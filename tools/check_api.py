@@ -52,10 +52,15 @@ GETTERS_EXEMPT = {}
 
 # The only functions that may take callbacks, with the callback type and why: each
 # may also take the `void *user` passed back to them. A decision, not a backlog.
-CALLBACKS_ALLOWED = {}
+CALLBACKS_ALLOWED = {
+    'wgf_app_run': ('wgf_app_callback_t', 'sokol_app owns the frame loop: on the web the browser runs it'),
+}
 
 # Setters that take several values, and the one getter per value each pairs with.
-GETTERS_PAIRED = {}
+GETTERS_PAIRED = {
+    'wgf_window_set_size': ('wgf_window_get_width', 'wgf_window_get_height'),
+    'wgf_window_set_position': ('wgf_window_get_x', 'wgf_window_get_y'),
+}
 
 # Calls that take or return a handle of any kind, as bare wgf_handle_t, and why; every
 # other handle is its kind's type (wgf_texture_t). A decision, not a backlog.

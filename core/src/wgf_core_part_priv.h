@@ -43,6 +43,8 @@ typedef struct wgf_core_priv_part_t {
        (wgf_core_priv_part_update) after the ticks and before the frame callback, where
        wgrender's runtime ran its modules' updates */
     void (*update)(float dt);
+    /* every tick, after the program's, with the tick's dt: a module's systems (ecs) */
+    void (*tick)(float dt);
     void (*flush)(void);     /* gfx's frame end, before any pass: the frame's records to the GPU */
     void (*end_frame)(void); /* after gfx's frame is submitted */
     void (*stop)(void);      /* when its layer stops: what it holds let go of */
@@ -55,6 +57,9 @@ void wgf_core_priv_part_install(wgf_core_priv_part_t *part);
 
 /* Every part's update, in order. */
 void wgf_core_priv_part_update(float dt);
+
+/* Every part's tick, in order. */
+void wgf_core_priv_part_tick(float dt);
 
 /* Every part of `layer` stopped, in order, then taken off the list, its installed and
  * next cleared: the next run's first create installs it again. */

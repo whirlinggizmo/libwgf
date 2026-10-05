@@ -11,15 +11,21 @@ header checks, tools/check_api.py, and tools/check_tools.py too), fastest first:
   windows-x64-mingw-debug-headless, -debug
                   on Linux, when MinGW-w64 is installed: built, and tested under Wine
                   when there is one (tools/wine.py)
-then the checks of what is built on them (CHECKS below; each names what it needs).
+then the checks of what is built on them (CHECKS below; each names what it needs):
+  smoke           every example headless (tools/run_smoke.py)
+  smoke-mingw     the same built with MinGW-w64, under Wine
+  desktop         every example in a window on a virtual display (tools/check_desktop.py)
+  desktop-mingw   the same built with MinGW-w64, under Wine, on the virtual display
 With --web, also (needs Emscripten; the browser tests need a Chromium-based browser):
   wasm32-debug, wasm32-release
                   configured, built, and tested (node, and the browser tests)
-and the web's checks.
+and the web's check:
+  web             every example in a browser (tools/check_web.py)
 With --windows HOST, also, on that Windows machine over ssh, the working tree as it is
 (tools/run_remote_windows.py, nothing left there):
-  windows-msvc    windows-x64-msvc-debug-headless and -debug
-  windows-mingw   windows-x64-mingw-debug-headless and -debug, natively
+  windows-msvc    windows-x64-msvc-debug-headless and -debug, then every example
+                  headless (tools/run_smoke.py)
+  windows-mingw   windows-x64-mingw-debug-headless and -debug, natively, then the same
 
 --only runs the steps named (a preset's name, or a check's); --list prints the steps it
 would run, and runs nothing. Stops at the first step that fails; a PASS names what was
@@ -44,8 +50,17 @@ MINGW = ['windows-x64-mingw-debug-headless', 'windows-x64-mingw-debug']
 WEB = [web(), web(debug=False)]
 # The checks after the presets: name -> (command, needs the web, what else it needs:
 # None, or (a program on PATH, or a platform prefix such as 'linux', and why it's needed)).
-CHECKS = {}
-REMOTE = {'windows-msvc': ['--msvc'], 'windows-mingw': []}
+CHECKS = {
+    'smoke': (['tools/run_smoke.py'], False, None),
+    'smoke-mingw': (['tools/run_smoke.py', '--variant', 'windows-x64-mingw-debug-headless'], False,
+                    ('x86_64-w64-mingw32-gcc', 'no MinGW-w64')),
+    'desktop': (['tools/check_desktop.py'], False, ('Xvfb', 'no Xvfb, the virtual X display')),
+    'desktop-mingw': (['tools/check_desktop.py', '--variant', 'windows-x64-mingw-debug'], False,
+                      ('x86_64-w64-mingw32-gcc', 'no MinGW-w64')),
+    'web': (['tools/check_web.py'], True, None),
+}
+REMOTE = {'windows-msvc': ['--msvc', '--then', 'tools/run_smoke.py --variant windows-x64-msvc-debug-headless'],
+          'windows-mingw': ['--then', 'tools/run_smoke.py --variant windows-x64-mingw-debug-headless']}
 
 
 def names_of_host():

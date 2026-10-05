@@ -53,7 +53,20 @@ ctest --preset linux-x64-debug-headless          # unit tests, header checks, ch
 python3 tools/stage_variant.py linux-x64-debug-headless
 ```
 
-The same four steps for any preset.
+The same four steps for any preset. A headless build runs frames at 60 a second until the program quits, or for `LIBWGF_HEADLESS_FRAMES` frames when that is set.
+
+The C examples, in `examples/c/<layer>-<name>/`, are built against a staged variant, as a program outside libwgf would be. Three tools build, stage, and run them all, or the ones named:
+
+```sh
+python3 tools/run_smoke.py        # headless, 180 frames each: fails on a crash, a hang, or an error log
+python3 tools/check_desktop.py    # in a window on a virtual display (Xvfb): fails on an error or an early exit,
+                                  # and saves a screenshot of each in build/<preset>/check_desktop/
+python3 tools/check_desktop.py --variant windows-x64-mingw-debug   # the Windows build, under Wine, the same way
+python3 tools/check_web.py        # in a headless browser: fails one that doesn't start or logs an error,
+                                  # and saves a screenshot of each in build/<preset>/check_web/
+```
+
+A program runs a script of inputs and expectations (`app/src/wgf_app_script_priv.h` says the format) when `LIBWGF_SCRIPT` names one; on the web a page hands the module the script's text as `Module["wgfScript"]`.
 
 ## The web
 
@@ -81,9 +94,10 @@ To build and test on a Windows machine from Linux without pushing, over ssh:
 ```sh
 python3 tools/run_remote_windows.py HOST           # the MinGW debug presets
 python3 tools/run_remote_windows.py HOST --msvc    # the MSVC debug presets
+python3 tools/run_remote_windows.py HOST --msvc --then "tools/run_smoke.py --variant windows-x64-msvc-debug-headless"
 ```
 
-It copies the working tree, committed or not, builds and tests there, and deletes its copy afterwards (`--keep` leaves it).
+It copies the working tree, committed or not, builds and tests there, runs what `--then` names, and deletes its copy afterwards (`--keep` leaves it).
 
 ## Before calling a change done
 
@@ -96,7 +110,7 @@ python3 tools/verify_builds.py --only linux-x64-debug-asan   # just these steps 
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs on every push and pull request: the Linux presets (debug, release, headless, and the three sanitizers), the web presets (with the runner's Chrome for the browser tests), and the MSVC presets on Windows, each through `tools/verify_builds.py --only`, so CI runs exactly what runs locally.
+`.github/workflows/ci.yml` runs on every push and pull request: the Linux presets (debug, release, headless, and the three sanitizers) with every example headless and in a window, the web presets with every example in the runner's Chrome, and the MSVC presets on Windows with every example headless, each through `tools/verify_builds.py --only`, so CI runs exactly what runs locally. The MinGW builds under Wine run locally only (`verify_builds.py`'s `smoke-mingw` and `desktop-mingw`, and `--windows HOST`).
 
 ## The tools
 
@@ -111,9 +125,13 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `run_in_browser.py` | runs a wasm test in a real browser, over several visits (ctest uses it) |
 | `run_in_xvfb.py` | runs a native test in a real window on a virtual display (ctest uses it) |
 | `run_wine.py` | runs a Windows program under Wine (the MinGW presets' test runner), starting it again when Wine's launcher failed |
-| `run_remote_windows.py` | builds and tests the working tree on a Windows machine over ssh |
+| `run_remote_windows.py` | builds and tests the working tree on a Windows machine over ssh, then runs a tool there with `--then` |
+| `run_smoke.py` | runs every example headless, failing a crash, a hang, an error log, or a sokol panic; a Windows variant on Linux under Wine |
+| `check_desktop.py` | runs every example in a window on Xvfb, a Windows variant under Wine there, with screenshots |
+| `check_web.py` | runs every example in a headless browser, each in a context of its own, checking it once its loads are done, with screenshots |
+| `finish_site.py` | finishes a web build's site: each example's page stamped with its program's version (`name.js?v=<hash>`), `examples.json`, and the launcher |
 | `watch_browser.py` | the browser tools' watchdog: stops what a run started if the run can't |
 | `setup_mingw.py` | sets up the pinned MinGW-w64 on Windows |
 | `setup_system_packages.py` | checks for, or installs, the packages a Linux desktop build links |
 
-Modules the tools share, with nothing to run: `headers.py` (the public API as clang reads it, in one parse), `browser.py` (finding and driving a Chromium-based browser over the DevTools protocol), `server.py` (serving a site as a static host would), `variants.py` (the presets, read from `CMakePresets.json`), `wine.py` (finding Wine), and `usercache.py` (the per-user cache).
+Modules the tools share, with nothing to run: `examples.py` (building the examples against a staged variant), `headers.py` (the public API as clang reads it, in one parse), `browser.py` (finding and driving a Chromium-based browser over the DevTools protocol), `server.py` (serving a site as a static host would), `variants.py` (the presets, read from `CMakePresets.json`), `wine.py` (finding Wine), and `usercache.py` (the per-user cache).

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>libwgf examples</title>
+<!-- The site's launcher, at its root (tools/finish_site.py writes it from
+     examples/c/wgf_launcher.html, with examples.json beside it): a dropdown of the
+     examples built, each loaded in a frame from its own page, <name>/index.html. No
+     example depends on this page: each runs on its own. -->
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #15171c;
+    color: #cdd3de; font: 14px/1.4 system-ui, sans-serif; }
+  #bar { position: fixed; inset: 0 0 auto 0; height: 38px; z-index: 10;
+    display: flex; align-items: center; gap: 12px; padding: 0 12px;
+    background: #1e2128; border-bottom: 1px solid #2c313c; white-space: nowrap; overflow: hidden; }
+  #bar b { color: #7ea2ff; }
+  @media (max-width: 520px) { #exlabel { display: none; } }
+  #src { color: #7ea2ff; text-decoration: none; }
+  #src:hover { text-decoration: underline; }
+  select { background: #0f1115; color: #cdd3de; border: 1px solid #3a4150;
+    border-radius: 6px; padding: 4px 8px; font: inherit; }
+  #frame { position: fixed; inset: 38px 0 0 0; width: 100vw; height: calc(100vh - 38px); height: calc(100dvh - 38px);
+    border: 0; background: #000; }
+</style>
+</head>
+<body>
+  <div id="bar">
+    <b>libwgf</b>
+    <label><span id="exlabel">example </span><select id="ex" aria-label="example"></select></label>
+    <a id="src" target="_blank" rel="noopener">source</a>
+  </div>
+  <iframe id="frame" allow="autoplay; gamepad; fullscreen" title="example"></iframe>
+  <script>
+    // Where each example's source is read, {name} standing for the example.
+    const SOURCE = "https://github.com/whirlinggizmo/libwgf/blob/main/examples/c/{name}/main.c";
+    const params = new URLSearchParams(location.search);
+    const sel = document.getElementById("ex");
+    const frame = document.getElementById("frame");
+    const src = document.getElementById("src");
+    function show(name) {
+      frame.src = encodeURIComponent(name) + "/index.html";
+      src.href = SOURCE.replaceAll("{name}", name);
+      document.title = "libwgf: " + name;
+    }
+    fetch("examples.json").then(r => (r.ok ? r.json() : [])).catch(() => []).then(list => {
+      const current = params.get("ex") || list[0] || "app-hello";
+      if (!list.includes(current)) list = [current, ...list];
+      for (const name of list) {
+        const o = document.createElement("option");
+        o.value = o.textContent = name;
+        if (name === current) o.selected = true;
+        sel.appendChild(o);
+      }
+      show(current);
+    });
+    sel.addEventListener("change", () => {
+      history.replaceState(null, "", "?ex=" + encodeURIComponent(sel.value));
+      show(sel.value);
+    });
+  </script>
+</body>
+</html>

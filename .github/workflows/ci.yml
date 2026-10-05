@@ -21,12 +21,12 @@ jobs:
       - name: System packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build
+          sudo apt-get install -y ninja-build xvfb libgl1-mesa-dri
           python3 tools/setup_system_packages.py install
-      - name: Presets
+      - name: Presets, and every example headless and in a window
         run: >-
           python3 tools/verify_builds.py --only
-          linux-x64-debug-headless,linux-x64-debug,linux-x64-release,linux-x64-debug-ubsan,linux-x64-debug-asan,linux-x64-debug-tsan
+          linux-x64-debug-headless,linux-x64-debug,linux-x64-release,linux-x64-debug-ubsan,linux-x64-debug-asan,linux-x64-debug-tsan,smoke,desktop
 
   web:
     name: web (wasm32 debug and release, node and Chrome)
@@ -46,13 +46,13 @@ jobs:
           actions-cache-folder: emsdk-cache
       - name: Ninja
         run: sudo apt-get update && sudo apt-get install -y ninja-build
-      - name: Presets
-        run: python3 tools/verify_builds.py --web --only wasm32-debug,wasm32-release
+      - name: Presets, and every example in Chrome
+        run: python3 tools/verify_builds.py --web --only wasm32-debug,wasm32-release,web
 
   windows:
     name: windows (MSVC debug, headless, release)
     runs-on: windows-2025
     steps:
       - uses: actions/checkout@v4
-      - name: Presets
-        run: python tools/verify_builds.py --only windows-x64-msvc-debug-headless,windows-x64-msvc-debug,windows-x64-msvc-release
+      - name: Presets, and every example headless
+        run: python tools/verify_builds.py --only windows-x64-msvc-debug-headless,windows-x64-msvc-debug,windows-x64-msvc-release,smoke

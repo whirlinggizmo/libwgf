@@ -28,12 +28,7 @@ static const char *user_root(void)
 {
     if (fs_user_root[0] == '\0') {
         char dir[sizeof(fs_user_root)];
-#if defined(__EMSCRIPTEN__)
-        const bool found = snprintf(dir, sizeof(dir), "%s/.user", fs_root) < (int)sizeof(dir);
-#else
-        const bool found = wgf_core_priv_app_data_dir(dir, sizeof(dir));
-#endif
-        if (found) {
+        if (wgf_core_priv_fs_platform_user_root(fs_root, dir, sizeof(dir))) {
             snprintf(fs_user_root, sizeof(fs_user_root), "%s", dir);
             wgf_log_info("wgf_core_fs: the program's own files (user:) under %s", fs_user_root);
         }
@@ -88,9 +83,7 @@ const char *wgf_core_priv_fs_root(void)
 void wgf_core_priv_fs_set_root(const char *root)
 {
     set_trimmed(fs_root, sizeof(fs_root), root);
-#if defined(__EMSCRIPTEN__)
-    fs_user_root[0] = '\0'; /* under the root on the web: found again under the new one */
-#endif
+    fs_user_root[0] = '\0'; /* found again: on the web it is under the root */
     wgf_core_priv_fs_platform_root_changed(fs_root);
 }
 

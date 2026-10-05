@@ -2,7 +2,7 @@
 """Build and test this checkout on a Windows machine over SSH, as it is, committed
 or not, and leave nothing behind there.
 
-    tools/run_remote_windows.py HOST [--msvc] [--variant NAME ...] [--path DIR ...] [--keep]
+    tools/run_remote_windows.py HOST [--msvc] [--variant NAME ...] [--then TOOL ...] [--path DIR ...] [--keep]
 
 Packs the working tree (every tracked file, and new ones git doesn't ignore), copies
 it to HOST with scp into a scratch folder in the remote user's profile, configures,
@@ -11,7 +11,9 @@ windows-x64-mingw ones, or with --msvc both windows-x64-msvc ones), and prints h
 went, every compile error of a variant, not the first. Nothing is set up first: the
 MSVC presets use Visual Studio's generator, which finds the compiler itself, and the
 MinGW ones' toolchain file sets up the pinned gcc. The scratch folder and the copied
-files are deleted afterwards, also when a step fails, unless --keep.
+files are deleted afterwards, also when a step fails, unless --keep. --then runs a
+tool there after the presets, `python <tool and its arguments>` in the copied tree
+(tools/run_smoke.py, say), its failure the run's.
 
 HOST is an ssh destination, as `ssh HOST` takes it (a Host from ~/.ssh/config), whose
 shell is cmd.exe. It needs CMake, Ninja, and Python 3.9 or later, and for MSVC Visual
@@ -41,7 +43,7 @@ def working_tree():
     return [name for name in listed.split('\0') if name and (ROOT / name).is_file()]
 
 
-def script(folder, archive, variants, paths, keep):
+def script(folder, archive, variants, paths, keep, then=()):
     """The .bat that runs on the remote machine."""
     lines = ['@echo off',
              'rem written by libwgf tools/run_remote_windows.py; it deletes itself',
@@ -68,6 +70,8 @@ def script(folder, archive, variants, paths, keep):
                   f'ctest --preset {variant}',
                   'if errorlevel 1 set FAILED=1',
                   f':next_{variant}']
+    for command in then:  # a tool run in the tree after the presets, as `python <tool> <args>`
+        lines += [f'echo run_remote_windows: python {command}', f'python {command}', 'if errorlevel 1 set FAILED=1']
     lines += [':done', 'cd /d "%USERPROFILE%"']
     if not keep:
         lines += ['rmdir /s /q "%ROOT%"', f'del "%USERPROFILE%\\{archive}"']
@@ -82,6 +86,9 @@ def main():
     parser.add_argument('--variant', action='append', dest='variants')
     parser.add_argument('--path', action='append', dest='paths', default=[])
     parser.add_argument('--keep', action='store_true', help='leave the scratch folder there, to look into it')
+    parser.add_argument('--then', action='append', default=[], metavar='TOOL',
+                        help='after the presets, run this tool there: "tools/run_smoke.py --variant ...", '
+                             'its arguments in the same string; repeatable')
     args = parser.parse_args()
     variants = args.variants or list(MSVC_VARIANTS if args.msvc else DEFAULT_VARIANTS)
     tag = f'libwgf-remote-{os.getpid()}'
@@ -92,7 +99,7 @@ def main():
         with tarfile.open(local_archive, 'w:gz') as tar:
             for name in working_tree():
                 tar.add(ROOT / name, arcname=name)
-        local_bat.write_bytes(script(tag, archive, variants, args.paths, args.keep).encode())
+        local_bat.write_bytes(script(tag, archive, variants, args.paths, args.keep, args.then).encode())
         print(f'run_remote_windows: {", ".join(variants)} on {args.host}', flush=True)
         copied = subprocess.run(['scp', '-q', str(local_archive), str(local_bat), f'{args.host}:'])
         if copied.returncode != 0:

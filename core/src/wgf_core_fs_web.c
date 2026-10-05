@@ -452,3 +452,10 @@ int wgf_core_priv_fs_cache_read_poll(int id)
     const int state = id > 0 ? wgf_core_priv_fs_js_read_state(id) : 2;
     return state == 0 ? 0 : (state == 1 ? 1 : -1);
 }
+
+/* The program's own files: under the root's ".user/", which the browser keeps with the
+ * rest of the store. */
+bool wgf_core_priv_fs_platform_user_root(const char *root, char *out, size_t out_size)
+{
+    return snprintf(out, out_size, "%s/.user", root) < (int)out_size;
+}

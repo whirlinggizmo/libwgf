@@ -68,6 +68,9 @@ target_include_directories(wgf PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/in
                                       $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 add_subdirectory(math)
 add_subdirectory(core)
+add_subdirectory(platform)
+add_subdirectory(gfx)
+add_subdirectory(app)
 install(TARGETS wgf ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES include/wgf_api.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 # libwgf's license and the vendored code's, staged with the variant: a program built

@@ -8,9 +8,7 @@ Ship, rocks that split, bullets, wraparound, score, lives, audio, particles, a t
 
 The plan, decided before building (HISTORY.md, "Milestone 1's plan"). Each step is a few small commits, each reviewed against CONVENTIONS.md, verified, and pushed.
 
-3. **platform and app.** The window (sokol_app), keyboard, mouse, gamepads, touch; the headless platform; the runtime (`wgf_app_run`), its fixed-rate ticks and frame loop; scripted input (a text script of inputs over frames with assertions on probes, run in deterministic time).
-   Done when: the loop and input are tested headless, a scripted run passes and a failing assertion fails it, and a window opens on Linux, Windows, and the web.
-4. **gfx, 2D.** The frame and its immediate mode (sokol_gl), color, textures, fonts and text (fontstash, the built-in JetBrains Mono), nodes in a tree with cached transforms, canvases with a 2D camera, 2D shapes (rectangle, circle, line, polygon, filled or outlined), sprites, text nodes, and CPU particle emitters.
+4. **gfx, 2D.** Textures, fonts and text (fontstash, the built-in JetBrains Mono) drawn in immediate mode, nodes in a tree with cached transforms, canvases with a 2D camera, 2D shapes as nodes (rectangle, circle, line, polygon, filled or outlined), sprites, text nodes, and CPU particle emitters. The frame, color, and immediate mode shapes are built.
    Done when: each section has tests (headless, and pixel checks in a browser and under Xvfb), and the C examples pass the headless smoke run and the browser check.
 5. **asset and audio.** Where a file comes from: fetched over HTTP on the web, read from disk natively, with a fetch hook a program can answer; failed loads logged once with a placeholder drawn. Sounds (WAV and MP3) and voices: the browser's Web Audio on the web, libwgf's mixer on sokol_audio natively.
    Done when: tests pass on every preset, and the audio example plays on the web and the desktop.

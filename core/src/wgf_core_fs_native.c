@@ -6,6 +6,7 @@
 
 #include "wgf_log.h"
 #include "wgf_core_os_priv.h"
+#include "wgf_core_priv.h"
 
 /* Native storage: files are files under the root, by default the program's own
  * directory (the executable's; Rob, 2026-10-04: a double-clicked program finds its
@@ -209,4 +210,11 @@ bool wgf_core_priv_fs_platform_has_stored_dir(const char *full)
 {
     (void)full; /* files are files: a directory is on disk or isn't there */
     return false;
+}
+
+/* The program's own files: its data directory, by its identity (wgf_core_identity.c). */
+bool wgf_core_priv_fs_platform_user_root(const char *root, char *out, size_t out_size)
+{
+    (void)root;
+    return wgf_core_priv_app_data_dir(out, out_size);
 }

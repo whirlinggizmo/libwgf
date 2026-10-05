@@ -37,6 +37,8 @@ const char *wgf_core_priv_fs_root(void);
  * lasts (wgf_fs.h): natively under its data directory (wgf_core_priv_app_data_dir),
  * found the first time one is asked for; on the web under the root's ".user/". */
 #define WGF_CORE_PRIV_FS_USER "user:"
+/* The platform's root for them, given fs's root: false where there is none. */
+bool wgf_core_priv_fs_platform_user_root(const char *root, char *out, size_t out_size);
 void wgf_core_priv_fs_set_cache_root(const char *root);
 
 /* `path` as a key under the root, into `out`: "\\" read as "/", "." and empty

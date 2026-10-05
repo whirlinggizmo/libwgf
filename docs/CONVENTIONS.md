@@ -18,7 +18,7 @@ libwgf/
     tests/
   hosts/web/      the web host the Haxe guest runs on
   bindings/haxe/  the Haxe binding (haxelib wgf)
-  examples/<layer>-<name>/   C examples, and examples/haxe/<name>/
+  examples/c/<layer>-<name>/ C examples, and examples/haxe/<name>/
   games/<name>/   the games
   templates/      what `wgf new` copies
   deps/           vendored third-party code

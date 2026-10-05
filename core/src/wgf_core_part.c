@@ -25,6 +25,14 @@ void wgf_core_priv_part_update(float dt)
     }
 }
 
+void wgf_core_priv_part_tick(float dt)
+{
+    const wgf_core_priv_part_t *part;
+    for (part = parts; part != NULL; part = part->next) {
+        if (part->tick != NULL) part->tick(dt);
+    }
+}
+
 void wgf_core_priv_part_stop(wgf_core_priv_part_layer_t layer)
 {
     wgf_core_priv_part_t **at;

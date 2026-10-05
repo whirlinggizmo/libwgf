@@ -10,13 +10,13 @@ libwgf is one C library, `libwgf.a`, built in layers (CONVENTIONS' table says wh
 |-------|----------|-------|
 | math | vectors, quaternions, 4 by 4 matrices, and the math on them | built |
 | core | version, logging, handles, time, file storage, the load pipeline and resources, the program's identity, probes, random numbers | built |
-| platform | the window, its events, input, scripted input | to come (ROADMAP, step 3) |
-| asset | where a resource's file comes from | to come (step 5) |
-| gfx | 2D drawing | to come (step 4) |
+| platform | the window, its events, input: keyboard, mouse, touch, gamepads | built: sokol_app natively and on the web, or none in a headless build |
+| asset | where a resource's file comes from | to come (ROADMAP, step 5) |
+| gfx | 2D drawing | started: the frame, color, immediate mode shapes; the rest of step 4 to come |
 | audio | sounds and voices | to come (step 5) |
 | ecs | entities, components, systems, scenes | to come (step 6) |
 | ui | layout and widgets | to come (step 7) |
-| app | the runtime | to come (step 3) |
+| app | the runtime: run, the frame loop, ticks, scripted runs | built |
 
 ### math
 
@@ -49,6 +49,54 @@ The base every other layer uses. It has no window and no loop: app's runtime sta
 | load | private | the load pipeline behind a resource's load on create: make the file local, prepare it on worker threads, finish it on the main thread within a per-frame budget |
 | part | private | the list of optional parts, each installed by its first create (below) |
 | os, thread | private | the few OS calls that differ between POSIX and Windows; threads, mutexes, and condition variables (none on the web) |
+
+### platform
+
+The window, its events, and input, under gfx and audio, which ask it for what they draw into and play through.
+
+| Section | Header | Provides |
+|---------|--------|----------|
+| window | `wgf_window.h` | title, size, fullscreen (and whether it can be), visible, resizable, decorated, focused; position and monitors; transparent, high DPI, vsync, and MSAA, fixed when it opens |
+| input | `wgf_input.h` | `wgf_input_state_t` (UP, PRESSED, DOWN, RELEASED); the characters typed, as UTF-8; the capture flags: whether game controls should leave the pointer or keyboard to a UI |
+| keyboard | `wgf_keyboard.h` | sokol's keys as `WGF_KEY_*`, by place on a US layout; each key's state, and down, pressed, released |
+| mouse | `wgf_mouse.h` | position, movement, and scrolling in logical pixels; each button's state; locking the pointer; hiding the cursor |
+| gamepad | `wgf_gamepad.h` | up to 4 pads, each keeping its number while connected: buttons by position on an Xbox-style pad; sticks with a round dead zone, rescaled to reach 1; triggers 0 to 1. Read once a frame, before its ticks: evdev on Linux, XInput on Windows, the Gamepad API on the web |
+| touch | `wgf_touch.h` | fingers, oldest first, by an id that holds while each is down; the two-finger gesture's center, pan, pinch, and twist; the first finger driving the mouse |
+| (the window system) | private | sokol_app, or none in a headless build, which runs frames at a display's rate (or as fast as it can, for a scripted run), for `LIBWGF_HEADLESS_FRAMES` frames when that is set; the device and each frame's swapchain for gfx, through sokol_glue |
+
+**Input** is read, never called back. Held state is shared; edges (pressed, released, movement, scrolling, typing) are kept twice, since they are relative to whoever reads them: inside a tick, since the previous tick; inside a frame, since the previous frame. A frame that runs no tick carries the tick edges over, so every press is seen by exactly one tick. A key pressed and released within one read is PRESSED, so no tap is missed.
+
+sokol's implementations are compiled once each, by the layer that owns them: gfx, gl, app, app_utils, and glue in platform's `wgf_platform_sokol_impl.c`, time in core's.
+
+### gfx
+
+Started: the frame, color, and immediate mode shapes.
+
+| Section | Header | Provides |
+|---------|--------|----------|
+| color | `wgf_color.h` | `wgf_color_t`, 8-bit RGBA packed as `0xRRGGBBAA`; the stock colors (`wgf_color_get`, and for C `WGF_COLOR_SKYBLUE`); make, make_float, with_alpha, the component getters, lerp |
+| render | `wgf_render.h` | the clear color; the frame's size and DPI scale; the clip stack (`wgf_render_push_clip` / `pop_clip`): nested, intersecting rectangles in logical pixels |
+| draw | `wgf_draw.h` | immediate mode 2D in logical pixels from the top-left, y down: rectangles, lines, circles, triangles, outlines with a thickness, polylines with mitred (or bevelled) corners, and polygons, convex or not, filled by ear clipping, both from a caller-owned array of points |
+
+app's runtime starts gfx once the window exists, and stops it. gfx draws with what the platform gives it: sokol_gfx on the window's device, each frame at the window's size and DPI scale, into the window's swapchain. A frame is recorded first and drawn at its end: immediate mode records into a sokol_gl context of gfx's own, starting with room for 65536 vertices and 16384 commands, doubled for the frames after one that runs out; the frame's end runs its parts' flushes (what must reach the GPU before a pass), then draws the recording in one pass into the window. A clip becomes a scissor in the frame's pixels, recorded in the immediate mode stream.
+
+sokol_gfx's backend is the build's: OpenGL core (4.1 or later) natively, WebGL2 on the web, and sokol's dummy backend, with no GPU, in a headless build.
+
+### app
+
+The runtime: it opens the window, starts and drives the layers below it, and runs the frame loop.
+
+| Section | Header | Provides |
+|---------|--------|----------|
+| (lifecycle) | `wgf_app.h` | `wgf_app_run(init, tick, frame, shutdown, user)`, `wgf_app_quit`, `wgf_app_can_quit` (false on the web), `wgf_app_is_running`. `wgf_app_run` is the one public call that takes callbacks |
+| loop | `wgf_loop.h` | the frame delta; the tick rate, delta, and fraction; the time scale (0 pauses ticks while frames go on); a target fps; frames per second |
+| (scripted runs) | private | a script of inputs at frames and expectations on probes (`app/src/wgf_app_script_priv.h` has the format), run in the script's own time |
+
+**The run.** `wgf_app_run` opens the window, starts core and gfx, and calls init. Each frame, it takes the window's events, updates core (tasks and loads move on), delivers a script's inputs for the frame, runs the ticks due -- after each, the parts' ticks (a module's systems) -- then the parts' updates, then the frame callback between gfx's begin and end, and checks a script's expectations for the frame. After quitting, it calls shutdown and stops gfx and core. On the desktop `wgf_app_run` returns when the program has quit; on the web it returns at once, and the browser runs the frames, so it is the last call in main everywhere.
+
+**Ticks** run on the runtime's tick clock, fed the frames' real time times the time scale, at most 5 a frame. The frame delta is real time, clamped to 0.1 s. A target fps sleeps natively, and on the web skips the frames the browser offers too early.
+
+**A scripted run** takes its script natively from the file `LIBWGF_SCRIPT` names, on the web from `Module["wgfScript"]`, the text the page gave the module. Its inputs at a frame are delivered as the window's events would be, before the frame's ticks, and its expectations are checked after the frame, each failure an error in the log; its end logs PASS or FAIL and quits. While it runs, every frame lasts exactly a sixtieth of a second, so ticks, and the random numbers its seed gives, make the same run on every machine; a headless run doesn't wait for a display. Its results are in the log, which is what the tools judge, since a page has no exit code.
 
 ## Handles
 
@@ -102,4 +150,5 @@ Logs go to stderr, which is the browser console on the web, as UTF-8. The export
 - `linux-x64-debug-headless` builds with no window or GPU (sokol's dummy backend), so its tests run anywhere; `-asan`, `-ubsan`, and `-tsan` run the headless tests under the sanitizers.
 - MinGW builds for Windows cross-build on Linux, their tests run under Wine (`tools/run_wine.py`); MSVC builds through Visual Studio's generator, on Windows, or from Linux over ssh (`tools/run_remote_windows.py`).
 - The web builds use the pinned Emscripten; their tests run under node, and the ones that need a browser in a headless Chromium-based browser (`tools/run_in_browser.py`).
+- The C examples (`examples/c/<layer>-<name>/`) are each a CMake project of their own, built against a staged variant as a program outside libwgf would be (`examples/c/wgf_example.cmake`), into the variant's `bin/`, or on the web its `site/`, one folder an example with its own page. `tools/run_smoke.py` runs each headless and fails one that exits non-zero, runs past its time, or logs an error; `tools/check_desktop.py` runs each in a window on a private Xvfb display with OpenGL on the CPU, a Windows build under Wine there, and saves a screenshot; `tools/check_web.py` loads each in a headless browser, fails one that doesn't start or logs an error, and saves a screenshot.
 - Every preset's tests include `check_api` (clang's parse of every public header, held to CONVENTIONS' API rules, and its self-test) and `check_tools`.
