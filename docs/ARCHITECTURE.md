@@ -9,7 +9,7 @@ libwgf is one C library, `libwgf.a`, built in layers (CONVENTIONS' table says wh
 | Layer | Provides | State |
 |-------|----------|-------|
 | math | vectors, quaternions, 4 by 4 matrices, and the math on them | built |
-| core | version, logging, handles, time, file storage, the load pipeline and resources, the program's identity | built |
+| core | version, logging, handles, time, file storage, the load pipeline and resources, the program's identity, probes, random numbers | built |
 | platform | the window, its events, input, scripted input | to come (ROADMAP, step 3) |
 | asset | where a resource's file comes from | to come (step 5) |
 | gfx | 2D drawing | to come (step 4) |
@@ -41,7 +41,9 @@ The base every other layer uses. It has no window and no loop: app's runtime sta
 | log | `wgf_log.h` | levels, `wgf_log_message`, and for C the `wgf_log_<level>` macros, which format |
 | time | `wgf_time.h` | `wgf_time_get_seconds`, monotonic seconds since core started, on sokol_time |
 | handle | `wgf_handle.h` | `wgf_handle_t`, and `wgf_handle_get_kind_name`; the pools are private |
-| fs | `wgf_fs.h` | read, write, exists, remove, mkdir, rmdir, each a task (`wgf_fs_task_t`); the root |
+| fs | `wgf_fs.h` | read, write, exists, remove, mkdir, rmdir, each a task (`wgf_fs_task_t`); the root; `user:` paths for the program's own files that last |
+| probe | `wgf_probe.h` | named numbers a program publishes about itself, read by scripted runs, tools, and tests |
+| random | `wgf_random.h` | one seeded generator (PCG32): a seed's sequence is the same on every platform |
 | resource | `wgf_resource.h` | what every resource kind shares: status, path, release; the load budget |
 | play state | `wgf_play_state.h` | `wgf_play_state_t`, the state of anything that plays over time |
 | load | private | the load pipeline behind a resource's load on create: make the file local, prepare it on worker threads, finish it on the main thread within a per-frame budget |
@@ -86,6 +88,7 @@ Native (Linux, Windows) and web (wasm32), split by file suffix (CONVENTIONS, "Na
 
 - **Native**: real files under the root, the program's own directory by default. A file's metadata is kept in a sidecar under the root's `.meta/`.
 - **Web**: files live in memory (MEMFS) under the root (`/wgf` by default), kept between visits in an IndexedDB database, one record per file; startup reads only the list of files, and a file is read into memory the first time it is needed.
+- **The program's own files**, `user:` paths: natively under the user's data directory by the program's identity (`<data>/<company>/<product>`), found the first time one is asked for; on the web under the root's `.user/`, so the browser keeps them as it keeps the rest.
 - **The root is a jail.** A path is normalized (`\` read as `/`, `.` and empty parts dropped, `..` taking back the part before it), and one that is absolute, has a `:` or a control character, climbs above the root, or names nothing is refused.
 
 ### Logging

@@ -15,6 +15,8 @@ wgf_layer(core
         src/wgf_core_identity.c
         src/wgf_core_load.c
         src/wgf_core_part.c
+        src/wgf_core_probe.c
+        src/wgf_core_random.c
         src/wgf_core_resource.c
         src/wgf_core_log.c
         src/wgf_core_time.c
@@ -35,6 +37,8 @@ if(WGF_TESTS)
     wgf_test(core wgf_core_handle_test)
     wgf_test(core wgf_core_identity_test)
     wgf_test(core wgf_core_part_test)
+    wgf_test(core wgf_core_probe_test)
+    wgf_test(core wgf_core_random_test)
     wgf_test(core wgf_core_lifecycle_test)
     wgf_test(core wgf_core_fs_test)
     wgf_test(core wgf_core_thread_test)
@@ -42,6 +46,7 @@ if(WGF_TESTS)
     wgf_test(core wgf_core_resource_test)
     wgf_test(core wgf_core_time_test)
     wgf_test(core wgf_core_fs_priv_test)
+    wgf_test(core wgf_core_fs_user_test)
     if(NOT EMSCRIPTEN)
         wgf_test(core wgf_core_fs_native_test)
         wgf_test(core wgf_core_fs_partial_test)

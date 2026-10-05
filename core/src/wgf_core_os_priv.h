@@ -34,6 +34,10 @@ bool wgf_core_priv_os_rmdir(const char *path);
  * ~/Library/Caches on macOS, %LOCALAPPDATA% on Windows. False where there is none (the
  * web, or no home). */
 bool wgf_core_priv_os_user_cache_dir(char *out, size_t out_size);
+/* The user's own data directory, where a program keeps what must last (saves,
+ * settings): $XDG_DATA_HOME or ~/.local/share on Linux, ~/Library/Application Support
+ * on macOS, %APPDATA% on Windows; false where there is none (the web). */
+bool wgf_core_priv_os_user_data_dir(char *out, size_t out_size);
 
 /* The running program's executable's name, without its directory or extension
  * ("game" for /opt/game/bin/game, C:\game\game.exe); false when it can't be told. */

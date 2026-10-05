@@ -127,3 +127,16 @@ bool wgf_core_priv_app_cache_dir(char *out, size_t out_size)
     }
     return true;
 }
+
+bool wgf_core_priv_app_data_dir(char *out, size_t out_size)
+{
+    char base[512];
+    int n;
+    if (!wgf_core_priv_os_user_data_dir(base, sizeof(base))) return false;
+    n = snprintf(out, out_size, "%s/%s/%s", base, wgf_identity_get_company(), wgf_identity_get_product());
+    if (n < 0 || n >= (int)out_size) return false;
+    for (char *c = out; *c != '\0'; c++) {
+        if (*c == '\\') *c = '/'; /* Windows takes either, and fs makes directories at "/" */
+    }
+    return true;
+}

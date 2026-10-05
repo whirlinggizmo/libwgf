@@ -9,6 +9,7 @@
 #include "wgf_core_handle_priv.h"
 #include "wgf_log.h"
 #include "wgf_core_os_priv.h"
+#include "wgf_core_priv.h"
 
 /* The part of fs that is the same everywhere: roots, paths, reading and writing
  * through stdio (real files natively, MEMFS on the web), and the public API's
@@ -17,14 +18,39 @@
 
 static char fs_root[512];
 static char fs_cache_root[512]; /* native: where WGF_CORE_PRIV_FS_CACHE paths are */
+static char fs_user_root[512];  /* where WGF_CORE_PRIV_FS_USER paths are; "" until the first is asked for */
 static bool fs_running;
 
-/* `path` without WGF_CORE_PRIV_FS_CACHE, and the root it is under. */
+/* The root user: paths are under, found the first time: natively the program's data
+ * directory, on the web the root's ".user/", since the root is what the browser keeps.
+ * "" when there is none. */
+static const char *user_root(void)
+{
+    if (fs_user_root[0] == '\0') {
+        char dir[sizeof(fs_user_root)];
+#if defined(__EMSCRIPTEN__)
+        const bool found = snprintf(dir, sizeof(dir), "%s/.user", fs_root) < (int)sizeof(dir);
+#else
+        const bool found = wgf_core_priv_app_data_dir(dir, sizeof(dir));
+#endif
+        if (found) {
+            snprintf(fs_user_root, sizeof(fs_user_root), "%s", dir);
+            wgf_log_info("wgf_core_fs: the program's own files (user:) under %s", fs_user_root);
+        }
+    }
+    return fs_user_root;
+}
+
+/* `path` without WGF_CORE_PRIV_FS_CACHE or _USER, and the root it is under. */
 static const char *root_of(const char **path)
 {
     if (strncmp(*path, WGF_CORE_PRIV_FS_CACHE, sizeof(WGF_CORE_PRIV_FS_CACHE) - 1) == 0) {
         *path += sizeof(WGF_CORE_PRIV_FS_CACHE) - 1;
         return fs_cache_root;
+    }
+    if (strncmp(*path, WGF_CORE_PRIV_FS_USER, sizeof(WGF_CORE_PRIV_FS_USER) - 1) == 0) {
+        *path += sizeof(WGF_CORE_PRIV_FS_USER) - 1;
+        return user_root();
     }
     return fs_root;
 }
@@ -62,6 +88,9 @@ const char *wgf_core_priv_fs_root(void)
 void wgf_core_priv_fs_set_root(const char *root)
 {
     set_trimmed(fs_root, sizeof(fs_root), root);
+#if defined(__EMSCRIPTEN__)
+    fs_user_root[0] = '\0'; /* under the root on the web: found again under the new one */
+#endif
     wgf_core_priv_fs_platform_root_changed(fs_root);
 }
 
@@ -273,11 +302,20 @@ static task_t *tasks;
 bool wgf_core_priv_fs_normalize_path(const char *path, char *out, size_t out_size)
 {
     size_t marks[256]; /* where each kept segment starts, for ".." to go back to */
-    size_t depth = 0, len = 0;
+    size_t depth = 0, len = 0, base = 0;
     const char *p = path;
 
     if (path == NULL || out == NULL || out_size == 0) return false;
     out[0] = '\0';
+    if (strncmp(path, WGF_CORE_PRIV_FS_USER, sizeof(WGF_CORE_PRIV_FS_USER) - 1) == 0) {
+        /* the program's own files: the prefix kept, the rest a path under their root */
+        base = sizeof(WGF_CORE_PRIV_FS_USER) - 1;
+        if (base >= out_size) return false;
+        memcpy(out, path, base);
+        out[base] = '\0';
+        path += base;
+        len = base;
+    }
     if (path[0] == '/' || path[0] == '\\' || strchr(path, ':') != NULL) return false;
     for (p = path; *p != '\0'; p++) {
         if ((unsigned char)*p < 0x20) return false;
@@ -293,20 +331,20 @@ bool wgf_core_priv_fs_normalize_path(const char *path, char *out, size_t out_siz
         n = (size_t)(p - start);
         if (n == 1 && start[0] == '.') continue;
         if (n == 2 && start[0] == '.' && start[1] == '.') {
-            if (depth == 0) return false; /* above the root */
+            if (depth == 0) return false; /* above the root, or the user: root */
             len = marks[--depth];
             out[len] = '\0';
             continue;
         }
         if (depth == sizeof(marks) / sizeof(marks[0])) return false;
         marks[depth++] = len;
-        if (len + (len > 0 ? 1 : 0) + n >= out_size) return false;
-        if (len > 0) out[len++] = '/';
+        if (len + (len > base ? 1 : 0) + n >= out_size) return false;
+        if (len > base) out[len++] = '/';
         memcpy(out + len, start, n);
         len += n;
         out[len] = '\0';
     }
-    return len > 0; /* else nothing is left to name a file */
+    return len > base; /* else nothing is left to name a file */
 }
 
 /* The task `task` names, or NULL for anything else, a detached task included:
@@ -334,6 +372,11 @@ static wgf_handle_t new_task(op_t op, const char *path)
     task_t *task_ptr;
     char normalized[WGF_CORE_PRIV_FS_PATH_MAX];
     if (!fs_running || !wgf_core_priv_fs_normalize_path(path, normalized, sizeof(normalized))) return 0;
+    if (strncmp(normalized, WGF_CORE_PRIV_FS_USER, sizeof(WGF_CORE_PRIV_FS_USER) - 1) == 0 && user_root()[0] == '\0') {
+        wgf_log_warn("wgf_fs: %s refused: this machine has no user data directory to keep the program's own "
+                     "files in", normalized);
+        return 0;
+    }
     task = wgf_core_priv_handle_pool_alloc(&task_pool);
     if (task == 0 || !wgf_core_priv_handle_pool_resolve(&task_pool, task, &index)) return 0;
     task_ptr = &tasks[index];
@@ -443,6 +486,7 @@ void wgf_core_priv_fs_deinit(void)
     wgf_core_priv_handle_pool_destroy(&task_pool);
     fs_root[0] = '\0';
     fs_cache_root[0] = '\0';
+    fs_user_root[0] = '\0';
     fs_running = false;
 }
 

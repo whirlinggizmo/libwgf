@@ -86,6 +86,13 @@ bool wgf_core_priv_os_user_cache_dir(char *out, size_t out_size)
     return n > 0 && n < sizeof(local) && snprintf(out, out_size, "%s", local) < (int)out_size;
 }
 
+bool wgf_core_priv_os_user_data_dir(char *out, size_t out_size)
+{
+    char roaming[MAX_PATH];
+    const DWORD n = GetEnvironmentVariableA("APPDATA", roaming, (DWORD)sizeof(roaming));
+    return n > 0 && n < sizeof(roaming) && snprintf(out, out_size, "%s", roaming) < (int)out_size;
+}
+
 bool wgf_core_priv_os_executable_dir(char *out, size_t out_size)
 {
     char path[MAX_PATH];

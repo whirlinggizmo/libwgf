@@ -55,6 +55,15 @@ static void test_normalize(void)
     check_normalize("a\nb", NULL); /* a control character */
     check_normalize("0123456789/0123456789/0123456789/0123456789/0123456789/0123456789", NULL); /* too long */
     check_normalize(NULL, NULL);
+
+    /* the program's own files: the prefix kept, the rest under its root */
+    check_normalize("user:saves/high.txt", "user:saves/high.txt");
+    check_normalize("user:./saves\\..\\settings.txt", "user:settings.txt");
+    check_normalize("user:", NULL);           /* names nothing */
+    check_normalize("user:../escape", NULL);  /* above its root */
+    check_normalize("user:/etc/passwd", NULL); /* absolute under it */
+    check_normalize("user:a:b", NULL);        /* a second ":" */
+    check_normalize("saves/user:x", NULL);    /* the prefix only leads */
 }
 
 int main(void)

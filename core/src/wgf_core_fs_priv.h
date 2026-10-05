@@ -32,12 +32,18 @@ const char *wgf_core_priv_fs_root(void);
  * only ever read. No key has a ":", so the prefix can't be one's own. Unused on
  * the web, whose root is the cache. */
 #define WGF_CORE_PRIV_FS_CACHE "cache:"
+
+/* A public path starting with WGF_CORE_PRIV_FS_USER names the program's own file that
+ * lasts (wgf_fs.h): natively under its data directory (wgf_core_priv_app_data_dir),
+ * found the first time one is asked for; on the web under the root's ".user/". */
+#define WGF_CORE_PRIV_FS_USER "user:"
 void wgf_core_priv_fs_set_cache_root(const char *root);
 
 /* `path` as a key under the root, into `out`: "\\" read as "/", "." and empty
  * parts dropped, ".." taking back the part before it. False when it is absolute,
- * has a ":" (a drive, or the cache prefix), has a control character, climbs above
- * the root, names nothing, or doesn't fit. What is true can only name something
+ * has a ":" (a drive, or the cache prefix) but for a leading WGF_CORE_PRIV_FS_USER,
+ * which is kept, has a control character, climbs above the root, names nothing, or
+ * doesn't fit. What is true can only name something
  * under the root. Cribbed from wgrender's wgri_asset_normalize_path. */
 bool wgf_core_priv_fs_normalize_path(const char *path, char *out, size_t out_size);
 

@@ -100,6 +100,23 @@ bool wgf_core_priv_os_user_cache_dir(char *out, size_t out_size)
 #endif
 }
 
+bool wgf_core_priv_os_user_data_dir(char *out, size_t out_size)
+{
+#if defined(__EMSCRIPTEN__)
+    (void)out;
+    (void)out_size;
+    return false; /* the browser keeps a site's files */
+#elif defined(__APPLE__)
+    const char *home = getenv("HOME");
+    return home != NULL && home[0] != '\0' &&
+           snprintf(out, out_size, "%s/Library/Application Support", home) < (int)out_size;
+#else
+    const char *xdg = getenv("XDG_DATA_HOME"), *home = getenv("HOME");
+    if (xdg != NULL && xdg[0] == '/') return snprintf(out, out_size, "%s", xdg) < (int)out_size;
+    return home != NULL && home[0] != '\0' && snprintf(out, out_size, "%s/.local/share", home) < (int)out_size;
+#endif
+}
+
 /* The executable's path into `path`; false where it can't be told. */
 static bool executable_path(char *path, size_t size)
 {

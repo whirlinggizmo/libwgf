@@ -8,10 +8,6 @@ Ship, rocks that split, bullets, wraparound, score, lives, audio, particles, a t
 
 The plan, decided before building (HISTORY.md, "Milestone 1's plan"). Each step is a few small commits, each reviewed against CONVENTIONS.md, verified, and pushed.
 
-1. **The repository.** Docs (AGENTS.md, CONVENTIONS.md, ARCHITECTURE.md, HISTORY.md, this file), CMake in layers (`wgf_layer()`), the presets (Linux debug, release, headless, asan, ubsan; wasm32 debug and release; MinGW debug and headless under Wine; MSVC debug and headless over ssh), the vendored dependencies, and the tools every later step leans on: `headers.py` and `check_api.py` (the API read by clang), `check_tools.py`, `variants.py`, `stage_variant.py`, `verify_builds.py`, and Wine and remote Windows runners. CI on GitHub Actions for Linux, Windows, and the web from the first commit that builds.
-   Done when: an empty library builds and tests on every preset here, on sightblinder, and in CI.
-2. **math and core.** Vectors and the 3x3 and 4x4 math a 2D game needs; handles (kind, generation, index), logging, time, the version, file storage as tasks (the high score), the load pipeline and resource core, probes (named numbers a game publishes for scripts and tests to read), and a seedable random generator.
-   Done when: each has unit tests passing on every preset, asan and ubsan included.
 3. **platform and app.** The window (sokol_app), keyboard, mouse, gamepads, touch; the headless platform; the runtime (`wgf_app_run`), its fixed-rate ticks and frame loop; scripted input (a text script of inputs over frames with assertions on probes, run in deterministic time).
    Done when: the loop and input are tested headless, a scripted run passes and a failing assertion fails it, and a window opens on Linux, Windows, and the web.
 4. **gfx, 2D.** The frame and its immediate mode (sokol_gl), color, textures, fonts and text (fontstash, the built-in JetBrains Mono), nodes in a tree with cached transforms, canvases with a 2D camera, 2D shapes (rectangle, circle, line, polygon, filled or outlined), sprites, text nodes, and CPU particle emitters.

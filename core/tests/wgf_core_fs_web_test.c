@@ -71,9 +71,15 @@ static void visit_1(void)
         case 2:
             if (!settled(WGF_FS_TASK_STATUS_DONE, "write doomed/inner/a.txt")) return;
             wgf_fs_task_destroy(task);
+            task = wgf_fs_write_text("user:high.txt", "999");
             step++;
             break;
         case 3:
+            if (!settled(WGF_FS_TASK_STATUS_DONE, "write user:high.txt")) return;
+            wgf_fs_task_destroy(task);
+            step++;
+            break;
+        case 4:
             if (!wgf_core_priv_fs_is_settled()) return; /* every write committed to the store */
             finish();
             break;
@@ -116,6 +122,16 @@ static void visit_2(void)
             step++;
             break;
         case 4:
+            task = wgf_fs_read("user:high.txt");
+            step++;
+            break;
+        case 5:
+            if (!settled(WGF_FS_TASK_STATUS_DONE, "a user: file kept between visits")) return;
+            expect(strcmp(wgf_fs_task_get_text(task), "999") == 0, "its bytes");
+            wgf_fs_task_destroy(task);
+            step++;
+            break;
+        case 6:
             if (!wgf_core_priv_fs_is_settled()) return;
             finish();
             break;
