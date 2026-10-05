@@ -44,6 +44,7 @@ Each game lives in `games/<name>/`, uses only libwgf's public API, is deployed t
 
 - **Handle-only public C API.** Values and handles cross the API, never pointers into the library's memory. No backend identifier (sokol, flecs, Jolt) appears in a public header.
 - **A program links only what it uses.** Optional subsystems never get named by the core. Web size is measured per example in CI, with a budget per game.
+- **Bulk calls for hot paths.** A call that reads or writes many objects takes a caller-owned array and a count, filled or read in one call. This means no shared scratch area (librl's, dropped: results overwrote each other between calls, and views broke when wasm memory grew), and no command stream within a process (wg-vf's, which wins only across a process or network boundary; libwgt's LINEAGE.md). Heavy per-entity loops run as C systems (ECS, physics). Scripts set intent; they don't drive every transform every frame.
 - **One async model.** Tasks polled from the frame. No synchronous twins, and no callbacks across a binding.
 - **Bindings generated from the headers.** One name per C call, with sugar on top. Exports are called by quoted key so minification can't break them. Binding marshalling never piles up on the wasm stack.
 - **Web first.** WebGL2 is the default, with WebGPU behind a build option until the condition in libwgt's ROADMAP holds. Threads are optional, and every game runs without cross-origin isolation.
