@@ -221,7 +221,9 @@ def read(root=ROOT, headers=None, emcc=None):
     if clang is None:
         return None
     source = ''.join(f'#include "{h.as_posix()}"\n' for h in headers)
-    flags = ['-std=c11', *[f'-I{d}' for d in include_dirs(root)]]
+    # WGF_API_PARSE: the export mark as every platform but Windows has it (wgf_api.h), so a
+    # parse on Windows reads it too
+    flags = ['-std=c11', '-DWGF_API_PARSE', *[f'-I{d}' for d in include_dirs(root)]]
     ast = json.loads(_run(clang, sysroot, ['-fsyntax-only', '-fparse-all-comments', '-Xclang', '-ast-dump=json',
                                            *flags], source, root))
     walk_files(ast)

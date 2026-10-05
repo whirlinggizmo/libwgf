@@ -14,7 +14,9 @@ parse (tools/headers.py), and checks each exported function -- the ones a bindin
               handle is its kind's type (a typedef of wgf_handle_t), but in the
               calls ANY_HANDLE lists; a const unsigned char * is a
               byte span: a parameter followed by `int size`, or returned by a
-              _get_data with a _get_size beside it. No other pointer, struct, function
+              _get_data with a _get_size beside it; a pointer to float, int, or a
+              handle type is a caller-owned array: a parameter followed by `int count`
+              (or `int <name>_count`, for a call taking two). No other pointer, struct, function
               pointer, or `...`, but for the callbacks CALLBACKS_ALLOWED lists
   getters     every set_X has a get_X, is_X, or has_X, unless GETTERS_EXEMPT says why;
               a setter of several values has the getters GETTERS_PAIRED lists;
@@ -90,6 +92,10 @@ def classify(written, canonical, handles):
         return 'text'
     if canonical.replace(' ', '') == 'constunsignedchar*':
         return 'span'
+    if written.count('*') == 1 and written.endswith('*'):
+        element = written[:-1].replace('const ', '').strip()
+        if element in ('float', 'int') or element in handles:
+            return 'array'
     return None
 
 
@@ -115,7 +121,7 @@ def check_function(fn, errors, callbacks, handles, any_handle):
         if kind == 'any-handle' and name not in any_handle:
             errors.append(f'{where}: returns wgf_handle_t: a handle is its kind\'s type (wgf_<kind>_t), '
                           'unless ANY_HANDLE says why')
-        if kind is None:
+        if kind is None or kind == 'array':
             errors.append(f'{where}: returns {fn.returns}, which the hard rule doesn\'t allow')
         elif kind == 'span' and not name.endswith('_get_data'):
             errors.append(f'{where}: returns bytes, which only a _get_data with a _get_size may')
@@ -136,6 +142,11 @@ def check_function(fn, errors, callbacks, handles, any_handle):
             following = fn.params[i + 1] if i + 1 < len(fn.params) else None
             if following is None or following.canonical.replace('const ', '') != 'int' or following.name != 'size':
                 errors.append(f'{where}: byte span {pname} must be followed by `int size`')
+        elif kind == 'array':
+            following = fn.params[i + 1] if i + 1 < len(fn.params) else None
+            if following is None or following.canonical.replace('const ', '') != 'int' or \
+                    not (following.name == 'count' or following.name.endswith('_count')):
+                errors.append(f'{where}: array {pname} must be followed by `int count` (or `int <name>_count`)')
 
 
 def check_functions(functions, errors, exempt, paired):
@@ -243,6 +254,12 @@ WGF_API wgf_quat_t wgf_bad_rotation(wgf_quat_t a, const wgf_vec2_t b);
 WGF_API wgf_handle_t wgf_bad_any_create(void);
 WGF_API void wgf_bad_any_use(wgf_handle_t thing);
 WGF_API void wgf_good_any_use(wgf_handle_t thing);
+WGF_API int wgf_good_fill(const wgf_good_t *goods, int count, float *out_xy, int out_count);
+WGF_API int wgf_good_read(const float *values, int count);
+WGF_API void wgf_bad_array(const float *values, int n);
+WGF_API void wgf_bad_array_alone(int *values);
+WGF_API float *wgf_bad_array_return(void);
+WGF_API void wgf_bad_double_array(const double *values, int count);
 WGF_API void wgf_good_set_volume(float volume);
 WGF_API void wgf_core_bad_layer_name(void);
 WGF_API float wgf_good_get_volume(void);
@@ -271,7 +288,10 @@ EXPECTED = ['bad_unprefixed: a public function is named', 'wgf_bad_not_exported:
             'wgf_bad_gone_run: listed in CALLBACKS_ALLOWED, but no public header',
             'wgf_bad_gone_any: listed in ANY_HANDLE, but no public header',
             'wgf_bad_rotation: parameter a is wgf_quat_t', 'wgf_bad_rotation: parameter b is const wgf_vec2_t',
-            'wgf_bad_any_create: returns wgf_handle_t', 'wgf_bad_any_use: parameter thing is wgf_handle_t']
+            'wgf_bad_any_create: returns wgf_handle_t', 'wgf_bad_any_use: parameter thing is wgf_handle_t',
+            'wgf_bad_array: array values must be followed by `int count`',
+            'wgf_bad_array_alone: array values must be followed', 'wgf_bad_array_return: returns float *',
+            'wgf_bad_double_array: parameter values is const double *']
 
 # The self-test's own lists: one entry each that names nothing, and one exempt setter with a getter
 SELF_TEST_EXEMPT = {'wgf_bad_set_loud': 'it has a getter', 'wgf_bad_gone_set_x': 'there is no such call'}

@@ -149,7 +149,10 @@ def main():
         start = time.monotonic()
         tests_skipped = []
         if name in REMOTE:
-            ok = run(sys.executable, 'tools/run_remote_windows.py', args.windows, *what)
+            ok = run(sys.executable, 'tools/run_remote_windows.py', args.windows, *what, skipped=tests_skipped)
+            if tests_skipped:
+                notes.append(f'{len(tests_skipped)} of {name}\'s tests on {args.windows} ({", ".join(tests_skipped)})')
+                print(f'verify_builds: SKIPPED {notes[-1]}', flush=True)
         elif name in CHECKS:
             ok = run(sys.executable, *what)
         else:

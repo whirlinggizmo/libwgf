@@ -83,9 +83,12 @@ libwgf is one library, `libwgf.a` (`wgf.lib` with MSVC), built in layers and mod
 - an integer, float, bool, or enum;
 - a `const char *` for a path or text (UTF-8, NUL-terminated);
 - a math value (`wgf_vec2_t`, `wgf_vec3_t`, `wgf_vec4_t`, `wgf_mat3_t`, `wgf_mat4_t`), **as a return value only**; a setter takes its components;
-- a byte span: `const unsigned char *data, int size` in, or a `_get_data` beside a `_get_size` out.
+- a byte span: `const unsigned char *data, int size` in, or a `_get_data` beside a `_get_size` out;
+- a caller-owned array of numbers or handles, followed by its `int count` (`int <name>_count` for a call's second): `const float *` or `const int *` or a handle type's `const wgf_<kind>_t *` read, or the same without `const` filled, within the call.
 
-No other pointer, no struct, no function pointer, no `void *`, no variadic call. A byte span is opaque: the layer never reads it as a structure. In: copied before the call returns. Out: owned by the task or handle that produced it, valid until that is destroyed.
+No other pointer, no struct, no function pointer, no `void *`, no variadic call. A byte span is opaque: the layer never reads it as a structure. In: copied before the call returns. Out: owned by the task or handle that produced it, valid until that is destroyed. An array is the caller's: the layer reads or fills it during the call and never keeps it, and a call that fills one returns how many it filled.
+
+**Bulk calls for hot paths.** A call that reads or writes many objects takes a caller-owned array and a count, filled or read in one call (SPEC's invariant): never a scratch area the library shares between calls, whose results the next call overwrites, and never a command stream within a process. Per-entity work every tick runs as a C system (ecs); a binding sets intent, it doesn't drive every transform every frame.
 
 **One exception: `wgf_app_run`**, whose callbacks are `wgf_app_callback_t`, `void (*)(void *user)`, because the window system owns the loop. `tools/check_api.py` lists it in `CALLBACKS_ALLOWED`; another is a decision recorded in HISTORY.md, not a convenience.
 
