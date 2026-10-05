@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(~/projects/github/whirlinggizmo/.github/**)",
+      "Edit(~/projects/github/whirlinggizmo/experiments/**)",
+      "Edit(~/projects/github/whirlinggizmo/flecs_wrapper-c/**)",
+      "Edit(~/projects/github/whirlinggizmo/hotreload-hx/**)",
+      "Edit(~/projects/github/whirlinggizmo/hotreload-nim/**)",
+      "Edit(~/projects/github/whirlinggizmo/libwgt/**)",
+      "Edit(~/projects/github/whirlinggizmo/senior-showdown/**)",
+      "Edit(~/projects/github/whirlinggizmo/wgrender-beef/**)",
+      "Edit(~/projects/github/whirlinggizmo/wgrender-c/**)",
+      "Edit(~/projects/github/whirlinggizmo/wgrender-hx/**)",
+      "Edit(~/projects/github/whirlinggizmo/wgrender-nim/**)",
+      "Edit(~/projects/github/whirlinggizmo/wgutils-c/**)",
+      "Edit(~/projects/github/robknopf/**)",
+      "Edit(~/toolchains/**)"
+    ]
+  }
+}
