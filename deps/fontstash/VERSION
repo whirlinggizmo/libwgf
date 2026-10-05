@@ -1,0 +1,3 @@
+# Vendored fontstash: src/fontstash.h from memononen/fontstash, unchanged.
+# The commit that last changed the file; upstream's head (b5ddc97, 2019-04-22) still has it.
+fontstash https://github.com/memononen/fontstash.git 203fec2eb6a8905abcc828383f69c7b592d452dc 2018-01-03

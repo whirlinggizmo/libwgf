@@ -1,0 +1,58 @@
+# libwgf's CI: what tools/verify_builds.py runs locally, on Linux, Windows, and the web,
+# on every push and pull request (BUILDING.md, "Continuous integration").
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: linux (debug, release, headless, sanitizers)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: System packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build
+          python3 tools/setup_system_packages.py install
+      - name: Presets
+        run: >-
+          python3 tools/verify_builds.py --only
+          linux-x64-debug-headless,linux-x64-debug,linux-x64-release,linux-x64-debug-ubsan,linux-x64-debug-asan,linux-x64-debug-tsan
+
+  web:
+    name: web (wasm32 debug and release, node and Chrome)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: The pinned Emscripten
+        id: pins
+        run: echo "emscripten=$(head -n1 cmake/emscripten-version.txt)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: emsdk-cache
+          key: emsdk-${{ steps.pins.outputs.emscripten }}-${{ runner.os }}
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: ${{ steps.pins.outputs.emscripten }}
+          actions-cache-folder: emsdk-cache
+      - name: Ninja
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+      - name: Presets
+        run: python3 tools/verify_builds.py --web --only wasm32-debug,wasm32-release
+
+  windows:
+    name: windows (MSVC debug, headless, release)
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+      - name: Presets
+        run: python tools/verify_builds.py --only windows-x64-msvc-debug-headless,windows-x64-msvc-debug,windows-x64-msvc-release

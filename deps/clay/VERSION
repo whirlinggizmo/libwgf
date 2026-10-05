@@ -1,0 +1,6 @@
+# Vendored from the Whirling Gizmo fork of nicbarker/clay (zlib license, LICENSE.md): a C99
+# UI layout library (flexbox-like; it emits render commands and draws nothing itself), with
+# the fixes the fork carries on top of upstream. Copied from wgrender-c's deps/clay, which
+# took it from the fork at this commit. Only libwgf's ui module includes it.
+clay-fork https://github.com/robknopf/clay.git 95784c55f16f060d4246c4ac322090ec9e214157 2026-10-02
+clay-upstream https://github.com/nicbarker/clay.git e6cc36941ab2af5d81107617039d6f527a1c660b

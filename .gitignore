@@ -1,0 +1,6 @@
+build/
+out/
+dist/
+.claude/settings.local.json
+__pycache__/
+.claude/*.lock

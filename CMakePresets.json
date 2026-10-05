@@ -1,0 +1,348 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}"
+    },
+    {
+      "name": "linux-x64",
+      "hidden": true,
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-x64-debug",
+      "displayName": "Linux x64, debug",
+      "inherits": "linux-x64",
+      "installDir": "${sourceDir}/out/linux-x64/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "wasm32-debug",
+      "displayName": "Web (wasm32), debug; tests run under node",
+      "inherits": "base",
+      "installDir": "${sourceDir}/out/wasm32/debug",
+      "cacheVariables": {
+        "WGF_WEB": "ON",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "linux-x64-release",
+      "displayName": "Linux x64, release: optimized, for benchmarks and a game's desktop export",
+      "inherits": "linux-x64",
+      "installDir": "${sourceDir}/out/linux-x64/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "wasm32-release",
+      "displayName": "Web (wasm32), release: optimized, the host a game ships on",
+      "inherits": "base",
+      "installDir": "${sourceDir}/out/wasm32/release",
+      "cacheVariables": {
+        "WGF_WEB": "ON",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "linux-x64-debug-tsan",
+      "displayName": "Linux x64, debug, headless, under ThreadSanitizer: data races between threads",
+      "inherits": "linux-x64",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "WGF_SANITIZE": "thread",
+        "WGF_HEADLESS": "ON"
+      }
+    },
+    {
+      "name": "linux-x64-debug-asan",
+      "displayName": "Linux x64, debug, headless, under AddressSanitizer: memory errors, and leaks through LeakSanitizer",
+      "inherits": "linux-x64",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "WGF_SANITIZE": "address",
+        "WGF_HEADLESS": "ON"
+      }
+    },
+    {
+      "name": "linux-x64-debug-ubsan",
+      "displayName": "Linux x64, debug, headless, under UndefinedBehaviorSanitizer",
+      "inherits": "linux-x64",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "WGF_SANITIZE": "undefined",
+        "WGF_HEADLESS": "ON"
+      }
+    },
+    {
+      "name": "linux-x64-debug-headless",
+      "displayName": "Linux x64, debug, headless: no window or GPU (sokol's dummy backend), so gfx's tests run anywhere",
+      "inherits": "linux-x64",
+      "installDir": "${sourceDir}/out/linux-x64/debug-headless",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "WGF_HEADLESS": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "windows-x64-mingw",
+      "hidden": true,
+      "inherits": "base",
+      "toolchainFile": "${sourceDir}/cmake/mingw-w64.cmake"
+    },
+    {
+      "name": "windows-x64-mingw-debug",
+      "displayName": "Windows x64, MinGW-w64, debug; tests run under Wine when built on Linux or macOS",
+      "inherits": "windows-x64-mingw",
+      "installDir": "${sourceDir}/out/windows-x64-mingw/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "windows-x64-mingw-debug-headless",
+      "displayName": "Windows x64, MinGW-w64, debug, headless: no window or GPU; tests run under Wine when built on Linux or macOS",
+      "inherits": "windows-x64-mingw",
+      "installDir": "${sourceDir}/out/windows-x64-mingw/debug-headless",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "WGF_HEADLESS": "ON"
+      }
+    },
+    {
+      "name": "windows-x64-mingw-release",
+      "displayName": "Windows x64, MinGW-w64, release: optimized, for a game's desktop export",
+      "inherits": "windows-x64-mingw",
+      "installDir": "${sourceDir}/out/windows-x64-mingw/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "windows-x64-msvc",
+      "hidden": true,
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+      },
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "architecture": {
+        "value": "x64",
+        "strategy": "set"
+      }
+    },
+    {
+      "name": "windows-x64-msvc-debug",
+      "displayName": "Windows x64, MSVC, debug; Visual Studio's generator, which finds the compiler: no developer prompt",
+      "inherits": "windows-x64-msvc",
+      "installDir": "${sourceDir}/out/windows-x64-msvc/debug"
+    },
+    {
+      "name": "windows-x64-msvc-debug-headless",
+      "displayName": "Windows x64, MSVC, debug, headless: no window or GPU; Visual Studio's generator, which finds the compiler: no developer prompt",
+      "inherits": "windows-x64-msvc",
+      "installDir": "${sourceDir}/out/windows-x64-msvc/debug-headless",
+      "cacheVariables": {
+        "WGF_HEADLESS": "ON"
+      }
+    },
+    {
+      "name": "windows-x64-msvc-release",
+      "displayName": "Windows x64, MSVC, release: optimized, for a game's desktop export",
+      "inherits": "windows-x64-msvc",
+      "installDir": "${sourceDir}/out/windows-x64-msvc/release"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "linux-x64-debug",
+      "configurePreset": "linux-x64-debug"
+    },
+    {
+      "name": "wasm32-debug",
+      "configurePreset": "wasm32-debug"
+    },
+    {
+      "name": "linux-x64-release",
+      "configurePreset": "linux-x64-release"
+    },
+    {
+      "name": "wasm32-release",
+      "configurePreset": "wasm32-release"
+    },
+    {
+      "name": "linux-x64-debug-tsan",
+      "configurePreset": "linux-x64-debug-tsan"
+    },
+    {
+      "name": "linux-x64-debug-asan",
+      "configurePreset": "linux-x64-debug-asan"
+    },
+    {
+      "name": "linux-x64-debug-ubsan",
+      "configurePreset": "linux-x64-debug-ubsan"
+    },
+    {
+      "name": "linux-x64-debug-headless",
+      "configurePreset": "linux-x64-debug-headless"
+    },
+    {
+      "name": "windows-x64-mingw-debug",
+      "configurePreset": "windows-x64-mingw-debug"
+    },
+    {
+      "name": "windows-x64-mingw-debug-headless",
+      "configurePreset": "windows-x64-mingw-debug-headless"
+    },
+    {
+      "name": "windows-x64-msvc-debug",
+      "configurePreset": "windows-x64-msvc-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-x64-msvc-debug-headless",
+      "configurePreset": "windows-x64-msvc-debug-headless",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-x64-msvc-release",
+      "configurePreset": "windows-x64-msvc-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows-x64-mingw-release",
+      "configurePreset": "windows-x64-mingw-release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "linux-x64-debug",
+      "configurePreset": "linux-x64-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "wasm32-debug",
+      "configurePreset": "wasm32-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "linux-x64-release",
+      "configurePreset": "linux-x64-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "wasm32-release",
+      "configurePreset": "wasm32-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "linux-x64-debug-tsan",
+      "configurePreset": "linux-x64-debug-tsan",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "linux-x64-debug-asan",
+      "configurePreset": "linux-x64-debug-asan",
+      "output": {
+        "outputOnFailure": true
+      },
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1"
+      }
+    },
+    {
+      "name": "linux-x64-debug-ubsan",
+      "configurePreset": "linux-x64-debug-ubsan",
+      "output": {
+        "outputOnFailure": true
+      },
+      "environment": {
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      }
+    },
+    {
+      "name": "linux-x64-debug-headless",
+      "configurePreset": "linux-x64-debug-headless",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "windows-x64-mingw-debug",
+      "configurePreset": "windows-x64-mingw-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "windows-x64-mingw-debug-headless",
+      "configurePreset": "windows-x64-mingw-debug-headless",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "windows-x64-msvc-debug",
+      "configurePreset": "windows-x64-msvc-debug",
+      "output": {
+        "outputOnFailure": true
+      },
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-x64-msvc-debug-headless",
+      "configurePreset": "windows-x64-msvc-debug-headless",
+      "output": {
+        "outputOnFailure": true
+      },
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-x64-msvc-release",
+      "configurePreset": "windows-x64-msvc-release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "configuration": "Release"
+    },
+    {
+      "name": "windows-x64-mingw-release",
+      "configurePreset": "windows-x64-mingw-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

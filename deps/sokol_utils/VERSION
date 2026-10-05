@@ -1,0 +1,19 @@
+# Vendored from squk/sokol_utils (zlib license, LICENSE in this directory): extension
+# functions for sokol_app.h (window size/position, displays, swap interval, mouse
+# position). It reads sokol_app's private state, so check it compiles whenever
+# deps/sokol is updated. Taken from libwgrender's modified copy, unchanged.
+sokol_utils https://github.com/squk/sokol_utils 65cbd2a6fbc2bd9a9eb716f1f478b6dc37ba41c0 2026-07-31
+# Changes made in libwgrender, carried here unchanged: marked "[libwgrender]" in the
+# header, for the project that made them. A change libwgf makes is marked "[libwgf]".
+# - removed _sapp_x11_window_focused(): sokol_app.h now defines it (redefinition error)
+# - _sapp_linux_set_swap_interval() uses sokol_app's _sapp_glx_swapinterval(): the
+#   original called an undeclared glXGetProcAddress and passed the X11 window as the
+#   GLX drawable
+# - added sapp_display_position() (X11, Win32, macOS)
+# - added sapp_set_window_resizable(), sapp_set_window_decorated(),
+#   sapp_set_window_visible() and sapp_window_visible() (X11, Win32, macOS; web:
+#   visibility only), and a fixed size follows sapp_set_window_size() on X11
+# - added sapp_can_move_window(): false under XWayland (the XWAYLAND extension), where
+#   the compositor ignores a program's window moves
+# - the size hints it sets use static gravity (sokol_app: center), so a window
+#   position set is read back the same, whatever the window manager's frame
