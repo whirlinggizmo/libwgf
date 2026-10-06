@@ -137,7 +137,7 @@ Entities, their components, and the systems that run them at the tick rate, on f
 
 **Colliders** are triggers, nothing pushed apart: each tick, the colliders under each parent node, sorted along x, are swept for overlaps whose layer meets the other's mask; the pairs found are sorted and walked against the last tick's, so a pair new this tick raises TRIGGER_ENTER and one gone raises TRIGGER_EXIT, told to each. A destroyed entity's pairs are dropped without an exit; its DESTROYED (for one with a behavior) carries its now-stale handle.
 
-**Events** queue in a ring of 65,536 and are taken by the program, or the binding, with `wgf_ecs_take_events`: one async model, polled, and no callback crosses into a script. A behavior's code is the program's: the binding's runtime makes each behavior's script (`wgf.Script`) from these events, tells it of its triggers, ticks and frames it, and ends it ("The bindings").
+**Events** queue in a ring of 65,536 and are taken by the program, or the binding, with `wgf_ecs_take_events`: one async model, polled, and no callback crosses into a behavior. A behavior's code is the program's: the binding's runtime makes each behavior's object (`wgf.Behavior`) from these events, tells it of its triggers, ticks and frames it, and ends it ("The bindings").
 
 **Scenes** load through core's load pipeline, parsed on a worker into a plan of entities and prefabs, each a list of component lines; `from` copies a prefab's lines first. Instantiating or spawning applies the lines through the same calls a program makes. `wgf_ecs_dump` writes every live entity with every component as it is, so a dumped world loaded again makes the same world, and dumps the same text.
 
@@ -184,7 +184,7 @@ Games are Haxe (`bindings/haxe/`, haxelib `wgf`); JS and TypeScript programs use
 **The Haxe binding**, in three parts:
 
 - **Generated:** `impl/Raw.js.hx` and `impl/Raw.cpp.hx`, the same Haxe signature for each exported call on each target; the typed API over them, `wgf.<Type>` -- an abstract per handle kind, one over a kind for each section whose calls take it (a `Shape2d` is a `Node`), an enum abstract per enum, and statics for the rest -- each member one inline call of one `Raw` function; and `impl/BuiltVersion.hx`.
-- **The runtime**, by hand: `wgf.Runtime.run` (C's `wgf_app_run`: on the web the JS binding's; natively four trampolines installed once, each reading its handler when it fires), `wgf.Script` (per-entity code made, told, and ended from the ecs's events, taken in bulk each tick and frame), the version checks, and the vector types.
+- **The runtime**, by hand: `wgf.Runtime.run` (C's `wgf_app_run`: on the web the JS binding's; natively four trampolines installed once, each reading its handler when it fires), `wgf.Behavior` (per-entity code made, told, and ended from the ecs's events, taken in bulk each tick and frame; the behavior component's calls are `wgf.BehaviorComponent`'s), the version checks, and the vector types.
 - **The C calls.** On JS, `Raw` calls the JS binding's functions by quoted key (`Raw.binding["wgf_..."]`), found at `globalThis.wgfJs`; `impl/Host.js.hx` keeps what is Haxe's own (a vector read through one kept array, `Bytes` as the binding's `Uint8Array`s, handles back from unsigned). On hxcpp, `Raw`'s functions write each C call out with its arguments cast to their C types, in one compiled file that includes every header, and `project/Build.xml` links the staged archive (`-D wgf_out`).
 
 **The feature test** (`examples/haxe/feature-test/`) is one program reaching every public call through the binding, every component in a scene among them. Built with `-D wgf_reach`, each `Raw` function first counts its call (`impl/Reach.hx`, generated with the list of every call), and the program fails naming any it never made; `tools/check_features.py` runs it on hxcpp, under node, and in a browser.
@@ -202,7 +202,7 @@ Games are Haxe (`bindings/haxe/`, haxelib `wgf`); JS and TypeScript programs use
 
 ## Games
 
-Each game is a directory in `games/` the `wgf` tool works on, on the public API alone, through the binding: Asteroids (`games/asteroids/`) now. Its world is a scene file of prefabs; its scripts set intent and the ecs does the per-entity work; its screens are the UI; its sounds are generated (`tools/gen_sounds.py`) and committed. Each game ships an autopilot playthrough, which `tools/check_games.py` runs headless and in a browser beside its exports, and every push to `main` deploys its web export to GitHub Pages (`tools/build_pages.py`, `.github/workflows/pages.yml`), held to its size budget.
+Each game is a directory in `games/` the `wgf` tool works on, on the public API alone, through the binding: Asteroids (`games/asteroids/`) now. Its world is a scene file of prefabs; its behaviors set intent and the ecs does the per-entity work; its screens are the UI; its sounds are generated (`tools/gen_sounds.py`) and committed. Each game ships an autopilot playthrough, which `tools/check_games.py` runs headless and in a browser beside its exports, and every push to `main` deploys its web export to GitHub Pages (`tools/build_pages.py`, `.github/workflows/pages.yml`), held to its size budget.
 
 ## Handles
 

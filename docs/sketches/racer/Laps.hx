@@ -48,11 +48,11 @@ class Laps {
 	}
 }
 
-class Checkpoint extends Script {
+class Checkpoint extends Behavior {
 	var index = 0;
 
 	override function onCreate() {
-		index = Std.int((entity : Behavior).getParamNumber("index"));
+		index = Std.int(getParamNumber("index"));
 		Laps.count++;
 	}
 

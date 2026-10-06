@@ -4,7 +4,7 @@
 // The world is the game's scene file: the ship, three sizes of rock, the bullet, and the
 // explosion, each a prefab with its components. The ecs moves everything, wraps it, ages
 // the bullets and explosions out, and finds the overlaps; the behaviors' objects only set
-// intent (behaviors.js does what the Haxe binding's wgf.Script does). The title and
+// intent (behaviors.js does what the Haxe binding's wgf.Behavior does). The title and
 // game-over screens are libwgf's UI; the HUD is drawn text. Its probes are the Haxe
 // game's: asteroids.state (0 title, 1 playing, 2 game over), score, lives, and wave.
 //

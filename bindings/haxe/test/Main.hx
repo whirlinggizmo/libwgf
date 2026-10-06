@@ -6,11 +6,11 @@ import wgf.impl.BuiltVersion;
 	host under node or a page's host in a browser; hxcpp against a staged headless
 	archive): every way a value crosses -- handles, enums, numbers, bools, text both ways
 	(UTF-8, and null), a returned vector new and filled, arrays in and filled, a byte span
-	in and out -- the runtime's trampolines, scripts made, told of their triggers, and
+	in and out -- the runtime's trampolines, behaviors made, told of their triggers, and
 	ended from the ecs's events, and a getter called 100,000 times in one frame, which a
 	binding piling things on the wasm stack would fault at.
 **/
-class Rock extends Script {
+class Rock extends Behavior {
 	public static var made = 0;
 	public static var entered = 0;
 	public static var ended = 0;
@@ -87,10 +87,10 @@ class Main {
 		write = Fs.write("binding/test.bin", bytes);
 		expect(!write.isNone(), "a byte span in");
 
-		// scripts, from the ecs's events
-		Script.register("Rock", Rock.new);
+		// behaviors, from the ecs's events
+		Behavior.register("Rock", Rock.new);
 		for (e in [a, b]) {
-			expect(e.addComponent(Component.BEHAVIOR) && (e : Behavior).setName("Rock"), "a behavior");
+			expect(e.addComponent(Component.BEHAVIOR) && (e : BehaviorComponent).setName("Rock"), "a behavior");
 			expect(e.addComponent(Component.COLLIDER) && (e : Collider).setRadius(5), "a collider");
 		}
 		(b : Entity).setPosition(13, 11, 12); // within a's reach
@@ -103,8 +103,8 @@ class Main {
 		frames++;
 		switch frames {
 			case 1:
-				expect(Rock.made == 2 && Script.count() == 2, "the scripts made from CREATED");
-				expect(Script.of(a) != null && Script.of(a).name == "Rock", "a's script");
+				expect(Rock.made == 2 && Behavior.count() == 2, "the behaviors made from CREATED");
+				expect(Behavior.of(a) != null && Behavior.of(a).name == "Rock", "a's behavior");
 				// a getter 100,000 times in one frame: nothing may pile up on the wasm stack
 				final v = new Vec3();
 				var sum = 0.0;
@@ -117,10 +117,10 @@ class Main {
 				expect(names == 20000, "20,000 calls passing text in a frame");
 			case 3:
 				expect(Rock.entered == 2, "both told of their trigger");
-				expect(Rock.ticks > 0, "the scripts ticked");
+				expect(Rock.ticks > 0, "the behaviors ticked");
 				expect(a.destroy(), "destroyed");
 			case 5:
-				expect(Rock.ended == 1 && Script.count() == 1 && Script.of(a) == null, "its script ended from DESTROYED");
+				expect(Rock.ended == 1 && Behavior.count() == 1 && Behavior.of(a) == null, "its behavior ended from DESTROYED");
 				if (Ui.begin()) {
 					Ui.beginPanel("p");
 					Ui.label("ünïcødé", 0);
@@ -160,7 +160,7 @@ class Main {
 	static var reported = false;
 
 	static function shutdown():Void {
-		expect(Rock.ended == 2, "the last script ended at shutdown");
+		expect(Rock.ended == 2, "the last behavior ended at shutdown");
 		report();
 	}
 

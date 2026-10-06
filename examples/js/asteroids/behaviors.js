@@ -1,4 +1,4 @@
-// An object for each entity whose behavior has a name: what the Haxe binding's wgf.Script
+// An object for each entity whose behavior has a name: what the Haxe binding's wgf.Behavior
 // does for a Haxe program, here in the program, on the JS binding alone. The objects are
 // made, told of their triggers, and ended from the ecs's events (wgf_ecs_take_events),
 // taken each tick and frame before the program's own: nothing in C calls them.

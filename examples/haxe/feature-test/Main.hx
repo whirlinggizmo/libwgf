@@ -9,7 +9,7 @@ import wgf.*;
 	there) is made and its answer left alone. Built with -D wgf_reach, the binding counts
 	every call, and the run fails naming any it never made (tools/check_features.py).
 **/
-class Rock extends Script {
+class Rock extends Behavior {
 	public static var made = 0;
 	public static var hits = 0;
 
@@ -287,7 +287,7 @@ class Main {
 	}
 
 	static function ecs():Void {
-		Script.register("Rock", Rock.new);
+		Behavior.register("Rock", Rock.new);
 		scene = Scene.create("scenes/field.scene");
 		final ship = Entity.create(world);
 		expect(!ship.isNone() && ship.isAlive() && Entity.getCount() >= 1 && !ship.getNode().isNone(), "an entity");
@@ -468,7 +468,7 @@ class Main {
 
 	static function finish():Void {
 		reported = true;
-		expect(Rock.made == 3, 'the scene\'s rocks given their scripts (${Rock.made})');
+		expect(Rock.made == 3, 'the scene\'s rocks given their behaviors (${Rock.made})');
 		expect(!tiles.isNone() && tiles.getWidth() > 0 && tiles.getHeight() > 0, "a texture loaded");
 		expect(Resource.getPath(tiles) == "textures/tiles.png" && Resource.getStatus(tiles) == ResourceStatus.READY, "a resource");
 		expect((tiles : Handle).getKindName() == "gfx.texture", "its kind");

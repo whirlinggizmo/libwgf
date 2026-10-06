@@ -482,3 +482,11 @@ Rob approved the plan above with answers and changes. The step numbers above are
   - The quick fixes are made in step 0: the autopilot format in a public doc, `wgf` on PATH or the docs saying how, an entity's visibility, the screenshot override, and the desktop export's leftover. The template's canvas waits for the presentation mode.
 
 The new order: 0 Asteroids and the rename; 1 frame times; 2 the presentation mode; 3 3D; 4 the drivable slice; 5 physics3d on Jolt; 6 glTF; 7 hot reload of assets; 8 lights and shadows; 9 the environment; 10 asset streaming; 11 many things on the track; 12 render targets, effects, and custom shaders; 13 combination scenes; 14 the racer, finished; 15 the rows that flip; 16 the close.
+
+## Script renamed Behavior (2026-10-06)
+
+Step 0, from Rob's review: the Haxe base class for a game's behaviors is `wgf.Behavior`, the name C (`wgf_behavior`) and SPEC give it, not `wgf.Script`.
+- **Its generated namesake** was the typed section over `wgf_behavior_*` (an entity's behavior component: its name and its parameters), which can't share the name in Haxe. It is `wgf.BehaviorComponent` now, by the generator's `TYPE_NAMES`, its one exception to "a section is its header's name", with the reason beside it.
+- **Considered:** putting the component's calls on the class itself, as statics and instance methods. That would put generated calls inside a hand-written runtime class, or a hand-written class's members inside the generated API, and lose "one member per C call" for one section. The alternative names (`BehaviorParams`, `BehaviorEntity`) said less than "component".
+- **Sugar instead:** `Behavior` gains `getParam`, `getParamNumber`, and `hasParam` for its own entity, each one call to a `BehaviorComponent` member, as BINDINGS.md's sugar rule allows. A behavior reads `getParamNumber("size")`; code holding only an entity uses `(rock : BehaviorComponent).setParam(...)`.
+- **Renamed in** the binding (`Behavior.hx`, `Runtime.hx`, its test), the feature test, Asteroids, the JS Asteroids' comments (its `behaviors.js` already said `Behavior`), the racer's sketches, and the docs. Prose calling a behavior's object "a script" says "behavior" now. HISTORY's entries above keep `Script` as written.

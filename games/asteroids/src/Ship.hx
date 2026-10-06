@@ -1,12 +1,12 @@
 import wgf.*;
 
 /**
-	The player's ship: its script turns the input into intent -- a spin to turn, thrust
+	The player's ship: its behavior turns the input into intent -- a spin to turn, thrust
 	added to its velocity, a bullet fired -- and the ecs does the rest (its motion's
 	damping and top speed, wrapping at the screen's edge). A new ship can't be hit for its
 	first two seconds (its collider meets nothing), and blinks meanwhile.
 **/
-class Ship extends Script {
+class Ship extends Behavior {
 	static inline var TURN = 4.2; // radians a second
 	static inline var THRUST = 420.0; // units a second, a second
 	static inline var BULLET_SPEED = 560.0;

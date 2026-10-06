@@ -51,8 +51,8 @@ class Main {
 		mirrorCamera = Camera3d.create();
 		mirrorCamera.setFov(50);
 
-		Script.register("Car", e -> new Car(e));
-		Script.register("Checkpoint", e -> new Laps.Checkpoint(e));
+		Behavior.register("Car", e -> new Car(e));
+		Behavior.register("Checkpoint", e -> new Laps.Checkpoint(e));
 		Loop.setTickRate(60); // physics and the car's intent, at a fixed rate
 		Debug.setFpsOverlay(true, 0, 16, Color.get(ColorStock.LIME)); // development builds only
 	}

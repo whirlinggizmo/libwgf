@@ -5,7 +5,7 @@ import wgf.*;
 	vehicle (physics3d, from the scene file's `vehicle` keys) does the engine, gears,
 	suspension, and tires; this only says what the driver wants.
 **/
-class Car extends Script {
+class Car extends Behavior {
 	static inline var STEER_RATE = 3.0; // full lock in a third of a second
 
 	var steer = 0.0;

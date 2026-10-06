@@ -6,7 +6,7 @@ import wgf.*;
 	The world is a scene file (assets/scenes/asteroids.scene): the ship, three sizes of
 	rock, the bullet, and the explosion, each a prefab with its components. The ecs moves
 	everything, wraps it around the screen, ages the bullets and explosions out, and
-	finds the overlaps; the scripts only set intent -- the ship's turn, thrust, and fire
+	finds the overlaps; the behaviors only set intent -- the ship's turn, thrust, and fire
 	from the input, a rock's split when a bullet meets it -- and keep the score. The title
 	and game-over screens are libwgf's UI; the HUD is drawn text. Sounds are generated
 	(tools/gen_sounds.py) and committed.
@@ -45,9 +45,9 @@ class Main {
 		world = Canvas.create();
 		scene = Scene.create("scenes/asteroids.scene");
 		sounds = new Sounds();
-		Script.register("Ship", e -> new Ship(e));
-		Script.register("Rock", e -> new Rock(e));
-		Script.register("Bullet", e -> new Bullet(e));
+		Behavior.register("Ship", e -> new Ship(e));
+		Behavior.register("Rock", e -> new Rock(e));
+		Behavior.register("Bullet", e -> new Bullet(e));
 		Ui.setStyleColor(UiColor.PANEL, Color.make(14, 18, 30, 230));
 		Ui.setStyleColor(UiColor.BUTTON, Color.make(32, 40, 62, 255));
 		Ui.setStyleColor(UiColor.BUTTON_HOVERED, Color.make(48, 60, 92, 255));

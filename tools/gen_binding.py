@@ -48,6 +48,11 @@ HOST_EXTRA = jsbinding.LIBRARY
 
 VECTORS = {'wgf_vec2_t': ('Vec2', 2), 'wgf_vec3_t': ('Vec3', 3), 'wgf_vec4_t': ('Vec4', 4)}
 
+# A section whose Haxe type can't be its own name, and why. `Behavior` is the runtime's
+# base class for a game's behaviors (bindings/haxe/src/wgf/Behavior.hx, SPEC's name);
+# wgf_behavior_*'s calls, on an entity's behavior component, are BehaviorComponent's.
+TYPE_NAMES = {'behavior': 'BehaviorComponent'}
+
 
 def spelled(ctype):
     """A type as one spelling on every machine: clang spells C's boolean `_Bool` or, newer
@@ -181,7 +186,7 @@ class Binding:
         prefix = f'wgf_{section}_'
         if not f.name.startswith(prefix):
             raise MapError(f'{f.name}: not named for its header\'s section ({section}) or a handle kind')
-        return pascal(section), camel(f.name[len(prefix):]), False
+        return TYPE_NAMES.get(section, pascal(section)), camel(f.name[len(prefix):]), False
 
     def over(self):
         """The sections that are over a handle kind: Haxe type -> the kind's Haxe type. A

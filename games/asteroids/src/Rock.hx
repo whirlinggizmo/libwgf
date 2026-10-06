@@ -5,7 +5,7 @@ import wgf.*;
 	drifts, spins, and wraps it. A bullet that meets it splits it in two of the next size
 	down (a small one is gone), for points; the ship that meets it is lost.
 **/
-class Rock extends Script {
+class Rock extends Behavior {
 	static final PREFABS = ["rock_large", "rock_medium", "rock_small"];
 	static final RADII = [44.0, 24.0, 12.0];
 	static final SPEEDS = [50.0, 90.0, 140.0];
@@ -21,12 +21,12 @@ class Rock extends Script {
 		final speed = SPEEDS[size] * Random.getRange(0.7, 1.3);
 		(rock : Motion).setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed, 0);
 		(rock : Motion).setSpin(0, 0, Random.getRange(-1.5, 1.5));
-		(rock : Behavior).setParam("size", Std.string(size));
+		(rock : BehaviorComponent).setParam("size", Std.string(size));
 		return rock;
 	}
 
 	override function onCreate() {
-		size = Std.int((entity : Behavior).getParamNumber("size"));
+		size = Std.int(getParamNumber("size"));
 		final radius = RADII[size], points = [];
 		final corners = 9 + Random.getInt(0, 3);
 		for (i in 0...corners) {
@@ -42,12 +42,12 @@ class Rock extends Script {
 	override function onTriggerEnter(other:Entity) {
 		if (!entity.isAlive() || !other.isAlive())
 			return; // one already gone this tick: a bullet meeting two rocks at once
-		final script = Script.of(other);
-		if (Std.isOfType(script, Bullet)) {
+		final behavior = Behavior.of(other);
+		if (Std.isOfType(behavior, Bullet)) {
 			other.destroy();
 			split();
-		} else if (Std.isOfType(script, Ship)) {
-			(cast script : Ship).explode();
+		} else if (Std.isOfType(behavior, Ship)) {
+			(cast behavior : Ship).explode();
 			split();
 		}
 	}

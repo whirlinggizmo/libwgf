@@ -12,9 +12,9 @@ import wgf.impl.Raw;
 	swapping the classes -- is the one that runs, and on the web no second function enters
 	the wasm table.
 
-	Each trampoline also runs the scripts (wgf.Script): before the program's tick, the
-	ecs's events are taken and each script made, told of its triggers, or ended; then
-	every script's tick, then the program's. The frame does the same with frames. A throw
+	Each trampoline also runs the behaviors (wgf.Behavior): before the program's tick, the
+	ecs's events are taken and each behavior made, told of its triggers, or ended; then
+	every behavior's tick, then the program's. The frame does the same with frames. A throw
 	out of a handler is caught at the trampoline -- it would otherwise unwind through C --
 	logged, and ends the run, so it is seen rather than repeated every frame.
 **/
@@ -106,13 +106,13 @@ class Runtime {
 				case 0:
 					if (onInit != null) onInit();
 				case 1:
-					Script.tickAll(Loop.getTickDelta());
+					Behavior.tickAll(Loop.getTickDelta());
 					if (onTick != null) onTick();
 				case 2:
-					Script.frameAll(Loop.getFrameDelta());
+					Behavior.frameAll(Loop.getFrameDelta());
 					if (onFrame != null) onFrame();
 				default:
-					Script.endAll();
+					Behavior.endAll();
 					if (onShutdown != null) onShutdown();
 			}
 		} catch (e:haxe.Exception) {
