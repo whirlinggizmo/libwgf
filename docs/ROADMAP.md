@@ -2,17 +2,9 @@
 
 What is left to build, in order. libwgf is done when it ships three games ([SPEC.md](../SPEC.md), "Done means games"); each milestone leaves everything before it working, and every game stays playable in CI. A finished step is deleted from this file, not ticked off, and its record moves to [HISTORY.md](HISTORY.md) in the same commit. What exists now is [ARCHITECTURE.md](ARCHITECTURE.md).
 
-## Milestone 1: Asteroids
-
-Ship, rocks that split, bullets, wraparound, score, lives, audio, particles, a title screen and a game-over screen built with the UI. It proves the loop, input, 2D drawing, audio, UI, entities, and export.
-
-The plan, decided before building (HISTORY.md, "Milestone 1's plan"). Each step is a few small commits, each reviewed against CONVENTIONS.md, verified, and pushed.
-
-12. **Close the milestone.** Skills for repeated work (adding a component, a binding call, an example), the docs checked against the code, and this section moved to HISTORY.md.
-
 ## Milestone 2: a chase-camera racing game
 
-One track from glTF, a car with real vehicle physics, a chase camera with smoothing, lap timing, a HUD, shadows, and an environment map. It proves 3D rendering, physics, asset streaming, and performance. Planned in full once milestone 1 closes; its pieces will come from libwgt's 3D (scenes, meshes from glTF, materials, lights, shadows, environments) and a physics3d module on Jolt's C API.
+One track from glTF, a car with real vehicle physics, a chase camera with smoothing, lap timing, a HUD, shadows, and an environment map. It proves 3D rendering, physics, asset streaming, and performance. Planned in full before it starts (milestone 1 closed on 2026-10-06: HISTORY.md); its pieces will come from libwgt's 3D (scenes, meshes from glTF, materials, lights, shadows, environments) and a physics3d module on Jolt's C API.
 
 ## Milestone 3: an ARPG vertical slice with co-op
 

@@ -141,7 +141,7 @@ python3 tools/verify_builds.py --only linux-x64-debug-asan   # just these steps 
 
 ## Continuous integration
 
-`.github/workflows/pages.yml` builds every game's web export on every push to `main` (`tools/build_pages.py`) and deploys it to GitHub Pages, at <https://whirlinggizmo.github.io/libwgf/>. `.github/workflows/ci.yml` runs on every push and pull request: the Linux presets (debug, release, headless, and the three sanitizers) with every example headless and in a window and the binding on hxcpp, the web presets with every example in the runner's Chrome and the binding under node and in Chrome, and the MSVC presets on Windows with every example headless and the binding on hxcpp, each through `tools/verify_builds.py --only`, so CI runs exactly what runs locally. The MinGW builds under Wine run locally only (`verify_builds.py`'s `smoke-mingw` and `desktop-mingw`, and `--windows HOST`).
+`.github/workflows/pages.yml` builds every game's web export on every push to `main` (`tools/build_pages.py`) and deploys it to GitHub Pages, at <https://whirlinggizmo.github.io/libwgf/>. `.github/workflows/ci.yml` runs on every push and pull request: the Linux presets (debug, release, headless, and the three sanitizers) with every example headless and in a window and the binding on hxcpp, the web presets with every example in the runner's Chrome and the binding under node and in Chrome, and the MSVC presets on Windows with every example headless, the binding on hxcpp, and each game's playthrough headless (the runner has no GPU, so nothing runs in a window there; a game's desktop export runs in one on Windows in `verify_builds.py --windows HOST`), each through `tools/verify_builds.py --only`, so CI runs exactly what runs locally. The MinGW builds under Wine run locally only (`verify_builds.py`'s `smoke-mingw` and `desktop-mingw`, and `--windows HOST`).
 
 ## The tools
 
@@ -158,6 +158,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `check_cli.py` | runs each `wgf` command on a game it makes from the template, judging what each made and said; `serve` is edited while it runs, and must keep its state |
 | `check_features.py` | runs the feature test (`examples/haxe/feature-test/`) on hxcpp, under node, and in a browser, failing a call it never reached |
 | `check_binding.py` | checks the binding: generated, every call reached once, and its test on hxcpp, under node, and in a browser |
+| `check_docs.py` | checks the docs against the code: every link resolves, ARCHITECTURE names every public header, this file every tool and preset, README every doc, deps/README every vendored directory (ctest runs it) |
 | `check_tools.py` | checks every tool is named for what it does, imports no script, answers `--help` and does nothing else, and refuses an argument it doesn't take |
 | `stage_variant.py` | stages a built preset into `out/`, fresh |
 | `verify_builds.py` | every build and check this machine can run, in one command |

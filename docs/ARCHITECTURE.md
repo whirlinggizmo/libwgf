@@ -137,7 +137,7 @@ Entities, their components, and the systems that run them at the tick rate, on f
 
 **Colliders** are triggers, nothing pushed apart: each tick, the colliders under each parent node, sorted along x, are swept for overlaps whose layer meets the other's mask; the pairs found are sorted and walked against the last tick's, so a pair new this tick raises TRIGGER_ENTER and one gone raises TRIGGER_EXIT, told to each. A destroyed entity's pairs are dropped without an exit; its DESTROYED (for one with a behavior) carries its now-stale handle.
 
-**Events** queue in a ring of 65,536 and are taken by the program, or the binding, with `wgf_ecs_take_events`: one async model, polled, and no callback crosses into a script. A behavior's code is the program's: the binding dispatches its create, tick, and trigger calls from these events and the found entities (step 8).
+**Events** queue in a ring of 65,536 and are taken by the program, or the binding, with `wgf_ecs_take_events`: one async model, polled, and no callback crosses into a script. A behavior's code is the program's: the binding's runtime makes each behavior's script (`wgf.Script`) from these events, tells it of its triggers, ticks and frames it, and ends it ("The Haxe binding").
 
 **Scenes** load through core's load pipeline, parsed on a worker into a plan of entities and prefabs, each a list of component lines; `from` copies a prefab's lines first. Instantiating or spawning applies the lines through the same calls a program makes. `wgf_ecs_dump` writes every live entity with every component as it is, so a dumped world loaded again makes the same world, and dumps the same text.
 
