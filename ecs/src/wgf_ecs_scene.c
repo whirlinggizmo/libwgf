@@ -77,7 +77,7 @@ static const kind_t kinds[] = {
      false},
     {"bounds", WGF_COMPONENT_BOUNDS, {{"rect", V_NUM4}, {"mode", V_MODE}, {"margin", V_NUM}}, false},
     {"lifetime", WGF_COMPONENT_LIFETIME, {{"seconds", V_NUM}}, false},
-    {"collider", WGF_COMPONENT_COLLIDER, {{"radius", V_NUM}, {"layer", V_INT}, {"mask", V_INT}}, false},
+    {"collider", WGF_COMPONENT_COLLIDER, {{"radius", V_NUM}, {"layer", V_INT}, {"mask", V_INT}, {"enabled", V_BOOL}}, false},
     {"behavior", WGF_COMPONENT_BEHAVIOR, {{"name", V_TEXT}}, true},
     {"shape2d",
      WGF_COMPONENT_SHAPE2D,
@@ -580,6 +580,7 @@ static void apply_setting(wgf_entity_t e, int kind, const setting_t *s, value_t 
         case WGF_COMPONENT_COLLIDER:
             if (strcmp(key, "radius") == 0) wgf_collider_set_radius(e, f(v, 0));
             else if (strcmp(key, "layer") == 0) wgf_collider_set_layer(e, (int)v->n[0]);
+            else if (strcmp(key, "enabled") == 0) wgf_collider_set_enabled(e, v->truth);
             else wgf_collider_set_mask(e, (int)v->n[0]);
             break;
         case WGF_COMPONENT_BEHAVIOR:

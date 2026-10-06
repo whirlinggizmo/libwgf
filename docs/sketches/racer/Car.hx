@@ -21,19 +21,12 @@ class Car extends Behavior {
 			(entity : Vehicle).setInput(0, 1, 0, true);
 			return;
 		}
-		final pad = Gamepad.getStick(0, GamepadStick.LEFT).x;
-		var want = pad;
-		if (Keyboard.isDown(KeyboardKey.LEFT) || Keyboard.isDown(KeyboardKey.A))
-			want -= 1;
-		if (Keyboard.isDown(KeyboardKey.RIGHT) || Keyboard.isDown(KeyboardKey.D))
-			want += 1;
-		want = Math.max(-1, Math.min(1, want));
+		// the player's controls are named actions (bound once, in Main.bindControls), read
+		// across the keyboard and every pad; their bindings make the title's help text
+		final want = Action.getAxis("steer"); // -1 to 1
 		steer += Math.max(-STEER_RATE * dt, Math.min(STEER_RATE * dt, want - steer)); // keys ease in
-
-		final throttle = Keyboard.isDown(KeyboardKey.UP) ? 1.0 : Gamepad.getTrigger(0, GamepadTrigger.RIGHT);
-		final brake = Keyboard.isDown(KeyboardKey.DOWN) ? 1.0 : Gamepad.getTrigger(0, GamepadTrigger.LEFT);
-		final handbrake = Keyboard.isDown(KeyboardKey.SPACE) || Gamepad.isDown(0, GamepadButton.SOUTH);
-		(entity : Vehicle).setInput(throttle, brake, steer, handbrake);
+		(entity : Vehicle).setInput(Action.getValue("throttle"), Action.getValue("brake"), steer,
+			Action.isDown("handbrake"));
 
 		// smoke where the rear tires slide
 		for (i in 0...smoke.length) {

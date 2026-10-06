@@ -17,17 +17,26 @@ extern "C" {
  * overlap only where one's layer meets the other's mask: (a's layer & b's mask) or (b's
  * layer & a's mask). Nothing is pushed apart: that is physics, not a trigger. Only
  * colliders under the same parent node are compared. Defaults: a radius of 1, layer 1,
- * mask everything (-1). Every call is false (or 0) for an entity without a collider. */
+ * mask everything (-1), enabled. Every call is false (or 0) for an entity without a
+ * collider. */
 
 /* False too for a radius below 0. */
 WGF_API bool wgf_collider_set_radius(wgf_entity_t entity, float radius);
 WGF_API float wgf_collider_get_radius(wgf_entity_t entity);
 
-/* Bits: what it is, and what it meets. */
+/* Bits: what it is, and what it meets. A pair meets when either side's mask has the
+ * other's layer, so clearing one collider's mask doesn't stop another whose mask has its
+ * layer from meeting it: to make one meet nothing, switch it off (below). */
 WGF_API bool wgf_collider_set_layer(wgf_entity_t entity, int layer);
 WGF_API int wgf_collider_get_layer(wgf_entity_t entity);
 WGF_API bool wgf_collider_set_mask(wgf_entity_t entity, int mask);
 WGF_API int wgf_collider_get_mask(wgf_entity_t entity);
+
+/* Switched off, a collider meets nothing, from either side, and a pair it was in ends
+ * (TRIGGER_EXIT at the next tick); its radius, layer, and mask are kept, so switched on
+ * again it meets as they say: a ship that can't be hit while it blinks. */
+WGF_API bool wgf_collider_set_enabled(wgf_entity_t entity, bool enabled);
+WGF_API bool wgf_collider_is_enabled(wgf_entity_t entity);
 
 /* What it overlaps as of the last tick, into `out`, as many as fit in `count`, returning
  * how many it filled. */

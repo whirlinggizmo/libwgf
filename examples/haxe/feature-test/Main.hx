@@ -292,6 +292,7 @@ class Main {
 		final ship = Entity.create(world);
 		expect(!ship.isNone() && ship.isAlive() && Entity.getCount() >= 1 && !ship.getNode().isNone(), "an entity");
 		expect(ship.setName("probe ship") && ship.getName() == "probe ship" && Entity.find("probe ship") == ship, "named");
+		expect(ship.isVisible() && ship.setVisible(false) && !ship.isVisible() && ship.setVisible(true), "hidden and shown");
 		expect(ship.setTransform(100, 100, 0, 0, 0, 0, 1, 1, 1) && ship.snap(), "a transform, snapped");
 		expect(ship.setPosition(120, 100, 0) && near(ship.getPosition().x, 120), "a position");
 		expect(ship.setRotation(0, 0, 0.5) && near(ship.getRotation().z, 0.5), "a rotation");
@@ -318,6 +319,8 @@ class Main {
 		expect(collider.setRadius(8) && near(collider.getRadius(), 8), "a collider");
 		expect(collider.setLayer(2) && collider.getLayer() == 2 && collider.setMask(1) && collider.getMask() == 1, "its layers");
 		collider.getOverlaps([ship]);
+		expect(collider.isEnabled() && collider.setEnabled(false) && !collider.isEnabled() && collider.setEnabled(true),
+			"a collider switched off and on");
 		final behavior:BehaviorComponent = ship;
 		expect(behavior.setName("Probe") && behavior.getName() == "Probe", "a behavior's name");
 		expect(behavior.setParam("speed", "3.5") && behavior.hasParam("speed") && behavior.getParam("speed") == "3.5"

@@ -31,7 +31,12 @@ class Behavior {
 		this.entity = entity;
 	}
 
-	/** Its entity was made (its components set, its scene's lines applied). **/
+	/**
+		Its entity was made (its components set, its scene's lines applied). It runs at the
+		runtime's next poll of the ecs's events, before the next tick or frame, never inside
+		the call that made the entity: so the code that spawned it, a parameter it set right
+		after `spawn` included, has run by then.
+	**/
 	public function onCreate():Void {}
 
 	/** Each tick, before the program's, with the tick's length in seconds. **/

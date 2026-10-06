@@ -49,7 +49,7 @@ class Ship extends Behavior {
     stick = { x: 0, y: 0 };
 
     onCreate() {
-        wgf.wgf_collider_set_mask(this.entity, 0); // safe while it blinks
+        wgf.wgf_collider_set_enabled(this.entity, false); // safe while it blinks
     }
 
     onDestroy() {
@@ -63,7 +63,7 @@ class Ship extends Behavior {
             this.safe -= dt;
             const shape = wgf.wgf_entity_get_component_node(e, wgf.WGF_COMPONENT_SHAPE2D);
             wgf.wgf_node_set_visible(shape, this.safe <= 0 || Math.trunc(this.safe * 8) % 2 === 0);
-            if (this.safe <= 0) wgf.wgf_collider_set_mask(e, 2); // rocks again
+            if (this.safe <= 0) wgf.wgf_collider_set_enabled(e, true); // rocks again
         }
         const stick = wgf.wgf_gamepad_get_stick(0, wgf.WGF_GAMEPAD_STICK_LEFT, this.stick).x;
         let turn = 0;
@@ -201,6 +201,8 @@ function start() {
     score = 0;
     lives = 3;
     wave = 0;
+    waveDelay = 0; // a delay left from the last game would cut this one's first wait short
+    respawnDelay = 0;
     state = PLAYING;
     spawnShip();
     nextWave();

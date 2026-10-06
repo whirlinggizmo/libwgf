@@ -182,6 +182,24 @@ bool wgf_entity_set_transform(wgf_entity_t entity, float position_x, float posit
     return true;
 }
 
+bool wgf_entity_set_visible(wgf_entity_t entity, bool visible)
+{
+    wgf_ecs_priv_entity_t *record = wgf_ecs_priv_entity_of(entity);
+    int i;
+    if (record == NULL) return false;
+    record->hidden = !visible;
+    for (i = 0; i < WGF_ECS_PRIV_NODE_KINDS; i++) {
+        if (record->parts[i] != 0) wgf_node_set_visible(record->parts[i], visible);
+    }
+    return true;
+}
+
+bool wgf_entity_is_visible(wgf_entity_t entity)
+{
+    const wgf_ecs_priv_entity_t *record = wgf_ecs_priv_entity_of(entity);
+    return record != NULL && !record->hidden;
+}
+
 bool wgf_entity_snap(wgf_entity_t entity)
 {
     wgf_ecs_priv_transform_t *t = transform_of(entity);
@@ -263,6 +281,7 @@ bool wgf_entity_add_component(wgf_entity_t entity, wgf_component_t component)
         if (node == 0) return false;
         record = wgf_ecs_priv_entity_of(entity); /* making a node can't move records, but say so */
         wgf_node_set_parent(node, record->node);
+        if (record->hidden) wgf_node_set_visible(node, false); /* it takes the entity's */
         record->parts[slot] = node;
         return true;
     }
@@ -303,6 +322,7 @@ bool wgf_entity_add_component(wgf_entity_t entity, wgf_component_t component)
             c.radius = 1.0f;
             c.layer = 1;
             c.mask = -1;
+            c.enabled = true;
             ecs_set_id(wgf_ecs_priv_world(), record->id, ids()->collider, sizeof(c), &c);
             break;
         }

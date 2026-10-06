@@ -183,6 +183,22 @@ int main(void)
     wgf_collider_set_mask(a, 2);
     step(0.0f);
     expect(count_events(WGF_ECS_EVENT_TRIGGER_ENTER, b, a) == 1, "a's mask meeting b's layer: entered");
+    wgf_collider_set_mask(a, 0);
+    wgf_collider_set_mask(b, 1);
+    step(0.0f);
+    expect(wgf_ecs_get_event_count() == 0, "a's mask cleared, b's meeting a's layer: still met (either side)");
+    expect(wgf_collider_is_enabled(a) && wgf_collider_set_enabled(a, false) && !wgf_collider_is_enabled(a),
+           "a collider switched off");
+    step(0.0f);
+    expect(count_events(WGF_ECS_EVENT_TRIGGER_EXIT, a, b) == 1, "switched off: its pair ended");
+    step(0.0f);
+    expect(wgf_ecs_get_event_count() == 0, "switched off: meets nothing, from either side");
+    expect(wgf_collider_get_radius(a) == 5 && wgf_collider_get_layer(a) == 1 && wgf_collider_get_mask(a) == 0,
+           "switched off: its settings kept");
+    wgf_collider_set_enabled(a, true);
+    step(0.0f);
+    expect(count_events(WGF_ECS_EVENT_TRIGGER_ENTER, a, b) == 1, "switched on again: met as its settings say");
+    expect(!wgf_collider_set_enabled(c + 999, false) && !wgf_collider_is_enabled(c + 999), "not a collider: false");
     wgf_entity_set_position(c, 0, 0, 0);
     step(0.0f);
     expect(wgf_ecs_get_event_count() == 0, "under another parent: not compared");

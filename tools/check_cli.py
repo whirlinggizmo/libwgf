@@ -78,13 +78,17 @@ def step_new(base, game):
     code, out = wgf(base, 'new', str(game), '--name', 'clitest')
     if code != 0:
         return problem('wgf new failed', out)
+    made = out
     data = json.loads((game / 'wgf.json').read_text())
     if data.get('name') != 'clitest' or 'clitest' not in (game / 'src' / 'Main.hx').read_text():
         return problem('wgf new: the name isn\'t in wgf.json and Main.hx')
     code, out = wgf(base, 'new', str(game))
     if code == 0:
         return problem('wgf new into a game\'s directory wasn\'t refused', out)
-    print('check_cli: new: made, named, and a second new into it refused')
+    said = [line for line in made.splitlines() if 'serve` runs it' in line]
+    if not said or not (f'{WGF} serve' in said[0] or ' wgf serve' in said[0] or f'python {WGF} serve' in said[0]):
+        return problem('wgf new: its message doesn\'t name a wgf that runs from the game', made)
+    print('check_cli: new: made, named, its message naming the wgf to run; and a second new into it refused')
     return True
 
 
@@ -196,7 +200,14 @@ def step_screenshot(game):
     code, out = wgf(game, 'screenshot', '--autopilot', 'autopilot/fly.autopilot', '--out', str(flown), '--no-build')
     if code != 0 or not flown.exists() or 'frame 90 saved' not in out:
         return problem('wgf screenshot --autopilot: no PNG at the autopilot\'s end (frame 90)', out)
-    print(f'check_cli: screenshot: frame 30, {shot.stat().st_size} bytes of PNG; and frame 90, flown there')
+    own = game / 'autopilot' / 'own.autopilot'  # its own screenshot line, earlier: --frame must win
+    own.write_text('wgf-autopilot 1\nat 20 screenshot early\nat 40 expect frames >= 40\nat 90 end\n')
+    code, out = wgf(game, 'screenshot', '--autopilot', 'autopilot/own.autopilot', '--frame', '60', '--out',
+                    str(flown), '--no-build')
+    if code != 0 or 'frame 60 saved' not in out or 'left out' not in out:
+        return problem('wgf screenshot --frame: the autopilot\'s own screenshot line won, or wasn\'t said', out)
+    print(f'check_cli: screenshot: frame 30, {shot.stat().st_size} bytes of PNG; frame 90, flown there; and frame '
+          '60 over the autopilot\'s own screenshot line, said')
     return True
 
 
@@ -272,6 +283,9 @@ def step_export(game):
         if 'desktop export: smoke PASS' not in out and 'desktop export: SKIPPING' not in out:
             return problem('wgf export: the desktop export failed', out)
         said.append('desktop: ' + ('smoke passed' if 'desktop export: smoke PASS' in out else 'not smoke-tested here'))
+        left = [p.name for p in (game / 'export' / 'desktop').rglob('*.autopilot')]
+        if left:
+            return problem(f'wgf export: the smoke run left {", ".join(left)} in the desktop export')
     if code != 0:
         return problem('wgf export: failed', out)
     if any(path.is_symlink() for path in game.joinpath('export').rglob('*')):

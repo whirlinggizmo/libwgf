@@ -50,6 +50,7 @@ typedef struct wgf_ecs_priv_lifetime_t {
 typedef struct wgf_ecs_priv_collider_t {
     float radius;
     int32_t layer, mask;
+    bool enabled; /* off: it meets nothing, its settings kept */
 } wgf_ecs_priv_collider_t;
 
 /* The flecs ids of the components, made with the world. */
@@ -83,6 +84,7 @@ typedef struct wgf_ecs_priv_entity_t {
     wgf_voice_t voice;                         /* 0: no voice component */
     char name[WGF_ECS_PRIV_NAME_MAX];
     wgf_ecs_priv_behavior_t *behavior;         /* malloc'd; NULL: no behavior component */
+    bool hidden;                               /* wgf_entity_set_visible's: its parts drawn or not */
 } wgf_ecs_priv_entity_t;
 
 /* The world, made with the first entity, and the component ids; NULL before. */

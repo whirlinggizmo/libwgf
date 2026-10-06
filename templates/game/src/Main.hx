@@ -6,6 +6,7 @@ import wgf.*;
 **/
 class Main {
 	static var frames = 0;
+	static var flips = 0;
 	static var world:Canvas;
 	static var ship:Entity;
 
@@ -34,7 +35,12 @@ class Main {
 
 	static function frame() {
 		frames++;
-		Probe.setValue("frames", frames);
+		if (Keyboard.isPressed(KeyboardKey.SPACE)) { // space turns the ship's spin around
+			flips++;
+			(ship : Motion).setSpin(0, 0, -(ship : Motion).getSpin().z);
+		}
+		Probe.setValue("frames", frames); // probes: what an autopilot expects on
+		Probe.setValue("flips", flips);
 		if (frames % 60 == 0) // save a change here while `wgf serve` runs: the next line logged is the new code's
 			Log.message(LogLevel.INFO, 'hello, frame $frames');
 		world.draw();

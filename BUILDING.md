@@ -68,7 +68,7 @@ python3 tools/check_web.py        # in a headless browser: fails one that doesn'
                                   # and saves a screenshot of each in build/<preset>/check_web/
 ```
 
-A program flies an autopilot -- a file of inputs and expectations (`app/src/wgf_app_autopilot_priv.h` says the format) -- when `LIBWGF_AUTOPILOT` names one; on the web a page hands the module the file's text as `Module["wgfAutopilot"]`.
+A program flies an autopilot -- a file of inputs and expectations ("Autopilot files", below) -- when `LIBWGF_AUTOPILOT` names one; on the web a page hands the module the file's text as `Module["wgfAutopilot"]`.
 
 ## The web
 
@@ -95,7 +95,7 @@ How the bindings map the C calls is [docs/BINDINGS.md](docs/BINDINGS.md); how to
 
 ## Games: the `wgf` tool
 
-`wgf` (at the repository's root; `python wgf` on Windows) makes and works on a game, run in the game's directory:
+`wgf` (at the repository's root; `python wgf` on Windows) makes and works on a game, run in the game's directory. To run it as `wgf` from anywhere, put the repository on PATH (`export PATH="$PATH:$HOME/path/to/libwgf"`, in your shell's profile to keep it); on Windows, `python <libwgf>\wgf` is the command wherever `wgf` is written below. `wgf new` says which to type.
 
 ```sh
 ./wgf new ~/games/rocks             # a game from templates/game/
@@ -109,7 +109,55 @@ wgf dump --frame 60 [--autopilot FILE]         # the ecs's world, as a scene's t
 wgf export                          # export/web (a trimmed host) and export/desktop, smoke-tested
 ```
 
-`wgf --help`, and each command's, says the rest. A game names no libwgf: it is built against the libwgf whose `wgf` runs, from its staged variants. `wgf serve` builds through hotreload-hx (`deps/hotreload-hx`), vendored, so nothing is installed for it; Haxe 4.3.7 and hxcpp 4.3.2 are what the rest need.
+`wgf --help`, and each command's, says the rest. `wgf screenshot` and `wgf dump` with `--autopilot` leave out the file's own screenshot and dump lines, and say so, so the one asked for is the one made. A game names no libwgf: it is built against the libwgf whose `wgf` runs, from its staged variants. `wgf serve` builds through hotreload-hx (`deps/hotreload-hx`), vendored, so nothing is installed for it; Haxe 4.3.7 and hxcpp 4.3.2 are what the rest need.
+
+### Autopilot files
+
+An autopilot flies a program with no one at it: inputs at frames, and expectations on probes (`wgf_probe.h`), the numbers a program publishes. `wgf autopilot`, `wgf run --autopilot`, and the checks run them; natively the file `LIBWGF_AUTOPILOT` names is flown, and on the web a page hands the module the file's text as `Module["wgfAutopilot"]`. A line each, `#` starting a comment:
+
+```
+wgf-autopilot 1                 the first line: the format and its version
+seed <int>                      wgf_random's seed, set before the program's init
+at <frame> <command>            a command at a frame, frames counted from 0
+```
+
+where a command is one of
+
+```
+key down|up|tap <key>           a key by name (wgf_keyboard.h's, lower case: a, 1, space, enter,
+                                left, left_shift, f1...); tap is down at this frame and up at the next
+text <characters>               typed characters (UTF-8, the rest of the line)
+mouse move <x> <y>              the pointer, in logical pixels
+mouse down|up|click <button>    left, right, or middle; click is down, then up the next frame
+mouse scroll <dx> <dy>
+pad <n> connect|disconnect      pad 0 to 3 (an autopilot's pads replace the real ones)
+pad <n> down|up|tap <button>    wgf_gamepad.h's, lower case: south, dpad_up, start...
+pad <n> axis <axis> <value>     left_x, left_y, right_x, right_y (-1 to 1), left_trigger,
+                                right_trigger (0 to 1)
+expect <probe> <op> <number>    after the frame: ==, !=, <, <=, >, or >= against a probe;
+                                a probe not set fails
+log <text>                      the text, logged, to mark a point in the run
+screenshot <name>               "wgf_autopilot: SCREENSHOT <name>" logged, for a tool watching the
+                                run to save the frame (wgf screenshot does)
+dump                            after the frame, each optional part's state as text (the ecs's
+                                world, as a scene), logged a line at a time
+end                             after the frame: the run's result logged, and quit
+```
+
+For example, a game started, a thrust and a shot, and what should follow:
+
+```
+wgf-autopilot 1
+seed 1
+at 30 key tap enter             # start the game
+at 40 key down up               # thrust...
+at 100 key up up
+at 100 key tap space            # ...and fire
+at 101 expect bullets >= 1
+at 120 end
+```
+
+Inputs at a frame are delivered before its ticks; expectations are checked after it. While an autopilot runs, time is the autopilot's: every frame lasts a sixtieth of a second, whatever the display does, so ticks, and the random numbers a seed gives, make the same run everywhere, and a headless run doesn't wait for a display. The run's result is logged, "wgf_autopilot: PASS (<n> expectations, <frames> frames)" or "wgf_autopilot: FAIL ...", with an error for each expectation that failed, naming the probe and its value; an autopilot that can't be read, or a program that quits before its end, is an error too. Errors are what the tools judge a run by (on the web there is no exit code).
 
 ## Windows
 

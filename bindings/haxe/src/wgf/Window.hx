@@ -21,7 +21,9 @@ class Window {
 	/**
 	    The size inside the window's frame (default 1024 by 768). Values under 1 are
 	    refused (false). On the web, the canvas's size on the page: left to the page
-	    unless set, and the page's own CSS can override it.
+	    unless set. Set, it is the canvas's own style, which wins over the page's: the
+	    canvas stays that size, at the page's top left, whatever the browser window does,
+	    so a game meant to fill the page doesn't set it on the web.
 	**/
 	public static inline function setSize(width:Int, height:Int):Bool
 		return Raw.wgf_window_set_size(width, height);
@@ -29,7 +31,9 @@ class Window {
 	/**
 	    The size inside the window's frame (default 1024 by 768). Values under 1 are
 	    refused (false). On the web, the canvas's size on the page: left to the page
-	    unless set, and the page's own CSS can override it.
+	    unless set. Set, it is the canvas's own style, which wins over the page's: the
+	    canvas stays that size, at the page's top left, whatever the browser window does,
+	    so a game meant to fill the page doesn't set it on the web.
 	**/
 	public static inline function getWidth():Int
 		return Raw.wgf_window_get_width();
@@ -37,7 +41,9 @@ class Window {
 	/**
 	    The size inside the window's frame (default 1024 by 768). Values under 1 are
 	    refused (false). On the web, the canvas's size on the page: left to the page
-	    unless set, and the page's own CSS can override it.
+	    unless set. Set, it is the canvas's own style, which wins over the page's: the
+	    canvas stays that size, at the page's top left, whatever the browser window does,
+	    so a game meant to fill the page doesn't set it on the web.
 	**/
 	public static inline function getHeight():Int
 		return Raw.wgf_window_get_height();

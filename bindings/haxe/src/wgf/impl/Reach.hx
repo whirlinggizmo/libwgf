@@ -70,6 +70,8 @@ class Reach {
 		"wgf_collider_get_mask",
 		"wgf_collider_get_overlaps",
 		"wgf_collider_get_radius",
+		"wgf_collider_is_enabled",
+		"wgf_collider_set_enabled",
 		"wgf_collider_set_layer",
 		"wgf_collider_set_mask",
 		"wgf_collider_set_radius",
@@ -147,6 +149,7 @@ class Reach {
 		"wgf_entity_get_voice",
 		"wgf_entity_has_component",
 		"wgf_entity_is_alive",
+		"wgf_entity_is_visible",
 		"wgf_entity_remove_component",
 		"wgf_entity_set_name",
 		"wgf_entity_set_position",
@@ -154,6 +157,7 @@ class Reach {
 		"wgf_entity_set_rotation",
 		"wgf_entity_set_scale",
 		"wgf_entity_set_transform",
+		"wgf_entity_set_visible",
 		"wgf_entity_snap",
 		"wgf_font_create",
 		"wgf_font_get_default",
@@ -437,7 +441,7 @@ class Reach {
 		"wgf_window_set_vsync",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...428) 0];
+	static final counts:Array<Int> = [for (_ in 0...432) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

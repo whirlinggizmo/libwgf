@@ -128,6 +128,25 @@ int main(void)
                wgf_node_get_type(wgf_entity_get_component_node(e, WGF_COMPONENT_TEXT)) == WGF_NODE_TYPE_TEXT &&
                wgf_node_get_type(wgf_entity_get_component_node(e, WGF_COMPONENT_EMITTER2D)) == WGF_NODE_TYPE_EMITTER2D,
            "each its node's type");
+    /* what it draws, hidden and shown */
+    expect(wgf_entity_is_visible(e) && wgf_entity_set_visible(e, false) && !wgf_entity_is_visible(e), "hidden");
+    expect(!wgf_node_is_visible(wgf_entity_get_component_node(e, WGF_COMPONENT_SHAPE2D)) &&
+               !wgf_node_is_visible(wgf_entity_get_component_node(e, WGF_COMPONENT_EMITTER2D)) &&
+               wgf_node_is_visible(wgf_entity_get_node(e)) && wgf_node_is_enabled(wgf_entity_get_node(e)),
+           "hidden: each component node not drawn; the entity's node and its updates as they were");
+    {
+        const wgf_entity_t later = wgf_entity_create(0);
+        wgf_entity_set_visible(later, false);
+        wgf_entity_add_component(later, WGF_COMPONENT_SPRITE);
+        expect(!wgf_node_is_visible(wgf_entity_get_component_node(later, WGF_COMPONENT_SPRITE)),
+               "a component added to a hidden entity is hidden too");
+        wgf_entity_destroy(later);
+    }
+    expect(wgf_entity_set_visible(e, true) &&
+               wgf_node_is_visible(wgf_entity_get_component_node(e, WGF_COMPONENT_SHAPE2D)) &&
+               wgf_node_is_visible(wgf_entity_get_component_node(e, WGF_COMPONENT_TEXT)),
+           "shown again: each drawn");
+    expect(!wgf_entity_set_visible(12345, false) && !wgf_entity_is_visible(12345), "not an entity: false");
     expect(wgf_entity_get_component_node(e, WGF_COMPONENT_MOTION) == 0, "no node for a data component");
     expect(wgf_entity_add_component(e, WGF_COMPONENT_VOICE) && wgf_entity_get_voice(e) != 0 &&
                wgf_voice_get_sound(wgf_entity_get_voice(e)) == 0,

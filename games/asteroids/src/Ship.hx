@@ -4,7 +4,8 @@ import wgf.*;
 	The player's ship: its behavior turns the input into intent -- a spin to turn, thrust
 	added to its velocity, a bullet fired -- and the ecs does the rest (its motion's
 	damping and top speed, wrapping at the screen's edge). A new ship can't be hit for its
-	first two seconds (its collider meets nothing), and blinks meanwhile.
+	first two seconds (its collider switched off, so it meets nothing from either side),
+	and blinks meanwhile.
 **/
 class Ship extends Behavior {
 	static inline var TURN = 4.2; // radians a second
@@ -14,8 +15,6 @@ class Ship extends Behavior {
 	static inline var BULLETS_MAX = 6;
 	static inline var SAFE_FOR = 2.0;
 
-	public static var current:Null<Ship>;
-
 	var cooldown = 0.0;
 	var safe = SAFE_FOR;
 	var thrusting = false;
@@ -23,13 +22,10 @@ class Ship extends Behavior {
 	final velocity = new Vec3();
 
 	override function onCreate() {
-		current = this;
-		(entity : Collider).setMask(0); // safe while it blinks
+		(entity : Collider).setEnabled(false); // safe while it blinks
 	}
 
 	override function onDestroy() {
-		if (current == this)
-			current = null;
 		Main.sounds.thrust(false);
 	}
 
@@ -41,7 +37,7 @@ class Ship extends Behavior {
 			final shape:Node = entity.getComponentNode(Component.SHAPE2D);
 			shape.setVisible(safe <= 0 || Std.int(safe * 8) % 2 == 0);
 			if (safe <= 0)
-				(entity : Collider).setMask(2); // rocks again
+				(entity : Collider).setEnabled(true); // rocks again
 		}
 		final stick = Gamepad.getStick(0, GamepadStick.LEFT).x;
 		var turn = 0.0;

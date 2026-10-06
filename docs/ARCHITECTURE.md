@@ -122,12 +122,12 @@ Entities, their components, and the systems that run them at the tick rate, on f
 
 | Section | Header | Provides |
 |---------|--------|----------|
-| entity | `wgf_entity.h` | `wgf_component_t`; an entity made under a node and destroyed with everything under its node; a name, and finding by it; its transform, and positions read and written in bulk through caller-owned arrays; snapping (drawn where it is, not swept there); components added, removed, asked about; a node component's node, the voice |
+| entity | `wgf_entity.h` | `wgf_component_t`; an entity made under a node and destroyed with everything under its node; a name, and finding by it; what it draws hidden or shown (its component nodes' visible, one added later taking it); its transform, and positions read and written in bulk through caller-owned arrays; snapping (drawn where it is, not swept there); components added, removed, asked about; a node component's node, the voice |
 | (the world) | `wgf_ecs.h` | the events, polled: CREATED, DESTROYED, TRIGGER_ENTER, TRIGGER_EXIT, three ints each; the entities of a behavior found and counted; clearing; the world dumped as a scene |
 | motion | `wgf_motion.h` | velocity, spin, damping, a top speed |
 | bounds | `wgf_bounds.h` | a rectangle wrapped around, clamped to, or died outside, with a margin |
 | lifetime | `wgf_lifetime.h` | seconds left |
-| collider | `wgf_collider.h` | a circle, a layer and a mask; what it overlaps |
+| collider | `wgf_collider.h` | a circle, a layer and a mask; switched off and on; what it overlaps |
 | behavior | `wgf_behavior.h` | the program's own code, by name, with text parameters |
 | scene | `wgf_scene.h` | a resource: entities and prefabs in a text file (its header has the format), instantiated, and prefabs spawned |
 
@@ -135,7 +135,7 @@ Entities, their components, and the systems that run them at the tick rate, on f
 
 **A tick** runs the systems, after the program's tick callback: lifetimes count down (at 0, destroyed), motion moves (damping, then the top speed, then velocity and spin), bounds wrap, clamp, or destroy, colliders compare, and the probes (`ecs.entities`, `ecs.behavior.<name>`) are published. Entities are destroyed after the query that found them, never inside it. As each tick begins, each transform is kept as it was; each frame, every entity's node is given its transform between the last two ticks at the frame's tick fraction, its rotation the shortest way round. A wrap moves the kept position by the same span, so a rock leaving the right edge is drawn coming in at the left, not swept back across the screen; `wgf_entity_snap` keeps the transform as it is now, for one put somewhere new.
 
-**Colliders** are triggers, nothing pushed apart: each tick, the colliders under each parent node, sorted along x, are swept for overlaps whose layer meets the other's mask; the pairs found are sorted and walked against the last tick's, so a pair new this tick raises TRIGGER_ENTER and one gone raises TRIGGER_EXIT, told to each. A destroyed entity's pairs are dropped without an exit; its DESTROYED (for one with a behavior) carries its now-stale handle.
+**Colliders** are triggers, nothing pushed apart: each tick, the colliders under each parent node, sorted along x, are swept for overlaps where either side's mask has the other's layer (so clearing one side's mask doesn't stop the other meeting it), a switched-off collider (`wgf_collider_set_enabled`) skipped, its settings kept; the pairs found are sorted and walked against the last tick's, so a pair new this tick raises TRIGGER_ENTER and one gone raises TRIGGER_EXIT, told to each. A destroyed entity's pairs are dropped without an exit; its DESTROYED (for one with a behavior) carries its now-stale handle.
 
 **Events** queue in a ring of 65,536 and are taken by the program, or the binding, with `wgf_ecs_take_events`: one async model, polled, and no callback crosses into a behavior. A behavior's code is the program's: the binding's runtime makes each behavior's object (`wgf.Behavior`) from these events, tells it of its triggers, ticks and frames it, and ends it ("The bindings").
 
@@ -163,7 +163,7 @@ The runtime: it opens the window, starts and drives the layers below it, and run
 |---------|--------|----------|
 | (lifecycle) | `wgf_app.h` | `wgf_app_run(init, tick, frame, shutdown, user)`, `wgf_app_quit`, `wgf_app_can_quit` (false on the web), `wgf_app_is_running`. `wgf_app_run` is the one public call that takes callbacks |
 | loop | `wgf_loop.h` | the frame delta; the tick rate, delta, and fraction; the time scale (0 pauses ticks while frames go on); a target fps; frames per second |
-| (autopilot runs) | private | an autopilot: inputs at frames and expectations on probes (`app/src/wgf_app_autopilot_priv.h` has the format), flown in its own time |
+| (autopilot runs) | private | an autopilot: inputs at frames and expectations on probes (BUILDING.md, "Autopilot files", has the format), flown in its own time |
 
 **The run.** `wgf_app_run` opens the window, starts core and gfx, and calls init. Each frame, it takes the window's events, updates core (tasks and loads move on), delivers an autopilot's inputs for the frame, runs the ticks due -- after each, the parts' ticks (a module's systems) -- then the parts' updates, then the frame callback between gfx's begin and end, and checks an autopilot's expectations for the frame. After quitting, it calls shutdown and stops gfx and core. On the desktop `wgf_app_run` returns when the program has quit; on the web it returns at once, and the browser runs the frames, so it is the last call in main everywhere.
 
@@ -196,7 +196,7 @@ Games are Haxe (`bindings/haxe/`, haxelib `wgf`); JS and TypeScript programs use
 `wgf` (the root's launcher, `tools/wgf/`) works on a game: a directory with a `wgf.json` (its name, main class, sources, assets, autopilot files, and web size budget), made from `templates/game/` by `wgf new`. A game names no libwgf: the tool builds it against the libwgf it belongs to, from that libwgf's staged variants, with the binding on the class path. Its builds put the program's assets beside it everywhere (`build/<target>/assets`), as `Asset.setHost("assets")` finds them: a page's directory on the web, the executable's natively.
 
 - **build** and **run**: the web (the full host, the game's page written once into `web/index.html`, the program), the desktop and headless (hxcpp against the native debug or release, or the headless, variant).
-- **autopilot**, **screenshot**, **dump**: autopilot runs (app's format, `wgf_app_autopilot_priv.h`), headless natively or in a headless browser, which a page hands the host (`globalThis.wgfAutopilot`, the module's `wgfAutopilot`); judged by what they log. A screenshot is the browser's capture when the autopilot logs its SCREENSHOT; a dump, each part's dump hook (the ecs's world, as a scene), logged a line at a time. `run`, `screenshot`, and `dump` take `--autopilot` to fly one to a point first.
+- **autopilot**, **screenshot**, **dump**: autopilot runs (BUILDING.md, "Autopilot files"), headless natively or in a headless browser, which a page hands the host (`globalThis.wgfAutopilot`, the module's `wgfAutopilot`); judged by what they log. A screenshot is the browser's capture when the autopilot logs its SCREENSHOT; a dump, each part's dump hook (the ecs's world, as a scene), logged a line at a time. `run`, `screenshot`, and `dump` take `--autopilot` to fly one to a point first.
 - **serve** (`tools/wgf/devserver.py`): a hot build (hotreload-hx, vendored in `deps/`) on the full host, served with a long poll at `/__hotreload`; each save rebuilds the program through a compilation server, stamps it, and the page swaps its classes in between two frames, every static and object kept. The runtime's trampolines read their handlers when they fire, so the swapped code is what runs; a reload's bundle doesn't start the run again.
 - **export**: the web as a static folder -- a release program, its host and its JS binding trimmed to the calls the program makes (the quoted keys in its JS that are calls), its assets copied in, libwgf's notices -- smoke-tested in a browser with the game's smoke autopilot and held to its budget; and the desktop, a release build with its assets, smoke-tested in a window (Xvfb's when Linux has no display).
 

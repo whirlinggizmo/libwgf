@@ -72,6 +72,15 @@ WGF_API bool wgf_entity_set_name(wgf_entity_t entity, const char *name);
 WGF_API const char *wgf_entity_get_name(wgf_entity_t entity);
 WGF_API wgf_entity_t wgf_entity_find(const char *name);
 
+/* Whether what the entity draws is drawn: hidden, none of its components' nodes (a
+ * shape, a sprite, text, an emitter's particles) is drawn, while it moves, ticks, meets
+ * others, and its emitters go on simulating. An entity's own node draws nothing, so
+ * hiding it (wgf_node_set_visible) hides nothing: this sets each component node's
+ * visible, and one added later takes the entity's. A component node made visible on its
+ * own afterwards is drawn. Default: visible. False for a handle that isn't an entity. */
+WGF_API bool wgf_entity_set_visible(wgf_entity_t entity, bool visible);
+WGF_API bool wgf_entity_is_visible(wgf_entity_t entity);
+
 /* The transform: position, rotation (three angles in radians, about x, then y, then z;
  * in 2D, about z alone), and scale, each set part by part or all at once. A change in a
  * tick is smoothed into the frames after it; snap ends the smoothing, so the node is

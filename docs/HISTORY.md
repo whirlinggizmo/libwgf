@@ -490,3 +490,42 @@ Step 0, from Rob's review: the Haxe base class for a game's behaviors is `wgf.Be
 - **Considered:** putting the component's calls on the class itself, as statics and instance methods. That would put generated calls inside a hand-written runtime class, or a hand-written class's members inside the generated API, and lose "one member per C call" for one section. The alternative names (`BehaviorParams`, `BehaviorEntity`) said less than "component".
 - **Sugar instead:** `Behavior` gains `getParam`, `getParamNumber`, and `hasParam` for its own entity, each one call to a `BehaviorComponent` member, as BINDINGS.md's sugar rule allows. A behavior reads `getParamNumber("size")`; code holding only an entity uses `(rock : BehaviorComponent).setParam(...)`.
 - **Renamed in** the binding (`Behavior.hx`, `Runtime.hx`, its test), the feature test, Asteroids, the JS Asteroids' comments (its `behaviors.js` already said `Behavior`), the racer's sketches, and the docs. Prose calling a behavior's object "a script" says "behavior" now. HISTORY's entries above keep `Script` as written.
+
+## Step 0, Asteroids' friction triaged (2026-10-06)
+
+Step 0's two inputs:
+- **The clean-room rebuild:** Asteroids made again from the docs, the public API, and `wgf new` alone, without seeing `games/asteroids/`. It shipped everything in about 15 minutes.
+- **The adversarial review of `games/asteroids/`.** It found one live bug: the spawn protection. Clearing a ship's collider mask doesn't stop a rock from meeting it, since a pair meets when either side's mask has the other's layer.
+
+All 27 entries are in FRICTION.md, each with its triage. The decisions that the workaround is fine, and why:
+- **Arrow keys moving the UI's focus over a game that also steers with them** (clean-room #9): the UI does what `wgf_ui.h` says. A delay before a menu takes input is the game's design. What the framework owes is a way to check focus from an autopilot (milestone 2, step 4) and the UI's default focus and input guard (milestone 2.5).
+- **The load gate polled by hand** (review #13): polling is SPEC's one async model, so this is right. A spawn before READY will log once (milestone 2.5), and the template will show the gate when step 2 changes it.
+- **The game's states, waves, score, jagged rocks, thrust, bullet cap, and probes** (review #14): the game's to own, as the review says.
+- **The lives icon redrawn by hand** (review #7): small, and the game's.
+- **Prefab variants by name and the rock's size as a string parameter** (review #6): partly the game's choice. It could read its prefabs' own parameters and its collider's radius already. Typed behavior fields are milestone 3's, as SPEC has them.
+- **What worked** (clean-room #3, #5, #6, #10, #13): kept as it is. A change that loses one of them is a regression.
+
+Two more, found by Rob's questions while triaging:
+- **A regression against libwgt:** libwgf's emitter update stepped an emitter under a disabled parent. It read the emitter node's own `enabled` and not its ancestors', where `wgf_node.h` promises a disabled node is skipped with everything under it. libwgt's emitter checks the whole chain (`enabled_in_tree` in `wgt_gfx_emitter.c`). Milestone 1 wrote its own CPU emitter, since it carried no shaders, and lost the check. Drawing was always right: the canvas's walk skips a disabled subtree, and an emitter is a node in it. Only the per-frame step, which finds emitters through an index rather than the tree, missed the rule.
+- **The particles are on the CPU** where libwgt's were on the GPU. wgrender-c measured 16,000 particles at 1.1 ms of CPU a frame against 0.1 on the GPU, and 6.2 against 0.6 on a phone. Milestone 2's step 11 now carries libwgt's emitter core whole, 2D and 3D in one, with its breadth (keyframes, palettes, spawn shapes, prewarm, frames, spin, inherited velocity), and retires the CPU emitter. Asteroids and its JS port move to it. The CPU emitter's one advantage, particles that react after they are born, waits in "Later" on a game needing it.
+
+Rob's caution, recorded: libwgf may have cut important things libwgt had. The catalog in ROADMAP.md exists to keep every cut visible and re-checked at each milestone's close. The game-developer sessions' friction is how a cut that hurts comes back early: the GPU particles moved up from milestone 2.5's breadth to milestone 2 on exactly that kind of question.
+
+## Step 0, the quick fixes: closed (2026-10-06)
+
+Step 0 of milestone 2 is done: both inputs triaged (FRICTION.md, and the entry above), `Script` renamed `Behavior`, and the quick fixes made, each with a test:
+- **The autopilot format is a public doc's:** BUILDING.md's "Autopilot files", every command with an example, its time and its result. The private header now points there, so the format lives in one place. The template's smoke autopilot presses a key: Space turns the ship's spin around, counted by a `flips` probe, and the smoke expects it.
+- **`wgf` from anywhere:** BUILDING.md says how to put the repository on PATH, and on Windows to type `python <libwgf>\wgf`. `wgf new` names the `wgf` to type: `wgf` when that one is on PATH, else its path. check_cli checks the message.
+- **An entity's visibility:** `wgf_entity_set_visible` and `_is_visible` set the visibility of the entity's component nodes, and a component added later takes it. The entity still moves, ticks, meets others, and its emitters simulate. An entity's node draws nothing, so hiding it hid nothing, as `wgf_node.h` said; this is the call a game reaches for. Tested in the ecs's entity test, and reached by the feature test.
+- **The collider's switch, and Asteroids' spawn protection:**
+  - `wgf_collider_set_enabled` and `_is_enabled`: switched off, a collider meets nothing from either side, its pairs end with TRIGGER_EXIT, and its settings are kept. A scene file's `collider enabled=false` does the same, and the dump shows it.
+  - The rule (either side's mask) is stated again on the mask's own line.
+  - Asteroids' ship, and its JS port's, switch the collider off while blinking, in place of `setMask(0)` and the `setMask(2)` that restored a number the scene file owned. That was a live bug: a ship respawned onto a rock died blinking.
+  - The ecs's systems test holds the either-side rule, the switch off, its settings kept, and the switch on.
+- **Asteroids' stale delays:** `start()` resets the wave and respawn delays, so a partial wave delay no longer carries into the next game. The dead `Ship.current` is gone.
+- **The screenshot override:** `wgf screenshot` and `wgf dump` with `--autopilot` leave out the file's own screenshot and dump lines, which fired first and won, and say how many. check_cli flies a file with its own earlier screenshot line and expects `--frame`'s.
+- **The desktop export's leftover:** a native run's autopilot file goes in a scratch folder, removed after, never beside the program. An export ships that folder, and check_cli checks that no autopilot file is in it.
+- **The emitter under a disabled parent** (Rob's question): libwgt's `enabled_in_tree` is carried into the emitter's update. The emitter test holds that one under a disabled node isn't moved on while its own flag is on. `wgf_node.h` says a disabled subtree is skipped by every update, not only by drawing.
+- **Doc gaps closed:**
+  - `wgf_window.h` said a page's CSS could override `Window.setSize` on the web. Set, it is the canvas's own style, which wins over the page's, so it now says that.
+  - `Behavior.onCreate` says when it runs: at the runtime's next poll, never inside the call that made the entity, so a parameter set right after `spawn` is there.

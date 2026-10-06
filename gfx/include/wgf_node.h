@@ -99,7 +99,8 @@ WGF_API wgf_node_t wgf_node_find(wgf_node_t root, const char *name);
 /* Two flags say what a node takes part in, each the node's own, read back as set:
  *
  *   enabled   off: the node is skipped altogether, with everything under it, as if
- *             it weren't in the tree: the switch on a part of the game that is off
+ *             it weren't in the tree, by drawing and by every update (an emitter
+ *             under it isn't moved on): the switch on a part of the game that is off
  *             for now. The only one that reaches the children; their own flags are
  *             kept, so enabling it again brings each back as it was set
  *   visible   off: the node's own output is off -- a sprite, shape, text, or

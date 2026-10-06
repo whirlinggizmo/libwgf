@@ -211,8 +211,8 @@ static void dump_entity(out_t *out, wgf_entity_t e)
         put(out, "    lifetime seconds=%.9g\n", wgf_lifetime_get_seconds(e));
     }
     if (wgf_entity_has_component(e, WGF_COMPONENT_COLLIDER)) {
-        put(out, "    collider radius=%.9g layer=%d mask=%d\n", wgf_collider_get_radius(e), wgf_collider_get_layer(e),
-            wgf_collider_get_mask(e));
+        put(out, "    collider radius=%.9g layer=%d mask=%d%s\n", wgf_collider_get_radius(e), wgf_collider_get_layer(e),
+            wgf_collider_get_mask(e), wgf_collider_is_enabled(e) ? "" : " enabled=false");
     }
     if (wgf_entity_has_component(e, WGF_COMPONENT_BEHAVIOR)) {
         int i;

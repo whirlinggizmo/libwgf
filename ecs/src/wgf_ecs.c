@@ -204,7 +204,7 @@ static void collide(void)
         for (i = 0; i < it.count; i++) {
             const wgf_ecs_priv_entity_t *record = wgf_ecs_priv_entity_of(ref[i].handle);
             const float sx = fabsf(t[i].scale[0]), sy = fabsf(t[i].scale[1]);
-            if (record == NULL) continue;
+            if (record == NULL || !c[i].enabled) continue; /* switched off: it meets nothing */
             if (body_count == body_capacity) {
                 const int capacity = body_capacity > 0 ? body_capacity * 2 : 64;
                 body_t *grown = (body_t *)realloc(bodies, sizeof(body_t) * (size_t)capacity);

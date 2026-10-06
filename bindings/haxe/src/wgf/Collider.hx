@@ -18,28 +18,52 @@ import wgf.impl.Raw;
 		return Raw.wgf_collider_get_radius(this);
 
 	/**
-	    Bits: what it is, and what it meets.
+	    Bits: what it is, and what it meets. A pair meets when either side's mask has the
+	    other's layer, so clearing one collider's mask doesn't stop another whose mask has its
+	    layer from meeting it: to make one meet nothing, switch it off (below).
 	**/
 	public inline function setLayer(layer:Int):Bool
 		return Raw.wgf_collider_set_layer(this, layer);
 
 	/**
-	    Bits: what it is, and what it meets.
+	    Bits: what it is, and what it meets. A pair meets when either side's mask has the
+	    other's layer, so clearing one collider's mask doesn't stop another whose mask has its
+	    layer from meeting it: to make one meet nothing, switch it off (below).
 	**/
 	public inline function getLayer():Int
 		return Raw.wgf_collider_get_layer(this);
 
 	/**
-	    Bits: what it is, and what it meets.
+	    Bits: what it is, and what it meets. A pair meets when either side's mask has the
+	    other's layer, so clearing one collider's mask doesn't stop another whose mask has its
+	    layer from meeting it: to make one meet nothing, switch it off (below).
 	**/
 	public inline function setMask(mask:Int):Bool
 		return Raw.wgf_collider_set_mask(this, mask);
 
 	/**
-	    Bits: what it is, and what it meets.
+	    Bits: what it is, and what it meets. A pair meets when either side's mask has the
+	    other's layer, so clearing one collider's mask doesn't stop another whose mask has its
+	    layer from meeting it: to make one meet nothing, switch it off (below).
 	**/
 	public inline function getMask():Int
 		return Raw.wgf_collider_get_mask(this);
+
+	/**
+	    Switched off, a collider meets nothing, from either side, and a pair it was in ends
+	    (TRIGGER_EXIT at the next tick); its radius, layer, and mask are kept, so switched on
+	    again it meets as they say: a ship that can't be hit while it blinks.
+	**/
+	public inline function setEnabled(enabled:Bool):Bool
+		return Raw.wgf_collider_set_enabled(this, enabled);
+
+	/**
+	    Switched off, a collider meets nothing, from either side, and a pair it was in ends
+	    (TRIGGER_EXIT at the next tick); its radius, layer, and mask are kept, so switched on
+	    again it meets as they say: a ship that can't be hit while it blinks.
+	**/
+	public inline function isEnabled():Bool
+		return Raw.wgf_collider_is_enabled(this);
 
 	/**
 	    What it overlaps as of the last tick, into `out`, as many as fit in `count`, returning

@@ -207,3 +207,17 @@ int wgf_collider_get_mask(wgf_entity_t entity)
     const wgf_ecs_priv_collider_t *c = collider_of(entity);
     return c != NULL ? c->mask : 0;
 }
+
+bool wgf_collider_set_enabled(wgf_entity_t entity, bool enabled)
+{
+    wgf_ecs_priv_collider_t *c = collider_of(entity);
+    if (c == NULL) return false;
+    c->enabled = enabled;
+    return true;
+}
+
+bool wgf_collider_is_enabled(wgf_entity_t entity)
+{
+    const wgf_ecs_priv_collider_t *c = collider_of(entity);
+    return c != NULL && c->enabled;
+}

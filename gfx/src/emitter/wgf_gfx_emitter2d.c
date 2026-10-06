@@ -128,13 +128,24 @@ static void move_on(wgf_node_t emitter, wgf_gfx_priv_emitter_t *e, float dt)
     e->last[1] = y;
 }
 
+/* Whether `node` and everything above it are enabled: a disabled one, or one under a
+ * disabled node, isn't moved on, as the draw's walk skips it (libwgt's enabled_in_tree). */
+static bool enabled_in_tree(wgf_node_t node)
+{
+    const wgf_gfx_priv_node_t *node_ptr = wgf_gfx_priv_node_of(node);
+    while (node_ptr != NULL) {
+        if (!node_ptr->enabled) return false;
+        node_ptr = node_ptr->parent != 0 ? wgf_gfx_priv_node_of(node_ptr->parent) : NULL;
+    }
+    return true;
+}
+
 static void update(float dt)
 {
     int i;
     for (i = 0; i < emitter_count; i++) {
         wgf_gfx_priv_emitter_t *e = emitter_of(emitters[i]);
-        const wgf_gfx_priv_node_t *node_ptr = wgf_gfx_priv_node_of(emitters[i]);
-        if (e != NULL && node_ptr->enabled) move_on(emitters[i], e, dt);
+        if (e != NULL && enabled_in_tree(emitters[i])) move_on(emitters[i], e, dt);
     }
 }
 

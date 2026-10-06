@@ -64,6 +64,8 @@ class Main {
 		score = 0;
 		lives = 3;
 		wave = 0;
+		waveDelay = 0; // a delay left from the last game would cut this one's first wait short
+		respawnDelay = 0;
 		state = State.PLAYING;
 		spawnShip();
 		nextWave();

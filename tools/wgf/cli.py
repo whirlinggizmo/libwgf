@@ -52,6 +52,16 @@ def say(text):
     print(f'wgf: {text}', flush=True)
 
 
+def launcher():
+    """How to run this wgf from anywhere: `wgf` when it is the one on PATH, else its path
+    (with python first on Windows, which runs no script by its first line)."""
+    found = shutil.which('wgf')
+    mine = ROOT / 'wgf'
+    if found and Path(found).resolve() == mine.resolve():
+        return 'wgf'
+    return f'python {mine}' if os.name == 'nt' else str(mine)
+
+
 # ---- new -------------------------------------------------------------------------------
 
 def cmd_new(args):
@@ -72,7 +82,7 @@ def cmd_new(args):
             target.write_text(text.replace('@NAME@', name), encoding='utf-8')
         except UnicodeDecodeError:
             shutil.copyfile(path, target)
-    say(f'{name} made in {dest}: `cd {dest} && wgf serve` runs it in a browser, reloading as you save')
+    say(f'{name} made in {dest}: `cd {dest} && {launcher()} serve` runs it in a browser, reloading as you save')
     return 0
 
 
@@ -131,15 +141,22 @@ def cmd_run(args):
 def flown_to(path, frame, command, after):
     """An autopilot that flies the file at `path` (if any) to `frame` -- the file's end
     when `frame` is None -- then does `command` there, and ends `after` frames on. The
-    file's own end is left out: this one ends instead. (Its text, the frame.)"""
-    lines, end = ['wgf-autopilot 1'], None
+    file's own end is left out, and so are its own screenshot and dump lines, which would
+    fire first and win over this one's; how many were left out is said. (Its text, the
+    frame.)"""
+    lines, end, dropped = ['wgf-autopilot 1'], None, 0
     if path:
         for line in Path(path).read_text(encoding='utf-8').splitlines()[1:]:
             words = line.split('#', 1)[0].split()
             if len(words) >= 3 and words[0] == 'at' and words[2] == 'end':
                 end = int(words[1])
                 continue
+            if len(words) >= 3 and words[0] == 'at' and words[2] in ('screenshot', 'dump'):
+                dropped += 1
+                continue
             lines.append(line)
+    if dropped:
+        say(f'{path}: its own {dropped} screenshot or dump line(s) left out, so the one asked for is the one made')
     at = frame if frame is not None else (end if end is not None else 60)
     lines += [f'at {at} {command}', f'at {at + after} end']
     return '\n'.join(lines) + '\n', at

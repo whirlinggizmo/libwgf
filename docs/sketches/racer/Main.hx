@@ -51,10 +51,24 @@ class Main {
 		mirrorCamera = Camera3d.create();
 		mirrorCamera.setFov(50);
 
+		bindControls();
 		Behavior.register("Car", e -> new Car(e));
 		Behavior.register("Checkpoint", e -> new Laps.Checkpoint(e));
 		Loop.setTickRate(60); // physics and the car's intent, at a fixed rate
 		Debug.setFpsOverlay(true, 0, 16, Color.get(ColorStock.LIME)); // development builds only
+	}
+
+	/** The controls, as named actions: keys, pad buttons, and axes bound to each. **/
+	static function bindControls() {
+		Action.bindAxis("steer", KeyboardKey.LEFT, KeyboardKey.RIGHT);
+		Action.bindAxis("steer", KeyboardKey.A, KeyboardKey.D);
+		Action.bindPadAxis("steer", GamepadAxis.LEFT_X);
+		Action.bindKey("throttle", KeyboardKey.UP);
+		Action.bindPadAxis("throttle", GamepadAxis.RIGHT_TRIGGER);
+		Action.bindKey("brake", KeyboardKey.DOWN);
+		Action.bindPadAxis("brake", GamepadAxis.LEFT_TRIGGER);
+		Action.bindKey("handbrake", KeyboardKey.SPACE);
+		Action.bindPadButton("handbrake", GamepadButton.SOUTH);
 	}
 
 	static function tick() {
@@ -62,9 +76,7 @@ class Main {
 			case State.LOADING:
 				if (loading.getStatus() == AssetTaskStatus.DONE && Resource.getStatus(scene) == ResourceStatus.READY) {
 					scene.instantiate(stage); // the track's static parts, checkpoints, props
-					car = scene.spawn("car", stage);
-					car.setPosition(0, 0.5, 0);
-					car.snap();
+					car = scene.spawnAt("car", stage, 0, 0.5, 0, 0); // placed, turned, and snapped
 					camera.follow(car);
 					state = State.COUNTDOWN;
 				}

@@ -136,6 +136,20 @@ int main(void)
     frames(200, 1.0f / 60.0f);
     expect(wgf_emitter2d_get_count(emitter) == i, "a disabled emitter isn't moved on");
     wgf_node_set_enabled(emitter, true);
+    {
+        const wgf_node_t holder = wgf_node_create(); /* the emitter under a disabled node */
+        const wgf_node_t was = wgf_node_get_parent(emitter);
+        wgf_node_set_parent(holder, was);
+        wgf_node_set_parent(emitter, holder);
+        wgf_node_set_enabled(holder, false);
+        i = wgf_emitter2d_get_count(emitter);
+        frames(200, 1.0f / 60.0f);
+        expect(wgf_emitter2d_get_count(emitter) == i && wgf_node_is_enabled(emitter),
+               "an emitter under a disabled node isn't moved on, its own flag on");
+        wgf_node_set_enabled(holder, true);
+        wgf_node_set_parent(emitter, was);
+        wgf_node_destroy(holder, WGF_NODE_DESTROY_CHILDREN);
+    }
     wgf_node_set_visible(emitter, false);
     expect(drawn(canvas) == 0, "a hidden one isn't drawn");
 

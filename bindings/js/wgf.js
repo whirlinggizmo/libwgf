@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "21c03e43c4a8e8bc" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "a8637b3186553569" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -1691,7 +1691,9 @@ export function wgf_window_get_title() {
 /**
  * The size inside the window's frame (default 1024 by 768). Values under 1 are
  * refused (false). On the web, the canvas's size on the page: left to the page
- * unless set, and the page's own CSS can override it.
+ * unless set. Set, it is the canvas's own style, which wins over the page's: the
+ * canvas stays that size, at the page's top left, whatever the browser window does,
+ * so a game meant to fill the page doesn't set it on the web.
  */
 export function wgf_window_set_size(width, height) {
     const value = host["_wgf_window_set_size"](width, height);
@@ -1702,7 +1704,9 @@ export function wgf_window_set_size(width, height) {
 /**
  * The size inside the window's frame (default 1024 by 768). Values under 1 are
  * refused (false). On the web, the canvas's size on the page: left to the page
- * unless set, and the page's own CSS can override it.
+ * unless set. Set, it is the canvas's own style, which wins over the page's: the
+ * canvas stays that size, at the page's top left, whatever the browser window does,
+ * so a game meant to fill the page doesn't set it on the web.
  */
 export function wgf_window_get_width() {
     const value = host["_wgf_window_get_width"]();
@@ -1713,7 +1717,9 @@ export function wgf_window_get_width() {
 /**
  * The size inside the window's frame (default 1024 by 768). Values under 1 are
  * refused (false). On the web, the canvas's size on the page: left to the page
- * unless set, and the page's own CSS can override it.
+ * unless set. Set, it is the canvas's own style, which wins over the page's: the
+ * canvas stays that size, at the page's top left, whatever the browser window does,
+ * so a game meant to fill the page doesn't set it on the web.
  */
 export function wgf_window_get_height() {
     const value = host["_wgf_window_get_height"]();
@@ -2776,7 +2782,8 @@ export function wgf_node_find(root, name) {
  * Two flags say what a node takes part in, each the node's own, read back as set:
  *
  *   enabled   off: the node is skipped altogether, with everything under it, as if
- *             it weren't in the tree: the switch on a part of the game that is off
+ *             it weren't in the tree, by drawing and by every update (an emitter
+ *             under it isn't moved on): the switch on a part of the game that is off
  *             for now. The only one that reaches the children; their own flags are
  *             kept, so enabling it again brings each back as it was set
  *   visible   off: the node's own output is off -- a sprite, shape, text, or
@@ -2795,7 +2802,8 @@ export function wgf_node_set_enabled(node, enabled) {
  * Two flags say what a node takes part in, each the node's own, read back as set:
  *
  *   enabled   off: the node is skipped altogether, with everything under it, as if
- *             it weren't in the tree: the switch on a part of the game that is off
+ *             it weren't in the tree, by drawing and by every update (an emitter
+ *             under it isn't moved on): the switch on a part of the game that is off
  *             for now. The only one that reaches the children; their own flags are
  *             kept, so enabling it again brings each back as it was set
  *   visible   off: the node's own output is off -- a sprite, shape, text, or
@@ -2814,7 +2822,8 @@ export function wgf_node_is_enabled(node) {
  * Two flags say what a node takes part in, each the node's own, read back as set:
  *
  *   enabled   off: the node is skipped altogether, with everything under it, as if
- *             it weren't in the tree: the switch on a part of the game that is off
+ *             it weren't in the tree, by drawing and by every update (an emitter
+ *             under it isn't moved on): the switch on a part of the game that is off
  *             for now. The only one that reaches the children; their own flags are
  *             kept, so enabling it again brings each back as it was set
  *   visible   off: the node's own output is off -- a sprite, shape, text, or
@@ -2833,7 +2842,8 @@ export function wgf_node_set_visible(node, visible) {
  * Two flags say what a node takes part in, each the node's own, read back as set:
  *
  *   enabled   off: the node is skipped altogether, with everything under it, as if
- *             it weren't in the tree: the switch on a part of the game that is off
+ *             it weren't in the tree, by drawing and by every update (an emitter
+ *             under it isn't moved on): the switch on a part of the game that is off
  *             for now. The only one that reaches the children; their own flags are
  *             kept, so enabling it again brings each back as it was set
  *   visible   off: the node's own output is off -- a sprite, shape, text, or
@@ -4620,6 +4630,34 @@ export function wgf_entity_find(name) {
     return value >>> 0;
 }
 
+// wgf: call wgf_entity_set_visible
+/**
+ * Whether what the entity draws is drawn: hidden, none of its components' nodes (a
+ * shape, a sprite, text, an emitter's particles) is drawn, while it moves, ticks, meets
+ * others, and its emitters go on simulating. An entity's own node draws nothing, so
+ * hiding it (wgf_node_set_visible) hides nothing: this sets each component node's
+ * visible, and one added later takes the entity's. A component node made visible on its
+ * own afterwards is drawn. Default: visible. False for a handle that isn't an entity.
+ */
+export function wgf_entity_set_visible(entity, visible) {
+    const value = host["_wgf_entity_set_visible"](entity, (visible ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_entity_is_visible
+/**
+ * Whether what the entity draws is drawn: hidden, none of its components' nodes (a
+ * shape, a sprite, text, an emitter's particles) is drawn, while it moves, ticks, meets
+ * others, and its emitters go on simulating. An entity's own node draws nothing, so
+ * hiding it (wgf_node_set_visible) hides nothing: this sets each component node's
+ * visible, and one added later takes the entity's. A component node made visible on its
+ * own afterwards is drawn. Default: visible. False for a handle that isn't an entity.
+ */
+export function wgf_entity_is_visible(entity) {
+    const value = host["_wgf_entity_is_visible"](entity);
+    return value !== 0;
+}
+
 // wgf: call wgf_entity_set_position
 /**
  * The transform: position, rotation (three angles in radians, about x, then y, then z;
@@ -4986,7 +5024,9 @@ export function wgf_collider_get_radius(entity) {
 
 // wgf: call wgf_collider_set_layer
 /**
- * Bits: what it is, and what it meets.
+ * Bits: what it is, and what it meets. A pair meets when either side's mask has the
+ * other's layer, so clearing one collider's mask doesn't stop another whose mask has its
+ * layer from meeting it: to make one meet nothing, switch it off (below).
  */
 export function wgf_collider_set_layer(entity, layer) {
     const value = host["_wgf_collider_set_layer"](entity, layer);
@@ -4995,7 +5035,9 @@ export function wgf_collider_set_layer(entity, layer) {
 
 // wgf: call wgf_collider_get_layer
 /**
- * Bits: what it is, and what it meets.
+ * Bits: what it is, and what it meets. A pair meets when either side's mask has the
+ * other's layer, so clearing one collider's mask doesn't stop another whose mask has its
+ * layer from meeting it: to make one meet nothing, switch it off (below).
  */
 export function wgf_collider_get_layer(entity) {
     const value = host["_wgf_collider_get_layer"](entity);
@@ -5004,7 +5046,9 @@ export function wgf_collider_get_layer(entity) {
 
 // wgf: call wgf_collider_set_mask
 /**
- * Bits: what it is, and what it meets.
+ * Bits: what it is, and what it meets. A pair meets when either side's mask has the
+ * other's layer, so clearing one collider's mask doesn't stop another whose mask has its
+ * layer from meeting it: to make one meet nothing, switch it off (below).
  */
 export function wgf_collider_set_mask(entity, mask) {
     const value = host["_wgf_collider_set_mask"](entity, mask);
@@ -5013,11 +5057,35 @@ export function wgf_collider_set_mask(entity, mask) {
 
 // wgf: call wgf_collider_get_mask
 /**
- * Bits: what it is, and what it meets.
+ * Bits: what it is, and what it meets. A pair meets when either side's mask has the
+ * other's layer, so clearing one collider's mask doesn't stop another whose mask has its
+ * layer from meeting it: to make one meet nothing, switch it off (below).
  */
 export function wgf_collider_get_mask(entity) {
     const value = host["_wgf_collider_get_mask"](entity);
     return value;
+}
+
+// wgf: call wgf_collider_set_enabled
+/**
+ * Switched off, a collider meets nothing, from either side, and a pair it was in ends
+ * (TRIGGER_EXIT at the next tick); its radius, layer, and mask are kept, so switched on
+ * again it meets as they say: a ship that can't be hit while it blinks.
+ */
+export function wgf_collider_set_enabled(entity, enabled) {
+    const value = host["_wgf_collider_set_enabled"](entity, (enabled ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_collider_is_enabled
+/**
+ * Switched off, a collider meets nothing, from either side, and a pair it was in ends
+ * (TRIGGER_EXIT at the next tick); its radius, layer, and mask are kept, so switched on
+ * again it meets as they say: a ship that can't be hit while it blinks.
+ */
+export function wgf_collider_is_enabled(entity) {
+    const value = host["_wgf_collider_is_enabled"](entity);
+    return value !== 0;
 }
 
 // wgf: call wgf_collider_get_overlaps

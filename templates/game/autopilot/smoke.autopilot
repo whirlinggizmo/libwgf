@@ -1,4 +1,7 @@
 wgf-autopilot 1
-# a smoke run: two seconds of frames, and the game counted them (wgf autopilot, wgf export)
+# a smoke run (wgf autopilot, wgf export): two seconds of frames, a key pressed, and the
+# game's probes expected on. The format is BUILDING.md's, "Autopilot files".
+at 60 key tap space
+at 61 expect flips == 1
 at 120 expect frames >= 120
 at 120 end

@@ -1171,21 +1171,27 @@ export declare function wgf_window_get_title(): string;
 /**
  * The size inside the window's frame (default 1024 by 768). Values under 1 are
  * refused (false). On the web, the canvas's size on the page: left to the page
- * unless set, and the page's own CSS can override it.
+ * unless set. Set, it is the canvas's own style, which wins over the page's: the
+ * canvas stays that size, at the page's top left, whatever the browser window does,
+ * so a game meant to fill the page doesn't set it on the web.
  */
 export declare function wgf_window_set_size(width: number, height: number): boolean;
 
 /**
  * The size inside the window's frame (default 1024 by 768). Values under 1 are
  * refused (false). On the web, the canvas's size on the page: left to the page
- * unless set, and the page's own CSS can override it.
+ * unless set. Set, it is the canvas's own style, which wins over the page's: the
+ * canvas stays that size, at the page's top left, whatever the browser window does,
+ * so a game meant to fill the page doesn't set it on the web.
  */
 export declare function wgf_window_get_width(): number;
 
 /**
  * The size inside the window's frame (default 1024 by 768). Values under 1 are
  * refused (false). On the web, the canvas's size on the page: left to the page
- * unless set, and the page's own CSS can override it.
+ * unless set. Set, it is the canvas's own style, which wins over the page's: the
+ * canvas stays that size, at the page's top left, whatever the browser window does,
+ * so a game meant to fill the page doesn't set it on the web.
  */
 export declare function wgf_window_get_height(): number;
 
@@ -1916,7 +1922,8 @@ export declare function wgf_node_find(root: wgf_node_t | 0, name: string | null)
  * Two flags say what a node takes part in, each the node's own, read back as set:
  *
  *   enabled   off: the node is skipped altogether, with everything under it, as if
- *             it weren't in the tree: the switch on a part of the game that is off
+ *             it weren't in the tree, by drawing and by every update (an emitter
+ *             under it isn't moved on): the switch on a part of the game that is off
  *             for now. The only one that reaches the children; their own flags are
  *             kept, so enabling it again brings each back as it was set
  *   visible   off: the node's own output is off -- a sprite, shape, text, or
@@ -1931,7 +1938,8 @@ export declare function wgf_node_set_enabled(node: wgf_node_t | 0, enabled: bool
  * Two flags say what a node takes part in, each the node's own, read back as set:
  *
  *   enabled   off: the node is skipped altogether, with everything under it, as if
- *             it weren't in the tree: the switch on a part of the game that is off
+ *             it weren't in the tree, by drawing and by every update (an emitter
+ *             under it isn't moved on): the switch on a part of the game that is off
  *             for now. The only one that reaches the children; their own flags are
  *             kept, so enabling it again brings each back as it was set
  *   visible   off: the node's own output is off -- a sprite, shape, text, or
@@ -1946,7 +1954,8 @@ export declare function wgf_node_is_enabled(node: wgf_node_t | 0): boolean;
  * Two flags say what a node takes part in, each the node's own, read back as set:
  *
  *   enabled   off: the node is skipped altogether, with everything under it, as if
- *             it weren't in the tree: the switch on a part of the game that is off
+ *             it weren't in the tree, by drawing and by every update (an emitter
+ *             under it isn't moved on): the switch on a part of the game that is off
  *             for now. The only one that reaches the children; their own flags are
  *             kept, so enabling it again brings each back as it was set
  *   visible   off: the node's own output is off -- a sprite, shape, text, or
@@ -1961,7 +1970,8 @@ export declare function wgf_node_set_visible(node: wgf_node_t | 0, visible: bool
  * Two flags say what a node takes part in, each the node's own, read back as set:
  *
  *   enabled   off: the node is skipped altogether, with everything under it, as if
- *             it weren't in the tree: the switch on a part of the game that is off
+ *             it weren't in the tree, by drawing and by every update (an emitter
+ *             under it isn't moved on): the switch on a part of the game that is off
  *             for now. The only one that reaches the children; their own flags are
  *             kept, so enabling it again brings each back as it was set
  *   visible   off: the node's own output is off -- a sprite, shape, text, or
@@ -3102,6 +3112,26 @@ export declare function wgf_entity_get_name(entity: wgf_entity_t | 0): string;
 export declare function wgf_entity_find(name: string | null): wgf_entity_t;
 
 /**
+ * Whether what the entity draws is drawn: hidden, none of its components' nodes (a
+ * shape, a sprite, text, an emitter's particles) is drawn, while it moves, ticks, meets
+ * others, and its emitters go on simulating. An entity's own node draws nothing, so
+ * hiding it (wgf_node_set_visible) hides nothing: this sets each component node's
+ * visible, and one added later takes the entity's. A component node made visible on its
+ * own afterwards is drawn. Default: visible. False for a handle that isn't an entity.
+ */
+export declare function wgf_entity_set_visible(entity: wgf_entity_t | 0, visible: boolean): boolean;
+
+/**
+ * Whether what the entity draws is drawn: hidden, none of its components' nodes (a
+ * shape, a sprite, text, an emitter's particles) is drawn, while it moves, ticks, meets
+ * others, and its emitters go on simulating. An entity's own node draws nothing, so
+ * hiding it (wgf_node_set_visible) hides nothing: this sets each component node's
+ * visible, and one added later takes the entity's. A component node made visible on its
+ * own afterwards is drawn. Default: visible. False for a handle that isn't an entity.
+ */
+export declare function wgf_entity_is_visible(entity: wgf_entity_t | 0): boolean;
+
+/**
  * The transform: position, rotation (three angles in radians, about x, then y, then z;
  * in 2D, about z alone), and scale, each set part by part or all at once. A change in a
  * tick is smoothed into the frames after it; snap ends the smoothing, so the node is
@@ -3327,24 +3357,46 @@ export declare function wgf_collider_set_radius(entity: wgf_entity_t | 0, radius
 export declare function wgf_collider_get_radius(entity: wgf_entity_t | 0): number;
 
 /**
- * Bits: what it is, and what it meets.
+ * Bits: what it is, and what it meets. A pair meets when either side's mask has the
+ * other's layer, so clearing one collider's mask doesn't stop another whose mask has its
+ * layer from meeting it: to make one meet nothing, switch it off (below).
  */
 export declare function wgf_collider_set_layer(entity: wgf_entity_t | 0, layer: number): boolean;
 
 /**
- * Bits: what it is, and what it meets.
+ * Bits: what it is, and what it meets. A pair meets when either side's mask has the
+ * other's layer, so clearing one collider's mask doesn't stop another whose mask has its
+ * layer from meeting it: to make one meet nothing, switch it off (below).
  */
 export declare function wgf_collider_get_layer(entity: wgf_entity_t | 0): number;
 
 /**
- * Bits: what it is, and what it meets.
+ * Bits: what it is, and what it meets. A pair meets when either side's mask has the
+ * other's layer, so clearing one collider's mask doesn't stop another whose mask has its
+ * layer from meeting it: to make one meet nothing, switch it off (below).
  */
 export declare function wgf_collider_set_mask(entity: wgf_entity_t | 0, mask: number): boolean;
 
 /**
- * Bits: what it is, and what it meets.
+ * Bits: what it is, and what it meets. A pair meets when either side's mask has the
+ * other's layer, so clearing one collider's mask doesn't stop another whose mask has its
+ * layer from meeting it: to make one meet nothing, switch it off (below).
  */
 export declare function wgf_collider_get_mask(entity: wgf_entity_t | 0): number;
+
+/**
+ * Switched off, a collider meets nothing, from either side, and a pair it was in ends
+ * (TRIGGER_EXIT at the next tick); its radius, layer, and mask are kept, so switched on
+ * again it meets as they say: a ship that can't be hit while it blinks.
+ */
+export declare function wgf_collider_set_enabled(entity: wgf_entity_t | 0, enabled: boolean): boolean;
+
+/**
+ * Switched off, a collider meets nothing, from either side, and a pair it was in ends
+ * (TRIGGER_EXIT at the next tick); its radius, layer, and mask are kept, so switched on
+ * again it meets as they say: a ship that can't be hit while it blinks.
+ */
+export declare function wgf_collider_is_enabled(entity: wgf_entity_t | 0): boolean;
 
 /**
  * What it overlaps as of the last tick, into `out`, as many as fit in `count`, returning

@@ -18,6 +18,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from pathlib import Path
@@ -186,8 +187,10 @@ def run_native(exe, autopilot=None, timeout=600, echo=True):
     """Run a native build, with `autopilot` (its text) flying it; (exit code, its
     output). Its output is echoed as it comes."""
     env = dict(os.environ)
-    if autopilot is not None:
-        path = exe.parent / '.wgf-run.autopilot'
+    scratch = None
+    if autopilot is not None:  # in a scratch folder, never beside the program (an export ships that folder)
+        scratch = tempfile.TemporaryDirectory(prefix='wgf-run-')
+        path = Path(scratch.name) / 'run.autopilot'
         path.write_text(autopilot, encoding='utf-8')
         env['LIBWGF_AUTOPILOT'] = str(path)
     lines = []
@@ -200,6 +203,8 @@ def run_native(exe, autopilot=None, timeout=600, echo=True):
             if echo:
                 print(line, end='', flush=True)
         timer.cancel()
+    if scratch is not None:
+        scratch.cleanup()
     return process.returncode, '\n'.join(lines)
 
 
