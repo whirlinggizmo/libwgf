@@ -56,7 +56,7 @@ Each game lives in `games/<name>/`, uses only libwgf's public API, is deployed t
 ## Reference repos (read-only north star)
 
 - `~/projects/github/whirlinggizmo/libwgt`: the latest. Layers, nodes (keep the idea), handles checked by clang, linking only what a program uses, the tools, and the Haxe binding plan. Its `docs/LINEAGE.md` is the summary of the whole line.
-- `~/projects/github/whirlinggizmo/wgrender-c`: the most complete. glTF with skinning, scenes, picking, audio, async assets, the web harness, the JS and Haxe bindings, and Clay UI. Its `docs/HISTORY.md` is the deep record.
+- `~/projects/github/whirlinggizmo/wgrender-c`: the most complete. glTF with skinning, scenes, picking, audio, async assets, the web harness, the JS and Haxe bindings, and Clay UI. Its `docs/HISTORY.md` is the deep record. It was the proving ground: what succeeded there was fed into libwgt, and some of it hasn't arrived yet (the JS binding, for one). When wgrender-c has something libwgt lacks, treat it as proven, not as abandoned.
 - `~/projects/github/whirlinggizmo/wgrender-hx`, `hotreload-hx`, `hotreload-nim`: bindings and hot reload.
 - `~/projects/github/whirlinggizmo/flecs_wrapper-c`, `wgutils-c` (WebSocket client for desktop and wasm), `experiments/`.
 - `~/media/models/`: source art (Blender files, textures), read-only. Exports go into libwgf.
@@ -78,6 +78,10 @@ Each game lives in `games/<name>/`, uses only libwgf's public API, is deployed t
 - **Core: C (C11).** It gives the tightest wasm, the C ABI that bindings need, and the best tooling (sanitizers, clang checks). Nim and Zig were considered; C won on wasm size, ABI simplicity, and reliability for the agent.
 - **Platform and graphics: sokol** (app, gfx, audio, fetch), vendored. One backend layer, never our own abstraction over several.
 - **Games: Haxe.** JS on the web against a prebuilt wasm host, hxcpp natively and for the server. Haxe never goes into the core.
+- **JS/TS binding: the one way JS reaches the wasm host.** It is generated from the headers: ES modules, `.d.ts` declarations, and each header comment as its JSDoc. It is a public API in its own right, so JS and TypeScript developers can use libwgf without Haxe. Haxe's JS target is built on it, dogfooding it, so every Haxe game, test and autopilot run exercises it. When Haxe needs something the JS binding can't express cheaply, extend the JS binding; never bypass it. Native Haxe still goes through hxcpp to C directly.
+  - Source: wgrender-c's `bindings/js` (generator, runtime, guest, type tests, examples), proven there and not yet carried into libwgt. Its runtime rules carry over: records through one fixed slot, strings released per call, getters that fill a caller's object or array, quoted keys.
+  - Checked by: a TypeScript type test, JS examples in the browser checks, the JS-to-wasm call benchmark, and the binding's size in the size table. Its cost was about 3% of download in wgrender; it stays measured, not assumed.
+  - Versioned like the C API, with the version stamps checked at startup.
 - **ECS: flecs**, wrapped behind libwgf's API. Nodes stay as the transform hierarchy, and entities attach to nodes. Decide the exact split in milestone 1 and record it.
 - **Physics:** Box2D v3 (C) for 2D. Jolt (through its C API) for 3D, which brings vehicles for the racing game. Each is an optional module.
 - **Game UI: Clay for layout, plus libwgf's own widget layer.** Clay only lays out boxes and hit-tests them; it has no widgets. libwgf's ui module adds:
