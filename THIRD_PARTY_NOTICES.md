@@ -4,7 +4,7 @@ libwgf's own code is MIT ([LICENSE](LICENSE)). It vendors the code below, each u
 own license, kept in or next to its files in `deps/` ([deps/README.md](deps/README.md)
 says where each comes from, what it is pinned to, and how it is updated). A program
 built with libwgf contains some of it, so **ship this file (or the notices in it) with a
-binary**: the MIT licenses ask that their notice go with copies, and the SIL Open Font
+binary**: the MIT and BSD licenses ask that their notice go with copies, and the SIL Open Font
 License that its text go with the font, which the library embeds as its default. The
 zlib licenses ask nothing of a binary, and the public-domain code nothing at all; they
 are listed for credit, and because their notices must stay in the sources. Each staged
@@ -81,6 +81,42 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+```
+
+## BSD 3-Clause license
+
+Native builds only: the web build plays audio through the browser.
+
+- **libogg** (`deps/xiph/ogg/`): Copyright (c) 2002, Xiph.org Foundation
+- **libvorbis** (`deps/xiph/vorbis/`): Copyright (c) 2002-2020 Xiph.org Foundation
+
+```
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+- Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+
+- Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+
+- Neither the name of the Xiph.org Foundation nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION
+OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
 ## Public domain, or MIT No Attribution (the user's choice)

@@ -130,6 +130,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `check_desktop.py` | runs every example in a window on Xvfb, a Windows variant under Wine there, with screenshots |
 | `check_web.py` | runs every example in a headless browser, each in a context of its own, checking it once its loads are done, with screenshots |
 | `check_asset_cache.py` | visits the asset cache's test page again and again in one browser context, judging each visit by its requests, log, and screen (ctest runs it on the web presets) |
+| `check_stream.py` | serves a streamed sound slowly to its test page and checks each case: played as it arrives, from the cache, after a 304, through a redirect (ctest runs it on the web presets) |
 | `gen_manifest.py` | writes the asset manifests for a directory tree (`wgf_asset_set_manifest`) |
 | `finish_site.py` | finishes a web build's site: each example's page stamped with its program's version (`name.js?v=<hash>`), `examples.json`, and the launcher |
 | `watch_browser.py` | the browser tools' watchdog: stops what a run started if the run can't |

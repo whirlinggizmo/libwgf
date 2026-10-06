@@ -1,0 +1,16 @@
+# Vendored from Xiph.Org (BSD-3-Clause: COPYING in each): libogg and libvorbis, the
+# decoder's sources only (libvorbis' lib/ without vorbisenc.c, barkmel.c, psytune.c and
+# tone.c, which encode or are tools; libogg's bitwise.c and framing.c), unchanged, plus
+# ogg/include/ogg/config_types.h, which libwgt wrote (carried unchanged) in place of the one libogg's
+# configure generates. Used natively alone: the web build plays through the browser.
+#
+# Master, not the release tags: libvorbis 1.3.7 (2020-07-04) is its newest release and
+# libogg 1.3.6 (2025-06-16) its, but libvorbis' master has the decoder's fixes since,
+# found by OSS-Fuzz, which covers both (a use-after-free in vorbisfile's ov_pcm_page_seek,
+# 1b75110; unchecked allocations and large stack allocations in codebook setup, a629068,
+# 28965ed, 7ef6726; an undefined shift, bb4047d), and a downloaded file is untrusted
+# input. libogg's master has one fix past 1.3.6 (an overflow in ogg_stream_iovecin,
+# 06a5e02), taken for the same reason. Update both together from the commits wanted,
+# copying the same files, and record them here with the archive's sha256.
+libvorbis https://github.com/xiph/vorbis.git 1b75110b5a2754ba1931d82dd83cb822b266a21d 2026-08-04 archive sha256 bd0f08c8a63debdce27dd71de7d953f9c92e410d1cfe263220bcb49fff2ab749
+libogg https://github.com/xiph/ogg.git 06a5e0262cdc28aa4ae6797627a783b5010440f0 2026-03-02 archive sha256 fd7ab06f9fe9ace6b75d4223cf9034c9648cbe9f16120a344ec82f27c605ca11

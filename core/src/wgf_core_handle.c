@@ -16,6 +16,7 @@ static const char *const kind_names[WGF_CORE_PRIV_HANDLE_KIND_MASK + 1] = {
     [WGF_CORE_PRIV_HANDLE_KIND_ENTITY] = "ecs.entity",
     [WGF_CORE_PRIV_HANDLE_KIND_SCENE] = "ecs.scene",
     [WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND] = "audio.sound",
+    [WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND_STREAMED] = "audio.sound_streamed",
     [WGF_CORE_PRIV_HANDLE_KIND_AUDIO_VOICE] = "audio.voice",
     [WGF_CORE_PRIV_HANDLE_KIND_ASSET_TASK] = "asset.task",
     [WGF_CORE_PRIV_HANDLE_KIND_TEST_A] = "test.a",

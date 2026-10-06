@@ -2,6 +2,15 @@
 
 The files the C and Haxe examples, and some tests, load. Each one not made in this repository says where it came from and its license.
 
+## Third party
+
+From libwgt's `examples/assets/`, which took them from wgrender's, unchanged:
+
+| File | Work | Author | Source | License |
+|---|---|---|---|---|
+| `music/a_hero_is_born.mp3` | "A Hero Is Born", its first 90 s | HoliznaCC0 | [Free Music Archive](https://freemusicarchive.org/music/holiznacc0/retro-gamer-soundtrack/a-hero-is-born/) | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `sounds/click_004.ogg` | UI Audio | Kenney | [kenney.nl](https://kenney.nl) | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |
+
 ## Whirling Gizmo's own
 
 Made by Whirling Gizmo for its libraries, under libwgf's MIT license:

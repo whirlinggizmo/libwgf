@@ -13,7 +13,7 @@ libwgf is one C library, `libwgf.a`, built in layers (CONVENTIONS' table says wh
 | platform | the window, its events, input: keyboard, mouse, touch, gamepads | built: sokol_app natively and on the web, or none in a headless build |
 | asset | where a resource's file comes from: local, fetched and cached on the web, revalidated, manifests, redirects, ensured ahead of a load, a native download hook | built |
 | gfx | 2D drawing: the frame, immediate mode, textures, fonts and text, nodes in canvases, shapes, sprites, particles | built |
-| audio | sounds and voices | to come (step 5) |
+| audio | sounds (decoded or streamed) and voices, mixed natively by libwgf on sokol_audio's thread, on the web by the browser's Web Audio | built |
 | ecs | entities, components, systems, scenes | to come (step 6) |
 | ui | layout and widgets | to come (step 7) |
 | app | the runtime: run, the frame loop, ticks, scripted runs | built |
@@ -103,6 +103,18 @@ app's runtime starts gfx once the window exists, and stops it, freeing every nod
 **Nodes.** A plain node (`wgf_node_create`) is only a transform; the other types are nodes with content. All nodes share one pool (`"gfx.node"`), and every type shares the node calls. A node keeps its rotation as a quaternion, and its local and world matrices, rebuilt only when dirty: changing a node's transform or parent marks it and everything under it world-dirty, stopping at a node already dirty, so moving a node costs its subtree once and a frame where nothing moved does no matrix math. A node's children are an array in drawing order, and a child that leaves leaves a hole, closed in one pass when the array is next read whole, so a node leaving a parent with thousands of children costs nothing for its siblings. A tree is walked, drawn, and destroyed with a list rather than C recursion, so any depth is safe. A canvas draws its tree depth first, each node's world matrix cleaned on the way down, through its camera; each type with something to draw draws through its kind's hook (`wgf_gfx_priv_node_kind_t`), set by its first create, so a canvas names no type and a program links only the types it makes. Shapes become their outline's points, placed through the node and drawn by immediate mode's fill or thick polyline; a sprite a placed textured quad; text a fontstash block through the node's matrix; an emitter its particles, born and kept in canvas units and moved on by the particles part's update every frame, through the canvas's view.
 
 sokol_gfx's backend is the build's: OpenGL core (4.1 or later) natively, WebGL2 on the web, and sokol's dummy backend, with no GPU, in a headless build.
+
+### audio
+
+Sounds and voices, libwgt's audio carried whole: a part installed by the first sound created, so a program that makes none links none of it.
+
+| Section | Header | Provides |
+|---------|--------|----------|
+| audio | `wgf_audio.h` | the master volume, and pausing everything |
+| sound | `wgf_sound.h` | a resource: WAV, MP3, or Ogg Vorbis, mono or stereo, decoded whole as it loads (`wgf_sound_create`), or decoded as it plays and played while its file arrives (`wgf_sound_create_streamed`, for music); its duration; named segments of it |
+| voice | `wgf_voice.h` | one playing of a sound, an object: play, pause, resume, stop, and `wgf_play_state_t`; loop, volume, pitch (a negative one plays backwards), pan, position, and a segment to play as the whole; it holds a reference to its sound |
+
+**Natively** libwgf decodes (dr_wav, dr_mp3, Xiph's libvorbis, each pinned past its last release for its fuzz fixes) and mixes on sokol_audio's device thread; voices' settings go to the mixer through a lock it holds briefly, and a slow frame doesn't stop the sound (`wgf_audio_stall_test`, in a window). **On the web** the browser does all of it: a decoded sound is `decodeAudioData`'s buffer, a streamed one an `<audio>` element, each voice a gain and a panner into a master gain, mixed on the browser's own audio thread, so a slow frame doesn't stop it there either and no decoder is in the wasm. One AudioContext, made by the first sound, waits suspended until the page's first input. The same tests run on both (`wgf_audio_voice_checks.c`'s steps), and `tools/check_stream.py` serves a streamed file slowly to a page and checks each case.
 
 ### app
 
