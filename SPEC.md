@@ -12,6 +12,14 @@ In this order. Each milestone leaves everything before it working, and every gam
 2. **A chase-camera racing game** (3D). One track from glTF, a car with real vehicle physics, a chase camera with smoothing, lap timing, a HUD, shadows, and an environment map. This proves 3D rendering, physics, asset streaming, and performance.
 3. **An ARPG vertical slice with co-op** (Diablo / Torchlight / Darksburg style). One dungeon level, one player class with three abilities, three enemy types with navmesh pathing, loot drops, an inventory, and 2 to 4 players in co-op through a central server. This proves skinned animation with blending, many lit instances, navmesh and AI, an authoritative server, and replication.
 
+   The slice's characters are **modular**:
+   - **Shared skeletons.** Several skinned meshes (body, head, chest, legs, and so on) are driven by one skeleton and one animation state, matched by joint name, and swapped at runtime. A piece whose skeleton doesn't match is refused, never drawn wrong.
+   - **Sockets.** Named attachment points from the glTF or from data (`hand_r`, `hand_l`, `back`), each with an offset. Equipping an item from the inventory hangs the item's model on its socket: a weapon, a shield.
+   - **Animation.** Crossfades between clips, and layers: an upper-body attack over lower-body movement.
+   - **Co-op.** Equipment is replicated as item ids, never as meshes, so every player sees what the others wear and wield.
+
+   Done when equipping a different helmet, chest piece and weapon from the inventory changes the character for every player in the session, mid-animation, with no pop.
+
 The full ARPG is a game, not a framework milestone. The vertical slice is what libwgf must be able to carry.
 
 Each game lives in `games/<name>/`, uses only libwgf's public API, is deployed to GitHub Pages on every push to `main`, and also exports as a desktop build.
