@@ -4,9 +4,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FOLDERS = ['tools/*.py', 'tools/bench/*.py', 'tools/wgf/*.py', 'bindings/*/tools/*.py']
-MODULES = {'tools/binding.py', 'tools/browser.py', 'tools/examples.py', 'tools/headers.py', 'tools/server.py',
-           'tools/tools.py', 'tools/usercache.py', 'tools/variants.py', 'tools/webhost.py', 'tools/wine.py',
-           'tools/wgf/cli.py', 'tools/wgf/devserver.py', 'tools/wgf/game.py'}
+MODULES = {'tools/binding.py', 'tools/browser.py', 'tools/examples.py', 'tools/headers.py', 'tools/jsbinding.py',
+           'tools/server.py', 'tools/tools.py', 'tools/usercache.py', 'tools/variants.py', 'tools/webhost.py',
+           'tools/wine.py', 'tools/wgf/cli.py', 'tools/wgf/devserver.py', 'tools/wgf/game.py'}
 
 
 def tool_files():

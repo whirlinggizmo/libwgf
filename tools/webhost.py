@@ -1,5 +1,6 @@
 """Linking libwgf's web host: libwgf for the web with no main, exporting its calls, as
-tools/build_host.py and tools/check_binding.py build it. Standard library only."""
+tools/build_host.py and tools/check_binding.py build it, with the JS binding (wgf.js) every
+JS program reaches it through beside it. Standard library only."""
 import json
 import os
 import shutil
@@ -9,21 +10,20 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # an embedded Python (Windows) doesn't add it
 import examples  # noqa: E402
+import jsbinding  # noqa: E402
 import variants  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 FULL = ROOT / 'hosts' / 'web' / 'exports.json'
 
-# What the binding's runtime reaches in the module besides the calls (wgf/impl/Host.js.hx,
-# wgf/Runtime.hx): never trimmed.
 # A release host's optimization, and whether Closure minifies its JS (docs/HISTORY.md,
 # "The web host's release flags"): measured on Asteroids' trimmed host.
 OPTIMIZE = '-O2'
 CLOSURE = True
 EXTRA = []  # more link flags, for an audit (--profiling-funcs, -Wl,--Map)
 
-RUNTIME = ['addFunction', 'stackSave', 'stackRestore', 'stackAlloc', 'stringToUTF8', 'lengthBytesUTF8',
-           'UTF8ToString', 'HEAPU8', 'HEAP32', 'HEAPF32']
+# What the JS binding reaches in the module besides the calls: never trimmed.
+RUNTIME = jsbinding.RUNTIME
 
 
 def emcc():
@@ -39,8 +39,10 @@ def emcc():
     return found
 
 
-def build(variant, exports_file=None, out=None, stage=True):
-    """Link the host; the directory it is in."""
+def build(variant, exports_file=None, out=None, stage=True, constants=True):
+    """Link the host, the JS binding beside it (bindings/js/wgf.js: whole for the full
+    host, else trimmed to the same calls, with its enums when `constants`); the directory
+    they are in."""
     if not variants.is_web(variant):
         raise RuntimeError(f'{variant} is not a web variant')
     if stage:
@@ -50,8 +52,7 @@ def build(variant, exports_file=None, out=None, stage=True):
     if not archive.exists():
         raise RuntimeError(f'no staged libwgf in {staged}: run tools/stage_variant.py {variant}')
     listed = json.loads(Path(exports_file or FULL).read_text(encoding='utf-8'))['exports']
-    exports = sorted(set(listed) | {'_malloc', '_free', '_wgf_version_get', '_wgf_version_get_major',
-                                    '_wgf_version_get_minor', '_wgf_app_run'})
+    exports = sorted(set(listed) | set(jsbinding.LIBRARY) | set(jsbinding.RUN_CALLS))
     out = Path(out) if out else staged / 'host'
     out.mkdir(parents=True, exist_ok=True)
     work = Path(variants.work(variant)) / 'host'
@@ -76,6 +77,49 @@ def build(variant, exports_file=None, out=None, stage=True):
                           errors='replace')
     if done.returncode != 0:
         raise RuntimeError('linking the host failed:\n' + '\n'.join(done.stdout.strip().splitlines()[-30:]))
+    whole = (jsbinding.BINDING / 'wgf.js').read_text(encoding='utf-8')
+    binding = whole if exports_file is None else jsbinding.trim(whole, listed, constants)
+    (out / 'wgf.js').write_bytes(binding.encode('utf-8'))  # its \n as they are, on every platform
+    return out
+
+
+JS_EXAMPLES = ROOT / 'examples' / 'js'
+
+
+def js_example_config(example):
+    """A JS example's example.json, if it has one: its assets and its autopilot, each a
+    path from the root (default: examples/assets, and none)."""
+    path = Path(example) / 'example.json'
+    config = json.loads(path.read_text(encoding='utf-8')) if path.exists() else {}
+    assets = ROOT / config.get('assets', 'examples/assets')
+    autopilot = ROOT / config['autopilot'] if 'autopilot' in config else None
+    return assets, autopilot
+
+
+def build_js_example(example, variant, out, trimmed=False):
+    """A JS example (examples/js/<name>/) as a site in `out`: its page and modules, the
+    host and the JS binding beside them (with `trimmed`, both cut to the calls and enums
+    its modules name, as a release export is), and its assets copied in. The directory."""
+    example, out = Path(example), Path(out)
+    if out.exists():
+        shutil.rmtree(out)
+    out.mkdir(parents=True)
+    modules = sorted(example.glob('*.js'))
+    for file in [*modules, example / 'index.html']:
+        shutil.copyfile(file, out / file.name)
+    listing = None
+    if trimmed:
+        calls, constants = jsbinding.names_in(''.join(m.read_text(encoding='utf-8') for m in modules))
+        known = set(json.loads(FULL.read_text(encoding='utf-8'))['exports'])
+        listing = Path(variants.work(variant)) / 'host' / f'{example.name}-exports.json'
+        listing.parent.mkdir(parents=True, exist_ok=True)
+        listing.write_text(json.dumps({'exports': sorted({'_' + c for c in calls} & known)}, indent=1) + '\n',
+                           encoding='utf-8')
+        build(variant, listing, out, constants=constants)
+    else:
+        build(variant, None, out)
+    assets, _ = js_example_config(example)
+    shutil.copytree(assets, out / 'assets')
     return out
 
 

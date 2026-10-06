@@ -5,10 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>@WGF_PROGRAM@</title>
 <!-- A Haxe program's page, written from hosts/web/page.html: it loads libwgf's web host,
-     wgf-host.js and .wasm (tools/build_host.py), makes the host on the canvas, and then
-     the program, @WGF_PROGRAM@.js, built by Haxe for the JS target, which finds the host
-     at globalThis.wgfHost (wgf.Runtime.run). Files are versioned name?v=<hash> once
-     stamped in (the /*wgf:versions*/ mark below), so a host can keep them for good. -->
+     wgf-host.js and .wasm (tools/build_host.py), makes the host on the canvas, attaches
+     the JS binding to it (wgf.js, bindings/js/), and then loads the program,
+     @WGF_PROGRAM@.js, built by Haxe for the JS target, which finds the binding at
+     globalThis.wgfJs: every call it makes goes through it. Files are versioned
+     name?v=<hash> once stamped in (the /*wgf:versions*/ mark below), so a host can keep
+     them for good. -->
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: #101218;
     color: #cdd3de; font: 14px/1.4 system-ui, sans-serif; }
@@ -81,7 +83,8 @@
     }
 
     // ---- the host, then the program ------------------------------------------
-    // Written in by the build: {"host": "<hash>", "wasm": "<hash>", "js": "<hash>"}, so
+    // Written in by the build: {"host": "<hash>", "wasm": "<hash>", "binding": "<hash>",
+    // "js": "<hash>"}, so
     // each file is loaded as name?v=<hash>; empty, they are loaded unversioned.
     const VERSION = /*wgf:versions*/{};
     const versioned = (file, hash) => (hash ? file + "?v=" + hash : file);
@@ -109,7 +112,8 @@
     };
     try {
       const createWgfHost = (await import(versioned("./wgf-host.js", VERSION.host))).default;
-      globalThis.wgfHost = await createWgfHost({
+      const wgf = await import(versioned("./wgf.js", VERSION.binding));
+      const host = await createWgfHost({
         canvas: document.getElementById("canvas"),
         print: (...a) => console.log(...a),
         printErr,
@@ -117,6 +121,8 @@
         // an autopilot run (the wgf tool's autopilot, a playthrough), when one was handed the page
         ...(typeof globalThis.wgfAutopilot === "string" ? { wgfAutopilot: globalThis.wgfAutopilot } : {}),
       });
+      wgf.attach(host);
+      globalThis.wgfJs = wgf;
       statusEl.textContent = "";
       await import(versioned("./" + NAME + ".js", VERSION.js));
     } catch (err) {

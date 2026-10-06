@@ -42,9 +42,9 @@ def work_dir(name):
     return path
 
 
-def compile_haxe(source, target, defines=()):
+def compile_haxe(source, target, defines=(), extra=()):
     """Build the Haxe program whose Main is in `source`; (ok, its output)."""
-    command = [haxe(), '-cp', SOURCE.parent, '-cp', source, '--main', 'Main', *target]
+    command = [haxe(), '-cp', SOURCE.parent, '-cp', source, '--main', 'Main', *target, *extra]
     for define in defines:
         command += ['-D', define]
     done = subprocess.run([str(c) for c in command], cwd=BINDING, stdout=subprocess.PIPE,
@@ -91,7 +91,7 @@ def run_node(name, source, mark, defines=(), assets=False):
     ok, out = compile_haxe(source, ['--js', work / 'program.js'], ['js-es=6', *defines])
     if not ok:
         return False, out
-    command = [node, BINDING / 'test' / 'node.mjs', host / 'wgf-host.js', work / 'program.js']
+    command = [node, BINDING / 'test' / 'node.mjs', host / 'wgf-host.js', host / 'wgf.js', work / 'program.js']
     if assets:
         command.append(f'{ASSETS.as_posix()}=/assets')
     done = subprocess.run([str(c) for c in command], cwd=work, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -100,16 +100,18 @@ def run_node(name, source, mark, defines=(), assets=False):
     return done.returncode == 0 and result == 'PASS', done.stdout
 
 
-def run_browser(name, source, mark, browser_path, defines=(), timeout=120):
+def run_browser(name, source, mark, browser_path, defines=(), timeout=120, release=False):
     """Build `source` for JS beside the full web host, in its page (hosts/web/page.html),
     serve it with examples/assets at /assets, and load it in a headless browser until its
-    `mark` line; (passed, what it logged)."""
+    `mark` line; (passed, what it logged). `release`: the release host, and the program
+    built as a game's release is (a benchmark's)."""
     work = work_dir(name + '-browser')
     site = work / 'site'
     page_dir = site / name
     page_dir.mkdir(parents=True, exist_ok=True)
-    webhost.build(variants.web(), out=page_dir)
-    ok, out = compile_haxe(source, ['--js', page_dir / f'{name}.js'], ['js-es=6', '-dce', 'full', *defines])
+    webhost.build(variants.web(debug=not release), out=page_dir)
+    ok, out = compile_haxe(source, ['--js', page_dir / f'{name}.js'],
+                           ['js-es=6', *(['analyzer-optimize'] if release else []), *defines], ['-dce', 'full'])
     if not ok:
         return False, out
     page = (ROOT / 'hosts' / 'web' / 'page.html').read_text(encoding='utf-8').replace('@WGF_PROGRAM@', name)

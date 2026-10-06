@@ -238,3 +238,59 @@ Renamed everywhere at once, with no aliases:
 The CLI's `wgf play <script>` is `wgf autopilot <file>` (`--web` for a browser), and `wgf run --script` is `wgf run --autopilot`. `wgf screenshot` and `wgf dump` take `--autopilot <file>` to fly one to a point first: the file's own end is dropped, and the shot or dump is taken at `--frame`, or where the file ended. `check_cli.py` covers each one.
 
 The same reading went through the tooling: a Python tool that is run, not imported, is a "command" (check_tools' wording, `tools.commands()`), and "no shell scripts" is "nothing in shell". Untouched, because they are the web's own terms: "script" in HTML's `<script>` and in Chrome's DevTools calls, JavaScript, and Emscripten. SPEC.md is Rob's, and still says "scripted"; the entries above are kept as written.
+
+## The JS binding, the one way JS reaches the host (2026-10-06)
+
+Rob's note, after SPEC (51af8be) made a JS/TS binding a public API and the one way JS reaches the wasm host, with Haxe's JS target built on it. This reverses milestone 1's "No JS binding between Haxe and the host" (above: the plan's "The Haxe binding: generated whole, calling the host directly", and the binding's entry). That decision was reasonable under the SPEC of then, which named no JS audience: with Haxe the only guest, one marshaller in Haxe was less to test. Reversed because SPEC now has three reasons it didn't. JS and TypeScript developers are users, who should need no Haxe. One marshaller serves every JS guest, so a JS program and a Haxe one cross the same way and can't drift. And Haxe dogfoods it: every Haxe game, test, and autopilot run exercises the JS binding.
+
+**wgrender-c was the proving ground.** SPEC now says so: what succeeded there was fed into libwgt, and some of it hasn't arrived (this binding, for one), so what wgrender-c has and libwgt lacks is proven, not abandoned. Milestone 1's decisions that leaned on libwgt, or set wgrender-c's way aside, re-checked for anything else of that kind:
+- **No JS binding**: reversed here.
+- **Natively, the staged archive** (libwgt's plan) over wgrender compiling libwgf's C through hxcpp: wgrender's was a workaround for MinGW archives with MSVC's linker, not something it proved. The archive built by hxcpp's own toolchain links (MSVC, every verify). It holds.
+- **One runtime call, `wgf_app_run`**, over wgrender's guest ABI (`wgr_guest_register`, `_install`, `_start`, a tick op, a fault policy). The ABI's ops are `wgf_app_run`'s callbacks; the JS binding's run now does what wgrender's `guest.js` did (catching, restoring the stack). Its fault policy is not carried: wgrender's default kept calling after a throw, and FATAL quit, where libwgf always ends the run. Found, not carried: a game that should run on past a throw would bring it.
+- **wgrender-c's measurements**: its call benchmark (`tools/bench/callbench`) is carried now (below). Its frame-time and GC measurements of a page (`tools/bench/pages.py`: frame, gc, calls) and its stress scene (`tools/bench/stress.c`, the scene every binding ported) are not: found, open, for when a frame's cost is the question.
+- **Minifier safety**: wgrender measured its JS binding under esbuild's property mangling. libwgf carries the rules that made it safe (quoted keys; vectors into arrays for a mangled program's own fields) but builds nothing mangled to test them. Found, open.
+
+Read first: wgrender-c's `bindings/js` (its generator, runtime, guest, type test, examples, README's measurements) and its HISTORY entry for Haxe's JS target on it (2026-10-03). What was carried:
+- Every call under its C name, its header comment its JSDoc, declarations beside it.
+- The runtime's rules: no heap view held; a returned vector through one fixed slot; text on the wasm stack for its call alone; quoted keys for every name into the host or into an object a caller passed.
+- Getters that fill the caller's object, or an array by index.
+- `BUILT_VERSION`, checked against the host when the run starts.
+- A release copy trimmed to what a program calls, without the enums for Haxe.
+- The TypeScript type test, and hello.
+
+What was redesigned, and why:
+- **One file.** The runtime (`src/runtime.js`) and the run (`src/app.js`) are put at the top of the generated `wgf.js`, where wgrender's were modules beside it. One file is one thing to copy, version, and trim. And a page that loads it versioned (`wgf.js?v=...`) can't end up with a second, unattached instance of a runtime imported by another path.
+- **Trimmed by its sections.** Each section after the hand-written head starts with a `// wgf: ` line. `tools/jsbinding.py`'s `trim` keeps the calls a program makes, and only the enums it names, and drops the comments. An export needs no clang, where wgrender's `--trim` parsed the headers again.
+- **`wgf_app_run` under its C name, taking JS functions**: libwgf has no guest ABI (one runtime call on every target), so the run is the C call's, its `user` pointer dropped (a closure carries state).
+- **What libwgf's API has and wgrender's didn't.** Bulk calls take a JS array or a typed array, copied into a slot of their own and back when C fills them. Byte spans are a `Uint8Array` or `ArrayBuffer` in, a `Uint8Array` out. No opaque records: libwgf returns none.
+- **Handles branded by kind in TypeScript** (wgrender's were one `number` type). SPEC's handles typed by kind hold in TS too: a texture is not a node, a plain number is neither, and 0 is any. A `uint32_t` comes back unsigned (`>>> 0`), so a color equals the constant it was made from.
+- **Generated with the Haxe binding, by the same tool from the same model** (`tools/gen_binding.py`'s `Binding`), so the two agree by construction.
+
+Haxe on it:
+- `Raw.js.hx` calls `Raw.binding["wgf_..."]`, the binding at `globalThis.wgfJs`, where the page (or node's runner) attaches it to the host. This is wgrender's `WgrJs`.
+- `Host.js.hx` keeps only Haxe's own: a vector read through one kept array, `Bytes` as the binding's `Uint8Array`s, and handles made Ints again (`| 0`).
+- `Runtime.run` on the web is the binding's run. Its version check also refuses a `wgf.js` made from other headers than the program's binding.
+- The export trims both: the host's list is the binding's quoted keys in the program's JS that are calls.
+- A game's page is its own, written once from `hosts/web/page.html`, so one made before this has no attach. Its program then says so at its first call; the fix is to write the page again, as Asteroids' was.
+
+**JS examples** (`examples/js/`):
+- hello: the C `app-hello`, call for call.
+- Asteroids: the Haxe game ported, on the game's own assets. Its `behaviors.js` does in the program what the Haxe binding's `wgf.Script` does. It flies the Haxe game's own playthrough to a PASS: same calls, same seed.
+- `tools/check_js_binding.py` runs the type test and flies both in a browser (verify's `js-binding`, CI's web job).
+- TypeScript 7.0.2 is pinned in that tool and installed by CI; locally the tool finds a `tsc`, or that version in npm's cache, offline.
+
+**Measured: before and after.** The call benchmark (`tools/bench/measure_calls.py`, new) times 200,000 calls of each shape in headless Chromium on the release host: the median of 7 runs a page, over 3 page loads. "Before" is Haxe calling the host's exports directly (c29da68); "after" is the same program through the JS binding, beside the same calls written in JS on the binding alone. In ns per call:
+
+| shape | Haxe, before | Haxe, after | JS |
+|---|---:|---:|---:|
+| set (`wgf_entity_set_position`) | 15.4 | 16.4 | 16.9 |
+| get (`wgf_entity_get_position`, into a kept vector) | 28.4 | 29.9 | 24.4 |
+| transform (`wgf_entity_set_transform`, nine floats) | 24.7 | 26.2 | 21.6 |
+| string (`wgf_entity_set_name`) | 86.7 | 85.9 | 82.8 |
+| bulk (`wgf_entity_get_positions`), per entity of 1,000 | 13.6 | 13.7 | 13.6 |
+
+The layer costs Haxe about 1 to 1.5 ns on a simple call (one more function between Haxe and the export, about 6%), and nothing measurable on text or bulk calls, where the copying is the cost. JS on the binding is a little faster than Haxe on the vector and many-float calls.
+
+In bytes, Asteroids' web export went from 294.7 to 297.3 KB gzipped (+2.6, +0.9%): its trimmed `wgf.js` is 3.1 KB for its 69 calls, its program's JS fell from 9.6 to 8.9, and the host is the same. wgrender-c measured its two layers at about 3% of a trimmed page. JS hello is 112.5 KB beside the C `app-hello`'s 107.2, and JS Asteroids 295.0 beside the Haxe game's 297.3. The size table now gives every program on the binding with the binding's share (`docs/benchmarks.md`, "The JS binding's share").
+
+Found on the way: `tools/binding.py`'s browser runs passed `-dce full` as two defines (`-D -dce -D full`), so the binding's and the feature test's browser runs never had full dead-code elimination. They have it now, and pass.

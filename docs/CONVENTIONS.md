@@ -16,9 +16,10 @@ libwgf/
     include/      public headers
     src/          implementation and private headers
     tests/
-  hosts/web/      the web host the Haxe guest runs on
-  bindings/haxe/  the Haxe binding (haxelib wgf)
-  examples/c/<layer>-<name>/ C examples, and examples/haxe/<name>/
+  hosts/web/      the web host JS and Haxe programs run on
+  bindings/js/    the JS binding (wgf.js, wgf.d.ts), the one way JS reaches the host
+  bindings/haxe/  the Haxe binding (haxelib wgf), built on the JS binding on the web
+  examples/c/<layer>-<name>/ C examples; examples/js/<name>/ and examples/haxe/<name>/
   games/<name>/   the games
   templates/      what `wgf new` copies
   deps/           vendored third-party code
@@ -130,11 +131,11 @@ No other pointer, no struct, no function pointer, no `void *`, no variadic call.
 
 - Third-party source is copied into `deps/`, pinned, and never fetched at build time. `deps/README.md` lists each with its version, license, and how to update it; `THIRD_PARTY_NOTICES.md` has each license in full and what a binary must ship.
 - An altered vendored file says so at its top and is listed in THIRD_PARTY_NOTICES.md; a change of libwgf's is marked `[libwgf]`, one carried from another project keeps its mark.
-- Haxe dependencies are pinned in `bindings/haxe/haxelib.json`.
+- Haxe dependencies are pinned in `bindings/haxe/haxelib.json`. The JS binding depends on nothing; TypeScript, a tool its type test runs, is pinned in `tools/check_js_binding.py` (`TYPESCRIPT`), which CI installs.
 
 ## Versioning
 
-- One version for the repository, in `VERSION`; the library and its binding change together in one commit.
+- One version for the repository, in `VERSION`; the library and its bindings change together in one commit.
 
 ## Bindings
 

@@ -27,11 +27,13 @@ The binding's checks (tools/check_binding.py), when there is a haxe:
   binding-web     with --web: the test under node on the headless host, and in a browser
   features        the feature test, every public call reached, on hxcpp (tools/check_features.py)
   features-web    with --web: the same under node, and in a browser
+  js-binding      with --web: the JS binding generated, its types under TypeScript (said
+                  skipped without tsc), every JS example in a browser (check_js_binding.py)
   cli             the wgf tool, each command on a game it makes (tools/check_cli.py); its
                   steps needing what this machine hasn't are skipped, and said so
   games           every game: its playthrough headless and in a browser, its web export
                   within its budget, its desktop export (tools/check_games.py), as cli skips
-  sizes           with --web: every example's and game export's web size against the
+  sizes           with --web: every example's (C, JS) and game export's web size against the
                   baseline, docs/benchmarks.json (tools/measure_sizes.py --check)
 With --windows HOST, also, on that Windows machine over ssh, the working tree as it is
 (tools/run_remote_windows.py, nothing left there):
@@ -76,6 +78,7 @@ CHECKS = {
     'binding-web': (['tools/check_binding.py', '--only', 'node,browser'], True, ('haxe', 'no haxe')),
     'features': (['tools/check_features.py', '--only', 'hxcpp'], False, ('haxe', 'no haxe')),
     'features-web': (['tools/check_features.py', '--only', 'node,browser'], True, ('haxe', 'no haxe')),
+    'js-binding': (['tools/check_js_binding.py'], True, None),
     'cli': (['tools/check_cli.py'], False, ('haxe', 'no haxe')),
     'games': (['tools/check_games.py'], False, ('haxe', 'no haxe')),
     'sizes': (['tools/measure_sizes.py', '--check'], True, ('haxe', 'no haxe')),

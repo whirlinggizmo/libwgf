@@ -135,7 +135,7 @@ def build_web(game, release=False, hot=False, out=None, exports=None):
     out = Path(out) if out else game.build_dir('web')
     out.mkdir(parents=True, exist_ok=True)
     try:
-        webhost.build(variant_for('web', release), exports, out)
+        webhost.build(variant_for('web', release), exports, out, constants=False)  # Haxe has its own enums
     except RuntimeError as e:
         raise GameError(str(e))
     shutil.copyfile(page(game), out / 'index.html')

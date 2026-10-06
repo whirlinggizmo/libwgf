@@ -1,6 +1,6 @@
 # libwgf
 
-A game framework for the web first and the desktop second: a C core on sokol, and games written in Haxe (JavaScript on the web against a prebuilt wasm host; hxcpp natively).
+A game framework for the web first and the desktop second: a C core on sokol, and games written in Haxe (JavaScript on the web against a prebuilt wasm host; hxcpp natively), or in JavaScript and TypeScript through its JS binding.
 
 It is done when it ships three games ([SPEC.md](SPEC.md)): Asteroids, a chase-camera racing game, and an ARPG vertical slice with co-op. [docs/ROADMAP.md](docs/ROADMAP.md) says where it is.
 
@@ -11,7 +11,7 @@ It is done when it ships three games ([SPEC.md](SPEC.md)): Asteroids, a chase-ca
 - [docs/CONVENTIONS.md](docs/CONVENTIONS.md): the rules for changing libwgf.
 - [games/asteroids/](games/asteroids/README.md): the first game, played at <https://whirlinggizmo.github.io/libwgf/asteroids/>.
 - [BUILDING.md](BUILDING.md#games-the-wgf-tool): making a game with the `wgf` tool: `./wgf new`, then `wgf serve`.
-- [docs/BINDINGS.md](docs/BINDINGS.md): how a binding maps libwgf's calls; the Haxe binding is [bindings/haxe/](bindings/haxe/README.md).
+- [docs/BINDINGS.md](docs/BINDINGS.md): how a binding maps libwgf's calls; the JS binding is [bindings/js/](bindings/js/README.md), the Haxe binding [bindings/haxe/](bindings/haxe/README.md).
 - [docs/benchmarks.md](docs/benchmarks.md): every program's web size, beside libwgt's and wgrender-c's, which CI holds libwgf to.
 - [docs/HISTORY.md](docs/HISTORY.md): what was built and decided, and why.
 - [docs/ROADMAP.md](docs/ROADMAP.md): what is left, in order.

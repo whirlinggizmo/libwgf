@@ -31,6 +31,7 @@ command but new and serve exits 0 when it did what it says, and non-zero, saying
 when it didn't. Standard library only.
 """
 import argparse
+import json
 import os
 import re
 import shutil
@@ -39,7 +40,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # an embedded Python (Windows) doesn't add it
 import devserver  # noqa: E402
-import game as games  # noqa: E402
+import game as games  # noqa: E402  (which puts tools/ on the path, for the two below)
+import jsbinding  # noqa: E402
+import webhost  # noqa: E402
 
 ROOT = games.ROOT
 TEMPLATE = ROOT / 'templates' / 'game'
@@ -203,18 +206,16 @@ def cmd_serve(args):
 
 # ---- export ----------------------------------------------------------------------------
 
-RUNTIME_CALLS = ('_wgf_app_run', '_wgf_version_get', '_wgf_version_get_major', '_wgf_version_get_minor')
-
-
 def trimmed_exports(program_js, out):
     """The host's exports a release program calls, written as a trimmed host's list: every
-    call into the host is by its quoted key (host["_wgf_..."]), wherever dead-code
-    elimination and inlining left it, so the keys in the program's JS are what it calls.
-    Read from the program's JS (Haxe's output, not C)."""
+    call the program makes is the JS binding's by its quoted key (Raw.binding["wgf_..."]),
+    wherever dead-code elimination and inlining left it, so the keys in the program's JS
+    that are calls are what it calls; the binding's run adds its own. Read from the
+    program's JS (Haxe's output, not C)."""
     text = Path(program_js).read_text(encoding='utf-8')
-    calls = set(re.findall(r'"(_wgf_[a-z0-9_]+)"', text))
-    exports = sorted(calls | set(RUNTIME_CALLS))
-    import json
+    known = set(json.loads(webhost.FULL.read_text(encoding='utf-8'))['exports'])
+    calls = {'_' + name for name in re.findall(r'"(wgf_[a-z0-9_]+)"', text)} & known
+    exports = sorted(calls | set(jsbinding.RUN_CALLS))
     out.write_text(json.dumps({'exports': exports}, indent=1) + '\n', encoding='utf-8')
     return exports
 
@@ -241,7 +242,7 @@ def export_web(game, out):
         shutil.copytree(game.assets, assets) if game.assets.is_dir() else assets.mkdir()
     for notice in ('LICENSE', 'THIRD_PARTY_NOTICES.md'):
         shutil.copyfile(ROOT / notice, out / f'libwgf-{notice}')
-    files = [out / 'wgf-host.wasm', out / 'wgf-host.js', out / f'{game.name}.js', out / 'index.html']
+    files = [out / 'wgf-host.wasm', out / 'wgf-host.js', out / 'wgf.js', out / f'{game.name}.js', out / 'index.html']
     sizes = {f.name: games.gzip_size(f) for f in files}
     total = sum(sizes.values())
     say(f'web export: {len(exports)} calls in its host; '

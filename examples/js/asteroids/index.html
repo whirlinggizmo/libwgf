@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Asteroids (JS)</title>
+<!-- A JS example's page: main.js makes libwgf's web host (wgf-host.js and .wasm) on the
+     canvas, attaches the JS binding (wgf.js) to it, and runs. -->
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; }
+  #canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; display: block;
+    outline: none; touch-action: none; }
+</style>
+</head>
+<body>
+  <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

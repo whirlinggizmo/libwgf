@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
-"""Generate the Haxe binding's C surface and typed API from the public headers.
+"""Generate the bindings from the public headers: the Haxe binding, and the JS binding it
+is built on for the JS target.
 
     tools/gen_binding.py [--check]
 
 Reads every public header through clang (tools/headers.py) and writes, under
 bindings/haxe/src/wgf/:
-  impl/Raw.js.hx     each exported call for the JS target: the wasm host's export by its
-                     quoted key, strings on the wasm stack for the call alone, arrays and
-                     returned vectors through the binding's slots (impl/Host.js.hx)
+  impl/Raw.js.hx     each exported call for the JS target: the JS binding's, by its quoted
+                     key (bindings/js/wgf.js does the crossing; impl/Host.js.hx the rest)
   impl/Raw.cpp.hx    the same calls for hxcpp: the C call itself, its arguments cast
   impl/BuiltVersion.hx  the version and the headers' digest the binding was made from
   <Type>.hx          the typed API: an abstract per handle kind, with its calls as its
                      methods; an abstract over a kind for each section whose calls take
                      that kind first (a shape is a node); an enum abstract per enum; and
                      the other calls as statics of their header's class
-and hosts/web/exports.json, the full host's exports. One name per C call: every exported
+bindings/js/wgf.js and wgf.d.ts, the JS binding (tools/jsbinding.py), and
+hosts/web/exports.json, the full host's exports. One name per C call: every exported
 call is exactly one member of the typed API, or listed in SKIPPED with its reason
 (docs/BINDINGS.md). Every generated file says so at its top; --check writes nothing and
 fails when one is stale or missing. A call it can't map stops it, named. Standard library
@@ -29,6 +30,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # an embedded Python (Windows) doesn't add it
 import binding as places  # noqa: E402
 import headers  # noqa: E402
+import jsbinding  # noqa: E402
 
 ROOT = places.ROOT
 OUT = places.SOURCE
@@ -41,8 +43,8 @@ SKIPPED = {
     'wgf_app_run': 'the runtime: wgf.App.run installs its trampolines once (callbacks are C function pointers)',
 }
 
-# The runtime's calls into the host besides the API's: kept by every host.
-HOST_EXTRA = ['_malloc', '_free']
+# The JS binding's calls into the host besides the API's: kept by every host.
+HOST_EXTRA = jsbinding.LIBRARY
 
 VECTORS = {'wgf_vec2_t': ('Vec2', 2), 'wgf_vec3_t': ('Vec3', 3), 'wgf_vec4_t': ('Vec4', 4)}
 
@@ -260,61 +262,39 @@ def haxe_result(binding, f, raw):
     return 'Int' if raw and detail[2] == 'int' else detail[0]
 
 
-def js_raw(binding, f):
-    """One call for the JS target."""
+def js_raw(binding, f, emitter):
+    """One call for the JS target: the JS binding's (bindings/js/wgf.js), by its quoted key.
+    The binding does the crossing; what is left is Haxe's own: a vector read into a Vec,
+    Bytes to and from the binding's bytes, and a uint32_t made an Int (`| 0`) again."""
     params = haxe_params(binding, f, raw=True)
     sig = ', '.join(f'{n}:{t}' for n, t in params)
     result, detail = binding.result_of(f)
-    lines, args, after = [], [], []
-    needs_mark = False
-    slot = 0
+    args, after = [], []
     for (kind, name, ctype, extra), (safe, _) in zip(binding.params_of(f), params):
-        if kind == 'scalar':
-            args.append(f'({safe} ? 1 : 0)' if extra[2] == 'bool' else safe)
-        elif kind == 'string':
-            needs_mark = True
-            args.append(f'Host.cstr({safe})')
-        elif kind == 'bytes':
-            lines.append(f'final {safe}Pointer = Host.bytesIn({safe}, {slot});')
-            args += [f'{safe}Pointer', f'({safe} == null ? 0 : {safe}.length)']
-            slot += 1
+        if kind == 'bytes':
+            args.append(f'Host.bytesIn({safe})')
         else:
-            float_ = extra == 'float'
-            if kind == 'array_in':
-                lines.append(f'final {safe}Pointer = Host.{"floatsIn" if float_ else "intsIn"}({safe}, {slot});')
-            else:
-                lines.append(f'final {safe}Pointer = Host.arrayOut({safe}, {slot});')
-                after.append(f'Host.{"floatsOut" if float_ else "intsOut"}({safe}Pointer, {safe});')
-            args += [f'{safe}Pointer', f'({safe} == null ? 0 : {safe}.length)']
-            slot += 1
-    key = f'Raw.host["_{f.name}"]'
-    if result == 'vector':
-        haxe_type, count = detail
-        lines.append(f'final result = Host.result({4 * count});')
-        call = f'{key}({", ".join(["result"] + args)})'
-    else:
-        call = f'{key}({", ".join(args)})'
+            args.append(safe)
+            if kind == 'array_out' and extra not in ('float', 'int'):
+                after.append(f'Host.signed({safe});')  # handles back unsigned: Haxe's Ints again
+    key = f'Raw.binding["{f.name}"]'
     body = []
-    if needs_mark:
-        body.append('final mark = Host.stackSave();')
-    body += lines
-    if result == 'void':
-        body.append(f'{call};')
-    elif result == 'vector':
-        body.append(f'{call};')
+    if result == 'vector':
+        body.append(f'{key}({", ".join(args + ["Host.vector"])});')
+        body += after
+        body.append(f'return Host.vec{detail[1]}(into);')
+    elif result == 'void':
+        body.append(f'{key}({", ".join(args)});')
+        body += after
     else:
-        body.append(f'final value:Dynamic = {call};')
-    body += after
-    if needs_mark:
-        body.append('Host.stackRestore(mark);')
-    if result == 'string':
-        body.append('return Host.str(value);')
-    elif result == 'bytes':
-        body.append(f'return Host.bytesOut(value, (Raw.host["_{detail}"]({args[0]}) : Int));')
-    elif result == 'vector':
-        body.append(f'return Host.vec{detail[1]}(result, into);')
-    elif result == 'scalar':
-        body.append({'bool': 'return value != 0;', 'float': 'return value;', 'int': 'return value;'}[detail[2]])
+        body.append(f'final value:Dynamic = {key}({", ".join(args)});')
+        body += after
+        if result == 'bytes':
+            body.append('return Host.bytesOut(value);')
+        elif result == 'scalar' and detail[2] == 'int' and emitter.unsigned(f.returns):
+            body.append('return (value : Int) | 0;')
+        else:
+            body.append('return value;')
     ret = haxe_result(binding, f, raw=True)
     return raw_function(f, sig, ret, body)
 
@@ -517,13 +497,14 @@ def outputs(api):
         '\t\treturn i < 0 ? -1 : counts[i];\n\t}\n\n'
         '\t/** The calls never made. **/\n\tpublic static function missing():Array<String>\n'
         '\t\treturn [for (i in 0...NAMES.length) if (counts[i] == 0) NAMES[i]];\n}\n')
-    js = ''.join(js_raw(binding, f) for f in funcs if f.name not in SKIPPED)
+    emitter = jsbinding.Emitter(binding)
+    js = ''.join(js_raw(binding, f, emitter) for f in funcs if f.name not in SKIPPED)
     cpp = ''.join(cpp_raw(binding, f) for f in funcs if f.name not in SKIPPED)
     files[OUT / 'impl' / 'Raw.js.hx'] = (
         f'// {MARK}\npackage wgf.impl;\n\n'
-        '/** Each exported C call for the JS target: the host\'s export by its quoted key. **/\n'
-        'class Raw {\n\t/** The wasm host every call goes through (Host.attach). **/\n'
-        '\tpublic static var host:haxe.DynamicAccess<Dynamic> = Host.initial();\n\n' + js + '}\n')
+        '/** Each exported C call for the JS target: the JS binding\'s, by its quoted key. **/\n'
+        'class Raw {\n\t/** The JS binding every call goes through (bindings/js/wgf.js; Host.initial). **/\n'
+        '\tpublic static var binding:haxe.DynamicAccess<Dynamic> = Host.initial();\n\n' + js + '}\n')
     includes = ''.join(f'#include <{Path(h).name}>\\n' for h in api.headers)
     cvec = ''.join(f'@:native("wgf_vec{n}_t") @:structAccess @:unreflective extern class CVec{n} {{\n' +
                    ''.join(f'\tvar {c}:cpp.Float32;\n' for c in 'xyzw'[:n]) + '}\n\n' for n in (2, 3, 4))
@@ -539,6 +520,7 @@ def outputs(api):
         f'\tpublic static inline final PATCH = {int(patch)};\n\tpublic static inline final HEADERS = "{stamp}";\n}}\n')
     for name, text in typed_modules(binding).items():
         files[OUT / f'{name}.hx'] = text
+    files.update(jsbinding.outputs(binding, version, stamp, SKIPPED))
     exports = sorted('_' + f.name for f in binding.functions) + HOST_EXTRA
     files[EXPORTS] = json.dumps({'generated': MARK, 'version': version, 'headers': stamp, 'exports': exports},
                                 indent=1) + '\n'

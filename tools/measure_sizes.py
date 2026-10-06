@@ -6,9 +6,11 @@ baseline.
     tools/measure_sizes.py [--references] [--write] [--check] [--only NAME[,NAME...]]
 
 libwgf's programs are built in wasm32-release, as a page ships them: each C example
-(tools/examples.py) and each game's web export (wgf export --web: its trimmed host, its
-page, its program). For each, the wasm and the JS, raw, gzip -9, and brotli -q 11 (when
-the brotli tool or module is there); a game's JS is its host's and its program's.
+(tools/examples.py), each game's web export (wgf export --web: its trimmed host, its
+page, its program), and each JS example (examples/js/, its host and JS binding trimmed
+alike: js:<name>). For each, the wasm and the JS, raw, gzip -9, and brotli -q 11 (when
+the brotli tool or module is there); a game's JS is its host's, the JS binding's, and
+its program's, and the binding's share is given too.
 
   --references  build libwgt's and wgrender-c's release web examples from their
                 checkouts beside this one (../libwgt, ../wgrender-c), read-only: each is
@@ -108,9 +110,13 @@ def brotli_size(data):
 
 
 def measure(wasm_files, js_files):
-    """One program's sizes, bytes: raw, gzip -9, and brotli, for its wasm and its JS."""
+    """One program's sizes, bytes: raw, gzip -9, and brotli, for its wasm and its JS; and
+    of its JS, the JS binding's (wgf.js), when it has one."""
     out = {}
-    for kind, files in (('wasm', wasm_files), ('js', js_files)):
+    binding = [f for f in js_files if Path(f).name == 'wgf.js']
+    for kind, files in (('wasm', wasm_files), ('js', js_files), ('binding', binding)):
+        if not files:
+            continue
         data = b''.join(Path(f).read_bytes() for f in files)
         out[kind] = {'raw': len(data), 'gz': sum(len(gzip.compress(Path(f).read_bytes(), 9)) for f in files)}
         br = [brotli_size(Path(f).read_bytes()) for f in files]
@@ -173,7 +179,23 @@ def libwgf_games(only):
         dest = ROOT / 'build' / 'sizes' / name
         run([sys.executable, ROOT / 'wgf', 'export', '--web', '--out', dest], cwd=game, what=f'exporting {name}')
         web = dest / 'web'
-        out[f'game:{name}'] = measure([web / 'wgf-host.wasm'], [web / 'wgf-host.js', web / f'{name}.js'])
+        out[f'game:{name}'] = measure([web / 'wgf-host.wasm'],
+                                      [web / 'wgf-host.js', web / 'wgf.js', web / f'{name}.js'])
+    return out
+
+
+def libwgf_js_examples(only):
+    """Each JS example as a release export is: its host and binding trimmed to the calls
+    and enums it names (tools/webhost.py's build_js_example)."""
+    out = {}
+    for example in sorted(p for p in webhost.JS_EXAMPLES.iterdir() if (p / 'main.js').is_file()):
+        name = f'js:{example.name}'
+        if only and name not in only:
+            continue
+        site = webhost.build_js_example(example, variants.web(debug=False),
+                                        ROOT / 'build' / 'sizes' / f'js-{example.name}', trimmed=True)
+        modules = sorted(p for p in site.glob('*.js') if p.name != 'wgf-host.js')
+        out[name] = measure([site / 'wgf-host.wasm'], [site / 'wgf-host.js', *modules])
     return out
 
 
@@ -289,13 +311,26 @@ def markdown(baseline):
     games = sorted(n for n in lib if n.startswith('game:'))
     if games:
         lines += ['', '## Games', '', 'Each game\'s web export: its host trimmed to the calls it makes, and its program '
-                  '(the JS column is both JS files); its page and assets aren\'t counted.', '',
+                  '(the JS column is the host\'s, the JS binding\'s, and the program\'s); its page and assets aren\'t '
+                  'counted.', '',
                   '| game | wasm | wasm.gz | js | js.gz | total.gz | total.br | budget |', '|---|---:|---:|---:|---:|---:|---:|---:|']
         for name in games:
             s = lib[name]
             budget = baseline['libwgf'].get('budgets', {}).get(name)
             lines.append(f'| {name[5:]} | {kb(s["wasm"]["raw"])} | {kb(s["wasm"]["gz"])} | {kb(s["js"]["raw"])} | '
                          f'{kb(s["js"]["gz"])} | {kb(total(s))} | {kb(total(s, "br"))} | {budget or ""} |')
+    bound = sorted((n for n in lib if 'binding' in lib[n]), key=lambda n: total(lib[n]))
+    if bound:
+        lines += ['', '## The JS binding\'s share', '',
+                  'Every program on the JS binding (`bindings/js/wgf.js`): a game\'s Haxe program reaches the host '
+                  'through it, and a JS example is written on it. Its share is its trimmed copy\'s, the calls the program '
+                  'makes; '
+                  'gzip. Beside the same program on C (app-hello) or Haxe (the game), it is what the layer costs.', '',
+                  '| program | total.gz | wgf.js.gz | share |', '|---|---:|---:|---:|']
+        for name in bound:
+            s = lib[name]
+            lines.append(f'| {name} | {kb(total(s))} | {kb(s["binding"]["gz"])} | '
+                         f'{100 * s["binding"]["gz"] / total(s):.1f}% |')
     for title, programs in (('libwgf', lib), ('libwgt', wgt), ('wgrender-c', wgr)):
         if not programs:
             continue
@@ -358,6 +393,7 @@ def main():
     try:
         measured = libwgf_examples(only)
         measured.update(libwgf_games(only))
+        measured.update(libwgf_js_examples(only))
         refs = references() if args.references else None
     except RuntimeError as e:
         print(f'measure_sizes: {e}', file=sys.stderr)

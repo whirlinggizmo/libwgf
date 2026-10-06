@@ -1,13 +1,14 @@
 // Run a Haxe program built for the JS target under node, on a headless web host:
-//   node node.mjs <wgf-host.js> <program.js> [<directory>=<path in the host> ...]
-// The host is made first and left at globalThis.wgfHost, where the binding finds it; each
-// directory given is copied into the host's own storage at its path first (a headless
-// host's files are the wasm's, so a program's ../assets is /assets).
+//   node node.mjs <wgf-host.js> <wgf.js> <program.js> [<directory>=<path in the host> ...]
+// The host is made first and the JS binding (bindings/js/wgf.js) attached to it, then
+// left at globalThis.wgfJs, where the Haxe binding finds it; each directory given is
+// copied into the host's own storage at its path first (a headless host's files are the
+// wasm's, so a program's ../assets is /assets).
 import { pathToFileURL } from 'node:url';
 import { resolve, join, relative } from 'node:path';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 
-const [hostPath, programPath, ...mounts] = process.argv.slice(2);
+const [hostPath, bindingPath, programPath, ...mounts] = process.argv.slice(2);
 const createWgfHost = (await import(pathToFileURL(resolve(hostPath)).href)).default;
 const host = await createWgfHost();
 for (const mount of mounts) {
@@ -27,5 +28,7 @@ for (const mount of mounts) {
     host["FS"].mkdirTree(to);
     walk(from);
 }
-globalThis.wgfHost = host;
+const wgf = await import(pathToFileURL(resolve(bindingPath)).href);
+wgf.attach(host);
+globalThis.wgfJs = wgf;
 await import(pathToFileURL(resolve(programPath)).href);

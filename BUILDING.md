@@ -80,16 +80,18 @@ cmake --preset wasm32-debug && cmake --build --preset wasm32-debug && ctest --pr
 
 The tests run under node; the ones that need a real browser (IndexedDB, WebGL2's pixels) run in a headless Chromium-based browser through `tools/run_in_browser.py`, several visits in one browser context, and are skipped where there is none. `wasm32-debug-headless` builds the web with no canvas, Web Audio, or fetch, so every headless test runs under node, as the binding's does.
 
-## The Haxe binding
+## The bindings
 
 ```sh
-python3 tools/gen_binding.py           # the binding's generated files, from the headers (--check: fail if stale)
-python3 tools/build_host.py            # the full web host for a variant (default wasm32-release)
-python3 tools/check_binding.py         # generated, coverage, and the test on hxcpp, under node, and in a browser
+python3 tools/gen_binding.py           # both bindings' generated files, from the headers (--check: fail if stale)
+python3 tools/build_host.py            # the full web host for a variant (default wasm32-release), wgf.js beside it
+python3 tools/check_js_binding.py      # the JS binding: generated, its types, and every JS example in a browser
+python3 tools/check_binding.py         # the Haxe binding: generated, coverage, and its test on hxcpp, node, a browser
 python3 tools/check_features.py        # the feature test, reaching every public call, on the same three
+python3 tools/bench/measure_calls.py   # what a call costs from Haxe and from JS, through the JS binding
 ```
 
-How the binding maps the C calls is [docs/BINDINGS.md](docs/BINDINGS.md); how to use it, [bindings/haxe/README.md](bindings/haxe/README.md).
+How the bindings map the C calls is [docs/BINDINGS.md](docs/BINDINGS.md); how to use them, [bindings/js/README.md](bindings/js/README.md) and [bindings/haxe/README.md](bindings/haxe/README.md). The JS binding's type test needs TypeScript 7.0.2 (`npm install -g typescript@7.0.2`, or `TSC` naming a tsc), the version CI installs; without it the step is skipped, and says so.
 
 ## Games: the `wgf` tool
 
@@ -141,7 +143,7 @@ python3 tools/verify_builds.py --only linux-x64-debug-asan   # just these steps 
 
 ## Continuous integration
 
-`.github/workflows/pages.yml` builds every game's web export on every push to `main` (`tools/build_pages.py`) and deploys it to GitHub Pages, at <https://whirlinggizmo.github.io/libwgf/>. `.github/workflows/ci.yml` runs on every push and pull request: the Linux presets (debug, release, headless, and the three sanitizers) with every example headless and in a window and the binding on hxcpp, the web presets with every example in the runner's Chrome and the binding under node and in Chrome, and the MSVC presets on Windows with every example headless, the binding on hxcpp, and each game's playthrough headless (the runner has no GPU, so nothing runs in a window there; a game's desktop export runs in one on Windows in `verify_builds.py --windows HOST`), each through `tools/verify_builds.py --only`, so CI runs exactly what runs locally. The MinGW builds under Wine run locally only (`verify_builds.py`'s `smoke-mingw` and `desktop-mingw`, and `--windows HOST`).
+`.github/workflows/pages.yml` builds every game's web export on every push to `main` (`tools/build_pages.py`) and deploys it to GitHub Pages, at <https://whirlinggizmo.github.io/libwgf/>. `.github/workflows/ci.yml` runs on every push and pull request: the Linux presets (debug, release, headless, and the three sanitizers) with every example headless and in a window and the binding on hxcpp, the web presets with every example in the runner's Chrome, the Haxe binding under node and in Chrome, and the JS binding's types and examples, and the MSVC presets on Windows with every example headless, the binding on hxcpp, and each game's playthrough headless (the runner has no GPU, so nothing runs in a window there; a game's desktop export runs in one on Windows in `verify_builds.py --windows HOST`), each through `tools/verify_builds.py --only`, so CI runs exactly what runs locally. The MinGW builds under Wine run locally only (`verify_builds.py`'s `smoke-mingw` and `desktop-mingw`, and `--windows HOST`).
 
 ## The tools
 
@@ -150,15 +152,17 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | Tool | What it does |
 | --- | --- |
 | `check_api.py` | checks the public API's shape against CONVENTIONS through clang's parse of every public header (`headers.py`); `--self-test` runs it against a header that breaks every rule |
-| `gen_binding.py` | writes the Haxe binding's generated files from the headers (`--check`: writes nothing, fails when one is stale) |
-| `build_host.py` | links the web host a Haxe program runs on, the full one or a trimmed one (`--exports`) |
-| `measure_sizes.py` | measures every example's and game export's release web size (wasm and JS, raw, gzip, brotli), beside libwgt's and wgrender-c's (`--references`), into `docs/benchmarks.md` (`--write`); `--check` fails a program grown past the baseline |
+| `gen_binding.py` | writes both bindings' generated files from the headers, the JS binding's and the Haxe binding's (`--check`: writes nothing, fails when one is stale) |
+| `build_host.py` | links the web host a JS or Haxe program runs on, the full one or a trimmed one (`--exports`), with the JS binding beside it, whole or trimmed alike |
+| `measure_sizes.py` | measures every example's (C and JS) and game export's release web size (wasm and JS, raw, gzip, brotli, and the JS binding's share), beside libwgt's and wgrender-c's (`--references`), into `docs/benchmarks.md` (`--write`); `--check` fails a program grown past the baseline |
 | `check_games.py` | checks every game in `games/`: its generated files current, its playthrough headless and in a browser, its web export within budget, its desktop export |
 | `build_pages.py` | builds the GitHub Pages site: every game's web export, smoke-tested and within budget, and a page linking them |
 | `gen_sounds.py` | writes Asteroids' sounds (`games/asteroids/assets/sounds/`) from their synthesis, the same bytes every time (`--check`) |
 | `check_cli.py` | runs each `wgf` command on a game it makes from the template, judging what each made and said; `serve` is edited while it runs, and must keep its state |
 | `check_features.py` | runs the feature test (`examples/haxe/feature-test/`) on hxcpp, under node, and in a browser, failing a call it never reached |
-| `check_binding.py` | checks the binding: generated, every call reached once, and its test on hxcpp, under node, and in a browser |
+| `check_binding.py` | checks the Haxe binding: generated, every call reached once, and its test on hxcpp, under node, and in a browser |
+| `check_js_binding.py` | checks the JS binding: generated, its declarations under TypeScript (`bindings/js/tests/types.ts`), and every JS example (`examples/js/`) in a browser, flown by its autopilot |
+| `measure_calls.py` | (in `tools/bench/`) times a call into the host from Haxe and from JS, both through the JS binding, in a browser on the release host (not a check: timing) |
 | `check_docs.py` | checks the docs against the code: every link resolves, ARCHITECTURE names every public header, this file every tool and preset, README every doc, deps/README every vendored directory (ctest runs it) |
 | `check_tools.py` | checks every tool is named for what it does, imports no command, answers `--help` and does nothing else, and refuses an argument it doesn't take |
 | `stage_variant.py` | stages a built preset into `out/`, fresh |
@@ -178,4 +182,4 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `setup_mingw.py` | sets up the pinned MinGW-w64 on Windows |
 | `setup_system_packages.py` | checks for, or installs, the packages a Linux desktop build links |
 
-Modules the tools share, with nothing to run: `examples.py` (building the examples against a staged variant), `headers.py` (the public API as clang reads it, in one parse), `browser.py` (finding and driving a Chromium-based browser over the DevTools protocol), `server.py` (serving a site as a static host would), `variants.py` (the presets, read from `CMakePresets.json`), `wine.py` (finding Wine), and `usercache.py` (the per-user cache).
+Modules the tools share, with nothing to run: `examples.py` (building the examples against a staged variant), `headers.py` (the public API as clang reads it, in one parse), `jsbinding.py` (the JS binding's text, and its trimming for an export), `webhost.py` (linking the web host, the JS binding beside it, and a JS example's site), `browser.py` (finding and driving a Chromium-based browser over the DevTools protocol), `server.py` (serving a site as a static host would), `variants.py` (the presets, read from `CMakePresets.json`), `wine.py` (finding Wine), and `usercache.py` (the per-user cache).

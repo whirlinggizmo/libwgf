@@ -54,8 +54,12 @@ jobs:
       - uses: krdlab/setup-haxe@v1
         with:
           haxe-version: 4.3.7
-      - name: Presets, every example in Chrome, and the binding under node and in Chrome
-        run: python3 tools/verify_builds.py --web --only wasm32-debug-headless,wasm32-debug,wasm32-release,web,binding-web,features-web,cli,games,sizes
+      - name: TypeScript, for the JS binding's type test (the version tools/check_js_binding.py pins)
+        run: |
+          version=$(python3 -c 'import sys; sys.path.insert(0, "tools"); import check_js_binding as c; print(c.TYPESCRIPT)')
+          npm install -g "typescript@$version"
+      - name: Presets, every example in Chrome, both bindings under node and in Chrome
+        run: python3 tools/verify_builds.py --web --only wasm32-debug-headless,wasm32-debug,wasm32-release,web,binding-web,features-web,js-binding,cli,games,sizes
 
   windows:
     name: windows (MSVC debug, headless, release)

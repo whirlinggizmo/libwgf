@@ -1,0 +1,48 @@
+# libwgf's JS binding
+
+libwgf from JavaScript and TypeScript in the browser: one ES module, `wgf.js`, and TypeScript's declarations beside it, `wgf.d.ts`, generated from libwgf's public headers (`tools/gen_binding.py`). It is the one way JS reaches libwgf's wasm host (`hosts/web/`): the Haxe binding's JS target is built on it, so every Haxe game, test, and autopilot run exercises it too.
+
+## Files
+
+| | |
+|---|---|
+| `wgf.js`, `wgf.d.ts` | every exported C call under its C name, each header comment its JSDoc, and the enums; generated, never edited |
+| `src/runtime.js` | how a call crosses into the host and back; put at the top of `wgf.js` |
+| `src/app.js` | `wgf_app_run` for JS, and the version check; put in `wgf.js` after the runtime |
+| `src/wgf.d.ts` | the declarations of what `src/` writes by hand; put in `wgf.d.ts` |
+| `tests/types.ts` | what TypeScript must accept, and the mistakes it must catch (`tools/check_js_binding.py`) |
+
+The examples are `examples/js/`: `hello` (the C `app-hello`, call for call) and `asteroids` (the Haxe game ported, flying the game's own playthrough).
+
+## Use
+
+```js
+import createWgfHost from "./wgf-host.js";   // the host: tools/build_host.py, wgf.js beside it
+import * as wgf from "./wgf.js";
+
+wgf.attach(await createWgfHost({ canvas: document.getElementById("canvas") }));
+
+let white = 0;
+function init() {
+    white = wgf.wgf_color_get(wgf.WGF_COLOR_STOCK_RAYWHITE);
+    wgf.wgf_render_set_clear_color(white);
+}
+function frame() {
+    wgf.wgf_draw_text(0, "hello", 40, 40, 32, wgf.wgf_color_get(wgf.WGF_COLOR_STOCK_DARKGRAY));
+}
+
+wgf.wgf_window_set_title("hello");
+wgf.wgf_app_run(init, null, frame, null);
+```
+
+`attach` comes first: a call before it throws, naming the call. `wgf_app_run(init, tick, frame, shutdown)` takes JS functions, any of them null; it checks the host is the libwgf the binding was made from (`BUILT_VERSION`, major and minor) and refuses another, saying so. A throw out of a callback is logged and ends the run.
+
+How each kind of value crosses -- text, arrays and typed arrays, bytes, vectors filled into the caller's object or array -- is [docs/BINDINGS.md](../../docs/BINDINGS.md)'s, as is how a handle kind is typed in TypeScript.
+
+## Minifying
+
+Everything the binding sends across a module boundary is a quoted key (`host["_wgf_..."]`, `into["x"]`), so a minifier that mangles property names leaves it alone. Two rules for a program's own code, as wgrender-c measured them for this binding's original: keep `wgf_` out of a mangling pattern (the calls are module exports, which a namespace import reads by name), and read vectors into an array if the program's own `x`, `y`, `z` get mangled.
+
+## Release
+
+A full host and the whole `wgf.js` are for development. A release ships a host trimmed to the calls its program makes, and `wgf.js` trimmed to the same (`tools/jsbinding.py`'s `trim`, which keeps whole sections, each marked `// wgf: `, and drops the comments): a Haxe game's export does it (`wgf export`), and a JS example's release build reads the calls and enums its modules name (`tools/webhost.py`'s `build_js_example`). What the binding costs, in time and in bytes, is measured: `tools/bench/measure_calls.py`, and the binding's share in `docs/benchmarks.md`.

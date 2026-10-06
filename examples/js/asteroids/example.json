@@ -1,0 +1,4 @@
+{
+ "assets": "games/asteroids/assets",
+ "autopilot": "games/asteroids/autopilot/playthrough.autopilot"
+}

@@ -6,10 +6,11 @@ import wgf.impl.Raw;
 /**
 	Running a program: `Runtime.run(init, tick, frame, shutdown)` is libwgf's `wgf_app_run`
 	for Haxe, the one call that takes callbacks (docs/BINDINGS.md). It checks the library
-	is the version the binding was made for, then hands C four trampolines, installed once:
-	each reads the handler statics below when it fires, so a handler changed later -- by
-	the program, or by a hot reload swapping the classes -- is the one that runs, and on
-	the web no second function enters the wasm table.
+	is the version the binding was made for, then hands C four trampolines, installed once
+	(on the web, the JS binding's run installs them): each reads the handler statics below
+	when it fires, so a handler changed later -- by the program, or by a hot reload
+	swapping the classes -- is the one that runs, and on the web no second function enters
+	the wasm table.
 
 	Each trampoline also runs the scripts (wgf.Script): before the program's tick, the
 	ecs's events are taken and each script made, told of its triggers, or ended; then
@@ -60,18 +61,13 @@ class Runtime {
 		wgf.impl.Reach.hit(wgf.impl.Reach.NAMES.indexOf("wgf_app_run"));
 		#end
 		#if js
-		final host = Raw.host;
-		if (trampolines == null)
-			trampolines = [for (which in 0...4) host["addFunction"](() -> dispatch(which), "vi")];
-		return (host["_wgf_app_run"](trampolines[0], trampolines[1], trampolines[2], trampolines[3], 0) : Int) != 0;
+		// the JS binding's run: its trampolines, installed once, call these, which read the
+		// handlers when they fire; it restores the wasm stack after each
+		return Raw.binding["wgf_app_run"](() -> dispatch(0), () -> dispatch(1), () -> dispatch(2), () -> dispatch(3));
 		#elseif cpp
 		return untyped __cpp__("::wgf_app_run(wgf_hx_init, wgf_hx_tick, wgf_hx_frame, wgf_hx_shutdown, (void *)0)");
 		#end
 	}
-
-	#if js
-	static var trampolines:Null<Array<Int>>;
-	#end
 
 	/**
 		Whether the library is the version the binding was made from, major and minor; a
@@ -80,6 +76,18 @@ class Runtime {
 		than calls landing on the wrong functions.
 	**/
 	public static function versionMatches():Bool {
+		#if js
+		// the JS binding beside the program: made from the same headers as this binding,
+		// or the calls this one makes may not be the ones it has
+		final built:haxe.DynamicAccess<Dynamic> = Raw.binding["BUILT_VERSION"];
+		final stamp:String = built["headers"];
+		if (stamp != BuiltVersion.HEADERS) {
+			Log.message(LogLevel.ERROR,
+				'wgf: the JS binding beside the program (wgf.js) was made from other headers (${stamp}) than '
+				+ 'the program\'s binding (${BuiltVersion.HEADERS}): build the program and its page again');
+			return false;
+		}
+		#end
 		final major = Version.getMajor(), minor = Version.getMinor();
 		if (major == BuiltVersion.MAJOR && minor == BuiltVersion.MINOR)
 			return true;
@@ -93,9 +101,6 @@ class Runtime {
 	@:keep public static function dispatch(which:Int):Void {
 		if (faulted && which != 3)
 			return;
-		#if js
-		final mark = wgf.impl.Host.stackSave();
-		#end
 		try {
 			switch which {
 				case 0:
@@ -116,8 +121,5 @@ class Runtime {
 				+ e.message + '\n' + e.stack.toString());
 			App.quit();
 		}
-		#if js
-		wgf.impl.Host.stackRestore(mark);
-		#end
 	}
 }
