@@ -5,7 +5,8 @@
     (https://github.com/robknopf/clay), not the original. Changed from
     nicbarker/clay: Clay_UpdateScrollContainers scrolls the innermost scroll
     container under the pointer, not the outermost. The fork's git history has
-    each change.
+    each change. Changed in libwgf, marked [libwgf]: CLAY_DISABLE_DEBUG_VIEW, defined,
+    leaves the debug view's one call out of Clay_EndLayout, so it isn't linked.
 */
 
 /*
@@ -4752,11 +4753,13 @@ Clay_RenderCommandArray Clay_EndLayout(float deltaTime) {
                 }
             }
 
+#ifndef CLAY_DISABLE_DEBUG_VIEW /* [libwgf] a build without the debug view leaves it unlinked */
             if (context->debugModeEnabled) {
                 context->warningsEnabled = false;
                 Clay__RenderDebugView();
                 context->warningsEnabled = true;
             }
+#endif
 
             if (context->booleanWarnings.maxElementsExceeded) {
                 Clay_String message;

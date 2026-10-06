@@ -12,6 +12,7 @@ It is done when it ships three games ([SPEC.md](SPEC.md)): Asteroids, a chase-ca
 - [games/asteroids/](games/asteroids/README.md): the first game, played at <https://whirlinggizmo.github.io/libwgf/asteroids/>.
 - [BUILDING.md](BUILDING.md#games-the-wgf-tool): making a game with the `wgf` tool: `./wgf new`, then `wgf serve`.
 - [docs/BINDINGS.md](docs/BINDINGS.md): how a binding maps libwgf's calls; the Haxe binding is [bindings/haxe/](bindings/haxe/README.md).
+- [docs/benchmarks.md](docs/benchmarks.md): every program's web size, beside libwgt's and wgrender-c's, which CI holds libwgf to.
 - [docs/HISTORY.md](docs/HISTORY.md): what was built and decided, and why.
 - [docs/ROADMAP.md](docs/ROADMAP.md): what is left, in order.
 - [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [deps/README.md](deps/README.md): the vendored code, its licenses, and what a binary ships.

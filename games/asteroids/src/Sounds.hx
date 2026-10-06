@@ -1,7 +1,7 @@
 import wgf.*;
 
 /**
-	The game's sounds (tools/gen_sounds.py made them; assets/sounds/), and voices to play
+	The game's sounds (tools/gen_sounds.py made them, Ogg Vorbis; assets/sounds/), and voices to play
 	them: a few per sound, taken in turn, so a quick second shot doesn't cut off the
 	first; the thrust's own, looping, played while the ship thrusts.
 **/
@@ -25,7 +25,7 @@ class Sounds {
 		extraLife = voices("extra_life", 1, 0.7);
 		start = voices("start", 1, 0.6);
 		gameOver = voices("game_over", 1, 0.7);
-		final thrust = Sound.create("sounds/thrust.wav");
+		final thrust = Sound.create("sounds/thrust.ogg");
 		thrustVoice = Voice.create(thrust);
 		thrustVoice.setLoop(true);
 		thrustVoice.setVolume(0.45);
@@ -33,7 +33,7 @@ class Sounds {
 	}
 
 	static function voices(name:String, count:Int, volume:Float):Array<Voice> {
-		final sound = Sound.create('sounds/$name.wav');
+		final sound = Sound.create('sounds/$name.ogg');
 		final out = [for (_ in 0...count) Voice.create(sound)];
 		for (v in out)
 			v.setVolume(volume);

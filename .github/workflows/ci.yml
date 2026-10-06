@@ -55,7 +55,7 @@ jobs:
         with:
           haxe-version: 4.3.7
       - name: Presets, every example in Chrome, and the binding under node and in Chrome
-        run: python3 tools/verify_builds.py --web --only wasm32-debug-headless,wasm32-debug,wasm32-release,web,binding-web,features-web,cli,games
+        run: python3 tools/verify_builds.py --web --only wasm32-debug-headless,wasm32-debug,wasm32-release,web,binding-web,features-web,cli,games,sizes
 
   windows:
     name: windows (MSVC debug, headless, release)

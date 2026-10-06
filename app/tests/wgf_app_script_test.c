@@ -170,6 +170,18 @@ int main(void)
     run_script("wgf-script 1\nat 2 dump\nat 3 dump\nat 4 end\n", &run);
     expect(wgf_app_priv_script_has_passed() && dumps == 2, "each dump asks the part for its state");
 
+    /* the numbers a script reads: decimals with a point and an exponent, either sign */
+    run_script("wgf-script 1\n"
+               "at 3 expect ticks == 4e0\n"
+               "at 3 expect ticks == +4.000\n"
+               "at 3 expect ticks > .35e1\n"
+               "at 3 expect ticks < 450E-2\n"
+               "at 3 expect ticks > -1.5\n"
+               "at 4 end\n",
+               &run);
+    expect(wgf_app_priv_script_has_passed() && wgf_app_priv_script_get_failures() == 0,
+           "numbers with points, exponents, and signs read as they say");
+
     run_script("wgf-script 1\nat 2 key tap nosuchkey\nat 4 end\n", &run);
     expect(run.frames == 0, "a script that can't be read ends the program before its first frame");
 
@@ -188,6 +200,11 @@ int main(void)
             "wgf-script 1\nat 1 pad 0 axis left_x 2\n",
             "wgf-script 1\nat 1 expect score ~ 3\n",  /* no such operator */
             "wgf-script 1\nat 1 expect score == nan\n",
+            "wgf-script 1\nat 1 expect score == 1e\n",   /* an exponent with no digits */
+            "wgf-script 1\nat 1 expect score == .\n",    /* a point with no digits */
+            "wgf-script 1\nat 1 expect score == 0x10\n", /* hex: a script's numbers are decimal */
+            "wgf-script 1\nat 1 expect score == 1e999\n", /* not finite */
+            "wgf-script 1\nat 1 expect score == 2,5\n",
             "wgf-script 1\nat 1 end\nat 2 end\n",     /* two ends */
             "wgf-script 1\nat 1 end extra\n",         /* more than the command takes */
             "wgf-script 1\nat 1 key tap a\nseed 3\n", /* a seed after the commands */

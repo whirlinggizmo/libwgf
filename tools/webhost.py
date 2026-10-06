@@ -16,6 +16,12 @@ FULL = ROOT / 'hosts' / 'web' / 'exports.json'
 
 # What the binding's runtime reaches in the module besides the calls (wgf/impl/Host.js.hx,
 # wgf/Runtime.hx): never trimmed.
+# A release host's optimization, and whether Closure minifies its JS (docs/HISTORY.md,
+# "The web host's release flags"): measured on Asteroids' trimmed host.
+OPTIMIZE = '-O2'
+CLOSURE = True
+EXTRA = []  # more link flags, for an audit (--profiling-funcs, -Wl,--Map)
+
 RUNTIME = ['addFunction', 'stackSave', 'stackRestore', 'stackAlloc', 'stringToUTF8', 'lengthBytesUTF8',
            'UTF8ToString', 'HEAPU8', 'HEAP32', 'HEAPF32']
 
@@ -59,11 +65,13 @@ def build(variant, exports_file=None, out=None, stage=True):
                # a headless host's storage is the wasm's own: node's runner copies files in (FS)
                '-sEXPORTED_RUNTIME_METHODS=' + ','.join(RUNTIME + (['FS'] if headless else [])),
                '-sALLOW_TABLE_GROWTH=1', '-sALLOW_MEMORY_GROWTH=1',
-               '-O2' if release else '-O0', *([] if release else ['-g'])]
+               OPTIMIZE if release else '-O0', *([] if release else ['-g']), *EXTRA]
     if headless:
         command += ['-sENVIRONMENT=node']
     else:
         command += ['-sMIN_WEBGL_VERSION=2', '-sMAX_WEBGL_VERSION=2', '-sENVIRONMENT=web,worker']
+        if release and CLOSURE:
+            command += ['--closure=1']  # the examples' release pages' flags (examples/c/wgf_example.cmake)
     done = subprocess.run(command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                           errors='replace')
     if done.returncode != 0:

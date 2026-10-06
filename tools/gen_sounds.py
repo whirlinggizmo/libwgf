@@ -1,16 +1,24 @@
 #!/usr/bin/env python3
-"""Generate Asteroids' sounds: games/asteroids/assets/sounds/*.wav.
+"""Generate Asteroids' sounds: games/asteroids/assets/sounds/*.ogg.
 
     tools/gen_sounds.py [--check] [--out DIR]
 
 Each sound is made from a few lines of synthesis -- tones swept between two pitches,
-noise through a low-pass filter, envelopes -- with a fixed seed, so the same files come
-out every time; they are committed, and --check fails when one differs from what this
-would write. 16-bit mono WAV at 22,050 Hz: the mixer and the browser both decode it, and
-none is long enough for compression to matter. Standard library only.
+noise through a low-pass filter, envelopes -- with a fixed seed, so the same samples come
+out every time (16-bit mono at 22,050 Hz), then encoded as Ogg Vorbis by ffmpeg's
+libvorbis (quality 4), which libwgf's mixer decodes natively (Xiph's decoder) and the
+browser on the web. The samples' SHA-256 for each sound is in sounds.json beside them,
+committed with them: --check makes the samples again and fails when one differs from what
+the manifest says its Ogg was made from, needing no encoder (an encoder's version may
+change the bytes of the same sound). Standard library, and ffmpeg to write.
 """
 import argparse
+import hashlib
 import io
+import json
+import shutil
+import subprocess
+import tempfile
 import math
 import random
 import struct
@@ -103,26 +111,49 @@ def wav_bytes(samples):
     return buffer.getvalue()
 
 
+def encode(wav, path):
+    """`wav`'s bytes as Ogg Vorbis at `path`, by ffmpeg's libvorbis, bit-exact (no
+    encoder version or date in the file)."""
+    ffmpeg = shutil.which('ffmpeg')
+    if ffmpeg is None:
+        raise SystemExit('gen_sounds: writing the sounds needs ffmpeg (with libvorbis); --check needs none')
+    with tempfile.TemporaryDirectory() as scratch:
+        source = Path(scratch) / 'sound.wav'
+        source.write_bytes(wav)
+        subprocess.run([ffmpeg, '-loglevel', 'error', '-y', '-i', str(source), '-c:a', 'libvorbis', '-q:a', '4',
+                        '-map_metadata', '-1', '-fflags', '+bitexact', '-flags:a', '+bitexact', str(path)], check=True)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--check', action='store_true', help='write nothing; fail when a sound differs')
+    ap.add_argument('--check', action='store_true', help='write nothing; fail when a sound isn\'t what its samples make')
     ap.add_argument('--out', type=Path, default=OUT, help='where to write them (default: the game\'s assets)')
     args = ap.parse_args()
-    stale = []
+    manifest_path = args.out / 'sounds.json'
+    manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
+    stale, made = [], {}
     for name, samples in sounds().items():
-        path = args.out / f'{name}.wav'
-        data = wav_bytes(samples)
-        if not path.exists() or path.read_bytes() != data:
+        wav = wav_bytes(samples)
+        digest = hashlib.sha256(wav).hexdigest()
+        made[name] = digest
+        path = args.out / f'{name}.ogg'
+        if manifest.get(name) != digest or not path.exists():
             stale.append(path)
             if not args.check:
                 path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_bytes(data)
+                encode(wav, path)
     if args.check:
+        gone = sorted(set(manifest) - set(made))
         for path in stale:
             print(f'gen_sounds: stale: {path}', file=sys.stderr)
-        print(f'gen_sounds: {"stale" if stale else "up to date"}')
-        return 1 if stale else 0
-    print(f'gen_sounds: {len(stale)} of {len(sounds())} sound(s) written to {args.out}')
+        for name in gone:
+            print(f'gen_sounds: in the manifest, but not made any more: {name}', file=sys.stderr)
+        print(f'gen_sounds: {"stale" if stale or gone else "up to date"}')
+        return 1 if stale or gone else 0
+    manifest_path.write_text(json.dumps(made, indent=1, sort_keys=True) + '\n')
+    for old in args.out.glob('*.wav'):
+        old.unlink()  # the sounds are Ogg now
+    print(f'gen_sounds: {len(stale)} of {len(made)} sound(s) written to {args.out}')
     return 0
 
 

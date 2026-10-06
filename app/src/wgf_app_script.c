@@ -190,15 +190,33 @@ static bool parse_long(const char *word, long min, long max, long *out)
     return true;
 }
 
+/* A decimal number, [-+]digits[.digits][e[-+]digits], and nothing more: a script's
+ * thresholds and axis values. Read here rather than with strtod, whose full parse (hex
+ * floats, infinities, exact rounding through long doubles) every program would link
+ * for a script's few numbers, about 14 KB of wasm (docs/HISTORY.md, "Web sizes"). */
 static bool parse_number(const char *word, double *out)
 {
-    char *end;
-    double value;
+    const char *p = word;
+    double value = 0.0, scale = 1.0;
+    bool negative = false, digits = false;
+    long exponent = 0;
     if (word == NULL) return false;
-    errno = 0;
-    value = strtod(word, &end);
-    if (errno != 0 || end == word || *end != '\0' || !isfinite(value)) return false;
-    *out = value;
+    if (*p == '-' || *p == '+') negative = *p++ == '-';
+    for (; *p >= '0' && *p <= '9'; p++, digits = true) value = value * 10.0 + (*p - '0');
+    if (*p == '.') {
+        for (p++; *p >= '0' && *p <= '9'; p++, digits = true) value += (*p - '0') * (scale *= 0.1);
+    }
+    if (!digits) return false;
+    if (*p == 'e' || *p == 'E') {
+        bool down = false, any = false;
+        p++;
+        if (*p == '-' || *p == '+') down = *p++ == '-';
+        for (; *p >= '0' && *p <= '9' && exponent < 400; p++, any = true) exponent = exponent * 10 + (*p - '0');
+        if (!any) return false;
+        while (exponent-- > 0) value = down ? value / 10.0 : value * 10.0;
+    }
+    if (*p != '\0' || !isfinite(value)) return false;
+    *out = negative ? -value : value;
     return true;
 }
 

@@ -152,6 +152,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `check_api.py` | checks the public API's shape against CONVENTIONS through clang's parse of every public header (`headers.py`); `--self-test` runs it against a header that breaks every rule |
 | `gen_binding.py` | writes the Haxe binding's generated files from the headers (`--check`: writes nothing, fails when one is stale) |
 | `build_host.py` | links the web host a Haxe program runs on, the full one or a trimmed one (`--exports`) |
+| `measure_sizes.py` | measures every example's and game export's release web size (wasm and JS, raw, gzip, brotli), beside libwgt's and wgrender-c's (`--references`), into `docs/benchmarks.md` (`--write`); `--check` fails a program grown past the baseline |
 | `check_games.py` | checks every game in `games/`: its generated files current, its playthrough headless and in a browser, its web export within budget, its desktop export |
 | `build_pages.py` | builds the GitHub Pages site: every game's web export, smoke-tested and within budget, and a page linking them |
 | `gen_sounds.py` | writes Asteroids' sounds (`games/asteroids/assets/sounds/`) from their synthesis, the same bytes every time (`--check`) |

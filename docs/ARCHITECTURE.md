@@ -181,7 +181,7 @@ Games are Haxe (`bindings/haxe/`, haxelib `wgf`); how the binding maps each kind
 
 **The feature test** (`examples/haxe/feature-test/`) is one program reaching every public call through the binding, every component in a scene among them. Built with `-D wgf_reach`, each `Raw` function first counts its call (`impl/Reach.hx`, generated with the list of every call), and the program fails naming any it never made; `tools/check_features.py` runs it on hxcpp, under node, and in a browser.
 
-**The web host** (`hosts/web/`) is libwgf linked for the web with no `main`, as an ES module whose `createWgfHost()` resolves to it: `tools/build_host.py` links a staged web variant, exporting every call (the full host) or a list (a trimmed one), and the runtime methods the binding uses. A program's page (`hosts/web/page.html`) imports the host, makes it on the canvas, leaves it at `globalThis.wgfHost`, and imports the program; `Runtime.run` attaches it. A headless web variant's host is for node, where the binding's test runs (`bindings/haxe/test/node.mjs`).
+**The web host** (`hosts/web/`) is libwgf linked for the web with no `main`, as an ES module whose `createWgfHost()` resolves to it: `tools/build_host.py` links a staged web variant, exporting every call (the full host) or a list (a trimmed one), and the runtime methods the binding uses; a release host is linked as the examples' release pages are, -O2 with Closure for its JS. A program's page (`hosts/web/page.html`) imports the host, makes it on the canvas, leaves it at `globalThis.wgfHost`, and imports the program; `Runtime.run` attaches it. A headless web variant's host is for node, where the binding's test runs (`bindings/haxe/test/node.mjs`).
 
 ## The `wgf` tool
 

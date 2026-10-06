@@ -31,6 +31,8 @@ The binding's checks (tools/check_binding.py), when there is a haxe:
                   steps needing what this machine hasn't are skipped, and said so
   games           every game: its playthrough headless and in a browser, its web export
                   within its budget, its desktop export (tools/check_games.py), as cli skips
+  sizes           with --web: every example's and game export's web size against the
+                  baseline, docs/benchmarks.json (tools/measure_sizes.py --check)
 With --windows HOST, also, on that Windows machine over ssh, the working tree as it is
 (tools/run_remote_windows.py, nothing left there):
   windows-msvc    windows-x64-msvc-debug-headless and -debug, then every example
@@ -76,6 +78,7 @@ CHECKS = {
     'features-web': (['tools/check_features.py', '--only', 'node,browser'], True, ('haxe', 'no haxe')),
     'cli': (['tools/check_cli.py'], False, ('haxe', 'no haxe')),
     'games': (['tools/check_games.py'], False, ('haxe', 'no haxe')),
+    'sizes': (['tools/measure_sizes.py', '--check'], True, ('haxe', 'no haxe')),
 }
 REMOTE = {'windows-msvc': ['--msvc', '--then', 'tools/run_smoke.py --variant windows-x64-msvc-debug-headless',
                            '--then', 'tools/check_binding.py --only hxcpp', '--then', 'tools/check_features.py --only hxcpp',

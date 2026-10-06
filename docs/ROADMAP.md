@@ -18,5 +18,5 @@ Each starts when something anyone can check is true.
 - **Dear ImGui (cimgui), the developer UI**: when a milestone's game needs an in-game inspector (SPEC.md, "Not in v1").
 - **WebGPU behind a build option**, then as the default: libwgt's condition (its ROADMAP, "Later"): Firefox ships WebGPU on Linux, Chrome on Linux covers the common GPUs, and every example passes on WebGPU in CI, with an automatic fall back to WebGL2 and a persisted switch.
 - **Hot reload of assets**: when a game on the ROADMAP loads a file its developer edits while it runs (milestone 2's track and car, as glTF): `wgf serve` picks up a saved asset as it picks up Haxe, the resource loaded again in place, its handle kept. Asteroids' sounds are generated, its scene instantiated once, and its art drawn as shapes.
-- **Native hot reload** (hxcpp or C): when a game's desktop-only bug needs the reload loop to find; the browser is the everyday loop.
+- **Native hot reload** (hxcpp or C): when a game's desktop-only bug needs the reload loop to find; the browser is the everyday loop. Not through cppia as it measures now (HISTORY.md, "Native hot reload stays deferred").
 - **Threads on the web**: when a benchmark shows a load or a system that a worker would take off the main thread by more than a frame's budget.

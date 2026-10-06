@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #include "wgf_app.h"
 #include "wgf_asset.h"
@@ -20,19 +21,40 @@
  * on both platforms (natively libwgf's mixer, on the web the browser's), so it plays on
  * through a slow frame: press S to stall one for 300 ms and hear it not care. SPACE
  * plays the click, M pauses and resumes the music. From wgrender's audio example, where
- * the web stuttered through the stall. */
+ * the web stuttered through the stall.
+ *
+ *   Space   play the click
+ *   M       pause or resume the music
+ *   S       stall a frame for 300 ms
+ *   Esc     quit, where quitting means anything
+ *
+ * libwgt's audio-music (wgrender's audio) done 1:1, so the two compare in the size
+ * table: the same window, files, keys, and text. Where it differs, and why:
+ *   - "libwgt" reads "libwgf" in the window's title, the heading, and above: the
+ *     library's name.
+ *   - The frame rate is drawn by the example (draw_fps, as libwgt's wgt_loop_draw_fps
+ *     draws it: "%d FPS", 16 pixels, green): libwgf has wgf_loop_get_fps but no call
+ *     that draws it. */
 
-static wgf_handle_t music, click;
+static wgf_voice_t music, click;
 
 /* A voice of `sound`, which holds the sound's reference: the program's own is let go of. */
-static wgf_handle_t voice_of(wgf_handle_t sound)
+static wgf_voice_t voice_of(wgf_sound_t sound)
 {
-    const wgf_handle_t voice = wgf_voice_create(sound);
+    const wgf_voice_t voice = wgf_voice_create(sound);
     wgf_resource_release(sound);
     return voice;
 }
 
-static bool loaded(wgf_handle_t voice)
+/* The frame rate at (x, y), as libwgt's wgt_loop_draw_fps draws it. */
+static void draw_fps(float x, float y)
+{
+    char text[32];
+    snprintf(text, sizeof(text), "%d FPS", (int)(wgf_loop_get_fps() + 0.5f));
+    wgf_draw_text(0, text, x, y, 16.0f, wgf_color_make(0, 255, 0, 255));
+}
+
+static bool loaded(wgf_voice_t voice)
 {
     return wgf_resource_get_status(wgf_voice_get_sound(voice)) == WGF_RESOURCE_STATUS_READY;
 }
@@ -73,6 +95,7 @@ static void frame(void *user)
                   wgf_app_can_quit() ? "[SPACE] play click   [M] pause music   [S] stall 300 ms   [ESC] quit"
                                      : "[SPACE] play click   [M] pause music   [S] stall 300 ms",
                   24, 150, 16, WGF_COLOR_LIGHTGRAY);
+    draw_fps(24, 12);
 }
 
 int main(void)
