@@ -318,7 +318,7 @@ class Main {
 		expect(collider.setRadius(8) && near(collider.getRadius(), 8), "a collider");
 		expect(collider.setLayer(2) && collider.getLayer() == 2 && collider.setMask(1) && collider.getMask() == 1, "its layers");
 		collider.getOverlaps([ship]);
-		final behavior:Behavior = ship;
+		final behavior:BehaviorComponent = ship;
 		expect(behavior.setName("Probe") && behavior.getName() == "Probe", "a behavior's name");
 		expect(behavior.setParam("speed", "3.5") && behavior.hasParam("speed") && behavior.getParam("speed") == "3.5"
 			&& near(behavior.getParamNumber("speed"), 3.5), "a parameter");
