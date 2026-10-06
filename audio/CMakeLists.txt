@@ -59,6 +59,12 @@ if(WGF_TESTS AND NOT EMSCRIPTEN)
     target_compile_definitions(wgf_audio_decoders_test PRIVATE WGF_TEST_ASSETS="${PROJECT_SOURCE_DIR}/examples/assets")
     # sounds natively: each format decoded and streamed, from the examples' music and sound
     wgf_test(audio wgf_audio_sound_test)
+    # and again with no device, as a runner without a sound card has: audio stopped and
+    # started again must not set sokol_audio up twice
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT WGF_HEADLESS)
+        add_test(NAME wgf_audio_sound_no_device_test COMMAND wgf_audio_sound_test)
+        set_tests_properties(wgf_audio_sound_no_device_test PROPERTIES ENVIRONMENT "ALSA_CONFIG_PATH=/dev/null")
+    endif()
     # voices, the mixer pulled in place of a device: wgf_audio_voice_checks.c's steps
     if(WGF_HEADLESS)
         wgf_test(audio wgf_audio_voice_test)

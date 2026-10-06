@@ -441,6 +441,12 @@ static void device_callback(float *buffer, int frames, int channels)
 }
 #endif
 
+#if !defined(SOKOL_DUMMY_BACKEND)
+/* saudio_setup was called: saudio_shutdown must be too, a device or not, or the next
+ * start's setup asserts (a runner with no sound card stops and starts audio again). */
+static bool device_set_up;
+#endif
+
 void wgf_audio_priv_platform_start(void)
 {
 #if !defined(SOKOL_DUMMY_BACKEND)
@@ -449,6 +455,7 @@ void wgf_audio_priv_platform_start(void)
     desc.num_channels = 2;
     desc.stream_cb = device_callback;
     saudio_setup(&desc);
+    device_set_up = true;
     if (!saudio_isvalid()) {
         wgf_log_warn("wgf_audio: no audio device; voices play on, unheard");
         return;
@@ -462,7 +469,8 @@ void wgf_audio_priv_platform_start(void)
 void wgf_audio_priv_platform_stop(void)
 {
 #if !defined(SOKOL_DUMMY_BACKEND)
-    if (saudio_isvalid()) saudio_shutdown(); /* stops the device's thread before anything is freed */
+    if (device_set_up) saudio_shutdown(); /* stops the device's thread before anything is freed */
+    device_set_up = false;
     device_rate = 0;
 #endif
 }

@@ -98,3 +98,7 @@ asset came into this step from the next: textures and fonts are made from paths,
 ## Milestone 1, step 5, audio: closed (2026-10-05)
 
 libwgt's audio carried whole, its tests and its stream check with it, rather than trimmed to the plan's WAV and MP3 (that plan's entry above, "Audio formats"): its mixer decodes WAV, MP3, and Ogg Vorbis and plays streamed sounds through the same paths, so cutting Ogg and streaming out would have been surgery on tested code for no saving -- the web build carries no decoder either way, and a native build links libvorbis only with audio. The racing game's music will stream. So libwgf vendors libogg and libvorbis again (`deps/xiph`, BSD 3-Clause, back in THIRD_PARTY_NOTICES.md), and keeps the streamed sound's own handle kind (41, "audio.sound_streamed"); both kinds are `wgf_sound_t`. The audio-music example (its music streamed, a click, S stalling a frame for 300 ms) and the CC0 music and click it plays came with it. Every audio test ran and passed on every preset, the browser's included, and on sightblinder.
+
+## Audio on a machine without a sound card (2026-10-05)
+
+Step 5's CI run failed on Linux: GitHub's runner has no sound card, sokol_audio's setup found no device, and libwgt's mixer (carried) shut sokol_audio down only when a device was valid, so the next start in the same process asserted. It now shuts down whenever it set up, and `wgf_audio_sound_no_device_test` runs the sound test with ALSA given no configuration, so a machine with a sound card tests the case too.
