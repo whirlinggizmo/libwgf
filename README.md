@@ -15,6 +15,7 @@ It is done when it ships three games ([SPEC.md](SPEC.md)): Asteroids, a chase-ca
 - [docs/benchmarks.md](docs/benchmarks.md): every program's web size, beside libwgt's and wgrender-c's, which CI holds libwgf to.
 - [docs/HISTORY.md](docs/HISTORY.md): what was built and decided, and why.
 - [docs/ROADMAP.md](docs/ROADMAP.md): what is left, in order.
+- [docs/FRICTION.md](docs/FRICTION.md): each workaround and awkward use a game's developer found, until it is triaged.
 - [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [deps/README.md](deps/README.md): the vendored code, its licenses, and what a binary ships.
 
 ## Build

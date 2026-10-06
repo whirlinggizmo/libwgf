@@ -324,3 +324,142 @@ Measured in one session: 7 rounds, one page load of each program in turn, the me
 | bulk, per entity of 1,000 | 13.4 | 13.8 (+0.4) | 13.4 |
 
 So the layer costs a call from nothing to about 1.4 ns, and JS and Haxe on the binding are level. At 10,000 calls a frame, 1.4 ns is 14 µs, under 0.1% of a 60 Hz frame. Kept, for one marshaller every JS program crosses by, which every Haxe test, game, and autopilot run exercises.
+
+## Milestone 2's plan (2026-10-06)
+
+Rob's note: plan milestone 2, the chase-camera racer (SPEC, "Done means games", 2), in ROADMAP.md, with the decisions here, and stop for his review before building. Read first: libwgt's 3D (its gfx layer, examples, asset layer, HISTORY, TASKS, and ROADMAP) and wgrender-c's (its renderer, `tools/bench/`, HISTORY, TASKS, and PLAN files), each in full by a survey this session; neither has physics, vehicles, a chase camera, or a racing game, and no reference vendors Jolt.
+
+**The game early, not last.** Milestone 1 built Asteroids at step 11, so its API was shaped before a game used it; what the game found (the scene's spawn, the UI's focus, the dump) came late. The racer is step 3, as soon as the 3D path draws a mesh: a box car on a flat track of generated meshes, a chase camera, checkpoints, and lap timing, ugly and drivable, with its lap autopilot from its first commit. Each later layer lands in it the step it is built.
+
+**The slice in Haxe through the binding, from the start, not in C first.** The bindings are generated, so a new C call is in Haxe and JS the moment it builds, and coverage and the feature test hold that it is. A game in Haxe uses the API as games will: the typed API (a model is a node, a vehicle an entity's component), the JS binding under it (SPEC's dogfooding), and the `wgf` tool (build, autopilot, serve, export), so all three are pushed on while each layer is fresh. In C the slice would check the C API alone, and the Haxe API would meet a game only at the end, which is what milestone 1 did. C still gets each feature's own example (the 1:1 rows), which is where a layer is debugged under the sanitizers.
+
+**3D comes from libwgt, carried and trimmed to what the racer uses.**
+- Carried, in steps:
+  - the shader pipeline: sokol-shdc pinned and SHA-checked, the generated headers committed per backend, so a build needs no shader compiler;
+  - the 3D root; nodes in 3D; cameras; generated meshes; PBR and unlit materials; lights; models; the tonemap; and frustum culling;
+  - glTF through cgltf, with the node tree kept (libwgt's, where wgrender-c baked transforms in) and `KHR_lights_punctual` (libwgt reads it; wgrender-c didn't);
+  - shadow maps; the HDR environment; automatic instancing; 3D GPU particles; sprites and text in 3D;
+  - KTX loading;
+  - render targets, screen effects, and the custom shaders effects are made of (step 11);
+  - debug drawing (step 2) and the FPS overlay (step 1).
+- **Renamed:** libwgt's `wgt_scene`, the 3D root, is `wgf_stage`. In libwgf "scene" is the data scene, the ecs's (milestone 1's plan), and "world" names the ecs's state. A canvas is 2D's root, and a stage is 3D's.
+- **Not carried, and why:**
+  - **Skinning and the animation player** wait for milestone 3. Its SPEC redesigns them: shared skeletons matched by joint name, sockets, crossfades, layers, and pieces as separate files. The racer animates nothing but nodes: wheels turn, and the car's body leans.
+  - **Picking, layered stages, and the rest of the catalog** go to milestone 2.5 (Rob's addenda, below): the racer neither picks nor layers.
+  - **Cascades:** neither reference built them. A single sun map fitted around the camera is proven in both. Cascades have a measurable condition in "Later".
+- **What libwgt's own TASKS records as open stays open**, unless the racer meets it: morph targets, KTX2 and Basis, glTF material extensions beyond emissive strength, an HDR framebuffer and bloom, point-light shadows, LOD, and residency.
+
+**wgrender-c, the proving ground: what it proved in 3D that libwgt lacks.** Its renderer is in libwgt already, and in places libwgt's is ahead: the node tree, skinned bounds from the posed joints, the animation player, cubic-spline keys, and `KHR_lights_punctual`. What it has that libwgt doesn't is tools, measurements, and examples:
+- **Texture compression tools:** `tools/compress_textures.py`, `compress_model_textures.py` (a glTF's textures rewritten to KTX), and `gen_brdf_lut.c`. libwgt can load a `.ktx` but can't make one. Carried with the streaming step (9), where the track's textures need them. Measured there: a 2K texture uploaded in about 1 ms against 59 to 89 for its PNG, and a quarter of the GPU memory.
+- **Its web measurement harness:** `tools/bench/pages.py`, `measure.py`, and `measure_page.py`, which sample a page's script and task time per frame and its heap and collections. It is ROADMAP's former "Later" item, a page's frame time and garbage, whose condition the racer's performance budget meets, so it is step 1.
+- **Web runs of the 3D benches** (shadowbench and spritebench), with numbers from phones; libwgt's numbers are desktop only. shadowbench runs on the web in step 6.
+- **Examples libwgt never ported:** scene3d, meshes, materials, lights, and loading (a frame-time graph while models and environments load). meshes, materials, and lights become rows in step 2, and loading turns asset-loading's differs row in step 14.
+- **Per-object picking and its stats:** with milestone 2.5's picking.
+
+What neither built, and so is new here: cascades, LOD, streaming within a model, vehicle physics, and a chase camera.
+
+**physics3d on Jolt's C API, an optional module.**
+- **Jolt is C++, and has no C API of its own.** The C API is chosen at step 8, from the maintained ones (joltc, which JoltPhysicsSharp is built on, and SecondHalfGames' JoltC), by:
+  - whether it covers a wheeled vehicle (constraint, controller, engine, transmission, differential, wheels);
+  - its license (MIT or zlib, as Jolt's is MIT);
+  - its pinned version against Jolt's;
+  - its size on the web.
+  
+  If neither covers the vehicle, libwgf writes its own `extern "C"` layer inside the module, for only the calls physics3d makes.
+- **C++ stays inside the module.** It is compiled without exceptions or RTTI, for size. No header names Jolt (SPEC's invariant), and the module is linked only by a program that makes a body (the optional-parts rule), so Asteroids carries none of it.
+- **One thread on the web**, so there is no cross-origin isolation (SPEC).
+- **Jolt's cross-platform determinism is on**, so the same lap is the same to the tick on the desktop and in a browser, which the lap autopilot checks.
+- **It is stepped in the ecs's tick, before the triggers are taken.** That is where milestone 3's "Simulate" phase will be, so it moves to no new place.
+- **Its web size cost** is measured at step 8, recorded here, and added to the ladder as "+ physics3d".
+
+**Sizes.**
+- **The 1:1 3D rows:** libwgt's gfx-hello3d, gfx-environment, gfx-shadows, gfx-instancing, gfx-sprite3d, gfx-text3d, gfx-particles, gfx-pick, and gfx-tilemap, with wgrender-c's equivalents and its meshes, materials, and lights.
+- **Rows that flip from differs to same,** with what flips them:
+  - gfx-particles: 3D GPU particles;
+  - gfx-textures: KTX;
+  - asset-loading: models and environments.
+  
+  gfx-tilemap and app-touch need picking too, so they turn in milestone 2.5.
+- **Rows that stay differs:** gfx-model and gfx-sprite2d, each still behind the animated skinned character; milestone 3 brings skinning, and their reasons say so. gfx-shadows and gfx-instancing join them, if their programs' character is animated.
+- **New rows:** gfx-render-target, gfx-postprocess, and gfx-shaders (step 11), gfx-shaders differing while its toon is on the skinned character. gfx-pick, gfx-layers, and gfx-scroll come with milestone 2.5's picking, layers, and clips.
+- **The ladder gains** "+ 3D model" (step 2, glTF from step 4), "+ lights and shadows", "+ environment", and "+ physics3d".
+
+**The racer's web budget: 1 MB of code, gzipped (the host, the JS binding, and the program), and 4 MB of assets before the race starts.** Asteroids' export is 297 KB with flecs and Clay in it. libwgt's 3D measured from 109 KB (gfx-hello3d, against its skeleton's 72) to 273 KB (gfx-environment), and its everything-build 315 KB. So libwgf's 3D on top of Asteroids' modules should come to roughly 450 to 550 KB, leaving about 450 KB for Jolt and its C API. That share is the unmeasured one: it is the budget's assumption, and step 8 measures it. If Jolt doesn't fit, this entry's successor records the numbers and a new budget, not a quiet raise.
+
+The 4 MB is what the race needs to start: the car, the collision mesh, the nearest sections, and a 1K HDR environment, which is 1.4 to 1.6 MB as libwgt's are. That is about what a start in under 5 seconds on Chrome's Fast 4G profile allows, which step 9's check holds. The whole track streams in after, and is bounded by its own check, not by this budget.
+
+**Performance: 60 frames a second on a mid-range machine, measured, not felt.**
+- The racer's benchmark autopilot is a lap at racing speed through the busiest part of the track, with the chase camera, shadows, the environment, props, and smoke.
+- **Its budget:** a frame's main-thread work (Chrome's script and task time) at a median of 6 ms and a 95th percentile of 10 ms. No frame over 33 ms once the race has started, and none over 50 ms while sections stream.
+- **Why those numbers:** a 60 Hz frame is 16.7 ms, and the browser's compositing and the GPU need the rest. wgrender-c measured CPU submission, not fill, as the floor on a low-end phone (an Adreno 610), so the CPU time is what is budgeted. A frame's GPU time can't be read reliably through WebGL2, so the frame interval with vsync off stands in for it, on the reference machine.
+- **The reference machine is Rob's call** (below). The proposal: this Linux machine's browser, its real GPU through ANGLE under Xvfb as wgrender-c's harness ran it, with Chrome's CPU throttled 4 times. That is Lighthouse's stand-in for a mid-tier device: repeatable here by one command, and slower than any developer's machine.
+- **The numbers go in `docs/benchmarks.md` beside the sizes.** Each row names its machine, throttle, and commit, as wgrender-c's `measure.py` did. CI runs the tool so it keeps working, but on its software GPU it records no budget: CI's runners are no mid-range machine, and a check on their timing would fail on noise.
+
+**Asset streaming, for one track, means four things anyone can check** (step 9):
+- The race starts before the track is all loaded: a loading screen whose bar is an asset group's progress, then the race, while sections arrive nearest first.
+- Nothing hitches while sections arrive: no frame over the streaming limit, uploads within the load budget, textures compressed. wgrender-c measured a 2K PNG's upload at 59 to 89 ms against 1 ms compressed, which is why KTX comes with streaming.
+- Nothing is missing where the car is: on the lap autopilot, every section is drawn before the car reaches it, since the collision mesh for the whole track comes first and is small.
+- A second visit is all cache: no download, and it starts offline. This uses the asset layer's manifests and IndexedDB, carried whole in milestone 1 and checked by its cache check.
+
+The check runs the racer in a browser on an emulated network, on the asset cache check's pattern. Streaming within one model (LOD, mip streaming) is not part of it: the track's sections are separate files, which both references' loaders already do well.
+
+**The autopilot, from the first drivable slice.** The racer's lap autopilot expects the checkpoints in order and a lap time within a window. A steered lap isn't something to write by hand as frames of keys, so `wgf autopilot --record` writes a lap driven by hand in the browser as an autopilot file, its inputs at the frames they happened. Physics and the seeded random generator make the replay exact, and Jolt's determinism makes it exact on every platform. Without the recorder, the lap would need a human, which SPEC calls a missing tool.
+
+**Art.**
+- **The track is generated** (`tools/gen_track.py`, standard library only): road, kerbs, barriers, ground, and checkpoints from a centerline, and its plain textures written as PNG. It produces the same bytes every time and is committed, as Asteroids' sounds are. Its sections and its size are then the generator's to choose, which the streaming check needs, and its license is ours.
+- **The environment HDRs** are libwgt's CC0 ones (Poly Haven's), carried with their credits.
+- **The car** is a box until step 13, then a CC0 model, credited. Nothing on this machine fits: `~/media/models` holds characters, no vehicles. A CC0 car kit from outside (Kenney's or Quaternius's) is the proposal, for Rob to confirm (below).
+
+**Milestone 3, kept in view, not built.** Nothing in this plan forces it early:
+- The car's tuning (mass, engine torque, gears, grip, suspension) is the vehicle component's, set by scene-file keys parsed in C, as milestone 1's components are, not a behavior's string parameters. So milestone 3's typed behavior fields aren't needed for it.
+- Checkpoints and laps are the ecs's polled trigger events, handled in Haxe, not the pub/sub bus.
+- Effects (a slow on a car) aren't in the racer.
+- The one place milestone 2 touches milestone 3's phases is physics, stepped in the ecs's tick where "Simulate" will be, said above.
+- If the racer's Haxe code finds itself parsing string parameters for the car, that is milestone 3's typed fields arriving early, and an entry here will say so.
+
+**ROADMAP kept clean** (Rob's addendum): every "Later" item whose condition milestone 2 meets moved into the plan and left "Later":
+- **hot reload of assets** (it named the racer's track and car): step 5;
+- **a page's frame time and garbage** (the racer's performance budget needs it): step 1;
+- **wgrender-c's stress scene**, which was on the same line: it stays in "Later" on its own condition (milestone 3's stress run);
+- **skinning**, which isn't "Later" at all: milestone 3's, as above.
+
+The others were checked and stay, their conditions unmet by the racer:
+- physics2d: no 2D bodies;
+- ImGui: no inspector is needed;
+- WebGPU: its outside condition;
+- native hot reload;
+- threads: its measurement may come from the racer, and then it moves;
+- a minified JS build, and the fault policy.
+
+New in "Later", on a condition the racer's measurements decide: cascades.
+
+**Rob's addenda: the catalog, and milestone 2.5.** SPEC now has milestone 2.5, "Jam-ready" (9ce0a5b): the breadth trimmed from the references, each feature with a showcase example. ROADMAP gains "Trimmed from wgrender-c and libwgt", every feature they had that libwgf lacks, with its source (header and example) and why it is out. It was found by setting each reference's public calls against libwgf's, header by header, then grouped into features and checked against their examples. What the racer needs moved into milestone 2:
+- **The FPS overlay** (step 1), which the frame-time work and the racer's development builds use, and which milestone 1's examples drew by hand.
+- **Debug drawing** (step 2): 3D lines, shapes, a grid, 3D text, and `shape3d` nodes. The physics debug view (step 8) and the 1:1 3D examples draw with it.
+- **Render targets, screen effects, and custom shaders** (step 11): the racer's rear-view mirror and its speed effect. An effect is a custom-shader material, so the shaders and their packing tool come with it.
+
+The rest went under milestone 2.5, outlined, not planned. Picking left milestone 2's plan, where its first draft carried it only to turn three size rows; by Rob's rule, what the racer doesn't use waits.
+
+The catalog also corrects one SPEC line. libwgf already has the game's pointer capture (`wgf_input_set_pointer_captured`) and the cursor's (`wgf_mouse_set_locked`). What is missing is the pointer captured by a press on an interactive node, which comes with picking.
+
+Rob's second addendum (SPEC, pushed): Clay used directly, as wgrender-c's clay example did, is not a catalog item to restore. The catalog lists it as an exception, to look into later.
+
+**Rob's third addendum: games test the framework only if they can't bend it** (SPEC, 71f29b8). Built into the plan as follows:
+- **Game code first.** The racer's game-side code is written now, committed with the plan, in `docs/sketches/racer/`: `Main.hx` (the stage, sun, sky, loading screen, states, HUD, mirror, and speed effect), `Car.hx` (the vehicle's intent, tire smoke), `ChaseCamera.hx` (a critically damped spring), `Laps.hx` (checkpoints and probes), `racer.scene` (the vehicle, sensors, props as data), and `lap.autopilot`. Each ROADMAP step names the part of it the step makes real. Writing it first already found what the framework will need and doesn't have: a progress bar in the UI, a vehicle component taking a driver's input, sensors raising the ecs's triggers, a stage drawn from a second camera into a target, and a scene's entities placed with a transform line. It is not compiled: it is the API the game wants, and where the framework built differs, FRICTION.md or this file says why.
+- **A separate game-developer session builds the racer,** started by Rob. It works in its own directory from the public API, the docs, and `wgf new` alone, with edits to libwgf denied, and logs each gap and workaround in FRICTION.md. This session builds the framework under it. A step's framework lands before the game session takes up its part of the sketch, and that step's friction is triaged before the next step's framework starts, so a gap found in step 4's glTF is fixed while glTF is fresh.
+- **Asteroids first, retroactively** (step 0): a clean-room rebuild from the docs and API alone, without `games/asteroids/` and within a time limit, and an adversarial review of the existing game, both in sessions Rob starts. Their friction is triaged before milestone 2's building begins. Milestone 1's own game was built by the framework's author, so it is the first case of the bias SPEC names: a gap routed around quietly.
+- **Combination scenes** (step 12), in `examples/scenes/`, between an example and a game:
+  - the UI over a lit, shadowed stage with particles, rendered to a target through an effect;
+  - streamed glTF behind a progress screen with bodies falling onto what has arrived;
+  - many instanced props with 3D text, flown through.
+  
+  Each is in the smoke run, the browser check, the size table, and the frame-time table.
+- **An adversarial review at the milestone's end** (step 15), by a fresh session, looking for framework work done in game code. Each finding is justified or becomes a task, and the milestone closes only with FRICTION.md's racer entries triaged.
+- **Jam simulations** go in milestone 2.5's outline: several isolated sessions, across genres, each with a random theme and a time limit, shipping to Pages, their friction logs the result.
+- **`docs/FRICTION.md`**, created empty, with its format: each entry names the game, where, what was missing, the workaround, its cost, the session that found it, and its triage (a task, or "fine" with its HISTORY entry). Entries are never rewritten. A milestone's entries move here when it closes.
+
+**For Rob's review, before step 0:**
+1. **The reference machine for the frame-time budget:** the proposal above (this machine, its GPU, Chrome's 4x CPU throttle), or a machine of his.
+2. **The car's model:** a CC0 kit fetched from outside (Kenney's or Quaternius's), credited in the game's assets, or another source.
+3. **The budget:** 1 MB of code and 4 MB before the start, with Jolt's share the assumption step 8 measures.
+4. **Jolt's C API:** chosen at step 8 by the criteria above, or a preference now.

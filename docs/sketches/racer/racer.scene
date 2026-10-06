@@ -1,0 +1,38 @@
+wgf-scene 1
+# The racer's world as data: the car and its vehicle, the checkpoints, the props. The
+# track itself is glTF (tools/gen_track.py), placed by its own lines.
+
+entity track
+  model path=track/collision.glb visible=false
+  body type=static shape=mesh
+end
+
+entity track_00
+  model path=track/section_00.glb
+end
+# ... track_01 to track_11, each its own file, streamed in nearest first
+
+prefab car
+  model path=car/car.glb cast_shadows=true
+  body type=dynamic mass=1200 shape=convex
+  vehicle engine_torque=420 max_rpm=7000 gears=3.2,2.1,1.5,1.15,0.92 differential=rear
+  vehicle wheels=wheel_fl,wheel_fr,wheel_rl,wheel_rr radius=0.34 width=0.22 suspension=0.28 stiffness=1.6 grip=1.2
+  behavior name=Car
+end
+
+prefab checkpoint
+  body type=sensor shape=box size=14,4,1 layer=8 mask=1
+  behavior name=Checkpoint
+end
+
+entity checkpoint_0
+  from checkpoint
+  transform position=0,2,12
+  behavior index=0
+end
+# ... checkpoint_1 to checkpoint_7 around the track
+
+prefab cone
+  model path=props/cone.glb cast_shadows=true
+  body type=dynamic mass=4 shape=convex
+end

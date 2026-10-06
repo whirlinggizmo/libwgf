@@ -1,0 +1,17 @@
+wgf-autopilot 1
+# One lap, recorded by `wgf autopilot --record` from a driven lap (the inputs below are
+# its kind, not the real ones: a real recording is a key or stick change every few
+# frames), and what it expects: the race starting, every checkpoint in order, and the
+# lap inside its window. Physics with Jolt's cross-platform determinism makes it the
+# same natively and in a browser.
+seed 1
+at 1 expect racer.state == 0
+at 240 expect racer.state == 2
+at 240 key down up
+at 300 stick 0 left -0.35
+at 360 stick 0 left 0
+at 1800 expect racer.checkpoint >= 4
+at 3600 expect racer.lap == 2
+at 3600 expect racer.best > 50
+at 3600 expect racer.best < 70
+at 3610 end

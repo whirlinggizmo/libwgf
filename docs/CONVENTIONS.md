@@ -164,4 +164,5 @@ No other pointer, no struct, no function pointer, no `void *`, no variadic call.
 - ARCHITECTURE.md describes the design as it is now; a change to it updates it in the same commit. BUILDING.md says how to build and test, and what every tool does; a change to a preset, requirement, or tool updates it in the same commit.
 - ROADMAP.md lists what is left. An item leaving it, done or dropped, is deleted, and its record moves to HISTORY.md in the same commit; a dropped item says why. A deferred item has a condition anyone can check, never "when we need it".
 - HISTORY.md is the record, never rewritten. It says why things are as they are, and what was tried.
+- FRICTION.md logs what a game's developer had to work around or found awkward, each entry triaged into a ROADMAP task or a HISTORY decision before its milestone closes, then moved to HISTORY.md (SPEC.md, "Games test the framework only if they can't bend it"). A plan's game code first is in `docs/sketches/<game>/`, never compiled, and stays as written once its milestone closes.
 - Every other doc describes how things are now: rewrite what changed rather than adding history.
