@@ -12,7 +12,7 @@ Each is CONVENTIONS.md's; the words here only find it.
 - No backend identifier in a public header ("Public API", "Other rules").
 - `out/`, never `build/`, for anything built against the library ("Build").
 - Third-party source in `deps/`, never fetched ("Dependencies").
-- Tools in Python, standard library only; no shell scripts; no regular expressions over C source ("Tooling").
+- Tools in Python, standard library only; nothing in shell; no regular expressions over C source ("Tooling").
 - Which doc is true, and what moves to HISTORY.md ("Docs").
 
 ## Agent practice

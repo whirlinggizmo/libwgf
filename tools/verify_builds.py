@@ -82,7 +82,7 @@ CHECKS = {
 }
 REMOTE = {'windows-msvc': ['--msvc', '--then', 'tools/run_smoke.py --variant windows-x64-msvc-debug-headless',
                            '--then', 'tools/check_binding.py --only hxcpp', '--then', 'tools/check_features.py --only hxcpp',
-                           '--then', 'tools/check_cli.py --only build,run,play,dump',
+                           '--then', 'tools/check_cli.py --only build,run,autopilot,dump',
                            '--then', 'tools/check_games.py --only playthrough,desktop'],
           'windows-mingw': ['--then', 'tools/run_smoke.py --variant windows-x64-mingw-debug-headless']}
 

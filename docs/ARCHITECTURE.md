@@ -16,7 +16,7 @@ libwgf is one C library, `libwgf.a`, built in layers (CONVENTIONS' table says wh
 | audio | sounds (decoded or streamed) and voices, mixed natively by libwgf on sokol_audio's thread, on the web by the browser's Web Audio | built |
 | ecs | entities with a simulated transform, the built-in components and their systems, triggers, polled events, scenes as text | built: on flecs's core |
 | ui | game UI, immediate mode: boxes, panels, labels, buttons, focus by keys and pads, the pointer's capture, a style | built: on Clay |
-| app | the runtime: run, the frame loop, ticks, scripted runs | built |
+| app | the runtime: run, the frame loop, ticks, autopilot runs | built |
 
 ### math
 
@@ -42,7 +42,7 @@ The base every other layer uses. It has no window and no loop: app's runtime sta
 | time | `wgf_time.h` | `wgf_time_get_seconds`, monotonic seconds since core started, on sokol_time |
 | handle | `wgf_handle.h` | `wgf_handle_t`, and `wgf_handle_get_kind_name`; the pools are private |
 | fs | `wgf_fs.h` | read, write, exists, remove, mkdir, rmdir, each a task (`wgf_fs_task_t`); the root; `user:` paths for the program's own files that last |
-| probe | `wgf_probe.h` | named numbers a program publishes about itself, read by scripted runs, tools, and tests |
+| probe | `wgf_probe.h` | named numbers a program publishes about itself, read by autopilot runs, tools, and tests |
 | random | `wgf_random.h` | one seeded generator (PCG32): a seed's sequence is the same on every platform |
 | resource | `wgf_resource.h` | what every resource kind shares: status, path, release; the load budget |
 | play state | `wgf_play_state.h` | `wgf_play_state_t`, the state of anything that plays over time |
@@ -62,7 +62,7 @@ The window, its events, and input, under gfx and audio, which ask it for what th
 | mouse | `wgf_mouse.h` | position, movement, and scrolling in logical pixels; each button's state; locking the pointer; hiding the cursor |
 | gamepad | `wgf_gamepad.h` | up to 4 pads, each keeping its number while connected: buttons by position on an Xbox-style pad; sticks with a round dead zone, rescaled to reach 1; triggers 0 to 1. Read once a frame, before its ticks: evdev on Linux, XInput on Windows, the Gamepad API on the web |
 | touch | `wgf_touch.h` | fingers, oldest first, by an id that holds while each is down; the two-finger gesture's center, pan, pinch, and twist; the first finger driving the mouse |
-| (the window system) | private | sokol_app, or none in a headless build, which runs frames at a display's rate (or as fast as it can, for a scripted run), for `LIBWGF_HEADLESS_FRAMES` frames when that is set; the device and each frame's swapchain for gfx, through sokol_glue |
+| (the window system) | private | sokol_app, or none in a headless build, which runs frames at a display's rate (or as fast as it can, for an autopilot run), for `LIBWGF_HEADLESS_FRAMES` frames when that is set; the device and each frame's swapchain for gfx, through sokol_glue |
 
 **Input** is read, never called back. Held state is shared; edges (pressed, released, movement, scrolling, typing) are kept twice, since they are relative to whoever reads them: inside a tick, since the previous tick; inside a frame, since the previous frame. A frame that runs no tick carries the tick edges over, so every press is seen by exactly one tick. A key pressed and released within one read is PRESSED, so no tap is missed.
 
@@ -163,13 +163,13 @@ The runtime: it opens the window, starts and drives the layers below it, and run
 |---------|--------|----------|
 | (lifecycle) | `wgf_app.h` | `wgf_app_run(init, tick, frame, shutdown, user)`, `wgf_app_quit`, `wgf_app_can_quit` (false on the web), `wgf_app_is_running`. `wgf_app_run` is the one public call that takes callbacks |
 | loop | `wgf_loop.h` | the frame delta; the tick rate, delta, and fraction; the time scale (0 pauses ticks while frames go on); a target fps; frames per second |
-| (scripted runs) | private | a script of inputs at frames and expectations on probes (`app/src/wgf_app_script_priv.h` has the format), run in the script's own time |
+| (autopilot runs) | private | an autopilot: inputs at frames and expectations on probes (`app/src/wgf_app_autopilot_priv.h` has the format), flown in its own time |
 
-**The run.** `wgf_app_run` opens the window, starts core and gfx, and calls init. Each frame, it takes the window's events, updates core (tasks and loads move on), delivers a script's inputs for the frame, runs the ticks due -- after each, the parts' ticks (a module's systems) -- then the parts' updates, then the frame callback between gfx's begin and end, and checks a script's expectations for the frame. After quitting, it calls shutdown and stops gfx and core. On the desktop `wgf_app_run` returns when the program has quit; on the web it returns at once, and the browser runs the frames, so it is the last call in main everywhere.
+**The run.** `wgf_app_run` opens the window, starts core and gfx, and calls init. Each frame, it takes the window's events, updates core (tasks and loads move on), delivers an autopilot's inputs for the frame, runs the ticks due -- after each, the parts' ticks (a module's systems) -- then the parts' updates, then the frame callback between gfx's begin and end, and checks an autopilot's expectations for the frame. After quitting, it calls shutdown and stops gfx and core. On the desktop `wgf_app_run` returns when the program has quit; on the web it returns at once, and the browser runs the frames, so it is the last call in main everywhere.
 
 **Ticks** run on the runtime's tick clock, fed the frames' real time times the time scale, at most 5 a frame. The frame delta is real time, clamped to 0.1 s. A target fps sleeps natively, and on the web skips the frames the browser offers too early.
 
-**A scripted run** takes its script natively from the file `LIBWGF_SCRIPT` names, on the web from `Module["wgfScript"]`, the text the page gave the module. Its inputs at a frame are delivered as the window's events would be, before the frame's ticks, and its expectations are checked after the frame, each failure an error in the log; its end logs PASS or FAIL and quits. While it runs, every frame lasts exactly a sixtieth of a second, so ticks, and the random numbers its seed gives, make the same run on every machine; a headless run doesn't wait for a display. Its results are in the log, which is what the tools judge, since a page has no exit code.
+**An autopilot run** takes its file natively from the file `LIBWGF_AUTOPILOT` names, on the web from `Module["wgfAutopilot"]`, the text the page gave the module. Its inputs at a frame are delivered as the window's events would be, before the frame's ticks, and its expectations are checked after the frame, each failure an error in the log; its end logs PASS or FAIL and quits. While it runs, every frame lasts exactly a sixtieth of a second, so ticks, and the random numbers its seed gives, make the same run on every machine; a headless run doesn't wait for a display. Its results are in the log, which is what the tools judge, since a page has no exit code.
 
 ## The Haxe binding
 
@@ -185,16 +185,16 @@ Games are Haxe (`bindings/haxe/`, haxelib `wgf`); how the binding maps each kind
 
 ## The `wgf` tool
 
-`wgf` (the root's launcher, `tools/wgf/`) works on a game: a directory with a `wgf.json` (its name, main class, sources, assets, scripts, and web size budget), made from `templates/game/` by `wgf new`. A game names no libwgf: the tool builds it against the libwgf it belongs to, from that libwgf's staged variants, with the binding on the class path. Its builds put the program's assets beside it everywhere (`build/<target>/assets`), as `Asset.setHost("assets")` finds them: a page's directory on the web, the executable's natively.
+`wgf` (the root's launcher, `tools/wgf/`) works on a game: a directory with a `wgf.json` (its name, main class, sources, assets, autopilot files, and web size budget), made from `templates/game/` by `wgf new`. A game names no libwgf: the tool builds it against the libwgf it belongs to, from that libwgf's staged variants, with the binding on the class path. Its builds put the program's assets beside it everywhere (`build/<target>/assets`), as `Asset.setHost("assets")` finds them: a page's directory on the web, the executable's natively.
 
 - **build** and **run**: the web (the full host, the game's page written once into `web/index.html`, the program), the desktop and headless (hxcpp against the native debug or release, or the headless, variant).
-- **play**, **screenshot**, **dump**: scripted runs (app's format, `wgf_app_script_priv.h`), headless natively or in a headless browser, which a page hands the host (`globalThis.wgfScript`, the module's `wgfScript`); judged by what they log. A screenshot is the browser's capture when the script logs its SCREENSHOT; a dump, each part's dump hook (the ecs's world, as a scene), logged a line at a time.
+- **autopilot**, **screenshot**, **dump**: autopilot runs (app's format, `wgf_app_autopilot_priv.h`), headless natively or in a headless browser, which a page hands the host (`globalThis.wgfAutopilot`, the module's `wgfAutopilot`); judged by what they log. A screenshot is the browser's capture when the autopilot logs its SCREENSHOT; a dump, each part's dump hook (the ecs's world, as a scene), logged a line at a time. `run`, `screenshot`, and `dump` take `--autopilot` to fly one to a point first.
 - **serve** (`tools/wgf/devserver.py`): a hot build (hotreload-hx, vendored in `deps/`) on the full host, served with a long poll at `/__hotreload`; each save rebuilds the program through a compilation server, stamps it, and the page swaps its classes in between two frames, every static and object kept. The runtime's trampolines read their handlers when they fire, so the swapped code is what runs; a reload's bundle doesn't start the run again.
-- **export**: the web as a static folder -- a release program, its host trimmed to the calls the program makes (the quoted keys in its JS), its assets copied in, libwgf's notices -- smoke-tested in a browser with the game's smoke script and held to its budget; and the desktop, a release build with its assets, smoke-tested in a window (Xvfb's when Linux has no display).
+- **export**: the web as a static folder -- a release program, its host trimmed to the calls the program makes (the quoted keys in its JS), its assets copied in, libwgf's notices -- smoke-tested in a browser with the game's smoke autopilot and held to its budget; and the desktop, a release build with its assets, smoke-tested in a window (Xvfb's when Linux has no display).
 
 ## Games
 
-Each game is a directory in `games/` the `wgf` tool works on, on the public API alone, through the binding: Asteroids (`games/asteroids/`) now. Its world is a scene file of prefabs; its scripts set intent and the ecs does the per-entity work; its screens are the UI; its sounds are generated (`tools/gen_sounds.py`) and committed. Each game ships a scripted playthrough, which `tools/check_games.py` runs headless and in a browser beside its exports, and every push to `main` deploys its web export to GitHub Pages (`tools/build_pages.py`, `.github/workflows/pages.yml`), held to its size budget.
+Each game is a directory in `games/` the `wgf` tool works on, on the public API alone, through the binding: Asteroids (`games/asteroids/`) now. Its world is a scene file of prefabs; its scripts set intent and the ecs does the per-entity work; its screens are the UI; its sounds are generated (`tools/gen_sounds.py`) and committed. Each game ships an autopilot playthrough, which `tools/check_games.py` runs headless and in a browser beside its exports, and every push to `main` deploys its web export to GitHub Pages (`tools/build_pages.py`, `.github/workflows/pages.yml`), held to its size budget.
 
 ## Handles
 

@@ -65,7 +65,7 @@ void wgf_platform_priv_sokol_open(int width, int height, bool size_set);
 bool wgf_platform_priv_pace(double wait);
 
 /* Whether frames wait for a display: true at start. A headless build runs unpaced as
-   fast as it can (a scripted run's, whose time is its own); a window's frames are the
+   fast as it can (an autopilot run's, whose time is its own); a window's frames are the
    display's either way. */
 void wgf_platform_priv_set_paced(bool paced);
 

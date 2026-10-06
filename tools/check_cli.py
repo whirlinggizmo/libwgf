@@ -8,10 +8,10 @@ then each command is run on it as a developer would, and judged by what it made 
 what it said:
   new         the game's files, its name in them; a second new into it refused
   build       --headless and --web: the program, its page, its host, its assets beside it
-  run         --headless --frames 30: a run that ends at its frame, passing
-  play        the game's smoke script, headless and --web: PASS; a failing script: FAIL
-  dump        the ship, as a scene's text
-  screenshot  a PNG of frame 30, from a browser
+  run         --headless --frames 30, and --autopilot: runs that end at their frame, passing
+  autopilot   the game's smoke autopilot, headless and --web: PASS; a failing one: FAIL
+  dump        the ship, as a scene's text; flown by --autopilot to its end, turned on
+  screenshot  a PNG of frame 30, from a browser, and one flown there by --autopilot
   serve       the page reached in a browser, its Haxe edited while it runs: the new code
               runs, with the frame count it had (state kept, not a restart)
   export      export/web (a trimmed host, under the budget) and export/desktop, each
@@ -38,7 +38,7 @@ import webhost  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 WGF = ROOT / 'wgf'
-STEPS = ('new', 'build', 'run', 'play', 'dump', 'screenshot', 'serve', 'export')
+STEPS = ('new', 'build', 'run', 'autopilot', 'dump', 'screenshot', 'serve', 'export')
 
 
 def wgf(game_dir, *args, timeout=900):
@@ -119,35 +119,40 @@ def step_run(game):
     if why:
         return why
     code, out = wgf(game, 'run', '--headless', '--frames', '30', '--no-build')
-    if code != 0 or 'wgf_script: PASS (0 expectations, 30 frames)' not in out:
+    if code != 0 or 'wgf_autopilot: PASS (0 expectations, 30 frames)' not in out:
         return problem('wgf run --headless --frames 30: not a passing 30-frame run', out)
-    print('check_cli: run: 30 frames, headless, passed')
+    fly = game / 'autopilot' / 'fly.autopilot'
+    fly.write_text('wgf-autopilot 1\nat 40 expect frames >= 40\nat 90 end\n')
+    code, out = wgf(game, 'run', '--headless', '--autopilot', 'autopilot/fly.autopilot', '--no-build')
+    if code != 0 or 'wgf_autopilot: PASS (1 expectation, 91 frames)' not in out:
+        return problem('wgf run --headless --autopilot: not the file\'s passing 91-frame run', out)
+    print('check_cli: run: 30 frames, and an autopilot file\'s 91, headless, passed')
     return True
 
 
-def step_play(game):
-    """The smoke script headless (and a failing one), and in a browser: each where it can."""
+def step_autopilot(game):
+    """The smoke autopilot headless (and a failing one), and in a browser: each where it can."""
     native, web = needs(native=True), needs(web=True, browser_too=True)
     if native and web:
         return f'{native}; {web}'
     said = []
     if not native:
-        code, out = wgf(game, 'play', 'scripts/smoke.wgfscript', '--no-build')
-        if code != 0 or 'play scripts/smoke.wgfscript: PASS' not in out:
-            return problem('wgf play: the smoke script didn\'t pass headless', out)
-        failing = game / 'scripts' / 'failing.wgfscript'
-        failing.write_text('wgf-script 1\nat 10 expect frames > 1000\nat 10 end\n')
-        code, out = wgf(game, 'play', 'scripts/failing.wgfscript', '--no-build')
+        code, out = wgf(game, 'autopilot', 'autopilot/smoke.autopilot', '--no-build')
+        if code != 0 or 'autopilot autopilot/smoke.autopilot: PASS' not in out:
+            return problem('wgf autopilot: the smoke autopilot didn\'t pass headless', out)
+        failing = game / 'autopilot' / 'failing.autopilot'
+        failing.write_text('wgf-autopilot 1\nat 10 expect frames > 1000\nat 10 end\n')
+        code, out = wgf(game, 'autopilot', 'autopilot/failing.autopilot', '--no-build')
         if code == 0 or 'FAIL' not in out:
-            return problem('wgf play: a failing script passed', out)
-        said.append('the smoke script passed headless, a failing one failed')
+            return problem('wgf autopilot: a failing one passed', out)
+        said.append('the smoke autopilot passed headless, a failing one failed')
     if not web:
-        code, out = wgf(game, 'play', 'scripts/smoke.wgfscript', '--web', '--no-build')
+        code, out = wgf(game, 'autopilot', 'autopilot/smoke.autopilot', '--web', '--no-build')
         if code != 0 or 'PASS' not in out:
-            return problem('wgf play --web: the smoke script didn\'t pass in a browser', out)
-        said.append('the smoke script passed in a browser')
+            return problem('wgf autopilot --web: the smoke autopilot didn\'t pass in a browser', out)
+        said.append('the smoke autopilot passed in a browser')
     skipped = '; '.join(f'{t} skipped ({why})' for t, why in (('headless', native), ('web', web)) if why)
-    print(f'check_cli: play: {"; ".join(said)}' + (f'; {skipped}' if skipped else ''))
+    print(f'check_cli: autopilot: {"; ".join(said)}' + (f'; {skipped}' if skipped else ''))
     return True
 
 
@@ -158,8 +163,23 @@ def step_dump(game):
     code, out = wgf(game, 'dump', '--frame', '20', '--no-build')
     if code != 0 or not out.startswith('wgf-scene 1') or 'entity "ship"' not in out or 'motion ' not in out:
         return problem('wgf dump: not the ship as a scene', out)
-    print('check_cli: dump: the ship, as a scene\'s text')
+    early = turned(out)
+    fly = game / 'autopilot' / 'fly.autopilot'
+    fly.write_text('wgf-autopilot 1\nat 40 expect frames >= 40\nat 90 end\n')
+    code, out = wgf(game, 'dump', '--autopilot', 'autopilot/fly.autopilot', '--no-build')
+    late = turned(out) if code == 0 else None
+    if late is None or early is None or not late > early:
+        return problem(f'wgf dump --autopilot: not the ship turned on to frame 90 ({early} at 20, {late} after)', out)
+    print(f'check_cli: dump: the ship, as a scene\'s text; flown on by an autopilot, turned {early:.2f} -> {late:.2f}')
     return True
+
+
+def turned(dump):
+    """The ship's turn in a dump, radians: its transform's rotation z."""
+    for line in dump.splitlines():
+        if 'transform ' in line and 'rotation=' in line:
+            return float(line.split('rotation=')[1].split()[0].split(',')[2])
+    return None
 
 
 def step_screenshot(game):
@@ -170,7 +190,13 @@ def step_screenshot(game):
     code, out = wgf(game, 'screenshot', '--frame', '30', '--out', str(shot), '--no-build')
     if code != 0 or not shot.exists() or shot.read_bytes()[:8] != b'\x89PNG\r\n\x1a\n':
         return problem('wgf screenshot: no PNG', out)
-    print(f'check_cli: screenshot: frame 30, {shot.stat().st_size} bytes of PNG')
+    flown = game / 'build' / 'flown.png'
+    fly = game / 'autopilot' / 'fly.autopilot'
+    fly.write_text('wgf-autopilot 1\nat 40 expect frames >= 40\nat 90 end\n')
+    code, out = wgf(game, 'screenshot', '--autopilot', 'autopilot/fly.autopilot', '--out', str(flown), '--no-build')
+    if code != 0 or not flown.exists() or 'frame 90 saved' not in out:
+        return problem('wgf screenshot --autopilot: no PNG at the autopilot\'s end (frame 90)', out)
+    print(f'check_cli: screenshot: frame 30, {shot.stat().st_size} bytes of PNG; and frame 90, flown there')
     return True
 
 

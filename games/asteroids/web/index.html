@@ -114,8 +114,8 @@
         print: (...a) => console.log(...a),
         printErr,
         locateFile: (path, prefix) => (path.endsWith(".wasm") ? versioned("wgf-host.wasm", VERSION.wasm) : prefix + path),
-        // a scripted run (the wgf tool's play, a playthrough), when one was handed the page
-        ...(typeof globalThis.wgfScript === "string" ? { wgfScript: globalThis.wgfScript } : {}),
+        // an autopilot run (the wgf tool's autopilot, a playthrough), when one was handed the page
+        ...(typeof globalThis.wgfAutopilot === "string" ? { wgfAutopilot: globalThis.wgfAutopilot } : {}),
       });
       statusEl.textContent = "";
       await import(versioned("./" + NAME + ".js", VERSION.js));

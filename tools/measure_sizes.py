@@ -24,7 +24,7 @@ the brotli tool or module is there); a game's JS is its host's and its program's
 
 The rows of the comparison are ROWS: libwgf's example, libwgt's, and wgrender-c's that
 does the same thing, each marked same or differs (docs/HISTORY.md, "Web sizes, measured",
-"Same rows, a target"); a same row is also held to libwgt's size and the scripted-run
+"Same rows, a target"); a same row is also held to libwgt's size and the autopilot
 runner's cost. LADDER is the feature cost ladder: programs in examples/sizes/ that each
 add one thing. Standard library only.
 """
@@ -77,7 +77,7 @@ ROWS = [
     ('asset-loading', None, 'loading', 'differs',
      'libwgf has no 3D: textures and sounds of like weight in place of wgrender-c\'s models and environments'),
 ]
-# A "same" row's target: libwgt's size, gzip, and the scripted-run runner's cost, which
+# A "same" row's target: libwgt's size, gzip, and the autopilot runner's cost, which
 # every libwgf program carries on purpose, so a shipped build can be played through
 # (docs/HISTORY.md, "Same rows, a target"). --check fails a "same" row past it.
 RUNNER_COST = 4 * 1024
@@ -248,9 +248,9 @@ def markdown(baseline):
              'The same program in each library (each libwgf example\'s header says how it matches), gzip -9, its wasm '
              'and its JS together; brotli -q 11 in brackets.', '',
              'A **same** row is the same program in each library, and libwgf\'s is held to libwgt\'s size and the '
-             f'scripted-run runner\'s {RUNNER_COST // 1024} KB (the target); a **differs** row\'s libwgf program leaves out '
-             'what libwgf lacks, so its size is not a saving: its reason is linked, and it turns same as the milestone '
-             'that brings what it lacks does.', '',
+             f'autopilot runner\'s {RUNNER_COST // 1024} KB (the target); a **differs** row\'s libwgf program '
+             'leaves out what libwgf lacks, so its size is not a saving: its reason is linked, and it turns same as '
+             'the milestone that brings what it lacks does.', '',
              '| program | | libwgf | target | libwgt | wgrender-c |', '|---|---|---:|---:|---:|---:|']
 
     def cell(sizes):
@@ -289,7 +289,7 @@ def markdown(baseline):
     games = sorted(n for n in lib if n.startswith('game:'))
     if games:
         lines += ['', '## Games', '', 'Each game\'s web export: its host trimmed to the calls it makes, and its program '
-                  '(the JS column is both scripts); its page and assets aren\'t counted.', '',
+                  '(the JS column is both JS files); its page and assets aren\'t counted.', '',
                   '| game | wasm | wasm.gz | js | js.gz | total.gz | total.br | budget |', '|---|---:|---:|---:|---:|---:|---:|---:|']
         for name in games:
             s = lib[name]

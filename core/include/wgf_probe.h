@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 /* Probes: named numbers a program publishes about itself ("score", "lives"), for what
- * watches it from outside -- a scripted run's assertions, the `wgf` tool's dump, a
+ * watches it from outside -- an autopilot run's assertions, the `wgf` tool's dump, a
  * test. libwgf's modules publish their own under their layer's name ("ecs.entities").
  * A probe is a number, kept until it is set again or core stops; reading one costs a
  * lookup, so a program sets what changed, when it changes.

@@ -15,7 +15,7 @@ extern "C" {
 /* A 2D particle emitter: a node owning many particles, in a canvas. Particles are born
  * at the emitter, in its canvas's units -- so a moving emitter leaves a trail -- each
  * decided at birth (its direction, speed, life, and spin, drawn from wgf_random, so a
- * scripted run's particles are the same every time), and moved on every frame by
+ * autopilot run's particles are the same every time), and moved on every frame by
  * libwgf: velocity, gravity, and drag, their size and color running from start to end
  * over their life. A particle is a square, or with a stretch a streak along its
  * motion. Emitters are nodes (wgf_node.h): place, parent, and destroy them with the

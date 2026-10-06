@@ -2,9 +2,9 @@
 target, for the wgf tool (tools/wgf/cli.py, devserver.py).
 
 A game's directory:
-  wgf.json        its name, title, main class, where its sources, assets, and scripts
+  wgf.json        its name, title, main class, where its sources, assets, and autopilot
                   are, and its web size budget, gzipped (web_budget_kb)
-  src/ assets/ scripts/
+  src/ assets/ autopilot/
   web/index.html  its page: written once from libwgf's (hosts/web/page.html) when it has
                   none, never overwritten; the game's to change
   build/<target>/ what `wgf build` makes, for web, desktop, and headless: the program,
@@ -35,8 +35,8 @@ ROOT = TOOLS.parent
 PAGE = ROOT / 'hosts' / 'web' / 'page.html'
 HOTRELOAD = ROOT / 'deps' / 'hotreload-hx' / 'src'
 TARGETS = ('web', 'desktop', 'headless')
-SCRIPT_PASS = 'wgf_script: PASS'
-SCRIPT_FAIL = 'wgf_script: FAIL'
+AUTOPILOT_PASS = 'wgf_autopilot: PASS'
+AUTOPILOT_FAIL = 'wgf_autopilot: FAIL'
 
 
 class GameError(RuntimeError):
@@ -60,7 +60,7 @@ class Game:
         self.main = data.get('main', 'Main')
         self.source = self.root / data.get('source', 'src')
         self.assets = self.root / data.get('assets', 'assets')
-        self.scripts = self.root / data.get('scripts', 'scripts')
+        self.autopilot = self.root / data.get('autopilot', 'autopilot')
         self.budget_kb = data.get('web_budget_kb')
 
     def build_dir(self, target):
@@ -177,19 +177,19 @@ def build_native(game, target, release=False, out=None):
     return exe
 
 
-def frames_script(frames):
-    """A script that runs `frames` frames, then ends."""
-    return f'wgf-script 1\nat {max(frames - 1, 0)} end\n'
+def frames_autopilot(frames):
+    """An autopilot that runs `frames` frames, then ends."""
+    return f'wgf-autopilot 1\nat {max(frames - 1, 0)} end\n'
 
 
-def run_native(exe, script=None, timeout=600, echo=True):
-    """Run a native build, with `script` (its text) as its scripted run; (exit code, its
+def run_native(exe, autopilot=None, timeout=600, echo=True):
+    """Run a native build, with `autopilot` (its text) flying it; (exit code, its
     output). Its output is echoed as it comes."""
     env = dict(os.environ)
-    if script is not None:
-        path = exe.parent / '.wgf-run.wgfscript'
-        path.write_text(script, encoding='utf-8')
-        env['LIBWGF_SCRIPT'] = str(path)
+    if autopilot is not None:
+        path = exe.parent / '.wgf-run.autopilot'
+        path.write_text(autopilot, encoding='utf-8')
+        env['LIBWGF_AUTOPILOT'] = str(path)
     lines = []
     with subprocess.Popen([str(exe)], cwd=exe.parent, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                           text=True, errors='replace') as process:
@@ -203,25 +203,25 @@ def run_native(exe, script=None, timeout=600, echo=True):
     return process.returncode, '\n'.join(lines)
 
 
-def run_page(site, page_path, script=None, until=(SCRIPT_PASS, SCRIPT_FAIL), timeout=120, on_line=None,
+def run_page(site, page_path, autopilot=None, until=(AUTOPILOT_PASS, AUTOPILOT_FAIL), timeout=120, on_line=None,
              browser_path=None, echo=True, screenshot=None):
     """`site` served as it is (a game's assets are beside its page), and its page at
     `page_path` run as run_page_url runs one. The lines logged."""
     base, httpd = server.serve(site, assets=None)
     try:
-        return run_page_url(f'{base}/{page_path}', script, until, timeout, on_line, browser_path, echo, screenshot)
+        return run_page_url(f'{base}/{page_path}', autopilot, until, timeout, on_line, browser_path, echo, screenshot)
     finally:
         httpd.shutdown()
 
 
-def run_page_url(url, script=None, until=(SCRIPT_PASS, SCRIPT_FAIL), timeout=120, on_line=None,
+def run_page_url(url, autopilot=None, until=(AUTOPILOT_PASS, AUTOPILOT_FAIL), timeout=120, on_line=None,
                  browser_path=None, echo=True, screenshot=None):
-    """Load `url` in a headless browser, handing the page `script` as its scripted run,
+    """Load `url` in a headless browser, handing the page `autopilot` to fly it,
     until a console line contains one of `until`; `on_line(line)` sees each line first.
-    With `screenshot` (a path), the page is saved there as a PNG when the script logs its
+    With `screenshot` (a path), the page is saved there as a PNG when the autopilot logs its
     SCREENSHOT, and the run ends. The lines logged."""
     if screenshot is not None:
-        until = tuple(until) + ('wgf_script: SCREENSHOT',)
+        until = tuple(until) + ('wgf_autopilot: SCREENSHOT',)
     browser_path = browser.find_browser(browser_path)
     processes = browser.RunProcesses('wgf')
     processes.install_handlers()
@@ -252,13 +252,13 @@ def run_page_url(url, script=None, until=(SCRIPT_PASS, SCRIPT_FAIL), timeout=120
         session.on_event(on_event)
         session.send('Runtime.enable')
         session.send('Page.enable')
-        if script is not None:
+        if autopilot is not None:
             session.send('Page.addScriptToEvaluateOnNewDocument',
-                         {'source': f'globalThis.wgfScript = {json.dumps(script)};'})
+                         {'source': f'globalThis.wgfAutopilot = {json.dumps(autopilot)};'})
         session.send('Page.navigate', {'url': url})
         if not done.wait(timeout):
             lines.append(f'[ERROR] wgf: nothing ended the run within {timeout} s')
-        elif screenshot is not None and any('wgf_script: SCREENSHOT' in line for line in lines):
+        elif screenshot is not None and any('wgf_autopilot: SCREENSHOT' in line for line in lines):
             import base64
             shot = session.send('Page.captureScreenshot', {'format': 'png'})
             Path(screenshot).write_bytes(base64.b64decode(shot['data']))
@@ -269,19 +269,19 @@ def run_page_url(url, script=None, until=(SCRIPT_PASS, SCRIPT_FAIL), timeout=120
 
 
 def judged(output):
-    """A scripted run's verdict from what it logged: True for PASS with no error, False
+    """An autopilot run's verdict from what it logged: True for PASS with no error, False
     for FAIL or an error, None for no verdict."""
     lines = output if isinstance(output, list) else output.splitlines()
     errors = [line for line in lines if '[ERROR]' in line or '[FATAL]' in line]
-    if any(SCRIPT_FAIL in line for line in lines) or errors:
+    if any(AUTOPILOT_FAIL in line for line in lines) or errors:
         return False
-    return True if any(SCRIPT_PASS in line for line in lines) else None
+    return True if any(AUTOPILOT_PASS in line for line in lines) else None
 
 
 def dumped(output, part='ecs'):
-    """What a script's dump logged for `part`, as its text."""
+    """What an autopilot's dump logged for `part`, as its text."""
     lines = output if isinstance(output, list) else output.splitlines()
-    mark = f'wgf_script: DUMP {part}| '
+    mark = f'wgf_autopilot: DUMP {part}| '
     return '\n'.join(line.split(mark, 1)[1] for line in lines if mark in line)
 
 

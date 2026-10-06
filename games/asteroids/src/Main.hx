@@ -11,7 +11,7 @@ import wgf.*;
 	and game-over screens are libwgf's UI; the HUD is drawn text. Sounds are generated
 	(tools/gen_sounds.py) and committed.
 
-	Its probes, for its scripted playthrough (scripts/playthrough.wgfscript):
+	Its probes, for its autopilot playthrough (autopilot/playthrough.autopilot):
 	asteroids.state (0 title, 1 playing, 2 game over), asteroids.score, asteroids.lives,
 	asteroids.wave, and the ecs's own (ecs.behavior.Rock: the rocks left).
 **/

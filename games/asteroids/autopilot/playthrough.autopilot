@@ -1,5 +1,5 @@
-wgf-script 1
-# Asteroids, played through (wgf play; tools/check_games.py runs it headless and in a
+wgf-autopilot 1
+# Asteroids, played through (wgf autopilot; tools/check_games.py runs it headless and in a
 # browser): the title; a game -- rocks shot and split for points, then the ship flown
 # straight into the field until all three are lost; the game-over screen; and a second
 # game started from it. The seed makes the rocks the same every run.

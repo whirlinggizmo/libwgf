@@ -7,7 +7,7 @@
 #include <string.h>
 
 #include "wgf_app.h"
-#include "wgf_app_script_priv.h"
+#include "wgf_app_autopilot_priv.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_gamepad.h"
 #include "wgf_input.h"
@@ -17,10 +17,10 @@
 #include "wgf_probe.h"
 #include "wgf_random.h"
 
-/* Scripted runs, headless, through wgf_app_run as a program runs: a script's inputs
+/* Autopilot runs, headless, through wgf_app_run as a program runs: an autopilot's inputs
  * reach the program's ticks at their frames, its expectations pass and fail as the
  * probes say, its time is a display frame a frame, its seed is the random numbers',
- * its end quits; a dump asks each part for its state; and a script that can't be read
+ * its end quits; a dump asks each part for its state; and an autopilot that can't be read
  * doesn't run. */
 
 static int failures;
@@ -83,26 +83,26 @@ static void on_frame(void *user)
     if (wgf_input_get_chars()[0] != '\0') wgf_probe_set_value("typed", (double)(unsigned char)wgf_input_get_chars()[0]);
 }
 
-static const char *script_path = "wgf_app_script_test.txt";
+static const char *autopilot_path = "wgf_app_autopilot_test.txt";
 
-static void write_script(const char *text)
+static void write_autopilot(const char *text)
 {
-    FILE *f = fopen(script_path, "wb");
+    FILE *f = fopen(autopilot_path, "wb");
     if (f != NULL) {
         fputs(text, f);
         fclose(f);
     }
 }
 
-static void run_script(const char *text, run_t *run)
+static void run_autopilot(const char *text, run_t *run)
 {
-    write_script(text);
+    write_autopilot(text);
     memset(run, 0, sizeof(*run));
     wgf_app_run(on_init, on_tick, on_frame, NULL, run);
 }
 
 static const char *passing =
-    "wgf-script 1\n"
+    "wgf-autopilot 1\n"
     "# every kind of input, and checks after each\n"
     "seed 1234\n"
     "at 2 key tap space\n"
@@ -139,39 +139,39 @@ int main(void)
     float seeded_first;
 
 #if defined(_WIN32)
-    _putenv_s("LIBWGF_SCRIPT", script_path);
+    _putenv_s("LIBWGF_AUTOPILOT", autopilot_path);
 #else
-    setenv("LIBWGF_SCRIPT", script_path, 1);
+    setenv("LIBWGF_AUTOPILOT", autopilot_path, 1);
 #endif
 
-    run_script(passing, &run);
-    expect(wgf_app_priv_script_has_passed() && wgf_app_priv_script_get_failures() == 0, "the script passes");
+    run_autopilot(passing, &run);
+    expect(wgf_app_priv_autopilot_has_passed() && wgf_app_priv_autopilot_get_failures() == 0, "the autopilot passes");
     expect(run.frames == 30, "it ended after its end's frame");
     expect(run.ticks == 30, "a tick a frame");
     expect(run.deltas_exact, "every frame lasted a sixtieth of a second");
-    expect(run.seed == 1234, "the script's seed, set before init");
+    expect(run.seed == 1234, "the autopilot's seed, set before init");
     seeded_first = run.first_random;
     expect(run.presses == 2, "a tap and a hold, each pressed once");
 
-    run_script(passing, &run);
+    run_autopilot(passing, &run);
     expect(run.first_random == seeded_first, "the same seed, the same numbers");
 
-    run_script("wgf-script 1\n"
+    run_autopilot("wgf-autopilot 1\n"
                "at 3 expect presses == 1\n" /* nothing was pressed */
                "at 3 expect never_set > 0\n"
                "at 4 expect ticks == 5\n"
                "at 5 end\n",
                &run);
-    expect(!wgf_app_priv_script_has_passed() && wgf_app_priv_script_get_failures() == 2,
+    expect(!wgf_app_priv_autopilot_has_passed() && wgf_app_priv_autopilot_get_failures() == 2,
            "a wrong value and a probe never set fail, the right one doesn't");
-    expect(run.frames == 6, "a failing script still runs to its end");
+    expect(run.frames == 6, "a failing autopilot still runs to its end");
 
     wgf_core_priv_part_install(&dumping);
-    run_script("wgf-script 1\nat 2 dump\nat 3 dump\nat 4 end\n", &run);
-    expect(wgf_app_priv_script_has_passed() && dumps == 2, "each dump asks the part for its state");
+    run_autopilot("wgf-autopilot 1\nat 2 dump\nat 3 dump\nat 4 end\n", &run);
+    expect(wgf_app_priv_autopilot_has_passed() && dumps == 2, "each dump asks the part for its state");
 
-    /* the numbers a script reads: decimals with a point and an exponent, either sign */
-    run_script("wgf-script 1\n"
+    /* the numbers an autopilot reads: decimals with a point and an exponent, either sign */
+    run_autopilot("wgf-autopilot 1\n"
                "at 3 expect ticks == 4e0\n"
                "at 3 expect ticks == +4.000\n"
                "at 3 expect ticks > .35e1\n"
@@ -179,48 +179,48 @@ int main(void)
                "at 3 expect ticks > -1.5\n"
                "at 4 end\n",
                &run);
-    expect(wgf_app_priv_script_has_passed() && wgf_app_priv_script_get_failures() == 0,
+    expect(wgf_app_priv_autopilot_has_passed() && wgf_app_priv_autopilot_get_failures() == 0,
            "numbers with points, exponents, and signs read as they say");
 
-    run_script("wgf-script 1\nat 2 key tap nosuchkey\nat 4 end\n", &run);
-    expect(run.frames == 0, "a script that can't be read ends the program before its first frame");
+    run_autopilot("wgf-autopilot 1\nat 2 key tap nosuchkey\nat 4 end\n", &run);
+    expect(run.frames == 0, "an autopilot that can't be read ends the program before its first frame");
 
     /* what the parser refuses, each alone */
     {
         static const char *const bad[] = {
             "",                                       /* no header */
-            "wgf-script 2\n",                         /* another version */
-            "wgf-script 1\nat -1 end\n",              /* a frame before 0 */
-            "wgf-script 1\nat x end\n",               /* not a number */
-            "wgf-script 1\nat 1\n",                   /* no command */
-            "wgf-script 1\nat 1 jump\n",              /* no such command */
-            "wgf-script 1\nat 1 key press a\n",       /* no such verb */
-            "wgf-script 1\nat 1 mouse click thumb\n", /* no such button */
-            "wgf-script 1\nat 1 pad 4 connect\n",     /* pads are 0 to 3 */
-            "wgf-script 1\nat 1 pad 0 axis left_x 2\n",
-            "wgf-script 1\nat 1 expect score ~ 3\n",  /* no such operator */
-            "wgf-script 1\nat 1 expect score == nan\n",
-            "wgf-script 1\nat 1 expect score == 1e\n",   /* an exponent with no digits */
-            "wgf-script 1\nat 1 expect score == .\n",    /* a point with no digits */
-            "wgf-script 1\nat 1 expect score == 0x10\n", /* hex: a script's numbers are decimal */
-            "wgf-script 1\nat 1 expect score == 1e999\n", /* not finite */
-            "wgf-script 1\nat 1 expect score == 2,5\n",
-            "wgf-script 1\nat 1 end\nat 2 end\n",     /* two ends */
-            "wgf-script 1\nat 1 end extra\n",         /* more than the command takes */
-            "wgf-script 1\nat 1 key tap a\nseed 3\n", /* a seed after the commands */
-            "wgf-script 1\nwait 3\n",                 /* not a line the format has */
-            "wgf-script 1\nat 1 text\n",              /* nothing to type */
-            "wgf-script 1\nat 1 log \x01\n",          /* a control character */
+            "wgf-autopilot 2\n",                         /* another version */
+            "wgf-autopilot 1\nat -1 end\n",              /* a frame before 0 */
+            "wgf-autopilot 1\nat x end\n",               /* not a number */
+            "wgf-autopilot 1\nat 1\n",                   /* no command */
+            "wgf-autopilot 1\nat 1 jump\n",              /* no such command */
+            "wgf-autopilot 1\nat 1 key press a\n",       /* no such verb */
+            "wgf-autopilot 1\nat 1 mouse click thumb\n", /* no such button */
+            "wgf-autopilot 1\nat 1 pad 4 connect\n",     /* pads are 0 to 3 */
+            "wgf-autopilot 1\nat 1 pad 0 axis left_x 2\n",
+            "wgf-autopilot 1\nat 1 expect score ~ 3\n",  /* no such operator */
+            "wgf-autopilot 1\nat 1 expect score == nan\n",
+            "wgf-autopilot 1\nat 1 expect score == 1e\n",   /* an exponent with no digits */
+            "wgf-autopilot 1\nat 1 expect score == .\n",    /* a point with no digits */
+            "wgf-autopilot 1\nat 1 expect score == 0x10\n", /* hex: an autopilot's numbers are decimal */
+            "wgf-autopilot 1\nat 1 expect score == 1e999\n", /* not finite */
+            "wgf-autopilot 1\nat 1 expect score == 2,5\n",
+            "wgf-autopilot 1\nat 1 end\nat 2 end\n",     /* two ends */
+            "wgf-autopilot 1\nat 1 end extra\n",         /* more than the command takes */
+            "wgf-autopilot 1\nat 1 key tap a\nseed 3\n", /* a seed after the commands */
+            "wgf-autopilot 1\nwait 3\n",                 /* not a line the format has */
+            "wgf-autopilot 1\nat 1 text\n",              /* nothing to type */
+            "wgf-autopilot 1\nat 1 log \x01\n",          /* a control character */
         };
         size_t i;
         for (i = 0; i < sizeof(bad) / sizeof(bad[0]); i++) {
-            if (wgf_app_priv_script_start_text(bad[i])) printf("FAIL: accepted bad script %u\n", (unsigned)i);
-            expect(!wgf_app_priv_script_is_running(), "a bad script doesn't run");
+            if (wgf_app_priv_autopilot_start_text(bad[i])) printf("FAIL: accepted bad autopilot %u\n", (unsigned)i);
+            expect(!wgf_app_priv_autopilot_is_running(), "a bad autopilot doesn't run");
         }
-        expect(wgf_app_priv_script_start_text("wgf-script 1 # the header\n\n  # nothing else\n"),
-               "comments, blank lines, and no commands are a script");
-        wgf_app_priv_script_stop(0);
+        expect(wgf_app_priv_autopilot_start_text("wgf-autopilot 1 # the header\n\n  # nothing else\n"),
+               "comments, blank lines, and no commands are an autopilot");
+        wgf_app_priv_autopilot_stop(0);
     }
-    remove(script_path);
+    remove(autopilot_path);
     return failures == 0 ? 0 : 1;
 }

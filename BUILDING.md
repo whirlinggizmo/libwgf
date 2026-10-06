@@ -1,6 +1,6 @@
 # Building libwgf
 
-CMake (3.21 or newer), Ninja, and Python 3 (3.9 or newer) build everything: the library, its tests, and the web builds. There is no make and no shell script; every tool is Python, standard library only.
+CMake (3.21 or newer), Ninja, and Python 3 (3.9 or newer) build everything: the library, its tests, and the web builds. There is no make and nothing in shell; every tool is Python, standard library only.
 
 ## Requirements
 
@@ -68,7 +68,7 @@ python3 tools/check_web.py        # in a headless browser: fails one that doesn'
                                   # and saves a screenshot of each in build/<preset>/check_web/
 ```
 
-A program runs a script of inputs and expectations (`app/src/wgf_app_script_priv.h` says the format) when `LIBWGF_SCRIPT` names one; on the web a page hands the module the script's text as `Module["wgfScript"]`.
+A program flies an autopilot -- a file of inputs and expectations (`app/src/wgf_app_autopilot_priv.h` says the format) -- when `LIBWGF_AUTOPILOT` names one; on the web a page hands the module the file's text as `Module["wgfAutopilot"]`.
 
 ## The web
 
@@ -100,10 +100,10 @@ How the binding maps the C calls is [docs/BINDINGS.md](docs/BINDINGS.md); how to
 cd ~/games/rocks
 wgf serve                           # in a browser, reloaded as its Haxe is saved, its state kept
 wgf build --web | --desktop | --headless    # into build/<target>/
-wgf run [--headless] [--frames N]   # the desktop build
-wgf play scripts/smoke.wgfscript [--web]    # a scripted run: PASS or FAIL
-wgf screenshot --frame 60           # the web build at a frame, as a PNG
-wgf dump --frame 60                 # the ecs's world, as a scene's text
+wgf run [--headless] [--frames N | --autopilot FILE]   # the desktop build
+wgf autopilot autopilot/smoke.autopilot [--web]   # an autopilot run: PASS or FAIL
+wgf screenshot --frame 60 [--autopilot FILE]   # the web build at a frame, as a PNG
+wgf dump --frame 60 [--autopilot FILE]         # the ecs's world, as a scene's text
 wgf export                          # export/web (a trimmed host) and export/desktop, smoke-tested
 ```
 
@@ -160,7 +160,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `check_features.py` | runs the feature test (`examples/haxe/feature-test/`) on hxcpp, under node, and in a browser, failing a call it never reached |
 | `check_binding.py` | checks the binding: generated, every call reached once, and its test on hxcpp, under node, and in a browser |
 | `check_docs.py` | checks the docs against the code: every link resolves, ARCHITECTURE names every public header, this file every tool and preset, README every doc, deps/README every vendored directory (ctest runs it) |
-| `check_tools.py` | checks every tool is named for what it does, imports no script, answers `--help` and does nothing else, and refuses an argument it doesn't take |
+| `check_tools.py` | checks every tool is named for what it does, imports no command, answers `--help` and does nothing else, and refuses an argument it doesn't take |
 | `stage_variant.py` | stages a built preset into `out/`, fresh |
 | `verify_builds.py` | every build and check this machine can run, in one command |
 | `run_in_browser.py` | runs a wasm test in a real browser, over several visits (ctest uses it) |

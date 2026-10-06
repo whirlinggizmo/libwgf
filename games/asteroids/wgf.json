@@ -4,6 +4,6 @@
 	"main": "Main",
 	"source": "src",
 	"assets": "assets",
-	"scripts": "scripts",
+	"autopilot": "autopilot",
 	"web_budget_kb": 400
 }

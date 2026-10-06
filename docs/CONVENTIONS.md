@@ -37,7 +37,7 @@ libwgf is one library, `libwgf.a` (`wgf.lib` with MSVC), built in layers and mod
 |------|------|---------------|
 | math | vectors, matrices, and the math on them | nothing |
 | core | handles, logging, time, files, loading, resources, probes, random numbers | math |
-| platform | the window, its events, input, scripted input | core, math |
+| platform | the window, its events, input, an autopilot's input | core, math |
 | asset | where a resource's file comes from | core, math |
 | gfx | drawing | platform, asset, core, math |
 | audio | sounds and voices | platform, asset, core, math |
@@ -117,7 +117,7 @@ No other pointer, no struct, no function pointer, no `void *`, no variadic call.
 - C11, compiled with `-Wall -Wextra -Wpedantic` (`/W4` with MSVC), warnings as errors.
 - Four spaces, no tabs; lines up to 120 columns; a function's opening brace on its own line, a block's on the line of its statement. Comments are `/* */`, sentences, saying what and why, not how.
 - A public header comment says what the call does now, and is changed in the commit that changes the behavior. When a header and the code disagree, the header is the bug.
-- Untrusted input (files, scripts, scene text) is checked before it is read: sizes and offsets bounded, numbers parsed with their range checked. A parser refuses rather than guessing.
+- Untrusted input (files, autopilot files, scene text) is checked before it is read: sizes and offsets bounded, numbers parsed with their range checked. A parser refuses rather than guessing.
 
 ## Build
 
@@ -144,14 +144,14 @@ No other pointer, no struct, no function pointer, no `void *`, no variadic call.
 ## Tests and examples
 
 - A layer's tests are in `<layer>/tests/`, through its public headers, and its private ones for private pieces. A test that waits on a load gives up after a while and fails.
-- Every example and game runs headless in the smoke run and in a browser in the browser check; a game also ships a scripted playthrough.
+- Every example and game runs headless in the smoke run and in a browser in the browser check; a game also ships an autopilot playthrough.
 - Example files are under `examples/assets/`; a game's under `games/<name>/assets/`. Each asset not made here is credited, with its license, in a `CREDITS.md` beside it.
 
 ## Tooling
 
-- Tools are Python 3, standard library only, and run on Linux, macOS, and Windows. No shell-only scripts.
+- Tools are Python 3, standard library only, and run on Linux, macOS, and Windows. Nothing shell-only.
 - Every tool answers `--help` with its usage, from its docstring, and does nothing else; it refuses an argument it doesn't take. `tools/check_tools.py` checks every one.
-- A tool you run is named `<verb>_<noun>.py`, its verb from check_tools' `VERBS`; a module that tools import is one word, listed in `MODULES`. No file imports a script.
+- A tool you run is named `<verb>_<noun>.py`, its verb from check_tools' `VERBS`; a module that tools import is one word, listed in `MODULES`. No file imports a command.
 - A check that can't run here (no compiler, browser, Wine, Xvfb) says `<tool>: SKIPPING <what> (<why>)` before running anything, and a driver of checks repeats every skip in its last line. A skipped check is reported as skipped, never as passed.
 - Rules are enforced by the compiler and CMake where possible. A check of the API reads headers through clang (`tools/headers.py`), never regular expressions over source.
 - Before a change is done, every preset this machine can build passes its tests: `tools/verify_builds.py` runs them, `--web` adds the web, `--windows HOST` a Windows machine.

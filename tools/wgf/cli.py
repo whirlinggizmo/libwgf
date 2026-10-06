@@ -3,16 +3,22 @@
     wgf new <dir> [--name NAME]          a game, from libwgf's template (templates/game/)
     wgf build [--web|--desktop|--headless] [--release]
                                          the game, into build/<target>/ (default web)
-    wgf run [--headless] [--frames N] [--script FILE] [--no-build]
+    wgf run [--headless] [--frames N] [--autopilot FILE] [--no-build]
                                          the desktop build, in a window (or headless);
                                          --frames ends it after N frames
-    wgf play SCRIPT [--web] [--no-build] a scripted run (app's script format), headless or
-                                         in a browser: PASS or FAIL, as its exit code says
-    wgf screenshot [--frame N] [--out FILE] [--no-build]
+    wgf autopilot FILE [--web] [--no-build]
+                                         the game flown by an autopilot file (its inputs
+                                         at frames, its expectations: app's format),
+                                         headless or in a browser: PASS or FAIL, as its
+                                         exit code says
+    wgf screenshot [--frame N] [--autopilot FILE] [--out FILE] [--no-build]
                                          the web build at frame N, in a headless browser,
                                          saved as a PNG (default build/screenshot.png)
-    wgf dump [--frame N] [--no-build]    the ecs's world at frame N, as a scene's text,
+    wgf dump [--frame N] [--autopilot FILE] [--no-build]
+                                         the ecs's world at frame N, as a scene's text,
                                          from a headless run
+  (screenshot's and dump's --autopilot flies the game there first: the file's inputs up
+  to the frame, which is the file's end when --frame isn't given)
     wgf serve [--port N]                 the game in a browser, reloaded as its Haxe is
                                          saved, its state kept
     wgf export [--web] [--desktop] [--out DIR]
@@ -97,11 +103,11 @@ def native_exe(game, target, build):
     return exe
 
 
-def verdict(output, scripted):
-    """Exit code of a run from what it logged: a script's PASS or FAIL; without a script,
-    any error fails it."""
+def verdict(output, flown):
+    """Exit code of a run from what it logged: its autopilot's PASS or FAIL; without
+    one, any error fails it."""
     result = games.judged(output)
-    if scripted:
+    if flown:
         return 0 if result else 1
     return 1 if result is False else 0
 
@@ -110,13 +116,30 @@ def cmd_run(args):
     game = games.find()
     target = 'headless' if args.headless else 'desktop'
     exe = native_exe(game, target, not args.no_build)
-    script = None
-    if args.script:
-        script = Path(args.script).read_text(encoding='utf-8')
+    autopilot = None
+    if args.autopilot:
+        autopilot = Path(args.autopilot).read_text(encoding='utf-8')
     elif args.frames:
-        script = games.frames_script(args.frames)
-    code, output = games.run_native(exe, script)
-    return code or verdict(output, script is not None)
+        autopilot = games.frames_autopilot(args.frames)
+    code, output = games.run_native(exe, autopilot)
+    return code or verdict(output, autopilot is not None)
+
+
+def flown_to(path, frame, command, after):
+    """An autopilot that flies the file at `path` (if any) to `frame` -- the file's end
+    when `frame` is None -- then does `command` there, and ends `after` frames on. The
+    file's own end is left out: this one ends instead. (Its text, the frame.)"""
+    lines, end = ['wgf-autopilot 1'], None
+    if path:
+        for line in Path(path).read_text(encoding='utf-8').splitlines()[1:]:
+            words = line.split('#', 1)[0].split()
+            if len(words) >= 3 and words[0] == 'at' and words[2] == 'end':
+                end = int(words[1])
+                continue
+            lines.append(line)
+    at = frame if frame is not None else (end if end is not None else 60)
+    lines += [f'at {at} {command}', f'at {at + after} end']
+    return '\n'.join(lines) + '\n', at
 
 
 def web_dir(game, build):
@@ -128,18 +151,18 @@ def web_dir(game, build):
     return out
 
 
-def cmd_play(args):
+def cmd_autopilot(args):
     game = games.find()
-    script = Path(args.script).read_text(encoding='utf-8')
+    autopilot = Path(args.file).read_text(encoding='utf-8')
     if args.web:
         site = web_dir(game, not args.no_build)
-        lines = games.run_page(site, 'index.html', script)
+        lines = games.run_page(site, 'index.html', autopilot)
         result = games.judged(lines)
     else:
         exe = native_exe(game, 'headless', not args.no_build)
-        code, output = games.run_native(exe, script)
+        code, output = games.run_native(exe, autopilot)
         result = games.judged(output) if code == 0 else False
-    say(f'play {args.script}: {"PASS" if result else "FAIL"}')
+    say(f'autopilot {args.file}: {"PASS" if result else "FAIL"}')
     return 0 if result else 1
 
 
@@ -150,24 +173,25 @@ def cmd_screenshot(args):
     out.parent.mkdir(parents=True, exist_ok=True)
     if out.exists():
         out.unlink()
-    script = f'wgf-script 1\nat {args.frame} screenshot shot\nat {args.frame + 60} end\n'
-    games.run_page(site, 'index.html', script, screenshot=out, echo=False)
+    autopilot, frame = flown_to(args.autopilot, args.frame, 'screenshot shot', 60)
+    games.run_page(site, 'index.html', autopilot, screenshot=out, echo=False)
     if not out.exists():
-        raise games.GameError(f'no screenshot: the page never reached frame {args.frame}')
-    say(f'frame {args.frame} saved: {out}')
+        raise games.GameError(f'no screenshot: the page never reached frame {frame}')
+    say(f'frame {frame} saved: {out}')
     return 0
 
 
 def cmd_dump(args):
     game = games.find()
     exe = native_exe(game, 'headless', not args.no_build)
-    code, output = games.run_native(exe, f'wgf-script 1\nat {args.frame} dump\nat {args.frame} end\n', echo=False)
+    autopilot, frame = flown_to(args.autopilot, args.frame, 'dump', 0)
+    code, output = games.run_native(exe, autopilot, echo=False)
     text = games.dumped(output)
-    if code != 0 or 'wgf_script: DUMP ecs BEGIN' not in output:
+    if code != 0 or 'wgf_autopilot: DUMP ecs BEGIN' not in output:
         if code != 0:
             print(output)
-        raise games.GameError('no dump: the run ended early, or the game has no entities (an ecs to dump)'
-                              if code == 0 else f'the run failed (exit {code})')
+        raise games.GameError(f'no dump at frame {frame}: the run ended early, or the game has no entities (an ecs '
+                              'to dump)' if code == 0 else f'the run failed (exit {code})')
     print(text)
     return 0
 
@@ -195,9 +219,9 @@ def trimmed_exports(program_js, out):
     return exports
 
 
-def smoke_script(game):
-    path = game.scripts / 'smoke.wgfscript'
-    return path.read_text(encoding='utf-8') if path.exists() else games.frames_script(120)
+def smoke_autopilot(game):
+    path = game.autopilot / 'smoke.autopilot'
+    return path.read_text(encoding='utf-8') if path.exists() else games.frames_autopilot(120)
 
 
 def export_web(game, out):
@@ -227,7 +251,7 @@ def export_web(game, out):
     if game.budget_kb is not None and total > game.budget_kb * 1024:
         say(f'web export: FAIL: {total / 1024:.1f} KB is over the budget of {game.budget_kb} KB (wgf.json)')
         ok = False
-    lines = games.run_page(out, 'index.html', smoke_script(game), echo=False)
+    lines = games.run_page(out, 'index.html', smoke_autopilot(game), echo=False)
     smoke = games.judged(lines)
     for line in lines:
         if '[ERROR]' in line or 'FAIL' in line:
@@ -238,7 +262,7 @@ def export_web(game, out):
 
 def export_desktop(game, out):
     """The desktop export: a release build with its assets copied beside it, run with the
-    smoke script (in a window: on Linux with no display, on Xvfb's)."""
+    smoke autopilot (in a window: on Linux with no display, on Xvfb's)."""
     if out.exists():
         shutil.rmtree(out)
     exe = games.build_native(game, 'desktop', release=True, out=out)
@@ -260,7 +284,7 @@ def export_desktop(game, out):
         os.environ['DISPLAY'] = display
         xvfb = run
     try:
-        code, output = games.run_native(exe, smoke_script(game), echo=False)
+        code, output = games.run_native(exe, smoke_autopilot(game), echo=False)
     finally:
         if xvfb is not None:
             xvfb.stop()
@@ -301,21 +325,23 @@ def parser():
     p = sub.add_parser('run', help='the desktop build, in a window or headless')
     p.add_argument('--headless', action='store_true')
     p.add_argument('--frames', type=int, help='end after this many frames')
-    p.add_argument('--script', help='a scripted run (app\'s script format)')
+    p.add_argument('--autopilot', help='an autopilot file to fly it (app\'s format)')
     p.add_argument('--no-build', action='store_true')
     p.set_defaults(run=cmd_run)
-    p = sub.add_parser('play', help='a scripted run: PASS or FAIL')
-    p.add_argument('script')
+    p = sub.add_parser('autopilot', help='the game flown by an autopilot file: PASS or FAIL')
+    p.add_argument('file')
     p.add_argument('--web', action='store_true', help='in a headless browser (default: headless)')
     p.add_argument('--no-build', action='store_true')
-    p.set_defaults(run=cmd_play)
+    p.set_defaults(run=cmd_autopilot)
     p = sub.add_parser('screenshot', help='the web build at a frame, as a PNG')
-    p.add_argument('--frame', type=int, default=60)
+    p.add_argument('--frame', type=int, help='the frame (default: the autopilot\'s end, or 60)')
+    p.add_argument('--autopilot', help='an autopilot file to fly it there first')
     p.add_argument('--out')
     p.add_argument('--no-build', action='store_true')
     p.set_defaults(run=cmd_screenshot)
     p = sub.add_parser('dump', help='the ecs\'s world at a frame, as a scene\'s text')
-    p.add_argument('--frame', type=int, default=60)
+    p.add_argument('--frame', type=int, help='the frame (default: the autopilot\'s end, or 60)')
+    p.add_argument('--autopilot', help='an autopilot file to fly it there first')
     p.add_argument('--no-build', action='store_true')
     p.set_defaults(run=cmd_dump)
     p = sub.add_parser('serve', help='in a browser, reloaded as its Haxe is saved')

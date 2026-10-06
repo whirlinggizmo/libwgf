@@ -8,7 +8,7 @@ link in them goes somewhere.
             names a file or directory that exists
   headers   every public header (<layer>/include/wgf_*.h, include/) is named in
             docs/ARCHITECTURE.md, which describes each section
-  tools     every tool a person runs (tools/ and tools/wgf/, check_tools' scripts) is
+  tools     every tool a person runs (tools/ and tools/wgf/, check_tools' commands) is
             named in BUILDING.md, which says what each does
   presets   every configure preset in CMakePresets.json is named in BUILDING.md
   docs      every doc in docs/ is linked from README.md, where a reader starts
@@ -68,7 +68,8 @@ def check_headers():
 
 def check_tools_named():
     text = (ROOT / 'BUILDING.md').read_text(encoding='utf-8')
-    return [f'BUILDING.md doesn\'t say what {tool} does' for tool in tools.scripts() if f'`{Path(tool).name}`' not in text]
+    return [f'BUILDING.md doesn\'t say what {tool} does' for tool in tools.commands()
+            if f'`{Path(tool).name}`' not in text]
 
 
 def check_presets():

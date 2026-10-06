@@ -14,7 +14,7 @@ def tool_files():
     return sorted({p.relative_to(ROOT).as_posix() for pattern in FOLDERS for p in ROOT.glob(pattern)})
 
 
-def scripts():
+def commands():
     """The tools a person runs: every one but the modules."""
     return [t for t in tool_files() if t not in MODULES]
 

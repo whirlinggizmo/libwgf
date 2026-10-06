@@ -10,7 +10,7 @@
 #include "wgf_loop.h"
 #include "wgf.h"
 #include "wgf_log.h"
-#include "wgf_app_script_priv.h"
+#include "wgf_app_autopilot_priv.h"
 #include "wgf_app_tick_clock_priv.h"
 #include "wgf_time.h"
 #include "render/wgf_gfx_render_priv.h"
@@ -21,7 +21,7 @@
 
 #define DEFAULT_TICK_RATE 60
 #define MAX_FRAME_DELTA 0.1
-#define SCRIPT_FRAME (1.0 / 60.0) /* a scripted run's frame, whatever the display does */
+#define AUTOPILOT_FRAME (1.0 / 60.0) /* an autopilot run's frame, whatever the display does */
 
 static struct {
     bool running;
@@ -38,7 +38,7 @@ static struct {
     float frame_delta;
     double fps_delta; /* frame deltas, smoothed, for the fps readout; 0 before the first */
     bool first_frame_done; /* the first frame's mark made */
-    bool scripted;         /* a script runs (wgf_app_script_priv.h): its time, not the clock's */
+    bool flown;            /* an autopilot flies it (wgf_app_autopilot_priv.h): its time, not the clock's */
     long frames;           /* frames run since init */
 } app = {.tick_rate = DEFAULT_TICK_RATE, .time_scale = 1.0f};
 
@@ -62,8 +62,8 @@ static void on_init(void)
     app.frame_delta = 0.0f;
     app.fps_delta = 0.0;
     app.frames = 0;
-    app.scripted = wgf_app_priv_script_start(); /* before the program's init: it sets the seed */
-    wgf_platform_priv_set_paced(!app.scripted);  /* a scripted headless run waits for no display */
+    app.flown = wgf_app_priv_autopilot_start(); /* before the program's init: it sets the seed */
+    wgf_platform_priv_set_paced(!app.flown);  /* a headless run flown by an autopilot waits for no display */
     app.started = true;
     wgf_platform_priv_input_reset();
     wgf_platform_priv_gamepad_open();
@@ -96,11 +96,11 @@ static bool pace(void)
 static double time_frame(void)
 {
     const double now = wgf_time_get_seconds();
-    if (app.scripted) { /* the script's time: a display frame, every frame */
-        app.frame_delta = (float)SCRIPT_FRAME;
-        app.fps_delta = SCRIPT_FRAME;
+    if (app.flown) { /* the autopilot's time: a display frame, every frame */
+        app.frame_delta = (float)AUTOPILOT_FRAME;
+        app.fps_delta = AUTOPILOT_FRAME;
         app.last_frame = now;
-        return SCRIPT_FRAME;
+        return AUTOPILOT_FRAME;
     }
     const double elapsed = app.last_frame > 0.0 ? now - app.last_frame : 0.0;
     double delta = app.last_frame > 0.0 ? elapsed : wgf_platform_priv_get_frame_duration();
@@ -143,7 +143,7 @@ static void on_frame(void)
     if (!app.started) return;
     wgf_core_priv_update();
     if (!pace()) return;
-    wgf_app_priv_script_begin_frame(app.frames); /* the frame's scripted inputs, before its ticks */
+    wgf_app_priv_autopilot_begin_frame(app.frames); /* the frame's autopilot inputs, before its ticks */
     wgf_platform_priv_gamepad_begin_frame();     /* before the ticks: they read the pads too */
     run_ticks(time_frame());
     wgf_core_priv_part_set_fraction(wgf_loop_get_tick_fraction()); /* for those drawing ticked state */
@@ -157,7 +157,7 @@ static void on_frame(void)
     }
     wgf_platform_priv_input_end_frame();
     wgf_platform_priv_gamepad_end_frame();
-    wgf_app_priv_script_end_frame(app.frames); /* its expectations, after it */
+    wgf_app_priv_autopilot_end_frame(app.frames); /* its expectations, after it */
     app.frames++;
 }
 
@@ -167,7 +167,7 @@ static void on_shutdown(void)
         call(app.shutdown);
         app.started = false;
     }
-    wgf_app_priv_script_stop(app.frames);
+    wgf_app_priv_autopilot_stop(app.frames);
     wgf_platform_priv_window_set_open(false);
     wgf_platform_priv_gamepad_close();
     wgf_platform_priv_input_reset();

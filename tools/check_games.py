@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check every game in games/: its generated files current, its scripted playthrough
+"""Check every game in games/: its generated files current, its playthrough autopilot
 passing headless and in a browser, and its exports made, smoke-tested, and the web one
 within the game's size budget.
 
@@ -8,8 +8,8 @@ within the game's size budget.
 For each game (default: every games/<name>/ with a wgf.json), with the wgf tool, run in
 the game's directory as a developer would:
   generated   tools/gen_sounds.py --check, for a game whose sounds it makes
-  playthrough wgf play scripts/playthrough.wgfscript, headless
-  browser     the same in a headless browser (wgf play --web)
+  playthrough wgf autopilot autopilot/playthrough.autopilot, headless
+  browser     the same in a headless browser (wgf autopilot --web)
   web         wgf export --web: the trimmed host, the budget, the smoke run in a browser
   desktop     wgf export --desktop: the release build, its smoke run in a window
 A step that can't run here (no haxe, hxcpp, Emscripten, or browser) says
@@ -74,10 +74,10 @@ def run_step(name, step):
                               text=True)
         return done.returncode == 0, done.stdout.strip()
     if step == 'playthrough':
-        code, out = wgf(game_dir, 'play', 'scripts/playthrough.wgfscript')
+        code, out = wgf(game_dir, 'autopilot', 'autopilot/playthrough.autopilot')
         return code == 0 and 'PASS' in out.splitlines()[-1], out
     if step == 'browser':
-        code, out = wgf(game_dir, 'play', 'scripts/playthrough.wgfscript', '--web')
+        code, out = wgf(game_dir, 'autopilot', 'autopilot/playthrough.autopilot', '--web')
         return code == 0 and 'PASS' in out.splitlines()[-1], out
     if step == 'web':
         code, out = wgf(game_dir, 'export', '--web')
@@ -107,7 +107,7 @@ def main():
                 continue
             ok, out = run_step(name, step)
             summary = [line for line in out.splitlines()
-                       if line.startswith('wgf: ') or 'wgf_script: PASS' in line or 'gen_sounds' in line]
+                       if line.startswith('wgf: ') or 'wgf_autopilot: PASS' in line or 'gen_sounds' in line]
             print('\n'.join(summary[-4:]) if ok else '\n'.join(out.strip().splitlines()[-30:]), flush=True)
             print(f'check_games: {name} {step}: {"PASS" if ok else "FAIL"}', flush=True)
             if not ok:

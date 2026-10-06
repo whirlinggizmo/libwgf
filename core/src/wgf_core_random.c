@@ -40,7 +40,7 @@ int wgf_random_get_seed(void)
 
 void wgf_core_priv_random_init(void)
 {
-    /* the clock's fraction of a second, so two runs differ; a script sets its own */
+    /* the clock's fraction of a second, so two runs differ; an autopilot sets its own */
     const double now = wgf_time_get_seconds();
     wgf_random_set_seed((int)(uint32_t)((now - (double)(int64_t)now) * 4294967296.0) ^ (int)0x5eed5eed);
 }

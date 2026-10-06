@@ -1,0 +1,4 @@
+wgf-autopilot 1
+# a smoke run: two seconds of frames, and the game counted them (wgf autopilot, wgf export)
+at 120 expect frames >= 120
+at 120 end

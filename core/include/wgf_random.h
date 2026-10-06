@@ -12,8 +12,8 @@ extern "C" {
 /* One random number generator for the program, seeded, so a run can be made again:
  * the same seed gives the same numbers in the same order on every platform (PCG32,
  * O'Neill's permuted congruential generator). Core seeds it from the clock when it
- * starts, unless a scripted run sets the seed (a script's `seed` line), so a scripted
- * run is the same run everywhere. Simulation that must replay draws from here; what
+ * starts, unless an autopilot run sets the seed (an autopilot's `seed` line), so an
+ * autopilot run is the same run everywhere. Simulation that must replay draws from here; what
  * only looks random (a particle's spin) may too. */
 
 /* Start the sequence again from `seed`; a seed's sequence is the same everywhere. */
