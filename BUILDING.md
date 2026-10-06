@@ -91,6 +91,24 @@ python3 tools/check_features.py        # the feature test, reaching every public
 
 How the binding maps the C calls is [docs/BINDINGS.md](docs/BINDINGS.md); how to use it, [bindings/haxe/README.md](bindings/haxe/README.md).
 
+## Games: the `wgf` tool
+
+`wgf` (at the repository's root; `python wgf` on Windows) makes and works on a game, run in the game's directory:
+
+```sh
+./wgf new ~/games/rocks             # a game from templates/game/
+cd ~/games/rocks
+wgf serve                           # in a browser, reloaded as its Haxe is saved, its state kept
+wgf build --web | --desktop | --headless    # into build/<target>/
+wgf run [--headless] [--frames N]   # the desktop build
+wgf play scripts/smoke.wgfscript [--web]    # a scripted run: PASS or FAIL
+wgf screenshot --frame 60           # the web build at a frame, as a PNG
+wgf dump --frame 60                 # the ecs's world, as a scene's text
+wgf export                          # export/web (a trimmed host) and export/desktop, smoke-tested
+```
+
+`wgf --help`, and each command's, says the rest. A game names no libwgf: it is built against the libwgf whose `wgf` runs, from its staged variants. `wgf serve` builds through hotreload-hx (`deps/hotreload-hx`), vendored, so nothing is installed for it; Haxe 4.3.7 and hxcpp 4.3.2 are what the rest need.
+
 ## Windows
 
 From Linux, with MinGW-w64:
@@ -134,6 +152,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `check_api.py` | checks the public API's shape against CONVENTIONS through clang's parse of every public header (`headers.py`); `--self-test` runs it against a header that breaks every rule |
 | `gen_binding.py` | writes the Haxe binding's generated files from the headers (`--check`: writes nothing, fails when one is stale) |
 | `build_host.py` | links the web host a Haxe program runs on, the full one or a trimmed one (`--exports`) |
+| `check_cli.py` | runs each `wgf` command on a game it makes from the template, judging what each made and said; `serve` is edited while it runs, and must keep its state |
 | `check_features.py` | runs the feature test (`examples/haxe/feature-test/`) on hxcpp, under node, and in a browser, failing a call it never reached |
 | `check_binding.py` | checks the binding: generated, every call reached once, and its test on hxcpp, under node, and in a browser |
 | `check_tools.py` | checks every tool is named for what it does, imports no script, answers `--help` and does nothing else, and refuses an argument it doesn't take |

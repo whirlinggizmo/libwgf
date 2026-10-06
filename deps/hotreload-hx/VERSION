@@ -1,0 +1,5 @@
+# Vendored from Whirling Gizmo's hotreload-hx (MIT, LICENSE in this directory): its src/,
+# unchanged, at this commit. libwgf's `wgf serve` builds a game's web program with it
+# (-cp deps/hotreload-hx/src, its Builder macro, -D hotreload) and serves the builds itself
+# (tools/wgf/devserver.py), speaking its JsSwap's protocol; nothing else uses it.
+hotreload-hx https://github.com/whirlinggizmo/hotreload-hx.git 74bcceb

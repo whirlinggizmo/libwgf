@@ -183,6 +183,15 @@ Games are Haxe (`bindings/haxe/`, haxelib `wgf`); how the binding maps each kind
 
 **The web host** (`hosts/web/`) is libwgf linked for the web with no `main`, as an ES module whose `createWgfHost()` resolves to it: `tools/build_host.py` links a staged web variant, exporting every call (the full host) or a list (a trimmed one), and the runtime methods the binding uses. A program's page (`hosts/web/page.html`) imports the host, makes it on the canvas, leaves it at `globalThis.wgfHost`, and imports the program; `Runtime.run` attaches it. A headless web variant's host is for node, where the binding's test runs (`bindings/haxe/test/node.mjs`).
 
+## The `wgf` tool
+
+`wgf` (the root's launcher, `tools/wgf/`) works on a game: a directory with a `wgf.json` (its name, main class, sources, assets, scripts, and web size budget), made from `templates/game/` by `wgf new`. A game names no libwgf: the tool builds it against the libwgf it belongs to, from that libwgf's staged variants, with the binding on the class path. Its builds put the program's assets beside it everywhere (`build/<target>/assets`), as `Asset.setHost("assets")` finds them: a page's directory on the web, the executable's natively.
+
+- **build** and **run**: the web (the full host, the game's page written once into `web/index.html`, the program), the desktop and headless (hxcpp against the native debug or release, or the headless, variant).
+- **play**, **screenshot**, **dump**: scripted runs (app's format, `wgf_app_script_priv.h`), headless natively or in a headless browser, which a page hands the host (`globalThis.wgfScript`, the module's `wgfScript`); judged by what they log. A screenshot is the browser's capture when the script logs its SCREENSHOT; a dump, each part's dump hook (the ecs's world, as a scene), logged a line at a time.
+- **serve** (`tools/wgf/devserver.py`): a hot build (hotreload-hx, vendored in `deps/`) on the full host, served with a long poll at `/__hotreload`; each save rebuilds the program through a compilation server, stamps it, and the page swaps its classes in between two frames, every static and object kept. The runtime's trampolines read their handlers when they fire, so the swapped code is what runs; a reload's bundle doesn't start the run again.
+- **export**: the web as a static folder -- a release program, its host trimmed to the calls the program makes (the quoted keys in its JS), its assets copied in, libwgf's notices -- smoke-tested in a browser with the game's smoke script and held to its budget; and the desktop, a release build with its assets, smoke-tested in a window (Xvfb's when Linux has no display).
+
 ## Handles
 
 Everything libwgf owns and hands out -- a texture, a node, an entity, a task -- is named by a 32-bit handle:

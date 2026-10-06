@@ -48,6 +48,12 @@ class Runtime {
 		onTick = tick;
 		onFrame = frame;
 		onShutdown = shutdown;
+		#if hotreload
+		// a hot reload's bundle runs its main again as it loads: the run is going already,
+		// and the swap that follows gives the trampolines this bundle's handlers
+		if (hotreload.Reloader.isReload())
+			return true;
+		#end
 		if (!versionMatches())
 			return false;
 		#if wgf_reach

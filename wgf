@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+"""The wgf tool's launcher: `wgf <command>` (on Windows, `python wgf <command>`); what it
+does is tools/wgf/cli.py's, and `wgf --help` says."""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / 'tools' / 'wgf'))
+import cli  # noqa: E402
+
+if __name__ == '__main__':
+    sys.exit(cli.main())

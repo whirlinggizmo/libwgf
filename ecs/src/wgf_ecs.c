@@ -503,7 +503,8 @@ static wgf_core_priv_part_t part = {.name = "ecs",
                                     .update = update,
                                     .tick_begin = tick_begin,
                                     .tick = tick,
-                                    .stop = stop};
+                                    .stop = stop,
+                                    .dump = wgf_ecs_dump};
 
 /* ---- the world -------------------------------------------------------------------- */
 

@@ -46,6 +46,9 @@ typedef struct wgf_core_priv_part_t {
     void (*flush)(void);     /* gfx's frame end, before any pass: the frame's records to the GPU */
     void (*end_frame)(void); /* after gfx's frame is submitted */
     void (*stop)(void);      /* when its layer stops: what it holds let go of */
+    /* the part's state as text, for a scripted run's dump (ecs: the world as a scene); its
+       to keep until its next dump */
+    const char *(*dump)(void);
     bool installed;          /* on the list; its layer's stop clears it */
     struct wgf_core_priv_part_t *next;
 } wgf_core_priv_part_t;

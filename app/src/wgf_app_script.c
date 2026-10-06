@@ -7,6 +7,7 @@
 
 #include "sokol_app.h" /* the window's events, which the script's inputs are */
 #include "wgf_app_script_source_priv.h"
+#include "wgf_core_part_priv.h"
 #include "wgf_gamepad.h"
 #include "wgf_keyboard.h"
 #include "wgf_log.h"
@@ -38,6 +39,7 @@ typedef enum {
     CMD_EXPECT,
     CMD_LOG,
     CMD_SCREENSHOT,
+    CMD_DUMP,
     CMD_END
 } kind_t;
 
@@ -370,6 +372,8 @@ static void parse_command(parser_t *parser, long frame, char *at)
         }
         command = add(parser, frame, word[0] == 'l' ? CMD_LOG : CMD_SCREENSHOT);
         if (command != NULL) command->text = copy_of(parser, text);
+    } else if (strcmp(word, "dump") == 0) {
+        add(parser, frame, CMD_DUMP);
     } else if (strcmp(word, "end") == 0) {
         if (script.end_frame >= 0) {
             parse_error(parser, "a second end", NULL);
@@ -661,6 +665,25 @@ void wgf_app_priv_script_begin_frame(long frame)
     }
 }
 
+/* Each part's state that has one, as text (wgf_core_part_priv.h's dump), logged a line
+ * at a time, each line "wgf_script: DUMP <part>| <line>", between a BEGIN and an END. */
+static void dump(long frame)
+{
+    const wgf_core_priv_part_t *part;
+    for (part = wgf_core_priv_part_list(); part != NULL; part = part->next) {
+        const char *text = part->dump != NULL ? part->dump() : NULL, *line;
+        if (text == NULL) continue;
+        wgf_log_info("wgf_script: DUMP %s BEGIN at frame %ld", part->name, frame);
+        for (line = text; *line != '\0';) {
+            const char *end = strchr(line, '\n');
+            const int length = end != NULL ? (int)(end - line) : (int)strlen(line);
+            wgf_log_info("wgf_script: DUMP %s| %.*s", part->name, length, line);
+            line += length + (end != NULL ? 1 : 0);
+        }
+        wgf_log_info("wgf_script: DUMP %s END", part->name);
+    }
+}
+
 void wgf_app_priv_script_end_frame(long frame)
 {
     if (!script.running) return;
@@ -672,6 +695,7 @@ void wgf_app_priv_script_end_frame(long frame)
             case CMD_EXPECT: check(command); break;
             case CMD_LOG: wgf_log_info("wgf_script: %s", command->text); break;
             case CMD_SCREENSHOT: wgf_log_info("wgf_script: SCREENSHOT %s", command->text); break;
+            case CMD_DUMP: dump(frame); break;
             case CMD_END:
                 finish(frame + 1);
                 script.running = false;

@@ -32,6 +32,10 @@
  *   log <text>                   the text, logged, to mark a point in the run
  *   screenshot <name>            "wgf_script: SCREENSHOT <name>" logged, for a tool
  *                                watching the run to save the frame
+ *   dump                         after the frame, each optional part's state as text
+ *                                (the ecs's world, as a scene), logged a line at a
+ *                                time: "wgf_script: DUMP <part>| <line>", between
+ *                                "wgf_script: DUMP <part> BEGIN at frame <n>" and "... END"
  *   end                          after the frame: the run's result logged, and quit
  *
  * Inputs at a frame are delivered before its ticks; expectations are checked after

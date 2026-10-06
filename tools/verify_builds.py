@@ -27,10 +27,13 @@ The binding's checks (tools/check_binding.py), when there is a haxe:
   binding-web     with --web: the test under node on the headless host, and in a browser
   features        the feature test, every public call reached, on hxcpp (tools/check_features.py)
   features-web    with --web: the same under node, and in a browser
+  cli             the wgf tool, each command on a game it makes (tools/check_cli.py); its
+                  steps needing what this machine hasn't are skipped, and said so
 With --windows HOST, also, on that Windows machine over ssh, the working tree as it is
 (tools/run_remote_windows.py, nothing left there):
   windows-msvc    windows-x64-msvc-debug-headless and -debug, then every example
-                  headless (tools/run_smoke.py), and the binding's test and the feature test on hxcpp
+                  headless (tools/run_smoke.py), the binding's test and the feature test on
+                  hxcpp, and the wgf tool's native commands
   windows-mingw   windows-x64-mingw-debug-headless and -debug, natively, then the same
 
 --only runs the steps named (a preset's name, or a check's); --list prints the steps it
@@ -68,9 +71,11 @@ CHECKS = {
     'binding-web': (['tools/check_binding.py', '--only', 'node,browser'], True, ('haxe', 'no haxe')),
     'features': (['tools/check_features.py', '--only', 'hxcpp'], False, ('haxe', 'no haxe')),
     'features-web': (['tools/check_features.py', '--only', 'node,browser'], True, ('haxe', 'no haxe')),
+    'cli': (['tools/check_cli.py'], False, ('haxe', 'no haxe')),
 }
 REMOTE = {'windows-msvc': ['--msvc', '--then', 'tools/run_smoke.py --variant windows-x64-msvc-debug-headless',
-                           '--then', 'tools/check_binding.py --only hxcpp', '--then', 'tools/check_features.py --only hxcpp'],
+                           '--then', 'tools/check_binding.py --only hxcpp', '--then', 'tools/check_features.py --only hxcpp',
+                           '--then', 'tools/check_cli.py --only build,run,play,dump'],
           'windows-mingw': ['--then', 'tools/run_smoke.py --variant windows-x64-mingw-debug-headless']}
 
 

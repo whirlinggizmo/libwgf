@@ -8,6 +8,7 @@
 
 #include "wgf_app.h"
 #include "wgf_app_script_priv.h"
+#include "wgf_core_part_priv.h"
 #include "wgf_gamepad.h"
 #include "wgf_input.h"
 #include "wgf_keyboard.h"
@@ -19,9 +20,20 @@
 /* Scripted runs, headless, through wgf_app_run as a program runs: a script's inputs
  * reach the program's ticks at their frames, its expectations pass and fail as the
  * probes say, its time is a display frame a frame, its seed is the random numbers',
- * its end quits; and a script that can't be read doesn't run. */
+ * its end quits; a dump asks each part for its state; and a script that can't be read
+ * doesn't run. */
 
 static int failures;
+
+/* A part with state to dump, as the ecs is: how often it was asked. */
+static int dumps;
+static const char *dump_part(void)
+{
+    dumps++;
+    return "first line\nsecond line";
+}
+static wgf_core_priv_part_t dumping = {.name = "test", .layer = WGF_CORE_PRIV_PART_LAYER_ASSET,
+                                       .order = WGF_CORE_PRIV_PART_ASSET, .dump = dump_part};
 
 static void expect(int ok, const char *what)
 {
@@ -153,6 +165,10 @@ int main(void)
     expect(!wgf_app_priv_script_has_passed() && wgf_app_priv_script_get_failures() == 2,
            "a wrong value and a probe never set fail, the right one doesn't");
     expect(run.frames == 6, "a failing script still runs to its end");
+
+    wgf_core_priv_part_install(&dumping);
+    run_script("wgf-script 1\nat 2 dump\nat 3 dump\nat 4 end\n", &run);
+    expect(wgf_app_priv_script_has_passed() && dumps == 2, "each dump asks the part for its state");
 
     run_script("wgf-script 1\nat 2 key tap nosuchkey\nat 4 end\n", &run);
     expect(run.frames == 0, "a script that can't be read ends the program before its first frame");
