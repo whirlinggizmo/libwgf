@@ -19,8 +19,8 @@ In this order. Each milestone leaves everything before it working, and every gam
      - a settable placeholder texture
      - public pointer capture, and cursor capture
      - debug drawing
-     - Clay used directly
      - whatever 3D milestone 2 didn't need
+   - **An exception, to look into later and not restore by default:** Clay used directly, as wgrender-c's `clay` example did. libwgf's ui owns Clay, so a program driving Clay itself would be a second way to do UI. Whether to expose it, wrap it, or leave it out is an open question, not a catalog item.
    - Breadth stays cheap: only what a program calls is linked, and the size table shows that a small game doesn't pay for it.
    - **Done when:**
      - every catalog feature has an example in the browser check and the size table
