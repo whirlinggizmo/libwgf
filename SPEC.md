@@ -73,6 +73,16 @@ The full ARPG is a game, not a framework milestone. The vertical slice is what l
 
 Each game lives in `games/<name>/`, uses only libwgf's public API, is deployed to GitHub Pages on every push to `main`, and also exports as a desktop build.
 
+**Games test the framework only if they can't bend it.** Isolated examples prove a feature works; they don't prove it works with other features, over a session's lifetime, under load, or comfortably. A game built by the framework's own author tends to route around gaps quietly. So:
+
+- **A separate game developer.** Each game is built, or rebuilt clean-room, by a session that can use only the public API, the docs and `wgf new`. It works in its own directory, and edits to libwgf are denied to it. When something is missing or awkward, it files the gap. It may work around it only by logging the workaround.
+- **A friction log.** `docs/FRICTION.md` lists each workaround and each awkward use: the game, the file, what was missing, and what it cost. A milestone closes only when each entry has become a framework task or a recorded decision that the workaround is fine.
+- **Game code first.** Each new feature in a milestone's plan starts with the game-side code you'd want to write, committed in the plan. The framework is then made to fit that code, and any gap is recorded. The framework bends to the game, not the other way round.
+- **An adversarial review at each milestone's end.** A fresh session reads the game looking for framework work done in game code (hand-written hit tests, timers, tweens, pools, collision, layout). Each finding is justified or becomes a task.
+- **Combination scenes** sit beside the isolated examples: small realistic scenes mixing features (UI over 3D with particles, rendered to a target), between an example and a game.
+- **Jam simulations** test breadth (milestone 2.5). A fresh, isolated session gets only the docs, `wgf new` and a random jam theme, with a time limit, and must ship to Pages. Its friction log is the result. Run several, across genres.
+- **Asteroids is the first case, applied retroactively:** a clean-room rebuild from the docs and API alone, without seeing `games/asteroids/` and with a time limit, plus an adversarial review of the existing game. Both are triaged before milestone 2's building starts.
+
 ## Dev workflow
 
 - Work autonomously. Ask questions only when truly blocked. Start by proposing the plan for milestone 1 in `docs/ROADMAP.md`, then build it.
