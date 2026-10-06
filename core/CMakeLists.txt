@@ -1,5 +1,9 @@
-if(EMSCRIPTEN)
+if(WGF_BROWSER)
     set(core_platform_sources src/wgf_core_fs_web.c src/wgf_core_os_posix.c src/wgf_core_thread_web.c)
+elseif(EMSCRIPTEN)
+    # the web with no browser (WGF_HEADLESS, under node): files in the wasm's own storage,
+    # read and written as natively; threads as the web has them
+    set(core_platform_sources src/wgf_core_fs_native.c src/wgf_core_os_posix.c src/wgf_core_thread_web.c)
 elseif(WIN32)
     set(core_platform_sources src/wgf_core_fs_native.c src/wgf_core_os_windows.c src/wgf_core_thread_windows.c)
 else()
@@ -48,6 +52,8 @@ if(WGF_TESTS)
     wgf_test(core wgf_core_time_test)
     wgf_test(core wgf_core_fs_priv_test)
     wgf_test(core wgf_core_fs_user_test)
+    # its files where the build keeps them: the browser's store, or a directory as natively
+    target_compile_definitions(wgf_core_fs_user_test PRIVATE WGF_TEST_BROWSER_FS=$<BOOL:${WGF_BROWSER}>)
     if(NOT EMSCRIPTEN)
         wgf_test(core wgf_core_fs_native_test)
         wgf_test(core wgf_core_fs_partial_test)

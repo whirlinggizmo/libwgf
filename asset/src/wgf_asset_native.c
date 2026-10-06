@@ -60,6 +60,57 @@ void wgf_asset_priv_platform_host_set(bool url)
     wgf_core_priv_fs_set_cache_root(cache_dir());
 }
 
+bool wgf_asset_priv_platform_set_host(char *host)
+{
+    if (host[0] != '\0' && !wgf_asset_priv_host_is_url()) {
+        /* a local host is the storage's root, named as a path or a file: URL; a relative
+           path against the program's own directory, never the working directory, so a
+           double-clicked program finds its files and a host named in code means the same
+           thing here as on the web (Rob, 2026-10-04) */
+        char local[512], joined[WGF_CORE_PRIV_FS_PATH_MAX];
+        const char *root = local;
+        snprintf(local, sizeof(local), "%s", host);
+        if (strncmp(host, "file:", 5) == 0 &&
+            !wgf_asset_priv_file_url_path(host, local, sizeof(local))) {
+            wgf_log_warn("wgf_asset_set_host: %s isn't a file: URL naming a directory on this machine", host);
+        }
+        if (local[0] != '/' && local[0] != '\\' && !(local[0] != '\0' && local[1] == ':') &&
+            wgf_core_priv_fs_platform_default_root()[0] != '\0') {
+            if (snprintf(joined, sizeof(joined), "%s/%s", wgf_core_priv_fs_platform_default_root(), local) >=
+                (int)sizeof(joined)) {
+                wgf_log_warn("wgf_asset_set_host: %s is too long a path under the program's directory", local);
+                return false;
+            }
+            root = joined;
+        }
+        wgf_core_priv_fs_set_root(root);
+        host[0] = '\0'; /* the root, read live from now on */
+    } else if (host[0] == '\0') {
+        wgf_core_priv_fs_set_root(wgf_core_priv_fs_platform_default_root()); /* the default: the program's directory */
+    }
+    wgf_asset_priv_platform_host_set(wgf_asset_priv_host_is_url()); /* a URL host's files: the cache directory */
+    return true;
+}
+
+bool wgf_asset_priv_platform_refetch(const char *path)
+{
+    (void)path;
+    return false;
+}
+
+bool wgf_asset_priv_platform_evict(const char *logical)
+{
+    char cached[WGF_ASSET_PRIV_PATH_MAX + 8];
+    if (wgf_asset_priv_host_is_url()) return wgf_core_priv_fs_remove(logical); /* the cache is the root */
+    snprintf(cached, sizeof(cached), WGF_CORE_PRIV_FS_CACHE "%s", logical); /* a local host is only ever read */
+    return wgf_core_priv_fs_remove(cached);
+}
+
+wgf_asset_priv_host_kind_t wgf_asset_priv_platform_host_kind(void)
+{
+    return wgf_asset_priv_host_is_url() ? WGF_ASSET_PRIV_HOST_URL : WGF_ASSET_PRIV_HOST_LOCAL;
+}
+
 bool wgf_asset_priv_platform_lists(void)
 {
     return wgf_asset_priv_host_is_url() && native.fetching; /* a local host's files are simply there */

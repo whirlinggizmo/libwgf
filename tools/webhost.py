@@ -56,7 +56,8 @@ def build(variant, exports_file=None, out=None, stage=True):
     command = [emcc(), str(archive), '-o', str(out / 'wgf-host.js'), '--no-entry',
                '-sMODULARIZE=1', '-sEXPORT_ES6=1', '-sEXPORT_NAME=createWgfHost',
                f'-sEXPORTED_FUNCTIONS=@{(work / "exports.txt").as_posix()}',
-               '-sEXPORTED_RUNTIME_METHODS=' + ','.join(RUNTIME),
+               # a headless host's storage is the wasm's own: node's runner copies files in (FS)
+               '-sEXPORTED_RUNTIME_METHODS=' + ','.join(RUNTIME + (['FS'] if headless else [])),
                '-sALLOW_TABLE_GROWTH=1', '-sALLOW_MEMORY_GROWTH=1',
                '-O2' if release else '-O0', *([] if release else ['-g'])]
     if headless:

@@ -86,7 +86,7 @@ bool wgf_core_priv_os_rmdir(const char *path)
 
 bool wgf_core_priv_os_user_cache_dir(char *out, size_t out_size)
 {
-#if defined(__EMSCRIPTEN__)
+#if defined(WGF_PRIV_BROWSER)
     (void)out;
     (void)out_size;
     return false; /* the browser caches */
@@ -102,7 +102,7 @@ bool wgf_core_priv_os_user_cache_dir(char *out, size_t out_size)
 
 bool wgf_core_priv_os_user_data_dir(char *out, size_t out_size)
 {
-#if defined(__EMSCRIPTEN__)
+#if defined(WGF_PRIV_BROWSER)
     (void)out;
     (void)out_size;
     return false; /* the browser keeps a site's files */

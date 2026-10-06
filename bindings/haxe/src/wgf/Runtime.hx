@@ -48,13 +48,11 @@ class Runtime {
 		onTick = tick;
 		onFrame = frame;
 		onShutdown = shutdown;
-		#if js
-		// the host the page (or node's runner) made: globalThis.wgfHost, unless attached already
-		if (!wgf.impl.Host.isAttached() && js.Syntax.code("typeof globalThis.wgfHost") != "undefined")
-			wgf.impl.Host.attach(js.Syntax.code("globalThis.wgfHost"));
-		#end
 		if (!versionMatches())
 			return false;
+		#if wgf_reach
+		wgf.impl.Reach.hit(wgf.impl.Reach.NAMES.indexOf("wgf_app_run"));
+		#end
 		#if js
 		final host = Raw.host;
 		if (trampolines == null)

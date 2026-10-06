@@ -434,12 +434,7 @@ wgf_asset_task_t wgf_asset_ensure(const char *path, const char *fetch_url, unsig
         return 0;
     }
     if (fetch_url != NULL && fetch_url[0] != '\0') {
-#if defined(__EMSCRIPTEN__)
-        const wgf_asset_priv_host_kind_t kind = WGF_ASSET_PRIV_HOST_BROWSER;
-#else
-        const wgf_asset_priv_host_kind_t kind =
-            wgf_asset_priv_host_is_url() ? WGF_ASSET_PRIV_HOST_URL : WGF_ASSET_PRIV_HOST_LOCAL;
-#endif
+        const wgf_asset_priv_host_kind_t kind = wgf_asset_priv_platform_host_kind();
         found = wgf_asset_priv_resolve_source(wgf_asset_priv_host(), kind, fetch_url, source, sizeof(source));
         if (found == WGF_ASSET_PRIV_SOURCE_LOCAL && strlen(source) >= WGF_ASSET_PRIV_PATH_MAX) {
             found = WGF_ASSET_PRIV_SOURCE_REFUSED; /* it becomes the task's path, which it wouldn't fit */

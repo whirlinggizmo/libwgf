@@ -36,6 +36,6 @@ import wgf.impl.Raw;
 	    follows, or in no tree at all. False when `camera` isn't a 2D camera. A camera
 	    that is destroyed leaves the canvas with none.
 	**/
-	public inline function getCamera():Canvas
-		return ((Raw.wgf_canvas_get_camera(this) : Node) : Canvas);
+	public inline function getCamera():Node
+		return Raw.wgf_canvas_get_camera(this);
 }

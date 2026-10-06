@@ -34,7 +34,7 @@ static wgf_fs_task_status_t settle(wgf_fs_task_t task)
 int main(void)
 {
     wgf_fs_task_t t;
-#if !defined(__EMSCRIPTEN__)
+#if !WGF_TEST_BROWSER_FS
     char data[1024], expected[1200];
     char *cwd = wgf_core_priv_os_getcwd();
     snprintf(data, sizeof(data), "%s/fs_user_test_data", cwd != NULL ? cwd : ".");
@@ -66,7 +66,7 @@ int main(void)
     expect(settle(t) == WGF_FS_TASK_STATUS_NOT_FOUND, "it isn't under the root");
     wgf_fs_task_destroy(t);
 
-#if !defined(__EMSCRIPTEN__)
+#if !WGF_TEST_BROWSER_FS
     {
         FILE *f;
         snprintf(expected, sizeof(expected), "%s/WgfTest/fs_user_test/saves/high.txt", data);

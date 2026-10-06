@@ -23,13 +23,26 @@ class Host {
 		slotBytes = [];
 	}
 
-	static var attached = false;
+	// no initializer: Raw's, which may set it, can run before Host's would
+	static var attached:Null<Bool>;
 
 	public static inline function isAttached():Bool
-		return attached;
+		return attached == true;
 
-	/** A stand-in until attach: any call through it says what went wrong. **/
-	public static function notAttached():haxe.DynamicAccess<Dynamic>
+	/**
+		The host as the program loads: the one the page (or node's runner) made before
+		loading it, at globalThis.wgfHost, so a call before the run (a window's title) has
+		it; otherwise a stand-in until attach, which says what went wrong at any call.
+	**/
+	public static function initial():haxe.DynamicAccess<Dynamic> {
+		if (js.Syntax.code("typeof globalThis.wgfHost") != "undefined") {
+			attached = true;
+			return js.Syntax.code("globalThis.wgfHost");
+		}
+		return notAttached();
+	}
+
+	static function notAttached():haxe.DynamicAccess<Dynamic>
 		return js.Syntax.code("new Proxy({}, {get(_, name) { throw new Error(\"wgf: \" + String(name) + \" was reached before the host was attached: a call at load time runs before the host exists; make libwgf objects in init\"); }})");
 
 	public static inline function stackSave():Int

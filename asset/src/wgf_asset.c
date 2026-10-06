@@ -120,15 +120,7 @@ static void forget(wgf_handle_t request)
  * again. */
 static bool refetch(const char *path)
 {
-#if defined(__EMSCRIPTEN__)
-    if (!wgf_core_priv_fs_is_cached(path)) return false;
-    wgf_log_warn("wgf_asset: %s didn't load; forgetting the cached copy and fetching it again", path);
-    wgf_core_priv_fs_remove(path);
-    return true;
-#else
-    (void)path;
-    return false;
-#endif
+    return wgf_asset_priv_platform_refetch(path);
 }
 
 static void update(void)
@@ -203,40 +195,7 @@ bool wgf_asset_set_host(const char *host)
     snprintf(settings.host, sizeof(settings.host), "%s", host);
     n = strlen(settings.host);
     while (n > 1 && settings.host[n - 1] == '/') settings.host[--n] = '\0';
-#if !defined(__EMSCRIPTEN__)
-    if (settings.host[0] != '\0' && !wgf_asset_priv_host_is_url()) {
-        /* a local host is the storage's root, named as a path or a file: URL; a relative
-           path against the program's own directory, never the working directory, so a
-           double-clicked program finds its files and a host named in code means the same
-           thing here as on the web (Rob, 2026-10-04) */
-        char local[512], joined[WGF_CORE_PRIV_FS_PATH_MAX];
-        const char *root = local;
-        snprintf(local, sizeof(local), "%s", settings.host);
-        if (strncmp(settings.host, "file:", 5) == 0 &&
-            !wgf_asset_priv_file_url_path(settings.host, local, sizeof(local))) {
-            wgf_log_warn("wgf_asset_set_host: %s isn't a file: URL naming a directory on this machine", settings.host);
-        }
-        if (local[0] != '/' && local[0] != '\\' && !(local[0] != '\0' && local[1] == ':') &&
-            wgf_core_priv_fs_platform_default_root()[0] != '\0') {
-            if (snprintf(joined, sizeof(joined), "%s/%s", wgf_core_priv_fs_platform_default_root(), local) >=
-                (int)sizeof(joined)) {
-                wgf_log_warn("wgf_asset_set_host: %s is too long a path under the program's directory", local);
-                return false;
-            }
-            root = joined;
-        }
-        wgf_core_priv_fs_set_root(root);
-        settings.host[0] = '\0'; /* the root, read live from now on */
-    } else if (settings.host[0] == '\0') {
-        wgf_core_priv_fs_set_root(wgf_core_priv_fs_platform_default_root()); /* the default: the program's directory */
-    }
-    wgf_asset_priv_platform_host_set(wgf_asset_priv_host_is_url()); /* a URL host's files: the cache directory */
-#else
-    if (strncmp(settings.host, "file:", 5) == 0) {
-        wgf_log_warn("wgf_asset_set_host: %s: a browser doesn't read file: URLs", settings.host);
-    }
-#endif
-    return true;
+    return wgf_asset_priv_platform_set_host(settings.host);
 }
 
 const char *wgf_asset_get_host(void)
@@ -271,16 +230,7 @@ bool wgf_asset_evict(const char *path)
         wgf_log_warn("wgf_asset_evict: %s isn't a path under the host", path != NULL ? path : "(null)");
         return false;
     }
-#if !defined(__EMSCRIPTEN__)
-    if (wgf_asset_priv_host_is_url()) return wgf_core_priv_fs_remove(logical); /* the cache is the root */
-    { /* the cache's copy: a local host is only ever read */
-        char cached[WGF_ASSET_PRIV_PATH_MAX + 8];
-        snprintf(cached, sizeof(cached), WGF_CORE_PRIV_FS_CACHE "%s", logical);
-        return wgf_core_priv_fs_remove(cached);
-    }
-#else
-    return wgf_core_priv_fs_remove(logical);
-#endif
+    return wgf_asset_priv_platform_evict(logical);
 }
 
 void wgf_asset_clear_cache(void)

@@ -40,7 +40,7 @@ Every build is a preset in `CMakePresets.json`, named `<platform>-<config>[-<fea
 | Linux, Windows | `windows-x64-mingw-debug`, `-debug-headless`, `-release` | Windows with MinGW-w64: cross-built on Linux, tests under Wine |
 | Windows | `windows-x64-msvc-debug`, `-debug-headless`, `-release` | Windows with MSVC, through Visual Studio's generator |
 | Linux, Windows | `wasm32-debug`, `wasm32-release` | the web, WebGL2; tests under node, and in a browser where they need one |
-| Linux, Windows | `wasm32-debug-headless` | the web with no canvas, Web Audio, or fetch: the native mixer (no device) and asset layer; every headless test, and the binding's, under node |
+| Linux, Windows | `wasm32-debug-headless` | the web with no canvas, Web Audio, or fetch: the native mixer (no device), asset layer, and file storage, in the wasm's own file system; every headless test, the binding's, and the feature test, under node |
 
 A preset's CMake work goes to `build/<preset>/`. What it makes for others goes to `out/<platform>/<config>[-<feature>]/` when it is staged (`python3 tools/stage_variant.py <preset>`): the public headers in `include/`, the archive in `lib/` (`libwgf.a`; MSVC's `wgf.lib`), and libwgf's LICENSE and THIRD_PARTY_NOTICES.md in `share/wgf/`. A program builds against `out/`, never `build/`.
 
@@ -86,6 +86,7 @@ The tests run under node; the ones that need a real browser (IndexedDB, WebGL2's
 python3 tools/gen_binding.py           # the binding's generated files, from the headers (--check: fail if stale)
 python3 tools/build_host.py            # the full web host for a variant (default wasm32-release)
 python3 tools/check_binding.py         # generated, coverage, and the test on hxcpp, under node, and in a browser
+python3 tools/check_features.py        # the feature test, reaching every public call, on the same three
 ```
 
 How the binding maps the C calls is [docs/BINDINGS.md](docs/BINDINGS.md); how to use it, [bindings/haxe/README.md](bindings/haxe/README.md).
@@ -133,6 +134,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `check_api.py` | checks the public API's shape against CONVENTIONS through clang's parse of every public header (`headers.py`); `--self-test` runs it against a header that breaks every rule |
 | `gen_binding.py` | writes the Haxe binding's generated files from the headers (`--check`: writes nothing, fails when one is stale) |
 | `build_host.py` | links the web host a Haxe program runs on, the full one or a trimmed one (`--exports`) |
+| `check_features.py` | runs the feature test (`examples/haxe/feature-test/`) on hxcpp, under node, and in a browser, failing a call it never reached |
 | `check_binding.py` | checks the binding: generated, every call reached once, and its test on hxcpp, under node, and in a browser |
 | `check_tools.py` | checks every tool is named for what it does, imports no script, answers `--help` and does nothing else, and refuses an argument it doesn't take |
 | `stage_variant.py` | stages a built preset into `out/`, fresh |

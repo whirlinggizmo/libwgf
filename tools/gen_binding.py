@@ -316,8 +316,16 @@ def js_raw(binding, f):
     elif result == 'scalar':
         body.append({'bool': 'return value != 0;', 'float': 'return value;', 'int': 'return value;'}[detail[2]])
     ret = haxe_result(binding, f, raw=True)
-    inner = ''.join(f'\t\t{line}\n' for line in body)
-    return f'\tpublic static function {f.name}({sig}):{ret} {{\n{inner}\t}}\n'
+    return raw_function(f, sig, ret, body)
+
+
+def raw_function(f, sig, ret, body):
+    """A Raw function: under -D wgf_reach it first counts its call (wgf.impl.Reach)."""
+    inner = f'#if wgf_reach\n\t\tReach.hit({REACH_INDEX[f.name]});\n\t\t#end\n' + ''.join(f'\t\t{line}\n' for line in body)
+    return f'\tpublic static function {f.name}({sig}):{ret} {{\n\t\t{inner}\t}}\n'
+
+
+REACH_INDEX = {}
 
 
 def cpp_raw(binding, f):
@@ -391,8 +399,7 @@ def cpp_raw(binding, f):
         body += [f'out.{c} = value.{c};' for c in fields]
         body.append('return out;')
     ret = haxe_result(binding, f, raw=True)
-    inner = ''.join(f'\t\t{line}\n' for line in body)
-    return f'\tpublic static function {f.name}({sig}):{ret} {{\n{inner}\t}}\n'
+    return raw_function(f, sig, ret, body)
 
 
 def typed_member(binding, f, haxe, member, instance, docs, over_kind=None):
@@ -406,7 +413,7 @@ def typed_member(binding, f, haxe, member, instance, docs, over_kind=None):
         params = params[:-1] + [('?into', params[-1][1].replace('Null<', '').rstrip('>'))]
     sig = ', '.join(f'{n}:{t}' for n, t in params)
     ret = haxe_result(binding, f, raw=False)
-    if over_kind is not None and ret == over_kind:
+    if over_kind is not None and ret == over_kind and member.startswith('create'):
         ret = haxe  # a section's create makes one of the section: Shape2d.create() is a Shape2d
     # a kind or an enum crosses Raw as its Int, through its from/to; an array of a kind
     # is the same array of Ints, but Haxe's arrays don't convert, so it is cast
@@ -494,13 +501,29 @@ def outputs(api):
     stamp = digest(api)
     files = {}
     funcs = [f for f in binding.functions if f.name not in SKIPPED] + [binding.api.functions[n] for n in SKIPPED]
+    names = sorted(f.name for f in binding.functions)
+    REACH_INDEX.clear()
+    REACH_INDEX.update({name: i for i, name in enumerate(names)})
+    files[OUT / 'impl' / 'Reach.hx'] = (
+        f'// {MARK}\npackage wgf.impl;\n\n'
+        '/**\n\tEvery exported call, and how often a program built with -D wgf_reach called it: what\n'
+        '\tthe feature test (tools/check_features.py) checks reaches the whole API.\n**/\n'
+        'class Reach {\n\tpublic static final NAMES:Array<String> = [\n' +
+        ''.join(f'\t\t"{n}",\n' for n in names) +
+        f'\t];\n\n\tstatic final counts:Array<Int> = [for (_ in 0...{len(names)}) 0];\n\n'
+        '\tpublic static inline function hit(index:Int):Void\n\t\tcounts[index]++;\n\n'
+        '\t/** How often `name` was called; -1 for a name that isn\'t a call. **/\n'
+        '\tpublic static function count(name:String):Int {\n\t\tfinal i = NAMES.indexOf(name);\n'
+        '\t\treturn i < 0 ? -1 : counts[i];\n\t}\n\n'
+        '\t/** The calls never made. **/\n\tpublic static function missing():Array<String>\n'
+        '\t\treturn [for (i in 0...NAMES.length) if (counts[i] == 0) NAMES[i]];\n}\n')
     js = ''.join(js_raw(binding, f) for f in funcs if f.name not in SKIPPED)
     cpp = ''.join(cpp_raw(binding, f) for f in funcs if f.name not in SKIPPED)
     files[OUT / 'impl' / 'Raw.js.hx'] = (
         f'// {MARK}\npackage wgf.impl;\n\n'
         '/** Each exported C call for the JS target: the host\'s export by its quoted key. **/\n'
         'class Raw {\n\t/** The wasm host every call goes through (Host.attach). **/\n'
-        '\tpublic static var host:haxe.DynamicAccess<Dynamic> = Host.notAttached();\n\n' + js + '}\n')
+        '\tpublic static var host:haxe.DynamicAccess<Dynamic> = Host.initial();\n\n' + js + '}\n')
     includes = ''.join(f'#include <{Path(h).name}>\\n' for h in api.headers)
     cvec = ''.join(f'@:native("wgf_vec{n}_t") @:structAccess @:unreflective extern class CVec{n} {{\n' +
                    ''.join(f'\tvar {c}:cpp.Float32;\n' for c in 'xyzw'[:n]) + '}\n\n' for n in (2, 3, 4))

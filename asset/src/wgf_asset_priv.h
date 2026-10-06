@@ -261,6 +261,24 @@ void wgf_asset_priv_tasks_stop(void);
 void wgf_asset_priv_platform_update(void);
 /* The host just set (`url`: a URL): natively a URL host's files are the cache directory's. */
 void wgf_asset_priv_platform_host_set(bool url);
+
+/* A host just set (`host`, the settings' own, its trailing slashes gone) taken by the
+ * platform: natively a local one becomes the storage's root, a relative one under the
+ * program's directory, and `host` is cleared (the root is read live from then on); in a
+ * browser a file: URL is warned of. False for a local host too long a path. */
+bool wgf_asset_priv_platform_set_host(char *host);
+
+/* A file that didn't load given one more try: in a browser its cached copy forgotten
+ * and fetched again (true), when there was one; natively the file is the program's, and
+ * nothing is fetched again (false). */
+bool wgf_asset_priv_platform_refetch(const char *path);
+
+/* The copy of `logical` the cache keeps, forgotten; false when it can't be. */
+bool wgf_asset_priv_platform_evict(const char *logical);
+
+/* How the host's files are found: a browser's (fetched beside the page), or natively a
+ * URL host's (downloaded) or a local one's (read). */
+wgf_asset_priv_host_kind_t wgf_asset_priv_platform_host_kind(void);
 /* The part installed: natively the cache directory made the storage's cache root. */
 void wgf_asset_priv_platform_install(void);
 /* Whether a file can be listed by a manifest here: on the web always, natively only when

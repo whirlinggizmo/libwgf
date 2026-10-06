@@ -488,6 +488,32 @@ void wgf_asset_priv_platform_update(void)
 {
 }
 
+bool wgf_asset_priv_platform_refetch(const char *path)
+{
+    if (!wgf_core_priv_fs_is_cached(path)) return false;
+    wgf_log_warn("wgf_asset: %s didn't load; forgetting the cached copy and fetching it again", path);
+    wgf_core_priv_fs_remove(path);
+    return true;
+}
+
+bool wgf_asset_priv_platform_evict(const char *logical)
+{
+    return wgf_core_priv_fs_remove(logical);
+}
+
+wgf_asset_priv_host_kind_t wgf_asset_priv_platform_host_kind(void)
+{
+    return WGF_ASSET_PRIV_HOST_BROWSER;
+}
+
+bool wgf_asset_priv_platform_set_host(char *host)
+{
+    if (strncmp(host, "file:", 5) == 0) {
+        wgf_log_warn("wgf_asset_set_host: %s: a browser doesn't read file: URLs", host);
+    }
+    return true;
+}
+
 void wgf_asset_priv_platform_host_set(bool url)
 {
     (void)url;

@@ -67,6 +67,7 @@ endif()
 # native mixer (no device) and the native asset layer (files in the wasm's own storage).
 if(EMSCRIPTEN AND NOT WGF_HEADLESS)
     set(WGF_BROWSER ON)
+    add_compile_definitions(WGF_PRIV_BROWSER) # a platform file's own test, never a shared file's
 else()
     set(WGF_BROWSER OFF)
 endif()
