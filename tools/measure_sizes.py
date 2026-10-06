@@ -23,7 +23,10 @@ the brotli tool or module is there); a game's JS is its host's and its program's
                 says to --write a new baseline. CI runs this.
 
 The rows of the comparison are ROWS: libwgf's example, libwgt's, and wgrender-c's that
-does the same thing (docs/HISTORY.md, "Web sizes, measured"). Standard library only.
+does the same thing, each marked same or differs (docs/HISTORY.md, "Web sizes, measured",
+"Same rows, a target"); a same row is also held to libwgt's size and the scripted-run
+runner's cost. LADDER is the feature cost ladder: programs in examples/sizes/ that each
+add one thing. Standard library only.
 """
 import argparse
 import gzip
@@ -46,24 +49,51 @@ LIBWGT = ROOT.parent / 'libwgt'
 WGRENDER = ROOT.parent / 'wgrender-c'
 TOLERANCE = (0.01, 1024)  # a regression is more than 1%, and more than 1 KB, of gzip
 
-# (libwgf's program, libwgt's, wgrender-c's): the same program in each, or None
+# (libwgf's program, libwgt's, wgrender-c's, whether libwgf's does the same, and why not):
+# a "same" row is the same program in each, held to SAME_TARGET over libwgt's; a "differs"
+# row leaves out what libwgf lacks, so its size is never a saving, and turns "same" as
+# the milestone that brings what it lacks does (each example's header lists every
+# difference).
 ROWS = [
-    ('app-skeleton', 'app-skeleton', None),
-    ('app-hello', 'app-hello', 'hello'),
-    ('app-window', 'app-window', 'window'),
-    ('app-tick', 'app-tick', 'tick'),
-    ('app-gamepad', 'app-gamepad', 'gamepad'),
-    ('app-touch', 'app-touch', 'touch'),
-    ('gfx-font', 'gfx-font', 'font'),
-    ('gfx-textures', 'gfx-textures', 'textures'),
-    ('gfx-sprite2d', 'gfx-sprite2d', 'sprite2d'),
-    ('gfx-particles', 'gfx-particles', 'particles'),
-    ('gfx-tilemap', 'gfx-tilemap', 'tilemap'),
-    ('audio-music', 'audio-music', 'audio'),
-    ('asset-fetch', None, 'fetch'),
-    ('asset-force-fetch', None, 'force_fetch'),
-    ('asset-loading', None, 'loading'),
+    ('app-skeleton', 'app-skeleton', None, 'same', ''),
+    ('app-hello', 'app-hello', 'hello', 'same', ''),
+    ('app-window', 'app-window', 'window', 'same', ''),
+    ('app-tick', 'app-tick', 'tick', 'same', ''),
+    ('app-gamepad', 'app-gamepad', 'gamepad', 'same', ''),
+    ('app-touch', 'app-touch', 'touch', 'differs',
+     'libwgf has no pointer picking: the coin is hit-tested by hand, where libwgt links its pointer and picking'),
+    ('gfx-font', 'gfx-font', 'font', 'same', ''),
+    ('gfx-textures', 'gfx-textures', 'textures', 'differs',
+     'libwgf has no KTX (compressed) textures: their half loads the PNGs libwgt falls back to'),
+    ('gfx-sprite2d', 'gfx-sprite2d', 'sprite2d', 'differs',
+     'libwgf has no 3D and no alpha picking: the animated model behind the sprites, its lights, and picking are left out'),
+    ('gfx-particles', 'gfx-particles', 'particles', 'differs',
+     'libwgf has no 3D and no GPU particles: libwgt\'s 3D emitters are projected into 2D CPU emitters, untextured'),
+    ('gfx-tilemap', 'gfx-tilemap', 'tilemap', 'differs',
+     'libwgf has no 3D sprites and no picking: a canvas and a 2D camera, coins hit-tested by hand'),
+    ('audio-music', 'audio-music', 'audio', 'same', ''),
+    ('asset-fetch', None, 'fetch', 'same', ''),
+    ('asset-force-fetch', None, 'force_fetch', 'same', ''),
+    ('asset-loading', None, 'loading', 'differs',
+     'libwgf has no 3D: textures and sounds of like weight in place of wgrender-c\'s models and environments'),
 ]
+# A "same" row's target: libwgt's size, gzip, and the scripted-run runner's cost, which
+# every libwgf program carries on purpose, so a shipped build can be played through
+# (docs/HISTORY.md, "Same rows, a target"). --check fails a "same" row past it.
+RUNNER_COST = 4 * 1024
+# The feature cost ladder: the skeleton, then each step adding one thing to the one
+# before (examples/sizes/), and the steps still to come with what will bring them.
+LADDER = [
+    ('app-skeleton', 'skeleton: a window cleared each frame'),
+    ('ladder-1-text', '+ text'),
+    ('ladder-2-textures', '+ textures'),
+    ('ladder-3-sprites', '+ 2D sprites'),
+    ('ladder-4-ecs', '+ ecs'),
+    ('ladder-5-ui', '+ ui'),
+    (None, '+ 3D model (milestone 2)'),
+    (None, '+ skinning (milestone 2)'),
+]
+LADDER_DIR = ROOT / 'examples' / 'sizes'
 
 
 def brotli_size(data):
@@ -124,6 +154,12 @@ def libwgf_examples(only):
             continue
         examples.build(variant, name)
         out[name] = measure([site / name / f'{name}.wasm'], [site / name / f'{name}.js'])
+    for source in sorted(LADDER_DIR.iterdir()) if LADDER_DIR.is_dir() else []:
+        if not (source / 'CMakeLists.txt').exists() or (only and source.name not in only):
+            continue
+        examples.build_at(variant, source.name, source)
+        out[source.name] = measure([site / source.name / f'{source.name}.wasm'],
+                                   [site / source.name / f'{source.name}.js'])
     return out
 
 
@@ -211,7 +247,11 @@ def markdown(baseline):
              '## Side by side', '',
              'The same program in each library (each libwgf example\'s header says how it matches), gzip -9, its wasm '
              'and its JS together; brotli -q 11 in brackets.', '',
-             '| program | libwgf | libwgt | wgrender-c |', '|---|---:|---:|---:|']
+             'A **same** row is the same program in each library, and libwgf\'s is held to libwgt\'s size and the '
+             f'scripted-run runner\'s {RUNNER_COST // 1024} KB (the target); a **differs** row\'s libwgf program leaves out '
+             'what libwgf lacks, so its size is not a saving: its reason is linked, and it turns same as the milestone '
+             'that brings what it lacks does.', '',
+             '| program | | libwgf | target | libwgt | wgrender-c |', '|---|---|---:|---:|---:|---:|']
 
     def cell(sizes):
         if sizes is None:
@@ -219,10 +259,33 @@ def markdown(baseline):
         br = total(sizes, 'br')
         return kb(total(sizes)) + (f' ({kb(br)})' if br is not None else '')
 
-    for ours, theirs, wgrender in ROWS:
+    for ours, theirs, wgrender, status, why in ROWS:
+        mark = 'same' if status == 'same' else f'[differs](#differs-{ours})'
+        goal = target(baseline, ours)
         lines.append(f'| {ours}' + (f' / {theirs}' if theirs and theirs != ours else '')
-                     + (f' / {wgrender}' if wgrender else '') + f' | {cell(lib.get(ours))} | '
+                     + (f' / {wgrender}' if wgrender else '') + f' | {mark} | {cell(lib.get(ours))} | '
+                     + f'{kb(goal) if goal else "-"} | '
                      + f'{cell(wgt.get(theirs)) if theirs else "-"} | {cell(wgr.get(wgrender)) if wgrender else "-"} |')
+    lines += ['', '### Why rows differ', '']
+    for ours, theirs, wgrender, status, why in ROWS:
+        if status != 'same':
+            lines.append(f'- <a id="differs-{ours}"></a>**{ours}**: {why} ([its header](../examples/c/{ours}/main.c) '
+                         'lists every difference).')
+    lines += ['', '## The feature cost ladder', '',
+              'Programs that each add one thing to the one before (`examples/sizes/`): what each feature costs on its own '
+              'is its row\'s increment, gzip, wasm and JS together; brotli in brackets. Rows to come say what brings them.',
+              '', '| program | adds | total | increment |', '|---|---|---:|---:|']
+    before = None
+    for name, adds in LADDER:
+        sizes = lib.get(name) if name else None
+        if sizes is None:
+            lines.append(f'| {name or "-"} | {adds} | - | - |')
+            continue
+        now = total(sizes)
+        inc = '' if before is None else f'+{kb(now - before)}'
+        br = total(sizes, 'br')
+        lines.append(f'| {name} | {adds} | {kb(now)}' + (f' ({kb(br)})' if br is not None else '') + f' | {inc} |')
+        before = now
     games = sorted(n for n in lib if n.startswith('game:'))
     if games:
         lines += ['', '## Games', '', 'Each game\'s web export: its host trimmed to the calls it makes, and its program '
@@ -244,6 +307,16 @@ def markdown(baseline):
     return '\n'.join(lines) + '\n'
 
 
+def target(baseline, ours):
+    """A same row's target, bytes of gzip: libwgt's program and the runner's cost; None
+    for a differs row, or one libwgt has no program for."""
+    row = next((r for r in ROWS if r[0] == ours), None)
+    if row is None or row[3] != 'same' or row[1] is None:
+        return None
+    theirs = baseline.get('references', {}).get('libwgt', {}).get('programs', {}).get(row[1])
+    return None if theirs is None else total(theirs) + RUNNER_COST
+
+
 def emscripten_version():
     return (ROOT / 'cmake' / 'emscripten-version.txt').read_text().split()[0]
 
@@ -262,6 +335,10 @@ def check(measured, baseline):
             worse.append(f'{name}: {kb(new_total)} KB gzip, was {kb(old_total)} (allowed {kb(allowed)})')
         elif new_total < old_total - max(old_total * TOLERANCE[0], TOLERANCE[1]):
             better.append(f'{name}: {kb(new_total)} KB, was {kb(old_total)}: --write a new baseline')
+        goal = target(baseline, name)
+        if goal is not None and new_total > goal:
+            worse.append(f'{name}: {kb(new_total)} KB gzip, past its target {kb(goal)} (libwgt\'s and the runner\'s '
+                         f'{RUNNER_COST // 1024} KB): a "same" row')
     return worse, better
 
 

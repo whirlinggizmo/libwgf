@@ -48,6 +48,17 @@ int main(void)
     vertices = sgl_num_vertices();
     expect(vertices > 0, "draws in a frame are recorded");
     {
+        int before = sgl_num_vertices();
+        wgf_draw_rectangle_lines(0, 0, 10, 10, 2, WGF_COLOR_RED);
+        expect(sgl_num_vertices() - before == 4 * 6, "an outline: four bands of two triangles, no overlap");
+        before = sgl_num_vertices();
+        wgf_draw_line(0, 0, 10, 10, 3, WGF_COLOR_RED);
+        expect(sgl_num_vertices() - before == 6, "a line: one quad");
+        before = sgl_num_vertices();
+        wgf_draw_line(4, 4, 4, 4, 3, WGF_COLOR_RED);
+        expect(sgl_num_vertices() == before, "a line of no length: nothing");
+    }
+    {
         /* polylines and polygons, from the caller's arrays */
         const float square[8] = {0, 0, 10, 0, 10, 10, 0, 10};
         const float spike[6] = {0, 0, 100, 1, 0, 2}; /* a corner too sharp to mitre: bevelled */

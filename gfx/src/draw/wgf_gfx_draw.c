@@ -37,7 +37,9 @@ static int circle_segments(float radius)
     const float pixels = radius * wgf_render_get_dpi_scale();
     int segments = 8;
     if (pixels > CIRCLE_TOLERANCE) {
-        const float step = 2.0f * acosf(1.0f - CIRCLE_TOLERANCE / pixels);
+        /* the angle whose chord sags CIRCLE_TOLERANCE: 2 acos(1 - t/r), to within a small
+           fraction of a segment for every radius drawn, without acos's code */
+        const float step = 2.0f * sqrtf(2.0f * CIRCLE_TOLERANCE / pixels);
         segments = step > 0.0f ? (int)ceilf(TAU / step) : 512;
     }
     return segments < 8 ? 8 : (segments > 512 ? 512 : segments);
@@ -62,16 +64,36 @@ void wgf_draw_rectangle(float x, float y, float width, float height, wgf_color_t
     sgl_end();
 }
 
+/* Drawn as its own quads, not a polyline, so a program drawing outlines and lines alone
+ * doesn't link the polyline's joins (docs/HISTORY.md, "Same rows, a target"): four bands
+ * centered on the edges, meeting at the corners without overlapping, as a mitred closed
+ * polyline's are. */
 void wgf_draw_rectangle_lines(float x, float y, float width, float height, float thickness, wgf_color_t color)
 {
-    const float points[8] = {x, y, x + width, y, x + width, y + height, x, y + height};
-    wgf_draw_polyline(points, 8, true, thickness, color);
+    const float h = half_width(thickness);
+    const float x0 = x - h, x1 = x + width + h, y0 = y - h, y1 = y + height + h;
+    if (!wgf_gfx_priv_is_in_frame()) return;
+    sgl_begin_triangles();
+    set_color(color);
+    quad(x0, y0, x1, y0, x1, y + h, x0, y + h);                                 /* top */
+    quad(x0, y + height - h, x1, y + height - h, x1, y1, x0, y1);               /* bottom */
+    quad(x0, y + h, x + h, y + h, x + h, y + height - h, x0, y + height - h);   /* left */
+    quad(x1 - 2 * h, y + h, x1, y + h, x1, y + height - h, x1 - 2 * h, y + height - h); /* right */
+    sgl_end();
 }
 
+/* One quad, its ends flat at the points, as an open polyline of two points draws. */
 void wgf_draw_line(float x0, float y0, float x1, float y1, float thickness, wgf_color_t color)
 {
-    const float points[4] = {x0, y0, x1, y1};
-    wgf_draw_polyline(points, 4, false, thickness, color);
+    const float dx = x1 - x0, dy = y1 - y0, length = sqrtf(dx * dx + dy * dy), h = half_width(thickness);
+    float nx, ny;
+    if (!wgf_gfx_priv_is_in_frame() || length == 0.0f) return;
+    nx = -dy / length * h;
+    ny = dx / length * h;
+    sgl_begin_triangles();
+    set_color(color);
+    quad(x0 + nx, y0 + ny, x1 + nx, y1 + ny, x1 - nx, y1 - ny, x0 - nx, y0 - ny);
+    sgl_end();
 }
 
 void wgf_draw_circle(float center_x, float center_y, float radius, wgf_color_t color)
