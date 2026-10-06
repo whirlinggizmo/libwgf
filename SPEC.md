@@ -18,6 +18,8 @@ In this order. Each milestone leaves everything before it working, and every gam
    - **Animation.** Crossfades between clips, and layers: an upper-body attack over lower-body movement.
    - **Co-op.** Equipment is replicated as item ids, never as meshes, so every player sees what the others wear and wield.
 
+   - **Source.** The character comes from `~/media/models/woman/woman-src.blend` (Quaternius's Ultimate Modular Women, CC0). It has 10 outfits split into Body, Head, Legs and Feet, all on one 62-bone armature. A Sword and a Pistol are parented to the bone `Middle1.R`, which is the socket. It has 24 clips, including Sword_Slash, Punch, Kick, Roll, HitRecieve, Die and directional runs. `gen_woman.py` beside it is the export pattern: headless Blender. Write a new export script for the slice (one skeleton with every clip, each part in its own file, the weapons with their sockets) that writes into the game's assets, never into `~/media`. A shield, and enemies, come from elsewhere in `~/media/models/` (for example `cultist/`) or from other CC0 sources, credited.
+
    Done when equipping a different helmet, chest piece and weapon from the inventory changes the character for every player in the session, mid-animation, with no pop.
 
 The full ARPG is a game, not a framework milestone. The vertical slice is what libwgf must be able to carry.
@@ -46,6 +48,7 @@ Each game lives in `games/<name>/`, uses only libwgf's public API, is deployed t
 - `~/projects/github/whirlinggizmo/wgrender-c`: the most complete. glTF with skinning, scenes, picking, audio, async assets, the web harness, the JS and Haxe bindings, and Clay UI. Its `docs/HISTORY.md` is the deep record.
 - `~/projects/github/whirlinggizmo/wgrender-hx`, `hotreload-hx`, `hotreload-nim`: bindings and hot reload.
 - `~/projects/github/whirlinggizmo/flecs_wrapper-c`, `wgutils-c` (WebSocket client for desktop and wasm), `experiments/`.
+- `~/media/models/`: source art (Blender files, textures), read-only. Exports go into libwgf.
 - `~/projects/github/robknopf/librl`: the raylib-era library, for its hot-reload state stash and its binding version stamps.
 
 ## Invariants (proven by measurement; change only with a new measurement)
