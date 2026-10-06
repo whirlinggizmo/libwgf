@@ -302,3 +302,25 @@ Rob's note. The tools said Python 3.9 or newer, the version sightblinder's Micro
 - CI's Windows job sets it up (`actions/setup-python`, 3.12), where it took the runner image's default; Ubuntu 24.04's is 3.12 already.
 - `wgf` and `tools/verify_builds.py`, where a developer starts, refuse an older Python, naming the floor, rather than failing later on something newer than it.
 - The workaround made only for 3.9 is gone: `tools/webhost.py` writes `wgf.js` with `write_text(newline='\n')` again. No other tool had one.
+
+## The JS binding's cost, measured like for like (2026-10-06)
+
+The entry above ("The JS binding, the one way JS reaches the host") measured "before" and "after" in sessions an hour apart, and found JS on the binding faster than Haxe on vector and many-float calls. The second half was the benchmark, not the binding. `Main.hx` adds each result into a static (`Main.sink`), a property write every call; `main.js` added into a local. Given the same static, JS's `get` went from 25.2 to 29.2 ns and `transform` from 21.8 to 25.9: Haxe's numbers. `tools/bench/calls/main.js` now adds into a static as `Main.hx` does.
+
+Two more were ruled out on the way, each measured over 5 page loads and not kept:
+- Haxe passing its `Vec3` straight to the binding, which fills `into["x"]` and the rest, against the kept array read by index: 29.4 against 30.0 ns a `get`, inside the noise. The array, safe under a minifier that mangles properties (wgrender-c measured that break), stays.
+- `Raw.js.hx`'s functions `inline`: no faster anywhere, and slower on `get` (32.6). V8 inlines the small functions already, and the Haxe-level `inline` only made the call sites bigger.
+
+`Raw.binding["wgf_..."]` is not reflection either: `DynamicAccess` is only a compile-time type, and the call compiles to a constant-key property load on the binding's module object, the same lookup a JS program's `wgf.wgf_...` makes.
+
+Measured in one session: 7 rounds, one page load of each program in turn, the median of each shape's 7 loads, in ns per call. Each load is the median of 7 runs of 200,000 calls, in headless Chromium on the release host. "Direct" is c29da68's Haxe binding, which calls the host's exports itself, on today's host.
+
+| shape | Haxe, direct | Haxe, on the binding | JS, on the binding |
+|---|---:|---:|---:|
+| set | 16.0 | 16.4 (+0.4) | 17.1 |
+| get | 28.7 | 30.1 (+1.4) | 29.3 |
+| transform | 24.7 | 25.8 (+1.1) | 25.6 |
+| string | 85.4 | 84.8 (-0.6) | 84.0 |
+| bulk, per entity of 1,000 | 13.4 | 13.8 (+0.4) | 13.4 |
+
+So the layer costs a call from nothing to about 1.4 ns, and JS and Haxe on the binding are level. At 10,000 calls a frame, 1.4 ns is 14 µs, under 0.1% of a 60 Hz frame. Kept, for one marshaller every JS program crosses by, which every Haxe test, game, and autopilot run exercises.

@@ -11,7 +11,12 @@ const host = await createWgfHost({
     printErr: (text) => (/^\[(ERROR|FATAL)/.test(text) ? console.error : console.log)(text),
 });
 wgf.attach(host);
-let sink = 0, best = 0;
+// Main.hx adds each result into a static (Main.sink), a property write each call; so does
+// this, or the two would differ by that write and not by the calls (about 4 ns, measured).
+class Main {
+    static sink = 0;
+}
+let best = 0;
 
 function report(shape, calls, body) {
     body(); // warm: the JIT's tiers, the slots grown
@@ -33,18 +38,22 @@ function init() {
     const first = entities[0];
     const kept = { x: 0, y: 0, z: 0 };
     const out = new Array(BULK * 3).fill(0);
-    report("set", N, () => { for (let k = 0; k < N; k++) if (wgf.wgf_entity_set_position(first, k, 2, 3)) sink += 1; });
-    report("get", N, () => { for (let k = 0; k < N; k++) sink += wgf.wgf_entity_get_position(first, kept).x; });
-    report("transform", N, () => {
-        for (let k = 0; k < N; k++) if (wgf.wgf_entity_set_transform(first, k, 2, 3, 0, 0, 1, 1, 1, 1)) sink += 1;
+    report("set", N, () => {
+        for (let k = 0; k < N; k++) if (wgf.wgf_entity_set_position(first, k, 2, 3)) Main.sink += 1;
     });
-    report("string", N, () => { for (let k = 0; k < N; k++) if (wgf.wgf_entity_set_name(first, "first")) sink += 1; });
+    report("get", N, () => { for (let k = 0; k < N; k++) Main.sink += wgf.wgf_entity_get_position(first, kept).x; });
+    report("transform", N, () => {
+        for (let k = 0; k < N; k++) if (wgf.wgf_entity_set_transform(first, k, 2, 3, 0, 0, 1, 1, 1, 1)) Main.sink += 1;
+    });
+    report("string", N, () => {
+        for (let k = 0; k < N; k++) if (wgf.wgf_entity_set_name(first, "first")) Main.sink += 1;
+    });
     const calls = Math.trunc(N / BULK) * 10;
     report("bulk", calls, () => {
-        for (let k = 0; k < calls; k++) sink += wgf.wgf_entity_get_positions(entities, out);
+        for (let k = 0; k < calls; k++) Main.sink += wgf.wgf_entity_get_positions(entities, out);
     });
     console.log(`calls: bulk-entity ${Math.round(best / BULK * 1000) / 1000}`);
-    console.log(sink !== 0 ? "calls done: PASS" : "calls done: FAIL (nothing was called)");
+    console.log(Main.sink !== 0 ? "calls done: PASS" : "calls done: FAIL (nothing was called)");
     wgf.wgf_app_quit();
 }
 
