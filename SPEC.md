@@ -33,6 +33,18 @@ In this order. Each milestone leaves everything before it working, and every gam
 
    Done when equipping a different helmet, chest piece and weapon from the inventory changes the character for every player in the session, mid-animation, with no pop.
 
+   **Gameplay is behaviors first; ECS is the engine's inside and an escape hatch.** ARPG logic (buffs, procs, abilities, bosses, loot) is varied, rule-heavy and small in count. Writing it as pure ECS bends it out of shape (two poisons become effect entities with relationships and table fragmentation), so it is written as behaviors:
+   - **More than one of the same behavior per entity.** Two `Poison`s, each with its own state.
+   - **Typed fields, not string params.** Declared in Haxe or TS, with the layout generated, so scene files (`poison dps=4 remaining=6`), `dump`, autopilot `expect` and co-op replication work for game state with no hand-written code.
+   - **Event hooks:** `onHit`, `onDamaged`, `onEquipped`, `onTrigger`, and so on. A sword's proc is a behavior on the sword, listening for its wielder's hits.
+   - **Phases.** Each tick runs Input (engine), Update (game), Simulate (engine: motion, physics, collision), React (game: hits and triggers), and Finalize (engine: queued spawns and destroys applied, nodes synced). Structural changes inside a phase are queued until it ends.
+   - **The dispatch stays in one language.** The Haxe or JS runtime owns its behavior instances and is entered once per game phase. Inside, it's a Haxe loop calling Haxe methods. C never calls into script code once per entity.
+   - **The engine's hot, uniform work stays data-oriented in C:** transforms, motion, collision, particles, physics, animation.
+   - **The escape hatch:** batch query systems (components with field layouts, read and written a column at a time through caller-owned arrays) for the rare case of thousands of similar things. A system moves there, or into C, only when a measurement forces it, and HISTORY records the numbers.
+   - **Prior art:** `~/projects/github/whirlinggizmo/flecs_wrapper-c` and `~/projects/github/robknopf/flecs_wrapper-hx` (read its `docs/PLAN-component-storage.md`). Keep their runtime components and per-table batching. Avoid what broke them: raw column pointers and callbacks handed to the host language.
+   - **flecs is kept or replaced by measurement:** engine internals on flecs against plain C arrays and pools, for the slice's real load, on size and speed. Flecs is 152 KB of code in Asteroids' wasm today.
+   - **The proof:** a stress autopilot run for the slice (4 players, 200 enemies with AI behaviors, about 100 active effects with stacked poisons, heals over time and procs firing, over a fixed number of frames). It holds 60 fps in the browser on a mid-range machine, and its frame time is recorded in the benchmarks beside the size table.
+
 The full ARPG is a game, not a framework milestone. The vertical slice is what libwgf must be able to carry.
 
 Each game lives in `games/<name>/`, uses only libwgf's public API, is deployed to GitHub Pages on every push to `main`, and also exports as a desktop build.
@@ -82,7 +94,7 @@ Each game lives in `games/<name>/`, uses only libwgf's public API, is deployed t
   - Source: wgrender-c's `bindings/js` (generator, runtime, guest, type tests, examples), proven there and not yet carried into libwgt. Its runtime rules carry over: records through one fixed slot, strings released per call, getters that fill a caller's object or array, quoted keys.
   - Checked by: a TypeScript type test, JS examples in the browser checks, the JS-to-wasm call benchmark, and the binding's size in the size table. Its cost was about 3% of download in wgrender; it stays measured, not assumed.
   - Versioned like the C API, with the version stamps checked at startup.
-- **ECS: flecs**, wrapped behind libwgf's API. Nodes stay as the transform hierarchy, and entities attach to nodes. Decide the exact split in milestone 1 and record it.
+- **Entities: built-in components plus behaviors,** on flecs for now, wrapped behind libwgf's API. Nodes stay as the transform hierarchy, and entities attach to nodes. Milestone 3 settles the gameplay model (behaviors first, see milestone 3) and whether flecs stays (by measurement).
 - **Physics:** Box2D v3 (C) for 2D. Jolt (through its C API) for 3D, which brings vehicles for the racing game. Each is an optional module.
 - **Game UI: Clay for layout, plus libwgf's own widget layer.** Clay only lays out boxes and hit-tests them; it has no widgets. libwgf's ui module adds:
   - buttons, sliders, toggles, and text fields with the clipboard
