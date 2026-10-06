@@ -17,6 +17,21 @@ const char *wgf_version_get(void)
     return WGF_VERSION_STRING;
 }
 
+int wgf_version_get_major(void)
+{
+    return WGF_VERSION_MAJOR;
+}
+
+int wgf_version_get_minor(void)
+{
+    return WGF_VERSION_MINOR;
+}
+
+int wgf_version_get_patch(void)
+{
+    return WGF_VERSION_PATCH;
+}
+
 void wgf_core_priv_init(void)
 {
     if (running) return;

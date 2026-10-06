@@ -33,8 +33,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SECONDS = 30
 FOLDERS = ['tools/*.py', 'tools/bench/*.py', 'bindings/*/tools/*.py']
-MODULES = {'tools/browser.py', 'tools/examples.py', 'tools/headers.py', 'tools/server.py',
-           'tools/usercache.py', 'tools/variants.py', 'tools/wine.py'}
+MODULES = {'tools/binding.py', 'tools/browser.py', 'tools/examples.py', 'tools/headers.py', 'tools/server.py',
+           'tools/usercache.py', 'tools/variants.py', 'tools/webhost.py', 'tools/wine.py'}
 # What a script's name may start with: what it does. Then what it does it to. (wgrender's, and stage)
 VERBS = ('build', 'check', 'compare', 'compress', 'create', 'drive', 'fetch', 'finish', 'gen', 'list', 'measure',
          'pack', 'run', 'serve', 'setup', 'show', 'stage', 'update', 'verify', 'watch')

@@ -28,7 +28,8 @@ set_source_files_properties(src/wgf_core_sokol_impl.c PROPERTIES COMPILE_OPTIONS
 if(NOT WIN32 AND NOT EMSCRIPTEN)
     target_link_libraries(wgf_core PRIVATE m Threads::Threads)
 endif()
-target_compile_definitions(wgf_core PRIVATE WGF_VERSION_STRING="${PROJECT_VERSION}")
+target_compile_definitions(wgf_core PRIVATE WGF_VERSION_STRING="${PROJECT_VERSION}" WGF_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}
+                                             WGF_VERSION_MINOR=${PROJECT_VERSION_MINOR} WGF_VERSION_PATCH=${PROJECT_VERSION_PATCH})
 
 if(WGF_TESTS)
     wgf_test(core wgf_core_version_test)

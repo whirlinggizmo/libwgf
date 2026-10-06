@@ -17,10 +17,11 @@ Required: CMake 3.21 or newer, Python 3.9 or newer, Ninja, a C compiler (gcc or 
 | the native window tests | Xvfb and Mesa (OpenGL on the CPU) |
 | the Windows presets, cross-built | MinGW-w64 (`x86_64-w64-mingw32-gcc`), and to run their tests Wine (`wine64`, or Proton from Steam) |
 | the API check without Emscripten | clang on PATH; with neither, `check_api` is skipped |
+| the Haxe binding's checks | [Haxe](https://haxe.org) 4.3.7 on PATH, and for its hxcpp test hxcpp (`haxelib install hxcpp 4.3.2`); the web steps need Emscripten and node too, and a browser for the page |
 
 ### Windows
 
-Required: CMake 3.21 or newer, Python 3.9 or newer, and Visual Studio with the "Desktop development with C++" workload, for the MSVC presets: they use Visual Studio's generator, which finds the compiler, so no developer prompt. The MinGW presets need Ninja; their compiler is set up for you (`tools/setup_mingw.py`).
+Required: CMake 3.21 or newer, Python 3.9 or newer, and Visual Studio with the "Desktop development with C++" workload, for the MSVC presets: they use Visual Studio's generator, which finds the compiler, so no developer prompt. The MinGW presets need Ninja; their compiler is set up for you (`tools/setup_mingw.py`). The Haxe binding's hxcpp test needs Haxe and hxcpp, as on Linux; hxcpp uses MSVC, against the MSVC presets' archive.
 
 ### Set up by the tools
 
@@ -77,7 +78,17 @@ Configuring a web preset finds Emscripten through `$EMSDK` or the `emcc` on PATH
 cmake --preset wasm32-debug && cmake --build --preset wasm32-debug && ctest --preset wasm32-debug
 ```
 
-The tests run under node; the ones that need a real browser (IndexedDB, WebGL2's pixels) run in a headless Chromium-based browser through `tools/run_in_browser.py`, several visits in one browser context, and are skipped where there is none.
+The tests run under node; the ones that need a real browser (IndexedDB, WebGL2's pixels) run in a headless Chromium-based browser through `tools/run_in_browser.py`, several visits in one browser context, and are skipped where there is none. `wasm32-debug-headless` builds the web with no canvas, Web Audio, or fetch, so every headless test runs under node, as the binding's does.
+
+## The Haxe binding
+
+```sh
+python3 tools/gen_binding.py           # the binding's generated files, from the headers (--check: fail if stale)
+python3 tools/build_host.py            # the full web host for a variant (default wasm32-release)
+python3 tools/check_binding.py         # generated, coverage, and the test on hxcpp, under node, and in a browser
+```
+
+How the binding maps the C calls is [docs/BINDINGS.md](docs/BINDINGS.md); how to use it, [bindings/haxe/README.md](bindings/haxe/README.md).
 
 ## Windows
 
@@ -111,7 +122,7 @@ python3 tools/verify_builds.py --only linux-x64-debug-asan   # just these steps 
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs on every push and pull request: the Linux presets (debug, release, headless, and the three sanitizers) with every example headless and in a window, the web presets with every example in the runner's Chrome, and the MSVC presets on Windows with every example headless, each through `tools/verify_builds.py --only`, so CI runs exactly what runs locally. The MinGW builds under Wine run locally only (`verify_builds.py`'s `smoke-mingw` and `desktop-mingw`, and `--windows HOST`).
+`.github/workflows/ci.yml` runs on every push and pull request: the Linux presets (debug, release, headless, and the three sanitizers) with every example headless and in a window and the binding on hxcpp, the web presets with every example in the runner's Chrome and the binding under node and in Chrome, and the MSVC presets on Windows with every example headless and the binding on hxcpp, each through `tools/verify_builds.py --only`, so CI runs exactly what runs locally. The MinGW builds under Wine run locally only (`verify_builds.py`'s `smoke-mingw` and `desktop-mingw`, and `--windows HOST`).
 
 ## The tools
 
@@ -120,6 +131,9 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | Tool | What it does |
 | --- | --- |
 | `check_api.py` | checks the public API's shape against CONVENTIONS through clang's parse of every public header (`headers.py`); `--self-test` runs it against a header that breaks every rule |
+| `gen_binding.py` | writes the Haxe binding's generated files from the headers (`--check`: writes nothing, fails when one is stale) |
+| `build_host.py` | links the web host a Haxe program runs on, the full one or a trimmed one (`--exports`) |
+| `check_binding.py` | checks the binding: generated, every call reached once, and its test on hxcpp, under node, and in a browser |
 | `check_tools.py` | checks every tool is named for what it does, imports no script, answers `--help` and does nothing else, and refuses an argument it doesn't take |
 | `stage_variant.py` | stages a built preset into `out/`, fresh |
 | `verify_builds.py` | every build and check this machine can run, in one command |

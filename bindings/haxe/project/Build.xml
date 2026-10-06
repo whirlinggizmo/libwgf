@@ -1,0 +1,46 @@
+<xml>
+	<!-- The binding on hxcpp: libwgf's staged archive linked, never compiled here
+	     (docs/BINDINGS.md). -D wgf_out=<a staged variant, out/<platform>/<variant>> names
+	     it, built by the same toolchain hxcpp uses (the MSVC presets for MSVC); add
+	     -D wgf_headless for a headless variant, which needs no window or audio device. -->
+	<error value="wgf: -D wgf_out=<libwgf's staged variant, out/<platform>/<variant>> is needed" unless="wgf_out"/>
+
+	<files id="haxe">
+		<compilerflag value="-I${wgf_out}/include"/>
+	</files>
+	<files id="__main__">
+		<compilerflag value="-I${wgf_out}/include"/>
+	</files>
+
+	<target id="haxe">
+		<lib name="${wgf_out}/lib/wgf.lib" if="MSVC_VER"/>
+		<lib name="${wgf_out}/lib/libwgf.a" unless="MSVC_VER"/>
+		<section if="windows">
+			<lib name="kernel32.lib" if="MSVC_VER"/>
+			<lib name="user32.lib" if="MSVC_VER"/>
+			<lib name="shell32.lib" if="MSVC_VER"/>
+			<lib name="gdi32.lib" if="MSVC_VER"/>
+			<lib name="opengl32.lib" if="MSVC_VER"/>
+			<lib name="ole32.lib" if="MSVC_VER"/>
+			<lib name="-lkernel32" unless="MSVC_VER"/>
+			<lib name="-luser32" unless="MSVC_VER"/>
+			<lib name="-lshell32" unless="MSVC_VER"/>
+			<lib name="-lgdi32" unless="MSVC_VER"/>
+			<lib name="-lopengl32" unless="MSVC_VER"/>
+			<lib name="-lole32" unless="MSVC_VER"/>
+		</section>
+		<section if="linux">
+			<section unless="wgf_headless">
+				<lib name="-lX11"/>
+				<lib name="-lXi"/>
+				<lib name="-lXcursor"/>
+				<lib name="-lXrandr"/>
+				<lib name="-lGL"/>
+				<lib name="-lasound"/>
+			</section>
+			<lib name="-lm"/>
+			<lib name="-ldl"/>
+			<lib name="-lpthread"/>
+		</section>
+	</target>
+</xml>

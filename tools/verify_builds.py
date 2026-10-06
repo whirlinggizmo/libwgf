@@ -22,10 +22,13 @@ With --web, also (needs Emscripten; the browser tests need a Chromium-based brow
                   headless one under node alone, as the binding's tests run)
 and the web's check:
   web             every example in a browser (tools/check_web.py)
+The binding's checks (tools/check_binding.py), when there is a haxe:
+  binding         generated files current, every call reached once, the test on hxcpp
+  binding-web     with --web: the test under node on the headless host, and in a browser
 With --windows HOST, also, on that Windows machine over ssh, the working tree as it is
 (tools/run_remote_windows.py, nothing left there):
   windows-msvc    windows-x64-msvc-debug-headless and -debug, then every example
-                  headless (tools/run_smoke.py)
+                  headless (tools/run_smoke.py), and the binding's test on hxcpp
   windows-mingw   windows-x64-mingw-debug-headless and -debug, natively, then the same
 
 --only runs the steps named (a preset's name, or a check's); --list prints the steps it
@@ -59,8 +62,11 @@ CHECKS = {
     'desktop-mingw': (['tools/check_desktop.py', '--variant', 'windows-x64-mingw-debug'], False,
                       ('x86_64-w64-mingw32-gcc', 'no MinGW-w64')),
     'web': (['tools/check_web.py'], True, None),
+    'binding': (['tools/check_binding.py', '--only', 'generated,coverage,hxcpp'], False, ('haxe', 'no haxe')),
+    'binding-web': (['tools/check_binding.py', '--only', 'node,browser'], True, ('haxe', 'no haxe')),
 }
-REMOTE = {'windows-msvc': ['--msvc', '--then', 'tools/run_smoke.py --variant windows-x64-msvc-debug-headless'],
+REMOTE = {'windows-msvc': ['--msvc', '--then', 'tools/run_smoke.py --variant windows-x64-msvc-debug-headless',
+                           '--then', 'tools/check_binding.py --only hxcpp'],
           'windows-mingw': ['--then', 'tools/run_smoke.py --variant windows-x64-mingw-debug-headless']}
 
 

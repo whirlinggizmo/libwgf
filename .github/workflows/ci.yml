@@ -23,10 +23,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ninja-build xvfb libgl1-mesa-dri
           python3 tools/setup_system_packages.py install
-      - name: Presets, and every example headless and in a window
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.7
+      - name: hxcpp
+        run: haxelib install hxcpp 4.3.2 --always --quiet
+      - name: Presets, every example headless and in a window, and the binding on hxcpp
         run: >-
           python3 tools/verify_builds.py --only
-          linux-x64-debug-headless,linux-x64-debug,linux-x64-release,linux-x64-debug-ubsan,linux-x64-debug-asan,linux-x64-debug-tsan,smoke,desktop
+          linux-x64-debug-headless,linux-x64-debug,linux-x64-release,linux-x64-debug-ubsan,linux-x64-debug-asan,linux-x64-debug-tsan,smoke,desktop,binding
 
   web:
     name: web (wasm32 debug and release, node and Chrome)
@@ -46,13 +51,21 @@ jobs:
           actions-cache-folder: emsdk-cache
       - name: Ninja
         run: sudo apt-get update && sudo apt-get install -y ninja-build
-      - name: Presets, and every example in Chrome
-        run: python3 tools/verify_builds.py --web --only wasm32-debug-headless,wasm32-debug,wasm32-release,web
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.7
+      - name: Presets, every example in Chrome, and the binding under node and in Chrome
+        run: python3 tools/verify_builds.py --web --only wasm32-debug-headless,wasm32-debug,wasm32-release,web,binding-web
 
   windows:
     name: windows (MSVC debug, headless, release)
     runs-on: windows-2025
     steps:
       - uses: actions/checkout@v4
-      - name: Presets, and every example headless
-        run: python tools/verify_builds.py --only windows-x64-msvc-debug-headless,windows-x64-msvc-debug,windows-x64-msvc-release,smoke
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.7
+      - name: hxcpp
+        run: haxelib install hxcpp 4.3.2 --always --quiet
+      - name: Presets, every example headless, and the binding on hxcpp
+        run: python tools/verify_builds.py --only windows-x64-msvc-debug-headless,windows-x64-msvc-debug,windows-x64-msvc-release,smoke,binding

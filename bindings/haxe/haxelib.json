@@ -1,0 +1,12 @@
+{
+	"name": "wgf",
+	"url": "https://github.com/whirlinggizmo/libwgf",
+	"license": "MIT",
+	"tags": ["game", "framework", "wasm", "cpp", "js"],
+	"description": "libwgf for Haxe: games on the web (JS against libwgf's wasm host) and the desktop (hxcpp)",
+	"version": "0.1.0",
+	"classPath": "src",
+	"releasenote": "Milestone 1",
+	"contributors": ["robknopf"],
+	"dependencies": {}
+}

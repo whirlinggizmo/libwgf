@@ -171,6 +171,16 @@ The runtime: it opens the window, starts and drives the layers below it, and run
 
 **A scripted run** takes its script natively from the file `LIBWGF_SCRIPT` names, on the web from `Module["wgfScript"]`, the text the page gave the module. Its inputs at a frame are delivered as the window's events would be, before the frame's ticks, and its expectations are checked after the frame, each failure an error in the log; its end logs PASS or FAIL and quits. While it runs, every frame lasts exactly a sixtieth of a second, so ticks, and the random numbers its seed gives, make the same run on every machine; a headless run doesn't wait for a display. Its results are in the log, which is what the tools judge, since a page has no exit code.
 
+## The Haxe binding
+
+Games are Haxe (`bindings/haxe/`, haxelib `wgf`); how the binding maps each kind of C call is [BINDINGS.md](BINDINGS.md). Three parts:
+
+- **Generated** by `tools/gen_binding.py` from clang's parse of the headers (`tools/headers.py`): `impl/Raw.js.hx` and `impl/Raw.cpp.hx`, the same Haxe signature for each exported call on each target; the typed API over them, `wgf.<Type>` -- an abstract per handle kind, one over a kind for each section whose calls take it (a `Shape2d` is a `Node`), an enum abstract per enum, and statics for the rest -- each member one inline call of one `Raw` function; `impl/BuiltVersion.hx`; and `hosts/web/exports.json`, the full host's exports. A header change is a regeneration, checked by `--check`.
+- **The runtime**, by hand: `wgf.Runtime.run` (C's `wgf_app_run`, through four trampolines installed once, each reading its handler when it fires), `wgf.Script` (per-entity code made, told, and ended from the ecs's events, taken in bulk each tick and frame), the version check, and the vector types.
+- **The C calls.** On JS, `Raw` calls the host's exports by quoted key (`impl/Host.js.hx`: text on the wasm stack for its call alone, vectors and arrays through slots `_malloc`'d once, no heap view held). On hxcpp, `Raw`'s functions write each C call out with its arguments cast to their C types, in one compiled file that includes every header, and `project/Build.xml` links the staged archive (`-D wgf_out`).
+
+**The web host** (`hosts/web/`) is libwgf linked for the web with no `main`, as an ES module whose `createWgfHost()` resolves to it: `tools/build_host.py` links a staged web variant, exporting every call (the full host) or a list (a trimmed one), and the runtime methods the binding uses. A program's page (`hosts/web/page.html`) imports the host, makes it on the canvas, leaves it at `globalThis.wgfHost`, and imports the program; `Runtime.run` attaches it. A headless web variant's host is for node, where the binding's test runs (`bindings/haxe/test/node.mjs`).
+
 ## Handles
 
 Everything libwgf owns and hands out -- a texture, a node, an entity, a task -- is named by a 32-bit handle:

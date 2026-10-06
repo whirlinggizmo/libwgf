@@ -8,8 +8,6 @@ Ship, rocks that split, bullets, wraparound, score, lives, audio, particles, a t
 
 The plan, decided before building (HISTORY.md, "Milestone 1's plan"). Each step is a few small commits, each reviewed against CONVENTIONS.md, verified, and pushed.
 
-8. **The Haxe binding.** The externs and the typed API generated from the headers by clang, one name per C call, with a coverage check; bulk calls taking a Haxe array, copied for the call's length; the JS target calling a prebuilt wasm host by quoted keys, with no marshalling on the wasm stack; hxcpp natively, linking a staged archive; behaviors (create, tick, frame, destroy, trigger enter and exit) dispatched from polled events; version stamps checked at start.
-   Done when: the binding's tests pass on JS (node and a browser) and hxcpp (Linux, Windows), the coverage check passes, and a binding getter called 100,000 times in a frame doesn't fault.
 9. **The feature test.** One program exercising every component and the whole public API through the binding, run in CI on Linux, Windows, and the web; a tool fails the build when a public call isn't reached by it.
    Done when: it passes on all three, and the reach check passes.
 10. **The `wgf` CLI and the dev loop.** `wgf new` (from a template), `build`, `run --headless --frames N`, `screenshot`, `dump`, `play` (a scripted input sequence), `serve` (hot reload: save Haxe or an asset, and the running page picks it up with its state kept), and `export` (the web as a static folder with a trimmed host, and the desktop, then smoke-tested).
