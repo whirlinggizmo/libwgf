@@ -47,7 +47,7 @@ jobs:
       - name: Ninja
         run: sudo apt-get update && sudo apt-get install -y ninja-build
       - name: Presets, and every example in Chrome
-        run: python3 tools/verify_builds.py --web --only wasm32-debug,wasm32-release,web
+        run: python3 tools/verify_builds.py --web --only wasm32-debug-headless,wasm32-debug,wasm32-release,web
 
   windows:
     name: windows (MSVC debug, headless, release)

@@ -1,6 +1,6 @@
 # asset: where a resource's file comes from (docs/ARCHITECTURE.md; ROADMAP.md, phase 3).
 # Under gfx and audio, whose path-made resources install it: a path is an asset.
-if(EMSCRIPTEN)
+if(WGF_BROWSER)
     set(asset_platform_sources src/wgf_asset_web.c)
 else()
     set(asset_platform_sources src/wgf_asset_native.c)
@@ -28,7 +28,7 @@ if(WGF_TESTS AND NOT EMSCRIPTEN)
     set_tests_properties(wgf_asset_host_test PROPERTIES SKIP_RETURN_CODE 77)
 endif()
 
-if(WGF_TESTS AND EMSCRIPTEN)
+if(WGF_TESTS AND WGF_BROWSER)
     # the web asset cache, end to end: a page fetching its one file from beside it,
     # visited again and again by tools/check_asset_cache.py (headless on WebGL2; WebGPU's
     # needs the GPU, so verify_builds runs that one)

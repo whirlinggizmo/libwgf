@@ -105,7 +105,7 @@ endfunction()
 # times in one browser context. Skipped (exit 77) when no browser is found.
 function(wgf_web_test layer name visits)
     find_package(Python3 COMPONENTS Interpreter)
-    if(NOT EMSCRIPTEN OR NOT Python3_FOUND)
+    if(NOT WGF_BROWSER OR NOT Python3_FOUND)
         return()
     endif()
     add_executable(${name} "${CMAKE_CURRENT_SOURCE_DIR}/tests/${name}.c")
@@ -149,7 +149,7 @@ function(wgf_test layer name)
     target_link_libraries(${name} PRIVATE wgf wgf_${layer}_priv)
     wgf_target_defaults(${name})
     if(EMSCRIPTEN)
-        target_link_options(${name} PRIVATE -sEXIT_RUNTIME=1)
+        target_link_options(${name} PRIVATE -sEXIT_RUNTIME=1 -sALLOW_MEMORY_GROWTH=1)
     endif()
     # ThreadSanitizer aborts at start ("unexpected memory mapping") on Linux kernels
     # that randomize addresses with more entropy than its runtime expects. setarch -R

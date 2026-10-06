@@ -39,6 +39,7 @@ Every build is a preset in `CMakePresets.json`, named `<platform>-<config>[-<fea
 | Linux, Windows | `windows-x64-mingw-debug`, `-debug-headless`, `-release` | Windows with MinGW-w64: cross-built on Linux, tests under Wine |
 | Windows | `windows-x64-msvc-debug`, `-debug-headless`, `-release` | Windows with MSVC, through Visual Studio's generator |
 | Linux, Windows | `wasm32-debug`, `wasm32-release` | the web, WebGL2; tests under node, and in a browser where they need one |
+| Linux, Windows | `wasm32-debug-headless` | the web with no canvas, Web Audio, or fetch: the native mixer (no device) and asset layer; every headless test, and the binding's, under node |
 
 A preset's CMake work goes to `build/<preset>/`. What it makes for others goes to `out/<platform>/<config>[-<feature>]/` when it is staged (`python3 tools/stage_variant.py <preset>`): the public headers in `include/`, the archive in `lib/` (`libwgf.a`; MSVC's `wgf.lib`), and libwgf's LICENSE and THIRD_PARTY_NOTICES.md in `share/wgf/`. A program builds against `out/`, never `build/`.
 

@@ -43,6 +43,17 @@
       }
     },
     {
+      "name": "wasm32-debug-headless",
+      "displayName": "Web (wasm32), debug, headless: no canvas or GPU, so gfx's tests and the binding's run under node",
+      "inherits": "base",
+      "installDir": "${sourceDir}/out/wasm32/debug-headless",
+      "cacheVariables": {
+        "WGF_WEB": "ON",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "WGF_HEADLESS": "ON"
+      }
+    },
+    {
       "name": "linux-x64-release",
       "displayName": "Linux x64, release: optimized, for benchmarks and a game's desktop export",
       "inherits": "linux-x64",
@@ -185,6 +196,10 @@
       "configurePreset": "wasm32-debug"
     },
     {
+      "name": "wasm32-debug-headless",
+      "configurePreset": "wasm32-debug-headless"
+    },
+    {
       "name": "linux-x64-release",
       "configurePreset": "linux-x64-release"
     },
@@ -247,6 +262,13 @@
     {
       "name": "wasm32-debug",
       "configurePreset": "wasm32-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "wasm32-debug-headless",
+      "configurePreset": "wasm32-debug-headless",
       "output": {
         "outputOnFailure": true
       }

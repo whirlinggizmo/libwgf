@@ -1,5 +1,5 @@
 # The runtime: wgf_app_run, its loop, and what it drives, as wgrender's wgr.c.
-if(EMSCRIPTEN)
+if(WGF_BROWSER)
     set(app_script_source src/wgf_app_script_web.c)
 else()
     set(app_script_source src/wgf_app_script_native.c)

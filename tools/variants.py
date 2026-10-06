@@ -5,6 +5,7 @@ a preset or a directory itself.
     from variants import native, web, out, programs, work, preset_of
     native('debug-headless')      # 'linux-x64-debug-headless' on Linux
     web(debug=False)              # 'wasm32-release'
+    web(headless=True)            # 'wasm32-debug-headless'
     out('wasm32-debug')           # what it makes: the preset's installDir
     programs('wasm32-debug')      # its programs: out/wasm32/debug/site
     work('wasm32-debug')          # its work: the preset's binaryDir
@@ -76,9 +77,9 @@ def native(variant='debug'):
     return _defined(f'{HOST}-{variant}')
 
 
-def web(debug=True):
-    """The web preset, debug or release."""
-    return _defined('wasm32-' + ('debug' if debug else 'release'))
+def web(debug=True, headless=False):
+    """The web preset, debug or release; headless (debug only): no canvas, run under node."""
+    return _defined('wasm32-' + ('debug' if debug else 'release') + ('-headless' if headless else ''))
 
 
 def out(name):

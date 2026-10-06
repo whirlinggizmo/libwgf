@@ -62,6 +62,15 @@ else()
 endif()
 
 # One library, built in layers (cmake/wgf_library.cmake): each adds its objects here.
+# A page in a browser: the web without WGF_HEADLESS. A headless web build has no canvas,
+# no Web Audio, and no fetch; it runs under node (the binding's tests), and takes the
+# native mixer (no device) and the native asset layer (files in the wasm's own storage).
+if(EMSCRIPTEN AND NOT WGF_HEADLESS)
+    set(WGF_BROWSER ON)
+else()
+    set(WGF_BROWSER OFF)
+endif()
+
 add_library(wgf STATIC)
 add_library(wgf::wgf ALIAS wgf)
 target_include_directories(wgf PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>

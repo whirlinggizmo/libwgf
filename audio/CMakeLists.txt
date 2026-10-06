@@ -4,7 +4,7 @@
 set(xiph "${PROJECT_SOURCE_DIR}/deps/xiph")
 set(audio_sources src/wgf_audio.c src/wgf_audio_sound.c src/wgf_audio_voice.c)
 set(audio_decoders "")
-if(EMSCRIPTEN)
+if(WGF_BROWSER)
     list(APPEND audio_sources src/wgf_audio_sound_web.c src/wgf_audio_voice_web.c)
 else()
     list(APPEND audio_sources src/wgf_audio_sound_native.c src/wgf_audio_mix.c)
@@ -25,7 +25,7 @@ wgf_layer(audio
     DEPS
         math core platform asset)
 
-if(NOT EMSCRIPTEN)
+if(NOT WGF_BROWSER)
     set(decoder_includes "${PROJECT_SOURCE_DIR}/deps/dr" "${xiph}/ogg/include" "${xiph}/vorbis/include"
                          "${xiph}/vorbis/lib")
     target_include_directories(wgf_audio SYSTEM PRIVATE ${decoder_includes} "${PROJECT_SOURCE_DIR}/deps/sokol")
@@ -87,7 +87,7 @@ if(WGF_TESTS AND NOT EMSCRIPTEN)
     # a slow frame doesn't stop the sound: the mixer on the device's thread, in a window
     wgf_window_test(audio wgf_audio_stall_test)
 endif()
-if(WGF_TESTS AND EMSCRIPTEN)
+if(WGF_TESTS AND WGF_BROWSER)
     # a streamed sound played as its file arrives, fetched by its <audio> element from a
     # server sending it slowly: tools/check_stream.py (headless on WebGL2; the WebGPU
     # preset's on the GPU, as the asset cache check)

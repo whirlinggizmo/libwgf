@@ -17,8 +17,9 @@ then the checks of what is built on them (CHECKS below; each names what it needs
   desktop         every example in a window on a virtual display (tools/check_desktop.py)
   desktop-mingw   the same built with MinGW-w64, under Wine, on the virtual display
 With --web, also (needs Emscripten; the browser tests need a Chromium-based browser):
-  wasm32-debug, wasm32-release
-                  configured, built, and tested (node, and the browser tests)
+  wasm32-debug-headless, wasm32-debug, wasm32-release
+                  configured, built, and tested (node, and the browser tests; the
+                  headless one under node alone, as the binding's tests run)
 and the web's check:
   web             every example in a browser (tools/check_web.py)
 With --windows HOST, also, on that Windows machine over ssh, the working tree as it is
@@ -47,7 +48,7 @@ from wine import find_wine  # noqa: E402
 
 NATIVE = ['debug-headless', 'debug', 'release', 'debug-ubsan', 'debug-asan', 'debug-tsan']  # fastest first
 MINGW = ['windows-x64-mingw-debug-headless', 'windows-x64-mingw-debug']
-WEB = [web(), web(debug=False)]
+WEB = [web(headless=True), web(), web(debug=False)]
 # The checks after the presets: name -> (command, needs the web, what else it needs:
 # None, or (a program on PATH, or a platform prefix such as 'linux', and why it's needed)).
 CHECKS = {
