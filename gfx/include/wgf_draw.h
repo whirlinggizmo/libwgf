@@ -5,6 +5,8 @@
 
 #include "wgf_api.h"
 #include "wgf_color.h"
+#include "wgf_font.h"
+#include "wgf_texture.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,6 +39,23 @@ WGF_API bool wgf_draw_polyline(const float *points, int count, bool closed, floa
  * filled as the fan from its first point). False, drawing nothing, for an odd count,
  * fewer than 3 points, or NULL. */
 WGF_API bool wgf_draw_polygon(const float *points, int count, wgf_color_t color);
+
+/* Text (UTF-8) in `font` (0: the default font) at `size` logical pixels (16 for 0 or
+ * less), its top-left at (x, y). Newlines break lines. */
+WGF_API void wgf_draw_text(wgf_font_t font, const char *text, float x, float y, float size, wgf_color_t color);
+
+/* A texture into the rectangle (x, y, width, height), multiplied by `tint` (white
+ * leaves it as it is). A width or height of 0 or less draws it at its own size.
+ * Nothing while it is PENDING; the placeholder checker once it has FAILED. */
+WGF_API void wgf_draw_texture(wgf_texture_t texture, float x, float y, float width, float height, wgf_color_t tint);
+
+/* A region of a texture, in its pixels from the top-left (a source width or height of
+ * 0 or less: the whole texture), into the rectangle (x, y, width, height), as an icon
+ * is cut from an atlas. A width or height of 0 or less draws it at the region's own
+ * size. The placeholder fills the rectangle once the texture has FAILED. */
+WGF_API void wgf_draw_texture_region(wgf_texture_t texture, float source_x, float source_y, float source_width,
+                                     float source_height, float x, float y, float width, float height,
+                                     wgf_color_t tint);
 
 #ifdef __cplusplus
 }

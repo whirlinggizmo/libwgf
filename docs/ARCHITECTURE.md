@@ -11,8 +11,8 @@ libwgf is one C library, `libwgf.a`, built in layers (CONVENTIONS' table says wh
 | math | vectors, quaternions, 4 by 4 matrices, and the math on them | built |
 | core | version, logging, handles, time, file storage, the load pipeline and resources, the program's identity, probes, random numbers | built |
 | platform | the window, its events, input: keyboard, mouse, touch, gamepads | built: sokol_app natively and on the web, or none in a headless build |
-| asset | where a resource's file comes from | to come (ROADMAP, step 5) |
-| gfx | 2D drawing | started: the frame, color, immediate mode shapes; the rest of step 4 to come |
+| asset | where a resource's file comes from: local, fetched and cached on the web, revalidated, manifests, redirects, ensured ahead of a load, a native download hook | built |
+| gfx | 2D drawing: the frame, immediate mode, textures, fonts and text, nodes in canvases, shapes, sprites, particles | built |
 | audio | sounds and voices | to come (step 5) |
 | ecs | entities, components, systems, scenes | to come (step 6) |
 | ui | layout and widgets | to come (step 7) |
@@ -68,17 +68,39 @@ The window, its events, and input, under gfx and audio, which ask it for what th
 
 sokol's implementations are compiled once each, by the layer that owns them: gfx, gl, app, app_utils, and glue in platform's `wgf_platform_sokol_impl.c`, time in core's.
 
+### asset
+
+Where a resource's file comes from (`wgf_asset.h`), libwgt's asset layer carried whole: `wgf_asset.c` (the part, the host, the cache's settings, and core's hooks), `wgf_asset_task.c` (ensures, groups, pings, a load's file), `wgf_asset_url.c` (paths, URLs read against the host as a browser reads them, redirects), `wgf_asset_fresh.c` (Cache-Control's freshness), `wgf_asset_sha256.c`, the manifests (`wgf_asset_manifest.c`, `wgf_asset_manifest_reader.c`, a strict JSON reader), and per platform `wgf_asset_web.c` and `wgf_asset_native.c`.
+
+- **A path is an asset.** gfx's and audio's creates from a path go through `wgf_asset_priv_resource_create`, which installs the part, so a program of generated content links none of it. Installed, it sets core's load hooks: an update moving its tasks on, and a locate hook core asks, in place of looking for a request's file itself, until it answers LOCAL (fs has the file), PENDING, or FAILED; a refetch when a file that was local fails to load (on the web a cached copy is dropped and fetched once more).
+- **The host** needs no setting: natively the storage root, so files are read where they are; on the web the directory of the document's base URL. A program names another (`wgf_asset_set_host("../assets")`, as the examples do).
+- **On the web** a file not in this visit's store is read from the cache when the cache mode says it is current, else asked about (a conditional GET) or fetched, and kept with its response's validators; a 304 keeps the copy, a 4xx drops it, no answer or a 5xx uses it, so offline works. The fetch is polled: its answer waits in JS, under quoted keys of `Module`, until the task's step takes it, so nothing is exported.
+- **Manifests** (`wgf_asset_set_manifest`; `tools/gen_manifest.py` writes the tree): a listed file whose cached hash matches is used with no request, and a download is hashed before it is kept, so a host still serving an old file fails the load rather than filling the cache.
+- **Natively** libwgf has no HTTP client: the program downloads, when it turns that on (`wgf_asset_set_fetching`). Each download libwgf wants is a request the program polls for (`wgf_asset_fetch_next`), with a URL and a destination, and answers from any thread (`wgf_asset_fetch_done`), the answers applied at the next update.
+- `tools/check_asset_cache.py` visits a page (`asset/tests/wgf_asset_cache_page.c`) again and again in one browser context -- first, unchanged, offline, changed, again, cleared, gone, gone offline, and with manifests -- judged by the requests, the log, and the screen; ctest runs it on the web presets.
+
 ### gfx
 
-Started: the frame, color, and immediate mode shapes.
+2D drawing, on sokol_gfx and sokol_gl.
 
 | Section | Header | Provides |
 |---------|--------|----------|
 | color | `wgf_color.h` | `wgf_color_t`, 8-bit RGBA packed as `0xRRGGBBAA`; the stock colors (`wgf_color_get`, and for C `WGF_COLOR_SKYBLUE`); make, make_float, with_alpha, the component getters, lerp |
 | render | `wgf_render.h` | the clear color; the frame's size and DPI scale; the clip stack (`wgf_render_push_clip` / `pop_clip`): nested, intersecting rectangles in logical pixels |
-| draw | `wgf_draw.h` | immediate mode 2D in logical pixels from the top-left, y down: rectangles, lines, circles, triangles, outlines with a thickness, polylines with mitred (or bevelled) corners, and polygons, convex or not, filled by ear clipping, both from a caller-owned array of points |
+| draw | `wgf_draw.h` | immediate mode 2D in logical pixels from the top-left, y down: rectangles, lines, circles, triangles, outlines with a thickness, polylines with mitred (or bevelled) corners, polygons filled by ear clipping, both from a caller-owned array of points; text; textures and regions of them |
+| texture | `wgf_texture.h` | a resource loaded on create: PNG, JPEG, BMP, TGA, or GIF, decoded with stb_image on a worker, its mipmaps built there, uploaded on the main thread; size and sampling. PENDING draws nothing; FAILED draws a magenta and black checker |
+| font | `wgf_font.h` | a resource loaded on create: a TrueType or OpenType font, checked whole before it is read; font 0 is the default, the built-in JetBrains Mono (printable ASCII); measuring text |
+| node | `wgf_node.h` | every placed thing: the tree (parent, children in order, index), the transform (position, rotation as three angles, scale, all at once), world position, a name and finding by it, enabled and visible, and `wgf_node_destroy` with `DESTROY_CHILDREN` or `KEEP_CHILDREN` |
+| canvas | `wgf_canvas.h` | the root of a 2D tree, drawn when asked, with an optional 2D camera |
+| camera2d | `wgf_camera2d.h` | a node a canvas is viewed from, centered on its world position, turned, and zoomed |
+| shape2d | `wgf_shape2d.h` | a node drawing a rectangle, a circle, a line, or a polygon (its points from a caller's array, read back into one), filled or outlined |
+| sprite | `wgf_sprite.h` | a node showing a texture or a region of one: size, pivot (its center by default), tint; it holds a reference to its texture |
+| text | `wgf_text.h` | a node drawing a UTF-8 string in a font: font size, color, wrapping to a width, alignment on each axis; it holds a reference to its font |
+| emitter2d | `wgf_emitter2d.h` | a node owning many particles, simulated on the CPU: a rate and bursts, a capacity, life, direction and spread, speed, a birth radius, gravity, drag, size and color over life, and squares or streaks along their motion; their randomness from `wgf_random` |
 
-app's runtime starts gfx once the window exists, and stops it. gfx draws with what the platform gives it: sokol_gfx on the window's device, each frame at the window's size and DPI scale, into the window's swapchain. A frame is recorded first and drawn at its end: immediate mode records into a sokol_gl context of gfx's own, starting with room for 65536 vertices and 16384 commands, doubled for the frames after one that runs out; the frame's end runs its parts' flushes (what must reach the GPU before a pass), then draws the recording in one pass into the window. A clip becomes a scissor in the frame's pixels, recorded in the immediate mode stream.
+app's runtime starts gfx once the window exists, and stops it, freeing every node, texture, and font. gfx draws with what the platform gives it: sokol_gfx on the window's device, each frame at the window's size and DPI scale, into the window's swapchain. A frame is recorded first and drawn at its end: immediate mode records into a sokol_gl context of gfx's own, starting with room for 65536 vertices and 16384 commands, doubled for the frames after one that runs out; the frame's end runs its parts' flushes (text's glyphs into the atlas, which can't happen inside a pass), then draws the recording in one pass into the window. A full glyph atlas grows between frames. Text is laid out and rasterized at the frame's pixel density and drawn scaled back to logical pixels, so it stays sharp. A clip becomes a scissor in the frame's pixels, recorded in the immediate mode stream.
+
+**Nodes.** A plain node (`wgf_node_create`) is only a transform; the other types are nodes with content. All nodes share one pool (`"gfx.node"`), and every type shares the node calls. A node keeps its rotation as a quaternion, and its local and world matrices, rebuilt only when dirty: changing a node's transform or parent marks it and everything under it world-dirty, stopping at a node already dirty, so moving a node costs its subtree once and a frame where nothing moved does no matrix math. A node's children are an array in drawing order, and a child that leaves leaves a hole, closed in one pass when the array is next read whole, so a node leaving a parent with thousands of children costs nothing for its siblings. A tree is walked, drawn, and destroyed with a list rather than C recursion, so any depth is safe. A canvas draws its tree depth first, each node's world matrix cleaned on the way down, through its camera; each type with something to draw draws through its kind's hook (`wgf_gfx_priv_node_kind_t`), set by its first create, so a canvas names no type and a program links only the types it makes. Shapes become their outline's points, placed through the node and drawn by immediate mode's fill or thick polyline; a sprite a placed textured quad; text a fontstash block through the node's matrix; an emitter its particles, born and kept in canvas units and moved on by the particles part's update every frame, through the canvas's view.
 
 sokol_gfx's backend is the build's: OpenGL core (4.1 or later) natively, WebGL2 on the web, and sokol's dummy backend, with no GPU, in a headless build.
 

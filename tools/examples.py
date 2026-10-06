@@ -113,12 +113,11 @@ def build_at(variant, example, source, defines=None, into=None):
     config = variants.configuration(variant) or variants.cache_variable(variant, 'CMAKE_BUILD_TYPE') or 'Debug'
     msvc = '-msvc-' in variant  # Visual Studio's generator, as the variant's: a configuration per build
     configure = ['cmake', '-S', source, '-B', build_dir, f'-DCMAKE_RUNTIME_OUTPUT_DIRECTORY={programs}',
-                 f'-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_{config.upper()}={programs}',
                  f'-DWGF_OUT={variants.field(variant, "installDir")}',
                  f'-DWGF_HEADLESS={"ON" if variants.is_headless(variant) else "OFF"}',
                  f'-DCMAKE_BUILD_TYPE={config}']
-    if msvc:
-        configure += ['-A', 'x64', f'-DCMAKE_MSVC_RUNTIME_LIBRARY={variants.cache_variable(variant, "CMAKE_MSVC_RUNTIME_LIBRARY")}']
+    if msvc:  # a generator of several configurations puts each in a folder of its own, unless told
+        configure += [f'-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_{config.upper()}={programs}', '-A', 'x64', f'-DCMAKE_MSVC_RUNTIME_LIBRARY={variants.cache_variable(variant, "CMAKE_MSVC_RUNTIME_LIBRARY")}']
     elif shutil.which('ninja'):
         configure += ['-G', 'Ninja']
     if variants.is_web(variant):

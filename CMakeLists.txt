@@ -69,6 +69,7 @@ target_include_directories(wgf PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/in
 add_subdirectory(math)
 add_subdirectory(core)
 add_subdirectory(platform)
+add_subdirectory(asset)
 add_subdirectory(gfx)
 add_subdirectory(app)
 install(TARGETS wgf ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})

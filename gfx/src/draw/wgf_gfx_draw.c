@@ -4,6 +4,8 @@
 #include <stdlib.h>
 
 #include "render/wgf_gfx_render_priv.h"
+#include "text/wgf_gfx_font_priv.h"
+#include "texture/wgf_gfx_texture_priv.h"
 #include "sokol_gfx.h" /* sokol_gl needs it first */
 #include "util/sokol_gl.h"
 #include "wgf_render.h"
@@ -203,6 +205,11 @@ static void normal_of(float ax, float ay, float bx, float by, float *nx, float *
     *ny = dx / length;
 }
 
+/* The polyline's points with repeats dropped, kept between calls and grown as needed,
+ * so drawing shapes every frame allocates nothing once warm. The main thread's. */
+static float *scratch;
+static int scratch_capacity;
+
 bool wgf_draw_polyline(const float *points, int count, bool closed, float thickness, wgf_color_t color)
 {
     const float h = half_width(thickness);
@@ -210,8 +217,13 @@ bool wgf_draw_polyline(const float *points, int count, bool closed, float thickn
     int n = 0, segments, i;
     if (points == NULL || count < 4 || count % 2 != 0) return false;
     if (!wgf_gfx_priv_is_in_frame()) return true;
-    p = (float *)malloc(sizeof(float) * (size_t)count);
-    if (p == NULL) return true;
+    if (count > scratch_capacity) {
+        float *grown = (float *)realloc(scratch, sizeof(float) * (size_t)count);
+        if (grown == NULL) return true;
+        scratch = grown;
+        scratch_capacity = count;
+    }
+    p = scratch;
     for (i = 0; i < count; i += 2) {
         if (n > 0 && p[n - 2] == points[i] && p[n - 1] == points[i + 1]) continue;
         p[n++] = points[i];
@@ -219,10 +231,7 @@ bool wgf_draw_polyline(const float *points, int count, bool closed, float thickn
     }
     if (closed && n >= 6 && p[0] == p[n - 2] && p[1] == p[n - 1]) n -= 2; /* the first given again at the end */
     n /= 2;
-    if (n < 2) {
-        free(p);
-        return true; /* every point the same: nothing to see */
-    }
+    if (n < 2) return true; /* every point the same: nothing to see */
     if (n == 2) closed = false; /* there and back is one line */
     segments = closed ? n : n - 1;
     sgl_begin_triangles();
@@ -271,6 +280,74 @@ bool wgf_draw_polyline(const float *points, int count, bool closed, float thickn
         quad(start[0], start[1], end[0], end[1], end[2], end[3], start[2], start[3]);
     }
     sgl_end();
-    free(p);
     return true;
+}
+
+void wgf_draw_texture_region(wgf_texture_t texture, float source_x, float source_y, float source_width,
+                             float source_height, float x, float y, float width, float height, wgf_color_t tint)
+{
+    sg_view view;
+    sg_sampler sampler;
+    int texture_width, texture_height;
+    bool placeholder;
+    float u0, v0, u1, v1;
+
+    if (!wgf_gfx_priv_is_in_frame() ||
+        !wgf_gfx_priv_texture_get_binding(texture, &view, &sampler, &texture_width, &texture_height, &placeholder)) {
+        return;
+    }
+    if (placeholder || source_width <= 0.0f || source_height <= 0.0f) { /* the whole texture */
+        source_x = 0.0f;
+        source_y = 0.0f;
+        if (!placeholder || source_width <= 0.0f || source_height <= 0.0f) {
+            source_width = (float)texture_width;
+            source_height = (float)texture_height;
+        }
+    }
+    if (width <= 0.0f || height <= 0.0f) {
+        width = source_width;
+        height = source_height;
+    }
+    if (placeholder) { /* the checker fills the rectangle */
+        u0 = 0.0f;
+        v0 = 0.0f;
+        u1 = 1.0f;
+        v1 = 1.0f;
+    } else {
+        u0 = source_x / (float)texture_width;
+        v0 = source_y / (float)texture_height;
+        u1 = (source_x + source_width) / (float)texture_width;
+        v1 = (source_y + source_height) / (float)texture_height;
+    }
+    sgl_enable_texture();
+    sgl_texture(view, sampler);
+    sgl_begin_quads();
+    set_color(tint);
+    sgl_v2f_t2f(x, y, u0, v0);
+    sgl_v2f_t2f(x + width, y, u1, v0);
+    sgl_v2f_t2f(x + width, y + height, u1, v1);
+    sgl_v2f_t2f(x, y + height, u0, v1);
+    sgl_end();
+    sgl_disable_texture();
+}
+
+void wgf_draw_texture(wgf_texture_t texture, float x, float y, float width, float height, wgf_color_t tint)
+{
+    wgf_draw_texture_region(texture, 0.0f, 0.0f, 0.0f, 0.0f, x, y, width, height, tint);
+}
+
+void wgf_draw_text(wgf_font_t font, const char *text, float x, float y, float size, wgf_color_t color)
+{
+    float matrix[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+    if (!wgf_gfx_priv_is_in_frame()) return;
+    matrix[12] = x;
+    matrix[13] = y;
+    wgf_gfx_priv_font_draw_block(font, text, size, color, 0.0f, WGF_TEXT_HALIGN_LEFT, WGF_TEXT_VALIGN_TOP, matrix);
+}
+
+void wgf_gfx_priv_draw_shutdown(void)
+{
+    free(scratch);
+    scratch = NULL;
+    scratch_capacity = 0;
 }

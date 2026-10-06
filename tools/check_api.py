@@ -60,6 +60,17 @@ CALLBACKS_ALLOWED = {
 GETTERS_PAIRED = {
     'wgf_window_set_size': ('wgf_window_get_width', 'wgf_window_get_height'),
     'wgf_window_set_position': ('wgf_window_get_x', 'wgf_window_get_y'),
+    'wgf_node_set_transform': ('wgf_node_get_position', 'wgf_node_get_rotation', 'wgf_node_get_scale'),
+    'wgf_texture_set_sampling': ('wgf_texture_get_wrap_u', 'wgf_texture_get_wrap_v', 'wgf_texture_get_filter'),
+    'wgf_text_set_align': ('wgf_text_get_halign', 'wgf_text_get_valign'),
+    'wgf_shape2d_set_rectangle': ('wgf_shape2d_get_kind', 'wgf_shape2d_get_size'),
+    'wgf_shape2d_set_circle': ('wgf_shape2d_get_kind', 'wgf_shape2d_get_radius'),
+    'wgf_shape2d_set_line': ('wgf_shape2d_get_kind', 'wgf_shape2d_get_line_start', 'wgf_shape2d_get_line_end'),
+    'wgf_shape2d_set_polygon': ('wgf_shape2d_get_kind', 'wgf_shape2d_get_point_count', 'wgf_shape2d_get_points'),
+    'wgf_emitter2d_set_life': ('wgf_emitter2d_get_life_min', 'wgf_emitter2d_get_life_max'),
+    'wgf_emitter2d_set_speed': ('wgf_emitter2d_get_speed_min', 'wgf_emitter2d_get_speed_max'),
+    'wgf_emitter2d_set_size': ('wgf_emitter2d_get_size_start', 'wgf_emitter2d_get_size_end'),
+    'wgf_emitter2d_set_color': ('wgf_emitter2d_get_color_start', 'wgf_emitter2d_get_color_end'),
 }
 
 # Calls that take or return a handle of any kind, as bare wgf_handle_t, and why; every

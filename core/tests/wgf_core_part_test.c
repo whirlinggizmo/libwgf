@@ -6,7 +6,7 @@
 
 /* core's list of optional parts (wgf_core_part_priv.h), without a layer above: a part
  * joins once however often it installs, in its order whatever the order of installing;
- * update runs every part's in order; a layer's stop stops and forgets that layer's parts
+ * update and tick run every part's in order; a layer's stop stops and forgets that layer's parts
  * alone, so the next run's first create installs them again; core's shutdown stops what
  * no layer did. gfx's own parts and hooks are tested in gfx (wgf_gfx_part_test). */
 
@@ -34,13 +34,15 @@ static void note(char c)
 static void update_text(float dt) { (void)dt; note('t'); }
 static void update_audio(float dt) { (void)dt; note('a'); }
 static void stop_text(void) { note('T'); }
-static void stop_shadows(void) { note('S'); }
+static void stop_particles(void) { note('P'); }
 static void stop_audio(void) { note('A'); }
+static void tick_particles(float dt) { (void)dt; note('k'); }
 
 static wgf_core_priv_part_t text = {.name = "text", .layer = WGF_CORE_PRIV_PART_LAYER_GFX,
                                     .order = WGF_CORE_PRIV_PART_TEXT, .update = update_text, .stop = stop_text};
-static wgf_core_priv_part_t shadows = {.name = "shadows", .layer = WGF_CORE_PRIV_PART_LAYER_GFX,
-                                       .order = WGF_CORE_PRIV_PART_SHADOWS, .stop = stop_shadows};
+static wgf_core_priv_part_t particles = {.name = "particles", .layer = WGF_CORE_PRIV_PART_LAYER_GFX,
+                                       .order = WGF_CORE_PRIV_PART_PARTICLES, .tick = tick_particles,
+                                         .stop = stop_particles};
 static wgf_core_priv_part_t audio = {.name = "audio", .layer = WGF_CORE_PRIV_PART_LAYER_AUDIO,
                                      .order = WGF_CORE_PRIV_PART_AUDIO, .update = update_audio, .stop = stop_audio};
 
@@ -59,21 +61,24 @@ int main(void)
 
     /* installed out of order, one twice: listed once each, in order */
     wgf_core_priv_part_install(&audio);
-    wgf_core_priv_part_install(&shadows);
+    wgf_core_priv_part_install(&particles);
     wgf_core_priv_part_install(&text);
     wgf_core_priv_part_install(&text);
     expect(listed() == 3, "installed twice, listed once");
-    expect(wgf_core_priv_part_list() == &text && text.next == &shadows && shadows.next == &audio,
+    expect(wgf_core_priv_part_list() == &text && text.next == &particles && particles.next == &audio,
            "listed in their order, whatever the order of installing");
     wgf_core_priv_part_update(0.016f);
     expect(strcmp(trail, "ta") == 0, "update runs each part's, in order, skipping one without");
+    trail[0] = '\0';
+    wgf_core_priv_part_tick(1.0f / 60.0f);
+    expect(strcmp(trail, "k") == 0, "tick runs each part's tick, skipping those without");
 
     /* gfx's stop: its parts alone, in order, then forgotten */
     trail[0] = '\0';
     wgf_core_priv_part_stop(WGF_CORE_PRIV_PART_LAYER_GFX);
-    expect(strcmp(trail, "TS") == 0, "a layer's stop stops that layer's parts, in order");
+    expect(strcmp(trail, "TP") == 0, "a layer's stop stops that layer's parts, in order");
     expect(listed() == 1 && wgf_core_priv_part_list() == &audio && !text.installed && text.next == NULL &&
-               !shadows.installed && shadows.next == NULL,
+               !particles.installed && particles.next == NULL,
            "and forgets them, leaving the others");
     trail[0] = '\0';
     wgf_core_priv_part_update(0.016f);

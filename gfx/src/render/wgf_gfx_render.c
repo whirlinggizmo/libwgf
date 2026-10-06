@@ -2,7 +2,9 @@
 
 #include <string.h>
 
+#include "node/wgf_gfx_node_priv.h"
 #include "render/wgf_gfx_render_priv.h"
+#include "texture/wgf_gfx_texture_priv.h"
 #include "util/sokol_gl.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_log.h"
@@ -127,6 +129,7 @@ bool wgf_gfx_priv_start(void)
     draw_pipeline_2d = sgl_make_pipeline(&pipeline_desc);
     at_most_logged = false;
     setup = true;
+    wgf_gfx_priv_texture_setup();
     return true;
 }
 
@@ -176,7 +179,10 @@ void wgf_gfx_priv_stop(void)
 {
     if (!setup) return;
     if (in_frame) wgf_gfx_priv_end_frame();
+    wgf_gfx_priv_node_shutdown(); /* before what nodes hold references to */
     wgf_core_priv_part_stop(WGF_CORE_PRIV_PART_LAYER_GFX);
+    wgf_gfx_priv_texture_shutdown();
+    wgf_gfx_priv_draw_shutdown();
     sgl_destroy_pipeline(draw_pipeline_2d);
     sgl_destroy_context(draw_context);
     sgl_shutdown();

@@ -23,16 +23,12 @@ typedef enum wgf_core_priv_part_layer_t {
 /* Where a part runs among the others: update, flush, end_frame, and stop run in this
  * order. Naming a part here links nothing. */
 typedef enum wgf_core_priv_part_order_t {
-    WGF_CORE_PRIV_PART_TEXT,         /* fonts and fontstash (gfx/src/text/wgf_gfx_font.c) */
-    WGF_CORE_PRIV_PART_SCENE,        /* scenes and models (gfx/src/scene/wgf_gfx_scene.c) */
-    WGF_CORE_PRIV_PART_SPRITE_BATCH, /* the sprites' batches (gfx/src/sprite/wgf_gfx_sprite_batch.c) */
-    WGF_CORE_PRIV_PART_ENVIRONMENT,  /* environments and the BRDF table (gfx/src/scene/wgf_gfx_environment.c) */
-    WGF_CORE_PRIV_PART_ANIMATION,    /* models' clips advanced (gfx/src/scene/wgf_gfx_animation.c) */
-    WGF_CORE_PRIV_PART_PARTICLES,    /* emitters (gfx/src/emitter/wgf_gfx_emitter.c) */
-    WGF_CORE_PRIV_PART_EFFECTS,      /* screen effects (gfx/src/render/wgf_gfx_effect.c) */
-    WGF_CORE_PRIV_PART_SHADOWS,      /* the shadow map (gfx/src/scene/wgf_gfx_shadow.c) */
-    WGF_CORE_PRIV_PART_AUDIO,        /* clips, players, the mixer (audio/) */
-    WGF_CORE_PRIV_PART_ASSET,        /* where files come from: fetching, the cache (asset/) */
+    WGF_CORE_PRIV_PART_ECS,       /* entities and their systems (ecs/), whose nodes the rest draw */
+    WGF_CORE_PRIV_PART_TEXT,      /* fonts and fontstash (gfx/src/text/wgf_gfx_font.c) */
+    WGF_CORE_PRIV_PART_PARTICLES, /* emitters (gfx/src/emitter/wgf_gfx_emitter2d.c) */
+    WGF_CORE_PRIV_PART_UI,        /* layout and widgets (ui/) */
+    WGF_CORE_PRIV_PART_AUDIO,     /* sounds, voices, the mixer (audio/) */
+    WGF_CORE_PRIV_PART_ASSET,     /* where files come from: fetching, the cache (asset/) */
 } wgf_core_priv_part_order_t;
 
 typedef struct wgf_core_priv_part_t {

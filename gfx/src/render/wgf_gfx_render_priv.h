@@ -36,6 +36,9 @@ bool wgf_gfx_priv_render_is_running(void);
  * other code (fontstash) may have changed sokol_gl's state. */
 void wgf_gfx_priv_render_set_2d(void);
 
+/* What immediate mode keeps between frames (a polyline's scratch), freed at gfx's stop. */
+void wgf_gfx_priv_draw_shutdown(void);
+
 /* The clip drawing is under now (wgf_render_push_clip), in logical pixels; the whole
  * frame when none is pushed, which is when this is false. */
 bool wgf_gfx_priv_render_get_clip(float *x, float *y, float *width, float *height);
