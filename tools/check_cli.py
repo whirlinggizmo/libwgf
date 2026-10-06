@@ -89,23 +89,28 @@ def step_new(base, game):
 
 
 def step_build(game):
-    why = needs(native=True)
-    if why:
-        return why
-    code, out = wgf(game, 'build', '--headless')
-    exe = game / 'build' / 'headless' / ('clitest.exe' if sys.platform == 'win32' else 'clitest')
-    if code != 0 or not exe.exists() or not (exe.parent / 'assets').exists():
-        return problem('wgf build --headless: no program, or no assets beside it', out)
-    why = needs(web=True)
-    if why:
-        print(f'check_cli: build: headless built; --web skipped ({why})')
-        return True
-    code, out = wgf(game, 'build', '--web')
-    web = game / 'build' / 'web'
-    missing = [n for n in ('index.html', 'clitest.js', 'wgf-host.js', 'wgf-host.wasm', 'assets') if not (web / n).exists()]
-    if code != 0 or missing:
-        return problem(f'wgf build --web: missing {missing}', out)
-    print('check_cli: build: headless and web built, each with its assets beside it')
+    """Each target this machine can build: headless with hxcpp, the web with Emscripten."""
+    native, web = needs(native=True), needs(web=True)
+    if native and web:
+        return f'{native}; {web}'
+    done = []
+    if not native:
+        code, out = wgf(game, 'build', '--headless')
+        exe = game / 'build' / 'headless' / ('clitest.exe' if sys.platform == 'win32' else 'clitest')
+        if code != 0 or not exe.exists() or not (exe.parent / 'assets').exists():
+            return problem('wgf build --headless: no program, or no assets beside it', out)
+        done.append('headless')
+    if not web:
+        code, out = wgf(game, 'build', '--web')
+        site = game / 'build' / 'web'
+        missing = [n for n in ('index.html', 'clitest.js', 'wgf-host.js', 'wgf-host.wasm', 'assets')
+                   if not (site / n).exists()]
+        if code != 0 or missing:
+            return problem(f'wgf build --web: missing {missing}', out)
+        done.append('web')
+    skipped = '; '.join(f'{t} skipped ({why})' for t, why in (('headless', native), ('web', web)) if why)
+    print(f'check_cli: build: {" and ".join(done)} built, each with its assets beside it'
+          + (f'; {skipped}' if skipped else ''))
     return True
 
 
@@ -121,25 +126,28 @@ def step_run(game):
 
 
 def step_play(game):
-    why = needs(native=True)
-    if why:
-        return why
-    code, out = wgf(game, 'play', 'scripts/smoke.wgfscript', '--no-build')
-    if code != 0 or 'play scripts/smoke.wgfscript: PASS' not in out:
-        return problem('wgf play: the smoke script didn\'t pass headless', out)
-    failing = game / 'scripts' / 'failing.wgfscript'
-    failing.write_text('wgf-script 1\nat 10 expect frames > 1000\nat 10 end\n')
-    code, out = wgf(game, 'play', 'scripts/failing.wgfscript', '--no-build')
-    if code == 0 or 'FAIL' not in out:
-        return problem('wgf play: a failing script passed', out)
-    why = needs(web=True, browser_too=True)
-    if why:
-        print(f'check_cli: play: headless PASS and FAIL; --web skipped ({why})')
-        return True
-    code, out = wgf(game, 'play', 'scripts/smoke.wgfscript', '--web', '--no-build')
-    if code != 0 or 'PASS' not in out:
-        return problem('wgf play --web: the smoke script didn\'t pass in a browser', out)
-    print('check_cli: play: the smoke script passed headless and in a browser; a failing one failed')
+    """The smoke script headless (and a failing one), and in a browser: each where it can."""
+    native, web = needs(native=True), needs(web=True, browser_too=True)
+    if native and web:
+        return f'{native}; {web}'
+    said = []
+    if not native:
+        code, out = wgf(game, 'play', 'scripts/smoke.wgfscript', '--no-build')
+        if code != 0 or 'play scripts/smoke.wgfscript: PASS' not in out:
+            return problem('wgf play: the smoke script didn\'t pass headless', out)
+        failing = game / 'scripts' / 'failing.wgfscript'
+        failing.write_text('wgf-script 1\nat 10 expect frames > 1000\nat 10 end\n')
+        code, out = wgf(game, 'play', 'scripts/failing.wgfscript', '--no-build')
+        if code == 0 or 'FAIL' not in out:
+            return problem('wgf play: a failing script passed', out)
+        said.append('the smoke script passed headless, a failing one failed')
+    if not web:
+        code, out = wgf(game, 'play', 'scripts/smoke.wgfscript', '--web', '--no-build')
+        if code != 0 or 'PASS' not in out:
+            return problem('wgf play --web: the smoke script didn\'t pass in a browser', out)
+        said.append('the smoke script passed in a browser')
+    skipped = '; '.join(f'{t} skipped ({why})' for t, why in (('headless', native), ('web', web)) if why)
+    print(f'check_cli: play: {"; ".join(said)}' + (f'; {skipped}' if skipped else ''))
     return True
 
 
@@ -215,23 +223,35 @@ def step_serve(game):
 
 
 def step_export(game):
-    why = needs(web=True, native=True, browser_too=True)
-    if why:
-        return why
-    code, out = wgf(game, 'export', timeout=1800)
-    web = game / 'export' / 'web'
-    if code != 0 or 'web export: smoke PASS' not in out or not (web / 'wgf-host.wasm').exists():
-        return problem('wgf export: the web export failed', out)
-    if 'desktop export: smoke PASS' not in out and 'desktop export: SKIPPING' not in out:
-        return problem('wgf export: the desktop export failed', out)
-    trimmed = json.loads((game / 'build' / 'export-web' / 'exports.json').read_text())['exports']
-    full = json.loads((ROOT / 'hosts' / 'web' / 'exports.json').read_text())['exports']
-    if not len(trimmed) < len(full) / 2:
-        return problem(f'wgf export: the host wasn\'t trimmed ({len(trimmed)} of {len(full)} calls)', out)
+    """The web export (a trimmed host, smoke-tested in a browser) and the desktop one
+    (smoke-tested in a window), each where it can be."""
+    native, web = needs(native=True), needs(web=True, browser_too=True)
+    if native and web:
+        return f'{native}; {web}'
+    args = ['export'] + (['--web'] if native else ['--desktop'] if web else [])
+    code, out = wgf(game, *args, timeout=1800)
+    said = []
+    if not web:
+        site = game / 'export' / 'web'
+        if 'web export: smoke PASS' not in out or not (site / 'wgf-host.wasm').exists():
+            return problem('wgf export: the web export failed', out)
+        trimmed = json.loads((game / 'build' / 'export-web' / 'exports.json').read_text())['exports']
+        full = json.loads((ROOT / 'hosts' / 'web' / 'exports.json').read_text())['exports']
+        if not len(trimmed) < len(full) / 2:
+            return problem(f'wgf export: the host wasn\'t trimmed ({len(trimmed)} of {len(full)} calls)', out)
+        sizes = [line for line in out.splitlines() if 'KB gzipped in all' in line]
+        said.append(f'web: {len(trimmed)} of {len(full)} calls in the host, '
+                    f'{sizes[0].split("; ")[-1] if sizes else ""}, smoke passed')
+    if not native:
+        if 'desktop export: smoke PASS' not in out and 'desktop export: SKIPPING' not in out:
+            return problem('wgf export: the desktop export failed', out)
+        said.append('desktop: ' + ('smoke passed' if 'desktop export: smoke PASS' in out else 'not smoke-tested here'))
+    if code != 0:
+        return problem('wgf export: failed', out)
     if any(path.is_symlink() for path in game.joinpath('export').rglob('*')):
         return problem('wgf export: a link in the export, which a copy elsewhere would break')
-    sizes = [line for line in out.splitlines() if 'KB gzipped in all' in line]
-    print(f'check_cli: export: {len(trimmed)} of {len(full)} calls in the host; {sizes[0].split("; ")[-1] if sizes else ""}')
+    skipped = '; '.join(f'{t} skipped ({why})' for t, why in (('desktop', native), ('web', web)) if why)
+    print(f'check_cli: export: {"; ".join(said)}' + (f'; {skipped}' if skipped else ''))
     return True
 
 
