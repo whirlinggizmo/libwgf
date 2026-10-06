@@ -2,6 +2,7 @@
 
 #include "wgf_bounds.h"
 #include "wgf_collider.h"
+#include "wgf_presentation.h"
 #include "wgf_ecs_priv.h"
 #include "wgf_lifetime.h"
 #include "wgf_motion.h"
@@ -111,13 +112,29 @@ bool wgf_bounds_set_rect(wgf_entity_t entity, float x, float y, float width, flo
     b->rect[1] = y;
     b->rect[2] = width;
     b->rect[3] = height;
+    b->visible = false; /* a rectangle of its own, in place of the visible area */
     return true;
 }
 
 wgf_vec4_t wgf_bounds_get_rect(wgf_entity_t entity)
 {
     const wgf_ecs_priv_bounds_t *b = bounds_of(entity);
+    if (b != NULL && b->visible) return wgf_presentation_get_visible();
     return b != NULL ? wgf_vec4_make(b->rect[0], b->rect[1], b->rect[2], b->rect[3]) : wgf_vec4_make(0, 0, 0, 0);
+}
+
+bool wgf_bounds_set_visible(wgf_entity_t entity, bool visible)
+{
+    wgf_ecs_priv_bounds_t *b = bounds_of(entity);
+    if (b == NULL) return false;
+    b->visible = visible;
+    return true;
+}
+
+bool wgf_bounds_is_visible(wgf_entity_t entity)
+{
+    const wgf_ecs_priv_bounds_t *b = bounds_of(entity);
+    return b != NULL && b->visible;
 }
 
 bool wgf_bounds_set_mode(wgf_entity_t entity, wgf_bounds_mode_t mode)

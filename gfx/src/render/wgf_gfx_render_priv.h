@@ -39,6 +39,15 @@ void wgf_gfx_priv_render_set_2d(void);
 /* What immediate mode keeps between frames (a polyline's scratch), freed at gfx's stop. */
 void wgf_gfx_priv_draw_shutdown(void);
 
+/* From wgf_presentation_set: how the bars are filled from here on, when a mode has
+ * them; and the fill itself, which only that hook reaches. */
+void wgf_gfx_priv_render_set_bars(void (*fill)(void));
+void wgf_gfx_priv_render_fill_visible(void);
+
+/* What the frame shows, in logical pixels (the presentation's visible area,
+ * wgf_presentation.h): where a canvas centers its view and the UI lays out. */
+void wgf_gfx_priv_render_get_visible(float *x, float *y, float *width, float *height);
+
 /* The clip drawing is under now (wgf_render_push_clip), in logical pixels; the whole
  * frame when none is pushed, which is when this is false. */
 bool wgf_gfx_priv_render_get_clip(float *x, float *y, float *width, float *height);

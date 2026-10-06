@@ -37,6 +37,32 @@ void wgf_platform_priv_request_quit(void);
 int wgf_platform_priv_get_framebuffer_width(void);
 int wgf_platform_priv_get_framebuffer_height(void);
 float wgf_platform_priv_get_dpi_scale(void); /* 1 or more */
+
+/* The presentation (wgf_presentation.h) as a transform: a framebuffer pixel is
+ * offset + logical * scale, on each axis; the visible area is in logical coordinates;
+ * `bars` when what is outside it is the presentation's bars (FIT, INTEGER), which
+ * nothing is drawn in. */
+typedef struct wgf_platform_priv_presentation_t {
+    float scale_x, scale_y;
+    float offset_x, offset_y;
+    float visible_x, visible_y, visible_width, visible_height;
+    bool bars;
+} wgf_platform_priv_presentation_t;
+
+/* A fitting: the transform for the framebuffer's size and DPI scale. */
+typedef void (*wgf_platform_priv_fitting_t)(int framebuffer_width, int framebuffer_height, float dpi_scale,
+                                            wgf_platform_priv_presentation_t *out);
+
+/* Now's transform: the fitting's, else NONE's (the DPI scale, no offset, the whole
+ * framebuffer visible). */
+void wgf_platform_priv_get_presentation(wgf_platform_priv_presentation_t *out);
+/* Set by wgf_presentation_set, so a program that never sets a mode links none of the
+ * fitting; NULL for NONE. With a design size, a window whose size the program didn't
+ * set opens at it. */
+void wgf_platform_priv_set_fitting(wgf_platform_priv_fitting_t fitting, int design_width, int design_height);
+/* Whether a mode is set: input maps through the presentation then, else through the
+ * DPI scale it is given. */
+bool wgf_platform_priv_is_presented(void);
 /* Samples a pixel the window's framebuffer has: 1, or what MSAA got. */
 int wgf_platform_priv_get_sample_count(void);
 /* Whether quitting means anything: false on the web, where the page stays. */
@@ -95,6 +121,9 @@ void wgf_platform_priv_show_mouse(bool shown);
 
 /* Headless builds only, for tests: the DPI scale the window reports (1 by default). */
 void wgf_platform_priv_headless_set_dpi_scale(float scale);
+/* Headless builds only, for tests: the framebuffer's size, as a resized window's would
+ * be, outside a run (a run sets it from the window's size). */
+void wgf_platform_priv_headless_set_framebuffer(int width, int height);
 
 /* Headless builds only, for tests: queue an event, delivered before the next
  * frame as sokol_app delivers the window's. False when the queue is full. */

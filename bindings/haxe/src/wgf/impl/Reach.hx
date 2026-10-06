@@ -56,9 +56,11 @@ class Reach {
 		"wgf_bounds_get_margin",
 		"wgf_bounds_get_mode",
 		"wgf_bounds_get_rect",
+		"wgf_bounds_is_visible",
 		"wgf_bounds_set_margin",
 		"wgf_bounds_set_mode",
 		"wgf_bounds_set_rect",
+		"wgf_bounds_set_visible",
 		"wgf_camera2d_create",
 		"wgf_camera2d_get_zoom",
 		"wgf_camera2d_set_zoom",
@@ -95,6 +97,7 @@ class Reach {
 		"wgf_draw_rectangle",
 		"wgf_draw_rectangle_lines",
 		"wgf_draw_text",
+		"wgf_draw_text_aligned",
 		"wgf_draw_texture",
 		"wgf_draw_texture_region",
 		"wgf_draw_triangle",
@@ -264,6 +267,12 @@ class Reach {
 		"wgf_node_set_scale",
 		"wgf_node_set_transform",
 		"wgf_node_set_visible",
+		"wgf_presentation_get_height",
+		"wgf_presentation_get_mode",
+		"wgf_presentation_get_scale",
+		"wgf_presentation_get_visible",
+		"wgf_presentation_get_width",
+		"wgf_presentation_set",
 		"wgf_probe_get_count",
 		"wgf_probe_get_name",
 		"wgf_probe_get_value",
@@ -274,12 +283,14 @@ class Reach {
 		"wgf_random_get_range",
 		"wgf_random_get_seed",
 		"wgf_random_set_seed",
+		"wgf_render_get_bar_color",
 		"wgf_render_get_clear_color",
 		"wgf_render_get_dpi_scale",
 		"wgf_render_get_height",
 		"wgf_render_get_width",
 		"wgf_render_pop_clip",
 		"wgf_render_push_clip",
+		"wgf_render_set_bar_color",
 		"wgf_render_set_clear_color",
 		"wgf_resource_get_load_budget",
 		"wgf_resource_get_path",
@@ -445,7 +456,7 @@ class Reach {
 		"wgf_window_set_vsync",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...436) 0];
+	static final counts:Array<Int> = [for (_ in 0...447) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

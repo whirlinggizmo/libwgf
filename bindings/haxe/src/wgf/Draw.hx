@@ -83,6 +83,14 @@ class Draw {
 		Raw.wgf_draw_text(font, text, x, y, size, color);
 
 	/**
+	    The same, (x, y) the point the text is aligned to: its left, center, or right, and its
+	    top, middle, or bottom (wgf_text.h's alignments), so a HUD anchored to the visible
+	    area's right edge (wgf_presentation_get_visible) needs no guessed width.
+	**/
+	public static inline function textAligned(font:Font, text:String, x:Float, y:Float, size:Float, color:Int, horizontal:TextHalign, vertical:TextValign):Void
+		Raw.wgf_draw_text_aligned(font, text, x, y, size, color, horizontal, vertical);
+
+	/**
 	    A texture into the rectangle (x, y, width, height), multiplied by `tint` (white
 	    leaves it as it is). A width or height of 0 or less draws it at its own size.
 	    Nothing while it is PENDING; the placeholder checker once it has FAILED.

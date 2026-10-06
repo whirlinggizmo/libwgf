@@ -12,7 +12,7 @@ class Main {
 
 	static function main() {
 		Window.setTitle("@NAME@");
-		Window.setSize(800, 600);
+		Presentation.set(PresentationMode.FIT, 800, 600); // the design, fitted to the window or the page
 		Runtime.run(init, null, frame, null);
 	}
 

@@ -8,6 +8,7 @@
 #include "node/wgf_gfx_node_priv.h"
 #include "wgf_bounds.h"
 #include "wgf_collider.h"
+#include "wgf_presentation.h"
 #include "wgf_core_handle_priv.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_ecs_priv.h"
@@ -365,6 +366,8 @@ static void bound(void)
 {
     wgf_entity_t *doomed = NULL;
     int count = 0, capacity = 0, i;
+    bool seen = false;
+    wgf_vec4_t seen_area = wgf_vec4_make(0, 0, 0, 0); /* the visible area, read once a tick when one asks */
     ecs_iter_t it = ecs_query_iter(ecs.world, ecs.q_bounds);
     while (ecs_query_next(&it)) {
         wgf_ecs_priv_transform_t *t = ecs_field(&it, wgf_ecs_priv_transform_t, 0);
@@ -377,8 +380,18 @@ static void bound(void)
                     ? (wgf_ecs_priv_motion_t *)ecs_get_mut_id(ecs.world, record->id, ecs.ids.motion)
                     : NULL;
             const float m = b[i].margin;
-            const bool out_x = keep_in(&t[i], motion, 0, b[i].rect[0] - m, b[i].rect[0] + b[i].rect[2] + m, b[i].mode);
-            const bool out_y = keep_in(&t[i], motion, 1, b[i].rect[1] - m, b[i].rect[1] + b[i].rect[3] + m, b[i].mode);
+            float rect[4];
+            bool out_x, out_y;
+            if (b[i].visible && !seen) {
+                seen_area = wgf_presentation_get_visible();
+                seen = true;
+            }
+            rect[0] = b[i].visible ? seen_area.x : b[i].rect[0];
+            rect[1] = b[i].visible ? seen_area.y : b[i].rect[1];
+            rect[2] = b[i].visible ? seen_area.z : b[i].rect[2];
+            rect[3] = b[i].visible ? seen_area.w : b[i].rect[3];
+            out_x = keep_in(&t[i], motion, 0, rect[0] - m, rect[0] + rect[2] + m, b[i].mode);
+            out_y = keep_in(&t[i], motion, 1, rect[1] - m, rect[1] + rect[3] + m, b[i].mode);
             if (out_x || out_y) doom(&doomed, &count, &capacity, ref[i].handle);
         }
     }

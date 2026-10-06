@@ -421,31 +421,6 @@ export declare const WGF_COLOR_STOCK_RAYWHITE: 25;
 export type wgf_color_stock_t = typeof WGF_COLOR_STOCK_BLANK | typeof WGF_COLOR_STOCK_WHITE | typeof WGF_COLOR_STOCK_BLACK | typeof WGF_COLOR_STOCK_LIGHTGRAY | typeof WGF_COLOR_STOCK_GRAY | typeof WGF_COLOR_STOCK_DARKGRAY | typeof WGF_COLOR_STOCK_YELLOW | typeof WGF_COLOR_STOCK_GOLD | typeof WGF_COLOR_STOCK_ORANGE | typeof WGF_COLOR_STOCK_PINK | typeof WGF_COLOR_STOCK_RED | typeof WGF_COLOR_STOCK_MAROON | typeof WGF_COLOR_STOCK_GREEN | typeof WGF_COLOR_STOCK_LIME | typeof WGF_COLOR_STOCK_DARKGREEN | typeof WGF_COLOR_STOCK_SKYBLUE | typeof WGF_COLOR_STOCK_BLUE | typeof WGF_COLOR_STOCK_DARKBLUE | typeof WGF_COLOR_STOCK_PURPLE | typeof WGF_COLOR_STOCK_VIOLET | typeof WGF_COLOR_STOCK_DARKPURPLE | typeof WGF_COLOR_STOCK_BEIGE | typeof WGF_COLOR_STOCK_BROWN | typeof WGF_COLOR_STOCK_DARKBROWN | typeof WGF_COLOR_STOCK_MAGENTA | typeof WGF_COLOR_STOCK_RAYWHITE;
 
 /**
- * How a texture is sampled where it is drawn.
- */
-export declare const WGF_TEXTURE_WRAP_REPEAT: 0;
-export declare const WGF_TEXTURE_WRAP_CLAMP: 1;
-export declare const WGF_TEXTURE_WRAP_MIRROR: 2;
-export type wgf_texture_wrap_t = typeof WGF_TEXTURE_WRAP_REPEAT | typeof WGF_TEXTURE_WRAP_CLAMP | typeof WGF_TEXTURE_WRAP_MIRROR;
-
-export declare const WGF_TEXTURE_FILTER_LINEAR: 0;
-export declare const WGF_TEXTURE_FILTER_NEAREST: 1;
-export type wgf_texture_filter_t = typeof WGF_TEXTURE_FILTER_LINEAR | typeof WGF_TEXTURE_FILTER_NEAREST;
-
-/**
- * A 2D shape: a node drawing a rectangle, a circle, a line, or a polygon, filled or
- * outlined, in one color, in a canvas. Shapes are nodes (wgf_node.h): place, turn,
- * scale, parent, and destroy them with the node calls; the shape turns and scales with
- * its node, and an outline's thickness stays in the frame's logical pixels.
- */
-export declare const WGF_SHAPE2D_KIND_NONE: 0;
-export declare const WGF_SHAPE2D_KIND_RECTANGLE: 1;
-export declare const WGF_SHAPE2D_KIND_CIRCLE: 2;
-export declare const WGF_SHAPE2D_KIND_LINE: 3;
-export declare const WGF_SHAPE2D_KIND_POLYGON: 4;
-export type wgf_shape2d_kind_t = typeof WGF_SHAPE2D_KIND_NONE | typeof WGF_SHAPE2D_KIND_RECTANGLE | typeof WGF_SHAPE2D_KIND_CIRCLE | typeof WGF_SHAPE2D_KIND_LINE | typeof WGF_SHAPE2D_KIND_POLYGON;
-
-/**
  * A text node: a string drawn in a font, in a canvas. Its node's position is where its
  * block of lines sits, by its alignment, and the node turns and scales it like any
  * other. It holds a reference to its font (0: the default font). Text is a
@@ -460,6 +435,64 @@ export declare const WGF_TEXT_VALIGN_TOP: 0;
 export declare const WGF_TEXT_VALIGN_MIDDLE: 1;
 export declare const WGF_TEXT_VALIGN_BOTTOM: 2;
 export type wgf_text_valign_t = typeof WGF_TEXT_VALIGN_TOP | typeof WGF_TEXT_VALIGN_MIDDLE | typeof WGF_TEXT_VALIGN_BOTTOM;
+
+/**
+ * How a texture is sampled where it is drawn.
+ */
+export declare const WGF_TEXTURE_WRAP_REPEAT: 0;
+export declare const WGF_TEXTURE_WRAP_CLAMP: 1;
+export declare const WGF_TEXTURE_WRAP_MIRROR: 2;
+export type wgf_texture_wrap_t = typeof WGF_TEXTURE_WRAP_REPEAT | typeof WGF_TEXTURE_WRAP_CLAMP | typeof WGF_TEXTURE_WRAP_MIRROR;
+
+export declare const WGF_TEXTURE_FILTER_LINEAR: 0;
+export declare const WGF_TEXTURE_FILTER_NEAREST: 1;
+export type wgf_texture_filter_t = typeof WGF_TEXTURE_FILTER_LINEAR | typeof WGF_TEXTURE_FILTER_NEAREST;
+
+/**
+ * How a game's design is fitted to the window or the screen (Godot's stretch modes
+ * and aspects are the prior art). A game is written for a design resolution, and its
+ * logical coordinates stay the design's at any window size and in fullscreen: drawing,
+ * canvases, the UI, the pointer and touches (mapped back into them), and an autopilot's
+ * mouse. The same on the desktop, in a resized browser window, and in fullscreen.
+ *
+ *   NONE     the default: logical pixels are the window's (a framebuffer pixel over the
+ *            DPI scale), and the visible area is the window
+ *   STRETCH  the design scaled to the window on each axis apart, its aspect lost
+ *   FIT      scaled alike on both axes, as large as it fits whole, centered; the rest
+ *            are bars (wgf_render_set_bar_color), nothing drawn in them
+ *   FILL     scaled alike, as small as covers the window, centered; what is past the
+ *            window's edges is cropped
+ *   EXPAND   scaled as FIT is, but the visible area grows past the design to the
+ *            window's edges, centered on it: the design is the least the game shows,
+ *            and a UI anchored to the visible area's edges stays at them
+ *   INTEGER  as FIT, at a whole number of framebuffer pixels to a logical one (at
+ *            least 1), for pixel art; bars around it
+ *
+ * Set any time; it takes effect at the next frame. A program that never sets a mode
+ * links none of its fitting. Natively, a window whose size the program didn't set
+ * (wgf_window_set_size) opens at the design size. False for a size under 1 (but for
+ * NONE, which takes none) or a mode that isn't one.
+ */
+export declare const WGF_PRESENTATION_MODE_NONE: 0;
+export declare const WGF_PRESENTATION_MODE_STRETCH: 1;
+export declare const WGF_PRESENTATION_MODE_FIT: 2;
+export declare const WGF_PRESENTATION_MODE_FILL: 3;
+export declare const WGF_PRESENTATION_MODE_EXPAND: 4;
+export declare const WGF_PRESENTATION_MODE_INTEGER: 5;
+export type wgf_presentation_mode_t = typeof WGF_PRESENTATION_MODE_NONE | typeof WGF_PRESENTATION_MODE_STRETCH | typeof WGF_PRESENTATION_MODE_FIT | typeof WGF_PRESENTATION_MODE_FILL | typeof WGF_PRESENTATION_MODE_EXPAND | typeof WGF_PRESENTATION_MODE_INTEGER;
+
+/**
+ * A 2D shape: a node drawing a rectangle, a circle, a line, or a polygon, filled or
+ * outlined, in one color, in a canvas. Shapes are nodes (wgf_node.h): place, turn,
+ * scale, parent, and destroy them with the node calls; the shape turns and scales with
+ * its node, and an outline's thickness stays in the frame's logical pixels.
+ */
+export declare const WGF_SHAPE2D_KIND_NONE: 0;
+export declare const WGF_SHAPE2D_KIND_RECTANGLE: 1;
+export declare const WGF_SHAPE2D_KIND_CIRCLE: 2;
+export declare const WGF_SHAPE2D_KIND_LINE: 3;
+export declare const WGF_SHAPE2D_KIND_POLYGON: 4;
+export type wgf_shape2d_kind_t = typeof WGF_SHAPE2D_KIND_NONE | typeof WGF_SHAPE2D_KIND_RECTANGLE | typeof WGF_SHAPE2D_KIND_CIRCLE | typeof WGF_SHAPE2D_KIND_LINE | typeof WGF_SHAPE2D_KIND_POLYGON;
 
 /**
  * What an entity can have, at most one of each. The first five are data the systems
@@ -1173,7 +1206,9 @@ export declare function wgf_window_get_title(): string;
  * refused (false). On the web, the canvas's size on the page: left to the page
  * unless set. Set, it is the canvas's own style, which wins over the page's: the
  * canvas stays that size, at the page's top left, whatever the browser window does,
- * so a game meant to fill the page doesn't set it on the web.
+ * so a game meant to fill the page doesn't set it on the web. A game written for one
+ * size sets a presentation (wgf_presentation.h) instead, which fits it to whatever the
+ * window is, and natively opens the window at that size when this isn't set.
  */
 export declare function wgf_window_set_size(width: number, height: number): boolean;
 
@@ -1182,7 +1217,9 @@ export declare function wgf_window_set_size(width: number, height: number): bool
  * refused (false). On the web, the canvas's size on the page: left to the page
  * unless set. Set, it is the canvas's own style, which wins over the page's: the
  * canvas stays that size, at the page's top left, whatever the browser window does,
- * so a game meant to fill the page doesn't set it on the web.
+ * so a game meant to fill the page doesn't set it on the web. A game written for one
+ * size sets a presentation (wgf_presentation.h) instead, which fits it to whatever the
+ * window is, and natively opens the window at that size when this isn't set.
  */
 export declare function wgf_window_get_width(): number;
 
@@ -1191,7 +1228,9 @@ export declare function wgf_window_get_width(): number;
  * refused (false). On the web, the canvas's size on the page: left to the page
  * unless set. Set, it is the canvas's own style, which wins over the page's: the
  * canvas stays that size, at the page's top left, whatever the browser window does,
- * so a game meant to fill the page doesn't set it on the web.
+ * so a game meant to fill the page doesn't set it on the web. A game written for one
+ * size sets a presentation (wgf_presentation.h) instead, which fits it to whatever the
+ * window is, and natively opens the window at that size when this isn't set.
  */
 export declare function wgf_window_get_height(): number;
 
@@ -2111,6 +2150,92 @@ export declare function wgf_font_measure<T extends number[] | Float32Array | Flo
 export declare function wgf_font_measure(font: wgf_font_t | 0, text: string | null, size: number, into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
+ * A text node in `font` (0: the default font), with no string yet. 0 when `font`
+ * isn't a font, or there is no room for another node.
+ */
+export declare function wgf_text_create(font: wgf_font_t | 0): wgf_node_t;
+
+/**
+ * False when `font` isn't a font (0 is: the default font).
+ */
+export declare function wgf_text_set_font(text: wgf_node_t | 0, font: wgf_font_t | 0): boolean;
+
+/**
+ * False when `font` isn't a font (0 is: the default font).
+ */
+export declare function wgf_text_get_font(text: wgf_node_t | 0): wgf_font_t;
+
+/**
+ * What it says, UTF-8, copied. get_string's is the node's: valid until the next
+ * set_string, or until it is destroyed.
+ */
+export declare function wgf_text_set_string(text: wgf_node_t | 0, string: string | null): boolean;
+
+/**
+ * What it says, UTF-8, copied. get_string's is the node's: valid until the next
+ * set_string, or until it is destroyed.
+ */
+export declare function wgf_text_get_string(text: wgf_node_t | 0): string;
+
+/**
+ * Its font size: the height of its lines, before the node's scale, in canvas units (a
+ * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
+ * Read back as the size it draws at. False for a handle that isn't text.
+ */
+export declare function wgf_text_set_font_size(text: wgf_node_t | 0, size: number): boolean;
+
+/**
+ * Its font size: the height of its lines, before the node's scale, in canvas units (a
+ * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
+ * Read back as the size it draws at. False for a handle that isn't text.
+ */
+export declare function wgf_text_get_font_size(text: wgf_node_t | 0): number;
+
+/**
+ * Default: white.
+ */
+export declare function wgf_text_set_color(text: wgf_node_t | 0, color: wgf_color_t): boolean;
+
+/**
+ * Default: white.
+ */
+export declare function wgf_text_get_color(text: wgf_node_t | 0): wgf_color_t;
+
+/**
+ * Wrap lines at spaces and tabs to fit `width`, in canvas units; a word wider keeps
+ * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
+ * wrapped block is `width` wide for its alignment, or as wide as its widest line
+ * where a word is wider. False for less than 0.
+ */
+export declare function wgf_text_set_wrap_width(text: wgf_node_t | 0, width: number): boolean;
+
+/**
+ * Wrap lines at spaces and tabs to fit `width`, in canvas units; a word wider keeps
+ * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
+ * wrapped block is `width` wide for its alignment, or as wide as its widest line
+ * where a word is wider. False for less than 0.
+ */
+export declare function wgf_text_get_wrap_width(text: wgf_node_t | 0): number;
+
+/**
+ * Where the block sits relative to the node's position, on each axis; lines line
+ * up the same way inside the block. False for a value that isn't one.
+ */
+export declare function wgf_text_set_align(text: wgf_node_t | 0, horizontal: wgf_text_halign_t, vertical: wgf_text_valign_t): boolean;
+
+/**
+ * Where the block sits relative to the node's position, on each axis; lines line
+ * up the same way inside the block. False for a value that isn't one.
+ */
+export declare function wgf_text_get_halign(text: wgf_node_t | 0): wgf_text_halign_t;
+
+/**
+ * Where the block sits relative to the node's position, on each axis; lines line
+ * up the same way inside the block. False for a value that isn't one.
+ */
+export declare function wgf_text_get_valign(text: wgf_node_t | 0): wgf_text_valign_t;
+
+/**
  * A texture from an image file: PNG, JPEG, BMP, TGA, or GIF (its first frame). 0 only
  * when there is no room for another texture; a path or file that can't be loaded gives
  * a texture that FAILED. wgf_resource_get_path gives the file it read.
@@ -2223,6 +2348,13 @@ export declare function wgf_draw_polygon(points: readonly number[] | Float32Arra
  * less), its top-left at (x, y). Newlines break lines.
  */
 export declare function wgf_draw_text(font: wgf_font_t | 0, text: string | null, x: number, y: number, size: number, color: wgf_color_t): void;
+
+/**
+ * The same, (x, y) the point the text is aligned to: its left, center, or right, and its
+ * top, middle, or bottom (wgf_text.h's alignments), so a HUD anchored to the visible
+ * area's right edge (wgf_presentation_get_visible) needs no guessed width.
+ */
+export declare function wgf_draw_text_aligned(font: wgf_font_t | 0, text: string | null, x: number, y: number, size: number, color: wgf_color_t, horizontal: wgf_text_halign_t, vertical: wgf_text_valign_t): void;
 
 /**
  * A texture into the rectangle (x, y, width, height), multiplied by `tint` (white
@@ -2463,6 +2595,35 @@ export declare function wgf_emitter2d_get_stretch(emitter: wgf_node_t | 0): numb
  */
 export declare function wgf_emitter2d_clear(emitter: wgf_node_t | 0): boolean;
 
+export declare function wgf_presentation_set(mode: wgf_presentation_mode_t, width: number, height: number): boolean;
+
+export declare function wgf_presentation_get_mode(): wgf_presentation_mode_t;
+
+/**
+ * The design resolution; the window's logical size under NONE.
+ */
+export declare function wgf_presentation_get_width(): number;
+
+/**
+ * The design resolution; the window's logical size under NONE.
+ */
+export declare function wgf_presentation_get_height(): number;
+
+/**
+ * What is visible now, in logical coordinates: x, y, width, height. The design area
+ * (0, 0, its width, its height) under STRETCH, FIT, and INTEGER; less of it under FILL;
+ * more under EXPAND, x and y below 0 when it grows. A HUD anchored to a corner places
+ * itself from this.
+ */
+export declare function wgf_presentation_get_visible<T extends number[] | Float32Array | Float64Array>(into: T): T;
+export declare function wgf_presentation_get_visible(into?: wgf_vec4_t | null): wgf_vec4_t;
+
+/**
+ * Framebuffer pixels to a logical pixel, across (under STRETCH, each axis has its own:
+ * this is the horizontal one).
+ */
+export declare function wgf_presentation_get_scale(): number;
+
 /**
  * What each frame starts cleared to. Default: black.
  */
@@ -2472,6 +2633,18 @@ export declare function wgf_render_set_clear_color(color: wgf_color_t): void;
  * What each frame starts cleared to. Default: black.
  */
 export declare function wgf_render_get_clear_color(): wgf_color_t;
+
+/**
+ * The presentation's bars (wgf_presentation.h's FIT and INTEGER): the framebuffer
+ * outside the visible area, which nothing is drawn in. Default: black.
+ */
+export declare function wgf_render_set_bar_color(color: wgf_color_t): void;
+
+/**
+ * The presentation's bars (wgf_presentation.h's FIT and INTEGER): the framebuffer
+ * outside the visible area, which nothing is drawn in. Default: black.
+ */
+export declare function wgf_render_get_bar_color(): wgf_color_t;
 
 /**
  * The frame's size in pixels, and how many pixels make one logical pixel (2 on most
@@ -2722,92 +2895,6 @@ export declare function wgf_sprite_set_tint(sprite: wgf_node_t | 0, tint: wgf_co
  * for a handle that isn't a sprite.
  */
 export declare function wgf_sprite_get_tint(sprite: wgf_node_t | 0): wgf_color_t;
-
-/**
- * A text node in `font` (0: the default font), with no string yet. 0 when `font`
- * isn't a font, or there is no room for another node.
- */
-export declare function wgf_text_create(font: wgf_font_t | 0): wgf_node_t;
-
-/**
- * False when `font` isn't a font (0 is: the default font).
- */
-export declare function wgf_text_set_font(text: wgf_node_t | 0, font: wgf_font_t | 0): boolean;
-
-/**
- * False when `font` isn't a font (0 is: the default font).
- */
-export declare function wgf_text_get_font(text: wgf_node_t | 0): wgf_font_t;
-
-/**
- * What it says, UTF-8, copied. get_string's is the node's: valid until the next
- * set_string, or until it is destroyed.
- */
-export declare function wgf_text_set_string(text: wgf_node_t | 0, string: string | null): boolean;
-
-/**
- * What it says, UTF-8, copied. get_string's is the node's: valid until the next
- * set_string, or until it is destroyed.
- */
-export declare function wgf_text_get_string(text: wgf_node_t | 0): string;
-
-/**
- * Its font size: the height of its lines, before the node's scale, in canvas units (a
- * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
- * Read back as the size it draws at. False for a handle that isn't text.
- */
-export declare function wgf_text_set_font_size(text: wgf_node_t | 0, size: number): boolean;
-
-/**
- * Its font size: the height of its lines, before the node's scale, in canvas units (a
- * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
- * Read back as the size it draws at. False for a handle that isn't text.
- */
-export declare function wgf_text_get_font_size(text: wgf_node_t | 0): number;
-
-/**
- * Default: white.
- */
-export declare function wgf_text_set_color(text: wgf_node_t | 0, color: wgf_color_t): boolean;
-
-/**
- * Default: white.
- */
-export declare function wgf_text_get_color(text: wgf_node_t | 0): wgf_color_t;
-
-/**
- * Wrap lines at spaces and tabs to fit `width`, in canvas units; a word wider keeps
- * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
- * wrapped block is `width` wide for its alignment, or as wide as its widest line
- * where a word is wider. False for less than 0.
- */
-export declare function wgf_text_set_wrap_width(text: wgf_node_t | 0, width: number): boolean;
-
-/**
- * Wrap lines at spaces and tabs to fit `width`, in canvas units; a word wider keeps
- * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
- * wrapped block is `width` wide for its alignment, or as wide as its widest line
- * where a word is wider. False for less than 0.
- */
-export declare function wgf_text_get_wrap_width(text: wgf_node_t | 0): number;
-
-/**
- * Where the block sits relative to the node's position, on each axis; lines line
- * up the same way inside the block. False for a value that isn't one.
- */
-export declare function wgf_text_set_align(text: wgf_node_t | 0, horizontal: wgf_text_halign_t, vertical: wgf_text_valign_t): boolean;
-
-/**
- * Where the block sits relative to the node's position, on each axis; lines line
- * up the same way inside the block. False for a value that isn't one.
- */
-export declare function wgf_text_get_halign(text: wgf_node_t | 0): wgf_text_halign_t;
-
-/**
- * Where the block sits relative to the node's position, on each axis; lines line
- * up the same way inside the block. False for a value that isn't one.
- */
-export declare function wgf_text_get_valign(text: wgf_node_t | 0): wgf_text_valign_t;
 
 /**
  * Every voice's loudness, times its own: 1 as they are, 0 silent, above 1 louder (and
@@ -3333,6 +3420,22 @@ export declare function wgf_bounds_set_mode(entity: wgf_entity_t | 0, mode: wgf_
  * False too for a mode that isn't one.
  */
 export declare function wgf_bounds_get_mode(entity: wgf_entity_t | 0): wgf_bounds_mode_t;
+
+/**
+ * Whether the rectangle is the presentation's visible area (wgf_presentation.h), read
+ * each tick, so what wraps at the screen's edge wraps at the window's whatever its size
+ * (a scene file's `bounds visible=true`); read back by get_rect as it is now. Setting a
+ * rectangle turns it off. Default: off.
+ */
+export declare function wgf_bounds_set_visible(entity: wgf_entity_t | 0, visible: boolean): boolean;
+
+/**
+ * Whether the rectangle is the presentation's visible area (wgf_presentation.h), read
+ * each tick, so what wraps at the screen's edge wraps at the window's whatever its size
+ * (a scene file's `bounds visible=true`); read back by get_rect as it is now. Setting a
+ * rectangle turns it off. Default: off.
+ */
+export declare function wgf_bounds_is_visible(entity: wgf_entity_t | 0): boolean;
 
 /**
  * How far past the rectangle's edge it may go first, so a rock wraps once it is wholly

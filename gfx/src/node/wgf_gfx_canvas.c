@@ -44,15 +44,15 @@ static wgf_mat4_t view_of(wgf_node_t canvas)
     const wgf_node_t camera = wgf_canvas_get_camera(canvas);
     wgf_mat4_t world, view, step;
     wgf_vec3_t position;
-    float zoom, angle;
+    float zoom, angle, x, y, width, height;
     if (camera == 0) return wgf_mat4_identity();
+    wgf_gfx_priv_render_get_visible(&x, &y, &width, &height); /* the camera looks at what is visible's center */
     world = wgf_gfx_priv_node_get_world_matrix(camera);
     position = wgf_mat4_get_translation(world);
     angle = wgf_quat_to_euler(wgf_mat4_get_rotation(world)).z;
     zoom = wgf_camera2d_get_zoom(camera);
     /* center * zoom * turn back * move the camera to the origin, applied right to left */
-    view = wgf_mat4_from_trs(wgf_vec3_make((float)wgf_render_get_width() / wgf_render_get_dpi_scale() * 0.5f,
-                                           (float)wgf_render_get_height() / wgf_render_get_dpi_scale() * 0.5f, 0.0f),
+    view = wgf_mat4_from_trs(wgf_vec3_make(x + width * 0.5f, y + height * 0.5f, 0.0f),
                              wgf_quat_from_euler(wgf_vec3_make(0.0f, 0.0f, -angle)), wgf_vec3_make(zoom, zoom, 1.0f));
     step = wgf_mat4_from_trs(wgf_vec3_make(-position.x, -position.y, 0.0f), wgf_quat_identity(),
                              wgf_vec3_make(1.0f, 1.0f, 1.0f));

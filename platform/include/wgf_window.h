@@ -24,7 +24,9 @@ WGF_API const char *wgf_window_get_title(void);
  * refused (false). On the web, the canvas's size on the page: left to the page
  * unless set. Set, it is the canvas's own style, which wins over the page's: the
  * canvas stays that size, at the page's top left, whatever the browser window does,
- * so a game meant to fill the page doesn't set it on the web. */
+ * so a game meant to fill the page doesn't set it on the web. A game written for one
+ * size sets a presentation (wgf_presentation.h) instead, which fits it to whatever the
+ * window is, and natively opens the window at that size when this isn't set. */
 WGF_API bool wgf_window_set_size(int width, int height);
 WGF_API int wgf_window_get_width(void);
 WGF_API int wgf_window_get_height(void);

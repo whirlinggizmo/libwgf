@@ -49,7 +49,7 @@ static struct {
     edges_t frame;
     edges_t tick;
     wgf_platform_priv_input_context_t context;
-    float dpi_scale; /* the event being handled's */
+    float scale_x, scale_y, offset_x, offset_y; /* the event being handled's: logical = (pixel - offset) / scale */
     finger_t fingers[MAX_FINGERS];
     unsigned finger_order;
     /* the first finger drives the mouse until a second cancels it; then the mouse
@@ -153,12 +153,12 @@ static void add_typed(edges_t *edges, uint32_t code)
 }
 
 /* One event's edges, into one set. */
-static void add_edges(edges_t *edges, const sapp_event *event, float dpi_scale, bool key_was_down)
+static void add_edges(edges_t *edges, const sapp_event *event, bool key_was_down)
 {
     switch (event->type) {
         case SAPP_EVENTTYPE_MOUSE_MOVE:
-            edges->dx += event->mouse_dx / dpi_scale;
-            edges->dy += event->mouse_dy / dpi_scale;
+            edges->dx += event->mouse_dx / input.scale_x;
+            edges->dy += event->mouse_dy / input.scale_y;
             break;
         case SAPP_EVENTTYPE_MOUSE_DOWN:
             edges->pressed[event->mouse_button] = true;
@@ -240,14 +240,14 @@ static bool gesture_pair(int *a, int *b)
 /* Move the mouse to logical (x, y), and press or release its left button. */
 static void pointer_event(sapp_event_type type, float x, float y)
 {
-    const float scale = input.dpi_scale;
+    const float scale = input.scale_x;
     sapp_event mouse;
     memset(&mouse, 0, sizeof(mouse));
     mouse.type = SAPP_EVENTTYPE_MOUSE_MOVE;
-    mouse.mouse_x = x * scale;
-    mouse.mouse_y = y * scale;
-    mouse.mouse_dx = (x - input.x) * scale;
-    mouse.mouse_dy = (y - input.y) * scale;
+    mouse.mouse_x = input.offset_x + x * input.scale_x;
+    mouse.mouse_y = input.offset_y + y * input.scale_y;
+    mouse.mouse_dx = (x - input.x) * input.scale_x;
+    mouse.mouse_dy = (y - input.y) * input.scale_y;
     wgf_platform_priv_input_handle_event(&mouse, scale);
     if (type != SAPP_EVENTTYPE_MOUSE_MOVE) {
         mouse.type = type;
@@ -283,7 +283,6 @@ static void touch_pointer(sapp_event_type type, uintptr_t system_id, const finge
 /* Fingers, their edges, the mouse, and the gesture, from one touch event. */
 static void handle_touch(const sapp_event *event)
 {
-    const float scale = input.dpi_scale;
     const sapp_event_type type =
         event->type == SAPP_EVENTTYPE_TOUCHES_CANCELLED ? SAPP_EVENTTYPE_TOUCHES_ENDED : event->type;
     float ax = 0, ay = 0, bx = 0, by = 0;
@@ -297,7 +296,8 @@ static void handle_touch(const sapp_event *event)
     }
     for (i = 0; i < event->num_touches && i < SAPP_MAX_TOUCHPOINTS; i++) {
         const sapp_touchpoint *touch = &event->touches[i];
-        const float x = touch->pos_x / scale, y = touch->pos_y / scale;
+        const float x = (touch->pos_x - input.offset_x) / input.scale_x;
+        const float y = (touch->pos_y - input.offset_y) / input.scale_y;
         int slot = find_finger(touch->identifier);
         finger_t *finger;
 
@@ -360,8 +360,17 @@ void wgf_platform_priv_input_handle_event(const sapp_event *event, float dpi_sca
 {
     bool key_was_down = false;
     if (event == NULL) return;
-    input.dpi_scale = dpi_scale >= 1.0f ? dpi_scale : 1.0f;
-    dpi_scale = input.dpi_scale;
+    if (wgf_platform_priv_is_presented()) { /* the design's coordinates */
+        wgf_platform_priv_presentation_t present;
+        wgf_platform_priv_get_presentation(&present);
+        input.scale_x = present.scale_x;
+        input.scale_y = present.scale_y;
+        input.offset_x = present.offset_x;
+        input.offset_y = present.offset_y;
+    } else { /* the window's logical pixels, at the scale given */
+        input.scale_x = input.scale_y = dpi_scale >= 1.0f ? dpi_scale : 1.0f;
+        input.offset_x = input.offset_y = 0.0f;
+    }
     switch (event->type) {
         case SAPP_EVENTTYPE_TOUCHES_BEGAN:
         case SAPP_EVENTTYPE_TOUCHES_MOVED:
@@ -392,12 +401,12 @@ void wgf_platform_priv_input_handle_event(const sapp_event *event, float dpi_sca
         default:
             break;
     }
-    add_edges(&input.frame, event, dpi_scale, key_was_down);
-    add_edges(&input.tick, event, dpi_scale, key_was_down);
+    add_edges(&input.frame, event, key_was_down);
+    add_edges(&input.tick, event, key_was_down);
     switch (event->type) {
         case SAPP_EVENTTYPE_MOUSE_MOVE:
-            input.x = event->mouse_x / dpi_scale;
-            input.y = event->mouse_y / dpi_scale;
+            input.x = (event->mouse_x - input.offset_x) / input.scale_x;
+            input.y = (event->mouse_y - input.offset_y) / input.scale_y;
             break;
         case SAPP_EVENTTYPE_MOUSE_DOWN:
             input.down[event->mouse_button] = true;

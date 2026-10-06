@@ -36,7 +36,9 @@ class Main {
 
 	static function main() {
 		Window.setTitle("Asteroids");
-		Window.setSize(WIDTH, HEIGHT);
+		// the design the game is written in, fitted to any window or screen, bars around it
+		Presentation.set(PresentationMode.FIT, WIDTH, HEIGHT);
+		Render.setBarColor(Color.make(2, 3, 6, 255));
 		Runtime.run(init, tick, frame, null);
 	}
 
@@ -175,7 +177,8 @@ class Main {
 		Draw.text(0, '$score', 24, 16, 32, white);
 		for (i in 0...lives)
 			Ship.drawIcon(32 + i * 26, 72);
-		Draw.text(0, 'wave $wave', WIDTH - 120, 20, 18, Color.get(ColorStock.LIGHTGRAY));
+		Draw.textAligned(0, 'wave $wave', WIDTH - 24, 20, 18, Color.get(ColorStock.LIGHTGRAY), TextHalign.RIGHT,
+			TextValign.TOP);
 	}
 
 	static function titleScreen() {

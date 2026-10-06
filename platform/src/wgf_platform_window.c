@@ -25,6 +25,43 @@ static struct {
     bool msaa;
 } window = {false, "libwgf", 1024, 768, false, true, true, true, false, true, true, false, false, false};
 
+static wgf_platform_priv_fitting_t fitting; /* wgf_presentation_set's; NULL for NONE */
+
+void wgf_platform_priv_set_fitting(wgf_platform_priv_fitting_t set, int design_width, int design_height)
+{
+    fitting = set;
+    if (set != NULL && !window.size_set && !window.open) { /* the window opens at the design size */
+        window.width = design_width;
+        window.height = design_height;
+    }
+}
+
+bool wgf_platform_priv_is_presented(void)
+{
+    return fitting != NULL;
+}
+
+static void presentation_none(float dpi_scale, wgf_platform_priv_presentation_t *out)
+{
+    const float scale = dpi_scale >= 1.0f ? dpi_scale : 1.0f;
+    out->scale_x = out->scale_y = scale;
+    out->offset_x = out->offset_y = 0.0f;
+    out->visible_x = out->visible_y = 0.0f;
+    out->visible_width = (float)wgf_platform_priv_get_framebuffer_width() / scale;
+    out->visible_height = (float)wgf_platform_priv_get_framebuffer_height() / scale;
+    out->bars = false;
+}
+
+void wgf_platform_priv_get_presentation(wgf_platform_priv_presentation_t *out)
+{
+    if (fitting != NULL) {
+        fitting(wgf_platform_priv_get_framebuffer_width(), wgf_platform_priv_get_framebuffer_height(),
+                wgf_platform_priv_get_dpi_scale(), out);
+    } else {
+        presentation_none(wgf_platform_priv_get_dpi_scale(), out);
+    }
+}
+
 void wgf_platform_priv_window_describe(wgf_platform_priv_desc_t *desc)
 {
     desc->width = window.width;

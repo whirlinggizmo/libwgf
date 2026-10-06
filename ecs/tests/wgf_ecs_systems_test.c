@@ -14,6 +14,8 @@
 #include "wgf_lifetime.h"
 #include "wgf_motion.h"
 #include "wgf_node.h"
+#include "wgf_platform_priv.h"
+#include "wgf_presentation.h"
 #include "wgf_probe.h"
 
 /* The systems, headless, ticked as app's runtime ticks them (core's part list): motion
@@ -121,6 +123,25 @@ int main(void)
            "held at the edge, its velocity across stopped and along kept");
 
     /* destroying */
+    /* the visible area as the rectangle: a fit 100 by 100 over a 200 by 100 framebuffer
+       shows the design's 100 by 100, so a position past 100 wraps */
+    wgf_bounds_set_mode(e, WGF_BOUNDS_MODE_WRAP);
+    wgf_platform_priv_headless_set_framebuffer(200, 100);
+    wgf_presentation_set(WGF_PRESENTATION_MODE_FIT, 100, 100);
+    expect(!wgf_bounds_is_visible(e) && wgf_bounds_set_visible(e, true) && wgf_bounds_is_visible(e),
+           "bounds following the visible area");
+    expect(near(wgf_bounds_get_rect(e).z, 100) && near(wgf_bounds_get_rect(e).w, 100),
+           "its rectangle, read back as it is now");
+    wgf_entity_set_position(e, 130, 50, 0);
+    step(0.0f);
+    expect(near(wgf_entity_get_position(e).x, 30), "past the visible area's edge: wrapped there");
+    wgf_presentation_set(WGF_PRESENTATION_MODE_EXPAND, 100, 100); /* wider than the design: -50 to 150 */
+    wgf_entity_set_position(e, 130, 50, 0);
+    step(0.0f);
+    expect(near(wgf_entity_get_position(e).x, 130), "expanded past the design: no wrap until the window's edge");
+    expect(wgf_bounds_set_rect(e, 0, 0, 100, 100) && !wgf_bounds_is_visible(e), "a rectangle of its own turns it off");
+    wgf_presentation_set(WGF_PRESENTATION_MODE_NONE, 0, 0);
+
     wgf_bounds_set_mode(e, WGF_BOUNDS_MODE_DESTROY);
     wgf_entity_set_position(e, 200, 0, 0);
     step(0.0f);

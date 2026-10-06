@@ -18,7 +18,8 @@
 
 /* Text, in a browser (tools/run_in_browser.py), in the built-in font on a 64 by 64
  * WebGL2 canvas: where glyphs light pixels and where they don't, a centered and a
- * right-aligned block landing on the right sides, wrapping making more lines, and a
+ * right-aligned block landing on the right sides (a node's, and immediate text aligned
+ * the same way), wrapping making more lines, and a
  * shape drawn after text keeping its exact color. Glyph shapes aren't compared:
  * only where ink is. */
 
@@ -109,6 +110,13 @@ static void run_test(void)
     wgf_gfx_priv_end_frame();
     expect(lit(40, 2, 61, 22) > 20, "right-aligned: ink just left of its position");
     expect(lit(0, 0, 36, 64) == 0 && lit(62, 0, 64, 64) == 0, "and none far left of it, or right of it");
+
+    /* draw_text_aligned: the immediate text, aligned to its point as a text node is */
+    begin();
+    wgf_draw_text_aligned(0, "MMM", 60, 2, 16, WGF_COLOR_WHITE, WGF_TEXT_HALIGN_RIGHT, WGF_TEXT_VALIGN_TOP);
+    wgf_gfx_priv_end_frame();
+    expect(lit(30, 2, 61, 22) > 20 && lit(0, 0, 24, 64) == 0 && lit(62, 0, 64, 64) == 0,
+           "draw_text_aligned, right: ink just left of its point, none far left or right of it");
 
     /* wrapping: the same string, then wrapped narrow, makes more lines */
     wgf_node_set_visible(right, false);

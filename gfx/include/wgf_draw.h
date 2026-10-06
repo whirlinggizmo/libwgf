@@ -6,6 +6,7 @@
 #include "wgf_api.h"
 #include "wgf_color.h"
 #include "wgf_font.h"
+#include "wgf_text.h"
 #include "wgf_texture.h"
 
 #ifdef __cplusplus
@@ -43,6 +44,12 @@ WGF_API bool wgf_draw_polygon(const float *points, int count, wgf_color_t color)
 /* Text (UTF-8) in `font` (0: the default font) at `size` logical pixels (16 for 0 or
  * less), its top-left at (x, y). Newlines break lines. */
 WGF_API void wgf_draw_text(wgf_font_t font, const char *text, float x, float y, float size, wgf_color_t color);
+
+/* The same, (x, y) the point the text is aligned to: its left, center, or right, and its
+ * top, middle, or bottom (wgf_text.h's alignments), so a HUD anchored to the visible
+ * area's right edge (wgf_presentation_get_visible) needs no guessed width. */
+WGF_API void wgf_draw_text_aligned(wgf_font_t font, const char *text, float x, float y, float size, wgf_color_t color,
+                                   wgf_text_halign_t horizontal, wgf_text_valign_t vertical);
 
 /* A texture into the rectangle (x, y, width, height), multiplied by `tint` (white
  * leaves it as it is). A width or height of 0 or less draws it at its own size.

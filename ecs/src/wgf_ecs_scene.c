@@ -75,7 +75,10 @@ static const kind_t kinds[] = {
      WGF_COMPONENT_MOTION,
      {{"velocity", V_NUM3}, {"spin", V_NUM3}, {"damping", V_NUM}, {"max_speed", V_NUM}},
      false},
-    {"bounds", WGF_COMPONENT_BOUNDS, {{"rect", V_NUM4}, {"mode", V_MODE}, {"margin", V_NUM}}, false},
+    {"bounds",
+     WGF_COMPONENT_BOUNDS,
+     {{"rect", V_NUM4}, {"mode", V_MODE}, {"margin", V_NUM}, {"visible", V_BOOL}},
+     false},
     {"lifetime", WGF_COMPONENT_LIFETIME, {{"seconds", V_NUM}}, false},
     {"collider", WGF_COMPONENT_COLLIDER, {{"radius", V_NUM}, {"layer", V_INT}, {"mask", V_INT}, {"enabled", V_BOOL}}, false},
     {"behavior", WGF_COMPONENT_BEHAVIOR, {{"name", V_TEXT}}, true},
@@ -574,6 +577,7 @@ static void apply_setting(wgf_entity_t e, int kind, const setting_t *s, value_t 
         case WGF_COMPONENT_BOUNDS:
             if (strcmp(key, "rect") == 0) wgf_bounds_set_rect(e, f(v, 0), f(v, 1), f(v, 2), f(v, 3));
             else if (strcmp(key, "mode") == 0) wgf_bounds_set_mode(e, (wgf_bounds_mode_t)(int)v->n[0]);
+            else if (strcmp(key, "visible") == 0) wgf_bounds_set_visible(e, v->truth);
             else wgf_bounds_set_margin(e, f(v, 0));
             break;
         case WGF_COMPONENT_LIFETIME: wgf_lifetime_set_seconds(e, f(v, 0)); break;

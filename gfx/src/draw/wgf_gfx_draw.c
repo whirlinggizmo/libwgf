@@ -358,6 +358,16 @@ void wgf_draw_texture(wgf_texture_t texture, float x, float y, float width, floa
     wgf_draw_texture_region(texture, 0.0f, 0.0f, 0.0f, 0.0f, x, y, width, height, tint);
 }
 
+void wgf_draw_text_aligned(wgf_font_t font, const char *text, float x, float y, float size, wgf_color_t color,
+                           wgf_text_halign_t horizontal, wgf_text_valign_t vertical)
+{
+    float matrix[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+    if (!wgf_gfx_priv_is_in_frame()) return;
+    matrix[12] = x;
+    matrix[13] = y;
+    wgf_gfx_priv_font_draw_block(font, text, size, color, 0.0f, horizontal, vertical, matrix);
+}
+
 void wgf_draw_text(wgf_font_t font, const char *text, float x, float y, float size, wgf_color_t color)
 {
     float matrix[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};

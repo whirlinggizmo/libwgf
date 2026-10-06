@@ -201,6 +201,13 @@ class Main {
 		expect(Render.getClearColor() == Color.make(10, 12, 20, 255), "the clear color");
 		Render.getWidth();
 		Render.getHeight();
+		expect(Presentation.set(PresentationMode.EXPAND, 320, 180) && Presentation.getMode() == PresentationMode.EXPAND
+			&& Presentation.getWidth() == 320 && Presentation.getHeight() == 180, "a presentation");
+		expect(Presentation.getVisible().z >= 320 && Presentation.getScale() > 0, "what it shows, and its scale");
+		expect(!Presentation.set(PresentationMode.FIT, 0, 180) && Presentation.set(PresentationMode.NONE, 0, 0),
+			"a design under 1 refused; none again");
+		Render.setBarColor(Color.make(1, 2, 3, 255));
+		expect(Render.getBarColor() == Color.make(1, 2, 3, 255), "the bars' color");
 		expect(Render.getDpiScale() >= 1, "the dpi scale");
 		final white = Color.get(ColorStock.WHITE);
 		expect(Color.getRed(white) == 255 && Color.getGreen(white) == 255 && Color.getBlue(white) == 255
@@ -313,6 +320,8 @@ class Main {
 		expect(bounds.setRect(0, 0, 640, 360) && near(bounds.getRect().z, 640), "bounds");
 		expect(bounds.setMode(BoundsMode.WRAP) && bounds.getMode() == BoundsMode.WRAP, "wrapping");
 		expect(bounds.setMargin(10) && near(bounds.getMargin(), 10), "a margin");
+		expect(bounds.setVisible(true) && bounds.isVisible(), "bounds the visible area");
+		expect(bounds.setRect(0, 0, 640, 360) && !bounds.isVisible(), "until a rectangle is set");
 		final life:Lifetime = ship;
 		expect(life.setSeconds(100) && near(life.getSeconds(), 100), "a lifetime");
 		final collider:Collider = ship;
@@ -351,6 +360,7 @@ class Main {
 		expect(Draw.polygon([100.0, 100, 120, 100, 110, 115], Color.get(ColorStock.WHITE)), "a polygon drawn");
 		Render.pushClip(0, 0, 200, 200);
 		Draw.text(font, "feature-test", 4, 120, 14, Color.get(ColorStock.WHITE));
+		Draw.textAligned(font, "right", 200, 140, 14, Color.get(ColorStock.WHITE), TextHalign.RIGHT, TextValign.MIDDLE);
 		Draw.texture(tiles, 140, 4, 32, 32, Color.get(ColorStock.WHITE));
 		Draw.textureRegion(tiles, 0, 0, 8, 8, 180, 4, 16, 16, Color.get(ColorStock.WHITE));
 		Render.popClip();

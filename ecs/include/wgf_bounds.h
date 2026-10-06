@@ -29,6 +29,13 @@ WGF_API wgf_vec4_t wgf_bounds_get_rect(wgf_entity_t entity);
 WGF_API bool wgf_bounds_set_mode(wgf_entity_t entity, wgf_bounds_mode_t mode);
 WGF_API wgf_bounds_mode_t wgf_bounds_get_mode(wgf_entity_t entity);
 
+/* Whether the rectangle is the presentation's visible area (wgf_presentation.h), read
+ * each tick, so what wraps at the screen's edge wraps at the window's whatever its size
+ * (a scene file's `bounds visible=true`); read back by get_rect as it is now. Setting a
+ * rectangle turns it off. Default: off. */
+WGF_API bool wgf_bounds_set_visible(wgf_entity_t entity, bool visible);
+WGF_API bool wgf_bounds_is_visible(wgf_entity_t entity);
+
 /* How far past the rectangle's edge it may go first, so a rock wraps once it is wholly
  * off the screen. Clamped to 0 or more. */
 WGF_API bool wgf_bounds_set_margin(wgf_entity_t entity, float margin);

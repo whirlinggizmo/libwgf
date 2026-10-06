@@ -17,6 +17,11 @@ extern "C" {
 WGF_API void wgf_render_set_clear_color(wgf_color_t color);
 WGF_API wgf_color_t wgf_render_get_clear_color(void);
 
+/* The presentation's bars (wgf_presentation.h's FIT and INTEGER): the framebuffer
+ * outside the visible area, which nothing is drawn in. Default: black. */
+WGF_API void wgf_render_set_bar_color(wgf_color_t color);
+WGF_API wgf_color_t wgf_render_get_bar_color(void);
+
 /* The frame's size in pixels, and how many pixels make one logical pixel (2 on most
  * high-density displays); 0, 0, and 1 while there is no surface. Drawing is in logical
  * pixels: the frame is get_width() / get_dpi_scale() of them wide. */

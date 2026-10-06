@@ -41,6 +41,7 @@ typedef struct wgf_ecs_priv_bounds_t {
     float rect[4];
     int mode; /* wgf_bounds_mode_t */
     float margin;
+    bool visible; /* the rectangle is the presentation's visible area, each tick */
 } wgf_ecs_priv_bounds_t;
 
 typedef struct wgf_ecs_priv_lifetime_t {

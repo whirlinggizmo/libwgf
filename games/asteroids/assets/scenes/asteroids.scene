@@ -4,7 +4,7 @@ wgf-scene 1
 
 prefab ship
   motion damping=0.35 max_speed=420
-  bounds rect=0,0,960,720 mode=wrap margin=16
+  bounds visible=true mode=wrap margin=16
   collider radius=12 layer=1 mask=2
   behavior name=Ship
   shape2d polygon=18,0,-12,-11,-6,0,-12,11 outline=2 color=#7FD4FF
@@ -13,7 +13,7 @@ end
 
 prefab rock_large
   motion
-  bounds rect=0,0,960,720 mode=wrap margin=48
+  bounds visible=true mode=wrap margin=48
   collider radius=40 layer=2 mask=5
   behavior name=Rock
   shape2d outline=2 color=#C8CCD6
@@ -33,7 +33,7 @@ end
 
 prefab bullet
   motion
-  bounds rect=0,0,960,720 mode=wrap
+  bounds visible=true mode=wrap
   lifetime seconds=1.0
   collider radius=3 layer=4 mask=2
   behavior name=Bullet

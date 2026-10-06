@@ -322,7 +322,8 @@ function frame() {
 function hud() {
     wgf.wgf_draw_text(0, `${score}`, 24, 16, 32, color(wgf.WGF_COLOR_STOCK_WHITE));
     for (let i = 0; i < lives; i++) drawShipIcon(32 + i * 26, 72);
-    wgf.wgf_draw_text(0, `wave ${wave}`, WIDTH - 120, 20, 18, color(wgf.WGF_COLOR_STOCK_LIGHTGRAY));
+    wgf.wgf_draw_text_aligned(0, `wave ${wave}`, WIDTH - 24, 20, 18, color(wgf.WGF_COLOR_STOCK_LIGHTGRAY),
+                              wgf.WGF_TEXT_HALIGN_RIGHT, wgf.WGF_TEXT_VALIGN_TOP);
 }
 
 function titleScreen() {
@@ -357,5 +358,7 @@ function gameOverScreen() {
 }
 
 wgf.wgf_window_set_title("Asteroids (JS)");
-wgf.wgf_window_set_size(WIDTH, HEIGHT);
+// the design the game is written in, fitted to any window or screen, bars around it
+wgf.wgf_presentation_set(wgf.WGF_PRESENTATION_MODE_FIT, WIDTH, HEIGHT);
+wgf.wgf_render_set_bar_color(wgf.wgf_color_make(2, 3, 6, 255));
 wgf.wgf_app_run(init, tick, frame, endAll);

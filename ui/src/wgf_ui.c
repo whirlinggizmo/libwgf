@@ -62,6 +62,7 @@ static struct {
 
     /* this frame's answers, from the input as the UI began */
     float pointer_x, pointer_y;
+    float origin_x, origin_y; /* the visible area's top left: the UI lays out from it (wgf_presentation.h) */
     bool pointer_down, pointer_pressed, pointer_released;
     bool activate, next, previous;
 
@@ -654,8 +655,8 @@ static void read_input(void)
     const wgf_vec2_t pointer = wgf_mouse_get_position();
     const bool shift = wgf_keyboard_is_down(WGF_KEY_LEFT_SHIFT) || wgf_keyboard_is_down(WGF_KEY_RIGHT_SHIFT);
     const bool tab = wgf_keyboard_is_pressed(WGF_KEY_TAB);
-    ui.pointer_x = pointer.x;
-    ui.pointer_y = pointer.y;
+    ui.pointer_x = pointer.x - ui.origin_x; /* in the layout's coordinates, which start at the visible area */
+    ui.pointer_y = pointer.y - ui.origin_y;
     ui.pointer_down = wgf_mouse_is_down(WGF_MOUSE_BUTTON_LEFT);
     ui.pointer_pressed = wgf_mouse_is_pressed(WGF_MOUSE_BUTTON_LEFT);
     ui.pointer_released = wgf_mouse_is_released(WGF_MOUSE_BUTTON_LEFT);
@@ -672,7 +673,6 @@ bool wgf_ui_begin(void)
     level_t *root;
     Clay_Dimensions dimensions;
     Clay_Vector2 pointer;
-    const float scale = wgf_render_get_dpi_scale();
     if (ui.begun) {
         wgf_log_error("wgf_ui_begin: a UI is already begun");
         return false;
@@ -686,9 +686,8 @@ bool wgf_ui_begin(void)
     ui.block = ui.blocks;
     ui.button_count = ui.solid_count = 0;
     ui.focus_seen = false;
+    wgf_gfx_priv_render_get_visible(&ui.origin_x, &ui.origin_y, &dimensions.width, &dimensions.height);
     read_input();
-    dimensions.width = (float)wgf_render_get_width() / (scale > 0.0f ? scale : 1.0f);
-    dimensions.height = (float)wgf_render_get_height() / (scale > 0.0f ? scale : 1.0f);
     Clay_SetLayoutDimensions(dimensions);
     pointer.x = ui.pointer_x;
     pointer.y = ui.pointer_y;
@@ -774,7 +773,9 @@ static void draw(Clay_RenderCommandArray commands)
     int i;
     for (i = 0; i < commands.length; i++) {
         const Clay_RenderCommand *command = Clay_RenderCommandArray_Get(&commands, i);
-        const Clay_BoundingBox box = command->boundingBox;
+        Clay_BoundingBox box = command->boundingBox;
+        box.x += ui.origin_x; /* drawn where the visible area is */
+        box.y += ui.origin_y;
         switch (command->commandType) {
         case CLAY_RENDER_COMMAND_TYPE_RECTANGLE: {
             const Clay_RectangleRenderData *rect = &command->renderData.rectangle;
@@ -836,8 +837,8 @@ bool wgf_ui_priv_get_bounds(const char *id, float *x, float *y, float *width, fl
     name.chars = id;
     data = Clay_GetElementData(Clay_GetElementId(name));
     if (!data.found) return false;
-    *x = data.boundingBox.x;
-    *y = data.boundingBox.y;
+    *x = data.boundingBox.x + ui.origin_x;
+    *y = data.boundingBox.y + ui.origin_y;
     *width = data.boundingBox.width;
     *height = data.boundingBox.height;
     return true;

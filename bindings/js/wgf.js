@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "77aa4212bc580519" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "8e44d223a72439c4" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -585,28 +585,6 @@ export const WGF_COLOR_STOCK_MAGENTA = 24;
 export const WGF_COLOR_STOCK_RAYWHITE = 25;
 
 /**
- * How a texture is sampled where it is drawn.
- */
-export const WGF_TEXTURE_WRAP_REPEAT = 0;
-export const WGF_TEXTURE_WRAP_CLAMP = 1;
-export const WGF_TEXTURE_WRAP_MIRROR = 2;
-
-export const WGF_TEXTURE_FILTER_LINEAR = 0;
-export const WGF_TEXTURE_FILTER_NEAREST = 1;
-
-/**
- * A 2D shape: a node drawing a rectangle, a circle, a line, or a polygon, filled or
- * outlined, in one color, in a canvas. Shapes are nodes (wgf_node.h): place, turn,
- * scale, parent, and destroy them with the node calls; the shape turns and scales with
- * its node, and an outline's thickness stays in the frame's logical pixels.
- */
-export const WGF_SHAPE2D_KIND_NONE = 0;
-export const WGF_SHAPE2D_KIND_RECTANGLE = 1;
-export const WGF_SHAPE2D_KIND_CIRCLE = 2;
-export const WGF_SHAPE2D_KIND_LINE = 3;
-export const WGF_SHAPE2D_KIND_POLYGON = 4;
-
-/**
  * A text node: a string drawn in a font, in a canvas. Its node's position is where its
  * block of lines sits, by its alignment, and the node turns and scales it like any
  * other. It holds a reference to its font (0: the default font). Text is a
@@ -619,6 +597,60 @@ export const WGF_TEXT_HALIGN_RIGHT = 2;
 export const WGF_TEXT_VALIGN_TOP = 0;
 export const WGF_TEXT_VALIGN_MIDDLE = 1;
 export const WGF_TEXT_VALIGN_BOTTOM = 2;
+
+/**
+ * How a texture is sampled where it is drawn.
+ */
+export const WGF_TEXTURE_WRAP_REPEAT = 0;
+export const WGF_TEXTURE_WRAP_CLAMP = 1;
+export const WGF_TEXTURE_WRAP_MIRROR = 2;
+
+export const WGF_TEXTURE_FILTER_LINEAR = 0;
+export const WGF_TEXTURE_FILTER_NEAREST = 1;
+
+/**
+ * How a game's design is fitted to the window or the screen (Godot's stretch modes
+ * and aspects are the prior art). A game is written for a design resolution, and its
+ * logical coordinates stay the design's at any window size and in fullscreen: drawing,
+ * canvases, the UI, the pointer and touches (mapped back into them), and an autopilot's
+ * mouse. The same on the desktop, in a resized browser window, and in fullscreen.
+ *
+ *   NONE     the default: logical pixels are the window's (a framebuffer pixel over the
+ *            DPI scale), and the visible area is the window
+ *   STRETCH  the design scaled to the window on each axis apart, its aspect lost
+ *   FIT      scaled alike on both axes, as large as it fits whole, centered; the rest
+ *            are bars (wgf_render_set_bar_color), nothing drawn in them
+ *   FILL     scaled alike, as small as covers the window, centered; what is past the
+ *            window's edges is cropped
+ *   EXPAND   scaled as FIT is, but the visible area grows past the design to the
+ *            window's edges, centered on it: the design is the least the game shows,
+ *            and a UI anchored to the visible area's edges stays at them
+ *   INTEGER  as FIT, at a whole number of framebuffer pixels to a logical one (at
+ *            least 1), for pixel art; bars around it
+ *
+ * Set any time; it takes effect at the next frame. A program that never sets a mode
+ * links none of its fitting. Natively, a window whose size the program didn't set
+ * (wgf_window_set_size) opens at the design size. False for a size under 1 (but for
+ * NONE, which takes none) or a mode that isn't one.
+ */
+export const WGF_PRESENTATION_MODE_NONE = 0;
+export const WGF_PRESENTATION_MODE_STRETCH = 1;
+export const WGF_PRESENTATION_MODE_FIT = 2;
+export const WGF_PRESENTATION_MODE_FILL = 3;
+export const WGF_PRESENTATION_MODE_EXPAND = 4;
+export const WGF_PRESENTATION_MODE_INTEGER = 5;
+
+/**
+ * A 2D shape: a node drawing a rectangle, a circle, a line, or a polygon, filled or
+ * outlined, in one color, in a canvas. Shapes are nodes (wgf_node.h): place, turn,
+ * scale, parent, and destroy them with the node calls; the shape turns and scales with
+ * its node, and an outline's thickness stays in the frame's logical pixels.
+ */
+export const WGF_SHAPE2D_KIND_NONE = 0;
+export const WGF_SHAPE2D_KIND_RECTANGLE = 1;
+export const WGF_SHAPE2D_KIND_CIRCLE = 2;
+export const WGF_SHAPE2D_KIND_LINE = 3;
+export const WGF_SHAPE2D_KIND_POLYGON = 4;
 
 /**
  * What an entity can have, at most one of each. The first five are data the systems
@@ -1693,7 +1725,9 @@ export function wgf_window_get_title() {
  * refused (false). On the web, the canvas's size on the page: left to the page
  * unless set. Set, it is the canvas's own style, which wins over the page's: the
  * canvas stays that size, at the page's top left, whatever the browser window does,
- * so a game meant to fill the page doesn't set it on the web.
+ * so a game meant to fill the page doesn't set it on the web. A game written for one
+ * size sets a presentation (wgf_presentation.h) instead, which fits it to whatever the
+ * window is, and natively opens the window at that size when this isn't set.
  */
 export function wgf_window_set_size(width, height) {
     const value = host["_wgf_window_set_size"](width, height);
@@ -1706,7 +1740,9 @@ export function wgf_window_set_size(width, height) {
  * refused (false). On the web, the canvas's size on the page: left to the page
  * unless set. Set, it is the canvas's own style, which wins over the page's: the
  * canvas stays that size, at the page's top left, whatever the browser window does,
- * so a game meant to fill the page doesn't set it on the web.
+ * so a game meant to fill the page doesn't set it on the web. A game written for one
+ * size sets a presentation (wgf_presentation.h) instead, which fits it to whatever the
+ * window is, and natively opens the window at that size when this isn't set.
  */
 export function wgf_window_get_width() {
     const value = host["_wgf_window_get_width"]();
@@ -1719,7 +1755,9 @@ export function wgf_window_get_width() {
  * refused (false). On the web, the canvas's size on the page: left to the page
  * unless set. Set, it is the canvas's own style, which wins over the page's: the
  * canvas stays that size, at the page's top left, whatever the browser window does,
- * so a game meant to fill the page doesn't set it on the web.
+ * so a game meant to fill the page doesn't set it on the web. A game written for one
+ * size sets a presentation (wgf_presentation.h) instead, which fits it to whatever the
+ * window is, and natively opens the window at that size when this isn't set.
  */
 export function wgf_window_get_height() {
     const value = host["_wgf_window_get_height"]();
@@ -3068,6 +3106,150 @@ export function wgf_font_measure(font, text, size, into) {
     return vector(ret, 2, into);
 }
 
+// wgf: call wgf_text_create
+/**
+ * A text node in `font` (0: the default font), with no string yet. 0 when `font`
+ * isn't a font, or there is no room for another node.
+ */
+export function wgf_text_create(font) {
+    const value = host["_wgf_text_create"](font);
+    return value >>> 0;
+}
+
+// wgf: call wgf_text_set_font
+/**
+ * False when `font` isn't a font (0 is: the default font).
+ */
+export function wgf_text_set_font(text, font) {
+    const value = host["_wgf_text_set_font"](text, font);
+    return value !== 0;
+}
+
+// wgf: call wgf_text_get_font
+/**
+ * False when `font` isn't a font (0 is: the default font).
+ */
+export function wgf_text_get_font(text) {
+    const value = host["_wgf_text_get_font"](text);
+    return value >>> 0;
+}
+
+// wgf: call wgf_text_set_string
+/**
+ * What it says, UTF-8, copied. get_string's is the node's: valid until the next
+ * set_string, or until it is destroyed.
+ */
+export function wgf_text_set_string(text, string) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_text_set_string"](text, cstr(string));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_text_get_string
+/**
+ * What it says, UTF-8, copied. get_string's is the node's: valid until the next
+ * set_string, or until it is destroyed.
+ */
+export function wgf_text_get_string(text) {
+    const value = host["_wgf_text_get_string"](text);
+    return str(value);
+}
+
+// wgf: call wgf_text_set_font_size
+/**
+ * Its font size: the height of its lines, before the node's scale, in canvas units (a
+ * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
+ * Read back as the size it draws at. False for a handle that isn't text.
+ */
+export function wgf_text_set_font_size(text, size) {
+    const value = host["_wgf_text_set_font_size"](text, size);
+    return value !== 0;
+}
+
+// wgf: call wgf_text_get_font_size
+/**
+ * Its font size: the height of its lines, before the node's scale, in canvas units (a
+ * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
+ * Read back as the size it draws at. False for a handle that isn't text.
+ */
+export function wgf_text_get_font_size(text) {
+    const value = host["_wgf_text_get_font_size"](text);
+    return value;
+}
+
+// wgf: call wgf_text_set_color
+/**
+ * Default: white.
+ */
+export function wgf_text_set_color(text, color) {
+    const value = host["_wgf_text_set_color"](text, color);
+    return value !== 0;
+}
+
+// wgf: call wgf_text_get_color
+/**
+ * Default: white.
+ */
+export function wgf_text_get_color(text) {
+    const value = host["_wgf_text_get_color"](text);
+    return value >>> 0;
+}
+
+// wgf: call wgf_text_set_wrap_width
+/**
+ * Wrap lines at spaces and tabs to fit `width`, in canvas units; a word wider keeps
+ * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
+ * wrapped block is `width` wide for its alignment, or as wide as its widest line
+ * where a word is wider. False for less than 0.
+ */
+export function wgf_text_set_wrap_width(text, width) {
+    const value = host["_wgf_text_set_wrap_width"](text, width);
+    return value !== 0;
+}
+
+// wgf: call wgf_text_get_wrap_width
+/**
+ * Wrap lines at spaces and tabs to fit `width`, in canvas units; a word wider keeps
+ * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
+ * wrapped block is `width` wide for its alignment, or as wide as its widest line
+ * where a word is wider. False for less than 0.
+ */
+export function wgf_text_get_wrap_width(text) {
+    const value = host["_wgf_text_get_wrap_width"](text);
+    return value;
+}
+
+// wgf: call wgf_text_set_align
+/**
+ * Where the block sits relative to the node's position, on each axis; lines line
+ * up the same way inside the block. False for a value that isn't one.
+ */
+export function wgf_text_set_align(text, horizontal, vertical) {
+    const value = host["_wgf_text_set_align"](text, horizontal, vertical);
+    return value !== 0;
+}
+
+// wgf: call wgf_text_get_halign
+/**
+ * Where the block sits relative to the node's position, on each axis; lines line
+ * up the same way inside the block. False for a value that isn't one.
+ */
+export function wgf_text_get_halign(text) {
+    const value = host["_wgf_text_get_halign"](text);
+    return value;
+}
+
+// wgf: call wgf_text_get_valign
+/**
+ * Where the block sits relative to the node's position, on each axis; lines line
+ * up the same way inside the block. False for a value that isn't one.
+ */
+export function wgf_text_get_valign(text) {
+    const value = host["_wgf_text_get_valign"](text);
+    return value;
+}
+
 // wgf: call wgf_texture_create
 /**
  * A texture from an image file: PNG, JPEG, BMP, TGA, or GIF (its first frame). 0 only
@@ -3242,6 +3424,18 @@ export function wgf_draw_polygon(points, color) {
 export function wgf_draw_text(font, text, x, y, size, color) {
     const mark = host["stackSave"]();
     host["_wgf_draw_text"](font, cstr(text), x, y, size, color);
+    host["stackRestore"](mark);
+}
+
+// wgf: call wgf_draw_text_aligned
+/**
+ * The same, (x, y) the point the text is aligned to: its left, center, or right, and its
+ * top, middle, or bottom (wgf_text.h's alignments), so a HUD anchored to the visible
+ * area's right edge (wgf_presentation_get_visible) needs no guessed width.
+ */
+export function wgf_draw_text_aligned(font, text, x, y, size, color, horizontal, vertical) {
+    const mark = host["stackSave"]();
+    host["_wgf_draw_text_aligned"](font, cstr(text), x, y, size, color, horizontal, vertical);
     host["stackRestore"](mark);
 }
 
@@ -3622,6 +3816,59 @@ export function wgf_emitter2d_clear(emitter) {
     return value !== 0;
 }
 
+// wgf: call wgf_presentation_set
+export function wgf_presentation_set(mode, width, height) {
+    const value = host["_wgf_presentation_set"](mode, width, height);
+    return value !== 0;
+}
+
+// wgf: call wgf_presentation_get_mode
+export function wgf_presentation_get_mode() {
+    const value = host["_wgf_presentation_get_mode"]();
+    return value;
+}
+
+// wgf: call wgf_presentation_get_width
+/**
+ * The design resolution; the window's logical size under NONE.
+ */
+export function wgf_presentation_get_width() {
+    const value = host["_wgf_presentation_get_width"]();
+    return value;
+}
+
+// wgf: call wgf_presentation_get_height
+/**
+ * The design resolution; the window's logical size under NONE.
+ */
+export function wgf_presentation_get_height() {
+    const value = host["_wgf_presentation_get_height"]();
+    return value;
+}
+
+// wgf: call wgf_presentation_get_visible
+/**
+ * What is visible now, in logical coordinates: x, y, width, height. The design area
+ * (0, 0, its width, its height) under STRETCH, FIT, and INTEGER; less of it under FILL;
+ * more under EXPAND, x and y below 0 when it grows. A HUD anchored to a corner places
+ * itself from this.
+ */
+export function wgf_presentation_get_visible(into) {
+    const ret = result(16);
+    host["_wgf_presentation_get_visible"](ret);
+    return vector(ret, 4, into);
+}
+
+// wgf: call wgf_presentation_get_scale
+/**
+ * Framebuffer pixels to a logical pixel, across (under STRETCH, each axis has its own:
+ * this is the horizontal one).
+ */
+export function wgf_presentation_get_scale() {
+    const value = host["_wgf_presentation_get_scale"]();
+    return value;
+}
+
 // wgf: call wgf_render_set_clear_color
 /**
  * What each frame starts cleared to. Default: black.
@@ -3636,6 +3883,25 @@ export function wgf_render_set_clear_color(color) {
  */
 export function wgf_render_get_clear_color() {
     const value = host["_wgf_render_get_clear_color"]();
+    return value >>> 0;
+}
+
+// wgf: call wgf_render_set_bar_color
+/**
+ * The presentation's bars (wgf_presentation.h's FIT and INTEGER): the framebuffer
+ * outside the visible area, which nothing is drawn in. Default: black.
+ */
+export function wgf_render_set_bar_color(color) {
+    host["_wgf_render_set_bar_color"](color);
+}
+
+// wgf: call wgf_render_get_bar_color
+/**
+ * The presentation's bars (wgf_presentation.h's FIT and INTEGER): the framebuffer
+ * outside the visible area, which nothing is drawn in. Default: black.
+ */
+export function wgf_render_get_bar_color() {
+    const value = host["_wgf_render_get_bar_color"]();
     return value >>> 0;
 }
 
@@ -4024,150 +4290,6 @@ export function wgf_sprite_set_tint(sprite, tint) {
 export function wgf_sprite_get_tint(sprite) {
     const value = host["_wgf_sprite_get_tint"](sprite);
     return value >>> 0;
-}
-
-// wgf: call wgf_text_create
-/**
- * A text node in `font` (0: the default font), with no string yet. 0 when `font`
- * isn't a font, or there is no room for another node.
- */
-export function wgf_text_create(font) {
-    const value = host["_wgf_text_create"](font);
-    return value >>> 0;
-}
-
-// wgf: call wgf_text_set_font
-/**
- * False when `font` isn't a font (0 is: the default font).
- */
-export function wgf_text_set_font(text, font) {
-    const value = host["_wgf_text_set_font"](text, font);
-    return value !== 0;
-}
-
-// wgf: call wgf_text_get_font
-/**
- * False when `font` isn't a font (0 is: the default font).
- */
-export function wgf_text_get_font(text) {
-    const value = host["_wgf_text_get_font"](text);
-    return value >>> 0;
-}
-
-// wgf: call wgf_text_set_string
-/**
- * What it says, UTF-8, copied. get_string's is the node's: valid until the next
- * set_string, or until it is destroyed.
- */
-export function wgf_text_set_string(text, string) {
-    const mark = host["stackSave"]();
-    const value = host["_wgf_text_set_string"](text, cstr(string));
-    host["stackRestore"](mark);
-    return value !== 0;
-}
-
-// wgf: call wgf_text_get_string
-/**
- * What it says, UTF-8, copied. get_string's is the node's: valid until the next
- * set_string, or until it is destroyed.
- */
-export function wgf_text_get_string(text) {
-    const value = host["_wgf_text_get_string"](text);
-    return str(value);
-}
-
-// wgf: call wgf_text_set_font_size
-/**
- * Its font size: the height of its lines, before the node's scale, in canvas units (a
- * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
- * Read back as the size it draws at. False for a handle that isn't text.
- */
-export function wgf_text_set_font_size(text, size) {
-    const value = host["_wgf_text_set_font_size"](text, size);
-    return value !== 0;
-}
-
-// wgf: call wgf_text_get_font_size
-/**
- * Its font size: the height of its lines, before the node's scale, in canvas units (a
- * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
- * Read back as the size it draws at. False for a handle that isn't text.
- */
-export function wgf_text_get_font_size(text) {
-    const value = host["_wgf_text_get_font_size"](text);
-    return value;
-}
-
-// wgf: call wgf_text_set_color
-/**
- * Default: white.
- */
-export function wgf_text_set_color(text, color) {
-    const value = host["_wgf_text_set_color"](text, color);
-    return value !== 0;
-}
-
-// wgf: call wgf_text_get_color
-/**
- * Default: white.
- */
-export function wgf_text_get_color(text) {
-    const value = host["_wgf_text_get_color"](text);
-    return value >>> 0;
-}
-
-// wgf: call wgf_text_set_wrap_width
-/**
- * Wrap lines at spaces and tabs to fit `width`, in canvas units; a word wider keeps
- * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
- * wrapped block is `width` wide for its alignment, or as wide as its widest line
- * where a word is wider. False for less than 0.
- */
-export function wgf_text_set_wrap_width(text, width) {
-    const value = host["_wgf_text_set_wrap_width"](text, width);
-    return value !== 0;
-}
-
-// wgf: call wgf_text_get_wrap_width
-/**
- * Wrap lines at spaces and tabs to fit `width`, in canvas units; a word wider keeps
- * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
- * wrapped block is `width` wide for its alignment, or as wide as its widest line
- * where a word is wider. False for less than 0.
- */
-export function wgf_text_get_wrap_width(text) {
-    const value = host["_wgf_text_get_wrap_width"](text);
-    return value;
-}
-
-// wgf: call wgf_text_set_align
-/**
- * Where the block sits relative to the node's position, on each axis; lines line
- * up the same way inside the block. False for a value that isn't one.
- */
-export function wgf_text_set_align(text, horizontal, vertical) {
-    const value = host["_wgf_text_set_align"](text, horizontal, vertical);
-    return value !== 0;
-}
-
-// wgf: call wgf_text_get_halign
-/**
- * Where the block sits relative to the node's position, on each axis; lines line
- * up the same way inside the block. False for a value that isn't one.
- */
-export function wgf_text_get_halign(text) {
-    const value = host["_wgf_text_get_halign"](text);
-    return value;
-}
-
-// wgf: call wgf_text_get_valign
-/**
- * Where the block sits relative to the node's position, on each axis; lines line
- * up the same way inside the block. False for a value that isn't one.
- */
-export function wgf_text_get_valign(text) {
-    const value = host["_wgf_text_get_valign"](text);
-    return value;
 }
 
 // wgf: call wgf_audio_set_volume
@@ -4982,6 +5104,30 @@ export function wgf_bounds_set_mode(entity, mode) {
 export function wgf_bounds_get_mode(entity) {
     const value = host["_wgf_bounds_get_mode"](entity);
     return value;
+}
+
+// wgf: call wgf_bounds_set_visible
+/**
+ * Whether the rectangle is the presentation's visible area (wgf_presentation.h), read
+ * each tick, so what wraps at the screen's edge wraps at the window's whatever its size
+ * (a scene file's `bounds visible=true`); read back by get_rect as it is now. Setting a
+ * rectangle turns it off. Default: off.
+ */
+export function wgf_bounds_set_visible(entity, visible) {
+    const value = host["_wgf_bounds_set_visible"](entity, (visible ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_bounds_is_visible
+/**
+ * Whether the rectangle is the presentation's visible area (wgf_presentation.h), read
+ * each tick, so what wraps at the screen's edge wraps at the window's whatever its size
+ * (a scene file's `bounds visible=true`); read back by get_rect as it is now. Setting a
+ * rectangle turns it off. Default: off.
+ */
+export function wgf_bounds_is_visible(entity) {
+    const value = host["_wgf_bounds_is_visible"](entity);
+    return value !== 0;
 }
 
 // wgf: call wgf_bounds_set_margin

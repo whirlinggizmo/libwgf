@@ -85,6 +85,10 @@ ROWS = [
 # every libwgf program carries on purpose, so a shipped build can be played through
 # (docs/HISTORY.md, "Same rows, a target"). --check fails a "same" row past it.
 RUNNER_COST = 4 * 1024
+# And the presentation's transform (wgf_presentation.h), which every program's drawing,
+# clips, and input go through, a mode set or not: measured at 304 bytes of gzip on
+# app-hello (docs/HISTORY.md, "Milestone 2, step 2"); libwgt has no presentation mode.
+PRESENTATION_COST = 512
 # The feature cost ladder: the skeleton, then each step adding one thing to the one
 # before (examples/sizes/), and the steps still to come with what will bring them.
 LADDER = [
@@ -272,7 +276,8 @@ def markdown(baseline):
              'The same program in each library (each libwgf example\'s header says how it matches), gzip -9, its wasm '
              'and its JS together; brotli -q 11 in brackets.', '',
              'A **same** row is the same program in each library, and libwgf\'s is held to libwgt\'s size and the '
-             f'autopilot runner\'s {RUNNER_COST // 1024} KB (the target); a **differs** row\'s libwgf program '
+             f'autopilot runner\'s {RUNNER_COST // 1024} KB and the presentation\'s {PRESENTATION_COST / 1024:g} KB '
+             '(the target); a **differs** row\'s libwgf program '
              'leaves out what libwgf lacks, so its size is not a saving: its reason is linked, and it turns same as '
              'the milestone that brings what it lacks does.', '',
              '| program | | libwgf | target | libwgt | wgrender-c |', '|---|---|---:|---:|---:|---:|']
@@ -365,7 +370,7 @@ def target(baseline, ours):
     if row is None or row[3] != 'same' or row[1] is None:
         return None
     theirs = baseline.get('references', {}).get('libwgt', {}).get('programs', {}).get(row[1])
-    return None if theirs is None else total(theirs) + RUNNER_COST
+    return None if theirs is None else total(theirs) + RUNNER_COST + PRESENTATION_COST
 
 
 def emscripten_version():
@@ -389,7 +394,7 @@ def check(measured, baseline):
         goal = target(baseline, name)
         if goal is not None and new_total > goal:
             worse.append(f'{name}: {kb(new_total)} KB gzip, past its target {kb(goal)} (libwgt\'s and the runner\'s '
-                         f'{RUNNER_COST // 1024} KB): a "same" row')
+                         f'{RUNNER_COST // 1024} KB, the presentation\'s {PRESENTATION_COST / 1024:g}): a "same" row')
     return worse, better
 
 

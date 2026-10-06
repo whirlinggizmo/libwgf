@@ -543,9 +543,17 @@ static uint32_t next_code_point(const unsigned char **p)
 static void play_input(const command_t *command)
 {
     sapp_event event;
+    wgf_platform_priv_presentation_t to; /* logical to the framebuffer's pixels, as the window's events are */
     memset(&event, 0, sizeof(event));
-    event.mouse_x = autopilot.mouse_x * wgf_platform_priv_get_dpi_scale();
-    event.mouse_y = autopilot.mouse_y * wgf_platform_priv_get_dpi_scale();
+    wgf_platform_priv_get_presentation(&to);
+    if (command->kind == CMD_MOUSE_MOVE) {
+        event.mouse_dx = (command->x - autopilot.mouse_x) * to.scale_x;
+        event.mouse_dy = (command->y - autopilot.mouse_y) * to.scale_y;
+        autopilot.mouse_x = command->x;
+        autopilot.mouse_y = command->y;
+    }
+    event.mouse_x = to.offset_x + autopilot.mouse_x * to.scale_x;
+    event.mouse_y = to.offset_y + autopilot.mouse_y * to.scale_y;
     switch (command->kind) {
         case CMD_KEY_DOWN:
         case CMD_KEY_UP:
@@ -564,12 +572,6 @@ static void play_input(const command_t *command)
         }
         case CMD_MOUSE_MOVE:
             event.type = SAPP_EVENTTYPE_MOUSE_MOVE;
-            event.mouse_dx = (command->x - autopilot.mouse_x) * wgf_platform_priv_get_dpi_scale();
-            event.mouse_dy = (command->y - autopilot.mouse_y) * wgf_platform_priv_get_dpi_scale();
-            autopilot.mouse_x = command->x;
-            autopilot.mouse_y = command->y;
-            event.mouse_x = autopilot.mouse_x * wgf_platform_priv_get_dpi_scale();
-            event.mouse_y = autopilot.mouse_y * wgf_platform_priv_get_dpi_scale();
             deliver(&event);
             break;
         case CMD_MOUSE_DOWN:

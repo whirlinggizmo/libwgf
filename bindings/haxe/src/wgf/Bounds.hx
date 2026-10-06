@@ -30,6 +30,24 @@ import wgf.impl.Raw;
 		return Raw.wgf_bounds_get_mode(this);
 
 	/**
+	    Whether the rectangle is the presentation's visible area (wgf_presentation.h), read
+	    each tick, so what wraps at the screen's edge wraps at the window's whatever its size
+	    (a scene file's `bounds visible=true`); read back by get_rect as it is now. Setting a
+	    rectangle turns it off. Default: off.
+	**/
+	public inline function setVisible(visible:Bool):Bool
+		return Raw.wgf_bounds_set_visible(this, visible);
+
+	/**
+	    Whether the rectangle is the presentation's visible area (wgf_presentation.h), read
+	    each tick, so what wraps at the screen's edge wraps at the window's whatever its size
+	    (a scene file's `bounds visible=true`); read back by get_rect as it is now. Setting a
+	    rectangle turns it off. Default: off.
+	**/
+	public inline function isVisible():Bool
+		return Raw.wgf_bounds_is_visible(this);
+
+	/**
 	    How far past the rectangle's edge it may go first, so a rock wraps once it is wholly
 	    off the screen. Clamped to 0 or more.
 	**/

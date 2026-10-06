@@ -23,9 +23,12 @@ static bool in_frame;
 static unsigned frame_number;
 static unsigned last_frame;
 static wgf_color_t clear_color = 0x000000FFu; /* black */
+static wgf_color_t bar_color = 0x000000FFu;   /* black: the presentation's bars (wgf_presentation.h) */
 static int frame_width;
 static int frame_height;
 static float frame_dpi_scale = 1.0f;
+static wgf_platform_priv_presentation_t present; /* the frame's: logical to framebuffer pixels */
+static void (*fill_bars)(void); /* wgf_presentation_set's (wgf_gfx_presentation.c); NULL before a mode is set */
 
 /* Immediate mode drawing records into a sokol_gl context of gfx's own, drawn inside the
  * frame's pass. sokol_gl's default context can't be resized, so it stays tiny and
@@ -206,13 +209,15 @@ static void warn_clips(const char *what)
     clip_warned = true;
 }
 
-/* The whole frame, in logical pixels. */
+/* What the frame shows, in logical pixels: the presentation's visible area (the whole
+ * frame under NONE). */
 static clip_rect_t frame_rect(void)
 {
     clip_rect_t rect;
-    rect.x = rect.y = 0.0f;
-    rect.width = (float)frame_width / frame_dpi_scale;
-    rect.height = (float)frame_height / frame_dpi_scale;
+    rect.x = present.visible_x;
+    rect.y = present.visible_y;
+    rect.width = present.visible_width;
+    rect.height = present.visible_height;
     return rect;
 }
 
@@ -226,10 +231,12 @@ static clip_rect_t current_clip(void)
 static void apply_clip(void)
 {
     const clip_rect_t clip = current_clip();
-    const float scale = frame_dpi_scale;
+    const float x0 = present.offset_x + clip.x * present.scale_x, y0 = present.offset_y + clip.y * present.scale_y;
+    const float x1 = present.offset_x + (clip.x + clip.width) * present.scale_x;
+    const float y1 = present.offset_y + (clip.y + clip.height) * present.scale_y;
     sgl_set_context(draw_context);
-    sgl_scissor_rect((int)(clip.x * scale + 0.5f), (int)(clip.y * scale + 0.5f), (int)(clip.width * scale + 0.5f),
-                     (int)(clip.height * scale + 0.5f), true);
+    sgl_scissor_rect((int)(x0 + 0.5f), (int)(y0 + 0.5f), (int)(x1 + 0.5f) - (int)(x0 + 0.5f),
+                     (int)(y1 + 0.5f) - (int)(y0 + 0.5f), true);
 }
 
 void wgf_render_push_clip(float x, float y, float width, float height)
@@ -295,11 +302,13 @@ void wgf_gfx_priv_begin_frame(void)
     frame_width = wgf_platform_priv_get_framebuffer_width();
     frame_height = wgf_platform_priv_get_framebuffer_height();
     frame_dpi_scale = wgf_platform_priv_get_dpi_scale();
+    wgf_platform_priv_get_presentation(&present);
     clip_depth = clip_overflow = 0;
     sgl_set_context(draw_context);
     sgl_defaults();
     in_frame = true; /* before the 2D projection, which reads the frame's size */
     wgf_gfx_priv_render_set_2d();
+    if (present.bars && fill_bars != NULL) fill_bars();
     frame_number++;
 }
 
@@ -317,10 +326,13 @@ void wgf_gfx_priv_end_frame(void)
     memset(&pass, 0, sizeof(pass));
     pass.swapchain = wgf_platform_priv_get_swapchain();
     pass.action.colors[0].load_action = SG_LOADACTION_CLEAR;
-    pass.action.colors[0].clear_value.r = (float)wgf_color_get_red(clear_color) / 255.0f;
-    pass.action.colors[0].clear_value.g = (float)wgf_color_get_green(clear_color) / 255.0f;
-    pass.action.colors[0].clear_value.b = (float)wgf_color_get_blue(clear_color) / 255.0f;
-    pass.action.colors[0].clear_value.a = (float)wgf_color_get_alpha(clear_color) / 255.0f;
+    {
+        const wgf_color_t cleared = present.bars ? bar_color : clear_color;
+        pass.action.colors[0].clear_value.r = (float)wgf_color_get_red(cleared) / 255.0f;
+        pass.action.colors[0].clear_value.g = (float)wgf_color_get_green(cleared) / 255.0f;
+        pass.action.colors[0].clear_value.b = (float)wgf_color_get_blue(cleared) / 255.0f;
+        pass.action.colors[0].clear_value.a = (float)wgf_color_get_alpha(cleared) / 255.0f;
+    }
     sg_begin_pass(&pass);
     sgl_context_draw(draw_context);
     error = sgl_context_error(draw_context);
@@ -336,12 +348,16 @@ void wgf_gfx_priv_end_frame(void)
 
 void wgf_gfx_priv_render_set_2d(void)
 {
-    const clip_rect_t frame = frame_rect();
+    /* the framebuffer's edges in logical coordinates: a logical point lands on the
+       pixel the presentation puts it at (offset + logical * scale) */
+    const float left = -present.offset_x / present.scale_x, top = -present.offset_y / present.scale_y;
+    const float right = ((float)frame_width - present.offset_x) / present.scale_x;
+    const float bottom = ((float)frame_height - present.offset_y) / present.scale_y;
     sgl_set_context(draw_context);
     sgl_load_pipeline(draw_pipeline_2d);
     sgl_matrix_mode_projection();
     sgl_load_identity();
-    sgl_ortho(0.0f, frame.width, frame.height, 0.0f, -1.0f, 1.0f);
+    sgl_ortho(left, right, bottom, top, -1.0f, 1.0f);
     sgl_matrix_mode_modelview();
     sgl_load_identity();
 }
@@ -379,6 +395,48 @@ void wgf_render_set_clear_color(wgf_color_t color)
 wgf_color_t wgf_render_get_clear_color(void)
 {
     return clear_color;
+}
+
+void wgf_render_set_bar_color(wgf_color_t color)
+{
+    bar_color = color;
+}
+
+wgf_color_t wgf_render_get_bar_color(void)
+{
+    return bar_color;
+}
+
+/* The bars: the frame is cleared to their color, so the visible area is filled with
+ * the clear color first, and drawing after is clipped to it. Called only through the
+ * hook wgf_presentation_set installs (from its own file: a hook set here would be
+ * inlined into the frame's start, linking this into every program). */
+void wgf_gfx_priv_render_fill_visible(void)
+{
+    const clip_rect_t frame = frame_rect();
+    sgl_begin_quads();
+    sgl_c4b((uint8_t)wgf_color_get_red(clear_color), (uint8_t)wgf_color_get_green(clear_color),
+            (uint8_t)wgf_color_get_blue(clear_color), (uint8_t)wgf_color_get_alpha(clear_color));
+    sgl_v2f(frame.x, frame.y);
+    sgl_v2f(frame.x + frame.width, frame.y);
+    sgl_v2f(frame.x + frame.width, frame.y + frame.height);
+    sgl_v2f(frame.x, frame.y + frame.height);
+    sgl_end();
+    apply_clip();
+}
+
+void wgf_gfx_priv_render_set_bars(void (*fill)(void))
+{
+    fill_bars = fill;
+}
+
+void wgf_gfx_priv_render_get_visible(float *x, float *y, float *width, float *height)
+{
+    const clip_rect_t frame = frame_rect();
+    *x = frame.x;
+    *y = frame.y;
+    *width = frame.width;
+    *height = frame.height;
 }
 
 int wgf_render_get_width(void)

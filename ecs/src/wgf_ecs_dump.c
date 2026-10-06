@@ -204,8 +204,13 @@ static void dump_entity(out_t *out, wgf_entity_t e)
     if (wgf_entity_has_component(e, WGF_COMPONENT_BOUNDS)) {
         static const char *const modes[] = {"wrap", "clamp", "destroy"};
         const wgf_vec4_t rect = wgf_bounds_get_rect(e);
-        put(out, "    bounds rect=%.9g,%.9g,%.9g,%.9g mode=%s margin=%.9g\n", rect.x, rect.y, rect.z, rect.w,
-            modes[wgf_bounds_get_mode(e)], wgf_bounds_get_margin(e));
+        if (wgf_bounds_is_visible(e)) {
+            put(out, "    bounds visible=true mode=%s margin=%.9g\n", modes[wgf_bounds_get_mode(e)],
+                wgf_bounds_get_margin(e));
+        } else {
+            put(out, "    bounds rect=%.9g,%.9g,%.9g,%.9g mode=%s margin=%.9g\n", rect.x, rect.y, rect.z, rect.w,
+                modes[wgf_bounds_get_mode(e)], wgf_bounds_get_margin(e));
+        }
     }
     if (wgf_entity_has_component(e, WGF_COMPONENT_LIFETIME)) {
         put(out, "    lifetime seconds=%.9g\n", wgf_lifetime_get_seconds(e));

@@ -82,7 +82,7 @@ Asteroids (milestone 1), from step 0 of milestone 2: the clean-room rebuild (`..
 - **Workaround:** `Window.setSize` only off the web; a `Camera2d` zoomed to fit the field; `Render.pushClip` to the letterboxed field; the HUD placed by hand in the fitted rectangle
 - **Cost:** about 10 minutes, 25 lines
 - **Found by:** the clean-room rebuild (its #11)
-- **Triage:** task: milestone 2, step 2, the presentation mode, which the template then uses (fit by default)
+- **Triage:** fixed in milestone 2, step 2: the presentation mode (`wgf_presentation.h`); the template sets an 800 by 600 design, fit, and no window size
 
 ### Asteroids: an export is smoke-tested only, and leaves a file in the desktop folder
 
@@ -127,7 +127,7 @@ Asteroids (milestone 1), from step 0 of milestone 2: the clean-room rebuild (`..
 - **Workaround:** none: the game is 960 by 720 at the top-left of any browser
 - **Cost:** cut off on a phone, a corner of a large monitor; on a resized desktop window the menus and the field drift apart
 - **Found by:** the adversarial review (its #2); the clean-room rebuild's #11 too
-- **Triage:** task: milestone 2, step 2 (the presentation mode, `bounds` taking the design area); the `Window.setSize` sentence fixed in step 0 (`wgf_window.h`)
+- **Triage:** fixed in milestone 2, step 2: Asteroids sets a 960 by 720 design, fit, and its scene's bounds take the visible area (`bounds visible=true`); the `Window.setSize` sentence fixed in step 0 (`wgf_window.h`), and pointed at the presentation in step 2
 
 ### Asteroids: input mapped by hand
 
@@ -217,7 +217,7 @@ Asteroids (milestone 1), from step 0 of milestone 2: the clean-room rebuild (`..
 - **Workaround:** a guessed offset
 - **Cost:** a label that overflows with another string or font
 - **Found by:** the adversarial review (its #12)
-- **Triage:** task: milestone 2, step 2 (anchors to the visible area, and `Draw.text`'s alignment)
+- **Triage:** fixed in milestone 2, step 2: `Draw.textAligned`, and the visible area (`Presentation.getVisible`) to anchor to; the wave right-aligned at the design's edge
 
 ### Asteroids: the load gate, polled by hand
 

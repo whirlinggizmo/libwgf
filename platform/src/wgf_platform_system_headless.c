@@ -174,6 +174,12 @@ void wgf_platform_priv_headless_set_dpi_scale(float scale)
     dpi_scale = scale >= 1.0f ? scale : 1.0f;
 }
 
+void wgf_platform_priv_headless_set_framebuffer(int width, int height)
+{
+    desc.width = width;
+    desc.height = height;
+}
+
 double wgf_platform_priv_get_frame_duration(void)
 {
     return frame_duration;
