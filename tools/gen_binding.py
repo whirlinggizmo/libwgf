@@ -47,6 +47,12 @@ HOST_EXTRA = ['_malloc', '_free']
 VECTORS = {'wgf_vec2_t': ('Vec2', 2), 'wgf_vec3_t': ('Vec3', 3), 'wgf_vec4_t': ('Vec4', 4)}
 
 
+def spelled(ctype):
+    """A type as one spelling on every machine: clang spells C's boolean `_Bool` or, newer
+    and on some systems, `bool` (Windows' runner's), the same type."""
+    return '_Bool' if ctype == 'bool' else ctype
+
+
 def pascal(snake):
     return ''.join(part[:1].upper() + part[1:] for part in snake.split('_') if part)
 
@@ -79,7 +85,7 @@ class Binding:
     def scalar(self, ctype):
         """A parameter or result type that crosses as one value: its Haxe type, its C cast
         (for hxcpp), and how JS passes it ('int', 'float', 'bool')."""
-        ctype = ctype.replace('const ', '').strip() if not ctype.endswith('*') else ctype
+        ctype = spelled(ctype.replace('const ', '').strip() if not ctype.endswith('*') else ctype)
         if ctype in self.kinds:
             return self.kinds[ctype], ctype, 'int'
         if ctype in self.enums:
@@ -475,7 +481,8 @@ def typed_modules(binding):
 
 
 def digest(api):
-    text = json.dumps([[f.name, f.returns, [p.type for p in f.params]] for f in api.functions.values() if f.exported] +
+    text = json.dumps([[f.name, spelled(f.returns), [spelled(p.type) for p in f.params]]
+                       for f in api.functions.values() if f.exported] +
                       [[e.name, list(e.values.items())] for e in api.enums.values()])
     return hashlib.sha256(text.encode()).hexdigest()[:16]
 
