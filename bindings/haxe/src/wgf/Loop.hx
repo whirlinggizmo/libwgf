@@ -78,4 +78,14 @@ class Loop {
 	**/
 	public static inline function getFps():Float
 		return Raw.wgf_loop_get_fps();
+
+	/**
+	    The last frame's own cost, in seconds: the real time the runtime spent on it, from
+	    its start to its drawing's end (the ticks, the optional parts, the frame callback, and
+	    gfx's end). What the GPU and the browser do after isn't in it. Real time under an
+	    autopilot too, whose frames are the autopilot's time: so a flown run's cost is
+	    measured as it would be played. 0 before the first frame.
+	**/
+	public static inline function getFrameCost():Float
+		return Raw.wgf_loop_get_frame_cost();
 }

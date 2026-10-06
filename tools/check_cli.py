@@ -123,12 +123,12 @@ def step_run(game):
     if why:
         return why
     code, out = wgf(game, 'run', '--headless', '--frames', '30', '--no-build')
-    if code != 0 or 'wgf_autopilot: PASS (0 expectations, 30 frames)' not in out:
+    if code != 0 or 'wgf_autopilot: PASS (0 of 0 expectations failed, 30 frames)' not in out:
         return problem('wgf run --headless --frames 30: not a passing 30-frame run', out)
     fly = game / 'autopilot' / 'fly.autopilot'
     fly.write_text('wgf-autopilot 1\nat 40 expect frames >= 40\nat 90 end\n')
     code, out = wgf(game, 'run', '--headless', '--autopilot', 'autopilot/fly.autopilot', '--no-build')
-    if code != 0 or 'wgf_autopilot: PASS (1 expectation, 91 frames)' not in out:
+    if code != 0 or 'wgf_autopilot: PASS (0 of 1 expectations failed, 91 frames)' not in out:
         return problem('wgf run --headless --autopilot: not the file\'s passing 91-frame run', out)
     print('check_cli: run: 30 frames, and an autopilot file\'s 91, headless, passed')
     return True

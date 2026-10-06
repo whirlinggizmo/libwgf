@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "wgf_app.h"
+#include "wgf_debug.h"
 #include "wgf_asset.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
@@ -46,7 +47,8 @@
  *   - The buttons are libwgf's UI, in a row where wgrender's widgets were; Fetch asset
  *     is ignored while a fetch is under way rather than drawn disabled, which libwgf's
  *     UI has no call for.
- *   - The FPS counter is text drawn from wgf_loop_get_fps: libwgf has no debug overlay.
+ *   - The FPS counter is libwgf's overlay (wgf_debug_show_fps), as wgrender-c's is
+ *     wgr_debug_enable_fps, with the frame's cost in milliseconds beside the rate.
  *   - Text is ASCII ("--" for the em dash): the built-in font is not known to have it. */
 
 #define TEXTURE_PATH "sprites/logo/wg-logo-white-alpha.png"
@@ -199,8 +201,6 @@ static void frame(void *user)
     /* drawn once it's READY, centered where wgrender's sprite was */
     wgf_draw_texture(texture, 512 - wgf_texture_get_width(texture) * 0.5f,
                      380 - wgf_texture_get_height(texture) * 0.5f, 0, 0, WGF_COLOR_WHITE);
-    snprintf(line, sizeof line, "%.0f FPS", wgf_loop_get_fps());
-    wgf_draw_text(0, line, 12, 10, 16, WGF_COLOR_LIME);
     wgf_draw_text(0, "libwgf fetch: the desktop build downloads what the browser downloads", 12, 36, 20,
                   WGF_COLOR_RAYWHITE);
     snprintf(line, sizeof line, "host: %s", host);
@@ -220,6 +220,7 @@ int main(void)
 {
     wgf_window_set_title("libwgf fetch");
     wgf_window_set_size(1024, 640);
+    wgf_debug_show_fps(0, 12, 10, 16, WGF_COLOR_LIME); /* wgrender-c's enable_fps */
     wgf_app_run(init, NULL, frame, NULL, NULL);
     return 0;
 }

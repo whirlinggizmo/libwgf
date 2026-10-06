@@ -162,7 +162,8 @@ The runtime: it opens the window, starts and drives the layers below it, and run
 | Section | Header | Provides |
 |---------|--------|----------|
 | (lifecycle) | `wgf_app.h` | `wgf_app_run(init, tick, frame, shutdown, user)`, `wgf_app_quit`, `wgf_app_can_quit` (false on the web), `wgf_app_is_running`. `wgf_app_run` is the one public call that takes callbacks |
-| loop | `wgf_loop.h` | the frame delta; the tick rate, delta, and fraction; the time scale (0 pauses ticks while frames go on); a target fps; frames per second |
+| loop | `wgf_loop.h` | the frame delta; the tick rate, delta, and fraction; the time scale (0 pauses ticks while frames go on); a target fps; frames per second; a frame's own cost, in real time |
+| debug | `wgf_debug.h` | the frame-rate overlay (the frames a second and a frame's cost), drawn by the runtime over the program's frame through a hook its show call sets, so a program that never shows it links none of it |
 | (autopilot runs) | private | an autopilot: inputs at frames and expectations on probes (BUILDING.md, "Autopilot files", has the format), flown in its own time |
 
 **The run.** `wgf_app_run` opens the window, starts core and gfx, and calls init. Each frame, it takes the window's events, updates core (tasks and loads move on), delivers an autopilot's inputs for the frame, runs the ticks due -- after each, the parts' ticks (a module's systems) -- then the parts' updates, then the frame callback between gfx's begin and end, and checks an autopilot's expectations for the frame. After quitting, it calls shutdown and stops gfx and core. On the desktop `wgf_app_run` returns when the program has quit; on the web it returns at once, and the browser runs the frames, so it is the last call in main everywhere.

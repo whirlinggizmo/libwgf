@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "wgf_app.h"
+#include "wgf_debug.h"
 #include "wgf_asset.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
@@ -23,9 +24,9 @@
  * the same window, fonts, text, and keys. Where it differs, and why:
  *   - "libwgt" reads "libwgf" in the window's title and the drawn title: the library's
  *     name, the same length.
- *   - The frame rate is drawn by the example (draw_fps, as libwgt's wgt_loop_draw_fps
- *     draws it: "%d FPS", 16 pixels, green): libwgf has wgf_loop_get_fps but no call
- *     that draws it. */
+ *   - The readout is libwgf's overlay (wgf_debug_show_fps), as libwgt's is its
+ *     wgt_loop_draw_fps: the same place, font, size, and color, with the frame's
+ *     cost in milliseconds beside the rate. */
 
 #define MONO_PATH "fonts/JetBrainsMono/JetBrainsMono-Regular.ttf"
 #define KOMIKA_PATH "fonts/Komika/KOMIKAH_.ttf"
@@ -37,13 +38,6 @@ static bool ready(wgf_font_t font)
     return wgf_resource_get_status(font) == WGF_RESOURCE_STATUS_READY;
 }
 
-/* The frame rate at (x, y), as libwgt's wgt_loop_draw_fps draws it. */
-static void draw_fps(float x, float y)
-{
-    char text[32];
-    snprintf(text, sizeof(text), "%d FPS", (int)(wgf_loop_get_fps() + 0.5f));
-    wgf_draw_text(0, text, x, y, 16.0f, wgf_color_make(0, 255, 0, 255));
-}
 
 static void frame(void *user)
 {
@@ -76,7 +70,6 @@ static void frame(void *user)
                   wgf_font_get_default() == 0 ? "[D] default font: built in   {a|b} ~ \\ ^_`"
                                               : "[D] default font: Komika   {a|b} ~ \\ ^_`",
                   40, 360, 16, WGF_COLOR_DARKGREEN);
-    draw_fps(12, 12);
 }
 
 static void init(void *user)
@@ -101,6 +94,7 @@ int main(void)
     wgf_window_set_title("libwgf font");
     wgf_window_set_size(900, 500);
     wgf_window_set_msaa(true);
+    wgf_debug_show_fps(0, 12, 12, 16.0f, wgf_color_make(0, 255, 0, 255)); /* libwgt's draw_fps */
     wgf_app_run(init, NULL, frame, on_shutdown, NULL);
     return 0;
 }

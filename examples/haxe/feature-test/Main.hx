@@ -361,6 +361,14 @@ class Main {
 			Loop.getTickFraction();
 			Loop.getFps();
 			expect(App.isRunning(), "running");
+			expect(!Debug.isFpsShown(), "the frame-rate overlay off by default");
+			Debug.showFps(0, 8, 8, 14, Color.get(ColorStock.LIME));
+			expect(Debug.isFpsShown(), "and shown");
+		}
+		if (frames == 3) {
+			expect(Loop.getFrameCost() > 0, "a frame's cost, measured");
+			Debug.hideFps();
+			expect(!Debug.isFpsShown(), "the overlay hidden");
 		}
 		waitOnTasks();
 		if (!instantiated && Resource.getStatus(scene) == ResourceStatus.READY) {

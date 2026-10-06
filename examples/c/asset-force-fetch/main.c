@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "wgf_app.h"
+#include "wgf_debug.h"
 #include "wgf_asset.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
@@ -29,7 +30,8 @@
  *   - The music is a streamed sound played by a looping voice: libwgf's sound is the
  *     data and its voice the playing (wgrender's audio and sound), and libwgf streams
  *     only when asked, where wgrender streamed a file over 1 MB by itself, as this is.
- *   - The FPS counter is text drawn from wgf_loop_get_fps: libwgf has no FPS call.
+ *   - The FPS counter is libwgf's overlay (wgf_debug_show_fps), as wgrender-c's is
+ *     wgr_debug_enable_fps, with the frame's cost in milliseconds beside the rate.
  *   - The quit key's hint is shown where wgf_app_can_quit, not by a platform #if. */
 
 #define INVALID_MUSIC_PATH "music/invalid.mp3" /* intentionally invalid, to show the fetch_url is honored */
@@ -91,8 +93,6 @@ static void frame(void *user)
                   24, 80, 18, WGF_COLOR_SKYBLUE);
     wgf_draw_text(0, wgf_app_can_quit() ? "[M] toggle music   [ESC] quit" : "[M] toggle music", 24, 150, 16,
                   WGF_COLOR_LIGHTGRAY);
-    snprintf(line, sizeof line, "%.0f FPS", wgf_loop_get_fps());
-    wgf_draw_text(0, line, 24, 12, 16, WGF_COLOR_LIME);
 }
 
 int main(void)
@@ -100,6 +100,7 @@ int main(void)
     wgf_log_set_level(WGF_LOG_LEVEL_INFO);
     wgf_window_set_title("libwgf audio + force_fetch");
     wgf_window_set_size(720, 240);
+    wgf_debug_show_fps(0, 24, 12, 16, WGF_COLOR_LIME); /* wgrender-c's enable_fps */
     wgf_app_run(init, NULL, frame, NULL, NULL);
     return 0;
 }

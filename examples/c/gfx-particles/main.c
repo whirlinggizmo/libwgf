@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "wgf_app.h"
+#include "wgf_debug.h"
 #include "wgf_canvas.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
@@ -54,8 +55,9 @@
  *   - The confetti is five emitters of one color each, bursting 60 apiece: libwgf's have
  *     no palette. A full emitter drops a new particle, where libwgt's replaces the
  *     oldest.
- *   - The frame rate is drawn by the example (draw_fps, as libwgt's wgt_loop_draw_fps
- *     draws it): libwgf has wgf_loop_get_fps but no call that draws it. */
+ *   - The readout is libwgf's overlay (wgf_debug_show_fps), as libwgt's is its
+ *     wgt_loop_draw_fps: the same place, font, size, and color, with the frame's
+ *     cost in milliseconds beside the rate. */
 
 #define ORBIT_RADIUS 16.0f
 #define ORBIT_SPEED 0.15f /* radians a second */
@@ -353,13 +355,6 @@ static int confetti_count(void)
     return count;
 }
 
-/* The frame rate at (x, y), as libwgt's wgt_loop_draw_fps draws it. */
-static void draw_fps(float x, float y)
-{
-    char text[32];
-    snprintf(text, sizeof(text), "%d FPS", (int)(wgf_loop_get_fps() + 0.5f));
-    wgf_draw_text(0, text, x, y, 16.0f, wgf_color_make(0, 255, 0, 255));
-}
 
 static void place_camera(void)
 {
@@ -425,7 +420,6 @@ static void frame(void *user)
              wgf_emitter2d_get_count(g.steady[FOUNTAIN]), wgf_emitter2d_get_count(g.steady[SPARKS]),
              wgf_emitter2d_get_count(g.steady[FLAME]), wgf_emitter2d_get_count(g.steady[SMOKE]), confetti_count());
     wgf_draw_text(0, line, 12, 94, 16, WGF_COLOR_LIGHTGRAY);
-    draw_fps(12, 10);
 }
 
 int main(void)
@@ -433,6 +427,7 @@ int main(void)
     wgf_window_set_title("libwgf particles");
     wgf_window_set_size(1000, 700);
     wgf_window_set_msaa(true);
+    wgf_debug_show_fps(0, 12, 10, 16.0f, wgf_color_make(0, 255, 0, 255)); /* libwgt's draw_fps */
     wgf_app_run(init, NULL, frame, NULL, NULL);
     return 0;
 }

@@ -636,25 +636,20 @@ static void finish(long frames)
 {
     autopilot.ended = true;
     autopilot.passed = autopilot.failures == 0;
-    if (autopilot.passed) {
-        wgf_log_info("wgf_autopilot: PASS (%d expectation%s, %ld frames)", autopilot.expectations,
-                     autopilot.expectations == 1 ? "" : "s", frames);
-    } else {
-        wgf_log_error("wgf_autopilot: FAIL (%d of %d expectation%s failed, %ld frames)", autopilot.failures,
-                      autopilot.expectations, autopilot.expectations == 1 ? "" : "s", frames);
-    }
+    wgf_log_format(autopilot.passed ? WGF_LOG_LEVEL_INFO : WGF_LOG_LEVEL_ERROR, __FILE__, __LINE__,
+                   "wgf_autopilot: %s (%d of %d expectations failed, %ld frames)", autopilot.passed ? "PASS" : "FAIL",
+                   autopilot.failures, autopilot.expectations, frames);
 }
 
 bool wgf_app_priv_autopilot_start_text(const char *text)
 {
     if (text == NULL || !parse(text)) {
-        wgf_log_error("wgf_autopilot: the autopilot can't be run (above); quitting");
+        wgf_log_error("wgf_autopilot: can't run the autopilot; quitting");
         wgf_platform_priv_request_quit();
         return false;
     }
     autopilot.running = true;
-    wgf_log_info("wgf_autopilot: %d command%s, %s", autopilot.count, autopilot.count == 1 ? "" : "s",
-                 autopilot.end_frame >= 0 ? "ending at its end" : "with no end: it runs until the program quits");
+    wgf_log_info("wgf_autopilot: %d commands%s", autopilot.count, autopilot.end_frame >= 0 ? "" : ", no end");
     return true;
 }
 
@@ -668,7 +663,7 @@ bool wgf_app_priv_autopilot_start(void)
         started = wgf_app_priv_autopilot_start_text(text);
         free(text);
     } else if (named) {
-        wgf_log_error("wgf_autopilot: the autopilot named couldn't be read; quitting");
+        wgf_log_error("wgf_autopilot: can't run the autopilot; quitting");
         wgf_platform_priv_request_quit();
     }
     return started;
@@ -764,7 +759,7 @@ void wgf_app_priv_autopilot_end_frame(long program_frame)
 void wgf_app_priv_autopilot_stop(long frames)
 {
     if (autopilot.running && autopilot.end_frame >= 0) {
-        wgf_log_error("wgf_autopilot: FAIL: the program quit at frame %ld, before the autopilot's end at frame %ld",
+        wgf_log_error("wgf_autopilot: FAIL: the program quit at frame %ld, before the end at %ld",
                       frames, autopilot.end_frame);
         autopilot.failures++;
         finish(frames);

@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "wgf_app.h"
+#include "wgf_debug.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
 #include "wgf_keyboard.h"
@@ -18,9 +19,9 @@
  *
  * libwgt's app-tick (wgrender's tick) done 1:1 for the size table. The differences:
  *   - the title and the heading say libwgf where libwgt's say libwgt;
- *   - libwgf has no wgf_loop_draw_fps, so the readout is drawn as libwgt's
- *     wgt_loop_draw_fps draws it: "%d FPS" of the rounded rate, the default font,
- *     16 pixels, pure green. */
+ *   - The readout is libwgf's overlay (wgf_debug_show_fps), as libwgt's is its
+ *     wgt_loop_draw_fps: the same place, font, size, and color, with the frame's
+ *     cost in milliseconds beside the rate. */
 
 enum { WIDTH = 800, HEIGHT = 450, TICK_HZ = 10, SQUARE = 40, LEFT = 40, RIGHT = WIDTH - 80 };
 
@@ -32,12 +33,6 @@ static struct {
     int tick_presses, frame_presses;
 } g;
 
-static void draw_fps(float x, float y)
-{
-    char text[32];
-    snprintf(text, sizeof(text), "%d FPS", (int)(wgf_loop_get_fps() + 0.5f));
-    wgf_draw_text(0, text, x, y, 16.0f, wgf_color_make(0, 255, 0, 255));
-}
 
 static void tick(void *user)
 {
@@ -74,7 +69,6 @@ static void frame(void *user)
     wgf_draw_text(0, "between the last two ticks, by the tick fraction", 20, 250, 16, WGF_COLOR_GRAY);
     wgf_draw_rectangle(g.previous_x + (g.x - g.previous_x) * t, 275, SQUARE, SQUARE, WGF_COLOR_SKYBLUE);
 
-    draw_fps(20, HEIGHT - 30);
 }
 
 static void init(void *user)
@@ -90,6 +84,7 @@ int main(void)
     wgf_window_set_title("libwgf tick");
     wgf_window_set_size(WIDTH, HEIGHT);
     wgf_window_set_msaa(true);
+    wgf_debug_show_fps(0, 20, HEIGHT - 30, 16.0f, wgf_color_make(0, 255, 0, 255)); /* libwgt's draw_fps */
     wgf_app_run(init, tick, frame, NULL, NULL);
     return 0;
 }

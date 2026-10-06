@@ -9,6 +9,7 @@ wgf_layer(app
     SOURCES
         src/wgf_app.c
         src/wgf_app_autopilot.c
+        src/wgf_app_debug.c
         src/wgf_app_tick_clock.c
         ${app_autopilot_source}
     DEPS

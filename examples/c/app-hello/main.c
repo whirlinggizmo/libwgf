@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "wgf_app.h"
+#include "wgf_debug.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
 #include "wgf_input.h"
@@ -19,19 +20,13 @@
  *   - the title and the big text say libwgf where libwgt's say libwgt;
  *   - outlines and the line take a thickness here, 1 logical pixel: libwgt's are GL
  *     lines of one pixel;
- *   - libwgf has no wgf_loop_draw_fps, so the readout is drawn as libwgt's
- *     wgt_loop_draw_fps draws it: "%d FPS" of the rounded rate, the default font,
- *     16 pixels, pure green;
+ *   - The readout is libwgf's overlay (wgf_debug_show_fps), as libwgt's is its
+ *     wgt_loop_draw_fps: the same place, font, size, and color, with the frame's
+ *     cost in milliseconds beside the rate.
  *   - circles get enough segments for their size, where libwgt's have 36. */
 
 static char typed[64];
 
-static void draw_fps(float x, float y)
-{
-    char text[32];
-    snprintf(text, sizeof(text), "%d FPS", (int)(wgf_loop_get_fps() + 0.5f));
-    wgf_draw_text(0, text, x, y, 16.0f, wgf_color_make(0, 255, 0, 255));
-}
 
 static void frame(void *user)
 {
@@ -61,7 +56,6 @@ static void frame(void *user)
     wgf_draw_text(0, typed[0] != '\0' ? typed : "type something", 40, 410, 16,
                   typed[0] != '\0' ? WGF_COLOR_DARKBLUE : WGF_COLOR_GRAY);
     if (wgf_app_can_quit()) wgf_draw_text(0, "press Esc to quit", 40, 440, 16, WGF_COLOR_GRAY);
-    draw_fps(40, 12);
 }
 
 static void init(void *user)
@@ -75,6 +69,7 @@ int main(void)
     wgf_window_set_title("libwgf hello");
     wgf_window_set_size(800, 600);
     wgf_window_set_msaa(true);
+    wgf_debug_show_fps(0, 40, 12, 16.0f, wgf_color_make(0, 255, 0, 255)); /* libwgt's draw_fps */
     wgf_app_run(init, NULL, frame, NULL, NULL);
     return 0;
 }

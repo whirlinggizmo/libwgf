@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "a8637b3186553569" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "77aa4212bc580519" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -5630,6 +5630,46 @@ export function wgf_app_is_running() {
     return value !== 0;
 }
 
+// wgf: call wgf_debug_show_fps
+/**
+ * The frame-rate overlay, for a program under development: "<fps> FPS <cost> ms" (the
+ * frames a second and a frame's own cost, wgf_loop.h's), drawn by the runtime over
+ * everything the program drew, every frame, at (x, y) in logical pixels, in `font` (0:
+ * the built-in), at `size`, in `color`; a size of 0 or less is none, so it isn't
+ * shown. Off by default; showing it again moves or restyles it. A program that never
+ * shows it links none of it.
+ */
+export function wgf_debug_show_fps(font, x, y, size, color) {
+    host["_wgf_debug_show_fps"](font, x, y, size, color);
+}
+
+// wgf: call wgf_debug_hide_fps
+/**
+ * The frame-rate overlay, for a program under development: "<fps> FPS <cost> ms" (the
+ * frames a second and a frame's own cost, wgf_loop.h's), drawn by the runtime over
+ * everything the program drew, every frame, at (x, y) in logical pixels, in `font` (0:
+ * the built-in), at `size`, in `color`; a size of 0 or less is none, so it isn't
+ * shown. Off by default; showing it again moves or restyles it. A program that never
+ * shows it links none of it.
+ */
+export function wgf_debug_hide_fps() {
+    host["_wgf_debug_hide_fps"]();
+}
+
+// wgf: call wgf_debug_is_fps_shown
+/**
+ * The frame-rate overlay, for a program under development: "<fps> FPS <cost> ms" (the
+ * frames a second and a frame's own cost, wgf_loop.h's), drawn by the runtime over
+ * everything the program drew, every frame, at (x, y) in logical pixels, in `font` (0:
+ * the built-in), at `size`, in `color`; a size of 0 or less is none, so it isn't
+ * shown. Off by default; showing it again moves or restyles it. A program that never
+ * shows it links none of it.
+ */
+export function wgf_debug_is_fps_shown() {
+    const value = host["_wgf_debug_is_fps_shown"]();
+    return value !== 0;
+}
+
 // wgf: call wgf_loop_get_frame_delta
 /**
  * Seconds since the previous frame, at most 0.1 (a frame after a stall counts as
@@ -5729,5 +5769,18 @@ export function wgf_loop_get_target_fps() {
  */
 export function wgf_loop_get_fps() {
     const value = host["_wgf_loop_get_fps"]();
+    return value;
+}
+
+// wgf: call wgf_loop_get_frame_cost
+/**
+ * The last frame's own cost, in seconds: the real time the runtime spent on it, from
+ * its start to its drawing's end (the ticks, the optional parts, the frame callback, and
+ * gfx's end). What the GPU and the browser do after isn't in it. Real time under an
+ * autopilot too, whose frames are the autopilot's time: so a flown run's cost is
+ * measured as it would be played. 0 before the first frame.
+ */
+export function wgf_loop_get_frame_cost() {
+    const value = host["_wgf_loop_get_frame_cost"]();
     return value;
 }

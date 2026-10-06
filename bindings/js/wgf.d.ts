@@ -3714,6 +3714,36 @@ export declare function wgf_app_can_quit(): boolean;
 export declare function wgf_app_is_running(): boolean;
 
 /**
+ * The frame-rate overlay, for a program under development: "<fps> FPS <cost> ms" (the
+ * frames a second and a frame's own cost, wgf_loop.h's), drawn by the runtime over
+ * everything the program drew, every frame, at (x, y) in logical pixels, in `font` (0:
+ * the built-in), at `size`, in `color`; a size of 0 or less is none, so it isn't
+ * shown. Off by default; showing it again moves or restyles it. A program that never
+ * shows it links none of it.
+ */
+export declare function wgf_debug_show_fps(font: wgf_font_t | 0, x: number, y: number, size: number, color: wgf_color_t): void;
+
+/**
+ * The frame-rate overlay, for a program under development: "<fps> FPS <cost> ms" (the
+ * frames a second and a frame's own cost, wgf_loop.h's), drawn by the runtime over
+ * everything the program drew, every frame, at (x, y) in logical pixels, in `font` (0:
+ * the built-in), at `size`, in `color`; a size of 0 or less is none, so it isn't
+ * shown. Off by default; showing it again moves or restyles it. A program that never
+ * shows it links none of it.
+ */
+export declare function wgf_debug_hide_fps(): void;
+
+/**
+ * The frame-rate overlay, for a program under development: "<fps> FPS <cost> ms" (the
+ * frames a second and a frame's own cost, wgf_loop.h's), drawn by the runtime over
+ * everything the program drew, every frame, at (x, y) in logical pixels, in `font` (0:
+ * the built-in), at `size`, in `color`; a size of 0 or less is none, so it isn't
+ * shown. Off by default; showing it again moves or restyles it. A program that never
+ * shows it links none of it.
+ */
+export declare function wgf_debug_is_fps_shown(): boolean;
+
+/**
  * Seconds since the previous frame, at most 0.1 (a frame after a stall counts as
  * 0.1); the first frame counts as one display frame. Real time: the time scale
  * doesn't change it.
@@ -3777,3 +3807,12 @@ export declare function wgf_loop_get_target_fps(): number;
  * the frames that ran, not the display's refreshes. 0 before the first frame.
  */
 export declare function wgf_loop_get_fps(): number;
+
+/**
+ * The last frame's own cost, in seconds: the real time the runtime spent on it, from
+ * its start to its drawing's end (the ticks, the optional parts, the frame callback, and
+ * gfx's end). What the GPU and the browser do after isn't in it. Real time under an
+ * autopilot too, whose frames are the autopilot's time: so a flown run's cost is
+ * measured as it would be played. 0 before the first frame.
+ */
+export declare function wgf_loop_get_frame_cost(): number;

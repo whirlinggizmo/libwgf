@@ -3,6 +3,9 @@
 #include <string.h>
 
 #include "wgf_app.h"
+#include "wgf_app_priv.h"
+#include "wgf_color.h"
+#include "wgf_debug.h"
 #include "wgf_loop.h"
 #include "wgf_window.h"
 #include "wgf_time.h"
@@ -39,7 +42,10 @@ typedef struct run_t {
     int samples;
     int placed, monitors_ok;
     float fps;          /* at the last frame */
-    int fps_drawn;      /* the readout recorded glyphs */
+    float cost;         /* the frame's cost, at the last frame */
+    int no_readout;     /* the frame callback leaves the readout off */
+    int overlays;       /* the overlay drawn, after the frame callback */
+    int overlay_after;  /* each time after that frame's callback */
 } run_t;
 
 static void on_init(void *user)
@@ -75,6 +81,7 @@ static void on_frame(void *user)
     run_t *run = user;
     run->frames++;
     run->frames_in_frame &= wgf_gfx_priv_is_in_frame();
+    if (run->frames == 5 && !run->no_readout) wgf_debug_show_fps(0, 8, 8, 16, wgf_color_make(0, 255, 0, 255)); /* drawn over the rest */
     run->frame_sizes_ok &= wgf_render_get_width() == 320 && wgf_render_get_height() == 200;
     if (run->frames == 30) {
         wgf_loop_set_time_scale(0.0f); /* paused from the next frame */
@@ -83,8 +90,20 @@ static void on_frame(void *user)
     } else if (run->frames == 45) {
         run->paused_fraction_last = wgf_loop_get_tick_fraction();
         run->fps = wgf_loop_get_fps();
+        run->cost = wgf_loop_get_frame_cost();
         wgf_app_quit();
     }
+}
+
+/* An overlay of the test's own, in the hook the readout uses: counted, and checked to
+ * come after the frame callback (the frames it counts are already up). */
+static run_t *overlay_run;
+static int last_overlay_frame;
+static void count_overlay(void)
+{
+    overlay_run->overlays++;
+    overlay_run->overlay_after &= overlay_run->frames > last_overlay_frame;
+    last_overlay_frame = overlay_run->frames;
 }
 
 static void on_shutdown(void *user)
@@ -125,7 +144,11 @@ int main(void)
     expect(!wgf_window_is_msaa() && wgf_window_set_msaa(true) && wgf_window_is_msaa(), "MSAA asked for");
     expect(!wgf_window_set_position(1, 2) && wgf_window_get_x() == 0, "no position before the window opens");
 
+    expect(!wgf_debug_is_fps_shown(), "the readout off by default");
     expect(wgf_app_run(on_init, on_tick, on_frame, on_shutdown, &run), "runs");
+    expect(wgf_debug_is_fps_shown(), "the readout shown, and a run with it drawn every frame clean");
+    wgf_debug_hide_fps();
+    expect(!wgf_debug_is_fps_shown(), "and hidden");
 
     expect(run.inits == 1 && run.shutdowns == 1, "init and shutdown once each");
     expect(run.frames == 45, "frames until it quit");
@@ -143,9 +166,22 @@ int main(void)
     expect(run.paused_fraction_first == run.paused_fraction_last, "the tick fraction holds while paused");
     expect(run.ended - run.started >= 1.3, "the frame cap paces frames");
     expect(run.fps > 25.0f && run.fps < 35.0f, "the readout's fps: the frames that ran, capped at 30");
+    expect(run.cost > 0.0f && run.cost < 1.0f / 30.0f,
+           "a frame's cost: real time, some, and less than its cap's interval (the rest is the pacing's wait)");
     expect(!wgf_app_is_running(), "not running after it quit");
     expect(wgf_time_get_seconds() == 0.0, "core stopped after shutdown");
     expect(wgf_loop_get_tick_rate() == 50 && wgf_loop_get_target_fps() == 30, "loop settings kept");
     printf("%d frames, %d ticks, %.2f s\n", run.frames, run.ticks, run.ended - run.started);
+
+    /* the hook the readout draws through: called once a frame, after the frame callback */
+    overlay_run = &run;
+    memset(&run, 0, sizeof(run));
+    run.ticks_in_order = run.frames_in_frame = run.frame_sizes_ok = run.overlay_after = run.no_readout = 1;
+    wgf_app_priv_set_overlay(count_overlay);
+    wgf_loop_set_target_fps(0);
+    expect(wgf_app_run(on_init, NULL, on_frame, NULL, &run), "runs with an overlay");
+    expect(run.overlays == run.frames && run.overlay_after, "the overlay drawn each frame, after its callback");
+    wgf_app_priv_set_overlay(NULL);
+
     return failures == 0 ? 0 : 1;
 }

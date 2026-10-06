@@ -8,819 +8,819 @@ class Raw {
 
 	public static function wgf_version_get():String {
 		#if wgf_reach
-		Reach.hit(373);
+		Reach.hit(377);
 		#end
 		final value:Dynamic = Raw.binding["wgf_version_get"]();
 		return value;
 	}
 	public static function wgf_version_get_major():Int {
 		#if wgf_reach
-		Reach.hit(374);
+		Reach.hit(378);
 		#end
 		final value:Dynamic = Raw.binding["wgf_version_get_major"]();
 		return value;
 	}
 	public static function wgf_version_get_minor():Int {
 		#if wgf_reach
-		Reach.hit(375);
+		Reach.hit(379);
 		#end
 		final value:Dynamic = Raw.binding["wgf_version_get_minor"]();
 		return value;
 	}
 	public static function wgf_version_get_patch():Int {
 		#if wgf_reach
-		Reach.hit(376);
+		Reach.hit(380);
 		#end
 		final value:Dynamic = Raw.binding["wgf_version_get_patch"]();
 		return value;
 	}
 	public static function wgf_handle_get_kind_name(handle:Int):String {
 		#if wgf_reach
-		Reach.hit(180);
+		Reach.hit(183);
 		#end
 		final value:Dynamic = Raw.binding["wgf_handle_get_kind_name"](handle);
 		return value;
 	}
 	public static function wgf_fs_set_root(root:String):Bool {
 		#if wgf_reach
-		Reach.hit(162);
+		Reach.hit(165);
 		#end
 		final value:Dynamic = Raw.binding["wgf_fs_set_root"](root);
 		return value;
 	}
 	public static function wgf_fs_get_root():String {
 		#if wgf_reach
-		Reach.hit(157);
+		Reach.hit(160);
 		#end
 		final value:Dynamic = Raw.binding["wgf_fs_get_root"]();
 		return value;
 	}
 	public static function wgf_fs_read(path:String):Int {
 		#if wgf_reach
-		Reach.hit(159);
+		Reach.hit(162);
 		#end
 		final value:Dynamic = Raw.binding["wgf_fs_read"](path);
 		return (value : Int) | 0;
 	}
 	public static function wgf_fs_write(path:String, data:haxe.io.Bytes):Int {
 		#if wgf_reach
-		Reach.hit(169);
+		Reach.hit(172);
 		#end
 		final value:Dynamic = Raw.binding["wgf_fs_write"](path, Host.bytesIn(data));
 		return (value : Int) | 0;
 	}
 	public static function wgf_fs_exists(path:String):Int {
 		#if wgf_reach
-		Reach.hit(156);
+		Reach.hit(159);
 		#end
 		final value:Dynamic = Raw.binding["wgf_fs_exists"](path);
 		return (value : Int) | 0;
 	}
 	public static function wgf_fs_remove(path:String):Int {
 		#if wgf_reach
-		Reach.hit(160);
+		Reach.hit(163);
 		#end
 		final value:Dynamic = Raw.binding["wgf_fs_remove"](path);
 		return (value : Int) | 0;
 	}
 	public static function wgf_fs_mkdir(path:String):Int {
 		#if wgf_reach
-		Reach.hit(158);
+		Reach.hit(161);
 		#end
 		final value:Dynamic = Raw.binding["wgf_fs_mkdir"](path);
 		return (value : Int) | 0;
 	}
 	public static function wgf_fs_rmdir(path:String):Int {
 		#if wgf_reach
-		Reach.hit(161);
+		Reach.hit(164);
 		#end
 		final value:Dynamic = Raw.binding["wgf_fs_rmdir"](path);
 		return (value : Int) | 0;
 	}
 	public static function wgf_fs_task_get_status(task:Int):Int {
 		#if wgf_reach
-		Reach.hit(167);
+		Reach.hit(170);
 		#end
 		final value:Dynamic = Raw.binding["wgf_fs_task_get_status"](task);
 		return value;
 	}
 	public static function wgf_fs_task_get_path(task:Int):String {
 		#if wgf_reach
-		Reach.hit(165);
+		Reach.hit(168);
 		#end
 		final value:Dynamic = Raw.binding["wgf_fs_task_get_path"](task);
 		return value;
 	}
 	public static function wgf_fs_task_get_data(task:Int):haxe.io.Bytes {
 		#if wgf_reach
-		Reach.hit(164);
+		Reach.hit(167);
 		#end
 		final value:Dynamic = Raw.binding["wgf_fs_task_get_data"](task);
 		return Host.bytesOut(value);
 	}
 	public static function wgf_fs_task_get_size(task:Int):Int {
 		#if wgf_reach
-		Reach.hit(166);
+		Reach.hit(169);
 		#end
 		final value:Dynamic = Raw.binding["wgf_fs_task_get_size"](task);
 		return value;
 	}
 	public static function wgf_fs_task_get_text(task:Int):String {
 		#if wgf_reach
-		Reach.hit(168);
+		Reach.hit(171);
 		#end
 		final value:Dynamic = Raw.binding["wgf_fs_task_get_text"](task);
 		return value;
 	}
 	public static function wgf_fs_task_destroy(task:Int):Bool {
 		#if wgf_reach
-		Reach.hit(163);
+		Reach.hit(166);
 		#end
 		final value:Dynamic = Raw.binding["wgf_fs_task_destroy"](task);
 		return value;
 	}
 	public static function wgf_identity_set_company(company:String):Bool {
 		#if wgf_reach
-		Reach.hit(183);
+		Reach.hit(186);
 		#end
 		final value:Dynamic = Raw.binding["wgf_identity_set_company"](company);
 		return value;
 	}
 	public static function wgf_identity_get_company():String {
 		#if wgf_reach
-		Reach.hit(181);
+		Reach.hit(184);
 		#end
 		final value:Dynamic = Raw.binding["wgf_identity_get_company"]();
 		return value;
 	}
 	public static function wgf_identity_set_product(name:String):Bool {
 		#if wgf_reach
-		Reach.hit(184);
+		Reach.hit(187);
 		#end
 		final value:Dynamic = Raw.binding["wgf_identity_set_product"](name);
 		return value;
 	}
 	public static function wgf_identity_get_product():String {
 		#if wgf_reach
-		Reach.hit(182);
+		Reach.hit(185);
 		#end
 		final value:Dynamic = Raw.binding["wgf_identity_get_product"]();
 		return value;
 	}
 	public static function wgf_log_set_level(level:Int):Void {
 		#if wgf_reach
-		Reach.hit(199);
+		Reach.hit(202);
 		#end
 		Raw.binding["wgf_log_set_level"](level);
 	}
 	public static function wgf_log_get_level():Int {
 		#if wgf_reach
-		Reach.hit(196);
+		Reach.hit(199);
 		#end
 		final value:Dynamic = Raw.binding["wgf_log_get_level"]();
 		return value;
 	}
 	public static function wgf_log_message(level:Int, text:String):Void {
 		#if wgf_reach
-		Reach.hit(197);
+		Reach.hit(200);
 		#end
 		Raw.binding["wgf_log_message"](level, text);
 	}
 	public static function wgf_log_message_source(level:Int, file:String, line:Int, text:String):Void {
 		#if wgf_reach
-		Reach.hit(198);
+		Reach.hit(201);
 		#end
 		Raw.binding["wgf_log_message_source"](level, file, line, text);
 	}
 	public static function wgf_probe_set_value(name:String, value:Float):Bool {
 		#if wgf_reach
-		Reach.hit(257);
+		Reach.hit(261);
 		#end
 		final value:Dynamic = Raw.binding["wgf_probe_set_value"](name, value);
 		return value;
 	}
 	public static function wgf_probe_get_value(name:String):Float {
 		#if wgf_reach
-		Reach.hit(255);
+		Reach.hit(259);
 		#end
 		final value:Dynamic = Raw.binding["wgf_probe_get_value"](name);
 		return value;
 	}
 	public static function wgf_probe_has_value(name:String):Bool {
 		#if wgf_reach
-		Reach.hit(256);
+		Reach.hit(260);
 		#end
 		final value:Dynamic = Raw.binding["wgf_probe_has_value"](name);
 		return value;
 	}
 	public static function wgf_probe_get_count():Int {
 		#if wgf_reach
-		Reach.hit(253);
+		Reach.hit(257);
 		#end
 		final value:Dynamic = Raw.binding["wgf_probe_get_count"]();
 		return value;
 	}
 	public static function wgf_probe_get_name(index:Int):String {
 		#if wgf_reach
-		Reach.hit(254);
+		Reach.hit(258);
 		#end
 		final value:Dynamic = Raw.binding["wgf_probe_get_name"](index);
 		return value;
 	}
 	public static function wgf_random_set_seed(seed:Int):Void {
 		#if wgf_reach
-		Reach.hit(262);
+		Reach.hit(266);
 		#end
 		Raw.binding["wgf_random_set_seed"](seed);
 	}
 	public static function wgf_random_get_seed():Int {
 		#if wgf_reach
-		Reach.hit(261);
+		Reach.hit(265);
 		#end
 		final value:Dynamic = Raw.binding["wgf_random_get_seed"]();
 		return value;
 	}
 	public static function wgf_random_get_float():Float {
 		#if wgf_reach
-		Reach.hit(258);
+		Reach.hit(262);
 		#end
 		final value:Dynamic = Raw.binding["wgf_random_get_float"]();
 		return value;
 	}
 	public static function wgf_random_get_range(min:Float, max:Float):Float {
 		#if wgf_reach
-		Reach.hit(260);
+		Reach.hit(264);
 		#end
 		final value:Dynamic = Raw.binding["wgf_random_get_range"](min, max);
 		return value;
 	}
 	public static function wgf_random_get_int(min:Int, max:Int):Int {
 		#if wgf_reach
-		Reach.hit(259);
+		Reach.hit(263);
 		#end
 		final value:Dynamic = Raw.binding["wgf_random_get_int"](min, max);
 		return value;
 	}
 	public static function wgf_resource_get_status(resource:Int):Int {
 		#if wgf_reach
-		Reach.hit(272);
+		Reach.hit(276);
 		#end
 		final value:Dynamic = Raw.binding["wgf_resource_get_status"](resource);
 		return value;
 	}
 	public static function wgf_resource_get_path(resource:Int):String {
 		#if wgf_reach
-		Reach.hit(271);
+		Reach.hit(275);
 		#end
 		final value:Dynamic = Raw.binding["wgf_resource_get_path"](resource);
 		return value;
 	}
 	public static function wgf_resource_release(resource:Int):Bool {
 		#if wgf_reach
-		Reach.hit(273);
+		Reach.hit(277);
 		#end
 		final value:Dynamic = Raw.binding["wgf_resource_release"](resource);
 		return value;
 	}
 	public static function wgf_resource_set_load_budget(milliseconds:Float):Bool {
 		#if wgf_reach
-		Reach.hit(274);
+		Reach.hit(278);
 		#end
 		final value:Dynamic = Raw.binding["wgf_resource_set_load_budget"](milliseconds);
 		return value;
 	}
 	public static function wgf_resource_get_load_budget():Float {
 		#if wgf_reach
-		Reach.hit(270);
+		Reach.hit(274);
 		#end
 		final value:Dynamic = Raw.binding["wgf_resource_get_load_budget"]();
 		return value;
 	}
 	public static function wgf_time_get_seconds():Float {
 		#if wgf_reach
-		Reach.hit(336);
+		Reach.hit(340);
 		#end
 		final value:Dynamic = Raw.binding["wgf_time_get_seconds"]();
 		return value;
 	}
 	public static function wgf_input_get_chars():String {
 		#if wgf_reach
-		Reach.hit(185);
+		Reach.hit(188);
 		#end
 		final value:Dynamic = Raw.binding["wgf_input_get_chars"]();
 		return value;
 	}
 	public static function wgf_input_set_pointer_captured(captured:Bool):Void {
 		#if wgf_reach
-		Reach.hit(189);
+		Reach.hit(192);
 		#end
 		Raw.binding["wgf_input_set_pointer_captured"](captured);
 	}
 	public static function wgf_input_is_pointer_captured():Bool {
 		#if wgf_reach
-		Reach.hit(187);
+		Reach.hit(190);
 		#end
 		final value:Dynamic = Raw.binding["wgf_input_is_pointer_captured"]();
 		return value;
 	}
 	public static function wgf_input_set_keyboard_captured(captured:Bool):Void {
 		#if wgf_reach
-		Reach.hit(188);
+		Reach.hit(191);
 		#end
 		Raw.binding["wgf_input_set_keyboard_captured"](captured);
 	}
 	public static function wgf_input_is_keyboard_captured():Bool {
 		#if wgf_reach
-		Reach.hit(186);
+		Reach.hit(189);
 		#end
 		final value:Dynamic = Raw.binding["wgf_input_is_keyboard_captured"]();
 		return value;
 	}
 	public static function wgf_gamepad_is_connected(pad:Int):Bool {
 		#if wgf_reach
-		Reach.hit(175);
+		Reach.hit(178);
 		#end
 		final value:Dynamic = Raw.binding["wgf_gamepad_is_connected"](pad);
 		return value;
 	}
 	public static function wgf_gamepad_get_name(pad:Int):String {
 		#if wgf_reach
-		Reach.hit(172);
+		Reach.hit(175);
 		#end
 		final value:Dynamic = Raw.binding["wgf_gamepad_get_name"](pad);
 		return value;
 	}
 	public static function wgf_gamepad_get_button_state(pad:Int, button:Int):Int {
 		#if wgf_reach
-		Reach.hit(170);
+		Reach.hit(173);
 		#end
 		final value:Dynamic = Raw.binding["wgf_gamepad_get_button_state"](pad, button);
 		return value;
 	}
 	public static function wgf_gamepad_is_down(pad:Int, button:Int):Bool {
 		#if wgf_reach
-		Reach.hit(176);
+		Reach.hit(179);
 		#end
 		final value:Dynamic = Raw.binding["wgf_gamepad_is_down"](pad, button);
 		return value;
 	}
 	public static function wgf_gamepad_is_pressed(pad:Int, button:Int):Bool {
 		#if wgf_reach
-		Reach.hit(177);
+		Reach.hit(180);
 		#end
 		final value:Dynamic = Raw.binding["wgf_gamepad_is_pressed"](pad, button);
 		return value;
 	}
 	public static function wgf_gamepad_is_released(pad:Int, button:Int):Bool {
 		#if wgf_reach
-		Reach.hit(178);
+		Reach.hit(181);
 		#end
 		final value:Dynamic = Raw.binding["wgf_gamepad_is_released"](pad, button);
 		return value;
 	}
 	public static function wgf_gamepad_get_stick(pad:Int, stick:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(173);
+		Reach.hit(176);
 		#end
 		Raw.binding["wgf_gamepad_get_stick"](pad, stick, Host.vector);
 		return Host.vec2(into);
 	}
 	public static function wgf_gamepad_get_trigger(pad:Int, trigger:Int):Float {
 		#if wgf_reach
-		Reach.hit(174);
+		Reach.hit(177);
 		#end
 		final value:Dynamic = Raw.binding["wgf_gamepad_get_trigger"](pad, trigger);
 		return value;
 	}
 	public static function wgf_gamepad_set_deadzone(radius:Float):Void {
 		#if wgf_reach
-		Reach.hit(179);
+		Reach.hit(182);
 		#end
 		Raw.binding["wgf_gamepad_set_deadzone"](radius);
 	}
 	public static function wgf_gamepad_get_deadzone():Float {
 		#if wgf_reach
-		Reach.hit(171);
+		Reach.hit(174);
 		#end
 		final value:Dynamic = Raw.binding["wgf_gamepad_get_deadzone"]();
 		return value;
 	}
 	public static function wgf_keyboard_get_state(key:Int):Int {
 		#if wgf_reach
-		Reach.hit(190);
+		Reach.hit(193);
 		#end
 		final value:Dynamic = Raw.binding["wgf_keyboard_get_state"](key);
 		return value;
 	}
 	public static function wgf_keyboard_is_down(key:Int):Bool {
 		#if wgf_reach
-		Reach.hit(191);
+		Reach.hit(194);
 		#end
 		final value:Dynamic = Raw.binding["wgf_keyboard_is_down"](key);
 		return value;
 	}
 	public static function wgf_keyboard_is_pressed(key:Int):Bool {
 		#if wgf_reach
-		Reach.hit(192);
+		Reach.hit(195);
 		#end
 		final value:Dynamic = Raw.binding["wgf_keyboard_is_pressed"](key);
 		return value;
 	}
 	public static function wgf_keyboard_is_released(key:Int):Bool {
 		#if wgf_reach
-		Reach.hit(193);
+		Reach.hit(196);
 		#end
 		final value:Dynamic = Raw.binding["wgf_keyboard_is_released"](key);
 		return value;
 	}
 	public static function wgf_mouse_get_position(into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(220);
+		Reach.hit(224);
 		#end
 		Raw.binding["wgf_mouse_get_position"](Host.vector);
 		return Host.vec2(into);
 	}
 	public static function wgf_mouse_get_delta(into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(219);
+		Reach.hit(223);
 		#end
 		Raw.binding["wgf_mouse_get_delta"](Host.vector);
 		return Host.vec2(into);
 	}
 	public static function wgf_mouse_get_wheel(into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(221);
+		Reach.hit(225);
 		#end
 		Raw.binding["wgf_mouse_get_wheel"](Host.vector);
 		return Host.vec2(into);
 	}
 	public static function wgf_mouse_get_button_state(button:Int):Int {
 		#if wgf_reach
-		Reach.hit(218);
+		Reach.hit(222);
 		#end
 		final value:Dynamic = Raw.binding["wgf_mouse_get_button_state"](button);
 		return value;
 	}
 	public static function wgf_mouse_is_down(button:Int):Bool {
 		#if wgf_reach
-		Reach.hit(223);
+		Reach.hit(227);
 		#end
 		final value:Dynamic = Raw.binding["wgf_mouse_is_down"](button);
 		return value;
 	}
 	public static function wgf_mouse_is_pressed(button:Int):Bool {
 		#if wgf_reach
-		Reach.hit(225);
+		Reach.hit(229);
 		#end
 		final value:Dynamic = Raw.binding["wgf_mouse_is_pressed"](button);
 		return value;
 	}
 	public static function wgf_mouse_is_released(button:Int):Bool {
 		#if wgf_reach
-		Reach.hit(226);
+		Reach.hit(230);
 		#end
 		final value:Dynamic = Raw.binding["wgf_mouse_is_released"](button);
 		return value;
 	}
 	public static function wgf_mouse_set_locked(locked:Bool):Void {
 		#if wgf_reach
-		Reach.hit(228);
+		Reach.hit(232);
 		#end
 		Raw.binding["wgf_mouse_set_locked"](locked);
 	}
 	public static function wgf_mouse_is_locked():Bool {
 		#if wgf_reach
-		Reach.hit(224);
+		Reach.hit(228);
 		#end
 		final value:Dynamic = Raw.binding["wgf_mouse_is_locked"]();
 		return value;
 	}
 	public static function wgf_mouse_set_cursor_visible(visible:Bool):Void {
 		#if wgf_reach
-		Reach.hit(227);
+		Reach.hit(231);
 		#end
 		Raw.binding["wgf_mouse_set_cursor_visible"](visible);
 	}
 	public static function wgf_mouse_is_cursor_visible():Bool {
 		#if wgf_reach
-		Reach.hit(222);
+		Reach.hit(226);
 		#end
 		final value:Dynamic = Raw.binding["wgf_mouse_is_cursor_visible"]();
 		return value;
 	}
 	public static function wgf_touch_get_count():Int {
 		#if wgf_reach
-		Reach.hit(337);
+		Reach.hit(341);
 		#end
 		final value:Dynamic = Raw.binding["wgf_touch_get_count"]();
 		return value;
 	}
 	public static function wgf_touch_get_id(index:Int):Int {
 		#if wgf_reach
-		Reach.hit(343);
+		Reach.hit(347);
 		#end
 		final value:Dynamic = Raw.binding["wgf_touch_get_id"](index);
 		return value;
 	}
 	public static function wgf_touch_get_state(id:Int):Int {
 		#if wgf_reach
-		Reach.hit(345);
+		Reach.hit(349);
 		#end
 		final value:Dynamic = Raw.binding["wgf_touch_get_state"](id);
 		return value;
 	}
 	public static function wgf_touch_get_position(id:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(344);
+		Reach.hit(348);
 		#end
 		Raw.binding["wgf_touch_get_position"](id, Host.vector);
 		return Host.vec2(into);
 	}
 	public static function wgf_touch_get_delta(id:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(338);
+		Reach.hit(342);
 		#end
 		Raw.binding["wgf_touch_get_delta"](id, Host.vector);
 		return Host.vec2(into);
 	}
 	public static function wgf_touch_set_mouse_emulated(emulated:Bool):Void {
 		#if wgf_reach
-		Reach.hit(348);
+		Reach.hit(352);
 		#end
 		Raw.binding["wgf_touch_set_mouse_emulated"](emulated);
 	}
 	public static function wgf_touch_is_mouse_emulated():Bool {
 		#if wgf_reach
-		Reach.hit(347);
+		Reach.hit(351);
 		#end
 		final value:Dynamic = Raw.binding["wgf_touch_is_mouse_emulated"]();
 		return value;
 	}
 	public static function wgf_touch_is_gesture():Bool {
 		#if wgf_reach
-		Reach.hit(346);
+		Reach.hit(350);
 		#end
 		final value:Dynamic = Raw.binding["wgf_touch_is_gesture"]();
 		return value;
 	}
 	public static function wgf_touch_get_gesture_center(into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(339);
+		Reach.hit(343);
 		#end
 		Raw.binding["wgf_touch_get_gesture_center"](Host.vector);
 		return Host.vec2(into);
 	}
 	public static function wgf_touch_get_gesture_pan(into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(340);
+		Reach.hit(344);
 		#end
 		Raw.binding["wgf_touch_get_gesture_pan"](Host.vector);
 		return Host.vec2(into);
 	}
 	public static function wgf_touch_get_gesture_scale():Float {
 		#if wgf_reach
-		Reach.hit(342);
+		Reach.hit(346);
 		#end
 		final value:Dynamic = Raw.binding["wgf_touch_get_gesture_scale"]();
 		return value;
 	}
 	public static function wgf_touch_get_gesture_rotation():Float {
 		#if wgf_reach
-		Reach.hit(341);
+		Reach.hit(345);
 		#end
 		final value:Dynamic = Raw.binding["wgf_touch_get_gesture_rotation"]();
 		return value;
 	}
 	public static function wgf_window_set_title(title:String):Void {
 		#if wgf_reach
-		Reach.hit(428);
+		Reach.hit(432);
 		#end
 		Raw.binding["wgf_window_set_title"](title);
 	}
 	public static function wgf_window_get_title():String {
 		#if wgf_reach
-		Reach.hit(407);
+		Reach.hit(411);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_get_title"]();
 		return value;
 	}
 	public static function wgf_window_set_size(width:Int, height:Int):Bool {
 		#if wgf_reach
-		Reach.hit(427);
+		Reach.hit(431);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_set_size"](width, height);
 		return value;
 	}
 	public static function wgf_window_get_width():Int {
 		#if wgf_reach
-		Reach.hit(408);
+		Reach.hit(412);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_get_width"]();
 		return value;
 	}
 	public static function wgf_window_get_height():Int {
 		#if wgf_reach
-		Reach.hit(399);
+		Reach.hit(403);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_get_height"]();
 		return value;
 	}
 	public static function wgf_window_set_fullscreen(fullscreen:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(421);
+		Reach.hit(425);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_set_fullscreen"](fullscreen);
 		return value;
 	}
 	public static function wgf_window_is_fullscreen():Bool {
 		#if wgf_reach
-		Reach.hit(413);
+		Reach.hit(417);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_is_fullscreen"]();
 		return value;
 	}
 	public static function wgf_window_can_fullscreen():Bool {
 		#if wgf_reach
-		Reach.hit(398);
+		Reach.hit(402);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_can_fullscreen"]();
 		return value;
 	}
 	public static function wgf_window_set_position(x:Int, y:Int):Bool {
 		#if wgf_reach
-		Reach.hit(425);
+		Reach.hit(429);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_set_position"](x, y);
 		return value;
 	}
 	public static function wgf_window_get_x():Int {
 		#if wgf_reach
-		Reach.hit(409);
+		Reach.hit(413);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_get_x"]();
 		return value;
 	}
 	public static function wgf_window_get_y():Int {
 		#if wgf_reach
-		Reach.hit(410);
+		Reach.hit(414);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_get_y"]();
 		return value;
 	}
 	public static function wgf_window_get_monitor_count():Int {
 		#if wgf_reach
-		Reach.hit(401);
+		Reach.hit(405);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_get_monitor_count"]();
 		return value;
 	}
 	public static function wgf_window_set_monitor(monitor:Int):Bool {
 		#if wgf_reach
-		Reach.hit(423);
+		Reach.hit(427);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_set_monitor"](monitor);
 		return value;
 	}
 	public static function wgf_window_get_monitor():Int {
 		#if wgf_reach
-		Reach.hit(400);
+		Reach.hit(404);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_get_monitor"]();
 		return value;
 	}
 	public static function wgf_window_get_monitor_width(monitor:Int):Int {
 		#if wgf_reach
-		Reach.hit(404);
+		Reach.hit(408);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_get_monitor_width"](monitor);
 		return value;
 	}
 	public static function wgf_window_get_monitor_height(monitor:Int):Int {
 		#if wgf_reach
-		Reach.hit(402);
+		Reach.hit(406);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_get_monitor_height"](monitor);
 		return value;
 	}
 	public static function wgf_window_get_monitor_x(monitor:Int):Int {
 		#if wgf_reach
-		Reach.hit(405);
+		Reach.hit(409);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_get_monitor_x"](monitor);
 		return value;
 	}
 	public static function wgf_window_get_monitor_y(monitor:Int):Int {
 		#if wgf_reach
-		Reach.hit(406);
+		Reach.hit(410);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_get_monitor_y"](monitor);
 		return value;
 	}
 	public static function wgf_window_get_monitor_name(monitor:Int):String {
 		#if wgf_reach
-		Reach.hit(403);
+		Reach.hit(407);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_get_monitor_name"](monitor);
 		return value;
 	}
 	public static function wgf_window_set_visible(visible:Bool):Void {
 		#if wgf_reach
-		Reach.hit(430);
+		Reach.hit(434);
 		#end
 		Raw.binding["wgf_window_set_visible"](visible);
 	}
 	public static function wgf_window_is_visible():Bool {
 		#if wgf_reach
-		Reach.hit(418);
+		Reach.hit(422);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_is_visible"]();
 		return value;
 	}
 	public static function wgf_window_set_resizable(resizable:Bool):Void {
 		#if wgf_reach
-		Reach.hit(426);
+		Reach.hit(430);
 		#end
 		Raw.binding["wgf_window_set_resizable"](resizable);
 	}
 	public static function wgf_window_is_resizable():Bool {
 		#if wgf_reach
-		Reach.hit(416);
+		Reach.hit(420);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_is_resizable"]();
 		return value;
 	}
 	public static function wgf_window_set_decorated(decorated:Bool):Void {
 		#if wgf_reach
-		Reach.hit(420);
+		Reach.hit(424);
 		#end
 		Raw.binding["wgf_window_set_decorated"](decorated);
 	}
 	public static function wgf_window_is_decorated():Bool {
 		#if wgf_reach
-		Reach.hit(411);
+		Reach.hit(415);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_is_decorated"]();
 		return value;
 	}
 	public static function wgf_window_is_focused():Bool {
 		#if wgf_reach
-		Reach.hit(412);
+		Reach.hit(416);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_is_focused"]();
 		return value;
 	}
 	public static function wgf_window_set_transparent(transparent:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(429);
+		Reach.hit(433);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_set_transparent"](transparent);
 		return value;
 	}
 	public static function wgf_window_is_transparent():Bool {
 		#if wgf_reach
-		Reach.hit(417);
+		Reach.hit(421);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_is_transparent"]();
 		return value;
 	}
 	public static function wgf_window_set_high_dpi(high_dpi:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(422);
+		Reach.hit(426);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_set_high_dpi"](high_dpi);
 		return value;
 	}
 	public static function wgf_window_is_high_dpi():Bool {
 		#if wgf_reach
-		Reach.hit(414);
+		Reach.hit(418);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_is_high_dpi"]();
 		return value;
 	}
 	public static function wgf_window_set_vsync(vsync:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(431);
+		Reach.hit(435);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_set_vsync"](vsync);
 		return value;
 	}
 	public static function wgf_window_is_vsync():Bool {
 		#if wgf_reach
-		Reach.hit(419);
+		Reach.hit(423);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_is_vsync"]();
 		return value;
 	}
 	public static function wgf_window_set_msaa(msaa:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(424);
+		Reach.hit(428);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_set_msaa"](msaa);
 		return value;
 	}
 	public static function wgf_window_is_msaa():Bool {
 		#if wgf_reach
-		Reach.hit(415);
+		Reach.hit(419);
 		#end
 		final value:Dynamic = Raw.binding["wgf_window_is_msaa"]();
 		return value;
@@ -1035,167 +1035,167 @@ class Raw {
 	}
 	public static function wgf_node_create():Int {
 		#if wgf_reach
-		Reach.hit(229);
+		Reach.hit(233);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_create"]();
 		return (value : Int) | 0;
 	}
 	public static function wgf_node_destroy(node:Int, children:Int):Void {
 		#if wgf_reach
-		Reach.hit(230);
+		Reach.hit(234);
 		#end
 		Raw.binding["wgf_node_destroy"](node, children);
 	}
 	public static function wgf_node_get_type(node:Int):Int {
 		#if wgf_reach
-		Reach.hit(240);
+		Reach.hit(244);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_get_type"](node);
 		return value;
 	}
 	public static function wgf_node_set_parent(node:Int, parent:Int):Bool {
 		#if wgf_reach
-		Reach.hit(247);
+		Reach.hit(251);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_set_parent"](node, parent);
 		return value;
 	}
 	public static function wgf_node_get_parent(node:Int):Int {
 		#if wgf_reach
-		Reach.hit(236);
+		Reach.hit(240);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_get_parent"](node);
 		return (value : Int) | 0;
 	}
 	public static function wgf_node_get_child_count(node:Int):Int {
 		#if wgf_reach
-		Reach.hit(233);
+		Reach.hit(237);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_get_child_count"](node);
 		return value;
 	}
 	public static function wgf_node_get_child(node:Int, index:Int):Int {
 		#if wgf_reach
-		Reach.hit(232);
+		Reach.hit(236);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_get_child"](node, index);
 		return (value : Int) | 0;
 	}
 	public static function wgf_node_set_index(node:Int, index:Int):Bool {
 		#if wgf_reach
-		Reach.hit(245);
+		Reach.hit(249);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_set_index"](node, index);
 		return value;
 	}
 	public static function wgf_node_get_index(node:Int):Int {
 		#if wgf_reach
-		Reach.hit(234);
+		Reach.hit(238);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_get_index"](node);
 		return value;
 	}
 	public static function wgf_node_set_position(node:Int, x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
-		Reach.hit(248);
+		Reach.hit(252);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_set_position"](node, x, y, z);
 		return value;
 	}
 	public static function wgf_node_get_position(node:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
-		Reach.hit(237);
+		Reach.hit(241);
 		#end
 		Raw.binding["wgf_node_get_position"](node, Host.vector);
 		return Host.vec3(into);
 	}
 	public static function wgf_node_set_rotation(node:Int, x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
-		Reach.hit(249);
+		Reach.hit(253);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_set_rotation"](node, x, y, z);
 		return value;
 	}
 	public static function wgf_node_get_rotation(node:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
-		Reach.hit(238);
+		Reach.hit(242);
 		#end
 		Raw.binding["wgf_node_get_rotation"](node, Host.vector);
 		return Host.vec3(into);
 	}
 	public static function wgf_node_set_scale(node:Int, x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
-		Reach.hit(250);
+		Reach.hit(254);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_set_scale"](node, x, y, z);
 		return value;
 	}
 	public static function wgf_node_get_scale(node:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
-		Reach.hit(239);
+		Reach.hit(243);
 		#end
 		Raw.binding["wgf_node_get_scale"](node, Host.vector);
 		return Host.vec3(into);
 	}
 	public static function wgf_node_set_transform(node:Int, position_x:Float, position_y:Float, position_z:Float, rotation_x:Float, rotation_y:Float, rotation_z:Float, scale_x:Float, scale_y:Float, scale_z:Float):Bool {
 		#if wgf_reach
-		Reach.hit(251);
+		Reach.hit(255);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_set_transform"](node, position_x, position_y, position_z, rotation_x, rotation_y, rotation_z, scale_x, scale_y, scale_z);
 		return value;
 	}
 	public static function wgf_node_get_world_position(node:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
-		Reach.hit(241);
+		Reach.hit(245);
 		#end
 		Raw.binding["wgf_node_get_world_position"](node, Host.vector);
 		return Host.vec3(into);
 	}
 	public static function wgf_node_set_name(node:Int, name:String):Bool {
 		#if wgf_reach
-		Reach.hit(246);
+		Reach.hit(250);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_set_name"](node, name);
 		return value;
 	}
 	public static function wgf_node_get_name(node:Int):String {
 		#if wgf_reach
-		Reach.hit(235);
+		Reach.hit(239);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_get_name"](node);
 		return value;
 	}
 	public static function wgf_node_find(root:Int, name:String):Int {
 		#if wgf_reach
-		Reach.hit(231);
+		Reach.hit(235);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_find"](root, name);
 		return (value : Int) | 0;
 	}
 	public static function wgf_node_set_enabled(node:Int, enabled:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(244);
+		Reach.hit(248);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_set_enabled"](node, enabled);
 		return value;
 	}
 	public static function wgf_node_is_enabled(node:Int):Bool {
 		#if wgf_reach
-		Reach.hit(242);
+		Reach.hit(246);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_is_enabled"](node);
 		return value;
 	}
 	public static function wgf_node_set_visible(node:Int, visible:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(252);
+		Reach.hit(256);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_set_visible"](node, visible);
 		return value;
 	}
 	public static function wgf_node_is_visible(node:Int):Bool {
 		#if wgf_reach
-		Reach.hit(243);
+		Reach.hit(247);
 		#end
 		final value:Dynamic = Raw.binding["wgf_node_is_visible"](node);
 		return value;
@@ -1313,723 +1313,723 @@ class Raw {
 	}
 	public static function wgf_font_create(path:String):Int {
 		#if wgf_reach
-		Reach.hit(152);
+		Reach.hit(155);
 		#end
 		final value:Dynamic = Raw.binding["wgf_font_create"](path);
 		return (value : Int) | 0;
 	}
 	public static function wgf_font_set_default(font:Int):Bool {
 		#if wgf_reach
-		Reach.hit(155);
+		Reach.hit(158);
 		#end
 		final value:Dynamic = Raw.binding["wgf_font_set_default"](font);
 		return value;
 	}
 	public static function wgf_font_get_default():Int {
 		#if wgf_reach
-		Reach.hit(153);
+		Reach.hit(156);
 		#end
 		final value:Dynamic = Raw.binding["wgf_font_get_default"]();
 		return (value : Int) | 0;
 	}
 	public static function wgf_font_measure(font:Int, text:String, size:Float, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(154);
+		Reach.hit(157);
 		#end
 		Raw.binding["wgf_font_measure"](font, text, size, Host.vector);
 		return Host.vec2(into);
 	}
 	public static function wgf_texture_create(path:String):Int {
 		#if wgf_reach
-		Reach.hit(329);
+		Reach.hit(333);
 		#end
 		final value:Dynamic = Raw.binding["wgf_texture_create"](path);
 		return (value : Int) | 0;
 	}
 	public static function wgf_texture_get_width(texture:Int):Int {
 		#if wgf_reach
-		Reach.hit(332);
+		Reach.hit(336);
 		#end
 		final value:Dynamic = Raw.binding["wgf_texture_get_width"](texture);
 		return value;
 	}
 	public static function wgf_texture_get_height(texture:Int):Int {
 		#if wgf_reach
-		Reach.hit(331);
+		Reach.hit(335);
 		#end
 		final value:Dynamic = Raw.binding["wgf_texture_get_height"](texture);
 		return value;
 	}
 	public static function wgf_texture_set_sampling(texture:Int, wrap_u:Int, wrap_v:Int, filter:Int):Bool {
 		#if wgf_reach
-		Reach.hit(335);
+		Reach.hit(339);
 		#end
 		final value:Dynamic = Raw.binding["wgf_texture_set_sampling"](texture, wrap_u, wrap_v, filter);
 		return value;
 	}
 	public static function wgf_texture_get_wrap_u(texture:Int):Int {
 		#if wgf_reach
-		Reach.hit(333);
+		Reach.hit(337);
 		#end
 		final value:Dynamic = Raw.binding["wgf_texture_get_wrap_u"](texture);
 		return value;
 	}
 	public static function wgf_texture_get_wrap_v(texture:Int):Int {
 		#if wgf_reach
-		Reach.hit(334);
+		Reach.hit(338);
 		#end
 		final value:Dynamic = Raw.binding["wgf_texture_get_wrap_v"](texture);
 		return value;
 	}
 	public static function wgf_texture_get_filter(texture:Int):Int {
 		#if wgf_reach
-		Reach.hit(330);
+		Reach.hit(334);
 		#end
 		final value:Dynamic = Raw.binding["wgf_texture_get_filter"](texture);
 		return value;
 	}
 	public static function wgf_draw_rectangle(x:Float, y:Float, width:Float, height:Float, color:Int):Void {
 		#if wgf_reach
-		Reach.hit(82);
+		Reach.hit(85);
 		#end
 		Raw.binding["wgf_draw_rectangle"](x, y, width, height, color);
 	}
 	public static function wgf_draw_rectangle_lines(x:Float, y:Float, width:Float, height:Float, thickness:Float, color:Int):Void {
 		#if wgf_reach
-		Reach.hit(83);
+		Reach.hit(86);
 		#end
 		Raw.binding["wgf_draw_rectangle_lines"](x, y, width, height, thickness, color);
 	}
 	public static function wgf_draw_line(x0:Float, y0:Float, x1:Float, y1:Float, thickness:Float, color:Int):Void {
 		#if wgf_reach
-		Reach.hit(79);
+		Reach.hit(82);
 		#end
 		Raw.binding["wgf_draw_line"](x0, y0, x1, y1, thickness, color);
 	}
 	public static function wgf_draw_circle(center_x:Float, center_y:Float, radius:Float, color:Int):Void {
 		#if wgf_reach
-		Reach.hit(77);
+		Reach.hit(80);
 		#end
 		Raw.binding["wgf_draw_circle"](center_x, center_y, radius, color);
 	}
 	public static function wgf_draw_circle_lines(center_x:Float, center_y:Float, radius:Float, thickness:Float, color:Int):Void {
 		#if wgf_reach
-		Reach.hit(78);
+		Reach.hit(81);
 		#end
 		Raw.binding["wgf_draw_circle_lines"](center_x, center_y, radius, thickness, color);
 	}
 	public static function wgf_draw_triangle(x0:Float, y0:Float, x1:Float, y1:Float, x2:Float, y2:Float, color:Int):Void {
 		#if wgf_reach
-		Reach.hit(87);
+		Reach.hit(90);
 		#end
 		Raw.binding["wgf_draw_triangle"](x0, y0, x1, y1, x2, y2, color);
 	}
 	public static function wgf_draw_polyline(points:Array<Float>, closed:Bool, thickness:Float, color:Int):Bool {
 		#if wgf_reach
-		Reach.hit(81);
+		Reach.hit(84);
 		#end
 		final value:Dynamic = Raw.binding["wgf_draw_polyline"](points, closed, thickness, color);
 		return value;
 	}
 	public static function wgf_draw_polygon(points:Array<Float>, color:Int):Bool {
 		#if wgf_reach
-		Reach.hit(80);
+		Reach.hit(83);
 		#end
 		final value:Dynamic = Raw.binding["wgf_draw_polygon"](points, color);
 		return value;
 	}
 	public static function wgf_draw_text(font:Int, text:String, x:Float, y:Float, size:Float, color:Int):Void {
 		#if wgf_reach
-		Reach.hit(84);
+		Reach.hit(87);
 		#end
 		Raw.binding["wgf_draw_text"](font, text, x, y, size, color);
 	}
 	public static function wgf_draw_texture(texture:Int, x:Float, y:Float, width:Float, height:Float, tint:Int):Void {
 		#if wgf_reach
-		Reach.hit(85);
+		Reach.hit(88);
 		#end
 		Raw.binding["wgf_draw_texture"](texture, x, y, width, height, tint);
 	}
 	public static function wgf_draw_texture_region(texture:Int, source_x:Float, source_y:Float, source_width:Float, source_height:Float, x:Float, y:Float, width:Float, height:Float, tint:Int):Void {
 		#if wgf_reach
-		Reach.hit(86);
+		Reach.hit(89);
 		#end
 		Raw.binding["wgf_draw_texture_region"](texture, source_x, source_y, source_width, source_height, x, y, width, height, tint);
 	}
 	public static function wgf_emitter2d_create():Int {
 		#if wgf_reach
-		Reach.hit(96);
+		Reach.hit(99);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_create"]();
 		return (value : Int) | 0;
 	}
 	public static function wgf_emitter2d_set_rate(emitter:Int, per_second:Float):Bool {
 		#if wgf_reach
-		Reach.hit(123);
+		Reach.hit(126);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_set_rate"](emitter, per_second);
 		return value;
 	}
 	public static function wgf_emitter2d_get_rate(emitter:Int):Float {
 		#if wgf_reach
-		Reach.hit(107);
+		Reach.hit(110);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_get_rate"](emitter);
 		return value;
 	}
 	public static function wgf_emitter2d_set_emitting(emitter:Int, emitting:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(119);
+		Reach.hit(122);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_set_emitting"](emitter, emitting);
 		return value;
 	}
 	public static function wgf_emitter2d_is_emitting(emitter:Int):Bool {
 		#if wgf_reach
-		Reach.hit(114);
+		Reach.hit(117);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_is_emitting"](emitter);
 		return value;
 	}
 	public static function wgf_emitter2d_burst(emitter:Int, count:Int):Bool {
 		#if wgf_reach
-		Reach.hit(94);
+		Reach.hit(97);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_burst"](emitter, count);
 		return value;
 	}
 	public static function wgf_emitter2d_set_capacity(emitter:Int, capacity:Int):Bool {
 		#if wgf_reach
-		Reach.hit(115);
+		Reach.hit(118);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_set_capacity"](emitter, capacity);
 		return value;
 	}
 	public static function wgf_emitter2d_get_capacity(emitter:Int):Int {
 		#if wgf_reach
-		Reach.hit(97);
+		Reach.hit(100);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_get_capacity"](emitter);
 		return value;
 	}
 	public static function wgf_emitter2d_get_count(emitter:Int):Int {
 		#if wgf_reach
-		Reach.hit(100);
+		Reach.hit(103);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_get_count"](emitter);
 		return value;
 	}
 	public static function wgf_emitter2d_set_life(emitter:Int, min:Float, max:Float):Bool {
 		#if wgf_reach
-		Reach.hit(121);
+		Reach.hit(124);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_set_life"](emitter, min, max);
 		return value;
 	}
 	public static function wgf_emitter2d_get_life_min(emitter:Int):Float {
 		#if wgf_reach
-		Reach.hit(105);
+		Reach.hit(108);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_get_life_min"](emitter);
 		return value;
 	}
 	public static function wgf_emitter2d_get_life_max(emitter:Int):Float {
 		#if wgf_reach
-		Reach.hit(104);
+		Reach.hit(107);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_get_life_max"](emitter);
 		return value;
 	}
 	public static function wgf_emitter2d_set_direction(emitter:Int, angle:Float, spread:Float):Bool {
 		#if wgf_reach
-		Reach.hit(117);
+		Reach.hit(120);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_set_direction"](emitter, angle, spread);
 		return value;
 	}
 	public static function wgf_emitter2d_get_direction(emitter:Int):Float {
 		#if wgf_reach
-		Reach.hit(101);
+		Reach.hit(104);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_get_direction"](emitter);
 		return value;
 	}
 	public static function wgf_emitter2d_get_spread(emitter:Int):Float {
 		#if wgf_reach
-		Reach.hit(112);
+		Reach.hit(115);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_get_spread"](emitter);
 		return value;
 	}
 	public static function wgf_emitter2d_set_speed(emitter:Int, min:Float, max:Float):Bool {
 		#if wgf_reach
-		Reach.hit(125);
+		Reach.hit(128);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_set_speed"](emitter, min, max);
 		return value;
 	}
 	public static function wgf_emitter2d_get_speed_min(emitter:Int):Float {
 		#if wgf_reach
-		Reach.hit(111);
+		Reach.hit(114);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_get_speed_min"](emitter);
 		return value;
 	}
 	public static function wgf_emitter2d_get_speed_max(emitter:Int):Float {
 		#if wgf_reach
-		Reach.hit(110);
+		Reach.hit(113);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_get_speed_max"](emitter);
 		return value;
 	}
 	public static function wgf_emitter2d_set_radius(emitter:Int, radius:Float):Bool {
 		#if wgf_reach
-		Reach.hit(122);
+		Reach.hit(125);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_set_radius"](emitter, radius);
 		return value;
 	}
 	public static function wgf_emitter2d_get_radius(emitter:Int):Float {
 		#if wgf_reach
-		Reach.hit(106);
+		Reach.hit(109);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_get_radius"](emitter);
 		return value;
 	}
 	public static function wgf_emitter2d_set_gravity(emitter:Int, x:Float, y:Float):Bool {
 		#if wgf_reach
-		Reach.hit(120);
+		Reach.hit(123);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_set_gravity"](emitter, x, y);
 		return value;
 	}
 	public static function wgf_emitter2d_get_gravity(emitter:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(103);
+		Reach.hit(106);
 		#end
 		Raw.binding["wgf_emitter2d_get_gravity"](emitter, Host.vector);
 		return Host.vec2(into);
 	}
 	public static function wgf_emitter2d_set_drag(emitter:Int, drag:Float):Bool {
 		#if wgf_reach
-		Reach.hit(118);
+		Reach.hit(121);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_set_drag"](emitter, drag);
 		return value;
 	}
 	public static function wgf_emitter2d_get_drag(emitter:Int):Float {
 		#if wgf_reach
-		Reach.hit(102);
+		Reach.hit(105);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_get_drag"](emitter);
 		return value;
 	}
 	public static function wgf_emitter2d_set_size(emitter:Int, start:Float, end:Float):Bool {
 		#if wgf_reach
-		Reach.hit(124);
+		Reach.hit(127);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_set_size"](emitter, start, end);
 		return value;
 	}
 	public static function wgf_emitter2d_get_size_start(emitter:Int):Float {
 		#if wgf_reach
-		Reach.hit(109);
+		Reach.hit(112);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_get_size_start"](emitter);
 		return value;
 	}
 	public static function wgf_emitter2d_get_size_end(emitter:Int):Float {
 		#if wgf_reach
-		Reach.hit(108);
+		Reach.hit(111);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_get_size_end"](emitter);
 		return value;
 	}
 	public static function wgf_emitter2d_set_color(emitter:Int, start:Int, end:Int):Bool {
 		#if wgf_reach
-		Reach.hit(116);
+		Reach.hit(119);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_set_color"](emitter, start, end);
 		return value;
 	}
 	public static function wgf_emitter2d_get_color_start(emitter:Int):Int {
 		#if wgf_reach
-		Reach.hit(99);
+		Reach.hit(102);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_get_color_start"](emitter);
 		return (value : Int) | 0;
 	}
 	public static function wgf_emitter2d_get_color_end(emitter:Int):Int {
 		#if wgf_reach
-		Reach.hit(98);
+		Reach.hit(101);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_get_color_end"](emitter);
 		return (value : Int) | 0;
 	}
 	public static function wgf_emitter2d_set_stretch(emitter:Int, seconds:Float):Bool {
 		#if wgf_reach
-		Reach.hit(126);
+		Reach.hit(129);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_set_stretch"](emitter, seconds);
 		return value;
 	}
 	public static function wgf_emitter2d_get_stretch(emitter:Int):Float {
 		#if wgf_reach
-		Reach.hit(113);
+		Reach.hit(116);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_get_stretch"](emitter);
 		return value;
 	}
 	public static function wgf_emitter2d_clear(emitter:Int):Bool {
 		#if wgf_reach
-		Reach.hit(95);
+		Reach.hit(98);
 		#end
 		final value:Dynamic = Raw.binding["wgf_emitter2d_clear"](emitter);
 		return value;
 	}
 	public static function wgf_render_set_clear_color(color:Int):Void {
 		#if wgf_reach
-		Reach.hit(269);
+		Reach.hit(273);
 		#end
 		Raw.binding["wgf_render_set_clear_color"](color);
 	}
 	public static function wgf_render_get_clear_color():Int {
 		#if wgf_reach
-		Reach.hit(263);
+		Reach.hit(267);
 		#end
 		final value:Dynamic = Raw.binding["wgf_render_get_clear_color"]();
 		return (value : Int) | 0;
 	}
 	public static function wgf_render_get_width():Int {
 		#if wgf_reach
-		Reach.hit(266);
+		Reach.hit(270);
 		#end
 		final value:Dynamic = Raw.binding["wgf_render_get_width"]();
 		return value;
 	}
 	public static function wgf_render_get_height():Int {
 		#if wgf_reach
-		Reach.hit(265);
+		Reach.hit(269);
 		#end
 		final value:Dynamic = Raw.binding["wgf_render_get_height"]();
 		return value;
 	}
 	public static function wgf_render_get_dpi_scale():Float {
 		#if wgf_reach
-		Reach.hit(264);
+		Reach.hit(268);
 		#end
 		final value:Dynamic = Raw.binding["wgf_render_get_dpi_scale"]();
 		return value;
 	}
 	public static function wgf_render_push_clip(x:Float, y:Float, width:Float, height:Float):Void {
 		#if wgf_reach
-		Reach.hit(268);
+		Reach.hit(272);
 		#end
 		Raw.binding["wgf_render_push_clip"](x, y, width, height);
 	}
 	public static function wgf_render_pop_clip():Void {
 		#if wgf_reach
-		Reach.hit(267);
+		Reach.hit(271);
 		#end
 		Raw.binding["wgf_render_pop_clip"]();
 	}
 	public static function wgf_shape2d_create():Int {
 		#if wgf_reach
-		Reach.hit(282);
+		Reach.hit(286);
 		#end
 		final value:Dynamic = Raw.binding["wgf_shape2d_create"]();
 		return (value : Int) | 0;
 	}
 	public static function wgf_shape2d_get_kind(shape:Int):Int {
 		#if wgf_reach
-		Reach.hit(284);
+		Reach.hit(288);
 		#end
 		final value:Dynamic = Raw.binding["wgf_shape2d_get_kind"](shape);
 		return value;
 	}
 	public static function wgf_shape2d_set_rectangle(shape:Int, width:Float, height:Float):Bool {
 		#if wgf_reach
-		Reach.hit(299);
+		Reach.hit(303);
 		#end
 		final value:Dynamic = Raw.binding["wgf_shape2d_set_rectangle"](shape, width, height);
 		return value;
 	}
 	public static function wgf_shape2d_set_circle(shape:Int, radius:Float):Bool {
 		#if wgf_reach
-		Reach.hit(293);
+		Reach.hit(297);
 		#end
 		final value:Dynamic = Raw.binding["wgf_shape2d_set_circle"](shape, radius);
 		return value;
 	}
 	public static function wgf_shape2d_set_line(shape:Int, x0:Float, y0:Float, x1:Float, y1:Float):Bool {
 		#if wgf_reach
-		Reach.hit(295);
+		Reach.hit(299);
 		#end
 		final value:Dynamic = Raw.binding["wgf_shape2d_set_line"](shape, x0, y0, x1, y1);
 		return value;
 	}
 	public static function wgf_shape2d_set_polygon(shape:Int, points:Array<Float>):Bool {
 		#if wgf_reach
-		Reach.hit(298);
+		Reach.hit(302);
 		#end
 		final value:Dynamic = Raw.binding["wgf_shape2d_set_polygon"](shape, points);
 		return value;
 	}
 	public static function wgf_shape2d_get_size(shape:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(292);
+		Reach.hit(296);
 		#end
 		Raw.binding["wgf_shape2d_get_size"](shape, Host.vector);
 		return Host.vec2(into);
 	}
 	public static function wgf_shape2d_get_radius(shape:Int):Float {
 		#if wgf_reach
-		Reach.hit(291);
+		Reach.hit(295);
 		#end
 		final value:Dynamic = Raw.binding["wgf_shape2d_get_radius"](shape);
 		return value;
 	}
 	public static function wgf_shape2d_get_line_start(shape:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(286);
+		Reach.hit(290);
 		#end
 		Raw.binding["wgf_shape2d_get_line_start"](shape, Host.vector);
 		return Host.vec2(into);
 	}
 	public static function wgf_shape2d_get_line_end(shape:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(285);
+		Reach.hit(289);
 		#end
 		Raw.binding["wgf_shape2d_get_line_end"](shape, Host.vector);
 		return Host.vec2(into);
 	}
 	public static function wgf_shape2d_get_point_count(shape:Int):Int {
 		#if wgf_reach
-		Reach.hit(289);
+		Reach.hit(293);
 		#end
 		final value:Dynamic = Raw.binding["wgf_shape2d_get_point_count"](shape);
 		return value;
 	}
 	public static function wgf_shape2d_get_points(shape:Int, out:Array<Float>):Int {
 		#if wgf_reach
-		Reach.hit(290);
+		Reach.hit(294);
 		#end
 		final value:Dynamic = Raw.binding["wgf_shape2d_get_points"](shape, out);
 		return value;
 	}
 	public static function wgf_shape2d_set_pivot(shape:Int, x:Float, y:Float):Bool {
 		#if wgf_reach
-		Reach.hit(297);
+		Reach.hit(301);
 		#end
 		final value:Dynamic = Raw.binding["wgf_shape2d_set_pivot"](shape, x, y);
 		return value;
 	}
 	public static function wgf_shape2d_get_pivot(shape:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(288);
+		Reach.hit(292);
 		#end
 		Raw.binding["wgf_shape2d_get_pivot"](shape, Host.vector);
 		return Host.vec2(into);
 	}
 	public static function wgf_shape2d_set_outline(shape:Int, thickness:Float):Bool {
 		#if wgf_reach
-		Reach.hit(296);
+		Reach.hit(300);
 		#end
 		final value:Dynamic = Raw.binding["wgf_shape2d_set_outline"](shape, thickness);
 		return value;
 	}
 	public static function wgf_shape2d_get_outline(shape:Int):Float {
 		#if wgf_reach
-		Reach.hit(287);
+		Reach.hit(291);
 		#end
 		final value:Dynamic = Raw.binding["wgf_shape2d_get_outline"](shape);
 		return value;
 	}
 	public static function wgf_shape2d_set_color(shape:Int, color:Int):Bool {
 		#if wgf_reach
-		Reach.hit(294);
+		Reach.hit(298);
 		#end
 		final value:Dynamic = Raw.binding["wgf_shape2d_set_color"](shape, color);
 		return value;
 	}
 	public static function wgf_shape2d_get_color(shape:Int):Int {
 		#if wgf_reach
-		Reach.hit(283);
+		Reach.hit(287);
 		#end
 		final value:Dynamic = Raw.binding["wgf_shape2d_get_color"](shape);
 		return (value : Int) | 0;
 	}
 	public static function wgf_sprite_create(texture:Int):Int {
 		#if wgf_reach
-		Reach.hit(304);
+		Reach.hit(308);
 		#end
 		final value:Dynamic = Raw.binding["wgf_sprite_create"](texture);
 		return (value : Int) | 0;
 	}
 	public static function wgf_sprite_set_texture(sprite:Int, texture:Int):Bool {
 		#if wgf_reach
-		Reach.hit(313);
+		Reach.hit(317);
 		#end
 		final value:Dynamic = Raw.binding["wgf_sprite_set_texture"](sprite, texture);
 		return value;
 	}
 	public static function wgf_sprite_get_texture(sprite:Int):Int {
 		#if wgf_reach
-		Reach.hit(308);
+		Reach.hit(312);
 		#end
 		final value:Dynamic = Raw.binding["wgf_sprite_get_texture"](sprite);
 		return (value : Int) | 0;
 	}
 	public static function wgf_sprite_set_source(sprite:Int, x:Float, y:Float, width:Float, height:Float):Bool {
 		#if wgf_reach
-		Reach.hit(312);
+		Reach.hit(316);
 		#end
 		final value:Dynamic = Raw.binding["wgf_sprite_set_source"](sprite, x, y, width, height);
 		return value;
 	}
 	public static function wgf_sprite_get_source(sprite:Int, into:Null<wgf.Vec4>):wgf.Vec4 {
 		#if wgf_reach
-		Reach.hit(307);
+		Reach.hit(311);
 		#end
 		Raw.binding["wgf_sprite_get_source"](sprite, Host.vector);
 		return Host.vec4(into);
 	}
 	public static function wgf_sprite_set_size(sprite:Int, width:Float, height:Float):Bool {
 		#if wgf_reach
-		Reach.hit(311);
+		Reach.hit(315);
 		#end
 		final value:Dynamic = Raw.binding["wgf_sprite_set_size"](sprite, width, height);
 		return value;
 	}
 	public static function wgf_sprite_get_size(sprite:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(306);
+		Reach.hit(310);
 		#end
 		Raw.binding["wgf_sprite_get_size"](sprite, Host.vector);
 		return Host.vec2(into);
 	}
 	public static function wgf_sprite_set_pivot(sprite:Int, x:Float, y:Float):Bool {
 		#if wgf_reach
-		Reach.hit(310);
+		Reach.hit(314);
 		#end
 		final value:Dynamic = Raw.binding["wgf_sprite_set_pivot"](sprite, x, y);
 		return value;
 	}
 	public static function wgf_sprite_get_pivot(sprite:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(305);
+		Reach.hit(309);
 		#end
 		Raw.binding["wgf_sprite_get_pivot"](sprite, Host.vector);
 		return Host.vec2(into);
 	}
 	public static function wgf_sprite_set_tint(sprite:Int, tint:Int):Bool {
 		#if wgf_reach
-		Reach.hit(314);
+		Reach.hit(318);
 		#end
 		final value:Dynamic = Raw.binding["wgf_sprite_set_tint"](sprite, tint);
 		return value;
 	}
 	public static function wgf_sprite_get_tint(sprite:Int):Int {
 		#if wgf_reach
-		Reach.hit(309);
+		Reach.hit(313);
 		#end
 		final value:Dynamic = Raw.binding["wgf_sprite_get_tint"](sprite);
 		return (value : Int) | 0;
 	}
 	public static function wgf_text_create(font:Int):Int {
 		#if wgf_reach
-		Reach.hit(315);
+		Reach.hit(319);
 		#end
 		final value:Dynamic = Raw.binding["wgf_text_create"](font);
 		return (value : Int) | 0;
 	}
 	public static function wgf_text_set_font(text:Int, font:Int):Bool {
 		#if wgf_reach
-		Reach.hit(325);
+		Reach.hit(329);
 		#end
 		final value:Dynamic = Raw.binding["wgf_text_set_font"](text, font);
 		return value;
 	}
 	public static function wgf_text_get_font(text:Int):Int {
 		#if wgf_reach
-		Reach.hit(317);
+		Reach.hit(321);
 		#end
 		final value:Dynamic = Raw.binding["wgf_text_get_font"](text);
 		return (value : Int) | 0;
 	}
 	public static function wgf_text_set_string(text:Int, string:String):Bool {
 		#if wgf_reach
-		Reach.hit(327);
+		Reach.hit(331);
 		#end
 		final value:Dynamic = Raw.binding["wgf_text_set_string"](text, string);
 		return value;
 	}
 	public static function wgf_text_get_string(text:Int):String {
 		#if wgf_reach
-		Reach.hit(320);
+		Reach.hit(324);
 		#end
 		final value:Dynamic = Raw.binding["wgf_text_get_string"](text);
 		return value;
 	}
 	public static function wgf_text_set_font_size(text:Int, size:Float):Bool {
 		#if wgf_reach
-		Reach.hit(326);
+		Reach.hit(330);
 		#end
 		final value:Dynamic = Raw.binding["wgf_text_set_font_size"](text, size);
 		return value;
 	}
 	public static function wgf_text_get_font_size(text:Int):Float {
 		#if wgf_reach
-		Reach.hit(318);
+		Reach.hit(322);
 		#end
 		final value:Dynamic = Raw.binding["wgf_text_get_font_size"](text);
 		return value;
 	}
 	public static function wgf_text_set_color(text:Int, color:Int):Bool {
 		#if wgf_reach
-		Reach.hit(324);
+		Reach.hit(328);
 		#end
 		final value:Dynamic = Raw.binding["wgf_text_set_color"](text, color);
 		return value;
 	}
 	public static function wgf_text_get_color(text:Int):Int {
 		#if wgf_reach
-		Reach.hit(316);
+		Reach.hit(320);
 		#end
 		final value:Dynamic = Raw.binding["wgf_text_get_color"](text);
 		return (value : Int) | 0;
 	}
 	public static function wgf_text_set_wrap_width(text:Int, width:Float):Bool {
 		#if wgf_reach
-		Reach.hit(328);
+		Reach.hit(332);
 		#end
 		final value:Dynamic = Raw.binding["wgf_text_set_wrap_width"](text, width);
 		return value;
 	}
 	public static function wgf_text_get_wrap_width(text:Int):Float {
 		#if wgf_reach
-		Reach.hit(322);
+		Reach.hit(326);
 		#end
 		final value:Dynamic = Raw.binding["wgf_text_get_wrap_width"](text);
 		return value;
 	}
 	public static function wgf_text_set_align(text:Int, horizontal:Int, vertical:Int):Bool {
 		#if wgf_reach
-		Reach.hit(323);
+		Reach.hit(327);
 		#end
 		final value:Dynamic = Raw.binding["wgf_text_set_align"](text, horizontal, vertical);
 		return value;
 	}
 	public static function wgf_text_get_halign(text:Int):Int {
 		#if wgf_reach
-		Reach.hit(319);
+		Reach.hit(323);
 		#end
 		final value:Dynamic = Raw.binding["wgf_text_get_halign"](text);
 		return value;
 	}
 	public static function wgf_text_get_valign(text:Int):Int {
 		#if wgf_reach
-		Reach.hit(321);
+		Reach.hit(325);
 		#end
 		final value:Dynamic = Raw.binding["wgf_text_get_valign"](text);
 		return value;
@@ -2063,349 +2063,349 @@ class Raw {
 	}
 	public static function wgf_sound_create(path:String):Int {
 		#if wgf_reach
-		Reach.hit(301);
+		Reach.hit(305);
 		#end
 		final value:Dynamic = Raw.binding["wgf_sound_create"](path);
 		return (value : Int) | 0;
 	}
 	public static function wgf_sound_create_streamed(path:String):Int {
 		#if wgf_reach
-		Reach.hit(302);
+		Reach.hit(306);
 		#end
 		final value:Dynamic = Raw.binding["wgf_sound_create_streamed"](path);
 		return (value : Int) | 0;
 	}
 	public static function wgf_sound_add_segment(sound:Int, name:String, start:Float, end:Float):Bool {
 		#if wgf_reach
-		Reach.hit(300);
+		Reach.hit(304);
 		#end
 		final value:Dynamic = Raw.binding["wgf_sound_add_segment"](sound, name, start, end);
 		return value;
 	}
 	public static function wgf_sound_get_duration(sound:Int):Float {
 		#if wgf_reach
-		Reach.hit(303);
+		Reach.hit(307);
 		#end
 		final value:Dynamic = Raw.binding["wgf_sound_get_duration"](sound);
 		return value;
 	}
 	public static function wgf_voice_create(sound:Int):Int {
 		#if wgf_reach
-		Reach.hit(377);
+		Reach.hit(381);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_create"](sound);
 		return (value : Int) | 0;
 	}
 	public static function wgf_voice_destroy(voice:Int):Void {
 		#if wgf_reach
-		Reach.hit(378);
+		Reach.hit(382);
 		#end
 		Raw.binding["wgf_voice_destroy"](voice);
 	}
 	public static function wgf_voice_set_sound(voice:Int, sound:Int):Bool {
 		#if wgf_reach
-		Reach.hit(395);
+		Reach.hit(399);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_set_sound"](voice, sound);
 		return value;
 	}
 	public static function wgf_voice_get_sound(voice:Int):Int {
 		#if wgf_reach
-		Reach.hit(383);
+		Reach.hit(387);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_get_sound"](voice);
 		return (value : Int) | 0;
 	}
 	public static function wgf_voice_play(voice:Int):Bool {
 		#if wgf_reach
-		Reach.hit(388);
+		Reach.hit(392);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_play"](voice);
 		return value;
 	}
 	public static function wgf_voice_pause(voice:Int):Bool {
 		#if wgf_reach
-		Reach.hit(387);
+		Reach.hit(391);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_pause"](voice);
 		return value;
 	}
 	public static function wgf_voice_resume(voice:Int):Bool {
 		#if wgf_reach
-		Reach.hit(389);
+		Reach.hit(393);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_resume"](voice);
 		return value;
 	}
 	public static function wgf_voice_stop(voice:Int):Bool {
 		#if wgf_reach
-		Reach.hit(397);
+		Reach.hit(401);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_stop"](voice);
 		return value;
 	}
 	public static function wgf_voice_get_state(voice:Int):Int {
 		#if wgf_reach
-		Reach.hit(384);
+		Reach.hit(388);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_get_state"](voice);
 		return value;
 	}
 	public static function wgf_voice_set_loop(voice:Int, loop:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(390);
+		Reach.hit(394);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_set_loop"](voice, loop);
 		return value;
 	}
 	public static function wgf_voice_is_loop(voice:Int):Bool {
 		#if wgf_reach
-		Reach.hit(386);
+		Reach.hit(390);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_is_loop"](voice);
 		return value;
 	}
 	public static function wgf_voice_set_volume(voice:Int, volume:Float):Bool {
 		#if wgf_reach
-		Reach.hit(396);
+		Reach.hit(400);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_set_volume"](voice, volume);
 		return value;
 	}
 	public static function wgf_voice_get_volume(voice:Int):Float {
 		#if wgf_reach
-		Reach.hit(385);
+		Reach.hit(389);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_get_volume"](voice);
 		return value;
 	}
 	public static function wgf_voice_set_pitch(voice:Int, pitch:Float):Bool {
 		#if wgf_reach
-		Reach.hit(392);
+		Reach.hit(396);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_set_pitch"](voice, pitch);
 		return value;
 	}
 	public static function wgf_voice_get_pitch(voice:Int):Float {
 		#if wgf_reach
-		Reach.hit(380);
+		Reach.hit(384);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_get_pitch"](voice);
 		return value;
 	}
 	public static function wgf_voice_set_pan(voice:Int, pan:Float):Bool {
 		#if wgf_reach
-		Reach.hit(391);
+		Reach.hit(395);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_set_pan"](voice, pan);
 		return value;
 	}
 	public static function wgf_voice_get_pan(voice:Int):Float {
 		#if wgf_reach
-		Reach.hit(379);
+		Reach.hit(383);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_get_pan"](voice);
 		return value;
 	}
 	public static function wgf_voice_set_position(voice:Int, seconds:Float):Bool {
 		#if wgf_reach
-		Reach.hit(393);
+		Reach.hit(397);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_set_position"](voice, seconds);
 		return value;
 	}
 	public static function wgf_voice_get_position(voice:Int):Float {
 		#if wgf_reach
-		Reach.hit(381);
+		Reach.hit(385);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_get_position"](voice);
 		return value;
 	}
 	public static function wgf_voice_set_segment(voice:Int, name:String):Bool {
 		#if wgf_reach
-		Reach.hit(394);
+		Reach.hit(398);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_set_segment"](voice, name);
 		return value;
 	}
 	public static function wgf_voice_get_segment(voice:Int):String {
 		#if wgf_reach
-		Reach.hit(382);
+		Reach.hit(386);
 		#end
 		final value:Dynamic = Raw.binding["wgf_voice_get_segment"](voice);
 		return value;
 	}
 	public static function wgf_entity_create(parent:Int):Int {
 		#if wgf_reach
-		Reach.hit(128);
+		Reach.hit(131);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_create"](parent);
 		return (value : Int) | 0;
 	}
 	public static function wgf_entity_destroy(entity:Int):Bool {
 		#if wgf_reach
-		Reach.hit(129);
+		Reach.hit(132);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_destroy"](entity);
 		return value;
 	}
 	public static function wgf_entity_is_alive(entity:Int):Bool {
 		#if wgf_reach
-		Reach.hit(141);
+		Reach.hit(144);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_is_alive"](entity);
 		return value;
 	}
 	public static function wgf_entity_get_count():Int {
 		#if wgf_reach
-		Reach.hit(132);
+		Reach.hit(135);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_get_count"]();
 		return value;
 	}
 	public static function wgf_entity_get_node(entity:Int):Int {
 		#if wgf_reach
-		Reach.hit(134);
+		Reach.hit(137);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_get_node"](entity);
 		return (value : Int) | 0;
 	}
 	public static function wgf_entity_set_name(entity:Int, name:String):Bool {
 		#if wgf_reach
-		Reach.hit(144);
+		Reach.hit(147);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_set_name"](entity, name);
 		return value;
 	}
 	public static function wgf_entity_get_name(entity:Int):String {
 		#if wgf_reach
-		Reach.hit(133);
+		Reach.hit(136);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_get_name"](entity);
 		return value;
 	}
 	public static function wgf_entity_find(name:String):Int {
 		#if wgf_reach
-		Reach.hit(130);
+		Reach.hit(133);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_find"](name);
 		return (value : Int) | 0;
 	}
 	public static function wgf_entity_set_visible(entity:Int, visible:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(150);
+		Reach.hit(153);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_set_visible"](entity, visible);
 		return value;
 	}
 	public static function wgf_entity_is_visible(entity:Int):Bool {
 		#if wgf_reach
-		Reach.hit(142);
+		Reach.hit(145);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_is_visible"](entity);
 		return value;
 	}
 	public static function wgf_entity_set_position(entity:Int, x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
-		Reach.hit(145);
+		Reach.hit(148);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_set_position"](entity, x, y, z);
 		return value;
 	}
 	public static function wgf_entity_get_position(entity:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
-		Reach.hit(135);
+		Reach.hit(138);
 		#end
 		Raw.binding["wgf_entity_get_position"](entity, Host.vector);
 		return Host.vec3(into);
 	}
 	public static function wgf_entity_set_rotation(entity:Int, x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
-		Reach.hit(147);
+		Reach.hit(150);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_set_rotation"](entity, x, y, z);
 		return value;
 	}
 	public static function wgf_entity_get_rotation(entity:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
-		Reach.hit(137);
+		Reach.hit(140);
 		#end
 		Raw.binding["wgf_entity_get_rotation"](entity, Host.vector);
 		return Host.vec3(into);
 	}
 	public static function wgf_entity_set_scale(entity:Int, x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
-		Reach.hit(148);
+		Reach.hit(151);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_set_scale"](entity, x, y, z);
 		return value;
 	}
 	public static function wgf_entity_get_scale(entity:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
-		Reach.hit(138);
+		Reach.hit(141);
 		#end
 		Raw.binding["wgf_entity_get_scale"](entity, Host.vector);
 		return Host.vec3(into);
 	}
 	public static function wgf_entity_set_transform(entity:Int, position_x:Float, position_y:Float, position_z:Float, rotation_x:Float, rotation_y:Float, rotation_z:Float, scale_x:Float, scale_y:Float, scale_z:Float):Bool {
 		#if wgf_reach
-		Reach.hit(149);
+		Reach.hit(152);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_set_transform"](entity, position_x, position_y, position_z, rotation_x, rotation_y, rotation_z, scale_x, scale_y, scale_z);
 		return value;
 	}
 	public static function wgf_entity_snap(entity:Int):Bool {
 		#if wgf_reach
-		Reach.hit(151);
+		Reach.hit(154);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_snap"](entity);
 		return value;
 	}
 	public static function wgf_entity_get_positions(entities:Array<Int>, out:Array<Float>):Int {
 		#if wgf_reach
-		Reach.hit(136);
+		Reach.hit(139);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_get_positions"](entities, out);
 		return value;
 	}
 	public static function wgf_entity_set_positions(entities:Array<Int>, positions:Array<Float>):Bool {
 		#if wgf_reach
-		Reach.hit(146);
+		Reach.hit(149);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_set_positions"](entities, positions);
 		return value;
 	}
 	public static function wgf_entity_add_component(entity:Int, component:Int):Bool {
 		#if wgf_reach
-		Reach.hit(127);
+		Reach.hit(130);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_add_component"](entity, component);
 		return value;
 	}
 	public static function wgf_entity_remove_component(entity:Int, component:Int):Bool {
 		#if wgf_reach
-		Reach.hit(143);
+		Reach.hit(146);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_remove_component"](entity, component);
 		return value;
 	}
 	public static function wgf_entity_has_component(entity:Int, component:Int):Bool {
 		#if wgf_reach
-		Reach.hit(140);
+		Reach.hit(143);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_has_component"](entity, component);
 		return value;
 	}
 	public static function wgf_entity_get_component_node(entity:Int, component:Int):Int {
 		#if wgf_reach
-		Reach.hit(131);
+		Reach.hit(134);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_get_component_node"](entity, component);
 		return (value : Int) | 0;
 	}
 	public static function wgf_entity_get_voice(entity:Int):Int {
 		#if wgf_reach
-		Reach.hit(139);
+		Reach.hit(142);
 		#end
 		final value:Dynamic = Raw.binding["wgf_entity_get_voice"](entity);
 		return (value : Int) | 0;
@@ -2574,21 +2574,21 @@ class Raw {
 	}
 	public static function wgf_ecs_get_event_count():Int {
 		#if wgf_reach
-		Reach.hit(92);
+		Reach.hit(95);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ecs_get_event_count"]();
 		return value;
 	}
 	public static function wgf_ecs_take_events(out:Array<Int>):Int {
 		#if wgf_reach
-		Reach.hit(93);
+		Reach.hit(96);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ecs_take_events"](out);
 		return value;
 	}
 	public static function wgf_ecs_find_behavior(name:String, out:Array<Int>):Int {
 		#if wgf_reach
-		Reach.hit(91);
+		Reach.hit(94);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ecs_find_behavior"](name, out);
 		Host.signed(out);
@@ -2596,307 +2596,307 @@ class Raw {
 	}
 	public static function wgf_ecs_count_behavior(name:String):Int {
 		#if wgf_reach
-		Reach.hit(89);
+		Reach.hit(92);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ecs_count_behavior"](name);
 		return value;
 	}
 	public static function wgf_ecs_clear():Void {
 		#if wgf_reach
-		Reach.hit(88);
+		Reach.hit(91);
 		#end
 		Raw.binding["wgf_ecs_clear"]();
 	}
 	public static function wgf_ecs_dump():String {
 		#if wgf_reach
-		Reach.hit(90);
+		Reach.hit(93);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ecs_dump"]();
 		return value;
 	}
 	public static function wgf_lifetime_set_seconds(entity:Int, seconds:Float):Bool {
 		#if wgf_reach
-		Reach.hit(195);
+		Reach.hit(198);
 		#end
 		final value:Dynamic = Raw.binding["wgf_lifetime_set_seconds"](entity, seconds);
 		return value;
 	}
 	public static function wgf_lifetime_get_seconds(entity:Int):Float {
 		#if wgf_reach
-		Reach.hit(194);
+		Reach.hit(197);
 		#end
 		final value:Dynamic = Raw.binding["wgf_lifetime_get_seconds"](entity);
 		return value;
 	}
 	public static function wgf_motion_set_velocity(entity:Int, x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
-		Reach.hit(217);
+		Reach.hit(221);
 		#end
 		final value:Dynamic = Raw.binding["wgf_motion_set_velocity"](entity, x, y, z);
 		return value;
 	}
 	public static function wgf_motion_get_velocity(entity:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
-		Reach.hit(213);
+		Reach.hit(217);
 		#end
 		Raw.binding["wgf_motion_get_velocity"](entity, Host.vector);
 		return Host.vec3(into);
 	}
 	public static function wgf_motion_set_spin(entity:Int, x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
-		Reach.hit(216);
+		Reach.hit(220);
 		#end
 		final value:Dynamic = Raw.binding["wgf_motion_set_spin"](entity, x, y, z);
 		return value;
 	}
 	public static function wgf_motion_get_spin(entity:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
-		Reach.hit(212);
+		Reach.hit(216);
 		#end
 		Raw.binding["wgf_motion_get_spin"](entity, Host.vector);
 		return Host.vec3(into);
 	}
 	public static function wgf_motion_set_damping(entity:Int, damping:Float):Bool {
 		#if wgf_reach
-		Reach.hit(214);
+		Reach.hit(218);
 		#end
 		final value:Dynamic = Raw.binding["wgf_motion_set_damping"](entity, damping);
 		return value;
 	}
 	public static function wgf_motion_get_damping(entity:Int):Float {
 		#if wgf_reach
-		Reach.hit(210);
+		Reach.hit(214);
 		#end
 		final value:Dynamic = Raw.binding["wgf_motion_get_damping"](entity);
 		return value;
 	}
 	public static function wgf_motion_set_max_speed(entity:Int, speed:Float):Bool {
 		#if wgf_reach
-		Reach.hit(215);
+		Reach.hit(219);
 		#end
 		final value:Dynamic = Raw.binding["wgf_motion_set_max_speed"](entity, speed);
 		return value;
 	}
 	public static function wgf_motion_get_max_speed(entity:Int):Float {
 		#if wgf_reach
-		Reach.hit(211);
+		Reach.hit(215);
 		#end
 		final value:Dynamic = Raw.binding["wgf_motion_get_max_speed"](entity);
 		return value;
 	}
 	public static function wgf_scene_create(path:String):Int {
 		#if wgf_reach
-		Reach.hit(275);
+		Reach.hit(279);
 		#end
 		final value:Dynamic = Raw.binding["wgf_scene_create"](path);
 		return (value : Int) | 0;
 	}
 	public static function wgf_scene_instantiate(scene:Int, parent:Int):Int {
 		#if wgf_reach
-		Reach.hit(280);
+		Reach.hit(284);
 		#end
 		final value:Dynamic = Raw.binding["wgf_scene_instantiate"](scene, parent);
 		return value;
 	}
 	public static function wgf_scene_spawn(scene:Int, name:String, parent:Int):Int {
 		#if wgf_reach
-		Reach.hit(281);
+		Reach.hit(285);
 		#end
 		final value:Dynamic = Raw.binding["wgf_scene_spawn"](scene, name, parent);
 		return (value : Int) | 0;
 	}
 	public static function wgf_scene_get_entity_count(scene:Int):Int {
 		#if wgf_reach
-		Reach.hit(276);
+		Reach.hit(280);
 		#end
 		final value:Dynamic = Raw.binding["wgf_scene_get_entity_count"](scene);
 		return value;
 	}
 	public static function wgf_scene_get_prefab_count(scene:Int):Int {
 		#if wgf_reach
-		Reach.hit(277);
+		Reach.hit(281);
 		#end
 		final value:Dynamic = Raw.binding["wgf_scene_get_prefab_count"](scene);
 		return value;
 	}
 	public static function wgf_scene_get_prefab_name(scene:Int, index:Int):String {
 		#if wgf_reach
-		Reach.hit(278);
+		Reach.hit(282);
 		#end
 		final value:Dynamic = Raw.binding["wgf_scene_get_prefab_name"](scene, index);
 		return value;
 	}
 	public static function wgf_scene_has_prefab(scene:Int, name:String):Bool {
 		#if wgf_reach
-		Reach.hit(279);
+		Reach.hit(283);
 		#end
 		final value:Dynamic = Raw.binding["wgf_scene_has_prefab"](scene, name);
 		return value;
 	}
 	public static function wgf_ui_begin():Bool {
 		#if wgf_reach
-		Reach.hit(349);
+		Reach.hit(353);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_begin"]();
 		return value;
 	}
 	public static function wgf_ui_end():Bool {
 		#if wgf_reach
-		Reach.hit(353);
+		Reach.hit(357);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_end"]();
 		return value;
 	}
 	public static function wgf_ui_begin_box(id:String, direction:Int):Bool {
 		#if wgf_reach
-		Reach.hit(350);
+		Reach.hit(354);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_begin_box"](id, direction);
 		return value;
 	}
 	public static function wgf_ui_end_box():Bool {
 		#if wgf_reach
-		Reach.hit(354);
+		Reach.hit(358);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_end_box"]();
 		return value;
 	}
 	public static function wgf_ui_begin_panel(id:String):Bool {
 		#if wgf_reach
-		Reach.hit(351);
+		Reach.hit(355);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_begin_panel"](id);
 		return value;
 	}
 	public static function wgf_ui_end_panel():Bool {
 		#if wgf_reach
-		Reach.hit(355);
+		Reach.hit(359);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_end_panel"]();
 		return value;
 	}
 	public static function wgf_ui_set_width(sizing:Int, value:Float):Bool {
 		#if wgf_reach
-		Reach.hit(371);
+		Reach.hit(375);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_set_width"](sizing, value);
 		return value;
 	}
 	public static function wgf_ui_set_height(sizing:Int, value:Float):Bool {
 		#if wgf_reach
-		Reach.hit(366);
+		Reach.hit(370);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_set_height"](sizing, value);
 		return value;
 	}
 	public static function wgf_ui_set_padding(x:Float, y:Float):Bool {
 		#if wgf_reach
-		Reach.hit(367);
+		Reach.hit(371);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_set_padding"](x, y);
 		return value;
 	}
 	public static function wgf_ui_set_gap(gap:Float):Bool {
 		#if wgf_reach
-		Reach.hit(365);
+		Reach.hit(369);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_set_gap"](gap);
 		return value;
 	}
 	public static function wgf_ui_set_align(x:Int, y:Int):Bool {
 		#if wgf_reach
-		Reach.hit(362);
+		Reach.hit(366);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_set_align"](x, y);
 		return value;
 	}
 	public static function wgf_ui_set_color(color:Int):Bool {
 		#if wgf_reach
-		Reach.hit(363);
+		Reach.hit(367);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_set_color"](color);
 		return value;
 	}
 	public static function wgf_ui_label(text:String, size:Float):Bool {
 		#if wgf_reach
-		Reach.hit(360);
+		Reach.hit(364);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_label"](text, size);
 		return value;
 	}
 	public static function wgf_ui_spacer(size:Float):Bool {
 		#if wgf_reach
-		Reach.hit(372);
+		Reach.hit(376);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_spacer"](size);
 		return value;
 	}
 	public static function wgf_ui_button(id:String, text:String):Bool {
 		#if wgf_reach
-		Reach.hit(352);
+		Reach.hit(356);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_button"](id, text);
 		return value;
 	}
 	public static function wgf_ui_set_focus(id:String):Bool {
 		#if wgf_reach
-		Reach.hit(364);
+		Reach.hit(368);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_set_focus"](id);
 		return value;
 	}
 	public static function wgf_ui_get_focus():String {
 		#if wgf_reach
-		Reach.hit(356);
+		Reach.hit(360);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_get_focus"]();
 		return value;
 	}
 	public static function wgf_ui_set_style_color(which:Int, color:Int):Bool {
 		#if wgf_reach
-		Reach.hit(368);
+		Reach.hit(372);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_set_style_color"](which, color);
 		return value;
 	}
 	public static function wgf_ui_get_style_color(which:Int):Int {
 		#if wgf_reach
-		Reach.hit(357);
+		Reach.hit(361);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_get_style_color"](which);
 		return (value : Int) | 0;
 	}
 	public static function wgf_ui_set_style_value(which:Int, value:Float):Bool {
 		#if wgf_reach
-		Reach.hit(370);
+		Reach.hit(374);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_set_style_value"](which, value);
 		return value;
 	}
 	public static function wgf_ui_get_style_value(which:Int):Float {
 		#if wgf_reach
-		Reach.hit(359);
+		Reach.hit(363);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_get_style_value"](which);
 		return value;
 	}
 	public static function wgf_ui_set_style_font(font:Int):Bool {
 		#if wgf_reach
-		Reach.hit(369);
+		Reach.hit(373);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_set_style_font"](font);
 		return value;
 	}
 	public static function wgf_ui_get_style_font():Int {
 		#if wgf_reach
-		Reach.hit(358);
+		Reach.hit(362);
 		#end
 		final value:Dynamic = Raw.binding["wgf_ui_get_style_font"]();
 		return (value : Int) | 0;
 	}
 	public static function wgf_ui_reset_style():Void {
 		#if wgf_reach
-		Reach.hit(361);
+		Reach.hit(365);
 		#end
 		Raw.binding["wgf_ui_reset_style"]();
 	}
@@ -2920,71 +2920,97 @@ class Raw {
 		final value:Dynamic = Raw.binding["wgf_app_is_running"]();
 		return value;
 	}
+	public static function wgf_debug_show_fps(font:Int, x:Float, y:Float, size:Float, color:Int):Void {
+		#if wgf_reach
+		Reach.hit(79);
+		#end
+		Raw.binding["wgf_debug_show_fps"](font, x, y, size, color);
+	}
+	public static function wgf_debug_hide_fps():Void {
+		#if wgf_reach
+		Reach.hit(77);
+		#end
+		Raw.binding["wgf_debug_hide_fps"]();
+	}
+	public static function wgf_debug_is_fps_shown():Bool {
+		#if wgf_reach
+		Reach.hit(78);
+		#end
+		final value:Dynamic = Raw.binding["wgf_debug_is_fps_shown"]();
+		return value;
+	}
 	public static function wgf_loop_get_frame_delta():Float {
 		#if wgf_reach
-		Reach.hit(201);
+		Reach.hit(205);
 		#end
 		final value:Dynamic = Raw.binding["wgf_loop_get_frame_delta"]();
 		return value;
 	}
 	public static function wgf_loop_set_tick_rate(hz:Int):Void {
 		#if wgf_reach
-		Reach.hit(208);
+		Reach.hit(212);
 		#end
 		Raw.binding["wgf_loop_set_tick_rate"](hz);
 	}
 	public static function wgf_loop_get_tick_rate():Int {
 		#if wgf_reach
-		Reach.hit(205);
+		Reach.hit(209);
 		#end
 		final value:Dynamic = Raw.binding["wgf_loop_get_tick_rate"]();
 		return value;
 	}
 	public static function wgf_loop_get_tick_delta():Float {
 		#if wgf_reach
-		Reach.hit(203);
+		Reach.hit(207);
 		#end
 		final value:Dynamic = Raw.binding["wgf_loop_get_tick_delta"]();
 		return value;
 	}
 	public static function wgf_loop_get_tick_fraction():Float {
 		#if wgf_reach
-		Reach.hit(204);
+		Reach.hit(208);
 		#end
 		final value:Dynamic = Raw.binding["wgf_loop_get_tick_fraction"]();
 		return value;
 	}
 	public static function wgf_loop_set_time_scale(scale:Float):Void {
 		#if wgf_reach
-		Reach.hit(209);
+		Reach.hit(213);
 		#end
 		Raw.binding["wgf_loop_set_time_scale"](scale);
 	}
 	public static function wgf_loop_get_time_scale():Float {
 		#if wgf_reach
-		Reach.hit(206);
+		Reach.hit(210);
 		#end
 		final value:Dynamic = Raw.binding["wgf_loop_get_time_scale"]();
 		return value;
 	}
 	public static function wgf_loop_set_target_fps(fps:Int):Void {
 		#if wgf_reach
-		Reach.hit(207);
+		Reach.hit(211);
 		#end
 		Raw.binding["wgf_loop_set_target_fps"](fps);
 	}
 	public static function wgf_loop_get_target_fps():Int {
 		#if wgf_reach
-		Reach.hit(202);
+		Reach.hit(206);
 		#end
 		final value:Dynamic = Raw.binding["wgf_loop_get_target_fps"]();
 		return value;
 	}
 	public static function wgf_loop_get_fps():Float {
 		#if wgf_reach
-		Reach.hit(200);
+		Reach.hit(203);
 		#end
 		final value:Dynamic = Raw.binding["wgf_loop_get_fps"]();
+		return value;
+	}
+	public static function wgf_loop_get_frame_cost():Float {
+		#if wgf_reach
+		Reach.hit(204);
+		#end
+		final value:Dynamic = Raw.binding["wgf_loop_get_frame_cost"]();
 		return value;
 	}
 }

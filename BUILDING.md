@@ -163,7 +163,7 @@ at 101 expect bullets >= 1
 at 120 end
 ```
 
-Inputs at a frame are delivered before its ticks; expectations are checked after it. While an autopilot runs, time is the autopilot's: every frame lasts a sixtieth of a second, whatever the display does, so ticks, and the random numbers a seed gives, make the same run everywhere, and a headless run doesn't wait for a display. The run's result is logged, "wgf_autopilot: PASS (<n> expectations, <frames> frames)" or "wgf_autopilot: FAIL ...", with an error for each expectation that failed, naming the probe and its value; an autopilot that can't be read, or a program that quits before its end, is an error too. Errors are what the tools judge a run by (on the web there is no exit code).
+Inputs at a frame are delivered before its ticks; expectations are checked after it. While an autopilot runs, time is the autopilot's: every frame lasts a sixtieth of a second, whatever the display does, so ticks, and the random numbers a seed gives, make the same run everywhere, and a headless run doesn't wait for a display. The run's result is logged, "wgf_autopilot: PASS (0 of <n> expectations failed, <frames> frames)", or FAIL with how many failed, with an error for each expectation that failed, naming the probe and its value; an autopilot that can't be read, or a program that quits before its end, is an error too. Errors are what the tools judge a run by (on the web there is no exit code).
 
 ## Windows
 

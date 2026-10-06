@@ -84,6 +84,9 @@ class Reach {
 		"wgf_color_make",
 		"wgf_color_make_float",
 		"wgf_color_with_alpha",
+		"wgf_debug_hide_fps",
+		"wgf_debug_is_fps_shown",
+		"wgf_debug_show_fps",
 		"wgf_draw_circle",
 		"wgf_draw_circle_lines",
 		"wgf_draw_line",
@@ -208,6 +211,7 @@ class Reach {
 		"wgf_log_message_source",
 		"wgf_log_set_level",
 		"wgf_loop_get_fps",
+		"wgf_loop_get_frame_cost",
 		"wgf_loop_get_frame_delta",
 		"wgf_loop_get_target_fps",
 		"wgf_loop_get_tick_delta",
@@ -441,7 +445,7 @@ class Reach {
 		"wgf_window_set_vsync",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...432) 0];
+	static final counts:Array<Int> = [for (_ in 0...436) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

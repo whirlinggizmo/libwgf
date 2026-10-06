@@ -10,6 +10,7 @@
 #include "wgf_loop.h"
 #include "wgf.h"
 #include "wgf_log.h"
+#include "wgf_app_priv.h"
 #include "wgf_app_autopilot_priv.h"
 #include "wgf_app_tick_clock_priv.h"
 #include "wgf_time.h"
@@ -37,6 +38,8 @@ static struct {
     double last_frame; /* when the previous frame ran; 0 before the first */
     float frame_delta;
     double fps_delta; /* frame deltas, smoothed, for the fps readout; 0 before the first */
+    float frame_cost;  /* the last frame's own work in real time, seconds; 0 before the first */
+    wgf_app_priv_overlay_t overlay; /* drawn over the program's frame (wgf_app_priv.h); NULL for none */
     bool first_frame_done; /* the first frame's mark made */
     bool flown;            /* an autopilot flies it (wgf_app_autopilot_priv.h): its time, not the clock's */
     long frames;           /* frames run since init */
@@ -61,6 +64,7 @@ static void on_init(void)
     app.last_frame = 0.0;
     app.frame_delta = 0.0f;
     app.fps_delta = 0.0;
+    app.frame_cost = 0.0f;
     app.frames = 0;
     app.flown = wgf_app_priv_autopilot_start(); /* before the program's init: it sets the seed */
     wgf_platform_priv_set_paced(!app.flown);  /* a headless run flown by an autopilot waits for no display */
@@ -140,9 +144,11 @@ static void run_ticks(double elapsed)
 
 static void on_frame(void)
 {
+    double started;
     if (!app.started) return;
     wgf_core_priv_update();
     if (!pace()) return;
+    started = wgf_time_get_seconds(); /* the frame's own work, from here to its drawing's end */
     wgf_app_priv_autopilot_begin_frame(app.frames); /* the frame's autopilot inputs, before its ticks */
     wgf_platform_priv_gamepad_begin_frame();     /* before the ticks: they read the pads too */
     run_ticks(time_frame());
@@ -150,7 +156,9 @@ static void on_frame(void)
     wgf_core_priv_part_update(app.frame_delta); /* the parts' (the ecs's nodes, particles): after the ticks, before the frame */
     wgf_gfx_priv_begin_frame();
     call(app.frame);
+    if (app.overlay != NULL) app.overlay();
     wgf_gfx_priv_end_frame();
+    app.frame_cost = (float)(wgf_time_get_seconds() - started);
     if (!app.first_frame_done) {
         app.first_frame_done = true;
         wgf_platform_priv_mark("wgf:first-frame");
@@ -264,4 +272,14 @@ int wgf_loop_get_target_fps(void)
 float wgf_loop_get_fps(void)
 {
     return app.fps_delta > 0.0 ? (float)(1.0 / app.fps_delta) : 0.0f;
+}
+
+void wgf_app_priv_set_overlay(wgf_app_priv_overlay_t overlay)
+{
+    app.overlay = overlay;
+}
+
+float wgf_loop_get_frame_cost(void)
+{
+    return app.frame_cost;
 }

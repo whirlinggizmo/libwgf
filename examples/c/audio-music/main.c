@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "wgf_app.h"
+#include "wgf_debug.h"
 #include "wgf_asset.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
@@ -32,9 +33,9 @@
  * table: the same window, files, keys, and text. Where it differs, and why:
  *   - "libwgt" reads "libwgf" in the window's title, the heading, and above: the
  *     library's name.
- *   - The frame rate is drawn by the example (draw_fps, as libwgt's wgt_loop_draw_fps
- *     draws it: "%d FPS", 16 pixels, green): libwgf has wgf_loop_get_fps but no call
- *     that draws it. */
+ *   - The readout is libwgf's overlay (wgf_debug_show_fps), as libwgt's is its
+ *     wgt_loop_draw_fps: the same place, font, size, and color, with the frame's
+ *     cost in milliseconds beside the rate. */
 
 static wgf_voice_t music, click;
 
@@ -46,13 +47,6 @@ static wgf_voice_t voice_of(wgf_sound_t sound)
     return voice;
 }
 
-/* The frame rate at (x, y), as libwgt's wgt_loop_draw_fps draws it. */
-static void draw_fps(float x, float y)
-{
-    char text[32];
-    snprintf(text, sizeof(text), "%d FPS", (int)(wgf_loop_get_fps() + 0.5f));
-    wgf_draw_text(0, text, x, y, 16.0f, wgf_color_make(0, 255, 0, 255));
-}
 
 static bool loaded(wgf_voice_t voice)
 {
@@ -95,13 +89,13 @@ static void frame(void *user)
                   wgf_app_can_quit() ? "[SPACE] play click   [M] pause music   [S] stall 300 ms   [ESC] quit"
                                      : "[SPACE] play click   [M] pause music   [S] stall 300 ms",
                   24, 150, 16, WGF_COLOR_LIGHTGRAY);
-    draw_fps(24, 12);
 }
 
 int main(void)
 {
     wgf_window_set_title("libwgf audio");
     wgf_window_set_size(720, 240);
+    wgf_debug_show_fps(0, 24, 12, 16.0f, wgf_color_make(0, 255, 0, 255)); /* libwgt's draw_fps */
     wgf_app_run(init, NULL, frame, NULL, NULL);
     return 0;
 }
