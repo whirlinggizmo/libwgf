@@ -48,7 +48,15 @@ ROOT = Path(__file__).resolve().parents[1]
 SKIP = 77
 
 # Setters with no getter on purpose, and why. A decision, not a backlog.
-GETTERS_EXEMPT = {}
+UI_OPEN_BOX = 'immediate mode: it describes the open box for this frame alone, and nothing keeps it to read back'
+GETTERS_EXEMPT = {
+    'wgf_ui_set_width': UI_OPEN_BOX,
+    'wgf_ui_set_height': UI_OPEN_BOX,
+    'wgf_ui_set_padding': UI_OPEN_BOX,
+    'wgf_ui_set_gap': UI_OPEN_BOX,
+    'wgf_ui_set_align': UI_OPEN_BOX,
+    'wgf_ui_set_color': UI_OPEN_BOX,
+}
 
 # The only functions that may take callbacks, with the callback type and why: each
 # may also take the `void *user` passed back to them. A decision, not a backlog.

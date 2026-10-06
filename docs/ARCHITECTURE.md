@@ -15,7 +15,7 @@ libwgf is one C library, `libwgf.a`, built in layers (CONVENTIONS' table says wh
 | gfx | 2D drawing: the frame, immediate mode, textures, fonts and text, nodes in canvases, shapes, sprites, particles | built |
 | audio | sounds (decoded or streamed) and voices, mixed natively by libwgf on sokol_audio's thread, on the web by the browser's Web Audio | built |
 | ecs | entities with a simulated transform, the built-in components and their systems, triggers, polled events, scenes as text | built: on flecs's core |
-| ui | layout and widgets | to come (step 7) |
+| ui | game UI, immediate mode: boxes, panels, labels, buttons, focus by keys and pads, the pointer's capture, a style | built: on Clay |
 | app | the runtime: run, the frame loop, ticks, scripted runs | built |
 
 ### math
@@ -140,6 +140,20 @@ Entities, their components, and the systems that run them at the tick rate, on f
 **Events** queue in a ring of 65,536 and are taken by the program, or the binding, with `wgf_ecs_take_events`: one async model, polled, and no callback crosses into a script. A behavior's code is the program's: the binding dispatches its create, tick, and trigger calls from these events and the found entities (step 8).
 
 **Scenes** load through core's load pipeline, parsed on a worker into a plan of entities and prefabs, each a list of component lines; `from` copies a prefab's lines first. Instantiating or spawning applies the lines through the same calls a program makes. `wgf_ecs_dump` writes every live entity with every component as it is, so a dumped world loaded again makes the same world, and dumps the same text.
+
+### ui
+
+Game UI, immediate mode, on Clay (the Whirling Gizmo fork): a part installed by the first `wgf_ui_begin`, so a program that draws none links none of Clay.
+
+| Section | Header | Provides |
+|---------|--------|----------|
+| ui | `wgf_ui.h` | a frame's UI between `wgf_ui_begin` and `wgf_ui_end`: boxes (a column or a row) and panels, the open one's size, padding, gap, alignment, and color; labels, spacers, and buttons, a button true in the frame it is activated; the focus, by id; the style (colors, sizes, a font) |
+
+**A frame's UI.** The program describes the UI as it is now, in the frame callback; each call goes to Clay as it is made, a box's layout held back until its first child or its close, since Clay takes an element's declaration once. The screen is the root, a centered column. Text and ids are copied into blocks kept until the next frame's begin, because Clay points at them until it draws. `wgf_ui_end` closes what was left open, has Clay lay it all out, and draws its commands through gfx's immediate mode, at that point in the frame: a rectangle as a filled outline with rounded corners, a border as a closed thick line along it, text through `wgf_draw_text` in the style's font (measured with `wgf_font_measure`, so Clay and the drawing agree), and clips through gfx's clip stack. Nothing of Clay is in a public header, and no callback crosses the API.
+
+**Input.** As the UI begins, it reads the frame's input once: the pointer (the mouse, which touch drives too) and its left button's edges, and the keys and pad buttons that activate and navigate. A button is answered as it is described, against where Clay laid it out in the frame before: the pointer activates the button it was pressed and released over, and the focused button activates on Enter, Space, or a pad's south button. After the layout, the arrow keys, Tab and Shift+Tab, and the D-pad move the focus through the frame's buttons in order, wrapping; a focus moved so is drawn as a line around the button. The UI sets the input's pointer capture while the pointer is over a panel, a button, or a colored box, or a press on a button is held, and the keyboard capture while a button has the focus; the part's end of frame lets both go after a frame that drew no UI.
+
+**Memory.** One Clay context in one arena, sized by Clay for 2048 elements and 8192 measured words, made at the first begin and freed at gfx's stop with the text blocks.
 
 ### app
 

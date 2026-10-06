@@ -29,10 +29,9 @@ WGF_API const char *wgf_input_get_chars(void);
  * or the keyboard alone because a UI has it. Advisory: input keeps reporting
  * everything; game code checks these first.
  *
- * The pointer is captured while a press that started on an interactive node is held
- * (wgf_pointer.h), through the frame it is released, or while the game's UI says
- * so. The UI's say is sticky: set it from the UI's own hit testing every frame, such
- * as a text field that has the focus for the keyboard. */
+ * Each is captured while the game's UI says so, and the say is sticky: libwgf's UI
+ * (wgf_ui.h) sets both from its own hit testing and focus every frame it is drawn, and
+ * lets them go in a frame it isn't. */
 WGF_API void wgf_input_set_pointer_captured(bool captured);
 WGF_API bool wgf_input_is_pointer_captured(void);
 WGF_API void wgf_input_set_keyboard_captured(bool captured);
