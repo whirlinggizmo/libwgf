@@ -299,6 +299,7 @@ function publish() {
     wgf.wgf_probe_set_value("asteroids.score", score);
     wgf.wgf_probe_set_value("asteroids.lives", lives);
     wgf.wgf_probe_set_value("asteroids.wave", wave);
+    wgf.wgf_probe_set_value("asteroids.ready", ready ? 1 : 0); // its scene loaded: what an autopilot waits for
 }
 
 function frame() {

@@ -16,6 +16,7 @@
 #include "wgf_platform_priv.h"
 #include "wgf_probe.h"
 #include "wgf_random.h"
+#include "wgf_time.h"
 
 /* An autopilot run (wgf_app_autopilot_priv.h): the autopilot parsed whole first, each line
  * checked, into commands sorted by frame, then played a frame at a time. */
@@ -37,6 +38,7 @@ typedef enum {
     CMD_PAD_UP,
     CMD_PAD_AXIS,
     CMD_EXPECT,
+    CMD_WAIT,
     CMD_LOG,
     CMD_SCREENSHOT,
     CMD_DUMP,
@@ -67,6 +69,8 @@ static struct {
     int count, capacity, next;
     int failures, expectations;
     long end_frame; /* the end's frame, -1 when the autopilot has none */
+    long shift;     /* the program's frames waited (wait): the autopilot's frame is the program's less this */
+    double waiting; /* when the wait under way began, in real seconds; -1 for none */
     float mouse_x, mouse_y;
     bool pads_taken;
     wgf_platform_priv_gamepad_t pads[WGF_PLATFORM_PRIV_GAMEPADS];
@@ -125,6 +129,10 @@ static const name_t pad_axes[] = {
 };
 
 static const char *const ops[] = {"==", "!=", "<", "<=", ">", ">="};
+
+/* A wait's longest, in real seconds: a load on a slow machine, not a wait that will
+ * never end. */
+#define WAIT_SECONDS 30.0
 
 static bool find_name(const name_t *names, size_t count, const char *word, int *code)
 {
@@ -362,12 +370,13 @@ static void parse_command(parser_t *parser, long frame, char *at)
             parse_error(parser, "pad takes connect, disconnect, down, up, tap, or axis", how);
             return;
         }
-    } else if (strcmp(word, "expect") == 0) {
+    } else if (strcmp(word, "expect") == 0 || strcmp(word, "wait") == 0) {
+        const bool wait = word[0] == 'w';
         char *probe = next_word(&at), *op = next_word(&at);
         double value;
         int i;
         if (probe == NULL || op == NULL || !parse_number(next_word(&at), &value)) {
-            parse_error(parser, "expect takes a probe, an operator, and a number", probe);
+            parse_error(parser, "expect and wait take a probe, an operator, and a number", probe);
             return;
         }
         for (i = 0; i < 6 && strcmp(ops[i], op) != 0; i++) {
@@ -376,7 +385,7 @@ static void parse_command(parser_t *parser, long frame, char *at)
             parse_error(parser, "no such operator (==, !=, <, <=, >, >=)", op);
             return;
         }
-        command = add(parser, frame, CMD_EXPECT);
+        command = add(parser, frame, wait ? CMD_WAIT : CMD_EXPECT);
         if (command != NULL) {
             command->op = (op_t)i;
             command->value = value;
@@ -420,6 +429,8 @@ static void clear(void)
     free(autopilot.commands);
     memset(&autopilot, 0, sizeof(autopilot));
     autopilot.end_frame = -1;
+    autopilot.shift = 0;
+    autopilot.waiting = -1.0;
 }
 
 /* Parse `text` whole; false, with each bad line logged, when anything is wrong. */
@@ -610,15 +621,13 @@ static bool holds(op_t op, double got, double want)
 
 static void check(const command_t *command)
 {
+    const bool set = wgf_probe_has_value(command->text);
+    const double got = set ? wgf_probe_get_value(command->text) : 0.0;
     autopilot.expectations++;
-    if (!wgf_probe_has_value(command->text)) {
-        wgf_log_error("wgf_autopilot: FAIL at frame %ld (line %d): expect %s %s %g: %s was never set", command->frame,
-                      command->line, command->text, ops[command->op], command->value, command->text);
-        autopilot.failures++;
-    } else if (!holds(command->op, wgf_probe_get_value(command->text), command->value)) {
-        wgf_log_error("wgf_autopilot: FAIL at frame %ld (line %d): expect %s %s %g: %s is %g", command->frame,
+    if (!set || !holds(command->op, got, command->value)) {
+        wgf_log_error("wgf_autopilot: FAIL at frame %ld (line %d): expect %s %s %g: %s %s %g", command->frame,
                       command->line, command->text, ops[command->op], command->value, command->text,
-                      wgf_probe_get_value(command->text));
+                      set ? "is" : "was never set, read as", got);
         autopilot.failures++;
     }
 }
@@ -674,6 +683,7 @@ void wgf_app_priv_autopilot_begin_frame(long frame)
 {
     int i;
     if (!autopilot.running) return;
+    frame -= autopilot.shift; /* the autopilot's frame */
     for (i = autopilot.next; i < autopilot.count && autopilot.commands[i].frame <= frame; i++) {
         command_t *command = &autopilot.commands[i];
         if (!command->done && command->kind < CMD_EXPECT) {
@@ -702,20 +712,47 @@ static void dump(long frame)
     }
 }
 
-void wgf_app_priv_autopilot_end_frame(long frame)
+/* A wait at the autopilot's frame: true once its probe holds, so the autopilot goes on;
+ * false while it doesn't, so the autopilot stays at this frame for the program's next
+ * one; past WAIT_SECONDS of real time, it fails and the autopilot goes on. */
+static bool waited(const command_t *command)
 {
+    const double now = wgf_time_get_seconds();
+    const bool met = wgf_probe_has_value(command->text) &&
+                     holds(command->op, wgf_probe_get_value(command->text), command->value);
+    if (!met && autopilot.waiting < 0.0) autopilot.waiting = now;
+    if (!met && now - autopilot.waiting <= WAIT_SECONDS) {
+        autopilot.shift++; /* this autopilot frame again, for the program's next */
+        return false;
+    }
+    if (!met) {
+        wgf_log_error("wgf_autopilot: FAIL at line %d: wait timed out", command->line);
+        autopilot.failures++;
+    }
+    autopilot.waiting = -1.0;
+    return true;
+}
+
+void wgf_app_priv_autopilot_end_frame(long program_frame)
+{
+    const long frame = program_frame - autopilot.shift; /* the autopilot's frame */
     if (!autopilot.running) return;
-    for (; autopilot.next < autopilot.count && autopilot.commands[autopilot.next].frame <= frame; autopilot.next++) {
+    while (autopilot.next < autopilot.count && autopilot.commands[autopilot.next].frame <= frame) {
         command_t *command = &autopilot.commands[autopilot.next];
-        if (command->done) continue;
+        if (command->done) {
+            autopilot.next++;
+            continue;
+        }
+        if (command->kind == CMD_WAIT && !waited(command)) return; /* the rest of the frame waits too */
         command->done = true;
+        autopilot.next++;
         switch (command->kind) {
             case CMD_EXPECT: check(command); break;
             case CMD_LOG: wgf_log_info("wgf_autopilot: %s", command->text); break;
             case CMD_SCREENSHOT: wgf_log_info("wgf_autopilot: SCREENSHOT %s", command->text); break;
             case CMD_DUMP: dump(frame); break;
             case CMD_END:
-                finish(frame + 1);
+                finish(program_frame + 1);
                 autopilot.running = false;
                 wgf_platform_priv_request_quit();
                 return;

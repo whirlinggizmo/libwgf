@@ -255,3 +255,12 @@ Asteroids (milestone 1), from step 0 of milestone 2: the clean-room rebuild (`..
 - **Found by:** Rob's question during step 0's triage
 - **Triage:** task: milestone 2, step 11, which carries libwgt's emitter core whole and retires the CPU one; a CPU mode for particles that react after birth waits in "Later" on its condition
 
+
+### Asteroids: a playthrough raced its game's load
+
+- **Where:** `games/asteroids/autopilot/playthrough.autopilot`, flown by the JS Asteroids in CI (0bb429e's run): `at 30 key tap enter`, then `at 31 expect asteroids.state == 1`
+- **Missing:** a way for an autopilot to wait for the program: its frames are virtual time, but a load takes real time, so on CI's slower runner the scene hadn't loaded by frame 30, the title ignored Play, and the run failed; the Haxe game's playthrough had the same race and hadn't lost it yet
+- **Workaround:** none: the run failed
+- **Cost:** a CI failure on a commit that had passed locally; a flake in every playthrough that acts before its loads end
+- **Found by:** CI
+- **Triage:** fixed in milestone 2's step 1: `at <frame> wait <probe> <op> <number>` holds the autopilot's clock while the program's frames go on (BUILDING.md, "Autopilot files"); Asteroids publishes `asteroids.ready`, and its playthrough and smoke autopilots wait for it

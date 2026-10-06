@@ -166,6 +166,18 @@ int main(void)
            "a wrong value and a probe never set fail, the right one doesn't");
     expect(run.frames == 6, "a failing autopilot still runs to its end");
 
+    /* a wait: the autopilot's clock held at its frame until the probe holds, the
+       program's frames going on, every later line its distance from the wait */
+    run_autopilot("wgf-autopilot 1\n"
+               "at 2 wait ticks >= 10\n" /* frame 2 has had 3 ticks: the program's frame 9 has had 10 */
+               "at 2 expect ticks == 10\n"
+               "at 3 expect ticks == 11\n"
+               "at 4 end\n",
+               &run);
+    expect(wgf_app_priv_autopilot_has_passed() && wgf_app_priv_autopilot_get_failures() == 0,
+           "a wait holds until its probe does, and what follows it at its frame runs then");
+    expect(run.frames == 12, "the program's frames went on through the wait, the end its distance after");
+
     wgf_core_priv_part_install(&dumping);
     run_autopilot("wgf-autopilot 1\nat 2 dump\nat 3 dump\nat 4 end\n", &run);
     expect(wgf_app_priv_autopilot_has_passed() && dumps == 2, "each dump asks the part for its state");
@@ -209,6 +221,8 @@ int main(void)
             "wgf-autopilot 1\nat 1 end extra\n",         /* more than the command takes */
             "wgf-autopilot 1\nat 1 key tap a\nseed 3\n", /* a seed after the commands */
             "wgf-autopilot 1\nwait 3\n",                 /* not a line the format has */
+            "wgf-autopilot 1\nat 1 wait score ~ 3\n",    /* no such operator */
+            "wgf-autopilot 1\nat 1 wait score == 1 2\n", /* more than the command takes */
             "wgf-autopilot 1\nat 1 text\n",              /* nothing to type */
             "wgf-autopilot 1\nat 1 log \x01\n",          /* a control character */
         };

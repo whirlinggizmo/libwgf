@@ -136,6 +136,11 @@ pad <n> axis <axis> <value>     left_x, left_y, right_x, right_y (-1 to 1), left
                                 right_trigger (0 to 1)
 expect <probe> <op> <number>    after the frame: ==, !=, <, <=, >, or >= against a probe;
                                 a probe not set fails
+wait <probe> <op> <number>      after the frame, until the probe holds: the autopilot stays at this
+                                frame while the program's frames go on, so every later line keeps its
+                                distance from the wait (a load's end, which takes real time, comes at
+                                the same point on every machine); past 30 real seconds, a failure,
+                                and the autopilot goes on
 log <text>                      the text, logged, to mark a point in the run
 screenshot <name>               "wgf_autopilot: SCREENSHOT <name>" logged, for a tool watching the
                                 run to save the frame (wgf screenshot does)
@@ -149,6 +154,7 @@ For example, a game started, a thrust and a shot, and what should follow:
 ```
 wgf-autopilot 1
 seed 1
+at 1 wait ready == 1            # the game's files loaded, however long that takes here
 at 30 key tap enter             # start the game
 at 40 key down up               # thrust...
 at 100 key up up

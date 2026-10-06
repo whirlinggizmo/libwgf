@@ -12,8 +12,9 @@ import wgf.*;
 	(tools/gen_sounds.py) and committed.
 
 	Its probes, for its autopilot playthrough (autopilot/playthrough.autopilot):
-	asteroids.state (0 title, 1 playing, 2 game over), asteroids.score, asteroids.lives,
-	asteroids.wave, and the ecs's own (ecs.behavior.Rock: the rocks left).
+	asteroids.ready (1 once its scene has loaded), asteroids.state (0 title, 1 playing,
+	2 game over), asteroids.score, asteroids.lives, asteroids.wave, and the ecs's own
+	(ecs.behavior.Rock: the rocks left).
 **/
 class Main {
 	public static inline var WIDTH = 960;
@@ -146,6 +147,7 @@ class Main {
 		Probe.setValue("asteroids.score", score);
 		Probe.setValue("asteroids.lives", lives);
 		Probe.setValue("asteroids.wave", wave);
+		Probe.setValue("asteroids.ready", ready ? 1 : 0); // its scene loaded: what an autopilot waits for
 	}
 
 	static function frame() {

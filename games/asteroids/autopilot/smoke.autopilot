@@ -1,5 +1,6 @@
 wgf-autopilot 1
 # a smoke run (wgf export): the title, its rocks drifting, for two seconds
 seed 1
+at 1 wait asteroids.ready == 1
 at 120 expect asteroids.state == 0
 at 120 end

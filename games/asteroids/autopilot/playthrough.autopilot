@@ -4,6 +4,7 @@ wgf-autopilot 1
 # straight into the field until all three are lost; the game-over screen; and a second
 # game started from it. The seed makes the rocks the same every run.
 seed 1
+at 5 wait asteroids.ready == 1
 at 10 expect asteroids.state == 0
 at 30 key tap enter
 at 31 expect asteroids.state == 1
