@@ -119,13 +119,17 @@ static void run_ticks(double elapsed)
                                                       WGF_APP_PRIV_MAX_TICKS_PER_FRAME);
     int i;
     if (app.tick == NULL) {
-        for (i = 0; i < count; i++) wgf_core_priv_part_tick(wgf_loop_get_tick_delta());
+        for (i = 0; i < count; i++) {
+            wgf_core_priv_part_tick_begin();
+            wgf_core_priv_part_tick(wgf_loop_get_tick_delta());
+        }
         wgf_platform_priv_input_end_tick(); /* nothing reads tick edges: don't let them pile up */
         wgf_platform_priv_gamepad_end_tick();
         return;
     }
     wgf_platform_priv_input_set_context(WGF_PLATFORM_PRIV_INPUT_TICK);
     for (i = 0; i < count && app.tick_rate_changes == changes && app.running; i++) {
+        wgf_core_priv_part_tick_begin(); /* the parts' state as the tick begins (ecs) */
         call(app.tick);
         wgf_core_priv_part_tick(wgf_loop_get_tick_delta()); /* the parts' systems, after the program's (ecs) */
         wgf_platform_priv_input_end_tick();
@@ -142,7 +146,8 @@ static void on_frame(void)
     wgf_app_priv_script_begin_frame(app.frames); /* the frame's scripted inputs, before its ticks */
     wgf_platform_priv_gamepad_begin_frame();     /* before the ticks: they read the pads too */
     run_ticks(time_frame());
-    wgf_core_priv_part_update(app.frame_delta); /* the parts' (particles): after the ticks, before the frame, as wgrender's */
+    wgf_core_priv_part_set_fraction(wgf_loop_get_tick_fraction()); /* for those drawing ticked state */
+    wgf_core_priv_part_update(app.frame_delta); /* the parts' (the ecs's nodes, particles): after the ticks, before the frame */
     wgf_gfx_priv_begin_frame();
     call(app.frame);
     wgf_gfx_priv_end_frame();

@@ -39,6 +39,8 @@ typedef struct wgf_core_priv_part_t {
        (wgf_core_priv_part_update) after the ticks and before the frame callback, where
        wgrender's runtime ran its modules' updates */
     void (*update)(float dt);
+    /* every tick, just before the program's: a module's state as the tick begins (ecs) */
+    void (*tick_begin)(void);
     /* every tick, after the program's, with the tick's dt: a module's systems (ecs) */
     void (*tick)(float dt);
     void (*flush)(void);     /* gfx's frame end, before any pass: the frame's records to the GPU */
@@ -54,8 +56,15 @@ void wgf_core_priv_part_install(wgf_core_priv_part_t *part);
 /* Every part's update, in order. */
 void wgf_core_priv_part_update(float dt);
 
-/* Every part's tick, in order. */
+/* Every part's tick_begin, and every part's tick, in order. */
+void wgf_core_priv_part_tick_begin(void);
 void wgf_core_priv_part_tick(float dt);
+
+/* How far the frame being drawn is into the next tick, 0 up to 1 (wgf_loop.h's tick
+ * fraction), which app's runtime sets before the parts' updates, for a part drawing
+ * ticked state smoothly (the ecs's nodes). */
+void wgf_core_priv_part_set_fraction(float fraction);
+float wgf_core_priv_part_get_fraction(void);
 
 /* Every part of `layer` stopped, in order, then taken off the list, its installed and
  * next cleared: the next run's first create installs it again. */

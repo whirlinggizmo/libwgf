@@ -37,11 +37,12 @@ static void stop_text(void) { note('T'); }
 static void stop_particles(void) { note('P'); }
 static void stop_audio(void) { note('A'); }
 static void tick_particles(float dt) { (void)dt; note('k'); }
+static void begin_particles(void) { note('b'); }
 
 static wgf_core_priv_part_t text = {.name = "text", .layer = WGF_CORE_PRIV_PART_LAYER_GFX,
                                     .order = WGF_CORE_PRIV_PART_TEXT, .update = update_text, .stop = stop_text};
 static wgf_core_priv_part_t particles = {.name = "particles", .layer = WGF_CORE_PRIV_PART_LAYER_GFX,
-                                       .order = WGF_CORE_PRIV_PART_PARTICLES, .tick = tick_particles,
+                                       .order = WGF_CORE_PRIV_PART_PARTICLES, .tick_begin = begin_particles, .tick = tick_particles,
                                          .stop = stop_particles};
 static wgf_core_priv_part_t audio = {.name = "audio", .layer = WGF_CORE_PRIV_PART_LAYER_AUDIO,
                                      .order = WGF_CORE_PRIV_PART_AUDIO, .update = update_audio, .stop = stop_audio};
@@ -70,8 +71,11 @@ int main(void)
     wgf_core_priv_part_update(0.016f);
     expect(strcmp(trail, "ta") == 0, "update runs each part's, in order, skipping one without");
     trail[0] = '\0';
+    wgf_core_priv_part_tick_begin();
     wgf_core_priv_part_tick(1.0f / 60.0f);
-    expect(strcmp(trail, "k") == 0, "tick runs each part's tick, skipping those without");
+    expect(strcmp(trail, "bk") == 0, "tick_begin and tick run each part's, skipping those without");
+    wgf_core_priv_part_set_fraction(0.25f);
+    expect(wgf_core_priv_part_get_fraction() == 0.25f, "the frame's tick fraction reads back");
 
     /* gfx's stop: its parts alone, in order, then forgotten */
     trail[0] = '\0';

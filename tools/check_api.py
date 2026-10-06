@@ -61,6 +61,7 @@ GETTERS_PAIRED = {
     'wgf_window_set_size': ('wgf_window_get_width', 'wgf_window_get_height'),
     'wgf_window_set_position': ('wgf_window_get_x', 'wgf_window_get_y'),
     'wgf_node_set_transform': ('wgf_node_get_position', 'wgf_node_get_rotation', 'wgf_node_get_scale'),
+    'wgf_entity_set_transform': ('wgf_entity_get_position', 'wgf_entity_get_rotation', 'wgf_entity_get_scale'),
     'wgf_texture_set_sampling': ('wgf_texture_get_wrap_u', 'wgf_texture_get_wrap_v', 'wgf_texture_get_filter'),
     'wgf_text_set_align': ('wgf_text_get_halign', 'wgf_text_get_valign'),
     'wgf_shape2d_set_rectangle': ('wgf_shape2d_get_kind', 'wgf_shape2d_get_size'),

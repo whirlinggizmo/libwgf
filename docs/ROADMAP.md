@@ -8,8 +8,6 @@ Ship, rocks that split, bullets, wraparound, score, lives, audio, particles, a t
 
 The plan, decided before building (HISTORY.md, "Milestone 1's plan"). Each step is a few small commits, each reviewed against CONVENTIONS.md, verified, and pushed.
 
-6. **ecs.** flecs behind libwgf's handles: entities with a simulated transform and the built-in components (motion, bounds, lifetime, collider, shape, sprite, text, emitter, sound, behavior); the systems that move them at the tick rate and draw them interpolated through nodes; triggers; lifecycle events polled by the binding; bulk reads and writes of many entities through caller-owned arrays; scenes as text, with prefabs spawned at run time, and the scene dumped as text.
-   Done when: each component and system has unit tests, a scene file round-trips through load and dump, and the feature test's first scene runs headless.
 7. **ui.** Clay for layout, and libwgf's widget layer on it, immediate mode, drawn by gfx: panels, labels, buttons, focus with keyboard and gamepad navigation, the pointer captured from the game, per-game styling. Widgets past these come with the milestone that needs them.
    Done when: a UI example is tested headless (focus moves, a button activates by key, pad, and pointer) and passes the browser check.
 8. **The Haxe binding.** The externs and the typed API generated from the headers by clang, one name per C call, with a coverage check; bulk calls taking a Haxe array, copied for the call's length; the JS target calling a prebuilt wasm host by quoted keys, with no marshalling on the wasm stack; hxcpp natively, linking a staged archive; behaviors (create, tick, frame, destroy, trigger enter and exit) dispatched from polled events; version stamps checked at start.

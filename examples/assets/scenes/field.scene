@@ -1,0 +1,46 @@
+wgf-scene 1
+# A field of rocks drifting and wrapping, and a ship held inside the screen; the
+# ecs-scene example spawns the sparks at run time.
+
+prefab rock
+  motion spin=0,0,0.4
+  bounds rect=0,0,800,450 mode=wrap margin=40
+  collider radius=36 layer=1 mask=2
+  behavior name=Rock
+  shape2d polygon=0,-40,28,-30,40,-4,30,26,6,40,-24,30,-40,6,-30,-24 outline=2 color=#C8CCD6
+end
+
+prefab spark
+  motion damping=0.6
+  bounds rect=0,0,800,450 mode=destroy
+  lifetime seconds=1.5
+  collider radius=3 layer=2 mask=1
+  behavior name=Spark
+  shape2d circle=3 color=#FFD040
+end
+
+entity ship
+  transform position=400,225,0
+  motion velocity=90,60,0
+  bounds rect=0,0,800,450 mode=clamp
+  shape2d polygon=16,0,-12,-10,-6,0,-12,10 outline=2 color=#66CCFF
+  text string="ship" size=12 color=#7B8494 align=center,top
+end
+
+entity
+  from rock
+  transform position=120,90,0
+  motion velocity=30,12,0
+end
+
+entity
+  from rock
+  transform position=640,120,0 scale=0.6,0.6,1
+  motion velocity=-24,30,0 spin=0,0,-0.7
+end
+
+entity
+  from rock
+  transform position=300,360,0 scale=0.8,0.8,1
+  motion velocity=18,-26,0
+end

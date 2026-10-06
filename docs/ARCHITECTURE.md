@@ -14,7 +14,7 @@ libwgf is one C library, `libwgf.a`, built in layers (CONVENTIONS' table says wh
 | asset | where a resource's file comes from: local, fetched and cached on the web, revalidated, manifests, redirects, ensured ahead of a load, a native download hook | built |
 | gfx | 2D drawing: the frame, immediate mode, textures, fonts and text, nodes in canvases, shapes, sprites, particles | built |
 | audio | sounds (decoded or streamed) and voices, mixed natively by libwgf on sokol_audio's thread, on the web by the browser's Web Audio | built |
-| ecs | entities, components, systems, scenes | to come (step 6) |
+| ecs | entities with a simulated transform, the built-in components and their systems, triggers, polled events, scenes as text | built: on flecs's core |
 | ui | layout and widgets | to come (step 7) |
 | app | the runtime: run, the frame loop, ticks, scripted runs | built |
 
@@ -115,6 +115,31 @@ Sounds and voices, libwgt's audio carried whole: a part installed by the first s
 | voice | `wgf_voice.h` | one playing of a sound, an object: play, pause, resume, stop, and `wgf_play_state_t`; loop, volume, pitch (a negative one plays backwards), pan, position, and a segment to play as the whole; it holds a reference to its sound |
 
 **Natively** libwgf decodes (dr_wav, dr_mp3, Xiph's libvorbis, each pinned past its last release for its fuzz fixes) and mixes on sokol_audio's device thread; voices' settings go to the mixer through a lock it holds briefly, and a slow frame doesn't stop the sound (`wgf_audio_stall_test`, in a window). **On the web** the browser does all of it: a decoded sound is `decodeAudioData`'s buffer, a streamed one an `<audio>` element, each voice a gain and a panner into a master gain, mixed on the browser's own audio thread, so a slow frame doesn't stop it there either and no decoder is in the wasm. One AudioContext, made by the first sound, waits suspended until the page's first input. The same tests run on both (`wgf_audio_voice_checks.c`'s steps), and `tools/check_stream.py` serves a streamed file slowly to a page and checks each case.
+
+### ecs
+
+Entities, their components, and the systems that run them at the tick rate, on flecs (v4.0.5, its core alone): a part installed by the first entity made, so a program that makes none links none of it, flecs included.
+
+| Section | Header | Provides |
+|---------|--------|----------|
+| entity | `wgf_entity.h` | `wgf_component_t`; an entity made under a node and destroyed with everything under its node; a name, and finding by it; its transform, and positions read and written in bulk through caller-owned arrays; snapping (drawn where it is, not swept there); components added, removed, asked about; a node component's node, the voice |
+| (the world) | `wgf_ecs.h` | the events, polled: CREATED, DESTROYED, TRIGGER_ENTER, TRIGGER_EXIT, three ints each; the entities of a behavior found and counted; clearing; the world dumped as a scene |
+| motion | `wgf_motion.h` | velocity, spin, damping, a top speed |
+| bounds | `wgf_bounds.h` | a rectangle wrapped around, clamped to, or died outside, with a margin |
+| lifetime | `wgf_lifetime.h` | seconds left |
+| collider | `wgf_collider.h` | a circle, a layer and a mask; what it overlaps |
+| behavior | `wgf_behavior.h` | the program's own code, by name, with text parameters |
+| scene | `wgf_scene.h` | a resource: entities and prefabs in a text file (its header has the format), instantiated, and prefabs spawned |
+
+**The split.** An entity's simulated state -- its transform and the systems' components -- is flecs components, plain data the systems' queries walk in flecs's tables. What isn't plain data is in libwgf's record for its handle (`"ecs.entity"`): its node, the nodes of its visual components, its voice, its name, and its behavior's name and parameters, with the flecs id. Its node is a plain node it owns, under the parent it was made with; a shape, sprite, text, or emitter component is a node of that type under it, so drawing stays gfx's, through canvases, and an entity or node put under an entity's node goes when it does.
+
+**A tick** runs the systems, after the program's tick callback: lifetimes count down (at 0, destroyed), motion moves (damping, then the top speed, then velocity and spin), bounds wrap, clamp, or destroy, colliders compare, and the probes (`ecs.entities`, `ecs.behavior.<name>`) are published. Entities are destroyed after the query that found them, never inside it. As each tick begins, each transform is kept as it was; each frame, every entity's node is given its transform between the last two ticks at the frame's tick fraction, its rotation the shortest way round. A wrap moves the kept position by the same span, so a rock leaving the right edge is drawn coming in at the left, not swept back across the screen; `wgf_entity_snap` keeps the transform as it is now, for one put somewhere new.
+
+**Colliders** are triggers, nothing pushed apart: each tick, the colliders under each parent node, sorted along x, are swept for overlaps whose layer meets the other's mask; the pairs found are sorted and walked against the last tick's, so a pair new this tick raises TRIGGER_ENTER and one gone raises TRIGGER_EXIT, told to each. A destroyed entity's pairs are dropped without an exit; its DESTROYED (for one with a behavior) carries its now-stale handle.
+
+**Events** queue in a ring of 65,536 and are taken by the program, or the binding, with `wgf_ecs_take_events`: one async model, polled, and no callback crosses into a script. A behavior's code is the program's: the binding dispatches its create, tick, and trigger calls from these events and the found entities (step 8).
+
+**Scenes** load through core's load pipeline, parsed on a worker into a plan of entities and prefabs, each a list of component lines; `from` copies a prefab's lines first. Instantiating or spawning applies the lines through the same calls a program makes. `wgf_ecs_dump` writes every live entity with every component as it is, so a dumped world loaded again makes the same world, and dumps the same text.
 
 ### app
 

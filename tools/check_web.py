@@ -95,8 +95,10 @@ def check(browser_session, debug_base, url, opts, shot_path):
                     result['errors'].append(first_line(text))
             elif method == 'Runtime.exceptionThrown':
                 details = params['exceptionDetails']
-                result['errors'].append(first_line((details.get('exception') or {}).get('description')
-                                                   or details.get('text') or 'exception'))
+                text = (details.get('exception') or {}).get('description') or details.get('text') or 'exception'
+                lines = text.strip().split('\n')
+                # where it was thrown, too: a wasm fault says nothing without its stack
+                result['errors'].append('\n          '.join([lines[0]] + [l.strip() for l in lines[1:13]]))
             elif method == 'Log.entryAdded':
                 entry = params['entry']
                 line = f'[{entry["source"]}/{entry["level"]}] {first_line(entry.get("text") or "")}'

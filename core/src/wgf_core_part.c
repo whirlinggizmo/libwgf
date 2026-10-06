@@ -25,6 +25,26 @@ void wgf_core_priv_part_update(float dt)
     }
 }
 
+static float fraction;
+
+void wgf_core_priv_part_set_fraction(float tick_fraction)
+{
+    fraction = tick_fraction;
+}
+
+float wgf_core_priv_part_get_fraction(void)
+{
+    return fraction;
+}
+
+void wgf_core_priv_part_tick_begin(void)
+{
+    const wgf_core_priv_part_t *part;
+    for (part = parts; part != NULL; part = part->next) {
+        if (part->tick_begin != NULL) part->tick_begin();
+    }
+}
+
 void wgf_core_priv_part_tick(float dt)
 {
     const wgf_core_priv_part_t *part;
