@@ -33,6 +33,9 @@ The binding's checks (tools/check_binding.py), when there is a haxe:
                   steps needing what this machine hasn't are skipped, and said so
   games           every game: its playthrough headless and in a browser, its web export
                   within its budget, its desktop export (tools/check_games.py), as cli skips
+  frames          with --web: every game's export flown by its autopilot in a browser, its
+                  frame times traced (tools/bench/measure_frames.py, on SwiftShader: kept
+                  working, nothing recorded)
   sizes           with --web: every example's (C, JS) and game export's web size against the
                   baseline, docs/benchmarks.json (tools/measure_sizes.py --check)
 With --windows HOST, also, on that Windows machine over ssh, the working tree as it is
@@ -82,6 +85,7 @@ CHECKS = {
     'cli': (['tools/check_cli.py'], False, ('haxe', 'no haxe')),
     'games': (['tools/check_games.py'], False, ('haxe', 'no haxe')),
     'sizes': (['tools/measure_sizes.py', '--check'], True, ('haxe', 'no haxe')),
+    'frames': (['tools/bench/measure_frames.py', '--display', 'headless'], True, ('haxe', 'no haxe')),
 }
 REMOTE = {'windows-msvc': ['--msvc', '--then', 'tools/run_smoke.py --variant windows-x64-msvc-debug-headless',
                            '--then', 'tools/check_binding.py --only hxcpp', '--then', 'tools/check_features.py --only hxcpp',

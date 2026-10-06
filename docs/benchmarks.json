@@ -1,5 +1,27 @@
 {
  "emscripten": "5.0.7",
+ "frames": {
+  "game:asteroids": {
+   "autopilot": "playthrough.autopilot",
+   "commit": "9c1cfe2 2026-10-06",
+   "cpu": "13th Gen Intel(R) Core(TM) i9-13900HX",
+   "display": "xvfb",
+   "frames": 2502,
+   "gc": 6,
+   "gcTotal": 11.23,
+   "gcWorst": 4.14,
+   "gpu": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA)",
+   "mean": 0.35,
+   "median": 0.15,
+   "over16": 2,
+   "over33": 1,
+   "p95": 0.83,
+   "p99": 1.31,
+   "runs": 3,
+   "throttle": 4.0,
+   "worst": 146.88
+  }
+ },
  "libwgf": {
   "budgets": {
    "game:asteroids": 400

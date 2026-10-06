@@ -529,3 +529,28 @@ Step 0 of milestone 2 is done: both inputs triaged (FRICTION.md, and the entry a
 - **Doc gaps closed:**
   - `wgf_window.h` said a page's CSS could override `Window.setSize` on the web. Set, it is the canvas's own style, which wins over the page's, so it now says that.
   - `Behavior.onCreate` says when it runs: at the runtime's next poll, never inside the call that made the entity, so a parameter set right after `spawn` is there.
+
+## Milestone 2, step 1, frame times: closed (2026-10-06)
+
+Read first: wgrender-c's page harness (`tools/bench/pages.py`: its frame measure from Chrome's `Performance.getMetrics`, its gc measure from a `devtools.timeline` trace), libwgt's and wgrender-c's FPS readouts (`wgt_loop_draw_fps`, `wgr_debug_enable_fps`).
+- **The autopilot waits first.** CI failed on 0bb429e because the JS Asteroids' playthrough pressed Play at frame 30, before its scene had loaded on a slow runner. An autopilot's frames are virtual time and a load is real time, so any playthrough acting before its loads end raced them; the Haxe game's had the same race. `at <frame> wait <probe> <op> <number>` holds the autopilot's clock at its frame while the program's frames go on, so every later line keeps its distance from the wait. A wait past 30 real seconds fails. Asteroids publishes `asteroids.ready`, and its playthrough and smoke autopilots wait for it (FRICTION.md).
+- **The runner within its 4 KB.** The wait, then the overlay, took the same rows past their targets (libwgt's size and the runner's 4 KB) by tens of bytes, twice. Each time the fix was the runner's own fat, not a bigger allowance:
+  - the wait's success log and its optional seconds argument dropped;
+  - the two "can't run" messages merged;
+  - the PASS and FAIL summaries made one string, "PASS (0 of <n> expectations failed, <frames> frames)", with no plural branch;
+  - `check`'s two failure strings made one, which still prints the probe's value.
+  
+  app-hello ended 68 bytes under its target.
+- **Frame times measured from outside the program.** Measuring inside the runtime would put statistics and a summary string into every program's runner, which the same rows can't afford. Chrome's timeline trace already records each frame's requestAnimationFrame callback, `FireAnimationFrame`, with its duration: the frame's main-thread work, JS and wasm together. The same trace records the garbage collections. `tools/bench/measure_frames.py` exports each game as a release (`wgf export --web`), flies it with its autopilot (`bench.autopilot`, else `playthrough.autopilot`), traces the run, and reports:
+  - the mean, median, 95th and 99th percentiles, and the worst frame;
+  - the frames over 16.7 and 33 ms;
+  - the collections' count, total, and longest.
+  
+  `--write` records them in `docs/benchmarks.json`, and `measure_sizes.py --render` writes the table beside the sizes. Each row names its CPU, GPU, display, throttle, autopilot, and commit.
+- **The reference machine**, as Rob approved: this machine's RTX 4080 through ANGLE on Vulkan under Xvfb, with Chrome's CPU throttled 4 times. CI runs the tool on SwiftShader (verify's `frames`, CI's web job) to keep it working, and records nothing.
+- **Found measuring:** Chrome throttles by suspending the main thread in slices, so a frame shorter than a slice runs unslowed. Asteroids' median frame was 0.13 ms unthrottled and 0.15 at 4x; its 95th, 0.32 against 0.87. Under a throttle the mean, the time taken as a whole, is the number that scales, so the tool reports it beside the percentiles.
+- **Asteroids, the first row** (three runs, the median of each): 2,502 frames; mean 0.35 ms, median 0.15, 95th 0.83, 99th 1.31, worst 146.9 (its load). 2 frames over 16.7 ms and 1 over 33. 6 collections, 11.2 ms in all, the longest 4.1. On SwiftShader the mean is 0.55 and the median 0.45.
+- **The FPS overlay:** `wgf_debug_show_fps(font, x, y, size, color)`, `wgf_debug_hide_fps`, and `wgf_debug_is_fps_shown`. It shows "<fps> FPS <cost> ms", drawn by the runtime after the frame callback through a hook its show call sets, so a program that never shows it links none of it.
+  - **A frame's cost:** `wgf_loop_get_frame_cost`, the last frame's real time from its start to its drawing's end, which the overlay smooths as it shows it. Its milliseconds are formatted from integers, since `%.1f` would link printf's float formatting into a program that had none.
+  - **The examples:** the seven that drew their own readout (app-hello, app-tick, gfx-font, gfx-particles, audio-music, asset-fetch, asset-force-fetch) show the overlay instead, at the same place, size, and color, as libwgt's call theirs.
+  - **Against the sketch:** the sketch wished for `Debug.setFpsOverlay(true, font, size, color)`; the overlay built takes its position too, and is shown and hidden by name, which reads better than a boolean.

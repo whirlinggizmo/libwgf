@@ -89,6 +89,7 @@ python3 tools/check_js_binding.py      # the JS binding: generated, its types, a
 python3 tools/check_binding.py         # the Haxe binding: generated, coverage, and its test on hxcpp, node, a browser
 python3 tools/check_features.py        # the feature test, reaching every public call, on the same three
 python3 tools/bench/measure_calls.py   # what a call costs from Haxe and from JS, through the JS binding
+python3 tools/bench/measure_frames.py --write   # each game's frame times, on the reference machine, into the benchmarks
 ```
 
 How the bindings map the C calls is [docs/BINDINGS.md](docs/BINDINGS.md); how to use them, [bindings/js/README.md](bindings/js/README.md) and [bindings/haxe/README.md](bindings/haxe/README.md). The JS binding's type test needs TypeScript 7.0.2 (`npm install -g typescript@7.0.2`, or `TSC` naming a tsc), the version CI installs; without it the step is skipped, and says so.
@@ -216,6 +217,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `check_features.py` | runs the feature test (`examples/haxe/feature-test/`) on hxcpp, under node, and in a browser, failing a call it never reached |
 | `check_binding.py` | checks the Haxe binding: generated, every call reached once, and its test on hxcpp, under node, and in a browser |
 | `check_js_binding.py` | checks the JS binding: generated, its declarations under TypeScript (`bindings/js/tests/types.ts`), and every JS example (`examples/js/`) in a browser, flown by its autopilot |
+| `measure_frames.py` | (in `tools/bench/`) flies each game's web export with its autopilot in a browser and traces each frame's main-thread work and the garbage collections; `--write` records them in `docs/benchmarks.md` beside the sizes, from the reference machine (the GPU under Xvfb, the CPU throttled 4 times) |
 | `measure_calls.py` | (in `tools/bench/`) times a call into the host from Haxe and from JS, both through the JS binding, in a browser on the release host (not a check: timing) |
 | `check_docs.py` | checks the docs against the code: every link resolves, ARCHITECTURE names every public header, this file every tool and preset, README every doc, deps/README every vendored directory (ctest runs it) |
 | `check_tools.py` | checks every tool is named for what it does, imports no command, answers `--help` and does nothing else, and refuses an argument it doesn't take |

@@ -59,7 +59,7 @@ jobs:
           version=$(python3 -c 'import sys; sys.path.insert(0, "tools"); import check_js_binding as c; print(c.TYPESCRIPT)')
           npm install -g "typescript@$version"
       - name: Presets, every example in Chrome, both bindings under node and in Chrome
-        run: python3 tools/verify_builds.py --web --only wasm32-debug-headless,wasm32-debug,wasm32-release,web,binding-web,features-web,js-binding,cli,games,sizes
+        run: python3 tools/verify_builds.py --web --only wasm32-debug-headless,wasm32-debug,wasm32-release,web,binding-web,features-web,js-binding,cli,games,sizes,frames
 
   windows:
     name: windows (MSVC debug, headless, release)

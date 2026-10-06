@@ -3,7 +3,7 @@
 wgrender-c's same programs, in docs/benchmarks.md; and a check against the committed
 baseline.
 
-    tools/measure_sizes.py [--references] [--write] [--check] [--only NAME[,NAME...]]
+    tools/measure_sizes.py [--references] [--write] [--check] [--render] [--only NAME[,NAME...]]
 
 libwgf's programs are built in wasm32-release, as a page ships them: each C example
 (tools/examples.py), each game's web export (wgf export --web: its trimmed host, its
@@ -20,6 +20,8 @@ its program's, and the binding's share is given too.
                 commits, go in the baseline. Without it, the baseline's are kept.
   --write       write docs/benchmarks.json (the baseline: every number, and where each
                 library was measured from) and docs/benchmarks.md (the tables)
+  --render      write docs/benchmarks.md from docs/benchmarks.json, measuring nothing (what
+                tools/bench/measure_frames.py runs after recording its frame times there)
   --check       measure libwgf's programs and compare each with the baseline: one more
                 than TOLERANCE larger (gzip, wasm and JS together) fails; one smaller
                 says to --write a new baseline. CI runs this.
@@ -331,6 +333,20 @@ def markdown(baseline):
             s = lib[name]
             lines.append(f'| {name} | {kb(total(s))} | {kb(s["binding"]["gz"])} | '
                          f'{100 * s["binding"]["gz"] / total(s):.1f}% |')
+    frames = baseline.get('frames', {})
+    if frames:
+        lines += ['', '## Frame times', '',
+                  'Each game\'s web export flown by its autopilot in a browser (`tools/bench/measure_frames.py`): '
+                  'each frame\'s main-thread work, in milliseconds, as Chrome traced it, every frame of the run its '
+                  'loading among them; and the garbage collections. Each row names the machine, the display, and the '
+                  'CPU throttle it was measured on, and the commit: a row from another machine is not comparable.', '',
+                  '| program | frames | mean | median | 95th | 99th | worst | over 16.7 | over 33 | collections (ms, longest) '
+                  '| on |', '|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|']
+        for name, f in sorted(frames.items()):
+            lines.append(f'| {name} | {f["frames"]} | {f["mean"]} | {f["median"]} | {f["p95"]} | {f["p99"]} | {f["worst"]} | '
+                         f'{f["over16"]} | {f["over33"]} | {f["gc"]} ({f["gcTotal"]}, {f["gcWorst"]}) | '
+                         f'{f["cpu"]}, {f["gpu"]}, {f["display"]}, CPU throttled {f["throttle"]:g}x, '
+                         f'{f["autopilot"]}, {f["commit"]} |')
     for title, programs in (('libwgf', lib), ('libwgt', wgt), ('wgrender-c', wgr)):
         if not programs:
             continue
@@ -382,8 +398,13 @@ def main():
     ap.add_argument('--references', action='store_true', help="build and measure libwgt's and wgrender-c's too")
     ap.add_argument('--write', action='store_true', help='write docs/benchmarks.json and docs/benchmarks.md')
     ap.add_argument('--check', action='store_true', help='fail on a program grown past the baseline')
+    ap.add_argument('--render', action='store_true', help='write docs/benchmarks.md from the baseline alone')
     ap.add_argument('--only', help='comma-separated programs (game:<name> for a game)')
     args = ap.parse_args()
+    if args.render:
+        TABLE.write_text(markdown(json.loads(BASELINE.read_text())))
+        print(f'measure_sizes: wrote {TABLE.relative_to(ROOT)} from {BASELINE.relative_to(ROOT)}')
+        return 0
     only = set(args.only.split(',')) if args.only else None
     try:
         webhost.emcc()

@@ -70,6 +70,14 @@ Every program on the JS binding (`bindings/js/wgf.js`): a game's Haxe program re
 | js:asteroids | 295.0 | 3.5 | 1.2% |
 | game:asteroids | 297.3 | 3.1 | 1.1% |
 
+## Frame times
+
+Each game's web export flown by its autopilot in a browser (`tools/bench/measure_frames.py`): each frame's main-thread work, in milliseconds, as Chrome traced it, every frame of the run its loading among them; and the garbage collections. Each row names the machine, the display, and the CPU throttle it was measured on, and the commit: a row from another machine is not comparable.
+
+| program | frames | mean | median | 95th | 99th | worst | over 16.7 | over 33 | collections (ms, longest) | on |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
+| game:asteroids | 2502 | 0.35 | 0.15 | 0.83 | 1.31 | 146.88 | 2 | 1 | 6 (11.23, 4.14) | 13th Gen Intel(R) Core(TM) i9-13900HX, ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA), xvfb, CPU throttled 4x, playthrough.autopilot, 9c1cfe2 2026-10-06 |
+
 ## Every libwgf program
 
 | program | wasm | js | wasm.gz | js.gz | wasm.br | js.br | total.gz |
