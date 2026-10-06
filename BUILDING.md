@@ -1,6 +1,6 @@
 # Building libwgf
 
-CMake (3.21 or newer), Ninja, and Python 3 (3.9 or newer) build everything: the library, its tests, and the web builds. There is no make and nothing in shell; every tool is Python, standard library only.
+CMake (3.21 or newer), Ninja, and Python 3 (3.12 or newer) build everything: the library, its tests, and the web builds. There is no make and nothing in shell; every tool is Python, standard library only.
 
 ## Requirements
 
@@ -8,7 +8,7 @@ What every build on a platform needs is under Required; the rest is only for its
 
 ### Linux
 
-Required: CMake 3.21 or newer, Python 3.9 or newer, Ninja, a C compiler (gcc or clang, with their sanitizer runtimes for the sanitizer presets), and for the desktop presets the X11, OpenGL, and ALSA dev packages: `python3 tools/setup_system_packages.py install` installs them with apt, dnf, or pacman.
+Required: CMake 3.21 or newer, Python 3.12 or newer, Ninja, a C compiler (gcc or clang, with their sanitizer runtimes for the sanitizer presets), and for the desktop presets the X11, OpenGL, and ALSA dev packages: `python3 tools/setup_system_packages.py install` installs them with apt, dnf, or pacman.
 
 | For | Needs |
 | --- | --- |
@@ -21,7 +21,7 @@ Required: CMake 3.21 or newer, Python 3.9 or newer, Ninja, a C compiler (gcc or 
 
 ### Windows
 
-Required: CMake 3.21 or newer, Python 3.9 or newer, and Visual Studio with the "Desktop development with C++" workload, for the MSVC presets: they use Visual Studio's generator, which finds the compiler, so no developer prompt. The MinGW presets need Ninja; their compiler is set up for you (`tools/setup_mingw.py`). The Haxe binding's hxcpp test needs Haxe and hxcpp, as on Linux; hxcpp uses MSVC, against the MSVC presets' archive.
+Required: CMake 3.21 or newer, Python 3.12 or newer, and Visual Studio with the "Desktop development with C++" workload, for the MSVC presets: they use Visual Studio's generator, which finds the compiler, so no developer prompt. The MinGW presets need Ninja; their compiler is set up for you (`tools/setup_mingw.py`). The Haxe binding's hxcpp test needs Haxe and hxcpp, as on Linux; hxcpp uses MSVC, against the MSVC presets' archive.
 
 ### Set up by the tools
 

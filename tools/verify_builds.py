@@ -161,6 +161,8 @@ def run(*cmd, skipped=None):
 
 
 def main():
+    if sys.version_info < (3, 12):
+        sys.exit(f'verify_builds: needs Python 3.12 or newer (BUILDING.md); this is {sys.version.split()[0]}')
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--web', action='store_true', help='the web presets too, and the web checks')
     ap.add_argument('--windows', metavar='HOST', help='also build and test on this Windows machine over ssh')

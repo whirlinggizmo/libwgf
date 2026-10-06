@@ -294,3 +294,11 @@ The layer costs Haxe about 1 to 1.5 ns on a simple call (one more function betwe
 In bytes, Asteroids' web export went from 294.7 to 297.3 KB gzipped (+2.6, +0.9%): its trimmed `wgf.js` is 3.1 KB for its 69 calls, its program's JS fell from 9.6 to 8.9, and the host is the same. wgrender-c measured its two layers at about 3% of a trimmed page. JS hello is 112.5 KB beside the C `app-hello`'s 107.2, and JS Asteroids 295.0 beside the Haxe game's 297.3. The size table now gives every program on the binding with the binding's share (`docs/benchmarks.md`, "The JS binding's share").
 
 Found on the way: `tools/binding.py`'s browser runs passed `-dce full` as two defines (`-D -dce -D full`), so the binding's and the feature test's browser runs never had full dead-code elimination. They have it now, and pass.
+
+## Python 3.12, the tools' floor (2026-10-06)
+
+Rob's note. The tools said Python 3.9 or newer, the version sightblinder's Microsoft Store Python was. The JS binding's first verify there failed on `write_text(newline=)`, which is 3.10's, and a70dc36 worked around it with `write_bytes`. sightblinder now has Python 3.12.10 (winget, first on its PATH; the Store's 3.9 stays behind it), as Linux's is 3.12, so the floor is 3.12 everywhere:
+- BUILDING.md, CONVENTIONS.md ("Tooling"), and `tools/run_remote_windows.py`'s and `tools/setup_mingw.py`'s notes say so.
+- CI's Windows job sets it up (`actions/setup-python`, 3.12), where it took the runner image's default; Ubuntu 24.04's is 3.12 already.
+- `wgf` and `tools/verify_builds.py`, where a developer starts, refuse an older Python, naming the floor, rather than failing later on something newer than it.
+- The workaround made only for 3.9 is gone: `tools/webhost.py` writes `wgf.js` with `write_text(newline='\n')` again. No other tool had one.

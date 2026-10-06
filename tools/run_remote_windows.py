@@ -16,7 +16,7 @@ tool there after the presets, `python <tool and its arguments>` in the copied tr
 (tools/run_smoke.py, say), its failure the run's.
 
 HOST is an ssh destination, as `ssh HOST` takes it (a Host from ~/.ssh/config), whose
-shell is cmd.exe. It needs CMake, Ninja, and Python 3.9 or later, and for MSVC Visual
+shell is cmd.exe. It needs CMake, Ninja, and Python 3.12 or later (`python` resolving to it first), and for MSVC Visual
 Studio with its C++ tools. MinGW-w64 comes from tools/setup_mingw.py, run by the
 toolchain file, which sets up the pinned release in the remote user's cache the first
 time (about 270 MB). --path puts directories at the front of PATH for the run, for tools

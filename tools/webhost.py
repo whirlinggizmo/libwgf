@@ -79,7 +79,7 @@ def build(variant, exports_file=None, out=None, stage=True, constants=True):
         raise RuntimeError('linking the host failed:\n' + '\n'.join(done.stdout.strip().splitlines()[-30:]))
     whole = (jsbinding.BINDING / 'wgf.js').read_text(encoding='utf-8')
     binding = whole if exports_file is None else jsbinding.trim(whole, listed, constants)
-    (out / 'wgf.js').write_bytes(binding.encode('utf-8'))  # its \n as they are, on every platform
+    (out / 'wgf.js').write_text(binding, encoding='utf-8', newline='\n')
     return out
 
 

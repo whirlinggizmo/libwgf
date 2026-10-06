@@ -4,6 +4,8 @@ does is tools/wgf/cli.py's, and `wgf --help` says."""
 import sys
 from pathlib import Path
 
+if sys.version_info < (3, 12):
+    sys.exit(f'wgf: needs Python 3.12 or newer (BUILDING.md); this is {sys.version.split()[0]}')
 sys.path.insert(0, str(Path(__file__).resolve().parent / 'tools' / 'wgf'))
 import cli  # noqa: E402
 

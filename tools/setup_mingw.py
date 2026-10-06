@@ -11,7 +11,7 @@ against its SHA-256, and unpacked into the per-user cache
 (tools/usercache.py: %LOCALAPPDATA%\\libwgf\\mingw\\<release>). It prints its bin
 on stdout; progress goes to stderr. Run
 again, it only prints. To move to a newer release, change RELEASE, URL, and SHA256
-below together, from the release's page. Standard library only; Python 3.9 or later.
+below together, from the release's page. Standard library only; Python 3.12 or later.
 """
 import argparse
 import hashlib
