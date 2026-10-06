@@ -9,6 +9,7 @@ It is done when it ships three games ([SPEC.md](SPEC.md)): Asteroids, a chase-ca
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): how libwgf works: its layers and modules, handles, resources and tasks, the runtime.
 - [BUILDING.md](BUILDING.md): building and testing on each platform, what to install, and every tool.
 - [docs/CONVENTIONS.md](docs/CONVENTIONS.md): the rules for changing libwgf.
+- [games/asteroids/](games/asteroids/README.md): the first game, played at <https://whirlinggizmo.github.io/libwgf/asteroids/>.
 - [BUILDING.md](BUILDING.md#games-the-wgf-tool): making a game with the `wgf` tool: `./wgf new`, then `wgf serve`.
 - [docs/BINDINGS.md](docs/BINDINGS.md): how a binding maps libwgf's calls; the Haxe binding is [bindings/haxe/](bindings/haxe/README.md).
 - [docs/HISTORY.md](docs/HISTORY.md): what was built and decided, and why.

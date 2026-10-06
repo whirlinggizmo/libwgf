@@ -1,0 +1,9 @@
+{
+	"name": "asteroids",
+	"title": "Asteroids",
+	"main": "Main",
+	"source": "src",
+	"assets": "assets",
+	"scripts": "scripts",
+	"web_budget_kb": 400
+}

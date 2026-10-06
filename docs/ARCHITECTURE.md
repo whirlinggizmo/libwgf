@@ -192,6 +192,10 @@ Games are Haxe (`bindings/haxe/`, haxelib `wgf`); how the binding maps each kind
 - **serve** (`tools/wgf/devserver.py`): a hot build (hotreload-hx, vendored in `deps/`) on the full host, served with a long poll at `/__hotreload`; each save rebuilds the program through a compilation server, stamps it, and the page swaps its classes in between two frames, every static and object kept. The runtime's trampolines read their handlers when they fire, so the swapped code is what runs; a reload's bundle doesn't start the run again.
 - **export**: the web as a static folder -- a release program, its host trimmed to the calls the program makes (the quoted keys in its JS), its assets copied in, libwgf's notices -- smoke-tested in a browser with the game's smoke script and held to its budget; and the desktop, a release build with its assets, smoke-tested in a window (Xvfb's when Linux has no display).
 
+## Games
+
+Each game is a directory in `games/` the `wgf` tool works on, on the public API alone, through the binding: Asteroids (`games/asteroids/`) now. Its world is a scene file of prefabs; its scripts set intent and the ecs does the per-entity work; its screens are the UI; its sounds are generated (`tools/gen_sounds.py`) and committed. Each game ships a scripted playthrough, which `tools/check_games.py` runs headless and in a browser beside its exports, and every push to `main` deploys its web export to GitHub Pages (`tools/build_pages.py`, `.github/workflows/pages.yml`), held to its size budget.
+
 ## Handles
 
 Everything libwgf owns and hands out -- a texture, a node, an entity, a task -- is named by a 32-bit handle:

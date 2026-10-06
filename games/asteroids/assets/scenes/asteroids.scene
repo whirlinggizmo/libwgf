@@ -1,0 +1,46 @@
+wgf-scene 1
+# Asteroids' world: the prefabs the game spawns (it instantiates nothing). Layers: the
+# ship 1, rocks 2, bullets 4; a rock meets the ship and bullets (mask 5), never a rock.
+
+prefab ship
+  motion damping=0.35 max_speed=420
+  bounds rect=0,0,960,720 mode=wrap margin=16
+  collider radius=12 layer=1 mask=2
+  behavior name=Ship
+  shape2d polygon=18,0,-12,-11,-6,0,-12,11 outline=2 color=#7FD4FF
+  emitter2d rate=70 emitting=false capacity=64 life=0.12,0.3 direction=3.14159 spread=0.4 speed=90,180 size=3,0 color=#FFB040FF,#FF400000
+end
+
+prefab rock_large
+  motion
+  bounds rect=0,0,960,720 mode=wrap margin=48
+  collider radius=40 layer=2 mask=5
+  behavior name=Rock
+  shape2d outline=2 color=#C8CCD6
+end
+
+prefab rock_medium
+  from rock_large
+  bounds margin=26
+  collider radius=21
+end
+
+prefab rock_small
+  from rock_large
+  bounds margin=14
+  collider radius=11
+end
+
+prefab bullet
+  motion
+  bounds rect=0,0,960,720 mode=wrap
+  lifetime seconds=1.0
+  collider radius=3 layer=4 mask=2
+  behavior name=Bullet
+  shape2d circle=2 color=#FFFFFF
+end
+
+prefab explosion
+  lifetime seconds=1.2
+  emitter2d rate=0 emitting=false capacity=64 life=0.4,1.0 direction=0 spread=6.2832 speed=40,200 drag=1.5 size=3,0 color=#FFE0A0FF,#FF602000
+end

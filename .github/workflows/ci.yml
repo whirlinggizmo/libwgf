@@ -31,7 +31,7 @@ jobs:
       - name: Presets, every example headless and in a window, and the binding on hxcpp
         run: >-
           python3 tools/verify_builds.py --only
-          linux-x64-debug-headless,linux-x64-debug,linux-x64-release,linux-x64-debug-ubsan,linux-x64-debug-asan,linux-x64-debug-tsan,smoke,desktop,binding,features,cli
+          linux-x64-debug-headless,linux-x64-debug,linux-x64-release,linux-x64-debug-ubsan,linux-x64-debug-asan,linux-x64-debug-tsan,smoke,desktop,binding,features,cli,games
 
   web:
     name: web (wasm32 debug and release, node and Chrome)
@@ -55,7 +55,7 @@ jobs:
         with:
           haxe-version: 4.3.7
       - name: Presets, every example in Chrome, and the binding under node and in Chrome
-        run: python3 tools/verify_builds.py --web --only wasm32-debug-headless,wasm32-debug,wasm32-release,web,binding-web,features-web,cli
+        run: python3 tools/verify_builds.py --web --only wasm32-debug-headless,wasm32-debug,wasm32-release,web,binding-web,features-web,cli,games
 
   windows:
     name: windows (MSVC debug, headless, release)
@@ -68,4 +68,4 @@ jobs:
       - name: hxcpp
         run: haxelib install hxcpp 4.3.2 --always --quiet
       - name: Presets, every example headless, and the binding on hxcpp
-        run: python tools/verify_builds.py --only windows-x64-msvc-debug-headless,windows-x64-msvc-debug,windows-x64-msvc-release,smoke,binding,features
+        run: python tools/verify_builds.py --only windows-x64-msvc-debug-headless,windows-x64-msvc-debug,windows-x64-msvc-release,smoke,binding,features,games

@@ -1,0 +1,26 @@
+wgf-script 1
+# Asteroids, played through (wgf play; tools/check_games.py runs it headless and in a
+# browser): the title; a game -- rocks shot and split for points, then the ship flown
+# straight into the field until all three are lost; the game-over screen; and a second
+# game started from it. The seed makes the rocks the same every run.
+seed 1
+at 10 expect asteroids.state == 0
+at 30 key tap enter
+at 31 expect asteroids.state == 1
+at 31 expect asteroids.lives == 3
+at 40 key down left
+at 40 key down space
+at 300 expect asteroids.score > 0
+at 300 expect ecs.behavior.Rock > 4
+at 600 key up space
+at 600 key up left
+at 600 key down up
+at 600 expect asteroids.lives == 3
+at 2400 key up up
+at 2400 expect asteroids.state == 2
+at 2400 expect asteroids.lives == 0
+at 2410 key tap enter
+at 2412 expect asteroids.state == 1
+at 2412 expect asteroids.score == 0
+at 2412 expect asteroids.lives == 3
+at 2500 end

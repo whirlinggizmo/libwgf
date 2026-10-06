@@ -1,0 +1,56 @@
+# libwgf's games on GitHub Pages: every game's web export (tools/build_pages.py), each
+# smoke-tested in Chrome and held to its size budget, deployed on every push to main.
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build the site
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: The pinned Emscripten
+        id: pins
+        run: echo "emscripten=$(head -n1 cmake/emscripten-version.txt)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: emsdk-cache
+          key: emsdk-${{ steps.pins.outputs.emscripten }}-${{ runner.os }}
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: ${{ steps.pins.outputs.emscripten }}
+          actions-cache-folder: emsdk-cache
+      - name: Ninja
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.7
+      - name: Every game exported for the web
+        run: python3 tools/build_pages.py --out _site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    name: deploy
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
