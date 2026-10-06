@@ -463,3 +463,22 @@ Rob's second addendum (SPEC, pushed): Clay used directly, as wgrender-c's clay e
 2. **The car's model:** a CC0 kit fetched from outside (Kenney's or Quaternius's), credited in the game's assets, or another source.
 3. **The budget:** 1 MB of code and 4 MB before the start, with Jolt's share the assumption step 8 measures.
 4. **Jolt's C API:** chosen at step 8 by the criteria above, or a preference now.
+
+## Milestone 2's plan, reviewed (2026-10-06)
+
+Rob approved the plan above with answers and changes. The step numbers above are the first draft's; ROADMAP.md's are now these.
+- **The reference machine:** the proposal. This machine's real GPU through ANGLE under Xvfb, with Chrome's CPU throttled 4 times.
+- **The car:** Kenney's Car Kit (CC0, glTF), credited. If something in it doesn't fit, another CC0 kit, with the reason recorded.
+- **The budget:** as proposed: 1 MB of code gzipped, and 4 MB of assets before the start, with Jolt's real share measured when physics3d is built.
+- **Jolt's C API:** chosen when physics3d is built, on the plan's criteria.
+- **Physics earlier:** physics3d on Jolt, with the vehicle, is right after the drivable slice, not after shadows and the environment. The vehicle is the racer's game, so its API and its feel must push back early. The slice may drive arcade-style until then. With the vehicle before glTF, its first track is the slice's flat one, its collider made from the generated meshes; glTF then brings the track's own collision mesh.
+- **One name:** the Haxe base class for a game's behaviors is `Behavior`, as C's `wgf_behavior` and SPEC say, not `Script`. Renamed in step 0, before the racer is written.
+- **The presentation mode** (from the clean-room rebuild's friction #11, and Rob): a design resolution the game is written in, and a mode fitting it to the window or the screen: stretch, fit (with a bar color), fill, expand, and integer, after Godot's stretch modes and aspects.
+  - Logical coordinates stay the design's; the pointer and touches map back into them; and the UI anchors to the visible area.
+  - It behaves the same on the desktop, in a resized browser window, and in fullscreen, and the template uses it (fit by default).
+  - It is a step of its own, step 2, before the slice and after the frame times: every game needs it, Asteroids included. With it, physics3d is step 5.
+- **Step 0's inputs:** the clean-room rebuild's friction log, and an adversarial review of `games/asteroids/`, both from sessions outside libwgf and read-only here.
+  - Each is copied into FRICTION.md and triaged.
+  - The quick fixes are made in step 0: the autopilot format in a public doc, `wgf` on PATH or the docs saying how, an entity's visibility, the screenshot override, and the desktop export's leftover. The template's canvas waits for the presentation mode.
+
+The new order: 0 Asteroids and the rename; 1 frame times; 2 the presentation mode; 3 3D; 4 the drivable slice; 5 physics3d on Jolt; 6 glTF; 7 hot reload of assets; 8 lights and shadows; 9 the environment; 10 asset streaming; 11 many things on the track; 12 render targets, effects, and custom shaders; 13 combination scenes; 14 the racer, finished; 15 the rows that flip; 16 the close.
