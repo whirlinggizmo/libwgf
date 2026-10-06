@@ -10,6 +10,22 @@ In this order. Each milestone leaves everything before it working, and every gam
 
 1. **Asteroids** (2D). Ship, rocks that split, bullets, wraparound, score, lives, audio, particles, a title screen and a game-over screen built with the UI. This proves the loop, input, 2D drawing, audio, UI, entities, and export.
 2. **A chase-camera racing game** (3D). One track from glTF, a car with real vehicle physics, a chase camera with smoothing, lap timing, a HUD, shadows, and an environment map. This proves 3D rendering, physics, asset streaming, and performance.
+2.5. **Jam-ready: the framework's breadth.** libwgf is a framework, not one game's library: a game jam must not have to stop and add a feature under a deadline. Games drive the order of work, but breadth defines done. After the racer, restore what was trimmed from wgrender-c and libwgt and no game has brought back yet, each feature with a showcase example (wgrender-c's suite is the model).
+   - **Already trimmed** (keep this list in ROADMAP's catalog, and re-check it each milestone):
+     - render targets and post-process effects
+     - rounded rectangles, borders, nine-slice textures
+     - text slices without copying (`draw_n`, `measure_n`) and the FPS overlay
+     - particle color and size keyframes, palettes, spawn shapes, prewarm, sprite-sheet frames, spin, inherited velocity, alpha modes
+     - a settable placeholder texture
+     - public pointer capture, and cursor capture
+     - debug drawing
+     - Clay used directly
+     - whatever 3D milestone 2 didn't need
+   - Breadth stays cheap: only what a program calls is linked, and the size table shows that a small game doesn't pay for it.
+   - **Done when:**
+     - every catalog feature has an example in the browser check and the size table
+     - `wgf new` offers a few starter templates (top-down, platformer, menu-driven)
+     - a jam game can go from `wgf new` to deployed on Pages in one sitting, which is checked by doing it
 3. **An ARPG vertical slice with co-op** (Diablo / Torchlight / Darksburg style). One dungeon level, one player class with three abilities, three enemy types with navmesh pathing, loot drops, an inventory, and 2 to 4 players in co-op through a central server. This proves skinned animation with blending, many lit instances, navmesh and AI, an authoritative server, and replication.
 
    The slice's characters are **modular**:
