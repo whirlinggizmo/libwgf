@@ -20,6 +20,17 @@ In this order. Each milestone leaves everything before it working, and every gam
 
    - **Source.** The character comes from `~/media/models/woman/woman-src.blend` (Quaternius's Ultimate Modular Women, CC0). It has 10 outfits split into Body, Head, Legs and Feet, all on one 62-bone armature. A Sword and a Pistol are parented to the bone `Middle1.R`, which is the socket. It has 24 clips, including Sword_Slash, Punch, Kick, Roll, HitRecieve, Die and directional runs. `gen_woman.py` beside it is the export pattern: headless Blender. Write a new export script for the slice (one skeleton with every clip, each part in its own file, the weapons with their sockets) that writes into the game's assets, never into `~/media`. A shield, and enemies, come from elsewhere in `~/media/models/` (for example `cultist/`) or from other CC0 sources, credited.
 
+   - **Pieces as separate files.** A character is dressed from per-piece files, never from one file holding every piece, so a player downloads only what they wear.
+     - The rig file holds the skeleton and the clips, in sets (locomotion, combat) fetched when needed.
+     - Each piece's glTF holds just its skinned mesh, with its own joint list and inverse bind matrices, and no animation.
+     - A piece is bound to the character's skeleton instance by joint name: a remap table built once per piece and skeleton, and the skeleton posed once per character per frame and shared by every piece.
+     - A rig id in the glTF extras, plus a bind-pose check within a tolerance, refuses a piece from another rig.
+     - Pieces are listed in the asset manifest (rig id, slot, palette, file) and fetched on demand. The old piece stays drawn until the new one is ready, so equipping never pops.
+     - Pieces follow the body-region convention (each piece *is* its region of the body, as Quaternius's are). Masks for clothing over a full body wait until an asset needs them.
+     - Rigid items (weapons, shields) carry no skin; they hang on sockets.
+     - Retargeting animation to a different rig (other proportions, a second character) is out of v1: later, when a second rig exists.
+     - The exporter writes the rig with its clip sets, plus one file per piece, from `woman-src.blend`. Later, artists will author pieces as separate .blend files that link the rig file.
+
    Done when equipping a different helmet, chest piece and weapon from the inventory changes the character for every player in the session, mid-animation, with no pop.
 
 The full ARPG is a game, not a framework milestone. The vertical slice is what libwgf must be able to carry.
