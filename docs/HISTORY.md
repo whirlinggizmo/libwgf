@@ -576,3 +576,9 @@ Read first: libwgt's 3D core (`gfx/src/scene/`, `mesh/`, `material/`, `shape/`, 
   - The depth-tested pipeline is made by the first 3D draw and the 3D calls are a file of their own, so a 2D program links none of them.
   - Text in 3D draws its glyphs' quads through a pipeline on sokol_fontstash's own shader and atlas, as libwgt's does (its fontstash render-state hook carried), in a line-drawing function of its own, so 2D text's code doesn't grow.
 - **gfx-hello3d**, libwgt's example done 1:1, is a same row: 112.2 KB gzip against its target of 113.2 (libwgt's 108.7, the runner's 4 KB, the presentation's 0.5).
+- **Generated meshes and materials**, carried from libwgt with what this step draws:
+  - the seven shapes' geometry (`wgf_gfx_mesh_shapes.c`), libwgt's, whole: one builder that turns each triangle to face its vertices' normals and drops degenerate ones; tangents generated as wgrender's are; wgrender's 18-float vertex, so one layout serves every shader;
+  - a generated mesh made at once, even before gfx starts, its buffers uploaded the first time it is drawn, and shared by its parameters. Its key is the parameters' bits, not `%g` of them, so meshes link no float formatting;
+  - materials, libwgt's parameter table whole (glTF metallic-roughness, the texture transforms, the samplers), less its custom shaders, which are step 12's;
+  - left for glTF (step 6): `wgf_mesh_create` from a file, its node tree, and the mipmap flag a file's sampler can turn off.
+  - Meshes and materials are parts, each installed by its first create, so a 2D program links neither; meshes stop before materials, whose references they hold.

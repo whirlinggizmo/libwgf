@@ -25,6 +25,8 @@ typedef enum wgf_core_priv_part_layer_t {
 typedef enum wgf_core_priv_part_order_t {
     WGF_CORE_PRIV_PART_ECS,       /* entities and their systems (ecs/), whose nodes the rest draw */
     WGF_CORE_PRIV_PART_TEXT,      /* fonts and fontstash (gfx/src/text/wgf_gfx_font.c) */
+    WGF_CORE_PRIV_PART_MESHES,    /* meshes (gfx/src/mesh/), stopped before the materials they hold */
+    WGF_CORE_PRIV_PART_MATERIALS, /* materials (gfx/src/material/) */
     WGF_CORE_PRIV_PART_PARTICLES, /* emitters (gfx/src/emitter/wgf_gfx_emitter2d.c) */
     WGF_CORE_PRIV_PART_UI,        /* layout and widgets (ui/) */
     WGF_CORE_PRIV_PART_AUDIO,     /* sounds, voices, the mixer (audio/) */

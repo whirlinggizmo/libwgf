@@ -56,6 +56,8 @@ GETTERS_EXEMPT = {
     'wgf_ui_set_gap': UI_OPEN_BOX,
     'wgf_ui_set_align': UI_OPEN_BOX,
     'wgf_ui_set_color': UI_OPEN_BOX,
+    'wgf_material_set_color': 'a vec3 or vec4 parameter from an sRGB color, stored linear: read back as one '
+                              '(wgf_material_get_vec3, get_vec4)',
 }
 
 # The only functions that may take callbacks, with the callback type and why: each
@@ -81,6 +83,9 @@ GETTERS_PAIRED = {
     'wgf_emitter2d_set_size': ('wgf_emitter2d_get_size_start', 'wgf_emitter2d_get_size_end'),
     'wgf_emitter2d_set_color': ('wgf_emitter2d_get_color_start', 'wgf_emitter2d_get_color_end'),
     'wgf_camera3d_set_clip': ('wgf_camera3d_get_near', 'wgf_camera3d_get_far'),
+    'wgf_material_set_alpha_mode': ('wgf_material_get_alpha_mode', 'wgf_material_get_alpha_cutoff'),
+    'wgf_material_set_texture_sampling': ('wgf_material_get_texture_wrap_u', 'wgf_material_get_texture_wrap_v',
+                                          'wgf_material_get_texture_filter'),
 }
 
 # Calls that take or return a handle of any kind, as bare wgf_handle_t, and why; every

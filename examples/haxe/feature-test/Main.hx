@@ -199,6 +199,34 @@ class Main {
 	static var camera3d:Camera3d;
 	static var camera3dMade = false;
 
+	/** Generated meshes and materials. **/
+	static function meshes():Void {
+		final cube = Mesh.createCube(1, 2, 3);
+		expect(!cube.isNone() && Mesh.createCube(1, 2, 3) == cube && Resource.release(cube), "a cube, shared");
+		for (mesh in [Mesh.createPlane(2, 2, 1), Mesh.createSphere(1, 8, 16), Mesh.createCylinder(1, 2, 12),
+			Mesh.createCone(1, 2, 12), Mesh.createCapsule(0.5, 2, 8, 12), Mesh.createTorus(1, 0.25, 12, 8)])
+			expect(!mesh.isNone() && mesh.getMaterialCount() == 1 && Resource.release(mesh), "a generated shape");
+		final material = cube.getMaterial(0);
+		expect(material.getShading() == MaterialShading.PBR && material.getFloat("metallic") == 0, "the mesh's material");
+		final own = Material.create(MaterialShading.UNLIT);
+		expect(own.setShading(MaterialShading.PBR) && own.getShading() == MaterialShading.PBR, "a material's shading");
+		expect(own.setAlphaMode(AlphaMode.MASK, 0.25) && own.getAlphaMode() == AlphaMode.MASK
+			&& own.getAlphaCutoff() == 0.25, "its alpha mode");
+		expect(own.setDoubleSided(true) && own.isDoubleSided(), "double sided");
+		expect(own.setInt("base_color_texture_texcoord", 1) && own.getInt("base_color_texture_texcoord") == 1, "an int");
+		expect(own.setFloat("roughness", 0.5) && own.getFloat("roughness") == 0.5, "a float");
+		expect(own.setVec2("normal_texture_scale", 2, 3) && own.getVec2("normal_texture_scale").y == 3, "a vec2");
+		expect(own.setVec3("emissive", 1, 2, 3) && own.getVec3("emissive").z == 3, "a vec3");
+		expect(own.setVec4("base_color", 1, 0, 0, 1) && own.getVec4("base_color").x == 1, "a vec4");
+		expect(own.setColor("base_color", Color.get(ColorStock.WHITE)) && own.getVec4("base_color").w == 1, "a color");
+		expect(own.setTexture("base_color_texture", tiles) && own.getTexture("base_color_texture") == tiles, "a texture");
+		expect(own.setTextureSampling("base_color_texture", TextureWrap.CLAMP, TextureWrap.MIRROR, TextureFilter.NEAREST)
+			&& own.getTextureWrapU("base_color_texture") == TextureWrap.CLAMP
+			&& own.getTextureWrapV("base_color_texture") == TextureWrap.MIRROR
+			&& own.getTextureFilter("base_color_texture") == TextureFilter.NEAREST, "its sampling");
+		expect(Resource.release(own), "a material let go of");
+	}
+
 	/** The 3D camera, look_at, and immediate mode in 3D. **/
 	static function threeD():Void {
 		if (!camera3dMade) {
@@ -212,6 +240,7 @@ class Main {
 			camera3d.setPosition(6, 4, 6);
 			expect(camera3d.lookAt(0, 0, 0, 0, 1, 0) && !camera3d.lookAt(6, 4, 6, 0, 1, 0), "aimed with lookAt");
 		}
+		if (frames == 2) meshes();
 		expect(Draw.begin3d(camera3d), "3D immediate mode");
 		Draw.grid(4, 1, Color.get(ColorStock.GRAY));
 		Draw.line3d(0, 0, 0, 1, 1, 1, Color.get(ColorStock.RED));

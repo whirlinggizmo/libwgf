@@ -5,6 +5,9 @@ wgf_layer(gfx
         src/draw/wgf_gfx_draw.c
         src/draw/wgf_gfx_draw3d.c
         src/emitter/wgf_gfx_emitter2d.c
+        src/material/wgf_gfx_material.c
+        src/mesh/wgf_gfx_mesh.c
+        src/mesh/wgf_gfx_mesh_shapes.c
         src/node/wgf_gfx_camera2d.c
         src/node/wgf_gfx_camera3d.c
         src/node/wgf_gfx_canvas.c
@@ -40,6 +43,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_presentation_test)
         wgf_test(gfx wgf_gfx_node_test)
         wgf_test(gfx wgf_gfx_camera3d_test)
+        wgf_test(gfx wgf_gfx_mesh_test)
         wgf_test(gfx wgf_gfx_text_test)
         wgf_test(gfx wgf_gfx_texture_test)
         wgf_test(gfx wgf_gfx_draw_test)

@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "e0b11f66e88f1a1d" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "6366b0d5609f1824" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -608,6 +608,17 @@ export const WGF_TEXTURE_WRAP_MIRROR = 2;
 
 export const WGF_TEXTURE_FILTER_LINEAR = 0;
 export const WGF_TEXTURE_FILTER_NEAREST = 1;
+
+export const WGF_MATERIAL_SHADING_PBR = 0;
+export const WGF_MATERIAL_SHADING_UNLIT = 1;
+
+/**
+ * How something drawn uses its alpha. In a stage, OPAQUE and MASK parts write depth and
+ * aren't sorted; BLEND parts are drawn after them, sorted back to front.
+ */
+export const WGF_ALPHA_MODE_OPAQUE = 0;
+export const WGF_ALPHA_MODE_MASK = 1;
+export const WGF_ALPHA_MODE_BLEND = 2;
 
 /**
  * How a game's design is fitted to the window or the screen (Godot's stretch modes
@@ -4060,6 +4071,366 @@ export function wgf_emitter2d_get_stretch(emitter) {
 export function wgf_emitter2d_clear(emitter) {
     const value = host["_wgf_emitter2d_clear"](emitter);
     return value !== 0;
+}
+
+// wgf: call wgf_material_create
+/**
+ * A material with glTF's defaults. 0 when `shading` isn't one (logged), or there is no
+ * room for another material.
+ */
+export function wgf_material_create(shading) {
+    const value = host["_wgf_material_create"](shading);
+    return value >>> 0;
+}
+
+// wgf: call wgf_material_set_shading
+/**
+ * False when `shading` isn't one.
+ */
+export function wgf_material_set_shading(material, shading) {
+    const value = host["_wgf_material_set_shading"](material, shading);
+    return value !== 0;
+}
+
+// wgf: call wgf_material_get_shading
+/**
+ * False when `shading` isn't one.
+ */
+export function wgf_material_get_shading(material) {
+    const value = host["_wgf_material_get_shading"](material);
+    return value;
+}
+
+// wgf: call wgf_material_set_alpha_mode
+/**
+ * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
+ * 0 is clamped to 0). False when `mode` isn't one.
+ */
+export function wgf_material_set_alpha_mode(material, mode, cutoff) {
+    const value = host["_wgf_material_set_alpha_mode"](material, mode, cutoff);
+    return value !== 0;
+}
+
+// wgf: call wgf_material_get_alpha_mode
+/**
+ * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
+ * 0 is clamped to 0). False when `mode` isn't one.
+ */
+export function wgf_material_get_alpha_mode(material) {
+    const value = host["_wgf_material_get_alpha_mode"](material);
+    return value;
+}
+
+// wgf: call wgf_material_get_alpha_cutoff
+/**
+ * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
+ * 0 is clamped to 0). False when `mode` isn't one.
+ */
+export function wgf_material_get_alpha_cutoff(material) {
+    const value = host["_wgf_material_get_alpha_cutoff"](material);
+    return value;
+}
+
+// wgf: call wgf_material_set_double_sided
+/**
+ * A double-sided surface isn't culled from behind; its back faces are lit from their
+ * side (default single sided).
+ */
+export function wgf_material_set_double_sided(material, double_sided) {
+    const value = host["_wgf_material_set_double_sided"](material, (double_sided ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_material_is_double_sided
+/**
+ * A double-sided surface isn't culled from behind; its back faces are lit from their
+ * side (default single sided).
+ */
+export function wgf_material_is_double_sided(material) {
+    const value = host["_wgf_material_is_double_sided"](material);
+    return value !== 0;
+}
+
+// wgf: call wgf_material_set_int
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export function wgf_material_set_int(material, name, value_) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_material_set_int"](material, cstr(name), value_);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_material_get_int
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export function wgf_material_get_int(material, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_material_get_int"](material, cstr(name));
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_material_set_float
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export function wgf_material_set_float(material, name, value_) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_material_set_float"](material, cstr(name), value_);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_material_get_float
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export function wgf_material_get_float(material, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_material_get_float"](material, cstr(name));
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_material_set_vec2
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export function wgf_material_set_vec2(material, name, x, y) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_material_set_vec2"](material, cstr(name), x, y);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_material_get_vec2
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export function wgf_material_get_vec2(material, name, into) {
+    const mark = host["stackSave"]();
+    const ret = result(8);
+    host["_wgf_material_get_vec2"](ret, material, cstr(name));
+    host["stackRestore"](mark);
+    return vector(ret, 2, into);
+}
+
+// wgf: call wgf_material_set_vec3
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export function wgf_material_set_vec3(material, name, x, y, z) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_material_set_vec3"](material, cstr(name), x, y, z);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_material_get_vec3
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export function wgf_material_get_vec3(material, name, into) {
+    const mark = host["stackSave"]();
+    const ret = result(12);
+    host["_wgf_material_get_vec3"](ret, material, cstr(name));
+    host["stackRestore"](mark);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_material_set_vec4
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export function wgf_material_set_vec4(material, name, x, y, z, w) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_material_set_vec4"](material, cstr(name), x, y, z, w);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_material_get_vec4
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export function wgf_material_get_vec4(material, name, into) {
+    const mark = host["stackSave"]();
+    const ret = result(16);
+    host["_wgf_material_get_vec4"](ret, material, cstr(name));
+    host["stackRestore"](mark);
+    return vector(ret, 4, into);
+}
+
+// wgf: call wgf_material_set_color
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export function wgf_material_set_color(material, name, color) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_material_set_color"](material, cstr(name), color);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_material_set_texture
+/**
+ * A texture parameter: the material holds its own reference to the texture; 0 clears
+ * it. False when `texture` isn't a texture.
+ */
+export function wgf_material_set_texture(material, name, texture) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_material_set_texture"](material, cstr(name), texture);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_material_get_texture
+/**
+ * A texture parameter: the material holds its own reference to the texture; 0 clears
+ * it. False when `texture` isn't a texture.
+ */
+export function wgf_material_get_texture(material, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_material_get_texture"](material, cstr(name));
+    host["stackRestore"](mark);
+    return value >>> 0;
+}
+
+// wgf: call wgf_material_set_texture_sampling
+/**
+ * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
+ * filter that isn't one.
+ */
+export function wgf_material_set_texture_sampling(material, name, wrap_u, wrap_v, filter) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_material_set_texture_sampling"](material, cstr(name), wrap_u, wrap_v, filter);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_material_get_texture_wrap_u
+/**
+ * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
+ * filter that isn't one.
+ */
+export function wgf_material_get_texture_wrap_u(material, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_material_get_texture_wrap_u"](material, cstr(name));
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_material_get_texture_wrap_v
+/**
+ * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
+ * filter that isn't one.
+ */
+export function wgf_material_get_texture_wrap_v(material, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_material_get_texture_wrap_v"](material, cstr(name));
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_material_get_texture_filter
+/**
+ * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
+ * filter that isn't one.
+ */
+export function wgf_material_get_texture_filter(material, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_material_get_texture_filter"](material, cstr(name));
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_mesh_create_plane
+export function wgf_mesh_create_plane(width, length, subdivisions) {
+    const value = host["_wgf_mesh_create_plane"](width, length, subdivisions);
+    return value >>> 0;
+}
+
+// wgf: call wgf_mesh_create_cube
+export function wgf_mesh_create_cube(width, height, length) {
+    const value = host["_wgf_mesh_create_cube"](width, height, length);
+    return value >>> 0;
+}
+
+// wgf: call wgf_mesh_create_sphere
+export function wgf_mesh_create_sphere(radius, rings, segments) {
+    const value = host["_wgf_mesh_create_sphere"](radius, rings, segments);
+    return value >>> 0;
+}
+
+// wgf: call wgf_mesh_create_cylinder
+export function wgf_mesh_create_cylinder(radius, height, segments) {
+    const value = host["_wgf_mesh_create_cylinder"](radius, height, segments);
+    return value >>> 0;
+}
+
+// wgf: call wgf_mesh_create_cone
+export function wgf_mesh_create_cone(radius, height, segments) {
+    const value = host["_wgf_mesh_create_cone"](radius, height, segments);
+    return value >>> 0;
+}
+
+// wgf: call wgf_mesh_create_capsule
+export function wgf_mesh_create_capsule(radius, height, rings, segments) {
+    const value = host["_wgf_mesh_create_capsule"](radius, height, rings, segments);
+    return value >>> 0;
+}
+
+// wgf: call wgf_mesh_create_torus
+export function wgf_mesh_create_torus(radius, thickness, rings, segments) {
+    const value = host["_wgf_mesh_create_torus"](radius, thickness, rings, segments);
+    return value >>> 0;
+}
+
+// wgf: call wgf_mesh_get_material_count
+/**
+ * The mesh's materials, one a slot (wgf_material.h); a generated mesh has one. The
+ * handle is borrowed: valid while the mesh is, and changing it changes every model
+ * drawing the mesh with it. 0 for a slot it hasn't.
+ */
+export function wgf_mesh_get_material_count(mesh) {
+    const value = host["_wgf_mesh_get_material_count"](mesh);
+    return value;
+}
+
+// wgf: call wgf_mesh_get_material
+/**
+ * The mesh's materials, one a slot (wgf_material.h); a generated mesh has one. The
+ * handle is borrowed: valid while the mesh is, and changing it changes every model
+ * drawing the mesh with it. 0 for a slot it hasn't.
+ */
+export function wgf_mesh_get_material(mesh, slot_) {
+    const value = host["_wgf_mesh_get_material"](mesh, slot_);
+    return value >>> 0;
 }
 
 // wgf: call wgf_presentation_set
