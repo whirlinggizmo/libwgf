@@ -66,7 +66,12 @@ In this order. Each milestone leaves everything before it working, and every gam
    - **The engine's hot, uniform work stays data-oriented in C:** transforms, motion, collision, particles, physics, animation.
    - **The escape hatch:** batch query systems (components with field layouts, read and written a column at a time through caller-owned arrays) for the rare case of thousands of similar things. A system moves there, or into C, only when a measurement forces it, and HISTORY records the numbers.
    - **Prior art:** `~/projects/github/whirlinggizmo/flecs_wrapper-c` and `~/projects/github/robknopf/flecs_wrapper-hx` (read its `docs/PLAN-component-storage.md`). Keep their runtime components and per-table batching. Avoid what broke them: raw column pointers and callbacks handed to the host language.
-   - **flecs is kept or replaced by measurement:** engine internals on flecs against plain C arrays and pools, for the slice's real load, on size and speed. Flecs is 152 KB of code in Asteroids' wasm today.
+   - **flecs is kept or replaced by measurement, decided right after the actor unification and before the racer** (Rob, 2026-10-07). libwgf uses only flecs' core: components by size, set, get, has and remove, and queries of up to 3 terms. Its hierarchy, prefabs, events, reflection and scheduling are all libwgf's own, and flecs is the ladder's biggest step (+87 KB gzipped, ecs included). The alternative is plain C sparse-set storage behind the same internal interface. The benchmark must not flatter either side:
+     - **sparse sets' worst case:** a query whose rarest component is common but whose intersection is small (e.g. 50k actors with A, 50k with B, 100 with both), which archetype tables answer without scanning;
+     - **archetype tables' worst case:** churn that adds and removes components on many actors each tick, which moves them between tables;
+     - the ordinary cases: the actor benchmark's static and moving actors, spawn and destroy churn, lookups, and Asteroids' and the racer's real queries;
+     - size: the ladder's "+ ecs" step for each.
+     Keep the winner on the real load, with the worst cases recorded either way, and the reasons in HISTORY. Asteroids' autopilot runs are the regression test.
    - **The proof:** a stress autopilot run for the slice (4 players, 200 enemies with AI behaviors, about 100 active effects with stacked poisons, heals over time and procs firing, over a fixed number of frames). It holds 60 fps in the browser on a mid-range machine, and its frame time is recorded in the benchmarks beside the size table.
 
 The full ARPG is a game, not a framework milestone. The vertical slice is what libwgf must be able to carry.
