@@ -92,7 +92,7 @@ ROWS = [
 # A "same" row's target: libwgt's size, gzip, and the autopilot runner's cost, which
 # every libwgf program carries on purpose, so a shipped build can be played through
 # (docs/HISTORY.md, "Same rows, a target"). --check fails a "same" row past it.
-RUNNER_COST = 4608  # 4.5 KB: text expectations and recording's hooks (HISTORY, "The runner's allowance")
+RUNNER_COST = 4864  # 4.75 KB: text expectations, recording's hooks, a wait on the loads (HISTORY, "The runner's allowance")
 # And the presentation's transform (wgf_presentation.h), which every program's drawing,
 # clips, and input go through, a mode set or not: measured at 304 bytes of gzip on
 # app-hello (docs/HISTORY.md, "Milestone 2, step 2"); libwgt has no presentation mode.
