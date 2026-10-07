@@ -18,6 +18,9 @@
 #include "wgf_node.h"
 #include "wgf_resource.h"
 #include "wgf_scene.h"
+#include "wgf_mesh.h"
+#include "wgf_model.h"
+#include "wgf_stage.h"
 #include "wgf_shape2d.h"
 #include "wgf_text.h"
 #include "wgf_time.h"
@@ -185,6 +188,36 @@ int main(void)
         wgf_resource_release(again);
     }
     wgf_resource_release(field);
+
+    /* models: a generated mesh by its create call's parameters, shared, and its tint; the
+       dump writes them the same */
+    {
+        const wgf_scene_t garage = load("scenes/garage.scene", "wgf-scene 1\n"
+                                                              "entity car\n"
+                                                              "  model cube=2,1,4 tint=#FF0000FF\n"
+                                                              "end\n"
+                                                              "entity wheel\n"
+                                                              "  model torus=0.5,0.25,12,8\n"
+                                                              "end\n");
+        wgf_node_t car, wheel;
+        wgf_mesh_t cube;
+        wgf_ecs_clear();
+        wgf_stage_create(); /* models are made once there is a stage to draw them */
+        expect(wgf_scene_instantiate(garage, canvas) == 2, "two models made");
+        car = wgf_entity_get_component_node(wgf_entity_find("car"), WGF_COMPONENT_MODEL);
+        wheel = wgf_entity_get_component_node(wgf_entity_find("wheel"), WGF_COMPONENT_MODEL);
+        cube = wgf_mesh_create_cube(2, 1, 4);
+        expect(wgf_node_get_type(car) == WGF_NODE_TYPE_MODEL && wgf_model_get_mesh(car) == cube &&
+                   wgf_model_get_tint(car) == 0xFF0000FFu,
+               "a model: its generated mesh (the same, shared) and its tint");
+        wgf_resource_release(cube); /* the reference the comparison took */
+        expect(strstr(wgf_ecs_dump(), "model cube=2,1,4 tint=#FF0000FF") != NULL &&
+                   strstr(wgf_ecs_dump(), "model torus=0.5,0.25,12,8 tint=#FFFFFFFF") != NULL,
+               "dumped as they were written");
+        (void)wheel;
+        wgf_ecs_clear();
+        wgf_resource_release(garage);
+    }
 
     /* refusals */
     expect(refused("header", "wgf-scene 2\n"), "a version it doesn't know");

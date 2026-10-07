@@ -43,7 +43,8 @@ typedef enum wgf_component_t {
     WGF_COMPONENT_SPRITE = 7,    /* a sprite node of no texture yet (wgf_sprite.h) */
     WGF_COMPONENT_TEXT = 8,      /* a text node in the default font (wgf_text.h) */
     WGF_COMPONENT_EMITTER2D = 9, /* a 2D particle emitter node (wgf_emitter2d.h) */
-    WGF_COMPONENT_VOICE = 10     /* a voice of no sound yet (wgf_voice.h) */
+    WGF_COMPONENT_VOICE = 10,    /* a voice of no sound yet (wgf_voice.h) */
+    WGF_COMPONENT_MODEL = 11     /* a model node of no mesh yet (wgf_model.h): a stage made first (wgf_stage.h) */
 } wgf_component_t;
 
 /* An entity at the origin, with no components, its node put under `parent` (0: no
@@ -108,8 +109,10 @@ WGF_API bool wgf_entity_set_positions(const wgf_entity_t *entities, int count, c
 /* Components. add makes one with its defaults (each component's header says them; the
  * node kinds' as their create makes them); adding one it has keeps it as it is. remove
  * ends it (a node kind's node destroyed, a voice stopped and destroyed). False for a
- * handle that isn't an entity, or a kind that isn't one; remove is false too for one it
- * doesn't have. Adding a behavior is told as a CREATED event (wgf_ecs.h). */
+ * handle that isn't an entity, or a kind that isn't one, and for a model before any
+ * stage has been made (logged: models are drawn on stages, and a program that makes none
+ * links none of the 3D); remove is false too for one it doesn't have. Adding a behavior
+ * is told as a CREATED event (wgf_ecs.h). */
 WGF_API bool wgf_entity_add_component(wgf_entity_t entity, wgf_component_t component);
 WGF_API bool wgf_entity_remove_component(wgf_entity_t entity, wgf_component_t component);
 WGF_API bool wgf_entity_has_component(wgf_entity_t entity, wgf_component_t component);

@@ -127,6 +127,17 @@ static const kind_t kinds[] = {
       {"loop", V_BOOL},
       {"play", V_BOOL}},
      false},
+    {"model",
+     WGF_COMPONENT_MODEL,
+     {{"plane", V_NUM3},
+      {"cube", V_NUM3},
+      {"sphere", V_NUM3},
+      {"cylinder", V_NUM3},
+      {"cone", V_NUM3},
+      {"capsule", V_NUM4},
+      {"torus", V_NUM4},
+      {"tint", V_COLOR}},
+     false},
 };
 #define KIND_COUNT ((int)(sizeof(kinds) / sizeof(kinds[0])))
 
@@ -557,7 +568,7 @@ static float f(const value_t *v, int i)
 static void apply_setting(wgf_entity_t e, int kind, const setting_t *s, value_t *v, after_t *after)
 {
     const char *key = s->key;
-    const wgf_node_t node = kinds[kind].component >= WGF_COMPONENT_SHAPE2D && kinds[kind].component <= WGF_COMPONENT_EMITTER2D
+    const wgf_node_t node = wgf_ecs_priv_node_slot((wgf_component_t)kinds[kind].component) >= 0
                                 ? wgf_entity_get_component_node(e, (wgf_component_t)kinds[kind].component)
                                 : 0;
     const int type = key_type(kind, key);
@@ -625,6 +636,19 @@ static void apply_setting(wgf_entity_t e, int kind, const setting_t *s, value_t 
             else if (strcmp(key, "wrap") == 0) wgf_text_set_wrap_width(node, f(v, 0));
             else wgf_text_set_align(node, (wgf_text_halign_t)(int)v->n[0], (wgf_text_valign_t)(int)v->n[1]);
             break;
+        case WGF_COMPONENT_MODEL: { /* through a stage's hooks: no model was made without one */
+            const wgf_gfx_priv_model_hooks_t *hooks = wgf_gfx_priv_get_model_hooks();
+            float params[4];
+            int i;
+            if (hooks == NULL || node == 0) break;
+            if (strcmp(key, "tint") == 0) {
+                hooks->set_tint(node, v->colors[0]);
+                break;
+            }
+            for (i = 0; i < 4; i++) params[i] = i < v->count ? f(v, i) : 0.0f;
+            hooks->set_shape(node, key, params, v->count);
+            break;
+        }
         case WGF_COMPONENT_EMITTER2D:
             if (strcmp(key, "rate") == 0) wgf_emitter2d_set_rate(node, f(v, 0));
             else if (strcmp(key, "emitting") == 0) wgf_emitter2d_set_emitting(node, v->truth);

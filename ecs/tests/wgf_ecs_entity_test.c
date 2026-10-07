@@ -10,6 +10,8 @@
 #include "wgf_core_priv.h"
 #include "wgf_ecs.h"
 #include "wgf_entity.h"
+#include "wgf_model.h"
+#include "wgf_stage.h"
 #include "wgf_handle.h"
 #include "wgf_lifetime.h"
 #include "wgf_motion.h"
@@ -147,6 +149,14 @@ int main(void)
                wgf_node_is_visible(wgf_entity_get_component_node(e, WGF_COMPONENT_TEXT)),
            "shown again: each drawn");
     expect(!wgf_entity_set_visible(12345, false) && !wgf_entity_is_visible(12345), "not an entity: false");
+    expect(!wgf_entity_add_component(e, WGF_COMPONENT_MODEL), "a model before any stage: refused (logged)");
+    wgf_stage_create();
+    expect(wgf_entity_add_component(e, WGF_COMPONENT_MODEL) &&
+               wgf_node_get_type(wgf_entity_get_component_node(e, WGF_COMPONENT_MODEL)) == WGF_NODE_TYPE_MODEL &&
+               wgf_model_get_mesh(wgf_entity_get_component_node(e, WGF_COMPONENT_MODEL)) == 0,
+           "a model of no mesh yet");
+    expect(wgf_entity_remove_component(e, WGF_COMPONENT_MODEL) && !wgf_entity_has_component(e, WGF_COMPONENT_MODEL),
+           "and taken off");
     expect(wgf_entity_get_component_node(e, WGF_COMPONENT_MOTION) == 0, "no node for a data component");
     expect(wgf_entity_add_component(e, WGF_COMPONENT_VOICE) && wgf_entity_get_voice(e) != 0 &&
                wgf_voice_get_sound(wgf_entity_get_voice(e)) == 0,

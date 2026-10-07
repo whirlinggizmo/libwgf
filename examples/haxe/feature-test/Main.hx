@@ -225,6 +225,9 @@ class Main {
 		expect(model.setMaterial(0, own) && model.getMaterial(0) == own && Resource.release(own), "its own material");
 		model.setParent(stage3d);
 		Resource.release(cube);
+		final car = Entity.create(stage3d);
+		expect(car.addComponent(Component.MODEL) && car.getComponentNode(Component.MODEL).getType() == NodeType.MODEL,
+			"the ecs's model component, on a stage");
 		final shape:Shape3d = Shape3d.create();
 		expect(shape.getKind() == Shape3dKind.NONE && shape.setCube(1, 2, 3) && shape.getKind() == Shape3dKind.CUBE
 			&& shape.getSize().z == 3, "a 3D shape: a cube");

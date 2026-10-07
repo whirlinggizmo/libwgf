@@ -18,4 +18,5 @@ enum abstract Component(Int) from Int to Int {
 	var TEXT = 8;
 	var EMITTER2D = 9;
 	var VOICE = 10;
+	var MODEL = 11;
 }

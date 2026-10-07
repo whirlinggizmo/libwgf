@@ -42,6 +42,12 @@ bool wgf_gfx_priv_mesh_get_primitive(wgf_mesh_t mesh, int index, wgf_gfx_priv_me
 void wgf_gfx_priv_mesh_generate_tangents(const float *positions, const float *normals, const float *uvs,
                                         int vertex_count, const uint32_t *indices, int index_count, float *tangents);
 
+/* What a generated mesh was made as -- "plane", "cube", "sphere", "cylinder", "cone",
+ * "capsule", or "torus" -- and its create call's parameters after their clamps, in its
+ * order, into `params` (how many: `count`); NULL for anything else. The ecs's dump writes
+ * a model's mesh with it. */
+const char *wgf_gfx_priv_mesh_describe(wgf_mesh_t mesh, float params[4], int *count);
+
 /* For tests: primitive 0's vertices and indices as made, and how many of each; NULL
  * when it isn't a mesh. */
 const float *wgf_gfx_priv_mesh_get_vertices(wgf_mesh_t mesh, int *vertex_count);

@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "fb9d61a3784528e3" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "7c08d7090783bc58" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -735,6 +735,7 @@ export const WGF_COMPONENT_SPRITE = 7;
 export const WGF_COMPONENT_TEXT = 8;
 export const WGF_COMPONENT_EMITTER2D = 9;
 export const WGF_COMPONENT_VOICE = 10;
+export const WGF_COMPONENT_MODEL = 11;
 
 /**
  * Bounds (WGF_COMPONENT_BOUNDS): a rectangle in the entity's parent's space, x and y,
@@ -6072,8 +6073,10 @@ export function wgf_entity_set_positions(entities, positions) {
  * Components. add makes one with its defaults (each component's header says them; the
  * node kinds' as their create makes them); adding one it has keeps it as it is. remove
  * ends it (a node kind's node destroyed, a voice stopped and destroyed). False for a
- * handle that isn't an entity, or a kind that isn't one; remove is false too for one it
- * doesn't have. Adding a behavior is told as a CREATED event (wgf_ecs.h).
+ * handle that isn't an entity, or a kind that isn't one, and for a model before any
+ * stage has been made (logged: models are drawn on stages, and a program that makes none
+ * links none of the 3D); remove is false too for one it doesn't have. Adding a behavior
+ * is told as a CREATED event (wgf_ecs.h).
  */
 export function wgf_entity_add_component(entity, component) {
     const value = host["_wgf_entity_add_component"](entity, component);
@@ -6085,8 +6088,10 @@ export function wgf_entity_add_component(entity, component) {
  * Components. add makes one with its defaults (each component's header says them; the
  * node kinds' as their create makes them); adding one it has keeps it as it is. remove
  * ends it (a node kind's node destroyed, a voice stopped and destroyed). False for a
- * handle that isn't an entity, or a kind that isn't one; remove is false too for one it
- * doesn't have. Adding a behavior is told as a CREATED event (wgf_ecs.h).
+ * handle that isn't an entity, or a kind that isn't one, and for a model before any
+ * stage has been made (logged: models are drawn on stages, and a program that makes none
+ * links none of the 3D); remove is false too for one it doesn't have. Adding a behavior
+ * is told as a CREATED event (wgf_ecs.h).
  */
 export function wgf_entity_remove_component(entity, component) {
     const value = host["_wgf_entity_remove_component"](entity, component);
@@ -6098,8 +6103,10 @@ export function wgf_entity_remove_component(entity, component) {
  * Components. add makes one with its defaults (each component's header says them; the
  * node kinds' as their create makes them); adding one it has keeps it as it is. remove
  * ends it (a node kind's node destroyed, a voice stopped and destroyed). False for a
- * handle that isn't an entity, or a kind that isn't one; remove is false too for one it
- * doesn't have. Adding a behavior is told as a CREATED event (wgf_ecs.h).
+ * handle that isn't an entity, or a kind that isn't one, and for a model before any
+ * stage has been made (logged: models are drawn on stages, and a program that makes none
+ * links none of the 3D); remove is false too for one it doesn't have. Adding a behavior
+ * is told as a CREATED event (wgf_ecs.h).
  */
 export function wgf_entity_has_component(entity, component) {
     const value = host["_wgf_entity_has_component"](entity, component);

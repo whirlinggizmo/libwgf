@@ -273,6 +273,18 @@ static bool is_under(wgf_node_t node, wgf_node_t ancestor)
 _Static_assert(WGF_NODE_TYPE_SHAPE3D < NODE_TYPES, "a node type past the kinds' table");
 static const wgf_gfx_priv_node_kind_t *kinds[NODE_TYPES];
 
+static const wgf_gfx_priv_model_hooks_t *model_hooks;
+
+void wgf_gfx_priv_set_model_hooks(const wgf_gfx_priv_model_hooks_t *hooks)
+{
+    model_hooks = hooks;
+}
+
+const wgf_gfx_priv_model_hooks_t *wgf_gfx_priv_get_model_hooks(void)
+{
+    return model_hooks;
+}
+
 void wgf_gfx_priv_node_set_kind(wgf_node_type_t type, const wgf_gfx_priv_node_kind_t *kind)
 {
     if ((int)type >= 0 && type < NODE_TYPES) kinds[type] = kind;

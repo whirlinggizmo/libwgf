@@ -74,14 +74,14 @@ typedef struct wgf_ecs_priv_behavior_t {
 } wgf_ecs_priv_behavior_t;
 
 /* The node kinds' slots, from WGF_COMPONENT_SHAPE2D. */
-#define WGF_ECS_PRIV_NODE_KINDS 4
+#define WGF_ECS_PRIV_NODE_KINDS 5
 
 /* libwgf's record for an entity, by its handle. */
 typedef struct wgf_ecs_priv_entity_t {
     ecs_entity_t id;
     uint64_t order; /* made the order-th: "oldest first" */
     wgf_node_t node;
-    wgf_node_t parts[WGF_ECS_PRIV_NODE_KINDS]; /* SHAPE2D, SPRITE, TEXT, EMITTER2D; 0 for none */
+    wgf_node_t parts[WGF_ECS_PRIV_NODE_KINDS]; /* SHAPE2D, SPRITE, TEXT, EMITTER2D, MODEL; 0 for none */
     wgf_voice_t voice;                         /* 0: no voice component */
     char name[WGF_ECS_PRIV_NAME_MAX];
     wgf_ecs_priv_behavior_t *behavior;         /* malloc'd; NULL: no behavior component */

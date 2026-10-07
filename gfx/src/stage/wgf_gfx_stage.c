@@ -141,6 +141,7 @@ wgf_node_t wgf_stage_create(void)
     node_ptr->as.stage.tonemap = WGF_STAGE_TONEMAP_NEUTRAL;
     node_ptr->as.stage.culling = true;
     wgf_core_priv_part_install(&part);
+    wgf_gfx_priv_model_install(); /* the ecs's model component, now that there is somewhere to draw one */
     return stage;
 }
 

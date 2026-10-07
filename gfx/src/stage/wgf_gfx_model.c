@@ -1,6 +1,7 @@
 #include "wgf_model.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "material/wgf_gfx_material_priv.h"
 #include "mesh/wgf_gfx_mesh_priv.h"
@@ -55,6 +56,49 @@ wgf_node_t wgf_model_create(wgf_mesh_t mesh)
         return 0;
     }
     return model;
+}
+
+static wgf_node_t create_empty(void)
+{
+    return wgf_model_create(0);
+}
+
+/* The generated mesh `shape` names, made with `params` as its create call takes them. */
+static bool set_shape(wgf_node_t model, const char *shape, const float *params, int count)
+{
+    wgf_mesh_t mesh = 0;
+    bool done;
+    if (count >= 3 && strcmp(shape, "plane") == 0) mesh = wgf_mesh_create_plane(params[0], params[1], (int)params[2]);
+    else if (count >= 3 && strcmp(shape, "cube") == 0) mesh = wgf_mesh_create_cube(params[0], params[1], params[2]);
+    else if (count >= 3 && strcmp(shape, "sphere") == 0) {
+        mesh = wgf_mesh_create_sphere(params[0], (int)params[1], (int)params[2]);
+    } else if (count >= 3 && strcmp(shape, "cylinder") == 0) {
+        mesh = wgf_mesh_create_cylinder(params[0], params[1], (int)params[2]);
+    } else if (count >= 3 && strcmp(shape, "cone") == 0) {
+        mesh = wgf_mesh_create_cone(params[0], params[1], (int)params[2]);
+    } else if (count >= 4 && strcmp(shape, "capsule") == 0) {
+        mesh = wgf_mesh_create_capsule(params[0], params[1], (int)params[2], (int)params[3]);
+    } else if (count >= 4 && strcmp(shape, "torus") == 0) {
+        mesh = wgf_mesh_create_torus(params[0], params[1], (int)params[2], (int)params[3]);
+    } else {
+        return false;
+    }
+    done = wgf_model_set_mesh(model, mesh);
+    if (mesh != 0) wgf_resource_release(mesh); /* the model holds its own */
+    return done && mesh != 0;
+}
+
+static const char *describe(wgf_node_t model, float params[4], int *count)
+{
+    return wgf_gfx_priv_mesh_describe(wgf_model_get_mesh(model), params, count);
+}
+
+static const wgf_gfx_priv_model_hooks_t hooks = {create_empty, set_shape, describe, wgf_model_set_tint,
+                                                  wgf_model_get_tint};
+
+void wgf_gfx_priv_model_install(void)
+{
+    wgf_gfx_priv_set_model_hooks(&hooks);
 }
 
 bool wgf_model_set_mesh(wgf_node_t model, wgf_mesh_t mesh)

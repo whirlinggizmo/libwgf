@@ -12,6 +12,7 @@
 #include "wgf_ecs_priv.h"
 #include "wgf_emitter2d.h"
 #include "wgf_lifetime.h"
+#include "node/wgf_gfx_node_priv.h"
 #include "wgf_motion.h"
 #include "wgf_shape2d.h"
 #include "wgf_sprite.h"
@@ -169,6 +170,23 @@ static void dump_emitter(out_t *out, wgf_node_t node)
         (unsigned)wgf_emitter2d_get_color_end(node), wgf_emitter2d_get_stretch(node));
 }
 
+/* A model: its mesh as the generated shape it is, with its create call's parameters
+ * (a mesh of no generated shape is left out), and its tint. */
+static void dump_model(out_t *out, wgf_node_t node)
+{
+    const wgf_gfx_priv_model_hooks_t *hooks = wgf_gfx_priv_get_model_hooks(); /* set: there is a model */
+    float params[4];
+    int count, i;
+    const char *shape = hooks->describe(node, params, &count);
+    put(out, "    model");
+    if (shape != NULL) {
+        put(out, " %s=", shape);
+        for (i = 0; i < count; i++) put(out, i == 0 ? "%.9g" : ",%.9g", params[i]);
+    }
+    put_color(out, "tint", hooks->get_tint(node));
+    put(out, "\n");
+}
+
 static void dump_voice(out_t *out, wgf_voice_t voice)
 {
     const wgf_sound_t sound = wgf_voice_get_sound(voice);
@@ -240,6 +258,9 @@ static void dump_entity(out_t *out, wgf_entity_t e)
     }
     if (wgf_entity_has_component(e, WGF_COMPONENT_EMITTER2D)) {
         dump_emitter(out, wgf_entity_get_component_node(e, WGF_COMPONENT_EMITTER2D));
+    }
+    if (wgf_entity_has_component(e, WGF_COMPONENT_MODEL)) {
+        dump_model(out, wgf_entity_get_component_node(e, WGF_COMPONENT_MODEL));
     }
     if (wgf_entity_has_component(e, WGF_COMPONENT_VOICE)) dump_voice(out, wgf_entity_get_voice(e));
     put(out, "end\n");

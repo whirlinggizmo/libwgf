@@ -181,6 +181,24 @@ const wgf_gfx_priv_node_kind_t *wgf_gfx_priv_node_get_kind(wgf_node_type_t type)
  * identity for a node that isn't a 3D camera. */
 wgf_mat4_t wgf_gfx_priv_camera3d_view_projection(wgf_node_t camera, float aspect, wgf_vec3_t *position);
 
+/* The ecs's model component's way to models (wgf_gfx_model.c), installed by the first
+ * stage made, so a program loading scenes links no 3D until it makes a stage: a model
+ * node made; given the generated mesh `shape` names ("cube") with its create call's
+ * parameters (false for a shape that isn't one); its mesh described so (NULL for one of
+ * no generated shape); and its tint. NULL before a stage is made. */
+typedef struct wgf_gfx_priv_model_hooks_t {
+    wgf_node_t (*create)(void);
+    bool (*set_shape)(wgf_node_t model, const char *shape, const float *params, int count);
+    const char *(*describe)(wgf_node_t model, float params[4], int *count);
+    bool (*set_tint)(wgf_node_t model, wgf_color_t tint);
+    wgf_color_t (*get_tint)(wgf_node_t model);
+} wgf_gfx_priv_model_hooks_t;
+void wgf_gfx_priv_set_model_hooks(const wgf_gfx_priv_model_hooks_t *hooks);
+const wgf_gfx_priv_model_hooks_t *wgf_gfx_priv_get_model_hooks(void);
+
+/* The hooks above set: the stage's first create. */
+void wgf_gfx_priv_model_install(void);
+
 /* With the surface: every node destroyed at shutdown, its references released. */
 void wgf_gfx_priv_node_shutdown(void);
 

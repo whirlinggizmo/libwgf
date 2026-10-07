@@ -191,8 +191,10 @@ abstract Entity(Int) from Int to Int to wgf.Handle {
 	    Components. add makes one with its defaults (each component's header says them; the
 	    node kinds' as their create makes them); adding one it has keeps it as it is. remove
 	    ends it (a node kind's node destroyed, a voice stopped and destroyed). False for a
-	    handle that isn't an entity, or a kind that isn't one; remove is false too for one it
-	    doesn't have. Adding a behavior is told as a CREATED event (wgf_ecs.h).
+	    handle that isn't an entity, or a kind that isn't one, and for a model before any
+	    stage has been made (logged: models are drawn on stages, and a program that makes none
+	    links none of the 3D); remove is false too for one it doesn't have. Adding a behavior
+	    is told as a CREATED event (wgf_ecs.h).
 	**/
 	public inline function addComponent(component:Component):Bool
 		return Raw.wgf_entity_add_component(this, component);
@@ -201,8 +203,10 @@ abstract Entity(Int) from Int to Int to wgf.Handle {
 	    Components. add makes one with its defaults (each component's header says them; the
 	    node kinds' as their create makes them); adding one it has keeps it as it is. remove
 	    ends it (a node kind's node destroyed, a voice stopped and destroyed). False for a
-	    handle that isn't an entity, or a kind that isn't one; remove is false too for one it
-	    doesn't have. Adding a behavior is told as a CREATED event (wgf_ecs.h).
+	    handle that isn't an entity, or a kind that isn't one, and for a model before any
+	    stage has been made (logged: models are drawn on stages, and a program that makes none
+	    links none of the 3D); remove is false too for one it doesn't have. Adding a behavior
+	    is told as a CREATED event (wgf_ecs.h).
 	**/
 	public inline function removeComponent(component:Component):Bool
 		return Raw.wgf_entity_remove_component(this, component);
@@ -211,8 +215,10 @@ abstract Entity(Int) from Int to Int to wgf.Handle {
 	    Components. add makes one with its defaults (each component's header says them; the
 	    node kinds' as their create makes them); adding one it has keeps it as it is. remove
 	    ends it (a node kind's node destroyed, a voice stopped and destroyed). False for a
-	    handle that isn't an entity, or a kind that isn't one; remove is false too for one it
-	    doesn't have. Adding a behavior is told as a CREATED event (wgf_ecs.h).
+	    handle that isn't an entity, or a kind that isn't one, and for a model before any
+	    stage has been made (logged: models are drawn on stages, and a program that makes none
+	    links none of the 3D); remove is false too for one it doesn't have. Adding a behavior
+	    is told as a CREATED event (wgf_ecs.h).
 	**/
 	public inline function hasComponent(component:Component):Bool
 		return Raw.wgf_entity_has_component(this, component);

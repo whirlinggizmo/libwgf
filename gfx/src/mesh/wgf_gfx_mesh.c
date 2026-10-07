@@ -35,6 +35,9 @@ typedef struct primitive_t {
 typedef struct mesh_t {
     wgf_core_priv_resource_t resource; /* first: the resource core's (status, references) */
     char key[KEY_MAX];                 /* the parameters it was made with, which find it again */
+    const char *shape;                 /* what it was made as ("cube"), and with what: its call's parameters */
+    float params[4];
+    int param_count;
     primitive_t *primitives;
     int primitive_count;
     wgf_material_t *materials; /* one a slot, referenced */
@@ -249,19 +252,40 @@ static unsigned bits_of(float value)
     return (unsigned)bits;
 }
 
-/* The mesh `key` names, shared, or made by `made` (false: a size of 0 or less). */
-static wgf_mesh_t generate(const char *key, bool made, wgf_gfx_priv_mesh_shape_t *shape, const char *call)
+/* The mesh `key` names, shared, or made by `made` (false: a size of 0 or less), as
+ * `name` with its call's `count` parameters (counts clamped). */
+static wgf_mesh_t generate(const char *key, bool made, wgf_gfx_priv_mesh_shape_t *shape, const char *name,
+                           const float *params, int count)
 {
     const wgf_mesh_t existing = find_mesh(key);
+    wgf_mesh_t mesh;
+    mesh_t *mesh_ptr;
     if (existing != 0) {
         if (made) wgf_gfx_priv_mesh_shape_free(shape);
         return existing;
     }
     if (!made) {
-        wgf_log_error("%s: its sizes are more than 0 (or it ran out of memory)", call);
+        wgf_log_error("wgf_mesh_create_%s: its sizes are more than 0 (or it ran out of memory)", name);
         return 0;
     }
-    return create_generated(key, shape);
+    mesh = create_generated(key, shape);
+    mesh_ptr = record_of(mesh);
+    if (mesh_ptr != NULL) {
+        mesh_ptr->shape = name;
+        memcpy(mesh_ptr->params, params, sizeof(float) * (size_t)count);
+        mesh_ptr->param_count = count;
+    }
+    return mesh;
+}
+
+const char *wgf_gfx_priv_mesh_describe(wgf_mesh_t mesh, float params[4], int *count)
+{
+    const mesh_t *mesh_ptr = record_of(mesh);
+    *count = 0;
+    if (mesh_ptr == NULL || mesh_ptr->shape == NULL) return NULL;
+    memcpy(params, mesh_ptr->params, sizeof(mesh_ptr->params));
+    *count = mesh_ptr->param_count;
+    return mesh_ptr->shape;
 }
 
 static int clamp_count(int value, int low, int high)
@@ -275,8 +299,9 @@ wgf_mesh_t wgf_mesh_create_plane(float width, float length, int subdivisions)
     wgf_gfx_priv_mesh_shape_t shape;
     subdivisions = clamp_count(subdivisions, 0, WGF_GFX_PRIV_MESH_MAX_SUBDIVISIONS);
     snprintf(key, sizeof(key), "plane %x %x %d", bits_of(width), bits_of(length), subdivisions);
-    return generate(key, wgf_gfx_priv_mesh_shape_plane(width, length, subdivisions, &shape), &shape,
-                    "wgf_mesh_create_plane");
+    const float params[4] = {width, length, (float)subdivisions};
+    const bool made = wgf_gfx_priv_mesh_shape_plane(width, length, subdivisions, &shape);
+    return generate(key, made, &shape, "plane", params, 3);
 }
 
 wgf_mesh_t wgf_mesh_create_cube(float width, float height, float length)
@@ -284,7 +309,8 @@ wgf_mesh_t wgf_mesh_create_cube(float width, float height, float length)
     char key[KEY_MAX];
     wgf_gfx_priv_mesh_shape_t shape;
     snprintf(key, sizeof(key), "cube %x %x %x", bits_of(width), bits_of(height), bits_of(length));
-    return generate(key, wgf_gfx_priv_mesh_shape_cube(width, height, length, &shape), &shape, "wgf_mesh_create_cube");
+    const float params[4] = {width, height, length};
+    return generate(key, wgf_gfx_priv_mesh_shape_cube(width, height, length, &shape), &shape, "cube", params, 3);
 }
 
 wgf_mesh_t wgf_mesh_create_sphere(float radius, int rings, int segments)
@@ -294,8 +320,8 @@ wgf_mesh_t wgf_mesh_create_sphere(float radius, int rings, int segments)
     rings = clamp_count(rings, WGF_GFX_PRIV_MESH_MIN_RINGS, WGF_GFX_PRIV_MESH_MAX_RINGS);
     segments = clamp_count(segments, WGF_GFX_PRIV_MESH_MIN_SEGMENTS, WGF_GFX_PRIV_MESH_MAX_SEGMENTS);
     snprintf(key, sizeof(key), "sphere %x %d %d", bits_of(radius), rings, segments);
-    return generate(key, wgf_gfx_priv_mesh_shape_sphere(radius, rings, segments, &shape), &shape,
-                    "wgf_mesh_create_sphere");
+    const float params[4] = {radius, (float)rings, (float)segments};
+    return generate(key, wgf_gfx_priv_mesh_shape_sphere(radius, rings, segments, &shape), &shape, "sphere", params, 3);
 }
 
 wgf_mesh_t wgf_mesh_create_cylinder(float radius, float height, int segments)
@@ -304,8 +330,9 @@ wgf_mesh_t wgf_mesh_create_cylinder(float radius, float height, int segments)
     wgf_gfx_priv_mesh_shape_t shape;
     segments = clamp_count(segments, WGF_GFX_PRIV_MESH_MIN_SEGMENTS, WGF_GFX_PRIV_MESH_MAX_SEGMENTS);
     snprintf(key, sizeof(key), "cylinder %x %x %d", bits_of(radius), bits_of(height), segments);
-    return generate(key, wgf_gfx_priv_mesh_shape_cylinder(radius, height, segments, &shape), &shape,
-                    "wgf_mesh_create_cylinder");
+    const float params[4] = {radius, height, (float)segments};
+    const bool made = wgf_gfx_priv_mesh_shape_cylinder(radius, height, segments, &shape);
+    return generate(key, made, &shape, "cylinder", params, 3);
 }
 
 wgf_mesh_t wgf_mesh_create_cone(float radius, float height, int segments)
@@ -314,8 +341,8 @@ wgf_mesh_t wgf_mesh_create_cone(float radius, float height, int segments)
     wgf_gfx_priv_mesh_shape_t shape;
     segments = clamp_count(segments, WGF_GFX_PRIV_MESH_MIN_SEGMENTS, WGF_GFX_PRIV_MESH_MAX_SEGMENTS);
     snprintf(key, sizeof(key), "cone %x %x %d", bits_of(radius), bits_of(height), segments);
-    return generate(key, wgf_gfx_priv_mesh_shape_cone(radius, height, segments, &shape), &shape,
-                    "wgf_mesh_create_cone");
+    const float params[4] = {radius, height, (float)segments};
+    return generate(key, wgf_gfx_priv_mesh_shape_cone(radius, height, segments, &shape), &shape, "cone", params, 3);
 }
 
 wgf_mesh_t wgf_mesh_create_capsule(float radius, float height, int rings, int segments)
@@ -325,8 +352,9 @@ wgf_mesh_t wgf_mesh_create_capsule(float radius, float height, int rings, int se
     rings = clamp_count(rings, WGF_GFX_PRIV_MESH_MIN_RINGS, WGF_GFX_PRIV_MESH_MAX_RINGS);
     segments = clamp_count(segments, WGF_GFX_PRIV_MESH_MIN_SEGMENTS, WGF_GFX_PRIV_MESH_MAX_SEGMENTS);
     snprintf(key, sizeof(key), "capsule %x %x %d %d", bits_of(radius), bits_of(height), rings, segments);
-    return generate(key, wgf_gfx_priv_mesh_shape_capsule(radius, height, rings, segments, &shape), &shape,
-                    "wgf_mesh_create_capsule");
+    const float params[4] = {radius, height, (float)rings, (float)segments};
+    const bool made = wgf_gfx_priv_mesh_shape_capsule(radius, height, rings, segments, &shape);
+    return generate(key, made, &shape, "capsule", params, 4);
 }
 
 wgf_mesh_t wgf_mesh_create_torus(float radius, float thickness, int rings, int segments)
@@ -336,8 +364,9 @@ wgf_mesh_t wgf_mesh_create_torus(float radius, float thickness, int rings, int s
     rings = clamp_count(rings, WGF_GFX_PRIV_MESH_MIN_SEGMENTS, WGF_GFX_PRIV_MESH_MAX_SEGMENTS);
     segments = clamp_count(segments, WGF_GFX_PRIV_MESH_MIN_SEGMENTS, WGF_GFX_PRIV_MESH_MAX_SEGMENTS);
     snprintf(key, sizeof(key), "torus %x %x %d %d", bits_of(radius), bits_of(thickness), rings, segments);
-    return generate(key, wgf_gfx_priv_mesh_shape_torus(radius, thickness, rings, segments, &shape), &shape,
-                    "wgf_mesh_create_torus");
+    const float params[4] = {radius, thickness, (float)rings, (float)segments};
+    const bool made = wgf_gfx_priv_mesh_shape_torus(radius, thickness, rings, segments, &shape);
+    return generate(key, made, &shape, "torus", params, 4);
 }
 
 int wgf_mesh_get_material_count(wgf_mesh_t mesh)

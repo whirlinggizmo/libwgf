@@ -50,6 +50,11 @@ extern "C" {
  *              color=#..,#..  stretch=s  burst=n (that many at once, as it is made)
  *   voice      sound="path"  streamed=true|false  volume=v  pitch=p  pan=p  loop=true|false
  *              play=true|false (played as it is made)
+ *   model      a generated mesh (wgf_mesh.h), its create call's parameters in order:
+ *              plane=w,l,subdivisions | cube=w,h,l | sphere=r,rings,segments |
+ *              cylinder=r,h,segments | cone=r,h,segments | capsule=r,h,rings,segments |
+ *              torus=r,thickness,rings,segments; and tint=#.. (made only once a stage
+ *              has been: wgf_entity_add_component)
  *
  * Paths name files as wgf_texture_create and the others take them, through the asset
  * layer. A file of more than 4 MB, a line of more than 4096 bytes, an unknown line,

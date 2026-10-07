@@ -7,6 +7,8 @@
 #include "wgf_bounds.h"
 #include "wgf_ecs_priv.h"
 #include "wgf_emitter2d.h"
+#include "node/wgf_gfx_node_priv.h"
+#include "wgf_log.h"
 #include "wgf_shape2d.h"
 #include "wgf_sprite.h"
 #include "wgf_text.h"
@@ -25,6 +27,7 @@ int wgf_ecs_priv_node_slot(wgf_component_t component)
         case WGF_COMPONENT_SPRITE: return 1;
         case WGF_COMPONENT_TEXT: return 2;
         case WGF_COMPONENT_EMITTER2D: return 3;
+        case WGF_COMPONENT_MODEL: return 4;
         default: return -1;
     }
 }
@@ -255,6 +258,11 @@ static wgf_node_t make_node(wgf_component_t component)
         case WGF_COMPONENT_SPRITE: return wgf_sprite_create(0);
         case WGF_COMPONENT_TEXT: return wgf_text_create(0);
         case WGF_COMPONENT_EMITTER2D: return wgf_emitter2d_create();
+        case WGF_COMPONENT_MODEL: { /* through a stage's hooks: a program with no stage links no 3D */
+            const wgf_gfx_priv_model_hooks_t *hooks = wgf_gfx_priv_get_model_hooks();
+            if (hooks == NULL) wgf_log_warn("wgf_entity_add_component: a model is drawn on a stage: make one first");
+            return hooks != NULL ? hooks->create() : 0;
+        }
         default: return 0;
     }
 }
@@ -274,7 +282,7 @@ bool wgf_entity_add_component(wgf_entity_t entity, wgf_component_t component)
 {
     wgf_ecs_priv_entity_t *record = wgf_ecs_priv_entity_of(entity);
     const int slot = wgf_ecs_priv_node_slot(component);
-    if (record == NULL || (int)component <= WGF_COMPONENT_NONE || component > WGF_COMPONENT_VOICE) return false;
+    if (record == NULL || (int)component <= WGF_COMPONENT_NONE || component > WGF_COMPONENT_MODEL) return false;
     if (wgf_entity_has_component(entity, component)) return true;
     if (slot >= 0) {
         const wgf_node_t node = make_node(component);

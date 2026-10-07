@@ -586,7 +586,8 @@ export declare const WGF_COMPONENT_SPRITE: 7;
 export declare const WGF_COMPONENT_TEXT: 8;
 export declare const WGF_COMPONENT_EMITTER2D: 9;
 export declare const WGF_COMPONENT_VOICE: 10;
-export type wgf_component_t = typeof WGF_COMPONENT_NONE | typeof WGF_COMPONENT_MOTION | typeof WGF_COMPONENT_BOUNDS | typeof WGF_COMPONENT_LIFETIME | typeof WGF_COMPONENT_COLLIDER | typeof WGF_COMPONENT_BEHAVIOR | typeof WGF_COMPONENT_SHAPE2D | typeof WGF_COMPONENT_SPRITE | typeof WGF_COMPONENT_TEXT | typeof WGF_COMPONENT_EMITTER2D | typeof WGF_COMPONENT_VOICE;
+export declare const WGF_COMPONENT_MODEL: 11;
+export type wgf_component_t = typeof WGF_COMPONENT_NONE | typeof WGF_COMPONENT_MOTION | typeof WGF_COMPONENT_BOUNDS | typeof WGF_COMPONENT_LIFETIME | typeof WGF_COMPONENT_COLLIDER | typeof WGF_COMPONENT_BEHAVIOR | typeof WGF_COMPONENT_SHAPE2D | typeof WGF_COMPONENT_SPRITE | typeof WGF_COMPONENT_TEXT | typeof WGF_COMPONENT_EMITTER2D | typeof WGF_COMPONENT_VOICE | typeof WGF_COMPONENT_MODEL;
 
 /**
  * Bounds (WGF_COMPONENT_BOUNDS): a rectangle in the entity's parent's space, x and y,
@@ -4040,8 +4041,10 @@ export declare function wgf_entity_set_positions(entities: readonly wgf_entity_t
  * Components. add makes one with its defaults (each component's header says them; the
  * node kinds' as their create makes them); adding one it has keeps it as it is. remove
  * ends it (a node kind's node destroyed, a voice stopped and destroyed). False for a
- * handle that isn't an entity, or a kind that isn't one; remove is false too for one it
- * doesn't have. Adding a behavior is told as a CREATED event (wgf_ecs.h).
+ * handle that isn't an entity, or a kind that isn't one, and for a model before any
+ * stage has been made (logged: models are drawn on stages, and a program that makes none
+ * links none of the 3D); remove is false too for one it doesn't have. Adding a behavior
+ * is told as a CREATED event (wgf_ecs.h).
  */
 export declare function wgf_entity_add_component(entity: wgf_entity_t | 0, component: wgf_component_t): boolean;
 
@@ -4049,8 +4052,10 @@ export declare function wgf_entity_add_component(entity: wgf_entity_t | 0, compo
  * Components. add makes one with its defaults (each component's header says them; the
  * node kinds' as their create makes them); adding one it has keeps it as it is. remove
  * ends it (a node kind's node destroyed, a voice stopped and destroyed). False for a
- * handle that isn't an entity, or a kind that isn't one; remove is false too for one it
- * doesn't have. Adding a behavior is told as a CREATED event (wgf_ecs.h).
+ * handle that isn't an entity, or a kind that isn't one, and for a model before any
+ * stage has been made (logged: models are drawn on stages, and a program that makes none
+ * links none of the 3D); remove is false too for one it doesn't have. Adding a behavior
+ * is told as a CREATED event (wgf_ecs.h).
  */
 export declare function wgf_entity_remove_component(entity: wgf_entity_t | 0, component: wgf_component_t): boolean;
 
@@ -4058,8 +4063,10 @@ export declare function wgf_entity_remove_component(entity: wgf_entity_t | 0, co
  * Components. add makes one with its defaults (each component's header says them; the
  * node kinds' as their create makes them); adding one it has keeps it as it is. remove
  * ends it (a node kind's node destroyed, a voice stopped and destroyed). False for a
- * handle that isn't an entity, or a kind that isn't one; remove is false too for one it
- * doesn't have. Adding a behavior is told as a CREATED event (wgf_ecs.h).
+ * handle that isn't an entity, or a kind that isn't one, and for a model before any
+ * stage has been made (logged: models are drawn on stages, and a program that makes none
+ * links none of the 3D); remove is false too for one it doesn't have. Adding a behavior
+ * is told as a CREATED event (wgf_ecs.h).
  */
 export declare function wgf_entity_has_component(entity: wgf_entity_t | 0, component: wgf_component_t): boolean;
 
