@@ -106,7 +106,7 @@ LADDER = [
     ('ladder-3-sprites', '+ 2D sprites'),
     ('ladder-4-ecs', '+ ecs'),
     ('ladder-5-ui', '+ ui'),
-    (None, '+ 3D model (milestone 2)'),
+    ('ladder-6-model', '+ 3D model'),
     (None, '+ skinning (milestone 2)'),
 ]
 LADDER_DIR = ROOT / 'examples' / 'sizes'

@@ -245,7 +245,7 @@ What could wait follows CONVENTIONS' rules: a task handle, polled; its status an
 
 ## Optional parts
 
-CONVENTIONS' rule, "An optional part is reached through its hook", is met by core's part list (`wgf_core_part_priv.h`): each part is a static record (its layer, its order, and any of an update, a flush, an end of frame, and a stop) put on the list by the first create of what it serves. The runtime and the frame walk the list and never name a part, so a program that never creates one links none of its code. A layer's stop runs its parts' stops and takes them off the list, so the next run installs them again.
+CONVENTIONS' rule, "An optional part is reached through its hook", is met by core's part list (`wgf_core_part_priv.h`): each part is a static record (its layer, its order, and any of an update, a flush, an end of frame, and a stop) put on the list by the first create of what it serves. The runtime and the frame walk the list and never name a part, so a program that never creates one links none of its code. A layer's stop runs its parts' stops and takes them off the list, so the next run installs them again. Between a layer's own files, hooks do the same: gfx's node kinds, the presentation's fitting and bars, the frame's drawing of its commands (a stage's draws), and the ecs's way to models, which the first stage made installs. Each is a function pointer set from another file than the one that calls it: set and called in one file, the optimizer sees its only target and links it in anyway (milestone 2, step 2's finding).
 
 ## Platforms
 
