@@ -26,7 +26,9 @@ against sparse sets before removing it (kept for the record). --check fails a ro
 its baseline: its bytes by more than BYTES_TOLERANCE, exactly as on any machine; its time
 by more than ROW_TOLERANCE times this machine's own speed against the baseline's (the
 median of the rows' ratios), so a row slower than the rest fails on a runner of any
-speed; and every row, when the machine is MACHINE_TOLERANCE times slower in all. Linux
+speed; every row, when the machine is MACHINE_TOLERANCE times slower in all; and on the
+machine that recorded the baseline (its CPU named the same), any row past LOCAL_TOLERANCE
+times its own, so a slowdown of every row alike fails there. Linux
 alone: the program reads glibc's mallinfo2. Standard library only.
 """
 import argparse
@@ -52,6 +54,9 @@ BYTES_TOLERANCE = (0.05, 4)  # a row's bytes an actor may grow by 5%, or 4 bytes
 # ROW_TOLERANCE times that, and the machine be MACHINE_TOLERANCE times slower in all
 ROW_TOLERANCE = 2.0
 MACHINE_TOLERANCE = 4.0
+# and on the machine that recorded the baseline, every row to this many times its own, so a
+# slowdown of every row alike fails there
+LOCAL_TOLERANCE = 1.5
 SECONDS = 300
 
 
@@ -116,7 +121,7 @@ def measure(program, rows, runs):
     return results
 
 
-def check(measured, rows):
+def check(measured, rows, local=False):
     worse, notes = [], []
     for name, new in sorted(measured.items()):
         old = rows.get(name)
@@ -136,7 +141,10 @@ def check(measured, rows):
         if machine > MACHINE_TOLERANCE:
             worse.append(f'every row {machine:.2f} times the baseline\'s time (allowed {MACHINE_TOLERANCE:g})')
         for name, ratio in sorted(ratios.items()):
-            if ratio > machine * ROW_TOLERANCE:
+            if local and ratio > LOCAL_TOLERANCE:
+                worse.append(f'{name}: {measured[name]["ns"]:.2f} ns, was {rows[name]["ns"]:.2f}: {ratio:.2f} times on '
+                             f'the machine that recorded it (allowed {LOCAL_TOLERANCE:g})')
+            elif ratio > machine * ROW_TOLERANCE:
                 worse.append(f'{name}: {measured[name]["ns"]:.2f} ns, was {rows[name]["ns"]:.2f}: {ratio:.2f} times, '
                              f'{ratio / machine:.2f} times this machine\'s (allowed {ROW_TOLERANCE:g})')
     return worse, notes
@@ -190,7 +198,8 @@ def main():
     actors = baseline.get('actors', {})
     status = 0
     if args.check:
-        worse, notes = check(measured, actors.get('rows', {}))
+        local = actors.get('cpu') == cpu_name()  # the machine that recorded the baseline
+        worse, notes = check(measured, actors.get('rows', {}), local)
         for line in notes:
             print(f'measure_actors: {line}')
         for line in worse:

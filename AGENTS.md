@@ -14,6 +14,7 @@ Each is CONVENTIONS.md's; the words here only find it.
 - Third-party source in `deps/`, never fetched ("Dependencies").
 - Tools in Python, standard library only; nothing in shell; no regular expressions over C source ("Tooling").
 - Which doc is true, and what moves to HISTORY.md ("Docs").
+- A guard loosened only in a commit of its own, and every guard change reported ("Guards").
 
 ## Agent practice
 

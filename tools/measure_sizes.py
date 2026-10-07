@@ -370,7 +370,7 @@ def markdown(baseline):
                   'header says what each row and number is): the heap\'s growth an actor, its pools\' slack included, and '
                   'the frames\' own cost an actor a frame (a find\'s rows: a find, or an actor found), the median of '
                   f'{actors.get("runs", 1)} runs, on {actors.get("cpu", "?")}, `{actors.get("variant", "?")}`, '
-                  f'{actors.get("commit", "?")}. CI fails a row past its bytes by 5%, or past its time by twice the run\'s own speed against these (the median of its rows\' ratios). '
+                  f'{actors.get("commit", "?")}. A check fails a row past its bytes by 5%, or past its time by twice the run\'s own speed against these (the median of its rows\' ratios), and on this machine past 1.5 times its time. '
                   + (f'Before: the same program on the nodes and entities actors replaced, {before.get("commit", "?")} '
                      '(docs/HISTORY.md, "One kind of object, the actor"); a dash where there was no such call. The store- rows are the ecs\'s store on its own '
                      '(`ecs/bench/wgf_ecs_store_bench.c`), each storage\'s worst case among them.'

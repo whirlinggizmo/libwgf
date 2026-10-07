@@ -157,6 +157,14 @@ No other pointer, no struct, no function pointer, no `void *`, no variadic call.
 - Rules are enforced by the compiler and CMake where possible. A check of the API reads headers through clang (`tools/headers.py`), never regular expressions over source.
 - Before a change is done, every preset this machine can build passes its tests: `tools/verify_builds.py` runs them, `--web` adds the web, `--windows HOST` a Windows machine.
 
+## Guards
+
+A guard is a check that holds a number or a rule: a tolerance, a threshold, a baseline (`docs/benchmarks.json`), a budget, or the presets and steps a check runs on.
+
+- A timing guard holds every row to an absolute limit on the machine that recorded its baseline (the baseline names it), so a slowdown of every row alike fails there; elsewhere, a runner of another speed, it holds rows relative to the run's own speed.
+- A guard is never loosened in the commit whose code needs it loosened: a looser tolerance, a higher threshold, a baseline re-recorded upward, or a check narrowed to fewer presets goes in a commit of its own, with its reason, so it is judged on its own.
+- Every change to a guard, either way, is reported in the step's report under "Guards changed": what it was, what it is, and why.
+
 ## Docs
 
 - Every rule lives in one developer doc, exactly once: this file, BINDINGS.md, ARCHITECTURE.md, BUILDING.md, or the binding's README. AGENTS.md links to rules and adds only what an agent needs.
