@@ -9,6 +9,10 @@ abstract Scene(Int) from Int to Int to wgf.Handle {
 	public inline function isNone():Bool
 		return this == 0;
 
+	/** Whether this refers to something alive: false for none, and for what was destroyed or released (wgf_handle_is_alive). Ask it first where a handle may be dead. **/
+	public inline function isAlive():Bool
+		return (this : Handle).isAlive();
+
 	/**
 	    The scene at `path`, loading. The same path again gives the same scene, with one more
 	    reference. 0 only when there is no room for another.
@@ -25,20 +29,12 @@ abstract Scene(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_scene_instantiate(this, parent);
 
 	/**
-	    Make one tree of the prefab `name` under `parent`: its top actor; 0 for a scene that
-	    isn't READY, a prefab it doesn't have, or a `parent` that isn't an actor.
+	    The prefab `name` of a READY scene, to spawn: the same handle each time it is asked
+	    for. 0 for a scene that isn't READY, or a prefab it doesn't have. A released scene's
+	    prefabs go with it (their handles stale).
 	**/
-	public inline function spawn(name:String, parent:Actor):Actor
-		return Raw.wgf_scene_spawn(this, name, parent);
-
-	/**
-	    The same, its top actor placed at (x, y, z) in `parent`'s space and turned `angle`
-	    radians about its stage's up -- y on a 3D stage, z otherwise -- its other angles and its
-	    scale the prefab's, then snapped: drawn there from its first frame, and what it bursts
-	    as it is made (an emitter's `burst=`) starts there.
-	**/
-	public inline function spawnAt(name:String, parent:Actor, x:Float, y:Float, z:Float, angle:Float):Actor
-		return Raw.wgf_scene_spawn_at(this, name, parent, x, y, z, angle);
+	public inline function prefab(name:String):Prefab
+		return Raw.wgf_scene_find_prefab(this, name);
 
 	/**
 	    What the file holds, once READY: its top actors and its prefabs, and each prefab's name
@@ -67,4 +63,12 @@ abstract Scene(Int) from Int to Int to wgf.Handle {
 	**/
 	public inline function hasPrefab(name:String):Bool
 		return Raw.wgf_scene_has_prefab(this, name);
+
+	/**
+		The prefab `name` found (scene.prefab) and spawned under `parent`: placed at (x, y, z), turned `angle`, and snapped when a place is given (Prefab.spawnAt), else at the prefab's own transform (Prefab.spawn). It looks the prefab up on every call: a hot path finds it once and keeps the handle. 0 as those calls give it.
+	**/
+	public inline function spawnPrefab(name:String, parent:Actor, ?x:Float, ?y:Float, ?z:Float, ?angle:Float):Actor {
+		final found:Prefab = prefab(name);
+		return x == null ? found.spawn(parent) : found.spawnAt(parent, x, y ?? 0, z ?? 0, angle ?? 0);
+	}
 }

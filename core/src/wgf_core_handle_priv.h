@@ -61,6 +61,7 @@ typedef enum wgf_core_priv_handle_kind_t {
     /* ecs: 32.. */
     WGF_CORE_PRIV_HANDLE_KIND_COMPONENTS = 32, /* "ecs.components" */
     WGF_CORE_PRIV_HANDLE_KIND_SCENE = 33,  /* "ecs.scene": a scene file, a resource */
+    WGF_CORE_PRIV_HANDLE_KIND_PREFAB = 34, /* "ecs.prefab": one of a scene's prefabs */
     /* audio: 40.. */
     WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND = 40,          /* "audio.sound": decoded whole */
     WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND_STREAMED = 41, /* "audio.sound_streamed": a kind of its own, so a path
@@ -132,6 +133,36 @@ static inline bool wgf_core_priv_handle_pool_resolve(const wgf_core_priv_handle_
     if (index_out != NULL) *index_out = index;
     return true;
 }
+
+/* A public call's name where it resolves a handle, for the warning below: __func__ in a
+ * debug build, NULL in a release one, so a shipped program carries no call names. */
+#ifdef NDEBUG
+#define WGF_CORE_PRIV_CALLER NULL
+#else
+#define WGF_CORE_PRIV_CALLER __func__
+#endif
+
+/* A handle of the pool's kind whose slot is gone -- destroyed, released, or reused since
+ * -- given to `caller`: in a debug build logged once for each call it reaches (a warning
+ * naming the call and the handle), nothing in a release build or with no caller. */
+void wgf_core_priv_handle_stale(wgf_handle_t handle, const char *caller);
+
+/* wgf_core_priv_handle_pool_resolve, saying so (wgf_core_priv_handle_stale) when the
+ * handle is of the pool's kind but dead: what a call's own resolve uses, with
+ * WGF_CORE_PRIV_CALLER. A check that a handle is alive uses the one above, silently. */
+static inline bool wgf_core_priv_handle_pool_resolve_at(const wgf_core_priv_handle_pool_t *pool, wgf_handle_t handle,
+                                                        uint16_t *index_out, const char *caller)
+{
+    if (wgf_core_priv_handle_pool_resolve(pool, handle, index_out)) return true;
+    if (caller != NULL && handle != 0 && WGF_CORE_PRIV_HANDLE_KIND(handle) == pool->kind &&
+        WGF_CORE_PRIV_HANDLE_INDEX(handle) != 0 && WGF_CORE_PRIV_HANDLE_INDEX(handle) < pool->capacity) {
+        wgf_core_priv_handle_stale(handle, caller);
+    }
+    return false;
+}
+
+/* Whether `handle` is alive, of any kind: its kind's pool, as registered by its init. */
+bool wgf_core_priv_handle_is_alive(wgf_handle_t handle);
 wgf_handle_t wgf_core_priv_handle_pool_handle_from_index(const wgf_core_priv_handle_pool_t *pool,
                                                             uint16_t index);
 

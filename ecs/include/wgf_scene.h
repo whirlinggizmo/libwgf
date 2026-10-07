@@ -16,7 +16,7 @@ extern "C" {
  * prefabs, loaded as a resource (wgf_resource.h: on create, PENDING then READY, or FAILED
  * with each bad line logged). Instantiating it makes its trees; a prefab is a tree kept in
  * the file to make at run time, as often as wanted (a rock, a bullet). Text, a line per
- * fact, so a scene diffs and merges; wgf_ecs_dump writes the simulated actors in the same
+ * fact, so a scene diffs and merges; wgf_world_dump writes the simulated actors in the same
  * format.
  *
  * The format, `wgf-scene 2`, is BUILDING.md's ("Scene files"): flat `actor` and `prefab`
@@ -28,6 +28,10 @@ extern "C" {
  * the scene, the line logged with its number. */
 typedef wgf_handle_t wgf_scene_t;
 
+/* One of a scene's prefabs, found once by its name (wgf_scene_find_prefab) and kept: what
+ * is spawned, as often as wanted, with no lookup. Valid while its scene is. */
+typedef wgf_handle_t wgf_prefab_t;
+
 /* The scene at `path`, loading. The same path again gives the same scene, with one more
  * reference. 0 only when there is no room for another. */
 WGF_API wgf_scene_t wgf_scene_create(const char *path);
@@ -37,16 +41,10 @@ WGF_API wgf_scene_t wgf_scene_create(const char *path);
  * for a scene that isn't READY, or a `parent` that isn't an actor (0 is). */
 WGF_API int wgf_scene_instantiate(wgf_scene_t scene, wgf_actor_t parent);
 
-/* Make one tree of the prefab `name` under `parent`: its top actor; 0 for a scene that
- * isn't READY, a prefab it doesn't have, or a `parent` that isn't an actor. */
-WGF_API wgf_actor_t wgf_scene_spawn(wgf_scene_t scene, const char *name, wgf_actor_t parent);
-
-/* The same, its top actor placed at (x, y, z) in `parent`'s space and turned `angle`
- * radians about its stage's up -- y on a 3D stage, z otherwise -- its other angles and its
- * scale the prefab's, then snapped: drawn there from its first frame, and what it bursts
- * as it is made (an emitter's `burst=`) starts there. */
-WGF_API wgf_actor_t wgf_scene_spawn_at(wgf_scene_t scene, const char *name, wgf_actor_t parent, float x, float y,
-                                       float z, float angle);
+/* The prefab `name` of a READY scene, to spawn: the same handle each time it is asked
+ * for. 0 for a scene that isn't READY, or a prefab it doesn't have. A released scene's
+ * prefabs go with it (their handles stale). */
+WGF_API wgf_prefab_t wgf_scene_find_prefab(wgf_scene_t scene, const char *name);
 
 /* What the file holds, once READY: its top actors and its prefabs, and each prefab's name
  * in file order ("" past the end). 0 and "" until then. */
@@ -54,6 +52,18 @@ WGF_API int wgf_scene_get_actor_count(wgf_scene_t scene);
 WGF_API int wgf_scene_get_prefab_count(wgf_scene_t scene);
 WGF_API const char *wgf_scene_get_prefab_name(wgf_scene_t scene, int index);
 WGF_API bool wgf_scene_has_prefab(wgf_scene_t scene, const char *name);
+
+/* Make one tree of the prefab under `parent` (0: none): its top actor, each actor as the
+ * file says, each behavior's CREATED raised, and its references found. 0 for a prefab
+ * that isn't one (or whose scene went), or a `parent` that isn't an actor. */
+WGF_API wgf_actor_t wgf_prefab_spawn(wgf_prefab_t prefab, wgf_actor_t parent);
+
+/* The same, its top actor placed at (x, y, z) in `parent`'s space and turned `angle`
+ * radians about its stage's up -- y on a 3D stage, z otherwise -- its other angles and its
+ * scale the prefab's, then snapped: drawn there from its first frame, and what it bursts
+ * as it is made (an emitter's `burst=`) starts there. */
+WGF_API wgf_actor_t wgf_prefab_spawn_at(wgf_prefab_t prefab, wgf_actor_t parent, float x, float y, float z,
+                                        float angle);
 
 #ifdef __cplusplus
 }

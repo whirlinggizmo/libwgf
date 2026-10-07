@@ -6,7 +6,7 @@ import wgf.*;
 **/
 class Bullet {
 	public static function fire(x:Float, y:Float, vx:Float, vy:Float) {
-		final bullet = Main.scene.spawnAt("bullet", Main.world, x, y, 0, 0);
+		final bullet = Main.bulletPrefab.spawnAt(Main.world, x, y, 0, 0);
 		(bullet : Motion).setVelocity(vx, vy, 0);
 		Main.sounds.play(Main.sounds.fire);
 	}

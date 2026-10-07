@@ -9,7 +9,7 @@
 #include "wgf_component.h"
 #include "wgf_core_handle_priv.h"
 #include "wgf_core_resource_priv.h"
-#include "wgf_ecs.h"
+#include "wgf_world.h"
 #include "wgf_ecs_priv.h"
 #include "wgf_emitter2d.h"
 #include "wgf_lifetime.h"
@@ -20,7 +20,7 @@
 #include "wgf_text.h"
 #include "wgf_voice.h"
 
-/* The simulated actors written as a scene (wgf_ecs_dump): each top one, oldest first, and
+/* The simulated actors written as a scene (wgf_world_dump): each top one, oldest first, and
  * everything under it, every setting each has, in the format wgf_scene.h reads, numbers to
  * 9 significant digits so a float reads back as itself. */
 
@@ -304,7 +304,7 @@ static bool under_another(wgf_actor_t actor)
     return false;
 }
 
-const char *wgf_ecs_dump(void)
+const char *wgf_world_dump(void)
 {
     out_t out = {NULL, 0, 0, false};
     wgf_actor_t *all;

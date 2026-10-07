@@ -8,7 +8,7 @@
 #include "wgf_app.h"
 #include "wgf_behavior.h"
 #include "wgf_component.h"
-#include "wgf_ecs.h"
+#include "wgf_world.h"
 #include "wgf_loop.h"
 #include "wgf_motion.h"
 #include "wgf_stage2d.h"
@@ -114,7 +114,7 @@ static wgf_actor_t find_path(wgf_actor_t from, const char *path)
 
 static int find_component(wgf_actor_t *out, int count)
 {
-    return wgf_ecs_find_component(WGF_COMPONENT_MOTION, out, count);
+    return wgf_actor_find_with_component(WGF_COMPONENT_MOTION, out, count);
 }
 
 /* ---- the rows --------------------------------------------------------------------- */
@@ -202,7 +202,7 @@ static void frame(void *user)
 {
     const row_t *row = bench.row;
     (void)user;
-    while (wgf_ecs_take_events(bench.events, (int)(sizeof(bench.events) / sizeof(bench.events[0]))) > 0) {
+    while (wgf_world_take_events(bench.events, (int)(sizeof(bench.events) / sizeof(bench.events[0]))) > 0) {
         /* a binding takes them each frame: so does this */
     }
     if (bench.frame > WARM) bench.cost += wgf_loop_get_frame_cost(); /* the frame before this one's */

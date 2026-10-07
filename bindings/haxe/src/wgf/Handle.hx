@@ -16,4 +16,14 @@ abstract Handle(Int) from Int to Int {
 	**/
 	public inline function getKindName():String
 		return Raw.wgf_handle_get_kind_name(this);
+
+	/**
+	    Whether `handle` refers to something alive: false for 0, for a number no kind has, and
+	    for what was destroyed or released (and for a resource's whose last reference went).
+	    Code that expects a handle may be dead -- the other side of a trigger, an actor kept
+	    across frames -- asks this first; any other call on a dead handle is refused (false, 0,
+	    or nothing), and in a debug build warns, once a call, naming the call and the handle.
+	**/
+	public inline function isAlive():Bool
+		return Raw.wgf_handle_is_alive(this);
 }

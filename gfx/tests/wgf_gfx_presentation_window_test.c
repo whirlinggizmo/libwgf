@@ -66,7 +66,7 @@ static void on_frame(void *user)
     (void)user;
     frames++;
     if (fullscreen_next) {
-        if (waited == 0) wgf_window_set_fullscreen(true);
+        if (waited == 0) wgf_window_request_fullscreen(true);
         if (++waited < 30 && wgf_platform_priv_get_framebuffer_width() == 32) return;
         if (wgf_platform_priv_get_framebuffer_width() == 32) {
             printf("SKIPPING fullscreen: the window kept its size (no window manager on Xvfb to honor it)\n");
@@ -110,7 +110,7 @@ int main(void)
 {
     wgf_window_set_size(64, 32);
     expect(wgf_presentation_set(WGF_PRESENTATION_MODE_FIT, 32, 32), "fit, 32 by 32");
-    wgf_render_set_bar_color(WGF_COLOR_BLUE);
+    wgf_presentation_set_bar_color(WGF_COLOR_BLUE);
     wgf_render_set_clear_color(WGF_COLOR_DARKGRAY);
     wgf_app_run(NULL, NULL, on_frame, NULL, NULL);
     return 0;

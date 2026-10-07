@@ -52,6 +52,34 @@ VECTORS = {'wgf_vec2_t': ('Vec2', 2), 'wgf_vec3_t': ('Vec3', 3), 'wgf_vec4_t': (
 # base class for a game's behaviors (bindings/haxe/src/wgf/Behavior.hx, SPEC's name);
 # wgf_behavior_*'s calls, on an entity's behavior component, are BehaviorComponent's.
 TYPE_NAMES = {'behavior': 'BehaviorComponent'}
+# A call whose member takes another name than its C name gives, with why.
+MEMBER_NAMES = {
+    'wgf_scene_find_prefab': 'prefab',  # scene.prefab("bullet"), then bullet.spawnAt(...): read as what it gives
+}
+# Members written here rather than generated, a typed type's sugar over its calls: the
+# same in Haxe (HAXE_EXTRAS) and in the typed JS layer (jsbinding's, from JS_EXTRAS).
+SPAWN_PREFAB_DOC = (
+    'The prefab `name` found (scene.prefab) and spawned under `parent`: placed at (x, y, z), turned `angle`, and '
+    'snapped when a place is given (Prefab.spawnAt), else at the prefab\'s own transform (Prefab.spawn). It looks '
+    'the prefab up on every call: a hot path finds it once and keeps the handle. 0 as those calls give it.')
+HAXE_EXTRAS = {
+    'Scene': ('\t/**\n\t\t' + SPAWN_PREFAB_DOC + '\n\t**/\n'
+              '\tpublic inline function spawnPrefab(name:String, parent:Actor, ?x:Float, ?y:Float, ?z:Float, '
+              '?angle:Float):Actor {\n'
+              '\t\tfinal found:Prefab = prefab(name);\n'
+              '\t\treturn x == null ? found.spawn(parent) : found.spawnAt(parent, x, y ?? 0, z ?? 0, angle ?? 0);\n'
+              '\t}\n'),
+}
+JS_EXTRAS = {
+    'Scene': ('spawnPrefab', SPAWN_PREFAB_DOC, ('wgf_scene_find_prefab', 'wgf_prefab_spawn', 'wgf_prefab_spawn_at'),
+              'spawnPrefab(scene, name, parent, x, y, z, angle) {\n'
+              '        const prefab = raw.wgf_scene_find_prefab(scene, name);\n'
+              '        return x === undefined ? raw.wgf_prefab_spawn(prefab, parent)\n'
+              '            : raw.wgf_prefab_spawn_at(prefab, parent, x, y ?? 0, z ?? 0, angle ?? 0);\n'
+              '    }',
+              '(scene: raw.wgf_scene_t | 0, name: string | null, parent: raw.wgf_actor_t | 0, x?: number, y?: number, '
+              'z?: number, angle?: number) => raw.wgf_actor_t'),
+}
 
 
 def spelled(ctype):
@@ -181,12 +209,12 @@ class Binding:
             if f.name.startswith(f'wgf_{stem}_'):
                 if stem == 'handle' and self.section_of(f) != 'handle':
                     continue  # wgf_handle_* is the handle section's own, nothing else's
-                return haxe, camel(f.name[len(f'wgf_{stem}_'):]), first == ctype
+                return haxe, MEMBER_NAMES.get(f.name, camel(f.name[len(f'wgf_{stem}_'):])), first == ctype
         section = self.section_of(f)
         prefix = f'wgf_{section}_'
         if not f.name.startswith(prefix):
             raise MapError(f'{f.name}: not named for its header\'s section ({section}) or a handle kind')
-        return TYPE_NAMES.get(section, pascal(section)), camel(f.name[len(prefix):]), False
+        return TYPE_NAMES.get(section, pascal(section)), MEMBER_NAMES.get(f.name, camel(f.name[len(prefix):])), False
 
     def over(self):
         """The sections that are over a handle kind: Haxe type -> the kind's Haxe type. A
@@ -414,6 +442,43 @@ def typed_member(binding, f, haxe, member, instance, docs, over_kind=None):
             f'\tpublic {static}inline function {member}({sig}):{ret}\n\t\t{body};\n')
 
 
+def enum_members(binding, cname):
+    """An enum's values as the typed APIs name them: (short name, value, C name), their
+    shared prefix off (WGF_KEY_0 -> KEY_0: a name can't start with a digit)."""
+    enum = binding.api.enums[cname]
+    names = list(enum.values)
+    prefix = names[0]
+    for n in names[1:]:
+        while not n.startswith(prefix):
+            prefix = prefix[:-1]
+    prefix = prefix[:prefix.rfind('_') + 1] if '_' in prefix else ''
+    out = []
+    for n, v in enum.values.items():
+        short = n[len(prefix):]
+        if not short or short[0].isdigit():
+            short = prefix.rstrip('_').split('_')[-1] + '_' + short
+        out.append((short, v, n))
+    return out
+
+
+def typed_layout(binding, with_skipped=False):
+    """The typed APIs' shape, Haxe's and the typed JS layer's alike: each type's members
+    as (member, C name), in the headers' order; which types are a handle kind's (or over
+    one), with that kind's C type; and the enums' members."""
+    over = binding.over()
+    kinds = {haxe: ctype for ctype, haxe in binding.kinds.items()}
+    members = {}
+    for f in binding.functions:
+        if f.name in SKIPPED and not with_skipped:  # the typed JS layer has them: the raw binding's run carries them
+            continue
+        haxe, member, _ = binding.place(f)
+        members.setdefault(haxe, []).append((member, f.name))
+    handle_types = {haxe: kinds[haxe] for haxe in kinds}
+    handle_types.update({haxe: kinds[kind] for haxe, kind in over.items()})
+    enums = {haxe: (cname, enum_members(binding, cname)) for cname, haxe in binding.enums.items()}
+    return members, handle_types, enums
+
+
 def typed_modules(binding):
     """Haxe module name -> its text."""
     docs = binding.docs()
@@ -437,11 +502,15 @@ def typed_modules(binding):
     for ctype, haxe in binding.kinds.items():
         doc = binding.api.typedefs[ctype][1]
         to = '' if haxe == 'Handle' else ' to wgf.Handle'
+        alive = '' if haxe == 'Handle' else (
+            '\t/** Whether this refers to something alive: false for none, and for what was destroyed or released '
+            '(wgf_handle_is_alive). Ask it first where a handle may be dead. **/\n'
+            '\tpublic inline function isAlive():Bool\n\t\treturn (this : Handle).isAlive();\n\n')
         text = header + (f'/** A handle of kind {ctype} ({doc}): 0 is none. **/\n'
                          f'abstract {haxe}(Int) from Int to Int{to} {{\n'
                          f'\t/** Whether this is no handle (0); right on every target, where `== null` is not. **/\n'
-                         f'\tpublic inline function isNone():Bool\n\t\treturn this == 0;\n\n' +
-                         '\n'.join(members.pop(haxe, [])) + '}\n')
+                         f'\tpublic inline function isNone():Bool\n\t\treturn this == 0;\n\n' + alive +
+                         '\n'.join(members.pop(haxe, []) + ([HAXE_EXTRAS[haxe]] if haxe in HAXE_EXTRAS else [])) + '}\n')
         modules[haxe] = text
     for haxe, kind in over.items():
         text = header + (f'/** {haxe}\'s calls, on a {kind}: `var x:{haxe} = handle` gives it them, and a {haxe} is '
@@ -453,18 +522,7 @@ def typed_modules(binding):
         modules[haxe] = header + f'class {haxe} {{\n' + '\n'.join(items) + '}\n'
     for cname, haxe in binding.enums.items():
         enum = binding.api.enums[cname]
-        names = list(enum.values)
-        prefix = names[0]
-        for n in names[1:]:
-            while not n.startswith(prefix):
-                prefix = prefix[:-1]
-        prefix = prefix[:prefix.rfind('_') + 1] if '_' in prefix else ''
-        body = ''
-        for n, v in enum.values.items():
-            short = n[len(prefix):]
-            if not short or short[0].isdigit():  # WGF_KEY_0 -> KEY_0: a Haxe name can't start with a digit
-                short = prefix.rstrip('_').split('_')[-1] + '_' + short
-            body += f'\tvar {short} = {v};\n'
+        body = ''.join(f'\tvar {short} = {v};\n' for short, v, _ in enum_members(binding, cname))
         if haxe in modules:
             raise MapError(f'enum {cname} and a section are both wgf.{haxe}')
         modules[haxe] = (f'// {MARK}\npackage wgf;\n\n' + doc_block(enum.doc, '') +
@@ -526,6 +584,7 @@ def outputs(api):
     for name, text in typed_modules(binding).items():
         files[OUT / f'{name}.hx'] = text
     files.update(jsbinding.outputs(binding, version, stamp, SKIPPED))
+    files.update(jsbinding.typed_outputs(*typed_layout(binding, with_skipped=True), JS_EXTRAS, binding.docs()))
     exports = sorted('_' + f.name for f in binding.functions) + HOST_EXTRA
     files[EXPORTS] = json.dumps({'generated': MARK, 'version': version, 'headers': stamp, 'exports': exports},
                                 indent=1) + '\n'

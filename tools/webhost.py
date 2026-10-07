@@ -39,10 +39,11 @@ def emcc():
     return found
 
 
-def build(variant, exports_file=None, out=None, stage=True, constants=True):
+def build(variant, exports_file=None, out=None, stage=True, constants=True, typed_used=None):
     """Link the host, the JS binding beside it (bindings/js/wgf.js: whole for the full
-    host, else trimmed to the same calls, with its enums when `constants`); the directory
-    they are in."""
+    host, else trimmed to the same calls, with its enums when `constants`), and the typed
+    layer (wgf-typed.js: whole, or trimmed to the members `typed_used` names); the
+    directory they are in."""
     if not variants.is_web(variant):
         raise RuntimeError(f'{variant} is not a web variant')
     if stage:
@@ -80,6 +81,10 @@ def build(variant, exports_file=None, out=None, stage=True, constants=True):
     whole = (jsbinding.BINDING / 'wgf.js').read_text(encoding='utf-8')
     binding = whole if exports_file is None else jsbinding.trim(whole, listed, constants)
     (out / 'wgf.js').write_text(binding, encoding='utf-8', newline='\n')
+    typed = (jsbinding.BINDING / f'{jsbinding.TYPED}.js').read_text(encoding='utf-8')
+    if exports_file is not None:  # the typed layer beside it, cut to the members a program names, or none
+        typed = jsbinding.trim_typed(typed, typed_used or set())
+    (out / f'{jsbinding.TYPED}.js').write_text(typed, encoding='utf-8', newline='\n')
     return out
 
 
@@ -109,13 +114,17 @@ def build_js_example(example, variant, out, trimmed=False):
         shutil.copyfile(file, out / file.name)
     listing = None
     if trimmed:
-        calls, constants = jsbinding.names_in(''.join(m.read_text(encoding='utf-8') for m in modules))
+        text = ''.join(m.read_text(encoding='utf-8') for m in modules)
+        calls, constants = jsbinding.names_in(text)
+        typed_used, typed_calls = jsbinding.typed_names_in(
+            text, (jsbinding.BINDING / f'{jsbinding.TYPED}.js').read_text(encoding='utf-8'))
+        calls |= typed_calls
         known = set(json.loads(FULL.read_text(encoding='utf-8'))['exports'])
         listing = Path(variants.work(variant)) / 'host' / f'{example.name}-exports.json'
         listing.parent.mkdir(parents=True, exist_ok=True)
         listing.write_text(json.dumps({'exports': sorted({'_' + c for c in calls} & known)}, indent=1) + '\n',
                            encoding='utf-8')
-        build(variant, listing, out, constants=constants)
+        build(variant, listing, out, constants=constants, typed_used=typed_used)
     else:
         build(variant, None, out)
     assets, _ = js_example_config(example)

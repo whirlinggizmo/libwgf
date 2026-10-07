@@ -55,17 +55,27 @@ class Window {
 		return Raw.wgf_window_get_height();
 
 	/**
-	    Fill the screen (default off). False where the platform can't; on the web it is
-	    a request the browser grants only during a key press or click, so ask
-	    wgf_window_is_fullscreen for the answer.
+	    Ask to fill the screen, or to stop (default off); the answer is
+	    wgf_window_is_fullscreen, not the return. False where there is nothing to request
+	    (wgf_window_can_fullscreen); true means the request was made, not that it was
+	    granted: on the web the browser grants it only during a key press or click, and it
+	    arrives a frame or more later, and even on the desktop the switch has not happened
+	    yet when this returns. Named request_ for that reason (wgrender's), as every request
+	    the platform may refuse is (CONVENTIONS.md, "Naming"). Before the window opens, it
+	    opens filling the screen.
 	**/
-	public static inline function setFullscreen(fullscreen:Bool):Bool
-		return Raw.wgf_window_set_fullscreen(fullscreen);
+	public static inline function requestFullscreen(fullscreen:Bool):Bool
+		return Raw.wgf_window_request_fullscreen(fullscreen);
 
 	/**
-	    Fill the screen (default off). False where the platform can't; on the web it is
-	    a request the browser grants only during a key press or click, so ask
-	    wgf_window_is_fullscreen for the answer.
+	    Ask to fill the screen, or to stop (default off); the answer is
+	    wgf_window_is_fullscreen, not the return. False where there is nothing to request
+	    (wgf_window_can_fullscreen); true means the request was made, not that it was
+	    granted: on the web the browser grants it only during a key press or click, and it
+	    arrives a frame or more later, and even on the desktop the switch has not happened
+	    yet when this returns. Named request_ for that reason (wgrender's), as every request
+	    the platform may refuse is (CONVENTIONS.md, "Naming"). Before the window opens, it
+	    opens filling the screen.
 	**/
 	public static inline function isFullscreen():Bool
 		return Raw.wgf_window_is_fullscreen();

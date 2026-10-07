@@ -15,11 +15,12 @@
  * libwgt's 2D sprites, through sokol_gl in place of its instanced batch
  * (docs/HISTORY.md, "2D drawn through sokol_gl"). */
 
-static wgf_gfx_priv_sprite_t *sprite_of(wgf_actor_t sprite)
+static wgf_gfx_priv_sprite_t *sprite_of_at(wgf_actor_t sprite, const char *caller)
 {
-    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(sprite);
+    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of_at(sprite, caller);
     return actor_ptr != NULL && actor_ptr->type == WGF_ACTOR_KIND_SPRITE ? &actor_ptr->as.sprite : NULL;
 }
+#define sprite_of(...) sprite_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
 /* The region shown, and the size drawn: what was set, or the texture's. */
 static void region_of(const wgf_gfx_priv_sprite_t *sprite, float region[4], float size[2])

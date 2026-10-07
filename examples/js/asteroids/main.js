@@ -31,6 +31,8 @@ const LARGE = 0, SMALL = 2;
 let world = 0, scene = 0, sounds = null;
 let state = TITLE, score = 0, lives = 3, wave = 0, best = 0;
 let ready = false, waveDelay = 0, respawnDelay = 0, ship = 0;
+// the scene's prefabs, found once it has loaded and kept: what is spawned, with no lookup
+let rockPrefabs = [], bulletPrefab = 0, explosionPrefab = 0, shipPrefab = 0;
 
 const color = (stock) => wgf.wgf_color_get(stock);
 const keyDown = (...keys) => keys.some((key) => wgf.wgf_keyboard_is_down(key));
@@ -92,7 +94,7 @@ class Ship extends Behavior {
         this.cooldown -= dt;
         const fire = keyDown(wgf.WGF_KEY_SPACE)
             || padDown(wgf.WGF_GAMEPAD_BUTTON_EAST, wgf.WGF_GAMEPAD_BUTTON_RIGHT_BUMPER);
-        if (fire && this.cooldown <= 0 && wgf.wgf_ecs_count_behavior("Bullet") < BULLETS_MAX) {
+        if (fire && this.cooldown <= 0 && wgf.wgf_actor_count_with_behavior("Bullet") < BULLETS_MAX) {
             this.cooldown = FIRE_EVERY;
             const at = wgf.wgf_actor_get_position(e, this.heading);
             const v = wgf.wgf_motion_get_velocity(e, this.velocity);
@@ -125,7 +127,7 @@ const POINTS = [20, 50, 100];
 const SHIP_LAYER = 1, BULLET_LAYER = 4; // the scene's layers: the ship 1, rocks 2, bullets 4
 
 function spawnRock(size, x, y, direction) {
-    const rock = wgf.wgf_scene_spawn_at(scene, PREFABS[size], world, x, y, 0, 0);
+    const rock = wgf.wgf_prefab_spawn_at(rockPrefabs[size], world, x, y, 0, 0);
     const angle = direction !== undefined ? direction : wgf.wgf_random_get_range(0, Math.PI * 2);
     const speed = SPEEDS[size] * wgf.wgf_random_get_range(0.7, 1.3);
     wgf.wgf_motion_set_velocity(rock, Math.cos(angle) * speed, Math.sin(angle) * speed, 0);
@@ -175,14 +177,14 @@ class Rock extends Behavior {
 
 
 function fireBullet(x, y, vx, vy) {
-    const bullet = wgf.wgf_scene_spawn_at(scene, "bullet", world, x, y, 0, 0);
+    const bullet = wgf.wgf_prefab_spawn_at(bulletPrefab, world, x, y, 0, 0);
     wgf.wgf_motion_set_velocity(bullet, vx, vy, 0);
     sounds.play(sounds.fire);
 }
 
 /** Sparks at (x, y), as many as the size calls for: an emitter's burst that ages out. */
 function explosion(x, y, size) {
-    const sparks = wgf.wgf_scene_spawn_at(scene, "explosion", world, x, y, 0, 0);
+    const sparks = wgf.wgf_prefab_spawn_at(explosionPrefab, world, x, y, 0, 0);
     wgf.wgf_emitter2d_burst(sparks,
                             [40, 24, 14][Math.min(Math.max(size, 0), 2)]);
 }
@@ -190,7 +192,7 @@ function explosion(x, y, size) {
 // ---- the game's states --------------------------------------------------------------
 
 function start() {
-    wgf.wgf_ecs_clear();
+    wgf.wgf_world_clear();
     score = 0;
     lives = 3;
     wave = 0;
@@ -203,7 +205,7 @@ function start() {
 }
 
 function spawnShip() {
-    ship = wgf.wgf_scene_spawn_at(scene, "ship", world, WIDTH / 2, HEIGHT / 2, 0, 0);
+    ship = wgf.wgf_prefab_spawn_at(shipPrefab, world, WIDTH / 2, HEIGHT / 2, 0, 0);
 }
 
 function shipLost() {
@@ -232,7 +234,7 @@ function nextWave() {
 
 /** The title's drifting rocks, behind its menu. */
 function titleField() {
-    wgf.wgf_ecs_clear();
+    wgf.wgf_world_clear();
     for (let i = 0; i < 6; i++) {
         spawnRock(LARGE, wgf.wgf_random_get_range(0, WIDTH), wgf.wgf_random_get_range(0, HEIGHT));
     }
@@ -274,7 +276,7 @@ function tick() {
             respawnDelay -= dt;
             if (respawnDelay <= 0) spawnShip();
         }
-        if (wgf.wgf_ecs_count_behavior("Rock") === 0) {
+        if (wgf.wgf_actor_count_with_behavior("Rock") === 0) {
             waveDelay += dt;
             if (waveDelay > 1.5) {
                 waveDelay = 0;
@@ -297,6 +299,10 @@ function frame() {
     frameAll(wgf.wgf_loop_get_frame_delta());
     if (!ready && wgf.wgf_resource_get_status(scene) === wgf.WGF_RESOURCE_STATUS_READY) {
         ready = true;
+        rockPrefabs = PREFABS.map((name) => wgf.wgf_scene_find_prefab(scene, name));
+        bulletPrefab = wgf.wgf_scene_find_prefab(scene, "bullet");
+        explosionPrefab = wgf.wgf_scene_find_prefab(scene, "explosion");
+        shipPrefab = wgf.wgf_scene_find_prefab(scene, "ship");
         titleField();
         wgf.wgf_ui_set_focus("play");
     }
@@ -351,5 +357,5 @@ function gameOverScreen() {
 wgf.wgf_window_set_title("Asteroids (JS)");
 // the design the game is written in, fitted to any window or screen, bars around it
 wgf.wgf_presentation_set(wgf.WGF_PRESENTATION_MODE_FIT, WIDTH, HEIGHT);
-wgf.wgf_render_set_bar_color(wgf.wgf_color_make(2, 3, 6, 255));
+wgf.wgf_presentation_set_bar_color(wgf.wgf_color_make(2, 3, 6, 255));
 wgf.wgf_app_run(init, tick, frame, endAll);

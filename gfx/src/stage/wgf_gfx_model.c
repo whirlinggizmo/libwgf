@@ -12,11 +12,12 @@
 /* Models: actors showing a mesh, holding references to it and to their own materials,
  * libwgt's for generated meshes (a file's actor tree comes with glTF, step 6). */
 
-static wgf_gfx_priv_actor_t *model_of(wgf_actor_t model)
+static wgf_gfx_priv_actor_t *model_of_at(wgf_actor_t model, const char *caller)
 {
-    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(model);
+    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of_at(model, caller);
     return actor_ptr != NULL && actor_ptr->type == WGF_ACTOR_KIND_MODEL ? actor_ptr : NULL;
 }
+#define model_of(...) model_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
 static bool is_material(wgf_material_t material)
 {

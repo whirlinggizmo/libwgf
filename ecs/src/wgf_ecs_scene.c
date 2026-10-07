@@ -904,19 +904,31 @@ static wgf_actor_t make(const wgf_ecs_priv_scene_data_t *data, int thing, wgf_ac
 typedef struct scene_t {
     wgf_core_priv_resource_t resource; /* first: the resource core's */
     wgf_ecs_priv_scene_data_t *data;
+    wgf_prefab_t *prefabs; /* by block, its prefab's handle once found; NULL until the first */
 } scene_t;
+
+/* A prefab: its scene, and its block there. */
+typedef struct prefab_t {
+    wgf_scene_t scene;
+    int thing;
+} prefab_t;
+
+static bool prefabs_ready;
+static wgf_core_priv_handle_pool_t prefab_pool;
+static prefab_t *prefab_records;
 
 static bool pool_ready;
 static wgf_core_priv_handle_pool_t scene_pool;
 static scene_t *scenes;
 static wgf_core_priv_resource_kind_t resource_kind;
 
-static scene_t *scene_of(wgf_scene_t scene)
+static scene_t *scene_of_at(wgf_scene_t scene, const char *caller)
 {
     uint16_t index;
-    if (!pool_ready || !wgf_core_priv_handle_pool_resolve(&scene_pool, scene, &index)) return NULL;
+    if (!pool_ready || !wgf_core_priv_handle_pool_resolve_at(&scene_pool, scene, &index, caller)) return NULL;
     return &scenes[index];
 }
+#define scene_of(...) scene_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
 static void *prepare(const char *path)
 {
@@ -966,7 +978,13 @@ static const wgf_core_priv_loader_t *loader_of(const char *path)
 static void free_scene(wgf_handle_t scene, void *record)
 {
     scene_t *scene_ptr = (scene_t *)record;
+    int i;
     (void)scene;
+    for (i = 0; scene_ptr->prefabs != NULL && scene_ptr->data != NULL && i < scene_ptr->data->count; i++) {
+        if (scene_ptr->prefabs[i] != 0) wgf_core_priv_handle_pool_free(&prefab_pool, scene_ptr->prefabs[i]);
+    }
+    free(scene_ptr->prefabs);
+    scene_ptr->prefabs = NULL;
     wgf_ecs_priv_scene_data_free(scene_ptr->data);
     scene_ptr->data = NULL;
 }
@@ -1024,19 +1042,50 @@ int wgf_scene_instantiate(wgf_scene_t scene, wgf_actor_t parent)
     return made;
 }
 
-wgf_actor_t wgf_scene_spawn(wgf_scene_t scene, const char *name, wgf_actor_t parent)
+wgf_prefab_t wgf_scene_find_prefab(wgf_scene_t scene, const char *name)
 {
     const wgf_ecs_priv_scene_data_t *data = ready(scene);
-    const int prefab = data != NULL && name != NULL ? find_prefab(data, name) : -1;
+    scene_t *scene_ptr = scene_of(scene);
+    const int thing = data != NULL && name != NULL ? find_prefab(data, name) : -1;
+    uint16_t index;
+    if (thing < 0) return 0;
+    if (scene_ptr->prefabs == NULL) {
+        scene_ptr->prefabs = (wgf_prefab_t *)calloc((size_t)data->count, sizeof(wgf_prefab_t));
+        if (scene_ptr->prefabs == NULL) return 0;
+    }
+    if (scene_ptr->prefabs[thing] != 0) return scene_ptr->prefabs[thing];
+    if (!prefabs_ready) {
+        prefabs_ready = wgf_core_priv_handle_pool_init(&prefab_pool, WGF_CORE_PRIV_HANDLE_KIND_PREFAB,
+                                                       (void **)&prefab_records, sizeof(prefab_t), 16, 65535);
+        if (!prefabs_ready) return 0;
+    }
+    scene_ptr->prefabs[thing] = wgf_core_priv_handle_pool_alloc(&prefab_pool);
+    if (scene_ptr->prefabs[thing] == 0 ||
+        !wgf_core_priv_handle_pool_resolve(&prefab_pool, scene_ptr->prefabs[thing], &index)) {
+        wgf_log_error("wgf_scene_find_prefab: no room for another prefab");
+        return 0;
+    }
+    prefab_records[index].scene = scene;
+    prefab_records[index].thing = thing;
+    return scene_ptr->prefabs[thing];
+}
+
+wgf_actor_t wgf_prefab_spawn(wgf_prefab_t prefab, wgf_actor_t parent)
+{
+    const wgf_ecs_priv_scene_data_t *data;
+    const prefab_t *prefab_ptr;
     wgf_actor_t actor;
-    if (prefab < 0 || (parent != 0 && wgf_actor_get_kind(parent) == WGF_ACTOR_KIND_NONE)) return 0;
-    actor = make(data, prefab, parent, 0);
+    uint16_t index;
+    if (!prefabs_ready || !wgf_core_priv_handle_pool_resolve(&prefab_pool, prefab, &index)) return 0;
+    prefab_ptr = &prefab_records[index];
+    data = ready(prefab_ptr->scene);
+    if (data == NULL || (parent != 0 && wgf_actor_get_kind(parent) == WGF_ACTOR_KIND_NONE)) return 0;
+    actor = make(data, prefab_ptr->thing, parent, 0);
     resolve_tree(actor);
     return actor;
 }
 
-wgf_actor_t wgf_scene_spawn_at(wgf_scene_t scene, const char *name, wgf_actor_t parent, float x, float y, float z,
-                               float angle)
+wgf_actor_t wgf_prefab_spawn_at(wgf_prefab_t prefab, wgf_actor_t parent, float x, float y, float z, float angle)
 {
     wgf_actor_t actor;
     placement.set = true;
@@ -1044,7 +1093,7 @@ wgf_actor_t wgf_scene_spawn_at(wgf_scene_t scene, const char *name, wgf_actor_t 
     placement.y = y;
     placement.z = z;
     placement.angle = angle;
-    actor = wgf_scene_spawn(scene, name, parent);
+    actor = wgf_prefab_spawn(prefab, parent);
     placement.set = false;
     return actor;
 }
@@ -1084,4 +1133,6 @@ void wgf_ecs_priv_scene_shutdown(void)
     wgf_core_priv_resource_unregister(&scene_pool);
     wgf_core_priv_handle_pool_destroy(&scene_pool);
     pool_ready = false;
+    if (prefabs_ready) wgf_core_priv_handle_pool_destroy(&prefab_pool);
+    prefabs_ready = false;
 }

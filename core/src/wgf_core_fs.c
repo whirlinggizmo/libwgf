@@ -342,14 +342,15 @@ bool wgf_core_priv_fs_normalize_path(const char *path, char *out, size_t out_siz
 
 /* The task `task` names, or NULL for anything else, a detached task included:
  * to its caller it is already gone. */
-static task_t *task_of(wgf_handle_t task)
+static task_t *task_of_at(wgf_handle_t task, const char *caller)
 {
     uint16_t index;
     task_t *task_ptr;
-    if (!fs_running || !wgf_core_priv_handle_pool_resolve(&task_pool, task, &index)) return NULL;
+    if (!fs_running || !wgf_core_priv_handle_pool_resolve_at(&task_pool, task, &index, caller)) return NULL;
     task_ptr = &tasks[index];
     return task_ptr->detached ? NULL : task_ptr;
 }
+#define task_of(...) task_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
 static void free_task(wgf_handle_t task, task_t *task_ptr)
 {

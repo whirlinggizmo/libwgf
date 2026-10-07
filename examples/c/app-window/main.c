@@ -54,7 +54,7 @@ static void frame(void *user)
         report("shrink", wgf_window_set_size((int)((float)width / 1.1f), (int)((float)height / 1.1f)));
     }
     if (wgf_keyboard_is_pressed(WGF_KEY_F)) { /* a request: is_fullscreen answers on a later frame */
-        const bool asked = wgf_window_set_fullscreen(!wgf_window_is_fullscreen());
+        const bool asked = wgf_window_request_fullscreen(!wgf_window_is_fullscreen());
         snprintf(g.status, sizeof(g.status), "fullscreen: %s", asked ? "asked for" : "not supported here");
     }
     if (wgf_keyboard_is_pressed(WGF_KEY_H)) {

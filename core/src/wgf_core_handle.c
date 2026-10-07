@@ -17,6 +17,7 @@ static const char *const kind_names[WGF_CORE_PRIV_HANDLE_KIND_MASK + 1] = {
     [WGF_CORE_PRIV_HANDLE_KIND_MATERIAL] = "gfx.material",
     [WGF_CORE_PRIV_HANDLE_KIND_COMPONENTS] = "ecs.components",
     [WGF_CORE_PRIV_HANDLE_KIND_SCENE] = "ecs.scene",
+    [WGF_CORE_PRIV_HANDLE_KIND_PREFAB] = "ecs.prefab",
     [WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND] = "audio.sound",
     [WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND_STREAMED] = "audio.sound_streamed",
     [WGF_CORE_PRIV_HANDLE_KIND_AUDIO_VOICE] = "audio.voice",
@@ -24,6 +25,43 @@ static const char *const kind_names[WGF_CORE_PRIV_HANDLE_KIND_MASK + 1] = {
     [WGF_CORE_PRIV_HANDLE_KIND_TEST_A] = "test.a",
     [WGF_CORE_PRIV_HANDLE_KIND_TEST_B] = "test.b",
 };
+
+/* Each kind's pool, as its init registered it: how a handle of any kind is told alive. */
+static const wgf_core_priv_handle_pool_t *pools[WGF_CORE_PRIV_HANDLE_KIND_MASK + 1];
+
+bool wgf_core_priv_handle_is_alive(wgf_handle_t handle)
+{
+    const wgf_core_priv_handle_pool_t *pool = pools[WGF_CORE_PRIV_HANDLE_KIND(handle)];
+    return handle != 0 && pool != NULL && wgf_core_priv_handle_pool_resolve(pool, handle, NULL);
+}
+
+bool wgf_handle_is_alive(wgf_handle_t handle)
+{
+    return wgf_core_priv_handle_is_alive(handle);
+}
+
+#ifndef NDEBUG
+#define STALE_CALLERS_MAX 256
+#endif
+
+void wgf_core_priv_handle_stale(wgf_handle_t handle, const char *caller)
+{
+#ifndef NDEBUG
+    static const char *warned[STALE_CALLERS_MAX]; /* the calls already warned about: once each */
+    static int warned_count;
+    int i;
+    for (i = 0; i < warned_count; i++) {
+        if (warned[i] == caller) return;
+    }
+    if (warned_count < STALE_CALLERS_MAX) warned[warned_count++] = caller;
+    wgf_log_warn("%s: handle %u (%s) is dead: destroyed, released, or gone with what owned it. Ask is_alive first "
+                 "where that is expected (said once a call, in debug builds)",
+                 caller, (unsigned)handle, wgf_handle_get_kind_name(handle));
+#else
+    (void)handle;
+    (void)caller;
+#endif
+}
 
 const char *wgf_handle_get_kind_name(wgf_handle_t handle)
 {
@@ -94,12 +132,14 @@ bool wgf_core_priv_handle_pool_init(wgf_core_priv_handle_pool_t *pool, wgf_core_
         wgf_core_priv_handle_pool_destroy(pool);
         return false;
     }
+    pools[kind] = pool;
     return true;
 }
 
 void wgf_core_priv_handle_pool_destroy(wgf_core_priv_handle_pool_t *pool)
 {
     if (pool == NULL || pool->items == NULL) return;
+    if (pools[pool->kind] == pool) pools[pool->kind] = NULL;
     free(pool->generations);
     free(pool->occupied);
     free(pool->free_indices);

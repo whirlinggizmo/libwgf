@@ -1,6 +1,7 @@
 #ifndef WGF_GFX_ACTOR_PRIV_H
 #define WGF_GFX_ACTOR_PRIV_H
 
+#include "wgf_core_handle_priv.h" /* WGF_CORE_PRIV_CALLER */
 #include <stdbool.h>
 
 #include "wgf_color.h"
@@ -159,7 +160,10 @@ wgf_actor_t wgf_gfx_priv_actor_get_root(wgf_actor_t actor);
 
 /* The actor `actor` names; NULL for anything else. The pointer moves when an actor is
  * created: don't keep it across one. */
-wgf_gfx_priv_actor_t *wgf_gfx_priv_actor_of(wgf_actor_t actor);
+wgf_gfx_priv_actor_t *wgf_gfx_priv_actor_of_at(wgf_actor_t actor, const char *caller);
+/* The actor's record, NULL for a handle that isn't a live actor (a dead one warned of in a
+ * debug build, naming the call it reached: wgf_core_priv_handle_stale). */
+#define wgf_gfx_priv_actor_of(actor) wgf_gfx_priv_actor_of_at((actor), WGF_CORE_PRIV_CALLER)
 
 /* The actor's own transform, and its world transform (every parent's, composed),
  * each rebuilt only when it is dirty. */

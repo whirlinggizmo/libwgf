@@ -185,11 +185,11 @@ at 120 end
 
 ### Scene files
 
-A scene is a text file of actors -- their kinds, components, and behaviors -- and prefabs, the trees a game makes at run time (`wgf_scene.h`). `wgf_ecs_dump` and `wgf dump` write the simulated actors in the same format, so a dump loads again as a scene. Like Godot's `.tscn` it is a line per fact, so a scene diffs and merges line by line; and like `.tscn` a tree is written flat, each actor a block naming its parent by path, never blocks inside blocks. A line each, `#` starting a comment, words split by spaces:
+A scene is a text file of actors -- their kinds, components, and behaviors -- and prefabs, the trees a game makes at run time (`wgf_scene.h`). `wgf_world_dump` and `wgf dump` write the simulated actors in the same format, so a dump loads again as a scene. Like Godot's `.tscn` it is a line per fact, so a scene diffs and merges line by line; and like `.tscn` a tree is written flat, each actor a block naming its parent by path, never blocks inside blocks. A line each, `#` starting a comment, words split by spaces:
 
 ```
 wgf-scene 2                     the first line: the format and its version
-prefab <path>                   a prefab's actor, until its end: made by wgf_scene_spawn
+prefab <path>                   a prefab's actor, until its end: made by wgf_prefab_spawn
 actor [<path>]                  an actor made by wgf_scene_instantiate, until its end
   from <prefab>                 (first) starting as that prefab's tree, the lines after it
                                 changing its top actor
@@ -317,7 +317,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `check_cli.py` | runs each `wgf` command on a game it makes from the template, judging what each made and said; `serve` is edited while it runs, and must keep its state |
 | `check_features.py` | runs the feature test (`examples/haxe/feature-test/`) on hxcpp, under node, and in a browser, failing a call it never reached |
 | `check_binding.py` | checks the Haxe binding: generated, every call reached once, and its test on hxcpp, under node, and in a browser |
-| `check_js_binding.py` | checks the JS binding: generated, its declarations under TypeScript (`bindings/js/tests/types.ts`), and every JS example (`examples/js/`) in a browser, flown by its autopilot |
+| `check_js_binding.py` | checks the JS binding, its raw and typed layers: generated, their declarations under TypeScript (`bindings/js/tests/types.ts`), and every JS example (`examples/js/`) in a browser, flown by its autopilot, on the full host and trimmed as an export is |
 | `measure_frames.py` | (in `tools/bench/`) flies each game's web export with its autopilot in a browser and traces each frame's main-thread work and the garbage collections; `--write` records them in `docs/benchmarks.md` beside the sizes, from the reference machine (the GPU under Xvfb, the CPU throttled 4 times) |
 | `measure_actors.py` | (in `tools/bench/`) measures what an actor costs, bytes and nanoseconds, at 10k and 50k, static and moving, flat and deep, with behaviors, with churn, and finding by name, path, and component (`tools/bench/actors/main.c`), on `linux-x64-release-headless`; `--write` records them in `docs/benchmarks.md`, `--check` fails a row past its baseline |
 | `measure_calls.py` | (in `tools/bench/`) times a call into the host from Haxe and from JS, both through the JS binding, in a browser on the release host (not a check: timing) |

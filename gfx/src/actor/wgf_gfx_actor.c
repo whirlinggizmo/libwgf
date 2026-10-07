@@ -21,10 +21,10 @@ static wgf_gfx_priv_actor_t *records; /* the pool's items */
 
 /* --- the pool ---------------------------------------------------------------- */
 
-wgf_gfx_priv_actor_t *wgf_gfx_priv_actor_of(wgf_actor_t actor)
+wgf_gfx_priv_actor_t *wgf_gfx_priv_actor_of_at(wgf_actor_t actor, const char *caller)
 {
     uint16_t index;
-    if (!pool_ready || !wgf_core_priv_handle_pool_resolve(&actor_pool, actor, &index)) return NULL;
+    if (!pool_ready || !wgf_core_priv_handle_pool_resolve_at(&actor_pool, actor, &index, caller)) return NULL;
     return &records[index];
 }
 
@@ -439,7 +439,7 @@ void wgf_actor_destroy(wgf_actor_t actor, wgf_actor_destroy_t children)
 
 wgf_actor_kind_t wgf_actor_get_kind(wgf_actor_t actor)
 {
-    const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
+    const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of_at(actor, NULL); /* a check: never warned */
     return actor_ptr != NULL ? actor_ptr->type : WGF_ACTOR_KIND_NONE;
 }
 

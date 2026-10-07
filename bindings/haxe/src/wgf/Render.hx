@@ -17,20 +17,6 @@ class Render {
 		return Raw.wgf_render_get_clear_color();
 
 	/**
-	    The presentation's bars (wgf_presentation.h's FIT and INTEGER): the framebuffer
-	    outside the visible area, which nothing is drawn in. Default: black.
-	**/
-	public static inline function setBarColor(color:Int):Void
-		Raw.wgf_render_set_bar_color(color);
-
-	/**
-	    The presentation's bars (wgf_presentation.h's FIT and INTEGER): the framebuffer
-	    outside the visible area, which nothing is drawn in. Default: black.
-	**/
-	public static inline function getBarColor():Int
-		return Raw.wgf_render_get_bar_color();
-
-	/**
 	    The frame's size in pixels, and how many pixels make one logical pixel (2 on most
 	    high-density displays); 0, 0, and 1 while there is no surface. Drawing is in logical
 	    pixels: the frame is get_width() / get_dpi_scale() of them wide.

@@ -23,10 +23,10 @@ static struct {
     wgf_audio_priv_voice_t *voices; /* grown by the pool, under the lock */
 } vp;
 
-wgf_audio_priv_voice_t *wgf_audio_priv_voice_of(wgf_handle_t voice)
+wgf_audio_priv_voice_t *wgf_audio_priv_voice_of_at(wgf_handle_t voice, const char *caller)
 {
     uint16_t index;
-    if (!vp.ready || !wgf_core_priv_handle_pool_resolve(&vp.pool, voice, &index)) return NULL;
+    if (!vp.ready || !wgf_core_priv_handle_pool_resolve_at(&vp.pool, voice, &index, caller)) return NULL;
     return &vp.voices[index];
 }
 
@@ -274,11 +274,12 @@ bool wgf_voice_play(wgf_handle_t voice)
 }
 
 /* `voice`'s record when it is one and its state is `from`, or NULL; under the lock. */
-static wgf_audio_priv_voice_t *in_state(wgf_handle_t voice, wgf_play_state_t from)
+static wgf_audio_priv_voice_t *in_state_at(wgf_handle_t voice, wgf_play_state_t from, const char *caller)
 {
-    wgf_audio_priv_voice_t *voice_ptr = wgf_audio_priv_voice_of(voice);
+    wgf_audio_priv_voice_t *voice_ptr = wgf_audio_priv_voice_of_at(voice, caller);
     return voice_ptr != NULL && !voice_ptr->dying && voice_ptr->state == from ? voice_ptr : NULL;
 }
+#define in_state(...) in_state_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
 bool wgf_voice_pause(wgf_handle_t voice)
 {

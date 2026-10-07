@@ -69,7 +69,9 @@ libwgf is one library, `libwgf.a` (`wgf.lib` with MSVC), built in layers and mod
 | Haxe type | `wgf.<Section>` | `wgf.Actor` |
 | C example dir | `<layer>-<name>` | `gfx-shapes` |
 
-- Public names don't carry the layer, except the layer-wide calls of app, asset, audio, ecs, and ui (`wgf_app_run`, `wgf_ui_begin`). Section names are unique across layers, since they are the public names. A section named after its layer lives in `<layer>/src/wgf_<layer>.c`.
+- A name says what it acts on: a call named for a kind of handle (`wgf_prefab_spawn`) takes that kind first among its handles, or, taking none, returns one; a call named for what an actor is or has (`wgf_sprite_*`, `wgf_motion_*`, `wgf_stage2d_*`) takes the actor. A call that takes what it is made from first (`wgf_sprite_create(texture)`) is listed with why; `tools/check_api.py` fails any other, so a call is never named for a part of libwgf (an "ecs") rather than what it acts on: `wgf_actor_find_with_behavior`, `wgf_world_take_events`.
+- A request the platform may refuse or grant later is `request_`, its answer read back with `is_`, `get_`, or `can_`: `wgf_window_request_fullscreen` returns whether the request was made, never whether it was granted, which `wgf_window_is_fullscreen` says (wgrender-c's design; `can_` says whether to offer it at all).
+- Public names don't carry the layer, except the layer-wide calls of app, asset, audio, and ui (`wgf_app_run`, `wgf_ui_begin`). Section names are unique across layers, since they are the public names. A section named after its layer lives in `<layer>/src/wgf_<layer>.c`.
 - Platform-specific code goes in its own file with a platform suffix: `_web`, `_native`, `_posix`, `_windows`, `_linux`, `_macos`, `_headless` (the build with no window), `_none` (a section with nothing to use). CMake picks the files. Shared files contain no platform `#if`.
 - Inside libwgf, a pointer resolved from a handle is `<noun>_ptr`.
 - No double underscores, and no leading underscore followed by a capital.
@@ -94,6 +96,8 @@ No other pointer, no struct, no function pointer, no `void *`, no variadic call.
 **One exception: `wgf_app_run`**, whose callbacks are `wgf_app_callback_t`, `void (*)(void *user)`, because the window system owns the loop. `tools/check_api.py` lists it in `CALLBACKS_ALLOWED`; another is a decision recorded in HISTORY.md, not a convenience.
 
 **Handles are typed by kind.** A public handle parameter or return uses the kind's typedef (`wgf_texture_t`), never bare `wgf_handle_t`, except a call that takes any kind (`wgf_handle_get_kind_name`, `wgf_resource_release`). Actors of every kind are `wgf_actor_t`. A handle is valid only in the running program: never saved, never sent. 0 is none.
+
+**A dead handle is refused, and said.** A call on a handle whose thing was destroyed or released refuses (false, 0, or nothing), as it does 0; in a debug build it also warns, once a call, naming the call and the handle (`wgf_core_priv_handle_stale`, through `WGF_CORE_PRIV_CALLER` where a call resolves). Code that expects a handle may be dead asks `wgf_handle_is_alive` (every typed handle's `isAlive()`) first; the checks themselves (`is_alive`, an actor's `get_kind`) never warn.
 
 **Shape of calls.**
 

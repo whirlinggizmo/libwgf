@@ -54,7 +54,8 @@ void wgf_core_priv_resource_unregister(wgf_core_priv_handle_pool_t *pool);
 
 /* The header of a live resource, or NULL (no warning) for anything else. Don't hold it
  * across a create: the records move when a pool grows. */
-wgf_core_priv_resource_t *wgf_core_priv_resource_get(wgf_handle_t resource);
+wgf_core_priv_resource_t *wgf_core_priv_resource_get_at(wgf_handle_t resource, const char *caller);
+#define wgf_core_priv_resource_get(resource) wgf_core_priv_resource_get_at((resource), WGF_CORE_PRIV_CALLER)
 
 /* Load on create: the resource of `kind` at `path`, as wgf_resource.h says. A path
  * already created gives the same handle with one more reference; otherwise a new

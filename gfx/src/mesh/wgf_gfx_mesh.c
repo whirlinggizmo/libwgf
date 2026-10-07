@@ -49,12 +49,13 @@ static bool pool_ready;
 static wgf_core_priv_handle_pool_t pool;
 static mesh_t *meshes;
 
-static mesh_t *record_of(wgf_mesh_t mesh)
+static mesh_t *record_of_at(wgf_mesh_t mesh, const char *caller)
 {
     uint16_t index;
-    if (!pool_ready || !wgf_core_priv_handle_pool_resolve(&pool, mesh, &index)) return NULL;
+    if (!pool_ready || !wgf_core_priv_handle_pool_resolve_at(&pool, mesh, &index, caller)) return NULL;
     return &meshes[index];
 }
+#define record_of(...) record_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
 /* What a mesh holds: its primitives (CPU and GPU), and its materials. */
 static void free_mesh(wgf_handle_t mesh, void *record)

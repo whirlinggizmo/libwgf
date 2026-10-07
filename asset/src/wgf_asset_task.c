@@ -35,11 +35,12 @@ wgf_asset_priv_task_t *wgf_asset_priv_task_at(uint16_t slot)
     return ready && slot > 0 && slot < pool.capacity && pool.occupied[slot] ? &tasks[slot] : NULL;
 }
 
-static uint16_t slot_of(wgf_handle_t handle)
+static uint16_t slot_of_at(wgf_handle_t handle, const char *caller)
 {
     uint16_t slot = 0;
-    return ready && wgf_core_priv_handle_pool_resolve(&pool, handle, &slot) ? slot : 0;
+    return ready && wgf_core_priv_handle_pool_resolve_at(&pool, handle, &slot, caller) ? slot : 0;
 }
+#define slot_of(...) slot_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
 /* A task the program holds (an ensure, a group, a ping), or NULL. */
 static wgf_asset_priv_task_t *kept_task(wgf_handle_t handle)

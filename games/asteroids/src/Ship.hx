@@ -65,7 +65,7 @@ class Ship extends Behavior {
 		cooldown -= dt;
 		final fire = Keyboard.isDown(KeyboardKey.SPACE) || Gamepad.isDown(0, GamepadButton.EAST)
 			|| Gamepad.isDown(0, GamepadButton.RIGHT_BUMPER);
-		if (fire && cooldown <= 0 && Ecs.countBehavior("Bullet") < BULLETS_MAX) {
+		if (fire && cooldown <= 0 && Actor.countWithBehavior("Bullet") < BULLETS_MAX) {
 			cooldown = FIRE_EVERY;
 			final at = actor.getPosition(heading);
 			final v = (actor : Motion).getVelocity(velocity);

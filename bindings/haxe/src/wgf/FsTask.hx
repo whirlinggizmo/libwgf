@@ -9,6 +9,10 @@ abstract FsTask(Int) from Int to Int to wgf.Handle {
 	public inline function isNone():Bool
 		return this == 0;
 
+	/** Whether this refers to something alive: false for none, and for what was destroyed or released (wgf_handle_is_alive). Ask it first where a handle may be dead. **/
+	public inline function isAlive():Bool
+		return (this : Handle).isAlive();
+
 	/**
 	    Tasks. A getter answers NONE, "", NULL, or 0 for a handle that isn't a task.
 	**/

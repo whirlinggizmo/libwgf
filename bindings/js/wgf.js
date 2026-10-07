@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "23bb4d5b5a3beb22" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "7cd027874da536ba" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -672,7 +672,7 @@ export const WGF_ALPHA_MODE_BLEND = 2;
  *            DPI scale), and the visible area is the window
  *   STRETCH  the design scaled to the window on each axis apart, its aspect lost
  *   FIT      scaled alike on both axes, as large as it fits whole, centered; the rest
- *            are bars (wgf_render_set_bar_color), nothing drawn in them
+ *            are bars (wgf_presentation_set_bar_color), nothing drawn in them
  *   FILL     scaled alike, as small as covers the window, centered; what is past the
  *            window's edges is cropped
  *   EXPAND   scaled as FIT is, but the visible area grows past the design to the
@@ -733,7 +733,7 @@ export const WGF_STAGE3D_TONEMAP_ACES = 2;
 
 /**
  * Components: the simulation's data on an actor -- any actor, of any kind, a 2D stage's UI
- * actors and cameras included -- run each tick by libwgf's systems (wgf_ecs.h). One kind
+ * actors and cameras included -- run each tick by libwgf's systems (wgf_world.h). One kind
  * of object, the actor (SPEC.md), Godot's tree with Unity's components: what an actor draws
  * is its kind (a shape, a sprite, a model); what moves it, bounds it, ages it, and finds
  * what it overlaps are components on it; what the program does with it are its behaviors
@@ -764,8 +764,9 @@ export const WGF_BOUNDS_MODE_DESTROY = 2;
 
 /**
  * The simulation as a whole: libwgf's systems over the actors' components
- * (wgf_component.h), the events they raise, finding actors by behavior or component, and the simulated
- * actors written out as text.
+ * (wgf_component.h), the events they raise, and the simulated actors written out as text;
+ * the actors with a behavior or a component are found by wgf_actor_find_with_behavior
+ * (wgf_behavior.h) and wgf_actor_find_with_component (wgf_component.h).
  *
  * Each tick, as it begins, every simulated actor's transform is kept as it is; after the
  * program's tick the systems run in this order: lifetimes count down (an actor whose time is
@@ -790,11 +791,11 @@ export const WGF_BOUNDS_MODE_DESTROY = 2;
  * back: a binding takes them at its tick's start and calls its behaviors itself. At most
  * 65536 wait; past that the oldest are dropped, warned once.
  */
-export const WGF_ECS_EVENT_NONE = 0;
-export const WGF_ECS_EVENT_CREATED = 1;
-export const WGF_ECS_EVENT_DESTROYED = 2;
-export const WGF_ECS_EVENT_TRIGGER_ENTER = 3;
-export const WGF_ECS_EVENT_TRIGGER_EXIT = 4;
+export const WGF_WORLD_EVENT_NONE = 0;
+export const WGF_WORLD_EVENT_CREATED = 1;
+export const WGF_WORLD_EVENT_DESTROYED = 2;
+export const WGF_WORLD_EVENT_TRIGGER_ENTER = 3;
+export const WGF_WORLD_EVENT_TRIGGER_EXIT = 4;
 
 /**
  * Game UI, immediate mode: each frame the program describes the UI as it is now --
@@ -903,6 +904,19 @@ export function wgf_version_get_patch() {
 export function wgf_handle_get_kind_name(handle) {
     const value = host["_wgf_handle_get_kind_name"](handle);
     return str(value);
+}
+
+// wgf: call wgf_handle_is_alive
+/**
+ * Whether `handle` refers to something alive: false for 0, for a number no kind has, and
+ * for what was destroyed or released (and for a resource's whose last reference went).
+ * Code that expects a handle may be dead -- the other side of a trigger, an actor kept
+ * across frames -- asks this first; any other call on a dead handle is refused (false, 0,
+ * or nothing), and in a debug build warns, once a call, naming the call and the handle.
+ */
+export function wgf_handle_is_alive(handle) {
+    const value = host["_wgf_handle_is_alive"](handle);
+    return value !== 0;
 }
 
 // wgf: call wgf_fs_set_root
@@ -2092,22 +2106,32 @@ export function wgf_window_get_height() {
     return value;
 }
 
-// wgf: call wgf_window_set_fullscreen
+// wgf: call wgf_window_request_fullscreen
 /**
- * Fill the screen (default off). False where the platform can't; on the web it is
- * a request the browser grants only during a key press or click, so ask
- * wgf_window_is_fullscreen for the answer.
+ * Ask to fill the screen, or to stop (default off); the answer is
+ * wgf_window_is_fullscreen, not the return. False where there is nothing to request
+ * (wgf_window_can_fullscreen); true means the request was made, not that it was
+ * granted: on the web the browser grants it only during a key press or click, and it
+ * arrives a frame or more later, and even on the desktop the switch has not happened
+ * yet when this returns. Named request_ for that reason (wgrender's), as every request
+ * the platform may refuse is (CONVENTIONS.md, "Naming"). Before the window opens, it
+ * opens filling the screen.
  */
-export function wgf_window_set_fullscreen(fullscreen) {
-    const value = host["_wgf_window_set_fullscreen"]((fullscreen ? 1 : 0));
+export function wgf_window_request_fullscreen(fullscreen) {
+    const value = host["_wgf_window_request_fullscreen"]((fullscreen ? 1 : 0));
     return value !== 0;
 }
 
 // wgf: call wgf_window_is_fullscreen
 /**
- * Fill the screen (default off). False where the platform can't; on the web it is
- * a request the browser grants only during a key press or click, so ask
- * wgf_window_is_fullscreen for the answer.
+ * Ask to fill the screen, or to stop (default off); the answer is
+ * wgf_window_is_fullscreen, not the return. False where there is nothing to request
+ * (wgf_window_can_fullscreen); true means the request was made, not that it was
+ * granted: on the web the browser grants it only during a key press or click, and it
+ * arrives a frame or more later, and even on the desktop the switch has not happened
+ * yet when this returns. Named request_ for that reason (wgrender's), as every request
+ * the platform may refuse is (CONVENTIONS.md, "Naming"). Before the window opens, it
+ * opens filling the screen.
  */
 export function wgf_window_is_fullscreen() {
     const value = host["_wgf_window_is_fullscreen"]();
@@ -4948,6 +4972,25 @@ export function wgf_presentation_get_mode() {
     return value;
 }
 
+// wgf: call wgf_presentation_set_bar_color
+/**
+ * The bars (FIT and INTEGER): the framebuffer outside the visible area, which nothing is
+ * drawn in. Default: black.
+ */
+export function wgf_presentation_set_bar_color(color) {
+    host["_wgf_presentation_set_bar_color"](color);
+}
+
+// wgf: call wgf_presentation_get_bar_color
+/**
+ * The bars (FIT and INTEGER): the framebuffer outside the visible area, which nothing is
+ * drawn in. Default: black.
+ */
+export function wgf_presentation_get_bar_color() {
+    const value = host["_wgf_presentation_get_bar_color"]();
+    return value >>> 0;
+}
+
 // wgf: call wgf_presentation_get_width
 /**
  * The design resolution; the window's logical size under NONE.
@@ -5003,25 +5046,6 @@ export function wgf_render_set_clear_color(color) {
  */
 export function wgf_render_get_clear_color() {
     const value = host["_wgf_render_get_clear_color"]();
-    return value >>> 0;
-}
-
-// wgf: call wgf_render_set_bar_color
-/**
- * The presentation's bars (wgf_presentation.h's FIT and INTEGER): the framebuffer
- * outside the visible area, which nothing is drawn in. Default: black.
- */
-export function wgf_render_set_bar_color(color) {
-    host["_wgf_render_set_bar_color"](color);
-}
-
-// wgf: call wgf_render_get_bar_color
-/**
- * The presentation's bars (wgf_presentation.h's FIT and INTEGER): the framebuffer
- * outside the visible area, which nothing is drawn in. Default: black.
- */
-export function wgf_render_get_bar_color() {
-    const value = host["_wgf_render_get_bar_color"]();
     return value >>> 0;
 }
 
@@ -6340,6 +6364,36 @@ export function wgf_behavior_get_param_key(actor, behavior, index) {
     return str(value);
 }
 
+// wgf: call wgf_actor_find_with_behavior
+/**
+ * The actors with a behavior named `name`, oldest first (by when their first component or
+ * behavior came), into `out`, as many as fit in `count`, returning how many it filled;
+ * and how many there are, to size `out`. An actor with two of the name is one actor.
+ * Found by an index of each name, never by a look at every actor.
+ */
+export function wgf_actor_find_with_behavior(name, out) {
+    const mark = host["stackSave"]();
+    const outPointer = arrayOut(out, 0);
+    const value = host["_wgf_actor_find_with_behavior"](cstr(name), outPointer, lengthOf(out));
+    arrayBack(outPointer, out, "HEAPU32");
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_actor_count_with_behavior
+/**
+ * The actors with a behavior named `name`, oldest first (by when their first component or
+ * behavior came), into `out`, as many as fit in `count`, returning how many it filled;
+ * and how many there are, to size `out`. An actor with two of the name is one actor.
+ * Found by an index of each name, never by a look at every actor.
+ */
+export function wgf_actor_count_with_behavior(name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_actor_count_with_behavior"](cstr(name));
+    host["stackRestore"](mark);
+    return value;
+}
+
 // wgf: call wgf_actor_add_component
 /**
  * add makes one with its defaults (each component's header says them); adding one it has
@@ -6384,6 +6438,32 @@ export function wgf_actor_has_component(actor, component) {
 export function wgf_actor_get_voice(actor) {
     const value = host["_wgf_actor_get_voice"](actor);
     return value >>> 0;
+}
+
+// wgf: call wgf_actor_find_with_component
+/**
+ * The actors with a component, oldest first (by when their first component or behavior
+ * came), into `out`, as many as fit in `count`, returning how many it filled; and how many
+ * there are, to size `out`. Found by an index of each component, never by a look at every
+ * actor; NONE, or a value that isn't a component, finds none.
+ */
+export function wgf_actor_find_with_component(component, out) {
+    const outPointer = arrayOut(out, 0);
+    const value = host["_wgf_actor_find_with_component"](component, outPointer, lengthOf(out));
+    arrayBack(outPointer, out, "HEAPU32");
+    return value;
+}
+
+// wgf: call wgf_actor_count_with_component
+/**
+ * The actors with a component, oldest first (by when their first component or behavior
+ * came), into `out`, as many as fit in `count`, returning how many it filled; and how many
+ * there are, to size `out`. Found by an index of each component, never by a look at every
+ * actor; NONE, or a value that isn't a component, finds none.
+ */
+export function wgf_actor_count_with_component(component) {
+    const value = host["_wgf_actor_count_with_component"](component);
+    return value;
 }
 
 // wgf: call wgf_bounds_set_rect
@@ -6563,114 +6643,6 @@ export function wgf_collider_get_overlaps(actor, out) {
     return value;
 }
 
-// wgf: call wgf_ecs_get_event_count
-/**
- * Events waiting, and the oldest taken off the queue into `out`, four ints each (the
- * event, then the three above), as many whole events as fit in `count` ints, returning how
- * many ints it filled.
- */
-export function wgf_ecs_get_event_count() {
-    const value = host["_wgf_ecs_get_event_count"]();
-    return value;
-}
-
-// wgf: call wgf_ecs_take_events
-/**
- * Events waiting, and the oldest taken off the queue into `out`, four ints each (the
- * event, then the three above), as many whole events as fit in `count` ints, returning how
- * many ints it filled.
- */
-export function wgf_ecs_take_events(out) {
-    const outPointer = arrayOut(out, 0);
-    const value = host["_wgf_ecs_take_events"](outPointer, lengthOf(out));
-    arrayBack(outPointer, out, "HEAP32");
-    return value;
-}
-
-// wgf: call wgf_ecs_get_count
-/**
- * How many actors have a component or a behavior.
- */
-export function wgf_ecs_get_count() {
-    const value = host["_wgf_ecs_get_count"]();
-    return value;
-}
-
-// wgf: call wgf_ecs_find_behavior
-/**
- * The actors with a behavior named `name`, oldest first (by when their first component or
- * behavior came), into `out`, as many as fit in `count`, returning how many it filled;
- * and how many there are, to size `out`. An actor with two of the name is one actor.
- * Found by an index of each name and component, never by a look at every actor.
- */
-export function wgf_ecs_find_behavior(name, out) {
-    const mark = host["stackSave"]();
-    const outPointer = arrayOut(out, 0);
-    const value = host["_wgf_ecs_find_behavior"](cstr(name), outPointer, lengthOf(out));
-    arrayBack(outPointer, out, "HEAPU32");
-    host["stackRestore"](mark);
-    return value;
-}
-
-// wgf: call wgf_ecs_count_behavior
-/**
- * The actors with a behavior named `name`, oldest first (by when their first component or
- * behavior came), into `out`, as many as fit in `count`, returning how many it filled;
- * and how many there are, to size `out`. An actor with two of the name is one actor.
- * Found by an index of each name and component, never by a look at every actor.
- */
-export function wgf_ecs_count_behavior(name) {
-    const mark = host["stackSave"]();
-    const value = host["_wgf_ecs_count_behavior"](cstr(name));
-    host["stackRestore"](mark);
-    return value;
-}
-
-// wgf: call wgf_ecs_find_component
-/**
- * The actors with a component, oldest first, the same way; NONE, or a value that isn't a
- * component, finds none.
- */
-export function wgf_ecs_find_component(component, out) {
-    const outPointer = arrayOut(out, 0);
-    const value = host["_wgf_ecs_find_component"](component, outPointer, lengthOf(out));
-    arrayBack(outPointer, out, "HEAPU32");
-    return value;
-}
-
-// wgf: call wgf_ecs_count_component
-/**
- * The actors with a component, oldest first, the same way; NONE, or a value that isn't a
- * component, finds none.
- */
-export function wgf_ecs_count_component(component) {
-    const value = host["_wgf_ecs_count_component"](component);
-    return value;
-}
-
-// wgf: call wgf_ecs_clear
-/**
- * Every actor with a component or a behavior destroyed, with everything under it, oldest
- * first.
- */
-export function wgf_ecs_clear() {
-    host["_wgf_ecs_clear"]();
-}
-
-// wgf: call wgf_ecs_dump
-/**
- * The simulated actors as a scene's text (wgf_scene.h's format): each top one -- an actor
- * with a component or a behavior whose parent has none -- oldest first, as a `actor`
- * block, with its kind, its transform, its components, its behaviors, and the actors under
- * it, as they are now, so loading it as a scene and instantiating it makes the same actors
- * again. libwgf's to keep: valid until the next dump. "" when no actor ever had a
- * component or a behavior.
- */
-export function wgf_ecs_dump() {
-    const value = host["_wgf_ecs_dump"]();
-    return str(value);
-}
-
 // wgf: call wgf_lifetime_set_seconds
 /**
  * Seconds left from now. False for an actor without a lifetime, or a time below 0 or
@@ -6787,28 +6759,15 @@ export function wgf_scene_instantiate(scene, parent) {
     return value;
 }
 
-// wgf: call wgf_scene_spawn
+// wgf: call wgf_scene_find_prefab
 /**
- * Make one tree of the prefab `name` under `parent`: its top actor; 0 for a scene that
- * isn't READY, a prefab it doesn't have, or a `parent` that isn't an actor.
+ * The prefab `name` of a READY scene, to spawn: the same handle each time it is asked
+ * for. 0 for a scene that isn't READY, or a prefab it doesn't have. A released scene's
+ * prefabs go with it (their handles stale).
  */
-export function wgf_scene_spawn(scene, name, parent) {
+export function wgf_scene_find_prefab(scene, name) {
     const mark = host["stackSave"]();
-    const value = host["_wgf_scene_spawn"](scene, cstr(name), parent);
-    host["stackRestore"](mark);
-    return value >>> 0;
-}
-
-// wgf: call wgf_scene_spawn_at
-/**
- * The same, its top actor placed at (x, y, z) in `parent`'s space and turned `angle`
- * radians about its stage's up -- y on a 3D stage, z otherwise -- its other angles and its
- * scale the prefab's, then snapped: drawn there from its first frame, and what it bursts
- * as it is made (an emitter's `burst=`) starts there.
- */
-export function wgf_scene_spawn_at(scene, name, parent, x, y, z, angle) {
-    const mark = host["stackSave"]();
-    const value = host["_wgf_scene_spawn_at"](scene, cstr(name), parent, x, y, z, angle);
+    const value = host["_wgf_scene_find_prefab"](scene, cstr(name));
     host["stackRestore"](mark);
     return value >>> 0;
 }
@@ -6853,6 +6812,85 @@ export function wgf_scene_has_prefab(scene, name) {
     const value = host["_wgf_scene_has_prefab"](scene, cstr(name));
     host["stackRestore"](mark);
     return value !== 0;
+}
+
+// wgf: call wgf_prefab_spawn
+/**
+ * Make one tree of the prefab under `parent` (0: none): its top actor, each actor as the
+ * file says, each behavior's CREATED raised, and its references found. 0 for a prefab
+ * that isn't one (or whose scene went), or a `parent` that isn't an actor.
+ */
+export function wgf_prefab_spawn(prefab, parent) {
+    const value = host["_wgf_prefab_spawn"](prefab, parent);
+    return value >>> 0;
+}
+
+// wgf: call wgf_prefab_spawn_at
+/**
+ * The same, its top actor placed at (x, y, z) in `parent`'s space and turned `angle`
+ * radians about its stage's up -- y on a 3D stage, z otherwise -- its other angles and its
+ * scale the prefab's, then snapped: drawn there from its first frame, and what it bursts
+ * as it is made (an emitter's `burst=`) starts there.
+ */
+export function wgf_prefab_spawn_at(prefab, parent, x, y, z, angle) {
+    const value = host["_wgf_prefab_spawn_at"](prefab, parent, x, y, z, angle);
+    return value >>> 0;
+}
+
+// wgf: call wgf_world_get_event_count
+/**
+ * Events waiting, and the oldest taken off the queue into `out`, four ints each (the
+ * event, then the three above), as many whole events as fit in `count` ints, returning how
+ * many ints it filled.
+ */
+export function wgf_world_get_event_count() {
+    const value = host["_wgf_world_get_event_count"]();
+    return value;
+}
+
+// wgf: call wgf_world_take_events
+/**
+ * Events waiting, and the oldest taken off the queue into `out`, four ints each (the
+ * event, then the three above), as many whole events as fit in `count` ints, returning how
+ * many ints it filled.
+ */
+export function wgf_world_take_events(out) {
+    const outPointer = arrayOut(out, 0);
+    const value = host["_wgf_world_take_events"](outPointer, lengthOf(out));
+    arrayBack(outPointer, out, "HEAP32");
+    return value;
+}
+
+// wgf: call wgf_actor_get_count
+/**
+ * How many actors have a component or a behavior: the simulated ones.
+ */
+export function wgf_actor_get_count() {
+    const value = host["_wgf_actor_get_count"]();
+    return value;
+}
+
+// wgf: call wgf_world_clear
+/**
+ * Every actor with a component or a behavior destroyed, with everything under it, oldest
+ * first.
+ */
+export function wgf_world_clear() {
+    host["_wgf_world_clear"]();
+}
+
+// wgf: call wgf_world_dump
+/**
+ * The simulated actors as a scene's text (wgf_scene.h's format): each top one -- an actor
+ * with a component or a behavior whose parent has none -- oldest first, as a `actor`
+ * block, with its kind, its transform, its components, its behaviors, and the actors under
+ * it, as they are now, so loading it as a scene and instantiating it makes the same actors
+ * again. libwgf's to keep: valid until the next dump. "" when no actor ever had a
+ * component or a behavior.
+ */
+export function wgf_world_dump() {
+    const value = host["_wgf_world_dump"]();
+    return str(value);
 }
 
 // wgf: call wgf_ui_begin

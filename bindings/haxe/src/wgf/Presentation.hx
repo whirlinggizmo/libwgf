@@ -11,6 +11,20 @@ class Presentation {
 		return Raw.wgf_presentation_get_mode();
 
 	/**
+	    The bars (FIT and INTEGER): the framebuffer outside the visible area, which nothing is
+	    drawn in. Default: black.
+	**/
+	public static inline function setBarColor(color:Int):Void
+		Raw.wgf_presentation_set_bar_color(color);
+
+	/**
+	    The bars (FIT and INTEGER): the framebuffer outside the visible area, which nothing is
+	    drawn in. Default: black.
+	**/
+	public static inline function getBarColor():Int
+		return Raw.wgf_presentation_get_bar_color();
+
+	/**
 	    The design resolution; the window's logical size under NONE.
 	**/
 	public static inline function getWidth():Int

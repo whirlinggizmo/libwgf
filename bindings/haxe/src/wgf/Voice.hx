@@ -9,6 +9,10 @@ abstract Voice(Int) from Int to Int to wgf.Handle {
 	public inline function isNone():Bool
 		return this == 0;
 
+	/** Whether this refers to something alive: false for none, and for what was destroyed or released (wgf_handle_is_alive). Ask it first where a handle may be dead. **/
+	public inline function isAlive():Bool
+		return (this : Handle).isAlive();
+
 	/**
 	    A voice of `sound` (0 for none yet: set_sound later), STOPPED, at volume 1, pitch 1,
 	    pan 0, not looping; it holds a reference to the sound. 0 for a handle that isn't a

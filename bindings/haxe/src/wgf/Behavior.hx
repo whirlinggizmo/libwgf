@@ -6,7 +6,7 @@ package wgf;
 	`behavior name=...` lines), several of one name too; the runtime makes one of these for
 	each as the ecs says it was added, tells it of its actor's triggers, runs its tick and
 	frame before the program's, and ends it when it is removed or its actor goes -- all from
-	the ecs's events, taken each tick and frame (wgf.Ecs.takeEvents): nothing in C calls a
+	the ecs's events, taken each tick and frame (wgf.World.takeEvents): nothing in C calls a
 	behavior.
 	```haxe
 	class Rock extends Behavior {
@@ -96,7 +96,7 @@ class Behavior {
 	/**
 		A behavior name used only as a tag: no class, no object made, and no warning, as
 		an actor's behavior of a name never registered gets. The actors with it are
-		found by name (`Ecs.findBehavior`, `actor.findBehavior`): a bullet, a pickup.
+		found by name (`Actor.findWithBehavior`, `actor.findBehavior`): a bullet, a pickup.
 	**/
 	public static function tag(name:String):Void
 		tags.set(name, true);
@@ -125,27 +125,26 @@ class Behavior {
 	/** The ecs's events since the last time: behaviors made, told, and ended. **/
 	public static function poll():Void {
 		while (true) {
-			final n = Ecs.takeEvents(events);
+			final n = World.takeEvents(events);
 			if (n == 0)
 				break;
 			var i = 0;
 			while (i < n) {
-				final kind:EcsEvent = events[i], actor:Actor = events[i + 1], second = events[i + 2], layer = events[i + 3];
+				final kind:WorldEvent = events[i], actor:Actor = events[i + 1], second = events[i + 2], layer = events[i + 3];
 				i += 4;
 				switch kind {
-					case EcsEvent.CREATED:
+					case WorldEvent.CREATED:
 						make(actor, second);
-					case EcsEvent.DESTROYED:
+					case WorldEvent.DESTROYED:
 						end(actor, second);
-					case EcsEvent.TRIGGER_ENTER | EcsEvent.TRIGGER_EXIT:
+					case WorldEvent.TRIGGER_ENTER | WorldEvent.TRIGGER_EXIT:
 						final list = live.get(actor);
 						if (list != null)
 							for (behavior in list.copy()) {
 								// one destroyed by a behavior told earlier in the batch: dropped
-								if (!liveNow(behavior) || actor.getKind() == ActorKind.NONE
-									|| (second : Actor).getKind() == ActorKind.NONE)
+								if (!liveNow(behavior) || !actor.isAlive() || !(second : Actor).isAlive())
 									break;
-								if (kind == EcsEvent.TRIGGER_ENTER)
+								if (kind == WorldEvent.TRIGGER_ENTER)
 									behavior.onTriggerEnter(second, layer);
 								else
 									behavior.onTriggerExit(second, layer);
@@ -157,6 +156,8 @@ class Behavior {
 	}
 
 	static function make(actor:Actor, id:Int):Void {
+		if (!actor.isAlive())
+			return; // gone again before this poll: its DESTROYED follows
 		final name = (actor : BehaviorComponent).getName(id);
 		if (name == "")
 			return; // gone again before this poll: its DESTROYED follows

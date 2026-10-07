@@ -61,12 +61,13 @@ static parked_t *parked;
 static int parked_count;
 static int parked_capacity;
 
-static font_t *font_of(wgf_handle_t font)
+static font_t *font_of_at(wgf_handle_t font, const char *caller)
 {
     uint16_t index;
-    if (!pool_ready || !wgf_core_priv_handle_pool_resolve(&font_pool, font, &index)) return NULL;
+    if (!pool_ready || !wgf_core_priv_handle_pool_resolve_at(&font_pool, font, &index, caller)) return NULL;
     return &fonts[index];
 }
+#define font_of(...) font_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
 /* The fontstash font to draw `font` with: its own when ready, else the default's,
  * else the built-in one. */

@@ -8,7 +8,7 @@
 #include "wgf_stage2d.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
-#include "wgf_ecs.h"
+#include "wgf_world.h"
 #include "wgf_component.h"
 #include "wgf_keyboard.h"
 #include "wgf_log.h"
@@ -31,6 +31,7 @@
 
 static wgf_actor_t world, ship;
 static wgf_scene_t scene;
+static wgf_prefab_t spark_prefab;
 static bool made;
 static float spawn_clock;
 
@@ -48,10 +49,10 @@ static void init(void *user)
 static void read_events(void)
 {
     int events[4 * 64], n, i;
-    while ((n = wgf_ecs_take_events(events, 4 * 64)) > 0) {
+    while ((n = wgf_world_take_events(events, 4 * 64)) > 0) {
         for (i = 0; i < n; i += 4) {
             const wgf_actor_t actor = (wgf_actor_t)events[i + 1];
-            if (events[i] == WGF_ECS_EVENT_TRIGGER_ENTER && wgf_actor_find_behavior(actor, "Rock") != 0) {
+            if (events[i] == WGF_WORLD_EVENT_TRIGGER_ENTER && wgf_actor_find_behavior(actor, "Rock") != 0) {
                 wgf_shape2d_set_color(actor, wgf_color_make(255, 90, 80, 255)); /* a rock is a shape */
             }
         }
@@ -68,6 +69,7 @@ static void frame(void *user)
         made = true;
         wgf_scene_instantiate(scene, world);
         ship = wgf_stage2d_find(world, "ship"); /* found once, its handle kept */
+        spark_prefab = wgf_scene_find_prefab(scene, "spark"); /* and the prefab it sparks */
     } else if (status == WGF_RESOURCE_STATUS_FAILED && !made) {
         made = true;
         wgf_log_message(WGF_LOG_LEVEL_ERROR, "ecs-scene: scenes/field.scene failed to load (see above)");
@@ -77,10 +79,8 @@ static void frame(void *user)
         while (ship != 0 && spawn_clock > 0.05f) {
             const wgf_vec3_t at = wgf_actor_get_position(ship);
             const float angle = wgf_random_get_range(0.0f, 6.2831853f), speed = wgf_random_get_range(80, 220);
-            const wgf_actor_t spark = wgf_scene_spawn(scene, "spark", world);
+            const wgf_actor_t spark = wgf_prefab_spawn_at(spark_prefab, world, at.x, at.y, 0, 0); /* drawn here at once */
             spawn_clock -= 0.05f;
-            wgf_actor_set_position(spark, at.x, at.y, 0);
-            wgf_actor_snap(spark); /* made here: drawn here, not swept from the origin */
             wgf_motion_set_velocity(spark, cosf(angle) * speed, sinf(angle) * speed, 0);
         }
         read_events();

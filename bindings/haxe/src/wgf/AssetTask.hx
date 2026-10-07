@@ -9,6 +9,10 @@ abstract AssetTask(Int) from Int to Int to wgf.Handle {
 	public inline function isNone():Bool
 		return this == 0;
 
+	/** Whether this refers to something alive: false for none, and for what was destroyed or released (wgf_handle_is_alive). Ask it first where a handle may be dead. **/
+	public inline function isAlive():Bool
+		return (this : Handle).isAlive();
+
 	/**
 	    A task's status: a file's, a group's, or a ping's; NONE for anything that isn't one.
 	    It changes only in an update, so a frame reading it sees each change once.

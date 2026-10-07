@@ -16,11 +16,12 @@
 
 #define MAX_STRIP_POINTS 65536
 
-static wgf_gfx_priv_actor_t *shape_of(wgf_actor_t shape)
+static wgf_gfx_priv_actor_t *shape_of_at(wgf_actor_t shape, const char *caller)
 {
-    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(shape);
+    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of_at(shape, caller);
     return actor_ptr != NULL && actor_ptr->type == WGF_ACTOR_KIND_SHAPE3D ? actor_ptr : NULL;
 }
+#define shape_of(...) shape_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
 /* A 3D shape let go of: its line strip's points. */
 static void shape3d_free(wgf_actor_t shape, wgf_gfx_priv_actor_t *actor_ptr)

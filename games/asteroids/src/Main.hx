@@ -22,6 +22,11 @@ class Main {
 
 	public static var world:Stage2d;
 	public static var scene:Scene;
+	// the scene's prefabs, found once it has loaded and kept: what is spawned, with no lookup
+	public static var rockPrefabs:Array<Prefab> = [];
+	public static var bulletPrefab:Prefab = 0;
+	public static var explosionPrefab:Prefab = 0;
+	static var shipPrefab:Prefab = 0;
 	public static var sounds:Sounds;
 	public static var state = State.TITLE;
 	public static var score = 0;
@@ -38,7 +43,7 @@ class Main {
 		Window.setTitle("Asteroids");
 		// the design the game is written in, fitted to any window or screen, bars around it
 		Presentation.set(PresentationMode.FIT, WIDTH, HEIGHT);
-		Render.setBarColor(Color.make(2, 3, 6, 255));
+		Presentation.setBarColor(Color.make(2, 3, 6, 255));
 		Runtime.run(init, tick, frame, null);
 	}
 
@@ -63,7 +68,7 @@ class Main {
 
 	/** A new game: the rocks of the title cleared, the ship made, the first wave. **/
 	public static function start() {
-		Ecs.clear();
+		World.clear();
 		score = 0;
 		lives = 3;
 		wave = 0;
@@ -76,7 +81,7 @@ class Main {
 	}
 
 	static function spawnShip() {
-		ship = scene.spawnAt("ship", world, WIDTH / 2, HEIGHT / 2, 0, 0);
+		ship = shipPrefab.spawnAt(world, WIDTH / 2, HEIGHT / 2, 0, 0);
 	}
 
 	/** The ship was hit: a life lost, and the next ship in a while, or the game over. **/
@@ -107,7 +112,7 @@ class Main {
 
 	/** The title's drifting rocks, behind its menu. **/
 	static function titleField() {
-		Ecs.clear();
+		World.clear();
 		for (_ in 0...6)
 			Rock.spawn(RockSize.LARGE, Random.getRange(0, WIDTH), Random.getRange(0, HEIGHT));
 	}
@@ -131,7 +136,7 @@ class Main {
 				if (respawnDelay <= 0)
 					spawnShip();
 			}
-			if (Ecs.countBehavior("Rock") == 0) {
+			if (Actor.countWithBehavior("Rock") == 0) {
 				waveDelay += dt;
 				if (waveDelay > 1.5) {
 					waveDelay = 0;
@@ -153,6 +158,10 @@ class Main {
 	static function frame() {
 		if (!ready && Resource.getStatus(scene) == ResourceStatus.READY) {
 			ready = true;
+			rockPrefabs = [for (name in ["rock_large", "rock_medium", "rock_small"]) scene.prefab(name)];
+			bulletPrefab = scene.prefab("bullet");
+			explosionPrefab = scene.prefab("explosion");
+			shipPrefab = scene.prefab("ship");
 			titleField();
 			Ui.setFocus("play");
 		}

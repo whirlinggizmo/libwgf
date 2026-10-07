@@ -12,7 +12,7 @@ package wgf;
                DPI scale), and the visible area is the window
       STRETCH  the design scaled to the window on each axis apart, its aspect lost
       FIT      scaled alike on both axes, as large as it fits whole, centered; the rest
-               are bars (wgf_render_set_bar_color), nothing drawn in them
+               are bars (wgf_presentation_set_bar_color), nothing drawn in them
       FILL     scaled alike, as small as covers the window, centered; what is past the
                window's edges is cropped
       EXPAND   scaled as FIT is, but the visible area grows past the design to the

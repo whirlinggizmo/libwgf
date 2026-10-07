@@ -126,7 +126,7 @@ int wgf_window_get_height(void)
                  0.5f);
 }
 
-bool wgf_window_set_fullscreen(bool fullscreen)
+bool wgf_window_request_fullscreen(bool fullscreen)
 {
     if (!window.open) {
         window.fullscreen = fullscreen;

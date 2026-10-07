@@ -228,6 +228,155 @@ def outputs(binding, version, stamp, skipped):
     return {BINDING / 'wgf.js': js, BINDING / 'wgf.d.ts': dts}
 
 
+TYPED = 'wgf-typed'
+
+
+def typed_outputs(members, handle_types, enums, extras, docs):
+    """{path: text} for wgf-typed.js and wgf-typed.d.ts: the typed layer, beside the raw
+    one, in the typed Haxe API's names (Actor.setPosition, Prefab.spawnAt, World.takeEvents).
+    Each type is a frozen namespace of the raw binding's own functions -- no wrapper, so
+    nothing allocates and nothing costs a call -- taking the handle first where the raw
+    call does; each handle kind is also a type, the raw binding's branded one, so an actor
+    can't go where a prefab does; each enum an object of its values, literal numbers. Every
+    member starts with a `// wgf: call` line naming the raw calls it reaches, so a program's
+    copy can be trimmed to what it names (trim_typed)."""
+    js = [f'// {MARK}\n// libwgf\'s typed JS layer (bindings/js/README.md): the raw binding\'s calls (wgf.js) in the '
+          'typed Haxe API\'s names.\n\nimport * as raw from "./wgf.js";\n'
+          '/** The host handed over, as the raw binding takes it: a program on this layer imports nothing else. */\n'
+          'export { attach, isAttached } from "./wgf.js";\n']
+    dts = [f'// {MARK}\n\nimport * as raw from "./wgf.js";\nexport {{ attach, isAttached }} from "./wgf.js";\n']
+    for haxe in sorted(set(members) | set(extras) | set(handle_types)):
+        entries = members.get(haxe, [])
+        js.append(f'{SECTION}typed {haxe}\nexport const {haxe} = Object.freeze({{\n')
+        if haxe in handle_types:
+            dts.append(f'/** A handle of kind {handle_types[haxe]}: the raw binding\'s branded type. */\n'
+                       f'export type {haxe} = raw.{handle_types[haxe]};\n')
+        dts.append(f'export declare const {haxe}: {{\n')
+        for member, cname in entries:
+            doc = docs.get(cname, '')
+            js.append(f'    {SECTION}call {cname}\n    {member}: raw.{cname},\n')
+            dts.append(''.join('    ' + line + '\n' for line in jsdoc(doc).splitlines()) if doc else '')
+            dts.append(f'    readonly {member}: typeof raw.{cname};\n')
+        if haxe in handle_types and haxe != 'Handle':
+            js.append(f'    {SECTION}call wgf_handle_is_alive\n    isAlive: raw.wgf_handle_is_alive,\n')
+            dts.append(f'    /** Whether the handle refers to something alive (wgf_handle_is_alive). */\n'
+                       f'    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;\n')
+        if haxe in extras:
+            member, doc, calls, body, signature = extras[haxe]
+            js.append(f'    {SECTION}call {" ".join(calls)}\n    {body},\n')
+            dts.append(''.join('    ' + line + '\n' for line in jsdoc(doc).splitlines()) + f'    readonly {member}: {signature};\n')
+        js.append('});\n')
+        dts.append('};\n')
+    for haxe, (cname, values) in sorted(enums.items()):
+        js.append(f'{SECTION}enum {haxe}\nexport const {haxe} = Object.freeze({{ '
+                  + ', '.join(f'{short}: {v}' for short, v, _ in values) + ' });\n')
+        dts.append(f'export type {haxe} = raw.{cname};\n'
+                   f'export declare const {haxe}: {{ ' + ' '.join(f'readonly {short}: {haxe};' for short, _, _ in values)
+                   + ' };\n')
+    return {BINDING / f'{TYPED}.js': ''.join(js), BINDING / f'{TYPED}.d.ts': ''.join(dts)}
+
+
+def typed_names_in(program, typed):
+    """The typed layer's members a program names (`Actor.setPosition`), read from its text
+    as a type, a dot, and a member, and the raw calls they reach: (members as
+    (type, member), calls). `typed` is wgf-typed.js's text."""
+    layout, current = {}, None
+    pending = None
+    for line in typed.splitlines():
+        stripped = line.strip()
+        if stripped.startswith(SECTION + 'typed ') or stripped.startswith(SECTION + 'enum '):
+            current = stripped.split()[-1]
+            layout.setdefault(current, {})
+            if stripped.startswith(SECTION + 'enum '):
+                pending = 'enum'
+        elif pending == 'enum' and current is not None:  # its one line: each value a member, reaching no call
+            body = stripped.split('({', 1)[1].rsplit('})', 1)[0]
+            layout[current] = {pair.split(':')[0].strip(): [] for pair in body.split(',') if ':' in pair}
+            pending = None
+        elif stripped.startswith(SECTION + 'call '):
+            pending = stripped[len(SECTION + 'call '):].split()
+        elif pending is not None and current is not None:
+            layout[current][stripped.split(':', 1)[0].split('(', 1)[0].strip()] = pending
+            pending = None
+    used, calls = set(), set()
+    words, word, last = [], [], ''
+    for ch in program + ' ':
+        if ch.isalnum() or ch == '_':
+            word.append(ch)
+            continue
+        if word:
+            words.append((''.join(word), ch))
+            word = []
+        elif ch == '.':
+            words.append(('', '.'))
+    for (a, sep), (b, _) in zip(words, words[1:]):
+        if sep == '.' and a in layout and b in layout[a]:
+            used.add((a, b))
+            calls.update(layout[a][b])
+    return used, calls
+
+
+def trim_typed(typed, used):
+    """wgf-typed.js with only the members `used` names ((type, member), as typed_names_in
+    gives them): the types holding none of them left out, and each enum cut to the values
+    named."""
+    keep_types = {a for a, _ in used}
+    out, keep_type, in_head = [], False, True
+    lines = typed.splitlines()
+    i = 0
+    while i < len(lines):
+        line, stripped = lines[i], lines[i].strip()
+        if in_head and not stripped.startswith(SECTION):  # the import and the re-export, before the first type
+            if stripped and not stripped.startswith('//') and not stripped.startswith('/*'):
+                out.append(line)
+            i += 1
+            continue
+        in_head = False
+        if stripped.startswith(SECTION + 'enum '):
+            name = stripped.split()[-1]
+            if name in keep_types:  # its values the program names, alone
+                body = lines[i + 1].split('({', 1)[1].rsplit('})', 1)[0]
+                kept = [pair.strip() for pair in body.split(',') if (name, pair.split(':')[0].strip()) in used]
+                out.append(f'export const {name} = Object.freeze({{ {", ".join(kept)} }});')
+            keep_type = False
+            i += 2
+            continue
+        if stripped.startswith(SECTION + 'typed '):
+            name = stripped.split()[-1]
+            keep_type = name in keep_types
+            i += 1
+            continue
+        if not keep_type:
+            i += 1
+            continue
+        if stripped.startswith(SECTION + 'call '):
+            member = lines[i + 1].strip().split(':', 1)[0].split('(', 1)[0].strip()
+            j = i + 1
+            depth = 0
+            while True:  # the member's lines, to its closing comma at depth 0
+                depth += lines[j].count('{') - lines[j].count('}')
+                if depth <= 0 and lines[j].rstrip().endswith(','):
+                    break
+                j += 1
+            if (current_type(lines, i), member) in used:
+                out.extend(lines[i + 1:j + 1])
+            i = j + 1
+            continue
+        if not stripped.startswith('//'):
+            out.append(line)
+        i += 1
+    return '\n'.join(out) + '\n'
+
+
+def current_type(lines, at):
+    """The typed section a line is in."""
+    for line in reversed(lines[:at]):
+        stripped = line.strip()
+        if stripped.startswith(SECTION + 'typed ') or stripped.startswith(SECTION + 'enum '):
+            return stripped.split()[-1]
+    return None
+
+
 def trim(text, names, constants=False):
     """wgf.js with only the calls `names` lists (C names, with or without the host's
     leading _), and no comments: a release program's copy. Its enums too when

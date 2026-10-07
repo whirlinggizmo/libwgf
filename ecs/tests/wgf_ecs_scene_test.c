@@ -9,7 +9,7 @@
 #include "wgf_collider.h"
 #include "wgf_color.h"
 #include "wgf_core_priv.h"
-#include "wgf_ecs.h"
+#include "wgf_world.h"
 #include "wgf_component.h"
 #include "wgf_fs.h"
 #include "wgf_lifetime.h"
@@ -134,9 +134,9 @@ int main(void)
     wgf_resource_release(field);
 
     /* instantiated */
-    wgf_ecs_take_events(NULL, 0);
+    wgf_world_take_events(NULL, 0);
     expect(wgf_scene_instantiate(field, 12345) == 0, "a parent that isn't an actor is refused");
-    expect(wgf_scene_instantiate(field, stage) == 2 && wgf_ecs_get_count() == 2, "both made");
+    expect(wgf_scene_instantiate(field, stage) == 2 && wgf_actor_get_count() == 2, "both made");
     ship = wgf_actor_find(stage, "ship");
     expect(ship != 0 && wgf_actor_get_parent(ship) == stage && wgf_actor_get_kind(ship) == WGF_ACTOR_KIND_SHAPE2D,
            "the ship, a shape, under the stage");
@@ -152,7 +152,7 @@ int main(void)
     }
     {
         wgf_actor_t rocks[4];
-        expect(wgf_ecs_find_behavior("Rock", rocks, 4) == 1 && wgf_ecs_count_behavior("Rock") == 1, "one rock");
+        expect(wgf_actor_find_with_behavior("Rock", rocks, 4) == 1 && wgf_actor_count_with_behavior("Rock") == 1, "one rock");
         rock = rocks[0];
     }
     expect(near(wgf_motion_get_velocity(rock).y, -20) && wgf_bounds_get_margin(rock) == 30 &&
@@ -170,27 +170,33 @@ int main(void)
     expect(wgf_actor_get_kind(wgf_actor_find(rock, "dust")) == WGF_ACTOR_KIND_EMITTER2D, "the prefab's actor inside it");
     {
         int out[4 * 8];
-        expect(wgf_ecs_take_events(out, 4 * 8) == 8 && out[0] == WGF_ECS_EVENT_CREATED && (wgf_actor_t)out[1] == rock &&
+        expect(wgf_world_take_events(out, 4 * 8) == 8 && out[0] == WGF_WORLD_EVENT_CREATED && (wgf_actor_t)out[1] == rock &&
                    out[6] == 2,
                "CREATED raised for each behavior");
     }
 
     /* spawned */
-    small = wgf_scene_spawn(field, "small_rock", stage);
+    small = wgf_prefab_spawn(wgf_scene_find_prefab(field, "small_rock"), stage);
     expect(small != 0 && wgf_collider_get_radius(small) == 8 && wgf_collider_get_layer(small) == 2 &&
                wgf_behavior_get_param_number(small, wgf_actor_find_behavior(small, "Spinner"), "size") == 1 &&
                wgf_behavior_get_param_number(small, wgf_actor_find_behavior(small, "Rock"), "size") == 3 &&
                wgf_actor_find(small, "dust") != 0,
            "a prefab from another: its lines over the other's, `behavior` without a name the last one's, its tree");
-    expect(wgf_scene_spawn(field, "nothing", stage) == 0 && wgf_scene_spawn(12345, "rock", stage) == 0,
+    expect(wgf_scene_find_prefab(field, "nothing") == 0 && wgf_scene_find_prefab(12345, "rock") == 0 &&
+               wgf_prefab_spawn(0, stage) == 0 && wgf_prefab_spawn(12345, stage) == 0,
            "a prefab it hasn't, or a scene that isn't one, is refused");
-    expect(wgf_ecs_count_behavior("Rock") == 2, "two rocks");
+    expect(wgf_actor_count_with_behavior("Rock") == 2, "two rocks");
     {
-        const wgf_actor_t placed = wgf_scene_spawn_at(field, "rock", stage, 30, 40, 0, 1.25f);
+        const wgf_prefab_t rock_prefab = wgf_scene_find_prefab(field, "rock");
+        const wgf_actor_t placed = wgf_prefab_spawn_at(rock_prefab, stage, 30, 40, 0, 1.25f);
         expect(near(wgf_actor_get_position(placed).x, 30) && near(wgf_actor_get_position(placed).y, 40) &&
-                   near(wgf_actor_get_rotation(placed).z, 1.25f) && wgf_ecs_count_behavior("Rock") == 3,
+                   near(wgf_actor_get_rotation(placed).z, 1.25f) && wgf_actor_count_with_behavior("Rock") == 3,
                "spawned at a place, turned about z on a 2D stage");
-        expect(wgf_scene_spawn_at(field, "nothing", stage, 0, 0, 0, 0) == 0, "and refused as a spawn is");
+        expect(wgf_prefab_spawn_at(0, stage, 0, 0, 0, 0) == 0 && wgf_prefab_spawn_at(rock_prefab, 12345, 0, 0, 0, 0) == 0,
+               "and refused as a spawn is");
+        expect(rock_prefab != 0 && wgf_scene_find_prefab(field, "rock") == rock_prefab &&
+                   strcmp(wgf_handle_get_kind_name(rock_prefab), "ecs.prefab") == 0,
+               "a prefab is a handle of its own, the same each time it is found");
         wgf_actor_destroy(placed, WGF_ACTOR_DESTROY_CHILDREN);
     }
 
@@ -198,20 +204,25 @@ int main(void)
     {
         char dumped[16384];
         wgf_scene_t again;
-        snprintf(dumped, sizeof(dumped), "%s", wgf_ecs_dump());
+        snprintf(dumped, sizeof(dumped), "%s", wgf_world_dump());
         expect(strncmp(dumped, "wgf-scene 2\n", 12) == 0, "the dump is a scene");
-        wgf_ecs_clear();
+        wgf_world_clear();
         again = load("scenes/dumped.scene", dumped);
         expect(wgf_resource_get_status(again) == WGF_RESOURCE_STATUS_READY, "it loads");
         expect(wgf_scene_instantiate(again, stage) == 3, "the three made again");
-        expect(strcmp(wgf_ecs_dump(), dumped) == 0, "dumped again: the same text");
+        expect(strcmp(wgf_world_dump(), dumped) == 0, "dumped again: the same text");
         ship = wgf_actor_find(stage, "ship");
-        expect(near(wgf_actor_get_position(ship).x, 400) && wgf_ecs_count_behavior("Rock") == 2 &&
+        expect(near(wgf_actor_get_position(ship).x, 400) && wgf_actor_count_with_behavior("Rock") == 2 &&
                    wgf_actor_get_kind(wgf_actor_find(ship, "label")) == WGF_ACTOR_KIND_TEXT,
                "the same actors");
         wgf_resource_release(again);
     }
-    wgf_resource_release(field);
+    {
+        const wgf_prefab_t rock_prefab = wgf_scene_find_prefab(field, "rock");
+        wgf_resource_release(field);
+        expect(rock_prefab != 0 && wgf_prefab_spawn(rock_prefab, stage) == 0,
+               "a released scene's prefabs go with it: their handles stale");
+    }
 
     /* references: by a name on the stage, a path from one, from the actor and its parent,
        found once as the scene's actors are all made (a later one too), and again when spawned */
@@ -219,7 +230,7 @@ int main(void)
         wgf_scene_t track;
         wgf_actor_t car, gate, wheel, smoke, spawned;
         int b;
-        wgf_ecs_clear();
+        wgf_world_clear();
         track = load("scenes/track.scene", "wgf-scene 2\n"
                                            "prefab marker\n"
                                            "  behavior name=Marker car=@car self=@. up=@..\n"
@@ -256,7 +267,7 @@ int main(void)
                    wgf_behavior_get_param_actor(wheel, b, "gate") == gate &&
                    wgf_behavior_get_param_actor(wheel, b, "past") == 0,
                "the parent, a path up and down again, and up past the stage: none");
-        spawned = wgf_scene_spawn(track, "marker", smoke);
+        spawned = wgf_prefab_spawn(wgf_scene_find_prefab(track, "marker"), smoke);
         b = wgf_actor_find_behavior(spawned, "Marker");
         expect(wgf_behavior_get_param_actor(spawned, b, "car") == car &&
                    wgf_behavior_get_param_actor(spawned, b, "self") == spawned &&
@@ -270,8 +281,8 @@ int main(void)
         wgf_actor_destroy(gate, WGF_ACTOR_DESTROY_CHILDREN);
         expect(wgf_behavior_get_param_actor(car, wgf_actor_find_behavior(car, "Car"), "gate") == 0,
                "an actor since destroyed: 0");
-        expect(strstr(wgf_ecs_dump(), "gate=\"@start_gate\"") != NULL, "dumped as written");
-        wgf_ecs_clear();
+        expect(strstr(wgf_world_dump(), "gate=\"@start_gate\"") != NULL, "dumped as written");
+        wgf_world_clear();
         wgf_resource_release(track);
     }
 
@@ -281,7 +292,7 @@ int main(void)
         wgf_scene_t garage;
         wgf_actor_t car, world3d, cone;
         wgf_mesh_t cube;
-        wgf_ecs_clear();
+        wgf_world_clear();
         world3d = wgf_stage3d_create();
         garage = load("scenes/garage.scene", "wgf-scene 2\n"
                                              "prefab cone\n"
@@ -292,7 +303,7 @@ int main(void)
                                              "  motion\n"
                                              "end\n");
         expect(wgf_scene_instantiate(garage, stage) == 1, "a model made");
-        cone = wgf_scene_spawn_at(garage, "cone", world3d, 1, 2, 3, 0.25f);
+        cone = wgf_prefab_spawn_at(wgf_scene_find_prefab(garage, "cone"), world3d, 1, 2, 3, 0.25f);
         expect(near(wgf_actor_get_position(cone).z, 3) && near(wgf_actor_get_rotation(cone).y, 0.25f) &&
                    near(wgf_actor_get_rotation(cone).x, 0.5f) && near(wgf_actor_get_scale(cone).x, 2),
                "on a 3D stage, turned about y, its other angle and its scale the prefab's");
@@ -302,8 +313,8 @@ int main(void)
                    wgf_model_get_tint(car) == 0xFF0000FFu,
                "a model: its generated mesh (the same, shared) and its tint");
         wgf_resource_release(cube); /* the reference the comparison took */
-        expect(strstr(wgf_ecs_dump(), "model cube=2,1,4 tint=#FF0000FF") != NULL, "dumped as it was written");
-        wgf_ecs_clear();
+        expect(strstr(wgf_world_dump(), "model cube=2,1,4 tint=#FF0000FF") != NULL, "dumped as it was written");
+        wgf_world_clear();
         wgf_resource_release(garage);
     }
 
@@ -353,7 +364,7 @@ int main(void)
     expect(refused("comment", "wgf-scene 2 # a comment\nactor # here too\n  motion velocity=1,0,0 # and here\nend\n") == false,
            "comments anywhere: not refused");
 
-    wgf_ecs_clear();
+    wgf_world_clear();
     wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
     wgf_gfx_priv_stop();
     wgf_core_priv_shutdown();

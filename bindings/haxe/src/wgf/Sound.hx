@@ -9,6 +9,10 @@ abstract Sound(Int) from Int to Int to wgf.Handle {
 	public inline function isNone():Bool
 		return this == 0;
 
+	/** Whether this refers to something alive: false for none, and for what was destroyed or released (wgf_handle_is_alive). Ask it first where a handle may be dead. **/
+	public inline function isAlive():Bool
+		return (this : Handle).isAlive();
+
 	/**
 	    The sound at `path`, decoded whole as it loads: PENDING at once, then READY, or FAILED
 	    in a later update for a file that is missing or won't decode. The same path again

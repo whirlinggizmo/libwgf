@@ -5,14 +5,16 @@ a browser through it.
     tools/check_js_binding.py [--only STEP[,STEP...]] [--browser PATH]
 
 The steps, in order:
-  generated   tools/gen_binding.py --check: wgf.js and wgf.d.ts current with the headers
+  generated   tools/gen_binding.py --check: wgf.js, wgf-typed.js, and their .d.ts current
   types       the declarations hold up under TypeScript: bindings/js/tests/types.ts
               compiles with --strict, and each mistake it marks @ts-expect-error is
               caught. Needs tsc: TSC naming one, one on PATH, or TypeScript TYPESCRIPT
               in npm's cache
   examples    each JS example (examples/js/<name>/) built as a site on the full web host
               (wasm32-debug), loaded in a headless Chromium-based browser, and flown by
-              its autopilot (example.json's; else 120 frames) to a PASS with no error
+              its autopilot (example.json's; else 120 frames) to a PASS with no error;
+              then again trimmed, as a release export is (its host and both binding
+              layers cut to what it names), so a call the trimming lost is caught
 A step that can't run here (no clang, tsc, Emscripten, or browser) says
 `check_js_binding: SKIPPING <step> (<why>)`, and the last line repeats every skip. Exits 0
 when every step that ran passed. Standard library only.
@@ -76,9 +78,10 @@ def step(name, browser_option):
     except RuntimeError as e:
         return str(e)
     ok = True
-    for example in sorted(p for p in webhost.JS_EXAMPLES.iterdir() if (p / 'main.js').is_file()):
-        site = Path(variants.work(variants.web())) / 'js-examples' / example.name
-        webhost.build_js_example(example, variants.web(), site)
+    for example, trimmed in [(p, cut) for p in sorted(p for p in webhost.JS_EXAMPLES.iterdir()
+                                                      if (p / 'main.js').is_file()) for cut in (False, True)]:
+        site = Path(variants.work(variants.web())) / 'js-examples' / (example.name + ('-trimmed' if trimmed else ''))
+        webhost.build_js_example(example, variants.web(), site, trimmed=trimmed)
         _, autopilot_path = webhost.js_example_config(example)
         autopilot = (autopilot_path.read_text(encoding='utf-8') if autopilot_path
                      else games.frames_autopilot(120))
@@ -88,7 +91,7 @@ def step(name, browser_option):
             if '[ERROR]' in line or 'FAIL' in line or 'uncaught' in line:
                 print(line)
         verdict = {True: 'PASS', False: 'FAIL', None: 'no verdict'}[passed]
-        print(f'check_js_binding: {example.name}: {verdict}'
+        print(f'check_js_binding: {example.name}{" trimmed" if trimmed else ""}: {verdict}'
               + (f' ({autopilot_path.relative_to(ROOT).as_posix()})' if autopilot_path else ' (120 frames)'))
         ok = ok and passed is True
     return ok

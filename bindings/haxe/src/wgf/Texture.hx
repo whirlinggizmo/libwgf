@@ -9,6 +9,10 @@ abstract Texture(Int) from Int to Int to wgf.Handle {
 	public inline function isNone():Bool
 		return this == 0;
 
+	/** Whether this refers to something alive: false for none, and for what was destroyed or released (wgf_handle_is_alive). Ask it first where a handle may be dead. **/
+	public inline function isAlive():Bool
+		return (this : Handle).isAlive();
+
 	/**
 	    A texture from an image file: PNG, JPEG, BMP, TGA, or GIF (its first frame). 0 only
 	    when there is no room for another texture; a path or file that can't be loaded gives

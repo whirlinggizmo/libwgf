@@ -110,7 +110,7 @@ int main(void)
 
     wgf_window_set_size(64, 32);
     wgf_render_set_clear_color(WGF_COLOR_DARKGRAY);
-    wgf_render_set_bar_color(WGF_COLOR_BLUE);
+    wgf_presentation_set_bar_color(WGF_COLOR_BLUE);
     stage = wgf_stage3d_create();
     wgf_stage3d_set_tonemap(stage, WGF_STAGE3D_TONEMAP_NONE, 0.0f);
     camera = wgf_camera3d_create();

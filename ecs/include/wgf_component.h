@@ -12,7 +12,7 @@ extern "C" {
 #endif
 
 /* Components: the simulation's data on an actor -- any actor, of any kind, a 2D stage's UI
- * actors and cameras included -- run each tick by libwgf's systems (wgf_ecs.h). One kind
+ * actors and cameras included -- run each tick by libwgf's systems (wgf_world.h). One kind
  * of object, the actor (SPEC.md), Godot's tree with Unity's components: what an actor draws
  * is its kind (a shape, a sprite, a model); what moves it, bounds it, ages it, and finds
  * what it overlaps are components on it; what the program does with it are its behaviors
@@ -43,6 +43,13 @@ WGF_API bool wgf_actor_has_component(wgf_actor_t actor, wgf_component_t componen
 /* The voice component's voice; 0 for an actor without one. The actor's: play it, never
  * destroy it. */
 WGF_API wgf_voice_t wgf_actor_get_voice(wgf_actor_t actor);
+
+/* The actors with a component, oldest first (by when their first component or behavior
+ * came), into `out`, as many as fit in `count`, returning how many it filled; and how many
+ * there are, to size `out`. Found by an index of each component, never by a look at every
+ * actor; NONE, or a value that isn't a component, finds none. */
+WGF_API int wgf_actor_find_with_component(wgf_component_t component, wgf_actor_t *out, int count);
+WGF_API int wgf_actor_count_with_component(wgf_component_t component);
 
 #ifdef __cplusplus
 }

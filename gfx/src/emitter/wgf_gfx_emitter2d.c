@@ -48,11 +48,12 @@ typedef struct wgf_gfx_priv_emitter_t {
 static wgf_actor_t *emitters;
 static int emitter_count, emitter_capacity;
 
-static wgf_gfx_priv_emitter_t *emitter_of(wgf_actor_t emitter)
+static wgf_gfx_priv_emitter_t *emitter_of_at(wgf_actor_t emitter, const char *caller)
 {
-    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(emitter);
+    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of_at(emitter, caller);
     return actor_ptr != NULL && actor_ptr->type == WGF_ACTOR_KIND_EMITTER2D ? actor_ptr->as.emitter : NULL;
 }
+#define emitter_of(...) emitter_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
 static float random_between(float a, float b)
 {

@@ -7,12 +7,13 @@ libwgf from JavaScript and TypeScript in the browser: one ES module, `wgf.js`, a
 | | |
 |---|---|
 | `wgf.js`, `wgf.d.ts` | every exported C call under its C name, each header comment its JSDoc, and the enums; generated, never edited |
+| `wgf-typed.js`, `wgf-typed.d.ts` | the typed layer: the same calls in the typed Haxe API's names (`Actor.setPosition(actor, ...)`, `Prefab.spawnAt(prefab, ...)`, `World.takeEvents(...)`), each type a frozen namespace of `wgf.js`'s own functions -- no wrappers, so nothing allocates -- each handle kind its branded type (`Actor`, `Prefab`), each enum an object of its values (`KeyboardKey.SPACE`), and `Scene.spawnPrefab`; generated |
 | `src/runtime.js` | how a call crosses into the host and back; put at the top of `wgf.js` |
 | `src/app.js` | `wgf_app_run` for JS, and the version check; put in `wgf.js` after the runtime |
 | `src/wgf.d.ts` | the declarations of what `src/` writes by hand; put in `wgf.d.ts` |
 | `tests/types.ts` | what TypeScript must accept, and the mistakes it must catch (`tools/check_js_binding.py`) |
 
-The examples are `examples/js/`: `hello` (the C `app-hello`, call for call) and `asteroids` (the Haxe game ported, flying the game's own playthrough).
+The examples are `examples/js/`: `hello` (the C `app-hello`, call for call, on the typed layer) and `asteroids` (the Haxe game ported, flying the game's own playthrough, on the raw one).
 
 ## Use
 
@@ -38,6 +39,25 @@ wgf.wgf_app_run(init, null, frame, null);
 `attach` comes first: a call before it throws, naming the call. `wgf_app_run(init, tick, frame, shutdown)` takes JS functions, any of them null; it checks the host is the libwgf the binding was made from (`BUILT_VERSION`, major and minor) and refuses another, saying so. A throw out of a callback is logged and ends the run.
 
 How each kind of value crosses -- text, arrays and typed arrays, bytes, vectors filled into the caller's object or array -- is [docs/BINDINGS.md](../../docs/BINDINGS.md)'s, as is how a handle kind is typed in TypeScript.
+
+Or the same through the typed layer, its names the Haxe binding's:
+
+```js
+import createWgfHost from "./wgf-host.js";
+import { App, Color, ColorStock, Draw, Render, Window, attach } from "./wgf-typed.js";
+
+attach(await createWgfHost({ canvas: document.getElementById("canvas") }));
+function init() {
+    Render.setClearColor(Color.get(ColorStock.RAYWHITE));
+}
+function frame() {
+    Draw.text(0, "hello", 40, 40, 32, Color.get(ColorStock.DARKGRAY));
+}
+Window.setTitle("hello");
+App.run(init, null, frame, null);
+```
+
+Each member is the raw call itself, so it takes what the raw call takes, its handle first (`Actor.setPosition(actor, 1, 2, 3)`), and costs what it costs. In TypeScript an `Actor` can't go where a `Prefab` does. `Scene.spawnPrefab(scene, name, parent, x?, y?, z?, angle?)` finds the prefab and spawns it, placed when a place is given: it looks the prefab up on every call, so a hot path finds it once (`Scene.prefab`) and keeps the handle. A trimmed export keeps the members a program names (`Type.member`), and the calls they reach.
 
 ## Minifying
 

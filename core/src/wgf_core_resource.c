@@ -36,12 +36,13 @@ static wgf_core_priv_handle_pool_t *pool_of(wgf_handle_t resource)
     return resource != 0 ? kinds[WGF_CORE_PRIV_HANDLE_KIND(resource)].pool : NULL;
 }
 
-wgf_core_priv_resource_t *wgf_core_priv_resource_get(wgf_handle_t resource)
+wgf_core_priv_resource_t *wgf_core_priv_resource_get_at(wgf_handle_t resource, const char *caller)
 {
     wgf_core_priv_handle_pool_t *pool_ptr = pool_of(resource);
     uint16_t index = 0;
-    return pool_ptr != NULL && wgf_core_priv_handle_pool_resolve(pool_ptr, resource, &index) ? header(pool_ptr, index)
-                                                                                               : NULL;
+    return pool_ptr != NULL && wgf_core_priv_handle_pool_resolve_at(pool_ptr, resource, &index, caller)
+               ? header(pool_ptr, index)
+               : NULL;
 }
 
 static void lock(const wgf_core_priv_resource_kind_t *kind)

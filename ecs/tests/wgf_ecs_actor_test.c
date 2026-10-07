@@ -11,7 +11,7 @@
 #include "wgf_component.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_core_priv.h"
-#include "wgf_ecs.h"
+#include "wgf_world.h"
 #include "wgf_lifetime.h"
 #include "wgf_motion.h"
 #include "wgf_actor.h"
@@ -41,7 +41,7 @@ static bool near3(wgf_vec3_t v, float x, float y, float z)
 /* The events waiting, taken: how many, and each one's four ints into `out`. */
 static int take(int *out, int most)
 {
-    return wgf_ecs_take_events(out, 4 * most) / 4;
+    return wgf_world_take_events(out, 4 * most) / 4;
 }
 
 int main(void)
@@ -52,13 +52,13 @@ int main(void)
     wgf_core_priv_init();
     expect(wgf_gfx_priv_start(), "gfx");
     stage = wgf_stage2d_create();
-    expect(wgf_ecs_dump()[0] == '\0' && wgf_ecs_get_count() == 0, "before the first component: nothing");
+    expect(wgf_world_dump()[0] == '\0' && wgf_actor_get_count() == 0, "before the first component: nothing");
 
     /* components, with their defaults, on a plain actor */
     ship = wgf_actor_create();
     wgf_actor_set_parent(ship, stage);
     expect(!wgf_actor_has_component(ship, WGF_COMPONENT_MOTION) && wgf_actor_add_component(ship, WGF_COMPONENT_MOTION) &&
-               wgf_actor_has_component(ship, WGF_COMPONENT_MOTION) && wgf_ecs_get_count() == 1,
+               wgf_actor_has_component(ship, WGF_COMPONENT_MOTION) && wgf_actor_get_count() == 1,
            "motion added: the actor counted");
     expect(near3(wgf_motion_get_velocity(ship), 0, 0, 0) && wgf_motion_get_damping(ship) == 0 &&
                wgf_motion_get_max_speed(ship) == 0,
@@ -127,7 +127,7 @@ int main(void)
     second = wgf_actor_add_behavior(ship, "Shield");
     expect(rock == 1 && shield == 2 && second == 3 && wgf_actor_get_behavior_count(ship) == 3,
            "three behaviors, ids from 1");
-    expect(take(events, 64) == 3 && events[0] == WGF_ECS_EVENT_CREATED && events[1] == (int)ship && events[2] == 1 &&
+    expect(take(events, 64) == 3 && events[0] == WGF_WORLD_EVENT_CREATED && events[1] == (int)ship && events[2] == 1 &&
                events[10] == 3,
            "CREATED for each: the actor, the id");
     expect(wgf_actor_find_behavior(ship, "Shield") == shield && wgf_actor_find_behavior(ship, "Nobody") == 0 &&
@@ -148,33 +148,33 @@ int main(void)
     expect(wgf_actor_remove_behavior(ship, shield) && wgf_actor_get_behavior_count(ship) == 2 &&
                wgf_actor_get_behavior(ship, 1) == second && !wgf_actor_remove_behavior(ship, shield),
            "one removed, the others' ids kept");
-    expect(take(events, 64) == 1 && events[0] == WGF_ECS_EVENT_DESTROYED && events[2] == shield,
+    expect(take(events, 64) == 1 && events[0] == WGF_WORLD_EVENT_DESTROYED && events[2] == shield,
            "DESTROYED for it");
     expect(wgf_actor_add_behavior(ship, "Shield") == 4, "an id is never given again on the actor");
-    expect(wgf_ecs_count_behavior("Shield") == 1 && wgf_ecs_count_behavior("Ship") == 1, "actors counted by behavior");
+    expect(wgf_actor_count_with_behavior("Shield") == 1 && wgf_actor_count_with_behavior("Ship") == 1, "actors counted by behavior");
     {
         wgf_actor_t found[4];
-        expect(wgf_ecs_find_behavior("Shield", found, 4) == 1 && found[0] == ship, "and found");
+        expect(wgf_actor_find_with_behavior("Shield", found, 4) == 1 && found[0] == ship, "and found");
         wgf_actor_add_behavior(shape, "Shield");
-        expect(wgf_ecs_find_behavior("Shield", found, 4) == 2 && found[0] == ship && found[1] == shape &&
-                   wgf_ecs_find_behavior("Shield", found, 1) == 1 && found[0] == ship,
+        expect(wgf_actor_find_with_behavior("Shield", found, 4) == 2 && found[0] == ship && found[1] == shape &&
+                   wgf_actor_find_with_behavior("Shield", found, 1) == 1 && found[0] == ship,
                "oldest first, as many as fit");
         wgf_actor_remove_behavior(shape, wgf_actor_find_behavior(shape, "Shield"));
-        expect(wgf_ecs_count_behavior("Shield") == 1 && wgf_ecs_count_behavior("Nobody") == 0 &&
-                   wgf_ecs_find_behavior("Nobody", found, 4) == 0 && wgf_ecs_find_behavior(NULL, found, 4) == 0,
+        expect(wgf_actor_count_with_behavior("Shield") == 1 && wgf_actor_count_with_behavior("Nobody") == 0 &&
+                   wgf_actor_find_with_behavior("Nobody", found, 4) == 0 && wgf_actor_find_with_behavior(NULL, found, 4) == 0,
                "the last of a name removed: not found; a name never had: none");
-        expect(wgf_ecs_count_component(WGF_COMPONENT_MOTION) == 2 &&
-                   wgf_ecs_find_component(WGF_COMPONENT_MOTION, found, 4) == 2 && found[0] == ship &&
+        expect(wgf_actor_count_with_component(WGF_COMPONENT_MOTION) == 2 &&
+                   wgf_actor_find_with_component(WGF_COMPONENT_MOTION, found, 4) == 2 && found[0] == ship &&
                    found[1] == shape,
                "found by component, oldest first");
-        expect(wgf_ecs_count_component(WGF_COMPONENT_VOICE) == 1 &&
-                   wgf_ecs_find_component(WGF_COMPONENT_VOICE, found, 4) == 1 && found[0] == ship &&
-                   wgf_ecs_count_component(WGF_COMPONENT_LIFETIME) == 0 &&
-                   wgf_ecs_find_component(WGF_COMPONENT_NONE, found, 4) == 0 &&
-                   wgf_ecs_count_component((wgf_component_t)99) == 0,
+        expect(wgf_actor_count_with_component(WGF_COMPONENT_VOICE) == 1 &&
+                   wgf_actor_find_with_component(WGF_COMPONENT_VOICE, found, 4) == 1 && found[0] == ship &&
+                   wgf_actor_count_with_component(WGF_COMPONENT_LIFETIME) == 0 &&
+                   wgf_actor_find_with_component(WGF_COMPONENT_NONE, found, 4) == 0 &&
+                   wgf_actor_count_with_component((wgf_component_t)99) == 0,
                "a voice too; a component none has, or none at all: none");
         wgf_actor_remove_component(ship, WGF_COMPONENT_VOICE);
-        expect(wgf_ecs_count_component(WGF_COMPONENT_VOICE) == 0, "a removed one isn't found");
+        expect(wgf_actor_count_with_component(WGF_COMPONENT_VOICE) == 0, "a removed one isn't found");
     }
 
     /* destroyed: its components and behaviors with it, and what is under it */
@@ -186,17 +186,17 @@ int main(void)
     take(events, 64);
     wgf_actor_destroy(ship, WGF_ACTOR_DESTROY_CHILDREN);
     expect(wgf_actor_get_kind(ship) == WGF_ACTOR_KIND_NONE && wgf_actor_get_kind(child) == WGF_ACTOR_KIND_NONE &&
-               wgf_ecs_get_count() == 1,
+               wgf_actor_get_count() == 1,
            "destroyed, the actor under it with it; the shape left");
-    expect(take(events, 64) == 4 && events[0] == WGF_ECS_EVENT_DESTROYED && events[1] == (int)ship &&
-               events[12] == WGF_ECS_EVENT_DESTROYED && events[13] == (int)child,
+    expect(take(events, 64) == 4 && events[0] == WGF_WORLD_EVENT_DESTROYED && events[1] == (int)ship &&
+               events[12] == WGF_WORLD_EVENT_DESTROYED && events[13] == (int)child,
            "DESTROYED for each of their behaviors, the handles stale");
     expect(!wgf_motion_set_velocity(ship, 1, 0, 0) && wgf_actor_get_behavior_count(ship) == 0, "a stale handle: refused");
 
     /* clearing */
     wgf_actor_add_component(wgf_actor_create(), WGF_COMPONENT_LIFETIME);
-    wgf_ecs_clear();
-    expect(wgf_ecs_get_count() == 0 && wgf_actor_get_kind(shape) == WGF_ACTOR_KIND_NONE, "cleared: the actors destroyed");
+    wgf_world_clear();
+    expect(wgf_actor_get_count() == 0 && wgf_actor_get_kind(shape) == WGF_ACTOR_KIND_NONE, "cleared: the actors destroyed");
 
     wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
     wgf_gfx_priv_stop();

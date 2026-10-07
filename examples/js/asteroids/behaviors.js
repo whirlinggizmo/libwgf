@@ -1,7 +1,7 @@
 // An object for each behavior on an actor: what the Haxe binding's wgf.Behavior does for a
 // Haxe program, here in the program, on the JS binding alone. An actor may have several
 // behaviors; each object is made, told of its actor's triggers, and ended from the ecs's
-// events (wgf_ecs_take_events), taken each tick and frame before the program's own:
+// events (wgf_world_take_events), taken each tick and frame before the program's own:
 // nothing in C calls them.
 import * as wgf from "./wgf.js";
 
@@ -49,6 +49,7 @@ export function of(actor, name) {
 }
 
 function make(actor, id) {
+    if (!wgf.wgf_handle_is_alive(actor)) return; // gone again before this poll: its DESTROYED follows
     const name = wgf.wgf_behavior_get_name(actor, id);
     if (name === "") return; // gone again before this poll: its DESTROYED follows
     const factory = factories.get(name);
@@ -80,21 +81,20 @@ function end(actor, id) {
 
 function poll() {
     for (;;) {
-        const n = wgf.wgf_ecs_take_events(events);
+        const n = wgf.wgf_world_take_events(events);
         if (n === 0) break;
         for (let i = 0; i < n; i += 4) {
             const kind = events[i];
             const actor = events[i + 1] >>> 0, second = events[i + 2] >>> 0, layer = events[i + 3]; // handles, unsigned
-            if (kind === wgf.WGF_ECS_EVENT_CREATED) {
+            if (kind === wgf.WGF_WORLD_EVENT_CREATED) {
                 make(actor, second);
-            } else if (kind === wgf.WGF_ECS_EVENT_DESTROYED) {
+            } else if (kind === wgf.WGF_WORLD_EVENT_DESTROYED) {
                 end(actor, second);
-            } else if (kind === wgf.WGF_ECS_EVENT_TRIGGER_ENTER || kind === wgf.WGF_ECS_EVENT_TRIGGER_EXIT) {
+            } else if (kind === wgf.WGF_WORLD_EVENT_TRIGGER_ENTER || kind === wgf.WGF_WORLD_EVENT_TRIGGER_EXIT) {
                 for (const object of (live.get(actor) || []).slice()) {
                     // one destroyed by an object told earlier in the batch: dropped
-                    if (!liveNow(object) || wgf.wgf_actor_get_kind(actor) === wgf.WGF_ACTOR_KIND_NONE ||
-                        wgf.wgf_actor_get_kind(second) === wgf.WGF_ACTOR_KIND_NONE) break;
-                    if (kind === wgf.WGF_ECS_EVENT_TRIGGER_ENTER) object.onTriggerEnter(second, layer);
+                    if (!liveNow(object) || !wgf.wgf_handle_is_alive(actor) || !wgf.wgf_handle_is_alive(second)) break;
+                    if (kind === wgf.WGF_WORLD_EVENT_TRIGGER_ENTER) object.onTriggerEnter(second, layer);
                     else object.onTriggerExit(second, layer);
                 }
             }

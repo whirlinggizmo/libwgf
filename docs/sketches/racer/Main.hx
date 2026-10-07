@@ -76,7 +76,7 @@ class Main {
 			case State.LOADING:
 				if (loading.getStatus() == AssetTaskStatus.DONE && Resource.getStatus(scene) == ResourceStatus.READY) {
 					scene.instantiate(stage); // the track's static parts, checkpoints, props
-					car = scene.spawnAt("car", stage, 0, 0.5, 0, 0); // placed, turned, and snapped
+					car = scene.spawnPrefab("car", stage, 0, 0.5, 0, 0); // placed, turned, and snapped
 					camera.follow(car);
 					state = State.COUNTDOWN;
 				}

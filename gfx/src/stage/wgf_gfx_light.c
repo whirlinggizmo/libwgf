@@ -11,11 +11,12 @@
 
 #define PI 3.14159265358979323846f
 
-static wgf_gfx_priv_actor_t *light_of(wgf_actor_t light)
+static wgf_gfx_priv_actor_t *light_of_at(wgf_actor_t light, const char *caller)
 {
-    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(light);
+    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of_at(light, caller);
     return actor_ptr != NULL && actor_ptr->type == WGF_ACTOR_KIND_LIGHT ? actor_ptr : NULL;
 }
+#define light_of(...) light_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
 wgf_actor_t wgf_light_create(wgf_light_type_t type)
 {

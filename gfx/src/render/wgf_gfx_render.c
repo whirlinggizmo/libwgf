@@ -480,12 +480,12 @@ wgf_color_t wgf_render_get_clear_color(void)
     return clear_color;
 }
 
-void wgf_render_set_bar_color(wgf_color_t color)
+void wgf_presentation_set_bar_color(wgf_color_t color)
 {
     bar_color = color;
 }
 
-wgf_color_t wgf_render_get_bar_color(void)
+wgf_color_t wgf_presentation_get_bar_color(void)
 {
     return bar_color;
 }

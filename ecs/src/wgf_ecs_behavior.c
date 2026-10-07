@@ -28,12 +28,13 @@ static int index_of(const wgf_ecs_priv_record_t *record, int behavior)
     return -1;
 }
 
-static wgf_ecs_priv_behavior_t *behavior_of(wgf_actor_t actor, int behavior)
+static wgf_ecs_priv_behavior_t *behavior_of_at(wgf_actor_t actor, int behavior, const char *caller)
 {
-    const wgf_ecs_priv_record_t *record = wgf_ecs_priv_record_of(actor);
+    const wgf_ecs_priv_record_t *record = wgf_ecs_priv_record_of_at(actor, caller);
     const int at = index_of(record, behavior);
     return at >= 0 ? record->behaviors[at] : NULL;
 }
+#define behavior_of(...) behavior_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
 int wgf_actor_add_behavior(wgf_actor_t actor, const char *name)
 {
@@ -66,7 +67,7 @@ int wgf_actor_add_behavior(wgf_actor_t actor, const char *name)
     b->id = record->next_behavior++;
     memcpy(b->name, name, strlen(name) + 1);
     record->behaviors[record->behavior_count++] = b;
-    wgf_ecs_priv_raise(WGF_ECS_EVENT_CREATED, (int)actor, b->id, 0);
+    wgf_ecs_priv_raise(WGF_WORLD_EVENT_CREATED, (int)actor, b->id, 0);
     return b->id;
 }
 
@@ -87,7 +88,7 @@ bool wgf_actor_remove_behavior(wgf_actor_t actor, int behavior)
     memmove(&record->behaviors[at], &record->behaviors[at + 1],
             sizeof(record->behaviors[0]) * (size_t)(record->behavior_count - at - 1));
     record->behavior_count--;
-    wgf_ecs_priv_raise(WGF_ECS_EVENT_DESTROYED, (int)actor, behavior, 0);
+    wgf_ecs_priv_raise(WGF_WORLD_EVENT_DESTROYED, (int)actor, behavior, 0);
     return true;
 }
 

@@ -96,11 +96,12 @@ static void draw_shape(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr,
 
 static const wgf_gfx_priv_actor_kind_t kind = {free_shape, draw_shape};
 
-static wgf_gfx_priv_shape2d_t *shape_of(wgf_actor_t shape)
+static wgf_gfx_priv_shape2d_t *shape_of_at(wgf_actor_t shape, const char *caller)
 {
-    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(shape);
+    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of_at(shape, caller);
     return actor_ptr != NULL && actor_ptr->type == WGF_ACTOR_KIND_SHAPE2D ? &actor_ptr->as.shape2d : NULL;
 }
+#define shape_of(...) shape_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
 wgf_actor_t wgf_shape2d_create(void)
 {

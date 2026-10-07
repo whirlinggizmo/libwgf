@@ -50,12 +50,13 @@ static wgf_texture_t placeholder;
 static sg_view placeholder_view;
 static sg_sampler samplers[3][3][2][2]; /* wrap u, wrap v, filter, mipmaps */
 
-static texture_t *texture_of(wgf_texture_t texture)
+static texture_t *texture_of_at(wgf_texture_t texture, const char *caller)
 {
     uint16_t index;
-    if (!pool_ready || !wgf_core_priv_handle_pool_resolve(&texture_pool, texture, &index)) return NULL;
+    if (!pool_ready || !wgf_core_priv_handle_pool_resolve_at(&texture_pool, texture, &index, caller)) return NULL;
     return &textures[index];
 }
+#define texture_of(...) texture_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
 static wgf_core_priv_resource_kind_t resource_kind; /* defined below, with what it names */
 

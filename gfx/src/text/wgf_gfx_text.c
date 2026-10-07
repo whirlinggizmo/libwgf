@@ -14,11 +14,12 @@
 /* Text actors: a string in a font, laid out and drawn by its stage each frame, as
  * libwgt's are in its canvas. */
 
-static wgf_gfx_priv_actor_t *text_of(wgf_actor_t text)
+static wgf_gfx_priv_actor_t *text_of_at(wgf_actor_t text, const char *caller)
 {
-    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(text);
+    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of_at(text, caller);
     return actor_ptr != NULL && actor_ptr->type == WGF_ACTOR_KIND_TEXT ? actor_ptr : NULL;
 }
+#define text_of(...) text_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
 static bool is_font(wgf_font_t font)
 {

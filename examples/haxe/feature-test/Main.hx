@@ -97,7 +97,7 @@ class Main {
 		expect(Window.getTitle() == "feature-test", "the title");
 		Window.getWidth();
 		Window.getHeight();
-		Window.setFullscreen(false);
+		Window.requestFullscreen(false);
 		Window.isFullscreen();
 		Window.canFullscreen();
 		Window.setPosition(10, 10);
@@ -320,8 +320,8 @@ class Main {
 		expect(Presentation.getVisible().z >= 320 && Presentation.getScale() > 0, "what it shows, and its scale");
 		expect(!Presentation.set(PresentationMode.FIT, 0, 180) && Presentation.set(PresentationMode.NONE, 0, 0),
 			"a design under 1 refused; none again");
-		Render.setBarColor(Color.make(1, 2, 3, 255));
-		expect(Render.getBarColor() == Color.make(1, 2, 3, 255), "the bars' color");
+		Presentation.setBarColor(Color.make(1, 2, 3, 255));
+		expect(Presentation.getBarColor() == Color.make(1, 2, 3, 255), "the bars' color");
 		expect(Render.getDpiScale() >= 1, "the dpi scale");
 		final white = Color.get(ColorStock.WHITE);
 		expect(Color.getRed(white) == 255 && Color.getGreen(white) == 255 && Color.getBlue(white) == 255
@@ -420,7 +420,7 @@ class Main {
 			"positions in bulk");
 		for (c in [Component.MOTION, Component.BOUNDS, Component.LIFETIME, Component.COLLIDER, Component.VOICE])
 			expect(ship.addComponent(c) && ship.hasComponent(c), 'a component: $c');
-		expect(Ecs.getCount() >= 1 && !ship.getVoice().isNone(), "counted, and its voice");
+		expect(Actor.getCount() >= 1 && !ship.getVoice().isNone(), "counted, and its voice");
 		final motion:Motion = ship;
 		expect(motion.setVelocity(1, 0, 0) && near(motion.getVelocity().x, 1), "a velocity");
 		expect(motion.setSpin(0, 0, 1) && near(motion.getSpin().z, 1), "a spin");
@@ -453,11 +453,11 @@ class Main {
 			&& behavior.getParamActor(id, "speed").isNone(), "a parameter referring to an actor");
 		expect(ship.removeBehavior(second) && ship.getBehaviorCount() == 1, "a behavior removed");
 		expect(ship.removeComponent(Component.LIFETIME) && !ship.hasComponent(Component.LIFETIME), "a component removed");
-		expect(Ecs.countBehavior("Probe") == 1 && Ecs.findBehavior("Probe", [0]) == 1, "behaviors found");
+		expect(Actor.countWithBehavior("Probe") == 1 && Actor.findWithBehavior("Probe", [0]) == 1, "behaviors found");
 		final found = [ship];
-		expect(Ecs.countComponent(Component.COLLIDER) >= 1 && Ecs.findComponent(Component.COLLIDER, found) == 1,
+		expect(Actor.countWithComponent(Component.COLLIDER) >= 1 && Actor.findWithComponent(Component.COLLIDER, found) == 1,
 			"components found");
-		Ecs.getEventCount();
+		World.getEventCount();
 		final doomed = Actor.create();
 		doomed.addComponent(Component.LIFETIME);
 		doomed.destroy(ActorDestroy.DESTROY_CHILDREN);
@@ -509,12 +509,17 @@ class Main {
 			expect(scene.getActorCount() == 4 && scene.getPrefabCount() == 2 && scene.getPrefabName(0) == "rock"
 				&& scene.hasPrefab("spark"), "the scene file");
 			expect(scene.instantiate(world) == 4, "the scene's actors made");
-			expect(!scene.spawn("spark", world).isNone(), "a prefab spawned");
-			final placed = scene.spawnAt("spark", world, 10, 20, 0, 0.5);
+			final spark = scene.prefab("spark");
+			expect(!spark.isNone() && spark.isAlive() && !spark.spawn(world).isNone(), "a prefab found once, spawned");
+			final placed = spark.spawnAt(world, 10, 20, 0, 0.5);
 			expect(!placed.isNone() && near(placed.getPosition().x, 10) && near(placed.getRotation().z, 0.5),
 				"a prefab spawned at a place, turned");
+			expect(!scene.spawnPrefab("spark", world).isNone()
+				&& near(scene.spawnPrefab("spark", world, 5, 6, 0, 0).getPosition().y, 6),
+				"spawned by name, at its own transform or placed");
+			expect(placed.isAlive() && !(0 : Actor).isAlive() && (placed : Handle).isAlive(), "alive");
 			Behavior.tag("Spark");
-			expect(Ecs.dump().indexOf("wgf-scene 2") == 0, "the world dumped");
+			expect(World.dump().indexOf("wgf-scene 2") == 0, "the world dumped");
 		}
 		if (frames >= 30 && instantiated && stage > 3 && !reported)
 			finish();
@@ -631,8 +636,8 @@ class Main {
 		ping.destroy();
 		voice.stop();
 		voice.destroy();
-		Ecs.clear();
-		expect(Ecs.getCount() == 0, "the world cleared");
+		World.clear();
+		expect(Actor.getCount() == 0, "the world cleared");
 		expect(Resource.release(scene) && Resource.release(music), "resources released");
 		// the run ends after this frame, which finishes first: the verdict is still given
 		App.canQuit();

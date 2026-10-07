@@ -23,7 +23,13 @@ parse (tools/headers.py), and checks each exported function -- the ones a bindin
               a resource created from a file (wgf_X_create taking `path`) has
               wgf_X_get_path, or wgf_resource_get_path serves it
   predicates  is_, has_, and can_ return bool
-  lists       an entry in GETTERS_EXEMPT, GETTERS_PAIRED, CALLBACKS_ALLOWED, or ANY_HANDLE that
+  prefixes    a call named for a kind of handle (wgf_<kind>_*), or for one of ACTOR_FACETS
+              (a kind of actor, or a component or behavior an actor has), takes that
+              kind first among its handles -- an actor, for a facet -- or, taking none,
+              returns one; MADE_FROM lists the calls that take what they are made from
+              (a sprite's texture). A name says what it acts on (CONVENTIONS.md,
+              "Naming")
+  lists       an entry in GETTERS_EXEMPT, GETTERS_PAIRED, CALLBACKS_ALLOWED, ANY_HANDLE, or MADE_FROM that
               names no public call fails, and so does an exempt setter with a getter,
               so the lists can't go stale
   macros      every macro a public header defines is WGF_ (or wgf_, for the log
@@ -100,9 +106,24 @@ GETTERS_PAIRED = {
 # other handle is its kind's type (wgf_texture_t). A decision, not a backlog.
 ANY_HANDLE = {
     'wgf_handle_get_kind_name': 'names the kind of any handle',
+    'wgf_handle_is_alive': 'tells whether any handle is alive',
     'wgf_resource_get_status': 'every resource kind shares it',
     'wgf_resource_get_path': 'every resource kind shares it',
     'wgf_resource_release': 'every resource kind shares it',
+}
+
+# Sections named for what an actor is, or has, whose calls take the actor: wgf_sprite_*
+# on a sprite, wgf_motion_* on an actor with motion, wgf_stage2d_* on a 2D stage.
+ACTOR_FACETS = ('sprite', 'text', 'shape2d', 'shape3d', 'emitter2d', 'model', 'light', 'camera2d', 'camera3d',
+                'collider', 'motion', 'bounds', 'lifetime', 'behavior', 'stage2d', 'stage3d')
+
+# The calls that take what they are made from, before what they act on: their first handle
+# isn't their prefix's kind. A new one is listed here with what it is made from.
+MADE_FROM = {
+    'wgf_sprite_create': 'a sprite is made from its texture',
+    'wgf_text_create': 'a text is made from its font',
+    'wgf_model_create': 'a model is made from its mesh',
+    'wgf_voice_create': 'a voice is made from its sound',
 }
 
 # Math values a public call may return by value: their layout can never change. None is
@@ -188,6 +209,29 @@ def check_function(fn, errors, callbacks, handles, any_handle):
                 errors.append(f'{where}: array {pname} must be followed by `int count` (or `int <name>_count`)')
 
 
+def check_prefix(fn, errors, handles, made_from, facets=ACTOR_FACETS):
+    """A call named for a kind, or an actor's facet, acts on that kind: its first handle
+    parameter, or with none the handle it returns, is of that kind (an actor, for a facet),
+    unless MADE_FROM lists it."""
+    kinds = {h[len('wgf_'):-len('_t')] for h in handles} - {'handle'}
+    prefix = next((k for k in sorted(kinds | set(facets), key=len, reverse=True) if fn.name.startswith(f'wgf_{k}_')),
+                  None)
+    if prefix is None or fn.name in made_from:
+        return
+    def kind_of(ctype):
+        base = ctype.replace('const ', '').replace('*', '').strip()
+        return base[len('wgf_'):-len('_t')] if base in handles else None
+    found = next((k for k in (kind_of(p.type) for p in fn.params) if k is not None), None)
+    what = 'takes'
+    if found is None:
+        found, what = kind_of(fn.returns), 'returns'
+    if found is None or found == 'handle' or found == prefix or (prefix in facets and found == 'actor'):
+        return
+    expected = 'an actor (wgf_actor_t)' if prefix in facets else f'wgf_{prefix}_t'
+    errors.append(f'{fn.header}: {fn.name}: named for {prefix}, it {what} wgf_{found}_t first: a call takes what '
+                  f'its name says, {expected}; rename it for what it acts on, or list it in MADE_FROM with why')
+
+
 def check_functions(functions, errors, exempt, paired):
     for name, fn in sorted(functions.items()):
         for verb in ('is', 'has', 'can'):
@@ -214,10 +258,11 @@ def check_functions(functions, errors, exempt, paired):
             errors.append(f'{name}: returns bytes with no {name[:-len("_get_data")]}_get_size beside it')
 
 
-def check_lists(functions, errors, exempt, paired, callbacks, any_handle):
+def check_lists(functions, errors, exempt, paired, callbacks, any_handle, made_from):
     """A list entry that names no public call fails, so the lists can't go stale."""
     for list_name, entries in (('GETTERS_EXEMPT', exempt), ('GETTERS_PAIRED', paired),
-                               ('CALLBACKS_ALLOWED', callbacks), ('ANY_HANDLE', any_handle)):
+                               ('CALLBACKS_ALLOWED', callbacks), ('ANY_HANDLE', any_handle),
+                               ('MADE_FROM', made_from)):
         for name in sorted(set(entries) - set(functions)):
             errors.append(f'{name}: listed in {list_name}, but no public header declares it; take it off')
 
@@ -238,13 +283,14 @@ def handle_types(api):
     return {name for name, (spelling, _) in api.typedefs.items() if spelling == 'wgf_handle_t'}
 
 
-def check_tree(root, exempt=None, paired=None, callbacks=None, any_handle=None):
+def check_tree(root, exempt=None, paired=None, callbacks=None, any_handle=None, made_from=None):
     """Every rule broken in the public headers under `root`, and the public functions,
     or None when there is no clang."""
     exempt = GETTERS_EXEMPT if exempt is None else exempt
     paired = GETTERS_PAIRED if paired is None else paired
     callbacks = CALLBACKS_ALLOWED if callbacks is None else callbacks
     any_handle = ANY_HANDLE if any_handle is None else any_handle
+    made_from = MADE_FROM if made_from is None else made_from
     api = headers.read(root)
     if api is None:
         return None
@@ -254,8 +300,9 @@ def check_tree(root, exempt=None, paired=None, callbacks=None, any_handle=None):
     handles = handle_types(api)
     for fn in functions.values():
         check_function(fn, errors, callbacks, handles, any_handle)
+        check_prefix(fn, errors, handles, made_from)
     check_functions(functions, errors, exempt, paired)
-    check_lists(functions, errors, exempt, paired, callbacks, any_handle)
+    check_lists(functions, errors, exempt, paired, callbacks, any_handle, made_from)
     check_macros(api, errors)
     return errors, functions
 
@@ -271,6 +318,12 @@ BAD_HEADER = r'''
 typedef struct wgf_bad_record_t { int a; } wgf_bad_record_t;
 typedef void (*wgf_bad_fn)(void *user);
 typedef wgf_handle_t wgf_good_t;
+typedef wgf_handle_t wgf_tool_t;
+WGF_API void wgf_good_mend(wgf_good_t good, wgf_tool_t tool);
+typedef wgf_handle_t wgf_widget_t;
+WGF_API void wgf_widget_takes_tool(wgf_tool_t tool);
+WGF_API wgf_tool_t wgf_widget_makes_tool(void);
+WGF_API wgf_good_t wgf_good_make(wgf_tool_t tool);
 WGF_API void bad_unprefixed(void);
 void wgf_bad_not_exported(void);
 WGF_API void wgf_bad_printf(const char *format, ...);
@@ -330,13 +383,17 @@ EXPECTED = ['bad_unprefixed: a public function is named', 'wgf_bad_not_exported:
             'wgf_bad_any_create: returns wgf_handle_t', 'wgf_bad_any_use: parameter thing is wgf_handle_t',
             'wgf_bad_array: array values must be followed by `int count`',
             'wgf_bad_array_alone: array values must be followed', 'wgf_bad_array_return: returns float *',
-            'wgf_bad_double_array: parameter values is const double *']
+            'wgf_bad_double_array: parameter values is const double *',
+            'wgf_widget_takes_tool: named for widget, it takes wgf_tool_t first',
+            'wgf_widget_makes_tool: named for widget, it returns wgf_tool_t first',
+            'wgf_bad_gone_made: listed in MADE_FROM, but no public header']
 
 # The self-test's own lists: one entry each that names nothing, and one exempt setter with a getter
 SELF_TEST_EXEMPT = {'wgf_bad_set_loud': 'it has a getter', 'wgf_bad_gone_set_x': 'there is no such call'}
 SELF_TEST_PAIRED = {'wgf_bad_gone_set_y': ('wgf_bad_gone_get_y',)}
 SELF_TEST_CALLBACKS = {'wgf_bad_gone_run': ('wgf_bad_fn', 'there is no such call')}
 SELF_TEST_ANY = {'wgf_good_any_use': 'takes any kind', 'wgf_bad_gone_any': 'there is no such call'}
+SELF_TEST_MADE = {'wgf_good_make': 'a good is made from a tool', 'wgf_bad_gone_made': 'there is no such call'}
 
 
 def self_test():
@@ -350,7 +407,8 @@ def self_test():
         shutil.copy(ROOT / 'core' / 'include' / 'wgf_handle.h', tree / 'core' / 'include')
         shutil.copytree(ROOT / 'math' / 'include', tree / 'math' / 'include')
         (tree / 'core' / 'include' / 'wgf_bad.h').write_text(BAD_HEADER)
-        errors, _ = check_tree(tree, SELF_TEST_EXEMPT, SELF_TEST_PAIRED, SELF_TEST_CALLBACKS, SELF_TEST_ANY)
+        errors, _ = check_tree(tree, SELF_TEST_EXEMPT, SELF_TEST_PAIRED, SELF_TEST_CALLBACKS, SELF_TEST_ANY,
+                               SELF_TEST_MADE)
     errors = [e for e in errors if 'wgf_bad.h' in e or e.startswith('wgf_bad_') or e.startswith('wgf_core_bad_')]
     missed = [e for e in EXPECTED if not any(e in found for found in errors)]
     false = [e for e in errors if 'good' in e.split(':', 2)[1 if 'wgf_bad.h' in e else 0]]

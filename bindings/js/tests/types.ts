@@ -2,6 +2,7 @@
 // check_js_binding.py): what a program should be able to write compiles, and each line
 // marked as an expected error is a mistake the types must catch. Checked, never run.
 import * as wgf from '../wgf.js';
+import { Actor, Prefab, Scene, Texture, Sprite, World, Presentation, KeyboardKey, Keyboard } from '../wgf-typed.js';
 
 export function frame(): void {
     // handles are typed by kind: a texture is not an actor, and 0 is none of any kind
@@ -51,3 +52,26 @@ export function frame(): void {
 // the run takes JS functions, any of them null
 const running: boolean = wgf.wgf_app_run(null, null, frame, null);
 void running;
+
+// the typed layer: the raw calls under the typed API's names, the handle first, its
+// handle types the raw binding's branded ones
+export function typed(): void {
+    const texture: Texture = Texture.create('sprites/logo.png');
+    const sprite: Actor = Sprite.create(texture);
+    const moved: boolean = Actor.setPosition(sprite, 1, 2, 3);
+    const alive: boolean = Actor.isAlive(sprite);
+    const scene: Scene = Scene.create('scenes/field.scene');
+    const rock: Prefab = Scene.prefab(scene, 'rock');
+    const spawned: Actor = Prefab.spawnAt(rock, sprite, 1, 2, 0, 0.5);
+    const once: Actor = Scene.spawnPrefab(scene, 'rock', sprite);
+    const placed: Actor = Scene.spawnPrefab(scene, 'rock', sprite, 1, 2, 0, 0.5);
+    const found: number = Actor.findWithBehavior('Rock', [spawned, once, placed]);
+    const events: number = World.takeEvents(new Int32Array(64));
+    Presentation.setBarColor(0xff000000);
+    const pressed: boolean = Keyboard.isPressed(KeyboardKey.SPACE);
+    // @ts-expect-error an actor is not a prefab
+    Prefab.spawn(sprite, sprite);
+    // @ts-expect-error a prefab is not an actor
+    Actor.setPosition(rock, 1, 2, 3);
+    void moved; void alive; void found; void events; void pressed;
+}

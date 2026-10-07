@@ -13,7 +13,7 @@ extern "C" {
 /* Behaviors: the program's own code on an actor, named here and written in the program's
  * language. An actor has any number, several of one name too, each its own parameters.
  * libwgf keeps each behavior's name and parameters (from a scene file, or set) and raises
- * its lifecycle as events (wgf_ecs.h): CREATED when it is added, DESTROYED when it is
+ * its lifecycle as events (wgf_world.h): CREATED when it is added, DESTROYED when it is
  * removed or its actor goes, and its actor's colliders' triggers. The program's binding
  * takes those and calls its behaviors' create, destroy, and trigger enter and exit, and
  * their tick and frame from its own: nothing in C calls a behavior.
@@ -59,6 +59,13 @@ WGF_API bool wgf_behavior_has_param(wgf_actor_t actor, int behavior, const char 
  * end). */
 WGF_API int wgf_behavior_get_param_count(wgf_actor_t actor, int behavior);
 WGF_API const char *wgf_behavior_get_param_key(wgf_actor_t actor, int behavior, int index);
+
+/* The actors with a behavior named `name`, oldest first (by when their first component or
+ * behavior came), into `out`, as many as fit in `count`, returning how many it filled;
+ * and how many there are, to size `out`. An actor with two of the name is one actor.
+ * Found by an index of each name, never by a look at every actor. */
+WGF_API int wgf_actor_find_with_behavior(const char *name, wgf_actor_t *out, int count);
+WGF_API int wgf_actor_count_with_behavior(const char *name);
 
 #ifdef __cplusplus
 }

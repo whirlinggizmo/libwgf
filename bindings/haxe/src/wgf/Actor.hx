@@ -9,6 +9,10 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	public inline function isNone():Bool
 		return this == 0;
 
+	/** Whether this refers to something alive: false for none, and for what was destroyed or released (wgf_handle_is_alive). Ask it first where a handle may be dead. **/
+	public inline function isAlive():Bool
+		return (this : Handle).isAlive();
+
 	/**
 	    A plain actor: a transform, with no parent. 0 when there is no room for another.
 	**/
@@ -315,6 +319,24 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_actor_find_behavior(this, name);
 
 	/**
+	    The actors with a behavior named `name`, oldest first (by when their first component or
+	    behavior came), into `out`, as many as fit in `count`, returning how many it filled;
+	    and how many there are, to size `out`. An actor with two of the name is one actor.
+	    Found by an index of each name, never by a look at every actor.
+	**/
+	public static inline function findWithBehavior(name:String, out:Array<Actor>):Int
+		return Raw.wgf_actor_find_with_behavior(name, cast out);
+
+	/**
+	    The actors with a behavior named `name`, oldest first (by when their first component or
+	    behavior came), into `out`, as many as fit in `count`, returning how many it filled;
+	    and how many there are, to size `out`. An actor with two of the name is one actor.
+	    Found by an index of each name, never by a look at every actor.
+	**/
+	public static inline function countWithBehavior(name:String):Int
+		return Raw.wgf_actor_count_with_behavior(name);
+
+	/**
 	    add makes one with its defaults (each component's header says them); adding one it has
 	    keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
 	    that isn't an actor, or a component that isn't one; remove is false too for one it
@@ -347,4 +369,28 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	**/
 	public inline function getVoice():Voice
 		return Raw.wgf_actor_get_voice(this);
+
+	/**
+	    The actors with a component, oldest first (by when their first component or behavior
+	    came), into `out`, as many as fit in `count`, returning how many it filled; and how many
+	    there are, to size `out`. Found by an index of each component, never by a look at every
+	    actor; NONE, or a value that isn't a component, finds none.
+	**/
+	public static inline function findWithComponent(component:Component, out:Array<Actor>):Int
+		return Raw.wgf_actor_find_with_component(component, cast out);
+
+	/**
+	    The actors with a component, oldest first (by when their first component or behavior
+	    came), into `out`, as many as fit in `count`, returning how many it filled; and how many
+	    there are, to size `out`. Found by an index of each component, never by a look at every
+	    actor; NONE, or a value that isn't a component, finds none.
+	**/
+	public static inline function countWithComponent(component:Component):Int
+		return Raw.wgf_actor_count_with_component(component);
+
+	/**
+	    How many actors have a component or a behavior: the simulated ones.
+	**/
+	public static inline function getCount():Int
+		return Raw.wgf_actor_get_count();
 }

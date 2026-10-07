@@ -9,7 +9,7 @@
 #include "wgf_collider.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_core_priv.h"
-#include "wgf_ecs.h"
+#include "wgf_world.h"
 #include "wgf_component.h"
 #include "actor/wgf_gfx_actor_priv.h"
 #include "wgf_lifetime.h"
@@ -75,7 +75,7 @@ static wgf_actor_t mover(wgf_actor_t parent, float x, float y)
 static int count_events(int kind, wgf_actor_t actor, wgf_actor_t other)
 {
     int out[4 * 64], n, i, found = 0;
-    n = wgf_ecs_take_events(out, 4 * 64) / 4;
+    n = wgf_world_take_events(out, 4 * 64) / 4;
     for (i = 0; i < n; i++) {
         if (out[4 * i] == kind && (wgf_actor_t)out[4 * i + 1] == actor && (wgf_actor_t)out[4 * i + 2] == other)
             found++;
@@ -108,7 +108,7 @@ int main(void)
     step(1.0f);
     expect(near(wgf_motion_get_velocity(e).x, 2.5f), "damped: a quarter kept a second");
     expect(!wgf_motion_set_velocity(make(stage), 1, 0, 0), "no motion: refused");
-    wgf_ecs_clear();
+    wgf_world_clear();
 
     /* bounds: wrapping, drawn moving on */
     e = mover(stage, 95, 50);
@@ -172,7 +172,7 @@ int main(void)
     expect(wgf_actor_get_kind(e) != WGF_ACTOR_KIND_NONE && near(wgf_lifetime_get_seconds(e), 0.25f), "counted down");
     step(0.25f);
     expect(wgf_actor_get_kind(e) == WGF_ACTOR_KIND_NONE, "at 0: destroyed");
-    wgf_ecs_clear();
+    wgf_world_clear();
 
     /* colliders */
     a = make(stage);
@@ -185,71 +185,71 @@ int main(void)
     wgf_collider_set_radius(b, 5);
     expect(!wgf_collider_set_radius(a, -1), "a radius below 0 refused");
     wgf_actor_set_position(b, 20, 0, 0);
-    wgf_ecs_take_events(NULL, 0);
+    wgf_world_take_events(NULL, 0);
     step(0.0f);
     {
         int out[64];
-        expect(wgf_ecs_take_events(out, 64) == 0, "apart: nothing");
+        expect(wgf_world_take_events(out, 64) == 0, "apart: nothing");
     }
     wgf_actor_set_position(b, 9, 0, 0);
     step(0.0f);
-    expect(wgf_ecs_get_event_count() == 2, "two events");
+    expect(wgf_world_get_event_count() == 2, "two events");
     {
         int out[8];
-        expect(wgf_ecs_take_events(out, 8) == 8 &&
-                   ((out[0] == WGF_ECS_EVENT_TRIGGER_ENTER && (wgf_actor_t)out[1] == a && (wgf_actor_t)out[2] == b) ||
-                    (out[0] == WGF_ECS_EVENT_TRIGGER_ENTER && (wgf_actor_t)out[1] == b && (wgf_actor_t)out[2] == a)) &&
-                   out[4] == WGF_ECS_EVENT_TRIGGER_ENTER && (wgf_actor_t)out[5] == (wgf_actor_t)out[2],
+        expect(wgf_world_take_events(out, 8) == 8 &&
+                   ((out[0] == WGF_WORLD_EVENT_TRIGGER_ENTER && (wgf_actor_t)out[1] == a && (wgf_actor_t)out[2] == b) ||
+                    (out[0] == WGF_WORLD_EVENT_TRIGGER_ENTER && (wgf_actor_t)out[1] == b && (wgf_actor_t)out[2] == a)) &&
+                   out[4] == WGF_WORLD_EVENT_TRIGGER_ENTER && (wgf_actor_t)out[5] == (wgf_actor_t)out[2],
                "overlapping: entered, told to each");
         expect(out[3] == wgf_collider_get_layer((wgf_actor_t)out[2]) && out[7] == wgf_collider_get_layer((wgf_actor_t)out[6]),
                "each told the other's layer");
     }
     wgf_actor_set_position(b, 9, 0, 20); /* the same x and y, far in z: spheres, not circles */
     step(0.0f);
-    expect(count_events(WGF_ECS_EVENT_TRIGGER_EXIT, a, b) == 1, "apart in z: exited");
+    expect(count_events(WGF_WORLD_EVENT_TRIGGER_EXIT, a, b) == 1, "apart in z: exited");
     wgf_actor_set_position(b, 9, 0, 3);
     step(0.0f);
-    expect(count_events(WGF_ECS_EVENT_TRIGGER_ENTER, a, b) == 1, "near in z: entered again");
+    expect(count_events(WGF_WORLD_EVENT_TRIGGER_ENTER, a, b) == 1, "near in z: entered again");
     {
         wgf_actor_t overlaps[4];
         expect(wgf_collider_get_overlaps(a, overlaps, 4) == 1 && overlaps[0] == b, "a overlaps b");
     }
     step(0.0f);
-    expect(wgf_ecs_get_event_count() == 0, "still overlapping: nothing new");
+    expect(wgf_world_get_event_count() == 0, "still overlapping: nothing new");
     wgf_actor_set_scale(b, 0.5f, 0.5f, 1);
     step(0.0f);
-    expect(count_events(WGF_ECS_EVENT_TRIGGER_EXIT, a, b) == 1, "b scaled smaller, out of reach: exited");
+    expect(count_events(WGF_WORLD_EVENT_TRIGGER_EXIT, a, b) == 1, "b scaled smaller, out of reach: exited");
     wgf_actor_set_scale(b, 1, 1, 1);
     wgf_collider_set_layer(b, 2);
     wgf_collider_set_mask(b, 2);
     wgf_collider_set_mask(a, 1);
     step(0.0f);
-    expect(wgf_ecs_get_event_count() == 0, "layers that don't meet: nothing");
+    expect(wgf_world_get_event_count() == 0, "layers that don't meet: nothing");
     wgf_collider_set_mask(a, 2);
     step(0.0f);
-    expect(count_events(WGF_ECS_EVENT_TRIGGER_ENTER, b, a) == 1, "a's mask meeting b's layer: entered");
+    expect(count_events(WGF_WORLD_EVENT_TRIGGER_ENTER, b, a) == 1, "a's mask meeting b's layer: entered");
     wgf_collider_set_mask(a, 0);
     wgf_collider_set_mask(b, 1);
     step(0.0f);
-    expect(wgf_ecs_get_event_count() == 0, "a's mask cleared, b's meeting a's layer: still met (either side)");
+    expect(wgf_world_get_event_count() == 0, "a's mask cleared, b's meeting a's layer: still met (either side)");
     expect(wgf_collider_is_enabled(a) && wgf_collider_set_enabled(a, false) && !wgf_collider_is_enabled(a),
            "a collider switched off");
     step(0.0f);
-    expect(count_events(WGF_ECS_EVENT_TRIGGER_EXIT, a, b) == 1, "switched off: its pair ended");
+    expect(count_events(WGF_WORLD_EVENT_TRIGGER_EXIT, a, b) == 1, "switched off: its pair ended");
     step(0.0f);
-    expect(wgf_ecs_get_event_count() == 0, "switched off: meets nothing, from either side");
+    expect(wgf_world_get_event_count() == 0, "switched off: meets nothing, from either side");
     expect(wgf_collider_get_radius(a) == 5 && wgf_collider_get_layer(a) == 1 && wgf_collider_get_mask(a) == 0,
            "switched off: its settings kept");
     wgf_collider_set_enabled(a, true);
     step(0.0f);
-    expect(count_events(WGF_ECS_EVENT_TRIGGER_ENTER, a, b) == 1, "switched on again: met as its settings say");
+    expect(count_events(WGF_WORLD_EVENT_TRIGGER_ENTER, a, b) == 1, "switched on again: met as its settings say");
     expect(!wgf_collider_set_enabled(c + 999, false) && !wgf_collider_is_enabled(c + 999), "not a collider: false");
     wgf_actor_set_position(c, 0, 0, 0);
     step(0.0f);
-    expect(wgf_ecs_get_event_count() == 0, "under another parent: not compared");
+    expect(wgf_world_get_event_count() == 0, "under another parent: not compared");
     wgf_actor_destroy(b, WGF_ACTOR_DESTROY_CHILDREN);
     step(0.0f);
-    expect(wgf_ecs_get_event_count() == 0, "one destroyed: its pairs forgotten, no exit");
+    expect(wgf_world_get_event_count() == 0, "one destroyed: its pairs forgotten, no exit");
 
     /* the probes */
     wgf_actor_add_behavior(a, "Rock");
@@ -263,7 +263,7 @@ int main(void)
            "a behavior gone: 0, not missing");
 
     /* interpolation */
-    wgf_ecs_clear();
+    wgf_world_clear();
     e = mover(stage, 0, 0);
     wgf_motion_set_velocity(e, 10, 0, 0);
     wgf_actor_set_rotation(e, 0, 0, 3.0f);
@@ -275,7 +275,7 @@ int main(void)
     draw(0.5f);
     expect(near(drawn_x(e), 10), "snapped: drawn where it is");
 
-    wgf_ecs_clear();
+    wgf_world_clear();
     wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
     wgf_actor_destroy(other_stage, WGF_ACTOR_DESTROY_CHILDREN);
     wgf_gfx_priv_stop();

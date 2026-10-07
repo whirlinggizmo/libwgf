@@ -127,11 +127,12 @@ static wgf_core_priv_part_t part = {.name = "stage",
 
 /* ------------------------------------------------------------ the stage ---- */
 
-static wgf_gfx_priv_actor_t *stage_of(wgf_actor_t stage)
+static wgf_gfx_priv_actor_t *stage_of_at(wgf_actor_t stage, const char *caller)
 {
-    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(stage);
+    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of_at(stage, caller);
     return actor_ptr != NULL && actor_ptr->type == WGF_ACTOR_KIND_STAGE3D ? actor_ptr : NULL;
 }
+#define stage_of(...) stage_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
 wgf_actor_t wgf_stage3d_create(void)
 {

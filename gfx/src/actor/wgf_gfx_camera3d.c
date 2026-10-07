@@ -8,11 +8,12 @@
 
 #define PI 3.14159265358979323846f
 
-static wgf_gfx_priv_actor_t *camera_of(wgf_actor_t camera)
+static wgf_gfx_priv_actor_t *camera_of_at(wgf_actor_t camera, const char *caller)
 {
-    wgf_gfx_priv_actor_t *camera_ptr = wgf_gfx_priv_actor_of(camera);
+    wgf_gfx_priv_actor_t *camera_ptr = wgf_gfx_priv_actor_of_at(camera, caller);
     return camera_ptr != NULL && camera_ptr->type == WGF_ACTOR_KIND_CAMERA3D ? camera_ptr : NULL;
 }
+#define camera_of(...) camera_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
 wgf_actor_t wgf_camera3d_create(void)
 {

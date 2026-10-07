@@ -3,7 +3,7 @@ package wgf;
 
 /**
     Components: the simulation's data on an actor -- any actor, of any kind, a 2D stage's UI
-    actors and cameras included -- run each tick by libwgf's systems (wgf_ecs.h). One kind
+    actors and cameras included -- run each tick by libwgf's systems (wgf_world.h). One kind
     of object, the actor (SPEC.md), Godot's tree with Unity's components: what an actor draws
     is its kind (a shape, a sprite, a model); what moves it, bounds it, ages it, and finds
     what it overlaps are components on it; what the program does with it are its behaviors

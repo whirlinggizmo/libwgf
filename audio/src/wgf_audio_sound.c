@@ -26,12 +26,12 @@ static struct {
     wgf_audio_priv_sound_t *sounds;
 } kinds[2]; /* [streamed] */
 
-wgf_audio_priv_sound_t *wgf_audio_priv_sound_of(wgf_handle_t sound)
+wgf_audio_priv_sound_t *wgf_audio_priv_sound_of_at(wgf_handle_t sound, const char *caller)
 {
     uint16_t index;
     const int streamed = sound != 0 && WGF_CORE_PRIV_HANDLE_KIND(sound) == WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND_STREAMED;
     if (sound == 0 || (!streamed && WGF_CORE_PRIV_HANDLE_KIND(sound) != WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND) ||
-        !kinds[streamed].ready || !wgf_core_priv_handle_pool_resolve(&kinds[streamed].pool, sound, &index)) {
+        !kinds[streamed].ready || !wgf_core_priv_handle_pool_resolve_at(&kinds[streamed].pool, sound, &index, caller)) {
         return NULL;
     }
     return &kinds[streamed].sounds[index];

@@ -9,6 +9,10 @@ abstract Material(Int) from Int to Int to wgf.Handle {
 	public inline function isNone():Bool
 		return this == 0;
 
+	/** Whether this refers to something alive: false for none, and for what was destroyed or released (wgf_handle_is_alive). Ask it first where a handle may be dead. **/
+	public inline function isAlive():Bool
+		return (this : Handle).isAlive();
+
 	/**
 	    A material with glTF's defaults. 0 when `shading` isn't one (logged), or there is no
 	    room for another material.

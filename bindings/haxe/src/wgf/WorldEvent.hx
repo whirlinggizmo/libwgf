@@ -3,8 +3,9 @@ package wgf;
 
 /**
     The simulation as a whole: libwgf's systems over the actors' components
-    (wgf_component.h), the events they raise, finding actors by behavior or component, and the simulated
-    actors written out as text.
+    (wgf_component.h), the events they raise, and the simulated actors written out as text;
+    the actors with a behavior or a component are found by wgf_actor_find_with_behavior
+    (wgf_behavior.h) and wgf_actor_find_with_component (wgf_component.h).
 
     Each tick, as it begins, every simulated actor's transform is kept as it is; after the
     program's tick the systems run in this order: lifetimes count down (an actor whose time is
@@ -29,7 +30,7 @@ package wgf;
     back: a binding takes them at its tick's start and calls its behaviors itself. At most
     65536 wait; past that the oldest are dropped, warned once.
 **/
-enum abstract EcsEvent(Int) from Int to Int {
+enum abstract WorldEvent(Int) from Int to Int {
 	var NONE = 0;
 	var CREATED = 1;
 	var DESTROYED = 2;

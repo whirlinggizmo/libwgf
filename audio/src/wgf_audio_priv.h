@@ -1,6 +1,7 @@
 #ifndef WGF_AUDIO_PRIV_H
 #define WGF_AUDIO_PRIV_H
 
+#include "wgf_core_handle_priv.h" /* WGF_CORE_PRIV_CALLER */
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -84,7 +85,8 @@ wgf_audio_priv_segment_t *wgf_audio_priv_sound_segment(const wgf_audio_priv_soun
 
 /* The sound `sound` is, decoded or streamed; NULL for anything else. Under the lock when
  * another thread may read it. */
-wgf_audio_priv_sound_t *wgf_audio_priv_sound_of(wgf_handle_t sound);
+wgf_audio_priv_sound_t *wgf_audio_priv_sound_of_at(wgf_handle_t sound, const char *caller);
+#define wgf_audio_priv_sound_of(sound) wgf_audio_priv_sound_of_at((sound), WGF_CORE_PRIV_CALLER)
 
 /* Each platform's half of a sound's load and life: prepare on any thread (the file at
  * `path`), finish on the main thread, discard what was prepared, free what a record
@@ -129,7 +131,8 @@ typedef struct wgf_audio_priv_voice_t {
 void wgf_audio_priv_voice_range(const wgf_audio_priv_voice_t *voice_ptr, double *start, double *end);
 
 /* The voice `voice` is; NULL for anything else. Under the lock. */
-wgf_audio_priv_voice_t *wgf_audio_priv_voice_of(wgf_handle_t voice);
+wgf_audio_priv_voice_t *wgf_audio_priv_voice_of_at(wgf_handle_t voice, const char *caller);
+#define wgf_audio_priv_voice_of(voice) wgf_audio_priv_voice_of_at((voice), WGF_CORE_PRIV_CALLER)
 
 /* Every voice, for the mixer, under the lock: calls `each` with each live one. */
 void wgf_audio_priv_voice_each(void (*each)(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr, void *user),

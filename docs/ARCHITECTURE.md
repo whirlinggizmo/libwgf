@@ -40,7 +40,7 @@ The base every other layer uses. It has no window and no loop: app's runtime sta
 | identity | `wgf_identity.h` | the company and product the program's files on the desktop are kept under |
 | log | `wgf_log.h` | levels, `wgf_log_message`, and for C the `wgf_log_<level>` macros, which format |
 | time | `wgf_time.h` | `wgf_time_get_seconds`, monotonic seconds since core started, on sokol_time |
-| handle | `wgf_handle.h` | `wgf_handle_t`, and `wgf_handle_get_kind_name`; the pools are private |
+| handle | `wgf_handle.h` | `wgf_handle_t`, `wgf_handle_get_kind_name`, and `wgf_handle_is_alive` (any kind's, through the pools each kind registers); the pools are private, and a dead handle given to a call is refused and, in a debug build, warned of once a call |
 | fs | `wgf_fs.h` | read, write, exists, remove, mkdir, rmdir, each a task (`wgf_fs_task_t`); the root; `user:` paths for the program's own files that last |
 | probe | `wgf_probe.h` | named numbers, or text, a program publishes about itself (the UI's focus as `ui.focus`), read by autopilot runs, tools, and tests |
 | random | `wgf_random.h` | one seeded generator (PCG32): a seed's sequence is the same on every platform |
@@ -138,13 +138,13 @@ Components and behaviors on actors, and the systems that run them at the tick ra
 | Section | Header | Provides |
 |---------|--------|----------|
 | component | `wgf_component.h` | `wgf_component_t`; a component added to any actor, removed, asked about; the voice component's voice |
-| (the world) | `wgf_ecs.h` | the events, polled: CREATED, DESTROYED, TRIGGER_ENTER, TRIGGER_EXIT, four ints each (a trigger's last the other's layer); the actors with a behavior or a component found and counted; clearing; the simulated actors dumped as a scene |
+| (the world) | `wgf_world.h` | the events, polled: CREATED, DESTROYED, TRIGGER_ENTER, TRIGGER_EXIT, four ints each (a trigger's last the other's layer); the actors with a behavior or a component found and counted; clearing; the simulated actors dumped as a scene |
 | motion | `wgf_motion.h` | velocity, spin, damping, a top speed |
 | bounds | `wgf_bounds.h` | a rectangle wrapped around, clamped to, or died outside, with a margin; or the presentation's visible area, read each tick, in place of a rectangle |
 | lifetime | `wgf_lifetime.h` | seconds left |
 | collider | `wgf_collider.h` | a sphere (a circle on a 2D stage), a layer and a mask; switched off and on; what it overlaps |
 | behavior | `wgf_behavior.h` | the program's own code, by name, several on an actor, each with an id and text parameters, a parameter `@name` or `@path` referring to another actor |
-| scene | `wgf_scene.h` | a resource: actor trees and prefabs in a text file (BUILDING.md, "Scene files"), instantiated, and prefabs spawned, or spawned at a place and turned, snapped before anything it makes starts |
+| scene | `wgf_scene.h` | a resource: actor trees and prefabs in a text file (BUILDING.md, "Scene files"), instantiated; its prefabs found once as handles (`wgf_prefab_t`, "ecs.prefab", stale with their scene) and spawned, or spawned at a place and turned, snapped before anything it makes starts |
 
 **One kind of object.** There is no entity: an actor with a component or a behavior has a record here (`"ecs.components"`'s pool), its handle in the actor's own record (`components`), made with its first and let go of with the actor, through gfx's hook for an actor going, so gfx names no ecs. The systems' data -- motion, bounds, lifetime, a collider -- is the store's components, each packed in an array of its own with a sparse array from an entity to its place there, beside a reference back to the actor that every entity has, so a system's query walks its component's array; the transform is the actor's own. What isn't plain data is in the record: the voice and the behaviors (each its name, id, and parameters, in a list in the order added). Drawing stays gfx's: the actor is what it draws, through its stage.
 
@@ -152,11 +152,11 @@ Components and behaviors on actors, and the systems that run them at the tick ra
 
 **Colliders** are triggers, nothing pushed apart: each tick, the colliders under each parent, sorted along x, are swept for overlaps -- spheres, so a 3D stage's meet in all three axes and a 2D stage's (every z 0) as circles -- where either side's mask has the other's layer (so clearing one side's mask doesn't stop the other meeting it), a switched-off collider (`wgf_collider_set_enabled`) skipped, its settings kept; the pairs found are sorted and walked against the last tick's, so a pair new this tick raises TRIGGER_ENTER and one gone raises TRIGGER_EXIT, told to each with the other's layer as the pair met (kept with the pair, so an exit tells it too). A destroyed actor's pairs are dropped without an exit; its behaviors' DESTROYED carry its now-stale handle.
 
-**Finding** by component or behavior is the store's set of an id: each behavior name is a tag on the actors that have one of it, and the voice a tag too, so `wgf_ecs_find_component` and `wgf_ecs_find_behavior` walk that set, never every record, and give the actors oldest first into the caller's array; counting is the set's count.
+**Finding** by component or behavior is the store's set of an id: each behavior name is a tag on the actors that have one of it, and the voice a tag too, so `wgf_actor_find_with_component` and `wgf_actor_find_with_behavior` walk that set, never every record, and give the actors oldest first into the caller's array; counting is the set's count.
 
-**Events** queue in a ring of 65,536 and are taken by the program, or the binding, with `wgf_ecs_take_events`: one async model, polled, and no callback crosses into a behavior. A behavior's code is the program's: the binding's runtime makes each behavior's object (`wgf.Behavior`) from these events, tells it of its actor's triggers (dropping one whose actor or other the program destroyed earlier in the same batch), ticks and frames it, and ends it ("The bindings"). A behavior name with no class is a tag when the program says so (`Behavior.tag`): no object, no warning.
+**Events** queue in a ring of 65,536 and are taken by the program, or the binding, with `wgf_world_take_events`: one async model, polled, and no callback crosses into a behavior. A behavior's code is the program's: the binding's runtime makes each behavior's object (`wgf.Behavior`) from these events, tells it of its actor's triggers (dropping one whose actor or other the program destroyed earlier in the same batch), ticks and frames it, and ends it ("The bindings"). A behavior name with no class is a tag when the program says so (`Behavior.tag`): no object, no warning.
 
-**Scenes** load through core's load pipeline, parsed on a worker into a plan of blocks, each its path's parent, its kind, and a list of lines; `from` copies a prefab's lines and parts first. Instantiating or spawning makes each block's actor of its kind and applies the lines through the same calls a program makes, then makes the blocks under it; once all are made, each behavior parameter that is a reference is found and kept. `wgf_ecs_dump` writes every simulated actor's tree as flat blocks, with every component as it is, so a dumped world loaded again makes the same world, and dumps the same text.
+**Scenes** load through core's load pipeline, parsed on a worker into a plan of blocks, each its path's parent, its kind, and a list of lines; `from` copies a prefab's lines and parts first. Instantiating or spawning makes each block's actor of its kind and applies the lines through the same calls a program makes, then makes the blocks under it; once all are made, each behavior parameter that is a reference is found and kept. `wgf_world_dump` writes every simulated actor's tree as flat blocks, with every component as it is, so a dumped world loaded again makes the same world, and dumps the same text.
 
 ### ui
 

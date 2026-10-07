@@ -1,4 +1,5 @@
-#include "wgf_ecs.h"
+#include "wgf_behavior.h"
+#include "wgf_world.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -19,7 +20,7 @@
 #include "wgf_probe.h"
 #include "wgf_voice.h"
 
-/* The ecs (wgf_ecs.h): the store (wgf_ecs_store_priv.h) made with the first actor given
+/* The ecs (wgf_world.h): the store (wgf_ecs_store_priv.h) made with the first actor given
  * a component or a behavior, the records of those actors, the systems run each tick over
  * the actors' simulated transforms, and the events. A part (wgf_core_part_priv.h):
  * installed by the first record, so a program that gives no actor a component links
@@ -65,9 +66,9 @@ const wgf_ecs_priv_ids_t *wgf_ecs_priv_ids(void)
     return &ecs.ids;
 }
 
-wgf_ecs_priv_record_t *wgf_ecs_priv_record_of(wgf_actor_t actor)
+wgf_ecs_priv_record_t *wgf_ecs_priv_record_of_at(wgf_actor_t actor, const char *caller)
 {
-    const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
+    const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of_at(actor, caller);
     uint16_t index;
     if (!ecs.started || actor_ptr == NULL || actor_ptr->components == 0 ||
         !wgf_core_priv_handle_pool_resolve(&ecs.pool, actor_ptr->components, &index)) {
@@ -76,9 +77,9 @@ wgf_ecs_priv_record_t *wgf_ecs_priv_record_of(wgf_actor_t actor)
     return &ecs.records[index];
 }
 
-void *wgf_ecs_priv_get(wgf_actor_t actor, wgf_ecs_priv_id_t component)
+void *wgf_ecs_priv_get_at(wgf_actor_t actor, wgf_ecs_priv_id_t component, const char *caller)
 {
-    const wgf_ecs_priv_record_t *record = wgf_ecs_priv_record_of(actor);
+    const wgf_ecs_priv_record_t *record = wgf_ecs_priv_record_of_at(actor, caller);
     return record != NULL ? wgf_ecs_priv_store_get(record->id, component) : NULL;
 }
 
@@ -108,7 +109,7 @@ wgf_actor_t *wgf_ecs_priv_actors(int *count)
 
 /* ---- events -------------------------------------------------------------------- */
 
-void wgf_ecs_priv_raise(wgf_ecs_event_t event, int a, int b, int c)
+void wgf_ecs_priv_raise(wgf_world_event_t event, int a, int b, int c)
 {
     int at;
     if (ecs.events == NULL) return;
@@ -126,12 +127,12 @@ void wgf_ecs_priv_raise(wgf_ecs_event_t event, int a, int b, int c)
     ecs.event_count++;
 }
 
-int wgf_ecs_get_event_count(void)
+int wgf_world_get_event_count(void)
 {
     return ecs.event_count;
 }
 
-int wgf_ecs_take_events(int *out, int count)
+int wgf_world_take_events(int *out, int count)
 {
     int taken = 0;
     if (out == NULL || count < EVENT_INTS) return 0;
@@ -267,12 +268,12 @@ static void collide(void)
     while (i < found_count || j < ecs.pair_count) {
         const int order = i == found_count ? 1 : (j == ecs.pair_count ? -1 : by_pair(&found[i], &ecs.pairs[j]));
         if (order < 0) {
-            wgf_ecs_priv_raise(WGF_ECS_EVENT_TRIGGER_ENTER, (int)found[i].a, (int)found[i].b, found[i].b_layer);
-            wgf_ecs_priv_raise(WGF_ECS_EVENT_TRIGGER_ENTER, (int)found[i].b, (int)found[i].a, found[i].a_layer);
+            wgf_ecs_priv_raise(WGF_WORLD_EVENT_TRIGGER_ENTER, (int)found[i].a, (int)found[i].b, found[i].b_layer);
+            wgf_ecs_priv_raise(WGF_WORLD_EVENT_TRIGGER_ENTER, (int)found[i].b, (int)found[i].a, found[i].a_layer);
             i++;
         } else if (order > 0) {
-            wgf_ecs_priv_raise(WGF_ECS_EVENT_TRIGGER_EXIT, (int)ecs.pairs[j].a, (int)ecs.pairs[j].b, ecs.pairs[j].b_layer);
-            wgf_ecs_priv_raise(WGF_ECS_EVENT_TRIGGER_EXIT, (int)ecs.pairs[j].b, (int)ecs.pairs[j].a, ecs.pairs[j].a_layer);
+            wgf_ecs_priv_raise(WGF_WORLD_EVENT_TRIGGER_EXIT, (int)ecs.pairs[j].a, (int)ecs.pairs[j].b, ecs.pairs[j].b_layer);
+            wgf_ecs_priv_raise(WGF_WORLD_EVENT_TRIGGER_EXIT, (int)ecs.pairs[j].b, (int)ecs.pairs[j].a, ecs.pairs[j].a_layer);
             j++;
         } else {
             i++;
@@ -467,7 +468,7 @@ static void publish(void)
         for (b = 0; b < ecs.records[i].behavior_count; b++) note_name(ecs.records[i].behaviors[b]->name);
     }
     for (p = 0; p < ecs.probe_name_count; p++) {
-        n = wgf_ecs_count_behavior(ecs.probe_names[p]);
+        n = wgf_actor_count_with_behavior(ecs.probe_names[p]);
         snprintf(probe, sizeof(probe), "ecs.behavior.%s", ecs.probe_names[p]);
         wgf_probe_set_value(probe, n); /* a name too long for a probe is simply not published */
     }
@@ -554,7 +555,7 @@ static wgf_core_priv_part_t part = {.name = "ecs",
                                     .tick_begin = tick_begin,
                                     .tick = tick,
                                     .stop = stop,
-                                    .dump = wgf_ecs_dump};
+                                    .dump = wgf_world_dump};
 
 /* ---- the world -------------------------------------------------------------------- */
 
@@ -644,7 +645,7 @@ void wgf_ecs_priv_record_free(wgf_actor_t actor)
     int b;
     if (record == NULL) return;
     for (b = 0; b < record->behavior_count; b++) {
-        wgf_ecs_priv_raise(WGF_ECS_EVENT_DESTROYED, (int)actor, record->behaviors[b]->id, 0);
+        wgf_ecs_priv_raise(WGF_WORLD_EVENT_DESTROYED, (int)actor, record->behaviors[b]->id, 0);
     }
     wgf_ecs_priv_forget_pairs(actor);
     if (record->voice != 0) wgf_voice_destroy(record->voice);
@@ -657,7 +658,7 @@ void wgf_ecs_priv_record_free(wgf_actor_t actor)
     ecs.live--;
 }
 
-int wgf_ecs_get_count(void)
+int wgf_actor_get_count(void)
 {
     return ecs.live;
 }
@@ -738,27 +739,27 @@ static wgf_ecs_priv_id_t component_id(wgf_component_t component)
     }
 }
 
-int wgf_ecs_find_behavior(const char *name, wgf_actor_t *out, int count)
+int wgf_actor_find_with_behavior(const char *name, wgf_actor_t *out, int count)
 {
     return find_id(wgf_ecs_priv_behavior_tag(name, false), out, count);
 }
 
-int wgf_ecs_count_behavior(const char *name)
+int wgf_actor_count_with_behavior(const char *name)
 {
     return wgf_ecs_priv_store_count(wgf_ecs_priv_behavior_tag(name, false));
 }
 
-int wgf_ecs_find_component(wgf_component_t component, wgf_actor_t *out, int count)
+int wgf_actor_find_with_component(wgf_component_t component, wgf_actor_t *out, int count)
 {
     return find_id(component_id(component), out, count);
 }
 
-int wgf_ecs_count_component(wgf_component_t component)
+int wgf_actor_count_with_component(wgf_component_t component)
 {
     return ecs.started ? wgf_ecs_priv_store_count(component_id(component)) : 0;
 }
 
-void wgf_ecs_clear(void)
+void wgf_world_clear(void)
 {
     int count = 0, i;
     wgf_actor_t *all = wgf_ecs_priv_actors(&count);

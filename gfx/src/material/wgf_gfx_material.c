@@ -59,12 +59,13 @@ static const param_t PARAMS[] = {
     TEXTURE_PARAMS("emissive_texture", WGF_GFX_PRIV_MATERIAL_TEXTURE_EMISSIVE),
 };
 
-static wgf_gfx_priv_material_t *resolve(wgf_material_t handle)
+static wgf_gfx_priv_material_t *resolve_at(wgf_material_t handle, const char *caller)
 {
     uint16_t index = 0;
-    if (!pool_ready || !wgf_core_priv_handle_pool_resolve(&pool, handle, &index)) return NULL;
+    if (!pool_ready || !wgf_core_priv_handle_pool_resolve_at(&pool, handle, &index, caller)) return NULL;
     return &materials[index];
 }
+#define resolve(...) resolve_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
 /* The material and its parameter `name`; NULL when either doesn't exist, or when the
  * parameter's kind isn't `kind` (or `alt_kind`), logged when `log` is set. */

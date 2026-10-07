@@ -1,13 +1,14 @@
 #ifndef WGF_ECS_PRIV_H
 #define WGF_ECS_PRIV_H
 
+#include "wgf_core_handle_priv.h" /* WGF_CORE_PRIV_CALLER */
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
 #include "wgf_ecs_store_priv.h"
 #include "wgf_component.h"
-#include "wgf_ecs.h"
+#include "wgf_world.h"
 
 /* The ecs's own code: the store (wgf_ecs_store_priv.h), the records of the actors with
  * components or behaviors, the systems, and the events (wgf_ecs.c); an actor's components and behaviors
@@ -100,14 +101,16 @@ bool wgf_ecs_priv_start(void);
  * isn't an actor, or no room. And the record of an actor, or NULL when it has none: records
  * move when one is made, so don't keep the pointer across a make. */
 wgf_ecs_priv_record_t *wgf_ecs_priv_record_make(wgf_actor_t actor);
-wgf_ecs_priv_record_t *wgf_ecs_priv_record_of(wgf_actor_t actor);
+wgf_ecs_priv_record_t *wgf_ecs_priv_record_of_at(wgf_actor_t actor, const char *caller);
+#define wgf_ecs_priv_record_of(actor) wgf_ecs_priv_record_of_at((actor), WGF_CORE_PRIV_CALLER)
 
 /* A record let go of as its actor goes (the actor's hook): DESTROYED raised for each
  * behavior, its collider's pairs dropped, its voice destroyed, its entity in the store deleted. */
 void wgf_ecs_priv_record_free(wgf_actor_t actor);
 
 /* A component of an actor, for writing; NULL when it hasn't that one. */
-void *wgf_ecs_priv_get(wgf_actor_t actor, wgf_ecs_priv_id_t component);
+void *wgf_ecs_priv_get_at(wgf_actor_t actor, wgf_ecs_priv_id_t component, const char *caller);
+#define wgf_ecs_priv_get(actor, component) wgf_ecs_priv_get_at((actor), (component), WGF_CORE_PRIV_CALLER)
 
 /* Every actor with a record, oldest first, into a malloc'd array the caller frees (NULL
  * with none, or out of memory); how many in *count. */
@@ -122,8 +125,8 @@ wgf_ecs_priv_id_t wgf_ecs_priv_behavior_tag(const char *name, bool make);
  * as a scene's actors are all made: one found by none warned. */
 void wgf_ecs_priv_behaviors_resolve(wgf_actor_t actor);
 
-/* An event raised: queued for the program to take (wgf_ecs_take_events). */
-void wgf_ecs_priv_raise(wgf_ecs_event_t event, int a, int b, int c);
+/* An event raised: queued for the program to take (wgf_world_take_events). */
+void wgf_ecs_priv_raise(wgf_world_event_t event, int a, int b, int c);
 
 /* An actor's collider pairs dropped as it goes, or as its collider does, raising nothing. */
 void wgf_ecs_priv_forget_pairs(wgf_actor_t actor);
