@@ -92,7 +92,7 @@ ROWS = [
 # A "same" row's target: libwgt's size, gzip, and the autopilot runner's cost, which
 # every libwgf program carries on purpose, so a shipped build can be played through
 # (docs/HISTORY.md, "Same rows, a target"). --check fails a "same" row past it.
-RUNNER_COST = 4 * 1024
+RUNNER_COST = 4608  # 4.5 KB: text expectations and recording's hooks (HISTORY, "The runner's allowance")
 # And the presentation's transform (wgf_presentation.h), which every program's drawing,
 # clips, and input go through, a mode set or not: measured at 304 bytes of gzip on
 # app-hello (docs/HISTORY.md, "Milestone 2, step 2"); libwgt has no presentation mode.
@@ -284,7 +284,7 @@ def markdown(baseline):
              'The same program in each library (each libwgf example\'s header says how it matches), gzip -9, its wasm '
              'and its JS together; brotli -q 11 in brackets.', '',
              'A **same** row is the same program in each library, and libwgf\'s is held to libwgt\'s size and the '
-             f'autopilot runner\'s {RUNNER_COST // 1024} KB and the presentation\'s {PRESENTATION_COST / 1024:g} KB '
+             f'autopilot runner\'s {RUNNER_COST / 1024:g} KB and the presentation\'s {PRESENTATION_COST / 1024:g} KB '
              '(the target); a **differs** row\'s libwgf program '
              'leaves out what libwgf lacks, so its size is not a saving: its reason is linked, and it turns same as '
              'the milestone that brings what it lacks does.', '',
@@ -431,7 +431,7 @@ def check(measured, baseline):
         goal = target(baseline, name)
         if goal is not None and new_total > goal:
             worse.append(f'{name}: {kb(new_total)} KB gzip, past its target {kb(goal)} (libwgt\'s and the runner\'s '
-                         f'{RUNNER_COST // 1024} KB, the presentation\'s {PRESENTATION_COST / 1024:g}): a "same" row')
+                         f'{RUNNER_COST / 1024:g} KB, the presentation\'s {PRESENTATION_COST / 1024:g}): a "same" row')
     return worse, better
 
 

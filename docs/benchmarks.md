@@ -8,18 +8,18 @@ Measured from libwgf 8f3a822 2026-10-07, libwgt 8871e04 2026-10-05, wgrender-c 2
 
 The same program in each library (each libwgf example's header says how it matches), gzip -9, its wasm and its JS together; brotli -q 11 in brackets.
 
-A **same** row is the same program in each library, and libwgf's is held to libwgt's size and the autopilot runner's 4 KB and the presentation's 0.5 KB (the target); a **differs** row's libwgf program leaves out what libwgf lacks, so its size is not a saving: its reason is linked, and it turns same as the milestone that brings what it lacks does.
+A **same** row is the same program in each library, and libwgf's is held to libwgt's size and the autopilot runner's 4.5 KB and the presentation's 0.5 KB (the target); a **differs** row's libwgf program leaves out what libwgf lacks, so its size is not a saving: its reason is linked, and it turns same as the milestone that brings what it lacks does.
 
 | program | | libwgf | target | libwgt | wgrender-c |
 |---|---|---:|---:|---:|---:|
-| app-skeleton | same | 76.5 (64.3) | 76.9 | 72.4 (60.6) | - |
-| app-hello / hello | same | 107.9 (90.8) | 107.9 | 103.4 (86.9) | 124.9 (105.9) |
-| app-window / window | same | 103.3 (86.8) | 104.3 | 99.8 (83.6) | 126.0 (106.9) |
-| app-tick / tick | same | 103.1 (86.8) | 103.9 | 99.4 (83.3) | 125.1 (106.1) |
-| app-gamepad / gamepad | same | 108.3 (91.2) | 108.7 | 104.2 (87.6) | 126.6 (107.6) |
+| app-skeleton | same | 76.5 (64.3) | 77.4 | 72.4 (60.6) | - |
+| app-hello / hello | same | 107.9 (90.8) | 108.4 | 103.4 (86.9) | 124.9 (105.9) |
+| app-window / window | same | 103.3 (86.8) | 104.8 | 99.8 (83.6) | 126.0 (106.9) |
+| app-tick / tick | same | 103.1 (86.8) | 104.4 | 99.4 (83.3) | 125.1 (106.1) |
+| app-gamepad / gamepad | same | 108.3 (91.2) | 109.2 | 104.2 (87.6) | 126.6 (107.6) |
 | app-touch / touch | [differs](#differs-app-touch) | 157.4 (131.0) | - | 186.3 (154.0) | 176.5 (147.9) |
-| gfx-font / font | same | 123.0 (102.8) | 123.8 | 119.3 (99.6) | 126.6 (107.3) |
-| gfx-hello3d / hello3d | same | 113.0 (94.6) | 113.2 | 108.7 (90.9) | 125.9 (106.6) |
+| gfx-font / font | same | 123.0 (102.8) | 124.3 | 119.3 (99.6) | 126.6 (107.3) |
+| gfx-hello3d / hello3d | same | 113.0 (94.6) | 113.7 | 108.7 (90.9) | 125.9 (106.6) |
 | gfx-meshes / meshes | same | 174.4 (144.5) | - | - | 235.4 (194.9) |
 | gfx-materials / materials | [differs](#differs-gfx-materials) | 174.6 (144.5) | - | - | 235.8 (195.0) |
 | gfx-lights / lights | [differs](#differs-gfx-lights) | 131.8 (109.6) | - | - | 248.3 (204.3) |
@@ -27,7 +27,7 @@ A **same** row is the same program in each library, and libwgf's is held to libw
 | gfx-sprite2d / sprite2d | [differs](#differs-gfx-sprite2d) | 155.5 (129.8) | - | 249.4 (202.6) | 249.6 (205.4) |
 | gfx-particles / particles | [differs](#differs-gfx-particles) | 116.5 (97.8) | - | 210.7 (172.8) | 185.5 (154.9) |
 | gfx-tilemap / tilemap | [differs](#differs-gfx-tilemap) | 155.8 (130.0) | - | 208.4 (170.7) | 179.4 (150.3) |
-| audio-music / audio | same | 126.2 (105.7) | 126.8 | 122.3 (102.3) | 184.2 (155.6) |
+| audio-music / audio | same | 126.2 (105.7) | 127.3 | 122.3 (102.3) | 184.2 (155.6) |
 | asset-fetch / fetch | same | 183.4 (151.7) | - | - | 180.9 (151.2) |
 | asset-force-fetch / force_fetch | same | 127.2 (106.7) | - | - | 185.6 (156.9) |
 | asset-loading / loading | [differs](#differs-asset-loading) | 155.6 (130.2) | - | - | 237.0 (196.3) |
