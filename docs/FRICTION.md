@@ -364,7 +364,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Workaround:** the full race flown natively only; the browser flies one lap
 - **Cost:** 15 minutes; the browser covers a lap, not the race
 - **Found by:** the racer's session (its #11)
-- **Triage:** fixed in step 4: a browser run gets two minutes, its last frame's at 15 frames a second, and 30 s for each `wait` (the race: about 6 minutes), `--timeout` gives it another, and every FAIL prints why under it (the errors and FAIL lines, or that the run said nothing of a verdict); headless the same, and `wgf export --autopilot` takes the same time
+- **Triage:** fixed in step 4: a browser run gets two minutes, its last frame's at 3 frames a second, and 30 s for each `wait` (the lap: about 11 minutes, for CI's software drawing; HISTORY.md, "The browser autopilot's allowance"), `--timeout` gives it another, and every FAIL prints why under it (the errors and FAIL lines, or that the run said nothing of a verdict); headless the same, and `wgf export --autopilot` takes the same time
 
 ### Racer: `wgf --help` leaves out `autopilot --record` and `export --autopilot`
 

@@ -386,7 +386,7 @@ def parser():
                    help='play the desktop build by hand in a window, writing every input to the file as an autopilot')
     p.add_argument('--timeout', type=float,
                    help='seconds the run may take (default: in a browser, two minutes and the file\'s last frame at '
-                        '15 a second; headless, 600)')
+                        '3 a second; headless, 600)')
     p.add_argument('--no-build', action='store_true')
     p.set_defaults(run=cmd_autopilot)
     p = sub.add_parser('screenshot', help='the web build at a frame, as a PNG')
