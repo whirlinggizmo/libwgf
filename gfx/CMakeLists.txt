@@ -3,8 +3,10 @@ wgf_layer(gfx
     SOURCES
         src/color/wgf_gfx_color.c
         src/draw/wgf_gfx_draw.c
+        src/draw/wgf_gfx_draw3d.c
         src/emitter/wgf_gfx_emitter2d.c
         src/node/wgf_gfx_camera2d.c
+        src/node/wgf_gfx_camera3d.c
         src/node/wgf_gfx_canvas.c
         src/node/wgf_gfx_node.c
         src/render/wgf_gfx_presentation.c
@@ -37,6 +39,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_frame_test)
         wgf_test(gfx wgf_gfx_presentation_test)
         wgf_test(gfx wgf_gfx_node_test)
+        wgf_test(gfx wgf_gfx_camera3d_test)
         wgf_test(gfx wgf_gfx_text_test)
         wgf_test(gfx wgf_gfx_texture_test)
         wgf_test(gfx wgf_gfx_draw_test)
@@ -51,4 +54,5 @@ if(WGF_TESTS)
     wgf_web_test(gfx wgf_gfx_texture_web_test 1)
     wgf_web_test(gfx wgf_gfx_text_web_test 1)
     wgf_web_test(gfx wgf_gfx_canvas_web_test 1)
+    wgf_web_test(gfx wgf_gfx_draw3d_web_test 1)
 endif()

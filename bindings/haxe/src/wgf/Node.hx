@@ -147,6 +147,16 @@ abstract Node(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_node_get_world_position(this, into);
 
 	/**
+	    Turn the node so its -z points at the target (x, y, z) and its +y is as near to the
+	    up direction (up_x, up_y, up_z) as can be, both in its tree's root's space: how a
+	    camera is aimed, since it looks down its -z. Its rotation is set relative to its
+	    parent, so it points there as it is placed now. False when the target is where the
+	    node is, or the up direction is along the line to it.
+	**/
+	public inline function lookAt(x:Float, y:Float, z:Float, up_x:Float, up_y:Float, up_z:Float):Bool
+		return Raw.wgf_node_look_at(this, x, y, z, up_x, up_y, up_z);
+
+	/**
 	    A name to find the node by; NULL or "" for none, the default. get_name is "" for none: borrowed, valid until the
 	    name changes or the node goes. Names needn't be unique.
 	**/

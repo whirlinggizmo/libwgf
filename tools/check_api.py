@@ -80,6 +80,7 @@ GETTERS_PAIRED = {
     'wgf_emitter2d_set_speed': ('wgf_emitter2d_get_speed_min', 'wgf_emitter2d_get_speed_max'),
     'wgf_emitter2d_set_size': ('wgf_emitter2d_get_size_start', 'wgf_emitter2d_get_size_end'),
     'wgf_emitter2d_set_color': ('wgf_emitter2d_get_color_start', 'wgf_emitter2d_get_color_end'),
+    'wgf_camera3d_set_clip': ('wgf_camera3d_get_near', 'wgf_camera3d_get_far'),
 }
 
 # Calls that take or return a handle of any kind, as bare wgf_handle_t, and why; every

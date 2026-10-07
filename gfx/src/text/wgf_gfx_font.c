@@ -459,6 +459,93 @@ void wgf_gfx_priv_font_draw_block(wgf_handle_t font, const char *text, float siz
     sgl_load_identity(); /* back as the rest of the frame expects it */
 }
 
+/* Text in 3D, libwgt's (wgrender's text3d): each glyph's quad, two triangles, through
+ * a depth-tested pipeline on sokol_fontstash's own shader and atlas. */
+static sgl_pipeline pipeline_3d;
+static sg_shader pipeline_3d_shader;
+
+static void draw_line_quads(const char *start, const char *end, int index, void *user)
+{
+    const block_draw_t *ctx = (const block_draw_t *)user;
+    float x = ctx->left;
+    FONStextIter iter;
+    FONSquad quad;
+    if (end <= start) return;
+    if (ctx->halign == WGF_TEXT_HALIGN_CENTER) x += (ctx->box_width - span_width(start, end)) * 0.5f;
+    else if (ctx->halign == WGF_TEXT_HALIGN_RIGHT) x += ctx->box_width - span_width(start, end);
+    fonsTextIterInit(fons, &iter, x, ctx->top + (float)index * ctx->line_height, start, end);
+    while (fonsTextIterNext(fons, &iter, &quad)) {
+        sgl_v2f_t2f(quad.x0, quad.y0, quad.s0, quad.t0);
+        sgl_v2f_t2f(quad.x1, quad.y0, quad.s1, quad.t0);
+        sgl_v2f_t2f(quad.x1, quad.y1, quad.s1, quad.t1);
+        sgl_v2f_t2f(quad.x0, quad.y0, quad.s0, quad.t0);
+        sgl_v2f_t2f(quad.x1, quad.y1, quad.s1, quad.t1);
+        sgl_v2f_t2f(quad.x0, quad.y1, quad.s0, quad.t1);
+    }
+}
+
+void wgf_gfx_priv_font_draw_block_3d(wgf_handle_t font, const char *text, float size, wgf_color_t color,
+                                    float wrap_width, wgf_text_halign_t halign, wgf_text_valign_t valign,
+                                    const float *matrix)
+{
+    const float scale = size > 0.0f ? WGF_GFX_PRIV_FONT_RASTER_3D / size : 0.0f;
+    float widest = 0.0f, line_height = 0.0f, width;
+    block_draw_t ctx;
+    sg_view atlas;
+    sg_sampler sampler;
+    sg_shader shader;
+    int lines;
+
+    if (text == NULL || scale <= 0.0f || !use_font(font, size, scale, color) ||
+        !wgf_gfx_priv_fontstash_render_state(fons, &atlas, &sampler, &shader)) {
+        return;
+    }
+    lines = block_lines(text, wrap_width * scale, &widest, &line_height);
+    if (lines == 0) return;
+    if (pipeline_3d.id == SG_INVALID_ID || pipeline_3d_shader.id != shader.id) {
+        sg_pipeline_desc desc;
+        if (pipeline_3d.id != SG_INVALID_ID) sgl_destroy_pipeline(pipeline_3d);
+        memset(&desc, 0, sizeof(desc));
+        desc.shader = shader;
+        desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
+        desc.depth.write_enabled = false;
+        desc.colors[0].blend.enabled = true;
+        desc.colors[0].blend.src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA;
+        desc.colors[0].blend.dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+        desc.colors[0].write_mask = SG_COLORMASK_RGBA;
+        pipeline_3d = sgl_make_pipeline(&desc);
+        pipeline_3d_shader = shader;
+    }
+    width = box_width(widest, wrap_width * scale);
+    ctx.left = align_offset(width, (int)halign);
+    ctx.top = align_offset((float)lines * line_height, (int)valign);
+    ctx.line_height = line_height;
+    ctx.box_width = width;
+    ctx.halign = halign;
+
+    sgl_matrix_mode_modelview();
+    sgl_push_matrix();
+    sgl_load_matrix(matrix);
+    sgl_scale(1.0f / scale, 1.0f / scale, 1.0f);
+    sgl_push_pipeline();
+    sgl_load_pipeline(pipeline_3d);
+    sgl_enable_texture();
+    sgl_texture(atlas, sampler);
+    sgl_begin_triangles();
+    sgl_c4b((uint8_t)wgf_color_get_red(color), (uint8_t)wgf_color_get_green(color), (uint8_t)wgf_color_get_blue(color),
+            (uint8_t)wgf_color_get_alpha(color));
+    walk_lines(text, text + strlen(text), wrap_width * scale, &widest, draw_line_quads, &ctx);
+    sgl_end();
+    sgl_disable_texture();
+    sgl_pop_pipeline();
+    sgl_pop_matrix();
+    /* the glyphs the quads rasterized into fontstash's atlas go to sokol_fontstash's
+       texture only when fontstash flushes, which fonsDrawText does and its iterator
+       doesn't: an empty string flushes them, drawing nothing (libwgt's fix of wgrender's
+       text3d, which showed only in frames that also drew 2D text) */
+    fonsDrawText(fons, 0.0f, 0.0f, "", NULL);
+}
+
 /* A full atlas grows, but never in the middle of a frame: draws recorded earlier
  * refer to the atlas and to coordinates for its size, and growing remakes both. So
  * a full atlas only asks to grow, the glyphs that didn't fit skip this one frame,

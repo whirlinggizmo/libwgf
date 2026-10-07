@@ -40,6 +40,7 @@ static void (*fill_bars)(void); /* wgf_presentation_set's (wgf_gfx_presentation.
 
 static sgl_context draw_context;
 static sgl_pipeline draw_pipeline_2d;
+static sgl_pipeline draw_pipeline_3d; /* made by the first 3D draw: depth tested and written */
 static int vertex_capacity;
 static int command_capacity;
 static bool at_most_logged;
@@ -188,7 +189,8 @@ void wgf_gfx_priv_stop(void)
     wgf_gfx_priv_draw_shutdown();
     sgl_destroy_pipeline(draw_pipeline_2d);
     sgl_destroy_context(draw_context);
-    sgl_shutdown();
+    sgl_shutdown(); /* and the 3D pipeline with it */
+    draw_pipeline_3d.id = SG_INVALID_ID;
     sg_shutdown();
     setup = false;
     frame_width = 0;
@@ -360,6 +362,41 @@ void wgf_gfx_priv_render_set_2d(void)
     sgl_ortho(left, right, bottom, top, -1.0f, 1.0f);
     sgl_matrix_mode_modelview();
     sgl_load_identity();
+}
+
+void wgf_gfx_priv_render_set_3d(const float view_proj[16])
+{
+    const wgf_platform_priv_presentation_t *p = &present;
+    sgl_set_context(draw_context);
+    if (draw_pipeline_3d.id == SG_INVALID_ID) {
+        sg_pipeline_desc desc;
+        memset(&desc, 0, sizeof(desc));
+        desc.colors[0].write_mask = SG_COLORMASK_RGBA;
+        desc.colors[0].blend.enabled = true;
+        desc.colors[0].blend.src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA;
+        desc.colors[0].blend.dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+        desc.colors[0].blend.src_factor_alpha = SG_BLENDFACTOR_ONE;
+        desc.colors[0].blend.dst_factor_alpha = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+        desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
+        desc.depth.write_enabled = true;
+        draw_pipeline_3d = sgl_make_pipeline(&desc);
+    }
+    /* what the camera sees fills the visible area, in the framebuffer's pixels */
+    sgl_viewport((int)(p->offset_x + p->visible_x * p->scale_x + 0.5f),
+                 (int)(p->offset_y + p->visible_y * p->scale_y + 0.5f), (int)(p->visible_width * p->scale_x + 0.5f),
+                 (int)(p->visible_height * p->scale_y + 0.5f), true);
+    sgl_load_pipeline(draw_pipeline_3d);
+    sgl_matrix_mode_projection();
+    sgl_load_matrix(view_proj);
+    sgl_matrix_mode_modelview();
+    sgl_load_identity();
+}
+
+void wgf_gfx_priv_render_end_3d(void)
+{
+    sgl_set_context(draw_context);
+    sgl_viewport(0, 0, frame_width, frame_height, true);
+    wgf_gfx_priv_render_set_2d();
 }
 
 unsigned wgf_gfx_priv_render_get_frame(void)

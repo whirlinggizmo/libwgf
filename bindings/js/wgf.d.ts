@@ -378,7 +378,8 @@ export declare const WGF_NODE_TYPE_CAMERA2D: 4;
 export declare const WGF_NODE_TYPE_TEXT: 5;
 export declare const WGF_NODE_TYPE_SHAPE2D: 6;
 export declare const WGF_NODE_TYPE_EMITTER2D: 7;
-export type wgf_node_type_t = typeof WGF_NODE_TYPE_NONE | typeof WGF_NODE_TYPE_NODE | typeof WGF_NODE_TYPE_CANVAS | typeof WGF_NODE_TYPE_SPRITE | typeof WGF_NODE_TYPE_CAMERA2D | typeof WGF_NODE_TYPE_TEXT | typeof WGF_NODE_TYPE_SHAPE2D | typeof WGF_NODE_TYPE_EMITTER2D;
+export declare const WGF_NODE_TYPE_CAMERA3D: 8;
+export type wgf_node_type_t = typeof WGF_NODE_TYPE_NONE | typeof WGF_NODE_TYPE_NODE | typeof WGF_NODE_TYPE_CANVAS | typeof WGF_NODE_TYPE_SPRITE | typeof WGF_NODE_TYPE_CAMERA2D | typeof WGF_NODE_TYPE_TEXT | typeof WGF_NODE_TYPE_SHAPE2D | typeof WGF_NODE_TYPE_EMITTER2D | typeof WGF_NODE_TYPE_CAMERA3D;
 
 /**
  * What wgf_node_destroy does with the node's children.
@@ -1940,6 +1941,15 @@ export declare function wgf_node_get_world_position<T extends number[] | Float32
 export declare function wgf_node_get_world_position(node: wgf_node_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
 
 /**
+ * Turn the node so its -z points at the target (x, y, z) and its +y is as near to the
+ * up direction (up_x, up_y, up_z) as can be, both in its tree's root's space: how a
+ * camera is aimed, since it looks down its -z. Its rotation is set relative to its
+ * parent, so it points there as it is placed now. False when the target is where the
+ * node is, or the up direction is along the line to it.
+ */
+export declare function wgf_node_look_at(node: wgf_node_t | 0, x: number, y: number, z: number, up_x: number, up_y: number, up_z: number): boolean;
+
+/**
  * A name to find the node by; NULL or "" for none, the default. get_name is "" for none: borrowed, valid until the
  * name changes or the node goes. Names needn't be unique.
  */
@@ -2037,6 +2047,61 @@ export declare function wgf_camera2d_set_zoom(camera: wgf_node_t | 0, zoom: numb
  * less.
  */
 export declare function wgf_camera2d_get_zoom(camera: wgf_node_t | 0): number;
+
+/**
+ * A camera with a 60 degree vertical field of view, seeing from 0.1 to 1000 units in
+ * front of it. 0 when there is no room for another node.
+ */
+export declare function wgf_camera3d_create(): wgf_node_t;
+
+/**
+ * The vertical field of view, in radians, clamped to 0.01 to 3.13 (just short of a
+ * half turn).
+ */
+export declare function wgf_camera3d_set_fov(camera: wgf_node_t | 0, radians: number): boolean;
+
+/**
+ * The vertical field of view, in radians, clamped to 0.01 to 3.13 (just short of a
+ * half turn).
+ */
+export declare function wgf_camera3d_get_fov(camera: wgf_node_t | 0): number;
+
+/**
+ * How near and far in front of the camera it sees. False unless 0 < near < far.
+ */
+export declare function wgf_camera3d_set_clip(camera: wgf_node_t | 0, near_z: number, far_z: number): boolean;
+
+/**
+ * How near and far in front of the camera it sees. False unless 0 < near < far.
+ */
+export declare function wgf_camera3d_get_near(camera: wgf_node_t | 0): number;
+
+/**
+ * How near and far in front of the camera it sees. False unless 0 < near < far.
+ */
+export declare function wgf_camera3d_get_far(camera: wgf_node_t | 0): number;
+
+/**
+ * Orthographic (true) or perspective (false, the default).
+ */
+export declare function wgf_camera3d_set_orthographic(camera: wgf_node_t | 0, orthographic: boolean): boolean;
+
+/**
+ * Orthographic (true) or perspective (false, the default).
+ */
+export declare function wgf_camera3d_is_orthographic(camera: wgf_node_t | 0): boolean;
+
+/**
+ * How tall a view an orthographic camera sees, in units (default 10). False for 0 or
+ * less.
+ */
+export declare function wgf_camera3d_set_ortho_height(camera: wgf_node_t | 0, height: number): boolean;
+
+/**
+ * How tall a view an orthographic camera sees, in units (default 10). False for 0 or
+ * less.
+ */
+export declare function wgf_camera3d_get_ortho_height(camera: wgf_node_t | 0): number;
 
 /**
  * A canvas, with no camera. 0 when there is no room for another node.
@@ -2370,6 +2435,110 @@ export declare function wgf_draw_texture(texture: wgf_texture_t | 0, x: number, 
  * size. The placeholder fills the rectangle once the texture has FAILED.
  */
 export declare function wgf_draw_texture_region(texture: wgf_texture_t | 0, source_x: number, source_y: number, source_width: number, source_height: number, x: number, y: number, width: number, height: number, tint: wgf_color_t): void;
+
+/**
+ * 3D: between begin_3d and end_3d, the 3D calls draw in the world as `camera` (a 3D
+ * camera, wgf_camera3d.h) sees it, into the presentation's visible area, depth tested
+ * against each other and against the frame's 3D before them, and under the clip. False
+ * when `camera` isn't a 3D camera, or outside a frame. A 3D call outside them draws
+ * nothing; a frame starts in 2D, and one left in 3D ends there. A 2D call between them
+ * lands in the world's x-y plane, as wgrender's did.
+ */
+export declare function wgf_draw_begin_3d(camera: wgf_node_t | 0): boolean;
+
+/**
+ * 3D: between begin_3d and end_3d, the 3D calls draw in the world as `camera` (a 3D
+ * camera, wgf_camera3d.h) sees it, into the presentation's visible area, depth tested
+ * against each other and against the frame's 3D before them, and under the clip. False
+ * when `camera` isn't a 3D camera, or outside a frame. A 3D call outside them draws
+ * nothing; a frame starts in 2D, and one left in 3D ends there. A 2D call between them
+ * lands in the world's x-y plane, as wgrender's did.
+ */
+export declare function wgf_draw_end_3d(): void;
+
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export declare function wgf_draw_line_3d(x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, color: wgf_color_t): void;
+
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export declare function wgf_draw_cube(cx: number, cy: number, cz: number, width: number, height: number, length: number, color: wgf_color_t): void;
+
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export declare function wgf_draw_cube_wires(cx: number, cy: number, cz: number, width: number, height: number, length: number, color: wgf_color_t): void;
+
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export declare function wgf_draw_sphere(cx: number, cy: number, cz: number, radius: number, color: wgf_color_t): void;
+
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export declare function wgf_draw_grid(slices: number, spacing: number, color: wgf_color_t): void;
+
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export declare function wgf_draw_rectangle_3d(cx: number, cy: number, cz: number, width: number, height: number, rx: number, ry: number, rz: number, color: wgf_color_t): void;
+
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export declare function wgf_draw_circle_3d(cx: number, cy: number, cz: number, radius: number, rx: number, ry: number, rz: number, color: wgf_color_t): void;
+
+/**
+ * Text in the world: a block centered on (x, y, z), facing the camera, its lines `size`
+ * world units tall (1 for 0 or less), in `font` (0: the default font), depth tested
+ * and not hiding what is drawn behind it after it. wgrender's wgr_text_draw_3d.
+ */
+export declare function wgf_draw_text_3d(font: wgf_font_t | 0, text: string | null, x: number, y: number, z: number, size: number, color: wgf_color_t): void;
 
 /**
  * An emitter that isn't emitting yet: rate 0, 256 particles at most, white squares of

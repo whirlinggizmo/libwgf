@@ -64,6 +64,16 @@ class Reach {
 		"wgf_camera2d_create",
 		"wgf_camera2d_get_zoom",
 		"wgf_camera2d_set_zoom",
+		"wgf_camera3d_create",
+		"wgf_camera3d_get_far",
+		"wgf_camera3d_get_fov",
+		"wgf_camera3d_get_near",
+		"wgf_camera3d_get_ortho_height",
+		"wgf_camera3d_is_orthographic",
+		"wgf_camera3d_set_clip",
+		"wgf_camera3d_set_fov",
+		"wgf_camera3d_set_ortho_height",
+		"wgf_camera3d_set_orthographic",
 		"wgf_canvas_create",
 		"wgf_canvas_draw",
 		"wgf_canvas_get_camera",
@@ -89,14 +99,24 @@ class Reach {
 		"wgf_debug_hide_fps",
 		"wgf_debug_is_fps_shown",
 		"wgf_debug_show_fps",
+		"wgf_draw_begin_3d",
 		"wgf_draw_circle",
+		"wgf_draw_circle_3d",
 		"wgf_draw_circle_lines",
+		"wgf_draw_cube",
+		"wgf_draw_cube_wires",
+		"wgf_draw_end_3d",
+		"wgf_draw_grid",
 		"wgf_draw_line",
+		"wgf_draw_line_3d",
 		"wgf_draw_polygon",
 		"wgf_draw_polyline",
 		"wgf_draw_rectangle",
+		"wgf_draw_rectangle_3d",
 		"wgf_draw_rectangle_lines",
+		"wgf_draw_sphere",
 		"wgf_draw_text",
+		"wgf_draw_text_3d",
 		"wgf_draw_text_aligned",
 		"wgf_draw_texture",
 		"wgf_draw_texture_region",
@@ -258,6 +278,7 @@ class Reach {
 		"wgf_node_get_world_position",
 		"wgf_node_is_enabled",
 		"wgf_node_is_visible",
+		"wgf_node_look_at",
 		"wgf_node_set_enabled",
 		"wgf_node_set_index",
 		"wgf_node_set_name",
@@ -456,7 +477,7 @@ class Reach {
 		"wgf_window_set_vsync",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...447) 0];
+	static final counts:Array<Int> = [for (_ in 0...468) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

@@ -6,6 +6,7 @@
 #include "wgf_api.h"
 #include "wgf_color.h"
 #include "wgf_font.h"
+#include "wgf_node.h"
 #include "wgf_text.h"
 #include "wgf_texture.h"
 
@@ -63,6 +64,39 @@ WGF_API void wgf_draw_texture(wgf_texture_t texture, float x, float y, float wid
 WGF_API void wgf_draw_texture_region(wgf_texture_t texture, float source_x, float source_y, float source_width,
                                      float source_height, float x, float y, float width, float height,
                                      wgf_color_t tint);
+
+/* 3D: between begin_3d and end_3d, the 3D calls draw in the world as `camera` (a 3D
+ * camera, wgf_camera3d.h) sees it, into the presentation's visible area, depth tested
+ * against each other and against the frame's 3D before them, and under the clip. False
+ * when `camera` isn't a 3D camera, or outside a frame. A 3D call outside them draws
+ * nothing; a frame starts in 2D, and one left in 3D ends there. A 2D call between them
+ * lands in the world's x-y plane, as wgrender's did. */
+WGF_API bool wgf_draw_begin_3d(wgf_node_t camera);
+WGF_API void wgf_draw_end_3d(void);
+
+/* Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn. */
+WGF_API void wgf_draw_line_3d(float x0, float y0, float z0, float x1, float y1, float z1, wgf_color_t color);
+WGF_API void wgf_draw_cube(float cx, float cy, float cz, float width, float height, float length, wgf_color_t color);
+WGF_API void wgf_draw_cube_wires(float cx, float cy, float cz, float width, float height, float length,
+                                 wgf_color_t color);
+WGF_API void wgf_draw_sphere(float cx, float cy, float cz, float radius, wgf_color_t color);
+WGF_API void wgf_draw_grid(int slices, float spacing, wgf_color_t color);
+WGF_API void wgf_draw_rectangle_3d(float cx, float cy, float cz, float width, float height, float rx, float ry,
+                                   float rz, wgf_color_t color);
+WGF_API void wgf_draw_circle_3d(float cx, float cy, float cz, float radius, float rx, float ry, float rz,
+                                wgf_color_t color);
+
+/* Text in the world: a block centered on (x, y, z), facing the camera, its lines `size`
+ * world units tall (1 for 0 or less), in `font` (0: the default font), depth tested
+ * and not hiding what is drawn behind it after it. wgrender's wgr_text_draw_3d. */
+WGF_API void wgf_draw_text_3d(wgf_font_t font, const char *text, float x, float y, float z, float size,
+                              wgf_color_t color);
 
 #ifdef __cplusplus
 }

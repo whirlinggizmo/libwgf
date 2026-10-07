@@ -32,7 +32,8 @@ typedef enum wgf_node_type_t {
     WGF_NODE_TYPE_CAMERA2D = 4,
     WGF_NODE_TYPE_TEXT = 5,
     WGF_NODE_TYPE_SHAPE2D = 6,
-    WGF_NODE_TYPE_EMITTER2D = 7
+    WGF_NODE_TYPE_EMITTER2D = 7,
+    WGF_NODE_TYPE_CAMERA3D = 8
 } wgf_node_type_t;
 
 /* What wgf_node_destroy does with the node's children. */
@@ -86,6 +87,13 @@ WGF_API bool wgf_node_set_transform(wgf_node_t node, float position_x, float pos
 
 /* Where the node is in its tree's root's space: in a canvas, canvas units. */
 WGF_API wgf_vec3_t wgf_node_get_world_position(wgf_node_t node);
+
+/* Turn the node so its -z points at the target (x, y, z) and its +y is as near to the
+ * up direction (up_x, up_y, up_z) as can be, both in its tree's root's space: how a
+ * camera is aimed, since it looks down its -z. Its rotation is set relative to its
+ * parent, so it points there as it is placed now. False when the target is where the
+ * node is, or the up direction is along the line to it. */
+WGF_API bool wgf_node_look_at(wgf_node_t node, float x, float y, float z, float up_x, float up_y, float up_z);
 
 /* A name to find the node by; NULL or "" for none, the default. get_name is "" for none: borrowed, valid until the
  * name changes or the node goes. Names needn't be unique. */

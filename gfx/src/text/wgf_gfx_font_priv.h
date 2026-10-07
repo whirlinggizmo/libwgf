@@ -40,4 +40,18 @@ void wgf_gfx_priv_font_draw_block(wgf_handle_t font, const char *text, float siz
                                  float wrap_width, wgf_text_halign_t halign, wgf_text_valign_t valign,
                                  const float *matrix);
 
+/* The same in 3D (wgf_draw_text_3d): rasterized at WGF_GFX_PRIV_FONT_RASTER_3D pixels
+ * and scaled to `size` world units a line, its glyphs' quads through the frame's 3D
+ * projection and `matrix`, depth tested, not written. Nothing before setup. */
+#define WGF_GFX_PRIV_FONT_RASTER_3D 64.0f
+void wgf_gfx_priv_font_draw_block_3d(wgf_handle_t font, const char *text, float size, wgf_color_t color,
+                                    float wrap_width, wgf_text_halign_t halign, wgf_text_valign_t valign,
+                                    const float *matrix);
+
+/* What sokol_fontstash draws with (wgf_gfx_fontstash_impl.c): its atlas, sampler, and
+ * shader; false before it has them. */
+struct FONScontext;
+bool wgf_gfx_priv_fontstash_render_state(struct FONScontext *context, sg_view *atlas, sg_sampler *sampler,
+                                         sg_shader *shader);
+
 #endif

@@ -269,8 +269,8 @@ static bool is_under(wgf_node_t node, wgf_node_t ancestor)
     return false;
 }
 
-#define NODE_TYPES 8 /* more than wgf_node_type_t's last */
-_Static_assert(WGF_NODE_TYPE_EMITTER2D < NODE_TYPES, "a node type past the kinds' table");
+#define NODE_TYPES 16 /* more than wgf_node_type_t's last */
+_Static_assert(WGF_NODE_TYPE_CAMERA3D < NODE_TYPES, "a node type past the kinds' table");
 static const wgf_gfx_priv_node_kind_t *kinds[NODE_TYPES];
 
 void wgf_gfx_priv_node_set_kind(wgf_node_type_t type, const wgf_gfx_priv_node_kind_t *kind)
@@ -448,6 +448,28 @@ bool wgf_node_set_rotation(wgf_node_t node, float x, float y, float z)
     wgf_gfx_priv_node_t *node_ptr = wgf_gfx_priv_node_of(node);
     if (node_ptr == NULL) return false;
     node_ptr->rotation = wgf_quat_from_euler(wgf_vec3_make(x, y, z));
+    wgf_gfx_priv_node_transform_changed(node);
+    return true;
+}
+
+bool wgf_node_look_at(wgf_node_t node, float x, float y, float z, float up_x, float up_y, float up_z)
+{
+    const wgf_vec3_t up = wgf_vec3_make(up_x, up_y, up_z);
+    wgf_gfx_priv_node_t *node_ptr = wgf_gfx_priv_node_of(node);
+    wgf_vec3_t forward;
+    wgf_quat_t parent_rotation;
+    if (node_ptr == NULL) return false;
+    forward = wgf_vec3_sub(wgf_vec3_make(x, y, z), wgf_mat4_get_translation(wgf_gfx_priv_node_get_world_matrix(node)));
+    if (wgf_vec3_length(forward) < 1e-6f ||
+        wgf_vec3_length(wgf_vec3_cross(up, forward)) < 1e-6f * wgf_vec3_length(forward)) {
+        return false;
+    }
+    /* relative to the parent: its world rotation taken back off */
+    parent_rotation = node_ptr->parent != 0
+                          ? wgf_mat4_get_rotation(wgf_gfx_priv_node_get_world_matrix(node_ptr->parent))
+                          : wgf_quat_identity();
+    node_ptr = wgf_gfx_priv_node_of(node);
+    node_ptr->rotation = wgf_quat_mul(wgf_quat_conjugate(parent_rotation), wgf_quat_look_rotation(forward, up));
     wgf_gfx_priv_node_transform_changed(node);
     return true;
 }

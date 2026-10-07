@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "8e44d223a72439c4" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "e0b11f66e88f1a1d" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -545,6 +545,7 @@ export const WGF_NODE_TYPE_CAMERA2D = 4;
 export const WGF_NODE_TYPE_TEXT = 5;
 export const WGF_NODE_TYPE_SHAPE2D = 6;
 export const WGF_NODE_TYPE_EMITTER2D = 7;
+export const WGF_NODE_TYPE_CAMERA3D = 8;
 
 /**
  * What wgf_node_destroy does with the node's children.
@@ -2781,6 +2782,19 @@ export function wgf_node_get_world_position(node, into) {
     return vector(ret, 3, into);
 }
 
+// wgf: call wgf_node_look_at
+/**
+ * Turn the node so its -z points at the target (x, y, z) and its +y is as near to the
+ * up direction (up_x, up_y, up_z) as can be, both in its tree's root's space: how a
+ * camera is aimed, since it looks down its -z. Its rotation is set relative to its
+ * parent, so it points there as it is placed now. False when the target is where the
+ * node is, or the up direction is along the line to it.
+ */
+export function wgf_node_look_at(node, x, y, z, up_x, up_y, up_z) {
+    const value = host["_wgf_node_look_at"](node, x, y, z, up_x, up_y, up_z);
+    return value !== 0;
+}
+
 // wgf: call wgf_node_set_name
 /**
  * A name to find the node by; NULL or "" for none, the default. get_name is "" for none: borrowed, valid until the
@@ -2921,6 +2935,101 @@ export function wgf_camera2d_set_zoom(camera, zoom) {
  */
 export function wgf_camera2d_get_zoom(camera) {
     const value = host["_wgf_camera2d_get_zoom"](camera);
+    return value;
+}
+
+// wgf: call wgf_camera3d_create
+/**
+ * A camera with a 60 degree vertical field of view, seeing from 0.1 to 1000 units in
+ * front of it. 0 when there is no room for another node.
+ */
+export function wgf_camera3d_create() {
+    const value = host["_wgf_camera3d_create"]();
+    return value >>> 0;
+}
+
+// wgf: call wgf_camera3d_set_fov
+/**
+ * The vertical field of view, in radians, clamped to 0.01 to 3.13 (just short of a
+ * half turn).
+ */
+export function wgf_camera3d_set_fov(camera, radians) {
+    const value = host["_wgf_camera3d_set_fov"](camera, radians);
+    return value !== 0;
+}
+
+// wgf: call wgf_camera3d_get_fov
+/**
+ * The vertical field of view, in radians, clamped to 0.01 to 3.13 (just short of a
+ * half turn).
+ */
+export function wgf_camera3d_get_fov(camera) {
+    const value = host["_wgf_camera3d_get_fov"](camera);
+    return value;
+}
+
+// wgf: call wgf_camera3d_set_clip
+/**
+ * How near and far in front of the camera it sees. False unless 0 < near < far.
+ */
+export function wgf_camera3d_set_clip(camera, near_z, far_z) {
+    const value = host["_wgf_camera3d_set_clip"](camera, near_z, far_z);
+    return value !== 0;
+}
+
+// wgf: call wgf_camera3d_get_near
+/**
+ * How near and far in front of the camera it sees. False unless 0 < near < far.
+ */
+export function wgf_camera3d_get_near(camera) {
+    const value = host["_wgf_camera3d_get_near"](camera);
+    return value;
+}
+
+// wgf: call wgf_camera3d_get_far
+/**
+ * How near and far in front of the camera it sees. False unless 0 < near < far.
+ */
+export function wgf_camera3d_get_far(camera) {
+    const value = host["_wgf_camera3d_get_far"](camera);
+    return value;
+}
+
+// wgf: call wgf_camera3d_set_orthographic
+/**
+ * Orthographic (true) or perspective (false, the default).
+ */
+export function wgf_camera3d_set_orthographic(camera, orthographic) {
+    const value = host["_wgf_camera3d_set_orthographic"](camera, (orthographic ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_camera3d_is_orthographic
+/**
+ * Orthographic (true) or perspective (false, the default).
+ */
+export function wgf_camera3d_is_orthographic(camera) {
+    const value = host["_wgf_camera3d_is_orthographic"](camera);
+    return value !== 0;
+}
+
+// wgf: call wgf_camera3d_set_ortho_height
+/**
+ * How tall a view an orthographic camera sees, in units (default 10). False for 0 or
+ * less.
+ */
+export function wgf_camera3d_set_ortho_height(camera, height) {
+    const value = host["_wgf_camera3d_set_ortho_height"](camera, height);
+    return value !== 0;
+}
+
+// wgf: call wgf_camera3d_get_ortho_height
+/**
+ * How tall a view an orthographic camera sees, in units (default 10). False for 0 or
+ * less.
+ */
+export function wgf_camera3d_get_ortho_height(camera) {
+    const value = host["_wgf_camera3d_get_ortho_height"](camera);
     return value;
 }
 
@@ -3458,6 +3567,143 @@ export function wgf_draw_texture(texture, x, y, width, height, tint) {
  */
 export function wgf_draw_texture_region(texture, source_x, source_y, source_width, source_height, x, y, width, height, tint) {
     host["_wgf_draw_texture_region"](texture, source_x, source_y, source_width, source_height, x, y, width, height, tint);
+}
+
+// wgf: call wgf_draw_begin_3d
+/**
+ * 3D: between begin_3d and end_3d, the 3D calls draw in the world as `camera` (a 3D
+ * camera, wgf_camera3d.h) sees it, into the presentation's visible area, depth tested
+ * against each other and against the frame's 3D before them, and under the clip. False
+ * when `camera` isn't a 3D camera, or outside a frame. A 3D call outside them draws
+ * nothing; a frame starts in 2D, and one left in 3D ends there. A 2D call between them
+ * lands in the world's x-y plane, as wgrender's did.
+ */
+export function wgf_draw_begin_3d(camera) {
+    const value = host["_wgf_draw_begin_3d"](camera);
+    return value !== 0;
+}
+
+// wgf: call wgf_draw_end_3d
+/**
+ * 3D: between begin_3d and end_3d, the 3D calls draw in the world as `camera` (a 3D
+ * camera, wgf_camera3d.h) sees it, into the presentation's visible area, depth tested
+ * against each other and against the frame's 3D before them, and under the clip. False
+ * when `camera` isn't a 3D camera, or outside a frame. A 3D call outside them draws
+ * nothing; a frame starts in 2D, and one left in 3D ends there. A 2D call between them
+ * lands in the world's x-y plane, as wgrender's did.
+ */
+export function wgf_draw_end_3d() {
+    host["_wgf_draw_end_3d"]();
+}
+
+// wgf: call wgf_draw_line_3d
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export function wgf_draw_line_3d(x0, y0, z0, x1, y1, z1, color) {
+    host["_wgf_draw_line_3d"](x0, y0, z0, x1, y1, z1, color);
+}
+
+// wgf: call wgf_draw_cube
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export function wgf_draw_cube(cx, cy, cz, width, height, length, color) {
+    host["_wgf_draw_cube"](cx, cy, cz, width, height, length, color);
+}
+
+// wgf: call wgf_draw_cube_wires
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export function wgf_draw_cube_wires(cx, cy, cz, width, height, length, color) {
+    host["_wgf_draw_cube_wires"](cx, cy, cz, width, height, length, color);
+}
+
+// wgf: call wgf_draw_sphere
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export function wgf_draw_sphere(cx, cy, cz, radius, color) {
+    host["_wgf_draw_sphere"](cx, cy, cz, radius, color);
+}
+
+// wgf: call wgf_draw_grid
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export function wgf_draw_grid(slices, spacing, color) {
+    host["_wgf_draw_grid"](slices, spacing, color);
+}
+
+// wgf: call wgf_draw_rectangle_3d
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export function wgf_draw_rectangle_3d(cx, cy, cz, width, height, rx, ry, rz, color) {
+    host["_wgf_draw_rectangle_3d"](cx, cy, cz, width, height, rx, ry, rz, color);
+}
+
+// wgf: call wgf_draw_circle_3d
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export function wgf_draw_circle_3d(cx, cy, cz, radius, rx, ry, rz, color) {
+    host["_wgf_draw_circle_3d"](cx, cy, cz, radius, rx, ry, rz, color);
+}
+
+// wgf: call wgf_draw_text_3d
+/**
+ * Text in the world: a block centered on (x, y, z), facing the camera, its lines `size`
+ * world units tall (1 for 0 or less), in `font` (0: the default font), depth tested
+ * and not hiding what is drawn behind it after it. wgrender's wgr_text_draw_3d.
+ */
+export function wgf_draw_text_3d(font, text, x, y, z, size, color) {
+    const mark = host["stackSave"]();
+    host["_wgf_draw_text_3d"](font, cstr(text), x, y, z, size, color);
+    host["stackRestore"](mark);
 }
 
 // wgf: call wgf_emitter2d_create

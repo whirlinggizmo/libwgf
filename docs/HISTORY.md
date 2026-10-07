@@ -566,3 +566,13 @@ Read first: Godot's stretch modes and aspects (the prior art ROADMAP named); lib
 - **Asteroids** sets a 960 by 720 design, fit, with dark bars; its scene's three `bounds` take the visible area; its wave counter is right-aligned at the design's edge. Its JS port does the same. The template sets 800 by 600, fit.
 - **Tests:** headless, every mode's mapping both ways at several window sizes, the pointer and a touch, and the window's default size (`wgf_gfx_presentation_test`); pixels in a browser (`wgf_gfx_presentation_web_test`: fit wide, the canvas resized to tall, expand) and in a window under Xvfb (`wgf_gfx_presentation_window_test`: the same, natively).
 - **Skipped:** fullscreen's pixels. Under Xvfb there is no window manager to honor a fullscreen request, so the window test says SKIPPING for it; in a browser fullscreen needs a user gesture, which a headless page can't give. The fitting is the same code at any size, which the two sizes check.
+
+## Milestone 2, step 3, the 3D core (2026-10-06)
+
+Read first: libwgt's 3D core (`gfx/src/scene/`, `mesh/`, `material/`, `shape/`, `shaders/`, and `wgt_draw.h`'s 3D half) and its HISTORY entries for each; wgrender-c's hello3d, meshes, materials, and lights examples, which the size table's 3D rows match.
+- **The 3D camera and immediate mode in 3D first**, since they need no shader of libwgf's own: sokol_gl draws them. Carried from libwgt as they were: the camera's settings and clamps (`wgf_camera3d.h`), and `wgf_draw.h`'s 3D half (lines, cubes and their edges, spheres, a grid, rectangles and circles turned by angles, text facing the camera), wgrender's shape3d geometry. Redesigned:
+  - `wgf_node_look_at` takes the target and the up direction as six numbers, since libwgf's public calls take no vectors (CONVENTIONS.md, the hard rule).
+  - What a camera sees fills the presentation's visible area: its aspect is the visible area's, and immediate mode in 3D draws with a viewport of it, put back when `wgf_draw_end_3d` returns to 2D.
+  - The depth-tested pipeline is made by the first 3D draw and the 3D calls are a file of their own, so a 2D program links none of them.
+  - Text in 3D draws its glyphs' quads through a pipeline on sokol_fontstash's own shader and atlas, as libwgt's does (its fontstash render-state hook carried), in a line-drawing function of its own, so 2D text's code doesn't grow.
+- **gfx-hello3d**, libwgt's example done 1:1, is a same row: 112.2 KB gzip against its target of 113.2 (libwgt's 108.7, the runner's 4 KB, the presentation's 0.5).

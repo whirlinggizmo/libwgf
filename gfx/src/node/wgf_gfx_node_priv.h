@@ -48,6 +48,13 @@ typedef struct wgf_gfx_priv_text_t {
     wgf_text_valign_t valign;
 } wgf_gfx_priv_text_t;
 
+typedef struct wgf_gfx_priv_camera3d_t {
+    float fov; /* vertical, radians */
+    float near_z, far_z;
+    bool orthographic;
+    float ortho_height;
+} wgf_gfx_priv_camera3d_t;
+
 typedef struct wgf_gfx_priv_node_t {
     wgf_node_type_t type;
     char *name; /* malloc'd; NULL for none */
@@ -77,6 +84,7 @@ typedef struct wgf_gfx_priv_node_t {
         wgf_gfx_priv_sprite_t sprite;
         wgf_gfx_priv_text_t text;
         float camera2d_zoom;
+        wgf_gfx_priv_camera3d_t camera3d;
         wgf_gfx_priv_canvas_t canvas;
         wgf_gfx_priv_shape2d_t shape2d;
         struct wgf_gfx_priv_emitter_t *emitter; /* malloc'd (emitter/wgf_gfx_emitter_priv.h) */
@@ -129,6 +137,11 @@ typedef struct wgf_gfx_priv_node_kind_t {
 } wgf_gfx_priv_node_kind_t;
 void wgf_gfx_priv_node_set_kind(wgf_node_type_t type, const wgf_gfx_priv_node_kind_t *kind);
 const wgf_gfx_priv_node_kind_t *wgf_gfx_priv_node_get_kind(wgf_node_type_t type); /* NULL when unset */
+
+/* What a 3D camera sees, at `aspect` (width over height): its projection times its
+ * view, into OpenGL's clip space, and where it is, in its tree's root's space. The
+ * identity for a node that isn't a 3D camera. */
+wgf_mat4_t wgf_gfx_priv_camera3d_view_projection(wgf_node_t camera, float aspect, wgf_vec3_t *position);
 
 /* With the surface: every node destroyed at shutdown, its references released. */
 void wgf_gfx_priv_node_shutdown(void);

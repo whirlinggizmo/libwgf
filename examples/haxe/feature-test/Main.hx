@@ -196,6 +196,34 @@ class Main {
 		voice.resume();
 	}
 
+	static var camera3d:Camera3d;
+	static var camera3dMade = false;
+
+	/** The 3D camera, look_at, and immediate mode in 3D. **/
+	static function threeD():Void {
+		if (!camera3dMade) {
+			camera3dMade = true;
+			camera3d = Camera3d.create();
+			expect(camera3d.setFov(0.8) && Math.abs(camera3d.getFov() - 0.8) < 1e-4, "a 3D camera's field of view");
+			expect(!camera3d.setClip(2, 1) && camera3d.setClip(0.5, 200) && camera3d.getNear() == 0.5
+				&& camera3d.getFar() == 200, "its clip planes");
+			expect(camera3d.setOrthoHeight(6) && camera3d.getOrthoHeight() == 6 && camera3d.setOrthographic(true)
+				&& camera3d.isOrthographic() && camera3d.setOrthographic(false), "orthographic");
+			camera3d.setPosition(6, 4, 6);
+			expect(camera3d.lookAt(0, 0, 0, 0, 1, 0) && !camera3d.lookAt(6, 4, 6, 0, 1, 0), "aimed with lookAt");
+		}
+		expect(Draw.begin3d(camera3d), "3D immediate mode");
+		Draw.grid(4, 1, Color.get(ColorStock.GRAY));
+		Draw.line3d(0, 0, 0, 1, 1, 1, Color.get(ColorStock.RED));
+		Draw.cube(0, 0.5, 0, 1, 1, 1, Color.get(ColorStock.SKYBLUE));
+		Draw.cubeWires(0, 0.5, 0, 1, 1, 1, Color.get(ColorStock.DARKBLUE));
+		Draw.sphere(2, 0.5, 0, 0.5, Color.get(ColorStock.GOLD));
+		Draw.rectangle3d(-2, 0.5, 0, 1, 1, 0, 0.5, 0, Color.get(ColorStock.GREEN));
+		Draw.circle3d(0, 0.01, 0, 2, Math.PI / 2, 0, 0, Color.get(ColorStock.WHITE));
+		Draw.text3d(font, "3D", 0, 2, 0, 0.5, Color.get(ColorStock.WHITE));
+		Draw.end3d();
+	}
+
 	static function gfx():Void {
 		Render.setClearColor(Color.make(10, 12, 20, 255));
 		expect(Render.getClearColor() == Color.make(10, 12, 20, 255), "the clear color");
@@ -364,6 +392,7 @@ class Main {
 		Draw.texture(tiles, 140, 4, 32, 32, Color.get(ColorStock.WHITE));
 		Draw.textureRegion(tiles, 0, 0, 8, 8, 180, 4, 16, 16, Color.get(ColorStock.WHITE));
 		Render.popClip();
+		threeD();
 		ui();
 		input();
 		if (frames == 2) {

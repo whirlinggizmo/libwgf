@@ -106,4 +106,118 @@ class Draw {
 	**/
 	public static inline function textureRegion(texture:Texture, source_x:Float, source_y:Float, source_width:Float, source_height:Float, x:Float, y:Float, width:Float, height:Float, tint:Int):Void
 		Raw.wgf_draw_texture_region(texture, source_x, source_y, source_width, source_height, x, y, width, height, tint);
+
+	/**
+	    3D: between begin_3d and end_3d, the 3D calls draw in the world as `camera` (a 3D
+	    camera, wgf_camera3d.h) sees it, into the presentation's visible area, depth tested
+	    against each other and against the frame's 3D before them, and under the clip. False
+	    when `camera` isn't a 3D camera, or outside a frame. A 3D call outside them draws
+	    nothing; a frame starts in 2D, and one left in 3D ends there. A 2D call between them
+	    lands in the world's x-y plane, as wgrender's did.
+	**/
+	public static inline function begin3d(camera:Node):Bool
+		return Raw.wgf_draw_begin_3d(camera);
+
+	/**
+	    3D: between begin_3d and end_3d, the 3D calls draw in the world as `camera` (a 3D
+	    camera, wgf_camera3d.h) sees it, into the presentation's visible area, depth tested
+	    against each other and against the frame's 3D before them, and under the clip. False
+	    when `camera` isn't a 3D camera, or outside a frame. A 3D call outside them draws
+	    nothing; a frame starts in 2D, and one left in 3D ends there. A 2D call between them
+	    lands in the world's x-y plane, as wgrender's did.
+	**/
+	public static inline function end3d():Void
+		Raw.wgf_draw_end_3d();
+
+	/**
+	    Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+	    a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+	    (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+	    x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+	    centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+	    node's rotation turns it. A color with alpha below 255 is blended over what is
+	    behind it, in the order drawn.
+	**/
+	public static inline function line3d(x0:Float, y0:Float, z0:Float, x1:Float, y1:Float, z1:Float, color:Int):Void
+		Raw.wgf_draw_line_3d(x0, y0, z0, x1, y1, z1, color);
+
+	/**
+	    Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+	    a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+	    (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+	    x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+	    centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+	    node's rotation turns it. A color with alpha below 255 is blended over what is
+	    behind it, in the order drawn.
+	**/
+	public static inline function cube(cx:Float, cy:Float, cz:Float, width:Float, height:Float, length:Float, color:Int):Void
+		Raw.wgf_draw_cube(cx, cy, cz, width, height, length, color);
+
+	/**
+	    Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+	    a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+	    (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+	    x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+	    centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+	    node's rotation turns it. A color with alpha below 255 is blended over what is
+	    behind it, in the order drawn.
+	**/
+	public static inline function cubeWires(cx:Float, cy:Float, cz:Float, width:Float, height:Float, length:Float, color:Int):Void
+		Raw.wgf_draw_cube_wires(cx, cy, cz, width, height, length, color);
+
+	/**
+	    Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+	    a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+	    (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+	    x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+	    centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+	    node's rotation turns it. A color with alpha below 255 is blended over what is
+	    behind it, in the order drawn.
+	**/
+	public static inline function sphere(cx:Float, cy:Float, cz:Float, radius:Float, color:Int):Void
+		Raw.wgf_draw_sphere(cx, cy, cz, radius, color);
+
+	/**
+	    Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+	    a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+	    (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+	    x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+	    centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+	    node's rotation turns it. A color with alpha below 255 is blended over what is
+	    behind it, in the order drawn.
+	**/
+	public static inline function grid(slices:Int, spacing:Float, color:Int):Void
+		Raw.wgf_draw_grid(slices, spacing, color);
+
+	/**
+	    Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+	    a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+	    (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+	    x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+	    centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+	    node's rotation turns it. A color with alpha below 255 is blended over what is
+	    behind it, in the order drawn.
+	**/
+	public static inline function rectangle3d(cx:Float, cy:Float, cz:Float, width:Float, height:Float, rx:Float, ry:Float, rz:Float, color:Int):Void
+		Raw.wgf_draw_rectangle_3d(cx, cy, cz, width, height, rx, ry, rz, color);
+
+	/**
+	    Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+	    a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+	    (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+	    x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+	    centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+	    node's rotation turns it. A color with alpha below 255 is blended over what is
+	    behind it, in the order drawn.
+	**/
+	public static inline function circle3d(cx:Float, cy:Float, cz:Float, radius:Float, rx:Float, ry:Float, rz:Float, color:Int):Void
+		Raw.wgf_draw_circle_3d(cx, cy, cz, radius, rx, ry, rz, color);
+
+	/**
+	    Text in the world: a block centered on (x, y, z), facing the camera, its lines `size`
+	    world units tall (1 for 0 or less), in `font` (0: the default font), depth tested
+	    and not hiding what is drawn behind it after it. wgrender's wgr_text_draw_3d.
+	**/
+	public static inline function text3d(font:Font, text:String, x:Float, y:Float, z:Float, size:Float, color:Int):Void
+		Raw.wgf_draw_text_3d(font, text, x, y, z, size, color);
 }

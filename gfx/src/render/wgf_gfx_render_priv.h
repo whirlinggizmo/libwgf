@@ -36,6 +36,12 @@ bool wgf_gfx_priv_render_is_running(void);
  * other code (fontstash) may have changed sokol_gl's state. */
 void wgf_gfx_priv_render_set_2d(void);
 
+/* Immediate mode in 3D (wgf_draw_begin_3d): through `view_proj` (column by column,
+ * OpenGL's clip space), into the visible area, depth tested and written; and back to 2D,
+ * the whole framebuffer again. */
+void wgf_gfx_priv_render_set_3d(const float view_proj[16]);
+void wgf_gfx_priv_render_end_3d(void);
+
 /* What immediate mode keeps between frames (a polyline's scratch), freed at gfx's stop. */
 void wgf_gfx_priv_draw_shutdown(void);
 

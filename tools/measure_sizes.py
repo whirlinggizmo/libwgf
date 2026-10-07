@@ -67,6 +67,7 @@ ROWS = [
     ('app-touch', 'app-touch', 'touch', 'differs',
      'libwgf has no pointer picking: the coin is hit-tested by hand, where libwgt links its pointer and picking'),
     ('gfx-font', 'gfx-font', 'font', 'same', ''),
+    ('gfx-hello3d', 'gfx-hello3d', 'hello3d', 'same', ''),
     ('gfx-textures', 'gfx-textures', 'textures', 'differs',
      'libwgf has no KTX (compressed) textures: their half loads the PNGs libwgt falls back to'),
     ('gfx-sprite2d', 'gfx-sprite2d', 'sprite2d', 'differs',
