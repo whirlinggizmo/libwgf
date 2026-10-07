@@ -15,6 +15,7 @@ libwgf is one C library, `libwgf.a`, built in layers (CONVENTIONS' table says wh
 | gfx | drawing: the frame, immediate mode in 2D and 3D, textures, fonts and text, actors on stages (2D and 3D), shapes, sprites, particles, meshes, materials, lights, models | built |
 | audio | sounds (decoded or streamed) and voices, mixed natively by libwgf on sokol_audio's thread, on the web by the browser's Web Audio | built |
 | ecs | components and behaviors on any actor, a simulated transform, the built-in systems, triggers, polled events, finding by component or behavior, scenes as text | built: its data in sparse sets of its own |
+| physics3d | 3D physics on Jolt (deps/jolt): one world, stepped on the calling thread, Jolt's cross-platform determinism on; its way into Jolt one C++ file of C calls | being built (milestone 2, step 5): the world, bodies of five shapes, sensors' overlaps, and the wheeled vehicle, privately; no public calls yet |
 | ui | game UI, immediate mode: boxes, panels, labels, buttons, focus by keys and pads, the pointer's capture, a style | built: on Clay |
 | app | the runtime: run, the frame loop, ticks, autopilot runs | built |
 
@@ -157,6 +158,10 @@ Components and behaviors on actors, and the systems that run them at the tick ra
 **Events** queue in a ring of 65,536 and are taken by the program, or the binding, with `wgf_world_take_events`: one async model, polled, and no callback crosses into a behavior. A behavior's code is the program's: the binding's runtime makes each behavior's object (`wgf.Behavior`) from these events, tells it of its actor's triggers (dropping one whose actor or other the program destroyed earlier in the same batch), ticks and frames it, and ends it ("The bindings"). A behavior name with no class is a tag when the program says so (`Behavior.tag`): no object, no warning.
 
 **Scenes** load through core's load pipeline, parsed on a worker into a plan of blocks, each its path's parent, its kind, and a list of lines; `from` copies a prefab's lines and parts first. Instantiating or spawning makes each block's actor of its kind and applies the lines through the same calls a program makes, then makes the blocks under it; once all are made, each behavior parameter that is a reference is found and kept. `wgf_world_dump` writes every simulated actor's tree as flat blocks, with every component as it is, so a dumped world loaded again makes the same world, and dumps the same text.
+
+### physics3d
+
+Jolt (`deps/jolt`, its release sources) through one C++ file, `wgf_physics3d_jolt.cpp`, whose interface (`wgf_physics3d_jolt_priv.h`) is C and is only the calls physics3d makes: the world, made once with its gravity; bodies (static, dynamic, kinematic, or a sensor; a box, a sphere, a capsule, a convex hull of points, or a mesh of triangles) with their mass, friction, bounce, damping, and a layer and a mask of 15 bits each; poses, velocities, impulses; a step; the sensors' overlaps as they began and ended, counted per pair of bodies so a many-part shape enters once, and a body destroyed inside a sensor leaving it; and the wheeled vehicle (wheels in left and right pairs, the first pair steering, an engine, an automatic gearbox, differentials by axle, Jolt's tire curves scaled by a grip). Only the shapes it makes are registered with Jolt's collision dispatch, not every type, which keeps the rest of Jolt out of a program. One world on one thread everywhere, Jolt's job system the single-threaded one, and its cross-platform determinism on (`JPH_CROSS_PLATFORM_DETERMINISTIC`, no contracted floating point): the same steps give the same bits on every target, which its test pins. Jolt's narrow phase keeps its buffers on the stack, so a web program gets 512 KB of it.
 
 ### ui
 

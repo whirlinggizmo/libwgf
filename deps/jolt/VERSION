@@ -1,0 +1,8 @@
+# Vendored from Jorrit Rouwe's Jolt Physics (MIT, LICENSE in this directory): its Jolt/
+# directory, as src/Jolt (an include path of src/ keeps this file from being C++'s
+# <version> where case is ignored), at the release tag, unchanged, less what isn't C++ source (Shaders/' HLSL and the two .cpp files that compile it, its headers kept;
+# Compute/MTL's Objective-C, Jolt.natvis, Jolt.cmake, and a .gliffy drawing). Only libwgf's
+# physics3d module includes it, through the one C++ file there
+# (physics3d/src/wgf_physics3d_jolt.cpp); no header outside the module names it.
+JoltPhysics https://github.com/jrouwe/JoltPhysics.git v5.6.0
+archive https://github.com/jrouwe/JoltPhysics/archive/refs/tags/v5.6.0.tar.gz sha256 6e069ee0172478cc78182047aac87e5310ba14a67a53348ae14cc37801fd3f8e

@@ -17,7 +17,7 @@ if(WGF_WEB AND NOT CMAKE_TOOLCHAIN_FILE)
 endif()
 
 file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" WGF_VERSION LIMIT_COUNT 1)
-project(libwgf VERSION ${WGF_VERSION} LANGUAGES C)
+project(libwgf VERSION ${WGF_VERSION} LANGUAGES C CXX) # C++ in physics3d alone (Jolt)
 
 # The web builds use exactly the Emscripten cmake/emscripten-version.txt pins: its
 # patch releases change behavior and output within a series, so a size means something
@@ -83,6 +83,7 @@ add_subdirectory(asset)
 add_subdirectory(gfx)
 add_subdirectory(audio)
 add_subdirectory(ecs)
+add_subdirectory(physics3d)
 add_subdirectory(ui)
 add_subdirectory(app)
 install(TARGETS wgf ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})

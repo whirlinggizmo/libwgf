@@ -61,6 +61,8 @@ freely, subject to the following restrictions:
 
 ## MIT license
 
+- **Jolt Physics** (`deps/jolt/`): Copyright 2021 Jorrit Rouwe; in a program that makes a
+  physics body (physics3d), and in the web host that has every call
 - **hotreload-hx** (`deps/hotreload-hx/`): Copyright (c) 2026 Whirling Gizmo, LLC; only in a
   program `wgf serve` builds for hot reload, never in one `wgf export` ships
 - **The UTF-8 decoder in fontstash** (`deps/fontstash/fontstash.h`): Copyright (c)

@@ -43,6 +43,7 @@ libwgf is one library, `libwgf.a` (`wgf.lib` with MSVC), built in layers and mod
 | gfx | drawing | platform, asset, core, math |
 | audio | sounds and voices | platform, asset, core, math |
 | ecs (module) | components and behaviors on actors, systems, scenes | gfx, audio, platform, asset, core, math |
+| physics3d (module) | bodies, sensors, and wheeled vehicles, on Jolt | ecs, gfx, core, math |
 | ui (module) | layout and widgets | gfx, platform, asset, core, math |
 | app | the runtime: run, the loop, ticks | any other |
 
@@ -119,7 +120,7 @@ No other pointer, no struct, no function pointer, no `void *`, no variadic call.
 
 ## Code
 
-- C11, compiled with `-Wall -Wextra -Wpedantic` (`/W4` with MSVC), warnings as errors.
+- C11, compiled with `-Wall -Wextra -Wpedantic` (`/W4` with MSVC), warnings as errors. The one C++ file is physics3d's way into Jolt (`physics3d/src/wgf_physics3d_jolt.cpp`, C++17 without exceptions or RTTI), its interface C; C++ is in no other file, and in no header.
 - Four spaces, no tabs; lines up to 120 columns; a function's opening brace on its own line, a block's on the line of its statement. Comments are `/* */`, sentences, saying what and why, not how.
 - A public header comment says what the call does now, and is changed in the commit that changes the behavior. When a header and the code disagree, the header is the bug.
 - Untrusted input (files, autopilot files, scene text) is checked before it is read: sizes and offsets bounded, numbers parsed with their range checked. A parser refuses rather than guessing.
