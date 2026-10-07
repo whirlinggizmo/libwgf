@@ -42,6 +42,8 @@ static struct {
     wgf_app_priv_overlay_t overlay; /* drawn over the program's frame (wgf_app_priv.h); NULL for none */
     bool first_frame_done; /* the first frame's mark made */
     bool flown;            /* an autopilot flies it (wgf_app_autopilot_priv.h): its time, not the clock's */
+    bool recording;        /* played by hand and recorded as an autopilot: the autopilot's time, at 60 a second */
+    const wgf_app_priv_recorder_t *recorder; /* set by a program built to record; NULL in every other */
     long frames;           /* frames run since init */
 } app = {.tick_rate = DEFAULT_TICK_RATE, .time_scale = 1.0f};
 
@@ -67,6 +69,8 @@ static void on_init(void)
     app.frame_cost = 0.0f;
     app.frames = 0;
     app.flown = wgf_app_priv_autopilot_start(); /* before the program's init: it sets the seed */
+    app.recording = !app.flown && app.recorder != NULL && app.recorder->start();
+    if (app.recording && app.target_fps <= 0) app.target_fps = 60; /* a sixtieth a frame, as it will be played */
     wgf_platform_priv_set_paced(!app.flown);  /* a headless run flown by an autopilot waits for no display */
     app.started = true;
     wgf_platform_priv_input_reset();
@@ -77,9 +81,15 @@ static void on_init(void)
     wgf_platform_priv_mark("wgf:user-init");
 }
 
+void wgf_app_priv_set_recorder(const wgf_app_priv_recorder_t *recorder)
+{
+    app.recorder = recorder;
+}
+
 static void on_event(const sapp_event *event)
 {
     wgf_platform_priv_input_handle_event(event, wgf_platform_priv_get_dpi_scale());
+    if (app.recording) app.recorder->event(event, app.frames); /* reaching the next frame */
 }
 
 /* Pacing for a target fps: false when this frame is skipped (the web). */
@@ -100,7 +110,7 @@ static bool pace(void)
 static double time_frame(void)
 {
     const double now = wgf_time_get_seconds();
-    if (app.flown) { /* the autopilot's time: a display frame, every frame */
+    if (app.flown || app.recording) { /* the autopilot's time: a display frame, every frame */
         app.frame_delta = (float)AUTOPILOT_FRAME;
         app.fps_delta = AUTOPILOT_FRAME;
         app.last_frame = now;
@@ -151,6 +161,7 @@ static void on_frame(void)
     started = wgf_time_get_seconds(); /* the frame's own work, from here to its drawing's end */
     wgf_app_priv_autopilot_begin_frame(app.frames); /* the frame's autopilot inputs, before its ticks */
     wgf_platform_priv_gamepad_begin_frame();     /* before the ticks: they read the pads too */
+    if (app.recording) app.recorder->frame(app.frames);
     run_ticks(time_frame());
     wgf_core_priv_part_set_fraction(wgf_loop_get_tick_fraction()); /* for those drawing ticked state */
     wgf_core_priv_part_update(app.frame_delta); /* the parts' (ecs actors, particles): after the ticks, before the frame */
@@ -176,6 +187,8 @@ static void on_shutdown(void)
         app.started = false;
     }
     wgf_app_priv_autopilot_stop(app.frames);
+    if (app.recording) app.recorder->stop(app.frames);
+    app.recording = false;
     wgf_platform_priv_window_set_open(false);
     wgf_platform_priv_gamepad_close();
     wgf_platform_priv_input_reset();

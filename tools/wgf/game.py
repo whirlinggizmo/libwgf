@@ -149,10 +149,11 @@ def build_web(game, release=False, hot=False, out=None, exports=None):
     return out
 
 
-def build_native(game, target, release=False, out=None):
+def build_native(game, target, release=False, out=None, record=False):
     """The game built by hxcpp against libwgf's staged variant for `target` (desktop or
-    headless), its executable in `out` (build/<target>) with its assets beside it. The
-    executable's path."""
+    headless), its executable in `out` (build/<target>) with its assets beside it; with
+    `record`, built to record a run by hand (-D wgf_record), in build/<target>-record, as
+    no other build is. The executable's path."""
     variant = variant_for(target, release)
     if not binding.has_hxcpp():
         raise GameError('no hxcpp: haxelib install hxcpp 4.3.2 (BUILDING.md)')
@@ -160,10 +161,12 @@ def build_native(game, target, release=False, out=None):
         examples.prepare(variant)
     except RuntimeError as e:
         raise GameError(str(e))
-    out = Path(out) if out else game.build_dir(target)
-    work = game.build_dir(target) / 'cpp'
+    built_in = game.build_dir(target + ('-record' if record else ''))
+    out = Path(out) if out else built_in
+    work = built_in / 'cpp'
     defines = ['HXCPP_M64', f'wgf_out={variants.out(variant).as_posix()}',
                f'wgf_binding={binding.BINDING.as_posix()}'] + (['wgf_headless'] if target == 'headless' else [])
+    defines += ['wgf_record'] if record else []
     ok, output = haxe(game, ['--cpp', work], defines, [] if release else ['-debug'])
     if not ok:
         raise GameError(f'the build failed:\n{output.strip()}')
@@ -183,10 +186,13 @@ def frames_autopilot(frames):
     return f'wgf-autopilot 1\nat {max(frames - 1, 0)} end\n'
 
 
-def run_native(exe, autopilot=None, timeout=600, echo=True):
-    """Run a native build, with `autopilot` (its text) flying it; (exit code, its
-    output). Its output is echoed as it comes."""
+def run_native(exe, autopilot=None, timeout=600, echo=True, record=None):
+    """Run a native build, with `autopilot` (its text) flying it, or with `record` (a path)
+    recording what it is given there; (exit code, its output). Its output is echoed as
+    it comes."""
     env = dict(os.environ)
+    if record is not None:
+        env['LIBWGF_AUTOPILOT_RECORD'] = str(record)
     scratch = None
     if autopilot is not None:  # in a scratch folder, never beside the program (an export ships that folder)
         scratch = tempfile.TemporaryDirectory(prefix='wgf-run-')
@@ -209,28 +215,32 @@ def run_native(exe, autopilot=None, timeout=600, echo=True):
 
 
 def run_page(site, page_path, autopilot=None, until=(AUTOPILOT_PASS, AUTOPILOT_FAIL), timeout=120, on_line=None,
-             browser_path=None, echo=True, screenshot=None):
+             browser_path=None, echo=True, screenshot=None, screenshots=None):
     """`site` served as it is (a game's assets are beside its page), and its page at
     `page_path` run as run_page_url runs one. The lines logged."""
     base, httpd = server.serve(site, assets=None)
     try:
-        return run_page_url(f'{base}/{page_path}', autopilot, until, timeout, on_line, browser_path, echo, screenshot)
+        return run_page_url(f'{base}/{page_path}', autopilot, until, timeout, on_line, browser_path, echo, screenshot,
+                            screenshots)
     finally:
         httpd.shutdown()
 
 
 def run_page_url(url, autopilot=None, until=(AUTOPILOT_PASS, AUTOPILOT_FAIL), timeout=120, on_line=None,
-                 browser_path=None, echo=True, screenshot=None):
+                 browser_path=None, echo=True, screenshot=None, screenshots=None):
     """Load `url` in a headless browser, handing the page `autopilot` to fly it,
     until a console line contains one of `until`; `on_line(line)` sees each line first.
     With `screenshot` (a path), the page is saved there as a PNG when the autopilot logs its
-    SCREENSHOT, and the run ends. The lines logged."""
+    SCREENSHOT, and the run ends. With `screenshots` (a folder), every SCREENSHOT the
+    autopilot logs is saved there as <name>.png as the run goes on, as near its frame as
+    the browser's capture allows (the page runs on while it captures). The lines logged."""
     if screenshot is not None:
         until = tuple(until) + ('wgf_autopilot: SCREENSHOT',)
     browser_path = browser.find_browser(browser_path)
     processes = browser.RunProcesses('wgf')
     processes.install_handlers()
     lines, done = [], threading.Event()
+    shots, shot_ready = [], threading.Event()  # names logged, for the main thread to capture
 
     def on_event(message):
         if message.get('method') == 'Runtime.consoleAPICalled':
@@ -245,6 +255,9 @@ def run_page_url(url, autopilot=None, until=(AUTOPILOT_PASS, AUTOPILOT_FAIL), ti
             print(text, flush=True)
         if on_line is not None:
             on_line(text)
+        if screenshots is not None and 'wgf_autopilot: SCREENSHOT ' in text:
+            shots.append(text.split('wgf_autopilot: SCREENSHOT ', 1)[1].strip())
+            shot_ready.set()
         if any(mark in text for mark in until) or text.startswith('[ERROR] exception'):
             done.set()
 
@@ -261,7 +274,15 @@ def run_page_url(url, autopilot=None, until=(AUTOPILOT_PASS, AUTOPILOT_FAIL), ti
             session.send('Page.addScriptToEvaluateOnNewDocument',
                          {'source': f'globalThis.wgfAutopilot = {json.dumps(autopilot)};'})
         session.send('Page.navigate', {'url': url})
-        if not done.wait(timeout):
+        ended = time.monotonic() + timeout
+        while screenshots is not None and not done.is_set() and time.monotonic() < ended:
+            if shot_ready.wait(0.05):
+                shot_ready.clear()
+                while shots:
+                    save_shot(session, Path(screenshots), shots.pop(0))
+        while shots:  # those logged with the end
+            save_shot(session, Path(screenshots), shots.pop(0))
+        if not done.wait(max(0.0, ended - time.monotonic())):
             lines.append(f'[ERROR] wgf: nothing ended the run within {timeout} s')
         elif screenshot is not None and any('wgf_autopilot: SCREENSHOT' in line for line in lines):
             import base64
@@ -271,6 +292,17 @@ def run_page_url(url, autopilot=None, until=(AUTOPILOT_PASS, AUTOPILOT_FAIL), ti
     finally:
         processes.stop()
     return lines
+
+
+def save_shot(session, folder, name):
+    """The page now, as <folder>/<name>.png: a name of letters, digits, "-", "_", ".".
+    A name with anything else is saved with those replaced by "_"."""
+    import base64
+    safe = ''.join(c if c.isalnum() or c in '-_.' else '_' for c in name) or 'shot'
+    folder.mkdir(parents=True, exist_ok=True)
+    shot = session.send('Page.captureScreenshot', {'format': 'png'})
+    (folder / f'{safe}.png').write_bytes(base64.b64decode(shot['data']))
+    print(f'wgf: screenshot {name}: {folder / (safe + ".png")}', flush=True)
 
 
 def judged(output):

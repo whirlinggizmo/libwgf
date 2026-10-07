@@ -49,6 +49,7 @@ typedef struct run_t {
     int seed;
     int deltas_exact; /* every frame's delta exactly a sixtieth */
     int presses;
+    int typed; /* the last character typed */
     float first_random;
 } run_t;
 
@@ -80,11 +81,14 @@ static void on_frame(void *user)
     run_t *run = user;
     run->frames++;
     if (wgf_loop_get_frame_delta() != (float)(1.0 / 60.0)) run->deltas_exact = 0;
-    if (wgf_input_get_chars()[0] != '\0') wgf_probe_set_value("typed", (double)(unsigned char)wgf_input_get_chars()[0]);
+    if (wgf_input_get_chars()[0] != '\0') {
+        run->typed = (unsigned char)wgf_input_get_chars()[0];
+        wgf_probe_set_value("typed", run->typed);
+    }
+    wgf_probe_set_text("screen", run->frames < 5 ? "title" : "race \"one\" # 1");
 }
 
 static const char *autopilot_path = "wgf_app_autopilot_test.txt";
-
 static void write_autopilot(const char *text)
 {
     FILE *f = fopen(autopilot_path, "wb");
@@ -182,6 +186,21 @@ int main(void)
     run_autopilot("wgf-autopilot 1\nat 2 dump\nat 3 dump\nat 4 end\n", &run);
     expect(wgf_app_priv_autopilot_has_passed() && dumps == 2, "each dump asks the part for its state");
 
+    /* text probes: equal or not, quoted with escapes, a # inside the quotes not a comment;
+       a wait for text; and a text expectation failing */
+    run_autopilot("wgf-autopilot 1\n"
+               "at 2 expect screen == \"title\"   # a comment after the text\n"
+               "at 2 expect screen != \"race\"\n"
+               "at 3 wait screen == \"race \\\"one\\\" # 1\"\n"
+               "at 3 expect ticks == 5\n"
+               "at 4 end\n",
+               &run);
+    expect(wgf_app_priv_autopilot_has_passed() && wgf_app_priv_autopilot_get_failures() == 0,
+           "text compared, quoted with escapes, waited for");
+    run_autopilot("wgf-autopilot 1\nat 2 expect screen == \"race\"\nat 2 expect nothing == \"\"\nat 3 end\n", &run);
+    expect(!wgf_app_priv_autopilot_has_passed() && wgf_app_priv_autopilot_get_failures() == 2,
+           "other text, and a probe never set, fail");
+
     /* the numbers an autopilot reads: decimals with a point and an exponent, either sign */
     run_autopilot("wgf-autopilot 1\n"
                "at 3 expect ticks == 4e0\n"
@@ -225,6 +244,9 @@ int main(void)
             "wgf-autopilot 1\nat 1 wait score == 1 2\n", /* more than the command takes */
             "wgf-autopilot 1\nat 1 text\n",              /* nothing to type */
             "wgf-autopilot 1\nat 1 log \x01\n",          /* a control character */
+            "wgf-autopilot 1\nat 1 expect screen < \"a\"\n",     /* text compared with < */
+            "wgf-autopilot 1\nat 1 expect screen == \"open\n",     /* not closed */
+            "wgf-autopilot 1\nat 1 expect screen == \"a\" b\n",   /* more after it */
         };
         size_t i;
         for (i = 0; i < sizeof(bad) / sizeof(bad[0]); i++) {

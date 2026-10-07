@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "68132e307b3cb067" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "23bb4d5b5a3beb22" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -1206,13 +1206,43 @@ export function wgf_probe_get_value(name) {
 
 // wgf: call wgf_probe_has_value
 /**
- * Whether `name` has been set since core started.
+ * Whether `name` has been set since core started, as a number or as text.
  */
 export function wgf_probe_has_value(name) {
     const mark = host["stackSave"]();
     const value = host["_wgf_probe_has_value"](cstr(name));
     host["stackRestore"](mark);
     return value !== 0;
+}
+
+// wgf: call wgf_probe_set_text
+/**
+ * Set `name` to `text` (UTF-8, at most 255 bytes), adding it the first time: from then
+ * it is text, its number 0, until a number is set again. get_text is its text, borrowed
+ * until it next changes; "" for a probe that is a number or was never set. False, and
+ * nothing set, for a name breaking the rule above, NULL or longer text, a 257th probe,
+ * core not running, or no memory.
+ */
+export function wgf_probe_set_text(name, text) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_probe_set_text"](cstr(name), cstr(text));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_probe_get_text
+/**
+ * Set `name` to `text` (UTF-8, at most 255 bytes), adding it the first time: from then
+ * it is text, its number 0, until a number is set again. get_text is its text, borrowed
+ * until it next changes; "" for a probe that is a number or was never set. False, and
+ * nothing set, for a name breaking the rule above, NULL or longer text, a 257th probe,
+ * core not running, or no memory.
+ */
+export function wgf_probe_get_text(name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_probe_get_text"](cstr(name));
+    host["stackRestore"](mark);
+    return str(value);
 }
 
 // wgf: call wgf_probe_get_count
@@ -7005,7 +7035,9 @@ export function wgf_ui_button(id, text) {
 /**
  * The focus given to the button `id` (NULL or "": none), drawn as a key or pad would
  * draw it; false for an id of 64 bytes or more. The focused button's id, "" for none,
- * valid until the focus changes. These two work outside a begun UI too.
+ * valid until the focus changes. These two work outside a begun UI too. Each frame a UI
+ * ends, the focus is published as the text probe "ui.focus" (wgf_probe.h), so an
+ * autopilot can expect on which button has it.
  */
 export function wgf_ui_set_focus(id) {
     const mark = host["stackSave"]();
@@ -7018,7 +7050,9 @@ export function wgf_ui_set_focus(id) {
 /**
  * The focus given to the button `id` (NULL or "": none), drawn as a key or pad would
  * draw it; false for an id of 64 bytes or more. The focused button's id, "" for none,
- * valid until the focus changes. These two work outside a begun UI too.
+ * valid until the focus changes. These two work outside a begun UI too. Each frame a UI
+ * ends, the focus is published as the text probe "ui.focus" (wgf_probe.h), so an
+ * autopilot can expect on which button has it.
  */
 export function wgf_ui_get_focus() {
     const value = host["_wgf_ui_get_focus"]();

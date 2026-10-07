@@ -34,6 +34,24 @@ int main(void)
                strcmp(wgf_probe_get_name(2), "level:1-a_b") == 0,
            "listed in the order first set");
     expect(strcmp(wgf_probe_get_name(3), "") == 0 && strcmp(wgf_probe_get_name(-1), "") == 0, "out of range: \"\"");
+    expect(wgf_probe_set_text("screen", "title") && strcmp(wgf_probe_get_text("screen"), "title") == 0 &&
+               wgf_probe_has_value("screen") && wgf_probe_get_value("screen") == 0.0,
+           "text: set, read, a probe with a number of 0");
+    expect(wgf_probe_set_text("screen", "game ünïcødé") && strcmp(wgf_probe_get_text("screen"), "game ünïcødé") == 0,
+           "set again, UTF-8");
+    expect(strcmp(wgf_probe_get_text("score"), "") == 0 && strcmp(wgf_probe_get_text("never"), "") == 0,
+           "a number's text, and a probe never set's, are empty");
+    expect(wgf_probe_set_value("screen", 3) && strcmp(wgf_probe_get_text("screen"), "") == 0 &&
+               wgf_probe_set_text("score", "120") && wgf_probe_get_value("score") == 0.0,
+           "a number replaces text, and text a number");
+    {
+        char long_text[300];
+        memset(long_text, 'x', sizeof(long_text) - 1);
+        long_text[sizeof(long_text) - 1] = '\0';
+        expect(!wgf_probe_set_text("screen", long_text) && !wgf_probe_set_text("screen", NULL) &&
+                   !wgf_probe_set_text("bad name", "x"),
+               "text past 255 bytes, NULL, or a bad name: refused");
+    }
 
     expect(!wgf_probe_set_value("", 1) && !wgf_probe_set_value(NULL, 1), "an empty or NULL name is refused");
     expect(!wgf_probe_set_value("has space", 1) && !wgf_probe_set_value("slash/no", 1), "a character outside the rule");

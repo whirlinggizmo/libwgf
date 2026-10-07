@@ -16,6 +16,7 @@
 #include "wgf_input.h"
 #include "wgf_keyboard.h"
 #include "wgf_log.h"
+#include "wgf_probe.h"
 #include "wgf_mouse.h"
 #include "wgf_platform_priv.h"
 #include "wgf_render.h"
@@ -824,6 +825,7 @@ bool wgf_ui_end(void)
     draw(Clay_EndLayout((float)wgf_platform_priv_get_frame_duration()));
     navigate();
     capture();
+    wgf_probe_set_text("ui.focus", ui.focus); /* what an autopilot can expect on: the focused button's id */
     return balanced;
 }
 

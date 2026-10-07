@@ -9,11 +9,12 @@
 extern "C" {
 #endif
 
-/* Probes: named numbers a program publishes about itself ("score", "lives"), for what
- * watches it from outside -- an autopilot run's assertions, the `wgf` tool's dump, a
- * test. libwgf's modules publish their own under their layer's name ("ecs.entities").
- * A probe is a number, kept until it is set again or core stops; reading one costs a
- * lookup, so a program sets what changed, when it changes.
+/* Probes: named numbers, or text, a program publishes about itself ("score", "lives",
+ * the screen it is on), for what watches it from outside -- an autopilot run's
+ * assertions, the `wgf` tool's dump, a test. libwgf's modules publish their own under
+ * their layer's name ("ecs.entities", "ui.focus"). A probe is a number or a text, kept
+ * until it is set again or core stops; reading one costs a lookup, so a program sets
+ * what changed, when it changes.
  *
  * A name is 1 to 63 bytes of letters, digits, and "_", ".", ":", "-"; there are at
  * most 256 probes. */
@@ -26,8 +27,16 @@ WGF_API bool wgf_probe_set_value(const char *name, double value);
 /* The value of `name`; 0 for one never set (wgf_probe_has_value tells them apart). */
 WGF_API double wgf_probe_get_value(const char *name);
 
-/* Whether `name` has been set since core started. */
+/* Whether `name` has been set since core started, as a number or as text. */
 WGF_API bool wgf_probe_has_value(const char *name);
+
+/* Set `name` to `text` (UTF-8, at most 255 bytes), adding it the first time: from then
+ * it is text, its number 0, until a number is set again. get_text is its text, borrowed
+ * until it next changes; "" for a probe that is a number or was never set. False, and
+ * nothing set, for a name breaking the rule above, NULL or longer text, a 257th probe,
+ * core not running, or no memory. */
+WGF_API bool wgf_probe_set_text(const char *name, const char *text);
+WGF_API const char *wgf_probe_get_text(const char *name);
 
 /* The probes, in the order they were first set: how many, and each one's name ("" for
  * an index out of range). Borrowed: valid until core stops. */

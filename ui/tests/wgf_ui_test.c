@@ -9,6 +9,7 @@
 #include "wgf_log.h"
 #include "wgf_platform_gamepad_priv.h"
 #include "wgf_platform_priv.h"
+#include "wgf_probe.h"
 #include "wgf_ui.h"
 #include "wgf_ui_priv.h"
 #include "wgf_window.h"
@@ -154,6 +155,7 @@ static void on_frame(void *user)
     case 6:
         menu();
         expect(strcmp(wgf_ui_get_focus(), "options") == 0, "Down: the next");
+        expect(strcmp(wgf_probe_get_text("ui.focus"), "options") == 0, "published as the text probe ui.focus");
         tap(SAPP_KEYCODE_ENTER, 0);
         break;
     case 7:

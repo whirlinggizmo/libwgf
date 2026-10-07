@@ -19,10 +19,30 @@ class Probe {
 		return Raw.wgf_probe_get_value(name);
 
 	/**
-	    Whether `name` has been set since core started.
+	    Whether `name` has been set since core started, as a number or as text.
 	**/
 	public static inline function hasValue(name:String):Bool
 		return Raw.wgf_probe_has_value(name);
+
+	/**
+	    Set `name` to `text` (UTF-8, at most 255 bytes), adding it the first time: from then
+	    it is text, its number 0, until a number is set again. get_text is its text, borrowed
+	    until it next changes; "" for a probe that is a number or was never set. False, and
+	    nothing set, for a name breaking the rule above, NULL or longer text, a 257th probe,
+	    core not running, or no memory.
+	**/
+	public static inline function setText(name:String, text:String):Bool
+		return Raw.wgf_probe_set_text(name, text);
+
+	/**
+	    Set `name` to `text` (UTF-8, at most 255 bytes), adding it the first time: from then
+	    it is text, its number 0, until a number is set again. get_text is its text, borrowed
+	    until it next changes; "" for a probe that is a number or was never set. False, and
+	    nothing set, for a name breaking the rule above, NULL or longer text, a 257th probe,
+	    core not running, or no memory.
+	**/
+	public static inline function getText(name:String):String
+		return Raw.wgf_probe_get_text(name);
 
 	/**
 	    The probes, in the order they were first set: how many, and each one's name ("" for

@@ -923,9 +923,27 @@ export declare function wgf_probe_set_value(name: string | null, value_: number)
 export declare function wgf_probe_get_value(name: string | null): number;
 
 /**
- * Whether `name` has been set since core started.
+ * Whether `name` has been set since core started, as a number or as text.
  */
 export declare function wgf_probe_has_value(name: string | null): boolean;
+
+/**
+ * Set `name` to `text` (UTF-8, at most 255 bytes), adding it the first time: from then
+ * it is text, its number 0, until a number is set again. get_text is its text, borrowed
+ * until it next changes; "" for a probe that is a number or was never set. False, and
+ * nothing set, for a name breaking the rule above, NULL or longer text, a 257th probe,
+ * core not running, or no memory.
+ */
+export declare function wgf_probe_set_text(name: string | null, text: string | null): boolean;
+
+/**
+ * Set `name` to `text` (UTF-8, at most 255 bytes), adding it the first time: from then
+ * it is text, its number 0, until a number is set again. get_text is its text, borrowed
+ * until it next changes; "" for a probe that is a number or was never set. False, and
+ * nothing set, for a name breaking the rule above, NULL or longer text, a 257th probe,
+ * core not running, or no memory.
+ */
+export declare function wgf_probe_get_text(name: string | null): string;
 
 /**
  * The probes, in the order they were first set: how many, and each one's name ("" for
@@ -4591,14 +4609,18 @@ export declare function wgf_ui_button(id: string | null, text: string | null): b
 /**
  * The focus given to the button `id` (NULL or "": none), drawn as a key or pad would
  * draw it; false for an id of 64 bytes or more. The focused button's id, "" for none,
- * valid until the focus changes. These two work outside a begun UI too.
+ * valid until the focus changes. These two work outside a begun UI too. Each frame a UI
+ * ends, the focus is published as the text probe "ui.focus" (wgf_probe.h), so an
+ * autopilot can expect on which button has it.
  */
 export declare function wgf_ui_set_focus(id: string | null): boolean;
 
 /**
  * The focus given to the button `id` (NULL or "": none), drawn as a key or pad would
  * draw it; false for an id of 64 bytes or more. The focused button's id, "" for none,
- * valid until the focus changes. These two work outside a begun UI too.
+ * valid until the focus changes. These two work outside a begun UI too. Each frame a UI
+ * ends, the focus is published as the text probe "ui.focus" (wgf_probe.h), so an
+ * autopilot can expect on which button has it.
  */
 export declare function wgf_ui_get_focus(): string;
 

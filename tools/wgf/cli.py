@@ -173,10 +173,13 @@ def web_dir(game, build):
 
 def cmd_autopilot(args):
     game = games.find()
+    if args.record:
+        return record(game, Path(args.file))
     autopilot = Path(args.file).read_text(encoding='utf-8')
     if args.web:
         site = web_dir(game, not args.no_build)
-        lines = games.run_page(site, 'index.html', autopilot)
+        shots = Path(args.screenshots).resolve() if args.screenshots else game.root / 'build' / 'screenshots'
+        lines = games.run_page(site, 'index.html', autopilot, screenshots=shots)
         result = games.judged(lines)
     else:
         exe = native_exe(game, 'headless', not args.no_build)
@@ -184,6 +187,22 @@ def cmd_autopilot(args):
         result = games.judged(output) if code == 0 else False
     say(f'autopilot {args.file}: {"PASS" if result else "FAIL"}')
     return 0 if result else 1
+
+
+def record(game, out):
+    """The desktop build made to record (build/desktop-record: the only one with the
+    recorder in it) in a window, played by hand, every input written to `out` as an
+    autopilot as it was given (BUILDING.md, "Autopilot files": recording), until the game
+    quits or the window closes. Always built, --no-build or not."""
+    exe = games.build_native(game, 'desktop', record=True)  # the only build with the recorder in it
+    out = out.resolve()
+    out.parent.mkdir(parents=True, exist_ok=True)
+    say(f'recording to {out}: play, then quit the game or close its window')
+    code, _ = games.run_native(exe, None, timeout=24 * 3600, record=out)
+    if not out.exists():
+        raise games.GameError(f'nothing recorded (exit {code}): the run ended before its first frame')
+    say(f'recorded {out}: add its expectations, then fly it with `wgf autopilot {out.name}`')
+    return code
 
 
 def cmd_screenshot(args):
@@ -242,7 +261,7 @@ def smoke_autopilot(game):
     return path.read_text(encoding='utf-8') if path.exists() else games.frames_autopilot(120)
 
 
-def export_web(game, out):
+def export_web(game, out, autopilot=None):
     """The web export: a release build, then its host trimmed to what it calls, the
     assets copied in, smoke-tested in a browser, and measured against the budget."""
     work = game.root / 'build' / 'export-web'
@@ -269,16 +288,17 @@ def export_web(game, out):
     if game.budget_kb is not None and total > game.budget_kb * 1024:
         say(f'web export: FAIL: {total / 1024:.1f} KB is over the budget of {game.budget_kb} KB (wgf.json)')
         ok = False
-    lines = games.run_page(out, 'index.html', smoke_autopilot(game), echo=False)
+    flown = autopilot.read_text(encoding='utf-8') if autopilot else smoke_autopilot(game)
+    lines = games.run_page(out, 'index.html', flown, echo=False, timeout=600 if autopilot else 120)
     smoke = games.judged(lines)
     for line in lines:
         if '[ERROR]' in line or 'FAIL' in line:
             print(line)
-    say(f'web export: smoke {"PASS" if smoke else "FAIL"} ({out})')
+    say(f'web export: {autopilot.name if autopilot else "smoke"} {"PASS" if smoke else "FAIL"} ({out})')
     return ok and bool(smoke)
 
 
-def export_desktop(game, out):
+def export_desktop(game, out, autopilot=None):
     """The desktop export: a release build with its assets copied beside it, run with the
     smoke autopilot (in a window: on Linux with no display, on Xvfb's)."""
     if out.exists():
@@ -302,7 +322,8 @@ def export_desktop(game, out):
         os.environ['DISPLAY'] = display
         xvfb = run
     try:
-        code, output = games.run_native(exe, smoke_autopilot(game), echo=False)
+        flown = autopilot.read_text(encoding='utf-8') if autopilot else smoke_autopilot(game)
+        code, output = games.run_native(exe, flown, echo=False)
     finally:
         if xvfb is not None:
             xvfb.stop()
@@ -310,7 +331,7 @@ def export_desktop(game, out):
     smoke = code == 0 and games.judged(output)
     if not smoke:
         print('\n'.join(output.splitlines()[-20:]))
-    say(f'desktop export: smoke {"PASS" if smoke else "FAIL"} ({exe})')
+    say(f'desktop export: {autopilot.name if autopilot else "smoke"} {"PASS" if smoke else "FAIL"} ({exe})')
     return bool(smoke)
 
 
@@ -319,10 +340,11 @@ def cmd_export(args):
     out = Path(args.out).resolve() if args.out else game.root / 'export'
     both = not args.web and not args.desktop
     ok = True
+    autopilot = Path(args.autopilot).resolve() if args.autopilot else None
     if args.web or both:
-        ok = export_web(game, out / 'web') and ok
+        ok = export_web(game, out / 'web', autopilot) and ok
     if args.desktop or both:
-        ok = export_desktop(game, out / 'desktop') and ok
+        ok = export_desktop(game, out / 'desktop', autopilot) and ok
     return 0 if ok else 1
 
 
@@ -347,8 +369,12 @@ def parser():
     p.add_argument('--no-build', action='store_true')
     p.set_defaults(run=cmd_run)
     p = sub.add_parser('autopilot', help='the game flown by an autopilot file: PASS or FAIL')
-    p.add_argument('file')
+    p.add_argument('file', help='the autopilot to fly, or with --record the one to write')
     p.add_argument('--web', action='store_true', help='in a headless browser (default: headless)')
+    p.add_argument('--screenshots',
+                   help='with --web: the folder its named screenshots go in (default build/screenshots)')
+    p.add_argument('--record', action='store_true',
+                   help='play the desktop build by hand in a window, writing every input to the file as an autopilot')
     p.add_argument('--no-build', action='store_true')
     p.set_defaults(run=cmd_autopilot)
     p = sub.add_parser('screenshot', help='the web build at a frame, as a PNG')
@@ -368,6 +394,8 @@ def parser():
     p = sub.add_parser('export', help='export/web and export/desktop, smoke-tested')
     p.add_argument('--web', action='store_true')
     p.add_argument('--desktop', action='store_true')
+    p.add_argument('--autopilot', help='an autopilot to fly against each export in place of its smoke run '
+                   '(its playthrough, say)')
     p.add_argument('--out')
     p.set_defaults(run=cmd_export)
     return ap

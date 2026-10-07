@@ -113,6 +113,11 @@ void wgf_platform_priv_gamepad_end_frame(void)
     memset(pads.frame, 0, sizeof(pads.frame));
 }
 
+const wgf_platform_priv_gamepad_t *wgf_platform_priv_gamepad_get(int pad)
+{
+    return pad >= 0 && pad < WGF_PLATFORM_PRIV_GAMEPADS ? &pads.pads[pad] : NULL;
+}
+
 /* ----------------------------------------------------------- public API ---- */
 
 static const wgf_platform_priv_gamepad_t *connected(int pad)

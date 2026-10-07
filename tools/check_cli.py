@@ -9,13 +9,14 @@ what it said:
   new         the game's files, its name in them; a second new into it refused
   build       --headless and --web: the program, its page, its host, its assets beside it
   run         --headless --frames 30, and --autopilot: runs that end at their frame, passing
-  autopilot   the game's smoke autopilot, headless and --web: PASS; a failing one: FAIL
+  autopilot   the game's smoke autopilot, headless and --web: PASS; a failing one: FAIL;
+              --web saving an autopilot's two named screenshots
   dump        the ship, as a scene's text; flown by --autopilot to its end, turned on
   screenshot  a PNG of frame 30, from a browser, and one flown there by --autopilot
   serve       the page reached in a browser, its Haxe edited while it runs: the new code
               runs, with the frame count it had (state kept, not a restart)
   export      export/web (a trimmed host, under the budget) and export/desktop, each
-              smoke-tested by the tool itself
+              flown by the autopilot --autopilot names (the smoke one, here)
 A step that can't run here (no haxe, hxcpp, Emscripten, or browser) says
 `check_cli: SKIPPING <step> (<why>)`, and the last line repeats every skip. Standard
 library only.
@@ -155,6 +156,17 @@ def step_autopilot(game):
         if code != 0 or 'PASS' not in out:
             return problem('wgf autopilot --web: the smoke autopilot didn\'t pass in a browser', out)
         said.append('the smoke autopilot passed in a browser')
+        shots = game / 'autopilot' / 'shots.autopilot'
+        shots.write_text('wgf-autopilot 1\nat 20 screenshot first\nat 40 screenshot second\nat 60 end\n')
+        folder = game / 'build' / 'check-shots'
+        if folder.exists():
+            shutil.rmtree(folder)
+        code, out = wgf(game, 'autopilot', 'autopilot/shots.autopilot', '--web', '--no-build', '--screenshots',
+                        str(folder))
+        missing = [n for n in ('first.png', 'second.png') if not (folder / n).exists()]
+        if code != 0 or missing:
+            return problem(f'wgf autopilot --web --screenshots: {", ".join(missing) or "the run failed"}', out)
+        said.append('its two named screenshots saved')
     skipped = '; '.join(f'{t} skipped ({why})' for t, why in (('headless', native), ('web', web)) if why)
     print(f'check_cli: autopilot: {"; ".join(said)}' + (f'; {skipped}' if skipped else ''))
     return True
@@ -265,12 +277,13 @@ def step_export(game):
     native, web = needs(native=True), needs(web=True, browser_too=True)
     if native and web:
         return f'{native}; {web}'
-    args = ['export'] + (['--web'] if native else ['--desktop'] if web else [])
+    args = ['export', '--autopilot', 'autopilot/smoke.autopilot']
+    args += ['--web'] if native else ['--desktop'] if web else []
     code, out = wgf(game, *args, timeout=1800)
     said = []
     if not web:
         site = game / 'export' / 'web'
-        if 'web export: smoke PASS' not in out or not (site / 'wgf-host.wasm').exists():
+        if 'web export: smoke.autopilot PASS' not in out or not (site / 'wgf-host.wasm').exists():
             return problem('wgf export: the web export failed', out)
         trimmed = json.loads((game / 'build' / 'export-web' / 'exports.json').read_text())['exports']
         full = json.loads((ROOT / 'hosts' / 'web' / 'exports.json').read_text())['exports']
@@ -278,11 +291,12 @@ def step_export(game):
             return problem(f'wgf export: the host wasn\'t trimmed ({len(trimmed)} of {len(full)} calls)', out)
         sizes = [line for line in out.splitlines() if 'KB gzipped in all' in line]
         said.append(f'web: {len(trimmed)} of {len(full)} calls in the host, '
-                    f'{sizes[0].split("; ")[-1] if sizes else ""}, smoke passed')
+                    f'{sizes[0].split("; ")[-1] if sizes else ""}, flown by --autopilot')
     if not native:
-        if 'desktop export: smoke PASS' not in out and 'desktop export: SKIPPING' not in out:
+        if 'desktop export: smoke.autopilot PASS' not in out and 'desktop export: SKIPPING' not in out:
             return problem('wgf export: the desktop export failed', out)
-        said.append('desktop: ' + ('smoke passed' if 'desktop export: smoke PASS' in out else 'not smoke-tested here'))
+        said.append('desktop: ' + ('flown by --autopilot' if 'desktop export: smoke.autopilot PASS' in out
+                                   else 'not smoke-tested here'))
         left = [p.name for p in (game / 'export' / 'desktop').rglob('*.autopilot')]
         if left:
             return problem(f'wgf export: the smoke run left {", ".join(left)} in the desktop export')

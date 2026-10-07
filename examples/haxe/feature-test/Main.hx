@@ -84,6 +84,8 @@ class Main {
 		expect(Probe.setValue("feature.answer", 42) && Probe.hasValue("feature.answer") && Probe.getValue("feature.answer") == 42,
 			"a probe");
 		expect(Probe.getCount() >= 1 && Probe.getName(0) != "", "the probes listed");
+		expect(Probe.setText("feature.screen", "title") && Probe.getText("feature.screen") == "title"
+			&& Probe.getText("feature.answer") == "", "a text probe");
 		// the root is the program's directory, or "" (the working directory) where that can't be told
 		expect(Fs.setRoot(Fs.getRoot()), "the storage's root, set to itself");
 		tasks.push(Fs.mkdir("feature"));

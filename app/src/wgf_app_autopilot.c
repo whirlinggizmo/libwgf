@@ -58,6 +58,7 @@ typedef struct command_t {
     float x, y; /* a position, a scroll, an axis's value */
     double value;
     char *text; /* text, a probe's name, a log's or a screenshot's */
+    char *want; /* an expect's or a wait's text, for a text probe; NULL for a number */
     bool done;  /* played */
 } command_t;
 
@@ -130,6 +131,23 @@ static const name_t pad_axes[] = {
 
 static const char *const ops[] = {"==", "!=", "<", "<=", ">", ">="};
 
+const char *wgf_app_priv_autopilot_name(wgf_app_priv_name_kind_t kind, int code)
+{
+    const name_t *names = kind == WGF_APP_PRIV_NAME_KEY            ? keys
+                          : kind == WGF_APP_PRIV_NAME_MOUSE_BUTTON ? mouse_buttons
+                          : kind == WGF_APP_PRIV_NAME_PAD_BUTTON   ? pad_buttons
+                                                                   : pad_axes;
+    const size_t count = kind == WGF_APP_PRIV_NAME_KEY            ? sizeof(keys) / sizeof(keys[0])
+                         : kind == WGF_APP_PRIV_NAME_MOUSE_BUTTON ? sizeof(mouse_buttons) / sizeof(mouse_buttons[0])
+                         : kind == WGF_APP_PRIV_NAME_PAD_BUTTON   ? sizeof(pad_buttons) / sizeof(pad_buttons[0])
+                                                                  : sizeof(pad_axes) / sizeof(pad_axes[0]);
+    size_t i;
+    for (i = 0; i < count; i++) {
+        if (names[i].code == code) return names[i].name;
+    }
+    return NULL;
+}
+
 /* A wait's longest, in real seconds: a load on a slow machine, not a wait that will
  * never end. */
 #define WAIT_SECONDS 30.0
@@ -184,6 +202,24 @@ static char *rest_of(char **at)
     while (*p == ' ' || *p == '\t') p++;
     *at = p + strlen(p);
     return p;
+}
+
+/* Text in double quotes at `*at`, its \" and \\ undone, in place; NULL when it isn't
+ * closed or something follows it on the line. */
+static char *quoted(char **at)
+{
+    char *p = *at + 1, *out = p, *start = p;
+    for (; *p != '\0' && *p != '"'; p++) {
+        if (*p == '\\' && (p[1] == '"' || p[1] == '\\')) p++;
+        *out++ = *p;
+    }
+    if (*p != '"') return NULL;
+    *out = '\0';
+    for (p++; *p == ' ' || *p == '\t'; p++) {
+    }
+    if (*p != '\0') return NULL;
+    *at = p;
+    return start;
 }
 
 static bool parse_long(const char *word, long min, long max, long *out)
@@ -372,17 +408,28 @@ static void parse_command(parser_t *parser, long frame, char *at)
         }
     } else if (strcmp(word, "expect") == 0 || strcmp(word, "wait") == 0) {
         const bool wait = word[0] == 'w';
-        char *probe = next_word(&at), *op = next_word(&at);
-        double value;
+        char *probe = next_word(&at), *op = next_word(&at), *want = NULL;
+        double value = 0.0;
         int i;
-        if (probe == NULL || op == NULL || !parse_number(next_word(&at), &value)) {
+        while (*at == ' ' || *at == '\t') at++;
+        if (*at == '"') {
+            want = quoted(&at);
+            if (want == NULL) {
+                parse_error(parser, "unclosed \"text\", or more after it", probe);
+                return;
+            }
+        } else if (probe == NULL || op == NULL || !parse_number(next_word(&at), &value)) {
             parse_error(parser, "expect and wait take a probe, an operator, and a number", probe);
             return;
         }
-        for (i = 0; i < 6 && strcmp(ops[i], op) != 0; i++) {
+        for (i = 0; op != NULL && i < 6 && strcmp(ops[i], op) != 0; i++) {
         }
-        if (i == 6) {
+        if (probe == NULL || op == NULL || i == 6) {
             parse_error(parser, "no such operator (==, !=, <, <=, >, >=)", op);
+            return;
+        }
+        if (want != NULL && i != OP_EQ && i != OP_NE) {
+            parse_error(parser, "text takes == or !=", op);
             return;
         }
         command = add(parser, frame, wait ? CMD_WAIT : CMD_EXPECT);
@@ -390,6 +437,7 @@ static void parse_command(parser_t *parser, long frame, char *at)
             command->op = (op_t)i;
             command->value = value;
             command->text = copy_of(parser, probe);
+            command->want = want != NULL ? copy_of(parser, want) : NULL;
         }
     } else if (strcmp(word, "log") == 0 || strcmp(word, "screenshot") == 0) {
         const char *text = rest_of(&at);
@@ -425,7 +473,10 @@ static int by_frame(const void *a, const void *b)
 static void clear(void)
 {
     int i;
-    for (i = 0; i < autopilot.count; i++) free(autopilot.commands[i].text);
+    for (i = 0; i < autopilot.count; i++) {
+        free(autopilot.commands[i].text);
+        free(autopilot.commands[i].want);
+    }
     free(autopilot.commands);
     memset(&autopilot, 0, sizeof(autopilot));
     autopilot.end_frame = -1;
@@ -434,6 +485,22 @@ static void clear(void)
 }
 
 /* Parse `text` whole; false, with each bad line logged, when anything is wrong. */
+/* Where the line's comment starts: its first `#` outside double quotes; NULL for none. */
+static char *comment_of(char *line)
+{
+    bool in_quotes = false;
+    for (; *line != '\0'; line++) {
+        if (in_quotes && *line == '\\' && line[1] != '\0') {
+            line++;
+        } else if (*line == '"') {
+            in_quotes = !in_quotes;
+        } else if (*line == '#' && !in_quotes) {
+            return line;
+        }
+    }
+    return NULL;
+}
+
 static bool parse(const char *text)
 {
     parser_t parser = {0, 0, false};
@@ -459,7 +526,7 @@ static bool parse(const char *text)
                 break;
             }
         }
-        hash = strchr(line, '#');
+        hash = comment_of(line);
         if (hash != NULL) *hash = '\0';
         at = line;
         word = next_word(&at);
@@ -621,11 +688,31 @@ static bool holds(op_t op, double got, double want)
     }
 }
 
+/* Whether an expect's or a wait's probe holds: its number, or its text (== or != alone). */
+static bool probe_holds(const command_t *command)
+{
+    if (!wgf_probe_has_value(command->text)) return false;
+    if (command->want != NULL) {
+        const bool same = strcmp(wgf_probe_get_text(command->text), command->want) == 0;
+        return command->op == OP_EQ ? same : !same;
+    }
+    return holds(command->op, wgf_probe_get_value(command->text), command->value);
+}
+
 static void check(const command_t *command)
 {
     const bool set = wgf_probe_has_value(command->text);
     const double got = set ? wgf_probe_get_value(command->text) : 0.0;
     autopilot.expectations++;
+    if (command->want != NULL) {
+        if (!probe_holds(command)) {
+            wgf_log_error("wgf_autopilot: FAIL at frame %ld (line %d): expect %s %s \"%s\": it is \"%s\"",
+                          command->frame, command->line, command->text, ops[command->op], command->want,
+                          wgf_probe_get_text(command->text));
+            autopilot.failures++;
+        }
+        return;
+    }
     if (!set || !holds(command->op, got, command->value)) {
         wgf_log_error("wgf_autopilot: FAIL at frame %ld (line %d): expect %s %s %g: %s %s %g", command->frame,
                       command->line, command->text, ops[command->op], command->value, command->text,
@@ -715,8 +802,7 @@ static void dump(long frame)
 static bool waited(const command_t *command)
 {
     const double now = wgf_time_get_seconds();
-    const bool met = wgf_probe_has_value(command->text) &&
-                     holds(command->op, wgf_probe_get_value(command->text), command->value);
+    const bool met = probe_holds(command);
     if (!met && autopilot.waiting < 0.0) autopilot.waiting = now;
     if (!met && now - autopilot.waiting <= WAIT_SECONDS) {
         autopilot.shift++; /* this autopilot frame again, for the program's next */

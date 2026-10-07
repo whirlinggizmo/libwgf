@@ -130,7 +130,9 @@ class Ui {
 	/**
 	    The focus given to the button `id` (NULL or "": none), drawn as a key or pad would
 	    draw it; false for an id of 64 bytes or more. The focused button's id, "" for none,
-	    valid until the focus changes. These two work outside a begun UI too.
+	    valid until the focus changes. These two work outside a begun UI too. Each frame a UI
+	    ends, the focus is published as the text probe "ui.focus" (wgf_probe.h), so an
+	    autopilot can expect on which button has it.
 	**/
 	public static inline function setFocus(id:String):Bool
 		return Raw.wgf_ui_set_focus(id);
@@ -138,7 +140,9 @@ class Ui {
 	/**
 	    The focus given to the button `id` (NULL or "": none), drawn as a key or pad would
 	    draw it; false for an id of 64 bytes or more. The focused button's id, "" for none,
-	    valid until the focus changes. These two work outside a begun UI too.
+	    valid until the focus changes. These two work outside a begun UI too. Each frame a UI
+	    ends, the focus is published as the text probe "ui.focus" (wgf_probe.h), so an
+	    autopilot can expect on which button has it.
 	**/
 	public static inline function getFocus():String
 		return Raw.wgf_ui_get_focus();

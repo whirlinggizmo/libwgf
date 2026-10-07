@@ -26,6 +26,7 @@ static void wgf_hx_init(void *user) { (void)user; ::wgf::Runtime_obj::dispatch(0
 static void wgf_hx_tick(void *user) { (void)user; ::wgf::Runtime_obj::dispatch(1); }
 static void wgf_hx_frame(void *user) { (void)user; ::wgf::Runtime_obj::dispatch(2); }
 static void wgf_hx_shutdown(void *user) { (void)user; ::wgf::Runtime_obj::dispatch(3); }
+extern \"C\" void wgf_app_priv_record_install(void); /* linked only when called: -D wgf_record */
 ")
 #end
 class Runtime {
@@ -65,6 +66,10 @@ class Runtime {
 		// handlers when they fire; it restores the wasm stack after each
 		return Raw.binding["wgf_app_run"](() -> dispatch(0), () -> dispatch(1), () -> dispatch(2), () -> dispatch(3));
 		#elseif cpp
+		#if wgf_record
+		// a build made to record a run by hand (`wgf autopilot --record`): never a shipped one
+		untyped __cpp__("wgf_app_priv_record_install()");
+		#end
 		return untyped __cpp__("::wgf_app_run(wgf_hx_init, wgf_hx_tick, wgf_hx_frame, wgf_hx_shutdown, (void *)0)");
 		#end
 	}

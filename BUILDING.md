@@ -114,10 +114,11 @@ cd ~/games/rocks
 wgf serve                           # in a browser, reloaded as its Haxe is saved, its state kept
 wgf build --web | --desktop | --headless    # into build/<target>/
 wgf run [--headless] [--frames N | --autopilot FILE]   # the desktop build
-wgf autopilot autopilot/smoke.autopilot [--web]   # an autopilot run: PASS or FAIL
+wgf autopilot autopilot/smoke.autopilot [--web]   # an autopilot run: PASS or FAIL; --web saves its screenshots
+wgf autopilot --record autopilot/lap.autopilot   # play the desktop build by hand, recorded as an autopilot
 wgf screenshot --frame 60 [--autopilot FILE]   # the web build at a frame, as a PNG
 wgf dump --frame 60 [--autopilot FILE]         # the ecs's world, as a scene's text
-wgf export                          # export/web (a trimmed host) and export/desktop, smoke-tested
+wgf export [--autopilot FILE]       # export/web (a trimmed host) and export/desktop, smoke-tested or flown by FILE
 ```
 
 `wgf --help`, and each command's, says the rest. `wgf screenshot` and `wgf dump` with `--autopilot` leave out the file's own screenshot and dump lines, and say so, so the one asked for is the one made. A game names no libwgf: it is built against the libwgf whose `wgf` runs, from its staged variants. `wgf serve` builds through hotreload-hx (`deps/hotreload-hx`), vendored, so nothing is installed for it; Haxe 4.3.7 and hxcpp 4.3.2 are what the rest need.
@@ -147,6 +148,8 @@ pad <n> axis <axis> <value>     left_x, left_y, right_x, right_y (-1 to 1), left
                                 right_trigger (0 to 1)
 expect <probe> <op> <number>    after the frame: ==, !=, <, <=, >, or >= against a probe;
                                 a probe not set fails
+expect <probe> == "<text>"      the same against a text probe (wgf_probe_set_text; the UI's
+                                focus is `ui.focus`), == or != alone, \" and \\ escaped
 wait <probe> <op> <number>      after the frame, until the probe holds: the autopilot stays at this
                                 frame while the program's frames go on, so every later line keeps its
                                 distance from the wait (a load's end, which takes real time, comes at
@@ -154,7 +157,9 @@ wait <probe> <op> <number>      after the frame, until the probe holds: the auto
                                 and the autopilot goes on
 log <text>                      the text, logged, to mark a point in the run
 screenshot <name>               "wgf_autopilot: SCREENSHOT <name>" logged, for a tool watching the
-                                run to save the frame (wgf screenshot does)
+                                run to save the frame: `wgf autopilot --web` saves each as
+                                build/screenshots/<name>.png (--screenshots another folder), as
+                                near its frame as the browser's capture allows
 dump                            after the frame, each optional part's state as text (the ecs's
                                 world, as a scene), logged a line at a time
 end                             after the frame: the run's result logged, and quit
@@ -174,7 +179,9 @@ at 101 expect bullets >= 1
 at 120 end
 ```
 
-Inputs at a frame are delivered before its ticks; expectations are checked after it. While an autopilot runs, time is the autopilot's: every frame lasts a sixtieth of a second, whatever the display does, so ticks, and the random numbers a seed gives, make the same run everywhere, and a headless run doesn't wait for a display. The run's result is logged, "wgf_autopilot: PASS (0 of <n> expectations failed, <frames> frames)", or FAIL with how many failed, with an error for each expectation that failed, naming the probe and its value; an autopilot that can't be read, or a program that quits before its end, is an error too. Errors are what the tools judge a run by (on the web there is no exit code).
+`wait` takes text as `expect` does. Inputs at a frame are delivered before its ticks; expectations are checked after it. While an autopilot runs, time is the autopilot's: every frame lasts a sixtieth of a second, whatever the display does, so ticks, and the random numbers a seed gives, make the same run everywhere, and a headless run doesn't wait for a display. The run's result is logged, "wgf_autopilot: PASS (0 of <n> expectations failed, <frames> frames)", or FAIL with how many failed, with an error for each expectation that failed, naming the probe and its value; an autopilot that can't be read, or a program that quits before its end, is an error too. Errors are what the tools judge a run by (on the web there is no exit code).
+
+**Recording one** (`wgf autopilot --record FILE`, natively): a desktop build made to record (`build/desktop-record`, the game built with `-D wgf_record`, the only build with the recorder in it: a program that writes keystrokes to a file is what antivirus takes for a keylogger, so no other build, and no export, carries it), run in a window with `LIBWGF_AUTOPILOT_RECORD` naming the file, played by hand, every input written as it reaches the program -- keys, typing, the pointer where it ended up each frame, its buttons and scroll, and each pad's buttons and axes (to a hundredth) at each frame's start -- with the seed first, an `end` at the last frame, and the probes' last values as comments to write its expectations from. The run keeps the autopilot's time while it records (a sixtieth of a second a frame, paced to 60 a second), so flown back it gives the program the same inputs at the same ticks, and the same run, as long as the program draws its randomness from `wgf_random` (the seed is the autopilot's). Then add its `expect` lines, and fly it with `wgf autopilot`. A page isn't recorded: record the desktop build, and fly the file in a browser with `--web`.
 
 ### Scene files
 

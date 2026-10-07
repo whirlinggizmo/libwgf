@@ -46,6 +46,10 @@ void wgf_platform_priv_gamepad_begin_frame(void);
 void wgf_platform_priv_gamepad_end_tick(void);
 void wgf_platform_priv_gamepad_end_frame(void);
 
+/* Pad `pad` as the program sees it, before the dead zone: what an autopilot's `pad axis`
+ * lines set, so a recording of it plays back the same; NULL for no such pad. */
+const wgf_platform_priv_gamepad_t *wgf_platform_priv_gamepad_get(int pad);
+
 /* Tests: from now on, pads come from here, never the platform. */
 void wgf_platform_priv_gamepad_set_test_pad(int pad, const wgf_platform_priv_gamepad_t *state);
 

@@ -351,8 +351,10 @@ class Reach {
 		"wgf_presentation_set",
 		"wgf_probe_get_count",
 		"wgf_probe_get_name",
+		"wgf_probe_get_text",
 		"wgf_probe_get_value",
 		"wgf_probe_has_value",
+		"wgf_probe_set_text",
 		"wgf_probe_set_value",
 		"wgf_random_get_float",
 		"wgf_random_get_int",
@@ -567,7 +569,7 @@ class Reach {
 		"wgf_window_set_vsync",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...558) 0];
+	static final counts:Array<Int> = [for (_ in 0...560) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;
