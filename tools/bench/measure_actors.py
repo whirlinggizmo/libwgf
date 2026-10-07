@@ -23,10 +23,11 @@ records them as the measurement from before actors (the nodes and entities they
 replaced), kept beside the current one, with --program naming that build of the
 program (and no store- rows); --as flecs as the store on flecs, which step 3b measured
 against sparse sets before removing it (kept for the record). --check fails a row past
-its baseline: bytes by more than BYTES_TOLERANCE,
-time by more than TIME_TOLERANCE times (wide: a CI runner is not the machine that
-recorded it, and timing on a shared one is noisy; bytes are the check that holds
-exactly). Linux alone: the program reads glibc's mallinfo2. Standard library only.
+its baseline: its bytes by more than BYTES_TOLERANCE, exactly as on any machine; its time
+by more than ROW_TOLERANCE times this machine's own speed against the baseline's (the
+median of the rows' ratios), so a row slower than the rest fails on a runner of any
+speed; and every row, when the machine is MACHINE_TOLERANCE times slower in all. Linux
+alone: the program reads glibc's mallinfo2. Standard library only.
 """
 import argparse
 import json
@@ -47,7 +48,10 @@ VARIANT = 'linux-x64-release-headless'
 SOURCE = ROOT / 'tools' / 'bench' / 'actors'
 WORK = ROOT / 'build' / 'bench' / 'actors'
 BYTES_TOLERANCE = (0.05, 4)  # a row's bytes an actor may grow by 5%, or 4 bytes, whichever is more
-TIME_TOLERANCE = 3.0  # and its time to three times the baseline's
+# A machine's speed is the median of its rows' times against the baseline's: a row may take
+# ROW_TOLERANCE times that, and the machine be MACHINE_TOLERANCE times slower in all
+ROW_TOLERANCE = 2.0
+MACHINE_TOLERANCE = 4.0
 SECONDS = 300
 
 
@@ -124,8 +128,17 @@ def check(measured, rows):
             if new['bytes'] > allowed:
                 worse.append(f'{name}: {new["bytes"]:.1f} bytes an actor, was {old["bytes"]:.1f} '
                              f'(allowed {allowed:.1f})')
-        if new['ns'] > old['ns'] * TIME_TOLERANCE:
-            worse.append(f'{name}: {new["ns"]:.2f} ns, was {old["ns"]:.2f} (allowed {TIME_TOLERANCE:g} times)')
+    ratios = {name: new['ns'] / rows[name]['ns'] for name, new in measured.items()
+              if name in rows and rows[name].get('ns', 0) > 0}
+    if ratios:
+        machine = statistics.median(ratios.values())
+        notes.append(f'this machine at {machine:.2f} times the baseline\'s time, the median of {len(ratios)} rows')
+        if machine > MACHINE_TOLERANCE:
+            worse.append(f'every row {machine:.2f} times the baseline\'s time (allowed {MACHINE_TOLERANCE:g})')
+        for name, ratio in sorted(ratios.items()):
+            if ratio > machine * ROW_TOLERANCE:
+                worse.append(f'{name}: {measured[name]["ns"]:.2f} ns, was {rows[name]["ns"]:.2f}: {ratio:.2f} times, '
+                             f'{ratio / machine:.2f} times this machine\'s (allowed {ROW_TOLERANCE:g})')
     return worse, notes
 
 
