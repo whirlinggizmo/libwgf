@@ -84,6 +84,26 @@ Each game's web export flown by its autopilot in a browser (`tools/bench/measure
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
 | game:asteroids | 2502 | 0.35 | 0.15 | 0.83 | 1.31 | 146.88 | 2 | 1 | 6 (11.23, 4.14) | 13th Gen Intel(R) Core(TM) i9-13900HX, ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA), xvfb, CPU throttled 4x, playthrough.autopilot, 9c1cfe2 2026-10-06 |
 
+## Actors
+
+What an actor costs (`tools/bench/measure_actors.py`, the program `tools/bench/actors/main.c`, whose header says what each row and number is): the heap's growth an actor, its pools' slack included, and the frames' own cost an actor a frame (a find's rows: a find, or an actor found), the median of 3 runs, on 13th Gen Intel(R) Core(TM) i9-13900HX, `linux-x64-release-headless`, 0d712a3 2026-10-07. CI fails a row past its bytes by 5% or its time by three times. Before: the same program on the nodes and entities actors replaced, 1c28551 2026-10-06 (docs/HISTORY.md, "One kind of object, the actor"); a dash where there was no such call.
+
+| row | bytes | ns | before: bytes | before: ns |
+|---|---:|---:|---:|---:|
+| 10k-churn | 927.9 | 60.27 | 987.5 | 535.35 |
+| 10k-lookup | 863.6 | 53.82 | 1019.5 | 79.29 |
+| 10k-lookup-component | - | 39.62 | - | - |
+| 10k-lookup-name | - | 31.70 | - | 215897.20 |
+| 10k-lookup-path | - | 23.20 | - | 70.00 |
+| 10k-moving-behaviors | 927.9 | 51.07 | 987.5 | 63.35 |
+| 10k-moving-deep | 824.6 | 59.68 | 1012.1 | 71.70 |
+| 10k-moving-flat | 799.9 | 46.57 | 987.5 | 63.10 |
+| 10k-static-flat | 499.0 | 5.52 | 472.9 | 6.36 |
+| 50k-moving-behaviors | 777.5 | 57.48 | 787.2 | 69.30 |
+| 50k-moving-deep | 675.5 | 58.07 | 813.1 | 80.36 |
+| 50k-moving-flat | 649.5 | 48.36 | 787.2 | 71.95 |
+| 50k-static-flat | 399.5 | 4.75 | 378.6 | 4.73 |
+
 ## Every libwgf program
 
 | program | wasm | js | wasm.gz | js.gz | wasm.br | js.br | total.gz |

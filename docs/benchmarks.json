@@ -1,4 +1,115 @@
 {
+ "actors": {
+  "before": {
+   "commit": "1c28551 2026-10-06",
+   "cpu": "13th Gen Intel(R) Core(TM) i9-13900HX",
+   "rows": {
+    "10k-churn": {
+     "bytes": 987.5,
+     "ns": 535.35
+    },
+    "10k-lookup": {
+     "bytes": 1019.5,
+     "ns": 79.29
+    },
+    "10k-lookup-name": {
+     "ns": 215897.2
+    },
+    "10k-lookup-path": {
+     "ns": 70.0
+    },
+    "10k-moving-behaviors": {
+     "bytes": 987.5,
+     "ns": 63.35
+    },
+    "10k-moving-deep": {
+     "bytes": 1012.1,
+     "ns": 71.7
+    },
+    "10k-moving-flat": {
+     "bytes": 987.5,
+     "ns": 63.1
+    },
+    "10k-static-flat": {
+     "bytes": 472.9,
+     "ns": 6.36
+    },
+    "50k-moving-behaviors": {
+     "bytes": 787.2,
+     "ns": 69.3
+    },
+    "50k-moving-deep": {
+     "bytes": 813.1,
+     "ns": 80.36
+    },
+    "50k-moving-flat": {
+     "bytes": 787.2,
+     "ns": 71.95
+    },
+    "50k-static-flat": {
+     "bytes": 378.6,
+     "ns": 4.73
+    }
+   },
+   "runs": 3,
+   "variant": "linux-x64-release-headless"
+  },
+  "commit": "0d712a3 2026-10-07",
+  "cpu": "13th Gen Intel(R) Core(TM) i9-13900HX",
+  "rows": {
+   "10k-churn": {
+    "bytes": 927.9,
+    "ns": 60.27
+   },
+   "10k-lookup": {
+    "bytes": 863.6,
+    "ns": 53.82
+   },
+   "10k-lookup-component": {
+    "ns": 39.62
+   },
+   "10k-lookup-name": {
+    "ns": 31.7
+   },
+   "10k-lookup-path": {
+    "ns": 23.2
+   },
+   "10k-moving-behaviors": {
+    "bytes": 927.9,
+    "ns": 51.07
+   },
+   "10k-moving-deep": {
+    "bytes": 824.6,
+    "ns": 59.68
+   },
+   "10k-moving-flat": {
+    "bytes": 799.9,
+    "ns": 46.57
+   },
+   "10k-static-flat": {
+    "bytes": 499.0,
+    "ns": 5.52
+   },
+   "50k-moving-behaviors": {
+    "bytes": 777.5,
+    "ns": 57.48
+   },
+   "50k-moving-deep": {
+    "bytes": 675.5,
+    "ns": 58.07
+   },
+   "50k-moving-flat": {
+    "bytes": 649.5,
+    "ns": 48.36
+   },
+   "50k-static-flat": {
+    "bytes": 399.5,
+    "ns": 4.75
+   }
+  },
+  "runs": 3,
+  "variant": "linux-x64-release-headless"
+ },
  "emscripten": "5.0.7",
  "frames": {
   "game:asteroids": {

@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   linux:
-    name: linux (debug, release, headless, sanitizers)
+    name: linux (debug, release, headless, sanitizers, the actor benchmark)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +31,7 @@ jobs:
       - name: Presets, every example headless and in a window, and the binding on hxcpp
         run: >-
           python3 tools/verify_builds.py --only
-          linux-x64-debug-headless,linux-x64-debug,linux-x64-release,linux-x64-debug-ubsan,linux-x64-debug-asan,linux-x64-debug-tsan,smoke,desktop,binding,features,cli,games
+          linux-x64-debug-headless,linux-x64-debug,linux-x64-release,linux-x64-release-headless,linux-x64-debug-ubsan,linux-x64-debug-asan,linux-x64-debug-tsan,smoke,desktop,binding,features,cli,games,actors
 
   web:
     name: web (wasm32 debug and release, node and Chrome)

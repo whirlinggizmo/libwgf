@@ -5,7 +5,8 @@
 
 This machine's own presets, each configured, built, and tested (ctest, which runs the
 header checks, tools/check_api.py, and tools/check_tools.py too), fastest first:
-  linux-x64-debug-headless, -debug, -release, -debug-ubsan, -debug-asan, -debug-tsan
+  linux-x64-debug-headless, -debug, -release, -release-headless, -debug-ubsan, -debug-asan,
+                  -debug-tsan
                   on Linux (on Windows, windows-x64-msvc-debug-headless, -debug, and
                   -release, through Visual Studio's generator)
   windows-x64-mingw-debug-headless, -debug
@@ -35,6 +36,8 @@ The binding's checks (tools/check_binding.py), when there is a haxe:
                   within its budget, its desktop export (tools/check_games.py), as cli skips
   shaders         gfx's committed shader headers current with their GLSL (tools/gen_shaders.py
                   --check; skipped where sokol-shdc can't be had)
+  actors          on Linux, the actor benchmark's bytes and time an actor against the
+                  baseline, docs/benchmarks.json (tools/bench/measure_actors.py --check)
   frames          with --web: every game's export flown by its autopilot in a browser, its
                   frame times traced (tools/bench/measure_frames.py, on SwiftShader: kept
                   working, nothing recorded)
@@ -66,7 +69,8 @@ sys.path.insert(0, str(ROOT / 'tools'))  # an embedded Python (Windows) doesn't 
 from variants import names, native, web  # noqa: E402
 from wine import find_wine  # noqa: E402
 
-NATIVE = ['debug-headless', 'debug', 'release', 'debug-ubsan', 'debug-asan', 'debug-tsan']  # fastest first
+# fastest first
+NATIVE = ['debug-headless', 'debug', 'release', 'release-headless', 'debug-ubsan', 'debug-asan', 'debug-tsan']
 MINGW = ['windows-x64-mingw-debug-headless', 'windows-x64-mingw-debug']
 WEB = [web(headless=True), web(), web(debug=False)]
 # The checks after the presets: name -> (command, needs the web, what else it needs:
@@ -87,6 +91,8 @@ CHECKS = {
     'cli': (['tools/check_cli.py'], False, ('haxe', 'no haxe')),
     'games': (['tools/check_games.py'], False, ('haxe', 'no haxe')),
     'shaders': (['tools/gen_shaders.py', '--check'], False, None),
+    'actors': (['tools/bench/measure_actors.py', '--check'], False,
+               ('linux', 'the actor benchmark reads glibc\'s heap: Linux alone')),
     'sizes': (['tools/measure_sizes.py', '--check'], True, ('haxe', 'no haxe')),
     'frames': (['tools/bench/measure_frames.py', '--display', 'headless'], True, ('haxe', 'no haxe')),
 }

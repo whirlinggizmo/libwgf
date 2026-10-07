@@ -63,6 +63,16 @@
       }
     },
     {
+      "name": "linux-x64-release-headless",
+      "displayName": "Linux x64, release, headless: optimized with no window or GPU, for the actor benchmark and a native server",
+      "inherits": "linux-x64",
+      "installDir": "${sourceDir}/out/linux-x64/release-headless",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "WGF_HEADLESS": "ON"
+      }
+    },
+    {
       "name": "wasm32-release",
       "displayName": "Web (wasm32), release: optimized, the host a game ships on",
       "inherits": "base",
@@ -204,6 +214,10 @@
       "configurePreset": "linux-x64-release"
     },
     {
+      "name": "linux-x64-release-headless",
+      "configurePreset": "linux-x64-release-headless"
+    },
+    {
       "name": "wasm32-release",
       "configurePreset": "wasm32-release"
     },
@@ -276,6 +290,13 @@
     {
       "name": "linux-x64-release",
       "configurePreset": "linux-x64-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "linux-x64-release-headless",
+      "configurePreset": "linux-x64-release-headless",
       "output": {
         "outputOnFailure": true
       }

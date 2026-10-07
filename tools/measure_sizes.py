@@ -360,6 +360,28 @@ def markdown(baseline):
                          f'{f["over16"]} | {f["over33"]} | {f["gc"]} ({f["gcTotal"]}, {f["gcWorst"]}) | '
                          f'{f["cpu"]}, {f["gpu"]}, {f["display"]}, CPU throttled {f["throttle"]:g}x, '
                          f'{f["autopilot"]}, {f["commit"]} |')
+    actors = baseline.get('actors', {})
+    if actors.get('rows'):
+        before = actors.get('before', {})
+        old = before.get('rows', {})
+        lines += ['', '## Actors', '',
+                  'What an actor costs (`tools/bench/measure_actors.py`, the program `tools/bench/actors/main.c`, whose '
+                  'header says what each row and number is): the heap\'s growth an actor, its pools\' slack included, and '
+                  'the frames\' own cost an actor a frame (a find\'s rows: a find, or an actor found), the median of '
+                  f'{actors.get("runs", 1)} runs, on {actors.get("cpu", "?")}, `{actors.get("variant", "?")}`, '
+                  f'{actors.get("commit", "?")}. CI fails a row past its bytes by 5% or its time by three times. '
+                  + (f'Before: the same program on the nodes and entities actors replaced, {before.get("commit", "?")} '
+                     '(docs/HISTORY.md, "One kind of object, the actor"); a dash where there was no such call.'
+                     if before else ''), '',
+                  '| row | bytes | ns | before: bytes | before: ns |', '|---|---:|---:|---:|---:|']
+
+        def number(row, key, digits):
+            return f'{row[key]:.{digits}f}' if row is not None and key in row else '-'
+
+        for name, row in sorted(actors['rows'].items()):
+            was = old.get(name)
+            lines.append(f'| {name} | {number(row, "bytes", 1)} | {number(row, "ns", 2)} | '
+                         f'{number(was, "bytes", 1)} | {number(was, "ns", 2)} |')
     for title, programs in (('libwgf', lib), ('libwgt', wgt), ('wgrender-c', wgr)):
         if not programs:
             continue

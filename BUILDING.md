@@ -35,6 +35,7 @@ Every build is a preset in `CMakePresets.json`, named `<platform>-<config>[-<fea
 | --- | --- | --- |
 | Linux | `linux-x64-debug` | the library and its tests, windowed |
 | | `linux-x64-release` | optimized: benchmarks, and a game's desktop export |
+| | `linux-x64-release-headless` | optimized with no window or GPU: the actor benchmark (`tools/bench/measure_actors.py`), and a native server's build |
 | | `linux-x64-debug-headless` | no window or GPU (sokol's dummy backend), so every test runs anywhere |
 | | `linux-x64-debug-tsan`, `-asan`, `-ubsan` | the headless tests under ThreadSanitizer, AddressSanitizer with LeakSanitizer, and UndefinedBehaviorSanitizer |
 | Linux, Windows | `windows-x64-mingw-debug`, `-debug-headless`, `-release` | Windows with MinGW-w64: cross-built on Linux, tests under Wine |
@@ -291,7 +292,7 @@ python3 tools/verify_builds.py --only linux-x64-debug-asan   # just these steps 
 
 ## Continuous integration
 
-`.github/workflows/pages.yml` builds every game's web export on every push to `main` (`tools/build_pages.py`) and deploys it to GitHub Pages, at <https://whirlinggizmo.github.io/libwgf/>. `.github/workflows/ci.yml` runs on every push and pull request: the Linux presets (debug, release, headless, and the three sanitizers) with every example headless and in a window and the binding on hxcpp, the web presets with every example in the runner's Chrome, the Haxe binding under node and in Chrome, and the JS binding's types and examples, and the MSVC presets on Windows with every example headless, the binding on hxcpp, and each game's playthrough headless (the runner has no GPU, so nothing runs in a window there; a game's desktop export runs in one on Windows in `verify_builds.py --windows HOST`), each through `tools/verify_builds.py --only`, so CI runs exactly what runs locally. The MinGW builds under Wine run locally only (`verify_builds.py`'s `smoke-mingw` and `desktop-mingw`, and `--windows HOST`).
+`.github/workflows/pages.yml` builds every game's web export on every push to `main` (`tools/build_pages.py`) and deploys it to GitHub Pages, at <https://whirlinggizmo.github.io/libwgf/>. `.github/workflows/ci.yml` runs on every push and pull request: the Linux presets (debug, release, both headless, and the three sanitizers) with every example headless and in a window, the binding on hxcpp, and the actor benchmark against its baseline, the web presets with every example in the runner's Chrome, the Haxe binding under node and in Chrome, and the JS binding's types and examples, and the MSVC presets on Windows with every example headless, the binding on hxcpp, and each game's playthrough headless (the runner has no GPU, so nothing runs in a window there; a game's desktop export runs in one on Windows in `verify_builds.py --windows HOST`), each through `tools/verify_builds.py --only`, so CI runs exactly what runs locally. The MinGW builds under Wine run locally only (`verify_builds.py`'s `smoke-mingw` and `desktop-mingw`, and `--windows HOST`).
 
 ## The tools
 
@@ -311,6 +312,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `check_binding.py` | checks the Haxe binding: generated, every call reached once, and its test on hxcpp, under node, and in a browser |
 | `check_js_binding.py` | checks the JS binding: generated, its declarations under TypeScript (`bindings/js/tests/types.ts`), and every JS example (`examples/js/`) in a browser, flown by its autopilot |
 | `measure_frames.py` | (in `tools/bench/`) flies each game's web export with its autopilot in a browser and traces each frame's main-thread work and the garbage collections; `--write` records them in `docs/benchmarks.md` beside the sizes, from the reference machine (the GPU under Xvfb, the CPU throttled 4 times) |
+| `measure_actors.py` | (in `tools/bench/`) measures what an actor costs, bytes and nanoseconds, at 10k and 50k, static and moving, flat and deep, with behaviors, with churn, and finding by name, path, and component (`tools/bench/actors/main.c`), on `linux-x64-release-headless`; `--write` records them in `docs/benchmarks.md`, `--check` fails a row past its baseline |
 | `measure_calls.py` | (in `tools/bench/`) times a call into the host from Haxe and from JS, both through the JS binding, in a browser on the release host (not a check: timing) |
 | `check_docs.py` | checks the docs against the code: every link resolves, ARCHITECTURE names every public header, this file every tool and preset, README every doc, deps/README every vendored directory (ctest runs it) |
 | `check_tools.py` | checks every tool is named for what it does, imports no command, answers `--help` and does nothing else, and refuses an argument it doesn't take |
