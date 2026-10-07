@@ -143,6 +143,15 @@ Each game lives in `games/<name>/`, uses only libwgf's public API, is deployed t
     - C never calls into a script once per actor;
     - the binding doesn't allocate;
     - the scale escape hatches are still actors (instancing, emitters, batch query systems).
+  - **Finding an actor:**
+    - keep the handle `spawn` returns (a behavior always has its own actor);
+    - a path relative to an actor (`car.find("wheel_rl/smoke")`) for a prefab's parts;
+    - a name unique within its stage (`stage.find("player")`);
+    - tags (`tagged("enemy")`);
+    - by component or behavior (`with(Health)`);
+    - spatial queries (an area, a ray);
+    - and, in co-op, a stable id.
+    Lookups are indexed, never a walk of the tree, and many results go into a caller-owned array. The docs teach finding once and keeping the handle, never a find every frame. Scene files refer to other actors by name or path (`target=@start_gate`), resolved once when the scene loads. The unification step covers handles, paths, names, and lookup by component or behavior; tags, spatial queries and stable ids come where the ROADMAP has them.
   - **An actor benchmark** is recorded beside sizes and frame times: 10k and 50k actors, static and moving, in deep and flat trees, with and without behaviors, and churn (1,000 spawned and destroyed a second). It records bytes and time per actor, and CI fails a regression the way the size table does.
   - The internals stay data-oriented C behind handles (Godot's servers are the same shape). flecs, or plain arrays, store the components; milestone 3 settles which by measurement.
 - **Physics:** Box2D v3 (C) for 2D. Jolt (through its C API) for 3D, which brings vehicles for the racing game. Each is an optional module.
