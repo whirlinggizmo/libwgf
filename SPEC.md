@@ -130,7 +130,14 @@ Each game lives in `games/<name>/`, uses only libwgf's public API, is deployed t
   - Source: wgrender-c's `bindings/js` (generator, runtime, guest, type tests, examples), proven there and not yet carried into libwgt. Its runtime rules carry over: records through one fixed slot, strings released per call, getters that fill a caller's object or array, quoted keys.
   - Checked by: a TypeScript type test, JS examples in the browser checks, the JS-to-wasm call benchmark, and the binding's size in the size table. Its cost was about 3% of download in wgrender; it stays measured, not assumed.
   - Versioned like the C API, with the version stamps checked at startup.
-- **Entities: built-in components plus behaviors,** on flecs for now, wrapped behind libwgf's API. Nodes stay as the transform hierarchy, and entities attach to nodes. Milestone 3 settles the gameplay model (behaviors first, see milestone 3) and whether flecs stays (by measurement).
+- **One kind of object: the node** (Rob's decision, before the racer). This is Godot's tree with Unity-style components.
+  - Everything is a node in one tree, with a transform and a place in the hierarchy. There is no separate entity object.
+  - Visuals stay node kinds: sprite, model, text, emitter, light, camera.
+  - Any node can carry behaviors (several, even of one type) and data components (motion, collider, game data), UI nodes and cameras included.
+  - Simulation and drawing are split inside the node: a node with simulated components keeps a transform at the tick rate and draws an interpolated one, so determinism, interpolation and co-op replication keep what they need.
+  - A headless server runs the same tree with no GPU resources behind the visual nodes.
+  - Scene files and prefabs describe node trees with their components. The pub/sub bus's subjects are nodes.
+  - The internals stay data-oriented C behind handles (Godot's servers are the same shape). flecs, or plain arrays, store the components; milestone 3 settles which by measurement.
 - **Physics:** Box2D v3 (C) for 2D. Jolt (through its C API) for 3D, which brings vehicles for the racing game. Each is an optional module.
 - **Game UI: Clay for layout, plus libwgf's own widget layer.** Clay only lays out boxes and hit-tests them; it has no widgets. libwgf's ui module adds:
   - buttons, sliders, toggles, and text fields with the clipboard
