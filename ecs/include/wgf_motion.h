@@ -19,7 +19,9 @@ extern "C" {
 WGF_API bool wgf_motion_set_velocity(wgf_actor_t actor, float x, float y, float z);
 WGF_API wgf_vec3_t wgf_motion_get_velocity(wgf_actor_t actor);
 
-/* Radians a second about each axis (in 2D, z alone), added to its rotation's angles. */
+/* Radians a second about each axis (in 2D, z alone): each tick it turns by the tick's
+ * share, about its parent's axes, so a spin about one axis turns it steadily past any half
+ * turn. */
 WGF_API bool wgf_motion_set_spin(wgf_actor_t actor, float x, float y, float z);
 WGF_API wgf_vec3_t wgf_motion_get_spin(wgf_actor_t actor);
 

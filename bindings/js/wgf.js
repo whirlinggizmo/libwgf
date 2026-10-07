@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "7cd027874da536ba" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "72138b3d5d041468" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -3170,11 +3170,59 @@ export function wgf_actor_set_positions(actors, positions) {
 
 // wgf: call wgf_actor_get_world_position
 /**
- * Where the actor is in its tree's root's space: on a 2D stage, stage units.
+ * Where the actor is in its tree's root's space: on a 2D stage, stage units. The world
+ * position is the simulation's, as its transform is (above), in a tick and in a frame
+ * alike; the drawn position is where it is drawn this frame, a simulated actor (or one
+ * under one) between its last two ticks: what a camera following it in the frame reads,
+ * so the camera moves as smoothly as the actor does. They are the same for an actor with
+ * nothing simulated at or above it.
  */
 export function wgf_actor_get_world_position(actor, into) {
     const ret = result(12);
     host["_wgf_actor_get_world_position"](ret, actor);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_actor_get_drawn_position
+/**
+ * Where the actor is in its tree's root's space: on a 2D stage, stage units. The world
+ * position is the simulation's, as its transform is (above), in a tick and in a frame
+ * alike; the drawn position is where it is drawn this frame, a simulated actor (or one
+ * under one) between its last two ticks: what a camera following it in the frame reads,
+ * so the camera moves as smoothly as the actor does. They are the same for an actor with
+ * nothing simulated at or above it.
+ */
+export function wgf_actor_get_drawn_position(actor, into) {
+    const ret = result(12);
+    host["_wgf_actor_get_drawn_position"](ret, actor);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_actor_get_world_direction
+/**
+ * The direction (x, y, z), in the actor's own space, turned into its tree's root's space
+ * and made unit length: its heading in the world, say, from (0, 0, -1), with no angles to
+ * read back (get_rotation's may not be the ones set). The world direction is the
+ * simulation's and the drawn one this frame's, as the positions above. 0, 0, 0 for (0, 0,
+ * 0), or a handle that isn't an actor.
+ */
+export function wgf_actor_get_world_direction(actor, x, y, z, into) {
+    const ret = result(12);
+    host["_wgf_actor_get_world_direction"](ret, actor, x, y, z);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_actor_get_drawn_direction
+/**
+ * The direction (x, y, z), in the actor's own space, turned into its tree's root's space
+ * and made unit length: its heading in the world, say, from (0, 0, -1), with no angles to
+ * read back (get_rotation's may not be the ones set). The world direction is the
+ * simulation's and the drawn one this frame's, as the positions above. 0, 0, 0 for (0, 0,
+ * 0), or a handle that isn't an actor.
+ */
+export function wgf_actor_get_drawn_direction(actor, x, y, z, into) {
+    const ret = result(12);
+    host["_wgf_actor_get_drawn_direction"](ret, actor, x, y, z);
     return vector(ret, 3, into);
 }
 
@@ -6683,7 +6731,9 @@ export function wgf_motion_get_velocity(actor, into) {
 
 // wgf: call wgf_motion_set_spin
 /**
- * Radians a second about each axis (in 2D, z alone), added to its rotation's angles.
+ * Radians a second about each axis (in 2D, z alone): each tick it turns by the tick's
+ * share, about its parent's axes, so a spin about one axis turns it steadily past any half
+ * turn.
  */
 export function wgf_motion_set_spin(actor, x, y, z) {
     const value = host["_wgf_motion_set_spin"](actor, x, y, z);
@@ -6692,7 +6742,9 @@ export function wgf_motion_set_spin(actor, x, y, z) {
 
 // wgf: call wgf_motion_get_spin
 /**
- * Radians a second about each axis (in 2D, z alone), added to its rotation's angles.
+ * Radians a second about each axis (in 2D, z alone): each tick it turns by the tick's
+ * share, about its parent's axes, so a spin about one axis turns it steadily past any half
+ * turn.
  */
 export function wgf_motion_get_spin(actor, into) {
     const ret = result(12);

@@ -81,6 +81,12 @@ export const Actor = Object.freeze({
     setPositions: raw.wgf_actor_set_positions,
     // wgf: call wgf_actor_get_world_position
     getWorldPosition: raw.wgf_actor_get_world_position,
+    // wgf: call wgf_actor_get_drawn_position
+    getDrawnPosition: raw.wgf_actor_get_drawn_position,
+    // wgf: call wgf_actor_get_world_direction
+    getWorldDirection: raw.wgf_actor_get_world_direction,
+    // wgf: call wgf_actor_get_drawn_direction
+    getDrawnDirection: raw.wgf_actor_get_drawn_direction,
     // wgf: call wgf_actor_look_at
     lookAt: raw.wgf_actor_look_at,
     // wgf: call wgf_actor_set_name

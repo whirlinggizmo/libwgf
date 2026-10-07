@@ -72,27 +72,52 @@ static void drawn_transform(const wgf_gfx_priv_actor_t *actor_ptr, wgf_vec3_t *p
     *k = wgf_vec3_lerp(actor_ptr->previous->scale, actor_ptr->scale, t);
 }
 
+static wgf_mat4_t trs(wgf_vec3_t p, wgf_quat_t q, wgf_vec3_t k)
+{
+    if (q.x == 0.0f && q.y == 0.0f && q.z == 0.0f) { /* not turned, as most 2D actors: scale, then move */
+        wgf_mat4_t m = wgf_mat4_identity();
+        m.m[0] = k.x;
+        m.m[5] = k.y;
+        m.m[10] = k.z;
+        m.m[12] = p.x;
+        m.m[13] = p.y;
+        m.m[14] = p.z;
+        return m;
+    }
+    return wgf_mat4_from_trs(p, q, k);
+}
+
 wgf_mat4_t wgf_gfx_priv_actor_get_local_matrix(wgf_gfx_priv_actor_t *actor_ptr)
 {
     if (actor_ptr->local_dirty) {
         wgf_vec3_t p, k;
         wgf_quat_t q;
         drawn_transform(actor_ptr, &p, &q, &k);
-        if (q.x == 0.0f && q.y == 0.0f && q.z == 0.0f) { /* not turned, as most 2D actors: scale, then move */
-            wgf_mat4_t m = wgf_mat4_identity();
-            m.m[0] = k.x;
-            m.m[5] = k.y;
-            m.m[10] = k.z;
-            m.m[12] = p.x;
-            m.m[13] = p.y;
-            m.m[14] = p.z;
-            actor_ptr->local = m;
-        } else {
-            actor_ptr->local = wgf_mat4_from_trs(p, q, k);
-        }
+        actor_ptr->local = trs(p, q, k);
         actor_ptr->local_dirty = false;
     }
     return actor_ptr->local;
+}
+
+/* Its world matrix from the simulation's transforms, its own and every one above it: the
+ * cached world matrix is the drawn one, which for a simulated actor is between its ticks.
+ * The cached one when nothing in the chain is simulated, as it then is the same. */
+static wgf_mat4_t simulated_world(wgf_actor_t actor)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor), *at;
+    wgf_mat4_t world;
+    bool simulated = false;
+    if (actor_ptr == NULL) return wgf_mat4_identity();
+    for (at = actor_ptr; at != NULL; at = at->parent != 0 ? wgf_gfx_priv_actor_of(at->parent) : NULL) {
+        if (at->previous != NULL) simulated = true;
+    }
+    if (!simulated) return wgf_gfx_priv_actor_get_world_matrix(actor);
+    world = trs(actor_ptr->position, actor_ptr->rotation, actor_ptr->scale);
+    for (at = actor_ptr->parent != 0 ? wgf_gfx_priv_actor_of(actor_ptr->parent) : NULL; at != NULL;
+         at = at->parent != 0 ? wgf_gfx_priv_actor_of(at->parent) : NULL) {
+        world = wgf_mat4_mul(trs(at->position, at->rotation, at->scale), world);
+    }
+    return world;
 }
 
 /* Mark `actor` and everything under it world-dirty. An actor already dirty has its
@@ -616,9 +641,40 @@ bool wgf_actor_set_transform(wgf_actor_t actor, float position_x, float position
 
 wgf_vec3_t wgf_actor_get_world_position(wgf_actor_t actor)
 {
+    const wgf_mat4_t world = simulated_world(actor);
+    if (wgf_gfx_priv_actor_of(actor) == NULL) return wgf_vec3_make(0.0f, 0.0f, 0.0f);
+    return wgf_vec3_make(world.m[12], world.m[13], world.m[14]);
+}
+
+wgf_vec3_t wgf_actor_get_drawn_position(wgf_actor_t actor)
+{
     const wgf_mat4_t world = wgf_gfx_priv_actor_get_world_matrix(actor);
     if (wgf_gfx_priv_actor_of(actor) == NULL) return wgf_vec3_make(0.0f, 0.0f, 0.0f);
     return wgf_vec3_make(world.m[12], world.m[13], world.m[14]);
+}
+
+/* (x, y, z) turned by `world`'s rotation, made unit length; 0, 0, 0 for none. */
+static wgf_vec3_t direction(const wgf_mat4_t *world, float x, float y, float z)
+{
+    const wgf_vec3_t d = wgf_vec3_make(world->m[0] * x + world->m[4] * y + world->m[8] * z,
+                                       world->m[1] * x + world->m[5] * y + world->m[9] * z,
+                                       world->m[2] * x + world->m[6] * y + world->m[10] * z);
+    const float length = wgf_vec3_length(d);
+    return length > 0.0f ? wgf_vec3_scale(d, 1.0f / length) : wgf_vec3_make(0.0f, 0.0f, 0.0f);
+}
+
+wgf_vec3_t wgf_actor_get_world_direction(wgf_actor_t actor, float x, float y, float z)
+{
+    const wgf_mat4_t world = simulated_world(actor);
+    if (wgf_gfx_priv_actor_of(actor) == NULL) return wgf_vec3_make(0.0f, 0.0f, 0.0f);
+    return direction(&world, x, y, z);
+}
+
+wgf_vec3_t wgf_actor_get_drawn_direction(wgf_actor_t actor, float x, float y, float z)
+{
+    const wgf_mat4_t world = wgf_gfx_priv_actor_get_world_matrix(actor);
+    if (wgf_gfx_priv_actor_of(actor) == NULL) return wgf_vec3_make(0.0f, 0.0f, 0.0f);
+    return direction(&world, x, y, z);
 }
 
 /* ---- names, indexed --------------------------------------------------------------- */

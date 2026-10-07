@@ -348,7 +348,9 @@ class Main {
 		expect(group.setPosition(10, 20, 0) && near(group.getPosition().x, 10), "a position");
 		expect(group.setRotation(0, 0, 1) && near(group.getRotation().z, 1), "a rotation");
 		expect(group.setScale(2, 2, 1) && near(group.getScale().x, 2), "a scale");
-		group.getWorldPosition();
+		final at = group.getWorldPosition(), heading = group.getWorldDirection(1, 0, 0);
+		expect(near(group.getDrawnPosition().x, at.x) && near(group.getDrawnDirection(1, 0, 0).y, heading.y)
+			&& near(heading.x * heading.x + heading.y * heading.y, 1), "where it is, drawn there, and its heading");
 		expect(group.setEnabled(true) && group.isEnabled() && group.setVisible(true) && group.isVisible(), "on and shown");
 		expect(group.getKind() == ActorKind.PLAIN && group.setIndex(0) && group.getIndex() == 0, "its type and index");
 

@@ -2212,10 +2212,46 @@ export declare function wgf_actor_get_positions(actors: readonly wgf_actor_t[] |
 export declare function wgf_actor_set_positions(actors: readonly wgf_actor_t[] | Uint32Array | null, positions: readonly number[] | Float32Array | Float64Array | null): boolean;
 
 /**
- * Where the actor is in its tree's root's space: on a 2D stage, stage units.
+ * Where the actor is in its tree's root's space: on a 2D stage, stage units. The world
+ * position is the simulation's, as its transform is (above), in a tick and in a frame
+ * alike; the drawn position is where it is drawn this frame, a simulated actor (or one
+ * under one) between its last two ticks: what a camera following it in the frame reads,
+ * so the camera moves as smoothly as the actor does. They are the same for an actor with
+ * nothing simulated at or above it.
  */
 export declare function wgf_actor_get_world_position<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
 export declare function wgf_actor_get_world_position(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * Where the actor is in its tree's root's space: on a 2D stage, stage units. The world
+ * position is the simulation's, as its transform is (above), in a tick and in a frame
+ * alike; the drawn position is where it is drawn this frame, a simulated actor (or one
+ * under one) between its last two ticks: what a camera following it in the frame reads,
+ * so the camera moves as smoothly as the actor does. They are the same for an actor with
+ * nothing simulated at or above it.
+ */
+export declare function wgf_actor_get_drawn_position<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_actor_get_drawn_position(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * The direction (x, y, z), in the actor's own space, turned into its tree's root's space
+ * and made unit length: its heading in the world, say, from (0, 0, -1), with no angles to
+ * read back (get_rotation's may not be the ones set). The world direction is the
+ * simulation's and the drawn one this frame's, as the positions above. 0, 0, 0 for (0, 0,
+ * 0), or a handle that isn't an actor.
+ */
+export declare function wgf_actor_get_world_direction<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, x: number, y: number, z: number, into: T): T;
+export declare function wgf_actor_get_world_direction(actor: wgf_actor_t | 0, x: number, y: number, z: number, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * The direction (x, y, z), in the actor's own space, turned into its tree's root's space
+ * and made unit length: its heading in the world, say, from (0, 0, -1), with no angles to
+ * read back (get_rotation's may not be the ones set). The world direction is the
+ * simulation's and the drawn one this frame's, as the positions above. 0, 0, 0 for (0, 0,
+ * 0), or a handle that isn't an actor.
+ */
+export declare function wgf_actor_get_drawn_direction<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, x: number, y: number, z: number, into: T): T;
+export declare function wgf_actor_get_drawn_direction(actor: wgf_actor_t | 0, x: number, y: number, z: number, into?: wgf_vec3_t | null): wgf_vec3_t;
 
 /**
  * Turn the actor so its -z points at the target (x, y, z) and its +y is as near to the
@@ -4408,12 +4444,16 @@ export declare function wgf_motion_get_velocity<T extends number[] | Float32Arra
 export declare function wgf_motion_get_velocity(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
 
 /**
- * Radians a second about each axis (in 2D, z alone), added to its rotation's angles.
+ * Radians a second about each axis (in 2D, z alone): each tick it turns by the tick's
+ * share, about its parent's axes, so a spin about one axis turns it steadily past any half
+ * turn.
  */
 export declare function wgf_motion_set_spin(actor: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
 
 /**
- * Radians a second about each axis (in 2D, z alone), added to its rotation's angles.
+ * Radians a second about each axis (in 2D, z alone): each tick it turns by the tick's
+ * share, about its parent's axes, so a spin about one axis turns it steadily past any half
+ * turn.
  */
 export declare function wgf_motion_get_spin<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
 export declare function wgf_motion_get_spin(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;

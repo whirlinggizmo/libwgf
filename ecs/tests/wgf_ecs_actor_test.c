@@ -103,6 +103,15 @@ int main(void)
         wgf_core_priv_part_update(0.0f);
         world = wgf_gfx_priv_actor_get_world_matrix(shape);
         expect(fabsf(world.m[13] - 2.5f) < 1e-4f, "drawn halfway between the two ticks");
+        expect(near3(wgf_actor_get_world_position(shape), 0, 5, 0) && near3(wgf_actor_get_drawn_position(shape), 0, 2.5f, 0),
+               "its world position the simulation's, its drawn one between the ticks");
+        wgf_core_priv_part_tick_begin(); /* a tick's read, the drawn matrix kept from the frame before */
+        expect(near3(wgf_actor_get_world_position(shape), 0, 5, 0), "in a tick too, the simulation's");
+        wgf_actor_set_rotation(shape, 0, 0, 1.5707964f);
+        expect(near3(wgf_actor_get_world_direction(shape, 2, 0, 0), 0, 1, 0) &&
+                   near3(wgf_actor_get_drawn_direction(shape, 0, 0, 0), 0, 0, 0),
+               "a direction turned as it is, unit length; none for none");
+        wgf_actor_set_rotation(shape, 0, 0, 0);
         wgf_actor_snap(shape);
         world = wgf_gfx_priv_actor_get_world_matrix(shape);
         expect(fabsf(world.m[13] - 5.0f) < 1e-4f, "snapped: drawn where it is");

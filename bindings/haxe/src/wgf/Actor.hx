@@ -176,10 +176,46 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_actor_set_positions(cast actors, positions);
 
 	/**
-	    Where the actor is in its tree's root's space: on a 2D stage, stage units.
+	    Where the actor is in its tree's root's space: on a 2D stage, stage units. The world
+	    position is the simulation's, as its transform is (above), in a tick and in a frame
+	    alike; the drawn position is where it is drawn this frame, a simulated actor (or one
+	    under one) between its last two ticks: what a camera following it in the frame reads,
+	    so the camera moves as smoothly as the actor does. They are the same for an actor with
+	    nothing simulated at or above it.
 	**/
 	public inline function getWorldPosition(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_actor_get_world_position(this, into);
+
+	/**
+	    Where the actor is in its tree's root's space: on a 2D stage, stage units. The world
+	    position is the simulation's, as its transform is (above), in a tick and in a frame
+	    alike; the drawn position is where it is drawn this frame, a simulated actor (or one
+	    under one) between its last two ticks: what a camera following it in the frame reads,
+	    so the camera moves as smoothly as the actor does. They are the same for an actor with
+	    nothing simulated at or above it.
+	**/
+	public inline function getDrawnPosition(?into:wgf.Vec3):wgf.Vec3
+		return Raw.wgf_actor_get_drawn_position(this, into);
+
+	/**
+	    The direction (x, y, z), in the actor's own space, turned into its tree's root's space
+	    and made unit length: its heading in the world, say, from (0, 0, -1), with no angles to
+	    read back (get_rotation's may not be the ones set). The world direction is the
+	    simulation's and the drawn one this frame's, as the positions above. 0, 0, 0 for (0, 0,
+	    0), or a handle that isn't an actor.
+	**/
+	public inline function getWorldDirection(x:Float, y:Float, z:Float, ?into:wgf.Vec3):wgf.Vec3
+		return Raw.wgf_actor_get_world_direction(this, x, y, z, into);
+
+	/**
+	    The direction (x, y, z), in the actor's own space, turned into its tree's root's space
+	    and made unit length: its heading in the world, say, from (0, 0, -1), with no angles to
+	    read back (get_rotation's may not be the ones set). The world direction is the
+	    simulation's and the drawn one this frame's, as the positions above. 0, 0, 0 for (0, 0,
+	    0), or a handle that isn't an actor.
+	**/
+	public inline function getDrawnDirection(x:Float, y:Float, z:Float, ?into:wgf.Vec3):wgf.Vec3
+		return Raw.wgf_actor_get_drawn_direction(this, x, y, z, into);
 
 	/**
 	    Turn the actor so its -z points at the target (x, y, z) and its +y is as near to the

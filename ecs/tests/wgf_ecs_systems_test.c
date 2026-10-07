@@ -108,6 +108,17 @@ int main(void)
     step(1.0f);
     expect(near(wgf_motion_get_velocity(e).x, 2.5f), "damped: a quarter kept a second");
     expect(!wgf_motion_set_velocity(make(stage), 1, 0, 0), "no motion: refused");
+    {
+        /* a spin about y past a quarter turn goes on turning (it once read its angles back,
+         * which there aren't the ones set, and turned back) */
+        int i;
+        wgf_vec3_t heading;
+        e = mover(stage, 0, 0);
+        wgf_motion_set_spin(e, 0, 1, 0);
+        for (i = 0; i < 6; i++) step(0.5f); /* 3 radians */
+        heading = wgf_actor_get_world_direction(e, 0, 0, 1);
+        expect(near(heading.x, sinf(3.0f)) && near(heading.z, cosf(3.0f)), "a y spin turns steadily past a quarter turn");
+    }
     wgf_world_clear();
 
     /* bounds: wrapping, drawn moving on */

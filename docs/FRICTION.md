@@ -292,7 +292,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Workaround:** the car's transform kept as each tick begins, and blended in the frame by `Loop.getTickFraction()`, matching the ecs only because behaviors tick before the systems move the car
 - **Cost:** 15 minutes, about 15 lines, on an ordering stated in three places
 - **Found by:** the racer's session (its #3)
-- **Triage:**
+- **Triage:** fixed in step 4: `wgf_actor_get_drawn_position` and `wgf_actor_get_drawn_direction` read where an actor is drawn this frame; and `wgf_actor_get_world_position`, which read the drawn matrix (between the ticks in a frame, and in a tick a blend at the last frame's fraction), is now the simulation's everywhere, as ARCHITECTURE.md said the transform was
 
 ### Racer: `getRotation` past a half turn, and what Motion's spin does there
 
@@ -301,7 +301,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Workaround:** the game keeps its heading and sets the rotation and the velocity each tick
 - **Cost:** 5 minutes
 - **Found by:** the racer's session (its #4)
-- **Triage:**
+- **Triage:** fixed in step 4, and a bug found by it: Motion's spin added to the angles read back, so a spin about y turned back at a quarter turn and never got past it; it now turns by each tick's share about the parent's axes, steadily past any half turn, with a test. A heading is read with `wgf_actor_get_world_direction(actor, 0, 0, -1)` (or the drawn one), with no angles; the angles themselves stay as `wgf_actor.h` says (a rotation, given back as some angles that make it)
 
 ### Racer: recording a lap needs a window and a person
 

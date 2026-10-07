@@ -339,7 +339,6 @@ static void move(float dt)
         wgf_ecs_priv_motion_t *m = (wgf_ecs_priv_motion_t *)fields[0];
         const wgf_ecs_priv_ref_t *ref = (const wgf_ecs_priv_ref_t *)fields[1];
         wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(ref->actor);
-        wgf_vec3_t angles;
         if (actor_ptr == NULL) continue;
         if (m->damping > 0.0f) {
             const float keep = powf(1.0f - m->damping, dt);
@@ -356,10 +355,11 @@ static void move(float dt)
                                                                             m->velocity[1] * dt,
                                                                             m->velocity[2] * dt));
         if (m->spin[0] != 0.0f || m->spin[1] != 0.0f || m->spin[2] != 0.0f) {
-            angles = wgf_quat_to_euler(actor_ptr->rotation);
-            actor_ptr->rotation = wgf_quat_from_euler(wgf_vec3_make(angles.x + m->spin[0] * dt,
-                                                                   angles.y + m->spin[1] * dt,
-                                                                   angles.z + m->spin[2] * dt));
+            /* turned by the tick's share of the spin, about the parent's axes: never through the
+             * angles read back, which past a quarter turn about y aren't the ones that went in */
+            const wgf_quat_t turn =
+                wgf_quat_from_euler(wgf_vec3_make(m->spin[0] * dt, m->spin[1] * dt, m->spin[2] * dt));
+            actor_ptr->rotation = wgf_quat_normalize(wgf_quat_mul(turn, actor_ptr->rotation));
         }
         wgf_gfx_priv_actor_transform_changed(ref->actor);
     }

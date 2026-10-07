@@ -18,13 +18,17 @@ import wgf.impl.Raw;
 		return Raw.wgf_motion_get_velocity(this, into);
 
 	/**
-	    Radians a second about each axis (in 2D, z alone), added to its rotation's angles.
+	    Radians a second about each axis (in 2D, z alone): each tick it turns by the tick's
+	    share, about its parent's axes, so a spin about one axis turns it steadily past any half
+	    turn.
 	**/
 	public inline function setSpin(x:Float, y:Float, z:Float):Bool
 		return Raw.wgf_motion_set_spin(this, x, y, z);
 
 	/**
-	    Radians a second about each axis (in 2D, z alone), added to its rotation's angles.
+	    Radians a second about each axis (in 2D, z alone): each tick it turns by the tick's
+	    share, about its parent's axes, so a spin about one axis turns it steadily past any half
+	    turn.
 	**/
 	public inline function getSpin(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_motion_get_spin(this, into);
