@@ -108,7 +108,7 @@ No other pointer, no struct, no function pointer, no `void *`, no variadic call.
 
 **Other rules.**
 
-- Public headers and examples include no backend header (sokol, flecs, Clay) and name no backend identifier.
+- Public headers and examples include no backend header (sokol, Clay) and name no backend identifier.
 - Symbols are hidden by default; only `wgf_*` marked `WGF_API` are exported. Every public header compiles on its own.
 - A binding sees only exported functions and enums. Macros and `static inline` functions only rename or wrap exported functions; constants are enum values. A public function may be `inline` in its header with one `extern inline` in the layer's source.
 - The public API behaves the same on every platform; differences stay inside.

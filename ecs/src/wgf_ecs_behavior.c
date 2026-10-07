@@ -39,7 +39,7 @@ int wgf_actor_add_behavior(wgf_actor_t actor, const char *name)
 {
     wgf_ecs_priv_record_t *record;
     wgf_ecs_priv_behavior_t *b;
-    ecs_entity_t tag;
+    wgf_ecs_priv_id_t tag;
     if (!fits(name, WGF_ECS_PRIV_NAME_MAX, false)) return 0;
     record = wgf_ecs_priv_record_make(actor);
     if (record == NULL) return 0;
@@ -62,7 +62,7 @@ int wgf_actor_add_behavior(wgf_actor_t actor, const char *name)
         wgf_log_error("wgf_actor_add_behavior: out of memory");
         return 0;
     }
-    ecs_add_id(wgf_ecs_priv_world(), record->id, tag); /* once, however many of the name */
+    wgf_ecs_priv_store_set(record->id, tag, NULL); /* once, however many of the name */
     b->id = record->next_behavior++;
     memcpy(b->name, name, strlen(name) + 1);
     record->behaviors[record->behavior_count++] = b;
@@ -80,7 +80,7 @@ bool wgf_actor_remove_behavior(wgf_actor_t actor, int behavior)
         if (b != at && strcmp(record->behaviors[b]->name, record->behaviors[at]->name) == 0) break;
     }
     if (b == record->behavior_count) {
-        ecs_remove_id(wgf_ecs_priv_world(), record->id,
+        wgf_ecs_priv_store_remove(record->id,
                       wgf_ecs_priv_behavior_tag(record->behaviors[at]->name, false));
     }
     wgf_ecs_priv_behavior_free(record->behaviors[at]);

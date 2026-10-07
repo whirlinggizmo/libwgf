@@ -9,15 +9,15 @@
 #include "wgf_ecs_priv.h"
 #include "wgf_voice.h"
 
-/* An actor's components (wgf_component.h): the systems' data as flecs components on the
- * actor's flecs entity, made with its record the first time; a voice in the record. */
+/* An actor's components (wgf_component.h): the systems' data as the store's components on
+ * the actor's entity there, made with its record the first time; a voice in the record. */
 
 static const wgf_ecs_priv_ids_t *ids(void)
 {
     return wgf_ecs_priv_ids();
 }
 
-static ecs_entity_t data_id(wgf_component_t component)
+static wgf_ecs_priv_id_t data_id(wgf_component_t component)
 {
     switch (component) {
         case WGF_COMPONENT_MOTION: return ids()->motion;
@@ -33,7 +33,7 @@ bool wgf_actor_has_component(wgf_actor_t actor, wgf_component_t component)
     const wgf_ecs_priv_record_t *record = wgf_ecs_priv_record_of(actor);
     if (record == NULL) return false;
     if (component == WGF_COMPONENT_VOICE) return record->voice != 0;
-    return data_id(component) != 0 && ecs_has_id(wgf_ecs_priv_world(), record->id, data_id(component));
+    return data_id(component) != 0 && wgf_ecs_priv_store_has(record->id, data_id(component));
 }
 
 bool wgf_actor_add_component(wgf_actor_t actor, wgf_component_t component)
@@ -47,7 +47,7 @@ bool wgf_actor_add_component(wgf_actor_t actor, wgf_component_t component)
         case WGF_COMPONENT_MOTION: {
             wgf_ecs_priv_motion_t m;
             memset(&m, 0, sizeof(m));
-            ecs_set_id(wgf_ecs_priv_world(), record->id, ids()->motion, sizeof(m), &m);
+            wgf_ecs_priv_store_set(record->id, ids()->motion, &m);
             return true;
         }
         case WGF_COMPONENT_BOUNDS: {
@@ -56,13 +56,13 @@ bool wgf_actor_add_component(wgf_actor_t actor, wgf_component_t component)
             b.rect[2] = 800.0f;
             b.rect[3] = 600.0f;
             b.mode = WGF_BOUNDS_MODE_WRAP;
-            ecs_set_id(wgf_ecs_priv_world(), record->id, ids()->bounds, sizeof(b), &b);
+            wgf_ecs_priv_store_set(record->id, ids()->bounds, &b);
             return true;
         }
         case WGF_COMPONENT_LIFETIME: {
             wgf_ecs_priv_lifetime_t l;
             l.seconds = 1.0f;
-            ecs_set_id(wgf_ecs_priv_world(), record->id, ids()->lifetime, sizeof(l), &l);
+            wgf_ecs_priv_store_set(record->id, ids()->lifetime, &l);
             return true;
         }
         case WGF_COMPONENT_COLLIDER: {
@@ -71,12 +71,12 @@ bool wgf_actor_add_component(wgf_actor_t actor, wgf_component_t component)
             c.layer = 1;
             c.mask = -1;
             c.enabled = true;
-            ecs_set_id(wgf_ecs_priv_world(), record->id, ids()->collider, sizeof(c), &c);
+            wgf_ecs_priv_store_set(record->id, ids()->collider, &c);
             return true;
         }
         default: /* the voice */
             record->voice = wgf_voice_create(0);
-            if (record->voice != 0) ecs_add_id(wgf_ecs_priv_world(), record->id, ids()->voice);
+            if (record->voice != 0) wgf_ecs_priv_store_set(record->id, ids()->voice, NULL);
             return record->voice != 0;
     }
 }
@@ -88,11 +88,11 @@ bool wgf_actor_remove_component(wgf_actor_t actor, wgf_component_t component)
     if (component == WGF_COMPONENT_VOICE) {
         wgf_voice_destroy(record->voice);
         record->voice = 0;
-        ecs_remove_id(wgf_ecs_priv_world(), record->id, ids()->voice);
+        wgf_ecs_priv_store_remove(record->id, ids()->voice);
         return true;
     }
     if (component == WGF_COMPONENT_COLLIDER) wgf_ecs_priv_forget_pairs(actor);
-    ecs_remove_id(wgf_ecs_priv_world(), record->id, data_id(component));
+    wgf_ecs_priv_store_remove(record->id, data_id(component));
     return true;
 }
 

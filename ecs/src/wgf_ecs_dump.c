@@ -309,7 +309,7 @@ const char *wgf_ecs_dump(void)
     out_t out = {NULL, 0, 0, false};
     wgf_actor_t *all;
     int count = 0, i;
-    if (wgf_ecs_priv_world() == NULL) return "";
+    if (!wgf_ecs_priv_started()) return "";
     out.capacity = 4096;
     out.text = (char *)malloc(out.capacity);
     if (out.text == NULL) return "";

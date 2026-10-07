@@ -14,7 +14,7 @@ libwgf is one C library, `libwgf.a`, built in layers (CONVENTIONS' table says wh
 | asset | where a resource's file comes from: local, fetched and cached on the web, revalidated, manifests, redirects, ensured ahead of a load, a native download hook | built |
 | gfx | drawing: the frame, immediate mode in 2D and 3D, textures, fonts and text, actors on stages (2D and 3D), shapes, sprites, particles, meshes, materials, lights, models | built |
 | audio | sounds (decoded or streamed) and voices, mixed natively by libwgf on sokol_audio's thread, on the web by the browser's Web Audio | built |
-| ecs | components and behaviors on any actor, a simulated transform, the built-in systems, triggers, polled events, finding by component or behavior, scenes as text | built: on flecs's core |
+| ecs | components and behaviors on any actor, a simulated transform, the built-in systems, triggers, polled events, finding by component or behavior, scenes as text | built: its data in sparse sets of its own |
 | ui | game UI, immediate mode: boxes, panels, labels, buttons, focus by keys and pads, the pointer's capture, a style | built: on Clay |
 | app | the runtime: run, the frame loop, ticks, autopilot runs | built |
 
@@ -132,7 +132,7 @@ Sounds and voices, libwgt's audio carried whole: a part installed by the first s
 
 ### ecs
 
-Components and behaviors on actors, and the systems that run them at the tick rate, on flecs (v4.0.5, its core alone): a part installed by the first component or behavior added, so a program that adds none links none of it, flecs included.
+Components and behaviors on actors, and the systems that run them at the tick rate, their data in sparse sets of the ecs's own (`wgf_ecs_store.c`, behind `wgf_ecs_store_priv.h`; they replaced flecs by measurement, HISTORY.md's "flecs or sparse sets, measured"): a part installed by the first component or behavior added, so a program that adds none links none of it.
 
 | Section | Header | Provides |
 |---------|--------|----------|
@@ -145,13 +145,13 @@ Components and behaviors on actors, and the systems that run them at the tick ra
 | behavior | `wgf_behavior.h` | the program's own code, by name, several on an actor, each with an id and text parameters, a parameter `@name` or `@path` referring to another actor |
 | scene | `wgf_scene.h` | a resource: actor trees and prefabs in a text file (BUILDING.md, "Scene files"), instantiated, and prefabs spawned |
 
-**One kind of object.** There is no entity: an actor with a component or a behavior has a record here (`"ecs.components"`'s pool), its handle in the actor's own record (`components`), made with its first and let go of with the actor, through gfx's hook for an actor going, so gfx names no ecs. The systems' data -- motion, bounds, lifetime, a collider -- is flecs components, plain data the systems' queries walk in flecs's tables, beside a reference back to the actor; the transform is the actor's own. What isn't plain data is in the record: the voice and the behaviors (each its name, id, and parameters, in a list in the order added). Drawing stays gfx's: the actor is what it draws, through its stage.
+**One kind of object.** There is no entity: an actor with a component or a behavior has a record here (`"ecs.components"`'s pool), its handle in the actor's own record (`components`), made with its first and let go of with the actor, through gfx's hook for an actor going, so gfx names no ecs. The systems' data -- motion, bounds, lifetime, a collider -- is the store's components, each packed in an array of its own with a sparse array from an entity to its place there, beside a reference back to the actor that every entity has, so a system's query walks its component's array; the transform is the actor's own. What isn't plain data is in the record: the voice and the behaviors (each its name, id, and parameters, in a list in the order added). Drawing stays gfx's: the actor is what it draws, through its stage.
 
 **A tick** runs the systems, after the program's tick callback: lifetimes count down (at 0, destroyed), motion moves (damping, then the top speed, then velocity and spin), bounds wrap, clamp, or destroy, colliders compare, and the probes (`ecs.entities`, the actors with a record, and `ecs.behavior.<name>`) are published. Actors are destroyed after the query that found them, never inside it. An actor with a record is simulated: as each tick begins its transform is kept as it was, and each frame it is drawn at its transform between the last two ticks, at the frame's tick fraction, its rotation the shortest way round; the transform the program sets and reads is the simulation's. A wrap moves the kept position by the same span, so a rock leaving the right edge is drawn coming in at the left, not swept back across the screen; `wgf_actor_snap` keeps the transform as it is now, for one put somewhere new.
 
 **Colliders** are triggers, nothing pushed apart: each tick, the colliders under each parent, sorted along x, are swept for overlaps where either side's mask has the other's layer (so clearing one side's mask doesn't stop the other meeting it), a switched-off collider (`wgf_collider_set_enabled`) skipped, its settings kept; the pairs found are sorted and walked against the last tick's, so a pair new this tick raises TRIGGER_ENTER and one gone raises TRIGGER_EXIT, told to each. A destroyed actor's pairs are dropped without an exit; its behaviors' DESTROYED carry its now-stale handle.
 
-**Finding** by component or behavior is flecs's index of an id: each behavior name is a flecs tag on the actors that have one of it, and the voice a tag too, so `wgf_ecs_find_component` and `wgf_ecs_find_behavior` read the tables that have the id, never every record, and give the actors oldest first into the caller's array; counting is flecs's count of the id.
+**Finding** by component or behavior is the store's set of an id: each behavior name is a tag on the actors that have one of it, and the voice a tag too, so `wgf_ecs_find_component` and `wgf_ecs_find_behavior` walk that set, never every record, and give the actors oldest first into the caller's array; counting is the set's count.
 
 **Events** queue in a ring of 65,536 and are taken by the program, or the binding, with `wgf_ecs_take_events`: one async model, polled, and no callback crosses into a behavior. A behavior's code is the program's: the binding's runtime makes each behavior's object (`wgf.Behavior`) from these events, tells it of its actor's triggers, ticks and frames it, and ends it ("The bindings").
 

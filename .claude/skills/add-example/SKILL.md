@@ -18,7 +18,7 @@ Examples are programs outside libwgf, built against `out/` as anyone's would be 
    wgf_example(<layer>-<name> [ASSETS] main.c)
    ```
    `ASSETS` when it loads files from `examples/assets/`, which it then names with `wgf_asset_set_host("../assets")`.
-3. **`main.c`**: public headers only (no sokol, flecs, or Clay), a comment at its top saying what it shows and which keys do what, `wgf_window_set_size` before `wgf_app_run`, and Escape quitting only where `wgf_app_can_quit()`. It must start, draw, and keep running with no input, since the checks give it none.
+3. **`main.c`**: public headers only (no sokol or Clay), a comment at its top saying what it shows and which keys do what, `wgf_window_set_size` before `wgf_app_run`, and Escape quitting only where `wgf_app_can_quit()`. It must start, draw, and keep running with no input, since the checks give it none.
 4. **Its page**, `index.html`, is written from `examples/c/wgf_page.html` at the first web build; commit it, then it is the example's own.
 5. **Assets** it needs go in `examples/assets/`, each one not made here credited in `examples/assets/CREDITS.md` with its license.
 6. **Run the checks**: `python3 tools/run_smoke.py <name>`, `python3 tools/check_desktop.py <name>`, `python3 tools/check_web.py <name>`; read the screenshots they save (`build/<preset>/check_*/<name>.png`) to see it draws what it should.

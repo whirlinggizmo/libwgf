@@ -16,8 +16,8 @@
 
 /* The actor benchmark (SPEC.md, "An actor benchmark"; tools/bench/measure_actors.py runs
  * it): what an actor costs, in bytes and in time, at 10k and 50k, static and moving, in
- * flat and deep trees, with and without behaviors, with churn, and found by name, path,
- * and component. One row a run, named by its argument (`--list` prints them), so each
+ * flat and deep trees, with and without behaviors, with churn, every actor gaining and
+ * losing a component each frame (toggle), and found by name, path, and component. One row a run, named by its argument (`--list` prints them), so each
  * starts from a fresh heap:
  *
  *   bytes   the heap's growth (glibc's mallinfo2, mapped chunks too) from making the
@@ -41,7 +41,7 @@
 typedef struct row_t {
     const char *name;
     int count;
-    bool moving, deep, behaviors, churn, lookup;
+    bool moving, deep, behaviors, churn, lookup, toggle;
 } row_t;
 
 static const row_t rows[] = {
@@ -51,6 +51,7 @@ static const row_t rows[] = {
     {"10k-moving-behaviors", 10000, true, false, true, false, false},
     {"10k-churn", 10000, true, false, true, true, false},
     {"10k-lookup", 10000, true, false, false, false, true},
+    {"10k-toggle", 10000, true, false, false, false, false, true},
     {"50k-static-flat", 50000, false, false, false, false, false},
     {"50k-moving-flat", 50000, true, false, false, false, false},
     {"50k-moving-deep", 50000, true, true, false, false, false},
@@ -169,6 +170,15 @@ static void churn(void)
     }
 }
 
+/* Every actor given a lifetime and losing it again, each frame: the store's worst case
+ * when it keeps an actor's components together by their set (archetype tables, as flecs's were). */
+static void toggle(void)
+{
+    int i;
+    for (i = 0; i < bench.row->count; i++) wgf_actor_add_component(bench.actors[i], WGF_COMPONENT_LIFETIME);
+    for (i = 0; i < bench.row->count; i++) wgf_actor_remove_component(bench.actors[i], WGF_COMPONENT_LIFETIME);
+}
+
 static void lookups(void)
 {
     const double began = wgf_time_get_seconds();
@@ -197,6 +207,7 @@ static void frame(void *user)
     }
     if (bench.frame > WARM) bench.cost += wgf_loop_get_frame_cost(); /* the frame before this one's */
     if (row->churn) churn();
+    if (row->toggle) toggle();
     if (row->lookup && bench.frame >= WARM) lookups();
     wgf_stage2d_draw(bench.stage);
     if (++bench.frame == WARM + MEASURED + 1) {

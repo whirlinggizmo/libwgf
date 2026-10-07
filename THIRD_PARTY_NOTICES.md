@@ -59,7 +59,6 @@ freely, subject to the following restrictions:
 
 ## MIT license
 
-- **flecs** (`deps/flecs/`): Copyright (c) 2025 Sander Mertens
 - **hotreload-hx** (`deps/hotreload-hx/`): Copyright (c) 2026 Whirling Gizmo, LLC; only in a
   program `wgf serve` builds for hot reload, never in one `wgf export` ships
 - **The UTF-8 decoder in fontstash** (`deps/fontstash/fontstash.h`): Copyright (c)

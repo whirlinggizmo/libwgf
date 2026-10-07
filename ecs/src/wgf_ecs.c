@@ -12,16 +12,18 @@
 #include "wgf_core_handle_priv.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_ecs_priv.h"
+#include "wgf_ecs_store_priv.h"
 #include "wgf_ecs_scene_priv.h"
 #include "wgf_log.h"
 #include "wgf_actor.h"
 #include "wgf_probe.h"
 #include "wgf_voice.h"
 
-/* The ecs (wgf_ecs.h): a flecs world made with the first actor given a component or a
- * behavior, the records of those actors, the systems run each tick over the actors'
- * simulated transforms, and the events. A part (wgf_core_part_priv.h): installed by the
- * first record, so a program that gives no actor a component links none of flecs. */
+/* The ecs (wgf_ecs.h): the store (wgf_ecs_store_priv.h) made with the first actor given
+ * a component or a behavior, the records of those actors, the systems run each tick over
+ * the actors' simulated transforms, and the events. A part (wgf_core_part_priv.h):
+ * installed by the first record, so a program that gives no actor a component links
+ * none of it. */
 
 #define EVENTS_MAX 65536
 
@@ -30,9 +32,9 @@ typedef struct pair_t {
 } pair_t;
 
 static struct {
-    ecs_world_t *world;
+    bool started; /* the store started, the records' pool made */
     wgf_ecs_priv_ids_t ids;
-    ecs_query_t *q_motion, *q_bounds, *q_lifetime, *q_collider;
+    wgf_ecs_priv_query_t *q_motion, *q_bounds, *q_lifetime, *q_collider;
     wgf_core_priv_handle_pool_t pool;
     wgf_ecs_priv_record_t *records;
     uint64_t next_order;
@@ -46,14 +48,14 @@ static struct {
     int probe_name_count, probe_name_capacity;
     struct {
         char name[WGF_ECS_PRIV_NAME_MAX];
-        ecs_entity_t tag;
+        wgf_ecs_priv_id_t tag;
     } *tags; /* each behavior name's tag, sorted by name */
     int tag_count, tag_capacity;
 } ecs;
 
-ecs_world_t *wgf_ecs_priv_world(void)
+bool wgf_ecs_priv_started(void)
 {
-    return ecs.world;
+    return ecs.started;
 }
 
 const wgf_ecs_priv_ids_t *wgf_ecs_priv_ids(void)
@@ -65,18 +67,17 @@ wgf_ecs_priv_record_t *wgf_ecs_priv_record_of(wgf_actor_t actor)
 {
     const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
     uint16_t index;
-    if (ecs.world == NULL || actor_ptr == NULL || actor_ptr->components == 0 ||
+    if (!ecs.started || actor_ptr == NULL || actor_ptr->components == 0 ||
         !wgf_core_priv_handle_pool_resolve(&ecs.pool, actor_ptr->components, &index)) {
         return NULL;
     }
     return &ecs.records[index];
 }
 
-void *wgf_ecs_priv_get(wgf_actor_t actor, ecs_entity_t component)
+void *wgf_ecs_priv_get(wgf_actor_t actor, wgf_ecs_priv_id_t component)
 {
     const wgf_ecs_priv_record_t *record = wgf_ecs_priv_record_of(actor);
-    if (record == NULL || !ecs_has_id(ecs.world, record->id, component)) return NULL;
-    return ecs_get_mut_id(ecs.world, record->id, component);
+    return record != NULL ? wgf_ecs_priv_store_get(record->id, component) : NULL;
 }
 
 static int by_order(const void *a, const void *b)
@@ -92,7 +93,7 @@ wgf_actor_t *wgf_ecs_priv_actors(int *count)
     uint16_t i;
     int n = 0;
     *count = 0;
-    if (ecs.world == NULL || ecs.live == 0) return NULL;
+    if (!ecs.started || ecs.live == 0) return NULL;
     out = (wgf_actor_t *)malloc(sizeof(wgf_actor_t) * (size_t)ecs.live);
     if (out == NULL) return NULL;
     for (i = 1; i < ecs.pool.capacity && n < ecs.live; i++) {
@@ -205,32 +206,32 @@ static void collide(void)
     body_t *bodies = NULL;
     pair_t *found = NULL;
     int body_count = 0, body_capacity = 0, found_count = 0, found_capacity = 0, i, j;
-    ecs_iter_t it = ecs_query_iter(ecs.world, ecs.q_collider);
-    while (ecs_query_next(&it)) {
-        const wgf_ecs_priv_collider_t *c = ecs_field(&it, wgf_ecs_priv_collider_t, 0);
-        const wgf_ecs_priv_ref_t *ref = ecs_field(&it, wgf_ecs_priv_ref_t, 1);
-        for (i = 0; i < it.count; i++) {
-            const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(ref[i].actor);
-            float sx, sy;
-            if (actor_ptr == NULL || !c[i].enabled) continue; /* switched off: it meets nothing */
-            sx = fabsf(actor_ptr->scale.x);
-            sy = fabsf(actor_ptr->scale.y);
-            if (body_count == body_capacity) {
-                const int capacity = body_capacity > 0 ? body_capacity * 2 : 64;
-                body_t *grown = (body_t *)realloc(bodies, sizeof(body_t) * (size_t)capacity);
-                if (grown == NULL) continue;
-                bodies = grown;
-                body_capacity = capacity;
-            }
-            bodies[body_count].handle = ref[i].actor;
-            bodies[body_count].parent = actor_ptr->parent;
-            bodies[body_count].x = actor_ptr->position.x;
-            bodies[body_count].y = actor_ptr->position.y;
-            bodies[body_count].r = c[i].radius * (sx > sy ? sx : sy);
-            bodies[body_count].layer = c[i].layer;
-            bodies[body_count].mask = c[i].mask;
-            body_count++;
+    void *fields[2];
+    wgf_ecs_priv_id_t entity;
+    wgf_ecs_priv_store_walk(ecs.q_collider);
+    while (wgf_ecs_priv_store_next(ecs.q_collider, fields, &entity)) {
+        const wgf_ecs_priv_collider_t *c = (const wgf_ecs_priv_collider_t *)fields[0];
+        const wgf_ecs_priv_ref_t *ref = (const wgf_ecs_priv_ref_t *)fields[1];
+        const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(ref->actor);
+        float sx, sy;
+        if (actor_ptr == NULL || !c->enabled) continue; /* switched off: it meets nothing */
+        sx = fabsf(actor_ptr->scale.x);
+        sy = fabsf(actor_ptr->scale.y);
+        if (body_count == body_capacity) {
+            const int capacity = body_capacity > 0 ? body_capacity * 2 : 64;
+            body_t *grown = (body_t *)realloc(bodies, sizeof(body_t) * (size_t)capacity);
+            if (grown == NULL) continue;
+            bodies = grown;
+            body_capacity = capacity;
         }
+        bodies[body_count].handle = ref->actor;
+        bodies[body_count].parent = actor_ptr->parent;
+        bodies[body_count].x = actor_ptr->position.x;
+        bodies[body_count].y = actor_ptr->position.y;
+        bodies[body_count].r = c->radius * (sx > sy ? sx : sy);
+        bodies[body_count].layer = c->layer;
+        bodies[body_count].mask = c->mask;
+        body_count++;
     }
     if (body_count > 1) qsort(bodies, (size_t)body_count, sizeof(body_t), by_sweep);
     for (i = 0; i < body_count; i++) {
@@ -298,17 +299,17 @@ static bool doom(wgf_actor_t **doomed, int *count, int *capacity, wgf_actor_t ac
 static void count_down(float dt)
 {
     wgf_actor_t *doomed = NULL;
-    int count = 0, capacity = 0, i;
-    ecs_iter_t it = ecs_query_iter(ecs.world, ecs.q_lifetime);
-    while (ecs_query_next(&it)) {
-        wgf_ecs_priv_lifetime_t *life = ecs_field(&it, wgf_ecs_priv_lifetime_t, 0);
-        const wgf_ecs_priv_ref_t *ref = ecs_field(&it, wgf_ecs_priv_ref_t, 1);
-        for (i = 0; i < it.count; i++) {
-            life[i].seconds -= dt;
-            if (life[i].seconds <= 0.0f) {
-                life[i].seconds = 0.0f;
-                doom(&doomed, &count, &capacity, ref[i].actor);
-            }
+    int count = 0, capacity = 0;
+    void *fields[2];
+    wgf_ecs_priv_id_t entity;
+    wgf_ecs_priv_store_walk(ecs.q_lifetime);
+    while (wgf_ecs_priv_store_next(ecs.q_lifetime, fields, &entity)) {
+        wgf_ecs_priv_lifetime_t *life = (wgf_ecs_priv_lifetime_t *)fields[0];
+        const wgf_ecs_priv_ref_t *ref = (const wgf_ecs_priv_ref_t *)fields[1];
+        life->seconds -= dt;
+        if (life->seconds <= 0.0f) {
+            life->seconds = 0.0f;
+            doom(&doomed, &count, &capacity, ref->actor);
         }
     }
     destroy_all(doomed, count);
@@ -316,37 +317,37 @@ static void count_down(float dt)
 
 static void move(float dt)
 {
-    int i, k;
-    ecs_iter_t it = ecs_query_iter(ecs.world, ecs.q_motion);
-    while (ecs_query_next(&it)) {
-        wgf_ecs_priv_motion_t *m = ecs_field(&it, wgf_ecs_priv_motion_t, 0);
-        const wgf_ecs_priv_ref_t *ref = ecs_field(&it, wgf_ecs_priv_ref_t, 1);
-        for (i = 0; i < it.count; i++) {
-            wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(ref[i].actor);
-            wgf_vec3_t angles;
-            if (actor_ptr == NULL) continue;
-            if (m[i].damping > 0.0f) {
-                const float keep = powf(1.0f - m[i].damping, dt);
-                for (k = 0; k < 3; k++) m[i].velocity[k] *= keep;
-            }
-            if (m[i].max_speed > 0.0f) {
-                const float speed = sqrtf(m[i].velocity[0] * m[i].velocity[0] + m[i].velocity[1] * m[i].velocity[1] +
-                                          m[i].velocity[2] * m[i].velocity[2]);
-                if (speed > m[i].max_speed) {
-                    for (k = 0; k < 3; k++) m[i].velocity[k] *= m[i].max_speed / speed;
-                }
-            }
-            actor_ptr->position = wgf_vec3_add(actor_ptr->position, wgf_vec3_make(m[i].velocity[0] * dt,
-                                                                                m[i].velocity[1] * dt,
-                                                                                m[i].velocity[2] * dt));
-            if (m[i].spin[0] != 0.0f || m[i].spin[1] != 0.0f || m[i].spin[2] != 0.0f) {
-                angles = wgf_quat_to_euler(actor_ptr->rotation);
-                actor_ptr->rotation = wgf_quat_from_euler(wgf_vec3_make(angles.x + m[i].spin[0] * dt,
-                                                                       angles.y + m[i].spin[1] * dt,
-                                                                       angles.z + m[i].spin[2] * dt));
-            }
-            wgf_gfx_priv_actor_transform_changed(ref[i].actor);
+    int k;
+    void *fields[2];
+    wgf_ecs_priv_id_t entity;
+    wgf_ecs_priv_store_walk(ecs.q_motion);
+    while (wgf_ecs_priv_store_next(ecs.q_motion, fields, &entity)) {
+        wgf_ecs_priv_motion_t *m = (wgf_ecs_priv_motion_t *)fields[0];
+        const wgf_ecs_priv_ref_t *ref = (const wgf_ecs_priv_ref_t *)fields[1];
+        wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(ref->actor);
+        wgf_vec3_t angles;
+        if (actor_ptr == NULL) continue;
+        if (m->damping > 0.0f) {
+            const float keep = powf(1.0f - m->damping, dt);
+            for (k = 0; k < 3; k++) m->velocity[k] *= keep;
         }
+        if (m->max_speed > 0.0f) {
+            const float speed = sqrtf(m->velocity[0] * m->velocity[0] + m->velocity[1] * m->velocity[1] +
+                                      m->velocity[2] * m->velocity[2]);
+            if (speed > m->max_speed) {
+                for (k = 0; k < 3; k++) m->velocity[k] *= m->max_speed / speed;
+            }
+        }
+        actor_ptr->position = wgf_vec3_add(actor_ptr->position, wgf_vec3_make(m->velocity[0] * dt,
+                                                                            m->velocity[1] * dt,
+                                                                            m->velocity[2] * dt));
+        if (m->spin[0] != 0.0f || m->spin[1] != 0.0f || m->spin[2] != 0.0f) {
+            angles = wgf_quat_to_euler(actor_ptr->rotation);
+            actor_ptr->rotation = wgf_quat_from_euler(wgf_vec3_make(angles.x + m->spin[0] * dt,
+                                                                   angles.y + m->spin[1] * dt,
+                                                                   angles.z + m->spin[2] * dt));
+        }
+        wgf_gfx_priv_actor_transform_changed(ref->actor);
     }
 }
 
@@ -389,37 +390,35 @@ static bool keep_in(wgf_gfx_priv_actor_t *actor_ptr, wgf_ecs_priv_motion_t *moti
 static void bound(void)
 {
     wgf_actor_t *doomed = NULL;
-    int count = 0, capacity = 0, i;
+    int count = 0, capacity = 0;
     bool seen = false;
     wgf_vec4_t seen_area = wgf_vec4_make(0, 0, 0, 0); /* the visible area, read once a tick when one asks */
-    ecs_iter_t it = ecs_query_iter(ecs.world, ecs.q_bounds);
-    while (ecs_query_next(&it)) {
-        const wgf_ecs_priv_bounds_t *b = ecs_field(&it, wgf_ecs_priv_bounds_t, 0);
-        const wgf_ecs_priv_ref_t *ref = ecs_field(&it, wgf_ecs_priv_ref_t, 1);
-        for (i = 0; i < it.count; i++) {
-            const wgf_ecs_priv_record_t *record = wgf_ecs_priv_record_of(ref[i].actor);
-            wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(ref[i].actor);
-            wgf_ecs_priv_motion_t *motion =
-                record != NULL && ecs_has_id(ecs.world, record->id, ecs.ids.motion)
-                    ? (wgf_ecs_priv_motion_t *)ecs_get_mut_id(ecs.world, record->id, ecs.ids.motion)
-                    : NULL;
-            const float m = b[i].margin;
-            float rect[4];
-            bool out_x, out_y;
-            if (actor_ptr == NULL) continue;
-            if (b[i].visible && !seen) {
-                seen_area = wgf_presentation_get_visible();
-                seen = true;
-            }
-            rect[0] = b[i].visible ? seen_area.x : b[i].rect[0];
-            rect[1] = b[i].visible ? seen_area.y : b[i].rect[1];
-            rect[2] = b[i].visible ? seen_area.z : b[i].rect[2];
-            rect[3] = b[i].visible ? seen_area.w : b[i].rect[3];
-            out_x = keep_in(actor_ptr, motion, 0, rect[0] - m, rect[0] + rect[2] + m, b[i].mode);
-            out_y = keep_in(actor_ptr, motion, 1, rect[1] - m, rect[1] + rect[3] + m, b[i].mode);
-            wgf_gfx_priv_actor_transform_changed(ref[i].actor);
-            if (out_x || out_y) doom(&doomed, &count, &capacity, ref[i].actor);
+    void *fields[2];
+    wgf_ecs_priv_id_t entity;
+    wgf_ecs_priv_store_walk(ecs.q_bounds);
+    while (wgf_ecs_priv_store_next(ecs.q_bounds, fields, &entity)) {
+        const wgf_ecs_priv_bounds_t *b = (const wgf_ecs_priv_bounds_t *)fields[0];
+        const wgf_ecs_priv_ref_t *ref = (const wgf_ecs_priv_ref_t *)fields[1];
+        const wgf_ecs_priv_record_t *record = wgf_ecs_priv_record_of(ref->actor);
+        wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(ref->actor);
+        wgf_ecs_priv_motion_t *motion =
+            record != NULL ? (wgf_ecs_priv_motion_t *)wgf_ecs_priv_store_get(record->id, ecs.ids.motion) : NULL;
+        const float m = b->margin;
+        float rect[4];
+        bool out_x, out_y;
+        if (actor_ptr == NULL) continue;
+        if (b->visible && !seen) {
+            seen_area = wgf_presentation_get_visible();
+            seen = true;
         }
+        rect[0] = b->visible ? seen_area.x : b->rect[0];
+        rect[1] = b->visible ? seen_area.y : b->rect[1];
+        rect[2] = b->visible ? seen_area.z : b->rect[2];
+        rect[3] = b->visible ? seen_area.w : b->rect[3];
+        out_x = keep_in(actor_ptr, motion, 0, rect[0] - m, rect[0] + rect[2] + m, b->mode);
+        out_y = keep_in(actor_ptr, motion, 1, rect[1] - m, rect[1] + rect[3] + m, b->mode);
+        wgf_gfx_priv_actor_transform_changed(ref->actor);
+        if (out_x || out_y) doom(&doomed, &count, &capacity, ref->actor);
     }
     destroy_all(doomed, count);
 }
@@ -511,7 +510,7 @@ static void free_behaviors(wgf_ecs_priv_record_t *record)
 static void stop(void)
 {
     uint16_t i;
-    if (ecs.world == NULL) return;
+    if (!ecs.started) return;
     for (i = 1; i < ecs.pool.capacity; i++) {
         wgf_ecs_priv_record_t *record =
             wgf_core_priv_handle_pool_handle_from_index(&ecs.pool, i) != 0 ? &ecs.records[i] : NULL;
@@ -522,11 +521,11 @@ static void stop(void)
     wgf_gfx_priv_actor_set_components_hook(NULL);
     wgf_ecs_priv_scene_shutdown();
     wgf_ecs_priv_dump_shutdown();
-    ecs_query_fini(ecs.q_motion);
-    ecs_query_fini(ecs.q_bounds);
-    ecs_query_fini(ecs.q_lifetime);
-    ecs_query_fini(ecs.q_collider);
-    ecs_fini(ecs.world);
+    wgf_ecs_priv_store_query_free(ecs.q_motion);
+    wgf_ecs_priv_store_query_free(ecs.q_bounds);
+    wgf_ecs_priv_store_query_free(ecs.q_lifetime);
+    wgf_ecs_priv_store_query_free(ecs.q_collider);
+    wgf_ecs_priv_store_stop();
     wgf_core_priv_handle_pool_destroy(&ecs.pool);
     free(ecs.events);
     free(ecs.pairs);
@@ -546,26 +545,10 @@ static wgf_core_priv_part_t part = {.name = "ecs",
 
 /* ---- the world -------------------------------------------------------------------- */
 
-static ecs_entity_t component(const char *name, size_t size, size_t alignment)
+static wgf_ecs_priv_query_t *query_of(wgf_ecs_priv_id_t a, wgf_ecs_priv_id_t b)
 {
-    ecs_entity_desc_t entity_desc;
-    ecs_component_desc_t desc;
-    memset(&entity_desc, 0, sizeof(entity_desc));
-    entity_desc.name = name;
-    memset(&desc, 0, sizeof(desc));
-    desc.entity = ecs_entity_init(ecs.world, &entity_desc);
-    desc.type.size = (ecs_size_t)size;
-    desc.type.alignment = (ecs_size_t)alignment;
-    return ecs_component_init(ecs.world, &desc);
-}
-
-static ecs_query_t *query(ecs_entity_t a, ecs_entity_t b)
-{
-    ecs_query_desc_t desc;
-    memset(&desc, 0, sizeof(desc));
-    desc.terms[0].id = a;
-    desc.terms[1].id = b;
-    return ecs_query_init(ecs.world, &desc);
+    const wgf_ecs_priv_id_t terms[2] = {a, b};
+    return wgf_ecs_priv_store_query(terms, 2);
 }
 
 static void components_gone(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr)
@@ -576,7 +559,7 @@ static void components_gone(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr)
 
 bool wgf_ecs_priv_start(void)
 {
-    if (ecs.world != NULL) return true;
+    if (ecs.started) return true;
     ecs.events = (int *)malloc(sizeof(int) * 3 * EVENTS_MAX);
     if (ecs.events == NULL ||
         !wgf_core_priv_handle_pool_init(&ecs.pool, WGF_CORE_PRIV_HANDLE_KIND_COMPONENTS, (void **)&ecs.records,
@@ -586,17 +569,26 @@ bool wgf_ecs_priv_start(void)
         wgf_log_error("wgf_ecs: out of memory starting");
         return false;
     }
-    ecs.world = ecs_mini();
-    ecs.ids.ref = component("wgf_ref", sizeof(wgf_ecs_priv_ref_t), _Alignof(wgf_ecs_priv_ref_t));
-    ecs.ids.motion = component("wgf_motion", sizeof(wgf_ecs_priv_motion_t), _Alignof(wgf_ecs_priv_motion_t));
-    ecs.ids.bounds = component("wgf_bounds", sizeof(wgf_ecs_priv_bounds_t), _Alignof(wgf_ecs_priv_bounds_t));
-    ecs.ids.lifetime = component("wgf_lifetime", sizeof(wgf_ecs_priv_lifetime_t), _Alignof(wgf_ecs_priv_lifetime_t));
-    ecs.ids.collider = component("wgf_collider", sizeof(wgf_ecs_priv_collider_t), _Alignof(wgf_ecs_priv_collider_t));
-    ecs.ids.voice = ecs_new(ecs.world);
-    ecs.q_motion = query(ecs.ids.motion, ecs.ids.ref);
-    ecs.q_bounds = query(ecs.ids.bounds, ecs.ids.ref);
-    ecs.q_lifetime = query(ecs.ids.lifetime, ecs.ids.ref);
-    ecs.q_collider = query(ecs.ids.collider, ecs.ids.ref);
+    if (!wgf_ecs_priv_store_start()) {
+        free(ecs.events);
+        ecs.events = NULL;
+        wgf_core_priv_handle_pool_destroy(&ecs.pool);
+        wgf_log_error("wgf_ecs: out of memory starting");
+        return false;
+    }
+    ecs.started = true;
+    ecs.ids.ref = wgf_ecs_priv_store_component(sizeof(wgf_ecs_priv_ref_t), _Alignof(wgf_ecs_priv_ref_t));
+    ecs.ids.motion = wgf_ecs_priv_store_component(sizeof(wgf_ecs_priv_motion_t), _Alignof(wgf_ecs_priv_motion_t));
+    ecs.ids.bounds = wgf_ecs_priv_store_component(sizeof(wgf_ecs_priv_bounds_t), _Alignof(wgf_ecs_priv_bounds_t));
+    ecs.ids.lifetime =
+        wgf_ecs_priv_store_component(sizeof(wgf_ecs_priv_lifetime_t), _Alignof(wgf_ecs_priv_lifetime_t));
+    ecs.ids.collider =
+        wgf_ecs_priv_store_component(sizeof(wgf_ecs_priv_collider_t), _Alignof(wgf_ecs_priv_collider_t));
+    ecs.ids.voice = wgf_ecs_priv_store_component(0, 1);
+    ecs.q_motion = query_of(ecs.ids.motion, ecs.ids.ref);
+    ecs.q_bounds = query_of(ecs.ids.bounds, ecs.ids.ref);
+    ecs.q_lifetime = query_of(ecs.ids.lifetime, ecs.ids.ref);
+    ecs.q_collider = query_of(ecs.ids.collider, ecs.ids.ref);
     wgf_gfx_priv_actor_set_components_hook(components_gone);
     wgf_core_priv_part_install(&part);
     return true;
@@ -622,12 +614,12 @@ wgf_ecs_priv_record_t *wgf_ecs_priv_record_make(wgf_actor_t actor)
     wgf_gfx_priv_actor_set_simulated(actor_ptr, true);
     record = wgf_ecs_priv_record_of(actor);
     memset(record, 0, sizeof(*record));
-    record->id = ecs_new(ecs.world);
+    record->id = wgf_ecs_priv_store_new();
     record->order = ecs.next_order++;
     record->actor = actor;
     record->next_behavior = 1;
     ref.actor = actor;
-    ecs_set_id(ecs.world, record->id, ecs.ids.ref, sizeof(ref), &ref);
+    wgf_ecs_priv_store_set(record->id, ecs.ids.ref, &ref);
     ecs.live++;
     return record;
 }
@@ -644,7 +636,7 @@ void wgf_ecs_priv_record_free(wgf_actor_t actor)
     wgf_ecs_priv_forget_pairs(actor);
     if (record->voice != 0) wgf_voice_destroy(record->voice);
     record = wgf_ecs_priv_record_of(actor);
-    ecs_delete(ecs.world, record->id);
+    wgf_ecs_priv_store_delete(record->id);
     free_behaviors(record);
     wgf_core_priv_handle_pool_free(&ecs.pool, actor_ptr->components);
     actor_ptr->components = 0;
@@ -659,10 +651,10 @@ int wgf_ecs_get_count(void)
 
 /* ---- finding ---------------------------------------------------------------------- */
 
-ecs_entity_t wgf_ecs_priv_behavior_tag(const char *name, bool make)
+wgf_ecs_priv_id_t wgf_ecs_priv_behavior_tag(const char *name, bool make)
 {
     int low = 0, high = ecs.tag_count;
-    if (ecs.world == NULL || name == NULL) return 0;
+    if (!ecs.started || name == NULL) return 0;
     while (low < high) { /* the first not before `name` */
         const int mid = (low + high) / 2;
         if (strcmp(ecs.tags[mid].name, name) < 0) {
@@ -683,34 +675,37 @@ ecs_entity_t wgf_ecs_priv_behavior_tag(const char *name, bool make)
     memmove(&ecs.tags[low + 1], &ecs.tags[low], sizeof(ecs.tags[0]) * (size_t)(ecs.tag_count - low));
     ecs.tag_count++;
     memcpy(ecs.tags[low].name, name, strlen(name) + 1);
-    ecs.tags[low].tag = ecs_new(ecs.world);
+    ecs.tags[low].tag = wgf_ecs_priv_store_component(0, 1);
     return ecs.tags[low].tag;
 }
 
-/* The actors whose flecs entities have `id`, oldest first, into `out` as many as fit in
- * `count`: flecs's index of the id gives them, never a look at every record. */
-static int find_id(ecs_id_t id, wgf_actor_t *out, int count)
+/* The actors whose entities have `id`, oldest first, into `out` as many as fit in
+ * `count`: the store's set of the id gives them, never a look at every record. */
+static int find_id(wgf_ecs_priv_id_t id, wgf_actor_t *out, int count)
 {
     wgf_actor_t *all;
     int n = 0, total;
-    ecs_iter_t it;
-    if (ecs.world == NULL || id == 0 || out == NULL || count <= 0) return 0;
-    total = ecs_count_id(ecs.world, id);
+    wgf_ecs_priv_query_t *query;
+    void *fields[2];
+    wgf_ecs_priv_id_t entity;
+    if (!ecs.started || id == 0 || out == NULL || count <= 0) return 0;
+    total = wgf_ecs_priv_store_count(id);
     if (total == 0) return 0;
     all = (wgf_actor_t *)malloc(sizeof(wgf_actor_t) * (size_t)total);
     if (all == NULL) {
         wgf_log_error("wgf_ecs: out of memory finding actors");
         return 0;
     }
-    it = ecs_each_id(ecs.world, id);
-    while (ecs_each_next(&it)) {
-        int i;
-        for (i = 0; i < it.count && n < total; i++) {
-            const wgf_ecs_priv_ref_t *ref =
-                (const wgf_ecs_priv_ref_t *)ecs_get_id(ecs.world, it.entities[i], ecs.ids.ref);
-            if (ref != NULL) all[n++] = ref->actor;
-        }
+    query = query_of(id, ecs.ids.ref); /* the store's index of the id answers it */
+    if (query == NULL) {
+        free(all);
+        return 0;
     }
+    wgf_ecs_priv_store_walk(query);
+    while (n < total && wgf_ecs_priv_store_next(query, fields, &entity)) {
+        all[n++] = ((const wgf_ecs_priv_ref_t *)fields[1])->actor;
+    }
+    wgf_ecs_priv_store_query_free(query);
     qsort(all, (size_t)n, sizeof(wgf_actor_t), by_order);
     if (n > count) n = count;
     memcpy(out, all, sizeof(wgf_actor_t) * (size_t)n);
@@ -718,7 +713,7 @@ static int find_id(ecs_id_t id, wgf_actor_t *out, int count)
     return n;
 }
 
-static ecs_id_t component_id(wgf_component_t component)
+static wgf_ecs_priv_id_t component_id(wgf_component_t component)
 {
     switch (component) {
         case WGF_COMPONENT_MOTION: return ecs.ids.motion;
@@ -737,8 +732,7 @@ int wgf_ecs_find_behavior(const char *name, wgf_actor_t *out, int count)
 
 int wgf_ecs_count_behavior(const char *name)
 {
-    const ecs_entity_t tag = wgf_ecs_priv_behavior_tag(name, false);
-    return tag != 0 ? ecs_count_id(ecs.world, tag) : 0;
+    return wgf_ecs_priv_store_count(wgf_ecs_priv_behavior_tag(name, false));
 }
 
 int wgf_ecs_find_component(wgf_component_t component, wgf_actor_t *out, int count)
@@ -748,8 +742,7 @@ int wgf_ecs_find_component(wgf_component_t component, wgf_actor_t *out, int coun
 
 int wgf_ecs_count_component(wgf_component_t component)
 {
-    const ecs_id_t id = component_id(component);
-    return ecs.world != NULL && id != 0 ? ecs_count_id(ecs.world, id) : 0;
+    return ecs.started ? wgf_ecs_priv_store_count(component_id(component)) : 0;
 }
 
 void wgf_ecs_clear(void)

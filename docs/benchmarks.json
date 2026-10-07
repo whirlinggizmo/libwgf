@@ -1,110 +1,211 @@
 {
  "actors": {
   "before": {
-   "commit": "1c28551 2026-10-06",
+   "commit": "8f3a822 2026-10-07",
    "cpu": "13th Gen Intel(R) Core(TM) i9-13900HX",
    "rows": {
     "10k-churn": {
-     "bytes": 987.5,
-     "ns": 535.35
+     "bytes": 988.7,
+     "ns": 565.17
     },
     "10k-lookup": {
-     "bytes": 1019.5,
-     "ns": 79.29
+     "bytes": 1020.6,
+     "ns": 82.39
     },
     "10k-lookup-name": {
-     "ns": 215897.2
+     "ns": 218006.2
     },
     "10k-lookup-path": {
-     "ns": 70.0
+     "ns": 74.6
     },
     "10k-moving-behaviors": {
-     "bytes": 987.5,
-     "ns": 63.35
+     "bytes": 988.7,
+     "ns": 64.82
     },
     "10k-moving-deep": {
-     "bytes": 1012.1,
-     "ns": 71.7
+     "bytes": 1013.3,
+     "ns": 72.41
     },
     "10k-moving-flat": {
-     "bytes": 987.5,
-     "ns": 63.1
+     "bytes": 988.7,
+     "ns": 64.91
     },
     "10k-static-flat": {
-     "bytes": 472.9,
-     "ns": 6.36
+     "bytes": 474.0,
+     "ns": 4.18
     },
     "50k-moving-behaviors": {
-     "bytes": 787.2,
-     "ns": 69.3
+     "bytes": 787.4,
+     "ns": 68.77
     },
     "50k-moving-deep": {
-     "bytes": 813.1,
-     "ns": 80.36
+     "bytes": 813.3,
+     "ns": 77.76
     },
     "50k-moving-flat": {
-     "bytes": 787.2,
-     "ns": 71.95
+     "bytes": 787.4,
+     "ns": 69.16
     },
     "50k-static-flat": {
-     "bytes": 378.6,
-     "ns": 4.73
+     "bytes": 378.8,
+     "ns": 4.42
     }
    },
    "runs": 3,
    "variant": "linux-x64-release-headless"
   },
-  "commit": "0d712a3 2026-10-07",
+  "commit": "8f3a822 2026-10-07",
   "cpu": "13th Gen Intel(R) Core(TM) i9-13900HX",
+  "flecs": {
+   "commit": "8f3a822 2026-10-07",
+   "cpu": "13th Gen Intel(R) Core(TM) i9-13900HX",
+   "rows": {
+    "10k-churn": {
+     "bytes": 929.1,
+     "ns": 73.78
+    },
+    "10k-lookup": {
+     "bytes": 864.8,
+     "ns": 63.43
+    },
+    "10k-lookup-component": {
+     "ns": 40.76
+    },
+    "10k-lookup-name": {
+     "ns": 34.9
+    },
+    "10k-lookup-path": {
+     "ns": 24.7
+    },
+    "10k-moving-behaviors": {
+     "bytes": 929.1,
+     "ns": 64.69
+    },
+    "10k-moving-deep": {
+     "bytes": 825.7,
+     "ns": 70.33
+    },
+    "10k-moving-flat": {
+     "bytes": 801.1,
+     "ns": 59.23
+    },
+    "10k-static-flat": {
+     "bytes": 500.2,
+     "ns": 4.32
+    },
+    "10k-toggle": {
+     "bytes": 801.1,
+     "ns": 168.91
+    },
+    "50k-moving-behaviors": {
+     "bytes": 777.8,
+     "ns": 69.04
+    },
+    "50k-moving-deep": {
+     "bytes": 675.7,
+     "ns": 73.04
+    },
+    "50k-moving-flat": {
+     "bytes": 649.8,
+     "ns": 61.7
+    },
+    "50k-static-flat": {
+     "bytes": 399.8,
+     "ns": 5.09
+    },
+    "store-get": {
+     "ns": 15.95
+    },
+    "store-intersect": {
+     "ns": 4.77
+    },
+    "store-spawn": {
+     "ns": 141.28
+    },
+    "store-toggle": {
+     "ns": 75.01
+    },
+    "store-walk": {
+     "ns": 3.83
+    },
+    "store-walk-mixed": {
+     "ns": 3.85
+    }
+   },
+   "runs": 3,
+   "variant": "linux-x64-release-headless"
+  },
   "rows": {
    "10k-churn": {
-    "bytes": 927.9,
-    "ns": 60.27
+    "bytes": 933.6,
+    "ns": 59.81
    },
    "10k-lookup": {
-    "bytes": 863.6,
-    "ns": 53.82
+    "bytes": 856.2,
+    "ns": 50.24
    },
    "10k-lookup-component": {
-    "ns": 39.62
+    "ns": 40.85
    },
    "10k-lookup-name": {
-    "ns": 31.7
+    "ns": 33.3
    },
    "10k-lookup-path": {
-    "ns": 23.2
+    "ns": 23.5
    },
    "10k-moving-behaviors": {
-    "bytes": 927.9,
-    "ns": 51.07
+    "bytes": 933.6,
+    "ns": 51.79
    },
    "10k-moving-deep": {
-    "bytes": 824.6,
-    "ns": 59.68
+    "bytes": 817.1,
+    "ns": 59.9
    },
    "10k-moving-flat": {
-    "bytes": 799.9,
-    "ns": 46.57
+    "bytes": 792.6,
+    "ns": 48.89
    },
    "10k-static-flat": {
     "bytes": 499.0,
-    "ns": 5.52
+    "ns": 4.15
+   },
+   "10k-toggle": {
+    "bytes": 792.6,
+    "ns": 70.72
    },
    "50k-moving-behaviors": {
-    "bytes": 777.5,
-    "ns": 57.48
+    "bytes": 781.8,
+    "ns": 57.31
    },
    "50k-moving-deep": {
-    "bytes": 675.5,
-    "ns": 58.07
+    "bytes": 669.2,
+    "ns": 60.63
    },
    "50k-moving-flat": {
-    "bytes": 649.5,
-    "ns": 48.36
+    "bytes": 643.3,
+    "ns": 49.73
    },
    "50k-static-flat": {
-    "bytes": 399.5,
-    "ns": 4.75
+    "bytes": 399.8,
+    "ns": 4.59
+   },
+   "store-get": {
+    "ns": 2.85
+   },
+   "store-intersect": {
+    "ns": 288.49
+   },
+   "store-spawn": {
+    "ns": 24.29
+   },
+   "store-toggle": {
+    "ns": 5.05
+   },
+   "store-walk": {
+    "ns": 2.91
+   },
+   "store-walk-mixed": {
+    "ns": 2.9
    }
   },
   "runs": 3,
@@ -137,7 +238,7 @@
   "budgets": {
    "game:asteroids": 400
   },
-  "commit": "1c28551 2026-10-06",
+  "commit": "8f3a822 2026-10-07",
   "programs": {
    "app-gamepad": {
     "js": {
@@ -261,14 +362,14 @@
    },
    "ecs-scene": {
     "js": {
-     "br": 18804,
-     "gz": 21085,
-     "raw": 56033
+     "br": 18780,
+     "gz": 21063,
+     "raw": 55908
     },
     "wasm": {
-     "br": 198776,
-     "gz": 241303,
-     "raw": 572758
+     "br": 136586,
+     "gz": 165660,
+     "raw": 402894
     }
    },
    "game:asteroids": {
@@ -278,14 +379,14 @@
      "raw": 16190
     },
     "js": {
-     "br": 31775,
-     "gz": 35585,
-     "raw": 120192
+     "br": 31747,
+     "gz": 35535,
+     "raw": 120055
     },
     "wasm": {
-     "br": 230617,
-     "gz": 275545,
-     "raw": 670991
+     "br": 168545,
+     "gz": 203365,
+     "raw": 500637
     }
    },
    "gfx-font": {
@@ -415,14 +516,14 @@
      "raw": 17289
     },
     "js": {
-     "br": 29676,
-     "gz": 33545,
-     "raw": 101824
+     "br": 29603,
+     "gz": 33494,
+     "raw": 101687
     },
     "wasm": {
-     "br": 230680,
-     "gz": 275522,
-     "raw": 670956
+     "br": 168338,
+     "gz": 203339,
+     "raw": 500610
     }
    },
    "js:hello": {
@@ -480,38 +581,38 @@
    },
    "ladder-4-ecs": {
     "js": {
-     "br": 18167,
-     "gz": 20385,
-     "raw": 53611
+     "br": 18146,
+     "gz": 20343,
+     "raw": 53486
     },
     "wasm": {
-     "br": 187622,
-     "gz": 226666,
-     "raw": 540207
+     "br": 125457,
+     "gz": 151954,
+     "raw": 370340
     }
    },
    "ladder-5-ui": {
     "js": {
-     "br": 18189,
-     "gz": 20385,
-     "raw": 53609
+     "br": 18150,
+     "gz": 20342,
+     "raw": 53484
     },
     "wasm": {
-     "br": 216462,
-     "gz": 263756,
-     "raw": 624389
+     "br": 154010,
+     "gz": 188608,
+     "raw": 454483
     }
    },
    "ladder-6-model": {
     "js": {
-     "br": 18192,
-     "gz": 20388,
-     "raw": 53615
+     "br": 18132,
+     "gz": 20339,
+     "raw": 53489
     },
     "wasm": {
-     "br": 232290,
-     "gz": 284885,
-     "raw": 677419
+     "br": 169967,
+     "gz": 209218,
+     "raw": 507475
     }
    },
    "ui-menu": {

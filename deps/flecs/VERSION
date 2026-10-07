@@ -1,5 +1,0 @@
-# Vendored flecs (MIT, LICENSE in this directory): the distr amalgamation, flecs.c and
-# flecs.h, unchanged, v4.0.5, carried from flecs_wrapper-c's copy (its first commit,
-# 07852b7), which is the release's distr/ as it comes. libwgf compiles it with
-# FLECS_CUSTOM_BUILD and only the addons ecs/src/wgf_ecs_flecs_impl.c names.
-flecs https://github.com/SanderMertens/flecs.git v4.0.5

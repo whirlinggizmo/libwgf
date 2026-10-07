@@ -21,7 +21,7 @@
  *   1. text: one line drawn in the built-in font (fontstash, stb_truetype, the font).
  *   2. textures: one image loaded and drawn (the texture loader, stb_image).
  *   3. 2D sprites: the image as a sprite actor on a 2D stage (actors, 2D stages, sprites).
- *   4. ecs: a shape with motion on the stage2d (flecs, the systems).
+ *   4. ecs: a shape with motion on the stage2d (its store, the systems).
  *   5. ui: a panel with a label and a button (Clay, the widgets).
  * Each step's size less the one before is what its feature costs on its own. Nothing to
  * look at for its own sake: it is measured, not shown. */

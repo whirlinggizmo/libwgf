@@ -11,26 +11,26 @@
 
 static wgf_ecs_priv_motion_t *motion_of(wgf_actor_t actor)
 {
-    return wgf_ecs_priv_world() != NULL ? (wgf_ecs_priv_motion_t *)wgf_ecs_priv_get(actor, wgf_ecs_priv_ids()->motion)
+    return wgf_ecs_priv_started() ? (wgf_ecs_priv_motion_t *)wgf_ecs_priv_get(actor, wgf_ecs_priv_ids()->motion)
                                         : NULL;
 }
 
 static wgf_ecs_priv_bounds_t *bounds_of(wgf_actor_t actor)
 {
-    return wgf_ecs_priv_world() != NULL ? (wgf_ecs_priv_bounds_t *)wgf_ecs_priv_get(actor, wgf_ecs_priv_ids()->bounds)
+    return wgf_ecs_priv_started() ? (wgf_ecs_priv_bounds_t *)wgf_ecs_priv_get(actor, wgf_ecs_priv_ids()->bounds)
                                         : NULL;
 }
 
 static wgf_ecs_priv_lifetime_t *lifetime_of(wgf_actor_t actor)
 {
-    return wgf_ecs_priv_world() != NULL
+    return wgf_ecs_priv_started()
                ? (wgf_ecs_priv_lifetime_t *)wgf_ecs_priv_get(actor, wgf_ecs_priv_ids()->lifetime)
                : NULL;
 }
 
 static wgf_ecs_priv_collider_t *collider_of(wgf_actor_t actor)
 {
-    return wgf_ecs_priv_world() != NULL
+    return wgf_ecs_priv_started()
                ? (wgf_ecs_priv_collider_t *)wgf_ecs_priv_get(actor, wgf_ecs_priv_ids()->collider)
                : NULL;
 }

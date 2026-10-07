@@ -2,22 +2,28 @@
 """Measure what an actor costs, in bytes and in time (SPEC.md, "An actor benchmark"), and
 hold it to the baseline.
 
-    tools/bench/measure_actors.py [--runs N] [--write [--as before]] [--check]
+    tools/bench/measure_actors.py [--runs N] [--write [--as before|flecs]] [--check]
                                   [--program PATH] [row ...]
 
 The program (tools/bench/actors/main.c, whose header says what each row and number is)
 is built against linux-x64-release-headless, staged, and run once a row (default: every
 row it lists), flown by an autopilot so each frame is one tick and none waits for a
 display. Its rows: 10k and 50k actors static and moving, in flat and deep trees, with and
-without behaviors, 1,000 spawned and destroyed a second, and finding by name, path, and
-component. Each row's bytes an actor is the first run's (the heap's growth is the same
-every run); its nanoseconds the median of --runs (default 3).
+without behaviors, 1,000 spawned and destroyed a second, every actor gaining and losing a
+component each frame, and finding by name, path, and component. Each row's bytes an actor
+is the first run's (the heap's growth is the same every run); its nanoseconds the median
+of --runs (default 3). Beside them, the ecs's store measured on its own (the store-
+rows: ecs/bench/wgf_ecs_store_bench.c, built with the variant, whose header says what
+each is), each storage's worst case among them. Every run is pinned to one core, so a
+CPU of fast and slow cores doesn't mix them.
 
 --write records the rows, the machine, and the commit in docs/benchmarks.json ("actors")
 and renders docs/benchmarks.md again (tools/measure_sizes.py --render); --as before
 records them as the measurement from before actors (the nodes and entities they
 replaced), kept beside the current one, with --program naming that build of the
-program. --check fails a row past its baseline: bytes by more than BYTES_TOLERANCE,
+program (and no store- rows); --as flecs as the store on flecs, which step 3b measured
+against sparse sets before removing it (kept for the record). --check fails a row past
+its baseline: bytes by more than BYTES_TOLERANCE,
 time by more than TIME_TOLERANCE times (wide: a CI runner is not the machine that
 recorded it, and timing on a shared one is noisy; bytes are the check that holds
 exactly). Linux alone: the program reads glibc's mallinfo2. Standard library only.
@@ -33,6 +39,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # an embedded Python (Windows) doesn't add it
 import examples  # noqa: E402
+import variants  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 BASELINE = ROOT / 'docs' / 'benchmarks.json'
@@ -71,6 +78,24 @@ def run(program, row):
     if row not in found:
         raise RuntimeError(f'{row}: no result in its output\n' + done.stdout[-2000:])
     return found
+
+
+def store_rows(runs):
+    """The store bench's rows, store-<name>: the median of `runs` runs' nanoseconds."""
+    bench = Path(variants.work(VARIANT)) / 'ecs' / 'wgf_ecs_store_bench'
+    each = {}
+    for _ in range(runs):
+        done = subprocess.run([str(bench)], capture_output=True, text=True, timeout=SECONDS)
+        if done.returncode != 0:
+            raise RuntimeError(f'the store bench: exit {done.returncode}\n' + (done.stdout + done.stderr)[-2000:])
+        for line in done.stdout.splitlines():
+            if line.startswith('store_bench: ') and ' ns=' in line:
+                name, value = line[len('store_bench: '):].split(' ns=')
+                each.setdefault(f'store-{name}', []).append(float(value))
+    results = {name: {'ns': round(statistics.median(values), 2)} for name, values in each.items()}
+    for name, r in sorted(results.items()):
+        print(f'{name:<28} {" " * 15}{r["ns"]:>9.2f} ns', flush=True)
+    return results
 
 
 def measure(program, rows, runs):
@@ -124,14 +149,15 @@ def main():
     ap.add_argument('rows', nargs='*', help='rows to run (default: every row the program lists)')
     ap.add_argument('--runs', type=int, default=3, help='runs of each row, the median taken (default 3)')
     ap.add_argument('--write', action='store_true', help='record the rows in docs/benchmarks.json and .md')
-    ap.add_argument('--as', dest='label', choices=['current', 'before'], default='current',
-                    help='with --write: the current measurement (default), or the one from before actors')
+    ap.add_argument('--as', dest='label', choices=['current', 'before', 'flecs'], default='current',
+                    help='with --write: the current measurement (default), the one from before actors, or flecs\'s')
     ap.add_argument('--check', action='store_true', help='fail a row past its baseline')
     ap.add_argument('--program', type=Path, help='run this build of the program instead of building it')
     args = ap.parse_args()
     if not sys.platform.startswith('linux'):
         print('measure_actors: SKIPPING (the program reads glibc\'s mallinfo2: Linux alone)')
         return 77 if args.check else 0
+    os.sched_setaffinity(0, {min(os.sched_getaffinity(0))})  # one core, the runs' too
     try:
         program = args.program.resolve() if args.program else build()
         listed = subprocess.run([str(program), '--list'], capture_output=True, text=True, check=True).stdout.split()
@@ -142,6 +168,8 @@ def main():
                   file=sys.stderr)
             return 2
         measured = measure(program, rows, args.runs)
+        if args.program is None and not args.rows:
+            measured.update(store_rows(args.runs))
     except (RuntimeError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
         print(f'measure_actors: {e}', file=sys.stderr)
         return 1
@@ -158,8 +186,8 @@ def main():
         print(f'measure_actors: {"FAIL" if worse else "PASS"}: {len(measured)} row(s) against the baseline')
     if args.write:
         record = {'commit': commit(), 'cpu': cpu_name(), 'variant': VARIANT, 'runs': args.runs, 'rows': measured}
-        if args.label == 'before':
-            actors['before'] = record
+        if args.label != 'current':
+            actors[args.label] = record
         else:
             rows_kept = dict(actors.get('rows', {})) if args.rows else {}
             rows_kept.update(measured)
