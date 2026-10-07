@@ -5,16 +5,16 @@ import wgf.impl.Raw;
 
 class Ecs {
 	/**
-	    Events waiting, and the oldest taken off the queue into `out`, three ints each (the
-	    event, then the two above), as many whole events as fit in `count` ints, returning how
+	    Events waiting, and the oldest taken off the queue into `out`, four ints each (the
+	    event, then the three above), as many whole events as fit in `count` ints, returning how
 	    many ints it filled.
 	**/
 	public static inline function getEventCount():Int
 		return Raw.wgf_ecs_get_event_count();
 
 	/**
-	    Events waiting, and the oldest taken off the queue into `out`, three ints each (the
-	    event, then the two above), as many whole events as fit in `count` ints, returning how
+	    Events waiting, and the oldest taken off the queue into `out`, four ints each (the
+	    event, then the three above), as many whole events as fit in `count` ints, returning how
 	    many ints it filled.
 	**/
 	public static inline function takeEvents(out:Array<Int>):Int

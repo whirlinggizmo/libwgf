@@ -38,16 +38,16 @@ static bool near3(wgf_vec3_t v, float x, float y, float z)
     return fabsf(v.x - x) < 1e-5f && fabsf(v.y - y) < 1e-5f && fabsf(v.z - z) < 1e-5f;
 }
 
-/* The events waiting, taken: how many, and each one's three ints into `out`. */
+/* The events waiting, taken: how many, and each one's four ints into `out`. */
 static int take(int *out, int most)
 {
-    return wgf_ecs_take_events(out, 3 * most) / 3;
+    return wgf_ecs_take_events(out, 4 * most) / 4;
 }
 
 int main(void)
 {
     wgf_actor_t stage, ship, shape, child;
-    int events[3 * 64], rock, shield, second;
+    int events[4 * 64], rock, shield, second;
 
     wgf_core_priv_init();
     expect(wgf_gfx_priv_start(), "gfx");
@@ -128,7 +128,7 @@ int main(void)
     expect(rock == 1 && shield == 2 && second == 3 && wgf_actor_get_behavior_count(ship) == 3,
            "three behaviors, ids from 1");
     expect(take(events, 64) == 3 && events[0] == WGF_ECS_EVENT_CREATED && events[1] == (int)ship && events[2] == 1 &&
-               events[8] == 3,
+               events[10] == 3,
            "CREATED for each: the actor, the id");
     expect(wgf_actor_find_behavior(ship, "Shield") == shield && wgf_actor_find_behavior(ship, "Nobody") == 0 &&
                strcmp(wgf_behavior_get_name(ship, second), "Shield") == 0 && wgf_actor_get_behavior(ship, 2) == second,
@@ -189,7 +189,7 @@ int main(void)
                wgf_ecs_get_count() == 1,
            "destroyed, the actor under it with it; the shape left");
     expect(take(events, 64) == 4 && events[0] == WGF_ECS_EVENT_DESTROYED && events[1] == (int)ship &&
-               events[9] == WGF_ECS_EVENT_DESTROYED && events[10] == (int)child,
+               events[12] == WGF_ECS_EVENT_DESTROYED && events[13] == (int)child,
            "DESTROYED for each of their behaviors, the handles stale");
     expect(!wgf_motion_set_velocity(ship, 1, 0, 0) && wgf_actor_get_behavior_count(ship) == 0, "a stale handle: refused");
 

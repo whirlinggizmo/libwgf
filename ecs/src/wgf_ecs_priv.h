@@ -123,7 +123,7 @@ wgf_ecs_priv_id_t wgf_ecs_priv_behavior_tag(const char *name, bool make);
 void wgf_ecs_priv_behaviors_resolve(wgf_actor_t actor);
 
 /* An event raised: queued for the program to take (wgf_ecs_take_events). */
-void wgf_ecs_priv_raise(wgf_ecs_event_t event, int a, int b);
+void wgf_ecs_priv_raise(wgf_ecs_event_t event, int a, int b, int c);
 
 /* An actor's collider pairs dropped as it goes, or as its collider does, raising nothing. */
 void wgf_ecs_priv_forget_pairs(wgf_actor_t actor);

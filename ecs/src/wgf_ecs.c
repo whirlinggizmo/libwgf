@@ -26,9 +26,11 @@
  * none of it. */
 
 #define EVENTS_MAX 65536
+#define EVENT_INTS 4 /* an event, and its three ints */
 
 typedef struct pair_t {
-    wgf_actor_t a, b; /* a < b */
+    wgf_actor_t a, b;          /* a < b */
+    int32_t a_layer, b_layer; /* their colliders' layers as they met: what a trigger tells the other */
 } pair_t;
 
 static struct {
@@ -106,7 +108,7 @@ wgf_actor_t *wgf_ecs_priv_actors(int *count)
 
 /* ---- events -------------------------------------------------------------------- */
 
-void wgf_ecs_priv_raise(wgf_ecs_event_t event, int a, int b)
+void wgf_ecs_priv_raise(wgf_ecs_event_t event, int a, int b, int c)
 {
     int at;
     if (ecs.events == NULL) return;
@@ -117,9 +119,10 @@ void wgf_ecs_priv_raise(wgf_ecs_event_t event, int a, int b)
         ecs.event_count--;
     }
     at = (ecs.event_head + ecs.event_count) % EVENTS_MAX;
-    ecs.events[3 * at] = (int)event;
-    ecs.events[3 * at + 1] = a;
-    ecs.events[3 * at + 2] = b;
+    ecs.events[EVENT_INTS * at] = (int)event;
+    ecs.events[EVENT_INTS * at + 1] = a;
+    ecs.events[EVENT_INTS * at + 2] = b;
+    ecs.events[EVENT_INTS * at + 3] = c;
     ecs.event_count++;
 }
 
@@ -131,12 +134,12 @@ int wgf_ecs_get_event_count(void)
 int wgf_ecs_take_events(int *out, int count)
 {
     int taken = 0;
-    if (out == NULL || count < 3) return 0;
-    while (ecs.event_count > 0 && taken + 3 <= count) {
-        memcpy(out + taken, &ecs.events[3 * ecs.event_head], sizeof(int) * 3);
+    if (out == NULL || count < EVENT_INTS) return 0;
+    while (ecs.event_count > 0 && taken + EVENT_INTS <= count) {
+        memcpy(out + taken, &ecs.events[EVENT_INTS * ecs.event_head], sizeof(int) * EVENT_INTS);
         ecs.event_head = (ecs.event_head + 1) % EVENTS_MAX;
         ecs.event_count--;
-        taken += 3;
+        taken += EVENT_INTS;
     }
     return taken;
 }
@@ -173,7 +176,7 @@ static int by_pair(const void *a, const void *b)
 typedef struct body_t {
     wgf_actor_t handle;
     wgf_actor_t parent;
-    float x, y, r;
+    float x, y, z, r;
     int32_t layer, mask;
 } body_t;
 
@@ -184,7 +187,7 @@ static int by_sweep(const void *a, const void *b)
     return x->x - x->r < y->x - y->r ? -1 : (x->x - x->r > y->x - y->r ? 1 : 0);
 }
 
-static bool add_pair(pair_t **pairs, int *count, int *capacity, wgf_actor_t a, wgf_actor_t b)
+static bool add_pair(pair_t **pairs, int *count, int *capacity, const body_t *a, const body_t *b)
 {
     if (*count == *capacity) {
         const int grown_capacity = *capacity > 0 ? *capacity * 2 : 64;
@@ -193,8 +196,15 @@ static bool add_pair(pair_t **pairs, int *count, int *capacity, wgf_actor_t a, w
         *pairs = grown;
         *capacity = grown_capacity;
     }
-    (*pairs)[*count].a = a < b ? a : b;
-    (*pairs)[*count].b = a < b ? b : a;
+    if (b->handle < a->handle) {
+        const body_t *swap = a;
+        a = b;
+        b = swap;
+    }
+    (*pairs)[*count].a = a->handle;
+    (*pairs)[*count].b = b->handle;
+    (*pairs)[*count].a_layer = a->layer;
+    (*pairs)[*count].b_layer = b->layer;
     (*count)++;
     return true;
 }
@@ -228,6 +238,7 @@ static void collide(void)
         bodies[body_count].parent = actor_ptr->parent;
         bodies[body_count].x = actor_ptr->position.x;
         bodies[body_count].y = actor_ptr->position.y;
+        bodies[body_count].z = actor_ptr->position.z;
         bodies[body_count].r = c->radius * (sx > sy ? sx : sy);
         bodies[body_count].layer = c->layer;
         bodies[body_count].mask = c->mask;
@@ -239,9 +250,11 @@ static void collide(void)
         for (j = i + 1; j < body_count && bodies[j].parent == a->parent && bodies[j].x - bodies[j].r <= a->x + a->r;
              j++) {
             const body_t *b = &bodies[j];
-            const float dx = a->x - b->x, dy = a->y - b->y, reach = a->r + b->r;
-            if (((a->layer & b->mask) == 0 && (b->layer & a->mask) == 0) || dx * dx + dy * dy > reach * reach) continue;
-            if (!add_pair(&found, &found_count, &found_capacity, a->handle, b->handle)) {
+            const float dx = a->x - b->x, dy = a->y - b->y, dz = a->z - b->z, reach = a->r + b->r;
+            if (((a->layer & b->mask) == 0 && (b->layer & a->mask) == 0) || dx * dx + dy * dy + dz * dz > reach * reach) {
+                continue;
+            }
+            if (!add_pair(&found, &found_count, &found_capacity, a, b)) {
                 wgf_log_error("wgf_ecs: out of memory finding overlaps");
                 break;
             }
@@ -254,12 +267,12 @@ static void collide(void)
     while (i < found_count || j < ecs.pair_count) {
         const int order = i == found_count ? 1 : (j == ecs.pair_count ? -1 : by_pair(&found[i], &ecs.pairs[j]));
         if (order < 0) {
-            wgf_ecs_priv_raise(WGF_ECS_EVENT_TRIGGER_ENTER, (int)found[i].a, (int)found[i].b);
-            wgf_ecs_priv_raise(WGF_ECS_EVENT_TRIGGER_ENTER, (int)found[i].b, (int)found[i].a);
+            wgf_ecs_priv_raise(WGF_ECS_EVENT_TRIGGER_ENTER, (int)found[i].a, (int)found[i].b, found[i].b_layer);
+            wgf_ecs_priv_raise(WGF_ECS_EVENT_TRIGGER_ENTER, (int)found[i].b, (int)found[i].a, found[i].a_layer);
             i++;
         } else if (order > 0) {
-            wgf_ecs_priv_raise(WGF_ECS_EVENT_TRIGGER_EXIT, (int)ecs.pairs[j].a, (int)ecs.pairs[j].b);
-            wgf_ecs_priv_raise(WGF_ECS_EVENT_TRIGGER_EXIT, (int)ecs.pairs[j].b, (int)ecs.pairs[j].a);
+            wgf_ecs_priv_raise(WGF_ECS_EVENT_TRIGGER_EXIT, (int)ecs.pairs[j].a, (int)ecs.pairs[j].b, ecs.pairs[j].b_layer);
+            wgf_ecs_priv_raise(WGF_ECS_EVENT_TRIGGER_EXIT, (int)ecs.pairs[j].b, (int)ecs.pairs[j].a, ecs.pairs[j].a_layer);
             j++;
         } else {
             i++;
@@ -560,7 +573,7 @@ static void components_gone(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr)
 bool wgf_ecs_priv_start(void)
 {
     if (ecs.started) return true;
-    ecs.events = (int *)malloc(sizeof(int) * 3 * EVENTS_MAX);
+    ecs.events = (int *)malloc(sizeof(int) * EVENT_INTS * EVENTS_MAX);
     if (ecs.events == NULL ||
         !wgf_core_priv_handle_pool_init(&ecs.pool, WGF_CORE_PRIV_HANDLE_KIND_COMPONENTS, (void **)&ecs.records,
                                         sizeof(wgf_ecs_priv_record_t), 64, 65535)) {
@@ -631,7 +644,7 @@ void wgf_ecs_priv_record_free(wgf_actor_t actor)
     int b;
     if (record == NULL) return;
     for (b = 0; b < record->behavior_count; b++) {
-        wgf_ecs_priv_raise(WGF_ECS_EVENT_DESTROYED, (int)actor, record->behaviors[b]->id);
+        wgf_ecs_priv_raise(WGF_ECS_EVENT_DESTROYED, (int)actor, record->behaviors[b]->id, 0);
     }
     wgf_ecs_priv_forget_pairs(actor);
     if (record->voice != 0) wgf_voice_destroy(record->voice);

@@ -13,6 +13,7 @@ import wgf.impl.BuiltVersion;
 class Rock extends Behavior {
 	public static var made = 0;
 	public static var entered = 0;
+	public static var layers = 0;
 	public static var ended = 0;
 	public static var ticks = 0;
 
@@ -22,11 +23,23 @@ class Rock extends Behavior {
 	override function onTick(dt:Float)
 		ticks++;
 
-	override function onTriggerEnter(other:Actor)
+	override function onTriggerEnter(other:Actor, layer:Int) {
 		entered++;
+		layers += layer;
+	}
 
 	override function onDestroy()
 		ended++;
+}
+
+/** Destroys what it meets: the other's own trigger, later in the batch, must not arrive. **/
+class Doomer extends Behavior {
+	public static var entered = 0;
+
+	override function onTriggerEnter(other:Actor, layer:Int) {
+		entered++;
+		other.destroy(ActorDestroy.DESTROY_CHILDREN);
+	}
 }
 
 class Main {
@@ -96,6 +109,15 @@ class Main {
 			expect(e.addComponent(Component.COLLIDER) && (e : Collider).setRadius(5), "a collider");
 		}
 		b.setPosition(13, 11, 12); // within a's reach
+		Behavior.register("Doomer", Doomer.new);
+		for (x in [500.0, 503.0]) { // two that meet, far from a and b
+			final d = Actor.create();
+			d.setParent(world);
+			d.setPosition(x, 0, 0);
+			d.addBehavior("Doomer");
+			d.addComponent(Component.COLLIDER);
+			(d : Collider).setRadius(5);
+		}
 		(a : Motion).getVelocity(); // a component it hasn't: still answers
 	}
 
@@ -105,7 +127,7 @@ class Main {
 		frames++;
 		switch frames {
 			case 1:
-				expect(Rock.made == 2 && Behavior.count() == 2, "the behaviors made from CREATED");
+				expect(Rock.made == 2 && Behavior.count() == 4, "the behaviors made from CREATED");
 				expect(Behavior.of(a) != null && Behavior.of(a).name == "Rock", "a's behavior");
 				// a getter 100,000 times in one frame: nothing may pile up on the wasm stack
 				final v = new Vec3();
@@ -118,12 +140,13 @@ class Main {
 					names += world.find("rock ünïcødé ✓") == a ? 1 : 0;
 				expect(names == 20000, "20,000 calls passing text in a frame");
 			case 3:
-				expect(Rock.entered == 2, "both told of their trigger");
+				expect(Rock.entered == 2 && Rock.layers == 2, "both told of their trigger, and the other's layer (1)");
 				expect(Rock.ticks > 0, "the behaviors ticked");
+				expect(Doomer.entered == 1, "a trigger whose actor was destroyed earlier in the batch: dropped");
 				a.destroy(ActorDestroy.DESTROY_CHILDREN);
 				expect(a.getKind() == ActorKind.NONE, "destroyed");
 			case 5:
-				expect(Rock.ended == 1 && Behavior.count() == 1 && Behavior.of(a) == null, "its behavior ended from DESTROYED");
+				expect(Rock.ended == 1 && Behavior.count() == 2 && Behavior.of(a) == null, "its behavior ended from DESTROYED");
 				if (Ui.begin()) {
 					Ui.beginPanel("p");
 					Ui.label("ünïcødé", 0);

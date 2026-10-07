@@ -66,7 +66,7 @@ int wgf_actor_add_behavior(wgf_actor_t actor, const char *name)
     b->id = record->next_behavior++;
     memcpy(b->name, name, strlen(name) + 1);
     record->behaviors[record->behavior_count++] = b;
-    wgf_ecs_priv_raise(WGF_ECS_EVENT_CREATED, (int)actor, b->id);
+    wgf_ecs_priv_raise(WGF_ECS_EVENT_CREATED, (int)actor, b->id, 0);
     return b->id;
 }
 
@@ -87,7 +87,7 @@ bool wgf_actor_remove_behavior(wgf_actor_t actor, int behavior)
     memmove(&record->behaviors[at], &record->behaviors[at + 1],
             sizeof(record->behaviors[0]) * (size_t)(record->behavior_count - at - 1));
     record->behavior_count--;
-    wgf_ecs_priv_raise(WGF_ECS_EVENT_DESTROYED, (int)actor, behavior);
+    wgf_ecs_priv_raise(WGF_ECS_EVENT_DESTROYED, (int)actor, behavior, 0);
     return true;
 }
 

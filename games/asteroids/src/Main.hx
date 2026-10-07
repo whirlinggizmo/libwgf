@@ -50,7 +50,7 @@ class Main {
 		sounds = new Sounds();
 		Behavior.register("Ship", e -> new Ship(e));
 		Behavior.register("Rock", e -> new Rock(e));
-		Behavior.register("Bullet", e -> new Bullet(e));
+		Behavior.tag("Bullet"); // no code: found by name, to count them
 		Ui.setStyleColor(UiColor.PANEL, Color.make(14, 18, 30, 230));
 		Ui.setStyleColor(UiColor.BUTTON, Color.make(32, 40, 62, 255));
 		Ui.setStyleColor(UiColor.BUTTON_HOVERED, Color.make(48, 60, 92, 255));
@@ -76,9 +76,7 @@ class Main {
 	}
 
 	static function spawnShip() {
-		ship = scene.spawn("ship", world);
-		ship.setPosition(WIDTH / 2, HEIGHT / 2, 0);
-		ship.snap();
+		ship = scene.spawnAt("ship", world, WIDTH / 2, HEIGHT / 2, 0, 0);
 	}
 
 	/** The ship was hit: a life lost, and the next ship in a while, or the game over. **/

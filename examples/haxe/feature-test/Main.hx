@@ -16,7 +16,7 @@ class Rock extends Behavior {
 	override function onCreate()
 		made++;
 
-	override function onTriggerEnter(other:Actor)
+	override function onTriggerEnter(other:Actor, layer:Int)
 		hits++;
 }
 
@@ -508,6 +508,10 @@ class Main {
 				&& scene.hasPrefab("spark"), "the scene file");
 			expect(scene.instantiate(world) == 4, "the scene's actors made");
 			expect(!scene.spawn("spark", world).isNone(), "a prefab spawned");
+			final placed = scene.spawnAt("spark", world, 10, 20, 0, 0.5);
+			expect(!placed.isNone() && near(placed.getPosition().x, 10) && near(placed.getRotation().z, 0.5),
+				"a prefab spawned at a place, turned");
+			Behavior.tag("Spark");
 			expect(Ecs.dump().indexOf("wgf-scene 2") == 0, "the world dumped");
 		}
 		if (frames >= 30 && instantiated && stage > 3 && !reported)

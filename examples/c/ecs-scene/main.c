@@ -47,9 +47,9 @@ static void init(void *user)
 /* What the systems raised since the last frame: a spark meeting a rock colors the rock. */
 static void read_events(void)
 {
-    int events[3 * 64], n, i;
-    while ((n = wgf_ecs_take_events(events, 3 * 64)) > 0) {
-        for (i = 0; i < n; i += 3) {
+    int events[4 * 64], n, i;
+    while ((n = wgf_ecs_take_events(events, 4 * 64)) > 0) {
+        for (i = 0; i < n; i += 4) {
             const wgf_actor_t actor = (wgf_actor_t)events[i + 1];
             if (events[i] == WGF_ECS_EVENT_TRIGGER_ENTER && wgf_actor_find_behavior(actor, "Rock") != 0) {
                 wgf_shape2d_set_color(actor, wgf_color_make(255, 90, 80, 255)); /* a rock is a shape */

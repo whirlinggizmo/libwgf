@@ -17,10 +17,10 @@ export class Behavior {
     onTick(dt) {}
     /** Each frame, before the program's. */
     onFrame(dt) {}
-    /** Its actor started to overlap `other` (both have colliders). */
-    onTriggerEnter(other) {}
-    /** Its actor stopped overlapping `other`. */
-    onTriggerExit(other) {}
+    /** Its actor started to overlap `other` (both have colliders), of collider layer `layer`; both alive. */
+    onTriggerEnter(other, layer) {}
+    /** Its actor stopped overlapping `other`, of `layer`. */
+    onTriggerExit(other, layer) {}
     /** It was removed, or its actor is gone: `actor` may be stale from here. */
     onDestroy() {}
 }
@@ -29,11 +29,17 @@ const factories = new Map();
 const live = new Map(); // actor -> its objects, in the order added
 let order = [];
 const unknown = new Set();
-const events = new Int32Array(3 * 64);
+const tags = new Set();
+const events = new Int32Array(4 * 64);
 
 /** The class to make for each behavior named `name`. */
 export function register(name, factory) {
     factories.set(name, factory);
+}
+
+/** A behavior name used only as a tag: no class, no object, no warning. */
+export function tag(name) {
+    tags.add(name);
 }
 
 /** The first object on `actor` (named `name`, when given), or undefined when it has none. */
@@ -47,7 +53,7 @@ function make(actor, id) {
     if (name === "") return; // gone again before this poll: its DESTROYED follows
     const factory = factories.get(name);
     if (factory === undefined) {
-        if (!unknown.has(name)) {
+        if (!unknown.has(name) && !tags.has(name)) {
             unknown.add(name);
             wgf.wgf_log_message(wgf.WGF_LOG_LEVEL_WARN, `no behavior registered for "${name}"`);
         }
@@ -76,17 +82,20 @@ function poll() {
     for (;;) {
         const n = wgf.wgf_ecs_take_events(events);
         if (n === 0) break;
-        for (let i = 0; i < n; i += 3) {
+        for (let i = 0; i < n; i += 4) {
             const kind = events[i];
-            const actor = events[i + 1] >>> 0, second = events[i + 2] >>> 0; // handles, unsigned
+            const actor = events[i + 1] >>> 0, second = events[i + 2] >>> 0, layer = events[i + 3]; // handles, unsigned
             if (kind === wgf.WGF_ECS_EVENT_CREATED) {
                 make(actor, second);
             } else if (kind === wgf.WGF_ECS_EVENT_DESTROYED) {
                 end(actor, second);
             } else if (kind === wgf.WGF_ECS_EVENT_TRIGGER_ENTER || kind === wgf.WGF_ECS_EVENT_TRIGGER_EXIT) {
                 for (const object of (live.get(actor) || []).slice()) {
-                    if (kind === wgf.WGF_ECS_EVENT_TRIGGER_ENTER) object.onTriggerEnter(second);
-                    else object.onTriggerExit(second);
+                    // one destroyed by an object told earlier in the batch: dropped
+                    if (!liveNow(object) || wgf.wgf_actor_get_kind(actor) === wgf.WGF_ACTOR_KIND_NONE ||
+                        wgf.wgf_actor_get_kind(second) === wgf.WGF_ACTOR_KIND_NONE) break;
+                    if (kind === wgf.WGF_ECS_EVENT_TRIGGER_ENTER) object.onTriggerEnter(second, layer);
+                    else object.onTriggerExit(second, layer);
                 }
             }
         }

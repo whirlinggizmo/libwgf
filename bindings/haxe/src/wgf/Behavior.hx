@@ -47,11 +47,15 @@ class Behavior {
 	/** Each frame, before the program's, with the frame's length in seconds. **/
 	public function onFrame(dt:Float):Void {}
 
-	/** Its actor started to overlap `other` (both have colliders). **/
-	public function onTriggerEnter(other:Actor):Void {}
+	/**
+		Its actor started to overlap `other` (both have colliders), whose collider's layer
+		was `layer` as they met. Never told of an actor the program destroyed earlier in
+		the same batch of events: both are alive when it runs.
+	**/
+	public function onTriggerEnter(other:Actor, layer:Int):Void {}
 
-	/** Its actor stopped overlapping `other`. **/
-	public function onTriggerExit(other:Actor):Void {}
+	/** Its actor stopped overlapping `other`, of `layer`. **/
+	public function onTriggerExit(other:Actor, layer:Int):Void {}
 
 	/** It was removed, or its actor is gone: `actor` may be stale from here. **/
 	public function onDestroy():Void {}
@@ -79,7 +83,8 @@ class Behavior {
 	static var live = new Map<Int, Array<Behavior>>(); // by actor, in the order added
 	static var order:Array<Behavior> = [];
 	static var unknown = new Map<String, Bool>();
-	static final events:Array<Int> = [for (_ in 0...3 * 64) 0];
+	static var tags = new Map<String, Bool>();
+	static final events:Array<Int> = [for (_ in 0...4 * 64) 0];
 
 	/**
 		The class to make for each behavior named `name` (`Rock.new`); a second registration
@@ -87,6 +92,14 @@ class Behavior {
 	**/
 	public static function register(name:String, factory:(actor:Actor) -> Behavior):Void
 		factories.set(name, factory);
+
+	/**
+		A behavior name used only as a tag: no class, no object made, and no warning, as
+		an actor's behavior of a name never registered gets. The actors with it are
+		found by name (`Ecs.findBehavior`, `actor.findBehavior`): a bullet, a pickup.
+	**/
+	public static function tag(name:String):Void
+		tags.set(name, true);
 
 	/** The first behavior on `actor` named `name` (any, for null), or null for none. **/
 	public static function of(actor:Actor, ?name:String):Null<Behavior> {
@@ -117,23 +130,26 @@ class Behavior {
 				break;
 			var i = 0;
 			while (i < n) {
-				final kind:EcsEvent = events[i], actor:Actor = events[i + 1], second = events[i + 2];
-				i += 3;
+				final kind:EcsEvent = events[i], actor:Actor = events[i + 1], second = events[i + 2], layer = events[i + 3];
+				i += 4;
 				switch kind {
 					case EcsEvent.CREATED:
 						make(actor, second);
 					case EcsEvent.DESTROYED:
 						end(actor, second);
-					case EcsEvent.TRIGGER_ENTER:
+					case EcsEvent.TRIGGER_ENTER | EcsEvent.TRIGGER_EXIT:
 						final list = live.get(actor);
 						if (list != null)
-							for (behavior in list.copy())
-								behavior.onTriggerEnter(second);
-					case EcsEvent.TRIGGER_EXIT:
-						final list = live.get(actor);
-						if (list != null)
-							for (behavior in list.copy())
-								behavior.onTriggerExit(second);
+							for (behavior in list.copy()) {
+								// one destroyed by a behavior told earlier in the batch: dropped
+								if (!liveNow(behavior) || actor.getKind() == ActorKind.NONE
+									|| (second : Actor).getKind() == ActorKind.NONE)
+									break;
+								if (kind == EcsEvent.TRIGGER_ENTER)
+									behavior.onTriggerEnter(second, layer);
+								else
+									behavior.onTriggerExit(second, layer);
+							}
 					default:
 				}
 			}
@@ -146,9 +162,9 @@ class Behavior {
 			return; // gone again before this poll: its DESTROYED follows
 		final factory = factories.get(name);
 		if (factory == null) {
-			if (!unknown.exists(name)) {
+			if (!unknown.exists(name) && !tags.exists(name)) {
 				unknown.set(name, true);
-				Log.message(LogLevel.WARN, 'wgf: no behavior registered as "$name" (Behavior.register)');
+				Log.message(LogLevel.WARN, 'wgf: no behavior registered as "$name" (Behavior.register, or Behavior.tag for a tag)');
 			}
 			return;
 		}

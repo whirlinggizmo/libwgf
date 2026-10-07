@@ -853,6 +853,12 @@ static wgf_actor_t make_kind(const wgf_ecs_priv_scene_data_t *data, int thing)
 
 static wgf_actor_t make(const wgf_ecs_priv_scene_data_t *data, int thing, wgf_actor_t parent, int depth);
 
+/* Where a spawn_at puts the top actor it makes, before it is snapped; none otherwise. */
+static struct {
+    bool set;
+    float x, y, z, angle;
+} placement;
+
 /* The blocks inside block `thing`, each made under `actor`. */
 static void make_children(const wgf_ecs_priv_scene_data_t *data, int thing, wgf_actor_t actor, int depth)
 {
@@ -877,6 +883,16 @@ static wgf_actor_t make(const wgf_ecs_priv_scene_data_t *data, int thing, wgf_ac
     if (block->name[0] != '\0' && (!block->prefab || block->parent >= 0)) wgf_actor_set_name(actor, block->name);
     apply_thing(data, block, actor, &after, &behavior, 0);
     make_children(data, thing, actor, depth);
+    if (depth == 0 && placement.set) {
+        wgf_vec3_t angles = wgf_actor_get_rotation(actor);
+        if (wgf_gfx_priv_actor_get_root_type(actor) == WGF_ACTOR_KIND_STAGE3D) {
+            angles.y = placement.angle;
+        } else {
+            angles.z = placement.angle;
+        }
+        wgf_actor_set_position(actor, placement.x, placement.y, placement.z);
+        wgf_actor_set_rotation(actor, angles.x, angles.y, angles.z);
+    }
     wgf_actor_snap(actor);
     if (after.burst > 0 && wgf_actor_get_kind(actor) == WGF_ACTOR_KIND_EMITTER2D) wgf_emitter2d_burst(actor, after.burst);
     if (after.play) wgf_voice_play(wgf_actor_get_voice(actor));
@@ -1016,6 +1032,20 @@ wgf_actor_t wgf_scene_spawn(wgf_scene_t scene, const char *name, wgf_actor_t par
     if (prefab < 0 || (parent != 0 && wgf_actor_get_kind(parent) == WGF_ACTOR_KIND_NONE)) return 0;
     actor = make(data, prefab, parent, 0);
     resolve_tree(actor);
+    return actor;
+}
+
+wgf_actor_t wgf_scene_spawn_at(wgf_scene_t scene, const char *name, wgf_actor_t parent, float x, float y, float z,
+                               float angle)
+{
+    wgf_actor_t actor;
+    placement.set = true;
+    placement.x = x;
+    placement.y = y;
+    placement.z = z;
+    placement.angle = angle;
+    actor = wgf_scene_spawn(scene, name, parent);
+    placement.set = false;
     return actor;
 }
 

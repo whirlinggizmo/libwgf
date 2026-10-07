@@ -32,6 +32,15 @@ abstract Scene(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_scene_spawn(this, name, parent);
 
 	/**
+	    The same, its top actor placed at (x, y, z) in `parent`'s space and turned `angle`
+	    radians about its stage's up -- y on a 3D stage, z otherwise -- its other angles and its
+	    scale the prefab's, then snapped: drawn there from its first frame, and what it bursts
+	    as it is made (an emitter's `burst=`) starts there.
+	**/
+	public inline function spawnAt(name:String, parent:Actor, x:Float, y:Float, z:Float, angle:Float):Actor
+		return Raw.wgf_scene_spawn_at(this, name, parent, x, y, z, angle);
+
+	/**
 	    What the file holds, once READY: its top actors and its prefabs, and each prefab's name
 	    in file order ("" past the end). 0 and "" until then.
 	**/

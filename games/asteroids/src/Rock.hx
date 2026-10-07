@@ -10,13 +10,13 @@ class Rock extends Behavior {
 	static final RADII = [44.0, 24.0, 12.0];
 	static final SPEEDS = [50.0, 90.0, 140.0];
 	static final POINTS = [20, 50, 100];
+	static inline var SHIP_LAYER = 1; // the scene's layers: the ship 1, rocks 2, bullets 4
+	static inline var BULLET_LAYER = 4;
 
 	public var size:RockSize = RockSize.LARGE;
 
 	public static function spawn(size:RockSize, x:Float, y:Float, ?direction:Float):Actor {
-		final rock = Main.scene.spawn(PREFABS[size], Main.world);
-		rock.setPosition(x, y, 0);
-		rock.snap();
+		final rock = Main.scene.spawnAt(PREFABS[size], Main.world, x, y, 0, 0);
 		final angle = direction != null ? direction : Random.getRange(0, Math.PI * 2);
 		final speed = SPEEDS[size] * Random.getRange(0.7, 1.3);
 		(rock : Motion).setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed, 0);
@@ -38,15 +38,12 @@ class Rock extends Behavior {
 		(actor : Shape2d).setPolygon(points); // a rock is a shape
 	}
 
-	override function onTriggerEnter(other:Actor) {
-		if (actor.getKind() == ActorKind.NONE || other.getKind() == ActorKind.NONE)
-			return; // one already gone this tick: a bullet meeting two rocks at once
-		final behavior = Behavior.of(other);
-		if (Std.isOfType(behavior, Bullet)) {
+	override function onTriggerEnter(other:Actor, layer:Int) {
+		if (layer == BULLET_LAYER) {
 			other.destroy(ActorDestroy.DESTROY_CHILDREN);
 			split();
-		} else if (Std.isOfType(behavior, Ship)) {
-			(cast behavior : Ship).explode();
+		} else if (layer == SHIP_LAYER) {
+			(cast Behavior.of(other, "Ship") : Ship).explode();
 			split();
 		}
 	}
@@ -66,9 +63,7 @@ class Rock extends Behavior {
 
 	/** Sparks at (x, y), as many as the size calls for: an emitter's burst that ages out. **/
 	public static function explosion(x:Float, y:Float, size:Int) {
-		final sparks = Main.scene.spawn("explosion", Main.world);
-		sparks.setPosition(x, y, 0);
-		sparks.snap();
+		final sparks = Main.scene.spawnAt("explosion", Main.world, x, y, 0, 0);
 		(sparks : Emitter2d).burst([40, 24, 14][size < 0 ? 0 : size > 2 ? 2 : size]);
 	}
 }

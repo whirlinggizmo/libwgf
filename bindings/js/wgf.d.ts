@@ -627,15 +627,18 @@ export type wgf_bounds_mode_t = typeof WGF_BOUNDS_MODE_WRAP | typeof WGF_BOUNDS_
  * transforms.
  *
  * Events are what the program's behaviors are told (wgf_behavior.h), queued as they
- * happen and taken by the program, in order, three ints each:
+ * happen and taken by the program, in order, four ints each (the event and three more):
  *
- *   CREATED          a behavior added: its actor, its id
+ *   CREATED          a behavior added: its actor, its id, 0
  *   DESTROYED        a behavior removed, or its actor gone: its actor (stale by then, a name
- *                    for what it was), its id
- *   TRIGGER_ENTER    two colliders starting to overlap, told to each: the actor, the other
+ *                    for what it was), its id, 0
+ *   TRIGGER_ENTER    two colliders starting to overlap, told to each: the actor, the other,
+ *                    and the other's collider layer as they met
  *   TRIGGER_EXIT     and ceasing to
  *
- * An actor destroyed while it overlaps another raises no TRIGGER_EXIT. Nothing is called
+ * An actor destroyed while it overlaps another raises no TRIGGER_EXIT. Events taken in a
+ * batch can name an actor the program destroyed while handling an earlier one of the
+ * batch: a binding's runtime drops a trigger whose actor or other is gone by then. Nothing is called
  * back: a binding takes them at its tick's start and calls its behaviors itself. At most
  * 65536 wait; past that the oldest are dropped, warned once.
  */
@@ -4311,15 +4314,15 @@ export declare function wgf_collider_is_enabled(actor: wgf_actor_t | 0): boolean
 export declare function wgf_collider_get_overlaps(actor: wgf_actor_t | 0, out: wgf_actor_t[] | Uint32Array | null): number;
 
 /**
- * Events waiting, and the oldest taken off the queue into `out`, three ints each (the
- * event, then the two above), as many whole events as fit in `count` ints, returning how
+ * Events waiting, and the oldest taken off the queue into `out`, four ints each (the
+ * event, then the three above), as many whole events as fit in `count` ints, returning how
  * many ints it filled.
  */
 export declare function wgf_ecs_get_event_count(): number;
 
 /**
- * Events waiting, and the oldest taken off the queue into `out`, three ints each (the
- * event, then the two above), as many whole events as fit in `count` ints, returning how
+ * Events waiting, and the oldest taken off the queue into `out`, four ints each (the
+ * event, then the three above), as many whole events as fit in `count` ints, returning how
  * many ints it filled.
  */
 export declare function wgf_ecs_take_events(out: number[] | Int32Array | null): number;
@@ -4444,6 +4447,14 @@ export declare function wgf_scene_instantiate(scene: wgf_scene_t | 0, parent: wg
  * isn't READY, a prefab it doesn't have, or a `parent` that isn't an actor.
  */
 export declare function wgf_scene_spawn(scene: wgf_scene_t | 0, name: string | null, parent: wgf_actor_t | 0): wgf_actor_t;
+
+/**
+ * The same, its top actor placed at (x, y, z) in `parent`'s space and turned `angle`
+ * radians about its stage's up -- y on a 3D stage, z otherwise -- its other angles and its
+ * scale the prefab's, then snapped: drawn there from its first frame, and what it bursts
+ * as it is made (an emitter's `burst=`) starts there.
+ */
+export declare function wgf_scene_spawn_at(scene: wgf_scene_t | 0, name: string | null, parent: wgf_actor_t | 0, x: number, y: number, z: number, angle: number): wgf_actor_t;
 
 /**
  * What the file holds, once READY: its top actors and its prefabs, and each prefab's name

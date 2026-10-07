@@ -12,7 +12,7 @@
 // the getters fill, and a rock's size a number.
 import createWgfHost from "./wgf-host.js";
 import * as wgf from "./wgf.js";
-import { Behavior, register, of, tickAll, frameAll, endAll } from "./behaviors.js";
+import { Behavior, register, tag, of, tickAll, frameAll, endAll } from "./behaviors.js";
 import { Sounds } from "./sounds.js";
 
 const host = await createWgfHost({
@@ -122,11 +122,10 @@ const PREFABS = ["rock_large", "rock_medium", "rock_small"];
 const RADII = [44, 24, 12];
 const SPEEDS = [50, 90, 140];
 const POINTS = [20, 50, 100];
+const SHIP_LAYER = 1, BULLET_LAYER = 4; // the scene's layers: the ship 1, rocks 2, bullets 4
 
 function spawnRock(size, x, y, direction) {
-    const rock = wgf.wgf_scene_spawn(scene, PREFABS[size], world);
-    wgf.wgf_actor_set_position(rock, x, y, 0);
-    wgf.wgf_actor_snap(rock);
+    const rock = wgf.wgf_scene_spawn_at(scene, PREFABS[size], world, x, y, 0, 0);
     const angle = direction !== undefined ? direction : wgf.wgf_random_get_range(0, Math.PI * 2);
     const speed = SPEEDS[size] * wgf.wgf_random_get_range(0.7, 1.3);
     wgf.wgf_motion_set_velocity(rock, Math.cos(angle) * speed, Math.sin(angle) * speed, 0);
@@ -150,14 +149,12 @@ class Rock extends Behavior {
         wgf.wgf_shape2d_set_polygon(this.actor /* a rock is a shape */, points);
     }
 
-    onTriggerEnter(other) {
-        if (wgf.wgf_actor_get_kind(this.actor) === wgf.WGF_ACTOR_KIND_NONE || wgf.wgf_actor_get_kind(other) === wgf.WGF_ACTOR_KIND_NONE) return; // one gone this tick
-        const object = of(other);
-        if (object instanceof Bullet) {
+    onTriggerEnter(other, layer) {
+        if (layer === BULLET_LAYER) {
             wgf.wgf_actor_destroy(other, wgf.WGF_ACTOR_DESTROY_CHILDREN);
             this.split();
-        } else if (object instanceof Ship) {
-            object.explode();
+        } else if (layer === SHIP_LAYER) {
+            of(other, "Ship").explode();
             this.split();
         }
     }
@@ -176,22 +173,16 @@ class Rock extends Behavior {
     }
 }
 
-/** A bullet: the ecs flies it, wraps it, and ages it out; a rock it meets ends it. */
-class Bullet extends Behavior {}
 
 function fireBullet(x, y, vx, vy) {
-    const bullet = wgf.wgf_scene_spawn(scene, "bullet", world);
-    wgf.wgf_actor_set_position(bullet, x, y, 0);
-    wgf.wgf_actor_snap(bullet);
+    const bullet = wgf.wgf_scene_spawn_at(scene, "bullet", world, x, y, 0, 0);
     wgf.wgf_motion_set_velocity(bullet, vx, vy, 0);
     sounds.play(sounds.fire);
 }
 
 /** Sparks at (x, y), as many as the size calls for: an emitter's burst that ages out. */
 function explosion(x, y, size) {
-    const sparks = wgf.wgf_scene_spawn(scene, "explosion", world);
-    wgf.wgf_actor_set_position(sparks, x, y, 0);
-    wgf.wgf_actor_snap(sparks);
+    const sparks = wgf.wgf_scene_spawn_at(scene, "explosion", world, x, y, 0, 0);
     wgf.wgf_emitter2d_burst(sparks,
                             [40, 24, 14][Math.min(Math.max(size, 0), 2)]);
 }
@@ -212,9 +203,7 @@ function start() {
 }
 
 function spawnShip() {
-    ship = wgf.wgf_scene_spawn(scene, "ship", world);
-    wgf.wgf_actor_set_position(ship, WIDTH / 2, HEIGHT / 2, 0);
-    wgf.wgf_actor_snap(ship);
+    ship = wgf.wgf_scene_spawn_at(scene, "ship", world, WIDTH / 2, HEIGHT / 2, 0, 0);
 }
 
 function shipLost() {
@@ -268,7 +257,7 @@ function init() {
     sounds = new Sounds();
     register("Ship", (e) => new Ship(e));
     register("Rock", (e) => new Rock(e));
-    register("Bullet", (e) => new Bullet(e));
+    tag("Bullet"); // no code: found by name, to count them
     wgf.wgf_ui_set_style_color(wgf.WGF_UI_COLOR_PANEL, wgf.wgf_color_make(14, 18, 30, 230));
     wgf.wgf_ui_set_style_color(wgf.WGF_UI_COLOR_BUTTON, wgf.wgf_color_make(32, 40, 62, 255));
     wgf.wgf_ui_set_style_color(wgf.WGF_UI_COLOR_BUTTON_HOVERED, wgf.wgf_color_make(48, 60, 92, 255));

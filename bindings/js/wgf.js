@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "74162d0e80a80b7f" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "68132e307b3cb067" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -775,15 +775,18 @@ export const WGF_BOUNDS_MODE_DESTROY = 2;
  * transforms.
  *
  * Events are what the program's behaviors are told (wgf_behavior.h), queued as they
- * happen and taken by the program, in order, three ints each:
+ * happen and taken by the program, in order, four ints each (the event and three more):
  *
- *   CREATED          a behavior added: its actor, its id
+ *   CREATED          a behavior added: its actor, its id, 0
  *   DESTROYED        a behavior removed, or its actor gone: its actor (stale by then, a name
- *                    for what it was), its id
- *   TRIGGER_ENTER    two colliders starting to overlap, told to each: the actor, the other
+ *                    for what it was), its id, 0
+ *   TRIGGER_ENTER    two colliders starting to overlap, told to each: the actor, the other,
+ *                    and the other's collider layer as they met
  *   TRIGGER_EXIT     and ceasing to
  *
- * An actor destroyed while it overlaps another raises no TRIGGER_EXIT. Nothing is called
+ * An actor destroyed while it overlaps another raises no TRIGGER_EXIT. Events taken in a
+ * batch can name an actor the program destroyed while handling an earlier one of the
+ * batch: a binding's runtime drops a trigger whose actor or other is gone by then. Nothing is called
  * back: a binding takes them at its tick's start and calls its behaviors itself. At most
  * 65536 wait; past that the oldest are dropped, warned once.
  */
@@ -6532,8 +6535,8 @@ export function wgf_collider_get_overlaps(actor, out) {
 
 // wgf: call wgf_ecs_get_event_count
 /**
- * Events waiting, and the oldest taken off the queue into `out`, three ints each (the
- * event, then the two above), as many whole events as fit in `count` ints, returning how
+ * Events waiting, and the oldest taken off the queue into `out`, four ints each (the
+ * event, then the three above), as many whole events as fit in `count` ints, returning how
  * many ints it filled.
  */
 export function wgf_ecs_get_event_count() {
@@ -6543,8 +6546,8 @@ export function wgf_ecs_get_event_count() {
 
 // wgf: call wgf_ecs_take_events
 /**
- * Events waiting, and the oldest taken off the queue into `out`, three ints each (the
- * event, then the two above), as many whole events as fit in `count` ints, returning how
+ * Events waiting, and the oldest taken off the queue into `out`, four ints each (the
+ * event, then the three above), as many whole events as fit in `count` ints, returning how
  * many ints it filled.
  */
 export function wgf_ecs_take_events(out) {
@@ -6762,6 +6765,20 @@ export function wgf_scene_instantiate(scene, parent) {
 export function wgf_scene_spawn(scene, name, parent) {
     const mark = host["stackSave"]();
     const value = host["_wgf_scene_spawn"](scene, cstr(name), parent);
+    host["stackRestore"](mark);
+    return value >>> 0;
+}
+
+// wgf: call wgf_scene_spawn_at
+/**
+ * The same, its top actor placed at (x, y, z) in `parent`'s space and turned `angle`
+ * radians about its stage's up -- y on a 3D stage, z otherwise -- its other angles and its
+ * scale the prefab's, then snapped: drawn there from its first frame, and what it bursts
+ * as it is made (an emitter's `burst=`) starts there.
+ */
+export function wgf_scene_spawn_at(scene, name, parent, x, y, z, angle) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_scene_spawn_at"](scene, cstr(name), parent, x, y, z, angle);
     host["stackRestore"](mark);
     return value >>> 0;
 }

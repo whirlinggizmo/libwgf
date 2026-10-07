@@ -14,15 +14,18 @@ package wgf;
     transforms.
 
     Events are what the program's behaviors are told (wgf_behavior.h), queued as they
-    happen and taken by the program, in order, three ints each:
+    happen and taken by the program, in order, four ints each (the event and three more):
 
-      CREATED          a behavior added: its actor, its id
+      CREATED          a behavior added: its actor, its id, 0
       DESTROYED        a behavior removed, or its actor gone: its actor (stale by then, a name
-                       for what it was), its id
-      TRIGGER_ENTER    two colliders starting to overlap, told to each: the actor, the other
+                       for what it was), its id, 0
+      TRIGGER_ENTER    two colliders starting to overlap, told to each: the actor, the other,
+                       and the other's collider layer as they met
       TRIGGER_EXIT     and ceasing to
 
-    An actor destroyed while it overlaps another raises no TRIGGER_EXIT. Nothing is called
+    An actor destroyed while it overlaps another raises no TRIGGER_EXIT. Events taken in a
+    batch can name an actor the program destroyed while handling an earlier one of the
+    batch: a binding's runtime drops a trigger whose actor or other is gone by then. Nothing is called
     back: a binding takes them at its tick's start and calls its behaviors itself. At most
     65536 wait; past that the oldest are dropped, warned once.
 **/

@@ -380,6 +380,7 @@ class Reach {
 		"wgf_scene_has_prefab",
 		"wgf_scene_instantiate",
 		"wgf_scene_spawn",
+		"wgf_scene_spawn_at",
 		"wgf_shape2d_create",
 		"wgf_shape2d_get_color",
 		"wgf_shape2d_get_kind",
@@ -566,7 +567,7 @@ class Reach {
 		"wgf_window_set_vsync",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...557) 0];
+	static final counts:Array<Int> = [for (_ in 0...558) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

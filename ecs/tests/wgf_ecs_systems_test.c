@@ -74,10 +74,10 @@ static wgf_actor_t mover(wgf_actor_t parent, float x, float y)
 /* The events waiting, and how many of `kind` for `actor` meeting `other`. */
 static int count_events(int kind, wgf_actor_t actor, wgf_actor_t other)
 {
-    int out[3 * 64], n, i, found = 0;
-    n = wgf_ecs_take_events(out, 3 * 64) / 3;
+    int out[4 * 64], n, i, found = 0;
+    n = wgf_ecs_take_events(out, 4 * 64) / 4;
     for (i = 0; i < n; i++) {
-        if (out[3 * i] == kind && (wgf_actor_t)out[3 * i + 1] == actor && (wgf_actor_t)out[3 * i + 2] == other)
+        if (out[4 * i] == kind && (wgf_actor_t)out[4 * i + 1] == actor && (wgf_actor_t)out[4 * i + 2] == other)
             found++;
     }
     return found;
@@ -195,13 +195,21 @@ int main(void)
     step(0.0f);
     expect(wgf_ecs_get_event_count() == 2, "two events");
     {
-        int out[6];
-        expect(wgf_ecs_take_events(out, 6) == 6 &&
+        int out[8];
+        expect(wgf_ecs_take_events(out, 8) == 8 &&
                    ((out[0] == WGF_ECS_EVENT_TRIGGER_ENTER && (wgf_actor_t)out[1] == a && (wgf_actor_t)out[2] == b) ||
                     (out[0] == WGF_ECS_EVENT_TRIGGER_ENTER && (wgf_actor_t)out[1] == b && (wgf_actor_t)out[2] == a)) &&
-                   out[3] == WGF_ECS_EVENT_TRIGGER_ENTER && (wgf_actor_t)out[4] == (wgf_actor_t)out[2],
+                   out[4] == WGF_ECS_EVENT_TRIGGER_ENTER && (wgf_actor_t)out[5] == (wgf_actor_t)out[2],
                "overlapping: entered, told to each");
+        expect(out[3] == wgf_collider_get_layer((wgf_actor_t)out[2]) && out[7] == wgf_collider_get_layer((wgf_actor_t)out[6]),
+               "each told the other's layer");
     }
+    wgf_actor_set_position(b, 9, 0, 20); /* the same x and y, far in z: spheres, not circles */
+    step(0.0f);
+    expect(count_events(WGF_ECS_EVENT_TRIGGER_EXIT, a, b) == 1, "apart in z: exited");
+    wgf_actor_set_position(b, 9, 0, 3);
+    step(0.0f);
+    expect(count_events(WGF_ECS_EVENT_TRIGGER_ENTER, a, b) == 1, "near in z: entered again");
     {
         wgf_actor_t overlaps[4];
         expect(wgf_collider_get_overlaps(a, overlaps, 4) == 1 && overlaps[0] == b, "a overlaps b");

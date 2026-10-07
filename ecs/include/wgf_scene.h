@@ -41,6 +41,13 @@ WGF_API int wgf_scene_instantiate(wgf_scene_t scene, wgf_actor_t parent);
  * isn't READY, a prefab it doesn't have, or a `parent` that isn't an actor. */
 WGF_API wgf_actor_t wgf_scene_spawn(wgf_scene_t scene, const char *name, wgf_actor_t parent);
 
+/* The same, its top actor placed at (x, y, z) in `parent`'s space and turned `angle`
+ * radians about its stage's up -- y on a 3D stage, z otherwise -- its other angles and its
+ * scale the prefab's, then snapped: drawn there from its first frame, and what it bursts
+ * as it is made (an emitter's `burst=`) starts there. */
+WGF_API wgf_actor_t wgf_scene_spawn_at(wgf_scene_t scene, const char *name, wgf_actor_t parent, float x, float y,
+                                       float z, float angle);
+
 /* What the file holds, once READY: its top actors and its prefabs, and each prefab's name
  * in file order ("" past the end). 0 and "" until then. */
 WGF_API int wgf_scene_get_actor_count(wgf_scene_t scene);

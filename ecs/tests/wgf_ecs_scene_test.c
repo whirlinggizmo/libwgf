@@ -169,9 +169,9 @@ int main(void)
            "its shape: the kind of its prefab");
     expect(wgf_actor_get_kind(wgf_actor_find(rock, "dust")) == WGF_ACTOR_KIND_EMITTER2D, "the prefab's actor inside it");
     {
-        int out[3 * 8];
-        expect(wgf_ecs_take_events(out, 3 * 8) == 6 && out[0] == WGF_ECS_EVENT_CREATED && (wgf_actor_t)out[1] == rock &&
-                   out[5] == 2,
+        int out[4 * 8];
+        expect(wgf_ecs_take_events(out, 4 * 8) == 8 && out[0] == WGF_ECS_EVENT_CREATED && (wgf_actor_t)out[1] == rock &&
+                   out[6] == 2,
                "CREATED raised for each behavior");
     }
 
@@ -185,6 +185,14 @@ int main(void)
     expect(wgf_scene_spawn(field, "nothing", stage) == 0 && wgf_scene_spawn(12345, "rock", stage) == 0,
            "a prefab it hasn't, or a scene that isn't one, is refused");
     expect(wgf_ecs_count_behavior("Rock") == 2, "two rocks");
+    {
+        const wgf_actor_t placed = wgf_scene_spawn_at(field, "rock", stage, 30, 40, 0, 1.25f);
+        expect(near(wgf_actor_get_position(placed).x, 30) && near(wgf_actor_get_position(placed).y, 40) &&
+                   near(wgf_actor_get_rotation(placed).z, 1.25f) && wgf_ecs_count_behavior("Rock") == 3,
+               "spawned at a place, turned about z on a 2D stage");
+        expect(wgf_scene_spawn_at(field, "nothing", stage, 0, 0, 0, 0) == 0, "and refused as a spawn is");
+        wgf_actor_destroy(placed, WGF_ACTOR_DESTROY_CHILDREN);
+    }
 
     /* the dump, loaded again: the same actors */
     {
@@ -271,16 +279,23 @@ int main(void)
        a stage is made; the dump writes them the same */
     {
         wgf_scene_t garage;
-        wgf_actor_t car;
+        wgf_actor_t car, world3d, cone;
         wgf_mesh_t cube;
         wgf_ecs_clear();
-        wgf_stage3d_create();
+        world3d = wgf_stage3d_create();
         garage = load("scenes/garage.scene", "wgf-scene 2\n"
+                                             "prefab cone\n"
+                                             "  transform rotation=0.5,0,0 scale=2,2,2\n"
+                                             "end\n"
                                              "actor car\n"
                                              "  model cube=2,1,4 tint=#FF0000FF\n"
                                              "  motion\n"
                                              "end\n");
         expect(wgf_scene_instantiate(garage, stage) == 1, "a model made");
+        cone = wgf_scene_spawn_at(garage, "cone", world3d, 1, 2, 3, 0.25f);
+        expect(near(wgf_actor_get_position(cone).z, 3) && near(wgf_actor_get_rotation(cone).y, 0.25f) &&
+                   near(wgf_actor_get_rotation(cone).x, 0.5f) && near(wgf_actor_get_scale(cone).x, 2),
+               "on a 3D stage, turned about y, its other angle and its scale the prefab's");
         car = wgf_actor_find(stage, "car");
         cube = wgf_mesh_create_cube(2, 1, 4);
         expect(wgf_actor_get_kind(car) == WGF_ACTOR_KIND_MODEL && wgf_model_get_mesh(car) == cube &&

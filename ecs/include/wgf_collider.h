@@ -10,9 +10,9 @@
 extern "C" {
 #endif
 
-/* A collider (WGF_COMPONENT_COLLIDER): a circle about the actor's position, in its
- * parent's space, scaled by the larger of its scale's x and y, that overlaps others as a
- * trigger: each tick, after motion and bounds, two colliders that start to overlap raise
+/* A collider (WGF_COMPONENT_COLLIDER): a sphere about the actor's position, in its
+ * parent's space (a circle, on a 2D stage, where every z is 0), its radius scaled by the
+ * larger of its scale's x and y, that overlaps others as a trigger: each tick, after motion and bounds, two colliders that start to overlap raise
  * TRIGGER_ENTER and two that stop raise TRIGGER_EXIT (wgf_ecs.h), told to each. They
  * overlap only where one's layer meets the other's mask: (a's layer & b's mask) or (b's
  * layer & a's mask). Nothing is pushed apart: that is physics, not a trigger. Only
