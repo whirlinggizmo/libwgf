@@ -138,6 +138,12 @@ Each game lives in `games/<name>/`, uses only libwgf's public API, is deployed t
   - A headless server runs the same tree with no GPU resources behind the visual actors.
   - Scene files and prefabs describe actor trees with their components.
   - The pub/sub bus's subjects are actors, and an event may bubble up the actor tree, Flash-style (capture down, then bubble up, either one stoppable), so a click inside a panel reaches the panel and a hit on a weapon reaches its wielder. Bubbling is opt-in per event type.
+  - **Actors stay light, by rule and by measurement.** Godot's nodes are known to struggle at scale for four reasons: each node is a heavy object (signals, notifications, name, metadata); the engine calls into a script once per node, every frame; transforms propagate through the tree; and its C# binding allocated on every call. libwgf avoids all four by design and holds itself to that:
+    - an actor is a handle into data-oriented C storage, with optional fields stored only when used;
+    - C never calls into a script once per actor;
+    - the binding doesn't allocate;
+    - the scale escape hatches are still actors (instancing, emitters, batch query systems).
+  - **An actor benchmark** is recorded beside sizes and frame times: 10k and 50k actors, static and moving, in deep and flat trees, with and without behaviors, and churn (1,000 spawned and destroyed a second). It records bytes and time per actor, and CI fails a regression the way the size table does.
   - The internals stay data-oriented C behind handles (Godot's servers are the same shape). flecs, or plain arrays, store the components; milestone 3 settles which by measurement.
 - **Physics:** Box2D v3 (C) for 2D. Jolt (through its C API) for 3D, which brings vehicles for the racing game. Each is an optional module.
 - **Game UI: Clay for layout, plus libwgf's own widget layer.** Clay only lays out boxes and hit-tests them; it has no widgets. libwgf's ui module adds:
