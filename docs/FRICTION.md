@@ -264,3 +264,167 @@ Asteroids (milestone 1), from step 0 of milestone 2: the clean-room rebuild (`..
 - **Cost:** a CI failure on a commit that had passed locally; a flake in every playthrough that acts before its loads end
 - **Found by:** CI
 - **Triage:** fixed in milestone 2's step 1: `at <frame> wait <probe> <op> <number>` holds the autopilot's clock while the program's frames go on (BUILDING.md, "Autopilot files"); Asteroids publishes `asteroids.ready`, and its playthrough and smoke autopilots wait for it
+
+Racer (milestone 2), from step 4: the game-developer session that wrote the drivable slice outside libwgf (`../libwgf-racer/FRICTION.md`, its log entries numbered as there; the game in `../libwgf-racer/game/`), 2026-10-07.
+
+### Racer: the sketch calls what milestone 2 hasn't built yet
+
+- **Where:** the sketches' `Vehicle`, `body`, box sensors, glTF and `AssetGroup`, `Environment`, shadow casting, render targets, custom shaders and effects, `Emitter3d`, `Ui.progress`
+- **Missing:** each of them, as the brief expected; the mirror, the speed vignette, tire smoke, shadows, and the sky skipped; the car a prefab of generated meshes, the sky the clear color, the loading screen drawn text
+- **Workaround:** Motion for the driving (`ArcadeDrive.hx`), sphere colliders for checkpoints
+- **Cost:** none in time; the features skipped
+- **Found by:** the racer's session (its #1)
+- **Triage:** task: milestone 2's later steps, each where it already is: the vehicle, bodies, and sensors step 5; glTF step 6; shadows step 8; the environment step 9; asset groups and a progress bar step 10; 3D particles step 11; targets, effects, and shaders step 12
+
+### Racer: the sketch's own slips
+
+- **Where:** the sketches' `ChaseCamera.setFov(65)` (radians are wanted), `Laps.passed` (a lap counted on the first crossing), `ChaseCamera`'s spring on the camera's position (it trails a fast car by about 2v/ω), and `getRotation().y` as a heading
+- **Missing:** nothing in libwgf: the sketch was wrong
+- **Workaround:** degrees converted, the lap rule rewritten, the spring on the yaw only at a fixed distance, the heading kept by the game
+- **Cost:** 15 minutes
+- **Found by:** the racer's session (its #2)
+- **Triage:** fine: HISTORY.md, "Milestone 2, step 4, the racer's friction": the sketch's bugs, recorded as the roadmap says, and the sketch left as it was written
+
+### Racer: a simulated actor's drawn transform can't be read
+
+- **Where:** the game's `Car.hx:33-60`, read by its chase camera
+- **Missing:** the transform the ecs draws (between the last two ticks, blended by the tick fraction); a camera on `getWorldPosition` in the frame moves in tick steps while the car it follows moves smoothly
+- **Workaround:** the car's transform kept as each tick begins, and blended in the frame by `Loop.getTickFraction()`, matching the ecs only because behaviors tick before the systems move the car
+- **Cost:** 15 minutes, about 15 lines, on an ordering stated in three places
+- **Found by:** the racer's session (its #3)
+- **Triage:**
+
+### Racer: `getRotation` past a half turn, and what Motion's spin does there
+
+- **Where:** the game's `ArcadeDrive.hx:9-13, 89-90`
+- **Missing:** a heading read back as it was set (a yaw past a quarter turn reads back as x=π, y=π−yaw, z=π, as `wgf_actor.h` warns), and the docs saying what a y spin does past it
+- **Workaround:** the game keeps its heading and sets the rotation and the velocity each tick
+- **Cost:** 5 minutes
+- **Found by:** the racer's session (its #4)
+- **Triage:**
+
+### Racer: recording a lap needs a window and a person
+
+- **Where:** `wgf autopilot --record`; the game's `tools/drive.py` (197 lines) and its `#if wgf_record` telemetry (`Main.hx:137-162`)
+- **Missing:** a way to make a recording with no display and no hands: an agent's session, or CI
+- **Workaround:** the record build under Xvfb, driven by a script that reads the game's logged telemetry, steers by pure pursuit, and types keys with xdotool
+- **Cost:** 45 minutes, a telemetry block in the game
+- **Found by:** the racer's session (its #5)
+- **Triage:**
+
+### Racer: a recording counts frames from the start, but loading takes real time
+
+- **Where:** the game's start (`Main.hx:118, 212`) and its `lap.autopilot`; BUILDING.md's "Recording one"
+- **Missing:** a recording that waits for its load: the recorder writes the inputs by frame from the program's first, and a countdown begun when the scene loaded starts at a different frame natively, headless, and in a browser, so the keys land elsewhere in the race on replay; the sketch's lap has the same flaw
+- **Workaround:** the race starts on the throttle, and the driver adds `at 1 wait racer.state >= 1`
+- **Cost:** 20 minutes, one game state, a re-record
+- **Found by:** the racer's session (its #6)
+- **Triage:**
+
+### Racer: the recorder records the machine's pads
+
+- **Where:** the first recording's `at 0 pad 0 connect`, `pad 0 axis left_x 0.17`: a worn stick's drift, steering the car through a threshold of 0
+- **Missing:** BUILDING.md saying a recording takes in every pad connected
+- **Workaround:** a 0.2 threshold on the stick (`Main.hx:70`)
+- **Cost:** 5 minutes
+- **Found by:** the racer's session (its #7)
+- **Triage:**
+
+### Racer: checkpoints as spheres trigger before their line
+
+- **Where:** the game's checkpoints (`Main.hx:103`): a 7.5 m sphere across a 12 m track; the grid 8 m behind the line was inside it
+- **Missing:** a box or plane trigger, which is what a gate is
+- **Workaround:** the grid moved to 12 m; the line triggers about 8 m early, the same every lap
+- **Cost:** 10 minutes, a re-record
+- **Found by:** the racer's session (its #8)
+- **Triage:** task: milestone 2, step 5: physics3d's sensors, a box among their shapes, raising the ecs's trigger events; the ecs's colliders stay spheres
+
+### Racer: no mesh from vertices; the track is 763 models
+
+- **Where:** the game's `Track.hx:105-132`
+- **Missing:** a mesh made from the game's own vertices and indices (meshes are the generated primitives; glTF is step 6), so a ribbon of road along a centerline is unit boxes and planes, seams between them, and a draw each
+- **Workaround:** asphalt from overlapping coplanar planes of one tint and normal, curbs at alternating heights
+- **Cost:** 20 minutes; 763 static models (the 140 trees' 280 included) with no batching; measured only in a software-GL browser (about 40 fps)
+- **Found by:** the racer's session (its #9)
+- **Triage:**
+
+### Racer: `wgf serve` fails on an initialized instance `final`, Asteroids' `Ship` too
+
+- **Where:** any instance field written `final x = <initializer>` (the game's `Car` and `ArcadeDrive`; libwgf's `games/asteroids/src/Ship.hx`, `final heading = new Vec3()`)
+- **Missing:** a hot build that takes them: hotreload-hx's macro wrote each initializer into a method run on an object a reload carries over, `this.x = e`, which Haxe refuses for a final; every error pointed into `deps/hotreload-hx`, none at the game, and only `wgf serve` uses the macro, so check_cli's template game (no instance finals) never showed it
+- **Workaround:** the fields made `var`
+- **Cost:** 25 minutes to bisect; the documented first step failed on the sample game
+- **Found by:** the racer's session (its #10)
+- **Triage:** fixed in step 4: the macro sets a final's initializer with `Reflect.setField` (a change to the vendored copy, listed in `deps/hotreload-hx/VERSION` until it goes upstream), and check_cli's serve step builds a class with an initialized instance final
+
+### Racer: a browser autopilot gets 120 s, and its FAIL gives no reason
+
+- **Where:** `tools/wgf/game.py`'s `run_page(..., timeout=120)`; the CLI's `wgf: autopilot ...: FAIL`
+- **Missing:** a time that fits the file (a 3-lap race, 3,704 frames, at a headless browser's 30 to 40 fps), a way to give one, and the reason printed ("nothing ended the run within 120 s" was kept but never shown)
+- **Workaround:** the full race flown natively only; the browser flies one lap
+- **Cost:** 15 minutes; the browser covers a lap, not the race
+- **Found by:** the racer's session (its #11)
+- **Triage:**
+
+### Racer: `wgf --help` leaves out `autopilot --record` and `export --autopilot`
+
+- **Where:** the top-level help
+- **Missing:** the two options, which BUILDING.md and each command's own `--help` have
+- **Workaround:** read the command's help
+- **Cost:** none measured
+- **Found by:** the racer's session (its #12)
+- **Triage:**
+
+### Racer: wgf.json's `title` doesn't reach the page
+
+- **Where:** the game's `web/index.html`, whose `<title>` `wgf new` wrote once from the name
+- **Missing:** the page's title from wgf.json
+- **Workaround:** both set by hand
+- **Cost:** none measured
+- **Found by:** the racer's session (its #12)
+- **Triage:**
+
+### Racer: no defines from wgf.json
+
+- **Where:** the game's telemetry build, hung on `wgf_record`, the record build's own define
+- **Missing:** a way to give a game's build a `-D` of its own (a bot, telemetry, a cheat build)
+- **Workaround:** the record build's define
+- **Cost:** none measured
+- **Found by:** the racer's session (its #12)
+- **Triage:**
+
+### Racer: one random generator
+
+- **Where:** the game's tree placement (`Track.hx:182`)
+- **Missing:** a second generator: placing with `wgf_random` and restoring its seed would replay its sequence rather than go on with it
+- **Workaround:** a generator of the game's own, so an autopilot's seed stays the game's
+- **Cost:** none measured
+- **Found by:** the racer's session (its #12)
+- **Triage:**
+
+### Racer: the D-pad can't be the two sides of an axis action
+
+- **Where:** the game's `steer` action
+- **Missing:** a pad-button pair bound as -1 and +1, as `bindKeys` pairs two keys
+- **Workaround:** none: D-pad steering skipped
+- **Cost:** a control the game doesn't have
+- **Found by:** the racer's session (its #12)
+- **Triage:**
+
+### Racer: an autopilot's input timing, written off by a frame
+
+- **Where:** the game's first pad autopilot
+- **Missing:** an example of what "inputs at a frame are delivered before its ticks; expectations are checked after it" means for a line's frame (BUILDING.md says it exactly)
+- **Workaround:** found by running it
+- **Cost:** a run
+- **Found by:** the racer's session (its #12)
+- **Triage:**
+
+### Racer: what worked (seven notes)
+
+- **Where:** the racer's session's #13
+- **Missing:** nothing. A lap recorded on the debug desktop build replayed frame-exact headless, in a browser, and against both release exports, across hxcpp's and JS's float math; the recorder took synthetic and real input alike, its probe comments making expectations quick to write; the car and gates are prefabs of generated meshes, placed by `spawnPrefab`; collider triggers worked on a 3D stage with a layer and mask; actions read well (`getBindingText` made the prompt); EXPAND with `Presentation.getVisible` anchored the HUD in two lines; and it all compiled and ran first build, its web export 258 KB gzipped (77 calls in its trimmed host), both exports smoke-tested in 23 s
+- **Workaround:** none
+- **Cost:** none
+- **Found by:** the racer's session
+- **Triage:** fine: kept as they are, and kept so (a change that loses one of them is a regression)

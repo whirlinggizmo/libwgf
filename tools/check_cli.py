@@ -224,11 +224,19 @@ def step_screenshot(game):
 
 
 def step_serve(game):
-    """The page in a browser; Main.hx edited while it runs; the new code's line, with the
-    frame count going on from where it was."""
+    """The page in a browser, its program with an initialized instance final; Main.hx
+    edited while it runs; the new code's line, with the frame count going on from where
+    it was."""
     why = needs(web=True, browser_too=True)
     if why:
         return why
+    # a class with an initialized instance final, which a hot build once refused
+    (game / 'src' / 'Held.hx').write_text('class Held {\n\tpublic final count = [0];\n\n\tpublic function new() {}\n}\n')
+    main = game / 'src' / 'Main.hx'
+    main.write_text(main.read_text().replace('\tstatic var flips = 0;\n', '\tstatic var flips = 0;\n\tstatic final held = new Held();\n')
+                    .replace('\t\tframes++;\n', '\t\tframes++;\n\t\theld.count[0] = frames;\n'))
+    if 'held.count' not in main.read_text():
+        return problem('wgf serve: the template\'s Main.hx changed; give the check its instance final again', '')
     port = browser.free_port()
     process = subprocess.Popen([sys.executable, str(WGF), 'serve', '--port', str(port)], cwd=game,
                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors='replace')
@@ -239,7 +247,6 @@ def step_serve(game):
             return problem('wgf serve: never said where it serves', ''.join(served))
         sys.path.insert(0, str(ROOT / 'tools' / 'wgf'))
         import game as games  # the tool's own module, for its page runner
-        main = game / 'src' / 'Main.hx'
         state = {'edited': False, 'before': 0}
 
         def on_line(line):
