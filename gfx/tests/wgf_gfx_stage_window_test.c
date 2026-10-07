@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <GLES3/gl3.h>
-#include <emscripten.h>
+#include <GL/gl.h>
+#include <stdlib.h>
 
 #include "render/wgf_gfx_render_priv.h"
 #include "wgf_app.h"
@@ -19,8 +19,8 @@
 #include "wgf_stage.h"
 #include "wgf_window.h"
 
-/* A stage, in a browser (tools/run_in_browser.py) on a WebGL2 canvas, its pixels read
- * back: an unlit red cube in front of the camera, its color exact (no tone
+/* A stage, in a window (tools/run_in_xvfb.py, OpenGL on a virtual display), its pixels
+ * read back: an unlit red cube in front of the camera, its color exact (no tone
  * mapping of an unlit color: NONE), with a green 3D shape (unlit) above it; a lit white
  * cube beside it, black with no light, then lit by a sun facing it; a see-through blue
  * plane in front of the red, blended over it; and 2D drawn before and after the stage,
@@ -99,7 +99,7 @@ static void on_frame(void *user)
     expect_pixel(4, 16, WGF_COLOR_BLUE, 0, "fit: the bar, nothing of the stage in it");
     expect_pixel(17, 1, WGF_COLOR_WHITE, 0, "fit: 2D at the design's corner");
     expect_pixel(22, 16, WGF_COLOR_RED, 0, "fit: the unlit cube in the design area");
-    emscripten_force_exit(failures == 0 ? 0 : 1);
+    exit(failures == 0 ? 0 : 1);
 }
 
 int main(void)

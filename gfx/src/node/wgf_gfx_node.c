@@ -270,7 +270,7 @@ static bool is_under(wgf_node_t node, wgf_node_t ancestor)
 }
 
 #define NODE_TYPES 16 /* more than wgf_node_type_t's last */
-_Static_assert(WGF_NODE_TYPE_MODEL < NODE_TYPES, "a node type past the kinds' table");
+_Static_assert(WGF_NODE_TYPE_SHAPE3D < NODE_TYPES, "a node type past the kinds' table");
 static const wgf_gfx_priv_node_kind_t *kinds[NODE_TYPES];
 
 void wgf_gfx_priv_node_set_kind(wgf_node_type_t type, const wgf_gfx_priv_node_kind_t *kind)

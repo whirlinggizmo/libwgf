@@ -81,6 +81,14 @@ typedef struct wgf_gfx_priv_model_t {
     wgf_handle_t *materials;   /* its own, a slot each, referenced (0: the mesh's); malloc'd, NULL for none */
 } wgf_gfx_priv_model_t;
 
+typedef struct wgf_gfx_priv_shape3d_t {
+    int kind;      /* wgf_shape3d_kind_t */
+    float dim[6];  /* cube: width, height, length; sphere, circle: radius; rectangle: width, height; line: ends */
+    float *points; /* a line strip's, x, y, and z in turn, malloc'd */
+    int point_floats;
+    wgf_color_t color;
+} wgf_gfx_priv_shape3d_t;
+
 typedef struct wgf_gfx_priv_node_t {
     wgf_node_type_t type;
     char *name; /* malloc'd; NULL for none */
@@ -114,6 +122,7 @@ typedef struct wgf_gfx_priv_node_t {
         wgf_gfx_priv_stage_t stage;
         wgf_gfx_priv_light_t light;
         wgf_gfx_priv_model_t model;
+        wgf_gfx_priv_shape3d_t shape3d;
         wgf_gfx_priv_canvas_t canvas;
         wgf_gfx_priv_shape2d_t shape2d;
         struct wgf_gfx_priv_emitter_t *emitter; /* malloc'd (emitter/wgf_gfx_emitter_priv.h) */

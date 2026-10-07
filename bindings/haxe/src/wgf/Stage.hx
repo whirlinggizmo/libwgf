@@ -13,9 +13,10 @@ import wgf.impl.Raw;
 		return ((Raw.wgf_stage_create() : Node) : Stage);
 
 	/**
-	    Draw it into this frame, through its camera: its opaque models, then its see-through
-	    ones (a BLEND material, or a tint with alpha below 255) back to front, depth tested
-	    against each other and against the frame's 3D drawn before it. Each model is lit by
+	    Draw it into this frame, through its camera: its opaque models, then its 3D shapes
+	    (wgf_shape3d.h), then its see-through models (a BLEND material, or a tint with alpha
+	    below 255) back to front, depth tested against each other and against the frame's 3D
+	    drawn before it. Each model is lit by
 	    the up to 8 lights that reach it most. Outside a frame, or with no camera, nothing.
 	**/
 	public inline function draw():Void

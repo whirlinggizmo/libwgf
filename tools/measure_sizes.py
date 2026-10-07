@@ -69,6 +69,12 @@ ROWS = [
     ('gfx-font', 'gfx-font', 'font', 'same', ''),
     ('gfx-hello3d', 'gfx-hello3d', 'hello3d', 'same', ''),
     ('gfx-meshes', None, 'meshes', 'same', ''),
+    ('gfx-materials', None, 'materials', 'differs',
+     'libwgf has no glTF yet: a generated sphere in place of the file\'s, a gold torus in place of the animated '
+     'character'),
+    ('gfx-lights', None, 'lights', 'differs',
+     'libwgf has no glTF, skinning, or 3D sprites yet: generated capsules in place of the animated characters, and '
+     'no lit billboards'),
     ('gfx-textures', 'gfx-textures', 'textures', 'differs',
      'libwgf has no KTX (compressed) textures: their half loads the PNGs libwgt falls back to'),
     ('gfx-sprite2d', 'gfx-sprite2d', 'sprite2d', 'differs',

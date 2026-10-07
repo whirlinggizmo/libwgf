@@ -49,6 +49,17 @@ void wgf_gfx_priv_render_end_3d(void);
  * memory. */
 bool wgf_gfx_priv_render_add_command(void (*replay)(int index), int index);
 
+/* A command's own immediate mode: from begin to end, immediate mode records into a
+ * layer of its own through `view_proj` (depth tested, 3D), which the command draws when
+ * it is replayed (draw_side_layer), and the frame's state is as it was after it. */
+int wgf_gfx_priv_render_begin_side_layer(const float view_proj[16]);
+void wgf_gfx_priv_render_end_side_layer(void);
+void wgf_gfx_priv_render_draw_side_layer(int layer);
+
+/* The 3D pipeline and `view_proj` loaded into immediate mode, an identity model-view;
+ * nothing else changed (set_3d's viewport is its own). */
+void wgf_gfx_priv_render_load_3d(const float view_proj[16]);
+
 /* For the commands: the immediate mode recording's context; the frame's drawing (NULL:
  * its one layer); the clip now, and immediate mode's viewport now (the visible area's
  * in 3D, the frame's otherwise), each x, y, width, height in the framebuffer's pixels

@@ -102,6 +102,7 @@ Where a resource's file comes from (`wgf_asset.h`), libwgt's asset layer carried
 | material | `wgf_material.h` | a resource made from numbers: glTF metallic-roughness or unlit, its parameters by name (colors, factors, five textures with their transforms and sampling), alpha mode, double sided |
 | stage | `wgf_stage.h` | the root of a 3D tree, drawn when asked through its 3D camera: its ambient light, tone mapping (Khronos PBR Neutral, ACES, or none) and exposure, and culling by the camera's view |
 | light | `wgf_light.h` | a node lighting its stage: directional, point, or spot, glTF's KHR_lights_punctual (color, intensity, range, cone); on while visible |
+| shape3d | `wgf_shape3d.h` | a node drawing a cube, a sphere, a rectangle, a circle's outline, a line, or a line strip (from a caller-owned array), unlit, on a stage: debug views and markers |
 | model | `wgf_model.h` | a node showing a mesh on a stage, its material slots the mesh's or its own, tinted |
 | emitter2d | `wgf_emitter2d.h` | a node owning many particles, simulated on the CPU: a rate and bursts, a capacity, life, direction and spread, speed, a birth radius, gravity, drag, size and color over life, and squares or streaks along their motion; their randomness from `wgf_random` |
 

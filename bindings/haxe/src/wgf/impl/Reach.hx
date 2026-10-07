@@ -395,6 +395,22 @@ class Reach {
 		"wgf_shape2d_set_pivot",
 		"wgf_shape2d_set_polygon",
 		"wgf_shape2d_set_rectangle",
+		"wgf_shape3d_create",
+		"wgf_shape3d_get_color",
+		"wgf_shape3d_get_kind",
+		"wgf_shape3d_get_line_end",
+		"wgf_shape3d_get_line_start",
+		"wgf_shape3d_get_point_count",
+		"wgf_shape3d_get_points",
+		"wgf_shape3d_get_radius",
+		"wgf_shape3d_get_size",
+		"wgf_shape3d_set_circle",
+		"wgf_shape3d_set_color",
+		"wgf_shape3d_set_cube",
+		"wgf_shape3d_set_line",
+		"wgf_shape3d_set_line_strip",
+		"wgf_shape3d_set_rectangle",
+		"wgf_shape3d_set_sphere",
 		"wgf_sound_add_segment",
 		"wgf_sound_create",
 		"wgf_sound_create_streamed",
@@ -541,7 +557,7 @@ class Reach {
 		"wgf_window_set_vsync",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...532) 0];
+	static final counts:Array<Int> = [for (_ in 0...548) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

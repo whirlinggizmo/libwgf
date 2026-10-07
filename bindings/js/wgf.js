@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "a50d77a97f9f0f94" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "fb9d61a3784528e3" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -549,6 +549,7 @@ export const WGF_NODE_TYPE_CAMERA3D = 8;
 export const WGF_NODE_TYPE_STAGE = 9;
 export const WGF_NODE_TYPE_LIGHT = 10;
 export const WGF_NODE_TYPE_MODEL = 11;
+export const WGF_NODE_TYPE_SHAPE3D = 12;
 
 /**
  * What wgf_node_destroy does with the node's children.
@@ -691,6 +692,24 @@ export const WGF_SHAPE2D_KIND_RECTANGLE = 1;
 export const WGF_SHAPE2D_KIND_CIRCLE = 2;
 export const WGF_SHAPE2D_KIND_LINE = 3;
 export const WGF_SHAPE2D_KIND_POLYGON = 4;
+
+/**
+ * A 3D shape: a node drawing a cube, a sphere, a filled rectangle or a circle's outline
+ * in its local x-y plane, a line, or a line strip, in one color, unlit, on a stage
+ * (wgf_stage.h), as libwgt's (wgrender's shape3d): what debug views and markers are
+ * drawn with. In a canvas it draws nothing: 2D shapes are wgf_shape2d.h. Place, turn,
+ * scale, and parent it with the node calls. On a stage, shapes are drawn after its
+ * opaque models and before its see-through ones, depth tested; a see-through color
+ * blends over what is behind it in the order the shapes are found; lines are a pixel
+ * wide.
+ */
+export const WGF_SHAPE3D_KIND_NONE = 0;
+export const WGF_SHAPE3D_KIND_CUBE = 1;
+export const WGF_SHAPE3D_KIND_SPHERE = 2;
+export const WGF_SHAPE3D_KIND_RECTANGLE = 3;
+export const WGF_SHAPE3D_KIND_CIRCLE = 4;
+export const WGF_SHAPE3D_KIND_LINE = 5;
+export const WGF_SHAPE3D_KIND_LINE_STRIP = 6;
 
 /**
  * How a stage's lit colors map to the screen. Lighting can exceed what a screen shows;
@@ -5009,6 +5028,177 @@ export function wgf_shape2d_get_color(shape) {
     return value >>> 0;
 }
 
+// wgf: call wgf_shape3d_create
+/**
+ * A shape with nothing to draw yet, white. 0 when there is no room for another node.
+ */
+export function wgf_shape3d_create() {
+    const value = host["_wgf_shape3d_create"]();
+    return value >>> 0;
+}
+
+// wgf: call wgf_shape3d_get_kind
+/**
+ * What it is, set by the calls below; NONE for a node that isn't a 3D shape.
+ */
+export function wgf_shape3d_get_kind(shape) {
+    const value = host["_wgf_shape3d_get_kind"](shape);
+    return value;
+}
+
+// wgf: call wgf_shape3d_set_cube
+/**
+ * About its node's origin: a cube `width` by `height` by `length`; a sphere of
+ * `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
+ * in its local x-y plane. False for a size below 0.
+ */
+export function wgf_shape3d_set_cube(shape, width, height, length) {
+    const value = host["_wgf_shape3d_set_cube"](shape, width, height, length);
+    return value !== 0;
+}
+
+// wgf: call wgf_shape3d_set_sphere
+/**
+ * About its node's origin: a cube `width` by `height` by `length`; a sphere of
+ * `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
+ * in its local x-y plane. False for a size below 0.
+ */
+export function wgf_shape3d_set_sphere(shape, radius) {
+    const value = host["_wgf_shape3d_set_sphere"](shape, radius);
+    return value !== 0;
+}
+
+// wgf: call wgf_shape3d_set_rectangle
+/**
+ * About its node's origin: a cube `width` by `height` by `length`; a sphere of
+ * `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
+ * in its local x-y plane. False for a size below 0.
+ */
+export function wgf_shape3d_set_rectangle(shape, width, height) {
+    const value = host["_wgf_shape3d_set_rectangle"](shape, width, height);
+    return value !== 0;
+}
+
+// wgf: call wgf_shape3d_set_circle
+/**
+ * About its node's origin: a cube `width` by `height` by `length`; a sphere of
+ * `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
+ * in its local x-y plane. False for a size below 0.
+ */
+export function wgf_shape3d_set_circle(shape, radius) {
+    const value = host["_wgf_shape3d_set_circle"](shape, radius);
+    return value !== 0;
+}
+
+// wgf: call wgf_shape3d_set_line
+/**
+ * A line from (x0, y0, z0) to (x1, y1, z1), in its own space.
+ */
+export function wgf_shape3d_set_line(shape, x0, y0, z0, x1, y1, z1) {
+    const value = host["_wgf_shape3d_set_line"](shape, x0, y0, z0, x1, y1, z1);
+    return value !== 0;
+}
+
+// wgf: call wgf_shape3d_set_line_strip
+/**
+ * A line strip, from a caller-owned array of points, x, y, and z in turn (`float_count`
+ * floats: three a point), copied: drawn once it has two. False for a count that isn't a
+ * multiple of 3, or past 65536 points. get_points fills the caller's array with up to
+ * `float_count` floats of them and returns how many it filled.
+ */
+export function wgf_shape3d_set_line_strip(shape, points) {
+    const pointsPointer = arrayIn(points, 0, "HEAPF32");
+    const value = host["_wgf_shape3d_set_line_strip"](shape, pointsPointer, lengthOf(points));
+    return value !== 0;
+}
+
+// wgf: call wgf_shape3d_get_point_count
+/**
+ * A line strip, from a caller-owned array of points, x, y, and z in turn (`float_count`
+ * floats: three a point), copied: drawn once it has two. False for a count that isn't a
+ * multiple of 3, or past 65536 points. get_points fills the caller's array with up to
+ * `float_count` floats of them and returns how many it filled.
+ */
+export function wgf_shape3d_get_point_count(shape) {
+    const value = host["_wgf_shape3d_get_point_count"](shape);
+    return value;
+}
+
+// wgf: call wgf_shape3d_get_points
+/**
+ * A line strip, from a caller-owned array of points, x, y, and z in turn (`float_count`
+ * floats: three a point), copied: drawn once it has two. False for a count that isn't a
+ * multiple of 3, or past 65536 points. get_points fills the caller's array with up to
+ * `float_count` floats of them and returns how many it filled.
+ */
+export function wgf_shape3d_get_points(shape, points) {
+    const pointsPointer = arrayOut(points, 0);
+    const value = host["_wgf_shape3d_get_points"](shape, pointsPointer, lengthOf(points));
+    arrayBack(pointsPointer, points, "HEAPF32");
+    return value;
+}
+
+// wgf: call wgf_shape3d_get_size
+/**
+ * What was set: a cube's or rectangle's size (a rectangle's z 0; 0, 0, 0 otherwise), a
+ * sphere's or circle's radius (0 otherwise), and a line's ends.
+ */
+export function wgf_shape3d_get_size(shape, into) {
+    const ret = result(12);
+    host["_wgf_shape3d_get_size"](ret, shape);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_shape3d_get_radius
+/**
+ * What was set: a cube's or rectangle's size (a rectangle's z 0; 0, 0, 0 otherwise), a
+ * sphere's or circle's radius (0 otherwise), and a line's ends.
+ */
+export function wgf_shape3d_get_radius(shape) {
+    const value = host["_wgf_shape3d_get_radius"](shape);
+    return value;
+}
+
+// wgf: call wgf_shape3d_get_line_start
+/**
+ * What was set: a cube's or rectangle's size (a rectangle's z 0; 0, 0, 0 otherwise), a
+ * sphere's or circle's radius (0 otherwise), and a line's ends.
+ */
+export function wgf_shape3d_get_line_start(shape, into) {
+    const ret = result(12);
+    host["_wgf_shape3d_get_line_start"](ret, shape);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_shape3d_get_line_end
+/**
+ * What was set: a cube's or rectangle's size (a rectangle's z 0; 0, 0, 0 otherwise), a
+ * sphere's or circle's radius (0 otherwise), and a line's ends.
+ */
+export function wgf_shape3d_get_line_end(shape, into) {
+    const ret = result(12);
+    host["_wgf_shape3d_get_line_end"](ret, shape);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_shape3d_set_color
+/**
+ * Default: white. Alpha below 255 makes it see-through.
+ */
+export function wgf_shape3d_set_color(shape, color) {
+    const value = host["_wgf_shape3d_set_color"](shape, color);
+    return value !== 0;
+}
+
+// wgf: call wgf_shape3d_get_color
+/**
+ * Default: white. Alpha below 255 makes it see-through.
+ */
+export function wgf_shape3d_get_color(shape) {
+    const value = host["_wgf_shape3d_get_color"](shape);
+    return value >>> 0;
+}
+
 // wgf: call wgf_sprite_create
 /**
  * A sprite of `texture` (0 for none: it draws nothing). 0 when there is no room for
@@ -5140,9 +5330,10 @@ export function wgf_stage_create() {
 
 // wgf: call wgf_stage_draw
 /**
- * Draw it into this frame, through its camera: its opaque models, then its see-through
- * ones (a BLEND material, or a tint with alpha below 255) back to front, depth tested
- * against each other and against the frame's 3D drawn before it. Each model is lit by
+ * Draw it into this frame, through its camera: its opaque models, then its 3D shapes
+ * (wgf_shape3d.h), then its see-through models (a BLEND material, or a tint with alpha
+ * below 255) back to front, depth tested against each other and against the frame's 3D
+ * drawn before it. Each model is lit by
  * the up to 8 lights that reach it most. Outside a frame, or with no camera, nothing.
  */
 export function wgf_stage_draw(stage) {

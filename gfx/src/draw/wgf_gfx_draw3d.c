@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stddef.h>
 
+#include "draw/wgf_gfx_draw3d_priv.h"
 #include "node/wgf_gfx_node_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "sokol_gfx.h" /* sokol_gl needs it first */
@@ -10,8 +11,9 @@
 #include "util/sokol_gl.h"
 
 /* Immediate mode in 3D, libwgt's (wgrender's shape3d geometry): recorded into the
- * frame's sokol_gl recording through a 3D camera's view, depth tested. Its own file, so
- * a program drawing only in 2D links none of it. */
+ * frame's sokol_gl recording through a 3D camera's view, depth tested; its geometry is
+ * also a stage's 3D shape nodes' (wgf_gfx_shape3d.c). Its own file, so a program drawing
+ * only in 2D links none of it. */
 
 #define PI 3.14159265358979323846f
 #define CIRCLE_SEGMENTS 36
@@ -52,9 +54,8 @@ static void set_color(wgf_color_t color)
             (uint8_t)wgf_color_get_alpha(color));
 }
 
-void wgf_draw_line_3d(float x0, float y0, float z0, float x1, float y1, float z1, wgf_color_t color)
+void wgf_gfx_priv_draw3d_line(float x0, float y0, float z0, float x1, float y1, float z1, wgf_color_t color)
 {
-    if (!in_3d()) return;
     sgl_begin_lines();
     set_color(color);
     sgl_v3f(x0, y0, z0);
@@ -62,7 +63,13 @@ void wgf_draw_line_3d(float x0, float y0, float z0, float x1, float y1, float z1
     sgl_end();
 }
 
-void wgf_draw_cube(float cx, float cy, float cz, float width, float height, float length, wgf_color_t color)
+void wgf_draw_line_3d(float x0, float y0, float z0, float x1, float y1, float z1, wgf_color_t color)
+{
+    if (in_3d()) wgf_gfx_priv_draw3d_line(x0, y0, z0, x1, y1, z1, color);
+}
+
+void wgf_gfx_priv_draw3d_cube(float cx, float cy, float cz, float width, float height, float length,
+                              wgf_color_t color)
 {
     const float x0 = cx - width * 0.5f, x1 = cx + width * 0.5f;
     const float y0 = cy - height * 0.5f, y1 = cy + height * 0.5f;
@@ -77,13 +84,17 @@ void wgf_draw_cube(float cx, float cy, float cz, float width, float height, floa
         {{x0, y0, z0}, {x1, y0, z0}, {x1, y0, z1}, {x0, y0, z1}},
     };
     int f, c;
-    if (!in_3d()) return;
     sgl_begin_quads();
     set_color(color);
     for (f = 0; f < 6; f++) {
         for (c = 0; c < 4; c++) sgl_v3f(faces[f][c][0], faces[f][c][1], faces[f][c][2]);
     }
     sgl_end();
+}
+
+void wgf_draw_cube(float cx, float cy, float cz, float width, float height, float length, wgf_color_t color)
+{
+    if (in_3d()) wgf_gfx_priv_draw3d_cube(cx, cy, cz, width, height, length, color);
 }
 
 void wgf_draw_cube_wires(float cx, float cy, float cz, float width, float height, float length, wgf_color_t color)
@@ -107,11 +118,10 @@ void wgf_draw_cube_wires(float cx, float cy, float cz, float width, float height
     sgl_end();
 }
 
-void wgf_draw_sphere(float cx, float cy, float cz, float radius, wgf_color_t color)
+void wgf_gfx_priv_draw3d_sphere(float cx, float cy, float cz, float radius, wgf_color_t color)
 {
     const int rings = 16, sectors = 24;
     int r, s;
-    if (!in_3d()) return;
     sgl_begin_triangles();
     set_color(color);
     for (r = 0; r < rings; r++) {
@@ -132,6 +142,11 @@ void wgf_draw_sphere(float cx, float cy, float cz, float radius, wgf_color_t col
         }
     }
     sgl_end();
+}
+
+void wgf_draw_sphere(float cx, float cy, float cz, float radius, wgf_color_t color)
+{
+    if (in_3d()) wgf_gfx_priv_draw3d_sphere(cx, cy, cz, radius, color);
 }
 
 void wgf_draw_grid(int slices, float spacing, wgf_color_t color)
@@ -163,12 +178,9 @@ static void push_placement(float cx, float cy, float cz, float rx, float ry, flo
     sgl_rotate(rx, 1.0f, 0.0f, 0.0f);
 }
 
-void wgf_draw_rectangle_3d(float cx, float cy, float cz, float width, float height, float rx, float ry, float rz,
-                           wgf_color_t color)
+void wgf_gfx_priv_draw3d_rectangle(float width, float height, wgf_color_t color)
 {
     const float hw = width * 0.5f, hh = height * 0.5f;
-    if (!in_3d()) return;
-    push_placement(cx, cy, cz, rx, ry, rz);
     sgl_begin_quads();
     set_color(color);
     sgl_v3f(-hw, -hh, 0.0f);
@@ -176,14 +188,11 @@ void wgf_draw_rectangle_3d(float cx, float cy, float cz, float width, float heig
     sgl_v3f(hw, hh, 0.0f);
     sgl_v3f(-hw, hh, 0.0f);
     sgl_end();
-    sgl_pop_matrix();
 }
 
-void wgf_draw_circle_3d(float cx, float cy, float cz, float radius, float rx, float ry, float rz, wgf_color_t color)
+void wgf_gfx_priv_draw3d_circle(float radius, wgf_color_t color)
 {
     int i;
-    if (!in_3d()) return;
-    push_placement(cx, cy, cz, rx, ry, rz);
     sgl_begin_line_strip();
     set_color(color);
     for (i = 0; i <= CIRCLE_SEGMENTS; i++) {
@@ -191,6 +200,32 @@ void wgf_draw_circle_3d(float cx, float cy, float cz, float radius, float rx, fl
         sgl_v3f(cosf(a) * radius, sinf(a) * radius, 0.0f);
     }
     sgl_end();
+}
+
+void wgf_gfx_priv_draw3d_strip(const float *points, int count, wgf_color_t color)
+{
+    int i;
+    if (count < 2) return;
+    sgl_begin_line_strip();
+    set_color(color);
+    for (i = 0; i < count; i++) sgl_v3f(points[i * 3], points[i * 3 + 1], points[i * 3 + 2]);
+    sgl_end();
+}
+
+void wgf_draw_rectangle_3d(float cx, float cy, float cz, float width, float height, float rx, float ry, float rz,
+                           wgf_color_t color)
+{
+    if (!in_3d()) return;
+    push_placement(cx, cy, cz, rx, ry, rz);
+    wgf_gfx_priv_draw3d_rectangle(width, height, color);
+    sgl_pop_matrix();
+}
+
+void wgf_draw_circle_3d(float cx, float cy, float cz, float radius, float rx, float ry, float rz, wgf_color_t color)
+{
+    if (!in_3d()) return;
+    push_placement(cx, cy, cz, rx, ry, rz);
+    wgf_gfx_priv_draw3d_circle(radius, color);
     sgl_pop_matrix();
 }
 

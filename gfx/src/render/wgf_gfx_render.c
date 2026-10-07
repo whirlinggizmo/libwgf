@@ -378,9 +378,8 @@ void wgf_gfx_priv_render_set_2d(void)
     sgl_load_identity();
 }
 
-void wgf_gfx_priv_render_set_3d(const float view_proj[16])
+void wgf_gfx_priv_render_load_3d(const float view_proj[16])
 {
-    const wgf_platform_priv_presentation_t *p = &present;
     sgl_set_context(draw_context);
     if (draw_pipeline_3d.id == SG_INVALID_ID) {
         sg_pipeline_desc desc;
@@ -395,18 +394,25 @@ void wgf_gfx_priv_render_set_3d(const float view_proj[16])
         desc.depth.write_enabled = true;
         draw_pipeline_3d = sgl_make_pipeline(&desc);
     }
+    sgl_load_pipeline(draw_pipeline_3d);
+    sgl_matrix_mode_projection();
+    sgl_load_matrix(view_proj);
+    sgl_matrix_mode_modelview();
+    sgl_load_identity();
+}
+
+void wgf_gfx_priv_render_set_3d(const float view_proj[16])
+{
+    const wgf_platform_priv_presentation_t *p = &present;
     /* what the camera sees fills the visible area, in the framebuffer's pixels */
     viewport_3d[0] = (int)(p->offset_x + p->visible_x * p->scale_x + 0.5f);
     viewport_3d[1] = (int)(p->offset_y + p->visible_y * p->scale_y + 0.5f);
     viewport_3d[2] = (int)(p->visible_width * p->scale_x + 0.5f);
     viewport_3d[3] = (int)(p->visible_height * p->scale_y + 0.5f);
     viewport_3d_frame = frame_number;
+    sgl_set_context(draw_context);
     sgl_viewport(viewport_3d[0], viewport_3d[1], viewport_3d[2], viewport_3d[3], true);
-    sgl_load_pipeline(draw_pipeline_3d);
-    sgl_matrix_mode_projection();
-    sgl_load_matrix(view_proj);
-    sgl_matrix_mode_modelview();
-    sgl_load_identity();
+    wgf_gfx_priv_render_load_3d(view_proj);
 }
 
 void wgf_gfx_priv_render_end_3d(void)

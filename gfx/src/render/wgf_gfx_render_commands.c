@@ -42,6 +42,46 @@ static void draw_commands(void)
     command_count = 0;
 }
 
+/* Side layers: immediate mode recorded for a command to draw itself (a stage's 3D
+ * shapes), numbered past every layer the frame's commands can open. */
+#define SIDE_LAYER_BASE (1 << 20)
+static int side_layers;
+static unsigned side_frame;
+
+int wgf_gfx_priv_render_begin_side_layer(const float view_proj[16])
+{
+    const sgl_context context = wgf_gfx_priv_render_get_context();
+    if (side_frame != wgf_gfx_priv_render_get_frame()) {
+        side_layers = 0;
+        side_frame = wgf_gfx_priv_render_get_frame();
+    }
+    sgl_set_context(context);
+    sgl_layer(SIDE_LAYER_BASE + side_layers);
+    sgl_push_pipeline();
+    sgl_matrix_mode_projection();
+    sgl_push_matrix();
+    sgl_matrix_mode_modelview();
+    sgl_push_matrix();
+    wgf_gfx_priv_render_load_3d(view_proj);
+    return SIDE_LAYER_BASE + side_layers++;
+}
+
+void wgf_gfx_priv_render_end_side_layer(void)
+{
+    sgl_set_context(wgf_gfx_priv_render_get_context());
+    sgl_matrix_mode_projection();
+    sgl_pop_matrix();
+    sgl_matrix_mode_modelview();
+    sgl_pop_matrix();
+    sgl_pop_pipeline();
+    sgl_layer(commands_frame == wgf_gfx_priv_render_get_frame() ? command_count : 0);
+}
+
+void wgf_gfx_priv_render_draw_side_layer(int layer)
+{
+    sgl_context_draw_layer(wgf_gfx_priv_render_get_context(), layer);
+}
+
 bool wgf_gfx_priv_render_add_command(void (*replay)(int index), int index)
 {
     command_t *c;

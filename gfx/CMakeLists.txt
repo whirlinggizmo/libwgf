@@ -16,6 +16,7 @@ wgf_layer(gfx
         src/render/wgf_gfx_render.c
         src/render/wgf_gfx_render_commands.c
         src/shape/wgf_gfx_shape2d.c
+        src/shape/wgf_gfx_shape3d.c
         src/sprite/wgf_gfx_sprite.c
         src/stage/wgf_gfx_light.c
         src/stage/wgf_gfx_model.c
@@ -49,6 +50,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_camera3d_test)
         wgf_test(gfx wgf_gfx_mesh_test)
         wgf_test(gfx wgf_gfx_stage_test)
+        wgf_test(gfx wgf_gfx_shape3d_test)
         wgf_test(gfx wgf_gfx_text_test)
         wgf_test(gfx wgf_gfx_texture_test)
         wgf_test(gfx wgf_gfx_draw_test)
@@ -60,6 +62,8 @@ if(WGF_TESTS)
     wgf_web_test(gfx wgf_gfx_frame_web_test 1)
     wgf_web_test(gfx wgf_gfx_presentation_web_test 1)
     wgf_window_test(gfx wgf_gfx_presentation_window_test)
+    wgf_window_test(gfx wgf_gfx_draw3d_window_test)
+    wgf_window_test(gfx wgf_gfx_stage_window_test)
     wgf_web_test(gfx wgf_gfx_texture_web_test 1)
     wgf_web_test(gfx wgf_gfx_text_web_test 1)
     wgf_web_test(gfx wgf_gfx_canvas_web_test 1)

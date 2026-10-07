@@ -225,6 +225,18 @@ class Main {
 		expect(model.setMaterial(0, own) && model.getMaterial(0) == own && Resource.release(own), "its own material");
 		model.setParent(stage3d);
 		Resource.release(cube);
+		final shape:Shape3d = Shape3d.create();
+		expect(shape.getKind() == Shape3dKind.NONE && shape.setCube(1, 2, 3) && shape.getKind() == Shape3dKind.CUBE
+			&& shape.getSize().z == 3, "a 3D shape: a cube");
+		expect(shape.setSphere(2) && shape.getRadius() == 2 && shape.setRectangle(1, 2) && shape.getSize().y == 2
+			&& shape.setCircle(1), "a sphere, a rectangle, a circle");
+		expect(shape.setLine(0, 0, 0, 1, 2, 3) && shape.getLineStart().x == 0 && shape.getLineEnd().z == 3, "a line");
+		final points = [0.0, 0, 0, 1, 0, 0, 1, 1, 0];
+		final back = [for (i in 0...9) 0.0];
+		expect(shape.setLineStrip(points) && shape.getPointCount() == 3 && shape.getPoints(back) == 9 && back[7] == 1,
+			"a line strip, from an array and back into one");
+		expect(shape.setColor(Color.get(ColorStock.LIME)) && shape.getColor() == Color.get(ColorStock.LIME), "its color");
+		shape.setParent(stage3d);
 	}
 
 	/** Generated meshes and materials. **/

@@ -386,7 +386,8 @@ export declare const WGF_NODE_TYPE_CAMERA3D: 8;
 export declare const WGF_NODE_TYPE_STAGE: 9;
 export declare const WGF_NODE_TYPE_LIGHT: 10;
 export declare const WGF_NODE_TYPE_MODEL: 11;
-export type wgf_node_type_t = typeof WGF_NODE_TYPE_NONE | typeof WGF_NODE_TYPE_NODE | typeof WGF_NODE_TYPE_CANVAS | typeof WGF_NODE_TYPE_SPRITE | typeof WGF_NODE_TYPE_CAMERA2D | typeof WGF_NODE_TYPE_TEXT | typeof WGF_NODE_TYPE_SHAPE2D | typeof WGF_NODE_TYPE_EMITTER2D | typeof WGF_NODE_TYPE_CAMERA3D | typeof WGF_NODE_TYPE_STAGE | typeof WGF_NODE_TYPE_LIGHT | typeof WGF_NODE_TYPE_MODEL;
+export declare const WGF_NODE_TYPE_SHAPE3D: 12;
+export type wgf_node_type_t = typeof WGF_NODE_TYPE_NONE | typeof WGF_NODE_TYPE_NODE | typeof WGF_NODE_TYPE_CANVAS | typeof WGF_NODE_TYPE_SPRITE | typeof WGF_NODE_TYPE_CAMERA2D | typeof WGF_NODE_TYPE_TEXT | typeof WGF_NODE_TYPE_SHAPE2D | typeof WGF_NODE_TYPE_EMITTER2D | typeof WGF_NODE_TYPE_CAMERA3D | typeof WGF_NODE_TYPE_STAGE | typeof WGF_NODE_TYPE_LIGHT | typeof WGF_NODE_TYPE_MODEL | typeof WGF_NODE_TYPE_SHAPE3D;
 
 /**
  * What wgf_node_destroy does with the node's children.
@@ -540,6 +541,25 @@ export declare const WGF_SHAPE2D_KIND_CIRCLE: 2;
 export declare const WGF_SHAPE2D_KIND_LINE: 3;
 export declare const WGF_SHAPE2D_KIND_POLYGON: 4;
 export type wgf_shape2d_kind_t = typeof WGF_SHAPE2D_KIND_NONE | typeof WGF_SHAPE2D_KIND_RECTANGLE | typeof WGF_SHAPE2D_KIND_CIRCLE | typeof WGF_SHAPE2D_KIND_LINE | typeof WGF_SHAPE2D_KIND_POLYGON;
+
+/**
+ * A 3D shape: a node drawing a cube, a sphere, a filled rectangle or a circle's outline
+ * in its local x-y plane, a line, or a line strip, in one color, unlit, on a stage
+ * (wgf_stage.h), as libwgt's (wgrender's shape3d): what debug views and markers are
+ * drawn with. In a canvas it draws nothing: 2D shapes are wgf_shape2d.h. Place, turn,
+ * scale, and parent it with the node calls. On a stage, shapes are drawn after its
+ * opaque models and before its see-through ones, depth tested; a see-through color
+ * blends over what is behind it in the order the shapes are found; lines are a pixel
+ * wide.
+ */
+export declare const WGF_SHAPE3D_KIND_NONE: 0;
+export declare const WGF_SHAPE3D_KIND_CUBE: 1;
+export declare const WGF_SHAPE3D_KIND_SPHERE: 2;
+export declare const WGF_SHAPE3D_KIND_RECTANGLE: 3;
+export declare const WGF_SHAPE3D_KIND_CIRCLE: 4;
+export declare const WGF_SHAPE3D_KIND_LINE: 5;
+export declare const WGF_SHAPE3D_KIND_LINE_STRIP: 6;
+export type wgf_shape3d_kind_t = typeof WGF_SHAPE3D_KIND_NONE | typeof WGF_SHAPE3D_KIND_CUBE | typeof WGF_SHAPE3D_KIND_SPHERE | typeof WGF_SHAPE3D_KIND_RECTANGLE | typeof WGF_SHAPE3D_KIND_CIRCLE | typeof WGF_SHAPE3D_KIND_LINE | typeof WGF_SHAPE3D_KIND_LINE_STRIP;
 
 /**
  * How a stage's lit colors map to the screen. Lighting can exceed what a screen shows;
@@ -3347,6 +3367,110 @@ export declare function wgf_shape2d_set_color(shape: wgf_node_t | 0, color: wgf_
 export declare function wgf_shape2d_get_color(shape: wgf_node_t | 0): wgf_color_t;
 
 /**
+ * A shape with nothing to draw yet, white. 0 when there is no room for another node.
+ */
+export declare function wgf_shape3d_create(): wgf_node_t;
+
+/**
+ * What it is, set by the calls below; NONE for a node that isn't a 3D shape.
+ */
+export declare function wgf_shape3d_get_kind(shape: wgf_node_t | 0): wgf_shape3d_kind_t;
+
+/**
+ * About its node's origin: a cube `width` by `height` by `length`; a sphere of
+ * `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
+ * in its local x-y plane. False for a size below 0.
+ */
+export declare function wgf_shape3d_set_cube(shape: wgf_node_t | 0, width: number, height: number, length: number): boolean;
+
+/**
+ * About its node's origin: a cube `width` by `height` by `length`; a sphere of
+ * `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
+ * in its local x-y plane. False for a size below 0.
+ */
+export declare function wgf_shape3d_set_sphere(shape: wgf_node_t | 0, radius: number): boolean;
+
+/**
+ * About its node's origin: a cube `width` by `height` by `length`; a sphere of
+ * `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
+ * in its local x-y plane. False for a size below 0.
+ */
+export declare function wgf_shape3d_set_rectangle(shape: wgf_node_t | 0, width: number, height: number): boolean;
+
+/**
+ * About its node's origin: a cube `width` by `height` by `length`; a sphere of
+ * `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
+ * in its local x-y plane. False for a size below 0.
+ */
+export declare function wgf_shape3d_set_circle(shape: wgf_node_t | 0, radius: number): boolean;
+
+/**
+ * A line from (x0, y0, z0) to (x1, y1, z1), in its own space.
+ */
+export declare function wgf_shape3d_set_line(shape: wgf_node_t | 0, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number): boolean;
+
+/**
+ * A line strip, from a caller-owned array of points, x, y, and z in turn (`float_count`
+ * floats: three a point), copied: drawn once it has two. False for a count that isn't a
+ * multiple of 3, or past 65536 points. get_points fills the caller's array with up to
+ * `float_count` floats of them and returns how many it filled.
+ */
+export declare function wgf_shape3d_set_line_strip(shape: wgf_node_t | 0, points: readonly number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * A line strip, from a caller-owned array of points, x, y, and z in turn (`float_count`
+ * floats: three a point), copied: drawn once it has two. False for a count that isn't a
+ * multiple of 3, or past 65536 points. get_points fills the caller's array with up to
+ * `float_count` floats of them and returns how many it filled.
+ */
+export declare function wgf_shape3d_get_point_count(shape: wgf_node_t | 0): number;
+
+/**
+ * A line strip, from a caller-owned array of points, x, y, and z in turn (`float_count`
+ * floats: three a point), copied: drawn once it has two. False for a count that isn't a
+ * multiple of 3, or past 65536 points. get_points fills the caller's array with up to
+ * `float_count` floats of them and returns how many it filled.
+ */
+export declare function wgf_shape3d_get_points(shape: wgf_node_t | 0, points: number[] | Float32Array | Float64Array | null): number;
+
+/**
+ * What was set: a cube's or rectangle's size (a rectangle's z 0; 0, 0, 0 otherwise), a
+ * sphere's or circle's radius (0 otherwise), and a line's ends.
+ */
+export declare function wgf_shape3d_get_size<T extends number[] | Float32Array | Float64Array>(shape: wgf_node_t | 0, into: T): T;
+export declare function wgf_shape3d_get_size(shape: wgf_node_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * What was set: a cube's or rectangle's size (a rectangle's z 0; 0, 0, 0 otherwise), a
+ * sphere's or circle's radius (0 otherwise), and a line's ends.
+ */
+export declare function wgf_shape3d_get_radius(shape: wgf_node_t | 0): number;
+
+/**
+ * What was set: a cube's or rectangle's size (a rectangle's z 0; 0, 0, 0 otherwise), a
+ * sphere's or circle's radius (0 otherwise), and a line's ends.
+ */
+export declare function wgf_shape3d_get_line_start<T extends number[] | Float32Array | Float64Array>(shape: wgf_node_t | 0, into: T): T;
+export declare function wgf_shape3d_get_line_start(shape: wgf_node_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * What was set: a cube's or rectangle's size (a rectangle's z 0; 0, 0, 0 otherwise), a
+ * sphere's or circle's radius (0 otherwise), and a line's ends.
+ */
+export declare function wgf_shape3d_get_line_end<T extends number[] | Float32Array | Float64Array>(shape: wgf_node_t | 0, into: T): T;
+export declare function wgf_shape3d_get_line_end(shape: wgf_node_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * Default: white. Alpha below 255 makes it see-through.
+ */
+export declare function wgf_shape3d_set_color(shape: wgf_node_t | 0, color: wgf_color_t): boolean;
+
+/**
+ * Default: white. Alpha below 255 makes it see-through.
+ */
+export declare function wgf_shape3d_get_color(shape: wgf_node_t | 0): wgf_color_t;
+
+/**
  * A sprite of `texture` (0 for none: it draws nothing). 0 when there is no room for
  * another node.
  */
@@ -3428,9 +3552,10 @@ export declare function wgf_sprite_get_tint(sprite: wgf_node_t | 0): wgf_color_t
 export declare function wgf_stage_create(): wgf_node_t;
 
 /**
- * Draw it into this frame, through its camera: its opaque models, then its see-through
- * ones (a BLEND material, or a tint with alpha below 255) back to front, depth tested
- * against each other and against the frame's 3D drawn before it. Each model is lit by
+ * Draw it into this frame, through its camera: its opaque models, then its 3D shapes
+ * (wgf_shape3d.h), then its see-through models (a BLEND material, or a tint with alpha
+ * below 255) back to front, depth tested against each other and against the frame's 3D
+ * drawn before it. Each model is lit by
  * the up to 8 lights that reach it most. Outside a frame, or with no camera, nothing.
  */
 export declare function wgf_stage_draw(stage: wgf_node_t | 0): void;

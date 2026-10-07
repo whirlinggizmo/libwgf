@@ -35,9 +35,10 @@ typedef enum wgf_stage_tonemap_t {
  * 0. 0 when there is no room for another node. */
 WGF_API wgf_node_t wgf_stage_create(void);
 
-/* Draw it into this frame, through its camera: its opaque models, then its see-through
- * ones (a BLEND material, or a tint with alpha below 255) back to front, depth tested
- * against each other and against the frame's 3D drawn before it. Each model is lit by
+/* Draw it into this frame, through its camera: its opaque models, then its 3D shapes
+ * (wgf_shape3d.h), then its see-through models (a BLEND material, or a tint with alpha
+ * below 255) back to front, depth tested against each other and against the frame's 3D
+ * drawn before it. Each model is lit by
  * the up to 8 lights that reach it most. Outside a frame, or with no camera, nothing. */
 WGF_API void wgf_stage_draw(wgf_node_t stage);
 

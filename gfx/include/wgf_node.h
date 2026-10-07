@@ -36,7 +36,8 @@ typedef enum wgf_node_type_t {
     WGF_NODE_TYPE_CAMERA3D = 8,
     WGF_NODE_TYPE_STAGE = 9,
     WGF_NODE_TYPE_LIGHT = 10,
-    WGF_NODE_TYPE_MODEL = 11
+    WGF_NODE_TYPE_MODEL = 11,
+    WGF_NODE_TYPE_SHAPE3D = 12
 } wgf_node_type_t;
 
 /* What wgf_node_destroy does with the node's children. */

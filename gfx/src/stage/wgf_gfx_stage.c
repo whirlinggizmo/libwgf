@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "draw/wgf_gfx_draw3d_priv.h"
 #include "material/wgf_gfx_material_priv.h"
 #include "mesh/wgf_gfx_mesh_priv.h"
 #include "render/wgf_gfx_render_priv.h"
@@ -48,6 +49,7 @@ typedef struct item_t {
 typedef struct stage_draw_t {
     int first, count; /* its items */
     int first_light, light_count;
+    int shapes; /* its 3D shapes' side layer of immediate mode (-1: none), drawn after its opaque models */
     wgf_mat4_t view_proj;
     wgf_vec3_t camera_position;
     float ambient[3]; /* linear, times its intensity */
@@ -311,6 +313,16 @@ typedef struct walk_models_t {
     wgf_vec3_t eye, forward;
 } walk_models_t;
 
+static void visit_shape(wgf_node_t node, const wgf_gfx_priv_node_t *node_ptr, const wgf_mat4_t *world, void *user)
+{
+    stage_draw_t *draw = &frame.draws[frame.draw_count];
+    (void)node;
+    (void)user;
+    if (node_ptr->type != WGF_NODE_TYPE_SHAPE3D || node_ptr->as.shape3d.kind == 0) return;
+    if (draw->shapes < 0) draw->shapes = wgf_gfx_priv_render_begin_side_layer(draw->view_proj.m);
+    wgf_gfx_priv_shape3d_draw(node_ptr, world);
+}
+
 static void visit_model(wgf_node_t node, const wgf_gfx_priv_node_t *node_ptr, const wgf_mat4_t *world, void *user)
 {
     const walk_models_t *w = (const walk_models_t *)user;
@@ -375,6 +387,7 @@ void wgf_stage_draw(wgf_node_t stage)
     if (!grow((void **)&frame.draws, &frame.draw_capacity, frame.draw_count + 1, sizeof(stage_draw_t))) return;
     draw = &frame.draws[frame.draw_count];
     memset(draw, 0, sizeof(*draw));
+    draw->shapes = -1;
     wgf_gfx_priv_render_get_visible(&x, &y, &width, &height);
     draw->view_proj = wgf_gfx_priv_camera3d_view_projection(camera, height > 0.0f ? width / height : 1.0f,
                                                             &draw->camera_position);
@@ -405,7 +418,10 @@ void wgf_stage_draw(wgf_node_t stage)
     walk(stage, visit_model, &w);
     draw = &frame.draws[frame.draw_count];
     draw->count = frame.item_count - draw->first;
-    qsort(&frame.items[draw->first], (size_t)draw->count, sizeof(item_t), compare_items);
+    if (draw->count > 1) qsort(&frame.items[draw->first], (size_t)draw->count, sizeof(item_t), compare_items);
+    walk(stage, visit_shape, NULL); /* immediate mode: they move nothing in the pool */
+    draw = &frame.draws[frame.draw_count];
+    if (draw->shapes >= 0) wgf_gfx_priv_render_end_side_layer();
     if (wgf_gfx_priv_render_add_command(replay, frame.draw_count)) frame.draw_count++;
 }
 
@@ -598,7 +614,14 @@ static void replay(int index)
     ensure_ready();
     draw = &frame.draws[index];
     sg_apply_viewport(draw->viewport[0], draw->viewport[1], draw->viewport[2], draw->viewport[3], true);
-    for (i = draw->first; i < draw->first + draw->count; i++) draw_item(draw, &frame.items[i]);
+    for (i = draw->first; i < draw->first + draw->count && !frame.items[i].blended; i++) {
+        draw_item(draw, &frame.items[i]);
+    }
+    if (draw->shapes >= 0) { /* sokol_gl's layer, through the same viewport */
+        wgf_gfx_priv_render_draw_side_layer(draw->shapes);
+        sg_apply_viewport(draw->viewport[0], draw->viewport[1], draw->viewport[2], draw->viewport[3], true);
+    }
+    for (; i < draw->first + draw->count; i++) draw_item(draw, &frame.items[i]);
 }
 
 /* For tests: how many parts the frame's stage draws drew (after culling), and how many
