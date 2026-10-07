@@ -2,9 +2,18 @@
 package wgf;
 
 /**
-    What an entity can have, at most one of each. The first five are data the systems
-    read; the node kinds are a node under the entity's own (wgf_entity_get_component_node),
-    set up with its own calls; a voice plays a sound (wgf_entity_get_voice).
+    Components: the simulation's data on an actor -- any actor, of any kind, a 2D stage's UI
+    actors and cameras included -- run each tick by libwgf's systems (wgf_ecs.h). One kind
+    of object, the actor (SPEC.md), Godot's tree with Unity's components: what an actor draws
+    is its kind (a shape, a sprite, a model); what moves it, bounds it, ages it, and finds
+    what it overlaps are components on it; what the program does with it are its behaviors
+    (wgf_behavior.h), several to an actor.
+
+    An actor with a component or a behavior is simulated (wgf_actor_snap): its transform is
+    set and read at the tick rate, and it is drawn between its last two ticks, so it moves
+    smoothly at any frame rate. Its components go when it does (wgf_actor_destroy), and a
+    system that ends it (a lifetime run out, bounds of DESTROY) destroys the actor, with
+    everything under it, after the tick's systems have run.
 **/
 enum abstract Component(Int) from Int to Int {
 	var NONE = 0;
@@ -12,11 +21,5 @@ enum abstract Component(Int) from Int to Int {
 	var BOUNDS = 2;
 	var LIFETIME = 3;
 	var COLLIDER = 4;
-	var BEHAVIOR = 5;
-	var SHAPE2D = 6;
-	var SPRITE = 7;
-	var TEXT = 8;
-	var EMITTER2D = 9;
-	var VOICE = 10;
-	var MODEL = 11;
+	var VOICE = 5;
 }

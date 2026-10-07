@@ -9,7 +9,7 @@ Examples are programs outside libwgf, built against `out/` as anyone's would be 
 
 ## A C example
 
-1. **The directory**: `examples/c/<layer>-<name>/`, named for the layer it shows (`gfx-canvas`, `ecs-scene`, `ui-menu`).
+1. **The directory**: `examples/c/<layer>-<name>/`, named for the layer it shows (`gfx-stage2d`, `ecs-scene`, `ui-menu`).
 2. **`CMakeLists.txt`**, as the others:
    ```cmake
    cmake_minimum_required(VERSION 3.21)

@@ -3,14 +3,14 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Camera3d's calls, on a Node: `var x:Camera3d = handle` gives it them, and a Camera3d is still a Node. **/
-@:forward abstract Camera3d(Node) from Node to Node {
+/** Camera3d's calls, on a Actor: `var x:Camera3d = handle` gives it them, and a Camera3d is still a Actor. **/
+@:forward abstract Camera3d(Actor) from Actor to Actor {
 	/**
 	    A camera with a 60 degree vertical field of view, seeing from 0.1 to 1000 units in
-	    front of it. 0 when there is no room for another node.
+	    front of it. 0 when there is no room for another actor.
 	**/
 	public static inline function create():Camera3d
-		return ((Raw.wgf_camera3d_create() : Node) : Camera3d);
+		return ((Raw.wgf_camera3d_create() : Actor) : Camera3d);
 
 	/**
 	    The vertical field of view, in radians, clamped to 0.01 to 3.13 (just short of a

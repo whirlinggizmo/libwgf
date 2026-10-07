@@ -1,13 +1,13 @@
-wgf-scene 1
+wgf-scene 2
 # The racer's world as data: the car and its vehicle, the checkpoints, the props. The
 # track itself is glTF (tools/gen_track.py), placed by its own lines.
 
-entity track
+actor track
   model path=track/collision.glb visible=false
   body type=static shape=mesh
 end
 
-entity track_00
+actor track_00
   model path=track/section_00.glb
 end
 # ... track_01 to track_11, each its own file, streamed in nearest first
@@ -25,7 +25,7 @@ prefab checkpoint
   behavior name=Checkpoint
 end
 
-entity checkpoint_0
+actor checkpoint_0
   from checkpoint
   transform position=0,2,12
   behavior index=0

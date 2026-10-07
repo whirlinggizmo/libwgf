@@ -6,22 +6,25 @@
 #include "wgf_behavior.h"
 #include "wgf_bounds.h"
 #include "wgf_collider.h"
+#include "wgf_component.h"
 #include "wgf_core_handle_priv.h"
 #include "wgf_core_resource_priv.h"
 #include "wgf_ecs.h"
 #include "wgf_ecs_priv.h"
 #include "wgf_emitter2d.h"
 #include "wgf_lifetime.h"
-#include "node/wgf_gfx_node_priv.h"
+#include "actor/wgf_gfx_actor_priv.h"
 #include "wgf_motion.h"
 #include "wgf_shape2d.h"
 #include "wgf_sprite.h"
 #include "wgf_text.h"
 #include "wgf_voice.h"
 
-/* The world written as a scene (wgf_ecs_dump): every live entity, oldest first, every
- * setting it has, in the format wgf_scene.h reads, numbers to 9 significant digits so
- * a float reads back as itself. */
+/* The simulated actors written as a scene (wgf_ecs_dump): each top one, oldest first, and
+ * everything under it, every setting each has, in the format wgf_scene.h reads, numbers to
+ * 9 significant digits so a float reads back as itself. */
+
+#define PATH_BYTES 256
 
 typedef struct out_t {
     char *text;
@@ -96,25 +99,25 @@ static void put_color(out_t *out, const char *key, wgf_color_t color)
     put(out, " %s=#%08X", key, (unsigned)color);
 }
 
-static void dump_shape(out_t *out, wgf_node_t node)
+static void dump_shape(out_t *out, wgf_actor_t actor)
 {
-    const wgf_vec2_t pivot = wgf_shape2d_get_pivot(node);
+    const wgf_vec2_t pivot = wgf_shape2d_get_pivot(actor);
     put(out, "    shape2d");
-    switch (wgf_shape2d_get_kind(node)) {
+    switch (wgf_shape2d_get_kind(actor)) {
         case WGF_SHAPE2D_KIND_RECTANGLE: {
-            const wgf_vec2_t size = wgf_shape2d_get_size(node);
+            const wgf_vec2_t size = wgf_shape2d_get_size(actor);
             put(out, " rectangle=%.9g,%.9g", size.x, size.y);
             break;
         }
-        case WGF_SHAPE2D_KIND_CIRCLE: put(out, " circle=%.9g", wgf_shape2d_get_radius(node)); break;
+        case WGF_SHAPE2D_KIND_CIRCLE: put(out, " circle=%.9g", wgf_shape2d_get_radius(actor)); break;
         case WGF_SHAPE2D_KIND_LINE: {
-            const wgf_vec2_t a = wgf_shape2d_get_line_start(node), b = wgf_shape2d_get_line_end(node);
+            const wgf_vec2_t a = wgf_shape2d_get_line_start(actor), b = wgf_shape2d_get_line_end(actor);
             put(out, " line=%.9g,%.9g,%.9g,%.9g", a.x, a.y, b.x, b.y);
             break;
         }
         case WGF_SHAPE2D_KIND_POLYGON: {
             float points[2048];
-            const int n = wgf_shape2d_get_points(node, points, 2048);
+            const int n = wgf_shape2d_get_points(actor, points, 2048);
             int i;
             put(out, " polygon=");
             for (i = 0; i < n; i++) put(out, i > 0 ? ",%.9g" : "%.9g", points[i]);
@@ -122,68 +125,68 @@ static void dump_shape(out_t *out, wgf_node_t node)
         }
         default: break;
     }
-    put(out, " outline=%.9g", wgf_shape2d_get_outline(node));
-    put_color(out, "color", wgf_shape2d_get_color(node));
+    put(out, " outline=%.9g", wgf_shape2d_get_outline(actor));
+    put_color(out, "color", wgf_shape2d_get_color(actor));
     put(out, " pivot=%.9g,%.9g\n", pivot.x, pivot.y);
 }
 
-static void dump_sprite(out_t *out, wgf_node_t node)
+static void dump_sprite(out_t *out, wgf_actor_t actor)
 {
-    const wgf_vec4_t source = wgf_sprite_get_source(node);
-    const wgf_vec2_t pivot = wgf_sprite_get_pivot(node);
+    const wgf_vec4_t source = wgf_sprite_get_source(actor);
+    const wgf_vec2_t pivot = wgf_sprite_get_pivot(actor);
     put(out, "    sprite");
-    if (wgf_sprite_get_texture(node) != 0) put_text(out, "texture", path_of(wgf_sprite_get_texture(node)));
+    if (wgf_sprite_get_texture(actor) != 0) put_text(out, "texture", path_of(wgf_sprite_get_texture(actor)));
     put(out, " source=%.9g,%.9g,%.9g,%.9g", source.x, source.y, source.z, source.w);
     {
-        const wgf_vec2_t size = wgf_sprite_get_size(node);
+        const wgf_vec2_t size = wgf_sprite_get_size(actor);
         put(out, " size=%.9g,%.9g", size.x, size.y);
     }
     put(out, " pivot=%.9g,%.9g", pivot.x, pivot.y);
-    put_color(out, "tint", wgf_sprite_get_tint(node));
+    put_color(out, "tint", wgf_sprite_get_tint(actor));
     put(out, "\n");
 }
 
-static void dump_text(out_t *out, wgf_node_t node)
+static void dump_text(out_t *out, wgf_actor_t actor)
 {
     static const char *const across[] = {"left", "center", "right"}, *const down[] = {"top", "middle", "bottom"};
     put(out, "    text");
-    put_text(out, "string", wgf_text_get_string(node));
-    if (wgf_text_get_font(node) != 0) put_text(out, "font", path_of(wgf_text_get_font(node)));
-    put(out, " size=%.9g", wgf_text_get_font_size(node));
-    put_color(out, "color", wgf_text_get_color(node));
-    put(out, " wrap=%.9g align=%s,%s\n", wgf_text_get_wrap_width(node), across[wgf_text_get_halign(node)],
-        down[wgf_text_get_valign(node)]);
+    put_text(out, "string", wgf_text_get_string(actor));
+    if (wgf_text_get_font(actor) != 0) put_text(out, "font", path_of(wgf_text_get_font(actor)));
+    put(out, " size=%.9g", wgf_text_get_font_size(actor));
+    put_color(out, "color", wgf_text_get_color(actor));
+    put(out, " wrap=%.9g align=%s,%s\n", wgf_text_get_wrap_width(actor), across[wgf_text_get_halign(actor)],
+        down[wgf_text_get_valign(actor)]);
 }
 
-static void dump_emitter(out_t *out, wgf_node_t node)
+static void dump_emitter(out_t *out, wgf_actor_t actor)
 {
-    const wgf_vec2_t gravity = wgf_emitter2d_get_gravity(node);
+    const wgf_vec2_t gravity = wgf_emitter2d_get_gravity(actor);
     put(out, "    emitter2d rate=%.9g emitting=%s capacity=%d life=%.9g,%.9g direction=%.9g spread=%.9g",
-        wgf_emitter2d_get_rate(node), wgf_emitter2d_is_emitting(node) ? "true" : "false",
-        wgf_emitter2d_get_capacity(node), wgf_emitter2d_get_life_min(node), wgf_emitter2d_get_life_max(node),
-        wgf_emitter2d_get_direction(node), wgf_emitter2d_get_spread(node));
+        wgf_emitter2d_get_rate(actor), wgf_emitter2d_is_emitting(actor) ? "true" : "false",
+        wgf_emitter2d_get_capacity(actor), wgf_emitter2d_get_life_min(actor), wgf_emitter2d_get_life_max(actor),
+        wgf_emitter2d_get_direction(actor), wgf_emitter2d_get_spread(actor));
     put(out, " speed=%.9g,%.9g radius=%.9g gravity=%.9g,%.9g drag=%.9g size=%.9g,%.9g",
-        wgf_emitter2d_get_speed_min(node), wgf_emitter2d_get_speed_max(node), wgf_emitter2d_get_radius(node),
-        gravity.x, gravity.y, wgf_emitter2d_get_drag(node), wgf_emitter2d_get_size_start(node),
-        wgf_emitter2d_get_size_end(node));
-    put(out, " color=#%08X,#%08X stretch=%.9g\n", (unsigned)wgf_emitter2d_get_color_start(node),
-        (unsigned)wgf_emitter2d_get_color_end(node), wgf_emitter2d_get_stretch(node));
+        wgf_emitter2d_get_speed_min(actor), wgf_emitter2d_get_speed_max(actor), wgf_emitter2d_get_radius(actor),
+        gravity.x, gravity.y, wgf_emitter2d_get_drag(actor), wgf_emitter2d_get_size_start(actor),
+        wgf_emitter2d_get_size_end(actor));
+    put(out, " color=#%08X,#%08X stretch=%.9g\n", (unsigned)wgf_emitter2d_get_color_start(actor),
+        (unsigned)wgf_emitter2d_get_color_end(actor), wgf_emitter2d_get_stretch(actor));
 }
 
 /* A model: its mesh as the generated shape it is, with its create call's parameters
  * (a mesh of no generated shape is left out), and its tint. */
-static void dump_model(out_t *out, wgf_node_t node)
+static void dump_model(out_t *out, wgf_actor_t actor)
 {
     const wgf_gfx_priv_model_hooks_t *hooks = wgf_gfx_priv_get_model_hooks(); /* set: there is a model */
     float params[4];
     int count, i;
-    const char *shape = hooks->describe(node, params, &count);
+    const char *shape = hooks->describe(actor, params, &count);
     put(out, "    model");
     if (shape != NULL) {
         put(out, " %s=", shape);
         for (i = 0; i < count; i++) put(out, i == 0 ? "%.9g" : ",%.9g", params[i]);
     }
-    put_color(out, "tint", hooks->get_tint(node));
+    put_color(out, "tint", hooks->get_tint(actor));
     put(out, "\n");
 }
 
@@ -201,84 +204,128 @@ static void dump_voice(out_t *out, wgf_voice_t voice)
         wgf_voice_get_state(voice) == WGF_PLAY_STATE_PLAYING ? "true" : "false");
 }
 
-static void dump_entity(out_t *out, wgf_entity_t e)
+static void dump_actor(out_t *out, wgf_actor_t e, const char *path);
+
+/* `e`'s lines, a level in from its block's: its kind's, then its transform, components,
+ * and behaviors; then the actors under it, each a block a level further in. */
+static void dump_lines(out_t *out, wgf_actor_t e, const char *pad)
 {
-    const wgf_vec3_t p = wgf_entity_get_position(e), r = wgf_entity_get_rotation(e), s = wgf_entity_get_scale(e);
-    const char *name = wgf_entity_get_name(e);
-    if (name[0] != '\0') {
-        char quoted[2 * WGF_ECS_PRIV_NAME_MAX + 4];
-        wgf_ecs_priv_quote(name, quoted, sizeof(quoted));
-        put(out, "entity %s\n", quoted);
-    } else {
-        put(out, "entity\n");
+    const wgf_vec3_t p = wgf_actor_get_position(e), r = wgf_actor_get_rotation(e), s = wgf_actor_get_scale(e);
+    int i, b;
+    switch (wgf_actor_get_kind(e)) { /* each writes its own line, from its own 4 spaces */
+        case WGF_ACTOR_KIND_SHAPE2D: put(out, "%s", pad); dump_shape(out, e); break;
+        case WGF_ACTOR_KIND_SPRITE: put(out, "%s", pad); dump_sprite(out, e); break;
+        case WGF_ACTOR_KIND_TEXT: put(out, "%s", pad); dump_text(out, e); break;
+        case WGF_ACTOR_KIND_EMITTER2D: put(out, "%s", pad); dump_emitter(out, e); break;
+        case WGF_ACTOR_KIND_MODEL:
+            if (wgf_gfx_priv_get_model_hooks() != NULL) {
+                put(out, "%s", pad);
+                dump_model(out, e);
+            }
+            break;
+        default: break; /* a plain actor, or a kind scenes don't make: its transform and the rest alone */
     }
-    put(out, "    transform position=%.9g,%.9g,%.9g rotation=%.9g,%.9g,%.9g scale=%.9g,%.9g,%.9g\n", p.x, p.y, p.z, r.x,
-        r.y, r.z, s.x, s.y, s.z);
-    if (wgf_entity_has_component(e, WGF_COMPONENT_MOTION)) {
+    put(out, "%s    transform position=%.9g,%.9g,%.9g rotation=%.9g,%.9g,%.9g scale=%.9g,%.9g,%.9g\n", pad, p.x, p.y,
+        p.z, r.x, r.y, r.z, s.x, s.y, s.z);
+    if (wgf_actor_has_component(e, WGF_COMPONENT_MOTION)) {
         const wgf_vec3_t v = wgf_motion_get_velocity(e), w = wgf_motion_get_spin(e);
-        put(out, "    motion velocity=%.9g,%.9g,%.9g spin=%.9g,%.9g,%.9g damping=%.9g max_speed=%.9g\n", v.x, v.y, v.z,
-            w.x, w.y, w.z, wgf_motion_get_damping(e), wgf_motion_get_max_speed(e));
+        put(out, "%s    motion velocity=%.9g,%.9g,%.9g spin=%.9g,%.9g,%.9g damping=%.9g max_speed=%.9g\n", pad, v.x,
+            v.y, v.z, w.x, w.y, w.z, wgf_motion_get_damping(e), wgf_motion_get_max_speed(e));
     }
-    if (wgf_entity_has_component(e, WGF_COMPONENT_BOUNDS)) {
+    if (wgf_actor_has_component(e, WGF_COMPONENT_BOUNDS)) {
         static const char *const modes[] = {"wrap", "clamp", "destroy"};
         const wgf_vec4_t rect = wgf_bounds_get_rect(e);
         if (wgf_bounds_is_visible(e)) {
-            put(out, "    bounds visible=true mode=%s margin=%.9g\n", modes[wgf_bounds_get_mode(e)],
+            put(out, "%s    bounds visible=true mode=%s margin=%.9g\n", pad, modes[wgf_bounds_get_mode(e)],
                 wgf_bounds_get_margin(e));
         } else {
-            put(out, "    bounds rect=%.9g,%.9g,%.9g,%.9g mode=%s margin=%.9g\n", rect.x, rect.y, rect.z, rect.w,
-                modes[wgf_bounds_get_mode(e)], wgf_bounds_get_margin(e));
+            put(out, "%s    bounds rect=%.9g,%.9g,%.9g,%.9g mode=%s margin=%.9g\n", pad, rect.x, rect.y, rect.z,
+                rect.w, modes[wgf_bounds_get_mode(e)], wgf_bounds_get_margin(e));
         }
     }
-    if (wgf_entity_has_component(e, WGF_COMPONENT_LIFETIME)) {
-        put(out, "    lifetime seconds=%.9g\n", wgf_lifetime_get_seconds(e));
+    if (wgf_actor_has_component(e, WGF_COMPONENT_LIFETIME)) {
+        put(out, "%s    lifetime seconds=%.9g\n", pad, wgf_lifetime_get_seconds(e));
     }
-    if (wgf_entity_has_component(e, WGF_COMPONENT_COLLIDER)) {
-        put(out, "    collider radius=%.9g layer=%d mask=%d%s\n", wgf_collider_get_radius(e), wgf_collider_get_layer(e),
-            wgf_collider_get_mask(e), wgf_collider_is_enabled(e) ? "" : " enabled=false");
+    if (wgf_actor_has_component(e, WGF_COMPONENT_COLLIDER)) {
+        put(out, "%s    collider radius=%.9g layer=%d mask=%d%s\n", pad, wgf_collider_get_radius(e),
+            wgf_collider_get_layer(e), wgf_collider_get_mask(e), wgf_collider_is_enabled(e) ? "" : " enabled=false");
     }
-    if (wgf_entity_has_component(e, WGF_COMPONENT_BEHAVIOR)) {
-        int i;
-        put(out, "    behavior");
-        put_text(out, "name", wgf_behavior_get_name(e));
-        for (i = 0; i < wgf_behavior_get_param_count(e); i++) {
-            const char *key = wgf_behavior_get_param_key(e, i);
-            put_text(out, key, wgf_behavior_get_param(e, key));
+    if (wgf_actor_has_component(e, WGF_COMPONENT_VOICE)) {
+        put(out, "%s", pad);
+        dump_voice(out, wgf_actor_get_voice(e));
+    }
+    for (b = 0; b < wgf_actor_get_behavior_count(e); b++) {
+        const int id = wgf_actor_get_behavior(e, b);
+        put(out, "%s    behavior", pad);
+        put_text(out, "name", wgf_behavior_get_name(e, id));
+        for (i = 0; i < wgf_behavior_get_param_count(e, id); i++) {
+            const char *key = wgf_behavior_get_param_key(e, id, i);
+            put_text(out, key, wgf_behavior_get_param(e, id, key));
         }
         put(out, "\n");
     }
-    if (wgf_entity_has_component(e, WGF_COMPONENT_SHAPE2D)) {
-        dump_shape(out, wgf_entity_get_component_node(e, WGF_COMPONENT_SHAPE2D));
+}
+
+/* `e`'s block at `path` ("" for an unnamed top actor with nothing under it), then each
+ * actor under it, a block of its own naming `e` as its parent by path: an unnamed one is
+ * given the name `_<index>` among its siblings, so its block has a path. */
+static void dump_actor(out_t *out, wgf_actor_t e, const char *path)
+{
+    int i;
+    if (path[0] != '\0') {
+        char quoted[2 * PATH_BYTES + 4];
+        wgf_ecs_priv_quote(path, quoted, sizeof(quoted));
+        put(out, "actor %s\n", quoted);
+    } else {
+        put(out, "actor\n");
     }
-    if (wgf_entity_has_component(e, WGF_COMPONENT_SPRITE)) {
-        dump_sprite(out, wgf_entity_get_component_node(e, WGF_COMPONENT_SPRITE));
-    }
-    if (wgf_entity_has_component(e, WGF_COMPONENT_TEXT)) {
-        dump_text(out, wgf_entity_get_component_node(e, WGF_COMPONENT_TEXT));
-    }
-    if (wgf_entity_has_component(e, WGF_COMPONENT_EMITTER2D)) {
-        dump_emitter(out, wgf_entity_get_component_node(e, WGF_COMPONENT_EMITTER2D));
-    }
-    if (wgf_entity_has_component(e, WGF_COMPONENT_MODEL)) {
-        dump_model(out, wgf_entity_get_component_node(e, WGF_COMPONENT_MODEL));
-    }
-    if (wgf_entity_has_component(e, WGF_COMPONENT_VOICE)) dump_voice(out, wgf_entity_get_voice(e));
+    dump_lines(out, e, "");
     put(out, "end\n");
+    for (i = 0; i < wgf_actor_get_child_count(e); i++) {
+        const wgf_actor_t child = wgf_actor_get_child(e, i);
+        char below[PATH_BYTES];
+        if (wgf_actor_get_name(child)[0] == '\0') {
+            snprintf(below, sizeof(below), "_%d", i);
+            wgf_actor_set_name(child, below);
+        }
+        snprintf(below, sizeof(below), "%s/%s", path, wgf_actor_get_name(child));
+        dump_actor(out, child, below);
+    }
+}
+
+/* Whether an actor above `actor` has components or behaviors: it is written with that one. */
+static bool under_another(wgf_actor_t actor)
+{
+    wgf_actor_t up = wgf_actor_get_parent(actor);
+    while (up != 0) {
+        if (wgf_ecs_priv_record_of(up) != NULL) return true;
+        up = wgf_actor_get_parent(up);
+    }
+    return false;
 }
 
 const char *wgf_ecs_dump(void)
 {
     out_t out = {NULL, 0, 0, false};
-    wgf_entity_t *all;
+    wgf_actor_t *all;
     int count = 0, i;
     if (wgf_ecs_priv_world() == NULL) return "";
     out.capacity = 4096;
     out.text = (char *)malloc(out.capacity);
     if (out.text == NULL) return "";
     out.text[0] = '\0';
-    put(&out, "wgf-scene 1\n");
-    all = wgf_ecs_priv_entities(&count);
-    for (i = 0; i < count; i++) dump_entity(&out, all[i]);
+    put(&out, "wgf-scene 2\n");
+    all = wgf_ecs_priv_actors(&count);
+    for (i = 0; i < count; i++) {
+        char path[PATH_BYTES];
+        if (under_another(all[i])) continue;
+        if (wgf_actor_get_name(all[i])[0] == '\0' && wgf_actor_get_child_count(all[i]) > 0) {
+            snprintf(path, sizeof(path), "_%d", i); /* its parts need a path to name it by */
+            wgf_actor_set_name(all[i], path);
+        }
+        snprintf(path, sizeof(path), "%s", wgf_actor_get_name(all[i]));
+        dump_actor(&out, all[i], path);
+    }
     free(all);
     if (out.failed) {
         free(out.text);

@@ -22,7 +22,7 @@ class Rock extends Behavior {
 	override function onTick(dt:Float)
 		ticks++;
 
-	override function onTriggerEnter(other:Entity)
+	override function onTriggerEnter(other:Actor)
 		entered++;
 
 	override function onDestroy()
@@ -32,9 +32,9 @@ class Rock extends Behavior {
 class Main {
 	static var failures = 0;
 	static var frames = 0;
-	static var canvas:Canvas;
-	static var a:Entity;
-	static var b:Entity;
+	static var world:Stage2d;
+	static var a:Actor;
+	static var b:Actor;
 	static var write:FsTask;
 
 	static function expect(ok:Bool, what:String, ?pos:haxe.PosInfos):Void {
@@ -50,14 +50,15 @@ class Main {
 	static function init():Void {
 		expect(Version.get() == '${BuiltVersion.MAJOR}.${BuiltVersion.MINOR}.${BuiltVersion.PATCH}',
 			"the version");
-		canvas = Canvas.create();
-		expect(!canvas.isNone() && canvas.getType() == NodeType.CANVAS, "a handle, and an enum back");
+		world = Stage2d.create();
+		expect(!world.isNone() && world.getKind() == ActorKind.STAGE2D, "a handle, and an enum back");
 
 		// text both ways, UTF-8 included; null where C takes NULL
-		a = Entity.create(canvas);
+		a = Actor.create();
+		a.setParent(world);
 		expect(a.setName("rock ünïcødé ✓") && a.getName() == "rock ünïcødé ✓", "text in and out, UTF-8");
-		expect(Entity.find("rock ünïcødé ✓") == a && Entity.find(null).isNone(), "text in, and null");
-		expect((a : Handle).getKindName() == "ecs.entity", "any handle");
+		expect(world.find("rock ünïcødé ✓") == a && world.find(null).isNone(), "text in, and null");
+		expect((a : Handle).getKindName() == "gfx.actor", "any handle");
 
 		// vectors: new, and filled
 		expect(a.setPosition(1.5, -2, 3), "numbers in");
@@ -67,15 +68,16 @@ class Main {
 		expect(a.getPosition(into) == into && near(into.y, -2), "a vector filled");
 
 		// arrays: in, and filled
-		b = Entity.create(canvas);
-		expect(Entity.setPositions([a, b], [10.0, 11, 12, 20, 21, 22]), "an array of handles and one of floats in");
+		b = Actor.create();
+		b.setParent(world);
+		expect(Actor.setPositions([a, b], [10.0, 11, 12, 20, 21, 22]), "an array of handles and one of floats in");
 		final out = [for (_ in 0...6) 0.0];
-		expect(Entity.getPositions([a, b], out) == 6 && near(out[3], 20) && near(out[5], 22), "an array filled");
+		expect(Actor.getPositions([a, b], out) == 6 && near(out[3], 20) && near(out[5], 22), "an array filled");
 		final shape = Shape2d.create();
 		expect(shape.setPolygon([0.0, 0, 10, 0, 10, 10]) && shape.getPointCount() == 3, "a section over a kind");
 		final points = [for (_ in 0...6) 0.0];
 		expect(shape.getPoints(points) == 6 && near(points[4], 10), "floats filled");
-		expect(shape.setParent(canvas) && shape.getParent() == canvas, "a Shape2d is a Node");
+		expect(shape.setParent(world) && shape.getParent() == world, "a Shape2d is an Actor");
 
 		// numbers: a double, a bool, a color
 		expect(Probe.setValue("binding.test", 0.125) && Probe.getValue("binding.test") == 0.125, "a double both ways");
@@ -90,10 +92,10 @@ class Main {
 		// behaviors, from the ecs's events
 		Behavior.register("Rock", Rock.new);
 		for (e in [a, b]) {
-			expect(e.addComponent(Component.BEHAVIOR) && (e : BehaviorComponent).setName("Rock"), "a behavior");
+			expect(e.addBehavior("Rock") == 1, "a behavior");
 			expect(e.addComponent(Component.COLLIDER) && (e : Collider).setRadius(5), "a collider");
 		}
-		(b : Entity).setPosition(13, 11, 12); // within a's reach
+		b.setPosition(13, 11, 12); // within a's reach
 		(a : Motion).getVelocity(); // a component it hasn't: still answers
 	}
 
@@ -113,12 +115,13 @@ class Main {
 				expect(near(sum, 1000000), "100,000 vector getters in a frame");
 				var names = 0;
 				for (_ in 0...20000)
-					names += Entity.find("rock ünïcødé ✓") == a ? 1 : 0;
+					names += world.find("rock ünïcødé ✓") == a ? 1 : 0;
 				expect(names == 20000, "20,000 calls passing text in a frame");
 			case 3:
 				expect(Rock.entered == 2, "both told of their trigger");
 				expect(Rock.ticks > 0, "the behaviors ticked");
-				expect(a.destroy(), "destroyed");
+				a.destroy(ActorDestroy.DESTROY_CHILDREN);
+				expect(a.getKind() == ActorKind.NONE, "destroyed");
 			case 5:
 				expect(Rock.ended == 1 && Behavior.count() == 1 && Behavior.of(a) == null, "its behavior ended from DESTROYED");
 				if (Ui.begin()) {

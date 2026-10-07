@@ -30,7 +30,7 @@ wgf_platform_priv_input_context_t wgf_platform_priv_input_get_context(void);
 void wgf_platform_priv_input_end_tick(void);
 void wgf_platform_priv_input_end_frame(void);
 
-/* The pointer's: a press that started on an interactive node is held (or was let go
+/* The pointer's: a press that started on an interactive actor is held (or was let go
  * this frame), which captures the pointer along with the UI's own say. */
 void wgf_platform_priv_input_set_pointer_held(bool held);
 

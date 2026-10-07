@@ -7,8 +7,8 @@ import wgf.*;
 class Main {
 	static var frames = 0;
 	static var flips = 0;
-	static var world:Canvas;
-	static var ship:Entity;
+	static var world:Stage2d;
+	static var ship:Actor;
 
 	static function main() {
 		Window.setTitle("@NAME@");
@@ -19,16 +19,16 @@ class Main {
 	static function init() {
 		Asset.setHost("assets"); // the game's files, beside its program everywhere
 		Render.setClearColor(Color.make(12, 14, 22, 255));
-		world = Canvas.create();
-		// an entity: the ecs moves it (its motion's spin), the program only sets its intent
-		ship = Entity.create(world);
-		ship.setName("ship");
-		ship.setPosition(400, 300, 0);
-		ship.addComponent(Component.SHAPE2D);
-		final shape:Shape2d = ship.getComponentNode(Component.SHAPE2D);
+		world = Stage2d.create();
+		// an actor: a shape, which the ecs moves (its motion's spin); the program only sets its intent
+		final shape = Shape2d.create();
 		shape.setPolygon([18.0, 0, -12, -10, -6, 0, -12, 10]);
 		shape.setOutline(2);
 		shape.setColor(Color.get(ColorStock.SKYBLUE));
+		ship = shape;
+		ship.setParent(world);
+		ship.setName("ship");
+		ship.setPosition(400, 300, 0);
 		ship.addComponent(Component.MOTION);
 		(ship : Motion).setSpin(0, 0, 1.2);
 	}

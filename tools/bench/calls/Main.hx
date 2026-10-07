@@ -1,14 +1,13 @@
-import wgf.Entity;
 import wgf.Log;
 import wgf.LogLevel;
-import wgf.Node;
+import wgf.Actor;
 import wgf.Runtime;
 import wgf.Vec3;
 
 /**
 	What a call from Haxe into libwgf costs on the JS target (tools/bench/measure_calls.py
 	runs it under node and in a browser): each shape, the median of REPS runs of N calls,
-	in ns per call; the bulk one also per entity. One line each, `calls: <shape> <ns>`,
+	in ns per call; the bulk one also per actor. One line each, `calls: <shape> <ns>`,
 	then `calls done: PASS`. The same calls as main.js makes through the JS binding.
 **/
 class Main {
@@ -22,9 +21,13 @@ class Main {
 		Runtime.run(init, null, null, null);
 
 	static function init() {
-		final root = Node.create();
-		final entities = [for (i in 0...BULK) Entity.create(root)];
-		final first = entities[0];
+		final root = Actor.create();
+		final actors = [for (i in 0...BULK) {
+			final actor = Actor.create();
+			actor.setParent(root);
+			actor;
+		}];
+		final first = actors[0];
 		final kept = new Vec3();
 		final out = [for (_ in 0...BULK * 3) 0.0];
 		report("set", N, () -> for (k in 0...N) if (first.setPosition(k, 2, 3)) sink += 1);
@@ -32,8 +35,8 @@ class Main {
 		report("transform", N, () -> for (k in 0...N) if (first.setTransform(k, 2, 3, 0, 0, 1, 1, 1, 1)) sink += 1);
 		report("string", N, () -> for (_ in 0...N) if (first.setName("first")) sink += 1);
 		final calls = Std.int(N / BULK) * 10;
-		report("bulk", calls, () -> for (_ in 0...calls) sink += Entity.getPositions(entities, out));
-		Log.message(LogLevel.INFO, 'calls: bulk-entity ${Math.round(best / BULK * 1000) / 1000}');
+		report("bulk", calls, () -> for (_ in 0...calls) sink += Actor.getPositions(actors, out));
+		Log.message(LogLevel.INFO, 'calls: bulk-actor ${Math.round(best / BULK * 1000) / 1000}');
 		Log.message(LogLevel.INFO, sink != 0 ? "calls done: PASS" : "calls done: FAIL (nothing was called)");
 		wgf.App.quit();
 	}

@@ -56,7 +56,7 @@ class Checkpoint extends Behavior {
 		Laps.count++;
 	}
 
-	override function onTriggerEnter(other:Entity) {
+	override function onTriggerEnter(other:Actor) {
 		if (other == Main.car)
 			Laps.passed(index);
 	}

@@ -9,16 +9,16 @@
 #include "wgf_window.h"
 #include "wgf.h"
 #include "wgf_handle.h"
-#include "wgf_canvas.h"
+#include "wgf_stage2d.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
-#include "wgf_node.h"
+#include "wgf_actor.h"
 #include "wgf_render.h"
 #include "wgf_text.h"
 
 /* Text, in a browser (tools/run_in_browser.py), in the built-in font on a 64 by 64
- * WebGL2 canvas: where glyphs light pixels and where they don't, a centered and a
- * right-aligned block landing on the right sides (a node's, and immediate text aligned
+ * WebGL2 stage: where glyphs light pixels and where they don't, a centered and a
+ * right-aligned block landing on the right sides (an actor's, and immediate text aligned
  * the same way), wrapping making more lines, and a
  * shape drawn after text keeping its exact color. Glyph shapes aren't compared:
  * only where ink is. */
@@ -66,7 +66,7 @@ static void begin(void)
 
 static void run_test(void)
 {
-    wgf_handle_t canvas, centered, right, wrapped;
+    wgf_handle_t stage, centered, right, wrapped;
     int one_line, three_lines;
 
 
@@ -83,15 +83,15 @@ static void run_test(void)
         expect(rgba[0] == 10 && rgba[1] == 200 && rgba[2] == 30, "a shape drawn after text keeps its exact color");
     }
 
-    /* text nodes: centered on x 32, then right-aligned to x 60 */
-    canvas = wgf_canvas_create();
+    /* text actors: centered on x 32, then right-aligned to x 60 */
+    stage = wgf_stage2d_create();
     centered = wgf_text_create(0);
     wgf_text_set_string(centered, "MMMM");
     wgf_text_set_align(centered, WGF_TEXT_HALIGN_CENTER, WGF_TEXT_VALIGN_MIDDLE);
-    wgf_node_set_position(centered, 32, 32, 0);
-    wgf_node_set_parent(centered, canvas);
+    wgf_actor_set_position(centered, 32, 32, 0);
+    wgf_actor_set_parent(centered, stage);
     begin();
-    wgf_canvas_draw(canvas);
+    wgf_stage2d_draw(stage);
     wgf_gfx_priv_end_frame();
     {
         const int left = lit(0, 20, 32, 44), right_half = lit(32, 20, 64, 44);
@@ -99,19 +99,19 @@ static void run_test(void)
         expect(left * 2 > right_half && right_half * 2 > left, "and about evenly");
         expect(lit(0, 0, 64, 18) == 0 && lit(0, 46, 64, 64) == 0, "middle: about its position, nothing far above or below");
     }
-    wgf_node_set_visible(centered, false);
+    wgf_actor_set_visible(centered, false);
     right = wgf_text_create(0);
     wgf_text_set_string(right, "MM");
     wgf_text_set_align(right, WGF_TEXT_HALIGN_RIGHT, WGF_TEXT_VALIGN_TOP);
-    wgf_node_set_position(right, 60, 2, 0);
-    wgf_node_set_parent(right, canvas);
+    wgf_actor_set_position(right, 60, 2, 0);
+    wgf_actor_set_parent(right, stage);
     begin();
-    wgf_canvas_draw(canvas);
+    wgf_stage2d_draw(stage);
     wgf_gfx_priv_end_frame();
     expect(lit(40, 2, 61, 22) > 20, "right-aligned: ink just left of its position");
     expect(lit(0, 0, 36, 64) == 0 && lit(62, 0, 64, 64) == 0, "and none far left of it, or right of it");
 
-    /* draw_text_aligned: the immediate text, aligned to its point as a text node is */
+    /* draw_text_aligned: the immediate text, aligned to its point as a text actor is */
     begin();
     wgf_draw_text_aligned(0, "MMM", 60, 2, 16, WGF_COLOR_WHITE, WGF_TEXT_HALIGN_RIGHT, WGF_TEXT_VALIGN_TOP);
     wgf_gfx_priv_end_frame();
@@ -119,24 +119,24 @@ static void run_test(void)
            "draw_text_aligned, right: ink just left of its point, none far left or right of it");
 
     /* wrapping: the same string, then wrapped narrow, makes more lines */
-    wgf_node_set_visible(right, false);
+    wgf_actor_set_visible(right, false);
     wrapped = wgf_text_create(0);
     wgf_text_set_string(wrapped, "MM MM MM");
-    wgf_node_set_position(wrapped, 2, 2, 0);
-    wgf_node_set_parent(wrapped, canvas);
+    wgf_actor_set_position(wrapped, 2, 2, 0);
+    wgf_actor_set_parent(wrapped, stage);
     begin();
-    wgf_canvas_draw(canvas);
+    wgf_stage2d_draw(stage);
     wgf_gfx_priv_end_frame();
     one_line = lit(0, 22, 64, 64);
     wgf_text_set_wrap_width(wrapped, 24);
     begin();
-    wgf_canvas_draw(canvas);
+    wgf_stage2d_draw(stage);
     wgf_gfx_priv_end_frame();
     three_lines = lit(0, 22, 64, 64);
     expect(one_line == 0, "unwrapped: one line, nothing below it");
     expect(three_lines > 40, "wrapped: more lines below the first");
 
-    wgf_node_destroy(canvas, WGF_NODE_DESTROY_CHILDREN);
+    wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
     emscripten_force_exit(failures == 0 ? 0 : 1);
 }
 
@@ -147,7 +147,7 @@ static void on_frame(void *user)
     if (++frames == 2) run_test(); /* exits */
 }
 
-/* The page's canvas, 64 by 64, through app's runtime: the test runs in a frame. */
+/* The page's stage, 64 by 64, through app's runtime: the test runs in a frame. */
 int main(void)
 {
     wgf_window_set_size(64, 64);

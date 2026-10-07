@@ -2,10 +2,10 @@
 package wgf;
 
 /**
-    A text node: a string drawn in a font, in a canvas. Its node's position is where its
-    block of lines sits, by its alignment, and the node turns and scales it like any
+    A text actor: a string drawn in a font, on a 2D stage. Its actor's position is where its
+    block of lines sits, by its alignment, and the actor turns and scales it like any
     other. It holds a reference to its font (0: the default font). Text is a
-    node (wgf_node.h): place, parent, and destroy it with the node calls.
+    actor (wgf_actor.h): place, parent, and destroy it with the actor calls.
 **/
 enum abstract TextHalign(Int) from Int to Int {
 	var LEFT = 0;

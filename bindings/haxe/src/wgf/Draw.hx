@@ -115,7 +115,7 @@ class Draw {
 	    nothing; a frame starts in 2D, and one left in 3D ends there. A 2D call between them
 	    lands in the world's x-y plane, as wgrender's did.
 	**/
-	public static inline function begin3d(camera:Node):Bool
+	public static inline function begin3d(camera:Actor):Bool
 		return Raw.wgf_draw_begin_3d(camera);
 
 	/**
@@ -135,7 +135,7 @@ class Draw {
 	    (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
 	    x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
 	    centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
-	    node's rotation turns it. A color with alpha below 255 is blended over what is
+	    actor's rotation turns it. A color with alpha below 255 is blended over what is
 	    behind it, in the order drawn.
 	**/
 	public static inline function line3d(x0:Float, y0:Float, z0:Float, x1:Float, y1:Float, z1:Float, color:Int):Void
@@ -147,7 +147,7 @@ class Draw {
 	    (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
 	    x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
 	    centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
-	    node's rotation turns it. A color with alpha below 255 is blended over what is
+	    actor's rotation turns it. A color with alpha below 255 is blended over what is
 	    behind it, in the order drawn.
 	**/
 	public static inline function cube(cx:Float, cy:Float, cz:Float, width:Float, height:Float, length:Float, color:Int):Void
@@ -159,7 +159,7 @@ class Draw {
 	    (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
 	    x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
 	    centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
-	    node's rotation turns it. A color with alpha below 255 is blended over what is
+	    actor's rotation turns it. A color with alpha below 255 is blended over what is
 	    behind it, in the order drawn.
 	**/
 	public static inline function cubeWires(cx:Float, cy:Float, cz:Float, width:Float, height:Float, length:Float, color:Int):Void
@@ -171,7 +171,7 @@ class Draw {
 	    (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
 	    x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
 	    centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
-	    node's rotation turns it. A color with alpha below 255 is blended over what is
+	    actor's rotation turns it. A color with alpha below 255 is blended over what is
 	    behind it, in the order drawn.
 	**/
 	public static inline function sphere(cx:Float, cy:Float, cz:Float, radius:Float, color:Int):Void
@@ -183,7 +183,7 @@ class Draw {
 	    (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
 	    x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
 	    centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
-	    node's rotation turns it. A color with alpha below 255 is blended over what is
+	    actor's rotation turns it. A color with alpha below 255 is blended over what is
 	    behind it, in the order drawn.
 	**/
 	public static inline function grid(slices:Int, spacing:Float, color:Int):Void
@@ -195,7 +195,7 @@ class Draw {
 	    (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
 	    x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
 	    centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
-	    node's rotation turns it. A color with alpha below 255 is blended over what is
+	    actor's rotation turns it. A color with alpha below 255 is blended over what is
 	    behind it, in the order drawn.
 	**/
 	public static inline function rectangle3d(cx:Float, cy:Float, cz:Float, width:Float, height:Float, rx:Float, ry:Float, rz:Float, color:Int):Void
@@ -207,7 +207,7 @@ class Draw {
 	    (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
 	    x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
 	    centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
-	    node's rotation turns it. A color with alpha below 255 is blended over what is
+	    actor's rotation turns it. A color with alpha below 255 is blended over what is
 	    behind it, in the order drawn.
 	**/
 	public static inline function circle3d(cx:Float, cy:Float, cz:Float, radius:Float, rx:Float, ry:Float, rz:Float, color:Int):Void

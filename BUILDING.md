@@ -175,6 +175,90 @@ at 120 end
 
 Inputs at a frame are delivered before its ticks; expectations are checked after it. While an autopilot runs, time is the autopilot's: every frame lasts a sixtieth of a second, whatever the display does, so ticks, and the random numbers a seed gives, make the same run everywhere, and a headless run doesn't wait for a display. The run's result is logged, "wgf_autopilot: PASS (0 of <n> expectations failed, <frames> frames)", or FAIL with how many failed, with an error for each expectation that failed, naming the probe and its value; an autopilot that can't be read, or a program that quits before its end, is an error too. Errors are what the tools judge a run by (on the web there is no exit code).
 
+### Scene files
+
+A scene is a text file of actors -- their kinds, components, and behaviors -- and prefabs, the trees a game makes at run time (`wgf_scene.h`). `wgf_ecs_dump` and `wgf dump` write the simulated actors in the same format, so a dump loads again as a scene. Like Godot's `.tscn` it is a line per fact, so a scene diffs and merges line by line; and like `.tscn` a tree is written flat, each actor a block naming its parent by path, never blocks inside blocks. A line each, `#` starting a comment, words split by spaces:
+
+```
+wgf-scene 2                     the first line: the format and its version
+prefab <path>                   a prefab's actor, until its end: made by wgf_scene_spawn
+actor [<path>]                  an actor made by wgf_scene_instantiate, until its end
+  from <prefab>                 (first) starting as that prefab's tree, the lines after it
+                                changing its top actor
+  <kind> key=value ...          what the actor is: one kind line at most, none a plain actor
+  <component> key=value ...     a component, with its settings
+  behavior name=<name> key=value ...   a behavior added, the other keys its parameters;
+                                without name=, the last one's parameters changed
+end
+```
+
+A path is the actor's name, or its parent's path, `/`, and its name: `prefab ship` and then `prefab ship/flame` is the ship with an actor named `flame` under it. A parent comes before its children in the file, and the two are both prefabs or both actors; an `actor` with no name has no children. An actor's name is the one `wgf_actor_find` and `wgf_stage2d_find` look for. Settings not given keep their defaults; a kind or component line given twice changes the first.
+
+A value is a number, a list of numbers (`1,2,3`), a color (`#RRGGBB` or `#RRGGBBAA`), a word (`true`, `wrap`), or text in double quotes (`"a \"b\" \\ c"`, with `\"` and `\\` escapes). A behavior's parameter starting with `@` refers to another actor: `@start_gate` is the one actor so named on the stage, `@car/wheel_rl` a path from it, `@./flame` a path from the actor itself, `@../gun` from its parent. It is found once, when the scene's actors are all made (or the prefab is spawned), and kept: the behavior reads it with `wgf_behavior_get_param_actor`; one that finds none is warned. The kinds and their keys:
+
+```
+shape2d    rectangle=w,h | circle=r | line=x0,y0,x1,y1 | polygon=x,y,x,y,...
+           outline=t  color=#..  pivot=x,y
+sprite     texture="path"  source=x,y,w,h  size=w,h  pivot=x,y  tint=#..
+text       string="..."  font="path"  size=s  color=#..  wrap=w
+           align=left|center|right,top|middle|bottom
+emitter2d  rate=r  emitting=true|false  capacity=n  life=min,max  direction=a  spread=s
+           speed=min,max  radius=r  gravity=x,y  drag=d  size=start,end  color=#..,#..
+           stretch=s  burst=n (that many at once, as it is made)
+model      a generated mesh (wgf_mesh.h), its create call's parameters in order:
+           plane=w,l,subdivisions | cube=w,h,l | sphere=r,rings,segments |
+           cylinder=r,h,segments | cone=r,h,segments | capsule=r,h,rings,segments |
+           torus=r,thickness,rings,segments; and tint=#.. (made once a stage3d has been,
+           as it is drawn on one: before, a plain actor, warned)
+```
+
+and the transform and the components:
+
+```
+transform  position=x,y,z  rotation=x,y,z (radians)  scale=x,y,z
+motion     velocity=x,y,z  spin=x,y,z  damping=d  max_speed=s
+bounds     rect=x,y,w,h  mode=wrap|clamp|destroy  margin=m  visible=true|false
+lifetime   seconds=s
+collider   radius=r  layer=bits  mask=bits  enabled=true|false
+voice      sound="path"  streamed=true|false  volume=v  pitch=p  pan=p  loop=true|false
+           play=true|false (played as it is made)
+```
+
+For example, a ship with its flame, a rock prefab and a smaller one from it, and a ship placed:
+
+```
+wgf-scene 2
+prefab ship
+  shape2d polygon=18,0,-12,-11,-6,0,-12,11 outline=2 color=#7FD4FF
+  motion damping=0.35 max_speed=420
+  behavior name=Ship lives=3 target=@start_gate
+end
+prefab ship/flame
+  emitter2d rate=70 emitting=false life=0.12,0.3 direction=3.14159
+end
+
+prefab rock
+  shape2d circle=40 outline=2
+  collider radius=40 layer=2 mask=5
+  behavior name=Rock size=3
+end
+prefab rock_small
+  from rock
+  collider radius=11
+  behavior size=1
+end
+
+actor start_gate
+  transform position=400,300,0
+end
+```
+
+Paths in values name files as `wgf_texture_create` and the others take them, through the asset layer. A file of more than 4 MB, a line of more than 4096 bytes, an unknown line, kind, component, or key, a second kind, a value of the wrong shape, a duplicate or unknown prefab, a path whose parent isn't above it, a block inside another, a tree deeper than 32, or a block left without its `end`, is refused: the scene FAILED, each bad line logged with its number.
+
+Room is kept for structured values (milestone 3's lists and nested data) without giving up a line per fact: a key with `.`, `[`, or `]` in it (`wheels[0].radius=0.34`) is refused now, so it can mean a field of a list or a record later and no file written today reads differently then.
+
+**Version 1** (`wgf-scene 1`, before actors) is refused with a line saying so; `tools/update_scene.py FILE...` updates a file in place. The rule: `entity` becomes `actor`; a block's first kind line is its actor's own, and each further one becomes an actor under it named after its kind (`actor ship/emitter2d`), as a version 1 entity drew each of its kinds from its own place; an unnamed entity with such a part is named `_<n>`; everything else stays the actor's. A block `from` a prefab that adds a kind its prefab hasn't is left for a hand to write, the line named. A JSON form of a scene, made and read outside the runtime, is ROADMAP's.
+
 ## Windows
 
 From Linux, with MinGW-w64:
@@ -241,6 +325,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `check_web.py` | runs every example in a headless browser, each in a context of its own, checking it once its loads are done, with screenshots |
 | `check_asset_cache.py` | visits the asset cache's test page again and again in one browser context, judging each visit by its requests, log, and screen (ctest runs it on the web presets) |
 | `check_stream.py` | serves a streamed sound slowly to its test page and checks each case: played as it arrives, from the cache, after a 304, through a redirect (ctest runs it on the web presets) |
+| `update_scene.py` | updates scene files from `wgf-scene 1` to `wgf-scene 2`, in place, by the rule in "Scene files" (`--check`: fails naming a file still at version 1) |
 | `gen_manifest.py` | writes the asset manifests for a directory tree (`wgf_asset_set_manifest`) |
 | `finish_site.py` | finishes a web build's site: each example's page stamped with its program's version (`name.js?v=<hash>`), `examples.json`, and the launcher |
 | `watch_browser.py` | the browser tools' watchdog: stops what a run started if the run can't |

@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "7c08d7090783bc58" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "29d904fb3c0b878d" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -537,25 +537,25 @@ export const WGF_ASSET_CACHE_MODE_REVALIDATE = 0;
 export const WGF_ASSET_CACHE_MODE_TRUST = 1;
 export const WGF_ASSET_CACHE_MODE_OFF = 2;
 
-export const WGF_NODE_TYPE_NONE = 0;
-export const WGF_NODE_TYPE_NODE = 1;
-export const WGF_NODE_TYPE_CANVAS = 2;
-export const WGF_NODE_TYPE_SPRITE = 3;
-export const WGF_NODE_TYPE_CAMERA2D = 4;
-export const WGF_NODE_TYPE_TEXT = 5;
-export const WGF_NODE_TYPE_SHAPE2D = 6;
-export const WGF_NODE_TYPE_EMITTER2D = 7;
-export const WGF_NODE_TYPE_CAMERA3D = 8;
-export const WGF_NODE_TYPE_STAGE = 9;
-export const WGF_NODE_TYPE_LIGHT = 10;
-export const WGF_NODE_TYPE_MODEL = 11;
-export const WGF_NODE_TYPE_SHAPE3D = 12;
+export const WGF_ACTOR_KIND_NONE = 0;
+export const WGF_ACTOR_KIND_PLAIN = 1;
+export const WGF_ACTOR_KIND_STAGE2D = 2;
+export const WGF_ACTOR_KIND_SPRITE = 3;
+export const WGF_ACTOR_KIND_CAMERA2D = 4;
+export const WGF_ACTOR_KIND_TEXT = 5;
+export const WGF_ACTOR_KIND_SHAPE2D = 6;
+export const WGF_ACTOR_KIND_EMITTER2D = 7;
+export const WGF_ACTOR_KIND_CAMERA3D = 8;
+export const WGF_ACTOR_KIND_STAGE3D = 9;
+export const WGF_ACTOR_KIND_LIGHT = 10;
+export const WGF_ACTOR_KIND_MODEL = 11;
+export const WGF_ACTOR_KIND_SHAPE3D = 12;
 
 /**
- * What wgf_node_destroy does with the node's children.
+ * What wgf_actor_destroy does with the actor's children.
  */
-export const WGF_NODE_DESTROY_CHILDREN = 0;
-export const WGF_NODE_KEEP_CHILDREN = 1;
+export const WGF_ACTOR_DESTROY_CHILDREN = 0;
+export const WGF_ACTOR_KEEP_CHILDREN = 1;
 
 /**
  * The stock colors. These name a color; they aren't one: wgf_color_get turns
@@ -590,10 +590,10 @@ export const WGF_COLOR_STOCK_MAGENTA = 24;
 export const WGF_COLOR_STOCK_RAYWHITE = 25;
 
 /**
- * A text node: a string drawn in a font, in a canvas. Its node's position is where its
- * block of lines sits, by its alignment, and the node turns and scales it like any
+ * A text actor: a string drawn in a font, on a 2D stage. Its actor's position is where its
+ * block of lines sits, by its alignment, and the actor turns and scales it like any
  * other. It holds a reference to its font (0: the default font). Text is a
- * node (wgf_node.h): place, parent, and destroy it with the node calls.
+ * actor (wgf_actor.h): place, parent, and destroy it with the actor calls.
  */
 export const WGF_TEXT_HALIGN_LEFT = 0;
 export const WGF_TEXT_HALIGN_CENTER = 1;
@@ -614,8 +614,8 @@ export const WGF_TEXTURE_FILTER_LINEAR = 0;
 export const WGF_TEXTURE_FILTER_NEAREST = 1;
 
 /**
- * A light: a node that lights the stage it is on (wgf_stage.h), placed and aimed with
- * the node calls (wgf_node_look_at): a light shines down its -z. Lights work as
+ * A light: an actor that lights the stage it is on (wgf_stage3d.h), placed and aimed with
+ * the actor calls (wgf_actor_look_at): a light shines down its -z. Lights work as
  * libwgt's (wgrender's):
  *
  * - Nothing is lit implicitly: a stage with no lights and no ambient is black.
@@ -623,7 +623,7 @@ export const WGF_TEXTURE_FILTER_NEAREST = 1;
  *   their falloff at its box); point and spot lights whose range doesn't reach a model
  *   are skipped for it.
  * - A light shines while it is enabled (with everything above it) and visible
- *   (wgf_node.h): hiding it turns it off and leaves its children as they are, a lamp's
+ *   (wgf_actor.h): hiding it turns it off and leaves its children as they are, a lamp's
  *   bulb model under it, say.
  * - Parameters follow glTF's KHR_lights_punctual, and shading glTF's materials
  *   (wgf_material.h), so lights from glTF tools look the same here. Light colors are
@@ -653,7 +653,7 @@ export const WGF_ALPHA_MODE_BLEND = 2;
  * How a game's design is fitted to the window or the screen (Godot's stretch modes
  * and aspects are the prior art). A game is written for a design resolution, and its
  * logical coordinates stay the design's at any window size and in fullscreen: drawing,
- * canvases, the UI, the pointer and touches (mapped back into them), and an autopilot's
+ * 2D stages, the UI, the pointer and touches (mapped back into them), and an autopilot's
  * mouse. The same on the desktop, in a resized browser window, and in fullscreen.
  *
  *   NONE     the default: logical pixels are the window's (a framebuffer pixel over the
@@ -682,10 +682,10 @@ export const WGF_PRESENTATION_MODE_EXPAND = 4;
 export const WGF_PRESENTATION_MODE_INTEGER = 5;
 
 /**
- * A 2D shape: a node drawing a rectangle, a circle, a line, or a polygon, filled or
- * outlined, in one color, in a canvas. Shapes are nodes (wgf_node.h): place, turn,
- * scale, parent, and destroy them with the node calls; the shape turns and scales with
- * its node, and an outline's thickness stays in the frame's logical pixels.
+ * A 2D shape: an actor drawing a rectangle, a circle, a line, or a polygon, filled or
+ * outlined, in one color, on a 2D stage. Shapes are actors (wgf_actor.h): place, turn,
+ * scale, parent, and destroy them with the actor calls; the shape turns and scales with
+ * its actor, and an outline's thickness stays in the frame's logical pixels.
  */
 export const WGF_SHAPE2D_KIND_NONE = 0;
 export const WGF_SHAPE2D_KIND_RECTANGLE = 1;
@@ -694,11 +694,11 @@ export const WGF_SHAPE2D_KIND_LINE = 3;
 export const WGF_SHAPE2D_KIND_POLYGON = 4;
 
 /**
- * A 3D shape: a node drawing a cube, a sphere, a filled rectangle or a circle's outline
+ * A 3D shape: an actor drawing a cube, a sphere, a filled rectangle or a circle's outline
  * in its local x-y plane, a line, or a line strip, in one color, unlit, on a stage
- * (wgf_stage.h), as libwgt's (wgrender's shape3d): what debug views and markers are
- * drawn with. In a canvas it draws nothing: 2D shapes are wgf_shape2d.h. Place, turn,
- * scale, and parent it with the node calls. On a stage, shapes are drawn after its
+ * (wgf_stage3d.h), as libwgt's (wgrender's shape3d): what debug views and markers are
+ * drawn with. On a 2D stage it draws nothing: 2D shapes are wgf_shape2d.h. Place, turn,
+ * scale, and parent it with the actor calls. On a stage, shapes are drawn after its
  * opaque models and before its see-through ones, depth tested; a see-through color
  * blends over what is behind it in the order the shapes are found; lines are a pixel
  * wide.
@@ -715,56 +715,65 @@ export const WGF_SHAPE3D_KIND_LINE_STRIP = 6;
  * How a stage's lit colors map to the screen. Lighting can exceed what a screen shows;
  * tone mapping rolls off highlights instead of clipping them.
  */
-export const WGF_STAGE_TONEMAP_NONE = 0;
-export const WGF_STAGE_TONEMAP_NEUTRAL = 1;
-export const WGF_STAGE_TONEMAP_ACES = 2;
+export const WGF_STAGE3D_TONEMAP_NONE = 0;
+export const WGF_STAGE3D_TONEMAP_NEUTRAL = 1;
+export const WGF_STAGE3D_TONEMAP_ACES = 2;
 
 /**
- * What an entity can have, at most one of each. The first five are data the systems
- * read; the node kinds are a node under the entity's own (wgf_entity_get_component_node),
- * set up with its own calls; a voice plays a sound (wgf_entity_get_voice).
+ * Components: the simulation's data on an actor -- any actor, of any kind, a 2D stage's UI
+ * actors and cameras included -- run each tick by libwgf's systems (wgf_ecs.h). One kind
+ * of object, the actor (SPEC.md), Godot's tree with Unity's components: what an actor draws
+ * is its kind (a shape, a sprite, a model); what moves it, bounds it, ages it, and finds
+ * what it overlaps are components on it; what the program does with it are its behaviors
+ * (wgf_behavior.h), several to an actor.
+ *
+ * An actor with a component or a behavior is simulated (wgf_actor_snap): its transform is
+ * set and read at the tick rate, and it is drawn between its last two ticks, so it moves
+ * smoothly at any frame rate. Its components go when it does (wgf_actor_destroy), and a
+ * system that ends it (a lifetime run out, bounds of DESTROY) destroys the actor, with
+ * everything under it, after the tick's systems have run.
  */
 export const WGF_COMPONENT_NONE = 0;
 export const WGF_COMPONENT_MOTION = 1;
 export const WGF_COMPONENT_BOUNDS = 2;
 export const WGF_COMPONENT_LIFETIME = 3;
 export const WGF_COMPONENT_COLLIDER = 4;
-export const WGF_COMPONENT_BEHAVIOR = 5;
-export const WGF_COMPONENT_SHAPE2D = 6;
-export const WGF_COMPONENT_SPRITE = 7;
-export const WGF_COMPONENT_TEXT = 8;
-export const WGF_COMPONENT_EMITTER2D = 9;
-export const WGF_COMPONENT_VOICE = 10;
-export const WGF_COMPONENT_MODEL = 11;
+export const WGF_COMPONENT_VOICE = 5;
 
 /**
- * Bounds (WGF_COMPONENT_BOUNDS): a rectangle in the entity's parent's space, x and y,
- * and what happens to an entity whose position leaves it, by more than its margin, each
+ * Bounds (WGF_COMPONENT_BOUNDS): a rectangle in the actor's parent's space, x and y,
+ * and what happens to an actor whose position leaves it, by more than its margin, each
  * tick after motion. Defaults: 0, 0, 800 by 600, WRAP, a margin of 0. Every call is false
- * (or 0) for an entity without bounds.
+ * (or 0) for an actor without bounds.
  */
 export const WGF_BOUNDS_MODE_WRAP = 0;
 export const WGF_BOUNDS_MODE_CLAMP = 1;
 export const WGF_BOUNDS_MODE_DESTROY = 2;
 
 /**
- * The entity system as a whole: libwgf's systems, the events they raise, finding
- * entities, and the world written out as text.
+ * The simulation as a whole: libwgf's systems over the actors' components
+ * (wgf_component.h), the events they raise, finding actors by behavior or component, and the simulated
+ * actors written out as text.
  *
- * Each tick, after the program's, the systems run in this order: lifetimes count down
- * (an entity whose time is up destroyed), motion moves each entity by its velocity and
- * spin (damped, its speed capped), bounds wrap, clamp, or destroy what has left its
- * rectangle, and colliders find the overlaps. Each frame, before the program's frame,
- * every entity's node is given its transform interpolated between the last two ticks.
+ * Each tick, as it begins, every simulated actor's transform is kept as it is; after the
+ * program's tick the systems run in this order: lifetimes count down (an actor whose time is
+ * up destroyed), motion moves each actor by its velocity and spin (damped, its speed
+ * capped), bounds wrap, clamp, or destroy what has left its rectangle, and colliders find
+ * the overlaps. Each frame a simulated actor is drawn between its last two ticks'
+ * transforms.
  *
  * Events are what the program's behaviors are told (wgf_behavior.h), queued as they
- * happen and taken by the program, in order: a behavior added (CREATED); an entity with
- * a behavior destroyed (DESTROYED, its handle stale by then: a name for what it was); two
- * colliders starting to overlap (TRIGGER_ENTER) and ceasing to (TRIGGER_EXIT), told to
- * each of the two, the other its `other`. An entity destroyed while it overlaps another
- * raises no TRIGGER_EXIT. Nothing is called back: a binding takes them at its tick's
- * start and calls its behaviors itself. At most 65536 wait; past that the oldest are
- * dropped, warned once.
+ * happen and taken by the program, in order, three ints each:
+ *
+ *   CREATED          a behavior added: its actor, its id
+ *   DESTROYED        a behavior removed, or its actor gone: its actor (stale by then, a name
+ *                    for what it was), its id
+ *   TRIGGER_ENTER    two colliders starting to overlap, told to each: the actor, the other
+ *   TRIGGER_EXIT     and ceasing to
+ *
+ * An actor destroyed while it overlaps another raises no TRIGGER_EXIT. Nothing is called
+ * back: a binding takes them at its tick's start and calls its behaviors itself. At most
+ * 65536 wait; past that the oldest are dropped, warned once.
  */
 export const WGF_ECS_EVENT_NONE = 0;
 export const WGF_ECS_EVENT_CREATED = 1;
@@ -2658,327 +2667,376 @@ export function wgf_asset_ping_get_milliseconds(ping) {
     return value;
 }
 
-// wgf: call wgf_node_create
+// wgf: call wgf_actor_create
 /**
- * A plain node: a transform, with no parent. 0 when there is no room for another.
+ * A plain actor: a transform, with no parent. 0 when there is no room for another.
  */
-export function wgf_node_create() {
-    const value = host["_wgf_node_create"]();
+export function wgf_actor_create() {
+    const value = host["_wgf_actor_create"]();
     return value >>> 0;
 }
 
-// wgf: call wgf_node_destroy
+// wgf: call wgf_actor_destroy
 /**
- * End a node of any kind, at once. What it held is released, never destroyed: a
+ * End an actor of any kind, at once. What it held is released, never destroyed: a
  * sprite drops its reference to its texture.
  */
-export function wgf_node_destroy(node, children) {
-    host["_wgf_node_destroy"](node, children);
+export function wgf_actor_destroy(actor, children) {
+    host["_wgf_actor_destroy"](actor, children);
 }
 
-// wgf: call wgf_node_get_type
+// wgf: call wgf_actor_get_kind
 /**
- * End a node of any kind, at once. What it held is released, never destroyed: a
+ * End an actor of any kind, at once. What it held is released, never destroyed: a
  * sprite drops its reference to its texture.
  */
-export function wgf_node_get_type(node) {
-    const value = host["_wgf_node_get_type"](node);
+export function wgf_actor_get_kind(actor) {
+    const value = host["_wgf_actor_get_kind"](actor);
     return value;
 }
 
-// wgf: call wgf_node_set_parent
+// wgf: call wgf_actor_set_parent
 /**
- * Put `node` under `parent`, last among its children, keeping its own transform
+ * Put `actor` under `parent`, last among its children, keeping its own transform
  * (so it moves to where it sits relative to the new parent); 0 detaches it, and a
- * detached node is drawn by nothing. False when `parent` isn't a node, or is
- * `node` or under it, or when `node` is a canvas or a stage, which are always roots.
+ * detached actor is drawn by nothing. False when `parent` isn't an actor, or is
+ * `actor` or under it, or when `actor` is a 2D or 3D stage, which are always roots.
  */
-export function wgf_node_set_parent(node, parent) {
-    const value = host["_wgf_node_set_parent"](node, parent);
+export function wgf_actor_set_parent(actor, parent) {
+    const value = host["_wgf_actor_set_parent"](actor, parent);
     return value !== 0;
 }
 
-// wgf: call wgf_node_get_parent
+// wgf: call wgf_actor_get_parent
 /**
- * Put `node` under `parent`, last among its children, keeping its own transform
+ * Put `actor` under `parent`, last among its children, keeping its own transform
  * (so it moves to where it sits relative to the new parent); 0 detaches it, and a
- * detached node is drawn by nothing. False when `parent` isn't a node, or is
- * `node` or under it, or when `node` is a canvas or a stage, which are always roots.
+ * detached actor is drawn by nothing. False when `parent` isn't an actor, or is
+ * `actor` or under it, or when `actor` is a 2D or 3D stage, which are always roots.
  */
-export function wgf_node_get_parent(node) {
-    const value = host["_wgf_node_get_parent"](node);
+export function wgf_actor_get_parent(actor) {
+    const value = host["_wgf_actor_get_parent"](actor);
     return value >>> 0;
 }
 
-// wgf: call wgf_node_get_child_count
+// wgf: call wgf_actor_get_child_count
 /**
- * Put `node` under `parent`, last among its children, keeping its own transform
+ * Put `actor` under `parent`, last among its children, keeping its own transform
  * (so it moves to where it sits relative to the new parent); 0 detaches it, and a
- * detached node is drawn by nothing. False when `parent` isn't a node, or is
- * `node` or under it, or when `node` is a canvas or a stage, which are always roots.
+ * detached actor is drawn by nothing. False when `parent` isn't an actor, or is
+ * `actor` or under it, or when `actor` is a 2D or 3D stage, which are always roots.
  */
-export function wgf_node_get_child_count(node) {
-    const value = host["_wgf_node_get_child_count"](node);
+export function wgf_actor_get_child_count(actor) {
+    const value = host["_wgf_actor_get_child_count"](actor);
     return value;
 }
 
-// wgf: call wgf_node_get_child
+// wgf: call wgf_actor_get_child
 /**
  * The child at `index`, 0 first; 0 when there is none.
  */
-export function wgf_node_get_child(node, index) {
-    const value = host["_wgf_node_get_child"](node, index);
+export function wgf_actor_get_child(actor, index) {
+    const value = host["_wgf_actor_get_child"](actor, index);
     return value >>> 0;
 }
 
-// wgf: call wgf_node_set_index
+// wgf: call wgf_actor_set_index
 /**
- * Where `node` is among its parent's children, which is its drawing order in a
- * canvas: later children draw over earlier ones. An index past either end is
+ * Where `actor` is among its parent's children, which is its drawing order in a
+ * 2D stage: later children draw over earlier ones. An index past either end is
  * clamped to it, so a large one moves it to the front. False when it has no
  * parent.
  */
-export function wgf_node_set_index(node, index) {
-    const value = host["_wgf_node_set_index"](node, index);
+export function wgf_actor_set_index(actor, index) {
+    const value = host["_wgf_actor_set_index"](actor, index);
     return value !== 0;
 }
 
-// wgf: call wgf_node_get_index
+// wgf: call wgf_actor_get_index
 /**
- * Where `node` is among its parent's children, which is its drawing order in a
- * canvas: later children draw over earlier ones. An index past either end is
+ * Where `actor` is among its parent's children, which is its drawing order in a
+ * 2D stage: later children draw over earlier ones. An index past either end is
  * clamped to it, so a large one moves it to the front. False when it has no
  * parent.
  */
-export function wgf_node_get_index(node) {
-    const value = host["_wgf_node_get_index"](node);
+export function wgf_actor_get_index(actor) {
+    const value = host["_wgf_actor_get_index"](actor);
     return value;
 }
 
-// wgf: call wgf_node_set_position
+// wgf: call wgf_actor_set_position
 /**
  * The transform, relative to the parent. Rotation is three angles in radians,
  * about x, then y, then z (wgf_quat_from_euler), kept as the rotation they make:
  * get_rotation gives angles for the same rotation, which may not be the ones given
  * (past a half turn, say). Scale 1 is its own size.
  */
-export function wgf_node_set_position(node, x, y, z) {
-    const value = host["_wgf_node_set_position"](node, x, y, z);
+export function wgf_actor_set_position(actor, x, y, z) {
+    const value = host["_wgf_actor_set_position"](actor, x, y, z);
     return value !== 0;
 }
 
-// wgf: call wgf_node_get_position
+// wgf: call wgf_actor_get_position
 /**
  * The transform, relative to the parent. Rotation is three angles in radians,
  * about x, then y, then z (wgf_quat_from_euler), kept as the rotation they make:
  * get_rotation gives angles for the same rotation, which may not be the ones given
  * (past a half turn, say). Scale 1 is its own size.
  */
-export function wgf_node_get_position(node, into) {
+export function wgf_actor_get_position(actor, into) {
     const ret = result(12);
-    host["_wgf_node_get_position"](ret, node);
+    host["_wgf_actor_get_position"](ret, actor);
     return vector(ret, 3, into);
 }
 
-// wgf: call wgf_node_set_rotation
+// wgf: call wgf_actor_set_rotation
 /**
  * The transform, relative to the parent. Rotation is three angles in radians,
  * about x, then y, then z (wgf_quat_from_euler), kept as the rotation they make:
  * get_rotation gives angles for the same rotation, which may not be the ones given
  * (past a half turn, say). Scale 1 is its own size.
  */
-export function wgf_node_set_rotation(node, x, y, z) {
-    const value = host["_wgf_node_set_rotation"](node, x, y, z);
+export function wgf_actor_set_rotation(actor, x, y, z) {
+    const value = host["_wgf_actor_set_rotation"](actor, x, y, z);
     return value !== 0;
 }
 
-// wgf: call wgf_node_get_rotation
+// wgf: call wgf_actor_get_rotation
 /**
  * The transform, relative to the parent. Rotation is three angles in radians,
  * about x, then y, then z (wgf_quat_from_euler), kept as the rotation they make:
  * get_rotation gives angles for the same rotation, which may not be the ones given
  * (past a half turn, say). Scale 1 is its own size.
  */
-export function wgf_node_get_rotation(node, into) {
+export function wgf_actor_get_rotation(actor, into) {
     const ret = result(12);
-    host["_wgf_node_get_rotation"](ret, node);
+    host["_wgf_actor_get_rotation"](ret, actor);
     return vector(ret, 3, into);
 }
 
-// wgf: call wgf_node_set_scale
+// wgf: call wgf_actor_set_scale
 /**
  * The transform, relative to the parent. Rotation is three angles in radians,
  * about x, then y, then z (wgf_quat_from_euler), kept as the rotation they make:
  * get_rotation gives angles for the same rotation, which may not be the ones given
  * (past a half turn, say). Scale 1 is its own size.
  */
-export function wgf_node_set_scale(node, x, y, z) {
-    const value = host["_wgf_node_set_scale"](node, x, y, z);
+export function wgf_actor_set_scale(actor, x, y, z) {
+    const value = host["_wgf_actor_set_scale"](actor, x, y, z);
     return value !== 0;
 }
 
-// wgf: call wgf_node_get_scale
+// wgf: call wgf_actor_get_scale
 /**
  * The transform, relative to the parent. Rotation is three angles in radians,
  * about x, then y, then z (wgf_quat_from_euler), kept as the rotation they make:
  * get_rotation gives angles for the same rotation, which may not be the ones given
  * (past a half turn, say). Scale 1 is its own size.
  */
-export function wgf_node_get_scale(node, into) {
+export function wgf_actor_get_scale(actor, into) {
     const ret = result(12);
-    host["_wgf_node_get_scale"](ret, node);
+    host["_wgf_actor_get_scale"](ret, actor);
     return vector(ret, 3, into);
 }
 
-// wgf: call wgf_node_set_transform
+// wgf: call wgf_actor_set_transform
 /**
  * All three at once: the cheapest way to move something each frame.
  */
-export function wgf_node_set_transform(node, position_x, position_y, position_z, rotation_x, rotation_y, rotation_z, scale_x, scale_y, scale_z) {
-    const value = host["_wgf_node_set_transform"](node, position_x, position_y, position_z, rotation_x, rotation_y, rotation_z, scale_x, scale_y, scale_z);
+export function wgf_actor_set_transform(actor, position_x, position_y, position_z, rotation_x, rotation_y, rotation_z, scale_x, scale_y, scale_z) {
+    const value = host["_wgf_actor_set_transform"](actor, position_x, position_y, position_z, rotation_x, rotation_y, rotation_z, scale_x, scale_y, scale_z);
     return value !== 0;
 }
 
-// wgf: call wgf_node_get_world_position
+// wgf: call wgf_actor_snap
 /**
- * Where the node is in its tree's root's space: in a canvas, canvas units.
+ * An actor with a simulated component (motion, bounds, lifetime, a collider: wgf_component.h)
+ * moves at the tick rate: its transform is the simulation's, and it is drawn between its
+ * last two ticks' at each frame's tick fraction, so it moves smoothly at any frame rate.
+ * A change in a tick is so smoothed into the frames after it; snap ends the smoothing, so
+ * the actor is drawn where it is now (put somewhere new, it isn't seen sweeping there).
+ * False for an actor that isn't one; true and nothing to do for one not simulated.
  */
-export function wgf_node_get_world_position(node, into) {
+export function wgf_actor_snap(actor) {
+    const value = host["_wgf_actor_snap"](actor);
+    return value !== 0;
+}
+
+// wgf: call wgf_actor_get_positions
+/**
+ * Many positions at once: each of `actors` (count of them) read into `out` as x, y, z in
+ * turn, as many as fit in `out_count` floats, returning how many floats it filled (a
+ * handle that isn't an actor reads 0, 0, 0); and each set from `positions` (x, y, z in
+ * turn, positions_count floats), false when there aren't three floats for each, skipping
+ * a handle that isn't an actor.
+ */
+export function wgf_actor_get_positions(actors, out) {
+    const actorsPointer = arrayIn(actors, 0, "HEAPU32");
+    const outPointer = arrayOut(out, 1);
+    const value = host["_wgf_actor_get_positions"](actorsPointer, lengthOf(actors), outPointer, lengthOf(out));
+    arrayBack(outPointer, out, "HEAPF32");
+    return value;
+}
+
+// wgf: call wgf_actor_set_positions
+/**
+ * Many positions at once: each of `actors` (count of them) read into `out` as x, y, z in
+ * turn, as many as fit in `out_count` floats, returning how many floats it filled (a
+ * handle that isn't an actor reads 0, 0, 0); and each set from `positions` (x, y, z in
+ * turn, positions_count floats), false when there aren't three floats for each, skipping
+ * a handle that isn't an actor.
+ */
+export function wgf_actor_set_positions(actors, positions) {
+    const actorsPointer = arrayIn(actors, 0, "HEAPU32");
+    const positionsPointer = arrayIn(positions, 1, "HEAPF32");
+    const value = host["_wgf_actor_set_positions"](actorsPointer, lengthOf(actors), positionsPointer, lengthOf(positions));
+    return value !== 0;
+}
+
+// wgf: call wgf_actor_get_world_position
+/**
+ * Where the actor is in its tree's root's space: on a 2D stage, stage units.
+ */
+export function wgf_actor_get_world_position(actor, into) {
     const ret = result(12);
-    host["_wgf_node_get_world_position"](ret, node);
+    host["_wgf_actor_get_world_position"](ret, actor);
     return vector(ret, 3, into);
 }
 
-// wgf: call wgf_node_look_at
+// wgf: call wgf_actor_look_at
 /**
- * Turn the node so its -z points at the target (x, y, z) and its +y is as near to the
+ * Turn the actor so its -z points at the target (x, y, z) and its +y is as near to the
  * up direction (up_x, up_y, up_z) as can be, both in its tree's root's space: how a
  * camera is aimed, since it looks down its -z. Its rotation is set relative to its
  * parent, so it points there as it is placed now. False when the target is where the
- * node is, or the up direction is along the line to it.
+ * actor is, or the up direction is along the line to it.
  */
-export function wgf_node_look_at(node, x, y, z, up_x, up_y, up_z) {
-    const value = host["_wgf_node_look_at"](node, x, y, z, up_x, up_y, up_z);
+export function wgf_actor_look_at(actor, x, y, z, up_x, up_y, up_z) {
+    const value = host["_wgf_actor_look_at"](actor, x, y, z, up_x, up_y, up_z);
     return value !== 0;
 }
 
-// wgf: call wgf_node_set_name
+// wgf: call wgf_actor_set_name
 /**
- * A name to find the node by; NULL or "" for none, the default. get_name is "" for none: borrowed, valid until the
- * name changes or the node goes. Names needn't be unique.
+ * A name to find the actor by; NULL or "" for none, the default. get_name is "" for none: borrowed, valid until the
+ * name changes or the actor goes. A name is found by its stage (wgf_stage2d_find, wgf_stage3d_find) when it is the
+ * only one so named there, and by a path from any actor (wgf_actor_find) when it is unique among its siblings.
  */
-export function wgf_node_set_name(node, name) {
+export function wgf_actor_set_name(actor, name) {
     const mark = host["stackSave"]();
-    const value = host["_wgf_node_set_name"](node, cstr(name));
+    const value = host["_wgf_actor_set_name"](actor, cstr(name));
     host["stackRestore"](mark);
     return value !== 0;
 }
 
-// wgf: call wgf_node_get_name
+// wgf: call wgf_actor_get_name
 /**
- * A name to find the node by; NULL or "" for none, the default. get_name is "" for none: borrowed, valid until the
- * name changes or the node goes. Names needn't be unique.
+ * A name to find the actor by; NULL or "" for none, the default. get_name is "" for none: borrowed, valid until the
+ * name changes or the actor goes. A name is found by its stage (wgf_stage2d_find, wgf_stage3d_find) when it is the
+ * only one so named there, and by a path from any actor (wgf_actor_find) when it is unique among its siblings.
  */
-export function wgf_node_get_name(node) {
-    const value = host["_wgf_node_get_name"](node);
+export function wgf_actor_get_name(actor) {
+    const value = host["_wgf_actor_get_name"](actor);
     return str(value);
 }
 
-// wgf: call wgf_node_find
+// wgf: call wgf_actor_find
 /**
- * The first node named `name` in the tree from `root`, `root` included, depth
- * first, children in order; 0 for none.
+ * The actor at `path` from `actor`: child names joined by '/', so "wheel_rl/smoke" is the
+ * child "smoke" of the child "wheel_rl". Each step looks only among one actor's children
+ * (the first so named, in order), never through the tree. 0 for none, an empty step
+ * ("a//b"), or an empty or NULL path.
  */
-export function wgf_node_find(root, name) {
+export function wgf_actor_find(actor, path) {
     const mark = host["stackSave"]();
-    const value = host["_wgf_node_find"](root, cstr(name));
+    const value = host["_wgf_actor_find"](actor, cstr(path));
     host["stackRestore"](mark);
     return value >>> 0;
 }
 
-// wgf: call wgf_node_set_enabled
+// wgf: call wgf_actor_set_enabled
 /**
- * Two flags say what a node takes part in, each the node's own, read back as set:
+ * Two flags say what an actor takes part in, each the actor's own, read back as set:
  *
- *   enabled   off: the node is skipped altogether, with everything under it, as if
+ *   enabled   off: the actor is skipped altogether, with everything under it, as if
  *             it weren't in the tree, by drawing and by every update (an emitter
  *             under it isn't moved on): the switch on a part of the game that is off
  *             for now. The only one that reaches the children; their own flags are
  *             kept, so enabling it again brings each back as it was set
- *   visible   off: the node's own output is off -- a sprite, shape, text, or
+ *   visible   off: the actor's own output is off -- a sprite, shape, text, or
  *             emitter isn't drawn -- while it is still placed and its children are
  *             as they are
  *
  * Defaults: enabled, visible.
  */
-export function wgf_node_set_enabled(node, enabled) {
-    const value = host["_wgf_node_set_enabled"](node, (enabled ? 1 : 0));
+export function wgf_actor_set_enabled(actor, enabled) {
+    const value = host["_wgf_actor_set_enabled"](actor, (enabled ? 1 : 0));
     return value !== 0;
 }
 
-// wgf: call wgf_node_is_enabled
+// wgf: call wgf_actor_is_enabled
 /**
- * Two flags say what a node takes part in, each the node's own, read back as set:
+ * Two flags say what an actor takes part in, each the actor's own, read back as set:
  *
- *   enabled   off: the node is skipped altogether, with everything under it, as if
+ *   enabled   off: the actor is skipped altogether, with everything under it, as if
  *             it weren't in the tree, by drawing and by every update (an emitter
  *             under it isn't moved on): the switch on a part of the game that is off
  *             for now. The only one that reaches the children; their own flags are
  *             kept, so enabling it again brings each back as it was set
- *   visible   off: the node's own output is off -- a sprite, shape, text, or
+ *   visible   off: the actor's own output is off -- a sprite, shape, text, or
  *             emitter isn't drawn -- while it is still placed and its children are
  *             as they are
  *
  * Defaults: enabled, visible.
  */
-export function wgf_node_is_enabled(node) {
-    const value = host["_wgf_node_is_enabled"](node);
+export function wgf_actor_is_enabled(actor) {
+    const value = host["_wgf_actor_is_enabled"](actor);
     return value !== 0;
 }
 
-// wgf: call wgf_node_set_visible
+// wgf: call wgf_actor_set_visible
 /**
- * Two flags say what a node takes part in, each the node's own, read back as set:
+ * Two flags say what an actor takes part in, each the actor's own, read back as set:
  *
- *   enabled   off: the node is skipped altogether, with everything under it, as if
+ *   enabled   off: the actor is skipped altogether, with everything under it, as if
  *             it weren't in the tree, by drawing and by every update (an emitter
  *             under it isn't moved on): the switch on a part of the game that is off
  *             for now. The only one that reaches the children; their own flags are
  *             kept, so enabling it again brings each back as it was set
- *   visible   off: the node's own output is off -- a sprite, shape, text, or
+ *   visible   off: the actor's own output is off -- a sprite, shape, text, or
  *             emitter isn't drawn -- while it is still placed and its children are
  *             as they are
  *
  * Defaults: enabled, visible.
  */
-export function wgf_node_set_visible(node, visible) {
-    const value = host["_wgf_node_set_visible"](node, (visible ? 1 : 0));
+export function wgf_actor_set_visible(actor, visible) {
+    const value = host["_wgf_actor_set_visible"](actor, (visible ? 1 : 0));
     return value !== 0;
 }
 
-// wgf: call wgf_node_is_visible
+// wgf: call wgf_actor_is_visible
 /**
- * Two flags say what a node takes part in, each the node's own, read back as set:
+ * Two flags say what an actor takes part in, each the actor's own, read back as set:
  *
- *   enabled   off: the node is skipped altogether, with everything under it, as if
+ *   enabled   off: the actor is skipped altogether, with everything under it, as if
  *             it weren't in the tree, by drawing and by every update (an emitter
  *             under it isn't moved on): the switch on a part of the game that is off
  *             for now. The only one that reaches the children; their own flags are
  *             kept, so enabling it again brings each back as it was set
- *   visible   off: the node's own output is off -- a sprite, shape, text, or
+ *   visible   off: the actor's own output is off -- a sprite, shape, text, or
  *             emitter isn't drawn -- while it is still placed and its children are
  *             as they are
  *
  * Defaults: enabled, visible.
  */
-export function wgf_node_is_visible(node) {
-    const value = host["_wgf_node_is_visible"](node);
+export function wgf_actor_is_visible(actor) {
+    const value = host["_wgf_actor_is_visible"](actor);
     return value !== 0;
 }
 
 // wgf: call wgf_camera2d_create
 /**
- * A 2D camera, zoom 1. 0 when there is no room for another node.
+ * A 2D camera, zoom 1. 0 when there is no room for another actor.
  */
 export function wgf_camera2d_create() {
     const value = host["_wgf_camera2d_create"]();
@@ -3008,7 +3066,7 @@ export function wgf_camera2d_get_zoom(camera) {
 // wgf: call wgf_camera3d_create
 /**
  * A camera with a 60 degree vertical field of view, seeing from 0.1 to 1000 units in
- * front of it. 0 when there is no room for another node.
+ * front of it. 0 when there is no room for another actor.
  */
 export function wgf_camera3d_create() {
     const value = host["_wgf_camera3d_create"]();
@@ -3098,51 +3156,6 @@ export function wgf_camera3d_set_ortho_height(camera, height) {
 export function wgf_camera3d_get_ortho_height(camera) {
     const value = host["_wgf_camera3d_get_ortho_height"](camera);
     return value;
-}
-
-// wgf: call wgf_canvas_create
-/**
- * A canvas, with no camera. 0 when there is no room for another node.
- */
-export function wgf_canvas_create() {
-    const value = host["_wgf_canvas_create"]();
-    return value >>> 0;
-}
-
-// wgf: call wgf_canvas_draw
-/**
- * Draw it into this frame. Outside a frame, nothing.
- */
-export function wgf_canvas_draw(canvas) {
-    host["_wgf_canvas_draw"](canvas);
-}
-
-// wgf: call wgf_canvas_set_camera
-/**
- * With a camera (wgf_camera2d.h), the canvas point at the camera's position is
- * drawn at the frame's center, turned and zoomed as the camera is: a 2D world.
- * Without one (0, the default), canvas units are the frame's logical pixels: a HUD.
- * The camera can be anywhere -- in this canvas, parented to the player so it
- * follows, or in no tree at all. False when `camera` isn't a 2D camera. A camera
- * that is destroyed leaves the canvas with none.
- */
-export function wgf_canvas_set_camera(canvas, camera) {
-    const value = host["_wgf_canvas_set_camera"](canvas, camera);
-    return value !== 0;
-}
-
-// wgf: call wgf_canvas_get_camera
-/**
- * With a camera (wgf_camera2d.h), the canvas point at the camera's position is
- * drawn at the frame's center, turned and zoomed as the camera is: a 2D world.
- * Without one (0, the default), canvas units are the frame's logical pixels: a HUD.
- * The camera can be anywhere -- in this canvas, parented to the player so it
- * follows, or in no tree at all. False when `camera` isn't a 2D camera. A camera
- * that is destroyed leaves the canvas with none.
- */
-export function wgf_canvas_get_camera(canvas) {
-    const value = host["_wgf_canvas_get_camera"](canvas);
-    return value >>> 0;
 }
 
 // wgf: call wgf_color_get
@@ -3284,8 +3297,8 @@ export function wgf_font_measure(font, text, size, into) {
 
 // wgf: call wgf_text_create
 /**
- * A text node in `font` (0: the default font), with no string yet. 0 when `font`
- * isn't a font, or there is no room for another node.
+ * A text actor in `font` (0: the default font), with no string yet. 0 when `font`
+ * isn't a font, or there is no room for another actor.
  */
 export function wgf_text_create(font) {
     const value = host["_wgf_text_create"](font);
@@ -3312,7 +3325,7 @@ export function wgf_text_get_font(text) {
 
 // wgf: call wgf_text_set_string
 /**
- * What it says, UTF-8, copied. get_string's is the node's: valid until the next
+ * What it says, UTF-8, copied. get_string's is the actor's: valid until the next
  * set_string, or until it is destroyed.
  */
 export function wgf_text_set_string(text, string) {
@@ -3324,7 +3337,7 @@ export function wgf_text_set_string(text, string) {
 
 // wgf: call wgf_text_get_string
 /**
- * What it says, UTF-8, copied. get_string's is the node's: valid until the next
+ * What it says, UTF-8, copied. get_string's is the actor's: valid until the next
  * set_string, or until it is destroyed.
  */
 export function wgf_text_get_string(text) {
@@ -3334,7 +3347,7 @@ export function wgf_text_get_string(text) {
 
 // wgf: call wgf_text_set_font_size
 /**
- * Its font size: the height of its lines, before the node's scale, in canvas units (a
+ * Its font size: the height of its lines, before the actor's scale, in stage units (a
  * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
  * Read back as the size it draws at. False for a handle that isn't text.
  */
@@ -3345,7 +3358,7 @@ export function wgf_text_set_font_size(text, size) {
 
 // wgf: call wgf_text_get_font_size
 /**
- * Its font size: the height of its lines, before the node's scale, in canvas units (a
+ * Its font size: the height of its lines, before the actor's scale, in stage units (a
  * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
  * Read back as the size it draws at. False for a handle that isn't text.
  */
@@ -3374,7 +3387,7 @@ export function wgf_text_get_color(text) {
 
 // wgf: call wgf_text_set_wrap_width
 /**
- * Wrap lines at spaces and tabs to fit `width`, in canvas units; a word wider keeps
+ * Wrap lines at spaces and tabs to fit `width`, in stage units; a word wider keeps
  * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
  * wrapped block is `width` wide for its alignment, or as wide as its widest line
  * where a word is wider. False for less than 0.
@@ -3386,7 +3399,7 @@ export function wgf_text_set_wrap_width(text, width) {
 
 // wgf: call wgf_text_get_wrap_width
 /**
- * Wrap lines at spaces and tabs to fit `width`, in canvas units; a word wider keeps
+ * Wrap lines at spaces and tabs to fit `width`, in stage units; a word wider keeps
  * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
  * wrapped block is `width` wide for its alignment, or as wide as its widest line
  * where a word is wider. False for less than 0.
@@ -3398,7 +3411,7 @@ export function wgf_text_get_wrap_width(text) {
 
 // wgf: call wgf_text_set_align
 /**
- * Where the block sits relative to the node's position, on each axis; lines line
+ * Where the block sits relative to the actor's position, on each axis; lines line
  * up the same way inside the block. False for a value that isn't one.
  */
 export function wgf_text_set_align(text, horizontal, vertical) {
@@ -3408,7 +3421,7 @@ export function wgf_text_set_align(text, horizontal, vertical) {
 
 // wgf: call wgf_text_get_halign
 /**
- * Where the block sits relative to the node's position, on each axis; lines line
+ * Where the block sits relative to the actor's position, on each axis; lines line
  * up the same way inside the block. False for a value that isn't one.
  */
 export function wgf_text_get_halign(text) {
@@ -3418,7 +3431,7 @@ export function wgf_text_get_halign(text) {
 
 // wgf: call wgf_text_get_valign
 /**
- * Where the block sits relative to the node's position, on each axis; lines line
+ * Where the block sits relative to the actor's position, on each axis; lines line
  * up the same way inside the block. False for a value that isn't one.
  */
 export function wgf_text_get_valign(text) {
@@ -3670,7 +3683,7 @@ export function wgf_draw_end_3d() {
  * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
  * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
  * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
  * behind it, in the order drawn.
  */
 export function wgf_draw_line_3d(x0, y0, z0, x1, y1, z1, color) {
@@ -3684,7 +3697,7 @@ export function wgf_draw_line_3d(x0, y0, z0, x1, y1, z1, color) {
  * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
  * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
  * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
  * behind it, in the order drawn.
  */
 export function wgf_draw_cube(cx, cy, cz, width, height, length, color) {
@@ -3698,7 +3711,7 @@ export function wgf_draw_cube(cx, cy, cz, width, height, length, color) {
  * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
  * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
  * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
  * behind it, in the order drawn.
  */
 export function wgf_draw_cube_wires(cx, cy, cz, width, height, length, color) {
@@ -3712,7 +3725,7 @@ export function wgf_draw_cube_wires(cx, cy, cz, width, height, length, color) {
  * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
  * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
  * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
  * behind it, in the order drawn.
  */
 export function wgf_draw_sphere(cx, cy, cz, radius, color) {
@@ -3726,7 +3739,7 @@ export function wgf_draw_sphere(cx, cy, cz, radius, color) {
  * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
  * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
  * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
  * behind it, in the order drawn.
  */
 export function wgf_draw_grid(slices, spacing, color) {
@@ -3740,7 +3753,7 @@ export function wgf_draw_grid(slices, spacing, color) {
  * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
  * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
  * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
  * behind it, in the order drawn.
  */
 export function wgf_draw_rectangle_3d(cx, cy, cz, width, height, rx, ry, rz, color) {
@@ -3754,7 +3767,7 @@ export function wgf_draw_rectangle_3d(cx, cy, cz, width, height, rx, ry, rz, col
  * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
  * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
  * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
  * behind it, in the order drawn.
  */
 export function wgf_draw_circle_3d(cx, cy, cz, radius, rx, ry, rz, color) {
@@ -3776,7 +3789,7 @@ export function wgf_draw_text_3d(font, text, x, y, z, size, color) {
 // wgf: call wgf_emitter2d_create
 /**
  * An emitter that isn't emitting yet: rate 0, 256 particles at most, white squares of
- * 4 units living a second, going nowhere. 0 when there is no room for another node.
+ * 4 units living a second, going nowhere. 0 when there is no room for another actor.
  */
 export function wgf_emitter2d_create() {
     const value = host["_wgf_emitter2d_create"]();
@@ -3894,7 +3907,7 @@ export function wgf_emitter2d_get_life_max(emitter) {
 
 // wgf: call wgf_emitter2d_set_direction
 /**
- * The direction they leave in, radians in the canvas (0 along +x, a quarter turn along
+ * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
  * +y, down the screen), turned by the emitter's own world rotation, give or take
  * `spread` radians either side (TAU: every way); and their speed, in units a second,
  * between min and max. False for a handle that isn't an emitter, or a spread or speed
@@ -3907,7 +3920,7 @@ export function wgf_emitter2d_set_direction(emitter, angle, spread) {
 
 // wgf: call wgf_emitter2d_get_direction
 /**
- * The direction they leave in, radians in the canvas (0 along +x, a quarter turn along
+ * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
  * +y, down the screen), turned by the emitter's own world rotation, give or take
  * `spread` radians either side (TAU: every way); and their speed, in units a second,
  * between min and max. False for a handle that isn't an emitter, or a spread or speed
@@ -3920,7 +3933,7 @@ export function wgf_emitter2d_get_direction(emitter) {
 
 // wgf: call wgf_emitter2d_get_spread
 /**
- * The direction they leave in, radians in the canvas (0 along +x, a quarter turn along
+ * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
  * +y, down the screen), turned by the emitter's own world rotation, give or take
  * `spread` radians either side (TAU: every way); and their speed, in units a second,
  * between min and max. False for a handle that isn't an emitter, or a spread or speed
@@ -3933,7 +3946,7 @@ export function wgf_emitter2d_get_spread(emitter) {
 
 // wgf: call wgf_emitter2d_set_speed
 /**
- * The direction they leave in, radians in the canvas (0 along +x, a quarter turn along
+ * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
  * +y, down the screen), turned by the emitter's own world rotation, give or take
  * `spread` radians either side (TAU: every way); and their speed, in units a second,
  * between min and max. False for a handle that isn't an emitter, or a spread or speed
@@ -3946,7 +3959,7 @@ export function wgf_emitter2d_set_speed(emitter, min, max) {
 
 // wgf: call wgf_emitter2d_get_speed_min
 /**
- * The direction they leave in, radians in the canvas (0 along +x, a quarter turn along
+ * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
  * +y, down the screen), turned by the emitter's own world rotation, give or take
  * `spread` radians either side (TAU: every way); and their speed, in units a second,
  * between min and max. False for a handle that isn't an emitter, or a spread or speed
@@ -3959,7 +3972,7 @@ export function wgf_emitter2d_get_speed_min(emitter) {
 
 // wgf: call wgf_emitter2d_get_speed_max
 /**
- * The direction they leave in, radians in the canvas (0 along +x, a quarter turn along
+ * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
  * +y, down the screen), turned by the emitter's own world rotation, give or take
  * `spread` radians either side (TAU: every way); and their speed, in units a second,
  * between min and max. False for a handle that isn't an emitter, or a spread or speed
@@ -4132,7 +4145,7 @@ export function wgf_emitter2d_clear(emitter) {
 // wgf: call wgf_light_create
 /**
  * A white light of intensity 1, no range limit, a spot's cone pi/6 to pi/4. 0 when
- * `type` isn't a type, or there is no room for another node.
+ * `type` isn't a type, or there is no room for another actor.
  */
 export function wgf_light_create(type) {
     const value = host["_wgf_light_create"](type);
@@ -4142,7 +4155,7 @@ export function wgf_light_create(type) {
 // wgf: call wgf_light_get_type
 /**
  * A white light of intensity 1, no range limit, a spot's cone pi/6 to pi/4. 0 when
- * `type` isn't a type, or there is no room for another node.
+ * `type` isn't a type, or there is no room for another actor.
  */
 export function wgf_light_get_type(light) {
     const value = host["_wgf_light_get_type"](light);
@@ -4601,7 +4614,7 @@ export function wgf_mesh_get_material(mesh, slot_) {
 // wgf: call wgf_model_create
 /**
  * A model of `mesh`; 0 for none yet. 0 when `mesh` isn't a mesh, or there is no room
- * for another node. Tinted white: as its materials are.
+ * for another actor. Tinted white: as its materials are.
  */
 export function wgf_model_create(mesh) {
     const value = host["_wgf_model_create"](mesh);
@@ -4799,7 +4812,7 @@ export function wgf_render_get_dpi_scale() {
  * Clip drawing to a rectangle (logical pixels, top-left origin) until the matching
  * pop. Clips nest: each push intersects with the clip it's pushed inside, so a scroll
  * area inside a panel stays inside the panel. Everything drawn between is clipped:
- * immediate mode, and the canvases drawn there. A width or height of 0 clips
+ * immediate mode, and the 2D stages drawn there. A width or height of 0 clips
  * everything away. Every push should be popped within the frame: unmatched ones are
  * dropped at its end, with a warning, as is a pop without a push. Up to 32 deep; a
  * push past that clips nothing more, warned once. Outside a frame: nothing, warned.
@@ -4813,7 +4826,7 @@ export function wgf_render_push_clip(x, y, width, height) {
  * Clip drawing to a rectangle (logical pixels, top-left origin) until the matching
  * pop. Clips nest: each push intersects with the clip it's pushed inside, so a scroll
  * area inside a panel stays inside the panel. Everything drawn between is clipped:
- * immediate mode, and the canvases drawn there. A width or height of 0 clips
+ * immediate mode, and the 2D stages drawn there. A width or height of 0 clips
  * everything away. Every push should be popped within the frame: unmatched ones are
  * dropped at its end, with a warning, as is a pop without a push. Up to 32 deep; a
  * push past that clips nothing more, warned once. Outside a frame: nothing, warned.
@@ -4825,7 +4838,7 @@ export function wgf_render_pop_clip() {
 // wgf: call wgf_shape2d_create
 /**
  * A shape with nothing to draw yet, white, filled. 0 when there is no room for another
- * node.
+ * actor.
  */
 export function wgf_shape2d_create() {
     const value = host["_wgf_shape2d_create"]();
@@ -4964,7 +4977,7 @@ export function wgf_shape2d_get_points(shape, out) {
 
 // wgf: call wgf_shape2d_set_pivot
 /**
- * The point of a rectangle or circle at its node's position, which it turns and scales
+ * The point of a rectangle or circle at its actor's position, which it turns and scales
  * about, as a fraction of it: 0, 0 its top-left, 1, 1 its bottom-right. Unset (the
  * default), each keeps its own origin -- a rectangle's top-left corner, a circle's
  * center -- read back as that fraction (0, 0 or 0.5, 0.5). False for a handle that
@@ -4977,7 +4990,7 @@ export function wgf_shape2d_set_pivot(shape, x, y) {
 
 // wgf: call wgf_shape2d_get_pivot
 /**
- * The point of a rectangle or circle at its node's position, which it turns and scales
+ * The point of a rectangle or circle at its actor's position, which it turns and scales
  * about, as a fraction of it: 0, 0 its top-left, 1, 1 its bottom-right. Unset (the
  * default), each keeps its own origin -- a rectangle's top-left corner, a circle's
  * center -- read back as that fraction (0, 0 or 0.5, 0.5). False for a handle that
@@ -5031,7 +5044,7 @@ export function wgf_shape2d_get_color(shape) {
 
 // wgf: call wgf_shape3d_create
 /**
- * A shape with nothing to draw yet, white. 0 when there is no room for another node.
+ * A shape with nothing to draw yet, white. 0 when there is no room for another actor.
  */
 export function wgf_shape3d_create() {
     const value = host["_wgf_shape3d_create"]();
@@ -5040,7 +5053,7 @@ export function wgf_shape3d_create() {
 
 // wgf: call wgf_shape3d_get_kind
 /**
- * What it is, set by the calls below; NONE for a node that isn't a 3D shape.
+ * What it is, set by the calls below; NONE for an actor that isn't a 3D shape.
  */
 export function wgf_shape3d_get_kind(shape) {
     const value = host["_wgf_shape3d_get_kind"](shape);
@@ -5049,7 +5062,7 @@ export function wgf_shape3d_get_kind(shape) {
 
 // wgf: call wgf_shape3d_set_cube
 /**
- * About its node's origin: a cube `width` by `height` by `length`; a sphere of
+ * About its actor's origin: a cube `width` by `height` by `length`; a sphere of
  * `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
  * in its local x-y plane. False for a size below 0.
  */
@@ -5060,7 +5073,7 @@ export function wgf_shape3d_set_cube(shape, width, height, length) {
 
 // wgf: call wgf_shape3d_set_sphere
 /**
- * About its node's origin: a cube `width` by `height` by `length`; a sphere of
+ * About its actor's origin: a cube `width` by `height` by `length`; a sphere of
  * `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
  * in its local x-y plane. False for a size below 0.
  */
@@ -5071,7 +5084,7 @@ export function wgf_shape3d_set_sphere(shape, radius) {
 
 // wgf: call wgf_shape3d_set_rectangle
 /**
- * About its node's origin: a cube `width` by `height` by `length`; a sphere of
+ * About its actor's origin: a cube `width` by `height` by `length`; a sphere of
  * `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
  * in its local x-y plane. False for a size below 0.
  */
@@ -5082,7 +5095,7 @@ export function wgf_shape3d_set_rectangle(shape, width, height) {
 
 // wgf: call wgf_shape3d_set_circle
 /**
- * About its node's origin: a cube `width` by `height` by `length`; a sphere of
+ * About its actor's origin: a cube `width` by `height` by `length`; a sphere of
  * `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
  * in its local x-y plane. False for a size below 0.
  */
@@ -5203,7 +5216,7 @@ export function wgf_shape3d_get_color(shape) {
 // wgf: call wgf_sprite_create
 /**
  * A sprite of `texture` (0 for none: it draws nothing). 0 when there is no room for
- * another node.
+ * another actor.
  */
 export function wgf_sprite_create(texture) {
     const value = host["_wgf_sprite_create"](texture);
@@ -5278,7 +5291,7 @@ export function wgf_sprite_get_size(sprite, into) {
 
 // wgf: call wgf_sprite_set_pivot
 /**
- * The point of the sprite at its node's position, which it turns and scales about, as
+ * The point of the sprite at its actor's position, which it turns and scales about, as
  * a fraction of its size: 0.5, 0.5 its center (the default), 0, 0 its top-left. False
  * for a handle that isn't a sprite.
  */
@@ -5289,7 +5302,7 @@ export function wgf_sprite_set_pivot(sprite, x, y) {
 
 // wgf: call wgf_sprite_get_pivot
 /**
- * The point of the sprite at its node's position, which it turns and scales about, as
+ * The point of the sprite at its actor's position, which it turns and scales about, as
  * a fraction of its size: 0.5, 0.5 its center (the default), 0, 0 its top-left. False
  * for a handle that isn't a sprite.
  */
@@ -5319,17 +5332,76 @@ export function wgf_sprite_get_tint(sprite) {
     return value >>> 0;
 }
 
-// wgf: call wgf_stage_create
+// wgf: call wgf_stage2d_create
 /**
- * A stage, with no camera, no ambient light, and NEUTRAL tone mapping at an exposure of
- * 0. 0 when there is no room for another node.
+ * A 2D stage, with no camera. 0 when there is no room for another actor.
  */
-export function wgf_stage_create() {
-    const value = host["_wgf_stage_create"]();
+export function wgf_stage2d_create() {
+    const value = host["_wgf_stage2d_create"]();
     return value >>> 0;
 }
 
-// wgf: call wgf_stage_draw
+// wgf: call wgf_stage2d_draw
+/**
+ * Draw it into this frame. Outside a frame, nothing.
+ */
+export function wgf_stage2d_draw(stage) {
+    host["_wgf_stage2d_draw"](stage);
+}
+
+// wgf: call wgf_stage2d_set_camera
+/**
+ * With a camera (wgf_camera2d.h), the stage's point at the camera's position is
+ * drawn at the frame's center, turned and zoomed as the camera is: a 2D world.
+ * Without one (0, the default), stage units are the frame's logical pixels: a HUD.
+ * The camera can be anywhere -- on this stage, parented to the player so it
+ * follows, or in no tree at all. False when `camera` isn't a 2D camera. A camera
+ * that is destroyed leaves the stage with none.
+ */
+export function wgf_stage2d_set_camera(stage, camera) {
+    const value = host["_wgf_stage2d_set_camera"](stage, camera);
+    return value !== 0;
+}
+
+// wgf: call wgf_stage2d_get_camera
+/**
+ * With a camera (wgf_camera2d.h), the stage's point at the camera's position is
+ * drawn at the frame's center, turned and zoomed as the camera is: a 2D world.
+ * Without one (0, the default), stage units are the frame's logical pixels: a HUD.
+ * The camera can be anywhere -- on this stage, parented to the player so it
+ * follows, or in no tree at all. False when `camera` isn't a 2D camera. A camera
+ * that is destroyed leaves the stage with none.
+ */
+export function wgf_stage2d_get_camera(stage) {
+    const value = host["_wgf_stage2d_get_camera"](stage);
+    return value >>> 0;
+}
+
+// wgf: call wgf_stage2d_find
+/**
+ * The actor on this stage named `name` (wgf_actor_set_name), at any depth, found by an
+ * index of names rather than a walk of the tree. 0 for none, for a stage that isn't a
+ * 2D stage, and for a name two of its actors share (warned: find it by its path from an
+ * actor above it, wgf_actor_find, instead).
+ */
+export function wgf_stage2d_find(stage, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_stage2d_find"](stage, cstr(name));
+    host["stackRestore"](mark);
+    return value >>> 0;
+}
+
+// wgf: call wgf_stage3d_create
+/**
+ * A stage, with no camera, no ambient light, and NEUTRAL tone mapping at an exposure of
+ * 0. 0 when there is no room for another actor.
+ */
+export function wgf_stage3d_create() {
+    const value = host["_wgf_stage3d_create"]();
+    return value >>> 0;
+}
+
+// wgf: call wgf_stage3d_draw
 /**
  * Draw it into this frame, through its camera: its opaque models, then its 3D shapes
  * (wgf_shape3d.h), then its see-through models (a BLEND material, or a tint with alpha
@@ -5337,116 +5409,128 @@ export function wgf_stage_create() {
  * drawn before it. Each model is lit by
  * the up to 8 lights that reach it most. Outside a frame, or with no camera, nothing.
  */
-export function wgf_stage_draw(stage) {
-    host["_wgf_stage_draw"](stage);
+export function wgf_stage3d_draw(stage) {
+    host["_wgf_stage3d_draw"](stage);
 }
 
-// wgf: call wgf_stage_set_camera
+// wgf: call wgf_stage3d_set_camera
 /**
  * The camera it is seen through: a 3D camera anywhere, on this stage or not (default 0,
  * none: nothing is drawn). False when `camera` isn't a 3D camera. A camera that is
  * destroyed leaves the stage with none.
  */
-export function wgf_stage_set_camera(stage, camera) {
-    const value = host["_wgf_stage_set_camera"](stage, camera);
+export function wgf_stage3d_set_camera(stage, camera) {
+    const value = host["_wgf_stage3d_set_camera"](stage, camera);
     return value !== 0;
 }
 
-// wgf: call wgf_stage_get_camera
+// wgf: call wgf_stage3d_get_camera
 /**
  * The camera it is seen through: a 3D camera anywhere, on this stage or not (default 0,
  * none: nothing is drawn). False when `camera` isn't a 3D camera. A camera that is
  * destroyed leaves the stage with none.
  */
-export function wgf_stage_get_camera(stage) {
-    const value = host["_wgf_stage_get_camera"](stage);
+export function wgf_stage3d_get_camera(stage) {
+    const value = host["_wgf_stage3d_get_camera"](stage);
     return value >>> 0;
 }
 
-// wgf: call wgf_stage_set_ambient
+// wgf: call wgf_stage3d_find
 /**
- * The light that reaches everything evenly, from no direction: its color times
- * `intensity` (clamped to 0 or more). Default: none, an intensity of 0. Alpha is
- * ignored.
+ * The actor on this stage named `name`, as wgf_stage2d_find: by an index, never a walk;
+ * 0 for none, for a stage that isn't a 3D stage, and for a shared name (warned).
  */
-export function wgf_stage_set_ambient(stage, color, intensity) {
-    const value = host["_wgf_stage_set_ambient"](stage, color, intensity);
-    return value !== 0;
-}
-
-// wgf: call wgf_stage_get_ambient_color
-/**
- * The light that reaches everything evenly, from no direction: its color times
- * `intensity` (clamped to 0 or more). Default: none, an intensity of 0. Alpha is
- * ignored.
- */
-export function wgf_stage_get_ambient_color(stage) {
-    const value = host["_wgf_stage_get_ambient_color"](stage);
+export function wgf_stage3d_find(stage, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_stage3d_find"](stage, cstr(name));
+    host["stackRestore"](mark);
     return value >>> 0;
 }
 
-// wgf: call wgf_stage_get_ambient_intensity
+// wgf: call wgf_stage3d_set_ambient
 /**
  * The light that reaches everything evenly, from no direction: its color times
  * `intensity` (clamped to 0 or more). Default: none, an intensity of 0. Alpha is
  * ignored.
  */
-export function wgf_stage_get_ambient_intensity(stage) {
-    const value = host["_wgf_stage_get_ambient_intensity"](stage);
-    return value;
-}
-
-// wgf: call wgf_stage_set_tonemap
-/**
- * Its tone mapping, and its exposure in stops (EV): +1 doubles the brightness. Default:
- * NEUTRAL, 0. False for a tone mapping that isn't one.
- */
-export function wgf_stage_set_tonemap(stage, tonemap, exposure) {
-    const value = host["_wgf_stage_set_tonemap"](stage, tonemap, exposure);
+export function wgf_stage3d_set_ambient(stage, color, intensity) {
+    const value = host["_wgf_stage3d_set_ambient"](stage, color, intensity);
     return value !== 0;
 }
 
-// wgf: call wgf_stage_get_tonemap
+// wgf: call wgf_stage3d_get_ambient_color
+/**
+ * The light that reaches everything evenly, from no direction: its color times
+ * `intensity` (clamped to 0 or more). Default: none, an intensity of 0. Alpha is
+ * ignored.
+ */
+export function wgf_stage3d_get_ambient_color(stage) {
+    const value = host["_wgf_stage3d_get_ambient_color"](stage);
+    return value >>> 0;
+}
+
+// wgf: call wgf_stage3d_get_ambient_intensity
+/**
+ * The light that reaches everything evenly, from no direction: its color times
+ * `intensity` (clamped to 0 or more). Default: none, an intensity of 0. Alpha is
+ * ignored.
+ */
+export function wgf_stage3d_get_ambient_intensity(stage) {
+    const value = host["_wgf_stage3d_get_ambient_intensity"](stage);
+    return value;
+}
+
+// wgf: call wgf_stage3d_set_tonemap
 /**
  * Its tone mapping, and its exposure in stops (EV): +1 doubles the brightness. Default:
  * NEUTRAL, 0. False for a tone mapping that isn't one.
  */
-export function wgf_stage_get_tonemap(stage) {
-    const value = host["_wgf_stage_get_tonemap"](stage);
-    return value;
+export function wgf_stage3d_set_tonemap(stage, tonemap, exposure) {
+    const value = host["_wgf_stage3d_set_tonemap"](stage, tonemap, exposure);
+    return value !== 0;
 }
 
-// wgf: call wgf_stage_get_exposure
+// wgf: call wgf_stage3d_get_tonemap
 /**
  * Its tone mapping, and its exposure in stops (EV): +1 doubles the brightness. Default:
  * NEUTRAL, 0. False for a tone mapping that isn't one.
  */
-export function wgf_stage_get_exposure(stage) {
-    const value = host["_wgf_stage_get_exposure"](stage);
+export function wgf_stage3d_get_tonemap(stage) {
+    const value = host["_wgf_stage3d_get_tonemap"](stage);
     return value;
 }
 
-// wgf: call wgf_stage_set_culling
+// wgf: call wgf_stage3d_get_exposure
+/**
+ * Its tone mapping, and its exposure in stops (EV): +1 doubles the brightness. Default:
+ * NEUTRAL, 0. False for a tone mapping that isn't one.
+ */
+export function wgf_stage3d_get_exposure(stage) {
+    const value = host["_wgf_stage3d_get_exposure"](stage);
+    return value;
+}
+
+// wgf: call wgf_stage3d_set_culling
 /**
  * Skip models the camera can't see (on by default): each is tested by the box around it
  * as it is placed now, grown a little against rounding, against the camera's view
  * before it is drawn, which is far cheaper than drawing it. Turn it off to draw
  * everything, when checking whether a model's bounds are right, say.
  */
-export function wgf_stage_set_culling(stage, culling) {
-    const value = host["_wgf_stage_set_culling"](stage, (culling ? 1 : 0));
+export function wgf_stage3d_set_culling(stage, culling) {
+    const value = host["_wgf_stage3d_set_culling"](stage, (culling ? 1 : 0));
     return value !== 0;
 }
 
-// wgf: call wgf_stage_is_culling
+// wgf: call wgf_stage3d_is_culling
 /**
  * Skip models the camera can't see (on by default): each is tested by the box around it
  * as it is placed now, grown a little against rounding, against the camera's view
  * before it is drawn, which is far cheaper than drawing it. Turn it off to draw
  * everything, when checking whether a model's bounds are right, say.
  */
-export function wgf_stage_is_culling(stage) {
-    const value = host["_wgf_stage_is_culling"](stage);
+export function wgf_stage3d_is_culling(stage) {
+    const value = host["_wgf_stage3d_is_culling"](stage);
     return value !== 0;
 }
 
@@ -5818,355 +5902,85 @@ export function wgf_voice_get_segment(voice) {
     return str(value);
 }
 
-// wgf: call wgf_entity_create
+// wgf: call wgf_actor_add_behavior
 /**
- * An entity at the origin, with no components, its node put under `parent` (0: no
- * parent, so it is drawn by nothing until its node is given one). 0 when `parent` isn't
- * a node, or there is no room.
+ * A behavior named `name` added to `actor`, after the ones it has: its id, or 0 when
+ * `actor` isn't an actor, the name breaks the rule above, or it is out of memory.
  */
-export function wgf_entity_create(parent) {
-    const value = host["_wgf_entity_create"](parent);
-    return value >>> 0;
-}
-
-// wgf: call wgf_entity_destroy
-/**
- * End it now, with its node, everything under its node, and its components. One with a
- * behavior is told so: a DESTROYED event (wgf_ecs.h). False for a handle that isn't a
- * live entity.
- */
-export function wgf_entity_destroy(entity) {
-    const value = host["_wgf_entity_destroy"](entity);
-    return value !== 0;
-}
-
-// wgf: call wgf_entity_is_alive
-/**
- * End it now, with its node, everything under its node, and its components. One with a
- * behavior is told so: a DESTROYED event (wgf_ecs.h). False for a handle that isn't a
- * live entity.
- */
-export function wgf_entity_is_alive(entity) {
-    const value = host["_wgf_entity_is_alive"](entity);
-    return value !== 0;
-}
-
-// wgf: call wgf_entity_get_count
-/**
- * Live entities, now.
- */
-export function wgf_entity_get_count() {
-    const value = host["_wgf_entity_get_count"]();
+export function wgf_actor_add_behavior(actor, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_actor_add_behavior"](actor, cstr(name));
+    host["stackRestore"](mark);
     return value;
 }
 
-// wgf: call wgf_entity_get_node
+// wgf: call wgf_actor_remove_behavior
 /**
- * The node it is drawn through, which its component nodes are under; a node of its own,
- * which libwgf moves every frame (set the entity's transform, never this node's).
+ * The behavior removed (DESTROYED raised for it).
  */
-export function wgf_entity_get_node(entity) {
-    const value = host["_wgf_entity_get_node"](entity);
-    return value >>> 0;
-}
-
-// wgf: call wgf_entity_set_name
-/**
- * A name, for finding it and for the scene dump; NULL or "" for none (the default).
- * get_name's is the entity's, valid until it changes or the entity goes. find gives the
- * first live entity so named, 0 for none. False for a handle that isn't an entity, or a
- * name of 64 bytes or more.
- */
-export function wgf_entity_set_name(entity, name) {
-    const mark = host["stackSave"]();
-    const value = host["_wgf_entity_set_name"](entity, cstr(name));
-    host["stackRestore"](mark);
+export function wgf_actor_remove_behavior(actor, behavior) {
+    const value = host["_wgf_actor_remove_behavior"](actor, behavior);
     return value !== 0;
 }
 
-// wgf: call wgf_entity_get_name
+// wgf: call wgf_actor_get_behavior_count
 /**
- * A name, for finding it and for the scene dump; NULL or "" for none (the default).
- * get_name's is the entity's, valid until it changes or the entity goes. find gives the
- * first live entity so named, 0 for none. False for a handle that isn't an entity, or a
- * name of 64 bytes or more.
+ * The actor's behaviors in the order they were added: how many, and the id of the one at
+ * `index` (0 past the end); and the id of its first named `name` (0 for none).
  */
-export function wgf_entity_get_name(entity) {
-    const value = host["_wgf_entity_get_name"](entity);
-    return str(value);
-}
-
-// wgf: call wgf_entity_find
-/**
- * A name, for finding it and for the scene dump; NULL or "" for none (the default).
- * get_name's is the entity's, valid until it changes or the entity goes. find gives the
- * first live entity so named, 0 for none. False for a handle that isn't an entity, or a
- * name of 64 bytes or more.
- */
-export function wgf_entity_find(name) {
-    const mark = host["stackSave"]();
-    const value = host["_wgf_entity_find"](cstr(name));
-    host["stackRestore"](mark);
-    return value >>> 0;
-}
-
-// wgf: call wgf_entity_set_visible
-/**
- * Whether what the entity draws is drawn: hidden, none of its components' nodes (a
- * shape, a sprite, text, an emitter's particles) is drawn, while it moves, ticks, meets
- * others, and its emitters go on simulating. An entity's own node draws nothing, so
- * hiding it (wgf_node_set_visible) hides nothing: this sets each component node's
- * visible, and one added later takes the entity's. A component node made visible on its
- * own afterwards is drawn. Default: visible. False for a handle that isn't an entity.
- */
-export function wgf_entity_set_visible(entity, visible) {
-    const value = host["_wgf_entity_set_visible"](entity, (visible ? 1 : 0));
-    return value !== 0;
-}
-
-// wgf: call wgf_entity_is_visible
-/**
- * Whether what the entity draws is drawn: hidden, none of its components' nodes (a
- * shape, a sprite, text, an emitter's particles) is drawn, while it moves, ticks, meets
- * others, and its emitters go on simulating. An entity's own node draws nothing, so
- * hiding it (wgf_node_set_visible) hides nothing: this sets each component node's
- * visible, and one added later takes the entity's. A component node made visible on its
- * own afterwards is drawn. Default: visible. False for a handle that isn't an entity.
- */
-export function wgf_entity_is_visible(entity) {
-    const value = host["_wgf_entity_is_visible"](entity);
-    return value !== 0;
-}
-
-// wgf: call wgf_entity_set_position
-/**
- * The transform: position, rotation (three angles in radians, about x, then y, then z;
- * in 2D, about z alone), and scale, each set part by part or all at once. A change in a
- * tick is smoothed into the frames after it; snap ends the smoothing, so the node is
- * drawn where the entity is now. False for a handle that isn't an entity.
- */
-export function wgf_entity_set_position(entity, x, y, z) {
-    const value = host["_wgf_entity_set_position"](entity, x, y, z);
-    return value !== 0;
-}
-
-// wgf: call wgf_entity_get_position
-/**
- * The transform: position, rotation (three angles in radians, about x, then y, then z;
- * in 2D, about z alone), and scale, each set part by part or all at once. A change in a
- * tick is smoothed into the frames after it; snap ends the smoothing, so the node is
- * drawn where the entity is now. False for a handle that isn't an entity.
- */
-export function wgf_entity_get_position(entity, into) {
-    const ret = result(12);
-    host["_wgf_entity_get_position"](ret, entity);
-    return vector(ret, 3, into);
-}
-
-// wgf: call wgf_entity_set_rotation
-/**
- * The transform: position, rotation (three angles in radians, about x, then y, then z;
- * in 2D, about z alone), and scale, each set part by part or all at once. A change in a
- * tick is smoothed into the frames after it; snap ends the smoothing, so the node is
- * drawn where the entity is now. False for a handle that isn't an entity.
- */
-export function wgf_entity_set_rotation(entity, x, y, z) {
-    const value = host["_wgf_entity_set_rotation"](entity, x, y, z);
-    return value !== 0;
-}
-
-// wgf: call wgf_entity_get_rotation
-/**
- * The transform: position, rotation (three angles in radians, about x, then y, then z;
- * in 2D, about z alone), and scale, each set part by part or all at once. A change in a
- * tick is smoothed into the frames after it; snap ends the smoothing, so the node is
- * drawn where the entity is now. False for a handle that isn't an entity.
- */
-export function wgf_entity_get_rotation(entity, into) {
-    const ret = result(12);
-    host["_wgf_entity_get_rotation"](ret, entity);
-    return vector(ret, 3, into);
-}
-
-// wgf: call wgf_entity_set_scale
-/**
- * The transform: position, rotation (three angles in radians, about x, then y, then z;
- * in 2D, about z alone), and scale, each set part by part or all at once. A change in a
- * tick is smoothed into the frames after it; snap ends the smoothing, so the node is
- * drawn where the entity is now. False for a handle that isn't an entity.
- */
-export function wgf_entity_set_scale(entity, x, y, z) {
-    const value = host["_wgf_entity_set_scale"](entity, x, y, z);
-    return value !== 0;
-}
-
-// wgf: call wgf_entity_get_scale
-/**
- * The transform: position, rotation (three angles in radians, about x, then y, then z;
- * in 2D, about z alone), and scale, each set part by part or all at once. A change in a
- * tick is smoothed into the frames after it; snap ends the smoothing, so the node is
- * drawn where the entity is now. False for a handle that isn't an entity.
- */
-export function wgf_entity_get_scale(entity, into) {
-    const ret = result(12);
-    host["_wgf_entity_get_scale"](ret, entity);
-    return vector(ret, 3, into);
-}
-
-// wgf: call wgf_entity_set_transform
-/**
- * The transform: position, rotation (three angles in radians, about x, then y, then z;
- * in 2D, about z alone), and scale, each set part by part or all at once. A change in a
- * tick is smoothed into the frames after it; snap ends the smoothing, so the node is
- * drawn where the entity is now. False for a handle that isn't an entity.
- */
-export function wgf_entity_set_transform(entity, position_x, position_y, position_z, rotation_x, rotation_y, rotation_z, scale_x, scale_y, scale_z) {
-    const value = host["_wgf_entity_set_transform"](entity, position_x, position_y, position_z, rotation_x, rotation_y, rotation_z, scale_x, scale_y, scale_z);
-    return value !== 0;
-}
-
-// wgf: call wgf_entity_snap
-/**
- * The transform: position, rotation (three angles in radians, about x, then y, then z;
- * in 2D, about z alone), and scale, each set part by part or all at once. A change in a
- * tick is smoothed into the frames after it; snap ends the smoothing, so the node is
- * drawn where the entity is now. False for a handle that isn't an entity.
- */
-export function wgf_entity_snap(entity) {
-    const value = host["_wgf_entity_snap"](entity);
-    return value !== 0;
-}
-
-// wgf: call wgf_entity_get_positions
-/**
- * Many positions at once: each of `entities` (count of them) read into `out` as x, y, z
- * in turn, as many as fit in `out_count` floats, returning how many floats it filled (a
- * handle that isn't an entity reads 0, 0, 0); and each set from `positions` (x, y, z in
- * turn, positions_count floats), false when there aren't three floats for each, skipping
- * a handle that isn't an entity.
- */
-export function wgf_entity_get_positions(entities, out) {
-    const entitiesPointer = arrayIn(entities, 0, "HEAPU32");
-    const outPointer = arrayOut(out, 1);
-    const value = host["_wgf_entity_get_positions"](entitiesPointer, lengthOf(entities), outPointer, lengthOf(out));
-    arrayBack(outPointer, out, "HEAPF32");
+export function wgf_actor_get_behavior_count(actor) {
+    const value = host["_wgf_actor_get_behavior_count"](actor);
     return value;
 }
 
-// wgf: call wgf_entity_set_positions
+// wgf: call wgf_actor_get_behavior
 /**
- * Many positions at once: each of `entities` (count of them) read into `out` as x, y, z
- * in turn, as many as fit in `out_count` floats, returning how many floats it filled (a
- * handle that isn't an entity reads 0, 0, 0); and each set from `positions` (x, y, z in
- * turn, positions_count floats), false when there aren't three floats for each, skipping
- * a handle that isn't an entity.
+ * The actor's behaviors in the order they were added: how many, and the id of the one at
+ * `index` (0 past the end); and the id of its first named `name` (0 for none).
  */
-export function wgf_entity_set_positions(entities, positions) {
-    const entitiesPointer = arrayIn(entities, 0, "HEAPU32");
-    const positionsPointer = arrayIn(positions, 1, "HEAPF32");
-    const value = host["_wgf_entity_set_positions"](entitiesPointer, lengthOf(entities), positionsPointer, lengthOf(positions));
-    return value !== 0;
+export function wgf_actor_get_behavior(actor, index) {
+    const value = host["_wgf_actor_get_behavior"](actor, index);
+    return value;
 }
 
-// wgf: call wgf_entity_add_component
+// wgf: call wgf_actor_find_behavior
 /**
- * Components. add makes one with its defaults (each component's header says them; the
- * node kinds' as their create makes them); adding one it has keeps it as it is. remove
- * ends it (a node kind's node destroyed, a voice stopped and destroyed). False for a
- * handle that isn't an entity, or a kind that isn't one, and for a model before any
- * stage has been made (logged: models are drawn on stages, and a program that makes none
- * links none of the 3D); remove is false too for one it doesn't have. Adding a behavior
- * is told as a CREATED event (wgf_ecs.h).
+ * The actor's behaviors in the order they were added: how many, and the id of the one at
+ * `index` (0 past the end); and the id of its first named `name` (0 for none).
  */
-export function wgf_entity_add_component(entity, component) {
-    const value = host["_wgf_entity_add_component"](entity, component);
-    return value !== 0;
-}
-
-// wgf: call wgf_entity_remove_component
-/**
- * Components. add makes one with its defaults (each component's header says them; the
- * node kinds' as their create makes them); adding one it has keeps it as it is. remove
- * ends it (a node kind's node destroyed, a voice stopped and destroyed). False for a
- * handle that isn't an entity, or a kind that isn't one, and for a model before any
- * stage has been made (logged: models are drawn on stages, and a program that makes none
- * links none of the 3D); remove is false too for one it doesn't have. Adding a behavior
- * is told as a CREATED event (wgf_ecs.h).
- */
-export function wgf_entity_remove_component(entity, component) {
-    const value = host["_wgf_entity_remove_component"](entity, component);
-    return value !== 0;
-}
-
-// wgf: call wgf_entity_has_component
-/**
- * Components. add makes one with its defaults (each component's header says them; the
- * node kinds' as their create makes them); adding one it has keeps it as it is. remove
- * ends it (a node kind's node destroyed, a voice stopped and destroyed). False for a
- * handle that isn't an entity, or a kind that isn't one, and for a model before any
- * stage has been made (logged: models are drawn on stages, and a program that makes none
- * links none of the 3D); remove is false too for one it doesn't have. Adding a behavior
- * is told as a CREATED event (wgf_ecs.h).
- */
-export function wgf_entity_has_component(entity, component) {
-    const value = host["_wgf_entity_has_component"](entity, component);
-    return value !== 0;
-}
-
-// wgf: call wgf_entity_get_component_node
-/**
- * A node kind's node (SHAPE2D, SPRITE, TEXT, EMITTER2D), and the voice; 0 for one the
- * entity doesn't have. The entity's: set them up, never destroy them.
- */
-export function wgf_entity_get_component_node(entity, component) {
-    const value = host["_wgf_entity_get_component_node"](entity, component);
-    return value >>> 0;
-}
-
-// wgf: call wgf_entity_get_voice
-/**
- * A node kind's node (SHAPE2D, SPRITE, TEXT, EMITTER2D), and the voice; 0 for one the
- * entity doesn't have. The entity's: set them up, never destroy them.
- */
-export function wgf_entity_get_voice(entity) {
-    const value = host["_wgf_entity_get_voice"](entity);
-    return value >>> 0;
-}
-
-// wgf: call wgf_behavior_set_name
-/**
- * Default: "" (none: no code). Setting a name doesn't raise CREATED again. False too
- * for a name breaking the rule above. get_name's is the entity's, valid until it
- * changes.
- */
-export function wgf_behavior_set_name(entity, name) {
+export function wgf_actor_find_behavior(actor, name) {
     const mark = host["stackSave"]();
-    const value = host["_wgf_behavior_set_name"](entity, cstr(name));
+    const value = host["_wgf_actor_find_behavior"](actor, cstr(name));
     host["stackRestore"](mark);
-    return value !== 0;
+    return value;
 }
 
 // wgf: call wgf_behavior_get_name
 /**
- * Default: "" (none: no code). Setting a name doesn't raise CREATED again. False too
- * for a name breaking the rule above. get_name's is the entity's, valid until it
- * changes.
+ * Its name: the actor's, valid while the behavior is.
  */
-export function wgf_behavior_get_name(entity) {
-    const value = host["_wgf_behavior_get_name"](entity);
+export function wgf_behavior_get_name(actor, behavior) {
+    const value = host["_wgf_behavior_get_name"](actor, behavior);
     return str(value);
 }
 
 // wgf: call wgf_behavior_set_param
 /**
  * A parameter, set to `value` (text), added the first time; NULL removes it. False too
- * for a key or value breaking the rule, or a 33rd parameter. get_param's is the
- * entity's: "" for one it doesn't have, valid until it changes. get_param_number reads
- * it as a number: 0 for one it doesn't have or that isn't one.
+ * for a key or value breaking the rule, or a 33rd parameter. get_param's is the actor's:
+ * "" for one it doesn't have, valid until it changes. get_param_number reads it as a
+ * number: 0 for one it doesn't have or that isn't one.
+ *
+ * A value starting with '@' refers to another actor, found once -- as it is set, and again
+ * when a scene's actors are all made -- and kept: get_param_actor is it, never a search.
+ * "@start_gate" is the one actor so named on this actor's stage (wgf_stage2d_find);
+ * "@car/wheel_rl" a path from it (wgf_actor_find); "@./flame" a path from this actor and
+ * "@../gun" from its parent. 0 for a parameter that isn't a reference, one that found
+ * none, and an actor since destroyed.
  */
-export function wgf_behavior_set_param(entity, key, value_) {
+export function wgf_behavior_set_param(actor, behavior, key, value_) {
     const mark = host["stackSave"]();
-    const value = host["_wgf_behavior_set_param"](entity, cstr(key), cstr(value_));
+    const value = host["_wgf_behavior_set_param"](actor, behavior, cstr(key), cstr(value_));
     host["stackRestore"](mark);
     return value !== 0;
 }
@@ -6174,13 +5988,20 @@ export function wgf_behavior_set_param(entity, key, value_) {
 // wgf: call wgf_behavior_get_param
 /**
  * A parameter, set to `value` (text), added the first time; NULL removes it. False too
- * for a key or value breaking the rule, or a 33rd parameter. get_param's is the
- * entity's: "" for one it doesn't have, valid until it changes. get_param_number reads
- * it as a number: 0 for one it doesn't have or that isn't one.
+ * for a key or value breaking the rule, or a 33rd parameter. get_param's is the actor's:
+ * "" for one it doesn't have, valid until it changes. get_param_number reads it as a
+ * number: 0 for one it doesn't have or that isn't one.
+ *
+ * A value starting with '@' refers to another actor, found once -- as it is set, and again
+ * when a scene's actors are all made -- and kept: get_param_actor is it, never a search.
+ * "@start_gate" is the one actor so named on this actor's stage (wgf_stage2d_find);
+ * "@car/wheel_rl" a path from it (wgf_actor_find); "@./flame" a path from this actor and
+ * "@../gun" from its parent. 0 for a parameter that isn't a reference, one that found
+ * none, and an actor since destroyed.
  */
-export function wgf_behavior_get_param(entity, key) {
+export function wgf_behavior_get_param(actor, behavior, key) {
     const mark = host["stackSave"]();
-    const value = host["_wgf_behavior_get_param"](entity, cstr(key));
+    const value = host["_wgf_behavior_get_param"](actor, behavior, cstr(key));
     host["stackRestore"](mark);
     return str(value);
 }
@@ -6188,27 +6009,62 @@ export function wgf_behavior_get_param(entity, key) {
 // wgf: call wgf_behavior_get_param_number
 /**
  * A parameter, set to `value` (text), added the first time; NULL removes it. False too
- * for a key or value breaking the rule, or a 33rd parameter. get_param's is the
- * entity's: "" for one it doesn't have, valid until it changes. get_param_number reads
- * it as a number: 0 for one it doesn't have or that isn't one.
+ * for a key or value breaking the rule, or a 33rd parameter. get_param's is the actor's:
+ * "" for one it doesn't have, valid until it changes. get_param_number reads it as a
+ * number: 0 for one it doesn't have or that isn't one.
+ *
+ * A value starting with '@' refers to another actor, found once -- as it is set, and again
+ * when a scene's actors are all made -- and kept: get_param_actor is it, never a search.
+ * "@start_gate" is the one actor so named on this actor's stage (wgf_stage2d_find);
+ * "@car/wheel_rl" a path from it (wgf_actor_find); "@./flame" a path from this actor and
+ * "@../gun" from its parent. 0 for a parameter that isn't a reference, one that found
+ * none, and an actor since destroyed.
  */
-export function wgf_behavior_get_param_number(entity, key) {
+export function wgf_behavior_get_param_number(actor, behavior, key) {
     const mark = host["stackSave"]();
-    const value = host["_wgf_behavior_get_param_number"](entity, cstr(key));
+    const value = host["_wgf_behavior_get_param_number"](actor, behavior, cstr(key));
     host["stackRestore"](mark);
     return value;
+}
+
+// wgf: call wgf_behavior_get_param_actor
+/**
+ * A parameter, set to `value` (text), added the first time; NULL removes it. False too
+ * for a key or value breaking the rule, or a 33rd parameter. get_param's is the actor's:
+ * "" for one it doesn't have, valid until it changes. get_param_number reads it as a
+ * number: 0 for one it doesn't have or that isn't one.
+ *
+ * A value starting with '@' refers to another actor, found once -- as it is set, and again
+ * when a scene's actors are all made -- and kept: get_param_actor is it, never a search.
+ * "@start_gate" is the one actor so named on this actor's stage (wgf_stage2d_find);
+ * "@car/wheel_rl" a path from it (wgf_actor_find); "@./flame" a path from this actor and
+ * "@../gun" from its parent. 0 for a parameter that isn't a reference, one that found
+ * none, and an actor since destroyed.
+ */
+export function wgf_behavior_get_param_actor(actor, behavior, key) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_behavior_get_param_actor"](actor, behavior, cstr(key));
+    host["stackRestore"](mark);
+    return value >>> 0;
 }
 
 // wgf: call wgf_behavior_has_param
 /**
  * A parameter, set to `value` (text), added the first time; NULL removes it. False too
- * for a key or value breaking the rule, or a 33rd parameter. get_param's is the
- * entity's: "" for one it doesn't have, valid until it changes. get_param_number reads
- * it as a number: 0 for one it doesn't have or that isn't one.
+ * for a key or value breaking the rule, or a 33rd parameter. get_param's is the actor's:
+ * "" for one it doesn't have, valid until it changes. get_param_number reads it as a
+ * number: 0 for one it doesn't have or that isn't one.
+ *
+ * A value starting with '@' refers to another actor, found once -- as it is set, and again
+ * when a scene's actors are all made -- and kept: get_param_actor is it, never a search.
+ * "@start_gate" is the one actor so named on this actor's stage (wgf_stage2d_find);
+ * "@car/wheel_rl" a path from it (wgf_actor_find); "@./flame" a path from this actor and
+ * "@../gun" from its parent. 0 for a parameter that isn't a reference, one that found
+ * none, and an actor since destroyed.
  */
-export function wgf_behavior_has_param(entity, key) {
+export function wgf_behavior_has_param(actor, behavior, key) {
     const mark = host["stackSave"]();
-    const value = host["_wgf_behavior_has_param"](entity, cstr(key));
+    const value = host["_wgf_behavior_has_param"](actor, behavior, cstr(key));
     host["stackRestore"](mark);
     return value !== 0;
 }
@@ -6218,8 +6074,8 @@ export function wgf_behavior_has_param(entity, key) {
  * Its parameters in the order first set: how many, and each one's key ("" past the
  * end).
  */
-export function wgf_behavior_get_param_count(entity) {
-    const value = host["_wgf_behavior_get_param_count"](entity);
+export function wgf_behavior_get_param_count(actor, behavior) {
+    const value = host["_wgf_behavior_get_param_count"](actor, behavior);
     return value;
 }
 
@@ -6228,17 +6084,63 @@ export function wgf_behavior_get_param_count(entity) {
  * Its parameters in the order first set: how many, and each one's key ("" past the
  * end).
  */
-export function wgf_behavior_get_param_key(entity, index) {
-    const value = host["_wgf_behavior_get_param_key"](entity, index);
+export function wgf_behavior_get_param_key(actor, behavior, index) {
+    const value = host["_wgf_behavior_get_param_key"](actor, behavior, index);
     return str(value);
+}
+
+// wgf: call wgf_actor_add_component
+/**
+ * add makes one with its defaults (each component's header says them); adding one it has
+ * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
+ * that isn't an actor, or a component that isn't one; remove is false too for one it
+ * doesn't have.
+ */
+export function wgf_actor_add_component(actor, component) {
+    const value = host["_wgf_actor_add_component"](actor, component);
+    return value !== 0;
+}
+
+// wgf: call wgf_actor_remove_component
+/**
+ * add makes one with its defaults (each component's header says them); adding one it has
+ * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
+ * that isn't an actor, or a component that isn't one; remove is false too for one it
+ * doesn't have.
+ */
+export function wgf_actor_remove_component(actor, component) {
+    const value = host["_wgf_actor_remove_component"](actor, component);
+    return value !== 0;
+}
+
+// wgf: call wgf_actor_has_component
+/**
+ * add makes one with its defaults (each component's header says them); adding one it has
+ * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
+ * that isn't an actor, or a component that isn't one; remove is false too for one it
+ * doesn't have.
+ */
+export function wgf_actor_has_component(actor, component) {
+    const value = host["_wgf_actor_has_component"](actor, component);
+    return value !== 0;
+}
+
+// wgf: call wgf_actor_get_voice
+/**
+ * The voice component's voice; 0 for an actor without one. The actor's: play it, never
+ * destroy it.
+ */
+export function wgf_actor_get_voice(actor) {
+    const value = host["_wgf_actor_get_voice"](actor);
+    return value >>> 0;
 }
 
 // wgf: call wgf_bounds_set_rect
 /**
  * False too for a width or height below 0. Read back as x, y, width, height.
  */
-export function wgf_bounds_set_rect(entity, x, y, width, height) {
-    const value = host["_wgf_bounds_set_rect"](entity, x, y, width, height);
+export function wgf_bounds_set_rect(actor, x, y, width, height) {
+    const value = host["_wgf_bounds_set_rect"](actor, x, y, width, height);
     return value !== 0;
 }
 
@@ -6246,9 +6148,9 @@ export function wgf_bounds_set_rect(entity, x, y, width, height) {
 /**
  * False too for a width or height below 0. Read back as x, y, width, height.
  */
-export function wgf_bounds_get_rect(entity, into) {
+export function wgf_bounds_get_rect(actor, into) {
     const ret = result(16);
-    host["_wgf_bounds_get_rect"](ret, entity);
+    host["_wgf_bounds_get_rect"](ret, actor);
     return vector(ret, 4, into);
 }
 
@@ -6256,8 +6158,8 @@ export function wgf_bounds_get_rect(entity, into) {
 /**
  * False too for a mode that isn't one.
  */
-export function wgf_bounds_set_mode(entity, mode) {
-    const value = host["_wgf_bounds_set_mode"](entity, mode);
+export function wgf_bounds_set_mode(actor, mode) {
+    const value = host["_wgf_bounds_set_mode"](actor, mode);
     return value !== 0;
 }
 
@@ -6265,8 +6167,8 @@ export function wgf_bounds_set_mode(entity, mode) {
 /**
  * False too for a mode that isn't one.
  */
-export function wgf_bounds_get_mode(entity) {
-    const value = host["_wgf_bounds_get_mode"](entity);
+export function wgf_bounds_get_mode(actor) {
+    const value = host["_wgf_bounds_get_mode"](actor);
     return value;
 }
 
@@ -6277,8 +6179,8 @@ export function wgf_bounds_get_mode(entity) {
  * (a scene file's `bounds visible=true`); read back by get_rect as it is now. Setting a
  * rectangle turns it off. Default: off.
  */
-export function wgf_bounds_set_visible(entity, visible) {
-    const value = host["_wgf_bounds_set_visible"](entity, (visible ? 1 : 0));
+export function wgf_bounds_set_visible(actor, visible) {
+    const value = host["_wgf_bounds_set_visible"](actor, (visible ? 1 : 0));
     return value !== 0;
 }
 
@@ -6289,8 +6191,8 @@ export function wgf_bounds_set_visible(entity, visible) {
  * (a scene file's `bounds visible=true`); read back by get_rect as it is now. Setting a
  * rectangle turns it off. Default: off.
  */
-export function wgf_bounds_is_visible(entity) {
-    const value = host["_wgf_bounds_is_visible"](entity);
+export function wgf_bounds_is_visible(actor) {
+    const value = host["_wgf_bounds_is_visible"](actor);
     return value !== 0;
 }
 
@@ -6299,8 +6201,8 @@ export function wgf_bounds_is_visible(entity) {
  * How far past the rectangle's edge it may go first, so a rock wraps once it is wholly
  * off the screen. Clamped to 0 or more.
  */
-export function wgf_bounds_set_margin(entity, margin) {
-    const value = host["_wgf_bounds_set_margin"](entity, margin);
+export function wgf_bounds_set_margin(actor, margin) {
+    const value = host["_wgf_bounds_set_margin"](actor, margin);
     return value !== 0;
 }
 
@@ -6309,8 +6211,8 @@ export function wgf_bounds_set_margin(entity, margin) {
  * How far past the rectangle's edge it may go first, so a rock wraps once it is wholly
  * off the screen. Clamped to 0 or more.
  */
-export function wgf_bounds_get_margin(entity) {
-    const value = host["_wgf_bounds_get_margin"](entity);
+export function wgf_bounds_get_margin(actor) {
+    const value = host["_wgf_bounds_get_margin"](actor);
     return value;
 }
 
@@ -6318,8 +6220,8 @@ export function wgf_bounds_get_margin(entity) {
 /**
  * False too for a radius below 0.
  */
-export function wgf_collider_set_radius(entity, radius) {
-    const value = host["_wgf_collider_set_radius"](entity, radius);
+export function wgf_collider_set_radius(actor, radius) {
+    const value = host["_wgf_collider_set_radius"](actor, radius);
     return value !== 0;
 }
 
@@ -6327,8 +6229,8 @@ export function wgf_collider_set_radius(entity, radius) {
 /**
  * False too for a radius below 0.
  */
-export function wgf_collider_get_radius(entity) {
-    const value = host["_wgf_collider_get_radius"](entity);
+export function wgf_collider_get_radius(actor) {
+    const value = host["_wgf_collider_get_radius"](actor);
     return value;
 }
 
@@ -6338,8 +6240,8 @@ export function wgf_collider_get_radius(entity) {
  * other's layer, so clearing one collider's mask doesn't stop another whose mask has its
  * layer from meeting it: to make one meet nothing, switch it off (below).
  */
-export function wgf_collider_set_layer(entity, layer) {
-    const value = host["_wgf_collider_set_layer"](entity, layer);
+export function wgf_collider_set_layer(actor, layer) {
+    const value = host["_wgf_collider_set_layer"](actor, layer);
     return value !== 0;
 }
 
@@ -6349,8 +6251,8 @@ export function wgf_collider_set_layer(entity, layer) {
  * other's layer, so clearing one collider's mask doesn't stop another whose mask has its
  * layer from meeting it: to make one meet nothing, switch it off (below).
  */
-export function wgf_collider_get_layer(entity) {
-    const value = host["_wgf_collider_get_layer"](entity);
+export function wgf_collider_get_layer(actor) {
+    const value = host["_wgf_collider_get_layer"](actor);
     return value;
 }
 
@@ -6360,8 +6262,8 @@ export function wgf_collider_get_layer(entity) {
  * other's layer, so clearing one collider's mask doesn't stop another whose mask has its
  * layer from meeting it: to make one meet nothing, switch it off (below).
  */
-export function wgf_collider_set_mask(entity, mask) {
-    const value = host["_wgf_collider_set_mask"](entity, mask);
+export function wgf_collider_set_mask(actor, mask) {
+    const value = host["_wgf_collider_set_mask"](actor, mask);
     return value !== 0;
 }
 
@@ -6371,8 +6273,8 @@ export function wgf_collider_set_mask(entity, mask) {
  * other's layer, so clearing one collider's mask doesn't stop another whose mask has its
  * layer from meeting it: to make one meet nothing, switch it off (below).
  */
-export function wgf_collider_get_mask(entity) {
-    const value = host["_wgf_collider_get_mask"](entity);
+export function wgf_collider_get_mask(actor) {
+    const value = host["_wgf_collider_get_mask"](actor);
     return value;
 }
 
@@ -6382,8 +6284,8 @@ export function wgf_collider_get_mask(entity) {
  * (TRIGGER_EXIT at the next tick); its radius, layer, and mask are kept, so switched on
  * again it meets as they say: a ship that can't be hit while it blinks.
  */
-export function wgf_collider_set_enabled(entity, enabled) {
-    const value = host["_wgf_collider_set_enabled"](entity, (enabled ? 1 : 0));
+export function wgf_collider_set_enabled(actor, enabled) {
+    const value = host["_wgf_collider_set_enabled"](actor, (enabled ? 1 : 0));
     return value !== 0;
 }
 
@@ -6393,8 +6295,8 @@ export function wgf_collider_set_enabled(entity, enabled) {
  * (TRIGGER_EXIT at the next tick); its radius, layer, and mask are kept, so switched on
  * again it meets as they say: a ship that can't be hit while it blinks.
  */
-export function wgf_collider_is_enabled(entity) {
-    const value = host["_wgf_collider_is_enabled"](entity);
+export function wgf_collider_is_enabled(actor) {
+    const value = host["_wgf_collider_is_enabled"](actor);
     return value !== 0;
 }
 
@@ -6403,18 +6305,18 @@ export function wgf_collider_is_enabled(entity) {
  * What it overlaps as of the last tick, into `out`, as many as fit in `count`, returning
  * how many it filled.
  */
-export function wgf_collider_get_overlaps(entity, out) {
+export function wgf_collider_get_overlaps(actor, out) {
     const outPointer = arrayOut(out, 0);
-    const value = host["_wgf_collider_get_overlaps"](entity, outPointer, lengthOf(out));
+    const value = host["_wgf_collider_get_overlaps"](actor, outPointer, lengthOf(out));
     arrayBack(outPointer, out, "HEAPU32");
     return value;
 }
 
 // wgf: call wgf_ecs_get_event_count
 /**
- * Events waiting, and the oldest taken off the queue into `out`, three ints each -- the
- * event, the entity, the other entity (0 for none) -- as many whole events as fit in
- * `count` ints, returning how many ints it filled.
+ * Events waiting, and the oldest taken off the queue into `out`, three ints each (the
+ * event, then the two above), as many whole events as fit in `count` ints, returning how
+ * many ints it filled.
  */
 export function wgf_ecs_get_event_count() {
     const value = host["_wgf_ecs_get_event_count"]();
@@ -6423,9 +6325,9 @@ export function wgf_ecs_get_event_count() {
 
 // wgf: call wgf_ecs_take_events
 /**
- * Events waiting, and the oldest taken off the queue into `out`, three ints each -- the
- * event, the entity, the other entity (0 for none) -- as many whole events as fit in
- * `count` ints, returning how many ints it filled.
+ * Events waiting, and the oldest taken off the queue into `out`, three ints each (the
+ * event, then the two above), as many whole events as fit in `count` ints, returning how
+ * many ints it filled.
  */
 export function wgf_ecs_take_events(out) {
     const outPointer = arrayOut(out, 0);
@@ -6434,10 +6336,21 @@ export function wgf_ecs_take_events(out) {
     return value;
 }
 
+// wgf: call wgf_ecs_get_count
+/**
+ * How many actors have a component or a behavior.
+ */
+export function wgf_ecs_get_count() {
+    const value = host["_wgf_ecs_get_count"]();
+    return value;
+}
+
 // wgf: call wgf_ecs_find_behavior
 /**
- * The live entities with the behavior `name`, oldest first, into `out`, as many as fit in
- * `count`, returning how many it filled; and how many there are, to size `out`.
+ * The actors with a behavior named `name`, oldest first (by when their first component or
+ * behavior came), into `out`, as many as fit in `count`, returning how many it filled;
+ * and how many there are, to size `out`. An actor with two of the name is one actor.
+ * Found by an index of each name and component, never by a look at every actor.
  */
 export function wgf_ecs_find_behavior(name, out) {
     const mark = host["stackSave"]();
@@ -6450,8 +6363,10 @@ export function wgf_ecs_find_behavior(name, out) {
 
 // wgf: call wgf_ecs_count_behavior
 /**
- * The live entities with the behavior `name`, oldest first, into `out`, as many as fit in
- * `count`, returning how many it filled; and how many there are, to size `out`.
+ * The actors with a behavior named `name`, oldest first (by when their first component or
+ * behavior came), into `out`, as many as fit in `count`, returning how many it filled;
+ * and how many there are, to size `out`. An actor with two of the name is one actor.
+ * Found by an index of each name and component, never by a look at every actor.
  */
 export function wgf_ecs_count_behavior(name) {
     const mark = host["stackSave"]();
@@ -6460,9 +6375,32 @@ export function wgf_ecs_count_behavior(name) {
     return value;
 }
 
+// wgf: call wgf_ecs_find_component
+/**
+ * The actors with a component, oldest first, the same way; NONE, or a value that isn't a
+ * component, finds none.
+ */
+export function wgf_ecs_find_component(component, out) {
+    const outPointer = arrayOut(out, 0);
+    const value = host["_wgf_ecs_find_component"](component, outPointer, lengthOf(out));
+    arrayBack(outPointer, out, "HEAPU32");
+    return value;
+}
+
+// wgf: call wgf_ecs_count_component
+/**
+ * The actors with a component, oldest first, the same way; NONE, or a value that isn't a
+ * component, finds none.
+ */
+export function wgf_ecs_count_component(component) {
+    const value = host["_wgf_ecs_count_component"](component);
+    return value;
+}
+
 // wgf: call wgf_ecs_clear
 /**
- * Every live entity destroyed, as wgf_entity_destroy would, oldest first.
+ * Every actor with a component or a behavior destroyed, with everything under it, oldest
+ * first.
  */
 export function wgf_ecs_clear() {
     host["_wgf_ecs_clear"]();
@@ -6470,10 +6408,12 @@ export function wgf_ecs_clear() {
 
 // wgf: call wgf_ecs_dump
 /**
- * The world as a scene's text (wgf_scene.h's format): every live entity, oldest first,
- * with its transform and every component as it is now, so loading it as a scene and
- * instantiating it makes the same world again. libwgf's to keep: valid until the next
- * dump. "" when the ecs hasn't started (no entity was ever made).
+ * The simulated actors as a scene's text (wgf_scene.h's format): each top one -- an actor
+ * with a component or a behavior whose parent has none -- oldest first, as a `actor`
+ * block, with its kind, its transform, its components, its behaviors, and the actors under
+ * it, as they are now, so loading it as a scene and instantiating it makes the same actors
+ * again. libwgf's to keep: valid until the next dump. "" when no actor ever had a
+ * component or a behavior.
  */
 export function wgf_ecs_dump() {
     const value = host["_wgf_ecs_dump"]();
@@ -6482,20 +6422,20 @@ export function wgf_ecs_dump() {
 
 // wgf: call wgf_lifetime_set_seconds
 /**
- * Seconds left from now. False for an entity without a lifetime, or a time below 0 or
+ * Seconds left from now. False for an actor without a lifetime, or a time below 0 or
  * not finite.
  */
-export function wgf_lifetime_set_seconds(entity, seconds) {
-    const value = host["_wgf_lifetime_set_seconds"](entity, seconds);
+export function wgf_lifetime_set_seconds(actor, seconds) {
+    const value = host["_wgf_lifetime_set_seconds"](actor, seconds);
     return value !== 0;
 }
 
 // wgf: call wgf_lifetime_get_seconds
 /**
- * Seconds left; 0 for an entity without a lifetime.
+ * Seconds left; 0 for an actor without a lifetime.
  */
-export function wgf_lifetime_get_seconds(entity) {
-    const value = host["_wgf_lifetime_get_seconds"](entity);
+export function wgf_lifetime_get_seconds(actor) {
+    const value = host["_wgf_lifetime_get_seconds"](actor);
     return value;
 }
 
@@ -6503,8 +6443,8 @@ export function wgf_lifetime_get_seconds(entity) {
 /**
  * Units a second, in its parent's space.
  */
-export function wgf_motion_set_velocity(entity, x, y, z) {
-    const value = host["_wgf_motion_set_velocity"](entity, x, y, z);
+export function wgf_motion_set_velocity(actor, x, y, z) {
+    const value = host["_wgf_motion_set_velocity"](actor, x, y, z);
     return value !== 0;
 }
 
@@ -6512,9 +6452,9 @@ export function wgf_motion_set_velocity(entity, x, y, z) {
 /**
  * Units a second, in its parent's space.
  */
-export function wgf_motion_get_velocity(entity, into) {
+export function wgf_motion_get_velocity(actor, into) {
     const ret = result(12);
-    host["_wgf_motion_get_velocity"](ret, entity);
+    host["_wgf_motion_get_velocity"](ret, actor);
     return vector(ret, 3, into);
 }
 
@@ -6522,8 +6462,8 @@ export function wgf_motion_get_velocity(entity, into) {
 /**
  * Radians a second about each axis (in 2D, z alone), added to its rotation's angles.
  */
-export function wgf_motion_set_spin(entity, x, y, z) {
-    const value = host["_wgf_motion_set_spin"](entity, x, y, z);
+export function wgf_motion_set_spin(actor, x, y, z) {
+    const value = host["_wgf_motion_set_spin"](actor, x, y, z);
     return value !== 0;
 }
 
@@ -6531,9 +6471,9 @@ export function wgf_motion_set_spin(entity, x, y, z) {
 /**
  * Radians a second about each axis (in 2D, z alone), added to its rotation's angles.
  */
-export function wgf_motion_get_spin(entity, into) {
+export function wgf_motion_get_spin(actor, into) {
     const ret = result(12);
-    host["_wgf_motion_get_spin"](ret, entity);
+    host["_wgf_motion_get_spin"](ret, actor);
     return vector(ret, 3, into);
 }
 
@@ -6541,8 +6481,8 @@ export function wgf_motion_get_spin(entity, into) {
 /**
  * The part of its velocity it loses each second: 0 none, 1 all of it; clamped to that.
  */
-export function wgf_motion_set_damping(entity, damping) {
-    const value = host["_wgf_motion_set_damping"](entity, damping);
+export function wgf_motion_set_damping(actor, damping) {
+    const value = host["_wgf_motion_set_damping"](actor, damping);
     return value !== 0;
 }
 
@@ -6550,8 +6490,8 @@ export function wgf_motion_set_damping(entity, damping) {
 /**
  * The part of its velocity it loses each second: 0 none, 1 all of it; clamped to that.
  */
-export function wgf_motion_get_damping(entity) {
-    const value = host["_wgf_motion_get_damping"](entity);
+export function wgf_motion_get_damping(actor) {
+    const value = host["_wgf_motion_get_damping"](actor);
     return value;
 }
 
@@ -6559,8 +6499,8 @@ export function wgf_motion_get_damping(entity) {
 /**
  * The most its speed can be, in units a second; 0 for no limit. Clamped to 0 or more.
  */
-export function wgf_motion_set_max_speed(entity, speed) {
-    const value = host["_wgf_motion_set_max_speed"](entity, speed);
+export function wgf_motion_set_max_speed(actor, speed) {
+    const value = host["_wgf_motion_set_max_speed"](actor, speed);
     return value !== 0;
 }
 
@@ -6568,8 +6508,8 @@ export function wgf_motion_set_max_speed(entity, speed) {
 /**
  * The most its speed can be, in units a second; 0 for no limit. Clamped to 0 or more.
  */
-export function wgf_motion_get_max_speed(entity) {
-    const value = host["_wgf_motion_get_max_speed"](entity);
+export function wgf_motion_get_max_speed(actor) {
+    const value = host["_wgf_motion_get_max_speed"](actor);
     return value;
 }
 
@@ -6587,9 +6527,9 @@ export function wgf_scene_create(path) {
 
 // wgf: call wgf_scene_instantiate
 /**
- * Make the scene's entities, in file order, their nodes under `parent` (0: none), each
- * with its components as the file says and a behavior's CREATED raised. The number made;
- * 0 for a scene that isn't READY, or a `parent` that isn't a node (0 is).
+ * Make the scene's top actors' trees, in file order, under `parent` (0: none), each actor
+ * as the file says and each behavior's CREATED raised. The number of top actors made; 0
+ * for a scene that isn't READY, or a `parent` that isn't an actor (0 is).
  */
 export function wgf_scene_instantiate(scene, parent) {
     const value = host["_wgf_scene_instantiate"](scene, parent);
@@ -6598,8 +6538,8 @@ export function wgf_scene_instantiate(scene, parent) {
 
 // wgf: call wgf_scene_spawn
 /**
- * Make one entity of the prefab `name`, its node under `parent`; 0 for a scene that
- * isn't READY, a prefab it doesn't have, or a `parent` that isn't a node.
+ * Make one tree of the prefab `name` under `parent`: its top actor; 0 for a scene that
+ * isn't READY, a prefab it doesn't have, or a `parent` that isn't an actor.
  */
 export function wgf_scene_spawn(scene, name, parent) {
     const mark = host["stackSave"]();
@@ -6608,19 +6548,19 @@ export function wgf_scene_spawn(scene, name, parent) {
     return value >>> 0;
 }
 
-// wgf: call wgf_scene_get_entity_count
+// wgf: call wgf_scene_get_actor_count
 /**
- * What the file holds, once READY: its entities and its prefabs, and each prefab's name
+ * What the file holds, once READY: its top actors and its prefabs, and each prefab's name
  * in file order ("" past the end). 0 and "" until then.
  */
-export function wgf_scene_get_entity_count(scene) {
-    const value = host["_wgf_scene_get_entity_count"](scene);
+export function wgf_scene_get_actor_count(scene) {
+    const value = host["_wgf_scene_get_actor_count"](scene);
     return value;
 }
 
 // wgf: call wgf_scene_get_prefab_count
 /**
- * What the file holds, once READY: its entities and its prefabs, and each prefab's name
+ * What the file holds, once READY: its top actors and its prefabs, and each prefab's name
  * in file order ("" past the end). 0 and "" until then.
  */
 export function wgf_scene_get_prefab_count(scene) {
@@ -6630,7 +6570,7 @@ export function wgf_scene_get_prefab_count(scene) {
 
 // wgf: call wgf_scene_get_prefab_name
 /**
- * What the file holds, once READY: its entities and its prefabs, and each prefab's name
+ * What the file holds, once READY: its top actors and its prefabs, and each prefab's name
  * in file order ("" past the end). 0 and "" until then.
  */
 export function wgf_scene_get_prefab_name(scene, index) {
@@ -6640,7 +6580,7 @@ export function wgf_scene_get_prefab_name(scene, index) {
 
 // wgf: call wgf_scene_has_prefab
 /**
- * What the file holds, once READY: its entities and its prefabs, and each prefab's name
+ * What the file holds, once READY: its top actors and its prefabs, and each prefab's name
  * in file order ("" past the end). 0 and "" until then.
  */
 export function wgf_scene_has_prefab(scene, name) {

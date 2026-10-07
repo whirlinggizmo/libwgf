@@ -3,18 +3,18 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Light's calls, on a Node: `var x:Light = handle` gives it them, and a Light is still a Node. **/
-@:forward abstract Light(Node) from Node to Node {
+/** Light's calls, on a Actor: `var x:Light = handle` gives it them, and a Light is still a Actor. **/
+@:forward abstract Light(Actor) from Actor to Actor {
 	/**
 	    A white light of intensity 1, no range limit, a spot's cone pi/6 to pi/4. 0 when
-	    `type` isn't a type, or there is no room for another node.
+	    `type` isn't a type, or there is no room for another actor.
 	**/
 	public static inline function create(type:LightType):Light
-		return ((Raw.wgf_light_create(type) : Node) : Light);
+		return ((Raw.wgf_light_create(type) : Actor) : Light);
 
 	/**
 	    A white light of intensity 1, no range limit, a spot's cone pi/6 to pi/4. 0 when
-	    `type` isn't a type, or there is no room for another node.
+	    `type` isn't a type, or there is no room for another actor.
 	**/
 	public inline function getType():LightType
 		return Raw.wgf_light_get_type(this);

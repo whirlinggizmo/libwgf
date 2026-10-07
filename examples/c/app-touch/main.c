@@ -4,13 +4,13 @@
 
 #include "wgf_app.h"
 #include "wgf_asset.h"
-#include "wgf_canvas.h"
+#include "wgf_stage2d.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
 #include "wgf_input.h"
 #include "wgf_keyboard.h"
 #include "wgf_mouse.h"
-#include "wgf_node.h"
+#include "wgf_actor.h"
 #include "wgf_render.h"
 #include "wgf_resource.h"
 #include "wgf_sprite.h"
@@ -46,7 +46,7 @@
 #define FINGERS 8
 
 static struct {
-    wgf_node_t canvas, logo, coin;
+    wgf_actor_t stage, logo, coin;
     bool coin_held; /* a left press that started on the coin is held */
     float logo_x, logo_y, logo_scale, logo_rotation;
     float lifted[FINGERS][3]; /* x, y, fade (1 down to 0) where a finger lifted */
@@ -83,18 +83,18 @@ static void frame(void *user)
         transform_logo(center.x, center.y, wgf_touch_get_gesture_scale(), wgf_touch_get_gesture_rotation());
     }
     if (wheel.y != 0.0f) transform_logo(mouse.x, mouse.y, powf(1.1f, wheel.y), 0.0f);
-    wgf_node_set_position(g.logo, g.logo_x, g.logo_y, 0);
-    wgf_node_set_scale(g.logo, g.logo_scale, g.logo_scale, 1);
-    wgf_node_set_rotation(g.logo, 0, 0, g.logo_rotation);
+    wgf_actor_set_position(g.logo, g.logo_x, g.logo_y, 0);
+    wgf_actor_set_scale(g.logo, g.logo_scale, g.logo_scale, 1);
+    wgf_actor_set_rotation(g.logo, 0, 0, g.logo_rotation);
 
     /* the pointer (the mouse, or one finger) drags the coin: picked where it was before this frame moved it */
     if (wgf_mouse_is_pressed(WGF_MOUSE_BUTTON_LEFT)) {
-        const wgf_vec3_t coin = wgf_node_get_position(g.coin);
+        const wgf_vec3_t coin = wgf_actor_get_position(g.coin);
         g.coin_held = fabsf(mouse.x - coin.x) < COIN * 0.5f && fabsf(mouse.y - coin.y) < COIN * 0.5f;
     } else if (!wgf_mouse_is_down(WGF_MOUSE_BUTTON_LEFT)) {
         g.coin_held = false;
     }
-    if (g.coin_held) wgf_node_set_position(g.coin, mouse.x, mouse.y, 0);
+    if (g.coin_held) wgf_actor_set_position(g.coin, mouse.x, mouse.y, 0);
     wgf_sprite_set_tint(g.coin, g.coin_held ? wgf_color_make(255, 230, 150, 255) : WGF_COLOR_WHITE);
 
     /* where fingers lifted: a ring that fades */
@@ -109,7 +109,7 @@ static void frame(void *user)
         }
     }
 
-    wgf_canvas_draw(g.canvas);
+    wgf_stage2d_draw(g.stage);
     for (i = 0; i < FINGERS; i++) {
         if (g.lifted[i][2] > 0.0f) {
             wgf_draw_circle_lines(g.lifted[i][0], g.lifted[i][1], RING * (2.0f - g.lifted[i][2]), 1,
@@ -148,11 +148,11 @@ static void init(void *user)
     logo_texture = wgf_texture_create(LOGO_PATH);
     tiles = wgf_texture_create(TILES_PATH);
     wgf_render_set_clear_color(wgf_color_make(22, 25, 33, 255));
-    g.canvas = wgf_canvas_create();
+    g.stage = wgf_stage2d_create();
 
     g.logo = wgf_sprite_create(logo_texture);
     wgf_sprite_set_size(g.logo, 240, 240);
-    wgf_node_set_parent(g.logo, g.canvas);
+    wgf_actor_set_parent(g.logo, g.stage);
     g.logo_x = (float)wgf_window_get_width() * 0.5f;
     g.logo_y = (float)wgf_window_get_height() * 0.45f;
     g.logo_scale = 1.0f;
@@ -161,8 +161,8 @@ static void init(void *user)
     g.coin = wgf_sprite_create(tiles);
     wgf_sprite_set_source(g.coin, 42, 22, 16, 16); /* the coin, in the tile sheet (wgrender tools/gen_tiles.py) */
     wgf_sprite_set_size(g.coin, COIN, COIN);
-    wgf_node_set_position(g.coin, (float)wgf_window_get_width() * 0.5f, (float)wgf_window_get_height() * 0.8f, 0);
-    wgf_node_set_parent(g.coin, g.canvas);
+    wgf_actor_set_position(g.coin, (float)wgf_window_get_width() * 0.5f, (float)wgf_window_get_height() * 0.8f, 0);
+    wgf_actor_set_parent(g.coin, g.stage);
 
     /* the sprites hold their textures */
     wgf_resource_release(logo_texture);

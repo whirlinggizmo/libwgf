@@ -10,12 +10,12 @@ each, and reads its lines: for each shape and each, the median of its runs of 20
 calls, in ns per call. Both reach the host through the JS binding (bindings/js/wgf.js):
 the Haxe column is the binding and the Haxe binding over it, the JS column the JS
 binding alone.
-  set        wgf_entity_set_position: a handle and three floats in, a bool out
-  get        wgf_entity_get_position: a vec3 out, into a kept vector
-  transform  wgf_entity_set_transform: nine floats
-  string     wgf_entity_set_name: a string in (copied, no search), a bool out
-  bulk       wgf_entity_get_positions over 1,000 entities (an array in, one out);
-             bulk-entity is the same per entity
+  set        wgf_actor_set_position: a handle and three floats in, a bool out
+  get        wgf_actor_get_position: a vec3 out, into a kept vector
+  transform  wgf_actor_set_transform: nine floats
+  string     wgf_actor_set_name: a string in (copied, no search), a bool out
+  bulk       wgf_actor_get_positions over 1,000 actors (an array in, one out);
+             bulk-actor is the same per actor
 Each page load is one run; with --runs, each shape's median over the loads, and every
 load's number after it. Timing, so not a check: CI doesn't run it. Standard library only.
 """
@@ -35,7 +35,7 @@ import webhost  # noqa: E402
 PROGRAM = Path(__file__).resolve().parent / 'calls'
 MARK = 'calls: '
 VERDICT = 'calls done: '
-SHAPES = ('set', 'get', 'transform', 'string', 'bulk', 'bulk-entity')
+SHAPES = ('set', 'get', 'transform', 'string', 'bulk', 'bulk-actor')
 
 
 def numbers(output):

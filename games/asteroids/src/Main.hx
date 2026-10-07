@@ -20,7 +20,7 @@ class Main {
 	public static inline var WIDTH = 960;
 	public static inline var HEIGHT = 720;
 
-	public static var world:Canvas;
+	public static var world:Stage2d;
 	public static var scene:Scene;
 	public static var sounds:Sounds;
 	public static var state = State.TITLE;
@@ -32,7 +32,7 @@ class Main {
 	static var ready = false;
 	static var waveDelay = 0.0;
 	static var respawnDelay = 0.0;
-	static var ship:Entity = 0;
+	static var ship:Actor = 0;
 
 	static function main() {
 		Window.setTitle("Asteroids");
@@ -45,7 +45,7 @@ class Main {
 	static function init() {
 		Asset.setHost("assets");
 		Render.setClearColor(Color.make(6, 8, 14, 255));
-		world = Canvas.create();
+		world = Stage2d.create();
 		scene = Scene.create("scenes/asteroids.scene");
 		sounds = new Sounds();
 		Behavior.register("Ship", e -> new Ship(e));

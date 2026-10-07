@@ -19,7 +19,7 @@
  * design area, centered between the bars. */
 
 static int failures;
-static wgf_node_t camera;
+static wgf_actor_t camera;
 
 static void expect(int ok, const char *what)
 {
@@ -82,7 +82,7 @@ int main(void)
     wgf_render_set_bar_color(WGF_COLOR_BLUE);
     camera = wgf_camera3d_create();
     wgf_camera3d_set_fov(camera, 0.9f);
-    wgf_node_set_position(camera, 0.0f, 0.0f, 5.0f);
+    wgf_actor_set_position(camera, 0.0f, 0.0f, 5.0f);
     wgf_app_run(NULL, NULL, on_frame, NULL, NULL);
     return 0;
 }

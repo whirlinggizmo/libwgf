@@ -11,18 +11,18 @@
 #include "wgf_fs.h"
 #include "wgf_handle.h"
 #include "wgf_color.h"
-#include "wgf_canvas.h"
+#include "wgf_stage2d.h"
 #include "wgf_draw.h"
-#include "wgf_node.h"
+#include "wgf_actor.h"
 #include "wgf_resource.h"
 #include "wgf_sprite.h"
 #include "wgf_render.h"
 #include "wgf_texture.h"
 
 /* Textures, pixel by pixel, in a browser (tools/run_in_browser.py): a PNG loaded on
- * create through core's pipeline, drawn into a WebGL2 canvas scaled up with nearest
+ * create through core's pipeline, drawn into a WebGL2 stage scaled up with nearest
  * filtering, a region cut from it, and a texture that failed showing the
- * placeholder checker, a sprite of it turned in a canvas, and a pushed clip. A frame
+ * placeholder checker, a sprite of it turned on a 2D stage, and a pushed clip. A frame
  * loop, since the
  * web store opens between frames. */
 
@@ -98,23 +98,23 @@ static void draw_and_check(void)
     expect_pixel(38, 34, wgf_color_make(20, 0, 20, 255), "and the next: near black");
 
     {
-        /* a sprite of it in a canvas, turned a half turn about its center: the texels the
+        /* a sprite of it on a 2D stage, turned a half turn about its center: the texels the
            other way round; and a pushed clip around a rectangle (its bottom-right quarter) */
-        const wgf_node_t canvas = wgf_canvas_create(), sprite = wgf_sprite_create(image);
-        wgf_node_set_parent(sprite, canvas);
+        const wgf_actor_t stage = wgf_stage2d_create(), sprite = wgf_sprite_create(image);
+        wgf_actor_set_parent(sprite, stage);
         wgf_sprite_set_size(sprite, 32, 32);
-        wgf_node_set_transform(sprite, 16, 16, 0, 0, 0, 3.14159265f, 1, 1, 1);
+        wgf_actor_set_transform(sprite, 16, 16, 0, 0, 0, 3.14159265f, 1, 1, 1);
         begin_frame();
         wgf_render_push_clip(32, 32, 64, 64);
         wgf_draw_rectangle(0, 0, 64, 64, wgf_color_make(255, 0, 0, 255));
         wgf_render_pop_clip();
-        wgf_canvas_draw(canvas);
+        wgf_stage2d_draw(stage);
         wgf_gfx_priv_end_frame();
         expect_pixel(8, 8, wgf_color_make(255, 255, 255, 255), "a sprite turned a half turn: white top-left");
         expect_pixel(24, 24, wgf_color_make(255, 0, 0, 255), "and red bottom-right");
         expect_pixel(48, 48, wgf_color_make(255, 0, 0, 255), "a pushed clip: red inside it");
         expect_pixel(48, 16, wgf_color_make(0, 0, 0, 255), "a pushed clip: nothing outside it");
-        wgf_node_destroy(canvas, WGF_NODE_DESTROY_CHILDREN);
+        wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
     }
 }
 
@@ -148,7 +148,7 @@ static void on_frame(void *user)
     }
 }
 
-/* The page's canvas, 64 by 64, through app's runtime, which updates core each
+/* The page's stage, 64 by 64, through app's runtime, which updates core each
  * frame before calling it. */
 int main(void)
 {

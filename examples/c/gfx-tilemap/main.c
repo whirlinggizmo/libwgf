@@ -5,20 +5,20 @@
 #include "wgf_app.h"
 #include "wgf_asset.h"
 #include "wgf_camera2d.h"
-#include "wgf_canvas.h"
+#include "wgf_stage2d.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
 #include "wgf_keyboard.h"
 #include "wgf_loop.h"
 #include "wgf_mouse.h"
-#include "wgf_node.h"
+#include "wgf_actor.h"
 #include "wgf_render.h"
 #include "wgf_resource.h"
 #include "wgf_sprite.h"
 #include "wgf_texture.h"
 #include "wgf_window.h"
 
-/* A scrolling 2D tile map: sprites in a canvas, seen through a 2D camera.
+/* A scrolling 2D tile map: sprites on a 2D stage, seen through a 2D camera.
  *   - one sprite sheet (textures/tiles.png), one sprite a cell, cut out with
  *     wgf_sprite_set_source
  *   - trees and flags are 16x32 in the sheet, drawn 1x2 world units, and stand on
@@ -32,14 +32,14 @@
  * libwgt's gfx-tilemap (wgrender's tilemap) done 1:1, so the two compare in the size
  * table: the same window, map, controls, and text. Where it differs, and why:
  *   - "libwgt" reads "libwgf" in the window's title and the heading: the library's name.
- *   - A canvas and a 2D camera, where libwgt has 3D sprites (WGT_SPRITE_FACING_FREE) in
+ *   - A 2D stage and a 2D camera, where libwgt has 3D sprites (WGT_SPRITE_FACING_FREE) in
  *     a scene under an orthographic camera: libwgf is 2D only. The world is the same,
- *     y up, in world units: a cell at (x, y) is at (x, -y) in the canvas, and the
+ *     y up, in world units: a cell at (x, y) is at (x, -y) on the stage, and the
  *     camera's zoom is the window's height over the units seen (a 2D camera is
  *     orthographic), so the picture is the same.
  *   - Ground and props are drawn in their order, the ground first, where libwgt orders
  *     them by depth and draws them OPAQUE and MASK: libwgf's sprites have no alpha
- *     modes, and a canvas needs none, drawing in order.
+ *     modes, and a 2D stage needs none, drawing in order.
  *   - The coins' hover and click are the example's own test of the pointer against each
  *     coin's disc, where libwgt's pointer picking (wgt_pointer.h) finds them by their
  *     texels: libwgf has no picking. A click is a press and a release on the same coin,
@@ -61,10 +61,10 @@ static const float COIN[4] = {42, 22, 16, 16};
 static const float ROCK[4] = {62, 22, 16, 16};
 
 static struct {
-    wgf_node_t canvas, camera;
+    wgf_actor_t stage, camera;
     wgf_texture_t texture;
     wgf_color_t shade, text, dim, highlight;
-    wgf_node_t props[MAX_PROPS];
+    wgf_actor_t props[MAX_PROPS];
     bool is_coin[MAX_PROPS];
     float prop_x[MAX_PROPS], prop_y[MAX_PROPS], prop_size[MAX_PROPS]; /* a coin's bottom middle, and size */
     int prop_count;
@@ -77,20 +77,20 @@ static struct {
 static void place_camera(void)
 {
     const float height = (float)wgf_window_get_height();
-    wgf_node_set_position(g.camera, g.center_x, -g.center_y, 0.0f); /* the canvas's y is down */
+    wgf_actor_set_position(g.camera, g.center_x, -g.center_y, 0.0f); /* the stage's y is down */
     if (height > 0.0f) wgf_camera2d_set_zoom(g.camera, height / g.zoom);
 }
 
 /* One cell of the sheet in the world, at (x, y) with y up; the ones added later draw
  * over the ones before. */
-static wgf_node_t add_sprite(const float cell[4], float x, float y, float width, float height, float pivot_y)
+static wgf_actor_t add_sprite(const float cell[4], float x, float y, float width, float height, float pivot_y)
 {
-    const wgf_node_t sprite = wgf_sprite_create(g.texture);
+    const wgf_actor_t sprite = wgf_sprite_create(g.texture);
     wgf_sprite_set_source(sprite, cell[0], cell[1], cell[2], cell[3]);
     wgf_sprite_set_size(sprite, width, height);
     wgf_sprite_set_pivot(sprite, 0.5f, pivot_y);
-    wgf_node_set_position(sprite, x, -y, 0.0f);
-    wgf_node_set_parent(sprite, g.canvas);
+    wgf_actor_set_position(sprite, x, -y, 0.0f);
+    wgf_actor_set_parent(sprite, g.stage);
     return sprite;
 }
 
@@ -127,9 +127,9 @@ static void init(void *user)
     g.highlight = wgf_color_make(255, 230, 140, 255);
     g.pressed = -1;
 
-    g.canvas = wgf_canvas_create();
+    g.stage = wgf_stage2d_create();
     g.camera = wgf_camera2d_create();
-    wgf_canvas_set_camera(g.canvas, g.camera);
+    wgf_stage2d_set_camera(g.stage, g.camera);
     g.center_x = WORLD_W * 0.5f;
     g.center_y = WORLD_H * 0.5f;
     g.zoom = 12.0f;
@@ -166,7 +166,7 @@ static int coin_at(float x, float y)
     for (i = g.prop_count - 1; i >= 0; i--) {
         const float r = g.prop_size[i] * 0.5f;
         const float dx = x - g.prop_x[i], dy = y - (g.prop_y[i] + r);
-        if (g.is_coin[i] && wgf_node_is_visible(g.props[i]) && dx * dx + dy * dy <= r * r) return i;
+        if (g.is_coin[i] && wgf_actor_is_visible(g.props[i]) && dx * dx + dy * dy <= r * r) return i;
     }
     return -1;
 }
@@ -214,7 +214,7 @@ static void frame(void *user)
     if (wgf_mouse_is_pressed(WGF_MOUSE_BUTTON_LEFT)) g.pressed = hovered;
     if (wgf_mouse_is_released(WGF_MOUSE_BUTTON_LEFT)) {
         if (g.pressed >= 0 && g.pressed == hovered) {
-            wgf_node_set_visible(g.props[hovered], false);
+            wgf_actor_set_visible(g.props[hovered], false);
             g.collected++;
             hovered = -1;
         }
@@ -224,7 +224,7 @@ static void frame(void *user)
         if (g.is_coin[i]) wgf_sprite_set_tint(g.props[i], i == hovered ? g.highlight : WGF_COLOR_WHITE);
     }
 
-    wgf_canvas_draw(g.canvas);
+    wgf_stage2d_draw(g.stage);
     wgf_draw_rectangle(0, 0, width, 88, g.shade);
     wgf_draw_text(0, "libwgf tilemap: an orthographic camera over sprite tiles", 20, 20, 20, g.text);
     snprintf(line, sizeof(line), "coins: %d of 8   zoom: %.1f units   center: %.1f, %.1f%s", g.collected,

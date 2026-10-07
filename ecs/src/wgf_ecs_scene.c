@@ -6,9 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "node/wgf_gfx_node_priv.h"
+#include "actor/wgf_gfx_actor_priv.h"
 #include "wgf_asset_priv.h" /* a resource made from a path: the asset part locates it */
 #include "wgf_behavior.h"
+#include "wgf_component.h"
 #include "wgf_bounds.h"
 #include "wgf_collider.h"
 #include "wgf_core_fs_priv.h"
@@ -30,15 +31,17 @@
 #include "wgf_voice.h"
 
 /* Scenes (wgf_scene.h): a resource whose file is read and parsed whole on a worker, every
- * line checked against the table of components and keys below, kept as each line's
- * settings in their text; making an entity applies its lines in order, a prefab's first
- * when it starts as one. The format's values are parsed by the same functions when the
- * file is read and when its lines are applied, so what was checked is what is used. */
+ * line checked against the table of kinds, components, and keys below, kept as each
+ * line's settings in their text; making an actor makes it of its kind, applies its lines in
+ * order (a prefab's first when it starts as one), then makes its children (the prefab's,
+ * then its own). The format's values are parsed by the same functions when the file is
+ * read and when its lines are applied, so what was checked is what is used. */
 
 #define FILE_MAX (4 << 20)
 #define LINE_MAX_BYTES 4096
 #define WORDS_MAX 128
 #define POINTS_MAX 2048 /* floats in a polygon: 1024 points, as wgf_shape2d_set_polygon takes */
+#define DEPTH_MAX 32    /* actors inside actors */
 
 /* ---- the format's table --------------------------------------------------------------- */
 
@@ -62,28 +65,38 @@ typedef struct key_t {
     int value;
 } key_t;
 
+enum { ROLE_TRANSFORM, ROLE_KIND, ROLE_COMPONENT, ROLE_BEHAVIOR };
+
 typedef struct kind_t {
     const char *name;
-    int component; /* wgf_component_t; 0 for the transform */
+    int role;
+    int what; /* a kind's wgf_actor_kind_t, a component's wgf_component_t */
     key_t keys[16];
     bool open; /* any key: a behavior's parameters */
 } kind_t;
 
 static const kind_t kinds[] = {
-    {"transform", 0, {{"position", V_NUM3}, {"rotation", V_NUM3}, {"scale", V_NUM3}}, false},
+    {"transform", ROLE_TRANSFORM, 0, {{"position", V_NUM3}, {"rotation", V_NUM3}, {"scale", V_NUM3}}, false},
     {"motion",
+     ROLE_COMPONENT,
      WGF_COMPONENT_MOTION,
      {{"velocity", V_NUM3}, {"spin", V_NUM3}, {"damping", V_NUM}, {"max_speed", V_NUM}},
      false},
     {"bounds",
+     ROLE_COMPONENT,
      WGF_COMPONENT_BOUNDS,
      {{"rect", V_NUM4}, {"mode", V_MODE}, {"margin", V_NUM}, {"visible", V_BOOL}},
      false},
-    {"lifetime", WGF_COMPONENT_LIFETIME, {{"seconds", V_NUM}}, false},
-    {"collider", WGF_COMPONENT_COLLIDER, {{"radius", V_NUM}, {"layer", V_INT}, {"mask", V_INT}, {"enabled", V_BOOL}}, false},
-    {"behavior", WGF_COMPONENT_BEHAVIOR, {{"name", V_TEXT}}, true},
+    {"lifetime", ROLE_COMPONENT, WGF_COMPONENT_LIFETIME, {{"seconds", V_NUM}}, false},
+    {"collider",
+     ROLE_COMPONENT,
+     WGF_COMPONENT_COLLIDER,
+     {{"radius", V_NUM}, {"layer", V_INT}, {"mask", V_INT}, {"enabled", V_BOOL}},
+     false},
+    {"behavior", ROLE_BEHAVIOR, 0, {{"name", V_TEXT}}, true},
     {"shape2d",
-     WGF_COMPONENT_SHAPE2D,
+     ROLE_KIND,
+     WGF_ACTOR_KIND_SHAPE2D,
      {{"rectangle", V_NUM2},
       {"circle", V_NUM},
       {"line", V_NUM4},
@@ -93,15 +106,18 @@ static const kind_t kinds[] = {
       {"pivot", V_NUM2}},
      false},
     {"sprite",
-     WGF_COMPONENT_SPRITE,
+     ROLE_KIND,
+     WGF_ACTOR_KIND_SPRITE,
      {{"texture", V_TEXT}, {"source", V_NUM4}, {"size", V_NUM2}, {"pivot", V_NUM2}, {"tint", V_COLOR}},
      false},
     {"text",
-     WGF_COMPONENT_TEXT,
+     ROLE_KIND,
+     WGF_ACTOR_KIND_TEXT,
      {{"string", V_TEXT}, {"font", V_TEXT}, {"size", V_NUM}, {"color", V_COLOR}, {"wrap", V_NUM}, {"align", V_ALIGN}},
      false},
     {"emitter2d",
-     WGF_COMPONENT_EMITTER2D,
+     ROLE_KIND,
+     WGF_ACTOR_KIND_EMITTER2D,
      {{"rate", V_NUM},
       {"emitting", V_BOOL},
       {"capacity", V_INT},
@@ -118,6 +134,7 @@ static const kind_t kinds[] = {
       {"burst", V_INT}},
      false},
     {"voice",
+     ROLE_COMPONENT,
      WGF_COMPONENT_VOICE,
      {{"sound", V_TEXT},
       {"streamed", V_BOOL},
@@ -128,7 +145,8 @@ static const kind_t kinds[] = {
       {"play", V_BOOL}},
      false},
     {"model",
-     WGF_COMPONENT_MODEL,
+     ROLE_KIND,
+     WGF_ACTOR_KIND_MODEL,
      {{"plane", V_NUM3},
       {"cube", V_NUM3},
       {"sphere", V_NUM3},
@@ -260,10 +278,15 @@ typedef struct line_t {
     int count;
 } line_t;
 
-typedef struct thing_t {
-    char name[WGF_ECS_PRIV_NAME_MAX];
+#define PATH_MAX_BYTES 256
+
+typedef struct thing_t { /* a block: a prefab's actor or a scene's, its parent named by its path */
+    char name[WGF_ECS_PRIV_NAME_MAX]; /* its path's last part */
+    char path[PATH_MAX_BYTES];        /* "ship/flame": its parent's path, then its name */
     bool prefab;
-    int from; /* the prefab it starts as, into things; -1 none */
+    int parent; /* its parent's block, into things; -1 at the top */
+    int from;   /* the prefab it starts as, into things; -1 none */
+    int kind;   /* its kind line's kind, into kinds[]; -1 none: a plain actor, or its prefab's kind */
     line_t *lines;
     int count, capacity;
 } thing_t;
@@ -271,7 +294,7 @@ typedef struct thing_t {
 struct wgf_ecs_priv_scene_data_t {
     thing_t *things;
     int count, capacity;
-    int entities, prefabs;
+    int actors, prefabs; /* at the top */
 };
 
 void wgf_ecs_priv_scene_data_free(wgf_ecs_priv_scene_data_t *data)
@@ -358,7 +381,29 @@ static int find_prefab(const wgf_ecs_priv_scene_data_t *data, const char *name)
 {
     int i;
     for (i = 0; i < data->count; i++) {
-        if (data->things[i].prefab && strcmp(data->things[i].name, name) == 0) return i;
+        if (data->things[i].prefab && data->things[i].parent < 0 && strcmp(data->things[i].name, name) == 0) return i;
+    }
+    return -1;
+}
+
+/* The block above whose path is `path`, a prefab's or a scene's actor's as `prefab` says;
+ * -1 for none. */
+static int find_path(const wgf_ecs_priv_scene_data_t *data, const char *path, bool prefab)
+{
+    int i;
+    for (i = 0; i < data->count; i++) {
+        if (data->things[i].prefab == prefab && strcmp(data->things[i].path, path) == 0) return i;
+    }
+    return -1;
+}
+
+/* The kind a block is: its own kind line's, or its prefab's (-1: a plain actor). */
+static int kind_of(const wgf_ecs_priv_scene_data_t *data, int thing)
+{
+    int depth;
+    for (depth = 0; thing >= 0 && depth < DEPTH_MAX; depth++) {
+        if (data->things[thing].kind >= 0) return data->things[thing].kind;
+        thing = data->things[thing].from;
     }
     return -1;
 }
@@ -391,9 +436,13 @@ static bool add_line(parser_t *parser, thing_t *thing, int kind, char **words)
             return true;
         }
         *eq = '\0';
+        if (strpbrk(words[i], ".[]") != NULL) {
+            fail(parser, "a key with . [ or ] is kept for structured values", words[i]);
+            return true;
+        }
         type = key_type(kind, words[i]);
         if (type < 0) {
-            fail(parser, "no such key for this component", words[i]);
+            fail(parser, "no such key for this line", words[i]);
             return true;
         }
         if ((size_t)(eq - words[i]) >= WGF_ECS_PRIV_NAME_MAX || strlen(eq + 1) >= WGF_ECS_PRIV_VALUE_MAX * 16) {
@@ -418,7 +467,7 @@ wgf_ecs_priv_scene_data_t *wgf_ecs_priv_scene_parse(const char *text, size_t siz
     parser_t parser = {path, 0, false, NULL};
     wgf_ecs_priv_scene_data_t *data = (wgf_ecs_priv_scene_data_t *)calloc(1, sizeof(*data));
     const char *p = text, *end = text + size;
-    thing_t *open = NULL;
+    int open = -1; /* the block open, into things */
     bool header = false;
     parser.scratch = (value_t *)malloc(sizeof(value_t));
     if (data == NULL || parser.scratch == NULL) {
@@ -472,28 +521,54 @@ wgf_ecs_priv_scene_data_t *wgf_ecs_priv_scene_parse(const char *text, size_t siz
         }
         if (words[0] == NULL) continue;
         if (!header) {
-            if (strcmp(words[0], "wgf-scene") != 0 || words[1] == NULL || strcmp(words[1], "1") != 0 ||
+            if (strcmp(words[0], "wgf-scene") == 0 && words[1] != NULL && strcmp(words[1], "1") == 0) {
+                fail(&parser, "version 1's entities are actors now: the file's blocks are `actor`, at `wgf-scene 2`",
+                     NULL);
+                break;
+            }
+            if (strcmp(words[0], "wgf-scene") != 0 || words[1] == NULL || strcmp(words[1], "2") != 0 ||
                 words[2] != NULL) {
-                fail(&parser, "the first line is `wgf-scene 1`", words[0]);
+                fail(&parser, "the first line is `wgf-scene 2`", words[0]);
                 break;
             }
             header = true;
             continue;
         }
-        if (strcmp(words[0], "prefab") == 0 || strcmp(words[0], "entity") == 0) {
+        if (strcmp(words[0], "prefab") == 0 || strcmp(words[0], "actor") == 0) {
             const bool prefab = words[0][0] == 'p';
+            const char *slash = words[1] != NULL ? strrchr(words[1], '/') : NULL;
+            const char *name = slash != NULL ? slash + 1 : words[1];
+            int parent = -1, depth = 0;
             thing_t *thing;
-            if (open != NULL) {
-                fail(&parser, "an entity or prefab inside another: its `end` is missing", words[0]);
+            if (open >= 0) {
+                fail(&parser, "a block inside another: blocks are flat, a part naming its parent by path", words[0]);
                 break;
             }
             if ((prefab && words[1] == NULL) || (words[1] != NULL && words[2] != NULL) ||
-                (words[1] != NULL && strlen(words[1]) >= WGF_ECS_PRIV_NAME_MAX)) {
-                fail(&parser, prefab ? "prefab takes a name, under 64 bytes" : "entity takes a name or none", NULL);
+                (words[1] != NULL && strlen(words[1]) >= PATH_MAX_BYTES) ||
+                (name != NULL && (name[0] == '\0' || strlen(name) >= WGF_ECS_PRIV_NAME_MAX))) {
+                fail(&parser, prefab ? "prefab takes a path, its name under 64 bytes"
+                                     : "actor takes a path or none, its name under 64 bytes", NULL);
                 break;
             }
-            if (prefab && find_prefab(data, words[1]) >= 0) {
-                fail(&parser, "a second prefab of that name", words[1]);
+            if (slash != NULL) { /* a part: its parent a block above, at that path */
+                char above[PATH_MAX_BYTES];
+                const char *c;
+                snprintf(above, sizeof(above), "%.*s", (int)(slash - words[1]), words[1]);
+                parent = find_path(data, above, prefab);
+                for (c = words[1]; *c != '\0'; c++) depth += *c == '/';
+                if (parent < 0) {
+                    fail(&parser, "no block above at its parent's path", above);
+                    break;
+                }
+                if (depth >= DEPTH_MAX) {
+                    fail(&parser, "a path deeper than 32", words[1]);
+                    break;
+                }
+            }
+            if (words[1] != NULL && find_path(data, words[1], prefab) >= 0) {
+                fail(&parser, prefab ? "a second prefab block at that path" : "a second actor block at that path",
+                     words[1]);
                 break;
             }
             if (data->count == data->capacity) {
@@ -503,48 +578,64 @@ wgf_ecs_priv_scene_data_t *wgf_ecs_priv_scene_parse(const char *text, size_t siz
                 data->things = grown;
                 data->capacity = capacity;
             }
-            thing = open = &data->things[data->count++];
+            thing = &data->things[data->count];
             memset(thing, 0, sizeof(*thing));
             thing->prefab = prefab;
+            thing->parent = parent;
             thing->from = -1;
-            if (words[1] != NULL) snprintf(thing->name, sizeof(thing->name), "%s", words[1]);
-            if (prefab) data->prefabs++;
-            else data->entities++;
+            thing->kind = -1;
+            if (words[1] != NULL) {
+                snprintf(thing->name, sizeof(thing->name), "%s", name);
+                snprintf(thing->path, sizeof(thing->path), "%s", words[1]);
+            }
+            if (parent < 0 && prefab) data->prefabs++;
+            else if (parent < 0) data->actors++;
+            open = data->count++;
         } else if (strcmp(words[0], "end") == 0) {
-            if (open == NULL || words[1] != NULL) {
-                fail(&parser, open == NULL ? "an `end` with nothing to end" : "`end` takes nothing", NULL);
+            if (open < 0 || words[1] != NULL) {
+                fail(&parser, open < 0 ? "an `end` with nothing to end" : "`end` takes nothing", NULL);
                 break;
             }
-            open = NULL;
+            open = -1;
         } else if (strcmp(words[0], "from") == 0) {
-            const int prefab = open != NULL && words[1] != NULL ? find_prefab(data, words[1]) : -1;
-            if (open == NULL || open->count > 0 || open->from >= 0 || words[1] == NULL || words[2] != NULL) {
-                fail(&parser, "`from <prefab>` comes first in an entity or prefab", NULL);
+            thing_t *thing = open >= 0 ? &data->things[open] : NULL;
+            const int prefab = thing != NULL && words[1] != NULL ? find_prefab(data, words[1]) : -1;
+            if (thing == NULL || thing->count > 0 || thing->from >= 0 || words[1] == NULL || words[2] != NULL) {
+                fail(&parser, "`from <prefab>` comes first in an actor or prefab", NULL);
                 break;
             }
             if (prefab < 0) {
                 fail(&parser, "no prefab of that name above it", words[1]);
                 break;
             }
-            open->from = prefab;
+            thing->from = prefab;
         } else {
             const int kind = find_kind(words[0]);
-            if (open == NULL) {
-                fail(&parser, "a line is `prefab`, `entity`, `end`, or a component inside one", words[0]);
+            thing_t *thing = open >= 0 ? &data->things[open] : NULL;
+            if (thing == NULL) {
+                fail(&parser, "a line is `prefab`, `actor`, `end`, or a line inside one", words[0]);
                 break;
             }
             if (kind < 0) {
-                fail(&parser, "no such component", words[0]);
+                fail(&parser, "no such kind or component", words[0]);
                 break;
             }
-            if (!add_line(&parser, open, kind, words + 1)) {
+            if (kinds[kind].role == ROLE_KIND) { /* one kind, its own or its prefab's */
+                const int inherited = thing->from >= 0 ? kind_of(data, thing->from) : -1;
+                if ((thing->kind >= 0 && thing->kind != kind) || (inherited >= 0 && inherited != kind)) {
+                    fail(&parser, "an actor is one kind: put the other in a part of it (a block at its path/<name>)", words[0]);
+                    break;
+                }
+                thing->kind = kind;
+            }
+            if (!add_line(&parser, thing, kind, words + 1)) {
                 wgf_log_error("wgf_scene: %s: out of memory", path);
                 parser.failed = true;
             }
         }
     }
-    if (!parser.failed && !header) fail(&parser, "empty: the first line is `wgf-scene 1`", NULL);
-    if (!parser.failed && open != NULL) fail(&parser, "the file ended inside an entity or prefab: its `end` is missing", NULL);
+    if (!parser.failed && !header) fail(&parser, "empty: the first line is `wgf-scene 2`", NULL);
+    if (!parser.failed && open >= 0) fail(&parser, "the file ended inside an actor or prefab: its `end` is missing", NULL);
     free(parser.scratch);
     if (parser.failed) {
         wgf_ecs_priv_scene_data_free(data);
@@ -555,7 +646,7 @@ wgf_ecs_priv_scene_data_t *wgf_ecs_priv_scene_parse(const char *text, size_t siz
 
 /* ---- applying a line -------------------------------------------------------------- */
 
-typedef struct after_t { /* what happens once the entity is placed: a burst, a voice played */
+typedef struct after_t { /* what happens once the actor is placed: a burst, a voice played */
     int burst;
     bool play;
 } after_t;
@@ -565,19 +656,32 @@ static float f(const value_t *v, int i)
     return (float)v->n[i];
 }
 
-static void apply_setting(wgf_entity_t e, int kind, const setting_t *s, value_t *v, after_t *after)
+/* What a line's settings set: a kind's (KIND + its actor type), a component's, the
+ * transform's, a behavior's. */
+#define KIND 100
+#define BEHAVIOR (-1)
+
+static int what_of(int kind)
 {
+    switch (kinds[kind].role) {
+        case ROLE_TRANSFORM: return 0;
+        case ROLE_KIND: return KIND + kinds[kind].what;
+        case ROLE_BEHAVIOR: return BEHAVIOR;
+        default: return kinds[kind].what;
+    }
+}
+
+static void apply_setting(wgf_actor_t actor, int kind, const setting_t *s, value_t *v, after_t *after, int behavior)
+{
+    const wgf_actor_t e = actor;
     const char *key = s->key;
-    const wgf_node_t node = wgf_ecs_priv_node_slot((wgf_component_t)kinds[kind].component) >= 0
-                                ? wgf_entity_get_component_node(e, (wgf_component_t)kinds[kind].component)
-                                : 0;
     const int type = key_type(kind, key);
     if (!parse_value(type, s->value, v)) return; /* checked as the file was read */
-    switch (kinds[kind].component) {
+    switch (what_of(kind)) {
         case 0:
-            if (strcmp(key, "position") == 0) wgf_entity_set_position(e, f(v, 0), f(v, 1), f(v, 2));
-            else if (strcmp(key, "rotation") == 0) wgf_entity_set_rotation(e, f(v, 0), f(v, 1), f(v, 2));
-            else wgf_entity_set_scale(e, f(v, 0), f(v, 1), f(v, 2));
+            if (strcmp(key, "position") == 0) wgf_actor_set_position(e, f(v, 0), f(v, 1), f(v, 2));
+            else if (strcmp(key, "rotation") == 0) wgf_actor_set_rotation(e, f(v, 0), f(v, 1), f(v, 2));
+            else wgf_actor_set_scale(e, f(v, 0), f(v, 1), f(v, 2));
             break;
         case WGF_COMPONENT_MOTION:
             if (strcmp(key, "velocity") == 0) wgf_motion_set_velocity(e, f(v, 0), f(v, 1), f(v, 2));
@@ -598,75 +702,74 @@ static void apply_setting(wgf_entity_t e, int kind, const setting_t *s, value_t 
             else if (strcmp(key, "enabled") == 0) wgf_collider_set_enabled(e, v->truth);
             else wgf_collider_set_mask(e, (int)v->n[0]);
             break;
-        case WGF_COMPONENT_BEHAVIOR:
-            if (strcmp(key, "name") == 0) wgf_behavior_set_name(e, v->text);
-            else wgf_behavior_set_param(e, key, v->text);
+        case BEHAVIOR: /* its name, which added it, is its line's */
+            if (strcmp(key, "name") != 0) wgf_behavior_set_param(e, behavior, key, v->text);
             break;
-        case WGF_COMPONENT_SHAPE2D:
-            if (strcmp(key, "rectangle") == 0) wgf_shape2d_set_rectangle(node, f(v, 0), f(v, 1));
-            else if (strcmp(key, "circle") == 0) wgf_shape2d_set_circle(node, f(v, 0));
-            else if (strcmp(key, "line") == 0) wgf_shape2d_set_line(node, f(v, 0), f(v, 1), f(v, 2), f(v, 3));
+        case KIND + WGF_ACTOR_KIND_SHAPE2D:
+            if (strcmp(key, "rectangle") == 0) wgf_shape2d_set_rectangle(actor, f(v, 0), f(v, 1));
+            else if (strcmp(key, "circle") == 0) wgf_shape2d_set_circle(actor, f(v, 0));
+            else if (strcmp(key, "line") == 0) wgf_shape2d_set_line(actor, f(v, 0), f(v, 1), f(v, 2), f(v, 3));
             else if (strcmp(key, "polygon") == 0) {
                 float points[POINTS_MAX];
                 int i;
                 for (i = 0; i < v->count; i++) points[i] = f(v, i);
-                wgf_shape2d_set_polygon(node, points, v->count);
-            } else if (strcmp(key, "outline") == 0) wgf_shape2d_set_outline(node, f(v, 0));
-            else if (strcmp(key, "color") == 0) wgf_shape2d_set_color(node, v->colors[0]);
-            else wgf_shape2d_set_pivot(node, f(v, 0), f(v, 1));
+                wgf_shape2d_set_polygon(actor, points, v->count);
+            } else if (strcmp(key, "outline") == 0) wgf_shape2d_set_outline(actor, f(v, 0));
+            else if (strcmp(key, "color") == 0) wgf_shape2d_set_color(actor, v->colors[0]);
+            else wgf_shape2d_set_pivot(actor, f(v, 0), f(v, 1));
             break;
-        case WGF_COMPONENT_SPRITE:
+        case KIND + WGF_ACTOR_KIND_SPRITE:
             if (strcmp(key, "texture") == 0) {
                 const wgf_texture_t texture = wgf_texture_create(v->text);
-                wgf_sprite_set_texture(node, texture);
+                wgf_sprite_set_texture(actor, texture);
                 wgf_resource_release(texture); /* the sprite holds its own */
-            } else if (strcmp(key, "source") == 0) wgf_sprite_set_source(node, f(v, 0), f(v, 1), f(v, 2), f(v, 3));
-            else if (strcmp(key, "size") == 0) wgf_sprite_set_size(node, f(v, 0), f(v, 1));
-            else if (strcmp(key, "pivot") == 0) wgf_sprite_set_pivot(node, f(v, 0), f(v, 1));
-            else wgf_sprite_set_tint(node, v->colors[0]);
+            } else if (strcmp(key, "source") == 0) wgf_sprite_set_source(actor, f(v, 0), f(v, 1), f(v, 2), f(v, 3));
+            else if (strcmp(key, "size") == 0) wgf_sprite_set_size(actor, f(v, 0), f(v, 1));
+            else if (strcmp(key, "pivot") == 0) wgf_sprite_set_pivot(actor, f(v, 0), f(v, 1));
+            else wgf_sprite_set_tint(actor, v->colors[0]);
             break;
-        case WGF_COMPONENT_TEXT:
-            if (strcmp(key, "string") == 0) wgf_text_set_string(node, v->text);
+        case KIND + WGF_ACTOR_KIND_TEXT:
+            if (strcmp(key, "string") == 0) wgf_text_set_string(actor, v->text);
             else if (strcmp(key, "font") == 0) {
                 const wgf_font_t font = v->text[0] != '\0' ? wgf_font_create(v->text) : 0;
-                wgf_text_set_font(node, font);
+                wgf_text_set_font(actor, font);
                 if (font != 0) wgf_resource_release(font);
-            } else if (strcmp(key, "size") == 0) wgf_text_set_font_size(node, f(v, 0));
-            else if (strcmp(key, "color") == 0) wgf_text_set_color(node, v->colors[0]);
-            else if (strcmp(key, "wrap") == 0) wgf_text_set_wrap_width(node, f(v, 0));
-            else wgf_text_set_align(node, (wgf_text_halign_t)(int)v->n[0], (wgf_text_valign_t)(int)v->n[1]);
+            } else if (strcmp(key, "size") == 0) wgf_text_set_font_size(actor, f(v, 0));
+            else if (strcmp(key, "color") == 0) wgf_text_set_color(actor, v->colors[0]);
+            else if (strcmp(key, "wrap") == 0) wgf_text_set_wrap_width(actor, f(v, 0));
+            else wgf_text_set_align(actor, (wgf_text_halign_t)(int)v->n[0], (wgf_text_valign_t)(int)v->n[1]);
             break;
-        case WGF_COMPONENT_MODEL: { /* through a stage's hooks: no model was made without one */
+        case KIND + WGF_ACTOR_KIND_MODEL: { /* through a stage's hooks: no model was made without one */
             const wgf_gfx_priv_model_hooks_t *hooks = wgf_gfx_priv_get_model_hooks();
             float params[4];
             int i;
-            if (hooks == NULL || node == 0) break;
+            if (hooks == NULL || wgf_actor_get_kind(actor) != WGF_ACTOR_KIND_MODEL) break;
             if (strcmp(key, "tint") == 0) {
-                hooks->set_tint(node, v->colors[0]);
+                hooks->set_tint(actor, v->colors[0]);
                 break;
             }
             for (i = 0; i < 4; i++) params[i] = i < v->count ? f(v, i) : 0.0f;
-            hooks->set_shape(node, key, params, v->count);
+            hooks->set_shape(actor, key, params, v->count);
             break;
         }
-        case WGF_COMPONENT_EMITTER2D:
-            if (strcmp(key, "rate") == 0) wgf_emitter2d_set_rate(node, f(v, 0));
-            else if (strcmp(key, "emitting") == 0) wgf_emitter2d_set_emitting(node, v->truth);
-            else if (strcmp(key, "capacity") == 0) wgf_emitter2d_set_capacity(node, (int)v->n[0]);
-            else if (strcmp(key, "life") == 0) wgf_emitter2d_set_life(node, f(v, 0), f(v, 1));
-            else if (strcmp(key, "direction") == 0) wgf_emitter2d_set_direction(node, f(v, 0), wgf_emitter2d_get_spread(node));
-            else if (strcmp(key, "spread") == 0) wgf_emitter2d_set_direction(node, wgf_emitter2d_get_direction(node), f(v, 0));
-            else if (strcmp(key, "speed") == 0) wgf_emitter2d_set_speed(node, f(v, 0), f(v, 1));
-            else if (strcmp(key, "radius") == 0) wgf_emitter2d_set_radius(node, f(v, 0));
-            else if (strcmp(key, "gravity") == 0) wgf_emitter2d_set_gravity(node, f(v, 0), f(v, 1));
-            else if (strcmp(key, "drag") == 0) wgf_emitter2d_set_drag(node, f(v, 0));
-            else if (strcmp(key, "size") == 0) wgf_emitter2d_set_size(node, f(v, 0), f(v, 1));
-            else if (strcmp(key, "color") == 0) wgf_emitter2d_set_color(node, v->colors[0], v->colors[1]);
-            else if (strcmp(key, "stretch") == 0) wgf_emitter2d_set_stretch(node, f(v, 0));
+        case KIND + WGF_ACTOR_KIND_EMITTER2D:
+            if (strcmp(key, "rate") == 0) wgf_emitter2d_set_rate(actor, f(v, 0));
+            else if (strcmp(key, "emitting") == 0) wgf_emitter2d_set_emitting(actor, v->truth);
+            else if (strcmp(key, "capacity") == 0) wgf_emitter2d_set_capacity(actor, (int)v->n[0]);
+            else if (strcmp(key, "life") == 0) wgf_emitter2d_set_life(actor, f(v, 0), f(v, 1));
+            else if (strcmp(key, "direction") == 0) wgf_emitter2d_set_direction(actor, f(v, 0), wgf_emitter2d_get_spread(actor));
+            else if (strcmp(key, "spread") == 0) wgf_emitter2d_set_direction(actor, wgf_emitter2d_get_direction(actor), f(v, 0));
+            else if (strcmp(key, "speed") == 0) wgf_emitter2d_set_speed(actor, f(v, 0), f(v, 1));
+            else if (strcmp(key, "radius") == 0) wgf_emitter2d_set_radius(actor, f(v, 0));
+            else if (strcmp(key, "gravity") == 0) wgf_emitter2d_set_gravity(actor, f(v, 0), f(v, 1));
+            else if (strcmp(key, "drag") == 0) wgf_emitter2d_set_drag(actor, f(v, 0));
+            else if (strcmp(key, "size") == 0) wgf_emitter2d_set_size(actor, f(v, 0), f(v, 1));
+            else if (strcmp(key, "color") == 0) wgf_emitter2d_set_color(actor, v->colors[0], v->colors[1]);
+            else if (strcmp(key, "stretch") == 0) wgf_emitter2d_set_stretch(actor, f(v, 0));
             else after->burst = (int)v->n[0];
             break;
         default: { /* the voice */
-            const wgf_voice_t voice = wgf_entity_get_voice(e);
+            const wgf_voice_t voice = wgf_actor_get_voice(e);
             if (strcmp(key, "sound") == 0 || strcmp(key, "streamed") == 0) {
                 /* the sound once both are known: a streamed one is another kind */
                 break;
@@ -682,7 +785,7 @@ static void apply_setting(wgf_entity_t e, int kind, const setting_t *s, value_t 
 }
 
 /* A voice line's sound: its path and whether streamed, both read first. */
-static void apply_sound(wgf_entity_t e, const line_t *line, value_t *v)
+static void apply_sound(wgf_actor_t e, const line_t *line, value_t *v)
 {
     const char *path = NULL;
     bool streamed = false;
@@ -695,46 +798,89 @@ static void apply_sound(wgf_entity_t e, const line_t *line, value_t *v)
     }
     if (path != NULL) {
         const wgf_sound_t sound = path[0] != '\0' ? (streamed ? wgf_sound_create_streamed(path) : wgf_sound_create(path)) : 0;
-        wgf_voice_set_sound(wgf_entity_get_voice(e), sound);
+        wgf_voice_set_sound(wgf_actor_get_voice(e), sound);
         if (sound != 0) wgf_resource_release(sound);
     }
 }
 
-static void apply_thing(const wgf_ecs_priv_scene_data_t *data, const thing_t *thing, wgf_entity_t e, after_t *after,
-                        int depth)
+/* A block's lines on `actor`, a prefab's it starts as first. */
+static void apply_thing(const wgf_ecs_priv_scene_data_t *data, const thing_t *thing, wgf_actor_t actor, after_t *after,
+                        int *behavior, int depth)
 {
     static value_t v; /* the main thread's */
     int i, j;
-    if (thing->from >= 0 && depth < 64) apply_thing(data, &data->things[thing->from], e, after, depth + 1);
-    if (!thing->prefab && thing->name[0] != '\0') wgf_entity_set_name(e, thing->name);
+    if (thing->from >= 0 && depth < DEPTH_MAX) {
+        apply_thing(data, &data->things[thing->from], actor, after, behavior, depth + 1);
+    }
     for (i = 0; i < thing->count; i++) {
         const line_t *line = &thing->lines[i];
-        const int component = kinds[line->kind].component;
-        if (component != 0) wgf_entity_add_component(e, (wgf_component_t)component);
-        if (component == WGF_COMPONENT_VOICE) apply_sound(e, line, &v);
-        for (j = 0; j < line->count; j++) apply_setting(e, line->kind, &line->settings[j], &v, after);
+        if (kinds[line->kind].role == ROLE_COMPONENT) wgf_actor_add_component(actor, (wgf_component_t)kinds[line->kind].what);
+        if (kinds[line->kind].role == ROLE_BEHAVIOR) {
+            for (j = 0; j < line->count; j++) { /* name= adds one; without it, the last one's parameters */
+                if (strcmp(line->settings[j].key, "name") == 0) *behavior = wgf_actor_add_behavior(actor, line->settings[j].value);
+            }
+            if (*behavior == 0) {
+                wgf_log_warn("wgf_scene: line %d: parameters for a behavior, but the actor has none yet", line->number);
+                continue;
+            }
+        }
+        if (kinds[line->kind].what == WGF_COMPONENT_VOICE && kinds[line->kind].role == ROLE_COMPONENT) {
+            apply_sound(actor, line, &v);
+        }
+        for (j = 0; j < line->count; j++) apply_setting(actor, line->kind, &line->settings[j], &v, after, *behavior);
     }
 }
 
-/* The node placed where the entity is, its smoothing ended: so what is made with it (a
- * burst) starts there, not at the origin. */
-static void place(wgf_entity_t e)
+/* An actor of a block's kind (its own kind line's, or its prefab's): a plain actor for none,
+ * and for a model before any stage is made (logged by the hooks' absence). */
+static wgf_actor_t make_kind(const wgf_ecs_priv_scene_data_t *data, int thing)
 {
-    const wgf_vec3_t p = wgf_entity_get_position(e), r = wgf_entity_get_rotation(e), s = wgf_entity_get_scale(e);
-    wgf_entity_snap(e);
-    wgf_node_set_transform(wgf_entity_get_node(e), p.x, p.y, p.z, r.x, r.y, r.z, s.x, s.y, s.z);
+    const int kind = kind_of(data, thing);
+    switch (kind >= 0 ? kinds[kind].what : -1) {
+        case WGF_ACTOR_KIND_SHAPE2D: return wgf_shape2d_create();
+        case WGF_ACTOR_KIND_SPRITE: return wgf_sprite_create(0);
+        case WGF_ACTOR_KIND_TEXT: return wgf_text_create(0);
+        case WGF_ACTOR_KIND_EMITTER2D: return wgf_emitter2d_create();
+        case WGF_ACTOR_KIND_MODEL: { /* through a stage's hooks: a program with no stage links no 3D */
+            const wgf_gfx_priv_model_hooks_t *hooks = wgf_gfx_priv_get_model_hooks();
+            if (hooks != NULL) return hooks->create();
+            wgf_log_warn("wgf_scene: a model is drawn on a stage: make one first (a plain actor made in its place)");
+            return wgf_actor_create();
+        }
+        default: return wgf_actor_create();
+    }
 }
 
-static wgf_entity_t make(const wgf_ecs_priv_scene_data_t *data, const thing_t *thing, wgf_node_t parent)
+static wgf_actor_t make(const wgf_ecs_priv_scene_data_t *data, int thing, wgf_actor_t parent, int depth);
+
+/* The blocks inside block `thing`, each made under `actor`. */
+static void make_children(const wgf_ecs_priv_scene_data_t *data, int thing, wgf_actor_t actor, int depth)
+{
+    int i;
+    if (depth >= DEPTH_MAX) return;
+    if (data->things[thing].from >= 0) make_children(data, data->things[thing].from, actor, depth + 1);
+    for (i = thing + 1; i < data->count; i++) {
+        if (data->things[i].parent == thing) make(data, i, actor, depth + 1);
+    }
+}
+
+/* Block `thing`'s actor, its lines applied, then its children made, then it placed where it
+ * is, its smoothing ended: so what is made with it (a burst) starts there. */
+static wgf_actor_t make(const wgf_ecs_priv_scene_data_t *data, int thing, wgf_actor_t parent, int depth)
 {
     after_t after = {0, false};
-    const wgf_entity_t e = wgf_entity_create(parent);
-    if (e == 0) return 0;
-    apply_thing(data, thing, e, &after, 0);
-    place(e);
-    if (after.burst > 0) wgf_emitter2d_burst(wgf_entity_get_component_node(e, WGF_COMPONENT_EMITTER2D), after.burst);
-    if (after.play) wgf_voice_play(wgf_entity_get_voice(e));
-    return e;
+    int behavior = 0;
+    const thing_t *block = &data->things[thing];
+    const wgf_actor_t actor = make_kind(data, thing);
+    if (actor == 0) return 0;
+    if (parent != 0) wgf_actor_set_parent(actor, parent);
+    if (block->name[0] != '\0' && (!block->prefab || block->parent >= 0)) wgf_actor_set_name(actor, block->name);
+    apply_thing(data, block, actor, &after, &behavior, 0);
+    make_children(data, thing, actor, depth);
+    wgf_actor_snap(actor);
+    if (after.burst > 0 && wgf_actor_get_kind(actor) == WGF_ACTOR_KIND_EMITTER2D) wgf_emitter2d_burst(actor, after.burst);
+    if (after.play) wgf_voice_play(wgf_actor_get_voice(actor));
+    return actor;
 }
 
 /* ---- the resource ---------------------------------------------------------------- */
@@ -830,30 +976,53 @@ static const wgf_ecs_priv_scene_data_t *ready(wgf_scene_t scene)
     return scene_ptr != NULL && scene_ptr->resource.status == WGF_RESOURCE_STATUS_READY ? scene_ptr->data : NULL;
 }
 
-int wgf_scene_instantiate(wgf_scene_t scene, wgf_node_t parent)
+/* The references in the behaviors of `actor` and everything under it found, as it and all
+ * made with it are there: the actors a scene just made, so no other tree is walked. */
+static void resolve_tree(wgf_actor_t actor)
+{
+    int i;
+    wgf_ecs_priv_behaviors_resolve(actor);
+    for (i = 0; i < wgf_actor_get_child_count(actor); i++) resolve_tree(wgf_actor_get_child(actor, i));
+}
+
+int wgf_scene_instantiate(wgf_scene_t scene, wgf_actor_t parent)
 {
     const wgf_ecs_priv_scene_data_t *data = ready(scene);
+    wgf_actor_t *made_actors;
     int i, made = 0;
-    if (data == NULL || (parent != 0 && wgf_node_get_type(parent) == WGF_NODE_TYPE_NONE)) return 0;
-    for (i = 0; i < data->count; i++) {
-        data = ready(scene); /* making entities doesn't free the scene, but look again */
-        if (!data->things[i].prefab && make(data, &data->things[i], parent) != 0) made++;
+    if (data == NULL || (parent != 0 && wgf_actor_get_kind(parent) == WGF_ACTOR_KIND_NONE)) return 0;
+    made_actors = (wgf_actor_t *)malloc(sizeof(wgf_actor_t) * (size_t)(data->count > 0 ? data->count : 1));
+    if (made_actors == NULL) {
+        wgf_log_error("wgf_scene: out of memory instantiating");
+        return 0;
     }
+    for (i = 0; i < data->count; i++) {
+        data = ready(scene); /* making actors doesn't free the scene, but look again */
+        if (!data->things[i].prefab && data->things[i].parent < 0) {
+            const wgf_actor_t actor = make(data, i, parent, 0);
+            if (actor != 0) made_actors[made++] = actor;
+        }
+    }
+    for (i = 0; i < made; i++) resolve_tree(made_actors[i]); /* all made, so each can refer to any */
+    free(made_actors);
     return made;
 }
 
-wgf_entity_t wgf_scene_spawn(wgf_scene_t scene, const char *name, wgf_node_t parent)
+wgf_actor_t wgf_scene_spawn(wgf_scene_t scene, const char *name, wgf_actor_t parent)
 {
     const wgf_ecs_priv_scene_data_t *data = ready(scene);
     const int prefab = data != NULL && name != NULL ? find_prefab(data, name) : -1;
-    if (prefab < 0 || (parent != 0 && wgf_node_get_type(parent) == WGF_NODE_TYPE_NONE)) return 0;
-    return make(data, &data->things[prefab], parent);
+    wgf_actor_t actor;
+    if (prefab < 0 || (parent != 0 && wgf_actor_get_kind(parent) == WGF_ACTOR_KIND_NONE)) return 0;
+    actor = make(data, prefab, parent, 0);
+    resolve_tree(actor);
+    return actor;
 }
 
-int wgf_scene_get_entity_count(wgf_scene_t scene)
+int wgf_scene_get_actor_count(wgf_scene_t scene)
 {
     const wgf_ecs_priv_scene_data_t *data = ready(scene);
-    return data != NULL ? data->entities : 0;
+    return data != NULL ? data->actors : 0;
 }
 
 int wgf_scene_get_prefab_count(wgf_scene_t scene)
@@ -868,7 +1037,7 @@ const char *wgf_scene_get_prefab_name(wgf_scene_t scene, int index)
     int i, n = 0;
     if (data == NULL || index < 0) return "";
     for (i = 0; i < data->count; i++) {
-        if (data->things[i].prefab && n++ == index) return data->things[i].name;
+        if (data->things[i].prefab && data->things[i].parent < 0 && n++ == index) return data->things[i].name;
     }
     return "";
 }

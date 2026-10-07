@@ -6,7 +6,7 @@
 #include "wgf_api.h"
 #include "wgf_color.h"
 #include "wgf_font.h"
-#include "wgf_node.h"
+#include "wgf_actor.h"
 #include "wgf_text.h"
 #include "wgf_texture.h"
 
@@ -71,7 +71,7 @@ WGF_API void wgf_draw_texture_region(wgf_texture_t texture, float source_x, floa
  * when `camera` isn't a 3D camera, or outside a frame. A 3D call outside them draws
  * nothing; a frame starts in 2D, and one left in 3D ends there. A 2D call between them
  * lands in the world's x-y plane, as wgrender's did. */
-WGF_API bool wgf_draw_begin_3d(wgf_node_t camera);
+WGF_API bool wgf_draw_begin_3d(wgf_actor_t camera);
 WGF_API void wgf_draw_end_3d(void);
 
 /* Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
@@ -79,7 +79,7 @@ WGF_API void wgf_draw_end_3d(void);
  * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
  * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
  * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
  * behind it, in the order drawn. */
 WGF_API void wgf_draw_line_3d(float x0, float y0, float z0, float x1, float y1, float z1, wgf_color_t color);
 WGF_API void wgf_draw_cube(float cx, float cy, float cz, float width, float height, float length, wgf_color_t color);

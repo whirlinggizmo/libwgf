@@ -4,110 +4,110 @@
 #include <stddef.h>
 
 #include "material/wgf_gfx_material_priv.h"
-#include "stage/wgf_gfx_stage_priv.h"
+#include "stage/wgf_gfx_stage3d_priv.h"
 
-/* Lights: nodes that light their stage, and what a stage's draw makes of them. The
+/* Lights: actors that light their stage, and what a stage's draw makes of them. The
  * selection, attenuation, and cone are libwgt's (wgrender's wgr_light). */
 
 #define PI 3.14159265358979323846f
 
-static wgf_gfx_priv_node_t *light_of(wgf_node_t light)
+static wgf_gfx_priv_actor_t *light_of(wgf_actor_t light)
 {
-    wgf_gfx_priv_node_t *node_ptr = wgf_gfx_priv_node_of(light);
-    return node_ptr != NULL && node_ptr->type == WGF_NODE_TYPE_LIGHT ? node_ptr : NULL;
+    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(light);
+    return actor_ptr != NULL && actor_ptr->type == WGF_ACTOR_KIND_LIGHT ? actor_ptr : NULL;
 }
 
-wgf_node_t wgf_light_create(wgf_light_type_t type)
+wgf_actor_t wgf_light_create(wgf_light_type_t type)
 {
-    wgf_node_t light;
-    wgf_gfx_priv_node_t *node_ptr;
+    wgf_actor_t light;
+    wgf_gfx_priv_actor_t *actor_ptr;
     if ((int)type < WGF_LIGHT_TYPE_DIRECTIONAL || type > WGF_LIGHT_TYPE_SPOT) return 0;
-    light = wgf_gfx_priv_node_create(WGF_NODE_TYPE_LIGHT);
-    node_ptr = wgf_gfx_priv_node_of(light);
-    if (node_ptr == NULL) return 0;
-    node_ptr->as.light.type = (int)type;
-    node_ptr->as.light.color = 0xFFFFFFFFu;
-    node_ptr->as.light.intensity = 1.0f;
-    node_ptr->as.light.inner_angle = PI / 6.0f; /* wgrender's default cone */
-    node_ptr->as.light.outer_angle = PI / 4.0f;
+    light = wgf_gfx_priv_actor_create(WGF_ACTOR_KIND_LIGHT);
+    actor_ptr = wgf_gfx_priv_actor_of(light);
+    if (actor_ptr == NULL) return 0;
+    actor_ptr->as.light.type = (int)type;
+    actor_ptr->as.light.color = 0xFFFFFFFFu;
+    actor_ptr->as.light.intensity = 1.0f;
+    actor_ptr->as.light.inner_angle = PI / 6.0f; /* wgrender's default cone */
+    actor_ptr->as.light.outer_angle = PI / 4.0f;
     return light;
 }
 
-wgf_light_type_t wgf_light_get_type(wgf_node_t light)
+wgf_light_type_t wgf_light_get_type(wgf_actor_t light)
 {
-    const wgf_gfx_priv_node_t *node_ptr = light_of(light);
-    return node_ptr != NULL ? (wgf_light_type_t)node_ptr->as.light.type : WGF_LIGHT_TYPE_DIRECTIONAL;
+    const wgf_gfx_priv_actor_t *actor_ptr = light_of(light);
+    return actor_ptr != NULL ? (wgf_light_type_t)actor_ptr->as.light.type : WGF_LIGHT_TYPE_DIRECTIONAL;
 }
 
-bool wgf_light_set_color(wgf_node_t light, wgf_color_t color)
+bool wgf_light_set_color(wgf_actor_t light, wgf_color_t color)
 {
-    wgf_gfx_priv_node_t *node_ptr = light_of(light);
-    if (node_ptr == NULL) return false;
-    node_ptr->as.light.color = color;
+    wgf_gfx_priv_actor_t *actor_ptr = light_of(light);
+    if (actor_ptr == NULL) return false;
+    actor_ptr->as.light.color = color;
     return true;
 }
 
-wgf_color_t wgf_light_get_color(wgf_node_t light)
+wgf_color_t wgf_light_get_color(wgf_actor_t light)
 {
-    const wgf_gfx_priv_node_t *node_ptr = light_of(light);
-    return node_ptr != NULL ? node_ptr->as.light.color : 0;
+    const wgf_gfx_priv_actor_t *actor_ptr = light_of(light);
+    return actor_ptr != NULL ? actor_ptr->as.light.color : 0;
 }
 
-bool wgf_light_set_intensity(wgf_node_t light, float intensity)
+bool wgf_light_set_intensity(wgf_actor_t light, float intensity)
 {
-    wgf_gfx_priv_node_t *node_ptr = light_of(light);
-    if (node_ptr == NULL) return false;
-    node_ptr->as.light.intensity = intensity > 0.0f ? intensity : 0.0f;
+    wgf_gfx_priv_actor_t *actor_ptr = light_of(light);
+    if (actor_ptr == NULL) return false;
+    actor_ptr->as.light.intensity = intensity > 0.0f ? intensity : 0.0f;
     return true;
 }
 
-float wgf_light_get_intensity(wgf_node_t light)
+float wgf_light_get_intensity(wgf_actor_t light)
 {
-    const wgf_gfx_priv_node_t *node_ptr = light_of(light);
-    return node_ptr != NULL ? node_ptr->as.light.intensity : 0.0f;
+    const wgf_gfx_priv_actor_t *actor_ptr = light_of(light);
+    return actor_ptr != NULL ? actor_ptr->as.light.intensity : 0.0f;
 }
 
-bool wgf_light_set_range(wgf_node_t light, float range)
+bool wgf_light_set_range(wgf_actor_t light, float range)
 {
-    wgf_gfx_priv_node_t *node_ptr = light_of(light);
-    if (node_ptr == NULL) return false;
-    node_ptr->as.light.range = range > 0.0f ? range : 0.0f;
+    wgf_gfx_priv_actor_t *actor_ptr = light_of(light);
+    if (actor_ptr == NULL) return false;
+    actor_ptr->as.light.range = range > 0.0f ? range : 0.0f;
     return true;
 }
 
-float wgf_light_get_range(wgf_node_t light)
+float wgf_light_get_range(wgf_actor_t light)
 {
-    const wgf_gfx_priv_node_t *node_ptr = light_of(light);
-    return node_ptr != NULL ? node_ptr->as.light.range : 0.0f;
+    const wgf_gfx_priv_actor_t *actor_ptr = light_of(light);
+    return actor_ptr != NULL ? actor_ptr->as.light.range : 0.0f;
 }
 
-bool wgf_light_set_spot_cone(wgf_node_t light, float inner, float outer)
+bool wgf_light_set_spot_cone(wgf_actor_t light, float inner, float outer)
 {
-    wgf_gfx_priv_node_t *node_ptr = light_of(light);
-    if (node_ptr == NULL) return false;
+    wgf_gfx_priv_actor_t *actor_ptr = light_of(light);
+    if (actor_ptr == NULL) return false;
     outer = outer < 0.0f ? 0.0f : (outer > PI * 0.5f ? PI * 0.5f : outer);
     inner = inner < 0.0f ? 0.0f : (inner > outer ? outer : inner);
-    node_ptr->as.light.inner_angle = inner;
-    node_ptr->as.light.outer_angle = outer;
+    actor_ptr->as.light.inner_angle = inner;
+    actor_ptr->as.light.outer_angle = outer;
     return true;
 }
 
-float wgf_light_get_spot_inner_angle(wgf_node_t light)
+float wgf_light_get_spot_inner_angle(wgf_actor_t light)
 {
-    const wgf_gfx_priv_node_t *node_ptr = light_of(light);
-    return node_ptr != NULL ? node_ptr->as.light.inner_angle : 0.0f;
+    const wgf_gfx_priv_actor_t *actor_ptr = light_of(light);
+    return actor_ptr != NULL ? actor_ptr->as.light.inner_angle : 0.0f;
 }
 
-float wgf_light_get_spot_outer_angle(wgf_node_t light)
+float wgf_light_get_spot_outer_angle(wgf_actor_t light)
 {
-    const wgf_gfx_priv_node_t *node_ptr = light_of(light);
-    return node_ptr != NULL ? node_ptr->as.light.outer_angle : 0.0f;
+    const wgf_gfx_priv_actor_t *actor_ptr = light_of(light);
+    return actor_ptr != NULL ? actor_ptr->as.light.outer_angle : 0.0f;
 }
 
 /* -------------------------------------------------------------- shading ---- */
 
-void wgf_gfx_priv_light_resolve(const wgf_gfx_priv_node_t *light_ptr, wgf_mat4_t world,
-                                wgf_gfx_priv_stage_light_t *out)
+void wgf_gfx_priv_light_resolve(const wgf_gfx_priv_actor_t *light_ptr, wgf_mat4_t world,
+                                wgf_gfx_priv_stage3d_light_t *out)
 {
     const wgf_color_t color = light_ptr->as.light.color;
     const float intensity = light_ptr->as.light.intensity;
@@ -149,7 +149,7 @@ static float clampf(float v, float lo, float hi)
 }
 
 /* What `light` is estimated to give a model in the box [bmin, bmax]; 0: it can't reach it. */
-static float score_light(const wgf_gfx_priv_stage_light_t *light, wgf_vec3_t bmin, wgf_vec3_t bmax)
+static float score_light(const wgf_gfx_priv_stage3d_light_t *light, wgf_vec3_t bmin, wgf_vec3_t bmax)
 {
     float score = 0.2126f * light->radiance.x + 0.7152f * light->radiance.y + 0.0722f * light->radiance.z;
     wgf_vec3_t nearest, center, to_center;
@@ -172,7 +172,7 @@ static float score_light(const wgf_gfx_priv_stage_light_t *light, wgf_vec3_t bmi
     return score;
 }
 
-int wgf_gfx_priv_light_select(const wgf_gfx_priv_stage_light_t *lights, int count, wgf_vec3_t world_min,
+int wgf_gfx_priv_light_select(const wgf_gfx_priv_stage3d_light_t *lights, int count, wgf_vec3_t world_min,
                               wgf_vec3_t world_max, int *out_indices, int max_out)
 {
     float scores[WGF_GFX_PRIV_MAX_STAGE_LIGHTS];

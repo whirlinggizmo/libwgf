@@ -5,46 +5,73 @@ import wgf.impl.Raw;
 
 class Ecs {
 	/**
-	    Events waiting, and the oldest taken off the queue into `out`, three ints each -- the
-	    event, the entity, the other entity (0 for none) -- as many whole events as fit in
-	    `count` ints, returning how many ints it filled.
+	    Events waiting, and the oldest taken off the queue into `out`, three ints each (the
+	    event, then the two above), as many whole events as fit in `count` ints, returning how
+	    many ints it filled.
 	**/
 	public static inline function getEventCount():Int
 		return Raw.wgf_ecs_get_event_count();
 
 	/**
-	    Events waiting, and the oldest taken off the queue into `out`, three ints each -- the
-	    event, the entity, the other entity (0 for none) -- as many whole events as fit in
-	    `count` ints, returning how many ints it filled.
+	    Events waiting, and the oldest taken off the queue into `out`, three ints each (the
+	    event, then the two above), as many whole events as fit in `count` ints, returning how
+	    many ints it filled.
 	**/
 	public static inline function takeEvents(out:Array<Int>):Int
 		return Raw.wgf_ecs_take_events(out);
 
 	/**
-	    The live entities with the behavior `name`, oldest first, into `out`, as many as fit in
-	    `count`, returning how many it filled; and how many there are, to size `out`.
+	    How many actors have a component or a behavior.
 	**/
-	public static inline function findBehavior(name:String, out:Array<Entity>):Int
+	public static inline function getCount():Int
+		return Raw.wgf_ecs_get_count();
+
+	/**
+	    The actors with a behavior named `name`, oldest first (by when their first component or
+	    behavior came), into `out`, as many as fit in `count`, returning how many it filled;
+	    and how many there are, to size `out`. An actor with two of the name is one actor.
+	    Found by an index of each name and component, never by a look at every actor.
+	**/
+	public static inline function findBehavior(name:String, out:Array<Actor>):Int
 		return Raw.wgf_ecs_find_behavior(name, cast out);
 
 	/**
-	    The live entities with the behavior `name`, oldest first, into `out`, as many as fit in
-	    `count`, returning how many it filled; and how many there are, to size `out`.
+	    The actors with a behavior named `name`, oldest first (by when their first component or
+	    behavior came), into `out`, as many as fit in `count`, returning how many it filled;
+	    and how many there are, to size `out`. An actor with two of the name is one actor.
+	    Found by an index of each name and component, never by a look at every actor.
 	**/
 	public static inline function countBehavior(name:String):Int
 		return Raw.wgf_ecs_count_behavior(name);
 
 	/**
-	    Every live entity destroyed, as wgf_entity_destroy would, oldest first.
+	    The actors with a component, oldest first, the same way; NONE, or a value that isn't a
+	    component, finds none.
+	**/
+	public static inline function findComponent(component:Component, out:Array<Actor>):Int
+		return Raw.wgf_ecs_find_component(component, cast out);
+
+	/**
+	    The actors with a component, oldest first, the same way; NONE, or a value that isn't a
+	    component, finds none.
+	**/
+	public static inline function countComponent(component:Component):Int
+		return Raw.wgf_ecs_count_component(component);
+
+	/**
+	    Every actor with a component or a behavior destroyed, with everything under it, oldest
+	    first.
 	**/
 	public static inline function clear():Void
 		Raw.wgf_ecs_clear();
 
 	/**
-	    The world as a scene's text (wgf_scene.h's format): every live entity, oldest first,
-	    with its transform and every component as it is now, so loading it as a scene and
-	    instantiating it makes the same world again. libwgf's to keep: valid until the next
-	    dump. "" when the ecs hasn't started (no entity was ever made).
+	    The simulated actors as a scene's text (wgf_scene.h's format): each top one -- an actor
+	    with a component or a behavior whose parent has none -- oldest first, as a `actor`
+	    block, with its kind, its transform, its components, its behaviors, and the actors under
+	    it, as they are now, so loading it as a scene and instantiating it makes the same actors
+	    again. libwgf's to keep: valid until the next dump. "" when no actor ever had a
+	    component or a behavior.
 	**/
 	public static inline function dump():String
 		return Raw.wgf_ecs_dump();

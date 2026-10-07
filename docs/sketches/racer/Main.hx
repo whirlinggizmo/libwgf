@@ -7,9 +7,9 @@ import wgf.*;
 	What this does: the states, the camera, the HUD.
 **/
 class Main {
-	public static var stage:Stage;
+	public static var stage:Stage3d;
 	public static var scene:Scene;
-	public static var car:Entity = 0;
+	public static var car:Actor = 0;
 	public static var state = State.LOADING;
 
 	static var camera:ChaseCamera;
@@ -28,16 +28,16 @@ class Main {
 		Asset.setHost("assets");
 		Asset.setManifest("manifest.json"); // a second visit reads everything from the cache
 
-		stage = Stage.create();
+		stage = Stage3d.create();
 		final sun = Light.create(LightType.DIRECTIONAL);
 		sun.setRotation(-0.9, 0.6, 0);
 		sun.setIntensity(3);
 		sun.setShadowCasting(true);
 		sun.setShadowDistance(80);
-		stage.addLight(sun); // or: the light is a node under the stage
+		sun.setParent(stage); // a light is an actor on the stage
 		stage.setEnvironment(Environment.create("sky/meadow_1k.hdr"), 1.0, 0);
 		stage.setBackground(Environment.create("sky/meadow_1k.hdr"), 0);
-		stage.setTonemap(Tonemap.PBR_NEUTRAL, 0);
+		stage.setTonemap(Stage3dTonemap.NEUTRAL, 0);
 
 		// the start: the collision mesh, the car, and the nearest sections; the rest streams
 		loading = AssetGroup.create();

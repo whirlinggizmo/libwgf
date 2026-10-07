@@ -47,9 +47,11 @@ class Ship extends Behavior {
     heading = { x: 0, y: 0, z: 0 };
     velocity = { x: 0, y: 0, z: 0 };
     stick = { x: 0, y: 0 };
+    flame = 0;
 
     onCreate() {
-        wgf.wgf_collider_set_enabled(this.entity, false); // safe while it blinks
+        wgf.wgf_collider_set_enabled(this.actor, false); // safe while it blinks
+        this.flame = wgf.wgf_actor_find(this.actor, "emitter2d"); // its part, found once
     }
 
     onDestroy() {
@@ -58,11 +60,11 @@ class Ship extends Behavior {
 
     onTick(dt) {
         if (state !== PLAYING) return;
-        const e = this.entity;
+        const e = this.actor;
         if (this.safe > 0) {
             this.safe -= dt;
-            const shape = wgf.wgf_entity_get_component_node(e, wgf.WGF_COMPONENT_SHAPE2D);
-            wgf.wgf_node_set_visible(shape, this.safe <= 0 || Math.trunc(this.safe * 8) % 2 === 0);
+            const shape = e /* the ship is its shape */;
+            wgf.wgf_actor_set_visible(shape, this.safe <= 0 || Math.trunc(this.safe * 8) % 2 === 0);
             if (this.safe <= 0) wgf.wgf_collider_set_enabled(e, true); // rocks again
         }
         const stick = wgf.wgf_gamepad_get_stick(0, wgf.WGF_GAMEPAD_STICK_LEFT, this.stick).x;
@@ -73,7 +75,7 @@ class Ship extends Behavior {
         if (right || stick > 0.4) turn += 1;
         wgf.wgf_motion_set_spin(e, 0, 0, turn * TURN);
 
-        const angle = wgf.wgf_entity_get_rotation(e, this.heading).z;
+        const angle = wgf.wgf_actor_get_rotation(e, this.heading).z;
         const dx = Math.cos(angle), dy = Math.sin(angle);
         const thrust = keyDown(wgf.WGF_KEY_UP, wgf.WGF_KEY_W) || padDown(wgf.WGF_GAMEPAD_BUTTON_SOUTH)
             || wgf.wgf_gamepad_get_trigger(0, wgf.WGF_GAMEPAD_TRIGGER_RIGHT) > 0.3;
@@ -84,7 +86,7 @@ class Ship extends Behavior {
         if (thrust !== this.thrusting) {
             this.thrusting = thrust;
             sounds.thrust(thrust);
-            wgf.wgf_emitter2d_set_emitting(wgf.wgf_entity_get_component_node(e, wgf.WGF_COMPONENT_EMITTER2D), thrust);
+            wgf.wgf_emitter2d_set_emitting(this.flame, thrust);
         }
 
         this.cooldown -= dt;
@@ -92,7 +94,7 @@ class Ship extends Behavior {
             || padDown(wgf.WGF_GAMEPAD_BUTTON_EAST, wgf.WGF_GAMEPAD_BUTTON_RIGHT_BUMPER);
         if (fire && this.cooldown <= 0 && wgf.wgf_ecs_count_behavior("Bullet") < BULLETS_MAX) {
             this.cooldown = FIRE_EVERY;
-            const at = wgf.wgf_entity_get_position(e, this.heading);
+            const at = wgf.wgf_actor_get_position(e, this.heading);
             const v = wgf.wgf_motion_get_velocity(e, this.velocity);
             fireBullet(at.x + dx * 18, at.y + dy * 18, v.x + dx * BULLET_SPEED, v.y + dy * BULLET_SPEED);
         }
@@ -100,10 +102,10 @@ class Ship extends Behavior {
 
     /** Hit by a rock: an explosion where it was, and a life lost. */
     explode() {
-        const at = wgf.wgf_entity_get_position(this.entity, this.heading);
+        const at = wgf.wgf_actor_get_position(this.actor, this.heading);
         explosion(at.x, at.y, 2);
         sounds.play(sounds.bangLarge);
-        wgf.wgf_entity_destroy(this.entity);
+        wgf.wgf_actor_destroy(this.actor, wgf.WGF_ACTOR_DESTROY_CHILDREN);
         shipLost();
     }
 }
@@ -123,13 +125,13 @@ const POINTS = [20, 50, 100];
 
 function spawnRock(size, x, y, direction) {
     const rock = wgf.wgf_scene_spawn(scene, PREFABS[size], world);
-    wgf.wgf_entity_set_position(rock, x, y, 0);
-    wgf.wgf_entity_snap(rock);
+    wgf.wgf_actor_set_position(rock, x, y, 0);
+    wgf.wgf_actor_snap(rock);
     const angle = direction !== undefined ? direction : wgf.wgf_random_get_range(0, Math.PI * 2);
     const speed = SPEEDS[size] * wgf.wgf_random_get_range(0.7, 1.3);
     wgf.wgf_motion_set_velocity(rock, Math.cos(angle) * speed, Math.sin(angle) * speed, 0);
     wgf.wgf_motion_set_spin(rock, 0, 0, wgf.wgf_random_get_range(-1.5, 1.5));
-    wgf.wgf_behavior_set_param(rock, "size", String(size));
+    wgf.wgf_behavior_set_param(rock, wgf.wgf_actor_find_behavior(rock, "Rock"), "size", String(size));
     return rock;
 }
 
@@ -137,7 +139,7 @@ class Rock extends Behavior {
     size = LARGE;
 
     onCreate() {
-        this.size = Math.trunc(wgf.wgf_behavior_get_param_number(this.entity, "size"));
+        this.size = Math.trunc(wgf.wgf_behavior_get_param_number(this.actor, this.id, "size"));
         const radius = RADII[this.size], points = [];
         const corners = 9 + wgf.wgf_random_get_int(0, 3);
         for (let i = 0; i < corners; i++) {
@@ -145,14 +147,14 @@ class Rock extends Behavior {
             const r = radius * wgf.wgf_random_get_range(0.72, 1.08);
             points.push(Math.cos(a) * r, Math.sin(a) * r);
         }
-        wgf.wgf_shape2d_set_polygon(wgf.wgf_entity_get_component_node(this.entity, wgf.WGF_COMPONENT_SHAPE2D), points);
+        wgf.wgf_shape2d_set_polygon(this.actor /* a rock is a shape */, points);
     }
 
     onTriggerEnter(other) {
-        if (!wgf.wgf_entity_is_alive(this.entity) || !wgf.wgf_entity_is_alive(other)) return; // one gone this tick
+        if (wgf.wgf_actor_get_kind(this.actor) === wgf.WGF_ACTOR_KIND_NONE || wgf.wgf_actor_get_kind(other) === wgf.WGF_ACTOR_KIND_NONE) return; // one gone this tick
         const object = of(other);
         if (object instanceof Bullet) {
-            wgf.wgf_entity_destroy(other);
+            wgf.wgf_actor_destroy(other, wgf.WGF_ACTOR_DESTROY_CHILDREN);
             this.split();
         } else if (object instanceof Ship) {
             object.explode();
@@ -161,11 +163,11 @@ class Rock extends Behavior {
     }
 
     split() {
-        const at = wgf.wgf_entity_get_position(this.entity);
+        const at = wgf.wgf_actor_get_position(this.actor);
         addScore(POINTS[this.size]);
         explosion(at.x, at.y, this.size);
         sounds.play([sounds.bangLarge, sounds.bangMedium, sounds.bangSmall][this.size]);
-        wgf.wgf_entity_destroy(this.entity);
+        wgf.wgf_actor_destroy(this.actor, wgf.WGF_ACTOR_DESTROY_CHILDREN);
         if (this.size !== SMALL) {
             const heading = wgf.wgf_random_get_range(0, Math.PI * 2);
             spawnRock(this.size + 1, at.x, at.y, heading);
@@ -179,8 +181,8 @@ class Bullet extends Behavior {}
 
 function fireBullet(x, y, vx, vy) {
     const bullet = wgf.wgf_scene_spawn(scene, "bullet", world);
-    wgf.wgf_entity_set_position(bullet, x, y, 0);
-    wgf.wgf_entity_snap(bullet);
+    wgf.wgf_actor_set_position(bullet, x, y, 0);
+    wgf.wgf_actor_snap(bullet);
     wgf.wgf_motion_set_velocity(bullet, vx, vy, 0);
     sounds.play(sounds.fire);
 }
@@ -188,9 +190,9 @@ function fireBullet(x, y, vx, vy) {
 /** Sparks at (x, y), as many as the size calls for: an emitter's burst that ages out. */
 function explosion(x, y, size) {
     const sparks = wgf.wgf_scene_spawn(scene, "explosion", world);
-    wgf.wgf_entity_set_position(sparks, x, y, 0);
-    wgf.wgf_entity_snap(sparks);
-    wgf.wgf_emitter2d_burst(wgf.wgf_entity_get_component_node(sparks, wgf.WGF_COMPONENT_EMITTER2D),
+    wgf.wgf_actor_set_position(sparks, x, y, 0);
+    wgf.wgf_actor_snap(sparks);
+    wgf.wgf_emitter2d_burst(sparks,
                             [40, 24, 14][Math.min(Math.max(size, 0), 2)]);
 }
 
@@ -211,8 +213,8 @@ function start() {
 
 function spawnShip() {
     ship = wgf.wgf_scene_spawn(scene, "ship", world);
-    wgf.wgf_entity_set_position(ship, WIDTH / 2, HEIGHT / 2, 0);
-    wgf.wgf_entity_snap(ship);
+    wgf.wgf_actor_set_position(ship, WIDTH / 2, HEIGHT / 2, 0);
+    wgf.wgf_actor_snap(ship);
 }
 
 function shipLost() {
@@ -261,7 +263,7 @@ function addScore(points) {
 function init() {
     wgf.wgf_asset_set_host("assets");
     wgf.wgf_render_set_clear_color(wgf.wgf_color_make(6, 8, 14, 255));
-    world = wgf.wgf_canvas_create();
+    world = wgf.wgf_stage2d_create();
     scene = wgf.wgf_scene_create("scenes/asteroids.scene");
     sounds = new Sounds();
     register("Ship", (e) => new Ship(e));
@@ -309,7 +311,7 @@ function frame() {
         titleField();
         wgf.wgf_ui_set_focus("play");
     }
-    wgf.wgf_canvas_draw(world);
+    wgf.wgf_stage2d_draw(world);
     if (state === TITLE) {
         titleScreen();
     } else {

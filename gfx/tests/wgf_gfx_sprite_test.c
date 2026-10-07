@@ -3,7 +3,7 @@
 #include "render/wgf_gfx_render_priv.h"
 #include "sokol_gfx.h" /* sokol_gl needs it first */
 #include "util/sokol_gl.h"
-#include "wgf_canvas.h"
+#include "wgf_stage2d.h"
 #include "wgf_color.h"
 #include "wgf_core_priv.h"
 #include "wgf_fs.h"
@@ -15,9 +15,9 @@
 
 /* Sprites on sokol's dummy backend (a headless build): the defaults, each setting read
  * back, sizes before and after the texture is READY, what is refused, and what a
- * canvas draws: nothing while the texture is PENDING, the checker once it FAILED, the
- * texture once READY. References are wgf_gfx_node_test's. Pixels:
- * wgf_gfx_canvas_web_test. */
+ * stage draws: nothing while the texture is PENDING, the checker once it FAILED, the
+ * texture once READY. References are wgf_gfx_actor_test's. Pixels:
+ * wgf_gfx_stage2d_web_test. */
 
 static int failures;
 
@@ -36,14 +36,14 @@ static const unsigned char png_2x2[] = {
     0x34, 0x18, 0x00, 0x00, 0x49, 0xc8, 0x09, 0xf7, 0xf9, 0xab, 0xb6, 0x0d, 0x00, 0x00, 0x00, 0x00, 0x49,
     0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82};
 
-static int drawn(wgf_node_t canvas)
+static int drawn(wgf_actor_t stage)
 {
     int before;
     wgf_platform_priv_set_size(320, 240);
     wgf_platform_priv_headless_set_dpi_scale(1.0f);
     wgf_gfx_priv_begin_frame();
     before = sgl_num_vertices();
-    wgf_canvas_draw(canvas);
+    wgf_stage2d_draw(stage);
     before = sgl_num_vertices() - before;
     wgf_gfx_priv_end_frame();
     return before;
@@ -59,7 +59,7 @@ static void settle(wgf_texture_t texture)
 
 int main(void)
 {
-    wgf_node_t canvas, sprite;
+    wgf_actor_t stage, sprite;
     wgf_texture_t texture, missing;
     wgf_fs_task_t write;
     int i;
@@ -71,19 +71,19 @@ int main(void)
     for (i = 0; i < 1000 && wgf_fs_task_get_status(write) == WGF_FS_TASK_STATUS_PENDING; i++) wgf_core_priv_update();
     wgf_fs_task_destroy(write);
 
-    canvas = wgf_canvas_create();
+    stage = wgf_stage2d_create();
     texture = wgf_texture_create("sprite_test/rgbw.png");
     sprite = wgf_sprite_create(texture);
-    wgf_node_set_parent(sprite, canvas);
-    expect(wgf_node_get_type(sprite) == WGF_NODE_TYPE_SPRITE && wgf_sprite_get_texture(sprite) == texture, "a sprite");
+    wgf_actor_set_parent(sprite, stage);
+    expect(wgf_actor_get_kind(sprite) == WGF_ACTOR_KIND_SPRITE && wgf_sprite_get_texture(sprite) == texture, "a sprite");
     expect(wgf_sprite_get_pivot(sprite).x == 0.5f && wgf_sprite_get_pivot(sprite).y == 0.5f &&
                wgf_sprite_get_tint(sprite) == WGF_COLOR_WHITE && wgf_sprite_get_source(sprite).z == 0.0f,
            "defaults: centered, white, the whole texture");
     expect(wgf_sprite_get_size(sprite).x == 0.0f, "no size while its texture is PENDING and none is set");
-    expect(drawn(canvas) == 0, "and nothing drawn");
+    expect(drawn(stage) == 0, "and nothing drawn");
     settle(texture);
     expect(wgf_sprite_get_size(sprite).x == 2.0f && wgf_sprite_get_size(sprite).y == 2.0f, "READY: the texture's size");
-    expect(drawn(canvas) == 6, "drawn: one quad");
+    expect(drawn(stage) == 6, "drawn: one quad");
 
     expect(wgf_sprite_set_source(sprite, 1, 0, 1, 2) && wgf_sprite_get_source(sprite).x == 1.0f &&
                wgf_sprite_get_source(sprite).w == 2.0f && wgf_sprite_get_size(sprite).x == 1.0f,
@@ -97,16 +97,16 @@ int main(void)
     expect(wgf_sprite_set_texture(sprite, missing) && wgf_sprite_get_texture(sprite) == missing, "another texture");
     wgf_resource_release(missing);
     settle(missing);
-    expect(drawn(canvas) == 6, "a FAILED texture: the checker, drawn");
-    expect(wgf_sprite_set_texture(sprite, 0) && drawn(canvas) == 0, "no texture: nothing");
-    expect(!wgf_sprite_set_texture(sprite, canvas) && !wgf_sprite_set_texture(sprite, 12345),
+    expect(drawn(stage) == 6, "a FAILED texture: the checker, drawn");
+    expect(wgf_sprite_set_texture(sprite, 0) && drawn(stage) == 0, "no texture: nothing");
+    expect(!wgf_sprite_set_texture(sprite, stage) && !wgf_sprite_set_texture(sprite, 12345),
            "a handle that isn't a texture is refused");
-    expect(wgf_sprite_create(canvas) == 0, "and a sprite of one");
-    expect(!wgf_sprite_set_tint(canvas, WGF_COLOR_RED) && wgf_sprite_get_texture(canvas) == 0,
-           "sprite calls refuse other kinds of node");
+    expect(wgf_sprite_create(stage) == 0, "and a sprite of one");
+    expect(!wgf_sprite_set_tint(stage, WGF_COLOR_RED) && wgf_sprite_get_texture(stage) == 0,
+           "sprite calls refuse other kinds of actor");
 
     wgf_resource_release(texture);
-    wgf_node_destroy(canvas, WGF_NODE_DESTROY_CHILDREN);
+    wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
     write = wgf_fs_rmdir("sprite_test");
     for (i = 0; i < 1000 && wgf_fs_task_get_status(write) == WGF_FS_TASK_STATUS_PENDING; i++) wgf_core_priv_update();
     wgf_fs_task_destroy(write);

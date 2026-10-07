@@ -114,7 +114,7 @@ static inline wgf_mat4_t wgf_mat4_invert(wgf_mat4_t a)
     return r;
 }
 
-/* Scale, then rotate, then move: the transform of a node at `position`, turned by
+/* Scale, then rotate, then move: the transform of an actor at `position`, turned by
  * `rotation`, scaled by `scale`. */
 static inline wgf_mat4_t wgf_mat4_from_trs(wgf_vec3_t position, wgf_quat_t rotation,
                                                           wgf_vec3_t scale)

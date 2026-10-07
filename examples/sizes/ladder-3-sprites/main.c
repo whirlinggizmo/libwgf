@@ -2,10 +2,10 @@
 
 #include "wgf_app.h"
 #include "wgf_asset.h"
-#include "wgf_canvas.h"
+#include "wgf_stage2d.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
-#include "wgf_node.h"
+#include "wgf_actor.h"
 #include "wgf_render.h"
 #include "wgf_resource.h"
 #include "wgf_sprite.h"
@@ -16,12 +16,12 @@
  * skeleton (examples/c/app-skeleton) and, each adding one thing to the one before,
  *   1. text: one line drawn in the built-in font (fontstash, stb_truetype, the font).
  *   2. textures: one image loaded and drawn (the texture loader, stb_image).
- *   3. 2D sprites: the image as a sprite node in a canvas (nodes, canvases, sprites).
+ *   3. 2D sprites: the image as a sprite actor on a 2D stage (actors, 2D stages, sprites).
  * Each step's size less the one before is what its feature costs on its own. Nothing to
  * look at for its own sake: it is measured, not shown. */
 
 static wgf_texture_t tiles;
-static wgf_node_t world;
+static wgf_actor_t world;
 
 static void init(void *user)
 {
@@ -29,11 +29,11 @@ static void init(void *user)
     wgf_render_set_clear_color(WGF_COLOR_RAYWHITE);
     wgf_asset_set_host("../assets");
     tiles = wgf_texture_create("textures/tiles.png");
-    world = wgf_canvas_create();
+    world = wgf_stage2d_create();
     {
-        const wgf_node_t sprite = wgf_sprite_create(tiles);
-        wgf_node_set_position(sprite, 400, 300, 0);
-        wgf_node_set_parent(sprite, world);
+        const wgf_actor_t sprite = wgf_sprite_create(tiles);
+        wgf_actor_set_position(sprite, 400, 300, 0);
+        wgf_actor_set_parent(sprite, world);
     }
 }
 
@@ -42,7 +42,7 @@ static void frame(void *user)
     (void)user;
     wgf_draw_text(0, "libwgf", 40, 40, 32, WGF_COLOR_DARKGRAY);
     wgf_draw_texture(tiles, 40, 100, 128, 128, WGF_COLOR_WHITE);
-    wgf_canvas_draw(world);
+    wgf_stage2d_draw(world);
 }
 
 int main(void)

@@ -38,8 +38,8 @@ export type wgf_handle_t = number & { readonly [kind]: string };
 export type wgf_fs_task_t = number & { readonly [kind]: "wgf_fs_task_t" };
 /** A handle of kind wgf_asset_task_t; 0 is none. */
 export type wgf_asset_task_t = number & { readonly [kind]: "wgf_asset_task_t" };
-/** A handle of kind wgf_node_t; 0 is none. */
-export type wgf_node_t = number & { readonly [kind]: "wgf_node_t" };
+/** A handle of kind wgf_actor_t; 0 is none. */
+export type wgf_actor_t = number & { readonly [kind]: "wgf_actor_t" };
 /** A handle of kind wgf_font_t; 0 is none. */
 export type wgf_font_t = number & { readonly [kind]: "wgf_font_t" };
 /** A handle of kind wgf_texture_t; 0 is none. */
@@ -52,8 +52,6 @@ export type wgf_mesh_t = number & { readonly [kind]: "wgf_mesh_t" };
 export type wgf_sound_t = number & { readonly [kind]: "wgf_sound_t" };
 /** A handle of kind wgf_voice_t; 0 is none. */
 export type wgf_voice_t = number & { readonly [kind]: "wgf_voice_t" };
-/** A handle of kind wgf_entity_t; 0 is none. */
-export type wgf_entity_t = number & { readonly [kind]: "wgf_entity_t" };
 /** A handle of kind wgf_scene_t; 0 is none. */
 export type wgf_scene_t = number & { readonly [kind]: "wgf_scene_t" };
 export type wgf_color_t = number;
@@ -374,27 +372,27 @@ export declare const WGF_ASSET_CACHE_MODE_TRUST: 1;
 export declare const WGF_ASSET_CACHE_MODE_OFF: 2;
 export type wgf_asset_cache_mode_t = typeof WGF_ASSET_CACHE_MODE_REVALIDATE | typeof WGF_ASSET_CACHE_MODE_TRUST | typeof WGF_ASSET_CACHE_MODE_OFF;
 
-export declare const WGF_NODE_TYPE_NONE: 0;
-export declare const WGF_NODE_TYPE_NODE: 1;
-export declare const WGF_NODE_TYPE_CANVAS: 2;
-export declare const WGF_NODE_TYPE_SPRITE: 3;
-export declare const WGF_NODE_TYPE_CAMERA2D: 4;
-export declare const WGF_NODE_TYPE_TEXT: 5;
-export declare const WGF_NODE_TYPE_SHAPE2D: 6;
-export declare const WGF_NODE_TYPE_EMITTER2D: 7;
-export declare const WGF_NODE_TYPE_CAMERA3D: 8;
-export declare const WGF_NODE_TYPE_STAGE: 9;
-export declare const WGF_NODE_TYPE_LIGHT: 10;
-export declare const WGF_NODE_TYPE_MODEL: 11;
-export declare const WGF_NODE_TYPE_SHAPE3D: 12;
-export type wgf_node_type_t = typeof WGF_NODE_TYPE_NONE | typeof WGF_NODE_TYPE_NODE | typeof WGF_NODE_TYPE_CANVAS | typeof WGF_NODE_TYPE_SPRITE | typeof WGF_NODE_TYPE_CAMERA2D | typeof WGF_NODE_TYPE_TEXT | typeof WGF_NODE_TYPE_SHAPE2D | typeof WGF_NODE_TYPE_EMITTER2D | typeof WGF_NODE_TYPE_CAMERA3D | typeof WGF_NODE_TYPE_STAGE | typeof WGF_NODE_TYPE_LIGHT | typeof WGF_NODE_TYPE_MODEL | typeof WGF_NODE_TYPE_SHAPE3D;
+export declare const WGF_ACTOR_KIND_NONE: 0;
+export declare const WGF_ACTOR_KIND_PLAIN: 1;
+export declare const WGF_ACTOR_KIND_STAGE2D: 2;
+export declare const WGF_ACTOR_KIND_SPRITE: 3;
+export declare const WGF_ACTOR_KIND_CAMERA2D: 4;
+export declare const WGF_ACTOR_KIND_TEXT: 5;
+export declare const WGF_ACTOR_KIND_SHAPE2D: 6;
+export declare const WGF_ACTOR_KIND_EMITTER2D: 7;
+export declare const WGF_ACTOR_KIND_CAMERA3D: 8;
+export declare const WGF_ACTOR_KIND_STAGE3D: 9;
+export declare const WGF_ACTOR_KIND_LIGHT: 10;
+export declare const WGF_ACTOR_KIND_MODEL: 11;
+export declare const WGF_ACTOR_KIND_SHAPE3D: 12;
+export type wgf_actor_kind_t = typeof WGF_ACTOR_KIND_NONE | typeof WGF_ACTOR_KIND_PLAIN | typeof WGF_ACTOR_KIND_STAGE2D | typeof WGF_ACTOR_KIND_SPRITE | typeof WGF_ACTOR_KIND_CAMERA2D | typeof WGF_ACTOR_KIND_TEXT | typeof WGF_ACTOR_KIND_SHAPE2D | typeof WGF_ACTOR_KIND_EMITTER2D | typeof WGF_ACTOR_KIND_CAMERA3D | typeof WGF_ACTOR_KIND_STAGE3D | typeof WGF_ACTOR_KIND_LIGHT | typeof WGF_ACTOR_KIND_MODEL | typeof WGF_ACTOR_KIND_SHAPE3D;
 
 /**
- * What wgf_node_destroy does with the node's children.
+ * What wgf_actor_destroy does with the actor's children.
  */
-export declare const WGF_NODE_DESTROY_CHILDREN: 0;
-export declare const WGF_NODE_KEEP_CHILDREN: 1;
-export type wgf_node_destroy_t = typeof WGF_NODE_DESTROY_CHILDREN | typeof WGF_NODE_KEEP_CHILDREN;
+export declare const WGF_ACTOR_DESTROY_CHILDREN: 0;
+export declare const WGF_ACTOR_KEEP_CHILDREN: 1;
+export type wgf_actor_destroy_t = typeof WGF_ACTOR_DESTROY_CHILDREN | typeof WGF_ACTOR_KEEP_CHILDREN;
 
 /**
  * The stock colors. These name a color; they aren't one: wgf_color_get turns
@@ -430,10 +428,10 @@ export declare const WGF_COLOR_STOCK_RAYWHITE: 25;
 export type wgf_color_stock_t = typeof WGF_COLOR_STOCK_BLANK | typeof WGF_COLOR_STOCK_WHITE | typeof WGF_COLOR_STOCK_BLACK | typeof WGF_COLOR_STOCK_LIGHTGRAY | typeof WGF_COLOR_STOCK_GRAY | typeof WGF_COLOR_STOCK_DARKGRAY | typeof WGF_COLOR_STOCK_YELLOW | typeof WGF_COLOR_STOCK_GOLD | typeof WGF_COLOR_STOCK_ORANGE | typeof WGF_COLOR_STOCK_PINK | typeof WGF_COLOR_STOCK_RED | typeof WGF_COLOR_STOCK_MAROON | typeof WGF_COLOR_STOCK_GREEN | typeof WGF_COLOR_STOCK_LIME | typeof WGF_COLOR_STOCK_DARKGREEN | typeof WGF_COLOR_STOCK_SKYBLUE | typeof WGF_COLOR_STOCK_BLUE | typeof WGF_COLOR_STOCK_DARKBLUE | typeof WGF_COLOR_STOCK_PURPLE | typeof WGF_COLOR_STOCK_VIOLET | typeof WGF_COLOR_STOCK_DARKPURPLE | typeof WGF_COLOR_STOCK_BEIGE | typeof WGF_COLOR_STOCK_BROWN | typeof WGF_COLOR_STOCK_DARKBROWN | typeof WGF_COLOR_STOCK_MAGENTA | typeof WGF_COLOR_STOCK_RAYWHITE;
 
 /**
- * A text node: a string drawn in a font, in a canvas. Its node's position is where its
- * block of lines sits, by its alignment, and the node turns and scales it like any
+ * A text actor: a string drawn in a font, on a 2D stage. Its actor's position is where its
+ * block of lines sits, by its alignment, and the actor turns and scales it like any
  * other. It holds a reference to its font (0: the default font). Text is a
- * node (wgf_node.h): place, parent, and destroy it with the node calls.
+ * actor (wgf_actor.h): place, parent, and destroy it with the actor calls.
  */
 export declare const WGF_TEXT_HALIGN_LEFT: 0;
 export declare const WGF_TEXT_HALIGN_CENTER: 1;
@@ -458,8 +456,8 @@ export declare const WGF_TEXTURE_FILTER_NEAREST: 1;
 export type wgf_texture_filter_t = typeof WGF_TEXTURE_FILTER_LINEAR | typeof WGF_TEXTURE_FILTER_NEAREST;
 
 /**
- * A light: a node that lights the stage it is on (wgf_stage.h), placed and aimed with
- * the node calls (wgf_node_look_at): a light shines down its -z. Lights work as
+ * A light: an actor that lights the stage it is on (wgf_stage3d.h), placed and aimed with
+ * the actor calls (wgf_actor_look_at): a light shines down its -z. Lights work as
  * libwgt's (wgrender's):
  *
  * - Nothing is lit implicitly: a stage with no lights and no ambient is black.
@@ -467,7 +465,7 @@ export type wgf_texture_filter_t = typeof WGF_TEXTURE_FILTER_LINEAR | typeof WGF
  *   their falloff at its box); point and spot lights whose range doesn't reach a model
  *   are skipped for it.
  * - A light shines while it is enabled (with everything above it) and visible
- *   (wgf_node.h): hiding it turns it off and leaves its children as they are, a lamp's
+ *   (wgf_actor.h): hiding it turns it off and leaves its children as they are, a lamp's
  *   bulb model under it, say.
  * - Parameters follow glTF's KHR_lights_punctual, and shading glTF's materials
  *   (wgf_material.h), so lights from glTF tools look the same here. Light colors are
@@ -500,7 +498,7 @@ export type wgf_alpha_mode_t = typeof WGF_ALPHA_MODE_OPAQUE | typeof WGF_ALPHA_M
  * How a game's design is fitted to the window or the screen (Godot's stretch modes
  * and aspects are the prior art). A game is written for a design resolution, and its
  * logical coordinates stay the design's at any window size and in fullscreen: drawing,
- * canvases, the UI, the pointer and touches (mapped back into them), and an autopilot's
+ * 2D stages, the UI, the pointer and touches (mapped back into them), and an autopilot's
  * mouse. The same on the desktop, in a resized browser window, and in fullscreen.
  *
  *   NONE     the default: logical pixels are the window's (a framebuffer pixel over the
@@ -530,10 +528,10 @@ export declare const WGF_PRESENTATION_MODE_INTEGER: 5;
 export type wgf_presentation_mode_t = typeof WGF_PRESENTATION_MODE_NONE | typeof WGF_PRESENTATION_MODE_STRETCH | typeof WGF_PRESENTATION_MODE_FIT | typeof WGF_PRESENTATION_MODE_FILL | typeof WGF_PRESENTATION_MODE_EXPAND | typeof WGF_PRESENTATION_MODE_INTEGER;
 
 /**
- * A 2D shape: a node drawing a rectangle, a circle, a line, or a polygon, filled or
- * outlined, in one color, in a canvas. Shapes are nodes (wgf_node.h): place, turn,
- * scale, parent, and destroy them with the node calls; the shape turns and scales with
- * its node, and an outline's thickness stays in the frame's logical pixels.
+ * A 2D shape: an actor drawing a rectangle, a circle, a line, or a polygon, filled or
+ * outlined, in one color, on a 2D stage. Shapes are actors (wgf_actor.h): place, turn,
+ * scale, parent, and destroy them with the actor calls; the shape turns and scales with
+ * its actor, and an outline's thickness stays in the frame's logical pixels.
  */
 export declare const WGF_SHAPE2D_KIND_NONE: 0;
 export declare const WGF_SHAPE2D_KIND_RECTANGLE: 1;
@@ -543,11 +541,11 @@ export declare const WGF_SHAPE2D_KIND_POLYGON: 4;
 export type wgf_shape2d_kind_t = typeof WGF_SHAPE2D_KIND_NONE | typeof WGF_SHAPE2D_KIND_RECTANGLE | typeof WGF_SHAPE2D_KIND_CIRCLE | typeof WGF_SHAPE2D_KIND_LINE | typeof WGF_SHAPE2D_KIND_POLYGON;
 
 /**
- * A 3D shape: a node drawing a cube, a sphere, a filled rectangle or a circle's outline
+ * A 3D shape: an actor drawing a cube, a sphere, a filled rectangle or a circle's outline
  * in its local x-y plane, a line, or a line strip, in one color, unlit, on a stage
- * (wgf_stage.h), as libwgt's (wgrender's shape3d): what debug views and markers are
- * drawn with. In a canvas it draws nothing: 2D shapes are wgf_shape2d.h. Place, turn,
- * scale, and parent it with the node calls. On a stage, shapes are drawn after its
+ * (wgf_stage3d.h), as libwgt's (wgrender's shape3d): what debug views and markers are
+ * drawn with. On a 2D stage it draws nothing: 2D shapes are wgf_shape2d.h. Place, turn,
+ * scale, and parent it with the actor calls. On a stage, shapes are drawn after its
  * opaque models and before its see-through ones, depth tested; a see-through color
  * blends over what is behind it in the order the shapes are found; lines are a pixel
  * wide.
@@ -565,35 +563,38 @@ export type wgf_shape3d_kind_t = typeof WGF_SHAPE3D_KIND_NONE | typeof WGF_SHAPE
  * How a stage's lit colors map to the screen. Lighting can exceed what a screen shows;
  * tone mapping rolls off highlights instead of clipping them.
  */
-export declare const WGF_STAGE_TONEMAP_NONE: 0;
-export declare const WGF_STAGE_TONEMAP_NEUTRAL: 1;
-export declare const WGF_STAGE_TONEMAP_ACES: 2;
-export type wgf_stage_tonemap_t = typeof WGF_STAGE_TONEMAP_NONE | typeof WGF_STAGE_TONEMAP_NEUTRAL | typeof WGF_STAGE_TONEMAP_ACES;
+export declare const WGF_STAGE3D_TONEMAP_NONE: 0;
+export declare const WGF_STAGE3D_TONEMAP_NEUTRAL: 1;
+export declare const WGF_STAGE3D_TONEMAP_ACES: 2;
+export type wgf_stage3d_tonemap_t = typeof WGF_STAGE3D_TONEMAP_NONE | typeof WGF_STAGE3D_TONEMAP_NEUTRAL | typeof WGF_STAGE3D_TONEMAP_ACES;
 
 /**
- * What an entity can have, at most one of each. The first five are data the systems
- * read; the node kinds are a node under the entity's own (wgf_entity_get_component_node),
- * set up with its own calls; a voice plays a sound (wgf_entity_get_voice).
+ * Components: the simulation's data on an actor -- any actor, of any kind, a 2D stage's UI
+ * actors and cameras included -- run each tick by libwgf's systems (wgf_ecs.h). One kind
+ * of object, the actor (SPEC.md), Godot's tree with Unity's components: what an actor draws
+ * is its kind (a shape, a sprite, a model); what moves it, bounds it, ages it, and finds
+ * what it overlaps are components on it; what the program does with it are its behaviors
+ * (wgf_behavior.h), several to an actor.
+ *
+ * An actor with a component or a behavior is simulated (wgf_actor_snap): its transform is
+ * set and read at the tick rate, and it is drawn between its last two ticks, so it moves
+ * smoothly at any frame rate. Its components go when it does (wgf_actor_destroy), and a
+ * system that ends it (a lifetime run out, bounds of DESTROY) destroys the actor, with
+ * everything under it, after the tick's systems have run.
  */
 export declare const WGF_COMPONENT_NONE: 0;
 export declare const WGF_COMPONENT_MOTION: 1;
 export declare const WGF_COMPONENT_BOUNDS: 2;
 export declare const WGF_COMPONENT_LIFETIME: 3;
 export declare const WGF_COMPONENT_COLLIDER: 4;
-export declare const WGF_COMPONENT_BEHAVIOR: 5;
-export declare const WGF_COMPONENT_SHAPE2D: 6;
-export declare const WGF_COMPONENT_SPRITE: 7;
-export declare const WGF_COMPONENT_TEXT: 8;
-export declare const WGF_COMPONENT_EMITTER2D: 9;
-export declare const WGF_COMPONENT_VOICE: 10;
-export declare const WGF_COMPONENT_MODEL: 11;
-export type wgf_component_t = typeof WGF_COMPONENT_NONE | typeof WGF_COMPONENT_MOTION | typeof WGF_COMPONENT_BOUNDS | typeof WGF_COMPONENT_LIFETIME | typeof WGF_COMPONENT_COLLIDER | typeof WGF_COMPONENT_BEHAVIOR | typeof WGF_COMPONENT_SHAPE2D | typeof WGF_COMPONENT_SPRITE | typeof WGF_COMPONENT_TEXT | typeof WGF_COMPONENT_EMITTER2D | typeof WGF_COMPONENT_VOICE | typeof WGF_COMPONENT_MODEL;
+export declare const WGF_COMPONENT_VOICE: 5;
+export type wgf_component_t = typeof WGF_COMPONENT_NONE | typeof WGF_COMPONENT_MOTION | typeof WGF_COMPONENT_BOUNDS | typeof WGF_COMPONENT_LIFETIME | typeof WGF_COMPONENT_COLLIDER | typeof WGF_COMPONENT_VOICE;
 
 /**
- * Bounds (WGF_COMPONENT_BOUNDS): a rectangle in the entity's parent's space, x and y,
- * and what happens to an entity whose position leaves it, by more than its margin, each
+ * Bounds (WGF_COMPONENT_BOUNDS): a rectangle in the actor's parent's space, x and y,
+ * and what happens to an actor whose position leaves it, by more than its margin, each
  * tick after motion. Defaults: 0, 0, 800 by 600, WRAP, a margin of 0. Every call is false
- * (or 0) for an entity without bounds.
+ * (or 0) for an actor without bounds.
  */
 export declare const WGF_BOUNDS_MODE_WRAP: 0;
 export declare const WGF_BOUNDS_MODE_CLAMP: 1;
@@ -601,23 +602,29 @@ export declare const WGF_BOUNDS_MODE_DESTROY: 2;
 export type wgf_bounds_mode_t = typeof WGF_BOUNDS_MODE_WRAP | typeof WGF_BOUNDS_MODE_CLAMP | typeof WGF_BOUNDS_MODE_DESTROY;
 
 /**
- * The entity system as a whole: libwgf's systems, the events they raise, finding
- * entities, and the world written out as text.
+ * The simulation as a whole: libwgf's systems over the actors' components
+ * (wgf_component.h), the events they raise, finding actors by behavior or component, and the simulated
+ * actors written out as text.
  *
- * Each tick, after the program's, the systems run in this order: lifetimes count down
- * (an entity whose time is up destroyed), motion moves each entity by its velocity and
- * spin (damped, its speed capped), bounds wrap, clamp, or destroy what has left its
- * rectangle, and colliders find the overlaps. Each frame, before the program's frame,
- * every entity's node is given its transform interpolated between the last two ticks.
+ * Each tick, as it begins, every simulated actor's transform is kept as it is; after the
+ * program's tick the systems run in this order: lifetimes count down (an actor whose time is
+ * up destroyed), motion moves each actor by its velocity and spin (damped, its speed
+ * capped), bounds wrap, clamp, or destroy what has left its rectangle, and colliders find
+ * the overlaps. Each frame a simulated actor is drawn between its last two ticks'
+ * transforms.
  *
  * Events are what the program's behaviors are told (wgf_behavior.h), queued as they
- * happen and taken by the program, in order: a behavior added (CREATED); an entity with
- * a behavior destroyed (DESTROYED, its handle stale by then: a name for what it was); two
- * colliders starting to overlap (TRIGGER_ENTER) and ceasing to (TRIGGER_EXIT), told to
- * each of the two, the other its `other`. An entity destroyed while it overlaps another
- * raises no TRIGGER_EXIT. Nothing is called back: a binding takes them at its tick's
- * start and calls its behaviors itself. At most 65536 wait; past that the oldest are
- * dropped, warned once.
+ * happen and taken by the program, in order, three ints each:
+ *
+ *   CREATED          a behavior added: its actor, its id
+ *   DESTROYED        a behavior removed, or its actor gone: its actor (stale by then, a name
+ *                    for what it was), its id
+ *   TRIGGER_ENTER    two colliders starting to overlap, told to each: the actor, the other
+ *   TRIGGER_EXIT     and ceasing to
+ *
+ * An actor destroyed while it overlaps another raises no TRIGGER_EXIT. Nothing is called
+ * back: a binding takes them at its tick's start and calls its behaviors itself. At most
+ * 65536 wait; past that the oldest are dropped, warned once.
  */
 export declare const WGF_ECS_EVENT_NONE: 0;
 export declare const WGF_ECS_EVENT_CREATED: 1;
@@ -1893,66 +1900,66 @@ export declare function wgf_asset_ping_host(host_: string | null, timeout_ms: nu
 export declare function wgf_asset_ping_get_milliseconds(ping: wgf_asset_task_t | 0): number;
 
 /**
- * A plain node: a transform, with no parent. 0 when there is no room for another.
+ * A plain actor: a transform, with no parent. 0 when there is no room for another.
  */
-export declare function wgf_node_create(): wgf_node_t;
+export declare function wgf_actor_create(): wgf_actor_t;
 
 /**
- * End a node of any kind, at once. What it held is released, never destroyed: a
+ * End an actor of any kind, at once. What it held is released, never destroyed: a
  * sprite drops its reference to its texture.
  */
-export declare function wgf_node_destroy(node: wgf_node_t | 0, children: wgf_node_destroy_t): void;
+export declare function wgf_actor_destroy(actor: wgf_actor_t | 0, children: wgf_actor_destroy_t): void;
 
 /**
- * End a node of any kind, at once. What it held is released, never destroyed: a
+ * End an actor of any kind, at once. What it held is released, never destroyed: a
  * sprite drops its reference to its texture.
  */
-export declare function wgf_node_get_type(node: wgf_node_t | 0): wgf_node_type_t;
+export declare function wgf_actor_get_kind(actor: wgf_actor_t | 0): wgf_actor_kind_t;
 
 /**
- * Put `node` under `parent`, last among its children, keeping its own transform
+ * Put `actor` under `parent`, last among its children, keeping its own transform
  * (so it moves to where it sits relative to the new parent); 0 detaches it, and a
- * detached node is drawn by nothing. False when `parent` isn't a node, or is
- * `node` or under it, or when `node` is a canvas or a stage, which are always roots.
+ * detached actor is drawn by nothing. False when `parent` isn't an actor, or is
+ * `actor` or under it, or when `actor` is a 2D or 3D stage, which are always roots.
  */
-export declare function wgf_node_set_parent(node: wgf_node_t | 0, parent: wgf_node_t | 0): boolean;
+export declare function wgf_actor_set_parent(actor: wgf_actor_t | 0, parent: wgf_actor_t | 0): boolean;
 
 /**
- * Put `node` under `parent`, last among its children, keeping its own transform
+ * Put `actor` under `parent`, last among its children, keeping its own transform
  * (so it moves to where it sits relative to the new parent); 0 detaches it, and a
- * detached node is drawn by nothing. False when `parent` isn't a node, or is
- * `node` or under it, or when `node` is a canvas or a stage, which are always roots.
+ * detached actor is drawn by nothing. False when `parent` isn't an actor, or is
+ * `actor` or under it, or when `actor` is a 2D or 3D stage, which are always roots.
  */
-export declare function wgf_node_get_parent(node: wgf_node_t | 0): wgf_node_t;
+export declare function wgf_actor_get_parent(actor: wgf_actor_t | 0): wgf_actor_t;
 
 /**
- * Put `node` under `parent`, last among its children, keeping its own transform
+ * Put `actor` under `parent`, last among its children, keeping its own transform
  * (so it moves to where it sits relative to the new parent); 0 detaches it, and a
- * detached node is drawn by nothing. False when `parent` isn't a node, or is
- * `node` or under it, or when `node` is a canvas or a stage, which are always roots.
+ * detached actor is drawn by nothing. False when `parent` isn't an actor, or is
+ * `actor` or under it, or when `actor` is a 2D or 3D stage, which are always roots.
  */
-export declare function wgf_node_get_child_count(node: wgf_node_t | 0): number;
+export declare function wgf_actor_get_child_count(actor: wgf_actor_t | 0): number;
 
 /**
  * The child at `index`, 0 first; 0 when there is none.
  */
-export declare function wgf_node_get_child(node: wgf_node_t | 0, index: number): wgf_node_t;
+export declare function wgf_actor_get_child(actor: wgf_actor_t | 0, index: number): wgf_actor_t;
 
 /**
- * Where `node` is among its parent's children, which is its drawing order in a
- * canvas: later children draw over earlier ones. An index past either end is
+ * Where `actor` is among its parent's children, which is its drawing order in a
+ * 2D stage: later children draw over earlier ones. An index past either end is
  * clamped to it, so a large one moves it to the front. False when it has no
  * parent.
  */
-export declare function wgf_node_set_index(node: wgf_node_t | 0, index: number): boolean;
+export declare function wgf_actor_set_index(actor: wgf_actor_t | 0, index: number): boolean;
 
 /**
- * Where `node` is among its parent's children, which is its drawing order in a
- * canvas: later children draw over earlier ones. An index past either end is
+ * Where `actor` is among its parent's children, which is its drawing order in a
+ * 2D stage: later children draw over earlier ones. An index past either end is
  * clamped to it, so a large one moves it to the front. False when it has no
  * parent.
  */
-export declare function wgf_node_get_index(node: wgf_node_t | 0): number;
+export declare function wgf_actor_get_index(actor: wgf_actor_t | 0): number;
 
 /**
  * The transform, relative to the parent. Rotation is three angles in radians,
@@ -1960,7 +1967,7 @@ export declare function wgf_node_get_index(node: wgf_node_t | 0): number;
  * get_rotation gives angles for the same rotation, which may not be the ones given
  * (past a half turn, say). Scale 1 is its own size.
  */
-export declare function wgf_node_set_position(node: wgf_node_t | 0, x: number, y: number, z: number): boolean;
+export declare function wgf_actor_set_position(actor: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
 
 /**
  * The transform, relative to the parent. Rotation is three angles in radians,
@@ -1968,8 +1975,8 @@ export declare function wgf_node_set_position(node: wgf_node_t | 0, x: number, y
  * get_rotation gives angles for the same rotation, which may not be the ones given
  * (past a half turn, say). Scale 1 is its own size.
  */
-export declare function wgf_node_get_position<T extends number[] | Float32Array | Float64Array>(node: wgf_node_t | 0, into: T): T;
-export declare function wgf_node_get_position(node: wgf_node_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+export declare function wgf_actor_get_position<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_actor_get_position(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
 
 /**
  * The transform, relative to the parent. Rotation is three angles in radians,
@@ -1977,7 +1984,7 @@ export declare function wgf_node_get_position(node: wgf_node_t | 0, into?: wgf_v
  * get_rotation gives angles for the same rotation, which may not be the ones given
  * (past a half turn, say). Scale 1 is its own size.
  */
-export declare function wgf_node_set_rotation(node: wgf_node_t | 0, x: number, y: number, z: number): boolean;
+export declare function wgf_actor_set_rotation(actor: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
 
 /**
  * The transform, relative to the parent. Rotation is three angles in radians,
@@ -1985,8 +1992,8 @@ export declare function wgf_node_set_rotation(node: wgf_node_t | 0, x: number, y
  * get_rotation gives angles for the same rotation, which may not be the ones given
  * (past a half turn, say). Scale 1 is its own size.
  */
-export declare function wgf_node_get_rotation<T extends number[] | Float32Array | Float64Array>(node: wgf_node_t | 0, into: T): T;
-export declare function wgf_node_get_rotation(node: wgf_node_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+export declare function wgf_actor_get_rotation<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_actor_get_rotation(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
 
 /**
  * The transform, relative to the parent. Rotation is three angles in radians,
@@ -1994,7 +2001,7 @@ export declare function wgf_node_get_rotation(node: wgf_node_t | 0, into?: wgf_v
  * get_rotation gives angles for the same rotation, which may not be the ones given
  * (past a half turn, say). Scale 1 is its own size.
  */
-export declare function wgf_node_set_scale(node: wgf_node_t | 0, x: number, y: number, z: number): boolean;
+export declare function wgf_actor_set_scale(actor: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
 
 /**
  * The transform, relative to the parent. Rotation is three angles in radians,
@@ -2002,212 +2009,214 @@ export declare function wgf_node_set_scale(node: wgf_node_t | 0, x: number, y: n
  * get_rotation gives angles for the same rotation, which may not be the ones given
  * (past a half turn, say). Scale 1 is its own size.
  */
-export declare function wgf_node_get_scale<T extends number[] | Float32Array | Float64Array>(node: wgf_node_t | 0, into: T): T;
-export declare function wgf_node_get_scale(node: wgf_node_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+export declare function wgf_actor_get_scale<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_actor_get_scale(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
 
 /**
  * All three at once: the cheapest way to move something each frame.
  */
-export declare function wgf_node_set_transform(node: wgf_node_t | 0, position_x: number, position_y: number, position_z: number, rotation_x: number, rotation_y: number, rotation_z: number, scale_x: number, scale_y: number, scale_z: number): boolean;
+export declare function wgf_actor_set_transform(actor: wgf_actor_t | 0, position_x: number, position_y: number, position_z: number, rotation_x: number, rotation_y: number, rotation_z: number, scale_x: number, scale_y: number, scale_z: number): boolean;
 
 /**
- * Where the node is in its tree's root's space: in a canvas, canvas units.
+ * An actor with a simulated component (motion, bounds, lifetime, a collider: wgf_component.h)
+ * moves at the tick rate: its transform is the simulation's, and it is drawn between its
+ * last two ticks' at each frame's tick fraction, so it moves smoothly at any frame rate.
+ * A change in a tick is so smoothed into the frames after it; snap ends the smoothing, so
+ * the actor is drawn where it is now (put somewhere new, it isn't seen sweeping there).
+ * False for an actor that isn't one; true and nothing to do for one not simulated.
  */
-export declare function wgf_node_get_world_position<T extends number[] | Float32Array | Float64Array>(node: wgf_node_t | 0, into: T): T;
-export declare function wgf_node_get_world_position(node: wgf_node_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+export declare function wgf_actor_snap(actor: wgf_actor_t | 0): boolean;
 
 /**
- * Turn the node so its -z points at the target (x, y, z) and its +y is as near to the
+ * Many positions at once: each of `actors` (count of them) read into `out` as x, y, z in
+ * turn, as many as fit in `out_count` floats, returning how many floats it filled (a
+ * handle that isn't an actor reads 0, 0, 0); and each set from `positions` (x, y, z in
+ * turn, positions_count floats), false when there aren't three floats for each, skipping
+ * a handle that isn't an actor.
+ */
+export declare function wgf_actor_get_positions(actors: readonly wgf_actor_t[] | Uint32Array | null, out: number[] | Float32Array | Float64Array | null): number;
+
+/**
+ * Many positions at once: each of `actors` (count of them) read into `out` as x, y, z in
+ * turn, as many as fit in `out_count` floats, returning how many floats it filled (a
+ * handle that isn't an actor reads 0, 0, 0); and each set from `positions` (x, y, z in
+ * turn, positions_count floats), false when there aren't three floats for each, skipping
+ * a handle that isn't an actor.
+ */
+export declare function wgf_actor_set_positions(actors: readonly wgf_actor_t[] | Uint32Array | null, positions: readonly number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * Where the actor is in its tree's root's space: on a 2D stage, stage units.
+ */
+export declare function wgf_actor_get_world_position<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_actor_get_world_position(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * Turn the actor so its -z points at the target (x, y, z) and its +y is as near to the
  * up direction (up_x, up_y, up_z) as can be, both in its tree's root's space: how a
  * camera is aimed, since it looks down its -z. Its rotation is set relative to its
  * parent, so it points there as it is placed now. False when the target is where the
- * node is, or the up direction is along the line to it.
+ * actor is, or the up direction is along the line to it.
  */
-export declare function wgf_node_look_at(node: wgf_node_t | 0, x: number, y: number, z: number, up_x: number, up_y: number, up_z: number): boolean;
+export declare function wgf_actor_look_at(actor: wgf_actor_t | 0, x: number, y: number, z: number, up_x: number, up_y: number, up_z: number): boolean;
 
 /**
- * A name to find the node by; NULL or "" for none, the default. get_name is "" for none: borrowed, valid until the
- * name changes or the node goes. Names needn't be unique.
+ * A name to find the actor by; NULL or "" for none, the default. get_name is "" for none: borrowed, valid until the
+ * name changes or the actor goes. A name is found by its stage (wgf_stage2d_find, wgf_stage3d_find) when it is the
+ * only one so named there, and by a path from any actor (wgf_actor_find) when it is unique among its siblings.
  */
-export declare function wgf_node_set_name(node: wgf_node_t | 0, name: string | null): boolean;
+export declare function wgf_actor_set_name(actor: wgf_actor_t | 0, name: string | null): boolean;
 
 /**
- * A name to find the node by; NULL or "" for none, the default. get_name is "" for none: borrowed, valid until the
- * name changes or the node goes. Names needn't be unique.
+ * A name to find the actor by; NULL or "" for none, the default. get_name is "" for none: borrowed, valid until the
+ * name changes or the actor goes. A name is found by its stage (wgf_stage2d_find, wgf_stage3d_find) when it is the
+ * only one so named there, and by a path from any actor (wgf_actor_find) when it is unique among its siblings.
  */
-export declare function wgf_node_get_name(node: wgf_node_t | 0): string;
+export declare function wgf_actor_get_name(actor: wgf_actor_t | 0): string;
 
 /**
- * The first node named `name` in the tree from `root`, `root` included, depth
- * first, children in order; 0 for none.
+ * The actor at `path` from `actor`: child names joined by '/', so "wheel_rl/smoke" is the
+ * child "smoke" of the child "wheel_rl". Each step looks only among one actor's children
+ * (the first so named, in order), never through the tree. 0 for none, an empty step
+ * ("a//b"), or an empty or NULL path.
  */
-export declare function wgf_node_find(root: wgf_node_t | 0, name: string | null): wgf_node_t;
+export declare function wgf_actor_find(actor: wgf_actor_t | 0, path: string | null): wgf_actor_t;
 
 /**
- * Two flags say what a node takes part in, each the node's own, read back as set:
+ * Two flags say what an actor takes part in, each the actor's own, read back as set:
  *
- *   enabled   off: the node is skipped altogether, with everything under it, as if
+ *   enabled   off: the actor is skipped altogether, with everything under it, as if
  *             it weren't in the tree, by drawing and by every update (an emitter
  *             under it isn't moved on): the switch on a part of the game that is off
  *             for now. The only one that reaches the children; their own flags are
  *             kept, so enabling it again brings each back as it was set
- *   visible   off: the node's own output is off -- a sprite, shape, text, or
+ *   visible   off: the actor's own output is off -- a sprite, shape, text, or
  *             emitter isn't drawn -- while it is still placed and its children are
  *             as they are
  *
  * Defaults: enabled, visible.
  */
-export declare function wgf_node_set_enabled(node: wgf_node_t | 0, enabled: boolean): boolean;
+export declare function wgf_actor_set_enabled(actor: wgf_actor_t | 0, enabled: boolean): boolean;
 
 /**
- * Two flags say what a node takes part in, each the node's own, read back as set:
+ * Two flags say what an actor takes part in, each the actor's own, read back as set:
  *
- *   enabled   off: the node is skipped altogether, with everything under it, as if
+ *   enabled   off: the actor is skipped altogether, with everything under it, as if
  *             it weren't in the tree, by drawing and by every update (an emitter
  *             under it isn't moved on): the switch on a part of the game that is off
  *             for now. The only one that reaches the children; their own flags are
  *             kept, so enabling it again brings each back as it was set
- *   visible   off: the node's own output is off -- a sprite, shape, text, or
+ *   visible   off: the actor's own output is off -- a sprite, shape, text, or
  *             emitter isn't drawn -- while it is still placed and its children are
  *             as they are
  *
  * Defaults: enabled, visible.
  */
-export declare function wgf_node_is_enabled(node: wgf_node_t | 0): boolean;
+export declare function wgf_actor_is_enabled(actor: wgf_actor_t | 0): boolean;
 
 /**
- * Two flags say what a node takes part in, each the node's own, read back as set:
+ * Two flags say what an actor takes part in, each the actor's own, read back as set:
  *
- *   enabled   off: the node is skipped altogether, with everything under it, as if
+ *   enabled   off: the actor is skipped altogether, with everything under it, as if
  *             it weren't in the tree, by drawing and by every update (an emitter
  *             under it isn't moved on): the switch on a part of the game that is off
  *             for now. The only one that reaches the children; their own flags are
  *             kept, so enabling it again brings each back as it was set
- *   visible   off: the node's own output is off -- a sprite, shape, text, or
+ *   visible   off: the actor's own output is off -- a sprite, shape, text, or
  *             emitter isn't drawn -- while it is still placed and its children are
  *             as they are
  *
  * Defaults: enabled, visible.
  */
-export declare function wgf_node_set_visible(node: wgf_node_t | 0, visible: boolean): boolean;
+export declare function wgf_actor_set_visible(actor: wgf_actor_t | 0, visible: boolean): boolean;
 
 /**
- * Two flags say what a node takes part in, each the node's own, read back as set:
+ * Two flags say what an actor takes part in, each the actor's own, read back as set:
  *
- *   enabled   off: the node is skipped altogether, with everything under it, as if
+ *   enabled   off: the actor is skipped altogether, with everything under it, as if
  *             it weren't in the tree, by drawing and by every update (an emitter
  *             under it isn't moved on): the switch on a part of the game that is off
  *             for now. The only one that reaches the children; their own flags are
  *             kept, so enabling it again brings each back as it was set
- *   visible   off: the node's own output is off -- a sprite, shape, text, or
+ *   visible   off: the actor's own output is off -- a sprite, shape, text, or
  *             emitter isn't drawn -- while it is still placed and its children are
  *             as they are
  *
  * Defaults: enabled, visible.
  */
-export declare function wgf_node_is_visible(node: wgf_node_t | 0): boolean;
+export declare function wgf_actor_is_visible(actor: wgf_actor_t | 0): boolean;
 
 /**
- * A 2D camera, zoom 1. 0 when there is no room for another node.
+ * A 2D camera, zoom 1. 0 when there is no room for another actor.
  */
-export declare function wgf_camera2d_create(): wgf_node_t;
+export declare function wgf_camera2d_create(): wgf_actor_t;
 
 /**
  * How big things look: 2 draws everything twice as big. False for a zoom of 0 or
  * less.
  */
-export declare function wgf_camera2d_set_zoom(camera: wgf_node_t | 0, zoom: number): boolean;
+export declare function wgf_camera2d_set_zoom(camera: wgf_actor_t | 0, zoom: number): boolean;
 
 /**
  * How big things look: 2 draws everything twice as big. False for a zoom of 0 or
  * less.
  */
-export declare function wgf_camera2d_get_zoom(camera: wgf_node_t | 0): number;
+export declare function wgf_camera2d_get_zoom(camera: wgf_actor_t | 0): number;
 
 /**
  * A camera with a 60 degree vertical field of view, seeing from 0.1 to 1000 units in
- * front of it. 0 when there is no room for another node.
+ * front of it. 0 when there is no room for another actor.
  */
-export declare function wgf_camera3d_create(): wgf_node_t;
+export declare function wgf_camera3d_create(): wgf_actor_t;
 
 /**
  * The vertical field of view, in radians, clamped to 0.01 to 3.13 (just short of a
  * half turn).
  */
-export declare function wgf_camera3d_set_fov(camera: wgf_node_t | 0, radians: number): boolean;
+export declare function wgf_camera3d_set_fov(camera: wgf_actor_t | 0, radians: number): boolean;
 
 /**
  * The vertical field of view, in radians, clamped to 0.01 to 3.13 (just short of a
  * half turn).
  */
-export declare function wgf_camera3d_get_fov(camera: wgf_node_t | 0): number;
+export declare function wgf_camera3d_get_fov(camera: wgf_actor_t | 0): number;
 
 /**
  * How near and far in front of the camera it sees. False unless 0 < near < far.
  */
-export declare function wgf_camera3d_set_clip(camera: wgf_node_t | 0, near_z: number, far_z: number): boolean;
+export declare function wgf_camera3d_set_clip(camera: wgf_actor_t | 0, near_z: number, far_z: number): boolean;
 
 /**
  * How near and far in front of the camera it sees. False unless 0 < near < far.
  */
-export declare function wgf_camera3d_get_near(camera: wgf_node_t | 0): number;
+export declare function wgf_camera3d_get_near(camera: wgf_actor_t | 0): number;
 
 /**
  * How near and far in front of the camera it sees. False unless 0 < near < far.
  */
-export declare function wgf_camera3d_get_far(camera: wgf_node_t | 0): number;
+export declare function wgf_camera3d_get_far(camera: wgf_actor_t | 0): number;
 
 /**
  * Orthographic (true) or perspective (false, the default).
  */
-export declare function wgf_camera3d_set_orthographic(camera: wgf_node_t | 0, orthographic: boolean): boolean;
+export declare function wgf_camera3d_set_orthographic(camera: wgf_actor_t | 0, orthographic: boolean): boolean;
 
 /**
  * Orthographic (true) or perspective (false, the default).
  */
-export declare function wgf_camera3d_is_orthographic(camera: wgf_node_t | 0): boolean;
+export declare function wgf_camera3d_is_orthographic(camera: wgf_actor_t | 0): boolean;
 
 /**
  * How tall a view an orthographic camera sees, in units (default 10). False for 0 or
  * less.
  */
-export declare function wgf_camera3d_set_ortho_height(camera: wgf_node_t | 0, height: number): boolean;
+export declare function wgf_camera3d_set_ortho_height(camera: wgf_actor_t | 0, height: number): boolean;
 
 /**
  * How tall a view an orthographic camera sees, in units (default 10). False for 0 or
  * less.
  */
-export declare function wgf_camera3d_get_ortho_height(camera: wgf_node_t | 0): number;
-
-/**
- * A canvas, with no camera. 0 when there is no room for another node.
- */
-export declare function wgf_canvas_create(): wgf_node_t;
-
-/**
- * Draw it into this frame. Outside a frame, nothing.
- */
-export declare function wgf_canvas_draw(canvas: wgf_node_t | 0): void;
-
-/**
- * With a camera (wgf_camera2d.h), the canvas point at the camera's position is
- * drawn at the frame's center, turned and zoomed as the camera is: a 2D world.
- * Without one (0, the default), canvas units are the frame's logical pixels: a HUD.
- * The camera can be anywhere -- in this canvas, parented to the player so it
- * follows, or in no tree at all. False when `camera` isn't a 2D camera. A camera
- * that is destroyed leaves the canvas with none.
- */
-export declare function wgf_canvas_set_camera(canvas: wgf_node_t | 0, camera: wgf_node_t | 0): boolean;
-
-/**
- * With a camera (wgf_camera2d.h), the canvas point at the camera's position is
- * drawn at the frame's center, turned and zoomed as the camera is: a 2D world.
- * Without one (0, the default), canvas units are the frame's logical pixels: a HUD.
- * The camera can be anywhere -- in this canvas, parented to the player so it
- * follows, or in no tree at all. False when `camera` isn't a 2D camera. A camera
- * that is destroyed leaves the canvas with none.
- */
-export declare function wgf_canvas_get_camera(canvas: wgf_node_t | 0): wgf_node_t;
+export declare function wgf_camera3d_get_ortho_height(camera: wgf_actor_t | 0): number;
 
 /**
  * The stock color `stock` names; 0 (transparent) for a value that names none.
@@ -2291,90 +2300,90 @@ export declare function wgf_font_measure<T extends number[] | Float32Array | Flo
 export declare function wgf_font_measure(font: wgf_font_t | 0, text: string | null, size: number, into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
- * A text node in `font` (0: the default font), with no string yet. 0 when `font`
- * isn't a font, or there is no room for another node.
+ * A text actor in `font` (0: the default font), with no string yet. 0 when `font`
+ * isn't a font, or there is no room for another actor.
  */
-export declare function wgf_text_create(font: wgf_font_t | 0): wgf_node_t;
+export declare function wgf_text_create(font: wgf_font_t | 0): wgf_actor_t;
 
 /**
  * False when `font` isn't a font (0 is: the default font).
  */
-export declare function wgf_text_set_font(text: wgf_node_t | 0, font: wgf_font_t | 0): boolean;
+export declare function wgf_text_set_font(text: wgf_actor_t | 0, font: wgf_font_t | 0): boolean;
 
 /**
  * False when `font` isn't a font (0 is: the default font).
  */
-export declare function wgf_text_get_font(text: wgf_node_t | 0): wgf_font_t;
+export declare function wgf_text_get_font(text: wgf_actor_t | 0): wgf_font_t;
 
 /**
- * What it says, UTF-8, copied. get_string's is the node's: valid until the next
+ * What it says, UTF-8, copied. get_string's is the actor's: valid until the next
  * set_string, or until it is destroyed.
  */
-export declare function wgf_text_set_string(text: wgf_node_t | 0, string: string | null): boolean;
+export declare function wgf_text_set_string(text: wgf_actor_t | 0, string: string | null): boolean;
 
 /**
- * What it says, UTF-8, copied. get_string's is the node's: valid until the next
+ * What it says, UTF-8, copied. get_string's is the actor's: valid until the next
  * set_string, or until it is destroyed.
  */
-export declare function wgf_text_get_string(text: wgf_node_t | 0): string;
+export declare function wgf_text_get_string(text: wgf_actor_t | 0): string;
 
 /**
- * Its font size: the height of its lines, before the node's scale, in canvas units (a
+ * Its font size: the height of its lines, before the actor's scale, in stage units (a
  * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
  * Read back as the size it draws at. False for a handle that isn't text.
  */
-export declare function wgf_text_set_font_size(text: wgf_node_t | 0, size: number): boolean;
+export declare function wgf_text_set_font_size(text: wgf_actor_t | 0, size: number): boolean;
 
 /**
- * Its font size: the height of its lines, before the node's scale, in canvas units (a
+ * Its font size: the height of its lines, before the actor's scale, in stage units (a
  * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
  * Read back as the size it draws at. False for a handle that isn't text.
  */
-export declare function wgf_text_get_font_size(text: wgf_node_t | 0): number;
+export declare function wgf_text_get_font_size(text: wgf_actor_t | 0): number;
 
 /**
  * Default: white.
  */
-export declare function wgf_text_set_color(text: wgf_node_t | 0, color: wgf_color_t): boolean;
+export declare function wgf_text_set_color(text: wgf_actor_t | 0, color: wgf_color_t): boolean;
 
 /**
  * Default: white.
  */
-export declare function wgf_text_get_color(text: wgf_node_t | 0): wgf_color_t;
+export declare function wgf_text_get_color(text: wgf_actor_t | 0): wgf_color_t;
 
 /**
- * Wrap lines at spaces and tabs to fit `width`, in canvas units; a word wider keeps
+ * Wrap lines at spaces and tabs to fit `width`, in stage units; a word wider keeps
  * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
  * wrapped block is `width` wide for its alignment, or as wide as its widest line
  * where a word is wider. False for less than 0.
  */
-export declare function wgf_text_set_wrap_width(text: wgf_node_t | 0, width: number): boolean;
+export declare function wgf_text_set_wrap_width(text: wgf_actor_t | 0, width: number): boolean;
 
 /**
- * Wrap lines at spaces and tabs to fit `width`, in canvas units; a word wider keeps
+ * Wrap lines at spaces and tabs to fit `width`, in stage units; a word wider keeps
  * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
  * wrapped block is `width` wide for its alignment, or as wide as its widest line
  * where a word is wider. False for less than 0.
  */
-export declare function wgf_text_get_wrap_width(text: wgf_node_t | 0): number;
+export declare function wgf_text_get_wrap_width(text: wgf_actor_t | 0): number;
 
 /**
- * Where the block sits relative to the node's position, on each axis; lines line
+ * Where the block sits relative to the actor's position, on each axis; lines line
  * up the same way inside the block. False for a value that isn't one.
  */
-export declare function wgf_text_set_align(text: wgf_node_t | 0, horizontal: wgf_text_halign_t, vertical: wgf_text_valign_t): boolean;
+export declare function wgf_text_set_align(text: wgf_actor_t | 0, horizontal: wgf_text_halign_t, vertical: wgf_text_valign_t): boolean;
 
 /**
- * Where the block sits relative to the node's position, on each axis; lines line
+ * Where the block sits relative to the actor's position, on each axis; lines line
  * up the same way inside the block. False for a value that isn't one.
  */
-export declare function wgf_text_get_halign(text: wgf_node_t | 0): wgf_text_halign_t;
+export declare function wgf_text_get_halign(text: wgf_actor_t | 0): wgf_text_halign_t;
 
 /**
- * Where the block sits relative to the node's position, on each axis; lines line
+ * Where the block sits relative to the actor's position, on each axis; lines line
  * up the same way inside the block. False for a value that isn't one.
  */
-export declare function wgf_text_get_valign(text: wgf_node_t | 0): wgf_text_valign_t;
+export declare function wgf_text_get_valign(text: wgf_actor_t | 0): wgf_text_valign_t;
 
 /**
  * A texture from an image file: PNG, JPEG, BMP, TGA, or GIF (its first frame). 0 only
@@ -2520,7 +2529,7 @@ export declare function wgf_draw_texture_region(texture: wgf_texture_t | 0, sour
  * nothing; a frame starts in 2D, and one left in 3D ends there. A 2D call between them
  * lands in the world's x-y plane, as wgrender's did.
  */
-export declare function wgf_draw_begin_3d(camera: wgf_node_t | 0): boolean;
+export declare function wgf_draw_begin_3d(camera: wgf_actor_t | 0): boolean;
 
 /**
  * 3D: between begin_3d and end_3d, the 3D calls draw in the world as `camera` (a 3D
@@ -2538,7 +2547,7 @@ export declare function wgf_draw_end_3d(): void;
  * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
  * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
  * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
  * behind it, in the order drawn.
  */
 export declare function wgf_draw_line_3d(x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, color: wgf_color_t): void;
@@ -2549,7 +2558,7 @@ export declare function wgf_draw_line_3d(x0: number, y0: number, z0: number, x1:
  * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
  * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
  * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
  * behind it, in the order drawn.
  */
 export declare function wgf_draw_cube(cx: number, cy: number, cz: number, width: number, height: number, length: number, color: wgf_color_t): void;
@@ -2560,7 +2569,7 @@ export declare function wgf_draw_cube(cx: number, cy: number, cz: number, width:
  * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
  * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
  * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
  * behind it, in the order drawn.
  */
 export declare function wgf_draw_cube_wires(cx: number, cy: number, cz: number, width: number, height: number, length: number, color: wgf_color_t): void;
@@ -2571,7 +2580,7 @@ export declare function wgf_draw_cube_wires(cx: number, cy: number, cz: number, 
  * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
  * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
  * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
  * behind it, in the order drawn.
  */
 export declare function wgf_draw_sphere(cx: number, cy: number, cz: number, radius: number, color: wgf_color_t): void;
@@ -2582,7 +2591,7 @@ export declare function wgf_draw_sphere(cx: number, cy: number, cz: number, radi
  * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
  * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
  * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
  * behind it, in the order drawn.
  */
 export declare function wgf_draw_grid(slices: number, spacing: number, color: wgf_color_t): void;
@@ -2593,7 +2602,7 @@ export declare function wgf_draw_grid(slices: number, spacing: number, color: wg
  * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
  * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
  * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
  * behind it, in the order drawn.
  */
 export declare function wgf_draw_rectangle_3d(cx: number, cy: number, cz: number, width: number, height: number, rx: number, ry: number, rz: number, color: wgf_color_t): void;
@@ -2604,7 +2613,7 @@ export declare function wgf_draw_rectangle_3d(cx: number, cy: number, cz: number
  * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
  * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
  * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * node's rotation turns it. A color with alpha below 255 is blended over what is
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
  * behind it, in the order drawn.
  */
 export declare function wgf_draw_circle_3d(cx: number, cy: number, cz: number, radius: number, rx: number, ry: number, rz: number, color: wgf_color_t): void;
@@ -2618,205 +2627,205 @@ export declare function wgf_draw_text_3d(font: wgf_font_t | 0, text: string | nu
 
 /**
  * An emitter that isn't emitting yet: rate 0, 256 particles at most, white squares of
- * 4 units living a second, going nowhere. 0 when there is no room for another node.
+ * 4 units living a second, going nowhere. 0 when there is no room for another actor.
  */
-export declare function wgf_emitter2d_create(): wgf_node_t;
+export declare function wgf_emitter2d_create(): wgf_actor_t;
 
 /**
  * Particles a second while emitting, spread evenly over the frames. Clamped to 0 or
  * more. False for a handle that isn't an emitter.
  */
-export declare function wgf_emitter2d_set_rate(emitter: wgf_node_t | 0, per_second: number): boolean;
+export declare function wgf_emitter2d_set_rate(emitter: wgf_actor_t | 0, per_second: number): boolean;
 
 /**
  * Particles a second while emitting, spread evenly over the frames. Clamped to 0 or
  * more. False for a handle that isn't an emitter.
  */
-export declare function wgf_emitter2d_get_rate(emitter: wgf_node_t | 0): number;
+export declare function wgf_emitter2d_get_rate(emitter: wgf_actor_t | 0): number;
 
 /**
  * Whether it emits at its rate (default true; with the rate at 0 nothing comes). Bursts
  * come either way. False for a handle that isn't an emitter.
  */
-export declare function wgf_emitter2d_set_emitting(emitter: wgf_node_t | 0, emitting: boolean): boolean;
+export declare function wgf_emitter2d_set_emitting(emitter: wgf_actor_t | 0, emitting: boolean): boolean;
 
 /**
  * Whether it emits at its rate (default true; with the rate at 0 nothing comes). Bursts
  * come either way. False for a handle that isn't an emitter.
  */
-export declare function wgf_emitter2d_is_emitting(emitter: wgf_node_t | 0): boolean;
+export declare function wgf_emitter2d_is_emitting(emitter: wgf_actor_t | 0): boolean;
 
 /**
  * `count` particles at once, where the emitter is now. Clamped to the room left. False
  * for a handle that isn't an emitter, or a count below 1.
  */
-export declare function wgf_emitter2d_burst(emitter: wgf_node_t | 0, count: number): boolean;
+export declare function wgf_emitter2d_burst(emitter: wgf_actor_t | 0, count: number): boolean;
 
 /**
  * The most particles it keeps, 1 to 65536 (default 256); a birth past it is dropped.
  * Lowering it drops the oldest. Clamped. False for a handle that isn't an emitter.
  */
-export declare function wgf_emitter2d_set_capacity(emitter: wgf_node_t | 0, capacity: number): boolean;
+export declare function wgf_emitter2d_set_capacity(emitter: wgf_actor_t | 0, capacity: number): boolean;
 
 /**
  * The most particles it keeps, 1 to 65536 (default 256); a birth past it is dropped.
  * Lowering it drops the oldest. Clamped. False for a handle that isn't an emitter.
  */
-export declare function wgf_emitter2d_get_capacity(emitter: wgf_node_t | 0): number;
+export declare function wgf_emitter2d_get_capacity(emitter: wgf_actor_t | 0): number;
 
 /**
  * Particles alive now.
  */
-export declare function wgf_emitter2d_get_count(emitter: wgf_node_t | 0): number;
+export declare function wgf_emitter2d_get_count(emitter: wgf_actor_t | 0): number;
 
 /**
  * How long each lives, in seconds, chosen between min and max at birth (swapped when
  * max is less). False for a handle that isn't an emitter, or a min of 0 or less.
  */
-export declare function wgf_emitter2d_set_life(emitter: wgf_node_t | 0, min: number, max: number): boolean;
+export declare function wgf_emitter2d_set_life(emitter: wgf_actor_t | 0, min: number, max: number): boolean;
 
 /**
  * How long each lives, in seconds, chosen between min and max at birth (swapped when
  * max is less). False for a handle that isn't an emitter, or a min of 0 or less.
  */
-export declare function wgf_emitter2d_get_life_min(emitter: wgf_node_t | 0): number;
+export declare function wgf_emitter2d_get_life_min(emitter: wgf_actor_t | 0): number;
 
 /**
  * How long each lives, in seconds, chosen between min and max at birth (swapped when
  * max is less). False for a handle that isn't an emitter, or a min of 0 or less.
  */
-export declare function wgf_emitter2d_get_life_max(emitter: wgf_node_t | 0): number;
+export declare function wgf_emitter2d_get_life_max(emitter: wgf_actor_t | 0): number;
 
 /**
- * The direction they leave in, radians in the canvas (0 along +x, a quarter turn along
+ * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
  * +y, down the screen), turned by the emitter's own world rotation, give or take
  * `spread` radians either side (TAU: every way); and their speed, in units a second,
  * between min and max. False for a handle that isn't an emitter, or a spread or speed
  * below 0.
  */
-export declare function wgf_emitter2d_set_direction(emitter: wgf_node_t | 0, angle: number, spread: number): boolean;
+export declare function wgf_emitter2d_set_direction(emitter: wgf_actor_t | 0, angle: number, spread: number): boolean;
 
 /**
- * The direction they leave in, radians in the canvas (0 along +x, a quarter turn along
+ * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
  * +y, down the screen), turned by the emitter's own world rotation, give or take
  * `spread` radians either side (TAU: every way); and their speed, in units a second,
  * between min and max. False for a handle that isn't an emitter, or a spread or speed
  * below 0.
  */
-export declare function wgf_emitter2d_get_direction(emitter: wgf_node_t | 0): number;
+export declare function wgf_emitter2d_get_direction(emitter: wgf_actor_t | 0): number;
 
 /**
- * The direction they leave in, radians in the canvas (0 along +x, a quarter turn along
+ * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
  * +y, down the screen), turned by the emitter's own world rotation, give or take
  * `spread` radians either side (TAU: every way); and their speed, in units a second,
  * between min and max. False for a handle that isn't an emitter, or a spread or speed
  * below 0.
  */
-export declare function wgf_emitter2d_get_spread(emitter: wgf_node_t | 0): number;
+export declare function wgf_emitter2d_get_spread(emitter: wgf_actor_t | 0): number;
 
 /**
- * The direction they leave in, radians in the canvas (0 along +x, a quarter turn along
+ * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
  * +y, down the screen), turned by the emitter's own world rotation, give or take
  * `spread` radians either side (TAU: every way); and their speed, in units a second,
  * between min and max. False for a handle that isn't an emitter, or a spread or speed
  * below 0.
  */
-export declare function wgf_emitter2d_set_speed(emitter: wgf_node_t | 0, min: number, max: number): boolean;
+export declare function wgf_emitter2d_set_speed(emitter: wgf_actor_t | 0, min: number, max: number): boolean;
 
 /**
- * The direction they leave in, radians in the canvas (0 along +x, a quarter turn along
+ * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
  * +y, down the screen), turned by the emitter's own world rotation, give or take
  * `spread` radians either side (TAU: every way); and their speed, in units a second,
  * between min and max. False for a handle that isn't an emitter, or a spread or speed
  * below 0.
  */
-export declare function wgf_emitter2d_get_speed_min(emitter: wgf_node_t | 0): number;
+export declare function wgf_emitter2d_get_speed_min(emitter: wgf_actor_t | 0): number;
 
 /**
- * The direction they leave in, radians in the canvas (0 along +x, a quarter turn along
+ * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
  * +y, down the screen), turned by the emitter's own world rotation, give or take
  * `spread` radians either side (TAU: every way); and their speed, in units a second,
  * between min and max. False for a handle that isn't an emitter, or a spread or speed
  * below 0.
  */
-export declare function wgf_emitter2d_get_speed_max(emitter: wgf_node_t | 0): number;
+export declare function wgf_emitter2d_get_speed_max(emitter: wgf_actor_t | 0): number;
 
 /**
  * Born anywhere within `radius` of the emitter (0, the default: at it). False for a
  * handle that isn't an emitter, or a radius below 0.
  */
-export declare function wgf_emitter2d_set_radius(emitter: wgf_node_t | 0, radius: number): boolean;
+export declare function wgf_emitter2d_set_radius(emitter: wgf_actor_t | 0, radius: number): boolean;
 
 /**
  * Born anywhere within `radius` of the emitter (0, the default: at it). False for a
  * handle that isn't an emitter, or a radius below 0.
  */
-export declare function wgf_emitter2d_get_radius(emitter: wgf_node_t | 0): number;
+export declare function wgf_emitter2d_get_radius(emitter: wgf_actor_t | 0): number;
 
 /**
  * Acceleration in units a second squared (default 0, 0), and drag, the part of its
  * velocity a particle loses each second (0, the default, to 1: none to all). Drag is
  * clamped to 0..1. False for a handle that isn't an emitter.
  */
-export declare function wgf_emitter2d_set_gravity(emitter: wgf_node_t | 0, x: number, y: number): boolean;
+export declare function wgf_emitter2d_set_gravity(emitter: wgf_actor_t | 0, x: number, y: number): boolean;
 
 /**
  * Acceleration in units a second squared (default 0, 0), and drag, the part of its
  * velocity a particle loses each second (0, the default, to 1: none to all). Drag is
  * clamped to 0..1. False for a handle that isn't an emitter.
  */
-export declare function wgf_emitter2d_get_gravity<T extends number[] | Float32Array | Float64Array>(emitter: wgf_node_t | 0, into: T): T;
-export declare function wgf_emitter2d_get_gravity(emitter: wgf_node_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+export declare function wgf_emitter2d_get_gravity<T extends number[] | Float32Array | Float64Array>(emitter: wgf_actor_t | 0, into: T): T;
+export declare function wgf_emitter2d_get_gravity(emitter: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
  * Acceleration in units a second squared (default 0, 0), and drag, the part of its
  * velocity a particle loses each second (0, the default, to 1: none to all). Drag is
  * clamped to 0..1. False for a handle that isn't an emitter.
  */
-export declare function wgf_emitter2d_set_drag(emitter: wgf_node_t | 0, drag: number): boolean;
+export declare function wgf_emitter2d_set_drag(emitter: wgf_actor_t | 0, drag: number): boolean;
 
 /**
  * Acceleration in units a second squared (default 0, 0), and drag, the part of its
  * velocity a particle loses each second (0, the default, to 1: none to all). Drag is
  * clamped to 0..1. False for a handle that isn't an emitter.
  */
-export declare function wgf_emitter2d_get_drag(emitter: wgf_node_t | 0): number;
+export declare function wgf_emitter2d_get_drag(emitter: wgf_actor_t | 0): number;
 
 /**
  * Size in units, and color, at birth and at death, each running between them over the
  * particle's life. False for a handle that isn't an emitter, or a size below 0.
  */
-export declare function wgf_emitter2d_set_size(emitter: wgf_node_t | 0, start: number, end: number): boolean;
+export declare function wgf_emitter2d_set_size(emitter: wgf_actor_t | 0, start: number, end: number): boolean;
 
 /**
  * Size in units, and color, at birth and at death, each running between them over the
  * particle's life. False for a handle that isn't an emitter, or a size below 0.
  */
-export declare function wgf_emitter2d_get_size_start(emitter: wgf_node_t | 0): number;
+export declare function wgf_emitter2d_get_size_start(emitter: wgf_actor_t | 0): number;
 
 /**
  * Size in units, and color, at birth and at death, each running between them over the
  * particle's life. False for a handle that isn't an emitter, or a size below 0.
  */
-export declare function wgf_emitter2d_get_size_end(emitter: wgf_node_t | 0): number;
+export declare function wgf_emitter2d_get_size_end(emitter: wgf_actor_t | 0): number;
 
 /**
  * Size in units, and color, at birth and at death, each running between them over the
  * particle's life. False for a handle that isn't an emitter, or a size below 0.
  */
-export declare function wgf_emitter2d_set_color(emitter: wgf_node_t | 0, start: wgf_color_t, end: wgf_color_t): boolean;
+export declare function wgf_emitter2d_set_color(emitter: wgf_actor_t | 0, start: wgf_color_t, end: wgf_color_t): boolean;
 
 /**
  * Size in units, and color, at birth and at death, each running between them over the
  * particle's life. False for a handle that isn't an emitter, or a size below 0.
  */
-export declare function wgf_emitter2d_get_color_start(emitter: wgf_node_t | 0): wgf_color_t;
+export declare function wgf_emitter2d_get_color_start(emitter: wgf_actor_t | 0): wgf_color_t;
 
 /**
  * Size in units, and color, at birth and at death, each running between them over the
  * particle's life. False for a handle that isn't an emitter, or a size below 0.
  */
-export declare function wgf_emitter2d_get_color_end(emitter: wgf_node_t | 0): wgf_color_t;
+export declare function wgf_emitter2d_get_color_end(emitter: wgf_actor_t | 0): wgf_color_t;
 
 /**
  * A streak instead of a square: each particle drawn as a line from where it is back
@@ -2824,7 +2833,7 @@ export declare function wgf_emitter2d_get_color_end(emitter: wgf_node_t | 0): wg
  * default) draws squares. Clamped to 0 or more. False for a handle that isn't an
  * emitter.
  */
-export declare function wgf_emitter2d_set_stretch(emitter: wgf_node_t | 0, seconds: number): boolean;
+export declare function wgf_emitter2d_set_stretch(emitter: wgf_actor_t | 0, seconds: number): boolean;
 
 /**
  * A streak instead of a square: each particle drawn as a line from where it is back
@@ -2832,78 +2841,78 @@ export declare function wgf_emitter2d_set_stretch(emitter: wgf_node_t | 0, secon
  * default) draws squares. Clamped to 0 or more. False for a handle that isn't an
  * emitter.
  */
-export declare function wgf_emitter2d_get_stretch(emitter: wgf_node_t | 0): number;
+export declare function wgf_emitter2d_get_stretch(emitter: wgf_actor_t | 0): number;
 
 /**
  * Every particle gone at once; it keeps emitting as it was. False for a handle that
  * isn't an emitter.
  */
-export declare function wgf_emitter2d_clear(emitter: wgf_node_t | 0): boolean;
+export declare function wgf_emitter2d_clear(emitter: wgf_actor_t | 0): boolean;
 
 /**
  * A white light of intensity 1, no range limit, a spot's cone pi/6 to pi/4. 0 when
- * `type` isn't a type, or there is no room for another node.
+ * `type` isn't a type, or there is no room for another actor.
  */
-export declare function wgf_light_create(type: wgf_light_type_t): wgf_node_t;
+export declare function wgf_light_create(type: wgf_light_type_t): wgf_actor_t;
 
 /**
  * A white light of intensity 1, no range limit, a spot's cone pi/6 to pi/4. 0 when
- * `type` isn't a type, or there is no room for another node.
+ * `type` isn't a type, or there is no room for another actor.
  */
-export declare function wgf_light_get_type(light: wgf_node_t | 0): wgf_light_type_t;
+export declare function wgf_light_get_type(light: wgf_actor_t | 0): wgf_light_type_t;
 
 /**
  * Its color (default white); alpha is ignored.
  */
-export declare function wgf_light_set_color(light: wgf_node_t | 0, color: wgf_color_t): boolean;
+export declare function wgf_light_set_color(light: wgf_actor_t | 0, color: wgf_color_t): boolean;
 
 /**
  * Its color (default white); alpha is ignored.
  */
-export declare function wgf_light_get_color(light: wgf_node_t | 0): wgf_color_t;
+export declare function wgf_light_get_color(light: wgf_actor_t | 0): wgf_color_t;
 
 /**
  * How strong it is, its color times this (default 1, clamped to 0 or more).
  */
-export declare function wgf_light_set_intensity(light: wgf_node_t | 0, intensity: number): boolean;
+export declare function wgf_light_set_intensity(light: wgf_actor_t | 0, intensity: number): boolean;
 
 /**
  * How strong it is, its color times this (default 1, clamped to 0 or more).
  */
-export declare function wgf_light_get_intensity(light: wgf_node_t | 0): number;
+export declare function wgf_light_get_intensity(light: wgf_actor_t | 0): number;
 
 /**
  * How far a point or spot light reaches, in units: it fades to nothing there (default
  * 0, unlimited; below 0 is clamped to 0).
  */
-export declare function wgf_light_set_range(light: wgf_node_t | 0, range: number): boolean;
+export declare function wgf_light_set_range(light: wgf_actor_t | 0, range: number): boolean;
 
 /**
  * How far a point or spot light reaches, in units: it fades to nothing there (default
  * 0, unlimited; below 0 is clamped to 0).
  */
-export declare function wgf_light_get_range(light: wgf_node_t | 0): number;
+export declare function wgf_light_get_range(light: wgf_actor_t | 0): number;
 
 /**
  * A spot light's cone, radians from its direction: full inside `inner`, nothing past
  * `outer`, smooth between (glTF's innerConeAngle and outerConeAngle). outer is clamped
  * to 0..pi/2, inner to 0..outer.
  */
-export declare function wgf_light_set_spot_cone(light: wgf_node_t | 0, inner: number, outer: number): boolean;
+export declare function wgf_light_set_spot_cone(light: wgf_actor_t | 0, inner: number, outer: number): boolean;
 
 /**
  * A spot light's cone, radians from its direction: full inside `inner`, nothing past
  * `outer`, smooth between (glTF's innerConeAngle and outerConeAngle). outer is clamped
  * to 0..pi/2, inner to 0..outer.
  */
-export declare function wgf_light_get_spot_inner_angle(light: wgf_node_t | 0): number;
+export declare function wgf_light_get_spot_inner_angle(light: wgf_actor_t | 0): number;
 
 /**
  * A spot light's cone, radians from its direction: full inside `inner`, nothing past
  * `outer`, smooth between (glTF's innerConeAngle and outerConeAngle). outer is clamped
  * to 0..pi/2, inner to 0..outer.
  */
-export declare function wgf_light_get_spot_outer_angle(light: wgf_node_t | 0): number;
+export declare function wgf_light_get_spot_outer_angle(light: wgf_actor_t | 0): number;
 
 /**
  * A material with glTF's defaults. 0 when `shading` isn't one (logged), or there is no
@@ -3097,31 +3106,31 @@ export declare function wgf_mesh_get_material(mesh: wgf_mesh_t | 0, slot_: numbe
 
 /**
  * A model of `mesh`; 0 for none yet. 0 when `mesh` isn't a mesh, or there is no room
- * for another node. Tinted white: as its materials are.
+ * for another actor. Tinted white: as its materials are.
  */
-export declare function wgf_model_create(mesh: wgf_mesh_t | 0): wgf_node_t;
+export declare function wgf_model_create(mesh: wgf_mesh_t | 0): wgf_actor_t;
 
 /**
  * The model's mesh; 0 is none, and nothing drawn. False when `mesh` isn't a mesh.
  */
-export declare function wgf_model_set_mesh(model: wgf_node_t | 0, mesh: wgf_mesh_t | 0): boolean;
+export declare function wgf_model_set_mesh(model: wgf_actor_t | 0, mesh: wgf_mesh_t | 0): boolean;
 
 /**
  * The model's mesh; 0 is none, and nothing drawn. False when `mesh` isn't a mesh.
  */
-export declare function wgf_model_get_mesh(model: wgf_node_t | 0): wgf_mesh_t;
+export declare function wgf_model_get_mesh(model: wgf_actor_t | 0): wgf_mesh_t;
 
 /**
  * A color its materials are multiplied by, as wgrender's tint (default white); alpha
  * below 255 makes the model see-through, blended back to front.
  */
-export declare function wgf_model_set_tint(model: wgf_node_t | 0, color: wgf_color_t): boolean;
+export declare function wgf_model_set_tint(model: wgf_actor_t | 0, color: wgf_color_t): boolean;
 
 /**
  * A color its materials are multiplied by, as wgrender's tint (default white); alpha
  * below 255 makes the model see-through, blended back to front.
  */
-export declare function wgf_model_get_tint(model: wgf_node_t | 0): wgf_color_t;
+export declare function wgf_model_get_tint(model: wgf_actor_t | 0): wgf_color_t;
 
 /**
  * Draw material slot `slot` (0..31) with `material` instead of the mesh's; -1 sets every
@@ -3130,7 +3139,7 @@ export declare function wgf_model_get_tint(model: wgf_node_t | 0): wgf_color_t;
  * material. get_material is the material the slot draws with: borrowed, the model's
  * own or the mesh's, 0 for neither.
  */
-export declare function wgf_model_set_material(model: wgf_node_t | 0, slot_: number, material: wgf_material_t | 0): boolean;
+export declare function wgf_model_set_material(model: wgf_actor_t | 0, slot_: number, material: wgf_material_t | 0): boolean;
 
 /**
  * Draw material slot `slot` (0..31) with `material` instead of the mesh's; -1 sets every
@@ -3139,7 +3148,7 @@ export declare function wgf_model_set_material(model: wgf_node_t | 0, slot_: num
  * material. get_material is the material the slot draws with: borrowed, the model's
  * own or the mesh's, 0 for neither.
  */
-export declare function wgf_model_get_material(model: wgf_node_t | 0, slot_: number): wgf_material_t;
+export declare function wgf_model_get_material(model: wgf_actor_t | 0, slot_: number): wgf_material_t;
 
 export declare function wgf_presentation_set(mode: wgf_presentation_mode_t, width: number, height: number): boolean;
 
@@ -3217,7 +3226,7 @@ export declare function wgf_render_get_dpi_scale(): number;
  * Clip drawing to a rectangle (logical pixels, top-left origin) until the matching
  * pop. Clips nest: each push intersects with the clip it's pushed inside, so a scroll
  * area inside a panel stays inside the panel. Everything drawn between is clipped:
- * immediate mode, and the canvases drawn there. A width or height of 0 clips
+ * immediate mode, and the 2D stages drawn there. A width or height of 0 clips
  * everything away. Every push should be popped within the frame: unmatched ones are
  * dropped at its end, with a warning, as is a pop without a push. Up to 32 deep; a
  * push past that clips nothing more, warned once. Outside a frame: nothing, warned.
@@ -3228,7 +3237,7 @@ export declare function wgf_render_push_clip(x: number, y: number, width: number
  * Clip drawing to a rectangle (logical pixels, top-left origin) until the matching
  * pop. Clips nest: each push intersects with the clip it's pushed inside, so a scroll
  * area inside a panel stays inside the panel. Everything drawn between is clipped:
- * immediate mode, and the canvases drawn there. A width or height of 0 clips
+ * immediate mode, and the 2D stages drawn there. A width or height of 0 clips
  * everything away. Every push should be popped within the frame: unmatched ones are
  * dropped at its end, with a warning, as is a pop without a push. Up to 32 deep; a
  * push past that clips nothing more, warned once. Outside a frame: nothing, warned.
@@ -3237,33 +3246,33 @@ export declare function wgf_render_pop_clip(): void;
 
 /**
  * A shape with nothing to draw yet, white, filled. 0 when there is no room for another
- * node.
+ * actor.
  */
-export declare function wgf_shape2d_create(): wgf_node_t;
+export declare function wgf_shape2d_create(): wgf_actor_t;
 
 /**
  * What it is, set by the calls below; NONE for a handle that isn't a 2D shape.
  */
-export declare function wgf_shape2d_get_kind(shape: wgf_node_t | 0): wgf_shape2d_kind_t;
+export declare function wgf_shape2d_get_kind(shape: wgf_actor_t | 0): wgf_shape2d_kind_t;
 
 /**
  * A rectangle `width` by `height` from its own origin (its top-left corner, unless a
  * pivot is set). False for a handle that isn't a 2D shape, or a size below 0.
  */
-export declare function wgf_shape2d_set_rectangle(shape: wgf_node_t | 0, width: number, height: number): boolean;
+export declare function wgf_shape2d_set_rectangle(shape: wgf_actor_t | 0, width: number, height: number): boolean;
 
 /**
  * A circle of `radius` about its own origin (its center, unless a pivot is set). False
  * for a handle that isn't a 2D shape, or a radius below 0.
  */
-export declare function wgf_shape2d_set_circle(shape: wgf_node_t | 0, radius: number): boolean;
+export declare function wgf_shape2d_set_circle(shape: wgf_actor_t | 0, radius: number): boolean;
 
 /**
  * A line from (x0, y0) to (x1, y1) in its own units, as thick as the outline (a hairline
  * at 0). Its ends are its own, so the pivot doesn't move them. False for a handle that
  * isn't a 2D shape.
  */
-export declare function wgf_shape2d_set_line(shape: wgf_node_t | 0, x0: number, y0: number, x1: number, y1: number): boolean;
+export declare function wgf_shape2d_set_line(shape: wgf_actor_t | 0, x0: number, y0: number, x1: number, y1: number): boolean;
 
 /**
  * A polygon through `points` in its own units, x and y in turn (count floats: count / 2
@@ -3271,7 +3280,7 @@ export declare function wgf_shape2d_set_line(shape: wgf_node_t | 0, x0: number, 
  * points are its own, so the pivot doesn't move them. False for a handle that isn't a
  * 2D shape, NULL, an odd count, fewer than 3 points, or more than 1024.
  */
-export declare function wgf_shape2d_set_polygon(shape: wgf_node_t | 0, points: readonly number[] | Float32Array | Float64Array | null): boolean;
+export declare function wgf_shape2d_set_polygon(shape: wgf_actor_t | 0, points: readonly number[] | Float32Array | Float64Array | null): boolean;
 
 /**
  * What was set: a rectangle's width and height (0, 0 otherwise), a circle's radius (0
@@ -3279,8 +3288,8 @@ export declare function wgf_shape2d_set_polygon(shape: wgf_node_t | 0, points: r
  * many as fit in `count` floats, returning how many floats it filled (0 for anything
  * but a polygon).
  */
-export declare function wgf_shape2d_get_size<T extends number[] | Float32Array | Float64Array>(shape: wgf_node_t | 0, into: T): T;
-export declare function wgf_shape2d_get_size(shape: wgf_node_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+export declare function wgf_shape2d_get_size<T extends number[] | Float32Array | Float64Array>(shape: wgf_actor_t | 0, into: T): T;
+export declare function wgf_shape2d_get_size(shape: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
  * What was set: a rectangle's width and height (0, 0 otherwise), a circle's radius (0
@@ -3288,7 +3297,7 @@ export declare function wgf_shape2d_get_size(shape: wgf_node_t | 0, into?: wgf_v
  * many as fit in `count` floats, returning how many floats it filled (0 for anything
  * but a polygon).
  */
-export declare function wgf_shape2d_get_radius(shape: wgf_node_t | 0): number;
+export declare function wgf_shape2d_get_radius(shape: wgf_actor_t | 0): number;
 
 /**
  * What was set: a rectangle's width and height (0, 0 otherwise), a circle's radius (0
@@ -3296,8 +3305,8 @@ export declare function wgf_shape2d_get_radius(shape: wgf_node_t | 0): number;
  * many as fit in `count` floats, returning how many floats it filled (0 for anything
  * but a polygon).
  */
-export declare function wgf_shape2d_get_line_start<T extends number[] | Float32Array | Float64Array>(shape: wgf_node_t | 0, into: T): T;
-export declare function wgf_shape2d_get_line_start(shape: wgf_node_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+export declare function wgf_shape2d_get_line_start<T extends number[] | Float32Array | Float64Array>(shape: wgf_actor_t | 0, into: T): T;
+export declare function wgf_shape2d_get_line_start(shape: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
  * What was set: a rectangle's width and height (0, 0 otherwise), a circle's radius (0
@@ -3305,8 +3314,8 @@ export declare function wgf_shape2d_get_line_start(shape: wgf_node_t | 0, into?:
  * many as fit in `count` floats, returning how many floats it filled (0 for anything
  * but a polygon).
  */
-export declare function wgf_shape2d_get_line_end<T extends number[] | Float32Array | Float64Array>(shape: wgf_node_t | 0, into: T): T;
-export declare function wgf_shape2d_get_line_end(shape: wgf_node_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+export declare function wgf_shape2d_get_line_end<T extends number[] | Float32Array | Float64Array>(shape: wgf_actor_t | 0, into: T): T;
+export declare function wgf_shape2d_get_line_end(shape: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
  * What was set: a rectangle's width and height (0, 0 otherwise), a circle's radius (0
@@ -3314,7 +3323,7 @@ export declare function wgf_shape2d_get_line_end(shape: wgf_node_t | 0, into?: w
  * many as fit in `count` floats, returning how many floats it filled (0 for anything
  * but a polygon).
  */
-export declare function wgf_shape2d_get_point_count(shape: wgf_node_t | 0): number;
+export declare function wgf_shape2d_get_point_count(shape: wgf_actor_t | 0): number;
 
 /**
  * What was set: a rectangle's width and height (0, 0 otherwise), a circle's radius (0
@@ -3322,93 +3331,93 @@ export declare function wgf_shape2d_get_point_count(shape: wgf_node_t | 0): numb
  * many as fit in `count` floats, returning how many floats it filled (0 for anything
  * but a polygon).
  */
-export declare function wgf_shape2d_get_points(shape: wgf_node_t | 0, out: number[] | Float32Array | Float64Array | null): number;
+export declare function wgf_shape2d_get_points(shape: wgf_actor_t | 0, out: number[] | Float32Array | Float64Array | null): number;
 
 /**
- * The point of a rectangle or circle at its node's position, which it turns and scales
+ * The point of a rectangle or circle at its actor's position, which it turns and scales
  * about, as a fraction of it: 0, 0 its top-left, 1, 1 its bottom-right. Unset (the
  * default), each keeps its own origin -- a rectangle's top-left corner, a circle's
  * center -- read back as that fraction (0, 0 or 0.5, 0.5). False for a handle that
  * isn't a 2D shape.
  */
-export declare function wgf_shape2d_set_pivot(shape: wgf_node_t | 0, x: number, y: number): boolean;
+export declare function wgf_shape2d_set_pivot(shape: wgf_actor_t | 0, x: number, y: number): boolean;
 
 /**
- * The point of a rectangle or circle at its node's position, which it turns and scales
+ * The point of a rectangle or circle at its actor's position, which it turns and scales
  * about, as a fraction of it: 0, 0 its top-left, 1, 1 its bottom-right. Unset (the
  * default), each keeps its own origin -- a rectangle's top-left corner, a circle's
  * center -- read back as that fraction (0, 0 or 0.5, 0.5). False for a handle that
  * isn't a 2D shape.
  */
-export declare function wgf_shape2d_get_pivot<T extends number[] | Float32Array | Float64Array>(shape: wgf_node_t | 0, into: T): T;
-export declare function wgf_shape2d_get_pivot(shape: wgf_node_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+export declare function wgf_shape2d_get_pivot<T extends number[] | Float32Array | Float64Array>(shape: wgf_actor_t | 0, into: T): T;
+export declare function wgf_shape2d_get_pivot(shape: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
  * Drawn as an outline `thickness` logical pixels wide, centered on its edge; 0 (the
  * default) fills it, and a line is then a hairline. Clamped to 0 or more. False for a
  * handle that isn't a 2D shape.
  */
-export declare function wgf_shape2d_set_outline(shape: wgf_node_t | 0, thickness: number): boolean;
+export declare function wgf_shape2d_set_outline(shape: wgf_actor_t | 0, thickness: number): boolean;
 
 /**
  * Drawn as an outline `thickness` logical pixels wide, centered on its edge; 0 (the
  * default) fills it, and a line is then a hairline. Clamped to 0 or more. False for a
  * handle that isn't a 2D shape.
  */
-export declare function wgf_shape2d_get_outline(shape: wgf_node_t | 0): number;
+export declare function wgf_shape2d_get_outline(shape: wgf_actor_t | 0): number;
 
 /**
  * Default: white. False for a handle that isn't a 2D shape.
  */
-export declare function wgf_shape2d_set_color(shape: wgf_node_t | 0, color: wgf_color_t): boolean;
+export declare function wgf_shape2d_set_color(shape: wgf_actor_t | 0, color: wgf_color_t): boolean;
 
 /**
  * Default: white. False for a handle that isn't a 2D shape.
  */
-export declare function wgf_shape2d_get_color(shape: wgf_node_t | 0): wgf_color_t;
+export declare function wgf_shape2d_get_color(shape: wgf_actor_t | 0): wgf_color_t;
 
 /**
- * A shape with nothing to draw yet, white. 0 when there is no room for another node.
+ * A shape with nothing to draw yet, white. 0 when there is no room for another actor.
  */
-export declare function wgf_shape3d_create(): wgf_node_t;
+export declare function wgf_shape3d_create(): wgf_actor_t;
 
 /**
- * What it is, set by the calls below; NONE for a node that isn't a 3D shape.
+ * What it is, set by the calls below; NONE for an actor that isn't a 3D shape.
  */
-export declare function wgf_shape3d_get_kind(shape: wgf_node_t | 0): wgf_shape3d_kind_t;
+export declare function wgf_shape3d_get_kind(shape: wgf_actor_t | 0): wgf_shape3d_kind_t;
 
 /**
- * About its node's origin: a cube `width` by `height` by `length`; a sphere of
+ * About its actor's origin: a cube `width` by `height` by `length`; a sphere of
  * `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
  * in its local x-y plane. False for a size below 0.
  */
-export declare function wgf_shape3d_set_cube(shape: wgf_node_t | 0, width: number, height: number, length: number): boolean;
+export declare function wgf_shape3d_set_cube(shape: wgf_actor_t | 0, width: number, height: number, length: number): boolean;
 
 /**
- * About its node's origin: a cube `width` by `height` by `length`; a sphere of
+ * About its actor's origin: a cube `width` by `height` by `length`; a sphere of
  * `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
  * in its local x-y plane. False for a size below 0.
  */
-export declare function wgf_shape3d_set_sphere(shape: wgf_node_t | 0, radius: number): boolean;
+export declare function wgf_shape3d_set_sphere(shape: wgf_actor_t | 0, radius: number): boolean;
 
 /**
- * About its node's origin: a cube `width` by `height` by `length`; a sphere of
+ * About its actor's origin: a cube `width` by `height` by `length`; a sphere of
  * `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
  * in its local x-y plane. False for a size below 0.
  */
-export declare function wgf_shape3d_set_rectangle(shape: wgf_node_t | 0, width: number, height: number): boolean;
+export declare function wgf_shape3d_set_rectangle(shape: wgf_actor_t | 0, width: number, height: number): boolean;
 
 /**
- * About its node's origin: a cube `width` by `height` by `length`; a sphere of
+ * About its actor's origin: a cube `width` by `height` by `length`; a sphere of
  * `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
  * in its local x-y plane. False for a size below 0.
  */
-export declare function wgf_shape3d_set_circle(shape: wgf_node_t | 0, radius: number): boolean;
+export declare function wgf_shape3d_set_circle(shape: wgf_actor_t | 0, radius: number): boolean;
 
 /**
  * A line from (x0, y0, z0) to (x1, y1, z1), in its own space.
  */
-export declare function wgf_shape3d_set_line(shape: wgf_node_t | 0, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number): boolean;
+export declare function wgf_shape3d_set_line(shape: wgf_actor_t | 0, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number): boolean;
 
 /**
  * A line strip, from a caller-owned array of points, x, y, and z in turn (`float_count`
@@ -3416,7 +3425,7 @@ export declare function wgf_shape3d_set_line(shape: wgf_node_t | 0, x0: number, 
  * multiple of 3, or past 65536 points. get_points fills the caller's array with up to
  * `float_count` floats of them and returns how many it filled.
  */
-export declare function wgf_shape3d_set_line_strip(shape: wgf_node_t | 0, points: readonly number[] | Float32Array | Float64Array | null): boolean;
+export declare function wgf_shape3d_set_line_strip(shape: wgf_actor_t | 0, points: readonly number[] | Float32Array | Float64Array | null): boolean;
 
 /**
  * A line strip, from a caller-owned array of points, x, y, and z in turn (`float_count`
@@ -3424,7 +3433,7 @@ export declare function wgf_shape3d_set_line_strip(shape: wgf_node_t | 0, points
  * multiple of 3, or past 65536 points. get_points fills the caller's array with up to
  * `float_count` floats of them and returns how many it filled.
  */
-export declare function wgf_shape3d_get_point_count(shape: wgf_node_t | 0): number;
+export declare function wgf_shape3d_get_point_count(shape: wgf_actor_t | 0): number;
 
 /**
  * A line strip, from a caller-owned array of points, x, y, and z in turn (`float_count`
@@ -3432,75 +3441,75 @@ export declare function wgf_shape3d_get_point_count(shape: wgf_node_t | 0): numb
  * multiple of 3, or past 65536 points. get_points fills the caller's array with up to
  * `float_count` floats of them and returns how many it filled.
  */
-export declare function wgf_shape3d_get_points(shape: wgf_node_t | 0, points: number[] | Float32Array | Float64Array | null): number;
+export declare function wgf_shape3d_get_points(shape: wgf_actor_t | 0, points: number[] | Float32Array | Float64Array | null): number;
 
 /**
  * What was set: a cube's or rectangle's size (a rectangle's z 0; 0, 0, 0 otherwise), a
  * sphere's or circle's radius (0 otherwise), and a line's ends.
  */
-export declare function wgf_shape3d_get_size<T extends number[] | Float32Array | Float64Array>(shape: wgf_node_t | 0, into: T): T;
-export declare function wgf_shape3d_get_size(shape: wgf_node_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+export declare function wgf_shape3d_get_size<T extends number[] | Float32Array | Float64Array>(shape: wgf_actor_t | 0, into: T): T;
+export declare function wgf_shape3d_get_size(shape: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
 
 /**
  * What was set: a cube's or rectangle's size (a rectangle's z 0; 0, 0, 0 otherwise), a
  * sphere's or circle's radius (0 otherwise), and a line's ends.
  */
-export declare function wgf_shape3d_get_radius(shape: wgf_node_t | 0): number;
+export declare function wgf_shape3d_get_radius(shape: wgf_actor_t | 0): number;
 
 /**
  * What was set: a cube's or rectangle's size (a rectangle's z 0; 0, 0, 0 otherwise), a
  * sphere's or circle's radius (0 otherwise), and a line's ends.
  */
-export declare function wgf_shape3d_get_line_start<T extends number[] | Float32Array | Float64Array>(shape: wgf_node_t | 0, into: T): T;
-export declare function wgf_shape3d_get_line_start(shape: wgf_node_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+export declare function wgf_shape3d_get_line_start<T extends number[] | Float32Array | Float64Array>(shape: wgf_actor_t | 0, into: T): T;
+export declare function wgf_shape3d_get_line_start(shape: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
 
 /**
  * What was set: a cube's or rectangle's size (a rectangle's z 0; 0, 0, 0 otherwise), a
  * sphere's or circle's radius (0 otherwise), and a line's ends.
  */
-export declare function wgf_shape3d_get_line_end<T extends number[] | Float32Array | Float64Array>(shape: wgf_node_t | 0, into: T): T;
-export declare function wgf_shape3d_get_line_end(shape: wgf_node_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+export declare function wgf_shape3d_get_line_end<T extends number[] | Float32Array | Float64Array>(shape: wgf_actor_t | 0, into: T): T;
+export declare function wgf_shape3d_get_line_end(shape: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
 
 /**
  * Default: white. Alpha below 255 makes it see-through.
  */
-export declare function wgf_shape3d_set_color(shape: wgf_node_t | 0, color: wgf_color_t): boolean;
+export declare function wgf_shape3d_set_color(shape: wgf_actor_t | 0, color: wgf_color_t): boolean;
 
 /**
  * Default: white. Alpha below 255 makes it see-through.
  */
-export declare function wgf_shape3d_get_color(shape: wgf_node_t | 0): wgf_color_t;
+export declare function wgf_shape3d_get_color(shape: wgf_actor_t | 0): wgf_color_t;
 
 /**
  * A sprite of `texture` (0 for none: it draws nothing). 0 when there is no room for
- * another node.
+ * another actor.
  */
-export declare function wgf_sprite_create(texture: wgf_texture_t | 0): wgf_node_t;
+export declare function wgf_sprite_create(texture: wgf_texture_t | 0): wgf_actor_t;
 
 /**
  * False for a handle that isn't a sprite, or a texture that isn't one (0 is none).
  */
-export declare function wgf_sprite_set_texture(sprite: wgf_node_t | 0, texture: wgf_texture_t | 0): boolean;
+export declare function wgf_sprite_set_texture(sprite: wgf_actor_t | 0, texture: wgf_texture_t | 0): boolean;
 
 /**
  * False for a handle that isn't a sprite, or a texture that isn't one (0 is none).
  */
-export declare function wgf_sprite_get_texture(sprite: wgf_node_t | 0): wgf_texture_t;
+export declare function wgf_sprite_get_texture(sprite: wgf_actor_t | 0): wgf_texture_t;
 
 /**
  * The region of the texture shown, in its pixels from the top-left; a width or height
  * of 0 or less (the default) shows the whole texture. False for a handle that isn't a
  * sprite. Read back as x, y, width, height.
  */
-export declare function wgf_sprite_set_source(sprite: wgf_node_t | 0, x: number, y: number, width: number, height: number): boolean;
+export declare function wgf_sprite_set_source(sprite: wgf_actor_t | 0, x: number, y: number, width: number, height: number): boolean;
 
 /**
  * The region of the texture shown, in its pixels from the top-left; a width or height
  * of 0 or less (the default) shows the whole texture. False for a handle that isn't a
  * sprite. Read back as x, y, width, height.
  */
-export declare function wgf_sprite_get_source<T extends number[] | Float32Array | Float64Array>(sprite: wgf_node_t | 0, into: T): T;
-export declare function wgf_sprite_get_source(sprite: wgf_node_t | 0, into?: wgf_vec4_t | null): wgf_vec4_t;
+export declare function wgf_sprite_get_source<T extends number[] | Float32Array | Float64Array>(sprite: wgf_actor_t | 0, into: T): T;
+export declare function wgf_sprite_get_source(sprite: wgf_actor_t | 0, into?: wgf_vec4_t | null): wgf_vec4_t;
 
 /**
  * Its size in its own units; a width or height of 0 or less (the default) is the
@@ -3508,7 +3517,7 @@ export declare function wgf_sprite_get_source(sprite: wgf_node_t | 0, into?: wgf
  * the region's (0, 0 while its texture isn't READY and no size is set). False for a
  * handle that isn't a sprite.
  */
-export declare function wgf_sprite_set_size(sprite: wgf_node_t | 0, width: number, height: number): boolean;
+export declare function wgf_sprite_set_size(sprite: wgf_actor_t | 0, width: number, height: number): boolean;
 
 /**
  * Its size in its own units; a width or height of 0 or less (the default) is the
@@ -3516,41 +3525,79 @@ export declare function wgf_sprite_set_size(sprite: wgf_node_t | 0, width: numbe
  * the region's (0, 0 while its texture isn't READY and no size is set). False for a
  * handle that isn't a sprite.
  */
-export declare function wgf_sprite_get_size<T extends number[] | Float32Array | Float64Array>(sprite: wgf_node_t | 0, into: T): T;
-export declare function wgf_sprite_get_size(sprite: wgf_node_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+export declare function wgf_sprite_get_size<T extends number[] | Float32Array | Float64Array>(sprite: wgf_actor_t | 0, into: T): T;
+export declare function wgf_sprite_get_size(sprite: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
- * The point of the sprite at its node's position, which it turns and scales about, as
+ * The point of the sprite at its actor's position, which it turns and scales about, as
  * a fraction of its size: 0.5, 0.5 its center (the default), 0, 0 its top-left. False
  * for a handle that isn't a sprite.
  */
-export declare function wgf_sprite_set_pivot(sprite: wgf_node_t | 0, x: number, y: number): boolean;
+export declare function wgf_sprite_set_pivot(sprite: wgf_actor_t | 0, x: number, y: number): boolean;
 
 /**
- * The point of the sprite at its node's position, which it turns and scales about, as
+ * The point of the sprite at its actor's position, which it turns and scales about, as
  * a fraction of its size: 0.5, 0.5 its center (the default), 0, 0 its top-left. False
  * for a handle that isn't a sprite.
  */
-export declare function wgf_sprite_get_pivot<T extends number[] | Float32Array | Float64Array>(sprite: wgf_node_t | 0, into: T): T;
-export declare function wgf_sprite_get_pivot(sprite: wgf_node_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+export declare function wgf_sprite_get_pivot<T extends number[] | Float32Array | Float64Array>(sprite: wgf_actor_t | 0, into: T): T;
+export declare function wgf_sprite_get_pivot(sprite: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
  * What its texels are multiplied by; white (the default) leaves them as they are. False
  * for a handle that isn't a sprite.
  */
-export declare function wgf_sprite_set_tint(sprite: wgf_node_t | 0, tint: wgf_color_t): boolean;
+export declare function wgf_sprite_set_tint(sprite: wgf_actor_t | 0, tint: wgf_color_t): boolean;
 
 /**
  * What its texels are multiplied by; white (the default) leaves them as they are. False
  * for a handle that isn't a sprite.
  */
-export declare function wgf_sprite_get_tint(sprite: wgf_node_t | 0): wgf_color_t;
+export declare function wgf_sprite_get_tint(sprite: wgf_actor_t | 0): wgf_color_t;
+
+/**
+ * A 2D stage, with no camera. 0 when there is no room for another actor.
+ */
+export declare function wgf_stage2d_create(): wgf_actor_t;
+
+/**
+ * Draw it into this frame. Outside a frame, nothing.
+ */
+export declare function wgf_stage2d_draw(stage: wgf_actor_t | 0): void;
+
+/**
+ * With a camera (wgf_camera2d.h), the stage's point at the camera's position is
+ * drawn at the frame's center, turned and zoomed as the camera is: a 2D world.
+ * Without one (0, the default), stage units are the frame's logical pixels: a HUD.
+ * The camera can be anywhere -- on this stage, parented to the player so it
+ * follows, or in no tree at all. False when `camera` isn't a 2D camera. A camera
+ * that is destroyed leaves the stage with none.
+ */
+export declare function wgf_stage2d_set_camera(stage: wgf_actor_t | 0, camera: wgf_actor_t | 0): boolean;
+
+/**
+ * With a camera (wgf_camera2d.h), the stage's point at the camera's position is
+ * drawn at the frame's center, turned and zoomed as the camera is: a 2D world.
+ * Without one (0, the default), stage units are the frame's logical pixels: a HUD.
+ * The camera can be anywhere -- on this stage, parented to the player so it
+ * follows, or in no tree at all. False when `camera` isn't a 2D camera. A camera
+ * that is destroyed leaves the stage with none.
+ */
+export declare function wgf_stage2d_get_camera(stage: wgf_actor_t | 0): wgf_actor_t;
+
+/**
+ * The actor on this stage named `name` (wgf_actor_set_name), at any depth, found by an
+ * index of names rather than a walk of the tree. 0 for none, for a stage that isn't a
+ * 2D stage, and for a name two of its actors share (warned: find it by its path from an
+ * actor above it, wgf_actor_find, instead).
+ */
+export declare function wgf_stage2d_find(stage: wgf_actor_t | 0, name: string | null): wgf_actor_t;
 
 /**
  * A stage, with no camera, no ambient light, and NEUTRAL tone mapping at an exposure of
- * 0. 0 when there is no room for another node.
+ * 0. 0 when there is no room for another actor.
  */
-export declare function wgf_stage_create(): wgf_node_t;
+export declare function wgf_stage3d_create(): wgf_actor_t;
 
 /**
  * Draw it into this frame, through its camera: its opaque models, then its 3D shapes
@@ -3559,60 +3606,66 @@ export declare function wgf_stage_create(): wgf_node_t;
  * drawn before it. Each model is lit by
  * the up to 8 lights that reach it most. Outside a frame, or with no camera, nothing.
  */
-export declare function wgf_stage_draw(stage: wgf_node_t | 0): void;
+export declare function wgf_stage3d_draw(stage: wgf_actor_t | 0): void;
 
 /**
  * The camera it is seen through: a 3D camera anywhere, on this stage or not (default 0,
  * none: nothing is drawn). False when `camera` isn't a 3D camera. A camera that is
  * destroyed leaves the stage with none.
  */
-export declare function wgf_stage_set_camera(stage: wgf_node_t | 0, camera: wgf_node_t | 0): boolean;
+export declare function wgf_stage3d_set_camera(stage: wgf_actor_t | 0, camera: wgf_actor_t | 0): boolean;
 
 /**
  * The camera it is seen through: a 3D camera anywhere, on this stage or not (default 0,
  * none: nothing is drawn). False when `camera` isn't a 3D camera. A camera that is
  * destroyed leaves the stage with none.
  */
-export declare function wgf_stage_get_camera(stage: wgf_node_t | 0): wgf_node_t;
+export declare function wgf_stage3d_get_camera(stage: wgf_actor_t | 0): wgf_actor_t;
+
+/**
+ * The actor on this stage named `name`, as wgf_stage2d_find: by an index, never a walk;
+ * 0 for none, for a stage that isn't a 3D stage, and for a shared name (warned).
+ */
+export declare function wgf_stage3d_find(stage: wgf_actor_t | 0, name: string | null): wgf_actor_t;
 
 /**
  * The light that reaches everything evenly, from no direction: its color times
  * `intensity` (clamped to 0 or more). Default: none, an intensity of 0. Alpha is
  * ignored.
  */
-export declare function wgf_stage_set_ambient(stage: wgf_node_t | 0, color: wgf_color_t, intensity: number): boolean;
+export declare function wgf_stage3d_set_ambient(stage: wgf_actor_t | 0, color: wgf_color_t, intensity: number): boolean;
 
 /**
  * The light that reaches everything evenly, from no direction: its color times
  * `intensity` (clamped to 0 or more). Default: none, an intensity of 0. Alpha is
  * ignored.
  */
-export declare function wgf_stage_get_ambient_color(stage: wgf_node_t | 0): wgf_color_t;
+export declare function wgf_stage3d_get_ambient_color(stage: wgf_actor_t | 0): wgf_color_t;
 
 /**
  * The light that reaches everything evenly, from no direction: its color times
  * `intensity` (clamped to 0 or more). Default: none, an intensity of 0. Alpha is
  * ignored.
  */
-export declare function wgf_stage_get_ambient_intensity(stage: wgf_node_t | 0): number;
+export declare function wgf_stage3d_get_ambient_intensity(stage: wgf_actor_t | 0): number;
 
 /**
  * Its tone mapping, and its exposure in stops (EV): +1 doubles the brightness. Default:
  * NEUTRAL, 0. False for a tone mapping that isn't one.
  */
-export declare function wgf_stage_set_tonemap(stage: wgf_node_t | 0, tonemap: wgf_stage_tonemap_t, exposure: number): boolean;
+export declare function wgf_stage3d_set_tonemap(stage: wgf_actor_t | 0, tonemap: wgf_stage3d_tonemap_t, exposure: number): boolean;
 
 /**
  * Its tone mapping, and its exposure in stops (EV): +1 doubles the brightness. Default:
  * NEUTRAL, 0. False for a tone mapping that isn't one.
  */
-export declare function wgf_stage_get_tonemap(stage: wgf_node_t | 0): wgf_stage_tonemap_t;
+export declare function wgf_stage3d_get_tonemap(stage: wgf_actor_t | 0): wgf_stage3d_tonemap_t;
 
 /**
  * Its tone mapping, and its exposure in stops (EV): +1 doubles the brightness. Default:
  * NEUTRAL, 0. False for a tone mapping that isn't one.
  */
-export declare function wgf_stage_get_exposure(stage: wgf_node_t | 0): number;
+export declare function wgf_stage3d_get_exposure(stage: wgf_actor_t | 0): number;
 
 /**
  * Skip models the camera can't see (on by default): each is tested by the box around it
@@ -3620,7 +3673,7 @@ export declare function wgf_stage_get_exposure(stage: wgf_node_t | 0): number;
  * before it is drawn, which is far cheaper than drawing it. Turn it off to draw
  * everything, when checking whether a model's bounds are right, say.
  */
-export declare function wgf_stage_set_culling(stage: wgf_node_t | 0, culling: boolean): boolean;
+export declare function wgf_stage3d_set_culling(stage: wgf_actor_t | 0, culling: boolean): boolean;
 
 /**
  * Skip models the camera can't see (on by default): each is tested by the box around it
@@ -3628,7 +3681,7 @@ export declare function wgf_stage_set_culling(stage: wgf_node_t | 0, culling: bo
  * before it is drawn, which is far cheaper than drawing it. Turn it off to draw
  * everything, when checking whether a model's bounds are right, say.
  */
-export declare function wgf_stage_is_culling(stage: wgf_node_t | 0): boolean;
+export declare function wgf_stage3d_is_culling(stage: wgf_actor_t | 0): boolean;
 
 /**
  * Every voice's loudness, times its own: 1 as they are, 0 silent, above 1 louder (and
@@ -3877,289 +3930,176 @@ export declare function wgf_voice_set_segment(voice: wgf_voice_t | 0, name: stri
 export declare function wgf_voice_get_segment(voice: wgf_voice_t | 0): string;
 
 /**
- * An entity at the origin, with no components, its node put under `parent` (0: no
- * parent, so it is drawn by nothing until its node is given one). 0 when `parent` isn't
- * a node, or there is no room.
+ * A behavior named `name` added to `actor`, after the ones it has: its id, or 0 when
+ * `actor` isn't an actor, the name breaks the rule above, or it is out of memory.
  */
-export declare function wgf_entity_create(parent: wgf_node_t | 0): wgf_entity_t;
+export declare function wgf_actor_add_behavior(actor: wgf_actor_t | 0, name: string | null): number;
 
 /**
- * End it now, with its node, everything under its node, and its components. One with a
- * behavior is told so: a DESTROYED event (wgf_ecs.h). False for a handle that isn't a
- * live entity.
+ * The behavior removed (DESTROYED raised for it).
  */
-export declare function wgf_entity_destroy(entity: wgf_entity_t | 0): boolean;
+export declare function wgf_actor_remove_behavior(actor: wgf_actor_t | 0, behavior: number): boolean;
 
 /**
- * End it now, with its node, everything under its node, and its components. One with a
- * behavior is told so: a DESTROYED event (wgf_ecs.h). False for a handle that isn't a
- * live entity.
+ * The actor's behaviors in the order they were added: how many, and the id of the one at
+ * `index` (0 past the end); and the id of its first named `name` (0 for none).
  */
-export declare function wgf_entity_is_alive(entity: wgf_entity_t | 0): boolean;
+export declare function wgf_actor_get_behavior_count(actor: wgf_actor_t | 0): number;
 
 /**
- * Live entities, now.
+ * The actor's behaviors in the order they were added: how many, and the id of the one at
+ * `index` (0 past the end); and the id of its first named `name` (0 for none).
  */
-export declare function wgf_entity_get_count(): number;
+export declare function wgf_actor_get_behavior(actor: wgf_actor_t | 0, index: number): number;
 
 /**
- * The node it is drawn through, which its component nodes are under; a node of its own,
- * which libwgf moves every frame (set the entity's transform, never this node's).
+ * The actor's behaviors in the order they were added: how many, and the id of the one at
+ * `index` (0 past the end); and the id of its first named `name` (0 for none).
  */
-export declare function wgf_entity_get_node(entity: wgf_entity_t | 0): wgf_node_t;
+export declare function wgf_actor_find_behavior(actor: wgf_actor_t | 0, name: string | null): number;
 
 /**
- * A name, for finding it and for the scene dump; NULL or "" for none (the default).
- * get_name's is the entity's, valid until it changes or the entity goes. find gives the
- * first live entity so named, 0 for none. False for a handle that isn't an entity, or a
- * name of 64 bytes or more.
+ * Its name: the actor's, valid while the behavior is.
  */
-export declare function wgf_entity_set_name(entity: wgf_entity_t | 0, name: string | null): boolean;
-
-/**
- * A name, for finding it and for the scene dump; NULL or "" for none (the default).
- * get_name's is the entity's, valid until it changes or the entity goes. find gives the
- * first live entity so named, 0 for none. False for a handle that isn't an entity, or a
- * name of 64 bytes or more.
- */
-export declare function wgf_entity_get_name(entity: wgf_entity_t | 0): string;
-
-/**
- * A name, for finding it and for the scene dump; NULL or "" for none (the default).
- * get_name's is the entity's, valid until it changes or the entity goes. find gives the
- * first live entity so named, 0 for none. False for a handle that isn't an entity, or a
- * name of 64 bytes or more.
- */
-export declare function wgf_entity_find(name: string | null): wgf_entity_t;
-
-/**
- * Whether what the entity draws is drawn: hidden, none of its components' nodes (a
- * shape, a sprite, text, an emitter's particles) is drawn, while it moves, ticks, meets
- * others, and its emitters go on simulating. An entity's own node draws nothing, so
- * hiding it (wgf_node_set_visible) hides nothing: this sets each component node's
- * visible, and one added later takes the entity's. A component node made visible on its
- * own afterwards is drawn. Default: visible. False for a handle that isn't an entity.
- */
-export declare function wgf_entity_set_visible(entity: wgf_entity_t | 0, visible: boolean): boolean;
-
-/**
- * Whether what the entity draws is drawn: hidden, none of its components' nodes (a
- * shape, a sprite, text, an emitter's particles) is drawn, while it moves, ticks, meets
- * others, and its emitters go on simulating. An entity's own node draws nothing, so
- * hiding it (wgf_node_set_visible) hides nothing: this sets each component node's
- * visible, and one added later takes the entity's. A component node made visible on its
- * own afterwards is drawn. Default: visible. False for a handle that isn't an entity.
- */
-export declare function wgf_entity_is_visible(entity: wgf_entity_t | 0): boolean;
-
-/**
- * The transform: position, rotation (three angles in radians, about x, then y, then z;
- * in 2D, about z alone), and scale, each set part by part or all at once. A change in a
- * tick is smoothed into the frames after it; snap ends the smoothing, so the node is
- * drawn where the entity is now. False for a handle that isn't an entity.
- */
-export declare function wgf_entity_set_position(entity: wgf_entity_t | 0, x: number, y: number, z: number): boolean;
-
-/**
- * The transform: position, rotation (three angles in radians, about x, then y, then z;
- * in 2D, about z alone), and scale, each set part by part or all at once. A change in a
- * tick is smoothed into the frames after it; snap ends the smoothing, so the node is
- * drawn where the entity is now. False for a handle that isn't an entity.
- */
-export declare function wgf_entity_get_position<T extends number[] | Float32Array | Float64Array>(entity: wgf_entity_t | 0, into: T): T;
-export declare function wgf_entity_get_position(entity: wgf_entity_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
-
-/**
- * The transform: position, rotation (three angles in radians, about x, then y, then z;
- * in 2D, about z alone), and scale, each set part by part or all at once. A change in a
- * tick is smoothed into the frames after it; snap ends the smoothing, so the node is
- * drawn where the entity is now. False for a handle that isn't an entity.
- */
-export declare function wgf_entity_set_rotation(entity: wgf_entity_t | 0, x: number, y: number, z: number): boolean;
-
-/**
- * The transform: position, rotation (three angles in radians, about x, then y, then z;
- * in 2D, about z alone), and scale, each set part by part or all at once. A change in a
- * tick is smoothed into the frames after it; snap ends the smoothing, so the node is
- * drawn where the entity is now. False for a handle that isn't an entity.
- */
-export declare function wgf_entity_get_rotation<T extends number[] | Float32Array | Float64Array>(entity: wgf_entity_t | 0, into: T): T;
-export declare function wgf_entity_get_rotation(entity: wgf_entity_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
-
-/**
- * The transform: position, rotation (three angles in radians, about x, then y, then z;
- * in 2D, about z alone), and scale, each set part by part or all at once. A change in a
- * tick is smoothed into the frames after it; snap ends the smoothing, so the node is
- * drawn where the entity is now. False for a handle that isn't an entity.
- */
-export declare function wgf_entity_set_scale(entity: wgf_entity_t | 0, x: number, y: number, z: number): boolean;
-
-/**
- * The transform: position, rotation (three angles in radians, about x, then y, then z;
- * in 2D, about z alone), and scale, each set part by part or all at once. A change in a
- * tick is smoothed into the frames after it; snap ends the smoothing, so the node is
- * drawn where the entity is now. False for a handle that isn't an entity.
- */
-export declare function wgf_entity_get_scale<T extends number[] | Float32Array | Float64Array>(entity: wgf_entity_t | 0, into: T): T;
-export declare function wgf_entity_get_scale(entity: wgf_entity_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
-
-/**
- * The transform: position, rotation (three angles in radians, about x, then y, then z;
- * in 2D, about z alone), and scale, each set part by part or all at once. A change in a
- * tick is smoothed into the frames after it; snap ends the smoothing, so the node is
- * drawn where the entity is now. False for a handle that isn't an entity.
- */
-export declare function wgf_entity_set_transform(entity: wgf_entity_t | 0, position_x: number, position_y: number, position_z: number, rotation_x: number, rotation_y: number, rotation_z: number, scale_x: number, scale_y: number, scale_z: number): boolean;
-
-/**
- * The transform: position, rotation (three angles in radians, about x, then y, then z;
- * in 2D, about z alone), and scale, each set part by part or all at once. A change in a
- * tick is smoothed into the frames after it; snap ends the smoothing, so the node is
- * drawn where the entity is now. False for a handle that isn't an entity.
- */
-export declare function wgf_entity_snap(entity: wgf_entity_t | 0): boolean;
-
-/**
- * Many positions at once: each of `entities` (count of them) read into `out` as x, y, z
- * in turn, as many as fit in `out_count` floats, returning how many floats it filled (a
- * handle that isn't an entity reads 0, 0, 0); and each set from `positions` (x, y, z in
- * turn, positions_count floats), false when there aren't three floats for each, skipping
- * a handle that isn't an entity.
- */
-export declare function wgf_entity_get_positions(entities: readonly wgf_entity_t[] | Uint32Array | null, out: number[] | Float32Array | Float64Array | null): number;
-
-/**
- * Many positions at once: each of `entities` (count of them) read into `out` as x, y, z
- * in turn, as many as fit in `out_count` floats, returning how many floats it filled (a
- * handle that isn't an entity reads 0, 0, 0); and each set from `positions` (x, y, z in
- * turn, positions_count floats), false when there aren't three floats for each, skipping
- * a handle that isn't an entity.
- */
-export declare function wgf_entity_set_positions(entities: readonly wgf_entity_t[] | Uint32Array | null, positions: readonly number[] | Float32Array | Float64Array | null): boolean;
-
-/**
- * Components. add makes one with its defaults (each component's header says them; the
- * node kinds' as their create makes them); adding one it has keeps it as it is. remove
- * ends it (a node kind's node destroyed, a voice stopped and destroyed). False for a
- * handle that isn't an entity, or a kind that isn't one, and for a model before any
- * stage has been made (logged: models are drawn on stages, and a program that makes none
- * links none of the 3D); remove is false too for one it doesn't have. Adding a behavior
- * is told as a CREATED event (wgf_ecs.h).
- */
-export declare function wgf_entity_add_component(entity: wgf_entity_t | 0, component: wgf_component_t): boolean;
-
-/**
- * Components. add makes one with its defaults (each component's header says them; the
- * node kinds' as their create makes them); adding one it has keeps it as it is. remove
- * ends it (a node kind's node destroyed, a voice stopped and destroyed). False for a
- * handle that isn't an entity, or a kind that isn't one, and for a model before any
- * stage has been made (logged: models are drawn on stages, and a program that makes none
- * links none of the 3D); remove is false too for one it doesn't have. Adding a behavior
- * is told as a CREATED event (wgf_ecs.h).
- */
-export declare function wgf_entity_remove_component(entity: wgf_entity_t | 0, component: wgf_component_t): boolean;
-
-/**
- * Components. add makes one with its defaults (each component's header says them; the
- * node kinds' as their create makes them); adding one it has keeps it as it is. remove
- * ends it (a node kind's node destroyed, a voice stopped and destroyed). False for a
- * handle that isn't an entity, or a kind that isn't one, and for a model before any
- * stage has been made (logged: models are drawn on stages, and a program that makes none
- * links none of the 3D); remove is false too for one it doesn't have. Adding a behavior
- * is told as a CREATED event (wgf_ecs.h).
- */
-export declare function wgf_entity_has_component(entity: wgf_entity_t | 0, component: wgf_component_t): boolean;
-
-/**
- * A node kind's node (SHAPE2D, SPRITE, TEXT, EMITTER2D), and the voice; 0 for one the
- * entity doesn't have. The entity's: set them up, never destroy them.
- */
-export declare function wgf_entity_get_component_node(entity: wgf_entity_t | 0, component: wgf_component_t): wgf_node_t;
-
-/**
- * A node kind's node (SHAPE2D, SPRITE, TEXT, EMITTER2D), and the voice; 0 for one the
- * entity doesn't have. The entity's: set them up, never destroy them.
- */
-export declare function wgf_entity_get_voice(entity: wgf_entity_t | 0): wgf_voice_t;
-
-/**
- * Default: "" (none: no code). Setting a name doesn't raise CREATED again. False too
- * for a name breaking the rule above. get_name's is the entity's, valid until it
- * changes.
- */
-export declare function wgf_behavior_set_name(entity: wgf_entity_t | 0, name: string | null): boolean;
-
-/**
- * Default: "" (none: no code). Setting a name doesn't raise CREATED again. False too
- * for a name breaking the rule above. get_name's is the entity's, valid until it
- * changes.
- */
-export declare function wgf_behavior_get_name(entity: wgf_entity_t | 0): string;
+export declare function wgf_behavior_get_name(actor: wgf_actor_t | 0, behavior: number): string;
 
 /**
  * A parameter, set to `value` (text), added the first time; NULL removes it. False too
- * for a key or value breaking the rule, or a 33rd parameter. get_param's is the
- * entity's: "" for one it doesn't have, valid until it changes. get_param_number reads
- * it as a number: 0 for one it doesn't have or that isn't one.
+ * for a key or value breaking the rule, or a 33rd parameter. get_param's is the actor's:
+ * "" for one it doesn't have, valid until it changes. get_param_number reads it as a
+ * number: 0 for one it doesn't have or that isn't one.
+ *
+ * A value starting with '@' refers to another actor, found once -- as it is set, and again
+ * when a scene's actors are all made -- and kept: get_param_actor is it, never a search.
+ * "@start_gate" is the one actor so named on this actor's stage (wgf_stage2d_find);
+ * "@car/wheel_rl" a path from it (wgf_actor_find); "@./flame" a path from this actor and
+ * "@../gun" from its parent. 0 for a parameter that isn't a reference, one that found
+ * none, and an actor since destroyed.
  */
-export declare function wgf_behavior_set_param(entity: wgf_entity_t | 0, key: string | null, value_: string | null): boolean;
+export declare function wgf_behavior_set_param(actor: wgf_actor_t | 0, behavior: number, key: string | null, value_: string | null): boolean;
 
 /**
  * A parameter, set to `value` (text), added the first time; NULL removes it. False too
- * for a key or value breaking the rule, or a 33rd parameter. get_param's is the
- * entity's: "" for one it doesn't have, valid until it changes. get_param_number reads
- * it as a number: 0 for one it doesn't have or that isn't one.
+ * for a key or value breaking the rule, or a 33rd parameter. get_param's is the actor's:
+ * "" for one it doesn't have, valid until it changes. get_param_number reads it as a
+ * number: 0 for one it doesn't have or that isn't one.
+ *
+ * A value starting with '@' refers to another actor, found once -- as it is set, and again
+ * when a scene's actors are all made -- and kept: get_param_actor is it, never a search.
+ * "@start_gate" is the one actor so named on this actor's stage (wgf_stage2d_find);
+ * "@car/wheel_rl" a path from it (wgf_actor_find); "@./flame" a path from this actor and
+ * "@../gun" from its parent. 0 for a parameter that isn't a reference, one that found
+ * none, and an actor since destroyed.
  */
-export declare function wgf_behavior_get_param(entity: wgf_entity_t | 0, key: string | null): string;
+export declare function wgf_behavior_get_param(actor: wgf_actor_t | 0, behavior: number, key: string | null): string;
 
 /**
  * A parameter, set to `value` (text), added the first time; NULL removes it. False too
- * for a key or value breaking the rule, or a 33rd parameter. get_param's is the
- * entity's: "" for one it doesn't have, valid until it changes. get_param_number reads
- * it as a number: 0 for one it doesn't have or that isn't one.
+ * for a key or value breaking the rule, or a 33rd parameter. get_param's is the actor's:
+ * "" for one it doesn't have, valid until it changes. get_param_number reads it as a
+ * number: 0 for one it doesn't have or that isn't one.
+ *
+ * A value starting with '@' refers to another actor, found once -- as it is set, and again
+ * when a scene's actors are all made -- and kept: get_param_actor is it, never a search.
+ * "@start_gate" is the one actor so named on this actor's stage (wgf_stage2d_find);
+ * "@car/wheel_rl" a path from it (wgf_actor_find); "@./flame" a path from this actor and
+ * "@../gun" from its parent. 0 for a parameter that isn't a reference, one that found
+ * none, and an actor since destroyed.
  */
-export declare function wgf_behavior_get_param_number(entity: wgf_entity_t | 0, key: string | null): number;
+export declare function wgf_behavior_get_param_number(actor: wgf_actor_t | 0, behavior: number, key: string | null): number;
 
 /**
  * A parameter, set to `value` (text), added the first time; NULL removes it. False too
- * for a key or value breaking the rule, or a 33rd parameter. get_param's is the
- * entity's: "" for one it doesn't have, valid until it changes. get_param_number reads
- * it as a number: 0 for one it doesn't have or that isn't one.
+ * for a key or value breaking the rule, or a 33rd parameter. get_param's is the actor's:
+ * "" for one it doesn't have, valid until it changes. get_param_number reads it as a
+ * number: 0 for one it doesn't have or that isn't one.
+ *
+ * A value starting with '@' refers to another actor, found once -- as it is set, and again
+ * when a scene's actors are all made -- and kept: get_param_actor is it, never a search.
+ * "@start_gate" is the one actor so named on this actor's stage (wgf_stage2d_find);
+ * "@car/wheel_rl" a path from it (wgf_actor_find); "@./flame" a path from this actor and
+ * "@../gun" from its parent. 0 for a parameter that isn't a reference, one that found
+ * none, and an actor since destroyed.
  */
-export declare function wgf_behavior_has_param(entity: wgf_entity_t | 0, key: string | null): boolean;
+export declare function wgf_behavior_get_param_actor(actor: wgf_actor_t | 0, behavior: number, key: string | null): wgf_actor_t;
+
+/**
+ * A parameter, set to `value` (text), added the first time; NULL removes it. False too
+ * for a key or value breaking the rule, or a 33rd parameter. get_param's is the actor's:
+ * "" for one it doesn't have, valid until it changes. get_param_number reads it as a
+ * number: 0 for one it doesn't have or that isn't one.
+ *
+ * A value starting with '@' refers to another actor, found once -- as it is set, and again
+ * when a scene's actors are all made -- and kept: get_param_actor is it, never a search.
+ * "@start_gate" is the one actor so named on this actor's stage (wgf_stage2d_find);
+ * "@car/wheel_rl" a path from it (wgf_actor_find); "@./flame" a path from this actor and
+ * "@../gun" from its parent. 0 for a parameter that isn't a reference, one that found
+ * none, and an actor since destroyed.
+ */
+export declare function wgf_behavior_has_param(actor: wgf_actor_t | 0, behavior: number, key: string | null): boolean;
 
 /**
  * Its parameters in the order first set: how many, and each one's key ("" past the
  * end).
  */
-export declare function wgf_behavior_get_param_count(entity: wgf_entity_t | 0): number;
+export declare function wgf_behavior_get_param_count(actor: wgf_actor_t | 0, behavior: number): number;
 
 /**
  * Its parameters in the order first set: how many, and each one's key ("" past the
  * end).
  */
-export declare function wgf_behavior_get_param_key(entity: wgf_entity_t | 0, index: number): string;
+export declare function wgf_behavior_get_param_key(actor: wgf_actor_t | 0, behavior: number, index: number): string;
+
+/**
+ * add makes one with its defaults (each component's header says them); adding one it has
+ * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
+ * that isn't an actor, or a component that isn't one; remove is false too for one it
+ * doesn't have.
+ */
+export declare function wgf_actor_add_component(actor: wgf_actor_t | 0, component: wgf_component_t): boolean;
+
+/**
+ * add makes one with its defaults (each component's header says them); adding one it has
+ * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
+ * that isn't an actor, or a component that isn't one; remove is false too for one it
+ * doesn't have.
+ */
+export declare function wgf_actor_remove_component(actor: wgf_actor_t | 0, component: wgf_component_t): boolean;
+
+/**
+ * add makes one with its defaults (each component's header says them); adding one it has
+ * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
+ * that isn't an actor, or a component that isn't one; remove is false too for one it
+ * doesn't have.
+ */
+export declare function wgf_actor_has_component(actor: wgf_actor_t | 0, component: wgf_component_t): boolean;
+
+/**
+ * The voice component's voice; 0 for an actor without one. The actor's: play it, never
+ * destroy it.
+ */
+export declare function wgf_actor_get_voice(actor: wgf_actor_t | 0): wgf_voice_t;
 
 /**
  * False too for a width or height below 0. Read back as x, y, width, height.
  */
-export declare function wgf_bounds_set_rect(entity: wgf_entity_t | 0, x: number, y: number, width: number, height: number): boolean;
+export declare function wgf_bounds_set_rect(actor: wgf_actor_t | 0, x: number, y: number, width: number, height: number): boolean;
 
 /**
  * False too for a width or height below 0. Read back as x, y, width, height.
  */
-export declare function wgf_bounds_get_rect<T extends number[] | Float32Array | Float64Array>(entity: wgf_entity_t | 0, into: T): T;
-export declare function wgf_bounds_get_rect(entity: wgf_entity_t | 0, into?: wgf_vec4_t | null): wgf_vec4_t;
+export declare function wgf_bounds_get_rect<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_bounds_get_rect(actor: wgf_actor_t | 0, into?: wgf_vec4_t | null): wgf_vec4_t;
 
 /**
  * False too for a mode that isn't one.
  */
-export declare function wgf_bounds_set_mode(entity: wgf_entity_t | 0, mode: wgf_bounds_mode_t): boolean;
+export declare function wgf_bounds_set_mode(actor: wgf_actor_t | 0, mode: wgf_bounds_mode_t): boolean;
 
 /**
  * False too for a mode that isn't one.
  */
-export declare function wgf_bounds_get_mode(entity: wgf_entity_t | 0): wgf_bounds_mode_t;
+export declare function wgf_bounds_get_mode(actor: wgf_actor_t | 0): wgf_bounds_mode_t;
 
 /**
  * Whether the rectangle is the presentation's visible area (wgf_presentation.h), read
@@ -4167,7 +4107,7 @@ export declare function wgf_bounds_get_mode(entity: wgf_entity_t | 0): wgf_bound
  * (a scene file's `bounds visible=true`); read back by get_rect as it is now. Setting a
  * rectangle turns it off. Default: off.
  */
-export declare function wgf_bounds_set_visible(entity: wgf_entity_t | 0, visible: boolean): boolean;
+export declare function wgf_bounds_set_visible(actor: wgf_actor_t | 0, visible: boolean): boolean;
 
 /**
  * Whether the rectangle is the presentation's visible area (wgf_presentation.h), read
@@ -4175,169 +4115,193 @@ export declare function wgf_bounds_set_visible(entity: wgf_entity_t | 0, visible
  * (a scene file's `bounds visible=true`); read back by get_rect as it is now. Setting a
  * rectangle turns it off. Default: off.
  */
-export declare function wgf_bounds_is_visible(entity: wgf_entity_t | 0): boolean;
+export declare function wgf_bounds_is_visible(actor: wgf_actor_t | 0): boolean;
 
 /**
  * How far past the rectangle's edge it may go first, so a rock wraps once it is wholly
  * off the screen. Clamped to 0 or more.
  */
-export declare function wgf_bounds_set_margin(entity: wgf_entity_t | 0, margin: number): boolean;
+export declare function wgf_bounds_set_margin(actor: wgf_actor_t | 0, margin: number): boolean;
 
 /**
  * How far past the rectangle's edge it may go first, so a rock wraps once it is wholly
  * off the screen. Clamped to 0 or more.
  */
-export declare function wgf_bounds_get_margin(entity: wgf_entity_t | 0): number;
+export declare function wgf_bounds_get_margin(actor: wgf_actor_t | 0): number;
 
 /**
  * False too for a radius below 0.
  */
-export declare function wgf_collider_set_radius(entity: wgf_entity_t | 0, radius: number): boolean;
+export declare function wgf_collider_set_radius(actor: wgf_actor_t | 0, radius: number): boolean;
 
 /**
  * False too for a radius below 0.
  */
-export declare function wgf_collider_get_radius(entity: wgf_entity_t | 0): number;
+export declare function wgf_collider_get_radius(actor: wgf_actor_t | 0): number;
 
 /**
  * Bits: what it is, and what it meets. A pair meets when either side's mask has the
  * other's layer, so clearing one collider's mask doesn't stop another whose mask has its
  * layer from meeting it: to make one meet nothing, switch it off (below).
  */
-export declare function wgf_collider_set_layer(entity: wgf_entity_t | 0, layer: number): boolean;
+export declare function wgf_collider_set_layer(actor: wgf_actor_t | 0, layer: number): boolean;
 
 /**
  * Bits: what it is, and what it meets. A pair meets when either side's mask has the
  * other's layer, so clearing one collider's mask doesn't stop another whose mask has its
  * layer from meeting it: to make one meet nothing, switch it off (below).
  */
-export declare function wgf_collider_get_layer(entity: wgf_entity_t | 0): number;
+export declare function wgf_collider_get_layer(actor: wgf_actor_t | 0): number;
 
 /**
  * Bits: what it is, and what it meets. A pair meets when either side's mask has the
  * other's layer, so clearing one collider's mask doesn't stop another whose mask has its
  * layer from meeting it: to make one meet nothing, switch it off (below).
  */
-export declare function wgf_collider_set_mask(entity: wgf_entity_t | 0, mask: number): boolean;
+export declare function wgf_collider_set_mask(actor: wgf_actor_t | 0, mask: number): boolean;
 
 /**
  * Bits: what it is, and what it meets. A pair meets when either side's mask has the
  * other's layer, so clearing one collider's mask doesn't stop another whose mask has its
  * layer from meeting it: to make one meet nothing, switch it off (below).
  */
-export declare function wgf_collider_get_mask(entity: wgf_entity_t | 0): number;
+export declare function wgf_collider_get_mask(actor: wgf_actor_t | 0): number;
 
 /**
  * Switched off, a collider meets nothing, from either side, and a pair it was in ends
  * (TRIGGER_EXIT at the next tick); its radius, layer, and mask are kept, so switched on
  * again it meets as they say: a ship that can't be hit while it blinks.
  */
-export declare function wgf_collider_set_enabled(entity: wgf_entity_t | 0, enabled: boolean): boolean;
+export declare function wgf_collider_set_enabled(actor: wgf_actor_t | 0, enabled: boolean): boolean;
 
 /**
  * Switched off, a collider meets nothing, from either side, and a pair it was in ends
  * (TRIGGER_EXIT at the next tick); its radius, layer, and mask are kept, so switched on
  * again it meets as they say: a ship that can't be hit while it blinks.
  */
-export declare function wgf_collider_is_enabled(entity: wgf_entity_t | 0): boolean;
+export declare function wgf_collider_is_enabled(actor: wgf_actor_t | 0): boolean;
 
 /**
  * What it overlaps as of the last tick, into `out`, as many as fit in `count`, returning
  * how many it filled.
  */
-export declare function wgf_collider_get_overlaps(entity: wgf_entity_t | 0, out: wgf_entity_t[] | Uint32Array | null): number;
+export declare function wgf_collider_get_overlaps(actor: wgf_actor_t | 0, out: wgf_actor_t[] | Uint32Array | null): number;
 
 /**
- * Events waiting, and the oldest taken off the queue into `out`, three ints each -- the
- * event, the entity, the other entity (0 for none) -- as many whole events as fit in
- * `count` ints, returning how many ints it filled.
+ * Events waiting, and the oldest taken off the queue into `out`, three ints each (the
+ * event, then the two above), as many whole events as fit in `count` ints, returning how
+ * many ints it filled.
  */
 export declare function wgf_ecs_get_event_count(): number;
 
 /**
- * Events waiting, and the oldest taken off the queue into `out`, three ints each -- the
- * event, the entity, the other entity (0 for none) -- as many whole events as fit in
- * `count` ints, returning how many ints it filled.
+ * Events waiting, and the oldest taken off the queue into `out`, three ints each (the
+ * event, then the two above), as many whole events as fit in `count` ints, returning how
+ * many ints it filled.
  */
 export declare function wgf_ecs_take_events(out: number[] | Int32Array | null): number;
 
 /**
- * The live entities with the behavior `name`, oldest first, into `out`, as many as fit in
- * `count`, returning how many it filled; and how many there are, to size `out`.
+ * How many actors have a component or a behavior.
  */
-export declare function wgf_ecs_find_behavior(name: string | null, out: wgf_entity_t[] | Uint32Array | null): number;
+export declare function wgf_ecs_get_count(): number;
 
 /**
- * The live entities with the behavior `name`, oldest first, into `out`, as many as fit in
- * `count`, returning how many it filled; and how many there are, to size `out`.
+ * The actors with a behavior named `name`, oldest first (by when their first component or
+ * behavior came), into `out`, as many as fit in `count`, returning how many it filled;
+ * and how many there are, to size `out`. An actor with two of the name is one actor.
+ * Found by an index of each name and component, never by a look at every actor.
+ */
+export declare function wgf_ecs_find_behavior(name: string | null, out: wgf_actor_t[] | Uint32Array | null): number;
+
+/**
+ * The actors with a behavior named `name`, oldest first (by when their first component or
+ * behavior came), into `out`, as many as fit in `count`, returning how many it filled;
+ * and how many there are, to size `out`. An actor with two of the name is one actor.
+ * Found by an index of each name and component, never by a look at every actor.
  */
 export declare function wgf_ecs_count_behavior(name: string | null): number;
 
 /**
- * Every live entity destroyed, as wgf_entity_destroy would, oldest first.
+ * The actors with a component, oldest first, the same way; NONE, or a value that isn't a
+ * component, finds none.
+ */
+export declare function wgf_ecs_find_component(component: wgf_component_t, out: wgf_actor_t[] | Uint32Array | null): number;
+
+/**
+ * The actors with a component, oldest first, the same way; NONE, or a value that isn't a
+ * component, finds none.
+ */
+export declare function wgf_ecs_count_component(component: wgf_component_t): number;
+
+/**
+ * Every actor with a component or a behavior destroyed, with everything under it, oldest
+ * first.
  */
 export declare function wgf_ecs_clear(): void;
 
 /**
- * The world as a scene's text (wgf_scene.h's format): every live entity, oldest first,
- * with its transform and every component as it is now, so loading it as a scene and
- * instantiating it makes the same world again. libwgf's to keep: valid until the next
- * dump. "" when the ecs hasn't started (no entity was ever made).
+ * The simulated actors as a scene's text (wgf_scene.h's format): each top one -- an actor
+ * with a component or a behavior whose parent has none -- oldest first, as a `actor`
+ * block, with its kind, its transform, its components, its behaviors, and the actors under
+ * it, as they are now, so loading it as a scene and instantiating it makes the same actors
+ * again. libwgf's to keep: valid until the next dump. "" when no actor ever had a
+ * component or a behavior.
  */
 export declare function wgf_ecs_dump(): string;
 
 /**
- * Seconds left from now. False for an entity without a lifetime, or a time below 0 or
+ * Seconds left from now. False for an actor without a lifetime, or a time below 0 or
  * not finite.
  */
-export declare function wgf_lifetime_set_seconds(entity: wgf_entity_t | 0, seconds: number): boolean;
+export declare function wgf_lifetime_set_seconds(actor: wgf_actor_t | 0, seconds: number): boolean;
 
 /**
- * Seconds left; 0 for an entity without a lifetime.
+ * Seconds left; 0 for an actor without a lifetime.
  */
-export declare function wgf_lifetime_get_seconds(entity: wgf_entity_t | 0): number;
-
-/**
- * Units a second, in its parent's space.
- */
-export declare function wgf_motion_set_velocity(entity: wgf_entity_t | 0, x: number, y: number, z: number): boolean;
+export declare function wgf_lifetime_get_seconds(actor: wgf_actor_t | 0): number;
 
 /**
  * Units a second, in its parent's space.
  */
-export declare function wgf_motion_get_velocity<T extends number[] | Float32Array | Float64Array>(entity: wgf_entity_t | 0, into: T): T;
-export declare function wgf_motion_get_velocity(entity: wgf_entity_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+export declare function wgf_motion_set_velocity(actor: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
+
+/**
+ * Units a second, in its parent's space.
+ */
+export declare function wgf_motion_get_velocity<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_motion_get_velocity(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
 
 /**
  * Radians a second about each axis (in 2D, z alone), added to its rotation's angles.
  */
-export declare function wgf_motion_set_spin(entity: wgf_entity_t | 0, x: number, y: number, z: number): boolean;
+export declare function wgf_motion_set_spin(actor: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
 
 /**
  * Radians a second about each axis (in 2D, z alone), added to its rotation's angles.
  */
-export declare function wgf_motion_get_spin<T extends number[] | Float32Array | Float64Array>(entity: wgf_entity_t | 0, into: T): T;
-export declare function wgf_motion_get_spin(entity: wgf_entity_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+export declare function wgf_motion_get_spin<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_motion_get_spin(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
 
 /**
  * The part of its velocity it loses each second: 0 none, 1 all of it; clamped to that.
  */
-export declare function wgf_motion_set_damping(entity: wgf_entity_t | 0, damping: number): boolean;
+export declare function wgf_motion_set_damping(actor: wgf_actor_t | 0, damping: number): boolean;
 
 /**
  * The part of its velocity it loses each second: 0 none, 1 all of it; clamped to that.
  */
-export declare function wgf_motion_get_damping(entity: wgf_entity_t | 0): number;
+export declare function wgf_motion_get_damping(actor: wgf_actor_t | 0): number;
 
 /**
  * The most its speed can be, in units a second; 0 for no limit. Clamped to 0 or more.
  */
-export declare function wgf_motion_set_max_speed(entity: wgf_entity_t | 0, speed: number): boolean;
+export declare function wgf_motion_set_max_speed(actor: wgf_actor_t | 0, speed: number): boolean;
 
 /**
  * The most its speed can be, in units a second; 0 for no limit. Clamped to 0 or more.
  */
-export declare function wgf_motion_get_max_speed(entity: wgf_entity_t | 0): number;
+export declare function wgf_motion_get_max_speed(actor: wgf_actor_t | 0): number;
 
 /**
  * The scene at `path`, loading. The same path again gives the same scene, with one more
@@ -4346,38 +4310,38 @@ export declare function wgf_motion_get_max_speed(entity: wgf_entity_t | 0): numb
 export declare function wgf_scene_create(path: string | null): wgf_scene_t;
 
 /**
- * Make the scene's entities, in file order, their nodes under `parent` (0: none), each
- * with its components as the file says and a behavior's CREATED raised. The number made;
- * 0 for a scene that isn't READY, or a `parent` that isn't a node (0 is).
+ * Make the scene's top actors' trees, in file order, under `parent` (0: none), each actor
+ * as the file says and each behavior's CREATED raised. The number of top actors made; 0
+ * for a scene that isn't READY, or a `parent` that isn't an actor (0 is).
  */
-export declare function wgf_scene_instantiate(scene: wgf_scene_t | 0, parent: wgf_node_t | 0): number;
+export declare function wgf_scene_instantiate(scene: wgf_scene_t | 0, parent: wgf_actor_t | 0): number;
 
 /**
- * Make one entity of the prefab `name`, its node under `parent`; 0 for a scene that
- * isn't READY, a prefab it doesn't have, or a `parent` that isn't a node.
+ * Make one tree of the prefab `name` under `parent`: its top actor; 0 for a scene that
+ * isn't READY, a prefab it doesn't have, or a `parent` that isn't an actor.
  */
-export declare function wgf_scene_spawn(scene: wgf_scene_t | 0, name: string | null, parent: wgf_node_t | 0): wgf_entity_t;
+export declare function wgf_scene_spawn(scene: wgf_scene_t | 0, name: string | null, parent: wgf_actor_t | 0): wgf_actor_t;
 
 /**
- * What the file holds, once READY: its entities and its prefabs, and each prefab's name
+ * What the file holds, once READY: its top actors and its prefabs, and each prefab's name
  * in file order ("" past the end). 0 and "" until then.
  */
-export declare function wgf_scene_get_entity_count(scene: wgf_scene_t | 0): number;
+export declare function wgf_scene_get_actor_count(scene: wgf_scene_t | 0): number;
 
 /**
- * What the file holds, once READY: its entities and its prefabs, and each prefab's name
+ * What the file holds, once READY: its top actors and its prefabs, and each prefab's name
  * in file order ("" past the end). 0 and "" until then.
  */
 export declare function wgf_scene_get_prefab_count(scene: wgf_scene_t | 0): number;
 
 /**
- * What the file holds, once READY: its entities and its prefabs, and each prefab's name
+ * What the file holds, once READY: its top actors and its prefabs, and each prefab's name
  * in file order ("" past the end). 0 and "" until then.
  */
 export declare function wgf_scene_get_prefab_name(scene: wgf_scene_t | 0, index: number): string;
 
 /**
- * What the file holds, once READY: its entities and its prefabs, and each prefab's name
+ * What the file holds, once READY: its top actors and its prefabs, and each prefab's name
  * in file order ("" past the end). 0 and "" until then.
  */
 export declare function wgf_scene_has_prefab(scene: wgf_scene_t | 0, name: string | null): boolean;

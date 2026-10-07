@@ -3,14 +3,14 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Text's calls, on a Node: `var x:Text = handle` gives it them, and a Text is still a Node. **/
-@:forward abstract Text(Node) from Node to Node {
+/** Text's calls, on a Actor: `var x:Text = handle` gives it them, and a Text is still a Actor. **/
+@:forward abstract Text(Actor) from Actor to Actor {
 	/**
-	    A text node in `font` (0: the default font), with no string yet. 0 when `font`
-	    isn't a font, or there is no room for another node.
+	    A text actor in `font` (0: the default font), with no string yet. 0 when `font`
+	    isn't a font, or there is no room for another actor.
 	**/
 	public static inline function create(font:Font):Text
-		return ((Raw.wgf_text_create(font) : Node) : Text);
+		return ((Raw.wgf_text_create(font) : Actor) : Text);
 
 	/**
 	    False when `font` isn't a font (0 is: the default font).
@@ -25,21 +25,21 @@ import wgf.impl.Raw;
 		return Raw.wgf_text_get_font(this);
 
 	/**
-	    What it says, UTF-8, copied. get_string's is the node's: valid until the next
+	    What it says, UTF-8, copied. get_string's is the actor's: valid until the next
 	    set_string, or until it is destroyed.
 	**/
 	public inline function setString(string:String):Bool
 		return Raw.wgf_text_set_string(this, string);
 
 	/**
-	    What it says, UTF-8, copied. get_string's is the node's: valid until the next
+	    What it says, UTF-8, copied. get_string's is the actor's: valid until the next
 	    set_string, or until it is destroyed.
 	**/
 	public inline function getString():String
 		return Raw.wgf_text_get_string(this);
 
 	/**
-	    Its font size: the height of its lines, before the node's scale, in canvas units (a
+	    Its font size: the height of its lines, before the actor's scale, in stage units (a
 	    font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
 	    Read back as the size it draws at. False for a handle that isn't text.
 	**/
@@ -47,7 +47,7 @@ import wgf.impl.Raw;
 		return Raw.wgf_text_set_font_size(this, size);
 
 	/**
-	    Its font size: the height of its lines, before the node's scale, in canvas units (a
+	    Its font size: the height of its lines, before the actor's scale, in stage units (a
 	    font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
 	    Read back as the size it draws at. False for a handle that isn't text.
 	**/
@@ -67,7 +67,7 @@ import wgf.impl.Raw;
 		return Raw.wgf_text_get_color(this);
 
 	/**
-	    Wrap lines at spaces and tabs to fit `width`, in canvas units; a word wider keeps
+	    Wrap lines at spaces and tabs to fit `width`, in stage units; a word wider keeps
 	    a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
 	    wrapped block is `width` wide for its alignment, or as wide as its widest line
 	    where a word is wider. False for less than 0.
@@ -76,7 +76,7 @@ import wgf.impl.Raw;
 		return Raw.wgf_text_set_wrap_width(this, width);
 
 	/**
-	    Wrap lines at spaces and tabs to fit `width`, in canvas units; a word wider keeps
+	    Wrap lines at spaces and tabs to fit `width`, in stage units; a word wider keeps
 	    a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
 	    wrapped block is `width` wide for its alignment, or as wide as its widest line
 	    where a word is wider. False for less than 0.
@@ -85,21 +85,21 @@ import wgf.impl.Raw;
 		return Raw.wgf_text_get_wrap_width(this);
 
 	/**
-	    Where the block sits relative to the node's position, on each axis; lines line
+	    Where the block sits relative to the actor's position, on each axis; lines line
 	    up the same way inside the block. False for a value that isn't one.
 	**/
 	public inline function setAlign(horizontal:TextHalign, vertical:TextValign):Bool
 		return Raw.wgf_text_set_align(this, horizontal, vertical);
 
 	/**
-	    Where the block sits relative to the node's position, on each axis; lines line
+	    Where the block sits relative to the actor's position, on each axis; lines line
 	    up the same way inside the block. False for a value that isn't one.
 	**/
 	public inline function getHalign():TextHalign
 		return Raw.wgf_text_get_halign(this);
 
 	/**
-	    Where the block sits relative to the node's position, on each axis; lines line
+	    Where the block sits relative to the actor's position, on each axis; lines line
 	    up the same way inside the block. False for a value that isn't one.
 	**/
 	public inline function getValign():TextValign

@@ -3,8 +3,8 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Collider's calls, on a Entity: `var x:Collider = handle` gives it them, and a Collider is still a Entity. **/
-@:forward abstract Collider(Entity) from Entity to Entity {
+/** Collider's calls, on a Actor: `var x:Collider = handle` gives it them, and a Collider is still a Actor. **/
+@:forward abstract Collider(Actor) from Actor to Actor {
 	/**
 	    False too for a radius below 0.
 	**/
@@ -69,6 +69,6 @@ import wgf.impl.Raw;
 	    What it overlaps as of the last tick, into `out`, as many as fit in `count`, returning
 	    how many it filled.
 	**/
-	public inline function getOverlaps(out:Array<Entity>):Int
+	public inline function getOverlaps(out:Array<Actor>):Int
 		return Raw.wgf_collider_get_overlaps(this, cast out);
 }

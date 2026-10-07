@@ -2,10 +2,10 @@
 package wgf;
 
 /**
-    A 2D shape: a node drawing a rectangle, a circle, a line, or a polygon, filled or
-    outlined, in one color, in a canvas. Shapes are nodes (wgf_node.h): place, turn,
-    scale, parent, and destroy them with the node calls; the shape turns and scales with
-    its node, and an outline's thickness stays in the frame's logical pixels.
+    A 2D shape: an actor drawing a rectangle, a circle, a line, or a polygon, filled or
+    outlined, in one color, on a 2D stage. Shapes are actors (wgf_actor.h): place, turn,
+    scale, parent, and destroy them with the actor calls; the shape turns and scales with
+    its actor, and an outline's thickness stays in the frame's logical pixels.
 **/
 enum abstract Shape2dKind(Int) from Int to Int {
 	var NONE = 0;

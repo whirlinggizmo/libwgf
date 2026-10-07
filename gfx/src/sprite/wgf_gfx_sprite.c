@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-#include "node/wgf_gfx_node_priv.h"
+#include "actor/wgf_gfx_actor_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "sokol_gfx.h" /* sokol_gl needs it first */
 #include "texture/wgf_gfx_texture_priv.h"
@@ -10,15 +10,15 @@
 #include "wgf_core_handle_priv.h"
 #include "wgf_resource.h"
 
-/* Sprites in a canvas: a textured quad, its corners placed through the node into the
+/* Sprites on a 2D stage: a textured quad, its corners placed through the actor into the
  * frame's logical pixels and drawn through the frame's immediate mode recording, as
  * libwgt's 2D sprites, through sokol_gl in place of its instanced batch
  * (docs/HISTORY.md, "2D drawn through sokol_gl"). */
 
-static wgf_gfx_priv_sprite_t *sprite_of(wgf_node_t sprite)
+static wgf_gfx_priv_sprite_t *sprite_of(wgf_actor_t sprite)
 {
-    wgf_gfx_priv_node_t *node_ptr = wgf_gfx_priv_node_of(sprite);
-    return node_ptr != NULL && node_ptr->type == WGF_NODE_TYPE_SPRITE ? &node_ptr->as.sprite : NULL;
+    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(sprite);
+    return actor_ptr != NULL && actor_ptr->type == WGF_ACTOR_KIND_SPRITE ? &actor_ptr->as.sprite : NULL;
 }
 
 /* The region shown, and the size drawn: what was set, or the texture's. */
@@ -39,16 +39,16 @@ static void vertex(const wgf_mat4_t *m, float x, float y, float u, float v)
     sgl_v2f_t2f(m->m[0] * x + m->m[4] * y + m->m[12], m->m[1] * x + m->m[5] * y + m->m[13], u, v);
 }
 
-static void draw_sprite(wgf_node_t node, const wgf_gfx_priv_node_t *node_ptr, const wgf_mat4_t *placed,
+static void draw_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *placed,
                         const wgf_mat4_t *view)
 {
-    const wgf_gfx_priv_sprite_t *sprite = &node_ptr->as.sprite;
+    const wgf_gfx_priv_sprite_t *sprite = &actor_ptr->as.sprite;
     sg_view image;
     sg_sampler sampler;
     int tw, th;
     bool placeholder;
     float region[4], size[2], u0 = 0.0f, v0 = 0.0f, u1 = 1.0f, v1 = 1.0f, x0, y0, x1, y1;
-    (void)node;
+    (void)actor;
     (void)view;
     if (!wgf_gfx_priv_texture_get_binding(sprite->texture, &image, &sampler, &tw, &th, &placeholder)) return;
     region_of(sprite, region, size);
@@ -81,14 +81,14 @@ static void draw_sprite(wgf_node_t node, const wgf_gfx_priv_node_t *node_ptr, co
     sgl_disable_texture();
 }
 
-static void free_sprite(wgf_node_t node, wgf_gfx_priv_node_t *node_ptr)
+static void free_sprite(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr)
 {
-    (void)node;
-    if (node_ptr->as.sprite.texture != 0) wgf_resource_release(node_ptr->as.sprite.texture);
-    node_ptr->as.sprite.texture = 0;
+    (void)actor;
+    if (actor_ptr->as.sprite.texture != 0) wgf_resource_release(actor_ptr->as.sprite.texture);
+    actor_ptr->as.sprite.texture = 0;
 }
 
-static const wgf_gfx_priv_node_kind_t kind = {free_sprite, draw_sprite};
+static const wgf_gfx_priv_actor_kind_t kind = {free_sprite, draw_sprite};
 
 static bool is_texture(wgf_texture_t texture)
 {
@@ -96,12 +96,12 @@ static bool is_texture(wgf_texture_t texture)
                             wgf_resource_get_status(texture) != WGF_RESOURCE_STATUS_NONE);
 }
 
-wgf_node_t wgf_sprite_create(wgf_texture_t texture)
+wgf_actor_t wgf_sprite_create(wgf_texture_t texture)
 {
-    wgf_node_t sprite;
+    wgf_actor_t sprite;
     wgf_gfx_priv_sprite_t *sprite_ptr;
     if (!is_texture(texture)) return 0;
-    sprite = wgf_gfx_priv_node_create(WGF_NODE_TYPE_SPRITE);
+    sprite = wgf_gfx_priv_actor_create(WGF_ACTOR_KIND_SPRITE);
     sprite_ptr = sprite_of(sprite);
     if (sprite_ptr == NULL) return 0;
     sprite_ptr->tint = 0xFFFFFFFFu;
@@ -110,11 +110,11 @@ wgf_node_t wgf_sprite_create(wgf_texture_t texture)
         wgf_gfx_priv_texture_retain(texture);
         sprite_ptr->texture = texture;
     }
-    wgf_gfx_priv_node_set_kind(WGF_NODE_TYPE_SPRITE, &kind);
+    wgf_gfx_priv_actor_set_kind(WGF_ACTOR_KIND_SPRITE, &kind);
     return sprite;
 }
 
-bool wgf_sprite_set_texture(wgf_node_t sprite, wgf_texture_t texture)
+bool wgf_sprite_set_texture(wgf_actor_t sprite, wgf_texture_t texture)
 {
     wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
     if (sprite_ptr == NULL || !is_texture(texture)) return false;
@@ -125,13 +125,13 @@ bool wgf_sprite_set_texture(wgf_node_t sprite, wgf_texture_t texture)
     return true;
 }
 
-wgf_texture_t wgf_sprite_get_texture(wgf_node_t sprite)
+wgf_texture_t wgf_sprite_get_texture(wgf_actor_t sprite)
 {
     const wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
     return sprite_ptr != NULL ? sprite_ptr->texture : 0;
 }
 
-bool wgf_sprite_set_source(wgf_node_t sprite, float x, float y, float width, float height)
+bool wgf_sprite_set_source(wgf_actor_t sprite, float x, float y, float width, float height)
 {
     wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
     if (sprite_ptr == NULL) return false;
@@ -142,14 +142,14 @@ bool wgf_sprite_set_source(wgf_node_t sprite, float x, float y, float width, flo
     return true;
 }
 
-wgf_vec4_t wgf_sprite_get_source(wgf_node_t sprite)
+wgf_vec4_t wgf_sprite_get_source(wgf_actor_t sprite)
 {
     const wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
     if (sprite_ptr == NULL) return wgf_vec4_make(0.0f, 0.0f, 0.0f, 0.0f);
     return wgf_vec4_make(sprite_ptr->source[0], sprite_ptr->source[1], sprite_ptr->source[2], sprite_ptr->source[3]);
 }
 
-bool wgf_sprite_set_size(wgf_node_t sprite, float width, float height)
+bool wgf_sprite_set_size(wgf_actor_t sprite, float width, float height)
 {
     wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
     if (sprite_ptr == NULL) return false;
@@ -158,7 +158,7 @@ bool wgf_sprite_set_size(wgf_node_t sprite, float width, float height)
     return true;
 }
 
-wgf_vec2_t wgf_sprite_get_size(wgf_node_t sprite)
+wgf_vec2_t wgf_sprite_get_size(wgf_actor_t sprite)
 {
     const wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
     float region[4], size[2];
@@ -167,7 +167,7 @@ wgf_vec2_t wgf_sprite_get_size(wgf_node_t sprite)
     return wgf_vec2_make(size[0], size[1]);
 }
 
-bool wgf_sprite_set_pivot(wgf_node_t sprite, float x, float y)
+bool wgf_sprite_set_pivot(wgf_actor_t sprite, float x, float y)
 {
     wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
     if (sprite_ptr == NULL) return false;
@@ -176,13 +176,13 @@ bool wgf_sprite_set_pivot(wgf_node_t sprite, float x, float y)
     return true;
 }
 
-wgf_vec2_t wgf_sprite_get_pivot(wgf_node_t sprite)
+wgf_vec2_t wgf_sprite_get_pivot(wgf_actor_t sprite)
 {
     const wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
     return sprite_ptr != NULL ? wgf_vec2_make(sprite_ptr->pivot[0], sprite_ptr->pivot[1]) : wgf_vec2_make(0.0f, 0.0f);
 }
 
-bool wgf_sprite_set_tint(wgf_node_t sprite, wgf_color_t tint)
+bool wgf_sprite_set_tint(wgf_actor_t sprite, wgf_color_t tint)
 {
     wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
     if (sprite_ptr == NULL) return false;
@@ -190,7 +190,7 @@ bool wgf_sprite_set_tint(wgf_node_t sprite, wgf_color_t tint)
     return true;
 }
 
-wgf_color_t wgf_sprite_get_tint(wgf_node_t sprite)
+wgf_color_t wgf_sprite_get_tint(wgf_actor_t sprite)
 {
     const wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
     return sprite_ptr != NULL ? sprite_ptr->tint : 0u;

@@ -13,10 +13,10 @@
 #include "wgf_material.h"
 #include "wgf_mesh.h"
 #include "wgf_model.h"
-#include "wgf_node.h"
+#include "wgf_actor.h"
 #include "wgf_render.h"
 #include "wgf_resource.h"
-#include "wgf_stage.h"
+#include "wgf_stage3d.h"
 #include "wgf_texture.h"
 #include "wgf_window.h"
 
@@ -28,9 +28,9 @@
  *
  * wgrender-c's meshes example done 1:1 for the size table (libwgt has none). The
  * differences:
- *   - the stage is a node: the models are its children, and the sun is a light node
- *     aimed with wgf_node_look_at, where wgrender's is given a direction;
- *   - the camera is placed and aimed each frame with the node calls, where wgrender's
+ *   - the stage is an actor: the models are its children, and the sun is a light actor
+ *     aimed with wgf_actor_look_at, where wgrender's is given a direction;
+ *   - the camera is placed and aimed each frame with the actor calls, where wgrender's
  *     camera3d_set_view takes the eye, target, and up at once;
  *   - the readout is libwgf's overlay (wgf_debug_show_fps), as wgrender's is its
  *     wgr_debug_enable_fps, at the same place. */
@@ -40,7 +40,7 @@
 enum { SHAPE_COUNT = 7 };
 
 static struct {
-    wgf_node_t stage, camera;
+    wgf_actor_t stage, camera;
     bool orbit;
     float angle;
 } g = {.orbit = true};
@@ -62,7 +62,7 @@ static void init(void *user)
         {wgf_mesh_create_torus(0.4f, 0.15f, 48, 24), 0.15f, 0.9f, 0.5f, 0.6f},
     };
     wgf_mesh_t plane;
-    wgf_node_t sun, floor;
+    wgf_actor_t sun, floor;
     wgf_material_t ground;
     wgf_texture_t normal_map;
     int i;
@@ -71,13 +71,13 @@ static void init(void *user)
     wgf_render_set_clear_color(wgf_color_make(20, 22, 28, 255));
 
     g.camera = wgf_camera3d_create();
-    g.stage = wgf_stage_create();
-    wgf_stage_set_camera(g.stage, g.camera);
-    wgf_stage_set_ambient(g.stage, WGF_COLOR_WHITE, 0.25f);
+    g.stage = wgf_stage3d_create();
+    wgf_stage3d_set_camera(g.stage, g.camera);
+    wgf_stage3d_set_ambient(g.stage, WGF_COLOR_WHITE, 0.25f);
     sun = wgf_light_create(WGF_LIGHT_TYPE_DIRECTIONAL);
-    wgf_node_look_at(sun, -0.5f, -1.0f, -0.4f, 0, 1, 0); /* from the origin, shining that way */
+    wgf_actor_look_at(sun, -0.5f, -1.0f, -0.4f, 0, 1, 0); /* from the origin, shining that way */
     wgf_light_set_intensity(sun, 3.0f);
-    wgf_node_set_parent(sun, g.stage);
+    wgf_actor_set_parent(sun, g.stage);
 
     plane = wgf_mesh_create_plane(12.0f, 12.0f, 0);
     floor = wgf_model_create(plane);
@@ -88,15 +88,15 @@ static void init(void *user)
     wgf_material_set_float(ground, "roughness", 0.9f);
     wgf_model_set_material(floor, -1, ground);
     wgf_resource_release(ground);
-    wgf_node_set_parent(floor, g.stage);
+    wgf_actor_set_parent(floor, g.stage);
 
     normal_map = wgf_texture_create(NORMAL_MAP_PATH); /* a flat normal until it loads */
     for (i = 0; i < SHAPE_COUNT; i++) {
         const float x = ((float)i - (SHAPE_COUNT - 1) * 0.5f) * 1.4f;
-        const wgf_node_t model = wgf_model_create(shapes[i].mesh);
+        const wgf_actor_t model = wgf_model_create(shapes[i].mesh);
         const wgf_material_t material = wgf_material_create(WGF_MATERIAL_SHADING_PBR);
         wgf_resource_release(shapes[i].mesh);
-        wgf_node_set_transform(model, x, shapes[i].y, 0, 0, 0, 0, 1, 1, 1);
+        wgf_actor_set_transform(model, x, shapes[i].y, 0, 0, 0, 0, 1, 1, 1);
         wgf_material_set_vec4(material, "base_color", shapes[i].r, shapes[i].gr, shapes[i].b, 1.0f);
         wgf_material_set_float(material, "metallic", 0.0f);
         wgf_material_set_float(material, "roughness", 0.45f);
@@ -104,7 +104,7 @@ static void init(void *user)
         wgf_material_set_texture(material, "normal_texture", normal_map);
         wgf_model_set_material(model, 0, material);
         wgf_resource_release(material); /* the model keeps it alive */
-        wgf_node_set_parent(model, g.stage);
+        wgf_actor_set_parent(model, g.stage);
     }
     wgf_resource_release(normal_map); /* the materials hold their own references */
 }
@@ -115,10 +115,10 @@ static void frame(void *user)
     if (wgf_app_can_quit() && wgf_keyboard_is_pressed(WGF_KEY_ESCAPE)) wgf_app_quit();
     if (wgf_keyboard_is_pressed(WGF_KEY_O)) g.orbit = !g.orbit;
     if (g.orbit) g.angle += wgf_loop_get_frame_delta() * 0.2f;
-    wgf_node_set_position(g.camera, 9.0f * sinf(g.angle), 3.5f, 9.0f * cosf(g.angle));
-    wgf_node_look_at(g.camera, 0, 0.4f, 0, 0, 1, 0);
+    wgf_actor_set_position(g.camera, 9.0f * sinf(g.angle), 3.5f, 9.0f * cosf(g.angle));
+    wgf_actor_look_at(g.camera, 0, 0.4f, 0, 0, 1, 0);
 
-    wgf_stage_draw(g.stage);
+    wgf_stage3d_draw(g.stage);
     wgf_draw_text(0, "libwgf generated meshes: plane, cube, sphere, cylinder, cone, capsule, torus", 12, 36, 20,
                   WGF_COLOR_RAYWHITE);
     if (wgf_app_can_quit()) { /* the quit key's hint, where there is one */

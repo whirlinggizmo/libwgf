@@ -82,7 +82,7 @@ ROWS = [
     ('gfx-particles', 'gfx-particles', 'particles', 'differs',
      'libwgf has no 3D and no GPU particles: libwgt\'s 3D emitters are projected into 2D CPU emitters, untextured'),
     ('gfx-tilemap', 'gfx-tilemap', 'tilemap', 'differs',
-     'libwgf has no 3D sprites and no picking: a canvas and a 2D camera, coins hit-tested by hand'),
+     'libwgf has no 3D sprites and no picking: a 2D stage and a 2D camera, coins hit-tested by hand'),
     ('audio-music', 'audio-music', 'audio', 'same', ''),
     ('asset-fetch', None, 'fetch', 'same', ''),
     ('asset-force-fetch', None, 'force_fetch', 'same', ''),

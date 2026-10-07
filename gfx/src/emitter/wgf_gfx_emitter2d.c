@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "node/wgf_gfx_node_priv.h"
+#include "actor/wgf_gfx_actor_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "sokol_gfx.h" /* sokol_gl needs it first */
 #include "util/sokol_gl.h"
@@ -14,8 +14,8 @@
 
 /* 2D particle emitters, simulated on the CPU (docs/HISTORY.md, "2D drawn through
  * sokol_gl, particles on the CPU"): each emitter's particles in an array of its own, in
- * canvas units, moved on every frame by the particles part's update, after the ticks
- * and before the frame; drawn through the canvas's view as quads in its immediate mode.
+ * stage units, moved on every frame by the particles part's update, after the ticks
+ * and before the frame; drawn through the stage's view as quads in its immediate mode.
  * The part is installed by the first emitter, so a program with none links none of it. */
 
 #define TAU 6.28318530717958647692f
@@ -40,18 +40,18 @@ typedef struct wgf_gfx_priv_emitter_t {
     float size_start, size_end;
     wgf_color_t color_start, color_end;
     float stretch;
-    float last[2];  /* where the emitter was last frame, in canvas units, for a trail */
+    float last[2];  /* where the emitter was last frame, in stage units, for a trail */
     bool has_last;
 } wgf_gfx_priv_emitter_t;
 
 /* The emitters, for the part's update to move them on. */
-static wgf_node_t *emitters;
+static wgf_actor_t *emitters;
 static int emitter_count, emitter_capacity;
 
-static wgf_gfx_priv_emitter_t *emitter_of(wgf_node_t emitter)
+static wgf_gfx_priv_emitter_t *emitter_of(wgf_actor_t emitter)
 {
-    wgf_gfx_priv_node_t *node_ptr = wgf_gfx_priv_node_of(emitter);
-    return node_ptr != NULL && node_ptr->type == WGF_NODE_TYPE_EMITTER2D ? node_ptr->as.emitter : NULL;
+    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(emitter);
+    return actor_ptr != NULL && actor_ptr->type == WGF_ACTOR_KIND_EMITTER2D ? actor_ptr->as.emitter : NULL;
 }
 
 static float random_between(float a, float b)
@@ -59,10 +59,10 @@ static float random_between(float a, float b)
     return a + (b - a) * wgf_random_get_float();
 }
 
-/* Where the emitter is in its canvas's units, and its world rotation's angle. */
-static void placement(wgf_node_t emitter, float *x, float *y, float *angle)
+/* Where the emitter is in its stage's units, and its world rotation's angle. */
+static void placement(wgf_actor_t emitter, float *x, float *y, float *angle)
 {
-    const wgf_mat4_t world = wgf_gfx_priv_node_get_world_matrix(emitter);
+    const wgf_mat4_t world = wgf_gfx_priv_actor_get_world_matrix(emitter);
     *x = world.m[12];
     *y = world.m[13];
     *angle = atan2f(world.m[1], world.m[0]);
@@ -90,7 +90,7 @@ static void spawn(wgf_gfx_priv_emitter_t *e, float x, float y, float angle)
     p->life = random_between(e->life_min, e->life_max);
 }
 
-static void move_on(wgf_node_t emitter, wgf_gfx_priv_emitter_t *e, float dt)
+static void move_on(wgf_actor_t emitter, wgf_gfx_priv_emitter_t *e, float dt)
 {
     const float keep = powf(1.0f - e->drag, dt); /* the drag's share lost per second, at this frame's length */
     float x, y, angle;
@@ -128,14 +128,14 @@ static void move_on(wgf_node_t emitter, wgf_gfx_priv_emitter_t *e, float dt)
     e->last[1] = y;
 }
 
-/* Whether `node` and everything above it are enabled: a disabled one, or one under a
- * disabled node, isn't moved on, as the draw's walk skips it (libwgt's enabled_in_tree). */
-static bool enabled_in_tree(wgf_node_t node)
+/* Whether `actor` and everything above it are enabled: a disabled one, or one under a
+ * disabled actor, isn't moved on, as the draw's walk skips it (libwgt's enabled_in_tree). */
+static bool enabled_in_tree(wgf_actor_t actor)
 {
-    const wgf_gfx_priv_node_t *node_ptr = wgf_gfx_priv_node_of(node);
-    while (node_ptr != NULL) {
-        if (!node_ptr->enabled) return false;
-        node_ptr = node_ptr->parent != 0 ? wgf_gfx_priv_node_of(node_ptr->parent) : NULL;
+    const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
+    while (actor_ptr != NULL) {
+        if (!actor_ptr->enabled) return false;
+        actor_ptr = actor_ptr->parent != 0 ? wgf_gfx_priv_actor_of(actor_ptr->parent) : NULL;
     }
     return true;
 }
@@ -151,7 +151,7 @@ static void update(float dt)
 
 static void stop(void)
 {
-    free(emitters); /* the emitters themselves go with the nodes */
+    free(emitters); /* the emitters themselves go with the actors */
     emitters = NULL;
     emitter_count = emitter_capacity = 0;
 }
@@ -174,12 +174,12 @@ static void corner(const wgf_mat4_t *m, float x, float y)
     sgl_v2f(m->m[0] * x + m->m[4] * y + m->m[12], m->m[1] * x + m->m[5] * y + m->m[13]);
 }
 
-static void draw_emitter(wgf_node_t node, const wgf_gfx_priv_node_t *node_ptr, const wgf_mat4_t *placed,
+static void draw_emitter(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *placed,
                          const wgf_mat4_t *view)
 {
-    const wgf_gfx_priv_emitter_t *e = node_ptr->as.emitter;
+    const wgf_gfx_priv_emitter_t *e = actor_ptr->as.emitter;
     int i;
-    (void)node;
+    (void)actor;
     (void)placed;
     if (e == NULL || e->count == 0) return;
     sgl_begin_triangles();
@@ -215,29 +215,29 @@ static void draw_emitter(wgf_node_t node, const wgf_gfx_priv_node_t *node_ptr, c
     sgl_end();
 }
 
-static void free_emitter(wgf_node_t node, wgf_gfx_priv_node_t *node_ptr)
+static void free_emitter(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr)
 {
     int i;
-    if (node_ptr->as.emitter != NULL) free(node_ptr->as.emitter->particles);
-    free(node_ptr->as.emitter);
-    node_ptr->as.emitter = NULL;
+    if (actor_ptr->as.emitter != NULL) free(actor_ptr->as.emitter->particles);
+    free(actor_ptr->as.emitter);
+    actor_ptr->as.emitter = NULL;
     for (i = 0; i < emitter_count; i++) {
-        if (emitters[i] == node) {
+        if (emitters[i] == actor) {
             emitters[i] = emitters[--emitter_count];
             break;
         }
     }
 }
 
-static const wgf_gfx_priv_node_kind_t kind = {free_emitter, draw_emitter};
+static const wgf_gfx_priv_actor_kind_t kind = {free_emitter, draw_emitter};
 
-wgf_node_t wgf_emitter2d_create(void)
+wgf_actor_t wgf_emitter2d_create(void)
 {
-    wgf_node_t node;
+    wgf_actor_t actor;
     wgf_gfx_priv_emitter_t *e;
     if (emitter_count == emitter_capacity) {
         const int capacity = emitter_capacity > 0 ? emitter_capacity * 2 : 16;
-        wgf_node_t *grown = (wgf_node_t *)realloc(emitters, sizeof(wgf_node_t) * (size_t)capacity);
+        wgf_actor_t *grown = (wgf_actor_t *)realloc(emitters, sizeof(wgf_actor_t) * (size_t)capacity);
         if (grown == NULL) return 0;
         emitters = grown;
         emitter_capacity = capacity;
@@ -246,8 +246,8 @@ wgf_node_t wgf_emitter2d_create(void)
     if (e == NULL) return 0;
     e->capacity = 256;
     e->particles = (particle_t *)malloc(sizeof(particle_t) * (size_t)e->capacity);
-    node = e->particles != NULL ? wgf_gfx_priv_node_create(WGF_NODE_TYPE_EMITTER2D) : 0;
-    if (node == 0) {
+    actor = e->particles != NULL ? wgf_gfx_priv_actor_create(WGF_ACTOR_KIND_EMITTER2D) : 0;
+    if (actor == 0) {
         free(e->particles);
         free(e);
         return 0;
@@ -256,14 +256,14 @@ wgf_node_t wgf_emitter2d_create(void)
     e->life_min = e->life_max = 1.0f;
     e->size_start = e->size_end = 4.0f;
     e->color_start = e->color_end = 0xFFFFFFFFu;
-    wgf_gfx_priv_node_of(node)->as.emitter = e;
-    emitters[emitter_count++] = node;
-    wgf_gfx_priv_node_set_kind(WGF_NODE_TYPE_EMITTER2D, &kind);
+    wgf_gfx_priv_actor_of(actor)->as.emitter = e;
+    emitters[emitter_count++] = actor;
+    wgf_gfx_priv_actor_set_kind(WGF_ACTOR_KIND_EMITTER2D, &kind);
     wgf_core_priv_part_install(&part);
-    return node;
+    return actor;
 }
 
-bool wgf_emitter2d_set_rate(wgf_node_t emitter, float per_second)
+bool wgf_emitter2d_set_rate(wgf_actor_t emitter, float per_second)
 {
     wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     if (e == NULL) return false;
@@ -271,13 +271,13 @@ bool wgf_emitter2d_set_rate(wgf_node_t emitter, float per_second)
     return true;
 }
 
-float wgf_emitter2d_get_rate(wgf_node_t emitter)
+float wgf_emitter2d_get_rate(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     return e != NULL ? e->rate : 0.0f;
 }
 
-bool wgf_emitter2d_set_emitting(wgf_node_t emitter, bool emitting)
+bool wgf_emitter2d_set_emitting(wgf_actor_t emitter, bool emitting)
 {
     wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     if (e == NULL) return false;
@@ -285,13 +285,13 @@ bool wgf_emitter2d_set_emitting(wgf_node_t emitter, bool emitting)
     return true;
 }
 
-bool wgf_emitter2d_is_emitting(wgf_node_t emitter)
+bool wgf_emitter2d_is_emitting(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     return e != NULL && e->emitting;
 }
 
-bool wgf_emitter2d_burst(wgf_node_t emitter, int count)
+bool wgf_emitter2d_burst(wgf_actor_t emitter, int count)
 {
     wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     float x, y, angle;
@@ -302,7 +302,7 @@ bool wgf_emitter2d_burst(wgf_node_t emitter, int count)
     return true;
 }
 
-bool wgf_emitter2d_set_capacity(wgf_node_t emitter, int capacity)
+bool wgf_emitter2d_set_capacity(wgf_actor_t emitter, int capacity)
 {
     wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     particle_t *grown;
@@ -322,19 +322,19 @@ bool wgf_emitter2d_set_capacity(wgf_node_t emitter, int capacity)
     return true;
 }
 
-int wgf_emitter2d_get_capacity(wgf_node_t emitter)
+int wgf_emitter2d_get_capacity(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     return e != NULL ? e->capacity : 0;
 }
 
-int wgf_emitter2d_get_count(wgf_node_t emitter)
+int wgf_emitter2d_get_count(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     return e != NULL ? e->count : 0;
 }
 
-bool wgf_emitter2d_set_life(wgf_node_t emitter, float min, float max)
+bool wgf_emitter2d_set_life(wgf_actor_t emitter, float min, float max)
 {
     wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     if (e == NULL || !(min > 0.0f) || !(max > 0.0f)) return false;
@@ -343,19 +343,19 @@ bool wgf_emitter2d_set_life(wgf_node_t emitter, float min, float max)
     return true;
 }
 
-float wgf_emitter2d_get_life_min(wgf_node_t emitter)
+float wgf_emitter2d_get_life_min(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     return e != NULL ? e->life_min : 0.0f;
 }
 
-float wgf_emitter2d_get_life_max(wgf_node_t emitter)
+float wgf_emitter2d_get_life_max(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     return e != NULL ? e->life_max : 0.0f;
 }
 
-bool wgf_emitter2d_set_direction(wgf_node_t emitter, float angle, float spread)
+bool wgf_emitter2d_set_direction(wgf_actor_t emitter, float angle, float spread)
 {
     wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     if (e == NULL || !(spread >= 0.0f) || !isfinite(angle)) return false;
@@ -364,19 +364,19 @@ bool wgf_emitter2d_set_direction(wgf_node_t emitter, float angle, float spread)
     return true;
 }
 
-float wgf_emitter2d_get_direction(wgf_node_t emitter)
+float wgf_emitter2d_get_direction(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     return e != NULL ? e->direction : 0.0f;
 }
 
-float wgf_emitter2d_get_spread(wgf_node_t emitter)
+float wgf_emitter2d_get_spread(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     return e != NULL ? e->spread : 0.0f;
 }
 
-bool wgf_emitter2d_set_speed(wgf_node_t emitter, float min, float max)
+bool wgf_emitter2d_set_speed(wgf_actor_t emitter, float min, float max)
 {
     wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     if (e == NULL || !(min >= 0.0f) || !(max >= 0.0f)) return false;
@@ -385,19 +385,19 @@ bool wgf_emitter2d_set_speed(wgf_node_t emitter, float min, float max)
     return true;
 }
 
-float wgf_emitter2d_get_speed_min(wgf_node_t emitter)
+float wgf_emitter2d_get_speed_min(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     return e != NULL ? e->speed_min : 0.0f;
 }
 
-float wgf_emitter2d_get_speed_max(wgf_node_t emitter)
+float wgf_emitter2d_get_speed_max(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     return e != NULL ? e->speed_max : 0.0f;
 }
 
-bool wgf_emitter2d_set_radius(wgf_node_t emitter, float radius)
+bool wgf_emitter2d_set_radius(wgf_actor_t emitter, float radius)
 {
     wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     if (e == NULL || !(radius >= 0.0f)) return false;
@@ -405,13 +405,13 @@ bool wgf_emitter2d_set_radius(wgf_node_t emitter, float radius)
     return true;
 }
 
-float wgf_emitter2d_get_radius(wgf_node_t emitter)
+float wgf_emitter2d_get_radius(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     return e != NULL ? e->radius : 0.0f;
 }
 
-bool wgf_emitter2d_set_gravity(wgf_node_t emitter, float x, float y)
+bool wgf_emitter2d_set_gravity(wgf_actor_t emitter, float x, float y)
 {
     wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     if (e == NULL) return false;
@@ -420,13 +420,13 @@ bool wgf_emitter2d_set_gravity(wgf_node_t emitter, float x, float y)
     return true;
 }
 
-wgf_vec2_t wgf_emitter2d_get_gravity(wgf_node_t emitter)
+wgf_vec2_t wgf_emitter2d_get_gravity(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     return e != NULL ? wgf_vec2_make(e->gravity[0], e->gravity[1]) : wgf_vec2_make(0.0f, 0.0f);
 }
 
-bool wgf_emitter2d_set_drag(wgf_node_t emitter, float drag)
+bool wgf_emitter2d_set_drag(wgf_actor_t emitter, float drag)
 {
     wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     if (e == NULL) return false;
@@ -434,13 +434,13 @@ bool wgf_emitter2d_set_drag(wgf_node_t emitter, float drag)
     return true;
 }
 
-float wgf_emitter2d_get_drag(wgf_node_t emitter)
+float wgf_emitter2d_get_drag(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     return e != NULL ? e->drag : 0.0f;
 }
 
-bool wgf_emitter2d_set_size(wgf_node_t emitter, float start, float end)
+bool wgf_emitter2d_set_size(wgf_actor_t emitter, float start, float end)
 {
     wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     if (e == NULL || !(start >= 0.0f) || !(end >= 0.0f)) return false;
@@ -449,19 +449,19 @@ bool wgf_emitter2d_set_size(wgf_node_t emitter, float start, float end)
     return true;
 }
 
-float wgf_emitter2d_get_size_start(wgf_node_t emitter)
+float wgf_emitter2d_get_size_start(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     return e != NULL ? e->size_start : 0.0f;
 }
 
-float wgf_emitter2d_get_size_end(wgf_node_t emitter)
+float wgf_emitter2d_get_size_end(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     return e != NULL ? e->size_end : 0.0f;
 }
 
-bool wgf_emitter2d_set_color(wgf_node_t emitter, wgf_color_t start, wgf_color_t end)
+bool wgf_emitter2d_set_color(wgf_actor_t emitter, wgf_color_t start, wgf_color_t end)
 {
     wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     if (e == NULL) return false;
@@ -470,19 +470,19 @@ bool wgf_emitter2d_set_color(wgf_node_t emitter, wgf_color_t start, wgf_color_t 
     return true;
 }
 
-wgf_color_t wgf_emitter2d_get_color_start(wgf_node_t emitter)
+wgf_color_t wgf_emitter2d_get_color_start(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     return e != NULL ? e->color_start : 0u;
 }
 
-wgf_color_t wgf_emitter2d_get_color_end(wgf_node_t emitter)
+wgf_color_t wgf_emitter2d_get_color_end(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     return e != NULL ? e->color_end : 0u;
 }
 
-bool wgf_emitter2d_set_stretch(wgf_node_t emitter, float seconds)
+bool wgf_emitter2d_set_stretch(wgf_actor_t emitter, float seconds)
 {
     wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     if (e == NULL) return false;
@@ -490,13 +490,13 @@ bool wgf_emitter2d_set_stretch(wgf_node_t emitter, float seconds)
     return true;
 }
 
-float wgf_emitter2d_get_stretch(wgf_node_t emitter)
+float wgf_emitter2d_get_stretch(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     return e != NULL ? e->stretch : 0.0f;
 }
 
-bool wgf_emitter2d_clear(wgf_node_t emitter)
+bool wgf_emitter2d_clear(wgf_actor_t emitter)
 {
     wgf_gfx_priv_emitter_t *e = emitter_of(emitter);
     if (e == NULL) return false;

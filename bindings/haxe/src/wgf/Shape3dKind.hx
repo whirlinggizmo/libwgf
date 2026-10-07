@@ -2,11 +2,11 @@
 package wgf;
 
 /**
-    A 3D shape: a node drawing a cube, a sphere, a filled rectangle or a circle's outline
+    A 3D shape: an actor drawing a cube, a sphere, a filled rectangle or a circle's outline
     in its local x-y plane, a line, or a line strip, in one color, unlit, on a stage
-    (wgf_stage.h), as libwgt's (wgrender's shape3d): what debug views and markers are
-    drawn with. In a canvas it draws nothing: 2D shapes are wgf_shape2d.h. Place, turn,
-    scale, and parent it with the node calls. On a stage, shapes are drawn after its
+    (wgf_stage3d.h), as libwgt's (wgrender's shape3d): what debug views and markers are
+    drawn with. On a 2D stage it draws nothing: 2D shapes are wgf_shape2d.h. Place, turn,
+    scale, and parent it with the actor calls. On a stage, shapes are drawn after its
     opaque models and before its see-through ones, depth tested; a see-through color
     blends over what is behind it in the order the shapes are found; lines are a pixel
     wide.

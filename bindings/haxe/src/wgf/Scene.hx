@@ -17,43 +17,43 @@ abstract Scene(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_scene_create(path);
 
 	/**
-	    Make the scene's entities, in file order, their nodes under `parent` (0: none), each
-	    with its components as the file says and a behavior's CREATED raised. The number made;
-	    0 for a scene that isn't READY, or a `parent` that isn't a node (0 is).
+	    Make the scene's top actors' trees, in file order, under `parent` (0: none), each actor
+	    as the file says and each behavior's CREATED raised. The number of top actors made; 0
+	    for a scene that isn't READY, or a `parent` that isn't an actor (0 is).
 	**/
-	public inline function instantiate(parent:Node):Int
+	public inline function instantiate(parent:Actor):Int
 		return Raw.wgf_scene_instantiate(this, parent);
 
 	/**
-	    Make one entity of the prefab `name`, its node under `parent`; 0 for a scene that
-	    isn't READY, a prefab it doesn't have, or a `parent` that isn't a node.
+	    Make one tree of the prefab `name` under `parent`: its top actor; 0 for a scene that
+	    isn't READY, a prefab it doesn't have, or a `parent` that isn't an actor.
 	**/
-	public inline function spawn(name:String, parent:Node):Entity
+	public inline function spawn(name:String, parent:Actor):Actor
 		return Raw.wgf_scene_spawn(this, name, parent);
 
 	/**
-	    What the file holds, once READY: its entities and its prefabs, and each prefab's name
+	    What the file holds, once READY: its top actors and its prefabs, and each prefab's name
 	    in file order ("" past the end). 0 and "" until then.
 	**/
-	public inline function getEntityCount():Int
-		return Raw.wgf_scene_get_entity_count(this);
+	public inline function getActorCount():Int
+		return Raw.wgf_scene_get_actor_count(this);
 
 	/**
-	    What the file holds, once READY: its entities and its prefabs, and each prefab's name
+	    What the file holds, once READY: its top actors and its prefabs, and each prefab's name
 	    in file order ("" past the end). 0 and "" until then.
 	**/
 	public inline function getPrefabCount():Int
 		return Raw.wgf_scene_get_prefab_count(this);
 
 	/**
-	    What the file holds, once READY: its entities and its prefabs, and each prefab's name
+	    What the file holds, once READY: its top actors and its prefabs, and each prefab's name
 	    in file order ("" past the end). 0 and "" until then.
 	**/
 	public inline function getPrefabName(index:Int):String
 		return Raw.wgf_scene_get_prefab_name(this, index);
 
 	/**
-	    What the file holds, once READY: its entities and its prefabs, and each prefab's name
+	    What the file holds, once READY: its top actors and its prefabs, and each prefab's name
 	    in file order ("" past the end). 0 and "" until then.
 	**/
 	public inline function hasPrefab(name:String):Bool

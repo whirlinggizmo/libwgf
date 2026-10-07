@@ -4,7 +4,7 @@
 #include <stddef.h>
 
 #include "draw/wgf_gfx_draw3d_priv.h"
-#include "node/wgf_gfx_node_priv.h"
+#include "actor/wgf_gfx_actor_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "sokol_gfx.h" /* sokol_gl needs it first */
 #include "text/wgf_gfx_font_priv.h"
@@ -12,28 +12,28 @@
 
 /* Immediate mode in 3D, libwgt's (wgrender's shape3d geometry): recorded into the
  * frame's sokol_gl recording through a 3D camera's view, depth tested; its geometry is
- * also a stage's 3D shape nodes' (wgf_gfx_shape3d.c). Its own file, so a program drawing
+ * also a stage's 3D shape actors' (wgf_gfx_shape3d.c). Its own file, so a program drawing
  * only in 2D links none of it. */
 
 #define PI 3.14159265358979323846f
 #define CIRCLE_SEGMENTS 36
 
 /* The camera 3D calls draw through until end_3d, in the frame it was begun in; 0 in 2D. */
-static wgf_node_t camera_3d;
+static wgf_actor_t camera_3d;
 static unsigned camera_3d_frame;
 
 static bool in_3d(void)
 {
     return wgf_gfx_priv_is_in_frame() && camera_3d != 0 && camera_3d_frame == wgf_gfx_priv_render_get_frame() &&
-           wgf_node_get_type(camera_3d) == WGF_NODE_TYPE_CAMERA3D;
+           wgf_actor_get_kind(camera_3d) == WGF_ACTOR_KIND_CAMERA3D;
 }
 
-bool wgf_draw_begin_3d(wgf_node_t camera)
+bool wgf_draw_begin_3d(wgf_actor_t camera)
 {
     float x, y, width, height;
     wgf_vec3_t position;
     wgf_mat4_t view_proj;
-    if (!wgf_gfx_priv_is_in_frame() || wgf_node_get_type(camera) != WGF_NODE_TYPE_CAMERA3D) return false;
+    if (!wgf_gfx_priv_is_in_frame() || wgf_actor_get_kind(camera) != WGF_ACTOR_KIND_CAMERA3D) return false;
     wgf_gfx_priv_render_get_visible(&x, &y, &width, &height);
     view_proj = wgf_gfx_priv_camera3d_view_projection(camera, height > 0.0f ? width / height : 1.0f, &position);
     wgf_gfx_priv_render_set_3d(view_proj.m);
@@ -167,7 +167,7 @@ void wgf_draw_grid(int slices, float spacing, wgf_color_t color)
 }
 
 /* An immediate primitive's own transform: its center, then its angles (radians), as a
- * node's rotation turns it (x, then y, then z). */
+ * actor's rotation turns it (x, then y, then z). */
 static void push_placement(float cx, float cy, float cz, float rx, float ry, float rz)
 {
     sgl_matrix_mode_modelview();
@@ -234,7 +234,7 @@ void wgf_draw_text_3d(wgf_font_t font, const char *text, float x, float y, float
     wgf_mat4_t world, m;
     if (!in_3d() || text == NULL) return;
     /* the camera's turn, so the block faces it; y down the block, as text runs */
-    world = wgf_gfx_priv_node_get_world_matrix(camera_3d);
+    world = wgf_gfx_priv_actor_get_world_matrix(camera_3d);
     m = wgf_mat4_from_trs(wgf_vec3_make(x, y, z), wgf_mat4_get_rotation(world), wgf_vec3_make(1.0f, -1.0f, 1.0f));
     wgf_gfx_priv_font_draw_block_3d(font, text, size > 0.0f ? size : 1.0f, color, 0.0f, WGF_TEXT_HALIGN_CENTER,
                                     WGF_TEXT_VALIGN_MIDDLE, m.m);

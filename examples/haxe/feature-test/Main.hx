@@ -16,15 +16,15 @@ class Rock extends Behavior {
 	override function onCreate()
 		made++;
 
-	override function onTriggerEnter(other:Entity)
+	override function onTriggerEnter(other:Actor)
 		hits++;
 }
 
 class Main {
 	static var failures = 0;
 	static var frames = 0;
-	static var world:Canvas;
-	static var hud:Canvas;
+	static var world:Stage2d;
+	static var hud:Stage2d;
 	static var camera:Camera2d;
 	static var tiles:Texture;
 	static var font:Font;
@@ -199,16 +199,16 @@ class Main {
 	static var camera3d:Camera3d;
 	static var camera3dMade = false;
 
-	static var stage3d:Stage;
+	static var stage3d:Stage3d;
 
 	/** A stage, its lights, and its models. **/
 	static function makeStage():Void {
-		stage3d = Stage.create();
+		stage3d = Stage3d.create();
 		expect(stage3d.setCamera(camera3d) && stage3d.getCamera() == camera3d, "a stage's camera");
 		expect(stage3d.setAmbient(Color.get(ColorStock.WHITE), 0.2) && stage3d.getAmbientColor() == Color.get(ColorStock.WHITE)
 			&& Math.abs(stage3d.getAmbientIntensity() - 0.2) < 1e-6, "its ambient light");
-		expect(stage3d.setTonemap(StageTonemap.ACES, 0.5) && stage3d.getTonemap() == StageTonemap.ACES
-			&& stage3d.getExposure() == 0.5 && stage3d.setTonemap(StageTonemap.NEUTRAL, 0), "its tone mapping");
+		expect(stage3d.setTonemap(Stage3dTonemap.ACES, 0.5) && stage3d.getTonemap() == Stage3dTonemap.ACES
+			&& stage3d.getExposure() == 0.5 && stage3d.setTonemap(Stage3dTonemap.NEUTRAL, 0), "its tone mapping");
 		expect(stage3d.setCulling(false) && !stage3d.isCulling() && stage3d.setCulling(true), "its culling");
 		final sun:Light = Light.create(LightType.SPOT);
 		expect(sun.getType() == LightType.SPOT && sun.setColor(Color.get(ColorStock.GOLD))
@@ -216,6 +216,7 @@ class Main {
 		expect(sun.setIntensity(3) && sun.getIntensity() == 3 && sun.setRange(20) && sun.getRange() == 20, "its strength");
 		expect(sun.setSpotCone(0.25, 0.5) && sun.getSpotInnerAngle() == 0.25 && sun.getSpotOuterAngle() == 0.5, "its cone");
 		sun.setParent(stage3d);
+		expect(sun.setName("sun") && stage3d.find("sun") == (sun : Actor), "found on its stage");
 		sun.setPosition(0, 5, 0);
 		final cube = Mesh.createCube(1, 1, 1);
 		final model:Model = Model.create(cube);
@@ -225,9 +226,9 @@ class Main {
 		expect(model.setMaterial(0, own) && model.getMaterial(0) == own && Resource.release(own), "its own material");
 		model.setParent(stage3d);
 		Resource.release(cube);
-		final car = Entity.create(stage3d);
-		expect(car.addComponent(Component.MODEL) && car.getComponentNode(Component.MODEL).getType() == NodeType.MODEL,
-			"the ecs's model component, on a stage");
+		final car:Actor = Model.create(0);
+		car.setParent(stage3d);
+		expect(car.addComponent(Component.MOTION) && (car : Motion).setVelocity(0, 0, 1), "a model with motion");
 		final shape:Shape3d = Shape3d.create();
 		expect(shape.getKind() == Shape3dKind.NONE && shape.setCube(1, 2, 3) && shape.getKind() == Shape3dKind.CUBE
 			&& shape.getSize().z == 3, "a 3D shape: a cube");
@@ -321,23 +322,24 @@ class Main {
 		expect(Font.getDefault().isNone() && font.setDefault() && Font.getDefault() == font, "the default font");
 		expect(font.measure("feature", 16).x > 0, "text measured");
 
-		world = Canvas.create();
-		hud = Canvas.create();
+		world = Stage2d.create();
+		hud = Stage2d.create();
 		camera = Camera2d.create();
 		expect(camera.setZoom(1.5) && near(camera.getZoom(), 1.5), "a camera's zoom");
-		expect(world.setCamera(camera) && (world.getCamera() : Node) == camera, "a canvas's camera");
+		expect(world.setCamera(camera) && (world.getCamera() : Actor) == camera, "a 2D stage's camera");
 
-		final group = Node.create();
+		final group = Actor.create();
 		expect(group.setParent(world) && group.getParent() == world && world.getChildCount() == 1
-			&& world.getChild(0) == group, "a node in a canvas");
-		expect(group.setName("group") && group.getName() == "group" && world.find("group") == group, "named");
+			&& world.getChild(0) == group, "an actor on a 2D stage");
+		expect(group.setName("group") && group.getName() == "group" && world.find("group") == group
+			&& (world : Actor).find("group") == group, "named: found on its stage, and by its path");
 		expect(group.setTransform(5, 6, 0, 0, 0, 0.5, 2, 2, 1), "a transform at once");
 		expect(group.setPosition(10, 20, 0) && near(group.getPosition().x, 10), "a position");
 		expect(group.setRotation(0, 0, 1) && near(group.getRotation().z, 1), "a rotation");
 		expect(group.setScale(2, 2, 1) && near(group.getScale().x, 2), "a scale");
 		group.getWorldPosition();
 		expect(group.setEnabled(true) && group.isEnabled() && group.setVisible(true) && group.isVisible(), "on and shown");
-		expect(group.getType() == NodeType.NODE && group.setIndex(0) && group.getIndex() == 0, "its type and index");
+		expect(group.getKind() == ActorKind.PLAIN && group.setIndex(0) && group.getIndex() == 0, "its type and index");
 
 		final shape = Shape2d.create();
 		shape.setParent(group);
@@ -387,9 +389,9 @@ class Main {
 		expect(emitter.clear() && emitter.getCount() == 0, "its particles cleared");
 		emitter.burst(8);
 
-		final gone = Node.create();
-		gone.destroy(NodeDestroy.DESTROY_CHILDREN);
-		expect(gone.getType() == NodeType.NONE, "a node destroyed");
+		final gone = Actor.create();
+		gone.destroy(ActorDestroy.DESTROY_CHILDREN);
+		expect(gone.getKind() == ActorKind.NONE, "an actor destroyed");
 		expect(tiles.setSampling(TextureWrap.REPEAT, TextureWrap.CLAMP, TextureFilter.NEAREST)
 			&& tiles.getWrapU() == TextureWrap.REPEAT && tiles.getWrapV() == TextureWrap.CLAMP
 			&& tiles.getFilter() == TextureFilter.NEAREST, "a texture's sampling");
@@ -398,21 +400,16 @@ class Main {
 	static function ecs():Void {
 		Behavior.register("Rock", Rock.new);
 		scene = Scene.create("scenes/field.scene");
-		final ship = Entity.create(world);
-		expect(!ship.isNone() && ship.isAlive() && Entity.getCount() >= 1 && !ship.getNode().isNone(), "an entity");
-		expect(ship.setName("probe ship") && ship.getName() == "probe ship" && Entity.find("probe ship") == ship, "named");
-		expect(ship.isVisible() && ship.setVisible(false) && !ship.isVisible() && ship.setVisible(true), "hidden and shown");
+		final ship:Actor = Shape2d.create();
+		ship.setParent(world);
+		expect(ship.setName("probe ship") && world.find("probe ship") == ship, "named");
 		expect(ship.setTransform(100, 100, 0, 0, 0, 0, 1, 1, 1) && ship.snap(), "a transform, snapped");
-		expect(ship.setPosition(120, 100, 0) && near(ship.getPosition().x, 120), "a position");
-		expect(ship.setRotation(0, 0, 0.5) && near(ship.getRotation().z, 0.5), "a rotation");
-		expect(ship.setScale(1, 1, 1) && near(ship.getScale().x, 1), "a scale");
 		final out = [0.0, 0, 0];
-		expect(Entity.setPositions([ship], [130.0, 100, 0]) && Entity.getPositions([ship], out) == 3 && near(out[0], 130),
+		expect(Actor.setPositions([ship], [130.0, 100, 0]) && Actor.getPositions([ship], out) == 3 && near(out[0], 130),
 			"positions in bulk");
-		for (c in [Component.MOTION, Component.BOUNDS, Component.LIFETIME, Component.COLLIDER, Component.BEHAVIOR,
-			Component.SHAPE2D, Component.SPRITE, Component.TEXT, Component.EMITTER2D, Component.VOICE])
+		for (c in [Component.MOTION, Component.BOUNDS, Component.LIFETIME, Component.COLLIDER, Component.VOICE])
 			expect(ship.addComponent(c) && ship.hasComponent(c), 'a component: $c');
-		expect(!ship.getComponentNode(Component.SHAPE2D).isNone() && !ship.getVoice().isNone(), "its nodes and its voice");
+		expect(Ecs.getCount() >= 1 && !ship.getVoice().isNone(), "counted, and its voice");
 		final motion:Motion = ship;
 		expect(motion.setVelocity(1, 0, 0) && near(motion.getVelocity().x, 1), "a velocity");
 		expect(motion.setSpin(0, 0, 1) && near(motion.getSpin().z, 1), "a spin");
@@ -432,16 +429,28 @@ class Main {
 		collider.getOverlaps([ship]);
 		expect(collider.isEnabled() && collider.setEnabled(false) && !collider.isEnabled() && collider.setEnabled(true),
 			"a collider switched off and on");
+		final id = ship.addBehavior("Probe");
+		final second = ship.addBehavior("Probe");
+		expect(id == 1 && second == 2 && ship.getBehaviorCount() == 2 && ship.getBehavior(1) == second
+			&& ship.findBehavior("Probe") == id, "two behaviors of a name");
 		final behavior:BehaviorComponent = ship;
-		expect(behavior.setName("Probe") && behavior.getName() == "Probe", "a behavior's name");
-		expect(behavior.setParam("speed", "3.5") && behavior.hasParam("speed") && behavior.getParam("speed") == "3.5"
-			&& near(behavior.getParamNumber("speed"), 3.5), "a parameter");
-		expect(behavior.getParamCount() == 1 && behavior.getParamKey(0) == "speed", "the parameters listed");
+		expect(behavior.getName(id) == "Probe", "a behavior's name");
+		expect(behavior.setParam(id, "speed", "3.5") && behavior.hasParam(id, "speed") && behavior.getParam(id, "speed") == "3.5"
+			&& near(behavior.getParamNumber(id, "speed"), 3.5) && !behavior.hasParam(second, "speed"), "a parameter, its own");
+		expect(behavior.getParamCount(id) == 1 && behavior.getParamKey(id, 0) == "speed", "the parameters listed");
+		expect(behavior.setParam(second, "self", "@.") && behavior.getParamActor(second, "self") == ship
+			&& behavior.getParamActor(id, "speed").isNone(), "a parameter referring to an actor");
+		expect(ship.removeBehavior(second) && ship.getBehaviorCount() == 1, "a behavior removed");
 		expect(ship.removeComponent(Component.LIFETIME) && !ship.hasComponent(Component.LIFETIME), "a component removed");
 		expect(Ecs.countBehavior("Probe") == 1 && Ecs.findBehavior("Probe", [0]) == 1, "behaviors found");
+		final found = [ship];
+		expect(Ecs.countComponent(Component.COLLIDER) >= 1 && Ecs.findComponent(Component.COLLIDER, found) == 1,
+			"components found");
 		Ecs.getEventCount();
-		final doomed = Entity.create(world);
-		expect(doomed.destroy() && !doomed.isAlive(), "an entity destroyed");
+		final doomed = Actor.create();
+		doomed.addComponent(Component.LIFETIME);
+		doomed.destroy(ActorDestroy.DESTROY_CHILDREN);
+		expect(doomed.getKind() == ActorKind.NONE && !doomed.hasComponent(Component.LIFETIME), "an actor destroyed");
 	}
 
 	// ---- the frames ----------------------------------------------------------------------
@@ -486,11 +495,11 @@ class Main {
 		waitOnTasks();
 		if (!instantiated && Resource.getStatus(scene) == ResourceStatus.READY) {
 			instantiated = true;
-			expect(scene.getEntityCount() == 4 && scene.getPrefabCount() == 2 && scene.getPrefabName(0) == "rock"
+			expect(scene.getActorCount() == 4 && scene.getPrefabCount() == 2 && scene.getPrefabName(0) == "rock"
 				&& scene.hasPrefab("spark"), "the scene file");
-			expect(scene.instantiate(world) == 4, "the scene's entities made");
+			expect(scene.instantiate(world) == 4, "the scene's actors made");
 			expect(!scene.spawn("spark", world).isNone(), "a prefab spawned");
-			expect(Ecs.dump().indexOf("wgf-scene 1") == 0, "the world dumped");
+			expect(Ecs.dump().indexOf("wgf-scene 2") == 0, "the world dumped");
 		}
 		if (frames >= 30 && instantiated && stage > 3 && !reported)
 			finish();
@@ -608,7 +617,7 @@ class Main {
 		voice.stop();
 		voice.destroy();
 		Ecs.clear();
-		expect(Entity.getCount() == 0, "the world cleared");
+		expect(Ecs.getCount() == 0, "the world cleared");
 		expect(Resource.release(scene) && Resource.release(music), "resources released");
 		// the run ends after this frame, which finishes first: the verdict is still given
 		App.canQuit();

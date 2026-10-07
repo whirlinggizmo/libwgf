@@ -2,23 +2,29 @@
 package wgf;
 
 /**
-    The entity system as a whole: libwgf's systems, the events they raise, finding
-    entities, and the world written out as text.
+    The simulation as a whole: libwgf's systems over the actors' components
+    (wgf_component.h), the events they raise, finding actors by behavior or component, and the simulated
+    actors written out as text.
 
-    Each tick, after the program's, the systems run in this order: lifetimes count down
-    (an entity whose time is up destroyed), motion moves each entity by its velocity and
-    spin (damped, its speed capped), bounds wrap, clamp, or destroy what has left its
-    rectangle, and colliders find the overlaps. Each frame, before the program's frame,
-    every entity's node is given its transform interpolated between the last two ticks.
+    Each tick, as it begins, every simulated actor's transform is kept as it is; after the
+    program's tick the systems run in this order: lifetimes count down (an actor whose time is
+    up destroyed), motion moves each actor by its velocity and spin (damped, its speed
+    capped), bounds wrap, clamp, or destroy what has left its rectangle, and colliders find
+    the overlaps. Each frame a simulated actor is drawn between its last two ticks'
+    transforms.
 
     Events are what the program's behaviors are told (wgf_behavior.h), queued as they
-    happen and taken by the program, in order: a behavior added (CREATED); an entity with
-    a behavior destroyed (DESTROYED, its handle stale by then: a name for what it was); two
-    colliders starting to overlap (TRIGGER_ENTER) and ceasing to (TRIGGER_EXIT), told to
-    each of the two, the other its `other`. An entity destroyed while it overlaps another
-    raises no TRIGGER_EXIT. Nothing is called back: a binding takes them at its tick's
-    start and calls its behaviors itself. At most 65536 wait; past that the oldest are
-    dropped, warned once.
+    happen and taken by the program, in order, three ints each:
+
+      CREATED          a behavior added: its actor, its id
+      DESTROYED        a behavior removed, or its actor gone: its actor (stale by then, a name
+                       for what it was), its id
+      TRIGGER_ENTER    two colliders starting to overlap, told to each: the actor, the other
+      TRIGGER_EXIT     and ceasing to
+
+    An actor destroyed while it overlaps another raises no TRIGGER_EXIT. Nothing is called
+    back: a binding takes them at its tick's start and calls its behaviors itself. At most
+    65536 wait; past that the oldest are dropped, warned once.
 **/
 enum abstract EcsEvent(Int) from Int to Int {
 	var NONE = 0;

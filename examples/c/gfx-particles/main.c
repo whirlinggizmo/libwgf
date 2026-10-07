@@ -5,14 +5,14 @@
 
 #include "wgf_app.h"
 #include "wgf_debug.h"
-#include "wgf_canvas.h"
+#include "wgf_stage2d.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
 #include "wgf_emitter2d.h"
 #include "wgf_keyboard.h"
 #include "wgf_loop.h"
 #include "wgf_mouse.h"
-#include "wgf_node.h"
+#include "wgf_actor.h"
 #include "wgf_render.h"
 #include "wgf_window.h"
 
@@ -86,9 +86,9 @@ typedef struct steady_t {
 } steady_t;
 
 static struct {
-    wgf_node_t scene, canvas;
-    wgf_node_t steady[STEADY];
-    wgf_node_t confetti[CONFETTI_COLORS];
+    wgf_actor_t scene, overlay;
+    wgf_actor_t steady[STEADY];
+    wgf_actor_t confetti[CONFETTI_COLORS];
     steady_t settings[STEADY];
     v3_t where[STEADY]; /* each steady emitter's place in the world */
     v3_t eye, forward, right, up;
@@ -194,10 +194,10 @@ static void draw_grid(int slices, float spacing, wgf_color_t color)
     }
 }
 
-/* A steady emitter in the scene canvas, at `where` in the world. */
+/* A steady emitter on the scene stage, at `where` in the world. */
 static void add_steady(int which, v3_t where, const steady_t *settings)
 {
-    const wgf_node_t emitter = wgf_emitter2d_create();
+    const wgf_actor_t emitter = wgf_emitter2d_create();
     g.steady[which] = emitter;
     g.where[which] = where;
     g.settings[which] = *settings;
@@ -207,7 +207,7 @@ static void add_steady(int which, v3_t where, const steady_t *settings)
     wgf_emitter2d_set_drag(emitter, 1.0f - expf(-settings->drag));
     wgf_emitter2d_set_color(emitter, settings->color_start, settings->color_end);
     wgf_emitter2d_set_stretch(emitter, settings->stretch);
-    wgf_node_set_parent(emitter, g.scene);
+    wgf_actor_set_parent(emitter, g.scene);
 }
 
 /* Each steady emitter where its 3D one is on the screen, its settings in pixels there. */
@@ -216,12 +216,12 @@ static void place_steady(void)
     int i;
     for (i = 0; i < STEADY; i++) {
         const steady_t *s = &g.settings[i];
-        const wgf_node_t emitter = g.steady[i];
+        const wgf_actor_t emitter = g.steady[i];
         const float z = depth_of(g.where[i]);
         const float scale = z > NEAR ? g.focal / z : 0.0f; /* pixels a world unit, at its depth */
         float x = 0, y = 0, vx, vy, gx, gy, speed;
-        wgf_node_set_visible(emitter, project(g.where[i], &x, &y));
-        wgf_node_set_position(emitter, x, y, 0);
+        wgf_actor_set_visible(emitter, project(g.where[i], &x, &y));
+        wgf_actor_set_position(emitter, x, y, 0);
         project_vector(g.where[i], s->velocity, &vx, &vy);
         project_vector(g.where[i], s->gravity, &gx, &gy);
         speed = sqrtf(vx * vx + vy * vy);
@@ -233,9 +233,9 @@ static void place_steady(void)
     }
     /* The blended ones farther first, then the added ones, as libwgt draws them. */
     if (depth_of(g.where[FOUNTAIN]) >= depth_of(g.where[SMOKE])) {
-        wgf_node_set_index(g.steady[FOUNTAIN], 0);
+        wgf_actor_set_index(g.steady[FOUNTAIN], 0);
     } else {
-        wgf_node_set_index(g.steady[SMOKE], 0);
+        wgf_actor_set_index(g.steady[SMOKE], 0);
     }
 }
 
@@ -324,9 +324,9 @@ static void make_confetti(void)
                                                  WGF_COLOR_VIOLET};
     int i;
     for (i = 0; i < CONFETTI_COLORS; i++) {
-        const wgf_node_t confetti = wgf_emitter2d_create();
+        const wgf_actor_t confetti = wgf_emitter2d_create();
         g.confetti[i] = confetti;
-        wgf_node_set_parent(confetti, g.canvas);
+        wgf_actor_set_parent(confetti, g.overlay);
         wgf_emitter2d_set_capacity(confetti, 4096 / CONFETTI_COLORS);
         wgf_emitter2d_set_life(confetti, 1.2f, 2.2f);
         wgf_emitter2d_set_direction(confetti, -1.5707963f, 1.3f); /* up the screen */
@@ -343,7 +343,7 @@ static void burst_confetti(float x, float y)
 {
     int i;
     for (i = 0; i < CONFETTI_COLORS; i++) {
-        wgf_node_set_position(g.confetti[i], x, y, 0.0f);
+        wgf_actor_set_position(g.confetti[i], x, y, 0.0f);
         wgf_emitter2d_burst(g.confetti[i], 300 / CONFETTI_COLORS);
     }
 }
@@ -366,8 +366,8 @@ static void init(void *user)
     (void)user;
     wgf_render_set_clear_color(wgf_color_make(14, 16, 24, 255));
     g.orbit = true;
-    g.scene = wgf_canvas_create();  /* the steady emitters, placed as the camera sees them */
-    g.canvas = wgf_canvas_create(); /* the confetti's, over the scene */
+    g.scene = wgf_stage2d_create();  /* the steady emitters, placed as the camera sees them */
+    g.overlay = wgf_stage2d_create(); /* the confetti's, over the scene */
 
     /* The emitters run at once, in their drawing order. */
     make_fountain();
@@ -409,8 +409,8 @@ static void frame(void *user)
     place_steady();
 
     draw_grid(24, 1.0f, WGF_COLOR_DARKGRAY);
-    wgf_canvas_draw(g.scene);
-    wgf_canvas_draw(g.canvas);
+    wgf_stage2d_draw(g.scene);
+    wgf_stage2d_draw(g.overlay);
 
     wgf_draw_text(0, "libwgf particles", 12, 36, 24, WGF_COLOR_RAYWHITE);
     snprintf(line, sizeof(line), "click / tap: confetti   space: %s   O: %s the camera", g.paused ? "resume" : "pause",

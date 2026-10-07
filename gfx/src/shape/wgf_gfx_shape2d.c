@@ -4,12 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "node/wgf_gfx_node_priv.h"
+#include "actor/wgf_gfx_actor_priv.h"
 #include "wgf_draw.h"
 #include "wgf_log.h"
 #include "wgf_render.h"
 
-/* 2D shapes: each its outline's points in its own units, placed through its node into
+/* 2D shapes: each its outline's points in its own units, placed through its actor into
  * the frame's logical pixels, then filled or outlined by immediate mode (wgf_draw.h),
  * so a turned, scaled shape is drawn exactly as a plain one. The kind (its free and its
  * draw) is set at the first create, so a program with no shape links none of this. */
@@ -18,14 +18,14 @@
 #define MAX_POINTS 1024
 #define CIRCLE_TOLERANCE 0.25f /* pixels a circle's segments may fall inside its curve */
 
-static void free_shape(wgf_node_t node, wgf_gfx_priv_node_t *node_ptr)
+static void free_shape(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr)
 {
-    (void)node;
-    free(node_ptr->as.shape2d.points);
-    node_ptr->as.shape2d.points = NULL;
+    (void)actor;
+    free(actor_ptr->as.shape2d.points);
+    actor_ptr->as.shape2d.points = NULL;
 }
 
-/* The pivot's offset, in its own units: where the node's position is in the shape. */
+/* The pivot's offset, in its own units: where the actor's position is in the shape. */
 static void pivot_offset(const wgf_gfx_priv_shape2d_t *shape, float *dx, float *dy)
 {
     *dx = *dy = 0.0f;
@@ -45,14 +45,14 @@ static void place(const wgf_mat4_t *m, float x, float y, float *out)
     out[1] = m->m[1] * x + m->m[5] * y + m->m[13];
 }
 
-static void draw_shape(wgf_node_t node, const wgf_gfx_priv_node_t *node_ptr, const wgf_mat4_t *placed,
+static void draw_shape(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *placed,
                        const wgf_mat4_t *view)
 {
-    const wgf_gfx_priv_shape2d_t *shape = &node_ptr->as.shape2d;
+    const wgf_gfx_priv_shape2d_t *shape = &actor_ptr->as.shape2d;
     float local[2 * MAX_POINTS], *pts;
     float dx, dy;
     int n = 0, i;
-    (void)node;
+    (void)actor;
     (void)view;
     if (shape->kind == WGF_SHAPE2D_KIND_LINE) {
         float a[2], b[2];
@@ -68,7 +68,7 @@ static void draw_shape(wgf_node_t node, const wgf_gfx_priv_node_t *node_ptr, con
         memcpy(local, corners, sizeof(corners));
         n = 4;
     } else if (shape->kind == WGF_SHAPE2D_KIND_CIRCLE) {
-        /* enough segments for its size on screen: its radius through the node's scale */
+        /* enough segments for its size on screen: its radius through the actor's scale */
         const float r = shape->dim[0];
         const float sx = sqrtf(placed->m[0] * placed->m[0] + placed->m[1] * placed->m[1]);
         const float sy = sqrtf(placed->m[4] * placed->m[4] + placed->m[5] * placed->m[5]);
@@ -94,32 +94,32 @@ static void draw_shape(wgf_node_t node, const wgf_gfx_priv_node_t *node_ptr, con
     else wgf_draw_polygon(pts, 2 * n, shape->color);
 }
 
-static const wgf_gfx_priv_node_kind_t kind = {free_shape, draw_shape};
+static const wgf_gfx_priv_actor_kind_t kind = {free_shape, draw_shape};
 
-static wgf_gfx_priv_shape2d_t *shape_of(wgf_node_t shape)
+static wgf_gfx_priv_shape2d_t *shape_of(wgf_actor_t shape)
 {
-    wgf_gfx_priv_node_t *node_ptr = wgf_gfx_priv_node_of(shape);
-    return node_ptr != NULL && node_ptr->type == WGF_NODE_TYPE_SHAPE2D ? &node_ptr->as.shape2d : NULL;
+    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(shape);
+    return actor_ptr != NULL && actor_ptr->type == WGF_ACTOR_KIND_SHAPE2D ? &actor_ptr->as.shape2d : NULL;
 }
 
-wgf_node_t wgf_shape2d_create(void)
+wgf_actor_t wgf_shape2d_create(void)
 {
-    const wgf_node_t shape = wgf_gfx_priv_node_create(WGF_NODE_TYPE_SHAPE2D);
+    const wgf_actor_t shape = wgf_gfx_priv_actor_create(WGF_ACTOR_KIND_SHAPE2D);
     wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
     if (shape_ptr == NULL) return 0;
     shape_ptr->color = 0xFFFFFFFFu;
-    wgf_gfx_priv_node_set_kind(WGF_NODE_TYPE_SHAPE2D, &kind);
+    wgf_gfx_priv_actor_set_kind(WGF_ACTOR_KIND_SHAPE2D, &kind);
     return shape;
 }
 
-wgf_shape2d_kind_t wgf_shape2d_get_kind(wgf_node_t shape)
+wgf_shape2d_kind_t wgf_shape2d_get_kind(wgf_actor_t shape)
 {
     const wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
     return shape_ptr != NULL ? (wgf_shape2d_kind_t)shape_ptr->kind : WGF_SHAPE2D_KIND_NONE;
 }
 
 /* `shape` made another kind: its old points let go, its dimensions cleared. */
-static wgf_gfx_priv_shape2d_t *become(wgf_node_t shape, wgf_shape2d_kind_t kind_of)
+static wgf_gfx_priv_shape2d_t *become(wgf_actor_t shape, wgf_shape2d_kind_t kind_of)
 {
     wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
     if (shape_ptr == NULL) return NULL;
@@ -131,7 +131,7 @@ static wgf_gfx_priv_shape2d_t *become(wgf_node_t shape, wgf_shape2d_kind_t kind_
     return shape_ptr;
 }
 
-bool wgf_shape2d_set_rectangle(wgf_node_t shape, float width, float height)
+bool wgf_shape2d_set_rectangle(wgf_actor_t shape, float width, float height)
 {
     wgf_gfx_priv_shape2d_t *shape_ptr;
     if (!(width >= 0.0f) || !(height >= 0.0f) || (shape_ptr = become(shape, WGF_SHAPE2D_KIND_RECTANGLE)) == NULL) {
@@ -142,7 +142,7 @@ bool wgf_shape2d_set_rectangle(wgf_node_t shape, float width, float height)
     return true;
 }
 
-bool wgf_shape2d_set_circle(wgf_node_t shape, float radius)
+bool wgf_shape2d_set_circle(wgf_actor_t shape, float radius)
 {
     wgf_gfx_priv_shape2d_t *shape_ptr;
     if (!(radius >= 0.0f) || (shape_ptr = become(shape, WGF_SHAPE2D_KIND_CIRCLE)) == NULL) return false;
@@ -150,7 +150,7 @@ bool wgf_shape2d_set_circle(wgf_node_t shape, float radius)
     return true;
 }
 
-bool wgf_shape2d_set_line(wgf_node_t shape, float x0, float y0, float x1, float y1)
+bool wgf_shape2d_set_line(wgf_actor_t shape, float x0, float y0, float x1, float y1)
 {
     wgf_gfx_priv_shape2d_t *shape_ptr = become(shape, WGF_SHAPE2D_KIND_LINE);
     if (shape_ptr == NULL) return false;
@@ -161,7 +161,7 @@ bool wgf_shape2d_set_line(wgf_node_t shape, float x0, float y0, float x1, float 
     return true;
 }
 
-bool wgf_shape2d_set_polygon(wgf_node_t shape, const float *points, int count)
+bool wgf_shape2d_set_polygon(wgf_actor_t shape, const float *points, int count)
 {
     wgf_gfx_priv_shape2d_t *shape_ptr;
     float *copy;
@@ -180,40 +180,40 @@ bool wgf_shape2d_set_polygon(wgf_node_t shape, const float *points, int count)
     return true;
 }
 
-wgf_vec2_t wgf_shape2d_get_size(wgf_node_t shape)
+wgf_vec2_t wgf_shape2d_get_size(wgf_actor_t shape)
 {
     const wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
     if (shape_ptr == NULL || shape_ptr->kind != WGF_SHAPE2D_KIND_RECTANGLE) return wgf_vec2_make(0.0f, 0.0f);
     return wgf_vec2_make(shape_ptr->dim[0], shape_ptr->dim[1]);
 }
 
-float wgf_shape2d_get_radius(wgf_node_t shape)
+float wgf_shape2d_get_radius(wgf_actor_t shape)
 {
     const wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
     return shape_ptr != NULL && shape_ptr->kind == WGF_SHAPE2D_KIND_CIRCLE ? shape_ptr->dim[0] : 0.0f;
 }
 
-wgf_vec2_t wgf_shape2d_get_line_start(wgf_node_t shape)
+wgf_vec2_t wgf_shape2d_get_line_start(wgf_actor_t shape)
 {
     const wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
     if (shape_ptr == NULL || shape_ptr->kind != WGF_SHAPE2D_KIND_LINE) return wgf_vec2_make(0.0f, 0.0f);
     return wgf_vec2_make(shape_ptr->dim[0], shape_ptr->dim[1]);
 }
 
-wgf_vec2_t wgf_shape2d_get_line_end(wgf_node_t shape)
+wgf_vec2_t wgf_shape2d_get_line_end(wgf_actor_t shape)
 {
     const wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
     if (shape_ptr == NULL || shape_ptr->kind != WGF_SHAPE2D_KIND_LINE) return wgf_vec2_make(0.0f, 0.0f);
     return wgf_vec2_make(shape_ptr->dim[2], shape_ptr->dim[3]);
 }
 
-int wgf_shape2d_get_point_count(wgf_node_t shape)
+int wgf_shape2d_get_point_count(wgf_actor_t shape)
 {
     const wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
     return shape_ptr != NULL ? shape_ptr->point_floats / 2 : 0;
 }
 
-int wgf_shape2d_get_points(wgf_node_t shape, float *out, int count)
+int wgf_shape2d_get_points(wgf_actor_t shape, float *out, int count)
 {
     const wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
     int n;
@@ -223,7 +223,7 @@ int wgf_shape2d_get_points(wgf_node_t shape, float *out, int count)
     return n;
 }
 
-bool wgf_shape2d_set_pivot(wgf_node_t shape, float x, float y)
+bool wgf_shape2d_set_pivot(wgf_actor_t shape, float x, float y)
 {
     wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
     if (shape_ptr == NULL) return false;
@@ -233,7 +233,7 @@ bool wgf_shape2d_set_pivot(wgf_node_t shape, float x, float y)
     return true;
 }
 
-wgf_vec2_t wgf_shape2d_get_pivot(wgf_node_t shape)
+wgf_vec2_t wgf_shape2d_get_pivot(wgf_actor_t shape)
 {
     const wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
     if (shape_ptr == NULL) return wgf_vec2_make(0.0f, 0.0f);
@@ -241,7 +241,7 @@ wgf_vec2_t wgf_shape2d_get_pivot(wgf_node_t shape)
     return shape_ptr->kind == WGF_SHAPE2D_KIND_CIRCLE ? wgf_vec2_make(0.5f, 0.5f) : wgf_vec2_make(0.0f, 0.0f);
 }
 
-bool wgf_shape2d_set_outline(wgf_node_t shape, float thickness)
+bool wgf_shape2d_set_outline(wgf_actor_t shape, float thickness)
 {
     wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
     if (shape_ptr == NULL) return false;
@@ -249,13 +249,13 @@ bool wgf_shape2d_set_outline(wgf_node_t shape, float thickness)
     return true;
 }
 
-float wgf_shape2d_get_outline(wgf_node_t shape)
+float wgf_shape2d_get_outline(wgf_actor_t shape)
 {
     const wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
     return shape_ptr != NULL ? shape_ptr->outline : 0.0f;
 }
 
-bool wgf_shape2d_set_color(wgf_node_t shape, wgf_color_t color)
+bool wgf_shape2d_set_color(wgf_actor_t shape, wgf_color_t color)
 {
     wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
     if (shape_ptr == NULL) return false;
@@ -263,7 +263,7 @@ bool wgf_shape2d_set_color(wgf_node_t shape, wgf_color_t color)
     return true;
 }
 
-wgf_color_t wgf_shape2d_get_color(wgf_node_t shape)
+wgf_color_t wgf_shape2d_get_color(wgf_actor_t shape)
 {
     const wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
     return shape_ptr != NULL ? shape_ptr->color : 0u;

@@ -4,7 +4,7 @@
 #include "render/wgf_gfx_render_priv.h"
 #include "sokol_gfx.h" /* sokol_gl needs it first */
 #include "util/sokol_gl.h"
-#include "wgf_canvas.h"
+#include "wgf_stage2d.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_core_priv.h"
 #include "wgf_emitter2d.h"
@@ -15,7 +15,7 @@
  * part's update as the runtime runs it: the defaults and every setting read back, the
  * refusals and clamps, bursts within the room, a rate over frames, life ending
  * particles, the capacity dropping the oldest, the same seed giving the same
- * particles, and what a canvas draws. */
+ * particles, and what a 2D stage draws. */
 
 static int failures;
 
@@ -27,14 +27,14 @@ static void expect(int ok, const char *what)
     }
 }
 
-static int drawn(wgf_node_t canvas)
+static int drawn(wgf_actor_t stage)
 {
     int before;
     wgf_platform_priv_set_size(320, 240);
     wgf_platform_priv_headless_set_dpi_scale(1.0f);
     wgf_gfx_priv_begin_frame();
     before = sgl_num_vertices();
-    wgf_canvas_draw(canvas);
+    wgf_stage2d_draw(stage);
     before = sgl_num_vertices() - before;
     wgf_gfx_priv_end_frame();
     return before;
@@ -48,16 +48,16 @@ static void frames(int count, float dt)
 
 int main(void)
 {
-    wgf_node_t canvas, emitter;
+    wgf_actor_t stage, emitter;
     int i;
 
     wgf_core_priv_init();
     expect(wgf_gfx_priv_start(), "setup");
-    canvas = wgf_canvas_create();
+    stage = wgf_stage2d_create();
     emitter = wgf_emitter2d_create();
-    wgf_node_set_parent(emitter, canvas);
+    wgf_actor_set_parent(emitter, stage);
 
-    expect(wgf_node_get_type(emitter) == WGF_NODE_TYPE_EMITTER2D, "an emitter");
+    expect(wgf_actor_get_kind(emitter) == WGF_ACTOR_KIND_EMITTER2D, "an emitter");
     expect(wgf_emitter2d_get_rate(emitter) == 0 && wgf_emitter2d_is_emitting(emitter) &&
                wgf_emitter2d_get_capacity(emitter) == 256 && wgf_emitter2d_get_count(emitter) == 0 &&
                wgf_emitter2d_get_life_min(emitter) == 1 && wgf_emitter2d_get_size_start(emitter) == 4 &&
@@ -67,7 +67,7 @@ int main(void)
     expect(wgf_emitter2d_get_count(emitter) == 0, "rate 0: nothing comes");
 
     expect(wgf_emitter2d_burst(emitter, 10) && wgf_emitter2d_get_count(emitter) == 10, "a burst");
-    expect(drawn(canvas) == 10 * 6, "each particle a quad");
+    expect(drawn(stage) == 10 * 6, "each particle a quad");
     expect(wgf_emitter2d_burst(emitter, 1000) && wgf_emitter2d_get_count(emitter) == 256, "clamped to the room left");
     expect(!wgf_emitter2d_burst(emitter, 0), "a burst below 1 is refused");
     frames(70, 1.0f / 60.0f);
@@ -123,46 +123,46 @@ int main(void)
         wgf_random_set_seed(99);
         wgf_emitter2d_burst(emitter, 50);
         frames(5, 1.0f / 60.0f);
-        first = drawn(canvas);
+        first = drawn(stage);
         wgf_emitter2d_clear(emitter);
         wgf_random_set_seed(99);
         wgf_emitter2d_burst(emitter, 50);
         frames(5, 1.0f / 60.0f);
-        second = drawn(canvas);
+        second = drawn(stage);
         expect(first == 50 * 6 && second == first, "a seed replays its particles");
     }
-    wgf_node_set_enabled(emitter, false);
+    wgf_actor_set_enabled(emitter, false);
     i = wgf_emitter2d_get_count(emitter);
     frames(200, 1.0f / 60.0f);
     expect(wgf_emitter2d_get_count(emitter) == i, "a disabled emitter isn't moved on");
-    wgf_node_set_enabled(emitter, true);
+    wgf_actor_set_enabled(emitter, true);
     {
-        const wgf_node_t holder = wgf_node_create(); /* the emitter under a disabled node */
-        const wgf_node_t was = wgf_node_get_parent(emitter);
-        wgf_node_set_parent(holder, was);
-        wgf_node_set_parent(emitter, holder);
-        wgf_node_set_enabled(holder, false);
+        const wgf_actor_t holder = wgf_actor_create(); /* the emitter under a disabled actor */
+        const wgf_actor_t was = wgf_actor_get_parent(emitter);
+        wgf_actor_set_parent(holder, was);
+        wgf_actor_set_parent(emitter, holder);
+        wgf_actor_set_enabled(holder, false);
         i = wgf_emitter2d_get_count(emitter);
         frames(200, 1.0f / 60.0f);
-        expect(wgf_emitter2d_get_count(emitter) == i && wgf_node_is_enabled(emitter),
-               "an emitter under a disabled node isn't moved on, its own flag on");
-        wgf_node_set_enabled(holder, true);
-        wgf_node_set_parent(emitter, was);
-        wgf_node_destroy(holder, WGF_NODE_DESTROY_CHILDREN);
+        expect(wgf_emitter2d_get_count(emitter) == i && wgf_actor_is_enabled(emitter),
+               "an emitter under a disabled actor isn't moved on, its own flag on");
+        wgf_actor_set_enabled(holder, true);
+        wgf_actor_set_parent(emitter, was);
+        wgf_actor_destroy(holder, WGF_ACTOR_DESTROY_CHILDREN);
     }
-    wgf_node_set_visible(emitter, false);
-    expect(drawn(canvas) == 0, "a hidden one isn't drawn");
+    wgf_actor_set_visible(emitter, false);
+    expect(drawn(stage) == 0, "a hidden one isn't drawn");
 
     {
-        const wgf_node_t plain = wgf_node_create();
+        const wgf_actor_t plain = wgf_actor_create();
         expect(!wgf_emitter2d_burst(plain, 1) && wgf_emitter2d_get_rate(plain) == 0 && !wgf_emitter2d_clear(12345),
-               "every call refuses a node that isn't an emitter");
-        wgf_node_destroy(plain, WGF_NODE_DESTROY_CHILDREN);
+               "every call refuses an actor that isn't an emitter");
+        wgf_actor_destroy(plain, WGF_ACTOR_DESTROY_CHILDREN);
     }
-    wgf_node_destroy(emitter, WGF_NODE_DESTROY_CHILDREN);
+    wgf_actor_destroy(emitter, WGF_ACTOR_DESTROY_CHILDREN);
     frames(1, 1.0f / 60.0f); /* the part with no emitter left */
     expect(wgf_emitter2d_create() != 0, "made again after one was destroyed");
-    wgf_node_destroy(canvas, WGF_NODE_DESTROY_CHILDREN);
+    wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
     wgf_gfx_priv_stop();
     wgf_core_priv_shutdown();
     return failures == 0 ? 0 : 1;

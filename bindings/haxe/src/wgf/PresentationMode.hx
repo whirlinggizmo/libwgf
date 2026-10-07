@@ -5,7 +5,7 @@ package wgf;
     How a game's design is fitted to the window or the screen (Godot's stretch modes
     and aspects are the prior art). A game is written for a design resolution, and its
     logical coordinates stay the design's at any window size and in fullscreen: drawing,
-    canvases, the UI, the pointer and touches (mapped back into them), and an autopilot's
+    2D stages, the UI, the pointer and touches (mapped back into them), and an autopilot's
     mouse. The same on the desktop, in a resized browser window, and in fullscreen.
 
       NONE     the default: logical pixels are the window's (a framebuffer pixel over the

@@ -5,7 +5,7 @@ wgf_layer(ecs
         src/wgf_ecs_behavior.c
         src/wgf_ecs_components.c
         src/wgf_ecs_dump.c
-        src/wgf_ecs_entity.c
+        src/wgf_ecs_actor.c
         src/wgf_ecs_flecs_impl.c
         src/wgf_ecs_scene.c
     DEPS
@@ -28,7 +28,7 @@ if(NOT WIN32 AND NOT EMSCRIPTEN)
 endif()
 
 if(WGF_TESTS AND WGF_HEADLESS)
-    wgf_test(ecs wgf_ecs_entity_test)
+    wgf_test(ecs wgf_ecs_actor_test)
     wgf_test(ecs wgf_ecs_systems_test)
     wgf_test(ecs wgf_ecs_scene_test)
 endif()

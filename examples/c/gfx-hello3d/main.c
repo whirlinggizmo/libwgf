@@ -7,7 +7,7 @@
 #include "wgf_debug.h"
 #include "wgf_draw.h"
 #include "wgf_keyboard.h"
-#include "wgf_node.h"
+#include "wgf_actor.h"
 #include "wgf_render.h"
 #include "wgf_time.h"
 #include "wgf_window.h"
@@ -19,12 +19,12 @@
  * libwgt's gfx-hello3d (wgrender's hello3d) done 1:1 for the size table. The
  * differences:
  *   - the title and the big text say libwgf where libwgt's say libwgt;
- *   - wgf_node_look_at takes the target and up direction as numbers, libwgf's public
+ *   - wgf_actor_look_at takes the target and up direction as numbers, libwgf's public
  *     calls taking no vectors;
  *   - the readout is libwgf's overlay (wgf_debug_show_fps), as libwgt's is its
  *     wgt_loop_draw_fps, at the same place. */
 
-static wgf_node_t camera;
+static wgf_actor_t camera;
 
 static void init(void *user)
 {
@@ -42,8 +42,8 @@ static void frame(void *user)
     if (wgf_app_can_quit() && wgf_keyboard_is_pressed(WGF_KEY_ESCAPE)) wgf_app_quit();
 
     /* circle the origin, looking at it */
-    wgf_node_set_position(camera, cosf(t * 0.4f) * 16.0f, 9.0f, sinf(t * 0.4f) * 16.0f);
-    wgf_node_look_at(camera, 0, 1, 0, 0, 1, 0);
+    wgf_actor_set_position(camera, cosf(t * 0.4f) * 16.0f, 9.0f, sinf(t * 0.4f) * 16.0f);
+    wgf_actor_look_at(camera, 0, 1, 0, 0, 1, 0);
 
     /* ---- 3D ---- */
     wgf_draw_begin_3d(camera);

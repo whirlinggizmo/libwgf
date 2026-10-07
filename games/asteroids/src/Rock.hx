@@ -13,7 +13,7 @@ class Rock extends Behavior {
 
 	public var size:RockSize = RockSize.LARGE;
 
-	public static function spawn(size:RockSize, x:Float, y:Float, ?direction:Float):Entity {
+	public static function spawn(size:RockSize, x:Float, y:Float, ?direction:Float):Actor {
 		final rock = Main.scene.spawn(PREFABS[size], Main.world);
 		rock.setPosition(x, y, 0);
 		rock.snap();
@@ -21,7 +21,7 @@ class Rock extends Behavior {
 		final speed = SPEEDS[size] * Random.getRange(0.7, 1.3);
 		(rock : Motion).setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed, 0);
 		(rock : Motion).setSpin(0, 0, Random.getRange(-1.5, 1.5));
-		(rock : BehaviorComponent).setParam("size", Std.string(size));
+		(rock : BehaviorComponent).setParam(rock.findBehavior("Rock"), "size", Std.string(size));
 		return rock;
 	}
 
@@ -35,16 +35,15 @@ class Rock extends Behavior {
 			points.push(Math.cos(a) * r);
 			points.push(Math.sin(a) * r);
 		}
-		final shape:Shape2d = entity.getComponentNode(Component.SHAPE2D);
-		shape.setPolygon(points);
+		(actor : Shape2d).setPolygon(points); // a rock is a shape
 	}
 
-	override function onTriggerEnter(other:Entity) {
-		if (!entity.isAlive() || !other.isAlive())
+	override function onTriggerEnter(other:Actor) {
+		if (actor.getKind() == ActorKind.NONE || other.getKind() == ActorKind.NONE)
 			return; // one already gone this tick: a bullet meeting two rocks at once
 		final behavior = Behavior.of(other);
 		if (Std.isOfType(behavior, Bullet)) {
-			other.destroy();
+			other.destroy(ActorDestroy.DESTROY_CHILDREN);
 			split();
 		} else if (Std.isOfType(behavior, Ship)) {
 			(cast behavior : Ship).explode();
@@ -53,11 +52,11 @@ class Rock extends Behavior {
 	}
 
 	function split() {
-		final at = entity.getPosition();
+		final at = actor.getPosition();
 		Main.addScore(POINTS[size]);
 		explosion(at.x, at.y, size);
 		Main.sounds.play([Main.sounds.bangLarge, Main.sounds.bangMedium, Main.sounds.bangSmall][size]);
-		entity.destroy();
+		actor.destroy(ActorDestroy.DESTROY_CHILDREN);
 		if (size != RockSize.SMALL) {
 			final heading = Random.getRange(0, Math.PI * 2);
 			spawn(size + 1, at.x, at.y, heading);
@@ -70,7 +69,6 @@ class Rock extends Behavior {
 		final sparks = Main.scene.spawn("explosion", Main.world);
 		sparks.setPosition(x, y, 0);
 		sparks.snap();
-		final emitter:Emitter2d = sparks.getComponentNode(Component.EMITTER2D);
-		emitter.burst([40, 24, 14][size < 0 ? 0 : size > 2 ? 2 : size]);
+		(sparks : Emitter2d).burst([40, 24, 14][size < 0 ? 0 : size > 2 ? 2 : size]);
 	}
 }

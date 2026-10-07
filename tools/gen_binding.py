@@ -167,7 +167,7 @@ class Binding:
     # ---- where each call goes ------------------------------------------------------
 
     def section_of(self, f):
-        """The header's section: wgf_node.h -> 'node'; wgf.h -> 'version'."""
+        """The header's section: wgf_actor.h -> 'node'; wgf.h -> 'version'."""
         stem = Path(f.header).stem
         return 'version' if stem == 'wgf' else stem[len('wgf_'):]
 

@@ -2,9 +2,9 @@
 package wgf;
 
 /**
-    What wgf_node_destroy does with the node's children.
+    What wgf_actor_destroy does with the actor's children.
 **/
-enum abstract NodeDestroy(Int) from Int to Int {
+enum abstract ActorDestroy(Int) from Int to Int {
 	var DESTROY_CHILDREN = 0;
 	var KEEP_CHILDREN = 1;
 }

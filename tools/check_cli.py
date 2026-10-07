@@ -165,7 +165,7 @@ def step_dump(game):
     if why:
         return why
     code, out = wgf(game, 'dump', '--frame', '20', '--no-build')
-    if code != 0 or not out.startswith('wgf-scene 1') or 'entity "ship"' not in out or 'motion ' not in out:
+    if code != 0 or not out.startswith('wgf-scene 2') or 'actor "ship"' not in out or 'motion ' not in out:
         return problem('wgf dump: not the ship as a scene', out)
     early = turned(out)
     fly = game / 'autopilot' / 'fly.autopilot'

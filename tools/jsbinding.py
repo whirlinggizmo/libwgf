@@ -66,7 +66,7 @@ class Emitter:
     # ---- types -----------------------------------------------------------------------
 
     def base(self, ctype):
-        """A type through its typedefs: wgf_node_t -> uint32_t."""
+        """A type through its typedefs: wgf_actor_t -> uint32_t."""
         ctype = ctype.replace('const ', '').strip()
         seen = set()
         while ctype in self.b.api.typedefs and ctype not in seen:

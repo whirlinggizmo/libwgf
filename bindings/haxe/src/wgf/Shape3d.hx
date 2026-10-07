@@ -3,22 +3,22 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Shape3d's calls, on a Node: `var x:Shape3d = handle` gives it them, and a Shape3d is still a Node. **/
-@:forward abstract Shape3d(Node) from Node to Node {
+/** Shape3d's calls, on a Actor: `var x:Shape3d = handle` gives it them, and a Shape3d is still a Actor. **/
+@:forward abstract Shape3d(Actor) from Actor to Actor {
 	/**
-	    A shape with nothing to draw yet, white. 0 when there is no room for another node.
+	    A shape with nothing to draw yet, white. 0 when there is no room for another actor.
 	**/
 	public static inline function create():Shape3d
-		return ((Raw.wgf_shape3d_create() : Node) : Shape3d);
+		return ((Raw.wgf_shape3d_create() : Actor) : Shape3d);
 
 	/**
-	    What it is, set by the calls below; NONE for a node that isn't a 3D shape.
+	    What it is, set by the calls below; NONE for an actor that isn't a 3D shape.
 	**/
 	public inline function getKind():Shape3dKind
 		return Raw.wgf_shape3d_get_kind(this);
 
 	/**
-	    About its node's origin: a cube `width` by `height` by `length`; a sphere of
+	    About its actor's origin: a cube `width` by `height` by `length`; a sphere of
 	    `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
 	    in its local x-y plane. False for a size below 0.
 	**/
@@ -26,7 +26,7 @@ import wgf.impl.Raw;
 		return Raw.wgf_shape3d_set_cube(this, width, height, length);
 
 	/**
-	    About its node's origin: a cube `width` by `height` by `length`; a sphere of
+	    About its actor's origin: a cube `width` by `height` by `length`; a sphere of
 	    `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
 	    in its local x-y plane. False for a size below 0.
 	**/
@@ -34,7 +34,7 @@ import wgf.impl.Raw;
 		return Raw.wgf_shape3d_set_sphere(this, radius);
 
 	/**
-	    About its node's origin: a cube `width` by `height` by `length`; a sphere of
+	    About its actor's origin: a cube `width` by `height` by `length`; a sphere of
 	    `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
 	    in its local x-y plane. False for a size below 0.
 	**/
@@ -42,7 +42,7 @@ import wgf.impl.Raw;
 		return Raw.wgf_shape3d_set_rectangle(this, width, height);
 
 	/**
-	    About its node's origin: a cube `width` by `height` by `length`; a sphere of
+	    About its actor's origin: a cube `width` by `height` by `length`; a sphere of
 	    `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
 	    in its local x-y plane. False for a size below 0.
 	**/

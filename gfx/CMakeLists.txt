@@ -8,10 +8,10 @@ wgf_layer(gfx
         src/material/wgf_gfx_material.c
         src/mesh/wgf_gfx_mesh.c
         src/mesh/wgf_gfx_mesh_shapes.c
-        src/node/wgf_gfx_camera2d.c
-        src/node/wgf_gfx_camera3d.c
-        src/node/wgf_gfx_canvas.c
-        src/node/wgf_gfx_node.c
+        src/actor/wgf_gfx_camera2d.c
+        src/actor/wgf_gfx_camera3d.c
+        src/actor/wgf_gfx_stage2d.c
+        src/actor/wgf_gfx_actor.c
         src/render/wgf_gfx_presentation.c
         src/render/wgf_gfx_render.c
         src/render/wgf_gfx_render_commands.c
@@ -20,7 +20,7 @@ wgf_layer(gfx
         src/sprite/wgf_gfx_sprite.c
         src/stage/wgf_gfx_light.c
         src/stage/wgf_gfx_model.c
-        src/stage/wgf_gfx_stage.c
+        src/stage/wgf_gfx_stage3d.c
         src/text/wgf_gfx_font.c
         src/text/wgf_gfx_fontstash_impl.c
         src/text/wgf_gfx_text.c
@@ -46,10 +46,10 @@ if(WGF_TESTS)
     if(WGF_HEADLESS)
         wgf_test(gfx wgf_gfx_frame_test)
         wgf_test(gfx wgf_gfx_presentation_test)
-        wgf_test(gfx wgf_gfx_node_test)
+        wgf_test(gfx wgf_gfx_actor_test)
         wgf_test(gfx wgf_gfx_camera3d_test)
         wgf_test(gfx wgf_gfx_mesh_test)
-        wgf_test(gfx wgf_gfx_stage_test)
+        wgf_test(gfx wgf_gfx_stage3d_test)
         wgf_test(gfx wgf_gfx_shape3d_test)
         wgf_test(gfx wgf_gfx_text_test)
         wgf_test(gfx wgf_gfx_texture_test)
@@ -63,10 +63,10 @@ if(WGF_TESTS)
     wgf_web_test(gfx wgf_gfx_presentation_web_test 1)
     wgf_window_test(gfx wgf_gfx_presentation_window_test)
     wgf_window_test(gfx wgf_gfx_draw3d_window_test)
-    wgf_window_test(gfx wgf_gfx_stage_window_test)
+    wgf_window_test(gfx wgf_gfx_stage3d_window_test)
     wgf_web_test(gfx wgf_gfx_texture_web_test 1)
     wgf_web_test(gfx wgf_gfx_text_web_test 1)
-    wgf_web_test(gfx wgf_gfx_canvas_web_test 1)
+    wgf_web_test(gfx wgf_gfx_stage2d_web_test 1)
     wgf_web_test(gfx wgf_gfx_draw3d_web_test 1)
-    wgf_web_test(gfx wgf_gfx_stage_web_test 1)
+    wgf_web_test(gfx wgf_gfx_stage3d_web_test 1)
 endif()

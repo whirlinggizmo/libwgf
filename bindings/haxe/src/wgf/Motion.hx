@@ -3,8 +3,8 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Motion's calls, on a Entity: `var x:Motion = handle` gives it them, and a Motion is still a Entity. **/
-@:forward abstract Motion(Entity) from Entity to Entity {
+/** Motion's calls, on a Actor: `var x:Motion = handle` gives it them, and a Motion is still a Actor. **/
+@:forward abstract Motion(Actor) from Actor to Actor {
 	/**
 	    Units a second, in its parent's space.
 	**/

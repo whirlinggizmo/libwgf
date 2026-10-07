@@ -3,14 +3,14 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Stage's calls, on a Node: `var x:Stage = handle` gives it them, and a Stage is still a Node. **/
-@:forward abstract Stage(Node) from Node to Node {
+/** Stage3d's calls, on a Actor: `var x:Stage3d = handle` gives it them, and a Stage3d is still a Actor. **/
+@:forward abstract Stage3d(Actor) from Actor to Actor {
 	/**
 	    A stage, with no camera, no ambient light, and NEUTRAL tone mapping at an exposure of
-	    0. 0 when there is no room for another node.
+	    0. 0 when there is no room for another actor.
 	**/
-	public static inline function create():Stage
-		return ((Raw.wgf_stage_create() : Node) : Stage);
+	public static inline function create():Stage3d
+		return ((Raw.wgf_stage3d_create() : Actor) : Stage3d);
 
 	/**
 	    Draw it into this frame, through its camera: its opaque models, then its 3D shapes
@@ -20,23 +20,30 @@ import wgf.impl.Raw;
 	    the up to 8 lights that reach it most. Outside a frame, or with no camera, nothing.
 	**/
 	public inline function draw():Void
-		Raw.wgf_stage_draw(this);
+		Raw.wgf_stage3d_draw(this);
 
 	/**
 	    The camera it is seen through: a 3D camera anywhere, on this stage or not (default 0,
 	    none: nothing is drawn). False when `camera` isn't a 3D camera. A camera that is
 	    destroyed leaves the stage with none.
 	**/
-	public inline function setCamera(camera:Node):Bool
-		return Raw.wgf_stage_set_camera(this, camera);
+	public inline function setCamera(camera:Actor):Bool
+		return Raw.wgf_stage3d_set_camera(this, camera);
 
 	/**
 	    The camera it is seen through: a 3D camera anywhere, on this stage or not (default 0,
 	    none: nothing is drawn). False when `camera` isn't a 3D camera. A camera that is
 	    destroyed leaves the stage with none.
 	**/
-	public inline function getCamera():Node
-		return Raw.wgf_stage_get_camera(this);
+	public inline function getCamera():Actor
+		return Raw.wgf_stage3d_get_camera(this);
+
+	/**
+	    The actor on this stage named `name`, as wgf_stage2d_find: by an index, never a walk;
+	    0 for none, for a stage that isn't a 3D stage, and for a shared name (warned).
+	**/
+	public inline function find(name:String):Actor
+		return Raw.wgf_stage3d_find(this, name);
 
 	/**
 	    The light that reaches everything evenly, from no direction: its color times
@@ -44,7 +51,7 @@ import wgf.impl.Raw;
 	    ignored.
 	**/
 	public inline function setAmbient(color:Int, intensity:Float):Bool
-		return Raw.wgf_stage_set_ambient(this, color, intensity);
+		return Raw.wgf_stage3d_set_ambient(this, color, intensity);
 
 	/**
 	    The light that reaches everything evenly, from no direction: its color times
@@ -52,7 +59,7 @@ import wgf.impl.Raw;
 	    ignored.
 	**/
 	public inline function getAmbientColor():Int
-		return Raw.wgf_stage_get_ambient_color(this);
+		return Raw.wgf_stage3d_get_ambient_color(this);
 
 	/**
 	    The light that reaches everything evenly, from no direction: its color times
@@ -60,28 +67,28 @@ import wgf.impl.Raw;
 	    ignored.
 	**/
 	public inline function getAmbientIntensity():Float
-		return Raw.wgf_stage_get_ambient_intensity(this);
+		return Raw.wgf_stage3d_get_ambient_intensity(this);
 
 	/**
 	    Its tone mapping, and its exposure in stops (EV): +1 doubles the brightness. Default:
 	    NEUTRAL, 0. False for a tone mapping that isn't one.
 	**/
-	public inline function setTonemap(tonemap:StageTonemap, exposure:Float):Bool
-		return Raw.wgf_stage_set_tonemap(this, tonemap, exposure);
+	public inline function setTonemap(tonemap:Stage3dTonemap, exposure:Float):Bool
+		return Raw.wgf_stage3d_set_tonemap(this, tonemap, exposure);
 
 	/**
 	    Its tone mapping, and its exposure in stops (EV): +1 doubles the brightness. Default:
 	    NEUTRAL, 0. False for a tone mapping that isn't one.
 	**/
-	public inline function getTonemap():StageTonemap
-		return Raw.wgf_stage_get_tonemap(this);
+	public inline function getTonemap():Stage3dTonemap
+		return Raw.wgf_stage3d_get_tonemap(this);
 
 	/**
 	    Its tone mapping, and its exposure in stops (EV): +1 doubles the brightness. Default:
 	    NEUTRAL, 0. False for a tone mapping that isn't one.
 	**/
 	public inline function getExposure():Float
-		return Raw.wgf_stage_get_exposure(this);
+		return Raw.wgf_stage3d_get_exposure(this);
 
 	/**
 	    Skip models the camera can't see (on by default): each is tested by the box around it
@@ -90,7 +97,7 @@ import wgf.impl.Raw;
 	    everything, when checking whether a model's bounds are right, say.
 	**/
 	public inline function setCulling(culling:Bool):Bool
-		return Raw.wgf_stage_set_culling(this, culling);
+		return Raw.wgf_stage3d_set_culling(this, culling);
 
 	/**
 	    Skip models the camera can't see (on by default): each is tested by the box around it
@@ -99,5 +106,5 @@ import wgf.impl.Raw;
 	    everything, when checking whether a model's bounds are right, say.
 	**/
 	public inline function isCulling():Bool
-		return Raw.wgf_stage_is_culling(this);
+		return Raw.wgf_stage3d_is_culling(this);
 }

@@ -9,8 +9,8 @@
  * the first time the program creates one of it, and they run it through this list, so
  * a program that never creates one doesn't link it. wgrender's registered modules
  * (wgri_module_t, its src/wgr_module.c) without the constructors: nothing runs before
- * main but a static table's filling (WGF_CORE_PRIV_ON_LINK). A layer's other hooks (gfx's draw and pick hooks, its node kinds) stay its
- * own. */
+ * main but a static table's filling (WGF_CORE_PRIV_ON_LINK). A layer's other hooks (gfx's draw and pick hooks, its actor kinds)
+ * stay its own. */
 
 /* The layer a part belongs to: its stop runs when that layer stops (gfx's while the GPU
  * is there), every other's at core's shutdown. */
@@ -23,9 +23,9 @@ typedef enum wgf_core_priv_part_layer_t {
 /* Where a part runs among the others: update, flush, end_frame, and stop run in this
  * order. Naming a part here links nothing. */
 typedef enum wgf_core_priv_part_order_t {
-    WGF_CORE_PRIV_PART_ECS,       /* entities and their systems (ecs/), whose nodes the rest draw */
+    WGF_CORE_PRIV_PART_ECS,       /* actors' components and their systems (ecs/), whose actors the rest draw */
     WGF_CORE_PRIV_PART_TEXT,      /* fonts and fontstash (gfx/src/text/wgf_gfx_font.c) */
-    WGF_CORE_PRIV_PART_STAGE,     /* stages' frames and their GPU objects (gfx/src/stage/) */
+    WGF_CORE_PRIV_PART_STAGE3D,   /* 3D stages' frames and their GPU objects (gfx/src/stage/) */
     WGF_CORE_PRIV_PART_MESHES,    /* meshes (gfx/src/mesh/), stopped before the materials they hold */
     WGF_CORE_PRIV_PART_MATERIALS, /* materials (gfx/src/material/) */
     WGF_CORE_PRIV_PART_PARTICLES, /* emitters (gfx/src/emitter/wgf_gfx_emitter2d.c) */
@@ -68,7 +68,7 @@ void wgf_core_priv_part_tick(float dt);
 
 /* How far the frame being drawn is into the next tick, 0 up to 1 (wgf_loop.h's tick
  * fraction), which app's runtime sets before the parts' updates, for a part drawing
- * ticked state smoothly (the ecs's nodes). */
+ * ticked state smoothly (the ecs's actors). */
 void wgf_core_priv_part_set_fraction(float fraction);
 float wgf_core_priv_part_get_fraction(void);
 

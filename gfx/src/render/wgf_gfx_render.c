@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-#include "node/wgf_gfx_node_priv.h"
+#include "actor/wgf_gfx_actor_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "texture/wgf_gfx_texture_priv.h"
 #include "util/sokol_gl.h"
@@ -186,7 +186,7 @@ void wgf_gfx_priv_stop(void)
 {
     if (!setup) return;
     if (in_frame) wgf_gfx_priv_end_frame();
-    wgf_gfx_priv_node_shutdown(); /* before what nodes hold references to */
+    wgf_gfx_priv_actor_shutdown(); /* before what actors hold references to */
     wgf_core_priv_part_stop(WGF_CORE_PRIV_PART_LAYER_GFX);
     wgf_gfx_priv_texture_shutdown();
     wgf_gfx_priv_draw_shutdown();

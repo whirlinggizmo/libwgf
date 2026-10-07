@@ -2,8 +2,8 @@
 package wgf;
 
 /**
-    A light: a node that lights the stage it is on (wgf_stage.h), placed and aimed with
-    the node calls (wgf_node_look_at): a light shines down its -z. Lights work as
+    A light: an actor that lights the stage it is on (wgf_stage3d.h), placed and aimed with
+    the actor calls (wgf_actor_look_at): a light shines down its -z. Lights work as
     libwgt's (wgrender's):
 
     - Nothing is lit implicitly: a stage with no lights and no ambient is black.
@@ -11,7 +11,7 @@ package wgf;
       their falloff at its box); point and spot lights whose range doesn't reach a model
       are skipped for it.
     - A light shines while it is enabled (with everything above it) and visible
-      (wgf_node.h): hiding it turns it off and leaves its children as they are, a lamp's
+      (wgf_actor.h): hiding it turns it off and leaves its children as they are, a lamp's
       bulb model under it, say.
     - Parameters follow glTF's KHR_lights_punctual, and shading glTF's materials
       (wgf_material.h), so lights from glTF tools look the same here. Light colors are

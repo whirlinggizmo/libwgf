@@ -6,7 +6,7 @@ Games in Haxe on libwgf: on the web, Haxe's JS against libwgf's prebuilt wasm ho
 import wgf.*;
 
 class Game {
-	static var world:Canvas;
+	static var world:Stage2d;
 	static var ship:Shape2d;
 
 	static function main() {
@@ -14,7 +14,7 @@ class Game {
 	}
 
 	static function init() {
-		world = Canvas.create();
+		world = Stage2d.create();
 		ship = Shape2d.create();
 		ship.setPolygon([16.0, 0, -12, -10, -12, 10]);
 		ship.setParent(world);
@@ -32,7 +32,7 @@ class Game {
 - **Install:** `haxelib dev wgf <libwgf>/bindings/haxe` (or `haxelib git wgf https://github.com/whirlinggizmo/libwgf main bindings/haxe`).
 - **The web:** `haxe -lib wgf --main Game --js game.js -D js-es=6 -dce full`, beside a host (`tools/build_host.py`, which writes `wgf-host.js` and `.wasm`, and the JS binding, `wgf.js`, beside them) and a page from `hosts/web/page.html`. The page makes the host, attaches the JS binding to it, and loads the program, which finds the binding at `globalThis.wgfJs`: every call the program makes goes through it ([the JS binding](../js/README.md)).
 - **The desktop:** `haxe -lib wgf --main Game --cpp build -D HXCPP_M64 -D wgf_out=<libwgf>/out/<platform>/<variant>`, against a variant staged by `tools/stage_variant.py` and built by the toolchain hxcpp uses (the MSVC presets for MSVC). Add `-D wgf_headless` for a headless variant.
-- **Behaviors:** a class extending `wgf.Behavior`, registered by its behavior's name (`Behavior.register("Rock", Rock.new)`), is made for each entity with that behavior, told of its triggers, and ended with it.
+- **Behaviors:** a class extending `wgf.Behavior`, registered by its behavior's name (`Behavior.register("Rock", Rock.new)`), is made for each behavior of that name on an actor (an actor may have several), told of its actor's triggers, and ended with it or its actor.
 
 ## What's here
 

@@ -3,13 +3,13 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Camera2d's calls, on a Node: `var x:Camera2d = handle` gives it them, and a Camera2d is still a Node. **/
-@:forward abstract Camera2d(Node) from Node to Node {
+/** Camera2d's calls, on a Actor: `var x:Camera2d = handle` gives it them, and a Camera2d is still a Actor. **/
+@:forward abstract Camera2d(Actor) from Actor to Actor {
 	/**
-	    A 2D camera, zoom 1. 0 when there is no room for another node.
+	    A 2D camera, zoom 1. 0 when there is no room for another actor.
 	**/
 	public static inline function create():Camera2d
-		return ((Raw.wgf_camera2d_create() : Node) : Camera2d);
+		return ((Raw.wgf_camera2d_create() : Actor) : Camera2d);
 
 	/**
 	    How big things look: 2 draws everything twice as big. False for a zoom of 0 or

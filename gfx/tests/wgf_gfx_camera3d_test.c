@@ -1,7 +1,7 @@
 #include <math.h>
 #include <stdio.h>
 
-#include "node/wgf_gfx_node_priv.h"
+#include "actor/wgf_gfx_actor_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "sokol_gfx.h" /* sokol_gl needs it first */
 #include "util/sokol_gl.h"
@@ -41,14 +41,14 @@ static wgf_vec3_t project(wgf_mat4_t m, float x, float y, float z)
 
 int main(void)
 {
-    wgf_node_t camera, parent, plain;
+    wgf_actor_t camera, parent, plain;
     wgf_vec3_t position, at;
     wgf_mat4_t view_proj;
     int before;
 
     expect(wgf_gfx_priv_start(), "setup");
     camera = wgf_camera3d_create();
-    expect(wgf_node_get_type(camera) == WGF_NODE_TYPE_CAMERA3D, "a 3D camera is a node of its type");
+    expect(wgf_actor_get_kind(camera) == WGF_ACTOR_KIND_CAMERA3D, "a 3D camera is an actor of its type");
     expect(near(wgf_camera3d_get_fov(camera), 3.14159265f / 3.0f) && near(wgf_camera3d_get_near(camera), 0.1f) &&
                near(wgf_camera3d_get_far(camera), 1000.0f) && !wgf_camera3d_is_orthographic(camera) &&
                near(wgf_camera3d_get_ortho_height(camera), 10.0f),
@@ -62,31 +62,31 @@ int main(void)
     expect(!wgf_camera3d_set_ortho_height(camera, 0.0f) && wgf_camera3d_set_ortho_height(camera, 4.0f) &&
                wgf_camera3d_set_orthographic(camera, true) && wgf_camera3d_is_orthographic(camera),
            "orthographic, and its height");
-    plain = wgf_node_create();
+    plain = wgf_actor_create();
     expect(!wgf_camera3d_set_fov(plain, 1.0f) && wgf_camera3d_get_far(plain) == 0.0f,
-           "a node that isn't a 3D camera: refused, and 0");
+           "an actor that isn't a 3D camera: refused, and 0");
 
     /* aimed with look_at, the camera sees its target in the middle */
     wgf_camera3d_set_orthographic(camera, false);
     wgf_camera3d_set_fov(camera, 1.0f);
-    wgf_node_set_position(camera, 10.0f, 5.0f, 10.0f);
-    expect(wgf_node_look_at(camera, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f), "look_at");
+    wgf_actor_set_position(camera, 10.0f, 5.0f, 10.0f);
+    expect(wgf_actor_look_at(camera, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f), "look_at");
     view_proj = wgf_gfx_priv_camera3d_view_projection(camera, 4.0f / 3.0f, &position);
     at = project(view_proj, 0.0f, 1.0f, 0.0f);
     expect(near(at.x, 0.0f) && near(at.y, 0.0f) && at.z > -1.0f && at.z < 1.0f, "the target, in the view's middle");
     at = project(view_proj, 0.0f, 3.0f, 0.0f);
     expect(at.y > 0.1f, "up is up");
     expect(near(position.x, 10.0f) && near(position.z, 10.0f), "where it sees from");
-    expect(!wgf_node_look_at(camera, 10.0f, 5.0f, 10.0f, 0.0f, 1.0f, 0.0f), "a target where it is: refused");
-    expect(!wgf_node_look_at(camera, 10.0f, 9.0f, 10.0f, 0.0f, 1.0f, 0.0f), "up along the line to it: refused");
+    expect(!wgf_actor_look_at(camera, 10.0f, 5.0f, 10.0f, 0.0f, 1.0f, 0.0f), "a target where it is: refused");
+    expect(!wgf_actor_look_at(camera, 10.0f, 9.0f, 10.0f, 0.0f, 1.0f, 0.0f), "up along the line to it: refused");
 
     /* under a turned parent, it still points at the target */
-    parent = wgf_node_create();
-    wgf_node_set_rotation(parent, 0.0f, 1.2f, 0.0f);
-    wgf_node_set_position(parent, 3.0f, 0.0f, 0.0f);
-    wgf_node_set_parent(camera, parent);
-    wgf_node_set_position(camera, 0.0f, 2.0f, 8.0f);
-    expect(wgf_node_look_at(camera, -4.0f, 0.0f, 2.0f, 0.0f, 1.0f, 0.0f), "look_at under a parent");
+    parent = wgf_actor_create();
+    wgf_actor_set_rotation(parent, 0.0f, 1.2f, 0.0f);
+    wgf_actor_set_position(parent, 3.0f, 0.0f, 0.0f);
+    wgf_actor_set_parent(camera, parent);
+    wgf_actor_set_position(camera, 0.0f, 2.0f, 8.0f);
+    expect(wgf_actor_look_at(camera, -4.0f, 0.0f, 2.0f, 0.0f, 1.0f, 0.0f), "look_at under a parent");
     view_proj = wgf_gfx_priv_camera3d_view_projection(camera, 1.0f, &position);
     at = project(view_proj, -4.0f, 0.0f, 2.0f);
     expect(near(at.x, 0.0f) && near(at.y, 0.0f), "the target in the middle, the parent's turn taken off");
@@ -98,7 +98,7 @@ int main(void)
     before = sgl_num_vertices();
     wgf_draw_cube(0, 0, 0, 1, 1, 1, WGF_COLOR_RED);
     expect(sgl_num_vertices() == before, "a 3D draw outside 3D: nothing");
-    expect(!wgf_draw_begin_3d(plain), "begin_3d with a node that isn't a 3D camera: refused");
+    expect(!wgf_draw_begin_3d(plain), "begin_3d with an actor that isn't a 3D camera: refused");
     expect(wgf_draw_begin_3d(camera), "begin_3d");
     wgf_draw_cube(0, 0, 0, 1, 1, 1, WGF_COLOR_RED);
     expect(sgl_num_vertices() - before == 36, "a cube: six faces of two triangles");

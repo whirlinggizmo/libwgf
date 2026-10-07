@@ -2,35 +2,31 @@
 #define WGF_ECS_PRIV_H
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include "flecs.h"
+#include "wgf_component.h"
 #include "wgf_ecs.h"
-#include "wgf_entity.h"
-#include "wgf_quat.h"
 
-/* The ecs module's own code: the world (flecs), the entity records, the systems, and the
- * events (wgf_ecs.c); the components' calls (wgf_ecs_components.c, wgf_ecs_behavior.c);
- * scenes (wgf_ecs_scene.c) and the dump (wgf_ecs_dump.c).
+/* The ecs's own code: the world (flecs), the records of the actors with components or
+ * behaviors, the systems, and the events (wgf_ecs.c); an actor's components and behaviors
+ * added and let go of (wgf_ecs_actor.c); the components' calls (wgf_ecs_components.c,
+ * wgf_ecs_behavior.c); scenes (wgf_ecs_scene.c) and the dump (wgf_ecs_dump.c).
  *
- * The split (docs/HISTORY.md, "The entity and node split"): an entity's simulated state
- * -- its transform and the systems' components -- is flecs components, plain data the
- * systems' queries walk; what isn't plain data -- its node and its component nodes, its
- * voice, its name, its behavior's name and parameters -- is in libwgf's record for its
- * handle, which also holds the flecs id. */
+ * One kind of object, the actor (docs/HISTORY.md, "One kind of object, the actor"): an actor
+ * with a component or a behavior has a record here, its handle in the actor's own record
+ * (wgf_gfx_priv_actor_t's `components`). The systems' data -- motion, bounds, lifetime, a
+ * collider -- is flecs components, plain data the queries walk; the transform is the
+ * actor's, simulated (wgf_gfx_priv_actor_set_simulated); what isn't plain data -- the voice,
+ * the behaviors' names and parameters -- is in the record, with the flecs id. */
 
 #define WGF_ECS_PRIV_NAME_MAX 64
 
 /* flecs components, plain data. */
 typedef struct wgf_ecs_priv_ref_t {
-    wgf_entity_t handle; /* the libwgf handle of the flecs entity, for a query's rows */
+    wgf_actor_t actor; /* the actor the flecs entity is the components of, for a query's rows */
 } wgf_ecs_priv_ref_t;
-
-typedef struct wgf_ecs_priv_transform_t {
-    float position[3], rotation[3], scale[3]; /* now: the simulation's */
-    float prev_position[3], prev_scale[3];    /* as the last tick began: drawn from these to now */
-    wgf_quat_t prev_rotation;
-} wgf_ecs_priv_transform_t;
 
 typedef struct wgf_ecs_priv_motion_t {
     float velocity[3], spin[3];
@@ -56,70 +52,81 @@ typedef struct wgf_ecs_priv_collider_t {
 
 /* The flecs ids of the components, made with the world. */
 typedef struct wgf_ecs_priv_ids_t {
-    ecs_entity_t ref, transform, motion, bounds, lifetime, collider;
+    ecs_entity_t ref, motion, bounds, lifetime, collider;
+    ecs_entity_t voice; /* a tag: the voice itself is in the record */
 } wgf_ecs_priv_ids_t;
 
 #define WGF_ECS_PRIV_PARAMS_MAX 32
 #define WGF_ECS_PRIV_VALUE_MAX 256
 
+/* A parameter, its key and value malloc'd, so a behavior costs what its parameters do
+ * (the actor benchmark's: inline, 32 slots were 10 KB an actor). */
 typedef struct wgf_ecs_priv_param_t {
-    char key[WGF_ECS_PRIV_NAME_MAX];
-    char value[WGF_ECS_PRIV_VALUE_MAX];
+    char *key;
+    char *value;
+    wgf_actor_t actor; /* a value "@...": the actor it refers to, found when set or when its scene's actors were made */
 } wgf_ecs_priv_param_t;
 
 typedef struct wgf_ecs_priv_behavior_t {
+    int id; /* the actor's for it: from 1, never given again on the actor */
     char name[WGF_ECS_PRIV_NAME_MAX];
-    wgf_ecs_priv_param_t params[WGF_ECS_PRIV_PARAMS_MAX];
-    int param_count;
+    wgf_ecs_priv_param_t *params; /* malloc'd, in the order first set */
+    int param_count, param_capacity;
 } wgf_ecs_priv_behavior_t;
 
-/* The node kinds' slots, from WGF_COMPONENT_SHAPE2D. */
-#define WGF_ECS_PRIV_NODE_KINDS 5
+/* A behavior let go of, its parameters with it. */
+void wgf_ecs_priv_behavior_free(wgf_ecs_priv_behavior_t *behavior);
 
-/* libwgf's record for an entity, by its handle. */
-typedef struct wgf_ecs_priv_entity_t {
+/* The record of an actor with components or behaviors, by its own handle (the actor's
+ * `components`). */
+typedef struct wgf_ecs_priv_record_t {
     ecs_entity_t id;
     uint64_t order; /* made the order-th: "oldest first" */
-    wgf_node_t node;
-    wgf_node_t parts[WGF_ECS_PRIV_NODE_KINDS]; /* SHAPE2D, SPRITE, TEXT, EMITTER2D, MODEL; 0 for none */
-    wgf_voice_t voice;                         /* 0: no voice component */
-    char name[WGF_ECS_PRIV_NAME_MAX];
-    wgf_ecs_priv_behavior_t *behavior;         /* malloc'd; NULL: no behavior component */
-    bool hidden;                               /* wgf_entity_set_visible's: its parts drawn or not */
-} wgf_ecs_priv_entity_t;
+    wgf_actor_t actor;
+    wgf_voice_t voice; /* 0: no voice component */
+    wgf_ecs_priv_behavior_t **behaviors; /* each malloc'd, in the order added */
+    int behavior_count, behavior_capacity;
+    int next_behavior; /* the id the next one added gets */
+} wgf_ecs_priv_record_t;
 
-/* The world, made with the first entity, and the component ids; NULL before. */
+/* The world, made with the first record, and the component ids; NULL before. */
 ecs_world_t *wgf_ecs_priv_world(void);
 const wgf_ecs_priv_ids_t *wgf_ecs_priv_ids(void);
 
 /* The ecs part installed, and the world made: false when it couldn't be (logged). */
 bool wgf_ecs_priv_start(void);
 
-/* A record for a new entity drawn through `node`, its flecs entity made with its ref and
- * transform; 0 when there is no room. And a record freed: its flecs entity deleted, its
- * behavior freed, its handle stale (its nodes and voice are the caller's to end). */
-wgf_entity_t wgf_ecs_priv_new_record(wgf_node_t node);
-void wgf_ecs_priv_free_record(wgf_entity_t entity);
+/* `actor`'s record, made the first time (the actor then simulated); NULL for a handle that
+ * isn't an actor, or no room. And the record of an actor, or NULL when it has none: records
+ * move when one is made, so don't keep the pointer across a make. */
+wgf_ecs_priv_record_t *wgf_ecs_priv_record_make(wgf_actor_t actor);
+wgf_ecs_priv_record_t *wgf_ecs_priv_record_of(wgf_actor_t actor);
 
-/* The record of a live entity; NULL for anything else. Records move when one is made:
- * don't keep the pointer across a create. */
-wgf_ecs_priv_entity_t *wgf_ecs_priv_entity_of(wgf_entity_t entity);
+/* A record let go of as its actor goes (the actor's hook): DESTROYED raised for each
+ * behavior, its collider's pairs dropped, its voice destroyed, its flecs entity deleted. */
+void wgf_ecs_priv_record_free(wgf_actor_t actor);
 
-/* A flecs component of a live entity, for writing; NULL when it hasn't that one. */
-void *wgf_ecs_priv_get(wgf_entity_t entity, ecs_entity_t component);
+/* A flecs component of an actor, for writing; NULL when it hasn't that one. */
+void *wgf_ecs_priv_get(wgf_actor_t actor, ecs_entity_t component);
 
-/* Every live entity, oldest first, into a malloc'd array the caller frees (NULL with
- * none, or out of memory); how many in *count. */
-wgf_entity_t *wgf_ecs_priv_entities(int *count);
+/* Every actor with a record, oldest first, into a malloc'd array the caller frees (NULL
+ * with none, or out of memory); how many in *count. */
+wgf_actor_t *wgf_ecs_priv_actors(int *count);
+
+/* The flecs tag an actor with a behavior named `name` carries, so finding them is flecs's
+ * index of an id rather than a look at every record; made the first time when `make`, else
+ * 0 for a name no actor has had. */
+ecs_entity_t wgf_ecs_priv_behavior_tag(const char *name, bool make);
+
+/* Every reference ("@name", "@path") in the parameters of `actor`'s behaviors found again,
+ * as a scene's actors are all made: one found by none warned. */
+void wgf_ecs_priv_behaviors_resolve(wgf_actor_t actor);
 
 /* An event raised: queued for the program to take (wgf_ecs_take_events). */
-void wgf_ecs_priv_raise(wgf_ecs_event_t event, wgf_entity_t entity, wgf_entity_t other);
+void wgf_ecs_priv_raise(wgf_ecs_event_t event, int a, int b);
 
-/* An entity's collider pairs dropped as it goes, raising nothing. */
-void wgf_ecs_priv_forget_pairs(wgf_entity_t entity);
-
-/* The node kind's slot in an entity's parts, or -1 for a component that isn't one. */
-int wgf_ecs_priv_node_slot(wgf_component_t component);
+/* An actor's collider pairs dropped as it goes, or as its collider does, raising nothing. */
+void wgf_ecs_priv_forget_pairs(wgf_actor_t actor);
 
 /* The last dump freed, with the ecs's stop. */
 void wgf_ecs_priv_dump_shutdown(void);

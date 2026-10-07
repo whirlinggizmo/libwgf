@@ -3,14 +3,14 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Model's calls, on a Node: `var x:Model = handle` gives it them, and a Model is still a Node. **/
-@:forward abstract Model(Node) from Node to Node {
+/** Model's calls, on a Actor: `var x:Model = handle` gives it them, and a Model is still a Actor. **/
+@:forward abstract Model(Actor) from Actor to Actor {
 	/**
 	    A model of `mesh`; 0 for none yet. 0 when `mesh` isn't a mesh, or there is no room
-	    for another node. Tinted white: as its materials are.
+	    for another actor. Tinted white: as its materials are.
 	**/
 	public static inline function create(mesh:Mesh):Model
-		return ((Raw.wgf_model_create(mesh) : Node) : Model);
+		return ((Raw.wgf_model_create(mesh) : Actor) : Model);
 
 	/**
 	    The model's mesh; 0 is none, and nothing drawn. False when `mesh` isn't a mesh.

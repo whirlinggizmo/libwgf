@@ -2,10 +2,10 @@
 package wgf;
 
 /**
-    Bounds (WGF_COMPONENT_BOUNDS): a rectangle in the entity's parent's space, x and y,
-    and what happens to an entity whose position leaves it, by more than its margin, each
+    Bounds (WGF_COMPONENT_BOUNDS): a rectangle in the actor's parent's space, x and y,
+    and what happens to an actor whose position leaves it, by more than its margin, each
     tick after motion. Defaults: 0, 0, 800 by 600, WRAP, a margin of 0. Every call is false
-    (or 0) for an entity without bounds.
+    (or 0) for an actor without bounds.
 **/
 enum abstract BoundsMode(Int) from Int to Int {
 	var WRAP = 0;

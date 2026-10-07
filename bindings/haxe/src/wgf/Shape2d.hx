@@ -3,14 +3,14 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Shape2d's calls, on a Node: `var x:Shape2d = handle` gives it them, and a Shape2d is still a Node. **/
-@:forward abstract Shape2d(Node) from Node to Node {
+/** Shape2d's calls, on a Actor: `var x:Shape2d = handle` gives it them, and a Shape2d is still a Actor. **/
+@:forward abstract Shape2d(Actor) from Actor to Actor {
 	/**
 	    A shape with nothing to draw yet, white, filled. 0 when there is no room for another
-	    node.
+	    actor.
 	**/
 	public static inline function create():Shape2d
-		return ((Raw.wgf_shape2d_create() : Node) : Shape2d);
+		return ((Raw.wgf_shape2d_create() : Actor) : Shape2d);
 
 	/**
 	    What it is, set by the calls below; NONE for a handle that isn't a 2D shape.
@@ -104,7 +104,7 @@ import wgf.impl.Raw;
 		return Raw.wgf_shape2d_get_points(this, out);
 
 	/**
-	    The point of a rectangle or circle at its node's position, which it turns and scales
+	    The point of a rectangle or circle at its actor's position, which it turns and scales
 	    about, as a fraction of it: 0, 0 its top-left, 1, 1 its bottom-right. Unset (the
 	    default), each keeps its own origin -- a rectangle's top-left corner, a circle's
 	    center -- read back as that fraction (0, 0 or 0.5, 0.5). False for a handle that
@@ -114,7 +114,7 @@ import wgf.impl.Raw;
 		return Raw.wgf_shape2d_set_pivot(this, x, y);
 
 	/**
-	    The point of a rectangle or circle at its node's position, which it turns and scales
+	    The point of a rectangle or circle at its actor's position, which it turns and scales
 	    about, as a fraction of it: 0, 0 its top-left, 1, 1 its bottom-right. Unset (the
 	    default), each keeps its own origin -- a rectangle's top-left corner, a circle's
 	    center -- read back as that fraction (0, 0 or 0.5, 0.5). False for a handle that

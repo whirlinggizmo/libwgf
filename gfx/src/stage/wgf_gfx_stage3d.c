@@ -1,4 +1,4 @@
-#include "wgf_stage.h"
+#include "wgf_stage3d.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -8,7 +8,7 @@
 #include "material/wgf_gfx_material_priv.h"
 #include "mesh/wgf_gfx_mesh_priv.h"
 #include "render/wgf_gfx_render_priv.h"
-#include "stage/wgf_gfx_stage_priv.h"
+#include "stage/wgf_gfx_stage3d_priv.h"
 #include "texture/wgf_gfx_texture_priv.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_light.h"
@@ -63,9 +63,9 @@ static struct {
     int item_count, item_capacity;
     stage_draw_t *draws;
     int draw_count, draw_capacity;
-    wgf_gfx_priv_stage_light_t *lights;
+    wgf_gfx_priv_stage3d_light_t *lights;
     int light_count, light_capacity;
-    wgf_node_t *todo; /* the walk's */
+    wgf_actor_t *todo; /* the walk's */
     int todo_capacity;
     /* the GPU's, made at the first replay */
     bool ready;
@@ -121,99 +121,105 @@ static void stop(void)
 
 static wgf_core_priv_part_t part = {.name = "stage",
                                     .layer = WGF_CORE_PRIV_PART_LAYER_GFX,
-                                    .order = WGF_CORE_PRIV_PART_STAGE,
+                                    .order = WGF_CORE_PRIV_PART_STAGE3D,
                                     .end_frame = end_frame,
                                     .stop = stop};
 
 /* ------------------------------------------------------------ the stage ---- */
 
-static wgf_gfx_priv_node_t *stage_of(wgf_node_t stage)
+static wgf_gfx_priv_actor_t *stage_of(wgf_actor_t stage)
 {
-    wgf_gfx_priv_node_t *node_ptr = wgf_gfx_priv_node_of(stage);
-    return node_ptr != NULL && node_ptr->type == WGF_NODE_TYPE_STAGE ? node_ptr : NULL;
+    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(stage);
+    return actor_ptr != NULL && actor_ptr->type == WGF_ACTOR_KIND_STAGE3D ? actor_ptr : NULL;
 }
 
-wgf_node_t wgf_stage_create(void)
+wgf_actor_t wgf_stage3d_create(void)
 {
-    const wgf_node_t stage = wgf_gfx_priv_node_create(WGF_NODE_TYPE_STAGE);
-    wgf_gfx_priv_node_t *node_ptr = wgf_gfx_priv_node_of(stage);
-    if (node_ptr == NULL) return 0;
-    node_ptr->as.stage.tonemap = WGF_STAGE_TONEMAP_NEUTRAL;
-    node_ptr->as.stage.culling = true;
+    const wgf_actor_t stage = wgf_gfx_priv_actor_create(WGF_ACTOR_KIND_STAGE3D);
+    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(stage);
+    if (actor_ptr == NULL) return 0;
+    actor_ptr->as.stage3d.tonemap = WGF_STAGE3D_TONEMAP_NEUTRAL;
+    actor_ptr->as.stage3d.culling = true;
     wgf_core_priv_part_install(&part);
     wgf_gfx_priv_model_install(); /* the ecs's model component, now that there is somewhere to draw one */
     return stage;
 }
 
-bool wgf_stage_set_camera(wgf_node_t stage, wgf_node_t camera)
+bool wgf_stage3d_set_camera(wgf_actor_t stage, wgf_actor_t camera)
 {
-    wgf_gfx_priv_node_t *node_ptr = stage_of(stage);
-    if (node_ptr == NULL || (camera != 0 && wgf_node_get_type(camera) != WGF_NODE_TYPE_CAMERA3D)) return false;
-    node_ptr->as.stage.camera = camera;
+    wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
+    if (actor_ptr == NULL || (camera != 0 && wgf_actor_get_kind(camera) != WGF_ACTOR_KIND_CAMERA3D)) return false;
+    actor_ptr->as.stage3d.camera = camera;
     return true;
 }
 
-wgf_node_t wgf_stage_get_camera(wgf_node_t stage)
+wgf_actor_t wgf_stage3d_get_camera(wgf_actor_t stage)
 {
-    const wgf_gfx_priv_node_t *node_ptr = stage_of(stage);
-    if (node_ptr == NULL || wgf_node_get_type(node_ptr->as.stage.camera) != WGF_NODE_TYPE_CAMERA3D) return 0;
-    return node_ptr->as.stage.camera;
+    const wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
+    if (actor_ptr == NULL || wgf_actor_get_kind(actor_ptr->as.stage3d.camera) != WGF_ACTOR_KIND_CAMERA3D) return 0;
+    return actor_ptr->as.stage3d.camera;
 }
 
-bool wgf_stage_set_ambient(wgf_node_t stage, wgf_color_t color, float intensity)
+wgf_actor_t wgf_stage3d_find(wgf_actor_t stage, const char *name)
 {
-    wgf_gfx_priv_node_t *node_ptr = stage_of(stage);
-    if (node_ptr == NULL) return false;
-    node_ptr->as.stage.ambient_color = color;
-    node_ptr->as.stage.ambient_intensity = intensity > 0.0f ? intensity : 0.0f;
+    if (wgf_actor_get_kind(stage) != WGF_ACTOR_KIND_STAGE3D) return 0;
+    return wgf_gfx_priv_actor_find_on_stage(stage, name);
+}
+
+bool wgf_stage3d_set_ambient(wgf_actor_t stage, wgf_color_t color, float intensity)
+{
+    wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
+    if (actor_ptr == NULL) return false;
+    actor_ptr->as.stage3d.ambient_color = color;
+    actor_ptr->as.stage3d.ambient_intensity = intensity > 0.0f ? intensity : 0.0f;
     return true;
 }
 
-wgf_color_t wgf_stage_get_ambient_color(wgf_node_t stage)
+wgf_color_t wgf_stage3d_get_ambient_color(wgf_actor_t stage)
 {
-    const wgf_gfx_priv_node_t *node_ptr = stage_of(stage);
-    return node_ptr != NULL ? node_ptr->as.stage.ambient_color : 0;
+    const wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
+    return actor_ptr != NULL ? actor_ptr->as.stage3d.ambient_color : 0;
 }
 
-float wgf_stage_get_ambient_intensity(wgf_node_t stage)
+float wgf_stage3d_get_ambient_intensity(wgf_actor_t stage)
 {
-    const wgf_gfx_priv_node_t *node_ptr = stage_of(stage);
-    return node_ptr != NULL ? node_ptr->as.stage.ambient_intensity : 0.0f;
+    const wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
+    return actor_ptr != NULL ? actor_ptr->as.stage3d.ambient_intensity : 0.0f;
 }
 
-bool wgf_stage_set_tonemap(wgf_node_t stage, wgf_stage_tonemap_t tonemap, float exposure)
+bool wgf_stage3d_set_tonemap(wgf_actor_t stage, wgf_stage3d_tonemap_t tonemap, float exposure)
 {
-    wgf_gfx_priv_node_t *node_ptr = stage_of(stage);
-    if (node_ptr == NULL || (int)tonemap < WGF_STAGE_TONEMAP_NONE || tonemap > WGF_STAGE_TONEMAP_ACES) return false;
-    node_ptr->as.stage.tonemap = tonemap;
-    node_ptr->as.stage.exposure = exposure;
+    wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
+    if (actor_ptr == NULL || (int)tonemap < WGF_STAGE3D_TONEMAP_NONE || tonemap > WGF_STAGE3D_TONEMAP_ACES) return false;
+    actor_ptr->as.stage3d.tonemap = tonemap;
+    actor_ptr->as.stage3d.exposure = exposure;
     return true;
 }
 
-wgf_stage_tonemap_t wgf_stage_get_tonemap(wgf_node_t stage)
+wgf_stage3d_tonemap_t wgf_stage3d_get_tonemap(wgf_actor_t stage)
 {
-    const wgf_gfx_priv_node_t *node_ptr = stage_of(stage);
-    return node_ptr != NULL ? (wgf_stage_tonemap_t)node_ptr->as.stage.tonemap : WGF_STAGE_TONEMAP_NONE;
+    const wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
+    return actor_ptr != NULL ? (wgf_stage3d_tonemap_t)actor_ptr->as.stage3d.tonemap : WGF_STAGE3D_TONEMAP_NONE;
 }
 
-float wgf_stage_get_exposure(wgf_node_t stage)
+float wgf_stage3d_get_exposure(wgf_actor_t stage)
 {
-    const wgf_gfx_priv_node_t *node_ptr = stage_of(stage);
-    return node_ptr != NULL ? node_ptr->as.stage.exposure : 0.0f;
+    const wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
+    return actor_ptr != NULL ? actor_ptr->as.stage3d.exposure : 0.0f;
 }
 
-bool wgf_stage_set_culling(wgf_node_t stage, bool culling)
+bool wgf_stage3d_set_culling(wgf_actor_t stage, bool culling)
 {
-    wgf_gfx_priv_node_t *node_ptr = stage_of(stage);
-    if (node_ptr == NULL) return false;
-    node_ptr->as.stage.culling = culling;
+    wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
+    if (actor_ptr == NULL) return false;
+    actor_ptr->as.stage3d.culling = culling;
     return true;
 }
 
-bool wgf_stage_is_culling(wgf_node_t stage)
+bool wgf_stage3d_is_culling(wgf_actor_t stage)
 {
-    const wgf_gfx_priv_node_t *node_ptr = stage_of(stage);
-    return node_ptr != NULL && node_ptr->as.stage.culling;
+    const wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
+    return actor_ptr != NULL && actor_ptr->as.stage3d.culling;
 }
 
 /* ------------------------------------------------------------- the draw ---- */
@@ -269,43 +275,43 @@ static void linear_color(wgf_color_t color, float out[4])
     out[3] = (float)wgf_color_get_alpha(color) / 255.0f;
 }
 
-/* Every enabled node of the tree from `root`, `root` first, depth first, as the
- * canvas walks it; `visit` is given each with its world matrix. False when the walk ran
+/* Every enabled actor of the tree from `root`, `root` first, depth first, as the
+ * a 2D stage walks it; `visit` is given each with its world matrix. False when the walk ran
  * out of memory (what it visited stands). */
-typedef void (*visit_t)(wgf_node_t node, const wgf_gfx_priv_node_t *node_ptr, const wgf_mat4_t *world, void *user);
-static void walk(wgf_node_t root, visit_t visit, void *user)
+typedef void (*visit_t)(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *world, void *user);
+static void walk(wgf_actor_t root, visit_t visit, void *user)
 {
     int count = 0;
-    if (!grow((void **)&frame.todo, &frame.todo_capacity, 64, sizeof(wgf_node_t))) return;
+    if (!grow((void **)&frame.todo, &frame.todo_capacity, 64, sizeof(wgf_actor_t))) return;
     frame.todo[count++] = root;
     while (count > 0) {
-        const wgf_node_t next = frame.todo[--count];
-        wgf_gfx_priv_node_t *node_ptr = wgf_gfx_priv_node_of(next);
-        const wgf_node_t *children;
+        const wgf_actor_t next = frame.todo[--count];
+        wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(next);
+        const wgf_actor_t *children;
         int i, child_count;
         wgf_mat4_t world;
-        if (node_ptr == NULL || !node_ptr->enabled) continue; /* with its children */
-        world = wgf_gfx_priv_node_world_of(next, node_ptr);
-        if (node_ptr->visible) visit(next, node_ptr, &world, user);
-        children = wgf_gfx_priv_node_children_of(node_ptr, &child_count);
-        if (!grow((void **)&frame.todo, &frame.todo_capacity, count + child_count, sizeof(wgf_node_t))) return;
+        if (actor_ptr == NULL || !actor_ptr->enabled) continue; /* with its children */
+        world = wgf_gfx_priv_actor_world_of(next, actor_ptr);
+        if (actor_ptr->visible) visit(next, actor_ptr, &world, user);
+        children = wgf_gfx_priv_actor_children_of(actor_ptr, &child_count);
+        if (!grow((void **)&frame.todo, &frame.todo_capacity, count + child_count, sizeof(wgf_actor_t))) return;
         for (i = child_count - 1; i >= 0; i--) frame.todo[count++] = children[i];
     }
 }
 
-static void visit_light(wgf_node_t node, const wgf_gfx_priv_node_t *node_ptr, const wgf_mat4_t *world, void *user)
+static void visit_light(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *world, void *user)
 {
-    (void)node;
+    (void)actor;
     (void)user;
-    if (node_ptr->type != WGF_NODE_TYPE_LIGHT || frame.light_count - frame.draws[frame.draw_count].first_light >=
+    if (actor_ptr->type != WGF_ACTOR_KIND_LIGHT || frame.light_count - frame.draws[frame.draw_count].first_light >=
                                                     WGF_GFX_PRIV_MAX_STAGE_LIGHTS) {
         return;
     }
     if (!grow((void **)&frame.lights, &frame.light_capacity, frame.light_count + 1,
-              sizeof(wgf_gfx_priv_stage_light_t))) {
+              sizeof(wgf_gfx_priv_stage3d_light_t))) {
         return;
     }
-    wgf_gfx_priv_light_resolve(node_ptr, *world, &frame.lights[frame.light_count++]);
+    wgf_gfx_priv_light_resolve(actor_ptr, *world, &frame.lights[frame.light_count++]);
 }
 
 typedef struct walk_models_t {
@@ -314,21 +320,21 @@ typedef struct walk_models_t {
     wgf_vec3_t eye, forward;
 } walk_models_t;
 
-static void visit_shape(wgf_node_t node, const wgf_gfx_priv_node_t *node_ptr, const wgf_mat4_t *world, void *user)
+static void visit_shape(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *world, void *user)
 {
     stage_draw_t *draw = &frame.draws[frame.draw_count];
-    (void)node;
+    (void)actor;
     (void)user;
-    if (node_ptr->type != WGF_NODE_TYPE_SHAPE3D || node_ptr->as.shape3d.kind == 0) return;
+    if (actor_ptr->type != WGF_ACTOR_KIND_SHAPE3D || actor_ptr->as.shape3d.kind == 0) return;
     if (draw->shapes < 0) draw->shapes = wgf_gfx_priv_render_begin_side_layer(draw->view_proj.m);
-    wgf_gfx_priv_shape3d_draw(node_ptr, world);
+    wgf_gfx_priv_shape3d_draw(actor_ptr, world);
 }
 
-static void visit_model(wgf_node_t node, const wgf_gfx_priv_node_t *node_ptr, const wgf_mat4_t *world, void *user)
+static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *world, void *user)
 {
     const walk_models_t *w = (const walk_models_t *)user;
     stage_draw_t *draw = &frame.draws[frame.draw_count];
-    const wgf_mesh_t mesh = node_ptr->type == WGF_NODE_TYPE_MODEL ? node_ptr->as.model.mesh : 0;
+    const wgf_mesh_t mesh = actor_ptr->type == WGF_ACTOR_KIND_MODEL ? actor_ptr->as.model.mesh : 0;
     const int primitives = wgf_gfx_priv_mesh_get_primitive_count(mesh);
     wgf_vec3_t lo, hi, box_lo, box_hi;
     float tint[4];
@@ -336,7 +342,7 @@ static void visit_model(wgf_node_t node, const wgf_gfx_priv_node_t *node_ptr, co
     if (primitives == 0 || !wgf_gfx_priv_mesh_get_bounds(mesh, &lo, &hi)) return;
     place_box(world, lo, hi, &box_lo, &box_hi);
     if (w->culling && outside(w->planes, box_lo, box_hi)) return;
-    linear_color(node_ptr->as.model.tint, tint);
+    linear_color(actor_ptr->as.model.tint, tint);
     for (p = 0; p < primitives; p++) {
         wgf_gfx_priv_mesh_primitive_t primitive;
         const wgf_gfx_priv_material_t *material;
@@ -344,7 +350,7 @@ static void visit_model(wgf_node_t node, const wgf_gfx_priv_node_t *node_ptr, co
         if (!wgf_gfx_priv_mesh_get_primitive(mesh, p, &primitive)) continue;
         if (!grow((void **)&frame.items, &frame.item_capacity, frame.item_count + 1, sizeof(item_t))) return;
         item = &frame.items[frame.item_count];
-        item->material = wgf_model_get_material(node, primitive.material);
+        item->material = wgf_model_get_material(actor, primitive.material);
         material = wgf_gfx_priv_material_get(item->material);
         if (material == NULL) continue; /* a slot with none draws nothing */
         item->world = *world;
@@ -374,10 +380,10 @@ static int compare_items(const void *lhs, const void *rhs)
 
 static void replay(int index);
 
-void wgf_stage_draw(wgf_node_t stage)
+void wgf_stage3d_draw(wgf_actor_t stage)
 {
-    const wgf_gfx_priv_node_t *stage_ptr = stage_of(stage);
-    const wgf_node_t camera = wgf_stage_get_camera(stage);
+    const wgf_gfx_priv_actor_t *stage_ptr = stage_of(stage);
+    const wgf_actor_t camera = wgf_stage3d_get_camera(stage);
     float x, y, width, height, ambient[4];
     wgf_platform_priv_presentation_t present;
     walk_models_t w;
@@ -398,15 +404,15 @@ void wgf_stage_draw(wgf_node_t stage)
     draw->viewport[2] = (int)(width * present.scale_x + 0.5f);
     draw->viewport[3] = (int)(height * present.scale_y + 0.5f);
     stage_ptr = stage_of(stage);
-    linear_color(stage_ptr->as.stage.ambient_color, ambient);
-    draw->ambient[0] = ambient[0] * stage_ptr->as.stage.ambient_intensity;
-    draw->ambient[1] = ambient[1] * stage_ptr->as.stage.ambient_intensity;
-    draw->ambient[2] = ambient[2] * stage_ptr->as.stage.ambient_intensity;
-    draw->tonemap = stage_ptr->as.stage.tonemap;
-    draw->exposure = stage_ptr->as.stage.exposure;
-    w.culling = stage_ptr->as.stage.culling;
+    linear_color(stage_ptr->as.stage3d.ambient_color, ambient);
+    draw->ambient[0] = ambient[0] * stage_ptr->as.stage3d.ambient_intensity;
+    draw->ambient[1] = ambient[1] * stage_ptr->as.stage3d.ambient_intensity;
+    draw->ambient[2] = ambient[2] * stage_ptr->as.stage3d.ambient_intensity;
+    draw->tonemap = stage_ptr->as.stage3d.tonemap;
+    draw->exposure = stage_ptr->as.stage3d.exposure;
+    w.culling = stage_ptr->as.stage3d.culling;
     frustum_planes(&draw->view_proj, w.planes);
-    camera_world = wgf_gfx_priv_node_get_world_matrix(camera);
+    camera_world = wgf_gfx_priv_actor_get_world_matrix(camera);
     w.eye = draw->camera_position;
     w.forward = wgf_vec3_normalize(wgf_mat4_transform_direction(camera_world, wgf_vec3_make(0.0f, 0.0f, -1.0f)));
 
@@ -588,7 +594,7 @@ static void draw_item(const stage_draw_t *draw, const item_t *item)
 
     memset(&lights, 0, sizeof(lights));
     for (i = 0; i < item->light_count; i++) {
-        const wgf_gfx_priv_stage_light_t *l = &frame.lights[draw->first_light + item->lights[i]];
+        const wgf_gfx_priv_stage3d_light_t *l = &frame.lights[draw->first_light + item->lights[i]];
         lights.u_light_pos_range[i][0] = l->position.x;
         lights.u_light_pos_range[i][1] = l->position.y;
         lights.u_light_pos_range[i][2] = l->position.z;
@@ -627,12 +633,12 @@ static void replay(int index)
 
 /* For tests: how many parts the frame's stage draws drew (after culling), and how many
  * lights the last one's first part was lit by. */
-int wgf_gfx_priv_stage_get_item_count(void)
+int wgf_gfx_priv_stage3d_get_item_count(void)
 {
     return frame.item_count;
 }
 
-int wgf_gfx_priv_stage_get_item_lights(int item)
+int wgf_gfx_priv_stage3d_get_item_lights(int item)
 {
     return item >= 0 && item < frame.item_count ? frame.items[item].light_count : -1;
 }

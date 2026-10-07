@@ -20,9 +20,11 @@ class Ship extends Behavior {
 	var thrusting = false;
 	final heading = new Vec3();
 	final velocity = new Vec3();
+	var flame:Emitter2d;
 
 	override function onCreate() {
-		(entity : Collider).setEnabled(false); // safe while it blinks
+		(actor : Collider).setEnabled(false); // safe while it blinks
+		flame = actor.find("emitter2d"); // its part, found once
 	}
 
 	override function onDestroy() {
@@ -34,10 +36,9 @@ class Ship extends Behavior {
 			return;
 		if (safe > 0) {
 			safe -= dt;
-			final shape:Node = entity.getComponentNode(Component.SHAPE2D);
-			shape.setVisible(safe <= 0 || Std.int(safe * 8) % 2 == 0);
+			actor.setVisible(safe <= 0 || Std.int(safe * 8) % 2 == 0); // the ship is its shape
 			if (safe <= 0)
-				(entity : Collider).setEnabled(true); // rocks again
+				(actor : Collider).setEnabled(true); // rocks again
 		}
 		final stick = Gamepad.getStick(0, GamepadStick.LEFT).x;
 		var turn = 0.0;
@@ -45,21 +46,20 @@ class Ship extends Behavior {
 			turn -= 1;
 		if (Keyboard.isDown(KeyboardKey.RIGHT) || Keyboard.isDown(KeyboardKey.D) || Gamepad.isDown(0, GamepadButton.DPAD_RIGHT) || stick > 0.4)
 			turn += 1;
-		(entity : Motion).setSpin(0, 0, turn * TURN);
+		(actor : Motion).setSpin(0, 0, turn * TURN);
 
-		final angle = entity.getRotation(heading).z;
+		final angle = actor.getRotation(heading).z;
 		final dx = Math.cos(angle), dy = Math.sin(angle);
 		final thrust = Keyboard.isDown(KeyboardKey.UP) || Keyboard.isDown(KeyboardKey.W) || Gamepad.isDown(0, GamepadButton.SOUTH)
 			|| Gamepad.getTrigger(0, GamepadTrigger.RIGHT) > 0.3;
 		if (thrust) {
-			final v = (entity : Motion).getVelocity(velocity);
-			(entity : Motion).setVelocity(v.x + dx * THRUST * dt, v.y + dy * THRUST * dt, 0);
+			final v = (actor : Motion).getVelocity(velocity);
+			(actor : Motion).setVelocity(v.x + dx * THRUST * dt, v.y + dy * THRUST * dt, 0);
 		}
 		if (thrust != thrusting) {
 			thrusting = thrust;
 			Main.sounds.thrust(thrust);
-			final flame:Node = entity.getComponentNode(Component.EMITTER2D);
-			(flame : Emitter2d).setEmitting(thrust);
+			flame.setEmitting(thrust);
 		}
 
 		cooldown -= dt;
@@ -67,18 +67,18 @@ class Ship extends Behavior {
 			|| Gamepad.isDown(0, GamepadButton.RIGHT_BUMPER);
 		if (fire && cooldown <= 0 && Ecs.countBehavior("Bullet") < BULLETS_MAX) {
 			cooldown = FIRE_EVERY;
-			final at = entity.getPosition(heading);
-			final v = (entity : Motion).getVelocity(velocity);
+			final at = actor.getPosition(heading);
+			final v = (actor : Motion).getVelocity(velocity);
 			Bullet.fire(at.x + dx * 18, at.y + dy * 18, v.x + dx * BULLET_SPEED, v.y + dy * BULLET_SPEED);
 		}
 	}
 
 	/** Hit by a rock: an explosion where it was, and a life lost. **/
 	public function explode() {
-		final at = entity.getPosition(heading);
+		final at = actor.getPosition(heading);
 		Rock.explosion(at.x, at.y, 2);
 		Main.sounds.play(Main.sounds.bangLarge);
-		entity.destroy();
+		actor.destroy(ActorDestroy.DESTROY_CHILDREN);
 		Main.shipLost();
 	}
 

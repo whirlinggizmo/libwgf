@@ -3,14 +3,14 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Sprite's calls, on a Node: `var x:Sprite = handle` gives it them, and a Sprite is still a Node. **/
-@:forward abstract Sprite(Node) from Node to Node {
+/** Sprite's calls, on a Actor: `var x:Sprite = handle` gives it them, and a Sprite is still a Actor. **/
+@:forward abstract Sprite(Actor) from Actor to Actor {
 	/**
 	    A sprite of `texture` (0 for none: it draws nothing). 0 when there is no room for
-	    another node.
+	    another actor.
 	**/
 	public static inline function create(texture:Texture):Sprite
-		return ((Raw.wgf_sprite_create(texture) : Node) : Sprite);
+		return ((Raw.wgf_sprite_create(texture) : Actor) : Sprite);
 
 	/**
 	    False for a handle that isn't a sprite, or a texture that isn't one (0 is none).
@@ -59,7 +59,7 @@ import wgf.impl.Raw;
 		return Raw.wgf_sprite_get_size(this, into);
 
 	/**
-	    The point of the sprite at its node's position, which it turns and scales about, as
+	    The point of the sprite at its actor's position, which it turns and scales about, as
 	    a fraction of its size: 0.5, 0.5 its center (the default), 0, 0 its top-left. False
 	    for a handle that isn't a sprite.
 	**/
@@ -67,7 +67,7 @@ import wgf.impl.Raw;
 		return Raw.wgf_sprite_set_pivot(this, x, y);
 
 	/**
-	    The point of the sprite at its node's position, which it turns and scales about, as
+	    The point of the sprite at its actor's position, which it turns and scales about, as
 	    a fraction of its size: 0.5, 0.5 its center (the default), 0, 0 its top-left. False
 	    for a handle that isn't a sprite.
 	**/

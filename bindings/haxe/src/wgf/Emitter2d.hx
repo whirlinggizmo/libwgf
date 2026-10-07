@@ -3,14 +3,14 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Emitter2d's calls, on a Node: `var x:Emitter2d = handle` gives it them, and a Emitter2d is still a Node. **/
-@:forward abstract Emitter2d(Node) from Node to Node {
+/** Emitter2d's calls, on a Actor: `var x:Emitter2d = handle` gives it them, and a Emitter2d is still a Actor. **/
+@:forward abstract Emitter2d(Actor) from Actor to Actor {
 	/**
 	    An emitter that isn't emitting yet: rate 0, 256 particles at most, white squares of
-	    4 units living a second, going nowhere. 0 when there is no room for another node.
+	    4 units living a second, going nowhere. 0 when there is no room for another actor.
 	**/
 	public static inline function create():Emitter2d
-		return ((Raw.wgf_emitter2d_create() : Node) : Emitter2d);
+		return ((Raw.wgf_emitter2d_create() : Actor) : Emitter2d);
 
 	/**
 	    Particles a second while emitting, spread evenly over the frames. Clamped to 0 or
@@ -89,7 +89,7 @@ import wgf.impl.Raw;
 		return Raw.wgf_emitter2d_get_life_max(this);
 
 	/**
-	    The direction they leave in, radians in the canvas (0 along +x, a quarter turn along
+	    The direction they leave in, radians on the stage (0 along +x, a quarter turn along
 	    +y, down the screen), turned by the emitter's own world rotation, give or take
 	    `spread` radians either side (TAU: every way); and their speed, in units a second,
 	    between min and max. False for a handle that isn't an emitter, or a spread or speed
@@ -99,7 +99,7 @@ import wgf.impl.Raw;
 		return Raw.wgf_emitter2d_set_direction(this, angle, spread);
 
 	/**
-	    The direction they leave in, radians in the canvas (0 along +x, a quarter turn along
+	    The direction they leave in, radians on the stage (0 along +x, a quarter turn along
 	    +y, down the screen), turned by the emitter's own world rotation, give or take
 	    `spread` radians either side (TAU: every way); and their speed, in units a second,
 	    between min and max. False for a handle that isn't an emitter, or a spread or speed
@@ -109,7 +109,7 @@ import wgf.impl.Raw;
 		return Raw.wgf_emitter2d_get_direction(this);
 
 	/**
-	    The direction they leave in, radians in the canvas (0 along +x, a quarter turn along
+	    The direction they leave in, radians on the stage (0 along +x, a quarter turn along
 	    +y, down the screen), turned by the emitter's own world rotation, give or take
 	    `spread` radians either side (TAU: every way); and their speed, in units a second,
 	    between min and max. False for a handle that isn't an emitter, or a spread or speed
@@ -119,7 +119,7 @@ import wgf.impl.Raw;
 		return Raw.wgf_emitter2d_get_spread(this);
 
 	/**
-	    The direction they leave in, radians in the canvas (0 along +x, a quarter turn along
+	    The direction they leave in, radians on the stage (0 along +x, a quarter turn along
 	    +y, down the screen), turned by the emitter's own world rotation, give or take
 	    `spread` radians either side (TAU: every way); and their speed, in units a second,
 	    between min and max. False for a handle that isn't an emitter, or a spread or speed
@@ -129,7 +129,7 @@ import wgf.impl.Raw;
 		return Raw.wgf_emitter2d_set_speed(this, min, max);
 
 	/**
-	    The direction they leave in, radians in the canvas (0 along +x, a quarter turn along
+	    The direction they leave in, radians on the stage (0 along +x, a quarter turn along
 	    +y, down the screen), turned by the emitter's own world rotation, give or take
 	    `spread` radians either side (TAU: every way); and their speed, in units a second,
 	    between min and max. False for a handle that isn't an emitter, or a spread or speed
@@ -139,7 +139,7 @@ import wgf.impl.Raw;
 		return Raw.wgf_emitter2d_get_speed_min(this);
 
 	/**
-	    The direction they leave in, radians in the canvas (0 along +x, a quarter turn along
+	    The direction they leave in, radians on the stage (0 along +x, a quarter turn along
 	    +y, down the screen), turned by the emitter's own world rotation, give or take
 	    `spread` radians either side (TAU: every way); and their speed, in units a second,
 	    between min and max. False for a handle that isn't an emitter, or a spread or speed

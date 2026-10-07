@@ -13,15 +13,15 @@
 #include "wgf_fs.h"
 #include "wgf_handle.h"
 #include "wgf_time.h"
-#include "wgf_canvas.h"
+#include "wgf_stage2d.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
 #include "wgf_font.h"
-#include "wgf_node.h"
+#include "wgf_actor.h"
 #include "wgf_text.h"
 
 /* Fonts and text on sokol's dummy backend (a headless build): the built-in font,
- * loading, failure falling back, the default, parking, layout, the text node, and
+ * loading, failure falling back, the default, parking, layout, the text actor, and
  * what is recorded. Pixels: wgf_gfx_text_web_test. */
 
 static int failures;
@@ -148,10 +148,10 @@ int main(void)
     again = wgf_font_create("text_test/mono.ttf");
     expect(wgf_resource_get_status(again) == WGF_RESOURCE_STATUS_READY, "a font released earlier comes back ready at once");
 
-    /* the text node */
+    /* the text actor */
     text = wgf_text_create(again);
-    expect(wgf_node_get_type(text) == WGF_NODE_TYPE_TEXT && wgf_text_get_font(text) == again, "a text node");
-    expect(wgf_text_create(12345) == 0, "a text node in something that isn't a font is refused");
+    expect(wgf_actor_get_kind(text) == WGF_ACTOR_KIND_TEXT && wgf_text_get_font(text) == again, "a text actor");
+    expect(wgf_text_create(12345) == 0, "a text actor in something that isn't a font is refused");
     expect(strcmp(wgf_text_get_string(text), "") == 0 && wgf_text_get_font_size(text) == 16 &&
                wgf_text_get_color(text) == WGF_COLOR_WHITE && wgf_text_get_wrap_width(text) == 0 &&
                wgf_text_get_halign(text) == WGF_TEXT_HALIGN_LEFT && wgf_text_get_valign(text) == WGF_TEXT_VALIGN_TOP,
@@ -176,30 +176,30 @@ int main(void)
 
     /* what is recorded */
     {
-        const wgf_handle_t canvas = wgf_canvas_create(), empty = wgf_text_create(0);
+        const wgf_handle_t stage = wgf_stage2d_create(), empty = wgf_text_create(0);
         int before, after_text, after_empty;
-        wgf_node_set_parent(text, canvas);
-        wgf_node_set_parent(empty, canvas);
+        wgf_actor_set_parent(text, stage);
+        wgf_actor_set_parent(empty, stage);
         wgf_draw_text(0, "outside", 0, 0, 16, WGF_COLOR_WHITE); /* outside a frame */
         begin_frame(64, 64, 1.0f);
         expect(sgl_num_vertices() == 0, "text outside a frame records nothing");
         wgf_draw_text(0, "Hi", 0, 0, 16, WGF_COLOR_WHITE);
         expect(sgl_num_vertices() > 0, "draw_text records glyphs");
         before = sgl_num_vertices();
-        wgf_node_set_visible(empty, true);
-        wgf_node_set_visible(text, false);
-        wgf_canvas_draw(canvas);
+        wgf_actor_set_visible(empty, true);
+        wgf_actor_set_visible(text, false);
+        wgf_stage2d_draw(stage);
         after_empty = sgl_num_vertices();
-        wgf_node_set_visible(text, true);
-        wgf_canvas_draw(canvas);
+        wgf_actor_set_visible(text, true);
+        wgf_stage2d_draw(stage);
         after_text = sgl_num_vertices();
         wgf_gfx_priv_end_frame();
-        expect(after_empty == before, "an empty or hidden text node draws nothing");
-        expect(after_text > after_empty, "a text node in a canvas draws its string");
-        wgf_node_destroy(canvas, WGF_NODE_DESTROY_CHILDREN);
+        expect(after_empty == before, "an empty or hidden text actor draws nothing");
+        expect(after_text > after_empty, "a text actor on a 2D stage draws its string");
+        wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
     }
     wgf_resource_release(again);
-    expect(wgf_resource_get_status(again) == WGF_RESOURCE_STATUS_NONE, "the text node's reference went with it");
+    expect(wgf_resource_get_status(again) == WGF_RESOURCE_STATUS_NONE, "the text actor's reference went with it");
     wgf_resource_release(broken);
 
     wgf_gfx_priv_stop();

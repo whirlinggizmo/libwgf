@@ -42,7 +42,7 @@ libwgf is one library, `libwgf.a` (`wgf.lib` with MSVC), built in layers and mod
 | asset | where a resource's file comes from | core, math |
 | gfx | drawing | platform, asset, core, math |
 | audio | sounds and voices | platform, asset, core, math |
-| ecs (module) | entities, components, systems, scenes | gfx, audio, platform, asset, core, math |
+| ecs (module) | components and behaviors on actors, systems, scenes | gfx, audio, platform, asset, core, math |
 | ui (module) | layout and widgets | gfx, platform, asset, core, math |
 | app | the runtime: run, the loop, ticks | any other |
 
@@ -56,17 +56,17 @@ libwgf is one library, `libwgf.a` (`wgf.lib` with MSVC), built in layers and mod
 
 | Thing | Form | Example |
 |-------|------|---------|
-| Public function | `wgf_<section>_<action>` | `wgf_node_set_position` |
+| Public function | `wgf_<section>_<action>` | `wgf_actor_set_position` |
 | Private function | `static`, or `wgf_<layer>_priv_*` | `wgf_gfx_priv_end_frame` |
 | Type | `wgf_<section>[_<name>]_t` | `wgf_log_level_t` |
 | Handle type | `wgf_<kind>_t`, a typedef of `wgf_handle_t` | `wgf_texture_t` |
 | Macro, constant, enum value | `WGF_<SECTION>_*` | `WGF_LOG_LEVEL_INFO` |
 | Include guard | `WGF_<FILE>_H` | `WGF_NODE_H` |
-| Public header | `wgf_<section>.h`; `wgf.h` for the version | `wgf_node.h` |
-| Source file | `wgf_<layer>_<section>.c`, in the layer's `src/` | `wgf_gfx_node.c` |
-| Private header | `wgf_<layer>_<section>_priv.h` | `wgf_gfx_node_priv.h` |
+| Public header | `wgf_<section>.h`; `wgf.h` for the version | `wgf_actor.h` |
+| Source file | `wgf_<layer>_<section>.c`, in the layer's `src/` | `wgf_gfx_actor.c` |
+| Private header | `wgf_<layer>_<section>_priv.h` | `wgf_gfx_actor_priv.h` |
 | Platform source | `wgf_<layer>_<section>_<platform>.c` | `wgf_core_fs_web.c` |
-| Haxe type | `wgf.<Section>` | `wgf.Node` |
+| Haxe type | `wgf.<Section>` | `wgf.Actor` |
 | C example dir | `<layer>-<name>` | `gfx-shapes` |
 
 - Public names don't carry the layer, except the layer-wide calls of app, asset, audio, ecs, and ui (`wgf_app_run`, `wgf_ui_begin`). Section names are unique across layers, since they are the public names. A section named after its layer lives in `<layer>/src/wgf_<layer>.c`.
@@ -89,11 +89,11 @@ libwgf is one library, `libwgf.a` (`wgf.lib` with MSVC), built in layers and mod
 
 No other pointer, no struct, no function pointer, no `void *`, no variadic call. A byte span is opaque: the layer never reads it as a structure. In: copied before the call returns. Out: owned by the task or handle that produced it, valid until that is destroyed. An array is the caller's: the layer reads or fills it during the call and never keeps it, and a call that fills one returns how many it filled.
 
-**Bulk calls for hot paths.** A call that reads or writes many objects takes a caller-owned array and a count, filled or read in one call (SPEC's invariant): never a scratch area the library shares between calls, whose results the next call overwrites, and never a command stream within a process. Per-entity work every tick runs as a C system (ecs); a binding sets intent, it doesn't drive every transform every frame.
+**Bulk calls for hot paths.** A call that reads or writes many objects takes a caller-owned array and a count, filled or read in one call (SPEC's invariant): never a scratch area the library shares between calls, whose results the next call overwrites, and never a command stream within a process. Per-actor work every tick runs as a C system (ecs); a binding sets intent, it doesn't drive every transform every frame.
 
 **One exception: `wgf_app_run`**, whose callbacks are `wgf_app_callback_t`, `void (*)(void *user)`, because the window system owns the loop. `tools/check_api.py` lists it in `CALLBACKS_ALLOWED`; another is a decision recorded in HISTORY.md, not a convenience.
 
-**Handles are typed by kind.** A public handle parameter or return uses the kind's typedef (`wgf_texture_t`), never bare `wgf_handle_t`, except a call that takes any kind (`wgf_handle_get_kind_name`, `wgf_resource_release`). Nodes of every type are `wgf_node_t`. A handle is valid only in the running program: never saved, never sent. 0 is none.
+**Handles are typed by kind.** A public handle parameter or return uses the kind's typedef (`wgf_texture_t`), never bare `wgf_handle_t`, except a call that takes any kind (`wgf_handle_get_kind_name`, `wgf_resource_release`). Actors of every kind are `wgf_actor_t`. A handle is valid only in the running program: never saved, never sent. 0 is none.
 
 **Shape of calls.**
 
@@ -102,7 +102,7 @@ No other pointer, no struct, no function pointer, no `void *`, no variadic call.
 - What plays over time has one state, `wgf_play_state_t` (STOPPED, PLAYING, PAUSED, COMPLETE), and four calls: play, pause, resume, stop, each false where it doesn't apply.
 - **Say clamp or refuse.** A setter clamps when every value in range is the same request at another fidelity; it refuses, returning false, when the value would change what was asked or has no meaning. Its comment says which, and a "false for ..." sentence names every refusal.
 - Predicates: `is_<state>` (now), `has_<noun>` (whether something exists), `can_<verb>` (whether an action is possible), all `bool`.
-- **Resources and objects.** A resource is shared data (a texture, a font, a sound, a scene file), created from a path, loading on create, reference counted, released with `wgf_resource_release`; `wgf_resource_get_status` answers NONE, PENDING, READY, or FAILED, and a resource is usable while PENDING. An object is owned (a node, a voice, an entity), created from a resource handle or from nothing, and destroyed with its own `_destroy`; it holds a reference to each resource it uses. No `_create_from_memory`.
+- **Resources and objects.** A resource is shared data (a texture, a font, a sound, a scene file), created from a path, loading on create, reference counted, released with `wgf_resource_release`; `wgf_resource_get_status` answers NONE, PENDING, READY, or FAILED, and a resource is usable while PENDING. An object is owned (an actor, a voice), created from a resource handle or from nothing, and destroyed with its own `_destroy`; it holds a reference to each resource it uses. No `_create_from_memory`.
 - **Asynchronous work** returns a task handle, polled for its status (an enum per kind of task: NONE 0, PENDING 1, then its outcomes), read through getters, then destroyed. A status changes only in the runtime's update at the start of a frame. An operation that could wait anywhere is asynchronous everywhere. Nothing calls back. A section exposes no readiness check: a request made early is queued.
 - **Failures are visible.** A failed load logs one error naming the file, and what uses it draws a placeholder. Nothing fails silently.
 

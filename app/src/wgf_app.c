@@ -153,7 +153,7 @@ static void on_frame(void)
     wgf_platform_priv_gamepad_begin_frame();     /* before the ticks: they read the pads too */
     run_ticks(time_frame());
     wgf_core_priv_part_set_fraction(wgf_loop_get_tick_fraction()); /* for those drawing ticked state */
-    wgf_core_priv_part_update(app.frame_delta); /* the parts' (the ecs's nodes, particles): after the ticks, before the frame */
+    wgf_core_priv_part_update(app.frame_delta); /* the parts' (ecs actors, particles): after the ticks, before the frame */
     wgf_gfx_priv_begin_frame();
     call(app.frame);
     if (app.overlay != NULL) app.overlay();

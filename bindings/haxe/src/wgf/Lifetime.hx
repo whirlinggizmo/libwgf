@@ -3,17 +3,17 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Lifetime's calls, on a Entity: `var x:Lifetime = handle` gives it them, and a Lifetime is still a Entity. **/
-@:forward abstract Lifetime(Entity) from Entity to Entity {
+/** Lifetime's calls, on a Actor: `var x:Lifetime = handle` gives it them, and a Lifetime is still a Actor. **/
+@:forward abstract Lifetime(Actor) from Actor to Actor {
 	/**
-	    Seconds left from now. False for an entity without a lifetime, or a time below 0 or
+	    Seconds left from now. False for an actor without a lifetime, or a time below 0 or
 	    not finite.
 	**/
 	public inline function setSeconds(seconds:Float):Bool
 		return Raw.wgf_lifetime_set_seconds(this, seconds);
 
 	/**
-	    Seconds left; 0 for an entity without a lifetime.
+	    Seconds left; 0 for an actor without a lifetime.
 	**/
 	public inline function getSeconds():Float
 		return Raw.wgf_lifetime_get_seconds(this);

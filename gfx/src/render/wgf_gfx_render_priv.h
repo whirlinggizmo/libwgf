@@ -17,7 +17,7 @@
 
 /* gfx's start and stop, run by app's runtime once the window exists: sokol_gfx on the
  * window's device (wgf_platform_priv_get_environment). Stopping frees everything gfx
- * holds: its nodes, textures, and fonts. False when sokol_gfx couldn't start. */
+ * holds: its actors, textures, and fonts. False when sokol_gfx couldn't start. */
 bool wgf_gfx_priv_start(void);
 void wgf_gfx_priv_stop(void);
 
@@ -78,7 +78,7 @@ void wgf_gfx_priv_render_set_bars(void (*fill)(void));
 void wgf_gfx_priv_render_fill_visible(void);
 
 /* What the frame shows, in logical pixels (the presentation's visible area,
- * wgf_presentation.h): where a canvas centers its view and the UI lays out. */
+ * wgf_presentation.h): where a 2D stage centers its view and the UI lays out. */
 void wgf_gfx_priv_render_get_visible(float *x, float *y, float *width, float *height);
 
 /* The clip drawing is under now (wgf_render_push_clip), in logical pixels; the whole

@@ -5,20 +5,20 @@
 
 #include "wgf_app.h"
 #include "wgf_asset.h"
-#include "wgf_canvas.h"
+#include "wgf_stage2d.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
 #include "wgf_keyboard.h"
 #include "wgf_loop.h"
 #include "wgf_mouse.h"
-#include "wgf_node.h"
+#include "wgf_actor.h"
 #include "wgf_render.h"
 #include "wgf_resource.h"
 #include "wgf_sprite.h"
 #include "wgf_texture.h"
 #include "wgf_window.h"
 
-/* Screen-space sprites in a canvas:
+/* Screen-space sprites on a 2D stage:
  *   - "sheet": the 256x256 logo treated as a 2x2 sprite sheet; its source steps
  *     through the four quadrants like animation frames
  *   - "spin": turns about its center (the default pivot)
@@ -26,7 +26,7 @@
  *   - "flip": mirrored by a negative x scale
  *   - "tint": a white copy of the logo cycling through tint colors (a tint multiplies
  *     the texture's color, so it can't show on the black logo)
- *   - a one-off wgf_draw_texture in the corner (no node)
+ *   - a one-off wgf_draw_texture in the corner (no actor)
  * Hovering enlarges the sprite under the pointer, the topmost (the last drawn) first.
  * Positions are logical pixels.
  *
@@ -53,10 +53,10 @@ enum { SPRITE_COUNT = 5, SHEET_SPRITE = 0, FLIP_SPRITE = 3, TINT_SPRITE = 4, PAL
 static const char *names[SPRITE_COUNT] = {"sheet", "spin", "swing", "flip", "tint"};
 
 static struct {
-    wgf_node_t canvas;
+    wgf_actor_t stage;
     wgf_texture_t logo;
     wgf_color_t palette[PALETTE_SIZE];
-    wgf_node_t sprites[SPRITE_COUNT];
+    wgf_actor_t sprites[SPRITE_COUNT];
     float angle[SPRITE_COUNT]; /* each one's rotation about z, as set */
     float grow[SPRITE_COUNT];  /* each one's scale, its mirror aside, as set */
     float time;
@@ -76,24 +76,24 @@ static void init(void *user)
                                       (int)(127 + 127 * sinf(a + 4.2f)), 255);
     }
 
-    g.canvas = wgf_canvas_create();
+    g.stage = wgf_stage2d_create();
     g.logo = wgf_texture_create(LOGO_PATH); /* kept for the one-off draw */
     white = wgf_texture_create(WHITE_LOGO_PATH);
     for (i = 0; i < SPRITE_COUNT; i++) {
         g.sprites[i] = wgf_sprite_create(i == TINT_SPRITE ? white : g.logo);
         wgf_sprite_set_size(g.sprites[i], 128, 128);
-        wgf_node_set_parent(g.sprites[i], g.canvas);
+        wgf_actor_set_parent(g.sprites[i], g.stage);
         g.grow[i] = 1.0f;
     }
     wgf_resource_release(white); /* the sprite holds its own reference */
-    wgf_node_set_position(g.sprites[0], 140, 170, 0);
-    wgf_node_set_position(g.sprites[1], 140, 380, 0);
+    wgf_actor_set_position(g.sprites[0], 140, 170, 0);
+    wgf_actor_set_position(g.sprites[1], 140, 380, 0);
     wgf_sprite_set_pivot(g.sprites[2], 0, 0);
-    wgf_node_set_position(g.sprites[2], 700, 110, 0);
+    wgf_actor_set_position(g.sprites[2], 700, 110, 0);
     wgf_sprite_set_size(g.sprites[2], 96, 96);
-    wgf_node_set_position(g.sprites[FLIP_SPRITE], 760, 400, 0);
-    wgf_node_set_scale(g.sprites[FLIP_SPRITE], -1, 1, 1);
-    wgf_node_set_position(g.sprites[TINT_SPRITE], 450, 110, 0);
+    wgf_actor_set_position(g.sprites[FLIP_SPRITE], 760, 400, 0);
+    wgf_actor_set_scale(g.sprites[FLIP_SPRITE], -1, 1, 1);
+    wgf_actor_set_position(g.sprites[TINT_SPRITE], 450, 110, 0);
     wgf_sprite_set_size(g.sprites[TINT_SPRITE], 96, 96);
 }
 
@@ -102,7 +102,7 @@ static void init(void *user)
  * rectangle. A mirror doesn't change what it covers. */
 static bool is_over(int i, float x, float y)
 {
-    const wgf_vec3_t position = wgf_node_get_position(g.sprites[i]);
+    const wgf_vec3_t position = wgf_actor_get_position(g.sprites[i]);
     const wgf_vec2_t size = wgf_sprite_get_size(g.sprites[i]);
     const wgf_vec2_t pivot = wgf_sprite_get_pivot(g.sprites[i]);
     const float c = cosf(g.angle[i]), s = sinf(g.angle[i]);
@@ -131,8 +131,8 @@ static void frame(void *user)
     wgf_sprite_set_source(g.sprites[0], (float)(g.frame % 2) * 128, (float)(g.frame / 2) * 128, 128, 128);
     g.angle[1] = g.time;
     g.angle[2] = sinf(g.time * 1.5f) * 0.8f;
-    wgf_node_set_rotation(g.sprites[1], 0, 0, g.angle[1]);
-    wgf_node_set_rotation(g.sprites[2], 0, 0, g.angle[2]);
+    wgf_actor_set_rotation(g.sprites[1], 0, 0, g.angle[1]);
+    wgf_actor_set_rotation(g.sprites[2], 0, 0, g.angle[2]);
     wgf_sprite_set_tint(g.sprites[TINT_SPRITE], g.palette[(int)(g.time * 6.0f) % PALETTE_SIZE]);
 
     /* Hover: the topmost sprite under the pointer, the last drawn first. */
@@ -142,12 +142,12 @@ static void frame(void *user)
     for (i = 0; i < SPRITE_COUNT; i++) {
         g.grow[i] = i == hovered ? 1.15f : 1.0f;
         /* "flip" keeps its mirror. */
-        wgf_node_set_scale(g.sprites[i], i == FLIP_SPRITE ? -g.grow[i] : g.grow[i], g.grow[i], 1);
+        wgf_actor_set_scale(g.sprites[i], i == FLIP_SPRITE ? -g.grow[i] : g.grow[i], g.grow[i], 1);
         if (i == hovered) hover_name = names[i];
     }
 
-    wgf_canvas_draw(g.canvas);
-    wgf_draw_texture(g.logo, (float)wgf_window_get_width() - 74, 10, 64, 64, WGF_COLOR_WHITE); /* one-off, no node */
+    wgf_stage2d_draw(g.stage);
+    wgf_draw_texture(g.logo, (float)wgf_window_get_width() - 74, 10, 64, 64, WGF_COLOR_WHITE); /* one-off, no actor */
 
     wgf_draw_text(0, "libwgf sprite2d: source rect, pivot, rotation, flip, picking", 12, 12, 16, WGF_COLOR_RAYWHITE);
     snprintf(line, sizeof(line), "mouse (%d, %d)  hover: %s  sheet frame %d", (int)mouse.x, (int)mouse.y, hover_name,

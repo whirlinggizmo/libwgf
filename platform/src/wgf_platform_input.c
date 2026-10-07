@@ -59,7 +59,7 @@ static struct {
     bool touch_cancelled;
     bool cursor_visible;
     bool mouse_emulated;
-    bool pointer_held;        /* the pointer section's press on a node */
+    bool pointer_held;        /* the pointer section's press on an actor */
     bool ui_pointer_captured; /* the game's UI's say, sticky */
     bool ui_keyboard_captured;
 } input = {.cursor_visible = true, .mouse_emulated = true};

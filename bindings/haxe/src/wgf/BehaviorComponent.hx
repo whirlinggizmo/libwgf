@@ -3,71 +3,105 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** BehaviorComponent's calls, on a Entity: `var x:BehaviorComponent = handle` gives it them, and a BehaviorComponent is still a Entity. **/
-@:forward abstract BehaviorComponent(Entity) from Entity to Entity {
+/** BehaviorComponent's calls, on a Actor: `var x:BehaviorComponent = handle` gives it them, and a BehaviorComponent is still a Actor. **/
+@:forward abstract BehaviorComponent(Actor) from Actor to Actor {
 	/**
-	    Default: "" (none: no code). Setting a name doesn't raise CREATED again. False too
-	    for a name breaking the rule above. get_name's is the entity's, valid until it
-	    changes.
+	    Its name: the actor's, valid while the behavior is.
 	**/
-	public inline function setName(name:String):Bool
-		return Raw.wgf_behavior_set_name(this, name);
-
-	/**
-	    Default: "" (none: no code). Setting a name doesn't raise CREATED again. False too
-	    for a name breaking the rule above. get_name's is the entity's, valid until it
-	    changes.
-	**/
-	public inline function getName():String
-		return Raw.wgf_behavior_get_name(this);
+	public inline function getName(behavior:Int):String
+		return Raw.wgf_behavior_get_name(this, behavior);
 
 	/**
 	    A parameter, set to `value` (text), added the first time; NULL removes it. False too
-	    for a key or value breaking the rule, or a 33rd parameter. get_param's is the
-	    entity's: "" for one it doesn't have, valid until it changes. get_param_number reads
-	    it as a number: 0 for one it doesn't have or that isn't one.
+	    for a key or value breaking the rule, or a 33rd parameter. get_param's is the actor's:
+	    "" for one it doesn't have, valid until it changes. get_param_number reads it as a
+	    number: 0 for one it doesn't have or that isn't one.
+
+	    A value starting with '@' refers to another actor, found once -- as it is set, and again
+	    when a scene's actors are all made -- and kept: get_param_actor is it, never a search.
+	    "@start_gate" is the one actor so named on this actor's stage (wgf_stage2d_find);
+	    "@car/wheel_rl" a path from it (wgf_actor_find); "@./flame" a path from this actor and
+	    "@../gun" from its parent. 0 for a parameter that isn't a reference, one that found
+	    none, and an actor since destroyed.
 	**/
-	public inline function setParam(key:String, value:String):Bool
-		return Raw.wgf_behavior_set_param(this, key, value);
+	public inline function setParam(behavior:Int, key:String, value:String):Bool
+		return Raw.wgf_behavior_set_param(this, behavior, key, value);
 
 	/**
 	    A parameter, set to `value` (text), added the first time; NULL removes it. False too
-	    for a key or value breaking the rule, or a 33rd parameter. get_param's is the
-	    entity's: "" for one it doesn't have, valid until it changes. get_param_number reads
-	    it as a number: 0 for one it doesn't have or that isn't one.
+	    for a key or value breaking the rule, or a 33rd parameter. get_param's is the actor's:
+	    "" for one it doesn't have, valid until it changes. get_param_number reads it as a
+	    number: 0 for one it doesn't have or that isn't one.
+
+	    A value starting with '@' refers to another actor, found once -- as it is set, and again
+	    when a scene's actors are all made -- and kept: get_param_actor is it, never a search.
+	    "@start_gate" is the one actor so named on this actor's stage (wgf_stage2d_find);
+	    "@car/wheel_rl" a path from it (wgf_actor_find); "@./flame" a path from this actor and
+	    "@../gun" from its parent. 0 for a parameter that isn't a reference, one that found
+	    none, and an actor since destroyed.
 	**/
-	public inline function getParam(key:String):String
-		return Raw.wgf_behavior_get_param(this, key);
+	public inline function getParam(behavior:Int, key:String):String
+		return Raw.wgf_behavior_get_param(this, behavior, key);
 
 	/**
 	    A parameter, set to `value` (text), added the first time; NULL removes it. False too
-	    for a key or value breaking the rule, or a 33rd parameter. get_param's is the
-	    entity's: "" for one it doesn't have, valid until it changes. get_param_number reads
-	    it as a number: 0 for one it doesn't have or that isn't one.
+	    for a key or value breaking the rule, or a 33rd parameter. get_param's is the actor's:
+	    "" for one it doesn't have, valid until it changes. get_param_number reads it as a
+	    number: 0 for one it doesn't have or that isn't one.
+
+	    A value starting with '@' refers to another actor, found once -- as it is set, and again
+	    when a scene's actors are all made -- and kept: get_param_actor is it, never a search.
+	    "@start_gate" is the one actor so named on this actor's stage (wgf_stage2d_find);
+	    "@car/wheel_rl" a path from it (wgf_actor_find); "@./flame" a path from this actor and
+	    "@../gun" from its parent. 0 for a parameter that isn't a reference, one that found
+	    none, and an actor since destroyed.
 	**/
-	public inline function getParamNumber(key:String):Float
-		return Raw.wgf_behavior_get_param_number(this, key);
+	public inline function getParamNumber(behavior:Int, key:String):Float
+		return Raw.wgf_behavior_get_param_number(this, behavior, key);
 
 	/**
 	    A parameter, set to `value` (text), added the first time; NULL removes it. False too
-	    for a key or value breaking the rule, or a 33rd parameter. get_param's is the
-	    entity's: "" for one it doesn't have, valid until it changes. get_param_number reads
-	    it as a number: 0 for one it doesn't have or that isn't one.
+	    for a key or value breaking the rule, or a 33rd parameter. get_param's is the actor's:
+	    "" for one it doesn't have, valid until it changes. get_param_number reads it as a
+	    number: 0 for one it doesn't have or that isn't one.
+
+	    A value starting with '@' refers to another actor, found once -- as it is set, and again
+	    when a scene's actors are all made -- and kept: get_param_actor is it, never a search.
+	    "@start_gate" is the one actor so named on this actor's stage (wgf_stage2d_find);
+	    "@car/wheel_rl" a path from it (wgf_actor_find); "@./flame" a path from this actor and
+	    "@../gun" from its parent. 0 for a parameter that isn't a reference, one that found
+	    none, and an actor since destroyed.
 	**/
-	public inline function hasParam(key:String):Bool
-		return Raw.wgf_behavior_has_param(this, key);
+	public inline function getParamActor(behavior:Int, key:String):Actor
+		return Raw.wgf_behavior_get_param_actor(this, behavior, key);
+
+	/**
+	    A parameter, set to `value` (text), added the first time; NULL removes it. False too
+	    for a key or value breaking the rule, or a 33rd parameter. get_param's is the actor's:
+	    "" for one it doesn't have, valid until it changes. get_param_number reads it as a
+	    number: 0 for one it doesn't have or that isn't one.
+
+	    A value starting with '@' refers to another actor, found once -- as it is set, and again
+	    when a scene's actors are all made -- and kept: get_param_actor is it, never a search.
+	    "@start_gate" is the one actor so named on this actor's stage (wgf_stage2d_find);
+	    "@car/wheel_rl" a path from it (wgf_actor_find); "@./flame" a path from this actor and
+	    "@../gun" from its parent. 0 for a parameter that isn't a reference, one that found
+	    none, and an actor since destroyed.
+	**/
+	public inline function hasParam(behavior:Int, key:String):Bool
+		return Raw.wgf_behavior_has_param(this, behavior, key);
 
 	/**
 	    Its parameters in the order first set: how many, and each one's key ("" past the
 	    end).
 	**/
-	public inline function getParamCount():Int
-		return Raw.wgf_behavior_get_param_count(this);
+	public inline function getParamCount(behavior:Int):Int
+		return Raw.wgf_behavior_get_param_count(this, behavior);
 
 	/**
 	    Its parameters in the order first set: how many, and each one's key ("" past the
 	    end).
 	**/
-	public inline function getParamKey(index:Int):String
-		return Raw.wgf_behavior_get_param_key(this, index);
+	public inline function getParamKey(behavior:Int, index:Int):String
+		return Raw.wgf_behavior_get_param_key(this, behavior, index);
 }

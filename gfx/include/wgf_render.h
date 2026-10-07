@@ -32,7 +32,7 @@ WGF_API float wgf_render_get_dpi_scale(void);
 /* Clip drawing to a rectangle (logical pixels, top-left origin) until the matching
  * pop. Clips nest: each push intersects with the clip it's pushed inside, so a scroll
  * area inside a panel stays inside the panel. Everything drawn between is clipped:
- * immediate mode, and the canvases drawn there. A width or height of 0 clips
+ * immediate mode, and the 2D stages drawn there. A width or height of 0 clips
  * everything away. Every push should be popped within the frame: unmatched ones are
  * dropped at its end, with a warning, as is a pop without a push. Up to 32 deep; a
  * push past that clips nothing more, warned once. Outside a frame: nothing, warned. */
