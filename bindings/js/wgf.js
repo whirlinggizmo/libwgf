@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "29d904fb3c0b878d" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "74162d0e80a80b7f" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -334,6 +334,18 @@ export const WGF_GAMEPAD_STICK_RIGHT = 1;
 
 export const WGF_GAMEPAD_TRIGGER_LEFT = 0;
 export const WGF_GAMEPAD_TRIGGER_RIGHT = 1;
+
+/**
+ * Every axis of a pad, one number each: the sticks' as get_stick gives them (-1 to 1, y
+ * down, past the dead zone) and the triggers' (0 to 1). What input actions bind
+ * (wgf_action.h), and the names an autopilot's `pad axis` lines use.
+ */
+export const WGF_GAMEPAD_AXIS_LEFT_X = 0;
+export const WGF_GAMEPAD_AXIS_LEFT_Y = 1;
+export const WGF_GAMEPAD_AXIS_RIGHT_X = 2;
+export const WGF_GAMEPAD_AXIS_RIGHT_Y = 3;
+export const WGF_GAMEPAD_AXIS_LEFT_TRIGGER = 4;
+export const WGF_GAMEPAD_AXIS_RIGHT_TRIGGER = 5;
 
 /**
  * The keyboard, read inside a tick or a frame: what changed since the previous
@@ -1490,6 +1502,15 @@ export function wgf_gamepad_get_trigger(pad, trigger) {
     return value;
 }
 
+// wgf: call wgf_gamepad_get_axis
+/**
+ * One axis, as get_stick and get_trigger give it; 0 for a pad or axis that isn't one.
+ */
+export function wgf_gamepad_get_axis(pad, axis) {
+    const value = host["_wgf_gamepad_get_axis"](pad, axis);
+    return value;
+}
+
 // wgf: call wgf_gamepad_set_deadzone
 /**
  * How far from the middle a stick counts as the middle, the same for every pad:
@@ -1545,6 +1566,203 @@ export function wgf_keyboard_is_pressed(key) {
 export function wgf_keyboard_is_released(key) {
     const value = host["_wgf_keyboard_is_released"](key);
     return value !== 0;
+}
+
+// wgf: call wgf_action_bind_key
+/**
+ * Bindings added to `action` (made by the first); false for a name breaking the rule, a
+ * 65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
+ * isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+ */
+export function wgf_action_bind_key(action, key) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_action_bind_key"](cstr(action), key);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_action_bind_keys
+/**
+ * Bindings added to `action` (made by the first); false for a name breaking the rule, a
+ * 65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
+ * isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+ */
+export function wgf_action_bind_keys(action, negative, positive) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_action_bind_keys"](cstr(action), negative, positive);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_action_bind_pad_button
+/**
+ * Bindings added to `action` (made by the first); false for a name breaking the rule, a
+ * 65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
+ * isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+ */
+export function wgf_action_bind_pad_button(action, button) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_action_bind_pad_button"](cstr(action), button);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_action_bind_pad_axis
+/**
+ * Bindings added to `action` (made by the first); false for a name breaking the rule, a
+ * 65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
+ * isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+ */
+export function wgf_action_bind_pad_axis(action, axis, direction, threshold) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_action_bind_pad_axis"](cstr(action), axis, direction, threshold);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_action_bind_touch
+/**
+ * Bindings added to `action` (made by the first); false for a name breaking the rule, a
+ * 65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
+ * isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+ */
+export function wgf_action_bind_touch(action, x, y, width, height) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_action_bind_touch"](cstr(action), x, y, width, height);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_action_clear
+/**
+ * Every binding of `action` taken off, the action kept (a remap screen binds it again);
+ * false for an action there isn't.
+ */
+export function wgf_action_clear(action) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_action_clear"](cstr(action));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_action_get_axis
+/**
+ * The action as it is: its axis (-1 to 1), its value (0 to 1), and its state. 0, 0, and
+ * UP for an action there isn't.
+ */
+export function wgf_action_get_axis(action) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_action_get_axis"](cstr(action));
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_action_get_value
+/**
+ * The action as it is: its axis (-1 to 1), its value (0 to 1), and its state. 0, 0, and
+ * UP for an action there isn't.
+ */
+export function wgf_action_get_value(action) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_action_get_value"](cstr(action));
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_action_get_state
+/**
+ * The action as it is: its axis (-1 to 1), its value (0 to 1), and its state. 0, 0, and
+ * UP for an action there isn't.
+ */
+export function wgf_action_get_state(action) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_action_get_state"](cstr(action));
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_action_is_down
+/**
+ * The action as it is: its axis (-1 to 1), its value (0 to 1), and its state. 0, 0, and
+ * UP for an action there isn't.
+ */
+export function wgf_action_is_down(action) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_action_is_down"](cstr(action));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_action_is_pressed
+/**
+ * The action as it is: its axis (-1 to 1), its value (0 to 1), and its state. 0, 0, and
+ * UP for an action there isn't.
+ */
+export function wgf_action_is_pressed(action) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_action_is_pressed"](cstr(action));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_action_is_released
+/**
+ * The action as it is: its axis (-1 to 1), its value (0 to 1), and its state. 0, 0, and
+ * UP for an action there isn't.
+ */
+export function wgf_action_is_released(action) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_action_is_released"](cstr(action));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_action_get_count
+/**
+ * The actions, in the order made, and each one's bindings as text for a help line or a
+ * remap screen ("Left / Right", "Space", "Pad south", "Left stick X", "Right trigger",
+ * "Touch"): libwgf's, valid until the next call here. "" past the end.
+ */
+export function wgf_action_get_count() {
+    const value = host["_wgf_action_get_count"]();
+    return value;
+}
+
+// wgf: call wgf_action_get_name
+/**
+ * The actions, in the order made, and each one's bindings as text for a help line or a
+ * remap screen ("Left / Right", "Space", "Pad south", "Left stick X", "Right trigger",
+ * "Touch"): libwgf's, valid until the next call here. "" past the end.
+ */
+export function wgf_action_get_name(index) {
+    const value = host["_wgf_action_get_name"](index);
+    return str(value);
+}
+
+// wgf: call wgf_action_get_binding_count
+/**
+ * The actions, in the order made, and each one's bindings as text for a help line or a
+ * remap screen ("Left / Right", "Space", "Pad south", "Left stick X", "Right trigger",
+ * "Touch"): libwgf's, valid until the next call here. "" past the end.
+ */
+export function wgf_action_get_binding_count(action) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_action_get_binding_count"](cstr(action));
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_action_get_binding_text
+/**
+ * The actions, in the order made, and each one's bindings as text for a help line or a
+ * remap screen ("Left / Right", "Space", "Pad south", "Left stick X", "Right trigger",
+ * "Touch"): libwgf's, valid until the next call here. "" past the end.
+ */
+export function wgf_action_get_binding_text(action, index) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_action_get_binding_text"](cstr(action), index);
+    host["stackRestore"](mark);
+    return str(value);
 }
 
 // wgf: call wgf_mouse_get_position

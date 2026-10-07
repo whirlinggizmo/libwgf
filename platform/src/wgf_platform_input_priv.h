@@ -30,6 +30,11 @@ wgf_platform_priv_input_context_t wgf_platform_priv_input_get_context(void);
 void wgf_platform_priv_input_end_tick(void);
 void wgf_platform_priv_input_end_frame(void);
 
+/* Called as a tick's or a frame's edges end, before they are cleared: input actions'
+ * (wgf_platform_action.c) keep each action's state there, set by the first binding, so a
+ * program with no actions links none of them. */
+void wgf_platform_priv_input_set_edges_hook(void (*ended)(wgf_platform_priv_input_context_t context));
+
 /* The pointer's: a press that started on an interactive actor is held (or was let go
  * this frame), which captures the pointer along with the UI's own say. */
 void wgf_platform_priv_input_set_pointer_held(bool held);

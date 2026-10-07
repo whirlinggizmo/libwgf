@@ -200,6 +200,19 @@ float wgf_gamepad_get_trigger(int pad, wgf_gamepad_trigger_t trigger)
     return 0.0f;
 }
 
+float wgf_gamepad_get_axis(int pad, wgf_gamepad_axis_t axis)
+{
+    switch (axis) {
+        case WGF_GAMEPAD_AXIS_LEFT_X: return wgf_gamepad_get_stick(pad, WGF_GAMEPAD_STICK_LEFT).x;
+        case WGF_GAMEPAD_AXIS_LEFT_Y: return wgf_gamepad_get_stick(pad, WGF_GAMEPAD_STICK_LEFT).y;
+        case WGF_GAMEPAD_AXIS_RIGHT_X: return wgf_gamepad_get_stick(pad, WGF_GAMEPAD_STICK_RIGHT).x;
+        case WGF_GAMEPAD_AXIS_RIGHT_Y: return wgf_gamepad_get_stick(pad, WGF_GAMEPAD_STICK_RIGHT).y;
+        case WGF_GAMEPAD_AXIS_LEFT_TRIGGER: return wgf_gamepad_get_trigger(pad, WGF_GAMEPAD_TRIGGER_LEFT);
+        case WGF_GAMEPAD_AXIS_RIGHT_TRIGGER: return wgf_gamepad_get_trigger(pad, WGF_GAMEPAD_TRIGGER_RIGHT);
+        default: return 0.0f;
+    }
+}
+
 void wgf_gamepad_set_deadzone(float radius)
 {
     pads.deadzone = radius >= 0.0f ? (radius <= MAX_DEADZONE ? radius : MAX_DEADZONE) : 0.0f;

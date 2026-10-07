@@ -51,6 +51,18 @@ typedef enum wgf_gamepad_trigger_t {
     WGF_GAMEPAD_TRIGGER_RIGHT = 1
 } wgf_gamepad_trigger_t;
 
+/* Every axis of a pad, one number each: the sticks' as get_stick gives them (-1 to 1, y
+ * down, past the dead zone) and the triggers' (0 to 1). What input actions bind
+ * (wgf_action.h), and the names an autopilot's `pad axis` lines use. */
+typedef enum wgf_gamepad_axis_t {
+    WGF_GAMEPAD_AXIS_LEFT_X = 0,
+    WGF_GAMEPAD_AXIS_LEFT_Y = 1,
+    WGF_GAMEPAD_AXIS_RIGHT_X = 2,
+    WGF_GAMEPAD_AXIS_RIGHT_Y = 3,
+    WGF_GAMEPAD_AXIS_LEFT_TRIGGER = 4,
+    WGF_GAMEPAD_AXIS_RIGHT_TRIGGER = 5
+} wgf_gamepad_axis_t;
+
 /* Whether pad 0 to 3 is connected. */
 WGF_API bool wgf_gamepad_is_connected(int pad);
 
@@ -72,6 +84,9 @@ WGF_API wgf_vec2_t wgf_gamepad_get_stick(int pad, wgf_gamepad_stick_t stick);
 
 /* How far a trigger is pulled, 0 to 1. */
 WGF_API float wgf_gamepad_get_trigger(int pad, wgf_gamepad_trigger_t trigger);
+
+/* One axis, as get_stick and get_trigger give it; 0 for a pad or axis that isn't one. */
+WGF_API float wgf_gamepad_get_axis(int pad, wgf_gamepad_axis_t axis);
 
 /* How far from the middle a stick counts as the middle, the same for every pad:
  * default 0.15, clamped to 0 to 0.9. */

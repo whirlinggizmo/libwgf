@@ -167,6 +167,19 @@ export declare const WGF_GAMEPAD_TRIGGER_RIGHT: 1;
 export type wgf_gamepad_trigger_t = typeof WGF_GAMEPAD_TRIGGER_LEFT | typeof WGF_GAMEPAD_TRIGGER_RIGHT;
 
 /**
+ * Every axis of a pad, one number each: the sticks' as get_stick gives them (-1 to 1, y
+ * down, past the dead zone) and the triggers' (0 to 1). What input actions bind
+ * (wgf_action.h), and the names an autopilot's `pad axis` lines use.
+ */
+export declare const WGF_GAMEPAD_AXIS_LEFT_X: 0;
+export declare const WGF_GAMEPAD_AXIS_LEFT_Y: 1;
+export declare const WGF_GAMEPAD_AXIS_RIGHT_X: 2;
+export declare const WGF_GAMEPAD_AXIS_RIGHT_Y: 3;
+export declare const WGF_GAMEPAD_AXIS_LEFT_TRIGGER: 4;
+export declare const WGF_GAMEPAD_AXIS_RIGHT_TRIGGER: 5;
+export type wgf_gamepad_axis_t = typeof WGF_GAMEPAD_AXIS_LEFT_X | typeof WGF_GAMEPAD_AXIS_LEFT_Y | typeof WGF_GAMEPAD_AXIS_RIGHT_X | typeof WGF_GAMEPAD_AXIS_RIGHT_Y | typeof WGF_GAMEPAD_AXIS_LEFT_TRIGGER | typeof WGF_GAMEPAD_AXIS_RIGHT_TRIGGER;
+
+/**
  * The keyboard, read inside a tick or a frame: what changed since the previous
  * tick, or the previous frame. Keys are named by where they are on a US layout:
  * WGF_KEY_Z is the key left of X, whatever the layout prints on it. For the
@@ -1101,6 +1114,11 @@ export declare function wgf_gamepad_get_stick(pad: number, stick: wgf_gamepad_st
 export declare function wgf_gamepad_get_trigger(pad: number, trigger: wgf_gamepad_trigger_t): number;
 
 /**
+ * One axis, as get_stick and get_trigger give it; 0 for a pad or axis that isn't one.
+ */
+export declare function wgf_gamepad_get_axis(pad: number, axis: wgf_gamepad_axis_t): number;
+
+/**
  * How far from the middle a stick counts as the middle, the same for every pad:
  * default 0.15, clamped to 0 to 0.9.
  */
@@ -1133,6 +1151,111 @@ export declare function wgf_keyboard_is_pressed(key: wgf_keyboard_key_t): boolea
  * Went up since the previous tick or frame.
  */
 export declare function wgf_keyboard_is_released(key: wgf_keyboard_key_t): boolean;
+
+/**
+ * Bindings added to `action` (made by the first); false for a name breaking the rule, a
+ * 65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
+ * isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+ */
+export declare function wgf_action_bind_key(action: string | null, key: wgf_keyboard_key_t): boolean;
+
+/**
+ * Bindings added to `action` (made by the first); false for a name breaking the rule, a
+ * 65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
+ * isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+ */
+export declare function wgf_action_bind_keys(action: string | null, negative: wgf_keyboard_key_t, positive: wgf_keyboard_key_t): boolean;
+
+/**
+ * Bindings added to `action` (made by the first); false for a name breaking the rule, a
+ * 65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
+ * isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+ */
+export declare function wgf_action_bind_pad_button(action: string | null, button: wgf_gamepad_button_t): boolean;
+
+/**
+ * Bindings added to `action` (made by the first); false for a name breaking the rule, a
+ * 65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
+ * isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+ */
+export declare function wgf_action_bind_pad_axis(action: string | null, axis: wgf_gamepad_axis_t, direction: number, threshold: number): boolean;
+
+/**
+ * Bindings added to `action` (made by the first); false for a name breaking the rule, a
+ * 65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
+ * isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+ */
+export declare function wgf_action_bind_touch(action: string | null, x: number, y: number, width: number, height: number): boolean;
+
+/**
+ * Every binding of `action` taken off, the action kept (a remap screen binds it again);
+ * false for an action there isn't.
+ */
+export declare function wgf_action_clear(action: string | null): boolean;
+
+/**
+ * The action as it is: its axis (-1 to 1), its value (0 to 1), and its state. 0, 0, and
+ * UP for an action there isn't.
+ */
+export declare function wgf_action_get_axis(action: string | null): number;
+
+/**
+ * The action as it is: its axis (-1 to 1), its value (0 to 1), and its state. 0, 0, and
+ * UP for an action there isn't.
+ */
+export declare function wgf_action_get_value(action: string | null): number;
+
+/**
+ * The action as it is: its axis (-1 to 1), its value (0 to 1), and its state. 0, 0, and
+ * UP for an action there isn't.
+ */
+export declare function wgf_action_get_state(action: string | null): wgf_input_state_t;
+
+/**
+ * The action as it is: its axis (-1 to 1), its value (0 to 1), and its state. 0, 0, and
+ * UP for an action there isn't.
+ */
+export declare function wgf_action_is_down(action: string | null): boolean;
+
+/**
+ * The action as it is: its axis (-1 to 1), its value (0 to 1), and its state. 0, 0, and
+ * UP for an action there isn't.
+ */
+export declare function wgf_action_is_pressed(action: string | null): boolean;
+
+/**
+ * The action as it is: its axis (-1 to 1), its value (0 to 1), and its state. 0, 0, and
+ * UP for an action there isn't.
+ */
+export declare function wgf_action_is_released(action: string | null): boolean;
+
+/**
+ * The actions, in the order made, and each one's bindings as text for a help line or a
+ * remap screen ("Left / Right", "Space", "Pad south", "Left stick X", "Right trigger",
+ * "Touch"): libwgf's, valid until the next call here. "" past the end.
+ */
+export declare function wgf_action_get_count(): number;
+
+/**
+ * The actions, in the order made, and each one's bindings as text for a help line or a
+ * remap screen ("Left / Right", "Space", "Pad south", "Left stick X", "Right trigger",
+ * "Touch"): libwgf's, valid until the next call here. "" past the end.
+ */
+export declare function wgf_action_get_name(index: number): string;
+
+/**
+ * The actions, in the order made, and each one's bindings as text for a help line or a
+ * remap screen ("Left / Right", "Space", "Pad south", "Left stick X", "Right trigger",
+ * "Touch"): libwgf's, valid until the next call here. "" past the end.
+ */
+export declare function wgf_action_get_binding_count(action: string | null): number;
+
+/**
+ * The actions, in the order made, and each one's bindings as text for a help line or a
+ * remap screen ("Left / Right", "Space", "Pad south", "Left stick X", "Right trigger",
+ * "Touch"): libwgf's, valid until the next call here. "" past the end.
+ */
+export declare function wgf_action_get_binding_text(action: string | null, index: number): string;
 
 /**
  * Where the pointer is: where it last moved over the window.

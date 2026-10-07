@@ -24,6 +24,7 @@ endif()
 
 wgf_layer(platform
     SOURCES
+        src/wgf_platform_action.c
         src/wgf_platform_gamepad.c
         src/wgf_platform_input.c
         src/wgf_platform_sokol_impl.c
@@ -79,6 +80,7 @@ endif()
 
 if(WGF_TESTS AND WGF_HEADLESS)
     wgf_test(platform wgf_platform_input_test)
+    wgf_test(platform wgf_platform_action_test)
     wgf_test(platform wgf_platform_touch_test)
     wgf_test(platform wgf_platform_gamepad_test)
 endif()

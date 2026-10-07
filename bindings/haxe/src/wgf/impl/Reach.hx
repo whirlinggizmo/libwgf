@@ -7,6 +7,22 @@ package wgf.impl;
 **/
 class Reach {
 	public static final NAMES:Array<String> = [
+		"wgf_action_bind_key",
+		"wgf_action_bind_keys",
+		"wgf_action_bind_pad_axis",
+		"wgf_action_bind_pad_button",
+		"wgf_action_bind_touch",
+		"wgf_action_clear",
+		"wgf_action_get_axis",
+		"wgf_action_get_binding_count",
+		"wgf_action_get_binding_text",
+		"wgf_action_get_count",
+		"wgf_action_get_name",
+		"wgf_action_get_state",
+		"wgf_action_get_value",
+		"wgf_action_is_down",
+		"wgf_action_is_pressed",
+		"wgf_action_is_released",
 		"wgf_actor_add_behavior",
 		"wgf_actor_add_component",
 		"wgf_actor_create",
@@ -214,6 +230,7 @@ class Reach {
 		"wgf_fs_task_get_status",
 		"wgf_fs_task_get_text",
 		"wgf_fs_write",
+		"wgf_gamepad_get_axis",
 		"wgf_gamepad_get_button_state",
 		"wgf_gamepad_get_deadzone",
 		"wgf_gamepad_get_name",
@@ -549,7 +566,7 @@ class Reach {
 		"wgf_window_set_vsync",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...540) 0];
+	static final counts:Array<Int> = [for (_ in 0...557) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

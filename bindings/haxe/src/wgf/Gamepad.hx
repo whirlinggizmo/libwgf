@@ -60,6 +60,12 @@ class Gamepad {
 		return Raw.wgf_gamepad_get_trigger(pad, trigger);
 
 	/**
+	    One axis, as get_stick and get_trigger give it; 0 for a pad or axis that isn't one.
+	**/
+	public static inline function getAxis(pad:Int, axis:GamepadAxis):Float
+		return Raw.wgf_gamepad_get_axis(pad, axis);
+
+	/**
 	    How far from the middle a stick counts as the middle, the same for every pad:
 	    default 0.15, clamped to 0 to 0.9.
 	**/

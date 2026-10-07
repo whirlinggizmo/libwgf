@@ -133,6 +133,15 @@ class Main {
 		expect(Loop.getTargetFps() == 0, "no target fps");
 		Gamepad.setDeadzone(0.2);
 		expect(near(Gamepad.getDeadzone(), 0.2), "the dead zone");
+		expect(Gamepad.getAxis(0, GamepadAxis.LEFT_X) == 0, "no pad, no axis");
+		expect(Action.bindKeys("steer", KeyboardKey.LEFT, KeyboardKey.RIGHT) && Action.bindKey("fire", KeyboardKey.SPACE)
+			&& Action.bindPadButton("fire", GamepadButton.SOUTH) && Action.bindPadAxis("steer", GamepadAxis.LEFT_X, 0, 0)
+			&& Action.bindTouch("fire", 0, 0, 100, 100), "input actions bound");
+		expect(Action.getCount() >= 2 && Action.getName(0) == "steer" && Action.getBindingCount("steer") == 2
+			&& Action.getBindingText("steer", 0) == "Left / Right", "listed");
+		expect(Action.getAxis("steer") == 0 && Action.getValue("fire") == 0 && Action.getState("fire") == InputState.UP
+			&& !Action.isDown("fire") && !Action.isPressed("fire") && !Action.isReleased("fire"), "read, at rest");
+		expect(Action.clear("fire") && Action.getBindingCount("fire") == 0, "cleared");
 		Touch.setMouseEmulated(true);
 		expect(Touch.isMouseEmulated(), "touch drives the mouse");
 		Mouse.setLocked(false);

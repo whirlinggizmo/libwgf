@@ -107,13 +107,22 @@ wgf_platform_priv_input_context_t wgf_platform_priv_input_get_context(void)
     return input.context;
 }
 
+static void (*edges_ended)(wgf_platform_priv_input_context_t context);
+
+void wgf_platform_priv_input_set_edges_hook(void (*ended)(wgf_platform_priv_input_context_t context))
+{
+    edges_ended = ended;
+}
+
 void wgf_platform_priv_input_end_tick(void)
 {
+    if (edges_ended != NULL) edges_ended(WGF_PLATFORM_PRIV_INPUT_TICK);
     memset(&input.tick, 0, sizeof(input.tick));
 }
 
 void wgf_platform_priv_input_end_frame(void)
 {
+    if (edges_ended != NULL) edges_ended(WGF_PLATFORM_PRIV_INPUT_FRAME);
     memset(&input.frame, 0, sizeof(input.frame));
 }
 
