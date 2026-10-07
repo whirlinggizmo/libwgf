@@ -1,3 +1,5 @@
+// Altered by libwgf: the two field initializers set an initialized instance final with
+// Reflect.setField (deps/hotreload-hx/VERSION), until hotreload-hx takes the change.
 package hotreload;
 
 #if macro
