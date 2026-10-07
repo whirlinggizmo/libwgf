@@ -11,4 +11,7 @@ enum abstract NodeType(Int) from Int to Int {
 	var SHAPE2D = 6;
 	var EMITTER2D = 7;
 	var CAMERA3D = 8;
+	var STAGE = 9;
+	var LIGHT = 10;
+	var MODEL = 11;
 }

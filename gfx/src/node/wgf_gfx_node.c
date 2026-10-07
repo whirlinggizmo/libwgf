@@ -270,7 +270,7 @@ static bool is_under(wgf_node_t node, wgf_node_t ancestor)
 }
 
 #define NODE_TYPES 16 /* more than wgf_node_type_t's last */
-_Static_assert(WGF_NODE_TYPE_CAMERA3D < NODE_TYPES, "a node type past the kinds' table");
+_Static_assert(WGF_NODE_TYPE_MODEL < NODE_TYPES, "a node type past the kinds' table");
 static const wgf_gfx_priv_node_kind_t *kinds[NODE_TYPES];
 
 void wgf_gfx_priv_node_set_kind(wgf_node_type_t type, const wgf_gfx_priv_node_kind_t *kind)
@@ -380,7 +380,9 @@ wgf_node_type_t wgf_node_get_type(wgf_node_t node)
 bool wgf_node_set_parent(wgf_node_t node, wgf_node_t parent)
 {
     wgf_gfx_priv_node_t *node_ptr = wgf_gfx_priv_node_of(node);
-    if (node_ptr == NULL || node_ptr->type == WGF_NODE_TYPE_CANVAS) return false;
+    if (node_ptr == NULL || node_ptr->type == WGF_NODE_TYPE_CANVAS || node_ptr->type == WGF_NODE_TYPE_STAGE) {
+        return false;
+    }
     if (parent != 0 && (wgf_gfx_priv_node_of(parent) == NULL || is_under(parent, node))) return false;
     if (parent == node_ptr->parent) return true;
     remove_child(node_ptr->parent, node);

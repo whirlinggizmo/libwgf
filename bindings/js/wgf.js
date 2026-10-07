@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "6366b0d5609f1824" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "a50d77a97f9f0f94" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -546,6 +546,9 @@ export const WGF_NODE_TYPE_TEXT = 5;
 export const WGF_NODE_TYPE_SHAPE2D = 6;
 export const WGF_NODE_TYPE_EMITTER2D = 7;
 export const WGF_NODE_TYPE_CAMERA3D = 8;
+export const WGF_NODE_TYPE_STAGE = 9;
+export const WGF_NODE_TYPE_LIGHT = 10;
+export const WGF_NODE_TYPE_MODEL = 11;
 
 /**
  * What wgf_node_destroy does with the node's children.
@@ -609,6 +612,31 @@ export const WGF_TEXTURE_WRAP_MIRROR = 2;
 export const WGF_TEXTURE_FILTER_LINEAR = 0;
 export const WGF_TEXTURE_FILTER_NEAREST = 1;
 
+/**
+ * A light: a node that lights the stage it is on (wgf_stage.h), placed and aimed with
+ * the node calls (wgf_node_look_at): a light shines down its -z. Lights work as
+ * libwgt's (wgrender's):
+ *
+ * - Nothing is lit implicitly: a stage with no lights and no ambient is black.
+ * - Each model is lit by the up to 8 lights reaching it most (their brightness, and
+ *   their falloff at its box); point and spot lights whose range doesn't reach a model
+ *   are skipped for it.
+ * - A light shines while it is enabled (with everything above it) and visible
+ *   (wgf_node.h): hiding it turns it off and leaves its children as they are, a lamp's
+ *   bulb model under it, say.
+ * - Parameters follow glTF's KHR_lights_punctual, and shading glTF's materials
+ *   (wgf_material.h), so lights from glTF tools look the same here. Light colors are
+ *   sRGB; lighting happens in linear space. A white directional light of intensity pi
+ *   (about 3) lights a white, rough, non-metal surface facing it fully. Point and spot
+ *   lights fall off with the inverse square of distance and fade smoothly to nothing at
+ *   their range (0: no limit).
+ * - Setters store values even where they don't apply to the light's type (a range on a
+ *   directional light). Shadows are milestone 2, step 8's.
+ */
+export const WGF_LIGHT_TYPE_DIRECTIONAL = 0;
+export const WGF_LIGHT_TYPE_POINT = 1;
+export const WGF_LIGHT_TYPE_SPOT = 2;
+
 export const WGF_MATERIAL_SHADING_PBR = 0;
 export const WGF_MATERIAL_SHADING_UNLIT = 1;
 
@@ -663,6 +691,14 @@ export const WGF_SHAPE2D_KIND_RECTANGLE = 1;
 export const WGF_SHAPE2D_KIND_CIRCLE = 2;
 export const WGF_SHAPE2D_KIND_LINE = 3;
 export const WGF_SHAPE2D_KIND_POLYGON = 4;
+
+/**
+ * How a stage's lit colors map to the screen. Lighting can exceed what a screen shows;
+ * tone mapping rolls off highlights instead of clipping them.
+ */
+export const WGF_STAGE_TONEMAP_NONE = 0;
+export const WGF_STAGE_TONEMAP_NEUTRAL = 1;
+export const WGF_STAGE_TONEMAP_ACES = 2;
 
 /**
  * What an entity can have, at most one of each. The first five are data the systems
@@ -2635,7 +2671,7 @@ export function wgf_node_get_type(node) {
  * Put `node` under `parent`, last among its children, keeping its own transform
  * (so it moves to where it sits relative to the new parent); 0 detaches it, and a
  * detached node is drawn by nothing. False when `parent` isn't a node, or is
- * `node` or under it, or when `node` is a canvas, which is always a root.
+ * `node` or under it, or when `node` is a canvas or a stage, which are always roots.
  */
 export function wgf_node_set_parent(node, parent) {
     const value = host["_wgf_node_set_parent"](node, parent);
@@ -2647,7 +2683,7 @@ export function wgf_node_set_parent(node, parent) {
  * Put `node` under `parent`, last among its children, keeping its own transform
  * (so it moves to where it sits relative to the new parent); 0 detaches it, and a
  * detached node is drawn by nothing. False when `parent` isn't a node, or is
- * `node` or under it, or when `node` is a canvas, which is always a root.
+ * `node` or under it, or when `node` is a canvas or a stage, which are always roots.
  */
 export function wgf_node_get_parent(node) {
     const value = host["_wgf_node_get_parent"](node);
@@ -2659,7 +2695,7 @@ export function wgf_node_get_parent(node) {
  * Put `node` under `parent`, last among its children, keeping its own transform
  * (so it moves to where it sits relative to the new parent); 0 detaches it, and a
  * detached node is drawn by nothing. False when `parent` isn't a node, or is
- * `node` or under it, or when `node` is a canvas, which is always a root.
+ * `node` or under it, or when `node` is a canvas or a stage, which are always roots.
  */
 export function wgf_node_get_child_count(node) {
     const value = host["_wgf_node_get_child_count"](node);
@@ -4073,6 +4109,115 @@ export function wgf_emitter2d_clear(emitter) {
     return value !== 0;
 }
 
+// wgf: call wgf_light_create
+/**
+ * A white light of intensity 1, no range limit, a spot's cone pi/6 to pi/4. 0 when
+ * `type` isn't a type, or there is no room for another node.
+ */
+export function wgf_light_create(type) {
+    const value = host["_wgf_light_create"](type);
+    return value >>> 0;
+}
+
+// wgf: call wgf_light_get_type
+/**
+ * A white light of intensity 1, no range limit, a spot's cone pi/6 to pi/4. 0 when
+ * `type` isn't a type, or there is no room for another node.
+ */
+export function wgf_light_get_type(light) {
+    const value = host["_wgf_light_get_type"](light);
+    return value;
+}
+
+// wgf: call wgf_light_set_color
+/**
+ * Its color (default white); alpha is ignored.
+ */
+export function wgf_light_set_color(light, color) {
+    const value = host["_wgf_light_set_color"](light, color);
+    return value !== 0;
+}
+
+// wgf: call wgf_light_get_color
+/**
+ * Its color (default white); alpha is ignored.
+ */
+export function wgf_light_get_color(light) {
+    const value = host["_wgf_light_get_color"](light);
+    return value >>> 0;
+}
+
+// wgf: call wgf_light_set_intensity
+/**
+ * How strong it is, its color times this (default 1, clamped to 0 or more).
+ */
+export function wgf_light_set_intensity(light, intensity) {
+    const value = host["_wgf_light_set_intensity"](light, intensity);
+    return value !== 0;
+}
+
+// wgf: call wgf_light_get_intensity
+/**
+ * How strong it is, its color times this (default 1, clamped to 0 or more).
+ */
+export function wgf_light_get_intensity(light) {
+    const value = host["_wgf_light_get_intensity"](light);
+    return value;
+}
+
+// wgf: call wgf_light_set_range
+/**
+ * How far a point or spot light reaches, in units: it fades to nothing there (default
+ * 0, unlimited; below 0 is clamped to 0).
+ */
+export function wgf_light_set_range(light, range) {
+    const value = host["_wgf_light_set_range"](light, range);
+    return value !== 0;
+}
+
+// wgf: call wgf_light_get_range
+/**
+ * How far a point or spot light reaches, in units: it fades to nothing there (default
+ * 0, unlimited; below 0 is clamped to 0).
+ */
+export function wgf_light_get_range(light) {
+    const value = host["_wgf_light_get_range"](light);
+    return value;
+}
+
+// wgf: call wgf_light_set_spot_cone
+/**
+ * A spot light's cone, radians from its direction: full inside `inner`, nothing past
+ * `outer`, smooth between (glTF's innerConeAngle and outerConeAngle). outer is clamped
+ * to 0..pi/2, inner to 0..outer.
+ */
+export function wgf_light_set_spot_cone(light, inner, outer) {
+    const value = host["_wgf_light_set_spot_cone"](light, inner, outer);
+    return value !== 0;
+}
+
+// wgf: call wgf_light_get_spot_inner_angle
+/**
+ * A spot light's cone, radians from its direction: full inside `inner`, nothing past
+ * `outer`, smooth between (glTF's innerConeAngle and outerConeAngle). outer is clamped
+ * to 0..pi/2, inner to 0..outer.
+ */
+export function wgf_light_get_spot_inner_angle(light) {
+    const value = host["_wgf_light_get_spot_inner_angle"](light);
+    return value;
+}
+
+// wgf: call wgf_light_get_spot_outer_angle
+/**
+ * A spot light's cone, radians from its direction: full inside `inner`, nothing past
+ * `outer`, smooth between (glTF's innerConeAngle and outerConeAngle). outer is clamped
+ * to 0..pi/2, inner to 0..outer.
+ */
+export function wgf_light_get_spot_outer_angle(light) {
+    const value = host["_wgf_light_get_spot_outer_angle"](light);
+    return value;
+}
+
 // wgf: call wgf_material_create
 /**
  * A material with glTF's defaults. 0 when `shading` isn't one (logged), or there is no
@@ -4430,6 +4575,80 @@ export function wgf_mesh_get_material_count(mesh) {
  */
 export function wgf_mesh_get_material(mesh, slot_) {
     const value = host["_wgf_mesh_get_material"](mesh, slot_);
+    return value >>> 0;
+}
+
+// wgf: call wgf_model_create
+/**
+ * A model of `mesh`; 0 for none yet. 0 when `mesh` isn't a mesh, or there is no room
+ * for another node. Tinted white: as its materials are.
+ */
+export function wgf_model_create(mesh) {
+    const value = host["_wgf_model_create"](mesh);
+    return value >>> 0;
+}
+
+// wgf: call wgf_model_set_mesh
+/**
+ * The model's mesh; 0 is none, and nothing drawn. False when `mesh` isn't a mesh.
+ */
+export function wgf_model_set_mesh(model, mesh) {
+    const value = host["_wgf_model_set_mesh"](model, mesh);
+    return value !== 0;
+}
+
+// wgf: call wgf_model_get_mesh
+/**
+ * The model's mesh; 0 is none, and nothing drawn. False when `mesh` isn't a mesh.
+ */
+export function wgf_model_get_mesh(model) {
+    const value = host["_wgf_model_get_mesh"](model);
+    return value >>> 0;
+}
+
+// wgf: call wgf_model_set_tint
+/**
+ * A color its materials are multiplied by, as wgrender's tint (default white); alpha
+ * below 255 makes the model see-through, blended back to front.
+ */
+export function wgf_model_set_tint(model, color) {
+    const value = host["_wgf_model_set_tint"](model, color);
+    return value !== 0;
+}
+
+// wgf: call wgf_model_get_tint
+/**
+ * A color its materials are multiplied by, as wgrender's tint (default white); alpha
+ * below 255 makes the model see-through, blended back to front.
+ */
+export function wgf_model_get_tint(model) {
+    const value = host["_wgf_model_get_tint"](model);
+    return value >>> 0;
+}
+
+// wgf: call wgf_model_set_material
+/**
+ * Draw material slot `slot` (0..31) with `material` instead of the mesh's; -1 sets every
+ * slot, and 0 goes back to the mesh's. The model holds its own reference; its materials
+ * stay when the mesh changes. False for a slot out of range, or a handle that isn't a
+ * material. get_material is the material the slot draws with: borrowed, the model's
+ * own or the mesh's, 0 for neither.
+ */
+export function wgf_model_set_material(model, slot_, material) {
+    const value = host["_wgf_model_set_material"](model, slot_, material);
+    return value !== 0;
+}
+
+// wgf: call wgf_model_get_material
+/**
+ * Draw material slot `slot` (0..31) with `material` instead of the mesh's; -1 sets every
+ * slot, and 0 goes back to the mesh's. The model holds its own reference; its materials
+ * stay when the mesh changes. False for a slot out of range, or a handle that isn't a
+ * material. get_material is the material the slot draws with: borrowed, the model's
+ * own or the mesh's, 0 for neither.
+ */
+export function wgf_model_get_material(model, slot_) {
+    const value = host["_wgf_model_get_material"](model, slot_);
     return value >>> 0;
 }
 
@@ -4907,6 +5126,136 @@ export function wgf_sprite_set_tint(sprite, tint) {
 export function wgf_sprite_get_tint(sprite) {
     const value = host["_wgf_sprite_get_tint"](sprite);
     return value >>> 0;
+}
+
+// wgf: call wgf_stage_create
+/**
+ * A stage, with no camera, no ambient light, and NEUTRAL tone mapping at an exposure of
+ * 0. 0 when there is no room for another node.
+ */
+export function wgf_stage_create() {
+    const value = host["_wgf_stage_create"]();
+    return value >>> 0;
+}
+
+// wgf: call wgf_stage_draw
+/**
+ * Draw it into this frame, through its camera: its opaque models, then its see-through
+ * ones (a BLEND material, or a tint with alpha below 255) back to front, depth tested
+ * against each other and against the frame's 3D drawn before it. Each model is lit by
+ * the up to 8 lights that reach it most. Outside a frame, or with no camera, nothing.
+ */
+export function wgf_stage_draw(stage) {
+    host["_wgf_stage_draw"](stage);
+}
+
+// wgf: call wgf_stage_set_camera
+/**
+ * The camera it is seen through: a 3D camera anywhere, on this stage or not (default 0,
+ * none: nothing is drawn). False when `camera` isn't a 3D camera. A camera that is
+ * destroyed leaves the stage with none.
+ */
+export function wgf_stage_set_camera(stage, camera) {
+    const value = host["_wgf_stage_set_camera"](stage, camera);
+    return value !== 0;
+}
+
+// wgf: call wgf_stage_get_camera
+/**
+ * The camera it is seen through: a 3D camera anywhere, on this stage or not (default 0,
+ * none: nothing is drawn). False when `camera` isn't a 3D camera. A camera that is
+ * destroyed leaves the stage with none.
+ */
+export function wgf_stage_get_camera(stage) {
+    const value = host["_wgf_stage_get_camera"](stage);
+    return value >>> 0;
+}
+
+// wgf: call wgf_stage_set_ambient
+/**
+ * The light that reaches everything evenly, from no direction: its color times
+ * `intensity` (clamped to 0 or more). Default: none, an intensity of 0. Alpha is
+ * ignored.
+ */
+export function wgf_stage_set_ambient(stage, color, intensity) {
+    const value = host["_wgf_stage_set_ambient"](stage, color, intensity);
+    return value !== 0;
+}
+
+// wgf: call wgf_stage_get_ambient_color
+/**
+ * The light that reaches everything evenly, from no direction: its color times
+ * `intensity` (clamped to 0 or more). Default: none, an intensity of 0. Alpha is
+ * ignored.
+ */
+export function wgf_stage_get_ambient_color(stage) {
+    const value = host["_wgf_stage_get_ambient_color"](stage);
+    return value >>> 0;
+}
+
+// wgf: call wgf_stage_get_ambient_intensity
+/**
+ * The light that reaches everything evenly, from no direction: its color times
+ * `intensity` (clamped to 0 or more). Default: none, an intensity of 0. Alpha is
+ * ignored.
+ */
+export function wgf_stage_get_ambient_intensity(stage) {
+    const value = host["_wgf_stage_get_ambient_intensity"](stage);
+    return value;
+}
+
+// wgf: call wgf_stage_set_tonemap
+/**
+ * Its tone mapping, and its exposure in stops (EV): +1 doubles the brightness. Default:
+ * NEUTRAL, 0. False for a tone mapping that isn't one.
+ */
+export function wgf_stage_set_tonemap(stage, tonemap, exposure) {
+    const value = host["_wgf_stage_set_tonemap"](stage, tonemap, exposure);
+    return value !== 0;
+}
+
+// wgf: call wgf_stage_get_tonemap
+/**
+ * Its tone mapping, and its exposure in stops (EV): +1 doubles the brightness. Default:
+ * NEUTRAL, 0. False for a tone mapping that isn't one.
+ */
+export function wgf_stage_get_tonemap(stage) {
+    const value = host["_wgf_stage_get_tonemap"](stage);
+    return value;
+}
+
+// wgf: call wgf_stage_get_exposure
+/**
+ * Its tone mapping, and its exposure in stops (EV): +1 doubles the brightness. Default:
+ * NEUTRAL, 0. False for a tone mapping that isn't one.
+ */
+export function wgf_stage_get_exposure(stage) {
+    const value = host["_wgf_stage_get_exposure"](stage);
+    return value;
+}
+
+// wgf: call wgf_stage_set_culling
+/**
+ * Skip models the camera can't see (on by default): each is tested by the box around it
+ * as it is placed now, grown a little against rounding, against the camera's view
+ * before it is drawn, which is far cheaper than drawing it. Turn it off to draw
+ * everything, when checking whether a model's bounds are right, say.
+ */
+export function wgf_stage_set_culling(stage, culling) {
+    const value = host["_wgf_stage_set_culling"](stage, (culling ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_stage_is_culling
+/**
+ * Skip models the camera can't see (on by default): each is tested by the box around it
+ * as it is placed now, grown a little against rounding, against the camera's view
+ * before it is drawn, which is far cheaper than drawing it. Turn it off to draw
+ * everything, when checking whether a model's bounds are right, say.
+ */
+export function wgf_stage_is_culling(stage) {
+    const value = host["_wgf_stage_is_culling"](stage);
+    return value !== 0;
 }
 
 // wgf: call wgf_audio_set_volume

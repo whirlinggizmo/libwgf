@@ -80,6 +80,15 @@ cmake --preset wasm32-debug && cmake --build --preset wasm32-debug && ctest --pr
 
 The tests run under node; the ones that need a real browser (IndexedDB, WebGL2's pixels) run in a headless Chromium-based browser through `tools/run_in_browser.py`, several visits in one browser context, and are skipped where there is none. `wasm32-debug-headless` builds the web with no canvas, Web Audio, or fetch, so every headless test runs under node, as the binding's does.
 
+## Shaders
+
+gfx's shaders (`gfx/src/shaders/*.glsl`) are written once in sokol-shdc's annotated GLSL and compiled into headers for GL 4.1 and WebGL2 by `gen_shaders.py`, which are committed: building never runs the compiler, the pinned sokol-shdc that `setup_shdc.py` downloads.
+
+```sh
+python3 tools/gen_shaders.py           # every shader's header again, after changing its GLSL (--check: fail if stale)
+python3 tools/setup_shdc.py            # the pinned sokol-shdc, downloaded once into the per-user cache; prints its path
+```
+
 ## The bindings
 
 ```sh

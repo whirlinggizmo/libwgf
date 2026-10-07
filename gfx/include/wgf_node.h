@@ -33,7 +33,10 @@ typedef enum wgf_node_type_t {
     WGF_NODE_TYPE_TEXT = 5,
     WGF_NODE_TYPE_SHAPE2D = 6,
     WGF_NODE_TYPE_EMITTER2D = 7,
-    WGF_NODE_TYPE_CAMERA3D = 8
+    WGF_NODE_TYPE_CAMERA3D = 8,
+    WGF_NODE_TYPE_STAGE = 9,
+    WGF_NODE_TYPE_LIGHT = 10,
+    WGF_NODE_TYPE_MODEL = 11
 } wgf_node_type_t;
 
 /* What wgf_node_destroy does with the node's children. */
@@ -56,7 +59,7 @@ WGF_API wgf_node_type_t wgf_node_get_type(wgf_node_t node);
 /* Put `node` under `parent`, last among its children, keeping its own transform
  * (so it moves to where it sits relative to the new parent); 0 detaches it, and a
  * detached node is drawn by nothing. False when `parent` isn't a node, or is
- * `node` or under it, or when `node` is a canvas, which is always a root. */
+ * `node` or under it, or when `node` is a canvas or a stage, which are always roots. */
 WGF_API bool wgf_node_set_parent(wgf_node_t node, wgf_node_t parent);
 WGF_API wgf_node_t wgf_node_get_parent(wgf_node_t node);
 WGF_API int wgf_node_get_child_count(wgf_node_t node);

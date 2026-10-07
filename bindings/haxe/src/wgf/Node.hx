@@ -33,7 +33,7 @@ abstract Node(Int) from Int to Int to wgf.Handle {
 	    Put `node` under `parent`, last among its children, keeping its own transform
 	    (so it moves to where it sits relative to the new parent); 0 detaches it, and a
 	    detached node is drawn by nothing. False when `parent` isn't a node, or is
-	    `node` or under it, or when `node` is a canvas, which is always a root.
+	    `node` or under it, or when `node` is a canvas or a stage, which are always roots.
 	**/
 	public inline function setParent(parent:Node):Bool
 		return Raw.wgf_node_set_parent(this, parent);
@@ -42,7 +42,7 @@ abstract Node(Int) from Int to Int to wgf.Handle {
 	    Put `node` under `parent`, last among its children, keeping its own transform
 	    (so it moves to where it sits relative to the new parent); 0 detaches it, and a
 	    detached node is drawn by nothing. False when `parent` isn't a node, or is
-	    `node` or under it, or when `node` is a canvas, which is always a root.
+	    `node` or under it, or when `node` is a canvas or a stage, which are always roots.
 	**/
 	public inline function getParent():Node
 		return Raw.wgf_node_get_parent(this);
@@ -51,7 +51,7 @@ abstract Node(Int) from Int to Int to wgf.Handle {
 	    Put `node` under `parent`, last among its children, keeping its own transform
 	    (so it moves to where it sits relative to the new parent); 0 detaches it, and a
 	    detached node is drawn by nothing. False when `parent` isn't a node, or is
-	    `node` or under it, or when `node` is a canvas, which is always a root.
+	    `node` or under it, or when `node` is a canvas or a stage, which are always roots.
 	**/
 	public inline function getChildCount():Int
 		return Raw.wgf_node_get_child_count(this);

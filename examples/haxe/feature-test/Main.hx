@@ -199,6 +199,34 @@ class Main {
 	static var camera3d:Camera3d;
 	static var camera3dMade = false;
 
+	static var stage3d:Stage;
+
+	/** A stage, its lights, and its models. **/
+	static function makeStage():Void {
+		stage3d = Stage.create();
+		expect(stage3d.setCamera(camera3d) && stage3d.getCamera() == camera3d, "a stage's camera");
+		expect(stage3d.setAmbient(Color.get(ColorStock.WHITE), 0.2) && stage3d.getAmbientColor() == Color.get(ColorStock.WHITE)
+			&& Math.abs(stage3d.getAmbientIntensity() - 0.2) < 1e-6, "its ambient light");
+		expect(stage3d.setTonemap(StageTonemap.ACES, 0.5) && stage3d.getTonemap() == StageTonemap.ACES
+			&& stage3d.getExposure() == 0.5 && stage3d.setTonemap(StageTonemap.NEUTRAL, 0), "its tone mapping");
+		expect(stage3d.setCulling(false) && !stage3d.isCulling() && stage3d.setCulling(true), "its culling");
+		final sun:Light = Light.create(LightType.SPOT);
+		expect(sun.getType() == LightType.SPOT && sun.setColor(Color.get(ColorStock.GOLD))
+			&& sun.getColor() == Color.get(ColorStock.GOLD), "a light's color");
+		expect(sun.setIntensity(3) && sun.getIntensity() == 3 && sun.setRange(20) && sun.getRange() == 20, "its strength");
+		expect(sun.setSpotCone(0.25, 0.5) && sun.getSpotInnerAngle() == 0.25 && sun.getSpotOuterAngle() == 0.5, "its cone");
+		sun.setParent(stage3d);
+		sun.setPosition(0, 5, 0);
+		final cube = Mesh.createCube(1, 1, 1);
+		final model:Model = Model.create(cube);
+		expect(model.getMesh() == cube && model.setMesh(cube) && model.setTint(Color.get(ColorStock.WHITE))
+			&& model.getTint() == Color.get(ColorStock.WHITE), "a model");
+		final own = Material.create(MaterialShading.UNLIT);
+		expect(model.setMaterial(0, own) && model.getMaterial(0) == own && Resource.release(own), "its own material");
+		model.setParent(stage3d);
+		Resource.release(cube);
+	}
+
 	/** Generated meshes and materials. **/
 	static function meshes():Void {
 		final cube = Mesh.createCube(1, 2, 3);
@@ -241,6 +269,8 @@ class Main {
 			expect(camera3d.lookAt(0, 0, 0, 0, 1, 0) && !camera3d.lookAt(6, 4, 6, 0, 1, 0), "aimed with lookAt");
 		}
 		if (frames == 2) meshes();
+		if (frames == 2) makeStage();
+		if (frames >= 2) stage3d.draw();
 		expect(Draw.begin3d(camera3d), "3D immediate mode");
 		Draw.grid(4, 1, Color.get(ColorStock.GRAY));
 		Draw.line3d(0, 0, 0, 1, 1, 1, Color.get(ColorStock.RED));

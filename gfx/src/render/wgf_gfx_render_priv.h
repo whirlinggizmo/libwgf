@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "sokol_gfx.h"
+#include "util/sokol_gl.h"
 
 /* The frame, for gfx's own drawing code and app's runtime. */
 
@@ -41,6 +42,21 @@ void wgf_gfx_priv_render_set_2d(void);
  * the whole framebuffer again. */
 void wgf_gfx_priv_render_set_3d(const float view_proj[16]);
 void wgf_gfx_priv_render_end_3d(void);
+
+/* The frame's commands (wgf_gfx_render_commands.c): `replay(index)` draws with
+ * sokol_gfx at this point among the frame's immediate mode, when the frame is drawn,
+ * under the clip it was made under, in the open pass. False outside a frame, or out of
+ * memory. */
+bool wgf_gfx_priv_render_add_command(void (*replay)(int index), int index);
+
+/* For the commands: the immediate mode recording's context; the frame's drawing (NULL:
+ * its one layer); the clip now, and immediate mode's viewport now (the visible area's
+ * in 3D, the frame's otherwise), each x, y, width, height in the framebuffer's pixels
+ * from its top-left. */
+sgl_context wgf_gfx_priv_render_get_context(void);
+void wgf_gfx_priv_render_set_drawing(void (*draw)(void));
+void wgf_gfx_priv_render_get_scissor(int rect[4]);
+void wgf_gfx_priv_render_get_viewport(int rect[4]);
 
 /* What immediate mode keeps between frames (a polyline's scratch), freed at gfx's stop. */
 void wgf_gfx_priv_draw_shutdown(void);

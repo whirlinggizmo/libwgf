@@ -33,6 +33,8 @@ The binding's checks (tools/check_binding.py), when there is a haxe:
                   steps needing what this machine hasn't are skipped, and said so
   games           every game: its playthrough headless and in a browser, its web export
                   within its budget, its desktop export (tools/check_games.py), as cli skips
+  shaders         gfx's committed shader headers current with their GLSL (tools/gen_shaders.py
+                  --check; skipped where sokol-shdc can't be had)
   frames          with --web: every game's export flown by its autopilot in a browser, its
                   frame times traced (tools/bench/measure_frames.py, on SwiftShader: kept
                   working, nothing recorded)
@@ -84,6 +86,7 @@ CHECKS = {
     'js-binding': (['tools/check_js_binding.py'], True, None),
     'cli': (['tools/check_cli.py'], False, ('haxe', 'no haxe')),
     'games': (['tools/check_games.py'], False, ('haxe', 'no haxe')),
+    'shaders': (['tools/gen_shaders.py', '--check'], False, None),
     'sizes': (['tools/measure_sizes.py', '--check'], True, ('haxe', 'no haxe')),
     'frames': (['tools/bench/measure_frames.py', '--display', 'headless'], True, ('haxe', 'no haxe')),
 }

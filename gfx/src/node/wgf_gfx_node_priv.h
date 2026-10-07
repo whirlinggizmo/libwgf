@@ -55,6 +55,32 @@ typedef struct wgf_gfx_priv_camera3d_t {
     float ortho_height;
 } wgf_gfx_priv_camera3d_t;
 
+typedef struct wgf_gfx_priv_stage_t {
+    wgf_node_t camera;
+    wgf_color_t ambient_color;
+    float ambient_intensity;
+    int tonemap; /* wgf_stage_tonemap_t */
+    float exposure;
+    bool culling;
+} wgf_gfx_priv_stage_t;
+
+typedef struct wgf_gfx_priv_light_t {
+    int type; /* wgf_light_type_t */
+    wgf_color_t color;
+    float intensity;
+    float range;
+    float inner_angle, outer_angle;
+} wgf_gfx_priv_light_t;
+
+/* Material slots a model can draw with its own material, as wgrender's */
+#define WGF_GFX_PRIV_MODEL_MATERIAL_SLOTS 32
+
+typedef struct wgf_gfx_priv_model_t {
+    wgf_handle_t mesh;         /* referenced; 0 none */
+    wgf_color_t tint;
+    wgf_handle_t *materials;   /* its own, a slot each, referenced (0: the mesh's); malloc'd, NULL for none */
+} wgf_gfx_priv_model_t;
+
 typedef struct wgf_gfx_priv_node_t {
     wgf_node_type_t type;
     char *name; /* malloc'd; NULL for none */
@@ -85,6 +111,9 @@ typedef struct wgf_gfx_priv_node_t {
         wgf_gfx_priv_text_t text;
         float camera2d_zoom;
         wgf_gfx_priv_camera3d_t camera3d;
+        wgf_gfx_priv_stage_t stage;
+        wgf_gfx_priv_light_t light;
+        wgf_gfx_priv_model_t model;
         wgf_gfx_priv_canvas_t canvas;
         wgf_gfx_priv_shape2d_t shape2d;
         struct wgf_gfx_priv_emitter_t *emitter; /* malloc'd (emitter/wgf_gfx_emitter_priv.h) */

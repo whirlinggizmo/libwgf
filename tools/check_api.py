@@ -84,6 +84,9 @@ GETTERS_PAIRED = {
     'wgf_emitter2d_set_color': ('wgf_emitter2d_get_color_start', 'wgf_emitter2d_get_color_end'),
     'wgf_camera3d_set_clip': ('wgf_camera3d_get_near', 'wgf_camera3d_get_far'),
     'wgf_material_set_alpha_mode': ('wgf_material_get_alpha_mode', 'wgf_material_get_alpha_cutoff'),
+    'wgf_stage_set_ambient': ('wgf_stage_get_ambient_color', 'wgf_stage_get_ambient_intensity'),
+    'wgf_stage_set_tonemap': ('wgf_stage_get_tonemap', 'wgf_stage_get_exposure'),
+    'wgf_light_set_spot_cone': ('wgf_light_get_spot_inner_angle', 'wgf_light_get_spot_outer_angle'),
     'wgf_material_set_texture_sampling': ('wgf_material_get_texture_wrap_u', 'wgf_material_get_texture_wrap_v',
                                           'wgf_material_get_texture_filter'),
 }

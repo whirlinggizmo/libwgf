@@ -14,8 +14,12 @@ wgf_layer(gfx
         src/node/wgf_gfx_node.c
         src/render/wgf_gfx_presentation.c
         src/render/wgf_gfx_render.c
+        src/render/wgf_gfx_render_commands.c
         src/shape/wgf_gfx_shape2d.c
         src/sprite/wgf_gfx_sprite.c
+        src/stage/wgf_gfx_light.c
+        src/stage/wgf_gfx_model.c
+        src/stage/wgf_gfx_stage.c
         src/text/wgf_gfx_font.c
         src/text/wgf_gfx_fontstash_impl.c
         src/text/wgf_gfx_text.c
@@ -44,6 +48,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_node_test)
         wgf_test(gfx wgf_gfx_camera3d_test)
         wgf_test(gfx wgf_gfx_mesh_test)
+        wgf_test(gfx wgf_gfx_stage_test)
         wgf_test(gfx wgf_gfx_text_test)
         wgf_test(gfx wgf_gfx_texture_test)
         wgf_test(gfx wgf_gfx_draw_test)
@@ -59,4 +64,5 @@ if(WGF_TESTS)
     wgf_web_test(gfx wgf_gfx_text_web_test 1)
     wgf_web_test(gfx wgf_gfx_canvas_web_test 1)
     wgf_web_test(gfx wgf_gfx_draw3d_web_test 1)
+    wgf_web_test(gfx wgf_gfx_stage_web_test 1)
 endif()
