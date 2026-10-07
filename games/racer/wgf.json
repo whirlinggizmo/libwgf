@@ -1,0 +1,10 @@
+{
+	"name": "racer",
+	"title": "Racer",
+	"main": "Main",
+	"source": "src",
+	"assets": "assets",
+	"autopilot": "autopilot",
+	"web_budget_kb": 400,
+	"playthrough": "lap.autopilot"
+}

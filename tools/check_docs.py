@@ -4,8 +4,9 @@ link in them goes somewhere.
 
     tools/check_docs.py
 
-  links     every relative link in the repository's Markdown (what git tracks, not deps/)
-            names a file or directory that exists
+  links     every relative link in the repository's Markdown (what git tracks, not deps/,
+            nor a game imported into games/, whose docs are its source's: IMPORTED.md
+            beside them) names a file or directory that exists
   headers   every public header (<layer>/include/wgf_*.h, include/) is named in
             docs/ARCHITECTURE.md, which describes each section
   tools     every tool a person runs (tools/ and tools/wgf/, check_tools' commands) is
@@ -31,12 +32,15 @@ LINK = re.compile(r'\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)')
 
 def markdown_files():
     """The repository's own Markdown: what git tracks (a build's or an export's copies
-    aren't), less the vendored code's."""
+    aren't), less the vendored code's and an imported game's (tools/import_game.py), which
+    are its source's, linking where its source is."""
     import subprocess
     done = subprocess.run(['git', 'ls-files', '*.md'], cwd=ROOT, capture_output=True, text=True)
     paths = done.stdout.split() if done.returncode == 0 else [p.relative_to(ROOT).as_posix() for p in ROOT.rglob('*.md')]
     for rel in sorted(paths):
         if Path(rel).parts[0] in SKIP or any(part in SKIP for part in Path(rel).parts):
+            continue
+        if any((ROOT / parent / 'IMPORTED.md').exists() for parent in Path(rel).parents):
             continue
         yield ROOT / rel
 

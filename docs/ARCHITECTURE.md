@@ -220,7 +220,7 @@ Games are Haxe (`bindings/haxe/`, haxelib `wgf`); JS and TypeScript programs use
 
 ## Games
 
-Each game is a directory in `games/` the `wgf` tool works on, on the public API alone, through the binding: Asteroids (`games/asteroids/`) now. Its world is a scene file of prefabs; its behaviors set intent and the ecs does the per-actor work; its screens are the UI; its sounds are generated (`tools/gen_sounds.py`) and committed. Each game ships an autopilot playthrough, which `tools/check_games.py` runs headless and in a browser beside its exports, and every push to `main` deploys its web export to GitHub Pages (`tools/build_pages.py`, `.github/workflows/pages.yml`), held to its size budget.
+Each game is a directory in `games/` the `wgf` tool works on, on the public API alone, through the binding: Asteroids (`games/asteroids/`), and the racer (`games/racer/`), a copy of a game written outside libwgf by a game-developer session from the public surface alone, imported by `tools/import_game.py` and changed only in its source. Its world is a scene file of prefabs; its behaviors set intent and the ecs does the per-actor work; its screens are the UI; its sounds are generated (`tools/gen_sounds.py`) and committed. Each game ships an autopilot playthrough (wgf.json's `playthrough`, `playthrough.autopilot` by default), which `tools/check_games.py` runs headless and in a browser beside its exports, and every push to `main` deploys its web export to GitHub Pages (`tools/build_pages.py`, `.github/workflows/pages.yml`), held to its size budget.
 
 ## Handles
 

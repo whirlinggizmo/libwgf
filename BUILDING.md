@@ -313,6 +313,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `measure_sizes.py` | measures every example's (C and JS) and game export's release web size (wasm and JS, raw, gzip, brotli, and the JS binding's share), beside libwgt's and wgrender-c's (`--references`), into `docs/benchmarks.md` (`--write`); `--check` fails a program grown past the baseline |
 | `check_games.py` | checks every game in `games/`: its generated files current, its playthrough headless and in a browser, its web export within budget, its desktop export |
 | `build_pages.py` | builds the GitHub Pages site: every game's web export, smoke-tested and within budget, and a page linking them |
+| `import_game.py` | copies a game written outside libwgf into `games/` (`../libwgf-racer/game` as `games/racer`), less its `build/` and `export/`, with `IMPORTED.md` naming its source and commit, so the checks, sizes, frame times, and Pages cover it; the copy is changed only in its source and imported again |
 | `gen_sounds.py` | writes Asteroids' sounds (`games/asteroids/assets/sounds/`) from their synthesis, the same bytes every time (`--check`) |
 | `check_cli.py` | runs each `wgf` command on a game it makes from the template, judging what each made and said; `serve` is edited while it runs, and must keep its state |
 | `check_features.py` | runs the feature test (`examples/haxe/feature-test/`) on hxcpp, under node, and in a browser, failing a call it never reached |

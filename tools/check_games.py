@@ -8,7 +8,8 @@ within the game's size budget.
 For each game (default: every games/<name>/ with a wgf.json), with the wgf tool, run in
 the game's directory as a developer would:
   generated   tools/gen_sounds.py --check, for a game whose sounds it makes
-  playthrough wgf autopilot autopilot/playthrough.autopilot, headless
+  playthrough wgf autopilot <its playthrough>, headless: wgf.json's "playthrough" in its
+              autopilot folder, playthrough.autopilot by default
   browser     the same in a headless browser (wgf autopilot --web)
   web         wgf export --web: the trimmed host, the budget, the smoke run in a browser
   desktop     wgf export --desktop: the release build, its smoke run in a window
@@ -17,6 +18,7 @@ A step that can't run here (no haxe, hxcpp, Emscripten, or browser) says
 library only.
 """
 import argparse
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -47,6 +49,13 @@ def wgf(game_dir, *args, timeout=1800):
     return done.returncode, done.stdout
 
 
+def playthrough(game_dir):
+    """The game's playthrough autopilot, relative to it: wgf.json's "playthrough" in its
+    autopilot folder (playthrough.autopilot by default)."""
+    data = json.loads((game_dir / 'wgf.json').read_text(encoding='utf-8'))
+    return f'{data.get("autopilot", "autopilot")}/{data.get("playthrough", "playthrough.autopilot")}'
+
+
 def why_not(step):
     """Why `step` can't run here, or None."""
     if step == 'generated':
@@ -74,10 +83,10 @@ def run_step(name, step):
                               text=True)
         return done.returncode == 0, done.stdout.strip()
     if step == 'playthrough':
-        code, out = wgf(game_dir, 'autopilot', 'autopilot/playthrough.autopilot')
+        code, out = wgf(game_dir, 'autopilot', playthrough(game_dir))
         return code == 0 and 'PASS' in out.splitlines()[-1], out
     if step == 'browser':
-        code, out = wgf(game_dir, 'autopilot', 'autopilot/playthrough.autopilot', '--web')
+        code, out = wgf(game_dir, 'autopilot', playthrough(game_dir), '--web')
         return code == 0 and 'PASS' in out.splitlines()[-1], out
     if step == 'web':
         code, out = wgf(game_dir, 'export', '--web')

@@ -10,6 +10,7 @@ It is done when it ships three games ([SPEC.md](SPEC.md)): Asteroids, a chase-ca
 - [BUILDING.md](BUILDING.md): building and testing on each platform, what to install, and every tool.
 - [docs/CONVENTIONS.md](docs/CONVENTIONS.md): the rules for changing libwgf.
 - [games/asteroids/](games/asteroids/README.md): the first game, played at <https://whirlinggizmo.github.io/libwgf/asteroids/>.
+- [games/racer/](games/racer/README.md): milestone 2's racer, its drivable slice, written outside libwgf by a game-developer session and imported (`tools/import_game.py`), played at <https://whirlinggizmo.github.io/libwgf/racer/>.
 - [BUILDING.md](BUILDING.md#games-the-wgf-tool): making a game with the `wgf` tool: `./wgf new`, then `wgf serve`.
 - [docs/BINDINGS.md](docs/BINDINGS.md): how a binding maps libwgf's calls; the JS binding is [bindings/js/](bindings/js/README.md), the Haxe binding [bindings/haxe/](bindings/haxe/README.md).
 - [docs/benchmarks.md](docs/benchmarks.md): every program's web size, beside libwgt's and wgrender-c's, which CI holds libwgf to.

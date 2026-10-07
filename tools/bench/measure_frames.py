@@ -8,7 +8,8 @@ the sizes.
 
 A program is game:<name> (default: every game in games/): its web export, made as `wgf
 export --web` makes it (a release build, its host and JS binding trimmed), flown by the
-game's autopilot/bench.autopilot, else its autopilot/playthrough.autopilot.
+game's autopilot/bench.autopilot, else its playthrough (wgf.json's "playthrough",
+playthrough.autopilot by default).
 
 The reference machine (docs/HISTORY.md, "Milestone 2's plan, reviewed"): this machine's
 GPU through ANGLE on Vulkan under Xvfb (--display xvfb, the default), with Chrome's CPU
@@ -72,7 +73,8 @@ def export(name):
         raise RuntimeError(f'exporting {name} failed:\n' + '\n'.join(done.stdout.strip().splitlines()[-15:]))
     data = json.loads((game / 'wgf.json').read_text(encoding='utf-8'))
     autopilots = game / data.get('autopilot', 'autopilot')
-    flown = next((p for p in (autopilots / 'bench.autopilot', autopilots / 'playthrough.autopilot') if p.exists()), None)
+    flown = next((p for p in (autopilots / 'bench.autopilot', autopilots / data.get('playthrough', 'playthrough.autopilot'))
+                  if p.exists()), None)
     if flown is None:
         raise RuntimeError(f'{name} has no bench or playthrough autopilot to fly')
     return dest / 'web', flown

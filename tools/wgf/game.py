@@ -4,7 +4,10 @@ target, for the wgf tool (tools/wgf/cli.py, devserver.py).
 A game's directory:
   wgf.json        its name, title (its page's), main class, where its sources, assets,
                   and autopilot are, its web size budget, gzipped (web_budget_kb), and
-                  defines for every build of it (defines: names, or name=value, each a -D)
+                  defines for every build of it (defines: names, or name=value, each a -D),
+                  and its playthrough (playthrough: the autopilot file, in its autopilot
+                  folder, that libwgf's checks and frame times fly; playthrough.autopilot
+                  by default)
   src/ assets/ autopilot/
   web/index.html  its page: written once from libwgf's (hosts/web/page.html) when it has
                   none, never overwritten; the game's to change
@@ -64,6 +67,7 @@ class Game:
         self.assets = self.root / data.get('assets', 'assets')
         self.autopilot = self.root / data.get('autopilot', 'autopilot')
         self.budget_kb = data.get('web_budget_kb')
+        self.playthrough = self.autopilot / data.get('playthrough', 'playthrough.autopilot')
         self.defines = data.get('defines', [])
         if not isinstance(self.defines, list) or not all(isinstance(d, str) and d for d in self.defines):
             raise GameError(f'{path}: "defines" is a list of names (or name=value), each given to Haxe as -D')
