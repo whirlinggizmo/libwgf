@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "sokol_app.h"
+#include "wgf_core_load_priv.h"
 #include "wgf_log.h"
 #include "wgf_mouse.h"
 #include "wgf_platform_gamepad_priv.h"
@@ -16,7 +17,12 @@
  * files"), in a program built to record alone: the window's events as they arrive, each
  * written for the frame it reaches; the pointer's position once a frame, where it ended
  * up; and the pads' buttons and axes at each frame's start, as they changed. Lines go to the file as they come, so a crash
- * keeps what was played; the end and the probes' last values are written as it stops. */
+ * keeps what was played; the end and the probes' last values are written as it stops.
+ *
+ * A program whose loads are in flight as recording starts (its init's) is recorded from
+ * their end: the file waits for them (`wait core.loading == 0`), its frames count from
+ * the program's frame they ended in, and what was given during them is written at 0, so
+ * a replay holds it through its own load, however long that takes. */
 
 #define AXIS_STEP 0.01f /* an axis's change smaller than this isn't written: a stick's noise */
 
@@ -28,7 +34,31 @@ static struct {
     size_t typed_count;
     long typed_frame;
     wgf_platform_priv_gamepad_t pads[WGF_PLATFORM_PRIV_GAMEPADS]; /* as last written */
+    bool decided;    /* whether it waits, decided at the first event or frame (the init's loads made) */
+    bool waits;      /* the start's loads were in flight: frames count from their end */
+    long start;      /* waiting: the program's frame they ended in; -1 until they have */
 } rec;
+
+/* Whether the recording waits for the start's loads, decided once, after the program's init. */
+static void decide(void)
+{
+    if (rec.decided) return;
+    rec.decided = true;
+    rec.start = -1;
+    rec.waits = wgf_core_priv_load_get_pending_count() > 0;
+    if (rec.waits) {
+        fprintf(rec.file, "# its start's loads were in flight: what follows counts from their end\n"
+                          "at 0 wait core.loading == 0\n");
+    }
+}
+
+/* The program's frame `frame` as the recording's: itself, or when the recording waits,
+ * counted from the frame the start's loads ended in (0 until then). */
+static long at(long frame)
+{
+    if (!rec.waits) return frame;
+    return rec.start < 0 || frame <= rec.start ? 0 : frame - rec.start;
+}
 
 static void flush_typed(void)
 {
@@ -90,6 +120,8 @@ static void record_event(const void *event_ptr, long frame)
     const sapp_event *event = (const sapp_event *)event_ptr;
     const char *name;
     if (rec.file == NULL) return;
+    decide();
+    frame = at(frame);
     switch (event->type) {
         case SAPP_EVENTTYPE_KEY_DOWN:
         case SAPP_EVENTTYPE_KEY_UP:
@@ -130,6 +162,9 @@ static void record_frame(long frame)
 {
     int pad, i;
     if (rec.file == NULL) return;
+    decide();
+    if (rec.waits && rec.start < 0 && wgf_core_priv_load_get_pending_count() == 0) rec.start = frame;
+    frame = at(frame);
     if (rec.typed_count > 0 && rec.typed_frame < frame) flush_typed();
     if (rec.moved) { /* where the pointer ended up, once a frame */
         const wgf_vec2_t at = wgf_mouse_get_position();
@@ -173,7 +208,7 @@ static void record_stop(long frames)
     if (rec.file == NULL) return;
     flush_typed();
     fprintf(rec.file, "at %ld end\n# the probes as the recording ended, to start its expectations from:\n",
-            frames > 0 ? frames - 1 : 0);
+            at(frames > 0 ? frames - 1 : 0));
     for (i = 0; i < wgf_probe_get_count(); i++) {
         const char *name = wgf_probe_get_name(i);
         const char *text = wgf_probe_get_text(name);

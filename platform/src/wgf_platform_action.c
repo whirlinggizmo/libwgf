@@ -17,11 +17,11 @@
 #define NAME_MAX 32
 #define PADS 4
 
-typedef enum binding_kind_t { KEY, KEYS, PAD_BUTTON, PAD_AXIS, TOUCH } binding_kind_t;
+typedef enum binding_kind_t { KEY, KEYS, PAD_BUTTON, PAD_BUTTONS, PAD_AXIS, TOUCH } binding_kind_t;
 
 typedef struct binding_t {
     binding_kind_t kind;
-    int a, b;           /* the key, the keys (negative, positive), the button, or the axis */
+    int a, b;           /* the key, the keys (negative, positive), the button(s), or the axis */
     int direction;      /* a pad axis: -1, 0, or 1 */
     float threshold;    /* a pad axis: below it, 0 */
     float rect[4];      /* a touch region */
@@ -102,6 +102,7 @@ static float value_of(const binding_t *b)
             return (wgf_keyboard_is_down((wgf_keyboard_key_t)b->b) ? 1.0f : 0.0f) -
                    (wgf_keyboard_is_down((wgf_keyboard_key_t)b->a) ? 1.0f : 0.0f);
         case PAD_BUTTON: return pad_button_down(b->a) ? 1.0f : 0.0f;
+        case PAD_BUTTONS: return (pad_button_down(b->b) ? 1.0f : 0.0f) - (pad_button_down(b->a) ? 1.0f : 0.0f);
         case PAD_AXIS: return pad_axis(b);
         default: return touched(b) ? 1.0f : 0.0f;
     }
@@ -125,8 +126,10 @@ static bool binding_pressed(const binding_t *b)
             return wgf_keyboard_is_pressed((wgf_keyboard_key_t)b->a) ||
                    wgf_keyboard_is_pressed((wgf_keyboard_key_t)b->b);
         case PAD_BUTTON:
+        case PAD_BUTTONS:
             for (pad = 0; pad < PADS; pad++) {
                 if (wgf_gamepad_is_pressed(pad, (wgf_gamepad_button_t)b->a)) return true;
+                if (b->kind == PAD_BUTTONS && wgf_gamepad_is_pressed(pad, (wgf_gamepad_button_t)b->b)) return true;
             }
             return false;
         default: return false;
@@ -264,6 +267,20 @@ bool wgf_action_bind_pad_button(const char *action, wgf_gamepad_button_t button)
     return true;
 }
 
+bool wgf_action_bind_pad_buttons(const char *action, wgf_gamepad_button_t negative, wgf_gamepad_button_t positive)
+{
+    binding_t *b;
+    if ((int)negative < WGF_GAMEPAD_BUTTON_SOUTH || (int)negative > WGF_GAMEPAD_BUTTON_DPAD_RIGHT ||
+        (int)positive < WGF_GAMEPAD_BUTTON_SOUTH || (int)positive > WGF_GAMEPAD_BUTTON_DPAD_RIGHT ||
+        (b = add(action)) == NULL) {
+        return false;
+    }
+    b->kind = PAD_BUTTONS;
+    b->a = (int)negative;
+    b->b = (int)positive;
+    return true;
+}
+
 bool wgf_action_bind_pad_axis(const char *action, wgf_gamepad_axis_t axis, int direction, float threshold)
 {
     binding_t *b;
@@ -366,6 +383,7 @@ const char *wgf_action_get_binding_text(const char *action, int index)
                      key_text(b->b, two, sizeof(two)));
             break;
         case PAD_BUTTON: snprintf(table.text, sizeof(table.text), "%s", buttons[b->a]); break;
+        case PAD_BUTTONS: snprintf(table.text, sizeof(table.text), "%s / %s", buttons[b->a], buttons[b->b]); break;
         case PAD_AXIS:
             snprintf(table.text, sizeof(table.text), "%s%s", axes[b->a],
                      b->direction < 0 ? " -" : (b->direction > 0 && b->a < WGF_GAMEPAD_AXIS_LEFT_TRIGGER ? " +" : ""));

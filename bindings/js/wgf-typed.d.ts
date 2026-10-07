@@ -26,6 +26,12 @@ export declare const Action: {
      * 65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
      * isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
      */
+    readonly bindPadButtons: typeof raw.wgf_action_bind_pad_buttons;
+    /**
+     * Bindings added to `action` (made by the first); false for a name breaking the rule, a
+     * 65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
+     * isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+     */
     readonly bindPadAxis: typeof raw.wgf_action_bind_pad_axis;
     /**
      * Bindings added to `action` (made by the first); false for a name breaking the rule, a

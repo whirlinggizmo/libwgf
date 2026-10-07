@@ -6,11 +6,14 @@
     wgf run [--headless] [--frames N] [--autopilot FILE] [--no-build]
                                          the desktop build, in a window (or headless);
                                          --frames ends it after N frames
-    wgf autopilot FILE [--web] [--no-build]
+    wgf autopilot FILE [--web] [--screenshots DIR] [--timeout S] [--no-build]
                                          the game flown by an autopilot file (its inputs
                                          at frames, its expectations: app's format),
                                          headless or in a browser: PASS or FAIL, as its
-                                         exit code says
+                                         exit code says, and why when it fails;
+                                         --screenshots saves a --web run's named ones
+    wgf autopilot FILE --record          the desktop build, played by hand in a window,
+                                         every input written to FILE as an autopilot
     wgf screenshot [--frame N] [--autopilot FILE] [--out FILE] [--no-build]
                                          the web build at frame N, in a headless browser,
                                          saved as a PNG (default build/screenshot.png)
@@ -21,10 +24,11 @@
   to the frame, which is the file's end when --frame isn't given)
     wgf serve [--port N]                 the game in a browser, reloaded as its Haxe is
                                          saved, its state kept
-    wgf export [--web] [--desktop] [--out DIR]
+    wgf export [--web] [--desktop] [--out DIR] [--autopilot FILE]
                                          export/web (a static folder with a trimmed host)
                                          and export/desktop, each smoke-tested, the web
-                                         held to the game's size budget (default both)
+                                         held to the game's size budget (default both);
+                                         --autopilot flies each with FILE, not the smoke run
 
 Run it in a game's directory (or below): the game is the wgf.json there or above. Every
 command but new and serve exits 0 when it did what it says, and non-zero, saying why,
@@ -179,12 +183,17 @@ def cmd_autopilot(args):
     if args.web:
         site = web_dir(game, not args.no_build)
         shots = Path(args.screenshots).resolve() if args.screenshots else game.root / 'build' / 'screenshots'
-        lines = games.run_page(site, 'index.html', autopilot, screenshots=shots)
+        lines = games.run_page(site, 'index.html', autopilot, screenshots=shots,
+                               timeout=args.timeout or games.autopilot_seconds(autopilot))
         result = games.judged(lines)
     else:
         exe = native_exe(game, 'headless', not args.no_build)
-        code, output = games.run_native(exe, autopilot)
+        code, output = games.run_native(exe, autopilot, timeout=args.timeout or 600)
+        lines = output.splitlines()
         result = games.judged(output) if code == 0 else False
+    if not result:
+        for line in games.why_failed(lines):
+            say(f'autopilot {args.file}: {line}')
     say(f'autopilot {args.file}: {"PASS" if result else "FAIL"}')
     return 0 if result else 1
 
@@ -289,7 +298,7 @@ def export_web(game, out, autopilot=None):
         say(f'web export: FAIL: {total / 1024:.1f} KB is over the budget of {game.budget_kb} KB (wgf.json)')
         ok = False
     flown = autopilot.read_text(encoding='utf-8') if autopilot else smoke_autopilot(game)
-    lines = games.run_page(out, 'index.html', flown, echo=False, timeout=600 if autopilot else 120)
+    lines = games.run_page(out, 'index.html', flown, echo=False, timeout=games.autopilot_seconds(flown))
     smoke = games.judged(lines)
     for line in lines:
         if '[ERROR]' in line or 'FAIL' in line:
@@ -375,6 +384,9 @@ def parser():
                    help='with --web: the folder its named screenshots go in (default build/screenshots)')
     p.add_argument('--record', action='store_true',
                    help='play the desktop build by hand in a window, writing every input to the file as an autopilot')
+    p.add_argument('--timeout', type=float,
+                   help='seconds the run may take (default: in a browser, two minutes and the file\'s last frame at '
+                        '15 a second; headless, 600)')
     p.add_argument('--no-build', action='store_true')
     p.set_defaults(run=cmd_autopilot)
     p = sub.add_parser('screenshot', help='the web build at a frame, as a PNG')

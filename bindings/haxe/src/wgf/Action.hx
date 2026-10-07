@@ -33,6 +33,14 @@ class Action {
 	    65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
 	    isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
 	**/
+	public static inline function bindPadButtons(action:String, negative:GamepadButton, positive:GamepadButton):Bool
+		return Raw.wgf_action_bind_pad_buttons(action, negative, positive);
+
+	/**
+	    Bindings added to `action` (made by the first); false for a name breaking the rule, a
+	    65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
+	    isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+	**/
 	public static inline function bindPadAxis(action:String, axis:GamepadAxis, direction:Int, threshold:Float):Bool
 		return Raw.wgf_action_bind_pad_axis(action, axis, direction, threshold);
 

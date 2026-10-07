@@ -9,7 +9,8 @@ what it said:
   new         the game's files, its name in them; a second new into it refused
   build       --headless and --web: the program, its page, its host, its assets beside it
   run         --headless --frames 30, and --autopilot: runs that end at their frame, passing
-  autopilot   the game's smoke autopilot, headless and --web: PASS; a failing one: FAIL;
+  autopilot   the game's smoke autopilot, headless and --web: PASS; a failing one: FAIL,
+              and why;
               --web saving an autopilot's two named screenshots
   dump        the ship, as a scene's text; flown by --autopilot to its end, turned on
   screenshot  a PNG of frame 30, from a browser, and one flown there by --autopilot
@@ -150,7 +151,10 @@ def step_autopilot(game):
         code, out = wgf(game, 'autopilot', 'autopilot/failing.autopilot', '--no-build')
         if code == 0 or 'FAIL' not in out:
             return problem('wgf autopilot: a failing one passed', out)
-        said.append('the smoke autopilot passed headless, a failing one failed')
+        if not any(line.startswith('wgf: autopilot') and 'frames' in line and 'FAIL' not in line[-6:]
+                   for line in out.splitlines()):
+            return problem('wgf autopilot: a failing one didn\'t say why under its FAIL', out)
+        said.append('the smoke autopilot passed headless, a failing one failed, saying why')
     if not web:
         code, out = wgf(game, 'autopilot', 'autopilot/smoke.autopilot', '--web', '--no-build')
         if code != 0 or 'PASS' not in out:

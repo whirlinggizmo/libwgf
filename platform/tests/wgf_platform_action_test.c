@@ -135,6 +135,27 @@ static void buttons_taps_and_ticks(void)
     next_frame();
     next_frame();
 
+    expect(wgf_action_bind_pad_buttons("dpad", WGF_GAMEPAD_BUTTON_DPAD_LEFT, WGF_GAMEPAD_BUTTON_DPAD_RIGHT) &&
+               !wgf_action_bind_pad_buttons("dpad", WGF_GAMEPAD_BUTTON_DPAD_LEFT, (wgf_gamepad_button_t)40) &&
+               strcmp(wgf_action_get_binding_text("dpad", 0), "D-pad left / D-pad right") == 0,
+           "a pair of pad buttons, bound and named");
+    memset(&pad, 0, sizeof(pad));
+    pad.connected = true;
+    pad.buttons[WGF_GAMEPAD_BUTTON_DPAD_LEFT] = true;
+    wgf_platform_priv_gamepad_set_test_pad(3, &pad);
+    next_frame();
+    expect(wgf_action_get_axis("dpad") == -1.0f && wgf_action_is_pressed("dpad"), "its first: -1, a press");
+    pad.buttons[WGF_GAMEPAD_BUTTON_DPAD_RIGHT] = true;
+    wgf_platform_priv_gamepad_set_test_pad(3, &pad);
+    next_frame();
+    expect(wgf_action_get_axis("dpad") == 0.0f, "both: 0");
+    pad.buttons[WGF_GAMEPAD_BUTTON_DPAD_LEFT] = false;
+    wgf_platform_priv_gamepad_set_test_pad(3, &pad);
+    next_frame();
+    expect(wgf_action_get_axis("dpad") == 1.0f, "its second: 1");
+    wgf_platform_priv_gamepad_set_test_pad(3, NULL);
+    next_frame();
+
     key(SAPP_EVENTTYPE_KEY_DOWN, SAPP_KEYCODE_SPACE);
     key(SAPP_EVENTTYPE_KEY_UP, SAPP_KEYCODE_SPACE);
     expect(wgf_action_is_pressed("fire"), "a tap within a frame is still a press");
@@ -182,7 +203,7 @@ static void listing(void)
     expect(strcmp(wgf_action_get_binding_text("fire", 2), "") == 0 && wgf_action_get_binding_count("none") == 0 &&
                strcmp(wgf_action_get_binding_text("none", 0), "") == 0,
            "past the end, or no such action: none");
-    expect(wgf_action_clear("fire") && wgf_action_get_binding_count("fire") == 0 && wgf_action_get_count() == 5 &&
+    expect(wgf_action_clear("fire") && wgf_action_get_binding_count("fire") == 0 && wgf_action_get_count() == 6 &&
                wgf_action_bind_key("fire", WGF_KEY_F) && strcmp(wgf_action_get_binding_text("fire", 0), "F") == 0,
            "cleared, kept, and bound again");
     expect(!wgf_action_clear("none") && wgf_action_get_state("none") == WGF_INPUT_STATE_UP &&

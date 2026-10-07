@@ -138,8 +138,9 @@ class Main {
 		expect(Gamepad.getAxis(0, GamepadAxis.LEFT_X) == 0, "no pad, no axis");
 		expect(Action.bindKeys("steer", KeyboardKey.LEFT, KeyboardKey.RIGHT) && Action.bindKey("fire", KeyboardKey.SPACE)
 			&& Action.bindPadButton("fire", GamepadButton.SOUTH) && Action.bindPadAxis("steer", GamepadAxis.LEFT_X, 0, 0)
-			&& Action.bindTouch("fire", 0, 0, 100, 100), "input actions bound");
-		expect(Action.getCount() >= 2 && Action.getName(0) == "steer" && Action.getBindingCount("steer") == 2
+			&& Action.bindTouch("fire", 0, 0, 100, 100)
+			&& Action.bindPadButtons("steer", GamepadButton.DPAD_LEFT, GamepadButton.DPAD_RIGHT), "input actions bound");
+		expect(Action.getCount() >= 2 && Action.getName(0) == "steer" && Action.getBindingCount("steer") == 3
 			&& Action.getBindingText("steer", 0) == "Left / Right", "listed");
 		expect(Action.getAxis("steer") == 0 && Action.getValue("fire") == 0 && Action.getState("fire") == InputState.UP
 			&& !Action.isDown("fire") && !Action.isPressed("fire") && !Action.isReleased("fire"), "read, at rest");

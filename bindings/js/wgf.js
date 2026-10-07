@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "72138b3d5d041468" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "83120f3cf491f4d7" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -1650,6 +1650,19 @@ export function wgf_action_bind_keys(action, negative, positive) {
 export function wgf_action_bind_pad_button(action, button) {
     const mark = host["stackSave"]();
     const value = host["_wgf_action_bind_pad_button"](cstr(action), button);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_action_bind_pad_buttons
+/**
+ * Bindings added to `action` (made by the first); false for a name breaking the rule, a
+ * 65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
+ * isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+ */
+export function wgf_action_bind_pad_buttons(action, negative, positive) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_action_bind_pad_buttons"](cstr(action), negative, positive);
     host["stackRestore"](mark);
     return value !== 0;
 }

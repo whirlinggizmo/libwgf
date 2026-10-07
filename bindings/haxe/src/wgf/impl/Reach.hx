@@ -11,6 +11,7 @@ class Reach {
 		"wgf_action_bind_keys",
 		"wgf_action_bind_pad_axis",
 		"wgf_action_bind_pad_button",
+		"wgf_action_bind_pad_buttons",
 		"wgf_action_bind_touch",
 		"wgf_action_clear",
 		"wgf_action_get_axis",
@@ -574,7 +575,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...565) 0];
+	static final counts:Array<Int> = [for (_ in 0...566) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

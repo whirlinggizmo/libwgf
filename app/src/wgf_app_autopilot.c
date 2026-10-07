@@ -7,6 +7,7 @@
 
 #include "sokol_app.h" /* the window's events, which the autopilot's inputs are */
 #include "wgf_app_autopilot_source_priv.h"
+#include "wgf_core_load_priv.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_gamepad.h"
 #include "wgf_keyboard.h"
@@ -689,20 +690,32 @@ static bool holds(op_t op, double got, double want)
 }
 
 /* Whether an expect's or a wait's probe holds: its number, or its text (== or != alone). */
+/* The number an expect or a wait reads: the probe's, or for `core.loading`, which the
+ * autopilot answers itself in every program, the loads in flight. False for a probe not set. */
+static bool number_of(const char *name, double *value)
+{
+    if (strcmp(name, "core.loading") == 0) {
+        *value = (double)wgf_core_priv_load_get_pending_count();
+        return true;
+    }
+    *value = wgf_probe_get_value(name);
+    return wgf_probe_has_value(name);
+}
+
 static bool probe_holds(const command_t *command)
 {
-    if (!wgf_probe_has_value(command->text)) return false;
+    double value;
     if (command->want != NULL) {
         const bool same = strcmp(wgf_probe_get_text(command->text), command->want) == 0;
-        return command->op == OP_EQ ? same : !same;
+        return wgf_probe_has_value(command->text) && (command->op == OP_EQ ? same : !same);
     }
-    return holds(command->op, wgf_probe_get_value(command->text), command->value);
+    return number_of(command->text, &value) && holds(command->op, value, command->value);
 }
 
 static void check(const command_t *command)
 {
-    const bool set = wgf_probe_has_value(command->text);
-    const double got = set ? wgf_probe_get_value(command->text) : 0.0;
+    double got;
+    const bool set = number_of(command->text, &got);
     autopilot.expectations++;
     if (command->want != NULL) {
         if (!probe_holds(command)) {

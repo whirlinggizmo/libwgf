@@ -22,6 +22,8 @@ extern "C" {
  *
  *   a key, a pad button   1 while it is down
  *   a pair of keys        -1 while the first is down, 1 the second, 0 both or neither
+ *   a pair of pad buttons the same, across the pads (the d-pad's left and right as a
+ *                         steering axis)
  *   a pad axis            its value (sticks -1 to 1, past the dead zone; triggers 0 to 1),
  *                         either side (direction 0) or one side only (1 or -1, read as
  *                         0 to 1), below `threshold` as 0
@@ -39,6 +41,8 @@ extern "C" {
 WGF_API bool wgf_action_bind_key(const char *action, wgf_keyboard_key_t key);
 WGF_API bool wgf_action_bind_keys(const char *action, wgf_keyboard_key_t negative, wgf_keyboard_key_t positive);
 WGF_API bool wgf_action_bind_pad_button(const char *action, wgf_gamepad_button_t button);
+WGF_API bool wgf_action_bind_pad_buttons(const char *action, wgf_gamepad_button_t negative,
+                                         wgf_gamepad_button_t positive);
 WGF_API bool wgf_action_bind_pad_axis(const char *action, wgf_gamepad_axis_t axis, int direction, float threshold);
 WGF_API bool wgf_action_bind_touch(const char *action, float x, float y, float width, float height);
 

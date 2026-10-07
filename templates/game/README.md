@@ -11,4 +11,4 @@ wgf export                  # export/web (a static folder) and export/desktop, e
 
 `src/Main.hx` sets an 800 by 600 design, fitted to any window or screen with bars (`Presentation.set`; libwgf's `wgf_presentation.h` has the other modes): draw in those coordinates whatever the window's size.
 
-`wgf.json` is the game's: its name, its main class, where its sources, assets, and autopilot files are, and its web size budget (`web_budget_kb`, gzipped), which `wgf export` holds it to.
+`wgf.json` is the game's: its name, its title (its page's), its main class, where its sources, assets, and autopilot files are, its web size budget (`web_budget_kb`, gzipped), which `wgf export` holds it to, and `defines`, if it has any: names (or name=value) given to every build of it as Haxe's `-D` (a bot or a telemetry build, read with `#if`).

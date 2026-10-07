@@ -2,8 +2,9 @@
 target, for the wgf tool (tools/wgf/cli.py, devserver.py).
 
 A game's directory:
-  wgf.json        its name, title, main class, where its sources, assets, and autopilot
-                  are, and its web size budget, gzipped (web_budget_kb)
+  wgf.json        its name, title (its page's), main class, where its sources, assets,
+                  and autopilot are, its web size budget, gzipped (web_budget_kb), and
+                  defines for every build of it (defines: names, or name=value, each a -D)
   src/ assets/ autopilot/
   web/index.html  its page: written once from libwgf's (hosts/web/page.html) when it has
                   none, never overwritten; the game's to change
@@ -63,6 +64,9 @@ class Game:
         self.assets = self.root / data.get('assets', 'assets')
         self.autopilot = self.root / data.get('autopilot', 'autopilot')
         self.budget_kb = data.get('web_budget_kb')
+        self.defines = data.get('defines', [])
+        if not isinstance(self.defines, list) or not all(isinstance(d, str) and d for d in self.defines):
+            raise GameError(f'{path}: "defines" is a list of names (or name=value), each given to Haxe as -D')
 
     def build_dir(self, target):
         return self.root / 'build' / target
@@ -109,7 +113,7 @@ def haxe(game, target_args, defines=(), extra=()):
         raise GameError('no haxe on PATH: install Haxe 4.3.7 (BUILDING.md)')
     command = [binding.haxe(), '-cp', binding.SOURCE.parent, '-cp', game.source, '--main', game.main,
                *target_args, *extra]
-    for define in defines:
+    for define in [*defines, *game.defines]:  # the build's, then the game's own (wgf.json)
         command += ['-D', define]
     done = subprocess.run([str(c) for c in command], cwd=game.root, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                           text=True, errors='replace')
@@ -123,6 +127,17 @@ def page(game):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(PAGE.read_text(encoding='utf-8').replace('@WGF_PROGRAM@', game.name), encoding='utf-8')
     return path
+
+
+def titled(text, title):
+    """A page's text with its <title>'s text made `title` (wgf.json's), escaped; as it
+    was when it has no <title>."""
+    start = text.find('<title>')
+    end = text.find('</title>', start)
+    if start < 0 or end < 0:
+        return text
+    escaped = title.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+    return text[:start + len('<title>')] + escaped + text[end:]
 
 
 def hot_args():
@@ -139,7 +154,7 @@ def build_web(game, release=False, hot=False, out=None, exports=None):
         webhost.build(variant_for('web', release), exports, out, constants=False)  # Haxe has its own enums
     except RuntimeError as e:
         raise GameError(str(e))
-    shutil.copyfile(page(game), out / 'index.html')
+    (out / 'index.html').write_text(titled(page(game).read_text(encoding='utf-8'), game.title), encoding='utf-8')
     defines = ['js-es=6'] + (['analyzer-optimize'] if release else []) + (['hotreload'] if hot else [])
     extra = (['-dce', 'full'] if release else []) + (hot_args() if hot else [])
     ok, output = haxe(game, ['--js', out / f'{game.name}.js'], defines, extra)
@@ -202,13 +217,16 @@ def run_native(exe, autopilot=None, timeout=600, echo=True, record=None):
     lines = []
     with subprocess.Popen([str(exe)], cwd=exe.parent, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                           text=True, errors='replace') as process:
-        timer = threading.Timer(timeout, process.kill)
+        killed = threading.Event()
+        timer = threading.Timer(timeout, lambda: (killed.set(), process.kill()))
         timer.start()
         for line in process.stdout:
             lines.append(line.rstrip('\n'))
             if echo:
                 print(line, end='', flush=True)
         timer.cancel()
+    if killed.is_set():
+        lines.append(f'[ERROR] wgf: nothing ended the run within {timeout:g} s')
     if scratch is not None:
         scratch.cleanup()
     return process.returncode, '\n'.join(lines)
@@ -303,6 +321,27 @@ def save_shot(session, folder, name):
     shot = session.send('Page.captureScreenshot', {'format': 'png'})
     (folder / f'{safe}.png').write_bytes(base64.b64decode(shot['data']))
     print(f'wgf: screenshot {name}: {folder / (safe + ".png")}', flush=True)
+
+
+def autopilot_seconds(text):
+    """How long a run of the autopilot `text` may take in a browser: two minutes, and
+    its last frame's at 15 frames a second (a headless browser's software drawing
+    can be that slow), with each wait's longest (30 s) on top."""
+    last, waits = 0, 0
+    for line in text.splitlines():
+        words = line.split('#', 1)[0].split()
+        if len(words) >= 3 and words[0] == 'at' and words[1].isdigit():
+            last = max(last, int(words[1]))
+            waits += words[2] == 'wait'
+    return 120 + last / 15 + 30 * waits
+
+
+def why_failed(output):
+    """What a failed run said of why: its error and FAIL lines, or that it said nothing
+    of a verdict."""
+    lines = output if isinstance(output, list) else output.splitlines()
+    said = [line for line in lines if '[ERROR]' in line or '[FATAL]' in line or AUTOPILOT_FAIL in line]
+    return said or ['the run ended with no PASS or FAIL from its autopilot']
 
 
 def judged(output):

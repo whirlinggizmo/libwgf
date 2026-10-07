@@ -1211,6 +1211,13 @@ export declare function wgf_action_bind_pad_button(action: string | null, button
  * 65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
  * isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
  */
+export declare function wgf_action_bind_pad_buttons(action: string | null, negative: wgf_gamepad_button_t, positive: wgf_gamepad_button_t): boolean;
+
+/**
+ * Bindings added to `action` (made by the first); false for a name breaking the rule, a
+ * 65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
+ * isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+ */
 export declare function wgf_action_bind_pad_axis(action: string | null, axis: wgf_gamepad_axis_t, direction: number, threshold: number): boolean;
 
 /**

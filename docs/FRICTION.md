@@ -310,7 +310,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Workaround:** the record build under Xvfb, driven by a script that reads the game's logged telemetry, steers by pure pursuit, and types keys with xdotool
 - **Cost:** 45 minutes, a telemetry block in the game
 - **Found by:** the racer's session (its #5)
-- **Triage:**
+- **Triage:** task: ROADMAP's "Later", "AI players, an autopilot `set` command, and a supported way to record with no one there", when a game needs AI opponents or recording becomes a burden; until then the racer's `drive.py` stays the game's own tool: it steers by feedback, so a lap re-recorded after the driving changes (step 5's vehicle) is a re-run of it, not a person's time (HISTORY.md, "Milestone 2, step 4, the racer's friction")
 
 ### Racer: a recording counts frames from the start, but loading takes real time
 
@@ -319,7 +319,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Workaround:** the race starts on the throttle, and the driver adds `at 1 wait racer.state >= 1`
 - **Cost:** 20 minutes, one game state, a re-record
 - **Found by:** the racer's session (its #6)
-- **Triage:**
+- **Triage:** fixed in step 4: every program's autopilot reads `core.loading` (the loads in flight) as a probe, and a recording made while the init's loads are in flight starts with `at 0 wait core.loading == 0`, counts its frames from their end, and writes what came during them at 0, so its inputs land at the same point after the load on any machine; BUILDING.md says so, and that a game whose play starts on its own at the load's end should start it on an input where it can, as the racer did
 
 ### Racer: the recorder records the machine's pads
 
@@ -328,7 +328,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Workaround:** a 0.2 threshold on the stick (`Main.hx:70`)
 - **Cost:** 5 minutes
 - **Found by:** the racer's session (its #7)
-- **Triage:**
+- **Triage:** fixed in step 4: BUILDING.md's "Recording one" says the pads connected are recorded, drift and all, and flown back in place of the real ones, and to give a stick's binding a threshold above its drift
 
 ### Racer: checkpoints as spheres trigger before their line
 
@@ -346,7 +346,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Workaround:** asphalt from overlapping coplanar planes of one tint and normal, curbs at alternating heights
 - **Cost:** 20 minutes; 763 static models (the 140 trees' 280 included) with no batching; measured only in a software-GL browser (about 40 fps)
 - **Found by:** the racer's session (its #9)
-- **Triage:**
+- **Triage:** task: milestone 2, step 6: a mesh from a program's own vertices and indices (`wgf_mesh_create`), which glTF's loader makes its meshes with, so a track or a road generated along a centerline is one mesh; the track itself becomes glTF in the same step
 
 ### Racer: `wgf serve` fails on an initialized instance `final`, Asteroids' `Ship` too
 
@@ -364,7 +364,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Workaround:** the full race flown natively only; the browser flies one lap
 - **Cost:** 15 minutes; the browser covers a lap, not the race
 - **Found by:** the racer's session (its #11)
-- **Triage:**
+- **Triage:** fixed in step 4: a browser run gets two minutes, its last frame's at 15 frames a second, and 30 s for each `wait` (the race: about 6 minutes), `--timeout` gives it another, and every FAIL prints why under it (the errors and FAIL lines, or that the run said nothing of a verdict); headless the same, and `wgf export --autopilot` takes the same time
 
 ### Racer: `wgf --help` leaves out `autopilot --record` and `export --autopilot`
 
@@ -373,7 +373,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Workaround:** read the command's help
 - **Cost:** none measured
 - **Found by:** the racer's session (its #12)
-- **Triage:**
+- **Triage:** fixed in step 4: the help lists `--record`, `--screenshots`, `--timeout`, and `export --autopilot`
 
 ### Racer: wgf.json's `title` doesn't reach the page
 
@@ -382,7 +382,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Workaround:** both set by hand
 - **Cost:** none measured
 - **Found by:** the racer's session (its #12)
-- **Triage:**
+- **Triage:** fixed in step 4: a web build's page takes its `<title>` from wgf.json's title (the game's `web/index.html` left as it is), so a page's title follows wgf.json
 
 ### Racer: no defines from wgf.json
 
@@ -391,7 +391,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Workaround:** the record build's define
 - **Cost:** none measured
 - **Found by:** the racer's session (its #12)
-- **Triage:**
+- **Triage:** fixed in step 4: wgf.json's `defines` (a list of names, or name=value) are given to every build of the game as `-D`, hot builds included
 
 ### Racer: one random generator
 
@@ -400,7 +400,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Workaround:** a generator of the game's own, so an autopilot's seed stays the game's
 - **Cost:** none measured
 - **Found by:** the racer's session (its #12)
-- **Triage:**
+- **Triage:** task: milestone 2.5, "Random generators of a game's own" (a generator as a handle, seeded, beside `wgf_random`, so a world's layout can draw its own numbers and the autopilot's seed stays the game's); the game's own generator is fine until then
 
 ### Racer: the D-pad can't be the two sides of an axis action
 
@@ -409,7 +409,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Workaround:** none: D-pad steering skipped
 - **Cost:** a control the game doesn't have
 - **Found by:** the racer's session (its #12)
-- **Triage:**
+- **Triage:** fixed in step 4: `wgf_action_bind_pad_buttons(action, negative, positive)`, a pair of pad buttons as -1 and 1 across the pads, as `bind_keys` pairs two keys
 
 ### Racer: an autopilot's input timing, written off by a frame
 
@@ -418,7 +418,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Workaround:** found by running it
 - **Cost:** a run
 - **Found by:** the racer's session (its #12)
-- **Triage:**
+- **Triage:** fixed in step 4: BUILDING.md shows what it means for a line's frame (`at 10 key down space` is seen by frame 10's ticks, so `at 10 expect` holds and `at 9` doesn't)
 
 ### Racer: what worked (seven notes)
 

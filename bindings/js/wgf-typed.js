@@ -12,6 +12,8 @@ export const Action = Object.freeze({
     bindKeys: raw.wgf_action_bind_keys,
     // wgf: call wgf_action_bind_pad_button
     bindPadButton: raw.wgf_action_bind_pad_button,
+    // wgf: call wgf_action_bind_pad_buttons
+    bindPadButtons: raw.wgf_action_bind_pad_buttons,
     // wgf: call wgf_action_bind_pad_axis
     bindPadAxis: raw.wgf_action_bind_pad_axis,
     // wgf: call wgf_action_bind_touch
