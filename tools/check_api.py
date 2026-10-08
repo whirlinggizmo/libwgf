@@ -56,6 +56,7 @@ SKIP = 77
 # Setters with no getter on purpose, and why. A decision, not a backlog.
 UI_OPEN_BOX = 'immediate mode: it describes the open box for this frame alone, and nothing keeps it to read back'
 GETTERS_EXEMPT = {
+    'wgf_vehicle_set_input': 'the driver\'s intent, a tick\'s: what it did is read back (speed, rpm, gear, slip)',
     'wgf_ui_set_width': UI_OPEN_BOX,
     'wgf_ui_set_height': UI_OPEN_BOX,
     'wgf_ui_set_padding': UI_OPEN_BOX,
@@ -79,6 +80,8 @@ GETTERS_PAIRED = {
     'wgf_actor_set_transform': ('wgf_actor_get_position', 'wgf_actor_get_rotation', 'wgf_actor_get_scale'),
     'wgf_texture_set_sampling': ('wgf_texture_get_wrap_u', 'wgf_texture_get_wrap_v', 'wgf_texture_get_filter'),
     'wgf_text_set_align': ('wgf_text_get_halign', 'wgf_text_get_valign'),
+    'wgf_vehicle_set_wheels': ('wgf_vehicle_get_wheel_count', 'wgf_vehicle_get_wheel'),
+    'wgf_vehicle_set_gears': ('wgf_vehicle_get_gear_count', 'wgf_vehicle_get_gear_ratio'),
     'wgf_shape2d_set_rectangle': ('wgf_shape2d_get_kind', 'wgf_shape2d_get_size'),
     'wgf_shape2d_set_circle': ('wgf_shape2d_get_kind', 'wgf_shape2d_get_radius'),
     'wgf_shape2d_set_line': ('wgf_shape2d_get_kind', 'wgf_shape2d_get_line_start', 'wgf_shape2d_get_line_end'),
@@ -115,7 +118,7 @@ ANY_HANDLE = {
 # Sections named for what an actor is, or has, whose calls take the actor: wgf_sprite_*
 # on a sprite, wgf_motion_* on an actor with motion, wgf_stage2d_* on a 2D stage.
 ACTOR_FACETS = ('sprite', 'text', 'shape2d', 'shape3d', 'emitter2d', 'model', 'light', 'camera2d', 'camera3d',
-                'collider', 'motion', 'bounds', 'lifetime', 'behavior', 'stage2d', 'stage3d')
+                'collider', 'motion', 'bounds', 'lifetime', 'behavior', 'stage2d', 'stage3d', 'body', 'vehicle')
 
 # The calls that take what they are made from, before what they act on: their first handle
 # isn't their prefix's kind. A new one is listed here with what it is made from.

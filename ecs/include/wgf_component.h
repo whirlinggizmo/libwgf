@@ -29,13 +29,16 @@ typedef enum wgf_component_t {
     WGF_COMPONENT_BOUNDS = 2,   /* a rectangle it wraps around, is clamped to, or dies outside (wgf_bounds.h) */
     WGF_COMPONENT_LIFETIME = 3, /* seconds until it is destroyed (wgf_lifetime.h) */
     WGF_COMPONENT_COLLIDER = 4, /* a circle that overlaps others, as triggers (wgf_collider.h) */
-    WGF_COMPONENT_VOICE = 5     /* a voice of no sound yet (wgf_voice.h), destroyed with the actor */
+    WGF_COMPONENT_VOICE = 5,    /* a voice of no sound yet (wgf_voice.h), destroyed with the actor */
+    WGF_COMPONENT_BODY = 6,     /* a rigid body in the physics world (wgf_body.h): physics started first */
+    WGF_COMPONENT_VEHICLE = 7   /* wheels, an engine, and a gearbox on a body (wgf_vehicle.h): physics started first */
 } wgf_component_t;
 
 /* add makes one with its defaults (each component's header says them); adding one it has
  * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
  * that isn't an actor, or a component that isn't one; remove is false too for one it
- * doesn't have. */
+ * doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
+ * before physics has started, it is refused, and logged once. */
 WGF_API bool wgf_actor_add_component(wgf_actor_t actor, wgf_component_t component);
 WGF_API bool wgf_actor_remove_component(wgf_actor_t actor, wgf_component_t component);
 WGF_API bool wgf_actor_has_component(wgf_actor_t actor, wgf_component_t component);

@@ -247,6 +247,55 @@ export const BehaviorComponent = Object.freeze({
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
+// wgf: typed Body
+export const Body = Object.freeze({
+    // wgf: call wgf_body_set_type
+    setType: raw.wgf_body_set_type,
+    // wgf: call wgf_body_get_type
+    getType: raw.wgf_body_get_type,
+    // wgf: call wgf_body_set_shape
+    setShape: raw.wgf_body_set_shape,
+    // wgf: call wgf_body_get_shape
+    getShape: raw.wgf_body_get_shape,
+    // wgf: call wgf_body_get_size
+    getSize: raw.wgf_body_get_size,
+    // wgf: call wgf_body_set_mass
+    setMass: raw.wgf_body_set_mass,
+    // wgf: call wgf_body_get_mass
+    getMass: raw.wgf_body_get_mass,
+    // wgf: call wgf_body_set_friction
+    setFriction: raw.wgf_body_set_friction,
+    // wgf: call wgf_body_get_friction
+    getFriction: raw.wgf_body_get_friction,
+    // wgf: call wgf_body_set_bounce
+    setBounce: raw.wgf_body_set_bounce,
+    // wgf: call wgf_body_get_bounce
+    getBounce: raw.wgf_body_get_bounce,
+    // wgf: call wgf_body_set_damping
+    setDamping: raw.wgf_body_set_damping,
+    // wgf: call wgf_body_get_damping
+    getDamping: raw.wgf_body_get_damping,
+    // wgf: call wgf_body_set_layer
+    setLayer: raw.wgf_body_set_layer,
+    // wgf: call wgf_body_get_layer
+    getLayer: raw.wgf_body_get_layer,
+    // wgf: call wgf_body_set_mask
+    setMask: raw.wgf_body_set_mask,
+    // wgf: call wgf_body_get_mask
+    getMask: raw.wgf_body_get_mask,
+    // wgf: call wgf_body_set_velocity
+    setVelocity: raw.wgf_body_set_velocity,
+    // wgf: call wgf_body_get_velocity
+    getVelocity: raw.wgf_body_get_velocity,
+    // wgf: call wgf_body_set_spin
+    setSpin: raw.wgf_body_set_spin,
+    // wgf: call wgf_body_get_spin
+    getSpin: raw.wgf_body_get_spin,
+    // wgf: call wgf_body_add_impulse
+    addImpulse: raw.wgf_body_add_impulse,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
+});
 // wgf: typed Bounds
 export const Bounds = Object.freeze({
     // wgf: call wgf_bounds_set_rect
@@ -806,6 +855,15 @@ export const Mouse = Object.freeze({
     // wgf: call wgf_mouse_is_cursor_visible
     isCursorVisible: raw.wgf_mouse_is_cursor_visible,
 });
+// wgf: typed Physics
+export const Physics = Object.freeze({
+    // wgf: call wgf_physics_set_gravity
+    setGravity: raw.wgf_physics_set_gravity,
+    // wgf: call wgf_physics_get_gravity
+    getGravity: raw.wgf_physics_get_gravity,
+    // wgf: call wgf_physics_draw_bodies
+    drawBodies: raw.wgf_physics_draw_bodies,
+});
 // wgf: typed Prefab
 export const Prefab = Object.freeze({
     // wgf: call wgf_prefab_spawn
@@ -1218,6 +1276,59 @@ export const Ui = Object.freeze({
     // wgf: call wgf_ui_reset_style
     resetStyle: raw.wgf_ui_reset_style,
 });
+// wgf: typed Vehicle
+export const Vehicle = Object.freeze({
+    // wgf: call wgf_vehicle_set_wheels
+    setWheels: raw.wgf_vehicle_set_wheels,
+    // wgf: call wgf_vehicle_get_wheel_count
+    getWheelCount: raw.wgf_vehicle_get_wheel_count,
+    // wgf: call wgf_vehicle_get_wheel
+    getWheel: raw.wgf_vehicle_get_wheel,
+    // wgf: call wgf_vehicle_set_wheel_size
+    setWheelSize: raw.wgf_vehicle_set_wheel_size,
+    // wgf: call wgf_vehicle_set_suspension
+    setSuspension: raw.wgf_vehicle_set_suspension,
+    // wgf: call wgf_vehicle_set_steering
+    setSteering: raw.wgf_vehicle_set_steering,
+    // wgf: call wgf_vehicle_set_grip
+    setGrip: raw.wgf_vehicle_set_grip,
+    // wgf: call wgf_vehicle_get_wheel_size
+    getWheelSize: raw.wgf_vehicle_get_wheel_size,
+    // wgf: call wgf_vehicle_get_suspension
+    getSuspension: raw.wgf_vehicle_get_suspension,
+    // wgf: call wgf_vehicle_get_steering
+    getSteering: raw.wgf_vehicle_get_steering,
+    // wgf: call wgf_vehicle_get_grip
+    getGrip: raw.wgf_vehicle_get_grip,
+    // wgf: call wgf_vehicle_set_engine
+    setEngine: raw.wgf_vehicle_set_engine,
+    // wgf: call wgf_vehicle_set_gears
+    setGears: raw.wgf_vehicle_set_gears,
+    // wgf: call wgf_vehicle_set_drive
+    setDrive: raw.wgf_vehicle_set_drive,
+    // wgf: call wgf_vehicle_get_engine
+    getEngine: raw.wgf_vehicle_get_engine,
+    // wgf: call wgf_vehicle_get_gear_count
+    getGearCount: raw.wgf_vehicle_get_gear_count,
+    // wgf: call wgf_vehicle_get_gear_ratio
+    getGearRatio: raw.wgf_vehicle_get_gear_ratio,
+    // wgf: call wgf_vehicle_get_drive
+    getDrive: raw.wgf_vehicle_get_drive,
+    // wgf: call wgf_vehicle_set_input
+    setInput: raw.wgf_vehicle_set_input,
+    // wgf: call wgf_vehicle_get_speed
+    getSpeed: raw.wgf_vehicle_get_speed,
+    // wgf: call wgf_vehicle_get_rpm
+    getRpm: raw.wgf_vehicle_get_rpm,
+    // wgf: call wgf_vehicle_get_gear
+    getGear: raw.wgf_vehicle_get_gear,
+    // wgf: call wgf_vehicle_get_wheel_slip
+    getWheelSlip: raw.wgf_vehicle_get_wheel_slip,
+    // wgf: call wgf_vehicle_reset
+    reset: raw.wgf_vehicle_reset,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
+});
 // wgf: typed Version
 export const Version = Object.freeze({
     // wgf: call wgf_version_get
@@ -1368,12 +1479,16 @@ export const AlphaMode = Object.freeze({ OPAQUE: 0, MASK: 1, BLEND: 2 });
 export const AssetCacheMode = Object.freeze({ REVALIDATE: 0, TRUST: 1, OFF: 2 });
 // wgf: enum AssetTaskStatus
 export const AssetTaskStatus = Object.freeze({ NONE: 0, PENDING: 1, DONE: 2, FAILED: 3 });
+// wgf: enum BodyShape
+export const BodyShape = Object.freeze({ BOX: 0, SPHERE: 1, CAPSULE: 2, CONVEX: 3, MESH: 4 });
+// wgf: enum BodyType
+export const BodyType = Object.freeze({ STATIC: 0, DYNAMIC: 1, KINEMATIC: 2, SENSOR: 3 });
 // wgf: enum BoundsMode
 export const BoundsMode = Object.freeze({ WRAP: 0, CLAMP: 1, DESTROY: 2 });
 // wgf: enum ColorStock
 export const ColorStock = Object.freeze({ BLANK: 0, WHITE: 1, BLACK: 2, LIGHTGRAY: 3, GRAY: 4, DARKGRAY: 5, YELLOW: 6, GOLD: 7, ORANGE: 8, PINK: 9, RED: 10, MAROON: 11, GREEN: 12, LIME: 13, DARKGREEN: 14, SKYBLUE: 15, BLUE: 16, DARKBLUE: 17, PURPLE: 18, VIOLET: 19, DARKPURPLE: 20, BEIGE: 21, BROWN: 22, DARKBROWN: 23, MAGENTA: 24, RAYWHITE: 25 });
 // wgf: enum Component
-export const Component = Object.freeze({ NONE: 0, MOTION: 1, BOUNDS: 2, LIFETIME: 3, COLLIDER: 4, VOICE: 5 });
+export const Component = Object.freeze({ NONE: 0, MOTION: 1, BOUNDS: 2, LIFETIME: 3, COLLIDER: 4, VOICE: 5, BODY: 6, VEHICLE: 7 });
 // wgf: enum FsTaskStatus
 export const FsTaskStatus = Object.freeze({ NONE: 0, PENDING: 1, DONE: 2, NOT_FOUND: 3, FAILED: 4 });
 // wgf: enum GamepadAxis
@@ -1426,5 +1541,7 @@ export const UiDirection = Object.freeze({ COLUMN: 0, ROW: 1 });
 export const UiSizing = Object.freeze({ FIT: 0, GROW: 1, FIXED: 2, PERCENT: 3 });
 // wgf: enum UiValue
 export const UiValue = Object.freeze({ TEXT_SIZE: 0, PADDING: 1, GAP: 2, CORNER_RADIUS: 3, BUTTON_PADDING: 4, BUTTON_WIDTH: 5, FOCUS_WIDTH: 6 });
+// wgf: enum VehicleDrive
+export const VehicleDrive = Object.freeze({ FRONT: 0, REAR: 1, ALL: 2 });
 // wgf: enum WorldEvent
 export const WorldEvent = Object.freeze({ NONE: 0, CREATED: 1, DESTROYED: 2, TRIGGER_ENTER: 3, TRIGGER_EXIT: 4 });

@@ -65,6 +65,7 @@ class Main {
 		audio();
 		gfx();
 		ecs();
+		physics();
 	}
 
 	static function core():Void {
@@ -467,12 +468,57 @@ class Main {
 		expect(doomed.getKind() == ActorKind.NONE && !doomed.hasComponent(Component.LIFETIME), "an actor destroyed");
 	}
 
+	static function physics():Void {
+		expect(Physics.setGravity(0, -9.81, 0) && near(Physics.getGravity().y, -9.81), "physics started, its gravity");
+		final floor = Actor.create();
+		floor.setParent(stage3d);
+		expect(floor.addComponent(Component.BODY) && floor.hasComponent(Component.BODY), "a body");
+		final body:Body = floor;
+		expect(body.setType(BodyType.STATIC) && body.getType() == BodyType.STATIC, "static");
+		expect(body.setShape(BodyShape.BOX, 50, 1, 50) && body.getShape() == BodyShape.BOX && near(body.getSize().x, 50),
+			"a box");
+		expect(body.setMass(0) && body.getMass() == 0 && body.setFriction(0.8) && near(body.getFriction(), 0.8), "mass, friction");
+		expect(body.setBounce(0.1) && near(body.getBounce(), 0.1) && body.setDamping(0.1, 0.2) && near(body.getDamping().y, 0.2),
+			"bounce, damping");
+		expect(body.setLayer(4) && body.getLayer() == 4 && body.setMask(3) && body.getMask() == 3, "its layer and mask");
+		final car = Actor.create();
+		car.setParent(stage3d);
+		car.setPosition(0, 1, 0);
+		car.addComponent(Component.BODY);
+		final carBody:Body = car;
+		expect(carBody.setVelocity(0, 0, 1) && near(carBody.getVelocity().z, 1) && carBody.setSpin(0, 1, 0)
+			&& near(carBody.getSpin().y, 1) && carBody.addImpulse(0, 0, 10), "moving");
+		final wheels = [for (i in 0...4) Actor.create()];
+		for (i in 0...4) {
+			wheels[i].setParent(car);
+			wheels[i].setPosition(i % 2 == 0 ? -0.8 : 0.8, -0.2, i < 2 ? 1.4 : -1.4);
+		}
+		expect(car.addComponent(Component.VEHICLE), "a vehicle");
+		final vehicle:Vehicle = car;
+		expect(vehicle.setWheels(wheels) && vehicle.getWheelCount() == 4 && vehicle.getWheel(0) == wheels[0], "its wheels");
+		expect(vehicle.setWheelSize(0.34, 0.22) && vehicle.setSuspension(0.3, 1.6, 0.5) && vehicle.setSteering(0.5)
+			&& vehicle.setGrip(1.2), "its wheels' settings");
+		expect(near(vehicle.getWheelSize().x, 0.34) && near(vehicle.getSuspension().y, 1.6) && near(vehicle.getSteering(), 0.5)
+			&& near(vehicle.getGrip(), 1.2), "read back");
+		expect(vehicle.setEngine(420, 7000) && vehicle.setGears([3.2, 2.1, 1.5]) && vehicle.setDrive(VehicleDrive.REAR),
+			"its drive train");
+		expect(near(vehicle.getEngine().x, 420) && vehicle.getGearCount() == 3 && near(vehicle.getGearRatio(1), 2.1)
+			&& vehicle.getDrive() == VehicleDrive.REAR, "its drive train read back");
+		expect(vehicle.setInput(1, 0, 0, false), "its intent");
+		vehicle.getSpeed();
+		vehicle.getRpm();
+		vehicle.getGear();
+		vehicle.getWheelSlip(0);
+		expect(vehicle.reset(), "reset");
+	}
+
 	// ---- the frames ----------------------------------------------------------------------
 
 	static function tick():Void {}
 
 	static function frame():Void {
 		frames++;
+		Physics.drawBodies(Color.get(ColorStock.YELLOW)); // outside a 3D drawing: nothing, but reached
 		world.draw();
 		hud.draw();
 		Draw.rectangle(4, 4, 20, 10, Color.get(ColorStock.RED));

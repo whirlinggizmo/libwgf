@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "83120f3cf491f4d7" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "dd579eb0f2bd8960" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -751,6 +751,8 @@ export const WGF_COMPONENT_BOUNDS = 2;
 export const WGF_COMPONENT_LIFETIME = 3;
 export const WGF_COMPONENT_COLLIDER = 4;
 export const WGF_COMPONENT_VOICE = 5;
+export const WGF_COMPONENT_BODY = 6;
+export const WGF_COMPONENT_VEHICLE = 7;
 
 /**
  * Bounds (WGF_COMPONENT_BOUNDS): a rectangle in the actor's parent's space, x and y,
@@ -796,6 +798,50 @@ export const WGF_WORLD_EVENT_CREATED = 1;
 export const WGF_WORLD_EVENT_DESTROYED = 2;
 export const WGF_WORLD_EVENT_TRIGGER_ENTER = 3;
 export const WGF_WORLD_EVENT_TRIGGER_EXIT = 4;
+
+/**
+ * A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
+ * (wgf_physics.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
+ * its size (1000 kg a cubic meter), friction 0.5, no bounce, damping of 0.05, layer 1,
+ * mask every layer. Its settings take effect at the next tick, when the world's body is
+ * made again from them; set them together, before the first tick, as a scene does.
+ *
+ * The actor's transform is the body's: where the world moves a dynamic body, each tick,
+ * the actor is set; a transform the program sets puts the body there (a static or
+ * dynamic one jumps; a kinematic one is moved there over the tick, pushing what it meets).
+ * A body's shape isn't scaled with its actor. Its place is in its 3D stage's space, the
+ * actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
+ * body.
+ */
+export const WGF_BODY_TYPE_STATIC = 0;
+export const WGF_BODY_TYPE_DYNAMIC = 1;
+export const WGF_BODY_TYPE_KINEMATIC = 2;
+export const WGF_BODY_TYPE_SENSOR = 3;
+
+export const WGF_BODY_SHAPE_BOX = 0;
+export const WGF_BODY_SHAPE_SPHERE = 1;
+export const WGF_BODY_SHAPE_CAPSULE = 2;
+export const WGF_BODY_SHAPE_CONVEX = 3;
+export const WGF_BODY_SHAPE_MESH = 4;
+
+/**
+ * A wheeled vehicle (WGF_COMPONENT_VEHICLE, wgf_component.h) on an actor with a dynamic
+ * body (wgf_body.h): wheels on springs, an engine, an automatic gearbox, and differentials,
+ * driven by the program's intent (set_input), each tick, in the physics world
+ * (wgf_physics.h). It faces its actor's +z, +y up.
+ *
+ * Its wheels are actors under it, given in left and right pairs, front first: where each
+ * is as the vehicle is made is where it attaches (its spring at rest), and each tick it is
+ * set where the wheel is, steered, sprung, and turning about its own x, so a model under
+ * it with its axle along x shows the wheel. The first pair steers. Defaults: no wheels, an engine of 500 Nm to 6000 rpm,
+ * Jolt's gear ratios, rear drive, wheels of 0.3 m by 0.2 m, 0.3 m of spring travel at 1.5
+ * Hz damped by half, 0.5 radians of steering, grip 1. Its settings take effect at the next
+ * tick, when it is made again from them (at rest), as a body's are; reset puts it at rest
+ * where it is. The calls are false (or 0) for an actor without a vehicle.
+ */
+export const WGF_VEHICLE_DRIVE_FRONT = 0;
+export const WGF_VEHICLE_DRIVE_REAR = 1;
+export const WGF_VEHICLE_DRIVE_ALL = 2;
 
 /**
  * Game UI, immediate mode: each frame the program describes the UI as it is now --
@@ -6460,7 +6506,8 @@ export function wgf_actor_count_with_behavior(name) {
  * add makes one with its defaults (each component's header says them); adding one it has
  * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
  * that isn't an actor, or a component that isn't one; remove is false too for one it
- * doesn't have.
+ * doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
+ * before physics has started, it is refused, and logged once.
  */
 export function wgf_actor_add_component(actor, component) {
     const value = host["_wgf_actor_add_component"](actor, component);
@@ -6472,7 +6519,8 @@ export function wgf_actor_add_component(actor, component) {
  * add makes one with its defaults (each component's header says them); adding one it has
  * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
  * that isn't an actor, or a component that isn't one; remove is false too for one it
- * doesn't have.
+ * doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
+ * before physics has started, it is refused, and logged once.
  */
 export function wgf_actor_remove_component(actor, component) {
     const value = host["_wgf_actor_remove_component"](actor, component);
@@ -6484,7 +6532,8 @@ export function wgf_actor_remove_component(actor, component) {
  * add makes one with its defaults (each component's header says them); adding one it has
  * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
  * that isn't an actor, or a component that isn't one; remove is false too for one it
- * doesn't have.
+ * doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
+ * before physics has started, it is refused, and logged once.
  */
 export function wgf_actor_has_component(actor, component) {
     const value = host["_wgf_actor_has_component"](actor, component);
@@ -6956,6 +7005,520 @@ export function wgf_world_clear() {
 export function wgf_world_dump() {
     const value = host["_wgf_world_dump"]();
     return str(value);
+}
+
+// wgf: call wgf_body_set_type
+export function wgf_body_set_type(actor, type) {
+    const value = host["_wgf_body_set_type"](actor, type);
+    return value !== 0;
+}
+
+// wgf: call wgf_body_get_type
+export function wgf_body_get_type(actor) {
+    const value = host["_wgf_body_get_type"](actor);
+    return value;
+}
+
+// wgf: call wgf_body_set_shape
+/**
+ * Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
+ * at least 0.01, and nothing for CONVEX and MESH, whose models' meshes are read when
+ * the body is made (a model not yet loaded is left out). get_size is x, y, z as set. A
+ * mesh can only be static: on another type it is its convex hull.
+ */
+export function wgf_body_set_shape(actor, shape, x, y, z) {
+    const value = host["_wgf_body_set_shape"](actor, shape, x, y, z);
+    return value !== 0;
+}
+
+// wgf: call wgf_body_get_shape
+/**
+ * Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
+ * at least 0.01, and nothing for CONVEX and MESH, whose models' meshes are read when
+ * the body is made (a model not yet loaded is left out). get_size is x, y, z as set. A
+ * mesh can only be static: on another type it is its convex hull.
+ */
+export function wgf_body_get_shape(actor) {
+    const value = host["_wgf_body_get_shape"](actor);
+    return value;
+}
+
+// wgf: call wgf_body_get_size
+/**
+ * Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
+ * at least 0.01, and nothing for CONVEX and MESH, whose models' meshes are read when
+ * the body is made (a model not yet loaded is left out). get_size is x, y, z as set. A
+ * mesh can only be static: on another type it is its convex hull.
+ */
+export function wgf_body_get_size(actor, into) {
+    const ret = result(12);
+    host["_wgf_body_get_size"](ret, actor);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_body_set_mass
+/**
+ * Kilograms, for a dynamic body; 0 (the default) for its shape's at 1000 a cubic meter.
+ */
+export function wgf_body_set_mass(actor, kilograms) {
+    const value = host["_wgf_body_set_mass"](actor, kilograms);
+    return value !== 0;
+}
+
+// wgf: call wgf_body_get_mass
+/**
+ * Kilograms, for a dynamic body; 0 (the default) for its shape's at 1000 a cubic meter.
+ */
+export function wgf_body_get_mass(actor) {
+    const value = host["_wgf_body_get_mass"](actor);
+    return value;
+}
+
+// wgf: call wgf_body_set_friction
+/**
+ * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
+ * clamped to 0 to 1), each a pair's taken together.
+ */
+export function wgf_body_set_friction(actor, friction) {
+    const value = host["_wgf_body_set_friction"](actor, friction);
+    return value !== 0;
+}
+
+// wgf: call wgf_body_get_friction
+/**
+ * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
+ * clamped to 0 to 1), each a pair's taken together.
+ */
+export function wgf_body_get_friction(actor) {
+    const value = host["_wgf_body_get_friction"](actor);
+    return value;
+}
+
+// wgf: call wgf_body_set_bounce
+/**
+ * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
+ * clamped to 0 to 1), each a pair's taken together.
+ */
+export function wgf_body_set_bounce(actor, bounce) {
+    const value = host["_wgf_body_set_bounce"](actor, bounce);
+    return value !== 0;
+}
+
+// wgf: call wgf_body_get_bounce
+/**
+ * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
+ * clamped to 0 to 1), each a pair's taken together.
+ */
+export function wgf_body_get_bounce(actor) {
+    const value = host["_wgf_body_get_bounce"](actor);
+    return value;
+}
+
+// wgf: call wgf_body_set_damping
+/**
+ * The share of its velocity and of its spin it loses each second, 0 to 1: get_damping is
+ * (linear, angular).
+ */
+export function wgf_body_set_damping(actor, linear, angular) {
+    const value = host["_wgf_body_set_damping"](actor, linear, angular);
+    return value !== 0;
+}
+
+// wgf: call wgf_body_get_damping
+/**
+ * The share of its velocity and of its spin it loses each second, 0 to 1: get_damping is
+ * (linear, angular).
+ */
+export function wgf_body_get_damping(actor, into) {
+    const ret = result(8);
+    host["_wgf_body_get_damping"](ret, actor);
+    return vector(ret, 2, into);
+}
+
+// wgf: call wgf_body_set_layer
+/**
+ * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
+ * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
+ * body meets every moving one its mask lets, and every moving one meets the static world.
+ */
+export function wgf_body_set_layer(actor, layer) {
+    const value = host["_wgf_body_set_layer"](actor, layer);
+    return value !== 0;
+}
+
+// wgf: call wgf_body_get_layer
+/**
+ * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
+ * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
+ * body meets every moving one its mask lets, and every moving one meets the static world.
+ */
+export function wgf_body_get_layer(actor) {
+    const value = host["_wgf_body_get_layer"](actor);
+    return value;
+}
+
+// wgf: call wgf_body_set_mask
+/**
+ * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
+ * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
+ * body meets every moving one its mask lets, and every moving one meets the static world.
+ */
+export function wgf_body_set_mask(actor, mask) {
+    const value = host["_wgf_body_set_mask"](actor, mask);
+    return value !== 0;
+}
+
+// wgf: call wgf_body_get_mask
+/**
+ * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
+ * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
+ * body meets every moving one its mask lets, and every moving one meets the static world.
+ */
+export function wgf_body_get_mask(actor) {
+    const value = host["_wgf_body_get_mask"](actor);
+    return value;
+}
+
+// wgf: call wgf_body_set_velocity
+/**
+ * Its velocity (units a second) and spin (radians a second about each axis), in its
+ * stage's space; and a push, an impulse (kg units a second) through its center. A body not
+ * yet made in the world (before its first tick) reads 0 and takes them when it is.
+ */
+export function wgf_body_set_velocity(actor, x, y, z) {
+    const value = host["_wgf_body_set_velocity"](actor, x, y, z);
+    return value !== 0;
+}
+
+// wgf: call wgf_body_get_velocity
+/**
+ * Its velocity (units a second) and spin (radians a second about each axis), in its
+ * stage's space; and a push, an impulse (kg units a second) through its center. A body not
+ * yet made in the world (before its first tick) reads 0 and takes them when it is.
+ */
+export function wgf_body_get_velocity(actor, into) {
+    const ret = result(12);
+    host["_wgf_body_get_velocity"](ret, actor);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_body_set_spin
+/**
+ * Its velocity (units a second) and spin (radians a second about each axis), in its
+ * stage's space; and a push, an impulse (kg units a second) through its center. A body not
+ * yet made in the world (before its first tick) reads 0 and takes them when it is.
+ */
+export function wgf_body_set_spin(actor, x, y, z) {
+    const value = host["_wgf_body_set_spin"](actor, x, y, z);
+    return value !== 0;
+}
+
+// wgf: call wgf_body_get_spin
+/**
+ * Its velocity (units a second) and spin (radians a second about each axis), in its
+ * stage's space; and a push, an impulse (kg units a second) through its center. A body not
+ * yet made in the world (before its first tick) reads 0 and takes them when it is.
+ */
+export function wgf_body_get_spin(actor, into) {
+    const ret = result(12);
+    host["_wgf_body_get_spin"](ret, actor);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_body_add_impulse
+/**
+ * Its velocity (units a second) and spin (radians a second about each axis), in its
+ * stage's space; and a push, an impulse (kg units a second) through its center. A body not
+ * yet made in the world (before its first tick) reads 0 and takes them when it is.
+ */
+export function wgf_body_add_impulse(actor, x, y, z) {
+    const value = host["_wgf_body_add_impulse"](actor, x, y, z);
+    return value !== 0;
+}
+
+// wgf: call wgf_physics_set_gravity
+/**
+ * The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
+ * starting physics. False only when physics couldn't start (logged).
+ */
+export function wgf_physics_set_gravity(x, y, z) {
+    const value = host["_wgf_physics_set_gravity"](x, y, z);
+    return value !== 0;
+}
+
+// wgf: call wgf_physics_get_gravity
+/**
+ * The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
+ * starting physics. False only when physics couldn't start (logged).
+ */
+export function wgf_physics_get_gravity(into) {
+    const ret = result(12);
+    host["_wgf_physics_get_gravity"](ret);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_physics_draw_bodies
+/**
+ * Every body's shape outlined in `color` (a sensor's in half its alpha), and each vehicle's
+ * wheels: a debug view, drawn into the 3D drawing begun (wgf_draw_begin_3d, wgf_draw.h);
+ * nothing outside one, or before physics starts. A mesh is drawn by its triangles' edges.
+ */
+export function wgf_physics_draw_bodies(color) {
+    host["_wgf_physics_draw_bodies"](color);
+}
+
+// wgf: call wgf_vehicle_set_wheels
+/**
+ * Its wheels: 2 to 8 actors under it, in left and right pairs, front first; false for an
+ * odd count, more than 8, or one that isn't an actor under it.
+ */
+export function wgf_vehicle_set_wheels(actor, wheels) {
+    const wheelsPointer = arrayIn(wheels, 0, "HEAPU32");
+    const value = host["_wgf_vehicle_set_wheels"](actor, wheelsPointer, lengthOf(wheels));
+    return value !== 0;
+}
+
+// wgf: call wgf_vehicle_get_wheel_count
+/**
+ * Its wheels: 2 to 8 actors under it, in left and right pairs, front first; false for an
+ * odd count, more than 8, or one that isn't an actor under it.
+ */
+export function wgf_vehicle_get_wheel_count(actor) {
+    const value = host["_wgf_vehicle_get_wheel_count"](actor);
+    return value;
+}
+
+// wgf: call wgf_vehicle_get_wheel
+/**
+ * Its wheels: 2 to 8 actors under it, in left and right pairs, front first; false for an
+ * odd count, more than 8, or one that isn't an actor under it.
+ */
+export function wgf_vehicle_get_wheel(actor, index) {
+    const value = host["_wgf_vehicle_get_wheel"](actor, index);
+    return value >>> 0;
+}
+
+// wgf: call wgf_vehicle_set_wheel_size
+/**
+ * Each wheel's radius and width (m), its spring's travel (m), stiffness (Hz), and damping
+ * (0 none, 1 just enough), the front pair's steering (radians), and the tires' grip
+ * (1 a road tire's; more grips harder).
+ */
+export function wgf_vehicle_set_wheel_size(actor, radius, width) {
+    const value = host["_wgf_vehicle_set_wheel_size"](actor, radius, width);
+    return value !== 0;
+}
+
+// wgf: call wgf_vehicle_set_suspension
+/**
+ * Each wheel's radius and width (m), its spring's travel (m), stiffness (Hz), and damping
+ * (0 none, 1 just enough), the front pair's steering (radians), and the tires' grip
+ * (1 a road tire's; more grips harder).
+ */
+export function wgf_vehicle_set_suspension(actor, travel, stiffness, damping) {
+    const value = host["_wgf_vehicle_set_suspension"](actor, travel, stiffness, damping);
+    return value !== 0;
+}
+
+// wgf: call wgf_vehicle_set_steering
+/**
+ * Each wheel's radius and width (m), its spring's travel (m), stiffness (Hz), and damping
+ * (0 none, 1 just enough), the front pair's steering (radians), and the tires' grip
+ * (1 a road tire's; more grips harder).
+ */
+export function wgf_vehicle_set_steering(actor, radians) {
+    const value = host["_wgf_vehicle_set_steering"](actor, radians);
+    return value !== 0;
+}
+
+// wgf: call wgf_vehicle_set_grip
+/**
+ * Each wheel's radius and width (m), its spring's travel (m), stiffness (Hz), and damping
+ * (0 none, 1 just enough), the front pair's steering (radians), and the tires' grip
+ * (1 a road tire's; more grips harder).
+ */
+export function wgf_vehicle_set_grip(actor, grip) {
+    const value = host["_wgf_vehicle_set_grip"](actor, grip);
+    return value !== 0;
+}
+
+// wgf: call wgf_vehicle_get_wheel_size
+/**
+ * As set: (radius, width); (travel, stiffness, damping); radians; grip.
+ */
+export function wgf_vehicle_get_wheel_size(actor, into) {
+    const ret = result(8);
+    host["_wgf_vehicle_get_wheel_size"](ret, actor);
+    return vector(ret, 2, into);
+}
+
+// wgf: call wgf_vehicle_get_suspension
+/**
+ * As set: (radius, width); (travel, stiffness, damping); radians; grip.
+ */
+export function wgf_vehicle_get_suspension(actor, into) {
+    const ret = result(12);
+    host["_wgf_vehicle_get_suspension"](ret, actor);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_vehicle_get_steering
+/**
+ * As set: (radius, width); (travel, stiffness, damping); radians; grip.
+ */
+export function wgf_vehicle_get_steering(actor) {
+    const value = host["_wgf_vehicle_get_steering"](actor);
+    return value;
+}
+
+// wgf: call wgf_vehicle_get_grip
+/**
+ * As set: (radius, width); (travel, stiffness, damping); radians; grip.
+ */
+export function wgf_vehicle_get_grip(actor) {
+    const value = host["_wgf_vehicle_get_grip"](actor);
+    return value;
+}
+
+// wgf: call wgf_vehicle_set_engine
+/**
+ * The engine's torque (Nm) and top speed (rpm), its gearbox's forward ratios (1 to 8, the
+ * first the lowest: 3.2 down to 0.9, say), and which axles it drives.
+ */
+export function wgf_vehicle_set_engine(actor, torque, max_rpm) {
+    const value = host["_wgf_vehicle_set_engine"](actor, torque, max_rpm);
+    return value !== 0;
+}
+
+// wgf: call wgf_vehicle_set_gears
+/**
+ * The engine's torque (Nm) and top speed (rpm), its gearbox's forward ratios (1 to 8, the
+ * first the lowest: 3.2 down to 0.9, say), and which axles it drives.
+ */
+export function wgf_vehicle_set_gears(actor, ratios) {
+    const ratiosPointer = arrayIn(ratios, 0, "HEAPF32");
+    const value = host["_wgf_vehicle_set_gears"](actor, ratiosPointer, lengthOf(ratios));
+    return value !== 0;
+}
+
+// wgf: call wgf_vehicle_set_drive
+/**
+ * The engine's torque (Nm) and top speed (rpm), its gearbox's forward ratios (1 to 8, the
+ * first the lowest: 3.2 down to 0.9, say), and which axles it drives.
+ */
+export function wgf_vehicle_set_drive(actor, drive) {
+    const value = host["_wgf_vehicle_set_drive"](actor, drive);
+    return value !== 0;
+}
+
+// wgf: call wgf_vehicle_get_engine
+/**
+ * As set: (torque, max_rpm); how many forward ratios, and ratio `index` (0 for one it
+ * hasn't); the drive.
+ */
+export function wgf_vehicle_get_engine(actor, into) {
+    const ret = result(8);
+    host["_wgf_vehicle_get_engine"](ret, actor);
+    return vector(ret, 2, into);
+}
+
+// wgf: call wgf_vehicle_get_gear_count
+/**
+ * As set: (torque, max_rpm); how many forward ratios, and ratio `index` (0 for one it
+ * hasn't); the drive.
+ */
+export function wgf_vehicle_get_gear_count(actor) {
+    const value = host["_wgf_vehicle_get_gear_count"](actor);
+    return value;
+}
+
+// wgf: call wgf_vehicle_get_gear_ratio
+/**
+ * As set: (torque, max_rpm); how many forward ratios, and ratio `index` (0 for one it
+ * hasn't); the drive.
+ */
+export function wgf_vehicle_get_gear_ratio(actor, index) {
+    const value = host["_wgf_vehicle_get_gear_ratio"](actor, index);
+    return value;
+}
+
+// wgf: call wgf_vehicle_get_drive
+/**
+ * As set: (torque, max_rpm); how many forward ratios, and ratio `index` (0 for one it
+ * hasn't); the drive.
+ */
+export function wgf_vehicle_get_drive(actor) {
+    const value = host["_wgf_vehicle_get_drive"](actor);
+    return value;
+}
+
+// wgf: call wgf_vehicle_set_input
+/**
+ * The driver's intent, until set again: throttle 0 to 1 (below 0 is reverse), brake 0 to 1,
+ * steering -1 (full left) to 1 (full right), and the hand brake on the rear wheels; each
+ * clamped. Set it each tick from the input (wgf_action.h).
+ */
+export function wgf_vehicle_set_input(actor, throttle, brake, steer, hand_brake) {
+    const value = host["_wgf_vehicle_set_input"](actor, throttle, brake, steer, (hand_brake ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_vehicle_get_speed
+/**
+ * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
+ * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
+ * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
+ * air).
+ */
+export function wgf_vehicle_get_speed(actor) {
+    const value = host["_wgf_vehicle_get_speed"](actor);
+    return value;
+}
+
+// wgf: call wgf_vehicle_get_rpm
+/**
+ * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
+ * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
+ * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
+ * air).
+ */
+export function wgf_vehicle_get_rpm(actor) {
+    const value = host["_wgf_vehicle_get_rpm"](actor);
+    return value;
+}
+
+// wgf: call wgf_vehicle_get_gear
+/**
+ * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
+ * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
+ * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
+ * air).
+ */
+export function wgf_vehicle_get_gear(actor) {
+    const value = host["_wgf_vehicle_get_gear"](actor);
+    return value;
+}
+
+// wgf: call wgf_vehicle_get_wheel_slip
+/**
+ * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
+ * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
+ * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
+ * air).
+ */
+export function wgf_vehicle_get_wheel_slip(actor, index) {
+    const value = host["_wgf_vehicle_get_wheel_slip"](actor, index);
+    return value;
+}
+
+// wgf: call wgf_vehicle_reset
+/**
+ * At rest where it is: its velocity, spin, wheels, engine, and gearbox stopped, its intent
+ * none (a car put back on the grid: set its transform, then reset).
+ */
+export function wgf_vehicle_reset(actor) {
+    const value = host["_wgf_vehicle_reset"](actor);
+    return value !== 0;
 }
 
 // wgf: call wgf_ui_begin

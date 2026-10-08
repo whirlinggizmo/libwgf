@@ -254,6 +254,14 @@ static void dump_lines(out_t *out, wgf_actor_t e, const char *pad)
         put(out, "%s", pad);
         dump_voice(out, wgf_actor_get_voice(e));
     }
+    for (i = WGF_COMPONENT_BODY; i <= WGF_COMPONENT_VEHICLE; i++) { /* a part's, as the part writes them */
+        const wgf_ecs_priv_part_component_t *part = wgf_ecs_priv_get_part_component((wgf_component_t)i);
+        if (part != NULL && wgf_actor_has_component(e, (wgf_component_t)i)) {
+            char settings[1024] = "";
+            part->describe(e, settings, sizeof(settings));
+            put(out, "%s    %s%s\n", pad, i == WGF_COMPONENT_BODY ? "body" : "vehicle", settings);
+        }
+    }
     for (b = 0; b < wgf_actor_get_behavior_count(e); b++) {
         const int id = wgf_actor_get_behavior(e, b);
         put(out, "%s    behavior", pad);

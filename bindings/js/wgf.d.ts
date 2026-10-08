@@ -603,7 +603,9 @@ export declare const WGF_COMPONENT_BOUNDS: 2;
 export declare const WGF_COMPONENT_LIFETIME: 3;
 export declare const WGF_COMPONENT_COLLIDER: 4;
 export declare const WGF_COMPONENT_VOICE: 5;
-export type wgf_component_t = typeof WGF_COMPONENT_NONE | typeof WGF_COMPONENT_MOTION | typeof WGF_COMPONENT_BOUNDS | typeof WGF_COMPONENT_LIFETIME | typeof WGF_COMPONENT_COLLIDER | typeof WGF_COMPONENT_VOICE;
+export declare const WGF_COMPONENT_BODY: 6;
+export declare const WGF_COMPONENT_VEHICLE: 7;
+export type wgf_component_t = typeof WGF_COMPONENT_NONE | typeof WGF_COMPONENT_MOTION | typeof WGF_COMPONENT_BOUNDS | typeof WGF_COMPONENT_LIFETIME | typeof WGF_COMPONENT_COLLIDER | typeof WGF_COMPONENT_VOICE | typeof WGF_COMPONENT_BODY | typeof WGF_COMPONENT_VEHICLE;
 
 /**
  * Bounds (WGF_COMPONENT_BOUNDS): a rectangle in the actor's parent's space, x and y,
@@ -651,6 +653,53 @@ export declare const WGF_WORLD_EVENT_DESTROYED: 2;
 export declare const WGF_WORLD_EVENT_TRIGGER_ENTER: 3;
 export declare const WGF_WORLD_EVENT_TRIGGER_EXIT: 4;
 export type wgf_world_event_t = typeof WGF_WORLD_EVENT_NONE | typeof WGF_WORLD_EVENT_CREATED | typeof WGF_WORLD_EVENT_DESTROYED | typeof WGF_WORLD_EVENT_TRIGGER_ENTER | typeof WGF_WORLD_EVENT_TRIGGER_EXIT;
+
+/**
+ * A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
+ * (wgf_physics.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
+ * its size (1000 kg a cubic meter), friction 0.5, no bounce, damping of 0.05, layer 1,
+ * mask every layer. Its settings take effect at the next tick, when the world's body is
+ * made again from them; set them together, before the first tick, as a scene does.
+ *
+ * The actor's transform is the body's: where the world moves a dynamic body, each tick,
+ * the actor is set; a transform the program sets puts the body there (a static or
+ * dynamic one jumps; a kinematic one is moved there over the tick, pushing what it meets).
+ * A body's shape isn't scaled with its actor. Its place is in its 3D stage's space, the
+ * actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
+ * body.
+ */
+export declare const WGF_BODY_TYPE_STATIC: 0;
+export declare const WGF_BODY_TYPE_DYNAMIC: 1;
+export declare const WGF_BODY_TYPE_KINEMATIC: 2;
+export declare const WGF_BODY_TYPE_SENSOR: 3;
+export type wgf_body_type_t = typeof WGF_BODY_TYPE_STATIC | typeof WGF_BODY_TYPE_DYNAMIC | typeof WGF_BODY_TYPE_KINEMATIC | typeof WGF_BODY_TYPE_SENSOR;
+
+export declare const WGF_BODY_SHAPE_BOX: 0;
+export declare const WGF_BODY_SHAPE_SPHERE: 1;
+export declare const WGF_BODY_SHAPE_CAPSULE: 2;
+export declare const WGF_BODY_SHAPE_CONVEX: 3;
+export declare const WGF_BODY_SHAPE_MESH: 4;
+export type wgf_body_shape_t = typeof WGF_BODY_SHAPE_BOX | typeof WGF_BODY_SHAPE_SPHERE | typeof WGF_BODY_SHAPE_CAPSULE | typeof WGF_BODY_SHAPE_CONVEX | typeof WGF_BODY_SHAPE_MESH;
+
+/**
+ * A wheeled vehicle (WGF_COMPONENT_VEHICLE, wgf_component.h) on an actor with a dynamic
+ * body (wgf_body.h): wheels on springs, an engine, an automatic gearbox, and differentials,
+ * driven by the program's intent (set_input), each tick, in the physics world
+ * (wgf_physics.h). It faces its actor's +z, +y up.
+ *
+ * Its wheels are actors under it, given in left and right pairs, front first: where each
+ * is as the vehicle is made is where it attaches (its spring at rest), and each tick it is
+ * set where the wheel is, steered, sprung, and turning about its own x, so a model under
+ * it with its axle along x shows the wheel. The first pair steers. Defaults: no wheels, an engine of 500 Nm to 6000 rpm,
+ * Jolt's gear ratios, rear drive, wheels of 0.3 m by 0.2 m, 0.3 m of spring travel at 1.5
+ * Hz damped by half, 0.5 radians of steering, grip 1. Its settings take effect at the next
+ * tick, when it is made again from them (at rest), as a body's are; reset puts it at rest
+ * where it is. The calls are false (or 0) for an actor without a vehicle.
+ */
+export declare const WGF_VEHICLE_DRIVE_FRONT: 0;
+export declare const WGF_VEHICLE_DRIVE_REAR: 1;
+export declare const WGF_VEHICLE_DRIVE_ALL: 2;
+export type wgf_vehicle_drive_t = typeof WGF_VEHICLE_DRIVE_FRONT | typeof WGF_VEHICLE_DRIVE_REAR | typeof WGF_VEHICLE_DRIVE_ALL;
 
 /**
  * Game UI, immediate mode: each frame the program describes the UI as it is now --
@@ -4279,7 +4328,8 @@ export declare function wgf_actor_count_with_behavior(name: string | null): numb
  * add makes one with its defaults (each component's header says them); adding one it has
  * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
  * that isn't an actor, or a component that isn't one; remove is false too for one it
- * doesn't have.
+ * doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
+ * before physics has started, it is refused, and logged once.
  */
 export declare function wgf_actor_add_component(actor: wgf_actor_t | 0, component: wgf_component_t): boolean;
 
@@ -4287,7 +4337,8 @@ export declare function wgf_actor_add_component(actor: wgf_actor_t | 0, componen
  * add makes one with its defaults (each component's header says them); adding one it has
  * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
  * that isn't an actor, or a component that isn't one; remove is false too for one it
- * doesn't have.
+ * doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
+ * before physics has started, it is refused, and logged once.
  */
 export declare function wgf_actor_remove_component(actor: wgf_actor_t | 0, component: wgf_component_t): boolean;
 
@@ -4295,7 +4346,8 @@ export declare function wgf_actor_remove_component(actor: wgf_actor_t | 0, compo
  * add makes one with its defaults (each component's header says them); adding one it has
  * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
  * that isn't an actor, or a component that isn't one; remove is false too for one it
- * doesn't have.
+ * doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
+ * before physics has started, it is refused, and logged once.
  */
 export declare function wgf_actor_has_component(actor: wgf_actor_t | 0, component: wgf_component_t): boolean;
 
@@ -4578,6 +4630,323 @@ export declare function wgf_world_clear(): void;
  * component or a behavior.
  */
 export declare function wgf_world_dump(): string;
+
+export declare function wgf_body_set_type(actor: wgf_actor_t | 0, type: wgf_body_type_t): boolean;
+
+export declare function wgf_body_get_type(actor: wgf_actor_t | 0): wgf_body_type_t;
+
+/**
+ * Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
+ * at least 0.01, and nothing for CONVEX and MESH, whose models' meshes are read when
+ * the body is made (a model not yet loaded is left out). get_size is x, y, z as set. A
+ * mesh can only be static: on another type it is its convex hull.
+ */
+export declare function wgf_body_set_shape(actor: wgf_actor_t | 0, shape: wgf_body_shape_t, x: number, y: number, z: number): boolean;
+
+/**
+ * Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
+ * at least 0.01, and nothing for CONVEX and MESH, whose models' meshes are read when
+ * the body is made (a model not yet loaded is left out). get_size is x, y, z as set. A
+ * mesh can only be static: on another type it is its convex hull.
+ */
+export declare function wgf_body_get_shape(actor: wgf_actor_t | 0): wgf_body_shape_t;
+
+/**
+ * Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
+ * at least 0.01, and nothing for CONVEX and MESH, whose models' meshes are read when
+ * the body is made (a model not yet loaded is left out). get_size is x, y, z as set. A
+ * mesh can only be static: on another type it is its convex hull.
+ */
+export declare function wgf_body_get_size<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_body_get_size(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * Kilograms, for a dynamic body; 0 (the default) for its shape's at 1000 a cubic meter.
+ */
+export declare function wgf_body_set_mass(actor: wgf_actor_t | 0, kilograms: number): boolean;
+
+/**
+ * Kilograms, for a dynamic body; 0 (the default) for its shape's at 1000 a cubic meter.
+ */
+export declare function wgf_body_get_mass(actor: wgf_actor_t | 0): number;
+
+/**
+ * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
+ * clamped to 0 to 1), each a pair's taken together.
+ */
+export declare function wgf_body_set_friction(actor: wgf_actor_t | 0, friction: number): boolean;
+
+/**
+ * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
+ * clamped to 0 to 1), each a pair's taken together.
+ */
+export declare function wgf_body_get_friction(actor: wgf_actor_t | 0): number;
+
+/**
+ * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
+ * clamped to 0 to 1), each a pair's taken together.
+ */
+export declare function wgf_body_set_bounce(actor: wgf_actor_t | 0, bounce: number): boolean;
+
+/**
+ * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
+ * clamped to 0 to 1), each a pair's taken together.
+ */
+export declare function wgf_body_get_bounce(actor: wgf_actor_t | 0): number;
+
+/**
+ * The share of its velocity and of its spin it loses each second, 0 to 1: get_damping is
+ * (linear, angular).
+ */
+export declare function wgf_body_set_damping(actor: wgf_actor_t | 0, linear: number, angular: number): boolean;
+
+/**
+ * The share of its velocity and of its spin it loses each second, 0 to 1: get_damping is
+ * (linear, angular).
+ */
+export declare function wgf_body_get_damping<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_body_get_damping(actor: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
+ * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
+ * body meets every moving one its mask lets, and every moving one meets the static world.
+ */
+export declare function wgf_body_set_layer(actor: wgf_actor_t | 0, layer: number): boolean;
+
+/**
+ * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
+ * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
+ * body meets every moving one its mask lets, and every moving one meets the static world.
+ */
+export declare function wgf_body_get_layer(actor: wgf_actor_t | 0): number;
+
+/**
+ * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
+ * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
+ * body meets every moving one its mask lets, and every moving one meets the static world.
+ */
+export declare function wgf_body_set_mask(actor: wgf_actor_t | 0, mask: number): boolean;
+
+/**
+ * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
+ * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
+ * body meets every moving one its mask lets, and every moving one meets the static world.
+ */
+export declare function wgf_body_get_mask(actor: wgf_actor_t | 0): number;
+
+/**
+ * Its velocity (units a second) and spin (radians a second about each axis), in its
+ * stage's space; and a push, an impulse (kg units a second) through its center. A body not
+ * yet made in the world (before its first tick) reads 0 and takes them when it is.
+ */
+export declare function wgf_body_set_velocity(actor: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
+
+/**
+ * Its velocity (units a second) and spin (radians a second about each axis), in its
+ * stage's space; and a push, an impulse (kg units a second) through its center. A body not
+ * yet made in the world (before its first tick) reads 0 and takes them when it is.
+ */
+export declare function wgf_body_get_velocity<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_body_get_velocity(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * Its velocity (units a second) and spin (radians a second about each axis), in its
+ * stage's space; and a push, an impulse (kg units a second) through its center. A body not
+ * yet made in the world (before its first tick) reads 0 and takes them when it is.
+ */
+export declare function wgf_body_set_spin(actor: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
+
+/**
+ * Its velocity (units a second) and spin (radians a second about each axis), in its
+ * stage's space; and a push, an impulse (kg units a second) through its center. A body not
+ * yet made in the world (before its first tick) reads 0 and takes them when it is.
+ */
+export declare function wgf_body_get_spin<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_body_get_spin(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * Its velocity (units a second) and spin (radians a second about each axis), in its
+ * stage's space; and a push, an impulse (kg units a second) through its center. A body not
+ * yet made in the world (before its first tick) reads 0 and takes them when it is.
+ */
+export declare function wgf_body_add_impulse(actor: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
+
+/**
+ * The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
+ * starting physics. False only when physics couldn't start (logged).
+ */
+export declare function wgf_physics_set_gravity(x: number, y: number, z: number): boolean;
+
+/**
+ * The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
+ * starting physics. False only when physics couldn't start (logged).
+ */
+export declare function wgf_physics_get_gravity<T extends number[] | Float32Array | Float64Array>(into: T): T;
+export declare function wgf_physics_get_gravity(into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * Every body's shape outlined in `color` (a sensor's in half its alpha), and each vehicle's
+ * wheels: a debug view, drawn into the 3D drawing begun (wgf_draw_begin_3d, wgf_draw.h);
+ * nothing outside one, or before physics starts. A mesh is drawn by its triangles' edges.
+ */
+export declare function wgf_physics_draw_bodies(color: wgf_color_t): void;
+
+/**
+ * Its wheels: 2 to 8 actors under it, in left and right pairs, front first; false for an
+ * odd count, more than 8, or one that isn't an actor under it.
+ */
+export declare function wgf_vehicle_set_wheels(actor: wgf_actor_t | 0, wheels: readonly wgf_actor_t[] | Uint32Array | null): boolean;
+
+/**
+ * Its wheels: 2 to 8 actors under it, in left and right pairs, front first; false for an
+ * odd count, more than 8, or one that isn't an actor under it.
+ */
+export declare function wgf_vehicle_get_wheel_count(actor: wgf_actor_t | 0): number;
+
+/**
+ * Its wheels: 2 to 8 actors under it, in left and right pairs, front first; false for an
+ * odd count, more than 8, or one that isn't an actor under it.
+ */
+export declare function wgf_vehicle_get_wheel(actor: wgf_actor_t | 0, index: number): wgf_actor_t;
+
+/**
+ * Each wheel's radius and width (m), its spring's travel (m), stiffness (Hz), and damping
+ * (0 none, 1 just enough), the front pair's steering (radians), and the tires' grip
+ * (1 a road tire's; more grips harder).
+ */
+export declare function wgf_vehicle_set_wheel_size(actor: wgf_actor_t | 0, radius: number, width: number): boolean;
+
+/**
+ * Each wheel's radius and width (m), its spring's travel (m), stiffness (Hz), and damping
+ * (0 none, 1 just enough), the front pair's steering (radians), and the tires' grip
+ * (1 a road tire's; more grips harder).
+ */
+export declare function wgf_vehicle_set_suspension(actor: wgf_actor_t | 0, travel: number, stiffness: number, damping: number): boolean;
+
+/**
+ * Each wheel's radius and width (m), its spring's travel (m), stiffness (Hz), and damping
+ * (0 none, 1 just enough), the front pair's steering (radians), and the tires' grip
+ * (1 a road tire's; more grips harder).
+ */
+export declare function wgf_vehicle_set_steering(actor: wgf_actor_t | 0, radians: number): boolean;
+
+/**
+ * Each wheel's radius and width (m), its spring's travel (m), stiffness (Hz), and damping
+ * (0 none, 1 just enough), the front pair's steering (radians), and the tires' grip
+ * (1 a road tire's; more grips harder).
+ */
+export declare function wgf_vehicle_set_grip(actor: wgf_actor_t | 0, grip: number): boolean;
+
+/**
+ * As set: (radius, width); (travel, stiffness, damping); radians; grip.
+ */
+export declare function wgf_vehicle_get_wheel_size<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_vehicle_get_wheel_size(actor: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * As set: (radius, width); (travel, stiffness, damping); radians; grip.
+ */
+export declare function wgf_vehicle_get_suspension<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_vehicle_get_suspension(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * As set: (radius, width); (travel, stiffness, damping); radians; grip.
+ */
+export declare function wgf_vehicle_get_steering(actor: wgf_actor_t | 0): number;
+
+/**
+ * As set: (radius, width); (travel, stiffness, damping); radians; grip.
+ */
+export declare function wgf_vehicle_get_grip(actor: wgf_actor_t | 0): number;
+
+/**
+ * The engine's torque (Nm) and top speed (rpm), its gearbox's forward ratios (1 to 8, the
+ * first the lowest: 3.2 down to 0.9, say), and which axles it drives.
+ */
+export declare function wgf_vehicle_set_engine(actor: wgf_actor_t | 0, torque: number, max_rpm: number): boolean;
+
+/**
+ * The engine's torque (Nm) and top speed (rpm), its gearbox's forward ratios (1 to 8, the
+ * first the lowest: 3.2 down to 0.9, say), and which axles it drives.
+ */
+export declare function wgf_vehicle_set_gears(actor: wgf_actor_t | 0, ratios: readonly number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * The engine's torque (Nm) and top speed (rpm), its gearbox's forward ratios (1 to 8, the
+ * first the lowest: 3.2 down to 0.9, say), and which axles it drives.
+ */
+export declare function wgf_vehicle_set_drive(actor: wgf_actor_t | 0, drive: wgf_vehicle_drive_t): boolean;
+
+/**
+ * As set: (torque, max_rpm); how many forward ratios, and ratio `index` (0 for one it
+ * hasn't); the drive.
+ */
+export declare function wgf_vehicle_get_engine<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_vehicle_get_engine(actor: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * As set: (torque, max_rpm); how many forward ratios, and ratio `index` (0 for one it
+ * hasn't); the drive.
+ */
+export declare function wgf_vehicle_get_gear_count(actor: wgf_actor_t | 0): number;
+
+/**
+ * As set: (torque, max_rpm); how many forward ratios, and ratio `index` (0 for one it
+ * hasn't); the drive.
+ */
+export declare function wgf_vehicle_get_gear_ratio(actor: wgf_actor_t | 0, index: number): number;
+
+/**
+ * As set: (torque, max_rpm); how many forward ratios, and ratio `index` (0 for one it
+ * hasn't); the drive.
+ */
+export declare function wgf_vehicle_get_drive(actor: wgf_actor_t | 0): wgf_vehicle_drive_t;
+
+/**
+ * The driver's intent, until set again: throttle 0 to 1 (below 0 is reverse), brake 0 to 1,
+ * steering -1 (full left) to 1 (full right), and the hand brake on the rear wheels; each
+ * clamped. Set it each tick from the input (wgf_action.h).
+ */
+export declare function wgf_vehicle_set_input(actor: wgf_actor_t | 0, throttle: number, brake: number, steer: number, hand_brake: boolean): boolean;
+
+/**
+ * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
+ * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
+ * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
+ * air).
+ */
+export declare function wgf_vehicle_get_speed(actor: wgf_actor_t | 0): number;
+
+/**
+ * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
+ * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
+ * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
+ * air).
+ */
+export declare function wgf_vehicle_get_rpm(actor: wgf_actor_t | 0): number;
+
+/**
+ * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
+ * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
+ * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
+ * air).
+ */
+export declare function wgf_vehicle_get_gear(actor: wgf_actor_t | 0): number;
+
+/**
+ * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
+ * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
+ * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
+ * air).
+ */
+export declare function wgf_vehicle_get_wheel_slip(actor: wgf_actor_t | 0, index: number): number;
+
+/**
+ * At rest where it is: its velocity, spin, wheels, engine, and gearbox stopped, its intent
+ * none (a car put back on the grid: set its transform, then reset).
+ */
+export declare function wgf_vehicle_reset(actor: wgf_actor_t | 0): boolean;
 
 /**
  * The frame's UI begun, the screen at its logical size as the root; false when one is

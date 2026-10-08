@@ -102,7 +102,7 @@ wgf_mat4_t wgf_gfx_priv_actor_get_local_matrix(wgf_gfx_priv_actor_t *actor_ptr)
 /* Its world matrix from the simulation's transforms, its own and every one above it: the
  * cached world matrix is the drawn one, which for a simulated actor is between its ticks.
  * The cached one when nothing in the chain is simulated, as it then is the same. */
-static wgf_mat4_t simulated_world(wgf_actor_t actor)
+wgf_mat4_t wgf_gfx_priv_actor_get_simulated_world(wgf_actor_t actor)
 {
     const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor), *at;
     wgf_mat4_t world;
@@ -641,7 +641,7 @@ bool wgf_actor_set_transform(wgf_actor_t actor, float position_x, float position
 
 wgf_vec3_t wgf_actor_get_world_position(wgf_actor_t actor)
 {
-    const wgf_mat4_t world = simulated_world(actor);
+    const wgf_mat4_t world = wgf_gfx_priv_actor_get_simulated_world(actor);
     if (wgf_gfx_priv_actor_of(actor) == NULL) return wgf_vec3_make(0.0f, 0.0f, 0.0f);
     return wgf_vec3_make(world.m[12], world.m[13], world.m[14]);
 }
@@ -665,7 +665,7 @@ static wgf_vec3_t direction(const wgf_mat4_t *world, float x, float y, float z)
 
 wgf_vec3_t wgf_actor_get_world_direction(wgf_actor_t actor, float x, float y, float z)
 {
-    const wgf_mat4_t world = simulated_world(actor);
+    const wgf_mat4_t world = wgf_gfx_priv_actor_get_simulated_world(actor);
     if (wgf_gfx_priv_actor_of(actor) == NULL) return wgf_vec3_make(0.0f, 0.0f, 0.0f);
     return direction(&world, x, y, z);
 }

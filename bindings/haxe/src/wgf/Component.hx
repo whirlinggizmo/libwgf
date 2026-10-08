@@ -22,4 +22,6 @@ enum abstract Component(Int) from Int to Int {
 	var LIFETIME = 3;
 	var COLLIDER = 4;
 	var VOICE = 5;
+	var BODY = 6;
+	var VEHICLE = 7;
 }

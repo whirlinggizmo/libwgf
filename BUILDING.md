@@ -220,6 +220,8 @@ model      a generated mesh (wgf_mesh.h), its create call's parameters in order:
            as it is drawn on one: before, a plain actor, warned)
 ```
 
+`body` and `vehicle` are physics' (`wgf_body.h`, `wgf_vehicle.h`), refused until the program has started physics (`wgf_physics_set_gravity`): `body type=static|dynamic|kinematic|sensor shape=box|sphere|capsule|convex|mesh size=x,y,z radius= height= mass= friction= bounce= damping=linear,angular layer= mask= velocity=x,y,z spin=x,y,z`, and `vehicle wheels=<child>,<child>,... radius= width= suspension= stiffness= damping= steering= grip= engine_torque= max_rpm= gears=<ratio>,... drive=front|rear|all`, its wheels named among the actor's children, in pairs, front first.
+
 and the transform and the components:
 
 ```

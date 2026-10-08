@@ -337,7 +337,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Workaround:** the grid moved to 12 m; the line triggers about 8 m early, the same every lap
 - **Cost:** 10 minutes, a re-record
 - **Found by:** the racer's session (its #8)
-- **Triage:** task: milestone 2, step 5: physics3d's sensors, a box among their shapes, raising the ecs's trigger events; the ecs's colliders stay spheres
+- **Triage:** fixed in step 5: a body of type sensor (`wgf_body.h`), a box among its shapes, raising the ecs's trigger events to both; the ecs's colliders stay spheres
 
 ### Racer: no mesh from vertices; the track is 763 models
 

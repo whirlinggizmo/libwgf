@@ -227,6 +227,11 @@ void wgf_gfx_priv_model_install(void);
  * transforms (both its own as it is now, until a tick moves it). And the ecs's hook for an
  * actor with components going: its components and behaviors let go of, before the actor. */
 void wgf_gfx_priv_actor_set_simulated(wgf_gfx_priv_actor_t *actor_ptr, bool simulated);
+
+/* `actor`'s world matrix from the simulation's transforms, its own and every one above it
+ * (the cached world matrix is the drawn one, between the ticks): where wgf_actor_get_world_position
+ * says it is, and physics' place for its body. The identity for a handle that isn't an actor. */
+wgf_mat4_t wgf_gfx_priv_actor_get_simulated_world(wgf_actor_t actor);
 void wgf_gfx_priv_actor_set_components_hook(void (*gone)(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr));
 
 /* With the surface: every actor destroyed at shutdown, its references released. */

@@ -649,6 +649,10 @@ void wgf_ecs_priv_record_free(wgf_actor_t actor)
     }
     wgf_ecs_priv_forget_pairs(actor);
     if (record->voice != 0) wgf_voice_destroy(record->voice);
+    for (b = WGF_COMPONENT_BODY; b <= WGF_COMPONENT_VEHICLE; b++) { /* a part's components let go of by the part */
+        const wgf_ecs_priv_part_component_t *hooks = wgf_ecs_priv_get_part_component((wgf_component_t)b);
+        if (hooks != NULL && wgf_actor_has_component(actor, (wgf_component_t)b)) hooks->remove(actor);
+    }
     record = wgf_ecs_priv_record_of(actor);
     wgf_ecs_priv_store_delete(record->id);
     free_behaviors(record);
@@ -735,6 +739,11 @@ static wgf_ecs_priv_id_t component_id(wgf_component_t component)
         case WGF_COMPONENT_LIFETIME: return ecs.ids.lifetime;
         case WGF_COMPONENT_COLLIDER: return ecs.ids.collider;
         case WGF_COMPONENT_VOICE: return ecs.ids.voice;
+        case WGF_COMPONENT_BODY:
+        case WGF_COMPONENT_VEHICLE: {
+            const wgf_ecs_priv_part_component_t *hooks = wgf_ecs_priv_get_part_component(component);
+            return hooks != NULL ? hooks->id : 0;
+        }
         default: return 0;
     }
 }

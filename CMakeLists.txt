@@ -18,6 +18,12 @@ endif()
 
 file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" WGF_VERSION LIMIT_COUNT 1)
 project(libwgf VERSION ${WGF_VERSION} LANGUAGES C CXX) # C++ in physics3d alone (Jolt)
+# MSVC: the static release runtime (/MT) in every configuration, the one hxcpp's programs
+# link (its toolchain's -MT): a debug build's C++ (Jolt's) calls the debug runtime's own
+# (_CrtDbgReport), and C++ of two runtimes in one program doesn't link (LNK2038), where
+# libwgf's C alone got by on either. A debug build keeps its debug information and no
+# optimization; it loses the debug heap.
+set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded)
 
 # The web builds use exactly the Emscripten cmake/emscripten-version.txt pins: its
 # patch releases change behavior and output within a series, so a size means something

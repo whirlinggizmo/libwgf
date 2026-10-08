@@ -376,7 +376,8 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	    add makes one with its defaults (each component's header says them); adding one it has
 	    keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
 	    that isn't an actor, or a component that isn't one; remove is false too for one it
-	    doesn't have.
+	    doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
+	    before physics has started, it is refused, and logged once.
 	**/
 	public inline function addComponent(component:Component):Bool
 		return Raw.wgf_actor_add_component(this, component);
@@ -385,7 +386,8 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	    add makes one with its defaults (each component's header says them); adding one it has
 	    keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
 	    that isn't an actor, or a component that isn't one; remove is false too for one it
-	    doesn't have.
+	    doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
+	    before physics has started, it is refused, and logged once.
 	**/
 	public inline function removeComponent(component:Component):Bool
 		return Raw.wgf_actor_remove_component(this, component);
@@ -394,7 +396,8 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	    add makes one with its defaults (each component's header says them); adding one it has
 	    keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
 	    that isn't an actor, or a component that isn't one; remove is false too for one it
-	    doesn't have.
+	    doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
+	    before physics has started, it is refused, and logged once.
 	**/
 	public inline function hasComponent(component:Component):Bool
 		return Raw.wgf_actor_has_component(this, component);

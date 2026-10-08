@@ -30,6 +30,10 @@ option(WGF_HEADLESS "WGF_OUT is a headless variant: no window or GPU" OFF)
 option(WGF_CHECK_EXPORTS "Export the loader's pending count and log, for tools/check_web.py" OFF)
 set(wgf_example_dir "${CMAKE_CURRENT_LIST_DIR}") # this file's: inside the function, the list dir is the caller's
 
+# MSVC: the static release runtime, as libwgf's own builds use in every configuration
+# (its CMakeLists.txt says why)
+set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded)
+
 function(wgf_example name)
     cmake_parse_arguments(PARSE_ARGV 1 arg "ASSETS" "" "")
     if(NOT EXISTS "${WGF_OUT}/lib")
@@ -73,7 +77,8 @@ function(wgf_example name)
             file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${name}_exports.txt" "${exports}\n")
             target_link_options(${name} PRIVATE "-sEXPORTED_FUNCTIONS=@${CMAKE_CURRENT_BINARY_DIR}/${name}_exports.txt")
         endif()
-        target_link_options(${name} PRIVATE -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sALLOW_MEMORY_GROWTH=1)
+        target_link_options(${name} PRIVATE -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sALLOW_MEMORY_GROWTH=1
+                                            -sSTACK_SIZE=524288) # physics3d's Jolt (physics3d/CMakeLists.txt)
         # a release page, as wgrender's: Closure minifies the JS, and only a browser's
         # environments (a page, a worker) are kept
         target_link_options(${name} PRIVATE $<$<CONFIG:Release>:--closure=1 -sENVIRONMENT=web,worker>)

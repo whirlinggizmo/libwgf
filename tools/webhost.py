@@ -61,7 +61,11 @@ def build(variant, exports_file=None, out=None, stage=True, constants=True, type
     (work / 'exports.txt').write_text('\n'.join(exports) + '\n', encoding='utf-8')
     headless = variants.is_headless(variant)
     release = variants.cache_variable(variant, 'CMAKE_BUILD_TYPE') == 'Release'
-    command = [emcc(), str(archive), '-o', str(out / 'wgf-host.js'), '--no-entry',
+    # C++'s runtime, linked only for a host with physics in it (Jolt): em++ costs a host
+    # without it 2 KB gzip of the runtime's own
+    physics = any(e.lstrip('_').startswith(('wgf_physics_', 'wgf_body_', 'wgf_vehicle_')) for e in exports)
+    linker = Path(emcc()).with_name('em++' + Path(emcc()).suffix) if physics else Path(emcc())
+    command = [str(linker), str(archive), '-o', str(out / 'wgf-host.js'), '--no-entry',
                '-sMODULARIZE=1', '-sEXPORT_ES6=1', '-sEXPORT_NAME=createWgfHost',
                f'-sEXPORTED_FUNCTIONS=@{(work / "exports.txt").as_posix()}',
                # a headless host's storage is the wasm's own: node's runner copies files in (FS)

@@ -31,10 +31,16 @@ if(EMSCRIPTEN)
 endif()
 target_link_libraries(wgf PUBLIC wgf_physics3d_jolt)
 
-# physics3d's C (its public calls come with milestone 2, step 5's next part)
-wgf_layer(physics3d DEPS math core gfx ecs)
+# physics3d's C: its public calls, the body and vehicle components, the tick
+wgf_layer(physics3d
+    SOURCES
+        src/wgf_physics3d.c
+    DEPS
+        math core gfx ecs)
 
 if(WGF_TESTS)
     wgf_test(physics3d wgf_physics3d_jolt_test)
-    target_include_directories(wgf_physics3d_jolt_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+    if(WGF_HEADLESS)
+        wgf_test(physics3d wgf_physics3d_test)
+    endif()
 endif()

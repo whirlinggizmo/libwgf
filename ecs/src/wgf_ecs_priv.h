@@ -125,6 +125,20 @@ wgf_ecs_priv_id_t wgf_ecs_priv_behavior_tag(const char *name, bool make);
  * as a scene's actors are all made: one found by none warned. */
 void wgf_ecs_priv_behaviors_resolve(wgf_actor_t actor);
 
+/* A component an optional part keeps (physics3d's body and vehicle), its data a store
+ * component of the part's own: the ecs reaches it through these, set by the part as it
+ * starts (NULL as it stops), so a program that never starts the part links none of it. */
+typedef struct wgf_ecs_priv_part_component_t {
+    wgf_ecs_priv_id_t id;                 /* its store component: what has and the finds read */
+    void (*add)(wgf_actor_t actor);       /* its data made, with its defaults */
+    void (*remove)(wgf_actor_t actor);    /* the part's own let go of; the ecs removes the data after */
+    /* a scene line's setting, its value's text: the part reads it, and warns of what it can't */
+    void (*set)(wgf_actor_t actor, const char *key, const char *value);
+    void (*describe)(wgf_actor_t actor, char *out, size_t size); /* its dump line's " key=value"s */
+} wgf_ecs_priv_part_component_t;
+void wgf_ecs_priv_set_part_component(wgf_component_t component, const wgf_ecs_priv_part_component_t *part);
+const wgf_ecs_priv_part_component_t *wgf_ecs_priv_get_part_component(wgf_component_t component);
+
 /* An event raised: queued for the program to take (wgf_world_take_events). */
 void wgf_ecs_priv_raise(wgf_world_event_t event, int a, int b, int c);
 

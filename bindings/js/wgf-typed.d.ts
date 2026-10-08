@@ -389,21 +389,24 @@ export declare const Actor: {
      * add makes one with its defaults (each component's header says them); adding one it has
      * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
      * that isn't an actor, or a component that isn't one; remove is false too for one it
-     * doesn't have.
+     * doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
+     * before physics has started, it is refused, and logged once.
      */
     readonly addComponent: typeof raw.wgf_actor_add_component;
     /**
      * add makes one with its defaults (each component's header says them); adding one it has
      * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
      * that isn't an actor, or a component that isn't one; remove is false too for one it
-     * doesn't have.
+     * doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
+     * before physics has started, it is refused, and logged once.
      */
     readonly removeComponent: typeof raw.wgf_actor_remove_component;
     /**
      * add makes one with its defaults (each component's header says them); adding one it has
      * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
      * that isn't an actor, or a component that isn't one; remove is false too for one it
-     * doesn't have.
+     * doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
+     * before physics has started, it is refused, and logged once.
      */
     readonly hasComponent: typeof raw.wgf_actor_has_component;
     /**
@@ -853,6 +856,127 @@ export declare const BehaviorComponent: {
      * end).
      */
     readonly getParamKey: typeof raw.wgf_behavior_get_param_key;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
+};
+/** A handle of kind wgf_actor_t: the raw binding's branded type. */
+export type Body = raw.wgf_actor_t;
+export declare const Body: {
+    readonly setType: typeof raw.wgf_body_set_type;
+    readonly getType: typeof raw.wgf_body_get_type;
+    /**
+     * Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
+     * at least 0.01, and nothing for CONVEX and MESH, whose models' meshes are read when
+     * the body is made (a model not yet loaded is left out). get_size is x, y, z as set. A
+     * mesh can only be static: on another type it is its convex hull.
+     */
+    readonly setShape: typeof raw.wgf_body_set_shape;
+    /**
+     * Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
+     * at least 0.01, and nothing for CONVEX and MESH, whose models' meshes are read when
+     * the body is made (a model not yet loaded is left out). get_size is x, y, z as set. A
+     * mesh can only be static: on another type it is its convex hull.
+     */
+    readonly getShape: typeof raw.wgf_body_get_shape;
+    /**
+     * Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
+     * at least 0.01, and nothing for CONVEX and MESH, whose models' meshes are read when
+     * the body is made (a model not yet loaded is left out). get_size is x, y, z as set. A
+     * mesh can only be static: on another type it is its convex hull.
+     */
+    readonly getSize: typeof raw.wgf_body_get_size;
+    /**
+     * Kilograms, for a dynamic body; 0 (the default) for its shape's at 1000 a cubic meter.
+     */
+    readonly setMass: typeof raw.wgf_body_set_mass;
+    /**
+     * Kilograms, for a dynamic body; 0 (the default) for its shape's at 1000 a cubic meter.
+     */
+    readonly getMass: typeof raw.wgf_body_get_mass;
+    /**
+     * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
+     * clamped to 0 to 1), each a pair's taken together.
+     */
+    readonly setFriction: typeof raw.wgf_body_set_friction;
+    /**
+     * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
+     * clamped to 0 to 1), each a pair's taken together.
+     */
+    readonly getFriction: typeof raw.wgf_body_get_friction;
+    /**
+     * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
+     * clamped to 0 to 1), each a pair's taken together.
+     */
+    readonly setBounce: typeof raw.wgf_body_set_bounce;
+    /**
+     * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
+     * clamped to 0 to 1), each a pair's taken together.
+     */
+    readonly getBounce: typeof raw.wgf_body_get_bounce;
+    /**
+     * The share of its velocity and of its spin it loses each second, 0 to 1: get_damping is
+     * (linear, angular).
+     */
+    readonly setDamping: typeof raw.wgf_body_set_damping;
+    /**
+     * The share of its velocity and of its spin it loses each second, 0 to 1: get_damping is
+     * (linear, angular).
+     */
+    readonly getDamping: typeof raw.wgf_body_get_damping;
+    /**
+     * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
+     * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
+     * body meets every moving one its mask lets, and every moving one meets the static world.
+     */
+    readonly setLayer: typeof raw.wgf_body_set_layer;
+    /**
+     * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
+     * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
+     * body meets every moving one its mask lets, and every moving one meets the static world.
+     */
+    readonly getLayer: typeof raw.wgf_body_get_layer;
+    /**
+     * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
+     * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
+     * body meets every moving one its mask lets, and every moving one meets the static world.
+     */
+    readonly setMask: typeof raw.wgf_body_set_mask;
+    /**
+     * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
+     * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
+     * body meets every moving one its mask lets, and every moving one meets the static world.
+     */
+    readonly getMask: typeof raw.wgf_body_get_mask;
+    /**
+     * Its velocity (units a second) and spin (radians a second about each axis), in its
+     * stage's space; and a push, an impulse (kg units a second) through its center. A body not
+     * yet made in the world (before its first tick) reads 0 and takes them when it is.
+     */
+    readonly setVelocity: typeof raw.wgf_body_set_velocity;
+    /**
+     * Its velocity (units a second) and spin (radians a second about each axis), in its
+     * stage's space; and a push, an impulse (kg units a second) through its center. A body not
+     * yet made in the world (before its first tick) reads 0 and takes them when it is.
+     */
+    readonly getVelocity: typeof raw.wgf_body_get_velocity;
+    /**
+     * Its velocity (units a second) and spin (radians a second about each axis), in its
+     * stage's space; and a push, an impulse (kg units a second) through its center. A body not
+     * yet made in the world (before its first tick) reads 0 and takes them when it is.
+     */
+    readonly setSpin: typeof raw.wgf_body_set_spin;
+    /**
+     * Its velocity (units a second) and spin (radians a second about each axis), in its
+     * stage's space; and a push, an impulse (kg units a second) through its center. A body not
+     * yet made in the world (before its first tick) reads 0 and takes them when it is.
+     */
+    readonly getSpin: typeof raw.wgf_body_get_spin;
+    /**
+     * Its velocity (units a second) and spin (radians a second about each axis), in its
+     * stage's space; and a push, an impulse (kg units a second) through its center. A body not
+     * yet made in the world (before its first tick) reads 0 and takes them when it is.
+     */
+    readonly addImpulse: typeof raw.wgf_body_add_impulse;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
@@ -2248,6 +2372,24 @@ export declare const Mouse: {
      */
     readonly isCursorVisible: typeof raw.wgf_mouse_is_cursor_visible;
 };
+export declare const Physics: {
+    /**
+     * The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
+     * starting physics. False only when physics couldn't start (logged).
+     */
+    readonly setGravity: typeof raw.wgf_physics_set_gravity;
+    /**
+     * The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
+     * starting physics. False only when physics couldn't start (logged).
+     */
+    readonly getGravity: typeof raw.wgf_physics_get_gravity;
+    /**
+     * Every body's shape outlined in `color` (a sensor's in half its alpha), and each vehicle's
+     * wheels: a debug view, drawn into the 3D drawing begun (wgf_draw_begin_3d, wgf_draw.h);
+     * nothing outside one, or before physics starts. A mesh is drawn by its triangles' edges.
+     */
+    readonly drawBodies: typeof raw.wgf_physics_draw_bodies;
+};
 /** A handle of kind wgf_prefab_t: the raw binding's branded type. */
 export type Prefab = raw.wgf_prefab_t;
 export declare const Prefab: {
@@ -3299,6 +3441,141 @@ export declare const Ui: {
      */
     readonly resetStyle: typeof raw.wgf_ui_reset_style;
 };
+/** A handle of kind wgf_actor_t: the raw binding's branded type. */
+export type Vehicle = raw.wgf_actor_t;
+export declare const Vehicle: {
+    /**
+     * Its wheels: 2 to 8 actors under it, in left and right pairs, front first; false for an
+     * odd count, more than 8, or one that isn't an actor under it.
+     */
+    readonly setWheels: typeof raw.wgf_vehicle_set_wheels;
+    /**
+     * Its wheels: 2 to 8 actors under it, in left and right pairs, front first; false for an
+     * odd count, more than 8, or one that isn't an actor under it.
+     */
+    readonly getWheelCount: typeof raw.wgf_vehicle_get_wheel_count;
+    /**
+     * Its wheels: 2 to 8 actors under it, in left and right pairs, front first; false for an
+     * odd count, more than 8, or one that isn't an actor under it.
+     */
+    readonly getWheel: typeof raw.wgf_vehicle_get_wheel;
+    /**
+     * Each wheel's radius and width (m), its spring's travel (m), stiffness (Hz), and damping
+     * (0 none, 1 just enough), the front pair's steering (radians), and the tires' grip
+     * (1 a road tire's; more grips harder).
+     */
+    readonly setWheelSize: typeof raw.wgf_vehicle_set_wheel_size;
+    /**
+     * Each wheel's radius and width (m), its spring's travel (m), stiffness (Hz), and damping
+     * (0 none, 1 just enough), the front pair's steering (radians), and the tires' grip
+     * (1 a road tire's; more grips harder).
+     */
+    readonly setSuspension: typeof raw.wgf_vehicle_set_suspension;
+    /**
+     * Each wheel's radius and width (m), its spring's travel (m), stiffness (Hz), and damping
+     * (0 none, 1 just enough), the front pair's steering (radians), and the tires' grip
+     * (1 a road tire's; more grips harder).
+     */
+    readonly setSteering: typeof raw.wgf_vehicle_set_steering;
+    /**
+     * Each wheel's radius and width (m), its spring's travel (m), stiffness (Hz), and damping
+     * (0 none, 1 just enough), the front pair's steering (radians), and the tires' grip
+     * (1 a road tire's; more grips harder).
+     */
+    readonly setGrip: typeof raw.wgf_vehicle_set_grip;
+    /**
+     * As set: (radius, width); (travel, stiffness, damping); radians; grip.
+     */
+    readonly getWheelSize: typeof raw.wgf_vehicle_get_wheel_size;
+    /**
+     * As set: (radius, width); (travel, stiffness, damping); radians; grip.
+     */
+    readonly getSuspension: typeof raw.wgf_vehicle_get_suspension;
+    /**
+     * As set: (radius, width); (travel, stiffness, damping); radians; grip.
+     */
+    readonly getSteering: typeof raw.wgf_vehicle_get_steering;
+    /**
+     * As set: (radius, width); (travel, stiffness, damping); radians; grip.
+     */
+    readonly getGrip: typeof raw.wgf_vehicle_get_grip;
+    /**
+     * The engine's torque (Nm) and top speed (rpm), its gearbox's forward ratios (1 to 8, the
+     * first the lowest: 3.2 down to 0.9, say), and which axles it drives.
+     */
+    readonly setEngine: typeof raw.wgf_vehicle_set_engine;
+    /**
+     * The engine's torque (Nm) and top speed (rpm), its gearbox's forward ratios (1 to 8, the
+     * first the lowest: 3.2 down to 0.9, say), and which axles it drives.
+     */
+    readonly setGears: typeof raw.wgf_vehicle_set_gears;
+    /**
+     * The engine's torque (Nm) and top speed (rpm), its gearbox's forward ratios (1 to 8, the
+     * first the lowest: 3.2 down to 0.9, say), and which axles it drives.
+     */
+    readonly setDrive: typeof raw.wgf_vehicle_set_drive;
+    /**
+     * As set: (torque, max_rpm); how many forward ratios, and ratio `index` (0 for one it
+     * hasn't); the drive.
+     */
+    readonly getEngine: typeof raw.wgf_vehicle_get_engine;
+    /**
+     * As set: (torque, max_rpm); how many forward ratios, and ratio `index` (0 for one it
+     * hasn't); the drive.
+     */
+    readonly getGearCount: typeof raw.wgf_vehicle_get_gear_count;
+    /**
+     * As set: (torque, max_rpm); how many forward ratios, and ratio `index` (0 for one it
+     * hasn't); the drive.
+     */
+    readonly getGearRatio: typeof raw.wgf_vehicle_get_gear_ratio;
+    /**
+     * As set: (torque, max_rpm); how many forward ratios, and ratio `index` (0 for one it
+     * hasn't); the drive.
+     */
+    readonly getDrive: typeof raw.wgf_vehicle_get_drive;
+    /**
+     * The driver's intent, until set again: throttle 0 to 1 (below 0 is reverse), brake 0 to 1,
+     * steering -1 (full left) to 1 (full right), and the hand brake on the rear wheels; each
+     * clamped. Set it each tick from the input (wgf_action.h).
+     */
+    readonly setInput: typeof raw.wgf_vehicle_set_input;
+    /**
+     * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
+     * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
+     * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
+     * air).
+     */
+    readonly getSpeed: typeof raw.wgf_vehicle_get_speed;
+    /**
+     * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
+     * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
+     * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
+     * air).
+     */
+    readonly getRpm: typeof raw.wgf_vehicle_get_rpm;
+    /**
+     * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
+     * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
+     * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
+     * air).
+     */
+    readonly getGear: typeof raw.wgf_vehicle_get_gear;
+    /**
+     * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
+     * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
+     * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
+     * air).
+     */
+    readonly getWheelSlip: typeof raw.wgf_vehicle_get_wheel_slip;
+    /**
+     * At rest where it is: its velocity, spin, wheels, engine, and gearbox stopped, its intent
+     * none (a car put back on the grid: set its transform, then reset).
+     */
+    readonly reset: typeof raw.wgf_vehicle_reset;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
+};
 export declare const Version: {
     /**
      * The libwgf version, "MAJOR.MINOR.PATCH", from the repo's VERSION file.
@@ -3804,12 +4081,16 @@ export type AssetCacheMode = raw.wgf_asset_cache_mode_t;
 export declare const AssetCacheMode: { readonly REVALIDATE: AssetCacheMode; readonly TRUST: AssetCacheMode; readonly OFF: AssetCacheMode; };
 export type AssetTaskStatus = raw.wgf_asset_task_status_t;
 export declare const AssetTaskStatus: { readonly NONE: AssetTaskStatus; readonly PENDING: AssetTaskStatus; readonly DONE: AssetTaskStatus; readonly FAILED: AssetTaskStatus; };
+export type BodyShape = raw.wgf_body_shape_t;
+export declare const BodyShape: { readonly BOX: BodyShape; readonly SPHERE: BodyShape; readonly CAPSULE: BodyShape; readonly CONVEX: BodyShape; readonly MESH: BodyShape; };
+export type BodyType = raw.wgf_body_type_t;
+export declare const BodyType: { readonly STATIC: BodyType; readonly DYNAMIC: BodyType; readonly KINEMATIC: BodyType; readonly SENSOR: BodyType; };
 export type BoundsMode = raw.wgf_bounds_mode_t;
 export declare const BoundsMode: { readonly WRAP: BoundsMode; readonly CLAMP: BoundsMode; readonly DESTROY: BoundsMode; };
 export type ColorStock = raw.wgf_color_stock_t;
 export declare const ColorStock: { readonly BLANK: ColorStock; readonly WHITE: ColorStock; readonly BLACK: ColorStock; readonly LIGHTGRAY: ColorStock; readonly GRAY: ColorStock; readonly DARKGRAY: ColorStock; readonly YELLOW: ColorStock; readonly GOLD: ColorStock; readonly ORANGE: ColorStock; readonly PINK: ColorStock; readonly RED: ColorStock; readonly MAROON: ColorStock; readonly GREEN: ColorStock; readonly LIME: ColorStock; readonly DARKGREEN: ColorStock; readonly SKYBLUE: ColorStock; readonly BLUE: ColorStock; readonly DARKBLUE: ColorStock; readonly PURPLE: ColorStock; readonly VIOLET: ColorStock; readonly DARKPURPLE: ColorStock; readonly BEIGE: ColorStock; readonly BROWN: ColorStock; readonly DARKBROWN: ColorStock; readonly MAGENTA: ColorStock; readonly RAYWHITE: ColorStock; };
 export type Component = raw.wgf_component_t;
-export declare const Component: { readonly NONE: Component; readonly MOTION: Component; readonly BOUNDS: Component; readonly LIFETIME: Component; readonly COLLIDER: Component; readonly VOICE: Component; };
+export declare const Component: { readonly NONE: Component; readonly MOTION: Component; readonly BOUNDS: Component; readonly LIFETIME: Component; readonly COLLIDER: Component; readonly VOICE: Component; readonly BODY: Component; readonly VEHICLE: Component; };
 export type FsTaskStatus = raw.wgf_fs_task_status_t;
 export declare const FsTaskStatus: { readonly NONE: FsTaskStatus; readonly PENDING: FsTaskStatus; readonly DONE: FsTaskStatus; readonly NOT_FOUND: FsTaskStatus; readonly FAILED: FsTaskStatus; };
 export type GamepadAxis = raw.wgf_gamepad_axis_t;
@@ -3862,5 +4143,7 @@ export type UiSizing = raw.wgf_ui_sizing_t;
 export declare const UiSizing: { readonly FIT: UiSizing; readonly GROW: UiSizing; readonly FIXED: UiSizing; readonly PERCENT: UiSizing; };
 export type UiValue = raw.wgf_ui_value_t;
 export declare const UiValue: { readonly TEXT_SIZE: UiValue; readonly PADDING: UiValue; readonly GAP: UiValue; readonly CORNER_RADIUS: UiValue; readonly BUTTON_PADDING: UiValue; readonly BUTTON_WIDTH: UiValue; readonly FOCUS_WIDTH: UiValue; };
+export type VehicleDrive = raw.wgf_vehicle_drive_t;
+export declare const VehicleDrive: { readonly FRONT: VehicleDrive; readonly REAR: VehicleDrive; readonly ALL: VehicleDrive; };
 export type WorldEvent = raw.wgf_world_event_t;
 export declare const WorldEvent: { readonly NONE: WorldEvent; readonly CREATED: WorldEvent; readonly DESTROYED: WorldEvent; readonly TRIGGER_ENTER: WorldEvent; readonly TRIGGER_EXIT: WorldEvent; };

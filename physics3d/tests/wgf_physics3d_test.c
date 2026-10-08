@@ -1,0 +1,268 @@
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "render/wgf_gfx_render_priv.h"
+#include "wgf_actor.h"
+#include "wgf_body.h"
+#include "wgf_component.h"
+#include "wgf_core_part_priv.h"
+#include "wgf_core_priv.h"
+#include "wgf_fs.h"
+#include "wgf_log.h"
+#include "wgf_physics.h"
+#include "wgf_resource.h"
+#include "wgf_scene.h"
+#include "wgf_stage3d.h"
+#include "wgf_time.h"
+#include "wgf_vehicle.h"
+#include "wgf_world.h"
+
+/* Physics, headless: refused before it starts; a ball falling onto a floor and coming to
+ * rest, its actor set where the world put it; a sensor telling both of an overlap; a body
+ * put somewhere new by the program; a kinematic body pushing a dynamic one; a car on four
+ * wheels driven, steered, its wheels' actors moved, and reset; a scene's body and vehicle
+ * lines; the dump writing them back. */
+
+static int failures;
+
+static void expect(int ok, const char *what)
+{
+    if (!ok) {
+        printf("FAIL: %s\n", what);
+        failures++;
+    }
+}
+
+static void step(int ticks)
+{
+    while (ticks-- > 0) {
+        wgf_core_priv_part_tick_begin();
+        wgf_core_priv_part_tick(1.0f / 60.0f);
+    }
+}
+
+static wgf_actor_t put(wgf_actor_t parent, float x, float y, float z)
+{
+    const wgf_actor_t actor = wgf_actor_create();
+    wgf_actor_set_parent(actor, parent);
+    wgf_actor_set_position(actor, x, y, z);
+    return actor;
+}
+
+/* The events since the last take: whether a trigger enter of `a` by `b` is among them. */
+static int events[4 * 256];
+static int event_count;
+
+static void take(void)
+{
+    event_count = wgf_world_take_events(events, 4 * 256) / 4;
+}
+
+static bool told(wgf_world_event_t event, wgf_actor_t a, wgf_actor_t b)
+{
+    int i;
+    for (i = 0; i < event_count; i++) {
+        if (events[4 * i] == (int)event && events[4 * i + 1] == (int)a && events[4 * i + 2] == (int)b) return true;
+    }
+    return false;
+}
+
+static void write_file(const char *path, const char *text)
+{
+    const wgf_fs_task_t task = wgf_fs_write_text(path, text);
+    int i;
+    for (i = 0; i < 1000 && wgf_fs_task_get_status(task) == WGF_FS_TASK_STATUS_PENDING; i++) wgf_core_priv_update();
+    wgf_fs_task_destroy(task);
+}
+
+static const char *garage =
+    "wgf-scene 2\n"
+    "actor car\n"
+    "  transform position=0,1,0\n"
+    "  body type=dynamic shape=box size=1.8,0.6,4 mass=1200 friction=0.9 damping=0.1,0.2 layer=2 mask=3\n"
+    "  vehicle wheels=wheel_fl,wheel_fr,wheel_rl,wheel_rr radius=0.34 width=0.22 suspension=0.3 stiffness=1.6 "
+    "damping=0.5 steering=0.5 grip=1.2 engine_torque=420 max_rpm=7000 gears=3.2,2.1,1.5 drive=rear\n"
+    "end\n"
+    "actor car/wheel_fl\n  transform position=-0.8,-0.2,1.4\nend\n"
+    "actor car/wheel_fr\n  transform position=0.8,-0.2,1.4\nend\n"
+    "actor car/wheel_rl\n  transform position=-0.8,-0.2,-1.4\nend\n"
+    "actor car/wheel_rr\n  transform position=0.8,-0.2,-1.4\nend\n";
+
+int main(void)
+{
+    wgf_actor_t stage, floor_actor, ball, gate, pusher, car, wheels[4];
+    wgf_vec3_t at;
+    int i;
+
+    wgf_core_priv_init();
+    wgf_log_set_level(WGF_LOG_LEVEL_ERROR); /* the refusals log, on purpose */
+    expect(wgf_gfx_priv_start(), "gfx");
+    stage = wgf_stage3d_create();
+
+    /* before physics starts */
+    ball = put(stage, 0, 5, 0);
+    expect(!wgf_actor_add_component(ball, WGF_COMPONENT_BODY) && !wgf_actor_has_component(ball, WGF_COMPONENT_BODY),
+           "a body before physics starts: refused");
+    expect(wgf_physics_get_gravity().y == -9.81f, "its gravity, as it will start");
+
+    /* started; a ball onto a floor */
+    expect(wgf_physics_set_gravity(0, -9.81f, 0) && wgf_physics_get_gravity().y == -9.81f, "started, by its gravity");
+    floor_actor = put(stage, 0, -0.5f, 0);
+    expect(wgf_actor_add_component(floor_actor, WGF_COMPONENT_BODY) &&
+               wgf_body_set_type(floor_actor, WGF_BODY_TYPE_STATIC) &&
+               wgf_body_set_shape(floor_actor, WGF_BODY_SHAPE_BOX, 200, 1, 200),
+           "a static floor");
+    expect(wgf_actor_add_component(ball, WGF_COMPONENT_BODY) && wgf_body_set_shape(ball, WGF_BODY_SHAPE_SPHERE, 0.5f, 0, 0),
+           "a dynamic ball");
+    expect(wgf_body_get_type(ball) == WGF_BODY_TYPE_DYNAMIC && wgf_body_get_shape(ball) == WGF_BODY_SHAPE_SPHERE &&
+               wgf_body_get_size(ball).x == 0.5f && wgf_body_get_friction(ball) == 0.5f && wgf_body_get_mask(ball) == 0x7FFF,
+           "its settings, its defaults");
+    expect(!wgf_body_set_layer(ball, 0) && !wgf_body_set_mask(ball, 0x8000) && !wgf_body_set_type(ball, (wgf_body_type_t)9),
+           "a layer, a mask, a type that isn't one: refused");
+    step(1);
+    expect(wgf_actor_get_position(ball).y < 5.0f, "falling at the first tick");
+    step(180);
+    at = wgf_actor_get_position(ball);
+    expect(fabsf(at.y - 0.5f) < 0.05f && fabsf(at.x) < 0.01f, "at rest on the floor");
+    expect(fabsf(wgf_body_get_velocity(ball).y) < 0.05f, "still");
+
+    /* put somewhere new by the program, and pushed */
+    wgf_actor_set_position(ball, 3, 2, 0);
+    step(1);
+    expect(fabsf(wgf_actor_get_position(ball).x - 3.0f) < 0.01f && wgf_actor_get_position(ball).y < 2.0f,
+           "set by the program: the body there, falling");
+    wgf_body_add_impulse(ball, 0, 0, 500);
+    step(1);
+    expect(wgf_body_get_velocity(ball).z > 0.5f, "an impulse pushed it");
+    wgf_body_set_velocity(ball, 0, 0, 0);
+    expect(fabsf(wgf_body_get_velocity(ball).z) < 1e-4f, "its velocity set");
+
+    /* a sensor, telling both */
+    gate = put(stage, -6, 2, 0);
+    wgf_actor_add_component(gate, WGF_COMPONENT_BODY);
+    wgf_body_set_type(gate, WGF_BODY_TYPE_SENSOR);
+    wgf_body_set_shape(gate, WGF_BODY_SHAPE_BOX, 2, 1, 2);
+    wgf_body_set_layer(gate, 8);
+    wgf_world_take_events(NULL, 0);
+    step(1);
+    take();
+    wgf_actor_set_position(ball, -6, 4, 0);
+    wgf_body_set_layer(ball, 2);
+    for (i = 0; i < 90; i++) {
+        step(1);
+        take();
+        if (told(WGF_WORLD_EVENT_TRIGGER_ENTER, gate, ball)) break;
+    }
+    expect(told(WGF_WORLD_EVENT_TRIGGER_ENTER, gate, ball) && told(WGF_WORLD_EVENT_TRIGGER_ENTER, ball, gate),
+           "a ball falling into a sensor: both told");
+    for (i = 0; i < 4 * event_count; i += 4) {
+        if (events[i + 1] == (int)gate && events[i] == WGF_WORLD_EVENT_TRIGGER_ENTER) expect(events[i + 3] == 2, "the gate told the ball's layer");
+    }
+    for (i = 0; i < 120; i++) {
+        step(1);
+        take();
+        if (told(WGF_WORLD_EVENT_TRIGGER_EXIT, gate, ball)) break;
+    }
+    expect(told(WGF_WORLD_EVENT_TRIGGER_EXIT, gate, ball), "and left");
+
+    /* a kinematic body moved by the program, pushing */
+    pusher = put(stage, 10, 0.5f, 0);
+    wgf_actor_add_component(pusher, WGF_COMPONENT_BODY);
+    wgf_body_set_type(pusher, WGF_BODY_TYPE_KINEMATIC);
+    wgf_actor_set_position(ball, 11.2f, 0.5f, 0);
+    step(10);
+    for (i = 0; i < 30; i++) {
+        wgf_actor_set_position(pusher, 10.0f + 0.05f * (float)(i + 1), 0.5f, 0);
+        step(1);
+    }
+    expect(wgf_actor_get_position(ball).x > 11.6f, "a kinematic box pushed the ball along");
+
+    /* a car */
+    car = put(stage, 0, 1, 20);
+    wgf_actor_add_component(car, WGF_COMPONENT_BODY);
+    wgf_body_set_shape(car, WGF_BODY_SHAPE_BOX, 1.8f, 0.6f, 4);
+    wgf_body_set_mass(car, 1200);
+    for (i = 0; i < 4; i++) wheels[i] = put(car, i % 2 ? 0.8f : -0.8f, -0.2f, i < 2 ? 1.4f : -1.4f);
+    expect(!wgf_vehicle_set_input(car, 1, 0, 0, false), "no vehicle yet: refused");
+    expect(wgf_actor_add_component(car, WGF_COMPONENT_VEHICLE), "a vehicle on it");
+    expect(!wgf_vehicle_set_wheels(car, wheels, 3) && !wgf_vehicle_set_wheels(car, &ball, 2) &&
+               wgf_vehicle_set_wheels(car, wheels, 4) && wgf_vehicle_get_wheel_count(car) == 4 &&
+               wgf_vehicle_get_wheel(car, 2) == wheels[2] && wgf_vehicle_get_wheel(car, 4) == 0,
+           "its wheels: pairs of its children");
+    {
+        const float gears[] = {3.2f, 2.1f, 1.5f, 1.15f, 0.92f};
+        expect(wgf_vehicle_set_engine(car, 420, 7000) && wgf_vehicle_set_gears(car, gears, 5) &&
+                   !wgf_vehicle_set_gears(car, gears, 0) && wgf_vehicle_set_drive(car, WGF_VEHICLE_DRIVE_REAR) &&
+                   wgf_vehicle_set_wheel_size(car, 0.34f, 0.22f) && wgf_vehicle_set_suspension(car, 0.3f, 1.6f, 0.5f) &&
+                   wgf_vehicle_set_steering(car, 0.5f) && wgf_vehicle_set_grip(car, 1.2f),
+               "its settings");
+        expect(wgf_vehicle_get_engine(car).y == 7000.0f && wgf_vehicle_get_gear_count(car) == 5 &&
+                   wgf_vehicle_get_gear_ratio(car, 1) == 2.1f && wgf_vehicle_get_gear_ratio(car, 5) == 0.0f &&
+                   wgf_vehicle_get_drive(car) == WGF_VEHICLE_DRIVE_REAR && wgf_vehicle_get_wheel_size(car).x == 0.34f &&
+                   wgf_vehicle_get_suspension(car).y == 1.6f && wgf_vehicle_get_steering(car) == 0.5f &&
+                   wgf_vehicle_get_grip(car) == 1.2f,
+               "read back as set");
+    }
+    step(60); /* settled on its springs */
+    expect(fabsf(wgf_vehicle_get_speed(car)) < 0.2f, "at rest");
+    for (i = 0; i < 180; i++) {
+        wgf_vehicle_set_input(car, 1, 0, 0, false);
+        step(1);
+    }
+    expect(wgf_vehicle_get_speed(car) > 8.0f && wgf_actor_get_position(car).z > 25.0f, "the throttle took it forward");
+    expect(wgf_vehicle_get_gear(car) >= 1 && wgf_vehicle_get_rpm(car) > 500.0f, "in gear, its engine turning");
+    expect(fabsf(wgf_actor_get_position(wheels[0]).x + 0.8f) < 0.05f && wgf_actor_get_position(wheels[0]).y < -0.2f,
+           "its wheel set where the wheel is, on its spring");
+    {
+        const float x = wgf_actor_get_position(car).x;
+        for (i = 0; i < 60; i++) {
+            wgf_vehicle_set_input(car, 0.5f, 0, 1, false);
+            step(1);
+        }
+        expect(wgf_actor_get_position(car).x < x - 0.5f, "steered right: toward its -x, facing +z");
+    }
+    expect(wgf_vehicle_get_wheel_slip(car, 0) >= 0.0f && wgf_vehicle_get_wheel_slip(car, 7) == 0.0f, "a wheel's slip");
+    expect(wgf_vehicle_reset(car) && fabsf(wgf_vehicle_get_speed(car)) < 1e-3f, "reset: at rest");
+
+    /* a scene's lines, and the dump */
+    {
+        wgf_scene_t scene;
+        wgf_actor_t made;
+        double start;
+        const char *dump;
+        write_file("scenes/garage.scene", garage);
+        scene = wgf_scene_create("scenes/garage.scene");
+        start = wgf_time_get_seconds();
+        while (wgf_resource_get_status(scene) == WGF_RESOURCE_STATUS_PENDING && wgf_time_get_seconds() - start < 30.0) {
+            wgf_core_priv_update();
+        }
+        expect(wgf_scene_instantiate(scene, stage) == 1, "a scene's car");
+        made = wgf_stage3d_find(stage, "car");
+        expect(wgf_actor_has_component(made, WGF_COMPONENT_BODY) && wgf_body_get_mass(made) == 1200.0f &&
+                   wgf_body_get_layer(made) == 2 && wgf_body_get_damping(made).y == 0.2f,
+               "its body as the line says");
+        step(2);
+        expect(wgf_vehicle_get_wheel_count(made) == 4 && wgf_vehicle_get_wheel(made, 3) == wgf_actor_find(made, "wheel_rr"),
+               "its vehicle's wheels found by name as it was made");
+        dump = wgf_world_dump();
+        if (getenv("WGF_TEST_SHOW")) printf("%s", dump);
+        expect(strstr(dump, "body type=dynamic shape=box size=1.79999995,0.600000024,4 mass=1200 friction=0.899999976") != NULL &&
+                   strstr(dump, "vehicle wheels=_0,_1,_2,_3 ") != NULL &&
+                   strstr(dump, "vehicle wheels=wheel_fl,wheel_fr,wheel_rl,wheel_rr radius=0.340000004") != NULL &&
+                   strstr(dump, "gears=3.20000005,2.0999999,1.5 drive=rear") != NULL,
+               "dumped as scene lines");
+        wgf_resource_release(scene);
+    }
+
+    /* gone */
+    wgf_actor_destroy(car, WGF_ACTOR_DESTROY_CHILDREN);
+    step(1);
+    expect(wgf_actor_count_with_component(WGF_COMPONENT_VEHICLE) == 1 && wgf_actor_count_with_component(WGF_COMPONENT_BODY) == 5,
+           "a car destroyed: its body and vehicle with it");
+    wgf_gfx_priv_stop();
+    expect(!wgf_actor_has_component(ball, WGF_COMPONENT_BODY), "stopped with gfx");
+    wgf_core_priv_shutdown();
+    return failures == 0 ? 0 : 1;
+}

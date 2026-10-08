@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-LAYERS = ('math', 'core', 'platform', 'asset', 'gfx', 'audio', 'ecs', 'ui', 'app')
+LAYERS = ('math', 'core', 'platform', 'asset', 'gfx', 'audio', 'ecs', 'physics3d', 'ui', 'app')
 
 
 @dataclass

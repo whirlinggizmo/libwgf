@@ -24,6 +24,7 @@ typedef enum wgf_core_priv_part_layer_t {
  * order. Naming a part here links nothing. */
 typedef enum wgf_core_priv_part_order_t {
     WGF_CORE_PRIV_PART_ECS,       /* actors' components and their systems (ecs/), whose actors the rest draw */
+    WGF_CORE_PRIV_PART_PHYSICS3D, /* bodies and vehicles (physics3d/): ticked after the ecs's systems */
     WGF_CORE_PRIV_PART_TEXT,      /* fonts and fontstash (gfx/src/text/wgf_gfx_font.c) */
     WGF_CORE_PRIV_PART_STAGE3D,   /* 3D stages' frames and their GPU objects (gfx/src/stage/) */
     WGF_CORE_PRIV_PART_MESHES,    /* meshes (gfx/src/mesh/), stopped before the materials they hold */

@@ -94,6 +94,10 @@ static const kind_t kinds[] = {
      {{"radius", V_NUM}, {"layer", V_INT}, {"mask", V_INT}, {"enabled", V_BOOL}},
      false},
     {"behavior", ROLE_BEHAVIOR, 0, {{"name", V_TEXT}}, true},
+    /* physics3d's (wgf_body.h, wgf_vehicle.h): any key, its text handed to physics, which
+       reads it, so a program without physics carries none of its keys */
+    {"body", ROLE_COMPONENT, WGF_COMPONENT_BODY, {{NULL, 0}}, true},
+    {"vehicle", ROLE_COMPONENT, WGF_COMPONENT_VEHICLE, {{NULL, 0}}, true},
     {"shape2d",
      ROLE_KIND,
      WGF_ACTOR_KIND_SHAPE2D,
@@ -702,6 +706,14 @@ static void apply_setting(wgf_actor_t actor, int kind, const setting_t *s, value
             else if (strcmp(key, "enabled") == 0) wgf_collider_set_enabled(e, v->truth);
             else wgf_collider_set_mask(e, (int)v->n[0]);
             break;
+        case WGF_COMPONENT_BODY:
+        case WGF_COMPONENT_VEHICLE: { /* through physics' hooks: none was added without them */
+            const wgf_ecs_priv_part_component_t *part = wgf_ecs_priv_get_part_component((wgf_component_t)what_of(kind));
+            if (part != NULL && wgf_actor_has_component(e, (wgf_component_t)what_of(kind))) {
+                part->set(e, key, v->text);
+            }
+            break;
+        }
         case BEHAVIOR: /* its name, which added it, is its line's */
             if (strcmp(key, "name") != 0) wgf_behavior_set_param(e, behavior, key, v->text);
             break;
