@@ -98,6 +98,31 @@ int main(void)
     expect_shape(wgf_mesh_create_capsule(0.5f, 3.0f, 8, 16), "capsule");
     expect_shape(wgf_mesh_create_torus(2.0f, 0.5f, 24, 12), "torus");
 
+    /* a mesh of the program's own triangles: a strip of two quads, its normals made smooth */
+    {
+        const float strip[] = {0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 2, 0.5f, 0, 2, 0.5f, 1};
+        const float uvs[] = {0, 0, 0, 1, 0.5f, 0, 0.5f, 1, 1, 0, 1, 1};
+        const int indices[] = {0, 1, 2, 2, 1, 3, 2, 3, 4, 4, 3, 5};
+        const int past[] = {0, 1, 9};
+        const wgf_mesh_t road = wgf_mesh_create_triangles(strip, 18, NULL, 0, uvs, 12, indices, 12);
+        const float *v;
+        expect(road != 0 && wgf_resource_get_status(road) == WGF_RESOURCE_STATUS_READY &&
+                   wgf_mesh_create_triangles(strip, 18, NULL, 0, uvs, 12, indices, 12) != road,
+               "the program's own triangles: ready at once, and its own, never shared");
+        expect_shape(road, "triangles");
+        v = wgf_gfx_priv_mesh_get_vertices(road, &count);
+        expect(count == 6 && near(v[3 + 1], 1.0f) && v[2 * WGF_GFX_PRIV_MESH_VERTEX_FLOATS + 4] < 0.99f &&
+                   near(v[1 * WGF_GFX_PRIV_MESH_VERTEX_FLOATS + 7], 1.0f),
+               "its corners as given, a smooth normal where the strip bends, its texture coordinates");
+        expect(wgf_gfx_priv_mesh_get_bounds(road, &lo, &hi) && near(hi.x, 2.0f) && near(hi.y, 0.5f),
+               "its box from its corners");
+        expect(wgf_mesh_create_triangles(strip, 9, NULL, 0, NULL, 0, NULL, 0) != 0, "three corners in threes: one triangle");
+        expect(wgf_mesh_create_triangles(strip, 18, NULL, 0, NULL, 0, past, 3) == 0 &&
+                   wgf_mesh_create_triangles(strip, 17, NULL, 0, NULL, 0, NULL, 0) == 0 &&
+                   wgf_mesh_create_triangles(strip, 18, NULL, 0, uvs, 10, indices, 12) == 0,
+               "an index past the corners, or counts that don't fit: none (logged)");
+    }
+
     /* a generated mesh's one material */
     expect(wgf_mesh_get_material_count(cube) == 1 && wgf_mesh_get_material(cube, 1) == 0, "one material slot");
     material = wgf_mesh_get_material(cube, 0);

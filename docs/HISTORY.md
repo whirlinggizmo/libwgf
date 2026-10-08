@@ -720,3 +720,15 @@ The game-developer session put the car on physics3d in about three hours (`../li
 - **Fine as they are**: steering that narrows with speed is the game's arcade feel, five lines on the vehicle's input; the debug view's lines are depth-tested, so they show what is in front, and fight with a surface they lie on, as any debug line does.
 - **The racer re-imported** at d4c0284 (its part 2), built against 5309723 and passing on b1d756e unchanged: its lap (2,514 frames, a Jolt car on a mesh road) headless, in a browser, and on both release exports; its web export 483.9 KB gzipped against its own budget of 550; its frame times on the reference machine a mean of 1.47 ms and a 99th percentile of 2.67 (docs/benchmarks.md).
 
+## Milestone 2, step 6, glTF (2026-10-08)
+
+Rob's decisions before the step, from a survey of libwgt's loader against libwgf's mesh, model, and material code:
+
+- **cgltf parses; libwgf writes the glue.** cgltf 1.15, libwgt's vendored copy, unchanged, reads a `.gltf` or `.glb`; what libwgf writes is libwgt's glue around it (`wgt_gfx_mesh_gltf.c`: vertices into the shared layout, materials into libwgf's PBR material, images decoded on a worker and uploaded in steps), less its skinning, animation, and KTX, and with the file's node tree made actors rather than libwgt's nodes.
+- **A correction**: milestone 2's plan ("Milestone 2's plan, reviewed") says libwgt reads `KHR_lights_punctual`. It doesn't: no code of libwgt's outside cgltf reads a file's lights; its `wgt_light.h` only follows the extension's parameters. libwgf's file lights are new code.
+- **A failed model draws the placeholder, a pending one nothing**, as a texture does (milestone 1's rule: the checker always means a failure), where the plan said "failed or pending".
+- **Names**: `wgf_mesh_create(path)` loads a file, as `wgf_texture_create`, `wgf_font_create`, `wgf_sound_create`, and `wgf_scene_create` do; the mesh from a program's own triangles is `wgf_mesh_create_triangles`, beside the generated meshes' `create_<shape>`. A rename of every file-reading create to `_load` was weighed and left for another time.
+
+Each part, as it landed:
+
+- **A mesh of the program's own triangles** (`wgf_mesh_create_triangles`): positions, optional normals (smooth ones made from the triangles, area-weighted, when none), optional texture coordinates, optional indices; made through the generated meshes' path (tangents, both texture coordinate sets, white, one PBR material), ready at once, and never shared, where a generated mesh is shared by its parameters. A count of 0 is none whatever its pointer, as an empty array from a binding is.

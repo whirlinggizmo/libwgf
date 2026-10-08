@@ -263,6 +263,8 @@ class Main {
 		for (mesh in [Mesh.createPlane(2, 2, 1), Mesh.createSphere(1, 8, 16), Mesh.createCylinder(1, 2, 12),
 			Mesh.createCone(1, 2, 12), Mesh.createCapsule(0.5, 2, 8, 12), Mesh.createTorus(1, 0.25, 12, 8)])
 			expect(!mesh.isNone() && mesh.getMaterialCount() == 1 && Resource.release(mesh), "a generated shape");
+		final strip = Mesh.createTriangles([0.0, 0, 0, 0, 0, 1, 1, 0, 0], [], [], [0, 1, 2]);
+		expect(!strip.isNone() && strip.getMaterialCount() == 1 && Resource.release(strip), "the program's own triangles");
 		final material = cube.getMaterial(0);
 		expect(material.getShading() == MaterialShading.PBR && material.getFloat("metallic") == 0, "the mesh's material");
 		final own = Material.create(MaterialShading.UNLIT);

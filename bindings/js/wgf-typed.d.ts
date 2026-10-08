@@ -2243,6 +2243,17 @@ export declare const Mesh: {
     readonly createCapsule: typeof raw.wgf_mesh_create_capsule;
     readonly createTorus: typeof raw.wgf_mesh_create_torus;
     /**
+     * A mesh of the program's own triangles (a road along a centerline, a terrain): its
+     * corners' positions (x, y, z each: position_count floats, a multiple of 3), their normals
+     * (as many, or none for smooth ones made from the triangles), their texture coordinates
+     * (u, v each, or none for 0, 0), and its triangles as indices into the corners, three
+     * each, counterclockwise seen from its front (none: the corners in threes); a count of 0
+     * is none, whatever its pointer. Ready at once, as a generated mesh is, with its one
+     * material slot, white, not metallic, roughness 0.5; the arrays are copied. 0 (logged)
+     * for counts that don't fit, or an index past the corners.
+     */
+    readonly createTriangles: typeof raw.wgf_mesh_create_triangles;
+    /**
      * The mesh's materials, one a slot (wgf_material.h); a generated mesh has one. The
      * handle is borrowed: valid while the mesh is, and changing it changes every model
      * drawing the mesh with it. 0 for a slot it hasn't.

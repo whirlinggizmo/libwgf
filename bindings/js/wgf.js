@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "b5db16e6a25345bf" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "f25a33f1b98adf20" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -4972,6 +4972,26 @@ export function wgf_mesh_create_capsule(radius, height, rings, segments) {
 // wgf: call wgf_mesh_create_torus
 export function wgf_mesh_create_torus(radius, thickness, rings, segments) {
     const value = host["_wgf_mesh_create_torus"](radius, thickness, rings, segments);
+    return value >>> 0;
+}
+
+// wgf: call wgf_mesh_create_triangles
+/**
+ * A mesh of the program's own triangles (a road along a centerline, a terrain): its
+ * corners' positions (x, y, z each: position_count floats, a multiple of 3), their normals
+ * (as many, or none for smooth ones made from the triangles), their texture coordinates
+ * (u, v each, or none for 0, 0), and its triangles as indices into the corners, three
+ * each, counterclockwise seen from its front (none: the corners in threes); a count of 0
+ * is none, whatever its pointer. Ready at once, as a generated mesh is, with its one
+ * material slot, white, not metallic, roughness 0.5; the arrays are copied. 0 (logged)
+ * for counts that don't fit, or an index past the corners.
+ */
+export function wgf_mesh_create_triangles(positions, normals, uvs, indices) {
+    const positionsPointer = arrayIn(positions, 0, "HEAPF32");
+    const normalsPointer = arrayIn(normals, 1, "HEAPF32");
+    const uvsPointer = arrayIn(uvs, 2, "HEAPF32");
+    const indicesPointer = arrayIn(indices, 3, "HEAP32");
+    const value = host["_wgf_mesh_create_triangles"](positionsPointer, lengthOf(positions), normalsPointer, lengthOf(normals), uvsPointer, lengthOf(uvs), indicesPointer, lengthOf(indices));
     return value >>> 0;
 }
 

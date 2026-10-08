@@ -165,7 +165,7 @@ static wgf_mesh_t find_mesh(const char *key)
     if (!pool_ready) return 0;
     for (i = 1; i < pool.capacity; i++) {
         const wgf_mesh_t mesh = wgf_core_priv_handle_pool_handle_from_index(&pool, i);
-        if (mesh != 0 && strcmp(meshes[i].key, key) == 0) {
+        if (mesh != 0 && meshes[i].key[0] != '\0' && strcmp(meshes[i].key, key) == 0) {
             wgf_core_priv_resource_retain(mesh);
             return mesh;
         }
@@ -292,6 +292,86 @@ const char *wgf_gfx_priv_mesh_describe(wgf_mesh_t mesh, float params[4], int *co
 static int clamp_count(int value, int low, int high)
 {
     return value < low ? low : (value > high ? high : value);
+}
+
+/* Smooth normals for a mesh's corners: each the sum of the faces' around it, weighted by
+ * their areas (the cross product's length), made unit length; up for a corner with none. */
+static void smooth_normals(const float *positions, int vertex_count, const uint32_t *indices, int index_count,
+                           float *normals)
+{
+    int i;
+    for (i = 0; i + 2 < index_count; i += 3) {
+        const float *a = &positions[indices[i] * 3], *b = &positions[indices[i + 1] * 3], *c = &positions[indices[i + 2] * 3];
+        const wgf_vec3_t n = wgf_vec3_cross(wgf_vec3_make(b[0] - a[0], b[1] - a[1], b[2] - a[2]),
+                                            wgf_vec3_make(c[0] - a[0], c[1] - a[1], c[2] - a[2]));
+        int k;
+        for (k = 0; k < 3; k++) {
+            float *out = &normals[indices[i + k] * 3];
+            out[0] += n.x;
+            out[1] += n.y;
+            out[2] += n.z;
+        }
+    }
+    for (i = 0; i < vertex_count; i++) {
+        float *n = &normals[i * 3];
+        const float length = sqrtf(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
+        if (length > 0.0f) {
+            n[0] /= length;
+            n[1] /= length;
+            n[2] /= length;
+        } else {
+            n[0] = n[2] = 0.0f;
+            n[1] = 1.0f;
+        }
+    }
+}
+
+wgf_mesh_t wgf_mesh_create_triangles(const float *positions, int position_count, const float *normals,
+                                     int normal_count, const float *uvs, int uv_count, const int *indices,
+                                     int index_count)
+{
+    wgf_gfx_priv_mesh_shape_t shape;
+    const int vertex_count = position_count / 3;
+    int triangles, i;
+    if (normal_count == 0) normals = NULL; /* a count of 0 is none, whatever the pointer (an empty array) */
+    if (uv_count == 0) uvs = NULL;
+    if (index_count == 0) indices = NULL;
+    triangles = indices != NULL ? index_count : vertex_count;
+    if (positions == NULL || position_count < 9 || position_count % 3 != 0 ||
+        (normals != NULL && normal_count != position_count) || (normals == NULL && normal_count != 0) ||
+        (uvs != NULL && uv_count != vertex_count * 2) || (uvs == NULL && uv_count != 0) ||
+        (indices == NULL && index_count != 0) || triangles % 3 != 0 || triangles < 3) {
+        wgf_log_error("wgf_mesh_create_triangles: counts that don't fit (positions in threes, normals as many, "
+                      "texture coordinates in twos a corner, indices in threes)");
+        return 0;
+    }
+    for (i = 0; indices != NULL && i < index_count; i++) {
+        if (indices[i] < 0 || indices[i] >= vertex_count) {
+            wgf_log_error("wgf_mesh_create_triangles: index %d is past the %d corners", indices[i], vertex_count);
+            return 0;
+        }
+    }
+    memset(&shape, 0, sizeof(shape));
+    shape.vertex_count = vertex_count;
+    shape.index_count = triangles;
+    shape.positions = (float *)malloc(sizeof(float) * (size_t)position_count);
+    shape.normals = (float *)calloc((size_t)position_count, sizeof(float));
+    shape.uvs = (float *)calloc((size_t)vertex_count * 2, sizeof(float));
+    shape.indices = (uint32_t *)malloc(sizeof(uint32_t) * (size_t)triangles);
+    if (shape.positions == NULL || shape.normals == NULL || shape.uvs == NULL || shape.indices == NULL) {
+        wgf_log_error("wgf_mesh_create_triangles: out of memory");
+        wgf_gfx_priv_mesh_shape_free(&shape);
+        return 0;
+    }
+    memcpy(shape.positions, positions, sizeof(float) * (size_t)position_count);
+    if (uvs != NULL) memcpy(shape.uvs, uvs, sizeof(float) * (size_t)uv_count);
+    for (i = 0; i < triangles; i++) shape.indices[i] = indices != NULL ? (uint32_t)indices[i] : (uint32_t)i;
+    if (normals != NULL) {
+        memcpy(shape.normals, normals, sizeof(float) * (size_t)normal_count);
+    } else {
+        smooth_normals(shape.positions, vertex_count, shape.indices, triangles, shape.normals);
+    }
+    return create_generated("", &shape); /* no key: its own, never found by another's parameters */
 }
 
 wgf_mesh_t wgf_mesh_create_plane(float width, float length, int subdivisions)

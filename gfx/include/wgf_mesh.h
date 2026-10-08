@@ -22,7 +22,8 @@ extern "C" {
  * model differently, scale it, or make another mesh. Each has one material slot,
  * white, not metallic, roughness 0.5: draw a model of it with another with
  * wgf_model_set_material. 0 (logged) for a size of 0 or less; counts are clamped to
- * their ranges. Meshes from files are glTF's (milestone 2, step 6).
+ * their ranges. Meshes from files are glTF's (milestone 2, step 6). A mesh of a program's
+ * own triangles (wgf_mesh_create_triangles, below) is its own, never shared.
  *
  *   plane     flat in x and z, facing +y; subdivisions 0..256 more cells each way.
  *             Texture coordinates span it once
@@ -44,6 +45,18 @@ WGF_API wgf_mesh_t wgf_mesh_create_cylinder(float radius, float height, int segm
 WGF_API wgf_mesh_t wgf_mesh_create_cone(float radius, float height, int segments);
 WGF_API wgf_mesh_t wgf_mesh_create_capsule(float radius, float height, int rings, int segments);
 WGF_API wgf_mesh_t wgf_mesh_create_torus(float radius, float thickness, int rings, int segments);
+
+/* A mesh of the program's own triangles (a road along a centerline, a terrain): its
+ * corners' positions (x, y, z each: position_count floats, a multiple of 3), their normals
+ * (as many, or none for smooth ones made from the triangles), their texture coordinates
+ * (u, v each, or none for 0, 0), and its triangles as indices into the corners, three
+ * each, counterclockwise seen from its front (none: the corners in threes); a count of 0
+ * is none, whatever its pointer. Ready at once, as a generated mesh is, with its one
+ * material slot, white, not metallic, roughness 0.5; the arrays are copied. 0 (logged)
+ * for counts that don't fit, or an index past the corners. */
+WGF_API wgf_mesh_t wgf_mesh_create_triangles(const float *positions, int position_count, const float *normals,
+                                             int normal_count, const float *uvs, int uv_count, const int *indices,
+                                             int index_count);
 
 /* The mesh's materials, one a slot (wgf_material.h); a generated mesh has one. The
  * handle is borrowed: valid while the mesh is, and changing it changes every model

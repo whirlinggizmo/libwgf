@@ -346,7 +346,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Workaround:** asphalt from overlapping coplanar planes of one tint and normal, curbs at alternating heights
 - **Cost:** 20 minutes; 763 static models (the 140 trees' 280 included) with no batching; measured only in a software-GL browser (about 40 fps)
 - **Found by:** the racer's session (its #9)
-- **Triage:** task: milestone 2, step 6: a mesh from a program's own vertices and indices (`wgf_mesh_create`), which glTF's loader makes its meshes with, so a track or a road generated along a centerline is one mesh; the track itself becomes glTF in the same step
+- **Triage:** fixed in step 6: a mesh from a program's own vertices and indices (`wgf_mesh_create_triangles`; `wgf_mesh_create(path)` is glTF's, as every resource's create from a file is), so a track or a road generated along a centerline is one mesh; the track itself becomes glTF in the same step
 
 ### Racer: `wgf serve` fails on an initialized instance `final`, Asteroids' `Ship` too
 
