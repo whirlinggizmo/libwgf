@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ladder-7-physics3d</title>
+<!-- This page is ladder-7-physics3d's own: written once from examples/c/wgf_page.html when the
+     example had none, never overwritten; edit it as you like. It loads the program built
+     beside it, ladder-7-physics3d.js and .wasm, as name?v=<hash> once tools/finish_site.py
+     has stamped the versions in (the /*wgf:versions*/ mark below), so a host can keep
+     the code for good and a returning visit fetches none. The program's files are one
+     level up, in ../assets (wgf_asset_set_host("../assets") in main.c). -->
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #101218;
+    color: #cdd3de; font: 14px/1.4 system-ui, sans-serif; }
+  /* the canvas fills the page; sokol manages the drawing buffer. Touches on it are the
+     program's: the browser doesn't scroll or zoom the page for them. dvh is the visible
+     height, without a phone's browser bars; vh before it is the fallback. */
+  #canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; display: block;
+    background: #000; outline: none; touch-action: none; }
+  #status { position: fixed; left: 10px; bottom: 8px; z-index: 10; color: #7b8494; pointer-events: none; }
+  /* A console on the page, because a phone has no easy one: what the program logs, and
+     anything the browser refuses to do. Opens itself on the first error. */
+  #log { position: fixed; inset: auto 0 0 0; max-height: 45vh; z-index: 11; display: none;
+    overflow-y: auto; padding: 6px 10px; margin: 0; background: #0b0d11ee;
+    border-top: 1px solid #2c313c; font: 12px/1.45 ui-monospace, monospace;
+    white-space: pre-wrap; overscroll-behavior: contain; }
+  #log.on { display: block; }
+  #log .warn { color: #ffcc66; }
+  #log .err  { color: #ff8080; }
+  #logbtn { position: fixed; right: 10px; top: 8px; z-index: 12; background: #0f1115aa; color: #cdd3de;
+    border: 1px solid #3a4150; border-radius: 6px; padding: 4px 8px; font: inherit; cursor: pointer; }
+  #logbtn.alert { border-color: #ff8080; color: #ff8080; }
+</style>
+</head>
+<body>
+  <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+  <span id="status">loading…</span>
+  <button id="logbtn" type="button">console</button>
+  <pre id="log"></pre>
+  <script>
+    const NAME = "ladder-7-physics3d";
+    const statusEl = document.getElementById("status");
+
+    // ---- console on the page --------------------------------------------------
+    const logEl = document.getElementById("log");
+    const logBtn = document.getElementById("logbtn");
+    const MAX_LINES = 400;
+    function addLine(text, kind) {
+      const line = document.createElement("span");
+      line.className = kind || "";
+      line.textContent = text + "\n";
+      logEl.appendChild(line);
+      while (logEl.childNodes.length > MAX_LINES) logEl.removeChild(logEl.firstChild);
+      logEl.scrollTop = logEl.scrollHeight;
+      if (kind) logBtn.classList.add("alert");
+      if (kind === "err" && !logEl.classList.contains("on")) logEl.classList.add("on");
+    }
+    logBtn.addEventListener("click", () => {
+      logEl.classList.toggle("on");
+      if (logEl.classList.contains("on")) logBtn.classList.remove("alert");
+    });
+    // libwgf writes every level to stderr, which emscripten sends to printErr, so the
+    // level has to come from the line itself: "[WARN ] wgf_mesh.c:12: ..."
+    const LEVEL = /^\[(TRACE|DEBUG|INFO|WARN|ERROR|FATAL)\s*\]/;
+    function levelKind(text) {
+      const m = LEVEL.exec(text);
+      if (!m) return null;
+      return (m[1] === "ERROR" || m[1] === "FATAL") ? "err" : m[1] === "WARN" ? "warn" : "";
+    }
+    for (const [name, kind] of [["log", ""], ["info", ""], ["warn", "warn"], ["error", "err"]]) {
+      const original = console[name].bind(console);
+      console[name] = (...a) => {
+        original(...a);
+        addLine(a.map(v => (typeof v === "string" ? v : String(v))).join(" "), kind);
+      };
+    }
+    addEventListener("error", e => addLine("error: " + (e.message || e.type), "err"));
+    addEventListener("unhandledrejection", e => addLine("unhandled: " + e.reason, "err"));
+    if (new URLSearchParams(location.search).get("console") === "1" || location.hash === "#console") {
+      logEl.classList.add("on");
+    }
+
+    // ---- the program's version, and its download -----------------------------
+    // Written in by tools/finish_site.py: {"js": "<hash>", "wasm": "<hash>"}, so the
+    // files are loaded as name.js?v=<hash>; empty, they are loaded unversioned.
+    const VERSION = /*wgf:versions*/{};
+    const versioned = (file, hash) => (hash ? file + "?v=" + hash : file);
+    const wasmUrl = versioned(NAME + ".wasm", VERSION.wasm);
+    // Start downloading (and compiling, as it streams) the wasm now, alongside the JS,
+    // rather than once the JS has run: one round trip less on a first visit.
+    const wasmResponse = fetch(wasmUrl, { credentials: "same-origin" });
+
+    // What this build needs from the browser, said plainly: a missing WebGL2 is a blank
+    // canvas otherwise.
+    const missing = (() => {
+      if (!window.WebAssembly) return "WebAssembly";
+      const canvas = document.createElement("canvas");
+      if (!canvas.getContext("webgl2")) return "WebGL2";
+      return null;
+    })();
+    if (missing) {
+      statusEl.textContent = "this browser has no " + missing + ", which this program needs";
+      throw new Error("missing " + missing);
+    }
+
+    var Module = {
+      canvas: document.getElementById("canvas"),
+      print: (...a) => console.log(...a),
+      /* by level, not by stream: everything libwgf logs arrives here */
+      printErr: (...a) => {
+        const text = a.join(" ");
+        const kind = levelKind(text);
+        if (kind === "err") console.error(text);
+        else if (kind === "warn") console.warn(text);
+        else console.log(text);
+      },
+      onRuntimeInitialized: () => { statusEl.textContent = ""; },
+      locateFile: (path, prefix) => (path.endsWith(".wasm") ? wasmUrl : prefix + path),
+      // Instantiate from the download started above (with its module, which worker
+      // threads are sent). A server that doesn't say application/wasm can't stream:
+      // then compile from the bytes.
+      instantiateWasm: (imports, receive) => {
+        const fromBytes = (response) => response.arrayBuffer().then(b => WebAssembly.instantiate(b, imports));
+        wasmResponse
+          .then(response => (WebAssembly.instantiateStreaming
+            ? WebAssembly.instantiateStreaming(response.clone(), imports).catch(() => fromBytes(response))
+            : fromBytes(response)))
+          .then(result => receive(result.instance, result.module))
+          .catch(err => {
+            statusEl.textContent = "failed to load " + wasmUrl;
+            console.error("page:", err);
+          });
+        return {}; // the exports arrive through receive()
+      },
+    };
+
+    const s = document.createElement("script");
+    s.src = versioned(NAME + ".js", VERSION.js);
+    s.onerror = () => { statusEl.textContent = "not built: " + NAME + ".js"; };
+    document.body.appendChild(s);
+  </script>
+</body>
+</html>

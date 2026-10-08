@@ -107,6 +107,7 @@ LADDER = [
     ('ladder-4-ecs', '+ ecs'),
     ('ladder-5-ui', '+ ui'),
     ('ladder-6-model', '+ 3D model'),
+    ('ladder-7-physics3d', '+ physics3d'),
     (None, '+ skinning (milestone 2)'),
 ]
 LADDER_DIR = ROOT / 'examples' / 'sizes'
