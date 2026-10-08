@@ -86,7 +86,7 @@ Each game's web export flown by its autopilot in a browser (`tools/bench/measure
 | program | frames | mean | median | 95th | 99th | worst | over 16.7 | over 33 | collections (ms, longest) | on |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
 | game:asteroids | 2502 | 0.35 | 0.15 | 0.83 | 1.31 | 146.88 | 2 | 1 | 6 (11.23, 4.14) | 13th Gen Intel(R) Core(TM) i9-13900HX, ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA), xvfb, CPU throttled 4x, playthrough.autopilot, 9c1cfe2 2026-10-06 |
-| game:racer | 2514 | 1.47 | 1.36 | 2.12 | 2.67 | 135.52 | 2 | 1 | 10 (13.2, 4.32) | 13th Gen Intel(R) Core(TM) i9-13900HX, ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA), xvfb, CPU throttled 4x, lap.autopilot, b1d756e 2026-10-08 |
+| game:racer | 606 | 1.86 | 1.49 | 2.42 | 3.37 | 143.52 | 2 | 1 | 5 (4.67, 2.02) | 13th Gen Intel(R) Core(TM) i9-13900HX, ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA), xvfb, CPU throttled 4x, bench.autopilot, e019ec0 2026-10-08 |
 
 ## Actors
 
