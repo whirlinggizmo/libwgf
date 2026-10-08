@@ -15,6 +15,12 @@
 	<target id="haxe">
 		<lib name="${wgf_out}/lib/wgf.lib" if="MSVC_VER"/>
 		<lib name="${wgf_out}/lib/libwgf.a" unless="MSVC_VER"/>
+		<!-- -D wgf_gltf: glTF's loading linked though the program never calls it, for a
+		     scene's model path= (tools/wgf/game.py sets it when a scene names a file) -->
+		<section if="wgf_gltf">
+			<flag value="/INCLUDE:wgf_mesh_create" if="MSVC_VER"/>
+			<flag value="-Wl,-u,wgf_mesh_create" unless="MSVC_VER"/>
+		</section>
 		<section if="windows">
 			<lib name="kernel32.lib" if="MSVC_VER"/>
 			<lib name="user32.lib" if="MSVC_VER"/>

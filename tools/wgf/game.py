@@ -171,6 +171,17 @@ def build_web(game, release=False, hot=False, out=None, exports=None):
     return out
 
 
+def names_a_file(assets):
+    """Whether a scene among `assets` has a model of a glTF file (a `model` line with a
+    path=): the host then keeps glTF's create, which the scene's line loads through."""
+    for scene in sorted(Path(assets).rglob('*.scene')) if assets and Path(assets).is_dir() else []:
+        for line in scene.read_text(encoding='utf-8', errors='replace').splitlines():
+            words = line.split()
+            if words and words[0] == 'model' and any(w.startswith('path=') for w in words[1:]):
+                return True
+    return False
+
+
 def build_native(game, target, release=False, out=None, record=False):
     """The game built by hxcpp against libwgf's staged variant for `target` (desktop or
     headless), its executable in `out` (build/<target>) with its assets beside it; with
@@ -189,6 +200,7 @@ def build_native(game, target, release=False, out=None, record=False):
     defines = ['HXCPP_M64', f'wgf_out={variants.out(variant).as_posix()}',
                f'wgf_binding={binding.BINDING.as_posix()}'] + (['wgf_headless'] if target == 'headless' else [])
     defines += ['wgf_record'] if record else []
+    defines += ['wgf_gltf'] if names_a_file(game.assets) else []  # a scene's model path= loads through it
     ok, output = haxe(game, ['--cpp', work], defines, [] if release else ['-debug'])
     if not ok:
         raise GameError(f'the build failed:\n{output.strip()}')

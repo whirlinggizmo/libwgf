@@ -318,6 +318,44 @@ int main(void)
         wgf_resource_release(garage);
     }
 
+    /* a model of a glTF file: its path, its tree made under it once loaded, and dumped as the
+       one line that makes it again (in a program with glTF: one that calls wgf_mesh_create) */
+    {
+        wgf_scene_t showroom;
+        wgf_actor_t car;
+        wgf_mesh_t file;
+        double start;
+        write_file("models/tri.gltf",
+                   "{\"asset\":{\"version\":\"2.0\"},\"scene\":0,\"scenes\":[{\"nodes\":[0]}],"
+                   "\"nodes\":[{\"name\":\"body\",\"mesh\":0}],"
+                   "\"meshes\":[{\"primitives\":[{\"attributes\":{\"POSITION\":0}}]}],"
+                   "\"buffers\":[{\"uri\":\"data:application/octet-stream;base64,"
+                   "AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAA\",\"byteLength\":36}],"
+                   "\"bufferViews\":[{\"buffer\":0,\"byteLength\":36}],"
+                   "\"accessors\":[{\"bufferView\":0,\"componentType\":5126,\"count\":3,\"type\":\"VEC3\","
+                   "\"min\":[0,0,0],\"max\":[1,1,0]}]}");
+        wgf_stage3d_create();
+        showroom = load("scenes/showroom.scene", "wgf-scene 2\n"
+                                                 "actor car\n"
+                                                 "  model path=models/tri.gltf\n"
+                                                 "  motion\n"
+                                                 "end\n");
+        expect(wgf_scene_instantiate(showroom, stage) == 1, "a model of a file made");
+        car = wgf_actor_find(stage, "car");
+        file = wgf_model_get_mesh(car);
+        start = wgf_time_get_seconds();
+        while (wgf_resource_get_status(file) == WGF_RESOURCE_STATUS_PENDING && wgf_time_get_seconds() - start < 30.0)
+            wgf_core_priv_update();
+        expect(wgf_resource_get_status(file) == WGF_RESOURCE_STATUS_READY && wgf_actor_find(car, "body") != 0,
+               "its file loaded, its node under it");
+        expect(wgf_mesh_create("models/tri.gltf") == file && wgf_resource_release(file), "the file's mesh, by its path");
+        expect(strstr(wgf_world_dump(), "model path=\"models/tri.gltf\"") != NULL &&
+                   strstr(wgf_world_dump(), "car/body") == NULL,
+               "dumped as its path, its file's nodes left to it");
+        wgf_world_clear();
+        wgf_resource_release(showroom);
+    }
+
     /* refusals */
     expect(refused("header", "wgf-scene 3\n"), "a version it doesn't know");
     expect(refused("old", "wgf-scene 1\nentity\nend\n"), "version 1's entities: refused, saying why");

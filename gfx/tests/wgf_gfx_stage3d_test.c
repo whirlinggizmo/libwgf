@@ -149,6 +149,27 @@ int main(void)
     expect(wgf_gfx_priv_stage3d_get_item_lights(0) == 1, "a hidden light shines on nothing");
     wgf_gfx_priv_end_frame();
 
+    /* a spot facing away from the model's center: it reaches a model only as large as to be
+       in its cone (a floor ahead of a headlight) */
+    {
+        const wgf_actor_t spot = wgf_light_create(WGF_LIGHT_TYPE_SPOT);
+        wgf_actor_set_visible(near_light, false);
+        wgf_light_set_range(spot, 10.0f);
+        wgf_actor_set_parent(spot, stage);
+        wgf_actor_set_position(spot, 0, 1, 3);
+        wgf_actor_look_at(spot, 0, 0, 8, 0, 1, 0); /* ahead, a little down */
+        wgf_gfx_priv_begin_frame();
+        wgf_stage3d_draw(stage);
+        expect(wgf_gfx_priv_stage3d_get_item_lights(0) == 0, "a spot facing away from a small model misses it");
+        wgf_gfx_priv_end_frame();
+        wgf_actor_set_scale(model, 20, 0.1f, 20); /* a floor under the spot, its center behind it */
+        wgf_gfx_priv_begin_frame();
+        wgf_stage3d_draw(stage);
+        expect(wgf_gfx_priv_stage3d_get_item_lights(0) == 1, "and reaches one its cone falls on past its center");
+        wgf_gfx_priv_end_frame();
+        wgf_actor_set_scale(model, 1, 1, 1);
+    }
+
     /* destroyed: its camera gone, the stage has none; a model lets go of its mesh */
     wgf_actor_destroy(camera, WGF_ACTOR_DESTROY_CHILDREN);
     expect(wgf_stage3d_get_camera(stage) == 0, "a destroyed camera leaves the stage with none");

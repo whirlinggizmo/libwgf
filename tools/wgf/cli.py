@@ -251,15 +251,18 @@ def cmd_serve(args):
 
 # ---- export ----------------------------------------------------------------------------
 
-def trimmed_exports(program_js, out):
+def trimmed_exports(program_js, out, assets=None):
     """The host's exports a release program calls, written as a trimmed host's list: every
     call the program makes is the JS binding's by its quoted key (Raw.binding["wgf_..."]),
     wherever dead-code elimination and inlining left it, so the keys in the program's JS
-    that are calls are what it calls; the binding's run adds its own. Read from the
-    program's JS (Haxe's output, not C)."""
+    that are calls are what it calls; the binding's run adds its own, and a scene of the
+    game's `assets` naming a glTF file adds glTF's create. Read from the program's JS
+    (Haxe's output, not C)."""
     text = Path(program_js).read_text(encoding='utf-8')
     known = set(json.loads(webhost.FULL.read_text(encoding='utf-8'))['exports'])
     calls = {'_' + name for name in re.findall(r'"(wgf_[a-z0-9_]+)"', text)} & known
+    if games.names_a_file(assets):
+        calls.add('_wgf_mesh_create')
     exports = sorted(calls | set(jsbinding.RUN_CALLS))
     out.write_text(json.dumps({'exports': exports}, indent=1) + '\n', encoding='utf-8')
     return exports
@@ -276,7 +279,7 @@ def export_web(game, out, autopilot=None):
     work = game.root / 'build' / 'export-web'
     games.build_web(game, release=True, out=work)  # the program first: what it calls makes the host
     listing = work / 'exports.json'
-    exports = trimmed_exports(work / f'{game.name}.js', listing)
+    exports = trimmed_exports(work / f'{game.name}.js', listing, game.assets)
     if out.exists():
         shutil.rmtree(out)
     out.mkdir(parents=True)

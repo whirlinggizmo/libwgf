@@ -27,6 +27,7 @@ class Main {
 	static var hud:Stage2d;
 	static var camera:Camera2d;
 	static var tiles:Texture;
+	static var car:Model;
 	static var font:Font;
 	static var click:Sound;
 	static var music:Sound;
@@ -265,6 +266,9 @@ class Main {
 			expect(!mesh.isNone() && mesh.getMaterialCount() == 1 && Resource.release(mesh), "a generated shape");
 		final strip = Mesh.createTriangles([0.0, 0, 0, 0, 0, 1, 1, 0, 0], [], [], [0, 1, 2]);
 		expect(!strip.isNone() && strip.getMaterialCount() == 1 && Resource.release(strip), "the program's own triangles");
+		final file = Mesh.create("models/toy_car.glb");
+		car = Model.create(file);
+		expect(!file.isNone() && !car.isNone() && Resource.release(file), "a glTF file's mesh, a model of it");
 		final material = cube.getMaterial(0);
 		expect(material.getShading() == MaterialShading.PBR && material.getFloat("metallic") == 0, "the mesh's material");
 		final own = Material.create(MaterialShading.UNLIT);
@@ -679,6 +683,8 @@ class Main {
 		expect(!tiles.isNone() && tiles.getWidth() > 0 && tiles.getHeight() > 0, "a texture loaded");
 		expect(Resource.getPath(tiles) == "textures/tiles.png" && Resource.getStatus(tiles) == ResourceStatus.READY, "a resource");
 		expect((tiles : Handle).getKindName() == "gfx.texture", "its kind");
+		expect(Resource.getStatus(car.getMesh()) == ResourceStatus.READY && !car.find("toy_car/body/wheel_fl").isNone(),
+			"a glTF file loaded, its nodes under its model");
 		expect(music.getDuration() >= 0 && click.getDuration() > 0, "the sounds' lengths");
 		ensure.getStatus();
 		ensure.getPath();

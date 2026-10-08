@@ -22,7 +22,10 @@ extern "C" {
  * for another actor. Tinted white: as its materials are. */
 WGF_API wgf_actor_t wgf_model_create(wgf_mesh_t mesh);
 
-/* The model's mesh; 0 is none, and nothing drawn. False when `mesh` isn't a mesh. */
+/* The model's mesh; 0 is none, and nothing drawn. A glTF file's mesh (wgf_mesh_create) makes
+ * the model the file's root, its node tree made the model's children once the mesh is
+ * READY, and is the model's for good. False when `mesh` isn't a mesh, for a file's mesh on a
+ * model with children, and for a file's root or one of its nodes (their meshes are the file's). */
 WGF_API bool wgf_model_set_mesh(wgf_actor_t model, wgf_mesh_t mesh);
 WGF_API wgf_mesh_t wgf_model_get_mesh(wgf_actor_t model);
 

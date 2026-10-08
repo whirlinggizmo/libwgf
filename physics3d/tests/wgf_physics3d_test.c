@@ -12,6 +12,8 @@
 #include "wgf_core_priv.h"
 #include "wgf_fs.h"
 #include "wgf_log.h"
+#include "wgf_mesh.h"
+#include "wgf_model.h"
 #include "wgf_physics.h"
 #include "wgf_resource.h"
 #include "wgf_scene.h"
@@ -24,7 +26,7 @@
  * rest, its actor set where the world put it; a sensor telling both of an overlap; a body
  * put somewhere new by the program; a kinematic body pushing a dynamic one; a car on four
  * wheels driven, steered, its wheels' actors moved, and reset; a scene's body and vehicle
- * lines; the dump writing them back. */
+ * lines; the dump writing them back; and a mesh body of a glTF file's nodes. */
 
 static int failures;
 
@@ -301,6 +303,51 @@ int main(void)
     step(1);
     expect(wgf_actor_count_with_component(WGF_COMPONENT_VEHICLE) == 1 && wgf_actor_count_with_component(WGF_COMPONENT_BODY) == 7,
            "a car destroyed: its body and vehicle with it");
+
+    /* a mesh body of a glTF file's nodes, made while the file loads: it waits for the file,
+       then takes each node's own triangles where the node is, none of the file's root's */
+    {
+        wgf_mesh_t file;
+        wgf_actor_t deck, on_deck, beside;
+        double start;
+        write_file("models/deck.gltf",
+                   "{\"asset\":{\"version\":\"2.0\"},\"scene\":0,\"scenes\":[{\"nodes\":[0]}],"
+                   "\"nodes\":[{\"name\":\"deck\",\"mesh\":0,\"translation\":[20,0,0]}],"
+                   "\"meshes\":[{\"primitives\":[{\"attributes\":{\"POSITION\":0},\"indices\":1}]}],"
+                   "\"buffers\":[{\"uri\":\"data:application/octet-stream;base64,"
+                   "AACgwAAAAAAAAKDAAACgwAAAAAAAAKBAAACgQAAAAAAAAKBAAACgQAAAAAAAAKDAAAABAAIAAAACAAMA\","
+                   "\"byteLength\":60}],\"bufferViews\":[{\"buffer\":0,\"byteLength\":48},"
+                   "{\"buffer\":0,\"byteOffset\":48,\"byteLength\":12}],"
+                   "\"accessors\":[{\"bufferView\":0,\"componentType\":5126,\"count\":4,\"type\":\"VEC3\","
+                   "\"min\":[-5,0,-5],\"max\":[5,0,5]},"
+                   "{\"bufferView\":1,\"componentType\":5123,\"count\":6,\"type\":\"SCALAR\"}]}");
+        file = wgf_mesh_create("models/deck.gltf");
+        deck = wgf_model_create(file);
+        wgf_resource_release(file);
+        wgf_actor_set_parent(deck, stage);
+        wgf_actor_set_position(deck, -60, 3, -60); /* clear of the rest */
+        expect(wgf_actor_add_component(deck, WGF_COMPONENT_BODY) && wgf_body_set_type(deck, WGF_BODY_TYPE_STATIC) &&
+                   wgf_body_set_shape(deck, WGF_BODY_SHAPE_MESH, 0, 0, 0),
+               "a mesh body on a file's root, the file loading");
+        step(1);
+        start = wgf_time_get_seconds();
+        while (wgf_resource_get_status(file) == WGF_RESOURCE_STATUS_PENDING && wgf_time_get_seconds() - start < 30.0)
+            wgf_core_priv_update();
+        expect(wgf_resource_get_status(file) == WGF_RESOURCE_STATUS_READY, "the file loaded");
+        on_deck = put(stage, -40, 6, -60);
+        beside = put(stage, -60, 6, -60); /* where the file's mesh would be, unplaced */
+        wgf_actor_add_component(on_deck, WGF_COMPONENT_BODY);
+        wgf_body_set_shape(on_deck, WGF_BODY_SHAPE_SPHERE, 0.5f, 0, 0);
+        wgf_actor_add_component(beside, WGF_COMPONENT_BODY);
+        wgf_body_set_shape(beside, WGF_BODY_SHAPE_SPHERE, 0.5f, 0, 0);
+        step(180);
+        expect(fabsf(wgf_actor_get_position(on_deck).y - 3.5f) < 0.05f, "a ball rests on the file's node, where it is");
+        if (getenv("WGF_TEST_SHOW")) printf("on the deck %g, beside %g\n", wgf_actor_get_position(on_deck).y, wgf_actor_get_position(beside).y);
+        expect(fabsf(wgf_actor_get_position(beside).y - 0.5f) < 0.05f, "and none of it is anywhere else: one beside falls past");
+        wgf_actor_destroy(deck, WGF_ACTOR_DESTROY_CHILDREN);
+        wgf_actor_destroy(on_deck, WGF_ACTOR_DESTROY_CHILDREN);
+        wgf_actor_destroy(beside, WGF_ACTOR_DESTROY_CHILDREN);
+    }
     wgf_gfx_priv_stop();
     expect(!wgf_actor_has_component(ball, WGF_COMPONENT_BODY), "stopped with gfx");
     wgf_core_priv_shutdown();

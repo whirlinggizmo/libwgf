@@ -42,6 +42,7 @@ bool wgf_gfx_priv_mesh_get_primitive(wgf_mesh_t mesh, int index, wgf_gfx_priv_me
 void wgf_gfx_priv_mesh_generate_tangents(const float *positions, const float *normals, const float *uvs,
                                         int vertex_count, const uint32_t *indices, int index_count, float *tangents);
 
+
 /* What a generated mesh was made as -- "plane", "cube", "sphere", "cylinder", "cone",
  * "capsule", or "torus" -- and its create call's parameters after their clamps, in its
  * order, into `params` (how many: `count`); NULL for anything else. The ecs's dump writes
@@ -52,5 +53,11 @@ const char *wgf_gfx_priv_mesh_describe(wgf_mesh_t mesh, float params[4], int *co
  * when it isn't a mesh. */
 const float *wgf_gfx_priv_mesh_get_vertices(wgf_mesh_t mesh, int *vertex_count);
 const uint32_t *wgf_gfx_priv_mesh_get_indices(wgf_mesh_t mesh, int *index_count);
+
+/* Primitive `primitive`'s vertices (WGF_GFX_PRIV_MESH_VERTEX_FLOATS each) and indices, as
+ * made, kept after they are uploaded: what physics makes a convex or mesh body of, a model's
+ * mesh at a time. False for a primitive it hasn't. */
+bool wgf_gfx_priv_mesh_get_triangles(wgf_mesh_t mesh, int primitive, const float **vertices, int *vertex_count,
+                                     const uint32_t **indices, int *index_count);
 
 #endif

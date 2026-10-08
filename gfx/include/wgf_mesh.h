@@ -22,8 +22,8 @@ extern "C" {
  * model differently, scale it, or make another mesh. Each has one material slot,
  * white, not metallic, roughness 0.5: draw a model of it with another with
  * wgf_model_set_material. 0 (logged) for a size of 0 or less; counts are clamped to
- * their ranges. Meshes from files are glTF's (milestone 2, step 6). A mesh of a program's
- * own triangles (wgf_mesh_create_triangles, below) is its own, never shared.
+ * their ranges. A mesh from a file is glTF's (wgf_mesh_create, below); a mesh of a
+ * program's own triangles (wgf_mesh_create_triangles) is its own, never shared.
  *
  *   plane     flat in x and z, facing +y; subdivisions 0..256 more cells each way.
  *             Texture coordinates span it once
@@ -57,6 +57,22 @@ WGF_API wgf_mesh_t wgf_mesh_create_torus(float radius, float thickness, int ring
 WGF_API wgf_mesh_t wgf_mesh_create_triangles(const float *positions, int position_count, const float *normals,
                                              int normal_count, const float *uvs, int uv_count, const int *indices,
                                              int index_count);
+
+/* The mesh in a glTF file (.gltf, its buffers and images beside it, or .glb), loaded in the
+ * background as a texture is (wgf_resource.h: PENDING, then READY or FAILED, the asset
+ * part's search paths finding it), shared by its path. All of its scene's nodes: their
+ * meshes (each glTF mesh one mesh, shared by every node showing it, its primitives each
+ * with a material slot: glTF's metallic-roughness materials, their textures loaded with
+ * it), their names and places, and the lights KHR_lights_punctual gives them. A model of it
+ * (wgf_model_set_mesh) is the file's root: once READY, the file's node tree is made its
+ * children, a model of the mesh each node shows (wgf_model_get_mesh: one handle for the
+ * nodes sharing one) and a plain actor for a node with none, named and placed as in the
+ * file, found as any actor is (wgf_actor_find), and a light under a node that carries one.
+ * The file's own mesh holds the tree, the materials, and no triangles. A model of a PENDING mesh
+ * draws nothing; of a FAILED one, the placeholder checker on a unit cube. Skins,
+ * animations, morph targets, and cameras in the file are not read. 0 (logged) for an
+ * empty path or one that isn't .gltf or .glb. */
+WGF_API wgf_mesh_t wgf_mesh_create(const char *path);
 
 /* The mesh's materials, one a slot (wgf_material.h); a generated mesh has one. The
  * handle is borrowed: valid while the mesh is, and changing it changes every model

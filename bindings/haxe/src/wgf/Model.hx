@@ -13,13 +13,19 @@ import wgf.impl.Raw;
 		return ((Raw.wgf_model_create(mesh) : Actor) : Model);
 
 	/**
-	    The model's mesh; 0 is none, and nothing drawn. False when `mesh` isn't a mesh.
+	    The model's mesh; 0 is none, and nothing drawn. A glTF file's mesh (wgf_mesh_create) makes
+	    the model the file's root, its node tree made the model's children once the mesh is
+	    READY, and is the model's for good. False when `mesh` isn't a mesh, for a file's mesh on a
+	    model with children, and for a file's root or one of its nodes (their meshes are the file's).
 	**/
 	public inline function setMesh(mesh:Mesh):Bool
 		return Raw.wgf_model_set_mesh(this, mesh);
 
 	/**
-	    The model's mesh; 0 is none, and nothing drawn. False when `mesh` isn't a mesh.
+	    The model's mesh; 0 is none, and nothing drawn. A glTF file's mesh (wgf_mesh_create) makes
+	    the model the file's root, its node tree made the model's children once the mesh is
+	    READY, and is the model's for good. False when `mesh` isn't a mesh, for a file's mesh on a
+	    model with children, and for a file's root or one of its nodes (their meshes are the file's).
 	**/
 	public inline function getMesh():Mesh
 		return Raw.wgf_model_get_mesh(this);

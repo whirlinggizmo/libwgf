@@ -5,12 +5,30 @@
 
 #include "material/wgf_gfx_material_priv.h"
 #include "mesh/wgf_gfx_mesh_priv.h"
+#include "mesh/wgf_gfx_mesh_record_priv.h"
 #include "actor/wgf_gfx_actor_priv.h"
+#include "stage/wgf_gfx_model_priv.h"
+#include "wgf_actor.h"
+#include "wgf_resource.h"
 #include "wgf_core_handle_priv.h"
 #include "wgf_log.h"
 
 /* Models: actors showing a mesh, holding references to it and to their own materials,
- * libwgt's for generated meshes (a file's actor tree comes with glTF, step 6). */
+ * libwgt's. A model of a file's mesh (wgf_mesh_create) is the file's root, its tree made by
+ * the file part (wgf_gfx_model_file.c), reached through its hooks, set as glTF's file links:
+ * a program without glTF links none of it. */
+
+static const wgf_gfx_priv_model_file_t *file_part; /* glTF's, when the program links it */
+
+void wgf_gfx_priv_model_set_file(const wgf_gfx_priv_model_file_t *part)
+{
+    file_part = part;
+}
+
+bool wgf_gfx_priv_model_placeholder(wgf_mesh_t *mesh, wgf_material_t *material)
+{
+    return file_part != NULL && file_part->placeholder(mesh, material);
+}
 
 static wgf_gfx_priv_actor_t *model_of_at(wgf_actor_t model, const char *caller)
 {
@@ -28,7 +46,7 @@ static bool is_material(wgf_material_t material)
 static void model_free(wgf_actor_t model, wgf_gfx_priv_actor_t *actor_ptr)
 {
     int slot;
-    (void)model;
+    if (actor_ptr->as.model.file_root && file_part != NULL) file_part->forget(model);
     if (actor_ptr->as.model.mesh != 0) wgf_resource_release(actor_ptr->as.model.mesh);
     if (actor_ptr->as.model.materials != NULL) {
         for (slot = 0; slot < WGF_GFX_PRIV_MODEL_MATERIAL_SLOTS; slot++) {
@@ -94,8 +112,30 @@ static const char *describe(wgf_actor_t model, float params[4], int *count)
     return wgf_gfx_priv_mesh_describe(wgf_model_get_mesh(model), params, count);
 }
 
-static const wgf_gfx_priv_model_hooks_t hooks = {create_empty, set_shape, describe, wgf_model_set_tint,
-                                                  wgf_model_get_tint};
+static bool set_path(wgf_actor_t model, const char *path)
+{
+    wgf_mesh_t mesh;
+    if (file_part == NULL) {
+        wgf_log_warn("wgf_scene: model path=%s: the program has no glTF loading (it links it by calling "
+                     "wgf_mesh_create; a game's export keeps it when a scene names a file)",
+                     path);
+        return false;
+    }
+    mesh = file_part->create(path);
+    const bool done = mesh != 0 && wgf_model_set_mesh(model, mesh);
+    if (mesh != 0) wgf_resource_release(mesh); /* the model holds its own */
+    return done;
+}
+
+static const char *get_path(wgf_actor_t model)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = model_of(model);
+    if (actor_ptr == NULL || !actor_ptr->as.model.file_root) return NULL;
+    return wgf_resource_get_path(actor_ptr->as.model.mesh);
+}
+
+static const wgf_gfx_priv_model_hooks_t hooks = {create_empty,       set_shape, describe, wgf_model_set_tint,
+                                                  wgf_model_get_tint, set_path,  get_path};
 
 void wgf_gfx_priv_model_install(void)
 {
@@ -105,9 +145,23 @@ void wgf_gfx_priv_model_install(void)
 bool wgf_model_set_mesh(wgf_actor_t model, wgf_mesh_t mesh)
 {
     wgf_gfx_priv_actor_t *actor_ptr = model_of(model);
-    if (actor_ptr == NULL || (mesh != 0 && !wgf_gfx_priv_mesh_retain(mesh))) return false;
+    const wgf_gfx_priv_mesh_record_t *record = wgf_gfx_priv_mesh_record(mesh);
+    const bool file = record != NULL && record->from_file;
+    if (actor_ptr == NULL || actor_ptr->as.model.file_root || actor_ptr->from_file) {
+        return false; /* a file's root, or one of its nodes: its tree is the file's */
+    }
+    if (file && (file_part == NULL || wgf_actor_get_child_count(model) > 0)) return false; /* under no other actors */
+    if (mesh != 0 && !wgf_gfx_priv_mesh_retain(mesh)) return false;
+    if (file && wgf_resource_get_status(mesh) == WGF_RESOURCE_STATUS_PENDING && !file_part->wait(model)) {
+        wgf_resource_release(mesh);
+        return false;
+    }
     if (actor_ptr->as.model.mesh != 0) wgf_resource_release(actor_ptr->as.model.mesh);
     actor_ptr->as.model.mesh = mesh;
+    if (file) {
+        actor_ptr->as.model.file_root = true;
+        if (wgf_resource_get_status(mesh) == WGF_RESOURCE_STATUS_READY) file_part->build(model, mesh);
+    }
     return true;
 }
 

@@ -335,6 +335,7 @@ class Reach {
 		"wgf_material_set_vec2",
 		"wgf_material_set_vec3",
 		"wgf_material_set_vec4",
+		"wgf_mesh_create",
 		"wgf_mesh_create_capsule",
 		"wgf_mesh_create_cone",
 		"wgf_mesh_create_cube",
@@ -631,7 +632,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...622) 0];
+	static final counts:Array<Int> = [for (_ in 0...623) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

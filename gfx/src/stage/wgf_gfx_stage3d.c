@@ -8,6 +8,7 @@
 #include "material/wgf_gfx_material_priv.h"
 #include "mesh/wgf_gfx_mesh_priv.h"
 #include "render/wgf_gfx_render_priv.h"
+#include "stage/wgf_gfx_model_priv.h"
 #include "stage/wgf_gfx_stage3d_priv.h"
 #include "texture/wgf_gfx_texture_priv.h"
 #include "wgf_core_part_priv.h"
@@ -335,23 +336,33 @@ static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
 {
     const walk_models_t *w = (const walk_models_t *)user;
     stage_draw_t *draw = &frame.draws[frame.draw_count];
-    const wgf_mesh_t mesh = actor_ptr->type == WGF_ACTOR_KIND_MODEL ? actor_ptr->as.model.mesh : 0;
-    const int primitives = wgf_gfx_priv_mesh_get_primitive_count(mesh);
+    wgf_mesh_t mesh = actor_ptr->type == WGF_ACTOR_KIND_MODEL ? actor_ptr->as.model.mesh : 0;
+    wgf_material_t forced = 0; /* the placeholder's, for a failed mesh */
     wgf_vec3_t lo, hi, box_lo, box_hi;
     float tint[4];
-    int p;
-    if (primitives == 0 || !wgf_gfx_priv_mesh_get_bounds(mesh, &lo, &hi)) return;
+    int count = 0, p;
+    if (mesh == 0) return;
+    if (wgf_resource_get_status(mesh) == WGF_RESOURCE_STATUS_FAILED) {
+        if (!wgf_gfx_priv_model_placeholder(&mesh, &forced)) return; /* the file part's: only a file's mesh fails */
+        count = 1;
+        lo = wgf_vec3_make(-0.5f, -0.5f, -0.5f);
+        hi = wgf_vec3_make(0.5f, 0.5f, 0.5f);
+    } else if (actor_ptr->as.model.file_root || !wgf_gfx_priv_mesh_get_bounds(mesh, &lo, &hi)) {
+        return; /* a file's root (its nodes draw), or pending: nothing */
+    } else {
+        count = wgf_gfx_priv_mesh_get_primitive_count(mesh);
+    }
     place_box(world, lo, hi, &box_lo, &box_hi);
     if (w->culling && outside(w->planes, box_lo, box_hi)) return;
     linear_color(actor_ptr->as.model.tint, tint);
-    for (p = 0; p < primitives; p++) {
+    for (p = 0; p < count; p++) {
         wgf_gfx_priv_mesh_primitive_t primitive;
         const wgf_gfx_priv_material_t *material;
         item_t *item;
         if (!wgf_gfx_priv_mesh_get_primitive(mesh, p, &primitive)) continue;
         if (!grow((void **)&frame.items, &frame.item_capacity, frame.item_count + 1, sizeof(item_t))) return;
         item = &frame.items[frame.item_count];
-        item->material = wgf_model_get_material(actor, primitive.material);
+        item->material = forced != 0 ? forced : wgf_model_get_material(actor, primitive.material);
         material = wgf_gfx_priv_material_get(item->material);
         if (material == NULL) continue; /* a slot with none draws nothing */
         item->world = *world;
@@ -520,7 +531,7 @@ static sg_view texture_view(const wgf_gfx_priv_material_texture_t *texture, sg_v
     bool placeholder;
     if (texture->texture != 0 &&
         wgf_gfx_priv_texture_get_binding(texture->texture, &view, sampler, &width, &height, &placeholder)) {
-        *sampler = wgf_gfx_priv_texture_sampler(texture->wrap_u, texture->wrap_v, texture->filter, true);
+        *sampler = wgf_gfx_priv_texture_sampler(texture->wrap_u, texture->wrap_v, texture->filter, texture->mipmaps);
         return view;
     }
     *sampler = frame.sampler;

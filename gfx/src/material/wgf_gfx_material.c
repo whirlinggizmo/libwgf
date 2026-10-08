@@ -187,6 +187,7 @@ wgf_material_t wgf_material_create(wgf_material_shading_t shading)
     material_ptr->occlusion_strength = 1.0f;
     for (i = 0; i < WGF_GFX_PRIV_MATERIAL_TEXTURE_COUNT; i++) {
         material_ptr->textures[i].scale[0] = material_ptr->textures[i].scale[1] = 1.0f;
+        material_ptr->textures[i].mipmaps = true;
     }
     return handle;
 }
@@ -375,6 +376,14 @@ bool wgf_material_set_texture_sampling(wgf_material_t material, const char *name
     texture_ptr->wrap_u = wrap_u;
     texture_ptr->wrap_v = wrap_v;
     texture_ptr->filter = filter;
+    return true;
+}
+
+bool wgf_gfx_priv_material_set_texture_mipmaps(wgf_material_t material, const char *name, bool mipmaps)
+{
+    wgf_gfx_priv_material_texture_t *texture_ptr = lookup_texture(material, name, true);
+    if (texture_ptr == NULL) return false;
+    texture_ptr->mipmaps = mipmaps;
     return true;
 }
 

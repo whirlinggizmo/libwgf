@@ -6,7 +6,9 @@ wgf_layer(gfx
         src/draw/wgf_gfx_draw3d.c
         src/emitter/wgf_gfx_emitter2d.c
         src/material/wgf_gfx_material.c
+        src/mesh/wgf_gfx_cgltf_impl.c
         src/mesh/wgf_gfx_mesh.c
+        src/mesh/wgf_gfx_mesh_gltf.c
         src/mesh/wgf_gfx_mesh_shapes.c
         src/actor/wgf_gfx_camera2d.c
         src/actor/wgf_gfx_camera3d.c
@@ -20,6 +22,7 @@ wgf_layer(gfx
         src/sprite/wgf_gfx_sprite.c
         src/stage/wgf_gfx_light.c
         src/stage/wgf_gfx_model.c
+        src/stage/wgf_gfx_model_file.c
         src/stage/wgf_gfx_stage3d.c
         src/text/wgf_gfx_font.c
         src/text/wgf_gfx_fontstash_impl.c
@@ -30,9 +33,10 @@ wgf_layer(gfx
         math core platform asset)
 
 target_include_directories(wgf_gfx SYSTEM PRIVATE "${PROJECT_SOURCE_DIR}/deps/sokol" "${PROJECT_SOURCE_DIR}/deps/stb"
+                           "${PROJECT_SOURCE_DIR}/deps/cgltf"
                            "${PROJECT_SOURCE_DIR}/deps/fontstash" "${PROJECT_SOURCE_DIR}/deps/jetbrains-mono")
 # vendored code is compiled as it comes: its warnings are not ours to fix
-set_source_files_properties(src/texture/wgf_gfx_stb_impl.c src/text/wgf_gfx_fontstash_impl.c
+set_source_files_properties(src/texture/wgf_gfx_stb_impl.c src/text/wgf_gfx_fontstash_impl.c src/mesh/wgf_gfx_cgltf_impl.c
                             PROPERTIES COMPILE_OPTIONS "$<IF:$<C_COMPILER_ID:MSVC>,/w,-w>")
 # what includes gfx's private headers (app, gfx's tests) sees sokol's
 target_include_directories(wgf_gfx_priv SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/deps/sokol"
@@ -49,6 +53,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_actor_test)
         wgf_test(gfx wgf_gfx_camera3d_test)
         wgf_test(gfx wgf_gfx_mesh_test)
+        wgf_test(gfx wgf_gfx_gltf_test)
         wgf_test(gfx wgf_gfx_stage3d_test)
         wgf_test(gfx wgf_gfx_shape3d_test)
         wgf_test(gfx wgf_gfx_text_test)
@@ -69,4 +74,5 @@ if(WGF_TESTS)
     wgf_web_test(gfx wgf_gfx_stage2d_web_test 1)
     wgf_web_test(gfx wgf_gfx_draw3d_web_test 1)
     wgf_web_test(gfx wgf_gfx_stage3d_web_test 1)
+    wgf_web_test(gfx wgf_gfx_gltf_web_test 1)
 endif()

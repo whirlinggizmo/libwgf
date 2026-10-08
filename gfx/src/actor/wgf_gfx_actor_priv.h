@@ -80,6 +80,7 @@ typedef struct wgf_gfx_priv_model_t {
     wgf_handle_t mesh;         /* referenced; 0 none */
     wgf_color_t tint;
     wgf_handle_t *materials;   /* its own, a slot each, referenced (0: the mesh's); malloc'd, NULL for none */
+    bool file_root; /* of a glTF file's mesh: its tree is actors under it, and it draws nothing itself */
 } wgf_gfx_priv_model_t;
 
 typedef struct wgf_gfx_priv_shape3d_t {
@@ -121,6 +122,7 @@ typedef struct wgf_gfx_priv_actor_t {
     bool world_dirty;
     bool enabled;
     bool visible;
+    bool from_file; /* made from a glTF file's nodes, under its root: the root's path makes it again */
     /* Simulated (it has a component the ticks move, ecs/): `position`, `rotation`, and
      * `scale` are the simulation's, at the tick rate, and the actor is drawn between
      * `previous`, kept as the last tick began, and them, at the frame's tick fraction.
@@ -216,6 +218,8 @@ typedef struct wgf_gfx_priv_model_hooks_t {
     const char *(*describe)(wgf_actor_t model, float params[4], int *count);
     bool (*set_tint)(wgf_actor_t model, wgf_color_t tint);
     wgf_color_t (*get_tint)(wgf_actor_t model);
+    bool (*set_path)(wgf_actor_t model, const char *path); /* a glTF file's mesh (wgf_mesh_create) */
+    const char *(*get_path)(wgf_actor_t model);            /* a file root's path; NULL for any other model */
 } wgf_gfx_priv_model_hooks_t;
 void wgf_gfx_priv_set_model_hooks(const wgf_gfx_priv_model_hooks_t *hooks);
 const wgf_gfx_priv_model_hooks_t *wgf_gfx_priv_get_model_hooks(void);

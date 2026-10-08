@@ -793,6 +793,8 @@ export const Mesh = Object.freeze({
     createTorus: raw.wgf_mesh_create_torus,
     // wgf: call wgf_mesh_create_triangles
     createTriangles: raw.wgf_mesh_create_triangles,
+    // wgf: call wgf_mesh_create
+    create: raw.wgf_mesh_create,
     // wgf: call wgf_mesh_get_material_count
     getMaterialCount: raw.wgf_mesh_get_material_count,
     // wgf: call wgf_mesh_get_material

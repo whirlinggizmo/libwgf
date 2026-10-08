@@ -63,6 +63,9 @@ freely, subject to the following restrictions:
 
 - **Jolt Physics** (`deps/jolt/`): Copyright 2021 Jorrit Rouwe; in a program that makes a
   physics body (physics3d), and in the web host that has every call
+- **cgltf** (`deps/cgltf/`): Copyright (c) 2018-2021 Johannes Kuhlmann; in a program that
+  makes a mesh from a glTF file (wgf_mesh_create), and in the web host that has every call
+- **jsmn** (inside `deps/cgltf/cgltf.h`): Copyright (c) 2010 Serge Zaitsev; with cgltf
 - **hotreload-hx** (`deps/hotreload-hx/`): Copyright (c) 2026 Whirling Gizmo, LLC; only in a
   program `wgf serve` builds for hot reload, never in one `wgf export` ships
 - **The UTF-8 decoder in fontstash** (`deps/fontstash/fontstash.h`): Copyright (c)

@@ -48,6 +48,25 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_mesh_create_triangles(positions, normals, uvs, indices);
 
 	/**
+	    The mesh in a glTF file (.gltf, its buffers and images beside it, or .glb), loaded in the
+	    background as a texture is (wgf_resource.h: PENDING, then READY or FAILED, the asset
+	    part's search paths finding it), shared by its path. All of its scene's nodes: their
+	    meshes (each glTF mesh one mesh, shared by every node showing it, its primitives each
+	    with a material slot: glTF's metallic-roughness materials, their textures loaded with
+	    it), their names and places, and the lights KHR_lights_punctual gives them. A model of it
+	    (wgf_model_set_mesh) is the file's root: once READY, the file's node tree is made its
+	    children, a model of the mesh each node shows (wgf_model_get_mesh: one handle for the
+	    nodes sharing one) and a plain actor for a node with none, named and placed as in the
+	    file, found as any actor is (wgf_actor_find), and a light under a node that carries one.
+	    The file's own mesh holds the tree, the materials, and no triangles. A model of a PENDING mesh
+	    draws nothing; of a FAILED one, the placeholder checker on a unit cube. Skins,
+	    animations, morph targets, and cameras in the file are not read. 0 (logged) for an
+	    empty path or one that isn't .gltf or .glb.
+	**/
+	public static inline function create(path:String):Mesh
+		return Raw.wgf_mesh_create(path);
+
+	/**
 	    The mesh's materials, one a slot (wgf_material.h); a generated mesh has one. The
 	    handle is borrowed: valid while the mesh is, and changing it changes every model
 	    drawing the mesh with it. 0 for a slot it hasn't.

@@ -213,7 +213,9 @@ text       string="..."  font="path"  size=s  color=#..  wrap=w
 emitter2d  rate=r  emitting=true|false  capacity=n  life=min,max  direction=a  spread=s
            speed=min,max  radius=r  gravity=x,y  drag=d  size=start,end  color=#..,#..
            stretch=s  burst=n (that many at once, as it is made)
-model      a generated mesh (wgf_mesh.h), its create call's parameters in order:
+model      a glTF file, path="path" (its nodes made under it once it loads; in a program
+           with glTF, one that calls wgf_mesh_create, as a game's exports are), or a
+           generated mesh (wgf_mesh.h), its create call's parameters in order:
            plane=w,l,subdivisions | cube=w,h,l | sphere=r,rings,segments |
            cylinder=r,h,segments | cone=r,h,segments | capsule=r,h,rings,segments |
            torus=r,thickness,rings,segments; and tint=#.. (made once a stage3d has been,
@@ -241,7 +243,7 @@ vehicle    wheels=<child>,<child>,... (its children, left and right pairs, front
            max_rpm=rpm  gears=<ratio>,... (forward, lowest first)  drive=front|rear|all
 ```
 
-`body` and `vehicle` are physics' (`wgf_body.h`, `wgf_vehicle.h`): refused until the program has started physics (`wgf_physics_set_gravity`), so a game sets the gravity before it loads such a scene. A convex or mesh body is read from the models at and under its actor, each one's transform, scale included.
+`body` and `vehicle` are physics' (`wgf_body.h`, `wgf_vehicle.h`): refused until the program has started physics (`wgf_physics_set_gravity`), so a game sets the gravity before it loads such a scene. A convex or mesh body is read from the models at and under its actor, each one's transform, scale included: a glTF file's nodes each their own triangles, and the body made once the files have loaded.
 
 For example, a ship with its flame, a rock prefab and a smaller one from it, and a ship placed:
 
@@ -325,6 +327,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `check_games.py` | checks every game in `games/`: its generated files current, its playthrough headless and in a browser, its web export within budget, its desktop export |
 | `build_pages.py` | builds the GitHub Pages site: every game's web export, smoke-tested and within budget, and a page linking them |
 | `import_game.py` | copies a game written outside libwgf into `games/` (`../libwgf-racer/game` as `games/racer`), less its `build/` and `export/`, with `IMPORTED.md` naming its source and commit, so the checks, sizes, frame times, and Pages cover it; the copy is changed only in its source and imported again |
+| `gen_model.py` | writes the examples' glTF model (`examples/assets/models/toy_car.glb`), a toy car of named nodes, the same bytes every time (`--check`) |
 | `gen_sounds.py` | writes Asteroids' sounds (`games/asteroids/assets/sounds/`) from their synthesis, the same bytes every time (`--check`) |
 | `check_cli.py` | runs each `wgf` command on a game it makes from the template, judging what each made and said; `serve` is edited while it runs, and must keep its state |
 | `check_features.py` | runs the feature test (`examples/haxe/feature-test/`) on hxcpp, under node, and in a browser, failing a call it never reached |
@@ -353,4 +356,4 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `setup_mingw.py` | sets up the pinned MinGW-w64 on Windows |
 | `setup_system_packages.py` | checks for, or installs, the packages a Linux desktop build links |
 
-Modules the tools share, with nothing to run: `examples.py` (building the examples against a staged variant), `headers.py` (the public API as clang reads it, in one parse), `jsbinding.py` (the JS binding's text, and its trimming for an export), `webhost.py` (linking the web host, the JS binding beside it, and a JS example's site), `browser.py` (finding and driving a Chromium-based browser over the DevTools protocol), `server.py` (serving a site as a static host would), `variants.py` (the presets, read from `CMakePresets.json`), `wine.py` (finding Wine), and `usercache.py` (the per-user cache).
+Modules the tools share, with nothing to run: `examples.py` (building the examples against a staged variant), `gltf.py` (writing glTF files: meshes, materials, an image, nodes, lights), `headers.py` (the public API as clang reads it, in one parse), `jsbinding.py` (the JS binding's text, and its trimming for an export), `webhost.py` (linking the web host, the JS binding beside it, and a JS example's site), `browser.py` (finding and driving a Chromium-based browser over the DevTools protocol), `server.py` (serving a site as a static host would), `variants.py` (the presets, read from `CMakePresets.json`), `wine.py` (finding Wine), and `usercache.py` (the per-user cache).

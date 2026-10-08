@@ -29,6 +29,7 @@ typedef struct wgf_gfx_priv_material_texture_t {
     wgf_texture_wrap_t wrap_u;
     wgf_texture_wrap_t wrap_v;
     wgf_texture_filter_t filter;
+    bool mipmaps; /* sampled through its mipmaps (the default), or its base level alone (a glTF sampler's) */
 } wgf_gfx_priv_material_texture_t;
 
 typedef struct wgf_gfx_priv_material_t {
@@ -53,6 +54,10 @@ const wgf_gfx_priv_material_t *wgf_gfx_priv_material_get(wgf_material_t material
  * u' = m[0] u + m[1] v + m[2], v' = m[3] u + m[4] v + m[5]. As glTF's
  * KHR_texture_transform: translation * rotation * scale. */
 void wgf_gfx_priv_material_uv_matrix(const wgf_gfx_priv_material_texture_t *texture, float m[6]);
+
+/* Whether material texture `name` is sampled through its mipmaps; false for a name that
+ * isn't one of its textures. */
+bool wgf_gfx_priv_material_set_texture_mipmaps(wgf_material_t material, const char *name, bool mipmaps);
 
 /* An sRGB channel (0..1) as linear light. */
 float wgf_gfx_priv_srgb_to_linear(float c);

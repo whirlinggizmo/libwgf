@@ -158,6 +158,7 @@ static const kind_t kinds[] = {
       {"cone", V_NUM3},
       {"capsule", V_NUM4},
       {"torus", V_NUM4},
+      {"path", V_TEXT},
       {"tint", V_COLOR}},
      false},
 };
@@ -758,6 +759,10 @@ static void apply_setting(wgf_actor_t actor, int kind, const setting_t *s, value
             if (hooks == NULL || wgf_actor_get_kind(actor) != WGF_ACTOR_KIND_MODEL) break;
             if (strcmp(key, "tint") == 0) {
                 hooks->set_tint(actor, v->colors[0]);
+                break;
+            }
+            if (strcmp(key, "path") == 0) {
+                hooks->set_path(actor, v->text);
                 break;
             }
             for (i = 0; i < 4; i++) params[i] = i < v->count ? f(v, i) : 0.0f;

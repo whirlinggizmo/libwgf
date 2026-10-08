@@ -19,6 +19,7 @@
 #include "wgf_model.h"
 #include "wgf_physics3d_jolt_priv.h"
 #include "wgf_quat.h"
+#include "wgf_resource.h"
 
 /* physics3d (wgf_physics.h): the body and vehicle components, the ecs's through its hooks
  * for a part's components (wgf_ecs_priv.h), their data the store's; each tick, after the
@@ -160,6 +161,7 @@ typedef struct soup_t {
     float *points;
     uint32_t *indices;
     int point_count, index_count, point_capacity, index_capacity;
+    bool pending; /* a model's mesh still loading (a glTF file): the body waits for it */
 } soup_t;
 
 static bool grow(void **array, int *capacity, int need, size_t size)
@@ -175,32 +177,49 @@ static bool grow(void **array, int *capacity, int need, size_t size)
     return true;
 }
 
-/* Every model at and under `actor`, its mesh's triangles in `root`'s space. */
+/* Primitive `primitive` of `mesh`, placed by `to_root`, added to `soup`. */
+static void add_primitive(wgf_mesh_t mesh, int primitive, wgf_mat4_t to_root, soup_t *soup)
+{
+    const float *vertices = NULL;
+    const uint32_t *indices = NULL;
+    int vertex_count = 0, index_count = 0, i;
+    uint32_t base;
+    if (!wgf_gfx_priv_mesh_get_triangles(mesh, primitive, &vertices, &vertex_count, &indices, &index_count) ||
+        vertex_count == 0 ||
+        !grow((void **)&soup->points, &soup->point_capacity, 3 * (soup->point_count + vertex_count), sizeof(float)) ||
+        !grow((void **)&soup->indices, &soup->index_capacity, soup->index_count + index_count, sizeof(uint32_t))) {
+        return;
+    }
+    base = (uint32_t)soup->point_count;
+    for (i = 0; i < vertex_count; i++) {
+        const float *v = vertices + (size_t)i * WGF_GFX_PRIV_MESH_VERTEX_FLOATS;
+        const wgf_vec3_t point = wgf_mat4_transform_point(to_root, wgf_vec3_make(v[0], v[1], v[2]));
+        soup->points[3 * soup->point_count] = point.x;
+        soup->points[3 * soup->point_count + 1] = point.y;
+        soup->points[3 * soup->point_count + 2] = point.z;
+        soup->point_count++;
+    }
+    for (i = 0; i < index_count; i++) soup->indices[soup->index_count++] = base + indices[i];
+}
+
+/* Every model at and under `actor`, its mesh's triangles in `root`'s space (a glTF file's
+ * root none: its nodes, under it, carry the file's meshes); and whether a model's mesh is
+ * still loading. */
 static void gather(wgf_actor_t root, wgf_mat4_t root_inverse, wgf_actor_t actor, soup_t *soup, int depth)
 {
-    int i, n;
-    if (depth > 32) return;
-    if (wgf_actor_get_kind(actor) == WGF_ACTOR_KIND_MODEL) {
-        const wgf_mesh_t mesh = wgf_model_get_mesh(actor);
-        int vertex_count = 0, index_count = 0;
-        const float *vertices = mesh != 0 ? wgf_gfx_priv_mesh_get_vertices(mesh, &vertex_count) : NULL;
-        const uint32_t *indices = mesh != 0 ? wgf_gfx_priv_mesh_get_indices(mesh, &index_count) : NULL;
-        if (vertices != NULL && indices != NULL && vertex_count > 0 &&
-            grow((void **)&soup->points, &soup->point_capacity, 3 * (soup->point_count + vertex_count), sizeof(float)) &&
-            grow((void **)&soup->indices, &soup->index_capacity, soup->index_count + index_count, sizeof(uint32_t))) {
-            const wgf_mat4_t to_root =
-                wgf_mat4_mul(root_inverse, wgf_gfx_priv_actor_get_simulated_world(actor));
-            const uint32_t base = (uint32_t)soup->point_count;
-            for (i = 0; i < vertex_count; i++) {
-                const float *v = vertices + (size_t)i * WGF_GFX_PRIV_MESH_VERTEX_FLOATS;
-                const wgf_vec3_t p = wgf_mat4_transform_point(to_root, wgf_vec3_make(v[0], v[1], v[2]));
-                soup->points[3 * soup->point_count] = p.x;
-                soup->points[3 * soup->point_count + 1] = p.y;
-                soup->points[3 * soup->point_count + 2] = p.z;
-                soup->point_count++;
-            }
-            for (i = 0; i < index_count; i++) soup->indices[soup->index_count++] = base + indices[i];
-        }
+    const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
+    int count, i, n;
+    if (depth > 32 || actor_ptr == NULL) return;
+    if (actor_ptr->type == WGF_ACTOR_KIND_MODEL && actor_ptr->as.model.mesh != 0 &&
+        wgf_resource_get_status(actor_ptr->as.model.mesh) == WGF_RESOURCE_STATUS_PENDING) {
+        soup->pending = true;
+    }
+    count = actor_ptr->type == WGF_ACTOR_KIND_MODEL && !actor_ptr->as.model.file_root
+                ? wgf_gfx_priv_mesh_get_primitive_count(actor_ptr->as.model.mesh)
+                : 0;
+    if (count > 0) {
+        const wgf_mat4_t to_root = wgf_mat4_mul(root_inverse, wgf_gfx_priv_actor_get_simulated_world(actor));
+        for (i = 0; i < count; i++) add_primitive(actor_ptr->as.model.mesh, i, to_root, soup);
     }
     (void)root;
     n = wgf_actor_get_child_count(actor);
@@ -261,6 +280,12 @@ static void make_body(wgf_actor_t actor, body_t *b)
         default: {
             const wgf_mat4_t inverse = wgf_mat4_invert(wgf_gfx_priv_actor_get_simulated_world(actor));
             gather(actor, inverse, actor, &soup, 0);
+            if (soup.pending) { /* made at a tick after its models' files have loaded */
+                free(soup.points);
+                free(soup.indices);
+                b->dirty = true;
+                return;
+            }
             d.points = soup.points;
             d.point_count = soup.point_count;
             d.indices = soup.indices;
@@ -338,6 +363,7 @@ static void make_vehicle(wgf_actor_t actor, vehicle_t *v)
     const body_t *b = body_of(actor);
     wgf_physics3d_priv_vehicle_desc_t d;
     int i;
+    if (b != NULL && b->dirty) return; /* its body waits for its models' files: so does it */
     unmake_vehicle(v);
     find_wheels(actor, v);
     v->dirty = false;

@@ -173,16 +173,19 @@ static void dump_emitter(out_t *out, wgf_actor_t actor)
         (unsigned)wgf_emitter2d_get_color_end(actor), wgf_emitter2d_get_stretch(actor));
 }
 
-/* A model: its mesh as the generated shape it is, with its create call's parameters
- * (a mesh of no generated shape is left out), and its tint. */
+/* A model: its glTF file's path, or its mesh as the generated shape it is, with its create
+ * call's parameters (a mesh of neither is left out), and its tint. */
 static void dump_model(out_t *out, wgf_actor_t actor)
 {
     const wgf_gfx_priv_model_hooks_t *hooks = wgf_gfx_priv_get_model_hooks(); /* set: there is a model */
     float params[4];
     int count, i;
     const char *shape = hooks->describe(actor, params, &count);
+    const char *path = hooks->get_path(actor);
     put(out, "    model");
-    if (shape != NULL) {
+    if (path != NULL) {
+        put_text(out, "path", path);
+    } else if (shape != NULL) {
         put(out, " %s=", shape);
         for (i = 0; i < count; i++) put(out, i == 0 ? "%.9g" : ",%.9g", params[i]);
     }
@@ -291,7 +294,9 @@ static void dump_actor(out_t *out, wgf_actor_t e, const char *path)
     put(out, "end\n");
     for (i = 0; i < wgf_actor_get_child_count(e); i++) {
         const wgf_actor_t child = wgf_actor_get_child(e, i);
+        const wgf_gfx_priv_actor_t *child_ptr = wgf_gfx_priv_actor_of(child);
         char below[PATH_BYTES];
+        if (child_ptr != NULL && child_ptr->from_file) continue; /* its file's root's path makes it again */
         if (wgf_actor_get_name(child)[0] == '\0') {
             snprintf(below, sizeof(below), "_%d", i);
             wgf_actor_set_name(child, below);

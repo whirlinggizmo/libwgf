@@ -162,12 +162,19 @@ static float score_light(const wgf_gfx_priv_stage3d_light_t *light, wgf_vec3_t b
     if (light->range > 0.0f && distance >= light->range) return 0.0f;
     score *= attenuation(distance, light->range);
     if (light->type == WGF_LIGHT_TYPE_SPOT && distance > 0.0f) {
+        /* the cone against the box's bounding sphere: the angle to its center less the angle
+         * the sphere spans, so a large box the cone reaches past its center (a floor ahead of
+         * a headlight) is still lit */
+        const float radius = 0.5f * wgf_vec3_length(wgf_vec3_sub(bmax, bmin));
         center = wgf_vec3_scale(wgf_vec3_add(bmin, bmax), 0.5f);
         to_center = wgf_vec3_sub(center, light->position);
         center_distance = wgf_vec3_length(to_center);
-        if (center_distance > 1e-6f) {
-            score *= spot_factor(wgf_vec3_dot(to_center, light->direction) / center_distance, light->cos_inner,
-                                 light->cos_outer);
+        if (center_distance > radius) {
+            /* cos(angle - spread) as cos a cos s + sin a sin s: no inverse trigonometry linked */
+            const float cos_a = clampf(wgf_vec3_dot(to_center, light->direction) / center_distance, -1.0f, 1.0f);
+            const float sin_s = radius / center_distance, cos_s = sqrtf(1.0f - sin_s * sin_s);
+            const float closest = cos_a >= cos_s ? 1.0f : cos_a * cos_s + sqrtf(1.0f - cos_a * cos_a) * sin_s;
+            score *= spot_factor(closest, light->cos_inner, light->cos_outer);
         }
     }
     return score;

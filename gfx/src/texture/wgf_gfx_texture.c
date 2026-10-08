@@ -221,6 +221,57 @@ static void fail(wgf_handle_t resource)
 
 static const wgf_core_priv_loader_t loader = {"texture", prepare, finish, discard, fail, NULL};
 
+/* --- an image of another file's (a glTF's) ------------------------------------ */
+
+void *wgf_gfx_priv_texture_decode(const unsigned char *bytes, int size, const char *what)
+{
+    int comp;
+    decoded_t *decoded = (decoded_t *)calloc(1, sizeof(decoded_t));
+    if (decoded == NULL) return NULL;
+    decoded->levels[0] = stbi_load_from_memory(bytes, size, &decoded->width, &decoded->height, &comp, 4);
+    if (decoded->levels[0] == NULL) {
+        wgf_log_warn("wgf_gfx_texture: %s: an image it can't read (%s)", what, stbi_failure_reason());
+        free(decoded);
+        return NULL;
+    }
+    if (!build_mipmaps(decoded)) {
+        wgf_log_warn("wgf_gfx_texture: %s: out of memory", what);
+        discard(decoded);
+        return NULL;
+    }
+    return decoded;
+}
+
+void wgf_gfx_priv_texture_decoded_free(void *decoded)
+{
+    if (decoded != NULL) discard(decoded);
+}
+
+wgf_texture_t wgf_gfx_priv_texture_create_decoded(void *decoded_data)
+{
+    decoded_t *decoded = (decoded_t *)decoded_data;
+    wgf_texture_t texture = 0;
+    texture_t *texture_ptr;
+    if (decoded == NULL) return 0;
+    if (ensure_pool()) texture = wgf_core_priv_resource_add(WGF_CORE_PRIV_HANDLE_KIND_TEXTURE);
+    texture_ptr = texture_of(texture);
+    if (texture_ptr == NULL || !make_image(decoded->width, decoded->height, decoded->mip_count, decoded->levels,
+                                           &texture_ptr->image, &texture_ptr->view)) {
+        if (texture != 0) wgf_resource_release(texture);
+        discard(decoded);
+        return 0;
+    }
+    texture_ptr->width = decoded->width;
+    texture_ptr->height = decoded->height; /* READY as it was added: made from numbers */
+    discard(decoded);
+    return texture;
+}
+
+wgf_texture_t wgf_gfx_priv_texture_get_placeholder(void)
+{
+    return placeholder;
+}
+
 /* --- the public API --------------------------------------------------------- */
 
 static const wgf_core_priv_loader_t *loader_of(const char *path)

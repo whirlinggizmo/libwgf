@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "mesh/wgf_gfx_mesh_priv.h"
+#include "mesh/wgf_gfx_mesh_record_priv.h"
 #include "mesh/wgf_gfx_mesh_shapes_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "wgf_core_handle_priv.h"
@@ -21,29 +22,10 @@
  * for picking (milestone 2.5's). A part, installed by the first mesh made; its stop at
  * gfx's frees every mesh, before the materials they hold. */
 
-#define KEY_MAX 64 /* a generated mesh's: its shape and its parameters' bits */
+#define KEY_MAX WGF_GFX_PRIV_MESH_KEY_MAX
 
-typedef struct primitive_t {
-    float *vertices;
-    uint32_t *indices;
-    int vertex_count, index_count;
-    int material; /* its slot in the mesh's materials */
-    wgf_vec3_t bounds_min, bounds_max;
-    sg_buffer vertex_buffer, index_buffer; /* SG_INVALID_ID until uploaded */
-} primitive_t;
-
-typedef struct mesh_t {
-    wgf_core_priv_resource_t resource; /* first: the resource core's (status, references) */
-    char key[KEY_MAX];                 /* the parameters it was made with, which find it again */
-    const char *shape;                 /* what it was made as ("cube"), and with what: its call's parameters */
-    float params[4];
-    int param_count;
-    primitive_t *primitives;
-    int primitive_count;
-    wgf_material_t *materials; /* one a slot, referenced */
-    int material_count;
-    wgf_vec3_t bounds_min, bounds_max;
-} mesh_t;
+typedef wgf_gfx_priv_mesh_record_primitive_t primitive_t;
+typedef wgf_gfx_priv_mesh_record_t mesh_t;
 
 static bool pool_ready;
 static wgf_core_priv_handle_pool_t pool;
@@ -57,12 +39,9 @@ static mesh_t *record_of_at(wgf_mesh_t mesh, const char *caller)
 }
 #define record_of(...) record_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
-/* What a mesh holds: its primitives (CPU and GPU), and its materials. */
-static void free_mesh(wgf_handle_t mesh, void *record)
+void wgf_gfx_priv_mesh_free_data(mesh_t *mesh_ptr)
 {
-    mesh_t *mesh_ptr = (mesh_t *)record;
     int i;
-    (void)mesh;
     for (i = 0; i < mesh_ptr->primitive_count; i++) {
         primitive_t *primitive = &mesh_ptr->primitives[i];
         if (primitive->vertex_buffer.id != SG_INVALID_ID) sg_destroy_buffer(primitive->vertex_buffer);
@@ -73,12 +52,46 @@ static void free_mesh(wgf_handle_t mesh, void *record)
     free(mesh_ptr->primitives);
     for (i = 0; i < mesh_ptr->material_count; i++) wgf_resource_release(mesh_ptr->materials[i]);
     free(mesh_ptr->materials);
+    for (i = 0; i < mesh_ptr->part_count; i++) { /* gone already at gfx's stop, when the pool frees all */
+        if (wgf_gfx_priv_mesh_record(mesh_ptr->parts[i]) != NULL) wgf_resource_release(mesh_ptr->parts[i]);
+    }
+    free(mesh_ptr->parts);
+    mesh_ptr->parts = NULL;
+    mesh_ptr->part_count = 0;
+    for (i = 0; i < mesh_ptr->node_count; i++) free(mesh_ptr->nodes[i].name);
+    free(mesh_ptr->nodes);
+    free(mesh_ptr->lights);
     mesh_ptr->primitives = NULL;
     mesh_ptr->materials = NULL;
-    mesh_ptr->primitive_count = mesh_ptr->material_count = 0;
+    mesh_ptr->nodes = NULL;
+    mesh_ptr->lights = NULL;
+    mesh_ptr->primitive_count = mesh_ptr->material_count = mesh_ptr->node_count = mesh_ptr->light_count = 0;
 }
 
-static const wgf_core_priv_resource_kind_t resource_kind = {.create = "wgf_mesh_create", .free = free_mesh};
+/* What a mesh holds: its primitives (CPU and GPU), its materials, and a file's tree. */
+static void free_mesh(wgf_handle_t mesh, void *record)
+{
+    (void)mesh;
+    wgf_gfx_priv_mesh_free_data((mesh_t *)record);
+}
+
+/* Its file side (the loader) is set by wgf_mesh_create, glTF's: a kind naming the loader
+ * from the start would link cgltf into every program that makes a generated mesh. */
+static const wgf_core_priv_loader_t *file_loader;
+
+static const wgf_core_priv_loader_t *loader_of(const char *path)
+{
+    (void)path;
+    return file_loader;
+}
+
+static wgf_core_priv_resource_kind_t resource_kind = {.create = "wgf_mesh_create", .free = free_mesh};
+
+void wgf_gfx_priv_mesh_set_loader(const wgf_core_priv_loader_t *loader)
+{
+    file_loader = loader;
+    resource_kind.loader = loader_of;
+}
 
 static void stop(void)
 {
@@ -93,6 +106,24 @@ static wgf_core_priv_part_t part = {.name = "meshes",
                                     .layer = WGF_CORE_PRIV_PART_LAYER_GFX,
                                     .order = WGF_CORE_PRIV_PART_MESHES,
                                     .stop = stop};
+
+bool wgf_gfx_priv_mesh_ensure_pool(void)
+{
+    if (!pool_ready) {
+        pool_ready = wgf_core_priv_handle_pool_init(&pool, WGF_CORE_PRIV_HANDLE_KIND_MESH, (void **)&meshes,
+                                                    sizeof(mesh_t), 16, 65535);
+        if (pool_ready) wgf_core_priv_resource_register(&pool, &resource_kind);
+    }
+    if (pool_ready) wgf_core_priv_part_install(&part);
+    return pool_ready;
+}
+
+wgf_gfx_priv_mesh_record_t *wgf_gfx_priv_mesh_record(wgf_mesh_t mesh)
+{
+    uint16_t index;
+    if (!pool_ready || !wgf_core_priv_handle_pool_resolve(&pool, mesh, &index)) return NULL;
+    return &meshes[index];
+}
 
 /* Tangents for normal mapping from triangle positions and texture coordinates
  * (per-vertex average, orthogonalized against the normal), in glTF's convention: the
@@ -191,13 +222,7 @@ static wgf_mesh_t create_generated(const char *key, wgf_gfx_priv_mesh_shape_t *s
     int i;
 
     if (tangents != NULL && vertices != NULL && primitive != NULL && materials != NULL) {
-        if (!pool_ready) {
-            pool_ready = wgf_core_priv_handle_pool_init(&pool, WGF_CORE_PRIV_HANDLE_KIND_MESH, (void **)&meshes,
-                                                        sizeof(mesh_t), 16, 65535);
-            if (pool_ready) wgf_core_priv_resource_register(&pool, &resource_kind);
-        }
-        wgf_core_priv_part_install(&part);
-        handle = pool_ready ? wgf_core_priv_resource_add(WGF_CORE_PRIV_HANDLE_KIND_MESH) : 0;
+        handle = wgf_gfx_priv_mesh_ensure_pool() ? wgf_core_priv_resource_add(WGF_CORE_PRIV_HANDLE_KIND_MESH) : 0;
         mesh_ptr = record_of(handle);
     }
     if (mesh_ptr == NULL) {
@@ -487,7 +512,7 @@ int wgf_gfx_priv_mesh_get_primitive_count(wgf_mesh_t mesh)
 }
 
 /* The primitive's buffers made; false (logged) when the GPU didn't take them. */
-static bool upload(primitive_t *primitive)
+bool wgf_gfx_priv_mesh_upload(primitive_t *primitive)
 {
     sg_buffer_desc desc;
     if (primitive->vertex_buffer.id != SG_INVALID_ID) return true;
@@ -517,7 +542,7 @@ bool wgf_gfx_priv_mesh_get_primitive(wgf_mesh_t mesh, int index, wgf_gfx_priv_me
         return false;
     }
     p = &mesh_ptr->primitives[index];
-    if (!upload(p)) return false;
+    if (!wgf_gfx_priv_mesh_upload(p)) return false;
     primitive->vertices = p->vertex_buffer;
     primitive->indices = p->index_buffer;
     primitive->index_count = p->index_count;
@@ -527,12 +552,64 @@ bool wgf_gfx_priv_mesh_get_primitive(wgf_mesh_t mesh, int index, wgf_gfx_priv_me
     return true;
 }
 
+wgf_mesh_t wgf_gfx_priv_mesh_create_from(primitive_t *primitives, int count, const wgf_material_t *materials,
+                                         int material_count)
+{
+    wgf_material_t *own = (wgf_material_t *)calloc((size_t)(material_count > 0 ? material_count : 1),
+                                                   sizeof(wgf_material_t));
+    const wgf_mesh_t handle = own != NULL && wgf_gfx_priv_mesh_ensure_pool()
+                                  ? wgf_core_priv_resource_add(WGF_CORE_PRIV_HANDLE_KIND_MESH)
+                                  : 0;
+    mesh_t *mesh_ptr = record_of(handle);
+    int i;
+    if (mesh_ptr == NULL) {
+        mesh_t lost;
+        wgf_log_error("wgf_gfx_mesh: out of memory, or no room for another mesh");
+        memset(&lost, 0, sizeof(lost));
+        lost.primitives = primitives;
+        lost.primitive_count = count;
+        wgf_gfx_priv_mesh_free_data(&lost);
+        free(own);
+        return 0;
+    }
+    mesh_ptr->primitives = primitives;
+    mesh_ptr->primitive_count = count;
+    mesh_ptr->bounds_min = wgf_vec3_make(1e30f, 1e30f, 1e30f);
+    mesh_ptr->bounds_max = wgf_vec3_make(-1e30f, -1e30f, -1e30f);
+    for (i = 0; i < count; i++) {
+        const wgf_vec3_t lo = primitives[i].bounds_min, hi = primitives[i].bounds_max;
+        mesh_ptr->bounds_min = wgf_vec3_make(fminf(mesh_ptr->bounds_min.x, lo.x), fminf(mesh_ptr->bounds_min.y, lo.y),
+                                             fminf(mesh_ptr->bounds_min.z, lo.z));
+        mesh_ptr->bounds_max = wgf_vec3_make(fmaxf(mesh_ptr->bounds_max.x, hi.x), fmaxf(mesh_ptr->bounds_max.y, hi.y),
+                                             fmaxf(mesh_ptr->bounds_max.z, hi.z));
+    }
+    for (i = 0; i < material_count; i++) {
+        own[i] = materials[i];
+        if (own[i] != 0) wgf_core_priv_resource_retain(own[i]);
+    }
+    mesh_ptr->materials = own;
+    mesh_ptr->material_count = material_count;
+    return handle;
+}
+
 const float *wgf_gfx_priv_mesh_get_vertices(wgf_mesh_t mesh, int *vertex_count)
 {
     const mesh_t *mesh_ptr = record_of(mesh);
     const bool has = mesh_ptr != NULL && mesh_ptr->primitive_count > 0;
     *vertex_count = has ? mesh_ptr->primitives[0].vertex_count : 0;
     return has ? mesh_ptr->primitives[0].vertices : NULL;
+}
+
+bool wgf_gfx_priv_mesh_get_triangles(wgf_mesh_t mesh, int primitive, const float **vertices, int *vertex_count,
+                                     const uint32_t **indices, int *index_count)
+{
+    const mesh_t *mesh_ptr = record_of(mesh);
+    if (mesh_ptr == NULL || primitive < 0 || primitive >= mesh_ptr->primitive_count) return false;
+    *vertices = mesh_ptr->primitives[primitive].vertices;
+    *vertex_count = mesh_ptr->primitives[primitive].vertex_count;
+    *indices = mesh_ptr->primitives[primitive].indices;
+    *index_count = mesh_ptr->primitives[primitive].index_count;
+    return *vertices != NULL && *indices != NULL;
 }
 
 const uint32_t *wgf_gfx_priv_mesh_get_indices(wgf_mesh_t mesh, int *index_count)
