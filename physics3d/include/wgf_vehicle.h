@@ -24,7 +24,8 @@ extern "C" {
  * Jolt's gear ratios, rear drive, wheels of 0.3 m by 0.2 m, 0.3 m of spring travel at 1.5
  * Hz damped by half, 0.5 radians of steering, grip 1. Its settings take effect at the next
  * tick, when it is made again from them (at rest), as a body's are; reset puts it at rest
- * where it is. The calls are false (or 0) for an actor without a vehicle. */
+ * where it is (its anti-roll bars take a change at once). The calls are false (or 0) for
+ * an actor without a vehicle. */
 typedef enum wgf_vehicle_drive_t {
     WGF_VEHICLE_DRIVE_FRONT = 0,
     WGF_VEHICLE_DRIVE_REAR = 1,
@@ -44,6 +45,11 @@ WGF_API bool wgf_vehicle_set_wheel_size(wgf_actor_t actor, float radius, float w
 WGF_API bool wgf_vehicle_set_suspension(wgf_actor_t actor, float travel, float stiffness, float damping);
 WGF_API bool wgf_vehicle_set_steering(wgf_actor_t actor, float radians);
 WGF_API bool wgf_vehicle_set_grip(wgf_actor_t actor, float grip);
+/* Each axle's anti-roll bar (N/m, 0 none, the default): the stiffer, the less the vehicle
+ * leans in a corner; taken at once. */
+WGF_API bool wgf_vehicle_set_anti_roll(wgf_actor_t actor, float stiffness);
+WGF_API float wgf_vehicle_get_anti_roll(wgf_actor_t actor);
+
 /* As set: (radius, width); (travel, stiffness, damping); radians; grip. */
 WGF_API wgf_vec2_t wgf_vehicle_get_wheel_size(wgf_actor_t actor);
 WGF_API wgf_vec3_t wgf_vehicle_get_suspension(wgf_actor_t actor);
@@ -68,9 +74,11 @@ WGF_API wgf_vehicle_drive_t wgf_vehicle_get_drive(wgf_actor_t actor);
 WGF_API bool wgf_vehicle_set_input(wgf_actor_t actor, float throttle, float brake, float steer, bool hand_brake);
 
 /* How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
- * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
- * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
- * air). */
+ * it is in (1 the lowest, -1 reverse, 0 neutral), and how hard wheel `index`'s tire works,
+ * as a share of its grip's peak: below 1 gripping (a free-rolling wheel a little above 0,
+ * its small slip angle), 1 at the limit, above it sliding or spinning, up to 10 (traction
+ * control keeps it near 1, tire smoke shows above about 1.5); the larger of along and
+ * across the tire; 0 for a wheel it hasn't, or in the air. */
 WGF_API float wgf_vehicle_get_speed(wgf_actor_t actor);
 WGF_API float wgf_vehicle_get_rpm(wgf_actor_t actor);
 WGF_API int wgf_vehicle_get_gear(wgf_actor_t actor);

@@ -42,6 +42,9 @@ HOTRELOAD = ROOT / 'deps' / 'hotreload-hx' / 'src'
 TARGETS = ('web', 'desktop', 'headless')
 AUTOPILOT_PASS = 'wgf_autopilot: PASS'
 AUTOPILOT_FAIL = 'wgf_autopilot: FAIL'
+# The run's result, its last line: "PASS (" or "FAIL (", never a failed expectation's
+# "FAIL at frame ...", after which the run goes on (to its screenshots, say)
+AUTOPILOT_ENDED = ('wgf_autopilot: PASS (', 'wgf_autopilot: FAIL (')
 
 
 class GameError(RuntimeError):
@@ -236,7 +239,7 @@ def run_native(exe, autopilot=None, timeout=600, echo=True, record=None):
     return process.returncode, '\n'.join(lines)
 
 
-def run_page(site, page_path, autopilot=None, until=(AUTOPILOT_PASS, AUTOPILOT_FAIL), timeout=120, on_line=None,
+def run_page(site, page_path, autopilot=None, until=AUTOPILOT_ENDED, timeout=120, on_line=None,
              browser_path=None, echo=True, screenshot=None, screenshots=None):
     """`site` served as it is (a game's assets are beside its page), and its page at
     `page_path` run as run_page_url runs one. The lines logged."""
@@ -248,7 +251,7 @@ def run_page(site, page_path, autopilot=None, until=(AUTOPILOT_PASS, AUTOPILOT_F
         httpd.shutdown()
 
 
-def run_page_url(url, autopilot=None, until=(AUTOPILOT_PASS, AUTOPILOT_FAIL), timeout=120, on_line=None,
+def run_page_url(url, autopilot=None, until=AUTOPILOT_ENDED, timeout=120, on_line=None,
                  browser_path=None, echo=True, screenshot=None, screenshots=None):
     """Load `url` in a headless browser, handing the page `autopilot` to fly it,
     until a console line contains one of `until`; `on_line(line)` sees each line first.

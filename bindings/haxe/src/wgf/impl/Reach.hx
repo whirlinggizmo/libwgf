@@ -122,6 +122,8 @@ class Reach {
 		"wgf_body_get_layer",
 		"wgf_body_get_mask",
 		"wgf_body_get_mass",
+		"wgf_body_get_mass_offset",
+		"wgf_body_get_offset",
 		"wgf_body_get_shape",
 		"wgf_body_get_size",
 		"wgf_body_get_spin",
@@ -133,6 +135,8 @@ class Reach {
 		"wgf_body_set_layer",
 		"wgf_body_set_mask",
 		"wgf_body_set_mass",
+		"wgf_body_set_mass_offset",
+		"wgf_body_set_offset",
 		"wgf_body_set_shape",
 		"wgf_body_set_spin",
 		"wgf_body_set_type",
@@ -535,6 +539,7 @@ class Reach {
 		"wgf_ui_set_style_value",
 		"wgf_ui_set_width",
 		"wgf_ui_spacer",
+		"wgf_vehicle_get_anti_roll",
 		"wgf_vehicle_get_drive",
 		"wgf_vehicle_get_engine",
 		"wgf_vehicle_get_gear",
@@ -550,6 +555,7 @@ class Reach {
 		"wgf_vehicle_get_wheel_size",
 		"wgf_vehicle_get_wheel_slip",
 		"wgf_vehicle_reset",
+		"wgf_vehicle_set_anti_roll",
 		"wgf_vehicle_set_drive",
 		"wgf_vehicle_set_engine",
 		"wgf_vehicle_set_gears",
@@ -624,7 +630,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...615) 0];
+	static final counts:Array<Int> = [for (_ in 0...621) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

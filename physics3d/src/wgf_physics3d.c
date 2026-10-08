@@ -36,7 +36,7 @@
 typedef struct body_t {
     uint32_t id; /* Jolt's; WGF_PHYSICS3D_PRIV_NO_BODY until made */
     int type, shape;
-    float size[3], mass, friction, bounce, damping[2];
+    float size[3], offset[3], mass_offset[3], mass, friction, bounce, damping[2];
     int layer, mask;
     bool dirty; /* made again at the next tick */
     float velocity[3], spin[3], impulse[3];
@@ -55,6 +55,7 @@ typedef struct vehicle_t {
     float radius, width, travel, stiffness, damping, steering, grip, torque, max_rpm;
     float gears[GEARS_MAX];
     int gear_count, drive;
+    float anti_roll;
     float throttle, brake, steer;
     bool hand_brake, dirty;
 } vehicle_t;
@@ -271,6 +272,8 @@ static void make_body(wgf_actor_t actor, body_t *b)
         }
     }
     world_pose(actor, d.position, d.rotation);
+    memcpy(d.offset, b->offset, sizeof(d.offset));
+    memcpy(d.mass_offset, b->mass_offset, sizeof(d.mass_offset));
     d.mass = b->mass;
     d.friction = b->friction;
     d.restitution = b->bounce;
@@ -358,6 +361,7 @@ static void make_vehicle(wgf_actor_t actor, vehicle_t *v)
     d.damping = v->damping;
     d.max_steer = v->steering;
     d.grip = v->grip;
+    d.anti_roll = v->anti_roll;
     d.engine_torque = v->torque;
     d.max_rpm = v->max_rpm;
     memcpy(d.gears, v->gears, sizeof(d.gears));
@@ -460,10 +464,12 @@ typedef struct line_key_t {
 
 static const line_key_t body_keys[] = {{"type", 0},     {"shape", 0},    {"size", 3},    {"radius", 1}, {"height", 1},
                                        {"mass", 1},     {"friction", 1}, {"bounce", 1},  {"damping", 2}, {"layer", 1},
-                                       {"mask", 1},     {"velocity", 3}, {"spin", 3}};
+                                       {"mask", 1},     {"velocity", 3}, {"spin", 3},
+                                       {"offset", 3},   {"mass_offset", 3}};
 static const line_key_t vehicle_keys[] = {{"wheels", 0},    {"drive", 0},         {"radius", 1},  {"width", 1},
                                           {"suspension", 1}, {"stiffness", 1},    {"damping", 1}, {"steering", 1},
-                                          {"grip", 1},       {"engine_torque", 1}, {"max_rpm", 1}, {"gears", -1}};
+                                          {"grip", 1},       {"engine_torque", 1}, {"max_rpm", 1}, {"gears", -1},
+                                          {"anti_roll", 1}};
 
 /* `value`'s numbers as `key` takes them, into n: how many; -1, warned, for a key the line
  * hasn't or a value it can't take. */
@@ -525,6 +531,8 @@ static void body_set(wgf_actor_t actor, const char *key, const char *text)
     else if (strcmp(key, "mask") == 0) wgf_body_set_mask(actor, (int)x);
     else if (strcmp(key, "velocity") == 0 && count == 3) wgf_body_set_velocity(actor, x, (float)n[1], (float)n[2]);
     else if (strcmp(key, "spin") == 0 && count == 3) wgf_body_set_spin(actor, x, (float)n[1], (float)n[2]);
+    else if (strcmp(key, "offset") == 0) wgf_body_set_offset(actor, x, (float)n[1], (float)n[2]);
+    else if (strcmp(key, "mass_offset") == 0) wgf_body_set_mass_offset(actor, x, (float)n[1], (float)n[2]);
 }
 
 static void vehicle_set(wgf_actor_t actor, const char *key, const char *text)
@@ -545,6 +553,7 @@ static void vehicle_set(wgf_actor_t actor, const char *key, const char *text)
     else if (strcmp(key, "damping") == 0) v->damping = x > 0.0f ? x : 0.0f;
     else if (strcmp(key, "steering") == 0) v->steering = x > 0.0f ? x : 0.0f;
     else if (strcmp(key, "grip") == 0) v->grip = x > 0.0f ? x : 0.0f;
+    else if (strcmp(key, "anti_roll") == 0) v->anti_roll = x > 0.0f ? x : 0.0f;
     else if (strcmp(key, "engine_torque") == 0) v->torque = x > 0.0f ? x : 0.0f;
     else if (strcmp(key, "max_rpm") == 0) v->max_rpm = x > 100.0f ? x : 100.0f;
     else if (strcmp(key, "gears") == 0 && count > 0) {
@@ -577,6 +586,12 @@ static void body_describe(wgf_actor_t actor, char *out, size_t size)
     if (b->shape == WGF_BODY_SHAPE_CAPSULE) put(out, size, " height=%.9g", b->size[1]);
     put(out, size, " mass=%.9g friction=%.9g bounce=%.9g damping=%.9g,%.9g layer=%d mask=%d", b->mass, b->friction,
         b->bounce, b->damping[0], b->damping[1], b->layer, b->mask);
+    if (b->offset[0] != 0.0f || b->offset[1] != 0.0f || b->offset[2] != 0.0f) {
+        put(out, size, " offset=%.9g,%.9g,%.9g", b->offset[0], b->offset[1], b->offset[2]);
+    }
+    if (b->mass_offset[0] != 0.0f || b->mass_offset[1] != 0.0f || b->mass_offset[2] != 0.0f) {
+        put(out, size, " mass_offset=%.9g,%.9g,%.9g", b->mass_offset[0], b->mass_offset[1], b->mass_offset[2]);
+    }
 }
 
 static void vehicle_describe(wgf_actor_t actor, char *out, size_t size)
@@ -600,6 +615,7 @@ static void vehicle_describe(wgf_actor_t actor, char *out, size_t size)
     put(out, size, " engine_torque=%.9g max_rpm=%.9g gears=", v->torque, v->max_rpm);
     for (i = 0; i < v->gear_count; i++) put(out, size, i == 0 ? "%.9g" : ",%.9g", v->gears[i]);
     put(out, size, " drive=%s", drives[v->drive]);
+    if (v->anti_roll > 0.0f) put(out, size, " anti_roll=%.9g", v->anti_roll);
 }
 
 /* the components' hooks, their store ids filled as physics starts */
@@ -814,11 +830,26 @@ float wgf_body_get_mass(wgf_actor_t actor)
     return b != NULL ? b->mass : 0.0f;
 }
 
+/* A setting a made body takes in place, its motion kept; one not yet made takes it when it is. */
+static body_t *tuning(wgf_actor_t actor)
+{
+    if (!start()) return NULL;
+    return body_of(actor);
+}
+
+static void retune(body_t *b)
+{
+    if (b->id != WGF_PHYSICS3D_PRIV_NO_BODY && !b->dirty) {
+        wgf_physics3d_priv_jolt_body_set_material(b->id, b->friction, b->bounce, b->damping[0], b->damping[1]);
+    }
+}
+
 bool wgf_body_set_friction(wgf_actor_t actor, float friction)
 {
-    body_t *b = changing(actor);
+    body_t *b = tuning(actor);
     if (b == NULL) return false;
     b->friction = at_least(friction, 0.0f);
+    retune(b);
     return true;
 }
 
@@ -830,9 +861,10 @@ float wgf_body_get_friction(wgf_actor_t actor)
 
 bool wgf_body_set_bounce(wgf_actor_t actor, float bounce)
 {
-    body_t *b = changing(actor);
+    body_t *b = tuning(actor);
     if (b == NULL) return false;
     b->bounce = bounce < 0.0f ? 0.0f : (bounce > 1.0f ? 1.0f : bounce);
+    retune(b);
     return true;
 }
 
@@ -849,11 +881,45 @@ static float unit(float v)
 
 bool wgf_body_set_damping(wgf_actor_t actor, float linear, float angular)
 {
-    body_t *b = changing(actor);
+    body_t *b = tuning(actor);
     if (b == NULL) return false;
     b->damping[0] = unit(linear);
     b->damping[1] = unit(angular);
+    retune(b);
     return true;
+}
+
+bool wgf_body_set_offset(wgf_actor_t actor, float x, float y, float z)
+{
+    body_t *b = changing(actor);
+    if (b == NULL) return false;
+    b->offset[0] = x;
+    b->offset[1] = y;
+    b->offset[2] = z;
+    return true;
+}
+
+wgf_vec3_t wgf_body_get_offset(wgf_actor_t actor)
+{
+    const body_t *b = body_of(actor);
+    return b != NULL ? wgf_vec3_make(b->offset[0], b->offset[1], b->offset[2]) : wgf_vec3_make(0.0f, 0.0f, 0.0f);
+}
+
+bool wgf_body_set_mass_offset(wgf_actor_t actor, float x, float y, float z)
+{
+    body_t *b = changing(actor);
+    if (b == NULL) return false;
+    b->mass_offset[0] = x;
+    b->mass_offset[1] = y;
+    b->mass_offset[2] = z;
+    return true;
+}
+
+wgf_vec3_t wgf_body_get_mass_offset(wgf_actor_t actor)
+{
+    const body_t *b = body_of(actor);
+    return b != NULL ? wgf_vec3_make(b->mass_offset[0], b->mass_offset[1], b->mass_offset[2])
+                     : wgf_vec3_make(0.0f, 0.0f, 0.0f);
 }
 
 wgf_vec2_t wgf_body_get_damping(wgf_actor_t actor)
@@ -1057,6 +1123,21 @@ bool wgf_vehicle_set_drive(wgf_actor_t actor, wgf_vehicle_drive_t drive)
     return true;
 }
 
+bool wgf_vehicle_set_anti_roll(wgf_actor_t actor, float stiffness)
+{
+    vehicle_t *v;
+    if (!start() || (v = vehicle_of(actor)) == NULL) return false;
+    v->anti_roll = at_least(stiffness, 0.0f);
+    if (v->index >= 0 && !v->dirty) wgf_physics3d_priv_jolt_vehicle_set_anti_roll(v->index, v->anti_roll);
+    return true;
+}
+
+float wgf_vehicle_get_anti_roll(wgf_actor_t actor)
+{
+    const vehicle_t *v = vehicle_of(actor);
+    return v != NULL ? v->anti_roll : 0.0f;
+}
+
 wgf_vec2_t wgf_vehicle_get_wheel_size(wgf_actor_t actor)
 {
     const vehicle_t *v = vehicle_of(actor);
@@ -1201,7 +1282,10 @@ void wgf_physics_draw_bodies(wgf_color_t color)
         if (b->id == WGF_PHYSICS3D_PRIV_NO_BODY) continue;
         wgf_physics3d_priv_jolt_body_get_pose(b->id, p, q);
         (void)actor;
-        m = wgf_mat4_from_trs(wgf_vec3_make(p[0], p[1], p[2]), wgf_quat_make(q[0], q[1], q[2], q[3]), wgf_vec3_make(1, 1, 1));
+        m = wgf_mat4_mul(wgf_mat4_from_trs(wgf_vec3_make(p[0], p[1], p[2]), wgf_quat_make(q[0], q[1], q[2], q[3]),
+                                           wgf_vec3_make(1, 1, 1)),
+                         wgf_mat4_from_trs(wgf_vec3_make(b->offset[0], b->offset[1], b->offset[2]), wgf_quat_identity(),
+                                           wgf_vec3_make(1, 1, 1))); /* its shape where the offset puts it */
         if (b->shape == WGF_BODY_SHAPE_BOX) {
             const float x = b->size[0] * 0.5f, y = b->size[1] * 0.5f, z = b->size[2] * 0.5f;
             for (i = 0; i < 4; i++) {

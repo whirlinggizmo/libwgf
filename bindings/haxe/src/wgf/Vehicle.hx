@@ -59,6 +59,20 @@ import wgf.impl.Raw;
 		return Raw.wgf_vehicle_set_grip(this, grip);
 
 	/**
+	    Each axle's anti-roll bar (N/m, 0 none, the default): the stiffer, the less the vehicle
+	    leans in a corner; taken at once.
+	**/
+	public inline function setAntiRoll(stiffness:Float):Bool
+		return Raw.wgf_vehicle_set_anti_roll(this, stiffness);
+
+	/**
+	    Each axle's anti-roll bar (N/m, 0 none, the default): the stiffer, the less the vehicle
+	    leans in a corner; taken at once.
+	**/
+	public inline function getAntiRoll():Float
+		return Raw.wgf_vehicle_get_anti_roll(this);
+
+	/**
 	    As set: (radius, width); (travel, stiffness, damping); radians; grip.
 	**/
 	public inline function getWheelSize(?into:wgf.Vec2):wgf.Vec2
@@ -141,36 +155,44 @@ import wgf.impl.Raw;
 
 	/**
 	    How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
-	    it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
-	    (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
-	    air).
+	    it is in (1 the lowest, -1 reverse, 0 neutral), and how hard wheel `index`'s tire works,
+	    as a share of its grip's peak: below 1 gripping (a free-rolling wheel a little above 0,
+	    its small slip angle), 1 at the limit, above it sliding or spinning, up to 10 (traction
+	    control keeps it near 1, tire smoke shows above about 1.5); the larger of along and
+	    across the tire; 0 for a wheel it hasn't, or in the air.
 	**/
 	public inline function getSpeed():Float
 		return Raw.wgf_vehicle_get_speed(this);
 
 	/**
 	    How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
-	    it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
-	    (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
-	    air).
+	    it is in (1 the lowest, -1 reverse, 0 neutral), and how hard wheel `index`'s tire works,
+	    as a share of its grip's peak: below 1 gripping (a free-rolling wheel a little above 0,
+	    its small slip angle), 1 at the limit, above it sliding or spinning, up to 10 (traction
+	    control keeps it near 1, tire smoke shows above about 1.5); the larger of along and
+	    across the tire; 0 for a wheel it hasn't, or in the air.
 	**/
 	public inline function getRpm():Float
 		return Raw.wgf_vehicle_get_rpm(this);
 
 	/**
 	    How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
-	    it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
-	    (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
-	    air).
+	    it is in (1 the lowest, -1 reverse, 0 neutral), and how hard wheel `index`'s tire works,
+	    as a share of its grip's peak: below 1 gripping (a free-rolling wheel a little above 0,
+	    its small slip angle), 1 at the limit, above it sliding or spinning, up to 10 (traction
+	    control keeps it near 1, tire smoke shows above about 1.5); the larger of along and
+	    across the tire; 0 for a wheel it hasn't, or in the air.
 	**/
 	public inline function getGear():Int
 		return Raw.wgf_vehicle_get_gear(this);
 
 	/**
 	    How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
-	    it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
-	    (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
-	    air).
+	    it is in (1 the lowest, -1 reverse, 0 neutral), and how hard wheel `index`'s tire works,
+	    as a share of its grip's peak: below 1 gripping (a free-rolling wheel a little above 0,
+	    its small slip angle), 1 at the limit, above it sliding or spinning, up to 10 (traction
+	    control keeps it near 1, tire smoke shows above about 1.5); the larger of along and
+	    across the tire; 0 for a wheel it hasn't, or in the air.
 	**/
 	public inline function getWheelSlip(index:Int):Float
 		return Raw.wgf_vehicle_get_wheel_slip(this, index);

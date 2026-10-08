@@ -481,6 +481,8 @@ class Main {
 		expect(body.setBounce(0.1) && near(body.getBounce(), 0.1) && body.setDamping(0.1, 0.2) && near(body.getDamping().y, 0.2),
 			"bounce, damping");
 		expect(body.setLayer(4) && body.getLayer() == 4 && body.setMask(3) && body.getMask() == 3, "its layer and mask");
+		expect(body.setOffset(0, 0.5, 0) && near(body.getOffset().y, 0.5) && body.setMassOffset(0, -0.2, 0)
+			&& near(body.getMassOffset().y, -0.2), "its offsets");
 		final car = Actor.create();
 		car.setParent(stage3d);
 		car.setPosition(0, 1, 0);
@@ -498,6 +500,7 @@ class Main {
 		expect(vehicle.setWheels(wheels) && vehicle.getWheelCount() == 4 && vehicle.getWheel(0) == wheels[0], "its wheels");
 		expect(vehicle.setWheelSize(0.34, 0.22) && vehicle.setSuspension(0.3, 1.6, 0.5) && vehicle.setSteering(0.5)
 			&& vehicle.setGrip(1.2), "its wheels' settings");
+		expect(vehicle.setAntiRoll(4000) && near(vehicle.getAntiRoll(), 4000), "its anti-roll bars");
 		expect(near(vehicle.getWheelSize().x, 0.34) && near(vehicle.getSuspension().y, 1.6) && near(vehicle.getSteering(), 0.5)
 			&& near(vehicle.getGrip(), 1.2), "read back");
 		expect(vehicle.setEngine(420, 7000) && vehicle.setGears([3.2, 2.1, 1.5]) && vehicle.setDrive(VehicleDrive.REAR),

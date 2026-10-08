@@ -39,6 +39,38 @@ import wgf.impl.Raw;
 		return Raw.wgf_body_get_size(this, into);
 
 	/**
+	    Where its shape is centered from its actor (a gate's sensor on the road, its actor at
+	    the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
+	    so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
+	**/
+	public inline function setOffset(x:Float, y:Float, z:Float):Bool
+		return Raw.wgf_body_set_offset(this, x, y, z);
+
+	/**
+	    Where its shape is centered from its actor (a gate's sensor on the road, its actor at
+	    the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
+	    so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
+	**/
+	public inline function getOffset(?into:wgf.Vec3):wgf.Vec3
+		return Raw.wgf_body_get_offset(this, into);
+
+	/**
+	    Where its shape is centered from its actor (a gate's sensor on the road, its actor at
+	    the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
+	    so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
+	**/
+	public inline function setMassOffset(x:Float, y:Float, z:Float):Bool
+		return Raw.wgf_body_set_mass_offset(this, x, y, z);
+
+	/**
+	    Where its shape is centered from its actor (a gate's sensor on the road, its actor at
+	    the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
+	    so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
+	**/
+	public inline function getMassOffset(?into:wgf.Vec3):wgf.Vec3
+		return Raw.wgf_body_get_mass_offset(this, into);
+
+	/**
 	    Kilograms, for a dynamic body; 0 (the default) for its shape's at 1000 a cubic meter.
 	**/
 	public inline function setMass(kilograms:Float):Bool

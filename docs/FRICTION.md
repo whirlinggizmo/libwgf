@@ -428,3 +428,95 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Cost:** none
 - **Found by:** the racer's session
 - **Triage:** fine: kept as they are, and kept so (a change that loses one of them is a regression)
+
+Racer (milestone 2), from step 5: the game-developer session's part 2, the car on physics3d (`../libwgf-racer/FRICTION.md`, "Part 2", its entries P1 to P14; the game at d4c0284), 2026-10-07.
+
+### Racer: the car rolled onto its roof, with no center of mass to lower
+
+- **Where:** the car prefab (`racer.scene:10-14`, its wheels at `:36-63`)
+- **Missing:** a center of mass apart from the body's shape's middle, or anti-roll bars: a 1.8 by 0.6 m box's middle sits 0.6 m up on a 1.9 m track, rolling over near 1.6 g, below the grip asked for
+- **Workaround:** geometry: a flat 0.4 m body box, the wheels attached just below its middle on a 2.0 m track, grip 1.5; the model drawn taller than the physics box
+- **Cost:** 30 minutes, three tries
+- **Found by:** the racer's session (its P3)
+- **Triage:** fixed in step 5: `wgf_body_set_mass_offset` (`mass_offset=` in a scene) moves the center of mass off the shape's, and `wgf_vehicle_set_anti_roll` (`anti_roll=`) gives each axle an anti-roll bar, taken at once
+
+### Racer: wheel slip read 1/60 rolling and 1 driving
+
+- **Where:** the game's traction control, dropped
+- **Missing:** a slip a game can steer by: the reading was Jolt's slip ratio over 0.2 and slip angle over 20 degrees, clamped at 1, so a rolling wheel's small slip angle read 1/60 and any spin past 0.2 read exactly 1, flipping from tick to tick
+- **Workaround:** no traction control; torque and speed-narrowed steering keep the car pointed
+- **Cost:** 25 minutes
+- **Found by:** the racer's session (its P4)
+- **Triage:** fixed in step 5: the slip is measured as Jolt's tire model measures it but against at least 1 m/s of ground speed (from rest Jolt's ratio divides by nearly nothing), and given as a share of the tires' grip peak, unclamped to 10: below 1 gripping, 1 at the limit, above it sliding; `wgf_vehicle.h` says so
+
+### Racer: a vehicle on keys needs driver aids
+
+- **Where:** the game's `Drive.hx:16, 57-61`: steering lock that narrows with speed
+- **Missing:** a steering that takes a speed curve
+- **Workaround:** the lock narrows as 1/speed² above 19 m/s, in the game
+- **Cost:** 20 minutes
+- **Found by:** the racer's session (its P5)
+- **Triage:** fine: HISTORY.md, "Milestone 2, step 5, the racer's friction": an arcade feel is the game's to tune, its few lines on the vehicle's input, as the brief expected
+
+### Racer: grass is ice, not drag, and settings remake a body at rest
+
+- **Where:** the game's grass (`Drive.hx:51-56`); `wgf_body.h`'s "made again ... at rest"
+- **Missing:** a drag on a surface: friction takes grip but not speed, and a body's settings changed during a race remade it at rest, ruling out damping as drag, or any live tuning
+- **Workaround:** grass friction 0.7, and a game-side drag on the vehicle's input while on grass
+- **Cost:** 15 minutes; live tuning designed around, never tried
+- **Found by:** the racer's session (its P6 and P13)
+- **Triage:** fixed in step 5: a body's friction, bounce, and damping take effect at once, its motion kept, so a car's damping can be its drag on grass; its other settings still remake it at the next tick, and a vehicle's anti-roll is taken at once
+
+### Racer: a sensor centered on its actor
+
+- **Where:** the checkpoints (`Main.hx:99`), spawned at y = 2 to sit on the road, their posts offset by -2
+- **Missing:** a shape off its actor's origin
+- **Workaround:** the actor raised, its parts lowered
+- **Cost:** 5 minutes
+- **Found by:** the racer's session (its P8)
+- **Triage:** fixed in step 5: `wgf_body_set_offset` (`offset=`) centers the shape off its actor
+
+### Racer: `wgf screenshot --autopilot` stopped at the first failed expectation
+
+- **Where:** `tools/wgf/game.py`'s page runner
+- **Missing:** a run that goes on past a failed `expect`: the runner ended at any line starting "wgf_autopilot: FAIL", a failed expectation's as well as the result's, and said the page never reached the frame
+- **Workaround:** the `expect` lines stripped
+- **Cost:** 15 minutes
+- **Found by:** the racer's session (its P9)
+- **Triage:** fixed in step 5: the runner ends at the run's result line alone ("PASS (" or "FAIL ("), and check_cli screenshots past a failed expectation
+
+### Racer: the vehicle's scene keys, their units, and what physics costs, undocumented
+
+- **Where:** BUILDING.md's scene lines (one sentence for `body` and `vehicle`); the template's 400 KB web budget against an export of 485.6 KB with Jolt; a mesh body's models' scale
+- **Missing:** the keys in the table with their units (stiffness in Hz, suspension as travel in m), what physics adds to a page, and that a convex or mesh body reads each model's transform, scale included
+- **Workaround:** the C example read for the keys; the budget raised to 550 KB
+- **Cost:** minutes
+- **Found by:** the racer's session (its P2, P7, P10, P12)
+- **Triage:** fixed in step 5: BUILDING.md's components table has `body` and `vehicle` with their units and says how a mesh body reads its models; the template's README says what physics costs; `wgf_body.h` says a convex or mesh shape takes each model's scale
+
+### Racer: the debug view's lines dashed on coplanar asphalt
+
+- **Where:** the debug view (B) over the road
+- **Missing:** lines drawn over the scene rather than depth-tested against it
+- **Workaround:** none needed
+- **Cost:** none
+- **Found by:** the racer's session (its P7)
+- **Triage:** fine: HISTORY.md, "Milestone 2, step 5, the racer's friction": the 3D drawing's lines are depth-tested so a view of bodies shows what is in front; outlines on a surface fight with it, as any debug line does
+
+### Racer: what worked on physics (five notes)
+
+- **Where:** the racer's session's P1, P2, P7, P11, P12
+- **Missing:** nothing. Five of part 1's frictions were fixed upstream (about 20 lines deleted); the sketch's physics lines mapped onto the real keys nearly one for one; a road of 500-odd scaled planes as one static mesh body just worked; a lap recorded on the debug desktop build replayed with every checkpoint on its frame on hxcpp, wasm in a browser, and both release exports, three laps too; the steering's sign matches the actions, and `reset` after `setTransform` put the car on the grid at rest
+- **Workaround:** none
+- **Cost:** none
+- **Found by:** the racer's session
+- **Triage:** fine: kept as they are, and kept so (a change that loses one of them is a regression)
+
+### Racer: tuning a car, and teaching the driver tool to drive one
+
+- **Where:** the game's tuning and its `tools/drive.py` (a rate controller, grip-limited corners, a trace)
+- **Missing:** nothing in libwgf
+- **Workaround:** none
+- **Cost:** about 70 minutes
+- **Found by:** the racer's session (its P14)
+- **Triage:** fine: the game's, as expected; recording with no one there stays in ROADMAP's "Later" on its condition

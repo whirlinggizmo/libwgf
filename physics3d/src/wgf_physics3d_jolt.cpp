@@ -45,6 +45,8 @@ constexpr uint MAX_CONTACTS = 8192;
 constexpr int MAX_VEHICLES = 64;
 constexpr uint32 STATIC_GROUP = 0x8000; // the group bit a static body has, so movers' masks reach statics
 constexpr uint32 USER_BITS = 0x7FFF;
+constexpr float PEAK_ALONG = 0.06f;                 // the tires' grip peaks: their curves' (below)
+constexpr float PEAK_ACROSS = 3.0f * JPH_PI / 180.0f;
 
 // Two broadphase trees, the static bodies' and the moving ones', as Jolt advises.
 constexpr BroadPhaseLayer NON_MOVING(0);
@@ -210,6 +212,16 @@ RefConst<Shape> MakeShape(const wgf_physics3d_priv_body_desc_t &d)
     return nullptr;
 }
 
+// The shape moved off the body's origin and its mass off the shape's own center, as asked.
+RefConst<Shape> Placed(RefConst<Shape> shape, const wgf_physics3d_priv_body_desc_t &d)
+{
+    if (shape == nullptr) return nullptr;
+    const Vec3 offset = V(d.offset), mass_offset = V(d.mass_offset);
+    if (offset != Vec3::sZero()) shape = new RotatedTranslatedShape(offset, Quat::sIdentity(), shape);
+    if (mass_offset != Vec3::sZero()) shape = new OffsetCenterOfMassShape(shape, mass_offset);
+    return shape;
+}
+
 ObjectLayer LayerOf(const wgf_physics3d_priv_body_desc_t &d)
 {
     uint32 group = d.layer & USER_BITS, mask = d.mask & USER_BITS;
@@ -280,7 +292,7 @@ void wgf_physics3d_priv_jolt_set_gravity(float gx, float gy, float gz)
 uint32_t wgf_physics3d_priv_jolt_body_create(const wgf_physics3d_priv_body_desc_t *d)
 {
     if (world == nullptr || d == nullptr) return WGF_PHYSICS3D_PRIV_NO_BODY;
-    RefConst<Shape> shape = MakeShape(*d);
+    RefConst<Shape> shape = Placed(MakeShape(*d), *d);
     if (shape == nullptr) return WGF_PHYSICS3D_PRIV_NO_BODY;
     const EMotionType motion = d->motion == WGF_PHYSICS3D_PRIV_DYNAMIC     ? EMotionType::Dynamic
                                : d->motion == WGF_PHYSICS3D_PRIV_KINEMATIC ? EMotionType::Kinematic
@@ -364,6 +376,21 @@ void wgf_physics3d_priv_jolt_body_add_impulse(uint32_t body, const float impulse
     world->system.GetBodyInterface().AddImpulse(BodyID(body), V(impulse));
 }
 
+void wgf_physics3d_priv_jolt_body_set_material(uint32_t body, float friction, float restitution, float linear_damping,
+                                              float angular_damping)
+{
+    if (world == nullptr) return;
+    BodyLockWrite lock(world->system.GetBodyLockInterface(), BodyID(body));
+    if (!lock.Succeeded()) return;
+    Body &b = lock.GetBody();
+    b.SetFriction(friction);
+    b.SetRestitution(restitution);
+    if (MotionProperties *motion = b.GetMotionPropertiesUnchecked(); motion != nullptr && !b.IsStatic()) {
+        motion->SetLinearDamping(linear_damping);
+        motion->SetAngularDamping(angular_damping);
+    }
+}
+
 bool wgf_physics3d_priv_jolt_body_is_active(uint32_t body)
 {
     return world != nullptr && world->system.GetBodyInterface().IsActive(BodyID(body));
@@ -404,11 +431,11 @@ int wgf_physics3d_priv_jolt_vehicle_create(uint32_t body, const wgf_physics3d_pr
     LinearCurve longitudinal, lateral; // Jolt's tire curves, scaled by the grip
     longitudinal.Reserve(3);
     longitudinal.AddPoint(0.0f, 0.0f);
-    longitudinal.AddPoint(0.06f, 1.2f * d->grip);
+    longitudinal.AddPoint(PEAK_ALONG, 1.2f * d->grip);
     longitudinal.AddPoint(0.2f, 1.0f * d->grip);
     lateral.Reserve(3);
     lateral.AddPoint(0.0f, 0.0f);
-    lateral.AddPoint(3.0f, 1.2f * d->grip);
+    lateral.AddPoint(3.0f, 1.2f * d->grip); // degrees: PEAK_ACROSS
     lateral.AddPoint(20.0f, 1.0f * d->grip);
     for (int i = 0; i < d->wheel_count; i++) {
         WheelSettingsWV *w = new WheelSettingsWV;
@@ -443,6 +470,13 @@ int wgf_physics3d_priv_jolt_vehicle_create(uint32_t body, const wgf_physics3d_pr
         differential.mLeftWheel = axle * 2;
         differential.mRightWheel = axle * 2 + 1;
         controller->mDifferentials.push_back(differential);
+    }
+    for (int axle = 0; d->anti_roll > 0.0f && axle * 2 + 1 < d->wheel_count; axle++) {
+        VehicleAntiRollBar bar;
+        bar.mLeftWheel = axle * 2;
+        bar.mRightWheel = axle * 2 + 1;
+        bar.mStiffness = d->anti_roll;
+        settings.mAntiRollBars.push_back(bar);
     }
     const float share = controller->mDifferentials.empty() ? 1.0f : 1.0f / float(controller->mDifferentials.size());
     for (VehicleDifferentialSettings &differential : controller->mDifferentials) differential.mEngineTorqueRatio = share;
@@ -482,14 +516,40 @@ int wgf_physics3d_priv_jolt_vehicle_get_gear(int vehicle)
     return controller != nullptr ? controller->GetTransmission().GetCurrentGear() : 0;
 }
 
+void wgf_physics3d_priv_jolt_vehicle_set_anti_roll(int vehicle, float stiffness)
+{
+    if (ControllerOf(vehicle) == nullptr) return;
+    VehicleAntiRollBars &bars = world->vehicles[vehicle]->GetAntiRollBars();
+    const int wheels = int(world->vehicles[vehicle]->GetWheels().size());
+    bars.clear();
+    for (int axle = 0; stiffness > 0.0f && axle * 2 + 1 < wheels; axle++) {
+        VehicleAntiRollBar bar;
+        bar.mLeftWheel = axle * 2;
+        bar.mRightWheel = axle * 2 + 1;
+        bar.mStiffness = stiffness;
+        bars.push_back(bar);
+    }
+}
+
 float wgf_physics3d_priv_jolt_vehicle_get_slip(int vehicle, int wheel)
 {
     if (ControllerOf(vehicle) == nullptr || wheel < 0 || wheel >= int(world->vehicles[vehicle]->GetWheels().size())) return 0.0f;
     const WheelWV *w = static_cast<const WheelWV *>(world->vehicles[vehicle]->GetWheel(wheel));
     if (!w->HasContact()) return 0.0f;
-    // the larger of the two, each as a share of where the tire lets go
-    const float along = std::abs(w->mLongitudinalSlip) / 0.2f, across = std::abs(w->mLateralSlip) / DegreesToRadians(20.0f);
-    return std::min(std::max(along, across), 1.0f);
+    // as Jolt's tire model measures it (the ground's speed at the contact against the
+    // wheel's rim), but against at least 1 m/s, so a car pulling away from rest reads what
+    // its tires do rather than a ratio of near nothing; each as a share of where its grip
+    // peaks (the tire curves made with the vehicle: a slip ratio of 0.06 along, 3 degrees
+    // across): a free-rolling wheel reads a little above 0, a spinning one well above 1
+    const Body *body = world->vehicles[vehicle]->GetVehicleBody();
+    Vec3 relative = body->GetPointVelocity(w->GetContactPosition()) - w->GetContactPointVelocity();
+    relative -= w->GetContactNormal().Dot(relative) * w->GetContactNormal();
+    const float ground = relative.Dot(w->GetContactLongitudinal()), side = relative.Dot(w->GetContactLateral());
+    const float rim = w->GetAngularVelocity() * w->GetSettings()->mRadius;
+    const float speed = std::max(std::abs(ground), 1.0f);
+    const float along = std::abs(rim - ground) / speed / PEAK_ALONG;
+    const float across = std::atan2(std::abs(side), speed) / PEAK_ACROSS;
+    return std::min(std::max(along, across), 10.0f);
 }
 
 void wgf_physics3d_priv_jolt_vehicle_get_wheel(int vehicle, int wheel, float position[3], float rotation[4])

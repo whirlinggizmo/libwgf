@@ -259,6 +259,14 @@ export const Body = Object.freeze({
     getShape: raw.wgf_body_get_shape,
     // wgf: call wgf_body_get_size
     getSize: raw.wgf_body_get_size,
+    // wgf: call wgf_body_set_offset
+    setOffset: raw.wgf_body_set_offset,
+    // wgf: call wgf_body_get_offset
+    getOffset: raw.wgf_body_get_offset,
+    // wgf: call wgf_body_set_mass_offset
+    setMassOffset: raw.wgf_body_set_mass_offset,
+    // wgf: call wgf_body_get_mass_offset
+    getMassOffset: raw.wgf_body_get_mass_offset,
     // wgf: call wgf_body_set_mass
     setMass: raw.wgf_body_set_mass,
     // wgf: call wgf_body_get_mass
@@ -1292,6 +1300,10 @@ export const Vehicle = Object.freeze({
     setSteering: raw.wgf_vehicle_set_steering,
     // wgf: call wgf_vehicle_set_grip
     setGrip: raw.wgf_vehicle_set_grip,
+    // wgf: call wgf_vehicle_set_anti_roll
+    setAntiRoll: raw.wgf_vehicle_set_anti_roll,
+    // wgf: call wgf_vehicle_get_anti_roll
+    getAntiRoll: raw.wgf_vehicle_get_anti_roll,
     // wgf: call wgf_vehicle_get_wheel_size
     getWheelSize: raw.wgf_vehicle_get_wheel_size,
     // wgf: call wgf_vehicle_get_suspension

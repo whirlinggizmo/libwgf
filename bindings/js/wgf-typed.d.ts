@@ -886,6 +886,30 @@ export declare const Body: {
      */
     readonly getSize: typeof raw.wgf_body_get_size;
     /**
+     * Where its shape is centered from its actor (a gate's sensor on the road, its actor at
+     * the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
+     * so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
+     */
+    readonly setOffset: typeof raw.wgf_body_set_offset;
+    /**
+     * Where its shape is centered from its actor (a gate's sensor on the road, its actor at
+     * the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
+     * so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
+     */
+    readonly getOffset: typeof raw.wgf_body_get_offset;
+    /**
+     * Where its shape is centered from its actor (a gate's sensor on the road, its actor at
+     * the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
+     * so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
+     */
+    readonly setMassOffset: typeof raw.wgf_body_set_mass_offset;
+    /**
+     * Where its shape is centered from its actor (a gate's sensor on the road, its actor at
+     * the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
+     * so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
+     */
+    readonly getMassOffset: typeof raw.wgf_body_get_mass_offset;
+    /**
      * Kilograms, for a dynamic body; 0 (the default) for its shape's at 1000 a cubic meter.
      */
     readonly setMass: typeof raw.wgf_body_set_mass;
@@ -3484,6 +3508,16 @@ export declare const Vehicle: {
      */
     readonly setGrip: typeof raw.wgf_vehicle_set_grip;
     /**
+     * Each axle's anti-roll bar (N/m, 0 none, the default): the stiffer, the less the vehicle
+     * leans in a corner; taken at once.
+     */
+    readonly setAntiRoll: typeof raw.wgf_vehicle_set_anti_roll;
+    /**
+     * Each axle's anti-roll bar (N/m, 0 none, the default): the stiffer, the less the vehicle
+     * leans in a corner; taken at once.
+     */
+    readonly getAntiRoll: typeof raw.wgf_vehicle_get_anti_roll;
+    /**
      * As set: (radius, width); (travel, stiffness, damping); radians; grip.
      */
     readonly getWheelSize: typeof raw.wgf_vehicle_get_wheel_size;
@@ -3542,30 +3576,38 @@ export declare const Vehicle: {
     readonly setInput: typeof raw.wgf_vehicle_set_input;
     /**
      * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
-     * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
-     * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
-     * air).
+     * it is in (1 the lowest, -1 reverse, 0 neutral), and how hard wheel `index`'s tire works,
+     * as a share of its grip's peak: below 1 gripping (a free-rolling wheel a little above 0,
+     * its small slip angle), 1 at the limit, above it sliding or spinning, up to 10 (traction
+     * control keeps it near 1, tire smoke shows above about 1.5); the larger of along and
+     * across the tire; 0 for a wheel it hasn't, or in the air.
      */
     readonly getSpeed: typeof raw.wgf_vehicle_get_speed;
     /**
      * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
-     * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
-     * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
-     * air).
+     * it is in (1 the lowest, -1 reverse, 0 neutral), and how hard wheel `index`'s tire works,
+     * as a share of its grip's peak: below 1 gripping (a free-rolling wheel a little above 0,
+     * its small slip angle), 1 at the limit, above it sliding or spinning, up to 10 (traction
+     * control keeps it near 1, tire smoke shows above about 1.5); the larger of along and
+     * across the tire; 0 for a wheel it hasn't, or in the air.
      */
     readonly getRpm: typeof raw.wgf_vehicle_get_rpm;
     /**
      * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
-     * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
-     * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
-     * air).
+     * it is in (1 the lowest, -1 reverse, 0 neutral), and how hard wheel `index`'s tire works,
+     * as a share of its grip's peak: below 1 gripping (a free-rolling wheel a little above 0,
+     * its small slip angle), 1 at the limit, above it sliding or spinning, up to 10 (traction
+     * control keeps it near 1, tire smoke shows above about 1.5); the larger of along and
+     * across the tire; 0 for a wheel it hasn't, or in the air.
      */
     readonly getGear: typeof raw.wgf_vehicle_get_gear;
     /**
      * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
-     * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
-     * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
-     * air).
+     * it is in (1 the lowest, -1 reverse, 0 neutral), and how hard wheel `index`'s tire works,
+     * as a share of its grip's peak: below 1 gripping (a free-rolling wheel a little above 0,
+     * its small slip angle), 1 at the limit, above it sliding or spinning, up to 10 (traction
+     * control keeps it near 1, tire smoke shows above about 1.5); the larger of along and
+     * across the tire; 0 for a wheel it hasn't, or in the air.
      */
     readonly getWheelSlip: typeof raw.wgf_vehicle_get_wheel_slip;
     /**

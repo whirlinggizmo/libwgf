@@ -216,14 +216,20 @@ def step_screenshot(game):
     code, out = wgf(game, 'screenshot', '--autopilot', 'autopilot/fly.autopilot', '--out', str(flown), '--no-build')
     if code != 0 or not flown.exists() or 'frame 90 saved' not in out:
         return problem('wgf screenshot --autopilot: no PNG at the autopilot\'s end (frame 90)', out)
+    broken = game / 'autopilot' / 'broken.autopilot'  # an expectation failed on the way: the run goes on
+    broken.write_text('wgf-autopilot 1\nat 10 expect frames > 1000\nat 90 end\n')
+    flown.unlink()
+    code, out = wgf(game, 'screenshot', '--autopilot', 'autopilot/broken.autopilot', '--out', str(flown), '--no-build')
+    if not flown.exists() or 'frame 90 saved' not in out:
+        return problem('wgf screenshot --autopilot: a failed expectation on the way stopped the run before frame 90', out)
     own = game / 'autopilot' / 'own.autopilot'  # its own screenshot line, earlier: --frame must win
     own.write_text('wgf-autopilot 1\nat 20 screenshot early\nat 40 expect frames >= 40\nat 90 end\n')
     code, out = wgf(game, 'screenshot', '--autopilot', 'autopilot/own.autopilot', '--frame', '60', '--out',
                     str(flown), '--no-build')
     if code != 0 or 'frame 60 saved' not in out or 'left out' not in out:
         return problem('wgf screenshot --frame: the autopilot\'s own screenshot line won, or wasn\'t said', out)
-    print(f'check_cli: screenshot: frame 30, {shot.stat().st_size} bytes of PNG; frame 90, flown there; and frame '
-          '60 over the autopilot\'s own screenshot line, said')
+    print(f'check_cli: screenshot: frame 30, {shot.stat().st_size} bytes of PNG; frame 90, flown there, a failed '
+          'expectation on the way or not; and frame 60 over the autopilot\'s own screenshot line, said')
     return True
 
 

@@ -220,8 +220,6 @@ model      a generated mesh (wgf_mesh.h), its create call's parameters in order:
            as it is drawn on one: before, a plain actor, warned)
 ```
 
-`body` and `vehicle` are physics' (`wgf_body.h`, `wgf_vehicle.h`), refused until the program has started physics (`wgf_physics_set_gravity`): `body type=static|dynamic|kinematic|sensor shape=box|sphere|capsule|convex|mesh size=x,y,z radius= height= mass= friction= bounce= damping=linear,angular layer= mask= velocity=x,y,z spin=x,y,z`, and `vehicle wheels=<child>,<child>,... radius= width= suspension= stiffness= damping= steering= grip= engine_torque= max_rpm= gears=<ratio>,... drive=front|rear|all`, its wheels named among the actor's children, in pairs, front first.
-
 and the transform and the components:
 
 ```
@@ -232,7 +230,18 @@ lifetime   seconds=s
 collider   radius=r  layer=bits  mask=bits  enabled=true|false
 voice      sound="path"  streamed=true|false  volume=v  pitch=p  pan=p  loop=true|false
            play=true|false (played as it is made)
+body       type=static|dynamic|kinematic|sensor  shape=box|sphere|capsule|convex|mesh
+           size=x,y,z (a box's, m)  radius=r  height=h (a capsule's, end to end)
+           offset=x,y,z (its shape's center from the actor)  mass=kg (0: its shape's)
+           mass_offset=x,y,z (its center of mass from its shape's)  friction=f  bounce=b
+           damping=linear,angular  layer=bits  mask=bits (15 each)  velocity=x,y,z  spin=x,y,z
+vehicle    wheels=<child>,<child>,... (its children, left and right pairs, front first)
+           radius=m  width=m  suspension=m (travel)  stiffness=Hz  damping=d (1 just enough)
+           steering=radians  grip=g (1 a road tire's)  anti_roll=N/m  engine_torque=Nm
+           max_rpm=rpm  gears=<ratio>,... (forward, lowest first)  drive=front|rear|all
 ```
+
+`body` and `vehicle` are physics' (`wgf_body.h`, `wgf_vehicle.h`): refused until the program has started physics (`wgf_physics_set_gravity`), so a game sets the gravity before it loads such a scene. A convex or mesh body is read from the models at and under its actor, each one's transform, scale included.
 
 For example, a ship with its flame, a rock prefab and a smaller one from it, and a ship placed:
 

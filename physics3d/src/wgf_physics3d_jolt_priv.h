@@ -41,6 +41,8 @@ typedef struct wgf_physics3d_priv_body_desc_t {
     int index_count;
     float position[3];
     float rotation[4]; /* x, y, z, w */
+    float offset[3];      /* the shape's center from the body's origin */
+    float mass_offset[3]; /* its center of mass from the shape's own */
     float mass;        /* kg; 0 for the shape's own from a density of 1000 */
     float friction, restitution, linear_damping, angular_damping;
     uint32_t layer, mask; /* 15 bits each: a pair meets when each one's layer is in the other's mask */
@@ -63,6 +65,9 @@ void wgf_physics3d_priv_jolt_body_move(uint32_t body, const float position[3], c
 void wgf_physics3d_priv_jolt_body_get_velocity(uint32_t body, float linear[3], float angular[3]);
 void wgf_physics3d_priv_jolt_body_set_velocity(uint32_t body, const float linear[3], const float angular[3]);
 void wgf_physics3d_priv_jolt_body_add_impulse(uint32_t body, const float impulse[3]);
+/* Its friction, bounce, and damping changed in place, its motion kept. */
+void wgf_physics3d_priv_jolt_body_set_material(uint32_t body, float friction, float restitution, float linear_damping,
+                                              float angular_damping);
 bool wgf_physics3d_priv_jolt_body_is_active(uint32_t body);
 
 /* One step of `dt`, then the sensors' overlaps as they changed in it: each a sensor and the
@@ -84,6 +89,7 @@ typedef struct wgf_physics3d_priv_vehicle_desc_t {
     float suspension, frequency, damping; /* travel (m), spring (Hz), damping ratio */
     float max_steer;                      /* radians */
     float grip;                           /* tire friction, 1 normal */
+    float anti_roll;                      /* each axle's anti-roll bar, N/m; 0 none */
     float engine_torque, max_rpm;
     float gears[8];
     int gear_count;
@@ -96,7 +102,9 @@ void wgf_physics3d_priv_jolt_vehicle_destroy(int vehicle);
 void wgf_physics3d_priv_jolt_vehicle_set_input(int vehicle, float forward, float right, float brake, float hand_brake);
 float wgf_physics3d_priv_jolt_vehicle_get_rpm(int vehicle);
 int wgf_physics3d_priv_jolt_vehicle_get_gear(int vehicle);
-/* A wheel: how far its tire slides (0 gripping, about 1 sliding), and its transform in the
+void wgf_physics3d_priv_jolt_vehicle_set_anti_roll(int vehicle, float stiffness);
+/* A wheel: how hard its tire works, as a share of its grip's peak (below 1 gripping, 1 at
+ * its limit, above it sliding; the larger of along and across), and its transform in the
  * body's space (position, and rotation x, y, z, w: steered and spun). */
 float wgf_physics3d_priv_jolt_vehicle_get_slip(int vehicle, int wheel);
 void wgf_physics3d_priv_jolt_vehicle_get_wheel(int vehicle, int wheel, float position[3], float rotation[4]);

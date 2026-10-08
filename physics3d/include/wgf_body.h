@@ -15,14 +15,17 @@ extern "C" {
 /* A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
  * (wgf_physics.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
  * its size (1000 kg a cubic meter), friction 0.5, no bounce, damping of 0.05, layer 1,
- * mask every layer. Its settings take effect at the next tick, when the world's body is
- * made again from them; set them together, before the first tick, as a scene does.
+ * mask every layer. Friction, bounce, and damping take effect at once, its motion kept (a
+ * car's drag on grass, set as it goes); its other settings take effect at the next tick,
+ * when the world's body is made again from them, at rest: set them together, before the
+ * first tick, as a scene does.
  *
  * The actor's transform is the body's: where the world moves a dynamic body, each tick,
  * the actor is set; a transform the program sets puts the body there (a static or
  * dynamic one jumps; a kinematic one is moved there over the tick, pushing what it meets).
- * A body's shape isn't scaled with its actor. Its place is in its 3D stage's space, the
- * actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
+ * A box's, sphere's, or capsule's size isn't scaled with its actor; a convex or mesh shape
+ * is read from each model's place under the actor, scale included. Its place is in its 3D
+ * stage's space, the actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
  * body. */
 typedef enum wgf_body_type_t {
     WGF_BODY_TYPE_STATIC = 0,    /* never moves: the track, the ground */
@@ -49,6 +52,14 @@ WGF_API wgf_body_type_t wgf_body_get_type(wgf_actor_t actor);
 WGF_API bool wgf_body_set_shape(wgf_actor_t actor, wgf_body_shape_t shape, float x, float y, float z);
 WGF_API wgf_body_shape_t wgf_body_get_shape(wgf_actor_t actor);
 WGF_API wgf_vec3_t wgf_body_get_size(wgf_actor_t actor);
+
+/* Where its shape is centered from its actor (a gate's sensor on the road, its actor at
+ * the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
+ * so it doesn't roll): each 0, 0, 0 by default, in the actor's space. */
+WGF_API bool wgf_body_set_offset(wgf_actor_t actor, float x, float y, float z);
+WGF_API wgf_vec3_t wgf_body_get_offset(wgf_actor_t actor);
+WGF_API bool wgf_body_set_mass_offset(wgf_actor_t actor, float x, float y, float z);
+WGF_API wgf_vec3_t wgf_body_get_mass_offset(wgf_actor_t actor);
 
 /* Kilograms, for a dynamic body; 0 (the default) for its shape's at 1000 a cubic meter. */
 WGF_API bool wgf_body_set_mass(wgf_actor_t actor, float kilograms);

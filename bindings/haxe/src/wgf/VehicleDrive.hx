@@ -14,7 +14,8 @@ package wgf;
     Jolt's gear ratios, rear drive, wheels of 0.3 m by 0.2 m, 0.3 m of spring travel at 1.5
     Hz damped by half, 0.5 radians of steering, grip 1. Its settings take effect at the next
     tick, when it is made again from them (at rest), as a body's are; reset puts it at rest
-    where it is. The calls are false (or 0) for an actor without a vehicle.
+    where it is (its anti-roll bars take a change at once). The calls are false (or 0) for
+    an actor without a vehicle.
 **/
 enum abstract VehicleDrive(Int) from Int to Int {
 	var FRONT = 0;

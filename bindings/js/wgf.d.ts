@@ -658,14 +658,17 @@ export type wgf_world_event_t = typeof WGF_WORLD_EVENT_NONE | typeof WGF_WORLD_E
  * A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
  * (wgf_physics.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
  * its size (1000 kg a cubic meter), friction 0.5, no bounce, damping of 0.05, layer 1,
- * mask every layer. Its settings take effect at the next tick, when the world's body is
- * made again from them; set them together, before the first tick, as a scene does.
+ * mask every layer. Friction, bounce, and damping take effect at once, its motion kept (a
+ * car's drag on grass, set as it goes); its other settings take effect at the next tick,
+ * when the world's body is made again from them, at rest: set them together, before the
+ * first tick, as a scene does.
  *
  * The actor's transform is the body's: where the world moves a dynamic body, each tick,
  * the actor is set; a transform the program sets puts the body there (a static or
  * dynamic one jumps; a kinematic one is moved there over the tick, pushing what it meets).
- * A body's shape isn't scaled with its actor. Its place is in its 3D stage's space, the
- * actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
+ * A box's, sphere's, or capsule's size isn't scaled with its actor; a convex or mesh shape
+ * is read from each model's place under the actor, scale included. Its place is in its 3D
+ * stage's space, the actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
  * body.
  */
 export declare const WGF_BODY_TYPE_STATIC: 0;
@@ -694,7 +697,8 @@ export type wgf_body_shape_t = typeof WGF_BODY_SHAPE_BOX | typeof WGF_BODY_SHAPE
  * Jolt's gear ratios, rear drive, wheels of 0.3 m by 0.2 m, 0.3 m of spring travel at 1.5
  * Hz damped by half, 0.5 radians of steering, grip 1. Its settings take effect at the next
  * tick, when it is made again from them (at rest), as a body's are; reset puts it at rest
- * where it is. The calls are false (or 0) for an actor without a vehicle.
+ * where it is (its anti-roll bars take a change at once). The calls are false (or 0) for
+ * an actor without a vehicle.
  */
 export declare const WGF_VEHICLE_DRIVE_FRONT: 0;
 export declare const WGF_VEHICLE_DRIVE_REAR: 1;
@@ -4661,6 +4665,36 @@ export declare function wgf_body_get_size<T extends number[] | Float32Array | Fl
 export declare function wgf_body_get_size(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
 
 /**
+ * Where its shape is centered from its actor (a gate's sensor on the road, its actor at
+ * the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
+ * so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
+ */
+export declare function wgf_body_set_offset(actor: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
+
+/**
+ * Where its shape is centered from its actor (a gate's sensor on the road, its actor at
+ * the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
+ * so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
+ */
+export declare function wgf_body_get_offset<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_body_get_offset(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * Where its shape is centered from its actor (a gate's sensor on the road, its actor at
+ * the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
+ * so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
+ */
+export declare function wgf_body_set_mass_offset(actor: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
+
+/**
+ * Where its shape is centered from its actor (a gate's sensor on the road, its actor at
+ * the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
+ * so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
+ */
+export declare function wgf_body_get_mass_offset<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_body_get_mass_offset(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
  * Kilograms, for a dynamic body; 0 (the default) for its shape's at 1000 a cubic meter.
  */
 export declare function wgf_body_set_mass(actor: wgf_actor_t | 0, kilograms: number): boolean;
@@ -4839,6 +4873,18 @@ export declare function wgf_vehicle_set_steering(actor: wgf_actor_t | 0, radians
 export declare function wgf_vehicle_set_grip(actor: wgf_actor_t | 0, grip: number): boolean;
 
 /**
+ * Each axle's anti-roll bar (N/m, 0 none, the default): the stiffer, the less the vehicle
+ * leans in a corner; taken at once.
+ */
+export declare function wgf_vehicle_set_anti_roll(actor: wgf_actor_t | 0, stiffness: number): boolean;
+
+/**
+ * Each axle's anti-roll bar (N/m, 0 none, the default): the stiffer, the less the vehicle
+ * leans in a corner; taken at once.
+ */
+export declare function wgf_vehicle_get_anti_roll(actor: wgf_actor_t | 0): number;
+
+/**
  * As set: (radius, width); (travel, stiffness, damping); radians; grip.
  */
 export declare function wgf_vehicle_get_wheel_size<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
@@ -4912,33 +4958,41 @@ export declare function wgf_vehicle_set_input(actor: wgf_actor_t | 0, throttle: 
 
 /**
  * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
- * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
- * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
- * air).
+ * it is in (1 the lowest, -1 reverse, 0 neutral), and how hard wheel `index`'s tire works,
+ * as a share of its grip's peak: below 1 gripping (a free-rolling wheel a little above 0,
+ * its small slip angle), 1 at the limit, above it sliding or spinning, up to 10 (traction
+ * control keeps it near 1, tire smoke shows above about 1.5); the larger of along and
+ * across the tire; 0 for a wheel it hasn't, or in the air.
  */
 export declare function wgf_vehicle_get_speed(actor: wgf_actor_t | 0): number;
 
 /**
  * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
- * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
- * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
- * air).
+ * it is in (1 the lowest, -1 reverse, 0 neutral), and how hard wheel `index`'s tire works,
+ * as a share of its grip's peak: below 1 gripping (a free-rolling wheel a little above 0,
+ * its small slip angle), 1 at the limit, above it sliding or spinning, up to 10 (traction
+ * control keeps it near 1, tire smoke shows above about 1.5); the larger of along and
+ * across the tire; 0 for a wheel it hasn't, or in the air.
  */
 export declare function wgf_vehicle_get_rpm(actor: wgf_actor_t | 0): number;
 
 /**
  * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
- * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
- * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
- * air).
+ * it is in (1 the lowest, -1 reverse, 0 neutral), and how hard wheel `index`'s tire works,
+ * as a share of its grip's peak: below 1 gripping (a free-rolling wheel a little above 0,
+ * its small slip angle), 1 at the limit, above it sliding or spinning, up to 10 (traction
+ * control keeps it near 1, tire smoke shows above about 1.5); the larger of along and
+ * across the tire; 0 for a wheel it hasn't, or in the air.
  */
 export declare function wgf_vehicle_get_gear(actor: wgf_actor_t | 0): number;
 
 /**
  * How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
- * it is in (1 the lowest, -1 reverse, 0 neutral), and how far wheel `index`'s tire slides
- * (0 gripping, 1 sliding: tire smoke above about 0.3; 0 for a wheel it hasn't, or in the
- * air).
+ * it is in (1 the lowest, -1 reverse, 0 neutral), and how hard wheel `index`'s tire works,
+ * as a share of its grip's peak: below 1 gripping (a free-rolling wheel a little above 0,
+ * its small slip angle), 1 at the limit, above it sliding or spinning, up to 10 (traction
+ * control keeps it near 1, tire smoke shows above about 1.5); the larger of along and
+ * across the tire; 0 for a wheel it hasn't, or in the air.
  */
 export declare function wgf_vehicle_get_wheel_slip(actor: wgf_actor_t | 0, index: number): number;
 

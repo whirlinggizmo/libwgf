@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "actor/wgf_gfx_actor_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "wgf_actor.h"
 #include "wgf_body.h"
@@ -167,6 +168,30 @@ int main(void)
     }
     expect(told(WGF_WORLD_EVENT_TRIGGER_EXIT, gate, ball), "and left");
 
+    /* a shape off its actor, a center of mass off its shape, a setting taken at once */
+    {
+        const wgf_actor_t tipper = put(stage, -20, 0.5f, 0), slider = put(stage, -30, 0.5f, 0);
+        wgf_quat_t before;
+        wgf_actor_add_component(tipper, WGF_COMPONENT_BODY);
+        expect(wgf_body_set_mass_offset(tipper, 0.8f, 0, 0) && wgf_body_get_mass_offset(tipper).x == 0.8f &&
+                   wgf_body_set_offset(tipper, 0, 0, 0) && wgf_body_get_offset(tipper).y == 0.0f,
+               "its offsets, set and read back");
+        step(1);
+        before = wgf_gfx_priv_actor_of(tipper)->rotation;
+        step(120);
+        expect(fabsf(wgf_gfx_priv_actor_of(tipper)->rotation.z - before.z) > 0.2f,
+               "a box with its mass past its edge tipped over");
+        wgf_actor_add_component(slider, WGF_COMPONENT_BODY);
+        wgf_body_set_friction(slider, 0.0f);
+        step(2);
+        wgf_body_set_velocity(slider, 5, 0, 0);
+        step(10);
+        wgf_body_set_friction(slider, 0.3f);
+        step(1);
+        expect(wgf_body_get_velocity(slider).x > 3.0f && wgf_body_get_friction(slider) == 0.3f,
+               "friction set as it slides: taken at once, its motion kept");
+    }
+
     /* a kinematic body moved by the program, pushing */
     pusher = put(stage, 10, 0.5f, 0);
     wgf_actor_add_component(pusher, WGF_COMPONENT_BODY);
@@ -224,6 +249,21 @@ int main(void)
         expect(wgf_actor_get_position(car).x < x - 0.5f, "steered right: toward its -x, facing +z");
     }
     expect(wgf_vehicle_get_wheel_slip(car, 0) >= 0.0f && wgf_vehicle_get_wheel_slip(car, 7) == 0.0f, "a wheel's slip");
+    expect(wgf_vehicle_set_anti_roll(car, 5000) && wgf_vehicle_get_anti_roll(car) == 5000.0f, "anti-roll, taken at once");
+    {
+        float front = 0.0f, rear = 0.0f;
+        wgf_actor_set_transform(car, 30, 1, 60, 0, 0, 0, 1, 1, 1); /* back on its wheels, somewhere clear */
+        wgf_vehicle_reset(car);
+        step(60);
+        for (i = 0; i < 60; i++) {
+            wgf_vehicle_set_input(car, 1, 0, 0, false);
+            step(1);
+            front = wgf_vehicle_get_wheel_slip(car, 0) > front ? wgf_vehicle_get_wheel_slip(car, 0) : front;
+            rear = wgf_vehicle_get_wheel_slip(car, 2) > rear ? wgf_vehicle_get_wheel_slip(car, 2) : rear;
+        }
+        if (getenv("WGF_TEST_SHOW")) printf("slip at launch: front %g, rear %g\n", front, rear);
+        expect(front < 2.0f && rear > 5.0f, "at full throttle from rest the rolling front tire is near its grip, the driven rear spins");
+    }
     expect(wgf_vehicle_reset(car) && fabsf(wgf_vehicle_get_speed(car)) < 1e-3f, "reset: at rest");
 
     /* a scene's lines, and the dump */
@@ -259,7 +299,7 @@ int main(void)
     /* gone */
     wgf_actor_destroy(car, WGF_ACTOR_DESTROY_CHILDREN);
     step(1);
-    expect(wgf_actor_count_with_component(WGF_COMPONENT_VEHICLE) == 1 && wgf_actor_count_with_component(WGF_COMPONENT_BODY) == 5,
+    expect(wgf_actor_count_with_component(WGF_COMPONENT_VEHICLE) == 1 && wgf_actor_count_with_component(WGF_COMPONENT_BODY) == 7,
            "a car destroyed: its body and vehicle with it");
     wgf_gfx_priv_stop();
     expect(!wgf_actor_has_component(ball, WGF_COMPONENT_BODY), "stopped with gfx");
