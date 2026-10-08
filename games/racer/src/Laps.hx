@@ -49,9 +49,23 @@ class Laps {
 		Probe.setValue("racer.last", last);
 		Probe.setValue("racer.best", best);
 		Probe.setValue("racer.speed", Main.car == null ? 0 : Main.car.drive.speed);
+		if (Main.car != null) {
+			final car = Main.car.actor;
+			Probe.setValue("racer.y", car.getWorldPosition(probeAt).y);
+			Probe.setValue("racer.heading", Main.car.drive.heading);
+			Probe.setValue("racer.yaw_rate", (car : Body).getSpin(probeSpin).y);
+			Probe.setValue("racer.gear", (car : Vehicle).getGear());
+			Probe.setValue("racer.rpm", (car : Vehicle).getRpm());
+			for (w in 0...4)
+				Probe.setValue('racer.slip$w', (car : Vehicle).getWheelSlip(w));
+			Probe.setValue("racer.slip", Math.max((car : Vehicle).getWheelSlip(2), (car : Vehicle).getWheelSlip(3)));
+		}
 		Probe.setValue("racer.steer", Main.car == null ? 0 : Main.car.steer);
 		Probe.setValue("racer.grass", Main.car != null && Main.car.drive.onGrass ? 1 : 0);
 	}
+
+	static final probeAt = new Vec3();
+	static final probeSpin = new Vec3();
 
 	public static function format(seconds:Float):String {
 		final whole = Std.int(seconds);

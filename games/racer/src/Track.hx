@@ -5,12 +5,15 @@ import wgf.*;
 	every STEP metres), and the world built from it out of generated meshes -- the grass,
 	the asphalt as a box per sample, curbs on the corners, the start line, and trees. The
 	checkpoints are spawned at even distances along it, the first on the start line.
-	Everything here is static: plain models on the stage, no components.
+	The asphalt, curbs, and start line are one static body (a mesh of their triangles,
+	physics3d's), on a static box under the grass; the trees are scenery.
 **/
 class Track {
 	public static inline var WIDTH = 12.0;
 	public static inline var STEP = 2.0;
 	public static inline var CHECKPOINTS = 8;
+	static inline var ROAD_FRICTION = 1.0;
+	static inline var GRASS_FRICTION = 0.7;
 
 	// the loop, on the ground (x, z), driven in this order; SCALE metres a unit
 	static inline var SCALE = 1.7;
@@ -107,6 +110,17 @@ class Track {
 		grass.setTint(Color.make(70, 128, 58, 255));
 		grass.setParent(stage);
 		models++;
+		// the ground: a static box under the grass, its top at 0, slippery next to the asphalt
+		final ground = Actor.create();
+		ground.setPosition(0, -0.5, 0);
+		ground.setParent(stage);
+		ground.addComponent(Component.BODY);
+		(ground : Body).setType(BodyType.STATIC);
+		(ground : Body).setShape(BodyShape.BOX, 800, 1, 800);
+		(ground : Body).setFriction(GRASS_FRICTION);
+		// the road: every asphalt, curb, and line model under one actor, its body their triangles
+		road = Actor.create();
+		road.setParent(stage);
 
 		final asphalt = Color.make(58, 60, 66, 255);
 		final red = Color.make(200, 40, 36, 255), white = Color.make(235, 235, 235, 255);
@@ -138,8 +152,14 @@ class Track {
 		final s = checkpointSample(0);
 		box(stage, unit, xs[s], 0.05, zs[s], headings[s], WIDTH, 0.02, 1.0, white);
 
+		road.addComponent(Component.BODY);
+		(road : Body).setType(BodyType.STATIC);
+		(road : Body).setShape(BodyShape.MESH, 0, 0, 0);
+		(road : Body).setFriction(ROAD_FRICTION);
 		trees(stage);
 	}
+
+	static var road:Actor = 0;
 
 	static function box(stage:Actor, mesh:Mesh, x:Float, y:Float, z:Float, yaw:Float, w:Float, h:Float, l:Float,
 			tint:Int) {
@@ -147,7 +167,7 @@ class Track {
 		models++;
 		m.setTint(tint);
 		m.setTransform(x, y, z, 0, yaw, 0, w, h, l);
-		m.setParent(stage);
+		m.setParent(road);
 	}
 
 	static function trees(stage:Stage3d) {

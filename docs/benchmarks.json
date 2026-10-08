@@ -235,31 +235,31 @@
   },
   "game:racer": {
    "autopilot": "lap.autopilot",
-   "commit": "3f16fd0 2026-10-07",
+   "commit": "b1d756e 2026-10-08",
    "cpu": "13th Gen Intel(R) Core(TM) i9-13900HX",
    "display": "xvfb",
-   "frames": 1461,
-   "gc": 7,
-   "gcTotal": 7.07,
-   "gcWorst": 1.31,
+   "frames": 2514,
+   "gc": 10,
+   "gcTotal": 13.2,
+   "gcWorst": 4.32,
    "gpu": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA)",
-   "mean": 1.17,
-   "median": 0.99,
+   "mean": 1.47,
+   "median": 1.36,
    "over16": 2,
    "over33": 1,
-   "p95": 1.77,
-   "p99": 2.51,
+   "p95": 2.12,
+   "p99": 2.67,
    "runs": 1,
    "throttle": 4.0,
-   "worst": 145.9
+   "worst": 135.52
   }
  },
  "libwgf": {
   "budgets": {
    "game:asteroids": 400,
-   "game:racer": 400
+   "game:racer": 550
   },
-  "commit": "42fc45e 2026-10-07",
+  "commit": "b1d756e 2026-10-08",
   "programs": {
    "app-gamepad": {
     "js": {
@@ -412,19 +412,19 @@
    },
    "game:racer": {
     "binding": {
-     "br": 3019,
-     "gz": 3435,
-     "raw": 17744
+     "br": 3290,
+     "gz": 3744,
+     "raw": 20208
     },
     "js": {
-     "br": 33482,
-     "gz": 37569,
-     "raw": 128448
+     "br": 34411,
+     "gz": 38529,
+     "raw": 135713
     },
     "wasm": {
-     "br": 185407,
-     "gz": 224408,
-     "raw": 555725
+     "br": 359805,
+     "gz": 457014,
+     "raw": 1130048
     }
    },
    "gfx-font": {

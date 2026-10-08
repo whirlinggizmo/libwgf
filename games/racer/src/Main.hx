@@ -2,11 +2,12 @@ import wgf.*;
 
 /**
 	The racer's slice: a box car on a flat track of generated meshes, driven arcade-style
-	(ArcadeDrive, the one place a real vehicle will replace), a chase camera, checkpoints in
+	(Drive: a Jolt wheeled vehicle, physics3d's), a chase camera, checkpoints in
 	order and lap times, and a HUD of drawn text.
 
-	What the framework does: the stage draws the track, car, and trees; the ecs moves the
-	car by its motion, draws it between ticks, and raises the checkpoints' triggers. What
+	What the framework does: the stage draws the track, car, and trees; physics drives the
+	car on the track's static body from the intent, the ecs draws it between ticks, and the
+	checkpoints' sensors raise their triggers. What
 	this does: the race's states, the camera, the HUD.
 
 	The race starts on the throttle, not when loading ends: loading takes real time, which
@@ -29,6 +30,7 @@ class Main {
 
 	static var camera:ChaseCamera;
 	static var countdown = COUNTDOWN;
+	static var showBodies = false;
 
 	static function main() {
 		Window.setTitle("Racer");
@@ -41,6 +43,7 @@ class Main {
 		Render.setClearColor(Color.make(150, 196, 236, 255)); // the sky
 		Loop.setTickRate(60); // the car's intent and the ecs, at a fixed rate
 
+		Physics.setGravity(0, -9.81, 0); // physics started: before the scene's bodies load
 		stage = Stage3d.create();
 		stage.setAmbient(Color.make(190, 210, 255, 255), 0.55);
 		final sun = Light.create(LightType.DIRECTIONAL);
@@ -79,6 +82,7 @@ class Main {
 		Action.bindKey("handbrake", KeyboardKey.SPACE);
 		Action.bindPadButton("handbrake", GamepadButton.EAST);
 		Action.bindKey("restart", KeyboardKey.R);
+		Action.bindKey("bodies", KeyboardKey.B); // the physics debug view
 		Action.bindPadButton("restart", GamepadButton.START);
 	}
 
@@ -92,14 +96,14 @@ class Main {
 		scene.spawnPrefab("car", stage);
 		for (i in 0...Track.CHECKPOINTS) {
 			final s = Track.checkpointSample(i);
-			final gate = scene.spawnPrefab("checkpoint", stage, Track.xs[s], 0, Track.zs[s], Track.headings[s]);
+			final gate = scene.spawnPrefab("checkpoint", stage, Track.xs[s], 2, Track.zs[s], Track.headings[s]); // its sensor 4 m tall
 			(gate : BehaviorComponent).setParam(gate.findBehavior("Checkpoint"), "index", '$i');
 		}
 	}
 
 	/** The car on the grid, behind the line, waiting for the start (or counting down to it). **/
 	static function grid(?counting = false) {
-		// 12 m back: clear of the line's trigger sphere (7.5 m, and the car's 1.2), so the line is crossed after the start
+		// 12 m back from the line's sensor, so the line is crossed after the start
 		final s = (Track.checkpointSample(0) - 6 + Track.xs.length) % Track.xs.length;
 		car.reset(Track.xs[s], Track.zs[s], Track.headings[s]);
 		camera.snap(car);
@@ -140,6 +144,12 @@ class Main {
 		if (car != null)
 			camera.update(car, Loop.getFrameDelta());
 		stage.draw();
+		if (Action.isPressed("bodies"))
+			showBodies = !showBodies;
+		if (showBodies && Draw.begin3d(camera.camera)) {
+			Physics.drawBodies(Color.get(ColorStock.YELLOW));
+			Draw.end3d();
+		}
 		hud();
 		if (App.canQuit() && Keyboard.isPressed(KeyboardKey.ESCAPE))
 			App.quit();

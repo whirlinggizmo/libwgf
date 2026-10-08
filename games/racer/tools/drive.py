@@ -7,7 +7,8 @@ as a player would. The recorder writes what reached the game; this only types.
 
     xvfb-run -a -s "-screen 0 1280x720x24" python3 tools/drive.py autopilot/lap.autopilot
 
-It steers by pure pursuit toward a point ahead on the centerline, holds the throttle,
+It steers by pure pursuit toward a point ahead on the centerline (the turn rate it asks for
+against the car's own), holds the throttle,
 brakes before corners too tight for its speed, and quits the game (Escape) a second into
 lap 2.
 """
@@ -20,9 +21,11 @@ import time
 LAPS = int(os.environ.get('RACER_LAPS', '1'))  # 3 drives the whole race, to its results (no expectations then)
 WGF = os.path.expanduser('~/projects/github/whirlinggizmo/libwgf/wgf')
 
-# ArcadeDrive's numbers, for the speed a corner allows
-TURN = 1.9
-TOP = 44.0
+# what the car can do, for the speed a corner allows: its tires' sideways grip and its
+# brakes, in m/s² (the vehicle's, felt out by driving; RACER_GRIP and RACER_BRAKE override)
+GRIP = float(os.environ.get('RACER_GRIP', '10.0'))
+BRAKE = float(os.environ.get('RACER_BRAKE', '7.0'))
+TOP = 80.0
 
 
 def wrap(a):
@@ -34,11 +37,10 @@ def wrap(a):
 
 
 def corner_speed(curvature):
-    """The fastest speed whose turn rate (ArcadeDrive's, at full lock) follows `curvature`."""
+    """The fastest speed the tires hold through `curvature` (1/m)."""
     if curvature < 1e-4:
         return TOP
-    # v * k = TURN * (1 - 0.4 v / TOP)  ->  v = TURN / (k + 0.4 TURN / TOP)
-    return TURN / (curvature + 0.4 * TURN / TOP) * 0.92
+    return math.sqrt(GRIP / curvature)
 
 
 class Keys:
@@ -67,8 +69,10 @@ def main():
     track = []
     keys = None
     hint = 0
+    last_heading = None
     finished_at = None
     last_passed = 0
+    trace = open(os.environ['RACER_TRACE'], 'w') if os.environ.get('RACER_TRACE') else None  # the telemetry and keys, a frame a line
     passes = []  # (checkpoints passed, the autopilot frame it happened in)
     for line in run.stdout:
         if 'racer.track ' in line:
@@ -86,6 +90,10 @@ def main():
             subprocess.run(['xdotool', 'windowfocus', '--sync', wid], check=False)
             keys = Keys(wid)
         f = line.split('racer.tel ', 1)[1].split()
+        if trace and trace.tell() == 0:
+            trace.write('track ' + ' '.join(f'{a},{b}' for a, b in track) + '\n')
+        if trace:
+            trace.write(' '.join(f) + ' ' + ' '.join(sorted(keys.down)) + '\n')
         frame, state = int(f[0]), int(f[1])
         x, z, heading, speed, passed, lap = float(f[2]), float(f[3]), float(f[4]), float(f[5]), int(f[6]), int(f[7])
         if passed != last_passed:
@@ -101,6 +109,8 @@ def main():
         if lap >= LAPS + 1 and finished_at is None:
             finished_at = frame
             print(f'drive: lap {lap - 1} done at frame {frame}', flush=True)
+        if frame > int(os.environ.get('RACER_GIVE_UP', '100000')):
+            finished_at = finished_at or frame - 61
         if finished_at is not None and frame > finished_at + 60:
             keys.release()
             keys.tap('Escape')
@@ -113,14 +123,22 @@ def main():
             d = (track[i][0] - x) ** 2 + (track[i][1] - z) ** 2
             if d < best_d:
                 best, best_d = i, d
+        if best_d > 15 * 15:  # lost (far off the track): look along all of it
+            best = min(range(n), key=lambda i: (track[i][0] - x) ** 2 + (track[i][1] - z) ** 2)
         hint = best
 
         # pure pursuit, a point ahead by more as it goes faster (a sample every 2 m)
         ahead = int((5 + 0.3 * max(speed, 0)) / 2)
         tx, tz = track[(best + ahead) % n]
         err = wrap(math.atan2(tx - x, tz - z) - heading)
-        keys.set('Left', err > 0.03)
-        keys.set('Right', err < -0.03)
+        # pure pursuit's turn rate (the arc through the point ahead), and the car's own from
+        # its last heading: the keys push the one toward the other, so it doesn't overshoot
+        dist = max(math.hypot(tx - x, tz - z), 1.0)
+        want_rate = 2 * max(speed, 3) * math.sin(err) / dist
+        rate = wrap(heading - last_heading) * 60 if last_heading is not None else 0.0
+        last_heading = heading
+        keys.set('Left', want_rate - rate > 0.04)
+        keys.set('Right', want_rate - rate < -0.04)
 
         # the tightest curvature in the distance it takes to brake to it
         limit = TOP
@@ -131,8 +149,8 @@ def main():
             hb = math.atan2(track[(b + 1) % n][0] - track[b][0], track[(b + 1) % n][1] - track[b][1])
             k_here = abs(wrap(hb - ha)) / 6.0
             v = corner_speed(k_here)
-            # what it can still slow to by there, braking at 30 m/s²
-            v_allowed = math.sqrt(v * v + 2 * 30 * 2 * k * 0.6)
+            # what it can still slow to by there, braking at BRAKE
+            v_allowed = math.sqrt(v * v + 2 * BRAKE * 2 * k)
             limit = min(limit, v_allowed)
         braking = speed > limit + 0.5
         keys.set('Up', not braking)
@@ -181,7 +199,9 @@ def expect(path, passes):
         ats.append(f'at {f + 2} expect racer.passed == {n}')
         ats.append(f'at {f + 2} expect racer.checkpoint == {n % count}')
     line_frame = passes[-1][1]
-    lap = (passes[-1][1] - passes[0][1]) / 60
+    # the lap as the game timed it (from the start, standing): the recorder's last probe values
+    best = [float(l.split('==')[1]) for l in tail if 'racer.best ==' in l]
+    lap = best[0] if best else (passes[-1][1] - passes[0][1]) / 60
     ats.append(f'at {line_frame - 2} expect racer.lap == 1')
     ats.append(f'at {line_frame + 2} expect racer.lap == 2')
     ats.append(f'at {line_frame + 2} expect racer.best > {lap - 1.5:.0f}')

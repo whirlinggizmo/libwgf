@@ -8,7 +8,7 @@ at 2 pad 0 connect
 at 10 pad 0 axis right_trigger 1
 at 11 expect racer.state == 2
 at 200 expect racer.state == 3
-at 260 expect racer.speed > 8
+at 260 expect racer.speed > 5
 at 260 pad 0 axis left_x 0.1
 at 269 expect racer.steer == 0         # 0.1 is inside the dead band
 at 270 pad 0 axis left_x -1
@@ -22,5 +22,5 @@ at 420 expect racer.speed < 1
 at 420 pad 0 axis left_trigger 0
 at 430 pad 0 tap start
 at 432 expect racer.state == 2
-at 432 expect racer.speed == 0
+at 432 expect racer.speed < 0.01      # at rest on the grid (physics leaves a hair)
 at 440 end

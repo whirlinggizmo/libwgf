@@ -7,5 +7,5 @@ at 2 expect racer.state == 1
 at 10 key down up
 at 11 expect racer.state == 2
 at 200 expect racer.state == 3
-at 230 expect racer.speed > 5
-at 230 end
+at 260 expect racer.speed > 3
+at 260 end
