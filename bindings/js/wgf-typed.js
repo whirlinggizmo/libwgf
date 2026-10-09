@@ -683,6 +683,32 @@ export const Light = Object.freeze({
     getSpotInnerAngle: raw.wgf_light_get_spot_inner_angle,
     // wgf: call wgf_light_get_spot_outer_angle
     getSpotOuterAngle: raw.wgf_light_get_spot_outer_angle,
+    // wgf: call wgf_light_set_shadow_casting
+    setShadowCasting: raw.wgf_light_set_shadow_casting,
+    // wgf: call wgf_light_is_shadow_casting
+    isShadowCasting: raw.wgf_light_is_shadow_casting,
+    // wgf: call wgf_light_set_shadow_distance
+    setShadowDistance: raw.wgf_light_set_shadow_distance,
+    // wgf: call wgf_light_get_shadow_distance
+    getShadowDistance: raw.wgf_light_get_shadow_distance,
+    // wgf: call wgf_light_set_shadow_map_size
+    setShadowMapSize: raw.wgf_light_set_shadow_map_size,
+    // wgf: call wgf_light_get_shadow_map_size
+    getShadowMapSize: raw.wgf_light_get_shadow_map_size,
+    // wgf: call wgf_light_set_shadow_strength
+    setShadowStrength: raw.wgf_light_set_shadow_strength,
+    // wgf: call wgf_light_get_shadow_strength
+    getShadowStrength: raw.wgf_light_get_shadow_strength,
+    // wgf: call wgf_light_set_shadow_color
+    setShadowColor: raw.wgf_light_set_shadow_color,
+    // wgf: call wgf_light_get_shadow_color
+    getShadowColor: raw.wgf_light_get_shadow_color,
+    // wgf: call wgf_light_set_shadow_bias
+    setShadowBias: raw.wgf_light_set_shadow_bias,
+    // wgf: call wgf_light_get_shadow_bias_constant
+    getShadowBiasConstant: raw.wgf_light_get_shadow_bias_constant,
+    // wgf: call wgf_light_get_shadow_bias_slope
+    getShadowBiasSlope: raw.wgf_light_get_shadow_bias_slope,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
@@ -820,6 +846,14 @@ export const Model = Object.freeze({
     setMaterial: raw.wgf_model_set_material,
     // wgf: call wgf_model_get_material
     getMaterial: raw.wgf_model_get_material,
+    // wgf: call wgf_model_set_shadow_casting
+    setShadowCasting: raw.wgf_model_set_shadow_casting,
+    // wgf: call wgf_model_is_shadow_casting
+    isShadowCasting: raw.wgf_model_is_shadow_casting,
+    // wgf: call wgf_model_set_shadow_receiving
+    setShadowReceiving: raw.wgf_model_set_shadow_receiving,
+    // wgf: call wgf_model_is_shadow_receiving
+    isShadowReceiving: raw.wgf_model_is_shadow_receiving,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });

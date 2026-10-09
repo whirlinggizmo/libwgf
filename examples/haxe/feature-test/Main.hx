@@ -240,6 +240,16 @@ class Main {
 		final own = Material.create(MaterialShading.UNLIT);
 		expect(model.setMaterial(0, own) && model.getMaterial(0) == own && Resource.release(own), "its own material");
 		model.setParent(stage3d);
+		expect(sun.setShadowCasting(true) && sun.isShadowCasting() && sun.setShadowDistance(30)
+			&& sun.getShadowDistance() == 30 && sun.setShadowMapSize(1000) && sun.getShadowMapSize() == 512,
+			"a light's shadows: on, their reach, their map (a power of two)");
+		expect(sun.setShadowStrength(0.5) && sun.getShadowStrength() == 0.5 && sun.setShadowColor(Color.get(ColorStock.DARKBLUE))
+			&& sun.getShadowColor() == Color.get(ColorStock.DARKBLUE), "how dark, and a tint");
+		expect(sun.setShadowBias(2, 3) && sun.getShadowBiasConstant() == 2 && sun.getShadowBiasSlope() == 3
+			&& !sun.setShadowBias(-1, 0), "its bias, a negative refused");
+		expect(model.isShadowCasting() && model.setShadowCasting(false) && !model.isShadowCasting()
+			&& model.isShadowReceiving() && model.setShadowReceiving(false) && !model.isShadowReceiving()
+			&& model.setShadowCasting(true) && model.setShadowReceiving(true), "a model's shadows, cast and received");
 		Resource.release(cube);
 		final car:Actor = Model.create(0);
 		car.setParent(stage3d);

@@ -218,8 +218,9 @@ model      a glTF file, path="path" (its nodes made under it once it loads; in a
            generated mesh (wgf_mesh.h), its create call's parameters in order:
            plane=w,l,subdivisions | cube=w,h,l | sphere=r,rings,segments |
            cylinder=r,h,segments | cone=r,h,segments | capsule=r,h,rings,segments |
-           torus=r,thickness,rings,segments; and tint=#.. (made once a stage3d has been,
-           as it is drawn on one: before, a plain actor, warned)
+           torus=r,thickness,rings,segments; and tint=#.., cast_shadows=true|false,
+           receive_shadows=true|false (wgf_model.h; both true by default) (made once a
+           stage3d has been, as it is drawn on one: before, a plain actor, warned)
 ```
 
 and the transform and the components:

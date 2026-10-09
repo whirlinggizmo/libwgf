@@ -190,7 +190,8 @@ static void dump_model(out_t *out, wgf_actor_t actor)
         for (i = 0; i < count; i++) put(out, i == 0 ? "%.9g" : ",%.9g", params[i]);
     }
     put_color(out, "tint", hooks->get_tint(actor));
-    put(out, "\n");
+    put(out, " cast_shadows=%s receive_shadows=%s\n", hooks->get_shadows(actor, true) ? "true" : "false",
+        hooks->get_shadows(actor, false) ? "true" : "false");
 }
 
 static void dump_voice(out_t *out, wgf_voice_t voice)

@@ -307,7 +307,7 @@ int main(void)
                                              "  transform rotation=0.5,0,0 scale=2,2,2\n"
                                              "end\n"
                                              "actor car\n"
-                                             "  model cube=2,1,4 tint=#FF0000FF\n"
+                                             "  model cube=2,1,4 tint=#FF0000FF cast_shadows=false\n"
                                              "  motion\n"
                                              "end\n");
         expect(wgf_scene_instantiate(garage, stage) == 1, "a model made");
@@ -321,7 +321,10 @@ int main(void)
                    wgf_model_get_tint(car) == 0xFF0000FFu,
                "a model: its generated mesh (the same, shared) and its tint");
         wgf_resource_release(cube); /* the reference the comparison took */
-        expect(strstr(wgf_world_dump(), "model cube=2,1,4 tint=#FF0000FF") != NULL, "dumped as it was written");
+        expect(!wgf_model_is_shadow_casting(car) && wgf_model_is_shadow_receiving(car),
+               "its shadows: cast_shadows=false, receiving as a model does");
+        expect(strstr(wgf_world_dump(), "model cube=2,1,4 tint=#FF0000FF cast_shadows=false receive_shadows=true") != NULL,
+               "dumped as it was written");
         wgf_world_clear();
         wgf_resource_release(garage);
     }

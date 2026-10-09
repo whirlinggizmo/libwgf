@@ -159,7 +159,9 @@ static const kind_t kinds[] = {
       {"capsule", V_NUM4},
       {"torus", V_NUM4},
       {"path", V_TEXT},
-      {"tint", V_COLOR}},
+      {"tint", V_COLOR},
+      {"cast_shadows", V_BOOL},
+      {"receive_shadows", V_BOOL}},
      false},
 };
 #define KIND_COUNT ((int)(sizeof(kinds) / sizeof(kinds[0])))
@@ -757,6 +759,10 @@ static void apply_setting(wgf_actor_t actor, int kind, const setting_t *s, value
             float params[4];
             int i;
             if (hooks == NULL || wgf_actor_get_kind(actor) != WGF_ACTOR_KIND_MODEL) break;
+            if (strcmp(key, "cast_shadows") == 0 || strcmp(key, "receive_shadows") == 0) {
+                hooks->set_shadows(actor, key[0] == 'c', v->truth);
+                break;
+            }
             if (strcmp(key, "tint") == 0) {
                 hooks->set_tint(actor, v->colors[0]);
                 break;

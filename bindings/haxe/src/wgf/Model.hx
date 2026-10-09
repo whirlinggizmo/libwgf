@@ -69,4 +69,44 @@ import wgf.impl.Raw;
 	**/
 	public inline function getMaterial(slot:Int):Material
 		return Raw.wgf_model_get_material(this, slot);
+
+	/**
+	    Shadows, when a light on its stage casts them (wgf_light_set_shadow_casting). Casting
+	    (default): the model is drawn into the light's depth map, so it shadows what is behind
+	    it -- turn it off for a glow or a sky. Receiving (default): shadows darken it. Each is the
+	    model's own: a glTF file's tree has a setting on each of its node's models. A hidden model
+	    casts nothing; its see-through parts never cast.
+	**/
+	public inline function setShadowCasting(casting:Bool):Bool
+		return Raw.wgf_model_set_shadow_casting(this, casting);
+
+	/**
+	    Shadows, when a light on its stage casts them (wgf_light_set_shadow_casting). Casting
+	    (default): the model is drawn into the light's depth map, so it shadows what is behind
+	    it -- turn it off for a glow or a sky. Receiving (default): shadows darken it. Each is the
+	    model's own: a glTF file's tree has a setting on each of its node's models. A hidden model
+	    casts nothing; its see-through parts never cast.
+	**/
+	public inline function isShadowCasting():Bool
+		return Raw.wgf_model_is_shadow_casting(this);
+
+	/**
+	    Shadows, when a light on its stage casts them (wgf_light_set_shadow_casting). Casting
+	    (default): the model is drawn into the light's depth map, so it shadows what is behind
+	    it -- turn it off for a glow or a sky. Receiving (default): shadows darken it. Each is the
+	    model's own: a glTF file's tree has a setting on each of its node's models. A hidden model
+	    casts nothing; its see-through parts never cast.
+	**/
+	public inline function setShadowReceiving(receiving:Bool):Bool
+		return Raw.wgf_model_set_shadow_receiving(this, receiving);
+
+	/**
+	    Shadows, when a light on its stage casts them (wgf_light_set_shadow_casting). Casting
+	    (default): the model is drawn into the light's depth map, so it shadows what is behind
+	    it -- turn it off for a glow or a sky. Receiving (default): shadows darken it. Each is the
+	    model's own: a glTF file's tree has a setting on each of its node's models. A hidden model
+	    casts nothing; its see-through parts never cast.
+	**/
+	public inline function isShadowReceiving():Bool
+		return Raw.wgf_model_is_shadow_receiving(this);
 }

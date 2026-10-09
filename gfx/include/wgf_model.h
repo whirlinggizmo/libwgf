@@ -45,6 +45,16 @@ WGF_API wgf_color_t wgf_model_get_tint(wgf_actor_t model);
 WGF_API bool wgf_model_set_material(wgf_actor_t model, int slot, wgf_material_t material);
 WGF_API wgf_material_t wgf_model_get_material(wgf_actor_t model, int slot);
 
+/* Shadows, when a light on its stage casts them (wgf_light_set_shadow_casting). Casting
+ * (default): the model is drawn into the light's depth map, so it shadows what is behind
+ * it -- turn it off for a glow or a sky. Receiving (default): shadows darken it. Each is the
+ * model's own: a glTF file's tree has a setting on each of its node's models. A hidden model
+ * casts nothing; its see-through parts never cast. */
+WGF_API bool wgf_model_set_shadow_casting(wgf_actor_t model, bool casting);
+WGF_API bool wgf_model_is_shadow_casting(wgf_actor_t model);
+WGF_API bool wgf_model_set_shadow_receiving(wgf_actor_t model, bool receiving);
+WGF_API bool wgf_model_is_shadow_receiving(wgf_actor_t model);
+
 #ifdef __cplusplus
 }
 #endif

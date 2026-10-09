@@ -20,7 +20,8 @@ package wgf;
       lights fall off with the inverse square of distance and fade smoothly to nothing at
       their range (0: no limit).
     - Setters store values even where they don't apply to the light's type (a range on a
-      directional light). Shadows are milestone 2, step 8's.
+      directional light).
+    - Shadows (below) are a directional or spot light's, set on per light.
 **/
 enum abstract LightType(Int) from Int to Int {
 	var DIRECTIONAL = 0;

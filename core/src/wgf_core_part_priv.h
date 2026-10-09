@@ -27,6 +27,7 @@ typedef enum wgf_core_priv_part_order_t {
     WGF_CORE_PRIV_PART_PHYSICS3D, /* bodies and vehicles (physics3d/): ticked after the ecs's systems */
     WGF_CORE_PRIV_PART_TEXT,      /* fonts and fontstash (gfx/src/text/wgf_gfx_font.c) */
     WGF_CORE_PRIV_PART_STAGE3D,   /* 3D stages' frames and their GPU objects (gfx/src/stage/) */
+    WGF_CORE_PRIV_PART_SHADOWS,   /* shadow maps (gfx/src/stage/wgf_gfx_shadow.c): drawn as the frame flushes */
     WGF_CORE_PRIV_PART_MESHES,    /* meshes (gfx/src/mesh/), stopped before the materials they hold */
     WGF_CORE_PRIV_PART_MATERIALS, /* materials (gfx/src/material/) */
     WGF_CORE_PRIV_PART_PARTICLES, /* emitters (gfx/src/emitter/wgf_gfx_emitter2d.c) */

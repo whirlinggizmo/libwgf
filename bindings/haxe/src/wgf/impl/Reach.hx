@@ -289,12 +289,25 @@ class Reach {
 		"wgf_light_get_color",
 		"wgf_light_get_intensity",
 		"wgf_light_get_range",
+		"wgf_light_get_shadow_bias_constant",
+		"wgf_light_get_shadow_bias_slope",
+		"wgf_light_get_shadow_color",
+		"wgf_light_get_shadow_distance",
+		"wgf_light_get_shadow_map_size",
+		"wgf_light_get_shadow_strength",
 		"wgf_light_get_spot_inner_angle",
 		"wgf_light_get_spot_outer_angle",
 		"wgf_light_get_type",
+		"wgf_light_is_shadow_casting",
 		"wgf_light_set_color",
 		"wgf_light_set_intensity",
 		"wgf_light_set_range",
+		"wgf_light_set_shadow_bias",
+		"wgf_light_set_shadow_casting",
+		"wgf_light_set_shadow_color",
+		"wgf_light_set_shadow_distance",
+		"wgf_light_set_shadow_map_size",
+		"wgf_light_set_shadow_strength",
 		"wgf_light_set_spot_cone",
 		"wgf_log_get_level",
 		"wgf_log_message",
@@ -351,8 +364,12 @@ class Reach {
 		"wgf_model_get_material",
 		"wgf_model_get_mesh",
 		"wgf_model_get_tint",
+		"wgf_model_is_shadow_casting",
+		"wgf_model_is_shadow_receiving",
 		"wgf_model_set_material",
 		"wgf_model_set_mesh",
+		"wgf_model_set_shadow_casting",
+		"wgf_model_set_shadow_receiving",
 		"wgf_model_set_tint",
 		"wgf_motion_get_damping",
 		"wgf_motion_get_max_speed",
@@ -633,7 +650,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...624) 0];
+	static final counts:Array<Int> = [for (_ in 0...641) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

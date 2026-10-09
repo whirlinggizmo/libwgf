@@ -31,6 +31,12 @@ wgf_actor_t wgf_light_create(wgf_light_type_t type)
     actor_ptr->as.light.intensity = 1.0f;
     actor_ptr->as.light.inner_angle = PI / 6.0f; /* wgrender's default cone */
     actor_ptr->as.light.outer_angle = PI / 4.0f;
+    actor_ptr->as.light.shadow_distance = 50.0f; /* libwgt's shadow defaults (wgf_light.h) */
+    actor_ptr->as.light.shadow_map_size = 2048;
+    actor_ptr->as.light.shadow_strength = 1.0f;
+    actor_ptr->as.light.shadow_color = 0x000000FFu;
+    actor_ptr->as.light.shadow_bias_constant = 1.0f;
+    actor_ptr->as.light.shadow_bias_slope = 4.0f;
     return light;
 }
 
@@ -121,6 +127,17 @@ void wgf_gfx_priv_light_resolve(const wgf_gfx_priv_actor_t *light_ptr, wgf_mat4_
     out->range = light_ptr->as.light.range;
     out->cos_inner = cosf(light_ptr->as.light.inner_angle);
     out->cos_outer = cosf(light_ptr->as.light.outer_angle);
+    out->shadow_casting = light_ptr->as.light.shadow_casting && out->type != WGF_LIGHT_TYPE_POINT;
+    out->shadow_slot = -1;
+    out->shadow_distance = light_ptr->as.light.shadow_distance;
+    out->shadow_map_size = light_ptr->as.light.shadow_map_size;
+    out->shadow_strength = light_ptr->as.light.shadow_strength;
+    out->shadow_tint = wgf_vec3_make(
+        wgf_gfx_priv_srgb_to_linear((float)wgf_color_get_red(light_ptr->as.light.shadow_color) / 255.0f),
+        wgf_gfx_priv_srgb_to_linear((float)wgf_color_get_green(light_ptr->as.light.shadow_color) / 255.0f),
+        wgf_gfx_priv_srgb_to_linear((float)wgf_color_get_blue(light_ptr->as.light.shadow_color) / 255.0f));
+    out->shadow_bias_constant = light_ptr->as.light.shadow_bias_constant;
+    out->shadow_bias_slope = light_ptr->as.light.shadow_bias_slope;
 }
 
 static float attenuation(float distance, float range)

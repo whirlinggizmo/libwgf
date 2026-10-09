@@ -80,4 +80,121 @@ import wgf.impl.Raw;
 	**/
 	public inline function getSpotOuterAngle():Float
 		return Raw.wgf_light_get_spot_outer_angle(this);
+
+	/**
+	    Shadows, libwgt's (wgrender's). A casting light draws what it can see into a depth map
+	    once a frame, and surfaces behind something are darkened: models that cast and receive
+	    (wgf_model_set_shadow_casting, _receiving; both on by default), their see-through parts
+	    casting nothing. Off by default: a map costs a pass and its memory. Directional and spot
+	    lights cast; a point light doesn't: turning it on is refused (false, warned), as it would
+	    need six maps, one each way. Up to 4 lights cast at once, the first a stage's draw finds
+	    in its tree; past that a light lights the stage without shadowing it. Shadows fall on the
+	    frame's first stage drawn with a casting light; a stage drawn after it (a HUD's) is lit
+	    without. A model out of the camera's view still casts when its shadow reaches the view.
+	**/
+	public inline function setShadowCasting(casting:Bool):Bool
+		return Raw.wgf_light_set_shadow_casting(this, casting);
+
+	/**
+	    Shadows, libwgt's (wgrender's). A casting light draws what it can see into a depth map
+	    once a frame, and surfaces behind something are darkened: models that cast and receive
+	    (wgf_model_set_shadow_casting, _receiving; both on by default), their see-through parts
+	    casting nothing. Off by default: a map costs a pass and its memory. Directional and spot
+	    lights cast; a point light doesn't: turning it on is refused (false, warned), as it would
+	    need six maps, one each way. Up to 4 lights cast at once, the first a stage's draw finds
+	    in its tree; past that a light lights the stage without shadowing it. Shadows fall on the
+	    frame's first stage drawn with a casting light; a stage drawn after it (a HUD's) is lit
+	    without. A model out of the camera's view still casts when its shadow reaches the view.
+	**/
+	public inline function isShadowCasting():Bool
+		return Raw.wgf_light_is_shadow_casting(this);
+
+	/**
+	    How far its shadows reach, in units (default 50): a directional light covers that much
+	    of what the camera sees, in one map fitted around the view and snapped to its texels (no
+	    cascades), so less distance is a sharper shadow; a spot light covers its cone out to this
+	    or its range, whichever is nearer. False, unchanged, for 0 or less.
+	**/
+	public inline function setShadowDistance(distance:Float):Bool
+		return Raw.wgf_light_set_shadow_distance(this, distance);
+
+	/**
+	    How far its shadows reach, in units (default 50): a directional light covers that much
+	    of what the camera sees, in one map fitted around the view and snapped to its texels (no
+	    cascades), so less distance is a sharper shadow; a spot light covers its cone out to this
+	    or its range, whichever is nearer. False, unchanged, for 0 or less.
+	**/
+	public inline function getShadowDistance():Float
+		return Raw.wgf_light_get_shadow_distance(this);
+
+	/**
+	    Pixels each way of its shadow map, clamped to 256..4096 and rounded down to a power of
+	    two (default 2048); false for a size below 1. Bigger is sharper and slower. The casting
+	    lights share one map, so they all get the largest size any of them asked for. get is
+	    the size the GPU gets.
+	**/
+	public inline function setShadowMapSize(size:Int):Bool
+		return Raw.wgf_light_set_shadow_map_size(this, size);
+
+	/**
+	    Pixels each way of its shadow map, clamped to 256..4096 and rounded down to a power of
+	    two (default 2048); false for a size below 1. Bigger is sharper and slower. The casting
+	    lights share one map, so they all get the largest size any of them asked for. get is
+	    the size the GPU gets.
+	**/
+	public inline function getShadowMapSize():Int
+		return Raw.wgf_light_get_shadow_map_size(this);
+
+	/**
+	    How much of the light a shadow blocks, 0..1 (clamped; default 1, all of it).
+	**/
+	public inline function setShadowStrength(strength:Float):Bool
+		return Raw.wgf_light_set_shadow_strength(this, strength);
+
+	/**
+	    How much of the light a shadow blocks, 0..1 (clamped; default 1, all of it).
+	**/
+	public inline function getShadowStrength():Float
+		return Raw.wgf_light_get_shadow_strength(this);
+
+	/**
+	    A color mixed into what a shadow leaves behind (default black: nothing added), scaled by
+	    how deep the shadow is: the stylized knob for a blue or a warm shadow.
+	**/
+	public inline function setShadowColor(color:Int):Bool
+		return Raw.wgf_light_set_shadow_color(this, color);
+
+	/**
+	    A color mixed into what a shadow leaves behind (default black: nothing added), scaled by
+	    how deep the shadow is: the stylized knob for a blue or a warm shadow.
+	**/
+	public inline function getShadowColor():Int
+		return Raw.wgf_light_get_shadow_color(this);
+
+	/**
+	    Depth offsets that keep a surface from shadowing itself, in shadow-map texels: `constant`
+	    always, `slope` scaled by how steeply the surface faces away from the light (defaults 1,
+	    4). Too little and lit surfaces stripe ("shadow acne"); too much and a shadow creeps
+	    away from its caster. False, unchanged, for a negative one.
+	**/
+	public inline function setShadowBias(constant:Float, slope:Float):Bool
+		return Raw.wgf_light_set_shadow_bias(this, constant, slope);
+
+	/**
+	    Depth offsets that keep a surface from shadowing itself, in shadow-map texels: `constant`
+	    always, `slope` scaled by how steeply the surface faces away from the light (defaults 1,
+	    4). Too little and lit surfaces stripe ("shadow acne"); too much and a shadow creeps
+	    away from its caster. False, unchanged, for a negative one.
+	**/
+	public inline function getShadowBiasConstant():Float
+		return Raw.wgf_light_get_shadow_bias_constant(this);
+
+	/**
+	    Depth offsets that keep a surface from shadowing itself, in shadow-map texels: `constant`
+	    always, `slope` scaled by how steeply the surface faces away from the light (defaults 1,
+	    4). Too little and lit surfaces stripe ("shadow acne"); too much and a shadow creeps
+	    away from its caster. False, unchanged, for a negative one.
+	**/
+	public inline function getShadowBiasSlope():Float
+		return Raw.wgf_light_get_shadow_bias_slope(this);
 }

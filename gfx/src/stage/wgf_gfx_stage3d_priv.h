@@ -22,6 +22,13 @@ typedef struct wgf_gfx_priv_stage3d_light_t {
     float range;          /* 0 = unlimited */
     float cos_inner;
     float cos_outer;
+    bool shadow_casting;  /* set to cast (a point light never does) */
+    int shadow_slot;      /* its layer of the frame's shadow map; -1 none (the stage's draw gives it one) */
+    float shadow_distance;
+    int shadow_map_size;
+    float shadow_strength;
+    wgf_vec3_t shadow_tint; /* linear */
+    float shadow_bias_constant, shadow_bias_slope;
 } wgf_gfx_priv_stage3d_light_t;
 
 /* `light` (a light actor, its record `light_ptr`) as it shades, placed by `world`. */

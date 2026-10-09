@@ -78,6 +78,9 @@ ROWS = [
     ('gfx-lights', None, 'lights', 'differs',
      'libwgf has no skinning or 3D sprites yet: generated capsules in place of the animated characters, and no lit '
      'billboards'),
+    ('gfx-shadows', 'gfx-shadows', 'shadows', 'differs',
+     'libwgf has no skinning or animation yet: the toy car in place of the walking character, and its readout fixed '
+     'labels with no formatting'),
     ('gfx-textures', 'gfx-textures', 'textures', 'differs',
      'libwgf has no KTX (compressed) textures: their half loads the PNGs libwgt falls back to'),
     ('gfx-sprite2d', 'gfx-sprite2d', 'sprite2d', 'differs',
@@ -111,6 +114,7 @@ LADDER = [
     ('ladder-5-ui', '+ ui'),
     ('ladder-6-model', '+ 3D model'),
     ('ladder-7-physics3d', '+ physics3d'),
+    ('ladder-8-shadows', '+ lights and shadows'),
     (None, '+ skinning (milestone 2)'),
 ]
 LADDER_DIR = ROOT / 'examples' / 'sizes'

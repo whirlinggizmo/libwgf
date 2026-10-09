@@ -489,7 +489,8 @@ export type wgf_texture_filter_t = typeof WGF_TEXTURE_FILTER_LINEAR | typeof WGF
  *   lights fall off with the inverse square of distance and fade smoothly to nothing at
  *   their range (0: no limit).
  * - Setters store values even where they don't apply to the light's type (a range on a
- *   directional light). Shadows are milestone 2, step 8's.
+ *   directional light).
+ * - Shadows (below) are a directional or spot light's, set on per light.
  */
 export declare const WGF_LIGHT_TYPE_DIRECTIONAL: 0;
 export declare const WGF_LIGHT_TYPE_POINT: 1;
@@ -3192,6 +3193,110 @@ export declare function wgf_light_get_spot_inner_angle(light: wgf_actor_t | 0): 
 export declare function wgf_light_get_spot_outer_angle(light: wgf_actor_t | 0): number;
 
 /**
+ * Shadows, libwgt's (wgrender's). A casting light draws what it can see into a depth map
+ * once a frame, and surfaces behind something are darkened: models that cast and receive
+ * (wgf_model_set_shadow_casting, _receiving; both on by default), their see-through parts
+ * casting nothing. Off by default: a map costs a pass and its memory. Directional and spot
+ * lights cast; a point light doesn't: turning it on is refused (false, warned), as it would
+ * need six maps, one each way. Up to 4 lights cast at once, the first a stage's draw finds
+ * in its tree; past that a light lights the stage without shadowing it. Shadows fall on the
+ * frame's first stage drawn with a casting light; a stage drawn after it (a HUD's) is lit
+ * without. A model out of the camera's view still casts when its shadow reaches the view.
+ */
+export declare function wgf_light_set_shadow_casting(light: wgf_actor_t | 0, casting: boolean): boolean;
+
+/**
+ * Shadows, libwgt's (wgrender's). A casting light draws what it can see into a depth map
+ * once a frame, and surfaces behind something are darkened: models that cast and receive
+ * (wgf_model_set_shadow_casting, _receiving; both on by default), their see-through parts
+ * casting nothing. Off by default: a map costs a pass and its memory. Directional and spot
+ * lights cast; a point light doesn't: turning it on is refused (false, warned), as it would
+ * need six maps, one each way. Up to 4 lights cast at once, the first a stage's draw finds
+ * in its tree; past that a light lights the stage without shadowing it. Shadows fall on the
+ * frame's first stage drawn with a casting light; a stage drawn after it (a HUD's) is lit
+ * without. A model out of the camera's view still casts when its shadow reaches the view.
+ */
+export declare function wgf_light_is_shadow_casting(light: wgf_actor_t | 0): boolean;
+
+/**
+ * How far its shadows reach, in units (default 50): a directional light covers that much
+ * of what the camera sees, in one map fitted around the view and snapped to its texels (no
+ * cascades), so less distance is a sharper shadow; a spot light covers its cone out to this
+ * or its range, whichever is nearer. False, unchanged, for 0 or less.
+ */
+export declare function wgf_light_set_shadow_distance(light: wgf_actor_t | 0, distance: number): boolean;
+
+/**
+ * How far its shadows reach, in units (default 50): a directional light covers that much
+ * of what the camera sees, in one map fitted around the view and snapped to its texels (no
+ * cascades), so less distance is a sharper shadow; a spot light covers its cone out to this
+ * or its range, whichever is nearer. False, unchanged, for 0 or less.
+ */
+export declare function wgf_light_get_shadow_distance(light: wgf_actor_t | 0): number;
+
+/**
+ * Pixels each way of its shadow map, clamped to 256..4096 and rounded down to a power of
+ * two (default 2048); false for a size below 1. Bigger is sharper and slower. The casting
+ * lights share one map, so they all get the largest size any of them asked for. get is
+ * the size the GPU gets.
+ */
+export declare function wgf_light_set_shadow_map_size(light: wgf_actor_t | 0, size: number): boolean;
+
+/**
+ * Pixels each way of its shadow map, clamped to 256..4096 and rounded down to a power of
+ * two (default 2048); false for a size below 1. Bigger is sharper and slower. The casting
+ * lights share one map, so they all get the largest size any of them asked for. get is
+ * the size the GPU gets.
+ */
+export declare function wgf_light_get_shadow_map_size(light: wgf_actor_t | 0): number;
+
+/**
+ * How much of the light a shadow blocks, 0..1 (clamped; default 1, all of it).
+ */
+export declare function wgf_light_set_shadow_strength(light: wgf_actor_t | 0, strength: number): boolean;
+
+/**
+ * How much of the light a shadow blocks, 0..1 (clamped; default 1, all of it).
+ */
+export declare function wgf_light_get_shadow_strength(light: wgf_actor_t | 0): number;
+
+/**
+ * A color mixed into what a shadow leaves behind (default black: nothing added), scaled by
+ * how deep the shadow is: the stylized knob for a blue or a warm shadow.
+ */
+export declare function wgf_light_set_shadow_color(light: wgf_actor_t | 0, color: wgf_color_t): boolean;
+
+/**
+ * A color mixed into what a shadow leaves behind (default black: nothing added), scaled by
+ * how deep the shadow is: the stylized knob for a blue or a warm shadow.
+ */
+export declare function wgf_light_get_shadow_color(light: wgf_actor_t | 0): wgf_color_t;
+
+/**
+ * Depth offsets that keep a surface from shadowing itself, in shadow-map texels: `constant`
+ * always, `slope` scaled by how steeply the surface faces away from the light (defaults 1,
+ * 4). Too little and lit surfaces stripe ("shadow acne"); too much and a shadow creeps
+ * away from its caster. False, unchanged, for a negative one.
+ */
+export declare function wgf_light_set_shadow_bias(light: wgf_actor_t | 0, constant: number, slope: number): boolean;
+
+/**
+ * Depth offsets that keep a surface from shadowing itself, in shadow-map texels: `constant`
+ * always, `slope` scaled by how steeply the surface faces away from the light (defaults 1,
+ * 4). Too little and lit surfaces stripe ("shadow acne"); too much and a shadow creeps
+ * away from its caster. False, unchanged, for a negative one.
+ */
+export declare function wgf_light_get_shadow_bias_constant(light: wgf_actor_t | 0): number;
+
+/**
+ * Depth offsets that keep a surface from shadowing itself, in shadow-map texels: `constant`
+ * always, `slope` scaled by how steeply the surface faces away from the light (defaults 1,
+ * 4). Too little and lit surfaces stripe ("shadow acne"); too much and a shadow creeps
+ * away from its caster. False, unchanged, for a negative one.
+ */
+export declare function wgf_light_get_shadow_bias_slope(light: wgf_actor_t | 0): number;
+
+/**
  * A material with glTF's defaults. 0 when `shading` isn't one (logged), or there is no
  * room for another material.
  */
@@ -3469,6 +3574,42 @@ export declare function wgf_model_set_material(model: wgf_actor_t | 0, slot_: nu
  * own or the mesh's, 0 for neither.
  */
 export declare function wgf_model_get_material(model: wgf_actor_t | 0, slot_: number): wgf_material_t;
+
+/**
+ * Shadows, when a light on its stage casts them (wgf_light_set_shadow_casting). Casting
+ * (default): the model is drawn into the light's depth map, so it shadows what is behind
+ * it -- turn it off for a glow or a sky. Receiving (default): shadows darken it. Each is the
+ * model's own: a glTF file's tree has a setting on each of its node's models. A hidden model
+ * casts nothing; its see-through parts never cast.
+ */
+export declare function wgf_model_set_shadow_casting(model: wgf_actor_t | 0, casting: boolean): boolean;
+
+/**
+ * Shadows, when a light on its stage casts them (wgf_light_set_shadow_casting). Casting
+ * (default): the model is drawn into the light's depth map, so it shadows what is behind
+ * it -- turn it off for a glow or a sky. Receiving (default): shadows darken it. Each is the
+ * model's own: a glTF file's tree has a setting on each of its node's models. A hidden model
+ * casts nothing; its see-through parts never cast.
+ */
+export declare function wgf_model_is_shadow_casting(model: wgf_actor_t | 0): boolean;
+
+/**
+ * Shadows, when a light on its stage casts them (wgf_light_set_shadow_casting). Casting
+ * (default): the model is drawn into the light's depth map, so it shadows what is behind
+ * it -- turn it off for a glow or a sky. Receiving (default): shadows darken it. Each is the
+ * model's own: a glTF file's tree has a setting on each of its node's models. A hidden model
+ * casts nothing; its see-through parts never cast.
+ */
+export declare function wgf_model_set_shadow_receiving(model: wgf_actor_t | 0, receiving: boolean): boolean;
+
+/**
+ * Shadows, when a light on its stage casts them (wgf_light_set_shadow_casting). Casting
+ * (default): the model is drawn into the light's depth map, so it shadows what is behind
+ * it -- turn it off for a glow or a sky. Receiving (default): shadows darken it. Each is the
+ * model's own: a glTF file's tree has a setting on each of its node's models. A hidden model
+ * casts nothing; its see-through parts never cast.
+ */
+export declare function wgf_model_is_shadow_receiving(model: wgf_actor_t | 0): boolean;
 
 export declare function wgf_presentation_set(mode: wgf_presentation_mode_t, width: number, height: number): boolean;
 

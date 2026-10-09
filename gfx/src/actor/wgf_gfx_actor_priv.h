@@ -71,6 +71,13 @@ typedef struct wgf_gfx_priv_light_t {
     float intensity;
     float range;
     float inner_angle, outer_angle;
+    /* its shadows (wgf_gfx_shadow.c's calls; their defaults set as it is made) */
+    bool shadow_casting;
+    float shadow_distance;
+    int shadow_map_size;
+    float shadow_strength;
+    wgf_color_t shadow_color;
+    float shadow_bias_constant, shadow_bias_slope; /* shadow texels */
 } wgf_gfx_priv_light_t;
 
 /* Material slots a model can draw with its own material, as wgrender's */
@@ -81,6 +88,7 @@ typedef struct wgf_gfx_priv_model_t {
     wgf_color_t tint;
     wgf_handle_t *materials;   /* its own, a slot each, referenced (0: the mesh's); malloc'd, NULL for none */
     bool file_root; /* of a glTF file's mesh: its tree is actors under it, and it draws nothing itself */
+    bool shadow_off, receive_off; /* casting and receiving shadows, each on unless set off (wgf_gfx_shadow.c) */
 } wgf_gfx_priv_model_t;
 
 typedef struct wgf_gfx_priv_shape3d_t {
@@ -220,6 +228,9 @@ typedef struct wgf_gfx_priv_model_hooks_t {
     wgf_color_t (*get_tint)(wgf_actor_t model);
     bool (*set_path)(wgf_actor_t model, const char *path); /* a glTF file's mesh (wgf_mesh_create) */
     const char *(*get_path)(wgf_actor_t model);            /* a file root's path; NULL for any other model */
+    /* whether it casts (`cast`) or receives shadows, set and read without the shadow part */
+    void (*set_shadows)(wgf_actor_t model, bool cast, bool on);
+    bool (*get_shadows)(wgf_actor_t model, bool cast);
 } wgf_gfx_priv_model_hooks_t;
 void wgf_gfx_priv_set_model_hooks(const wgf_gfx_priv_model_hooks_t *hooks);
 const wgf_gfx_priv_model_hooks_t *wgf_gfx_priv_get_model_hooks(void);

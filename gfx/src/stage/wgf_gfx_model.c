@@ -134,8 +134,25 @@ static const char *get_path(wgf_actor_t model)
     return wgf_resource_get_path(actor_ptr->as.model.mesh);
 }
 
-static const wgf_gfx_priv_model_hooks_t hooks = {create_empty,       set_shape, describe, wgf_model_set_tint,
-                                                  wgf_model_get_tint, set_path,  get_path};
+/* A scene's cast_shadows= and receive_shadows=: the model's own flags, which the shadow
+   part reads, written here so a scene names them without linking it */
+static void set_shadows(wgf_actor_t model, bool cast, bool on)
+{
+    wgf_gfx_priv_actor_t *actor_ptr = model_of(model);
+    if (actor_ptr == NULL) return;
+    if (cast) actor_ptr->as.model.shadow_off = !on;
+    else actor_ptr->as.model.receive_off = !on;
+}
+
+static bool get_shadows(wgf_actor_t model, bool cast)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = model_of(model);
+    return actor_ptr != NULL && !(cast ? actor_ptr->as.model.shadow_off : actor_ptr->as.model.receive_off);
+}
+
+static const wgf_gfx_priv_model_hooks_t hooks = {create_empty, set_shape,          describe, wgf_model_set_tint,
+                                                  wgf_model_get_tint, set_path, get_path, set_shadows,
+                                                  get_shadows};
 
 void wgf_gfx_priv_model_install(void)
 {

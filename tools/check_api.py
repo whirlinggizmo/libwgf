@@ -87,6 +87,7 @@ GETTERS_PAIRED = {
     'wgf_shape2d_set_line': ('wgf_shape2d_get_kind', 'wgf_shape2d_get_line_start', 'wgf_shape2d_get_line_end'),
     'wgf_shape2d_set_polygon': ('wgf_shape2d_get_kind', 'wgf_shape2d_get_point_count', 'wgf_shape2d_get_points'),
     'wgf_emitter2d_set_life': ('wgf_emitter2d_get_life_min', 'wgf_emitter2d_get_life_max'),
+    'wgf_light_set_shadow_bias': ('wgf_light_get_shadow_bias_constant', 'wgf_light_get_shadow_bias_slope'),
     'wgf_emitter2d_set_speed': ('wgf_emitter2d_get_speed_min', 'wgf_emitter2d_get_speed_max'),
     'wgf_emitter2d_set_size': ('wgf_emitter2d_get_size_start', 'wgf_emitter2d_get_size_end'),
     'wgf_emitter2d_set_color': ('wgf_emitter2d_get_color_start', 'wgf_emitter2d_get_color_end'),

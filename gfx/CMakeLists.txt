@@ -23,6 +23,7 @@ wgf_layer(gfx
         src/stage/wgf_gfx_light.c
         src/stage/wgf_gfx_model.c
         src/stage/wgf_gfx_model_file.c
+        src/stage/wgf_gfx_shadow.c
         src/stage/wgf_gfx_stage3d.c
         src/text/wgf_gfx_font.c
         src/text/wgf_gfx_fontstash_impl.c
@@ -55,6 +56,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_mesh_test)
         wgf_test(gfx wgf_gfx_gltf_test)
         wgf_test(gfx wgf_gfx_stage3d_test)
+        wgf_test(gfx wgf_gfx_shadow_test)
         wgf_test(gfx wgf_gfx_shape3d_test)
         wgf_test(gfx wgf_gfx_text_test)
         wgf_test(gfx wgf_gfx_texture_test)
@@ -74,5 +76,6 @@ if(WGF_TESTS)
     wgf_web_test(gfx wgf_gfx_stage2d_web_test 1)
     wgf_web_test(gfx wgf_gfx_draw3d_web_test 1)
     wgf_web_test(gfx wgf_gfx_stage3d_web_test 1)
+    wgf_web_test(gfx wgf_gfx_shadow_web_test 1)
     wgf_web_test(gfx wgf_gfx_gltf_web_test 1)
 endif()
