@@ -3,8 +3,8 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Bounds's calls, on a Actor: `var x:Bounds = handle` gives it them, and a Bounds is still a Actor. **/
-@:forward abstract Bounds(Actor) from Actor to Actor {
+/** Bounds's calls, on a Actor: `var x:Bounds = handle` gives it them, and a Bounds is still a Actor; it starts as 0, none, as a Actor does. **/
+@:forward abstract Bounds(Actor) from Actor from Int to Actor {
 	/**
 	    False too for a width or height below 0. Read back as x, y, width, height.
 	**/

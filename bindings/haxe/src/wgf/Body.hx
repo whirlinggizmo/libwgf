@@ -3,8 +3,8 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Body's calls, on a Actor: `var x:Body = handle` gives it them, and a Body is still a Actor. **/
-@:forward abstract Body(Actor) from Actor to Actor {
+/** Body's calls, on a Actor: `var x:Body = handle` gives it them, and a Body is still a Actor; it starts as 0, none, as a Actor does. **/
+@:forward abstract Body(Actor) from Actor from Int to Actor {
 	public inline function setType(type:BodyType):Bool
 		return Raw.wgf_body_set_type(this, type);
 

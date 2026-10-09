@@ -3,8 +3,8 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Shape2d's calls, on a Actor: `var x:Shape2d = handle` gives it them, and a Shape2d is still a Actor. **/
-@:forward abstract Shape2d(Actor) from Actor to Actor {
+/** Shape2d's calls, on a Actor: `var x:Shape2d = handle` gives it them, and a Shape2d is still a Actor; it starts as 0, none, as a Actor does. **/
+@:forward abstract Shape2d(Actor) from Actor from Int to Actor {
 	/**
 	    A shape with nothing to draw yet, white, filled. 0 when there is no room for another
 	    actor.

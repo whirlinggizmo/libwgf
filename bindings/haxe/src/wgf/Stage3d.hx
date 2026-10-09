@@ -3,8 +3,8 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Stage3d's calls, on a Actor: `var x:Stage3d = handle` gives it them, and a Stage3d is still a Actor. **/
-@:forward abstract Stage3d(Actor) from Actor to Actor {
+/** Stage3d's calls, on a Actor: `var x:Stage3d = handle` gives it them, and a Stage3d is still a Actor; it starts as 0, none, as a Actor does. **/
+@:forward abstract Stage3d(Actor) from Actor from Int to Actor {
 	/**
 	    A stage, with no camera, no ambient light, and NEUTRAL tone mapping at an exposure of
 	    0. 0 when there is no room for another actor.

@@ -329,6 +329,18 @@ const wgf_gfx_priv_model_hooks_t *wgf_gfx_priv_get_model_hooks(void)
     return model_hooks;
 }
 
+static void (*model_built)(wgf_actor_t root); /* the ecs's, set by a scene waiting on a file */
+
+void wgf_gfx_priv_set_model_built_hook(void (*built)(wgf_actor_t root))
+{
+    model_built = built;
+}
+
+void wgf_gfx_priv_model_built(wgf_actor_t root)
+{
+    if (model_built != NULL) model_built(root);
+}
+
 void wgf_gfx_priv_actor_set_kind(wgf_actor_kind_t type, const wgf_gfx_priv_actor_kind_t *kind)
 {
     if ((int)type >= 0 && type < NODE_TYPES) kinds[type] = kind;

@@ -3,8 +3,8 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Sprite's calls, on a Actor: `var x:Sprite = handle` gives it them, and a Sprite is still a Actor. **/
-@:forward abstract Sprite(Actor) from Actor to Actor {
+/** Sprite's calls, on a Actor: `var x:Sprite = handle` gives it them, and a Sprite is still a Actor; it starts as 0, none, as a Actor does. **/
+@:forward abstract Sprite(Actor) from Actor from Int to Actor {
 	/**
 	    A sprite of `texture` (0 for none: it draws nothing). 0 when there is no room for
 	    another actor.

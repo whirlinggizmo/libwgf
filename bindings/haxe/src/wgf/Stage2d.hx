@@ -3,8 +3,8 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Stage2d's calls, on a Actor: `var x:Stage2d = handle` gives it them, and a Stage2d is still a Actor. **/
-@:forward abstract Stage2d(Actor) from Actor to Actor {
+/** Stage2d's calls, on a Actor: `var x:Stage2d = handle` gives it them, and a Stage2d is still a Actor; it starts as 0, none, as a Actor does. **/
+@:forward abstract Stage2d(Actor) from Actor from Int to Actor {
 	/**
 	    A 2D stage, with no camera. 0 when there is no room for another actor.
 	**/

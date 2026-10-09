@@ -6,8 +6,8 @@ A game's directory:
                   and autopilot are, its web size budget, gzipped (web_budget_kb), and
                   defines for every build of it (defines: names, or name=value, each a -D),
                   and its playthrough (playthrough: the autopilot file, in its autopilot
-                  folder, that libwgf's checks and frame times fly; playthrough.autopilot
-                  by default)
+                  folder, that libwgf's checks fly; playthrough.autopilot by default;
+                  its frame times fly autopilot/bench.autopilot when it has one)
   src/ assets/ autopilot/
   web/index.html  its page: written once from libwgf's (hosts/web/page.html) when it has
                   none, never overwritten; the game's to change

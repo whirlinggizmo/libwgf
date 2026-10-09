@@ -3,8 +3,8 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Light's calls, on a Actor: `var x:Light = handle` gives it them, and a Light is still a Actor. **/
-@:forward abstract Light(Actor) from Actor to Actor {
+/** Light's calls, on a Actor: `var x:Light = handle` gives it them, and a Light is still a Actor; it starts as 0, none, as a Actor does. **/
+@:forward abstract Light(Actor) from Actor from Int to Actor {
 	/**
 	    A white light of intensity 1, no range limit, a spot's cone pi/6 to pi/4. 0 when
 	    `type` isn't a type, or there is no room for another actor.

@@ -5009,7 +5009,8 @@ export function wgf_mesh_create_triangles(positions, normals, uvs, indices) {
  * file, found as any actor is (wgf_actor_find), and a light under a node that carries one.
  * The file's own mesh holds the tree, the materials, and no triangles. A model of a PENDING mesh
  * draws nothing; of a FAILED one, the placeholder checker on a unit cube. Skins,
- * animations, morph targets, and cameras in the file are not read. 0 (logged) for an
+ * animations, morph targets, cameras, and `extras` (a node's or the file's own data) in the
+ * file are not read: a game's data beside its geometry is a file of its own. 0 (logged) for an
  * empty path or one that isn't .gltf or .glb.
  */
 export function wgf_mesh_create(path) {
@@ -7053,8 +7054,11 @@ export function wgf_world_clear() {
  * with a component or a behavior whose parent has none -- oldest first, as a `actor`
  * block, with its kind, its transform, its components, its behaviors, and the actors under
  * it, as they are now, so loading it as a scene and instantiating it makes the same actors
- * again. libwgf's to keep: valid until the next dump. "" when no actor ever had a
- * component or a behavior.
+ * again. One under a glTF file's model is written with the file's root, as its `model path=`
+ * block, and a node of the file only with what it has more than the file gives it (its
+ * transform, components, behaviors, and the actors under it), its kind left to the file.
+ * libwgf's to keep: valid until the next dump. "" when no actor ever had a component or a
+ * behavior.
  */
 export function wgf_world_dump() {
     const value = host["_wgf_world_dump"]();

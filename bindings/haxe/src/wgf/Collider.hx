@@ -3,8 +3,8 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Collider's calls, on a Actor: `var x:Collider = handle` gives it them, and a Collider is still a Actor. **/
-@:forward abstract Collider(Actor) from Actor to Actor {
+/** Collider's calls, on a Actor: `var x:Collider = handle` gives it them, and a Collider is still a Actor; it starts as 0, none, as a Actor does. **/
+@:forward abstract Collider(Actor) from Actor from Int to Actor {
 	/**
 	    False too for a radius below 0.
 	**/

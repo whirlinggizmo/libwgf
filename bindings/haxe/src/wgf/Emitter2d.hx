@@ -3,8 +3,8 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Emitter2d's calls, on a Actor: `var x:Emitter2d = handle` gives it them, and a Emitter2d is still a Actor. **/
-@:forward abstract Emitter2d(Actor) from Actor to Actor {
+/** Emitter2d's calls, on a Actor: `var x:Emitter2d = handle` gives it them, and a Emitter2d is still a Actor; it starts as 0, none, as a Actor does. **/
+@:forward abstract Emitter2d(Actor) from Actor from Int to Actor {
 	/**
 	    An emitter that isn't emitting yet: rate 0, 256 particles at most, white squares of
 	    4 units living a second, going nowhere. 0 when there is no room for another actor.

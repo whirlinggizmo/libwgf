@@ -3,8 +3,8 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Camera2d's calls, on a Actor: `var x:Camera2d = handle` gives it them, and a Camera2d is still a Actor. **/
-@:forward abstract Camera2d(Actor) from Actor to Actor {
+/** Camera2d's calls, on a Actor: `var x:Camera2d = handle` gives it them, and a Camera2d is still a Actor; it starts as 0, none, as a Actor does. **/
+@:forward abstract Camera2d(Actor) from Actor from Int to Actor {
 	/**
 	    A 2D camera, zoom 1. 0 when there is no room for another actor.
 	**/

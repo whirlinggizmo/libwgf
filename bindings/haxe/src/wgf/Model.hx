@@ -3,8 +3,8 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Model's calls, on a Actor: `var x:Model = handle` gives it them, and a Model is still a Actor. **/
-@:forward abstract Model(Actor) from Actor to Actor {
+/** Model's calls, on a Actor: `var x:Model = handle` gives it them, and a Model is still a Actor; it starts as 0, none, as a Actor does. **/
+@:forward abstract Model(Actor) from Actor from Int to Actor {
 	/**
 	    A model of `mesh`; 0 for none yet. 0 when `mesh` isn't a mesh, or there is no room
 	    for another actor. Tinted white: as its materials are.

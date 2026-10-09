@@ -22,7 +22,11 @@ extern "C" {
  * The format, `wgf-scene 2`, is BUILDING.md's ("Scene files"): flat `actor` and `prefab`
  * blocks, each naming its parent by path (`prefab ship/flame`), a kind line, component
  * lines, and behavior lines whose parameters may refer to other actors by name or path
- * (`target=@start_gate`, wgf_behavior_get_param_actor). Every refusal -- an unknown line,
+ * (`target=@start_gate`, wgf_behavior_get_param_actor). A block under a glTF file's model
+ * (`model path=`) that names one of the file's nodes is that node: its lines are applied to
+ * it, and the blocks under it made, once the file has loaded (a block naming none is a new
+ * actor there, made then too); the scene is held until then, and the references in that tree
+ * are found then. Every refusal -- an unknown line,
  * kind, component, or key, a value of the wrong shape, a path with no parent above it, a
  * block inside another, a file at version 1 (tools/update_scene.py updates one) -- FAILS
  * the scene, the line logged with its number. */

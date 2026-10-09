@@ -27,7 +27,7 @@ class Main {
 	static var hud:Stage2d;
 	static var camera:Camera2d;
 	static var tiles:Texture;
-	static var car:Model;
+	static var car:Model = 0; // a section type starts as none, as a handle does
 	static var font:Font;
 	static var click:Sound;
 	static var music:Sound;

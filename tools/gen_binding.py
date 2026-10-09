@@ -514,8 +514,8 @@ def typed_modules(binding):
         modules[haxe] = text
     for haxe, kind in over.items():
         text = header + (f'/** {haxe}\'s calls, on a {kind}: `var x:{haxe} = handle` gives it them, and a {haxe} is '
-                         f'still a {kind}. **/\n'
-                         f'@:forward abstract {haxe}({kind}) from {kind} to {kind} {{\n' +
+                         f'still a {kind}; it starts as 0, none, as a {kind} does. **/\n'
+                         f'@:forward abstract {haxe}({kind}) from {kind} from Int to {kind} {{\n' +
                          '\n'.join(members.pop(haxe, [])) + '}\n')
         modules[haxe] = text
     for haxe, items in members.items():

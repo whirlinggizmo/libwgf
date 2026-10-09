@@ -3,8 +3,8 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Text's calls, on a Actor: `var x:Text = handle` gives it them, and a Text is still a Actor. **/
-@:forward abstract Text(Actor) from Actor to Actor {
+/** Text's calls, on a Actor: `var x:Text = handle` gives it them, and a Text is still a Actor; it starts as 0, none, as a Actor does. **/
+@:forward abstract Text(Actor) from Actor from Int to Actor {
 	/**
 	    A text actor in `font` (0: the default font), with no string yet. 0 when `font`
 	    isn't a font, or there is no room for another actor.

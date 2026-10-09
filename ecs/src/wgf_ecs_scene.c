@@ -869,6 +869,8 @@ static wgf_actor_t make_kind(const wgf_ecs_priv_scene_data_t *data, int thing)
 }
 
 static wgf_actor_t make(const wgf_ecs_priv_scene_data_t *data, int thing, wgf_actor_t parent, int depth);
+static void overlay(const wgf_ecs_priv_scene_data_t *data, int thing, wgf_actor_t node, int depth);
+static bool defer(int thing, wgf_actor_t root, int depth);
 
 /* Where a spawn_at puts the top actor it makes, before it is snapped; none otherwise. */
 static struct {
@@ -876,15 +878,73 @@ static struct {
     float x, y, z, angle;
 } placement;
 
-/* The blocks inside block `thing`, each made under `actor`. */
+/* The scene whose blocks are being made: what a glTF file's root waits with. */
+static wgf_scene_t making;
+
+/* The node of a glTF file named `name` directly under `actor` (a file's root or one of its
+ * nodes); 0 for none, and for any other actor. */
+static wgf_actor_t file_node(wgf_actor_t actor, const char *name)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
+    int i;
+    if (actor_ptr == NULL || name[0] == '\0' ||
+        !(actor_ptr->from_file || (actor_ptr->type == WGF_ACTOR_KIND_MODEL && actor_ptr->as.model.file_root))) {
+        return 0;
+    }
+    for (i = 0; i < wgf_actor_get_child_count(actor); i++) {
+        const wgf_actor_t child = wgf_actor_get_child(actor, i);
+        const wgf_gfx_priv_actor_t *child_ptr = wgf_gfx_priv_actor_of(child);
+        if (child_ptr != NULL && child_ptr->from_file && strcmp(wgf_actor_get_name(child), name) == 0) return child;
+    }
+    return 0;
+}
+
+/* Whether `actor` is a glTF file's root whose file is still loading: its tree isn't made yet. */
+static bool file_loading(wgf_actor_t actor)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
+    return actor_ptr != NULL && actor_ptr->type == WGF_ACTOR_KIND_MODEL && actor_ptr->as.model.file_root &&
+           wgf_resource_get_status(actor_ptr->as.model.mesh) == WGF_RESOURCE_STATUS_PENDING;
+}
+
+/* The blocks inside block `thing`, each made under `actor`: a block naming one of a glTF
+ * file's nodes there is that node, its lines applied to it (overlay); any other a new actor. */
 static void make_children(const wgf_ecs_priv_scene_data_t *data, int thing, wgf_actor_t actor, int depth)
 {
     int i;
     if (depth >= DEPTH_MAX) return;
     if (data->things[thing].from >= 0) make_children(data, data->things[thing].from, actor, depth + 1);
     for (i = thing + 1; i < data->count; i++) {
-        if (data->things[i].parent == thing) make(data, i, actor, depth + 1);
+        if (data->things[i].parent == thing) {
+            const wgf_actor_t node = file_node(actor, data->things[i].name);
+            if (node != 0) overlay(data, i, node, depth + 1);
+            else make(data, i, actor, depth + 1);
+        }
     }
+}
+
+/* The blocks inside block `thing`, under `actor`: made now, or, `actor` a glTF file's root
+ * still loading, once its tree is (its nodes are what they name). */
+static void make_children_of(const wgf_ecs_priv_scene_data_t *data, int thing, wgf_actor_t actor, int depth)
+{
+    if (file_loading(actor) && defer(thing, actor, depth)) return;
+    make_children(data, thing, actor, depth);
+}
+
+/* Block `thing`'s lines on a glTF file's node, which the file made: its kind the file's. */
+static void overlay(const wgf_ecs_priv_scene_data_t *data, int thing, wgf_actor_t node, int depth)
+{
+    after_t after = {0, false};
+    int behavior = 0;
+    const int kind = kind_of(data, thing);
+    if (kind >= 0 && kinds[kind].role == ROLE_KIND && (int)kinds[kind].what != (int)wgf_actor_get_kind(node)) {
+        wgf_log_warn("wgf_scene: %s: a glTF file's node is the kind its file makes it, not a %s",
+                     data->things[thing].path, kinds[kind].name);
+    }
+    apply_thing(data, &data->things[thing], node, &after, &behavior, 0);
+    make_children_of(data, thing, node, depth);
+    wgf_actor_snap(node);
+    if (after.play) wgf_voice_play(wgf_actor_get_voice(node));
 }
 
 /* Block `thing`'s actor, its lines applied, then its children made, then it placed where it
@@ -899,7 +959,7 @@ static wgf_actor_t make(const wgf_ecs_priv_scene_data_t *data, int thing, wgf_ac
     if (parent != 0) wgf_actor_set_parent(actor, parent);
     if (block->name[0] != '\0' && (!block->prefab || block->parent >= 0)) wgf_actor_set_name(actor, block->name);
     apply_thing(data, block, actor, &after, &behavior, 0);
-    make_children(data, thing, actor, depth);
+    make_children_of(data, thing, actor, depth);
     if (depth == 0 && placement.set) {
         wgf_vec3_t angles = wgf_actor_get_rotation(actor);
         if (wgf_gfx_priv_actor_get_root_type(actor) == WGF_ACTOR_KIND_STAGE3D) {
@@ -1027,11 +1087,107 @@ static const wgf_ecs_priv_scene_data_t *ready(wgf_scene_t scene)
     return scene_ptr != NULL && scene_ptr->resource.status == WGF_RESOURCE_STATUS_READY ? scene_ptr->data : NULL;
 }
 
+/* ---- blocks under a glTF file still loading ---------------------------------------- */
+
+/* A file's root whose file was loading as its scene made it: the blocks inside block `thing`
+ * are made under it once its tree is (the file part's hook, wgf_gfx_priv_model_built), the
+ * scene held until then. */
+typedef struct deferred_t {
+    wgf_scene_t scene;
+    int thing, depth;
+    wgf_actor_t root;
+} deferred_t;
+
+static deferred_t *deferred;
+static int deferred_count, deferred_capacity;
+
+static void resolve_tree(wgf_actor_t actor);
+
+static bool waits(wgf_actor_t actor)
+{
+    int i;
+    for (i = 0; i < deferred_count; i++) {
+        if (deferred[i].root == actor) return true;
+    }
+    return false;
+}
+
+/* Let go of the waits whose roots went before their files loaded. */
+static void forget_gone(void)
+{
+    int i = 0;
+    while (i < deferred_count) {
+        if (wgf_handle_is_alive(deferred[i].root)) {
+            i++;
+            continue;
+        }
+        wgf_resource_release(deferred[i].scene);
+        deferred[i] = deferred[--deferred_count];
+    }
+}
+
+/* The ecs's hook: `root`'s file loaded (its tree made) or FAILED; what waited for it made, or
+ * dropped with a warning. A block made now may wait for another file, growing the list. */
+static void file_built(wgf_actor_t root)
+{
+    int i = 0;
+    while (i < deferred_count) {
+        deferred_t wait;
+        const wgf_ecs_priv_scene_data_t *data;
+        const wgf_scene_t before = making;
+        const wgf_gfx_priv_actor_t *root_ptr;
+        if (deferred[i].root != root) {
+            i++;
+            continue;
+        }
+        wait = deferred[i];
+        deferred[i] = deferred[--deferred_count];
+        data = ready(wait.scene);
+        root_ptr = wgf_gfx_priv_actor_of(root);
+        if (data != NULL && root_ptr != NULL &&
+            wgf_resource_get_status(root_ptr->as.model.mesh) == WGF_RESOURCE_STATUS_READY) {
+            making = wait.scene;
+            make_children(data, wait.thing, root, wait.depth);
+            making = before;
+            if (!waits(root)) resolve_tree(root);
+        } else if (data != NULL) {
+            wgf_log_warn("wgf_scene: %s: what the scene puts under it isn't made: its file failed",
+                         data->things[wait.thing].path[0] != '\0' ? data->things[wait.thing].path : "a model");
+        }
+        wgf_resource_release(wait.scene);
+        i = 0; /* making may have changed the list */
+    }
+    forget_gone();
+}
+
+static bool defer(int thing, wgf_actor_t root, int depth)
+{
+    if (making == 0) return false;
+    forget_gone();
+    if (deferred_count == deferred_capacity) {
+        const int capacity = deferred_capacity > 0 ? deferred_capacity * 2 : 8;
+        deferred_t *grown = (deferred_t *)realloc(deferred, sizeof(deferred_t) * (size_t)capacity);
+        if (grown == NULL) return false; /* made now, beside the file's nodes */
+        deferred = grown;
+        deferred_capacity = capacity;
+    }
+    wgf_core_priv_resource_retain(making);
+    deferred[deferred_count].scene = making;
+    deferred[deferred_count].thing = thing;
+    deferred[deferred_count].depth = depth;
+    deferred[deferred_count].root = root;
+    deferred_count++;
+    wgf_gfx_priv_set_model_built_hook(file_built);
+    return true;
+}
+
 /* The references in the behaviors of `actor` and everything under it found, as it and all
- * made with it are there: the actors a scene just made, so no other tree is walked. */
+ * made with it are there: the actors a scene just made, so no other tree is walked. A file's
+ * root that waits for its file is left until its tree is made, so it can refer into it. */
 static void resolve_tree(wgf_actor_t actor)
 {
     int i;
+    if (waits(actor)) return;
     wgf_ecs_priv_behaviors_resolve(actor);
     for (i = 0; i < wgf_actor_get_child_count(actor); i++) resolve_tree(wgf_actor_get_child(actor, i));
 }
@@ -1047,6 +1203,7 @@ int wgf_scene_instantiate(wgf_scene_t scene, wgf_actor_t parent)
         wgf_log_error("wgf_scene: out of memory instantiating");
         return 0;
     }
+    making = scene;
     for (i = 0; i < data->count; i++) {
         data = ready(scene); /* making actors doesn't free the scene, but look again */
         if (!data->things[i].prefab && data->things[i].parent < 0) {
@@ -1054,6 +1211,7 @@ int wgf_scene_instantiate(wgf_scene_t scene, wgf_actor_t parent)
             if (actor != 0) made_actors[made++] = actor;
         }
     }
+    making = 0;
     for (i = 0; i < made; i++) resolve_tree(made_actors[i]); /* all made, so each can refer to any */
     free(made_actors);
     return made;
@@ -1097,7 +1255,9 @@ wgf_actor_t wgf_prefab_spawn(wgf_prefab_t prefab, wgf_actor_t parent)
     prefab_ptr = &prefab_records[index];
     data = ready(prefab_ptr->scene);
     if (data == NULL || (parent != 0 && wgf_actor_get_kind(parent) == WGF_ACTOR_KIND_NONE)) return 0;
+    making = prefab_ptr->scene;
     actor = make(data, prefab_ptr->thing, parent, 0);
+    making = 0;
     resolve_tree(actor);
     return actor;
 }
@@ -1146,6 +1306,11 @@ bool wgf_scene_has_prefab(wgf_scene_t scene, const char *name)
 
 void wgf_ecs_priv_scene_shutdown(void)
 {
+    int i;
+    for (i = 0; i < deferred_count; i++) wgf_resource_release(deferred[i].scene);
+    free(deferred);
+    deferred = NULL;
+    deferred_count = deferred_capacity = 0;
     if (!pool_ready) return;
     wgf_core_priv_resource_unregister(&scene_pool);
     wgf_core_priv_handle_pool_destroy(&scene_pool);

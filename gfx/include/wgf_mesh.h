@@ -70,7 +70,8 @@ WGF_API wgf_mesh_t wgf_mesh_create_triangles(const float *positions, int positio
  * file, found as any actor is (wgf_actor_find), and a light under a node that carries one.
  * The file's own mesh holds the tree, the materials, and no triangles. A model of a PENDING mesh
  * draws nothing; of a FAILED one, the placeholder checker on a unit cube. Skins,
- * animations, morph targets, and cameras in the file are not read. 0 (logged) for an
+ * animations, morph targets, cameras, and `extras` (a node's or the file's own data) in the
+ * file are not read: a game's data beside its geometry is a file of its own. 0 (logged) for an
  * empty path or one that isn't .gltf or .glb. */
 WGF_API wgf_mesh_t wgf_mesh_create(const char *path);
 

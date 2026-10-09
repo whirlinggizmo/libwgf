@@ -62,8 +62,11 @@ WGF_API void wgf_world_clear(void);
  * with a component or a behavior whose parent has none -- oldest first, as a `actor`
  * block, with its kind, its transform, its components, its behaviors, and the actors under
  * it, as they are now, so loading it as a scene and instantiating it makes the same actors
- * again. libwgf's to keep: valid until the next dump. "" when no actor ever had a
- * component or a behavior. */
+ * again. One under a glTF file's model is written with the file's root, as its `model path=`
+ * block, and a node of the file only with what it has more than the file gives it (its
+ * transform, components, behaviors, and the actors under it), its kind left to the file.
+ * libwgf's to keep: valid until the next dump. "" when no actor ever had a component or a
+ * behavior. */
 WGF_API const char *wgf_world_dump(void);
 
 #ifdef __cplusplus

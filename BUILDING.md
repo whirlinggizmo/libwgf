@@ -243,6 +243,20 @@ vehicle    wheels=<child>,<child>,... (its children, left and right pairs, front
            max_rpm=rpm  gears=<ratio>,... (forward, lowest first)  drive=front|rear|all
 ```
 
+**A glTF file's nodes** are blocks too. Under an actor with `model path=`, a block whose path names one of the file's nodes (`actor track/road`, the file's node `road`) is that node: no actor is made for it, its lines are applied to the node the file made, and the blocks under it likewise; a block naming no node of the file is a new actor there. The node's kind is the file's, so its block has no kind line (a `model tint=` aside). They are made once the file has loaded, the scene held until then, and the references in that tree are found then; a failed file makes none of them, warned. A dump writes a file's actors the same way: its root as its `model path=` block, and a node only where it, or something under it, has more than the file gives it. So a track's surfaces each take their own body in the scene:
+
+```
+actor track
+  model path="track/track.glb"
+end
+actor track/road
+  body type=static shape=mesh friction=1
+end
+actor track/ground
+  body type=static shape=mesh friction=0.7
+end
+```
+
 `body` and `vehicle` are physics' (`wgf_body.h`, `wgf_vehicle.h`): refused until the program has started physics (`wgf_physics_set_gravity`), so a game sets the gravity before it loads such a scene. A convex or mesh body is read from the models at and under its actor, each one's transform, scale included: a glTF file's nodes each their own triangles, and the body made once the files have loaded.
 
 For example, a ship with its flame, a rock prefab and a smaller one from it, and a ship placed:
@@ -333,7 +347,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `check_features.py` | runs the feature test (`examples/haxe/feature-test/`) on hxcpp, under node, and in a browser, failing a call it never reached |
 | `check_binding.py` | checks the Haxe binding: generated, every call reached once, and its test on hxcpp, under node, and in a browser |
 | `check_js_binding.py` | checks the JS binding, its raw and typed layers: generated, their declarations under TypeScript (`bindings/js/tests/types.ts`), and every JS example (`examples/js/`) in a browser, flown by its autopilot, on the full host and trimmed as an export is |
-| `measure_frames.py` | (in `tools/bench/`) flies each game's web export with its autopilot in a browser and traces each frame's main-thread work and the garbage collections; `--write` records them in `docs/benchmarks.md` beside the sizes, from the reference machine (the GPU under Xvfb, the CPU throttled 4 times) |
+| `measure_frames.py` | (in `tools/bench/`) flies each game's web export in a browser with its `autopilot/bench.autopilot` (a few hundred frames of its busiest play), else its playthrough, and traces each frame's main-thread work and the garbage collections; `--write` records them in `docs/benchmarks.md` beside the sizes, from the reference machine (the GPU under Xvfb, the CPU throttled 4 times) |
 | `measure_actors.py` | (in `tools/bench/`) measures what an actor costs, bytes and nanoseconds, at 10k and 50k, static and moving, flat and deep, with behaviors, with churn, and finding by name, path, and component (`tools/bench/actors/main.c`), on `linux-x64-release-headless`; `--write` records them in `docs/benchmarks.md`, `--check` fails a row past its baseline |
 | `measure_calls.py` | (in `tools/bench/`) times a call into the host from Haxe and from JS, both through the JS binding, in a browser on the release host (not a check: timing) |
 | `check_docs.py` | checks the docs against the code: every link resolves, ARCHITECTURE names every public header, this file every tool and preset, README every doc, deps/README every vendored directory (ctest runs it) |

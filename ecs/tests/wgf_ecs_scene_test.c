@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "render/wgf_gfx_render_priv.h"
@@ -39,6 +40,13 @@ static void expect(int ok, const char *what)
         printf("FAIL: %s\n", what);
         failures++;
     }
+}
+
+static char *copy_of(const char *text)
+{
+    char *copy = (char *)malloc(strlen(text) + 1);
+    if (copy != NULL) memcpy(copy, text, strlen(text) + 1);
+    return copy;
 }
 
 static bool near(float a, float b) { return fabsf(a - b) < 1e-4f; }
@@ -354,6 +362,138 @@ int main(void)
                "dumped as its path, its file's nodes left to it");
         wgf_world_clear();
         wgf_resource_release(showroom);
+    }
+
+    /* blocks under a glTF file's model: one naming a node of the file is that node, its lines
+       applied once the file has loaded (and its references found then); one naming none is a
+       new actor under it; a dump writes the file's root and only what was added to its nodes,
+       and loads again as the same tree; a file that fails makes none of them */
+    {
+        static const char *const track_scene = "wgf-scene 2\n"
+                                               "actor track\n"
+                                               "  model path=models/track.gltf\n"
+                                               "end\n"
+                                               "actor track/road\n"
+                                               "  motion damping=0.5\n"
+                                               "  behavior name=Surface grip=1 next=@../gates/gate_0/gate\n"
+                                               "end\n"
+                                               "actor track/gates\n"
+                                               "end\n"
+                                               "actor track/gates/gate_0\n"
+                                               "end\n"
+                                               "actor track/gates/gate_0/gate\n"
+                                               "  lifetime seconds=100\n"
+                                               "  behavior name=Gate road=@../../../road\n"
+                                               "end\n"
+                                               "actor track/sign\n"
+                                               "  transform position=1,2,3\n"
+                                               "end\n"
+                                               "prefab kit\n"
+                                               "  model path=models/track.gltf\n"
+                                               "end\n"
+                                               "prefab kit/road\n"
+                                               "  lifetime seconds=50\n"
+                                               "end\n";
+        wgf_scene_t circuit, again, broken;
+        wgf_actor_t track, road, gate_0, gate, sign, kit;
+        wgf_mesh_t file;
+        char *dump;
+        double start;
+        write_file("models/track.gltf",
+                   "{\"asset\":{\"version\":\"2.0\"},\"scene\":0,\"scenes\":[{\"nodes\":[0,1]}],"
+                   "\"nodes\":[{\"name\":\"road\",\"mesh\":0},{\"name\":\"gates\",\"children\":[2]},"
+                   "{\"name\":\"gate_0\",\"translation\":[5,0,0]}],"
+                   "\"meshes\":[{\"primitives\":[{\"attributes\":{\"POSITION\":0}}]}],"
+                   "\"buffers\":[{\"uri\":\"data:application/octet-stream;base64,"
+                   "AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAA\",\"byteLength\":36}],"
+                   "\"bufferViews\":[{\"buffer\":0,\"byteLength\":36}],"
+                   "\"accessors\":[{\"bufferView\":0,\"componentType\":5126,\"count\":3,\"type\":\"VEC3\","
+                   "\"min\":[0,0,0],\"max\":[1,1,0]}]}");
+        circuit = load("scenes/circuit.scene", track_scene);
+        expect(wgf_scene_instantiate(circuit, stage) == 1, "a file's model made, its blocks waiting");
+        track = wgf_actor_find(stage, "track");
+        kit = wgf_prefab_spawn(wgf_scene_find_prefab(circuit, "kit"), stage);
+        file = wgf_model_get_mesh(track);
+        expect(wgf_resource_get_status(file) == WGF_RESOURCE_STATUS_PENDING && wgf_actor_get_child_count(track) == 0,
+               "nothing under it while its file loads");
+        wgf_resource_release(circuit); /* what waits for the file holds it */
+        start = wgf_time_get_seconds();
+        while (wgf_resource_get_status(file) == WGF_RESOURCE_STATUS_PENDING && wgf_time_get_seconds() - start < 30.0)
+            wgf_core_priv_update();
+        road = wgf_actor_find(track, "road");
+        gate_0 = wgf_actor_find(track, "gates/gate_0");
+        gate = wgf_actor_find(track, "gates/gate_0/gate");
+        sign = wgf_actor_find(track, "sign");
+        expect(road != 0 && wgf_actor_get_kind(road) == WGF_ACTOR_KIND_MODEL && wgf_model_get_mesh(road) != 0 &&
+                   wgf_actor_has_component(road, WGF_COMPONENT_MOTION) && near(wgf_motion_get_damping(road), 0.5f),
+               "the file's node, its kind and mesh the file's, the block's lines on it");
+        expect(gate_0 != 0 && near(wgf_actor_get_position(gate_0).x, 5) && gate != 0 &&
+                   wgf_actor_get_parent(gate) == gate_0 && wgf_actor_has_component(gate, WGF_COMPONENT_LIFETIME),
+               "a node left where the file put it, and a new actor made under it");
+        expect(sign != 0 && wgf_actor_get_parent(sign) == track && near(wgf_actor_get_position(sign).y, 2),
+               "a block naming no node: a new actor under the root");
+        expect(wgf_behavior_get_param_actor(road, wgf_actor_find_behavior(road, "Surface"), "next") == gate &&
+                   wgf_behavior_get_param_actor(gate, wgf_actor_find_behavior(gate, "Gate"), "road") == road,
+               "references into and out of the file's tree found once it is made");
+        expect(wgf_actor_has_component(wgf_actor_find(kit, "road"), WGF_COMPONENT_LIFETIME),
+               "a prefab's the same");
+        wgf_actor_destroy(kit, WGF_ACTOR_DESTROY_CHILDREN);
+        circuit = load("scenes/circuit.scene", track_scene); /* let go of with the last wait */
+        kit = wgf_prefab_spawn(wgf_scene_find_prefab(circuit, "kit"), stage);
+        expect(wgf_actor_has_component(wgf_actor_find(kit, "road"), WGF_COMPONENT_LIFETIME),
+               "its file READY, a spawn's blocks are made at once");
+        wgf_actor_destroy(kit, WGF_ACTOR_DESTROY_CHILDREN);
+        wgf_resource_release(circuit);
+        dump = copy_of(wgf_world_dump());
+        if (getenv("WGF_TEST_SHOW")) printf("%s", dump);
+        expect(dump != NULL && strstr(dump, "actor \"track\"\n    model path=\"models/track.gltf\"") != NULL &&
+                   strstr(dump, "actor \"track/road\"\n    transform") != NULL &&
+                   strstr(dump, "actor \"track/gates\"\n    transform") != NULL &&
+                   strstr(dump, "actor \"track/gates/gate_0/gate\"\n") != NULL &&
+                   strstr(dump, "actor \"road\"") == NULL,
+               "dumped as the file's root, its nodes as what was added to them, no kind of their own");
+        wgf_actor_destroy(track, WGF_ACTOR_DESTROY_CHILDREN); /* a plain root: the world's clear leaves it */
+        wgf_world_clear();
+        again = load("scenes/circuit_again.scene", dump);
+        free(dump);
+        expect(wgf_scene_instantiate(again, stage) == 1, "the dump loaded again");
+        track = wgf_actor_find(stage, "track");
+        file = wgf_model_get_mesh(track);
+        start = wgf_time_get_seconds();
+        while (wgf_resource_get_status(file) == WGF_RESOURCE_STATUS_PENDING && wgf_time_get_seconds() - start < 30.0)
+            wgf_core_priv_update();
+        road = wgf_actor_find(track, "road");
+        gate = wgf_actor_find(track, "gates/gate_0/gate");
+        expect(road != 0 && wgf_actor_has_component(road, WGF_COMPONENT_MOTION) && gate != 0 &&
+                   wgf_actor_get_parent(gate) == wgf_actor_find(track, "gates/gate_0") &&
+                   wgf_behavior_get_param_actor(road, wgf_actor_find_behavior(road, "Surface"), "next") == gate &&
+                   wgf_actor_get_child_count(track) == 3,
+               "the same tree");
+        {   /* the file READY: a block under it made at once */
+            const wgf_actor_t twin = wgf_prefab_spawn(wgf_scene_find_prefab(again, "kit"), stage);
+            expect(twin == 0, "a dump has no prefabs");
+        }
+        wgf_actor_destroy(track, WGF_ACTOR_DESTROY_CHILDREN);
+        wgf_world_clear();
+        wgf_resource_release(again);
+
+        broken = load("scenes/broken.scene", "wgf-scene 2\n"
+                                             "actor wreck\n"
+                                             "  model path=models/missing.gltf\n"
+                                             "end\n"
+                                             "actor wreck/road\n"
+                                             "  motion\n"
+                                             "end\n");
+        expect(wgf_scene_instantiate(broken, stage) == 1, "a model of a missing file made");
+        track = wgf_actor_find(stage, "wreck");
+        file = wgf_model_get_mesh(track);
+        start = wgf_time_get_seconds();
+        while (wgf_resource_get_status(file) == WGF_RESOURCE_STATUS_PENDING && wgf_time_get_seconds() - start < 30.0)
+            wgf_core_priv_update();
+        expect(wgf_resource_get_status(file) == WGF_RESOURCE_STATUS_FAILED && wgf_actor_get_child_count(track) == 0,
+               "its file failed: nothing under it made (warned)");
+        wgf_actor_destroy(track, WGF_ACTOR_DESTROY_CHILDREN);
+        wgf_resource_release(broken);
     }
 
     /* refusals */

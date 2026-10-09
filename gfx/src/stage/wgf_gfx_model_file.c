@@ -119,6 +119,7 @@ void wgf_gfx_priv_model_mesh_done(wgf_mesh_t mesh)
         }
         waiting[i] = waiting[--waiting_count];
         if (wgf_resource_get_status(mesh) == WGF_RESOURCE_STATUS_READY) build(root, mesh);
+        wgf_gfx_priv_model_built(root); /* what a scene put under it, made now (the list may grow) */
     }
 }
 

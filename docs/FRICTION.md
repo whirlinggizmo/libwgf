@@ -520,3 +520,59 @@ Racer (milestone 2), from step 5: the game-developer session's part 2, the car o
 - **Cost:** about 70 minutes
 - **Found by:** the racer's session (its P14)
 - **Triage:** fine: the game's, as expected; recording with no one there stays in ROADMAP's "Later" on its condition
+
+Racer (milestone 2), from step 6: the game-developer session's part 3, the track as a glTF file (`../libwgf-racer/FRICTION.md`, "Part 3", its entries G1 to G8; the game at db88e32), 2026-10-09.
+
+### Racer: a scene can't put a body on a node of a glTF file
+
+- **Where:** the game's `Track.hx:64-76`, which polls the file's status and `find("road")` each tick of its load, then gives each surface node a body
+- **Missing:** a scene line that addresses a file's node: `actor track/road` under a `model path=` block made a new actor, and one body on the root took the whole file at one friction (grass, asphalt, and walls alike)
+- **Workaround:** the bodies in code, after the load; Main waits on it before spawning the car
+- **Cost:** 15 lines
+- **Found by:** the racer's session (its G2)
+- **Triage:** fixed in step 6: a block under a file's model naming one of the file's nodes is that node (Godot's editable children), its lines applied and the blocks under it made once the file has loaded, the scene held until then; a block naming no node is a new actor there (a checkpoint under a gate); BUILDING.md's "Scene files" shows a track's surfaces each with its own body
+
+### Racer: `wgf dump` wrote a file's bodied nodes as top actors, and left out what was under them
+
+- **Where:** `wgf dump` of the racer at frame 30
+- **Missing:** a dump that loads again as the same world: the file's root, having no component, wasn't written; the four nodes given bodies were written as top `model` actors with no mesh; the checkpoints under the gates weren't written at all
+- **Workaround:** none needed (dump is a debugging tool)
+- **Cost:** 10 minutes
+- **Found by:** the racer's session (its G4)
+- **Triage:** fixed in step 6: a simulated actor at or under a file's node is written with the file's root, as its `model path=` block, and a node only where it or something under it has more than its file gives (its transform, components, behaviors, and the actors under it), with no kind line; loaded again it is the same tree (`wgf_ecs_scene_test`)
+
+### Racer: a glTF file carries no game data
+
+- **Where:** the track's centerline (the grid, the grass test, the HUD's next checkpoint, the driver tool), which isn't geometry
+- **Missing:** a node's glTF `extras`, or an accessor read back, so a track carries its own racing line; and the docs saying a file can't
+- **Workaround:** `gen_track.py` writes `src/TrackData.hx` beside the file from the same centerline, `--check` covering both
+- **Cost:** 10 minutes, and 11 KB of racer.js
+- **Found by:** the racer's session (its G3)
+- **Triage:** the docs gap fixed in step 6 (`wgf_mesh.h`: `extras` aren't read, a game's data beside its geometry is a file of its own); reading `extras` deferred to ROADMAP's "Later" on its condition, since one tool writing both files is the game's way and costs it nothing at run time
+
+### Racer: a section type can't start at 0
+
+- **Where:** `Track.hx:24`, `public static var root:Model = 0;`, a compile error
+- **Missing:** `from Int` on the Haxe section types (`Model`, `Camera3d`, `Body` ...), which are `from Actor` only, where `Actor` and `Mesh` take 0
+- **Workaround:** `root:Actor = 0`, used as a Model
+- **Cost:** 2 minutes
+- **Found by:** the racer's session (its G6)
+- **Triage:** fixed in step 6: every section type is `from Int` too, reached by the feature test (`static var car:Model = 0`)
+
+### Racer: the benchmark autopilot, documented only in a tool's help
+
+- **Where:** `measure_frames.py --help` and benchmarks.md's row; neither the template's README nor BUILDING named `bench.autopilot`, and the session regenerated over the one it had
+- **Missing:** the file's name and purpose where a game's developer reads
+- **Workaround:** the driver tool now writes it from each lap it records
+- **Cost:** 15 minutes
+- **Found by:** the racer's session (its G7)
+- **Triage:** fixed in step 6: the template's README, BUILDING's tool table, and `tools/wgf/game.py`'s account of wgf.json say what `autopilot/bench.autopilot` is and that frame times fly it before the playthrough
+
+### Racer: what worked on glTF (three notes)
+
+- **Where:** the racer's session's G1, G5, G8
+- **Missing:** nothing. Loading a glTF and making collision from its nodes was a few lines and worked the first time (nodes found by path, a mesh body over a node's subtree, a sensor under a node); glTF linked for hxcpp and the trimmed web host with nothing done; the stage draws 280 trees and 15 file nodes where it drew 763 models; a hand-written .glb loaded as glTF says (winding, 32-bit indices, flat normals, linear colors). The faster car on a seamless road (G5) was the better geometry's, and the driver tool's to absorb; the track's file outside the web budget (G8) is fair, the budget counting the program
+- **Workaround:** none
+- **Cost:** none
+- **Found by:** the racer's session
+- **Triage:** fine: kept as they are, and kept so

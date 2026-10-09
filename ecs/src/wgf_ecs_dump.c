@@ -207,15 +207,19 @@ static void dump_voice(out_t *out, wgf_voice_t voice)
         wgf_voice_get_state(voice) == WGF_PLAY_STATE_PLAYING ? "true" : "false");
 }
 
-static void dump_actor(out_t *out, wgf_actor_t e, const char *path);
+static bool from_file(wgf_actor_t actor)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
+    return actor_ptr != NULL && actor_ptr->from_file;
+}
 
-/* `e`'s lines, a level in from its block's: its kind's, then its transform, components,
- * and behaviors; then the actors under it, each a block a level further in. */
+/* `e`'s lines, a level in from its block's: its kind's (none for a glTF file's node, which
+ * its file makes), then its transform, components, and behaviors. */
 static void dump_lines(out_t *out, wgf_actor_t e, const char *pad)
 {
     const wgf_vec3_t p = wgf_actor_get_position(e), r = wgf_actor_get_rotation(e), s = wgf_actor_get_scale(e);
     int i, b;
-    switch (wgf_actor_get_kind(e)) { /* each writes its own line, from its own 4 spaces */
+    switch (from_file(e) ? WGF_ACTOR_KIND_NONE : wgf_actor_get_kind(e)) { /* each writes its own line */
         case WGF_ACTOR_KIND_SHAPE2D: put(out, "%s", pad); dump_shape(out, e); break;
         case WGF_ACTOR_KIND_SPRITE: put(out, "%s", pad); dump_sprite(out, e); break;
         case WGF_ACTOR_KIND_TEXT: put(out, "%s", pad); dump_text(out, e); break;
@@ -277,9 +281,23 @@ static void dump_lines(out_t *out, wgf_actor_t e, const char *pad)
     }
 }
 
+/* Whether a glTF file's node is written: it, or something under it, has more than its file
+ * gives it (components or behaviors, or an actor the file didn't make). */
+static bool node_written(wgf_actor_t node, int depth)
+{
+    int i;
+    if (!from_file(node) || wgf_ecs_priv_record_of(node) != NULL) return true;
+    for (i = 0; depth < 32 && i < wgf_actor_get_child_count(node); i++) {
+        if (node_written(wgf_actor_get_child(node, i), depth + 1)) return true;
+    }
+    return false;
+}
+
 /* `e`'s block at `path` ("" for an unnamed top actor with nothing under it), then each
  * actor under it, a block of its own naming `e` as its parent by path: an unnamed one is
- * given the name `_<index>` among its siblings, so its block has a path. */
+ * given the name `_<index>` among its siblings, so its block has a path. A glTF file's node
+ * is written only for what it has more than its file (node_written): its file's root's path
+ * makes it again, and the scene's block for it is applied to it then. */
 static void dump_actor(out_t *out, wgf_actor_t e, const char *path)
 {
     int i;
@@ -296,7 +314,7 @@ static void dump_actor(out_t *out, wgf_actor_t e, const char *path)
         const wgf_actor_t child = wgf_actor_get_child(e, i);
         const wgf_gfx_priv_actor_t *child_ptr = wgf_gfx_priv_actor_of(child);
         char below[PATH_BYTES];
-        if (child_ptr != NULL && child_ptr->from_file) continue; /* its file's root's path makes it again */
+        if (child_ptr != NULL && child_ptr->from_file && !node_written(child, 0)) continue;
         if (wgf_actor_get_name(child)[0] == '\0') {
             snprintf(below, sizeof(below), "_%d", i);
             wgf_actor_set_name(child, below);
@@ -304,6 +322,19 @@ static void dump_actor(out_t *out, wgf_actor_t e, const char *path)
         snprintf(below, sizeof(below), "%s/%s", path, wgf_actor_get_name(child));
         dump_actor(out, child, below);
     }
+}
+
+/* What `actor` is written with: the glTF file's root above it when it is, or is under, one
+ * of the file's nodes (the root's block makes them); itself otherwise. */
+static wgf_actor_t anchor_of(wgf_actor_t actor)
+{
+    wgf_actor_t up = actor, anchor = actor;
+    int depth;
+    for (depth = 0; up != 0 && depth < 64; depth++) {
+        if (from_file(up)) anchor = wgf_actor_get_parent(up);
+        up = wgf_actor_get_parent(up);
+    }
+    return anchor != 0 ? anchor : actor;
 }
 
 /* Whether an actor above `actor` has components or behaviors: it is written with that one. */
@@ -320,8 +351,8 @@ static bool under_another(wgf_actor_t actor)
 const char *wgf_world_dump(void)
 {
     out_t out = {NULL, 0, 0, false};
-    wgf_actor_t *all;
-    int count = 0, i;
+    wgf_actor_t *all, *tops;
+    int count = 0, top_count = 0, i, j;
     if (!wgf_ecs_priv_started()) return "";
     out.capacity = 4096;
     out.text = (char *)malloc(out.capacity);
@@ -329,16 +360,24 @@ const char *wgf_world_dump(void)
     out.text[0] = '\0';
     put(&out, "wgf-scene 2\n");
     all = wgf_ecs_priv_actors(&count);
-    for (i = 0; i < count; i++) {
+    tops = (wgf_actor_t *)malloc(sizeof(wgf_actor_t) * (size_t)(count > 0 ? count : 1));
+    for (i = 0; tops != NULL && i < count; i++) {
         char path[PATH_BYTES];
-        if (under_another(all[i])) continue;
-        if (wgf_actor_get_name(all[i])[0] == '\0' && wgf_actor_get_child_count(all[i]) > 0) {
-            snprintf(path, sizeof(path), "_%d", i); /* its parts need a path to name it by */
-            wgf_actor_set_name(all[i], path);
+        const wgf_actor_t top = anchor_of(all[i]); /* a file's root, written once for its nodes */
+        if (under_another(top) || (top != all[i] && wgf_ecs_priv_record_of(top) != NULL)) continue;
+        for (j = 0; j < top_count && tops[j] != top; j++) {
         }
-        snprintf(path, sizeof(path), "%s", wgf_actor_get_name(all[i]));
-        dump_actor(&out, all[i], path);
+        if (j < top_count) continue;
+        tops[top_count++] = top;
+        if (wgf_actor_get_name(top)[0] == '\0' && wgf_actor_get_child_count(top) > 0) {
+            snprintf(path, sizeof(path), "_%d", i); /* its parts need a path to name it by */
+            wgf_actor_set_name(top, path);
+        }
+        snprintf(path, sizeof(path), "%s", wgf_actor_get_name(top));
+        dump_actor(&out, top, path);
     }
+    out.failed = out.failed || tops == NULL;
+    free(tops);
     free(all);
     if (out.failed) {
         free(out.text);

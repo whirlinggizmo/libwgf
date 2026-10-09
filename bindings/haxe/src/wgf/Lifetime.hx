@@ -3,8 +3,8 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Lifetime's calls, on a Actor: `var x:Lifetime = handle` gives it them, and a Lifetime is still a Actor. **/
-@:forward abstract Lifetime(Actor) from Actor to Actor {
+/** Lifetime's calls, on a Actor: `var x:Lifetime = handle` gives it them, and a Lifetime is still a Actor; it starts as 0, none, as a Actor does. **/
+@:forward abstract Lifetime(Actor) from Actor from Int to Actor {
 	/**
 	    Seconds left from now. False for an actor without a lifetime, or a time below 0 or
 	    not finite.

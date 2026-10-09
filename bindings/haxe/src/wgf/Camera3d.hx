@@ -3,8 +3,8 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Camera3d's calls, on a Actor: `var x:Camera3d = handle` gives it them, and a Camera3d is still a Actor. **/
-@:forward abstract Camera3d(Actor) from Actor to Actor {
+/** Camera3d's calls, on a Actor: `var x:Camera3d = handle` gives it them, and a Camera3d is still a Actor; it starts as 0, none, as a Actor does. **/
+@:forward abstract Camera3d(Actor) from Actor from Int to Actor {
 	/**
 	    A camera with a 60 degree vertical field of view, seeing from 0.1 to 1000 units in
 	    front of it. 0 when there is no room for another actor.

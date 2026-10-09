@@ -227,6 +227,12 @@ const wgf_gfx_priv_model_hooks_t *wgf_gfx_priv_get_model_hooks(void);
 /* The hooks above set: the stage's first create. */
 void wgf_gfx_priv_model_install(void);
 
+/* A glTF file's root that waited for its file: its tree made, or its file FAILED (its mesh's
+ * status says which). Called by the file part as the load ends, it calls the ecs's hook, set
+ * by a scene with blocks under such a root: what the scene put there is made then. */
+void wgf_gfx_priv_set_model_built_hook(void (*built)(wgf_actor_t root));
+void wgf_gfx_priv_model_built(wgf_actor_t root);
+
 /* An actor made simulated, or not: from here it is drawn between its last two ticks'
  * transforms (both its own as it is now, until a tick moves it). And the ecs's hook for an
  * actor with components going: its components and behaviors let go of, before the actor. */
