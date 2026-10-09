@@ -21,12 +21,13 @@ libwgf is one C library, `libwgf.a`, built in layers (CONVENTIONS' table says wh
 
 ### math
 
-Headers alone: value types and the math on them, depending on nothing.
+Headers, value types and the math on them, depending on nothing; and one source file, the trigonometry the same on every target.
 
 | Section | Header | Provides |
 |---------|--------|----------|
 | vec2, vec3, vec4 | `wgf_vec2.h` ... | `wgf_vec3_t` and its kin, floats in order with no padding; make, add, sub, scale, dot, length, normalize, lerp, and for vec3, cross |
 | quat | `wgf_quat.h` | `wgf_quat_t`, a rotation; identity, from an axis and angle, to and from euler angles, look rotation (-z to a direction), mul, conjugate, normalize, rotate a vec3, slerp |
+| trig | `wgf_trig.h` | sin, cos, tan, atan2, asin, and acos that give the same bits on every target (worked in double from polynomials, no C library call but sqrt and floor), which the rotations and the generated meshes are made with, and a binding's simulation can call (Haxe's `Trig`): glibc's sinf and Emscripten's differ in a last bit, which a pile of physics bodies turns into a different world. Compiled once (`src/wgf_math_trig.c`), math's one source file |
 | mat4 | `wgf_mat4.h` | `wgf_mat4_t`, 16 floats column by column; identity, mul, transpose, determinant, invert, from translation, rotation, and scale and back, transforming a point or a direction, and projections (perspective, orthographic, look at) |
 
 These are the only structs the public API passes, and only as return values. Every operation is `static inline`, C's own: a binding does its math in its own language, which on the web is faster than a call into the wasm.

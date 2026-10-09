@@ -2,6 +2,7 @@
 #define WGF_MAT4_H
 
 #include <math.h>
+#include "wgf_trig.h"
 #include "wgf_api.h"
 #include "wgf_quat.h"
 #include "wgf_vec3.h"
@@ -215,7 +216,7 @@ static inline wgf_vec3_t wgf_mat4_transform_direction(wgf_mat4_t m, wgf_vec3_t d
  * than 0), into OpenGL's clip space (z -1 at near, 1 at far). */
 static inline wgf_mat4_t wgf_mat4_perspective(float fov_y, float aspect, float near_z, float far_z)
 {
-    const float f = 1.0f / tanf(fov_y * 0.5f);
+    const float f = 1.0f / wgf_trig_tan(fov_y * 0.5f);
     wgf_mat4_t r;
     int i;
     for (i = 0; i < 16; i++) r.m[i] = 0.0f;

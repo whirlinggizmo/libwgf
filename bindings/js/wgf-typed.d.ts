@@ -3504,6 +3504,53 @@ export declare const Touch: {
      */
     readonly getGestureRotation: typeof raw.wgf_touch_get_gesture_rotation;
 };
+export declare const Trig: {
+    /**
+     * Trigonometry that gives the same bits on every target -- natively, under Windows, and in a
+     * browser -- which the rotations (wgf_quat.h) and the generated meshes are made with, so a
+     * simulation started from the same numbers runs the same everywhere. The C library's sinf and
+     * cosf don't: glibc's and Emscripten's (musl's) differ in the last bit for some angles, enough
+     * for a pile of a thousand physics boxes, each turned as it is made, to come apart within
+     * seconds; and a binding's own (Haxe's Math on hxcpp and on JS) differ the same way. Within an
+     * ulp of the C library's, and usually equal to it. Radians; NaN for an infinite or NaN angle,
+     * and for asin and acos past -1..1, as the C library's.
+     */
+    readonly sin: typeof raw.wgf_trig_sin;
+    /**
+     * Trigonometry that gives the same bits on every target -- natively, under Windows, and in a
+     * browser -- which the rotations (wgf_quat.h) and the generated meshes are made with, so a
+     * simulation started from the same numbers runs the same everywhere. The C library's sinf and
+     * cosf don't: glibc's and Emscripten's (musl's) differ in the last bit for some angles, enough
+     * for a pile of a thousand physics boxes, each turned as it is made, to come apart within
+     * seconds; and a binding's own (Haxe's Math on hxcpp and on JS) differ the same way. Within an
+     * ulp of the C library's, and usually equal to it. Radians; NaN for an infinite or NaN angle,
+     * and for asin and acos past -1..1, as the C library's.
+     */
+    readonly cos: typeof raw.wgf_trig_cos;
+    /**
+     * Trigonometry that gives the same bits on every target -- natively, under Windows, and in a
+     * browser -- which the rotations (wgf_quat.h) and the generated meshes are made with, so a
+     * simulation started from the same numbers runs the same everywhere. The C library's sinf and
+     * cosf don't: glibc's and Emscripten's (musl's) differ in the last bit for some angles, enough
+     * for a pile of a thousand physics boxes, each turned as it is made, to come apart within
+     * seconds; and a binding's own (Haxe's Math on hxcpp and on JS) differ the same way. Within an
+     * ulp of the C library's, and usually equal to it. Radians; NaN for an infinite or NaN angle,
+     * and for asin and acos past -1..1, as the C library's.
+     */
+    readonly tan: typeof raw.wgf_trig_tan;
+    /**
+     * The angle of (x, y) from the x axis, -pi..pi, as atan2f(y, x).
+     */
+    readonly atan2: typeof raw.wgf_trig_atan2;
+    /**
+     * The angle whose sine (asin, -pi/2..pi/2) or cosine (acos, 0..pi) is x.
+     */
+    readonly asin: typeof raw.wgf_trig_asin;
+    /**
+     * The angle whose sine (asin, -pi/2..pi/2) or cosine (acos, 0..pi) is x.
+     */
+    readonly acos: typeof raw.wgf_trig_acos;
+};
 export declare const Ui: {
     /**
      * The frame's UI begun, the screen at its logical size as the root; false when one is

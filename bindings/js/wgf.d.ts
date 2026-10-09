@@ -771,6 +771,57 @@ export declare const WGF_UI_VALUE_FOCUS_WIDTH: 6;
 export type wgf_ui_value_t = typeof WGF_UI_VALUE_TEXT_SIZE | typeof WGF_UI_VALUE_PADDING | typeof WGF_UI_VALUE_GAP | typeof WGF_UI_VALUE_CORNER_RADIUS | typeof WGF_UI_VALUE_BUTTON_PADDING | typeof WGF_UI_VALUE_BUTTON_WIDTH | typeof WGF_UI_VALUE_FOCUS_WIDTH;
 
 /**
+ * Trigonometry that gives the same bits on every target -- natively, under Windows, and in a
+ * browser -- which the rotations (wgf_quat.h) and the generated meshes are made with, so a
+ * simulation started from the same numbers runs the same everywhere. The C library's sinf and
+ * cosf don't: glibc's and Emscripten's (musl's) differ in the last bit for some angles, enough
+ * for a pile of a thousand physics boxes, each turned as it is made, to come apart within
+ * seconds; and a binding's own (Haxe's Math on hxcpp and on JS) differ the same way. Within an
+ * ulp of the C library's, and usually equal to it. Radians; NaN for an infinite or NaN angle,
+ * and for asin and acos past -1..1, as the C library's.
+ */
+export declare function wgf_trig_sin(radians: number): number;
+
+/**
+ * Trigonometry that gives the same bits on every target -- natively, under Windows, and in a
+ * browser -- which the rotations (wgf_quat.h) and the generated meshes are made with, so a
+ * simulation started from the same numbers runs the same everywhere. The C library's sinf and
+ * cosf don't: glibc's and Emscripten's (musl's) differ in the last bit for some angles, enough
+ * for a pile of a thousand physics boxes, each turned as it is made, to come apart within
+ * seconds; and a binding's own (Haxe's Math on hxcpp and on JS) differ the same way. Within an
+ * ulp of the C library's, and usually equal to it. Radians; NaN for an infinite or NaN angle,
+ * and for asin and acos past -1..1, as the C library's.
+ */
+export declare function wgf_trig_cos(radians: number): number;
+
+/**
+ * Trigonometry that gives the same bits on every target -- natively, under Windows, and in a
+ * browser -- which the rotations (wgf_quat.h) and the generated meshes are made with, so a
+ * simulation started from the same numbers runs the same everywhere. The C library's sinf and
+ * cosf don't: glibc's and Emscripten's (musl's) differ in the last bit for some angles, enough
+ * for a pile of a thousand physics boxes, each turned as it is made, to come apart within
+ * seconds; and a binding's own (Haxe's Math on hxcpp and on JS) differ the same way. Within an
+ * ulp of the C library's, and usually equal to it. Radians; NaN for an infinite or NaN angle,
+ * and for asin and acos past -1..1, as the C library's.
+ */
+export declare function wgf_trig_tan(radians: number): number;
+
+/**
+ * The angle of (x, y) from the x axis, -pi..pi, as atan2f(y, x).
+ */
+export declare function wgf_trig_atan2(y: number, x: number): number;
+
+/**
+ * The angle whose sine (asin, -pi/2..pi/2) or cosine (acos, 0..pi) is x.
+ */
+export declare function wgf_trig_asin(x: number): number;
+
+/**
+ * The angle whose sine (asin, -pi/2..pi/2) or cosine (acos, 0..pi) is x.
+ */
+export declare function wgf_trig_acos(x: number): number;
+
+/**
  * The libwgf version, "MAJOR.MINOR.PATCH", from the repo's VERSION file.
  */
 export declare function wgf_version_get(): string;

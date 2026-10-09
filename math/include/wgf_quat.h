@@ -2,6 +2,7 @@
 #define WGF_QUAT_H
 
 #include <math.h>
+#include "wgf_trig.h"
 #include "wgf_api.h"
 #include "wgf_vec3.h"
 
@@ -42,18 +43,18 @@ static inline wgf_quat_t wgf_quat_identity(void)
 static inline wgf_quat_t wgf_quat_from_axis_angle(wgf_vec3_t axis, float radians)
 {
     const wgf_vec3_t unit = wgf_vec3_normalize(axis);
-    const float s = sinf(radians * 0.5f);
+    const float s = wgf_trig_sin(radians * 0.5f);
     if (wgf_vec3_dot(unit, unit) == 0.0f) return wgf_quat_identity();
-    return wgf_quat_make(unit.x * s, unit.y * s, unit.z * s, cosf(radians * 0.5f));
+    return wgf_quat_make(unit.x * s, unit.y * s, unit.z * s, wgf_trig_cos(radians * 0.5f));
 }
 
 /* A rotation from three angles in radians, about x, then y, then z, each about the
  * fixed axes: roll, pitch, then yaw. (As a product, z times y times x.) */
 static inline wgf_quat_t wgf_quat_from_euler(wgf_vec3_t radians)
 {
-    const float cx = cosf(radians.x * 0.5f), sx = sinf(radians.x * 0.5f);
-    const float cy = cosf(radians.y * 0.5f), sy = sinf(radians.y * 0.5f);
-    const float cz = cosf(radians.z * 0.5f), sz = sinf(radians.z * 0.5f);
+    const float cx = wgf_trig_cos(radians.x * 0.5f), sx = wgf_trig_sin(radians.x * 0.5f);
+    const float cy = wgf_trig_cos(radians.y * 0.5f), sy = wgf_trig_sin(radians.y * 0.5f);
+    const float cz = wgf_trig_cos(radians.z * 0.5f), sz = wgf_trig_sin(radians.z * 0.5f);
     return wgf_quat_make(sx * cy * cz - cx * sy * sz, cx * sy * cz + sx * cy * sz, cx * cy * sz - sx * sy * cz,
                              cx * cy * cz + sx * sy * sz);
 }
@@ -67,11 +68,11 @@ static inline wgf_vec3_t wgf_quat_to_euler(wgf_quat_t q)
     if (sin_y >= 0.99999f || sin_y <= -0.99999f) {
         const float half_pi = 1.57079632679f;
         return wgf_vec3_make(0.0f, sin_y > 0.0f ? half_pi : -half_pi,
-                                 -2.0f * atan2f(q.x, q.w) * (sin_y > 0.0f ? -1.0f : 1.0f));
+                                 -2.0f * wgf_trig_atan2(q.x, q.w) * (sin_y > 0.0f ? -1.0f : 1.0f));
     }
-    return wgf_vec3_make(atan2f(2.0f * (q.w * q.x + q.y * q.z), 1.0f - 2.0f * (q.x * q.x + q.y * q.y)),
-                             asinf(sin_y),
-                             atan2f(2.0f * (q.w * q.z + q.x * q.y), 1.0f - 2.0f * (q.y * q.y + q.z * q.z)));
+    return wgf_vec3_make(wgf_trig_atan2(2.0f * (q.w * q.x + q.y * q.z), 1.0f - 2.0f * (q.x * q.x + q.y * q.y)),
+                             wgf_trig_asin(sin_y),
+                             wgf_trig_atan2(2.0f * (q.w * q.z + q.x * q.y), 1.0f - 2.0f * (q.y * q.y + q.z * q.z)));
 }
 
 /* `b`, then `a`: rotating by the result is rotating by b and then by a. */
@@ -123,10 +124,10 @@ static inline wgf_quat_t wgf_quat_slerp(wgf_quat_t a, wgf_quat_t b, float t)
         wa = 1.0f - t;
         wb = t;
     } else {
-        const float angle = acosf(d);
-        const float s = sinf(angle);
-        wa = sinf((1.0f - t) * angle) / s;
-        wb = sinf(t * angle) / s;
+        const float angle = wgf_trig_acos(d);
+        const float s = wgf_trig_sin(angle);
+        wa = wgf_trig_sin((1.0f - t) * angle) / s;
+        wb = wgf_trig_sin(t * angle) / s;
     }
     return wgf_quat_normalize(wgf_quat_make(wa * a.x + wb * b.x, wa * a.y + wb * b.y,
                                                     wa * a.z + wb * b.z, wa * a.w + wb * b.w));

@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "4f19732a58fa7465" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "dc5292037e037e44" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -906,6 +906,81 @@ export const WGF_UI_VALUE_CORNER_RADIUS = 3;
 export const WGF_UI_VALUE_BUTTON_PADDING = 4;
 export const WGF_UI_VALUE_BUTTON_WIDTH = 5;
 export const WGF_UI_VALUE_FOCUS_WIDTH = 6;
+
+// wgf: call wgf_trig_sin
+/**
+ * Trigonometry that gives the same bits on every target -- natively, under Windows, and in a
+ * browser -- which the rotations (wgf_quat.h) and the generated meshes are made with, so a
+ * simulation started from the same numbers runs the same everywhere. The C library's sinf and
+ * cosf don't: glibc's and Emscripten's (musl's) differ in the last bit for some angles, enough
+ * for a pile of a thousand physics boxes, each turned as it is made, to come apart within
+ * seconds; and a binding's own (Haxe's Math on hxcpp and on JS) differ the same way. Within an
+ * ulp of the C library's, and usually equal to it. Radians; NaN for an infinite or NaN angle,
+ * and for asin and acos past -1..1, as the C library's.
+ */
+export function wgf_trig_sin(radians) {
+    const value = host["_wgf_trig_sin"](radians);
+    return value;
+}
+
+// wgf: call wgf_trig_cos
+/**
+ * Trigonometry that gives the same bits on every target -- natively, under Windows, and in a
+ * browser -- which the rotations (wgf_quat.h) and the generated meshes are made with, so a
+ * simulation started from the same numbers runs the same everywhere. The C library's sinf and
+ * cosf don't: glibc's and Emscripten's (musl's) differ in the last bit for some angles, enough
+ * for a pile of a thousand physics boxes, each turned as it is made, to come apart within
+ * seconds; and a binding's own (Haxe's Math on hxcpp and on JS) differ the same way. Within an
+ * ulp of the C library's, and usually equal to it. Radians; NaN for an infinite or NaN angle,
+ * and for asin and acos past -1..1, as the C library's.
+ */
+export function wgf_trig_cos(radians) {
+    const value = host["_wgf_trig_cos"](radians);
+    return value;
+}
+
+// wgf: call wgf_trig_tan
+/**
+ * Trigonometry that gives the same bits on every target -- natively, under Windows, and in a
+ * browser -- which the rotations (wgf_quat.h) and the generated meshes are made with, so a
+ * simulation started from the same numbers runs the same everywhere. The C library's sinf and
+ * cosf don't: glibc's and Emscripten's (musl's) differ in the last bit for some angles, enough
+ * for a pile of a thousand physics boxes, each turned as it is made, to come apart within
+ * seconds; and a binding's own (Haxe's Math on hxcpp and on JS) differ the same way. Within an
+ * ulp of the C library's, and usually equal to it. Radians; NaN for an infinite or NaN angle,
+ * and for asin and acos past -1..1, as the C library's.
+ */
+export function wgf_trig_tan(radians) {
+    const value = host["_wgf_trig_tan"](radians);
+    return value;
+}
+
+// wgf: call wgf_trig_atan2
+/**
+ * The angle of (x, y) from the x axis, -pi..pi, as atan2f(y, x).
+ */
+export function wgf_trig_atan2(y, x) {
+    const value = host["_wgf_trig_atan2"](y, x);
+    return value;
+}
+
+// wgf: call wgf_trig_asin
+/**
+ * The angle whose sine (asin, -pi/2..pi/2) or cosine (acos, 0..pi) is x.
+ */
+export function wgf_trig_asin(x) {
+    const value = host["_wgf_trig_asin"](x);
+    return value;
+}
+
+// wgf: call wgf_trig_acos
+/**
+ * The angle whose sine (asin, -pi/2..pi/2) or cosine (acos, 0..pi) is x.
+ */
+export function wgf_trig_acos(x) {
+    const value = host["_wgf_trig_acos"](x);
+    return value;
+}
 
 // wgf: call wgf_version_get
 /**

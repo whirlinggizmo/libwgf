@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -368,6 +369,47 @@ int main(void)
         wgf_actor_destroy(deck, WGF_ACTOR_DESTROY_CHILDREN);
         wgf_actor_destroy(on_deck, WGF_ACTOR_DESTROY_CHILDREN);
         wgf_actor_destroy(beside, WGF_ACTOR_DESTROY_CHILDREN);
+    }
+    /* the same to the bit natively and in a browser: a pile of boxes, each made turned (the
+       rotations' trigonometry, wgf_trig.h, the same on every target), dropped onto a floor
+       and settled, their poses hashed and held to one number on every target (the
+       experiments' 1,000-box scene came apart across targets before it) */
+    {
+        enum { SIDE = 5, BOXES = SIDE * SIDE * SIDE };
+        wgf_actor_t pile[BOXES], ground;
+        uint32_t seed = 12345u, hash = 2166136261u;
+        int b, k;
+        ground = put(stage, 300, -0.5f, 0);
+        wgf_actor_add_component(ground, WGF_COMPONENT_BODY);
+        wgf_body_set_type(ground, WGF_BODY_TYPE_STATIC);
+        wgf_body_set_shape(ground, WGF_BODY_SHAPE_BOX, 40, 1, 40);
+        for (b = 0; b < BOXES; b++) {
+            float yaw;
+            seed = seed * 1664525u + 1013904223u;
+            yaw = ((float)(seed >> 8) / 16777216.0f - 0.5f) * 0.4f;
+            pile[b] = put(stage, 300 + (float)(b % SIDE) * 0.65f, 3 + (float)(b / (SIDE * SIDE)) * 0.65f,
+                          (float)((b / SIDE) % SIDE) * 0.65f);
+            wgf_actor_set_rotation(pile[b], 0, yaw, 0);
+            wgf_actor_add_component(pile[b], WGF_COMPONENT_BODY);
+            wgf_body_set_shape(pile[b], WGF_BODY_SHAPE_BOX, 0.44f, 0.44f, 0.44f);
+            wgf_body_set_friction(pile[b], 0.5f);
+            wgf_body_set_damping(pile[b], 0.05f, 0.05f);
+        }
+        step(360);
+        for (b = 0; b < BOXES; b++) {
+            const wgf_gfx_priv_actor_t *box_ptr = wgf_gfx_priv_actor_of(pile[b]);
+            const float values[7] = {box_ptr->position.x, box_ptr->position.y, box_ptr->position.z, box_ptr->rotation.x,
+                                     box_ptr->rotation.y, box_ptr->rotation.z, box_ptr->rotation.w};
+            for (k = 0; k < 7; k++) {
+                uint32_t u;
+                memcpy(&u, &values[k], sizeof(u));
+                hash = (hash ^ u) * 16777619u;
+            }
+        }
+        if (getenv("WGF_TEST_SHOW")) printf("pile hash %08x\n", (unsigned)hash);
+        expect(hash == 0x305B395Fu, "a settled pile of turned boxes: the same to the bit on every target");
+        for (b = 0; b < BOXES; b++) wgf_actor_destroy(pile[b], WGF_ACTOR_DESTROY_CHILDREN);
+        wgf_actor_destroy(ground, WGF_ACTOR_DESTROY_CHILDREN);
     }
     wgf_gfx_priv_stop();
     expect(!wgf_actor_has_component(ball, WGF_COMPONENT_BODY), "stopped with gfx");

@@ -1,8 +1,12 @@
 #include <math.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "wgf_mat4.h"
+#include "wgf_trig.h"
 #include "wgf_quat.h"
 #include "wgf_vec2.h"
 #include "wgf_vec3.h"
@@ -160,6 +164,41 @@ int main(void)
         expect(near3(wgf_quat_rotate(down, wgf_vec3_make(0, 0, -1)), 0, -0.70710678f, -0.70710678f), "looking down and ahead");
         expect(near(wgf_quat_look_rotation(wgf_vec3_make(0, 1, 0), wgf_vec3_make(0, 1, 0)).w, 1),
                "forward along up: the identity");
+    }
+
+    {
+        /* the trigonometry the rotations use gives the same bits on every target: a hash of its
+           results over a sweep of angles, held to one number natively, under Wine and MSVC, and in
+           a browser (glibc's sinf and Emscripten's differ on these); and each within an ulp of the
+           C library's */
+        uint32_t hash = 2166136261u;
+        int worst = 0, i, k;
+        for (i = -200000; i <= 200000; i += 7) {
+            const float a = (float)i * 1e-4f; /* -20..20 */
+            const float mine[5] = {wgf_trig_sin(a), wgf_trig_cos(a), wgf_trig_atan2(a, 0.7f), wgf_trig_asin(a / 20.0f),
+                                   wgf_trig_acos(a / 20.0f)};
+            const float theirs[5] = {sinf(a), cosf(a), atan2f(a, 0.7f), asinf(a / 20.0f), acosf(a / 20.0f)};
+            for (k = 0; k < 5; k++) {
+                int32_t x, y, apart;
+                uint32_t u;
+                memcpy(&u, &mine[k], sizeof(u));
+                hash = (hash ^ u) * 16777619u;
+                memcpy(&x, &mine[k], sizeof(x));
+                memcpy(&y, &theirs[k], sizeof(y));
+                apart = (x < 0) != (y < 0) ? (mine[k] == theirs[k] ? 0 : 1000) : (x > y ? x - y : y - x);
+                if (apart > worst) worst = apart;
+            }
+        }
+        if (getenv("WGF_TEST_SHOW")) printf("trig hash %08x, worst %d ulp\n", (unsigned)hash, worst);
+        expect(hash == 0xFDD87A04u, "the rotations' trigonometry: the same bits on every target");
+        expect(worst <= 1, "within an ulp of the C library's");
+        {
+            const double half_turn = 3.14159265358979323846;
+            expect(wgf_trig_sin(0) == 0 && wgf_trig_cos(0) == 1 && wgf_trig_atan2(0, 0) == 0 &&
+                       wgf_trig_asin(1) == (float)(half_turn / 2) && wgf_trig_acos(-1) == (float)half_turn &&
+                       isnan(wgf_trig_asin(2)) && isnan(wgf_trig_sin(INFINITY)),
+                   "its edges");
+        }
     }
 
     return failures == 0 ? 0 : 1;

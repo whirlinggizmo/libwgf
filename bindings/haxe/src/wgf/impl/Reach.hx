@@ -535,6 +535,12 @@ class Reach {
 		"wgf_touch_is_gesture",
 		"wgf_touch_is_mouse_emulated",
 		"wgf_touch_set_mouse_emulated",
+		"wgf_trig_acos",
+		"wgf_trig_asin",
+		"wgf_trig_atan2",
+		"wgf_trig_cos",
+		"wgf_trig_sin",
+		"wgf_trig_tan",
 		"wgf_ui_begin",
 		"wgf_ui_begin_box",
 		"wgf_ui_begin_panel",
@@ -650,7 +656,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...641) 0];
+	static final counts:Array<Int> = [for (_ in 0...647) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

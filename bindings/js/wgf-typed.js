@@ -1273,6 +1273,21 @@ export const Touch = Object.freeze({
     // wgf: call wgf_touch_get_gesture_rotation
     getGestureRotation: raw.wgf_touch_get_gesture_rotation,
 });
+// wgf: typed Trig
+export const Trig = Object.freeze({
+    // wgf: call wgf_trig_sin
+    sin: raw.wgf_trig_sin,
+    // wgf: call wgf_trig_cos
+    cos: raw.wgf_trig_cos,
+    // wgf: call wgf_trig_tan
+    tan: raw.wgf_trig_tan,
+    // wgf: call wgf_trig_atan2
+    atan2: raw.wgf_trig_atan2,
+    // wgf: call wgf_trig_asin
+    asin: raw.wgf_trig_asin,
+    // wgf: call wgf_trig_acos
+    acos: raw.wgf_trig_acos,
+});
 // wgf: typed Ui
 export const Ui = Object.freeze({
     // wgf: call wgf_ui_begin

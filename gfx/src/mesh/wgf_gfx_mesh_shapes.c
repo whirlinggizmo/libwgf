@@ -1,4 +1,5 @@
 #include "mesh/wgf_gfx_mesh_shapes_priv.h"
+#include "wgf_trig.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -110,7 +111,7 @@ static void disc(builder_t *b, float radius, float y, float up, int segments)
 {
     const int center = vertex(b, 0.0f, y, 0.0f, 0.0f, up, 0.0f, 0.5f, 0.5f);
     for (int c = 0; c <= segments; c++) {
-        const float a = 2.0f * PI * (float)c / (float)segments, x = cosf(a), z = -sinf(a);
+        const float a = 2.0f * PI * (float)c / (float)segments, x = wgf_trig_cos(a), z = -wgf_trig_sin(a);
         vertex(b, radius * x, y, radius * z, 0.0f, up, 0.0f, 0.5f + 0.5f * x, 0.5f + 0.5f * z * up);
     }
     for (int c = 0; c < segments; c++) triangle(b, center, center + 1 + c, center + 2 + c);
@@ -190,10 +191,10 @@ bool wgf_gfx_priv_mesh_shape_sphere(float radius, int rings, int segments, wgf_g
     rings = clamp_int(rings, WGF_GFX_PRIV_MESH_MIN_RINGS, WGF_GFX_PRIV_MESH_MAX_RINGS);
     segments = clamp_int(segments, WGF_GFX_PRIV_MESH_MIN_SEGMENTS, WGF_GFX_PRIV_MESH_MAX_SEGMENTS);
     for (int r = 0; r <= rings; r++) {
-        const float polar = PI * (float)r / (float)rings, sp = sinf(polar), cp = cosf(polar);
+        const float polar = PI * (float)r / (float)rings, sp = wgf_trig_sin(polar), cp = wgf_trig_cos(polar);
         for (int c = 0; c <= segments; c++) {
             const float a = 2.0f * PI * (float)c / (float)segments;
-            const float x = sp * cosf(a), y = cp, z = -sp * sinf(a);
+            const float x = sp * wgf_trig_cos(a), y = cp, z = -sp * wgf_trig_sin(a);
             vertex(&b, radius * x, radius * y, radius * z, x, y, z, (float)c / (float)segments,
                    (float)r / (float)rings);
         }
@@ -210,7 +211,7 @@ bool wgf_gfx_priv_mesh_shape_cylinder(float radius, float height, int segments, 
     segments = clamp_int(segments, WGF_GFX_PRIV_MESH_MIN_SEGMENTS, WGF_GFX_PRIV_MESH_MAX_SEGMENTS);
     for (int r = 0; r < 2; r++) { /* the side: top row, then bottom */
         for (int c = 0; c <= segments; c++) {
-            const float a = 2.0f * PI * (float)c / (float)segments, x = cosf(a), z = -sinf(a);
+            const float a = 2.0f * PI * (float)c / (float)segments, x = wgf_trig_cos(a), z = -wgf_trig_sin(a);
             vertex(&b, radius * x, r == 0 ? height * 0.5f : -height * 0.5f, radius * z, x, 0.0f, z,
                    (float)c / (float)segments, (float)r);
         }
@@ -231,12 +232,12 @@ bool wgf_gfx_priv_mesh_shape_cone(float radius, float height, int segments, wgf_
     for (int c = 0; c < segments; c++) {
         const float a0 = 2.0f * PI * (float)c / (float)segments, a1 = 2.0f * PI * (float)(c + 1) / (float)segments;
         const float am = 0.5f * (a0 + a1);
-        const int tip = vertex(&b, 0.0f, height * 0.5f, 0.0f, cosf(am) * height, radius, -sinf(am) * height,
+        const int tip = vertex(&b, 0.0f, height * 0.5f, 0.0f, wgf_trig_cos(am) * height, radius, -wgf_trig_sin(am) * height,
                                ((float)c + 0.5f) / (float)segments, 0.0f);
-        const int base0 = vertex(&b, radius * cosf(a0), -height * 0.5f, -radius * sinf(a0), cosf(a0) * height,
-                                 radius, -sinf(a0) * height, (float)c / (float)segments, 1.0f);
-        const int base1 = vertex(&b, radius * cosf(a1), -height * 0.5f, -radius * sinf(a1), cosf(a1) * height,
-                                 radius, -sinf(a1) * height, (float)(c + 1) / (float)segments, 1.0f);
+        const int base0 = vertex(&b, radius * wgf_trig_cos(a0), -height * 0.5f, -radius * wgf_trig_sin(a0), wgf_trig_cos(a0) * height,
+                                 radius, -wgf_trig_sin(a0) * height, (float)c / (float)segments, 1.0f);
+        const int base1 = vertex(&b, radius * wgf_trig_cos(a1), -height * 0.5f, -radius * wgf_trig_sin(a1), wgf_trig_cos(a1) * height,
+                                 radius, -wgf_trig_sin(a1) * height, (float)(c + 1) / (float)segments, 1.0f);
         triangle(&b, tip, base0, base1);
     }
     disc(&b, radius, -height * 0.5f, -1.0f, segments);
@@ -259,11 +260,11 @@ bool wgf_gfx_priv_mesh_shape_capsule(float radius, float height, int rings, int 
     for (int h = 0; h < 2; h++) {
         for (int r = 0; r <= half_rings; r++) {
             const float polar = 0.5f * PI * ((float)h + (float)r / (float)half_rings);
-            const float sp = sinf(polar), cp = cosf(polar), offset = h == 0 ? straight : -straight;
+            const float sp = wgf_trig_sin(polar), cp = wgf_trig_cos(polar), offset = h == 0 ? straight : -straight;
             const float along = radius * polar + (h == 1 ? 2.0f * straight : 0.0f); /* for v */
             for (int c = 0; c <= segments; c++) {
                 const float a = 2.0f * PI * (float)c / (float)segments;
-                const float x = sp * cosf(a), z = -sp * sinf(a);
+                const float x = sp * wgf_trig_cos(a), z = -sp * wgf_trig_sin(a);
                 vertex(&b, radius * x, radius * cp + offset, radius * z, x, cp, z, (float)c / (float)segments,
                        along / total);
             }
@@ -283,9 +284,9 @@ bool wgf_gfx_priv_mesh_shape_torus(float radius, float thickness, int rings, int
     rings = clamp_int(rings, WGF_GFX_PRIV_MESH_MIN_SEGMENTS, WGF_GFX_PRIV_MESH_MAX_SEGMENTS);
     segments = clamp_int(segments, WGF_GFX_PRIV_MESH_MIN_SEGMENTS, WGF_GFX_PRIV_MESH_MAX_SEGMENTS);
     for (int i = 0; i <= rings; i++) {
-        const float a = 2.0f * PI * (float)i / (float)rings, ca = cosf(a), sa = -sinf(a);
+        const float a = 2.0f * PI * (float)i / (float)rings, ca = wgf_trig_cos(a), sa = -wgf_trig_sin(a);
         for (int j = 0; j <= segments; j++) {
-            const float t = 2.0f * PI * (float)j / (float)segments, ct = cosf(t), st = sinf(t);
+            const float t = 2.0f * PI * (float)j / (float)segments, ct = wgf_trig_cos(t), st = wgf_trig_sin(t);
             const float nx = ca * ct, ny = st, nz = sa * ct;
             vertex(&b, radius * ca + thickness * nx, thickness * ny, radius * sa + thickness * nz, nx, ny, nz,
                    (float)i / (float)rings, (float)j / (float)segments);
