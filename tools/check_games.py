@@ -8,7 +8,8 @@ within the game's size budget.
 For each game (default: every games/<name>/ with a wgf.json), with the wgf tool, run in
 the game's directory as a developer would:
   generated   tools/gen_sounds.py --check, for a game whose sounds it makes, and the
-              racer's games/racer/tools/gen_track.py --check, its track
+              racer's games/racer/tools/gen_track.py --check, its track (skipped on Windows:
+              GENERATED_ON says why)
   playthrough wgf autopilot <its playthrough>, headless: wgf.json's "playthrough" in its
               autopilot folder, playthrough.autopilot by default
   browser     the same in a headless browser (wgf autopilot --web)
@@ -20,6 +21,7 @@ library only.
 """
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -34,6 +36,11 @@ GAMES = ROOT / 'games'
 WGF = ROOT / 'wgf'
 STEPS = ('generated', 'playthrough', 'browser', 'web', 'desktop')
 GENERATORS = {'asteroids': ['tools/gen_sounds.py', '--check'], 'racer': ['games/racer/tools/gen_track.py', '--check']}
+# Generators whose bytes differ on another system, and why: their check skips there, said so.
+# The racer's prints 64-bit floats whole, and Windows' math library rounds one of its track's
+# sines a digit apart from glibc's (its .glb's 32-bit floats agree), until the game prints fewer.
+GENERATED_ON = {'racer': ('posix', "its TrackData.hx's 64-bit floats differ in a last digit under Windows' math "
+                                   "library; the game's generator is to print fewer")}
 
 
 def games(names):
@@ -57,10 +64,11 @@ def playthrough(game_dir):
     return f'{data.get("autopilot", "autopilot")}/{data.get("playthrough", "playthrough.autopilot")}'
 
 
-def why_not(step):
-    """Why `step` can't run here, or None."""
+def why_not(step, name=None):
+    """Why `step` can't run here (for game `name`), or None."""
     if step == 'generated':
-        return None
+        system, why = GENERATED_ON.get(name, (os.name, None))
+        return why if os.name != system else None
     if binding.haxe() is None:
         return 'no haxe on PATH'
     if step in ('playthrough', 'desktop') and not binding.has_hxcpp():
@@ -110,7 +118,7 @@ def main():
     for name in games(args.games):
         for step in steps:
             print(f'== {name}: {step}', flush=True)
-            why = why_not(step)
+            why = why_not(step, name)
             if why:
                 print(f'check_games: SKIPPING {name} {step} ({why})', flush=True)
                 skipped.append(f'{name} {step} ({why})')
