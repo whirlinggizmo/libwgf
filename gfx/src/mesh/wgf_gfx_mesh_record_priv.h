@@ -84,6 +84,9 @@ bool wgf_gfx_priv_mesh_upload(wgf_gfx_priv_mesh_record_primitive_t *primitive);
  * of memory or room, the primitives freed. */
 wgf_mesh_t wgf_gfx_priv_mesh_create_from(wgf_gfx_priv_mesh_record_primitive_t *primitives, int count,
                                          const wgf_material_t *materials, int material_count);
+/* What two meshes draw, traded: their primitives, materials, and bounds (a file's mesh
+ * loaded again keeps each of its meshes' handles, given the new one's triangles). */
+void wgf_gfx_priv_mesh_swap(wgf_mesh_t a, wgf_mesh_t b);
 /* Everything a record (or a load's record, not yet the mesh's) holds, let go of. */
 void wgf_gfx_priv_mesh_free_data(wgf_gfx_priv_mesh_record_t *record);
 

@@ -68,6 +68,26 @@ void wgf_gfx_priv_mesh_free_data(mesh_t *mesh_ptr)
     mesh_ptr->primitive_count = mesh_ptr->material_count = mesh_ptr->node_count = mesh_ptr->light_count = 0;
 }
 
+void wgf_gfx_priv_mesh_swap(wgf_mesh_t a, wgf_mesh_t b)
+{
+    mesh_t *a_ptr = wgf_gfx_priv_mesh_record(a), *b_ptr = wgf_gfx_priv_mesh_record(b);
+    mesh_t held;
+    if (a_ptr == NULL || b_ptr == NULL || a_ptr == b_ptr) return;
+    held = *a_ptr;
+    a_ptr->primitives = b_ptr->primitives;
+    a_ptr->primitive_count = b_ptr->primitive_count;
+    a_ptr->materials = b_ptr->materials;
+    a_ptr->material_count = b_ptr->material_count;
+    a_ptr->bounds_min = b_ptr->bounds_min;
+    a_ptr->bounds_max = b_ptr->bounds_max;
+    b_ptr->primitives = held.primitives;
+    b_ptr->primitive_count = held.primitive_count;
+    b_ptr->materials = held.materials;
+    b_ptr->material_count = held.material_count;
+    b_ptr->bounds_min = held.bounds_min;
+    b_ptr->bounds_max = held.bounds_max;
+}
+
 /* What a mesh holds: its primitives (CPU and GPU), its materials, and a file's tree. */
 static void free_mesh(wgf_handle_t mesh, void *record)
 {

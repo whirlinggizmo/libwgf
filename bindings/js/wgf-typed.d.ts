@@ -583,6 +583,20 @@ export declare const Asset: {
      */
     readonly evict: typeof raw.wgf_asset_evict;
     /**
+     * Load again, in place, every resource made from `path`, and every file that names it (a
+     * glTF whose buffer or image it is): what `wgf serve` does with an asset saved while the
+     * game runs. Each is fetched anew (never from the cache or this run's store), its handle
+     * kept, and READY all the while: what uses it draws what it had until the new file is in,
+     * then the new one, as of the frame it is. A glTF's tree is kept too: each of its nodes'
+     * actors stays, moved and given its new mesh, a node the file no longer has gone with its
+     * actor, a new one made (wgf_model.h). A file that doesn't load keeps what was loaded, with
+     * one error logged; a FAILED resource that now loads is READY. Textures and glTF meshes
+     * load again (a resource of another kind is warned of and left), and a resource still
+     * loading is left. The number set loading; 0 when nothing was made from `path`, or for a
+     * path that isn't under the host.
+     */
+    readonly reload: typeof raw.wgf_asset_reload;
+    /**
      * Forget every cached file, so the next ensure of any fetches it again, and what was
      * read of the manifests, so the root is asked about again. Natively, every file libwgf
      * downloaded into the cache directory is deleted, with its metadata and the directories
@@ -2297,14 +2311,20 @@ export declare const Model: {
     /**
      * The model's mesh; 0 is none, and nothing drawn. A glTF file's mesh (wgf_mesh_create) makes
      * the model the file's root, its node tree made the model's children once the mesh is
-     * READY, and is the model's for good. False when `mesh` isn't a mesh, for a file's mesh on a
+     * READY, and is the model's for good; loaded again (wgf_asset_reload), the tree is made
+     * again in place: a node's actor kept (found by its name under its parent's) and moved, its
+     * mesh's handle the same with the new triangles, a node the file no longer has gone with its
+     * actor and what is under it, a new one made, and the file's lights made again. False when `mesh` isn't a mesh, for a file's mesh on a
      * model with children, and for a file's root or one of its nodes (their meshes are the file's).
      */
     readonly setMesh: typeof raw.wgf_model_set_mesh;
     /**
      * The model's mesh; 0 is none, and nothing drawn. A glTF file's mesh (wgf_mesh_create) makes
      * the model the file's root, its node tree made the model's children once the mesh is
-     * READY, and is the model's for good. False when `mesh` isn't a mesh, for a file's mesh on a
+     * READY, and is the model's for good; loaded again (wgf_asset_reload), the tree is made
+     * again in place: a node's actor kept (found by its name under its parent's) and moved, its
+     * mesh's handle the same with the new triangles, a node the file no longer has gone with its
+     * actor and what is under it, a new one made, and the file's lights made again. False when `mesh` isn't a mesh, for a file's mesh on a
      * model with children, and for a file's root or one of its nodes (their meshes are the file's).
      */
     readonly getMesh: typeof raw.wgf_model_get_mesh;

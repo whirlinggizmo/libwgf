@@ -139,6 +139,22 @@ class Asset {
 		return Raw.wgf_asset_evict(path);
 
 	/**
+	    Load again, in place, every resource made from `path`, and every file that names it (a
+	    glTF whose buffer or image it is): what `wgf serve` does with an asset saved while the
+	    game runs. Each is fetched anew (never from the cache or this run's store), its handle
+	    kept, and READY all the while: what uses it draws what it had until the new file is in,
+	    then the new one, as of the frame it is. A glTF's tree is kept too: each of its nodes'
+	    actors stays, moved and given its new mesh, a node the file no longer has gone with its
+	    actor, a new one made (wgf_model.h). A file that doesn't load keeps what was loaded, with
+	    one error logged; a FAILED resource that now loads is READY. Textures and glTF meshes
+	    load again (a resource of another kind is warned of and left), and a resource still
+	    loading is left. The number set loading; 0 when nothing was made from `path`, or for a
+	    path that isn't under the host.
+	**/
+	public static inline function reload(path:String):Int
+		return Raw.wgf_asset_reload(path);
+
+	/**
 	    Forget every cached file, so the next ensure of any fetches it again, and what was
 	    read of the manifests, so the root is asked about again. Natively, every file libwgf
 	    downloaded into the cache directory is deleted, with its metadata and the directories

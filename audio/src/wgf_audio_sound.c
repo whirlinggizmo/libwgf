@@ -82,8 +82,8 @@ static void arrive(wgf_handle_t sound, const char *path, wgf_handle_t arrival)
 }
 
 static const wgf_core_priv_loader_t loaders[2] = {
-    {"sound", prepare_decoded, finish, wgf_audio_priv_sound_discard, fail, NULL},
-    {"streamed sound", prepare_streamed, finish, wgf_audio_priv_sound_discard, fail, arrive},
+    {"sound", prepare_decoded, finish, wgf_audio_priv_sound_discard, fail, NULL, false},
+    {"streamed sound", prepare_streamed, finish, wgf_audio_priv_sound_discard, fail, arrive, false},
 };
 
 static const wgf_core_priv_loader_t *decoded_loader(const char *path)

@@ -1044,7 +1044,7 @@ static void failed(wgf_handle_t resource)
     wgf_core_priv_resource_failed(resource);
 }
 
-static const wgf_core_priv_loader_t loader = {"scene", prepare, finish, discard, failed, NULL};
+static const wgf_core_priv_loader_t loader = {"scene", prepare, finish, discard, failed, NULL, false};
 
 static const wgf_core_priv_loader_t *loader_of(const char *path)
 {
@@ -1177,7 +1177,7 @@ static bool defer(int thing, wgf_actor_t root, int depth)
     deferred[deferred_count].depth = depth;
     deferred[deferred_count].root = root;
     deferred_count++;
-    wgf_gfx_priv_set_model_built_hook(file_built);
+    wgf_gfx_priv_add_model_built_hook(file_built); /* room for it: the ecs's and physics' are all */
     return true;
 }
 

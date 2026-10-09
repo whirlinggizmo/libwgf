@@ -162,6 +162,7 @@ class Main {
 	static function assets():Void {
 		expect(Asset.setHost("../assets") && Asset.getHost() != "", "the asset host (beside the program)");
 		Log.message(LogLevel.INFO, "feature-test assets from " + Asset.getHost());
+		expect(Asset.reload("nothing/made/from.png") == 0, "a reload of a path nothing was made from: none");
 		Asset.setCacheDir("feature-cache");
 		Asset.getCacheDir();
 		Asset.setFetching(false);

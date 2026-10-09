@@ -152,7 +152,7 @@ bool wgf_model_set_mesh(wgf_actor_t model, wgf_mesh_t mesh)
     }
     if (file && (file_part == NULL || wgf_actor_get_child_count(model) > 0)) return false; /* under no other actors */
     if (mesh != 0 && !wgf_gfx_priv_mesh_retain(mesh)) return false;
-    if (file && wgf_resource_get_status(mesh) == WGF_RESOURCE_STATUS_PENDING && !file_part->wait(model)) {
+    if (file && !file_part->add(model)) {
         wgf_resource_release(mesh);
         return false;
     }

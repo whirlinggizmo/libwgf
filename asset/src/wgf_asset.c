@@ -1,6 +1,7 @@
 #include "wgf_asset_priv.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "wgf_core_load_priv.h"
@@ -25,6 +26,8 @@ static wgf_core_priv_locate_t locate(wgf_handle_t request, char *path, size_t pa
 {
     uint16_t slot = wgf_asset_priv_task_of_request(request);
     wgf_asset_priv_task_t *task_ptr;
+    /* a file loaded again is fetched anew, with what it names, never taken from this run's store */
+    const unsigned int flags = wgf_core_priv_load_is_reload(request) ? WGF_ASSET_ENSURE_FORCE_FETCH : 0;
     if (slot == 0) {
         if (wgf_asset_priv_has_scheme(path)) { /* a URL: kept under its key, fetched from it */
             char key[WGF_ASSET_PRIV_PATH_MAX];
@@ -32,11 +35,11 @@ static wgf_core_priv_locate_t locate(wgf_handle_t request, char *path, size_t pa
                 wgf_log_warn("wgf_asset: %s: a URL naming no file", path);
                 return WGF_CORE_PRIV_LOCATE_FAILED;
             }
-            slot = wgf_asset_priv_task_new(key, path, false, 0);
+            slot = wgf_asset_priv_task_new(key, path, false, flags);
         } else if (wgf_asset_priv_found(path) != NULL) { /* an ensure's explicit source: read there */
-            slot = wgf_asset_priv_task_new(path, wgf_asset_priv_found(path), true, 0);
+            slot = wgf_asset_priv_task_new(path, wgf_asset_priv_found(path), true, flags);
         } else {
-            slot = wgf_asset_priv_task_new(path, NULL, false, 0);
+            slot = wgf_asset_priv_task_new(path, NULL, false, flags);
         }
         task_ptr = wgf_asset_priv_task_at(slot);
         if (task_ptr == NULL) return WGF_CORE_PRIV_LOCATE_FAILED;
@@ -129,8 +132,61 @@ static void update(void)
     wgf_asset_priv_tasks_step(0);
 }
 
+/* ------------------------------------------------------------- reloading ---- */
+
+/* The files a loaded file named (a glTF's buffers and images), each with the file that
+ * named it: what wgf_asset_reload loads again when one of them is saved. */
+typedef struct named_t {
+    char file[WGF_ASSET_PRIV_PATH_MAX];
+    char named[WGF_ASSET_PRIV_PATH_MAX];
+} named_t;
+
+static named_t *names;
+static int name_count, name_capacity;
+
+void wgf_asset_priv_note_named(const char *file, const char *named)
+{
+    int i;
+    for (i = 0; i < name_count; i++) {
+        if (strcmp(names[i].file, file) == 0 && strcmp(names[i].named, named) == 0) return;
+    }
+    if (name_count == name_capacity) {
+        const int capacity = name_capacity > 0 ? name_capacity * 2 : 16;
+        named_t *grown = (named_t *)realloc(names, sizeof(named_t) * (size_t)capacity);
+        if (grown == NULL) return; /* it won't be reloaded through what names it: nothing else lost */
+        names = grown;
+        name_capacity = capacity;
+    }
+    snprintf(names[name_count].file, sizeof(names[name_count].file), "%s", file);
+    snprintf(names[name_count].named, sizeof(names[name_count].named), "%s", named);
+    name_count++;
+}
+
+int wgf_asset_reload(const char *path)
+{
+    char logical[WGF_ASSET_PRIV_PATH_MAX];
+    int count, i, j;
+    wgf_asset_priv_install();
+    if (path == NULL || !wgf_asset_priv_normalize_path(path, logical, sizeof(logical))) {
+        wgf_log_warn("wgf_asset_reload: %s isn't a path under the host", path != NULL ? path : "(null)");
+        return 0;
+    }
+    count = wgf_core_priv_resource_reload(logical);
+    for (i = 0; i < name_count; i++) { /* the files that name it, each once */
+        if (strcmp(names[i].named, logical) != 0) continue;
+        for (j = 0; j < i && !(strcmp(names[j].named, logical) == 0 && strcmp(names[j].file, names[i].file) == 0);
+             j++) {
+        }
+        if (j == i) count += wgf_core_priv_resource_reload(names[i].file);
+    }
+    return count;
+}
+
 static void stop(void)
 {
+    free(names);
+    names = NULL;
+    name_count = name_capacity = 0;
     wgf_asset_priv_tasks_stop();
     wgf_asset_priv_manifests_forget();
     memset(&wgf_core_priv_load_hooks, 0, sizeof(wgf_core_priv_load_hooks));

@@ -8,6 +8,7 @@
 #include "stage/wgf_gfx_stage3d_priv.h"
 #include "wgf_camera3d.h"
 #include "wgf_actor.h"
+#include "wgf_asset.h"
 #include "wgf_color.h"
 #include "wgf_core_priv.h"
 #include "wgf_core_resource_priv.h"
@@ -29,7 +30,11 @@
  * one), also for a model made while the mesh was pending; the same path is the same mesh;
  * a missing file, a file that isn't glTF, and a missing buffer FAILED; what isn't a glTF
  * path is refused; a file's root and its nodes keep their meshes; and drawn: each node's
- * mesh, nothing for a pending file, the placeholder for a failed one. */
+ * mesh, nothing for a pending file, the placeholder for a failed one. And loaded again
+ * (wgf_asset_reload): READY all the while, each kept node's actor and mesh handle kept,
+ * moved and given the new triangles, a node gone with its actor, a new one made, the
+ * game's own actor under a kept node kept; through its buffer saved too; a broken file
+ * keeping what it had; a FAILED file that now loads making its tree. */
 
 static int failures;
 
@@ -44,6 +49,14 @@ static void expect(int ok, const char *what)
 static int near(float a, float b)
 {
     return fabsf(a - b) < 1e-4f;
+}
+
+static void remove_file(const char *path)
+{
+    const wgf_fs_task_t task = wgf_fs_remove(path);
+    int i;
+    for (i = 0; i < 1000 && wgf_fs_task_get_status(task) == WGF_FS_TASK_STATUS_PENDING; i++) wgf_core_priv_update();
+    wgf_fs_task_destroy(task);
 }
 
 static void write_file(const char *path, const void *data, int size)
@@ -84,6 +97,29 @@ static void settle(const wgf_mesh_t *meshes, int count)
     "\"min\":[0,0,0],\"max\":[1,1,0]}]}"
 
 static const float tri[9] = {0, 0, 0, 1, 0, 0, 0, 1, 0};
+static const float big[9] = {0, 0, 0, 2, 0, 0, 0, 2, 0};
+
+/* TRI_JSON saved again, changed: "body" moved to x 3, "wheel" gone, "door" new. */
+static const char car_changed[] =
+    "{\"asset\":{\"version\":\"2.0\"},\"extensionsUsed\":[\"KHR_lights_punctual\"],"
+    "\"extensions\":{\"KHR_lights_punctual\":{\"lights\":[{\"type\":\"point\",\"color\":[1,0.5,0],"
+    "\"intensity\":5,\"range\":10}]}},"
+    "\"scene\":0,\"scenes\":[{\"nodes\":[0]}],"
+    "\"nodes\":[{\"name\":\"body\",\"mesh\":0,\"translation\":[3,0,0],\"children\":[1,2]},"
+    "{\"name\":\"door\",\"mesh\":0,\"translation\":[0,0,1]},"
+    "{\"name\":\"lamp\",\"extensions\":{\"KHR_lights_punctual\":{\"light\":0}}}],"
+    "\"meshes\":[{\"primitives\":[{\"attributes\":{\"POSITION\":0},\"material\":0}]}],"
+    "\"materials\":[{\"pbrMetallicRoughness\":{\"baseColorFactor\":[0,1,0,1]}}],"
+    "\"buffers\":[{\"uri\":\"car.bin\",\"byteLength\":36}],\"bufferViews\":[{\"buffer\":0,\"byteLength\":36}],"
+    "\"accessors\":[{\"bufferView\":0,\"componentType\":5126,\"count\":3,\"type\":\"VEC3\","
+    "\"min\":[0,0,0],\"max\":[1,1,0]}]}";
+
+/* Update until `mesh` has loaded again (wgf_asset_reload). */
+static void settle_reload(wgf_mesh_t mesh)
+{
+    const double start = wgf_time_get_seconds();
+    while (wgf_core_priv_resource_is_reloading(mesh) && wgf_time_get_seconds() - start < 30.0) wgf_core_priv_update();
+}
 
 static void put32(unsigned char *at, unsigned int value)
 {
@@ -241,6 +277,74 @@ int main(void)
     wgf_actor_destroy(root, WGF_ACTOR_DESTROY_CHILDREN);
     expect(wgf_mesh_create("models/tri.obj") == 0 && wgf_mesh_create("") == 0 && wgf_mesh_create(NULL) == 0,
            "a path that isn't glTF: none (logged)");
+
+    /* loaded again, in place */
+    {
+        static const char car[] = TRI_JSON("\"uri\":\"car.bin\",");
+        static const char broken[] = "{ not glTF any more";
+        wgf_mesh_t file;
+        wgf_actor_t body, mine, wheel;
+        write_file("models/car.gltf", car, (int)sizeof(car) - 1);
+        write_file("models/car.bin", tri, (int)sizeof(tri));
+        file = wgf_mesh_create("models/car.gltf");
+        root = wgf_model_create(file);
+        settle(&file, 1);
+        body = wgf_actor_find(root, "body");
+        wheel = wgf_actor_find(root, "body/wheel");
+        part = wgf_model_get_mesh(body);
+        mine = wgf_actor_create(); /* the game's own, on a node of the file */
+        wgf_actor_set_parent(mine, body);
+        expect(body != 0 && wheel != 0 && part != 0, "a file's tree, before");
+
+        write_file("models/car.gltf", car_changed, (int)sizeof(car_changed) - 1);
+        expect(wgf_asset_reload("models/car.gltf") == 1, "one resource made from it, loading again");
+        expect(wgf_resource_get_status(file) == WGF_RESOURCE_STATUS_READY && wgf_actor_find(root, "body/wheel") == wheel,
+               "READY all the while, what it had kept until the new file is in");
+        settle_reload(file);
+        expect(wgf_actor_find(root, "body") == body && near(wgf_actor_get_position(body).x, 3.0f) &&
+                   wgf_model_get_mesh(body) == part,
+               "a kept node: its actor and its mesh's handle kept, moved as the file says");
+        expect(wgf_actor_find(root, "body/wheel") == 0 && wgf_actor_find(root, "body/door") != 0 &&
+                   wgf_model_get_mesh(wgf_actor_find(root, "body/door")) == part,
+               "a node gone with its actor, a new one made");
+        expect(wgf_actor_get_parent(mine) == body,
+               "the game's own actor on a kept node kept");
+        {
+            int lights = 0, i;
+            const wgf_actor_t lamp = wgf_actor_find(root, "body/lamp");
+            for (i = 0; lamp != 0 && i < wgf_actor_get_child_count(lamp); i++) {
+                lights += wgf_actor_get_kind(wgf_actor_get_child(lamp, i)) == WGF_ACTOR_KIND_LIGHT;
+            }
+            expect(lights == 1, "its light made again, once");
+        }
+        expect(near(wgf_material_get_vec4(wgf_mesh_get_material(part, 0), "base_color").y, 1.0f),
+               "the new material drawn by the kept mesh");
+
+        write_file("models/car.bin", big, (int)sizeof(big));
+        expect(wgf_asset_reload("models/car.bin") == 1, "its buffer saved: the file that names it, loading again");
+        settle_reload(file);
+        expect(wgf_gfx_priv_mesh_get_bounds(part, &lo, &hi) && near(hi.x, 2.0f) && wgf_model_get_mesh(body) == part,
+               "the new triangles, in the same mesh");
+
+        write_file("models/car.gltf", broken, (int)sizeof(broken) - 1);
+        expect(wgf_asset_reload("models/car.gltf") == 1, "a broken file, loading again");
+        settle_reload(file);
+        expect(wgf_resource_get_status(file) == WGF_RESOURCE_STATUS_READY && wgf_actor_find(root, "body/door") != 0 &&
+                   wgf_gfx_priv_mesh_get_bounds(part, &lo, &hi) && near(hi.x, 2.0f),
+               "a broken file keeps what it had (one error logged)");
+        expect(wgf_asset_reload("models/nothing.gltf") == 0, "nothing made from a path: none");
+        wgf_actor_destroy(root, WGF_ACTOR_DESTROY_CHILDREN);
+        wgf_resource_release(file);
+
+        root = wgf_model_create(failed[0]);
+        write_file("models/missing.gltf", gltf, (int)sizeof(gltf) - 1);
+        expect(wgf_asset_reload("models/missing.gltf") == 1, "a FAILED file there now, loading again");
+        settle_reload(failed[0]);
+        expect(wgf_resource_get_status(failed[0]) == WGF_RESOURCE_STATUS_READY, "READY now");
+        expect_tree(root, failed[0], "a FAILED file's model, its tree made once it loads");
+        wgf_actor_destroy(root, WGF_ACTOR_DESTROY_CHILDREN);
+        remove_file("models/missing.gltf"); /* missing again for the next run */
+    }
 
     /* a mesh let go of while it loads */
     early = wgf_mesh_create("models/tri.gltf#again");

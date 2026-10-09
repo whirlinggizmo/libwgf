@@ -93,6 +93,7 @@ class Reach {
 		"wgf_asset_is_fetching",
 		"wgf_asset_ping_get_milliseconds",
 		"wgf_asset_ping_host",
+		"wgf_asset_reload",
 		"wgf_asset_set_cache_dir",
 		"wgf_asset_set_cache_mode",
 		"wgf_asset_set_fetch_timeout",
@@ -632,7 +633,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...623) 0];
+	static final counts:Array<Int> = [for (_ in 0...624) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

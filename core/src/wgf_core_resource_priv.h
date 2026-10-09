@@ -22,6 +22,7 @@ typedef struct wgf_core_priv_resource_t {
     int refs;
     wgf_resource_status_t status;
     bool permanent;                         /* a built-in: never freed, and release does nothing */
+    bool reloading;                         /* its file loading again (wgf_core_priv_resource_reload): its status kept */
     char path[WGF_CORE_PRIV_FS_PATH_MAX];  /* the path it was created from, normalized, which finds it again; "" none */
     char found[WGF_CORE_PRIV_FS_PATH_MAX]; /* the file it is read from (shown once READY) */
 } wgf_core_priv_resource_t;
@@ -81,6 +82,17 @@ void wgf_core_priv_resource_retain(wgf_handle_t resource);
 /* From the module's loader, when the load into `resource` is done: READY, read from
  * `found` (a path under fs's root; NULL: the file it was asked to read), or FAILED. */
 void wgf_core_priv_resource_loaded(wgf_handle_t resource, const char *found);
+
+/* Every resource created from `path` (normalized; any kind), READY or FAILED, loaded again
+ * from its file in place (wgf_asset_reload): its handle and status kept while it loads, its
+ * loader filling it anew once the new file is in (a loader that `reloads`: is_reloading says
+ * so), and a failure leaving it as it was, with one error logged. A resource still loading,
+ * or of a kind that doesn't reload (warned), is left. The number set loading. */
+int wgf_core_priv_resource_reload(const char *path);
+
+/* Whether `resource` is loading again (its loader replaces what it holds, freeing the old
+ * only once the new is made). */
+bool wgf_core_priv_resource_is_reloading(wgf_handle_t resource);
 
 /* Where a loading resource's file was found, when its load found it elsewhere than its
  * path said (a redirect, a URL's key): what wgf_resource_get_path shows once READY. */

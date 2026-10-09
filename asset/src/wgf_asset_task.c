@@ -262,6 +262,7 @@ static void add_dependency(const char *uri, const char *fallback_uri, bool requi
         parent_ptr->dependency_failed = parent_ptr->dependency_failed || required;
         return;
     }
+    wgf_asset_priv_note_named(parent_ptr->path, path); /* saved, it loads its file again */
     for (uint16_t i = 1; i < pool.capacity; i++) { /* named twice: made local once */
         if (pool.occupied[i] && tasks[i].parent == parent && strcmp(tasks[i].origin, path) == 0) return;
     }

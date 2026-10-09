@@ -636,13 +636,13 @@ static void *prepare(const char *path)
  * file's materials: the file's meshes, which the nodes showing them share (Rob's decision
  * over a copy a node: the toy car's four wheels are one mesh). The skin a node gives with
  * its mesh (milestone 3's) is kept beside the mesh, never in it, so a skinned mesh is
- * shared too. Made before `file`'s record is resolved again: each is a resource added, and
- * the pool may move. False (the parts made let go of) out of memory. */
-static bool make_parts(prepared_t *prepared, wgf_mesh_t file)
+ * shared too. Made before the file's record is resolved again: each is a resource added, and
+ * the pool may move. Into `out`, of `out_count`; false (the parts made let go of) out of
+ * memory. */
+static bool make_parts(prepared_t *prepared, wgf_mesh_t **out, int *out_count)
 {
     const int count = (int)prepared->gltf->meshes_count;
     wgf_mesh_t *parts = (wgf_mesh_t *)calloc((size_t)(count > 0 ? count : 1), sizeof(wgf_mesh_t));
-    mesh_t *mesh_ptr;
     int m;
     if (parts == NULL) return false;
     for (m = 0; m < count; m++) {
@@ -667,17 +667,49 @@ static bool make_parts(prepared_t *prepared, wgf_mesh_t file)
     free(prepared->mesh.primitives); /* every one moved */
     prepared->mesh.primitives = NULL;
     prepared->mesh.primitive_count = 0;
-    mesh_ptr = wgf_gfx_priv_mesh_record(file);
-    mesh_ptr->parts = parts;
-    mesh_ptr->part_count = count;
+    *out = parts;
+    *out_count = count;
     return true;
+}
+
+/* A file's mesh loaded again (wgf_asset_reload): each of its meshes keeps its handle, which
+ * the models of its nodes hold, given the new one's triangles and materials (the new handle
+ * let go of with the old ones); one the file no longer has is let go of (its models keep it
+ * until their tree is made again), and a new one is the new handle. The old tree, lights,
+ * and materials freed. `parts` taken. */
+static void reload_into(mesh_t *mesh_ptr, wgf_mesh_t *parts, int part_count)
+{
+    mesh_t old;
+    int m;
+    memset(&old, 0, sizeof(old));
+    old.parts = mesh_ptr->parts;
+    old.part_count = mesh_ptr->part_count;
+    old.nodes = mesh_ptr->nodes;
+    old.node_count = mesh_ptr->node_count;
+    old.lights = mesh_ptr->lights;
+    old.light_count = mesh_ptr->light_count;
+    old.materials = mesh_ptr->materials;
+    old.material_count = mesh_ptr->material_count;
+    for (m = 0; m < part_count && m < old.part_count; m++) {
+        if (parts[m] == 0 || old.parts[m] == 0) continue;
+        wgf_gfx_priv_mesh_swap(old.parts[m], parts[m]);
+        { /* the handle swapped: the new holds what the old drew, freed with it */
+            const wgf_mesh_t kept = old.parts[m];
+            old.parts[m] = parts[m];
+            parts[m] = kept;
+        }
+    }
+    mesh_ptr->parts = parts;
+    mesh_ptr->part_count = part_count;
+    wgf_gfx_priv_mesh_free_data(&old); /* releases a mesh the models no longer hold */
 }
 
 static wgf_core_priv_load_step_t finish(void *data, wgf_handle_t resource)
 {
     prepared_t *prepared = (prepared_t *)data;
     mesh_t *mesh_ptr = wgf_gfx_priv_mesh_record(resource);
-    int p;
+    wgf_mesh_t *parts = NULL;
+    int p, part_count = 0;
 
     if (mesh_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
     if (!wgf_gfx_priv_render_is_running()) return WGF_CORE_PRIV_LOAD_MORE; /* no GPU yet: wait for one */
@@ -700,8 +732,15 @@ static wgf_core_priv_load_step_t finish(void *data, wgf_handle_t resource)
         }
     }
     load_materials(prepared);
-    if (!make_parts(prepared, resource)) return WGF_CORE_PRIV_LOAD_FAILED;
+    if (!make_parts(prepared, &parts, &part_count)) return WGF_CORE_PRIV_LOAD_FAILED;
     mesh_ptr = wgf_gfx_priv_mesh_record(resource); /* resolved again: the parts' adds may have moved the pool */
+    if (wgf_core_priv_resource_is_reloading(resource)) {
+        reload_into(mesh_ptr, parts, part_count);
+        mesh_ptr = wgf_gfx_priv_mesh_record(resource); /* releases may free, never move: resolved again all the same */
+    } else {
+        mesh_ptr->parts = parts;
+        mesh_ptr->part_count = part_count;
+    }
     mesh_ptr->nodes = prepared->mesh.nodes;
     mesh_ptr->node_count = prepared->mesh.node_count;
     mesh_ptr->lights = prepared->mesh.lights;
@@ -718,12 +757,13 @@ static wgf_core_priv_load_step_t finish(void *data, wgf_handle_t resource)
 
 static void fail(wgf_handle_t resource)
 {
+    const bool reloading = wgf_core_priv_resource_is_reloading(resource);
     if (wgf_gfx_priv_mesh_record(resource) == NULL) return;
-    wgf_core_priv_resource_failed(resource);
-    wgf_gfx_priv_model_mesh_done(resource);
+    wgf_core_priv_resource_failed(resource); /* loading again: kept as it was, and its trees with it */
+    if (!reloading) wgf_gfx_priv_model_mesh_done(resource);
 }
 
-static const wgf_core_priv_loader_t loader = {"mesh", prepare, finish, discard, fail, NULL};
+static const wgf_core_priv_loader_t loader = {"mesh", prepare, finish, discard, fail, NULL, true};
 
 /* The files a glTF names, for the asset part to make local with it (core's lister,
  * wgf_core_load_priv.h): its buffers, required; its images, optional (a missing one gets the

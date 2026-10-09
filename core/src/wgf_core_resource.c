@@ -182,13 +182,60 @@ void wgf_core_priv_resource_loaded(wgf_handle_t resource, const char *found)
     wgf_core_priv_resource_t *record_ptr = wgf_core_priv_resource_get(resource);
     if (record_ptr == NULL) return;
     record_ptr->status = WGF_RESOURCE_STATUS_READY;
+    record_ptr->reloading = false;
     if (found != NULL) snprintf(record_ptr->found, sizeof(record_ptr->found), "%s", found);
 }
 
 void wgf_core_priv_resource_failed(wgf_handle_t resource)
 {
     wgf_core_priv_resource_t *record_ptr = wgf_core_priv_resource_get(resource);
-    if (record_ptr != NULL) record_ptr->status = WGF_RESOURCE_STATUS_FAILED;
+    if (record_ptr == NULL) return;
+    if (record_ptr->reloading) { /* what it had is kept */
+        record_ptr->reloading = false;
+        wgf_log_error("wgf_asset_reload: %s didn't load again: what was loaded is kept", record_ptr->path);
+        return;
+    }
+    record_ptr->status = WGF_RESOURCE_STATUS_FAILED;
+}
+
+bool wgf_core_priv_resource_is_reloading(wgf_handle_t resource)
+{
+    const wgf_core_priv_resource_t *record_ptr = wgf_core_priv_resource_get(resource);
+    return record_ptr != NULL && record_ptr->reloading;
+}
+
+int wgf_core_priv_resource_reload(const char *path)
+{
+    char key[WGF_CORE_PRIV_FS_PATH_MAX];
+    int count = 0;
+    if (!wgf_core_priv_fs_normalize_path(path, key, sizeof(key))) return 0;
+    for (unsigned kind = 0; kind < KINDS; kind++) {
+        wgf_core_priv_handle_pool_t *pool = kinds[kind].pool;
+        const wgf_core_priv_resource_kind_t *desc = kinds[kind].kind;
+        for (uint16_t i = 1; pool != NULL && i < pool->capacity; i++) {
+            wgf_core_priv_resource_t *record = header(pool, i);
+            const wgf_core_priv_loader_t *loader;
+            const wgf_handle_t handle = wgf_core_priv_handle_pool_handle_from_index(pool, i);
+            if (handle == 0 || strcmp(record->path, key) != 0 || record->permanent || record->reloading ||
+                record->status == WGF_RESOURCE_STATUS_PENDING || desc->loader == NULL) {
+                continue;
+            }
+            loader = desc->loader(record->found);
+            if (loader == NULL || !loader->reloads) {
+                wgf_log_warn("wgf_asset_reload: %s: a %s doesn't load again (textures and glTF meshes do)", key,
+                             loader != NULL ? loader->name : "resource");
+                continue;
+            }
+            record->reloading = true;
+            if (!wgf_core_priv_load_request_reload(loader, record->found, handle)) {
+                record = header(pool, i);
+                record->reloading = false;
+                continue;
+            }
+            count++;
+        }
+    }
+    return count;
 }
 
 wgf_resource_status_t wgf_resource_get_status(wgf_handle_t resource)

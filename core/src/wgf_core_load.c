@@ -44,6 +44,7 @@ typedef struct request_t {
     unsigned long waiting;   /* the update its finish said to WAIT in (updates counts from 1); 0 none */
     bool asked;              /* the locate hook was asked about it: told when it ends */
     bool refetched;          /* its file failed once and was located again */
+    bool reload;             /* a resource's file loaded again: fetched anew */
 } request_t;
 
 wgf_core_priv_load_hooks_t wgf_core_priv_load_hooks;
@@ -214,7 +215,7 @@ static void queue_prepare(wgf_handle_t handle, request_t *request_ptr)
     wgf_core_priv_mutex_unlock(&jobs.lock);
 }
 
-bool wgf_core_priv_load_request(const wgf_core_priv_loader_t *loader, const char *path, wgf_handle_t resource)
+static bool request(const wgf_core_priv_loader_t *loader, const char *path, wgf_handle_t resource, bool reload)
 {
     wgf_handle_t handle;
     uint16_t index;
@@ -237,6 +238,7 @@ bool wgf_core_priv_load_request(const wgf_core_priv_loader_t *loader, const char
     memset(request_ptr, 0, sizeof(*request_ptr));
     request_ptr->loader = loader;
     request_ptr->resource = resource;
+    request_ptr->reload = reload;
     request_ptr->state = wgf_core_priv_fs_normalize_path(path, request_ptr->path, sizeof(request_ptr->path))
                              ? STATE_LOCATING
                              : STATE_BAD_PATH;
@@ -246,6 +248,22 @@ bool wgf_core_priv_load_request(const wgf_core_priv_loader_t *loader, const char
         request_ptr->state = strstr(path, "://") != NULL ? STATE_LOCATING : STATE_BAD_PATH;
     }
     return true;
+}
+
+bool wgf_core_priv_load_request(const wgf_core_priv_loader_t *loader, const char *path, wgf_handle_t resource)
+{
+    return request(loader, path, resource, false);
+}
+
+bool wgf_core_priv_load_request_reload(const wgf_core_priv_loader_t *loader, const char *path, wgf_handle_t resource)
+{
+    return request(loader, path, resource, true);
+}
+
+bool wgf_core_priv_load_is_reload(wgf_handle_t handle)
+{
+    const request_t *request_ptr = request_of(handle);
+    return request_ptr != NULL && request_ptr->reload;
 }
 
 bool wgf_core_priv_load_cancel(wgf_handle_t resource)

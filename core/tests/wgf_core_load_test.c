@@ -94,7 +94,7 @@ static void fail(wgf_handle_t resource)
     if (thing_ptr != NULL) thing_ptr->status = 2;
 }
 
-static const wgf_core_priv_loader_t loader = {"thing", prepare, finish, discard, fail, NULL};
+static const wgf_core_priv_loader_t loader = {"thing", prepare, finish, discard, fail, NULL, false};
 
 static wgf_handle_t make(const char *path)
 {

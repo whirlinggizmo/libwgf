@@ -177,6 +177,8 @@ export const Asset = Object.freeze({
     getFetchTimeout: raw.wgf_asset_get_fetch_timeout,
     // wgf: call wgf_asset_evict
     evict: raw.wgf_asset_evict,
+    // wgf: call wgf_asset_reload
+    reload: raw.wgf_asset_reload,
     // wgf: call wgf_asset_clear_cache
     clearCache: raw.wgf_asset_clear_cache,
     // wgf: call wgf_asset_set_cache_mode

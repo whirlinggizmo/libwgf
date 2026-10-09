@@ -200,14 +200,20 @@ static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
 {
     const decoded_t *decoded = (const decoded_t *)prepared;
     texture_t *texture_ptr = texture_of(resource);
+    sg_image image = {SG_INVALID_ID};
+    sg_view view = {SG_INVALID_ID};
     if (texture_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
     if (!wgf_gfx_priv_render_is_running()) return WGF_CORE_PRIV_LOAD_MORE; /* no GPU yet: wait for one */
-    if (!make_image(decoded->width, decoded->height, decoded->mip_count, decoded->levels, &texture_ptr->image,
-                    &texture_ptr->view)) {
+    if (!make_image(decoded->width, decoded->height, decoded->mip_count, decoded->levels, &image, &view)) {
         wgf_log_warn("wgf_gfx_texture: %s: the GPU didn't take it (%d by %d)", texture_ptr->resource.found,
                      decoded->width, decoded->height);
         return WGF_CORE_PRIV_LOAD_FAILED;
     }
+    /* loaded again (wgf_asset_reload): the old image goes only now the new one is made */
+    if (texture_ptr->view.id != SG_INVALID_ID) sg_destroy_view(texture_ptr->view);
+    if (texture_ptr->image.id != SG_INVALID_ID) sg_destroy_image(texture_ptr->image);
+    texture_ptr->image = image;
+    texture_ptr->view = view;
     texture_ptr->width = decoded->width;
     texture_ptr->height = decoded->height;
     wgf_core_priv_resource_loaded(resource, NULL);
@@ -219,7 +225,7 @@ static void fail(wgf_handle_t resource)
     wgf_core_priv_resource_failed(resource);
 }
 
-static const wgf_core_priv_loader_t loader = {"texture", prepare, finish, discard, fail, NULL};
+static const wgf_core_priv_loader_t loader = {"texture", prepare, finish, discard, fail, NULL, true};
 
 /* --- an image of another file's (a glTF's) ------------------------------------ */
 

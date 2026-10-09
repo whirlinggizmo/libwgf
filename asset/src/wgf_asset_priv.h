@@ -230,6 +230,9 @@ wgf_asset_priv_task_t *wgf_asset_priv_task_at(uint16_t slot);
  * or from `fetch_url` alone (its source, resolved; `local` when that is a file under a
  * local host), and its slot; 0 without room. */
 uint16_t wgf_asset_priv_task_new(const char *path, const char *fetch_url, bool local, unsigned int flags);
+/* `named` (normalized) is a file `file` names (a glTF's buffer or image): wgf_asset_reload
+ * of `named` loads `file` again. */
+void wgf_asset_priv_note_named(const char *file, const char *named);
 /* A new task for exactly `path`, no redirects (a manifest's); 0 without room. */
 uint16_t wgf_asset_priv_task_new_direct(const char *path);
 /* Move every pending task on, and `slot`'s alone (0: all). */

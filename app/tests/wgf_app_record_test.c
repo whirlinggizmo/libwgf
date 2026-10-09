@@ -116,7 +116,7 @@ static void load_fail(wgf_handle_t resource)
     (void)resource;
 }
 
-static const wgf_core_priv_loader_t loader = {"test", load_prepare, load_finish, load_discard, load_fail, NULL};
+static const wgf_core_priv_loader_t loader = {"test", load_prepare, load_finish, load_discard, load_fail, NULL, false};
 
 typedef struct loading_run_t {
     int frames, held_after; /* frames, and ticks with space down once the load ended */

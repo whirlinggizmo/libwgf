@@ -329,16 +329,26 @@ const wgf_gfx_priv_model_hooks_t *wgf_gfx_priv_get_model_hooks(void)
     return model_hooks;
 }
 
-static void (*model_built)(wgf_actor_t root); /* the ecs's, set by a scene waiting on a file */
+#define BUILT_HOOKS 4
+static void (*model_built[BUILT_HOOKS])(wgf_actor_t root); /* the ecs's scenes', physics' */
 
-void wgf_gfx_priv_set_model_built_hook(void (*built)(wgf_actor_t root))
+bool wgf_gfx_priv_add_model_built_hook(void (*built)(wgf_actor_t root))
 {
-    model_built = built;
+    int i;
+    for (i = 0; i < BUILT_HOOKS; i++) {
+        if (model_built[i] == built) return true;
+        if (model_built[i] == NULL) {
+            model_built[i] = built;
+            return true;
+        }
+    }
+    return false;
 }
 
 void wgf_gfx_priv_model_built(wgf_actor_t root)
 {
-    if (model_built != NULL) model_built(root);
+    int i;
+    for (i = 0; i < BUILT_HOOKS && model_built[i] != NULL; i++) model_built[i](root);
 }
 
 void wgf_gfx_priv_actor_set_kind(wgf_actor_kind_t type, const wgf_gfx_priv_actor_kind_t *kind)

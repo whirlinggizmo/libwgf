@@ -50,6 +50,9 @@ typedef struct wgf_core_priv_loader_t {
        the loader fills in `resource` from here, and fails it if the file does. NULL
        for a loader that reads only whole files, which is every other. */
     void (*arrive)(wgf_handle_t resource, const char *path, wgf_handle_t arrival);
+    /* Whether its finish can fill a resource that is READY again, in place
+       (wgf_core_priv_resource_reload): what it held freed only once the new is made. */
+    bool reloads;
 } wgf_core_priv_loader_t;
 
 /* What makes a request's file local, when something other than core does (CONVENTIONS.md,
@@ -140,6 +143,12 @@ wgf_core_priv_load_lister_fn wgf_core_priv_load_lister(const char *path);
  * can't be held (memory); everything else, a bad path included, is told through
  * the loader in a later update. `loader` must outlive the request. */
 bool wgf_core_priv_load_request(const wgf_core_priv_loader_t *loader, const char *path, wgf_handle_t resource);
+
+/* The same, loading a resource's file again (wgf_core_priv_resource_reload): its file
+ * fetched anew rather than taken from what this run has (the locate hook asks
+ * is_reload). */
+bool wgf_core_priv_load_request_reload(const wgf_core_priv_loader_t *loader, const char *path, wgf_handle_t resource);
+bool wgf_core_priv_load_is_reload(wgf_handle_t request);
 
 /* Forget every request for `resource`, released while it loads -- a resource can
  * have more than one, such as a texture's image and its alpha: their prepared data

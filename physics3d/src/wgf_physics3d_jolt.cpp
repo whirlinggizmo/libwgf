@@ -325,6 +325,9 @@ void wgf_physics3d_priv_jolt_body_destroy(uint32_t body)
     const BodyID id(body);
     if (!bodies.IsAdded(id)) return;
     world->overlaps.Forget(id, bodies);
+    /* what rests on it wakes, or a sleeping body would stay where it no longer has support
+       (a floor made again from its file's new place, or gone) */
+    bodies.ActivateBodiesInAABox(bodies.GetTransformedShape(id).GetWorldSpaceBounds(), {}, {});
     bodies.RemoveBody(id);
     bodies.DestroyBody(id);
 }

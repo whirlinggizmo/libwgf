@@ -15,7 +15,10 @@ import wgf.impl.Raw;
 	/**
 	    The model's mesh; 0 is none, and nothing drawn. A glTF file's mesh (wgf_mesh_create) makes
 	    the model the file's root, its node tree made the model's children once the mesh is
-	    READY, and is the model's for good. False when `mesh` isn't a mesh, for a file's mesh on a
+	    READY, and is the model's for good; loaded again (wgf_asset_reload), the tree is made
+	    again in place: a node's actor kept (found by its name under its parent's) and moved, its
+	    mesh's handle the same with the new triangles, a node the file no longer has gone with its
+	    actor and what is under it, a new one made, and the file's lights made again. False when `mesh` isn't a mesh, for a file's mesh on a
 	    model with children, and for a file's root or one of its nodes (their meshes are the file's).
 	**/
 	public inline function setMesh(mesh:Mesh):Bool
@@ -24,7 +27,10 @@ import wgf.impl.Raw;
 	/**
 	    The model's mesh; 0 is none, and nothing drawn. A glTF file's mesh (wgf_mesh_create) makes
 	    the model the file's root, its node tree made the model's children once the mesh is
-	    READY, and is the model's for good. False when `mesh` isn't a mesh, for a file's mesh on a
+	    READY, and is the model's for good; loaded again (wgf_asset_reload), the tree is made
+	    again in place: a node's actor kept (found by its name under its parent's) and moved, its
+	    mesh's handle the same with the new triangles, a node the file no longer has gone with its
+	    actor and what is under it, a new one made, and the file's lights made again. False when `mesh` isn't a mesh, for a file's mesh on a
 	    model with children, and for a file's root or one of its nodes (their meshes are the file's).
 	**/
 	public inline function getMesh():Mesh

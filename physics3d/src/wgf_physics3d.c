@@ -656,6 +656,36 @@ static int32_t layer_of(wgf_actor_t actor)
     return b != NULL ? b->layer : 0;
 }
 
+/* Whether `a` is `b` or above it. */
+static bool at_or_above(wgf_actor_t a, wgf_actor_t b)
+{
+    int depth;
+    for (depth = 0; b != 0 && depth < 64; depth++) {
+        if (a == b) return true;
+        b = wgf_actor_get_parent(b);
+    }
+    return false;
+}
+
+/* A glTF file's tree made, or made again (the file loaded again: wgf_asset_reload): each
+ * convex or mesh body over it -- on its root, above it, or under it -- made again at the next
+ * tick, from the triangles the tree has now. */
+static void tree_built(wgf_actor_t root)
+{
+    void *fields[2];
+    wgf_ecs_priv_id_t entity;
+    if (!physics.started) return;
+    wgf_ecs_priv_store_walk(physics.bodies);
+    while (wgf_ecs_priv_store_next(physics.bodies, fields, &entity)) {
+        body_t *b = (body_t *)fields[0];
+        const wgf_actor_t actor = ((const wgf_ecs_priv_ref_t *)fields[1])->actor;
+        if ((b->shape == WGF_BODY_SHAPE_CONVEX || b->shape == WGF_BODY_SHAPE_MESH) &&
+            (at_or_above(actor, root) || at_or_above(root, actor))) {
+            b->dirty = true;
+        }
+    }
+}
+
 static void tick(float dt)
 {
     void *fields[2];
@@ -777,6 +807,7 @@ static bool start(void)
     wgf_ecs_priv_set_part_component(WGF_COMPONENT_BODY, &body_hooks);
     wgf_ecs_priv_set_part_component(WGF_COMPONENT_VEHICLE, &vehicle_hooks);
     wgf_core_priv_part_install(&part);
+    wgf_gfx_priv_add_model_built_hook(tree_built); /* room for it: the ecs's and physics' are all */
     return true;
 }
 

@@ -7,8 +7,9 @@
 #include "wgf_material.h"
 #include "wgf_mesh.h"
 
-/* A file's mesh done loading (READY or FAILED), from glTF's loader: the models of it made
- * while it loaded make their trees now (or, failed, stay empty, drawn as the placeholder). */
+/* A file's mesh done loading (READY or FAILED), or loaded again, from glTF's loader: the
+ * models of it make their trees now, or make them again in place (or, failed, stay empty,
+ * drawn as the placeholder). */
 void wgf_gfx_priv_model_mesh_done(wgf_mesh_t mesh);
 
 /* The file part (wgf_gfx_model_file.c): a file root's tree, made once its mesh is READY,
@@ -18,9 +19,9 @@ void wgf_gfx_priv_model_mesh_done(wgf_mesh_t mesh);
  * program that never calls wgf_mesh_create links none of glTF (27.8 KB of gzip on
  * gfx-meshes, and the placeholder's 1 KB). */
 typedef struct wgf_gfx_priv_model_file_t {
-    bool (*wait)(wgf_actor_t root);                  /* waiting for its mesh; false out of memory */
+    bool (*add)(wgf_actor_t root);                   /* a root kept: its tree made as its mesh loads; false out of memory */
     void (*forget)(wgf_actor_t root);                /* as it goes */
-    void (*build)(wgf_actor_t root, wgf_mesh_t mesh); /* its tree, its mesh READY */
+    void (*build)(wgf_actor_t root, wgf_mesh_t mesh); /* its tree, its mesh READY: made, or made again in place */
     wgf_mesh_t (*create)(const char *path);
     bool (*placeholder)(wgf_mesh_t *mesh, wgf_material_t *material); /* a failed model's; false when none */
 } wgf_gfx_priv_model_file_t;

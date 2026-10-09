@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "cf849e8670cc5093" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "b902064116329940" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -2761,6 +2761,27 @@ export function wgf_asset_evict(path) {
     return value !== 0;
 }
 
+// wgf: call wgf_asset_reload
+/**
+ * Load again, in place, every resource made from `path`, and every file that names it (a
+ * glTF whose buffer or image it is): what `wgf serve` does with an asset saved while the
+ * game runs. Each is fetched anew (never from the cache or this run's store), its handle
+ * kept, and READY all the while: what uses it draws what it had until the new file is in,
+ * then the new one, as of the frame it is. A glTF's tree is kept too: each of its nodes'
+ * actors stays, moved and given its new mesh, a node the file no longer has gone with its
+ * actor, a new one made (wgf_model.h). A file that doesn't load keeps what was loaded, with
+ * one error logged; a FAILED resource that now loads is READY. Textures and glTF meshes
+ * load again (a resource of another kind is warned of and left), and a resource still
+ * loading is left. The number set loading; 0 when nothing was made from `path`, or for a
+ * path that isn't under the host.
+ */
+export function wgf_asset_reload(path) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_asset_reload"](cstr(path));
+    host["stackRestore"](mark);
+    return value;
+}
+
 // wgf: call wgf_asset_clear_cache
 /**
  * Forget every cached file, so the next ensure of any fetches it again, and what was
@@ -5056,7 +5077,10 @@ export function wgf_model_create(mesh) {
 /**
  * The model's mesh; 0 is none, and nothing drawn. A glTF file's mesh (wgf_mesh_create) makes
  * the model the file's root, its node tree made the model's children once the mesh is
- * READY, and is the model's for good. False when `mesh` isn't a mesh, for a file's mesh on a
+ * READY, and is the model's for good; loaded again (wgf_asset_reload), the tree is made
+ * again in place: a node's actor kept (found by its name under its parent's) and moved, its
+ * mesh's handle the same with the new triangles, a node the file no longer has gone with its
+ * actor and what is under it, a new one made, and the file's lights made again. False when `mesh` isn't a mesh, for a file's mesh on a
  * model with children, and for a file's root or one of its nodes (their meshes are the file's).
  */
 export function wgf_model_set_mesh(model, mesh) {
@@ -5068,7 +5092,10 @@ export function wgf_model_set_mesh(model, mesh) {
 /**
  * The model's mesh; 0 is none, and nothing drawn. A glTF file's mesh (wgf_mesh_create) makes
  * the model the file's root, its node tree made the model's children once the mesh is
- * READY, and is the model's for good. False when `mesh` isn't a mesh, for a file's mesh on a
+ * READY, and is the model's for good; loaded again (wgf_asset_reload), the tree is made
+ * again in place: a node's actor kept (found by its name under its parent's) and moved, its
+ * mesh's handle the same with the new triangles, a node the file no longer has gone with its
+ * actor and what is under it, a new one made, and the file's lights made again. False when `mesh` isn't a mesh, for a file's mesh on a
  * model with children, and for a file's root or one of its nodes (their meshes are the file's).
  */
 export function wgf_model_get_mesh(model) {

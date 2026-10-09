@@ -6,7 +6,9 @@
 #include "actor/wgf_gfx_actor_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "wgf_actor.h"
+#include "wgf_asset.h"
 #include "wgf_body.h"
+#include "wgf_core_resource_priv.h"
 #include "wgf_component.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_core_priv.h"
@@ -344,6 +346,25 @@ int main(void)
         expect(fabsf(wgf_actor_get_position(on_deck).y - 3.5f) < 0.05f, "a ball rests on the file's node, where it is");
         if (getenv("WGF_TEST_SHOW")) printf("on the deck %g, beside %g\n", wgf_actor_get_position(on_deck).y, wgf_actor_get_position(beside).y);
         expect(fabsf(wgf_actor_get_position(beside).y - 0.5f) < 0.05f, "and none of it is anywhere else: one beside falls past");
+        /* the file saved again, its node 2 lower, and loaded again: the body made again from it */
+        write_file("models/deck.gltf",
+                   "{\"asset\":{\"version\":\"2.0\"},\"scene\":0,\"scenes\":[{\"nodes\":[0]}],"
+                   "\"nodes\":[{\"name\":\"deck\",\"mesh\":0,\"translation\":[20,-2,0]}],"
+                   "\"meshes\":[{\"primitives\":[{\"attributes\":{\"POSITION\":0},\"indices\":1}]}],"
+                   "\"buffers\":[{\"uri\":\"data:application/octet-stream;base64,"
+                   "AACgwAAAAAAAAKDAAACgwAAAAAAAAKBAAACgQAAAAAAAAKBAAACgQAAAAAAAAKDAAAABAAIAAAACAAMA\","
+                   "\"byteLength\":60}],\"bufferViews\":[{\"buffer\":0,\"byteLength\":48},"
+                   "{\"buffer\":0,\"byteOffset\":48,\"byteLength\":12}],"
+                   "\"accessors\":[{\"bufferView\":0,\"componentType\":5126,\"count\":4,\"type\":\"VEC3\","
+                   "\"min\":[-5,0,-5],\"max\":[5,0,5]},"
+                   "{\"bufferView\":1,\"componentType\":5123,\"count\":6,\"type\":\"SCALAR\"}]}");
+        expect(wgf_asset_reload("models/deck.gltf") == 1, "the file loading again");
+        start = wgf_time_get_seconds();
+        while (wgf_core_priv_resource_is_reloading(file) && wgf_time_get_seconds() - start < 30.0) wgf_core_priv_update();
+        step(180);
+        if (getenv("WGF_TEST_SHOW")) printf("on the lowered deck %g\n", wgf_actor_get_position(on_deck).y);
+        expect(fabsf(wgf_actor_get_position(on_deck).y - 1.5f) < 0.05f,
+               "loaded again, the body is made again from its new place, and the ball asleep on it wakes and drops");
         wgf_actor_destroy(deck, WGF_ACTOR_DESTROY_CHILDREN);
         wgf_actor_destroy(on_deck, WGF_ACTOR_DESTROY_CHILDREN);
         wgf_actor_destroy(beside, WGF_ACTOR_DESTROY_CHILDREN);
