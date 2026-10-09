@@ -24,7 +24,7 @@ WGF = os.path.expanduser('~/projects/github/whirlinggizmo/libwgf/wgf')
 # what the car can do, for the speed a corner allows: its tires' sideways grip and its
 # brakes, in m/s² (the vehicle's, felt out by driving; RACER_GRIP and RACER_BRAKE override)
 GRIP = float(os.environ.get('RACER_GRIP', '10.0'))
-BRAKE = float(os.environ.get('RACER_BRAKE', '7.0'))
+BRAKE = float(os.environ.get('RACER_BRAKE', '5.5'))
 TOP = 80.0
 
 
@@ -211,7 +211,36 @@ def expect(path, passes):
     ats.sort(key=lambda l: int(l.split()[1]))  # stable: the inputs before the checks at a frame
     open(path, 'w', encoding='utf-8').write('\n'.join(head + ats + tail) + '\n')
     print(f'drive: {path}: {len(passes)} checkpoints expected, a lap of {lap:.2f}s', flush=True)
+    if os.path.basename(path) == 'lap.autopilot':
+        bench(path)
+
+
+BENCH_FRAMES = 600
+
+
+def bench(lap_path):
+    """The benchmark autopilot beside the lap: its first BENCH_FRAMES frames (the start, the
+    first straight and corners), what tools/bench/measure_frames.py flies for frame timing."""
+    lines = open(lap_path, encoding='utf-8').read().splitlines()
+    out = ['wgf-autopilot 1',
+           '# The benchmark run for frame timing (tools/bench/measure_frames.py flies it): the lap',
+           f'# (lap.autopilot) cut at frame {BENCH_FRAMES}, the start and the first two checkpoints. Of the lap\'s',
+           '# stretches the start is within 15% of the busiest (the one at checkpoints 4 and 5, 1,300',
+           "# frames in), which a software renderer can't reach within the frames step's time.",
+           '# Cut again from lap.autopilot when the lap is re-recorded (tools/drive.py does, as it records).']
+    for line in lines:
+        if line.startswith('seed '):
+            out.append(line)
+        elif line.startswith('at ') and int(line.split()[1]) < BENCH_FRAMES and not line.endswith(' end'):
+            out.append(line)
+    out.append(f'at {BENCH_FRAMES} end')
+    dest = os.path.join(os.path.dirname(lap_path), 'bench.autopilot')
+    open(dest, 'w', encoding='utf-8').write('\n'.join(out) + '\n')
+    print(f'drive: {dest}: the lap\'s first {BENCH_FRAMES} frames', flush=True)
 
 
 if __name__ == '__main__':
+    if sys.argv[1:2] == ['--bench']:  # the benchmark cut again from a lap already recorded
+        bench(sys.argv[2])
+        sys.exit(0)
     sys.exit(main())

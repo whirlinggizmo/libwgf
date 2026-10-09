@@ -5,6 +5,6 @@
 	"source": "src",
 	"assets": "assets",
 	"autopilot": "autopilot",
-	"web_budget_kb": 550,
-	"playthrough": "lap.autopilot"
+	"playthrough": "lap.autopilot",
+	"web_budget_kb": 550
 }

@@ -7,7 +7,8 @@ within the game's size budget.
 
 For each game (default: every games/<name>/ with a wgf.json), with the wgf tool, run in
 the game's directory as a developer would:
-  generated   tools/gen_sounds.py --check, for a game whose sounds it makes
+  generated   tools/gen_sounds.py --check, for a game whose sounds it makes, and the
+              racer's games/racer/tools/gen_track.py --check, its track
   playthrough wgf autopilot <its playthrough>, headless: wgf.json's "playthrough" in its
               autopilot folder, playthrough.autopilot by default
   browser     the same in a headless browser (wgf autopilot --web)
@@ -32,7 +33,7 @@ ROOT = Path(__file__).resolve().parents[1]
 GAMES = ROOT / 'games'
 WGF = ROOT / 'wgf'
 STEPS = ('generated', 'playthrough', 'browser', 'web', 'desktop')
-GENERATORS = {'asteroids': ['tools/gen_sounds.py', '--check']}
+GENERATORS = {'asteroids': ['tools/gen_sounds.py', '--check'], 'racer': ['games/racer/tools/gen_track.py', '--check']}
 
 
 def games(names):

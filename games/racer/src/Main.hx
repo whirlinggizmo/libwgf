@@ -94,10 +94,9 @@ class Main {
 
 	static function spawn() {
 		scene.spawnPrefab("car", stage);
-		for (i in 0...Track.CHECKPOINTS) {
-			final s = Track.checkpointSample(i);
-			final gate = scene.spawnPrefab("checkpoint", stage, Track.xs[s], 2, Track.zs[s], Track.headings[s]); // its sensor 4 m tall
-			(gate : BehaviorComponent).setParam(gate.findBehavior("Checkpoint"), "index", '$i');
+		for (i in 0...Track.CHECKPOINTS) { // a sensor under each of the track file's gates
+			final sensor = scene.spawnPrefab("checkpoint", Track.gate(i));
+			(sensor : BehaviorComponent).setParam(sensor.findBehavior("Checkpoint"), "index", '$i');
 		}
 	}
 
@@ -116,7 +115,8 @@ class Main {
 		final dt = Loop.getTickDelta();
 		switch state {
 			case State.LOADING:
-				if (Resource.getStatus(scene) == ResourceStatus.READY && car == null && Actor.countWithBehavior("Car") == 0)
+				if (Resource.getStatus(scene) == ResourceStatus.READY && Track.ready() && car == null
+					&& Actor.countWithBehavior("Car") == 0)
 					spawn(); // the car's behavior starts the countdown once it is made
 			case State.READY:
 				if (Action.isPressed("throttle"))

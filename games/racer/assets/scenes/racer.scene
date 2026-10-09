@@ -1,7 +1,8 @@
 wgf-scene 2
 # The racer's things as data: the car and the checkpoint, each a prefab of generated
-# meshes with its physics. The track is built in code from its centerline (src/Track.hx),
-# a static body of its own. Physics is started (Physics.setGravity) before this loads.
+# meshes with its physics. The track is a glTF file (assets/track/track.glb, written by
+# tools/gen_track.py), loaded by src/Track.hx, its surfaces static bodies. Physics is started
+# (Physics.setGravity) before this loads.
 
 # The car: a dynamic box body with a vehicle on it (Jolt's wheeled vehicle), driven by
 # src/Drive.hx's intent each tick. It faces +z, its origin the body's center. Each wheel is
@@ -63,23 +64,10 @@ prefab car/wheel_rr/tire
   transform rotation=0,0,1.5708
 end
 
-# A checkpoint: a sensor box across the track and its curbs at the line, 2 m up (so it is
-# spawned at y 2), meeting the car's layer, and a gate over it whose posts are solid.
+# A checkpoint: a sensor box across the track and its curbs at the line, its center 2 m up
+# (offset: it is spawned under its gate, a node of assets/track/track.glb, on the road),
+# meeting the car's layer. The gate's posts and banner are the track file's.
 prefab checkpoint
-  body type=sensor shape=box size=15,4,1 layer=2 mask=1
+  body type=sensor shape=box size=15,4,1 offset=0,2,0 layer=2 mask=1
   behavior name=Checkpoint
-end
-prefab checkpoint/post_l
-  model cylinder=0.15,3.6,8 tint=#E8E8E8
-  transform position=7.6,-0.2,0
-  body type=static shape=box size=0.3,3.6,0.3
-end
-prefab checkpoint/post_r
-  model cylinder=0.15,3.6,8 tint=#E8E8E8
-  transform position=-7.6,-0.2,0
-  body type=static shape=box size=0.3,3.6,0.3
-end
-prefab checkpoint/banner
-  model cube=15.5,0.7,0.12 tint=#2860C8
-  transform position=0,1.6,0
 end
