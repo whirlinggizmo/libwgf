@@ -1,0 +1,3 @@
+# A generated file is checked byte for byte against its generator (a game's --check): it is
+# checked out exactly as committed on every system, never with its line ends changed.
+games/racer/src/TrackData.hx -text
