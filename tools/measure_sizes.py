@@ -368,6 +368,20 @@ def markdown(baseline):
                          f'{f["over16"]} | {f["over33"]} | {f["gc"]} ({f["gcTotal"]}, {f["gcWorst"]}) | '
                          f'{f["cpu"]}, {f["gpu"]}, {f["display"]}, CPU throttled {f["throttle"]:g}x, '
                          f'{f["autopilot"]}, {f["commit"]} |')
+    for name, bench in sorted(baseline.get('benches', {}).items()):
+        counts = sorted({int(key.split('|')[1]) for key in bench['cases']})
+        names = bench.get('order') or list(dict.fromkeys(key.split('|')[0] for key in bench['cases']))
+        lines += ['', f'## {name[len("bench:"):]}', '',
+                  f'`tools/bench/{name[len("bench:"):]}/` in a browser (`tools/bench/measure_frames.py {name}`): each '
+                  'case\'s frames\' main-thread work, its mean in milliseconds by how many models it draws (the 95th '
+                  'percentile after it), traced by Chrome. The program\'s header says what each case is. On '
+                  f'{bench["cpu"]}, {bench["gpu"]}, {bench["display"]}, CPU throttled {bench["throttle"]:g}x, '
+                  f'the median of {bench["runs"]} run(s), {bench["commit"]}: another machine\'s are not comparable.', '',
+                  '| case | ' + ' | '.join(f'{c} models' for c in counts) + ' |',
+                  '|---|' + '---:|' * len(counts)]
+        for case in names:
+            cells = [bench['cases'].get(f'{case}|{c}') for c in counts]
+            lines.append(f'| {case} | ' + ' | '.join(f'{r["mean"]} ({r["p95"]})' if r else '-' for r in cells) + ' |')
     actors = baseline.get('actors', {})
     if actors.get('rows'):
         before = actors.get('before', {})

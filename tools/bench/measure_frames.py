@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Measure frame times: a game's web export flown by its autopilot in a browser, each
 frame's main-thread work and the garbage collections traced by Chrome, recorded beside
-the sizes.
+the sizes; and a benchmark's cases, the same way.
 
     tools/bench/measure_frames.py [--display xvfb|headless] [--throttle N] [--runs N]
                                   [--write] [--browser PATH] [program ...]
@@ -9,7 +9,12 @@ the sizes.
 A program is game:<name> (default: every game in games/): its web export, made as `wgf
 export --web` makes it (a release build, its host and JS binding trimmed), flown by the
 game's autopilot/bench.autopilot, else its playthrough (wgf.json's "playthrough",
-playthrough.autopilot by default).
+playthrough.autopilot by default). Or bench:<name>, a benchmark in tools/bench/<name>/
+(BENCHES: shadowbench, libwgt's), built in wasm32-release against the staged variant and
+run with no autopilot until it logs "<name>: done": it marks each case in the trace
+(console.timeStamp "<name> <case> <models>" as the case's measured frames begin, "<name>
+rest" as they end), and each case is the frames between, a frame a mark falls in left
+out. A benchmark is never part of the default set.
 
 The reference machine (docs/HISTORY.md, "Milestone 2's plan, reviewed"): this machine's
 GPU through ANGLE on Vulkan under Xvfb (--display xvfb, the default), with Chrome's CPU
@@ -46,6 +51,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # an embedded Python (Windows) doesn't add it
 import browser  # noqa: E402
+import examples  # noqa: E402
 import server  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -53,6 +59,8 @@ BASELINE = ROOT / 'docs' / 'benchmarks.json'
 PASS, FAIL = 'wgf_autopilot: PASS', 'wgf_autopilot: FAIL'
 FRAME_EVENTS = ('FireAnimationFrame',)
 GC_EVENTS = ('MinorGC', 'MajorGC')
+MARK_EVENTS = ('TimeStamp',)
+BENCHES = ('shadowbench',)
 GPU = """(() => { const gl = document.createElement('canvas').getContext('webgl2');
     const info = gl && gl.getExtension('WEBGL_debug_renderer_info');
     return info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : (gl ? gl.getParameter(gl.RENDERER) : ''); })()"""
@@ -80,12 +88,38 @@ def export(name):
     return dest / 'web', flown
 
 
+def build_bench(name):
+    """The benchmark's page, built fresh in wasm32-release; its folder, the site."""
+    return examples.build_at('wasm32-release', name, ROOT / 'tools' / 'bench' / name).parent
+
+
+def cases(events, name):
+    """A benchmark's frames by case, as its marks split the trace: {(case, models): [ms, ...]}."""
+    marks = sorted((e['ts'], e.get('args', {}).get('data', {}).get('message', '')) for e in events
+                   if e['name'] in MARK_EVENTS)
+    marks = [(ts, text[len(name) + 1:]) for ts, text in marks if text.startswith(name + ' ')]
+    out = {}
+    for e in events:
+        if e['name'] not in FRAME_EVENTS:
+            continue
+        start, end = e['ts'], e['ts'] + e.get('dur', 0)
+        if any(start <= ts <= end for ts, _ in marks):
+            continue  # a frame a mark falls in: a case begun or ended in it, set up or torn down
+        before = [text for ts, text in marks if ts < start]
+        if not before or before[-1] == 'rest':
+            continue
+        label, _, models = before[-1].rpartition(' ')
+        out.setdefault((label, int(models)), []).append(e.get('dur', 0) / 1000.0)
+    return out
+
+
 def percentile(sorted_values, q):
     return sorted_values[min(len(sorted_values) - 1, int(len(sorted_values) * q))]
 
 
-def run(site, flown, display, throttle, browser_path, timeout=600):
-    """One flown run, traced: its numbers, and the GPU it drew on."""
+def run(site, flown, display, throttle, browser_path, timeout=600, bench=None):
+    """One flown run, traced: its numbers, and the GPU it drew on. A benchmark's (`bench`, its
+    name; `flown` None) runs until it logs that it is done: its numbers are its cases'."""
     base, httpd = server.serve(site, assets=None)
     processes = browser.RunProcesses('frames')
     processes.install_handlers()
@@ -96,13 +130,14 @@ def run(site, flown, display, throttle, browser_path, timeout=600):
         if method == 'Runtime.consoleAPICalled':
             text = ' '.join(str(a.get('value', a.get('description', ''))) for a in message['params']['args'])
             lines.append(text)
-            if PASS in text or FAIL in text:
+            if PASS in text or FAIL in text or (bench is not None and f'{bench}: done' in text):
                 ended.set()
         elif method == 'Runtime.exceptionThrown':
             lines.append('[ERROR] exception')
             ended.set()
         elif method == 'Tracing.dataCollected':
-            events.extend(e for e in message['params']['value'] if e.get('name') in FRAME_EVENTS + GC_EVENTS)
+            events.extend(e for e in message['params']['value']
+                          if e.get('name') in FRAME_EVENTS + GC_EVENTS + MARK_EVENTS)
         elif method == 'Tracing.tracingComplete':
             traced.set()
 
@@ -116,8 +151,9 @@ def run(site, flown, display, throttle, browser_path, timeout=600):
         page.send('Page.enable')
         if throttle > 1:
             page.send('Emulation.setCPUThrottlingRate', {'rate': throttle})
-        page.send('Page.addScriptToEvaluateOnNewDocument',
-                  {'source': f'globalThis.wgfAutopilot = {json.dumps(flown.read_text(encoding="utf-8"))};'})
+        if flown is not None:
+            page.send('Page.addScriptToEvaluateOnNewDocument',
+                      {'source': f'globalThis.wgfAutopilot = {json.dumps(flown.read_text(encoding="utf-8"))};'})
         page.send('Tracing.start', {'traceConfig': {'includedCategories': ['devtools.timeline', 'v8']},
                                     'transferMode': 'ReportEvents'})
         page.send('Page.navigate', {'url': f'{base}/index.html'})
@@ -130,10 +166,18 @@ def run(site, flown, display, throttle, browser_path, timeout=600):
         processes.stop()
         httpd.shutdown()
     if not finished:
-        raise RuntimeError(f'the autopilot didn\'t end within {timeout} s')
+        raise RuntimeError(f'the autopilot didn\'t end within {timeout} s' if bench is None
+                           else f'it didn\'t log "{bench}: done" within {timeout} s')
     failed = [line for line in lines if FAIL in line or '[ERROR]' in line or '[FATAL]' in line]
     if failed:
         raise RuntimeError('the run failed, so its numbers mean nothing:\n  ' + '\n  '.join(failed[:5]))
+    if bench is not None:
+        split = cases(events, bench)
+        if not split:
+            raise RuntimeError('no case marked in the trace')
+        return {f'{case}|{models}': {'frames': len(f), 'mean': sum(f) / len(f), 'median': percentile(sorted(f), 0.5),
+                                     'p95': percentile(sorted(f), 0.95), 'worst': max(f)}
+                for (case, models), f in split.items()}, gpu
     frames = sorted(e.get('dur', 0) / 1000.0 for e in events if e['name'] in FRAME_EVENTS)
     if len(frames) < 30:
         raise RuntimeError(f'only {len(frames)} frames traced: did it start?')
@@ -159,9 +203,39 @@ def commit():
     return done.stdout.strip()
 
 
+def run_bench(name, args, found, results):
+    """bench:<name>: built, run, its cases printed, and put in `results`; the exit code."""
+    if name not in BENCHES:
+        print(f'measure_frames: bench:{name}: no such benchmark ({", ".join(BENCHES)})')
+        return 2
+    try:
+        site = build_bench(name)
+        runs, gpu = [], ''
+        for _ in range(max(args.runs, 1)):
+            numbers, gpu = run(site, None, args.display, args.throttle, found, timeout=1800, bench=name)
+            runs.append(numbers)
+    except RuntimeError as e:
+        print(f'measure_frames: bench:{name}: {e}')
+        return 1
+    rows = {}
+    for key in runs[0]:
+        values = [r[key] for r in runs if key in r]
+        rows[key] = {k: round(statistics.median(v[k] for v in values), 2) if k != 'frames' else values[0][k]
+                     for k in values[0]}
+    print(f'bench:{name}: main-thread ms a frame, by case and models (mean, 95th)')
+    for key, row in rows.items():
+        case, models = key.split('|')
+        print(f'  {case:<16} {models:>5}  {row["mean"]:8.2f} {row["p95"]:8.2f}  ({row["frames"]} frames)')
+    print(f'  on {cpu_name()}, {gpu or "an unknown GPU"}, {args.display}, CPU throttled {args.throttle:g}x')
+    results[f'bench:{name}'] = {'cases': rows, 'order': list(dict.fromkeys(key.split('|')[0] for key in rows)),
+                                'display': args.display, 'throttle': args.throttle,
+                                'runs': len(runs), 'cpu': cpu_name(), 'gpu': gpu, 'commit': commit()}
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('programs', nargs='*', help='game:<name> (default: every game)')
+    ap.add_argument('programs', nargs='*', help='game:<name> or bench:<name> (default: every game)')
     ap.add_argument('--display', choices=['xvfb', 'headless'], default='xvfb',
                     help='xvfb: the real GPU under Xvfb (the reference); headless: SwiftShader (CI)')
     ap.add_argument('--throttle', type=float, default=4.0, help="Chrome's CPU throttling rate (default 4)")
@@ -177,8 +251,13 @@ def main():
     programs = args.programs or games()
     results = {}
     for name in programs:
+        if name.startswith('bench:'):
+            code = run_bench(name[len('bench:'):], args, found, results)
+            if code != 0:
+                return code
+            continue
         if not name.startswith('game:'):
-            print(f'measure_frames: {name}: not a game (game:<name>)')
+            print(f'measure_frames: {name}: not a game or a benchmark (game:<name>, bench:<name>)')
             return 2
         try:
             site, flown = export(name[len('game:'):])
@@ -201,6 +280,8 @@ def main():
         print(f'  on {merged["cpu"]}, {gpu or "an unknown GPU"}, {args.display}, CPU throttled {args.throttle:g}x')
     if args.write:
         baseline = json.loads(BASELINE.read_text(encoding='utf-8'))
+        for name in [n for n in results if n.startswith('bench:')]:
+            baseline.setdefault('benches', {})[name] = results.pop(name)
         baseline.setdefault('frames', {}).update(results)
         BASELINE.write_text(json.dumps(baseline, indent=1, sort_keys=True) + '\n', encoding='utf-8')
         done = subprocess.run([sys.executable, str(ROOT / 'tools' / 'measure_sizes.py'), '--render'])

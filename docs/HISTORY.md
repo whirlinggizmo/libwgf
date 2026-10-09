@@ -791,3 +791,15 @@ What it costs: every 3D program carries the model shader's shadow code and the s
 ## The racer's generated track on Windows (2026-10-09)
 
 CI's Windows job failed `check_games`' generated step on the racer (6c31be7 on): `gen_track.py --check` called `src/TrackData.hx` stale. f20d481 put the file down to Windows' line ends at checkout and marked it `-text` in `.gitattributes`; that was half of it, and not the half that failed. The file, copied byte for byte to the Windows machine and generated there, differs in one digit: the generator prints the centerline's 64-bit floats whole, and one heading's sine comes out `-0.10750953084669783` under Windows' math library where glibc gives `...784` (the `.glb`, its 32-bit floats, agrees on both). The attribute stays (a checkout's line ends would make the file stale once the digits agree); the fix is the game's, its generator printing fewer digits, so it goes to the game session's next part. Until then the step skips the racer on Windows and says so (`GENERATED_ON`: a guard narrowed, in a commit of its own); it still runs on Linux in CI and here.
+
+## Milestone 2, step 8, shadowbench on the web (2026-10-09)
+
+libwgt's shadowbench (wgrender's), ported case for case to `tools/bench/shadowbench/` and run in a browser by step 1's tool: `measure_frames.py bench:shadowbench` builds it in wasm32-release, runs it with no autopilot, and reads the cases apart by the marks it leaves in Chrome's trace (`console.timeStamp` as a case's measured frames begin and end, a frame a mark falls in left out, where a case is torn down and the next made). Its table is docs/benchmarks.md's "shadowbench": each case's frames' main-thread work, by model count, on the reference machine (the GPU under Xvfb, the CPU throttled 4 times). wgrender-c's web runs, on an Adreno 610 phone, are its TASKS.md's; libwgt has none on the web.
+
+What it says, from one run (a second's cheaper rows moved by up to 6 ms, so read the shape, not the second digit):
+- **Culling is worth almost everything out of view**: looking away, 0.1 to 1.5 ms; the same with culling off, 12 to 45.
+- **A map nothing samples is skipped**: no receiving model lands on "off".
+- **A casting light costs about 10 ms of a throttled frame at 100 or 400 models**, where "off" is 1.5 to 8: a cost that hardly scales with the casters, as wgrender-c found on its phone (one light 16 to 20 ms at any count, most of it on the receiving side), and map size moves nothing (1024 to 4096 alike), so it isn't fill. At 1000 and 4000 models the frame is the models' own, the light adding 2 to 4 ms.
+- **Shared meshes save little yet**, since libwgf draws a caster a draw until step 11's instancing; at 4000 models shared is 28.7 against 35.7 each.
+
+The light's fixed cost is the lead for the racer's frame budget: its car and barriers casting (step 8's game part) will show it in its frame times, and step 14 holds it to the budget.

@@ -93,6 +93,24 @@ Each game's web export flown by its autopilot in a browser (`tools/bench/measure
 | game:asteroids | 2502 | 0.35 | 0.15 | 0.83 | 1.31 | 146.88 | 2 | 1 | 6 (11.23, 4.14) | 13th Gen Intel(R) Core(TM) i9-13900HX, ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA), xvfb, CPU throttled 4x, playthrough.autopilot, 9c1cfe2 2026-10-06 |
 | game:racer | 607 | 1.76 | 1.34 | 2.25 | 3.13 | 107.41 | 3 | 2 | 5 (5.09, 1.47) | 13th Gen Intel(R) Core(TM) i9-13900HX, ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA), xvfb, CPU throttled 4x, bench.autopilot, e0ab2a2 2026-10-09 |
 
+## shadowbench
+
+`tools/bench/shadowbench/` in a browser (`tools/bench/measure_frames.py bench:shadowbench`): each case's frames' main-thread work, its mean in milliseconds by how many models it draws (the 95th percentile after it), traced by Chrome. The program's header says what each case is. On 13th Gen Intel(R) Core(TM) i9-13900HX, ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA), xvfb, CPU throttled 4x, the median of 1 run(s), 89284be 2026-10-09: another machine's are not comparable.
+
+| case | 100 models | 400 models | 1000 models | 4000 models |
+|---|---:|---:|---:|---:|
+| off | 1.45 (2.31) | 7.92 (27.22) | 18.14 (24.81) | 33.05 (38.38) |
+| sun 1024 | 11.95 (18.43) | 13.11 (21.96) | 22.05 (25.65) | 35.65 (37.42) |
+| sun 2048 | 11.43 (20.25) | 13.27 (23.45) | 21.89 (26.42) | 35.94 (41.6) |
+| sun 4096 | 13.93 (19.56) | 14.97 (17.18) | 22.77 (25.96) | 36.32 (41.69) |
+| two 1024 | 17.44 (24.38) | 20.03 (26.17) | 23.58 (28.57) | 37.68 (44.19) |
+| no receive | 0.41 (0.83) | 2.17 (4.99) | 18.44 (23.45) | 33.3 (38.72) |
+| shared | 11.27 (17.75) | 12.09 (22.53) | 20.37 (25.95) | 28.67 (31.04) |
+| wide, each | 12.74 (16.26) | 14.81 (22.66) | 23.6 (30.67) | 45.2 (49.37) |
+| wide, shared | 11.04 (20.19) | 11.45 (21.27) | 20.79 (24.68) | 34.92 (38.84) |
+| look away | 0.12 (0.43) | 0.14 (0.37) | 0.32 (0.87) | 1.48 (2.06) |
+| away, no cull | 11.6 (19.04) | 13.01 (20.77) | 21.03 (27.34) | 44.85 (64.34) |
+
 ## Actors
 
 What an actor costs (`tools/bench/measure_actors.py`, the program `tools/bench/actors/main.c`, whose header says what each row and number is): the heap's growth an actor, its pools' slack included, and the frames' own cost an actor a frame (a find's rows: a find, or an actor found), the median of 3 runs, on 13th Gen Intel(R) Core(TM) i9-13900HX, `linux-x64-release-headless`, 8f3a822 2026-10-07. A check fails a row past its bytes by 5%, or past its time by twice the run's own speed against these (the median of its rows' ratios), and on this machine past 1.5 times its time. Before: the same program on the nodes and entities actors replaced, 8f3a822 2026-10-07 (docs/HISTORY.md, "One kind of object, the actor"); a dash where there was no such call. The store- rows are the ecs's store on its own (`ecs/bench/wgf_ecs_store_bench.c`), each storage's worst case among them. The flecs columns: the same on the store step 3b replaced (docs/HISTORY.md, "flecs or sparse sets, measured"), recorded before it went.
