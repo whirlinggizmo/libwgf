@@ -259,7 +259,7 @@
    "game:asteroids": 400,
    "game:racer": 550
   },
-  "commit": "1f32e0f 2026-10-08",
+  "commit": "6b282a7 2026-10-09",
   "programs": {
    "app-gamepad": {
     "js": {
@@ -660,9 +660,9 @@
      "raw": 53489
     },
     "wasm": {
-     "br": 171716,
-     "gz": 211249,
-     "raw": 513638
+     "br": 193211,
+     "gz": 238013,
+     "raw": 603493
     }
    },
    "ladder-7-physics3d": {
@@ -672,9 +672,9 @@
      "raw": 54038
     },
     "wasm": {
-     "br": 343443,
-     "gz": 442549,
-     "raw": 1077881
+     "br": 364757,
+     "gz": 469434,
+     "raw": 1167646
     }
    },
    "physics3d-vehicle": {

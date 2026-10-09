@@ -28,8 +28,8 @@
  *   3. 2D sprites: the image as a sprite actor on a 2D stage (actors, 2D stages, sprites).
  *   4. ecs: a shape with motion on the stage2d (its store, the systems).
  *   5. ui: a panel with a label and a button (Clay, the widgets).
- *   6. 3D model: a lit cube on a stage behind it all (the stage, its shader, lights,
- *      meshes, and materials).
+ *   6. 3D model: a lit glTF model on a stage behind it all (the stage, its shader,
+ *      lights, meshes, materials, and the glTF loader, cgltf).
  * Each step's size less the one before is what its feature costs on its own. Nothing to
  * look at for its own sake: it is measured, not shown. */
 
@@ -46,10 +46,10 @@ static void init(void *user)
     stage = wgf_stage3d_create();
     {
         const wgf_actor_t camera = wgf_camera3d_create();
-        const wgf_mesh_t cube = wgf_mesh_create_cube(1, 1, 1);
-        const wgf_actor_t model = wgf_model_create(cube);
+        const wgf_mesh_t car = wgf_mesh_create("models/toy_car.glb");
+        const wgf_actor_t model = wgf_model_create(car);
         const wgf_actor_t sun = wgf_light_create(WGF_LIGHT_TYPE_DIRECTIONAL);
-        wgf_resource_release(cube);
+        wgf_resource_release(car);
         wgf_actor_set_position(camera, 2, 2, 4);
         wgf_actor_look_at(camera, 0, 0, 0, 0, 1, 0);
         wgf_stage3d_set_camera(stage, camera);
