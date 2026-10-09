@@ -266,7 +266,8 @@ def run_page(site, page_path, autopilot=None, until=AUTOPILOT_ENDED, timeout=120
 def run_page_url(url, autopilot=None, until=AUTOPILOT_ENDED, timeout=120, on_line=None,
                  browser_path=None, echo=True, screenshot=None, screenshots=None):
     """Load `url` in a headless browser, handing the page `autopilot` to fly it,
-    until a console line contains one of `until`; `on_line(line)` sees each line first.
+    until a console line contains one of `until`, or `on_line(line)`, which sees each line
+    first, returns true.
     With `screenshot` (a path), the page is saved there as a PNG when the autopilot logs its
     SCREENSHOT, and the run ends. With `screenshots` (a folder), every SCREENSHOT the
     autopilot logs is saved there as <name>.png as the run goes on, as near its frame as
@@ -290,8 +291,8 @@ def run_page_url(url, autopilot=None, until=AUTOPILOT_ENDED, timeout=120, on_lin
         lines.append(text)
         if echo:
             print(text, flush=True)
-        if on_line is not None:
-            on_line(text)
+        if on_line is not None and on_line(text):
+            done.set()
         if screenshots is not None and 'wgf_autopilot: SCREENSHOT ' in text:
             shots.append(text.split('wgf_autopilot: SCREENSHOT ', 1)[1].strip())
             shot_ready.set()

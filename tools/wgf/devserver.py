@@ -8,9 +8,16 @@ rebuild, through a compilation server (haxe --wait), is stamped with its number 
 first line, and the page loads it beside itself and takes on its classes between two
 frames (hotreload-hx's JsSwap): every static keeps its value, every object its fields,
 the C side -- entities, nodes, textures, the window -- is untouched. A failed build is
-reported here, and the page keeps what it has. Standard library only.
+reported here, and the page keeps what it has.
+
+The game's assets are watched too: a file saved under them is told to the page, which
+asks /__hotreload_assets?since=<n> (a long poll of its own, so an asset never re-imports the
+program) and loads each one again in place (wgf_asset_reload, from the Haxe runtime's
+hot build): a texture or a glTF, its handle kept, the game's state with it; a file that
+doesn't load keeps what it had, with one error logged in the page. Standard library only.
 """
 import json
+import shutil
 import socket
 import subprocess
 import sys
@@ -47,16 +54,46 @@ class Builds:
             return self.version
 
 
+class Saved:
+    """The asset files saved so far, each with the number of the save it came in: waited on
+    by the page's asset polls."""
+
+    def __init__(self):
+        self.version = 0
+        self.files = []  # (version, path under the assets)
+        self.changed = threading.Condition()
+
+    def bump(self, files):
+        with self.changed:
+            self.version += 1
+            self.files += [(self.version, f) for f in files]
+            self.changed.notify_all()
+
+    def wait_newer(self, since, timeout):
+        """The latest number, and the files saved after `since`, each once; a page asking
+        with no number yet (since < 0) is told the latest at once, and nothing to load."""
+        with self.changed:
+            if since >= 0:
+                self.changed.wait_for(lambda: self.version > since, timeout)
+            files = [] if since < 0 else sorted({f for v, f in self.files if v > since})
+            return self.version, files
+
+
 def free_port():
     with socket.socket() as s:
         s.bind(('127.0.0.1', 0))
         return s.getsockname()[1]
 
 
-def sources(directory):
-    """Each .hx under `directory`, and a stamp of it: its time and size."""
+def sources(directory, pattern='*.hx'):
+    """Each .hx (or each file `pattern` matches) under `directory`, and a stamp of it: its
+    time and size."""
     out = {}
-    for path in Path(directory).rglob('*.hx'):
+    if not Path(directory).is_dir():
+        return out
+    for path in Path(directory).rglob(pattern):
+        if not path.is_file():
+            continue
         try:
             stat = path.stat()
         except OSError:
@@ -72,6 +109,7 @@ class Server:
         self.echo = echo
         self.out = game.build_dir('web')
         self.builds = Builds()
+        self.saved = Saved()
         self.program = self.out / f'{game.name}.js'
         self.compile_port = None
         self.compile_server = None
@@ -129,8 +167,22 @@ class Server:
         self.echo(f'wgf serve: built in {round((time.monotonic() - started) * 1000)} ms; the page loads it next')
         return True
 
+    def assets_saved(self, changed):
+        """Asset files saved (or gone): told to the page, which loads each again; copied
+        first where the build has a copy of the assets rather than a link to them."""
+        served = self.out / 'assets'
+        names = []
+        for path in changed:
+            name = Path(path).relative_to(self.game.assets).as_posix()
+            names.append(name)
+            if not served.is_symlink() and Path(path).is_file():
+                (served / name).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(path, served / name)
+        self.echo(f'wgf serve: {", ".join(names)} saved; the page loads it again')
+        self.saved.bump(names)
+
     def handler(self):
-        builds, program, name = self.builds, self.program, self.game.name
+        builds, saved, program, name = self.builds, self.saved, self.program, self.game.name
 
         class Handler(server.handler_class(self.out, assets=None)):
             def end_headers(self):
@@ -139,11 +191,18 @@ class Server:
 
             def do_GET(self):
                 parts = urllib.parse.urlsplit(self.path)
-                if parts.path != '/__hotreload':
+                if parts.path not in ('/__hotreload', '/__hotreload_assets'):
                     return super().do_GET()
-                since = int(urllib.parse.parse_qs(parts.query).get('since', ['0'])[0] or 0)
-                version = builds.wait_newer(since, POLL_SECONDS)
-                body = json.dumps({'version': version, 'url': f'/{name}.js', 'file': str(program)}).encode()
+                try:
+                    since = int(urllib.parse.parse_qs(parts.query).get('since', ['0'])[0] or 0)
+                except ValueError:
+                    since = 0
+                if parts.path == '/__hotreload_assets':
+                    version, files = saved.wait_newer(since, POLL_SECONDS)
+                    body = json.dumps({'version': version, 'files': files}).encode()
+                else:
+                    version = builds.wait_newer(since, POLL_SECONDS)
+                    body = json.dumps({'version': version, 'url': f'/{name}.js', 'file': str(program)}).encode()
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.send_header('Content-Length', str(len(body)))
@@ -157,22 +216,15 @@ class Server:
         self.first_build()
         self.compile_port = self.start_compilation_server()
         base, httpd = server.serve(self.out, port=self.port, handler=self.handler())
-        self.echo(f'wgf serve: {self.game.name} at {base}/ (saving its Haxe reloads it, its state kept; '
-                  f'Ctrl-C stops)')
-        stamps = sources(self.game.source)
-        changed, settling = [], False
+        self.echo(f'wgf serve: {self.game.name} at {base}/ (saving its Haxe or an asset reloads it, its state '
+                  f'kept; Ctrl-C stops)')
+        code = Watch(lambda: sources(self.game.source), self.rebuild)
+        assets = Watch(lambda: sources(self.game.assets, '*'), self.assets_saved)
         try:
             while stop is None or not stop.is_set():
                 time.sleep(CHECK_SECONDS)
-                current = sources(self.game.source)
-                moved = [p for p in current if stamps.get(p) != current[p]] + [p for p in stamps if p not in current]
-                if moved:
-                    changed += [p for p in moved if p not in changed]
-                    stamps, settling = current, True
-                elif settling and all(size > 0 for _, size in current.values()):
-                    settling = False  # an empty file is one being saved: wait for it
-                    self.rebuild(changed)
-                    changed = []
+                code.check()
+                assets.check()
         except KeyboardInterrupt:
             pass
         finally:
@@ -180,6 +232,28 @@ class Server:
             if self.compile_server is not None:
                 self.compile_server.kill()
         return 0
+
+
+class Watch:
+    """Files watched by their stamps: once a change has settled (nothing moved since the last
+    look, and no file empty, which is one being saved), `then(changed)` is called with every
+    path that moved or went."""
+
+    def __init__(self, stamp, then):
+        self.stamp, self.then = stamp, then
+        self.stamps = stamp()
+        self.changed, self.settling = [], False
+
+    def check(self):
+        current = self.stamp()
+        moved = [p for p in current if self.stamps.get(p) != current[p]] + [p for p in self.stamps if p not in current]
+        if moved:
+            self.changed += [p for p in moved if p not in self.changed]
+            self.stamps, self.settling = current, True
+        elif self.settling and all(size > 0 for _, size in current.values()):
+            self.settling = False
+            changed, self.changed = self.changed, []
+            self.then(changed)
 
 
 if __name__ == '__main__':

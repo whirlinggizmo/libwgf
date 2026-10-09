@@ -15,7 +15,9 @@ what it said:
   dump        the ship, as a scene's text; flown by --autopilot to its end, turned on
   screenshot  a PNG of frame 30, from a browser, and one flown there by --autopilot
   serve       the page reached in a browser, its Haxe edited while it runs: the new code
-              runs, with the frame count it had (state kept, not a restart)
+              runs, with the frame count it had (state kept, not a restart); then a
+              texture and a glTF saved changed: the page shows the new ones, its count
+              going on; then a broken texture saved: the old one kept, one error logged
   export      export/web (a trimmed host, under the budget) and export/desktop, each
               flown by the autopilot --autopilot names (the smoke one, here)
 A step that can't run here (no haxe, hxcpp, Emscripten, or browser) says
@@ -25,11 +27,13 @@ library only.
 import argparse
 import json
 import re
+import struct
 import shutil
 import subprocess
 import sys
 import threading
 import time
+import zlib
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # an embedded Python (Windows) doesn't add it
@@ -233,20 +237,54 @@ def step_screenshot(game):
     return True
 
 
+def png(size):
+    """A PNG of `size` by `size` red pixels."""
+    def chunk(kind, data):
+        return struct.pack('>I', len(data)) + kind + data + struct.pack('>I', zlib.crc32(kind + data) & 0xFFFFFFFF)
+    rows = b''.join(b'\x00' + b'\xff\x00\x00\xff' * size for _ in range(size))
+    return (b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', size, size, 8, 6, 0, 0, 0)) +
+            chunk(b'IDAT', zlib.compress(rows)) + chunk(b'IEND', b''))
+
+
+def car_gltf(x):
+    """A glTF of one triangle, its node "body" at `x`, its buffer inside it."""
+    return json.dumps({
+        'asset': {'version': '2.0'}, 'scene': 0, 'scenes': [{'nodes': [0]}],
+        'nodes': [{'name': 'body', 'mesh': 0, 'translation': [x, 0, 0]}],
+        'meshes': [{'primitives': [{'attributes': {'POSITION': 0}}]}],
+        'buffers': [{'uri': 'data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAA',
+                     'byteLength': 36}],
+        'bufferViews': [{'buffer': 0, 'byteLength': 36}],
+        'accessors': [{'bufferView': 0, 'componentType': 5126, 'count': 3, 'type': 'VEC3',
+                       'min': [0, 0, 0], 'max': [1, 1, 0]}]})
+
+
 def step_serve(game):
-    """The page in a browser, its program with an initialized instance final; Main.hx
-    edited while it runs; the new code's line, with the frame count going on from where
-    it was."""
+    """The page in a browser, its program with an initialized instance final, a texture, and
+    a glTF; Main.hx edited while it runs: the new code's line, with the frame count going on
+    from where it was; then the texture and the glTF saved changed: their new size and place
+    in its log, the count going on; then the texture saved broken: the old one kept, and one
+    error logged."""
     why = needs(web=True, browser_too=True)
     if why:
         return why
     # a class with an initialized instance final, which a hot build once refused
     (game / 'src' / 'Held.hx').write_text('class Held {\n\tpublic final count = [0];\n\n\tpublic function new() {}\n}\n')
+    (game / 'assets' / 'rock.png').write_bytes(png(2))
+    (game / 'assets' / 'car.gltf').write_text(car_gltf(1))
     main = game / 'src' / 'Main.hx'
-    main.write_text(main.read_text().replace('\tstatic var flips = 0;\n', '\tstatic var flips = 0;\n\tstatic final held = new Held();\n')
-                    .replace('\t\tframes++;\n', '\t\tframes++;\n\t\theld.count[0] = frames;\n'))
-    if 'held.count' not in main.read_text():
-        return problem('wgf serve: the template\'s Main.hx changed; give the check its instance final again', '')
+    main.write_text(main.read_text()
+                    .replace('\tstatic var flips = 0;\n', '\tstatic var flips = 0;\n\tstatic final held = new Held();\n'
+                             '\tstatic var rock:Texture = 0;\n\tstatic var car:Model = 0;\n')
+                    .replace('\t\tframes++;\n', '\t\tframes++;\n\t\theld.count[0] = frames;\n')
+                    .replace('\t\tworld = Stage2d.create();\n', '\t\tworld = Stage2d.create();\n'
+                             '\t\trock = Texture.create("rock.png");\n\t\tcar = Model.create(Mesh.create("car.gltf"));\n')
+                    .replace("\t\t\tLog.message(LogLevel.INFO, 'hello, frame $frames');\n",
+                             "\t\t\tLog.message(LogLevel.INFO, 'hello, frame $frames; rock ${rock.getWidth()}, body at '\n"
+                             "\t\t\t\t+ Std.int(car.find(\"body\").getPosition().x));\n"))
+    if 'held.count' not in main.read_text() or 'rock.getWidth' not in main.read_text():
+        return problem('wgf serve: the template\'s Main.hx changed; give the check its instance final and assets '
+                       'again', '')
     port = browser.free_port()
     process = subprocess.Popen([sys.executable, str(WGF), 'serve', '--port', str(port)], cwd=game,
                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors='replace')
@@ -257,28 +295,62 @@ def step_serve(game):
             return problem('wgf serve: never said where it serves', ''.join(served))
         sys.path.insert(0, str(ROOT / 'tools' / 'wgf'))
         import game as games  # the tool's own module, for its page runner
-        state = {'edited': False, 'before': 0}
+        # the steps, each begun by a line of the page's: code edited, assets saved, a broken one saved
+        state = {'step': 'code', 'before': 0, 'assets_at': 0, 'broken_at': 0, 'errors': 0, 'done': False}
+        said = re.compile(r'(hello|reloaded), frame (\d+); rock (\d+), body at (-?\d+)')
 
         def on_line(line):
-            m = re.search(r'(hello|reloaded), frame (\d+)', line)
-            if m and m.group(1) == 'hello' and not state['edited'] and int(m.group(2)) >= 120:
-                state['before'] = int(m.group(2))
-                state['edited'] = True
+            if "didn't load again" in line:
+                state['errors'] += 1
+            m = said.search(line)
+            if not m:
+                return False
+            word, frame, width, x = m.group(1), int(m.group(2)), int(m.group(3)), int(m.group(4))
+            if state['step'] == 'code' and word == 'hello' and frame >= 120 and width == 2 and x == 1:
+                state['before'] = frame
+                state['step'] = 'reloaded'
                 # code, not a static's first value: a reload keeps every static's value
-                main.write_text(main.read_text().replace("'hello, frame $frames'", "'reloaded, frame $frames'"))
+                main.write_text(main.read_text().replace("'hello, frame $frames", "'reloaded, frame $frames"))
+            elif state['step'] == 'reloaded' and word == 'reloaded':
+                state['after'] = frame
+                state['step'] = 'assets'
+                state['assets_at'] = frame
+                (game / 'assets' / 'rock.png').write_bytes(png(4))
+                (game / 'assets' / 'car.gltf').write_text(car_gltf(3))
+            elif state['step'] == 'assets' and width == 4 and x == 3:
+                state['shown_at'] = frame
+                state['step'] = 'broken'
+                (game / 'assets' / 'rock.png').write_bytes(b'not an image any more')
+            elif state['step'] == 'broken' and state['errors'] > 0:
+                if 'broken_at' not in state or state['broken_at'] == 0:
+                    state['broken_at'] = frame  # the first line after the error: one more to be sure
+                elif frame > state['broken_at']:
+                    state['kept'] = width == 4
+                    state['done'] = True
+                    return True
+            return False
 
-        lines = games.run_page_url(f'http://127.0.0.1:{port}/index.html', until=('reloaded, frame',), timeout=240,
-                                   on_line=on_line, echo=False)
-        after = [int(m.group(1)) for line in lines for m in [re.search(r'reloaded, frame (\d+)', line)] if m]
-        if not state['edited']:
-            return problem('wgf serve: the page never said hello', '\n'.join(lines) + ''.join(served))
-        if not after:
-            return problem('wgf serve: the edit never reached the page', '\n'.join(lines) + ''.join(served))
-        if after[0] <= state['before']:
-            return problem(f'wgf serve: the reloaded page counted from {after[0]}, not on from {state["before"]}: '
-                           'its state was lost', '\n'.join(lines))
-        print(f'check_cli: serve: edited at frame {state["before"]}; the new code said so at frame {after[0]}, '
-              'its state kept')
+        lines = games.run_page_url(f'http://127.0.0.1:{port}/index.html', until=(), timeout=360, on_line=on_line,
+                                   echo=False)
+        log = '\n'.join(lines) + ''.join(served)
+        if state['step'] == 'code':
+            return problem('wgf serve: the page never said hello with its first texture and glTF', log)
+        if state['step'] == 'reloaded':
+            return problem('wgf serve: the edit never reached the page', log)
+        if state['after'] <= state['before']:
+            return problem(f'wgf serve: the reloaded page counted from {state["after"]}, not on from '
+                           f'{state["before"]}: its state was lost', log)
+        if state['step'] == 'assets':
+            return problem('wgf serve: the saved texture and glTF never showed in the page (a rock 4 wide, the '
+                           'body at 3)', log)
+        if not state['done']:
+            return problem('wgf serve: a broken texture saved: no error logged, or no line after it', log)
+        if not state['kept'] or state['errors'] != 1 or state['shown_at'] <= state['assets_at']:
+            return problem(f'wgf serve: a broken texture saved: kept {state["kept"]}, {state["errors"]} error(s) '
+                           'logged (one wanted)', log)
+        print(f'check_cli: serve: edited at frame {state["before"]}; the new code said so at frame {state["after"]}, '
+              f'its state kept; a texture and a glTF saved, shown by frame {state["shown_at"]}; a broken texture '
+              'saved, the old one kept and one error logged')
         return True
     finally:
         process.terminate()

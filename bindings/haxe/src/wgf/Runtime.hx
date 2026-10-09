@@ -62,6 +62,9 @@ class Runtime {
 		wgf.impl.Reach.hit(wgf.impl.Reach.NAMES.indexOf("wgf_app_run"));
 		#end
 		#if js
+		#if hotreload
+		pollAssets(-1);
+		#end
 		// the JS binding's run: its trampolines, installed once, call these, which read the
 		// handlers when they fire; it restores the wasm stack after each
 		return Raw.binding["wgf_app_run"](() -> dispatch(0), () -> dispatch(1), () -> dispatch(2), () -> dispatch(3));
@@ -73,6 +76,26 @@ class Runtime {
 		return untyped __cpp__("::wgf_app_run(wgf_hx_init, wgf_hx_tick, wgf_hx_frame, wgf_hx_shutdown, (void *)0)");
 		#end
 	}
+
+	#if (js && hotreload)
+	/**
+		`wgf serve`'s assets: asks the server for the files saved after save `since` (a long
+		poll; -1 first, for the latest number alone) and loads each again in place
+		(Asset.reload), then asks again; a server gone is asked again a second later.
+	**/
+	static function pollAssets(since:Int):Void {
+		js.Browser.window.fetch('/__hotreload_assets?since=$since', {cache: js.html.RequestCache.NO_STORE})
+			.then(response -> response.json())
+			.then(function(answer:Dynamic) {
+				final files:Array<String> = answer.files;
+				for (file in files)
+					Asset.reload(file);
+				pollAssets(answer.version);
+			}, function(_) {
+				haxe.Timer.delay(() -> pollAssets(since), 1000);
+			});
+	}
+	#end
 
 	/**
 		Whether the library is the version the binding was made from, major and minor; a

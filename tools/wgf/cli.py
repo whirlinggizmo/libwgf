@@ -22,8 +22,8 @@
                                          from a headless run
   (screenshot's and dump's --autopilot flies the game there first: the file's inputs up
   to the frame, which is the file's end when --frame isn't given)
-    wgf serve [--port N]                 the game in a browser, reloaded as its Haxe is
-                                         saved, its state kept
+    wgf serve [--port N]                 the game in a browser, reloaded as its Haxe or
+                                         an asset is saved, its state kept
     wgf export [--web] [--desktop] [--out DIR] [--autopilot FILE]
                                          export/web (a static folder with a trimmed host)
                                          and export/desktop, each smoke-tested, the web
@@ -403,7 +403,7 @@ def parser():
     p.add_argument('--autopilot', help='an autopilot file to fly it there first')
     p.add_argument('--no-build', action='store_true')
     p.set_defaults(run=cmd_dump)
-    p = sub.add_parser('serve', help='in a browser, reloaded as its Haxe is saved')
+    p = sub.add_parser('serve', help='in a browser, reloaded as its Haxe or an asset is saved')
     p.add_argument('--port', type=int, default=8080)
     p.set_defaults(run=cmd_serve)
     p = sub.add_parser('export', help='export/web and export/desktop, smoke-tested')

@@ -111,7 +111,7 @@ How the bindings map the C calls is [docs/BINDINGS.md](docs/BINDINGS.md); how to
 ```sh
 ./wgf new ~/games/rocks             # a game from templates/game/
 cd ~/games/rocks
-wgf serve                           # in a browser, reloaded as its Haxe is saved, its state kept
+wgf serve                           # in a browser, reloaded as its Haxe or an asset is saved, its state kept
 wgf build --web | --desktop | --headless    # into build/<target>/
 wgf run [--headless] [--frames N | --autopilot FILE]   # the desktop build
 wgf autopilot autopilot/smoke.autopilot [--web]   # an autopilot run: PASS or FAIL; --web saves its screenshots
@@ -343,7 +343,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `import_game.py` | copies a game written outside libwgf into `games/` (`../libwgf-racer/game` as `games/racer`), less its `build/` and `export/`, with `IMPORTED.md` naming its source and commit, so the checks, sizes, frame times, and Pages cover it; the copy is changed only in its source and imported again |
 | `gen_model.py` | writes the examples' glTF model (`examples/assets/models/toy_car.glb`), a toy car of named nodes, the same bytes every time (`--check`) |
 | `gen_sounds.py` | writes Asteroids' sounds (`games/asteroids/assets/sounds/`) from their synthesis, the same bytes every time (`--check`) |
-| `check_cli.py` | runs each `wgf` command on a game it makes from the template, judging what each made and said; `serve` is edited while it runs, and must keep its state |
+| `check_cli.py` | runs each `wgf` command on a game it makes from the template, judging what each made and said; `serve` is edited while it runs, and must keep its state, then has a texture and a glTF saved changed (shown, its state kept) and a texture saved broken (the old one kept, one error logged) |
 | `check_features.py` | runs the feature test (`examples/haxe/feature-test/`) on hxcpp, under node, and in a browser, failing a call it never reached |
 | `check_binding.py` | checks the Haxe binding: generated, every call reached once, and its test on hxcpp, under node, and in a browser |
 | `check_js_binding.py` | checks the JS binding, its raw and typed layers: generated, their declarations under TypeScript (`bindings/js/tests/types.ts`), and every JS example (`examples/js/`) in a browser, flown by its autopilot, on the full host and trimmed as an export is |
