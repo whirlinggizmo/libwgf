@@ -25,6 +25,7 @@ A **same** row is the same program in each library, and libwgf's is held to libw
 | gfx-materials / materials | [differs](#differs-gfx-materials) | 179.5 (148.5) | - | - | 235.8 (195.0) |
 | gfx-lights / lights | [differs](#differs-gfx-lights) | 136.2 (113.1) | - | - | 248.3 (204.3) |
 | gfx-shadows / shadows | [differs](#differs-gfx-shadows) | 212.9 (174.3) | - | 244.3 (198.5) | 243.7 (201.2) |
+| gfx-environment / environment | [differs](#differs-gfx-environment) | 227.2 (186.4) | - | 259.9 (212.3) | 235.1 (194.5) |
 | gfx-textures / textures | [differs](#differs-gfx-textures) | 146.9 (122.7) | - | 154.0 (128.6) | 175.0 (146.8) |
 | gfx-sprite2d / sprite2d | [differs](#differs-gfx-sprite2d) | 157.1 (131.2) | - | 249.4 (202.4) | 249.6 (205.4) |
 | gfx-particles / particles | [differs](#differs-gfx-particles) | 118.0 (98.5) | - | 210.8 (172.8) | 185.5 (154.9) |
@@ -41,6 +42,7 @@ A **same** row is the same program in each library, and libwgf's is held to libw
 - <a id="differs-gfx-materials"></a>**gfx-materials**: libwgf has no skinning yet: a gold torus in place of the animated character, and a generated sphere in place of the file's ([its header](../examples/c/gfx-materials/main.c) lists every difference).
 - <a id="differs-gfx-lights"></a>**gfx-lights**: libwgf has no skinning or 3D sprites yet: generated capsules in place of the animated characters, and no lit billboards ([its header](../examples/c/gfx-lights/main.c) lists every difference).
 - <a id="differs-gfx-shadows"></a>**gfx-shadows**: libwgf has no skinning or animation yet: the toy car in place of the walking character, and its readout fixed labels with no formatting ([its header](../examples/c/gfx-shadows/main.c) lists every difference).
+- <a id="differs-gfx-environment"></a>**gfx-environment**: libwgf has no skinning or animation yet: the toy car in place of the walking character; a sky of its own (tools/gen_sky.py) and the tiles in place of the two Poly Haven photographs; its readout fixed labels ([its header](../examples/c/gfx-environment/main.c) lists every difference).
 - <a id="differs-gfx-textures"></a>**gfx-textures**: libwgf has no KTX (compressed) textures: their half loads the PNGs libwgt falls back to ([its header](../examples/c/gfx-textures/main.c) lists every difference).
 - <a id="differs-gfx-sprite2d"></a>**gfx-sprite2d**: libwgf has no 3D and no alpha picking: the animated model behind the sprites, its lights, and picking are left out ([its header](../examples/c/gfx-sprite2d/main.c) lists every difference).
 - <a id="differs-gfx-particles"></a>**gfx-particles**: libwgf has no 3D and no GPU particles: libwgt's 3D emitters are projected into 2D CPU emitters, untextured ([its header](../examples/c/gfx-particles/main.c) lists every difference).
@@ -62,6 +64,7 @@ Programs that each add one thing to the one before (`examples/sizes/`): what eac
 | ladder-6-model | + 3D model | 257.1 (209.9) | +50.5 |
 | ladder-7-physics3d | + physics3d | 483.6 (378.6) | +226.5 |
 | ladder-8-shadows | + lights and shadows | 488.9 (381.6) | +5.3 |
+| ladder-9-environment | + environment | 509.2 (398.4) | +20.3 |
 | - | + skinning (milestone 2) | - | - |
 
 ## Games
@@ -172,12 +175,14 @@ What an actor costs (`tools/bench/measure_actors.py`, the program `tools/bench/a
 | gfx-model | 481.7 | 50.0 | 187.6 | 19.0 | 152.6 | 16.9 | 206.6 |
 | ladder-5-ui | 449.7 | 52.2 | 186.7 | 19.9 | 152.4 | 17.7 | 206.6 |
 | gfx-shadows | 494.7 | 50.0 | 193.9 | 19.0 | 157.4 | 16.9 | 212.9 |
+| gfx-environment | 522.9 | 50.0 | 208.2 | 19.0 | 169.5 | 16.9 | 227.2 |
 | js:asteroids | 498.4 | 100.4 | 202.4 | 33.3 | 167.6 | 29.4 | 235.7 |
 | game:asteroids | 498.4 | 118.0 | 202.4 | 35.2 | 167.6 | 31.3 | 237.6 |
 | ladder-6-model | 600.0 | 52.2 | 237.3 | 19.8 | 192.2 | 17.7 | 257.1 |
 | physics3d-vehicle | 894.0 | 50.3 | 369.1 | 19.1 | 285.1 | 17.1 | 388.2 |
 | ladder-7-physics3d | 1152.3 | 52.7 | 463.6 | 20.0 | 360.7 | 17.9 | 483.6 |
 | ladder-8-shadows | 1163.6 | 52.7 | 468.9 | 20.0 | 363.8 | 17.9 | 488.9 |
+| ladder-9-environment | 1202.2 | 52.7 | 489.2 | 20.0 | 380.5 | 17.9 | 509.2 |
 | game:racer | 1218.7 | 147.9 | 483.9 | 48.1 | 381.2 | 41.5 | 532.0 |
 
 ## Every libwgt program

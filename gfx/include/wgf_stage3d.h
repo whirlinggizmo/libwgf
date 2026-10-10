@@ -6,6 +6,7 @@
 #include "wgf_api.h"
 #include "wgf_color.h"
 #include "wgf_actor.h"
+#include "wgf_environment.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,6 +65,28 @@ WGF_API float wgf_stage3d_get_ambient_intensity(wgf_actor_t stage);
 WGF_API bool wgf_stage3d_set_tonemap(wgf_actor_t stage, wgf_stage3d_tonemap_t tonemap, float exposure);
 WGF_API wgf_stage3d_tonemap_t wgf_stage3d_get_tonemap(wgf_actor_t stage);
 WGF_API float wgf_stage3d_get_exposure(wgf_actor_t stage);
+
+/* Light its PBR models with an environment (wgf_environment.h) as well as its lights and
+ * ambient light: soft light from all around, and reflections sharp or blurred by each
+ * surface's roughness, darkened by its occlusion. `intensity` scales it (1 as the image
+ * is; clamped to 0 or more); `rotation` (radians) turns it about +y. 0 removes it.
+ * Default: none. The stage holds a reference of its own; one not READY lights nothing
+ * until it is. False when `environment` isn't one. */
+WGF_API bool wgf_stage3d_set_environment(wgf_actor_t stage, wgf_environment_t environment, float intensity,
+                                         float rotation);
+WGF_API wgf_environment_t wgf_stage3d_get_environment(wgf_actor_t stage);
+WGF_API float wgf_stage3d_get_environment_intensity(wgf_actor_t stage);
+WGF_API float wgf_stage3d_get_environment_rotation(wgf_actor_t stage);
+
+/* Draw an environment behind everything the stage draws (a sky), before its models,
+ * where nothing drawn before it in the frame's 3D is nearer: with the stage's environment
+ * intensity and rotation when it is the same environment, else at 1 and unturned, and
+ * tone mapped as the stage is. `blur` 0..1: sharp to fully blurred (clamped). 0 removes
+ * it. Default: none. The stage holds a reference of its own; one not READY draws nothing
+ * until it is. False when `environment` isn't one. */
+WGF_API bool wgf_stage3d_set_background(wgf_actor_t stage, wgf_environment_t environment, float blur);
+WGF_API wgf_environment_t wgf_stage3d_get_background(wgf_actor_t stage);
+WGF_API float wgf_stage3d_get_background_blur(wgf_actor_t stage);
 
 /* Skip models the camera can't see (on by default): each is tested by the box around it
  * as it is placed now, grown a little against rounding, against the camera's view

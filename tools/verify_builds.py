@@ -36,6 +36,7 @@ The binding's checks (tools/check_binding.py), when there is a haxe:
                   within its budget, its desktop export (tools/check_games.py), as cli skips
   shaders         gfx's committed shader headers current with their GLSL (tools/gen_shaders.py
                   --check; skipped where sokol-shdc can't be had)
+  brdf-lut        the environments' committed BRDF table current (tools/gen_brdf_lut.py --check)
   actors          on Linux, the actor benchmark's bytes and time an actor against the
                   baseline, docs/benchmarks.json (tools/bench/measure_actors.py --check)
   frames          with --web: every game's export flown by its autopilot in a browser, its
@@ -91,6 +92,7 @@ CHECKS = {
     'cli': (['tools/check_cli.py'], False, ('haxe', 'no haxe')),
     'games': (['tools/check_games.py'], False, ('haxe', 'no haxe')),
     'shaders': (['tools/gen_shaders.py', '--check'], False, None),
+    'brdf-lut': (['tools/gen_brdf_lut.py', '--check'], False, None),
     'actors': (['tools/bench/measure_actors.py', '--check'], False,
                ('linux', 'the actor benchmark reads glibc\'s heap: Linux alone')),
     'sizes': (['tools/measure_sizes.py', '--check'], True, ('haxe', 'no haxe')),

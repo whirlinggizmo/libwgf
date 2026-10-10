@@ -2,7 +2,7 @@
  * lit by up to 8 lights, tone mapped. libwgt's wgt_gfx_model.glsl and wgt_gfx_pbr.glsl
  * (wgrender's), trimmed to what milestone 2 draws so far: one model a draw, its
  * matrices uniforms (libwgt's per-instance texture comes with instancing, step 11),
- * shadows (step 8), and no environment (step 9). Written once in sokol-shdc's annotated
+ * shadows (step 8), and an environment's light (step 9). Written once in sokol-shdc's annotated
  * GLSL; tools/gen_shaders.py makes wgf_gfx_model.glsl.h, committed, for GL 4.1 and
  * WebGL2 (GLSL 300 es).
  *
@@ -22,6 +22,10 @@
  *                     u_uv_row0[i].w its texture coordinate set (0 or 1)
  * fs_scene, the stage's: u_camera_pos (xyz), u_ambient (rgb, linear, times intensity),
  *   u_tonemap (x mode: 0 none, 1 Khronos PBR Neutral, 2 ACES; y exposure scale, 2^EV),
+ *   its environment's light: u_env (x intensity, 0 none; y the prefiltered cube's last mip;
+ *   z/w the cosine and sine of its rotation about +y) and u_sh[9] (its irradiance over pi,
+ *   9 spherical-harmonic coefficients, xyz each), with env_tex (its GGX-prefiltered cube, a
+ *   mip a roughness step) and brdf_tex (the split-sum table: A, B by n.v and roughness),
  *   and its shadows, a slot a casting light (up to 4, each a layer of one depth array):
  *   u_shadow_mat[s]     world -> that light's clip space (GL's -1..1 depth)
  *   u_shadow_params[s]  x 1 / map size, y a texel in world units, z/w bias constant, slope (texels)
@@ -36,6 +40,8 @@
  * The BRDF follows the glTF 2.0 specification, appendix B (Lambert diffuse, GGX / Smith
  * height-correlated specular, Schlick Fresnel).
  */
+
+@include wgf_gfx_display.glsl
 
 @vs vs
 layout(binding=0) uniform vs_params {
@@ -82,6 +88,8 @@ layout(binding=2) uniform fs_scene {
     vec4 u_camera_pos;
     vec4 u_ambient;
     vec4 u_tonemap;
+    vec4 u_env;
+    vec4 u_sh[9];
     mat4 u_shadow_mat[4];
     vec4 u_shadow_params[4];
     vec4 u_shadow_tint[4];
@@ -104,6 +112,10 @@ layout(binding=1) uniform sampler metallic_roughness_smp;
 layout(binding=2) uniform sampler normal_smp;
 layout(binding=3) uniform sampler occlusion_smp;
 layout(binding=4) uniform sampler emissive_smp;
+layout(binding=5) uniform textureCube env_tex;
+layout(binding=6) uniform texture2D brdf_tex;
+layout(binding=5) uniform sampler env_smp;
+layout(binding=6) uniform sampler brdf_smp;
 layout(binding=8) uniform texture2DArray shadow_tex;
 layout(binding=8) uniform sampler shadow_smp;
 @image_sample_type shadow_tex depth
@@ -116,53 +128,19 @@ in vec4 v_color;
 in vec3 v_world_pos;
 out vec4 frag_color;
 
-vec3 srgb_to_linear(vec3 c) {
-    vec3 lo = c / 12.92;
-    vec3 hi = pow((max(c, vec3(0.04045)) + 0.055) / 1.055, vec3(2.4));
-    return mix(lo, hi, step(vec3(0.04045), c));
-}
+@include_block display
 
-vec3 linear_to_srgb(vec3 c) {
-    c = clamp(c, vec3(0.0), vec3(1.0));
-    vec3 lo = c * 12.92;
-    vec3 hi = 1.055 * pow(max(c, vec3(0.0031308)), vec3(1.0 / 2.4)) - 0.055;
-    return mix(lo, hi, step(vec3(0.0031308), c));
-}
-
-/* Khronos PBR Neutral (https://github.com/KhronosGroup/ToneMapping) */
-vec3 tonemap_neutral(vec3 color) {
-    const float start_compression = 0.8 - 0.04;
-    const float desaturation = 0.15;
-    float x = min(color.r, min(color.g, color.b));
-    float offset = x < 0.08 ? x - 6.25 * x * x : 0.04;
-    color -= offset;
-    float peak = max(color.r, max(color.g, color.b));
-    if (peak < start_compression) {
-        return color;
-    }
-    const float d = 1.0 - start_compression;
-    float new_peak = 1.0 - d * d / (peak + d - start_compression);
-    color *= new_peak / peak;
-    float g = 1.0 - 1.0 / (desaturation * (peak - new_peak) + 1.0);
-    return mix(color, vec3(new_peak), g);
-}
-
-/* ACES filmic curve fit (Narkowicz 2015) */
-vec3 tonemap_aces(vec3 color) {
-    color *= 0.6;
-    return clamp((color * (2.51 * color + 0.03)) / (color * (2.43 * color + 0.59) + 0.14), 0.0, 1.0);
-}
-
-/* Linear scene color to the framebuffer's sRGB, with exposure and tone mapping. */
-vec3 to_display(vec3 color) {
-    color *= u_tonemap.y;
-    int mode = int(u_tonemap.x + 0.5);
-    if (mode == 1) {
-        color = tonemap_neutral(color);
-    } else if (mode == 2) {
-        color = tonemap_aces(color);
-    }
-    return linear_to_srgb(color);
+/* An environment's irradiance over pi at a direction (in its frame). */
+vec3 eval_sh(vec3 n) {
+    return u_sh[0].xyz * 0.282095
+         + u_sh[1].xyz * (0.488603 * n.y)
+         + u_sh[2].xyz * (0.488603 * n.z)
+         + u_sh[3].xyz * (0.488603 * n.x)
+         + u_sh[4].xyz * (1.092548 * n.x * n.y)
+         + u_sh[5].xyz * (1.092548 * n.y * n.z)
+         + u_sh[6].xyz * (0.315392 * (3.0 * n.z * n.z - 1.0))
+         + u_sh[7].xyz * (1.092548 * n.x * n.z)
+         + u_sh[8].xyz * (0.546274 * (n.x * n.x - n.y * n.y));
 }
 
 /* Texture coordinates for texture slot i: its coordinate set, then its transform. */
@@ -253,7 +231,7 @@ void main() {
         discard;
     }
     if (u_pbr.w < 0.5) {
-        frag_color = vec4(to_display(base.rgb), base.a); /* unlit */
+        frag_color = vec4(to_display(base.rgb, u_tonemap), base.a); /* unlit */
         return;
     }
 
@@ -333,8 +311,19 @@ void main() {
         color += u_light_radiance[i].rgb * falloff * n_dot_l * (diffuse + specular);
     }
 
+    if (u_env.x > 0.0) {
+        /* split-sum image-based lighting, libwgt's: diffuse from the irradiance, specular
+         * from the prefiltered cube's mip for this roughness and the BRDF table */
+        float lod_roughness = sqrt(clamp(alpha, 0.0, 1.0)); /* the perceptual roughness the mips are made by */
+        vec3 irradiance = max(eval_sh(env_dir(n, u_env)), vec3(0.0));
+        vec3 r = env_dir(reflect(-v, n), u_env);
+        vec3 prefiltered = textureLod(samplerCube(env_tex, env_smp), r, lod_roughness * u_env.y).rgb;
+        vec2 ab = texture(sampler2D(brdf_tex, brdf_smp), vec2(n_dot_v, lod_roughness)).rg;
+        color += (irradiance * c_diff + prefiltered * (f0 * ab.x + ab.y)) * ao * u_env.x;
+    }
+
     color += u_emissive.rgb * srgb_to_linear(texture(sampler2D(emissive_tex, emissive_smp), tex_uv(4)).rgb);
-    frag_color = vec4(to_display(color), base.a);
+    frag_color = vec4(to_display(color, u_tonemap), base.a);
 }
 @end
 

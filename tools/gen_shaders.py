@@ -39,6 +39,8 @@ def main():
     stale = []
     with tempfile.TemporaryDirectory() as scratch:
         for source in sorted(SHADERS.glob('*.glsl')):
+            if '@program' not in source.read_text(encoding='utf-8'):
+                continue  # blocks the others include (wgf_gfx_display.glsl), no program of its own
             header = source.with_name(source.name + '.h')
             out = Path(scratch) / header.name if opts.check else header
             done = subprocess.run([shdc, '-i', source.name, '-o', str(out), '-l', SLANG, '--ifdef',

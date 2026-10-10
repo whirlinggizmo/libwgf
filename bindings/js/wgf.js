@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "dc5292037e037e44" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "a5d60278606e4bbe" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -4725,6 +4725,18 @@ export function wgf_emitter2d_clear(emitter) {
     return value !== 0;
 }
 
+// wgf: call wgf_environment_create
+/**
+ * An environment from a panorama image file. 0 only when there is no room for another;
+ * a path or file that can't be loaded gives one that FAILED.
+ */
+export function wgf_environment_create(path) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_environment_create"](cstr(path));
+    host["stackRestore"](mark);
+    return value >>> 0;
+}
+
 // wgf: call wgf_light_create
 /**
  * A white light of intensity 1, no range limit, a spot's cone pi/6 to pi/4. 0 when
@@ -6355,6 +6367,104 @@ export function wgf_stage3d_get_tonemap(stage) {
  */
 export function wgf_stage3d_get_exposure(stage) {
     const value = host["_wgf_stage3d_get_exposure"](stage);
+    return value;
+}
+
+// wgf: call wgf_stage3d_set_environment
+/**
+ * Light its PBR models with an environment (wgf_environment.h) as well as its lights and
+ * ambient light: soft light from all around, and reflections sharp or blurred by each
+ * surface's roughness, darkened by its occlusion. `intensity` scales it (1 as the image
+ * is; clamped to 0 or more); `rotation` (radians) turns it about +y. 0 removes it.
+ * Default: none. The stage holds a reference of its own; one not READY lights nothing
+ * until it is. False when `environment` isn't one.
+ */
+export function wgf_stage3d_set_environment(stage, environment, intensity, rotation) {
+    const value = host["_wgf_stage3d_set_environment"](stage, environment, intensity, rotation);
+    return value !== 0;
+}
+
+// wgf: call wgf_stage3d_get_environment
+/**
+ * Light its PBR models with an environment (wgf_environment.h) as well as its lights and
+ * ambient light: soft light from all around, and reflections sharp or blurred by each
+ * surface's roughness, darkened by its occlusion. `intensity` scales it (1 as the image
+ * is; clamped to 0 or more); `rotation` (radians) turns it about +y. 0 removes it.
+ * Default: none. The stage holds a reference of its own; one not READY lights nothing
+ * until it is. False when `environment` isn't one.
+ */
+export function wgf_stage3d_get_environment(stage) {
+    const value = host["_wgf_stage3d_get_environment"](stage);
+    return value >>> 0;
+}
+
+// wgf: call wgf_stage3d_get_environment_intensity
+/**
+ * Light its PBR models with an environment (wgf_environment.h) as well as its lights and
+ * ambient light: soft light from all around, and reflections sharp or blurred by each
+ * surface's roughness, darkened by its occlusion. `intensity` scales it (1 as the image
+ * is; clamped to 0 or more); `rotation` (radians) turns it about +y. 0 removes it.
+ * Default: none. The stage holds a reference of its own; one not READY lights nothing
+ * until it is. False when `environment` isn't one.
+ */
+export function wgf_stage3d_get_environment_intensity(stage) {
+    const value = host["_wgf_stage3d_get_environment_intensity"](stage);
+    return value;
+}
+
+// wgf: call wgf_stage3d_get_environment_rotation
+/**
+ * Light its PBR models with an environment (wgf_environment.h) as well as its lights and
+ * ambient light: soft light from all around, and reflections sharp or blurred by each
+ * surface's roughness, darkened by its occlusion. `intensity` scales it (1 as the image
+ * is; clamped to 0 or more); `rotation` (radians) turns it about +y. 0 removes it.
+ * Default: none. The stage holds a reference of its own; one not READY lights nothing
+ * until it is. False when `environment` isn't one.
+ */
+export function wgf_stage3d_get_environment_rotation(stage) {
+    const value = host["_wgf_stage3d_get_environment_rotation"](stage);
+    return value;
+}
+
+// wgf: call wgf_stage3d_set_background
+/**
+ * Draw an environment behind everything the stage draws (a sky), before its models,
+ * where nothing drawn before it in the frame's 3D is nearer: with the stage's environment
+ * intensity and rotation when it is the same environment, else at 1 and unturned, and
+ * tone mapped as the stage is. `blur` 0..1: sharp to fully blurred (clamped). 0 removes
+ * it. Default: none. The stage holds a reference of its own; one not READY draws nothing
+ * until it is. False when `environment` isn't one.
+ */
+export function wgf_stage3d_set_background(stage, environment, blur) {
+    const value = host["_wgf_stage3d_set_background"](stage, environment, blur);
+    return value !== 0;
+}
+
+// wgf: call wgf_stage3d_get_background
+/**
+ * Draw an environment behind everything the stage draws (a sky), before its models,
+ * where nothing drawn before it in the frame's 3D is nearer: with the stage's environment
+ * intensity and rotation when it is the same environment, else at 1 and unturned, and
+ * tone mapped as the stage is. `blur` 0..1: sharp to fully blurred (clamped). 0 removes
+ * it. Default: none. The stage holds a reference of its own; one not READY draws nothing
+ * until it is. False when `environment` isn't one.
+ */
+export function wgf_stage3d_get_background(stage) {
+    const value = host["_wgf_stage3d_get_background"](stage);
+    return value >>> 0;
+}
+
+// wgf: call wgf_stage3d_get_background_blur
+/**
+ * Draw an environment behind everything the stage draws (a sky), before its models,
+ * where nothing drawn before it in the frame's 3D is nearer: with the stage's environment
+ * intensity and rotation when it is the same environment, else at 1 and unturned, and
+ * tone mapped as the stage is. `blur` 0..1: sharp to fully blurred (clamped). 0 removes
+ * it. Default: none. The stage holds a reference of its own; one not READY draws nothing
+ * until it is. False when `environment` isn't one.
+ */
+export function wgf_stage3d_get_background_blur(stage) {
+    const value = host["_wgf_stage3d_get_background_blur"](stage);
     return value;
 }
 

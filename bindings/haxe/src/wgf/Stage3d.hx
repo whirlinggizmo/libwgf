@@ -91,6 +91,83 @@ import wgf.impl.Raw;
 		return Raw.wgf_stage3d_get_exposure(this);
 
 	/**
+	    Light its PBR models with an environment (wgf_environment.h) as well as its lights and
+	    ambient light: soft light from all around, and reflections sharp or blurred by each
+	    surface's roughness, darkened by its occlusion. `intensity` scales it (1 as the image
+	    is; clamped to 0 or more); `rotation` (radians) turns it about +y. 0 removes it.
+	    Default: none. The stage holds a reference of its own; one not READY lights nothing
+	    until it is. False when `environment` isn't one.
+	**/
+	public inline function setEnvironment(environment:Environment, intensity:Float, rotation:Float):Bool
+		return Raw.wgf_stage3d_set_environment(this, environment, intensity, rotation);
+
+	/**
+	    Light its PBR models with an environment (wgf_environment.h) as well as its lights and
+	    ambient light: soft light from all around, and reflections sharp or blurred by each
+	    surface's roughness, darkened by its occlusion. `intensity` scales it (1 as the image
+	    is; clamped to 0 or more); `rotation` (radians) turns it about +y. 0 removes it.
+	    Default: none. The stage holds a reference of its own; one not READY lights nothing
+	    until it is. False when `environment` isn't one.
+	**/
+	public inline function getEnvironment():Environment
+		return Raw.wgf_stage3d_get_environment(this);
+
+	/**
+	    Light its PBR models with an environment (wgf_environment.h) as well as its lights and
+	    ambient light: soft light from all around, and reflections sharp or blurred by each
+	    surface's roughness, darkened by its occlusion. `intensity` scales it (1 as the image
+	    is; clamped to 0 or more); `rotation` (radians) turns it about +y. 0 removes it.
+	    Default: none. The stage holds a reference of its own; one not READY lights nothing
+	    until it is. False when `environment` isn't one.
+	**/
+	public inline function getEnvironmentIntensity():Float
+		return Raw.wgf_stage3d_get_environment_intensity(this);
+
+	/**
+	    Light its PBR models with an environment (wgf_environment.h) as well as its lights and
+	    ambient light: soft light from all around, and reflections sharp or blurred by each
+	    surface's roughness, darkened by its occlusion. `intensity` scales it (1 as the image
+	    is; clamped to 0 or more); `rotation` (radians) turns it about +y. 0 removes it.
+	    Default: none. The stage holds a reference of its own; one not READY lights nothing
+	    until it is. False when `environment` isn't one.
+	**/
+	public inline function getEnvironmentRotation():Float
+		return Raw.wgf_stage3d_get_environment_rotation(this);
+
+	/**
+	    Draw an environment behind everything the stage draws (a sky), before its models,
+	    where nothing drawn before it in the frame's 3D is nearer: with the stage's environment
+	    intensity and rotation when it is the same environment, else at 1 and unturned, and
+	    tone mapped as the stage is. `blur` 0..1: sharp to fully blurred (clamped). 0 removes
+	    it. Default: none. The stage holds a reference of its own; one not READY draws nothing
+	    until it is. False when `environment` isn't one.
+	**/
+	public inline function setBackground(environment:Environment, blur:Float):Bool
+		return Raw.wgf_stage3d_set_background(this, environment, blur);
+
+	/**
+	    Draw an environment behind everything the stage draws (a sky), before its models,
+	    where nothing drawn before it in the frame's 3D is nearer: with the stage's environment
+	    intensity and rotation when it is the same environment, else at 1 and unturned, and
+	    tone mapped as the stage is. `blur` 0..1: sharp to fully blurred (clamped). 0 removes
+	    it. Default: none. The stage holds a reference of its own; one not READY draws nothing
+	    until it is. False when `environment` isn't one.
+	**/
+	public inline function getBackground():Environment
+		return Raw.wgf_stage3d_get_background(this);
+
+	/**
+	    Draw an environment behind everything the stage draws (a sky), before its models,
+	    where nothing drawn before it in the frame's 3D is nearer: with the stage's environment
+	    intensity and rotation when it is the same environment, else at 1 and unturned, and
+	    tone mapped as the stage is. `blur` 0..1: sharp to fully blurred (clamped). 0 removes
+	    it. Default: none. The stage holds a reference of its own; one not READY draws nothing
+	    until it is. False when `environment` isn't one.
+	**/
+	public inline function getBackgroundBlur():Float
+		return Raw.wgf_stage3d_get_background_blur(this);
+
+	/**
 	    Skip models the camera can't see (on by default): each is tested by the box around it
 	    as it is placed now, grown a little against rounding, against the camera's view
 	    before it is drawn, which is far cheaper than drawing it. Turn it off to draw

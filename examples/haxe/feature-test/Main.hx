@@ -225,6 +225,12 @@ class Main {
 		expect(stage3d.setTonemap(Stage3dTonemap.ACES, 0.5) && stage3d.getTonemap() == Stage3dTonemap.ACES
 			&& stage3d.getExposure() == 0.5 && stage3d.setTonemap(Stage3dTonemap.NEUTRAL, 0), "its tone mapping");
 		expect(stage3d.setCulling(false) && !stage3d.isCulling() && stage3d.setCulling(true), "its culling");
+		final sky:Environment = Environment.create("textures/tiles.png"); // any image is a panorama
+		expect(!sky.isNone() && stage3d.setEnvironment(sky, 0.5, 1) && stage3d.getEnvironment() == sky
+			&& stage3d.getEnvironmentIntensity() == 0.5 && stage3d.getEnvironmentRotation() == 1, "its environment");
+		expect(stage3d.setBackground(sky, 0.25) && stage3d.getBackground() == sky && stage3d.getBackgroundBlur() == 0.25,
+			"its background");
+		Resource.release(sky); // the stage holds its own
 		final sun:Light = Light.create(LightType.SPOT);
 		expect(sun.getType() == LightType.SPOT && sun.setColor(Color.get(ColorStock.GOLD))
 			&& sun.getColor() == Color.get(ColorStock.GOLD), "a light's color");

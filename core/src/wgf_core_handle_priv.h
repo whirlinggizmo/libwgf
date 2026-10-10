@@ -58,6 +58,7 @@ typedef enum wgf_core_priv_handle_kind_t {
     WGF_CORE_PRIV_HANDLE_KIND_FONT = 18,    /* "gfx.font" */
     WGF_CORE_PRIV_HANDLE_KIND_MESH = 19,    /* "gfx.mesh" */
     WGF_CORE_PRIV_HANDLE_KIND_MATERIAL = 20, /* "gfx.material" */
+    WGF_CORE_PRIV_HANDLE_KIND_ENVIRONMENT = 21, /* "gfx.environment" */
     /* ecs: 32.. */
     WGF_CORE_PRIV_HANDLE_KIND_COMPONENTS = 32, /* "ecs.components" */
     WGF_CORE_PRIV_HANDLE_KIND_SCENE = 33,  /* "ecs.scene": a scene file, a resource */

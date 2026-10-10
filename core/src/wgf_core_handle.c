@@ -15,6 +15,7 @@ static const char *const kind_names[WGF_CORE_PRIV_HANDLE_KIND_MASK + 1] = {
     [WGF_CORE_PRIV_HANDLE_KIND_FONT] = "gfx.font",
     [WGF_CORE_PRIV_HANDLE_KIND_MESH] = "gfx.mesh",
     [WGF_CORE_PRIV_HANDLE_KIND_MATERIAL] = "gfx.material",
+    [WGF_CORE_PRIV_HANDLE_KIND_ENVIRONMENT] = "gfx.environment",
     [WGF_CORE_PRIV_HANDLE_KIND_COMPONENTS] = "ecs.components",
     [WGF_CORE_PRIV_HANDLE_KIND_SCENE] = "ecs.scene",
     [WGF_CORE_PRIV_HANDLE_KIND_PREFAB] = "ecs.prefab",

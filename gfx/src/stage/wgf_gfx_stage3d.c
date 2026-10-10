@@ -8,11 +8,13 @@
 #include "material/wgf_gfx_material_priv.h"
 #include "mesh/wgf_gfx_mesh_priv.h"
 #include "render/wgf_gfx_render_priv.h"
+#include "stage/wgf_gfx_environment_priv.h"
 #include "stage/wgf_gfx_model_priv.h"
 #include "stage/wgf_gfx_shadow_priv.h"
 #include "stage/wgf_gfx_stage3d_priv.h"
 #include "texture/wgf_gfx_texture_priv.h"
 #include "wgf_core_part_priv.h"
+#include "wgf_core_resource_priv.h"
 #include "wgf_light.h"
 #include "wgf_log.h"
 #include "wgf_model.h"
@@ -25,8 +27,8 @@
 #endif
 #include "shaders/wgf_gfx_model.glsl.h"
 
-/* Stages: libwgt's scene, trimmed to what milestone 2 has so far (no environment,
- * instancing, skinning, picking, sprites, or particles: their steps bring them). A
+/* Stages: libwgt's scene, trimmed to what milestone 2 has so far (no instancing,
+ * skinning, picking, sprites, or particles: their steps bring them). A
  * draw walks the stage's tree as it is now -- its lights (the first 4 that cast shadows
  * each given a slot of the frame's shadow map), then its models, each part of a model's
  * mesh an item: placed, culled against the camera's view (a caster out of view kept for
@@ -35,8 +37,10 @@
  * frame's (render/wgf_gfx_render_commands.c). Before the frame's pass the shadow part, when
  * a light casts, draws the first such draw's casters into its map (wgf_gfx_shadow.c); then
  * the command draws the items with sokol_gfx, between the immediate mode drawn before and
- * after the stage. A part, installed by the first stage made: its end of frame forgets the
- * frame's items, and its stop frees its pipelines and default textures. */
+ * after the stage, its background first. An environment's lighting and background are the
+ * environment part's (wgf_gfx_environment.c), reached through its hooks: a program with
+ * none links none of it. A part, installed by the first stage made: its end of frame
+ * forgets the frame's items, and its stop frees its pipelines and default textures. */
 
 typedef struct item_t {
     wgf_mat4_t world;
@@ -68,6 +72,9 @@ typedef struct stage_draw_t {
     int shadow_count;                           /* its lights with a shadow slot */
     int shadow_lights[WGF_GFX_PRIV_MAX_SHADOW_LIGHTS]; /* into the frame's lights, by slot */
     wgf_gfx_priv_shadow_binding_t shadow;       /* the shadow pass's maps, valid once it drew them */
+    wgf_handle_t environment, background;       /* 0: none */
+    float environment_intensity, environment_rotation;
+    float background_intensity, background_rotation, background_blur;
 } stage_draw_t;
 
 static struct {
@@ -89,7 +96,20 @@ static struct {
     sg_image no_shadow_image; /* an empty depth array, bound when nothing casts */
     sg_view no_shadow_view;
     sg_sampler no_shadow_sampler;
+    sg_image no_environment_image; /* a black cube, bound with no environment */
+    sg_view no_environment_view;
 } frame;
+
+static wgf_gfx_priv_environment_hooks_t environment_hooks; /* the environment part's, once installed */
+
+void wgf_gfx_priv_set_environment_hooks(const wgf_gfx_priv_environment_hooks_t *hooks)
+{
+    if (hooks != NULL) {
+        environment_hooks = *hooks;
+    } else {
+        memset(&environment_hooks, 0, sizeof(environment_hooks));
+    }
+}
 
 static bool grow(void **items, int *capacity, int needed, size_t size)
 {
@@ -133,6 +153,8 @@ static void stop(void)
         sg_destroy_view(frame.no_shadow_view);
         sg_destroy_image(frame.no_shadow_image);
         sg_destroy_sampler(frame.no_shadow_sampler);
+        sg_destroy_view(frame.no_environment_view);
+        sg_destroy_image(frame.no_environment_image);
     }
     memset(&frame, 0, sizeof(frame));
 }
@@ -152,6 +174,16 @@ static wgf_gfx_priv_actor_t *stage_of_at(wgf_actor_t stage, const char *caller)
 }
 #define stage_of(...) stage_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
+/* A stage let go of: its environments' references. */
+static void stage_free(wgf_actor_t stage, wgf_gfx_priv_actor_t *actor_ptr)
+{
+    (void)stage;
+    if (actor_ptr->as.stage3d.environment != 0) wgf_resource_release(actor_ptr->as.stage3d.environment);
+    if (actor_ptr->as.stage3d.background != 0) wgf_resource_release(actor_ptr->as.stage3d.background);
+}
+
+static const wgf_gfx_priv_actor_kind_t actor_kind = {stage_free, NULL};
+
 wgf_actor_t wgf_stage3d_create(void)
 {
     const wgf_actor_t stage = wgf_gfx_priv_actor_create(WGF_ACTOR_KIND_STAGE3D);
@@ -159,6 +191,7 @@ wgf_actor_t wgf_stage3d_create(void)
     if (actor_ptr == NULL) return 0;
     actor_ptr->as.stage3d.tonemap = WGF_STAGE3D_TONEMAP_NEUTRAL;
     actor_ptr->as.stage3d.culling = true;
+    wgf_gfx_priv_actor_set_kind(WGF_ACTOR_KIND_STAGE3D, &actor_kind);
     wgf_core_priv_part_install(&part);
     wgf_gfx_priv_model_install(); /* the ecs's model component, now that there is somewhere to draw one */
     return stage;
@@ -225,6 +258,71 @@ float wgf_stage3d_get_exposure(wgf_actor_t stage)
 {
     const wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
     return actor_ptr != NULL ? actor_ptr->as.stage3d.exposure : 0.0f;
+}
+
+static bool is_environment(wgf_handle_t handle)
+{
+    return WGF_CORE_PRIV_HANDLE_KIND(handle) == WGF_CORE_PRIV_HANDLE_KIND_ENVIRONMENT &&
+           wgf_core_priv_handle_is_alive(handle);
+}
+
+/* `*held` becomes `environment` (0: none), the reference moved: the new one's taken
+ * before the old one's let go, which may be the same. */
+static void hold(wgf_handle_t *held, wgf_handle_t environment)
+{
+    const wgf_handle_t old = *held;
+    if (environment != 0) wgf_core_priv_resource_retain(environment);
+    *held = environment;
+    if (old != 0) wgf_resource_release(old);
+}
+
+bool wgf_stage3d_set_environment(wgf_actor_t stage, wgf_environment_t environment, float intensity, float rotation)
+{
+    wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
+    if (actor_ptr == NULL || (environment != 0 && !is_environment(environment))) return false;
+    hold(&actor_ptr->as.stage3d.environment, environment);
+    actor_ptr->as.stage3d.environment_intensity = environment != 0 ? (intensity > 0.0f ? intensity : 0.0f) : 0.0f;
+    actor_ptr->as.stage3d.environment_rotation = environment != 0 ? rotation : 0.0f;
+    return true;
+}
+
+wgf_environment_t wgf_stage3d_get_environment(wgf_actor_t stage)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
+    return actor_ptr != NULL ? actor_ptr->as.stage3d.environment : 0;
+}
+
+float wgf_stage3d_get_environment_intensity(wgf_actor_t stage)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
+    return actor_ptr != NULL ? actor_ptr->as.stage3d.environment_intensity : 0.0f;
+}
+
+float wgf_stage3d_get_environment_rotation(wgf_actor_t stage)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
+    return actor_ptr != NULL ? actor_ptr->as.stage3d.environment_rotation : 0.0f;
+}
+
+bool wgf_stage3d_set_background(wgf_actor_t stage, wgf_environment_t environment, float blur)
+{
+    wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
+    if (actor_ptr == NULL || (environment != 0 && !is_environment(environment))) return false;
+    hold(&actor_ptr->as.stage3d.background, environment);
+    actor_ptr->as.stage3d.background_blur = environment != 0 ? (blur < 0.0f ? 0.0f : (blur > 1.0f ? 1.0f : blur)) : 0.0f;
+    return true;
+}
+
+wgf_environment_t wgf_stage3d_get_background(wgf_actor_t stage)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
+    return actor_ptr != NULL ? actor_ptr->as.stage3d.background : 0;
+}
+
+float wgf_stage3d_get_background_blur(wgf_actor_t stage)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
+    return actor_ptr != NULL ? actor_ptr->as.stage3d.background_blur : 0.0f;
 }
 
 bool wgf_stage3d_set_culling(wgf_actor_t stage, bool culling)
@@ -474,6 +572,13 @@ void wgf_stage3d_draw(wgf_actor_t stage)
     draw->ambient[2] = ambient[2] * stage_ptr->as.stage3d.ambient_intensity;
     draw->tonemap = stage_ptr->as.stage3d.tonemap;
     draw->exposure = stage_ptr->as.stage3d.exposure;
+    draw->environment = stage_ptr->as.stage3d.environment;
+    draw->environment_intensity = stage_ptr->as.stage3d.environment_intensity;
+    draw->environment_rotation = stage_ptr->as.stage3d.environment_rotation;
+    draw->background = stage_ptr->as.stage3d.background;
+    draw->background_blur = stage_ptr->as.stage3d.background_blur;
+    draw->background_intensity = draw->background == draw->environment ? draw->environment_intensity : 1.0f;
+    draw->background_rotation = draw->background == draw->environment ? draw->environment_rotation : 0.0f;
     w.culling = stage_ptr->as.stage3d.culling;
     frustum_planes(&draw->view_proj, w.planes);
     camera_world = wgf_gfx_priv_actor_get_world_matrix(camera);
@@ -563,6 +668,21 @@ static void ensure_ready(void)
         sampler.compare = SG_COMPAREFUNC_LESS_EQUAL;
         frame.no_shadow_sampler = sg_make_sampler(&sampler);
     }
+    { /* what the shader's environment is with none: never read, but bound */
+        static const uint8_t black[6 * 4] = {0};
+        sg_image_desc image;
+        sg_view_desc view;
+        memset(&image, 0, sizeof(image));
+        image.type = SG_IMAGETYPE_CUBE;
+        image.width = image.height = 1;
+        image.pixel_format = SG_PIXELFORMAT_RGBA8;
+        image.data.mip_levels[0].ptr = black;
+        image.data.mip_levels[0].size = sizeof(black);
+        frame.no_environment_image = sg_make_image(&image);
+        memset(&view, 0, sizeof(view));
+        view.texture.image = frame.no_environment_image;
+        frame.no_environment_view = sg_make_view(&view);
+    }
     frame.ready = true;
 }
 
@@ -623,7 +743,8 @@ static sg_view texture_view(const wgf_gfx_priv_material_texture_t *texture, sg_v
     return fallback;
 }
 
-static void draw_item(const stage_draw_t *draw, const item_t *item)
+/* `lit`: the draw's environment, READY, in `env`. */
+static void draw_item(const stage_draw_t *draw, const item_t *item, bool lit, const wgf_gfx_priv_env_lighting_t *env)
 {
     const wgf_gfx_priv_material_t *material = wgf_gfx_priv_material_get(item->material);
     const float det = wgf_mat4_determinant(item->world);
@@ -648,6 +769,10 @@ static void draw_item(const stage_draw_t *draw, const item_t *item)
     }
     bindings.views[VIEW_shadow_tex] = draw->shadow.valid ? draw->shadow.map : frame.no_shadow_view;
     bindings.samplers[SMP_shadow_smp] = draw->shadow.valid ? draw->shadow.sampler : frame.no_shadow_sampler;
+    bindings.views[VIEW_env_tex] = lit ? env->cube : frame.no_environment_view;
+    bindings.samplers[SMP_env_smp] = lit ? env->cube_sampler : frame.sampler;
+    bindings.views[VIEW_brdf_tex] = lit ? env->brdf : frame.white_view;
+    bindings.samplers[SMP_brdf_smp] = lit ? env->brdf_sampler : frame.sampler;
     sg_apply_bindings(&bindings);
 
     memset(&vs, 0, sizeof(vs));
@@ -690,6 +815,13 @@ static void draw_item(const stage_draw_t *draw, const item_t *item)
     memcpy(scene.u_ambient, draw->ambient, sizeof(draw->ambient));
     scene.u_tonemap[0] = (float)draw->tonemap;
     scene.u_tonemap[1] = exp2f(draw->exposure);
+    if (lit) {
+        scene.u_env[0] = draw->environment_intensity;
+        scene.u_env[1] = env->max_lod;
+        scene.u_env[2] = cosf(draw->environment_rotation);
+        scene.u_env[3] = sinf(draw->environment_rotation);
+        for (i = 0; i < 9; i++) memcpy(scene.u_sh[i], env->sh.c[i], sizeof(env->sh.c[i]));
+    }
     for (i = 0; draw->shadow.valid && i < draw->shadow.count; i++) {
         const wgf_gfx_priv_shadow_slot_t *slot = &draw->shadow.slots[i];
         memcpy(scene.u_shadow_mat[i], slot->view_proj.m, sizeof(scene.u_shadow_mat[i]));
@@ -734,19 +866,29 @@ static void draw_item(const stage_draw_t *draw, const item_t *item)
 static void replay(int index)
 {
     const stage_draw_t *draw;
+    wgf_gfx_priv_env_lighting_t env;
+    bool lit;
     int i;
     if (index < 0 || index >= frame.draw_count) return;
     ensure_ready();
     draw = &frame.draws[index];
     sg_apply_viewport(draw->viewport[0], draw->viewport[1], draw->viewport[2], draw->viewport[3], true);
+    if (draw->background != 0 && environment_hooks.background != NULL) {
+        environment_hooks.background(draw->background, draw->view_proj, draw->background_blur,
+                                     draw->background_intensity, draw->background_rotation, draw->tonemap,
+                                     draw->exposure);
+    }
+    memset(&env, 0, sizeof(env));
+    lit = draw->environment != 0 && draw->environment_intensity > 0.0f && environment_hooks.lighting != NULL &&
+          environment_hooks.lighting(draw->environment, &env);
     for (i = draw->first; i < draw->first + draw->count && !frame.items[i].blended; i++) {
-        if (!frame.items[i].shadow_only) draw_item(draw, &frame.items[i]);
+        if (!frame.items[i].shadow_only) draw_item(draw, &frame.items[i], lit, &env);
     }
     if (draw->shapes >= 0) { /* sokol_gl's layer, through the same viewport */
         wgf_gfx_priv_render_draw_side_layer(draw->shapes);
         sg_apply_viewport(draw->viewport[0], draw->viewport[1], draw->viewport[2], draw->viewport[3], true);
     }
-    for (; i < draw->first + draw->count; i++) draw_item(draw, &frame.items[i]);
+    for (; i < draw->first + draw->count; i++) draw_item(draw, &frame.items[i], lit, &env);
 }
 
 /* ------------------------------------------------- the shadow pass's view ---- */

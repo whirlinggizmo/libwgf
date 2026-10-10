@@ -63,6 +63,12 @@ typedef struct wgf_gfx_priv_stage3d_t {
     int tonemap; /* wgf_stage3d_tonemap_t */
     float exposure;
     bool culling;
+    /* its environment (wgf_environment.h; a reference held on each, released as the stage
+       goes): the one lighting it, and the one behind it */
+    wgf_handle_t environment;
+    float environment_intensity, environment_rotation;
+    wgf_handle_t background;
+    float background_blur;
 } wgf_gfx_priv_stage3d_t;
 
 typedef struct wgf_gfx_priv_light_t {

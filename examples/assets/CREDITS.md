@@ -20,4 +20,5 @@ Made by Whirling Gizmo for its libraries, under libwgf's MIT license:
 - `textures/flame.png`, `textures/particle.png`: from libwgt's `examples/assets/`, made by wgrender's `tools/gen_particle_textures.py`.
 - `textures/tiles_normal.png`: from libwgt's `examples/assets/`, made by wgrender's `tools/gen_material_assets.py`.
 - `sprites/logo/wg-logo-bw-alpha.png`, `sprites/logo/wg-logo-white-alpha.png`: the Whirling Gizmo logo, from libwgt's `examples/assets/`.
+- `environments/sky.hdr`: made by `tools/gen_sky.py`.
 - `textures/tiles.png`: from libwgt's `examples/assets/`, made by wgrender's `tools/gen_tiles.py`; the page `tools/check_asset_cache.py` visits draws it.

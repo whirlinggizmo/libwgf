@@ -1633,6 +1633,17 @@ export declare const Emitter2d: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+/** A handle of kind wgf_environment_t: the raw binding's branded type. */
+export type Environment = raw.wgf_environment_t;
+export declare const Environment: {
+    /**
+     * An environment from a panorama image file. 0 only when there is no room for another;
+     * a path or file that can't be loaded gives one that FAILED.
+     */
+    readonly create: typeof raw.wgf_environment_create;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
+};
 /** A handle of kind wgf_font_t: the raw binding's branded type. */
 export type Font = raw.wgf_font_t;
 export declare const Font: {
@@ -3297,6 +3308,69 @@ export declare const Stage3d: {
      * NEUTRAL, 0. False for a tone mapping that isn't one.
      */
     readonly getExposure: typeof raw.wgf_stage3d_get_exposure;
+    /**
+     * Light its PBR models with an environment (wgf_environment.h) as well as its lights and
+     * ambient light: soft light from all around, and reflections sharp or blurred by each
+     * surface's roughness, darkened by its occlusion. `intensity` scales it (1 as the image
+     * is; clamped to 0 or more); `rotation` (radians) turns it about +y. 0 removes it.
+     * Default: none. The stage holds a reference of its own; one not READY lights nothing
+     * until it is. False when `environment` isn't one.
+     */
+    readonly setEnvironment: typeof raw.wgf_stage3d_set_environment;
+    /**
+     * Light its PBR models with an environment (wgf_environment.h) as well as its lights and
+     * ambient light: soft light from all around, and reflections sharp or blurred by each
+     * surface's roughness, darkened by its occlusion. `intensity` scales it (1 as the image
+     * is; clamped to 0 or more); `rotation` (radians) turns it about +y. 0 removes it.
+     * Default: none. The stage holds a reference of its own; one not READY lights nothing
+     * until it is. False when `environment` isn't one.
+     */
+    readonly getEnvironment: typeof raw.wgf_stage3d_get_environment;
+    /**
+     * Light its PBR models with an environment (wgf_environment.h) as well as its lights and
+     * ambient light: soft light from all around, and reflections sharp or blurred by each
+     * surface's roughness, darkened by its occlusion. `intensity` scales it (1 as the image
+     * is; clamped to 0 or more); `rotation` (radians) turns it about +y. 0 removes it.
+     * Default: none. The stage holds a reference of its own; one not READY lights nothing
+     * until it is. False when `environment` isn't one.
+     */
+    readonly getEnvironmentIntensity: typeof raw.wgf_stage3d_get_environment_intensity;
+    /**
+     * Light its PBR models with an environment (wgf_environment.h) as well as its lights and
+     * ambient light: soft light from all around, and reflections sharp or blurred by each
+     * surface's roughness, darkened by its occlusion. `intensity` scales it (1 as the image
+     * is; clamped to 0 or more); `rotation` (radians) turns it about +y. 0 removes it.
+     * Default: none. The stage holds a reference of its own; one not READY lights nothing
+     * until it is. False when `environment` isn't one.
+     */
+    readonly getEnvironmentRotation: typeof raw.wgf_stage3d_get_environment_rotation;
+    /**
+     * Draw an environment behind everything the stage draws (a sky), before its models,
+     * where nothing drawn before it in the frame's 3D is nearer: with the stage's environment
+     * intensity and rotation when it is the same environment, else at 1 and unturned, and
+     * tone mapped as the stage is. `blur` 0..1: sharp to fully blurred (clamped). 0 removes
+     * it. Default: none. The stage holds a reference of its own; one not READY draws nothing
+     * until it is. False when `environment` isn't one.
+     */
+    readonly setBackground: typeof raw.wgf_stage3d_set_background;
+    /**
+     * Draw an environment behind everything the stage draws (a sky), before its models,
+     * where nothing drawn before it in the frame's 3D is nearer: with the stage's environment
+     * intensity and rotation when it is the same environment, else at 1 and unturned, and
+     * tone mapped as the stage is. `blur` 0..1: sharp to fully blurred (clamped). 0 removes
+     * it. Default: none. The stage holds a reference of its own; one not READY draws nothing
+     * until it is. False when `environment` isn't one.
+     */
+    readonly getBackground: typeof raw.wgf_stage3d_get_background;
+    /**
+     * Draw an environment behind everything the stage draws (a sky), before its models,
+     * where nothing drawn before it in the frame's 3D is nearer: with the stage's environment
+     * intensity and rotation when it is the same environment, else at 1 and unturned, and
+     * tone mapped as the stage is. `blur` 0..1: sharp to fully blurred (clamped). 0 removes
+     * it. Default: none. The stage holds a reference of its own; one not READY draws nothing
+     * until it is. False when `environment` isn't one.
+     */
+    readonly getBackgroundBlur: typeof raw.wgf_stage3d_get_background_blur;
     /**
      * Skip models the camera can't see (on by default): each is tested by the box around it
      * as it is placed now, grown a little against rounding, against the camera's view

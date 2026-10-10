@@ -30,6 +30,8 @@ void wgf_gfx_priv_texture_retain(wgf_texture_t texture);
  * the GPU didn't). */
 void *wgf_gfx_priv_texture_decode(const unsigned char *bytes, int size, const char *what);
 void wgf_gfx_priv_texture_decoded_free(void *decoded);
+/* A decoded image's first level, RGBA, 8 bits a channel, and its size. */
+const unsigned char *wgf_gfx_priv_texture_decoded_pixels(const void *decoded, int *width, int *height);
 wgf_texture_t wgf_gfx_priv_texture_create_decoded(void *decoded);
 
 /* The placeholder checker, gfx's own (0 before gfx is set up): what a color texture a file

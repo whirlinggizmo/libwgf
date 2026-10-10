@@ -248,6 +248,14 @@ void *wgf_gfx_priv_texture_decode(const unsigned char *bytes, int size, const ch
     return decoded;
 }
 
+const unsigned char *wgf_gfx_priv_texture_decoded_pixels(const void *data, int *width, int *height)
+{
+    const decoded_t *decoded = (const decoded_t *)data;
+    *width = decoded->width;
+    *height = decoded->height;
+    return decoded->levels[0];
+}
+
 void wgf_gfx_priv_texture_decoded_free(void *decoded)
 {
     if (decoded != NULL) discard(decoded);

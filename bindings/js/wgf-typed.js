@@ -534,6 +534,13 @@ export const Emitter2d = Object.freeze({
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
+// wgf: typed Environment
+export const Environment = Object.freeze({
+    // wgf: call wgf_environment_create
+    create: raw.wgf_environment_create,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
+});
 // wgf: typed Font
 export const Font = Object.freeze({
     // wgf: call wgf_font_create
@@ -1182,6 +1189,20 @@ export const Stage3d = Object.freeze({
     getTonemap: raw.wgf_stage3d_get_tonemap,
     // wgf: call wgf_stage3d_get_exposure
     getExposure: raw.wgf_stage3d_get_exposure,
+    // wgf: call wgf_stage3d_set_environment
+    setEnvironment: raw.wgf_stage3d_set_environment,
+    // wgf: call wgf_stage3d_get_environment
+    getEnvironment: raw.wgf_stage3d_get_environment,
+    // wgf: call wgf_stage3d_get_environment_intensity
+    getEnvironmentIntensity: raw.wgf_stage3d_get_environment_intensity,
+    // wgf: call wgf_stage3d_get_environment_rotation
+    getEnvironmentRotation: raw.wgf_stage3d_get_environment_rotation,
+    // wgf: call wgf_stage3d_set_background
+    setBackground: raw.wgf_stage3d_set_background,
+    // wgf: call wgf_stage3d_get_background
+    getBackground: raw.wgf_stage3d_get_background,
+    // wgf: call wgf_stage3d_get_background_blur
+    getBackgroundBlur: raw.wgf_stage3d_get_background_blur,
     // wgf: call wgf_stage3d_set_culling
     setCulling: raw.wgf_stage3d_set_culling,
     // wgf: call wgf_stage3d_is_culling

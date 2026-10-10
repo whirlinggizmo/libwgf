@@ -44,6 +44,8 @@ export type wgf_actor_t = number & { readonly [kind]: "wgf_actor_t" };
 export type wgf_font_t = number & { readonly [kind]: "wgf_font_t" };
 /** A handle of kind wgf_texture_t; 0 is none. */
 export type wgf_texture_t = number & { readonly [kind]: "wgf_texture_t" };
+/** A handle of kind wgf_environment_t; 0 is none. */
+export type wgf_environment_t = number & { readonly [kind]: "wgf_environment_t" };
 /** A handle of kind wgf_material_t; 0 is none. */
 export type wgf_material_t = number & { readonly [kind]: "wgf_material_t" };
 /** A handle of kind wgf_mesh_t; 0 is none. */
@@ -3179,6 +3181,12 @@ export declare function wgf_emitter2d_get_stretch(emitter: wgf_actor_t | 0): num
 export declare function wgf_emitter2d_clear(emitter: wgf_actor_t | 0): boolean;
 
 /**
+ * An environment from a panorama image file. 0 only when there is no room for another;
+ * a path or file that can't be loaded gives one that FAILED.
+ */
+export declare function wgf_environment_create(path: string | null): wgf_environment_t;
+
+/**
  * A white light of intensity 1, no range limit, a spot's cone pi/6 to pi/4. 0 when
  * `type` isn't a type, or there is no room for another actor.
  */
@@ -4178,6 +4186,76 @@ export declare function wgf_stage3d_get_tonemap(stage: wgf_actor_t | 0): wgf_sta
  * NEUTRAL, 0. False for a tone mapping that isn't one.
  */
 export declare function wgf_stage3d_get_exposure(stage: wgf_actor_t | 0): number;
+
+/**
+ * Light its PBR models with an environment (wgf_environment.h) as well as its lights and
+ * ambient light: soft light from all around, and reflections sharp or blurred by each
+ * surface's roughness, darkened by its occlusion. `intensity` scales it (1 as the image
+ * is; clamped to 0 or more); `rotation` (radians) turns it about +y. 0 removes it.
+ * Default: none. The stage holds a reference of its own; one not READY lights nothing
+ * until it is. False when `environment` isn't one.
+ */
+export declare function wgf_stage3d_set_environment(stage: wgf_actor_t | 0, environment: wgf_environment_t | 0, intensity: number, rotation: number): boolean;
+
+/**
+ * Light its PBR models with an environment (wgf_environment.h) as well as its lights and
+ * ambient light: soft light from all around, and reflections sharp or blurred by each
+ * surface's roughness, darkened by its occlusion. `intensity` scales it (1 as the image
+ * is; clamped to 0 or more); `rotation` (radians) turns it about +y. 0 removes it.
+ * Default: none. The stage holds a reference of its own; one not READY lights nothing
+ * until it is. False when `environment` isn't one.
+ */
+export declare function wgf_stage3d_get_environment(stage: wgf_actor_t | 0): wgf_environment_t;
+
+/**
+ * Light its PBR models with an environment (wgf_environment.h) as well as its lights and
+ * ambient light: soft light from all around, and reflections sharp or blurred by each
+ * surface's roughness, darkened by its occlusion. `intensity` scales it (1 as the image
+ * is; clamped to 0 or more); `rotation` (radians) turns it about +y. 0 removes it.
+ * Default: none. The stage holds a reference of its own; one not READY lights nothing
+ * until it is. False when `environment` isn't one.
+ */
+export declare function wgf_stage3d_get_environment_intensity(stage: wgf_actor_t | 0): number;
+
+/**
+ * Light its PBR models with an environment (wgf_environment.h) as well as its lights and
+ * ambient light: soft light from all around, and reflections sharp or blurred by each
+ * surface's roughness, darkened by its occlusion. `intensity` scales it (1 as the image
+ * is; clamped to 0 or more); `rotation` (radians) turns it about +y. 0 removes it.
+ * Default: none. The stage holds a reference of its own; one not READY lights nothing
+ * until it is. False when `environment` isn't one.
+ */
+export declare function wgf_stage3d_get_environment_rotation(stage: wgf_actor_t | 0): number;
+
+/**
+ * Draw an environment behind everything the stage draws (a sky), before its models,
+ * where nothing drawn before it in the frame's 3D is nearer: with the stage's environment
+ * intensity and rotation when it is the same environment, else at 1 and unturned, and
+ * tone mapped as the stage is. `blur` 0..1: sharp to fully blurred (clamped). 0 removes
+ * it. Default: none. The stage holds a reference of its own; one not READY draws nothing
+ * until it is. False when `environment` isn't one.
+ */
+export declare function wgf_stage3d_set_background(stage: wgf_actor_t | 0, environment: wgf_environment_t | 0, blur: number): boolean;
+
+/**
+ * Draw an environment behind everything the stage draws (a sky), before its models,
+ * where nothing drawn before it in the frame's 3D is nearer: with the stage's environment
+ * intensity and rotation when it is the same environment, else at 1 and unturned, and
+ * tone mapped as the stage is. `blur` 0..1: sharp to fully blurred (clamped). 0 removes
+ * it. Default: none. The stage holds a reference of its own; one not READY draws nothing
+ * until it is. False when `environment` isn't one.
+ */
+export declare function wgf_stage3d_get_background(stage: wgf_actor_t | 0): wgf_environment_t;
+
+/**
+ * Draw an environment behind everything the stage draws (a sky), before its models,
+ * where nothing drawn before it in the frame's 3D is nearer: with the stage's environment
+ * intensity and rotation when it is the same environment, else at 1 and unturned, and
+ * tone mapped as the stage is. `blur` 0..1: sharp to fully blurred (clamped). 0 removes
+ * it. Default: none. The stage holds a reference of its own; one not READY draws nothing
+ * until it is. False when `environment` isn't one.
+ */
+export declare function wgf_stage3d_get_background_blur(stage: wgf_actor_t | 0): number;
 
 /**
  * Skip models the camera can't see (on by default): each is tested by the box around it

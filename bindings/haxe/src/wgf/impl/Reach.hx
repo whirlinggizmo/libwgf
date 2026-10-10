@@ -239,6 +239,7 @@ class Reach {
 		"wgf_emitter2d_set_size",
 		"wgf_emitter2d_set_speed",
 		"wgf_emitter2d_set_stretch",
+		"wgf_environment_create",
 		"wgf_font_create",
 		"wgf_font_get_default",
 		"wgf_font_measure",
@@ -493,13 +494,20 @@ class Reach {
 		"wgf_stage3d_find",
 		"wgf_stage3d_get_ambient_color",
 		"wgf_stage3d_get_ambient_intensity",
+		"wgf_stage3d_get_background",
+		"wgf_stage3d_get_background_blur",
 		"wgf_stage3d_get_camera",
+		"wgf_stage3d_get_environment",
+		"wgf_stage3d_get_environment_intensity",
+		"wgf_stage3d_get_environment_rotation",
 		"wgf_stage3d_get_exposure",
 		"wgf_stage3d_get_tonemap",
 		"wgf_stage3d_is_culling",
 		"wgf_stage3d_set_ambient",
+		"wgf_stage3d_set_background",
 		"wgf_stage3d_set_camera",
 		"wgf_stage3d_set_culling",
+		"wgf_stage3d_set_environment",
 		"wgf_stage3d_set_tonemap",
 		"wgf_text_create",
 		"wgf_text_get_color",
@@ -656,7 +664,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...647) 0];
+	static final counts:Array<Int> = [for (_ in 0...655) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;
