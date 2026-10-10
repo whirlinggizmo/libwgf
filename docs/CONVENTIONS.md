@@ -157,7 +157,7 @@ No other pointer, no struct, no function pointer, no `void *`, no variadic call.
 
 ## Tooling
 
-- Tools are Python 3.12 or newer, standard library only, and run on Linux, macOS, and Windows. Nothing shell-only.
+- Tools are Python 3.12 or newer, standard library only, and run on Linux, macOS, and Windows. Nothing shell-only. The one exception is `wgf.cmd`, Windows' launcher for `wgf`, whose only job is finding Python (`py -3`, else `python`) and running `wgf` with every argument, returning its exit code.
 - Every tool answers `--help` with its usage, from its docstring, and does nothing else; it refuses an argument it doesn't take. `tools/check_tools.py` checks every one.
 - A tool you run is named `<verb>_<noun>.py`, its verb from check_tools' `VERBS`; a module that tools import is one word, listed in `MODULES`. No file imports a command.
 - A check that can't run here (no compiler, browser, Wine, Xvfb) says `<tool>: SKIPPING <what> (<why>)` before running anything, and a driver of checks repeats every skip in its last line. A skipped check is reported as skipped, never as passed.

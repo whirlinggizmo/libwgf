@@ -107,7 +107,7 @@ How the bindings map the C calls is [docs/BINDINGS.md](docs/BINDINGS.md); how to
 
 ## Games: the `wgf` tool
 
-`wgf` (at the repository's root; `python wgf` on Windows) makes and works on a game, run in the game's directory. To run it as `wgf` from anywhere, put the repository on PATH (`export PATH="$PATH:$HOME/path/to/libwgf"`, in your shell's profile to keep it); on Windows, `python <libwgf>\wgf` is the command wherever `wgf` is written below. `wgf new` says which to type.
+`wgf` (at the repository's root) makes and works on a game, run in the game's directory. To run it as `wgf` from anywhere, put the repository on PATH (`export PATH="$PATH:$HOME/path/to/libwgf"`, in your shell's profile to keep it). On Windows `wgf <command>` works the same in cmd and PowerShell: `wgf.cmd` beside it runs it with Python (`py -3` when the Python launcher is there, else `python`), so with the repository on PATH (`setx PATH "%PATH%;C:\path\to\libwgf"`) it is `wgf` everywhere, and without, `<libwgf>\wgf.cmd`. `wgf new` says which to type.
 
 ```sh
 ./wgf new ~/games/rocks             # a game from templates/game/

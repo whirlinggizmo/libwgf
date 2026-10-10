@@ -26,6 +26,7 @@ library only.
 """
 import argparse
 import json
+import os
 import re
 import struct
 import shutil
@@ -92,9 +93,22 @@ def step_new(base, game):
     if code == 0:
         return problem('wgf new into a game\'s directory wasn\'t refused', out)
     said = [line for line in made.splitlines() if 'serve` runs it' in line]
-    if not said or not (f'{WGF} serve' in said[0] or ' wgf serve' in said[0] or f'python {WGF} serve' in said[0]):
+    if not said or not (f'{WGF} serve' in said[0] or ' wgf serve' in said[0] or f'{WGF}.cmd serve' in said[0]):
         return problem('wgf new: its message doesn\'t name a wgf that runs from the game', made)
-    print('check_cli: new: made, named, its message naming the wgf to run; and a second new into it refused')
+    shells = ''
+    if os.name == 'nt':  # Windows' launcher, as a developer types it: usage through, an exit code back
+        cmd = str(WGF) + '.cmd'
+        for shell in ('cmd', 'PowerShell'):
+            for args, wanted in ((['--help'], 0), (['no-such-command'], 2)):
+                run_it = (['cmd', '/c', cmd, *args] if shell == 'cmd' else  # PowerShell: the call in its own text
+                          ['powershell', '-NoProfile', '-Command', f"& '{cmd}' {' '.join(args)}; exit $LASTEXITCODE"])
+                done = subprocess.run(run_it, cwd=game, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                      text=True, errors='replace', timeout=120)
+                if done.returncode != wanted or (wanted == 0 and 'usage: wgf' not in done.stdout):
+                    return problem(f'wgf.cmd in {shell}: {" ".join(args)} exited {done.returncode}, not {wanted}',
+                                   done.stdout)
+        shells = '; wgf.cmd from cmd and PowerShell, its exit codes kept'
+    print(f'check_cli: new: made, named, its message naming the wgf to run; and a second new into it refused{shells}')
     return True
 
 

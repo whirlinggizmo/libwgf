@@ -60,12 +60,13 @@ def say(text):
 
 def launcher():
     """How to run this wgf from anywhere: `wgf` when it is the one on PATH, else its path
-    (with python first on Windows, which runs no script by its first line)."""
+    (on Windows wgf.cmd's, the launcher that finds Python, since Windows runs no script by
+    its first line)."""
     found = shutil.which('wgf')
-    mine = ROOT / 'wgf'
+    mine = ROOT / ('wgf.cmd' if os.name == 'nt' else 'wgf')
     if found and Path(found).resolve() == mine.resolve():
         return 'wgf'
-    return f'python {mine}' if os.name == 'nt' else str(mine)
+    return str(mine)
 
 
 # ---- new -------------------------------------------------------------------------------

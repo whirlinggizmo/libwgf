@@ -80,3 +80,5 @@ jobs:
       # a game's desktop export runs in a window on Windows in tools/verify_builds.py --windows
       - name: Every game's playthrough, headless
         run: python tools/check_games.py --only generated,playthrough
+      - name: The wgf launcher, wgf.cmd, from cmd and PowerShell
+        run: python tools/check_cli.py --only new

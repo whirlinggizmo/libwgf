@@ -1,3 +1,5 @@
 # A generated file is checked byte for byte against its generator (a game's --check): it is
 # checked out exactly as committed on every system, never with its line ends changed.
 games/racer/src/TrackData.hx -text
+# Windows' batch files keep CRLF line ends on every system, as cmd.exe expects.
+*.cmd text eol=crlf
