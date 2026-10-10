@@ -874,3 +874,19 @@ Rob's decision, for a tidier top level: the ten layer directories (math, core, p
 
 Rob's decision: `wgf.cmd` beside `wgf` runs it with Python (`py -3` when the Python launcher is there, else `python`), passing every argument and returning its exit code, so `wgf <command>` works in cmd and PowerShell as it does elsewhere, where it was `python wgf <command>`. It is the one file in shell, its only job finding Python, as CONVENTIONS now says; fetching a Python when there is none waits for the toolchain on demand (ROADMAP, "Distribution: when the API settles"). `wgf new` names it on Windows; `tools/check_cli.py`'s first step runs it from cmd and from PowerShell there (its usage through, an unknown command's exit code 2 kept), in the full tier's Windows steps and in CI's Windows job. `.gitattributes` keeps `*.cmd` CRLF on every checkout.
 
+
+## Milestone 2, step 10, compressed textures: the loader (2026-10-10)
+
+Read first: libwgt's `wgt_gfx_ktx.c` and its test, its texture loader's variants (`map_path`, the fallback, the compressed loader), its glTF's `WGR_texture_ktx` (the image read in prepare, the lister naming the variant with the texture's own image as its fallback), its GL frame test's BC7 against its PNG, and gfx-textures; wgrender-c's `tools/compress_textures.py` and `compress_model_textures.py`, which make the files (the next commit's).
+
+Carried whole: the KTX 1 parser (BC7, ASTC 4x4, ETC2 RGBA, their mipmaps, each way a file can be wrong refused with its reason) and its test; "name.ktx" as the first of name.bc7.ktx, name.astc.ktx, and name.etc2.ktx this GPU samples, else name.png, and a variant named outright as itself; the compressed loader, its levels uploaded as they are; glTF's `WGR_texture_ktx`, wgrender's name kept so its tool's files load as they are, the variant read in place of decoding the texture's own image and the lister naming the variant with the own image as its fallback (the asset part's candidates, already carried with step 2's tasks).
+
+Redesigned for libwgf:
+
+- **The fallback where the file is looked for.** libwgt chose the PNG at the create when the variant wasn't on disk (`fs_exists`), which can't be known on the web before a fetch; libwgf's compressed loader's fail requests name.png in its place (a loader's fail may now request another load of its resource, `wgf_core_load_priv.h` says), so a missing variant, and one the GPU won't take, fall back alike natively and on the web, the texture PENDING throughout.
+- **The GPU asked once.** libwgt asked sokol at each mapping, from a glTF's prepare on a worker too; libwgf asks once, on the main thread, at the first mapping once gfx runs (a create, or a glTF's lister, which runs before its prepare is queued), and keeps the answer.
+- **A glTF variant the asset part fell back from** is not read (it isn't local), so the texture's own image is decoded with no second warning.
+
+What it costs: a program that creates a texture links the compressed loader and the parser, which choose by the path at run time, as libwgt's do: ladder-2-textures 145.8 KB of gzip to 147.3, asset-loading (a glTF too) 156.4 to 158.1, gfx-environment 224.8 to 227.1; gfx-textures 148.3 against libwgt's 157.7. A program that loads no texture pays nothing: the GPU's formats were first asked at gfx's setup, which put gfx-hello3d, a same row with no texture, 0.1 KB past its target; they are asked at the first mapping instead. The size baseline is re-recorded for it in a commit of its own.
+
+Tests: the parser's (libwgt's); the texture test's mapping per GPU and each fallback, on the dummy backend (which samples no compressed format; a mask in its place for the tests); the glTF test's texture with a compressed image and no variant to use. The pixels of a real variant come with the example's files, next.

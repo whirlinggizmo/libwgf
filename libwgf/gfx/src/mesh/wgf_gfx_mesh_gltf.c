@@ -13,6 +13,7 @@
 #include "mesh/wgf_gfx_mesh_record_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "stage/wgf_gfx_model_priv.h"
+#include "texture/wgf_gfx_ktx_priv.h"
 #include "texture/wgf_gfx_texture_priv.h"
 #include "wgf_asset_priv.h" /* a resource made from a path: the asset part locates it */
 #include "wgf_core_fs_priv.h"
@@ -30,8 +31,7 @@
  * it names for the asset part (the lister, registered when this object is linked), and
  * wgf_mesh_create, the one call that references this object, so a program with no glTF
  * links none of cgltf (libwgt's design; its HISTORY, "The glTF leak"). libwgt's
- * wgt_gfx_mesh_gltf.c, without its skinning, animation, and compressed textures (milestone
- * 3's, and step 10's), and with the file's lights (KHR_lights_punctual), which libwgt didn't
+ * wgt_gfx_mesh_gltf.c, without its skinning and animation (milestone 3's), and with the file's lights (KHR_lights_punctual), which libwgt didn't
  * read. The file's node tree is kept in the mesh, for a model to make actors of, and each
  * of the file's meshes is a mesh of its own, shared by the nodes showing it. */
 
@@ -42,6 +42,8 @@ typedef wgf_gfx_priv_mesh_record_t mesh_t;
  * finishing. The loader holds one reference to each texture; materials add their own. */
 typedef struct gltf_image_t {
     void *decoded;        /* freed once uploaded */
+    void *ktx_file;       /* or a compressed file, read while preparing (ktx points into it) */
+    const wgf_gfx_priv_ktx_t *ktx;
     wgf_texture_t texture; /* 0: not uploaded (yet) */
     bool failed;          /* couldn't be read or decoded (warned) */
 } gltf_image_t;
@@ -149,6 +151,58 @@ static void decode_image(prepared_t *prepared, const cgltf_image *img)
     if (read != NULL) wgf_core_priv_fs_read_free(read);
 }
 
+/* Compressed textures: tools/compress_textures.py --gltf gives a texture the
+ * WGR_texture_ktx extension, {"source": <image>}, an image named "name.ktx" beside its
+ * own. The variant this GPU can sample (name.bc7.ktx, ...) is loaded instead of decoding
+ * the texture's own image; without one, or if it can't be read, the texture's own image
+ * is. libwgt's (wgrender's); the extension keeps wgrender's name, so the files its tool
+ * wrote load as they are. */
+#define KTX_EXTENSION "WGR_texture_ktx"
+
+static const cgltf_image *ktx_image(const cgltf_data *g, const cgltf_texture *t)
+{
+    cgltf_size i;
+    for (i = 0; t != NULL && i < t->extensions_count; i++) {
+        const char *source;
+        long index;
+        if (t->extensions[i].name == NULL || strcmp(t->extensions[i].name, KTX_EXTENSION) != 0 ||
+            t->extensions[i].data == NULL || (source = strstr(t->extensions[i].data, "\"source\"")) == NULL ||
+            (source = strchr(source, ':')) == NULL) {
+            continue;
+        }
+        index = strtol(source + 1, NULL, 10);
+        if (index >= 0 && (cgltf_size)index < g->images_count) return &g->images[index];
+    }
+    return NULL;
+}
+
+/* The variant this GPU can use of a texture's compressed image read (any thread): false
+ * when there is none, or it can't be used (warned), so the texture's own image is
+ * decoded instead. */
+static bool read_ktx(prepared_t *prepared, const cgltf_image *img)
+{
+    gltf_image_t *image = &prepared->images[img - prepared->gltf->images];
+    char uri[WGF_CORE_PRIV_FS_PATH_MAX], path[WGF_CORE_PRIV_FS_PATH_MAX];
+    const size_t n = img->uri != NULL ? strlen(img->uri) : 0;
+    if (image->ktx_file != NULL) return true;
+    if (image->failed || img->buffer_view != NULL || n < 4 || strcmp(img->uri + n - 4, ".ktx") != 0 ||
+        !wgf_gfx_priv_texture_ktx_path(img->uri, uri, sizeof(uri)) || strcmp(uri + strlen(uri) - 4, ".ktx") != 0 ||
+        !join_relative(prepared->path, uri, path, sizeof(path))) {
+        return false; /* not compressed for this GPU */
+    }
+    if (!wgf_core_priv_fs_exists(path)) { /* the asset part fell back to the texture's own image */
+        image->failed = true;
+        return false;
+    }
+    image->ktx_file = wgf_gfx_priv_texture_read_ktx(path, &image->ktx); /* warns */
+    if (image->ktx_file == NULL) {
+        wgf_log_warn("wgf_gfx_mesh: %s: using the texture's own image instead of %s", prepared->path, uri);
+        image->failed = true;
+        return false;
+    }
+    return true;
+}
+
 static wgf_texture_wrap_t gltf_wrap(cgltf_wrap_mode mode)
 {
     switch (mode) {
@@ -171,11 +225,15 @@ static void set_texture(prepared_t *prepared, wgf_material_t material, const cha
     int texcoord;
 
     if (view->texture == NULL) return;
-    if (view->texture->image == NULL) {
+    {
+        const cgltf_image *compressed = ktx_image(prepared->gltf, view->texture);
+        if (compressed != NULL) texture = prepared->images[compressed - prepared->gltf->images].texture;
+    }
+    if (texture == 0 && view->texture->image == NULL) {
         wgf_log_warn("wgf_gfx_mesh: %s: a texture has no image in a format it reads (PNG, JPEG); using the "
                      "placeholder texture",
                      prepared->path);
-    } else {
+    } else if (texture == 0) {
         texture = prepared->images[view->texture->image - prepared->gltf->images].texture;
     }
     if (texture == 0) {
@@ -588,6 +646,7 @@ static void discard(void *data)
     if (prepared->images != NULL) {
         for (i = 0; i < prepared->gltf->images_count; i++) {
             wgf_gfx_priv_texture_decoded_free(prepared->images[i].decoded);
+            wgf_gfx_priv_texture_ktx_free(prepared->images[i].ktx_file);
             if (prepared->images[i].texture != 0) wgf_resource_release(prepared->images[i].texture); /* materials hold theirs */
         }
     }
@@ -625,7 +684,10 @@ static void *prepare(const char *path)
     }
     /* the images textures use, decoded here: the slow part of most models */
     for (t = 0; t < prepared->gltf->textures_count; t++) {
-        if (prepared->gltf->textures[t].image != NULL) decode_image(prepared, prepared->gltf->textures[t].image);
+        const cgltf_texture *texture = &prepared->gltf->textures[t];
+        const cgltf_image *compressed = ktx_image(prepared->gltf, texture);
+        if (compressed != NULL && read_ktx(prepared, compressed)) continue; /* uploaded as it is: no decoding */
+        if (texture->image != NULL) decode_image(prepared, texture->image);
     }
     return prepared;
 }
@@ -724,6 +786,13 @@ static wgf_core_priv_load_step_t finish(void *data, wgf_handle_t resource)
     }
     while (prepared->next_image < prepared->gltf->images_count) {
         gltf_image_t *image = &prepared->images[prepared->next_image++];
+        if (image->ktx_file != NULL) {
+            image->texture = wgf_gfx_priv_texture_create_ktx(image->ktx, prepared->path); /* warns */
+            image->failed = image->texture == 0;
+            wgf_gfx_priv_texture_ktx_free(image->ktx_file);
+            image->ktx_file = NULL;
+            return WGF_CORE_PRIV_LOAD_MORE;
+        }
         if (image->decoded != NULL) {
             image->texture = wgf_gfx_priv_texture_create_decoded(image->decoded); /* takes it */
             image->decoded = NULL;
@@ -765,14 +834,21 @@ static void fail(wgf_handle_t resource)
 
 static const wgf_core_priv_loader_t loader = {"mesh", prepare, finish, discard, fail, NULL, true, NULL};
 
+static bool is_file_uri(const cgltf_image *img)
+{
+    return img != NULL && img->uri != NULL && img->buffer_view == NULL && strncmp(img->uri, "data:", 5) != 0;
+}
+
 /* The files a glTF names, for the asset part to make local with it (core's lister,
  * wgf_core_load_priv.h): its buffers, required; its images, optional (a missing one gets the
- * placeholder). */
+ * placeholder), and for a texture with a compressed file this GPU can use, that file
+ * instead of its own image, which is its fallback. libwgt's. */
 static void list_gltf_dependencies(const unsigned char *data, int size, wgf_core_priv_load_add_fn add, void *context)
 {
     cgltf_options options;
     cgltf_data *g = NULL;
-    cgltf_size i;
+    cgltf_size i, t;
+    unsigned char *need;
     memset(&options, 0, sizeof(options));
     if (cgltf_parse(&options, data, (cgltf_size)size, &g) != cgltf_result_success) {
         return; /* wgf_mesh_create reports the broken file */
@@ -782,11 +858,28 @@ static void list_gltf_dependencies(const unsigned char *data, int size, wgf_core
             add(g->buffers[i].uri, NULL, true, context);
         }
     }
-    for (i = 0; i < g->images_count; i++) {
-        if (g->images[i].uri != NULL && g->images[i].buffer_view == NULL && strncmp(g->images[i].uri, "data:", 5) != 0) {
-            add(g->images[i].uri, NULL, false, context);
+    need = (unsigned char *)calloc(g->images_count + 1, 1); /* 0 unknown, 1 yes, 2 no */
+    if (need != NULL) {
+        for (t = 0; t < g->textures_count; t++) {
+            const cgltf_image *compressed = ktx_image(g, &g->textures[t]);
+            if (compressed != NULL) need[compressed - g->images] = 2; /* only its variant */
+        }
+        for (t = 0; t < g->textures_count; t++) {
+            const cgltf_image *compressed = ktx_image(g, &g->textures[t]), *own = g->textures[t].image;
+            char uri[WGF_CORE_PRIV_FS_PATH_MAX];
+            if (is_file_uri(compressed) && wgf_gfx_priv_texture_ktx_path(compressed->uri, uri, sizeof(uri)) &&
+                strcmp(uri + strlen(uri) - 4, ".ktx") == 0) {
+                add(uri, is_file_uri(own) ? own->uri : NULL, false, context); /* its own image if it's missing */
+                if (own != NULL && need[own - g->images] == 0) need[own - g->images] = 2; /* unless another uses it */
+            } else if (own != NULL) {
+                need[own - g->images] = 1;
+            }
         }
     }
+    for (i = 0; i < g->images_count; i++) {
+        if (is_file_uri(&g->images[i]) && (need == NULL || need[i] != 2)) add(g->images[i].uri, NULL, false, context);
+    }
+    free(need);
     cgltf_free(g);
 }
 

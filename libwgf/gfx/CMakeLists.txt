@@ -29,6 +29,7 @@ wgf_layer(gfx
         src/text/wgf_gfx_font.c
         src/text/wgf_gfx_fontstash_impl.c
         src/text/wgf_gfx_text.c
+        src/texture/wgf_gfx_ktx.c
         src/texture/wgf_gfx_stb_impl.c
         src/texture/wgf_gfx_texture.c
     DEPS
@@ -54,6 +55,7 @@ if(NOT WIN32 AND NOT EMSCRIPTEN)
 endif()
 if(WGF_TESTS)
     wgf_test(gfx wgf_gfx_color_test)
+    wgf_test(gfx wgf_gfx_ktx_test)
     if(WGF_HEADLESS)
         wgf_test(gfx wgf_gfx_frame_test)
         wgf_test(gfx wgf_gfx_presentation_test)

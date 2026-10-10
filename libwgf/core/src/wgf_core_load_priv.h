@@ -42,7 +42,8 @@ typedef struct wgf_core_priv_loader_t {
     wgf_core_priv_load_step_t (*finish)(void *prepared, wgf_handle_t resource);
     /* Free prepared data, finished or not. */
     void (*discard)(void *prepared);
-    /* Main thread: the load failed; mark `resource` FAILED. */
+    /* Main thread: the load failed; mark `resource` FAILED, or request another load of
+       it (a fallback: a compressed texture's own image). */
     void (*fail)(wgf_handle_t resource);
     /* Main thread, optional: take a file still arriving (a streamed sound, natively),
        which will be at `path` once whole; `arrival` tells how it goes (the hooks'

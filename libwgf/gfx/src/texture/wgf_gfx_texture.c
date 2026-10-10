@@ -6,6 +6,7 @@
 
 #include "render/wgf_gfx_render_priv.h"
 #include "stb_image.h"
+#include "texture/wgf_gfx_ktx_priv.h"
 #include "texture/wgf_gfx_texture_priv.h"
 #include "wgf_asset_priv.h" /* a resource made from a path: the asset part locates it */
 #include "wgf_core_fs_priv.h"
@@ -15,9 +16,9 @@
 #include "wgf_log.h"
 
 /* Textures: a resource, loaded on create through core's load pipeline. A worker reads
- * and decodes the file (stb_image) and builds its mipmaps; the main thread uploads it.
- * libwgt's, without what milestone 1 doesn't draw: compressed (KTX) textures, render
- * targets, a glTF file's images, and the copy of the alpha picking reads. */
+ * and decodes the file (stb_image) and builds its mipmaps, or reads a compressed (KTX)
+ * file as it is; the main thread uploads it. libwgt's, without what isn't drawn yet:
+ * render targets (step 12's) and the copy of the alpha picking reads (milestone 2.5's). */
 
 #define CHECKER_SIZE 64
 #define CHECKER_SQUARE 8
@@ -89,25 +90,24 @@ sg_sampler wgf_gfx_priv_texture_sampler(wgf_texture_wrap_t wrap_u, wgf_texture_w
     return *sampler;
 }
 
-/* An RGBA image of `mip_count` levels, each half the last, and a view of it; false,
- * with nothing made, when the GPU refused. */
-static bool make_image(int width, int height, int mip_count, unsigned char *const *levels, sg_image *image,
-                       sg_view *view)
+/* An image of `format` with `mip_count` levels, each `sizes` bytes, and a view of it;
+ * false, with nothing made, when the GPU refused. */
+static bool make_image_of(int width, int height, sg_pixel_format format, int mip_count,
+                          const unsigned char *const *levels, const size_t *sizes, const char *label, sg_image *image,
+                          sg_view *view)
 {
     sg_image_desc image_desc;
     sg_view_desc view_desc;
-    int level, w = width, h = height;
+    int level;
     memset(&image_desc, 0, sizeof(image_desc));
     image_desc.width = width;
     image_desc.height = height;
     image_desc.num_mipmaps = mip_count;
-    image_desc.pixel_format = SG_PIXELFORMAT_RGBA8;
-    image_desc.label = "wgf-texture";
+    image_desc.pixel_format = format;
+    image_desc.label = label;
     for (level = 0; level < mip_count; level++) {
         image_desc.data.mip_levels[level].ptr = levels[level];
-        image_desc.data.mip_levels[level].size = (size_t)w * (size_t)h * 4;
-        w = w > 1 ? w / 2 : 1;
-        h = h > 1 ? h / 2 : 1;
+        image_desc.data.mip_levels[level].size = sizes[level];
     }
     *image = sg_make_image(&image_desc);
     if (sg_query_image_state(*image) != SG_RESOURCESTATE_VALID) {
@@ -123,6 +123,22 @@ static bool make_image(int width, int height, int mip_count, unsigned char *cons
         return false;
     }
     return true;
+}
+
+/* An RGBA image of `mip_count` levels, each half the last, and a view of it. */
+static bool make_image(int width, int height, int mip_count, unsigned char *const *levels, sg_image *image,
+                       sg_view *view)
+{
+    const unsigned char *pointers[SG_MAX_MIPMAPS];
+    size_t sizes[SG_MAX_MIPMAPS];
+    int level, w = width, h = height;
+    for (level = 0; level < mip_count; level++) {
+        pointers[level] = levels[level];
+        sizes[level] = (size_t)w * (size_t)h * 4;
+        w = w > 1 ? w / 2 : 1;
+        h = h > 1 ? h / 2 : 1;
+    }
+    return make_image_of(width, height, SG_PIXELFORMAT_RGBA8, mip_count, pointers, sizes, "wgf-texture", image, view);
 }
 
 /* --- the loader ------------------------------------------------------------ */
@@ -196,6 +212,19 @@ static void *prepare(const char *path)
     return decoded;
 }
 
+/* A texture's new image, READY: loaded again (wgf_asset_reload), the old image goes
+ * only now the new one is made. */
+static void loaded(wgf_handle_t resource, texture_t *texture_ptr, sg_image image, sg_view view, int width, int height)
+{
+    if (texture_ptr->view.id != SG_INVALID_ID) sg_destroy_view(texture_ptr->view);
+    if (texture_ptr->image.id != SG_INVALID_ID) sg_destroy_image(texture_ptr->image);
+    texture_ptr->image = image;
+    texture_ptr->view = view;
+    texture_ptr->width = width;
+    texture_ptr->height = height;
+    wgf_core_priv_resource_loaded(resource, NULL);
+}
+
 static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
 {
     const decoded_t *decoded = (const decoded_t *)prepared;
@@ -209,14 +238,7 @@ static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
                      decoded->width, decoded->height);
         return WGF_CORE_PRIV_LOAD_FAILED;
     }
-    /* loaded again (wgf_asset_reload): the old image goes only now the new one is made */
-    if (texture_ptr->view.id != SG_INVALID_ID) sg_destroy_view(texture_ptr->view);
-    if (texture_ptr->image.id != SG_INVALID_ID) sg_destroy_image(texture_ptr->image);
-    texture_ptr->image = image;
-    texture_ptr->view = view;
-    texture_ptr->width = decoded->width;
-    texture_ptr->height = decoded->height;
-    wgf_core_priv_resource_loaded(resource, NULL);
+    loaded(resource, texture_ptr, image, view, decoded->width, decoded->height);
     return WGF_CORE_PRIV_LOAD_DONE;
 }
 
@@ -226,6 +248,169 @@ static void fail(wgf_handle_t resource)
 }
 
 static const wgf_core_priv_loader_t loader = {"texture", prepare, finish, discard, fail, NULL, true, NULL};
+
+/* --- compressed textures (KTX) ---------------------------------------------- */
+
+/* textures/rock.ktx names a texture compressed for GPUs (tools/compress_textures.py):
+ * rock.bc7.ktx (desktops), rock.astc.ktx (phones), rock.etc2.ktx (older phones), and
+ * rock.png for anything else. The first this GPU can sample is the one loaded. libwgt's
+ * (wgrender's). */
+static const struct {
+    const char *suffix;
+    sg_pixel_format format;
+} KTX_VARIANTS[] = {
+    {".bc7.ktx", SG_PIXELFORMAT_BC7_RGBA},
+    {".astc.ktx", SG_PIXELFORMAT_ASTC_4x4_RGBA},
+    {".etc2.ktx", SG_PIXELFORMAT_ETC2_RGBA8},
+};
+enum { KTX_VARIANT_COUNT = sizeof(KTX_VARIANTS) / sizeof(KTX_VARIANTS[0]) };
+
+/* Bit i: variant i usable; -1 not asked yet. Asked of the GPU on the main thread, the
+ * first time a path is mapped once gfx runs (a create, or a glTF's lister, which runs in
+ * a frame), not at gfx's setup, so a program that loads no texture links none of this.
+ * A glTF's prepare on a worker maps again only after its lister did, so it reads what
+ * its job's queueing published. Before gfx runs there is no GPU to ask: the PNG loads,
+ * and it is asked later. A test's mask, when set (>= 0), in its place. */
+static int ktx_supported = -1;
+static int ktx_override = -1;
+
+static bool ends_with(const char *s, const char *suffix)
+{
+    const size_t n = strlen(s), m = strlen(suffix);
+    return n >= m && strcmp(s + n - m, suffix) == 0;
+}
+
+void wgf_gfx_priv_texture_set_ktx_support(int mask)
+{
+    ktx_override = mask;
+}
+
+/* Which variant `path` names outright (name.bc7.ktx), or -1. */
+static int variant_of(const char *path)
+{
+    int i;
+    for (i = 0; i < KTX_VARIANT_COUNT; i++) {
+        if (ends_with(path, KTX_VARIANTS[i].suffix)) return i;
+    }
+    return -1;
+}
+
+bool wgf_gfx_priv_texture_ktx_path(const char *path, char *out, size_t out_size)
+{
+    int mask, i;
+    size_t stem;
+    if (path == NULL || !ends_with(path, ".ktx")) return false;
+    if (ktx_supported < 0 && wgf_gfx_priv_render_is_running()) {
+        ktx_supported = 0;
+        for (i = 0; i < KTX_VARIANT_COUNT; i++) {
+            if (sg_query_pixelformat(KTX_VARIANTS[i].format).sample) ktx_supported |= 1 << i;
+        }
+    }
+    mask = ktx_override >= 0 ? ktx_override : ktx_supported > 0 ? ktx_supported : 0;
+    if (variant_of(path) >= 0) return snprintf(out, out_size, "%s", path) < (int)out_size;
+    stem = strlen(path) - 4;
+    for (i = 0; i < KTX_VARIANT_COUNT; i++) {
+        if ((mask >> i) & 1) {
+            return snprintf(out, out_size, "%.*s%s", (int)stem, path, KTX_VARIANTS[i].suffix) < (int)out_size;
+        }
+    }
+    return snprintf(out, out_size, "%.*s.png", (int)stem, path) < (int)out_size; /* no compressed format here */
+}
+
+typedef struct ktx_file_t {
+    unsigned char *bytes; /* the file; ktx points into it */
+    wgf_gfx_priv_ktx_t ktx;
+} ktx_file_t;
+
+static void discard_ktx(void *prepared)
+{
+    ktx_file_t *file = (ktx_file_t *)prepared;
+    if (file == NULL) return;
+    if (file->bytes != NULL) wgf_core_priv_fs_read_free(file->bytes);
+    free(file);
+}
+
+void *wgf_gfx_priv_texture_read_ktx(const char *path, const wgf_gfx_priv_ktx_t **ktx)
+{
+    int size = 0;
+    const char *error = NULL;
+    ktx_file_t *file = (ktx_file_t *)calloc(1, sizeof(*file));
+    if (file == NULL) return NULL;
+    if (!wgf_core_priv_fs_read(path, &file->bytes, &size)) {
+        wgf_log_warn("wgf_gfx_texture: %s: couldn't be read", path);
+        discard_ktx(file);
+        return NULL;
+    }
+    if (!wgf_gfx_priv_ktx_parse(file->bytes, (size_t)size, &file->ktx, &error)) {
+        wgf_log_warn("wgf_gfx_texture: %s: %s", path, error);
+        discard_ktx(file);
+        return NULL;
+    }
+    if (ktx != NULL) *ktx = &file->ktx;
+    return file;
+}
+
+void wgf_gfx_priv_texture_ktx_free(void *file)
+{
+    discard_ktx(file);
+}
+
+static void *prepare_ktx(const char *path)
+{
+    return wgf_gfx_priv_texture_read_ktx(path, NULL);
+}
+
+/* The compressed levels as they are, in an image and its view: false (warned, naming
+ * `what`) when this GPU can't sample the format, or refused it. */
+static bool make_ktx_image(const wgf_gfx_priv_ktx_t *ktx, const char *what, sg_image *image, sg_view *view)
+{
+    if (!sg_query_pixelformat(ktx->format).sample) {
+        wgf_log_warn("wgf_gfx_texture: %s: this GPU can't sample its format", what);
+        return false;
+    }
+    if (!make_image_of(ktx->width, ktx->height, ktx->format, ktx->mip_count, ktx->levels, ktx->sizes,
+                       "wgf-texture-ktx", image, view)) {
+        wgf_log_warn("wgf_gfx_texture: %s: the GPU didn't take it (%d by %d)", what, ktx->width, ktx->height);
+        return false;
+    }
+    return true;
+}
+
+static wgf_core_priv_load_step_t finish_ktx(void *prepared, wgf_handle_t resource)
+{
+    const wgf_gfx_priv_ktx_t *ktx = &((const ktx_file_t *)prepared)->ktx;
+    texture_t *texture_ptr = texture_of(resource);
+    sg_image image = {SG_INVALID_ID};
+    sg_view view = {SG_INVALID_ID};
+    if (texture_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
+    if (!wgf_gfx_priv_render_is_running()) return WGF_CORE_PRIV_LOAD_MORE; /* no GPU yet: wait for one */
+    if (!make_ktx_image(ktx, texture_ptr->resource.found, &image, &view)) return WGF_CORE_PRIV_LOAD_FAILED;
+    loaded(resource, texture_ptr, image, view, ktx->width, ktx->height);
+    return WGF_CORE_PRIV_LOAD_DONE;
+}
+
+/* This GPU's variant of a plain "name.ktx" missing or unusable: the PNG beside it, a
+ * load of its own, the texture PENDING all the while. Here, where the file was looked
+ * for, so the web (where nothing is known to exist before it is fetched) falls back as
+ * natively. libwgt asked the file system first, at the create. A variant named outright
+ * has no fallback. */
+static void fail_ktx(wgf_handle_t resource)
+{
+    texture_t *texture_ptr = texture_of(resource);
+    char png[WGF_CORE_PRIV_FS_PATH_MAX];
+    if (texture_ptr != NULL && ends_with(texture_ptr->resource.path, ".ktx") &&
+        variant_of(texture_ptr->resource.path) < 0 &&
+        snprintf(png, sizeof(png), "%.*s.png", (int)(strlen(texture_ptr->resource.path) - 4),
+                 texture_ptr->resource.path) < (int)sizeof(png)) {
+        wgf_log_warn("wgf_gfx_texture: %s not loaded; using %s instead", texture_ptr->resource.found, png);
+        snprintf(texture_ptr->resource.found, sizeof(texture_ptr->resource.found), "%s", png);
+        if (wgf_core_priv_load_request(&loader, png, resource)) return;
+    }
+    fail(resource);
+}
+
+static const wgf_core_priv_loader_t ktx_loader = {"compressed texture", prepare_ktx, finish_ktx, discard_ktx,
+                                                  fail_ktx, NULL, true, NULL};
 
 /* --- an image of another file's (a glTF's) ------------------------------------ */
 
@@ -281,6 +466,21 @@ wgf_texture_t wgf_gfx_priv_texture_create_decoded(void *decoded_data)
     return texture;
 }
 
+wgf_texture_t wgf_gfx_priv_texture_create_ktx(const wgf_gfx_priv_ktx_t *ktx, const char *what)
+{
+    wgf_texture_t texture = 0;
+    texture_t *texture_ptr;
+    if (ensure_pool()) texture = wgf_core_priv_resource_add(WGF_CORE_PRIV_HANDLE_KIND_TEXTURE);
+    texture_ptr = texture_of(texture);
+    if (texture_ptr == NULL || !make_ktx_image(ktx, what, &texture_ptr->image, &texture_ptr->view)) {
+        if (texture != 0) wgf_resource_release(texture);
+        return 0;
+    }
+    texture_ptr->width = ktx->width;
+    texture_ptr->height = ktx->height; /* READY as it was added: made from numbers */
+    return texture;
+}
+
 wgf_texture_t wgf_gfx_priv_texture_get_placeholder(void)
 {
     return placeholder;
@@ -288,10 +488,16 @@ wgf_texture_t wgf_gfx_priv_texture_get_placeholder(void)
 
 /* --- the public API --------------------------------------------------------- */
 
+/* The file to read for `path`: for a plain "name.ktx", this GPU's variant, or the PNG
+ * when it has none. */
+static void map_path(const char *path, char *out, size_t out_size)
+{
+    if (!wgf_gfx_priv_texture_ktx_path(path, out, out_size)) snprintf(out, out_size, "%s", path);
+}
+
 static const wgf_core_priv_loader_t *loader_of(const char *path)
 {
-    (void)path;
-    return &loader;
+    return ends_with(path, ".ktx") ? &ktx_loader : &loader;
 }
 
 static void init_texture(void *record)
@@ -311,7 +517,7 @@ static void free_texture(wgf_handle_t texture, void *record)
     if (texture_ptr->image.id != SG_INVALID_ID) sg_destroy_image(texture_ptr->image);
 }
 
-/* Its file side (the loader) is set by wgf_texture_create, the only way a texture comes
+/* Its file side (map, loader) is set by wgf_texture_create, the only way a texture comes
  * from a file: gfx's start makes the placeholder, so a kind naming the loader from the
  * start would link the image decoder into every program, those that load no image too
  * (libwgt's measurement, its HISTORY's "Release web sizes"). */
@@ -321,6 +527,7 @@ static wgf_core_priv_resource_kind_t resource_kind = {.create = "wgf_texture_cre
 
 wgf_texture_t wgf_texture_create(const char *path)
 {
+    resource_kind.map = map_path;
     resource_kind.loader = loader_of;
     return ensure_pool() ? wgf_asset_priv_resource_create(WGF_CORE_PRIV_HANDLE_KIND_TEXTURE, path) : 0;
 }
@@ -439,6 +646,7 @@ void wgf_gfx_priv_texture_shutdown(void)
     int u, v, f, m;
     placeholder = 0; /* freed with the rest */
     placeholder_view.id = SG_INVALID_ID;
+    ktx_supported = -1; /* another GPU, perhaps, at the next start */
     if (pool_ready) {
         wgf_core_priv_resource_unregister(&texture_pool);
         wgf_core_priv_handle_pool_destroy(&texture_pool);

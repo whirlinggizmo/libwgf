@@ -4032,9 +4032,16 @@ export function wgf_text_get_valign(text) {
 
 // wgf: call wgf_texture_create
 /**
- * A texture from an image file: PNG, JPEG, BMP, TGA, or GIF (its first frame). 0 only
- * when there is no room for another texture; a path or file that can't be loaded gives
- * a texture that FAILED. wgf_resource_get_path gives the file it read.
+ * A texture from an image file: PNG, JPEG, BMP, TGA, or GIF (its first frame), or a
+ * compressed one. "name.ktx" names a texture compressed for GPUs
+ * (tools/compress_textures.py, which writes them beside name.png): the first of
+ * name.bc7.ktx (desktops), name.astc.ktx (phones), and name.etc2.ktx (older phones) this
+ * GPU can sample is loaded, as it is, with no decoding and a quarter of the memory; where
+ * it can sample none, or its file is missing or can't be used (warned), name.png is.
+ * Made before the window opens there is no GPU to ask, so name.png. A variant named
+ * outright (name.bc7.ktx) is loaded or FAILED, with no PNG in its place. 0 only when
+ * there is no room for another texture; a path or file that can't be loaded gives a
+ * texture that FAILED. wgf_resource_get_path gives the file it read.
  */
 export function wgf_texture_create(path) {
     const mark = host["stackSave"]();

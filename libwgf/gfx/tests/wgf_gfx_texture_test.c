@@ -24,6 +24,8 @@
  * a PENDING one draws nothing, a FAILED one draws the placeholder. Loaded again
  * (wgf_asset_reload): the same handle, READY all the while, at the new file's size once
  * it is in; a broken file keeps what it had; a FAILED one whose file is there now is READY.
+ * Compressed: "name.ktx" is this GPU's variant, or the PNG beside it where it has none,
+ * the variant is missing, or it can't be used; a variant named outright has no fallback.
  * Pixels: wgf_gfx_texture_web_test. */
 
 static int failures;
@@ -86,6 +88,78 @@ static void write_file(const char *path, const unsigned char *data, int size)
     int i;
     for (i = 0; i < 1000 && wgf_fs_task_get_status(task) == WGF_FS_TASK_STATUS_PENDING; i++) wgf_core_priv_update();
     wgf_fs_task_destroy(task);
+}
+
+/* A BC7 KTX file, 4 by 4, one level: its one block. */
+static int make_ktx(unsigned char *file)
+{
+    static const unsigned char identifier[12] = {0xAB, 'K', 'T', 'X', ' ', '1', '1', 0xBB, '\r', '\n', 0x1A, '\n'};
+    static const unsigned int fields[13] = {0x04030201u, 0, 1, 0, 0x8E8C, 0x1907, 4, 4, 0, 0, 1, 1, 0};
+    int i;
+    memset(file, 0, 84);
+    memcpy(file, identifier, sizeof(identifier));
+    for (i = 0; i < 13; i++) {
+        file[12 + i * 4] = (unsigned char)fields[i];
+        file[13 + i * 4] = (unsigned char)(fields[i] >> 8);
+    }
+    file[64] = 16; /* the level's size, then its block */
+    return 84;
+}
+
+/* `path` loaded (updated until it isn't PENDING), and its status. */
+static wgf_resource_status_t load(const char *path, wgf_texture_t *texture)
+{
+    *texture = wgf_texture_create(path);
+    settle(texture, 1);
+    return wgf_resource_get_status(*texture);
+}
+
+static void compressed(void)
+{
+    unsigned char ktx[84];
+    char out[64];
+    wgf_texture_t texture;
+
+    expect(wgf_gfx_priv_texture_ktx_path("a/rock.ktx", out, sizeof(out)) && strcmp(out, "a/rock.png") == 0,
+           "the dummy GPU samples no compressed format: name.ktx is name.png");
+    wgf_gfx_priv_texture_set_ktx_support(1 | 2 | 4);
+    expect(wgf_gfx_priv_texture_ktx_path("a/rock.ktx", out, sizeof(out)) && strcmp(out, "a/rock.bc7.ktx") == 0,
+           "BC7 first");
+    wgf_gfx_priv_texture_set_ktx_support(2 | 4);
+    expect(wgf_gfx_priv_texture_ktx_path("a/rock.ktx", out, sizeof(out)) && strcmp(out, "a/rock.astc.ktx") == 0,
+           "then ASTC");
+    wgf_gfx_priv_texture_set_ktx_support(4);
+    expect(wgf_gfx_priv_texture_ktx_path("a/rock.ktx", out, sizeof(out)) && strcmp(out, "a/rock.etc2.ktx") == 0,
+           "then ETC2");
+    expect(wgf_gfx_priv_texture_ktx_path("a/rock.bc7.ktx", out, sizeof(out)) && strcmp(out, "a/rock.bc7.ktx") == 0,
+           "a variant named outright is itself");
+    expect(!wgf_gfx_priv_texture_ktx_path("a/rock.png", out, sizeof(out)) &&
+               !wgf_gfx_priv_texture_ktx_path("a/rock.ktx", out, 8),
+           "false for a path that isn't a .ktx, or too long");
+
+    write_file("images/crate.png", rock_png, (int)sizeof(rock_png));
+    write_file("images/stone.png", rock_png, (int)sizeof(rock_png));
+    write_file("images/stone.bc7.ktx", ktx, make_ktx(ktx));
+    wgf_gfx_priv_texture_set_ktx_support(0);
+    expect(load("images/crate.ktx", &texture) == WGF_RESOURCE_STATUS_READY &&
+               strcmp(wgf_resource_get_path(texture), "images/crate.png") == 0 && wgf_texture_get_width(texture) == 2,
+           "with no variant this GPU samples, name.ktx loads name.png");
+    wgf_resource_release(texture);
+    wgf_gfx_priv_texture_set_ktx_support(1);
+    expect(load("images/crate.ktx", &texture) == WGF_RESOURCE_STATUS_READY &&
+               strcmp(wgf_resource_get_path(texture), "images/crate.png") == 0,
+           "its variant missing, the PNG beside it (warned)");
+    wgf_resource_release(texture);
+    expect(load("images/stone.ktx", &texture) == WGF_RESOURCE_STATUS_READY &&
+               strcmp(wgf_resource_get_path(texture), "images/stone.png") == 0,
+           "its variant there but not one the GPU takes (the dummy samples none): the PNG");
+    wgf_resource_release(texture);
+    wgf_gfx_priv_texture_set_ktx_support(-1);
+    expect(load("images/stone.bc7.ktx", &texture) == WGF_RESOURCE_STATUS_FAILED,
+           "a variant named outright that the GPU can't sample FAILED, with no fallback");
+    wgf_resource_release(texture);
+    expect(load("images/nothing.ktx", &texture) == WGF_RESOURCE_STATUS_FAILED, "no variant and no PNG: FAILED");
+    wgf_resource_release(texture);
 }
 
 /* The vertices drawing `texture` records. */
@@ -197,6 +271,8 @@ int main(void)
                "READY now");
         remove_file("images/missing.png"); /* missing again for the next run */
     }
+
+    compressed();
 
     wgf_resource_release(rock);
     wgf_resource_release(missing);

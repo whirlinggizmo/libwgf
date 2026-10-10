@@ -6,6 +6,7 @@
 #include "mesh/wgf_gfx_mesh_record_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "stage/wgf_gfx_stage3d_priv.h"
+#include "texture/wgf_gfx_texture_priv.h"
 #include "wgf_camera3d.h"
 #include "wgf_actor.h"
 #include "wgf_asset.h"
@@ -21,6 +22,7 @@
 #include "wgf_platform_priv.h"
 #include "wgf_resource.h"
 #include "wgf_stage3d.h"
+#include "wgf_texture.h"
 #include "wgf_time.h"
 
 /* glTF files, headless: a .gltf with its buffer beside it and the same file as a .glb load
@@ -34,7 +36,9 @@
  * (wgf_asset_reload): READY all the while, each kept node's actor and mesh handle kept,
  * moved and given the new triangles, a node gone with its actor, a new one made, the
  * game's own actor under a kept node kept; through its buffer saved too; a broken file
- * keeping what it had; a FAILED file that now loads making its tree. */
+ * keeping what it had; a FAILED file that now loads making its tree. A texture with a
+ * compressed image (WGR_texture_ktx) whose variant is missing, or with no variant this GPU
+ * samples, is its own image. */
 
 static int failures;
 
@@ -95,6 +99,27 @@ static void settle(const wgf_mesh_t *meshes, int count)
     "\"buffers\":[{" buffer "\"byteLength\":36}],\"bufferViews\":[{\"buffer\":0,\"byteLength\":36}],"                  \
     "\"accessors\":[{\"bufferView\":0,\"componentType\":5126,\"count\":3,\"type\":\"VEC3\","                          \
     "\"min\":[0,0,0],\"max\":[1,1,0]}]}"
+
+/* TRI_JSON's triangle, textured: its texture's own image crate.png, its compressed one
+ * crate.ktx. */
+static const char crated[] =
+    "{\"asset\":{\"version\":\"2.0\"},\"extensionsUsed\":[\"WGR_texture_ktx\"],"
+    "\"scene\":0,\"scenes\":[{\"nodes\":[0]}],\"nodes\":[{\"mesh\":0}],"
+    "\"meshes\":[{\"primitives\":[{\"attributes\":{\"POSITION\":0},\"material\":0}]}],"
+    "\"materials\":[{\"pbrMetallicRoughness\":{\"baseColorTexture\":{\"index\":0}}}],"
+    "\"textures\":[{\"source\":0,\"extensions\":{\"WGR_texture_ktx\":{\"source\":1}}}],"
+    "\"images\":[{\"uri\":\"crate.png\"},{\"uri\":\"crate.ktx\"}],"
+    "\"buffers\":[{\"uri\":\"tri.bin\",\"byteLength\":36}],\"bufferViews\":[{\"buffer\":0,\"byteLength\":36}],"
+    "\"accessors\":[{\"bufferView\":0,\"componentType\":5126,\"count\":3,\"type\":\"VEC3\","
+    "\"min\":[0,0,0],\"max\":[1,1,0]}]}";
+
+/* A 2x2 PNG. */
+static const unsigned char crate_png[] = {
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00,
+    0x02, 0x00, 0x00, 0x00, 0x02, 0x08, 0x06, 0x00, 0x00, 0x00, 0x72, 0xb6, 0x0d, 0x24, 0x00, 0x00, 0x00, 0x13, 0x49,
+    0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0xf8, 0xcf, 0xc0, 0xf0, 0x1f, 0x08, 0x41, 0xe0, 0x3f, 0x18, 0x00, 0x00, 0x3f,
+    0xd2, 0x08, 0xf8, 0x65, 0x89, 0xa5, 0xdd, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+};
 
 static const float tri[9] = {0, 0, 0, 1, 0, 0, 0, 1, 0};
 static const float big[9] = {0, 0, 0, 2, 0, 0, 0, 2, 0};
@@ -344,6 +369,31 @@ int main(void)
         expect_tree(root, failed[0], "a FAILED file's model, its tree made once it loads");
         wgf_actor_destroy(root, WGF_ACTOR_DESTROY_CHILDREN);
         remove_file("models/missing.gltf"); /* missing again for the next run */
+    }
+
+    /* a compressed texture's image: its own where there is no variant to use */
+    {
+        static const int masks[2] = {0, 1}; /* no variant sampled; BC7, whose file is missing */
+        static const char *const paths[2] = {"models/crated.gltf", "models/crated_bc7.gltf"};
+        int i;
+        for (i = 0; i < 2; i++) write_file(paths[i], crated, (int)sizeof(crated) - 1);
+        write_file("models/crate.png", crate_png, (int)sizeof(crate_png));
+        for (i = 0; i < 2; i++) {
+            wgf_mesh_t crated_mesh;
+            wgf_texture_t texture;
+            wgf_gfx_priv_texture_set_ktx_support(masks[i]);
+            crated_mesh = wgf_mesh_create(paths[i]);
+            settle(&crated_mesh, 1);
+            texture = wgf_mesh_get_material_count(crated_mesh) == 1
+                          ? wgf_material_get_texture(wgf_mesh_get_material(crated_mesh, 0), "base_color_texture")
+                          : 0;
+            expect(wgf_resource_get_status(crated_mesh) == WGF_RESOURCE_STATUS_READY && texture != 0 &&
+                       wgf_texture_get_width(texture) == 2,
+                   i == 0 ? "no compressed format sampled: the texture's own image"
+                          : "its variant missing: the texture's own image");
+            wgf_resource_release(crated_mesh);
+        }
+        wgf_gfx_priv_texture_set_ktx_support(-1);
     }
 
     /* a mesh let go of while it loads */
