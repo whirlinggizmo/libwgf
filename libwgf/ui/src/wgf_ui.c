@@ -33,6 +33,8 @@
 #define ELEMENTS_MAX 2048
 #define WORDS_MAX 8192  /* Clay's cache of measured words */
 #define TEXT_BLOCK 16384
+#define STYLE_COLORS 9  /* wgf_ui_color_t's */
+#define STYLE_VALUES 9  /* wgf_ui_value_t's */
 
 enum { KIND_ROOT, KIND_BOX, KIND_PANEL };
 
@@ -80,12 +82,12 @@ static struct {
     char *scratch; /* text NUL-terminated for measuring and drawing */
     size_t scratch_size;
 
-    wgf_color_t colors[7];
-    float values[7];
+    wgf_color_t colors[STYLE_COLORS];
+    float values[STYLE_VALUES];
     wgf_font_t font;
 } ui;
 
-static const wgf_color_t default_colors[7] = {
+static const wgf_color_t default_colors[STYLE_COLORS] = {
     0xE6E9F0FFu, /* text */
     0x1A1E28E6u, /* panel */
     0x2E3546FFu, /* button */
@@ -93,8 +95,10 @@ static const wgf_color_t default_colors[7] = {
     0x232836FFu, /* pressed */
     0xF2F4F8FFu, /* button text */
     0xFFD040FFu, /* focus */
+    0x2E3546FFu, /* bar: a button's color */
+    0x5AA0E6FFu, /* bar fill */
 };
-static const float default_values[7] = {20.0f, 24.0f, 12.0f, 8.0f, 24.0f, 200.0f, 3.0f};
+static const float default_values[STYLE_VALUES] = {20.0f, 24.0f, 12.0f, 8.0f, 24.0f, 200.0f, 3.0f, 300.0f, 12.0f};
 
 /* ---- the style ---------------------------------------------------------------------- */
 
@@ -117,7 +121,7 @@ static void style_ready(void)
 bool wgf_ui_set_style_color(wgf_ui_color_t which, wgf_color_t color)
 {
     style_ready();
-    if ((int)which < 0 || (int)which >= 7) return false;
+    if ((int)which < 0 || (int)which >= STYLE_COLORS) return false;
     ui.colors[which] = color;
     return true;
 }
@@ -125,13 +129,13 @@ bool wgf_ui_set_style_color(wgf_ui_color_t which, wgf_color_t color)
 wgf_color_t wgf_ui_get_style_color(wgf_ui_color_t which)
 {
     style_ready();
-    return (int)which >= 0 && (int)which < 7 ? ui.colors[which] : 0;
+    return (int)which >= 0 && (int)which < STYLE_COLORS ? ui.colors[which] : 0;
 }
 
 bool wgf_ui_set_style_value(wgf_ui_value_t which, float value)
 {
     style_ready();
-    if ((int)which < 0 || (int)which >= 7 || !(value >= 0.0f) || !isfinite(value)) return false;
+    if ((int)which < 0 || (int)which >= STYLE_VALUES || !(value >= 0.0f) || !isfinite(value)) return false;
     ui.values[which] = value;
     return true;
 }
@@ -139,7 +143,7 @@ bool wgf_ui_set_style_value(wgf_ui_value_t which, float value)
 float wgf_ui_get_style_value(wgf_ui_value_t which)
 {
     style_ready();
-    return (int)which >= 0 && (int)which < 7 ? ui.values[which] : 0.0f;
+    return (int)which >= 0 && (int)which < STYLE_VALUES ? ui.values[which] : 0.0f;
 }
 
 bool wgf_ui_set_style_font(wgf_font_t font)
@@ -638,6 +642,34 @@ bool wgf_ui_button(const char *id, const char *text)
     Clay__CloseElement();
     if (!add_button(id)) wgf_log_error("wgf_ui: out of memory for the frame's buttons");
     return activated;
+}
+
+bool wgf_ui_progress(float value)
+{
+    Clay_ElementDeclaration track, fill;
+    const float height = ui.values[WGF_UI_VALUE_BAR_HEIGHT];
+    const Clay_CornerRadius radius = corners(fminf(ui.values[WGF_UI_VALUE_CORNER_RADIUS], height * 0.5f));
+    if (!child("wgf_ui_progress")) return false;
+    value = value > 0.0f ? (value < 1.0f ? value : 1.0f) : 0.0f; /* NaN too: 0 */
+    memset(&track, 0, sizeof(track));
+    sizing(&track.layout.sizing.width, WGF_UI_SIZING_FIXED, ui.values[WGF_UI_VALUE_BAR_WIDTH]);
+    sizing(&track.layout.sizing.height, WGF_UI_SIZING_FIXED, height);
+    track.backgroundColor = clay_color(ui.colors[WGF_UI_COLOR_BAR]);
+    track.cornerRadius = radius;
+    Clay__OpenElement();
+    Clay__ConfigureOpenElement(track);
+    if (value > 0.0f) {
+        memset(&fill, 0, sizeof(fill));
+        sizing(&fill.layout.sizing.width, WGF_UI_SIZING_PERCENT, value);
+        sizing(&fill.layout.sizing.height, WGF_UI_SIZING_GROW, 0.0f);
+        fill.backgroundColor = clay_color(ui.colors[WGF_UI_COLOR_BAR_FILL]);
+        fill.cornerRadius = radius;
+        Clay__OpenElement();
+        Clay__ConfigureOpenElement(fill);
+        Clay__CloseElement();
+    }
+    Clay__CloseElement();
+    return true;
 }
 
 /* ---- the frame ---------------------------------------------------------------------- */

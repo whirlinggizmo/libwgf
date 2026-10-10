@@ -13,4 +13,6 @@ enum abstract UiColor(Int) from Int to Int {
 	var BUTTON_PRESSED = 4;
 	var BUTTON_TEXT = 5;
 	var FOCUS = 6;
+	var BAR = 7;
+	var BAR_FILL = 8;
 }

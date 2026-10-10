@@ -561,6 +561,7 @@ class Reach {
 		"wgf_ui_get_style_font",
 		"wgf_ui_get_style_value",
 		"wgf_ui_label",
+		"wgf_ui_progress",
 		"wgf_ui_reset_style",
 		"wgf_ui_set_align",
 		"wgf_ui_set_color",
@@ -664,7 +665,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...655) 0];
+	static final counts:Array<Int> = [for (_ in 0...656) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

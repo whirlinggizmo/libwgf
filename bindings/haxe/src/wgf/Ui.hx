@@ -128,6 +128,16 @@ class Ui {
 		return Raw.wgf_ui_button(id, text);
 
 	/**
+	    A bar showing `value`, 0 (empty) to 1 (full), filled from the left: how far a
+	    loading screen's files have come (wgf_asset_task_get_progress), say. The style's bar
+	    width and height, its track and fill colors, and its corners; it shows a value, so
+	    the pointer over it isn't the UI's. A value below 0 shows 0, above 1 shows 1, and NaN
+	    shows 0.
+	**/
+	public static inline function progress(value:Float):Bool
+		return Raw.wgf_ui_progress(value);
+
+	/**
 	    The focus given to the button `id` (NULL or "": none), drawn as a key or pad would
 	    draw it; false for an id of 64 bytes or more. The focused button's id, "" for none,
 	    valid until the focus changes. These two work outside a begun UI too. Each frame a UI

@@ -16,7 +16,7 @@ libwgf is one C library, `libwgf.a`, built in layers (CONVENTIONS' table says wh
 | audio | sounds (decoded or streamed) and voices, mixed natively by libwgf on sokol_audio's thread, on the web by the browser's Web Audio | built |
 | ecs | components and behaviors on any actor, a simulated transform, the built-in systems, triggers, polled events, finding by component or behavior, scenes as text | built: its data in sparse sets of its own |
 | physics3d | 3D physics on Jolt (deps/jolt): one world, stepped on the calling thread, Jolt's cross-platform determinism on; its way into Jolt one C++ file of C calls | being built (milestone 2, step 5): bodies, sensors, and wheeled vehicles as components on actors (`wgf_physics.h`, `wgf_body.h`, `wgf_vehicle.h`), in scenes, and a debug view |
-| ui | game UI, immediate mode: boxes, panels, labels, buttons, focus by keys and pads, the pointer's capture, a style | built: on Clay |
+| ui | game UI, immediate mode: boxes, panels, labels, buttons, progress bars, focus by keys and pads, the pointer's capture, a style | built: on Clay |
 | app | the runtime: run, the frame loop, ticks, autopilot runs | built |
 
 ### math
@@ -179,7 +179,7 @@ Game UI, immediate mode, on Clay (the Whirling Gizmo fork): a part installed by 
 
 | Section | Header | Provides |
 |---------|--------|----------|
-| ui | `wgf_ui.h` | a frame's UI between `wgf_ui_begin` and `wgf_ui_end`: boxes (a column or a row) and panels, the open one's size, padding, gap, alignment, and color; labels, spacers, and buttons, a button true in the frame it is activated; the focus, by id; the style (colors, sizes, a font) |
+| ui | `wgf_ui.h` | a frame's UI between `wgf_ui_begin` and `wgf_ui_end`: boxes (a column or a row) and panels, the open one's size, padding, gap, alignment, and color; labels, spacers, buttons, a button true in the frame it is activated, and progress bars (a track, and a fill by a value of 0 to 1, from the left); the focus, by id; the style (colors, sizes, a font) |
 
 **A frame's UI.** The program describes the UI as it is now, in the frame callback; each call goes to Clay as it is made, a box's layout held back until its first child or its close, since Clay takes an element's declaration once. The presentation's visible area is the root, a centered column, so a UI anchored to its edges stays at the window's edges under EXPAND. Text and ids are copied into blocks kept until the next frame's begin, because Clay points at them until it draws. `wgf_ui_end` closes what was left open, has Clay lay it all out, and draws its commands through gfx's immediate mode, at that point in the frame: a rectangle as a filled outline with rounded corners, a border as a closed thick line along it, text through `wgf_draw_text` in the style's font (measured with `wgf_font_measure`, so Clay and the drawing agree), and clips through gfx's clip stack. Nothing of Clay is in a public header, and no callback crosses the API.
 

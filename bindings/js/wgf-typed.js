@@ -1341,6 +1341,8 @@ export const Ui = Object.freeze({
     spacer: raw.wgf_ui_spacer,
     // wgf: call wgf_ui_button
     button: raw.wgf_ui_button,
+    // wgf: call wgf_ui_progress
+    progress: raw.wgf_ui_progress,
     // wgf: call wgf_ui_set_focus
     setFocus: raw.wgf_ui_set_focus,
     // wgf: call wgf_ui_get_focus
@@ -1622,13 +1624,13 @@ export const TextureWrap = Object.freeze({ REPEAT: 0, CLAMP: 1, MIRROR: 2 });
 // wgf: enum UiAlign
 export const UiAlign = Object.freeze({ START: 0, CENTER: 1, END: 2 });
 // wgf: enum UiColor
-export const UiColor = Object.freeze({ TEXT: 0, PANEL: 1, BUTTON: 2, BUTTON_HOVERED: 3, BUTTON_PRESSED: 4, BUTTON_TEXT: 5, FOCUS: 6 });
+export const UiColor = Object.freeze({ TEXT: 0, PANEL: 1, BUTTON: 2, BUTTON_HOVERED: 3, BUTTON_PRESSED: 4, BUTTON_TEXT: 5, FOCUS: 6, BAR: 7, BAR_FILL: 8 });
 // wgf: enum UiDirection
 export const UiDirection = Object.freeze({ COLUMN: 0, ROW: 1 });
 // wgf: enum UiSizing
 export const UiSizing = Object.freeze({ FIT: 0, GROW: 1, FIXED: 2, PERCENT: 3 });
 // wgf: enum UiValue
-export const UiValue = Object.freeze({ TEXT_SIZE: 0, PADDING: 1, GAP: 2, CORNER_RADIUS: 3, BUTTON_PADDING: 4, BUTTON_WIDTH: 5, FOCUS_WIDTH: 6 });
+export const UiValue = Object.freeze({ TEXT_SIZE: 0, PADDING: 1, GAP: 2, CORNER_RADIUS: 3, BUTTON_PADDING: 4, BUTTON_WIDTH: 5, FOCUS_WIDTH: 6, BAR_WIDTH: 7, BAR_HEIGHT: 8 });
 // wgf: enum VehicleDrive
 export const VehicleDrive = Object.freeze({ FRONT: 0, REAR: 1, ALL: 2 });
 // wgf: enum WorldEvent

@@ -3,7 +3,7 @@ package wgf;
 
 /**
     Game UI, immediate mode: each frame the program describes the UI as it is now --
-    boxes, panels, labels, buttons -- between wgf_ui_begin and wgf_ui_end, inside the
+    boxes, panels, labels, buttons, progress bars -- between wgf_ui_begin and wgf_ui_end, inside the
     frame callback; libwgf lays it out (Clay), answers what the pointer, the keys, and the
     pads did to it, and draws it at wgf_ui_end, over what the frame drew before.
 

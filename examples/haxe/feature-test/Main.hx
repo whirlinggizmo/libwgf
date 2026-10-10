@@ -628,6 +628,7 @@ class Main {
 			Ui.spacer(8);
 			Ui.button("b", "B");
 			Ui.endBox();
+			expect(Ui.progress(0.5), "a progress bar");
 			Ui.endPanel();
 			expect(Ui.end(), "a UI");
 		}

@@ -9,4 +9,6 @@ enum abstract UiValue(Int) from Int to Int {
 	var BUTTON_PADDING = 4;
 	var BUTTON_WIDTH = 5;
 	var FOCUS_WIDTH = 6;
+	var BAR_WIDTH = 7;
+	var BAR_HEIGHT = 8;
 }

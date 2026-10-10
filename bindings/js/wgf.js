@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "a5d60278606e4bbe" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "f242677d52c86810" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -850,7 +850,7 @@ export const WGF_VEHICLE_DRIVE_ALL = 2;
 
 /**
  * Game UI, immediate mode: each frame the program describes the UI as it is now --
- * boxes, panels, labels, buttons -- between wgf_ui_begin and wgf_ui_end, inside the
+ * boxes, panels, labels, buttons, progress bars -- between wgf_ui_begin and wgf_ui_end, inside the
  * frame callback; libwgf lays it out (Clay), answers what the pointer, the keys, and the
  * pads did to it, and draws it at wgf_ui_end, over what the frame drew before.
  *
@@ -898,6 +898,8 @@ export const WGF_UI_COLOR_BUTTON_HOVERED = 3;
 export const WGF_UI_COLOR_BUTTON_PRESSED = 4;
 export const WGF_UI_COLOR_BUTTON_TEXT = 5;
 export const WGF_UI_COLOR_FOCUS = 6;
+export const WGF_UI_COLOR_BAR = 7;
+export const WGF_UI_COLOR_BAR_FILL = 8;
 
 export const WGF_UI_VALUE_TEXT_SIZE = 0;
 export const WGF_UI_VALUE_PADDING = 1;
@@ -906,6 +908,8 @@ export const WGF_UI_VALUE_CORNER_RADIUS = 3;
 export const WGF_UI_VALUE_BUTTON_PADDING = 4;
 export const WGF_UI_VALUE_BUTTON_WIDTH = 5;
 export const WGF_UI_VALUE_FOCUS_WIDTH = 6;
+export const WGF_UI_VALUE_BAR_WIDTH = 7;
+export const WGF_UI_VALUE_BAR_HEIGHT = 8;
 
 // wgf: local trig
 const LOCAL_PI = 3.14159265358979323846;
@@ -8362,6 +8366,19 @@ export function wgf_ui_button(id, text) {
     const mark = host["stackSave"]();
     const value = host["_wgf_ui_button"](cstr(id), cstr(text));
     host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_ui_progress
+/**
+ * A bar showing `value`, 0 (empty) to 1 (full), filled from the left: how far a
+ * loading screen's files have come (wgf_asset_task_get_progress), say. The style's bar
+ * width and height, its track and fill colors, and its corners; it shows a value, so
+ * the pointer over it isn't the UI's. A value below 0 shows 0, above 1 shows 1, and NaN
+ * shows 0.
+ */
+export function wgf_ui_progress(value_) {
+    const value = host["_wgf_ui_progress"](value_);
     return value !== 0;
 }
 

@@ -710,7 +710,7 @@ export type wgf_vehicle_drive_t = typeof WGF_VEHICLE_DRIVE_FRONT | typeof WGF_VE
 
 /**
  * Game UI, immediate mode: each frame the program describes the UI as it is now --
- * boxes, panels, labels, buttons -- between wgf_ui_begin and wgf_ui_end, inside the
+ * boxes, panels, labels, buttons, progress bars -- between wgf_ui_begin and wgf_ui_end, inside the
  * frame callback; libwgf lays it out (Clay), answers what the pointer, the keys, and the
  * pads did to it, and draws it at wgf_ui_end, over what the frame drew before.
  *
@@ -761,7 +761,9 @@ export declare const WGF_UI_COLOR_BUTTON_HOVERED: 3;
 export declare const WGF_UI_COLOR_BUTTON_PRESSED: 4;
 export declare const WGF_UI_COLOR_BUTTON_TEXT: 5;
 export declare const WGF_UI_COLOR_FOCUS: 6;
-export type wgf_ui_color_t = typeof WGF_UI_COLOR_TEXT | typeof WGF_UI_COLOR_PANEL | typeof WGF_UI_COLOR_BUTTON | typeof WGF_UI_COLOR_BUTTON_HOVERED | typeof WGF_UI_COLOR_BUTTON_PRESSED | typeof WGF_UI_COLOR_BUTTON_TEXT | typeof WGF_UI_COLOR_FOCUS;
+export declare const WGF_UI_COLOR_BAR: 7;
+export declare const WGF_UI_COLOR_BAR_FILL: 8;
+export type wgf_ui_color_t = typeof WGF_UI_COLOR_TEXT | typeof WGF_UI_COLOR_PANEL | typeof WGF_UI_COLOR_BUTTON | typeof WGF_UI_COLOR_BUTTON_HOVERED | typeof WGF_UI_COLOR_BUTTON_PRESSED | typeof WGF_UI_COLOR_BUTTON_TEXT | typeof WGF_UI_COLOR_FOCUS | typeof WGF_UI_COLOR_BAR | typeof WGF_UI_COLOR_BAR_FILL;
 
 export declare const WGF_UI_VALUE_TEXT_SIZE: 0;
 export declare const WGF_UI_VALUE_PADDING: 1;
@@ -770,7 +772,9 @@ export declare const WGF_UI_VALUE_CORNER_RADIUS: 3;
 export declare const WGF_UI_VALUE_BUTTON_PADDING: 4;
 export declare const WGF_UI_VALUE_BUTTON_WIDTH: 5;
 export declare const WGF_UI_VALUE_FOCUS_WIDTH: 6;
-export type wgf_ui_value_t = typeof WGF_UI_VALUE_TEXT_SIZE | typeof WGF_UI_VALUE_PADDING | typeof WGF_UI_VALUE_GAP | typeof WGF_UI_VALUE_CORNER_RADIUS | typeof WGF_UI_VALUE_BUTTON_PADDING | typeof WGF_UI_VALUE_BUTTON_WIDTH | typeof WGF_UI_VALUE_FOCUS_WIDTH;
+export declare const WGF_UI_VALUE_BAR_WIDTH: 7;
+export declare const WGF_UI_VALUE_BAR_HEIGHT: 8;
+export type wgf_ui_value_t = typeof WGF_UI_VALUE_TEXT_SIZE | typeof WGF_UI_VALUE_PADDING | typeof WGF_UI_VALUE_GAP | typeof WGF_UI_VALUE_CORNER_RADIUS | typeof WGF_UI_VALUE_BUTTON_PADDING | typeof WGF_UI_VALUE_BUTTON_WIDTH | typeof WGF_UI_VALUE_FOCUS_WIDTH | typeof WGF_UI_VALUE_BAR_WIDTH | typeof WGF_UI_VALUE_BAR_HEIGHT;
 
 /**
  * Trigonometry that gives the same bits on every target -- natively, under Windows, and in a
@@ -5455,6 +5459,15 @@ export declare function wgf_ui_spacer(size: number): boolean;
  * A button showing `text`, true in the frame it is activated. False too for no id.
  */
 export declare function wgf_ui_button(id: string | null, text: string | null): boolean;
+
+/**
+ * A bar showing `value`, 0 (empty) to 1 (full), filled from the left: how far a
+ * loading screen's files have come (wgf_asset_task_get_progress), say. The style's bar
+ * width and height, its track and fill colors, and its corners; it shows a value, so
+ * the pointer over it isn't the UI's. A value below 0 shows 0, above 1 shows 1, and NaN
+ * shows 0.
+ */
+export declare function wgf_ui_progress(value_: number): boolean;
 
 /**
  * The focus given to the button `id` (NULL or "": none), drawn as a key or pad would

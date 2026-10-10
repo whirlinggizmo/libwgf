@@ -3735,6 +3735,14 @@ export declare const Ui: {
      */
     readonly button: typeof raw.wgf_ui_button;
     /**
+     * A bar showing `value`, 0 (empty) to 1 (full), filled from the left: how far a
+     * loading screen's files have come (wgf_asset_task_get_progress), say. The style's bar
+     * width and height, its track and fill colors, and its corners; it shows a value, so
+     * the pointer over it isn't the UI's. A value below 0 shows 0, above 1 shows 1, and NaN
+     * shows 0.
+     */
+    readonly progress: typeof raw.wgf_ui_progress;
+    /**
      * The focus given to the button `id` (NULL or "": none), drawn as a key or pad would
      * draw it; false for an id of 64 bytes or more. The focused button's id, "" for none,
      * valid until the focus changes. These two work outside a begun UI too. Each frame a UI
@@ -4495,13 +4503,13 @@ export declare const TextureWrap: { readonly REPEAT: TextureWrap; readonly CLAMP
 export type UiAlign = raw.wgf_ui_align_t;
 export declare const UiAlign: { readonly START: UiAlign; readonly CENTER: UiAlign; readonly END: UiAlign; };
 export type UiColor = raw.wgf_ui_color_t;
-export declare const UiColor: { readonly TEXT: UiColor; readonly PANEL: UiColor; readonly BUTTON: UiColor; readonly BUTTON_HOVERED: UiColor; readonly BUTTON_PRESSED: UiColor; readonly BUTTON_TEXT: UiColor; readonly FOCUS: UiColor; };
+export declare const UiColor: { readonly TEXT: UiColor; readonly PANEL: UiColor; readonly BUTTON: UiColor; readonly BUTTON_HOVERED: UiColor; readonly BUTTON_PRESSED: UiColor; readonly BUTTON_TEXT: UiColor; readonly FOCUS: UiColor; readonly BAR: UiColor; readonly BAR_FILL: UiColor; };
 export type UiDirection = raw.wgf_ui_direction_t;
 export declare const UiDirection: { readonly COLUMN: UiDirection; readonly ROW: UiDirection; };
 export type UiSizing = raw.wgf_ui_sizing_t;
 export declare const UiSizing: { readonly FIT: UiSizing; readonly GROW: UiSizing; readonly FIXED: UiSizing; readonly PERCENT: UiSizing; };
 export type UiValue = raw.wgf_ui_value_t;
-export declare const UiValue: { readonly TEXT_SIZE: UiValue; readonly PADDING: UiValue; readonly GAP: UiValue; readonly CORNER_RADIUS: UiValue; readonly BUTTON_PADDING: UiValue; readonly BUTTON_WIDTH: UiValue; readonly FOCUS_WIDTH: UiValue; };
+export declare const UiValue: { readonly TEXT_SIZE: UiValue; readonly PADDING: UiValue; readonly GAP: UiValue; readonly CORNER_RADIUS: UiValue; readonly BUTTON_PADDING: UiValue; readonly BUTTON_WIDTH: UiValue; readonly FOCUS_WIDTH: UiValue; readonly BAR_WIDTH: UiValue; readonly BAR_HEIGHT: UiValue; };
 export type VehicleDrive = raw.wgf_vehicle_drive_t;
 export declare const VehicleDrive: { readonly FRONT: VehicleDrive; readonly REAR: VehicleDrive; readonly ALL: VehicleDrive; };
 export type WorldEvent = raw.wgf_world_event_t;

@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -20,7 +21,7 @@
  * gives it the focus, undrawn; the focus moved by arrow keys, Tab and Shift+Tab, and the
  * D-pad, wrapping, and a button activated by Enter and by the pad; the focus lost with
  * its button and given by the program; the captures; the layout setters and every
- * refusal; and the style. */
+ * refusal; a progress bar; and the style. */
 
 static int failures;
 
@@ -242,6 +243,37 @@ static void on_frame(void *user)
                    "a fixed width; half the screen's height less the gap to its sibling");
         }
 
+        /* a progress bar: the style's size, filled by its value, shown, not taken */
+        expect(!wgf_ui_progress(0.5f), "a bar outside a UI: refused");
+        {
+            int empty, half, full, nan;
+            float bx, by, bw, bh;
+            expect(wgf_ui_set_style_value(WGF_UI_VALUE_BAR_WIDTH, 200) &&
+                       wgf_ui_get_style_value(WGF_UI_VALUE_BAR_HEIGHT) == 12 &&
+                       wgf_ui_set_style_color(WGF_UI_COLOR_BAR_FILL, 0x00FF00FFu) &&
+                       wgf_ui_get_style_color(WGF_UI_COLOR_BAR_FILL) == 0x00FF00FFu,
+                   "the bar's style");
+            empty = sgl_num_vertices();
+            expect(wgf_ui_begin() && wgf_ui_begin_box("bar", WGF_UI_DIRECTION_COLUMN) && wgf_ui_progress(0.0f) &&
+                       wgf_ui_end_box() && wgf_ui_end(),
+                   "an empty bar");
+            empty = sgl_num_vertices() - empty;
+            expect(wgf_ui_priv_get_bounds("bar", &bx, &by, &bw, &bh) && bw == 200 && bh == 12,
+                   "the style's width and height");
+            half = sgl_num_vertices();
+            expect(wgf_ui_begin() && wgf_ui_progress(0.5f) && wgf_ui_end(), "half full");
+            half = sgl_num_vertices() - half;
+            full = sgl_num_vertices();
+            expect(wgf_ui_begin() && wgf_ui_progress(7.0f) && wgf_ui_end(), "past full");
+            full = sgl_num_vertices() - full;
+            nan = sgl_num_vertices();
+            expect(wgf_ui_begin() && wgf_ui_progress(NAN) && wgf_ui_end(), "NaN");
+            nan = sgl_num_vertices() - nan;
+            expect(empty > 0 && half > empty && full == half && nan == empty,
+                   "its track, then a fill for a value (above 1 as 1, NaN as 0)");
+            wgf_ui_reset_style();
+        }
+
         /* the style */
         expect(wgf_ui_get_style_value(WGF_UI_VALUE_TEXT_SIZE) == 20 &&
                    wgf_ui_get_style_color(WGF_UI_COLOR_FOCUS) == 0xFFD040FFu && wgf_ui_get_style_font() == 0,
@@ -250,8 +282,9 @@ static void on_frame(void *user)
                    wgf_ui_set_style_color(WGF_UI_COLOR_PANEL, 0x11223344u) &&
                    wgf_ui_get_style_color(WGF_UI_COLOR_PANEL) == 0x11223344u,
                "the game's");
-        expect(!wgf_ui_set_style_value(WGF_UI_VALUE_GAP, -1) && !wgf_ui_set_style_value((wgf_ui_value_t)7, 1) &&
-                   !wgf_ui_set_style_color((wgf_ui_color_t)-1, 0) && wgf_ui_get_style_value((wgf_ui_value_t)7) == 0 &&
+        expect(!wgf_ui_set_style_value(WGF_UI_VALUE_GAP, -1) && !wgf_ui_set_style_value((wgf_ui_value_t)9, 1) &&
+                   !wgf_ui_set_style_color((wgf_ui_color_t)-1, 0) && !wgf_ui_set_style_color((wgf_ui_color_t)9, 0) &&
+                   wgf_ui_get_style_value((wgf_ui_value_t)9) == 0 &&
                    !wgf_ui_set_style_font(12345),
                "what isn't one: refused");
         wgf_ui_reset_style();

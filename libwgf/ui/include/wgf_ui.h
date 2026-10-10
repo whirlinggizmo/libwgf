@@ -12,7 +12,7 @@ extern "C" {
 #endif
 
 /* Game UI, immediate mode: each frame the program describes the UI as it is now --
- * boxes, panels, labels, buttons -- between wgf_ui_begin and wgf_ui_end, inside the
+ * boxes, panels, labels, buttons, progress bars -- between wgf_ui_begin and wgf_ui_end, inside the
  * frame callback; libwgf lays it out (Clay), answers what the pointer, the keys, and the
  * pads did to it, and draws it at wgf_ui_end, over what the frame drew before.
  *
@@ -93,6 +93,13 @@ WGF_API bool wgf_ui_spacer(float size);
 /* A button showing `text`, true in the frame it is activated. False too for no id. */
 WGF_API bool wgf_ui_button(const char *id, const char *text);
 
+/* A bar showing `value`, 0 (empty) to 1 (full), filled from the left: how far a
+ * loading screen's files have come (wgf_asset_task_get_progress), say. The style's bar
+ * width and height, its track and fill colors, and its corners; it shows a value, so
+ * the pointer over it isn't the UI's. A value below 0 shows 0, above 1 shows 1, and NaN
+ * shows 0. */
+WGF_API bool wgf_ui_progress(float value);
+
 /* The focus given to the button `id` (NULL or "": none), drawn as a key or pad would
  * draw it; false for an id of 64 bytes or more. The focused button's id, "" for none,
  * valid until the focus changes. These two work outside a begun UI too. Each frame a UI
@@ -110,7 +117,9 @@ typedef enum wgf_ui_color_t {
     WGF_UI_COLOR_BUTTON_HOVERED = 3,
     WGF_UI_COLOR_BUTTON_PRESSED = 4,
     WGF_UI_COLOR_BUTTON_TEXT = 5,
-    WGF_UI_COLOR_FOCUS = 6 /* the line around a focused button */
+    WGF_UI_COLOR_FOCUS = 6, /* the line around a focused button */
+    WGF_UI_COLOR_BAR = 7,   /* a progress bar's track */
+    WGF_UI_COLOR_BAR_FILL = 8
 } wgf_ui_color_t;
 
 typedef enum wgf_ui_value_t {
@@ -120,7 +129,9 @@ typedef enum wgf_ui_value_t {
     WGF_UI_VALUE_CORNER_RADIUS = 3,  /* a panel's and a button's corners */
     WGF_UI_VALUE_BUTTON_PADDING = 4, /* around a button's text, across; half that up and down */
     WGF_UI_VALUE_BUTTON_WIDTH = 5,   /* a button's least width */
-    WGF_UI_VALUE_FOCUS_WIDTH = 6     /* the focus line's thickness */
+    WGF_UI_VALUE_FOCUS_WIDTH = 6,    /* the focus line's thickness */
+    WGF_UI_VALUE_BAR_WIDTH = 7,      /* a progress bar's */
+    WGF_UI_VALUE_BAR_HEIGHT = 8
 } wgf_ui_value_t;
 
 /* False for a color or value that isn't one, or a value below 0. 0 for one that isn't. */
