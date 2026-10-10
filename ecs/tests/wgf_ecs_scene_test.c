@@ -377,6 +377,7 @@ int main(void)
                                                "  model path=models/track.gltf\n"
                                                "end\n"
                                                "actor track/road\n"
+                                               "  model cast_shadows=false\n"
                                                "  motion damping=0.5\n"
                                                "  behavior name=Surface grip=1 next=@../gates/gate_0/gate\n"
                                                "end\n"
@@ -450,7 +451,7 @@ int main(void)
         dump = copy_of(wgf_world_dump());
         if (getenv("WGF_TEST_SHOW")) printf("%s", dump);
         expect(dump != NULL && strstr(dump, "actor \"track\"\n    model path=\"models/track.gltf\"") != NULL &&
-                   strstr(dump, "actor \"track/road\"\n    transform") != NULL &&
+                   strstr(dump, "actor \"track/road\"\n    model cast_shadows=false receive_shadows=true\n    transform") != NULL &&
                    strstr(dump, "actor \"track/gates\"\n    transform") != NULL &&
                    strstr(dump, "actor \"track/gates/gate_0/gate\"\n") != NULL &&
                    strstr(dump, "actor \"road\"") == NULL,
@@ -468,6 +469,7 @@ int main(void)
         road = wgf_actor_find(track, "road");
         gate = wgf_actor_find(track, "gates/gate_0/gate");
         expect(road != 0 && wgf_actor_has_component(road, WGF_COMPONENT_MOTION) && gate != 0 &&
+                   !wgf_model_is_shadow_casting(road) && wgf_model_is_shadow_receiving(road) &&
                    wgf_actor_get_parent(gate) == wgf_actor_find(track, "gates/gate_0") &&
                    wgf_behavior_get_param_actor(road, wgf_actor_find_behavior(road, "Surface"), "next") == gate &&
                    wgf_actor_get_child_count(track) == 3,

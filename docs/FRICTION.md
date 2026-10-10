@@ -576,3 +576,50 @@ Racer (milestone 2), from step 6: the game-developer session's part 3, the track
 - **Cost:** none
 - **Found by:** the racer's session
 - **Triage:** fine: kept as they are, and kept so
+
+Racer (milestone 2), from step 8: the game-developer session's part 4, a sun that casts (`../libwgf-racer/FRICTION.md`, "Part 4", its entries S1 to S8; the game at 178a4ea), 2026-10-09.
+
+### Racer: the shadow pass cost a fixed 12.5 ms a frame
+
+- **Where:** the racer's bench run with its sun casting: a mean of 14.3 ms and a 95th percentile of 20.8 against 1.6 and 1.9 without, unmoved by casters, receivers, map size, or the CPU's throttle (libwgf's shadowbench showed the same step)
+- **Missing:** a shadow pass that doesn't stall: the frame was waiting, not working
+- **Workaround:** none: shadows kept, the budget missed
+- **Cost:** 40 minutes of measuring
+- **Found by:** the racer's session (its S4, a blocker)
+- **Triage:** fixed in step 8: sokol asked WebGL whether each offscreen pass's framebuffer was complete (`glCheckFramebufferStatus`), a round trip to Chrome's GPU process that waits for every command before it, once a casting light a frame; a release web build no longer asks (`deps/sokol/sokol_gfx.h`, marked `[libwgf]`). The racer's bench run: a mean of 1.67 ms and a 95th percentile of 2.08, as without shadows
+
+### Racer: `wgf dump` dropped a file node's shadow flags
+
+- **Where:** `wgf dump` of the racer: `track/road` and `track/ground` written without their `model cast_shadows=false`, and `track/road/curbs` and `track/road/line`, changed by the flag alone, left out
+- **Missing:** a dump that loads again as the same world
+- **Workaround:** none needed (dump is a debugging tool)
+- **Cost:** 5 minutes
+- **Found by:** the racer's session (its S7)
+- **Triage:** fixed in step 8: a file's node whose shadows aren't the default is written, with a `model cast_shadows= receive_shadows=` line, the file's kind's own
+
+### Racer: the frame tool measured only libwgf's games, and the budget was no number
+
+- **Where:** `measure_frames.py` took `game:<name>` from libwgf's `games/` alone; "the frame budget" was named and not given
+- **Missing:** measuring a game where it lives, and the budget stated where a game's developer reads
+- **Workaround:** the game's own `tools/frames.py`, held to 16.7 ms at the 95th percentile, a guess
+- **Cost:** 20 minutes, 80 lines
+- **Found by:** the racer's session (its S5)
+- **Triage:** fixed in step 8: `measure_frames.py <a game's folder>`; the budget (a median of 6 ms and a 95th percentile of 10 ms of main-thread work on the reference machine, no frame over 33 ms once play has started, milestone 2's plan's) in BUILDING, the tool's help, and the template's README
+
+### Racer: a file's node in between needs an empty block, and a scene has no light
+
+- **Where:** `actor track/gates/gate_0/checkpoint` refused until `actor track/gates/gate_0` had a block of its own, though the file makes it (eight empty blocks); and the sun, with its shadows, written in code, as a scene has no `light` kind
+- **Missing:** a file's nodes counting as blocks above a block; a `light` kind with its shadow keys
+- **Workaround:** the blocks written; the sun in `Main.hx`
+- **Cost:** 5 minutes, 16 lines
+- **Found by:** the racer's session (its S2, S3)
+- **Triage:** milestone 2.5's (ROADMAP.md, "From the racer's friction"): conveniences, each a few lines a game writes once
+
+### Racer: what worked on shadows (three notes)
+
+- **Where:** the racer's session's S1, S6, S8
+- **Missing:** nothing. The track's bodies, shadow flags, and checkpoints moved into the scene as file-node blocks, physics bit-identical, so no recording changed; the default bias and a 35 m distance gave crisp shadows with no acne. The barriers stand 15 m out behind the run-off, so their shadows fall on the grass rather than the asphalt: the track's layout, the game's to move if it wants (S6)
+- **Workaround:** none
+- **Cost:** none
+- **Found by:** the racer's session
+- **Triage:** fine: kept as they are, and kept so; BUILDING says a node's block takes its kind's keys (`model cast_shadows=`)

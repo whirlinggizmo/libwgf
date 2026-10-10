@@ -214,12 +214,27 @@ static bool from_file(wgf_actor_t actor)
     return actor_ptr != NULL && actor_ptr->from_file;
 }
 
-/* `e`'s lines, a level in from its block's: its kind's (none for a glTF file's node, which
- * its file makes), then its transform, components, and behaviors. */
+/* Whether a model's shadows aren't a model's default, casting and receiving. */
+static bool shadows_changed(wgf_actor_t model)
+{
+    const wgf_gfx_priv_model_hooks_t *hooks = wgf_gfx_priv_get_model_hooks();
+    return hooks != NULL && wgf_actor_get_kind(model) == WGF_ACTOR_KIND_MODEL &&
+           !(hooks->get_shadows(model, true) && hooks->get_shadows(model, false));
+}
+
+/* `e`'s lines, a level in from its block's: its kind's (for a glTF file's node, which its
+ * file makes, only its shadows where they aren't the default), then its transform,
+ * components, and behaviors. */
 static void dump_lines(out_t *out, wgf_actor_t e, const char *pad)
 {
     const wgf_vec3_t p = wgf_actor_get_position(e), r = wgf_actor_get_rotation(e), s = wgf_actor_get_scale(e);
     int i, b;
+    if (from_file(e) && wgf_actor_get_kind(e) == WGF_ACTOR_KIND_MODEL && shadows_changed(e)) {
+        /* a file's node's own kind line: only what the file doesn't give it, its shadows */
+        const wgf_gfx_priv_model_hooks_t *hooks = wgf_gfx_priv_get_model_hooks();
+        put(out, "%s    model cast_shadows=%s receive_shadows=%s\n", pad, hooks->get_shadows(e, true) ? "true" : "false",
+            hooks->get_shadows(e, false) ? "true" : "false");
+    }
     switch (from_file(e) ? WGF_ACTOR_KIND_NONE : wgf_actor_get_kind(e)) { /* each writes its own line */
         case WGF_ACTOR_KIND_SHAPE2D: put(out, "%s", pad); dump_shape(out, e); break;
         case WGF_ACTOR_KIND_SPRITE: put(out, "%s", pad); dump_sprite(out, e); break;
@@ -283,11 +298,12 @@ static void dump_lines(out_t *out, wgf_actor_t e, const char *pad)
 }
 
 /* Whether a glTF file's node is written: it, or something under it, has more than its file
- * gives it (components or behaviors, or an actor the file didn't make). */
+ * gives it (components or behaviors, shadows not the default, or an actor the file didn't
+ * make). */
 static bool node_written(wgf_actor_t node, int depth)
 {
     int i;
-    if (!from_file(node) || wgf_ecs_priv_record_of(node) != NULL) return true;
+    if (!from_file(node) || wgf_ecs_priv_record_of(node) != NULL || shadows_changed(node)) return true;
     for (i = 0; depth < 32 && i < wgf_actor_get_child_count(node); i++) {
         if (node_written(wgf_actor_get_child(node, i), depth + 1)) return true;
     }

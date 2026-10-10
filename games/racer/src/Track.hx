@@ -2,29 +2,19 @@ import wgf.*;
 
 /**
 	The circuit: assets/track/track.glb, written by tools/gen_track.py from its centerline
-	(TrackData, generated beside it). The file's named nodes are the ground, the road (with
-	its curbs and start line), the barriers, and the gates; once it has loaded, each of
-	those gets a static body of its triangles (physics3d's mesh shape), and each gate a
-	checkpoint's sensor (Main.spawn). The trees are scenery, made here.
+	(TrackData, generated beside it). The scene file places it, with its surfaces' bodies,
+	their shadows, and the checkpoints under its gates (racer.scene); this is its centerline
+	for the game (the grid, the grass, the driver's telemetry), and the trees, made here.
 **/
 class Track {
 	public static inline var WIDTH = TrackData.WIDTH;
 	public static inline var STEP = TrackData.STEP;
 	public static inline var CHECKPOINTS = TrackData.CHECKPOINTS;
-	static inline var ROAD_FRICTION = 1.0;
-	static inline var GRASS_FRICTION = 0.7;
-	static inline var BARRIER_FRICTION = 0.3; // a wall the car slides along, not one it sticks to
 
 	public static final xs = TrackData.xs;
 	public static final zs = TrackData.zs;
 	public static final headings = TrackData.headings;
 	public static var models = 0; // the models it made itself (the file's nodes are counted apart)
-
-	/** The track's file, a model on the stage: its nodes are made under it once it loads. **/
-	public static var root:Actor = 0; // a Model (a section type takes no 0: an Actor does)
-
-	static var mesh:Mesh = 0;
-	static var bodied = false;
 
 	/** The index of the sample nearest (x, z), searched near `hint` (the last answer). **/
 	public static function nearest(x:Float, z:Float, hint:Int):Int {
@@ -48,42 +38,9 @@ class Track {
 		return (x - xs[i]) * Math.cos(h) - (z - zs[i]) * Math.sin(h);
 	}
 
-	/** The world: the track's file, loading, and the trees; on `stage`. **/
+	/** The trees, on `stage`: the scenery around the track's file. **/
 	public static function create(stage:Stage3d) {
-		mesh = Mesh.create("track/track.glb");
-		root = Model.create(mesh);
-		root.setName("track");
-		root.setParent(stage);
 		trees(stage);
-	}
-
-	/**
-		Whether the track has loaded and its bodies are made: each frame until then, the
-		file's nodes looked for, and once they are there each surface given its body.
-	**/
-	public static function ready():Bool {
-		if (bodied)
-			return true;
-		if (Resource.getStatus(mesh) != ResourceStatus.READY || root.find("road").isNone())
-			return false;
-		body("ground", GRASS_FRICTION);
-		body("road", ROAD_FRICTION); // its curbs and line, under it, are in its triangles
-		body("barriers", BARRIER_FRICTION);
-		body("gates", BARRIER_FRICTION); // every gate's posts and banner
-		bodied = true;
-		return true;
-	}
-
-	/** The gate node checkpoint `index` stands at. **/
-	public static function gate(index:Int):Actor
-		return root.find('gates/gate_$index');
-
-	static function body(node:String, friction:Float) {
-		final actor = root.find(node);
-		actor.addComponent(Component.BODY);
-		(actor : Body).setType(BodyType.STATIC);
-		(actor : Body).setShape(BodyShape.MESH, 0, 0, 0);
-		(actor : Body).setFriction(friction);
 	}
 
 	static function trees(stage:Stage3d) {

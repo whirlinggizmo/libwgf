@@ -22,6 +22,7 @@ class Main {
 	public static inline var WIDTH = 1280;
 	public static inline var HEIGHT = 720;
 	static inline var COUNTDOWN = 3.0;
+	static inline var SHADOW_DISTANCE = 35.0; // m of the camera's view the sun's map covers
 
 	public static var stage:Stage3d;
 	public static var scene:Scene;
@@ -31,6 +32,7 @@ class Main {
 	static var camera:ChaseCamera;
 	static var countdown = COUNTDOWN;
 	static var showBodies = false;
+	static var placed = false;
 
 	static function main() {
 		Window.setTitle("Racer");
@@ -50,7 +52,12 @@ class Main {
 		sun.setIntensity(2.6);
 		sun.setColor(Color.make(255, 244, 228, 255));
 		sun.setParent(stage); // a light is an actor on the stage
-		sun.lookAt(-0.5, -1, -0.35, 0, 1, 0); // shining down its -z, from the origin
+		sun.lookAt(-0.75, -0.6, -0.5, 0, 1, 0); // shining down its -z, from the origin: about 34° up, long shadows
+		// the sun casts: one map fitted around what the chase camera sees, SHADOW_DISTANCE out
+		sun.setShadowCasting(true);
+		sun.setShadowDistance(SHADOW_DISTANCE);
+		sun.setShadowMapSize(2048);
+		sun.setShadowStrength(0.85);
 
 		Track.create(stage);
 		Probe.setValue("racer.models", Track.models);
@@ -94,10 +101,6 @@ class Main {
 
 	static function spawn() {
 		scene.spawnPrefab("car", stage);
-		for (i in 0...Track.CHECKPOINTS) { // a sensor under each of the track file's gates
-			final sensor = scene.spawnPrefab("checkpoint", Track.gate(i));
-			(sensor : BehaviorComponent).setParam(sensor.findBehavior("Checkpoint"), "index", '$i');
-		}
 	}
 
 	/** The car on the grid, behind the line, waiting for the start (or counting down to it). **/
@@ -115,9 +118,15 @@ class Main {
 		final dt = Loop.getTickDelta();
 		switch state {
 			case State.LOADING:
-				if (Resource.getStatus(scene) == ResourceStatus.READY && Track.ready() && car == null
+				// the scene's track (its file's nodes, their bodies and checkpoints, made once the
+				// file has loaded), then the car on it: its behavior starts the countdown once made
+				if (!placed && Resource.getStatus(scene) == ResourceStatus.READY) {
+					scene.instantiate(stage);
+					placed = true;
+				}
+				if (placed && Actor.countWithBehavior("Checkpoint") == Track.CHECKPOINTS && car == null
 					&& Actor.countWithBehavior("Car") == 0)
-					spawn(); // the car's behavior starts the countdown once it is made
+					spawn();
 			case State.READY:
 				if (Action.isPressed("throttle"))
 					state = State.COUNTDOWN;

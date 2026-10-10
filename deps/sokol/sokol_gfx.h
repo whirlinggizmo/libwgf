@@ -7,6 +7,11 @@
 
     Project URL: https://github.com/floooh/sokol
 
+    Altered source: changed in libwgf, marked [libwgf] where it is: a release web build
+    doesn't ask WebGL whether an offscreen pass's framebuffer is complete
+    (_sg_gl_check_framebuffer_status), a round trip to the browser's GPU process that
+    stalled every shadow-mapped frame about 12 ms.
+
     Example code: https://github.com/floooh/sokol-samples
 
     Do this:
@@ -11867,6 +11872,13 @@ _SOKOL_PRIVATE GLenum _sg_gl_depth_stencil_attachment_type(const _sg_image_t* ds
 }
 
 _SOKOL_PRIVATE bool _sg_gl_check_framebuffer_status(void) {
+    #if defined(__EMSCRIPTEN__) && defined(NDEBUG)
+    /* [libwgf] WebGL's checkFramebufferStatus is a round trip to the browser's GPU process,
+       which waits for every command before it: once an offscreen pass, it stalled each frame
+       about 12 ms (libwgf's shadow maps). A release web build trusts the attachments sokol
+       already validated; a debug one still asks. */
+    return true;
+    #endif
     const GLenum fb_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (fb_status != GL_FRAMEBUFFER_COMPLETE) {
         switch (fb_status) {

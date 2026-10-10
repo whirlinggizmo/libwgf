@@ -1,8 +1,8 @@
 wgf-scene 2
-# The racer's things as data: the car and the checkpoint, each a prefab of generated
-# meshes with its physics. The track is a glTF file (assets/track/track.glb, written by
-# tools/gen_track.py), loaded by src/Track.hx, its surfaces static bodies. Physics is started
-# (Physics.setGravity) before this loads.
+# The racer's things as data: the track (a glTF file, assets/track/track.glb, written by
+# tools/gen_track.py), its surfaces' bodies and shadows, and its checkpoints; and the car,
+# a prefab of generated meshes with its physics. Physics is started (Physics.setGravity)
+# before this loads; the sun that casts is made in code (src/Main.hx: a scene has no light).
 
 # The car: a dynamic box body with a vehicle on it (Jolt's wheeled vehicle), driven by
 # src/Drive.hx's intent each tick. It faces +z, its origin the body's center. Each wheel is
@@ -70,4 +70,81 @@ end
 prefab checkpoint
   body type=sensor shape=box size=15,4,1 offset=0,2,0 layer=2 mask=1
   behavior name=Checkpoint
+end
+
+# The track: the file's nodes are these blocks (no actor made for them), applied once it has
+# loaded. Each surface is a static body of its triangles, at its own friction. The flat
+# surfaces receive shadows and cast none (a plane casting onto itself is only acne and a
+# draw); the barriers and gates cast onto them, as the car does. Each gate's node has a
+# block (empty: the file's as it is) so its checkpoint, a new actor, has a parent above it.
+actor track
+  model path="track/track.glb"
+end
+actor track/ground
+  model cast_shadows=false
+  body type=static shape=mesh friction=0.7
+end
+actor track/road
+  model cast_shadows=false
+  body type=static shape=mesh friction=1
+end
+actor track/road/curbs
+  model cast_shadows=false
+end
+actor track/road/line
+  model cast_shadows=false
+end
+actor track/barriers
+  body type=static shape=mesh friction=0.3
+end
+actor track/gates
+  body type=static shape=mesh friction=0.3
+end
+actor track/gates/gate_0
+end
+actor track/gates/gate_0/checkpoint
+  from checkpoint
+  behavior index=0
+end
+actor track/gates/gate_1
+end
+actor track/gates/gate_1/checkpoint
+  from checkpoint
+  behavior index=1
+end
+actor track/gates/gate_2
+end
+actor track/gates/gate_2/checkpoint
+  from checkpoint
+  behavior index=2
+end
+actor track/gates/gate_3
+end
+actor track/gates/gate_3/checkpoint
+  from checkpoint
+  behavior index=3
+end
+actor track/gates/gate_4
+end
+actor track/gates/gate_4/checkpoint
+  from checkpoint
+  behavior index=4
+end
+actor track/gates/gate_5
+end
+actor track/gates/gate_5/checkpoint
+  from checkpoint
+  behavior index=5
+end
+actor track/gates/gate_6
+end
+actor track/gates/gate_6/checkpoint
+  from checkpoint
+  behavior index=6
+end
+actor track/gates/gate_7
+end
+actor track/gates/gate_7/checkpoint
+  from checkpoint
+  behavior index=7
 end

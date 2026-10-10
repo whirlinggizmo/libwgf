@@ -6,10 +6,13 @@ the sizes; and a benchmark's cases, the same way.
     tools/bench/measure_frames.py [--display xvfb|headless] [--throttle N] [--runs N]
                                   [--write] [--browser PATH] [program ...]
 
-A program is game:<name> (default: every game in games/): its web export, made as `wgf
-export --web` makes it (a release build, its host and JS binding trimmed), flown by the
-game's autopilot/bench.autopilot, else its playthrough (wgf.json's "playthrough",
-playthrough.autopilot by default). Or bench:<name>, a benchmark in tools/bench/<name>/
+A program is game:<name> (default: every game in games/), or a game's folder anywhere (one
+with a wgf.json: a game outside libwgf measured as libwgf's are): its web export, made as
+`wgf export --web` makes it (a release build, its host and JS binding trimmed), flown by
+the game's autopilot/bench.autopilot, else its playthrough (wgf.json's "playthrough",
+playthrough.autopilot by default). A game's frame budget (HISTORY.md, "Milestone 2's
+plan"): a median of 6 ms and a 95th percentile of 10 ms of main-thread work on the
+reference machine, and no frame over 33 ms once play has started. Or bench:<name>, a benchmark in tools/bench/<name>/
 (BENCHES: shadowbench, libwgt's), built in wasm32-release against the staged variant and
 run with no autopilot until it logs "<name>: done": it marks each case in the trace
 (console.timeStamp "<name> <case> <models>" as the case's measured frames begin, "<name>
@@ -71,9 +74,10 @@ def games():
     return [f'game:{d.name}' for d in sorted(found.iterdir()) if (d / 'wgf.json').exists()] if found.is_dir() else []
 
 
-def export(name):
-    """The game's web export, made fresh in build/frames/; (the site, its autopilot's text)."""
-    game = ROOT / 'games' / name
+def export(name, game=None):
+    """The game's web export, made fresh in build/frames/; (the site, its autopilot's text).
+    `game`: its folder, when it isn't libwgf's games/<name>."""
+    game = game or ROOT / 'games' / name
     dest = ROOT / 'build' / 'frames' / name
     done = subprocess.run([sys.executable, str(ROOT / 'wgf'), 'export', '--web', '--out', str(dest)], cwd=game,
                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors='replace')
@@ -235,7 +239,7 @@ def run_bench(name, args, found, results):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('programs', nargs='*', help='game:<name> or bench:<name> (default: every game)')
+    ap.add_argument('programs', nargs='*', help='game:<name>, a game\'s folder, or bench:<name> (default: every game)')
     ap.add_argument('--display', choices=['xvfb', 'headless'], default='xvfb',
                     help='xvfb: the real GPU under Xvfb (the reference); headless: SwiftShader (CI)')
     ap.add_argument('--throttle', type=float, default=4.0, help="Chrome's CPU throttling rate (default 4)")
@@ -256,11 +260,13 @@ def main():
             if code != 0:
                 return code
             continue
-        if not name.startswith('game:'):
-            print(f'measure_frames: {name}: not a game or a benchmark (game:<name>, bench:<name>)')
+        folder = Path(name)
+        if not name.startswith('game:') and not (folder / 'wgf.json').is_file():
+            print(f'measure_frames: {name}: not a game or a benchmark (game:<name>, a game\'s folder, bench:<name>)')
             return 2
         try:
-            site, flown = export(name[len('game:'):])
+            site, flown = (export(name[len('game:'):]) if name.startswith('game:')
+                           else export(folder.resolve().name, folder.resolve()))
             runs, gpu = [], ''
             for _ in range(max(args.runs, 1)):
                 numbers, gpu = run(site, flown, args.display, args.throttle, found)

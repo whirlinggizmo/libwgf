@@ -91,25 +91,25 @@ Each game's web export flown by its autopilot in a browser (`tools/bench/measure
 | program | frames | mean | median | 95th | 99th | worst | over 16.7 | over 33 | collections (ms, longest) | on |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
 | game:asteroids | 2502 | 0.35 | 0.15 | 0.83 | 1.31 | 146.88 | 2 | 1 | 6 (11.23, 4.14) | 13th Gen Intel(R) Core(TM) i9-13900HX, ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA), xvfb, CPU throttled 4x, playthrough.autopilot, 9c1cfe2 2026-10-06 |
-| game:racer | 607 | 1.76 | 1.34 | 2.25 | 3.13 | 107.41 | 3 | 2 | 5 (5.09, 1.47) | 13th Gen Intel(R) Core(TM) i9-13900HX, ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA), xvfb, CPU throttled 4x, bench.autopilot, e0ab2a2 2026-10-09 |
+| game:racer | 607 | 1.69 | 1.29 | 2.08 | 3.36 | 119.2 | 2 | 2 | 5 (7.95, 4.05) | 13th Gen Intel(R) Core(TM) i9-13900HX, ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA), xvfb, CPU throttled 4x, bench.autopilot, c22ea5e 2026-10-09 |
 
 ## shadowbench
 
-`tools/bench/shadowbench/` in a browser (`tools/bench/measure_frames.py bench:shadowbench`): each case's frames' main-thread work, its mean in milliseconds by how many models it draws (the 95th percentile after it), traced by Chrome. The program's header says what each case is. On 13th Gen Intel(R) Core(TM) i9-13900HX, ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA), xvfb, CPU throttled 4x, the median of 1 run(s), 89284be 2026-10-09: another machine's are not comparable.
+`tools/bench/shadowbench/` in a browser (`tools/bench/measure_frames.py bench:shadowbench`): each case's frames' main-thread work, its mean in milliseconds by how many models it draws (the 95th percentile after it), traced by Chrome. The program's header says what each case is. On 13th Gen Intel(R) Core(TM) i9-13900HX, ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA), xvfb, CPU throttled 4x, the median of 1 run(s), c22ea5e 2026-10-09: another machine's are not comparable.
 
 | case | 100 models | 400 models | 1000 models | 4000 models |
 |---|---:|---:|---:|---:|
-| off | 1.45 (2.31) | 7.92 (27.22) | 18.14 (24.81) | 33.05 (38.38) |
-| sun 1024 | 11.95 (18.43) | 13.11 (21.96) | 22.05 (25.65) | 35.65 (37.42) |
-| sun 2048 | 11.43 (20.25) | 13.27 (23.45) | 21.89 (26.42) | 35.94 (41.6) |
-| sun 4096 | 13.93 (19.56) | 14.97 (17.18) | 22.77 (25.96) | 36.32 (41.69) |
-| two 1024 | 17.44 (24.38) | 20.03 (26.17) | 23.58 (28.57) | 37.68 (44.19) |
-| no receive | 0.41 (0.83) | 2.17 (4.99) | 18.44 (23.45) | 33.3 (38.72) |
-| shared | 11.27 (17.75) | 12.09 (22.53) | 20.37 (25.95) | 28.67 (31.04) |
-| wide, each | 12.74 (16.26) | 14.81 (22.66) | 23.6 (30.67) | 45.2 (49.37) |
-| wide, shared | 11.04 (20.19) | 11.45 (21.27) | 20.79 (24.68) | 34.92 (38.84) |
-| look away | 0.12 (0.43) | 0.14 (0.37) | 0.32 (0.87) | 1.48 (2.06) |
-| away, no cull | 11.6 (19.04) | 13.01 (20.77) | 21.03 (27.34) | 44.85 (64.34) |
+| off | 0.57 (1.17) | 1.97 (2.88) | 17.83 (23.52) | 32.72 (38.53) |
+| sun 1024 | 0.73 (1.16) | 2.82 (5.55) | 19.72 (25.42) | 33.12 (36.73) |
+| sun 2048 | 0.61 (1.11) | 3.23 (6.64) | 19.31 (23.51) | 33.1 (37.24) |
+| sun 4096 | 0.69 (1.04) | 3.72 (16.04) | 20.77 (25.94) | 33.34 (35.69) |
+| two 1024 | 0.76 (1.21) | 3.84 (13.81) | 20.25 (25.08) | 33.44 (35.82) |
+| no receive | 0.41 (0.83) | 1.9 (2.35) | 18.34 (24.6) | 32.74 (37.46) |
+| shared | 0.42 (0.96) | 1.72 (2.13) | 13.46 (14.41) | 27.48 (31.02) |
+| wide, each | 0.67 (1.08) | 3.31 (9.26) | 19.34 (21.28) | 38.76 (43.29) |
+| wide, shared | 0.33 (0.76) | 1.8 (5.9) | 18.85 (23.28) | 29.51 (31.72) |
+| look away | 0.11 (0.53) | 0.17 (0.56) | 0.33 (0.73) | 1.39 (1.78) |
+| away, no cull | 0.58 (0.98) | 1.9 (2.3) | 18.53 (22.91) | 32.13 (33.87) |
 
 ## Actors
 
