@@ -64,7 +64,7 @@ static void init(void *user)
         wgf_actor_look_at(camera, 0, 0, 0, 0, 1, 0);
         wgf_stage3d_set_camera(stage, camera);
         {
-            const wgf_environment_t sky = wgf_environment_create("environments/sky.hdr");
+            const wgf_environment_t sky = wgf_environment_create("environments/venice_sunset_1k.hdr");
             wgf_stage3d_set_environment(stage, sky, 1.0f, 0.0f);
             wgf_stage3d_set_background(stage, sky, 0.0f);
             wgf_resource_release(sky); /* the stage holds it */

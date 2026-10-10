@@ -27,7 +27,7 @@
  * world around them; rougher surfaces blur it. The environment is prepared on a worker
  * as it loads; until it is READY the stage is lit by nothing.
  *
- *   E            environment: the sky (a .hdr), the tiles (a PNG taken as sRGB), none
+ *   E            environment: sunset, studio, none
  *   B            background: sharp, soft, blurred, off
  *   T            tone mapping: Neutral, ACES, none
  *   UP / DOWN    exposure, half a stop a press
@@ -36,14 +36,14 @@
  *
  * libwgt's gfx-environment (wgrender's environment), which differs for the size table:
  * its walking character is a skinned, animated glTF, and libwgf has no skinning until
- * milestone 3, so the toy car (tools/gen_model.py) stands in its place; its two Poly Haven
- * photographs are a sky made here (tools/gen_sky.py) and the tiles. And the readout is
+ * milestone 3, so the toy car (tools/gen_model.py) stands in its place. And the readout is
  * fixed labels, no snprintf, as gfx-shadows. */
 
 enum { COLUMNS = 5, ENVIRONMENT_COUNT = 2, BLUR_COUNT = 3 };
 
-static const char *ENVIRONMENT_PATHS[ENVIRONMENT_COUNT] = {"environments/sky.hdr", "textures/tiles.png"};
-static const char *ENVIRONMENT_LABELS[ENVIRONMENT_COUNT + 1] = {"[E] the sky", "[E] the tiles", "[E] none"};
+static const char *ENVIRONMENT_PATHS[ENVIRONMENT_COUNT] = {"environments/venice_sunset_1k.hdr",
+                                                           "environments/studio_small_09_1k.hdr"};
+static const char *ENVIRONMENT_LABELS[ENVIRONMENT_COUNT + 1] = {"[E] sunset", "[E] studio", "[E] none"};
 static const float BLURS[BLUR_COUNT] = {0.0f, 0.35f, 0.8f};
 static const char *BLUR_LABELS[BLUR_COUNT + 1] = {"[B] sharp", "[B] soft", "[B] blurred", "[B] off"};
 static const char *TONEMAP_LABELS[] = {"[T] no tone mapping", "[T] Neutral", "[T] ACES"};

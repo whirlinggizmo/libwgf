@@ -344,7 +344,6 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `build_pages.py` | builds the GitHub Pages site: every game's web export, smoke-tested and within budget, and a page linking them |
 | `import_game.py` | copies a game written outside libwgf into `games/` (`../libwgf-racer/game` as `games/racer`), less its `build/` and `export/`, with `IMPORTED.md` naming its source and commit, so the checks, sizes, frame times, and Pages cover it; the copy is changed only in its source and imported again |
 | `gen_model.py` | writes the examples' glTF model (`examples/assets/models/toy_car.glb`), a toy car of named nodes, the same bytes every time (`--check`) |
-| `gen_sky.py` | writes the examples' sky (`examples/assets/environments/sky.hdr`), an equirectangular `.hdr` of a clear afternoon for gfx-environment, the same bytes every run on one machine (`--check`) |
 | `gen_brdf_lut.py` | writes the environments' split-sum BRDF table (`gfx/src/data/wgf_gfx_brdf_lut.h`, RG8), committed so building never computes it (`--check`: fails when stale; verify's `brdf-lut` step) |
 | `gen_sounds.py` | writes Asteroids' sounds (`games/asteroids/assets/sounds/`) from their synthesis, the same bytes every time (`--check`) |
 | `check_cli.py` | runs each `wgf` command on a game it makes from the template, judging what each made and said; `serve` is edited while it runs, and must keep its state, then has a texture and a glTF saved changed (shown, its state kept) and a texture saved broken (the old one kept, one error logged) |

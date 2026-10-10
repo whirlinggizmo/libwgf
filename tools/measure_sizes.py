@@ -82,8 +82,8 @@ ROWS = [
      'libwgf has no skinning or animation yet: the toy car in place of the walking character, and its readout fixed '
      'labels with no formatting'),
     ('gfx-environment', 'gfx-environment', 'environment', 'differs',
-     'libwgf has no skinning or animation yet: the toy car in place of the walking character; a sky of its own '
-     '(tools/gen_sky.py) and the tiles in place of the two Poly Haven photographs; its readout fixed labels'),
+     'libwgf has no skinning or animation yet: the toy car in place of the walking character, and its readout '
+     'fixed labels with no formatting'),
     ('gfx-textures', 'gfx-textures', 'textures', 'differs',
      'libwgf has no KTX (compressed) textures: their half loads the PNGs libwgt falls back to'),
     ('gfx-sprite2d', 'gfx-sprite2d', 'sprite2d', 'differs',
