@@ -1,4 +1,4 @@
-/* The shadow maps' depth pass (gfx/src/stage/wgf_gfx_shadow.c): the casters as a light
+/* The shadow maps' depth pass (libwgf/gfx/src/stage/wgf_gfx_shadow.c): the casters as a light
  * sees them. libwgt's wgt_gfx_depth.glsl (wgrender's), trimmed as the model shader is:
  * one caster a draw, its matrix a uniform (libwgt reads the frame's instance records,
  * step 11's), and no skinning (milestone 3's). Written once in sokol-shdc's annotated

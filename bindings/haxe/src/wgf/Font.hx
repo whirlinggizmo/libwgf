@@ -3,7 +3,7 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_font_t (gfx/include/wgf_font.h): 0 is none. **/
+/** A handle of kind wgf_font_t (libwgf/gfx/include/wgf_font.h): 0 is none. **/
 abstract Font(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

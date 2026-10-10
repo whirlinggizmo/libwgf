@@ -5,7 +5,7 @@
     tools/check_asset_cache.py PAGE_JS [--manifest [--no-subtle]]
                                [--browser PATH] [--verbose]
 
-Serves the page (asset/tests/wgf_asset_cache_page.c, built for the web) from a scratch
+Serves the page (libwgf/asset/tests/wgf_asset_cache_page.c, built for the web) from a scratch
 directory beside it, with the one file it loads, textures/tiles.png, beside it too, and
 visits it again and again in one browser context, so its IndexedDB cache carries over
 from visit to visit as a returning visitor's does. Between visits the file changes, and
@@ -307,7 +307,7 @@ def main():
     opts = parse_args()
     page_js = opts.page_js.resolve()
     if not page_js.exists():
-        sys.exit(f'check_asset_cache: no page at {page_js} (build asset/tests/wgf_asset_cache_page.c for the web)')
+        sys.exit(f'check_asset_cache: no page at {page_js} (build libwgf/asset/tests/wgf_asset_cache_page.c for the web)')
     try:
         browser_path = browser.find_browser(opts.browser)
     except RuntimeError as e:

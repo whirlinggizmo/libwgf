@@ -83,7 +83,7 @@ The tests run under node; the ones that need a real browser (IndexedDB, WebGL2's
 
 ## Shaders
 
-gfx's shaders (`gfx/src/shaders/*.glsl`) are written once in sokol-shdc's annotated GLSL and compiled into headers for GL 4.1 and WebGL2 by `gen_shaders.py`, which are committed: building never runs the compiler, the pinned sokol-shdc that `setup_shdc.py` downloads.
+gfx's shaders (`libwgf/gfx/src/shaders/*.glsl`) are written once in sokol-shdc's annotated GLSL and compiled into headers for GL 4.1 and WebGL2 by `gen_shaders.py`, which are committed: building never runs the compiler, the pinned sokol-shdc that `setup_shdc.py` downloads.
 
 ```sh
 python3 tools/gen_shaders.py           # every shader's header again, after changing its GLSL (--check: fail if stale)
@@ -347,7 +347,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `build_pages.py` | builds the GitHub Pages site: every game's web export, smoke-tested and within budget, and a page linking them |
 | `import_game.py` | copies a game written outside libwgf into `games/` (`../libwgf-racer/game` as `games/racer`), less its `build/` and `export/`, with `IMPORTED.md` naming its source and commit, so the checks, sizes, frame times, and Pages cover it; the copy is changed only in its source and imported again |
 | `gen_model.py` | writes the examples' glTF model (`examples/assets/models/toy_car.glb`), a toy car of named nodes, the same bytes every time (`--check`) |
-| `gen_brdf_lut.py` | writes the environments' split-sum BRDF table (`gfx/src/data/wgf_gfx_brdf_lut.h`, RG8), committed so building never computes it (`--check`: fails when stale; verify's `brdf-lut` step) |
+| `gen_brdf_lut.py` | writes the environments' split-sum BRDF table (`libwgf/gfx/src/data/wgf_gfx_brdf_lut.h`, RG8), committed so building never computes it (`--check`: fails when stale; verify's `brdf-lut` step) |
 | `gen_sounds.py` | writes Asteroids' sounds (`games/asteroids/assets/sounds/`) from their synthesis, the same bytes every time (`--check`) |
 | `check_cli.py` | runs each `wgf` command on a game it makes from the template, judging what each made and said; `serve` is edited while it runs, and must keep its state, then has a texture and a glTF saved changed (shown, its state kept) and a texture saved broken (the old one kept, one error logged) |
 | `check_features.py` | runs the feature test (`examples/haxe/feature-test/`) on hxcpp, under node, and in a browser, failing a call it never reached |

@@ -3,7 +3,7 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_mesh_t (gfx/include/wgf_mesh.h): 0 is none. **/
+/** A handle of kind wgf_mesh_t (libwgf/gfx/include/wgf_mesh.h): 0 is none. **/
 abstract Mesh(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Write the environments' split-sum BRDF table, gfx/src/data/wgf_gfx_brdf_lut.h.
+"""Write the environments' split-sum BRDF table, libwgf/gfx/src/data/wgf_gfx_brdf_lut.h.
 
     tools/gen_brdf_lut.py [--check]
 
-The table image-based lighting reads (gfx/src/stage/wgf_gfx_environment.c): for each
+The table image-based lighting reads (libwgf/gfx/src/stage/wgf_gfx_environment.c): for each
 n.v (x) and perceptual roughness (y), 64 of each at their texels' centres, the scale A and
 bias B that turn F0 into the specular reflectance of a GGX surface under uniform light
 (Karis' split sum), integrated over 256 GGX importance samples (Hammersley points) with
@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / 'gfx' / 'src' / 'data' / 'wgf_gfx_brdf_lut.h'
+OUT = ROOT / 'libwgf' / 'gfx' / 'src' / 'data' / 'wgf_gfx_brdf_lut.h'
 SIZE = 64
 SAMPLES = 256
 

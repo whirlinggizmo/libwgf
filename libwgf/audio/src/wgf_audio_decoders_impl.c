@@ -4,7 +4,7 @@
  * Xiph's libvorbis and libogg (deps/xiph/), compiled from their own files. Native
  * only: on the web the browser decodes. Files are untrusted input: the sanitizer
  * presets' tests load broken and cut-short ones of each format
- * (audio/tests/wgf_audio_decoders_test.c). */
+ * (libwgf/audio/tests/wgf_audio_decoders_test.c). */
 #define DR_WAV_IMPLEMENTATION
 #include "dr_wav.h"
 #define DR_MP3_IMPLEMENTATION

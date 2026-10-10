@@ -18,7 +18,7 @@ import shutil
 import subprocess
 import sys
 
-# the pkg-config modules platform links on Linux (platform/CMakeLists.txt), and audio's (alsa)
+# the pkg-config modules platform links on Linux (libwgf/platform/CMakeLists.txt), and audio's (alsa)
 MODULES = ['gl', 'x11', 'xi', 'xcursor', 'xrandr', 'alsa']
 
 PACKAGES = {

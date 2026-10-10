@@ -3,7 +3,7 @@
 
     tools/gen_shaders.py [--check]
 
-Each shader in gfx/src/shaders/, written once in sokol-shdc's annotated GLSL, becomes
+Each shader in libwgf/gfx/src/shaders/, written once in sokol-shdc's annotated GLSL, becomes
 the *.glsl.h beside it: the sources and reflection for every backend gfx runs on -- GL
 4.1 natively and WebGL2 (GLSL 300 es) on the web -- each behind #if
 defined(SOKOL_<backend>) (--ifdef), so a build carries only its own. Run it after
@@ -21,7 +21,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SHADERS = ROOT / 'gfx' / 'src' / 'shaders'
+SHADERS = ROOT / 'libwgf' / 'gfx' / 'src' / 'shaders'
 SLANG = 'glsl410:glsl300es'
 
 

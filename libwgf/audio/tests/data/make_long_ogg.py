@@ -1,4 +1,4 @@
-"""How audio/tests/data/long.ogg was made, kept for remaking it; not a tool (it runs
+"""How libwgf/audio/tests/data/long.ogg was made, kept for remaking it; not a tool (it runs
 ffmpeg, which a tool may not assume) and not run by any build.
 
 Forty seconds of mono at 44.1 kHz, a 440 Hz tone under quiet noise (so the encoder has
@@ -7,7 +7,7 @@ decoder keeps ahead of a file arriving, wgf_audio_mix.c), encoded by ffmpeg's li
 (ffmpeg 6.1.1, -q:a 4). For a streamed sound read while its file arrives
 (wgf_audio_arrive_test.c).
 
-    python3 audio/tests/data/make_long_ogg.py [DIR]
+    python3 libwgf/audio/tests/data/make_long_ogg.py [DIR]
 """
 import math
 import random

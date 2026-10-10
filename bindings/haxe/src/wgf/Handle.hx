@@ -3,7 +3,7 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_handle_t (core/include/wgf_handle.h): 0 is none. **/
+/** A handle of kind wgf_handle_t (libwgf/core/include/wgf_handle.h): 0 is none. **/
 abstract Handle(Int) from Int to Int {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

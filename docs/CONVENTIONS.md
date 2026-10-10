@@ -10,12 +10,13 @@ libwgf/
   README.md  AGENTS.md  BUILDING.md  LICENSE  THIRD_PARTY_NOTICES.md
   wgf             the command-line tool's launcher (tools/wgf/)
   include/        wgf_api.h, the export macro every public header uses
-  math/ core/ platform/ asset/ gfx/ audio/      the layers
-  ecs/ ui/                                      the optional modules
-  app/                                          the runtime
-    include/      public headers
-    src/          implementation and private headers
-    tests/
+  libwgf/         the library, a directory a layer:
+    math/ core/ platform/ asset/ gfx/ audio/    the layers
+    ecs/ physics3d/ ui/                         the optional modules
+    app/                                        the runtime
+      include/    public headers
+      src/        implementation and private headers
+      tests/
   hosts/web/      the web host JS and Haxe programs run on
   bindings/js/    the JS binding (wgf.js, wgf.d.ts), the one way JS reaches the host
   bindings/haxe/  the Haxe binding (haxelib wgf), built on the JS binding on the web
@@ -32,7 +33,7 @@ libwgf/
 
 ## Layers and dependencies
 
-libwgf is one library, `libwgf.a` (`wgf.lib` with MSVC), built in layers and modules: directories that depend on each other in one direction. A program runs through app's runtime (`wgf_app_run`), which starts and drives everything below it.
+libwgf is one library, `libwgf.a` (`wgf.lib` with MSVC), built in layers and modules: directories under `libwgf/` that depend on each other in one direction. A program runs through app's runtime (`wgf_app_run`), which starts and drives everything below it.
 
 | Layer | Role | May depend on |
 |------|------|---------------|
@@ -120,7 +121,7 @@ No other pointer, no struct, no function pointer, no `void *`, no variadic call.
 
 ## Code
 
-- C11, compiled with `-Wall -Wextra -Wpedantic` (`/W4` with MSVC), warnings as errors. The one C++ file is physics3d's way into Jolt (`physics3d/src/wgf_physics3d_jolt.cpp`, C++17 without exceptions or RTTI), its interface C; C++ is in no other file, and in no header.
+- C11, compiled with `-Wall -Wextra -Wpedantic` (`/W4` with MSVC), warnings as errors. The one C++ file is physics3d's way into Jolt (`libwgf/physics3d/src/wgf_physics3d_jolt.cpp`, C++17 without exceptions or RTTI), its interface C; C++ is in no other file, and in no header.
 - Four spaces, no tabs; lines up to 120 columns; a function's opening brace on its own line, a block's on the line of its statement. Comments are `/* */`, sentences, saying what and why, not how.
 - A public header comment says what the call does now, and is changed in the commit that changes the behavior. When a header and the code disagree, the header is the bug.
 - What a simulation starts from or steps with is the same to the bit on every target: trigonometry there is `wgf_trig.h`'s (Haxe's `Trig`), never the C library's or a binding's own, whose results differ by target (glibc's and Emscripten's `sinf` disagree in a last bit), and a check holds a pile of physics bodies to one hash on every target (`wgf_physics3d_test`).

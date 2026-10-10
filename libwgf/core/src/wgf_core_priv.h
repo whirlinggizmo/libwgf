@@ -18,7 +18,7 @@ void wgf_core_priv_shutdown(void);
  * isn't running: nothing. */
 void wgf_core_priv_update(void);
 
-/* The program's identity (wgf_identity.h; core/src/wgf_core_identity.c). `name` made one safe
+/* The program's identity (wgf_identity.h; libwgf/core/src/wgf_core_identity.c). `name` made one safe
  * path component into `out`, as the header says; false for a name refused (NULL, too
  * long, nothing left). And the directory the identity names under the user's cache,
  * <user cache>/<company>/<app> (Windows: .../cache under it), with "/"; false where

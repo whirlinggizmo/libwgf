@@ -5,8 +5,8 @@ closed").
 
     tools/check_stream.py PAGE_JS [--browser PATH] [--verbose]
 
-Serves the page (audio/tests/wgf_audio_stream_page.c, built for the web) from a scratch
-directory beside it, with the file it plays, music/long.ogg (audio/tests/data), sent
+Serves the page (libwgf/audio/tests/wgf_audio_stream_page.c, built for the web) from a scratch
+directory beside it, with the file it plays, music/long.ogg (libwgf/audio/tests/data), sent
 slowly, 16 KB every 0.3 s (about 7.5 s), as a slow connection would, no-store (so a
 cached copy is always asked about), with Last-Modified and a 304 for an unchanged one. A
 mod's redirect (mods/loud/music/) is asked first and hasn't it (404). Visits the page
@@ -291,7 +291,7 @@ def main():
     opts = parse_args()
     page_js = opts.page_js.resolve()
     if not page_js.exists():
-        sys.exit(f'check_stream: no page at {page_js} (build audio/tests/wgf_audio_stream_page.c for the web)')
+        sys.exit(f'check_stream: no page at {page_js} (build libwgf/audio/tests/wgf_audio_stream_page.c for the web)')
     try:
         browser_path = browser.find_browser(opts.browser)
     except RuntimeError as e:
@@ -303,7 +303,7 @@ def main():
     for built in (page_js, page_js.with_suffix('.wasm')):
         shutil.copy2(built, work / built.name)
     music = work / MUSIC
-    shutil.copy2(browser.ROOT / 'audio' / 'tests' / 'data' / 'long.ogg', music)
+    shutil.copy2(browser.ROOT / 'libwgf' / 'audio' / 'tests' / 'data' / 'long.ogg', music)
     os.utime(music, (time.time() - 60, time.time() - 60))
 
     def touch():

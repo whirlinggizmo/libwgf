@@ -91,7 +91,7 @@ def run(program, row):
 
 def store_rows(runs):
     """The store bench's rows, store-<name>: the median of `runs` runs' nanoseconds."""
-    bench = Path(variants.work(VARIANT)) / 'ecs' / 'wgf_ecs_store_bench'
+    bench = Path(variants.work(VARIANT)) / 'libwgf' / 'ecs' / 'wgf_ecs_store_bench'
     each = {}
     for _ in range(runs):
         done = subprocess.run([str(bench)], capture_output=True, text=True, timeout=SECONDS)

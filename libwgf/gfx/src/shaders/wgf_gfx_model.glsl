@@ -1,4 +1,4 @@
-/* A stage's models (gfx/src/stage/wgf_gfx_stage.c): glTF metallic-roughness materials,
+/* A stage's models (libwgf/gfx/src/stage/wgf_gfx_stage.c): glTF metallic-roughness materials,
  * lit by up to 8 lights, tone mapped. libwgt's wgt_gfx_model.glsl and wgt_gfx_pbr.glsl
  * (wgrender's), trimmed to what milestone 2 draws so far: one model a draw, its
  * matrices uniforms (libwgt's per-instance texture comes with instancing, step 11),

@@ -3,7 +3,7 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_asset_task_t (asset/include/wgf_asset.h): 0 is none. **/
+/** A handle of kind wgf_asset_task_t (libwgf/asset/include/wgf_asset.h): 0 is none. **/
 abstract AssetTask(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

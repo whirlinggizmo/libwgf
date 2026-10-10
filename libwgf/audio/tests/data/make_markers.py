@@ -1,4 +1,4 @@
-"""How audio/tests/data/markers*.mp3 were made, kept for remaking them; not a tool (it
+"""How libwgf/audio/tests/data/markers*.mp3 were made, kept for remaking them; not a tool (it
 runs ffmpeg, which a tool may not assume) and not run by any build.
 
 Two seconds of mono silence at 44.1 kHz with a marker (10 ms of a 1 kHz tone, which the
@@ -13,7 +13,7 @@ and 1.5 s, encoded by ffmpeg's libmp3lame (ffmpeg 6.1.1, 128 kbps CBR):
                        much the encoder delayed the audio, and every decoder plays the
                        markers late, by LAME's 576 frames plus the decoder's 529
 
-    python3 audio/tests/data/make_markers.py [DIR]
+    python3 libwgf/audio/tests/data/make_markers.py [DIR]
 """
 import math
 import struct

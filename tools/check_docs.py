@@ -7,7 +7,7 @@ link in them goes somewhere.
   links     every relative link in the repository's Markdown (what git tracks, not deps/,
             nor a game imported into games/, whose docs are its source's: IMPORTED.md
             beside them) names a file or directory that exists
-  headers   every public header (<layer>/include/wgf_*.h, include/) is named in
+  headers   every public header (libwgf/<layer>/include/wgf_*.h) is named in
             docs/ARCHITECTURE.md, which describes each section
   tools     every tool a person runs (tools/ and tools/wgf/, check_tools' commands) is
             named in BUILDING.md, which says what each does
@@ -64,7 +64,7 @@ def check_links():
 def check_headers():
     text = (ROOT / 'docs' / 'ARCHITECTURE.md').read_text(encoding='utf-8')
     problems = []
-    for header in sorted(ROOT.glob('*/include/wgf*.h')):
+    for header in sorted(ROOT.glob('libwgf/*/include/wgf*.h')):
         if header.name not in text and header.parent.parent.name != 'math':
             problems.append(f'docs/ARCHITECTURE.md doesn\'t name {header.relative_to(ROOT).as_posix()}')
     return problems

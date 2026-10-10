@@ -1,4 +1,4 @@
-/* An environment behind a stage's models (gfx/src/stage/wgf_gfx_environment.c): a
+/* An environment behind a stage's models (libwgf/gfx/src/stage/wgf_gfx_environment.c): a
  * full-screen triangle at the far plane, each pixel the environment in its view direction,
  * a mip of its background cube for blur, tone mapped as the stage is. libwgt's background
  * program (wgrender's), in a file of its own so a program with no environment links none

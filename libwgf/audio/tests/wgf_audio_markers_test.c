@@ -12,7 +12,7 @@
 #include "wgf_time.h"
 #include "wgf_voice.h"
 
-/* MP3's encoder delay, natively (audio/tests/data/make_markers.py): markers at 0.5, 1.0,
+/* MP3's encoder delay, natively (libwgf/audio/tests/data/make_markers.py): markers at 0.5, 1.0,
  * and 1.5 s. The file whose Info frame says its encoder's delay plays them on time, so a
  * segment starting on a marker starts with it; the file without plays them late by the
  * encoder's and decoder's delay (1105 frames, 25 ms), which no decoder can know. The

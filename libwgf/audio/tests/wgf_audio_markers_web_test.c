@@ -9,7 +9,7 @@
 #include "wgf_window.h"
 
 /* MP3's encoder delay in a browser (tools/run_in_browser.py): the markers of
- * audio/tests/data/make_markers.py, at 0.5, 1.0, and 1.5 s, found in the AudioBuffer the
+ * libwgf/audio/tests/data/make_markers.py, at 0.5, 1.0, and 1.5 s, found in the AudioBuffer the
  * browser decoded each file into. Whether the browser reads the delay the Info frame
  * writes decides whether an MP3's segments land on time there. Chromium reads it, as the
  * native decoder does (wgf_audio_markers_test): on time within 2 ms with it, the

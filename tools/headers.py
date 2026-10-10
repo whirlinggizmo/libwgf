@@ -8,7 +8,7 @@ scans source).
     api.functions['wgf_model_create'].params   # [Param(name='mesh', type='wgf_handle_t', ...)]
 
 One translation unit includes every public header (include/ and each layer's
-<layer>/include/), and clang parses it once: its JSON AST for the declarations
+libwgf/<layer>/include/), and clang parses it once: its JSON AST for the declarations
 (-fparse-all-comments attaches each comment to what it precedes), and its preprocessor
 (-E -dD) for the #defines, which the AST doesn't keep. Types are clang's spelling
 (`const char *`, `wgf_handle_t`) and, beside it, what they are through every typedef
@@ -26,6 +26,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 LAYERS = ('math', 'core', 'platform', 'asset', 'gfx', 'audio', 'ecs', 'physics3d', 'ui', 'app')
+LAYER_ROOT = 'libwgf'  # the layers' directories are under it: libwgf/core/include, ...
 
 
 @dataclass
@@ -41,7 +42,7 @@ class Function:
     returns: str     # clang's spelling
     returns_canonical: str  # through every typedef; None for a function pointer
     params: list     # [Param]; empty for (void)
-    header: str      # its path from the root: 'gfx/include/wgf_model.h'
+    header: str      # its path from the root: 'libwgf/gfx/include/wgf_model.h'
     doc: str         # the comment above it, as text ('' when none)
     variadic: bool = False
     exported: bool = False   # marked WGF_API: clang's visibility attribute
@@ -107,14 +108,14 @@ def find_clang(emcc=None):
 
 def include_dirs(root=ROOT):
     root = Path(root)
-    return [d for d in [root / 'include'] + [root / layer / 'include' for layer in LAYERS] if d.is_dir()]
+    return [d for d in [root / 'include'] + [root / LAYER_ROOT / layer / 'include' for layer in LAYERS] if d.is_dir()]
 
 
 def public_headers(root=ROOT):
     """Every layer's public headers, from the root, layer by layer; include/'s
     wgf_api.h, which only defines the export macro, is read through them."""
     root = Path(root)
-    return [h for layer in LAYERS for h in sorted((root / layer / 'include').glob('*.h'))]
+    return [h for layer in LAYERS for h in sorted((root / LAYER_ROOT / layer / 'include').glob('*.h'))]
 
 
 class ClangError(RuntimeError):

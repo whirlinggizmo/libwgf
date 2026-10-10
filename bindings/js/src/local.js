@@ -1,8 +1,8 @@
 // The calls the JS binding works itself rather than crossing into the host (LOCAL in
 // tools/jsbinding.py): arithmetic on their arguments alone, which a crossing into wasm
 // costs more than, for a JS program and Haxe's JS target alike, worked here to the same
-// bits C gives -- the colors' (gfx/src/color/wgf_gfx_color.c) and the trigonometry's
-// (math/src/wgf_math_trig.c). Each step rounds where C's does: to a 32-bit float after every
+// bits C gives -- the colors' (libwgf/gfx/src/color/wgf_gfx_color.c) and the trigonometry's
+// (libwgf/math/src/wgf_math_trig.c). Each step rounds where C's does: to a 32-bit float after every
 // float operation (Math.fround: a double operation on floats, then rounded, is the float
 // operation's result), and nowhere else. tools/gen_binding.py puts each block where its call
 // goes in wgf.js, and a release copy keeps a group's helpers only with a call of its group;

@@ -3,7 +3,7 @@
 
     tools/check_api.py [--self-test]
 
-Reads every public header (<layer>/include/*.h) through clang, all of them in one
+Reads every public header (libwgf/<layer>/include/*.h) through clang, all of them in one
 parse (tools/headers.py), and checks each exported function -- the ones a binding calls:
 
   name        wgf_<section>_<action>, and is marked WGF_API (exported). A layer
@@ -166,7 +166,7 @@ def classify(written, canonical, handles):
 def check_function(fn, errors, callbacks, handles, any_handle):
     name = fn.name
     where = f'{fn.header}: {name}'
-    layer = fn.header.split('/', 1)[0]
+    layer = fn.header.split('/')[1]  # libwgf/<layer>/include/...: headers.LAYER_ROOT, then the layer
     if not name.startswith('wgf_'):
         errors.append(f'{where}: a public function is named wgf_<section>_<action>')
     elif name.startswith(f'wgf_{layer}_') and not fn.header.endswith(f'/wgf_{layer}.h'):
@@ -405,12 +405,12 @@ def self_test():
     nothing that keeps the rules is."""
     with tempfile.TemporaryDirectory() as tmp:
         tree = Path(tmp)
-        (tree / 'core' / 'include').mkdir(parents=True)
+        (tree / 'libwgf' / 'core' / 'include').mkdir(parents=True)
         shutil.copytree(ROOT / 'include', tree / 'include')
-        shutil.copy(ROOT / 'core' / 'include' / 'wgf.h', tree / 'core' / 'include')
-        shutil.copy(ROOT / 'core' / 'include' / 'wgf_handle.h', tree / 'core' / 'include')
-        shutil.copytree(ROOT / 'math' / 'include', tree / 'math' / 'include')
-        (tree / 'core' / 'include' / 'wgf_bad.h').write_text(BAD_HEADER)
+        shutil.copy(ROOT / 'libwgf' / 'core' / 'include' / 'wgf.h', tree / 'libwgf' / 'core' / 'include')
+        shutil.copy(ROOT / 'libwgf' / 'core' / 'include' / 'wgf_handle.h', tree / 'libwgf' / 'core' / 'include')
+        shutil.copytree(ROOT / 'libwgf' / 'math' / 'include', tree / 'libwgf' / 'math' / 'include')
+        (tree / 'libwgf' / 'core' / 'include' / 'wgf_bad.h').write_text(BAD_HEADER)
         errors, _ = check_tree(tree, SELF_TEST_EXEMPT, SELF_TEST_PAIRED, SELF_TEST_CALLBACKS, SELF_TEST_ANY,
                                SELF_TEST_MADE)
     errors = [e for e in errors if 'wgf_bad.h' in e or e.startswith('wgf_bad_') or e.startswith('wgf_core_bad_')]
