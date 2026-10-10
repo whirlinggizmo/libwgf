@@ -15,20 +15,16 @@
 
 /* Textures from image files, loaded as they are created: each drawn large with smooth
  * (linear) and sharp (nearest) sampling side by side, with its size and how long it
- * took from asking to having it. Below, the logo and the flame again under their
- * "name.ktx" names, as the PNG each falls back to.
+ * took from asking to having it. Below, the logo and the flame again as "name.ktx": the
+ * texture compressed for this GPU (name.bc7.ktx on desktops, name.astc.ktx on phones,
+ * name.etc2.ktx on older phones, else name.png), made beforehand by
+ * tools/compress_textures.py.
  *
  *   Esc   quit, where quitting means anything
  *
  * libwgt's gfx-textures (wgrender's textures) done 1:1, so the two compare in the size
  * table: the same window, files, layout, and text. Where it differs, and why:
  *   - "libwgt" reads "libwgf" in the window's title and the heading: the library's name.
- *   - The compressed half loads the PNGs, not "name.ktx": libwgf has no compressed (KTX)
- *     textures, and examples/assets/ has no .ktx files. libwgt picks "else name.png" on
- *     a GPU with no variant, so this is what libwgt shows there: each captioned
- *     "name.ktx: name.png", sampled smooth, its GPU memory counted as RGBA. The PNG is
- *     the texture already made above (the same path gives the same texture), so its
- *     time is from its own asking to that texture being ready.
  *   - A texture not ready yet draws nothing, where libwgt's draws the magenta and black
  *     checker: libwgf draws the checker only for one that FAILED (wgf_draw.h). */
 
@@ -38,11 +34,9 @@ static const char *PATHS[TEXTURES] = {"sprites/logo/wg-logo-bw-alpha.png", "text
 
 enum { TILES = 2 };
 
-/* The compressed half: the logo and the flame, named as name.ktx, loaded as the PNG
- * libwgt falls back to. */
+/* The compressed half: the logo and the flame, as name.ktx. */
 enum { COMPRESSED = 2 };
 static const char *KTX_PATHS[COMPRESSED] = {"sprites/logo/wg-logo-bw-alpha.ktx", "textures/flame.ktx"};
-static const char *FALLBACK_PATHS[COMPRESSED] = {"sprites/logo/wg-logo-bw-alpha.png", "textures/flame.png"};
 
 /* The tile sheet's cells, in its pixels: x, y, width, height (wgrender's
  * tools/gen_tiles.py). Each has a 2 pixel gutter around it repeating its edge, so
@@ -129,9 +123,6 @@ static void frame(void *user)
     wgf_draw_text(0, "compressed: as name.ktx, this GPU's variant or else the PNG", 12, 300, 22, WGF_COLOR_RAYWHITE);
     for (t = 0; t < COMPRESSED; t++) {
         const float x = 20.0f + (float)t * 330.0f, y = 350.0f;
-        /* The PNG is the texture drawn sharp above: smooth, as libwgt's own .ktx texture is. */
-        wgf_texture_set_sampling(compressed[t].texture, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP,
-                                 WGF_TEXTURE_FILTER_LINEAR);
         wgf_draw_texture(compressed[t].texture, x, y, 150, 150, WGF_COLOR_WHITE);
         draw_caption(&compressed[t], KTX_PATHS[t], x, y + 166);
     }
@@ -149,7 +140,7 @@ static void init(void *user)
     }
     for (t = 0; t < COMPRESSED; t++) {
         compressed[t].asked = wgf_time_get_seconds();
-        compressed[t].texture = wgf_texture_create(FALLBACK_PATHS[t]);
+        compressed[t].texture = wgf_texture_create(KTX_PATHS[t]);
     }
 }
 
