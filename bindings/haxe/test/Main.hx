@@ -148,36 +148,38 @@ class Main {
 
 	static function frame():Void {
 		frames++;
-		switch frames {
-			case 1:
-				expect(Rock.made == 2 && Behavior.count() == 4, "the behaviors made from CREATED");
-				expect(Behavior.of(a) != null && Behavior.of(a).name == "Rock", "a's behavior");
-				// a getter 100,000 times in one frame: nothing may pile up on the wasm stack
-				final v = new Vec3();
-				var sum = 0.0;
-				for (_ in 0...100000)
-					sum += a.getPosition(v).x;
-				expect(near(sum, 1000000), "100,000 vector getters in a frame");
-				var names = 0;
-				for (_ in 0...20000)
-					names += world.find("rock ünïcødé ✓") == a ? 1 : 0;
-				expect(names == 20000, "20,000 calls passing text in a frame");
-			case 3:
-				expect(Rock.entered == 2 && Rock.layers == 2, "both told of their trigger, and the other's layer (1)");
-				expect(Rock.ticks > 0, "the behaviors ticked");
-				expect(Doomer.entered == 1, "a trigger whose actor was destroyed earlier in the batch: dropped");
-				a.destroy(ActorDestroy.DESTROY_CHILDREN);
-				expect(a.getKind() == ActorKind.NONE, "destroyed");
-			case 5:
-				expect(Rock.ended == 1 && Behavior.count() == 2 && Behavior.of(a) == null, "its behavior ended from DESTROYED");
-				if (Ui.begin()) {
-					Ui.beginPanel("p");
-					Ui.label("ünïcødé", 0);
-					expect(!Ui.button("b", "Button"), "a UI");
-					Ui.endPanel();
-					expect(Ui.end(), "ended");
-				}
-			default:
+		if (frames == 1) {
+			expect(Rock.made == 2 && Behavior.count() == 4, "the behaviors made from CREATED");
+			expect(Behavior.of(a) != null && Behavior.of(a).name == "Rock", "a's behavior");
+			// a getter 100,000 times in one frame: nothing may pile up on the wasm stack
+			final v = new Vec3();
+			var sum = 0.0;
+			for (_ in 0...100000)
+				sum += a.getPosition(v).x;
+			expect(near(sum, 1000000), "100,000 vector getters in a frame");
+			var names = 0;
+			for (_ in 0...20000)
+				names += world.find("rock ünïcødé ✓") == a ? 1 : 0;
+			expect(names == 20000, "20,000 calls passing text in a frame");
+		}
+		// the triggers and ticks come with the fixed-rate ticks, so with the time the frames
+		// carry: waited for, as a browser's first frames may carry little
+		if (destroyedAt == 0 && frames >= 3 && (Rock.entered == 2 && Rock.ticks > 0 && Doomer.entered >= 1 || frames > 300)) {
+			expect(Rock.entered == 2 && Rock.layers == 2, "both told of their trigger, and the other's layer (1)");
+			expect(Rock.ticks > 0, "the behaviors ticked");
+			expect(Doomer.entered == 1, "a trigger whose actor was destroyed earlier in the batch: dropped");
+			a.destroy(ActorDestroy.DESTROY_CHILDREN);
+			expect(a.getKind() == ActorKind.NONE, "destroyed");
+			destroyedAt = frames;
+		} else if (destroyedAt > 0 && frames == destroyedAt + 2) {
+			expect(Rock.ended == 1 && Behavior.count() == 2 && Behavior.of(a) == null, "its behavior ended from DESTROYED");
+			if (Ui.begin()) {
+				Ui.beginPanel("p");
+				Ui.label("ünïcødé", 0);
+				expect(!Ui.button("b", "Button"), "a UI");
+				Ui.endPanel();
+				expect(Ui.end(), "ended");
+			}
 		}
 		// the byte span's write, then its read: each waited on, as a page's storage takes a while
 		if (frames > 300 && stage < 3) {
@@ -196,7 +198,7 @@ class Main {
 			write.destroy();
 			stage = 2;
 		}
-		if (frames >= 9 && stage >= 2 && !reported) {
+		if (destroyedAt > 0 && frames >= destroyedAt + 6 && stage >= 2 && !reported) {
 			reported = true;
 			if (App.canQuit())
 				App.quit();
@@ -207,6 +209,7 @@ class Main {
 
 	static var stage = 0;
 	static var reported = false;
+	static var destroyedAt = 0;
 
 	static function shutdown():Void {
 		expect(Rock.ended == 2, "the last behavior ended at shutdown");
