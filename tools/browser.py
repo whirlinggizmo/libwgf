@@ -131,6 +131,20 @@ def wait_for(url, what, timeout=10):
     raise RuntimeError(f'{what} did not start ({url})')
 
 
+def page_target(debug_base, timeout=10):
+    """The browser's page among its DevTools targets, polled until there is one: its list can
+    answer before the page is in it (found on Windows, where the first answer was empty)."""
+    deadline = time.monotonic() + timeout
+    while True:
+        targets = json.loads(wait_for(f'{debug_base}/json/list', 'page', timeout))
+        page = next((t for t in targets if t.get('type') == 'page'), None)
+        if page is not None:
+            return page
+        if time.monotonic() >= deadline:
+            raise RuntimeError(f'the browser has no page ({debug_base}/json/list)')
+        time.sleep(0.1)
+
+
 class WebSocket:
     """A WebSocket client for a local DevTools endpoint: text messages in and out."""
 

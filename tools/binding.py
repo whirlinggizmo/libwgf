@@ -2,7 +2,6 @@
 target, for the tools that make and check the binding and the programs on it
 (tools/gen_binding.py, tools/check_binding.py, tools/check_features.py). Standard library
 only."""
-import json
 import os
 import shutil
 import subprocess
@@ -136,8 +135,7 @@ def run_browser(name, source, mark, browser_path, defines=(), timeout=120, relea
     try:
         debug_base, session = browser.launch_browser(processes, browser_path, 'headless')
         session.close()
-        target = json.loads(browser.wait_for(f'{debug_base}/json/list', 'page'))
-        page_target = next(t for t in target if t.get('type') == 'page')
+        page_target = browser.page_target(debug_base)
         session = browser.open_session(page_target['webSocketDebuggerUrl'])
         session.on_event(on_event)
         session.send('Runtime.enable')

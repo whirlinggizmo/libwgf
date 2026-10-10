@@ -148,8 +148,7 @@ def run(site, flown, display, throttle, browser_path, timeout=600, bench=None):
     try:
         debug_base, session = browser.launch_browser(processes, browser_path, display)
         session.close()
-        target = json.loads(browser.wait_for(f'{debug_base}/json/list', 'page'))
-        page = browser.open_session(next(t for t in target if t.get('type') == 'page')['webSocketDebuggerUrl'])
+        page = browser.open_session(browser.page_target(debug_base)['webSocketDebuggerUrl'])
         page.on_event(on_event)
         page.send('Runtime.enable')
         page.send('Page.enable')
