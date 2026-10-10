@@ -368,6 +368,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `run_smoke.py` | runs every example headless, failing a crash, a hang, an error log, or a sokol panic; a Windows variant on Linux under Wine |
 | `check_desktop.py` | runs every example in a window on Xvfb, a Windows variant under Wine there, with screenshots |
 | `check_web.py` | runs every example in a headless browser, each in a context of its own, checking it once its loads are done, with screenshots |
+| `check_racer_stream.py` | the racer's web export on an emulated "Fast 4G" network, visited three times in one browser context, flying its `stream.autopilot`: first with nothing cached (no frame over 33 ms once its race starts, on the reference machine's settings), again with nothing downloaded, and with its files blocked, starting from the cache; skipped until the racer has the autopilot |
 | `check_asset_cache.py` | visits the asset cache's test page again and again in one browser context, judging each visit by its requests, log, and screen (ctest runs it on the web presets) |
 | `check_stream.py` | serves a streamed sound slowly to its test page and checks each case: played as it arrives, from the cache, after a 304, through a redirect (ctest runs it on the web presets) |
 | `update_scene.py` | updates scene files from `wgf-scene 1` to `wgf-scene 2`, in place, by the rule in "Scene files" (`--check`: fails naming a file still at version 1) |
