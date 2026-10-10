@@ -161,7 +161,14 @@ No other pointer, no struct, no function pointer, no `void *`, no variadic call.
 - A tool you run is named `<verb>_<noun>.py`, its verb from check_tools' `VERBS`; a module that tools import is one word, listed in `MODULES`. No file imports a command.
 - A check that can't run here (no compiler, browser, Wine, Xvfb) says `<tool>: SKIPPING <what> (<why>)` before running anything, and a driver of checks repeats every skip in its last line. A skipped check is reported as skipped, never as passed.
 - Rules are enforced by the compiler and CMake where possible. A check of the API reads headers through clang (`tools/headers.py`), never regular expressions over source.
-- Before a change is done, every preset this machine can build passes its tests: `tools/verify_builds.py` runs them, `--web` adds the web, `--windows HOST` a Windows machine.
+
+## Verifying
+
+`tools/verify_builds.py` runs two tiers.
+
+- **The quick tier** (`--quick`, about ten minutes): this machine's debug, release, and sanitized presets, the release web build, the examples headless and in a browser, both bindings and the feature test, the actor benchmark, and the web sizes. It runs before every commit; then the commit is pushed and CI checked, and a CI failure is fixed first, before new work.
+- **The full tier** (`--web --windows HOST`: every preset and check this machine can run, and a Windows machine's). It runs when a ROADMAP step closes, before every hand-off to a game session, and before a commit that touches the build system, the toolchain, `deps/`, platform code, or a guard. A step isn't done without a full-tier pass recorded.
+- Each commit's report says which tier ran, and every skip as a skip.
 
 ## Guards
 

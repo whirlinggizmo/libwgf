@@ -31,4 +31,4 @@ Examples are programs outside libwgf, built against `out/` as anyone's would be 
 
 `examples/haxe/<name>/Main.hx`, built by the tools that run it (as `tools/check_features.py` builds the feature test): on the public binding only, `Asset.setHost("../assets")` for the examples' files. A game is not an example: `./wgf new games/<name>` and the game's own `wgf.json` (docs/ARCHITECTURE.md, "Games").
 
-Then `python3 tools/verify_builds.py --web --windows sightblinder`.
+Then verify, the tier CONVENTIONS.md's "Verifying" says (the quick tier, `python3 tools/verify_builds.py --quick`, before a commit).

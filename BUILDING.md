@@ -320,11 +320,14 @@ It copies the working tree, committed or not, builds and tests there, runs what 
 ## Before calling a change done
 
 ```sh
+python3 tools/verify_builds.py --quick                 # the quick tier, before every commit (about 10 minutes)
 python3 tools/verify_builds.py                         # this machine's presets, MinGW under Wine
 python3 tools/verify_builds.py --web                   # and the web presets
-python3 tools/verify_builds.py --web --windows HOST    # and MSVC and MinGW on a Windows machine over ssh
+python3 tools/verify_builds.py --web --windows HOST    # the full tier: and MSVC and MinGW on a Windows machine over ssh
 python3 tools/verify_builds.py --only linux-x64-debug-asan   # just these steps (--list shows them all)
 ```
+
+Which tier runs when is CONVENTIONS.md's ("Verifying").
 
 ## Continuous integration
 
@@ -356,7 +359,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `check_docs.py` | checks the docs against the code: every link resolves, ARCHITECTURE names every public header, this file every tool and preset, README every doc, deps/README every vendored directory (ctest runs it) |
 | `check_tools.py` | checks every tool is named for what it does, imports no command, answers `--help` and does nothing else, and refuses an argument it doesn't take |
 | `stage_variant.py` | stages a built preset into `out/`, fresh |
-| `verify_builds.py` | every build and check this machine can run, in one command |
+| `verify_builds.py` | every build and check this machine can run, in one command (the full tier with `--web --windows HOST`), or the quick tier's (`--quick`) |
 | `run_in_browser.py` | runs a wasm test in a real browser, over several visits (ctest uses it) |
 | `run_in_xvfb.py` | runs a native test in a real window on a virtual display (ctest uses it) |
 | `run_wine.py` | runs a Windows program under Wine (the MinGW presets' test runner), starting it again when Wine's launcher failed |

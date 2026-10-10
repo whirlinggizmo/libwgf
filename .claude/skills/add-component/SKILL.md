@@ -16,4 +16,4 @@ A component is a `wgf_component_t` value, its calls in a header of its own, and 
 7. **The scene format**: its line and keys in BUILDING.md's "Scene files", parsed in `ecs/src/wgf_ecs_scene.c`, and written by the dump (`ecs/src/wgf_ecs_dump.c`), so a dumped world loads back the same.
 8. **Tests**: its calls, refusals, and finding in `ecs/tests/wgf_ecs_actor_test.c`, its system in `wgf_ecs_systems_test.c` (ticked through core's part list), its scene line and the dump's round trip in `wgf_ecs_scene_test.c`.
 9. **The binding**: `python3 tools/gen_binding.py` (a new section over `wgf_actor_t` becomes `wgf.<Section>`, a type over `Actor`), then the add-binding-call skill's checks; reach it in the feature test (`examples/haxe/feature-test/Main.hx`'s `ecs()`).
-10. **Docs**: ARCHITECTURE.md's ecs table; HISTORY.md, why it exists. Then `python3 tools/verify_builds.py --web --windows sightblinder`.
+10. **Docs**: ARCHITECTURE.md's ecs table; HISTORY.md, why it exists. Then verify, the tier CONVENTIONS.md's "Verifying" says (the quick tier, `python3 tools/verify_builds.py --quick`, before a commit).

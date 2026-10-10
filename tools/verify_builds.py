@@ -2,6 +2,7 @@
 """Run before calling a change done: every build and check this machine can run.
 
     tools/verify_builds.py [--web] [--windows HOST] [--only STEP[,STEP...]] [--list]
+    tools/verify_builds.py --quick [--only STEP[,STEP...]] [--list]
 
 This machine's own presets, each configured, built, and tested (ctest, which runs the
 header checks, tools/check_api.py, and tools/check_tools.py too), fastest first:
@@ -52,6 +53,14 @@ With --windows HOST, also, on that Windows machine over ssh, the working tree as
                   desktop export
   windows-mingw   windows-x64-mingw-debug-headless and -debug, natively, then the same
 
+--quick is the quick tier, run before every commit (CONVENTIONS.md, "Verifying"): the
+steps that catch most of what breaks, in about ten minutes, against the full tier's (the
+above with --web --windows HOST) forty-odd, much of which CI runs again: quick_steps below, this
+machine's of them -- the debug, release, sanitized, and release web presets, the examples
+headless and in a browser, both bindings and the feature test, the actor benchmark, and the
+web sizes. The full tier is for a step's close, a hand-off to a game session, and a change to
+the build, toolchain, dependencies, platform code, or a guard.
+
 --only runs the steps named (a preset's name, or a check's); --list prints the steps it
 would run, and runs nothing. Stops at the first step that fails; a PASS names what was
 skipped for want of a tool, so it can't be misread. Standard library only.
@@ -98,6 +107,18 @@ CHECKS = {
     'sizes': (['tools/measure_sizes.py', '--check'], True, ('haxe', 'no haxe')),
     'frames': (['tools/bench/measure_frames.py', '--display', 'headless'], True, ('haxe', 'no haxe')),
 }
+# The quick tier (--quick), by step, run in the full tier's order. wasm32-debug-headless and wasm32-debug are built by the web checks
+# that run on them (check_binding's node and browser, check_js_binding), as they need them.
+QUICK_VARIANTS = ('debug-headless', 'debug', 'release', 'debug-asan', 'debug-ubsan')  # those this machine has
+QUICK_CHECKS = {'smoke', 'binding', 'features', 'actors', 'web', 'binding-web', 'js-binding', 'sizes'}
+
+
+def quick_steps():
+    """The quick tier's steps on this machine."""
+    host = names_of_host()
+    return {native(v) for v in QUICK_VARIANTS if v in host} | {web(debug=False)} | QUICK_CHECKS
+
+
 REMOTE = {'windows-msvc': ['--msvc', '--then', 'tools/run_smoke.py --variant windows-x64-msvc-debug-headless',
                            '--then', 'tools/check_binding.py --only hxcpp', '--then', 'tools/check_features.py --only hxcpp',
                            '--then', 'tools/check_cli.py --only build,run,autopilot,dump',
@@ -181,16 +202,25 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--web', action='store_true', help='the web presets too, and the web checks')
     ap.add_argument('--windows', metavar='HOST', help='also build and test on this Windows machine over ssh')
+    ap.add_argument('--quick', action='store_true',
+                    help='the quick tier: the steps run before every commit (quick_steps); not with --web or --windows')
     ap.add_argument('--only', help='comma-separated steps to run')
     ap.add_argument('--list', action='store_true', help='print the steps, and run nothing')
     args = ap.parse_args()
     only = set(args.only.split(',')) if args.only else None
+    if args.quick:
+        if args.web or args.windows:
+            sys.exit('verify_builds: --quick is a tier of its own; the full tier is --web --windows HOST')
+        args.web = True
 
     web_checks = {name for name, (_, needs_web, _) in CHECKS.items() if needs_web}
     with_web = args.web or bool(only and only & (set(WEB) | web_checks))
     if only and only & set(REMOTE) and not args.windows:
         sys.exit('verify_builds: the windows-msvc and windows-mingw steps need --windows HOST')
     plan, notes = steps(with_web, args.windows)
+    if args.quick:
+        quick = quick_steps()
+        plan = [(name, what) for name, what in plan if name in quick]
     if only:
         unknown = only - {name for name, _ in plan}
         if unknown:
@@ -226,7 +256,9 @@ def main():
             sys.exit(f'verify_builds: FAIL at {name}')
         print(f'== {name}: ok ({time.monotonic() - start:.0f} s)', flush=True)
     skipped = f'; SKIPPED: {"; ".join(notes)}' if notes else ''
-    print(f'verify_builds: PASS ({len(plan)} steps, {time.monotonic() - start_all:.0f} s{skipped})')
+    tier = 'the quick tier' if args.quick else ('steps ' + ','.join(sorted(only)) if only else
+                                                ('the full tier' if args.web and args.windows else 'this machine\'s'))
+    print(f'verify_builds: PASS ({tier}: {len(plan)} steps, {time.monotonic() - start_all:.0f} s{skipped})')
 
 
 if __name__ == '__main__':
