@@ -53,7 +53,8 @@ def build(variant, exports_file=None, out=None, stage=True, constants=True, type
     if not archive.exists():
         raise RuntimeError(f'no staged libwgf in {staged}: run tools/stage_variant.py {variant}')
     listed = json.loads(Path(exports_file or FULL).read_text(encoding='utf-8'))['exports']
-    exports = sorted(set(listed) | set(jsbinding.LIBRARY) | set(jsbinding.RUN_CALLS))
+    linked = listed if exports_file is None else jsbinding.local_exports(listed)  # the full host keeps every call's C
+    exports = sorted(set(linked) | set(jsbinding.LIBRARY) | set(jsbinding.RUN_CALLS))
     out = Path(out) if out else staged / 'host'
     out.mkdir(parents=True, exist_ok=True)
     work = Path(variants.work(variant)) / 'host'

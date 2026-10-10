@@ -1,6 +1,6 @@
 # libwgf's JS binding
 
-libwgf from JavaScript and TypeScript in the browser: one ES module, `wgf.js`, and TypeScript's declarations beside it, `wgf.d.ts`, generated from libwgf's public headers (`tools/gen_binding.py`). It is the one way JS reaches libwgf's wasm host (`hosts/web/`): the Haxe binding's JS target is built on it, so every Haxe game, test, and autopilot run exercises it too.
+libwgf from JavaScript and TypeScript in the browser: one ES module, `wgf.js`, and TypeScript's declarations beside it, `wgf.d.ts`, generated from libwgf's public headers (`tools/gen_binding.py`). It is the one way JS reaches libwgf's wasm host (`hosts/web/`): the Haxe binding's JS target is built on it, so every Haxe game, test, and autopilot run exercises it too. Fifteen calls don't cross at all: the colors' and the trigonometry's are arithmetic on their arguments alone, which a call into wasm costs more than, so `wgf.js` works them itself, to the same bits as libwgf's C (`docs/BINDINGS.md`).
 
 ## Files
 

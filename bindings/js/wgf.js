@@ -907,6 +907,78 @@ export const WGF_UI_VALUE_BUTTON_PADDING = 4;
 export const WGF_UI_VALUE_BUTTON_WIDTH = 5;
 export const WGF_UI_VALUE_FOCUS_WIDTH = 6;
 
+// wgf: local trig
+const LOCAL_PI = 3.14159265358979323846;
+
+function localSinReduced(r) {
+    const r2 = r * r;
+    let p = 2.8114572543455206e-15;
+    p = p * r2; p = p - 7.6471637318198164e-13;
+    p = p * r2; p = p + 1.6059043836821613e-10;
+    p = p * r2; p = p - 2.5052108385441720e-08;
+    p = p * r2; p = p + 2.7557319223985893e-06;
+    p = p * r2; p = p - 1.9841269841269841e-04;
+    p = p * r2; p = p + 8.3333333333333333e-03;
+    p = p * r2; p = p - 1.6666666666666667e-01;
+    p = p * r2; p = p * r;
+    return r + p;
+}
+
+function localCosReduced(r) {
+    const r2 = r * r;
+    let p = -1.5619206968586225e-16;
+    p = p * r2; p = p + 4.7794773323873853e-14;
+    p = p * r2; p = p - 1.1470745597729725e-11;
+    p = p * r2; p = p + 2.0876756987868099e-09;
+    p = p * r2; p = p - 2.7557319223985888e-07;
+    p = p * r2; p = p + 2.4801587301587302e-05;
+    p = p * r2; p = p - 1.3888888888888889e-03;
+    p = p * r2; p = p + 4.1666666666666667e-02;
+    p = p * r2; p = p - 0.5;
+    p = p * r2;
+    return 1 + p;
+}
+
+// sin (cosine false) or cos of x, in double.
+function localSinOrCos(x, cosine) {
+    const k = Math.floor(x * 0.63661977236758134308 + 0.5);
+    const quadrant = k - 4 * Math.floor(k * 0.25);
+    let r = x - k * 1.57079632673412561417e+00;
+    r = r - k * 6.07710050630396597660e-11;
+    r = r - k * 2.02226624879595063154e-21;
+    const s = localSinReduced(r), c = localCosReduced(r);
+    switch ((quadrant + (cosine ? 1 : 0)) & 3) {
+        case 0: return s;
+        case 1: return c;
+        case 2: return -s;
+        default: return -c;
+    }
+}
+
+function localAtanReduced(x) {
+    const x2 = x * x;
+    let p = 0;
+    for (let n = 43; n >= 3; n -= 2) {
+        p = p * x2;
+        p = p + ((((n - 1) >> 1) % 2 === 0) ? 1 : -1) / n;
+    }
+    p = p * x2;
+    p = p * x;
+    return x + p;
+}
+
+function localAtan(x) {
+    const t = x < 0 ? -x : x;
+    const a = t <= 0.41421356237309504880 ? localAtanReduced(t)
+        : t <= 2.41421356237309504880 ? LOCAL_PI / 4 + localAtanReduced((t - 1) / (t + 1))
+            : LOCAL_PI / 2 - localAtanReduced(1 / t);
+    return x < 0 ? -a : a;
+}
+
+function localNegative(x) {
+    return x < 0 || Object.is(x, -0);
+}
+
 // wgf: call wgf_trig_sin
 /**
  * Trigonometry that gives the same bits on every target -- natively, under Windows, and in a
@@ -919,8 +991,8 @@ export const WGF_UI_VALUE_FOCUS_WIDTH = 6;
  * and for asin and acos past -1..1, as the C library's.
  */
 export function wgf_trig_sin(radians) {
-    const value = host["_wgf_trig_sin"](radians);
-    return value;
+    const x = Math.fround(radians);
+    return Number.isFinite(x) ? Math.fround(localSinOrCos(x, false)) : NaN;
 }
 
 // wgf: call wgf_trig_cos
@@ -935,8 +1007,8 @@ export function wgf_trig_sin(radians) {
  * and for asin and acos past -1..1, as the C library's.
  */
 export function wgf_trig_cos(radians) {
-    const value = host["_wgf_trig_cos"](radians);
-    return value;
+    const x = Math.fround(radians);
+    return Number.isFinite(x) ? Math.fround(localSinOrCos(x, true)) : NaN;
 }
 
 // wgf: call wgf_trig_tan
@@ -951,35 +1023,45 @@ export function wgf_trig_cos(radians) {
  * and for asin and acos past -1..1, as the C library's.
  */
 export function wgf_trig_tan(radians) {
-    const value = host["_wgf_trig_tan"](radians);
-    return value;
+    const x = Math.fround(radians);
+    return Number.isFinite(x) ? Math.fround(localSinOrCos(x, false) / localSinOrCos(x, true)) : NaN;
 }
 
 // wgf: call wgf_trig_atan2
 /**
  * The angle of (x, y) from the x axis, -pi..pi, as atan2f(y, x).
  */
-export function wgf_trig_atan2(y, x) {
-    const value = host["_wgf_trig_atan2"](y, x);
-    return value;
+export function wgf_trig_atan2(yIn, xIn) {
+    const y = Math.fround(yIn), x = Math.fround(xIn);
+    if (Number.isNaN(y) || Number.isNaN(x)) return NaN;
+    if (x === 0 && y === 0) return localNegative(x) ? (localNegative(y) ? Math.fround(-LOCAL_PI) : Math.fround(LOCAL_PI)) : y;
+    if (!Number.isFinite(y) || !Number.isFinite(x)) return Math.fround(Math.atan2(y, x)); // the infinities' fixed angles
+    if (x > 0) return Math.fround(localAtan(y / x));
+    if (x < 0) return Math.fround(localAtan(y / x) + (localNegative(y) ? -LOCAL_PI : LOCAL_PI));
+    return y > 0 ? Math.fround(LOCAL_PI / 2) : Math.fround(-LOCAL_PI / 2);
 }
 
 // wgf: call wgf_trig_asin
 /**
  * The angle whose sine (asin, -pi/2..pi/2) or cosine (acos, 0..pi) is x.
  */
-export function wgf_trig_asin(x) {
-    const value = host["_wgf_trig_asin"](x);
-    return value;
+export function wgf_trig_asin(xIn) {
+    const d = Math.fround(xIn);
+    if (!(d >= -1 && d <= 1)) return NaN;
+    if (d === 1 || d === -1) return Math.fround(d * LOCAL_PI / 2);
+    return Math.fround(localAtan(d / Math.sqrt((1 - d) * (1 + d))));
 }
 
 // wgf: call wgf_trig_acos
 /**
  * The angle whose sine (asin, -pi/2..pi/2) or cosine (acos, 0..pi) is x.
  */
-export function wgf_trig_acos(x) {
-    const value = host["_wgf_trig_acos"](x);
-    return value;
+export function wgf_trig_acos(xIn) {
+    const d = Math.fround(xIn);
+    if (!(d >= -1 && d <= 1)) return NaN;
+    if (d === 0) return Math.fround(LOCAL_PI / 2);
+    const a = localAtan(Math.sqrt((1 - d) * (1 + d)) / d);
+    return Math.fround(d > 0 ? a : a + LOCAL_PI);
 }
 
 // wgf: call wgf_version_get
@@ -3641,13 +3723,30 @@ export function wgf_camera3d_get_ortho_height(camera) {
     return value;
 }
 
+// wgf: local color
+const LOCAL_STOCK = [
+    0x00000000, 0xFFFFFFFF, 0x000000FF, 0xC8C8C8FF, 0x828282FF, 0x505050FF, 0xFFFF00FF, 0xFFCB00FF, 0xFFA100FF,
+    0xFF6DC2FF, 0xE62937FF, 0xBE212DFF, 0x00E430FF, 0x009E2FFF, 0x00752CFF, 0x66BFFFFF, 0x0079F1FF, 0x0052ACFF,
+    0xC87AFFFF, 0x873CBEFF, 0x701F7EFF, 0xD3B083FF, 0x7F6A4FFF, 0x4C3F2FFF, 0xFF00FFFF, 0xF5F5F5FF,
+];
+
+function localComponent(v) {
+    v |= 0;
+    return v < 0 ? 0 : v > 255 ? 255 : v;
+}
+
+// 0..1 to 0..255, clamped and rounded to the nearest step, in C's float arithmetic.
+function localComponentFloat(v) {
+    const scaled = Math.fround(Math.fround(Math.fround(v) * 255) + 0.5);
+    return Math.trunc(scaled < 0 ? 0 : scaled > 255 ? 255 : scaled);
+}
+
 // wgf: call wgf_color_get
 /**
  * The stock color `stock` names; 0 (transparent) for a value that names none.
  */
 export function wgf_color_get(stock) {
-    const value = host["_wgf_color_get"](stock);
-    return value >>> 0;
+    return stock >= 0 && stock < LOCAL_STOCK.length ? LOCAL_STOCK[stock | 0] : 0;
 }
 
 // wgf: call wgf_color_make
@@ -3657,8 +3756,7 @@ export function wgf_color_get(stock) {
  * spill into the next channel.
  */
 export function wgf_color_make(r, g, b, a) {
-    const value = host["_wgf_color_make"](r, g, b, a);
-    return value >>> 0;
+    return ((localComponent(r) << 24) | (localComponent(g) << 16) | (localComponent(b) << 8) | localComponent(a)) >>> 0;
 }
 
 // wgf: call wgf_color_make_float
@@ -3668,8 +3766,8 @@ export function wgf_color_make(r, g, b, a) {
  * spill into the next channel.
  */
 export function wgf_color_make_float(r, g, b, a) {
-    const value = host["_wgf_color_make_float"](r, g, b, a);
-    return value >>> 0;
+    return ((localComponentFloat(r) << 24) | (localComponentFloat(g) << 16) | (localComponentFloat(b) << 8)
+        | localComponentFloat(a)) >>> 0;
 }
 
 // wgf: call wgf_color_with_alpha
@@ -3677,8 +3775,7 @@ export function wgf_color_make_float(r, g, b, a) {
  * `color` with its alpha replaced, clamped to 0..255.
  */
 export function wgf_color_with_alpha(color, a) {
-    const value = host["_wgf_color_with_alpha"](color, a);
-    return value >>> 0;
+    return ((color & 0xFFFFFF00) | localComponent(a)) >>> 0;
 }
 
 // wgf: call wgf_color_get_red
@@ -3686,8 +3783,7 @@ export function wgf_color_with_alpha(color, a) {
  * Components back out, 0..255.
  */
 export function wgf_color_get_red(color) {
-    const value = host["_wgf_color_get_red"](color);
-    return value;
+    return (color >>> 24) & 0xFF;
 }
 
 // wgf: call wgf_color_get_green
@@ -3695,8 +3791,7 @@ export function wgf_color_get_red(color) {
  * Components back out, 0..255.
  */
 export function wgf_color_get_green(color) {
-    const value = host["_wgf_color_get_green"](color);
-    return value;
+    return (color >>> 16) & 0xFF;
 }
 
 // wgf: call wgf_color_get_blue
@@ -3704,8 +3799,7 @@ export function wgf_color_get_green(color) {
  * Components back out, 0..255.
  */
 export function wgf_color_get_blue(color) {
-    const value = host["_wgf_color_get_blue"](color);
-    return value;
+    return (color >>> 8) & 0xFF;
 }
 
 // wgf: call wgf_color_get_alpha
@@ -3713,8 +3807,7 @@ export function wgf_color_get_blue(color) {
  * Components back out, 0..255.
  */
 export function wgf_color_get_alpha(color) {
-    const value = host["_wgf_color_get_alpha"](color);
-    return value;
+    return color & 0xFF;
 }
 
 // wgf: call wgf_color_lerp
@@ -3723,8 +3816,15 @@ export function wgf_color_get_alpha(color) {
  * t is clamped to 0..1.
  */
 export function wgf_color_lerp(from, to, t) {
-    const value = host["_wgf_color_lerp"](from, to, t);
-    return value >>> 0;
+    const t32 = Math.fround(t);
+    const k = t32 < 0 ? 0 : t32 > 1 ? 1 : t32;
+    let out = 0;
+    for (let shift = 24; shift >= 0; shift -= 8) {
+        const a = (from >>> shift) & 0xFF, b = (to >>> shift) & 0xFF;
+        const step = Math.fround(Math.fround(b - a) * k);
+        out |= (Math.trunc(Math.fround(Math.fround(a + step) + 0.5)) & 0xFF) << shift;
+    }
+    return out >>> 0;
 }
 
 // wgf: call wgf_font_create

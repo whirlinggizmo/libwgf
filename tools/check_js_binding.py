@@ -10,6 +10,9 @@ The steps, in order:
               compiles with --strict, and each mistake it marks @ts-expect-error is
               caught. Needs tsc: TSC naming one, one on PATH, or TypeScript TYPESCRIPT
               in npm's cache
+  local       the calls the binding works itself (jsbinding's LOCAL, bindings/js/src/
+              local.js) held to the host's C, to the bit: bindings/js/tests/local.mjs
+              under node on the full headless host (wasm32-debug-headless)
   examples    each JS example (examples/js/<name>/) built as a site on the full web host
               (wasm32-debug), loaded in a headless Chromium-based browser, and flown by
               its autopilot (example.json's; else 120 frames) to a PASS with no error;
@@ -35,7 +38,7 @@ import variants  # noqa: E402
 import webhost  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-STEPS = ('generated', 'types', 'examples')
+STEPS = ('generated', 'types', 'local', 'examples')
 
 
 TYPESCRIPT = '7.0.2'  # the one CI installs (.github/workflows/ci.yml)
@@ -73,6 +76,12 @@ def step(name, browser_option):
         webhost.emcc()
     except RuntimeError as e:
         return str(e)
+    if name == 'local':
+        if shutil.which('node') is None:
+            return 'no node on PATH'
+        host = webhost.build(variants.web(headless=True))  # the full host: every call's C, to compare with
+        done = subprocess.run(['node', str(jsbinding.BINDING / 'tests' / 'local.mjs'), str(host)])
+        return done.returncode == 0
     try:
         found = browser.find_browser(browser_option)
     except RuntimeError as e:

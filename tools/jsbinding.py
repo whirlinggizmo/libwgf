@@ -31,6 +31,56 @@ SECTION = '// wgf: '
 LIBRARY = ['_malloc', '_free']
 RUNTIME = ['addFunction', 'stackSave', 'stackRestore', 'stackAlloc', 'stringToUTF8', 'lengthBytesUTF8',
            'UTF8ToString', 'HEAPU8', 'HEAP32', 'HEAPU32', 'HEAPF32']
+# The calls the binding works itself rather than crossing into the host, and why: arithmetic
+# on their arguments alone, which a crossing into wasm costs more than, for a JS program and
+# Haxe's JS target alike (which reaches C through this binding alone). Each is worked in
+# bindings/js/src/local.js to the same bits as C's, its block put where its call goes in
+# wgf.js, a group's helpers (`// wgf: local <group>`, the call's section: color, trig) kept by
+# a release copy with any call of its group; a trimmed host leaves their C out
+# (local_exports), and the full one keeps it for the binding's test, which holds every one to
+# it (bindings/js/tests/local.mjs). Natively a call into C costs a function call, and hxcpp
+# makes it.
+LOCAL = {
+    'wgf_color_get': 'a lookup in a fixed table',
+    'wgf_color_make': 'clamps and shifts',
+    'wgf_color_make_float': "clamps and shifts, in C's float arithmetic",
+    'wgf_color_with_alpha': 'a mask',
+    'wgf_color_get_red': 'a shift',
+    'wgf_color_get_green': 'a shift',
+    'wgf_color_get_blue': 'a shift',
+    'wgf_color_get_alpha': 'a mask',
+    'wgf_color_lerp': "arithmetic, in C's float arithmetic",
+    'wgf_trig_sin': "a polynomial in double: C's bits on every target",
+    'wgf_trig_cos': "a polynomial in double: C's bits on every target",
+    'wgf_trig_tan': "a polynomial in double: C's bits on every target",
+    'wgf_trig_atan2': "a polynomial in double: C's bits on every target",
+    'wgf_trig_asin': "a polynomial in double: C's bits on every target",
+    'wgf_trig_acos': "a polynomial in double: C's bits on every target",
+}
+LOCAL_SOURCE = BINDING / 'src' / 'local.js'
+
+
+def local_blocks():
+    """local.js's blocks by their `// wgf: ` line ('call wgf_color_make', 'local color'):
+    each the text to its next."""
+    blocks, name, lines = {}, None, []
+    for line in LOCAL_SOURCE.read_text(encoding='utf-8').splitlines():
+        if line.startswith(SECTION):
+            if name is not None:
+                blocks[name] = '\n'.join(lines).strip() + '\n'
+            name, lines = line[len(SECTION):].strip(), []
+        elif name is not None:
+            lines.append(line)
+    if name is not None:
+        blocks[name] = '\n'.join(lines).strip() + '\n'
+    return blocks
+
+
+def local_exports(exports):
+    """A trimmed host's exports less the calls the binding works itself: their C isn't linked."""
+    return [e for e in exports if e.lstrip('_') not in LOCAL]
+
+
 # The calls the run makes itself (app.js), so every host keeps them, trimmed or not.
 RUN_CALLS = ['_wgf_app_run', '_wgf_app_quit', '_wgf_version_get_major', '_wgf_version_get_minor']
 
@@ -177,6 +227,17 @@ class Emitter:
         doc = jsdoc(self.docs.get(f.name, ''))
         js = (f'{SECTION}call {f.name}\n{doc}export function {f.name}({", ".join(js_args)}) {{\n'
               + ''.join(f'    {line}\n' for line in body) + '}\n')
+        if f.name in LOCAL:  # worked here, not in the host: local.js's block, its group's helpers before it
+            blocks = self.local
+            block = blocks.get(f'call {f.name}')
+            if block is None:
+                raise RuntimeError(f'{LOCAL_SOURCE}: no block for {f.name}, which LOCAL lists')
+            group = f.name.split('_')[1]
+            helpers = ''
+            if group not in self.groups_written:
+                self.groups_written.add(group)
+                helpers = f'{SECTION}local {group}\n' + blocks.get(f'local {group}', '') + '\n'
+            js = helpers + f'{SECTION}call {f.name}\n{doc}' + block
         sig = ', '.join(decl)
         if result == 'vector':
             vec = f'wgf_vec{detail[1]}_t'
@@ -203,6 +264,7 @@ def outputs(binding, version, stamp, skipped):
     """{path: text} for wgf.js and wgf.d.ts. `skipped`: the calls the run carries itself."""
     major, minor, patch = version.split('.')
     e = Emitter(binding)
+    e.local, e.groups_written = local_blocks(), set()
     built = (f'/** The libwgf this binding was generated from: wgf_app_run compares the host\'s with it. */\n'
              f'export const BUILT_VERSION = Object.freeze({{ "major": {int(major)}, "minor": {int(minor)}, '
              f'"patch": {int(patch)}, "headers": "{stamp}" }});\n')
@@ -387,7 +449,8 @@ def trim(text, names, constants=False):
         if line.startswith(SECTION):
             what = line[len(SECTION):].split()
             in_constants = what[0] == 'constants'
-            keep = (in_constants and bool(constants)) or (what[0] == 'call' and what[1] in wanted)
+            keep = ((in_constants and bool(constants)) or (what[0] == 'call' and what[1] in wanted)
+                    or (what[0] == 'local' and any(n.startswith(f'wgf_{what[1]}_') for n in wanted)))
             continue
         if not keep:
             continue

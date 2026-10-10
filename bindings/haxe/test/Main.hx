@@ -97,6 +97,12 @@ class Main {
 		expect(Color.getRed(Color.make(200, 10, 20, 255)) == 200 && Color.getAlpha(Color.make(1, 2, 3, 255)) == 255,
 			"a color, all 32 bits");
 
+		// the calls the JS binding works itself, and C natively: the same bits on every target
+		expect(Color.make(300, -5, 127, 128) == Color.make(255, 0, 127, 128) && Color.getRed(Color.make(300, -5, 127, 128)) == 255
+			&& Color.get(ColorStock.SKYBLUE) | 0 == 0x66BFFFFF && Color.makeFloat(0.5, 1, 0, 0.25) | 0 == 0x80FF0040
+			&& Color.lerp(0x000000FF, 0xFFFFFFFF, 0.5) | 0 == 0x808080FF, "colors, as C makes them");
+		trigonometry();
+
 		// a byte span in, then out
 		final bytes = haxe.io.Bytes.ofString("bytes\x00and more");
 		write = Fs.write("binding/test.bin", bytes);
@@ -119,6 +125,23 @@ class Main {
 			(d : Collider).setRadius(5);
 		}
 		(a : Motion).getVelocity(); // a component it hasn't: still answers
+	}
+
+	/**
+		The trigonometry (wgf_trig.h) over the sweep wgf_math_test hashes, to the same hash: C's
+		natively, the JS binding's own on the web (bindings/js/src/local.js), the same bits.
+	**/
+	static function trigonometry():Void {
+		var hash:haxe.Int32 = cast 0x811C9DC5;
+		var i = -200000;
+		while (i <= 200000) {
+			final a = haxe.io.FPHelper.i32ToFloat(haxe.io.FPHelper.floatToI32(i * haxe.io.FPHelper.i32ToFloat(haxe.io.FPHelper.floatToI32(1e-4))));
+			final twentieth = haxe.io.FPHelper.i32ToFloat(haxe.io.FPHelper.floatToI32(a / 20));
+			for (v in [Trig.sin(a), Trig.cos(a), Trig.atan2(a, 0.7), Trig.asin(twentieth), Trig.acos(twentieth)])
+				hash = (hash ^ haxe.io.FPHelper.floatToI32(v)) * 16777619;
+			i += 7;
+		}
+		expect(StringTools.hex(hash, 8) == "FDD87A04", 'trigonometry: C\'s hash on every target (${StringTools.hex(hash, 8)})');
 	}
 
 	static function tick():Void {}
