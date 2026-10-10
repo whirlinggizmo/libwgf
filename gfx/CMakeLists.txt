@@ -40,6 +40,11 @@ target_include_directories(wgf_gfx SYSTEM PRIVATE "${PROJECT_SOURCE_DIR}/deps/so
 # vendored code is compiled as it comes: its warnings are not ours to fix
 set_source_files_properties(src/texture/wgf_gfx_stb_impl.c src/text/wgf_gfx_fontstash_impl.c src/mesh/wgf_gfx_cgltf_impl.c
                             PROPERTIES COMPILE_OPTIONS "$<IF:$<C_COMPILER_ID:MSVC>,/w,-w>")
+# an environment's preparation is numeric loops, which unoptimized take seconds on the web for a
+# 1024 by 512 image (CI's browser check found it still loading at 20 s): optimized in every
+# build (MSVC's debug runtime checks forbid it there, and its builds aren't the web's)
+set_source_files_properties(src/stage/wgf_gfx_environment.c
+                            PROPERTIES COMPILE_OPTIONS "$<$<NOT:$<C_COMPILER_ID:MSVC>>:-O2>")
 # what includes gfx's private headers (app, gfx's tests) sees sokol's
 target_include_directories(wgf_gfx_priv SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/deps/sokol"
                            "${PROJECT_SOURCE_DIR}/deps/jetbrains-mono") # the tests compare the built-in font

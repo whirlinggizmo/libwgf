@@ -154,7 +154,7 @@ static void frame(void *user)
         for (i = 0; i < ENVIRONMENT_COUNT; i++) {
             loading = loading || wgf_resource_get_status(g.environments[i]) == WGF_RESOURCE_STATUS_PENDING;
         }
-        wgf_resource_set_load_budget(loading ? 16.0f : g.load_budget);
+        wgf_resource_set_load_budget(loading ? 50.0f : g.load_budget);
     }
 
     g.time += dt;
