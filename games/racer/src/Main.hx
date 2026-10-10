@@ -23,6 +23,14 @@ class Main {
 	public static inline var HEIGHT = 720;
 	static inline var COUNTDOWN = 3.0;
 	static inline var SHADOW_DISTANCE = 35.0; // m of the camera's view the sun's map covers
+	// the light, tuned with the sky: how much the panorama lights, the sun beside it, exposure
+	static inline var SKY_LIGHT = 0.7;
+	static inline var SUN = 3.5;
+	static inline var EXPOSURE = 0.0;
+	// the sky's sun (examples' sky.hdr, tools/gen_sky.py: 25 degrees up, 40 from -z to +x)
+	static inline var SUN_X = 0.5826; // cos 25 sin 40
+	static inline var SUN_Y = 0.4226; // sin 25
+	static inline var SUN_Z = -0.6943; // -cos 25 cos 40
 
 	public static var stage:Stage3d;
 	public static var scene:Scene;
@@ -33,6 +41,7 @@ class Main {
 	static var countdown = COUNTDOWN;
 	static var showBodies = false;
 	static var placed = false;
+	static var sky:Environment = 0;
 
 	static function main() {
 		Window.setTitle("Racer");
@@ -42,17 +51,24 @@ class Main {
 
 	static function init() {
 		Asset.setHost("assets");
-		Render.setClearColor(Color.make(150, 196, 236, 255)); // the sky
+		Render.setClearColor(Color.make(150, 196, 236, 255)); // behind the sky until it has loaded
 		Loop.setTickRate(60); // the car's intent and the ecs, at a fixed rate
 
 		Physics.setGravity(0, -9.81, 0); // physics started: before the scene's bodies load
 		stage = Stage3d.create();
-		stage.setAmbient(Color.make(190, 210, 255, 255), 0.55);
+		// the sky: one panorama lighting the stage (soft light all around, and what glossy
+		// surfaces reflect) and drawn behind it; it takes the place of a flat ambient light
+		sky = Environment.create("sky/sky.hdr");
+		stage.setEnvironment(sky, SKY_LIGHT, 0);
+		stage.setBackground(sky, 0);
+		stage.setTonemap(Stage3dTonemap.NEUTRAL, EXPOSURE);
+		// the sun: aimed along the sky's own sun (25 degrees up, 40 from -z toward +x, the
+		// panorama unturned), so the light, the shadows, and the bright disc in the sky agree
 		final sun = Light.create(LightType.DIRECTIONAL);
-		sun.setIntensity(2.6);
-		sun.setColor(Color.make(255, 244, 228, 255));
+		sun.setIntensity(SUN);
+		sun.setColor(Color.make(255, 240, 220, 255));
 		sun.setParent(stage); // a light is an actor on the stage
-		sun.lookAt(-0.75, -0.6, -0.5, 0, 1, 0); // shining down its -z, from the origin: about 34° up, long shadows
+		sun.lookAt(-SUN_X, -SUN_Y, -SUN_Z, 0, 1, 0); // shining down its -z, from the origin, away from the sky's sun
 		// the sun casts: one map fitted around what the chase camera sees, SHADOW_DISTANCE out
 		sun.setShadowCasting(true);
 		sun.setShadowDistance(SHADOW_DISTANCE);
@@ -124,7 +140,10 @@ class Main {
 					scene.instantiate(stage);
 					placed = true;
 				}
+				// and the sky, prepared on a worker, loaded (or failed): the grid comes after every
+				// load, so the start a player makes is after what a recording counts from
 				if (placed && Actor.countWithBehavior("Checkpoint") == Track.CHECKPOINTS && car == null
+					&& Resource.getStatus(sky) != ResourceStatus.PENDING
 					&& Actor.countWithBehavior("Car") == 0)
 					spawn();
 			case State.READY:

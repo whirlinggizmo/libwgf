@@ -30,6 +30,85 @@ import sys
 from pathlib import Path
 
 GAME = Path(__file__).resolve().parents[1]
+
+
+# ---- arithmetic the same on every system ---------------------------------------------
+# The track is the same bytes everywhere only if every number in it is: +, -, *, /, and
+# sqrt are IEEE's, rounded alike on every machine, but sin, cos, atan2, hypot, and pow are
+# the C library's, whose last digit differs between glibc and Windows' CRT. So the
+# trigonometry is ours, from those alone (a reduction by fdlibm's split pi/2, then series
+# accurate to about an ulp on the reduced range), and squares are products.
+
+PI = 3.141592653589793
+PIO2_HI = 1.5707963267341256  # pi/2 = PIO2_HI + PIO2_LO (fdlibm's split)
+PIO2_LO = 6.077100506506192e-11
+
+
+def _sin_series(r):
+    r2 = r * r
+    term, total = r, r
+    for k in range(1, 12):
+        term = -term * r2 / ((2 * k) * (2 * k + 1))
+        total += term
+    return total
+
+
+def _cos_series(r):
+    r2 = r * r
+    term, total = 1.0, 1.0
+    for k in range(1, 12):
+        term = -term * r2 / ((2 * k - 1) * (2 * k))
+        total += term
+    return total
+
+
+def _reduce(x):
+    k = int(round(x / (PIO2_HI + PIO2_LO)))
+    return (x - k * PIO2_HI) - k * PIO2_LO, k % 4
+
+
+def sin(x):
+    r, q = _reduce(x)
+    return (_sin_series(r), _cos_series(r), -_sin_series(r), -_cos_series(r))[q]
+
+
+def cos(x):
+    r, q = _reduce(x)
+    return (_cos_series(r), -_sin_series(r), -_cos_series(r), _sin_series(r))[q]
+
+
+def _atan(t):
+    """atan(t) for t >= 0: reduced below tan(pi/8), then its series."""
+    if t > 1.0:
+        return (PIO2_HI + PIO2_LO) - _atan(1.0 / t)
+    if t > 0.41421356237309503:  # tan(pi/8): atan(t) = pi/4 + atan((t - 1) / (t + 1))
+        return (PIO2_HI + PIO2_LO) / 2 + _atan_small((t - 1.0) / (t + 1.0))
+    return _atan_small(t)
+
+
+def _atan_small(t):
+    t2 = t * t
+    power, total = t, t
+    for k in range(1, 40):
+        power = -power * t2
+        total += power / (2 * k + 1)
+    return total
+
+
+def atan2(y, x):
+    if x == 0.0 and y == 0.0:
+        return 0.0
+    if abs(x) >= abs(y):
+        a = _atan(abs(y) / abs(x))
+        a = a if x > 0 else PI - a
+    else:
+        t = _atan(abs(x) / abs(y))
+        a = (PIO2_HI + PIO2_LO) - t if x >= 0 else (PIO2_HI + PIO2_LO) + t
+    return a if y >= 0 else -a
+
+
+def length(dx, dz):
+    return math.sqrt(dx * dx + dz * dz)
 GLB = GAME / 'assets' / 'track' / 'track.glb'
 DATA = GAME / 'src' / 'TrackData.hx'
 
@@ -48,11 +127,14 @@ BARRIER_THICK = 0.5
 GATE_HALF = 7.6  # the posts, either side
 GROUND = 800.0
 
-# colors as the game tinted them (sRGB), made linear for glTF's factors
+# colors: glTF's linear factors, written out (from the sRGB tints the game used: grass
+# 70,128,58; asphalt 58,60,66; curbs 200,40,36 and 235,235,235; line 235,235,235; barrier
+# 190,192,198; post 232,232,232; banner 40,96,200), since pow() is the C library's too
 COLORS = {
-    'grass': (70, 128, 58), 'asphalt': (58, 60, 66), 'curb_red': (200, 40, 36),
-    'curb_white': (235, 235, 235), 'line': (235, 235, 235), 'barrier': (190, 192, 198),
-    'post': (232, 232, 232), 'banner': (40, 96, 200),
+    'grass': (0.061246, 0.215861, 0.042311), 'asphalt': (0.042311, 0.045186, 0.054480),
+    'curb_red': (0.577580, 0.021219, 0.017642), 'curb_white': (0.830770, 0.830770, 0.830770),
+    'line': (0.830770, 0.830770, 0.830770), 'barrier': (0.514918, 0.527115, 0.564712),
+    'post': (0.806952, 0.806952, 0.806952), 'banner': (0.021219, 0.116971, 0.577580),
 }
 
 
@@ -83,7 +165,7 @@ def centerline():
     for i in range(m):
         ax, az = dense[i]
         bx, bz = dense[(i + 1) % m]
-        d = math.sqrt((bx - ax) ** 2 + (bz - az) ** 2)
+        d = math.sqrt((bx - ax) * (bx - ax) + (bz - az) * (bz - az))
         t = STEP - carried
         while t <= d:
             xs.append(ax + (bx - ax) * t / d)
@@ -94,15 +176,15 @@ def centerline():
         xs.pop()
         zs.pop()
     c = len(xs)
-    headings = [math.atan2(xs[(i + 1) % c] - xs[i], zs[(i + 1) % c] - zs[i]) for i in range(c)]
+    headings = [atan2(xs[(i + 1) % c] - xs[i], zs[(i + 1) % c] - zs[i]) for i in range(c)]
     return xs, zs, headings
 
 
 def wrap(a):
-    while a > math.pi:
-        a -= 2 * math.pi
-    while a < -math.pi:
-        a += 2 * math.pi
+    while a > PI:
+        a -= 2 * PI
+    while a < -PI:
+        a += 2 * PI
     return a
 
 
@@ -138,7 +220,7 @@ class Mesh:
         """A box, `size` (w, h, l) about `center`, turned `yaw` about y."""
         cx, cy, cz = center
         hw, hh, hl = size[0] / 2, size[1] / 2, size[2] / 2
-        s, c = math.sin(yaw), math.cos(yaw)
+        s, c = sin(yaw), cos(yaw)
 
         def P(x, y, z):  # local to world: +z along the yaw
             return (cx + x * c + z * s, cy + y, cz - x * s + z * c)
@@ -157,10 +239,10 @@ def side_point(xs, zs, i, offset, y):
     """The point `offset` across the track from sample i (right positive), at height y: the
     normal there the average of the two segments' meeting at it, so a ribbon has no gaps."""
     c = len(xs)
-    hp = math.atan2(xs[i] - xs[i - 1], zs[i] - zs[i - 1])
-    hn = math.atan2(xs[(i + 1) % c] - xs[i], zs[(i + 1) % c] - zs[i])
+    hp = atan2(xs[i] - xs[i - 1], zs[i] - zs[i - 1])
+    hn = atan2(xs[(i + 1) % c] - xs[i], zs[(i + 1) % c] - zs[i])
     h = hp + wrap(hn - hp) / 2
-    return (xs[i] + offset * math.cos(h), y, zs[i] - offset * math.sin(h))
+    return (xs[i] + offset * cos(h), y, zs[i] - offset * sin(h))
 
 
 def build(xs, zs, headings):
@@ -198,7 +280,7 @@ def build(xs, zs, headings):
             for (p, q) in ((ti, ni), (to, no)):  # its two sides, down to the ground
                 pb, qb = (p[0], 0.0, p[2]), (q[0], 0.0, q[2])
                 dx, dz = q[0] - p[0], q[2] - p[2]
-                ln = math.hypot(dx, dz) or 1.0
+                ln = length(dx, dz) or 1.0
                 n = (dz / ln, 0.0, -dx / ln)  # right of the way it runs
                 if (p is ti) == (sign > 0):
                     n = (-n[0], 0.0, -n[2])
@@ -227,7 +309,7 @@ def build(xs, zs, headings):
             barriers.quad('barrier', top(a_in), top(a_out), top(b_out), top(b_in), up)
             for p, q in ((a_in, b_in), (a_out, b_out)):
                 dx, dz = q[0] - p[0], q[2] - p[2]
-                ln = math.hypot(dx, dz) or 1.0
+                ln = length(dx, dz) or 1.0
                 n = (dz / ln, 0.0, -dx / ln)
                 facing_track = p is a_in
                 if (sign > 0) == facing_track:  # the inner face looks back at the track
@@ -250,17 +332,12 @@ def barrier_fits(xs, zs, headings, i, sign):
     c = len(xs)
     p = side_point(xs, zs, i, sign * BARRIER_OFFSET, 0.0)
     for k in range(c):
-        if (xs[k] - p[0]) ** 2 + (zs[k] - p[2]) ** 2 < (BARRIER_OFFSET - 1.0) ** 2:
+        if (xs[k] - p[0]) * (xs[k] - p[0]) + (zs[k] - p[2]) * (zs[k] - p[2]) < (BARRIER_OFFSET - 1.0) * (BARRIER_OFFSET - 1.0):
             return False
     return True
 
 
 # ---- glTF --------------------------------------------------------------------------
-
-def srgb_to_linear(c):
-    c = c / 255
-    return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
-
 
 def f32(x):
     """x as the float32 the file stores, back as a Python float: min and max exact."""
@@ -276,7 +353,7 @@ def glb(xs, zs, headings):
         'nodes': [], 'meshes': [], 'materials': [], 'accessors': [], 'bufferViews': [], 'buffers': [],
     }
     for name in materials:
-        r, g, b = (round(srgb_to_linear(v), 6) for v in COLORS[name])
+        r, g, b = COLORS[name]
         gltf['materials'].append({'name': name, 'pbrMetallicRoughness': {
             'baseColorFactor': [r, g, b, 1.0], 'metallicFactor': 0.0, 'roughnessFactor': 0.9}})
     blob = bytearray()
@@ -324,7 +401,7 @@ def glb(xs, zs, headings):
         if translation is not None:
             n['translation'] = [f32(t) for t in translation]
         if yaw is not None:
-            n['rotation'] = [0.0, f32(math.sin(yaw / 2)), 0.0, f32(math.cos(yaw / 2))]
+            n['rotation'] = [0.0, f32(sin(yaw / 2)), 0.0, f32(cos(yaw / 2))]
         if children:
             n['children'] = list(children)
         gltf['nodes'].append(n)
@@ -358,7 +435,9 @@ def glb(xs, zs, headings):
 
 def haxe(xs, zs, headings):
     def floats(values):
-        return ',\n\t\t'.join(', '.join(repr(v) for v in values[k:k + 6]) for k in range(0, len(values), 6))
+        # 6 decimals (a micrometre, a microradian): what the game needs, and short of the
+        # last digits, where a last-ulp difference anywhere upstream would show first
+        return ',\n\t\t'.join(', '.join(f'{v:.6f}' for v in values[k:k + 6]) for k in range(0, len(values), 6))
     c = len(xs)
     return f'''// Generated by tools/gen_track.py from its centerline: run it again, never edit this.
 package;

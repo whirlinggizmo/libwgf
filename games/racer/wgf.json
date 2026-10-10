@@ -6,5 +6,5 @@
 	"assets": "assets",
 	"autopilot": "autopilot",
 	"playthrough": "lap.autopilot",
-	"web_budget_kb": 550
+	"web_budget_kb": 600
 }
