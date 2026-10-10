@@ -763,7 +763,7 @@ static void fail(wgf_handle_t resource)
     if (!reloading) wgf_gfx_priv_model_mesh_done(resource);
 }
 
-static const wgf_core_priv_loader_t loader = {"mesh", prepare, finish, discard, fail, NULL, true};
+static const wgf_core_priv_loader_t loader = {"mesh", prepare, finish, discard, fail, NULL, true, NULL};
 
 /* The files a glTF names, for the asset part to make local with it (core's lister,
  * wgf_core_load_priv.h): its buffers, required; its images, optional (a missing one gets the

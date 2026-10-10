@@ -225,7 +225,7 @@ static void fail(wgf_handle_t resource)
     wgf_core_priv_resource_failed(resource);
 }
 
-static const wgf_core_priv_loader_t loader = {"texture", prepare, finish, discard, fail, NULL, true};
+static const wgf_core_priv_loader_t loader = {"texture", prepare, finish, discard, fail, NULL, true, NULL};
 
 /* --- an image of another file's (a glTF's) ------------------------------------ */
 

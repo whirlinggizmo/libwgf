@@ -1570,11 +1570,15 @@ export function wgf_resource_release(resource) {
 // wgf: call wgf_resource_set_load_budget
 /**
  * Milliseconds a frame spent finishing loads on the main thread, such as GPU uploads
- * (default 4), so loading doesn't stall the frames it runs beside. At least one step
- * runs each frame however small it is, so one large file can exceed it: a 4096x4096
- * texture is one upload of about 45 ms (wgrender's measurement). 0 finishes one step a
- * frame. It applies to every load, from a bundled, cached, or fetched file alike. False,
- * and nothing changed, for a negative or non-finite one.
+ * (default 4), and on the web, where there are no worker threads, preparing those that
+ * prepare in steps (an environment), so loading doesn't stall the frames it runs beside.
+ * At least one step runs each frame however small it is, so one large file can exceed it:
+ * a 4096x4096 texture is one upload of about 45 ms (wgrender's measurement). 0 finishes
+ * one step a frame. Loading takes the longer the less of each frame it has, the more so
+ * where frames are slow: a loading screen, with nothing else to draw, can give it more
+ * (16 ms, say) and set it back once loaded. It applies to every load, from a bundled,
+ * cached, or fetched file alike. False, and nothing changed, for a negative or
+ * non-finite one.
  */
 export function wgf_resource_set_load_budget(milliseconds) {
     const value = host["_wgf_resource_set_load_budget"](milliseconds);
@@ -1584,11 +1588,15 @@ export function wgf_resource_set_load_budget(milliseconds) {
 // wgf: call wgf_resource_get_load_budget
 /**
  * Milliseconds a frame spent finishing loads on the main thread, such as GPU uploads
- * (default 4), so loading doesn't stall the frames it runs beside. At least one step
- * runs each frame however small it is, so one large file can exceed it: a 4096x4096
- * texture is one upload of about 45 ms (wgrender's measurement). 0 finishes one step a
- * frame. It applies to every load, from a bundled, cached, or fetched file alike. False,
- * and nothing changed, for a negative or non-finite one.
+ * (default 4), and on the web, where there are no worker threads, preparing those that
+ * prepare in steps (an environment), so loading doesn't stall the frames it runs beside.
+ * At least one step runs each frame however small it is, so one large file can exceed it:
+ * a 4096x4096 texture is one upload of about 45 ms (wgrender's measurement). 0 finishes
+ * one step a frame. Loading takes the longer the less of each frame it has, the more so
+ * where frames are slow: a loading screen, with nothing else to draw, can give it more
+ * (16 ms, say) and set it back once loaded. It applies to every load, from a bundled,
+ * cached, or fetched file alike. False, and nothing changed, for a negative or
+ * non-finite one.
  */
 export function wgf_resource_get_load_budget() {
     const value = host["_wgf_resource_get_load_budget"]();

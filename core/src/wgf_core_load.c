@@ -78,6 +78,7 @@ static struct {
     ring_t queue; /* jobs for the workers */
     ring_t done;  /* their results */
     bool stop;
+    bool abandon; /* the pipeline ending: a stepped preparation in a worker stops between steps */
     wgf_core_priv_thread_t threads[MAX_WORKERS];
     int worker_count;
 } jobs;
@@ -124,6 +125,18 @@ static void ring_free(ring_t *ring)
 
 /* --- workers -------------------------------------------------------------- */
 
+/* Preparations in steps, reached through these once wgf_core_priv_load_enable_steps has
+ * set them (by the part whose loader steps), so a program with no such loader links none
+ * of it: in a worker, the steps run to the end; with no workers, `here` prepares on the
+ * main thread in its place. Not static, as wgf_core_priv_load_hooks isn't: a static one,
+ * set in one place, the compiler turns into direct calls behind a flag, which links them
+ * into every program (a 3D program 0.2 KB of gzip larger, measured). */
+struct wgf_core_priv_load_steps_t {
+    void (*worker)(job_t *job);
+    void (*here)(void);
+    void (*ending)(bool before); /* the pipeline ending: before its workers stop, and after */
+} wgf_core_priv_load_steps;
+
 static void worker_main(void *arg)
 {
     job_t job;
@@ -135,6 +148,7 @@ static void worker_main(void *arg)
         ring_pop(&jobs.queue, &job);
         wgf_core_priv_mutex_unlock(&jobs.lock);
         job.prepared = job.loader->prepare(job.path);
+        if (job.prepared != NULL && wgf_core_priv_load_steps.worker != NULL) wgf_core_priv_load_steps.worker(&job);
         wgf_core_priv_mutex_lock(&jobs.lock);
         ring_push(&jobs.done, &job);
     }
@@ -223,6 +237,13 @@ static bool request(const wgf_core_priv_loader_t *loader, const char *path, wgf_
     bool grown;
 
     if (!running || loader == NULL) return false;
+#ifndef NDEBUG
+    /* a part's mistake, caught where it's made: its steps would never run */
+    if (loader->prepare_step != NULL && wgf_core_priv_load_steps.worker == NULL) {
+        wgf_log_error("wgf_core_load: %s steps its preparation without wgf_core_priv_load_enable_steps", loader->name);
+        return false;
+    }
+#endif
     handle = wgf_core_priv_handle_pool_alloc(&request_pool);
     if (handle == 0 || !wgf_core_priv_handle_pool_resolve(&request_pool, handle, &index)) return false;
     /* room on both rings for every request's job, before this one can have one */
@@ -411,23 +432,128 @@ static void locate(void)
     }
 }
 
-/* Step 2's results: what the workers prepared, or, with none, one prepare here. */
+/* With no workers, the preparation in steps that the main thread is running. */
+static struct {
+    bool active;
+    job_t job;
+} stepping;
+
+static void push_done(const job_t *job)
+{
+    wgf_core_priv_mutex_lock(&jobs.lock);
+    ring_push(&jobs.done, job);
+    wgf_core_priv_mutex_unlock(&jobs.lock);
+}
+
+/* With no workers: one prepare here, a whole one. */
+static void prepare_here(void)
+{
+    job_t job;
+    bool have;
+    if (jobs.worker_count > 0) return;
+    wgf_core_priv_mutex_lock(&jobs.lock);
+    have = ring_pop(&jobs.queue, &job);
+    wgf_core_priv_mutex_unlock(&jobs.lock);
+    if (!have) return;
+    job.prepared = request_of(job.request)->state != STATE_CANCELLED ? job.loader->prepare(job.path) : NULL;
+    push_done(&job);
+}
+
+/* A worker's steps, to the end, or until the pipeline ends; failed or abandoned, let go of. */
+static void worker_steps(job_t *job)
+{
+    wgf_core_priv_load_step_t step = WGF_CORE_PRIV_LOAD_MORE;
+    bool abandon = false;
+    if (job->loader->prepare_step == NULL) return;
+    while (step == WGF_CORE_PRIV_LOAD_MORE && !abandon) {
+        step = job->loader->prepare_step(job->prepared);
+        wgf_core_priv_mutex_lock(&jobs.lock);
+        abandon = jobs.abandon;
+        wgf_core_priv_mutex_unlock(&jobs.lock);
+    }
+    if (step != WGF_CORE_PRIV_LOAD_DONE) {
+        job->loader->discard(job->prepared);
+        job->prepared = NULL;
+    }
+}
+
+/* With no workers, prepare_here's place: each update one preparation taken from the queue,
+ * as prepare_here takes one -- a whole one prepared, or a stepped one begun -- while one is
+ * stepping, the stepped ones waiting their turn behind the rest, the others keeping their
+ * order; and the stepping one's steps within the budget, at least one, so a long
+ * preparation holds no other load back. One begun here is ended here, should workers start
+ * meanwhile. */
+static void steps_here(void)
+{
+    const double start = wgf_time_get_seconds();
+    job_t job = {0}; /* set before it's read; MSVC can't see it (C4701) */
+    bool have = false;
+    if (jobs.worker_count == 0) {
+        int looked;
+        wgf_core_priv_mutex_lock(&jobs.lock);
+        for (looked = jobs.queue.count; looked > 0 && !have; looked--) {
+            ring_pop(&jobs.queue, &job);
+            have = !stepping.active || job.loader->prepare_step == NULL;
+            if (!have) ring_push(&jobs.queue, &job); /* stepped, while one steps: behind the rest */
+        }
+        wgf_core_priv_mutex_unlock(&jobs.lock);
+        if (have) {
+            job.prepared = request_of(job.request)->state != STATE_CANCELLED ? job.loader->prepare(job.path) : NULL;
+            if (job.prepared == NULL || job.loader->prepare_step == NULL) {
+                push_done(&job);
+            } else {
+                stepping.job = job;
+                stepping.active = true;
+            }
+        }
+    }
+    while (stepping.active) {
+        wgf_core_priv_load_step_t step = WGF_CORE_PRIV_LOAD_FAILED; /* cancelled: let go of */
+        if (request_of(stepping.job.request)->state != STATE_CANCELLED) {
+            step = stepping.job.loader->prepare_step(stepping.job.prepared);
+        }
+        if (step != WGF_CORE_PRIV_LOAD_MORE) {
+            if (step != WGF_CORE_PRIV_LOAD_DONE) {
+                stepping.job.loader->discard(stepping.job.prepared);
+                stepping.job.prepared = NULL;
+            }
+            stepping.active = false;
+            push_done(&stepping.job);
+            return;
+        }
+        if ((wgf_time_get_seconds() - start) * 1000.0 >= (double)budget_ms) return;
+    }
+}
+
+/* The pipeline ending: a worker's steps stop between two; one here is let go of. */
+static void steps_ending(bool before)
+{
+    wgf_core_priv_mutex_lock(&jobs.lock);
+    jobs.abandon = before;
+    wgf_core_priv_mutex_unlock(&jobs.lock);
+    if (!before && stepping.active) {
+        stepping.job.loader->discard(stepping.job.prepared);
+        stepping.active = false;
+    }
+}
+
+void wgf_core_priv_load_enable_steps(void)
+{
+    wgf_core_priv_load_steps.worker = worker_steps;
+    wgf_core_priv_load_steps.here = steps_here;
+    wgf_core_priv_load_steps.ending = steps_ending;
+}
+
+/* Step 2's results: what the workers prepared, or, with none, what was prepared here. */
 static void collect(void)
 {
     job_t job;
     bool have;
 
-    if (jobs.worker_count == 0) {
-        wgf_core_priv_mutex_lock(&jobs.lock);
-        have = ring_pop(&jobs.queue, &job);
-        wgf_core_priv_mutex_unlock(&jobs.lock);
-        if (have) {
-            const request_t *request_ptr = request_of(job.request);
-            job.prepared = request_ptr->state != STATE_CANCELLED ? job.loader->prepare(job.path) : NULL;
-            wgf_core_priv_mutex_lock(&jobs.lock);
-            ring_push(&jobs.done, &job);
-            wgf_core_priv_mutex_unlock(&jobs.lock);
-        }
+    if (wgf_core_priv_load_steps.here != NULL) {
+        wgf_core_priv_load_steps.here();
+    } else {
+        prepare_here();
     }
     for (;;) {
         request_t *request_ptr;
@@ -523,7 +649,9 @@ void wgf_core_priv_load_deinit(void)
     job_t job;
     uint16_t i;
     if (!running) return;
+    if (wgf_core_priv_load_steps.ending != NULL) wgf_core_priv_load_steps.ending(true);
     stop_workers();
+    if (wgf_core_priv_load_steps.ending != NULL) wgf_core_priv_load_steps.ending(false);
     while (ring_pop(&jobs.done, &job)) {
         if (job.prepared != NULL) job.loader->discard(job.prepared);
     }

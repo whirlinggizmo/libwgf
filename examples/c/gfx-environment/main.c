@@ -25,7 +25,9 @@
  * above, gold below, roughness 0 to 1 left to right), a normal-mapped sphere, and the toy
  * car, lit by an environment alone -- no lights, no ambient light. Metals mirror the
  * world around them; rougher surfaces blur it. The environment is prepared on a worker
- * as it loads; until it is READY the stage is lit by nothing.
+ * as it loads (on the web, a step at a time within the load budget, which this program
+ * raises while one is loading, as a loading screen would); until it is READY the stage is
+ * lit by nothing.
  *
  *   E            environment: sunset, studio, none
  *   B            background: sharp, soft, blurred, off
@@ -55,6 +57,7 @@ static struct {
     int blur;        /* an index into BLURS; BLUR_COUNT: no background */
     wgf_stage3d_tonemap_t tonemap;
     float exposure, rotation, time;
+    float load_budget; /* the default, given back once nothing loads */
 } g;
 
 static void apply_environment(void)
@@ -93,6 +96,7 @@ static void init(void *user)
     wgf_asset_set_host("../assets"); /* the examples' files: one level above every program */
     wgf_render_set_clear_color(wgf_color_make(20, 22, 28, 255));
     g.tonemap = WGF_STAGE3D_TONEMAP_NEUTRAL;
+    g.load_budget = wgf_resource_get_load_budget();
     g.stage = wgf_stage3d_create();
     g.camera = wgf_camera3d_create();
     wgf_actor_set_parent(g.camera, g.stage);
@@ -143,6 +147,15 @@ static void frame(void *user)
     if (wgf_keyboard_is_down(WGF_KEY_LEFT)) g.rotation -= dt, changed = true;
     if (wgf_keyboard_is_down(WGF_KEY_RIGHT)) g.rotation += dt, changed = true;
     if (changed) apply_environment();
+
+    { /* while an environment loads, more of each frame for it */
+        bool loading = false;
+        int i;
+        for (i = 0; i < ENVIRONMENT_COUNT; i++) {
+            loading = loading || wgf_resource_get_status(g.environments[i]) == WGF_RESOURCE_STATUS_PENDING;
+        }
+        wgf_resource_set_load_budget(loading ? 16.0f : g.load_budget);
+    }
 
     g.time += dt;
     wgf_actor_set_position(g.camera, sinf(g.time * 0.15f) * 7.5f, 1.2f, cosf(g.time * 0.15f) * 7.5f);

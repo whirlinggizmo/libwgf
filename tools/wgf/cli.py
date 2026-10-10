@@ -10,13 +10,15 @@
                                          the game flown by an autopilot file (its inputs
                                          at frames, its expectations: app's format),
                                          headless or in a browser: PASS or FAIL, as its
-                                         exit code says, and why when it fails;
+                                         exit code says, and why when it fails (the
+                                         first reason on the FAIL line itself);
                                          --screenshots saves a --web run's named ones
     wgf autopilot FILE --record          the desktop build, played by hand in a window,
                                          every input written to FILE as an autopilot
-    wgf screenshot [--frame N] [--autopilot FILE] [--out FILE] [--no-build]
+    wgf screenshot [--frame N] [--autopilot FILE] [--out FILE] [--timeout S] [--no-build]
                                          the web build at frame N, in a headless browser,
-                                         saved as a PNG (default build/screenshot.png)
+                                         saved as a PNG (default build/screenshot.png);
+                                         --timeout as autopilot's
     wgf dump [--frame N] [--autopilot FILE] [--no-build]
                                          the ecs's world at frame N, as a scene's text,
                                          from a headless run
@@ -191,11 +193,15 @@ def cmd_autopilot(args):
         code, output = games.run_native(exe, autopilot, timeout=args.timeout or 600)
         lines = output.splitlines()
         result = games.judged(output) if code == 0 else False
-    if not result:
-        for line in games.why_failed(lines):
-            say(f'autopilot {args.file}: {line}')
-    say(f'autopilot {args.file}: {"PASS" if result else "FAIL"}')
-    return 0 if result else 1
+    if result:
+        say(f'autopilot {args.file}: PASS')
+        return 0
+    why = games.why_failed(lines)
+    for line in why:
+        say(f'autopilot {args.file}: {line}')
+    more = f' (and {len(why) - 1} more above)' if len(why) > 1 else ''
+    say(f'autopilot {args.file}: FAIL: {why[0].strip()}{more}')  # the reason kept with the verdict
+    return 1
 
 
 def record(game, out):
@@ -222,9 +228,15 @@ def cmd_screenshot(args):
     if out.exists():
         out.unlink()
     autopilot, frame = flown_to(args.autopilot, args.frame, 'screenshot shot', 60)
-    games.run_page(site, 'index.html', autopilot, screenshot=out, echo=False)
+    timeout = args.timeout or games.autopilot_seconds(autopilot)
+    lines = games.run_page(site, 'index.html', autopilot, screenshot=out, echo=False, timeout=timeout)
     if not out.exists():
-        raise games.GameError(f'no screenshot: the page never reached frame {frame}')
+        if any('nothing ended the run within' in line for line in lines):
+            raise games.GameError(f'no screenshot: frame {frame} wasn\'t reached within {timeout:g} s (a slow browser '
+                                  'draws a few frames a second): give it longer with --timeout')
+        errors = [line for line in lines if '[ERROR]' in line or '[FATAL]' in line]
+        raise games.GameError(f'no screenshot: the page ended before frame {frame}' +
+                              (f': {errors[0].strip()}' if errors else ''))
     say(f'frame {frame} saved: {out}')
     return 0
 
@@ -396,6 +408,9 @@ def parser():
     p.add_argument('--frame', type=int, help='the frame (default: the autopilot\'s end, or 60)')
     p.add_argument('--autopilot', help='an autopilot file to fly it there first')
     p.add_argument('--out')
+    p.add_argument('--timeout', type=float,
+                   help='seconds the page may take to reach the frame (default: two minutes and the frame at 3 a '
+                        'second)')
     p.add_argument('--no-build', action='store_true')
     p.set_defaults(run=cmd_screenshot)
     p = sub.add_parser('dump', help='the ecs\'s world at a frame, as a scene\'s text')

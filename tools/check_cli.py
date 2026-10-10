@@ -158,7 +158,10 @@ def step_autopilot(game):
         if not any(line.startswith('wgf: autopilot') and 'frames' in line and 'FAIL' not in line[-6:]
                    for line in out.splitlines()):
             return problem('wgf autopilot: a failing one didn\'t say why under its FAIL', out)
-        said.append('the smoke autopilot passed headless, a failing one failed, saying why')
+        verdict = [line for line in out.splitlines() if line.startswith('wgf: autopilot')][-1]
+        if ': FAIL: ' not in verdict or 'frames' not in verdict:
+            return problem('wgf autopilot: a failing one\'s last line didn\'t keep its reason with its FAIL', out)
+        said.append('the smoke autopilot passed headless, a failing one failed, saying why on its FAIL line')
     if not web:
         code, out = wgf(game, 'autopilot', 'autopilot/smoke.autopilot', '--web', '--no-build')
         if code != 0 or 'PASS' not in out:
@@ -232,8 +235,12 @@ def step_screenshot(game):
                     str(flown), '--no-build')
     if code != 0 or 'frame 60 saved' not in out or 'left out' not in out:
         return problem('wgf screenshot --frame: the autopilot\'s own screenshot line won, or wasn\'t said', out)
+    code, out = wgf(game, 'screenshot', '--frame', '100000', '--timeout', '3', '--out', str(flown), '--no-build')
+    if code == 0 or 'within 3 s' not in out or '--timeout' not in out:
+        return problem('wgf screenshot --timeout: a frame past the time given wasn\'t said to have run out of time', out)
     print(f'check_cli: screenshot: frame 30, {shot.stat().st_size} bytes of PNG; frame 90, flown there, a failed '
-          'expectation on the way or not; and frame 60 over the autopilot\'s own screenshot line, said')
+          'expectation on the way or not; frame 60 over the autopilot\'s own screenshot line, said; and a frame past '
+          '--timeout said to have run out of time')
     return True
 
 

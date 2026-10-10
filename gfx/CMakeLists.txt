@@ -25,7 +25,6 @@ wgf_layer(gfx
         src/stage/wgf_gfx_model_file.c
         src/stage/wgf_gfx_shadow.c
         src/stage/wgf_gfx_environment.c
-        src/stage/wgf_gfx_environment_hdr.c
         src/stage/wgf_gfx_stage3d.c
         src/text/wgf_gfx_font.c
         src/text/wgf_gfx_fontstash_impl.c
@@ -40,7 +39,6 @@ target_include_directories(wgf_gfx SYSTEM PRIVATE "${PROJECT_SOURCE_DIR}/deps/so
                            "${PROJECT_SOURCE_DIR}/deps/fontstash" "${PROJECT_SOURCE_DIR}/deps/jetbrains-mono")
 # vendored code is compiled as it comes: its warnings are not ours to fix
 set_source_files_properties(src/texture/wgf_gfx_stb_impl.c src/text/wgf_gfx_fontstash_impl.c src/mesh/wgf_gfx_cgltf_impl.c
-                            src/stage/wgf_gfx_environment_hdr.c
                             PROPERTIES COMPILE_OPTIONS "$<IF:$<C_COMPILER_ID:MSVC>,/w,-w>")
 # what includes gfx's private headers (app, gfx's tests) sees sokol's
 target_include_directories(wgf_gfx_priv SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/deps/sokol"

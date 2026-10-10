@@ -197,14 +197,12 @@ static void sh_basis(wgf_vec3_t n, float y[9])
     y[8] = 0.546274f * (n.x * n.x - n.y * n.y);
 }
 
-void wgf_gfx_priv_environment_project_sh(const wgf_gfx_priv_env_image_t *image, wgf_gfx_priv_env_sh_t *out)
+/* Rows y0..y1 of the image's projection, added to `sum`. */
+static void project_sh_rows(const wgf_gfx_priv_env_image_t *image, int y0, int y1, double sum[9][3])
 {
-    /* Lambert convolution per band (Ramamoorthi & Hanrahan), divided by pi */
-    static const float band[9] = {1.0f, 2.0f / 3.0f, 2.0f / 3.0f, 2.0f / 3.0f, 0.25f, 0.25f, 0.25f, 0.25f, 0.25f};
-    double sum[9][3] = {{0}};
     const double pixel_area = (2.0 * PI_D / image->width) * (PI_D / image->height);
     int px, py, k, c;
-    for (py = 0; py < image->height; py++) {
+    for (py = y0; py < y1; py++) {
         const float v = ((float)py + 0.5f) / (float)image->height;
         const double solid_angle = pixel_area * sin(v * PI_D);
         for (px = 0; px < image->width; px++) {
@@ -217,9 +215,24 @@ void wgf_gfx_priv_environment_project_sh(const wgf_gfx_priv_env_image_t *image, 
             }
         }
     }
+}
+
+/* The coefficients from the whole image's sums: the Lambert convolution per band
+ * (Ramamoorthi & Hanrahan), divided by pi. */
+static void sh_from_sums(double sum[9][3], wgf_gfx_priv_env_sh_t *out)
+{
+    static const float band[9] = {1.0f, 2.0f / 3.0f, 2.0f / 3.0f, 2.0f / 3.0f, 0.25f, 0.25f, 0.25f, 0.25f, 0.25f};
+    int k, c;
     for (k = 0; k < 9; k++) {
         for (c = 0; c < 3; c++) out->c[k][c] = (float)sum[k][c] * band[k];
     }
+}
+
+void wgf_gfx_priv_environment_project_sh(const wgf_gfx_priv_env_image_t *image, wgf_gfx_priv_env_sh_t *out)
+{
+    double sum[9][3] = {{0}};
+    project_sh_rows(image, 0, image->height, sum);
+    sh_from_sums(sum, out);
 }
 
 wgf_vec3_t wgf_gfx_priv_environment_eval_sh(const wgf_gfx_priv_env_sh_t *sh, wgf_vec3_t n)
@@ -263,37 +276,47 @@ static bool cube_alloc(wgf_gfx_priv_env_cube_t *cube, int size, int mip_count)
     return true;
 }
 
-bool wgf_gfx_priv_environment_cube_from_equirect(const wgf_gfx_priv_env_image_t *image, int size,
-                                                 wgf_gfx_priv_env_cube_t *out)
+static int mip_count_of(int size)
 {
-    int mip_count = 1, face, x, y, m, c, sx, sy;
+    int mip_count = 1;
     while ((size >> (mip_count - 1)) > 1 && mip_count < 16) mip_count++;
-    if (!cube_alloc(out, size, mip_count)) return false;
-    for (face = 0; face < 6; face++) { /* mip 0: 2x2 supersampled a texel */
-        for (y = 0; y < size; y++) {
-            for (x = 0; x < size; x++) {
-                float *p = &out->mips[0][((size_t)face * size * size + (size_t)y * size + x) * 3];
-                for (sy = 0; sy < 2; sy++) {
-                    for (sx = 0; sx < 2; sx++) {
-                        const wgf_vec3_t d =
-                            wgf_gfx_priv_environment_cube_dir(face, ((float)x + 0.25f + 0.5f * sx) / (float)size,
-                                                              ((float)y + 0.25f + 0.5f * sy) / (float)size);
-                        const wgf_vec3_t col = wgf_gfx_priv_environment_sample_equirect(image, d);
-                        p[0] += col.x * 0.25f;
-                        p[1] += col.y * 0.25f;
-                        p[2] += col.z * 0.25f;
-                    }
+    return mip_count;
+}
+
+/* Rows y0..y1 of a face of the source cube's mip 0, 2x2 supersampled a texel. */
+static void cube_rows(const wgf_gfx_priv_env_image_t *image, wgf_gfx_priv_env_cube_t *cube, int face, int y0, int y1)
+{
+    const int size = cube->size;
+    int x, y, sx, sy;
+    for (y = y0; y < y1; y++) {
+        for (x = 0; x < size; x++) {
+            float *p = &cube->mips[0][((size_t)face * size * size + (size_t)y * size + x) * 3];
+            for (sy = 0; sy < 2; sy++) {
+                for (sx = 0; sx < 2; sx++) {
+                    const wgf_vec3_t d =
+                        wgf_gfx_priv_environment_cube_dir(face, ((float)x + 0.25f + 0.5f * sx) / (float)size,
+                                                          ((float)y + 0.25f + 0.5f * sy) / (float)size);
+                    const wgf_vec3_t col = wgf_gfx_priv_environment_sample_equirect(image, d);
+                    p[0] += col.x * 0.25f;
+                    p[1] += col.y * 0.25f;
+                    p[2] += col.z * 0.25f;
                 }
             }
         }
     }
-    for (m = 1; m < mip_count; m++) { /* box-filtered mips */
-        const int src = size >> (m - 1), dst = size >> m > 0 ? size >> m : 1;
+}
+
+/* Mips 1 on, box-filtered from mip 0. */
+static void box_mips(wgf_gfx_priv_env_cube_t *cube)
+{
+    int m, face, x, y, c;
+    for (m = 1; m < cube->mip_count; m++) {
+        const int src = cube->size >> (m - 1), dst = cube->size >> m > 0 ? cube->size >> m : 1;
         for (face = 0; face < 6; face++) {
-            const float *s = out->mips[m - 1] + (size_t)face * src * src * 3;
+            const float *s = cube->mips[m - 1] + (size_t)face * src * src * 3;
             for (y = 0; y < dst; y++) {
                 for (x = 0; x < dst; x++) {
-                    float *p = &out->mips[m][((size_t)face * dst * dst + (size_t)y * dst + x) * 3];
+                    float *p = &cube->mips[m][((size_t)face * dst * dst + (size_t)y * dst + x) * 3];
                     const int x1 = 2 * x + 1 < src ? 2 * x + 1 : 2 * x, y1 = 2 * y + 1 < src ? 2 * y + 1 : 2 * y;
                     for (c = 0; c < 3; c++) {
                         p[c] = 0.25f * (s[(2 * y * src + 2 * x) * 3 + c] + s[(2 * y * src + x1) * 3 + c] +
@@ -303,6 +326,15 @@ bool wgf_gfx_priv_environment_cube_from_equirect(const wgf_gfx_priv_env_image_t 
             }
         }
     }
+}
+
+bool wgf_gfx_priv_environment_cube_from_equirect(const wgf_gfx_priv_env_image_t *image, int size,
+                                                 wgf_gfx_priv_env_cube_t *out)
+{
+    int face;
+    if (!cube_alloc(out, size, mip_count_of(size))) return false;
+    for (face = 0; face < 6; face++) cube_rows(image, out, face, 0, size);
+    box_mips(out);
     return true;
 }
 
@@ -316,79 +348,98 @@ static float radical_inverse(uint32_t bits)
     return (float)bits * 2.3283064365386963e-10f;
 }
 
-/* The GGX half vector about +z for Hammersley point i of n (alpha = roughness^2). */
-static wgf_vec3_t importance_ggx(int i, int n, float alpha)
+/* A prefilter sample, the same for every texel of a mip (v = n): its light direction about
+ * +z, whose z is its weight (n.l), and the source mip it reads. */
+typedef struct prefilter_sample_t {
+    float x, y, z, lod;
+} prefilter_sample_t;
+
+/* Mip m's samples (n of them, Hammersley points through GGX at roughness m / (mip_count -
+ * 1)), those below the horizon left out; how many are kept. Filtered importance sampling: a
+ * sample reads a blurrier source mip where samples are sparse, which removes noise with few
+ * samples. */
+static int prefilter_samples(const wgf_gfx_priv_env_cube_t *source, int mip, int mip_count, int n,
+                             prefilter_sample_t *out)
 {
-    const float xi_x = (float)i / (float)n, xi_y = radical_inverse((uint32_t)i);
-    const float phi = 2.0f * PI_F * xi_x;
-    const float cos_theta = sqrtf((1.0f - xi_y) / (1.0f + (alpha * alpha - 1.0f) * xi_y));
-    const float sin_theta = sqrtf(1.0f - cos_theta * cos_theta);
-    return wgf_vec3_make(sin_theta * cosf(phi), sin_theta * sinf(phi), cos_theta);
+    const float source_texel_solid_angle = 4.0f * PI_F / (6.0f * (float)source->size * (float)source->size);
+    const float roughness = mip_count > 1 ? (float)mip / (float)(mip_count - 1) : 0.0f;
+    const float alpha = roughness * roughness, a2 = alpha * alpha;
+    int i, kept = 0;
+    for (i = 0; i < n; i++) {
+        const float phi = 2.0f * PI_F * (float)i / (float)n, xi = radical_inverse((uint32_t)i);
+        const float cos_theta = sqrtf((1.0f - xi) / (1.0f + (a2 - 1.0f) * xi));
+        const float sin_theta = sqrtf(1.0f - cos_theta * cos_theta);
+        const float hx = sin_theta * cosf(phi), hy = sin_theta * sinf(phi), hz = cos_theta;
+        const float lz = 2.0f * hz * hz - 1.0f; /* n about h, n = +z */
+        float dd, pdf;
+        if (lz <= 0.0f) continue;
+        dd = hz * hz * (a2 - 1.0f) + 1.0f;
+        pdf = a2 / (PI_F * dd * dd) * 0.25f; /* D n.h / (4 v.h), v.h == n.h */
+        out[kept].x = 2.0f * hz * hx;
+        out[kept].y = 2.0f * hz * hy;
+        out[kept].z = lz;
+        out[kept].lod = 0.5f * log2f(1.0f / ((float)n * pdf + 1e-6f) / source_texel_solid_angle) + 1.0f;
+        kept++;
+    }
+    return kept;
 }
 
-static wgf_vec3_t to_basis(wgf_vec3_t v, wgf_vec3_t n)
+/* Rows y0..y1 of a face of the prefiltered cube's mip `mip`, from its samples. */
+static void prefilter_rows(const wgf_gfx_priv_env_cube_t *source, wgf_gfx_priv_env_cube_t *out, int mip, int face,
+                           int y0, int y1, const prefilter_sample_t *samples, int count)
 {
-    const wgf_vec3_t up = fabsf(n.z) < 0.999f ? wgf_vec3_make(0, 0, 1) : wgf_vec3_make(1, 0, 0);
-    const wgf_vec3_t tx = wgf_vec3_normalize(wgf_vec3_cross(up, n));
-    const wgf_vec3_t ty = wgf_vec3_cross(n, tx);
-    return wgf_vec3_make(tx.x * v.x + ty.x * v.y + n.x * v.z, tx.y * v.x + ty.y * v.y + n.y * v.z,
-                         tx.z * v.x + ty.z * v.y + n.z * v.z);
+    const int s = out->size >> mip > 0 ? out->size >> mip : 1;
+    int x, y, i;
+    for (y = y0; y < y1; y++) {
+        for (x = 0; x < s; x++) {
+            float *p = &out->mips[mip][((size_t)face * s * s + (size_t)y * s + x) * 3];
+            const wgf_vec3_t n =
+                wgf_gfx_priv_environment_cube_dir(face, ((float)x + 0.5f) / (float)s, ((float)y + 0.5f) / (float)s);
+            wgf_vec3_t sum = {0, 0, 0}, tx, ty;
+            float weight = 0.0f;
+            if (mip == 0) { /* mirror-like: the source at this resolution */
+                const wgf_vec3_t col =
+                    wgf_gfx_priv_environment_sample_cube(source, n, log2f((float)source->size / (float)s));
+                p[0] = col.x;
+                p[1] = col.y;
+                p[2] = col.z;
+                continue;
+            }
+            tx = wgf_vec3_normalize(wgf_vec3_cross(fabsf(n.z) < 0.999f ? wgf_vec3_make(0, 0, 1) : wgf_vec3_make(1, 0, 0), n));
+            ty = wgf_vec3_cross(n, tx);
+            for (i = 0; i < count; i++) {
+                const prefilter_sample_t *k = &samples[i];
+                const wgf_vec3_t l = wgf_vec3_make(tx.x * k->x + ty.x * k->y + n.x * k->z,
+                                                   tx.y * k->x + ty.y * k->y + n.y * k->z,
+                                                   tx.z * k->x + ty.z * k->y + n.z * k->z);
+                const wgf_vec3_t col = wgf_gfx_priv_environment_sample_cube(source, l, k->lod);
+                sum = wgf_vec3_make(sum.x + col.x * k->z, sum.y + col.y * k->z, sum.z + col.z * k->z);
+                weight += k->z;
+            }
+            if (weight > 0.0f) {
+                p[0] = sum.x / weight;
+                p[1] = sum.y / weight;
+                p[2] = sum.z / weight;
+            }
+        }
+    }
 }
 
 bool wgf_gfx_priv_environment_prefilter(const wgf_gfx_priv_env_cube_t *source, int size, int mip_count, int samples,
                                         wgf_gfx_priv_env_cube_t *out)
 {
-    const float source_texel_solid_angle = 4.0f * PI_F / (6.0f * (float)source->size * (float)source->size);
-    int m, face, x, y, i;
-    if (!cube_alloc(out, size, mip_count)) return false;
-    for (m = 0; m < mip_count; m++) {
-        const int s = size >> m > 0 ? size >> m : 1;
-        const float roughness = mip_count > 1 ? (float)m / (float)(mip_count - 1) : 0.0f;
-        const float alpha = roughness * roughness;
-        for (face = 0; face < 6; face++) {
-            for (y = 0; y < s; y++) {
-                for (x = 0; x < s; x++) {
-                    float *p = &out->mips[m][((size_t)face * s * s + (size_t)y * s + x) * 3];
-                    const wgf_vec3_t n =
-                        wgf_gfx_priv_environment_cube_dir(face, ((float)x + 0.5f) / (float)s, ((float)y + 0.5f) / (float)s);
-                    wgf_vec3_t sum = {0, 0, 0};
-                    float weight = 0.0f;
-                    if (m == 0) { /* mirror-like: the source at this resolution */
-                        const wgf_vec3_t col =
-                            wgf_gfx_priv_environment_sample_cube(source, n, log2f((float)source->size / (float)s));
-                        p[0] = col.x;
-                        p[1] = col.y;
-                        p[2] = col.z;
-                        continue;
-                    }
-                    for (i = 0; i < samples; i++) {
-                        const wgf_vec3_t h = to_basis(importance_ggx(i, samples, alpha), n);
-                        const float n_dot_h = wgf_vec3_dot(n, h);
-                        const wgf_vec3_t l = wgf_vec3_sub(wgf_vec3_scale(h, 2.0f * n_dot_h), n); /* n about h (v = n) */
-                        const float n_dot_l = wgf_vec3_dot(n, l);
-                        float a2, dd, pdf, sample_solid_angle, lod;
-                        wgf_vec3_t col;
-                        if (n_dot_l <= 0.0f) continue;
-                        /* filtered importance sampling: a blurrier source mip where samples are
-                           sparse, which removes noise with few samples */
-                        a2 = alpha * alpha;
-                        dd = n_dot_h * n_dot_h * (a2 - 1.0f) + 1.0f;
-                        pdf = a2 / (PI_F * dd * dd) * 0.25f; /* D n.h / (4 v.h), v.h == n.h */
-                        sample_solid_angle = 1.0f / ((float)samples * pdf + 1e-6f);
-                        lod = 0.5f * log2f(sample_solid_angle / source_texel_solid_angle) + 1.0f;
-                        col = wgf_gfx_priv_environment_sample_cube(source, l, lod);
-                        sum = wgf_vec3_make(sum.x + col.x * n_dot_l, sum.y + col.y * n_dot_l, sum.z + col.z * n_dot_l);
-                        weight += n_dot_l;
-                    }
-                    if (weight > 0.0f) {
-                        p[0] = sum.x / weight;
-                        p[1] = sum.y / weight;
-                        p[2] = sum.z / weight;
-                    }
-                }
-            }
-        }
+    prefilter_sample_t *table = (prefilter_sample_t *)malloc(sizeof(prefilter_sample_t) * (size_t)(samples > 0 ? samples : 1));
+    int m, face;
+    if (table == NULL || !cube_alloc(out, size, mip_count)) {
+        free(table);
+        return false;
     }
+    for (m = 0; m < mip_count; m++) {
+        const int count = m > 0 ? prefilter_samples(source, m, mip_count, samples, table) : 0;
+        const int s = size >> m > 0 ? size >> m : 1;
+        for (face = 0; face < 6; face++) prefilter_rows(source, out, m, face, 0, s, table, count);
+    }
+    free(table);
     return true;
 }
 
@@ -414,37 +465,178 @@ uint16_t wgf_gfx_priv_environment_half_from_float(float value)
     return (uint16_t)(sign | (half >= 0x7C00u ? 0x7BFFu : half));
 }
 
+/* --- Radiance .hdr, a band of rows at a time ------------------------------------- */
+
+/* The header of a .hdr (`#?RADIANCE` or `#?RGBE`, its 32-bit_rle_rgbe format, and a
+ * "-Y height +X width" size, the only orientation stb_image reads too), its size, and
+ * where its pixels start; false for anything else. */
+static bool hdr_header(const unsigned char *bytes, int size, int *width, int *height, int *start)
+{
+    int pos = 0, w = 0, h = 0;
+    char line[128];
+    bool first = true;
+    for (;;) { /* lines up to the empty one */
+        int n = 0;
+        while (pos < size && bytes[pos] != '\n') {
+            if (n < (int)sizeof(line) - 1) line[n++] = (char)bytes[pos];
+            pos++;
+        }
+        if (pos >= size) return false;
+        pos++;
+        line[n] = '\0';
+        if (first) {
+            if (strcmp(line, "#?RADIANCE") != 0 && strcmp(line, "#?RGBE") != 0) return false;
+            first = false;
+        } else if (n == 0) {
+            break;
+        } else if (strncmp(line, "FORMAT=", 7) == 0 && strcmp(line + 7, "32-bit_rle_rgbe") != 0) {
+            return false;
+        }
+    }
+    {
+        int n = 0;
+        while (pos < size && bytes[pos] != '\n') {
+            if (n < (int)sizeof(line) - 1) line[n++] = (char)bytes[pos];
+            pos++;
+        }
+        if (pos >= size) return false;
+        pos++;
+        line[n] = '\0';
+        if (sscanf(line, "-Y %d +X %d", &h, &w) != 2 || w <= 0 || h <= 0 || w > 32768 || h > 32768) return false;
+    }
+    *width = w;
+    *height = h;
+    *start = pos;
+    return true;
+}
+
+bool wgf_gfx_priv_environment_is_hdr(const unsigned char *bytes, int size)
+{
+    int w, h, start;
+    return hdr_header(bytes, size, &w, &h, &start);
+}
+
+typedef struct hdr_reader_t {
+    const unsigned char *bytes;
+    int size, pos;
+    int rle; /* -1: not known before the first scanline; then 0 or 1, for the whole image (as stb_image) */
+    unsigned char *scanline; /* RGBE, a row */
+} hdr_reader_t;
+
+static void rgbe_to_float(const unsigned char *rgbe, float *out)
+{
+    if (rgbe[3] == 0) {
+        out[0] = out[1] = out[2] = 0.0f;
+    } else {
+        const float f = ldexpf(1.0f, (int)rgbe[3] - (128 + 8));
+        out[0] = (float)rgbe[0] * f;
+        out[1] = (float)rgbe[1] * f;
+        out[2] = (float)rgbe[2] * f;
+    }
+}
+
+/* Rows y0..y1 of `image` from the reader; false for data that ends or is broken. */
+static bool hdr_rows(hdr_reader_t *r, wgf_gfx_priv_env_image_t *image, int y0, int y1)
+{
+    const int w = image->width;
+    int y, x, c;
+    for (y = y0; y < y1; y++) {
+        if (r->rle < 0) {
+            r->rle = w >= 8 && w < 32768 && r->pos + 4 <= r->size && r->bytes[r->pos] == 2 &&
+                     r->bytes[r->pos + 1] == 2 && ((r->bytes[r->pos + 2] << 8) | r->bytes[r->pos + 3]) == w;
+        }
+        if (!r->rle) { /* flat RGBE */
+            if (r->pos + w * 4 > r->size) return false;
+            for (x = 0; x < w; x++) rgbe_to_float(&r->bytes[r->pos + x * 4], &image->rgb[((size_t)y * w + x) * 3]);
+            r->pos += w * 4;
+            continue;
+        }
+        if (r->pos + 4 > r->size || r->bytes[r->pos] != 2 || r->bytes[r->pos + 1] != 2 ||
+            ((r->bytes[r->pos + 2] << 8) | r->bytes[r->pos + 3]) != w) {
+            return false;
+        }
+        r->pos += 4;
+        for (c = 0; c < 4; c++) { /* each channel's runs: (128 + n, byte) or (n, n bytes) */
+            x = 0;
+            while (x < w) {
+                int n;
+                if (r->pos >= r->size) return false;
+                n = r->bytes[r->pos++];
+                if (n > 128) {
+                    n -= 128;
+                    if (n > w - x || r->pos >= r->size) return false;
+                    while (n-- > 0) r->scanline[(x++) * 4 + c] = r->bytes[r->pos];
+                    r->pos++;
+                } else {
+                    if (n == 0 || n > w - x || r->pos + n > r->size) return false;
+                    while (n-- > 0) r->scanline[(x++) * 4 + c] = r->bytes[r->pos++];
+                }
+            }
+        }
+        for (x = 0; x < w; x++) rgbe_to_float(&r->scanline[x * 4], &image->rgb[((size_t)y * w + x) * 3]);
+    }
+    return true;
+}
+
+/* An image file's start: a .hdr's size and its pixels' memory, left to decode in rows from
+ * `r`; a PNG or JPEG decoded whole (the texture loader's decoder, from sRGB). False when it
+ * can't be read. `bytes` stays the caller's, to free once the rows are read. */
+static bool image_begin(const unsigned char *bytes, int size, const char *path, wgf_gfx_priv_env_image_t *out,
+                        hdr_reader_t *r)
+{
+    int w = 0, h = 0, start = 0;
+    memset(out, 0, sizeof(*out));
+    memset(r, 0, sizeof(*r));
+    if (hdr_header(bytes, size, &w, &h, &start)) {
+        out->rgb = (float *)malloc((size_t)w * (size_t)h * 3 * sizeof(float));
+        r->scanline = (unsigned char *)malloc((size_t)w * 4);
+        if (out->rgb == NULL || r->scanline == NULL) {
+            free(out->rgb);
+            free(r->scanline);
+            out->rgb = NULL;
+            r->scanline = NULL;
+            return false;
+        }
+        r->bytes = bytes;
+        r->size = size;
+        r->pos = start;
+        r->rle = -1;
+    } else {
+        void *decoded = wgf_gfx_priv_texture_decode(bytes, size, path);
+        const unsigned char *pixels;
+        size_t i;
+        if (decoded == NULL) return false;
+        pixels = wgf_gfx_priv_texture_decoded_pixels(decoded, &w, &h);
+        out->rgb = (float *)malloc((size_t)w * (size_t)h * 3 * sizeof(float));
+        for (i = 0; out->rgb != NULL && i < (size_t)w * (size_t)h; i++) {
+            out->rgb[i * 3] = wgf_gfx_priv_srgb_to_linear((float)pixels[i * 4] / 255.0f);
+            out->rgb[i * 3 + 1] = wgf_gfx_priv_srgb_to_linear((float)pixels[i * 4 + 1] / 255.0f);
+            out->rgb[i * 3 + 2] = wgf_gfx_priv_srgb_to_linear((float)pixels[i * 4 + 2] / 255.0f);
+        }
+        wgf_gfx_priv_texture_decoded_free(decoded);
+        if (out->rgb == NULL) return false;
+    }
+    out->width = w;
+    out->height = h;
+    return w > 0 && h > 0;
+}
+
 bool wgf_gfx_priv_environment_load_image(const char *path, wgf_gfx_priv_env_image_t *out)
 {
     unsigned char *bytes;
-    int size = 0, w = 0, h = 0;
+    int size = 0;
+    hdr_reader_t r;
+    bool ok;
     memset(out, 0, sizeof(*out));
     if (!wgf_core_priv_fs_read(path, &bytes, &size)) return false;
-    if (wgf_gfx_priv_environment_is_hdr(bytes, size)) {
-        float *rgb = wgf_gfx_priv_environment_decode_hdr(bytes, size, &w, &h); /* linear already */
-        if (rgb != NULL && w > 0 && h > 0) {
-            out->rgb = (float *)malloc((size_t)w * (size_t)h * 3 * sizeof(float));
-            if (out->rgb != NULL) memcpy(out->rgb, rgb, (size_t)w * (size_t)h * 3 * sizeof(float));
-        }
-        wgf_gfx_priv_environment_hdr_free(rgb);
-    } else { /* a PNG or JPEG: the texture loader's decoder, from sRGB */
-        void *decoded = wgf_gfx_priv_texture_decode(bytes, size, path);
-        if (decoded != NULL) {
-            const unsigned char *pixels = wgf_gfx_priv_texture_decoded_pixels(decoded, &w, &h);
-            size_t i;
-            out->rgb = (float *)malloc((size_t)w * (size_t)h * 3 * sizeof(float));
-            for (i = 0; out->rgb != NULL && i < (size_t)w * (size_t)h; i++) {
-                out->rgb[i * 3] = wgf_gfx_priv_srgb_to_linear((float)pixels[i * 4] / 255.0f);
-                out->rgb[i * 3 + 1] = wgf_gfx_priv_srgb_to_linear((float)pixels[i * 4 + 1] / 255.0f);
-                out->rgb[i * 3 + 2] = wgf_gfx_priv_srgb_to_linear((float)pixels[i * 4 + 2] / 255.0f);
-            }
-            wgf_gfx_priv_texture_decoded_free(decoded);
-        }
-    }
+    ok = image_begin(bytes, size, path, out, &r) && (r.bytes == NULL || hdr_rows(&r, out, 0, out->height));
+    free(r.scanline);
     wgf_core_priv_fs_read_free(bytes);
-    out->width = w;
-    out->height = h;
-    return out->rgb != NULL && w > 0 && h > 0;
+    if (!ok) {
+        free(out->rgb);
+        out->rgb = NULL;
+    }
+    return ok;
 }
 
 /* ===================================================================== GPU ==== */
@@ -538,17 +730,39 @@ static bool make_cube_image(const wgf_gfx_priv_env_cube_t *cube, sg_image *image
     return ok;
 }
 
-/* The CPU half of loading an environment (any thread), as libwgt's. */
+/* The CPU half of loading an environment (any thread), as libwgt's, in steps
+ * (prepare_step), each about a millisecond natively, so that on the web, where the main
+ * thread prepares, it spreads over frames: the .hdr's rows decoded, the irradiance a band
+ * of rows at a time, the source cube a band of a face at a time and its mips, then the
+ * prefiltered cube a band of a face of a mip at a time. */
+typedef enum stage_t { STAGE_DECODE, STAGE_SH, STAGE_SOURCE, STAGE_PREFILTER, STAGE_DONE } stage_t;
+
+#define STEP_PIXELS 32768  /* the image's pixels a step: decoding, the irradiance */
+#define STEP_SAMPLES 16384 /* the equirect samples a step (4 a source texel), or prefilter samples a step */
+
 typedef struct prepared_t {
     wgf_gfx_priv_env_sh_t sh;
     wgf_gfx_priv_env_cube_t source;
     wgf_gfx_priv_env_cube_t prefiltered;
+    /* the steps' own */
+    stage_t stage;
+    char path[WGF_CORE_PRIV_FS_PATH_MAX];
+    unsigned char *bytes; /* the file, while its .hdr rows are read */
+    hdr_reader_t reader;
+    wgf_gfx_priv_env_image_t image;
+    double sums[9][3];
+    int face, mip, row;
+    prefilter_sample_t samples[PREFILTER_SAMPLES];
+    int sample_count;
 } prepared_t;
 
 static void discard(void *data)
 {
     prepared_t *prepared = (prepared_t *)data;
     if (prepared == NULL) return;
+    if (prepared->bytes != NULL) wgf_core_priv_fs_read_free(prepared->bytes);
+    free(prepared->reader.scanline);
+    free(prepared->image.rgb);
     wgf_gfx_priv_environment_cube_free(&prepared->source);
     wgf_gfx_priv_environment_cube_free(&prepared->prefiltered);
     free(prepared);
@@ -556,32 +770,111 @@ static void discard(void *data)
 
 static void *prepare(const char *path)
 {
-    wgf_gfx_priv_env_image_t image;
-    prepared_t *prepared;
-    int source_size = MIN_SOURCE_CUBE_SIZE;
-    bool built;
-    if (!wgf_gfx_priv_environment_load_image(path, &image)) {
+    prepared_t *prepared = (prepared_t *)calloc(1, sizeof(prepared_t));
+    int size = 0;
+    if (prepared == NULL) return NULL;
+    snprintf(prepared->path, sizeof(prepared->path), "%s", path);
+    if (!wgf_core_priv_fs_read(path, &prepared->bytes, &size) ||
+        !image_begin(prepared->bytes, size, path, &prepared->image, &prepared->reader)) {
         wgf_log_warn("wgf_gfx_environment: %s: not an image it can read", path);
-        free(image.rgb);
-        return NULL;
-    }
-    prepared = (prepared_t *)calloc(1, sizeof(prepared_t));
-    if (prepared == NULL) {
-        free(image.rgb);
-        return NULL;
-    }
-    wgf_gfx_priv_environment_project_sh(&image, &prepared->sh);
-    while (source_size * 2 <= image.width / 4 && source_size < MAX_SOURCE_CUBE_SIZE) source_size *= 2;
-    built = wgf_gfx_priv_environment_cube_from_equirect(&image, source_size, &prepared->source);
-    free(image.rgb);
-    if (!built || !wgf_gfx_priv_environment_prefilter(&prepared->source, WGF_GFX_PRIV_ENVIRONMENT_CUBE_SIZE,
-                                                      WGF_GFX_PRIV_ENVIRONMENT_MIP_COUNT, PREFILTER_SAMPLES,
-                                                      &prepared->prefiltered)) {
-        wgf_log_warn("wgf_gfx_environment: %s: out of memory preparing it", path);
         discard(prepared);
         return NULL;
     }
+    if (prepared->reader.bytes == NULL) { /* decoded whole */
+        wgf_core_priv_fs_read_free(prepared->bytes);
+        prepared->bytes = NULL;
+        prepared->stage = STAGE_SH;
+    }
     return prepared;
+}
+
+/* How many rows of `width` make a step of `budget`, at least one. */
+static int rows_for(int budget, int width)
+{
+    return width > 0 && budget / width > 0 ? budget / width : 1;
+}
+
+static wgf_core_priv_load_step_t prepare_step(void *data)
+{
+    prepared_t *p = (prepared_t *)data;
+    wgf_gfx_priv_env_image_t *image = &p->image;
+    switch (p->stage) {
+        case STAGE_DECODE: {
+            const int end = p->row + rows_for(STEP_PIXELS, image->width) < image->height
+                                ? p->row + rows_for(STEP_PIXELS, image->width)
+                                : image->height;
+            if (!hdr_rows(&p->reader, image, p->row, end)) {
+                wgf_log_warn("wgf_gfx_environment: %s: a broken .hdr", p->path);
+                return WGF_CORE_PRIV_LOAD_FAILED;
+            }
+            p->row = end;
+            if (end == image->height) {
+                wgf_core_priv_fs_read_free(p->bytes);
+                p->bytes = NULL;
+                free(p->reader.scanline);
+                p->reader.scanline = NULL;
+                p->row = 0;
+                p->stage = STAGE_SH;
+            }
+            return WGF_CORE_PRIV_LOAD_MORE;
+        }
+        case STAGE_SH: {
+            const int step = rows_for(STEP_PIXELS, image->width);
+            const int end = p->row + step < image->height ? p->row + step : image->height;
+            project_sh_rows(image, p->row, end, p->sums);
+            p->row = end;
+            if (end == image->height) {
+                int size = MIN_SOURCE_CUBE_SIZE;
+                sh_from_sums(p->sums, &p->sh);
+                while (size * 2 <= image->width / 4 && size < MAX_SOURCE_CUBE_SIZE) size *= 2;
+                if (!cube_alloc(&p->source, size, mip_count_of(size))) break;
+                p->row = p->face = 0;
+                p->stage = STAGE_SOURCE;
+            }
+            return WGF_CORE_PRIV_LOAD_MORE;
+        }
+        case STAGE_SOURCE: {
+            const int size = p->source.size, step = rows_for(STEP_SAMPLES / 4, size);
+            const int end = p->row + step < size ? p->row + step : size;
+            cube_rows(image, &p->source, p->face, p->row, end);
+            p->row = end;
+            if (end == size && ++p->face < 6) p->row = 0;
+            if (p->face == 6) {
+                box_mips(&p->source);
+                free(image->rgb);
+                image->rgb = NULL;
+                if (!cube_alloc(&p->prefiltered, WGF_GFX_PRIV_ENVIRONMENT_CUBE_SIZE, WGF_GFX_PRIV_ENVIRONMENT_MIP_COUNT)) {
+                    break;
+                }
+                p->row = p->face = p->mip = 0;
+                p->sample_count = 0;
+                p->stage = STAGE_PREFILTER;
+            }
+            return WGF_CORE_PRIV_LOAD_MORE;
+        }
+        case STAGE_PREFILTER: {
+            const int s = p->prefiltered.size >> p->mip > 0 ? p->prefiltered.size >> p->mip : 1;
+            const int step = rows_for(STEP_SAMPLES, s * (p->mip > 0 ? p->sample_count : 1));
+            const int end = p->row + step < s ? p->row + step : s;
+            prefilter_rows(&p->source, &p->prefiltered, p->mip, p->face, p->row, end, p->samples, p->sample_count);
+            p->row = end;
+            if (end < s) return WGF_CORE_PRIV_LOAD_MORE;
+            p->row = 0;
+            if (++p->face < 6) return WGF_CORE_PRIV_LOAD_MORE;
+            p->face = 0;
+            if (++p->mip == p->prefiltered.mip_count) {
+                p->stage = STAGE_DONE;
+                return WGF_CORE_PRIV_LOAD_DONE;
+            }
+            p->sample_count =
+                prefilter_samples(&p->source, p->mip, p->prefiltered.mip_count, PREFILTER_SAMPLES, p->samples);
+            return WGF_CORE_PRIV_LOAD_MORE;
+        }
+        case STAGE_DONE:
+            return WGF_CORE_PRIV_LOAD_DONE;
+    }
+    wgf_log_warn("wgf_gfx_environment: %s: out of memory preparing it", p->path);
+    return WGF_CORE_PRIV_LOAD_FAILED;
 }
 
 static void release_images(environment_t *env_ptr)
@@ -631,7 +924,7 @@ static void fail(wgf_handle_t resource)
     wgf_core_priv_resource_failed(resource);
 }
 
-static const wgf_core_priv_loader_t loader = {"environment", prepare, finish, discard, fail, NULL, true};
+static const wgf_core_priv_loader_t loader = {"environment", prepare, finish, discard, fail, NULL, true, prepare_step};
 
 static const wgf_core_priv_loader_t *loader_of(const char *path)
 {
@@ -781,6 +1074,7 @@ static const wgf_gfx_priv_environment_hooks_t hooks = {wgf_gfx_priv_environment_
 static bool ensure(void)
 {
     if (!part.installed) {
+        wgf_core_priv_load_enable_steps(); /* its preparation is in steps */
         wgf_core_priv_part_install(&part);
         wgf_gfx_priv_set_environment_hooks(&hooks);
     }

@@ -15,10 +15,13 @@ extern "C" {
  * direction, and reflections sharp or blurred by each surface's roughness) and can be
  * drawn behind them (wgf_stage3d_set_environment, wgf_stage3d_set_background). It is a
  * resource (wgf_resource.h): shared, reference counted, and loaded on create, as a
- * texture is -- prepared on a worker thread (tens of milliseconds for a 1024 by 512
- * image) and uploaded during the runtime's update. While it is PENDING, or once it has
- * FAILED (logged once, naming the file), a stage it is set on is lit and drawn as if it
- * had none. A backend that can't filter half-float textures has no environments: each
+ * texture is, then uploaded during the runtime's update. Its preparation is about 0.2 s of
+ * a desktop CPU for a 1024 by 512 image: on a worker thread natively, and on the web, which
+ * has no threads, a step of about a millisecond at a time within the load budget
+ * (wgf_resource_set_load_budget), so it lengthens no frame and takes a few hundred of them
+ * (a PNG or JPEG's decoding is one step, as a texture's is). While it is PENDING, or once
+ * it has FAILED (logged once, naming the file), a stage it is set on is lit and drawn as
+ * if it had none. A backend that can't filter half-float textures has no environments: each
  * FAILS, warned. */
 typedef wgf_handle_t wgf_environment_t;
 

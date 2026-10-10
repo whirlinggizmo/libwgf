@@ -13,7 +13,9 @@
 /* The pipeline with a stand-in loader: a "thing" is a file's text, finished in as
  * many steps as its first digit says. Things are handles from a pool of the test's
  * own, as a layer's resources are. Runs with workers where there are threads, and
- * again with none. Files land under load_test_root/. */
+ * again with none. A second loader prepares in steps (prepare_step): 6 of them, the
+ * third failing for "unpreparable"; with no workers they spread over updates, and one
+ * cancelled or shut down partway is let go of. Files land under load_test_root/. */
 
 typedef struct thing_t {
     int status; /* 0 pending, 1 ready, 2 failed */
@@ -24,13 +26,17 @@ typedef struct thing_t {
 typedef struct prepared_t {
     char text[64];
     int steps_left;
+    int prepare_steps_left; /* the stepped loader's */
 } prepared_t;
+
+#define PREPARE_STEPS 6
 
 static int failures;
 static wgf_core_priv_handle_pool_t thing_pool;
 static thing_t *things;
 static wgf_core_priv_mutex_t count_lock; /* prepare runs on workers, discard on the main thread */
 static int live_prepared;
+static int prepare_steps_run; /* under count_lock */
 
 static void expect(int ok, const char *what)
 {
@@ -94,14 +100,34 @@ static void fail(wgf_handle_t resource)
     if (thing_ptr != NULL) thing_ptr->status = 2;
 }
 
-static const wgf_core_priv_loader_t loader = {"thing", prepare, finish, discard, fail, NULL, false};
+static wgf_core_priv_load_step_t prepare_step(void *data)
+{
+    prepared_t *prepared = (prepared_t *)data;
+    wgf_core_priv_mutex_lock(&count_lock);
+    prepare_steps_run++;
+    wgf_core_priv_mutex_unlock(&count_lock);
+    if (prepared->prepare_steps_left == 0) prepared->prepare_steps_left = PREPARE_STEPS; /* the first */
+    if (strstr(prepared->text, "unpreparable") != NULL && prepared->prepare_steps_left == PREPARE_STEPS - 2) {
+        return WGF_CORE_PRIV_LOAD_FAILED;
+    }
+    return --prepared->prepare_steps_left > 0 ? WGF_CORE_PRIV_LOAD_MORE : WGF_CORE_PRIV_LOAD_DONE;
+}
 
-static wgf_handle_t make(const char *path)
+static const wgf_core_priv_loader_t loader = {"thing", prepare, finish, discard, fail, NULL, false, NULL};
+static const wgf_core_priv_loader_t stepped_loader = {"stepped thing", prepare, finish, discard, fail, NULL, false,
+                                                      prepare_step};
+
+static wgf_handle_t make_with(const wgf_core_priv_loader_t *with, const char *path)
 {
     wgf_handle_t handle = wgf_core_priv_handle_pool_alloc(&thing_pool);
     memset(thing(handle), 0, sizeof(thing_t));
-    expect(wgf_core_priv_load_request(&loader, path, handle), "a request is held");
+    expect(wgf_core_priv_load_request(with, path, handle), "a request is held");
     return handle;
+}
+
+static wgf_handle_t make(const char *path)
+{
+    return make_with(&loader, path);
 }
 
 /* Update until nothing is pending, as a frame loop would; the updates it took. */
@@ -173,6 +199,49 @@ static void run(const char *label, int workers)
         wgf_core_priv_handle_pool_free(&thing_pool, early);
         for (i = 0; i < 40; i++) wgf_core_priv_handle_pool_free(&thing_pool, more[i]);
     }
+
+    /* a preparation in steps */
+    {
+        wgf_handle_t stepped, unpreparable, after;
+        int before;
+        prepare_steps_run = 0;
+        stepped = make_with(&stepped_loader, "things/a.txt");
+        unpreparable = make_with(&stepped_loader, "things/unpreparable.txt");
+        updates = settle();
+        expect(thing(stepped)->status == 1 && strcmp(thing(stepped)->text, "1 alpha") == 0, "prepared in steps, loaded");
+        expect(thing(unpreparable)->status == 2, "a step that fails fails the load");
+        expect(prepare_steps_run == PREPARE_STEPS + 3, "every step run, and none after a failure");
+        expect(workers != 0 || updates >= PREPARE_STEPS, "with no workers and a budget of 0, a step an update");
+        expect(live_prepared == 0, "the failed one's data discarded");
+        wgf_core_priv_handle_pool_free(&thing_pool, stepped);
+        wgf_core_priv_handle_pool_free(&thing_pool, unpreparable);
+        if (workers == 0) { /* a long one in steps holds no other load back */
+            int guard = 0;
+            stepped = make_with(&stepped_loader, "things/a.txt");
+            after = make("things/b.txt");
+            while (thing(after)->status == 0 && guard++ < 100) wgf_core_priv_update();
+            expect(thing(after)->status == 1 && thing(stepped)->status == 0,
+                   "a whole load asked for after one in steps finishes first");
+            settle();
+            expect(thing(stepped)->status == 1, "and the one in steps after it");
+            wgf_core_priv_handle_pool_free(&thing_pool, stepped);
+            wgf_core_priv_handle_pool_free(&thing_pool, after);
+        }
+        if (workers == 0) { /* cancelled partway: let go of, and the next one loads */
+            before = prepare_steps_run;
+            stepped = make_with(&stepped_loader, "things/a.txt");
+            wgf_core_priv_update();
+            wgf_core_priv_update();
+            expect(prepare_steps_run > before && prepare_steps_run < before + PREPARE_STEPS, "partway through its steps");
+            expect(wgf_core_priv_load_cancel(stepped), "cancel it partway");
+            after = make_with(&stepped_loader, "things/b.txt");
+            settle();
+            expect(thing(stepped)->status == 0 && thing(after)->status == 1, "the cancelled one never loads; the next does");
+            expect(live_prepared == 0, "the cancelled one's data discarded");
+            wgf_core_priv_handle_pool_free(&thing_pool, stepped);
+            wgf_core_priv_handle_pool_free(&thing_pool, after);
+        }
+    }
 }
 
 int main(void)
@@ -187,8 +256,18 @@ int main(void)
     wgf_core_priv_fs_write("things/unfinishable.txt", (const unsigned char *)"1 unfinishable", 14);
     wgf_core_priv_fs_write("things/cancelled.txt", (const unsigned char *)"1 cancelled", 11);
     wgf_core_priv_fs_write("things/waits.txt", (const unsigned char *)"1 waits", 7);
+    wgf_core_priv_fs_write("things/unpreparable.txt", (const unsigned char *)"1 unpreparable", 14);
     wgf_core_priv_handle_pool_init(&thing_pool, WGF_CORE_PRIV_HANDLE_KIND_TEST_A, (void **)&things, sizeof(thing_t), 16, 256);
 
+#ifndef NDEBUG
+    { /* a debug build refuses a loader in steps until the steps are enabled (an error logged, on purpose) */
+        const wgf_handle_t refused = wgf_core_priv_handle_pool_alloc(&thing_pool);
+        expect(!wgf_core_priv_load_request(&stepped_loader, "things/a.txt", refused),
+               "a loader in steps refused until the steps are enabled");
+        wgf_core_priv_handle_pool_free(&thing_pool, refused);
+    }
+#endif
+    wgf_core_priv_load_enable_steps();
     run("with the default workers", -1);
     run("with no workers: prepares on the main thread", 0);
     expect(wgf_core_priv_load_get_budget() == 0.0f, "budget reads back");
@@ -218,7 +297,12 @@ int main(void)
     /* shutdown with requests in flight discards their data and calls no one */
     make("things/a.txt");
     make("things/slow.txt");
+    wgf_core_priv_load_set_worker_count(0); /* and one partway through its steps here */
+    make_with(&stepped_loader, "things/b.txt");
+    wgf_core_priv_update();
+    wgf_core_priv_update();
     wgf_core_priv_load_set_worker_count(-1);
+    make_with(&stepped_loader, "things/a.txt"); /* and one in a worker's */
     wgf_core_priv_update();
     wgf_core_priv_fs_rmdir("things");
     wgf_core_priv_shutdown();

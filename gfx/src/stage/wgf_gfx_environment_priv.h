@@ -65,10 +65,8 @@ uint16_t wgf_gfx_priv_environment_half_from_float(float value);
  * False when it can't be read or decoded. Freed with free(out->rgb). */
 bool wgf_gfx_priv_environment_load_image(const char *path, wgf_gfx_priv_env_image_t *out);
 
-/* stb_image's .hdr decoder, alone (wgf_gfx_environment_hdr.c). */
+/* Whether `bytes` are a Radiance .hdr environments read: its own decoder's, in rows. */
 bool wgf_gfx_priv_environment_is_hdr(const unsigned char *bytes, int size);
-float *wgf_gfx_priv_environment_decode_hdr(const unsigned char *bytes, int size, int *width, int *height);
-void wgf_gfx_priv_environment_hdr_free(float *rgb);
 
 /* What the model shader binds for a READY environment: its prefiltered cube, its
  * irradiance, its last mip, and the split-sum BRDF table, with their samplers. */

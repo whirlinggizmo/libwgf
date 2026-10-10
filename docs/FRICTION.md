@@ -623,3 +623,78 @@ Racer (milestone 2), from step 8: the game-developer session's part 4, a sun tha
 - **Cost:** none
 - **Found by:** the racer's session
 - **Triage:** fine: kept as they are, and kept so; BUILDING says a node's block takes its kind's keys (`model cast_shadows=`)
+
+Racer (milestone 2), from step 9: the game-developer session's part 5, a sky and reflections (`../libwgf-racer/FRICTION.md`, "Part 5", its entries E1 to E8; the game at 83a5056), 2026-10-10.
+
+### Racer: on the web the sky's preparation was one 1.48 s frame
+
+- **Where:** the racer's bench run with its sky: the worst frame from 106.7 ms to 1,477 ms (4 times throttled), the mean from 1.68 to 4.19; `wgf_environment.h` said "tens of milliseconds"
+- **Missing:** a preparation that doesn't stop a frame: on the web, with no workers, the loader's prepare ran whole on the main thread, and it was 360 ms natively, not tens
+- **Workaround:** none needed: the grid waits for the sky, so it fell in the loading period
+- **Cost:** none
+- **Found by:** the racer's session (its E4; flagged by Rob as a framework issue)
+- **Triage:** fixed: a loader may prepare in steps (`prepare_step`), which a worker runs to the end and the main thread, with no workers, runs a few an update within the load budget; an environment's preparation is steps of about a millisecond (its own `.hdr` decoder, a band of rows a step, in place of stb_image's; the irradiance, the source cube, the prefilter, each a band a step), and its prefilter works a mip's samples out once, so it is 180 ms natively where it was 360. The racer's bench run: no frame from it over the budget (its worst, 120 ms, the start-up one the baseline has), the 95th percentile 7.1 ms over the extra loading frames. The header says what it costs
+
+### Racer: a failed run's reason wasn't on its FAIL line
+
+- **Where:** `wgf autopilot --web` of the race: one of three runs printed `FAIL`, and the session kept only that line
+- **Missing:** the reason with the verdict (part 1's #11 asked for it)
+- **Workaround:** none: the run passed twice after
+- **Cost:** unknown
+- **Found by:** the racer's session (its E7)
+- **Triage:** fixed: the last line is `FAIL: <the first reason>` (and how many more are above it); `tools/check_cli.py` holds it. The race's one unexplained failure stays unexplained
+
+### Racer: `wgf screenshot` had no `--timeout`
+
+- **Where:** `wgf screenshot --frame 1150` with the sky, at about 8 frames a second in the headless browser: "the page never reached frame 1150", where `wgf autopilot --web` flew past it
+- **Missing:** the time autopilot gives (two minutes and the frames at 3 a second), and a message saying time ran out
+- **Workaround:** earlier frames
+- **Cost:** 10 minutes
+- **Found by:** the racer's session (its E8)
+- **Triage:** fixed: `--timeout`, by default autopilot's for the frame asked, and "frame N wasn't reached within S s ... give it longer with --timeout" when it runs out; `tools/check_cli.py` holds it
+
+### Racer: a recording's inputs made while loads were in flight, all at frame 0
+
+- **Where:** the racer's lap recording once the sky was its last load: the start press filed at frame 0, before the replay's grid
+- **Missing:** inputs kept in order with what the game showed while its start's loads were in flight
+- **Workaround:** the grid waits for the sky; the driver tool anchors its frames on the start press
+- **Cost:** 45 minutes, three recordings
+- **Found by:** the racer's session (its E3)
+- **Triage:** milestone 2.5's (ROADMAP.md, "From the racer's friction"): the rule (a recording counts from its loads' end) is sound, and the game's wait is the right shape meanwhile
+
+### Racer: a model's material numbers only in code
+
+- **Where:** the car's glossy paint and glass: a scene can tint a model but not set its material's roughness or metal
+- **Missing:** `model roughness= metallic=` in scenes
+- **Workaround:** a material a part in `Car.hx`, 20 lines
+- **Cost:** 10 minutes
+- **Found by:** the racer's session (its E5)
+- **Triage:** milestone 2.5's (ROADMAP.md, "From the racer's friction")
+
+### Racer: the environments libwgf carried, and where an environment's sun is
+
+- **Where:** the brief's "CC0 HDRs": libwgf had one generated sky then (step 9 couldn't carry libwgt's photographs); a game aiming its sun along the sky's read gen_sky.py's source
+- **Missing:** the photographs, and a way to know a panorama's brightest direction
+- **Workaround:** the generated sky, its sun read from the tool
+- **Cost:** 15 minutes
+- **Found by:** the racer's session (its E2)
+- **Triage:** the photographs are carried since (554842e: libwgt's two Poly Haven HDRs, CC0, credited; the generated sky removed, the racer keeps its copy, MIT, credited in its CREDITS.md); the brightest direction is milestone 2.5's (ROADMAP.md, "From the racer's friction")
+
+### Racer: the game's size budget moved with libwgf's steps
+
+- **Where:** the racer's web export at 550.3 KB, 0.3 over its 550 (the environment part about 16 KB)
+- **Missing:** nothing of libwgf's: a budget is the game's
+- **Workaround:** the game raised its budget to 600 KB (`wgf.json`)
+- **Cost:** none
+- **Found by:** the racer's session (its E6)
+- **Triage:** fine: the game's own guard, moved by the game and reported as such; libwgf's size table holds the export (`game:racer`) to its own baseline
+
+### Racer: what worked on the environment (two notes)
+
+- **Where:** the racer's session's E1
+- **Missing:** nothing. The sketch's three calls matched the binding name for name and worked first time; part 4's shadow stall was gone (its bench run's 95th percentile 20.8 to 2.07 ms)
+- **Workaround:** none
+- **Cost:** none
+- **Found by:** the racer's session
+- **Triage:** fine: kept as they are
+

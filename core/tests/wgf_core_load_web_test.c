@@ -61,7 +61,7 @@ static void fail(wgf_handle_t resource)
     loaded = 2;
 }
 
-static const wgf_core_priv_loader_t loader = {"text", prepare, finish, discard, fail, NULL, false};
+static const wgf_core_priv_loader_t loader = {"text", prepare, finish, discard, fail, NULL, false, NULL};
 
 static void finish_visit(void)
 {

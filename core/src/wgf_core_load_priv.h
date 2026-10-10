@@ -53,7 +53,19 @@ typedef struct wgf_core_priv_loader_t {
     /* Whether its finish can fill a resource that is READY again, in place
        (wgf_core_priv_resource_reload): what it held freed only once the new is made. */
     bool reloads;
+    /* Optional: the rest of a preparation, a step at a time, after prepare returned its
+       start: MORE while steps remain, DONE once `prepared` is whole, FAILED (logged why;
+       `prepared` is then discarded). A worker runs the steps to the end; with no workers
+       (the web) the main thread runs them a few an update, within the load budget, so a
+       preparation too long for a frame is spread over many. A step is as short as the
+       loader can keep it: a millisecond or so. NULL: prepare is the whole preparation. The
+       part whose loader steps calls wgf_core_priv_load_enable_steps first (as it installs):
+       the stepping is reached through it, so a program with no such loader links none. */
+    wgf_core_priv_load_step_t (*prepare_step)(void *prepared);
 } wgf_core_priv_loader_t;
+
+/* Make the pipeline run loaders' prepare_step (above); once is enough, and it lasts. */
+void wgf_core_priv_load_enable_steps(void);
 
 /* What makes a request's file local, when something other than core does (CONVENTIONS.md,
  * "An optional part is reached through its hook"): the asset part (asset/), installed

@@ -1050,7 +1050,7 @@ static void failed(wgf_handle_t resource)
     wgf_core_priv_resource_failed(resource);
 }
 
-static const wgf_core_priv_loader_t loader = {"scene", prepare, finish, discard, failed, NULL, false};
+static const wgf_core_priv_loader_t loader = {"scene", prepare, finish, discard, failed, NULL, false, NULL};
 
 static const wgf_core_priv_loader_t *loader_of(const char *path)
 {

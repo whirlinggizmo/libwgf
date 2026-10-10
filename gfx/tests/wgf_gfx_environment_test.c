@@ -274,6 +274,29 @@ static int make_hdr(unsigned char *out, int exponent)
     return head + 64 * 32 * 4;
 }
 
+/* The same 64 by 32 image of `value`, run-length encoded as Radiance writes it: each
+ * scanline's 4 channels a run of 64 (as 127 + 1: a run is at most 127), but its first
+ * pixel's red written alone, a literal, to have both kinds. */
+static int make_hdr_rle(unsigned char *out, int exponent)
+{
+    static const char header[] = "#?RADIANCE\nFORMAT=32-bit_rle_rgbe\n\n-Y 32 +X 64\n";
+    int n = (int)sizeof(header) - 1, y, c;
+    memcpy(out, header, (size_t)n);
+    for (y = 0; y < 32; y++) {
+        out[n++] = 2, out[n++] = 2, out[n++] = 0, out[n++] = 64;
+        for (c = 0; c < 4; c++) {
+            const unsigned char v = (unsigned char)(c < 3 ? 128 : exponent);
+            if (c == 0) {
+                out[n++] = 1, out[n++] = v;       /* a literal of 1 */
+                out[n++] = 128 + 63, out[n++] = v; /* a run of 63 */
+            } else {
+                out[n++] = 128 + 64, out[n++] = v; /* a run of 64 */
+            }
+        }
+    }
+    return n;
+}
+
 static void write_file(const char *path, const unsigned char *data, int size)
 {
     const wgf_fs_task_t task = wgf_fs_write(path, data, size);
@@ -304,6 +327,18 @@ static void test_api(void)
     wgf_actor_t stage, camera;
 
     memset(&lighting, 0, sizeof(lighting)); /* read below even when the lighting isn't had */
+    { /* run-length encoded: the same image; cut short: refused */
+        static unsigned char rle[64 + 32 * (4 + 4 + 6)];
+        const int size = make_hdr_rle(rle, 130);
+        write_file("environment_test/rle.hdr", rle, size);
+        CHECK(wgf_gfx_priv_environment_load_image("environment_test/rle.hdr", &image));
+        CHECK(image.width == 64 && image.height == 32 && fabsf(image.rgb[0] - 2.0f) < 1e-3f &&
+              fabsf(image.rgb[64 * 32 * 3 - 1] - 2.0f) < 1e-3f);
+        free(image.rgb);
+        write_file("environment_test/short.hdr", rle, size - 5);
+        CHECK(!wgf_gfx_priv_environment_load_image("environment_test/short.hdr", &image) && image.rgb == NULL);
+        CHECK(wgf_gfx_priv_environment_is_hdr(rle, size) && !wgf_gfx_priv_environment_is_hdr(rle, 20));
+    }
     write_file("environment_test/two.hdr", hdr, make_hdr(hdr, 130)); /* 2 */
     CHECK(wgf_gfx_priv_environment_load_image("environment_test/two.hdr", &image));
     CHECK(image.width == 64 && image.height == 32 && fabsf(image.rgb[0] - 2.0f) < 1e-3f &&
@@ -320,6 +355,12 @@ static void test_api(void)
     CHECK(wgf_gfx_priv_environment_get_lighting(env, &lighting));
     CHECK_VEC3_NEAR(wgf_gfx_priv_environment_eval_sh(&lighting.sh, wgf_vec3_make(0, 1, 0)), 2, 2, 2, 0.02f);
     CHECK(!wgf_gfx_priv_environment_get_lighting(0, &lighting));
+    { /* a broken .hdr FAILS, from one of its steps */
+        const wgf_environment_t broken = wgf_environment_create("environment_test/short.hdr");
+        settle(broken);
+        CHECK(wgf_resource_get_status(broken) == WGF_RESOURCE_STATUS_FAILED);
+        wgf_resource_release(broken);
+    }
     missing = wgf_environment_create("environment_test/missing.hdr");
     settle(missing);
     CHECK(wgf_resource_get_status(missing) == WGF_RESOURCE_STATUS_FAILED);
