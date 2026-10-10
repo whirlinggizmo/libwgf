@@ -18,12 +18,9 @@ licenses, in a `CREDITS.md` beside them; they are not part of the library.
 The zlib license asks that altered versions be marked as such. Six vendored files are
 altered, each saying so at its top:
 
-- `deps/sokol/sokol_audio.h` and `deps/sokol/util/sokol_gl.h`, from the Whirling Gizmo
-  fork of sokol (https://github.com/robknopf/sokol; `deps/sokol/VERSION` names the
-  commit)
-- `deps/sokol/sokol_gfx.h`, changed in place: a release web build doesn't ask WebGL whether
-  an offscreen pass's framebuffer is complete (`deps/sokol/VERSION` says why), until the
-  Whirling Gizmo fork takes it
+- `deps/sokol/sokol_audio.h`, `deps/sokol/sokol_gfx.h`, and `deps/sokol/util/sokol_gl.h`,
+  from the Whirling Gizmo fork of sokol (https://github.com/robknopf/sokol;
+  `deps/sokol/VERSION` names the commit)
 - `deps/sokol_utils/sokol_app_utils.h`, changed in place, as wgrender changed it
   (`deps/sokol_utils/VERSION` lists the changes)
 - `deps/clay/clay.h`, from the Whirling Gizmo fork of Clay

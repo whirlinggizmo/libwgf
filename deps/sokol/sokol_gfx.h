@@ -7,10 +7,12 @@
 
     Project URL: https://github.com/floooh/sokol
 
-    Altered source: changed in libwgf, marked [libwgf] where it is: a release web build
-    doesn't ask WebGL whether an offscreen pass's framebuffer is complete
-    (_sg_gl_check_framebuffer_status), a round trip to the browser's GPU process that
-    stalled every shadow-mapped frame about 12 ms.
+    Altered source: this is the Whirling Gizmo fork's version
+    (https://github.com/robknopf/sokol), not the original. Changed from
+    floooh/sokol: a release build on emscripten does not call
+    glCheckFramebufferStatus when a pass begins. In WebGL the call waits for
+    the GPU process, which stalls each frame with an offscreen pass.
+    The fork's git history has each change.
 
     Example code: https://github.com/floooh/sokol-samples
 
@@ -11873,10 +11875,9 @@ _SOKOL_PRIVATE GLenum _sg_gl_depth_stencil_attachment_type(const _sg_image_t* ds
 
 _SOKOL_PRIVATE bool _sg_gl_check_framebuffer_status(void) {
     #if defined(__EMSCRIPTEN__) && defined(NDEBUG)
-    /* [libwgf] WebGL's checkFramebufferStatus is a round trip to the browser's GPU process,
-       which waits for every command before it: once an offscreen pass, it stalled each frame
-       about 12 ms (libwgf's shadow maps). A release web build trusts the attachments sokol
-       already validated; a debug one still asks. */
+    // fork: in WebGL, checkFramebufferStatus waits for all commands in the GPU
+    // process (about 12 ms each frame with a shadow map pass). The attachments
+    // are validated when they are made, so a release build does not ask again.
     return true;
     #endif
     const GLenum fb_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);

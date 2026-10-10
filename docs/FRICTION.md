@@ -586,7 +586,7 @@ Racer (milestone 2), from step 8: the game-developer session's part 4, a sun tha
 - **Workaround:** none: shadows kept, the budget missed
 - **Cost:** 40 minutes of measuring
 - **Found by:** the racer's session (its S4, a blocker)
-- **Triage:** fixed in step 8: sokol asked WebGL whether each offscreen pass's framebuffer was complete (`glCheckFramebufferStatus`), a round trip to Chrome's GPU process that waits for every command before it, once a casting light a frame; a release web build no longer asks (`deps/sokol/sokol_gfx.h`, marked `[libwgf]`). The racer's bench run: a mean of 1.67 ms and a 95th percentile of 2.08, as without shadows
+- **Triage:** fixed in step 8: sokol asked WebGL whether each offscreen pass's framebuffer was complete (`glCheckFramebufferStatus`), a round trip to Chrome's GPU process that waits for every command before it, once a casting light a frame; a release web build no longer asks (`deps/sokol/sokol_gfx.h`; marked `[libwgf]` at first, the Whirling Gizmo fork's since 8194062e). The racer's bench run: a mean of 1.67 ms and a 95th percentile of 2.08, as without shadows
 
 ### Racer: `wgf dump` dropped a file node's shadow flags
 
