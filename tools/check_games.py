@@ -12,7 +12,9 @@ the game's directory as a developer would:
               GENERATED_ON says why)
   playthrough wgf autopilot <its playthrough>, headless: wgf.json's "playthrough" in its
               autopilot folder, playthrough.autopilot by default
-  browser     the same in a headless browser (wgf autopilot --web)
+  browser     the same in a headless browser (wgf autopilot --web), or the autopilot
+              BROWSER_FLIGHTS names for a game whose playthrough a software renderer can't
+              fly in time
   web         wgf export --web: the trimmed host, the budget, the smoke run in a browser
   desktop     wgf export --desktop: the release build, its smoke run in a window
 A step that can't run here (no haxe, hxcpp, Emscripten, or browser) says
@@ -41,6 +43,13 @@ GENERATORS = {'asteroids': ['tools/gen_sounds.py', '--check'], 'racer': ['games/
 # sines a digit apart from glibc's (its .glb's 32-bit floats agree), until the game prints fewer.
 GENERATED_ON = {'racer': ('posix', "its TrackData.hx's 64-bit floats differ in a last digit under Windows' math "
                                    "library; the game's generator is to print fewer")}
+
+# A game's browser step flies this autopilot in place of its playthrough, and why: CI's browser
+# draws with a software renderer. The racer's full lap (2,600 frames, its sun casting) ran past
+# the run's 1,002 s there; its bench run (the lap's first 600 frames, the start and two
+# checkpoints, 9 expectations) is flown instead, and the lap stays the headless playthrough's.
+BROWSER_FLIGHTS = {'racer': ('bench.autopilot', "its full lap, shadows and all, is past a software renderer's "
+                                                "time; the headless playthrough flies it")}
 
 
 def games(names):
@@ -95,7 +104,12 @@ def run_step(name, step):
         code, out = wgf(game_dir, 'autopilot', playthrough(game_dir))
         return code == 0 and 'PASS' in out.splitlines()[-1], out
     if step == 'browser':
-        code, out = wgf(game_dir, 'autopilot', playthrough(game_dir), '--web')
+        flight = BROWSER_FLIGHTS.get(name)
+        path = playthrough(game_dir)
+        if flight is not None:
+            path = f'{path.rsplit("/", 1)[0]}/{flight[0]}'
+            print(f'check_games: {name} browser flies {flight[0]}: {flight[1]}')
+        code, out = wgf(game_dir, 'autopilot', path, '--web')
         return code == 0 and 'PASS' in out.splitlines()[-1], out
     if step == 'web':
         code, out = wgf(game_dir, 'export', '--web')
