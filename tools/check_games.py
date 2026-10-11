@@ -38,12 +38,14 @@ WGF = ROOT / 'wgf'
 STEPS = ('generated', 'playthrough', 'browser', 'web', 'desktop')
 GENERATORS = {'asteroids': ['tools/gen_sounds.py', '--check'], 'racer': ['games/racer/tools/gen_track.py', '--check']}
 
-# A game's browser step flies this autopilot in place of its playthrough, and why: CI's browser
-# draws with a software renderer. The racer's full lap (2,600 frames, its sun casting) ran past
-# the run's 1,002 s there; its bench run (the lap's first 600 frames, the start and two
-# checkpoints, 9 expectations) is flown instead, and the lap stays the headless playthrough's.
+# A game's browser step flies this autopilot in place of its playthrough, and why, and the seconds
+# it is given: CI's browser draws with a software renderer. The racer's full lap (2,600 frames,
+# its sun casting) ran past the run's 1,002 s there; its bench run (the lap's first 600 frames,
+# the start and two checkpoints) is flown instead, and the lap stays the headless playthrough's.
+# Its Racing Kit track (part 6: 275 pieces, its files streamed at the start) ran past the 350 s
+# autopilot gives 750 frames on CI's runner (147 s here, the build included): it is given 900.
 BROWSER_FLIGHTS = {'racer': ('bench.autopilot', "its full lap, shadows and all, is past a software renderer's "
-                                                "time; the headless playthrough flies it")}
+                                                "time; the headless playthrough flies it", 900)}
 
 
 def games(names):
@@ -103,7 +105,8 @@ def run_step(name, step):
         if flight is not None:
             path = f'{path.rsplit("/", 1)[0]}/{flight[0]}'
             print(f'check_games: {name} browser flies {flight[0]}: {flight[1]}')
-        code, out = wgf(game_dir, 'autopilot', path, '--web')
+        timeout = ['--timeout', str(flight[2])] if flight is not None else []
+        code, out = wgf(game_dir, 'autopilot', path, '--web', *timeout)
         return code == 0 and 'PASS' in out.splitlines()[-1], out
     if step == 'web':
         code, out = wgf(game_dir, 'export', '--web')
