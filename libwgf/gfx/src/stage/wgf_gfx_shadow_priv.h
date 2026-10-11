@@ -97,17 +97,25 @@ typedef struct wgf_gfx_priv_shadow_frame_t {
 } wgf_gfx_priv_shadow_frame_t;
 bool wgf_gfx_priv_stage3d_shadow_frame(wgf_gfx_priv_shadow_frame_t *out);
 
-/* Item `item` of the frame's as a caster: an opaque part of a model that casts, placed by
- * `world`, its box in the stage, its primitive, and its material. False for any other. */
-bool wgf_gfx_priv_stage3d_caster(int item, wgf_mat4_t *world, wgf_vec3_t *lo, wgf_vec3_t *hi,
-                                 wgf_gfx_priv_mesh_primitive_t *primitive, wgf_material_t *material);
+/* Item `item` of the frame's as a caster: an opaque part of a model that casts, its box in
+ * the stage, its primitive, and its material; where it stands is its record in the frame's
+ * instance texture, at its own index. False for any other. */
+bool wgf_gfx_priv_stage3d_caster(int item, wgf_vec3_t *lo, wgf_vec3_t *hi, wgf_gfx_priv_mesh_primitive_t *primitive,
+                                 wgf_material_t *material);
+/* Whether casters `a` and `b` can go up as one draw: the same mesh, primitive, and material
+ * (what the depth pass binds and alpha-tests with). */
+bool wgf_gfx_priv_stage3d_same_caster(int a, int b);
+/* The frame's instance records, written before the passes: false when there are none, or
+ * they didn't fit (nothing is drawn then). */
+bool wgf_gfx_priv_stage3d_instances(sg_view *view, sg_sampler *sampler);
 
 /* The part installed: the first light set to cast. */
 void wgf_gfx_priv_shadow_install(void);
 
-/* For tests and the shadow benchmark: the casters the last frame's depth pass drew (every
- * layer's), and how many layers it drew. */
+/* For tests and the shadow benchmark: the draws the last frame's depth pass made (every
+ * layer's; a run of alike casters one), the casters in them, and how many layers it drew. */
 int wgf_gfx_priv_shadow_get_draw_calls(void);
+int wgf_gfx_priv_shadow_get_casters(void);
 int wgf_gfx_priv_shadow_get_layers(void);
 
 #endif

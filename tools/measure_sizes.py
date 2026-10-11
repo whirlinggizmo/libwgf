@@ -81,6 +81,9 @@ ROWS = [
     ('gfx-shadows', 'gfx-shadows', 'shadows', 'differs',
      'libwgf has no skinning or animation yet: the toy car in place of the walking character, and its readout fixed '
      'labels with no formatting'),
+    ('gfx-instancing', 'gfx-instancing', 'instancing', 'differs',
+     'libwgf has no skinning or animation yet: six of the toy car in place of the walking characters, and its readout '
+     'fixed labels with no formatting'),
     ('gfx-environment', 'gfx-environment', 'environment', 'differs',
      'libwgf has no skinning or animation yet: the toy car in place of the walking character, and its readout '
      'fixed labels with no formatting'),

@@ -1,8 +1,9 @@
 /* A stage's models (libwgf/gfx/src/stage/wgf_gfx_stage.c): glTF metallic-roughness materials,
  * lit by up to 8 lights, tone mapped. libwgt's wgt_gfx_model.glsl and wgt_gfx_pbr.glsl
- * (wgrender's), trimmed to what milestone 2 draws so far: one model a draw, its
- * matrices uniforms (libwgt's per-instance texture comes with instancing, step 11),
- * shadows (step 8), and an environment's light (step 9). Written once in sokol-shdc's annotated
+ * (wgrender's), trimmed to what milestone 2 draws so far: no skinning (milestone 3's).
+ * Each part's placement, its normals' matrix, and its tint are its record in the frame's
+ * instance texture (wgf_gfx_instance.glsl), so a run of parts alike in everything else
+ * is one draw; with shadows (step 8) and an environment's light (step 9). Written once in sokol-shdc's annotated
  * GLSL; tools/gen_shaders.py makes wgf_gfx_model.glsl.h, committed, for GL 4.1 and
  * WebGL2 (GLSL 300 es).
  *
@@ -11,7 +12,8 @@
  * result is tone mapped and encoded back to sRGB. Vertex colors (linear rgba; white for
  * generated meshes) multiply the base color.
  *
- * fs_params, the material's (times the model's tint):
+ * vs_params: view_proj, and instance_base (x: the draw's first record)
+ * fs_params, the material's (the model's tint is its record's, times the vertex color):
  *   u_base_color      linear rgba
  *   u_emissive        rgb linear emissive, w normal scale
  *   u_pbr             x metallic, y roughness, z occlusion strength, w 1 = lit, 0 = unlit
@@ -42,13 +44,13 @@
  */
 
 @include wgf_gfx_display.glsl
+@include wgf_gfx_instance.glsl
 
 @vs vs
+@include_block instance_data
 layout(binding=0) uniform vs_params {
-    mat4 mvp;
-    mat4 model;
-    mat4 normal_mat; /* the model matrix's inverse transpose, its upper 3x3 */
-    vec4 extra;      /* x: the tangents' handedness, -1 where the placement mirrors them */
+    mat4 view_proj;
+    vec4 instance_base; /* x: the draw's first record */
 };
 in vec3 position;
 in vec3 normal;
@@ -63,13 +65,15 @@ out vec2 v_uv1;
 out vec4 v_color;
 out vec3 v_world_pos;
 void main() {
+    int record = int(instance_base.x) + gl_InstanceIndex;
+    mat4 model = instance_model(record);
     vec4 world = model * vec4(position, 1.0);
-    gl_Position = mvp * vec4(position, 1.0);
-    v_normal = mat3(normal_mat) * normal;
-    v_tangent = vec4(mat3(model) * tangent.xyz, tangent.w * extra.x);
+    gl_Position = view_proj * world;
+    v_normal = instance_normal(record) * normal;
+    v_tangent = vec4(mat3(model) * tangent.xyz, tangent.w * instance_extra(record).y);
     v_uv0 = texcoord0;
     v_uv1 = texcoord1;
-    v_color = color0;
+    v_color = color0 * instance_tint(record); /* the placement's tint, already linear */
     v_world_pos = world.xyz;
 }
 @end

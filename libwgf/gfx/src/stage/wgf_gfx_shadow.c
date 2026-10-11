@@ -42,6 +42,7 @@ static struct {
     sg_view white_view;
     sg_sampler white_sampler;
     int draw_calls, last_draw_calls, last_layers;
+    int casters, last_casters; /* the instances drawn, every layer's */
 } sm;
 
 /* ------------------------------------------------------------------ the calls ---- */
@@ -461,35 +462,55 @@ static bool outside(float planes[6][4], wgf_vec3_t lo, wgf_vec3_t hi)
     return false;
 }
 
+/* Whether item `i` of the frame's casts into this layer: a caster the light's fit reaches. */
+static bool casts(float planes[6][4], int i, wgf_gfx_priv_mesh_primitive_t *primitive, wgf_material_t *material)
+{
+    wgf_vec3_t lo, hi;
+    return wgf_gfx_priv_stage3d_caster(i, &lo, &hi, primitive, material) && !outside(planes, lo, hi);
+}
+
 /* The casters of `job` that the light's fit reaches into the open layer, through its
- * `view_proj`. */
+ * `view_proj`: each where its instance record puts it, a run of alike ones (the same mesh,
+ * primitive, and material) a draw, as libwgt's. */
 static void draw_casters(const wgf_gfx_priv_shadow_frame_t *job, wgf_mat4_t view_proj)
 {
     float planes[6][4];
     float applied_cutoff = -1.0f;
-    int i;
+    const int end = job->first + job->count;
+    sg_view instances;
+    sg_sampler instance_sampler;
+    int i = job->first;
+    if (!wgf_gfx_priv_stage3d_instances(&instances, &instance_sampler)) return; /* the records didn't fit */
     frustum_planes(&view_proj, planes);
     sg_apply_pipeline(sm.pipeline);
-    for (i = job->first; i < job->first + job->count; i++) {
-        wgf_gfx_priv_mesh_primitive_t primitive;
-        wgf_material_t material_handle;
+    while (i < end) {
+        wgf_gfx_priv_mesh_primitive_t primitive, next_primitive;
+        wgf_material_t material_handle, next_material;
         const wgf_gfx_priv_material_t *material;
-        wgf_mat4_t world;
-        wgf_vec3_t lo, hi;
         vs_depth_params_t vs;
         sg_bindings bindings;
         float cutoff;
-        if (!wgf_gfx_priv_stage3d_caster(i, &world, &lo, &hi, &primitive, &material_handle) ||
-            outside(planes, lo, hi)) {
+        int last;
+        if (!casts(planes, i, &primitive, &material_handle)) {
+            i++;
             continue;
         }
+        for (last = i; last + 1 < end && casts(planes, last + 1, &next_primitive, &next_material) &&
+                       wgf_gfx_priv_stage3d_same_caster(i, last + 1);
+             last++) {
+        }
         material = wgf_gfx_priv_material_get(material_handle);
-        if (material == NULL) continue;
+        if (material == NULL) {
+            i = last + 1;
+            continue;
+        }
         memset(&bindings, 0, sizeof(bindings));
         bindings.vertex_buffers[0] = primitive.vertices;
         bindings.index_buffer = primitive.indices;
         bindings.views[VIEW_base_color_tex] = sm.white_view;
         bindings.samplers[SMP_base_color_smp] = sm.white_sampler;
+        bindings.views[VIEW_instance_tex] = instances;
+        bindings.samplers[SMP_instance_smp] = instance_sampler;
         cutoff = material->alpha_mode == WGF_ALPHA_MODE_MASK ? material->alpha_cutoff : 0.0f;
         if (cutoff > 0.0f) { /* a cut-out casts the shape it draws */
             const wgf_gfx_priv_material_texture_t *base = &material->textures[WGF_GFX_PRIV_MATERIAL_TEXTURE_BASE_COLOR];
@@ -505,15 +526,19 @@ static void draw_casters(const wgf_gfx_priv_shadow_frame_t *job, wgf_mat4_t view
             }
         }
         sg_apply_bindings(&bindings);
-        memcpy(vs.mvp, wgf_mat4_mul(view_proj, world).m, sizeof(vs.mvp));
+        memset(&vs, 0, sizeof(vs));
+        memcpy(vs.light_view_proj, view_proj.m, sizeof(vs.light_view_proj));
+        vs.instance_base[0] = (float)i;
         sg_apply_uniforms(UB_vs_depth_params, &SG_RANGE(vs));
         if (cutoff != applied_cutoff) {
             const float values[4] = {cutoff, 0.0f, 0.0f, 0.0f};
             sg_apply_uniforms(UB_fs_depth_params, &SG_RANGE(values));
             applied_cutoff = cutoff;
         }
-        sg_draw(0, primitive.index_count, 1);
+        sg_draw(0, primitive.index_count, last - i + 1);
         sm.draw_calls++;
+        sm.casters += last - i + 1;
+        i = last + 1;
     }
 }
 
@@ -523,17 +548,17 @@ static void flush(void)
 {
     wgf_gfx_priv_shadow_frame_t job;
     int size = 0, i;
-    sm.draw_calls = 0;
+    sm.draw_calls = sm.casters = 0;
     sm.last_layers = 0;
     if (!wgf_gfx_priv_stage3d_shadow_frame(&job)) {
-        sm.last_draw_calls = 0;
+        sm.last_draw_calls = sm.last_casters = 0;
         return;
     }
     for (i = 0; i < job.light_count; i++) { /* the layers share one size: the largest asked for */
         if (job.lights[i]->shadow_map_size > size) size = job.lights[i]->shadow_map_size;
     }
     if (!ensure_map(size, job.light_count)) {
-        sm.last_draw_calls = 0;
+        sm.last_draw_calls = sm.last_casters = 0;
         return;
     }
     ensure_pipeline();
@@ -566,12 +591,18 @@ static void flush(void)
     job.binding->count = job.light_count;
     job.binding->valid = true;
     sm.last_draw_calls = sm.draw_calls;
+    sm.last_casters = sm.casters;
     sm.last_layers = job.light_count;
 }
 
 int wgf_gfx_priv_shadow_get_draw_calls(void)
 {
     return sm.last_draw_calls;
+}
+
+int wgf_gfx_priv_shadow_get_casters(void)
+{
+    return sm.last_casters;
 }
 
 int wgf_gfx_priv_shadow_get_layers(void)

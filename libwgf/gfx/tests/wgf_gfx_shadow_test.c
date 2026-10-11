@@ -199,7 +199,7 @@ static int shadow_draws(wgf_actor_t stage, int *layers, int *kept)
     if (kept != NULL) *kept = wgf_gfx_priv_stage3d_get_item_count();
     wgf_gfx_priv_end_frame();
     if (layers != NULL) *layers = wgf_gfx_priv_shadow_get_layers();
-    return wgf_gfx_priv_shadow_get_draw_calls();
+    return wgf_gfx_priv_shadow_get_casters();
 }
 
 static wgf_actor_t add_model(wgf_actor_t stage, wgf_mesh_t mesh, float x, float y, float z)
@@ -210,7 +210,8 @@ static wgf_actor_t add_model(wgf_actor_t stage, wgf_mesh_t mesh, float x, float 
     return model;
 }
 
-/* What the depth pass draws: the casters the light's map reaches, a draw each. */
+/* What the depth pass draws: the casters the light's map reaches, a run of alike ones (the
+ * same mesh, primitive, and material) a draw. */
 static void test_casters(void)
 {
     const wgf_actor_t stage = wgf_stage3d_create(), camera = wgf_camera3d_create();
@@ -233,6 +234,7 @@ static void test_casters(void)
     CHECK(shadow_draws(stage, &layers, &kept) == 0 && layers == 0 && kept == 4); /* no light casts: no pass */
     wgf_light_set_shadow_casting(sun, true);
     CHECK(shadow_draws(stage, &layers, NULL) == 4 && layers == 1); /* the floor and the three cubes */
+    CHECK(wgf_gfx_priv_shadow_get_draw_calls() == 2);            /* the floor, and the cubes as one */
     wgf_model_set_shadow_casting(floor, false);
     CHECK(shadow_draws(stage, NULL, NULL) == 3); /* a floor that only receives */
     wgf_actor_set_visible(c, false);
@@ -260,6 +262,7 @@ static void test_casters(void)
     wgf_light_set_shadow_casting(spot, true);
     wgf_actor_set_parent(spot, stage);
     CHECK(shadow_draws(stage, &layers, NULL) == 6 && layers == 2);
+    CHECK(wgf_gfx_priv_shadow_get_draw_calls() == 2); /* the cubes as one draw a layer */
     /* a hidden light doesn't shine, so it casts nothing */
     wgf_actor_set_visible(spot, false);
     CHECK(shadow_draws(stage, &layers, NULL) == 3 && layers == 1);

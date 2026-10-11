@@ -1,6 +1,7 @@
 #include "wgf_stage3d.h"
 
 #include <math.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -27,17 +28,26 @@
 #endif
 #include "shaders/wgf_gfx_model.glsl.h"
 
-/* Stages: libwgt's scene, trimmed to what milestone 2 has so far (no instancing,
- * skinning, picking, sprites, or particles: their steps bring them). A
- * draw walks the stage's tree as it is now -- its lights (the first 4 that cast shadows
- * each given a slot of the frame's shadow map), then its models, each part of a model's
- * mesh an item: placed, culled against the camera's view (a caster out of view kept for
- * the shadow pass alone when its shadow reaches the view), given its lights, and the
- * see-through ones sorted back to front -- and records the items, as a command of the
- * frame's (render/wgf_gfx_render_commands.c). Before the frame's pass the shadow part, when
- * a light casts, draws the first such draw's casters into its map (wgf_gfx_shadow.c); then
- * the command draws the items with sokol_gfx, between the immediate mode drawn before and
- * after the stage, its background first. An environment's lighting and background are the
+/* Stages: libwgt's scene, trimmed to what milestone 2 has so far (no skinning, picking,
+ * sprites, or particles: their steps bring them). A draw walks the stage's tree as it is
+ * now -- its lights (the first 4 that cast shadows each given a slot of the frame's shadow
+ * map), then its models, each part of a model's mesh an item: placed, culled against the
+ * camera's view (a caster out of view kept for the shadow pass alone when its shadow
+ * reaches the view), given its lights; the opaque ones sorted to bring alike ones together,
+ * the see-through ones back to front -- and records the items, as a command of the frame's
+ * (render/wgf_gfx_render_commands.c).
+ *
+ * Instancing, libwgt's (wgrender's phase 2), with no API: each item's placement, its
+ * normals' matrix, its tint, and whether it mirrors are its record, at its own index in an
+ * RGBA32F texture written whole as the frame flushes (wgf_gfx_instance.glsl); the opaque
+ * items, which depth testing lets be drawn in any order, are sorted by a hash of what a
+ * draw sets outside the record -- material, mesh and primitive, the pipeline (blended,
+ * double sided, mirrored), shadows received, the lights selected -- and a run of items equal
+ * on all of it, compared exactly, goes up as one draw; see-through items keep their order,
+ * and only neighbours alike share a draw. Before the frame's pass the shadow part, when a
+ * light casts, draws the first such draw's casters into its map from the same records
+ * (wgf_gfx_shadow.c); then the command draws the items with sokol_gfx, between the
+ * immediate mode drawn before and after the stage, its background first. An environment's lighting and background are the
  * environment part's (wgf_gfx_environment.c), reached through its hooks: a program with
  * none links none of it. A part, installed by the first stage made: its end of frame
  * forgets the frame's items, and its stop frees its pipelines and default textures. */
@@ -49,8 +59,10 @@ typedef struct item_t {
     wgf_material_t material;
     float tint[4];   /* linear */
     bool blended;    /* drawn after the opaque ones, back to front, depth not written */
+    bool mirrored;   /* its placement turns its triangles' winding (a negative determinant) */
     float depth;     /* along the camera's view, for the sort */
     int order;       /* as found, so equal depths keep it */
+    uint64_t group;  /* its group key's hash: alike opaque ones sorted together */
     int lights[WGF_GFX_PRIV_MAX_DRAW_LIGHTS]; /* into the draw's lights */
     int light_count;
     bool casting, receiving; /* shadows: its model's */
@@ -98,7 +110,22 @@ static struct {
     sg_sampler no_shadow_sampler;
     sg_image no_environment_image; /* a black cube, bound with no environment */
     sg_view no_environment_view;
+    /* the instance records: an item's at its index, written as the frame flushes */
+    float *instances;
+    int instance_capacity; /* records */
+    sg_image instance_image;
+    sg_view instance_view;
+    sg_sampler instance_sampler;
+    int instance_rows;
+    bool instances_written;       /* this frame's are up */
+    bool instance_overflow_logged;
+    int draw_calls, last_draw_calls; /* for tests: the shading pass's draws */
 } frame;
+
+#define INSTANCE_TEXELS 8
+#define INSTANCES_PER_ROW 128
+#define INSTANCE_TEXTURE_WIDTH (INSTANCES_PER_ROW * INSTANCE_TEXELS)
+#define INSTANCE_FLOATS (INSTANCE_TEXELS * 4)
 
 static wgf_gfx_priv_environment_hooks_t environment_hooks; /* the environment part's, once installed */
 
@@ -131,7 +158,12 @@ static bool grow(void **items, int *capacity, int needed, size_t size)
 static void end_frame(void)
 {
     frame.item_count = frame.draw_count = frame.light_count = 0;
+    frame.instances_written = false;
+    frame.last_draw_calls = frame.draw_calls;
+    frame.draw_calls = 0;
 }
+
+static void flush(void);
 
 static void stop(void)
 {
@@ -141,6 +173,12 @@ static void stop(void)
     free(frame.draws);
     free(frame.lights);
     free(frame.todo);
+    free(frame.instances);
+    if (frame.instance_image.id != SG_INVALID_ID) { /* sokol_gfx is still up, as below */
+        sg_destroy_view(frame.instance_view);
+        sg_destroy_image(frame.instance_image);
+        sg_destroy_sampler(frame.instance_sampler);
+    }
     if (frame.ready) { /* sokol_gfx is still up: gfx stops its parts first */
         for (i = 0; i < 8; i++) {
             if (frame.pipelines[i].id != SG_INVALID_ID) sg_destroy_pipeline(frame.pipelines[i]);
@@ -162,6 +200,7 @@ static void stop(void)
 static wgf_core_priv_part_t part = {.name = "stage",
                                     .layer = WGF_CORE_PRIV_PART_LAYER_GFX,
                                     .order = WGF_CORE_PRIV_PART_STAGE3D,
+                                    .flush = flush,
                                     .end_frame = end_frame,
                                     .stop = stop};
 
@@ -470,6 +509,56 @@ static void visit_shape(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
     wgf_gfx_priv_shape3d_draw(actor_ptr, world);
 }
 
+/* What an item must agree on to share a draw with another: everything the draw sets
+ * outside the instance record -- its material, its primitive's buffers (its mesh and
+ * primitive), the pipeline (blended, double sided, mirrored), the shadows it receives, the
+ * lights selected for it, and whether it is drawn at all (a caster kept for its shadow
+ * alone isn't). The camera and the environment are the stage draw's. libwgt's. */
+typedef struct group_key_t {
+    wgf_material_t material;
+    wgf_mesh_t mesh;
+    int primitive;
+    bool blended, double_sided, mirrored, receiving, shadow_only;
+    int light_count, lights[WGF_GFX_PRIV_MAX_DRAW_LIGHTS];
+} group_key_t;
+
+static void item_key(const item_t *item, group_key_t *key)
+{
+    const wgf_gfx_priv_material_t *material = wgf_gfx_priv_material_get(item->material);
+    int i;
+    memset(key, 0, sizeof(*key)); /* the padding too: keys are compared and hashed as bytes */
+    key->material = item->material;
+    key->mesh = item->mesh;
+    key->primitive = item->primitive;
+    key->blended = item->blended;
+    key->double_sided = material != NULL && material->double_sided;
+    key->mirrored = item->mirrored;
+    key->receiving = item->receiving;
+    key->shadow_only = item->shadow_only;
+    key->light_count = item->light_count;
+    for (i = 0; i < item->light_count; i++) key->lights[i] = item->lights[i];
+}
+
+/* Whether two items go up as one draw, compared exactly: the hash below only orders them,
+ * so a collision costs a split, never a wrong batch. */
+static bool same_group(const item_t *a, const item_t *b)
+{
+    group_key_t ka, kb;
+    item_key(a, &ka);
+    item_key(b, &kb);
+    return memcmp(&ka, &kb, sizeof(ka)) == 0;
+}
+
+/* FNV-1a over the key's bytes. */
+static uint64_t key_hash(const group_key_t *key)
+{
+    const unsigned char *bytes = (const unsigned char *)key;
+    uint64_t h = 1469598103934665603ULL;
+    size_t i;
+    for (i = 0; i < sizeof(*key); i++) h = (h ^ bytes[i]) * 1099511628211ULL;
+    return h;
+}
+
 static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *world, void *user)
 {
     const walk_models_t *w = (const walk_models_t *)user;
@@ -511,6 +600,7 @@ static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
         material = wgf_gfx_priv_material_get(item->material);
         if (material == NULL) continue; /* a slot with none draws nothing */
         item->world = *world;
+        item->mirrored = wgf_mat4_determinant(*world) < 0.0f;
         item->mesh = mesh;
         item->primitive = p;
         memcpy(item->tint, tint, sizeof(tint));
@@ -527,16 +617,23 @@ static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
                                 ? wgf_gfx_priv_light_select(&frame.lights[draw->first_light], draw->light_count,
                                                             box_lo, box_hi, item->lights, WGF_GFX_PRIV_MAX_DRAW_LIGHTS)
                                 : 0;
+        {
+            group_key_t key;
+            item_key(item, &key);
+            item->group = key_hash(&key);
+        }
         frame.item_count++;
     }
 }
 
-/* Opaque first, in the order found; then the see-through ones, farthest first. */
+/* Opaque first, alike ones together (by their keys' hash, then as found); then the
+ * see-through ones, farthest first. */
 static int compare_items(const void *lhs, const void *rhs)
 {
     const item_t *a = (const item_t *)lhs, *b = (const item_t *)rhs;
     if (a->blended != b->blended) return a->blended ? 1 : -1;
     if (a->blended && a->depth != b->depth) return a->depth > b->depth ? -1 : 1;
+    if (!a->blended && a->group != b->group) return a->group < b->group ? -1 : 1;
     return (a->order > b->order) - (a->order < b->order);
 }
 
@@ -743,11 +840,13 @@ static sg_view texture_view(const wgf_gfx_priv_material_texture_t *texture, sg_v
     return fallback;
 }
 
-/* `lit`: the draw's environment, READY, in `env`. */
-static void draw_item(const stage_draw_t *draw, const item_t *item, bool lit, const wgf_gfx_priv_env_lighting_t *env)
+/* Items `first` to `first + count - 1`, alike (same_group), as one draw: their records
+ * are side by side in the instance texture. `lit`: the draw's environment, READY, in
+ * `env`. */
+static void draw_run(const stage_draw_t *draw, int first, int count, bool lit, const wgf_gfx_priv_env_lighting_t *env)
 {
+    const item_t *item = &frame.items[first];
     const wgf_gfx_priv_material_t *material = wgf_gfx_priv_material_get(item->material);
-    const float det = wgf_mat4_determinant(item->world);
     wgf_gfx_priv_mesh_primitive_t primitive;
     vs_params_t vs;
     fs_params_t fs;
@@ -757,7 +856,7 @@ static void draw_item(const stage_draw_t *draw, const item_t *item, bool lit, co
     int t, i;
 
     if (material == NULL || !wgf_gfx_priv_mesh_get_primitive(item->mesh, item->primitive, &primitive)) return;
-    sg_apply_pipeline(pipeline(item->blended, material->double_sided, det < 0.0f));
+    sg_apply_pipeline(pipeline(item->blended, material->double_sided, item->mirrored));
     memset(&bindings, 0, sizeof(bindings));
     bindings.vertex_buffers[0] = primitive.vertices;
     bindings.index_buffer = primitive.indices;
@@ -773,17 +872,17 @@ static void draw_item(const stage_draw_t *draw, const item_t *item, bool lit, co
     bindings.samplers[SMP_env_smp] = lit ? env->cube_sampler : frame.sampler;
     bindings.views[VIEW_brdf_tex] = lit ? env->brdf : frame.white_view;
     bindings.samplers[SMP_brdf_smp] = lit ? env->brdf_sampler : frame.sampler;
+    bindings.views[VIEW_instance_tex] = frame.instance_view;
+    bindings.samplers[SMP_instance_smp] = frame.instance_sampler;
     sg_apply_bindings(&bindings);
 
     memset(&vs, 0, sizeof(vs));
-    memcpy(vs.mvp, wgf_mat4_mul(draw->view_proj, item->world).m, sizeof(vs.mvp));
-    memcpy(vs.model, item->world.m, sizeof(vs.model));
-    memcpy(vs.normal_mat, wgf_mat4_transpose(wgf_mat4_invert(item->world)).m, sizeof(vs.normal_mat));
-    vs.extra[0] = det < 0.0f ? -1.0f : 1.0f;
+    memcpy(vs.view_proj, draw->view_proj.m, sizeof(vs.view_proj));
+    vs.instance_base[0] = (float)first;
     sg_apply_uniforms(UB_vs_params, &SG_RANGE(vs));
 
     memset(&fs, 0, sizeof(fs));
-    for (i = 0; i < 4; i++) fs.u_base_color[i] = material->base_color[i] * item->tint[i];
+    for (i = 0; i < 4; i++) fs.u_base_color[i] = material->base_color[i]; /* the tint is the record's */
     fs.u_emissive[0] = material->emissive[0];
     fs.u_emissive[1] = material->emissive[1];
     fs.u_emissive[2] = material->emissive[2];
@@ -860,7 +959,20 @@ static void draw_item(const stage_draw_t *draw, const item_t *item, bool lit, co
         lights.u_light_spot[i][2] = draw->shadow.valid && l->shadow_slot >= 0 ? (float)l->shadow_slot : -1.0f;
     }
     sg_apply_uniforms(UB_fs_lights, &SG_RANGE(lights));
-    sg_draw(0, primitive.index_count, 1);
+    sg_draw(0, primitive.index_count, count);
+    frame.draw_calls++;
+}
+
+/* The items from `i` to before `end`, each run of alike ones a draw; those kept for the
+ * shadow pass alone (a run of their own) are skipped. */
+static void draw_items(const stage_draw_t *draw, int i, int end, bool lit, const wgf_gfx_priv_env_lighting_t *env)
+{
+    while (i < end) {
+        int last = i;
+        while (last + 1 < end && same_group(&frame.items[i], &frame.items[last + 1])) last++;
+        if (!frame.items[i].shadow_only) draw_run(draw, i, last - i + 1, lit, env);
+        i = last + 1;
+    }
 }
 
 static void replay(int index)
@@ -881,14 +993,113 @@ static void replay(int index)
     memset(&env, 0, sizeof(env));
     lit = draw->environment != 0 && draw->environment_intensity > 0.0f && environment_hooks.lighting != NULL &&
           environment_hooks.lighting(draw->environment, &env);
-    for (i = draw->first; i < draw->first + draw->count && !frame.items[i].blended; i++) {
-        if (!frame.items[i].shadow_only) draw_item(draw, &frame.items[i], lit, &env);
-    }
+    i = draw->first; /* the opaque ones first, then the shapes, then the see-through ones */
+    while (i < draw->first + draw->count && !frame.items[i].blended) i++;
+    if (frame.instances_written) draw_items(draw, draw->first, i, lit, &env); /* else the records didn't fit */
     if (draw->shapes >= 0) { /* sokol_gl's layer, through the same viewport */
         wgf_gfx_priv_render_draw_side_layer(draw->shapes);
         sg_apply_viewport(draw->viewport[0], draw->viewport[1], draw->viewport[2], draw->viewport[3], true);
     }
-    for (; i < draw->first + draw->count; i++) draw_item(draw, &frame.items[i], lit, &env);
+    if (frame.instances_written) draw_items(draw, i, draw->first + draw->count, lit, &env);
+}
+
+/* ------------------------------------------------------ the instance records ---- */
+
+/* One item's record: its placement and normals' matrices as rows (what the shader reads,
+ * and what lets the placement cost three texels, not four), its tint, and its tangents'
+ * handedness. */
+static void write_instance(float *r, const item_t *item)
+{
+    const wgf_mat4_t normal = wgf_mat4_transpose(wgf_mat4_invert(item->world));
+    int row, col;
+    for (row = 0; row < 3; row++) {
+        for (col = 0; col < 4; col++) {
+            r[row * 4 + col] = item->world.m[col * 4 + row];
+            r[12 + row * 4 + col] = normal.m[col * 4 + row];
+        }
+    }
+    memcpy(&r[24], item->tint, sizeof(item->tint)); /* linear already */
+    r[28] = 0.0f;
+    r[29] = item->mirrored ? -1.0f : 1.0f;
+    r[30] = r[31] = 0.0f;
+}
+
+/* The texture to hold `rows` rows of records, grown by doubling up to the GPU's limit;
+ * false when they won't fit. */
+static bool ensure_instance_texture(int rows)
+{
+    const int max_rows = sg_query_limits().max_image_size_2d;
+    int height = frame.instance_rows > 0 ? frame.instance_rows : 4;
+    sg_image_desc desc;
+    sg_view_desc view;
+    if (rows <= frame.instance_rows) return true;
+    if (rows > max_rows) return false;
+    while (height < rows) height *= 2;
+    if (height > max_rows) height = max_rows;
+    if (frame.instance_image.id != SG_INVALID_ID) {
+        sg_destroy_view(frame.instance_view);
+        sg_destroy_image(frame.instance_image);
+    }
+    memset(&desc, 0, sizeof(desc));
+    desc.width = INSTANCE_TEXTURE_WIDTH;
+    desc.height = height;
+    desc.pixel_format = SG_PIXELFORMAT_RGBA32F;
+    desc.usage.write_transient = true;
+    desc.label = "wgf-instances";
+    frame.instance_image = sg_make_image(&desc);
+    memset(&view, 0, sizeof(view));
+    view.texture.image = frame.instance_image;
+    frame.instance_view = sg_make_view(&view);
+    frame.instance_rows = height;
+    if (frame.instance_sampler.id == SG_INVALID_ID) {
+        sg_sampler_desc sampler;
+        memset(&sampler, 0, sizeof(sampler));
+        sampler.min_filter = sampler.mag_filter = SG_FILTER_NEAREST;
+        sampler.wrap_u = sampler.wrap_v = SG_WRAP_CLAMP_TO_EDGE;
+        sampler.label = "wgf-instances";
+        frame.instance_sampler = sg_make_sampler(&sampler);
+    }
+    return true;
+}
+
+/* The part's flush, before the frame's passes (the shadow part's among them): every
+ * item's record, written whole rows at a time, the tail unwritten. */
+static void flush(void)
+{
+    const int rows = (frame.item_count + INSTANCES_PER_ROW - 1) / INSTANCES_PER_ROW;
+    const int wanted = rows * INSTANCES_PER_ROW;
+    sg_write_image_desc write;
+    int i;
+    if (frame.item_count == 0) return;
+    if (wanted > frame.instance_capacity) {
+        float *grown = (float *)realloc(frame.instances, sizeof(float) * INSTANCE_FLOATS * (size_t)wanted);
+        if (grown == NULL) {
+            wgf_log_error("wgf_gfx_stage: out of memory drawing a stage");
+            return;
+        }
+        frame.instances = grown;
+        frame.instance_capacity = wanted;
+    }
+    if (!ensure_instance_texture(rows)) {
+        if (!frame.instance_overflow_logged) {
+            wgf_log_error("wgf_gfx_stage: %d parts of models in a frame, more than the instance texture holds; none "
+                          "drawn", frame.item_count);
+            frame.instance_overflow_logged = true;
+        }
+        return;
+    }
+    for (i = 0; i < frame.item_count; i++) write_instance(&frame.instances[(size_t)i * INSTANCE_FLOATS], &frame.items[i]);
+    memset(&write, 0, sizeof(write));
+    write.src.data.ptr = frame.instances;
+    write.src.data.size = sizeof(float) * INSTANCE_FLOATS * (size_t)wanted;
+    write.src.bytes_per_row = (int)sizeof(float) * 4 * INSTANCE_TEXTURE_WIDTH;
+    write.src.bytes_per_slice = (int)sizeof(float) * 4 * INSTANCE_TEXTURE_WIDTH * rows;
+    write.dst.image = frame.instance_image;
+    write.size.width = INSTANCE_TEXTURE_WIDTH;
+    write.size.height = rows;
+    write.size.num_slices = 1;
+    sg_write_image_transient(&write);
+    frame.instances_written = true;
 }
 
 /* ------------------------------------------------- the shadow pass's view ---- */
@@ -916,16 +1127,34 @@ bool wgf_gfx_priv_stage3d_shadow_frame(wgf_gfx_priv_shadow_frame_t *out)
     return false;
 }
 
-bool wgf_gfx_priv_stage3d_caster(int index, wgf_mat4_t *world, wgf_vec3_t *lo, wgf_vec3_t *hi,
-                                 wgf_gfx_priv_mesh_primitive_t *primitive, wgf_material_t *material)
+bool wgf_gfx_priv_stage3d_caster(int index, wgf_vec3_t *lo, wgf_vec3_t *hi, wgf_gfx_priv_mesh_primitive_t *primitive,
+                                 wgf_material_t *material)
 {
     const item_t *item = index >= 0 && index < frame.item_count ? &frame.items[index] : NULL;
     if (item == NULL || !item->casting || item->blended) return false; /* see-through parts don't cast */
-    *world = item->world;
     *lo = item->box_lo;
     *hi = item->box_hi;
     *material = item->material;
     return wgf_gfx_priv_mesh_get_primitive(item->mesh, item->primitive, primitive);
+}
+
+bool wgf_gfx_priv_stage3d_same_caster(int a, int b)
+{
+    const item_t *x = &frame.items[a], *y = &frame.items[b];
+    return x->mesh == y->mesh && x->primitive == y->primitive && x->material == y->material;
+}
+
+bool wgf_gfx_priv_stage3d_instances(sg_view *view, sg_sampler *sampler)
+{
+    *view = frame.instance_view;
+    *sampler = frame.instance_sampler;
+    return frame.instances_written;
+}
+
+/* For tests: the draws the last frame's shading pass made (a run of alike parts one). */
+int wgf_gfx_priv_stage3d_get_draw_calls(void)
+{
+    return frame.last_draw_calls;
 }
 
 /* For tests: how many parts the frame's stage draws drew (after culling), and how many

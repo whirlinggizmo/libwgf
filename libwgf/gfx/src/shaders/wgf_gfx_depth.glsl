@@ -1,26 +1,32 @@
 /* The shadow maps' depth pass (libwgf/gfx/src/stage/wgf_gfx_shadow.c): the casters as a light
  * sees them. libwgt's wgt_gfx_depth.glsl (wgrender's), trimmed as the model shader is:
- * one caster a draw, its matrix a uniform (libwgt reads the frame's instance records,
- * step 11's), and no skinning (milestone 3's). Written once in sokol-shdc's annotated
+ * where each caster stands is its record in the frame's instance texture
+ * (wgf_gfx_instance.glsl), the one the shading pass reads, so a run of casters that agree
+ * on mesh and material is one draw here too; no skinning (milestone 3's). Written once in sokol-shdc's annotated
  * GLSL; tools/gen_shaders.py makes wgf_gfx_depth.glsl.h, committed.
  *
  * Only depth is written: the pass has no color attachment, so the fragment shader has
  * nothing to say unless the material is alpha-tested, where a cut-out texel must not
  * cast (a leaf casts its shape, not its quad).
  *
- * vs_depth_params  mvp: the light's view-projection times the caster's world matrix
+ * vs_depth_params  light_view_proj, and instance_base (x: the draw's first record)
  * fs_depth_params  cutoff.x: the alpha cutoff (0: no alpha test)
  */
 
+@include wgf_gfx_instance.glsl
+
 @vs vs_depth
+@include_block instance_data
 layout(binding=0) uniform vs_depth_params {
-    mat4 mvp;
+    mat4 light_view_proj;
+    vec4 instance_base;
 };
 in vec3 position;
 in vec2 texcoord0;
 out vec2 v_uv0;
 void main() {
-    gl_Position = mvp * vec4(position, 1.0);
+    int record = int(instance_base.x) + gl_InstanceIndex;
+    gl_Position = light_view_proj * (instance_model(record) * vec4(position, 1.0));
     v_uv0 = texcoord0;
 }
 @end

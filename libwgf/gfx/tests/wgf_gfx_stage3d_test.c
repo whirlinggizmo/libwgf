@@ -14,7 +14,8 @@
 
 /* Stages, lights, and models on sokol's dummy backend: their settings and refusals,
  * what a model holds, which models a stage's draw keeps (culled against the camera's
- * view, or not), and which lights reach which. Pixels: wgf_gfx_stage3d_web_test. */
+ * view, or not), which lights reach which, and which parts go up as one draw (libwgt's
+ * instancing). Pixels: wgf_gfx_stage3d_web_test. */
 
 static int failures;
 
@@ -40,6 +41,77 @@ static int drawn(wgf_actor_t stage)
     count = wgf_gfx_priv_stage3d_get_item_count();
     wgf_gfx_priv_end_frame();
     return count;
+}
+
+/* One frame drawing `stage`: how many parts it kept; `draws`, the draws they took. */
+static int drawn_in(wgf_actor_t stage, int *draws)
+{
+    const int count = drawn(stage);
+    *draws = wgf_gfx_priv_stage3d_get_draw_calls();
+    return count;
+}
+
+/* Models that agree on everything but where they stand, and their tint, go up as one draw;
+ * libwgt's test of it. */
+static void test_instancing(void)
+{
+    const wgf_actor_t stage = wgf_stage3d_create(), camera = wgf_camera3d_create();
+    const wgf_mesh_t cube = wgf_mesh_create_cube(0.2f, 0.2f, 0.2f);
+    wgf_actor_t cubes[50], glass[3];
+    wgf_material_t materials[50];
+    int i, draws;
+    wgf_actor_set_position(camera, 0, 0, 20);
+    wgf_actor_set_parent(camera, stage);
+    wgf_stage3d_set_camera(stage, camera);
+    for (i = 0; i < 50; i++) {
+        cubes[i] = wgf_model_create(cube);
+        wgf_actor_set_position(cubes[i], (float)(i % 10) - 4.5f, (float)(i / 10) - 2.0f, 0);
+        wgf_model_set_tint(cubes[i], wgf_color_make((unsigned char)(i * 5), 100, 200, 255)); /* a tint each */
+        wgf_actor_set_parent(cubes[i], stage);
+    }
+    expect(drawn_in(stage, &draws) == 50 && draws == 1, "50 cubes sharing a mesh and a material: one draw");
+    for (i = 0; i < 50; i++) {
+        materials[i] = wgf_material_create(WGF_MATERIAL_SHADING_PBR);
+        wgf_model_set_material(cubes[i], 0, materials[i]);
+    }
+    expect(drawn_in(stage, &draws) == 50 && draws == 50, "a material each: a draw each");
+    for (i = 0; i < 50; i++) wgf_model_set_material(cubes[i], 0, i % 2 == 0 ? materials[0] : materials[1]);
+    expect(drawn_in(stage, &draws) == 50 && draws == 2, "two materials, interleaved in the tree: sorted together");
+    for (i = 0; i < 50; i++) {
+        wgf_model_set_material(cubes[i], 0, 0);
+        wgf_resource_release(materials[i]);
+    }
+    for (i = 0; i < 10; i++) wgf_actor_set_scale(cubes[i], -1, 1, 1);
+    expect(drawn_in(stage, &draws) == 50 && draws == 2, "mirrored ones apart: two draws");
+    for (i = 0; i < 10; i++) wgf_actor_set_scale(cubes[i], 1, 1, 1);
+    for (i = 0; i < 10; i++) wgf_model_set_shadow_receiving(cubes[i], false);
+    expect(drawn_in(stage, &draws) == 50 && draws == 2, "ones that receive no shadows apart");
+    for (i = 0; i < 10; i++) wgf_model_set_shadow_receiving(cubes[i], true);
+    { /* a point light that reaches only the left of them: two sets of lights */
+        const wgf_actor_t light = wgf_light_create(WGF_LIGHT_TYPE_POINT);
+        wgf_light_set_range(light, 2.0f);
+        wgf_actor_set_position(light, -4.0f, 0, 0);
+        wgf_actor_set_parent(light, stage);
+        expect(drawn_in(stage, &draws) == 50 && draws == 2, "different lights: apart");
+        wgf_actor_destroy(light, WGF_ACTOR_DESTROY_CHILDREN);
+    }
+    /* see-through ones keep their back-to-front order: alike neighbours share a draw, but
+       two alike either side of one that differs aren't joined across it */
+    {
+        const wgf_material_t other = wgf_material_create(WGF_MATERIAL_SHADING_PBR);
+        for (i = 0; i < 3; i++) {
+            glass[i] = wgf_model_create(cube);
+            wgf_model_set_tint(glass[i], wgf_color_make(255, 255, 255, 100));
+            wgf_actor_set_position(glass[i], 0, 4, (float)i); /* far to near */
+            wgf_actor_set_parent(glass[i], stage);
+        }
+        expect(drawn_in(stage, &draws) == 53 && draws == 2, "three see-through alike, neighbours: one draw");
+        wgf_model_set_material(glass[1], 0, other);
+        wgf_resource_release(other);
+        expect(drawn_in(stage, &draws) == 53 && draws == 4, "the middle one apart: the outer two not joined across it");
+    }
+    wgf_resource_release(cube);
+    wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
 }
 
 int main(void)
@@ -177,6 +249,7 @@ int main(void)
     expect(wgf_resource_release(cube) && wgf_resource_get_status(cube) == WGF_RESOURCE_STATUS_NONE,
            "the models gone, the mesh's last reference was the caller's");
 
+    test_instancing();
     wgf_gfx_priv_stop();
     printf("%s\n", failures == 0 ? "PASS" : "FAIL");
     return failures == 0 ? 0 : 1;

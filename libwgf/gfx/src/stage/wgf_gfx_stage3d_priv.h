@@ -44,6 +44,8 @@ int wgf_gfx_priv_light_select(const wgf_gfx_priv_stage3d_light_t *lights, int co
 /* For tests: how many parts the frame's stage draws kept (after culling), and how many
  * lights part `item` of them is lit by (-1 for none). */
 int wgf_gfx_priv_stage3d_get_item_count(void);
+/* For tests: the draws the last frame's shading pass made (a run of alike parts one draw). */
+int wgf_gfx_priv_stage3d_get_draw_calls(void);
 int wgf_gfx_priv_stage3d_get_item_lights(int item);
 
 #endif
