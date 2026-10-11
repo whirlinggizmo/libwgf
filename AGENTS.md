@@ -19,7 +19,7 @@ Each is CONVENTIONS.md's; the words here only find it.
 
 ## Agent practice
 
-- Before a feature, read how the references did it (SPEC.md lists them; read-only) and their HISTORY entries for it; record what was carried, what was redesigned, and why, in docs/HISTORY.md.
+- Before a feature, read how the references did it (SPEC.md lists them; read-only): their code, their HISTORY entries for it, and their TASKS' open problems, measurements and pitfalls as much as features (docs/HISTORY.md, "The references, learned from"). Carry theirs where it is right, build anew where that is better, and record what was carried, what was redesigned, and why, in docs/HISTORY.md.
 - Before every commit: review the diff against docs/CONVENTIONS.md and run the quick tier, `python3 tools/verify_builds.py --quick`; the full tier, `python3 tools/verify_builds.py --web --windows sightblinder`, when CONVENTIONS' "Verifying" says. Report which tier ran, and each skip as a skip.
 - Commit small; push each verified commit to `main`, check that CI passes, and fix a CI failure before new work.
 - The skills in `.claude/skills/` are the steps for repeated work: adding a component, a binding call, or an example.
