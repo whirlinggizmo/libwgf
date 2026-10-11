@@ -22,6 +22,7 @@ library only.
 """
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -89,8 +90,9 @@ def run_step(name, step):
         command = GENERATORS.get(name)
         if command is None:
             return True, 'nothing generated'
+        # a game's own tool finds the libwgf it runs against by LIBWGF (the racer's), else where its author keeps it
         done = subprocess.run([sys.executable, *command], cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                              text=True)
+                              text=True, env={**os.environ, 'LIBWGF': str(ROOT)})
         return done.returncode == 0, done.stdout.strip()
     if step == 'playthrough':
         code, out = wgf(game_dir, 'autopilot', playthrough(game_dir))
