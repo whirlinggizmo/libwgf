@@ -24,6 +24,7 @@
 #include "wgf_model.h"
 #include "wgf_stage3d.h"
 #include "wgf_shape2d.h"
+#include "wgf_sprite.h"
 #include "wgf_text.h"
 #include "wgf_time.h"
 
@@ -358,6 +359,33 @@ int main(void)
                    "dumped as it was written");
             wgf_actor_destroy(smoke, WGF_ACTOR_DESTROY_CHILDREN);
             wgf_resource_release(fire);
+        }
+        { /* a sign: a sprite and text in 3D, their alpha mode and facings, dumped as written */
+            wgf_scene_t signs = load("scenes/signs.scene", "wgf-scene 2\n"
+                                                           "actor board\n"
+                                                           "  sprite alpha=mask cutoff=0.25 facing=camera-y\n"
+                                                           "  motion\n"
+                                                           "end\n"
+                                                           "actor banner\n"
+                                                           "  text string=\"GO\" facing=free\n"
+                                                           "  motion\n"
+                                                           "end\n");
+            wgf_actor_t board, banner;
+            expect(wgf_scene_instantiate(signs, stage) == 2, "a sprite and a text made");
+            board = wgf_actor_find(stage, "board");
+            banner = wgf_actor_find(stage, "banner");
+            expect(wgf_sprite_get_alpha_mode(board) == WGF_ALPHA_MODE_MASK &&
+                       near(wgf_sprite_get_alpha_cutoff(board), 0.25f) &&
+                       wgf_sprite_get_facing(board) == WGF_SPRITE_FACING_CAMERA_FIXED_Y &&
+                       wgf_text_get_facing(banner) == WGF_SPRITE_FACING_FREE,
+                   "a sprite's alpha mode, cutoff, and facing; a text's facing");
+            expect(strstr(wgf_world_dump(), "alpha=mask cutoff=0.25 facing=camera-y\n") != NULL &&
+                       strstr(wgf_world_dump(), "align=left,top facing=free\n") != NULL,
+                   "dumped as written");
+            expect(refused("facing", "wgf-scene 2\nactor\n  sprite facing=sideways\nend\n"), "a facing that isn't one");
+            wgf_actor_destroy(board, WGF_ACTOR_DESTROY_CHILDREN);
+            wgf_actor_destroy(banner, WGF_ACTOR_DESTROY_CHILDREN);
+            wgf_resource_release(signs);
         }
         wgf_world_clear();
         wgf_resource_release(garage);

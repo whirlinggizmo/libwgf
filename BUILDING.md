@@ -209,8 +209,10 @@ A value is a number, a list of numbers (`1,2,3`), a color (`#RRGGBB` or `#RRGGBB
 shape2d    rectangle=w,h | circle=r | line=x0,y0,x1,y1 | polygon=x,y,x,y,...
            outline=t  color=#..  pivot=x,y
 sprite     texture="path"  source=x,y,w,h  size=w,h  pivot=x,y  tint=#..
+           alpha=opaque|mask|blend|add  cutoff=c  facing=camera|camera-y|up|free
+           (on a stage3d: wgf_sprite.h)
 text       string="..."  font="path"  size=s  color=#..  wrap=w
-           align=left|center|right,top|middle|bottom
+           align=left|center|right,top|middle|bottom  facing=camera|camera-y|up|free
 emitter2d  texture="path"  source=x,y,w,h  frames=columns,rows,count,per_second  rate=r
            emitting=true|false  max=n  life=min,max  spawn_box=hw,hh | spawn_circle=r
            velocity=x,y[,spread[,variance]]  gravity=x,y  drag=d  inherit=f  stretch=s

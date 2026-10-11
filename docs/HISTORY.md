@@ -1023,3 +1023,7 @@ Carried from libwgt (wgrender-c's text3d): a text actor on a stage3d is a block 
 ## The size baseline for text in 3D, and gfx-text3d a differs row (2026-10-11)
 
 Re-recorded alone (a guard moved): a program that makes text actors carries their 3D placing and drawing, which the stage3d reaches through the text kind (gfx-stage2d 170.7 to 172.9 KB of gzip, ecs-scene 186.7 to 188.6, Asteroids 247.3 to 249.2, the racer 556.0 to 558.0); a program without text actors unchanged. gfx-text3d, 166.4, differs from libwgt's for picking (milestone 2.5).
+
+## Milestone 2, step 11, sprites' and text's 3D keys in scenes (2026-10-11)
+
+A scene's sprite takes `alpha=`, `cutoff=`, and `facing=camera|camera-y|up|free`, and its text `facing=`, so the racer's signs and gantry can be written in its scene rather than in code; the dump writes each only when it isn't the default (BLEND, the camera). The words are libwgf's: libwgt's scenes were built in code, with no text format to carry.

@@ -60,6 +60,7 @@ enum {
     V_MODE,   /* wrap, clamp, destroy */
     V_ALIGN,  /* left|center|right,top|middle|bottom */
     V_ALPHA,  /* opaque, mask, blend, add */
+    V_FACING, /* camera, camera-y, up, free */
     V_COLORS, /* 1 to 8 colors, a list */
     V_NUM23,  /* two or three numbers */
     V_NUM24,
@@ -128,13 +129,13 @@ static const kind_t kinds[] = {
      ROLE_KIND,
      WGF_ACTOR_KIND_SPRITE,
      {{"texture", V_TEXT}, {"source", V_NUM4}, {"size", V_NUM2}, {"pivot", V_NUM2}, {"tint", V_COLOR},
-      {"visible", V_BOOL}},
+      {"alpha", V_ALPHA}, {"cutoff", V_NUM}, {"facing", V_FACING}, {"visible", V_BOOL}},
      false},
     {"text",
      ROLE_KIND,
      WGF_ACTOR_KIND_TEXT,
      {{"string", V_TEXT}, {"font", V_TEXT}, {"size", V_NUM}, {"color", V_COLOR}, {"wrap", V_NUM}, {"align", V_ALIGN},
-      {"visible", V_BOOL}},
+      {"facing", V_FACING}, {"visible", V_BOOL}},
      false},
     {"emitter2d",
      ROLE_KIND,
@@ -251,6 +252,14 @@ static bool parse_value(int type, const char *text, value_t *v)
             static const char *const modes[] = {"opaque", "mask", "blend", "add"};
             int i;
             for (i = 0; i < 4 && strcmp(text, modes[i]) != 0; i++) {
+            }
+            v->n[0] = i;
+            return i < 4;
+        }
+        case V_FACING: { /* wgf_sprite_facing_t's order */
+            static const char *const facings[] = {"camera", "camera-y", "up", "free"};
+            int i;
+            for (i = 0; i < 4 && strcmp(text, facings[i]) != 0; i++) {
             }
             v->n[0] = i;
             return i < 4;
@@ -801,6 +810,11 @@ static void apply_setting(wgf_actor_t actor, int kind, const setting_t *s, value
             } else if (strcmp(key, "source") == 0) wgf_sprite_set_source(actor, f(v, 0), f(v, 1), f(v, 2), f(v, 3));
             else if (strcmp(key, "size") == 0) wgf_sprite_set_size(actor, f(v, 0), f(v, 1));
             else if (strcmp(key, "pivot") == 0) wgf_sprite_set_pivot(actor, f(v, 0), f(v, 1));
+            else if (strcmp(key, "alpha") == 0) {
+                wgf_sprite_set_alpha_mode(actor, (wgf_alpha_mode_t)(int)v->n[0], wgf_sprite_get_alpha_cutoff(actor));
+            } else if (strcmp(key, "cutoff") == 0) {
+                wgf_sprite_set_alpha_mode(actor, wgf_sprite_get_alpha_mode(actor), f(v, 0));
+            } else if (strcmp(key, "facing") == 0) wgf_sprite_set_facing(actor, (wgf_sprite_facing_t)(int)v->n[0]);
             else wgf_sprite_set_tint(actor, v->colors[0]);
             break;
         case KIND + WGF_ACTOR_KIND_TEXT:
@@ -812,6 +826,7 @@ static void apply_setting(wgf_actor_t actor, int kind, const setting_t *s, value
             } else if (strcmp(key, "size") == 0) wgf_text_set_font_size(actor, f(v, 0));
             else if (strcmp(key, "color") == 0) wgf_text_set_color(actor, v->colors[0]);
             else if (strcmp(key, "wrap") == 0) wgf_text_set_wrap_width(actor, f(v, 0));
+            else if (strcmp(key, "facing") == 0) wgf_text_set_facing(actor, (wgf_sprite_facing_t)(int)v->n[0]);
             else wgf_text_set_align(actor, (wgf_text_halign_t)(int)v->n[0], (wgf_text_valign_t)(int)v->n[1]);
             break;
         case KIND + WGF_ACTOR_KIND_MODEL: { /* through a stage's hooks: no model was made without one */

@@ -137,6 +137,10 @@ static void dump_shape(out_t *out, wgf_actor_t actor)
     end_kind(out, actor);
 }
 
+/* The scene format's words for an alpha mode and a facing (wgf_ecs_scene.c's), in their enums' order. */
+static const char *const alpha_modes[] = {"opaque", "mask", "blend", "add"};
+static const char *const facings[] = {"camera", "camera-y", "up", "free"};
+
 static void dump_sprite(out_t *out, wgf_actor_t actor)
 {
     const wgf_vec4_t source = wgf_sprite_get_source(actor);
@@ -150,6 +154,11 @@ static void dump_sprite(out_t *out, wgf_actor_t actor)
     }
     put(out, " pivot=%.9g,%.9g", pivot.x, pivot.y);
     put_color(out, "tint", wgf_sprite_get_tint(actor));
+    if (wgf_sprite_get_alpha_mode(actor) != WGF_ALPHA_MODE_BLEND) {
+        put(out, " alpha=%s", alpha_modes[wgf_sprite_get_alpha_mode(actor)]);
+    }
+    if (wgf_sprite_get_alpha_mode(actor) == WGF_ALPHA_MODE_MASK) put(out, " cutoff=%.9g", wgf_sprite_get_alpha_cutoff(actor));
+    if (wgf_sprite_get_facing(actor) != WGF_SPRITE_FACING_CAMERA) put(out, " facing=%s", facings[wgf_sprite_get_facing(actor)]);
     end_kind(out, actor);
 }
 
@@ -163,6 +172,7 @@ static void dump_text(out_t *out, wgf_actor_t actor)
     put_color(out, "color", wgf_text_get_color(actor));
     put(out, " wrap=%.9g align=%s,%s", wgf_text_get_wrap_width(actor), across[wgf_text_get_halign(actor)],
         down[wgf_text_get_valign(actor)]);
+    if (wgf_text_get_facing(actor) != WGF_SPRITE_FACING_CAMERA) put(out, " facing=%s", facings[wgf_text_get_facing(actor)]);
     end_kind(out, actor);
 }
 
