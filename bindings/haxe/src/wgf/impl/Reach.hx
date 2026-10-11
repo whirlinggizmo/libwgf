@@ -621,6 +621,7 @@ class Reach {
 		"wgf_stage3d_set_tonemap",
 		"wgf_text_create",
 		"wgf_text_get_color",
+		"wgf_text_get_facing",
 		"wgf_text_get_font",
 		"wgf_text_get_font_size",
 		"wgf_text_get_halign",
@@ -629,6 +630,7 @@ class Reach {
 		"wgf_text_get_wrap_width",
 		"wgf_text_set_align",
 		"wgf_text_set_color",
+		"wgf_text_set_facing",
 		"wgf_text_set_font",
 		"wgf_text_set_font_size",
 		"wgf_text_set_string",
@@ -775,7 +777,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...766) 0];
+	static final counts:Array<Int> = [for (_ in 0...768) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

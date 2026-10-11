@@ -1465,6 +1465,10 @@ export const Text = Object.freeze({
     getHalign: raw.wgf_text_get_halign,
     // wgf: call wgf_text_get_valign
     getValign: raw.wgf_text_get_valign,
+    // wgf: call wgf_text_set_facing
+    setFacing: raw.wgf_text_set_facing,
+    // wgf: call wgf_text_get_facing
+    getFacing: raw.wgf_text_get_facing,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });

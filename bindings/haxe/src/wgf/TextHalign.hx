@@ -2,9 +2,11 @@
 package wgf;
 
 /**
-    A text actor: a string drawn in a font, on a 2D stage. Its actor's position is where its
+    A text actor: a string drawn in a font. On a 2D stage it is flat on the screen; on a 3D
+    stage it is a block in the world facing as it is told (wgf_text_set_facing), depth
+    tested, and sorted with the see-through things. Its actor's position is where its
     block of lines sits, by its alignment, and the actor turns and scales it like any
-    other. It holds a reference to its font (0: the default font). Text is a
+    other. It holds a reference to its font (0: the default font). Text is an
     actor (wgf_actor.h): place, parent, and destroy it with the actor calls.
 **/
 enum abstract TextHalign(Int) from Int to Int {

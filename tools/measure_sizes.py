@@ -76,7 +76,7 @@ ROWS = [
      'libwgf has no skinning yet: a gold torus in place of the animated character, and a generated sphere in place '
      'of the file\'s'),
     ('gfx-lights', None, 'lights', 'differs',
-     'libwgf has no skinning or 3D sprites yet: generated capsules in place of the animated characters, and no lit '
+     'libwgf has no skinning or lit sprites yet: generated capsules in place of the animated characters, and no lit '
      'billboards'),
     ('gfx-shadows', 'gfx-shadows', 'shadows', 'differs',
      'libwgf has no skinning or animation yet: the toy car in place of the walking character, and its readout fixed '
@@ -89,11 +89,13 @@ ROWS = [
      'fixed labels with no formatting'),
     ('gfx-textures', 'gfx-textures', 'textures', 'same', ''),
     ('gfx-sprite3d', 'gfx-sprite3d', 'sprite3d', 'same', ''),
+    ('gfx-text3d', 'gfx-text3d', 'text3d', 'differs',
+     'libwgf has no picking yet: the hover highlight and the cube made pickable or not are left out'),
     ('gfx-sprite2d', 'gfx-sprite2d', 'sprite2d', 'differs',
      'libwgf has no 3D and no alpha picking: the animated model behind the sprites, its lights, and picking are left out'),
     ('gfx-particles', 'gfx-particles', 'particles', 'same', ''),
     ('gfx-tilemap', 'gfx-tilemap', 'tilemap', 'differs',
-     'libwgf has no 3D sprites and no picking: a 2D stage and a 2D camera, coins hit-tested by hand'),
+     'libwgf has no picking: a 2D stage and a 2D camera (written before its 3D sprites), coins hit-tested by hand'),
     ('audio-music', 'audio-music', 'audio', 'same', ''),
     ('asset-fetch', None, 'fetch', 'same', ''),
     ('asset-force-fetch', None, 'force_fetch', 'same', ''),

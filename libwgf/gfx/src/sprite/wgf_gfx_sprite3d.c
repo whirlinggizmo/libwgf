@@ -45,6 +45,20 @@ static void own_axes(int facing, wgf_mat4_t world, wgf_vec3_t *right, wgf_vec3_t
     }
 }
 
+void wgf_gfx_priv_facing_axes(int facing, wgf_mat4_t world, const wgf_gfx_priv_sprite_view_t *view,
+                              wgf_vec3_t *right, wgf_vec3_t *up)
+{
+    if (facing == WGF_SPRITE_FACING_CAMERA) {
+        *right = view->right;
+        *up = view->up;
+    } else if (facing == WGF_SPRITE_FACING_CAMERA_FIXED_Y) {
+        *right = view->upright;
+        *up = wgf_vec3_make(0.0f, 1.0f, 0.0f);
+    } else {
+        own_axes(facing, world, right, up);
+    }
+}
+
 /* Its size in the stage: its own (1 by 1 unset), times its actor's scale. */
 static void world_size(const wgf_gfx_priv_sprite_t *sprite, wgf_mat4_t world, float *width, float *height)
 {

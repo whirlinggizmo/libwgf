@@ -32,7 +32,7 @@ static void shape3d_free(wgf_actor_t shape, wgf_gfx_priv_actor_t *actor_ptr)
     actor_ptr->as.shape3d.point_floats = 0;
 }
 
-static const wgf_gfx_priv_actor_kind_t actor_kind = {shape3d_free, NULL};
+static const wgf_gfx_priv_actor_kind_t actor_kind = {shape3d_free, NULL, NULL, NULL};
 
 wgf_actor_t wgf_shape3d_create(void)
 {

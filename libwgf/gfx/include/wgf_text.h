@@ -7,14 +7,17 @@
 #include "wgf_color.h"
 #include "wgf_font.h"
 #include "wgf_actor.h"
+#include "wgf_sprite.h" /* wgf_sprite_facing_t */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* A text actor: a string drawn in a font, on a 2D stage. Its actor's position is where its
+/* A text actor: a string drawn in a font. On a 2D stage it is flat on the screen; on a 3D
+ * stage it is a block in the world facing as it is told (wgf_text_set_facing), depth
+ * tested, and sorted with the see-through things. Its actor's position is where its
  * block of lines sits, by its alignment, and the actor turns and scales it like any
- * other. It holds a reference to its font (0: the default font). Text is a
+ * other. It holds a reference to its font (0: the default font). Text is an
  * actor (wgf_actor.h): place, parent, and destroy it with the actor calls. */
 
 typedef enum wgf_text_halign_t {
@@ -43,7 +46,8 @@ WGF_API bool wgf_text_set_string(wgf_actor_t text, const char *string);
 WGF_API const char *wgf_text_get_string(wgf_actor_t text);
 
 /* Its font size: the height of its lines, before the actor's scale, in stage units (a
- * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
+ * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16 on a 2D
+ * stage, 1 on a 3D one.
  * Read back as the size it draws at. False for a handle that isn't text. */
 WGF_API bool wgf_text_set_font_size(wgf_actor_t text, float size);
 WGF_API float wgf_text_get_font_size(wgf_actor_t text);
@@ -65,6 +69,12 @@ WGF_API bool wgf_text_set_align(wgf_actor_t text, wgf_text_halign_t horizontal,
                                       wgf_text_valign_t vertical);
 WGF_API wgf_text_halign_t wgf_text_get_halign(wgf_actor_t text);
 WGF_API wgf_text_valign_t wgf_text_get_valign(wgf_actor_t text);
+
+/* Which way its block faces on a 3D stage, as a sprite's (wgf_sprite.h): the camera (the
+ * default), the camera about Y, flat facing up, or its actor's turn. A 2D stage's text is
+ * flat on the screen whatever this says. False when `facing` isn't one. */
+WGF_API bool wgf_text_set_facing(wgf_actor_t text, wgf_sprite_facing_t facing);
+WGF_API wgf_sprite_facing_t wgf_text_get_facing(wgf_actor_t text);
 
 #ifdef __cplusplus
 }

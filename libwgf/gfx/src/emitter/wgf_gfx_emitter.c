@@ -972,8 +972,8 @@ static wgf_core_priv_part_t part = {.name = "particles",
                                     .flush = flush,
                                     .end_frame = end_frame,
                                     .stop = stop};
-static const wgf_gfx_priv_actor_kind_t kind_2d = {free_actor, draw_2d};
-static const wgf_gfx_priv_actor_kind_t kind_3d = {free_actor, NULL}; /* a 3D stage draws its own */
+static const wgf_gfx_priv_actor_kind_t kind_2d = {free_actor, draw_2d, NULL, NULL};
+static const wgf_gfx_priv_actor_kind_t kind_3d = {free_actor, NULL, NULL, NULL}; /* a 3D stage draws its own */
 
 /* The first emitter: particles join the frame, and freeing and drawing actors. */
 static void install(void)

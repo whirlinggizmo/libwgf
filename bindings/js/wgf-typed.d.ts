@@ -4417,13 +4417,15 @@ export declare const Text: {
     readonly getString: typeof raw.wgf_text_get_string;
     /**
      * Its font size: the height of its lines, before the actor's scale, in stage units (a
-     * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
+     * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16 on a 2D
+     * stage, 1 on a 3D one.
      * Read back as the size it draws at. False for a handle that isn't text.
      */
     readonly setFontSize: typeof raw.wgf_text_set_font_size;
     /**
      * Its font size: the height of its lines, before the actor's scale, in stage units (a
-     * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
+     * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16 on a 2D
+     * stage, 1 on a 3D one.
      * Read back as the size it draws at. False for a handle that isn't text.
      */
     readonly getFontSize: typeof raw.wgf_text_get_font_size;
@@ -4464,6 +4466,18 @@ export declare const Text: {
      * up the same way inside the block. False for a value that isn't one.
      */
     readonly getValign: typeof raw.wgf_text_get_valign;
+    /**
+     * Which way its block faces on a 3D stage, as a sprite's (wgf_sprite.h): the camera (the
+     * default), the camera about Y, flat facing up, or its actor's turn. A 2D stage's text is
+     * flat on the screen whatever this says. False when `facing` isn't one.
+     */
+    readonly setFacing: typeof raw.wgf_text_set_facing;
+    /**
+     * Which way its block faces on a 3D stage, as a sprite's (wgf_sprite.h): the camera (the
+     * default), the camera about Y, flat facing up, or its actor's turn. A 2D stage's text is
+     * flat on the screen whatever this says. False when `facing` isn't one.
+     */
+    readonly getFacing: typeof raw.wgf_text_get_facing;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };

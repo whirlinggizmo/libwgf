@@ -40,7 +40,8 @@ import wgf.impl.Raw;
 
 	/**
 	    Its font size: the height of its lines, before the actor's scale, in stage units (a
-	    font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
+	    font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16 on a 2D
+	    stage, 1 on a 3D one.
 	    Read back as the size it draws at. False for a handle that isn't text.
 	**/
 	public inline function setFontSize(size:Float):Bool
@@ -48,7 +49,8 @@ import wgf.impl.Raw;
 
 	/**
 	    Its font size: the height of its lines, before the actor's scale, in stage units (a
-	    font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
+	    font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16 on a 2D
+	    stage, 1 on a 3D one.
 	    Read back as the size it draws at. False for a handle that isn't text.
 	**/
 	public inline function getFontSize():Float
@@ -104,4 +106,20 @@ import wgf.impl.Raw;
 	**/
 	public inline function getValign():TextValign
 		return Raw.wgf_text_get_valign(this);
+
+	/**
+	    Which way its block faces on a 3D stage, as a sprite's (wgf_sprite.h): the camera (the
+	    default), the camera about Y, flat facing up, or its actor's turn. A 2D stage's text is
+	    flat on the screen whatever this says. False when `facing` isn't one.
+	**/
+	public inline function setFacing(facing:SpriteFacing):Bool
+		return Raw.wgf_text_set_facing(this, facing);
+
+	/**
+	    Which way its block faces on a 3D stage, as a sprite's (wgf_sprite.h): the camera (the
+	    default), the camera about Y, flat facing up, or its actor's turn. A 2D stage's text is
+	    flat on the screen whatever this says. False when `facing` isn't one.
+	**/
+	public inline function getFacing():SpriteFacing
+		return Raw.wgf_text_get_facing(this);
 }

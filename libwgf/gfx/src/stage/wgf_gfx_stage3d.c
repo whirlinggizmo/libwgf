@@ -64,6 +64,7 @@ typedef struct item_t {
     int particles;   /* an emitter's draw (the particles part's); -1, a model's part */
     int sprite;      /* a see-through sprite's, into the frame's sprites, until it is recorded; -1 none */
     int sprite_batch, sprite_batches; /* sprites: their first batch and how many (0: in the one before) */
+    int text;        /* a text's: its index into the draw's texts until recorded, then its side layer; -1 none */
     int record;      /* a model part's, in the instance texture: model parts numbered in drawing order */
     bool mirrored;   /* its placement turns its triangles' winding (a negative determinant) */
     float depth;     /* along the camera's view, for the sort */
@@ -95,6 +96,12 @@ typedef struct stage_draw_t {
     float background_intensity, background_rotation, background_blur;
 } stage_draw_t;
 
+/* A text waiting for the sort: what its side layer is recorded from. */
+typedef struct text_record_t {
+    wgf_actor_t actor;
+    wgf_mat4_t plane;
+} text_record_t;
+
 /* A see-through sprite waiting for the sort: what it records into the batch. */
 typedef struct sprite_record_t {
     wgf_gfx_priv_sprite_quad_t quad;
@@ -106,6 +113,8 @@ typedef struct sprite_record_t {
 static struct {
     item_t *items;
     int item_count, item_capacity;
+    text_record_t *texts; /* a draw's texts, for the sort */
+    int text_count, text_capacity;
     sprite_record_t *sprites; /* a draw's see-through sprites, for the sort */
     int sprite_count, sprite_capacity;
     stage_draw_t *draws;
@@ -215,6 +224,7 @@ static void stop(void)
     free(frame.lights);
     free(frame.todo);
     free(frame.sprites);
+    free(frame.texts);
     free(sorting.keys);
     free(sorting.moved);
     memset(&sorting, 0, sizeof(sorting));
@@ -266,7 +276,7 @@ static void stage_free(wgf_actor_t stage, wgf_gfx_priv_actor_t *actor_ptr)
     if (actor_ptr->as.stage3d.background != 0) wgf_resource_release(actor_ptr->as.stage3d.background);
 }
 
-static const wgf_gfx_priv_actor_kind_t actor_kind = {stage_free, NULL};
+static const wgf_gfx_priv_actor_kind_t actor_kind = {stage_free, NULL, NULL, NULL};
 
 wgf_actor_t wgf_stage3d_create(void)
 {
@@ -594,6 +604,7 @@ static bool same_group(const item_t *a, const item_t *b)
     group_key_t ka, kb;
     if (a->particles >= 0 || b->particles >= 0) return false; /* an emitter's draw is its own */
     if (a->sprite >= 0 || b->sprite >= 0 || a->sprite_batch >= 0 || b->sprite_batch >= 0) return false; /* sprites' */
+    if (a->text >= 0 || b->text >= 0) return false; /* a text's layer is its own */
     item_key(a, &ka);
     item_key(b, &kb);
     return memcmp(&ka, &kb, sizeof(ka)) == 0;
@@ -651,7 +662,7 @@ static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
         if (material == NULL) continue; /* a slot with none draws nothing */
         item->world = *world;
         item->particles = -1;
-        item->sprite = item->sprite_batch = -1;
+        item->sprite = item->sprite_batch = item->text = -1;
         item->sprite_batches = 0;
         item->additive = false;
         item->mirrored = wgf_mat4_determinant(*world) < 0.0f;
@@ -696,7 +707,7 @@ static void visit_emitter(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_p
     memset(item, 0, sizeof(*item));
     item->world = wgf_mat4_identity(); /* its record goes unread */
     item->particles = index;
-    item->sprite = item->sprite_batch = -1;
+    item->sprite = item->sprite_batch = item->text = -1;
     item->blended = mode == WGF_ALPHA_MODE_BLEND || mode == WGF_ALPHA_MODE_ADD;
     item->additive = mode == WGF_ALPHA_MODE_ADD;
     item->depth = wgf_vec3_dot(wgf_vec3_sub(wgf_mat4_get_translation(*world), w->eye), w->forward);
@@ -713,7 +724,7 @@ static item_t *new_item(void)
     item = &frame.items[frame.item_count];
     memset(item, 0, sizeof(*item));
     item->world = wgf_mat4_identity(); /* its record goes unread */
-    item->particles = item->sprite = item->sprite_batch = -1;
+    item->particles = item->sprite = item->sprite_batch = item->text = -1;
     return item;
 }
 
@@ -878,6 +889,63 @@ static void sort_items(int first, int count)
     memcpy(&frame.items[first], sorting.moved, sizeof(item_t) * (size_t)count);
 }
 
+/* A text on the stage (its kind's place_3d, wgf_gfx_text.c), culled by the box around its
+ * block: always a see-through item (its glyphs' edges blend), sorted by where it is. libwgt's. */
+static void visit_text(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *world, void *user)
+{
+    const walk_models_t *w = (const walk_models_t *)user;
+    const wgf_gfx_priv_actor_kind_t *kind;
+    stage_draw_t *draw = &frame.draws[frame.draw_count];
+    wgf_mat4_t plane;
+    wgf_vec3_t corners[4], lo, hi;
+    item_t *item;
+    int k;
+    if (actor_ptr->type != WGF_ACTOR_KIND_TEXT) return;
+    kind = wgf_gfx_priv_actor_get_kind(WGF_ACTOR_KIND_TEXT); /* set: there is text */
+    if (kind == NULL || kind->place_3d == NULL || !kind->place_3d(actor_ptr, *world, &w->sprite_view, &plane, corners)) {
+        return;
+    }
+    lo = hi = corners[0];
+    for (k = 1; k < 4; k++) {
+        lo = wgf_vec3_make(fminf(lo.x, corners[k].x), fminf(lo.y, corners[k].y), fminf(lo.z, corners[k].z));
+        hi = wgf_vec3_make(fmaxf(hi.x, corners[k].x), fmaxf(hi.y, corners[k].y), fmaxf(hi.z, corners[k].z));
+    }
+    if (w->culling && outside((const float(*)[4])w->planes, lo, hi)) return;
+    if (!grow((void **)&frame.texts, &frame.text_capacity, frame.text_count + 1, sizeof(text_record_t))) return;
+    item = new_item();
+    if (item == NULL) return;
+    frame.texts[frame.text_count].actor = actor;
+    frame.texts[frame.text_count].plane = plane;
+    item->text = frame.text_count++;
+    item->blended = true;
+    item->depth = wgf_vec3_dot(wgf_vec3_sub(wgf_mat4_get_translation(*world), w->eye), w->forward);
+    item->order = frame.item_count - draw->first;
+    item->group = (uint64_t)item->order; /* alone */
+    frame.item_count++;
+}
+
+/* Each sorted text's glyphs into a side layer of its own, through the draw's camera, the
+ * layer drawn in its place among the see-through items. */
+static void record_texts(stage_draw_t *draw)
+{
+    const wgf_gfx_priv_actor_kind_t *kind = wgf_gfx_priv_actor_get_kind(WGF_ACTOR_KIND_TEXT);
+    int i;
+    for (i = draw->first; i < draw->first + draw->count; i++) {
+        item_t *item = &frame.items[i];
+        const text_record_t *text;
+        const wgf_gfx_priv_actor_t *actor_ptr;
+        if (item->text < 0) continue;
+        text = &frame.texts[item->text];
+        actor_ptr = wgf_gfx_priv_actor_of(text->actor);
+        item->text = -1;
+        if (actor_ptr == NULL || kind == NULL || kind->draw_3d == NULL) continue;
+        item->text = wgf_gfx_priv_render_begin_side_layer(draw->view_proj.m);
+        if (item->text < 0) continue;
+        kind->draw_3d(actor_ptr, &text->plane);
+        wgf_gfx_priv_render_end_side_layer();
+    }
+}
+
 static void replay(int index);
 
 void wgf_stage3d_draw(wgf_actor_t stage)
@@ -955,6 +1023,8 @@ void wgf_stage3d_draw(wgf_actor_t stage)
         sprite_pass_item(false, w.sprite_camera);
         sprite_pass_item(true, w.sprite_camera);
     }
+    frame.text_count = 0;
+    walk(stage, visit_text, &w);
     draw = &frame.draws[frame.draw_count];
     draw->count = frame.item_count - draw->first;
     sort_items(draw->first, draw->count);
@@ -962,6 +1032,7 @@ void wgf_stage3d_draw(wgf_actor_t stage)
     walk(stage, visit_shape, NULL); /* immediate mode: they move nothing in the pool */
     draw = &frame.draws[frame.draw_count];
     if (draw->shapes >= 0) wgf_gfx_priv_render_end_side_layer();
+    if (frame.text_count > 0) record_texts(draw);
     if (wgf_gfx_priv_render_add_command(replay, frame.draw_count)) frame.draw_count++;
 }
 
@@ -1226,6 +1297,12 @@ static void draw_items(const stage_draw_t *draw, int i, int end, bool lit, const
         int last = i;
         if (frame.items[i].particles >= 0) { /* an emitter's, through the same viewport */
             particle_hooks.draw(frame.items[i].particles); /* set: there is an emitter */
+            i++;
+            continue;
+        }
+        if (frame.items[i].text >= 0) { /* a text's side layer, through the same viewport */
+            wgf_gfx_priv_render_draw_side_layer(frame.items[i].text);
+            sg_apply_viewport(draw->viewport[0], draw->viewport[1], draw->viewport[2], draw->viewport[3], true);
             i++;
             continue;
         }

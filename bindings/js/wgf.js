@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "fa637b37c3defbaf" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "b81f7f9335b9c667" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -605,20 +605,6 @@ export const WGF_COLOR_STOCK_MAGENTA = 24;
 export const WGF_COLOR_STOCK_RAYWHITE = 25;
 
 /**
- * A text actor: a string drawn in a font, on a 2D stage. Its actor's position is where its
- * block of lines sits, by its alignment, and the actor turns and scales it like any
- * other. It holds a reference to its font (0: the default font). Text is a
- * actor (wgf_actor.h): place, parent, and destroy it with the actor calls.
- */
-export const WGF_TEXT_HALIGN_LEFT = 0;
-export const WGF_TEXT_HALIGN_CENTER = 1;
-export const WGF_TEXT_HALIGN_RIGHT = 2;
-
-export const WGF_TEXT_VALIGN_TOP = 0;
-export const WGF_TEXT_VALIGN_MIDDLE = 1;
-export const WGF_TEXT_VALIGN_BOTTOM = 2;
-
-/**
  * How a texture is sampled where it is drawn.
  */
 export const WGF_TEXTURE_WRAP_REPEAT = 0;
@@ -640,6 +626,31 @@ export const WGF_ALPHA_MODE_OPAQUE = 0;
 export const WGF_ALPHA_MODE_MASK = 1;
 export const WGF_ALPHA_MODE_BLEND = 2;
 export const WGF_ALPHA_MODE_ADD = 3;
+
+/**
+ * How a sprite on a 3D stage faces, libwgt's and wgrender-c's (on a 2D stage it lies in
+ * the stage, turned by its actor):
+ */
+export const WGF_SPRITE_FACING_CAMERA = 0;
+export const WGF_SPRITE_FACING_CAMERA_FIXED_Y = 1;
+export const WGF_SPRITE_FACING_Y_UP = 2;
+export const WGF_SPRITE_FACING_FREE = 3;
+
+/**
+ * A text actor: a string drawn in a font. On a 2D stage it is flat on the screen; on a 3D
+ * stage it is a block in the world facing as it is told (wgf_text_set_facing), depth
+ * tested, and sorted with the see-through things. Its actor's position is where its
+ * block of lines sits, by its alignment, and the actor turns and scales it like any
+ * other. It holds a reference to its font (0: the default font). Text is an
+ * actor (wgf_actor.h): place, parent, and destroy it with the actor calls.
+ */
+export const WGF_TEXT_HALIGN_LEFT = 0;
+export const WGF_TEXT_HALIGN_CENTER = 1;
+export const WGF_TEXT_HALIGN_RIGHT = 2;
+
+export const WGF_TEXT_VALIGN_TOP = 0;
+export const WGF_TEXT_VALIGN_MIDDLE = 1;
+export const WGF_TEXT_VALIGN_BOTTOM = 2;
 
 /**
  * A light: an actor that lights the stage it is on (wgf_stage3d.h), placed and aimed with
@@ -728,15 +739,6 @@ export const WGF_SHAPE3D_KIND_RECTANGLE = 3;
 export const WGF_SHAPE3D_KIND_CIRCLE = 4;
 export const WGF_SHAPE3D_KIND_LINE = 5;
 export const WGF_SHAPE3D_KIND_LINE_STRIP = 6;
-
-/**
- * How a sprite on a 3D stage faces, libwgt's and wgrender-c's (on a 2D stage it lies in
- * the stage, turned by its actor):
- */
-export const WGF_SPRITE_FACING_CAMERA = 0;
-export const WGF_SPRITE_FACING_CAMERA_FIXED_Y = 1;
-export const WGF_SPRITE_FACING_Y_UP = 2;
-export const WGF_SPRITE_FACING_FREE = 3;
 
 /**
  * How a stage's lit colors map to the screen. Lighting can exceed what a screen shows;
@@ -3906,150 +3908,6 @@ export function wgf_font_measure(font, text, size, into) {
     return vector(ret, 2, into);
 }
 
-// wgf: call wgf_text_create
-/**
- * A text actor in `font` (0: the default font), with no string yet. 0 when `font`
- * isn't a font, or there is no room for another actor.
- */
-export function wgf_text_create(font) {
-    const value = host["_wgf_text_create"](font);
-    return value >>> 0;
-}
-
-// wgf: call wgf_text_set_font
-/**
- * False when `font` isn't a font (0 is: the default font).
- */
-export function wgf_text_set_font(text, font) {
-    const value = host["_wgf_text_set_font"](text, font);
-    return value !== 0;
-}
-
-// wgf: call wgf_text_get_font
-/**
- * False when `font` isn't a font (0 is: the default font).
- */
-export function wgf_text_get_font(text) {
-    const value = host["_wgf_text_get_font"](text);
-    return value >>> 0;
-}
-
-// wgf: call wgf_text_set_string
-/**
- * What it says, UTF-8, copied. get_string's is the actor's: valid until the next
- * set_string, or until it is destroyed.
- */
-export function wgf_text_set_string(text, string) {
-    const mark = host["stackSave"]();
-    const value = host["_wgf_text_set_string"](text, cstr(string));
-    host["stackRestore"](mark);
-    return value !== 0;
-}
-
-// wgf: call wgf_text_get_string
-/**
- * What it says, UTF-8, copied. get_string's is the actor's: valid until the next
- * set_string, or until it is destroyed.
- */
-export function wgf_text_get_string(text) {
-    const value = host["_wgf_text_get_string"](text);
-    return str(value);
-}
-
-// wgf: call wgf_text_set_font_size
-/**
- * Its font size: the height of its lines, before the actor's scale, in stage units (a
- * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
- * Read back as the size it draws at. False for a handle that isn't text.
- */
-export function wgf_text_set_font_size(text, size) {
-    const value = host["_wgf_text_set_font_size"](text, size);
-    return value !== 0;
-}
-
-// wgf: call wgf_text_get_font_size
-/**
- * Its font size: the height of its lines, before the actor's scale, in stage units (a
- * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
- * Read back as the size it draws at. False for a handle that isn't text.
- */
-export function wgf_text_get_font_size(text) {
-    const value = host["_wgf_text_get_font_size"](text);
-    return value;
-}
-
-// wgf: call wgf_text_set_color
-/**
- * Default: white.
- */
-export function wgf_text_set_color(text, color) {
-    const value = host["_wgf_text_set_color"](text, color);
-    return value !== 0;
-}
-
-// wgf: call wgf_text_get_color
-/**
- * Default: white.
- */
-export function wgf_text_get_color(text) {
-    const value = host["_wgf_text_get_color"](text);
-    return value >>> 0;
-}
-
-// wgf: call wgf_text_set_wrap_width
-/**
- * Wrap lines at spaces and tabs to fit `width`, in stage units; a word wider keeps
- * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
- * wrapped block is `width` wide for its alignment, or as wide as its widest line
- * where a word is wider. False for less than 0.
- */
-export function wgf_text_set_wrap_width(text, width) {
-    const value = host["_wgf_text_set_wrap_width"](text, width);
-    return value !== 0;
-}
-
-// wgf: call wgf_text_get_wrap_width
-/**
- * Wrap lines at spaces and tabs to fit `width`, in stage units; a word wider keeps
- * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
- * wrapped block is `width` wide for its alignment, or as wide as its widest line
- * where a word is wider. False for less than 0.
- */
-export function wgf_text_get_wrap_width(text) {
-    const value = host["_wgf_text_get_wrap_width"](text);
-    return value;
-}
-
-// wgf: call wgf_text_set_align
-/**
- * Where the block sits relative to the actor's position, on each axis; lines line
- * up the same way inside the block. False for a value that isn't one.
- */
-export function wgf_text_set_align(text, horizontal, vertical) {
-    const value = host["_wgf_text_set_align"](text, horizontal, vertical);
-    return value !== 0;
-}
-
-// wgf: call wgf_text_get_halign
-/**
- * Where the block sits relative to the actor's position, on each axis; lines line
- * up the same way inside the block. False for a value that isn't one.
- */
-export function wgf_text_get_halign(text) {
-    const value = host["_wgf_text_get_halign"](text);
-    return value;
-}
-
-// wgf: call wgf_text_get_valign
-/**
- * Where the block sits relative to the actor's position, on each axis; lines line
- * up the same way inside the block. False for a value that isn't one.
- */
-export function wgf_text_get_valign(text) {
-    const value = host["_wgf_text_get_valign"](text);
-    return value;
-}
-
 // wgf: call wgf_texture_create
 /**
  * A texture from an image file: PNG, JPEG, BMP, TGA, or GIF (its first frame), or a
@@ -4130,278 +3988,6 @@ export function wgf_texture_get_wrap_v(texture) {
 export function wgf_texture_get_filter(texture) {
     const value = host["_wgf_texture_get_filter"](texture);
     return value;
-}
-
-// wgf: call wgf_draw_rectangle
-/**
- * Immediate mode 2D: each call draws once, in the frame it is made in, in call order
- * with everything else drawn that frame, and keeps nothing. Logical pixels from the
- * frame's top-left, y down (wgf_render.h). A draw outside a frame draws nothing.
- *
- * Outlines and lines have a thickness in logical pixels, centered on the line; one
- * of 0 or less is a hairline of one logical pixel. A polyline's corners are mitred,
- * and bevelled where a sharp corner's miter would reach past four thicknesses.
- */
-export function wgf_draw_rectangle(x, y, width, height, color) {
-    host["_wgf_draw_rectangle"](x, y, width, height, color);
-}
-
-// wgf: call wgf_draw_rectangle_lines
-/**
- * Immediate mode 2D: each call draws once, in the frame it is made in, in call order
- * with everything else drawn that frame, and keeps nothing. Logical pixels from the
- * frame's top-left, y down (wgf_render.h). A draw outside a frame draws nothing.
- *
- * Outlines and lines have a thickness in logical pixels, centered on the line; one
- * of 0 or less is a hairline of one logical pixel. A polyline's corners are mitred,
- * and bevelled where a sharp corner's miter would reach past four thicknesses.
- */
-export function wgf_draw_rectangle_lines(x, y, width, height, thickness, color) {
-    host["_wgf_draw_rectangle_lines"](x, y, width, height, thickness, color);
-}
-
-// wgf: call wgf_draw_line
-/**
- * Immediate mode 2D: each call draws once, in the frame it is made in, in call order
- * with everything else drawn that frame, and keeps nothing. Logical pixels from the
- * frame's top-left, y down (wgf_render.h). A draw outside a frame draws nothing.
- *
- * Outlines and lines have a thickness in logical pixels, centered on the line; one
- * of 0 or less is a hairline of one logical pixel. A polyline's corners are mitred,
- * and bevelled where a sharp corner's miter would reach past four thicknesses.
- */
-export function wgf_draw_line(x0, y0, x1, y1, thickness, color) {
-    host["_wgf_draw_line"](x0, y0, x1, y1, thickness, color);
-}
-
-// wgf: call wgf_draw_circle
-/**
- * Circles are drawn with enough segments for their size on screen.
- */
-export function wgf_draw_circle(center_x, center_y, radius, color) {
-    host["_wgf_draw_circle"](center_x, center_y, radius, color);
-}
-
-// wgf: call wgf_draw_circle_lines
-/**
- * Circles are drawn with enough segments for their size on screen.
- */
-export function wgf_draw_circle_lines(center_x, center_y, radius, thickness, color) {
-    host["_wgf_draw_circle_lines"](center_x, center_y, radius, thickness, color);
-}
-
-// wgf: call wgf_draw_triangle
-/**
- * Circles are drawn with enough segments for their size on screen.
- */
-export function wgf_draw_triangle(x0, y0, x1, y1, x2, y2, color) {
-    host["_wgf_draw_triangle"](x0, y0, x1, y1, x2, y2, color);
-}
-
-// wgf: call wgf_draw_polyline
-/**
- * Lines through `points`, x and y in turn (count floats: count / 2 points), the last
- * joined to the first when `closed`. False, drawing nothing, for an odd count, fewer
- * than 2 points, or NULL.
- */
-export function wgf_draw_polyline(points, closed, thickness, color) {
-    const pointsPointer = arrayIn(points, 0, "HEAPF32");
-    const value = host["_wgf_draw_polyline"](pointsPointer, lengthOf(points), (closed ? 1 : 0), thickness, color);
-    return value !== 0;
-}
-
-// wgf: call wgf_draw_polygon
-/**
- * The polygon through `points` filled, x and y in turn (count floats), convex or not,
- * in either winding, as long as its edges don't cross (one that crosses itself is
- * filled as the fan from its first point). False, drawing nothing, for an odd count,
- * fewer than 3 points, or NULL.
- */
-export function wgf_draw_polygon(points, color) {
-    const pointsPointer = arrayIn(points, 0, "HEAPF32");
-    const value = host["_wgf_draw_polygon"](pointsPointer, lengthOf(points), color);
-    return value !== 0;
-}
-
-// wgf: call wgf_draw_text
-/**
- * Text (UTF-8) in `font` (0: the default font) at `size` logical pixels (16 for 0 or
- * less), its top-left at (x, y). Newlines break lines.
- */
-export function wgf_draw_text(font, text, x, y, size, color) {
-    const mark = host["stackSave"]();
-    host["_wgf_draw_text"](font, cstr(text), x, y, size, color);
-    host["stackRestore"](mark);
-}
-
-// wgf: call wgf_draw_text_aligned
-/**
- * The same, (x, y) the point the text is aligned to: its left, center, or right, and its
- * top, middle, or bottom (wgf_text.h's alignments), so a HUD anchored to the visible
- * area's right edge (wgf_presentation_get_visible) needs no guessed width.
- */
-export function wgf_draw_text_aligned(font, text, x, y, size, color, horizontal, vertical) {
-    const mark = host["stackSave"]();
-    host["_wgf_draw_text_aligned"](font, cstr(text), x, y, size, color, horizontal, vertical);
-    host["stackRestore"](mark);
-}
-
-// wgf: call wgf_draw_texture
-/**
- * A texture into the rectangle (x, y, width, height), multiplied by `tint` (white
- * leaves it as it is). A width or height of 0 or less draws it at its own size.
- * Nothing while it is PENDING; the placeholder checker once it has FAILED.
- */
-export function wgf_draw_texture(texture, x, y, width, height, tint) {
-    host["_wgf_draw_texture"](texture, x, y, width, height, tint);
-}
-
-// wgf: call wgf_draw_texture_region
-/**
- * A region of a texture, in its pixels from the top-left (a source width or height of
- * 0 or less: the whole texture), into the rectangle (x, y, width, height), as an icon
- * is cut from an atlas. A width or height of 0 or less draws it at the region's own
- * size. The placeholder fills the rectangle once the texture has FAILED.
- */
-export function wgf_draw_texture_region(texture, source_x, source_y, source_width, source_height, x, y, width, height, tint) {
-    host["_wgf_draw_texture_region"](texture, source_x, source_y, source_width, source_height, x, y, width, height, tint);
-}
-
-// wgf: call wgf_draw_begin_3d
-/**
- * 3D: between begin_3d and end_3d, the 3D calls draw in the world as `camera` (a 3D
- * camera, wgf_camera3d.h) sees it, into the presentation's visible area, depth tested
- * against each other and against the frame's 3D before them, and under the clip. False
- * when `camera` isn't a 3D camera, or outside a frame. A 3D call outside them draws
- * nothing; a frame starts in 2D, and one left in 3D ends there. A 2D call between them
- * lands in the world's x-y plane, as wgrender's did.
- */
-export function wgf_draw_begin_3d(camera) {
-    const value = host["_wgf_draw_begin_3d"](camera);
-    return value !== 0;
-}
-
-// wgf: call wgf_draw_end_3d
-/**
- * 3D: between begin_3d and end_3d, the 3D calls draw in the world as `camera` (a 3D
- * camera, wgf_camera3d.h) sees it, into the presentation's visible area, depth tested
- * against each other and against the frame's 3D before them, and under the clip. False
- * when `camera` isn't a 3D camera, or outside a frame. A 3D call outside them draws
- * nothing; a frame starts in 2D, and one left in 3D ends there. A 2D call between them
- * lands in the world's x-y plane, as wgrender's did.
- */
-export function wgf_draw_end_3d() {
-    host["_wgf_draw_end_3d"]();
-}
-
-// wgf: call wgf_draw_line_3d
-/**
- * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
- * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
- * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
- * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
- * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * actor's rotation turns it. A color with alpha below 255 is blended over what is
- * behind it, in the order drawn.
- */
-export function wgf_draw_line_3d(x0, y0, z0, x1, y1, z1, color) {
-    host["_wgf_draw_line_3d"](x0, y0, z0, x1, y1, z1, color);
-}
-
-// wgf: call wgf_draw_cube
-/**
- * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
- * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
- * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
- * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
- * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * actor's rotation turns it. A color with alpha below 255 is blended over what is
- * behind it, in the order drawn.
- */
-export function wgf_draw_cube(cx, cy, cz, width, height, length, color) {
-    host["_wgf_draw_cube"](cx, cy, cz, width, height, length, color);
-}
-
-// wgf: call wgf_draw_cube_wires
-/**
- * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
- * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
- * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
- * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
- * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * actor's rotation turns it. A color with alpha below 255 is blended over what is
- * behind it, in the order drawn.
- */
-export function wgf_draw_cube_wires(cx, cy, cz, width, height, length, color) {
-    host["_wgf_draw_cube_wires"](cx, cy, cz, width, height, length, color);
-}
-
-// wgf: call wgf_draw_sphere
-/**
- * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
- * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
- * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
- * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
- * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * actor's rotation turns it. A color with alpha below 255 is blended over what is
- * behind it, in the order drawn.
- */
-export function wgf_draw_sphere(cx, cy, cz, radius, color) {
-    host["_wgf_draw_sphere"](cx, cy, cz, radius, color);
-}
-
-// wgf: call wgf_draw_grid
-/**
- * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
- * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
- * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
- * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
- * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * actor's rotation turns it. A color with alpha below 255 is blended over what is
- * behind it, in the order drawn.
- */
-export function wgf_draw_grid(slices, spacing, color) {
-    host["_wgf_draw_grid"](slices, spacing, color);
-}
-
-// wgf: call wgf_draw_rectangle_3d
-/**
- * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
- * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
- * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
- * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
- * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * actor's rotation turns it. A color with alpha below 255 is blended over what is
- * behind it, in the order drawn.
- */
-export function wgf_draw_rectangle_3d(cx, cy, cz, width, height, rx, ry, rz, color) {
-    host["_wgf_draw_rectangle_3d"](cx, cy, cz, width, height, rx, ry, rz, color);
-}
-
-// wgf: call wgf_draw_circle_3d
-/**
- * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
- * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
- * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
- * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
- * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * actor's rotation turns it. A color with alpha below 255 is blended over what is
- * behind it, in the order drawn.
- */
-export function wgf_draw_circle_3d(cx, cy, cz, radius, rx, ry, rz, color) {
-    host["_wgf_draw_circle_3d"](cx, cy, cz, radius, rx, ry, rz, color);
-}
-
-// wgf: call wgf_draw_text_3d
-/**
- * Text in the world: a block centered on (x, y, z), facing the camera, its lines `size`
- * world units tall (1 for 0 or less), in `font` (0: the default font), depth tested
- * and not hiding what is drawn behind it after it. wgrender's wgr_text_draw_3d.
- */
-export function wgf_draw_text_3d(font, text, x, y, z, size, color) {
-    const mark = host["stackSave"]();
-    host["_wgf_draw_text_3d"](font, cstr(text), x, y, z, size, color);
-    host["stackRestore"](mark);
 }
 
 // wgf: call wgf_material_create
@@ -4698,6 +4284,619 @@ export function wgf_material_get_texture_filter(material, name) {
     const value = host["_wgf_material_get_texture_filter"](material, cstr(name));
     host["stackRestore"](mark);
     return value;
+}
+
+// wgf: call wgf_sprite_create
+/**
+ * A sprite of `texture` (0 for none: it draws nothing). 0 when there is no room for
+ * another actor.
+ */
+export function wgf_sprite_create(texture) {
+    const value = host["_wgf_sprite_create"](texture);
+    return value >>> 0;
+}
+
+// wgf: call wgf_sprite_set_texture
+/**
+ * False for a handle that isn't a sprite, or a texture that isn't one (0 is none).
+ */
+export function wgf_sprite_set_texture(sprite, texture) {
+    const value = host["_wgf_sprite_set_texture"](sprite, texture);
+    return value !== 0;
+}
+
+// wgf: call wgf_sprite_get_texture
+/**
+ * False for a handle that isn't a sprite, or a texture that isn't one (0 is none).
+ */
+export function wgf_sprite_get_texture(sprite) {
+    const value = host["_wgf_sprite_get_texture"](sprite);
+    return value >>> 0;
+}
+
+// wgf: call wgf_sprite_set_source
+/**
+ * The region of the texture shown, in its pixels from the top-left; a width or height
+ * of 0 or less (the default) shows the whole texture. False for a handle that isn't a
+ * sprite. Read back as x, y, width, height.
+ */
+export function wgf_sprite_set_source(sprite, x, y, width, height) {
+    const value = host["_wgf_sprite_set_source"](sprite, x, y, width, height);
+    return value !== 0;
+}
+
+// wgf: call wgf_sprite_get_source
+/**
+ * The region of the texture shown, in its pixels from the top-left; a width or height
+ * of 0 or less (the default) shows the whole texture. False for a handle that isn't a
+ * sprite. Read back as x, y, width, height.
+ */
+export function wgf_sprite_get_source(sprite, into) {
+    const ret = result(16);
+    host["_wgf_sprite_get_source"](ret, sprite);
+    return vector(ret, 4, into);
+}
+
+// wgf: call wgf_sprite_set_size
+/**
+ * Its size in its own units; a width or height of 0 or less (the default) is the
+ * region's size in pixels on a 2D stage (1 by 1 on a 3D one). get_size is the size it draws at: what was set, or else
+ * the region's (0, 0 while its texture isn't READY and no size is set). False for a
+ * handle that isn't a sprite.
+ */
+export function wgf_sprite_set_size(sprite, width, height) {
+    const value = host["_wgf_sprite_set_size"](sprite, width, height);
+    return value !== 0;
+}
+
+// wgf: call wgf_sprite_get_size
+/**
+ * Its size in its own units; a width or height of 0 or less (the default) is the
+ * region's size in pixels on a 2D stage (1 by 1 on a 3D one). get_size is the size it draws at: what was set, or else
+ * the region's (0, 0 while its texture isn't READY and no size is set). False for a
+ * handle that isn't a sprite.
+ */
+export function wgf_sprite_get_size(sprite, into) {
+    const ret = result(8);
+    host["_wgf_sprite_get_size"](ret, sprite);
+    return vector(ret, 2, into);
+}
+
+// wgf: call wgf_sprite_set_pivot
+/**
+ * The point of the sprite at its actor's position, which it turns and scales about, as
+ * a fraction of its size: 0.5, 0.5 its center (the default), 0, 0 its top-left. False
+ * for a handle that isn't a sprite.
+ */
+export function wgf_sprite_set_pivot(sprite, x, y) {
+    const value = host["_wgf_sprite_set_pivot"](sprite, x, y);
+    return value !== 0;
+}
+
+// wgf: call wgf_sprite_get_pivot
+/**
+ * The point of the sprite at its actor's position, which it turns and scales about, as
+ * a fraction of its size: 0.5, 0.5 its center (the default), 0, 0 its top-left. False
+ * for a handle that isn't a sprite.
+ */
+export function wgf_sprite_get_pivot(sprite, into) {
+    const ret = result(8);
+    host["_wgf_sprite_get_pivot"](ret, sprite);
+    return vector(ret, 2, into);
+}
+
+// wgf: call wgf_sprite_set_tint
+/**
+ * What its texels are multiplied by; white (the default) leaves them as they are. False
+ * for a handle that isn't a sprite.
+ */
+export function wgf_sprite_set_tint(sprite, tint) {
+    const value = host["_wgf_sprite_set_tint"](sprite, tint);
+    return value !== 0;
+}
+
+// wgf: call wgf_sprite_get_tint
+/**
+ * What its texels are multiplied by; white (the default) leaves them as they are. False
+ * for a handle that isn't a sprite.
+ */
+export function wgf_sprite_get_tint(sprite) {
+    const value = host["_wgf_sprite_get_tint"](sprite);
+    return value >>> 0;
+}
+
+// wgf: call wgf_sprite_set_alpha_mode
+/**
+ * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
+ * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
+ * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
+ * isn't a sprite, or a mode that isn't one.
+ */
+export function wgf_sprite_set_alpha_mode(sprite, mode, cutoff) {
+    const value = host["_wgf_sprite_set_alpha_mode"](sprite, mode, cutoff);
+    return value !== 0;
+}
+
+// wgf: call wgf_sprite_get_alpha_mode
+/**
+ * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
+ * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
+ * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
+ * isn't a sprite, or a mode that isn't one.
+ */
+export function wgf_sprite_get_alpha_mode(sprite) {
+    const value = host["_wgf_sprite_get_alpha_mode"](sprite);
+    return value;
+}
+
+// wgf: call wgf_sprite_get_alpha_cutoff
+/**
+ * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
+ * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
+ * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
+ * isn't a sprite, or a mode that isn't one.
+ */
+export function wgf_sprite_get_alpha_cutoff(sprite) {
+    const value = host["_wgf_sprite_get_alpha_cutoff"](sprite);
+    return value;
+}
+
+// wgf: call wgf_sprite_set_facing
+/**
+ * Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
+ */
+export function wgf_sprite_set_facing(sprite, facing) {
+    const value = host["_wgf_sprite_set_facing"](sprite, facing);
+    return value !== 0;
+}
+
+// wgf: call wgf_sprite_get_facing
+/**
+ * Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
+ */
+export function wgf_sprite_get_facing(sprite) {
+    const value = host["_wgf_sprite_get_facing"](sprite);
+    return value;
+}
+
+// wgf: call wgf_text_create
+/**
+ * A text actor in `font` (0: the default font), with no string yet. 0 when `font`
+ * isn't a font, or there is no room for another actor.
+ */
+export function wgf_text_create(font) {
+    const value = host["_wgf_text_create"](font);
+    return value >>> 0;
+}
+
+// wgf: call wgf_text_set_font
+/**
+ * False when `font` isn't a font (0 is: the default font).
+ */
+export function wgf_text_set_font(text, font) {
+    const value = host["_wgf_text_set_font"](text, font);
+    return value !== 0;
+}
+
+// wgf: call wgf_text_get_font
+/**
+ * False when `font` isn't a font (0 is: the default font).
+ */
+export function wgf_text_get_font(text) {
+    const value = host["_wgf_text_get_font"](text);
+    return value >>> 0;
+}
+
+// wgf: call wgf_text_set_string
+/**
+ * What it says, UTF-8, copied. get_string's is the actor's: valid until the next
+ * set_string, or until it is destroyed.
+ */
+export function wgf_text_set_string(text, string) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_text_set_string"](text, cstr(string));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_text_get_string
+/**
+ * What it says, UTF-8, copied. get_string's is the actor's: valid until the next
+ * set_string, or until it is destroyed.
+ */
+export function wgf_text_get_string(text) {
+    const value = host["_wgf_text_get_string"](text);
+    return str(value);
+}
+
+// wgf: call wgf_text_set_font_size
+/**
+ * Its font size: the height of its lines, before the actor's scale, in stage units (a
+ * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16 on a 2D
+ * stage, 1 on a 3D one.
+ * Read back as the size it draws at. False for a handle that isn't text.
+ */
+export function wgf_text_set_font_size(text, size) {
+    const value = host["_wgf_text_set_font_size"](text, size);
+    return value !== 0;
+}
+
+// wgf: call wgf_text_get_font_size
+/**
+ * Its font size: the height of its lines, before the actor's scale, in stage units (a
+ * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16 on a 2D
+ * stage, 1 on a 3D one.
+ * Read back as the size it draws at. False for a handle that isn't text.
+ */
+export function wgf_text_get_font_size(text) {
+    const value = host["_wgf_text_get_font_size"](text);
+    return value;
+}
+
+// wgf: call wgf_text_set_color
+/**
+ * Default: white.
+ */
+export function wgf_text_set_color(text, color) {
+    const value = host["_wgf_text_set_color"](text, color);
+    return value !== 0;
+}
+
+// wgf: call wgf_text_get_color
+/**
+ * Default: white.
+ */
+export function wgf_text_get_color(text) {
+    const value = host["_wgf_text_get_color"](text);
+    return value >>> 0;
+}
+
+// wgf: call wgf_text_set_wrap_width
+/**
+ * Wrap lines at spaces and tabs to fit `width`, in stage units; a word wider keeps
+ * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
+ * wrapped block is `width` wide for its alignment, or as wide as its widest line
+ * where a word is wider. False for less than 0.
+ */
+export function wgf_text_set_wrap_width(text, width) {
+    const value = host["_wgf_text_set_wrap_width"](text, width);
+    return value !== 0;
+}
+
+// wgf: call wgf_text_get_wrap_width
+/**
+ * Wrap lines at spaces and tabs to fit `width`, in stage units; a word wider keeps
+ * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
+ * wrapped block is `width` wide for its alignment, or as wide as its widest line
+ * where a word is wider. False for less than 0.
+ */
+export function wgf_text_get_wrap_width(text) {
+    const value = host["_wgf_text_get_wrap_width"](text);
+    return value;
+}
+
+// wgf: call wgf_text_set_align
+/**
+ * Where the block sits relative to the actor's position, on each axis; lines line
+ * up the same way inside the block. False for a value that isn't one.
+ */
+export function wgf_text_set_align(text, horizontal, vertical) {
+    const value = host["_wgf_text_set_align"](text, horizontal, vertical);
+    return value !== 0;
+}
+
+// wgf: call wgf_text_get_halign
+/**
+ * Where the block sits relative to the actor's position, on each axis; lines line
+ * up the same way inside the block. False for a value that isn't one.
+ */
+export function wgf_text_get_halign(text) {
+    const value = host["_wgf_text_get_halign"](text);
+    return value;
+}
+
+// wgf: call wgf_text_get_valign
+/**
+ * Where the block sits relative to the actor's position, on each axis; lines line
+ * up the same way inside the block. False for a value that isn't one.
+ */
+export function wgf_text_get_valign(text) {
+    const value = host["_wgf_text_get_valign"](text);
+    return value;
+}
+
+// wgf: call wgf_text_set_facing
+/**
+ * Which way its block faces on a 3D stage, as a sprite's (wgf_sprite.h): the camera (the
+ * default), the camera about Y, flat facing up, or its actor's turn. A 2D stage's text is
+ * flat on the screen whatever this says. False when `facing` isn't one.
+ */
+export function wgf_text_set_facing(text, facing) {
+    const value = host["_wgf_text_set_facing"](text, facing);
+    return value !== 0;
+}
+
+// wgf: call wgf_text_get_facing
+/**
+ * Which way its block faces on a 3D stage, as a sprite's (wgf_sprite.h): the camera (the
+ * default), the camera about Y, flat facing up, or its actor's turn. A 2D stage's text is
+ * flat on the screen whatever this says. False when `facing` isn't one.
+ */
+export function wgf_text_get_facing(text) {
+    const value = host["_wgf_text_get_facing"](text);
+    return value;
+}
+
+// wgf: call wgf_draw_rectangle
+/**
+ * Immediate mode 2D: each call draws once, in the frame it is made in, in call order
+ * with everything else drawn that frame, and keeps nothing. Logical pixels from the
+ * frame's top-left, y down (wgf_render.h). A draw outside a frame draws nothing.
+ *
+ * Outlines and lines have a thickness in logical pixels, centered on the line; one
+ * of 0 or less is a hairline of one logical pixel. A polyline's corners are mitred,
+ * and bevelled where a sharp corner's miter would reach past four thicknesses.
+ */
+export function wgf_draw_rectangle(x, y, width, height, color) {
+    host["_wgf_draw_rectangle"](x, y, width, height, color);
+}
+
+// wgf: call wgf_draw_rectangle_lines
+/**
+ * Immediate mode 2D: each call draws once, in the frame it is made in, in call order
+ * with everything else drawn that frame, and keeps nothing. Logical pixels from the
+ * frame's top-left, y down (wgf_render.h). A draw outside a frame draws nothing.
+ *
+ * Outlines and lines have a thickness in logical pixels, centered on the line; one
+ * of 0 or less is a hairline of one logical pixel. A polyline's corners are mitred,
+ * and bevelled where a sharp corner's miter would reach past four thicknesses.
+ */
+export function wgf_draw_rectangle_lines(x, y, width, height, thickness, color) {
+    host["_wgf_draw_rectangle_lines"](x, y, width, height, thickness, color);
+}
+
+// wgf: call wgf_draw_line
+/**
+ * Immediate mode 2D: each call draws once, in the frame it is made in, in call order
+ * with everything else drawn that frame, and keeps nothing. Logical pixels from the
+ * frame's top-left, y down (wgf_render.h). A draw outside a frame draws nothing.
+ *
+ * Outlines and lines have a thickness in logical pixels, centered on the line; one
+ * of 0 or less is a hairline of one logical pixel. A polyline's corners are mitred,
+ * and bevelled where a sharp corner's miter would reach past four thicknesses.
+ */
+export function wgf_draw_line(x0, y0, x1, y1, thickness, color) {
+    host["_wgf_draw_line"](x0, y0, x1, y1, thickness, color);
+}
+
+// wgf: call wgf_draw_circle
+/**
+ * Circles are drawn with enough segments for their size on screen.
+ */
+export function wgf_draw_circle(center_x, center_y, radius, color) {
+    host["_wgf_draw_circle"](center_x, center_y, radius, color);
+}
+
+// wgf: call wgf_draw_circle_lines
+/**
+ * Circles are drawn with enough segments for their size on screen.
+ */
+export function wgf_draw_circle_lines(center_x, center_y, radius, thickness, color) {
+    host["_wgf_draw_circle_lines"](center_x, center_y, radius, thickness, color);
+}
+
+// wgf: call wgf_draw_triangle
+/**
+ * Circles are drawn with enough segments for their size on screen.
+ */
+export function wgf_draw_triangle(x0, y0, x1, y1, x2, y2, color) {
+    host["_wgf_draw_triangle"](x0, y0, x1, y1, x2, y2, color);
+}
+
+// wgf: call wgf_draw_polyline
+/**
+ * Lines through `points`, x and y in turn (count floats: count / 2 points), the last
+ * joined to the first when `closed`. False, drawing nothing, for an odd count, fewer
+ * than 2 points, or NULL.
+ */
+export function wgf_draw_polyline(points, closed, thickness, color) {
+    const pointsPointer = arrayIn(points, 0, "HEAPF32");
+    const value = host["_wgf_draw_polyline"](pointsPointer, lengthOf(points), (closed ? 1 : 0), thickness, color);
+    return value !== 0;
+}
+
+// wgf: call wgf_draw_polygon
+/**
+ * The polygon through `points` filled, x and y in turn (count floats), convex or not,
+ * in either winding, as long as its edges don't cross (one that crosses itself is
+ * filled as the fan from its first point). False, drawing nothing, for an odd count,
+ * fewer than 3 points, or NULL.
+ */
+export function wgf_draw_polygon(points, color) {
+    const pointsPointer = arrayIn(points, 0, "HEAPF32");
+    const value = host["_wgf_draw_polygon"](pointsPointer, lengthOf(points), color);
+    return value !== 0;
+}
+
+// wgf: call wgf_draw_text
+/**
+ * Text (UTF-8) in `font` (0: the default font) at `size` logical pixels (16 for 0 or
+ * less), its top-left at (x, y). Newlines break lines.
+ */
+export function wgf_draw_text(font, text, x, y, size, color) {
+    const mark = host["stackSave"]();
+    host["_wgf_draw_text"](font, cstr(text), x, y, size, color);
+    host["stackRestore"](mark);
+}
+
+// wgf: call wgf_draw_text_aligned
+/**
+ * The same, (x, y) the point the text is aligned to: its left, center, or right, and its
+ * top, middle, or bottom (wgf_text.h's alignments), so a HUD anchored to the visible
+ * area's right edge (wgf_presentation_get_visible) needs no guessed width.
+ */
+export function wgf_draw_text_aligned(font, text, x, y, size, color, horizontal, vertical) {
+    const mark = host["stackSave"]();
+    host["_wgf_draw_text_aligned"](font, cstr(text), x, y, size, color, horizontal, vertical);
+    host["stackRestore"](mark);
+}
+
+// wgf: call wgf_draw_texture
+/**
+ * A texture into the rectangle (x, y, width, height), multiplied by `tint` (white
+ * leaves it as it is). A width or height of 0 or less draws it at its own size.
+ * Nothing while it is PENDING; the placeholder checker once it has FAILED.
+ */
+export function wgf_draw_texture(texture, x, y, width, height, tint) {
+    host["_wgf_draw_texture"](texture, x, y, width, height, tint);
+}
+
+// wgf: call wgf_draw_texture_region
+/**
+ * A region of a texture, in its pixels from the top-left (a source width or height of
+ * 0 or less: the whole texture), into the rectangle (x, y, width, height), as an icon
+ * is cut from an atlas. A width or height of 0 or less draws it at the region's own
+ * size. The placeholder fills the rectangle once the texture has FAILED.
+ */
+export function wgf_draw_texture_region(texture, source_x, source_y, source_width, source_height, x, y, width, height, tint) {
+    host["_wgf_draw_texture_region"](texture, source_x, source_y, source_width, source_height, x, y, width, height, tint);
+}
+
+// wgf: call wgf_draw_begin_3d
+/**
+ * 3D: between begin_3d and end_3d, the 3D calls draw in the world as `camera` (a 3D
+ * camera, wgf_camera3d.h) sees it, into the presentation's visible area, depth tested
+ * against each other and against the frame's 3D before them, and under the clip. False
+ * when `camera` isn't a 3D camera, or outside a frame. A 3D call outside them draws
+ * nothing; a frame starts in 2D, and one left in 3D ends there. A 2D call between them
+ * lands in the world's x-y plane, as wgrender's did.
+ */
+export function wgf_draw_begin_3d(camera) {
+    const value = host["_wgf_draw_begin_3d"](camera);
+    return value !== 0;
+}
+
+// wgf: call wgf_draw_end_3d
+/**
+ * 3D: between begin_3d and end_3d, the 3D calls draw in the world as `camera` (a 3D
+ * camera, wgf_camera3d.h) sees it, into the presentation's visible area, depth tested
+ * against each other and against the frame's 3D before them, and under the clip. False
+ * when `camera` isn't a 3D camera, or outside a frame. A 3D call outside them draws
+ * nothing; a frame starts in 2D, and one left in 3D ends there. A 2D call between them
+ * lands in the world's x-y plane, as wgrender's did.
+ */
+export function wgf_draw_end_3d() {
+    host["_wgf_draw_end_3d"]();
+}
+
+// wgf: call wgf_draw_line_3d
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export function wgf_draw_line_3d(x0, y0, z0, x1, y1, z1, color) {
+    host["_wgf_draw_line_3d"](x0, y0, z0, x1, y1, z1, color);
+}
+
+// wgf: call wgf_draw_cube
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export function wgf_draw_cube(cx, cy, cz, width, height, length, color) {
+    host["_wgf_draw_cube"](cx, cy, cz, width, height, length, color);
+}
+
+// wgf: call wgf_draw_cube_wires
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export function wgf_draw_cube_wires(cx, cy, cz, width, height, length, color) {
+    host["_wgf_draw_cube_wires"](cx, cy, cz, width, height, length, color);
+}
+
+// wgf: call wgf_draw_sphere
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export function wgf_draw_sphere(cx, cy, cz, radius, color) {
+    host["_wgf_draw_sphere"](cx, cy, cz, radius, color);
+}
+
+// wgf: call wgf_draw_grid
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export function wgf_draw_grid(slices, spacing, color) {
+    host["_wgf_draw_grid"](slices, spacing, color);
+}
+
+// wgf: call wgf_draw_rectangle_3d
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export function wgf_draw_rectangle_3d(cx, cy, cz, width, height, rx, ry, rz, color) {
+    host["_wgf_draw_rectangle_3d"](cx, cy, cz, width, height, rx, ry, rz, color);
+}
+
+// wgf: call wgf_draw_circle_3d
+/**
+ * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
+ * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
+ * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
+ * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
+ * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
+ * actor's rotation turns it. A color with alpha below 255 is blended over what is
+ * behind it, in the order drawn.
+ */
+export function wgf_draw_circle_3d(cx, cy, cz, radius, rx, ry, rz, color) {
+    host["_wgf_draw_circle_3d"](cx, cy, cz, radius, rx, ry, rz, color);
+}
+
+// wgf: call wgf_draw_text_3d
+/**
+ * Text in the world: a block centered on (x, y, z), facing the camera, its lines `size`
+ * world units tall (1 for 0 or less), in `font` (0: the default font), depth tested
+ * and not hiding what is drawn behind it after it. wgrender's wgr_text_draw_3d.
+ */
+export function wgf_draw_text_3d(font, text, x, y, z, size, color) {
+    const mark = host["stackSave"]();
+    host["_wgf_draw_text_3d"](font, cstr(text), x, y, z, size, color);
+    host["stackRestore"](mark);
 }
 
 // wgf: call wgf_emitter2d_create
@@ -7594,179 +7793,6 @@ export function wgf_shape3d_set_color(shape, color) {
 export function wgf_shape3d_get_color(shape) {
     const value = host["_wgf_shape3d_get_color"](shape);
     return value >>> 0;
-}
-
-// wgf: call wgf_sprite_create
-/**
- * A sprite of `texture` (0 for none: it draws nothing). 0 when there is no room for
- * another actor.
- */
-export function wgf_sprite_create(texture) {
-    const value = host["_wgf_sprite_create"](texture);
-    return value >>> 0;
-}
-
-// wgf: call wgf_sprite_set_texture
-/**
- * False for a handle that isn't a sprite, or a texture that isn't one (0 is none).
- */
-export function wgf_sprite_set_texture(sprite, texture) {
-    const value = host["_wgf_sprite_set_texture"](sprite, texture);
-    return value !== 0;
-}
-
-// wgf: call wgf_sprite_get_texture
-/**
- * False for a handle that isn't a sprite, or a texture that isn't one (0 is none).
- */
-export function wgf_sprite_get_texture(sprite) {
-    const value = host["_wgf_sprite_get_texture"](sprite);
-    return value >>> 0;
-}
-
-// wgf: call wgf_sprite_set_source
-/**
- * The region of the texture shown, in its pixels from the top-left; a width or height
- * of 0 or less (the default) shows the whole texture. False for a handle that isn't a
- * sprite. Read back as x, y, width, height.
- */
-export function wgf_sprite_set_source(sprite, x, y, width, height) {
-    const value = host["_wgf_sprite_set_source"](sprite, x, y, width, height);
-    return value !== 0;
-}
-
-// wgf: call wgf_sprite_get_source
-/**
- * The region of the texture shown, in its pixels from the top-left; a width or height
- * of 0 or less (the default) shows the whole texture. False for a handle that isn't a
- * sprite. Read back as x, y, width, height.
- */
-export function wgf_sprite_get_source(sprite, into) {
-    const ret = result(16);
-    host["_wgf_sprite_get_source"](ret, sprite);
-    return vector(ret, 4, into);
-}
-
-// wgf: call wgf_sprite_set_size
-/**
- * Its size in its own units; a width or height of 0 or less (the default) is the
- * region's size in pixels on a 2D stage (1 by 1 on a 3D one). get_size is the size it draws at: what was set, or else
- * the region's (0, 0 while its texture isn't READY and no size is set). False for a
- * handle that isn't a sprite.
- */
-export function wgf_sprite_set_size(sprite, width, height) {
-    const value = host["_wgf_sprite_set_size"](sprite, width, height);
-    return value !== 0;
-}
-
-// wgf: call wgf_sprite_get_size
-/**
- * Its size in its own units; a width or height of 0 or less (the default) is the
- * region's size in pixels on a 2D stage (1 by 1 on a 3D one). get_size is the size it draws at: what was set, or else
- * the region's (0, 0 while its texture isn't READY and no size is set). False for a
- * handle that isn't a sprite.
- */
-export function wgf_sprite_get_size(sprite, into) {
-    const ret = result(8);
-    host["_wgf_sprite_get_size"](ret, sprite);
-    return vector(ret, 2, into);
-}
-
-// wgf: call wgf_sprite_set_pivot
-/**
- * The point of the sprite at its actor's position, which it turns and scales about, as
- * a fraction of its size: 0.5, 0.5 its center (the default), 0, 0 its top-left. False
- * for a handle that isn't a sprite.
- */
-export function wgf_sprite_set_pivot(sprite, x, y) {
-    const value = host["_wgf_sprite_set_pivot"](sprite, x, y);
-    return value !== 0;
-}
-
-// wgf: call wgf_sprite_get_pivot
-/**
- * The point of the sprite at its actor's position, which it turns and scales about, as
- * a fraction of its size: 0.5, 0.5 its center (the default), 0, 0 its top-left. False
- * for a handle that isn't a sprite.
- */
-export function wgf_sprite_get_pivot(sprite, into) {
-    const ret = result(8);
-    host["_wgf_sprite_get_pivot"](ret, sprite);
-    return vector(ret, 2, into);
-}
-
-// wgf: call wgf_sprite_set_tint
-/**
- * What its texels are multiplied by; white (the default) leaves them as they are. False
- * for a handle that isn't a sprite.
- */
-export function wgf_sprite_set_tint(sprite, tint) {
-    const value = host["_wgf_sprite_set_tint"](sprite, tint);
-    return value !== 0;
-}
-
-// wgf: call wgf_sprite_get_tint
-/**
- * What its texels are multiplied by; white (the default) leaves them as they are. False
- * for a handle that isn't a sprite.
- */
-export function wgf_sprite_get_tint(sprite) {
-    const value = host["_wgf_sprite_get_tint"](sprite);
-    return value >>> 0;
-}
-
-// wgf: call wgf_sprite_set_alpha_mode
-/**
- * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
- * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
- * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
- * isn't a sprite, or a mode that isn't one.
- */
-export function wgf_sprite_set_alpha_mode(sprite, mode, cutoff) {
-    const value = host["_wgf_sprite_set_alpha_mode"](sprite, mode, cutoff);
-    return value !== 0;
-}
-
-// wgf: call wgf_sprite_get_alpha_mode
-/**
- * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
- * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
- * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
- * isn't a sprite, or a mode that isn't one.
- */
-export function wgf_sprite_get_alpha_mode(sprite) {
-    const value = host["_wgf_sprite_get_alpha_mode"](sprite);
-    return value;
-}
-
-// wgf: call wgf_sprite_get_alpha_cutoff
-/**
- * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
- * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
- * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
- * isn't a sprite, or a mode that isn't one.
- */
-export function wgf_sprite_get_alpha_cutoff(sprite) {
-    const value = host["_wgf_sprite_get_alpha_cutoff"](sprite);
-    return value;
-}
-
-// wgf: call wgf_sprite_set_facing
-/**
- * Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
- */
-export function wgf_sprite_set_facing(sprite, facing) {
-    const value = host["_wgf_sprite_set_facing"](sprite, facing);
-    return value !== 0;
-}
-
-// wgf: call wgf_sprite_get_facing
-/**
- * Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
- */
-export function wgf_sprite_get_facing(sprite) {
-    const value = host["_wgf_sprite_get_facing"](sprite);
-    return value;
 }
 
 // wgf: call wgf_stage2d_create

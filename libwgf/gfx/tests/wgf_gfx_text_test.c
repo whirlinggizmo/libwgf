@@ -14,6 +14,8 @@
 #include "wgf_handle.h"
 #include "wgf_time.h"
 #include "wgf_stage2d.h"
+#include "wgf_stage3d.h"
+#include "wgf_camera3d.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
 #include "wgf_font.h"
@@ -197,6 +199,47 @@ int main(void)
         expect(after_empty == before, "an empty or hidden text actor draws nothing");
         expect(after_text > after_empty, "a text actor on a 2D stage draws its string");
         wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
+    }
+    { /* on a 3D stage: libwgt's, a block facing as it is told, each in a side layer of its own */
+        const wgf_actor_t world = wgf_stage3d_create(), camera = wgf_camera3d_create();
+        const wgf_actor_t sign = wgf_text_create(0), other = wgf_text_create(0);
+        int one, two, culled;
+        wgf_actor_set_position(camera, 0, 0, 20);
+        wgf_actor_set_parent(camera, world);
+        wgf_stage3d_set_camera(world, camera);
+        wgf_actor_set_parent(sign, world);
+        expect(wgf_text_get_font_size(sign) == 1, "unset on a 3D stage: one unit a line");
+        expect(wgf_text_get_facing(sign) == WGF_SPRITE_FACING_CAMERA &&
+                   wgf_text_set_facing(sign, WGF_SPRITE_FACING_CAMERA_FIXED_Y) &&
+                   wgf_text_get_facing(sign) == WGF_SPRITE_FACING_CAMERA_FIXED_Y &&
+                   !wgf_text_set_facing(sign, (wgf_sprite_facing_t)4) && !wgf_text_set_facing(camera, WGF_SPRITE_FACING_FREE),
+               "a facing: the camera by default, one that isn't refused");
+        begin_frame(320, 240, 1.0f);
+        wgf_stage3d_draw(world);
+        expect(sgl_num_vertices() == 0, "no string: nothing");
+        wgf_gfx_priv_end_frame();
+        wgf_text_set_string(sign, "START");
+        wgf_text_set_align(sign, WGF_TEXT_HALIGN_CENTER, WGF_TEXT_VALIGN_MIDDLE);
+        begin_frame(320, 240, 1.0f);
+        wgf_stage3d_draw(world);
+        one = sgl_num_vertices();
+        wgf_gfx_priv_end_frame();
+        expect(one == 5 * 6, "its glyphs, a quad each");
+        wgf_text_set_string(other, "GO");
+        wgf_actor_set_position(other, 0, 2, -5);
+        wgf_actor_set_parent(other, world);
+        begin_frame(320, 240, 1.0f);
+        wgf_stage3d_draw(world);
+        two = sgl_num_vertices();
+        wgf_gfx_priv_end_frame();
+        expect(two == 7 * 6, "two texts, both drawn");
+        wgf_actor_set_position(other, 0, 0, 40); /* behind the camera */
+        begin_frame(320, 240, 1.0f);
+        wgf_stage3d_draw(world);
+        culled = sgl_num_vertices();
+        wgf_gfx_priv_end_frame();
+        expect(culled == one, "one behind the camera: culled");
+        wgf_actor_destroy(world, WGF_ACTOR_DESTROY_CHILDREN);
     }
     wgf_resource_release(again);
     expect(wgf_resource_get_status(again) == WGF_RESOURCE_STATUS_NONE, "the text actor's reference went with it");

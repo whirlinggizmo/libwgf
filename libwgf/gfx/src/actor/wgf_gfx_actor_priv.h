@@ -50,6 +50,7 @@ typedef struct wgf_gfx_priv_text_t {
     float wrap_width;
     wgf_text_halign_t halign;
     wgf_text_valign_t valign;
+    int facing; /* on a stage3d: a wgf_sprite_facing_t (CAMERA by default) */
 } wgf_gfx_priv_text_t;
 
 typedef struct wgf_gfx_priv_camera3d_t {
@@ -207,6 +208,14 @@ wgf_actor_kind_t wgf_gfx_priv_actor_get_root_type(wgf_actor_t actor);
 /* What only the part making an actor type knows, set by that part at its first create,
  * so freeing or drawing an actor names no part: a program that makes no emitter links no
  * emitter. NULL again after gfx's stop, and a NULL member does nothing. */
+/* A 3D camera's axes for things facing it (wgf_gfx_sprite3d.c's wgf_gfx_priv_sprite_view_of):
+ * spherical (facing CAMERA, parallel to the view plane, `right` and `up`) and cylindrical
+ * (CAMERA_FIXED_Y: turning about world Y, staying upright, `upright` its right; the
+ * camera's own right when it looks straight up or down). */
+typedef struct wgf_gfx_priv_sprite_view_t {
+    wgf_vec3_t right, up, upright;
+} wgf_gfx_priv_sprite_view_t;
+
 typedef struct wgf_gfx_priv_actor_kind_t {
     /* what it holds let go of: a sprite's texture reference, a text's font reference
        and string, an emitter's particles */
@@ -215,6 +224,12 @@ typedef struct wgf_gfx_priv_actor_kind_t {
        frame's logical pixels; `view` the view alone (stage units to logical pixels) */
     void (*draw)(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *placed,
                  const wgf_mat4_t *view);
+    /* placed on a 3D stage (text's): the matrix its block's plane goes into the stage by,
+       and its corners there (culling's); false with nothing to show */
+    bool (*place_3d)(const wgf_gfx_priv_actor_t *actor_ptr, wgf_mat4_t world, const wgf_gfx_priv_sprite_view_t *view,
+                     wgf_mat4_t *plane, wgf_vec3_t corners[4]);
+    /* drawn on a 3D stage through `plane`, into the immediate-mode layer current */
+    void (*draw_3d)(const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *plane);
 } wgf_gfx_priv_actor_kind_t;
 void wgf_gfx_priv_actor_set_kind(wgf_actor_kind_t type, const wgf_gfx_priv_actor_kind_t *kind);
 const wgf_gfx_priv_actor_kind_t *wgf_gfx_priv_actor_get_kind(wgf_actor_kind_t type); /* NULL when unset */

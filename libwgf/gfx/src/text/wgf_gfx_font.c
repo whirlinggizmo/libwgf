@@ -416,6 +416,14 @@ bool wgf_gfx_priv_font_block_bounds(wgf_handle_t font, const char *text, float s
     return block_bounds_at(font, text, size, pixel_scale(), wrap_width, halign, valign, left, top, width, height);
 }
 
+bool wgf_gfx_priv_font_block_bounds_3d(wgf_handle_t font, const char *text, float size, float wrap_width,
+                                      wgf_text_halign_t halign, wgf_text_valign_t valign, float *left, float *top,
+                                      float *width, float *height)
+{
+    return size > 0.0f && block_bounds_at(font, text, size, WGF_GFX_PRIV_FONT_RASTER_3D / size, wrap_width, halign,
+                                          valign, left, top, width, height);
+}
+
 typedef struct block_draw_t {
     float left, top, line_height, box_width; /* in the font's (rasterized) pixels */
     wgf_text_halign_t halign;

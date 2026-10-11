@@ -44,6 +44,10 @@ void wgf_gfx_priv_font_draw_block(wgf_handle_t font, const char *text, float siz
  * and scaled to `size` world units a line, its glyphs' quads through the frame's 3D
  * projection and `matrix`, depth tested, not written. Nothing before setup. */
 #define WGF_GFX_PRIV_FONT_RASTER_3D 64.0f
+/* Its block's bounds as draw_block_3d lays it out, in world units (`size` a line). */
+bool wgf_gfx_priv_font_block_bounds_3d(wgf_handle_t font, const char *text, float size, float wrap_width,
+                                      wgf_text_halign_t halign, wgf_text_valign_t valign, float *left, float *top,
+                                      float *width, float *height);
 void wgf_gfx_priv_font_draw_block_3d(wgf_handle_t font, const char *text, float size, wgf_color_t color,
                                     float wrap_width, wgf_text_halign_t halign, wgf_text_valign_t valign,
                                     const float *matrix);

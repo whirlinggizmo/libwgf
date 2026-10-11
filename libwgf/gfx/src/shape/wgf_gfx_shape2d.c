@@ -94,7 +94,7 @@ static void draw_shape(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr,
     else wgf_draw_polygon(pts, 2 * n, shape->color);
 }
 
-static const wgf_gfx_priv_actor_kind_t kind = {free_shape, draw_shape};
+static const wgf_gfx_priv_actor_kind_t kind = {free_shape, draw_shape, NULL, NULL};
 
 static wgf_gfx_priv_shape2d_t *shape_of_at(wgf_actor_t shape, const char *caller)
 {

@@ -7,6 +7,7 @@
 #include "actor/wgf_gfx_actor_priv.h"
 #include "text/wgf_gfx_font_priv.h"
 #include "render/wgf_gfx_render_priv.h"
+#include "sprite/wgf_gfx_sprite3d_priv.h"
 #include "wgf_core_handle_priv.h"
 #include "wgf_font.h"
 #include "wgf_resource.h"
@@ -30,7 +31,19 @@ static bool is_font(wgf_font_t font)
 static void text_free(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr);
 static void text_draw(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *placed,
                       const wgf_mat4_t *view);
-static const wgf_gfx_priv_actor_kind_t kind = {text_free, text_draw};
+static bool text_place_3d(const wgf_gfx_priv_actor_t *actor_ptr, wgf_mat4_t world, const wgf_gfx_priv_sprite_view_t *view,
+                          wgf_mat4_t *plane, wgf_vec3_t corners[4]);
+static void text_draw_3d(const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *plane);
+static const wgf_gfx_priv_actor_kind_t kind = {text_free, text_draw, text_place_3d, text_draw_3d};
+
+/* Its size unset: 16 logical pixels on a 2D stage, 1 world unit on a 3D one (libwgt's). */
+#define TEXT_STAGE3D_SIZE 1.0f
+static float size_of(wgf_actor_t text, const wgf_gfx_priv_actor_t *actor_ptr)
+{
+    if (actor_ptr->as.text.size > 0.0f) return actor_ptr->as.text.size;
+    return wgf_gfx_priv_actor_get_root_type(text) == WGF_ACTOR_KIND_STAGE3D ? TEXT_STAGE3D_SIZE
+                                                                            : WGF_GFX_PRIV_FONT_DEFAULT_SIZE;
+}
 
 wgf_actor_t wgf_text_create(wgf_font_t font)
 {
@@ -106,8 +119,7 @@ bool wgf_text_set_font_size(wgf_actor_t text, float size)
 float wgf_text_get_font_size(wgf_actor_t text)
 {
     const wgf_gfx_priv_actor_t *actor_ptr = text_of(text);
-    if (actor_ptr == NULL) return 0.0f;
-    return actor_ptr->as.text.size > 0.0f ? actor_ptr->as.text.size : WGF_GFX_PRIV_FONT_DEFAULT_SIZE;
+    return actor_ptr != NULL ? size_of(text, actor_ptr) : 0.0f;
 }
 
 bool wgf_text_set_color(wgf_actor_t text, wgf_color_t color)
@@ -172,4 +184,56 @@ static void text_draw(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, 
     wgf_gfx_priv_font_draw_block(text->font, text->string, text->size, text->color, text->wrap_width, text->halign,
                                  text->valign, placed->m);
     wgf_gfx_priv_render_set_2d(); /* fontstash left its own state */
+}
+
+bool wgf_text_set_facing(wgf_actor_t text, wgf_sprite_facing_t facing)
+{
+    wgf_gfx_priv_actor_t *actor_ptr = text_of(text);
+    if (actor_ptr == NULL || (int)facing < WGF_SPRITE_FACING_CAMERA || facing > WGF_SPRITE_FACING_FREE) return false;
+    actor_ptr->as.text.facing = (int)facing;
+    return true;
+}
+
+wgf_sprite_facing_t wgf_text_get_facing(wgf_actor_t text)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = text_of(text);
+    return actor_ptr != NULL ? (wgf_sprite_facing_t)actor_ptr->as.text.facing : WGF_SPRITE_FACING_CAMERA;
+}
+
+/* On a 3D stage, libwgt's (wgrender-c's text3d): the block's plane (x right, y down, world
+ * units, about its position by its alignment) along its facing's axes, scaled by its actor,
+ * and its corners (top-left, top-right, bottom-right, bottom-left). Drawn by the stage3d,
+ * which reaches these through the kind, so a 3D program that makes no text links no font. */
+static bool text_place_3d(const wgf_gfx_priv_actor_t *actor_ptr, wgf_mat4_t world, const wgf_gfx_priv_sprite_view_t *view,
+                          wgf_mat4_t *plane, wgf_vec3_t corners[4])
+{
+    const wgf_gfx_priv_text_t *text = &actor_ptr->as.text;
+    const wgf_vec3_t scale = wgf_mat4_get_scale(world), position = wgf_mat4_get_translation(world);
+    const float size = text->size > 0.0f ? text->size : TEXT_STAGE3D_SIZE;
+    wgf_vec3_t right, up;
+    float left, top, width, height;
+    if (text->string == NULL || !wgf_gfx_priv_font_block_bounds_3d(text->font, text->string, size, text->wrap_width,
+                                                                   text->halign, text->valign, &left, &top, &width,
+                                                                   &height)) {
+        return false;
+    }
+    wgf_gfx_priv_facing_axes(text->facing, world, view, &right, &up);
+    right = wgf_vec3_scale(right, scale.x);
+    up = wgf_vec3_scale(up, -scale.y); /* the block's y runs down */
+    *plane = wgf_mat4_identity();
+    plane->m[0] = right.x, plane->m[1] = right.y, plane->m[2] = right.z;
+    plane->m[4] = up.x, plane->m[5] = up.y, plane->m[6] = up.z;
+    plane->m[12] = position.x, plane->m[13] = position.y, plane->m[14] = position.z;
+    corners[0] = wgf_mat4_transform_point(*plane, wgf_vec3_make(left, top, 0.0f));
+    corners[1] = wgf_mat4_transform_point(*plane, wgf_vec3_make(left + width, top, 0.0f));
+    corners[2] = wgf_mat4_transform_point(*plane, wgf_vec3_make(left + width, top + height, 0.0f));
+    corners[3] = wgf_mat4_transform_point(*plane, wgf_vec3_make(left, top + height, 0.0f));
+    return true;
+}
+
+static void text_draw_3d(const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *plane)
+{
+    const wgf_gfx_priv_text_t *text = &actor_ptr->as.text;
+    wgf_gfx_priv_font_draw_block_3d(text->font, text->string, text->size > 0.0f ? text->size : TEXT_STAGE3D_SIZE,
+                                    text->color, text->wrap_width, text->halign, text->valign, plane->m);
 }

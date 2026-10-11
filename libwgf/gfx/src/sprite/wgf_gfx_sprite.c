@@ -94,7 +94,7 @@ static void free_sprite(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr)
     actor_ptr->as.sprite.texture = 0;
 }
 
-static const wgf_gfx_priv_actor_kind_t kind = {free_sprite, draw_sprite};
+static const wgf_gfx_priv_actor_kind_t kind = {free_sprite, draw_sprite, NULL, NULL};
 
 static bool is_texture(wgf_texture_t texture)
 {

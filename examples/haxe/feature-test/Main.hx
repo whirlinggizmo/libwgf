@@ -270,6 +270,12 @@ class Main {
 		sign.setParent(stage3d);
 		sign.setPosition(0, 2, 0);
 		expect(sign.setFacing(SpriteFacing.CAMERA_FIXED_Y) && sign.setSize(1, 1), "a sprite on the 3D stage");
+		final banner = Text.create(0); // a 3D stage's text: a block facing as it is told
+		banner.setParent(stage3d);
+		banner.setPosition(0, 3, 0);
+		expect(banner.setString("START") && banner.getFontSize() == 1, "text on the 3D stage, a unit a line");
+		expect(banner.setFacing(SpriteFacing.CAMERA_FIXED_Y) && banner.getFacing() == SpriteFacing.CAMERA_FIXED_Y,
+			"its facing");
 		final sun:Light = Light.create(LightType.SPOT);
 		expect(sun.getType() == LightType.SPOT && sun.setColor(Color.get(ColorStock.GOLD))
 			&& sun.getColor() == Color.get(ColorStock.GOLD), "a light's color");

@@ -448,22 +448,6 @@ export declare const WGF_COLOR_STOCK_RAYWHITE: 25;
 export type wgf_color_stock_t = typeof WGF_COLOR_STOCK_BLANK | typeof WGF_COLOR_STOCK_WHITE | typeof WGF_COLOR_STOCK_BLACK | typeof WGF_COLOR_STOCK_LIGHTGRAY | typeof WGF_COLOR_STOCK_GRAY | typeof WGF_COLOR_STOCK_DARKGRAY | typeof WGF_COLOR_STOCK_YELLOW | typeof WGF_COLOR_STOCK_GOLD | typeof WGF_COLOR_STOCK_ORANGE | typeof WGF_COLOR_STOCK_PINK | typeof WGF_COLOR_STOCK_RED | typeof WGF_COLOR_STOCK_MAROON | typeof WGF_COLOR_STOCK_GREEN | typeof WGF_COLOR_STOCK_LIME | typeof WGF_COLOR_STOCK_DARKGREEN | typeof WGF_COLOR_STOCK_SKYBLUE | typeof WGF_COLOR_STOCK_BLUE | typeof WGF_COLOR_STOCK_DARKBLUE | typeof WGF_COLOR_STOCK_PURPLE | typeof WGF_COLOR_STOCK_VIOLET | typeof WGF_COLOR_STOCK_DARKPURPLE | typeof WGF_COLOR_STOCK_BEIGE | typeof WGF_COLOR_STOCK_BROWN | typeof WGF_COLOR_STOCK_DARKBROWN | typeof WGF_COLOR_STOCK_MAGENTA | typeof WGF_COLOR_STOCK_RAYWHITE;
 
 /**
- * A text actor: a string drawn in a font, on a 2D stage. Its actor's position is where its
- * block of lines sits, by its alignment, and the actor turns and scales it like any
- * other. It holds a reference to its font (0: the default font). Text is a
- * actor (wgf_actor.h): place, parent, and destroy it with the actor calls.
- */
-export declare const WGF_TEXT_HALIGN_LEFT: 0;
-export declare const WGF_TEXT_HALIGN_CENTER: 1;
-export declare const WGF_TEXT_HALIGN_RIGHT: 2;
-export type wgf_text_halign_t = typeof WGF_TEXT_HALIGN_LEFT | typeof WGF_TEXT_HALIGN_CENTER | typeof WGF_TEXT_HALIGN_RIGHT;
-
-export declare const WGF_TEXT_VALIGN_TOP: 0;
-export declare const WGF_TEXT_VALIGN_MIDDLE: 1;
-export declare const WGF_TEXT_VALIGN_BOTTOM: 2;
-export type wgf_text_valign_t = typeof WGF_TEXT_VALIGN_TOP | typeof WGF_TEXT_VALIGN_MIDDLE | typeof WGF_TEXT_VALIGN_BOTTOM;
-
-/**
  * How a texture is sampled where it is drawn.
  */
 export declare const WGF_TEXTURE_WRAP_REPEAT: 0;
@@ -489,6 +473,34 @@ export declare const WGF_ALPHA_MODE_MASK: 1;
 export declare const WGF_ALPHA_MODE_BLEND: 2;
 export declare const WGF_ALPHA_MODE_ADD: 3;
 export type wgf_alpha_mode_t = typeof WGF_ALPHA_MODE_OPAQUE | typeof WGF_ALPHA_MODE_MASK | typeof WGF_ALPHA_MODE_BLEND | typeof WGF_ALPHA_MODE_ADD;
+
+/**
+ * How a sprite on a 3D stage faces, libwgt's and wgrender-c's (on a 2D stage it lies in
+ * the stage, turned by its actor):
+ */
+export declare const WGF_SPRITE_FACING_CAMERA: 0;
+export declare const WGF_SPRITE_FACING_CAMERA_FIXED_Y: 1;
+export declare const WGF_SPRITE_FACING_Y_UP: 2;
+export declare const WGF_SPRITE_FACING_FREE: 3;
+export type wgf_sprite_facing_t = typeof WGF_SPRITE_FACING_CAMERA | typeof WGF_SPRITE_FACING_CAMERA_FIXED_Y | typeof WGF_SPRITE_FACING_Y_UP | typeof WGF_SPRITE_FACING_FREE;
+
+/**
+ * A text actor: a string drawn in a font. On a 2D stage it is flat on the screen; on a 3D
+ * stage it is a block in the world facing as it is told (wgf_text_set_facing), depth
+ * tested, and sorted with the see-through things. Its actor's position is where its
+ * block of lines sits, by its alignment, and the actor turns and scales it like any
+ * other. It holds a reference to its font (0: the default font). Text is an
+ * actor (wgf_actor.h): place, parent, and destroy it with the actor calls.
+ */
+export declare const WGF_TEXT_HALIGN_LEFT: 0;
+export declare const WGF_TEXT_HALIGN_CENTER: 1;
+export declare const WGF_TEXT_HALIGN_RIGHT: 2;
+export type wgf_text_halign_t = typeof WGF_TEXT_HALIGN_LEFT | typeof WGF_TEXT_HALIGN_CENTER | typeof WGF_TEXT_HALIGN_RIGHT;
+
+export declare const WGF_TEXT_VALIGN_TOP: 0;
+export declare const WGF_TEXT_VALIGN_MIDDLE: 1;
+export declare const WGF_TEXT_VALIGN_BOTTOM: 2;
+export type wgf_text_valign_t = typeof WGF_TEXT_VALIGN_TOP | typeof WGF_TEXT_VALIGN_MIDDLE | typeof WGF_TEXT_VALIGN_BOTTOM;
 
 /**
  * A light: an actor that lights the stage it is on (wgf_stage3d.h), placed and aimed with
@@ -581,16 +593,6 @@ export declare const WGF_SHAPE3D_KIND_CIRCLE: 4;
 export declare const WGF_SHAPE3D_KIND_LINE: 5;
 export declare const WGF_SHAPE3D_KIND_LINE_STRIP: 6;
 export type wgf_shape3d_kind_t = typeof WGF_SHAPE3D_KIND_NONE | typeof WGF_SHAPE3D_KIND_CUBE | typeof WGF_SHAPE3D_KIND_SPHERE | typeof WGF_SHAPE3D_KIND_RECTANGLE | typeof WGF_SHAPE3D_KIND_CIRCLE | typeof WGF_SHAPE3D_KIND_LINE | typeof WGF_SHAPE3D_KIND_LINE_STRIP;
-
-/**
- * How a sprite on a 3D stage faces, libwgt's and wgrender-c's (on a 2D stage it lies in
- * the stage, turned by its actor):
- */
-export declare const WGF_SPRITE_FACING_CAMERA: 0;
-export declare const WGF_SPRITE_FACING_CAMERA_FIXED_Y: 1;
-export declare const WGF_SPRITE_FACING_Y_UP: 2;
-export declare const WGF_SPRITE_FACING_FREE: 3;
-export type wgf_sprite_facing_t = typeof WGF_SPRITE_FACING_CAMERA | typeof WGF_SPRITE_FACING_CAMERA_FIXED_Y | typeof WGF_SPRITE_FACING_Y_UP | typeof WGF_SPRITE_FACING_FREE;
 
 /**
  * How a stage's lit colors map to the screen. Lighting can exceed what a screen shows;
@@ -2660,92 +2662,6 @@ export declare function wgf_font_measure<T extends number[] | Float32Array | Flo
 export declare function wgf_font_measure(font: wgf_font_t | 0, text: string | null, size: number, into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
- * A text actor in `font` (0: the default font), with no string yet. 0 when `font`
- * isn't a font, or there is no room for another actor.
- */
-export declare function wgf_text_create(font: wgf_font_t | 0): wgf_actor_t;
-
-/**
- * False when `font` isn't a font (0 is: the default font).
- */
-export declare function wgf_text_set_font(text: wgf_actor_t | 0, font: wgf_font_t | 0): boolean;
-
-/**
- * False when `font` isn't a font (0 is: the default font).
- */
-export declare function wgf_text_get_font(text: wgf_actor_t | 0): wgf_font_t;
-
-/**
- * What it says, UTF-8, copied. get_string's is the actor's: valid until the next
- * set_string, or until it is destroyed.
- */
-export declare function wgf_text_set_string(text: wgf_actor_t | 0, string: string | null): boolean;
-
-/**
- * What it says, UTF-8, copied. get_string's is the actor's: valid until the next
- * set_string, or until it is destroyed.
- */
-export declare function wgf_text_get_string(text: wgf_actor_t | 0): string;
-
-/**
- * Its font size: the height of its lines, before the actor's scale, in stage units (a
- * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
- * Read back as the size it draws at. False for a handle that isn't text.
- */
-export declare function wgf_text_set_font_size(text: wgf_actor_t | 0, size: number): boolean;
-
-/**
- * Its font size: the height of its lines, before the actor's scale, in stage units (a
- * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16.
- * Read back as the size it draws at. False for a handle that isn't text.
- */
-export declare function wgf_text_get_font_size(text: wgf_actor_t | 0): number;
-
-/**
- * Default: white.
- */
-export declare function wgf_text_set_color(text: wgf_actor_t | 0, color: wgf_color_t): boolean;
-
-/**
- * Default: white.
- */
-export declare function wgf_text_get_color(text: wgf_actor_t | 0): wgf_color_t;
-
-/**
- * Wrap lines at spaces and tabs to fit `width`, in stage units; a word wider keeps
- * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
- * wrapped block is `width` wide for its alignment, or as wide as its widest line
- * where a word is wider. False for less than 0.
- */
-export declare function wgf_text_set_wrap_width(text: wgf_actor_t | 0, width: number): boolean;
-
-/**
- * Wrap lines at spaces and tabs to fit `width`, in stage units; a word wider keeps
- * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
- * wrapped block is `width` wide for its alignment, or as wide as its widest line
- * where a word is wider. False for less than 0.
- */
-export declare function wgf_text_get_wrap_width(text: wgf_actor_t | 0): number;
-
-/**
- * Where the block sits relative to the actor's position, on each axis; lines line
- * up the same way inside the block. False for a value that isn't one.
- */
-export declare function wgf_text_set_align(text: wgf_actor_t | 0, horizontal: wgf_text_halign_t, vertical: wgf_text_valign_t): boolean;
-
-/**
- * Where the block sits relative to the actor's position, on each axis; lines line
- * up the same way inside the block. False for a value that isn't one.
- */
-export declare function wgf_text_get_halign(text: wgf_actor_t | 0): wgf_text_halign_t;
-
-/**
- * Where the block sits relative to the actor's position, on each axis; lines line
- * up the same way inside the block. False for a value that isn't one.
- */
-export declare function wgf_text_get_valign(text: wgf_actor_t | 0): wgf_text_valign_t;
-
-/**
  * A texture from an image file: PNG, JPEG, BMP, TGA, or GIF (its first frame), or a
  * compressed one. "name.ktx" names a texture compressed for GPUs
  * (tools/compress_textures.py, which writes them beside name.png): the first of
@@ -2796,6 +2712,379 @@ export declare function wgf_texture_get_wrap_v(texture: wgf_texture_t | 0): wgf_
  * texture, or a wrap or filter that isn't one.
  */
 export declare function wgf_texture_get_filter(texture: wgf_texture_t | 0): wgf_texture_filter_t;
+
+/**
+ * A material with glTF's defaults. 0 when `shading` isn't one (logged), or there is no
+ * room for another material.
+ */
+export declare function wgf_material_create(shading: wgf_material_shading_t): wgf_material_t;
+
+/**
+ * False when `shading` isn't one.
+ */
+export declare function wgf_material_set_shading(material: wgf_material_t | 0, shading: wgf_material_shading_t): boolean;
+
+/**
+ * False when `shading` isn't one.
+ */
+export declare function wgf_material_get_shading(material: wgf_material_t | 0): wgf_material_shading_t;
+
+/**
+ * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
+ * 0 is clamped to 0). False when `mode` isn't one.
+ */
+export declare function wgf_material_set_alpha_mode(material: wgf_material_t | 0, mode: wgf_alpha_mode_t, cutoff: number): boolean;
+
+/**
+ * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
+ * 0 is clamped to 0). False when `mode` isn't one.
+ */
+export declare function wgf_material_get_alpha_mode(material: wgf_material_t | 0): wgf_alpha_mode_t;
+
+/**
+ * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
+ * 0 is clamped to 0). False when `mode` isn't one.
+ */
+export declare function wgf_material_get_alpha_cutoff(material: wgf_material_t | 0): number;
+
+/**
+ * A double-sided surface isn't culled from behind; its back faces are lit from their
+ * side (default single sided).
+ */
+export declare function wgf_material_set_double_sided(material: wgf_material_t | 0, double_sided: boolean): boolean;
+
+/**
+ * A double-sided surface isn't culled from behind; its back faces are lit from their
+ * side (default single sided).
+ */
+export declare function wgf_material_is_double_sided(material: wgf_material_t | 0): boolean;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_set_int(material: wgf_material_t | 0, name: string | null, value_: number): boolean;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_get_int(material: wgf_material_t | 0, name: string | null): number;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_set_float(material: wgf_material_t | 0, name: string | null, value_: number): boolean;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_get_float(material: wgf_material_t | 0, name: string | null): number;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_set_vec2(material: wgf_material_t | 0, name: string | null, x: number, y: number): boolean;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_get_vec2<T extends number[] | Float32Array | Float64Array>(material: wgf_material_t | 0, name: string | null, into: T): T;
+export declare function wgf_material_get_vec2(material: wgf_material_t | 0, name: string | null, into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_set_vec3(material: wgf_material_t | 0, name: string | null, x: number, y: number, z: number): boolean;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_get_vec3<T extends number[] | Float32Array | Float64Array>(material: wgf_material_t | 0, name: string | null, into: T): T;
+export declare function wgf_material_get_vec3(material: wgf_material_t | 0, name: string | null, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_set_vec4(material: wgf_material_t | 0, name: string | null, x: number, y: number, z: number, w: number): boolean;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_get_vec4<T extends number[] | Float32Array | Float64Array>(material: wgf_material_t | 0, name: string | null, into: T): T;
+export declare function wgf_material_get_vec4(material: wgf_material_t | 0, name: string | null, into?: wgf_vec4_t | null): wgf_vec4_t;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_set_color(material: wgf_material_t | 0, name: string | null, color: wgf_color_t): boolean;
+
+/**
+ * A texture parameter: the material holds its own reference to the texture; 0 clears
+ * it. False when `texture` isn't a texture.
+ */
+export declare function wgf_material_set_texture(material: wgf_material_t | 0, name: string | null, texture: wgf_texture_t | 0): boolean;
+
+/**
+ * A texture parameter: the material holds its own reference to the texture; 0 clears
+ * it. False when `texture` isn't a texture.
+ */
+export declare function wgf_material_get_texture(material: wgf_material_t | 0, name: string | null): wgf_texture_t;
+
+/**
+ * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
+ * filter that isn't one.
+ */
+export declare function wgf_material_set_texture_sampling(material: wgf_material_t | 0, name: string | null, wrap_u: wgf_texture_wrap_t, wrap_v: wgf_texture_wrap_t, filter: wgf_texture_filter_t): boolean;
+
+/**
+ * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
+ * filter that isn't one.
+ */
+export declare function wgf_material_get_texture_wrap_u(material: wgf_material_t | 0, name: string | null): wgf_texture_wrap_t;
+
+/**
+ * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
+ * filter that isn't one.
+ */
+export declare function wgf_material_get_texture_wrap_v(material: wgf_material_t | 0, name: string | null): wgf_texture_wrap_t;
+
+/**
+ * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
+ * filter that isn't one.
+ */
+export declare function wgf_material_get_texture_filter(material: wgf_material_t | 0, name: string | null): wgf_texture_filter_t;
+
+/**
+ * A sprite of `texture` (0 for none: it draws nothing). 0 when there is no room for
+ * another actor.
+ */
+export declare function wgf_sprite_create(texture: wgf_texture_t | 0): wgf_actor_t;
+
+/**
+ * False for a handle that isn't a sprite, or a texture that isn't one (0 is none).
+ */
+export declare function wgf_sprite_set_texture(sprite: wgf_actor_t | 0, texture: wgf_texture_t | 0): boolean;
+
+/**
+ * False for a handle that isn't a sprite, or a texture that isn't one (0 is none).
+ */
+export declare function wgf_sprite_get_texture(sprite: wgf_actor_t | 0): wgf_texture_t;
+
+/**
+ * The region of the texture shown, in its pixels from the top-left; a width or height
+ * of 0 or less (the default) shows the whole texture. False for a handle that isn't a
+ * sprite. Read back as x, y, width, height.
+ */
+export declare function wgf_sprite_set_source(sprite: wgf_actor_t | 0, x: number, y: number, width: number, height: number): boolean;
+
+/**
+ * The region of the texture shown, in its pixels from the top-left; a width or height
+ * of 0 or less (the default) shows the whole texture. False for a handle that isn't a
+ * sprite. Read back as x, y, width, height.
+ */
+export declare function wgf_sprite_get_source<T extends number[] | Float32Array | Float64Array>(sprite: wgf_actor_t | 0, into: T): T;
+export declare function wgf_sprite_get_source(sprite: wgf_actor_t | 0, into?: wgf_vec4_t | null): wgf_vec4_t;
+
+/**
+ * Its size in its own units; a width or height of 0 or less (the default) is the
+ * region's size in pixels on a 2D stage (1 by 1 on a 3D one). get_size is the size it draws at: what was set, or else
+ * the region's (0, 0 while its texture isn't READY and no size is set). False for a
+ * handle that isn't a sprite.
+ */
+export declare function wgf_sprite_set_size(sprite: wgf_actor_t | 0, width: number, height: number): boolean;
+
+/**
+ * Its size in its own units; a width or height of 0 or less (the default) is the
+ * region's size in pixels on a 2D stage (1 by 1 on a 3D one). get_size is the size it draws at: what was set, or else
+ * the region's (0, 0 while its texture isn't READY and no size is set). False for a
+ * handle that isn't a sprite.
+ */
+export declare function wgf_sprite_get_size<T extends number[] | Float32Array | Float64Array>(sprite: wgf_actor_t | 0, into: T): T;
+export declare function wgf_sprite_get_size(sprite: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * The point of the sprite at its actor's position, which it turns and scales about, as
+ * a fraction of its size: 0.5, 0.5 its center (the default), 0, 0 its top-left. False
+ * for a handle that isn't a sprite.
+ */
+export declare function wgf_sprite_set_pivot(sprite: wgf_actor_t | 0, x: number, y: number): boolean;
+
+/**
+ * The point of the sprite at its actor's position, which it turns and scales about, as
+ * a fraction of its size: 0.5, 0.5 its center (the default), 0, 0 its top-left. False
+ * for a handle that isn't a sprite.
+ */
+export declare function wgf_sprite_get_pivot<T extends number[] | Float32Array | Float64Array>(sprite: wgf_actor_t | 0, into: T): T;
+export declare function wgf_sprite_get_pivot(sprite: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * What its texels are multiplied by; white (the default) leaves them as they are. False
+ * for a handle that isn't a sprite.
+ */
+export declare function wgf_sprite_set_tint(sprite: wgf_actor_t | 0, tint: wgf_color_t): boolean;
+
+/**
+ * What its texels are multiplied by; white (the default) leaves them as they are. False
+ * for a handle that isn't a sprite.
+ */
+export declare function wgf_sprite_get_tint(sprite: wgf_actor_t | 0): wgf_color_t;
+
+/**
+ * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
+ * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
+ * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
+ * isn't a sprite, or a mode that isn't one.
+ */
+export declare function wgf_sprite_set_alpha_mode(sprite: wgf_actor_t | 0, mode: wgf_alpha_mode_t, cutoff: number): boolean;
+
+/**
+ * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
+ * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
+ * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
+ * isn't a sprite, or a mode that isn't one.
+ */
+export declare function wgf_sprite_get_alpha_mode(sprite: wgf_actor_t | 0): wgf_alpha_mode_t;
+
+/**
+ * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
+ * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
+ * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
+ * isn't a sprite, or a mode that isn't one.
+ */
+export declare function wgf_sprite_get_alpha_cutoff(sprite: wgf_actor_t | 0): number;
+
+/**
+ * Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
+ */
+export declare function wgf_sprite_set_facing(sprite: wgf_actor_t | 0, facing: wgf_sprite_facing_t): boolean;
+
+/**
+ * Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
+ */
+export declare function wgf_sprite_get_facing(sprite: wgf_actor_t | 0): wgf_sprite_facing_t;
+
+/**
+ * A text actor in `font` (0: the default font), with no string yet. 0 when `font`
+ * isn't a font, or there is no room for another actor.
+ */
+export declare function wgf_text_create(font: wgf_font_t | 0): wgf_actor_t;
+
+/**
+ * False when `font` isn't a font (0 is: the default font).
+ */
+export declare function wgf_text_set_font(text: wgf_actor_t | 0, font: wgf_font_t | 0): boolean;
+
+/**
+ * False when `font` isn't a font (0 is: the default font).
+ */
+export declare function wgf_text_get_font(text: wgf_actor_t | 0): wgf_font_t;
+
+/**
+ * What it says, UTF-8, copied. get_string's is the actor's: valid until the next
+ * set_string, or until it is destroyed.
+ */
+export declare function wgf_text_set_string(text: wgf_actor_t | 0, string: string | null): boolean;
+
+/**
+ * What it says, UTF-8, copied. get_string's is the actor's: valid until the next
+ * set_string, or until it is destroyed.
+ */
+export declare function wgf_text_get_string(text: wgf_actor_t | 0): string;
+
+/**
+ * Its font size: the height of its lines, before the actor's scale, in stage units (a
+ * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16 on a 2D
+ * stage, 1 on a 3D one.
+ * Read back as the size it draws at. False for a handle that isn't text.
+ */
+export declare function wgf_text_set_font_size(text: wgf_actor_t | 0, size: number): boolean;
+
+/**
+ * Its font size: the height of its lines, before the actor's scale, in stage units (a
+ * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16 on a 2D
+ * stage, 1 on a 3D one.
+ * Read back as the size it draws at. False for a handle that isn't text.
+ */
+export declare function wgf_text_get_font_size(text: wgf_actor_t | 0): number;
+
+/**
+ * Default: white.
+ */
+export declare function wgf_text_set_color(text: wgf_actor_t | 0, color: wgf_color_t): boolean;
+
+/**
+ * Default: white.
+ */
+export declare function wgf_text_get_color(text: wgf_actor_t | 0): wgf_color_t;
+
+/**
+ * Wrap lines at spaces and tabs to fit `width`, in stage units; a word wider keeps
+ * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
+ * wrapped block is `width` wide for its alignment, or as wide as its widest line
+ * where a word is wider. False for less than 0.
+ */
+export declare function wgf_text_set_wrap_width(text: wgf_actor_t | 0, width: number): boolean;
+
+/**
+ * Wrap lines at spaces and tabs to fit `width`, in stage units; a word wider keeps
+ * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
+ * wrapped block is `width` wide for its alignment, or as wide as its widest line
+ * where a word is wider. False for less than 0.
+ */
+export declare function wgf_text_get_wrap_width(text: wgf_actor_t | 0): number;
+
+/**
+ * Where the block sits relative to the actor's position, on each axis; lines line
+ * up the same way inside the block. False for a value that isn't one.
+ */
+export declare function wgf_text_set_align(text: wgf_actor_t | 0, horizontal: wgf_text_halign_t, vertical: wgf_text_valign_t): boolean;
+
+/**
+ * Where the block sits relative to the actor's position, on each axis; lines line
+ * up the same way inside the block. False for a value that isn't one.
+ */
+export declare function wgf_text_get_halign(text: wgf_actor_t | 0): wgf_text_halign_t;
+
+/**
+ * Where the block sits relative to the actor's position, on each axis; lines line
+ * up the same way inside the block. False for a value that isn't one.
+ */
+export declare function wgf_text_get_valign(text: wgf_actor_t | 0): wgf_text_valign_t;
+
+/**
+ * Which way its block faces on a 3D stage, as a sprite's (wgf_sprite.h): the camera (the
+ * default), the camera about Y, flat facing up, or its actor's turn. A 2D stage's text is
+ * flat on the screen whatever this says. False when `facing` isn't one.
+ */
+export declare function wgf_text_set_facing(text: wgf_actor_t | 0, facing: wgf_sprite_facing_t): boolean;
+
+/**
+ * Which way its block faces on a 3D stage, as a sprite's (wgf_sprite.h): the camera (the
+ * default), the camera about Y, flat facing up, or its actor's turn. A 2D stage's text is
+ * flat on the screen whatever this says. False when `facing` isn't one.
+ */
+export declare function wgf_text_get_facing(text: wgf_actor_t | 0): wgf_sprite_facing_t;
 
 /**
  * Immediate mode 2D: each call draws once, in the frame it is made in, in call order
@@ -2991,168 +3280,6 @@ export declare function wgf_draw_circle_3d(cx: number, cy: number, cz: number, r
  * and not hiding what is drawn behind it after it. wgrender's wgr_text_draw_3d.
  */
 export declare function wgf_draw_text_3d(font: wgf_font_t | 0, text: string | null, x: number, y: number, z: number, size: number, color: wgf_color_t): void;
-
-/**
- * A material with glTF's defaults. 0 when `shading` isn't one (logged), or there is no
- * room for another material.
- */
-export declare function wgf_material_create(shading: wgf_material_shading_t): wgf_material_t;
-
-/**
- * False when `shading` isn't one.
- */
-export declare function wgf_material_set_shading(material: wgf_material_t | 0, shading: wgf_material_shading_t): boolean;
-
-/**
- * False when `shading` isn't one.
- */
-export declare function wgf_material_get_shading(material: wgf_material_t | 0): wgf_material_shading_t;
-
-/**
- * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
- * 0 is clamped to 0). False when `mode` isn't one.
- */
-export declare function wgf_material_set_alpha_mode(material: wgf_material_t | 0, mode: wgf_alpha_mode_t, cutoff: number): boolean;
-
-/**
- * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
- * 0 is clamped to 0). False when `mode` isn't one.
- */
-export declare function wgf_material_get_alpha_mode(material: wgf_material_t | 0): wgf_alpha_mode_t;
-
-/**
- * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
- * 0 is clamped to 0). False when `mode` isn't one.
- */
-export declare function wgf_material_get_alpha_cutoff(material: wgf_material_t | 0): number;
-
-/**
- * A double-sided surface isn't culled from behind; its back faces are lit from their
- * side (default single sided).
- */
-export declare function wgf_material_set_double_sided(material: wgf_material_t | 0, double_sided: boolean): boolean;
-
-/**
- * A double-sided surface isn't culled from behind; its back faces are lit from their
- * side (default single sided).
- */
-export declare function wgf_material_is_double_sided(material: wgf_material_t | 0): boolean;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_set_int(material: wgf_material_t | 0, name: string | null, value_: number): boolean;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_get_int(material: wgf_material_t | 0, name: string | null): number;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_set_float(material: wgf_material_t | 0, name: string | null, value_: number): boolean;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_get_float(material: wgf_material_t | 0, name: string | null): number;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_set_vec2(material: wgf_material_t | 0, name: string | null, x: number, y: number): boolean;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_get_vec2<T extends number[] | Float32Array | Float64Array>(material: wgf_material_t | 0, name: string | null, into: T): T;
-export declare function wgf_material_get_vec2(material: wgf_material_t | 0, name: string | null, into?: wgf_vec2_t | null): wgf_vec2_t;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_set_vec3(material: wgf_material_t | 0, name: string | null, x: number, y: number, z: number): boolean;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_get_vec3<T extends number[] | Float32Array | Float64Array>(material: wgf_material_t | 0, name: string | null, into: T): T;
-export declare function wgf_material_get_vec3(material: wgf_material_t | 0, name: string | null, into?: wgf_vec3_t | null): wgf_vec3_t;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_set_vec4(material: wgf_material_t | 0, name: string | null, x: number, y: number, z: number, w: number): boolean;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_get_vec4<T extends number[] | Float32Array | Float64Array>(material: wgf_material_t | 0, name: string | null, into: T): T;
-export declare function wgf_material_get_vec4(material: wgf_material_t | 0, name: string | null, into?: wgf_vec4_t | null): wgf_vec4_t;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_set_color(material: wgf_material_t | 0, name: string | null, color: wgf_color_t): boolean;
-
-/**
- * A texture parameter: the material holds its own reference to the texture; 0 clears
- * it. False when `texture` isn't a texture.
- */
-export declare function wgf_material_set_texture(material: wgf_material_t | 0, name: string | null, texture: wgf_texture_t | 0): boolean;
-
-/**
- * A texture parameter: the material holds its own reference to the texture; 0 clears
- * it. False when `texture` isn't a texture.
- */
-export declare function wgf_material_get_texture(material: wgf_material_t | 0, name: string | null): wgf_texture_t;
-
-/**
- * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
- * filter that isn't one.
- */
-export declare function wgf_material_set_texture_sampling(material: wgf_material_t | 0, name: string | null, wrap_u: wgf_texture_wrap_t, wrap_v: wgf_texture_wrap_t, filter: wgf_texture_filter_t): boolean;
-
-/**
- * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
- * filter that isn't one.
- */
-export declare function wgf_material_get_texture_wrap_u(material: wgf_material_t | 0, name: string | null): wgf_texture_wrap_t;
-
-/**
- * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
- * filter that isn't one.
- */
-export declare function wgf_material_get_texture_wrap_v(material: wgf_material_t | 0, name: string | null): wgf_texture_wrap_t;
-
-/**
- * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
- * filter that isn't one.
- */
-export declare function wgf_material_get_texture_filter(material: wgf_material_t | 0, name: string | null): wgf_texture_filter_t;
 
 /**
  * An emitter, emitting at no rate yet: white 8-unit squares living a second, added. 0
@@ -5103,115 +5230,6 @@ export declare function wgf_shape3d_set_color(shape: wgf_actor_t | 0, color: wgf
  * Default: white. Alpha below 255 makes it see-through.
  */
 export declare function wgf_shape3d_get_color(shape: wgf_actor_t | 0): wgf_color_t;
-
-/**
- * A sprite of `texture` (0 for none: it draws nothing). 0 when there is no room for
- * another actor.
- */
-export declare function wgf_sprite_create(texture: wgf_texture_t | 0): wgf_actor_t;
-
-/**
- * False for a handle that isn't a sprite, or a texture that isn't one (0 is none).
- */
-export declare function wgf_sprite_set_texture(sprite: wgf_actor_t | 0, texture: wgf_texture_t | 0): boolean;
-
-/**
- * False for a handle that isn't a sprite, or a texture that isn't one (0 is none).
- */
-export declare function wgf_sprite_get_texture(sprite: wgf_actor_t | 0): wgf_texture_t;
-
-/**
- * The region of the texture shown, in its pixels from the top-left; a width or height
- * of 0 or less (the default) shows the whole texture. False for a handle that isn't a
- * sprite. Read back as x, y, width, height.
- */
-export declare function wgf_sprite_set_source(sprite: wgf_actor_t | 0, x: number, y: number, width: number, height: number): boolean;
-
-/**
- * The region of the texture shown, in its pixels from the top-left; a width or height
- * of 0 or less (the default) shows the whole texture. False for a handle that isn't a
- * sprite. Read back as x, y, width, height.
- */
-export declare function wgf_sprite_get_source<T extends number[] | Float32Array | Float64Array>(sprite: wgf_actor_t | 0, into: T): T;
-export declare function wgf_sprite_get_source(sprite: wgf_actor_t | 0, into?: wgf_vec4_t | null): wgf_vec4_t;
-
-/**
- * Its size in its own units; a width or height of 0 or less (the default) is the
- * region's size in pixels on a 2D stage (1 by 1 on a 3D one). get_size is the size it draws at: what was set, or else
- * the region's (0, 0 while its texture isn't READY and no size is set). False for a
- * handle that isn't a sprite.
- */
-export declare function wgf_sprite_set_size(sprite: wgf_actor_t | 0, width: number, height: number): boolean;
-
-/**
- * Its size in its own units; a width or height of 0 or less (the default) is the
- * region's size in pixels on a 2D stage (1 by 1 on a 3D one). get_size is the size it draws at: what was set, or else
- * the region's (0, 0 while its texture isn't READY and no size is set). False for a
- * handle that isn't a sprite.
- */
-export declare function wgf_sprite_get_size<T extends number[] | Float32Array | Float64Array>(sprite: wgf_actor_t | 0, into: T): T;
-export declare function wgf_sprite_get_size(sprite: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
-
-/**
- * The point of the sprite at its actor's position, which it turns and scales about, as
- * a fraction of its size: 0.5, 0.5 its center (the default), 0, 0 its top-left. False
- * for a handle that isn't a sprite.
- */
-export declare function wgf_sprite_set_pivot(sprite: wgf_actor_t | 0, x: number, y: number): boolean;
-
-/**
- * The point of the sprite at its actor's position, which it turns and scales about, as
- * a fraction of its size: 0.5, 0.5 its center (the default), 0, 0 its top-left. False
- * for a handle that isn't a sprite.
- */
-export declare function wgf_sprite_get_pivot<T extends number[] | Float32Array | Float64Array>(sprite: wgf_actor_t | 0, into: T): T;
-export declare function wgf_sprite_get_pivot(sprite: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
-
-/**
- * What its texels are multiplied by; white (the default) leaves them as they are. False
- * for a handle that isn't a sprite.
- */
-export declare function wgf_sprite_set_tint(sprite: wgf_actor_t | 0, tint: wgf_color_t): boolean;
-
-/**
- * What its texels are multiplied by; white (the default) leaves them as they are. False
- * for a handle that isn't a sprite.
- */
-export declare function wgf_sprite_get_tint(sprite: wgf_actor_t | 0): wgf_color_t;
-
-/**
- * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
- * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
- * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
- * isn't a sprite, or a mode that isn't one.
- */
-export declare function wgf_sprite_set_alpha_mode(sprite: wgf_actor_t | 0, mode: wgf_alpha_mode_t, cutoff: number): boolean;
-
-/**
- * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
- * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
- * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
- * isn't a sprite, or a mode that isn't one.
- */
-export declare function wgf_sprite_get_alpha_mode(sprite: wgf_actor_t | 0): wgf_alpha_mode_t;
-
-/**
- * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
- * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
- * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
- * isn't a sprite, or a mode that isn't one.
- */
-export declare function wgf_sprite_get_alpha_cutoff(sprite: wgf_actor_t | 0): number;
-
-/**
- * Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
- */
-export declare function wgf_sprite_set_facing(sprite: wgf_actor_t | 0, facing: wgf_sprite_facing_t): boolean;
-
-/**
- * Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
- */
-export declare function wgf_sprite_get_facing(sprite: wgf_actor_t | 0): wgf_sprite_facing_t;
 
 /**
  * A 2D stage, with no camera. 0 when there is no room for another actor.
