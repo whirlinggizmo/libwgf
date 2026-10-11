@@ -43,6 +43,8 @@ The binding's checks (tools/check_binding.py), when there is a haxe:
   frames          with --web: every game's export flown by its autopilot in a browser, its
                   frame times traced (tools/bench/measure_frames.py, on SwiftShader: kept
                   working, nothing recorded)
+  stream          with --web: the racer streaming its track on a throttled network, first,
+                  again from the cache, and offline (tools/check_racer_stream.py)
   sizes           with --web: every example's (C, JS) and game export's web size against the
                   baseline, docs/benchmarks.json (tools/measure_sizes.py --check)
 With --windows HOST, also, on that Windows machine over ssh, the working tree as it is
@@ -106,6 +108,7 @@ CHECKS = {
                ('linux', 'the actor benchmark reads glibc\'s heap: Linux alone')),
     'sizes': (['tools/measure_sizes.py', '--check'], True, ('haxe', 'no haxe')),
     'frames': (['tools/bench/measure_frames.py', '--display', 'headless'], True, ('haxe', 'no haxe')),
+    'stream': (['tools/check_racer_stream.py'], True, ('Xvfb', 'no Xvfb, the virtual X display it measures on')),
 }
 # The quick tier (--quick), by step, run in the full tier's order. wasm32-debug-headless and wasm32-debug are built by the web checks
 # that run on them (check_binding's node and browser, check_js_binding), as they need them.
