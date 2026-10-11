@@ -1,0 +1,15 @@
+{
+ "dirs": {},
+ "files": {
+  "collision.glb": "sha256:63a4ddc1a495321ba67540df36360bb9eabab1e1bc5cecfcb827495580c82905",
+  "section_0.scene": "sha256:e7520ab17637bf0fa0d37a69073264e895f3dffb38d46430b0962d35de51a5b4",
+  "section_1.scene": "sha256:d20b251f20e698603b6a0c4c06092fdf3161ca61bcf2642bef7374df3bdc7386",
+  "section_2.scene": "sha256:0845c33fea6c0af2ae764820d534cf880c29a5febc51d24a06b31974fee0b6fd",
+  "section_3.scene": "sha256:2ea9ea2651689b852e15f4c55c73259157900a505a6d4e527b51475475f19350",
+  "section_4.scene": "sha256:e0e674903d88a7e587a8152a34e20878dfc73a95f5a00038dc7af3651c06c946",
+  "section_5.scene": "sha256:4cef97b253f761eb74d66d9c61e69b1b6615bc19e87dd2519286972847923aa6",
+  "section_6.scene": "sha256:ce8ce8d0bc8cea7fc7474bcbc04981d95aa8d668ad29700fa4101df673c8ef46",
+  "section_7.scene": "sha256:169816eb6af5a3c33f52f74c0abb47e1a37ad7b9e5b0f298faf8baa69680d207"
+ },
+ "wgf_manifest": 1
+}

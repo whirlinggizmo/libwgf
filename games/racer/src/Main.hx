@@ -1,9 +1,9 @@
 import wgf.*;
 
 /**
-	The racer's slice: a box car on a flat track of generated meshes, driven arcade-style
-	(Drive: a Jolt wheeled vehicle, physics3d's), a chase camera, checkpoints in
-	order and lap times, and a HUD of drawn text.
+	The racer's slice: a box car on a track of Kenney's Racing Kit pieces, streamed in
+	(Stream), driven on physics (Drive: a Jolt wheeled vehicle, physics3d's), a chase camera,
+	checkpoints in order and lap times, and a HUD of drawn text.
 
 	What the framework does: the stage draws the track, car, and trees; physics drives the
 	car on the track's static body from the intent, the ecs draws it between ticks, and the
@@ -12,11 +12,19 @@ import wgf.*;
 
 	The race starts on the throttle, not when loading ends: loading takes real time, which
 	differs between runs, and an autopilot's inputs are counted in frames, so a start the
-	player makes is one a recorded lap replays at the same point.
+	player makes is one a recorded lap replays at the same point. The track streams in from
+	then on (Stream): the loading screen holds only what the grid needs, and nothing loads
+	between it and the start, so a recording's count, which starts where the loads end, starts
+	before the grid's frames on every run.
+
+	The car is put back at the last checkpoint passed, facing along the track, on a key (or
+	pad's Back), and by itself when it has been upside down, past the barriers, or stuck
+	(Car.onTick).
 
 	Its probes (Laps.tick): racer.state (0 loading, 1 ready, 2 countdown, 3 racing, 4 results),
 	racer.lap, racer.checkpoint (the one wanted next), racer.passed (checkpoints passed in
-	order since the start), racer.lap_time, racer.last, racer.best, racer.speed, racer.steer, racer.grass.
+	order since the start), racer.lap_time, racer.last, racer.best, racer.speed, racer.steer, racer.grass,
+	racer.recoveries; and Stream's.
 **/
 class Main {
 	public static inline var WIDTH = 1280;
@@ -42,6 +50,10 @@ class Main {
 	static var showBodies = false;
 	static var placed = false;
 	static var sky:Environment = 0;
+	static var track:Scene = 0;
+	static var recoveries = 0;
+	static var storage:FsTask = 0;
+	static var failed = false; // a scene didn't load: said on the loading screen, which stays
 
 	static function main() {
 		Window.setTitle("Racer");
@@ -51,16 +63,14 @@ class Main {
 
 	static function init() {
 		Asset.setHost("assets");
+		// the browser's file store, open (and cleared of an older build's files) before the
+		// manifest and the start's files are asked for: a request waits for it (wgf_fs.h)
+		storage = Fs.exists("manifest.json");
 		Render.setClearColor(Color.make(150, 196, 236, 255)); // behind the sky until it has loaded
 		Loop.setTickRate(60); // the car's intent and the ecs, at a fixed rate
 
 		Physics.setGravity(0, -9.81, 0); // physics started: before the scene's bodies load
 		stage = Stage3d.create();
-		// the sky: one panorama lighting the stage (soft light all around, and what glossy
-		// surfaces reflect) and drawn behind it; it takes the place of a flat ambient light
-		sky = Environment.create("sky/sky.hdr");
-		stage.setEnvironment(sky, SKY_LIGHT, 0);
-		stage.setBackground(sky, 0);
 		stage.setTonemap(Stage3dTonemap.NEUTRAL, EXPOSURE);
 		// the sun: aimed along the sky's own sun (25 degrees up, 40 from -z toward +x, the
 		// panorama unturned), so the light, the shadows, and the bright disc in the sky agree
@@ -75,10 +85,7 @@ class Main {
 		sun.setShadowMapSize(2048);
 		sun.setShadowStrength(0.85);
 
-		Track.create(stage);
-		Probe.setValue("racer.models", Track.models);
 		camera = new ChaseCamera(stage);
-		scene = Scene.create("scenes/racer.scene");
 
 		bindControls();
 		Behavior.register("Car", e -> new Car(e));
@@ -105,6 +112,9 @@ class Main {
 		Action.bindKey("handbrake", KeyboardKey.SPACE);
 		Action.bindPadButton("handbrake", GamepadButton.EAST);
 		Action.bindKey("restart", KeyboardKey.R);
+		Action.bindKey("recover", KeyboardKey.BACKSPACE); // back on the track at the last checkpoint
+		Action.bindKey("recover", KeyboardKey.T);
+		Action.bindPadButton("recover", GamepadButton.BACK);
 		Action.bindKey("bodies", KeyboardKey.B); // the physics debug view
 		Action.bindPadButton("restart", GamepadButton.START);
 	}
@@ -121,38 +131,43 @@ class Main {
 
 	/** The car on the grid, behind the line, waiting for the start (or counting down to it). **/
 	static function grid(?counting = false) {
-		// 12 m back from the line's sensor, so the line is crossed after the start
-		final s = (Track.checkpointSample(0) - 6 + Track.xs.length) % Track.xs.length;
-		car.reset(Track.xs[s], Track.zs[s], Track.headings[s]);
+		car.reset(Track.xs[GRID], Track.zs[GRID], Track.headings[GRID]);
 		camera.snap(car);
 		Laps.reset();
 		countdown = COUNTDOWN;
 		state = counting ? State.COUNTDOWN : State.READY;
 	}
 
+	// 12 m back from the line's sensor, so the line is crossed after the start
+	static final GRID = (Track.checkpointSample(0) - 6 + Track.xs.length) % Track.xs.length;
+
+	/**
+		The car back on the track: on the last checkpoint passed (the grid before the first),
+		a few metres on, facing along the track, at rest.
+	**/
+	public static function recover() {
+		final s = Laps.passed == 0 ? GRID : (Track.checkpointSample((Laps.next + Track.CHECKPOINTS - 1) % Track.CHECKPOINTS) + 2) % Track.xs.length;
+		car.reset(Track.xs[s], Track.zs[s], Track.headings[s]);
+		camera.snap(car);
+		recoveries++;
+	}
+
 	static function tick() {
 		final dt = Loop.getTickDelta();
 		switch state {
 			case State.LOADING:
-				// the scene's track (its file's nodes, their bodies and checkpoints, made once the
-				// file has loaded), then the car on it: its behavior starts the countdown once made
-				if (!placed && Resource.getStatus(scene) == ResourceStatus.READY) {
-					scene.instantiate(stage);
-					placed = true;
-				}
-				// and the sky, prepared on a worker, loaded (or failed): the grid comes after every
-				// load, so the start a player makes is after what a recording counts from
-				if (placed && Actor.countWithBehavior("Checkpoint") == Track.CHECKPOINTS && car == null
-					&& Resource.getStatus(sky) != ResourceStatus.PENDING
-					&& Actor.countWithBehavior("Car") == 0)
-					spawn();
+				load();
 			case State.READY:
-				if (Action.isPressed("throttle"))
+				if (Action.isPressed("throttle")) {
 					state = State.COUNTDOWN;
+					Stream.start(); // the rest of the track, from now on
+				}
 			case State.COUNTDOWN:
 				countdown -= dt;
-				if (countdown <= 0)
+				if (countdown <= 0) {
 					state = State.RACING;
+					Stream.raced();
+				}
 			case State.RACING:
 				if (Laps.lap > Laps.LAPS) {
 					state = State.RESULTS;
@@ -162,7 +177,50 @@ class Main {
 		}
 		if (state != State.LOADING && Action.isPressed("restart"))
 			grid(true);
+		if (state == State.RACING && Action.isPressed("recover"))
+			recover();
+		if (state != State.LOADING)
+			Stream.update(car.drive.sample);
 		Laps.tick(dt);
+		Probe.setValue("racer.recoveries", recoveries);
+	}
+
+	/**
+		The start: once its files are local, the sky, the scenes (the car's, and the track's
+		collision and checkpoints, made once its file has loaded), and the grid's sections;
+		then the car on the grid once all of them are in, the sky prepared on a worker (or
+		failed), so the start a player makes is after every load a recording counts from.
+	**/
+	static function load() {
+		if (storage != 0) {
+			if (storage.getStatus() == FsTaskStatus.PENDING)
+				return;
+			storage.destroy();
+			storage = 0;
+			Asset.setManifest("manifest.json"); // a second visit reads everything from the cache
+			Stream.begin(stage); // the start's files, behind the loading screen
+		}
+		if (!Stream.filesLocal())
+			return;
+		if (sky == 0) {
+			// the sky: one panorama lighting the stage (soft light all around, and what glossy
+			// surfaces reflect) and drawn behind it; it takes the place of a flat ambient light
+			sky = Environment.create("sky/sky.hdr");
+			stage.setEnvironment(sky, SKY_LIGHT, 0);
+			stage.setBackground(sky, 0);
+			scene = Scene.create("scenes/racer.scene");
+			track = Scene.create("scenes/track.scene");
+		}
+		failed = Resource.getStatus(scene) == ResourceStatus.FAILED || Resource.getStatus(track) == ResourceStatus.FAILED;
+		if (!placed && Resource.getStatus(scene) == ResourceStatus.READY && Resource.getStatus(track) == ResourceStatus.READY) {
+			track.instantiate(stage);
+			placed = true;
+		}
+		Stream.update(GRID);
+		if (placed && Track.hideCollision(stage) && Actor.countWithBehavior("Checkpoint") == Track.CHECKPOINTS
+			&& Stream.gridReady() && car == null && Resource.getStatus(sky) != ResourceStatus.PENDING
+			&& Actor.countWithBehavior("Car") == 0)
+			spawn();
 	}
 
 	static function frame() {
@@ -208,7 +266,7 @@ class Main {
 		final v = Presentation.getVisible(visible); // under EXPAND, past the design on a wide page
 		final left = v.x + 24, top = v.y + 20, right = v.x + v.z - 24, bottom = v.y + v.w - 24;
 		if (state == State.LOADING) {
-			Draw.textAligned(0, "loading", v.x + v.z / 2, v.y + v.w / 2, 32, white, TextHalign.CENTER, TextValign.MIDDLE);
+			loadingScreen();
 			return;
 		}
 		Draw.rectangle(left - 12, top - 8, 300, 128, shade);
@@ -228,6 +286,19 @@ class Main {
 			Draw.textAligned(0, "GO", v.x + v.z / 2, v.y + v.w * 0.35, 120, Color.get(ColorStock.LIME), TextHalign.CENTER, TextValign.MIDDLE);
 		if (state == State.RESULTS)
 			results();
+	}
+
+	static function loadingScreen() {
+		if (!Ui.begin())
+			return;
+		Ui.beginPanel("loading");
+		Ui.setAlign(UiAlign.CENTER, UiAlign.START);
+		Ui.label("RACER", 64);
+		Ui.spacer(8);
+		Ui.progress(Stream.progress()); // the start's files, then the pieces loading
+		Ui.label(failed ? "the track didn't load: see the log" : "loading the track", 18);
+		Ui.endPanel();
+		Ui.end();
 	}
 
 	static function results() {

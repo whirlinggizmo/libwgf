@@ -16,7 +16,10 @@ class Laps {
 	public static var last = 0.0;
 	public static var best = 0.0;
 
+	public static var farthest = 0.0; // m from the centerline the car has been, this race
+
 	public static function reset() {
+		farthest = 0;
 		lap = 1;
 		next = 0;
 		passed = 0;
@@ -61,6 +64,16 @@ class Laps {
 			Probe.setValue("racer.slip", Math.max((car : Vehicle).getWheelSlip(2), (car : Vehicle).getWheelSlip(3)));
 		}
 		Probe.setValue("racer.steer", Main.car == null ? 0 : Main.car.steer);
+		if (Main.car != null) {
+			// where the car is across the track (m from the centerline), the farthest it has been
+			// out this race, and which way up it is (1 on its wheels): the barriers hold it in
+			final across = Main.car.drive.across;
+			if (Main.state == Main.State.RACING)
+				farthest = Math.max(farthest, Math.abs(across));
+			Probe.setValue("racer.across", across);
+			Probe.setValue("racer.farthest", farthest);
+			Probe.setValue("racer.upright", Main.car.drive.upright);
+		}
 		Probe.setValue("racer.grass", Main.car != null && Main.car.drive.onGrass ? 1 : 0);
 	}
 

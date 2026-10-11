@@ -12,6 +12,10 @@ class Drive {
 	public var speed(get, never):Float; // along the car's +z, m/s
 	public var heading(default, null) = 0.0; // yaw: the car's +z as (sin, cos) on x and z
 	public var onGrass(default, null) = false;
+	public var sample(get, never):Int; // the centerline's sample nearest the car
+	public var across(default, null) = 0.0; // m from the centerline, right positive
+	public var upright(default, null) = 1.0; // the car's up, its y: 1 on its wheels, below 0 on its roof
+	public var height(default, null) = 0.0;
 
 	static inline var LOCK_SPEED = 19.0; // m/s: full lock below, less above
 
@@ -19,6 +23,7 @@ class Drive {
 	var trackHint = 0;
 	final position = new Vec3();
 	final ahead = new Vec3();
+	final up = new Vec3();
 
 	public function new(car:Actor) {
 		this.car = car;
@@ -27,13 +32,18 @@ class Drive {
 	inline function get_speed():Float
 		return (car : Vehicle).getSpeed();
 
+	inline function get_sample():Int
+		return trackHint;
+
 	/** Put the car at (x, z), turned to `heading`, at rest on its wheels. **/
 	public function place(x:Float, z:Float, heading:Float) {
 		car.setTransform(x, 0.6, z, 0, heading, 0, 1, 1, 1);
 		(car : Vehicle).reset();
 		car.snap();
 		this.heading = heading;
-		trackHint = Track.nearest(x, z, 0);
+		trackHint = Track.nearestAnywhere(x, z);
+		across = 0;
+		upright = 1;
 	}
 
 	/** Held: brakes and the hand brake on, no throttle (the grid, before the start). **/
@@ -70,7 +80,10 @@ class Drive {
 	function observe() {
 		final at = car.getWorldPosition(position);
 		trackHint = Track.nearest(at.x, at.z, trackHint);
-		onGrass = Math.abs(Track.offset(at.x, at.z, trackHint)) > Track.WIDTH / 2 + 1;
+		across = Track.offset(at.x, at.z, trackHint);
+		onGrass = Math.abs(across) > Track.WIDTH / 2 + 1;
+		height = at.y;
+		upright = car.getWorldDirection(0, 1, 0, up).y;
 		final d = car.getWorldDirection(0, 0, 1, ahead);
 		heading = Math.atan2(d.x, d.z);
 	}

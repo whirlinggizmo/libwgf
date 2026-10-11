@@ -2,8 +2,9 @@
 """Measure this game's frame times as libwgf measures its own games: the web export flown by
 autopilot/bench.autopilot in a browser, each frame's main-thread work traced by Chrome
 (libwgf's tools/bench/measure_frames.py, whose run() this calls: it takes only the games in
-libwgf's own games/, by name). Prints the numbers and holds them to the frame budget: a
-60 Hz frame, 16.7 ms, at the 95th percentile.
+libwgf's own games/, by name). Prints the numbers and holds them to a game's frame budget
+as libwgf's BUILDING.md gives it: a median of 6 ms and a 95th percentile of 10 ms of
+main-thread work.
 
     python3 tools/frames.py [--display xvfb|headless] [--throttle N] [--runs N] [--out FILE]
 
@@ -21,7 +22,8 @@ from pathlib import Path
 
 GAME = Path(__file__).resolve().parents[1]
 LIBWGF = Path(os.environ.get('LIBWGF', Path.home() / 'projects/github/whirlinggizmo/libwgf'))
-BUDGET_MS = 1000.0 / 60.0
+BUDGET_MEDIAN_MS = 6.0
+BUDGET_P95_MS = 10.0
 
 
 def main():
@@ -58,8 +60,9 @@ def main():
           f'99th {row["p99"]}, worst {row["worst"]}; over 16.7: {row["over16"]}, over 33: {row["over33"]}; '
           f'collections {row["gc"]} ({row["gcTotal"]}, longest {row["gcWorst"]})')
     print(f'frames: on {measure_frames.cpu_name()}, {gpu}, {args.display}, CPU throttled {args.throttle:g}x')
-    within = row['p95'] <= BUDGET_MS
-    print(f'frames: 95th percentile {row["p95"]} ms {"within" if within else "PAST"} the {BUDGET_MS:.1f} ms budget')
+    within = row['median'] <= BUDGET_MEDIAN_MS and row['p95'] <= BUDGET_P95_MS
+    print(f'frames: median {row["median"]} ms, 95th percentile {row["p95"]} ms: {"within" if within else "PAST"} the '
+          f'budget ({BUDGET_MEDIAN_MS:g} and {BUDGET_P95_MS:g} ms)')
     if args.out:
         Path(args.out).write_text(json.dumps({**row, 'gpu': gpu, 'display': args.display,
                                               'throttle': args.throttle}, indent=1) + '\n')

@@ -23,7 +23,7 @@ WGF = os.path.expanduser('~/projects/github/whirlinggizmo/libwgf/wgf')
 
 # what the car can do, for the speed a corner allows: its tires' sideways grip and its
 # brakes, in m/s² (the vehicle's, felt out by driving; RACER_GRIP and RACER_BRAKE override)
-GRIP = float(os.environ.get('RACER_GRIP', '10.0'))
+GRIP = float(os.environ.get('RACER_GRIP', '7.0'))  # 7: the kit's S-bends, taken cleanly
 BRAKE = float(os.environ.get('RACER_BRAKE', '5.5'))
 TOP = 80.0
 
@@ -71,6 +71,7 @@ def main():
     hint = 0
     last_heading = None
     ready_frames = 0
+    ready_at = None  # the telemetry's frame the grid was first seen
     pressed_at = None
     finished_at = None
     last_passed = 0
@@ -102,6 +103,8 @@ def main():
             print(f'drive: passed {passed} lap {lap} at telemetry frame {frame}', flush=True)
             passes.append((passed, frame))
             last_passed = passed
+        if state == 1 and ready_at is None:
+            ready_at = frame
         if state == 1:  # ready: the throttle starts the countdown, and stays down through it
             # not on the grid's first frames: the recorder's frame 0 is where core's loads
             # ended, and the grid can come a frame later in a replay than it did here (the
@@ -170,19 +173,46 @@ def main():
         sys.stdout.write(line)
     code = run.wait()
     if code == 0 and passes and LAPS == 1:
-        expect(out, passes, pressed_at)
+        expect(out, passes, pressed_at, ready_at)
+    elif code == 0 and LAPS > 1:
+        rebase(out, pressed_at, ready_at)
     return code
+
+
+def rebase(path, pressed_at, ready_at):
+    """The recording's inputs counted from the grid's first frame, the replay's `at 1 wait
+    racer.state >= 1`. The recorder counts from where core's loads ended, or from the first
+    frame when none were in flight as it started -- and the racer's start loads its files as
+    asset ensures, which core's count doesn't hold -- so the grid comes at a frame that takes
+    real time to reach, and only it is the same point on every run. Each input after it keeps
+    its distance from it; the lines at 0 (a pad's connection) stay. Returns the shift taken
+    off the recording's frames (and the telemetry's frame `ready_at` was, in the recording's)."""
+    lines = open(path, encoding='utf-8').read().splitlines()
+    first_key = min(int(l.split()[1]) for l in lines if l.startswith('at ') and ' key ' in l)
+    ready = ready_at + (first_key - pressed_at)  # the grid's first frame, in the recording's count
+    shift = ready - 1
+    out = []
+    for line in lines:
+        if line.startswith('at ') and 'wait core.loading' not in line:
+            words = line.split(' ', 2)
+            frame = int(words[1])
+            if frame >= ready:
+                line = f'at {frame - shift} {words[2]}'
+        out.append(line)
+    open(path, 'w', encoding='utf-8').write('\n'.join(out) + '\n')
+    return shift
 
 
 WINDOW = 6  # frames either side of a pass the expectations allow: the press's own latency
 
 
-def expect(path, passes, pressed_at):
+def expect(path, passes, pressed_at, ready_at):
     """The recording made a lap autopilot: a wait for the load at frame 1 (loading takes
     real time, and the inputs count frames), the driver's Escape taken out (the replay
     would quit before its end), and expectations from what the driver saw -- the start,
     each checkpoint passed in order at its frame, the lap's time in a window -- in frame
     order among the inputs."""
+    shift = rebase(path, pressed_at, ready_at)
     lines = open(path, encoding='utf-8').read().splitlines()
     head, ats, tail = [], [], []
     for line in lines:
@@ -206,7 +236,7 @@ def expect(path, passes, pressed_at):
     # the telemetry counts the program's frames from its first; the recording counts from
     # where core's loads ended: the start's press, in both, puts one on the other
     shift = first_key - pressed_at
-    passes = [(n, f + shift) for n, f in passes]
+    passes = [(n, f + shift) for n, f in passes]  # (rebased: the press lands on its own frame)
     ats.append(f'at {first_key + 1} expect racer.state == 2')
     ats.append(f'at {first_key + 200} expect racer.state == 3')
     count = 8
@@ -229,6 +259,8 @@ def expect(path, passes, pressed_at):
     print(f'drive: {path}: {len(passes)} checkpoints expected, a lap of {lap:.2f}s', flush=True)
     if os.path.basename(path) == 'lap.autopilot':
         bench(path)
+        stream(path)
+        wall(path, line_frame)
 
 
 BENCH_FRAMES = 600
@@ -253,6 +285,90 @@ def bench(lap_path):
     dest = os.path.join(os.path.dirname(lap_path), 'bench.autopilot')
     open(dest, 'w', encoding='utf-8').write('\n'.join(out) + '\n')
     print(f'drive: {dest}: the lap\'s first {BENCH_FRAMES} frames', flush=True)
+
+
+COUNTDOWN_FRAMES = 180  # the start's press to the race: Main's countdown, 3 s of ticks
+
+
+def stream(lap_path):
+    """The streaming autopilot beside the lap: the lap, with `log streaming` where its race
+    starts (libwgf's tools/check_racer_stream.py holds the frames from there to 33 ms), and
+    the track's streaming expected: sections still to come as the race starts, every one
+    ready before the car reached it, and all of them in by the lap's end."""
+    lines = open(lap_path, encoding='utf-8').read().splitlines()
+    press = next(int(l.split()[1]) for l in lines if l.startswith('at ') and l.endswith(' key down up'))
+    start = press + COUNTDOWN_FRAMES
+    head = ['wgf-autopilot 1',
+            "# The lap (lap.autopilot) with its track streaming in: `log streaming` where the race",
+            "# starts, what tools/check_racer_stream.py (libwgf's) measures the frames from, on a slow",
+            '# network and from the cache; sections still to come then, and each ready before the car',
+            '# reaches it. Written by tools/drive.py with the lap: write it again when the lap is.']
+    ats, tail, end = [], [], None
+    for line in lines:
+        if line.startswith('at '):
+            if line.endswith(' end'):
+                end = int(line.split()[1])
+            else:
+                ats.append(line)
+        elif line.startswith('seed '):
+            head.append(line)
+        elif line.startswith('#   ') or 'the probes as the recording ended' in line:
+            tail.append(line)
+    ats += [f'at {start} log streaming', f'at {start} expect racer.state == 3',
+            f'at {start} expect racer.stream_pending_at_start >= 1',
+            f'at {end} expect racer.stream_late == 0', f'at {end} expect racer.stream_pending == 0',
+            f'at {end} end']
+    ats.sort(key=lambda l: int(l.split()[1]))
+    dest = os.path.join(os.path.dirname(lap_path), 'stream.autopilot')
+    open(dest, 'w', encoding='utf-8').write('\n'.join(head + ats + tail) + '\n')
+    print(f'drive: {dest}: the lap, streaming from frame {start}', flush=True)
+
+
+def wall(lap_path, line_frame):
+    """The barrier test beside the lap (Rob's playtest: a car rolled over a barrier and was
+    stuck outside the track): the lap flown to the last straight, the car flat out (30 m/s and
+    more), then steered into the barrier on its right. The barrier holds it on the track,
+    upright; the recover key (T) puts it back at the last checkpoint, facing along the track,
+    at once. Then, from there, it is driven into the barrier again and held against it, not
+    moving with the throttle down: put back by itself within a couple of seconds."""
+    cut = line_frame - 40  # two-thirds of a second before the line: down the straight, fast
+    lines = open(lap_path, encoding='utf-8').read().splitlines()
+    out = ['wgf-autopilot 1',
+           "# The barrier test: the lap (lap.autopilot) to its last straight, then hard right into",
+           "# the barrier at over 30 m/s. The car stays on the track and upright (the barriers",
+           "# collide taller than they're drawn); the recover key (T) puts it back; then, driven",
+           '# into the barrier again and held there, it is put back by itself. Written by',
+           '# tools/drive.py with the lap.']
+    held = set()
+    for line in lines:
+        if line.startswith('seed '):
+            out.append(line)
+        elif line.startswith('at ') and ' expect ' not in line and not line.endswith(' end'):
+            words = line.split()
+            if int(words[1]) >= cut:
+                continue
+            out.append(line)
+            if words[2] == 'key':
+                (held.add if words[3] == 'down' else held.discard)(words[4])
+    out += [f'at {cut} key up {k}' for k in sorted(held) if k not in ('up', 'right')]
+    if 'up' not in held:
+        out.append(f'at {cut} key down up')
+    out += [f'at {cut} expect racer.speed > 28', f'at {cut} key down right',
+            f'at {cut + 150} expect racer.farthest > 9',  # it hit the barrier
+            f'at {cut + 150} expect racer.farthest < 11',  # and stayed inside it
+            f'at {cut + 150} expect racer.upright > 0.9',
+            f'at {cut + 150} key up right',
+            f'at {cut + 150} key tap t',
+            f'at {cut + 150} expect racer.recoveries == 1',
+            f'at {cut + 150} expect racer.across < 0.5', f'at {cut + 150} expect racer.across > -0.5',
+            f'at {cut + 151} expect racer.speed < 1',
+            f'at {cut + 160} key down right',  # into the barrier again, slowly, and held there
+            f'at {cut + 760} expect racer.recoveries >= 2',  # stuck there: put back by itself
+            f'at {cut + 760} expect racer.farthest < 11', f'at {cut + 760} expect racer.upright > 0.9',
+            f'at {cut + 760} end']
+    dest = os.path.join(os.path.dirname(lap_path), 'wall.autopilot')
+    open(dest, 'w', encoding='utf-8').write('\n'.join(out) + '\n')
+    print(f'drive: {dest}: into the barrier at frame {cut}', flush=True)
 
 
 def race(recorded, dest):
@@ -295,7 +411,11 @@ if __name__ == '__main__':
     if sys.argv[1:2] == ['--race']:  # a 3-lap recording made the race autopilot
         race(sys.argv[2], sys.argv[3])
         sys.exit(0)
-    if sys.argv[1:2] == ['--bench']:  # the benchmark cut again from a lap already recorded
+    if sys.argv[1:2] == ['--bench']:  # the benchmark and stream autopilots again from a lap already recorded
         bench(sys.argv[2])
+        stream(sys.argv[2])
+        sys.exit(0)
+    if sys.argv[1:2] == ['--wall']:  # the wall autopilot again: the lap, and its line's frame
+        wall(sys.argv[2], int(sys.argv[3]))
         sys.exit(0)
     sys.exit(main())

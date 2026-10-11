@@ -1,20 +1,21 @@
 import wgf.*;
 
 /**
-	The circuit: assets/track/track.glb, written by tools/gen_track.py from its centerline
-	(TrackData, generated beside it). The scene file places it, with its surfaces' bodies,
-	their shadows, and the checkpoints under its gates (racer.scene); this is its centerline
-	for the game (the grid, the grass, the driver's telemetry), and the trees, made here.
+	The circuit, written by tools/gen_track.py from its layout of Kenney's Racing Kit pieces:
+	its collision and checkpoints (assets/scenes/track.scene, placing track/collision.glb),
+	its drawn pieces in sections (assets/track/section_<n>.scene, Stream's to load), and its
+	centerline (TrackData), what the game drives by: the grid, the grass, recovery, and the
+	driver's telemetry.
 **/
 class Track {
 	public static inline var WIDTH = TrackData.WIDTH;
 	public static inline var STEP = TrackData.STEP;
 	public static inline var CHECKPOINTS = TrackData.CHECKPOINTS;
+	public static inline var BARRIER_OFFSET = TrackData.BARRIER_OFFSET;
 
 	public static final xs = TrackData.xs;
 	public static final zs = TrackData.zs;
 	public static final headings = TrackData.headings;
-	public static var models = 0; // the models it made itself (the file's nodes are counted apart)
 
 	/** The index of the sample nearest (x, z), searched near `hint` (the last answer). **/
 	public static function nearest(x:Float, z:Float, hint:Int):Int {
@@ -31,55 +32,55 @@ class Track {
 		return best;
 	}
 
+	/** The index of the sample nearest (x, z), searched all the way round: after a jump. **/
+	public static function nearestAnywhere(x:Float, z:Float):Int {
+		var best = 0, bestD = 1e18;
+		for (i in 0...xs.length) {
+			final d = (xs[i] - x) * (xs[i] - x) + (zs[i] - z) * (zs[i] - z);
+			if (d < bestD) {
+				bestD = d;
+				best = i;
+			}
+		}
+		return best;
+	}
+
 	/** How far (x, z) is across the track from sample `i`, right positive. **/
 	public static function offset(x:Float, z:Float, i:Int):Float {
-		// across the track: the distance along the sample's right-hand normal
+		// the right of heading h is (-cos h, sin h) on x and z
 		final h = headings[i];
-		return (x - xs[i]) * Math.cos(h) - (z - zs[i]) * Math.sin(h);
-	}
-
-	/** The trees, on `stage`: the scenery around the track's file. **/
-	public static function create(stage:Stage3d) {
-		trees(stage);
-	}
-
-	static function trees(stage:Stage3d) {
-		final trunk = Mesh.createCylinder(0.35, 2.4, 8);
-		final crown = Mesh.createCone(2.2, 5.0, 10);
-		final bark = Color.make(96, 66, 40, 255), leaves = Color.make(34, 96, 44, 255);
-		seed = 7; // the same woods every run
-		var made = 0, tries = 0;
-		while (made < 140 && tries < 4000) {
-			tries++;
-			final x = range(-150, 290), z = range(-255, 240);
-			var near = 1e18;
-			for (i in 0...xs.length)
-				near = Math.min(near, (xs[i] - x) * (xs[i] - x) + (zs[i] - z) * (zs[i] - z));
-			if (near < (TrackData.BARRIER_OFFSET + 3) * (TrackData.BARRIER_OFFSET + 3))
-				continue;
-			final scale = range(0.8, 1.5);
-			final t = Model.create(trunk);
-			t.setTint(bark);
-			t.setTransform(x, 1.2 * scale, z, 0, 0, 0, scale, scale, scale);
-			t.setParent(stage);
-			final c = Model.create(crown);
-			c.setTint(leaves);
-			c.setTransform(x, (2.4 + 2.5) * scale, z, 0, 0, 0, scale, scale, scale);
-			c.setParent(stage);
-			made++;
-			models += 2;
-		}
-	}
-
-	// the trees' own generator (Park-Miller, exact in a double on every target), apart from wgf_random's
-	static var seed = 7.0;
-
-	static function range(lo:Float, hi:Float):Float {
-		seed = (seed * 16807) % 2147483647;
-		return lo + (hi - lo) * (seed / 2147483647);
+		return -(x - xs[i]) * Math.cos(h) + (z - zs[i]) * Math.sin(h);
 	}
 
 	/** The sample checkpoint `index` sits on. **/
 	public static function checkpointSample(index:Int):Int
 		return TrackData.checkpoints[index];
+
+	/** The section sample `i` is in. **/
+	public static function sectionOf(i:Int):Int {
+		var n = 0;
+		for (k in 0...TrackData.SECTIONS)
+			if (i >= TrackData.sectionStarts[k])
+				n = k;
+		return n;
+	}
+
+	static var hidden = false;
+
+	/**
+		The collision file's road and walls are for the bodies alone, the kit's pieces drawing
+		the track: hidden once the file's nodes are made (a scene line can't hide a model, so
+		this looks for them each tick until they are there). True once done.
+	**/
+	public static function hideCollision(stage:Stage3d):Bool {
+		if (hidden)
+			return true;
+		final road = (stage : Actor).find("track/road"), walls = (stage : Actor).find("track/walls");
+		if (road == 0 || walls == 0)
+			return false;
+		road.setVisible(false);
+		walls.setVisible(false);
+		hidden = true;
+		return true;
+	}
 }

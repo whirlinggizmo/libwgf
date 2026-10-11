@@ -9,6 +9,11 @@ class Car extends Behavior {
 	static inline var PAINT_ROUGHNESS = 0.22;
 	static inline var GLASS_ROUGHNESS = 0.08;
 	static inline var STEER_RATE = 4.0; // full lock in a quarter of a second, from keys
+	// put back on the track by itself after this long: on its roof or side, past the
+	// barriers (or fallen through the world), or not moving with the throttle or brake held
+	static inline var UPSIDE_DOWN = 1.0;
+	static inline var OFF_TRACK = 1.0;
+	static inline var STUCK = 2.5;
 
 	public var drive:Drive;
 	public var steer(default, null) = 0.0;
@@ -18,6 +23,9 @@ class Car extends Behavior {
 	public var drawnHeading = 0.0;
 
 	final ahead = new Vec3();
+	var upsideDown = 0.0;
+	var offTrack = 0.0;
+	var stuck = 0.0;
 
 	override function onCreate() {
 		drive = new Drive(actor);
@@ -36,7 +44,19 @@ class Car extends Behavior {
 		}
 		final want = Action.getAxis("steer"); // -1 to 1
 		steer += Math.max(-STEER_RATE * dt, Math.min(STEER_RATE * dt, want - steer)); // keys ease in
-		drive.update(Action.getValue("throttle"), Action.getValue("brake"), steer, Action.isDown("handbrake"));
+		final throttle = Action.getValue("throttle"), brake = Action.getValue("brake");
+		drive.update(throttle, brake, steer, Action.isDown("handbrake"));
+		if (lost(dt, throttle > 0.1 || brake > 0.1))
+			Main.recover();
+	}
+
+	/** Whether the car has been upside down, off the track, or stuck long enough to be put back. **/
+	function lost(dt:Float, driving:Bool):Bool {
+		upsideDown = drive.upright < 0.3 ? upsideDown + dt : 0;
+		final off = Math.abs(drive.across) > Track.BARRIER_OFFSET + 1.5 || drive.height < -3;
+		offTrack = off ? offTrack + dt : 0;
+		stuck = driving && Math.abs(drive.speed) < 1 ? stuck + dt : 0;
+		return upsideDown >= UPSIDE_DOWN || offTrack >= OFF_TRACK || stuck >= STUCK;
 	}
 
 	override function onFrame(dt:Float) {
@@ -71,6 +91,7 @@ class Car extends Behavior {
 	public function reset(x:Float, z:Float, heading:Float) {
 		drive.place(x, z, heading);
 		steer = 0;
+		upsideDown = offTrack = stuck = 0;
 		actor.getPosition(drawn);
 		drawnHeading = heading;
 	}

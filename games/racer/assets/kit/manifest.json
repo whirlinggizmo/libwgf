@@ -1,0 +1,15 @@
+{
+ "dirs": {},
+ "files": {
+  "barrierWall.glb": "sha256:e032958cec04755161d92f992fc1e5dbdb5fcbe8c8b99537fc83bfaa5d54a912",
+  "overhead.glb": "sha256:f8223c097bf800529aeda86fbac9db35a8606dfe243c17534c39583d079c6d74",
+  "roadCornerLarge.glb": "sha256:cd2721d0b20cecf7e1246330f496377cd11dbcea5532a055cd56d5e7d88b499f",
+  "roadCornerLarger.glb": "sha256:f25ac5c6b47d1b34dfc91a5b67285b78a4755201d6463f3b6a6d21efb0292d7c",
+  "roadStartPositions.glb": "sha256:09b023d462b55b942cf47c575cd0c6075244cb3e48d16902d47c591a7cf268a7",
+  "roadStraight.glb": "sha256:227dbccd34cfd04091d820b7c7ac53e2b75fad7eb3eda593793fa64943039b44",
+  "roadStraightLong.glb": "sha256:c7af76637acd86063b83591c5982c8bfc11709c8a0d23f295f91e9722675c238",
+  "treeLarge.glb": "sha256:ff7440d30661ce2a8a35ee131809dbe20116e90d8fb1d2a25cf28d7af35cb284",
+  "treeSmall.glb": "sha256:f50fb54a74736cbb3d0b90ff05a54bd2cfcb4795e87c1ecc5c1945a3bf0b9922"
+ },
+ "wgf_manifest": 1
+}
