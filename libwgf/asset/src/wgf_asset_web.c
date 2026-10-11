@@ -357,6 +357,10 @@ void wgf_asset_priv_platform_step(uint16_t slot)
 {
     wgf_asset_priv_task_t *task_ptr = wgf_asset_priv_task_at(slot);
     if (task_ptr == NULL || task_ptr->streaming) return; /* its loader's element fetches it */
+    /* Nothing is asked of the cache or kept in it before the store has opened: on a new
+       build's first visit it clears an older build's files as it opens, a file kept
+       before then with them (the root manifest, fetched at the first update). */
+    if (!wgf_core_priv_fs_is_ready()) return;
     if (task_ptr->cache_read != 0) {
         const int read = wgf_core_priv_fs_cache_read_poll(task_ptr->cache_read);
         if (read == 0) return; /* still reading */

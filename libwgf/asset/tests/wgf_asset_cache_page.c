@@ -11,8 +11,12 @@
  * relative path, so the asset part fetches it from beside the page (nothing bundled)
  * and keeps it in the browser's cache, drawn over the whole window. It asks for a
  * manifest, as a game would, so the same page serves the visits with manifests and
- * without. While it loads, or
- * once its load has failed, the placeholder checker is drawn instead. */
+ * without. At the start, before the browser's store has opened (and on a first visit
+ * cleared an older build's files), it ensures a file the check doesn't judge (the page's
+ * own script), as a game's loading screen ensures its files, which asks for the root
+ * manifest then: kept before the store opened, it would be lost, and downloaded again by
+ * the next visit. While the texture loads, or once its load has failed, the placeholder
+ * checker is drawn instead. */
 
 static wgf_handle_t tiles;
 
@@ -20,6 +24,7 @@ static void init(void *user)
 {
     (void)user;
     wgf_asset_set_manifest("manifest.json"); /* a host without one answers 404, and nothing is listed */
+    wgf_asset_ensure("wgf_asset_cache_page.js", NULL, 0);
     tiles = wgf_texture_create("textures/tiles.png");
 }
 
