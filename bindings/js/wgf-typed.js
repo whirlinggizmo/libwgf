@@ -1204,6 +1204,14 @@ export const Render = Object.freeze({
     getHeight: raw.wgf_render_get_height,
     // wgf: call wgf_render_get_dpi_scale
     getDpiScale: raw.wgf_render_get_dpi_scale,
+    // wgf: call wgf_render_begin_target
+    beginTarget: raw.wgf_render_begin_target,
+    // wgf: call wgf_render_end_target
+    endTarget: raw.wgf_render_end_target,
+    // wgf: call wgf_render_set_target_clear_color
+    setTargetClearColor: raw.wgf_render_set_target_clear_color,
+    // wgf: call wgf_render_get_target_clear_color
+    getTargetClearColor: raw.wgf_render_get_target_clear_color,
     // wgf: call wgf_render_push_clip
     pushClip: raw.wgf_render_push_clip,
     // wgf: call wgf_render_pop_clip
@@ -1396,6 +1404,8 @@ export const Stage3d = Object.freeze({
     create: raw.wgf_stage3d_create,
     // wgf: call wgf_stage3d_draw
     draw: raw.wgf_stage3d_draw,
+    // wgf: call wgf_stage3d_draw_with
+    drawWith: raw.wgf_stage3d_draw_with,
     // wgf: call wgf_stage3d_set_camera
     setCamera: raw.wgf_stage3d_set_camera,
     // wgf: call wgf_stage3d_get_camera
@@ -1476,6 +1486,8 @@ export const Text = Object.freeze({
 export const Texture = Object.freeze({
     // wgf: call wgf_texture_create
     create: raw.wgf_texture_create,
+    // wgf: call wgf_texture_create_target
+    createTarget: raw.wgf_texture_create_target,
     // wgf: call wgf_texture_get_width
     getWidth: raw.wgf_texture_get_width,
     // wgf: call wgf_texture_get_height

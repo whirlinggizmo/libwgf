@@ -372,6 +372,7 @@ class Main {
 		if (frames == 2) meshes();
 		if (frames == 2) makeStage();
 		if (frames >= 2) stage3d.draw();
+		if (frames == 2) renderTarget();
 		expect(Draw.begin3d(camera3d), "3D immediate mode");
 		Draw.grid(4, 1, Color.get(ColorStock.GRAY));
 		Draw.line3d(0, 0, 0, 1, 1, 1, Color.get(ColorStock.RED));
@@ -607,6 +608,21 @@ class Main {
 		vehicle.getGear();
 		vehicle.getWheelSlip(0);
 		expect(vehicle.reset(), "reset");
+	}
+
+	static var target:Texture;
+
+	/** A render target: drawn into with the stage through another camera, then on the screen. **/
+	static function renderTarget():Void {
+		target = Texture.createTarget(64, 48);
+		expect(!target.isNone() && target.getWidth() == 64, "a render target");
+		expect(Render.setTargetClearColor(target, Color.get(ColorStock.DARKGRAY))
+			&& Render.getTargetClearColor(target) == Color.get(ColorStock.DARKGRAY), "its clear color");
+		expect(!Render.beginTarget(tiles) && Render.beginTarget(target), "a texture that isn't a target refused, a target begun");
+		expect(Render.getWidth() == 64 && Render.getHeight() == 48 && Render.getDpiScale() == 1, "inside it, its size");
+		stage3d.drawWith(camera3d);
+		Render.endTarget();
+		Draw.texture(target, 220, 4, 64, 48, Color.get(ColorStock.WHITE));
 	}
 
 	// ---- the frames ----------------------------------------------------------------------

@@ -521,13 +521,17 @@ class Reach {
 		"wgf_random_get_range",
 		"wgf_random_get_seed",
 		"wgf_random_set_seed",
+		"wgf_render_begin_target",
+		"wgf_render_end_target",
 		"wgf_render_get_clear_color",
 		"wgf_render_get_dpi_scale",
 		"wgf_render_get_height",
+		"wgf_render_get_target_clear_color",
 		"wgf_render_get_width",
 		"wgf_render_pop_clip",
 		"wgf_render_push_clip",
 		"wgf_render_set_clear_color",
+		"wgf_render_set_target_clear_color",
 		"wgf_resource_get_load_budget",
 		"wgf_resource_get_path",
 		"wgf_resource_get_status",
@@ -601,6 +605,7 @@ class Reach {
 		"wgf_stage2d_set_camera",
 		"wgf_stage3d_create",
 		"wgf_stage3d_draw",
+		"wgf_stage3d_draw_with",
 		"wgf_stage3d_find",
 		"wgf_stage3d_get_ambient_color",
 		"wgf_stage3d_get_ambient_intensity",
@@ -636,6 +641,7 @@ class Reach {
 		"wgf_text_set_string",
 		"wgf_text_set_wrap_width",
 		"wgf_texture_create",
+		"wgf_texture_create_target",
 		"wgf_texture_get_filter",
 		"wgf_texture_get_height",
 		"wgf_texture_get_width",
@@ -777,7 +783,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...768) 0];
+	static final counts:Array<Int> = [for (_ in 0...774) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

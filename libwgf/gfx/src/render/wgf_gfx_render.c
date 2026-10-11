@@ -16,8 +16,10 @@
  * (sokol_glue). A frame is recorded first and drawn at its end, so what its parts must
  * send to the GPU first (text's glyph atlas) goes up before the pass opens, which it
  * can't inside one. Immediate mode (sokol_gl) records the frame, and a stage's draw is a
- * command between its layers (wgf_gfx_render_commands.c), drawn in the same pass;
- * libwgt's render targets and effects are milestone 2, step 12's. */
+ * command between its layers (wgf_gfx_render_commands.c), drawn in the same pass. A
+ * render target is a pass of its own (wgf_gfx_render_target.c), drawn before the screen's:
+ * while one is recorded, the frame's size, presentation, and clips here are the target's,
+ * and on GL its drawing is flipped (wgf_gfx_priv_render_is_flipped). */
 
 static bool setup;
 static bool in_frame;
@@ -30,9 +32,19 @@ static int frame_height;
 static float frame_dpi_scale = 1.0f;
 static wgf_platform_priv_presentation_t present; /* the frame's: logical to framebuffer pixels */
 static void (*fill_bars)(void); /* wgf_presentation_set's (wgf_gfx_presentation.c); NULL before a mode is set */
-static void (*drawing)(void);   /* the frame's commands' (wgf_gfx_render_commands.c); NULL before any */
+static void (*drawing)(int pass); /* the frame's commands' (wgf_gfx_render_commands.c); NULL before any */
 static int viewport_3d[4];      /* immediate mode's 3D viewport (set_3d), in frame viewport_3d_frame */
 static unsigned viewport_3d_frame;
+
+/* The pass recorded now (0 the screen) and its target, whether it is drawn flipped, and
+ * the screen's size and presentation, kept while a target's are in their place. */
+static int current_pass;
+static wgf_handle_t pass_target, drawing_into;
+static bool pass_flipped;
+static int screen_width, screen_height;
+static float screen_dpi_scale;
+static wgf_platform_priv_presentation_t screen_present;
+static void (*targets)(bool draw); /* the targets' (wgf_gfx_render_target.c); NULL before any is begun */
 
 /* Immediate mode drawing records into a sokol_gl context of gfx's own, drawn inside the
  * frame's pass. sokol_gl's default context can't be resized, so it stays tiny and
@@ -52,13 +64,15 @@ static bool at_most_logged;
 
 /* The clip stack: each push intersects with the clip it's pushed inside, so a scroll
  * list in a panel stays inside the panel. Clips are logical pixels with a top-left
- * origin; the scissor they become is in the frame's pixels. */
+ * origin; the scissor they become is in the frame's pixels. A target's pass starts
+ * unclipped, as libwgt's: the screen's clips come back when it ends. */
 #define MAX_CLIPS 32
 typedef struct clip_rect_t {
     float x, y, width, height;
 } clip_rect_t;
 static clip_rect_t clips[MAX_CLIPS];
 static int clip_depth;    /* entries in use */
+static int clip_base;     /* the first entry that belongs to the pass recorded now */
 static int clip_overflow; /* pushes past MAX_CLIPS, so their pops match up */
 static bool clip_warned;
 
@@ -203,7 +217,7 @@ void wgf_gfx_priv_stop(void)
     sgl_destroy_context(draw_context);
     sgl_shutdown(); /* and the 3D pipeline with it */
     draw_pipeline_3d.id = SG_INVALID_ID;
-    drawing = NULL;
+    drawing = NULL; /* the targets' hooks are set again by every target begun */
     sg_shutdown();
     setup = false;
     frame_width = 0;
@@ -238,7 +252,7 @@ static clip_rect_t frame_rect(void)
 
 static clip_rect_t current_clip(void)
 {
-    return clip_depth > 0 ? clips[clip_depth - 1] : frame_rect();
+    return clip_depth > clip_base ? clips[clip_depth - 1] : frame_rect();
 }
 
 void wgf_gfx_priv_render_get_scissor(int rect[4])
@@ -251,6 +265,7 @@ void wgf_gfx_priv_render_get_scissor(int rect[4])
     rect[1] = (int)(y0 + 0.5f);
     rect[2] = (int)(x1 + 0.5f) - rect[0];
     rect[3] = (int)(y1 + 0.5f) - rect[1];
+    if (pass_flipped) rect[1] = frame_height - rect[1] - rect[3];
 }
 
 /* Immediate mode drawn from now on is clipped: a scissor, in the frame's pixels,
@@ -300,7 +315,7 @@ void wgf_render_pop_clip(void)
         clip_overflow--;
         return;
     }
-    if (clip_depth <= 0) {
+    if (clip_depth <= clip_base) {
         warn_clips("wgf_render_pop_clip without a matching push");
         return;
     }
@@ -315,7 +330,7 @@ bool wgf_gfx_priv_render_get_clip(float *x, float *y, float *width, float *heigh
     *y = clip.y;
     *width = clip.width;
     *height = clip.height;
-    return clip_depth > 0;
+    return clip_depth > clip_base;
 }
 
 /* ---- the frame ------------------------------------------------------------- */
@@ -327,7 +342,7 @@ void wgf_gfx_priv_begin_frame(void)
     frame_height = wgf_platform_priv_get_framebuffer_height();
     frame_dpi_scale = wgf_platform_priv_get_dpi_scale();
     wgf_platform_priv_get_presentation(&present);
-    clip_depth = clip_overflow = 0;
+    clip_depth = clip_overflow = 0; /* and on the screen: every frame ends there (targets) */
     sgl_set_context(draw_context);
     sgl_defaults();
     in_frame = true; /* before the 2D projection, which reads the frame's size */
@@ -342,11 +357,13 @@ void wgf_gfx_priv_end_frame(void)
     sgl_error_t error;
     sg_pass pass;
     if (!in_frame) return;
+    if (targets != NULL) targets(false); /* a target left open is ended */
     if (clip_depth > 0 || clip_overflow > 0) warn_clips("clips pushed this frame weren't all popped");
     clip_depth = clip_overflow = 0;
     for (part = wgf_core_priv_part_list(); part != NULL; part = part->next) { /* text's glyphs, to the GPU */
         if (part->flush != NULL) part->flush();
     }
+    if (targets != NULL) targets(true); /* each target's pass, before the screen's */
     memset(&pass, 0, sizeof(pass));
     pass.swapchain = wgf_platform_priv_get_swapchain();
     pass.action.colors[0].load_action = SG_LOADACTION_CLEAR;
@@ -358,7 +375,7 @@ void wgf_gfx_priv_end_frame(void)
         pass.action.colors[0].clear_value.a = (float)wgf_color_get_alpha(cleared) / 255.0f;
     }
     sg_begin_pass(&pass);
-    if (drawing != NULL) drawing();
+    if (drawing != NULL) drawing(0);
     else sgl_context_draw(draw_context);
     error = sgl_context_error(draw_context);
     sg_end_pass();
@@ -382,6 +399,7 @@ void wgf_gfx_priv_render_set_2d(void)
     sgl_load_pipeline(draw_pipeline_2d);
     sgl_matrix_mode_projection();
     sgl_load_identity();
+    if (pass_flipped) sgl_scale(1.0f, -1.0f, 1.0f); /* clip space's y flipped */
     sgl_ortho(left, right, bottom, top, -1.0f, 1.0f);
     sgl_matrix_mode_modelview();
     sgl_load_identity();
@@ -398,7 +416,7 @@ wgf_mat4_t wgf_gfx_priv_render_projection_2d(void)
     const float left = -present.offset_x / present.scale_x, top = -present.offset_y / present.scale_y;
     const float right = ((float)frame_width - present.offset_x) / present.scale_x;
     const float bottom = ((float)frame_height - present.offset_y) / present.scale_y;
-    return wgf_mat4_orthographic(left, right, bottom, top, -1.0f, 1.0f);
+    return wgf_mat4_orthographic(left, right, pass_flipped ? top : bottom, pass_flipped ? bottom : top, -1.0f, 1.0f);
 }
 
 void wgf_gfx_priv_render_load_3d(const float view_proj[16])
@@ -419,19 +437,27 @@ void wgf_gfx_priv_render_load_3d(const float view_proj[16])
     }
     sgl_load_pipeline(draw_pipeline_3d);
     sgl_matrix_mode_projection();
-    sgl_load_matrix(view_proj);
+    sgl_load_identity();
+    if (pass_flipped) sgl_scale(1.0f, -1.0f, 1.0f); /* clip space's y flipped */
+    sgl_mult_matrix(view_proj);
     sgl_matrix_mode_modelview();
     sgl_load_identity();
 }
 
-void wgf_gfx_priv_render_set_3d(const float view_proj[16])
+void wgf_gfx_priv_render_get_visible_viewport(int rect[4])
 {
     const wgf_platform_priv_presentation_t *p = &present;
+    rect[0] = (int)(p->offset_x + p->visible_x * p->scale_x + 0.5f);
+    rect[1] = (int)(p->offset_y + p->visible_y * p->scale_y + 0.5f);
+    rect[2] = (int)(p->visible_width * p->scale_x + 0.5f);
+    rect[3] = (int)(p->visible_height * p->scale_y + 0.5f);
+    if (pass_flipped) rect[1] = frame_height - rect[1] - rect[3];
+}
+
+void wgf_gfx_priv_render_set_3d(const float view_proj[16])
+{
     /* what the camera sees fills the visible area, in the framebuffer's pixels */
-    viewport_3d[0] = (int)(p->offset_x + p->visible_x * p->scale_x + 0.5f);
-    viewport_3d[1] = (int)(p->offset_y + p->visible_y * p->scale_y + 0.5f);
-    viewport_3d[2] = (int)(p->visible_width * p->scale_x + 0.5f);
-    viewport_3d[3] = (int)(p->visible_height * p->scale_y + 0.5f);
+    wgf_gfx_priv_render_get_visible_viewport(viewport_3d);
     viewport_3d_frame = frame_number;
     sgl_set_context(draw_context);
     sgl_viewport(viewport_3d[0], viewport_3d[1], viewport_3d[2], viewport_3d[3], true);
@@ -451,9 +477,87 @@ sgl_context wgf_gfx_priv_render_get_context(void)
     return draw_context;
 }
 
-void wgf_gfx_priv_render_set_drawing(void (*draw)(void))
+void wgf_gfx_priv_render_set_drawing(void (*draw)(int pass))
 {
     drawing = draw;
+}
+
+/* ---- the passes ------------------------------------------------------------ */
+
+int wgf_gfx_priv_render_get_pass(void)
+{
+    return current_pass;
+}
+
+void wgf_gfx_priv_render_enter_pass(int pass, wgf_handle_t texture, int width, int height)
+{
+    if (!in_frame || (pass == 0) == (current_pass == 0)) return; /* from the screen to a target, or back */
+    if (pass != 0) {
+        screen_width = frame_width;
+        screen_height = frame_height;
+        screen_dpi_scale = frame_dpi_scale;
+        screen_present = present;
+        frame_width = width;
+        frame_height = height;
+        frame_dpi_scale = 1.0f; /* a target is in its own pixels */
+        memset(&present, 0, sizeof(present));
+        present.scale_x = present.scale_y = 1.0f;
+        present.visible_width = (float)width;
+        present.visible_height = (float)height;
+        clip_base = clip_depth;
+        pass_flipped = !sg_query_features().origin_top_left;
+    } else {
+        if (clip_depth > clip_base || clip_overflow > 0) {
+            warn_clips("clips pushed while drawing into a target weren't popped");
+        }
+        clip_depth = clip_base;
+        clip_overflow = 0;
+        clip_base = 0;
+        frame_width = screen_width;
+        frame_height = screen_height;
+        frame_dpi_scale = screen_dpi_scale;
+        present = screen_present;
+        pass_flipped = false;
+    }
+    current_pass = pass;
+    pass_target = pass != 0 ? texture : 0;
+    viewport_3d_frame = 0;
+    sgl_set_context(draw_context);
+    sgl_viewport(0, 0, frame_width, frame_height, true);
+    wgf_gfx_priv_render_set_2d();
+    apply_clip();
+}
+
+void wgf_gfx_priv_render_set_targets(void (*hook)(bool draw))
+{
+    targets = hook;
+}
+
+wgf_handle_t wgf_gfx_priv_render_get_target(void)
+{
+    if (drawing_into != 0) return drawing_into;
+    return in_frame ? pass_target : 0;
+}
+
+void wgf_gfx_priv_render_set_drawing_into(wgf_handle_t texture)
+{
+    drawing_into = texture;
+}
+
+bool wgf_gfx_priv_render_is_flipped(void)
+{
+    return in_frame && pass_flipped;
+}
+
+wgf_mat4_t wgf_gfx_priv_render_clip(wgf_mat4_t m)
+{
+    if (wgf_gfx_priv_render_is_flipped()) { /* clip space's y negated: the matrix's second row */
+        m.m[1] = -m.m[1];
+        m.m[5] = -m.m[5];
+        m.m[9] = -m.m[9];
+        m.m[13] = -m.m[13];
+    }
+    return m;
 }
 
 

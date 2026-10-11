@@ -20,7 +20,6 @@
 #include "wgf_light.h"
 #include "wgf_log.h"
 #include "wgf_model.h"
-#include "wgf_platform_priv.h"
 
 /* the shader's sources and reflection for the build's backend; a headless build's
    dummy backend takes the GL one, which it only checks the layout of */
@@ -81,12 +80,16 @@ typedef struct stage_draw_t {
     int first, count; /* its items */
     int first_light, light_count;
     int shapes; /* its 3D shapes' side layer of immediate mode (-1: none), drawn after its opaque models */
+    wgf_actor_t stage;
+    int pass;            /* the frame's pass it is drawn in (0 the screen, else a render target) */
+    bool flipped;        /* drawn with clip space's y flipped (a render target on GL) */
     wgf_mat4_t view_proj;
+    wgf_mat4_t clip_proj; /* what its own drawing sees through: view_proj, flipped when it is */
     wgf_vec3_t camera_position;
     float ambient[3]; /* linear, times its intensity */
     int tonemap;
     float exposure;
-    int viewport[4]; /* the visible area, in the framebuffer's pixels */
+    int viewport[4]; /* the visible area, in the pass's pixels */
     wgf_gfx_priv_shadow_camera_t shadow_camera; /* what its shadows are fitted around */
     int shadow_count;                           /* its lights with a shadow slot */
     int shadow_lights[WGF_GFX_PRIV_MAX_SHADOW_LIGHTS]; /* into the frame's lights, by slot */
@@ -119,6 +122,7 @@ static struct {
     int sprite_count, sprite_capacity;
     stage_draw_t *draws;
     int draw_count, draw_capacity;
+    int shadowed; /* the draw the shadows were fit for (-1: none) */
     wgf_gfx_priv_stage3d_light_t *lights;
     int light_count, light_capacity;
     wgf_actor_t *todo; /* the walk's */
@@ -208,6 +212,7 @@ static bool grow(void **items, int *capacity, int needed, size_t size)
 static void end_frame(void)
 {
     frame.item_count = frame.draw_count = frame.light_count = 0;
+    frame.shadowed = -1;
     frame.instances_written = false;
     frame.last_draw_calls = frame.draw_calls;
     frame.draw_calls = 0;
@@ -701,7 +706,7 @@ static void visit_emitter(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_p
     item_t *item;
     int index, mode = WGF_ALPHA_MODE_ADD;
     if (actor_ptr->type != WGF_ACTOR_KIND_EMITTER3D || particle_hooks.record == NULL) return;
-    index = particle_hooks.record(actor, draw->view_proj.m, w->right, w->up, &mode);
+    index = particle_hooks.record(actor, draw->clip_proj.m, w->right, w->up, &mode);
     if (index < 0 || !grow((void **)&frame.items, &frame.item_capacity, frame.item_count + 1, sizeof(item_t))) return;
     item = &frame.items[frame.item_count];
     memset(item, 0, sizeof(*item));
@@ -751,7 +756,7 @@ static void visit_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_pt
     reach = wgf_vec3_make(r, r, r);
     if (w->culling && outside((const float(*)[4])w->planes, wgf_vec3_sub(at, reach), wgf_vec3_add(at, reach))) return;
     if (w->sprite_camera < 0) {
-        w->sprite_camera = wgf_gfx_priv_sprite_batch_add_camera(draw->view_proj.m, w->sprite_view.right,
+        w->sprite_camera = wgf_gfx_priv_sprite_batch_add_camera(draw->clip_proj.m, w->sprite_view.right,
                                                                 w->sprite_view.up, w->sprite_view.upright);
         if (w->sprite_camera < 0) return;
     }
@@ -948,17 +953,18 @@ static void record_texts(stage_draw_t *draw)
 
 static void replay(int index);
 
-void wgf_stage3d_draw(wgf_actor_t stage)
+/* `stage` seen through `camera`, recorded for the frame's end. */
+static void draw_through(wgf_actor_t stage, wgf_actor_t camera)
 {
     const wgf_gfx_priv_actor_t *stage_ptr = stage_of(stage);
-    const wgf_actor_t camera = wgf_stage3d_get_camera(stage);
     float x, y, width, height, ambient[4];
-    wgf_platform_priv_presentation_t present;
     walk_models_t w;
     stage_draw_t *draw;
     wgf_mat4_t camera_world;
 
-    if (stage_ptr == NULL || camera == 0 || !wgf_gfx_priv_is_in_frame()) return;
+    if (stage_ptr == NULL || wgf_actor_get_kind(camera) != WGF_ACTOR_KIND_CAMERA3D || !wgf_gfx_priv_is_in_frame()) {
+        return;
+    }
     if (!grow((void **)&frame.draws, &frame.draw_capacity, frame.draw_count + 1, sizeof(stage_draw_t))) return;
     draw = &frame.draws[frame.draw_count];
     memset(draw, 0, sizeof(*draw));
@@ -966,11 +972,11 @@ void wgf_stage3d_draw(wgf_actor_t stage)
     wgf_gfx_priv_render_get_visible(&x, &y, &width, &height);
     draw->view_proj = wgf_gfx_priv_camera3d_view_projection(camera, height > 0.0f ? width / height : 1.0f,
                                                             &draw->camera_position);
-    wgf_platform_priv_get_presentation(&present);
-    draw->viewport[0] = (int)(present.offset_x + x * present.scale_x + 0.5f);
-    draw->viewport[1] = (int)(present.offset_y + y * present.scale_y + 0.5f);
-    draw->viewport[2] = (int)(width * present.scale_x + 0.5f);
-    draw->viewport[3] = (int)(height * present.scale_y + 0.5f);
+    draw->clip_proj = wgf_gfx_priv_render_clip(draw->view_proj);
+    draw->flipped = wgf_gfx_priv_render_is_flipped();
+    draw->pass = wgf_gfx_priv_render_get_pass();
+    draw->stage = stage;
+    wgf_gfx_priv_render_get_visible_viewport(draw->viewport);
     stage_ptr = stage_of(stage);
     linear_color(stage_ptr->as.stage3d.ambient_color, ambient);
     draw->ambient[0] = ambient[0] * stage_ptr->as.stage3d.ambient_intensity;
@@ -1034,6 +1040,16 @@ void wgf_stage3d_draw(wgf_actor_t stage)
     if (draw->shapes >= 0) wgf_gfx_priv_render_end_side_layer();
     if (frame.text_count > 0) record_texts(draw);
     if (wgf_gfx_priv_render_add_command(replay, frame.draw_count)) frame.draw_count++;
+}
+
+void wgf_stage3d_draw(wgf_actor_t stage)
+{
+    draw_through(stage, wgf_stage3d_get_camera(stage));
+}
+
+void wgf_stage3d_draw_with(wgf_actor_t stage, wgf_actor_t camera)
+{
+    draw_through(stage, camera);
 }
 
 /* ------------------------------------------------------------ the replay ---- */
@@ -1169,8 +1185,19 @@ static sg_view texture_view(const wgf_gfx_priv_material_texture_t *texture, sg_v
 /* Items `first` to `first + count - 1`, alike (same_group), as one draw: their records
  * are side by side in the instance texture. `lit`: the draw's environment, READY, in
  * `env`. */
+/* The shadow maps `draw` is shaded with: its own, or, seeing the stage the shadows were
+ * fit for, theirs. */
+static const wgf_gfx_priv_shadow_binding_t *shadow_of(const stage_draw_t *draw)
+{
+    const stage_draw_t *fit = frame.shadowed >= 0 && frame.shadowed < frame.draw_count ? &frame.draws[frame.shadowed]
+                                                                                       : NULL;
+    if (draw->shadow.valid || fit == NULL || fit->stage != draw->stage) return &draw->shadow;
+    return &fit->shadow;
+}
+
 static void draw_run(const stage_draw_t *draw, int first, int count, bool lit, const wgf_gfx_priv_env_lighting_t *env)
 {
+    const wgf_gfx_priv_shadow_binding_t *shadow = shadow_of(draw);
     const item_t *item = &frame.items[first];
     const wgf_gfx_priv_material_t *material = wgf_gfx_priv_material_get(item->material);
     wgf_gfx_priv_mesh_primitive_t primitive;
@@ -1182,7 +1209,7 @@ static void draw_run(const stage_draw_t *draw, int first, int count, bool lit, c
     int t, i;
 
     if (material == NULL || !wgf_gfx_priv_mesh_get_primitive(item->mesh, item->primitive, &primitive)) return;
-    sg_apply_pipeline(pipeline(item->blended, material->double_sided, item->mirrored));
+    sg_apply_pipeline(pipeline(item->blended, material->double_sided, item->mirrored != draw->flipped));
     memset(&bindings, 0, sizeof(bindings));
     bindings.vertex_buffers[0] = primitive.vertices;
     bindings.index_buffer = primitive.indices;
@@ -1192,8 +1219,8 @@ static void draw_run(const stage_draw_t *draw, int first, int count, bool lit, c
                                                                                    : frame.white_view,
                                          &bindings.samplers[t]);
     }
-    bindings.views[VIEW_shadow_tex] = draw->shadow.valid ? draw->shadow.map : frame.no_shadow_view;
-    bindings.samplers[SMP_shadow_smp] = draw->shadow.valid ? draw->shadow.sampler : frame.no_shadow_sampler;
+    bindings.views[VIEW_shadow_tex] = shadow->valid ? shadow->map : frame.no_shadow_view;
+    bindings.samplers[SMP_shadow_smp] = shadow->valid ? shadow->sampler : frame.no_shadow_sampler;
     bindings.views[VIEW_env_tex] = lit ? env->cube : frame.no_environment_view;
     bindings.samplers[SMP_env_smp] = lit ? env->cube_sampler : frame.sampler;
     bindings.views[VIEW_brdf_tex] = lit ? env->brdf : frame.white_view;
@@ -1203,7 +1230,7 @@ static void draw_run(const stage_draw_t *draw, int first, int count, bool lit, c
     sg_apply_bindings(&bindings);
 
     memset(&vs, 0, sizeof(vs));
-    memcpy(vs.view_proj, draw->view_proj.m, sizeof(vs.view_proj));
+    memcpy(vs.view_proj, draw->clip_proj.m, sizeof(vs.view_proj));
     vs.instance_base[0] = (float)item->record; /* its run's records follow it */
     sg_apply_uniforms(UB_vs_params, &SG_RANGE(vs));
 
@@ -1247,8 +1274,8 @@ static void draw_run(const stage_draw_t *draw, int first, int count, bool lit, c
         scene.u_env[3] = sinf(draw->environment_rotation);
         for (i = 0; i < 9; i++) memcpy(scene.u_sh[i], env->sh.c[i], sizeof(env->sh.c[i]));
     }
-    for (i = 0; draw->shadow.valid && i < draw->shadow.count; i++) {
-        const wgf_gfx_priv_shadow_slot_t *slot = &draw->shadow.slots[i];
+    for (i = 0; shadow->valid && i < shadow->count; i++) {
+        const wgf_gfx_priv_shadow_slot_t *slot = &shadow->slots[i];
         memcpy(scene.u_shadow_mat[i], slot->view_proj.m, sizeof(scene.u_shadow_mat[i]));
         scene.u_shadow_params[i][0] = slot->texel;
         scene.u_shadow_params[i][1] = slot->texel_world;
@@ -1263,7 +1290,7 @@ static void draw_run(const stage_draw_t *draw, int first, int count, bool lit, c
         scene.u_shadow_extra[i][2] = slot->far_z;
         scene.u_shadow_extra[i][3] = slot->perspective ? 1.0f : 0.0f;
     }
-    scene.u_shadow_map[0] = draw->shadow.flipped ? 1.0f : 0.0f;
+    scene.u_shadow_map[0] = shadow->flipped ? 1.0f : 0.0f;
     sg_apply_uniforms(UB_fs_scene, &SG_RANGE(scene));
 
     memset(&lights, 0, sizeof(lights));
@@ -1282,7 +1309,7 @@ static void draw_run(const stage_draw_t *draw, int first, int count, bool lit, c
         lights.u_light_radiance[i][2] = l->radiance.z;
         lights.u_light_spot[i][0] = l->cos_inner;
         lights.u_light_spot[i][1] = l->cos_outer;
-        lights.u_light_spot[i][2] = draw->shadow.valid && l->shadow_slot >= 0 ? (float)l->shadow_slot : -1.0f;
+        lights.u_light_spot[i][2] = shadow->valid && l->shadow_slot >= 0 ? (float)l->shadow_slot : -1.0f;
     }
     sg_apply_uniforms(UB_fs_lights, &SG_RANGE(lights));
     sg_draw(0, primitive.index_count, count);
@@ -1331,7 +1358,7 @@ static void replay(int index)
     draw = &frame.draws[index];
     sg_apply_viewport(draw->viewport[0], draw->viewport[1], draw->viewport[2], draw->viewport[3], true);
     if (draw->background != 0 && environment_hooks.background != NULL) {
-        environment_hooks.background(draw->background, draw->view_proj, draw->background_blur,
+        environment_hooks.background(draw->background, draw->clip_proj, draw->background_blur,
                                      draw->background_intensity, draw->background_rotation, draw->tonemap,
                                      draw->exposure);
     }
@@ -1460,13 +1487,17 @@ static void flush(void)
 
 /* ------------------------------------------------- the shadow pass's view ---- */
 
+/* The draw the frame's shadows are fit around: the first with a casting light into the
+ * screen, else into a target (a mirror, a minimap). Another draw of the same stage reads
+ * its maps where they reach (shadow_of). */
 bool wgf_gfx_priv_stage3d_shadow_frame(wgf_gfx_priv_shadow_frame_t *out)
 {
     int d, i, s;
-    for (d = 0; d < frame.draw_count; d++) {
-        stage_draw_t *draw = &frame.draws[d];
+    frame.shadowed = -1;
+    for (d = 0; d < frame.draw_count * 2; d++) {
+        stage_draw_t *draw = &frame.draws[d % frame.draw_count];
         bool casters = false, receivers = false;
-        if (draw->shadow_count == 0) continue;
+        if (draw->shadow_count == 0 || (d < frame.draw_count) != (draw->pass == 0)) continue;
         for (i = draw->first; i < draw->first + draw->count && !(casters && receivers); i++) {
             casters = casters || (frame.items[i].casting && !frame.items[i].blended);
             receivers = receivers || (frame.items[i].receiving && !frame.items[i].shadow_only);
@@ -1478,6 +1509,7 @@ bool wgf_gfx_priv_stage3d_shadow_frame(wgf_gfx_priv_shadow_frame_t *out)
         out->first = draw->first;
         out->count = draw->count;
         out->binding = &draw->shadow;
+        frame.shadowed = d % frame.draw_count;
         return true;
     }
     return false;

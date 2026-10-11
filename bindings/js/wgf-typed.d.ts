@@ -3696,39 +3696,88 @@ export declare const Render: {
     /**
      * The frame's size in pixels, and how many pixels make one logical pixel (2 on most
      * high-density displays); 0, 0, and 1 while there is no surface. Drawing is in logical
-     * pixels: the frame is get_width() / get_dpi_scale() of them wide.
+     * pixels: the frame is get_width() / get_dpi_scale() of them wide. Inside a render target
+     * (wgf_render_begin_target), the target's size, and 1: drawing there is in its own
+     * pixels, with no presentation (wgf_presentation.h), and a stage's camera sees it at its
+     * aspect ratio.
      */
     readonly getWidth: typeof raw.wgf_render_get_width;
     /**
      * The frame's size in pixels, and how many pixels make one logical pixel (2 on most
      * high-density displays); 0, 0, and 1 while there is no surface. Drawing is in logical
-     * pixels: the frame is get_width() / get_dpi_scale() of them wide.
+     * pixels: the frame is get_width() / get_dpi_scale() of them wide. Inside a render target
+     * (wgf_render_begin_target), the target's size, and 1: drawing there is in its own
+     * pixels, with no presentation (wgf_presentation.h), and a stage's camera sees it at its
+     * aspect ratio.
      */
     readonly getHeight: typeof raw.wgf_render_get_height;
     /**
      * The frame's size in pixels, and how many pixels make one logical pixel (2 on most
      * high-density displays); 0, 0, and 1 while there is no surface. Drawing is in logical
-     * pixels: the frame is get_width() / get_dpi_scale() of them wide.
+     * pixels: the frame is get_width() / get_dpi_scale() of them wide. Inside a render target
+     * (wgf_render_begin_target), the target's size, and 1: drawing there is in its own
+     * pixels, with no presentation (wgf_presentation.h), and a stage's camera sees it at its
+     * aspect ratio.
      */
     readonly getDpiScale: typeof raw.wgf_render_get_dpi_scale;
     /**
-     * Clip drawing to a rectangle (logical pixels, top-left origin) until the matching
-     * pop. Clips nest: each push intersects with the clip it's pushed inside, so a scroll
-     * area inside a panel stays inside the panel. Everything drawn between is clipped:
-     * immediate mode, and the 2D stages drawn there. A width or height of 0 clips
-     * everything away. Every push should be popped within the frame: unmatched ones are
-     * dropped at its end, with a warning, as is a pop without a push. Up to 32 deep; a
-     * push past that clips nothing more, warned once. Outside a frame: nothing, warned.
+     * Draw into a render target (wgf_texture_create_target) instead of the screen, until
+     * wgf_render_end_target, as libwgt's. Inside a frame, and everything draws there:
+     * stages, sprites, particles, text, the UI, immediate mode. Targets are drawn before the
+     * screen, in the order begun, so the screen shows what they drew this frame; a target
+     * begun again in the same frame keeps what it drew before. Not nested. A target isn't
+     * read while it is drawn into: used inside its own pass, it draws nothing there (warned
+     * once). False (logged) outside a frame, inside another target, for a texture that isn't
+     * a target, or past 16 target passes a frame. A frame that ends inside a target ends it
+     * (warned).
+     */
+    readonly beginTarget: typeof raw.wgf_render_begin_target;
+    /**
+     * Draw into a render target (wgf_texture_create_target) instead of the screen, until
+     * wgf_render_end_target, as libwgt's. Inside a frame, and everything draws there:
+     * stages, sprites, particles, text, the UI, immediate mode. Targets are drawn before the
+     * screen, in the order begun, so the screen shows what they drew this frame; a target
+     * begun again in the same frame keeps what it drew before. Not nested. A target isn't
+     * read while it is drawn into: used inside its own pass, it draws nothing there (warned
+     * once). False (logged) outside a frame, inside another target, for a texture that isn't
+     * a target, or past 16 target passes a frame. A frame that ends inside a target ends it
+     * (warned).
+     */
+    readonly endTarget: typeof raw.wgf_render_end_target;
+    /**
+     * What a pass into `target` starts cleared to, kept with it until changed. Default:
+     * transparent black. False, and transparent black read back, for a texture that isn't a
+     * render target.
+     */
+    readonly setTargetClearColor: typeof raw.wgf_render_set_target_clear_color;
+    /**
+     * What a pass into `target` starts cleared to, kept with it until changed. Default:
+     * transparent black. False, and transparent black read back, for a texture that isn't a
+     * render target.
+     */
+    readonly getTargetClearColor: typeof raw.wgf_render_get_target_clear_color;
+    /**
+     * Clip drawing to a rectangle (logical pixels, top-left origin; a render target's own
+     * pixels inside one) until the matching pop. Clips nest: each push intersects with the
+     * clip it's pushed inside, so a scroll area inside a panel stays inside the panel.
+     * Everything drawn between is clipped: immediate mode, and the 2D stages drawn there. A
+     * width or height of 0 clips everything away. A render target's pass starts unclipped,
+     * and the screen's clips apply again when it ends. Every push should be popped within
+     * the frame (and a target's within its pass): unmatched ones are dropped at its end,
+     * with a warning, as is a pop without a push. Up to 32 deep; a push past that clips
+     * nothing more, warned once. Outside a frame: nothing, warned.
      */
     readonly pushClip: typeof raw.wgf_render_push_clip;
     /**
-     * Clip drawing to a rectangle (logical pixels, top-left origin) until the matching
-     * pop. Clips nest: each push intersects with the clip it's pushed inside, so a scroll
-     * area inside a panel stays inside the panel. Everything drawn between is clipped:
-     * immediate mode, and the 2D stages drawn there. A width or height of 0 clips
-     * everything away. Every push should be popped within the frame: unmatched ones are
-     * dropped at its end, with a warning, as is a pop without a push. Up to 32 deep; a
-     * push past that clips nothing more, warned once. Outside a frame: nothing, warned.
+     * Clip drawing to a rectangle (logical pixels, top-left origin; a render target's own
+     * pixels inside one) until the matching pop. Clips nest: each push intersects with the
+     * clip it's pushed inside, so a scroll area inside a panel stays inside the panel.
+     * Everything drawn between is clipped: immediate mode, and the 2D stages drawn there. A
+     * width or height of 0 clips everything away. A render target's pass starts unclipped,
+     * and the screen's clips apply again when it ends. Every push should be popped within
+     * the frame (and a target's within its pass): unmatched ones are dropped at its end,
+     * with a warning, as is a pop without a push. Up to 32 deep; a push past that clips
+     * nothing more, warned once. Outside a frame: nothing, warned.
      */
     readonly popClip: typeof raw.wgf_render_pop_clip;
 };
@@ -4260,6 +4309,14 @@ export declare const Stage3d: {
      */
     readonly draw: typeof raw.wgf_stage3d_draw;
     /**
+     * Draw it as wgf_stage3d_draw does, through `camera` in place of its own, which is left as
+     * it is: a second view of the same stage, as a mirror or a minimap drawn into a render
+     * target (wgf_render_begin_target). The frame's shadows are fit around one view, the first
+     * drawn on the screen (else the first drawn), and the stage's other views are shaded with
+     * them where they reach. Nothing when `camera` isn't a 3D camera, or outside a frame.
+     */
+    readonly drawWith: typeof raw.wgf_stage3d_draw_with;
+    /**
      * The camera it is seen through: a 3D camera anywhere, on this stage or not (default 0,
      * none: nothing is drawn). False when `camera` isn't a 3D camera. A camera that is
      * destroyed leaves the stage with none.
@@ -4497,6 +4554,16 @@ export declare const Texture: {
      * texture that FAILED. wgf_resource_get_path gives the file it read.
      */
     readonly create: typeof raw.wgf_texture_create;
+    /**
+     * A texture to draw into, a render target, as libwgt's: `width` by `height` pixels,
+     * drawn into between wgf_render_begin_target and wgf_render_end_target (wgf_render.h),
+     * then used as any texture -- drawn (wgf_draw_texture), on a sprite, or on a material. It
+     * has the screen's pixel format and samples (wgf_window_set_msaa), and a depth buffer of
+     * its own, so whatever draws to the screen draws into it; it has no mipmaps. Made from
+     * numbers: READY at once, with no path. 0 for a size of 0 or less, or over 16384, or
+     * before gfx runs (in init or later), each logged.
+     */
+    readonly createTarget: typeof raw.wgf_texture_create_target;
     /**
      * Its size in pixels; 0 until it is READY.
      */

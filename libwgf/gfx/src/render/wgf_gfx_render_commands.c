@@ -14,12 +14,16 @@
  * current one (`sgl_context_draw_layer_range`, libwgf's sokol fork), not by a scan of the
  * frame's whole list a layer, which costs layers times commands (wgrender-c measured 3,000
  * switches at 5.4 ms against 0.6 ms by range).
+ * A command made with no replay closes a layer and draws nothing: a render target's
+ * begin or end (wgf_gfx_render_target.c), so each layer is drawn in the pass it was
+ * recorded in, as libwgt's.
  * Its own file, reached only by a command's maker, so a program that draws no stage
  * links none of it: render.c only calls the drawing installed here. */
 
 typedef struct command_t {
-    void (*replay)(int index);
+    void (*replay)(int index); /* NULL: a pass begun or ended */
     int index;
+    int pass;        /* the pass it, and the layer before it, are drawn in */
     int scissor[4];  /* the clip it was made under, in the framebuffer's pixels */
     int viewport[4]; /* immediate mode's then (3D's is the visible area's), given back after it */
     int first;       /* the sokol_gl command the layer after it starts at */
@@ -29,7 +33,8 @@ static command_t *commands;
 static int command_count, command_capacity;
 static unsigned commands_frame; /* the frame they were made in */
 
-static void draw_commands(void)
+/* Pass `pass`'s layers and commands; the screen's last, which ends the frame's. */
+static void draw_commands(int pass)
 {
     const sgl_context context = wgf_gfx_priv_render_get_context();
     int i, total;
@@ -38,8 +43,10 @@ static void draw_commands(void)
     for (i = 0; i <= command_count; i++) {
         /* layer i's commands: from where the command before it opened it to where the next closed it */
         const int first = i > 0 ? commands[i - 1].first : 0, end = i < command_count ? commands[i].first : total;
-        sgl_context_draw_layer_range(context, i, first, end - first);
-        if (i < command_count) {
+        if ((i < command_count ? commands[i].pass : 0) == pass) {
+            sgl_context_draw_layer_range(context, i, first, end - first);
+        }
+        if (i < command_count && commands[i].pass == pass && commands[i].replay != NULL) {
             const command_t *c = &commands[i];
             sg_apply_scissor_rect(c->scissor[0], c->scissor[1], c->scissor[2], c->scissor[3], true);
             c->replay(c->index);
@@ -48,7 +55,12 @@ static void draw_commands(void)
             sg_apply_scissor_rect(c->scissor[0], c->scissor[1], c->scissor[2], c->scissor[3], true);
         }
     }
-    command_count = 0;
+    if (pass == 0) command_count = 0;
+}
+
+void wgf_gfx_priv_render_draw_pass(int pass)
+{
+    draw_commands(pass);
 }
 
 /* Side layers: immediate mode recorded for a command to draw itself (a stage's 3D
@@ -132,6 +144,7 @@ bool wgf_gfx_priv_render_add_command(void (*replay)(int index), int index)
     c = &commands[command_count++];
     c->replay = replay;
     c->index = index;
+    c->pass = wgf_gfx_priv_render_get_pass();
     wgf_gfx_priv_render_get_scissor(c->scissor);
     wgf_gfx_priv_render_get_viewport(c->viewport);
     sgl_set_context(wgf_gfx_priv_render_get_context());

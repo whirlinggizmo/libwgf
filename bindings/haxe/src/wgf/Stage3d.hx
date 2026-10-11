@@ -23,6 +23,16 @@ import wgf.impl.Raw;
 		Raw.wgf_stage3d_draw(this);
 
 	/**
+	    Draw it as wgf_stage3d_draw does, through `camera` in place of its own, which is left as
+	    it is: a second view of the same stage, as a mirror or a minimap drawn into a render
+	    target (wgf_render_begin_target). The frame's shadows are fit around one view, the first
+	    drawn on the screen (else the first drawn), and the stage's other views are shaded with
+	    them where they reach. Nothing when `camera` isn't a 3D camera, or outside a frame.
+	**/
+	public inline function drawWith(camera:Actor):Void
+		Raw.wgf_stage3d_draw_with(this, camera);
+
+	/**
 	    The camera it is seen through: a 3D camera anywhere, on this stage or not (default 0,
 	    none: nothing is drawn). False when `camera` isn't a 3D camera. A camera that is
 	    destroyed leaves the stage with none.

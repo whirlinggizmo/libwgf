@@ -45,6 +45,15 @@ typedef enum wgf_texture_filter_t {
  * texture that FAILED. wgf_resource_get_path gives the file it read. */
 WGF_API wgf_texture_t wgf_texture_create(const char *path);
 
+/* A texture to draw into, a render target, as libwgt's: `width` by `height` pixels,
+ * drawn into between wgf_render_begin_target and wgf_render_end_target (wgf_render.h),
+ * then used as any texture -- drawn (wgf_draw_texture), on a sprite, or on a material. It
+ * has the screen's pixel format and samples (wgf_window_set_msaa), and a depth buffer of
+ * its own, so whatever draws to the screen draws into it; it has no mipmaps. Made from
+ * numbers: READY at once, with no path. 0 for a size of 0 or less, or over 16384, or
+ * before gfx runs (in init or later), each logged. */
+WGF_API wgf_texture_t wgf_texture_create_target(int width, int height);
+
 /* Its size in pixels; 0 until it is READY. */
 WGF_API int wgf_texture_get_width(wgf_texture_t texture);
 WGF_API int wgf_texture_get_height(wgf_texture_t texture);

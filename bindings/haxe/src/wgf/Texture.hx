@@ -29,6 +29,18 @@ abstract Texture(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_texture_create(path);
 
 	/**
+	    A texture to draw into, a render target, as libwgt's: `width` by `height` pixels,
+	    drawn into between wgf_render_begin_target and wgf_render_end_target (wgf_render.h),
+	    then used as any texture -- drawn (wgf_draw_texture), on a sprite, or on a material. It
+	    has the screen's pixel format and samples (wgf_window_set_msaa), and a depth buffer of
+	    its own, so whatever draws to the screen draws into it; it has no mipmaps. Made from
+	    numbers: READY at once, with no path. 0 for a size of 0 or less, or over 16384, or
+	    before gfx runs (in init or later), each logged.
+	**/
+	public static inline function createTarget(width:Int, height:Int):Texture
+		return Raw.wgf_texture_create_target(width, height);
+
+	/**
 	    Its size in pixels; 0 until it is READY.
 	**/
 	public inline function getWidth():Int

@@ -17,8 +17,9 @@
 
 /* Textures: a resource, loaded on create through core's load pipeline. A worker reads
  * and decodes the file (stb_image) and builds its mipmaps, or reads a compressed (KTX)
- * file as it is; the main thread uploads it. libwgt's, without what isn't drawn yet:
- * render targets (step 12's) and the copy of the alpha picking reads (milestone 2.5's). */
+ * file as it is; the main thread uploads it. Or a render target, drawn into
+ * (wgf_texture_create_target). libwgt's, without what isn't drawn yet: the copy of the
+ * alpha picking reads (milestone 2.5's). */
 
 #define CHECKER_SIZE 64
 #define CHECKER_SQUARE 8
@@ -32,6 +33,11 @@ typedef struct texture_t {
     wgf_texture_wrap_t wrap_u;
     wgf_texture_wrap_t wrap_v;
     wgf_texture_filter_t filter;
+    /* a render target (wgf_texture_create_target): drawn into, as the screen is */
+    bool target;
+    wgf_color_t clear_color; /* what a pass into it starts cleared to */
+    sg_image images[2];     /* its samples (with MSAA), its depth */
+    sg_view attachments[3]; /* color, resolve (with MSAA), depth */
 } texture_t;
 
 typedef struct decoded_t {
@@ -508,6 +514,10 @@ static void init_texture(void *record)
     texture_ptr->filter = WGF_TEXTURE_FILTER_LINEAR;
 }
 
+/* A target's own GPU objects, freed through a hook wgf_texture_create_target sets, so a
+ * program that makes none links none of it. */
+static void (*free_target)(texture_t *texture_ptr);
+
 /* What a record holds past the header: its GPU image once it has one. */
 static void free_texture(wgf_handle_t texture, void *record)
 {
@@ -515,6 +525,7 @@ static void free_texture(wgf_handle_t texture, void *record)
     (void)texture;
     if (texture_ptr->view.id != SG_INVALID_ID) sg_destroy_view(texture_ptr->view);
     if (texture_ptr->image.id != SG_INVALID_ID) sg_destroy_image(texture_ptr->image);
+    if (free_target != NULL) free_target(texture_ptr);
 }
 
 /* Its file side (map, loader) is set by wgf_texture_create, the only way a texture comes
@@ -530,6 +541,118 @@ wgf_texture_t wgf_texture_create(const char *path)
     resource_kind.map = map_path;
     resource_kind.loader = loader_of;
     return ensure_pool() ? wgf_asset_priv_resource_create(WGF_CORE_PRIV_HANDLE_KIND_TEXTURE, path) : 0;
+}
+
+static void free_target_objects(texture_t *texture_ptr)
+{
+    int i; /* invalid ids are ignored: a texture that isn't a target has none */
+    for (i = 0; i < 3; i++) sg_destroy_view(texture_ptr->attachments[i]);
+    for (i = 0; i < 2; i++) sg_destroy_image(texture_ptr->images[i]);
+}
+
+/* libwgt's: the screen's pixel format, samples, and a depth buffer, so every pipeline
+ * made for the screen draws into it; with samples, the image drawn is resolved into the
+ * one sampled. */
+wgf_texture_t wgf_texture_create_target(int width, int height)
+{
+    sg_environment_defaults env;
+    sg_image_desc image;
+    sg_view_desc view;
+    int samples;
+    wgf_texture_t texture = 0;
+    texture_t *t;
+    if (width <= 0 || height <= 0 || width > 16384 || height > 16384) {
+        wgf_log_error("wgf_texture_create_target: a size of %dx%d", width, height);
+        return 0;
+    }
+    if (!wgf_gfx_priv_render_is_running()) {
+        wgf_log_error("wgf_texture_create_target: gfx isn't running (make targets in init or later)");
+        return 0;
+    }
+    if (ensure_pool()) texture = wgf_core_priv_resource_add(WGF_CORE_PRIV_HANDLE_KIND_TEXTURE);
+    t = texture_of(texture);
+    if (t == NULL) return 0;
+    free_target = free_target_objects;
+    env = sg_query_desc().environment.defaults;
+    samples = env.sample_count > 1 ? env.sample_count : 1;
+    t->width = width;
+    t->height = height; /* READY as it was added: made from numbers */
+    t->target = true;
+    t->clear_color = 0x00000000u; /* transparent black */
+    memset(&image, 0, sizeof(image));
+    image.usage.color_attachment = samples == 1;
+    image.usage.resolve_attachment = samples > 1;
+    image.width = width;
+    image.height = height;
+    image.pixel_format = env.color_format != _SG_PIXELFORMAT_DEFAULT ? env.color_format : SG_PIXELFORMAT_RGBA8;
+    image.sample_count = 1;
+    image.label = "wgf-target-color";
+    t->image = sg_make_image(&image);
+    memset(&view, 0, sizeof(view));
+    if (samples > 1) {
+        memset(&image.usage, 0, sizeof(image.usage));
+        image.usage.color_attachment = true;
+        image.sample_count = samples;
+        image.label = "wgf-target-samples";
+        t->images[0] = sg_make_image(&image);
+        view.color_attachment.image = t->images[0];
+        t->attachments[0] = sg_make_view(&view);
+        memset(&view, 0, sizeof(view));
+        view.resolve_attachment.image = t->image;
+        t->attachments[1] = sg_make_view(&view);
+    } else {
+        view.color_attachment.image = t->image;
+        t->attachments[0] = sg_make_view(&view);
+    }
+    memset(&image, 0, sizeof(image));
+    image.usage.depth_stencil_attachment = true;
+    image.width = width;
+    image.height = height;
+    image.pixel_format = env.depth_format != _SG_PIXELFORMAT_DEFAULT ? env.depth_format : SG_PIXELFORMAT_DEPTH_STENCIL;
+    image.sample_count = samples;
+    image.label = "wgf-target-depth";
+    t->images[1] = sg_make_image(&image);
+    memset(&view, 0, sizeof(view));
+    view.depth_stencil_attachment.image = t->images[1];
+    t->attachments[2] = sg_make_view(&view);
+    memset(&view, 0, sizeof(view));
+    view.texture.image = t->image;
+    t->view = sg_make_view(&view);
+    if (sg_query_image_state(t->image) != SG_RESOURCESTATE_VALID ||
+        sg_query_image_state(t->images[1]) != SG_RESOURCESTATE_VALID ||
+        sg_query_view_state(t->view) != SG_RESOURCESTATE_VALID) {
+        wgf_log_error("wgf_texture_create_target: the GPU didn't take a %dx%d target", width, height);
+        wgf_resource_release(texture);
+        return 0;
+    }
+    return texture;
+}
+
+bool wgf_gfx_priv_texture_get_target(wgf_texture_t texture, sg_attachments *attachments, int *width, int *height)
+{
+    const texture_t *texture_ptr = texture_of(texture);
+    if (texture_ptr == NULL || !texture_ptr->target) return false;
+    memset(attachments, 0, sizeof(*attachments));
+    attachments->colors[0] = texture_ptr->attachments[0];
+    attachments->resolves[0] = texture_ptr->attachments[1];
+    attachments->depth_stencil = texture_ptr->attachments[2];
+    *width = texture_ptr->width;
+    *height = texture_ptr->height;
+    return true;
+}
+
+bool wgf_gfx_priv_texture_set_clear_color(wgf_texture_t texture, wgf_color_t color)
+{
+    texture_t *texture_ptr = texture_of(texture);
+    if (texture_ptr == NULL || !texture_ptr->target) return false;
+    texture_ptr->clear_color = color;
+    return true;
+}
+
+wgf_color_t wgf_gfx_priv_texture_get_clear_color(wgf_texture_t texture)
+{
+    const texture_t *texture_ptr = texture_of(texture);
+    return texture_ptr != NULL && texture_ptr->target ? texture_ptr->clear_color : 0x00000000u;
 }
 
 void wgf_gfx_priv_texture_retain(wgf_texture_t texture)
@@ -588,9 +711,16 @@ bool wgf_gfx_priv_texture_get_binding(wgf_texture_t texture, sg_view *view, sg_s
 {
     const texture_t *texture_ptr = texture_of(texture);
     if (texture_ptr == NULL || !wgf_gfx_priv_render_is_running()) return false;
+    if (texture_ptr->target && texture == wgf_gfx_priv_render_get_target()) {
+        static bool warned; /* a pass can't read the target it draws into */
+        if (!warned) wgf_log_warn("wgf_gfx_texture: a render target drawn into itself draws nothing");
+        warned = true;
+        return false;
+    }
     if (texture_ptr->resource.status == WGF_RESOURCE_STATUS_READY) {
         *view = texture_ptr->view;
-        *sampler = wgf_gfx_priv_texture_sampler(texture_ptr->wrap_u, texture_ptr->wrap_v, texture_ptr->filter, true);
+        *sampler = wgf_gfx_priv_texture_sampler(texture_ptr->wrap_u, texture_ptr->wrap_v, texture_ptr->filter,
+                                                !texture_ptr->target); /* a target has no mipmaps */
         *width = texture_ptr->width;
         *height = texture_ptr->height;
         *is_placeholder = false;

@@ -20,6 +20,7 @@ wgf_layer(gfx
         src/render/wgf_gfx_presentation.c
         src/render/wgf_gfx_render.c
         src/render/wgf_gfx_render_commands.c
+        src/render/wgf_gfx_render_target.c
         src/shape/wgf_gfx_shape2d.c
         src/shape/wgf_gfx_shape3d.c
         src/sprite/wgf_gfx_sprite.c
@@ -78,6 +79,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_shape_test)
         wgf_test(gfx wgf_gfx_sprite_test)
         wgf_test(gfx wgf_gfx_emitter_test)
+        wgf_test(gfx wgf_gfx_target_test)
     endif()
     # pixels, read back from WebGL2 in a browser
     wgf_web_test(gfx wgf_gfx_frame_web_test 1)
@@ -86,12 +88,14 @@ if(WGF_TESTS)
     wgf_window_test(gfx wgf_gfx_draw3d_window_test)
     wgf_window_test(gfx wgf_gfx_stage3d_window_test)
     wgf_window_test(gfx wgf_gfx_texture_window_test)
+    wgf_window_test(gfx wgf_gfx_target_window_test)
     wgf_web_test(gfx wgf_gfx_texture_web_test 1)
     wgf_web_test(gfx wgf_gfx_text_web_test 1)
     wgf_web_test(gfx wgf_gfx_stage2d_web_test 1)
     wgf_web_test(gfx wgf_gfx_draw3d_web_test 1)
     wgf_web_test(gfx wgf_gfx_stage3d_web_test 1)
     wgf_web_test(gfx wgf_gfx_shadow_web_test 1)
+    wgf_web_test(gfx wgf_gfx_target_web_test 1)
     wgf_web_test(gfx wgf_gfx_environment_web_test 1)
     wgf_web_test(gfx wgf_gfx_gltf_web_test 1)
 endif()

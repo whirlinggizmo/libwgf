@@ -5,6 +5,7 @@
 
 #include "sokol_gfx.h"
 #include "util/sokol_gl.h"
+#include "wgf_handle.h"
 #include "wgf_mat4.h"
 
 /* The frame, for gfx's own drawing code and app's runtime. */
@@ -55,6 +56,9 @@ void wgf_gfx_priv_render_end_3d(void);
  * under the clip it was made under, in the open pass. False outside a frame, or out of
  * memory. */
 bool wgf_gfx_priv_render_add_command(void (*replay)(int index), int index);
+/* A target's pass, its layers and commands, into the open sokol pass (the targets'
+ * drawing; the screen's is the frame's own). */
+void wgf_gfx_priv_render_draw_pass(int pass);
 
 /* A command's own immediate mode: from begin to end, immediate mode records into a
  * layer of its own through `view_proj` (depth tested, 3D), which the command draws when
@@ -67,14 +71,42 @@ void wgf_gfx_priv_render_draw_side_layer(int layer);
  * nothing else changed (set_3d's viewport is its own). */
 void wgf_gfx_priv_render_load_3d(const float view_proj[16]);
 
-/* For the commands: the immediate mode recording's context; the frame's drawing (NULL:
- * its one layer); the clip now, and immediate mode's viewport now (the visible area's
- * in 3D, the frame's otherwise), each x, y, width, height in the framebuffer's pixels
- * from its top-left. */
+/* For the commands: the immediate mode recording's context; the frame's drawing of a
+ * pass's layers and commands (NULL: its one layer); the clip now, and immediate mode's
+ * viewport now (the visible area's in 3D, the pass's otherwise), each x, y, width,
+ * height in the pass's pixels from its top-left (mirrored in a flipped pass). */
 sgl_context wgf_gfx_priv_render_get_context(void);
-void wgf_gfx_priv_render_set_drawing(void (*draw)(void));
+void wgf_gfx_priv_render_set_drawing(void (*draw)(int pass));
 void wgf_gfx_priv_render_get_scissor(int rect[4]);
 void wgf_gfx_priv_render_get_viewport(int rect[4]);
+/* The visible area, where a 3D view is drawn, in the pass's pixels as above. */
+void wgf_gfx_priv_render_get_visible_viewport(int rect[4]);
+
+/* The frame's passes: 0 the screen, then each render target begun
+ * (wgf_render_begin_target, wgf_gfx_render_target.c), drawn before the screen. The pass
+ * being recorded; and the one entered: `pass` 0 the screen again, its size, presentation,
+ * and clips as they were, else the target `texture`'s, `width` by `height` of its own
+ * pixels (a DPI scale of 1, no presentation), unclipped. Set by the targets alone. */
+int wgf_gfx_priv_render_get_pass(void);
+void wgf_gfx_priv_render_enter_pass(int pass, wgf_handle_t texture, int width, int height);
+/* The targets' hook, set by every target begun: at the frame's end, before anything is
+ * drawn (`draw` false: a target left open is ended), and after the uploads (true: each
+ * target's pass drawn, before the screen's). */
+void wgf_gfx_priv_render_set_targets(void (*hook)(bool draw));
+/* The render target drawn into now, while recording or drawing its pass; 0 the screen. A
+ * texture can't be read in the pass that draws into it. The pass draws into `texture`
+ * from now until 0 (the targets' draw). */
+wgf_handle_t wgf_gfx_priv_render_get_target(void);
+void wgf_gfx_priv_render_set_drawing_into(wgf_handle_t texture);
+
+/* GL stores a render target's rows bottom-up (its origin is the bottom-left corner);
+ * drawing into one, libwgf flips clip space's y, as libwgt does, so a target is stored
+ * top-down and whatever samples it -- a sprite, a material, a custom shader -- need not
+ * know. True while recording such a pass: the triangles' winding turns with it, and the
+ * pipelines that cull are chosen for the other winding. `clip` is `m` (to clip space)
+ * flipped so, when it is. */
+bool wgf_gfx_priv_render_is_flipped(void);
+wgf_mat4_t wgf_gfx_priv_render_clip(wgf_mat4_t m);
 
 /* What immediate mode keeps between frames (a polyline's scratch), freed at gfx's stop. */
 void wgf_gfx_priv_draw_shutdown(void);

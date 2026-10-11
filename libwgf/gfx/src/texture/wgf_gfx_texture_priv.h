@@ -5,6 +5,7 @@
 #include <stddef.h>
 
 #include "sokol_gfx.h"
+#include "wgf_color.h"
 #include "wgf_texture.h"
 
 /* Textures, for gfx's own drawing code. */
@@ -20,6 +21,14 @@ sg_sampler wgf_gfx_priv_texture_sampler(wgf_texture_wrap_t wrap_u, wgf_texture_w
  * is PENDING, for a handle that isn't a texture, or before gfx is set up. */
 bool wgf_gfx_priv_texture_get_binding(wgf_texture_t texture, sg_view *view, sg_sampler *sampler, int *width,
                                       int *height, bool *is_placeholder);
+
+/* A render target's (wgf_texture_create_target): what a pass into it draws into, and its
+ * size; false for a texture that isn't one. And what a pass into it starts cleared to
+ * (wgf_render_set_target_clear_color), kept with it: transparent black unset, and read
+ * back for a texture that isn't one. */
+bool wgf_gfx_priv_texture_get_target(wgf_texture_t texture, sg_attachments *attachments, int *width, int *height);
+bool wgf_gfx_priv_texture_set_clear_color(wgf_texture_t texture, wgf_color_t color);
+wgf_color_t wgf_gfx_priv_texture_get_clear_color(wgf_texture_t texture);
 
 /* One more reference to `texture`, as a sprite takes on the texture it shows; dropped
  * with wgf_resource_release. Nothing for a handle that isn't a texture. */

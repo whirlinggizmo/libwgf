@@ -43,6 +43,13 @@ WGF_API wgf_actor_t wgf_stage3d_create(void);
  * the up to 8 lights that reach it most. Outside a frame, or with no camera, nothing. */
 WGF_API void wgf_stage3d_draw(wgf_actor_t stage);
 
+/* Draw it as wgf_stage3d_draw does, through `camera` in place of its own, which is left as
+ * it is: a second view of the same stage, as a mirror or a minimap drawn into a render
+ * target (wgf_render_begin_target). The frame's shadows are fit around one view, the first
+ * drawn on the screen (else the first drawn), and the stage's other views are shaded with
+ * them where they reach. Nothing when `camera` isn't a 3D camera, or outside a frame. */
+WGF_API void wgf_stage3d_draw_with(wgf_actor_t stage, wgf_actor_t camera);
+
 /* The camera it is seen through: a 3D camera anywhere, on this stage or not (default 0,
  * none: nothing is drawn). False when `camera` isn't a 3D camera. A camera that is
  * destroyed leaves the stage with none. */
