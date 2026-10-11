@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "actor/wgf_gfx_actor_priv.h"
+#include "wgf_actor.h"
 #include "wgf_asset_priv.h" /* a resource made from a path: the asset part locates it */
 #include "wgf_behavior.h"
 #include "wgf_component.h"
@@ -107,17 +108,20 @@ static const kind_t kinds[] = {
       {"polygon", V_POINTS},
       {"outline", V_NUM},
       {"color", V_COLOR},
-      {"pivot", V_NUM2}},
+      {"pivot", V_NUM2},
+      {"visible", V_BOOL}},
      false},
     {"sprite",
      ROLE_KIND,
      WGF_ACTOR_KIND_SPRITE,
-     {{"texture", V_TEXT}, {"source", V_NUM4}, {"size", V_NUM2}, {"pivot", V_NUM2}, {"tint", V_COLOR}},
+     {{"texture", V_TEXT}, {"source", V_NUM4}, {"size", V_NUM2}, {"pivot", V_NUM2}, {"tint", V_COLOR},
+      {"visible", V_BOOL}},
      false},
     {"text",
      ROLE_KIND,
      WGF_ACTOR_KIND_TEXT,
-     {{"string", V_TEXT}, {"font", V_TEXT}, {"size", V_NUM}, {"color", V_COLOR}, {"wrap", V_NUM}, {"align", V_ALIGN}},
+     {{"string", V_TEXT}, {"font", V_TEXT}, {"size", V_NUM}, {"color", V_COLOR}, {"wrap", V_NUM}, {"align", V_ALIGN},
+      {"visible", V_BOOL}},
      false},
     {"emitter2d",
      ROLE_KIND,
@@ -135,7 +139,8 @@ static const kind_t kinds[] = {
       {"size", V_NUM2},
       {"color", V_COLOR2},
       {"stretch", V_NUM},
-      {"burst", V_INT}},
+      {"burst", V_INT},
+      {"visible", V_BOOL}},
      false},
     {"voice",
      ROLE_COMPONENT,
@@ -161,7 +166,8 @@ static const kind_t kinds[] = {
       {"path", V_TEXT},
       {"tint", V_COLOR},
       {"cast_shadows", V_BOOL},
-      {"receive_shadows", V_BOOL}},
+      {"receive_shadows", V_BOOL},
+      {"visible", V_BOOL}},
      false},
 };
 #define KIND_COUNT ((int)(sizeof(kinds) / sizeof(kinds[0])))
@@ -684,6 +690,10 @@ static void apply_setting(wgf_actor_t actor, int kind, const setting_t *s, value
     const char *key = s->key;
     const int type = key_type(kind, key);
     if (!parse_value(type, s->value, v)) return; /* checked as the file was read */
+    if (kinds[kind].role == ROLE_KIND && strcmp(key, "visible") == 0) { /* every kind's: the actor's flag */
+        wgf_actor_set_visible(e, v->truth);
+        return;
+    }
     switch (what_of(kind)) {
         case 0:
             if (strcmp(key, "position") == 0) wgf_actor_set_position(e, f(v, 0), f(v, 1), f(v, 2));

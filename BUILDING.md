@@ -122,7 +122,7 @@ wgf dump --frame 60 [--autopilot FILE]         # the ecs's world, as a scene's t
 wgf export [--autopilot FILE]       # export/web (a trimmed host) and export/desktop, smoke-tested or flown by FILE
 ```
 
-`wgf --help`, and each command's, says the rest. `wgf screenshot` and `wgf dump` with `--autopilot` leave out the file's own screenshot and dump lines, and say so, so the one asked for is the one made. A game names no libwgf: it is built against the libwgf whose `wgf` runs, from its staged variants. `wgf serve` builds through hotreload-hx (`deps/hotreload-hx`), vendored, so nothing is installed for it; Haxe 4.3.7 and hxcpp 4.3.2 are what the rest need.
+`wgf --help`, and each command's, says the rest. An autopilot FILE is a path, or a file in the game's autopilot folder by its name (`wgf autopilot lap.autopilot`). The web export writes its assets' manifests (`tools/gen_manifest.py`) over what it exports, so a game that sets the root one (`wgf_asset_set_manifest("manifest.json")`) keeps none in its `assets/`; under `wgf serve` it has none, and its files are cached as the cache mode says. `wgf screenshot` and `wgf dump` with `--autopilot` leave out the file's own screenshot and dump lines, and say so, so the one asked for is the one made. A game names no libwgf: it is built against the libwgf whose `wgf` runs, from its staged variants. `wgf serve` builds through hotreload-hx (`deps/hotreload-hx`), vendored, so nothing is installed for it; Haxe 4.3.7 and hxcpp 4.3.2 are what the rest need.
 
 ### Autopilot files
 
@@ -222,6 +222,8 @@ model      a glTF file, path="path" (its nodes made under it once it loads; in a
            torus=r,thickness,rings,segments; and tint=#.., cast_shadows=true|false,
            receive_shadows=true|false (wgf_model.h; both true by default) (made once a
            stage3d has been, as it is drawn on one: before, a plain actor, warned)
+each kind  visible=true|false (wgf_actor.h, true by default): false, the actor's own output
+           isn't drawn, its children as they are -- a body's model that collides unseen
 ```
 
 and the transform and the components:
@@ -354,7 +356,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `check_features.py` | runs the feature test (`examples/haxe/feature-test/`) on hxcpp, under node, and in a browser, failing a call it never reached |
 | `check_binding.py` | checks the Haxe binding: generated, every call reached once, and its test on hxcpp, under node, and in a browser |
 | `check_js_binding.py` | checks the JS binding, its raw and typed layers: generated, their declarations under TypeScript (`bindings/js/tests/types.ts`), and every JS example (`examples/js/`) in a browser, flown by its autopilot, on the full host and trimmed as an export is |
-| `measure_frames.py` | (in `tools/bench/`) flies each game's web export (libwgf's `game:<name>`, or any game's folder) in a browser with its `autopilot/bench.autopilot` (a few hundred frames of its busiest play), else its playthrough, or runs a benchmark (`bench:shadowbench`, `tools/bench/shadowbench/`, its cases read apart by the marks it leaves in the trace), and traces each frame's main-thread work and the garbage collections; `--write` records them in `docs/benchmarks.md` beside the sizes, from the reference machine (the GPU under Xvfb, the CPU throttled 4 times). A game's frame budget, there: a median of 6 ms and a 95th percentile of 10 ms of main-thread work, and no frame over 33 ms once play has started |
+| `measure_frames.py` | (in `tools/bench/`) flies each game's web export (libwgf's `game:<name>`, or any game's folder) in a browser with its `autopilot/bench.autopilot` (a few hundred frames of its busiest play), else its playthrough, or runs a benchmark (`bench:shadowbench`, `tools/bench/shadowbench/`, its cases read apart by the marks it leaves in the trace), and traces each frame's main-thread work and the garbage collections; `--write` records them in `docs/benchmarks.md` beside the sizes, from the reference machine (the GPU under Xvfb, the CPU throttled 4 times). A game's frame budget, there: a median of 6 ms and a 95th percentile of 10 ms of main-thread work, and no frame over 33 ms once play has started; the median and percentile are of every frame of the run, its loading's too, so a loading screen that gives loads more of its frames (`wgf_resource_set_load_budget`) raises them |
 | `measure_actors.py` | (in `tools/bench/`) measures what an actor costs, bytes and nanoseconds, at 10k and 50k, static and moving, flat and deep, with behaviors, with churn, and finding by name, path, and component (`tools/bench/actors/main.c`), on `linux-x64-release-headless`; `--write` records them in `docs/benchmarks.md`, `--check` fails a row past its baseline |
 | `measure_calls.py` | (in `tools/bench/`) times a call into the host from Haxe and from JS, both through the JS binding, in a browser on the release host (not a check: timing) |
 | `check_docs.py` | checks the docs against the code: every link resolves, ARCHITECTURE names every public header, this file every tool and preset, README every doc, deps/README every vendored directory (ctest runs it) |

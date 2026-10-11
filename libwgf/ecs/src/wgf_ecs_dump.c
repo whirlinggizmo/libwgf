@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "wgf_actor.h"
 #include "wgf_behavior.h"
 #include "wgf_bounds.h"
 #include "wgf_collider.h"
@@ -99,6 +100,12 @@ static void put_color(out_t *out, const char *key, wgf_color_t color)
     put(out, " %s=#%08X", key, (unsigned)color);
 }
 
+/* A kind line's end: visible=false where the actor's own output is off (wgf_actor.h). */
+static void end_kind(out_t *out, wgf_actor_t actor)
+{
+    put(out, wgf_actor_is_visible(actor) ? "\n" : " visible=false\n");
+}
+
 static void dump_shape(out_t *out, wgf_actor_t actor)
 {
     const wgf_vec2_t pivot = wgf_shape2d_get_pivot(actor);
@@ -127,7 +134,8 @@ static void dump_shape(out_t *out, wgf_actor_t actor)
     }
     put(out, " outline=%.9g", wgf_shape2d_get_outline(actor));
     put_color(out, "color", wgf_shape2d_get_color(actor));
-    put(out, " pivot=%.9g,%.9g\n", pivot.x, pivot.y);
+    put(out, " pivot=%.9g,%.9g", pivot.x, pivot.y);
+    end_kind(out, actor);
 }
 
 static void dump_sprite(out_t *out, wgf_actor_t actor)
@@ -143,7 +151,7 @@ static void dump_sprite(out_t *out, wgf_actor_t actor)
     }
     put(out, " pivot=%.9g,%.9g", pivot.x, pivot.y);
     put_color(out, "tint", wgf_sprite_get_tint(actor));
-    put(out, "\n");
+    end_kind(out, actor);
 }
 
 static void dump_text(out_t *out, wgf_actor_t actor)
@@ -154,8 +162,9 @@ static void dump_text(out_t *out, wgf_actor_t actor)
     if (wgf_text_get_font(actor) != 0) put_text(out, "font", path_of(wgf_text_get_font(actor)));
     put(out, " size=%.9g", wgf_text_get_font_size(actor));
     put_color(out, "color", wgf_text_get_color(actor));
-    put(out, " wrap=%.9g align=%s,%s\n", wgf_text_get_wrap_width(actor), across[wgf_text_get_halign(actor)],
+    put(out, " wrap=%.9g align=%s,%s", wgf_text_get_wrap_width(actor), across[wgf_text_get_halign(actor)],
         down[wgf_text_get_valign(actor)]);
+    end_kind(out, actor);
 }
 
 static void dump_emitter(out_t *out, wgf_actor_t actor)
@@ -169,8 +178,9 @@ static void dump_emitter(out_t *out, wgf_actor_t actor)
         wgf_emitter2d_get_speed_min(actor), wgf_emitter2d_get_speed_max(actor), wgf_emitter2d_get_radius(actor),
         gravity.x, gravity.y, wgf_emitter2d_get_drag(actor), wgf_emitter2d_get_size_start(actor),
         wgf_emitter2d_get_size_end(actor));
-    put(out, " color=#%08X,#%08X stretch=%.9g\n", (unsigned)wgf_emitter2d_get_color_start(actor),
+    put(out, " color=#%08X,#%08X stretch=%.9g", (unsigned)wgf_emitter2d_get_color_start(actor),
         (unsigned)wgf_emitter2d_get_color_end(actor), wgf_emitter2d_get_stretch(actor));
+    end_kind(out, actor);
 }
 
 /* A model: its glTF file's path, or its mesh as the generated shape it is, with its create
@@ -190,8 +200,9 @@ static void dump_model(out_t *out, wgf_actor_t actor)
         for (i = 0; i < count; i++) put(out, i == 0 ? "%.9g" : ",%.9g", params[i]);
     }
     put_color(out, "tint", hooks->get_tint(actor));
-    put(out, " cast_shadows=%s receive_shadows=%s\n", hooks->get_shadows(actor, true) ? "true" : "false",
+    put(out, " cast_shadows=%s receive_shadows=%s", hooks->get_shadows(actor, true) ? "true" : "false",
         hooks->get_shadows(actor, false) ? "true" : "false");
+    end_kind(out, actor);
 }
 
 static void dump_voice(out_t *out, wgf_voice_t voice)
@@ -223,17 +234,19 @@ static bool shadows_changed(wgf_actor_t model)
 }
 
 /* `e`'s lines, a level in from its block's: its kind's (for a glTF file's node, which its
- * file makes, only its shadows where they aren't the default), then its transform,
- * components, and behaviors. */
+ * file makes, only its shadows and visibility where they aren't the default), then its
+ * transform, components, and behaviors. */
 static void dump_lines(out_t *out, wgf_actor_t e, const char *pad)
 {
     const wgf_vec3_t p = wgf_actor_get_position(e), r = wgf_actor_get_rotation(e), s = wgf_actor_get_scale(e);
     int i, b;
-    if (from_file(e) && wgf_actor_get_kind(e) == WGF_ACTOR_KIND_MODEL && shadows_changed(e)) {
-        /* a file's node's own kind line: only what the file doesn't give it, its shadows */
+    if (from_file(e) && wgf_actor_get_kind(e) == WGF_ACTOR_KIND_MODEL &&
+        (shadows_changed(e) || !wgf_actor_is_visible(e))) {
+        /* a file's node's own kind line: only what the file doesn't give it */
         const wgf_gfx_priv_model_hooks_t *hooks = wgf_gfx_priv_get_model_hooks();
-        put(out, "%s    model cast_shadows=%s receive_shadows=%s\n", pad, hooks->get_shadows(e, true) ? "true" : "false",
+        put(out, "%s    model cast_shadows=%s receive_shadows=%s", pad, hooks->get_shadows(e, true) ? "true" : "false",
             hooks->get_shadows(e, false) ? "true" : "false");
+        end_kind(out, e);
     }
     switch (from_file(e) ? WGF_ACTOR_KIND_NONE : wgf_actor_get_kind(e)) { /* each writes its own line */
         case WGF_ACTOR_KIND_SHAPE2D: put(out, "%s", pad); dump_shape(out, e); break;

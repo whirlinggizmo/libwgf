@@ -698,3 +698,77 @@ Racer (milestone 2), from step 9: the game-developer session's part 5, a sky and
 - **Found by:** the racer's session
 - **Triage:** fine: kept as they are
 
+
+Racer (milestone 2), from step 10: the game-developer session's part 6, the track streamed as Racing Kit pieces (`../libwgf-racer/FRICTION.md`, "Part 6", its entries P1 to P8; the game at aff98b5), 2026-10-10.
+
+### Racer: the root manifest lost to the browser store's first clearing
+
+- **Where:** the stream check's second visit downloaded `assets/manifest.json` again, and the offline one found no manifest; the game set its manifest and ensured its start's files in its init, as `wgf_asset.h` says to
+- **Missing:** asset tasks held until the browser's store has opened: on a new build's first visit it clears an older build's files as it opens, and the root manifest, fetched before then, went with them (libwgt's, carried)
+- **Workaround:** one `Fs.exists` first, the manifest and the loads once it answers (`Main.load`)
+- **Cost:** 30 minutes, three check runs
+- **Found by:** the racer's session (its P1)
+- **Triage:** fixed (8e652e1): a task on the web waits for the store, as a file request does; the asset cache check's page ensures a file before the store opens, and fails without the fix as the racer did
+
+### Racer: an ensured start, and a recording counting from frame 0
+
+- **Where:** the lap re-recorded with the start's files loading through an asset group: the replay's grid 13 frames later than the recording's, the lap diverging at the first S-bend
+- **Missing:** a recording that waits for asset tasks as it waits for core's loads (`core.loading` counts no ensure)
+- **Workaround:** the driver tool counts every input from the grid's first frame
+- **Cost:** 40 minutes, two recordings
+- **Found by:** the racer's session (its P2; part 5's E3 from the other side)
+- **Triage:** milestone 2.5's, with E3 (ROADMAP.md, "From the racer's friction")
+
+### Racer: the kit's pieces, imported (a good surprise)
+
+- **Where:** Kenney's Racing Kit, nine pieces, through the game's own `gen_kit.py` (the kit's offsets, unused extension, and sRGB colors as linear factors fixed in its JSON)
+- **Missing:** nothing of libwgf's: each piece loaded as glTF says, lit, and shared its mesh among the models of its path
+- **Workaround:** none
+- **Cost:** an hour, the kit's
+- **Found by:** the racer's session (its P3)
+- **Triage:** fine: kept as it is
+
+### Racer: a stale manifest fails its file, and the export wrote none
+
+- **Where:** an edit to a scene, then the browser refused it ("isn't what the manifest lists"); gen_manifest.py says to run it on what is deployed, which `wgf export` didn't
+- **Missing:** the export writing the manifests over what it exports
+- **Workaround:** the game's generator writes the manifests into `assets/` last, its `--check` failing a stale one; `.gitattributes` keeps line endings out of their hashes
+- **Cost:** 20 minutes
+- **Found by:** the racer's session (its P4)
+- **Triage:** fixed: the web export writes its assets' manifests (`tools/gen_manifest.py`'s, over what it exports), so a game keeps none in `assets/`, and under `wgf serve` has none (its files cached as the cache mode says); BUILDING, the template's README, and `wgf_asset.h` say so
+
+### Racer: a body's model that isn't drawn took code
+
+- **Where:** the collision file's road and walls, which collide unseen: a scene's `model` line had no `visible=`, so the game hid each node in code once the file had made it
+- **Missing:** the actor's visible flag in scenes
+- **Workaround:** `Track.hideCollision`, each tick until the nodes exist, 15 lines
+- **Cost:** 15 minutes
+- **Found by:** the racer's session (its P5)
+- **Triage:** fixed: every kind's line takes `visible=true|false` (the actor's own flag, `wgf_actor.h`), a glTF node's block too (`actor track/road` with `model visible=false`), and a dump writes it where it's off
+
+### Racer: taller collision than the drawn barriers, and no tunnelling (a good surprise)
+
+- **Where:** Rob's playtest bug (the car rolled over a barrier): walls colliding 2.6 m tall where drawn 0.9, hit at 30 to 32 m/s by `wall.autopilot`
+- **Missing:** nothing: the walls held, nothing passed through, and recovery is the game's (a key, and on its own when upside down, off the track, or stuck)
+- **Workaround:** none
+- **Cost:** none
+- **Found by:** the racer's session (its P6)
+- **Triage:** fine: no continuous collision is needed yet; a square hit at speed wasn't tested
+
+### Racer: a loading screen's load budget, measured as slow frames
+
+- **Where:** the loading screen gave loads 16 ms, as `wgf_resource.h` advised; the bench run's 95th percentile went to 18.89 ms, since `measure_frames.py` counts the loading's frames too
+- **Missing:** the docs saying which frames the budget's median and percentile count
+- **Workaround:** the default budget (6.33 ms)
+- **Cost:** 10 minutes
+- **Found by:** the racer's session (its P7)
+- **Triage:** docs: `wgf_resource.h` and BUILDING's `measure_frames.py` row say a measurement of the whole run counts the loading's frames, and a raised budget raises them. Measuring play alone belongs with step 14's benchmark autopilot (a lap at racing speed)
+
+### Racer: smaller things on streaming
+
+- **Where:** the racer's session's P8
+- **Missing:** an ensured scene brings none of the files it names, where `wgf_asset.h` said no format names others and ARCHITECTURE that glTF's do; `wgf export --autopilot lap.autopilot` ended in a traceback, where `autopilot/lap.autopilot` worked
+- **Workaround:** the game lists each section's pieces beside its scene; the autopilot's folder named
+- **Cost:** a few minutes each
+- **Found by:** the racer's session (its P8)
+- **Triage:** `wgf_asset.h` says now which formats list their files (glTF's, in a program with glTF; a scene's not yet), and a scene's lister is milestone 2.5's (ROADMAP.md, "From the racer's friction"); the `wgf` tool finds an autopilot by its name in the game's autopilot folder, and names a missing one, before anything is built. The frame budget documented, `wgf screenshot --timeout`, and the environment prepared in steps (its worst loading frame 103 ms, from 1.48 s) were the session's good surprises

@@ -309,8 +309,12 @@ int main(void)
                                              "actor car\n"
                                              "  model cube=2,1,4 tint=#FF0000FF cast_shadows=false\n"
                                              "  motion\n"
+                                             "end\n"
+                                             "actor wall\n"
+                                             "  model cube=1,1,1 visible=false\n"
+                                             "  motion\n"
                                              "end\n");
-        expect(wgf_scene_instantiate(garage, stage) == 1, "a model made");
+        expect(wgf_scene_instantiate(garage, stage) == 2, "the models made");
         cone = wgf_prefab_spawn_at(wgf_scene_find_prefab(garage, "cone"), world3d, 1, 2, 3, 0.25f);
         expect(near(wgf_actor_get_position(cone).z, 3) && near(wgf_actor_get_rotation(cone).y, 0.25f) &&
                    near(wgf_actor_get_rotation(cone).x, 0.5f) && near(wgf_actor_get_scale(cone).x, 2),
@@ -323,8 +327,14 @@ int main(void)
         wgf_resource_release(cube); /* the reference the comparison took */
         expect(!wgf_model_is_shadow_casting(car) && wgf_model_is_shadow_receiving(car),
                "its shadows: cast_shadows=false, receiving as a model does");
-        expect(strstr(wgf_world_dump(), "model cube=2,1,4 tint=#FF0000FF cast_shadows=false receive_shadows=true") != NULL,
+        expect(strstr(wgf_world_dump(), "model cube=2,1,4 tint=#FF0000FF cast_shadows=false receive_shadows=true\n") !=
+                   NULL,
                "dumped as it was written");
+        expect(!wgf_actor_is_visible(wgf_actor_find(stage, "wall")) && wgf_actor_is_visible(car),
+               "visible=false: the actor's own output off (a body's model, say), and only its");
+        expect(strstr(wgf_world_dump(), "model cube=1,1,1 tint=#FFFFFFFF cast_shadows=true receive_shadows=true "
+                                        "visible=false\n") != NULL,
+               "dumped hidden");
         wgf_world_clear();
         wgf_resource_release(garage);
     }
@@ -377,7 +387,7 @@ int main(void)
                                                "  model path=models/track.gltf\n"
                                                "end\n"
                                                "actor track/road\n"
-                                               "  model cast_shadows=false\n"
+                                               "  model cast_shadows=false visible=false\n"
                                                "  motion damping=0.5\n"
                                                "  behavior name=Surface grip=1 next=@../gates/gate_0/gate\n"
                                                "end\n"
@@ -451,7 +461,8 @@ int main(void)
         dump = copy_of(wgf_world_dump());
         if (getenv("WGF_TEST_SHOW")) printf("%s", dump);
         expect(dump != NULL && strstr(dump, "actor \"track\"\n    model path=\"models/track.gltf\"") != NULL &&
-                   strstr(dump, "actor \"track/road\"\n    model cast_shadows=false receive_shadows=true\n    transform") != NULL &&
+                   strstr(dump, "actor \"track/road\"\n    model cast_shadows=false receive_shadows=true visible=false\n"
+                                       "    transform") != NULL &&
                    strstr(dump, "actor \"track/gates\"\n    transform") != NULL &&
                    strstr(dump, "actor \"track/gates/gate_0/gate\"\n") != NULL &&
                    strstr(dump, "actor \"road\"") == NULL,
@@ -470,6 +481,7 @@ int main(void)
         gate = wgf_actor_find(track, "gates/gate_0/gate");
         expect(road != 0 && wgf_actor_has_component(road, WGF_COMPONENT_MOTION) && gate != 0 &&
                    !wgf_model_is_shadow_casting(road) && wgf_model_is_shadow_receiving(road) &&
+                   !wgf_actor_is_visible(road) && wgf_actor_is_visible(track) &&
                    wgf_actor_get_parent(gate) == wgf_actor_find(track, "gates/gate_0") &&
                    wgf_behavior_get_param_actor(road, wgf_actor_find_behavior(road, "Surface"), "next") == gate &&
                    wgf_actor_get_child_count(track) == 3,
