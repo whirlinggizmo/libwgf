@@ -79,6 +79,12 @@ static void apply(wgf_actor_t actor, const char *key, const double *n, int count
         wgf_gfx_priv_emitter_set_size(e, (float)n[0], (float)n[1], at(n, count, 2));
     } else if (strcmp(key, "color") == 0) {
         wgf_gfx_priv_emitter_set_color(e, colors[0], colors[1]);
+    } else if (strcmp(key, "size_keys") == 0) { /* the curve's keys in place of its two (size=) */
+        e->size_keys = 0;
+        for (i = 0; i < count; i++) wgf_gfx_priv_emitter_add_size_key(e, (float)n[i], (float)n[8 + i]);
+    } else if (strcmp(key, "color_keys") == 0) {
+        e->color_keys = 0;
+        for (i = 0; i < color_count; i++) wgf_gfx_priv_emitter_add_color_key(e, (float)n[i], colors[i]);
     } else if (strcmp(key, "palette") == 0) {
         e->palette_count = 0;
         for (i = 0; i < color_count; i++) wgf_gfx_priv_emitter_add_palette_color(e, colors[i]);
@@ -123,8 +129,14 @@ static void put(const char *format, ...)
     if (wrote > 0) out.length += (size_t)wrote;
 }
 
-/* The line as a scene writes it: its curves by their first and last keys (more keys are
- * code's), and its palette. */
+/* Whether a curve's keys are set's two: one at birth and one at death. */
+static bool two_ends(const float *times, int keys)
+{
+    return keys == 2 && times[0] == 0.0f && times[1] == 1.0f;
+}
+
+/* The line as a scene writes it: its curves (size= and color=, with their keys after where
+ * there are more than the two ends), and its palette. */
 static const char *line(wgf_actor_t actor)
 {
     static const char *const alpha[] = {"opaque", "mask", "blend", "add"};
@@ -148,8 +160,16 @@ static const char *line(wgf_actor_t actor)
     }
     put(" drag=%.9g inherit=%.9g stretch=%.9g", e->drag, e->inherit, e->stretch);
     if (e->size_keys > 0) put(" size=%.9g,%.9g,%.9g", e->size_values[0], e->size_values[e->size_keys - 1], e->size_variance);
+    if (e->size_keys > 0 && !two_ends(e->size_times, e->size_keys)) {
+        for (i = 0; i < e->size_keys; i++) put(i == 0 ? " size_keys=%.9g:%.9g" : ",%.9g:%.9g", e->size_times[i], e->size_values[i]);
+    }
     if (e->color_keys > 0) {
         put(" color=#%08X,#%08X", (unsigned)e->color_values[0], (unsigned)e->color_values[e->color_keys - 1]);
+    }
+    if (e->color_keys > 0 && !two_ends(e->color_times, e->color_keys)) {
+        for (i = 0; i < e->color_keys; i++) {
+            put(i == 0 ? " color_keys=%.9g:#%08X" : ",%.9g:#%08X", e->color_times[i], (unsigned)e->color_values[i]);
+        }
     }
     for (i = 0; i < e->palette_count; i++) put(i == 0 ? " palette=#%08X" : ",#%08X", (unsigned)e->palette[i]);
     put(" spin=%.9g,%.9g alpha=%s cutoff=%.9g seed=%d ending=%s lingering=%s", e->spin_min, e->spin_max,

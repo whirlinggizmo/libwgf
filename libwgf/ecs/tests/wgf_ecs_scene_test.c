@@ -341,7 +341,9 @@ int main(void)
             wgf_scene_t fire = load("scenes/fire.scene", "wgf-scene 2\n"
                                                          "actor smoke\n"
                                                          "  emitter3d rate=10 max=32 velocity=0,1,0,0.5 size=1,2 "
-                                                         "alpha=blend ending=true palette=#FF0000,#00FF00\n"
+                                                         "alpha=blend ending=true palette=#FF0000,#00FF00 "
+                                                         "size_keys=0:0.5,0.2:2,1:3 "
+                                                         "color_keys=0:#E0E0E000,0.1:#E0E0E080,1:#60606000\n"
                                                          "  motion\n"
                                                          "end\n");
             wgf_actor_t smoke;
@@ -353,6 +355,14 @@ int main(void)
                        wgf_emitter3d_get_palette_count(smoke) == 2 &&
                        wgf_emitter3d_get_palette_color(smoke, 1) == 0x00FF00FFu,
                    "its keys");
+            expect(wgf_emitter3d_get_size_key_count(smoke) == 3 && near(wgf_emitter3d_get_size_key_time(smoke, 1), 0.2f) &&
+                       wgf_emitter3d_get_size_key_value(smoke, 2) == 3.0f &&
+                       wgf_emitter3d_get_color_key_count(smoke) == 3 &&
+                       wgf_emitter3d_get_color_key_value(smoke, 1) == 0xE0E0E080u,
+                   "its curves' keys, in place of size= and color='s two");
+            expect(strstr(wgf_world_dump(), "size=0.5,3,0 size_keys=0:0.5,0.200000003:2,1:3 color=#E0E0E000,#60606000 "
+                                            "color_keys=0:#E0E0E000,0.100000001:#E0E0E080,1:#60606000") != NULL,
+                   "its curves dumped with their keys");
             expect(strstr(wgf_world_dump(), "emitter3d frames=1,1,1,0 rate=10 emitting=true max=32") != NULL &&
                        strstr(wgf_world_dump(), "velocity=0,1,0,0.5,0") != NULL &&
                        strstr(wgf_world_dump(), "palette=#FF0000FF,#00FF00FF spin=0,0 alpha=blend") != NULL,
@@ -383,6 +393,10 @@ int main(void)
                        strstr(wgf_world_dump(), "align=left,top facing=free\n") != NULL,
                    "dumped as written");
             expect(refused("facing", "wgf-scene 2\nactor\n  sprite facing=sideways\nend\n"), "a facing that isn't one");
+            expect(refused("keys", "wgf-scene 2\nactor\n  emitter3d size_keys=0:1,1.5:2\nend\n") &&
+                       refused("keys2", "wgf-scene 2\nactor\n  emitter3d color_keys=0:1\nend\n") &&
+                       refused("keys3", "wgf-scene 2\nactor\n  emitter3d size_keys=0:-1\nend\n"),
+                   "a curve's key at a time outside 0..1, a color that isn't one, or a negative size");
             wgf_actor_destroy(board, WGF_ACTOR_DESTROY_CHILDREN);
             wgf_actor_destroy(banner, WGF_ACTOR_DESTROY_CHILDREN);
             wgf_resource_release(signs);

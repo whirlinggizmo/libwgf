@@ -216,7 +216,9 @@ text       string="..."  font="path"  size=s  color=#..  wrap=w
 emitter2d  texture="path"  source=x,y,w,h  frames=columns,rows,count,per_second  rate=r
            emitting=true|false  max=n  life=min,max  spawn_box=hw,hh | spawn_circle=r
            velocity=x,y[,spread[,variance]]  gravity=x,y  drag=d  inherit=f  stretch=s
-           size=start,end[,variance]  color=#..,#..  palette=#..,...  spin=min,max
+           size=start,end[,variance]  color=#..,#..  size_keys=t:s,...  color_keys=t:#..,...
+           (a curve's keys, up to 8, each t 0..1 of a life, in place of size= and color='s
+           two)  palette=#..,...  spin=min,max
            alpha=opaque|mask|blend|add  cutoff=c  seed=n  ending=true|false
            lingering=true|false (wgf_emitter2d.h), and as it is made, placed: prewarm=s,
            burst=n (that many at once) (in a program with emitters: one that makes one,

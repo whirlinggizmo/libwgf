@@ -64,7 +64,9 @@ enum {
     V_COLORS, /* 1 to 8 colors, a list */
     V_NUM23,  /* two or three numbers */
     V_NUM24,
-    V_NUM35
+    V_NUM35,
+    V_SIZE_KEYS,  /* 1 to 8 of t:size, t in 0..1, a list: times in n[0..], sizes in n[8..] */
+    V_COLOR_KEYS  /* 1 to 8 of t:#.., a list: times in n[0..], colors in colors[] */
 };
 
 typedef struct key_t {
@@ -87,7 +89,7 @@ typedef struct kind_t {
     {"texture", V_TEXT}, {"source", V_NUM4}, {"frames", V_NUM4}, {"rate", V_NUM}, {"emitting", V_BOOL},                \
         {"max", V_INT}, {"life", V_NUM2}, {"burst", V_INT}, {"prewarm", V_NUM}, {"drag", V_NUM}, {"inherit", V_NUM},   \
         {"stretch", V_NUM}, {"size", V_NUM23}, {"color", V_COLOR2}, {"palette", V_COLORS}, {"spin", V_NUM2},           \
-        {"alpha", V_ALPHA}, {"cutoff", V_NUM}, {"seed", V_INT}, {"ending", V_BOOL}, {"lingering", V_BOOL},            \
+        {"size_keys", V_SIZE_KEYS}, {"color_keys", V_COLOR_KEYS}, {"alpha", V_ALPHA}, {"cutoff", V_NUM}, {"seed", V_INT}, {"ending", V_BOOL}, {"lingering", V_BOOL},            \
         {"visible", V_BOOL}
 
 static const kind_t kinds[] = {
@@ -237,6 +239,31 @@ static bool parse_color(const char *text, size_t length, wgf_color_t *out)
     return true;
 }
 
+/* A curve's keys, "t:value" each (a size, or a color), 1 to 8 of them, each t in 0..1:
+ * the times in n[0..], the values in n[8..] or colors[]. */
+static bool parse_keys(const char *text, value_t *v, bool colors)
+{
+    const char *p = text;
+    v->count = 0;
+    for (;;) {
+        const char *comma = strchr(p, ',');
+        const size_t length = comma != NULL ? (size_t)(comma - p) : strlen(p);
+        const char *colon = memchr(p, ':', length);
+        double *t = &v->n[v->count];
+        if (v->count == 8 || colon == NULL || !parse_number(p, (size_t)(colon - p), t) || *t < 0.0 || *t > 1.0) {
+            return false;
+        }
+        if (colors ? !parse_color(colon + 1, length - (size_t)(colon - p) - 1, &v->colors[v->count])
+                   : !parse_number(colon + 1, length - (size_t)(colon - p) - 1, &v->n[8 + v->count]) ||
+                         v->n[8 + v->count] < 0.0) {
+            return false;
+        }
+        v->count++;
+        if (comma == NULL) return true;
+        p = comma + 1;
+    }
+}
+
 /* A value's text (already unquoted) as `type` says: false when it isn't one. */
 static bool parse_value(int type, const char *text, value_t *v)
 {
@@ -277,6 +304,8 @@ static bool parse_value(int type, const char *text, value_t *v)
             }
         }
         case V_POINTS: return parse_list(text, v, 6, POINTS_MAX) && v->count % 2 == 0;
+        case V_SIZE_KEYS: return parse_keys(text, v, false);
+        case V_COLOR_KEYS: return parse_keys(text, v, true);
         case V_INT: {
             char *end;
             long value;
@@ -565,8 +594,8 @@ wgf_ecs_priv_scene_data_t *wgf_ecs_priv_scene_parse(const char *text, size_t siz
             for (hash = line; *hash != '\0'; hash++) {
                 if (*hash == '"' && (hash == line || hash[-1] != '\\')) quoted = !quoted;
                 if (*hash == '#' && !quoted) {
-                    /* a color's # follows = or , : it is a value, not a comment */
-                    if (hash > line && (hash[-1] == '=' || hash[-1] == ',')) continue;
+                    /* a color's # follows =, a comma, or a key's time (t:#..): a value, not a comment */
+                    if (hash > line && (hash[-1] == '=' || hash[-1] == ',' || hash[-1] == ':')) continue;
                     *hash = '\0';
                     break;
                 }

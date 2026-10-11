@@ -496,7 +496,9 @@ export const WGF_MOUSE_BUTTON_MIDDLE = 2;
  *   web       the host is the page's own directory (its document's base URL, so a
  *             <base href> moves it): a file not bundled into the page and not cached
  *             is fetched from beside the page, cached in the browser's storage, and
- *             checked again on later visits as the cache mode says
+ *             checked again on later visits as the cache mode says. A file asked
+ *             for before that storage has opened (the first frames) waits for it,
+ *             so nothing kept is lost to it, and a game needs no wait of its own
  *
  * so a web page loads its files with no call here at all, and one that should never
  * fetch bundles what it loads. Set another host to fetch from elsewhere (a CDN), or

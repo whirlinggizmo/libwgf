@@ -772,3 +772,46 @@ Racer (milestone 2), from step 10: the game-developer session's part 6, the trac
 - **Cost:** a few minutes each
 - **Found by:** the racer's session (its P8)
 - **Triage:** `wgf_asset.h` says now which formats list their files (glTF's, in a program with glTF; a scene's not yet), and a scene's lister is milestone 2.5's (ROADMAP.md, "From the racer's friction"); the `wgf` tool finds an autopilot by its name in the game's autopilot folder, and names a missing one, before anything is built. The frame budget documented, `wgf screenshot --timeout`, and the environment prepared in steps (its worst loading frame 103 ms, from 1.48 s) were the session's good surprises
+
+Racer (milestone 2), from step 11: the game-developer session's part 7, props, signs, the gantry, and tire smoke (`../libwgf-racer/FRICTION.md`, "Part 7", its entries R1 to R11; the game at b1704d9), 2026-10-11.
+
+### Racer: an emitter's first particles cost a frame of about 25 ms
+
+- **Where:** the stream check's worst frame from the race's start went from about 4.4 ms to 32.5, a hair under its 33 ms line: the launch is the first frame anything spawns
+- **Missing:** the particle shader and pipelines made before they are first drawn; they were made with the first record of live particles, mid-race
+- **Workaround:** a transparent puff from each emitter on the grid, behind the loading screen, cleared two frames on
+- **Cost:** an hour and three stream checks (halving the sections came first)
+- **Found by:** the racer's session (its R4)
+- **Triage:** fixed: the shader and pipelines are made with the first emitter (where a game makes its emitters, behind its loading screen), not at its first particles. Chrome may still finish some of it at the first draw (ANGLE makes its pipelines lazily); part 8 measures the launch without the workaround, and what is left belongs with milestone 2.5's shaders warmed before the first frame
+
+### Racer: the smoke's curves were code, a scene line holding two keys of each
+
+- **Where:** a puff that fades in, grows fast then slowly, and greys as it thins: three or four keys of size and color
+- **Missing:** a scene line said only `size=start,end` and `color=#..,#..`
+- **Workaround:** `Car.curves`, 15 lines clearing the keys and adding them in Haxe
+- **Cost:** a few minutes
+- **Found by:** the racer's session (its R3)
+- **Triage:** fixed: `size_keys=t:s,...` and `color_keys=t:#..,...` on an emitter's line (up to 8 each, t 0..1 of a life, refused outside it), in place of `size=` and `color=`'s two; a dump writes them after those where a curve has more than its two ends; a color after a key's colon is a value, not a comment
+
+### Racer: a draw count only from a hooked page
+
+- **Where:** whether the props were drawn as runs: libwgf gave no count, so the session wrapped WebGL2's draw calls in a copy of the exported page
+- **Missing:** a frame's draw count a program reads (a probe)
+- **Workaround:** the hooked page (62 draws before the props, 126 with 376 of them, the order of a scene's lines making no difference: instancing needed nothing)
+- **Cost:** half an hour
+- **Found by:** the racer's session (its R1, otherwise a good surprise)
+- **Triage:** milestone 2.5 (ROADMAP.md, "From the racer's friction"): a frame's draws and instances, read by a program and published as a probe (libwgt's `get_last_frame_stats`, carried)
+
+### Racer: puffs cut flat by the road, a slip that pegs, a number lost against its disc
+
+- **Where:** a camera-facing puff growing into the road is cut on a straight line by the depth test (its R5); a rear wheel's slip pegs at 10 in most corners, so a smoke rate needed a threshold probed from a lap (its R6); a turn's number, text facing the camera at its disc sprite's place, loses the depth test to it from about 60 m (its R7)
+- **Missing:** soft particles; a wheel's sliding speed beside its slip ratio; a depth offset for text over the sprite it labels
+- **Workaround:** the emitters 20 cm up with a rising pull; smoke from a slip of 2; the numbers 0.3 m toward the track
+- **Cost:** under an hour together
+- **Found by:** the racer's session (its R5, R6, R7)
+- **Triage:** milestone 2.5 (ROADMAP.md, "From the racer's friction"), each a game's reach rather than a block: soft particles (the depth buffer read by a particle's shader, after step 12's targets), a wheel's sliding speed (`wgf_vehicle_get_wheel_slide_speed`), and a text's depth offset toward the camera
+
+### Racer: what worked in part 7 (good surprises)
+
+- **Found by:** the racer's session (its R2, R8, R9, R10, R11)
+- **Triage:** fine as built. The emitter's header told where to hang the smoke (velocity turns with the actor, particles stay where they were born, `skip_trail` on a teleport); signs and text in 3D did what BUILDING says on the first try; the emitter's limits never bit; part 6's frictions were fixed (`visible=`, the export's manifests, an autopilot by name). Of R10: a task waiting for the browser's store was in a commit and not in the header; `wgf_asset.h` says so now, so a game needs no wait of its own. The frame budget held: props and signs cost less than the run-to-run noise, the smoke about 0.1 ms of median (its table)

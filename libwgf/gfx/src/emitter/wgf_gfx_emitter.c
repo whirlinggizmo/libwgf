@@ -397,6 +397,8 @@ static bool listed(wgf_actor_t actor)
     return true;
 }
 
+static void ensure_gpu(void);
+
 wgf_actor_t wgf_gfx_priv_emitter_create(bool two_d)
 {
     wgf_actor_t actor;
@@ -409,6 +411,10 @@ wgf_actor_t wgf_gfx_priv_emitter_create(bool two_d)
         return 0;
     }
     install();
+    /* the shader and pipelines made now, where an emitter is made (behind a loading screen,
+       as a game's are), not at its first particles: compiling them there cost the racer a
+       frame of about 25 ms mid-race (its FRICTION, part 7's R4) */
+    if (wgf_gfx_priv_render_is_running()) ensure_gpu();
     actor = wgf_gfx_priv_actor_create(two_d ? WGF_ACTOR_KIND_EMITTER2D : WGF_ACTOR_KIND_EMITTER3D);
     actor_ptr = wgf_gfx_priv_actor_of(actor);
     if (actor_ptr == NULL || !listed(actor)) {
@@ -697,8 +703,9 @@ static sg_backend shader_backend(void)
     return backend == SG_BACKEND_DUMMY ? SG_BACKEND_GLCORE : backend;
 }
 
-/* The shader, pipelines, quad, and white texture, made with the first emitter drawn rather
- * than at startup: a program without particles doesn't compile them, as wgrender's. */
+/* The shader, pipelines, quad, and white texture, made with the first emitter (or, made
+ * before gfx runs, its first draw) rather than at startup: a program without particles
+ * doesn't compile them, as wgrender's. */
 static void ensure_gpu(void)
 {
     static const float corners[12] = {-0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, -0.5f};
