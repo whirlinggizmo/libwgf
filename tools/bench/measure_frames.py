@@ -13,7 +13,8 @@ the game's autopilot/bench.autopilot, else its playthrough (wgf.json's "playthro
 playthrough.autopilot by default). A game's frame budget (HISTORY.md, "Milestone 2's
 plan"): a median of 6 ms and a 95th percentile of 10 ms of main-thread work on the
 reference machine, and no frame over 33 ms once play has started. Or bench:<name>, a benchmark in tools/bench/<name>/
-(BENCHES: shadowbench, libwgt's), built in wasm32-release against the staged variant and
+(BENCHES: shadowbench and spritebench, libwgt's), built in wasm32-release against the staged
+variant, served with the examples' files at /assets/ as an example is, and
 run with no autopilot until it logs "<name>: done": it marks each case in the trace
 (console.timeStamp "<name> <case> <models>" as the case's measured frames begin, "<name>
 rest" as they end), and each case is the frames between, a frame a mark falls in left
@@ -63,7 +64,7 @@ PASS, FAIL = 'wgf_autopilot: PASS', 'wgf_autopilot: FAIL'
 FRAME_EVENTS = ('FireAnimationFrame',)
 GC_EVENTS = ('MinorGC', 'MajorGC')
 MARK_EVENTS = ('TimeStamp',)
-BENCHES = ('shadowbench',)
+BENCHES = ('shadowbench', 'spritebench')
 GPU = """(() => { const gl = document.createElement('canvas').getContext('webgl2');
     const info = gl && gl.getExtension('WEBGL_debug_renderer_info');
     return info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : (gl ? gl.getParameter(gl.RENDERER) : ''); })()"""
@@ -124,7 +125,8 @@ def percentile(sorted_values, q):
 def run(site, flown, display, throttle, browser_path, timeout=600, bench=None):
     """One flown run, traced: its numbers, and the GPU it drew on. A benchmark's (`bench`, its
     name; `flown` None) runs until it logs that it is done: its numbers are its cases'."""
-    base, httpd = server.serve(site, assets=None)
+    # a benchmark is an example's kind of page: the examples' files at /assets/, as check_web serves them
+    base, httpd = server.serve(site, assets=server.ASSETS if bench is not None else None)
     processes = browser.RunProcesses('frames')
     processes.install_handlers()
     lines, events, ended, traced = [], [], threading.Event(), threading.Event()

@@ -114,6 +114,17 @@ Each game's web export flown by its autopilot in a browser (`tools/bench/measure
 | look away | 0.12 (0.46) | 0.21 (0.62) | 0.55 (0.91) | 2.05 (2.82) |
 | away, no cull | 0.95 (1.33) | 2.79 (3.73) | 19.06 (24.43) | 34.05 (40.38) |
 
+## spritebench
+
+`tools/bench/spritebench/` in a browser (`tools/bench/measure_frames.py bench:spritebench`): each case's frames' main-thread work, its mean in milliseconds by how many models it draws (the 95th percentile after it), traced by Chrome. The program's header says what each case is. On 13th Gen Intel(R) Core(TM) i9-13900HX, ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA), xvfb, CPU throttled 4x, the median of 3 run(s), 113e0b9 2026-10-11: another machine's are not comparable.
+
+| case | 1000 models | 4000 models | 16000 models |
+|---|---:|---:|---:|
+| grid 2d | 0.45 (0.86) | 1.47 (2.25) | 4.98 (5.69) |
+| grid 2d, 4 tex | 1.28 (2.09) | 4.6 (4.9) | 23.15 (24.43) |
+| particles 2d | 0.55 (0.97) | 1.89 (2.31) | 7.86 (10.92) |
+| emitter 2d | 0.16 (0.66) | 0.2 (0.67) | 0.34 (0.74) |
+
 ## Actors
 
 What an actor costs (`tools/bench/measure_actors.py`, the program `tools/bench/actors/main.c`, whose header says what each row and number is): the heap's growth an actor, its pools' slack included, and the frames' own cost an actor a frame (a find's rows: a find, or an actor found), the median of 3 runs, on 13th Gen Intel(R) Core(TM) i9-13900HX, `linux-x64-release-headless`, 8f3a822 2026-10-07. A check fails a row past its bytes by 5%, or past its time by twice the run's own speed against these (the median of its rows' ratios), and on this machine past 1.5 times its time. Before: the same program on the nodes and entities actors replaced, 8f3a822 2026-10-07 (docs/HISTORY.md, "One kind of object, the actor"); a dash where there was no such call. The store- rows are the ecs's store on its own (`ecs/bench/wgf_ecs_store_bench.c`), each storage's worst case among them. The flecs columns: the same on the store step 3b replaced (docs/HISTORY.md, "flecs or sparse sets, measured"), recorded before it went.
