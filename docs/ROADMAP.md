@@ -104,7 +104,7 @@ One village at night, the first scene of Rob's "Whispers in the Shadows" (SPEC.m
 From the references, for a crowd of lit, animated characters in a town at night (each planned with milestone 3, ranked by what the scene needs):
 
 1. **Skinning and the animation player,** redesigned as SPEC says (shared skeletons, sockets, crossfades, layers), on wgrender-c's measured joint texture (every joint matrix of the frame in one float texture: 100 animated characters 15.2 to 2.1 ms) and libwgt's player.
-2. **Instancing's next phase** (wgrender-c's PLAN-instancing phase 5, built by neither): a light set per instance, so characters under different torches still share a draw; see-through runs.
+2. **Instancing's next phase** (wgrender-c's PLAN-instancing phase 5, built by neither): a light set per instance, so characters under different torches still share a draw; see-through runs; and libwgf's own, from shadowbench: a material's factors in the instance record (its color, metal, roughness, emissive), so parts that differ only in those numbers, a tinted crowd's, share a draw too, since every separate draw costs the browser's GPU process (HISTORY.md, "shadowbench's cliff").
 3. **Sprites that cast shadows** (alpha-tested quads in the depth pass) and **lit particles** (spells and torches lit by the scene: wgrender-c's "mostly wiring", the lights picked from an emitter's bounds): both open in wgrender-c and libwgt.
 
 ## Distribution: when the API settles

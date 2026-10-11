@@ -98,21 +98,21 @@ Each game's web export flown by its autopilot in a browser (`tools/bench/measure
 
 ## shadowbench
 
-`tools/bench/shadowbench/` in a browser (`tools/bench/measure_frames.py bench:shadowbench`): each case's frames' main-thread work, its mean in milliseconds by how many models it draws (the 95th percentile after it), traced by Chrome. The program's header says what each case is. On 13th Gen Intel(R) Core(TM) i9-13900HX, ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA), xvfb, CPU throttled 4x, the median of 1 run(s), c22ea5e 2026-10-09: another machine's are not comparable.
+`tools/bench/shadowbench/` in a browser (`tools/bench/measure_frames.py bench:shadowbench`): each case's frames' main-thread work, its mean in milliseconds by how many models it draws (the 95th percentile after it), traced by Chrome. The program's header says what each case is. On 13th Gen Intel(R) Core(TM) i9-13900HX, ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA), xvfb, CPU throttled 4x, the median of 1 run(s), 2539a8f 2026-10-11: another machine's are not comparable.
 
 | case | 100 models | 400 models | 1000 models | 4000 models |
 |---|---:|---:|---:|---:|
-| off | 0.57 (1.17) | 1.97 (2.88) | 17.83 (23.52) | 32.72 (38.53) |
-| sun 1024 | 0.73 (1.16) | 2.82 (5.55) | 19.72 (25.42) | 33.12 (36.73) |
-| sun 2048 | 0.61 (1.11) | 3.23 (6.64) | 19.31 (23.51) | 33.1 (37.24) |
-| sun 4096 | 0.69 (1.04) | 3.72 (16.04) | 20.77 (25.94) | 33.34 (35.69) |
-| two 1024 | 0.76 (1.21) | 3.84 (13.81) | 20.25 (25.08) | 33.44 (35.82) |
-| no receive | 0.41 (0.83) | 1.9 (2.35) | 18.34 (24.6) | 32.74 (37.46) |
-| shared | 0.42 (0.96) | 1.72 (2.13) | 13.46 (14.41) | 27.48 (31.02) |
-| wide, each | 0.67 (1.08) | 3.31 (9.26) | 19.34 (21.28) | 38.76 (43.29) |
-| wide, shared | 0.33 (0.76) | 1.8 (5.9) | 18.85 (23.28) | 29.51 (31.72) |
-| look away | 0.11 (0.53) | 0.17 (0.56) | 0.33 (0.73) | 1.39 (1.78) |
-| away, no cull | 0.58 (0.98) | 1.9 (2.3) | 18.53 (22.91) | 32.13 (33.87) |
+| off | 0.69 (1.25) | 2.16 (2.72) | 18.97 (25.21) | 31.01 (34.51) |
+| sun 1024 | 1.02 (1.63) | 14.45 (16.63) | 20.37 (24.51) | 35.29 (41.49) |
+| sun 2048 | 0.95 (1.54) | 3.06 (3.69) | 20.37 (26.61) | 34.54 (41.1) |
+| sun 4096 | 0.87 (1.27) | 17.34 (18.43) | 21.04 (23.67) | 34.33 (37.67) |
+| two 1024 | 1.0 (1.35) | 16.7 (18.17) | 20.76 (27.29) | 35.1 (41.6) |
+| no receive | 0.66 (0.99) | 2.46 (3.02) | 19.83 (26.89) | 33.77 (36.22) |
+| shared | 0.45 (0.79) | 1.12 (1.37) | 2.36 (2.82) | 8.99 (9.41) |
+| wide, each | 0.89 (1.27) | 3.16 (3.58) | 20.98 (26.31) | 39.99 (44.06) |
+| wide, shared | 0.43 (1.03) | 1.1 (1.7) | 2.17 (2.67) | 8.56 (8.99) |
+| look away | 0.12 (0.46) | 0.21 (0.62) | 0.55 (0.91) | 2.05 (2.82) |
+| away, no cull | 0.95 (1.33) | 2.79 (3.73) | 19.06 (24.43) | 34.05 (40.38) |
 
 ## Actors
 

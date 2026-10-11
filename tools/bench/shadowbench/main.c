@@ -36,8 +36,8 @@
  *   no receive         the sun casts but nothing receives: the pass is skipped, so this
  *                      should land on "off"
  *   shared             every model the same mesh and material, as a forest or a crowd:
- *                      libwgt batches them into one instanced draw; libwgf draws each until
- *                      step 11, so here it is what batching would be worth
+ *                      one instanced draw (and one into the map), where the other cases'
+ *                      models, a material each, are a draw each
  *   wide, each/shared  the sun's shadows reach the whole grid instead of 40 units, so every
  *                      model is drawn into the map as well as to the screen
  *   look away          the sun casts, the camera faces away from the grid: culling should

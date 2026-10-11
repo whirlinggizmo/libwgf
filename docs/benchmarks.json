@@ -216,314 +216,314 @@
    "cases": {
     "away, no cull|100": {
      "frames": 99,
-     "mean": 0.58,
-     "median": 0.61,
-     "p95": 0.98,
-     "worst": 1.9
+     "mean": 0.95,
+     "median": 0.95,
+     "p95": 1.33,
+     "worst": 1.57
     },
     "away, no cull|1000": {
      "frames": 99,
-     "mean": 18.53,
-     "median": 17.75,
-     "p95": 22.91,
-     "worst": 31.68
+     "mean": 19.06,
+     "median": 18.3,
+     "p95": 24.43,
+     "worst": 28.43
     },
     "away, no cull|400": {
      "frames": 99,
-     "mean": 1.9,
-     "median": 1.84,
-     "p95": 2.3,
-     "worst": 5.63
+     "mean": 2.79,
+     "median": 2.6,
+     "p95": 3.73,
+     "worst": 10.73
     },
     "away, no cull|4000": {
      "frames": 99,
-     "mean": 32.13,
-     "median": 31.96,
-     "p95": 33.87,
-     "worst": 41.91
+     "mean": 34.05,
+     "median": 33.24,
+     "p95": 40.38,
+     "worst": 46.41
     },
     "look away|100": {
      "frames": 99,
-     "mean": 0.11,
-     "median": 0.05,
-     "p95": 0.53,
-     "worst": 0.82
+     "mean": 0.12,
+     "median": 0.06,
+     "p95": 0.46,
+     "worst": 0.83
     },
     "look away|1000": {
      "frames": 99,
-     "mean": 0.33,
-     "median": 0.22,
-     "p95": 0.73,
-     "worst": 1.09
+     "mean": 0.55,
+     "median": 0.6,
+     "p95": 0.91,
+     "worst": 1.21
     },
     "look away|400": {
      "frames": 99,
-     "mean": 0.17,
-     "median": 0.08,
-     "p95": 0.56,
-     "worst": 0.76
+     "mean": 0.21,
+     "median": 0.11,
+     "p95": 0.62,
+     "worst": 0.82
     },
     "look away|4000": {
      "frames": 99,
-     "mean": 1.39,
-     "median": 1.42,
-     "p95": 1.78,
-     "worst": 2.04
+     "mean": 2.05,
+     "median": 2.03,
+     "p95": 2.82,
+     "worst": 3.44
     },
     "no receive|100": {
      "frames": 99,
-     "mean": 0.41,
-     "median": 0.42,
-     "p95": 0.83,
-     "worst": 0.96
+     "mean": 0.66,
+     "median": 0.71,
+     "p95": 0.99,
+     "worst": 1.2
     },
     "no receive|1000": {
      "frames": 99,
-     "mean": 18.34,
-     "median": 17.53,
-     "p95": 24.6,
-     "worst": 30.28
+     "mean": 19.83,
+     "median": 18.69,
+     "p95": 26.89,
+     "worst": 28.89
     },
     "no receive|400": {
      "frames": 99,
-     "mean": 1.9,
-     "median": 1.74,
-     "p95": 2.35,
-     "worst": 8.62
+     "mean": 2.46,
+     "median": 2.45,
+     "p95": 3.02,
+     "worst": 5.58
     },
     "no receive|4000": {
      "frames": 99,
-     "mean": 32.74,
-     "median": 32.28,
-     "p95": 37.46,
-     "worst": 39.63
+     "mean": 33.77,
+     "median": 33.42,
+     "p95": 36.22,
+     "worst": 41.29
     },
     "off|100": {
      "frames": 99,
-     "mean": 0.57,
-     "median": 0.55,
-     "p95": 1.17,
-     "worst": 1.29
+     "mean": 0.69,
+     "median": 0.72,
+     "p95": 1.25,
+     "worst": 1.47
     },
     "off|1000": {
      "frames": 99,
-     "mean": 17.83,
-     "median": 17.15,
-     "p95": 23.52,
-     "worst": 26.52
+     "mean": 18.97,
+     "median": 17.67,
+     "p95": 25.21,
+     "worst": 28.49
     },
     "off|400": {
      "frames": 99,
-     "mean": 1.97,
-     "median": 1.91,
-     "p95": 2.88,
-     "worst": 4.38
+     "mean": 2.16,
+     "median": 2.1,
+     "p95": 2.72,
+     "worst": 5.66
     },
     "off|4000": {
      "frames": 99,
-     "mean": 32.72,
-     "median": 32.11,
-     "p95": 38.53,
-     "worst": 40.63
+     "mean": 31.01,
+     "median": 30.71,
+     "p95": 34.51,
+     "worst": 41.48
     },
     "shared|100": {
      "frames": 99,
-     "mean": 0.42,
-     "median": 0.45,
-     "p95": 0.96,
-     "worst": 1.39
+     "mean": 0.45,
+     "median": 0.46,
+     "p95": 0.79,
+     "worst": 1.41
     },
     "shared|1000": {
      "frames": 99,
-     "mean": 13.46,
-     "median": 13.38,
-     "p95": 14.41,
-     "worst": 19.24
+     "mean": 2.36,
+     "median": 2.36,
+     "p95": 2.82,
+     "worst": 3.48
     },
     "shared|400": {
      "frames": 99,
-     "mean": 1.72,
-     "median": 1.47,
-     "p95": 2.13,
-     "worst": 16.25
+     "mean": 1.12,
+     "median": 1.12,
+     "p95": 1.37,
+     "worst": 1.5
     },
     "shared|4000": {
      "frames": 99,
-     "mean": 27.48,
-     "median": 27.07,
-     "p95": 31.02,
-     "worst": 32.54
+     "mean": 8.99,
+     "median": 8.96,
+     "p95": 9.41,
+     "worst": 11.79
     },
     "sun 1024|100": {
      "frames": 99,
-     "mean": 0.73,
-     "median": 0.75,
-     "p95": 1.16,
-     "worst": 1.79
+     "mean": 1.02,
+     "median": 1.0,
+     "p95": 1.63,
+     "worst": 2.12
     },
     "sun 1024|1000": {
      "frames": 99,
-     "mean": 19.72,
-     "median": 18.7,
-     "p95": 25.42,
-     "worst": 27.03
+     "mean": 20.37,
+     "median": 19.56,
+     "p95": 24.51,
+     "worst": 31.98
     },
     "sun 1024|400": {
      "frames": 99,
-     "mean": 2.82,
-     "median": 2.49,
-     "p95": 5.55,
-     "worst": 8.36
+     "mean": 14.45,
+     "median": 14.69,
+     "p95": 16.63,
+     "worst": 17.54
     },
     "sun 1024|4000": {
      "frames": 99,
-     "mean": 33.12,
-     "median": 32.73,
-     "p95": 36.73,
-     "worst": 41.88
+     "mean": 35.29,
+     "median": 34.37,
+     "p95": 41.49,
+     "worst": 49.13
     },
     "sun 2048|100": {
      "frames": 99,
-     "mean": 0.61,
-     "median": 0.56,
-     "p95": 1.11,
-     "worst": 3.34
+     "mean": 0.95,
+     "median": 0.9,
+     "p95": 1.54,
+     "worst": 3.53
     },
     "sun 2048|1000": {
      "frames": 99,
-     "mean": 19.31,
-     "median": 18.65,
-     "p95": 23.51,
-     "worst": 32.03
+     "mean": 20.37,
+     "median": 19.44,
+     "p95": 26.61,
+     "worst": 29.61
     },
     "sun 2048|400": {
      "frames": 99,
-     "mean": 3.23,
-     "median": 2.41,
-     "p95": 6.64,
-     "worst": 9.5
+     "mean": 3.06,
+     "median": 3.04,
+     "p95": 3.69,
+     "worst": 5.09
     },
     "sun 2048|4000": {
      "frames": 99,
-     "mean": 33.1,
-     "median": 32.75,
-     "p95": 37.24,
-     "worst": 46.43
+     "mean": 34.54,
+     "median": 34.05,
+     "p95": 41.1,
+     "worst": 43.68
     },
     "sun 4096|100": {
      "frames": 99,
-     "mean": 0.69,
-     "median": 0.75,
-     "p95": 1.04,
-     "worst": 1.41
+     "mean": 0.87,
+     "median": 0.88,
+     "p95": 1.27,
+     "worst": 1.72
     },
     "sun 4096|1000": {
      "frames": 99,
-     "mean": 20.77,
-     "median": 19.99,
-     "p95": 25.94,
-     "worst": 34.04
+     "mean": 21.04,
+     "median": 20.68,
+     "p95": 23.67,
+     "worst": 27.52
     },
     "sun 4096|400": {
      "frames": 99,
-     "mean": 3.72,
-     "median": 2.42,
-     "p95": 16.04,
-     "worst": 16.74
+     "mean": 17.34,
+     "median": 17.34,
+     "p95": 18.43,
+     "worst": 20.68
     },
     "sun 4096|4000": {
      "frames": 99,
-     "mean": 33.34,
-     "median": 32.99,
-     "p95": 35.69,
-     "worst": 43.11
+     "mean": 34.33,
+     "median": 33.85,
+     "p95": 37.67,
+     "worst": 45.88
     },
     "two 1024|100": {
      "frames": 99,
-     "mean": 0.76,
-     "median": 0.78,
-     "p95": 1.21,
-     "worst": 1.4
+     "mean": 1.0,
+     "median": 1.0,
+     "p95": 1.35,
+     "worst": 1.83
     },
     "two 1024|1000": {
      "frames": 99,
-     "mean": 20.25,
-     "median": 19.42,
-     "p95": 25.08,
-     "worst": 31.31
+     "mean": 20.76,
+     "median": 20.11,
+     "p95": 27.29,
+     "worst": 29.5
     },
     "two 1024|400": {
      "frames": 99,
-     "mean": 3.84,
-     "median": 2.59,
-     "p95": 13.81,
-     "worst": 16.28
+     "mean": 16.7,
+     "median": 16.59,
+     "p95": 18.17,
+     "worst": 19.97
     },
     "two 1024|4000": {
      "frames": 99,
-     "mean": 33.44,
-     "median": 33.15,
-     "p95": 35.82,
-     "worst": 39.52
+     "mean": 35.1,
+     "median": 34.44,
+     "p95": 41.6,
+     "worst": 47.5
     },
     "wide, each|100": {
      "frames": 99,
-     "mean": 0.67,
-     "median": 0.7,
-     "p95": 1.08,
-     "worst": 1.3
+     "mean": 0.89,
+     "median": 0.89,
+     "p95": 1.27,
+     "worst": 1.88
     },
     "wide, each|1000": {
      "frames": 99,
-     "mean": 19.34,
-     "median": 19.12,
-     "p95": 21.28,
-     "worst": 26.26
+     "mean": 20.98,
+     "median": 20.06,
+     "p95": 26.31,
+     "worst": 34.75
     },
     "wide, each|400": {
      "frames": 99,
-     "mean": 3.31,
-     "median": 2.45,
-     "p95": 9.26,
-     "worst": 10.55
+     "mean": 3.16,
+     "median": 3.15,
+     "p95": 3.58,
+     "worst": 4.2
     },
     "wide, each|4000": {
      "frames": 99,
-     "mean": 38.76,
-     "median": 38.3,
-     "p95": 43.29,
-     "worst": 54.37
+     "mean": 39.99,
+     "median": 39.49,
+     "p95": 44.06,
+     "worst": 46.73
     },
     "wide, shared|100": {
      "frames": 99,
-     "mean": 0.33,
-     "median": 0.23,
-     "p95": 0.76,
-     "worst": 0.97
+     "mean": 0.43,
+     "median": 0.41,
+     "p95": 1.03,
+     "worst": 1.31
     },
     "wide, shared|1000": {
      "frames": 99,
-     "mean": 18.85,
-     "median": 18.36,
-     "p95": 23.28,
-     "worst": 29.33
+     "mean": 2.17,
+     "median": 2.15,
+     "p95": 2.67,
+     "worst": 3.76
     },
     "wide, shared|400": {
      "frames": 99,
-     "mean": 1.8,
-     "median": 1.48,
-     "p95": 5.9,
-     "worst": 9.2
+     "mean": 1.1,
+     "median": 1.08,
+     "p95": 1.7,
+     "worst": 2.08
     },
     "wide, shared|4000": {
      "frames": 99,
-     "mean": 29.51,
-     "median": 29.28,
-     "p95": 31.72,
-     "worst": 36.55
+     "mean": 8.56,
+     "median": 8.5,
+     "p95": 8.99,
+     "worst": 12.19
     }
    },
-   "commit": "c22ea5e 2026-10-09",
+   "commit": "2539a8f 2026-10-11",
    "cpu": "13th Gen Intel(R) Core(TM) i9-13900HX",
    "display": "xvfb",
    "gpu": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA)",
