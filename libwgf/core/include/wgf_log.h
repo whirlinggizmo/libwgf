@@ -55,12 +55,21 @@ static inline void wgf_log_format(wgf_log_level_t level, const char *file, int l
     wgf_log_message_source(level, file, line, text);
 }
 
-#define wgf_log_trace(...) wgf_log_format(WGF_LOG_LEVEL_TRACE, __FILE__, __LINE__, __VA_ARGS__)
-#define wgf_log_debug(...) wgf_log_format(WGF_LOG_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
-#define wgf_log_info(...) wgf_log_format(WGF_LOG_LEVEL_INFO, __FILE__, __LINE__, __VA_ARGS__)
-#define wgf_log_warn(...) wgf_log_format(WGF_LOG_LEVEL_WARN, __FILE__, __LINE__, __VA_ARGS__)
-#define wgf_log_error(...) wgf_log_format(WGF_LOG_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
-#define wgf_log_fatal(...) wgf_log_format(WGF_LOG_LEVEL_FATAL, __FILE__, __LINE__, __VA_ARGS__)
+/* The file a line is logged from: its base name where the compiler gives one alone
+ * (__FILE_NAME__: clang, GCC 12 and later), which is all the log prints, so a build
+ * carries no source paths, and is the same bytes wherever it is made; else __FILE__. */
+#ifdef __FILE_NAME__
+#define WGF_LOG_FILE __FILE_NAME__
+#else
+#define WGF_LOG_FILE __FILE__
+#endif
+
+#define wgf_log_trace(...) wgf_log_format(WGF_LOG_LEVEL_TRACE, WGF_LOG_FILE, __LINE__, __VA_ARGS__)
+#define wgf_log_debug(...) wgf_log_format(WGF_LOG_LEVEL_DEBUG, WGF_LOG_FILE, __LINE__, __VA_ARGS__)
+#define wgf_log_info(...) wgf_log_format(WGF_LOG_LEVEL_INFO, WGF_LOG_FILE, __LINE__, __VA_ARGS__)
+#define wgf_log_warn(...) wgf_log_format(WGF_LOG_LEVEL_WARN, WGF_LOG_FILE, __LINE__, __VA_ARGS__)
+#define wgf_log_error(...) wgf_log_format(WGF_LOG_LEVEL_ERROR, WGF_LOG_FILE, __LINE__, __VA_ARGS__)
+#define wgf_log_fatal(...) wgf_log_format(WGF_LOG_LEVEL_FATAL, WGF_LOG_FILE, __LINE__, __VA_ARGS__)
 
 #ifdef __cplusplus
 }

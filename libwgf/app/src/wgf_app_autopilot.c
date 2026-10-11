@@ -738,7 +738,7 @@ static void finish(long frames)
 {
     autopilot.ended = true;
     autopilot.passed = autopilot.failures == 0;
-    wgf_log_format(autopilot.passed ? WGF_LOG_LEVEL_INFO : WGF_LOG_LEVEL_ERROR, __FILE__, __LINE__,
+    wgf_log_format(autopilot.passed ? WGF_LOG_LEVEL_INFO : WGF_LOG_LEVEL_ERROR, WGF_LOG_FILE, __LINE__,
                    "wgf_autopilot: %s (%d of %d expectations failed, %ld frames)", autopilot.passed ? "PASS" : "FAIL",
                    autopilot.failures, autopilot.expectations, frames);
 }
