@@ -65,22 +65,11 @@ class Track {
 		return n;
 	}
 
-	static var hidden = false;
-
 	/**
-		The collision file's road and walls are for the bodies alone, the kit's pieces drawing
-		the track: hidden once the file's nodes are made (a scene line can't hide a model, so
-		this looks for them each tick until they are there). True once done.
+		Whether the collision file's nodes are made, and with them the track's bodies (its
+		scene hides the road and walls: visible=false).
 	**/
-	public static function hideCollision(stage:Stage3d):Bool {
-		if (hidden)
-			return true;
-		final road = (stage : Actor).find("track/road"), walls = (stage : Actor).find("track/walls");
-		if (road == 0 || walls == 0)
-			return false;
-		road.setVisible(false);
-		walls.setVisible(false);
-		hidden = true;
-		return true;
+	public static function collisionPlaced(stage:Stage3d):Bool {
+		return (stage : Actor).find("track/road") != 0 && (stage : Actor).find("track/walls") != 0;
 	}
 }

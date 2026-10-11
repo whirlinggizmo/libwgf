@@ -16,32 +16,30 @@ From it:
       ground                         the grass, 800 m square (drawn: it is the field)
       road                           the road and its shoulders, curb to tile edge
       walls                          the barriers, taller than they are drawn, and the gates'
-                                     posts (road and walls aren't drawn: the game hides them)
+                                     posts (road and walls aren't drawn: visible=false)
     assets/scenes/track.scene        the collision file placed, its bodies, and the
                                      checkpoints' sensors at the gates
     src/TrackData.hx                 the centerline every STEP metres (what the game drives
                                      by: the grid, the grass, recovery, the driver's
                                      telemetry), the checkpoints' samples, and each
                                      section's first sample and files, in streaming order
-    assets/manifest.json (and one    the asset manifests (libwgf's tools/gen_manifest.py),
-      in each directory under it)    so a returning browser reads every file from its cache
+    assets/signs/signs.png           the signs' atlas, and the smoke's particle: images drawn
+    assets/fx/puff.png               here, compared by their pixels (zlib's bytes may differ)
+
+The asset manifests, which let a returning browser read every file from its cache, are
+the web export's (`wgf export` runs libwgf's gen_manifest.py over what it exports).
 
 A section's files are its scene and the kit pieces first placed in it, so each piece's
-file is fetched once, with the first section that places it. Standard library only (and
-libwgf's gen_manifest.py, run as a program).
+file is fetched once, with the first section that places it. Standard library only.
 """
 import json
 import math
-import os
-import shutil
 import struct
-import subprocess
 import sys
-import tempfile
+import zlib
 from pathlib import Path
 
 GAME = Path(__file__).resolve().parents[1]
-LIBWGF = Path(os.environ.get('LIBWGF', Path.home() / 'projects/github/whirlinggizmo/libwgf'))
 
 
 # ---- arithmetic the same on every system ---------------------------------------------
@@ -168,6 +166,28 @@ GATE_POST = 9.04  # its posts' middles from the centerline (the kit's -0.065 and
 
 TREES = 90
 TREE_CLEAR = BARRIER_OFFSET + 5.0
+
+# the trackside props: kit models, placed by the centerline, each section's own
+CONE_INSET = 0.9  # cones stand this far in from a barrier's middle, along every corner
+CONE_SCALE = 6.0  # the kit's pylon, 0.78 m tall
+CONE_LEAD = 10  # samples before a corner the cones begin (20 m)
+CONE_EVERY = 2  # samples between cones (4 m)
+FLAG_OFFSET = BARRIER_OFFSET + 2.5  # flags and light posts, behind the barriers on the straights
+FLAG_EVERY = 8  # samples (16 m)
+FLAG_SCALE = 4.0  # 5 m tall
+LIGHT_EVERY = 24  # samples (48 m): a light post in place of every third flag
+LIGHT_SCALE = 12.0  # 9.6 m tall
+TOWER_OFFSET = BARRIER_OFFSET + 3.0  # a banner tower outside each corner's entry
+TOWER_SCALE = 6.0  # 7.5 m
+STANDS = 8  # grandstands along the start straight's left, beyond its barrier
+STAND_SCALE = 10.0
+STAND_OFFSET = BARRIER_OFFSET + 3.0  # their front edge
+
+# the signs: sprites of one atlas (assets/signs/signs.png) and text, facing as each needs
+ATLAS = (256, 128)
+CHEVRON_L, CHEVRON_R, BOARD, DISC = (0, 0, 128, 64), (128, 0, 128, 64), (0, 64, 128, 64), (128, 64, 64, 64)
+RACE_NAME = 'WHIRLING GIZMO GRAND PRIX'
+SPONSORS = ['LIBWGF', 'WHIRLING GIZMO']
 
 # the collision file's colors (glTF linear): its ground is drawn, the kit's grass
 GRASS = (0.074214, 0.274677, 0.155926)
@@ -341,8 +361,14 @@ class Mesh:
 def barrier_fits(xs, zs, hs, i, sign):
     """Whether the barrier's point at sample i stays clear of the track: not inside a corner
     tighter than its offset, nor on another part of the loop."""
-    p = side_point(xs, zs, hs, i, sign * BARRIER_OFFSET, 0.0)
-    near = (BARRIER_OFFSET - 1.0) * (BARRIER_OFFSET - 1.0)
+    return clear_of_track(xs, zs, hs, i, sign * BARRIER_OFFSET)
+
+
+def clear_of_track(xs, zs, hs, i, offset):
+    """Whether the point `offset` to the right of sample i is no nearer any sample than it is
+    to i, less a metre."""
+    p = side_point(xs, zs, hs, i, offset, 0.0)
+    near = (abs(offset) - 1.0) * (abs(offset) - 1.0)
     for k in range(len(xs)):
         if (xs[k] - p[0]) * (xs[k] - p[0]) + (zs[k] - p[2]) * (zs[k] - p[2]) < near:
             return False
@@ -480,6 +506,263 @@ def glb(meshes):
     return out
 
 
+# ---- the trackside props and signs ------------------------------------------------
+
+def corner_spans(segments, c):
+    """Each corner's first and last samples and its turn (1 left, -1 right), in the loop's order."""
+    out = []
+    along = 0.0
+    for seg in segments:
+        seg_len = seg[4] if seg[0] == 'line' else seg[4] * PI / 2
+        if seg[0] == 'arc':
+            first = int(math.ceil(along / STEP - 1e-9)) % c
+            last = int(math.floor((along + seg_len) / STEP + 1e-9)) % c
+            out.append((first, last, seg[5]))
+        along += seg_len
+    return out
+
+
+def facing(dx, dz):
+    """The yaw that turns an actor's +z along (dx, dz)."""
+    return atan2(dx, dz)
+
+
+def props(xs, zs, hs, corners, gates, segments):
+    """The kit props: (sample, name, position, yaw, scale), and the circles trees keep out of."""
+    c = len(xs)
+    out, keep_out = [], []
+    coned = set()
+    for first, last, _ in corners:
+        span = (last - first) % c
+        for k in range(-CONE_LEAD, span + 1, CONE_EVERY):
+            i = (first + k) % c
+            for side in (-1, 1):
+                if (i, side) in coned or not barrier_fits(xs, zs, hs, i, side):
+                    continue
+                coned.add((i, side))
+                out.append((i, 'pylon', side_point(xs, zs, hs, i, side * (BARRIER_OFFSET - CONE_INSET), 0.0), 0.0,
+                            (CONE_SCALE,) * 3))
+    near_corner = {i for i, _ in coned}
+    stands_to = int((6.0 + STANDS * STAND_SCALE) / STEP) + 1
+
+    def straight(i):
+        return abs(wrap(hs[(i + 1) % c] - hs[i])) < 1e-6 and abs(wrap(hs[i] - hs[i - 1])) < 1e-6
+
+    for i in range(0, c, FLAG_EVERY):
+        if not straight(i) or i in near_corner or i in gates:
+            continue
+        for side in (-1, 1):
+            if side < 0 and i <= stands_to or not clear_of_track(xs, zs, hs, i, side * FLAG_OFFSET):
+                continue  # the grandstands' side of the start straight
+            p = side_point(xs, zs, hs, i, side * FLAG_OFFSET, 0.0)
+            if i % LIGHT_EVERY == 0:
+                # its lamps toward the track
+                yaw = facing(side * cos(hs[i]), -side * sin(hs[i]))
+                out.append((i, 'lightPostLarge', p, yaw, (LIGHT_SCALE,) * 3))
+            else:
+                name = 'flagRed' if (i // FLAG_EVERY + (side > 0)) % 2 else 'flagGreen'
+                out.append((i, name, p, hs[i], (FLAG_SCALE,) * 3))
+    for n, (first, _, sign) in enumerate(corners):
+        i = (first - 4) % c
+        if clear_of_track(xs, zs, hs, i, sign * TOWER_OFFSET):
+            yaw = facing(sign * cos(hs[i]), -sign * sin(hs[i]))
+            out.append((i, 'bannerTowerRed' if n % 2 else 'bannerTowerGreen',
+                        side_point(xs, zs, hs, i, sign * TOWER_OFFSET, 0.0), yaw, (TOWER_SCALE,) * 3))
+    # the checkered flags either side of the line
+    g = gates[0]
+    for side in (-1, 1):
+        out.append((g, 'flagCheckers', side_point(xs, zs, hs, g, side * (BARRIER_OFFSET + 1.5), 0.0), hs[g],
+                    (FLAG_SCALE,) * 3))
+    # the grandstands: along the start straight's left, their fronts to it, each its local x
+    # along the track and its depth (the kit's -z) away from it
+    _, x0, z0, h0, _ = segments[0]
+    for k in range(STANDS):
+        along = 6.0 + k * STAND_SCALE
+        x, z = x0 + along * sin(h0), z0 + along * cos(h0)
+        left = (cos(h0), -sin(h0))
+        p = (x + STAND_OFFSET * left[0], 0.0, z + STAND_OFFSET * left[1])
+        out.append((int(along / STEP), 'grandStand', p, wrap(h0 - PI / 2), (STAND_SCALE,) * 3))
+        keep_out.append((p[0] + left[0] * STAND_SCALE / 2 + sin(h0) * STAND_SCALE / 2,
+                         p[2] + left[1] * STAND_SCALE / 2 + cos(h0) * STAND_SCALE / 2, STAND_SCALE))
+    return out, keep_out
+
+
+def sprite_line(cell, size, facing_key, tint=None):
+    return (f'  sprite texture="signs/signs.png" source={",".join(str(v) for v in cell)} '
+            f'size={num(size[0])},{num(size[1])} alpha=mask cutoff=0.5 facing={facing_key}' +
+            (f' tint={tint}' if tint else ''))
+
+
+def text_line(string, size, color, facing_key):
+    return f'  text string="{string}" size={num(size)} color={color} align=center,middle facing={facing_key}'
+
+
+def transform_line(p, yaw=0.0):
+    return f'  transform position={num(p[0])},{num(p[1])},{num(p[2])} rotation=0,{num(yaw, 6)},0'
+
+
+def signs(xs, zs, hs, corners, gates):
+    """The signs: (sample, block lines), each of sprites of the atlas and text. Upright boards
+    are fixed (facing=free, their +z toward who reads them); the turns' numbers turn to the
+    camera about y (facing=camera-y)."""
+    c = len(xs)
+    out = []
+    for n, (first, last, sign) in enumerate(corners):
+        span = (last - first) % c
+        h_in = hs[(first - 1) % c]
+        # chevrons on the outside barrier, turned between the corner's inside and back up it
+        for m, f in enumerate((0.25, 0.5, 0.75)):
+            i = (first + int(span * f)) % c
+            if not clear_of_track(xs, zs, hs, i, sign * (BARRIER_OFFSET + 0.6)):
+                continue
+            x, _, z = side_point(xs, zs, hs, i, sign * (BARRIER_OFFSET + 0.6), 0.0)
+            dx = 0.6 * sign * cos(hs[i]) - 0.8 * sin(hs[i])
+            dz = -0.6 * sign * sin(hs[i]) - 0.8 * cos(hs[i])
+            out.append((i, [f'actor chevron_{n}_{m}', sprite_line(CHEVRON_L if sign > 0 else CHEVRON_R, (3.0, 1.5), 'free'),
+                            transform_line((x, 1.4, z), facing(dx, dz)), 'end']))
+        # distance boards before it, on its outside, where the way in is straight that far
+        for metres in (100, 50):
+            i = (first - int(metres / STEP)) % c
+            if any(abs(wrap(hs[(i + k) % c] - h_in)) > 1e-6 for k in range(int(metres / STEP))):
+                continue
+            x, _, z = side_point(xs, zs, hs, i, sign * (BARRIER_OFFSET + 0.6), 0.0)
+            name = f'board_{n}_{metres}'
+            out.append((i, [f'actor {name}', sprite_line(BOARD, (1.6, 0.8), 'free'),
+                            transform_line((x, 1.3, z), wrap(hs[i] + PI)), 'end',
+                            f'actor {name}/text', text_line(str(metres), 0.55, '#1A1A1A', 'free'),
+                            transform_line((0.0, 0.0, 0.03)), 'end']))
+        # its number on the inside at its middle, turning to the camera
+        i = (first + span // 2) % c
+        if clear_of_track(xs, zs, hs, i, -sign * (BARRIER_OFFSET + 2.0)):
+            x, _, z = side_point(xs, zs, hs, i, -sign * (BARRIER_OFFSET + 2.0), 0.0)
+            # the number 0.3 m nearer the track than its disc: the two turn to the camera about
+            # their own middles, so in one plane the text, drawn after, loses the depth test
+            # to the disc as the depth's precision falls with distance
+            ix, iz = sign * cos(hs[i]), -sign * sin(hs[i])  # toward the track
+            out.append((i, [f'actor turn_{n}', sprite_line(DISC, (2.2, 2.2), 'camera-y'),
+                            transform_line((x, 3.5, z)), 'end',
+                            f'actor turn_{n}/text', text_line(str(n + 1), 1.3, '#C8282C', 'camera-y'),
+                            transform_line((0.3 * ix, 0.0, 0.3 * iz)), 'end']))
+    # the sponsors' boards along the start straight's right, facing across it
+    for k in range(6):
+        i = 4 + k * 8
+        if i == gates[0]:
+            continue
+        x, _, z = side_point(xs, zs, hs, i, BARRIER_OFFSET + 0.6, 0.0)
+        name = f'sponsor_{k}'
+        out.append((i, [f'actor {name}', sprite_line(BOARD, (7.0, 1.2), 'free'),
+                        transform_line((x, 1.3, z), facing(cos(hs[i]), -sin(hs[i]))), 'end',
+                        f'actor {name}/text', text_line(SPONSORS[k % 2], 0.75, '#C8282C', 'free'),
+                        transform_line((0.0, 0.0, 0.03)), 'end']))
+    # the start gantry: the race's name across its beam (red: white was lost on the white arch
+    # past 30 m), and a board under it with the lap (src/Main.hx writes it), both facing the grid
+    g = gates[0]
+    back = (-sin(hs[g]), -cos(hs[g]))
+    yaw = wrap(hs[g] + PI)
+    out.append((g, ['actor gantry_name', text_line(RACE_NAME, GANTRY_TEXT, '#C8282C', 'free'),
+                    transform_line((xs[g] + GANTRY_BACK * back[0], GANTRY_Y, zs[g] + GANTRY_BACK * back[1]), yaw), 'end',
+                    'actor gantry_board', sprite_line(BOARD, (6.0, 1.5), 'free', '#202020'),
+                    transform_line((xs[g] + GANTRY_BACK * back[0], GANTRY_Y - 1.6, zs[g] + GANTRY_BACK * back[1]), yaw),
+                    'end',
+                    'actor gantry_board/lap', text_line('LAP 1', 0.9, '#FFD040', 'free'),
+                    transform_line((0.0, 0.0, 0.03)), 'end']))
+    return out
+
+
+GANTRY_Y = 7.3  # the race's name, on the overhead's beam
+GANTRY_BACK = 1.7  # m back toward the grid from the gate's middle: the beam's face
+GANTRY_TEXT = 0.9
+
+
+# ---- the textures: PNGs written here, checked by their pixels -----------------------
+
+def png(width, height, rgba):
+    """An RGBA PNG of `rgba` (bytes, rows top first)."""
+    def chunk(kind, data):
+        return struct.pack('>I', len(data)) + kind + data + struct.pack('>I', zlib.crc32(kind + data) & 0xFFFFFFFF)
+    rows = b''.join(b'\0' + rgba[y * width * 4:(y + 1) * width * 4] for y in range(height))
+    return (b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', width, height, 8, 6, 0, 0, 0)) +
+            chunk(b'IDAT', zlib.compress(rows, 9)) + chunk(b'IEND', b''))
+
+
+def png_pixels(data):
+    """A PNG's decompressed image data (what --check compares: zlib's bytes may differ)."""
+    pos, idat = 8, b''
+    while pos < len(data):
+        n = struct.unpack_from('>I', data, pos)[0]
+        kind = data[pos + 4:pos + 8]
+        if kind == b'IHDR':
+            head = data[pos + 8:pos + 8 + n]
+        if kind == b'IDAT':
+            idat += data[pos + 8:pos + 8 + n]
+        pos += 12 + n
+    return head + zlib.decompress(idat)
+
+
+def atlas():
+    """The signs' atlas: chevrons left and right (white on red), a board (white, a dark rim),
+    and a disc (white, a red rim), each with see-through corners (alpha=mask)."""
+    w, h = ATLAS
+    px = bytearray(w * h * 4)
+
+    def put(x, y, color):
+        o = (y * w + x) * 4
+        px[o:o + 4] = bytes(color)
+
+    def rounded(cx, cy, cw, ch, r, u, v):
+        """Whether (u, v), in a cell, is inside its rectangle with corners rounded by r."""
+        m = 2  # a margin, so a mip's neighbors don't bleed in
+        x0, y0, x1, y1 = m, m, cw - 1 - m, ch - 1 - m
+        if u < x0 or u > x1 or v < y0 or v > y1:
+            return False
+        dx = max(x0 + r - u, 0, u - (x1 - r))
+        dy = max(y0 + r - v, 0, v - (y1 - r))
+        return dx * dx + dy * dy <= r * r
+
+    red, white, dark = (200, 30, 30, 255), (245, 245, 245, 255), (30, 30, 30, 255)
+    for cell, mirrored in ((CHEVRON_L, False), (CHEVRON_R, True)):
+        cx, cy, cw, ch = cell
+        for v in range(ch):
+            for u in range(cw):
+                if not rounded(cx, cy, cw, ch, 8, u, v):
+                    continue
+                uu = cw - 1 - u if mirrored else u
+                arrow = False
+                for tip in (14, 50, 86):  # three chevrons, each pointing to -u
+                    d = (uu - tip) - 0.8 * abs(v - ch / 2 + 0.5)
+                    if 0 <= d <= 12 and abs(v - ch / 2 + 0.5) <= 22:
+                        arrow = True
+                put(cx + u, cy + v, white if arrow else red)
+    cx, cy, cw, ch = BOARD
+    for v in range(ch):
+        for u in range(cw):
+            if rounded(cx, cy, cw, ch, 8, u, v):
+                rim = not rounded(cx, cy, cw, ch, 8, u - 4, v - 4) or not rounded(cx, cy, cw, ch, 8, u + 4, v + 4)
+                put(cx + u, cy + v, dark if rim else white)
+    cx, cy, cw, ch = DISC
+    for v in range(ch):
+        for u in range(cw):
+            du, dv = u - cw / 2 + 0.5, v - ch / 2 + 0.5
+            r2 = du * du + dv * dv
+            if r2 <= 29 * 29:
+                put(cx + u, cy + v, red if r2 > 23 * 23 else white)
+    return png(w, h, bytes(px))
+
+
+def puff():
+    """The smoke's particle: white, its alpha falling from the middle to nothing at the rim."""
+    size = 64
+    px = bytearray(size * size * 4)
+    for y in range(size):
+        for x in range(size):
+            dx, dy = (x - size / 2 + 0.5) / (size / 2), (y - size / 2 + 0.5) / (size / 2)
+            r = math.sqrt(dx * dx + dy * dy)
+            a = max(0.0, 1.0 - r)
+            o = (y * size + x) * 4
+            px[o:o + 4] = bytes((255, 255, 255, int(a * a * (3 - 2 * a) * 255 + 0.5)))
+    return png(size, size, bytes(px))
+
+
 # ---- the sections' scenes ----------------------------------------------------------
 
 def num(v, places=4):
@@ -493,9 +776,9 @@ def placement(name, pos, rot, scale, shadows=True):
             f'scale={num(scale[0])},{num(scale[1])},{num(scale[2])}', 'end']
 
 
-def tree_spots(xs, zs):
-    """Trees around the track, clear of its barriers: the same woods every time (a Park-Miller
-    generator, exact in a double)."""
+def tree_spots(xs, zs, keep_out):
+    """Trees around the track, clear of its barriers and the props' circles in `keep_out`: the
+    same woods every time (a Park-Miller generator, exact in a double)."""
     seed = 7
     lo_x, hi_x = min(xs) - 90, max(xs) + 90
     lo_z, hi_z = min(zs) - 90, max(zs) + 90
@@ -517,13 +800,15 @@ def tree_spots(xs, zs):
                 best, nearest = d, k
         if best < TREE_CLEAR * TREE_CLEAR:
             continue
+        if any((x - kx) * (x - kx) + (z - kz) * (z - kz) < kr * kr for kx, kz, kr in keep_out):
+            continue
         spots.append((x, z, 'treeLarge' if big else 'treeSmall', scale, yaw, nearest))
     return spots
 
 
-def sections(placed, total, xs, zs, hs, chords, gates):
-    """Each section's scene text, its new kit files, its first sample, and its piece count, in
-    the loop's order from the grid."""
+def sections(placed, total, xs, zs, hs, chords, gates, corners, segments):
+    """Each section's scene text, its new files (kit pieces, the atlas), its first sample, and
+    its block count, in the loop's order from the grid."""
     c = len(xs)
     span = total / SECTIONS
     blocks = [[] for _ in range(SECTIONS)]
@@ -532,7 +817,7 @@ def sections(placed, total, xs, zs, hs, chords, gates):
         n = min(int(along / span), SECTIONS - 1)
         if starts[n] is None:
             starts[n] = along
-        blocks[n].append((name, placement(name, pos, rot, scale, shadows=False)))
+        blocks[n].append((f'kit/{name}.glb', placement(name, pos, rot, scale, shadows=False)))
     first_sample = [int(math.ceil(starts[n] / STEP - 1e-9)) % c for n in range(SECTIONS)]
 
     def section_of(sample):
@@ -550,27 +835,38 @@ def sections(placed, total, xs, zs, hs, chords, gates):
         rot = atan2(-uz, ux)  # the kit wall runs along its +x, 0.123 deep in -z
         sz = BARRIER_THICK / 0.123
         px, pz = local_to_world(p[0], p[2], rot, 0.0, -0.0615 * sz)
-        blocks[section_of(i)].append(('barrierWall', placement(
+        blocks[section_of(i)].append(('kit/barrierWall.glb', placement(
             'barrierWall', (px, 0.0, pz), rot, (span_m, BARRIER_HEIGHT / 0.131, sz))))
     for s in gates:
         rot = wrap(hs[s] + PI)  # across the road, its posts either side
         px, pz = local_to_world(xs[s], zs[s], rot, 0.5 * GATE_SCALE[0], 0.095 * GATE_SCALE[2])
-        blocks[section_of(s)].append(('overhead', placement('overhead', (px, 0.0, pz), rot, GATE_SCALE)))
-    for x, z, name, scale, yaw, nearest in tree_spots(xs, zs):
-        blocks[section_of(nearest)].append((name, placement(name, (x, 0.0, z), yaw, (scale, scale, scale))))
+        blocks[section_of(s)].append(('kit/overhead.glb', placement('overhead', (px, 0.0, pz), rot, GATE_SCALE)))
+    things, keep_out = props(xs, zs, hs, corners, gates, segments)
+    for x, z, name, scale, yaw, nearest in tree_spots(xs, zs, keep_out):
+        blocks[section_of(nearest)].append((f'kit/{name}.glb', placement(name, (x, 0.0, z), yaw, (scale, scale, scale))))
+    # the props and signs, in the loop's order (libwgf's instancing gathers alike parts
+    # whatever their order: grouped by model, the grid drew the same draws)
+    extra = [[] for _ in range(SECTIONS)]
+    for i, name, pos, yaw, scale in things:
+        extra[section_of(i)].append((f'kit/{name}.glb', placement(name, pos, yaw, scale)))
+    for i, block in signs(xs, zs, hs, corners, gates):
+        extra[section_of(i)].append(('signs/signs.png', block))
+    for n in range(SECTIONS):
+        blocks[n] += extra[n]
 
     seen = set()
     out = []
     for n in range(SECTIONS):
-        names = []
-        for name, _ in blocks[n]:
-            if name not in seen and name not in names:
-                names.append(name)
-        seen.update(names)
-        lines = ['wgf-scene 2', f'# Section {n} of the track: its kit pieces placed. Generated by tools/gen_track.py.']
+        files = []
+        for path, _ in blocks[n]:
+            if path not in seen and path not in files:
+                files.append(path)
+        seen.update(files)
+        lines = ['wgf-scene 2', f'# Section {n} of the track: its kit pieces, props, and signs placed. Generated by '
+                 'tools/gen_track.py.']
         for _, block in blocks[n]:
             lines += block
-        out.append(('\n'.join(lines) + '\n', [f'kit/{name}.glb' for name in names], first_sample[n], len(blocks[n])))
+        out.append(('\n'.join(lines) + '\n', files, first_sample[n], len(blocks[n])))
     return out
 
 
@@ -578,12 +874,12 @@ def track_scene(xs, zs, hs, gates):
     lines = ['wgf-scene 2',
              "# The track's collision and checkpoints, generated by tools/gen_track.py (its drawn",
              "# pieces are the sections', assets/track/section_<n>.scene, streamed in). Each surface a",
-             '# static body of its own triangles at its own friction; the road and walls are hidden by',
-             "# the game (src/Track.hx: a scene line can't hide a model), the ground is the field.",
+             '# static body of its own triangles at its own friction; the road and walls are for the',
+             '# bodies alone (visible=false: the pieces draw the track), the ground is the field.',
              'actor track', '  model path="track/collision.glb"', 'end',
              'actor track/ground', '  model cast_shadows=false', '  body type=static shape=mesh friction=0.7', 'end',
-             'actor track/road', '  model cast_shadows=false', '  body type=static shape=mesh friction=1', 'end',
-             'actor track/walls', '  model cast_shadows=false', '  body type=static shape=mesh friction=0.3', 'end',
+             'actor track/road', '  model cast_shadows=false visible=false', '  body type=static shape=mesh friction=1', 'end',
+             'actor track/walls', '  model cast_shadows=false visible=false', '  body type=static shape=mesh friction=0.3', 'end',
              '',
              '# A checkpoint: a sensor box across the track, barrier to barrier, its middle 2 m up,',
              "# meeting the car's layer.",
@@ -648,30 +944,18 @@ def outputs():
     c = len(xs)
     gates = [checkpoint_sample(i, c) for i in range(CHECKPOINTS)]
     chords = barrier_runs(xs, zs, hs)
-    secs = sections(placed, total, xs, zs, hs, chords, gates)
+    corners = corner_spans(segments, c)
+    secs = sections(placed, total, xs, zs, hs, chords, gates, corners, segments)
     files = {
         GAME / 'assets' / 'track' / 'collision.glb': glb(collision(xs, zs, hs, chords, gates)),
         GAME / 'assets' / 'scenes' / 'track.scene': track_scene(xs, zs, hs, gates).encode('utf-8'),
         GAME / 'src' / 'TrackData.hx': haxe(xs, zs, hs, gates, secs, total),
+        GAME / 'assets' / 'signs' / 'signs.png': atlas(),
+        GAME / 'assets' / 'fx' / 'puff.png': puff(),
     }
     for n, (text, _, _, _) in enumerate(secs):
         files[GAME / 'assets' / 'track' / f'section_{n}.scene'] = text.encode('utf-8')
     return files
-
-
-def manifests(assets, written):
-    """The manifests libwgf's tool writes for the tree at `assets` with `written` in place, as
-    {path: bytes}."""
-    with tempfile.TemporaryDirectory() as tmp:
-        copy = Path(tmp) / 'assets'
-        shutil.copytree(assets, copy, ignore=shutil.ignore_patterns('manifest.json'))
-        for path, data in written.items():
-            if assets in path.parents:
-                target = copy / path.relative_to(assets)
-                target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_bytes(data)
-        subprocess.run([sys.executable, str(LIBWGF / 'tools' / 'gen_manifest.py'), '--quiet', str(copy)], check=True)
-        return {assets / p.relative_to(copy): p.read_bytes() for p in sorted(copy.rglob('manifest.json'))}
 
 
 def main():
@@ -681,6 +965,8 @@ def main():
     def put(path, data):
         if path.exists() and path.read_bytes() == data:
             return
+        if path.suffix == '.png' and path.exists() and png_pixels(path.read_bytes()) == png_pixels(data):
+            return  # the same image, compressed by another zlib
         if check:
             stale.append(path)
         else:
@@ -690,10 +976,6 @@ def main():
 
     files = outputs()
     for path, data in files.items():
-        put(path, data)
-    # the manifests last, over every file under assets/ (gen_kit's pieces, the hand-written
-    # scenes, the sky) as the files above leave it: run this again after changing any of them
-    for path, data in manifests(GAME / 'assets', files).items():
         put(path, data)
     if stale:
         print('gen_track: stale: ' + ', '.join(str(p.relative_to(GAME)) for p in stale))

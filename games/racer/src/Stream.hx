@@ -18,7 +18,7 @@ class Stream {
 	static inline var FIRST = 2;
 	static inline var LOOKAHEAD = 280.0;
 
-	static final START_FILES = ["scenes/racer.scene", "scenes/track.scene", "track/collision.glb", "sky/sky.hdr"];
+	static final START_FILES = ["scenes/racer.scene", "scenes/track.scene", "track/collision.glb", "sky/sky.hdr", "fx/puff.png"];
 
 	public static var loading:AssetTask = 0; // the start's files, as one group
 	public static var started(default, null) = false; // the race begun: the rest may come
@@ -30,7 +30,7 @@ class Stream {
 	static final files:Array<AssetTask> = [for (_ in 0...TrackData.SECTIONS) 0];
 	static final scenes:Array<Scene> = [for (_ in 0...TrackData.SECTIONS) 0];
 	static final reached = [for (_ in 0...TrackData.SECTIONS) false];
-	static final meshes:Map<String, Mesh> = [];
+	static final held:Map<String, Handle> = []; // each section's kit pieces and textures, by path
 	static var stage:Stage3d = 0;
 
 	/** Ask for the start's files: the loading screen's bar is their progress. **/
@@ -65,9 +65,9 @@ class Stream {
 		if (loading.getStatus() == AssetTaskStatus.PENDING)
 			return 0.7 * files;
 		var done = 0, all = 0;
-		for (path => mesh in meshes) {
+		for (path => resource in held) {
 			all++;
-			if (Resource.getStatus(mesh) != ResourceStatus.PENDING)
+			if (Resource.getStatus(resource) != ResourceStatus.PENDING)
 				done++;
 		}
 		return 0.7 + 0.3 * (all == 0 ? 0 : done / all);
@@ -151,10 +151,12 @@ class Stream {
 	static function load(n:Int) {
 		final sectionFiles = TrackData.sectionFiles[n];
 		scenes[n] = Scene.create(sectionFiles[0]);
-		// hold each kit piece's mesh it brings (shared by path with the models its scene makes),
-		// so that the pieces are seen loaded
-		for (k in 1...sectionFiles.length)
-			meshes[sectionFiles[k]] = Mesh.create(sectionFiles[k]);
+		// hold each kit piece's mesh and each texture it brings (shared by path with the
+		// models and sprites its scene makes), so that they are seen loaded
+		for (k in 1...sectionFiles.length) {
+			final path = sectionFiles[k];
+			held[path] = StringTools.endsWith(path, ".png") ? (Texture.create(path) : Handle) : (Mesh.create(path) : Handle);
+		}
 		status[n] = Status.LOADING;
 	}
 
@@ -162,7 +164,7 @@ class Stream {
 		// a section shows the pieces it brings and those of the sections before it in the loop
 		for (k in 0...n + 1)
 			for (i in 1...TrackData.sectionFiles[k].length)
-				if (Resource.getStatus(meshes[TrackData.sectionFiles[k][i]]) == ResourceStatus.PENDING)
+				if (Resource.getStatus(held[TrackData.sectionFiles[k][i]]) == ResourceStatus.PENDING)
 					return false;
 		return true;
 	}

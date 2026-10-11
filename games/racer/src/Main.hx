@@ -54,6 +54,8 @@ class Main {
 	static var recoveries = 0;
 	static var storage:FsTask = 0;
 	static var failed = false; // a scene didn't load: said on the loading screen, which stays
+	static var gantry:Text = 0; // the start gantry's lap board (section 0's), once it is placed
+	static var gantrySays = "";
 
 	static function main() {
 		Window.setTitle("Racer");
@@ -183,6 +185,20 @@ class Main {
 			Stream.update(car.drive.sample);
 		Laps.tick(dt);
 		Probe.setValue("racer.recoveries", recoveries);
+		gantryBoard();
+	}
+
+	/** The start gantry's board: the lap the car is on, the last one called, then the finish. **/
+	static function gantryBoard() {
+		if (gantry == 0 && (gantry = (stage : Actor).find("gantry_board/lap")) == 0)
+			return;
+		final lap = Std.int(Math.min(Laps.lap, Laps.LAPS));
+		final says = state == State.RESULTS ? "FINISH" : (lap == Laps.LAPS && Laps.LAPS > 1 ? "FINAL LAP" : 'LAP $lap / ${Laps.LAPS}');
+		if (says != gantrySays) {
+			gantry.setString(says);
+			gantrySays = says;
+			Probe.setText("racer.gantry", says);
+		}
 	}
 
 	/**
@@ -217,7 +233,7 @@ class Main {
 			placed = true;
 		}
 		Stream.update(GRID);
-		if (placed && Track.hideCollision(stage) && Actor.countWithBehavior("Checkpoint") == Track.CHECKPOINTS
+		if (placed && Track.collisionPlaced(stage) && Actor.countWithBehavior("Checkpoint") == Track.CHECKPOINTS
 			&& Stream.gridReady() && car == null && Resource.getStatus(sky) != ResourceStatus.PENDING
 			&& Actor.countWithBehavior("Car") == 0)
 			spawn();

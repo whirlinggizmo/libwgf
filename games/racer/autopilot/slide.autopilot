@@ -1,0 +1,27 @@
+wgf-autopilot 1
+# Tire smoke (written by hand): from the grid, a wheelspinning start and a handbrake turn
+# under full throttle, then everything let go. The rear tires' slip makes smoke while they
+# spin and slide (racer.smoke_rate, puffs a second; racer.smoke, the puffs alive), and once
+# they grip again every puff dies within its life (1.8 s at most). Also the case
+# tools/frames.py --autopilot slide measures: the most smoke a car makes.
+seed 1
+at 1 wait racer.state >= 1
+at 2 expect racer.smoke == 0
+at 10 key down up
+at 11 expect racer.state == 2
+at 200 expect racer.state == 3
+at 250 expect racer.smoke_rate > 0
+at 250 expect racer.smoke > 0
+at 300 key down left
+at 300 key down space
+at 360 expect racer.slip > 2
+at 360 expect racer.smoke_rate > 0
+at 380 screenshot slide
+at 400 expect racer.smoke >= 100
+at 400 key up space
+at 400 key up left
+at 400 key up up
+at 560 expect racer.smoke_rate == 0
+at 560 expect racer.smoke == 0
+at 560 expect racer.recoveries == 0
+at 560 end

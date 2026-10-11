@@ -17,9 +17,9 @@ class TrackData {
 
 	/** Each section's files: its scene, then the kit pieces first placed in it. **/
 	public static final sectionFiles:Array<Array<String>> = [
-		["track/section_0.scene", "kit/roadStartPositions.glb", "kit/roadStraightLong.glb", "kit/barrierWall.glb", "kit/overhead.glb", "kit/treeSmall.glb", "kit/treeLarge.glb"],
+		["track/section_0.scene", "kit/roadStartPositions.glb", "kit/roadStraightLong.glb", "kit/barrierWall.glb", "kit/overhead.glb", "kit/treeSmall.glb", "kit/treeLarge.glb", "kit/pylon.glb", "kit/lightPostLarge.glb", "kit/flagGreen.glb", "kit/flagRed.glb", "kit/bannerTowerGreen.glb", "kit/flagCheckers.glb", "kit/grandStand.glb", "signs/signs.png"],
 		["track/section_1.scene", "kit/roadCornerLarger.glb"],
-		["track/section_2.scene", "kit/roadStraight.glb", "kit/roadCornerLarge.glb"],
+		["track/section_2.scene", "kit/roadStraight.glb", "kit/roadCornerLarge.glb", "kit/bannerTowerRed.glb"],
 		["track/section_3.scene"],
 		["track/section_4.scene"],
 		["track/section_5.scene"],

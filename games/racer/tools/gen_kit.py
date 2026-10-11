@@ -34,7 +34,10 @@ OUT = GAME / 'assets' / 'kit'
 KIT_SHA256 = '8a71ea16219315a01d00d5a90c4f6b5c090faddbc56d80ecf727e2b3b853c6c0'
 
 PIECES = ['roadStraight', 'roadStraightLong', 'roadStartPositions', 'roadCornerLarge', 'roadCornerLarger',
-          'barrierWall', 'overhead', 'treeLarge', 'treeSmall']
+          'barrierWall', 'overhead', 'treeLarge', 'treeSmall',
+          # the trackside props
+          'pylon', 'flagRed', 'flagGreen', 'flagCheckers', 'bannerTowerRed', 'bannerTowerGreen', 'lightPostLarge',
+          'grandStand']
 
 # the kit's material, its base color as the files give it (sRGB in intent), and what is
 # written: the linear factor and a roughness
@@ -45,6 +48,8 @@ MATERIALS = {
     'road': ((0.057805, 0.057805, 0.057805), 0.85),
     'red': ((0.806952, 0.090842, 0.086500), 0.6),
     'bark': ((0.658375, 0.386429, 0.149960), 0.9),
+    'pylon': ((0.913099, 0.485150, 0.054480), 0.6),  # the cones' orange, and the light posts' lamps
+    'checkers': ((1.0, 1.0, 1.0), 0.8),  # its texture's (the kit's PNG, kept)
 }
 
 

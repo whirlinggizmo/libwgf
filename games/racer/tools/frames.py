@@ -6,8 +6,9 @@ libwgf's own games/, by name). Prints the numbers and holds them to a game's fra
 as libwgf's BUILDING.md gives it: a median of 6 ms and a 95th percentile of 10 ms of
 main-thread work.
 
-    python3 tools/frames.py [--display xvfb|headless] [--throttle N] [--runs N] [--out FILE]
+    python3 tools/frames.py [--autopilot NAME] [--display xvfb|headless] [--throttle N] [--runs N] [--out FILE]
 
+--autopilot flies autopilot/NAME.autopilot in place of the bench (slide: the most tire smoke).
 xvfb (the default) is libwgf's reference: the real GPU under Xvfb, the CPU throttled 4
 times. --out writes the numbers as JSON too. Exit 0 within the budget, 1 past it, 2 when
 the run failed.
@@ -31,6 +32,7 @@ def main():
     ap.add_argument('--display', choices=['xvfb', 'headless'], default='xvfb')
     ap.add_argument('--throttle', type=float, default=4)
     ap.add_argument('--runs', type=int, default=1)
+    ap.add_argument('--autopilot', default='bench')
     ap.add_argument('--out')
     args = ap.parse_args()
     sys.path.insert(0, str(LIBWGF / 'tools' / 'bench'))
@@ -44,7 +46,7 @@ def main():
     if done.returncode != 0:
         print('frames: the export failed:\n' + '\n'.join(done.stdout.strip().splitlines()[-15:]))
         return 2
-    flown = GAME / 'autopilot' / 'bench.autopilot'
+    flown = GAME / 'autopilot' / f'{args.autopilot}.autopilot'
     found = browser.find_browser(None)
     runs, gpu = [], ''
     try:

@@ -1,8 +1,16 @@
 {
  "dirs": {},
  "files": {
+  "bannerTowerGreen.glb": "sha256:d8f53bb7a280beac83bf3eda0ced1ed41b6b34ce3691525703968b9454a76a70",
+  "bannerTowerRed.glb": "sha256:1fc638dedf0447f742709f2eab42067877505531912f9f4eca8588ddca7d905b",
   "barrierWall.glb": "sha256:e032958cec04755161d92f992fc1e5dbdb5fcbe8c8b99537fc83bfaa5d54a912",
+  "flagCheckers.glb": "sha256:8251d56bb51703f932653bbb017148456c7a39e74efceab82724d8e1eb1fbb8d",
+  "flagGreen.glb": "sha256:ef685967f71cc75712b45dfa75a43d699c5666e8668199a164a84cc1fd70a587",
+  "flagRed.glb": "sha256:d4ecaae6521e29440c0d0718f0f086633e7b1b6f2117c6533c5d91ef1b7eaef2",
+  "grandStand.glb": "sha256:be2e9f10aa55326d2b2b57707b75fa3088c268b6d29a7e1107446a6facda2ccb",
+  "lightPostLarge.glb": "sha256:a10ab2104413ab43ed69c42f58a55d57f3ef72dacdf9f74cba75591ddda926ce",
   "overhead.glb": "sha256:f8223c097bf800529aeda86fbac9db35a8606dfe243c17534c39583d079c6d74",
+  "pylon.glb": "sha256:5a320a76dac4783cd300b9827902f46ceff39cc565ccf0d7cd7bab1252a20185",
   "roadCornerLarge.glb": "sha256:cd2721d0b20cecf7e1246330f496377cd11dbcea5532a055cd56d5e7d88b499f",
   "roadCornerLarger.glb": "sha256:f25ac5c6b47d1b34dfc91a5b67285b78a4755201d6463f3b6a6d21efb0292d7c",
   "roadStartPositions.glb": "sha256:09b023d462b55b942cf47c575cd0c6075244cb3e48d16902d47c591a7cf268a7",

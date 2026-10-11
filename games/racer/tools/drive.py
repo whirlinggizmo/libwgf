@@ -239,6 +239,7 @@ def expect(path, passes, pressed_at, ready_at):
     passes = [(n, f + shift) for n, f in passes]  # (rebased: the press lands on its own frame)
     ats.append(f'at {first_key + 1} expect racer.state == 2')
     ats.append(f'at {first_key + 200} expect racer.state == 3')
+    ats.append(f'at {first_key + 200} expect racer.gantry == "LAP 1 / 3"')  # the start gantry's board
     count = 8
     for n, f in passes:
         ats.append(f'at {f - WINDOW} expect racer.passed == {n - 1}')
@@ -252,6 +253,7 @@ def expect(path, passes, pressed_at, ready_at):
     ats.append(f'at {line_frame + WINDOW} expect racer.lap == 2')
     ats.append(f'at {line_frame + WINDOW} expect racer.best > {lap - 1.5:.0f}')
     ats.append(f'at {line_frame + WINDOW} expect racer.best < {lap + 1.5:.0f}')
+    ats.append(f'at {line_frame + WINDOW} expect racer.gantry == "LAP 2 / 3"')
     ats.append(f'at {end} expect racer.grass == 0')
     ats.append(f'at {end} end')
     ats.sort(key=lambda l: int(l.split()[1]))  # stable: the inputs before the checks at a frame
@@ -399,9 +401,11 @@ def race(recorded, dest):
     best = [float(l.split('==')[1]) for l in tail if 'racer.best ==' in l][0]
     ats += ['at 1 wait racer.state >= 1', f'at {end} expect racer.state == 4', f'at {end} expect racer.lap == 4',
             f'at {end} expect racer.passed == 25', f'at {end} expect racer.best > {best - 1.5:.1f}',
-            f'at {end} expect racer.best < {best + 1.5:.1f}', f'at {end + 30} screenshot results',
+            f'at {end} expect racer.best < {best + 1.5:.1f}', f'at {end} expect racer.gantry == "FINISH"',
+            f'at {end + 30} screenshot results',
             f'at {end + 40} key tap enter', f'at {end + 42} expect racer.state == 2', f'at {end + 42} expect racer.lap == 1',
-            f'at {end + 42} expect racer.passed == 0', f'at {end + 50} end']
+            f'at {end + 42} expect racer.passed == 0', f'at {end + 42} expect racer.gantry == "LAP 1 / 3"',
+            f'at {end + 50} end']
     ats.sort(key=lambda l: int(l.split()[1]))
     open(dest, 'w', encoding='utf-8').write('\n'.join(head + ats + tail) + '\n')
     print(f'drive: {dest}: the race, its best lap {best:.2f}s', flush=True)
