@@ -203,7 +203,7 @@ int main(void)
     { /* on a 3D stage: libwgt's, a block facing as it is told, each in a side layer of its own */
         const wgf_actor_t world = wgf_stage3d_create(), camera = wgf_camera3d_create();
         const wgf_actor_t sign = wgf_text_create(0), other = wgf_text_create(0);
-        int one, two, culled;
+        int alone, both, culled;
         wgf_actor_set_position(camera, 0, 0, 20);
         wgf_actor_set_parent(camera, world);
         wgf_stage3d_set_camera(world, camera);
@@ -222,23 +222,23 @@ int main(void)
         wgf_text_set_align(sign, WGF_TEXT_HALIGN_CENTER, WGF_TEXT_VALIGN_MIDDLE);
         begin_frame(320, 240, 1.0f);
         wgf_stage3d_draw(world);
-        one = sgl_num_vertices();
+        alone = sgl_num_vertices();
         wgf_gfx_priv_end_frame();
-        expect(one == 5 * 6, "its glyphs, a quad each");
+        expect(alone == 5 * 6, "its glyphs, a quad each");
         wgf_text_set_string(other, "GO");
         wgf_actor_set_position(other, 0, 2, -5);
         wgf_actor_set_parent(other, world);
         begin_frame(320, 240, 1.0f);
         wgf_stage3d_draw(world);
-        two = sgl_num_vertices();
+        both = sgl_num_vertices();
         wgf_gfx_priv_end_frame();
-        expect(two == 7 * 6, "two texts, both drawn");
+        expect(both == 7 * 6, "two texts, both drawn");
         wgf_actor_set_position(other, 0, 0, 40); /* behind the camera */
         begin_frame(320, 240, 1.0f);
         wgf_stage3d_draw(world);
         culled = sgl_num_vertices();
         wgf_gfx_priv_end_frame();
-        expect(culled == one, "one behind the camera: culled");
+        expect(culled == alone, "one behind the camera: culled");
         wgf_actor_destroy(world, WGF_ACTOR_DESTROY_CHILDREN);
     }
     wgf_resource_release(again);
