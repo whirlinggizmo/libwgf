@@ -12,7 +12,6 @@
 #include "wgf_core_resource_priv.h"
 #include "wgf_world.h"
 #include "wgf_ecs_priv.h"
-#include "wgf_emitter2d.h"
 #include "wgf_lifetime.h"
 #include "actor/wgf_gfx_actor_priv.h"
 #include "wgf_motion.h"
@@ -167,19 +166,10 @@ static void dump_text(out_t *out, wgf_actor_t actor)
     end_kind(out, actor);
 }
 
+/* An emitter, 2D or 3D, as the particles part writes its line (set: there is one). */
 static void dump_emitter(out_t *out, wgf_actor_t actor)
 {
-    const wgf_vec2_t gravity = wgf_emitter2d_get_gravity(actor);
-    put(out, "    emitter2d rate=%.9g emitting=%s capacity=%d life=%.9g,%.9g direction=%.9g spread=%.9g",
-        wgf_emitter2d_get_rate(actor), wgf_emitter2d_is_emitting(actor) ? "true" : "false",
-        wgf_emitter2d_get_capacity(actor), wgf_emitter2d_get_life_min(actor), wgf_emitter2d_get_life_max(actor),
-        wgf_emitter2d_get_direction(actor), wgf_emitter2d_get_spread(actor));
-    put(out, " speed=%.9g,%.9g radius=%.9g gravity=%.9g,%.9g drag=%.9g size=%.9g,%.9g",
-        wgf_emitter2d_get_speed_min(actor), wgf_emitter2d_get_speed_max(actor), wgf_emitter2d_get_radius(actor),
-        gravity.x, gravity.y, wgf_emitter2d_get_drag(actor), wgf_emitter2d_get_size_start(actor),
-        wgf_emitter2d_get_size_end(actor));
-    put(out, " color=#%08X,#%08X stretch=%.9g", (unsigned)wgf_emitter2d_get_color_start(actor),
-        (unsigned)wgf_emitter2d_get_color_end(actor), wgf_emitter2d_get_stretch(actor));
+    put(out, "    %s", wgf_gfx_priv_get_emitter_scene()->line(actor));
     end_kind(out, actor);
 }
 
@@ -253,6 +243,7 @@ static void dump_lines(out_t *out, wgf_actor_t e, const char *pad)
         case WGF_ACTOR_KIND_SPRITE: put(out, "%s", pad); dump_sprite(out, e); break;
         case WGF_ACTOR_KIND_TEXT: put(out, "%s", pad); dump_text(out, e); break;
         case WGF_ACTOR_KIND_EMITTER2D: put(out, "%s", pad); dump_emitter(out, e); break;
+        case WGF_ACTOR_KIND_EMITTER3D: put(out, "%s", pad); dump_emitter(out, e); break;
         case WGF_ACTOR_KIND_MODEL:
             if (wgf_gfx_priv_get_model_hooks() != NULL) {
                 put(out, "%s", pad);

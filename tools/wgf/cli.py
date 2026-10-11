@@ -291,13 +291,16 @@ def trimmed_exports(program_js, out, assets=None):
     call the program makes is the JS binding's by its quoted key (Raw.binding["wgf_..."]),
     wherever dead-code elimination and inlining left it, so the keys in the program's JS
     that are calls are what it calls; the binding's run adds its own, and a scene of the
-    game's `assets` naming a glTF file adds glTF's create. Read from the program's JS
+    game's `assets` naming a glTF file adds glTF's create, one with an emitter an emitter's
+    create (which links the scene's emitter lines). Read from the program's JS
     (Haxe's output, not C)."""
     text = Path(program_js).read_text(encoding='utf-8')
     known = set(json.loads(webhost.FULL.read_text(encoding='utf-8'))['exports'])
     calls = {'_' + name for name in re.findall(r'"(wgf_[a-z0-9_]+)"', text)} & known
     if games.names_a_file(assets):
         calls.add('_wgf_mesh_create')
+    if games.names_an_emitter(assets):
+        calls.add('_wgf_emitter2d_create')
     exports = sorted(calls | set(jsbinding.RUN_CALLS))
     out.write_text(json.dumps({'exports': exports}, indent=1) + '\n', encoding='utf-8')
     return exports

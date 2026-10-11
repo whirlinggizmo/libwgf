@@ -3,10 +3,12 @@ package wgf;
 
 /**
     How something drawn uses its alpha. In a stage, OPAQUE and MASK parts write depth and
-    aren't sorted; BLEND parts are drawn after them, sorted back to front.
+    aren't sorted; BLEND parts are drawn after them, sorted back to front; ADD, particles'
+    alone (a material refuses it), after those.
 **/
 enum abstract AlphaMode(Int) from Int to Int {
 	var OPAQUE = 0;
 	var MASK = 1;
 	var BLEND = 2;
+	var ADD = 3;
 }

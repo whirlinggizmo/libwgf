@@ -181,7 +181,7 @@ Asteroids (milestone 1), from step 0 of milestone 2: the clean-room rebuild (`..
 - **Workaround:** a lifetime longer than the particles'
 - **Cost:** two numbers in step by hand; the ship's exhaust vanishing with it
 - **Found by:** the adversarial review (its #8)
-- **Triage:** task: milestone 2, step 11 (the emitters, 2D and 3D, ending their entity when empty; particles finishing after their owner)
+- **Triage:** fixed in step 11: an emitter set ending destroys its actor once it has nothing left to emit and its last particle has died, and one set lingering, destroyed with particles alive, lets them finish at its stage's top (`wgf_emitter2d_set_ending`, `_set_lingering`, the 3D ones too; scene keys `ending=`, `lingering=`); the explosion prefab ends itself, its lifetime gone, and the ship's exhaust lingers
 
 ### Asteroids: spawning is four lines each time, and a missed `snap` is a trap
 
@@ -253,7 +253,7 @@ Asteroids (milestone 1), from step 0 of milestone 2: the clean-room rebuild (`..
 - **Workaround:** none: Asteroids' few hundred sparks don't feel it
 - **Cost:** wgrender-c measured 16,000 particles at 1.1 ms of CPU a frame against 0.1 on the GPU (6.2 against 0.6 on a phone)
 - **Found by:** Rob's question during step 0's triage
-- **Triage:** task: milestone 2, step 11, which carries libwgt's emitter core whole and retires the CPU one; a CPU mode for particles that react after birth waits in "Later" on its condition
+- **Triage:** fixed in step 11: libwgt's emitter core carried whole, 2D and 3D, and the CPU one retired; a CPU mode for particles that react after birth waits in "Later" on its condition
 
 
 ### Asteroids: a playthrough raced its game's load

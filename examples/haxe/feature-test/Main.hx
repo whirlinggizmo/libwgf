@@ -231,6 +231,41 @@ class Main {
 		expect(stage3d.setBackground(sky, 0.25) && stage3d.getBackground() == sky && stage3d.getBackgroundBlur() == 0.25,
 			"its background");
 		Resource.release(sky); // the stage holds its own
+		final smoke = Emitter3d.create();
+		smoke.setParent(stage3d);
+		expect(smoke.setTexture(tiles) && smoke.getTexture() == tiles && smoke.setTexture(cast 0), "an emitter3d's texture, and none");
+		expect(smoke.setSource(0, 0, 16, 16) && near(smoke.getSource().z, 16), "its source");
+		expect(smoke.setFrames(2, 2, 3, 12) && smoke.getFrameColumns() == 2 && smoke.getFrameRows() == 2 && smoke.getFrameCount() == 3
+			&& near(smoke.getFrameRate(), 12), "its flipbook");
+		expect(smoke.skipTrail(), "its trail skipped");
+		expect(smoke.setRate(30) && near(smoke.getRate(), 30), "its rate");
+		expect(smoke.setEmitting(true) && smoke.isEmitting(), "emitting");
+		expect(smoke.setMax(64) && smoke.getMax() == 64, "its max");
+		expect(smoke.setLife(0.2, 0.5) && near(smoke.getLifeMin(), 0.2) && near(smoke.getLifeMax(), 0.5), "its life");
+		expect(smoke.setSpawnBox(1, 2, 3) && near(smoke.getSpawnBox().z, 3), "its spawn box");
+		expect(smoke.setSpawnSphere(4) && near(smoke.getSpawnSphere(), 4), "its spawn sphere");
+		expect(smoke.setVelocity(0, 5, 0, 0.5, 0.25) && near(smoke.getVelocity().y, 5) && near(smoke.getSpread(), 0.5)
+			&& near(smoke.getSpeedVariance(), 0.25), "its velocity");
+		expect(smoke.setGravity(0, -9.8, 0) && near(smoke.getGravity().y, -9.8), "its gravity");
+		expect(smoke.setDrag(0.5) && near(smoke.getDrag(), 0.5), "its drag");
+		expect(smoke.setInheritVelocity(0.5) && near(smoke.getInheritVelocity(), 0.5), "its inherited velocity");
+		expect(smoke.setStretch(0.1) && near(smoke.getStretch(), 0.1), "its stretch");
+		expect(smoke.setSize(4, 1, 0.5) && near(smoke.getSizeKeyValue(0), 4) && near(smoke.getSizeVariance(), 0.5), "its sizes");
+		expect(smoke.clearSizeKeys() && smoke.addSizeKey(0.5, 2) && smoke.getSizeKeyCount() == 1
+			&& near(smoke.getSizeKeyTime(0), 0.5), "a size key");
+		expect(smoke.setColor(Color.get(ColorStock.WHITE), 0) && smoke.getColorKeyValue(0) == Color.get(ColorStock.WHITE), "its colors");
+		expect(smoke.clearColorKeys() && smoke.addColorKey(0.5, Color.get(ColorStock.WHITE)) && smoke.getColorKeyCount() == 1
+			&& near(smoke.getColorKeyTime(0), 0.5), "a color key");
+		expect(smoke.addPaletteColor(Color.get(ColorStock.WHITE)) && smoke.getPaletteCount() == 1 && smoke.getPaletteColor(0) == Color.get(ColorStock.WHITE)
+			&& smoke.clearPalette(), "its palette");
+		expect(smoke.setSpin(1, 2) && near(smoke.getSpinMin(), 1) && near(smoke.getSpinMax(), 2), "its spin");
+		expect(smoke.setAlphaMode(AlphaMode.BLEND, 0.25) && smoke.getAlphaMode() == AlphaMode.BLEND
+			&& near(smoke.getAlphaCutoff(), 0.25), "its alpha");
+		expect(smoke.setSeed(42) && smoke.getSeed() == 42, "its seed");
+		expect(smoke.setEnding(false) && !smoke.isEnding() && smoke.setLingering(true) && smoke.isLingering(), "ending, lingering");
+		expect(smoke.prewarm(0.5) && smoke.burst(8) && smoke.getCount() >= 8, "prewarmed, and a burst");
+		expect(smoke.clear() && smoke.getCount() == 0, "its particles cleared");
+		smoke.burst(8);
 		final sun:Light = Light.create(LightType.SPOT);
 		expect(sun.getType() == LightType.SPOT && sun.setColor(Color.get(ColorStock.GOLD))
 			&& sun.getColor() == Color.get(ColorStock.GOLD), "a light's color");
@@ -415,19 +450,37 @@ class Main {
 
 		final emitter = Emitter2d.create();
 		emitter.setParent(world);
-		expect(emitter.setRate(30) && near(emitter.getRate(), 30), "an emitter's rate");
+		expect(emitter.setTexture(tiles) && emitter.getTexture() == tiles && emitter.setTexture(cast 0), "an emitter2d's texture, and none");
+		expect(emitter.setSource(0, 0, 16, 16) && near(emitter.getSource().z, 16), "its source");
+		expect(emitter.setFrames(2, 2, 3, 12) && emitter.getFrameColumns() == 2 && emitter.getFrameRows() == 2 && emitter.getFrameCount() == 3
+			&& near(emitter.getFrameRate(), 12), "its flipbook");
+		expect(emitter.skipTrail(), "its trail skipped");
+		expect(emitter.setRate(30) && near(emitter.getRate(), 30), "its rate");
 		expect(emitter.setEmitting(true) && emitter.isEmitting(), "emitting");
-		expect(emitter.setCapacity(64) && emitter.getCapacity() == 64, "its capacity");
+		expect(emitter.setMax(64) && emitter.getMax() == 64, "its max");
 		expect(emitter.setLife(0.2, 0.5) && near(emitter.getLifeMin(), 0.2) && near(emitter.getLifeMax(), 0.5), "its life");
-		expect(emitter.setDirection(1, 0.5) && near(emitter.getDirection(), 1) && near(emitter.getSpread(), 0.5), "its direction");
-		expect(emitter.setSpeed(10, 20) && near(emitter.getSpeedMin(), 10) && near(emitter.getSpeedMax(), 20), "its speed");
-		expect(emitter.setRadius(3) && near(emitter.getRadius(), 3), "its radius");
+		expect(emitter.setSpawnBox(2, 3) && near(emitter.getSpawnBox().y, 3), "its spawn box");
+		expect(emitter.setSpawnCircle(4) && near(emitter.getSpawnCircle(), 4), "its spawn circle");
+		expect(emitter.setVelocity(10, 0, 0.5, 0.25) && near(emitter.getVelocity().x, 10) && near(emitter.getSpread(), 0.5)
+			&& near(emitter.getSpeedVariance(), 0.25), "its velocity");
 		expect(emitter.setGravity(0, 10) && near(emitter.getGravity().y, 10), "its gravity");
 		expect(emitter.setDrag(0.5) && near(emitter.getDrag(), 0.5), "its drag");
-		expect(emitter.setSize(4, 1) && near(emitter.getSizeStart(), 4) && near(emitter.getSizeEnd(), 1), "its sizes");
-		expect(emitter.setColor(white, 0) && emitter.getColorStart() == white && emitter.getColorEnd() == 0, "its colors");
+		expect(emitter.setInheritVelocity(0.5) && near(emitter.getInheritVelocity(), 0.5), "its inherited velocity");
 		expect(emitter.setStretch(0.1) && near(emitter.getStretch(), 0.1), "its stretch");
-		expect(emitter.burst(8) && emitter.getCount() >= 0, "a burst");
+		expect(emitter.setSize(4, 1, 0.5) && near(emitter.getSizeKeyValue(0), 4) && near(emitter.getSizeVariance(), 0.5), "its sizes");
+		expect(emitter.clearSizeKeys() && emitter.addSizeKey(0.5, 2) && emitter.getSizeKeyCount() == 1
+			&& near(emitter.getSizeKeyTime(0), 0.5), "a size key");
+		expect(emitter.setColor(white, 0) && emitter.getColorKeyValue(0) == white, "its colors");
+		expect(emitter.clearColorKeys() && emitter.addColorKey(0.5, white) && emitter.getColorKeyCount() == 1
+			&& near(emitter.getColorKeyTime(0), 0.5), "a color key");
+		expect(emitter.addPaletteColor(white) && emitter.getPaletteCount() == 1 && emitter.getPaletteColor(0) == white
+			&& emitter.clearPalette(), "its palette");
+		expect(emitter.setSpin(1, 2) && near(emitter.getSpinMin(), 1) && near(emitter.getSpinMax(), 2), "its spin");
+		expect(emitter.setAlphaMode(AlphaMode.BLEND, 0.25) && emitter.getAlphaMode() == AlphaMode.BLEND
+			&& near(emitter.getAlphaCutoff(), 0.25), "its alpha");
+		expect(emitter.setSeed(42) && emitter.getSeed() == 42, "its seed");
+		expect(emitter.setEnding(false) && !emitter.isEnding() && emitter.setLingering(true) && emitter.isLingering(), "ending, lingering");
+		expect(emitter.prewarm(0.5) && emitter.burst(8) && emitter.getCount() >= 8, "prewarmed, and a burst");
 		expect(emitter.clear() && emitter.getCount() == 0, "its particles cleared");
 		emitter.burst(8);
 

@@ -37,7 +37,8 @@ typedef enum wgf_actor_kind_t {
     WGF_ACTOR_KIND_STAGE3D = 9,
     WGF_ACTOR_KIND_LIGHT = 10,
     WGF_ACTOR_KIND_MODEL = 11,
-    WGF_ACTOR_KIND_SHAPE3D = 12
+    WGF_ACTOR_KIND_SHAPE3D = 12,
+    WGF_ACTOR_KIND_EMITTER3D = 13
 } wgf_actor_kind_t;
 
 /* What wgf_actor_destroy does with the actor's children. */

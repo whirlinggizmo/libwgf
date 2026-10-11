@@ -1441,195 +1441,1157 @@ export declare const Draw: {
 export type Emitter2d = raw.wgf_actor_t;
 export declare const Emitter2d: {
     /**
-     * An emitter that isn't emitting yet: rate 0, 256 particles at most, white squares of
-     * 4 units living a second, going nowhere. 0 when there is no room for another actor.
+     * An emitter, emitting at no rate yet: white 8-unit squares living a second, added. 0
+     * when there is no room for another actor.
      */
     readonly create: typeof raw.wgf_emitter2d_create;
     /**
-     * Particles a second while emitting, spread evenly over the frames. Clamped to 0 or
-     * more. False for a handle that isn't an emitter.
+     * What each particle shows (0: a white square). False when `texture` isn't a texture.
+     * One still loading shows nothing until it is READY.
+     */
+    readonly setTexture: typeof raw.wgf_emitter2d_set_texture;
+    /**
+     * What each particle shows (0: a white square). False when `texture` isn't a texture.
+     * One still loading shows nothing until it is READY.
+     */
+    readonly getTexture: typeof raw.wgf_emitter2d_get_texture;
+    /**
+     * The region of the texture each particle shows, in texture pixels (an atlas cell).
+     * Default: the whole texture; a width or height of 0 or less goes back to that.
+     */
+    readonly setSource: typeof raw.wgf_emitter2d_set_source;
+    /**
+     * The region of the texture each particle shows, in texture pixels (an atlas cell).
+     * Default: the whole texture; a width or height of 0 or less goes back to that.
+     */
+    readonly getSource: typeof raw.wgf_emitter2d_get_source;
+    /**
+     * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+     * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+     * each particle plays them once over its life (puffs); above 0 it loops at that rate
+     * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+     * than 4096 frames, a count past them, or a negative rate.
+     */
+    readonly setFrames: typeof raw.wgf_emitter2d_set_frames;
+    /**
+     * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+     * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+     * each particle plays them once over its life (puffs); above 0 it loops at that rate
+     * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+     * than 4096 frames, a count past them, or a negative rate.
+     */
+    readonly getFrameColumns: typeof raw.wgf_emitter2d_get_frame_columns;
+    /**
+     * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+     * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+     * each particle plays them once over its life (puffs); above 0 it loops at that rate
+     * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+     * than 4096 frames, a count past them, or a negative rate.
+     */
+    readonly getFrameRows: typeof raw.wgf_emitter2d_get_frame_rows;
+    /**
+     * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+     * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+     * each particle plays them once over its life (puffs); above 0 it loops at that rate
+     * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+     * than 4096 frames, a count past them, or a negative rate.
+     */
+    readonly getFrameCount: typeof raw.wgf_emitter2d_get_frame_count;
+    /**
+     * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+     * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+     * each particle plays them once over its life (puffs); above 0 it loops at that rate
+     * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+     * than 4096 frames, a count past them, or a negative rate.
+     */
+    readonly getFrameRate: typeof raw.wgf_emitter2d_get_frame_rate;
+    /**
+     * Its actor's next move isn't a move: nothing spawns along the way, and particles
+     * inherit nothing of it (a teleport).
+     */
+    readonly skipTrail: typeof raw.wgf_emitter2d_skip_trail;
+    /**
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
      */
     readonly setRate: typeof raw.wgf_emitter2d_set_rate;
     /**
-     * Particles a second while emitting, spread evenly over the frames. Clamped to 0 or
-     * more. False for a handle that isn't an emitter.
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
      */
     readonly getRate: typeof raw.wgf_emitter2d_get_rate;
     /**
-     * Whether it emits at its rate (default true; with the rate at 0 nothing comes). Bursts
-     * come either way. False for a handle that isn't an emitter.
-     */
-    readonly setEmitting: typeof raw.wgf_emitter2d_set_emitting;
-    /**
-     * Whether it emits at its rate (default true; with the rate at 0 nothing comes). Bursts
-     * come either way. False for a handle that isn't an emitter.
-     */
-    readonly isEmitting: typeof raw.wgf_emitter2d_is_emitting;
-    /**
-     * `count` particles at once, where the emitter is now. Clamped to the room left. False
-     * for a handle that isn't an emitter, or a count below 1.
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
      */
     readonly burst: typeof raw.wgf_emitter2d_burst;
     /**
-     * The most particles it keeps, 1 to 65536 (default 256); a birth past it is dropped.
-     * Lowering it drops the oldest. Clamped. False for a handle that isn't an emitter.
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
      */
-    readonly setCapacity: typeof raw.wgf_emitter2d_set_capacity;
+    readonly setEmitting: typeof raw.wgf_emitter2d_set_emitting;
     /**
-     * The most particles it keeps, 1 to 65536 (default 256); a birth past it is dropped.
-     * Lowering it drops the oldest. Clamped. False for a handle that isn't an emitter.
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
      */
-    readonly getCapacity: typeof raw.wgf_emitter2d_get_capacity;
+    readonly isEmitting: typeof raw.wgf_emitter2d_is_emitting;
     /**
-     * Particles alive now.
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
      */
-    readonly getCount: typeof raw.wgf_emitter2d_get_count;
+    readonly setMax: typeof raw.wgf_emitter2d_set_max;
     /**
-     * How long each lives, in seconds, chosen between min and max at birth (swapped when
-     * max is less). False for a handle that isn't an emitter, or a min of 0 or less.
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
+     */
+    readonly getMax: typeof raw.wgf_emitter2d_get_max;
+    /**
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
      */
     readonly setLife: typeof raw.wgf_emitter2d_set_life;
     /**
-     * How long each lives, in seconds, chosen between min and max at birth (swapped when
-     * max is less). False for a handle that isn't an emitter, or a min of 0 or less.
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
      */
     readonly getLifeMin: typeof raw.wgf_emitter2d_get_life_min;
     /**
-     * How long each lives, in seconds, chosen between min and max at birth (swapped when
-     * max is less). False for a handle that isn't an emitter, or a min of 0 or less.
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
      */
     readonly getLifeMax: typeof raw.wgf_emitter2d_get_life_max;
     /**
-     * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
-     * +y, down the screen), turned by the emitter's own world rotation, give or take
-     * `spread` radians either side (TAU: every way); and their speed, in units a second,
-     * between min and max. False for a handle that isn't an emitter, or a spread or speed
-     * below 0.
+     * Start over as if the steady rate had been running for `seconds` (smoke already rising
+     * when it appears): the particles alive go, and those the rate would have made over that
+     * time, and still alive now, are made where the actor is. False below 0.
      */
-    readonly setDirection: typeof raw.wgf_emitter2d_set_direction;
+    readonly prewarm: typeof raw.wgf_emitter2d_prewarm;
     /**
-     * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
-     * +y, down the screen), turned by the emitter's own world rotation, give or take
-     * `spread` radians either side (TAU: every way); and their speed, in units a second,
-     * between min and max. False for a handle that isn't an emitter, or a spread or speed
-     * below 0.
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a circle (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+     * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+     * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+     * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+     * axes (default none).
      */
-    readonly getDirection: typeof raw.wgf_emitter2d_get_direction;
+    readonly setSpawnBox: typeof raw.wgf_emitter2d_set_spawn_box;
     /**
-     * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
-     * +y, down the screen), turned by the emitter's own world rotation, give or take
-     * `spread` radians either side (TAU: every way); and their speed, in units a second,
-     * between min and max. False for a handle that isn't an emitter, or a spread or speed
-     * below 0.
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a circle (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+     * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+     * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+     * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+     * axes (default none).
+     */
+    readonly getSpawnBox: typeof raw.wgf_emitter2d_get_spawn_box;
+    /**
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a circle (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+     * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+     * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+     * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+     * axes (default none).
+     */
+    readonly setSpawnCircle: typeof raw.wgf_emitter2d_set_spawn_circle;
+    /**
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a circle (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+     * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+     * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+     * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+     * axes (default none).
+     */
+    readonly getSpawnCircle: typeof raw.wgf_emitter2d_get_spawn_circle;
+    /**
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a circle (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+     * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+     * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+     * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+     * axes (default none).
+     */
+    readonly setVelocity: typeof raw.wgf_emitter2d_set_velocity;
+    /**
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a circle (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+     * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+     * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+     * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+     * axes (default none).
+     */
+    readonly getVelocity: typeof raw.wgf_emitter2d_get_velocity;
+    /**
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a circle (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+     * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+     * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+     * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+     * axes (default none).
      */
     readonly getSpread: typeof raw.wgf_emitter2d_get_spread;
     /**
-     * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
-     * +y, down the screen), turned by the emitter's own world rotation, give or take
-     * `spread` radians either side (TAU: every way); and their speed, in units a second,
-     * between min and max. False for a handle that isn't an emitter, or a spread or speed
-     * below 0.
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a circle (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+     * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+     * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+     * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+     * axes (default none).
      */
-    readonly setSpeed: typeof raw.wgf_emitter2d_set_speed;
+    readonly getSpeedVariance: typeof raw.wgf_emitter2d_get_speed_variance;
     /**
-     * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
-     * +y, down the screen), turned by the emitter's own world rotation, give or take
-     * `spread` radians either side (TAU: every way); and their speed, in units a second,
-     * between min and max. False for a handle that isn't an emitter, or a spread or speed
-     * below 0.
-     */
-    readonly getSpeedMin: typeof raw.wgf_emitter2d_get_speed_min;
-    /**
-     * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
-     * +y, down the screen), turned by the emitter's own world rotation, give or take
-     * `spread` radians either side (TAU: every way); and their speed, in units a second,
-     * between min and max. False for a handle that isn't an emitter, or a spread or speed
-     * below 0.
-     */
-    readonly getSpeedMax: typeof raw.wgf_emitter2d_get_speed_max;
-    /**
-     * Born anywhere within `radius` of the emitter (0, the default: at it). False for a
-     * handle that isn't an emitter, or a radius below 0.
-     */
-    readonly setRadius: typeof raw.wgf_emitter2d_set_radius;
-    /**
-     * Born anywhere within `radius` of the emitter (0, the default: at it). False for a
-     * handle that isn't an emitter, or a radius below 0.
-     */
-    readonly getRadius: typeof raw.wgf_emitter2d_get_radius;
-    /**
-     * Acceleration in units a second squared (default 0, 0), and drag, the part of its
-     * velocity a particle loses each second (0, the default, to 1: none to all). Drag is
-     * clamped to 0..1. False for a handle that isn't an emitter.
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a circle (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+     * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+     * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+     * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+     * axes (default none).
      */
     readonly setGravity: typeof raw.wgf_emitter2d_set_gravity;
     /**
-     * Acceleration in units a second squared (default 0, 0), and drag, the part of its
-     * velocity a particle loses each second (0, the default, to 1: none to all). Drag is
-     * clamped to 0..1. False for a handle that isn't an emitter.
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a circle (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+     * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+     * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+     * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+     * axes (default none).
      */
     readonly getGravity: typeof raw.wgf_emitter2d_get_gravity;
     /**
-     * Acceleration in units a second squared (default 0, 0), and drag, the part of its
-     * velocity a particle loses each second (0, the default, to 1: none to all). Drag is
-     * clamped to 0..1. False for a handle that isn't an emitter.
+     * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+     * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+     * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+     * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+     * points its top along its velocity across the screen, as long as the distance it moves in
+     * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+     * 0). Defaults 0.
      */
     readonly setDrag: typeof raw.wgf_emitter2d_set_drag;
     /**
-     * Acceleration in units a second squared (default 0, 0), and drag, the part of its
-     * velocity a particle loses each second (0, the default, to 1: none to all). Drag is
-     * clamped to 0..1. False for a handle that isn't an emitter.
+     * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+     * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+     * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+     * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+     * points its top along its velocity across the screen, as long as the distance it moves in
+     * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+     * 0). Defaults 0.
      */
     readonly getDrag: typeof raw.wgf_emitter2d_get_drag;
     /**
-     * Size in units, and color, at birth and at death, each running between them over the
-     * particle's life. False for a handle that isn't an emitter, or a size below 0.
+     * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+     * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+     * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+     * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+     * points its top along its velocity across the screen, as long as the distance it moves in
+     * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+     * 0). Defaults 0.
      */
-    readonly setSize: typeof raw.wgf_emitter2d_set_size;
+    readonly setInheritVelocity: typeof raw.wgf_emitter2d_set_inherit_velocity;
     /**
-     * Size in units, and color, at birth and at death, each running between them over the
-     * particle's life. False for a handle that isn't an emitter, or a size below 0.
+     * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+     * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+     * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+     * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+     * points its top along its velocity across the screen, as long as the distance it moves in
+     * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+     * 0). Defaults 0.
      */
-    readonly getSizeStart: typeof raw.wgf_emitter2d_get_size_start;
+    readonly getInheritVelocity: typeof raw.wgf_emitter2d_get_inherit_velocity;
     /**
-     * Size in units, and color, at birth and at death, each running between them over the
-     * particle's life. False for a handle that isn't an emitter, or a size below 0.
-     */
-    readonly getSizeEnd: typeof raw.wgf_emitter2d_get_size_end;
-    /**
-     * Size in units, and color, at birth and at death, each running between them over the
-     * particle's life. False for a handle that isn't an emitter, or a size below 0.
-     */
-    readonly setColor: typeof raw.wgf_emitter2d_set_color;
-    /**
-     * Size in units, and color, at birth and at death, each running between them over the
-     * particle's life. False for a handle that isn't an emitter, or a size below 0.
-     */
-    readonly getColorStart: typeof raw.wgf_emitter2d_get_color_start;
-    /**
-     * Size in units, and color, at birth and at death, each running between them over the
-     * particle's life. False for a handle that isn't an emitter, or a size below 0.
-     */
-    readonly getColorEnd: typeof raw.wgf_emitter2d_get_color_end;
-    /**
-     * A streak instead of a square: each particle drawn as a line from where it is back
-     * along its velocity for `seconds` of it, its size the line's thickness; 0 (the
-     * default) draws squares. Clamped to 0 or more. False for a handle that isn't an
-     * emitter.
+     * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+     * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+     * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+     * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+     * points its top along its velocity across the screen, as long as the distance it moves in
+     * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+     * 0). Defaults 0.
      */
     readonly setStretch: typeof raw.wgf_emitter2d_set_stretch;
     /**
-     * A streak instead of a square: each particle drawn as a line from where it is back
-     * along its velocity for `seconds` of it, its size the line's thickness; 0 (the
-     * default) draws squares. Clamped to 0 or more. False for a handle that isn't an
-     * emitter.
+     * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+     * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+     * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+     * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+     * points its top along its velocity across the screen, as long as the distance it moves in
+     * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+     * 0). Defaults 0.
      */
     readonly getStretch: typeof raw.wgf_emitter2d_get_stretch;
     /**
-     * Every particle gone at once; it keeps emitting as it was. False for a handle that
-     * isn't an emitter.
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly setSize: typeof raw.wgf_emitter2d_set_size;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly getSizeVariance: typeof raw.wgf_emitter2d_get_size_variance;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly addSizeKey: typeof raw.wgf_emitter2d_add_size_key;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly clearSizeKeys: typeof raw.wgf_emitter2d_clear_size_keys;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly getSizeKeyCount: typeof raw.wgf_emitter2d_get_size_key_count;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly getSizeKeyTime: typeof raw.wgf_emitter2d_get_size_key_time;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly getSizeKeyValue: typeof raw.wgf_emitter2d_get_size_key_value;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly setColor: typeof raw.wgf_emitter2d_set_color;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly addColorKey: typeof raw.wgf_emitter2d_add_color_key;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly clearColorKeys: typeof raw.wgf_emitter2d_clear_color_keys;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly getColorKeyCount: typeof raw.wgf_emitter2d_get_color_key_count;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly getColorKeyTime: typeof raw.wgf_emitter2d_get_color_key_time;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly getColorKeyValue: typeof raw.wgf_emitter2d_get_color_key_value;
+    /**
+     * Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+     * tints its color over its life (confetti from one emitter). Empty by default: no tint.
+     */
+    readonly addPaletteColor: typeof raw.wgf_emitter2d_add_palette_color;
+    /**
+     * Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+     * tints its color over its life (confetti from one emitter). Empty by default: no tint.
+     */
+    readonly clearPalette: typeof raw.wgf_emitter2d_clear_palette;
+    /**
+     * Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+     * tints its color over its life (confetti from one emitter). Empty by default: no tint.
+     */
+    readonly getPaletteCount: typeof raw.wgf_emitter2d_get_palette_count;
+    /**
+     * Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+     * tints its color over its life (confetti from one emitter). Empty by default: no tint.
+     */
+    readonly getPaletteColor: typeof raw.wgf_emitter2d_get_palette_color;
+    /**
+     * Spin: radians a second between min and max, positive clockwise on screen, from a random
+     * angle (default none).
+     */
+    readonly setSpin: typeof raw.wgf_emitter2d_set_spin;
+    /**
+     * Spin: radians a second between min and max, positive clockwise on screen, from a random
+     * angle (default none).
+     */
+    readonly getSpinMin: typeof raw.wgf_emitter2d_get_spin_min;
+    /**
+     * Spin: radians a second between min and max, positive clockwise on screen, from a random
+     * angle (default none).
+     */
+    readonly getSpinMax: typeof raw.wgf_emitter2d_get_spin_max;
+    /**
+     * How particles use alpha (wgf_material.h's modes; default ADD: glows, sparks, fire), and
+     * the cutoff MASK cuts out below (0..1, clamped; default 0.5). False when `mode` isn't
+     * one.
+     */
+    readonly setAlphaMode: typeof raw.wgf_emitter2d_set_alpha_mode;
+    /**
+     * How particles use alpha (wgf_material.h's modes; default ADD: glows, sparks, fire), and
+     * the cutoff MASK cuts out below (0..1, clamped; default 0.5). False when `mode` isn't
+     * one.
+     */
+    readonly getAlphaMode: typeof raw.wgf_emitter2d_get_alpha_mode;
+    /**
+     * How particles use alpha (wgf_material.h's modes; default ADD: glows, sparks, fire), and
+     * the cutoff MASK cuts out below (0..1, clamped; default 0.5). False when `mode` isn't
+     * one.
+     */
+    readonly getAlphaCutoff: typeof raw.wgf_emitter2d_get_alpha_cutoff;
+    /**
+     * Where its random numbers start: the same seed and settings give the same particles
+     * (default: drawn from wgf_random as it is made). Read back as last set.
+     */
+    readonly setSeed: typeof raw.wgf_emitter2d_set_seed;
+    /**
+     * Where its random numbers start: the same seed and settings give the same particles
+     * (default: drawn from wgf_random as it is made). Read back as last set.
+     */
+    readonly getSeed: typeof raw.wgf_emitter2d_get_seed;
+    /**
+     * Ending: once it has nothing left to emit (not emitting, or at no rate) and the last
+     * particle it made has died, the emitter's actor is destroyed, with what is under it, in
+     * the update before a frame: a one-shot effect (an explosion's burst) ends itself. One
+     * that has made no particle yet waits for its first. Default off.
+     */
+    readonly setEnding: typeof raw.wgf_emitter2d_set_ending;
+    /**
+     * Ending: once it has nothing left to emit (not emitting, or at no rate) and the last
+     * particle it made has died, the emitter's actor is destroyed, with what is under it, in
+     * the update before a frame: a one-shot effect (an explosion's burst) ends itself. One
+     * that has made no particle yet waits for its first. Default off.
+     */
+    readonly isEnding: typeof raw.wgf_emitter2d_is_ending;
+    /**
+     * Lingering: destroyed, directly or with an actor above it, while it has particles alive
+     * on a stage, they finish their lives where they are: the emitter goes on as an actor of
+     * its own at the stage's top, not emitting, ending (as above) with its last particle, made
+     * in the update before the next frame (a ship's exhaust outlives the ship). Default off.
+     */
+    readonly setLingering: typeof raw.wgf_emitter2d_set_lingering;
+    /**
+     * Lingering: destroyed, directly or with an actor above it, while it has particles alive
+     * on a stage, they finish their lives where they are: the emitter goes on as an actor of
+     * its own at the stage's top, not emitting, ending (as above) with its last particle, made
+     * in the update before the next frame (a ship's exhaust outlives the ship). Default off.
+     */
+    readonly isLingering: typeof raw.wgf_emitter2d_is_lingering;
+    /**
+     * The particles alive now, and all of them gone (it keeps emitting as it was).
+     */
+    readonly getCount: typeof raw.wgf_emitter2d_get_count;
+    /**
+     * The particles alive now, and all of them gone (it keeps emitting as it was).
      */
     readonly clear: typeof raw.wgf_emitter2d_clear;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
+};
+/** A handle of kind wgf_actor_t: the raw binding's branded type. */
+export type Emitter3d = raw.wgf_actor_t;
+export declare const Emitter3d: {
+    /**
+     * An emitter, emitting at no rate yet: white 1-unit squares living a second, added. 0
+     * when there is no room for another actor.
+     */
+    readonly create: typeof raw.wgf_emitter3d_create;
+    /**
+     * What each particle shows (0: a white square). False when `texture` isn't a texture.
+     * One still loading shows nothing until it is READY.
+     */
+    readonly setTexture: typeof raw.wgf_emitter3d_set_texture;
+    /**
+     * What each particle shows (0: a white square). False when `texture` isn't a texture.
+     * One still loading shows nothing until it is READY.
+     */
+    readonly getTexture: typeof raw.wgf_emitter3d_get_texture;
+    /**
+     * The region of the texture each particle shows, in texture pixels (an atlas cell).
+     * Default: the whole texture; a width or height of 0 or less goes back to that.
+     */
+    readonly setSource: typeof raw.wgf_emitter3d_set_source;
+    /**
+     * The region of the texture each particle shows, in texture pixels (an atlas cell).
+     * Default: the whole texture; a width or height of 0 or less goes back to that.
+     */
+    readonly getSource: typeof raw.wgf_emitter3d_get_source;
+    /**
+     * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+     * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+     * each particle plays them once over its life (puffs); above 0 it loops at that rate
+     * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+     * than 4096 frames, a count past them, or a negative rate.
+     */
+    readonly setFrames: typeof raw.wgf_emitter3d_set_frames;
+    /**
+     * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+     * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+     * each particle plays them once over its life (puffs); above 0 it loops at that rate
+     * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+     * than 4096 frames, a count past them, or a negative rate.
+     */
+    readonly getFrameColumns: typeof raw.wgf_emitter3d_get_frame_columns;
+    /**
+     * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+     * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+     * each particle plays them once over its life (puffs); above 0 it loops at that rate
+     * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+     * than 4096 frames, a count past them, or a negative rate.
+     */
+    readonly getFrameRows: typeof raw.wgf_emitter3d_get_frame_rows;
+    /**
+     * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+     * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+     * each particle plays them once over its life (puffs); above 0 it loops at that rate
+     * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+     * than 4096 frames, a count past them, or a negative rate.
+     */
+    readonly getFrameCount: typeof raw.wgf_emitter3d_get_frame_count;
+    /**
+     * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+     * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+     * each particle plays them once over its life (puffs); above 0 it loops at that rate
+     * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+     * than 4096 frames, a count past them, or a negative rate.
+     */
+    readonly getFrameRate: typeof raw.wgf_emitter3d_get_frame_rate;
+    /**
+     * Its actor's next move isn't a move: nothing spawns along the way, and particles
+     * inherit nothing of it (a teleport).
+     */
+    readonly skipTrail: typeof raw.wgf_emitter3d_skip_trail;
+    /**
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
+     */
+    readonly setRate: typeof raw.wgf_emitter3d_set_rate;
+    /**
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
+     */
+    readonly getRate: typeof raw.wgf_emitter3d_get_rate;
+    /**
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
+     */
+    readonly burst: typeof raw.wgf_emitter3d_burst;
+    /**
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
+     */
+    readonly setEmitting: typeof raw.wgf_emitter3d_set_emitting;
+    /**
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
+     */
+    readonly isEmitting: typeof raw.wgf_emitter3d_is_emitting;
+    /**
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
+     */
+    readonly setMax: typeof raw.wgf_emitter3d_set_max;
+    /**
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
+     */
+    readonly getMax: typeof raw.wgf_emitter3d_get_max;
+    /**
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
+     */
+    readonly setLife: typeof raw.wgf_emitter3d_set_life;
+    /**
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
+     */
+    readonly getLifeMin: typeof raw.wgf_emitter3d_get_life_min;
+    /**
+     * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+     * below 0), and bursts of `count` at once, where the actor is (false below 0).
+     * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+     * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+     * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+     * particles than asked is a different effect. Life: each particle's, in seconds, between
+     * min and max (default 1); false for min 0 or less, or max below min.
+     */
+    readonly getLifeMax: typeof raw.wgf_emitter3d_get_life_max;
+    /**
+     * Start over as if the steady rate had been running for `seconds` (smoke already rising
+     * when it appears): the particles alive go, and those the rate would have made over that
+     * time, and still alive now, are made where the actor is. False below 0.
+     */
+    readonly prewarm: typeof raw.wgf_emitter3d_prewarm;
+    /**
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+     * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+     * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+     * acceleration, stage units a second squared, along the stage's axes (default none).
+     */
+    readonly setSpawnBox: typeof raw.wgf_emitter3d_set_spawn_box;
+    /**
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+     * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+     * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+     * acceleration, stage units a second squared, along the stage's axes (default none).
+     */
+    readonly getSpawnBox: typeof raw.wgf_emitter3d_get_spawn_box;
+    /**
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+     * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+     * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+     * acceleration, stage units a second squared, along the stage's axes (default none).
+     */
+    readonly setSpawnSphere: typeof raw.wgf_emitter3d_set_spawn_sphere;
+    /**
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+     * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+     * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+     * acceleration, stage units a second squared, along the stage's axes (default none).
+     */
+    readonly getSpawnSphere: typeof raw.wgf_emitter3d_get_spawn_sphere;
+    /**
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+     * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+     * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+     * acceleration, stage units a second squared, along the stage's axes (default none).
+     */
+    readonly setVelocity: typeof raw.wgf_emitter3d_set_velocity;
+    /**
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+     * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+     * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+     * acceleration, stage units a second squared, along the stage's axes (default none).
+     */
+    readonly getVelocity: typeof raw.wgf_emitter3d_get_velocity;
+    /**
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+     * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+     * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+     * acceleration, stage units a second squared, along the stage's axes (default none).
+     */
+    readonly getSpread: typeof raw.wgf_emitter3d_get_spread;
+    /**
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+     * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+     * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+     * acceleration, stage units a second squared, along the stage's axes (default none).
+     */
+    readonly getSpeedVariance: typeof raw.wgf_emitter3d_get_speed_variance;
+    /**
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+     * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+     * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+     * acceleration, stage units a second squared, along the stage's axes (default none).
+     */
+    readonly setGravity: typeof raw.wgf_emitter3d_set_gravity;
+    /**
+     * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+     * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+     * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+     * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+     * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+     * acceleration, stage units a second squared, along the stage's axes (default none).
+     */
+    readonly getGravity: typeof raw.wgf_emitter3d_get_gravity;
+    /**
+     * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+     * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+     * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+     * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+     * points its top along its velocity across the screen, as long as the distance it moves in
+     * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+     * 0). Defaults 0.
+     */
+    readonly setDrag: typeof raw.wgf_emitter3d_set_drag;
+    /**
+     * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+     * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+     * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+     * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+     * points its top along its velocity across the screen, as long as the distance it moves in
+     * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+     * 0). Defaults 0.
+     */
+    readonly getDrag: typeof raw.wgf_emitter3d_get_drag;
+    /**
+     * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+     * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+     * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+     * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+     * points its top along its velocity across the screen, as long as the distance it moves in
+     * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+     * 0). Defaults 0.
+     */
+    readonly setInheritVelocity: typeof raw.wgf_emitter3d_set_inherit_velocity;
+    /**
+     * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+     * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+     * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+     * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+     * points its top along its velocity across the screen, as long as the distance it moves in
+     * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+     * 0). Defaults 0.
+     */
+    readonly getInheritVelocity: typeof raw.wgf_emitter3d_get_inherit_velocity;
+    /**
+     * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+     * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+     * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+     * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+     * points its top along its velocity across the screen, as long as the distance it moves in
+     * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+     * 0). Defaults 0.
+     */
+    readonly setStretch: typeof raw.wgf_emitter3d_set_stretch;
+    /**
+     * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+     * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+     * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+     * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+     * points its top along its velocity across the screen, as long as the distance it moves in
+     * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+     * 0). Defaults 0.
+     */
+    readonly getStretch: typeof raw.wgf_emitter3d_get_stretch;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly setSize: typeof raw.wgf_emitter3d_set_size;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly getSizeVariance: typeof raw.wgf_emitter3d_get_size_variance;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly addSizeKey: typeof raw.wgf_emitter3d_add_size_key;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly clearSizeKeys: typeof raw.wgf_emitter3d_clear_size_keys;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly getSizeKeyCount: typeof raw.wgf_emitter3d_get_size_key_count;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly getSizeKeyTime: typeof raw.wgf_emitter3d_get_size_key_time;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly getSizeKeyValue: typeof raw.wgf_emitter3d_get_size_key_value;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly setColor: typeof raw.wgf_emitter3d_set_color;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly addColorKey: typeof raw.wgf_emitter3d_add_color_key;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly clearColorKeys: typeof raw.wgf_emitter3d_clear_color_keys;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly getColorKeyCount: typeof raw.wgf_emitter3d_get_color_key_count;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly getColorKeyTime: typeof raw.wgf_emitter3d_get_color_key_time;
+    /**
+     * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+     * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+     * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+     * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+     * first and after the last it holds; keys at the same time make a step. An emitter
+     * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+     * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+     * in time order (0 past the last).
+     */
+    readonly getColorKeyValue: typeof raw.wgf_emitter3d_get_color_key_value;
+    /**
+     * Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+     * tints its color over its life (confetti from one emitter). Empty by default: no tint.
+     */
+    readonly addPaletteColor: typeof raw.wgf_emitter3d_add_palette_color;
+    /**
+     * Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+     * tints its color over its life (confetti from one emitter). Empty by default: no tint.
+     */
+    readonly clearPalette: typeof raw.wgf_emitter3d_clear_palette;
+    /**
+     * Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+     * tints its color over its life (confetti from one emitter). Empty by default: no tint.
+     */
+    readonly getPaletteCount: typeof raw.wgf_emitter3d_get_palette_count;
+    /**
+     * Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+     * tints its color over its life (confetti from one emitter). Empty by default: no tint.
+     */
+    readonly getPaletteColor: typeof raw.wgf_emitter3d_get_palette_color;
+    /**
+     * Spin: radians a second between min and max, positive clockwise as the camera sees it,
+     * from a random angle (default none).
+     */
+    readonly setSpin: typeof raw.wgf_emitter3d_set_spin;
+    /**
+     * Spin: radians a second between min and max, positive clockwise as the camera sees it,
+     * from a random angle (default none).
+     */
+    readonly getSpinMin: typeof raw.wgf_emitter3d_get_spin_min;
+    /**
+     * Spin: radians a second between min and max, positive clockwise as the camera sees it,
+     * from a random angle (default none).
+     */
+    readonly getSpinMax: typeof raw.wgf_emitter3d_get_spin_max;
+    /**
+     * How particles use alpha (wgf_material.h's modes; default ADD: glows, sparks, fire), and
+     * the cutoff MASK cuts out below (0..1, clamped; default 0.5). False when `mode` isn't
+     * one.
+     */
+    readonly setAlphaMode: typeof raw.wgf_emitter3d_set_alpha_mode;
+    /**
+     * How particles use alpha (wgf_material.h's modes; default ADD: glows, sparks, fire), and
+     * the cutoff MASK cuts out below (0..1, clamped; default 0.5). False when `mode` isn't
+     * one.
+     */
+    readonly getAlphaMode: typeof raw.wgf_emitter3d_get_alpha_mode;
+    /**
+     * How particles use alpha (wgf_material.h's modes; default ADD: glows, sparks, fire), and
+     * the cutoff MASK cuts out below (0..1, clamped; default 0.5). False when `mode` isn't
+     * one.
+     */
+    readonly getAlphaCutoff: typeof raw.wgf_emitter3d_get_alpha_cutoff;
+    /**
+     * Where its random numbers start: the same seed and settings give the same particles
+     * (default: drawn from wgf_random as it is made). Read back as last set.
+     */
+    readonly setSeed: typeof raw.wgf_emitter3d_set_seed;
+    /**
+     * Where its random numbers start: the same seed and settings give the same particles
+     * (default: drawn from wgf_random as it is made). Read back as last set.
+     */
+    readonly getSeed: typeof raw.wgf_emitter3d_get_seed;
+    /**
+     * Ending: once it has nothing left to emit (not emitting, or at no rate) and the last
+     * particle it made has died, the emitter's actor is destroyed, with what is under it, in
+     * the update before a frame: a one-shot effect (an explosion's burst) ends itself. One
+     * that has made no particle yet waits for its first. Default off.
+     */
+    readonly setEnding: typeof raw.wgf_emitter3d_set_ending;
+    /**
+     * Ending: once it has nothing left to emit (not emitting, or at no rate) and the last
+     * particle it made has died, the emitter's actor is destroyed, with what is under it, in
+     * the update before a frame: a one-shot effect (an explosion's burst) ends itself. One
+     * that has made no particle yet waits for its first. Default off.
+     */
+    readonly isEnding: typeof raw.wgf_emitter3d_is_ending;
+    /**
+     * Lingering: destroyed, directly or with an actor above it, while it has particles alive
+     * on a stage, they finish their lives where they are: the emitter goes on as an actor of
+     * its own at the stage's top, not emitting, ending (as above) with its last particle, made
+     * in the update before the next frame (a car's dust outlives the car). Default off.
+     */
+    readonly setLingering: typeof raw.wgf_emitter3d_set_lingering;
+    /**
+     * Lingering: destroyed, directly or with an actor above it, while it has particles alive
+     * on a stage, they finish their lives where they are: the emitter goes on as an actor of
+     * its own at the stage's top, not emitting, ending (as above) with its last particle, made
+     * in the update before the next frame (a car's dust outlives the car). Default off.
+     */
+    readonly isLingering: typeof raw.wgf_emitter3d_is_lingering;
+    /**
+     * The particles alive now, and all of them gone (it keeps emitting as it was).
+     */
+    readonly getCount: typeof raw.wgf_emitter3d_get_count;
+    /**
+     * The particles alive now, and all of them gone (it keeps emitting as it was).
+     */
+    readonly clear: typeof raw.wgf_emitter3d_clear;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
@@ -4443,9 +5405,9 @@ export declare const World: {
 export type ActorDestroy = raw.wgf_actor_destroy_t;
 export declare const ActorDestroy: { readonly DESTROY_CHILDREN: ActorDestroy; readonly KEEP_CHILDREN: ActorDestroy; };
 export type ActorKind = raw.wgf_actor_kind_t;
-export declare const ActorKind: { readonly NONE: ActorKind; readonly PLAIN: ActorKind; readonly STAGE2D: ActorKind; readonly SPRITE: ActorKind; readonly CAMERA2D: ActorKind; readonly TEXT: ActorKind; readonly SHAPE2D: ActorKind; readonly EMITTER2D: ActorKind; readonly CAMERA3D: ActorKind; readonly STAGE3D: ActorKind; readonly LIGHT: ActorKind; readonly MODEL: ActorKind; readonly SHAPE3D: ActorKind; };
+export declare const ActorKind: { readonly NONE: ActorKind; readonly PLAIN: ActorKind; readonly STAGE2D: ActorKind; readonly SPRITE: ActorKind; readonly CAMERA2D: ActorKind; readonly TEXT: ActorKind; readonly SHAPE2D: ActorKind; readonly EMITTER2D: ActorKind; readonly CAMERA3D: ActorKind; readonly STAGE3D: ActorKind; readonly LIGHT: ActorKind; readonly MODEL: ActorKind; readonly SHAPE3D: ActorKind; readonly EMITTER3D: ActorKind; };
 export type AlphaMode = raw.wgf_alpha_mode_t;
-export declare const AlphaMode: { readonly OPAQUE: AlphaMode; readonly MASK: AlphaMode; readonly BLEND: AlphaMode; };
+export declare const AlphaMode: { readonly OPAQUE: AlphaMode; readonly MASK: AlphaMode; readonly BLEND: AlphaMode; readonly ADD: AlphaMode; };
 export type AssetCacheMode = raw.wgf_asset_cache_mode_t;
 export declare const AssetCacheMode: { readonly REVALIDATE: AssetCacheMode; readonly TRUST: AssetCacheMode; readonly OFF: AssetCacheMode; };
 export type AssetTaskStatus = raw.wgf_asset_task_status_t;

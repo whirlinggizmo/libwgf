@@ -467,44 +467,64 @@ export const Draw = Object.freeze({
 export const Emitter2d = Object.freeze({
     // wgf: call wgf_emitter2d_create
     create: raw.wgf_emitter2d_create,
+    // wgf: call wgf_emitter2d_set_texture
+    setTexture: raw.wgf_emitter2d_set_texture,
+    // wgf: call wgf_emitter2d_get_texture
+    getTexture: raw.wgf_emitter2d_get_texture,
+    // wgf: call wgf_emitter2d_set_source
+    setSource: raw.wgf_emitter2d_set_source,
+    // wgf: call wgf_emitter2d_get_source
+    getSource: raw.wgf_emitter2d_get_source,
+    // wgf: call wgf_emitter2d_set_frames
+    setFrames: raw.wgf_emitter2d_set_frames,
+    // wgf: call wgf_emitter2d_get_frame_columns
+    getFrameColumns: raw.wgf_emitter2d_get_frame_columns,
+    // wgf: call wgf_emitter2d_get_frame_rows
+    getFrameRows: raw.wgf_emitter2d_get_frame_rows,
+    // wgf: call wgf_emitter2d_get_frame_count
+    getFrameCount: raw.wgf_emitter2d_get_frame_count,
+    // wgf: call wgf_emitter2d_get_frame_rate
+    getFrameRate: raw.wgf_emitter2d_get_frame_rate,
+    // wgf: call wgf_emitter2d_skip_trail
+    skipTrail: raw.wgf_emitter2d_skip_trail,
     // wgf: call wgf_emitter2d_set_rate
     setRate: raw.wgf_emitter2d_set_rate,
     // wgf: call wgf_emitter2d_get_rate
     getRate: raw.wgf_emitter2d_get_rate,
+    // wgf: call wgf_emitter2d_burst
+    burst: raw.wgf_emitter2d_burst,
     // wgf: call wgf_emitter2d_set_emitting
     setEmitting: raw.wgf_emitter2d_set_emitting,
     // wgf: call wgf_emitter2d_is_emitting
     isEmitting: raw.wgf_emitter2d_is_emitting,
-    // wgf: call wgf_emitter2d_burst
-    burst: raw.wgf_emitter2d_burst,
-    // wgf: call wgf_emitter2d_set_capacity
-    setCapacity: raw.wgf_emitter2d_set_capacity,
-    // wgf: call wgf_emitter2d_get_capacity
-    getCapacity: raw.wgf_emitter2d_get_capacity,
-    // wgf: call wgf_emitter2d_get_count
-    getCount: raw.wgf_emitter2d_get_count,
+    // wgf: call wgf_emitter2d_set_max
+    setMax: raw.wgf_emitter2d_set_max,
+    // wgf: call wgf_emitter2d_get_max
+    getMax: raw.wgf_emitter2d_get_max,
     // wgf: call wgf_emitter2d_set_life
     setLife: raw.wgf_emitter2d_set_life,
     // wgf: call wgf_emitter2d_get_life_min
     getLifeMin: raw.wgf_emitter2d_get_life_min,
     // wgf: call wgf_emitter2d_get_life_max
     getLifeMax: raw.wgf_emitter2d_get_life_max,
-    // wgf: call wgf_emitter2d_set_direction
-    setDirection: raw.wgf_emitter2d_set_direction,
-    // wgf: call wgf_emitter2d_get_direction
-    getDirection: raw.wgf_emitter2d_get_direction,
+    // wgf: call wgf_emitter2d_prewarm
+    prewarm: raw.wgf_emitter2d_prewarm,
+    // wgf: call wgf_emitter2d_set_spawn_box
+    setSpawnBox: raw.wgf_emitter2d_set_spawn_box,
+    // wgf: call wgf_emitter2d_get_spawn_box
+    getSpawnBox: raw.wgf_emitter2d_get_spawn_box,
+    // wgf: call wgf_emitter2d_set_spawn_circle
+    setSpawnCircle: raw.wgf_emitter2d_set_spawn_circle,
+    // wgf: call wgf_emitter2d_get_spawn_circle
+    getSpawnCircle: raw.wgf_emitter2d_get_spawn_circle,
+    // wgf: call wgf_emitter2d_set_velocity
+    setVelocity: raw.wgf_emitter2d_set_velocity,
+    // wgf: call wgf_emitter2d_get_velocity
+    getVelocity: raw.wgf_emitter2d_get_velocity,
     // wgf: call wgf_emitter2d_get_spread
     getSpread: raw.wgf_emitter2d_get_spread,
-    // wgf: call wgf_emitter2d_set_speed
-    setSpeed: raw.wgf_emitter2d_set_speed,
-    // wgf: call wgf_emitter2d_get_speed_min
-    getSpeedMin: raw.wgf_emitter2d_get_speed_min,
-    // wgf: call wgf_emitter2d_get_speed_max
-    getSpeedMax: raw.wgf_emitter2d_get_speed_max,
-    // wgf: call wgf_emitter2d_set_radius
-    setRadius: raw.wgf_emitter2d_set_radius,
-    // wgf: call wgf_emitter2d_get_radius
-    getRadius: raw.wgf_emitter2d_get_radius,
+    // wgf: call wgf_emitter2d_get_speed_variance
+    getSpeedVariance: raw.wgf_emitter2d_get_speed_variance,
     // wgf: call wgf_emitter2d_set_gravity
     setGravity: raw.wgf_emitter2d_set_gravity,
     // wgf: call wgf_emitter2d_get_gravity
@@ -513,24 +533,219 @@ export const Emitter2d = Object.freeze({
     setDrag: raw.wgf_emitter2d_set_drag,
     // wgf: call wgf_emitter2d_get_drag
     getDrag: raw.wgf_emitter2d_get_drag,
-    // wgf: call wgf_emitter2d_set_size
-    setSize: raw.wgf_emitter2d_set_size,
-    // wgf: call wgf_emitter2d_get_size_start
-    getSizeStart: raw.wgf_emitter2d_get_size_start,
-    // wgf: call wgf_emitter2d_get_size_end
-    getSizeEnd: raw.wgf_emitter2d_get_size_end,
-    // wgf: call wgf_emitter2d_set_color
-    setColor: raw.wgf_emitter2d_set_color,
-    // wgf: call wgf_emitter2d_get_color_start
-    getColorStart: raw.wgf_emitter2d_get_color_start,
-    // wgf: call wgf_emitter2d_get_color_end
-    getColorEnd: raw.wgf_emitter2d_get_color_end,
+    // wgf: call wgf_emitter2d_set_inherit_velocity
+    setInheritVelocity: raw.wgf_emitter2d_set_inherit_velocity,
+    // wgf: call wgf_emitter2d_get_inherit_velocity
+    getInheritVelocity: raw.wgf_emitter2d_get_inherit_velocity,
     // wgf: call wgf_emitter2d_set_stretch
     setStretch: raw.wgf_emitter2d_set_stretch,
     // wgf: call wgf_emitter2d_get_stretch
     getStretch: raw.wgf_emitter2d_get_stretch,
+    // wgf: call wgf_emitter2d_set_size
+    setSize: raw.wgf_emitter2d_set_size,
+    // wgf: call wgf_emitter2d_get_size_variance
+    getSizeVariance: raw.wgf_emitter2d_get_size_variance,
+    // wgf: call wgf_emitter2d_add_size_key
+    addSizeKey: raw.wgf_emitter2d_add_size_key,
+    // wgf: call wgf_emitter2d_clear_size_keys
+    clearSizeKeys: raw.wgf_emitter2d_clear_size_keys,
+    // wgf: call wgf_emitter2d_get_size_key_count
+    getSizeKeyCount: raw.wgf_emitter2d_get_size_key_count,
+    // wgf: call wgf_emitter2d_get_size_key_time
+    getSizeKeyTime: raw.wgf_emitter2d_get_size_key_time,
+    // wgf: call wgf_emitter2d_get_size_key_value
+    getSizeKeyValue: raw.wgf_emitter2d_get_size_key_value,
+    // wgf: call wgf_emitter2d_set_color
+    setColor: raw.wgf_emitter2d_set_color,
+    // wgf: call wgf_emitter2d_add_color_key
+    addColorKey: raw.wgf_emitter2d_add_color_key,
+    // wgf: call wgf_emitter2d_clear_color_keys
+    clearColorKeys: raw.wgf_emitter2d_clear_color_keys,
+    // wgf: call wgf_emitter2d_get_color_key_count
+    getColorKeyCount: raw.wgf_emitter2d_get_color_key_count,
+    // wgf: call wgf_emitter2d_get_color_key_time
+    getColorKeyTime: raw.wgf_emitter2d_get_color_key_time,
+    // wgf: call wgf_emitter2d_get_color_key_value
+    getColorKeyValue: raw.wgf_emitter2d_get_color_key_value,
+    // wgf: call wgf_emitter2d_add_palette_color
+    addPaletteColor: raw.wgf_emitter2d_add_palette_color,
+    // wgf: call wgf_emitter2d_clear_palette
+    clearPalette: raw.wgf_emitter2d_clear_palette,
+    // wgf: call wgf_emitter2d_get_palette_count
+    getPaletteCount: raw.wgf_emitter2d_get_palette_count,
+    // wgf: call wgf_emitter2d_get_palette_color
+    getPaletteColor: raw.wgf_emitter2d_get_palette_color,
+    // wgf: call wgf_emitter2d_set_spin
+    setSpin: raw.wgf_emitter2d_set_spin,
+    // wgf: call wgf_emitter2d_get_spin_min
+    getSpinMin: raw.wgf_emitter2d_get_spin_min,
+    // wgf: call wgf_emitter2d_get_spin_max
+    getSpinMax: raw.wgf_emitter2d_get_spin_max,
+    // wgf: call wgf_emitter2d_set_alpha_mode
+    setAlphaMode: raw.wgf_emitter2d_set_alpha_mode,
+    // wgf: call wgf_emitter2d_get_alpha_mode
+    getAlphaMode: raw.wgf_emitter2d_get_alpha_mode,
+    // wgf: call wgf_emitter2d_get_alpha_cutoff
+    getAlphaCutoff: raw.wgf_emitter2d_get_alpha_cutoff,
+    // wgf: call wgf_emitter2d_set_seed
+    setSeed: raw.wgf_emitter2d_set_seed,
+    // wgf: call wgf_emitter2d_get_seed
+    getSeed: raw.wgf_emitter2d_get_seed,
+    // wgf: call wgf_emitter2d_set_ending
+    setEnding: raw.wgf_emitter2d_set_ending,
+    // wgf: call wgf_emitter2d_is_ending
+    isEnding: raw.wgf_emitter2d_is_ending,
+    // wgf: call wgf_emitter2d_set_lingering
+    setLingering: raw.wgf_emitter2d_set_lingering,
+    // wgf: call wgf_emitter2d_is_lingering
+    isLingering: raw.wgf_emitter2d_is_lingering,
+    // wgf: call wgf_emitter2d_get_count
+    getCount: raw.wgf_emitter2d_get_count,
     // wgf: call wgf_emitter2d_clear
     clear: raw.wgf_emitter2d_clear,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
+});
+// wgf: typed Emitter3d
+export const Emitter3d = Object.freeze({
+    // wgf: call wgf_emitter3d_create
+    create: raw.wgf_emitter3d_create,
+    // wgf: call wgf_emitter3d_set_texture
+    setTexture: raw.wgf_emitter3d_set_texture,
+    // wgf: call wgf_emitter3d_get_texture
+    getTexture: raw.wgf_emitter3d_get_texture,
+    // wgf: call wgf_emitter3d_set_source
+    setSource: raw.wgf_emitter3d_set_source,
+    // wgf: call wgf_emitter3d_get_source
+    getSource: raw.wgf_emitter3d_get_source,
+    // wgf: call wgf_emitter3d_set_frames
+    setFrames: raw.wgf_emitter3d_set_frames,
+    // wgf: call wgf_emitter3d_get_frame_columns
+    getFrameColumns: raw.wgf_emitter3d_get_frame_columns,
+    // wgf: call wgf_emitter3d_get_frame_rows
+    getFrameRows: raw.wgf_emitter3d_get_frame_rows,
+    // wgf: call wgf_emitter3d_get_frame_count
+    getFrameCount: raw.wgf_emitter3d_get_frame_count,
+    // wgf: call wgf_emitter3d_get_frame_rate
+    getFrameRate: raw.wgf_emitter3d_get_frame_rate,
+    // wgf: call wgf_emitter3d_skip_trail
+    skipTrail: raw.wgf_emitter3d_skip_trail,
+    // wgf: call wgf_emitter3d_set_rate
+    setRate: raw.wgf_emitter3d_set_rate,
+    // wgf: call wgf_emitter3d_get_rate
+    getRate: raw.wgf_emitter3d_get_rate,
+    // wgf: call wgf_emitter3d_burst
+    burst: raw.wgf_emitter3d_burst,
+    // wgf: call wgf_emitter3d_set_emitting
+    setEmitting: raw.wgf_emitter3d_set_emitting,
+    // wgf: call wgf_emitter3d_is_emitting
+    isEmitting: raw.wgf_emitter3d_is_emitting,
+    // wgf: call wgf_emitter3d_set_max
+    setMax: raw.wgf_emitter3d_set_max,
+    // wgf: call wgf_emitter3d_get_max
+    getMax: raw.wgf_emitter3d_get_max,
+    // wgf: call wgf_emitter3d_set_life
+    setLife: raw.wgf_emitter3d_set_life,
+    // wgf: call wgf_emitter3d_get_life_min
+    getLifeMin: raw.wgf_emitter3d_get_life_min,
+    // wgf: call wgf_emitter3d_get_life_max
+    getLifeMax: raw.wgf_emitter3d_get_life_max,
+    // wgf: call wgf_emitter3d_prewarm
+    prewarm: raw.wgf_emitter3d_prewarm,
+    // wgf: call wgf_emitter3d_set_spawn_box
+    setSpawnBox: raw.wgf_emitter3d_set_spawn_box,
+    // wgf: call wgf_emitter3d_get_spawn_box
+    getSpawnBox: raw.wgf_emitter3d_get_spawn_box,
+    // wgf: call wgf_emitter3d_set_spawn_sphere
+    setSpawnSphere: raw.wgf_emitter3d_set_spawn_sphere,
+    // wgf: call wgf_emitter3d_get_spawn_sphere
+    getSpawnSphere: raw.wgf_emitter3d_get_spawn_sphere,
+    // wgf: call wgf_emitter3d_set_velocity
+    setVelocity: raw.wgf_emitter3d_set_velocity,
+    // wgf: call wgf_emitter3d_get_velocity
+    getVelocity: raw.wgf_emitter3d_get_velocity,
+    // wgf: call wgf_emitter3d_get_spread
+    getSpread: raw.wgf_emitter3d_get_spread,
+    // wgf: call wgf_emitter3d_get_speed_variance
+    getSpeedVariance: raw.wgf_emitter3d_get_speed_variance,
+    // wgf: call wgf_emitter3d_set_gravity
+    setGravity: raw.wgf_emitter3d_set_gravity,
+    // wgf: call wgf_emitter3d_get_gravity
+    getGravity: raw.wgf_emitter3d_get_gravity,
+    // wgf: call wgf_emitter3d_set_drag
+    setDrag: raw.wgf_emitter3d_set_drag,
+    // wgf: call wgf_emitter3d_get_drag
+    getDrag: raw.wgf_emitter3d_get_drag,
+    // wgf: call wgf_emitter3d_set_inherit_velocity
+    setInheritVelocity: raw.wgf_emitter3d_set_inherit_velocity,
+    // wgf: call wgf_emitter3d_get_inherit_velocity
+    getInheritVelocity: raw.wgf_emitter3d_get_inherit_velocity,
+    // wgf: call wgf_emitter3d_set_stretch
+    setStretch: raw.wgf_emitter3d_set_stretch,
+    // wgf: call wgf_emitter3d_get_stretch
+    getStretch: raw.wgf_emitter3d_get_stretch,
+    // wgf: call wgf_emitter3d_set_size
+    setSize: raw.wgf_emitter3d_set_size,
+    // wgf: call wgf_emitter3d_get_size_variance
+    getSizeVariance: raw.wgf_emitter3d_get_size_variance,
+    // wgf: call wgf_emitter3d_add_size_key
+    addSizeKey: raw.wgf_emitter3d_add_size_key,
+    // wgf: call wgf_emitter3d_clear_size_keys
+    clearSizeKeys: raw.wgf_emitter3d_clear_size_keys,
+    // wgf: call wgf_emitter3d_get_size_key_count
+    getSizeKeyCount: raw.wgf_emitter3d_get_size_key_count,
+    // wgf: call wgf_emitter3d_get_size_key_time
+    getSizeKeyTime: raw.wgf_emitter3d_get_size_key_time,
+    // wgf: call wgf_emitter3d_get_size_key_value
+    getSizeKeyValue: raw.wgf_emitter3d_get_size_key_value,
+    // wgf: call wgf_emitter3d_set_color
+    setColor: raw.wgf_emitter3d_set_color,
+    // wgf: call wgf_emitter3d_add_color_key
+    addColorKey: raw.wgf_emitter3d_add_color_key,
+    // wgf: call wgf_emitter3d_clear_color_keys
+    clearColorKeys: raw.wgf_emitter3d_clear_color_keys,
+    // wgf: call wgf_emitter3d_get_color_key_count
+    getColorKeyCount: raw.wgf_emitter3d_get_color_key_count,
+    // wgf: call wgf_emitter3d_get_color_key_time
+    getColorKeyTime: raw.wgf_emitter3d_get_color_key_time,
+    // wgf: call wgf_emitter3d_get_color_key_value
+    getColorKeyValue: raw.wgf_emitter3d_get_color_key_value,
+    // wgf: call wgf_emitter3d_add_palette_color
+    addPaletteColor: raw.wgf_emitter3d_add_palette_color,
+    // wgf: call wgf_emitter3d_clear_palette
+    clearPalette: raw.wgf_emitter3d_clear_palette,
+    // wgf: call wgf_emitter3d_get_palette_count
+    getPaletteCount: raw.wgf_emitter3d_get_palette_count,
+    // wgf: call wgf_emitter3d_get_palette_color
+    getPaletteColor: raw.wgf_emitter3d_get_palette_color,
+    // wgf: call wgf_emitter3d_set_spin
+    setSpin: raw.wgf_emitter3d_set_spin,
+    // wgf: call wgf_emitter3d_get_spin_min
+    getSpinMin: raw.wgf_emitter3d_get_spin_min,
+    // wgf: call wgf_emitter3d_get_spin_max
+    getSpinMax: raw.wgf_emitter3d_get_spin_max,
+    // wgf: call wgf_emitter3d_set_alpha_mode
+    setAlphaMode: raw.wgf_emitter3d_set_alpha_mode,
+    // wgf: call wgf_emitter3d_get_alpha_mode
+    getAlphaMode: raw.wgf_emitter3d_get_alpha_mode,
+    // wgf: call wgf_emitter3d_get_alpha_cutoff
+    getAlphaCutoff: raw.wgf_emitter3d_get_alpha_cutoff,
+    // wgf: call wgf_emitter3d_set_seed
+    setSeed: raw.wgf_emitter3d_set_seed,
+    // wgf: call wgf_emitter3d_get_seed
+    getSeed: raw.wgf_emitter3d_get_seed,
+    // wgf: call wgf_emitter3d_set_ending
+    setEnding: raw.wgf_emitter3d_set_ending,
+    // wgf: call wgf_emitter3d_is_ending
+    isEnding: raw.wgf_emitter3d_is_ending,
+    // wgf: call wgf_emitter3d_set_lingering
+    setLingering: raw.wgf_emitter3d_set_lingering,
+    // wgf: call wgf_emitter3d_is_lingering
+    isLingering: raw.wgf_emitter3d_is_lingering,
+    // wgf: call wgf_emitter3d_get_count
+    getCount: raw.wgf_emitter3d_get_count,
+    // wgf: call wgf_emitter3d_clear
+    clear: raw.wgf_emitter3d_clear,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
@@ -1562,9 +1777,9 @@ export const World = Object.freeze({
 // wgf: enum ActorDestroy
 export const ActorDestroy = Object.freeze({ DESTROY_CHILDREN: 0, KEEP_CHILDREN: 1 });
 // wgf: enum ActorKind
-export const ActorKind = Object.freeze({ NONE: 0, PLAIN: 1, STAGE2D: 2, SPRITE: 3, CAMERA2D: 4, TEXT: 5, SHAPE2D: 6, EMITTER2D: 7, CAMERA3D: 8, STAGE3D: 9, LIGHT: 10, MODEL: 11, SHAPE3D: 12 });
+export const ActorKind = Object.freeze({ NONE: 0, PLAIN: 1, STAGE2D: 2, SPRITE: 3, CAMERA2D: 4, TEXT: 5, SHAPE2D: 6, EMITTER2D: 7, CAMERA3D: 8, STAGE3D: 9, LIGHT: 10, MODEL: 11, SHAPE3D: 12, EMITTER3D: 13 });
 // wgf: enum AlphaMode
-export const AlphaMode = Object.freeze({ OPAQUE: 0, MASK: 1, BLEND: 2 });
+export const AlphaMode = Object.freeze({ OPAQUE: 0, MASK: 1, BLEND: 2, ADD: 3 });
 // wgf: enum AssetCacheMode
 export const AssetCacheMode = Object.freeze({ REVALIDATE: 0, TRUST: 1, OFF: 2 });
 // wgf: enum AssetTaskStatus

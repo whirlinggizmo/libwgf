@@ -378,6 +378,14 @@ void wgf_gfx_priv_render_set_2d(void)
     sgl_load_identity();
 }
 
+wgf_mat4_t wgf_gfx_priv_render_projection_2d(void)
+{
+    const float left = -present.offset_x / present.scale_x, top = -present.offset_y / present.scale_y;
+    const float right = ((float)frame_width - present.offset_x) / present.scale_x;
+    const float bottom = ((float)frame_height - present.offset_y) / present.scale_y;
+    return wgf_mat4_orthographic(left, right, bottom, top, -1.0f, 1.0f);
+}
+
 void wgf_gfx_priv_render_load_3d(const float view_proj[16])
 {
     sgl_set_context(draw_context);

@@ -19,7 +19,6 @@
 #include "wgf_core_resource_priv.h"
 #include "wgf_ecs_priv.h"
 #include "wgf_ecs_scene_priv.h"
-#include "wgf_emitter2d.h"
 #include "wgf_font.h"
 #include "wgf_lifetime.h"
 #include "wgf_log.h"
@@ -43,6 +42,7 @@
 #define WORDS_MAX 128
 #define POINTS_MAX 2048 /* floats in a polygon: 1024 points, as wgf_shape2d_set_polygon takes */
 #define DEPTH_MAX 32    /* actors inside actors */
+#define KEYS_MAX 32     /* a line's keys, an emitter's the most */
 
 /* ---- the format's table --------------------------------------------------------------- */
 
@@ -58,7 +58,12 @@ enum {
     V_COLOR2,
     V_TEXT,   /* a word or quoted text */
     V_MODE,   /* wrap, clamp, destroy */
-    V_ALIGN   /* left|center|right,top|middle|bottom */
+    V_ALIGN,  /* left|center|right,top|middle|bottom */
+    V_ALPHA,  /* opaque, mask, blend, add */
+    V_COLORS, /* 1 to 8 colors, a list */
+    V_NUM23,  /* two or three numbers */
+    V_NUM24,
+    V_NUM35
 };
 
 typedef struct key_t {
@@ -72,9 +77,17 @@ typedef struct kind_t {
     const char *name;
     int role;
     int what; /* a kind's wgf_actor_kind_t, a component's wgf_component_t */
-    key_t keys[16];
+    key_t keys[KEYS_MAX];
     bool open; /* any key: a behavior's parameters */
 } kind_t;
+
+/* the keys a 2D and a 3D emitter share; each adds its own shapes, velocity, and gravity */
+#define EMITTER_KEYS                                                                                                   \
+    {"texture", V_TEXT}, {"source", V_NUM4}, {"frames", V_NUM4}, {"rate", V_NUM}, {"emitting", V_BOOL},                \
+        {"max", V_INT}, {"life", V_NUM2}, {"burst", V_INT}, {"prewarm", V_NUM}, {"drag", V_NUM}, {"inherit", V_NUM},   \
+        {"stretch", V_NUM}, {"size", V_NUM23}, {"color", V_COLOR2}, {"palette", V_COLORS}, {"spin", V_NUM2},           \
+        {"alpha", V_ALPHA}, {"cutoff", V_NUM}, {"seed", V_INT}, {"ending", V_BOOL}, {"lingering", V_BOOL},            \
+        {"visible", V_BOOL}
 
 static const kind_t kinds[] = {
     {"transform", ROLE_TRANSFORM, 0, {{"position", V_NUM3}, {"rotation", V_NUM3}, {"scale", V_NUM3}}, false},
@@ -126,21 +139,20 @@ static const kind_t kinds[] = {
     {"emitter2d",
      ROLE_KIND,
      WGF_ACTOR_KIND_EMITTER2D,
-     {{"rate", V_NUM},
-      {"emitting", V_BOOL},
-      {"capacity", V_INT},
-      {"life", V_NUM2},
-      {"direction", V_NUM},
-      {"spread", V_NUM},
-      {"speed", V_NUM2},
-      {"radius", V_NUM},
-      {"gravity", V_NUM2},
-      {"drag", V_NUM},
-      {"size", V_NUM2},
-      {"color", V_COLOR2},
-      {"stretch", V_NUM},
-      {"burst", V_INT},
-      {"visible", V_BOOL}},
+     {EMITTER_KEYS,
+      {"spawn_box", V_NUM2},
+      {"spawn_circle", V_NUM},
+      {"velocity", V_NUM24},
+      {"gravity", V_NUM2}},
+     false},
+    {"emitter3d",
+     ROLE_KIND,
+     WGF_ACTOR_KIND_EMITTER3D,
+     {EMITTER_KEYS,
+      {"spawn_box", V_NUM3},
+      {"spawn_sphere", V_NUM},
+      {"velocity", V_NUM35},
+      {"gravity", V_NUM3}},
      false},
     {"voice",
      ROLE_COMPONENT,
@@ -177,7 +189,7 @@ static const kind_t kinds[] = {
 typedef struct value_t {
     double n[POINTS_MAX];
     int count; /* numbers in n */
-    wgf_color_t colors[2];
+    wgf_color_t colors[8];
     bool truth;
     char text[LINE_MAX_BYTES];
 } value_t;
@@ -232,6 +244,29 @@ static bool parse_value(int type, const char *text, value_t *v)
         case V_NUM2: return parse_list(text, v, 2, 2);
         case V_NUM3: return parse_list(text, v, 3, 3);
         case V_NUM4: return parse_list(text, v, 4, 4);
+        case V_NUM23: return parse_list(text, v, 2, 3);
+        case V_NUM24: return parse_list(text, v, 2, 4);
+        case V_NUM35: return parse_list(text, v, 3, 5);
+        case V_ALPHA: {
+            static const char *const modes[] = {"opaque", "mask", "blend", "add"};
+            int i;
+            for (i = 0; i < 4 && strcmp(text, modes[i]) != 0; i++) {
+            }
+            v->n[0] = i;
+            return i < 4;
+        }
+        case V_COLORS: {
+            const char *p = text;
+            v->count = 0;
+            for (;;) {
+                const char *comma = strchr(p, ',');
+                const size_t length = comma != NULL ? (size_t)(comma - p) : strlen(p);
+                if (v->count == 8 || !parse_color(p, length, &v->colors[v->count])) return false;
+                v->count++;
+                if (comma == NULL) return true;
+                p = comma + 1;
+            }
+        }
         case V_POINTS: return parse_list(text, v, 6, POINTS_MAX) && v->count % 2 == 0;
         case V_INT: {
             char *end;
@@ -384,7 +419,7 @@ static int find_kind(const char *name)
 static int key_type(int kind, const char *key)
 {
     int i;
-    for (i = 0; i < 16 && kinds[kind].keys[i].key != NULL; i++) {
+    for (i = 0; i < KEYS_MAX && kinds[kind].keys[i].key != NULL; i++) {
         if (strcmp(kinds[kind].keys[i].key, key) == 0) return kinds[kind].keys[i].value;
     }
     return kinds[kind].open ? V_TEXT : -1; /* a behavior's parameter: any text */
@@ -659,8 +694,9 @@ wgf_ecs_priv_scene_data_t *wgf_ecs_priv_scene_parse(const char *text, size_t siz
 
 /* ---- applying a line -------------------------------------------------------------- */
 
-typedef struct after_t { /* what happens once the actor is placed: a burst, a voice played */
+typedef struct after_t { /* what happens once the actor is placed: a burst or a prewarm, a voice played */
     int burst;
+    float prewarm;
     bool play;
 } after_t;
 
@@ -681,6 +717,20 @@ static int what_of(int kind)
         case ROLE_KIND: return KIND + kinds[kind].what;
         case ROLE_BEHAVIOR: return BEHAVIOR;
         default: return kinds[kind].what;
+    }
+}
+
+/* An emitter's key, 2D or 3D, through the particles part's hooks (set: it made the
+ * emitter); a burst and a prewarm kept for when it is placed. */
+static void apply_emitter(wgf_actor_t e, const char *key, const value_t *v, after_t *after)
+{
+    const wgf_gfx_priv_emitter_scene_t *hooks = wgf_gfx_priv_get_emitter_scene();
+    if (strcmp(key, "burst") == 0) {
+        after->burst = (int)v->n[0];
+    } else if (strcmp(key, "prewarm") == 0) {
+        after->prewarm = f(v, 0);
+    } else if (hooks != NULL) {
+        hooks->apply(e, key, v->n, v->count, v->colors, v->count, v->truth, v->text);
     }
 }
 
@@ -786,20 +836,8 @@ static void apply_setting(wgf_actor_t actor, int kind, const setting_t *s, value
             break;
         }
         case KIND + WGF_ACTOR_KIND_EMITTER2D:
-            if (strcmp(key, "rate") == 0) wgf_emitter2d_set_rate(actor, f(v, 0));
-            else if (strcmp(key, "emitting") == 0) wgf_emitter2d_set_emitting(actor, v->truth);
-            else if (strcmp(key, "capacity") == 0) wgf_emitter2d_set_capacity(actor, (int)v->n[0]);
-            else if (strcmp(key, "life") == 0) wgf_emitter2d_set_life(actor, f(v, 0), f(v, 1));
-            else if (strcmp(key, "direction") == 0) wgf_emitter2d_set_direction(actor, f(v, 0), wgf_emitter2d_get_spread(actor));
-            else if (strcmp(key, "spread") == 0) wgf_emitter2d_set_direction(actor, wgf_emitter2d_get_direction(actor), f(v, 0));
-            else if (strcmp(key, "speed") == 0) wgf_emitter2d_set_speed(actor, f(v, 0), f(v, 1));
-            else if (strcmp(key, "radius") == 0) wgf_emitter2d_set_radius(actor, f(v, 0));
-            else if (strcmp(key, "gravity") == 0) wgf_emitter2d_set_gravity(actor, f(v, 0), f(v, 1));
-            else if (strcmp(key, "drag") == 0) wgf_emitter2d_set_drag(actor, f(v, 0));
-            else if (strcmp(key, "size") == 0) wgf_emitter2d_set_size(actor, f(v, 0), f(v, 1));
-            else if (strcmp(key, "color") == 0) wgf_emitter2d_set_color(actor, v->colors[0], v->colors[1]);
-            else if (strcmp(key, "stretch") == 0) wgf_emitter2d_set_stretch(actor, f(v, 0));
-            else after->burst = (int)v->n[0];
+        case KIND + WGF_ACTOR_KIND_EMITTER3D:
+            apply_emitter(actor, key, v, after);
             break;
         default: { /* the voice */
             const wgf_voice_t voice = wgf_actor_get_voice(e);
@@ -873,7 +911,14 @@ static wgf_actor_t make_kind(const wgf_ecs_priv_scene_data_t *data, int thing)
         case WGF_ACTOR_KIND_SHAPE2D: return wgf_shape2d_create();
         case WGF_ACTOR_KIND_SPRITE: return wgf_sprite_create(0);
         case WGF_ACTOR_KIND_TEXT: return wgf_text_create(0);
-        case WGF_ACTOR_KIND_EMITTER2D: return wgf_emitter2d_create();
+        case WGF_ACTOR_KIND_EMITTER2D:
+        case WGF_ACTOR_KIND_EMITTER3D: { /* through the particles part's hooks: a program makes emitters to link them */
+            const wgf_gfx_priv_emitter_scene_t *hooks = wgf_gfx_priv_get_emitter_scene();
+            if (hooks != NULL) return hooks->create(kinds[kind].what == WGF_ACTOR_KIND_EMITTER2D);
+            wgf_log_warn("wgf_scene: an emitter is linked by a program that makes one (wgf_emitter2d_create): a plain "
+                         "actor made in its place");
+            return wgf_actor_create();
+        }
         case WGF_ACTOR_KIND_MODEL: { /* through a stage's hooks: a program with no stage links no 3D */
             const wgf_gfx_priv_model_hooks_t *hooks = wgf_gfx_priv_get_model_hooks();
             if (hooks != NULL) return hooks->create();
@@ -950,7 +995,7 @@ static void make_children_of(const wgf_ecs_priv_scene_data_t *data, int thing, w
 /* Block `thing`'s lines on a glTF file's node, which the file made: its kind the file's. */
 static void overlay(const wgf_ecs_priv_scene_data_t *data, int thing, wgf_actor_t node, int depth)
 {
-    after_t after = {0, false};
+    after_t after = {0, 0.0f, false};
     int behavior = 0;
     const int kind = kind_of(data, thing);
     if (kind >= 0 && kinds[kind].role == ROLE_KIND && (int)kinds[kind].what != (int)wgf_actor_get_kind(node)) {
@@ -967,7 +1012,7 @@ static void overlay(const wgf_ecs_priv_scene_data_t *data, int thing, wgf_actor_
  * is, its smoothing ended: so what is made with it (a burst) starts there. */
 static wgf_actor_t make(const wgf_ecs_priv_scene_data_t *data, int thing, wgf_actor_t parent, int depth)
 {
-    after_t after = {0, false};
+    after_t after = {0, 0.0f, false};
     int behavior = 0;
     const thing_t *block = &data->things[thing];
     const wgf_actor_t actor = make_kind(data, thing);
@@ -987,7 +1032,9 @@ static wgf_actor_t make(const wgf_ecs_priv_scene_data_t *data, int thing, wgf_ac
         wgf_actor_set_rotation(actor, angles.x, angles.y, angles.z);
     }
     wgf_actor_snap(actor);
-    if (after.burst > 0 && wgf_actor_get_kind(actor) == WGF_ACTOR_KIND_EMITTER2D) wgf_emitter2d_burst(actor, after.burst);
+    if ((after.prewarm > 0.0f || after.burst > 0) && wgf_gfx_priv_get_emitter_scene() != NULL) {
+        wgf_gfx_priv_get_emitter_scene()->placed(actor, after.prewarm, after.burst); /* nothing for another kind */
+    }
     if (after.play) wgf_voice_play(wgf_actor_get_voice(actor));
     return actor;
 }

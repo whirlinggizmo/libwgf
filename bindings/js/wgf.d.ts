@@ -44,10 +44,10 @@ export type wgf_actor_t = number & { readonly [kind]: "wgf_actor_t" };
 export type wgf_font_t = number & { readonly [kind]: "wgf_font_t" };
 /** A handle of kind wgf_texture_t; 0 is none. */
 export type wgf_texture_t = number & { readonly [kind]: "wgf_texture_t" };
-/** A handle of kind wgf_environment_t; 0 is none. */
-export type wgf_environment_t = number & { readonly [kind]: "wgf_environment_t" };
 /** A handle of kind wgf_material_t; 0 is none. */
 export type wgf_material_t = number & { readonly [kind]: "wgf_material_t" };
+/** A handle of kind wgf_environment_t; 0 is none. */
+export type wgf_environment_t = number & { readonly [kind]: "wgf_environment_t" };
 /** A handle of kind wgf_mesh_t; 0 is none. */
 export type wgf_mesh_t = number & { readonly [kind]: "wgf_mesh_t" };
 /** A handle of kind wgf_sound_t; 0 is none. */
@@ -404,7 +404,8 @@ export declare const WGF_ACTOR_KIND_STAGE3D: 9;
 export declare const WGF_ACTOR_KIND_LIGHT: 10;
 export declare const WGF_ACTOR_KIND_MODEL: 11;
 export declare const WGF_ACTOR_KIND_SHAPE3D: 12;
-export type wgf_actor_kind_t = typeof WGF_ACTOR_KIND_NONE | typeof WGF_ACTOR_KIND_PLAIN | typeof WGF_ACTOR_KIND_STAGE2D | typeof WGF_ACTOR_KIND_SPRITE | typeof WGF_ACTOR_KIND_CAMERA2D | typeof WGF_ACTOR_KIND_TEXT | typeof WGF_ACTOR_KIND_SHAPE2D | typeof WGF_ACTOR_KIND_EMITTER2D | typeof WGF_ACTOR_KIND_CAMERA3D | typeof WGF_ACTOR_KIND_STAGE3D | typeof WGF_ACTOR_KIND_LIGHT | typeof WGF_ACTOR_KIND_MODEL | typeof WGF_ACTOR_KIND_SHAPE3D;
+export declare const WGF_ACTOR_KIND_EMITTER3D: 13;
+export type wgf_actor_kind_t = typeof WGF_ACTOR_KIND_NONE | typeof WGF_ACTOR_KIND_PLAIN | typeof WGF_ACTOR_KIND_STAGE2D | typeof WGF_ACTOR_KIND_SPRITE | typeof WGF_ACTOR_KIND_CAMERA2D | typeof WGF_ACTOR_KIND_TEXT | typeof WGF_ACTOR_KIND_SHAPE2D | typeof WGF_ACTOR_KIND_EMITTER2D | typeof WGF_ACTOR_KIND_CAMERA3D | typeof WGF_ACTOR_KIND_STAGE3D | typeof WGF_ACTOR_KIND_LIGHT | typeof WGF_ACTOR_KIND_MODEL | typeof WGF_ACTOR_KIND_SHAPE3D | typeof WGF_ACTOR_KIND_EMITTER3D;
 
 /**
  * What wgf_actor_destroy does with the actor's children.
@@ -474,6 +475,21 @@ export declare const WGF_TEXTURE_FILTER_LINEAR: 0;
 export declare const WGF_TEXTURE_FILTER_NEAREST: 1;
 export type wgf_texture_filter_t = typeof WGF_TEXTURE_FILTER_LINEAR | typeof WGF_TEXTURE_FILTER_NEAREST;
 
+export declare const WGF_MATERIAL_SHADING_PBR: 0;
+export declare const WGF_MATERIAL_SHADING_UNLIT: 1;
+export type wgf_material_shading_t = typeof WGF_MATERIAL_SHADING_PBR | typeof WGF_MATERIAL_SHADING_UNLIT;
+
+/**
+ * How something drawn uses its alpha. In a stage, OPAQUE and MASK parts write depth and
+ * aren't sorted; BLEND parts are drawn after them, sorted back to front; ADD, particles'
+ * alone (a material refuses it), after those.
+ */
+export declare const WGF_ALPHA_MODE_OPAQUE: 0;
+export declare const WGF_ALPHA_MODE_MASK: 1;
+export declare const WGF_ALPHA_MODE_BLEND: 2;
+export declare const WGF_ALPHA_MODE_ADD: 3;
+export type wgf_alpha_mode_t = typeof WGF_ALPHA_MODE_OPAQUE | typeof WGF_ALPHA_MODE_MASK | typeof WGF_ALPHA_MODE_BLEND | typeof WGF_ALPHA_MODE_ADD;
+
 /**
  * A light: an actor that lights the stage it is on (wgf_stage3d.h), placed and aimed with
  * the actor calls (wgf_actor_look_at): a light shines down its -z. Lights work as
@@ -500,19 +516,6 @@ export declare const WGF_LIGHT_TYPE_DIRECTIONAL: 0;
 export declare const WGF_LIGHT_TYPE_POINT: 1;
 export declare const WGF_LIGHT_TYPE_SPOT: 2;
 export type wgf_light_type_t = typeof WGF_LIGHT_TYPE_DIRECTIONAL | typeof WGF_LIGHT_TYPE_POINT | typeof WGF_LIGHT_TYPE_SPOT;
-
-export declare const WGF_MATERIAL_SHADING_PBR: 0;
-export declare const WGF_MATERIAL_SHADING_UNLIT: 1;
-export type wgf_material_shading_t = typeof WGF_MATERIAL_SHADING_PBR | typeof WGF_MATERIAL_SHADING_UNLIT;
-
-/**
- * How something drawn uses its alpha. In a stage, OPAQUE and MASK parts write depth and
- * aren't sorted; BLEND parts are drawn after them, sorted back to front.
- */
-export declare const WGF_ALPHA_MODE_OPAQUE: 0;
-export declare const WGF_ALPHA_MODE_MASK: 1;
-export declare const WGF_ALPHA_MODE_BLEND: 2;
-export type wgf_alpha_mode_t = typeof WGF_ALPHA_MODE_OPAQUE | typeof WGF_ALPHA_MODE_MASK | typeof WGF_ALPHA_MODE_BLEND;
 
 /**
  * How a game's design is fitted to the window or the screen (Godot's stretch modes
@@ -2980,228 +2983,1458 @@ export declare function wgf_draw_circle_3d(cx: number, cy: number, cz: number, r
 export declare function wgf_draw_text_3d(font: wgf_font_t | 0, text: string | null, x: number, y: number, z: number, size: number, color: wgf_color_t): void;
 
 /**
- * An emitter that isn't emitting yet: rate 0, 256 particles at most, white squares of
- * 4 units living a second, going nowhere. 0 when there is no room for another actor.
+ * A material with glTF's defaults. 0 when `shading` isn't one (logged), or there is no
+ * room for another material.
+ */
+export declare function wgf_material_create(shading: wgf_material_shading_t): wgf_material_t;
+
+/**
+ * False when `shading` isn't one.
+ */
+export declare function wgf_material_set_shading(material: wgf_material_t | 0, shading: wgf_material_shading_t): boolean;
+
+/**
+ * False when `shading` isn't one.
+ */
+export declare function wgf_material_get_shading(material: wgf_material_t | 0): wgf_material_shading_t;
+
+/**
+ * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
+ * 0 is clamped to 0). False when `mode` isn't one.
+ */
+export declare function wgf_material_set_alpha_mode(material: wgf_material_t | 0, mode: wgf_alpha_mode_t, cutoff: number): boolean;
+
+/**
+ * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
+ * 0 is clamped to 0). False when `mode` isn't one.
+ */
+export declare function wgf_material_get_alpha_mode(material: wgf_material_t | 0): wgf_alpha_mode_t;
+
+/**
+ * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
+ * 0 is clamped to 0). False when `mode` isn't one.
+ */
+export declare function wgf_material_get_alpha_cutoff(material: wgf_material_t | 0): number;
+
+/**
+ * A double-sided surface isn't culled from behind; its back faces are lit from their
+ * side (default single sided).
+ */
+export declare function wgf_material_set_double_sided(material: wgf_material_t | 0, double_sided: boolean): boolean;
+
+/**
+ * A double-sided surface isn't culled from behind; its back faces are lit from their
+ * side (default single sided).
+ */
+export declare function wgf_material_is_double_sided(material: wgf_material_t | 0): boolean;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_set_int(material: wgf_material_t | 0, name: string | null, value_: number): boolean;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_get_int(material: wgf_material_t | 0, name: string | null): number;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_set_float(material: wgf_material_t | 0, name: string | null, value_: number): boolean;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_get_float(material: wgf_material_t | 0, name: string | null): number;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_set_vec2(material: wgf_material_t | 0, name: string | null, x: number, y: number): boolean;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_get_vec2<T extends number[] | Float32Array | Float64Array>(material: wgf_material_t | 0, name: string | null, into: T): T;
+export declare function wgf_material_get_vec2(material: wgf_material_t | 0, name: string | null, into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_set_vec3(material: wgf_material_t | 0, name: string | null, x: number, y: number, z: number): boolean;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_get_vec3<T extends number[] | Float32Array | Float64Array>(material: wgf_material_t | 0, name: string | null, into: T): T;
+export declare function wgf_material_get_vec3(material: wgf_material_t | 0, name: string | null, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_set_vec4(material: wgf_material_t | 0, name: string | null, x: number, y: number, z: number, w: number): boolean;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_get_vec4<T extends number[] | Float32Array | Float64Array>(material: wgf_material_t | 0, name: string | null, into: T): T;
+export declare function wgf_material_get_vec4(material: wgf_material_t | 0, name: string | null, into?: wgf_vec4_t | null): wgf_vec4_t;
+
+/**
+ * The parameters, by name (the table above). set_int refuses a texture coordinate set
+ * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
+ * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ */
+export declare function wgf_material_set_color(material: wgf_material_t | 0, name: string | null, color: wgf_color_t): boolean;
+
+/**
+ * A texture parameter: the material holds its own reference to the texture; 0 clears
+ * it. False when `texture` isn't a texture.
+ */
+export declare function wgf_material_set_texture(material: wgf_material_t | 0, name: string | null, texture: wgf_texture_t | 0): boolean;
+
+/**
+ * A texture parameter: the material holds its own reference to the texture; 0 clears
+ * it. False when `texture` isn't a texture.
+ */
+export declare function wgf_material_get_texture(material: wgf_material_t | 0, name: string | null): wgf_texture_t;
+
+/**
+ * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
+ * filter that isn't one.
+ */
+export declare function wgf_material_set_texture_sampling(material: wgf_material_t | 0, name: string | null, wrap_u: wgf_texture_wrap_t, wrap_v: wgf_texture_wrap_t, filter: wgf_texture_filter_t): boolean;
+
+/**
+ * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
+ * filter that isn't one.
+ */
+export declare function wgf_material_get_texture_wrap_u(material: wgf_material_t | 0, name: string | null): wgf_texture_wrap_t;
+
+/**
+ * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
+ * filter that isn't one.
+ */
+export declare function wgf_material_get_texture_wrap_v(material: wgf_material_t | 0, name: string | null): wgf_texture_wrap_t;
+
+/**
+ * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
+ * filter that isn't one.
+ */
+export declare function wgf_material_get_texture_filter(material: wgf_material_t | 0, name: string | null): wgf_texture_filter_t;
+
+/**
+ * An emitter, emitting at no rate yet: white 8-unit squares living a second, added. 0
+ * when there is no room for another actor.
  */
 export declare function wgf_emitter2d_create(): wgf_actor_t;
 
 /**
- * Particles a second while emitting, spread evenly over the frames. Clamped to 0 or
- * more. False for a handle that isn't an emitter.
+ * What each particle shows (0: a white square). False when `texture` isn't a texture.
+ * One still loading shows nothing until it is READY.
+ */
+export declare function wgf_emitter2d_set_texture(emitter: wgf_actor_t | 0, texture: wgf_texture_t | 0): boolean;
+
+/**
+ * What each particle shows (0: a white square). False when `texture` isn't a texture.
+ * One still loading shows nothing until it is READY.
+ */
+export declare function wgf_emitter2d_get_texture(emitter: wgf_actor_t | 0): wgf_texture_t;
+
+/**
+ * The region of the texture each particle shows, in texture pixels (an atlas cell).
+ * Default: the whole texture; a width or height of 0 or less goes back to that.
+ */
+export declare function wgf_emitter2d_set_source(emitter: wgf_actor_t | 0, x: number, y: number, width: number, height: number): boolean;
+
+/**
+ * The region of the texture each particle shows, in texture pixels (an atlas cell).
+ * Default: the whole texture; a width or height of 0 or less goes back to that.
+ */
+export declare function wgf_emitter2d_get_source<T extends number[] | Float32Array | Float64Array>(emitter: wgf_actor_t | 0, into: T): T;
+export declare function wgf_emitter2d_get_source(emitter: wgf_actor_t | 0, into?: wgf_vec4_t | null): wgf_vec4_t;
+
+/**
+ * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+ * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+ * each particle plays them once over its life (puffs); above 0 it loops at that rate
+ * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+ * than 4096 frames, a count past them, or a negative rate.
+ */
+export declare function wgf_emitter2d_set_frames(emitter: wgf_actor_t | 0, columns: number, rows: number, count: number, per_second: number): boolean;
+
+/**
+ * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+ * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+ * each particle plays them once over its life (puffs); above 0 it loops at that rate
+ * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+ * than 4096 frames, a count past them, or a negative rate.
+ */
+export declare function wgf_emitter2d_get_frame_columns(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+ * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+ * each particle plays them once over its life (puffs); above 0 it loops at that rate
+ * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+ * than 4096 frames, a count past them, or a negative rate.
+ */
+export declare function wgf_emitter2d_get_frame_rows(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+ * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+ * each particle plays them once over its life (puffs); above 0 it loops at that rate
+ * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+ * than 4096 frames, a count past them, or a negative rate.
+ */
+export declare function wgf_emitter2d_get_frame_count(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+ * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+ * each particle plays them once over its life (puffs); above 0 it loops at that rate
+ * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+ * than 4096 frames, a count past them, or a negative rate.
+ */
+export declare function wgf_emitter2d_get_frame_rate(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Its actor's next move isn't a move: nothing spawns along the way, and particles
+ * inherit nothing of it (a teleport).
+ */
+export declare function wgf_emitter2d_skip_trail(emitter: wgf_actor_t | 0): boolean;
+
+/**
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
  */
 export declare function wgf_emitter2d_set_rate(emitter: wgf_actor_t | 0, per_second: number): boolean;
 
 /**
- * Particles a second while emitting, spread evenly over the frames. Clamped to 0 or
- * more. False for a handle that isn't an emitter.
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
  */
 export declare function wgf_emitter2d_get_rate(emitter: wgf_actor_t | 0): number;
 
 /**
- * Whether it emits at its rate (default true; with the rate at 0 nothing comes). Bursts
- * come either way. False for a handle that isn't an emitter.
- */
-export declare function wgf_emitter2d_set_emitting(emitter: wgf_actor_t | 0, emitting: boolean): boolean;
-
-/**
- * Whether it emits at its rate (default true; with the rate at 0 nothing comes). Bursts
- * come either way. False for a handle that isn't an emitter.
- */
-export declare function wgf_emitter2d_is_emitting(emitter: wgf_actor_t | 0): boolean;
-
-/**
- * `count` particles at once, where the emitter is now. Clamped to the room left. False
- * for a handle that isn't an emitter, or a count below 1.
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
  */
 export declare function wgf_emitter2d_burst(emitter: wgf_actor_t | 0, count: number): boolean;
 
 /**
- * The most particles it keeps, 1 to 65536 (default 256); a birth past it is dropped.
- * Lowering it drops the oldest. Clamped. False for a handle that isn't an emitter.
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
  */
-export declare function wgf_emitter2d_set_capacity(emitter: wgf_actor_t | 0, capacity: number): boolean;
+export declare function wgf_emitter2d_set_emitting(emitter: wgf_actor_t | 0, emitting: boolean): boolean;
 
 /**
- * The most particles it keeps, 1 to 65536 (default 256); a birth past it is dropped.
- * Lowering it drops the oldest. Clamped. False for a handle that isn't an emitter.
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
  */
-export declare function wgf_emitter2d_get_capacity(emitter: wgf_actor_t | 0): number;
+export declare function wgf_emitter2d_is_emitting(emitter: wgf_actor_t | 0): boolean;
 
 /**
- * Particles alive now.
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
  */
-export declare function wgf_emitter2d_get_count(emitter: wgf_actor_t | 0): number;
+export declare function wgf_emitter2d_set_max(emitter: wgf_actor_t | 0, count: number): boolean;
 
 /**
- * How long each lives, in seconds, chosen between min and max at birth (swapped when
- * max is less). False for a handle that isn't an emitter, or a min of 0 or less.
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
  */
-export declare function wgf_emitter2d_set_life(emitter: wgf_actor_t | 0, min: number, max: number): boolean;
+export declare function wgf_emitter2d_get_max(emitter: wgf_actor_t | 0): number;
 
 /**
- * How long each lives, in seconds, chosen between min and max at birth (swapped when
- * max is less). False for a handle that isn't an emitter, or a min of 0 or less.
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
+ */
+export declare function wgf_emitter2d_set_life(emitter: wgf_actor_t | 0, min_seconds: number, max_seconds: number): boolean;
+
+/**
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
  */
 export declare function wgf_emitter2d_get_life_min(emitter: wgf_actor_t | 0): number;
 
 /**
- * How long each lives, in seconds, chosen between min and max at birth (swapped when
- * max is less). False for a handle that isn't an emitter, or a min of 0 or less.
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
  */
 export declare function wgf_emitter2d_get_life_max(emitter: wgf_actor_t | 0): number;
 
 /**
- * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
- * +y, down the screen), turned by the emitter's own world rotation, give or take
- * `spread` radians either side (TAU: every way); and their speed, in units a second,
- * between min and max. False for a handle that isn't an emitter, or a spread or speed
- * below 0.
+ * Start over as if the steady rate had been running for `seconds` (smoke already rising
+ * when it appears): the particles alive go, and those the rate would have made over that
+ * time, and still alive now, are made where the actor is. False below 0.
  */
-export declare function wgf_emitter2d_set_direction(emitter: wgf_actor_t | 0, angle: number, spread: number): boolean;
+export declare function wgf_emitter2d_prewarm(emitter: wgf_actor_t | 0, seconds: number): boolean;
 
 /**
- * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
- * +y, down the screen), turned by the emitter's own world rotation, give or take
- * `spread` radians either side (TAU: every way); and their speed, in units a second,
- * between min and max. False for a handle that isn't an emitter, or a spread or speed
- * below 0.
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a circle (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+ * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+ * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+ * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+ * axes (default none).
  */
-export declare function wgf_emitter2d_get_direction(emitter: wgf_actor_t | 0): number;
+export declare function wgf_emitter2d_set_spawn_box(emitter: wgf_actor_t | 0, half_width: number, half_height: number): boolean;
 
 /**
- * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
- * +y, down the screen), turned by the emitter's own world rotation, give or take
- * `spread` radians either side (TAU: every way); and their speed, in units a second,
- * between min and max. False for a handle that isn't an emitter, or a spread or speed
- * below 0.
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a circle (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+ * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+ * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+ * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+ * axes (default none).
+ */
+export declare function wgf_emitter2d_get_spawn_box<T extends number[] | Float32Array | Float64Array>(emitter: wgf_actor_t | 0, into: T): T;
+export declare function wgf_emitter2d_get_spawn_box(emitter: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a circle (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+ * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+ * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+ * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+ * axes (default none).
+ */
+export declare function wgf_emitter2d_set_spawn_circle(emitter: wgf_actor_t | 0, radius: number): boolean;
+
+/**
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a circle (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+ * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+ * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+ * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+ * axes (default none).
+ */
+export declare function wgf_emitter2d_get_spawn_circle(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a circle (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+ * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+ * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+ * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+ * axes (default none).
+ */
+export declare function wgf_emitter2d_set_velocity(emitter: wgf_actor_t | 0, x: number, y: number, spread: number, speed_variance: number): boolean;
+
+/**
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a circle (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+ * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+ * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+ * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+ * axes (default none).
+ */
+export declare function wgf_emitter2d_get_velocity<T extends number[] | Float32Array | Float64Array>(emitter: wgf_actor_t | 0, into: T): T;
+export declare function wgf_emitter2d_get_velocity(emitter: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a circle (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+ * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+ * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+ * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+ * axes (default none).
  */
 export declare function wgf_emitter2d_get_spread(emitter: wgf_actor_t | 0): number;
 
 /**
- * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
- * +y, down the screen), turned by the emitter's own world rotation, give or take
- * `spread` radians either side (TAU: every way); and their speed, in units a second,
- * between min and max. False for a handle that isn't an emitter, or a spread or speed
- * below 0.
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a circle (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+ * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+ * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+ * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+ * axes (default none).
  */
-export declare function wgf_emitter2d_set_speed(emitter: wgf_actor_t | 0, min: number, max: number): boolean;
+export declare function wgf_emitter2d_get_speed_variance(emitter: wgf_actor_t | 0): number;
 
 /**
- * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
- * +y, down the screen), turned by the emitter's own world rotation, give or take
- * `spread` radians either side (TAU: every way); and their speed, in units a second,
- * between min and max. False for a handle that isn't an emitter, or a spread or speed
- * below 0.
- */
-export declare function wgf_emitter2d_get_speed_min(emitter: wgf_actor_t | 0): number;
-
-/**
- * The direction they leave in, radians on the stage (0 along +x, a quarter turn along
- * +y, down the screen), turned by the emitter's own world rotation, give or take
- * `spread` radians either side (TAU: every way); and their speed, in units a second,
- * between min and max. False for a handle that isn't an emitter, or a spread or speed
- * below 0.
- */
-export declare function wgf_emitter2d_get_speed_max(emitter: wgf_actor_t | 0): number;
-
-/**
- * Born anywhere within `radius` of the emitter (0, the default: at it). False for a
- * handle that isn't an emitter, or a radius below 0.
- */
-export declare function wgf_emitter2d_set_radius(emitter: wgf_actor_t | 0, radius: number): boolean;
-
-/**
- * Born anywhere within `radius` of the emitter (0, the default: at it). False for a
- * handle that isn't an emitter, or a radius below 0.
- */
-export declare function wgf_emitter2d_get_radius(emitter: wgf_actor_t | 0): number;
-
-/**
- * Acceleration in units a second squared (default 0, 0), and drag, the part of its
- * velocity a particle loses each second (0, the default, to 1: none to all). Drag is
- * clamped to 0..1. False for a handle that isn't an emitter.
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a circle (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+ * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+ * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+ * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+ * axes (default none).
  */
 export declare function wgf_emitter2d_set_gravity(emitter: wgf_actor_t | 0, x: number, y: number): boolean;
 
 /**
- * Acceleration in units a second squared (default 0, 0), and drag, the part of its
- * velocity a particle loses each second (0, the default, to 1: none to all). Drag is
- * clamped to 0..1. False for a handle that isn't an emitter.
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a circle (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+ * its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+ * radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+ * (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+ * axes (default none).
  */
 export declare function wgf_emitter2d_get_gravity<T extends number[] | Float32Array | Float64Array>(emitter: wgf_actor_t | 0, into: T): T;
 export declare function wgf_emitter2d_get_gravity(emitter: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
- * Acceleration in units a second squared (default 0, 0), and drag, the part of its
- * velocity a particle loses each second (0, the default, to 1: none to all). Drag is
- * clamped to 0..1. False for a handle that isn't an emitter.
+ * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+ * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+ * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+ * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+ * points its top along its velocity across the screen, as long as the distance it moves in
+ * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+ * 0). Defaults 0.
  */
-export declare function wgf_emitter2d_set_drag(emitter: wgf_actor_t | 0, drag: number): boolean;
+export declare function wgf_emitter2d_set_drag(emitter: wgf_actor_t | 0, per_second: number): boolean;
 
 /**
- * Acceleration in units a second squared (default 0, 0), and drag, the part of its
- * velocity a particle loses each second (0, the default, to 1: none to all). Drag is
- * clamped to 0..1. False for a handle that isn't an emitter.
+ * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+ * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+ * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+ * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+ * points its top along its velocity across the screen, as long as the distance it moves in
+ * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+ * 0). Defaults 0.
  */
 export declare function wgf_emitter2d_get_drag(emitter: wgf_actor_t | 0): number;
 
 /**
- * Size in units, and color, at birth and at death, each running between them over the
- * particle's life. False for a handle that isn't an emitter, or a size below 0.
+ * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+ * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+ * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+ * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+ * points its top along its velocity across the screen, as long as the distance it moves in
+ * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+ * 0). Defaults 0.
  */
-export declare function wgf_emitter2d_set_size(emitter: wgf_actor_t | 0, start: number, end: number): boolean;
+export declare function wgf_emitter2d_set_inherit_velocity(emitter: wgf_actor_t | 0, fraction: number): boolean;
 
 /**
- * Size in units, and color, at birth and at death, each running between them over the
- * particle's life. False for a handle that isn't an emitter, or a size below 0.
+ * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+ * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+ * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+ * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+ * points its top along its velocity across the screen, as long as the distance it moves in
+ * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+ * 0). Defaults 0.
  */
-export declare function wgf_emitter2d_get_size_start(emitter: wgf_actor_t | 0): number;
+export declare function wgf_emitter2d_get_inherit_velocity(emitter: wgf_actor_t | 0): number;
 
 /**
- * Size in units, and color, at birth and at death, each running between them over the
- * particle's life. False for a handle that isn't an emitter, or a size below 0.
- */
-export declare function wgf_emitter2d_get_size_end(emitter: wgf_actor_t | 0): number;
-
-/**
- * Size in units, and color, at birth and at death, each running between them over the
- * particle's life. False for a handle that isn't an emitter, or a size below 0.
- */
-export declare function wgf_emitter2d_set_color(emitter: wgf_actor_t | 0, start: wgf_color_t, end: wgf_color_t): boolean;
-
-/**
- * Size in units, and color, at birth and at death, each running between them over the
- * particle's life. False for a handle that isn't an emitter, or a size below 0.
- */
-export declare function wgf_emitter2d_get_color_start(emitter: wgf_actor_t | 0): wgf_color_t;
-
-/**
- * Size in units, and color, at birth and at death, each running between them over the
- * particle's life. False for a handle that isn't an emitter, or a size below 0.
- */
-export declare function wgf_emitter2d_get_color_end(emitter: wgf_actor_t | 0): wgf_color_t;
-
-/**
- * A streak instead of a square: each particle drawn as a line from where it is back
- * along its velocity for `seconds` of it, its size the line's thickness; 0 (the
- * default) draws squares. Clamped to 0 or more. False for a handle that isn't an
- * emitter.
+ * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+ * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+ * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+ * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+ * points its top along its velocity across the screen, as long as the distance it moves in
+ * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+ * 0). Defaults 0.
  */
 export declare function wgf_emitter2d_set_stretch(emitter: wgf_actor_t | 0, seconds: number): boolean;
 
 /**
- * A streak instead of a square: each particle drawn as a line from where it is back
- * along its velocity for `seconds` of it, its size the line's thickness; 0 (the
- * default) draws squares. Clamped to 0 or more. False for a handle that isn't an
- * emitter.
+ * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+ * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+ * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+ * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+ * points its top along its velocity across the screen, as long as the distance it moves in
+ * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+ * 0). Defaults 0.
  */
 export declare function wgf_emitter2d_get_stretch(emitter: wgf_actor_t | 0): number;
 
 /**
- * Every particle gone at once; it keeps emitting as it was. False for a handle that
- * isn't an emitter.
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter2d_set_size(emitter: wgf_actor_t | 0, start: number, end: number, variance: number): boolean;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter2d_get_size_variance(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter2d_add_size_key(emitter: wgf_actor_t | 0, t: number, size: number): boolean;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter2d_clear_size_keys(emitter: wgf_actor_t | 0): boolean;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter2d_get_size_key_count(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter2d_get_size_key_time(emitter: wgf_actor_t | 0, index: number): number;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter2d_get_size_key_value(emitter: wgf_actor_t | 0, index: number): number;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter2d_set_color(emitter: wgf_actor_t | 0, start: wgf_color_t, end: wgf_color_t): boolean;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter2d_add_color_key(emitter: wgf_actor_t | 0, t: number, color: wgf_color_t): boolean;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter2d_clear_color_keys(emitter: wgf_actor_t | 0): boolean;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter2d_get_color_key_count(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter2d_get_color_key_time(emitter: wgf_actor_t | 0, index: number): number;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter2d_get_color_key_value(emitter: wgf_actor_t | 0, index: number): wgf_color_t;
+
+/**
+ * Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+ * tints its color over its life (confetti from one emitter). Empty by default: no tint.
+ */
+export declare function wgf_emitter2d_add_palette_color(emitter: wgf_actor_t | 0, color: wgf_color_t): boolean;
+
+/**
+ * Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+ * tints its color over its life (confetti from one emitter). Empty by default: no tint.
+ */
+export declare function wgf_emitter2d_clear_palette(emitter: wgf_actor_t | 0): boolean;
+
+/**
+ * Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+ * tints its color over its life (confetti from one emitter). Empty by default: no tint.
+ */
+export declare function wgf_emitter2d_get_palette_count(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+ * tints its color over its life (confetti from one emitter). Empty by default: no tint.
+ */
+export declare function wgf_emitter2d_get_palette_color(emitter: wgf_actor_t | 0, index: number): wgf_color_t;
+
+/**
+ * Spin: radians a second between min and max, positive clockwise on screen, from a random
+ * angle (default none).
+ */
+export declare function wgf_emitter2d_set_spin(emitter: wgf_actor_t | 0, min: number, max: number): boolean;
+
+/**
+ * Spin: radians a second between min and max, positive clockwise on screen, from a random
+ * angle (default none).
+ */
+export declare function wgf_emitter2d_get_spin_min(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Spin: radians a second between min and max, positive clockwise on screen, from a random
+ * angle (default none).
+ */
+export declare function wgf_emitter2d_get_spin_max(emitter: wgf_actor_t | 0): number;
+
+/**
+ * How particles use alpha (wgf_material.h's modes; default ADD: glows, sparks, fire), and
+ * the cutoff MASK cuts out below (0..1, clamped; default 0.5). False when `mode` isn't
+ * one.
+ */
+export declare function wgf_emitter2d_set_alpha_mode(emitter: wgf_actor_t | 0, mode: wgf_alpha_mode_t, cutoff: number): boolean;
+
+/**
+ * How particles use alpha (wgf_material.h's modes; default ADD: glows, sparks, fire), and
+ * the cutoff MASK cuts out below (0..1, clamped; default 0.5). False when `mode` isn't
+ * one.
+ */
+export declare function wgf_emitter2d_get_alpha_mode(emitter: wgf_actor_t | 0): wgf_alpha_mode_t;
+
+/**
+ * How particles use alpha (wgf_material.h's modes; default ADD: glows, sparks, fire), and
+ * the cutoff MASK cuts out below (0..1, clamped; default 0.5). False when `mode` isn't
+ * one.
+ */
+export declare function wgf_emitter2d_get_alpha_cutoff(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Where its random numbers start: the same seed and settings give the same particles
+ * (default: drawn from wgf_random as it is made). Read back as last set.
+ */
+export declare function wgf_emitter2d_set_seed(emitter: wgf_actor_t | 0, seed: number): boolean;
+
+/**
+ * Where its random numbers start: the same seed and settings give the same particles
+ * (default: drawn from wgf_random as it is made). Read back as last set.
+ */
+export declare function wgf_emitter2d_get_seed(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Ending: once it has nothing left to emit (not emitting, or at no rate) and the last
+ * particle it made has died, the emitter's actor is destroyed, with what is under it, in
+ * the update before a frame: a one-shot effect (an explosion's burst) ends itself. One
+ * that has made no particle yet waits for its first. Default off.
+ */
+export declare function wgf_emitter2d_set_ending(emitter: wgf_actor_t | 0, ending: boolean): boolean;
+
+/**
+ * Ending: once it has nothing left to emit (not emitting, or at no rate) and the last
+ * particle it made has died, the emitter's actor is destroyed, with what is under it, in
+ * the update before a frame: a one-shot effect (an explosion's burst) ends itself. One
+ * that has made no particle yet waits for its first. Default off.
+ */
+export declare function wgf_emitter2d_is_ending(emitter: wgf_actor_t | 0): boolean;
+
+/**
+ * Lingering: destroyed, directly or with an actor above it, while it has particles alive
+ * on a stage, they finish their lives where they are: the emitter goes on as an actor of
+ * its own at the stage's top, not emitting, ending (as above) with its last particle, made
+ * in the update before the next frame (a ship's exhaust outlives the ship). Default off.
+ */
+export declare function wgf_emitter2d_set_lingering(emitter: wgf_actor_t | 0, lingering: boolean): boolean;
+
+/**
+ * Lingering: destroyed, directly or with an actor above it, while it has particles alive
+ * on a stage, they finish their lives where they are: the emitter goes on as an actor of
+ * its own at the stage's top, not emitting, ending (as above) with its last particle, made
+ * in the update before the next frame (a ship's exhaust outlives the ship). Default off.
+ */
+export declare function wgf_emitter2d_is_lingering(emitter: wgf_actor_t | 0): boolean;
+
+/**
+ * The particles alive now, and all of them gone (it keeps emitting as it was).
+ */
+export declare function wgf_emitter2d_get_count(emitter: wgf_actor_t | 0): number;
+
+/**
+ * The particles alive now, and all of them gone (it keeps emitting as it was).
  */
 export declare function wgf_emitter2d_clear(emitter: wgf_actor_t | 0): boolean;
+
+/**
+ * An emitter, emitting at no rate yet: white 1-unit squares living a second, added. 0
+ * when there is no room for another actor.
+ */
+export declare function wgf_emitter3d_create(): wgf_actor_t;
+
+/**
+ * What each particle shows (0: a white square). False when `texture` isn't a texture.
+ * One still loading shows nothing until it is READY.
+ */
+export declare function wgf_emitter3d_set_texture(emitter: wgf_actor_t | 0, texture: wgf_texture_t | 0): boolean;
+
+/**
+ * What each particle shows (0: a white square). False when `texture` isn't a texture.
+ * One still loading shows nothing until it is READY.
+ */
+export declare function wgf_emitter3d_get_texture(emitter: wgf_actor_t | 0): wgf_texture_t;
+
+/**
+ * The region of the texture each particle shows, in texture pixels (an atlas cell).
+ * Default: the whole texture; a width or height of 0 or less goes back to that.
+ */
+export declare function wgf_emitter3d_set_source(emitter: wgf_actor_t | 0, x: number, y: number, width: number, height: number): boolean;
+
+/**
+ * The region of the texture each particle shows, in texture pixels (an atlas cell).
+ * Default: the whole texture; a width or height of 0 or less goes back to that.
+ */
+export declare function wgf_emitter3d_get_source<T extends number[] | Float32Array | Float64Array>(emitter: wgf_actor_t | 0, into: T): T;
+export declare function wgf_emitter3d_get_source(emitter: wgf_actor_t | 0, into?: wgf_vec4_t | null): wgf_vec4_t;
+
+/**
+ * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+ * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+ * each particle plays them once over its life (puffs); above 0 it loops at that rate
+ * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+ * than 4096 frames, a count past them, or a negative rate.
+ */
+export declare function wgf_emitter3d_set_frames(emitter: wgf_actor_t | 0, columns: number, rows: number, count: number, per_second: number): boolean;
+
+/**
+ * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+ * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+ * each particle plays them once over its life (puffs); above 0 it loops at that rate
+ * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+ * than 4096 frames, a count past them, or a negative rate.
+ */
+export declare function wgf_emitter3d_get_frame_columns(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+ * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+ * each particle plays them once over its life (puffs); above 0 it loops at that rate
+ * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+ * than 4096 frames, a count past them, or a negative rate.
+ */
+export declare function wgf_emitter3d_get_frame_rows(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+ * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+ * each particle plays them once over its life (puffs); above 0 it loops at that rate
+ * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+ * than 4096 frames, a count past them, or a negative rate.
+ */
+export declare function wgf_emitter3d_get_frame_count(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+ * bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+ * each particle plays them once over its life (puffs); above 0 it loops at that rate
+ * from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+ * than 4096 frames, a count past them, or a negative rate.
+ */
+export declare function wgf_emitter3d_get_frame_rate(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Its actor's next move isn't a move: nothing spawns along the way, and particles
+ * inherit nothing of it (a teleport).
+ */
+export declare function wgf_emitter3d_skip_trail(emitter: wgf_actor_t | 0): boolean;
+
+/**
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
+ */
+export declare function wgf_emitter3d_set_rate(emitter: wgf_actor_t | 0, per_second: number): boolean;
+
+/**
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
+ */
+export declare function wgf_emitter3d_get_rate(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
+ */
+export declare function wgf_emitter3d_burst(emitter: wgf_actor_t | 0, count: number): boolean;
+
+/**
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
+ */
+export declare function wgf_emitter3d_set_emitting(emitter: wgf_actor_t | 0, emitting: boolean): boolean;
+
+/**
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
+ */
+export declare function wgf_emitter3d_is_emitting(emitter: wgf_actor_t | 0): boolean;
+
+/**
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
+ */
+export declare function wgf_emitter3d_set_max(emitter: wgf_actor_t | 0, count: number): boolean;
+
+/**
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
+ */
+export declare function wgf_emitter3d_get_max(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
+ */
+export declare function wgf_emitter3d_set_life(emitter: wgf_actor_t | 0, min_seconds: number, max_seconds: number): boolean;
+
+/**
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
+ */
+export declare function wgf_emitter3d_get_life_min(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+ * below 0), and bursts of `count` at once, where the actor is (false below 0).
+ * set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+ * most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+ * empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+ * particles than asked is a different effect. Life: each particle's, in seconds, between
+ * min and max (default 1); false for min 0 or less, or max below min.
+ */
+export declare function wgf_emitter3d_get_life_max(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Start over as if the steady rate had been running for `seconds` (smoke already rising
+ * when it appears): the particles alive go, and those the rate would have made over that
+ * time, and still alive now, are made where the actor is. False below 0.
+ */
+export declare function wgf_emitter3d_prewarm(emitter: wgf_actor_t | 0, seconds: number): boolean;
+
+/**
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+ * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+ * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+ * acceleration, stage units a second squared, along the stage's axes (default none).
+ */
+export declare function wgf_emitter3d_set_spawn_box(emitter: wgf_actor_t | 0, half_x: number, half_y: number, half_z: number): boolean;
+
+/**
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+ * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+ * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+ * acceleration, stage units a second squared, along the stage's axes (default none).
+ */
+export declare function wgf_emitter3d_get_spawn_box<T extends number[] | Float32Array | Float64Array>(emitter: wgf_actor_t | 0, into: T): T;
+export declare function wgf_emitter3d_get_spawn_box(emitter: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+ * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+ * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+ * acceleration, stage units a second squared, along the stage's axes (default none).
+ */
+export declare function wgf_emitter3d_set_spawn_sphere(emitter: wgf_actor_t | 0, radius: number): boolean;
+
+/**
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+ * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+ * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+ * acceleration, stage units a second squared, along the stage's axes (default none).
+ */
+export declare function wgf_emitter3d_get_spawn_sphere(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+ * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+ * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+ * acceleration, stage units a second squared, along the stage's axes (default none).
+ */
+export declare function wgf_emitter3d_set_velocity(emitter: wgf_actor_t | 0, x: number, y: number, z: number, spread: number, speed_variance: number): boolean;
+
+/**
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+ * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+ * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+ * acceleration, stage units a second squared, along the stage's axes (default none).
+ */
+export declare function wgf_emitter3d_get_velocity<T extends number[] | Float32Array | Float64Array>(emitter: wgf_actor_t | 0, into: T): T;
+export declare function wgf_emitter3d_get_velocity(emitter: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+ * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+ * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+ * acceleration, stage units a second squared, along the stage's axes (default none).
+ */
+export declare function wgf_emitter3d_get_spread(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+ * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+ * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+ * acceleration, stage units a second squared, along the stage's axes (default none).
+ */
+export declare function wgf_emitter3d_get_speed_variance(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+ * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+ * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+ * acceleration, stage units a second squared, along the stage's axes (default none).
+ */
+export declare function wgf_emitter3d_set_gravity(emitter: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
+
+/**
+ * Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+ * within a sphere (each replaces the other; a radius below 0 is refused), moving along
+ * (x, y, z) at its length's speed (default still), in the emitter's own frame, so turned
+ * as its actor is. Spread evenly within a cone of `spread` radians about it (PI: every
+ * way) and faster or slower by up to `speed_variance` (0..1) of it. Gravity: an
+ * acceleration, stage units a second squared, along the stage's axes (default none).
+ */
+export declare function wgf_emitter3d_get_gravity<T extends number[] | Float32Array | Float64Array>(emitter: wgf_actor_t | 0, into: T): T;
+export declare function wgf_emitter3d_get_gravity(emitter: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+ * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+ * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+ * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+ * points its top along its velocity across the screen, as long as the distance it moves in
+ * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+ * 0). Defaults 0.
+ */
+export declare function wgf_emitter3d_set_drag(emitter: wgf_actor_t | 0, per_second: number): boolean;
+
+/**
+ * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+ * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+ * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+ * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+ * points its top along its velocity across the screen, as long as the distance it moves in
+ * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+ * 0). Defaults 0.
+ */
+export declare function wgf_emitter3d_get_drag(emitter: wgf_actor_t | 0): number;
+
+/**
+ * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+ * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+ * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+ * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+ * points its top along its velocity across the screen, as long as the distance it moves in
+ * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+ * 0). Defaults 0.
+ */
+export declare function wgf_emitter3d_set_inherit_velocity(emitter: wgf_actor_t | 0, fraction: number): boolean;
+
+/**
+ * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+ * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+ * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+ * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+ * points its top along its velocity across the screen, as long as the distance it moves in
+ * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+ * 0). Defaults 0.
+ */
+export declare function wgf_emitter3d_get_inherit_velocity(emitter: wgf_actor_t | 0): number;
+
+/**
+ * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+ * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+ * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+ * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+ * points its top along its velocity across the screen, as long as the distance it moves in
+ * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+ * 0). Defaults 0.
+ */
+export declare function wgf_emitter3d_set_stretch(emitter: wgf_actor_t | 0, seconds: number): boolean;
+
+/**
+ * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+ * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+ * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+ * them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+ * points its top along its velocity across the screen, as long as the distance it moves in
+ * `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+ * 0). Defaults 0.
+ */
+export declare function wgf_emitter3d_get_stretch(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter3d_set_size(emitter: wgf_actor_t | 0, start: number, end: number, variance: number): boolean;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter3d_get_size_variance(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter3d_add_size_key(emitter: wgf_actor_t | 0, t: number, size: number): boolean;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter3d_clear_size_keys(emitter: wgf_actor_t | 0): boolean;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter3d_get_size_key_count(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter3d_get_size_key_time(emitter: wgf_actor_t | 0, index: number): number;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter3d_get_size_key_value(emitter: wgf_actor_t | 0, index: number): number;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter3d_set_color(emitter: wgf_actor_t | 0, start: wgf_color_t, end: wgf_color_t): boolean;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter3d_add_color_key(emitter: wgf_actor_t | 0, t: number, color: wgf_color_t): boolean;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter3d_clear_color_keys(emitter: wgf_actor_t | 0): boolean;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter3d_get_color_key_count(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter3d_get_color_key_time(emitter: wgf_actor_t | 0, index: number): number;
+
+/**
+ * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+ * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+ * make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+ * each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+ * first and after the last it holds; keys at the same time make a step. An emitter
+ * without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+ * for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+ * in time order (0 past the last).
+ */
+export declare function wgf_emitter3d_get_color_key_value(emitter: wgf_actor_t | 0, index: number): wgf_color_t;
+
+/**
+ * Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+ * tints its color over its life (confetti from one emitter). Empty by default: no tint.
+ */
+export declare function wgf_emitter3d_add_palette_color(emitter: wgf_actor_t | 0, color: wgf_color_t): boolean;
+
+/**
+ * Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+ * tints its color over its life (confetti from one emitter). Empty by default: no tint.
+ */
+export declare function wgf_emitter3d_clear_palette(emitter: wgf_actor_t | 0): boolean;
+
+/**
+ * Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+ * tints its color over its life (confetti from one emitter). Empty by default: no tint.
+ */
+export declare function wgf_emitter3d_get_palette_count(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+ * tints its color over its life (confetti from one emitter). Empty by default: no tint.
+ */
+export declare function wgf_emitter3d_get_palette_color(emitter: wgf_actor_t | 0, index: number): wgf_color_t;
+
+/**
+ * Spin: radians a second between min and max, positive clockwise as the camera sees it,
+ * from a random angle (default none).
+ */
+export declare function wgf_emitter3d_set_spin(emitter: wgf_actor_t | 0, min: number, max: number): boolean;
+
+/**
+ * Spin: radians a second between min and max, positive clockwise as the camera sees it,
+ * from a random angle (default none).
+ */
+export declare function wgf_emitter3d_get_spin_min(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Spin: radians a second between min and max, positive clockwise as the camera sees it,
+ * from a random angle (default none).
+ */
+export declare function wgf_emitter3d_get_spin_max(emitter: wgf_actor_t | 0): number;
+
+/**
+ * How particles use alpha (wgf_material.h's modes; default ADD: glows, sparks, fire), and
+ * the cutoff MASK cuts out below (0..1, clamped; default 0.5). False when `mode` isn't
+ * one.
+ */
+export declare function wgf_emitter3d_set_alpha_mode(emitter: wgf_actor_t | 0, mode: wgf_alpha_mode_t, cutoff: number): boolean;
+
+/**
+ * How particles use alpha (wgf_material.h's modes; default ADD: glows, sparks, fire), and
+ * the cutoff MASK cuts out below (0..1, clamped; default 0.5). False when `mode` isn't
+ * one.
+ */
+export declare function wgf_emitter3d_get_alpha_mode(emitter: wgf_actor_t | 0): wgf_alpha_mode_t;
+
+/**
+ * How particles use alpha (wgf_material.h's modes; default ADD: glows, sparks, fire), and
+ * the cutoff MASK cuts out below (0..1, clamped; default 0.5). False when `mode` isn't
+ * one.
+ */
+export declare function wgf_emitter3d_get_alpha_cutoff(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Where its random numbers start: the same seed and settings give the same particles
+ * (default: drawn from wgf_random as it is made). Read back as last set.
+ */
+export declare function wgf_emitter3d_set_seed(emitter: wgf_actor_t | 0, seed: number): boolean;
+
+/**
+ * Where its random numbers start: the same seed and settings give the same particles
+ * (default: drawn from wgf_random as it is made). Read back as last set.
+ */
+export declare function wgf_emitter3d_get_seed(emitter: wgf_actor_t | 0): number;
+
+/**
+ * Ending: once it has nothing left to emit (not emitting, or at no rate) and the last
+ * particle it made has died, the emitter's actor is destroyed, with what is under it, in
+ * the update before a frame: a one-shot effect (an explosion's burst) ends itself. One
+ * that has made no particle yet waits for its first. Default off.
+ */
+export declare function wgf_emitter3d_set_ending(emitter: wgf_actor_t | 0, ending: boolean): boolean;
+
+/**
+ * Ending: once it has nothing left to emit (not emitting, or at no rate) and the last
+ * particle it made has died, the emitter's actor is destroyed, with what is under it, in
+ * the update before a frame: a one-shot effect (an explosion's burst) ends itself. One
+ * that has made no particle yet waits for its first. Default off.
+ */
+export declare function wgf_emitter3d_is_ending(emitter: wgf_actor_t | 0): boolean;
+
+/**
+ * Lingering: destroyed, directly or with an actor above it, while it has particles alive
+ * on a stage, they finish their lives where they are: the emitter goes on as an actor of
+ * its own at the stage's top, not emitting, ending (as above) with its last particle, made
+ * in the update before the next frame (a car's dust outlives the car). Default off.
+ */
+export declare function wgf_emitter3d_set_lingering(emitter: wgf_actor_t | 0, lingering: boolean): boolean;
+
+/**
+ * Lingering: destroyed, directly or with an actor above it, while it has particles alive
+ * on a stage, they finish their lives where they are: the emitter goes on as an actor of
+ * its own at the stage's top, not emitting, ending (as above) with its last particle, made
+ * in the update before the next frame (a car's dust outlives the car). Default off.
+ */
+export declare function wgf_emitter3d_is_lingering(emitter: wgf_actor_t | 0): boolean;
+
+/**
+ * The particles alive now, and all of them gone (it keeps emitting as it was).
+ */
+export declare function wgf_emitter3d_get_count(emitter: wgf_actor_t | 0): number;
+
+/**
+ * The particles alive now, and all of them gone (it keeps emitting as it was).
+ */
+export declare function wgf_emitter3d_clear(emitter: wgf_actor_t | 0): boolean;
 
 /**
  * An environment from a panorama image file. 0 only when there is no room for another;
@@ -3377,168 +4610,6 @@ export declare function wgf_light_get_shadow_bias_constant(light: wgf_actor_t | 
  * away from its caster. False, unchanged, for a negative one.
  */
 export declare function wgf_light_get_shadow_bias_slope(light: wgf_actor_t | 0): number;
-
-/**
- * A material with glTF's defaults. 0 when `shading` isn't one (logged), or there is no
- * room for another material.
- */
-export declare function wgf_material_create(shading: wgf_material_shading_t): wgf_material_t;
-
-/**
- * False when `shading` isn't one.
- */
-export declare function wgf_material_set_shading(material: wgf_material_t | 0, shading: wgf_material_shading_t): boolean;
-
-/**
- * False when `shading` isn't one.
- */
-export declare function wgf_material_get_shading(material: wgf_material_t | 0): wgf_material_shading_t;
-
-/**
- * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
- * 0 is clamped to 0). False when `mode` isn't one.
- */
-export declare function wgf_material_set_alpha_mode(material: wgf_material_t | 0, mode: wgf_alpha_mode_t, cutoff: number): boolean;
-
-/**
- * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
- * 0 is clamped to 0). False when `mode` isn't one.
- */
-export declare function wgf_material_get_alpha_mode(material: wgf_material_t | 0): wgf_alpha_mode_t;
-
-/**
- * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
- * 0 is clamped to 0). False when `mode` isn't one.
- */
-export declare function wgf_material_get_alpha_cutoff(material: wgf_material_t | 0): number;
-
-/**
- * A double-sided surface isn't culled from behind; its back faces are lit from their
- * side (default single sided).
- */
-export declare function wgf_material_set_double_sided(material: wgf_material_t | 0, double_sided: boolean): boolean;
-
-/**
- * A double-sided surface isn't culled from behind; its back faces are lit from their
- * side (default single sided).
- */
-export declare function wgf_material_is_double_sided(material: wgf_material_t | 0): boolean;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_set_int(material: wgf_material_t | 0, name: string | null, value_: number): boolean;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_get_int(material: wgf_material_t | 0, name: string | null): number;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_set_float(material: wgf_material_t | 0, name: string | null, value_: number): boolean;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_get_float(material: wgf_material_t | 0, name: string | null): number;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_set_vec2(material: wgf_material_t | 0, name: string | null, x: number, y: number): boolean;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_get_vec2<T extends number[] | Float32Array | Float64Array>(material: wgf_material_t | 0, name: string | null, into: T): T;
-export declare function wgf_material_get_vec2(material: wgf_material_t | 0, name: string | null, into?: wgf_vec2_t | null): wgf_vec2_t;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_set_vec3(material: wgf_material_t | 0, name: string | null, x: number, y: number, z: number): boolean;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_get_vec3<T extends number[] | Float32Array | Float64Array>(material: wgf_material_t | 0, name: string | null, into: T): T;
-export declare function wgf_material_get_vec3(material: wgf_material_t | 0, name: string | null, into?: wgf_vec3_t | null): wgf_vec3_t;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_set_vec4(material: wgf_material_t | 0, name: string | null, x: number, y: number, z: number, w: number): boolean;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_get_vec4<T extends number[] | Float32Array | Float64Array>(material: wgf_material_t | 0, name: string | null, into: T): T;
-export declare function wgf_material_get_vec4(material: wgf_material_t | 0, name: string | null, into?: wgf_vec4_t | null): wgf_vec4_t;
-
-/**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
- */
-export declare function wgf_material_set_color(material: wgf_material_t | 0, name: string | null, color: wgf_color_t): boolean;
-
-/**
- * A texture parameter: the material holds its own reference to the texture; 0 clears
- * it. False when `texture` isn't a texture.
- */
-export declare function wgf_material_set_texture(material: wgf_material_t | 0, name: string | null, texture: wgf_texture_t | 0): boolean;
-
-/**
- * A texture parameter: the material holds its own reference to the texture; 0 clears
- * it. False when `texture` isn't a texture.
- */
-export declare function wgf_material_get_texture(material: wgf_material_t | 0, name: string | null): wgf_texture_t;
-
-/**
- * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
- * filter that isn't one.
- */
-export declare function wgf_material_set_texture_sampling(material: wgf_material_t | 0, name: string | null, wrap_u: wgf_texture_wrap_t, wrap_v: wgf_texture_wrap_t, filter: wgf_texture_filter_t): boolean;
-
-/**
- * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
- * filter that isn't one.
- */
-export declare function wgf_material_get_texture_wrap_u(material: wgf_material_t | 0, name: string | null): wgf_texture_wrap_t;
-
-/**
- * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
- * filter that isn't one.
- */
-export declare function wgf_material_get_texture_wrap_v(material: wgf_material_t | 0, name: string | null): wgf_texture_wrap_t;
-
-/**
- * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
- * filter that isn't one.
- */
-export declare function wgf_material_get_texture_filter(material: wgf_material_t | 0, name: string | null): wgf_texture_filter_t;
 
 export declare function wgf_mesh_create_plane(width: number, length: number, subdivisions: number): wgf_mesh_t;
 

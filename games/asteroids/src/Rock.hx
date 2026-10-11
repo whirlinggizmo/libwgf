@@ -60,7 +60,7 @@ class Rock extends Behavior {
 		}
 	}
 
-	/** Sparks at (x, y), as many as the size calls for: an emitter's burst that ages out. **/
+	/** Sparks at (x, y), as many as the size calls for: an emitter's burst, ending itself with its last spark. **/
 	public static function explosion(x:Float, y:Float, size:Int) {
 		final sparks = Main.explosionPrefab.spawnAt(Main.world, x, y, 0, 0);
 		(sparks : Emitter2d).burst([40, 24, 14][size < 0 ? 0 : size > 2 ? 2 : size]);

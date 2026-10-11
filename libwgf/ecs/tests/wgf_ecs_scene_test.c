@@ -17,6 +17,7 @@
 #include "wgf_log.h"
 #include "wgf_motion.h"
 #include "wgf_actor.h"
+#include "wgf_emitter3d.h"
 #include "wgf_resource.h"
 #include "wgf_scene.h"
 #include "wgf_mesh.h"
@@ -335,6 +336,29 @@ int main(void)
         expect(strstr(wgf_world_dump(), "model cube=1,1,1 tint=#FFFFFFFF cast_shadows=true receive_shadows=true "
                                         "visible=false\n") != NULL,
                "dumped hidden");
+        { /* an emitter's keys, 3D, and dumped as written */
+            wgf_scene_t fire = load("scenes/fire.scene", "wgf-scene 2\n"
+                                                         "actor smoke\n"
+                                                         "  emitter3d rate=10 max=32 velocity=0,1,0,0.5 size=1,2 "
+                                                         "alpha=blend ending=true palette=#FF0000,#00FF00\n"
+                                                         "  motion\n"
+                                                         "end\n");
+            wgf_actor_t smoke;
+            expect(wgf_scene_instantiate(fire, stage) == 1, "an emitter made");
+            smoke = wgf_actor_find(stage, "smoke");
+            expect(wgf_actor_get_kind(smoke) == WGF_ACTOR_KIND_EMITTER3D && wgf_emitter3d_get_rate(smoke) == 10 &&
+                       wgf_emitter3d_get_max(smoke) == 32 && near(wgf_emitter3d_get_spread(smoke), 0.5f) &&
+                       wgf_emitter3d_get_alpha_mode(smoke) == WGF_ALPHA_MODE_BLEND && wgf_emitter3d_is_ending(smoke) &&
+                       wgf_emitter3d_get_palette_count(smoke) == 2 &&
+                       wgf_emitter3d_get_palette_color(smoke, 1) == 0x00FF00FFu,
+                   "its keys");
+            expect(strstr(wgf_world_dump(), "emitter3d frames=1,1,1,0 rate=10 emitting=true max=32") != NULL &&
+                       strstr(wgf_world_dump(), "velocity=0,1,0,0.5,0") != NULL &&
+                       strstr(wgf_world_dump(), "palette=#FF0000FF,#00FF00FF spin=0,0 alpha=blend") != NULL,
+                   "dumped as it was written");
+            wgf_actor_destroy(smoke, WGF_ACTOR_DESTROY_CHILDREN);
+            wgf_resource_release(fire);
+        }
         wgf_world_clear();
         wgf_resource_release(garage);
     }

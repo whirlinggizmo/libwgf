@@ -10,7 +10,7 @@ prefab ship
   shape2d polygon=18,0,-12,-11,-6,0,-12,11 outline=2 color=#7FD4FF
 end
 prefab ship/emitter2d
-  emitter2d rate=70 emitting=false capacity=64 life=0.12,0.3 direction=3.14159 spread=0.4 speed=90,180 size=3,0 color=#FFB040FF,#FF400000
+  emitter2d rate=70 emitting=false max=64 life=0.12,0.3 velocity=-135,0,0.4,0.33 size=3,0 color=#FFB040FF,#FF400000 alpha=blend lingering=true
 end
 
 prefab rock_large
@@ -43,6 +43,5 @@ prefab bullet
 end
 
 prefab explosion
-  lifetime seconds=1.2
-  emitter2d rate=0 emitting=false capacity=64 life=0.4,1.0 direction=0 spread=6.2832 speed=40,200 drag=1.5 size=3,0 color=#FFE0A0FF,#FF602000
+  emitter2d rate=0 emitting=false max=64 life=0.4,1.0 velocity=120,0,3.14159,0.67 drag=1.5 size=3,0 color=#FFE0A0FF,#FF602000 alpha=blend ending=true
 end

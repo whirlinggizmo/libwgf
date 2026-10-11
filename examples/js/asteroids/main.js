@@ -182,7 +182,7 @@ function fireBullet(x, y, vx, vy) {
     sounds.play(sounds.fire);
 }
 
-/** Sparks at (x, y), as many as the size calls for: an emitter's burst that ages out. */
+/** Sparks at (x, y), as many as the size calls for: an emitter's burst, ending itself with its last spark. */
 function explosion(x, y, size) {
     const sparks = wgf.wgf_prefab_spawn_at(explosionPrefab, world, x, y, 0, 0);
     wgf.wgf_emitter2d_burst(sparks,

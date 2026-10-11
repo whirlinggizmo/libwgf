@@ -4,7 +4,10 @@ wgf_layer(gfx
         src/color/wgf_gfx_color.c
         src/draw/wgf_gfx_draw.c
         src/draw/wgf_gfx_draw3d.c
+        src/emitter/wgf_gfx_emitter.c
         src/emitter/wgf_gfx_emitter2d.c
+        src/emitter/wgf_gfx_emitter3d.c
+        src/emitter/wgf_gfx_emitter_scene.c
         src/material/wgf_gfx_material.c
         src/mesh/wgf_gfx_cgltf_impl.c
         src/mesh/wgf_gfx_mesh.c

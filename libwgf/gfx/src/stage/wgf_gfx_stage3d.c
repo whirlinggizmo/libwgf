@@ -59,6 +59,8 @@ typedef struct item_t {
     wgf_material_t material;
     float tint[4];   /* linear */
     bool blended;    /* drawn after the opaque ones, back to front, depth not written */
+    bool additive;   /* an ADD emitter's: after the blended ones */
+    int particles;   /* an emitter's draw (the particles part's); -1, a model's part */
     bool mirrored;   /* its placement turns its triangles' winding (a negative determinant) */
     float depth;     /* along the camera's view, for the sort */
     int order;       /* as found, so equal depths keep it */
@@ -128,6 +130,16 @@ static struct {
 #define INSTANCE_FLOATS (INSTANCE_TEXELS * 4)
 
 static wgf_gfx_priv_environment_hooks_t environment_hooks; /* the environment part's, once installed */
+static wgf_gfx_priv_particle_hooks_t particle_hooks;       /* the particles part's, once installed */
+
+void wgf_gfx_priv_set_particle_hooks(const wgf_gfx_priv_particle_hooks_t *hooks)
+{
+    if (hooks != NULL) {
+        particle_hooks = *hooks;
+    } else {
+        memset(&particle_hooks, 0, sizeof(particle_hooks));
+    }
+}
 
 void wgf_gfx_priv_set_environment_hooks(const wgf_gfx_priv_environment_hooks_t *hooks)
 {
@@ -497,6 +509,7 @@ typedef struct walk_models_t {
     bool culling;
     float planes[6][4];
     wgf_vec3_t eye, forward;
+    wgf_vec3_t right, up; /* the camera's: a particle quad's before its spin */
 } walk_models_t;
 
 static void visit_shape(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *world, void *user)
@@ -544,6 +557,7 @@ static void item_key(const item_t *item, group_key_t *key)
 static bool same_group(const item_t *a, const item_t *b)
 {
     group_key_t ka, kb;
+    if (a->particles >= 0 || b->particles >= 0) return false; /* an emitter's draw is its own */
     item_key(a, &ka);
     item_key(b, &kb);
     return memcmp(&ka, &kb, sizeof(ka)) == 0;
@@ -600,6 +614,8 @@ static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
         material = wgf_gfx_priv_material_get(item->material);
         if (material == NULL) continue; /* a slot with none draws nothing */
         item->world = *world;
+        item->particles = -1;
+        item->additive = false;
         item->mirrored = wgf_mat4_determinant(*world) < 0.0f;
         item->mesh = mesh;
         item->primitive = p;
@@ -626,12 +642,37 @@ static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
     }
 }
 
+/* A 3D emitter's particles, recorded through the particles part's hook: an item drawn
+ * with the opaque parts (OPAQUE, MASK), among the see-through ones by where it is (BLEND),
+ * or after them (ADD). Not culled, casting and receiving nothing. */
+static void visit_emitter(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *world, void *user)
+{
+    const walk_models_t *w = (const walk_models_t *)user;
+    stage_draw_t *draw = &frame.draws[frame.draw_count];
+    item_t *item;
+    int index, mode = WGF_ALPHA_MODE_ADD;
+    if (actor_ptr->type != WGF_ACTOR_KIND_EMITTER3D || particle_hooks.record == NULL) return;
+    index = particle_hooks.record(actor, draw->view_proj.m, w->right, w->up, &mode);
+    if (index < 0 || !grow((void **)&frame.items, &frame.item_capacity, frame.item_count + 1, sizeof(item_t))) return;
+    item = &frame.items[frame.item_count];
+    memset(item, 0, sizeof(*item));
+    item->world = wgf_mat4_identity(); /* its record goes unread */
+    item->particles = index;
+    item->blended = mode == WGF_ALPHA_MODE_BLEND || mode == WGF_ALPHA_MODE_ADD;
+    item->additive = mode == WGF_ALPHA_MODE_ADD;
+    item->depth = wgf_vec3_dot(wgf_vec3_sub(wgf_mat4_get_translation(*world), w->eye), w->forward);
+    item->order = frame.item_count - draw->first;
+    item->group = (uint64_t)index; /* alone */
+    frame.item_count++;
+}
+
 /* Opaque first, alike ones together (by their keys' hash, then as found); then the
  * see-through ones, farthest first. */
 static int compare_items(const void *lhs, const void *rhs)
 {
     const item_t *a = (const item_t *)lhs, *b = (const item_t *)rhs;
     if (a->blended != b->blended) return a->blended ? 1 : -1;
+    if (a->additive != b->additive) return a->additive ? 1 : -1;
     if (a->blended && a->depth != b->depth) return a->depth > b->depth ? -1 : 1;
     if (!a->blended && a->group != b->group) return a->group < b->group ? -1 : 1;
     return (a->order > b->order) - (a->order < b->order);
@@ -681,6 +722,8 @@ void wgf_stage3d_draw(wgf_actor_t stage)
     camera_world = wgf_gfx_priv_actor_get_world_matrix(camera);
     w.eye = draw->camera_position;
     w.forward = wgf_vec3_normalize(wgf_mat4_transform_direction(camera_world, wgf_vec3_make(0.0f, 0.0f, -1.0f)));
+    w.right = wgf_vec3_normalize(wgf_mat4_transform_direction(camera_world, wgf_vec3_make(1.0f, 0.0f, 0.0f)));
+    w.up = wgf_vec3_normalize(wgf_mat4_transform_direction(camera_world, wgf_vec3_make(0.0f, 1.0f, 0.0f)));
     { /* the camera as the shadow fits see it */
         const wgf_gfx_priv_camera3d_t *lens = &wgf_gfx_priv_actor_of(camera)->as.camera3d;
         draw->shadow_camera.position = draw->camera_position;
@@ -701,6 +744,7 @@ void wgf_stage3d_draw(wgf_actor_t stage)
     draw->light_count = frame.light_count - draw->first_light;
     draw->first = frame.item_count;
     walk(stage, visit_model, &w);
+    walk(stage, visit_emitter, &w);
     draw = &frame.draws[frame.draw_count];
     draw->count = frame.item_count - draw->first;
     if (draw->count > 1) qsort(&frame.items[draw->first], (size_t)draw->count, sizeof(item_t), compare_items);
@@ -969,6 +1013,11 @@ static void draw_items(const stage_draw_t *draw, int i, int end, bool lit, const
 {
     while (i < end) {
         int last = i;
+        if (frame.items[i].particles >= 0) { /* an emitter's, through the same viewport */
+            particle_hooks.draw(frame.items[i].particles); /* set: there is an emitter */
+            i++;
+            continue;
+        }
         while (last + 1 < end && same_group(&frame.items[i], &frame.items[last + 1])) last++;
         if (!frame.items[i].shadow_only) draw_run(draw, i, last - i + 1, lit, env);
         i = last + 1;

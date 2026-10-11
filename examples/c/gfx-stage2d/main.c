@@ -69,9 +69,8 @@ static void init(void *user)
     emitter = wgf_emitter2d_create();
     wgf_emitter2d_set_rate(emitter, 120);
     wgf_emitter2d_set_life(emitter, 0.4f, 0.9f);
-    wgf_emitter2d_set_speed(emitter, 10, 40);
-    wgf_emitter2d_set_direction(emitter, 0, 6.2831853f);
-    wgf_emitter2d_set_size(emitter, 4, 0);
+    wgf_emitter2d_set_velocity(emitter, 25, 0, 3.1415927f, 0.6f); /* every way, 10 to 40 a second */
+    wgf_emitter2d_set_size(emitter, 4, 0, 0);
     wgf_emitter2d_set_color(emitter, WGF_COLOR_GOLD, wgf_color_make(255, 60, 0, 0));
     wgf_actor_set_parent(emitter, world);
 

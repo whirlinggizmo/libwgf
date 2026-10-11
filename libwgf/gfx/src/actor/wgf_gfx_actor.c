@@ -329,6 +329,18 @@ const wgf_gfx_priv_model_hooks_t *wgf_gfx_priv_get_model_hooks(void)
     return model_hooks;
 }
 
+static const wgf_gfx_priv_emitter_scene_t *emitter_scene;
+
+void wgf_gfx_priv_set_emitter_scene(const wgf_gfx_priv_emitter_scene_t *hooks)
+{
+    emitter_scene = hooks;
+}
+
+const wgf_gfx_priv_emitter_scene_t *wgf_gfx_priv_get_emitter_scene(void)
+{
+    return emitter_scene;
+}
+
 #define BUILT_HOOKS 4
 static void (*model_built[BUILT_HOOKS])(wgf_actor_t root); /* the ecs's scenes', physics' */
 

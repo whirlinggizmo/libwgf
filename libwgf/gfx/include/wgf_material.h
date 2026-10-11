@@ -66,11 +66,13 @@ typedef enum wgf_material_shading_t {
 } wgf_material_shading_t;
 
 /* How something drawn uses its alpha. In a stage, OPAQUE and MASK parts write depth and
- * aren't sorted; BLEND parts are drawn after them, sorted back to front. */
+ * aren't sorted; BLEND parts are drawn after them, sorted back to front; ADD, particles'
+ * alone (a material refuses it), after those. */
 typedef enum wgf_alpha_mode_t {
     WGF_ALPHA_MODE_OPAQUE = 0, /* alpha ignored */
     WGF_ALPHA_MODE_MASK = 1,   /* drawn where alpha reaches the cutoff, not elsewhere */
-    WGF_ALPHA_MODE_BLEND = 2   /* alpha blended, back to front */
+    WGF_ALPHA_MODE_BLEND = 2,  /* alpha blended, back to front */
+    WGF_ALPHA_MODE_ADD = 3     /* added, alpha its weight: glows, sparks, fire */
 } wgf_alpha_mode_t;
 
 /* A material with glTF's defaults. 0 when `shading` isn't one (logged), or there is no

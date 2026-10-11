@@ -241,6 +241,22 @@ typedef struct wgf_gfx_priv_model_hooks_t {
 void wgf_gfx_priv_set_model_hooks(const wgf_gfx_priv_model_hooks_t *hooks);
 const wgf_gfx_priv_model_hooks_t *wgf_gfx_priv_get_model_hooks(void);
 
+/* A scene's way to emitters (wgf_gfx_emitter_scene.c), set as the emitter part's file is
+ * linked, so a program loading scenes links no particles unless it makes an emitter (or,
+ * a game, its scenes name one: tools/wgf/game.py keeps them): an emitter made, 2D or 3D;
+ * a key of its scene line applied, its value parsed (numbers, colors, a truth, or text);
+ * what is done once it is placed (a prewarm, a burst); and its line, as a scene writes it,
+ * without its indent or end (borrowed until the next). NULL when it isn't linked. */
+typedef struct wgf_gfx_priv_emitter_scene_t {
+    wgf_actor_t (*create)(bool two_d);
+    void (*apply)(wgf_actor_t emitter, const char *key, const double *numbers, int count, const wgf_color_t *colors,
+                  int color_count, bool truth, const char *text);
+    void (*placed)(wgf_actor_t emitter, float prewarm, int burst);
+    const char *(*line)(wgf_actor_t emitter);
+} wgf_gfx_priv_emitter_scene_t;
+void wgf_gfx_priv_set_emitter_scene(const wgf_gfx_priv_emitter_scene_t *hooks);
+const wgf_gfx_priv_emitter_scene_t *wgf_gfx_priv_get_emitter_scene(void);
+
 /* The hooks above set: the stage's first create. */
 void wgf_gfx_priv_model_install(void);
 

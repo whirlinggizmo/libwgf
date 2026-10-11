@@ -207,7 +207,7 @@ static void check_shapes(void)
 static void check_particles(void)
 {
     const wgf_handle_t burst = wgf_emitter2d_create();
-    wgf_emitter2d_set_size(burst, 4, 4);
+    wgf_emitter2d_set_size(burst, 4, 4, 0);
     wgf_emitter2d_set_color(burst, WGF_COLOR_RED, WGF_COLOR_RED);
     wgf_actor_set_position(burst, 104, 96, 0); /* 4 right of and up from the camera's point */
     wgf_actor_set_parent(burst, world);

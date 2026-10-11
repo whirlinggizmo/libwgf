@@ -21,6 +21,11 @@
 			<flag value="/INCLUDE:wgf_mesh_create" if="MSVC_VER"/>
 			<flag value="-Wl,-u,wgf_mesh_create" unless="MSVC_VER"/>
 		</section>
+		<!-- -D wgf_emitters: the particles linked for a scene's emitter lines, the same way -->
+		<section if="wgf_emitters">
+			<flag value="/INCLUDE:wgf_emitter2d_create" if="MSVC_VER"/>
+			<flag value="-Wl,-u,wgf_emitter2d_create" unless="MSVC_VER"/>
+		</section>
 		<section if="windows">
 			<lib name="kernel32.lib" if="MSVC_VER"/>
 			<lib name="user32.lib" if="MSVC_VER"/>

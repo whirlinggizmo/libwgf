@@ -5,6 +5,7 @@
 
 #include "sokol_gfx.h"
 #include "util/sokol_gl.h"
+#include "wgf_mat4.h"
 
 /* The frame, for gfx's own drawing code and app's runtime. */
 
@@ -36,6 +37,9 @@ bool wgf_gfx_priv_render_is_running(void);
  * blended, no depth -- and an identity model-view. Call before recording, since
  * other code (fontstash) may have changed sokol_gl's state. */
 void wgf_gfx_priv_render_set_2d(void);
+/* That 2D projection, as a matrix (OpenGL's clip space): what a sokol_gfx draw among the
+ * 2D (particles) is seen through. */
+wgf_mat4_t wgf_gfx_priv_render_projection_2d(void);
 
 /* Immediate mode in 3D (wgf_draw_begin_3d): through `view_proj` (column by column,
  * OpenGL's clip space), into the visible area, depth tested and written; and back to 2D,

@@ -6,257 +6,717 @@ import wgf.impl.Raw;
 /** Emitter2d's calls, on a Actor: `var x:Emitter2d = handle` gives it them, and a Emitter2d is still a Actor; it starts as 0, none, as a Actor does. **/
 @:forward abstract Emitter2d(Actor) from Actor from Int to Actor {
 	/**
-	    An emitter that isn't emitting yet: rate 0, 256 particles at most, white squares of
-	    4 units living a second, going nowhere. 0 when there is no room for another actor.
+	    An emitter, emitting at no rate yet: white 8-unit squares living a second, added. 0
+	    when there is no room for another actor.
 	**/
 	public static inline function create():Emitter2d
 		return ((Raw.wgf_emitter2d_create() : Actor) : Emitter2d);
 
 	/**
-	    Particles a second while emitting, spread evenly over the frames. Clamped to 0 or
-	    more. False for a handle that isn't an emitter.
+	    What each particle shows (0: a white square). False when `texture` isn't a texture.
+	    One still loading shows nothing until it is READY.
+	**/
+	public inline function setTexture(texture:Texture):Bool
+		return Raw.wgf_emitter2d_set_texture(this, texture);
+
+	/**
+	    What each particle shows (0: a white square). False when `texture` isn't a texture.
+	    One still loading shows nothing until it is READY.
+	**/
+	public inline function getTexture():Texture
+		return Raw.wgf_emitter2d_get_texture(this);
+
+	/**
+	    The region of the texture each particle shows, in texture pixels (an atlas cell).
+	    Default: the whole texture; a width or height of 0 or less goes back to that.
+	**/
+	public inline function setSource(x:Float, y:Float, width:Float, height:Float):Bool
+		return Raw.wgf_emitter2d_set_source(this, x, y, width, height);
+
+	/**
+	    The region of the texture each particle shows, in texture pixels (an atlas cell).
+	    Default: the whole texture; a width or height of 0 or less goes back to that.
+	**/
+	public inline function getSource(?into:wgf.Vec4):wgf.Vec4
+		return Raw.wgf_emitter2d_get_source(this, into);
+
+	/**
+	    Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+	    bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+	    each particle plays them once over its life (puffs); above 0 it loops at that rate
+	    from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+	    than 4096 frames, a count past them, or a negative rate.
+	**/
+	public inline function setFrames(columns:Int, rows:Int, count:Int, per_second:Float):Bool
+		return Raw.wgf_emitter2d_set_frames(this, columns, rows, count, per_second);
+
+	/**
+	    Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+	    bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+	    each particle plays them once over its life (puffs); above 0 it loops at that rate
+	    from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+	    than 4096 frames, a count past them, or a negative rate.
+	**/
+	public inline function getFrameColumns():Int
+		return Raw.wgf_emitter2d_get_frame_columns(this);
+
+	/**
+	    Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+	    bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+	    each particle plays them once over its life (puffs); above 0 it loops at that rate
+	    from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+	    than 4096 frames, a count past them, or a negative rate.
+	**/
+	public inline function getFrameRows():Int
+		return Raw.wgf_emitter2d_get_frame_rows(this);
+
+	/**
+	    Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+	    bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+	    each particle plays them once over its life (puffs); above 0 it loops at that rate
+	    from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+	    than 4096 frames, a count past them, or a negative rate.
+	**/
+	public inline function getFrameCount():Int
+		return Raw.wgf_emitter2d_get_frame_count(this);
+
+	/**
+	    Flipbook: the source split into `columns` by `rows` frames (left to right, top to
+	    bottom), of which the first `count` are used (0 or less: all). With `per_second` 0
+	    each particle plays them once over its life (puffs); above 0 it loops at that rate
+	    from a random frame (flames). Default: one frame. False for less than 1 by 1, more
+	    than 4096 frames, a count past them, or a negative rate.
+	**/
+	public inline function getFrameRate():Float
+		return Raw.wgf_emitter2d_get_frame_rate(this);
+
+	/**
+	    Its actor's next move isn't a move: nothing spawns along the way, and particles
+	    inherit nothing of it (a teleport).
+	**/
+	public inline function skipTrail():Bool
+		return Raw.wgf_emitter2d_skip_trail(this);
+
+	/**
+	    Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+	    below 0), and bursts of `count` at once, where the actor is (false below 0).
+	    set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+	    most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+	    empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+	    particles than asked is a different effect. Life: each particle's, in seconds, between
+	    min and max (default 1); false for min 0 or less, or max below min.
 	**/
 	public inline function setRate(per_second:Float):Bool
 		return Raw.wgf_emitter2d_set_rate(this, per_second);
 
 	/**
-	    Particles a second while emitting, spread evenly over the frames. Clamped to 0 or
-	    more. False for a handle that isn't an emitter.
+	    Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+	    below 0), and bursts of `count` at once, where the actor is (false below 0).
+	    set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+	    most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+	    empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+	    particles than asked is a different effect. Life: each particle's, in seconds, between
+	    min and max (default 1); false for min 0 or less, or max below min.
 	**/
 	public inline function getRate():Float
 		return Raw.wgf_emitter2d_get_rate(this);
 
 	/**
-	    Whether it emits at its rate (default true; with the rate at 0 nothing comes). Bursts
-	    come either way. False for a handle that isn't an emitter.
-	**/
-	public inline function setEmitting(emitting:Bool):Bool
-		return Raw.wgf_emitter2d_set_emitting(this, emitting);
-
-	/**
-	    Whether it emits at its rate (default true; with the rate at 0 nothing comes). Bursts
-	    come either way. False for a handle that isn't an emitter.
-	**/
-	public inline function isEmitting():Bool
-		return Raw.wgf_emitter2d_is_emitting(this);
-
-	/**
-	    `count` particles at once, where the emitter is now. Clamped to the room left. False
-	    for a handle that isn't an emitter, or a count below 1.
+	    Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+	    below 0), and bursts of `count` at once, where the actor is (false below 0).
+	    set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+	    most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+	    empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+	    particles than asked is a different effect. Life: each particle's, in seconds, between
+	    min and max (default 1); false for min 0 or less, or max below min.
 	**/
 	public inline function burst(count:Int):Bool
 		return Raw.wgf_emitter2d_burst(this, count);
 
 	/**
-	    The most particles it keeps, 1 to 65536 (default 256); a birth past it is dropped.
-	    Lowering it drops the oldest. Clamped. False for a handle that isn't an emitter.
+	    Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+	    below 0), and bursts of `count` at once, where the actor is (false below 0).
+	    set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+	    most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+	    empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+	    particles than asked is a different effect. Life: each particle's, in seconds, between
+	    min and max (default 1); false for min 0 or less, or max below min.
 	**/
-	public inline function setCapacity(capacity:Int):Bool
-		return Raw.wgf_emitter2d_set_capacity(this, capacity);
+	public inline function setEmitting(emitting:Bool):Bool
+		return Raw.wgf_emitter2d_set_emitting(this, emitting);
 
 	/**
-	    The most particles it keeps, 1 to 65536 (default 256); a birth past it is dropped.
-	    Lowering it drops the oldest. Clamped. False for a handle that isn't an emitter.
+	    Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+	    below 0), and bursts of `count` at once, where the actor is (false below 0).
+	    set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+	    most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+	    empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+	    particles than asked is a different effect. Life: each particle's, in seconds, between
+	    min and max (default 1); false for min 0 or less, or max below min.
 	**/
-	public inline function getCapacity():Int
-		return Raw.wgf_emitter2d_get_capacity(this);
+	public inline function isEmitting():Bool
+		return Raw.wgf_emitter2d_is_emitting(this);
 
 	/**
-	    Particles alive now.
+	    Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+	    below 0), and bursts of `count` at once, where the actor is (false below 0).
+	    set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+	    most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+	    empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+	    particles than asked is a different effect. Life: each particle's, in seconds, between
+	    min and max (default 1); false for min 0 or less, or max below min.
 	**/
-	public inline function getCount():Int
-		return Raw.wgf_emitter2d_get_count(this);
+	public inline function setMax(count:Int):Bool
+		return Raw.wgf_emitter2d_set_max(this, count);
 
 	/**
-	    How long each lives, in seconds, chosen between min and max at birth (swapped when
-	    max is less). False for a handle that isn't an emitter, or a min of 0 or less.
+	    Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+	    below 0), and bursts of `count` at once, where the actor is (false below 0).
+	    set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+	    most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+	    empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+	    particles than asked is a different effect. Life: each particle's, in seconds, between
+	    min and max (default 1); false for min 0 or less, or max below min.
 	**/
-	public inline function setLife(min:Float, max:Float):Bool
-		return Raw.wgf_emitter2d_set_life(this, min, max);
+	public inline function getMax():Int
+		return Raw.wgf_emitter2d_get_max(this);
 
 	/**
-	    How long each lives, in seconds, chosen between min and max at birth (swapped when
-	    max is less). False for a handle that isn't an emitter, or a min of 0 or less.
+	    Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+	    below 0), and bursts of `count` at once, where the actor is (false below 0).
+	    set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+	    most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+	    empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+	    particles than asked is a different effect. Life: each particle's, in seconds, between
+	    min and max (default 1); false for min 0 or less, or max below min.
+	**/
+	public inline function setLife(min_seconds:Float, max_seconds:Float):Bool
+		return Raw.wgf_emitter2d_set_life(this, min_seconds, max_seconds);
+
+	/**
+	    Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+	    below 0), and bursts of `count` at once, where the actor is (false below 0).
+	    set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+	    most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+	    empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+	    particles than asked is a different effect. Life: each particle's, in seconds, between
+	    min and max (default 1); false for min 0 or less, or max below min.
 	**/
 	public inline function getLifeMin():Float
 		return Raw.wgf_emitter2d_get_life_min(this);
 
 	/**
-	    How long each lives, in seconds, chosen between min and max at birth (swapped when
-	    max is less). False for a handle that isn't an emitter, or a min of 0 or less.
+	    Emission: a steady rate (particles a second; 0, the default, for bursts only; false
+	    below 0), and bursts of `count` at once, where the actor is (false below 0).
+	    set_emitting(false) stops the steady rate; the particles alive finish their lives. At
+	    most `max` are alive at once (default 1024): new ones replace the oldest; a new max
+	    empties it. False for a max below 1 or above 65536 -- refused, not clamped, since fewer
+	    particles than asked is a different effect. Life: each particle's, in seconds, between
+	    min and max (default 1); false for min 0 or less, or max below min.
 	**/
 	public inline function getLifeMax():Float
 		return Raw.wgf_emitter2d_get_life_max(this);
 
 	/**
-	    The direction they leave in, radians on the stage (0 along +x, a quarter turn along
-	    +y, down the screen), turned by the emitter's own world rotation, give or take
-	    `spread` radians either side (TAU: every way); and their speed, in units a second,
-	    between min and max. False for a handle that isn't an emitter, or a spread or speed
-	    below 0.
+	    Start over as if the steady rate had been running for `seconds` (smoke already rising
+	    when it appears): the particles alive go, and those the rate would have made over that
+	    time, and still alive now, are made where the actor is. False below 0.
 	**/
-	public inline function setDirection(angle:Float, spread:Float):Bool
-		return Raw.wgf_emitter2d_set_direction(this, angle, spread);
+	public inline function prewarm(seconds:Float):Bool
+		return Raw.wgf_emitter2d_prewarm(this, seconds);
 
 	/**
-	    The direction they leave in, radians on the stage (0 along +x, a quarter turn along
-	    +y, down the screen), turned by the emitter's own world rotation, give or take
-	    `spread` radians either side (TAU: every way); and their speed, in units a second,
-	    between min and max. False for a handle that isn't an emitter, or a spread or speed
-	    below 0.
+	    Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+	    within a circle (each replaces the other; a radius below 0 is refused), moving along
+	    (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+	    its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+	    radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+	    (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+	    axes (default none).
 	**/
-	public inline function getDirection():Float
-		return Raw.wgf_emitter2d_get_direction(this);
+	public inline function setSpawnBox(half_width:Float, half_height:Float):Bool
+		return Raw.wgf_emitter2d_set_spawn_box(this, half_width, half_height);
 
 	/**
-	    The direction they leave in, radians on the stage (0 along +x, a quarter turn along
-	    +y, down the screen), turned by the emitter's own world rotation, give or take
-	    `spread` radians either side (TAU: every way); and their speed, in units a second,
-	    between min and max. False for a handle that isn't an emitter, or a spread or speed
-	    below 0.
+	    Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+	    within a circle (each replaces the other; a radius below 0 is refused), moving along
+	    (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+	    its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+	    radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+	    (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+	    axes (default none).
+	**/
+	public inline function getSpawnBox(?into:wgf.Vec2):wgf.Vec2
+		return Raw.wgf_emitter2d_get_spawn_box(this, into);
+
+	/**
+	    Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+	    within a circle (each replaces the other; a radius below 0 is refused), moving along
+	    (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+	    its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+	    radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+	    (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+	    axes (default none).
+	**/
+	public inline function setSpawnCircle(radius:Float):Bool
+		return Raw.wgf_emitter2d_set_spawn_circle(this, radius);
+
+	/**
+	    Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+	    within a circle (each replaces the other; a radius below 0 is refused), moving along
+	    (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+	    its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+	    radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+	    (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+	    axes (default none).
+	**/
+	public inline function getSpawnCircle():Float
+		return Raw.wgf_emitter2d_get_spawn_circle(this);
+
+	/**
+	    Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+	    within a circle (each replaces the other; a radius below 0 is refused), moving along
+	    (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+	    its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+	    radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+	    (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+	    axes (default none).
+	**/
+	public inline function setVelocity(x:Float, y:Float, spread:Float, speed_variance:Float):Bool
+		return Raw.wgf_emitter2d_set_velocity(this, x, y, spread, speed_variance);
+
+	/**
+	    Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+	    within a circle (each replaces the other; a radius below 0 is refused), moving along
+	    (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+	    its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+	    radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+	    (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+	    axes (default none).
+	**/
+	public inline function getVelocity(?into:wgf.Vec2):wgf.Vec2
+		return Raw.wgf_emitter2d_get_velocity(this, into);
+
+	/**
+	    Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+	    within a circle (each replaces the other; a radius below 0 is refused), moving along
+	    (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+	    its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+	    radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+	    (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+	    axes (default none).
 	**/
 	public inline function getSpread():Float
 		return Raw.wgf_emitter2d_get_spread(this);
 
 	/**
-	    The direction they leave in, radians on the stage (0 along +x, a quarter turn along
-	    +y, down the screen), turned by the emitter's own world rotation, give or take
-	    `spread` radians either side (TAU: every way); and their speed, in units a second,
-	    between min and max. False for a handle that isn't an emitter, or a spread or speed
-	    below 0.
+	    Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+	    within a circle (each replaces the other; a radius below 0 is refused), moving along
+	    (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+	    its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+	    radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+	    (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+	    axes (default none).
 	**/
-	public inline function setSpeed(min:Float, max:Float):Bool
-		return Raw.wgf_emitter2d_set_speed(this, min, max);
+	public inline function getSpeedVariance():Float
+		return Raw.wgf_emitter2d_get_speed_variance(this);
 
 	/**
-	    The direction they leave in, radians on the stage (0 along +x, a quarter turn along
-	    +y, down the screen), turned by the emitter's own world rotation, give or take
-	    `spread` radians either side (TAU: every way); and their speed, in units a second,
-	    between min and max. False for a handle that isn't an emitter, or a spread or speed
-	    below 0.
-	**/
-	public inline function getSpeedMin():Float
-		return Raw.wgf_emitter2d_get_speed_min(this);
-
-	/**
-	    The direction they leave in, radians on the stage (0 along +x, a quarter turn along
-	    +y, down the screen), turned by the emitter's own world rotation, give or take
-	    `spread` radians either side (TAU: every way); and their speed, in units a second,
-	    between min and max. False for a handle that isn't an emitter, or a spread or speed
-	    below 0.
-	**/
-	public inline function getSpeedMax():Float
-		return Raw.wgf_emitter2d_get_speed_max(this);
-
-	/**
-	    Born anywhere within `radius` of the emitter (0, the default: at it). False for a
-	    handle that isn't an emitter, or a radius below 0.
-	**/
-	public inline function setRadius(radius:Float):Bool
-		return Raw.wgf_emitter2d_set_radius(this, radius);
-
-	/**
-	    Born anywhere within `radius` of the emitter (0, the default: at it). False for a
-	    handle that isn't an emitter, or a radius below 0.
-	**/
-	public inline function getRadius():Float
-		return Raw.wgf_emitter2d_get_radius(this);
-
-	/**
-	    Acceleration in units a second squared (default 0, 0), and drag, the part of its
-	    velocity a particle loses each second (0, the default, to 1: none to all). Drag is
-	    clamped to 0..1. False for a handle that isn't an emitter.
+	    Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+	    within a circle (each replaces the other; a radius below 0 is refused), moving along
+	    (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+	    its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+	    radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+	    (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+	    axes (default none).
 	**/
 	public inline function setGravity(x:Float, y:Float):Bool
 		return Raw.wgf_emitter2d_set_gravity(this, x, y);
 
 	/**
-	    Acceleration in units a second squared (default 0, 0), and drag, the part of its
-	    velocity a particle loses each second (0, the default, to 1: none to all). Drag is
-	    clamped to 0..1. False for a handle that isn't an emitter.
+	    Birth: anywhere in a box around the position (half sizes; default a point), or evenly
+	    within a circle (each replaces the other; a radius below 0 is refused), moving along
+	    (x, y) at its length's speed (default still), in the emitter's own frame, so turned as
+	    its actor is: (0, -1) is up the screen for an emitter not turned. Turned up to `spread`
+	    radians either way (TAU: every way) and faster or slower by up to `speed_variance`
+	    (0..1) of it. Gravity: an acceleration, stage units a second squared, along the stage's
+	    axes (default none).
 	**/
 	public inline function getGravity(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_emitter2d_get_gravity(this, into);
 
 	/**
-	    Acceleration in units a second squared (default 0, 0), and drag, the part of its
-	    velocity a particle loses each second (0, the default, to 1: none to all). Drag is
-	    clamped to 0..1. False for a handle that isn't an emitter.
+	    After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+	    63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+	    that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+	    them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+	    points its top along its velocity across the screen, as long as the distance it moves in
+	    `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+	    0). Defaults 0.
 	**/
-	public inline function setDrag(drag:Float):Bool
-		return Raw.wgf_emitter2d_set_drag(this, drag);
+	public inline function setDrag(per_second:Float):Bool
+		return Raw.wgf_emitter2d_set_drag(this, per_second);
 
 	/**
-	    Acceleration in units a second squared (default 0, 0), and drag, the part of its
-	    velocity a particle loses each second (0, the default, to 1: none to all). Drag is
-	    clamped to 0..1. False for a handle that isn't an emitter.
+	    After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+	    63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+	    that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+	    them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+	    points its top along its velocity across the screen, as long as the distance it moves in
+	    `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+	    0). Defaults 0.
 	**/
 	public inline function getDrag():Float
 		return Raw.wgf_emitter2d_get_drag(this);
 
 	/**
-	    Size in units, and color, at birth and at death, each running between them over the
-	    particle's life. False for a handle that isn't an emitter, or a size below 0.
+	    After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+	    63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+	    that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+	    them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+	    points its top along its velocity across the screen, as long as the distance it moves in
+	    `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+	    0). Defaults 0.
 	**/
-	public inline function setSize(start:Float, end:Float):Bool
-		return Raw.wgf_emitter2d_set_size(this, start, end);
+	public inline function setInheritVelocity(fraction:Float):Bool
+		return Raw.wgf_emitter2d_set_inherit_velocity(this, fraction);
 
 	/**
-	    Size in units, and color, at birth and at death, each running between them over the
-	    particle's life. False for a handle that isn't an emitter, or a size below 0.
+	    After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+	    63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+	    that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+	    them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+	    points its top along its velocity across the screen, as long as the distance it moves in
+	    `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+	    0). Defaults 0.
 	**/
-	public inline function getSizeStart():Float
-		return Raw.wgf_emitter2d_get_size_start(this);
+	public inline function getInheritVelocity():Float
+		return Raw.wgf_emitter2d_get_inherit_velocity(this);
 
 	/**
-	    Size in units, and color, at birth and at death, each running between them over the
-	    particle's life. False for a handle that isn't an emitter, or a size below 0.
-	**/
-	public inline function getSizeEnd():Float
-		return Raw.wgf_emitter2d_get_size_end(this);
-
-	/**
-	    Size in units, and color, at birth and at death, each running between them over the
-	    particle's life. False for a handle that isn't an emitter, or a size below 0.
-	**/
-	public inline function setColor(start:Int, end:Int):Bool
-		return Raw.wgf_emitter2d_set_color(this, start, end);
-
-	/**
-	    Size in units, and color, at birth and at death, each running between them over the
-	    particle's life. False for a handle that isn't an emitter, or a size below 0.
-	**/
-	public inline function getColorStart():Int
-		return Raw.wgf_emitter2d_get_color_start(this);
-
-	/**
-	    Size in units, and color, at birth and at death, each running between them over the
-	    particle's life. False for a handle that isn't an emitter, or a size below 0.
-	**/
-	public inline function getColorEnd():Int
-		return Raw.wgf_emitter2d_get_color_end(this);
-
-	/**
-	    A streak instead of a square: each particle drawn as a line from where it is back
-	    along its velocity for `seconds` of it, its size the line's thickness; 0 (the
-	    default) draws squares. Clamped to 0 or more. False for a handle that isn't an
-	    emitter.
+	    After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+	    63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+	    that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+	    them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+	    points its top along its velocity across the screen, as long as the distance it moves in
+	    `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+	    0). Defaults 0.
 	**/
 	public inline function setStretch(seconds:Float):Bool
 		return Raw.wgf_emitter2d_set_stretch(this, seconds);
 
 	/**
-	    A streak instead of a square: each particle drawn as a line from where it is back
-	    along its velocity for `seconds` of it, its size the line's thickness; 0 (the
-	    default) draws squares. Clamped to 0 or more. False for a handle that isn't an
-	    emitter.
+	    After birth: drag slows particles in proportion to their speed (a second: 1 loses about
+	    63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
+	    that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
+	    them along with it. Stretch along the motion (sparks, streaks): each particle's texture
+	    points its top along its velocity across the screen, as long as the distance it moves in
+	    `seconds` (plus its size), trailing behind; stretched particles don't spin (false below
+	    0). Defaults 0.
 	**/
 	public inline function getStretch():Float
 		return Raw.wgf_emitter2d_get_stretch(this);
 
 	/**
-	    Every particle gone at once; it keeps emitting as it was. False for a handle that
-	    isn't an emitter.
+	    Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+	    `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+	    make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+	    each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+	    first and after the last it holds; keys at the same time make a step. An emitter
+	    without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+	    for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+	    in time order (0 past the last).
+	**/
+	public inline function setSize(start:Float, end:Float, variance:Float):Bool
+		return Raw.wgf_emitter2d_set_size(this, start, end, variance);
+
+	/**
+	    Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+	    `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+	    make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+	    each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+	    first and after the last it holds; keys at the same time make a step. An emitter
+	    without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+	    for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+	    in time order (0 past the last).
+	**/
+	public inline function getSizeVariance():Float
+		return Raw.wgf_emitter2d_get_size_variance(this);
+
+	/**
+	    Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+	    `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+	    make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+	    each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+	    first and after the last it holds; keys at the same time make a step. An emitter
+	    without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+	    for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+	    in time order (0 past the last).
+	**/
+	public inline function addSizeKey(t:Float, size:Float):Bool
+		return Raw.wgf_emitter2d_add_size_key(this, t, size);
+
+	/**
+	    Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+	    `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+	    make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+	    each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+	    first and after the last it holds; keys at the same time make a step. An emitter
+	    without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+	    for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+	    in time order (0 past the last).
+	**/
+	public inline function clearSizeKeys():Bool
+		return Raw.wgf_emitter2d_clear_size_keys(this);
+
+	/**
+	    Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+	    `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+	    make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+	    each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+	    first and after the last it holds; keys at the same time make a step. An emitter
+	    without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+	    for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+	    in time order (0 past the last).
+	**/
+	public inline function getSizeKeyCount():Int
+		return Raw.wgf_emitter2d_get_size_key_count(this);
+
+	/**
+	    Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+	    `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+	    make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+	    each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+	    first and after the last it holds; keys at the same time make a step. An emitter
+	    without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+	    for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+	    in time order (0 past the last).
+	**/
+	public inline function getSizeKeyTime(index:Int):Float
+		return Raw.wgf_emitter2d_get_size_key_time(this, index);
+
+	/**
+	    Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+	    `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+	    make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+	    each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+	    first and after the last it holds; keys at the same time make a step. An emitter
+	    without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+	    for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+	    in time order (0 past the last).
+	**/
+	public inline function getSizeKeyValue(index:Int):Float
+		return Raw.wgf_emitter2d_get_size_key_value(this, index);
+
+	/**
+	    Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+	    `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+	    make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+	    each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+	    first and after the last it holds; keys at the same time make a step. An emitter
+	    without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+	    for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+	    in time order (0 past the last).
+	**/
+	public inline function setColor(start:Int, end:Int):Bool
+		return Raw.wgf_emitter2d_set_color(this, start, end);
+
+	/**
+	    Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+	    `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+	    make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+	    each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+	    first and after the last it holds; keys at the same time make a step. An emitter
+	    without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+	    for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+	    in time order (0 past the last).
+	**/
+	public inline function addColorKey(t:Float, color:Int):Bool
+		return Raw.wgf_emitter2d_add_color_key(this, t, color);
+
+	/**
+	    Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+	    `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+	    make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+	    each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+	    first and after the last it holds; keys at the same time make a step. An emitter
+	    without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+	    for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+	    in time order (0 past the last).
+	**/
+	public inline function clearColorKeys():Bool
+		return Raw.wgf_emitter2d_clear_color_keys(this);
+
+	/**
+	    Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+	    `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+	    make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+	    each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+	    first and after the last it holds; keys at the same time make a step. An emitter
+	    without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+	    for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+	    in time order (0 past the last).
+	**/
+	public inline function getColorKeyCount():Int
+		return Raw.wgf_emitter2d_get_color_key_count(this);
+
+	/**
+	    Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+	    `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+	    make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+	    each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+	    first and after the last it holds; keys at the same time make a step. An emitter
+	    without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+	    for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+	    in time order (0 past the last).
+	**/
+	public inline function getColorKeyTime(index:Int):Float
+		return Raw.wgf_emitter2d_get_color_key_time(this, index);
+
+	/**
+	    Over a particle's life, curves: its size (stage units; each particle's scaled by up to
+	    `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
+	    make two keys, at 0 (birth) and 1 (death); for more, clear the keys and add up to 8,
+	    each at `t` (0..1 of a life). Between two keys the value moves in a line, before the
+	    first and after the last it holds; keys at the same time make a step. An emitter
+	    without size or color keys draws nothing. Defaults: size 8 to 8, white to white. False
+	    for a negative size, a `t` outside 0..1, or a ninth key. The keys read back by index,
+	    in time order (0 past the last).
+	**/
+	public inline function getColorKeyValue(index:Int):Int
+		return Raw.wgf_emitter2d_get_color_key_value(this, index);
+
+	/**
+	    Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+	    tints its color over its life (confetti from one emitter). Empty by default: no tint.
+	**/
+	public inline function addPaletteColor(color:Int):Bool
+		return Raw.wgf_emitter2d_add_palette_color(this, color);
+
+	/**
+	    Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+	    tints its color over its life (confetti from one emitter). Empty by default: no tint.
+	**/
+	public inline function clearPalette():Bool
+		return Raw.wgf_emitter2d_clear_palette(this);
+
+	/**
+	    Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+	    tints its color over its life (confetti from one emitter). Empty by default: no tint.
+	**/
+	public inline function getPaletteCount():Int
+		return Raw.wgf_emitter2d_get_palette_count(this);
+
+	/**
+	    Palette: up to 8 colors (false for a ninth); each particle picks one at birth, and it
+	    tints its color over its life (confetti from one emitter). Empty by default: no tint.
+	**/
+	public inline function getPaletteColor(index:Int):Int
+		return Raw.wgf_emitter2d_get_palette_color(this, index);
+
+	/**
+	    Spin: radians a second between min and max, positive clockwise on screen, from a random
+	    angle (default none).
+	**/
+	public inline function setSpin(min:Float, max:Float):Bool
+		return Raw.wgf_emitter2d_set_spin(this, min, max);
+
+	/**
+	    Spin: radians a second between min and max, positive clockwise on screen, from a random
+	    angle (default none).
+	**/
+	public inline function getSpinMin():Float
+		return Raw.wgf_emitter2d_get_spin_min(this);
+
+	/**
+	    Spin: radians a second between min and max, positive clockwise on screen, from a random
+	    angle (default none).
+	**/
+	public inline function getSpinMax():Float
+		return Raw.wgf_emitter2d_get_spin_max(this);
+
+	/**
+	    How particles use alpha (wgf_material.h's modes; default ADD: glows, sparks, fire), and
+	    the cutoff MASK cuts out below (0..1, clamped; default 0.5). False when `mode` isn't
+	    one.
+	**/
+	public inline function setAlphaMode(mode:AlphaMode, cutoff:Float):Bool
+		return Raw.wgf_emitter2d_set_alpha_mode(this, mode, cutoff);
+
+	/**
+	    How particles use alpha (wgf_material.h's modes; default ADD: glows, sparks, fire), and
+	    the cutoff MASK cuts out below (0..1, clamped; default 0.5). False when `mode` isn't
+	    one.
+	**/
+	public inline function getAlphaMode():AlphaMode
+		return Raw.wgf_emitter2d_get_alpha_mode(this);
+
+	/**
+	    How particles use alpha (wgf_material.h's modes; default ADD: glows, sparks, fire), and
+	    the cutoff MASK cuts out below (0..1, clamped; default 0.5). False when `mode` isn't
+	    one.
+	**/
+	public inline function getAlphaCutoff():Float
+		return Raw.wgf_emitter2d_get_alpha_cutoff(this);
+
+	/**
+	    Where its random numbers start: the same seed and settings give the same particles
+	    (default: drawn from wgf_random as it is made). Read back as last set.
+	**/
+	public inline function setSeed(seed:Int):Bool
+		return Raw.wgf_emitter2d_set_seed(this, seed);
+
+	/**
+	    Where its random numbers start: the same seed and settings give the same particles
+	    (default: drawn from wgf_random as it is made). Read back as last set.
+	**/
+	public inline function getSeed():Int
+		return Raw.wgf_emitter2d_get_seed(this);
+
+	/**
+	    Ending: once it has nothing left to emit (not emitting, or at no rate) and the last
+	    particle it made has died, the emitter's actor is destroyed, with what is under it, in
+	    the update before a frame: a one-shot effect (an explosion's burst) ends itself. One
+	    that has made no particle yet waits for its first. Default off.
+	**/
+	public inline function setEnding(ending:Bool):Bool
+		return Raw.wgf_emitter2d_set_ending(this, ending);
+
+	/**
+	    Ending: once it has nothing left to emit (not emitting, or at no rate) and the last
+	    particle it made has died, the emitter's actor is destroyed, with what is under it, in
+	    the update before a frame: a one-shot effect (an explosion's burst) ends itself. One
+	    that has made no particle yet waits for its first. Default off.
+	**/
+	public inline function isEnding():Bool
+		return Raw.wgf_emitter2d_is_ending(this);
+
+	/**
+	    Lingering: destroyed, directly or with an actor above it, while it has particles alive
+	    on a stage, they finish their lives where they are: the emitter goes on as an actor of
+	    its own at the stage's top, not emitting, ending (as above) with its last particle, made
+	    in the update before the next frame (a ship's exhaust outlives the ship). Default off.
+	**/
+	public inline function setLingering(lingering:Bool):Bool
+		return Raw.wgf_emitter2d_set_lingering(this, lingering);
+
+	/**
+	    Lingering: destroyed, directly or with an actor above it, while it has particles alive
+	    on a stage, they finish their lives where they are: the emitter goes on as an actor of
+	    its own at the stage's top, not emitting, ending (as above) with its last particle, made
+	    in the update before the next frame (a ship's exhaust outlives the ship). Default off.
+	**/
+	public inline function isLingering():Bool
+		return Raw.wgf_emitter2d_is_lingering(this);
+
+	/**
+	    The particles alive now, and all of them gone (it keeps emitting as it was).
+	**/
+	public inline function getCount():Int
+		return Raw.wgf_emitter2d_get_count(this);
+
+	/**
+	    The particles alive now, and all of them gone (it keeps emitting as it was).
 	**/
 	public inline function clear():Bool
 		return Raw.wgf_emitter2d_clear(this);

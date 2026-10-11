@@ -15,4 +15,5 @@ enum abstract ActorKind(Int) from Int to Int {
 	var LIGHT = 10;
 	var MODEL = 11;
 	var SHAPE3D = 12;
+	var EMITTER3D = 13;
 }

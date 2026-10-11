@@ -211,9 +211,17 @@ shape2d    rectangle=w,h | circle=r | line=x0,y0,x1,y1 | polygon=x,y,x,y,...
 sprite     texture="path"  source=x,y,w,h  size=w,h  pivot=x,y  tint=#..
 text       string="..."  font="path"  size=s  color=#..  wrap=w
            align=left|center|right,top|middle|bottom
-emitter2d  rate=r  emitting=true|false  capacity=n  life=min,max  direction=a  spread=s
-           speed=min,max  radius=r  gravity=x,y  drag=d  size=start,end  color=#..,#..
-           stretch=s  burst=n (that many at once, as it is made)
+emitter2d  texture="path"  source=x,y,w,h  frames=columns,rows,count,per_second  rate=r
+           emitting=true|false  max=n  life=min,max  spawn_box=hw,hh | spawn_circle=r
+           velocity=x,y[,spread[,variance]]  gravity=x,y  drag=d  inherit=f  stretch=s
+           size=start,end[,variance]  color=#..,#..  palette=#..,...  spin=min,max
+           alpha=opaque|mask|blend|add  cutoff=c  seed=n  ending=true|false
+           lingering=true|false (wgf_emitter2d.h), and as it is made, placed: prewarm=s,
+           burst=n (that many at once) (in a program with emitters: one that makes one,
+           as a game is whose scenes name one; elsewhere a plain actor, warned)
+emitter3d  as emitter2d, in 3D: spawn_box=hx,hy,hz | spawn_sphere=r,
+           velocity=x,y,z[,spread[,variance]], gravity=x,y,z (wgf_emitter3d.h; made once a
+           stage3d has been, as a model is)
 model      a glTF file, path="path" (its nodes made under it once it loads; in a program
            with glTF, one that calls wgf_mesh_create, as a game's exports are), or a
            generated mesh (wgf_mesh.h), its create call's parameters in order:
