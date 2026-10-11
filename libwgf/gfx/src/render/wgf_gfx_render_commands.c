@@ -10,6 +10,10 @@
  * records into a sokol_gl layer; a command closes the layer before it and opens the
  * next, so at the frame's end layer 0 is drawn, then command 0, then layer 1, and so on,
  * in the order they were made. A frame with no commands draws its one layer as before.
+ * Each layer is drawn by the range of sokol_gl's commands recorded while it was the
+ * current one (`sgl_context_draw_layer_range`, libwgf's sokol fork), not by a scan of the
+ * frame's whole list a layer, which costs layers times commands (wgrender-c measured 3,000
+ * switches at 5.4 ms against 0.6 ms by range).
  * Its own file, reached only by a command's maker, so a program that draws no stage
  * links none of it: render.c only calls the drawing installed here. */
 
@@ -18,6 +22,7 @@ typedef struct command_t {
     int index;
     int scissor[4];  /* the clip it was made under, in the framebuffer's pixels */
     int viewport[4]; /* immediate mode's then (3D's is the visible area's), given back after it */
+    int first;       /* the sokol_gl command the layer after it starts at */
 } command_t;
 
 static command_t *commands;
@@ -27,9 +32,13 @@ static unsigned commands_frame; /* the frame they were made in */
 static void draw_commands(void)
 {
     const sgl_context context = wgf_gfx_priv_render_get_context();
-    int i;
+    int i, total;
+    sgl_set_context(context);
+    total = sgl_num_commands();
     for (i = 0; i <= command_count; i++) {
-        sgl_context_draw_layer(context, i);
+        /* layer i's commands: from where the command before it opened it to where the next closed it */
+        const int first = i > 0 ? commands[i - 1].first : 0, end = i < command_count ? commands[i].first : total;
+        sgl_context_draw_layer_range(context, i, first, end - first);
         if (i < command_count) {
             const command_t *c = &commands[i];
             sg_apply_scissor_rect(c->scissor[0], c->scissor[1], c->scissor[2], c->scissor[3], true);
@@ -47,6 +56,8 @@ static void draw_commands(void)
 #define SIDE_LAYER_BASE (1 << 20)
 static int side_layers;
 static unsigned side_frame;
+static int *side_ranges; /* each side layer's first command and its end, two to a layer */
+static int side_capacity;
 
 int wgf_gfx_priv_render_begin_side_layer(const float view_proj[16])
 {
@@ -56,6 +67,17 @@ int wgf_gfx_priv_render_begin_side_layer(const float view_proj[16])
         side_frame = wgf_gfx_priv_render_get_frame();
     }
     sgl_set_context(context);
+    if (side_layers == side_capacity) {
+        const int capacity = side_capacity > 0 ? side_capacity * 2 : 16;
+        int *grown = (int *)realloc(side_ranges, sizeof(int) * 2 * (size_t)capacity);
+        if (grown != NULL) {
+            side_ranges = grown;
+            side_capacity = capacity;
+        }
+    }
+    if (side_layers < side_capacity) {
+        side_ranges[side_layers * 2] = side_ranges[side_layers * 2 + 1] = sgl_num_commands();
+    }
     sgl_layer(SIDE_LAYER_BASE + side_layers);
     sgl_push_pipeline();
     sgl_matrix_mode_projection();
@@ -69,6 +91,7 @@ int wgf_gfx_priv_render_begin_side_layer(const float view_proj[16])
 void wgf_gfx_priv_render_end_side_layer(void)
 {
     sgl_set_context(wgf_gfx_priv_render_get_context());
+    if (side_layers > 0 && side_layers <= side_capacity) side_ranges[side_layers * 2 - 1] = sgl_num_commands();
     sgl_matrix_mode_projection();
     sgl_pop_matrix();
     sgl_matrix_mode_modelview();
@@ -79,7 +102,13 @@ void wgf_gfx_priv_render_end_side_layer(void)
 
 void wgf_gfx_priv_render_draw_side_layer(int layer)
 {
-    sgl_context_draw_layer(wgf_gfx_priv_render_get_context(), layer);
+    const sgl_context context = wgf_gfx_priv_render_get_context();
+    const int n = layer - SIDE_LAYER_BASE;
+    if (n >= 0 && n < side_layers && n < side_capacity) {
+        sgl_context_draw_layer_range(context, layer, side_ranges[n * 2], side_ranges[n * 2 + 1] - side_ranges[n * 2]);
+    } else {
+        sgl_context_draw_layer(context, layer); /* no room was had to keep its range: found by a scan */
+    }
 }
 
 bool wgf_gfx_priv_render_add_command(void (*replay)(int index), int index)
@@ -106,6 +135,7 @@ bool wgf_gfx_priv_render_add_command(void (*replay)(int index), int index)
     wgf_gfx_priv_render_get_scissor(c->scissor);
     wgf_gfx_priv_render_get_viewport(c->viewport);
     sgl_set_context(wgf_gfx_priv_render_get_context());
+    c->first = sgl_num_commands();
     sgl_layer(command_count);
     wgf_gfx_priv_render_set_drawing(draw_commands);
     return true;
