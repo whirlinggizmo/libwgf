@@ -616,10 +616,10 @@ export declare const Asset: {
     /**
      * An asset manifest: each file's contents hashed, so a cached copy whose hash still
      * matches is used with no request, and one that changed is fetched once
-     * (tools/gen_manifest.py writes them). `path` is the root manifest's, under the host
-     * ("manifest.json"). A manifest lists the files beside it and, for each directory, the
-     * hash of its own manifest.json, fetched only when a file under it is first needed,
-     * and only if its hash changed.
+     * (tools/gen_manifest.py writes them, and `wgf export` into a game's web export).
+     * `path` is the root manifest's, under the host ("manifest.json"). A manifest lists
+     * the files beside it and, for each directory, the hash of its own manifest.json,
+     * fetched only when a file under it is first needed, and only if its hash changed.
      *
      * The root is asked about once a run, as REVALIDATE asks, whatever the mode; without
      * an answer the cached root is used, and without either nothing is listed. A listed
@@ -2798,9 +2798,10 @@ export declare const Resource: {
      * a 4096x4096 texture is one upload of about 45 ms (wgrender's measurement). 0 finishes
      * one step a frame. Loading takes the longer the less of each frame it has, the more so
      * where frames are slow: a loading screen, with nothing else to draw, can give it more
-     * (16 ms, say) and set it back once loaded. It applies to every load, from a bundled,
-     * cached, or fetched file alike. False, and nothing changed, for a negative or
-     * non-finite one.
+     * (16 ms, say) and set it back once loaded. Those are slow frames to a measurement of
+     * every frame of a run (tools/bench/measure_frames.py's, the loading's too). It applies
+     * to every load, from a bundled, cached, or fetched file alike. False, and nothing
+     * changed, for a negative or non-finite one.
      */
     readonly setLoadBudget: typeof raw.wgf_resource_set_load_budget;
     /**
@@ -2811,9 +2812,10 @@ export declare const Resource: {
      * a 4096x4096 texture is one upload of about 45 ms (wgrender's measurement). 0 finishes
      * one step a frame. Loading takes the longer the less of each frame it has, the more so
      * where frames are slow: a loading screen, with nothing else to draw, can give it more
-     * (16 ms, say) and set it back once loaded. It applies to every load, from a bundled,
-     * cached, or fetched file alike. False, and nothing changed, for a negative or
-     * non-finite one.
+     * (16 ms, say) and set it back once loaded. Those are slow frames to a measurement of
+     * every frame of a run (tools/bench/measure_frames.py's, the loading's too). It applies
+     * to every load, from a bundled, cached, or fetched file alike. False, and nothing
+     * changed, for a negative or non-finite one.
      */
     readonly getLoadBudget: typeof raw.wgf_resource_get_load_budget;
 };

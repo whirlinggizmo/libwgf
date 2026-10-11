@@ -37,9 +37,10 @@ class Resource {
 	    a 4096x4096 texture is one upload of about 45 ms (wgrender's measurement). 0 finishes
 	    one step a frame. Loading takes the longer the less of each frame it has, the more so
 	    where frames are slow: a loading screen, with nothing else to draw, can give it more
-	    (16 ms, say) and set it back once loaded. It applies to every load, from a bundled,
-	    cached, or fetched file alike. False, and nothing changed, for a negative or
-	    non-finite one.
+	    (16 ms, say) and set it back once loaded. Those are slow frames to a measurement of
+	    every frame of a run (tools/bench/measure_frames.py's, the loading's too). It applies
+	    to every load, from a bundled, cached, or fetched file alike. False, and nothing
+	    changed, for a negative or non-finite one.
 	**/
 	public static inline function setLoadBudget(milliseconds:Float):Bool
 		return Raw.wgf_resource_set_load_budget(milliseconds);
@@ -52,9 +53,10 @@ class Resource {
 	    a 4096x4096 texture is one upload of about 45 ms (wgrender's measurement). 0 finishes
 	    one step a frame. Loading takes the longer the less of each frame it has, the more so
 	    where frames are slow: a loading screen, with nothing else to draw, can give it more
-	    (16 ms, say) and set it back once loaded. It applies to every load, from a bundled,
-	    cached, or fetched file alike. False, and nothing changed, for a negative or
-	    non-finite one.
+	    (16 ms, say) and set it back once loaded. Those are slow frames to a measurement of
+	    every frame of a run (tools/bench/measure_frames.py's, the loading's too). It applies
+	    to every load, from a bundled, cached, or fetched file alike. False, and nothing
+	    changed, for a negative or non-finite one.
 	**/
 	public static inline function getLoadBudget():Float
 		return Raw.wgf_resource_get_load_budget();

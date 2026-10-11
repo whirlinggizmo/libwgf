@@ -31,7 +31,9 @@ package wgf;
 
     A format whose files name other files is ensured with them, when the layer that
     reads it registers how to list them (core's lister, wgf_core_load_priv.h): the task
-    is DONE once all are local. None of libwgf's formats names others yet.
+    is DONE once all are local. A glTF file's are listed (its buffers and images), in a
+    program with glTF (one that calls wgf_mesh_create); a scene's aren't yet, so a scene
+    ensured ahead is ensured beside the files its lines name.
 
     libwgt's asset layer, carried whole (docs/HISTORY.md).
 **/

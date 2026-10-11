@@ -43,7 +43,9 @@ typedef wgf_handle_t wgf_asset_task_t;
  *
  * A format whose files name other files is ensured with them, when the layer that
  * reads it registers how to list them (core's lister, wgf_core_load_priv.h): the task
- * is DONE once all are local. None of libwgf's formats names others yet.
+ * is DONE once all are local. A glTF file's are listed (its buffers and images), in a
+ * program with glTF (one that calls wgf_mesh_create); a scene's aren't yet, so a scene
+ * ensured ahead is ensured beside the files its lines name.
  *
  * libwgt's asset layer, carried whole (docs/HISTORY.md). */
 
@@ -211,10 +213,10 @@ WGF_API wgf_asset_cache_mode_t wgf_asset_get_cache_mode(void);
 
 /* An asset manifest: each file's contents hashed, so a cached copy whose hash still
  * matches is used with no request, and one that changed is fetched once
- * (tools/gen_manifest.py writes them). `path` is the root manifest's, under the host
- * ("manifest.json"). A manifest lists the files beside it and, for each directory, the
- * hash of its own manifest.json, fetched only when a file under it is first needed,
- * and only if its hash changed.
+ * (tools/gen_manifest.py writes them, and `wgf export` into a game's web export).
+ * `path` is the root manifest's, under the host ("manifest.json"). A manifest lists
+ * the files beside it and, for each directory, the hash of its own manifest.json,
+ * fetched only when a file under it is first needed, and only if its hash changed.
  *
  * The root is asked about once a run, as REVALIDATE asks, whatever the mode; without
  * an answer the cached root is used, and without either nothing is listed. A listed

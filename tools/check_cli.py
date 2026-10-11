@@ -10,7 +10,8 @@ what it said:
   build       --headless and --web: the program, its page, its host, its assets beside it
   run         --headless --frames 30, and --autopilot: runs that end at their frame, passing
   autopilot   the game's smoke autopilot, headless and --web: PASS; a failing one: FAIL,
-              and why;
+              and why; one named without its folder found in the game's autopilot
+              folder, and a missing one named, not a traceback;
               --web saving an autopilot's two named screenshots
   dump        the ship, as a scene's text; flown by --autopilot to its end, turned on
   screenshot  a PNG of frame 30, from a browser, and one flown there by --autopilot
@@ -18,8 +19,9 @@ what it said:
               runs, with the frame count it had (state kept, not a restart); then a
               texture and a glTF saved changed: the page shows the new ones, its count
               going on; then a broken texture saved: the old one kept, one error logged
-  export      export/web (a trimmed host, under the budget) and export/desktop, each
-              flown by the autopilot --autopilot names (the smoke one, here)
+  export      export/web (a trimmed host, under the budget, its assets' manifests
+              written, none in the game's) and export/desktop, each flown by the
+              autopilot --autopilot names (the smoke one, here, by its name alone)
 A step that can't run here (no haxe, hxcpp, Emscripten, or browser) says
 `check_cli: SKIPPING <step> (<why>)`, and the last line repeats every skip. Standard
 library only.
@@ -176,6 +178,13 @@ def step_autopilot(game):
         if ': FAIL: ' not in verdict or 'frames' not in verdict:
             return problem('wgf autopilot: a failing one\'s last line didn\'t keep its reason with its FAIL', out)
         said.append('the smoke autopilot passed headless, a failing one failed, saying why on its FAIL line')
+        code, out = wgf(game, 'autopilot', 'smoke.autopilot', '--no-build')
+        if code != 0 or 'autopilot smoke.autopilot: PASS' not in out:
+            return problem('wgf autopilot: one named without its folder wasn\'t found in the game\'s autopilot folder', out)
+        code, out = wgf(game, 'autopilot', 'nowhere.autopilot', '--no-build')
+        if code == 0 or 'no autopilot file nowhere.autopilot' not in out or 'Traceback' in out:
+            return problem('wgf autopilot: a missing file wasn\'t named as missing', out)
+        said.append('one found by its name alone, a missing one named')
     if not web:
         code, out = wgf(game, 'autopilot', 'autopilot/smoke.autopilot', '--web', '--no-build')
         if code != 0 or 'PASS' not in out:
@@ -387,7 +396,7 @@ def step_export(game):
     native, web = needs(native=True), needs(web=True, browser_too=True)
     if native and web:
         return f'{native}; {web}'
-    args = ['export', '--autopilot', 'autopilot/smoke.autopilot']
+    args = ['export', '--autopilot', 'smoke.autopilot']
     args += ['--web'] if native else ['--desktop'] if web else []
     code, out = wgf(game, *args, timeout=1800)
     said = []
@@ -399,9 +408,11 @@ def step_export(game):
         full = json.loads((ROOT / 'hosts' / 'web' / 'exports.json').read_text())['exports']
         if not len(trimmed) < len(full) / 2:
             return problem(f'wgf export: the host wasn\'t trimmed ({len(trimmed)} of {len(full)} calls)', out)
+        if not (site / 'assets' / 'manifest.json').exists() or (game / 'assets' / 'manifest.json').exists():
+            return problem('wgf export: the web export\'s assets have no manifest, or the game\'s were written', out)
         sizes = [line for line in out.splitlines() if 'KB gzipped in all' in line]
         said.append(f'web: {len(trimmed)} of {len(full)} calls in the host, '
-                    f'{sizes[0].split("; ")[-1] if sizes else ""}, flown by --autopilot')
+                    f'{sizes[0].split("; ")[-1] if sizes else ""}, its manifests written, flown by --autopilot')
     if not native:
         if 'desktop export: smoke.autopilot PASS' not in out and 'desktop export: SKIPPING' not in out:
             return problem('wgf export: the desktop export failed', out)

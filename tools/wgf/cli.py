@@ -27,10 +27,14 @@
     wgf serve [--port N]                 the game in a browser, reloaded as its Haxe or
                                          an asset is saved, its state kept
     wgf export [--web] [--desktop] [--out DIR] [--autopilot FILE]
-                                         export/web (a static folder with a trimmed host)
+                                         export/web (a static folder with a trimmed host,
+                                         its assets' manifests written: gen_manifest.py)
                                          and export/desktop, each smoke-tested, the web
                                          held to the game's size budget (default both);
                                          --autopilot flies each with FILE, not the smoke run
+
+An autopilot FILE flown is a path, or a file in the game's autopilot folder by its name
+(`wgf autopilot lap.autopilot`), as wgf.json's "playthrough" names one.
 
 Run it in a game's directory (or below): the game is the wgf.json there or above. Every
 command but new and serve exits 0 when it did what it says, and non-zero, saying why,
@@ -41,6 +45,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -132,8 +137,23 @@ def verdict(output, flown):
     return 1 if result is False else 0
 
 
+def autopilot_file(game, given):
+    """The autopilot file a command names: the path as given, else the file of that name in
+    the game's autopilot folder (as wgf.json's "playthrough" names one); found before
+    anything is built."""
+    if given is None:
+        return None
+    path = Path(given)
+    if not path.is_file() and (game.autopilot / given).is_file():
+        path = game.autopilot / given
+    if not path.is_file():
+        raise games.GameError(f'no autopilot file {given} (nor {game.autopilot / given})')
+    return path.resolve()
+
+
 def cmd_run(args):
     game = games.find()
+    args.autopilot = autopilot_file(game, args.autopilot)
     target = 'headless' if args.headless else 'desktop'
     exe = native_exe(game, target, not args.no_build)
     autopilot = None
@@ -182,7 +202,7 @@ def cmd_autopilot(args):
     game = games.find()
     if args.record:
         return record(game, Path(args.file))
-    autopilot = Path(args.file).read_text(encoding='utf-8')
+    autopilot = autopilot_file(game, args.file).read_text(encoding='utf-8')
     if args.web:
         site = web_dir(game, not args.no_build)
         shots = Path(args.screenshots).resolve() if args.screenshots else game.root / 'build' / 'screenshots'
@@ -223,6 +243,7 @@ def record(game, out):
 
 def cmd_screenshot(args):
     game = games.find()
+    args.autopilot = autopilot_file(game, args.autopilot)
     site = web_dir(game, not args.no_build)
     out = Path(args.out).resolve() if args.out else game.root / 'build' / 'screenshot.png'
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -244,6 +265,7 @@ def cmd_screenshot(args):
 
 def cmd_dump(args):
     game = games.find()
+    args.autopilot = autopilot_file(game, args.autopilot)
     exe = native_exe(game, 'headless', not args.no_build)
     autopilot, frame = flown_to(args.autopilot, args.frame, 'dump', 0)
     code, output = games.run_native(exe, autopilot, echo=False)
@@ -288,7 +310,10 @@ def smoke_autopilot(game):
 
 def export_web(game, out, autopilot=None):
     """The web export: a release build, then its host trimmed to what it calls, the
-    assets copied in, smoke-tested in a browser, and measured against the budget."""
+    assets copied in with their manifests (a game that sets the root one,
+    wgf_asset_set_manifest("manifest.json"), fetches only what changed since a visit; one
+    that doesn't, nothing more), smoke-tested in a browser, and measured against the
+    budget."""
     work = game.root / 'build' / 'export-web'
     games.build_web(game, release=True, out=work)  # the program first: what it calls makes the host
     listing = work / 'exports.json'
@@ -301,6 +326,8 @@ def export_web(game, out, autopilot=None):
     if assets.is_symlink():
         assets.unlink()
         shutil.copytree(game.assets, assets) if game.assets.is_dir() else assets.mkdir()
+    subprocess.run([sys.executable, ROOT / 'tools' / 'gen_manifest.py', assets, '--quiet'],
+                   check=True)  # over what is deployed, its last file in place
     for notice in ('LICENSE', 'THIRD_PARTY_NOTICES.md'):
         shutil.copyfile(ROOT / notice, out / f'libwgf-{notice}')
     files = [out / 'wgf-host.wasm', out / 'wgf-host.js', out / 'wgf.js', out / f'{game.name}.js', out / 'index.html']
@@ -365,7 +392,7 @@ def cmd_export(args):
     out = Path(args.out).resolve() if args.out else game.root / 'export'
     both = not args.web and not args.desktop
     ok = True
-    autopilot = Path(args.autopilot).resolve() if args.autopilot else None
+    autopilot = autopilot_file(game, args.autopilot)
     if args.web or both:
         ok = export_web(game, out / 'web', autopilot) and ok
     if args.desktop or both:
