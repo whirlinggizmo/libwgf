@@ -9,7 +9,9 @@
 #include "wgf_actor.h"
 #include "wgf_app.h"
 #include "wgf_asset.h"
+#include "wgf_camera3d.h"
 #include "wgf_emitter2d.h"
+#include "wgf_emitter3d.h"
 #include "wgf_log.h"
 #include "wgf_loop.h"
 #include "wgf_random.h"
@@ -17,6 +19,7 @@
 #include "wgf_resource.h"
 #include "wgf_sprite.h"
 #include "wgf_stage2d.h"
+#include "wgf_stage3d.h"
 #include "wgf_texture.h"
 #include "wgf_window.h"
 
@@ -35,9 +38,16 @@
  *                      replaced every frame (a 2 s life), blended
  *   emitter 2d         the same particles from one emitter, each written once at birth and
  *                      moved by the GPU
+ *   field 3d           sprites scattered on the ground of a 3D stage under an orbiting
+ *                      camera, facings mixed as a game would (camera-facing coins, upright
+ *                      trees turning about Y, flat decals), blended and sorted back to front
+ *                      each frame, from one atlas: the instanced batch's case
+ *   field 3d, 4 tex    the same from 4 textures, sorted: neighbours in depth alike rarely
+ *   field 3d, mask     the 4-texture field masked: depth-tested, so grouped by texture, not
+ *                      sorted (4 draws)
+ *   emitter 3d         a 3D emitter's particles, facing the camera
  *
- * libwgt's 3D cases (a grid and a field of sprites facing the camera, and 3D particles and
- * emitters) come with sprites in 3D. Natively it runs too, and prints its own frame times. */
+ * Natively it runs too, and prints its own frame times. */
 
 #define WARMUP_FRAMES 20
 #define MEASURE_FRAMES 100
@@ -46,9 +56,20 @@
 #define SCREEN_W 960
 #define SCREEN_H 600
 
-typedef enum { CASE_GRID, CASE_GRID_4, CASE_PARTICLES, CASE_EMITTER, CASES } bench_case_t;
+typedef enum {
+    CASE_GRID,
+    CASE_GRID_4,
+    CASE_PARTICLES,
+    CASE_EMITTER,
+    CASE_FIELD,
+    CASE_FIELD_4,
+    CASE_FIELD_MASK,
+    CASE_EMITTER_3D,
+    CASES
+} bench_case_t;
 
-static const char *CASE_NAMES[CASES] = {"grid 2d", "grid 2d, 4 tex", "particles 2d", "emitter 2d"};
+static const char *CASE_NAMES[CASES] = {"grid 2d",        "grid 2d, 4 tex",   "particles 2d", "emitter 2d",
+                                        "field 3d",       "field 3d, 4 tex",  "field 3d, mask", "emitter 3d"};
 enum { COUNT_STEPS = 3 };
 static const int SPRITE_COUNTS[COUNT_STEPS] = {1000, 4000, 16000};
 
@@ -59,6 +80,8 @@ typedef struct particle_t {
 
 static struct {
     wgf_actor_t stage, emitter;
+    wgf_actor_t world, camera; /* the 3D cases' */
+    float radius, angle;
     wgf_actor_t sprites[MAX_SPRITES];
     particle_t particles[MAX_SPRITES];
     wgf_texture_t textures[4];
@@ -89,6 +112,40 @@ static void throw_particle(particle_t *p)
     p->age = (int)(wgf_random_get_float() * PARTICLE_LIFE);
 }
 
+/* A field sprite, scattered on the ground: a coin, a tree, or a decal (libwgt's). */
+static void add_field_sprite(int i)
+{
+    const float r = b.radius * sqrtf(wgf_random_get_float()), angle = wgf_random_get_float() * 6.2831853f;
+    const float x = cosf(angle) * r, z = sinf(angle) * r;
+    const bool mixed = b.which != CASE_FIELD;
+    const wgf_actor_t sprite = wgf_sprite_create(mixed ? b.textures[i % 4] : b.textures[2]);
+    if (sprite == 0) return;
+    switch (i % 3) {
+        case 0: /* a coin: faces the camera */
+            wgf_sprite_set_facing(sprite, WGF_SPRITE_FACING_CAMERA);
+            if (!mixed) wgf_sprite_set_source(sprite, 32, 16, 16, 16);
+            wgf_actor_set_position(sprite, x, 0.6f, z);
+            wgf_sprite_set_size(sprite, 0.6f, 0.6f);
+            break;
+        case 1: /* a tree: upright, turns about Y, stands on its bottom edge */
+            wgf_sprite_set_facing(sprite, WGF_SPRITE_FACING_CAMERA_FIXED_Y);
+            if (!mixed) wgf_sprite_set_source(sprite, 0, 16, 16, 32);
+            wgf_sprite_set_size(sprite, 1, 2);
+            wgf_sprite_set_pivot(sprite, 0.5f, 1);
+            wgf_actor_set_position(sprite, x, 0, z);
+            break;
+        default: /* a decal flat on the ground */
+            wgf_sprite_set_facing(sprite, WGF_SPRITE_FACING_Y_UP);
+            if (!mixed) wgf_sprite_set_source(sprite, 0, 0, 16, 16);
+            wgf_sprite_set_size(sprite, 1, 1);
+            wgf_actor_set_position(sprite, x, 0.01f, z);
+            break;
+    }
+    if (b.which == CASE_FIELD_MASK) wgf_sprite_set_alpha_mode(sprite, WGF_ALPHA_MODE_MASK, 0.5f);
+    b.sprites[i] = sprite;
+    wgf_actor_set_parent(sprite, b.world);
+}
+
 static void setup(void)
 {
     const bench_case_t which = (bench_case_t)(b.step / COUNT_STEPS);
@@ -97,7 +154,23 @@ static void setup(void)
     int i;
     b.which = which;
     b.count = count;
-    if (which == CASE_EMITTER) {
+    b.radius = sqrtf((float)count) * 0.6f;
+    if (which == CASE_FIELD || which == CASE_FIELD_4 || which == CASE_FIELD_MASK) {
+        wgf_random_set_seed(12345);
+        for (i = 0; i < count; i++) add_field_sprite(i);
+    } else if (which == CASE_EMITTER_3D) {
+        b.emitter = wgf_emitter3d_create();
+        wgf_emitter3d_set_texture(b.emitter, b.textures[0]);
+        wgf_emitter3d_set_max(b.emitter, count);
+        wgf_emitter3d_set_rate(b.emitter, (float)count / 2.0f);
+        wgf_emitter3d_set_life(b.emitter, 2.0f, 2.0f);
+        wgf_emitter3d_set_velocity(b.emitter, 0, 6, 0, 0.5f, 0.3f);
+        wgf_emitter3d_set_gravity(b.emitter, 0, -6, 0);
+        wgf_emitter3d_set_size(b.emitter, 0.15f, 0.15f, 0);
+        wgf_emitter3d_set_alpha_mode(b.emitter, WGF_ALPHA_MODE_BLEND, 0.5f);
+        wgf_actor_set_parent(b.emitter, b.world);
+        wgf_emitter3d_prewarm(b.emitter, 2.0f);
+    } else if (which == CASE_EMITTER) {
         b.emitter = wgf_emitter2d_create();
         wgf_emitter2d_set_texture(b.emitter, b.textures[0]);
         wgf_emitter2d_set_max(b.emitter, count);
@@ -131,7 +204,7 @@ static void setup(void)
 static void teardown(void)
 {
     int i;
-    if (b.which == CASE_EMITTER) {
+    if (b.which == CASE_EMITTER || b.which == CASE_EMITTER_3D) {
         wgf_actor_destroy(b.emitter, WGF_ACTOR_DESTROY_CHILDREN);
     } else {
         for (i = 0; i < b.count; i++) wgf_actor_destroy(b.sprites[i], WGF_ACTOR_DESTROY_CHILDREN);
@@ -143,6 +216,13 @@ static void teardown(void)
 static void update(float dt)
 {
     int i;
+    if (b.which >= CASE_FIELD) { /* the camera orbits the field, so the sort changes every frame */
+        const float distance = b.which == CASE_EMITTER_3D ? 12.0f : b.radius * 1.4f + 4.0f;
+        b.angle += dt * 0.3f;
+        wgf_actor_set_position(b.camera, cosf(b.angle) * distance, distance * 0.45f, sinf(b.angle) * distance);
+        wgf_actor_look_at(b.camera, 0, b.which == CASE_EMITTER_3D ? 3.0f : 0.0f, 0, 0, 1, 0);
+        return;
+    }
     if (b.which != CASE_PARTICLES) return;
     for (i = 0; i < b.count; i++) {
         particle_t *p = &b.particles[i];
@@ -157,12 +237,16 @@ static void update(float dt)
 static void init(void *user)
 {
     static const char *const paths[4] = {"textures/particle.png", "textures/flame.png", "textures/tiles.png",
-                                         "textures/tiles_normal.png"};
+                                         "sprites/logo/wg-logo-bw-alpha.png"};
     int i;
     (void)user;
     wgf_asset_set_host("../assets"); /* the examples' files: one level above every program */
     wgf_render_set_clear_color(0x101420FFu);
     b.stage = wgf_stage2d_create();
+    b.world = wgf_stage3d_create();
+    b.camera = wgf_camera3d_create();
+    wgf_actor_set_parent(b.camera, b.world);
+    wgf_stage3d_set_camera(b.world, b.camera);
     for (i = 0; i < 4; i++) b.textures[i] = wgf_texture_create(paths[i]);
 }
 
@@ -197,7 +281,11 @@ static void frame(void *user)
     }
     if (b.step >= CASES * COUNT_STEPS) return;
     update(wgf_loop_get_frame_delta());
-    wgf_stage2d_draw(b.stage);
+    if (b.which >= CASE_FIELD) {
+        wgf_stage3d_draw(b.world);
+    } else {
+        wgf_stage2d_draw(b.stage);
+    }
     b.frame++;
 }
 

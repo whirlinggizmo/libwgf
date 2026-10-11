@@ -40,6 +40,9 @@ void wgf_gfx_priv_render_set_2d(void);
 /* That 2D projection, as a matrix (OpenGL's clip space): what a sokol_gfx draw among the
  * 2D (particles) is seen through. */
 wgf_mat4_t wgf_gfx_priv_render_projection_2d(void);
+/* The 2D pipeline for an alpha mode (wgf_alpha_mode_t): blended (BLEND and MASK, which
+ * immediate mode can't cut out), added, or opaque. */
+sgl_pipeline wgf_gfx_priv_render_pipeline_2d(int mode);
 
 /* Immediate mode in 3D (wgf_draw_begin_3d): through `view_proj` (column by column,
  * OpenGL's clip space), into the visible area, depth tested and written; and back to 2D,

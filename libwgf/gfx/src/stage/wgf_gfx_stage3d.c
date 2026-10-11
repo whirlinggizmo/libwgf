@@ -12,6 +12,7 @@
 #include "stage/wgf_gfx_environment_priv.h"
 #include "stage/wgf_gfx_model_priv.h"
 #include "stage/wgf_gfx_shadow_priv.h"
+#include "sprite/wgf_gfx_sprite3d_priv.h"
 #include "stage/wgf_gfx_stage3d_priv.h"
 #include "texture/wgf_gfx_texture_priv.h"
 #include "wgf_core_part_priv.h"
@@ -38,7 +39,7 @@
  * (render/wgf_gfx_render_commands.c).
  *
  * Instancing, libwgt's (wgrender's phase 2), with no API: each item's placement, its
- * normals' matrix, its tint, and whether it mirrors are its record, at its own index in an
+ * normals' matrix, its tint, and whether it mirrors are its record, numbered in drawing order in an
  * RGBA32F texture written whole as the frame flushes (wgf_gfx_instance.glsl); the opaque
  * items, which depth testing lets be drawn in any order, are sorted by a hash of what a
  * draw sets outside the record -- material, mesh and primitive, the pipeline (blended,
@@ -61,6 +62,9 @@ typedef struct item_t {
     bool blended;    /* drawn after the opaque ones, back to front, depth not written */
     bool additive;   /* an ADD emitter's: after the blended ones */
     int particles;   /* an emitter's draw (the particles part's); -1, a model's part */
+    int sprite;      /* a see-through sprite's, into the frame's sprites, until it is recorded; -1 none */
+    int sprite_batch, sprite_batches; /* sprites: their first batch and how many (0: in the one before) */
+    int record;      /* a model part's, in the instance texture: model parts numbered in drawing order */
     bool mirrored;   /* its placement turns its triangles' winding (a negative determinant) */
     float depth;     /* along the camera's view, for the sort */
     int order;       /* as found, so equal depths keep it */
@@ -91,9 +95,19 @@ typedef struct stage_draw_t {
     float background_intensity, background_rotation, background_blur;
 } stage_draw_t;
 
+/* A see-through sprite waiting for the sort: what it records into the batch. */
+typedef struct sprite_record_t {
+    wgf_gfx_priv_sprite_quad_t quad;
+    sg_view view;
+    sg_sampler sampler;
+    int mode; /* wgf_alpha_mode_t */
+} sprite_record_t;
+
 static struct {
     item_t *items;
     int item_count, item_capacity;
+    sprite_record_t *sprites; /* a draw's see-through sprites, for the sort */
+    int sprite_count, sprite_capacity;
     stage_draw_t *draws;
     int draw_count, draw_capacity;
     wgf_gfx_priv_stage3d_light_t *lights;
@@ -123,6 +137,21 @@ static struct {
     bool instance_overflow_logged;
     int draw_calls, last_draw_calls; /* for tests: the shading pass's draws */
 } frame;
+
+/* What the sort orders an item by (sort_items, below), and its room, kept between frames. */
+typedef struct sort_key_t {
+    float depth;
+    int order;
+    uint64_t group;
+    int item;
+    bool blended, additive;
+} sort_key_t;
+
+static struct {
+    sort_key_t *keys;
+    item_t *moved;
+    int capacity;
+} sorting;
 
 #define INSTANCE_TEXELS 8
 #define INSTANCES_PER_ROW 128
@@ -185,6 +214,10 @@ static void stop(void)
     free(frame.draws);
     free(frame.lights);
     free(frame.todo);
+    free(frame.sprites);
+    free(sorting.keys);
+    free(sorting.moved);
+    memset(&sorting, 0, sizeof(sorting));
     free(frame.instances);
     if (frame.instance_image.id != SG_INVALID_ID) { /* sokol_gfx is still up, as below */
         sg_destroy_view(frame.instance_view);
@@ -510,6 +543,8 @@ typedef struct walk_models_t {
     float planes[6][4];
     wgf_vec3_t eye, forward;
     wgf_vec3_t right, up; /* the camera's: a particle quad's before its spin */
+    wgf_gfx_priv_sprite_view_t sprite_view; /* the billboards' axes */
+    int sprite_camera;                      /* the batch's camera for this draw; -1 until a sprite */
 } walk_models_t;
 
 static void visit_shape(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *world, void *user)
@@ -558,6 +593,7 @@ static bool same_group(const item_t *a, const item_t *b)
 {
     group_key_t ka, kb;
     if (a->particles >= 0 || b->particles >= 0) return false; /* an emitter's draw is its own */
+    if (a->sprite >= 0 || b->sprite >= 0 || a->sprite_batch >= 0 || b->sprite_batch >= 0) return false; /* sprites' */
     item_key(a, &ka);
     item_key(b, &kb);
     return memcmp(&ka, &kb, sizeof(ka)) == 0;
@@ -615,6 +651,8 @@ static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
         if (material == NULL) continue; /* a slot with none draws nothing */
         item->world = *world;
         item->particles = -1;
+        item->sprite = item->sprite_batch = -1;
+        item->sprite_batches = 0;
         item->additive = false;
         item->mirrored = wgf_mat4_determinant(*world) < 0.0f;
         item->mesh = mesh;
@@ -658,12 +696,127 @@ static void visit_emitter(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_p
     memset(item, 0, sizeof(*item));
     item->world = wgf_mat4_identity(); /* its record goes unread */
     item->particles = index;
+    item->sprite = item->sprite_batch = -1;
     item->blended = mode == WGF_ALPHA_MODE_BLEND || mode == WGF_ALPHA_MODE_ADD;
     item->additive = mode == WGF_ALPHA_MODE_ADD;
     item->depth = wgf_vec3_dot(wgf_vec3_sub(wgf_mat4_get_translation(*world), w->eye), w->forward);
     item->order = frame.item_count - draw->first;
     item->group = (uint64_t)index; /* alone */
     frame.item_count++;
+}
+
+/* A new item past the frame's last, cleared; NULL out of memory. */
+static item_t *new_item(void)
+{
+    item_t *item;
+    if (!grow((void **)&frame.items, &frame.item_capacity, frame.item_count + 1, sizeof(item_t))) return NULL;
+    item = &frame.items[frame.item_count];
+    memset(item, 0, sizeof(*item));
+    item->world = wgf_mat4_identity(); /* its record goes unread */
+    item->particles = item->sprite = item->sprite_batch = -1;
+    return item;
+}
+
+/* A sprite on the stage (wgf_gfx_sprite3d.c), culled by the box its quad can reach, kept:
+ * an OPAQUE, MASK, or ADD one for its pass, grouped by texture once the walk is over; a
+ * BLEND one an item of its own too, sorted among the see-through parts and recorded after
+ * the sort, so alike neighbours share a batch. */
+static void visit_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *world, void *user)
+{
+    walk_models_t *w = (walk_models_t *)user;
+    stage_draw_t *draw = &frame.draws[frame.draw_count];
+    wgf_gfx_priv_sprite_quad_t quad;
+    sg_view view;
+    sg_sampler sampler;
+    wgf_vec3_t at, reach;
+    float r;
+    int mode;
+    (void)actor;
+    if (actor_ptr->type != WGF_ACTOR_KIND_SPRITE || !wgf_gfx_priv_sprite_quad(actor_ptr, *world, &quad, &view, &sampler)) {
+        return;
+    }
+    at = wgf_mat4_get_translation(*world);
+    r = wgf_gfx_priv_sprite_radius(actor_ptr, *world);
+    reach = wgf_vec3_make(r, r, r);
+    if (w->culling && outside((const float(*)[4])w->planes, wgf_vec3_sub(at, reach), wgf_vec3_add(at, reach))) return;
+    if (w->sprite_camera < 0) {
+        w->sprite_camera = wgf_gfx_priv_sprite_batch_add_camera(draw->view_proj.m, w->sprite_view.right,
+                                                                w->sprite_view.up, w->sprite_view.upright);
+        if (w->sprite_camera < 0) return;
+    }
+    mode = actor_ptr->as.sprite.alpha_mode;
+    if (!grow((void **)&frame.sprites, &frame.sprite_capacity, frame.sprite_count + 1, sizeof(sprite_record_t))) {
+        return;
+    }
+    frame.sprites[frame.sprite_count].quad = quad;
+    frame.sprites[frame.sprite_count].view = view;
+    frame.sprites[frame.sprite_count].sampler = sampler;
+    frame.sprites[frame.sprite_count].mode = mode;
+    if (mode != WGF_ALPHA_MODE_BLEND) { /* depth-tested or added: its pass's, any order */
+        frame.sprite_count++;
+        return;
+    }
+    {
+        item_t *item = new_item();
+        if (item == NULL) return;
+        item->sprite = frame.sprite_count++;
+        item->blended = true;
+        item->depth = wgf_vec3_dot(wgf_vec3_sub(at, w->eye), w->forward);
+        item->order = frame.item_count - draw->first;
+        item->group = (uint64_t)item->sprite;
+        frame.item_count++;
+    }
+}
+
+/* The sprites of one pass, OPAQUE and MASK (`additive` false) or ADD, recorded grouped by
+ * texture and mode: an item holding their batches. */
+static void sprite_pass_item(bool additive, int camera)
+{
+    int first, count, i, held = 0;
+    item_t *item;
+    wgf_gfx_priv_sprite_batch_begin_unordered();
+    for (i = 0; i < frame.sprite_count; i++) {
+        const sprite_record_t *r = &frame.sprites[i];
+        if (r->mode == WGF_ALPHA_MODE_BLEND || (r->mode == WGF_ALPHA_MODE_ADD) != additive) continue;
+        wgf_gfx_priv_sprite_batch_add_3d(&r->quad, r->view, r->sampler, (wgf_alpha_mode_t)r->mode, camera, false);
+        held++;
+    }
+    first = wgf_gfx_priv_sprite_batch_end_unordered(false, &count);
+    if (held == 0) return;
+    if (first < 0 || (item = new_item()) == NULL) return;
+    item->sprite_batch = first;
+    item->sprite_batches = count;
+    item->blended = item->additive = additive;
+    item->order = frame.item_count - frame.draws[frame.draw_count].first;
+    item->group = additive ? UINT64_MAX : 0; /* opaque sprites first among the opaque parts */
+    frame.item_count++;
+}
+
+/* After the sort: the see-through sprites recorded in its order, neighbours alike in one
+ * batch (the items after the first of a batch keeping none of their own). */
+static void record_sprites(const stage_draw_t *draw, int camera)
+{
+    int i, last = -2;
+    for (i = draw->first; i < draw->first + draw->count; i++) {
+        item_t *item = &frame.items[i];
+        const sprite_record_t *r;
+        int b;
+        if (item->sprite < 0) {
+            last = -2;
+            continue;
+        }
+        r = &frame.sprites[item->sprite];
+        b = wgf_gfx_priv_sprite_batch_add_3d(&r->quad, r->view, r->sampler, WGF_ALPHA_MODE_BLEND, camera,
+                                             last == i - 1);
+        if (b >= 0 && last == i - 1 && b == frame.items[i - 1].sprite_batch) {
+            item->sprite_batches = 0; /* joined the batch drawn with the item before */
+            item->sprite_batch = b;
+        } else {
+            item->sprite_batch = b;
+            item->sprite_batches = b >= 0 ? 1 : 0;
+        }
+        last = i;
+    }
 }
 
 /* Opaque first, alike ones together (by their keys' hash, then as found); then the
@@ -676,6 +829,53 @@ static int compare_items(const void *lhs, const void *rhs)
     if (a->blended && a->depth != b->depth) return a->depth > b->depth ? -1 : 1;
     if (!a->blended && a->group != b->group) return a->group < b->group ? -1 : 1;
     return (a->order > b->order) - (a->order < b->order);
+}
+
+/* What the sort orders an item by, small: the items are moved once, after it, not at every
+ * swap (an item is about 200 bytes; 16,000 see-through sprites sorted whole were most of a
+ * frame). */
+
+static int compare_keys(const void *lhs, const void *rhs)
+{
+    const sort_key_t *a = (const sort_key_t *)lhs, *b = (const sort_key_t *)rhs;
+    if (a->blended != b->blended) return a->blended ? 1 : -1;
+    if (a->additive != b->additive) return a->additive ? 1 : -1;
+    if (a->blended && a->depth != b->depth) return a->depth > b->depth ? -1 : 1;
+    if (!a->blended && a->group != b->group) return a->group < b->group ? -1 : 1;
+    return (a->order > b->order) - (a->order < b->order);
+}
+
+
+/* A draw's items in drawing order (compare_keys'): opaque first, alike ones together;
+ * then the see-through ones, farthest first; the added ones last. */
+static void sort_items(int first, int count)
+{
+    int i;
+    if (count < 2) return;
+    if (count > sorting.capacity) {
+        sort_key_t *keys = (sort_key_t *)realloc(sorting.keys, sizeof(sort_key_t) * (size_t)count);
+        item_t *moved = keys != NULL ? (item_t *)realloc(sorting.moved, sizeof(item_t) * (size_t)count) : NULL;
+        if (keys != NULL) sorting.keys = keys;
+        if (moved == NULL) { /* out of memory: sorted whole, slower */
+            qsort(&frame.items[first], (size_t)count, sizeof(item_t), compare_items);
+            return;
+        }
+        sorting.moved = moved;
+        sorting.capacity = count;
+    }
+    for (i = 0; i < count; i++) {
+        const item_t *item = &frame.items[first + i];
+        sort_key_t *key = &sorting.keys[i];
+        key->depth = item->depth;
+        key->order = item->order;
+        key->group = item->group;
+        key->item = first + i;
+        key->blended = item->blended;
+        key->additive = item->additive;
+    }
+    qsort(sorting.keys, (size_t)count, sizeof(sort_key_t), compare_keys);
+    for (i = 0; i < count; i++) sorting.moved[i] = frame.items[sorting.keys[i].item];
+    memcpy(&frame.items[first], sorting.moved, sizeof(item_t) * (size_t)count);
 }
 
 static void replay(int index);
@@ -745,9 +945,20 @@ void wgf_stage3d_draw(wgf_actor_t stage)
     draw->first = frame.item_count;
     walk(stage, visit_model, &w);
     walk(stage, visit_emitter, &w);
+    /* its sprites: the depth-tested ones grouped into one item, the added ones into another,
+       each blended one an item of its own until the sort has placed it */
+    w.sprite_view = wgf_gfx_priv_sprite_view_of(camera_world);
+    w.sprite_camera = -1;
+    frame.sprite_count = 0;
+    walk(stage, visit_sprite, &w);
+    if (frame.sprite_count > 0) {
+        sprite_pass_item(false, w.sprite_camera);
+        sprite_pass_item(true, w.sprite_camera);
+    }
     draw = &frame.draws[frame.draw_count];
     draw->count = frame.item_count - draw->first;
-    if (draw->count > 1) qsort(&frame.items[draw->first], (size_t)draw->count, sizeof(item_t), compare_items);
+    sort_items(draw->first, draw->count);
+    if (frame.sprite_count > 0) record_sprites(draw, w.sprite_camera);
     walk(stage, visit_shape, NULL); /* immediate mode: they move nothing in the pool */
     draw = &frame.draws[frame.draw_count];
     if (draw->shapes >= 0) wgf_gfx_priv_render_end_side_layer();
@@ -922,7 +1133,7 @@ static void draw_run(const stage_draw_t *draw, int first, int count, bool lit, c
 
     memset(&vs, 0, sizeof(vs));
     memcpy(vs.view_proj, draw->view_proj.m, sizeof(vs.view_proj));
-    vs.instance_base[0] = (float)first;
+    vs.instance_base[0] = (float)item->record; /* its run's records follow it */
     sg_apply_uniforms(UB_vs_params, &SG_RANGE(vs));
 
     memset(&fs, 0, sizeof(fs));
@@ -1015,6 +1226,14 @@ static void draw_items(const stage_draw_t *draw, int i, int end, bool lit, const
         int last = i;
         if (frame.items[i].particles >= 0) { /* an emitter's, through the same viewport */
             particle_hooks.draw(frame.items[i].particles); /* set: there is an emitter */
+            i++;
+            continue;
+        }
+        if (frame.items[i].sprite_batch >= 0) { /* sprites: their batches, each after the first applying what differs */
+            int k;
+            for (k = 0; k < frame.items[i].sprite_batches; k++) {
+                wgf_gfx_priv_sprite_batch_draw(frame.items[i].sprite_batch + k, k > 0);
+            }
             i++;
             continue;
         }
@@ -1111,15 +1330,23 @@ static bool ensure_instance_texture(int rows)
     return true;
 }
 
-/* The part's flush, before the frame's passes (the shadow part's among them): every
- * item's record, written whole rows at a time, the tail unwritten. */
+/* The part's flush, before the frame's passes (the shadow part's among them): each model
+ * part's record, numbered in drawing order so a run's are consecutive, written whole rows at
+ * a time, the tail unwritten. Sprites and particles take none (a field of 16,000 sprites
+ * would otherwise upload 2 MB of records nothing reads, a frame). */
 static void flush(void)
 {
-    const int rows = (frame.item_count + INSTANCES_PER_ROW - 1) / INSTANCES_PER_ROW;
-    const int wanted = rows * INSTANCES_PER_ROW;
+    int rows, wanted, records = 0, i;
     sg_write_image_desc write;
-    int i;
-    if (frame.item_count == 0) return;
+    for (i = 0; i < frame.item_count; i++) {
+        frame.items[i].record = frame.items[i].mesh != 0 ? records++ : -1;
+    }
+    if (records == 0) { /* no model part: nothing reads a record */
+        frame.instances_written = frame.item_count > 0;
+        return;
+    }
+    rows = (records + INSTANCES_PER_ROW - 1) / INSTANCES_PER_ROW;
+    wanted = rows * INSTANCES_PER_ROW;
     if (wanted > frame.instance_capacity) {
         float *grown = (float *)realloc(frame.instances, sizeof(float) * INSTANCE_FLOATS * (size_t)wanted);
         if (grown == NULL) {
@@ -1132,12 +1359,15 @@ static void flush(void)
     if (!ensure_instance_texture(rows)) {
         if (!frame.instance_overflow_logged) {
             wgf_log_error("wgf_gfx_stage: %d parts of models in a frame, more than the instance texture holds; none "
-                          "drawn", frame.item_count);
+                          "drawn", records);
             frame.instance_overflow_logged = true;
         }
         return;
     }
-    for (i = 0; i < frame.item_count; i++) write_instance(&frame.instances[(size_t)i * INSTANCE_FLOATS], &frame.items[i]);
+    for (i = 0; i < frame.item_count; i++) {
+        const item_t *item = &frame.items[i];
+        if (item->record >= 0) write_instance(&frame.instances[(size_t)item->record * INSTANCE_FLOATS], item);
+    }
     memset(&write, 0, sizeof(write));
     write.src.data.ptr = frame.instances;
     write.src.data.size = sizeof(float) * INSTANCE_FLOATS * (size_t)wanted;
@@ -1185,6 +1415,11 @@ bool wgf_gfx_priv_stage3d_caster(int index, wgf_vec3_t *lo, wgf_vec3_t *hi, wgf_
     *hi = item->box_hi;
     *material = item->material;
     return wgf_gfx_priv_mesh_get_primitive(item->mesh, item->primitive, primitive);
+}
+
+int wgf_gfx_priv_stage3d_record(int item)
+{
+    return item >= 0 && item < frame.item_count ? frame.items[item].record : -1;
 }
 
 bool wgf_gfx_priv_stage3d_same_caster(int a, int b)

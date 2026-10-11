@@ -8,6 +8,7 @@
 #include "util/sokol_gl.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_log.h"
+#include "wgf_material.h"
 #include "wgf_platform_priv.h"
 
 /* gfx's start and stop, and the frame, as libwgt's: sokol_gfx set up on the window's
@@ -43,6 +44,7 @@ static unsigned viewport_3d_frame;
 
 static sgl_context draw_context;
 static sgl_pipeline draw_pipeline_2d;
+static sgl_pipeline draw_pipeline_2d_add, draw_pipeline_2d_opaque; /* a sprite's other alpha modes */
 static sgl_pipeline draw_pipeline_3d; /* made by the first 3D draw: depth tested and written */
 static int vertex_capacity;
 static int command_capacity;
@@ -134,6 +136,11 @@ bool wgf_gfx_priv_start(void)
     pipeline_desc.colors[0].blend.src_factor_alpha = SG_BLENDFACTOR_ONE;
     pipeline_desc.colors[0].blend.dst_factor_alpha = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
     draw_pipeline_2d = sgl_make_pipeline(&pipeline_desc);
+    pipeline_desc.colors[0].blend.dst_factor_rgb = SG_BLENDFACTOR_ONE; /* added */
+    pipeline_desc.colors[0].blend.dst_factor_alpha = SG_BLENDFACTOR_ONE;
+    draw_pipeline_2d_add = sgl_make_pipeline(&pipeline_desc);
+    pipeline_desc.colors[0].blend.enabled = false; /* opaque */
+    draw_pipeline_2d_opaque = sgl_make_pipeline(&pipeline_desc);
     at_most_logged = false;
     setup = true;
     wgf_gfx_priv_texture_setup();
@@ -191,6 +198,8 @@ void wgf_gfx_priv_stop(void)
     wgf_gfx_priv_texture_shutdown();
     wgf_gfx_priv_draw_shutdown();
     sgl_destroy_pipeline(draw_pipeline_2d);
+    sgl_destroy_pipeline(draw_pipeline_2d_add);
+    sgl_destroy_pipeline(draw_pipeline_2d_opaque);
     sgl_destroy_context(draw_context);
     sgl_shutdown(); /* and the 3D pipeline with it */
     draw_pipeline_3d.id = SG_INVALID_ID;
@@ -376,6 +385,12 @@ void wgf_gfx_priv_render_set_2d(void)
     sgl_ortho(left, right, bottom, top, -1.0f, 1.0f);
     sgl_matrix_mode_modelview();
     sgl_load_identity();
+}
+
+sgl_pipeline wgf_gfx_priv_render_pipeline_2d(int mode)
+{
+    return mode == WGF_ALPHA_MODE_ADD ? draw_pipeline_2d_add : mode == WGF_ALPHA_MODE_OPAQUE ? draw_pipeline_2d_opaque
+                                                                                           : draw_pipeline_2d;
 }
 
 wgf_mat4_t wgf_gfx_priv_render_projection_2d(void)

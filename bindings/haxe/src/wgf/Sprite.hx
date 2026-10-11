@@ -42,7 +42,7 @@ import wgf.impl.Raw;
 
 	/**
 	    Its size in its own units; a width or height of 0 or less (the default) is the
-	    region's size in pixels. get_size is the size it draws at: what was set, or else
+	    region's size in pixels on a 2D stage (1 by 1 on a 3D one). get_size is the size it draws at: what was set, or else
 	    the region's (0, 0 while its texture isn't READY and no size is set). False for a
 	    handle that isn't a sprite.
 	**/
@@ -51,7 +51,7 @@ import wgf.impl.Raw;
 
 	/**
 	    Its size in its own units; a width or height of 0 or less (the default) is the
-	    region's size in pixels. get_size is the size it draws at: what was set, or else
+	    region's size in pixels on a 2D stage (1 by 1 on a 3D one). get_size is the size it draws at: what was set, or else
 	    the region's (0, 0 while its texture isn't READY and no size is set). False for a
 	    handle that isn't a sprite.
 	**/
@@ -87,4 +87,43 @@ import wgf.impl.Raw;
 	**/
 	public inline function getTint():Int
 		return Raw.wgf_sprite_get_tint(this);
+
+	/**
+	    How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
+	    MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
+	    a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
+	    isn't a sprite, or a mode that isn't one.
+	**/
+	public inline function setAlphaMode(mode:AlphaMode, cutoff:Float):Bool
+		return Raw.wgf_sprite_set_alpha_mode(this, mode, cutoff);
+
+	/**
+	    How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
+	    MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
+	    a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
+	    isn't a sprite, or a mode that isn't one.
+	**/
+	public inline function getAlphaMode():AlphaMode
+		return Raw.wgf_sprite_get_alpha_mode(this);
+
+	/**
+	    How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
+	    MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
+	    a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
+	    isn't a sprite, or a mode that isn't one.
+	**/
+	public inline function getAlphaCutoff():Float
+		return Raw.wgf_sprite_get_alpha_cutoff(this);
+
+	/**
+	    Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
+	**/
+	public inline function setFacing(facing:SpriteFacing):Bool
+		return Raw.wgf_sprite_set_facing(this, facing);
+
+	/**
+	    Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
+	**/
+	public inline function getFacing():SpriteFacing
+		return Raw.wgf_sprite_get_facing(this);
 }

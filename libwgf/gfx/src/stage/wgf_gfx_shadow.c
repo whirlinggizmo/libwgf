@@ -528,7 +528,7 @@ static void draw_casters(const wgf_gfx_priv_shadow_frame_t *job, wgf_mat4_t view
         sg_apply_bindings(&bindings);
         memset(&vs, 0, sizeof(vs));
         memcpy(vs.light_view_proj, view_proj.m, sizeof(vs.light_view_proj));
-        vs.instance_base[0] = (float)i;
+        vs.instance_base[0] = (float)wgf_gfx_priv_stage3d_record(i);
         sg_apply_uniforms(UB_vs_depth_params, &SG_RANGE(vs));
         if (cutoff != applied_cutoff) {
             const float values[4] = {cutoff, 0.0f, 0.0f, 0.0f};

@@ -67,6 +67,10 @@ static void draw_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
     y0 = -sprite->pivot[1] * size[1];
     x1 = x0 + size[0];
     y1 = y0 + size[1];
+    if (sprite->alpha_mode != WGF_ALPHA_MODE_BLEND && sprite->alpha_mode != WGF_ALPHA_MODE_MASK) {
+        sgl_push_pipeline();
+        sgl_load_pipeline(wgf_gfx_priv_render_pipeline_2d(sprite->alpha_mode));
+    }
     sgl_enable_texture();
     sgl_texture(image, sampler);
     sgl_begin_triangles();
@@ -80,6 +84,7 @@ static void draw_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
     vertex(placed, x0, y1, u0, v1);
     sgl_end();
     sgl_disable_texture();
+    if (sprite->alpha_mode != WGF_ALPHA_MODE_BLEND && sprite->alpha_mode != WGF_ALPHA_MODE_MASK) sgl_pop_pipeline();
 }
 
 static void free_sprite(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr)
@@ -107,6 +112,8 @@ wgf_actor_t wgf_sprite_create(wgf_texture_t texture)
     if (sprite_ptr == NULL) return 0;
     sprite_ptr->tint = 0xFFFFFFFFu;
     sprite_ptr->pivot[0] = sprite_ptr->pivot[1] = 0.5f;
+    sprite_ptr->alpha_mode = WGF_ALPHA_MODE_BLEND;
+    sprite_ptr->alpha_cutoff = 0.5f;
     if (texture != 0) {
         wgf_gfx_priv_texture_retain(texture);
         sprite_ptr->texture = texture;
@@ -195,4 +202,39 @@ wgf_color_t wgf_sprite_get_tint(wgf_actor_t sprite)
 {
     const wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
     return sprite_ptr != NULL ? sprite_ptr->tint : 0u;
+}
+
+bool wgf_sprite_set_alpha_mode(wgf_actor_t sprite, wgf_alpha_mode_t mode, float cutoff)
+{
+    wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
+    if (sprite_ptr == NULL || (int)mode < WGF_ALPHA_MODE_OPAQUE || mode > WGF_ALPHA_MODE_ADD) return false;
+    sprite_ptr->alpha_mode = (int)mode;
+    sprite_ptr->alpha_cutoff = cutoff < 0.0f ? 0.0f : (cutoff > 1.0f ? 1.0f : cutoff);
+    return true;
+}
+
+wgf_alpha_mode_t wgf_sprite_get_alpha_mode(wgf_actor_t sprite)
+{
+    const wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
+    return sprite_ptr != NULL ? (wgf_alpha_mode_t)sprite_ptr->alpha_mode : WGF_ALPHA_MODE_OPAQUE;
+}
+
+float wgf_sprite_get_alpha_cutoff(wgf_actor_t sprite)
+{
+    const wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
+    return sprite_ptr != NULL ? sprite_ptr->alpha_cutoff : 0.0f;
+}
+
+bool wgf_sprite_set_facing(wgf_actor_t sprite, wgf_sprite_facing_t facing)
+{
+    wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
+    if (sprite_ptr == NULL || (int)facing < WGF_SPRITE_FACING_CAMERA || facing > WGF_SPRITE_FACING_FREE) return false;
+    sprite_ptr->facing = (int)facing;
+    return true;
+}
+
+wgf_sprite_facing_t wgf_sprite_get_facing(wgf_actor_t sprite)
+{
+    const wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
+    return sprite_ptr != NULL ? (wgf_sprite_facing_t)sprite_ptr->facing : WGF_SPRITE_FACING_CAMERA;
 }

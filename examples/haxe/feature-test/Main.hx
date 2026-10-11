@@ -266,6 +266,10 @@ class Main {
 		expect(smoke.prewarm(0.5) && smoke.burst(8) && smoke.getCount() >= 8, "prewarmed, and a burst");
 		expect(smoke.clear() && smoke.getCount() == 0, "its particles cleared");
 		smoke.burst(8);
+		final sign = Sprite.create(tiles); // a 3D stage's sprite: the instanced batch
+		sign.setParent(stage3d);
+		sign.setPosition(0, 2, 0);
+		expect(sign.setFacing(SpriteFacing.CAMERA_FIXED_Y) && sign.setSize(1, 1), "a sprite on the 3D stage");
 		final sun:Light = Light.create(LightType.SPOT);
 		expect(sun.getType() == LightType.SPOT && sun.setColor(Color.get(ColorStock.GOLD))
 			&& sun.getColor() == Color.get(ColorStock.GOLD), "a light's color");
@@ -437,6 +441,10 @@ class Main {
 		expect(sprite.setSize(32, 32) && near(sprite.getSize().y, 32), "its size");
 		expect(sprite.setPivot(0.5, 0.5) && near(sprite.getPivot().x, 0.5), "its pivot");
 		expect(sprite.setTint(white) && sprite.getTint() == white, "its tint");
+		expect(sprite.setAlphaMode(AlphaMode.MASK, 0.25) && sprite.getAlphaMode() == AlphaMode.MASK
+			&& near(sprite.getAlphaCutoff(), 0.25) && sprite.setAlphaMode(AlphaMode.BLEND, 0.5), "its alpha mode");
+		expect(sprite.setFacing(SpriteFacing.CAMERA_FIXED_Y) && sprite.getFacing() == SpriteFacing.CAMERA_FIXED_Y
+			&& sprite.setFacing(SpriteFacing.CAMERA), "its facing on a 3D stage");
 
 		final label = Text.create(font);
 		label.setParent(hud);

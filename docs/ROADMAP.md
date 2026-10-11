@@ -134,6 +134,7 @@ Each starts when something anyone can check is true.
 - **glTF `extras` read** (FRICTION.md: the racer's centerline, written beside its track as Haxe): when a game's data must ride in a glTF file that a tool other than its own writes (an editor's custom properties, a level made in Blender), so it can't be written beside the file.
 - **macOS presets** (wgrender-c had `macos-arm64`, written and not run there): when someone can build and run them on a Mac in CI or by hand.
 - **Lightmaps** (wgrender-c's open task): when a static scene's lighting costs more of the frame budget than baking it would save, measured.
+- **Blended sprites in 3D as small records** (spritebench: 16,000 blended sprites 31.1 ms against 10.2 masked, the difference each one a whole stage item walked, sorted, and moved): when a game's see-through sprites in 3D number in the thousands; libwgt's `transparent_t`, the see-through things sorted as a depth and an index, not as items.
 - **A persistent instance buffer** for placements that don't move (wgrender-c's PLAN-instancing phase 5): when uploading a frame's instance records shows in a benchmark's frame times.
 - **A large download's arrival without a stall** (wgrender-c's open task: 64 MB copied into the wasm heap stalls a frame about 80 ms): when a game streams a file that size.
 - **Float (HDR) render targets, and an HDR framebuffer with bloom**: when a game's look needs them (step 12 carries 8-bit targets).

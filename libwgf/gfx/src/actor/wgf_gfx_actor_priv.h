@@ -22,6 +22,9 @@ typedef struct wgf_gfx_priv_sprite_t {
     float size[2];   /* <= 0: the source's size */
     float pivot[2];
     wgf_color_t tint;
+    int alpha_mode;     /* wgf_alpha_mode_t */
+    float alpha_cutoff; /* MASK's */
+    int facing;         /* wgf_sprite_facing_t: on a 3D stage */
 } wgf_gfx_priv_sprite_t;
 
 typedef struct wgf_gfx_priv_shape2d_t {

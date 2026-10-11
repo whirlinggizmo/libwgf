@@ -4138,14 +4138,14 @@ export declare const Sprite: {
     readonly getSource: typeof raw.wgf_sprite_get_source;
     /**
      * Its size in its own units; a width or height of 0 or less (the default) is the
-     * region's size in pixels. get_size is the size it draws at: what was set, or else
+     * region's size in pixels on a 2D stage (1 by 1 on a 3D one). get_size is the size it draws at: what was set, or else
      * the region's (0, 0 while its texture isn't READY and no size is set). False for a
      * handle that isn't a sprite.
      */
     readonly setSize: typeof raw.wgf_sprite_set_size;
     /**
      * Its size in its own units; a width or height of 0 or less (the default) is the
-     * region's size in pixels. get_size is the size it draws at: what was set, or else
+     * region's size in pixels on a 2D stage (1 by 1 on a 3D one). get_size is the size it draws at: what was set, or else
      * the region's (0, 0 while its texture isn't READY and no size is set). False for a
      * handle that isn't a sprite.
      */
@@ -4172,6 +4172,35 @@ export declare const Sprite: {
      * for a handle that isn't a sprite.
      */
     readonly getTint: typeof raw.wgf_sprite_get_tint;
+    /**
+     * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
+     * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
+     * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
+     * isn't a sprite, or a mode that isn't one.
+     */
+    readonly setAlphaMode: typeof raw.wgf_sprite_set_alpha_mode;
+    /**
+     * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
+     * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
+     * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
+     * isn't a sprite, or a mode that isn't one.
+     */
+    readonly getAlphaMode: typeof raw.wgf_sprite_get_alpha_mode;
+    /**
+     * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
+     * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
+     * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
+     * isn't a sprite, or a mode that isn't one.
+     */
+    readonly getAlphaCutoff: typeof raw.wgf_sprite_get_alpha_cutoff;
+    /**
+     * Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
+     */
+    readonly setFacing: typeof raw.wgf_sprite_set_facing;
+    /**
+     * Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
+     */
+    readonly getFacing: typeof raw.wgf_sprite_get_facing;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
@@ -5454,6 +5483,8 @@ export type Shape2dKind = raw.wgf_shape2d_kind_t;
 export declare const Shape2dKind: { readonly NONE: Shape2dKind; readonly RECTANGLE: Shape2dKind; readonly CIRCLE: Shape2dKind; readonly LINE: Shape2dKind; readonly POLYGON: Shape2dKind; };
 export type Shape3dKind = raw.wgf_shape3d_kind_t;
 export declare const Shape3dKind: { readonly NONE: Shape3dKind; readonly CUBE: Shape3dKind; readonly SPHERE: Shape3dKind; readonly RECTANGLE: Shape3dKind; readonly CIRCLE: Shape3dKind; readonly LINE: Shape3dKind; readonly LINE_STRIP: Shape3dKind; };
+export type SpriteFacing = raw.wgf_sprite_facing_t;
+export declare const SpriteFacing: { readonly CAMERA: SpriteFacing; readonly CAMERA_FIXED_Y: SpriteFacing; readonly Y_UP: SpriteFacing; readonly FREE: SpriteFacing; };
 export type Stage3dTonemap = raw.wgf_stage3d_tonemap_t;
 export declare const Stage3dTonemap: { readonly NONE: Stage3dTonemap; readonly NEUTRAL: Stage3dTonemap; readonly ACES: Stage3dTonemap; };
 export type TextHalign = raw.wgf_text_halign_t;

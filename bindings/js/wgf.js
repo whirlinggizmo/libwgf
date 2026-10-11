@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "302f1ce2ed854c53" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "fa637b37c3defbaf" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -728,6 +728,15 @@ export const WGF_SHAPE3D_KIND_RECTANGLE = 3;
 export const WGF_SHAPE3D_KIND_CIRCLE = 4;
 export const WGF_SHAPE3D_KIND_LINE = 5;
 export const WGF_SHAPE3D_KIND_LINE_STRIP = 6;
+
+/**
+ * How a sprite on a 3D stage faces, libwgt's and wgrender-c's (on a 2D stage it lies in
+ * the stage, turned by its actor):
+ */
+export const WGF_SPRITE_FACING_CAMERA = 0;
+export const WGF_SPRITE_FACING_CAMERA_FIXED_Y = 1;
+export const WGF_SPRITE_FACING_Y_UP = 2;
+export const WGF_SPRITE_FACING_FREE = 3;
 
 /**
  * How a stage's lit colors map to the screen. Lighting can exceed what a screen shows;
@@ -7641,7 +7650,7 @@ export function wgf_sprite_get_source(sprite, into) {
 // wgf: call wgf_sprite_set_size
 /**
  * Its size in its own units; a width or height of 0 or less (the default) is the
- * region's size in pixels. get_size is the size it draws at: what was set, or else
+ * region's size in pixels on a 2D stage (1 by 1 on a 3D one). get_size is the size it draws at: what was set, or else
  * the region's (0, 0 while its texture isn't READY and no size is set). False for a
  * handle that isn't a sprite.
  */
@@ -7653,7 +7662,7 @@ export function wgf_sprite_set_size(sprite, width, height) {
 // wgf: call wgf_sprite_get_size
 /**
  * Its size in its own units; a width or height of 0 or less (the default) is the
- * region's size in pixels. get_size is the size it draws at: what was set, or else
+ * region's size in pixels on a 2D stage (1 by 1 on a 3D one). get_size is the size it draws at: what was set, or else
  * the region's (0, 0 while its texture isn't READY and no size is set). False for a
  * handle that isn't a sprite.
  */
@@ -7704,6 +7713,60 @@ export function wgf_sprite_set_tint(sprite, tint) {
 export function wgf_sprite_get_tint(sprite) {
     const value = host["_wgf_sprite_get_tint"](sprite);
     return value >>> 0;
+}
+
+// wgf: call wgf_sprite_set_alpha_mode
+/**
+ * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
+ * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
+ * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
+ * isn't a sprite, or a mode that isn't one.
+ */
+export function wgf_sprite_set_alpha_mode(sprite, mode, cutoff) {
+    const value = host["_wgf_sprite_set_alpha_mode"](sprite, mode, cutoff);
+    return value !== 0;
+}
+
+// wgf: call wgf_sprite_get_alpha_mode
+/**
+ * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
+ * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
+ * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
+ * isn't a sprite, or a mode that isn't one.
+ */
+export function wgf_sprite_get_alpha_mode(sprite) {
+    const value = host["_wgf_sprite_get_alpha_mode"](sprite);
+    return value;
+}
+
+// wgf: call wgf_sprite_get_alpha_cutoff
+/**
+ * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
+ * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
+ * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
+ * isn't a sprite, or a mode that isn't one.
+ */
+export function wgf_sprite_get_alpha_cutoff(sprite) {
+    const value = host["_wgf_sprite_get_alpha_cutoff"](sprite);
+    return value;
+}
+
+// wgf: call wgf_sprite_set_facing
+/**
+ * Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
+ */
+export function wgf_sprite_set_facing(sprite, facing) {
+    const value = host["_wgf_sprite_set_facing"](sprite, facing);
+    return value !== 0;
+}
+
+// wgf: call wgf_sprite_get_facing
+/**
+ * Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
+ */
+export function wgf_sprite_get_facing(sprite) {
+    const value = host["_wgf_sprite_get_facing"](sprite);
+    return value;
 }
 
 // wgf: call wgf_stage2d_create

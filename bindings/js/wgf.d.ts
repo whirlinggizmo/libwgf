@@ -583,6 +583,16 @@ export declare const WGF_SHAPE3D_KIND_LINE_STRIP: 6;
 export type wgf_shape3d_kind_t = typeof WGF_SHAPE3D_KIND_NONE | typeof WGF_SHAPE3D_KIND_CUBE | typeof WGF_SHAPE3D_KIND_SPHERE | typeof WGF_SHAPE3D_KIND_RECTANGLE | typeof WGF_SHAPE3D_KIND_CIRCLE | typeof WGF_SHAPE3D_KIND_LINE | typeof WGF_SHAPE3D_KIND_LINE_STRIP;
 
 /**
+ * How a sprite on a 3D stage faces, libwgt's and wgrender-c's (on a 2D stage it lies in
+ * the stage, turned by its actor):
+ */
+export declare const WGF_SPRITE_FACING_CAMERA: 0;
+export declare const WGF_SPRITE_FACING_CAMERA_FIXED_Y: 1;
+export declare const WGF_SPRITE_FACING_Y_UP: 2;
+export declare const WGF_SPRITE_FACING_FREE: 3;
+export type wgf_sprite_facing_t = typeof WGF_SPRITE_FACING_CAMERA | typeof WGF_SPRITE_FACING_CAMERA_FIXED_Y | typeof WGF_SPRITE_FACING_Y_UP | typeof WGF_SPRITE_FACING_FREE;
+
+/**
  * How a stage's lit colors map to the screen. Lighting can exceed what a screen shows;
  * tone mapping rolls off highlights instead of clipping them.
  */
@@ -5127,7 +5137,7 @@ export declare function wgf_sprite_get_source(sprite: wgf_actor_t | 0, into?: wg
 
 /**
  * Its size in its own units; a width or height of 0 or less (the default) is the
- * region's size in pixels. get_size is the size it draws at: what was set, or else
+ * region's size in pixels on a 2D stage (1 by 1 on a 3D one). get_size is the size it draws at: what was set, or else
  * the region's (0, 0 while its texture isn't READY and no size is set). False for a
  * handle that isn't a sprite.
  */
@@ -5135,7 +5145,7 @@ export declare function wgf_sprite_set_size(sprite: wgf_actor_t | 0, width: numb
 
 /**
  * Its size in its own units; a width or height of 0 or less (the default) is the
- * region's size in pixels. get_size is the size it draws at: what was set, or else
+ * region's size in pixels on a 2D stage (1 by 1 on a 3D one). get_size is the size it draws at: what was set, or else
  * the region's (0, 0 while its texture isn't READY and no size is set). False for a
  * handle that isn't a sprite.
  */
@@ -5168,6 +5178,40 @@ export declare function wgf_sprite_set_tint(sprite: wgf_actor_t | 0, tint: wgf_c
  * for a handle that isn't a sprite.
  */
 export declare function wgf_sprite_get_tint(sprite: wgf_actor_t | 0): wgf_color_t;
+
+/**
+ * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
+ * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
+ * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
+ * isn't a sprite, or a mode that isn't one.
+ */
+export declare function wgf_sprite_set_alpha_mode(sprite: wgf_actor_t | 0, mode: wgf_alpha_mode_t, cutoff: number): boolean;
+
+/**
+ * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
+ * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
+ * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
+ * isn't a sprite, or a mode that isn't one.
+ */
+export declare function wgf_sprite_get_alpha_mode(sprite: wgf_actor_t | 0): wgf_alpha_mode_t;
+
+/**
+ * How it uses its texels' alpha (wgf_material.h's modes; default BLEND), and the cutoff
+ * MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, ADD adds. On
+ * a 2D stage MASK draws blended (immediate mode cuts out nothing). False for a handle that
+ * isn't a sprite, or a mode that isn't one.
+ */
+export declare function wgf_sprite_get_alpha_cutoff(sprite: wgf_actor_t | 0): number;
+
+/**
+ * Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
+ */
+export declare function wgf_sprite_set_facing(sprite: wgf_actor_t | 0, facing: wgf_sprite_facing_t): boolean;
+
+/**
+ * Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
+ */
+export declare function wgf_sprite_get_facing(sprite: wgf_actor_t | 0): wgf_sprite_facing_t;
 
 /**
  * A 2D stage, with no camera. 0 when there is no room for another actor.

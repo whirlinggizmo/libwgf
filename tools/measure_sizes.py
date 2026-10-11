@@ -88,6 +88,7 @@ ROWS = [
      'libwgf has no skinning or animation yet: the toy car in place of the walking character, and its readout '
      'fixed labels with no formatting'),
     ('gfx-textures', 'gfx-textures', 'textures', 'same', ''),
+    ('gfx-sprite3d', 'gfx-sprite3d', 'sprite3d', 'same', ''),
     ('gfx-sprite2d', 'gfx-sprite2d', 'sprite2d', 'differs',
      'libwgf has no 3D and no alpha picking: the animated model behind the sprites, its lights, and picking are left out'),
     ('gfx-particles', 'gfx-particles', 'particles', 'same', ''),

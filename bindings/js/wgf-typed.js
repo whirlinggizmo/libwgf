@@ -1362,6 +1362,16 @@ export const Sprite = Object.freeze({
     setTint: raw.wgf_sprite_set_tint,
     // wgf: call wgf_sprite_get_tint
     getTint: raw.wgf_sprite_get_tint,
+    // wgf: call wgf_sprite_set_alpha_mode
+    setAlphaMode: raw.wgf_sprite_set_alpha_mode,
+    // wgf: call wgf_sprite_get_alpha_mode
+    getAlphaMode: raw.wgf_sprite_get_alpha_mode,
+    // wgf: call wgf_sprite_get_alpha_cutoff
+    getAlphaCutoff: raw.wgf_sprite_get_alpha_cutoff,
+    // wgf: call wgf_sprite_set_facing
+    setFacing: raw.wgf_sprite_set_facing,
+    // wgf: call wgf_sprite_get_facing
+    getFacing: raw.wgf_sprite_get_facing,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
@@ -1826,6 +1836,8 @@ export const ResourceStatus = Object.freeze({ NONE: 0, PENDING: 1, READY: 2, FAI
 export const Shape2dKind = Object.freeze({ NONE: 0, RECTANGLE: 1, CIRCLE: 2, LINE: 3, POLYGON: 4 });
 // wgf: enum Shape3dKind
 export const Shape3dKind = Object.freeze({ NONE: 0, CUBE: 1, SPHERE: 2, RECTANGLE: 3, CIRCLE: 4, LINE: 5, LINE_STRIP: 6 });
+// wgf: enum SpriteFacing
+export const SpriteFacing = Object.freeze({ CAMERA: 0, CAMERA_FIXED_Y: 1, Y_UP: 2, FREE: 3 });
 // wgf: enum Stage3dTonemap
 export const Stage3dTonemap = Object.freeze({ NONE: 0, NEUTRAL: 1, ACES: 2 });
 // wgf: enum TextHalign

@@ -23,6 +23,8 @@ wgf_layer(gfx
         src/shape/wgf_gfx_shape2d.c
         src/shape/wgf_gfx_shape3d.c
         src/sprite/wgf_gfx_sprite.c
+        src/sprite/wgf_gfx_sprite3d.c
+        src/sprite/wgf_gfx_sprite_batch.c
         src/stage/wgf_gfx_light.c
         src/stage/wgf_gfx_model.c
         src/stage/wgf_gfx_model_file.c

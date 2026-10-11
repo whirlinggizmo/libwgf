@@ -579,11 +579,16 @@ class Reach {
 		"wgf_sound_create_streamed",
 		"wgf_sound_get_duration",
 		"wgf_sprite_create",
+		"wgf_sprite_get_alpha_cutoff",
+		"wgf_sprite_get_alpha_mode",
+		"wgf_sprite_get_facing",
 		"wgf_sprite_get_pivot",
 		"wgf_sprite_get_size",
 		"wgf_sprite_get_source",
 		"wgf_sprite_get_texture",
 		"wgf_sprite_get_tint",
+		"wgf_sprite_set_alpha_mode",
+		"wgf_sprite_set_facing",
 		"wgf_sprite_set_pivot",
 		"wgf_sprite_set_size",
 		"wgf_sprite_set_source",
@@ -770,7 +775,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...761) 0];
+	static final counts:Array<Int> = [for (_ in 0...766) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

@@ -28,6 +28,7 @@ A **same** row is the same program in each library, and libwgf's is held to libw
 | gfx-instancing / instancing | [differs](#differs-gfx-instancing) | 216.0 (177.5) | - | 242.4 (197.0) | 241.6 (199.7) |
 | gfx-environment / environment | [differs](#differs-gfx-environment) | 229.0 (187.9) | - | 259.9 (212.3) | 235.1 (194.5) |
 | gfx-textures / textures | same | 148.3 (123.8) | 159.2 | 154.0 (128.6) | 175.0 (146.8) |
+| gfx-sprite3d / sprite3d | same | - | 203.4 | 198.1 (163.1) | 177.3 (148.1) |
 | gfx-sprite2d / sprite2d | [differs](#differs-gfx-sprite2d) | 158.6 (132.5) | - | 249.4 (202.4) | 249.6 (205.4) |
 | gfx-particles / particles | same | 194.5 (161.0) | 216.0 | 210.8 (172.8) | 185.5 (154.9) |
 | gfx-tilemap / tilemap | [differs](#differs-gfx-tilemap) | 155.3 (128.8) | - | 208.5 (170.9) | 179.4 (150.3) |
@@ -116,14 +117,18 @@ Each game's web export flown by its autopilot in a browser (`tools/bench/measure
 
 ## spritebench
 
-`tools/bench/spritebench/` in a browser (`tools/bench/measure_frames.py bench:spritebench`): each case's frames' main-thread work, its mean in milliseconds by how many models it draws (the 95th percentile after it), traced by Chrome. The program's header says what each case is. On 13th Gen Intel(R) Core(TM) i9-13900HX, ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA), xvfb, CPU throttled 4x, the median of 3 run(s), 113e0b9 2026-10-11: another machine's are not comparable.
+`tools/bench/spritebench/` in a browser (`tools/bench/measure_frames.py bench:spritebench`): each case's frames' main-thread work, its mean in milliseconds by how many models it draws (the 95th percentile after it), traced by Chrome. The program's header says what each case is. On 13th Gen Intel(R) Core(TM) i9-13900HX, ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA), xvfb, CPU throttled 4x, the median of 3 run(s), b1e49e6 2026-10-11: another machine's are not comparable.
 
 | case | 1000 models | 4000 models | 16000 models |
 |---|---:|---:|---:|
-| grid 2d | 0.45 (0.86) | 1.47 (2.25) | 4.98 (5.69) |
-| grid 2d, 4 tex | 1.28 (2.09) | 4.6 (4.9) | 23.15 (24.43) |
-| particles 2d | 0.55 (0.97) | 1.89 (2.31) | 7.86 (10.92) |
-| emitter 2d | 0.16 (0.66) | 0.2 (0.67) | 0.34 (0.74) |
+| grid 2d | 0.4 (0.89) | 1.51 (2.25) | 5.15 (5.92) |
+| grid 2d, 4 tex | 1.11 (1.48) | 4.63 (5.51) | 23.19 (24.24) |
+| particles 2d | 0.52 (0.9) | 1.86 (2.28) | 7.94 (10.41) |
+| emitter 2d | 0.13 (0.52) | 0.19 (0.71) | 0.41 (0.94) |
+| field 3d | 1.67 (2.38) | 6.87 (7.38) | 31.1 (32.87) |
+| field 3d, 4 tex | 2.82 (3.26) | 16.9 (17.95) | 49.4 (50.86) |
+| field 3d, mask | 0.68 (1.1) | 2.29 (2.72) | 10.2 (10.88) |
+| emitter 3d | 0.15 (0.48) | 0.2 (0.67) | 0.39 (0.89) |
 
 ## Actors
 
