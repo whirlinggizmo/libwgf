@@ -972,3 +972,7 @@ Redesigned, and why:
 - The seed is an `int`, as `wgf_random`'s, where libwgt's is a `uint32_t`; the alpha modes gained ADD (particles' alone; a material refuses it).
 
 A scene's emitter lines reach the particles through hooks the particles' file sets as it is linked, as glTF's model lines do: first written as direct calls, they linked the particles into every program reading scenes (ecs-scene and the racer 9 KB of gzip larger); a game's builds keep them when a scene names an emitter (`-D wgf_emitters`, and the host's `wgf_emitter2d_create`). A program that makes emitters pays about 8 KB of gzip over milestone 1's (the shader, its pipelines, both kinds' calls). `gfx-particles` is now libwgt's example 1:1 (3D emitters on a 3D stage, the confetti on a 2D stage over it), where milestone 1 projected 3D into 2D CPU emitters. `tools/check_api.py` pairs the multi-value setters with their getters.
+
+## The size baseline for GPU particles, and gfx-particles a same row (2026-10-11)
+
+Re-recorded alone (a guard moved): a program that makes emitters carries the particle shader, its six pipelines, and both kinds' calls (gfx-stage2d 161.6 to 170.4 KB of gzip, Asteroids 239.2 to 247.2, its JS port 237.3 to 245.4); gfx-particles, now libwgt's example 1:1 in 3D, 118.1 to 194.5, under libwgt's 210.8, so a same row (tightened: held to libwgt's size and the runner's); and a program reading scenes with no emitter drops milestone 1's CPU emitter (ecs-scene 188.1 to 186.6, the racer 551.7 to 550.6).
