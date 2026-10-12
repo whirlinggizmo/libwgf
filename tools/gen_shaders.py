@@ -12,7 +12,11 @@ sokol-shdc. The pinned sokol-shdc comes from tools/setup_shdc.py, which download
 once. --check generates them into a scratch folder and fails when a committed header
 differs (a shader changed without its header); where sokol-shdc can't be had (no
 network, no binary for this machine), the check says SKIPPING and passes, as checks do
-(CONVENTIONS.md, "Tooling"). Standard library only.
+(CONVENTIONS.md, "Tooling").
+
+The examples' custom shaders too (wgf_shader.h): each examples/shaders/*.glsl packed by
+tools/pack_shader.py into examples/assets/shaders/*.wgfshader, committed, and held current
+by --check the same way, as libwgt's gen_shaders.py --examples does. Standard library only.
 """
 import argparse
 import subprocess
@@ -22,6 +26,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SHADERS = ROOT / 'libwgf' / 'gfx' / 'src' / 'shaders'
+EXAMPLE_SHADERS = ROOT / 'examples' / 'shaders'
+PACKED = ROOT / 'examples' / 'assets' / 'shaders'
 SLANG = 'glsl410:glsl300es'
 
 
@@ -52,11 +58,21 @@ def main():
                 stale.append(str(header.relative_to(ROOT)))
             elif not opts.check:
                 print(f'gen_shaders: {header.relative_to(ROOT)}')
+        for source in sorted(EXAMPLE_SHADERS.glob('*.glsl')):
+            packed = PACKED / (source.stem + '.wgfshader')
+            out = Path(scratch) / packed.name if opts.check else packed
+            done = subprocess.run([sys.executable, str(ROOT / 'tools' / 'pack_shader.py'), str(source), '-o', str(out)],
+                                  stdout=subprocess.DEVNULL if opts.check else None)
+            if done.returncode != 0:
+                print(f'gen_shaders: {source.relative_to(ROOT)} failed')
+                return 1
+            if opts.check and (not packed.exists() or packed.read_bytes() != out.read_bytes()):
+                stale.append(str(packed.relative_to(ROOT)))
     if stale:
         print('gen_shaders: stale (run tools/gen_shaders.py and commit): ' + ', '.join(stale))
         return 1
     if opts.check:
-        print('gen_shaders: every shader header is current')
+        print('gen_shaders: every shader header and packed example shader is current')
     return 0
 
 

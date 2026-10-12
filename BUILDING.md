@@ -85,8 +85,11 @@ The tests run under node; the ones that need a real browser (IndexedDB, WebGL2's
 
 gfx's shaders (`libwgf/gfx/src/shaders/*.glsl`) are written once in sokol-shdc's annotated GLSL and compiled into headers for GL 4.1 and WebGL2 by `gen_shaders.py`, which are committed: building never runs the compiler, the pinned sokol-shdc that `setup_shdc.py` downloads.
 
+Custom material shaders (`wgf_shader.h`) are written against `libwgf/gfx/shaders/wgf.glsl` and packed into a `.wgfshader` file by `pack_shader.py`. The examples' (`examples/shaders/*.glsl`) are packed into `examples/assets/shaders/` by `gen_shaders.py` and committed.
+
 ```sh
-python3 tools/gen_shaders.py           # every shader's header again, after changing its GLSL (--check: fail if stale)
+python3 tools/gen_shaders.py           # every shader's header, and the examples' packed shaders, again (--check: fail if stale)
+python3 tools/pack_shader.py name.glsl # a custom shader packed into name.wgfshader (-o: elsewhere)
 python3 tools/gen_brdf_lut.py          # the environments' BRDF table header again (--check: fail if stale)
 python3 tools/setup_shdc.py            # the pinned sokol-shdc, downloaded once into the per-user cache; prints its path
 ```
@@ -361,6 +364,8 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `build_pages.py` | builds the GitHub Pages site: every game's web export, smoke-tested and within budget, and a page linking them |
 | `import_game.py` | copies a game written outside libwgf into `games/` (`../libwgf-racer/game` as `games/racer`), less its `build/` and `export/`, with `IMPORTED.md` naming its source and commit, so the checks, sizes, frame times, and Pages cover it; the copy is changed only in its source and imported again |
 | `gen_model.py` | writes the examples' glTF model (`examples/assets/models/toy_car.glb`), a toy car of named nodes, the same bytes every time (`--check`) |
+| `gen_noise.py` | writes the dissolve shader's noise texture (`examples/assets/textures/noise.png`): tileable value noise from a fixed seed, made once and committed |
+| `pack_shader.py` | packs a custom material shader (`name.glsl`, written against `libwgf/gfx/shaders/wgf.glsl`) into a `.wgfshader` file for every backend: `wgf_shader_create` loads it |
 | `gen_brdf_lut.py` | writes the environments' split-sum BRDF table (`libwgf/gfx/src/data/wgf_gfx_brdf_lut.h`, RG8), committed so building never computes it (`--check`: fails when stale; verify's `brdf-lut` step) |
 | `compress_textures.py` | writes each PNG's GPU-compressed variants beside it (`name.bc7.ktx`, `name.astc.ktx`, `name.etc2.ktx`, with their mipmaps), which a program loads as `name.ktx`; `--gltf model.gltf` does a model's textures and writes `model.ktx.gltf` naming them; encodes with Basis Universal, built once from its pinned commit into the per-user cache (needs git, CMake, and a C++ compiler; only to make the files) |
 | `gen_sounds.py` | writes Asteroids' sounds (`games/asteroids/assets/sounds/`) from their synthesis, the same bytes every time (`--check`) |
