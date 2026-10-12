@@ -1040,6 +1040,18 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## The combination scenes' sizes and frame times recorded (2026-10-12)
+
+A guard added: scene-showroom, scene-stream, and scene-depot are rows of the size baseline (283.3, 499.5, and 173.2 KB of gzip, release web builds) and of the frame times, each flown by its frames.autopilot on the reference machine (Xvfb on this machine's GPU, Chrome's CPU throttled 4 times, the median of three runs). All three are within a game's frame budget (a median of 6 ms, a 95th percentile of 10):
+
+| scene | frames | median | p95 | p99 | over 33 ms |
+|---|---:|---:|---:|---:|---:|
+| scene-showroom | 601 | 0.81 ms | 1.51 | 2.26 | 1 |
+| scene-stream | 959 | 1.66 ms | 2.84 | 5.29 | 2 |
+| scene-depot | 901 | 3.80 ms | 5.79 | 7.36 | 1 |
+
+Each scene's worst frame is its start's (167 to 219 ms: the page's first frame, its pipelines made and its files read); scene-stream's second over 33 ms falls while its pieces stream in, not yet traced to one. scene-depot's 3.8 ms is the CPU its 1,600 unmoving models cost (filed: "Instancing's next phase"); headless under load it had read 18 ms.
+
 ## The size baseline for the racer's mirror and speed effect (2026-10-12)
 
 Re-recorded alone (a guard moved): the racer's part 8 (0ee2d68) draws a mirror into a render target, reads its pixels back, and applies a screen effect of its own shader, so it now links libwgf's targets, read-back, custom shaders, and effects: 569.8 to 582.3 KB of gzip (its wasm 525.5 to 536.2), within the game's own 600 KB (its export: 584.8). No other program moved.

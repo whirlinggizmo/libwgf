@@ -773,6 +773,66 @@
    "runs": 3,
    "throttle": 4.0,
    "worst": 119.2
+  },
+  "scene:scene-depot": {
+   "autopilot": "frames.autopilot",
+   "commit": "99f609d 2026-10-12",
+   "cpu": "13th Gen Intel(R) Core(TM) i9-13900HX",
+   "display": "xvfb",
+   "frames": 901,
+   "gc": 1,
+   "gcTotal": 2.03,
+   "gcWorst": 2.03,
+   "gpu": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA)",
+   "mean": 4.13,
+   "median": 3.8,
+   "over16": 1,
+   "over33": 1,
+   "p95": 5.79,
+   "p99": 7.36,
+   "runs": 3,
+   "throttle": 4.0,
+   "worst": 218.59
+  },
+  "scene:scene-showroom": {
+   "autopilot": "frames.autopilot",
+   "commit": "99f609d 2026-10-12",
+   "cpu": "13th Gen Intel(R) Core(TM) i9-13900HX",
+   "display": "xvfb",
+   "frames": 601,
+   "gc": 2,
+   "gcTotal": 2.84,
+   "gcWorst": 1.64,
+   "gpu": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA)",
+   "mean": 1.18,
+   "median": 0.81,
+   "over16": 3,
+   "over33": 1,
+   "p95": 1.51,
+   "p99": 2.26,
+   "runs": 3,
+   "throttle": 4.0,
+   "worst": 195.93
+  },
+  "scene:scene-stream": {
+   "autopilot": "frames.autopilot",
+   "commit": "99f609d 2026-10-12",
+   "cpu": "13th Gen Intel(R) Core(TM) i9-13900HX",
+   "display": "xvfb",
+   "frames": 959,
+   "gc": 2,
+   "gcTotal": 3.59,
+   "gcWorst": 1.99,
+   "gpu": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 4080 Laptop GPU (0x000027E0)), NVIDIA)",
+   "mean": 2.05,
+   "median": 1.66,
+   "over16": 2,
+   "over33": 2,
+   "p95": 2.84,
+   "p99": 5.29,
+   "runs": 3,
+   "throttle": 4.0,
+   "worst": 167.01
   }
  },
  "libwgf": {
@@ -780,7 +840,7 @@
    "game:asteroids": 400,
    "game:racer": 600
   },
-  "commit": "ed446ef 2026-10-12",
+  "commit": "99f609d 2026-10-12",
   "programs": {
    "app-gamepad": {
     "js": {
@@ -1328,6 +1388,42 @@
      "br": 298844,
      "gz": 386416,
      "raw": 936244
+    }
+   },
+   "scene-depot": {
+    "js": {
+     "br": 17321,
+     "gz": 19450,
+     "raw": 51171
+    },
+    "wasm": {
+     "br": 128981,
+     "gz": 157947,
+     "raw": 371366
+    }
+   },
+   "scene-showroom": {
+    "js": {
+     "br": 17334,
+     "gz": 19454,
+     "raw": 51177
+    },
+    "wasm": {
+     "br": 217702,
+     "gz": 270613,
+     "raw": 675846
+    }
+   },
+   "scene-stream": {
+    "js": {
+     "br": 18175,
+     "gz": 20325,
+     "raw": 53469
+    },
+    "wasm": {
+     "br": 381050,
+     "gz": 491163,
+     "raw": 1214436
     }
    },
    "ui-menu": {
