@@ -1040,6 +1040,10 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## The size baseline for gfx-shaders, a differs row (2026-10-12)
+
+Re-recorded alone (a guard added): gfx-shaders, 241.2 KB of gzip, differs from libwgt's 275.2 for its walker (skinning, milestone 3) and its logo's sprite effects (milestone 2.5). No other program moved.
+
 ## gfx-shaders (2026-10-12)
 
 libwgt's gfx-shaders (wgrender's shaders), on the custom shaders of step 12: toon shading, a sphere dissolving through the noise texture, and a sphere of water whose vertex hook ripples it, reflecting the stage's environment, under a sun and a circling point light. A differs row: the toon shading is on the toy car in place of the walking character (skinning, milestone 3), and the logo's sprite effects shader is left out (custom sprite materials, milestone 2.5). As libwgt's sets the toon material on its character's body once the file's tree is built, this one sets it on every model under the car then: a glTF file's models are actors made under the root as its mesh loads, each with its own slots, and a material set on the root reaches none of them.
