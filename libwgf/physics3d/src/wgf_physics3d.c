@@ -278,7 +278,11 @@ static void make_body(wgf_actor_t actor, body_t *b)
             if (d.size[1] < 0.01f) d.size[1] = 0.01f;
             break;
         default: {
-            const wgf_mat4_t inverse = wgf_mat4_invert(wgf_gfx_priv_actor_get_simulated_world(actor));
+            /* the triangles in the body's space: its place and turn, which the body takes,
+               but not its scale, which they keep (a kit's piece scaled up is its size) */
+            const wgf_mat4_t world = wgf_gfx_priv_actor_get_simulated_world(actor);
+            const wgf_mat4_t inverse = wgf_mat4_invert(wgf_mat4_from_trs(
+                wgf_mat4_get_translation(world), wgf_mat4_get_rotation(world), wgf_vec3_make(1, 1, 1)));
             gather(actor, inverse, actor, &soup, 0);
             if (soup.pending) { /* made at a tick after its models' files have loaded */
                 free(soup.points);

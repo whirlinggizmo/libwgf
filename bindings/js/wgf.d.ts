@@ -700,7 +700,8 @@ export type wgf_world_event_t = typeof WGF_WORLD_EVENT_NONE | typeof WGF_WORLD_E
  * the actor is set; a transform the program sets puts the body there (a static or
  * dynamic one jumps; a kinematic one is moved there over the tick, pushing what it meets).
  * A box's, sphere's, or capsule's size isn't scaled with its actor; a convex or mesh shape
- * is read from each model's place under the actor, scale included. Its place is in its 3D
+ * is read from the models at and under the actor, as they are drawn: the actor's own scale
+ * and each model's place under it included. Its place is in its 3D
  * stage's space, the actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
  * body.
  */

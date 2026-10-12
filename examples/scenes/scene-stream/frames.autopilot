@@ -1,0 +1,6 @@
+wgf-autopilot 1
+# tools/bench/measure_frames.py scene:scene-stream: the yard streamed in, then a while more
+seed 1
+at 1 wait stream.arrived == 40
+at 600 expect stream.resting > 5
+at 600 end

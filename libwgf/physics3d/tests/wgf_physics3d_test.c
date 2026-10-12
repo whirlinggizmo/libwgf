@@ -411,6 +411,29 @@ int main(void)
         for (b = 0; b < BOXES; b++) wgf_actor_destroy(pile[b], WGF_ACTOR_DESTROY_CHILDREN);
         wgf_actor_destroy(ground, WGF_ACTOR_DESTROY_CHILDREN);
     }
+    /* a file's root scaled (scene-stream's yard, the kit's pieces at four times): the body's
+       triangles scaled with it, the deck (as saved last, its node at 20, -2, 0) twice as wide
+       and its node twice as far; after the pile, whose hash holds the world as it was */
+    {
+        const wgf_mesh_t file = wgf_mesh_create("models/deck.gltf");
+        const wgf_actor_t scaled = wgf_model_create(file);
+        const wgf_actor_t on_scaled = put(stage, -152, 9, -60);
+        const double start = wgf_time_get_seconds();
+        wgf_resource_release(file);
+        wgf_actor_set_parent(scaled, stage);
+        wgf_actor_set_position(scaled, -200, 10, -60);
+        wgf_actor_set_scale(scaled, 2, 2, 2);
+        wgf_actor_add_component(scaled, WGF_COMPONENT_BODY);
+        wgf_body_set_type(scaled, WGF_BODY_TYPE_STATIC);
+        wgf_body_set_shape(scaled, WGF_BODY_SHAPE_MESH, 0, 0, 0);
+        wgf_actor_add_component(on_scaled, WGF_COMPONENT_BODY);
+        wgf_body_set_shape(on_scaled, WGF_BODY_SHAPE_SPHERE, 0.5f, 0, 0);
+        while (wgf_actor_get_child_count(scaled) == 0 && wgf_time_get_seconds() - start < 30.0) wgf_core_priv_update();
+        step(180);
+        if (getenv("WGF_TEST_SHOW")) printf("on the scaled deck %g\n", wgf_actor_get_position(on_scaled).y);
+        expect(fabsf(wgf_actor_get_position(on_scaled).y - 6.5f) < 0.05f,
+               "a scaled root's mesh body scaled with it: a ball rests where only the scaled deck reaches");
+    }
     wgf_gfx_priv_stop();
     expect(!wgf_actor_has_component(ball, WGF_COMPONENT_BODY), "stopped with gfx");
     wgf_core_priv_shutdown();
