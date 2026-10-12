@@ -17,7 +17,7 @@ Required: CMake 3.21 or newer, Python 3.12 or newer, Ninja, a C compiler (gcc or
 | the native window tests | Xvfb and Mesa (OpenGL on the CPU) |
 | the Windows presets, cross-built | MinGW-w64 (`x86_64-w64-mingw32-gcc`), and to run their tests Wine (`wine64`, or Proton from Steam) |
 | the API check without Emscripten | clang on PATH; with neither, `check_api` is skipped |
-| the Haxe binding's checks | [Haxe](https://haxe.org) 4.3.7 on PATH, and for its hxcpp test hxcpp 4.3.2, pinned (`tools/setup_hxcpp.py`, which the tools run themselves, installs it from lib.haxe.org into libwgf's per-user cache on first use, and every native Haxe build here uses that, never the machine's own haxelib, so a build here is made as CI's is); the web steps need Emscripten and node too, and a browser for the page |
+| the Haxe binding's checks | [Haxe](https://haxe.org) 4.3.7 on PATH, and for its hxcpp test hxcpp 4.3.2, pinned (`tools/setup_hxcpp.py`, run once, installs it from lib.haxe.org into libwgf's per-user cache, and every native Haxe build here uses that, a tool skipping its hxcpp steps until it is there, never the machine's own haxelib, so a build here is made as CI's is); the web steps need Emscripten and node too, and a browser for the page |
 
 ### Windows
 

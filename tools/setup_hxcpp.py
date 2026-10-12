@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Set up hxcpp, pinned (tools/hxcpp.py): install the release every native Haxe build here
 uses into libwgf's haxelib folder if it isn't there yet, from lib.haxe.org, and print
-where it is. The tools that build with hxcpp do this themselves the first time; CI runs
-it on a cache miss, and reads the pin with --version.
+where it is. Run it once on a machine that builds natively (the tools that build with
+hxcpp skip, saying so, until it has); CI runs it on a cache miss, and reads the pin
+with --version.
 
     tools/setup_hxcpp.py [--version]
 
@@ -23,7 +24,7 @@ def main():
     if args.version:
         print(hxcpp.VERSION)
         return 0
-    why = hxcpp.ensure()
+    why = hxcpp.install()
     if why:
         print(f'setup_hxcpp: {why}', file=sys.stderr)
         return 1

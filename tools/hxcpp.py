@@ -9,10 +9,10 @@ Linux), shared by every checkout as Emscripten's is, never the machine's own hax
 ($HAXELIB_PATH, which a developer's shell may set); the tools run Haxe with HAXELIB_PATH
 naming the folder (env()). Haxe runs `haxelib run hxcpp` with no version, so a version
 in a build's arguments would mix that release's Haxe classes with whichever native
-runtime haxelib resolves: the folder is what pins it, and ensure() refuses a build unless
-hxcpp resolves there to exactly the pinned release. Upstream releases from 4.3.106 on
-break haxe.zip.Uncompress past 64 KiB of output (HaxeFoundation/hxcpp#1422); 4.3.2
-predates that. Standard library only.
+runtime haxelib resolves: the folder is what pins it, and ensure() refuses a build
+unless hxcpp resolves there to exactly the pinned release, which tools/setup_hxcpp.py
+installs. Upstream releases from 4.3.106 on break haxe.zip.Uncompress past 64 KiB of
+output (HaxeFoundation/hxcpp#1422); 4.3.2 predates that. Standard library only.
 """
 import json
 import os
@@ -60,14 +60,26 @@ def resolved():
 
 
 def ensure():
-    """None when the pinned hxcpp is ready (installed into the folder if it wasn't, from
-    lib.haxe.org, retried), else why not: a build needing hxcpp says so and stops."""
+    """None when the pinned hxcpp is ready, else why not: a build needing hxcpp says so and
+    skips. Installing it is tools/setup_hxcpp.py's alone (install()), so a machine set up
+    without hxcpp, as CI's web jobs are, skips its native steps as before."""
     global _ready
-    if _ready is not None:
-        return _ready or None
+    if _ready is None:
+        if shutil.which('haxelib') is None:
+            _ready = 'no haxelib on PATH (Haxe 4.3.7: BUILDING.md)'
+        elif resolved() is None:
+            _ready = f'hxcpp {VERSION} is not set up in {folder()} (tools/setup_hxcpp.py)'
+        else:
+            _ready = ''
+    return _ready or None
+
+
+def install():
+    """The pinned release installed into the folder if it isn't there, from lib.haxe.org,
+    retried; None when it is ready, else why not."""
+    global _ready
     if shutil.which('haxelib') is None:
-        _ready = 'no haxelib on PATH (Haxe 4.3.7: BUILDING.md)'
-        return _ready
+        return 'no haxelib on PATH (Haxe 4.3.7: BUILDING.md)'
     if resolved() is None:
         folder().mkdir(parents=True, exist_ok=True)
         for attempt in range(3):
@@ -77,8 +89,8 @@ def ensure():
                 break
             time.sleep(10 * (attempt + 1))
         subprocess.run(['haxelib', '--always', 'set', 'hxcpp', VERSION], env=env(), capture_output=True)
-    _ready = '' if resolved() is not None else f'hxcpp {VERSION} could not be installed into {folder()}'
-    return _ready or None
+    _ready = None
+    return None if resolved() is not None else f'hxcpp {VERSION} could not be installed into {folder()}'
 
 
 if __name__ == '__main__':

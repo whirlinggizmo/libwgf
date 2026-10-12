@@ -13,6 +13,7 @@ Windows -- except under the Microsoft Store's Python, which redirects what it wr
 """
 import os
 import platform
+import sys
 from pathlib import Path
 
 
@@ -22,9 +23,11 @@ def cache_root():
     system = platform.system()
     if system == 'Windows':
         base = Path(os.environ.get('LOCALAPPDATA') or Path.home() / 'AppData' / 'Local')
-        # redirected? Only a folder that exists shows where it really is
-        (base / 'libwgf').mkdir(parents=True, exist_ok=True)
-        if os.path.realpath(base / 'libwgf') != str(base / 'libwgf'):
+        # the Store's Python, known by where it is installed: probing a folder for the
+        # redirect answered as the folder happened to be, so once another Python had made
+        # %LOCALAPPDATA%\libwgf the Store's one looked there for what it had kept in
+        # .cache (sightblinder's MinGW, under CMake's python3, after hxcpp's setup)
+        if 'WindowsApps' in Path(os.path.realpath(sys.executable)).parts or 'WindowsApps' in Path(sys.prefix).parts:
             base = Path.home() / '.cache'
     elif system == 'Darwin':
         base = Path.home() / 'Library' / 'Caches'
