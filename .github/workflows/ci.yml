@@ -14,12 +14,12 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-# hxcpp, pinned (BUILDING.md): fetched from lib.haxe.org on a cache miss alone, as the
-# pinned Emscripten is cached, since anything stable and external is cached in CI.
+# hxcpp, pinned (tools/hxcpp.py, its release written there alone; tools/setup_hxcpp.py): fetched from
+# lib.haxe.org on a cache miss alone, as the pinned Emscripten is cached, since anything
+# stable and external is cached in CI.
 # Compiles go through ccache, its folder cached per job: natively through CMake's
 # launcher, on the web through Emscripten's compiler wrapper.
 env:
-  HXCPP_VERSION: 4.3.2
   CCACHE_MAXSIZE: 500M
 
 jobs:
@@ -57,8 +57,10 @@ jobs:
       - uses: krdlab/setup-haxe@v1
         with:
           haxe-version: 4.3.7
-      - name: hxcpp's haxelib folder
-        run: echo "HAXELIB_PATH=$HOME/haxelib" >> "$GITHUB_ENV"
+      - name: hxcpp's pin and haxelib folder (tools/setup_hxcpp.py)
+        run: |
+          echo "LIBWGF_HAXELIB=$HOME/haxelib" >> "$GITHUB_ENV"
+          echo "HXCPP_VERSION=$(python3 tools/setup_hxcpp.py --version)" >> "$GITHUB_ENV"
       - uses: actions/cache/restore@v4
         id: hxcpp
         with:
@@ -67,10 +69,9 @@ jobs:
       - name: hxcpp, fetched on a cache miss (retried)
         if: steps.hxcpp.outputs.cache-hit != 'true'
         run: |
-          mkdir -p "$HAXELIB_PATH"
           for attempt in 1 2 3 4 5; do
-            haxelib install hxcpp "$HXCPP_VERSION" --always --quiet && exit 0
-            echo "haxelib install failed (attempt $attempt); retrying in $((attempt * 30)) s"
+            python3 tools/setup_hxcpp.py && exit 0
+            echo "installing hxcpp failed (attempt $attempt); retrying in $((attempt * 30)) s"
             sleep $((attempt * 30))
           done
           exit 1
@@ -186,9 +187,11 @@ jobs:
       - uses: krdlab/setup-haxe@v1
         with:
           haxe-version: 4.3.7
-      - name: hxcpp's haxelib folder
+      - name: hxcpp's pin and haxelib folder (tools/setup_hxcpp.py)
         shell: pwsh
-        run: Add-Content -Path $env:GITHUB_ENV -Value "HAXELIB_PATH=$HOME\haxelib"
+        run: |
+          Add-Content -Path $env:GITHUB_ENV -Value "LIBWGF_HAXELIB=$HOME\haxelib"
+          Add-Content -Path $env:GITHUB_ENV -Value "HXCPP_VERSION=$(python tools/setup_hxcpp.py --version)"
       - uses: actions/cache/restore@v4
         id: hxcpp
         with:
@@ -198,11 +201,10 @@ jobs:
         if: steps.hxcpp.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path $env:HAXELIB_PATH | Out-Null
           foreach ($attempt in 1..5) {
-            haxelib install hxcpp $env:HXCPP_VERSION --always --quiet
+            python tools/setup_hxcpp.py
             if ($LASTEXITCODE -eq 0) { exit 0 }
-            Write-Host "haxelib install failed (attempt $attempt); retrying in $($attempt * 30) s"
+            Write-Host "installing hxcpp failed (attempt $attempt); retrying in $($attempt * 30) s"
             Start-Sleep -Seconds ($attempt * 30)
           }
           exit 1

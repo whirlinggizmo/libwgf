@@ -92,7 +92,7 @@ def step_hxcpp():
     if places.haxe() is None:
         return 'no haxe on PATH'
     if not places.has_hxcpp():
-        return 'no hxcpp (haxelib install hxcpp)'
+        return f'no hxcpp: {places.hxcpp.ensure()}'
     passed, output = places.run_hxcpp('test', TEST, VERDICT)
     return report(f'hxcpp ({variants.native("debug-headless")})', passed, output)
 

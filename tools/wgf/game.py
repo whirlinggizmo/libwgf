@@ -122,8 +122,8 @@ def haxe(game, target_args, defines=(), extra=()):
                *target_args, *extra]
     for define in [*defines, *game.defines]:  # the build's, then the game's own (wgf.json)
         command += ['-D', define]
-    done = subprocess.run([str(c) for c in command], cwd=game.root, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                          text=True, errors='replace')
+    done = subprocess.run([str(c) for c in command], cwd=game.root, env=binding.hxcpp.env(), stdout=subprocess.PIPE,
+                          stderr=subprocess.STDOUT, text=True, errors='replace')  # hxcpp, pinned
     return done.returncode == 0, done.stdout
 
 
@@ -203,7 +203,7 @@ def build_native(game, target, release=False, out=None, record=False):
     no other build is. The executable's path."""
     variant = variant_for(target, release)
     if not binding.has_hxcpp():
-        raise GameError('no hxcpp: haxelib install hxcpp 4.3.2 (BUILDING.md)')
+        raise GameError(f'no hxcpp: {binding.hxcpp.ensure()}')
     try:
         examples.prepare(variant)
     except RuntimeError as e:

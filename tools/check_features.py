@@ -50,7 +50,7 @@ def step(name, browser_option):
         return 'no haxe on PATH'
     if name == 'hxcpp':
         if not places.has_hxcpp():
-            return 'no hxcpp (haxelib install hxcpp)'
+            return f'no hxcpp: {places.hxcpp.ensure()}'
         passed, output = places.run_hxcpp('feature-test', PROGRAM, VERDICT, DEFINES, assets=True)
         return report(f'hxcpp ({variants.native("debug-headless")})', passed, output)
     try:

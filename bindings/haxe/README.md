@@ -42,4 +42,4 @@ class Game {
 - `project/Build.xml`: hxcpp's link of the staged archive.
 - `test/`: the binding's test, run by `tools/check_binding.py` on hxcpp, under node, and in a browser.
 
-Tested with Haxe 4.3.7 and hxcpp 4.3.2. `haxelib.json` lists no dependency: hxcpp is the native toolchain, as Haxe is, and is named here rather than pinned.
+Tested with Haxe 4.3.7 and hxcpp 4.3.2. `haxelib.json` lists no dependency: hxcpp is the native toolchain, as Haxe is: libwgf's tools pin it (`tools/hxcpp.py`, a haxelib folder of their own), and a project using the binding elsewhere chooses its own.

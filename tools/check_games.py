@@ -76,7 +76,7 @@ def why_not(step):
     if binding.haxe() is None:
         return 'no haxe on PATH'
     if step in ('playthrough', 'desktop') and not binding.has_hxcpp():
-        return 'no hxcpp'
+        return f'no hxcpp: {binding.hxcpp.ensure()}'
     if step in ('browser', 'web'):
         try:
             webhost.emcc()

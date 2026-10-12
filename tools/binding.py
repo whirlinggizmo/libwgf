@@ -13,6 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # an embedded Python (Windows) doesn't add it
 import browser  # noqa: E402
 import examples  # noqa: E402
+import hxcpp  # noqa: E402
 import server  # noqa: E402
 import variants  # noqa: E402
 import webhost  # noqa: E402
@@ -31,7 +32,8 @@ def haxe():
 
 
 def has_hxcpp():
-    return haxe() is not None and subprocess.run(['haxelib', 'path', 'hxcpp'], capture_output=True).returncode == 0
+    """Whether hxcpp, pinned (tools/hxcpp.py), is ready here; hxcpp.ensure() says why not."""
+    return haxe() is not None and hxcpp.ensure() is None
 
 
 def work_dir(name):
@@ -46,7 +48,7 @@ def compile_haxe(source, target, defines=(), extra=()):
     command = [haxe(), '-cp', SOURCE.parent, '-cp', source, '--main', 'Main', *target, *extra]
     for define in defines:
         command += ['-D', define]
-    done = subprocess.run([str(c) for c in command], cwd=BINDING, stdout=subprocess.PIPE,
+    done = subprocess.run([str(c) for c in command], cwd=BINDING, env=hxcpp.env(), stdout=subprocess.PIPE,
                           stderr=subprocess.STDOUT, text=True, errors='replace', timeout=900)
     return done.returncode == 0, done.stdout
 

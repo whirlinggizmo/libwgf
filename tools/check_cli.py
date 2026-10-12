@@ -69,7 +69,7 @@ def needs(web=False, native=False, browser_too=False):
     if binding.haxe() is None:
         return 'no haxe on PATH'
     if native and not binding.has_hxcpp():
-        return 'no hxcpp'
+        return f'no hxcpp: {binding.hxcpp.ensure()}'
     if web:
         try:
             webhost.emcc()
