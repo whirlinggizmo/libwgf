@@ -450,8 +450,44 @@ def launch_browser(run, browser_path, display, profile=None, window_size='1024,9
         if not getattr(run, 'x_display', None):
             run.x_display = start_xvfb(run)
         env.update(DISPLAY=run.x_display, XDG_SESSION_TYPE='x11')
-    debug_port = free_port()
-    args = [browser_path,
+    for attempt in (1, 2):  # once more on a fresh port when DevTools never answers
+        debug_port = free_port()
+        args = _browser_args(browser_path, display, debug_port, profile, window_size, extra_args)
+        log = f'{profile}.log'
+        child = run.spawn(args, env=env, log=log)
+        debug_base = f'http://127.0.0.1:{debug_port}'
+        try:
+            version = json.loads(wait_for(f'{debug_base}/json/version', 'browser', 30))  # a cold CI start is slow
+            return debug_base, open_session(version['webSocketDebuggerUrl'])
+        except RuntimeError as e:
+            try:
+                output = '\n'.join(Path(log).read_text(errors='replace').strip().splitlines()[-20:])
+            except OSError:
+                output = ''
+            if attempt == 2:
+                raise RuntimeError(f'{e}, twice; its last output:\n{output or "(nothing)"}') from e
+            # CI's Chrome has said "DevTools listening" and then never answered its
+            # /json/version (2e2c0b6, f920d2f, f59863c: the first start of a fresh runner): that
+            # browser stopped, and one more started
+            print(f'browser: {e}; started again on a fresh port', file=sys.stderr)
+            _stop(child)
+
+
+def _stop(child):
+    """A browser that never answered, stopped with its own children (its process group)."""
+    try:
+        if WINDOWS:
+            subprocess.run(['taskkill', '/F', '/T', '/PID', str(child.pid)], capture_output=True)
+        else:
+            os.killpg(child.pid, signal.SIGKILL)
+        child.wait(timeout=10)
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+
+
+def _browser_args(browser_path, display, debug_port, profile, window_size, extra_args):
+    """The browser's command line."""
+    return [browser_path,
             *(['--headless=new'] if display == 'headless' else []),
             f'--remote-debugging-port={debug_port}',
             f'--user-data-dir={profile}',
@@ -467,18 +503,6 @@ def launch_browser(run, browser_path, display, profile=None, window_size='1024,9
               if display == 'xvfb' else []),
             *extra_args,
             'about:blank']
-    log = f'{profile}.log'
-    run.spawn(args, env=env, log=log)
-    debug_base = f'http://127.0.0.1:{debug_port}'
-    try:
-        version = json.loads(wait_for(f'{debug_base}/json/version', 'browser', 30))  # a cold CI start is slow
-    except RuntimeError as e:
-        try:
-            output = '\n'.join(Path(log).read_text(errors='replace').strip().splitlines()[-20:])
-        except OSError:
-            output = ''
-        raise RuntimeError(f'{e}; its last output:\n{output or "(nothing)"}') from e
-    return debug_base, open_session(version['webSocketDebuggerUrl'])
 
 
 def distinct_colours(session, png_base64, cap=64):
