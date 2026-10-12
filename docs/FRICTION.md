@@ -355,7 +355,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Workaround:** the fields made `var`
 - **Cost:** 25 minutes to bisect; the documented first step failed on the sample game
 - **Found by:** the racer's session (its #10)
-- **Triage:** fixed in step 4: the macro sets a final's initializer with `Reflect.setField` (a change to the vendored copy, listed in `deps/hotreload-hx/VERSION` until it goes upstream), and check_cli's serve step builds a class with an initialized instance final
+- **Triage:** fixed in step 4: the macro sets a final's initializer with `Reflect.setField` (a change to the vendored copy, listed in `deps/hotreload-hx/VERSION` until it went upstream, hotreload-hx 723c9e5, vendored unchanged since), and check_cli's serve step builds a class with an initialized instance final
 
 ### Racer: a browser autopilot gets 120 s, and its FAIL gives no reason
 

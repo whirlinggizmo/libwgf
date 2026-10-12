@@ -15,7 +15,7 @@ licenses, in a `CREDITS.md` beside them; they are not part of the library.
 
 ## Altered sources
 
-The zlib license asks that altered versions be marked as such. Six vendored files are
+The zlib license asks that altered versions be marked as such. Five vendored files are
 altered, each saying so at its top:
 
 - `deps/sokol/sokol_audio.h`, `deps/sokol/sokol_gfx.h`, and `deps/sokol/util/sokol_gl.h`,
@@ -25,8 +25,6 @@ altered, each saying so at its top:
   (`deps/sokol_utils/VERSION` lists the changes)
 - `deps/clay/clay.h`, from the Whirling Gizmo fork of Clay
   (https://github.com/robknopf/clay; `deps/clay/VERSION` names the commit)
-- `deps/hotreload-hx/src/hotreload/Builder.hx`, changed in place for an initialized
-  instance final (`deps/hotreload-hx/VERSION` says how), until hotreload-hx takes it
 
 ## zlib/libpng license
 
