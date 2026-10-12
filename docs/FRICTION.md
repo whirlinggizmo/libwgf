@@ -815,3 +815,55 @@ Racer (milestone 2), from step 11: the game-developer session's part 7, props, s
 
 - **Found by:** the racer's session (its R2, R8, R9, R10, R11)
 - **Triage:** fine as built. The emitter's header told where to hang the smoke (velocity turns with the actor, particles stay where they were born, `skip_trail` on a teleport); signs and text in 3D did what BUILDING says on the first try; the emitter's limits never bit; part 6's frictions were fixed (`visible=`, the export's manifests, an autopilot by name). Of R10: a task waiting for the browser's store was in a commit and not in the header; `wgf_asset.h` says so now, so a game needs no wait of its own. The frame budget held: props and signs cost less than the run-to-run noise, the smoke about 0.1 ms of median (its table)
+
+Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-view mirror and a speed effect (`../libwgf-racer/FRICTION.md`, "Part 8", its entries S1 to S8; the game at 0ee2d68), 2026-10-12.
+
+### Racer: a release export crashed at a read every other run passed
+
+- **Where:** the mirror's pixels read back (`TextureRead.getData`): the release web export quit at the read with `host._wgf_texture_read_get_size is not a function`; the development build and headless runs passed
+- **Missing:** the export trims its host to the calls the program's JS names, and the JS binding's `get_data` asks the host for its length too
+- **Workaround:** the game calls `getSize` itself, so the trimming keeps it
+- **Cost:** four frame runs, about 25 minutes, found only by a run against the export
+- **Found by:** the racer's session (its S5)
+- **Triage:** fixed: a trimmed host also exports every host call its kept calls' binding makes, read from `wgf.js` (`jsbinding.host_calls`, in `webhost.build`, so a JS example's trimmed host too); `wgf_fs_task_get_data` had the same gap
+
+### Racer: an effect redraws the HUD
+
+- **Where:** the speed effect, strongest at the frame's edges, blurred and darkened the lap panel, the speed, and the mirror, which sit there
+- **Missing:** effects applied before the HUD: an effect redraws the finished frame, the UI and 2D drawing too (`wgf_render.h` says so)
+- **Workaround:** three rectangles the game's shader leaves alone, set each frame from the HUD's layout; the speed on a panel so its clear patch reads as one
+- **Cost:** under an hour
+- **Found by:** the racer's session (its S3)
+- **Triage:** milestone 2.5 (ROADMAP.md, "From the racer's friction"): effects applied mid-frame, or an effect over the stages alone
+
+### Racer: a read-back's stall put a race frame over 33 ms
+
+- **Where:** the mirror's pixels read a second into the race: the stream check's worst frame 47.0 ms, with the CPU throttled 4 times
+- **Missing:** a read that answers later without stalling: a read waits for the GPU at the next frame's update (`wgf_texture.h` says so)
+- **Workaround:** the read in the countdown, where a hitch is unseen
+- **Cost:** three stream checks
+- **Found by:** the racer's session (its S8)
+- **Triage:** milestone 2.5 (ROADMAP.md, "From the racer's friction"): a read answered a frame or two later, a fence polled; a read is for tests and a photo mode today, and the header says what it costs
+
+### Racer: a mirrored texture, and a game's shaders packed by its own tool
+
+- **Where:** the mirror shown left-right flipped (its S2); the speed effect's shader packed by the game's own `tools/pack_shaders.py`, which must find libwgf's `pack_shader.py` itself (its S1)
+- **Missing:** a flip where a texture is drawn, and a header saying a negative scale mirrors a sprite (it does); `wgf build` and `wgf serve` packing a game's `shaders/*.glsl`
+- **Workaround:** a sprite of the target scaled -1 on a 2D stage of its own; the game's tool takes `--libwgf`, `$LIBWGF`, or a checkout beside it, and `--check`s the packed file
+- **Cost:** under an hour together
+- **Found by:** the racer's session (its S1, S2)
+- **Triage:** milestone 2.5 (ROADMAP.md, "From the racer's friction"): a negative source width to `wgf_draw_texture_region` or a sprite's flip, the sprite header's sentence, and the `wgf` tool packing shaders
+
+### Racer: what an effect and a measurement couldn't see
+
+- **Where:** a speed blur wants the previous frame or motion vectors, and a sharp car wants depth (its S4); `measure_frames.py` traces main-thread work, so a second view's GPU time isn't in the budget's numbers (its S7); `wgf dump` writes an emitter's `size=` and `color=` beside its keys (its S6)
+- **Missing:** depth and the previous frame for an effect; a frame's GPU time; a dump without the ends where keys say them
+- **Workaround:** a zoom blur toward the middle; none needed on this machine's GPU; none
+- **Cost:** none
+- **Found by:** the racer's session (its S4, S6, S7)
+- **Triage:** milestone 2.5 (ROADMAP.md, "From the racer's friction"), each a game's reach rather than a block
+
+### Racer: what worked in part 8 (good surprises)
+
+- **Found by:** the racer's session (its S1, S6, S7)
+- **Triage:** fine as built. A shader's errors cite the game's file and line, the export and the stream carry a packed shader as any asset, and an effect is skipped until its shader is READY; a custom material's parameters set before its shader loads are kept; part 7's two fixes held (no emitter warm-up, the stream check's worst frame 9.2 to 11.2 ms; the smoke's curves as scene keys). The mirror's cost is how far its camera sees, not its pixels: 120 m adds about 0.5 ms of median, the default 1000 m put the 95th percentile past the budget
