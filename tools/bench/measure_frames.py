@@ -18,7 +18,10 @@ variant, served with the examples' files at /assets/ as an example is, and
 run with no autopilot until it logs "<name>: done": it marks each case in the trace
 (console.timeStamp "<name> <case> <models>" as the case's measured frames begin, "<name>
 rest" as they end), and each case is the frames between, a frame a mark falls in left
-out. A benchmark is never part of the default set.
+out. A benchmark is never part of the default set. Or scene:<name>, a combination scene in
+examples/scenes/<name>/, built in wasm32-release as an example is, served with the
+examples' files, and flown by its frames.autopilot (its own view for a while, then `end`):
+measured as a game is.
 
 The reference machine (docs/HISTORY.md, "Milestone 2's plan, reviewed"): this machine's
 GPU through ANGLE on Vulkan under Xvfb (--display xvfb, the default), with Chrome's CPU
@@ -93,6 +96,14 @@ def export(name, game=None):
     return dest / 'web', flown
 
 
+def build_scene(name):
+    """A scene's page, built fresh in wasm32-release, and its frames autopilot: (the site, it)."""
+    if name not in examples.names() or examples.source(name).parent != examples.SCENES:
+        raise RuntimeError(f'no scene examples/scenes/{name}/')
+    examples.prepare('wasm32-release')
+    return examples.build('wasm32-release', name).parent, examples.source(name) / 'frames.autopilot'
+
+
 def build_bench(name):
     """The benchmark's page, built fresh in wasm32-release; its folder, the site."""
     return examples.build_at('wasm32-release', name, ROOT / 'tools' / 'bench' / name).parent
@@ -122,11 +133,11 @@ def percentile(sorted_values, q):
     return sorted_values[min(len(sorted_values) - 1, int(len(sorted_values) * q))]
 
 
-def run(site, flown, display, throttle, browser_path, timeout=600, bench=None):
+def run(site, flown, display, throttle, browser_path, timeout=600, bench=None, assets=False):
     """One flown run, traced: its numbers, and the GPU it drew on. A benchmark's (`bench`, its
     name; `flown` None) runs until it logs that it is done: its numbers are its cases'."""
     # a benchmark is an example's kind of page: the examples' files at /assets/, as check_web serves them
-    base, httpd = server.serve(site, assets=server.ASSETS if bench is not None else None)
+    base, httpd = server.serve(site, assets=server.ASSETS if bench is not None or assets else None)
     processes = browser.RunProcesses('frames')
     processes.install_handlers()
     lines, events, ended, traced = [], [], threading.Event(), threading.Event()
@@ -240,7 +251,8 @@ def run_bench(name, args, found, results):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('programs', nargs='*', help='game:<name>, a game\'s folder, or bench:<name> (default: every game)')
+    ap.add_argument('programs', nargs='*',
+                    help='game:<name>, a game\'s folder, scene:<name>, or bench:<name> (default: every game)')
     ap.add_argument('--display', choices=['xvfb', 'headless'], default='xvfb',
                     help='xvfb: the real GPU under Xvfb (the reference); headless: SwiftShader (CI)')
     ap.add_argument('--throttle', type=float, default=4.0, help="Chrome's CPU throttling rate (default 4)")
@@ -262,15 +274,20 @@ def main():
                 return code
             continue
         folder = Path(name)
-        if not name.startswith('game:') and not (folder / 'wgf.json').is_file():
-            print(f'measure_frames: {name}: not a game or a benchmark (game:<name>, a game\'s folder, bench:<name>)')
+        scene = name.startswith('scene:')
+        if not name.startswith('game:') and not scene and not (folder / 'wgf.json').is_file():
+            print(f'measure_frames: {name}: not a game, a scene, or a benchmark (game:<name>, a game\'s folder, '
+                  'scene:<name>, bench:<name>)')
             return 2
         try:
-            site, flown = (export(name[len('game:'):]) if name.startswith('game:')
-                           else export(folder.resolve().name, folder.resolve()))
+            if scene:
+                site, flown = build_scene(name[len('scene:'):])
+            else:
+                site, flown = (export(name[len('game:'):]) if name.startswith('game:')
+                               else export(folder.resolve().name, folder.resolve()))
             runs, gpu = [], ''
             for _ in range(max(args.runs, 1)):
-                numbers, gpu = run(site, flown, args.display, args.throttle, found)
+                numbers, gpu = run(site, flown, args.display, args.throttle, found, assets=scene)
                 runs.append(numbers)
         except RuntimeError as e:
             print(f'measure_frames: {name}: {e}')

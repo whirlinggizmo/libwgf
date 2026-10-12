@@ -1,0 +1,4 @@
+wgf-autopilot 1
+# tools/bench/measure_frames.py scene:scene-showroom: the scene as it opens, for ten seconds
+seed 1
+at 600 end

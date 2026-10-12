@@ -106,6 +106,8 @@
 
     var Module = {
       canvas: document.getElementById("canvas"),
+      /* an autopilot a tool hands the page (tools/bench/measure_frames.py's scene:<name>) */
+      ...(typeof globalThis.wgfAutopilot === "string" ? { wgfAutopilot: globalThis.wgfAutopilot } : {}),
       print: (...a) => console.log(...a),
       /* by level, not by stream: everything libwgf logs arrives here */
       printErr: (...a) => {

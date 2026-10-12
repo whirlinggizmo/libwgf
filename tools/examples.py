@@ -1,5 +1,6 @@
-"""The C examples in examples/c/<layer>-<name>/, built against a staged variant, for
-the tools that run them.
+"""The C examples in examples/c/<layer>-<name>/, and the combination scenes in
+examples/scenes/scene-<name>/ (examples mixing features, run and measured as the examples
+are), built against a staged variant, for the tools that run them.
 
 Each example is its own CMake project, built against out/ as a program outside libwgf
 would be: the variant is built (cmake --build --preset), staged
@@ -20,11 +21,23 @@ import variants  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 EXAMPLES = ROOT / 'examples' / 'c'
+SCENES = ROOT / 'examples' / 'scenes'
+
+
+def _sources():
+    """Each C example's and scene's directory, by its name."""
+    return {d.name: d for folder in (EXAMPLES, SCENES) if folder.is_dir() for d in folder.iterdir()
+            if (d / 'CMakeLists.txt').exists()}
 
 
 def names():
-    """Every C example, by its directory's name."""
-    return sorted(d.name for d in EXAMPLES.iterdir() if (d / 'CMakeLists.txt').exists())
+    """Every C example and scene, by its directory's name."""
+    return sorted(_sources())
+
+
+def source(name):
+    """An example's or scene's directory."""
+    return _sources()[name]
 
 
 def emscripten_toolchain():
@@ -97,7 +110,7 @@ def build(variant, example, defines=None, into=None):
     (WGF_CHECK_EXPORTS, say). `into`: a directory of its own for the build and the
     program, so a build with other options (a full one, say) leaves the usual ones, and
     their cached options, as they were."""
-    return build_at(variant, example, EXAMPLES / example, defines, into)
+    return build_at(variant, example, source(example), defines, into)
 
 
 def build_at(variant, example, source, defines=None, into=None):
