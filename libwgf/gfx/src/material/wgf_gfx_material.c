@@ -10,8 +10,9 @@
 #include "wgf_core_part_priv.h"
 #include "wgf_log.h"
 
-/* Materials, libwgt's (wgrender's wgr_material) without its custom shaders: a resource
- * made from numbers, its parameters set by name from a table. A part, installed by the
+/* Materials, libwgt's (wgrender's wgr_material): a resource made from numbers, its
+ * parameters set by name from a table; a custom material's, by its shader's names, are the
+ * custom part's (wgf_gfx_material_custom.c), reached through the material's hooks. A part, installed by the
  * first material made, so a program that makes none links none of it; its stop at
  * gfx's frees every material, after the meshes holding theirs. */
 
@@ -23,14 +24,14 @@ static wgf_gfx_priv_material_t *materials; /* grown by the pool: don't hold a po
 
 /* ------------------------------------------------------------ parameters ---- */
 
-typedef enum param_kind_t {
-    PARAM_INT,
-    PARAM_FLOAT,
-    PARAM_VEC2,
-    PARAM_VEC3,
-    PARAM_VEC4,
-    PARAM_TEXTURE
-} param_kind_t;
+typedef wgf_gfx_priv_material_kind_t param_kind_t;
+/* the kinds, by shorter names */
+#define PARAM_INT WGF_GFX_PRIV_MATERIAL_INT
+#define PARAM_FLOAT WGF_GFX_PRIV_MATERIAL_FLOAT
+#define PARAM_VEC2 WGF_GFX_PRIV_MATERIAL_VEC2
+#define PARAM_VEC3 WGF_GFX_PRIV_MATERIAL_VEC3
+#define PARAM_VEC4 WGF_GFX_PRIV_MATERIAL_VEC4
+#define PARAM_TEXTURE WGF_GFX_PRIV_MATERIAL_TEXTURE
 
 typedef struct param_t {
     const char *name;
@@ -67,12 +68,11 @@ static wgf_gfx_priv_material_t *resolve_at(wgf_material_t handle, const char *ca
 }
 #define resolve(...) resolve_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
-/* The material and its parameter `name`; NULL when either doesn't exist, or when the
- * parameter's kind isn't `kind` (or `alt_kind`), logged when `log` is set. */
-static const param_t *lookup(wgf_material_t material, const char *name, param_kind_t kind, param_kind_t alt_kind,
-                             wgf_gfx_priv_material_t **material_out, bool log)
+/* Parameter `name` of a built-in shading's material; NULL for no material, a parameter it
+ * doesn't have, or one whose kind isn't `kind` (or `alt_kind`), logged when `log` is set. */
+static const param_t *lookup(const wgf_gfx_priv_material_t *material_ptr, const char *name, param_kind_t kind,
+                             param_kind_t alt_kind, bool log)
 {
-    wgf_gfx_priv_material_t *material_ptr = resolve(material);
     const param_t *param = NULL;
     size_t i;
     if (material_ptr == NULL) return NULL;
@@ -87,30 +87,40 @@ static const param_t *lookup(wgf_material_t material, const char *name, param_ki
         if (log) wgf_log_warn("wgf_gfx_material: parameter '%s' is of another kind", name);
         return NULL;
     }
-    *material_out = material_ptr;
     return param;
 }
 
+/* The values of parameter `name` (`kind`), found when a setter's (`log`) or a getter's;
+ * a custom material's from its custom part, made by a setter. */
 static float *lookup_values(wgf_material_t material, const char *name, param_kind_t kind, bool log)
 {
-    wgf_gfx_priv_material_t *material_ptr = NULL;
-    const param_t *param_ptr = lookup(material, name, kind, kind, &material_ptr, log);
+    wgf_gfx_priv_material_t *material_ptr = resolve(material);
+    const param_t *param_ptr;
+    if (material_ptr != NULL && material_ptr->custom != NULL) {
+        return material_ptr->custom->value(material_ptr, name, kind, log);
+    }
+    param_ptr = lookup(material_ptr, name, kind, kind, log);
     return param_ptr != NULL ? (float *)((char *)material_ptr + param_ptr->offset) : NULL;
 }
 
 static wgf_gfx_priv_material_texture_t *lookup_texture(wgf_material_t material, const char *name, bool log)
 {
-    wgf_gfx_priv_material_t *material_ptr = NULL;
-    const param_t *param_ptr = lookup(material, name, PARAM_TEXTURE, PARAM_TEXTURE, &material_ptr, log);
+    wgf_gfx_priv_material_t *material_ptr = resolve(material);
+    const param_t *param_ptr;
+    if (material_ptr != NULL && material_ptr->custom != NULL) {
+        return material_ptr->custom->texture(material_ptr, name, log);
+    }
+    param_ptr = lookup(material_ptr, name, PARAM_TEXTURE, PARAM_TEXTURE, log);
     return param_ptr != NULL ? &material_ptr->textures[param_ptr->offset] : NULL;
 }
 
-/* What a material holds past the header: its textures. */
+/* What a material holds past the header: its textures, and a custom one's values. */
 static void clear(wgf_handle_t material, void *record)
 {
     wgf_gfx_priv_material_t *material_ptr = (wgf_gfx_priv_material_t *)record;
     int i;
     (void)material;
+    if (material_ptr->custom != NULL) material_ptr->custom->clear(material_ptr);
     for (i = 0; i < WGF_GFX_PRIV_MATERIAL_TEXTURE_COUNT; i++) {
         if (material_ptr->textures[i].texture != 0) wgf_resource_release(material_ptr->textures[i].texture);
     }
@@ -155,6 +165,13 @@ const wgf_gfx_priv_material_t *wgf_gfx_priv_material_get(wgf_material_t material
     return resolve(material);
 }
 
+wgf_gfx_priv_material_t *wgf_gfx_priv_material_make_custom(wgf_material_t material)
+{
+    wgf_gfx_priv_material_t *material_ptr = resolve(material);
+    if (material_ptr != NULL) material_ptr->shading = WGF_MATERIAL_SHADING_CUSTOM;
+    return material_ptr;
+}
+
 /* ------------------------------------------------------------ public API ---- */
 
 wgf_material_t wgf_material_create(wgf_material_shading_t shading)
@@ -195,7 +212,8 @@ wgf_material_t wgf_material_create(wgf_material_shading_t shading)
 bool wgf_material_set_shading(wgf_material_t material, wgf_material_shading_t shading)
 {
     wgf_gfx_priv_material_t *material_ptr = resolve(material);
-    if (material_ptr == NULL || (shading != WGF_MATERIAL_SHADING_PBR && shading != WGF_MATERIAL_SHADING_UNLIT)) {
+    if (material_ptr == NULL || material_ptr->custom != NULL ||
+        (shading != WGF_MATERIAL_SHADING_PBR && shading != WGF_MATERIAL_SHADING_UNLIT)) {
         return false;
     }
     material_ptr->shading = shading;
@@ -245,8 +263,14 @@ bool wgf_material_is_double_sided(wgf_material_t material)
 
 bool wgf_material_set_int(wgf_material_t material, const char *name, int value)
 {
-    wgf_gfx_priv_material_t *material_ptr = NULL;
-    const param_t *param_ptr = lookup(material, name, PARAM_INT, PARAM_INT, &material_ptr, true);
+    wgf_gfx_priv_material_t *material_ptr = resolve(material);
+    const param_t *param_ptr;
+    if (material_ptr != NULL && material_ptr->custom != NULL) { /* its shader's int, kept in a float's bits */
+        float *values = material_ptr->custom->value(material_ptr, name, PARAM_INT, true);
+        if (values != NULL) memcpy(values, &value, sizeof(value));
+        return values != NULL;
+    }
+    param_ptr = lookup(material_ptr, name, PARAM_INT, PARAM_INT, true);
     if (param_ptr == NULL) return false;
     if (value < 0 || value > 1) { /* the only int parameters are texture coordinate sets */
         wgf_log_warn("wgf_gfx_material: '%s' is 0 or 1, not %d", name, value);
@@ -258,8 +282,15 @@ bool wgf_material_set_int(wgf_material_t material, const char *name, int value)
 
 int wgf_material_get_int(wgf_material_t material, const char *name)
 {
-    wgf_gfx_priv_material_t *material_ptr = NULL;
-    const param_t *param_ptr = lookup(material, name, PARAM_INT, PARAM_INT, &material_ptr, false);
+    wgf_gfx_priv_material_t *material_ptr = resolve(material);
+    const param_t *param_ptr;
+    int value = 0;
+    if (material_ptr != NULL && material_ptr->custom != NULL) {
+        const float *values = material_ptr->custom->value(material_ptr, name, PARAM_INT, false);
+        if (values != NULL) memcpy(&value, values, sizeof(value));
+        return value;
+    }
+    param_ptr = lookup(material_ptr, name, PARAM_INT, PARAM_INT, false);
     return param_ptr != NULL ? *(const int *)((const char *)material_ptr + param_ptr->offset) : 0;
 }
 
@@ -328,15 +359,22 @@ wgf_vec4_t wgf_material_get_vec4(wgf_material_t material, const char *name)
 
 bool wgf_material_set_color(wgf_material_t material, const char *name, wgf_color_t color)
 {
-    wgf_gfx_priv_material_t *material_ptr = NULL;
-    const param_t *param_ptr = lookup(material, name, PARAM_VEC3, PARAM_VEC4, &material_ptr, true);
+    wgf_gfx_priv_material_t *material_ptr = resolve(material);
+    const param_t *param_ptr = NULL;
     float *values;
-    if (param_ptr == NULL) return false;
-    values = (float *)((char *)material_ptr + param_ptr->offset);
+    if (material_ptr != NULL && material_ptr->custom != NULL) {
+        values = material_ptr->custom->value(material_ptr, name, WGF_GFX_PRIV_MATERIAL_COLOR, true);
+    } else {
+        param_ptr = lookup(material_ptr, name, PARAM_VEC3, PARAM_VEC4, true);
+        values = param_ptr != NULL ? (float *)((char *)material_ptr + param_ptr->offset) : NULL;
+    }
+    if (values == NULL) return false;
     values[0] = wgf_gfx_priv_srgb_to_linear((float)wgf_color_get_red(color) / 255.0f);
     values[1] = wgf_gfx_priv_srgb_to_linear((float)wgf_color_get_green(color) / 255.0f);
     values[2] = wgf_gfx_priv_srgb_to_linear((float)wgf_color_get_blue(color) / 255.0f);
-    if (param_ptr->kind == PARAM_VEC4) values[3] = (float)wgf_color_get_alpha(color) / 255.0f; /* alpha is linear */
+    if (param_ptr == NULL || param_ptr->kind == PARAM_VEC4) {
+        values[3] = (float)wgf_color_get_alpha(color) / 255.0f; /* alpha is linear */
+    }
     return true;
 }
 

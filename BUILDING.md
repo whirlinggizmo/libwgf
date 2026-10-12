@@ -85,7 +85,7 @@ The tests run under node; the ones that need a real browser (IndexedDB, WebGL2's
 
 gfx's shaders (`libwgf/gfx/src/shaders/*.glsl`) are written once in sokol-shdc's annotated GLSL and compiled into headers for GL 4.1 and WebGL2 by `gen_shaders.py`, which are committed: building never runs the compiler, the pinned sokol-shdc that `setup_shdc.py` downloads.
 
-Custom material shaders (`wgf_shader.h`) are written against `libwgf/gfx/shaders/wgf.glsl` and packed into a `.wgfshader` file by `pack_shader.py`. The examples' (`examples/shaders/*.glsl`) are packed into `examples/assets/shaders/` by `gen_shaders.py` and committed.
+Custom material shaders (`wgf_shader.h`) are written against `libwgf/gfx/shaders/wgf.glsl` and packed into a `.wgfshader` file by `pack_shader.py`; a staged variant carries both, as `share/wgf/tools/pack_shader.py` and `share/wgf/shaders/wgf.glsl`, so a program outside libwgf packs its own. The examples' (`examples/shaders/*.glsl`) are packed into `examples/assets/shaders/` by `gen_shaders.py` and committed.
 
 ```sh
 python3 tools/gen_shaders.py           # every shader's header, and the examples' packed shaders, again (--check: fail if stale)

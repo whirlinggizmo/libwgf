@@ -14,9 +14,10 @@ differs (a shader changed without its header); where sokol-shdc can't be had (no
 network, no binary for this machine), the check says SKIPPING and passes, as checks do
 (CONVENTIONS.md, "Tooling").
 
-The examples' custom shaders too (wgf_shader.h): each examples/shaders/*.glsl packed by
-tools/pack_shader.py into examples/assets/shaders/*.wgfshader, committed, and held current
-by --check the same way, as libwgt's gen_shaders.py --examples does. Standard library only.
+The custom shaders too (wgf_shader.h): each examples/shaders/*.glsl packed by
+tools/pack_shader.py into examples/assets/shaders/*.wgfshader, and the tests' beside their
+sources (libwgf/gfx/tests/shaders/), committed, and held current by --check the same way,
+as libwgt's gen_shaders.py --examples does. Standard library only.
 """
 import argparse
 import subprocess
@@ -26,8 +27,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SHADERS = ROOT / 'libwgf' / 'gfx' / 'src' / 'shaders'
-EXAMPLE_SHADERS = ROOT / 'examples' / 'shaders'
-PACKED = ROOT / 'examples' / 'assets' / 'shaders'
+# custom shaders' sources, and where each folder's are packed to
+CUSTOM = [(ROOT / 'examples' / 'shaders', ROOT / 'examples' / 'assets' / 'shaders'),
+          (ROOT / 'libwgf' / 'gfx' / 'tests' / 'shaders', ROOT / 'libwgf' / 'gfx' / 'tests' / 'shaders')]
 SLANG = 'glsl410:glsl300es'
 
 
@@ -58,8 +60,8 @@ def main():
                 stale.append(str(header.relative_to(ROOT)))
             elif not opts.check:
                 print(f'gen_shaders: {header.relative_to(ROOT)}')
-        for source in sorted(EXAMPLE_SHADERS.glob('*.glsl')):
-            packed = PACKED / (source.stem + '.wgfshader')
+        for source in sorted(source for folder, _ in CUSTOM for source in folder.glob('*.glsl')):
+            packed = dict(CUSTOM)[source.parent] / (source.stem + '.wgfshader')
             out = Path(scratch) / packed.name if opts.check else packed
             done = subprocess.run([sys.executable, str(ROOT / 'tools' / 'pack_shader.py'), str(source), '-o', str(out)],
                                   stdout=subprocess.DEVNULL if opts.check else None)

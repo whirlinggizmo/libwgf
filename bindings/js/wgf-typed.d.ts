@@ -3179,11 +3179,21 @@ export declare const Material: {
      */
     readonly create: typeof raw.wgf_material_create;
     /**
-     * False when `shading` isn't one.
+     * A material drawn by `shader` (wgf_shader_create), loaded or still loading; the material
+     * holds its own reference to it. A surface shader's draws a stage's models. 0 when `shader`
+     * isn't a shader (logged), or there is no room for another material.
+     */
+    readonly createCustom: typeof raw.wgf_material_create_custom;
+    /**
+     * The custom material's shader; 0 for a built-in shading's.
+     */
+    readonly getShader: typeof raw.wgf_material_get_shader;
+    /**
+     * False when `shading` isn't PBR or UNLIT, or the material is a custom one.
      */
     readonly setShading: typeof raw.wgf_material_set_shading;
     /**
-     * False when `shading` isn't one.
+     * False when `shading` isn't PBR or UNLIT, or the material is a custom one.
      */
     readonly getShading: typeof raw.wgf_material_get_shading;
     /**
@@ -3876,6 +3886,19 @@ export declare const Scene: {
      * The prefab `name` found (scene.prefab) and spawned under `parent`: placed at (x, y, z), turned `angle`, and snapped when a place is given (Prefab.spawnAt), else at the prefab's own transform (Prefab.spawn). It looks the prefab up on every call: a hot path finds it once and keeps the handle. 0 as those calls give it.
      */
     readonly spawnPrefab: (scene: raw.wgf_scene_t | 0, name: string | null, parent: raw.wgf_actor_t | 0, x?: number, y?: number, z?: number, angle?: number) => raw.wgf_actor_t;
+};
+/** A handle of kind wgf_shader_t: the raw binding's branded type. */
+export type Shader = raw.wgf_shader_t;
+export declare const Shader: {
+    /**
+     * The shader in the .wgfshader file at `path` under fs's root. 0 only when there is no
+     * room for another; one that can't be loaded FAILED (logged once, saying why: a file made
+     * by another version of pack_shader.py, one with no program for this graphics backend, or
+     * one the graphics backend refused).
+     */
+    readonly create: typeof raw.wgf_shader_create;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Shape2d = raw.wgf_actor_t;
@@ -5551,7 +5574,7 @@ export declare const LightType: { readonly DIRECTIONAL: LightType; readonly POIN
 export type LogLevel = raw.wgf_log_level_t;
 export declare const LogLevel: { readonly TRACE: LogLevel; readonly DEBUG: LogLevel; readonly INFO: LogLevel; readonly WARN: LogLevel; readonly ERROR: LogLevel; readonly FATAL: LogLevel; };
 export type MaterialShading = raw.wgf_material_shading_t;
-export declare const MaterialShading: { readonly PBR: MaterialShading; readonly UNLIT: MaterialShading; };
+export declare const MaterialShading: { readonly PBR: MaterialShading; readonly UNLIT: MaterialShading; readonly CUSTOM: MaterialShading; };
 export type MouseButton = raw.wgf_mouse_button_t;
 export declare const MouseButton: { readonly LEFT: MouseButton; readonly RIGHT: MouseButton; readonly MIDDLE: MouseButton; };
 export type PlayState = raw.wgf_play_state_t;

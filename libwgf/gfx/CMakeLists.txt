@@ -9,6 +9,8 @@ wgf_layer(gfx
         src/emitter/wgf_gfx_emitter3d.c
         src/emitter/wgf_gfx_emitter_scene.c
         src/material/wgf_gfx_material.c
+        src/material/wgf_gfx_material_custom.c
+        src/material/wgf_gfx_shader.c
         src/mesh/wgf_gfx_cgltf_impl.c
         src/mesh/wgf_gfx_mesh.c
         src/mesh/wgf_gfx_mesh_gltf.c
@@ -32,6 +34,7 @@ wgf_layer(gfx
         src/stage/wgf_gfx_shadow.c
         src/stage/wgf_gfx_environment.c
         src/stage/wgf_gfx_stage3d.c
+        src/stage/wgf_gfx_stage3d_custom.c
         src/text/wgf_gfx_font.c
         src/text/wgf_gfx_fontstash_impl.c
         src/text/wgf_gfx_text.c
@@ -80,6 +83,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_sprite_test)
         wgf_test(gfx wgf_gfx_emitter_test)
         wgf_test(gfx wgf_gfx_target_test)
+        wgf_test(gfx wgf_gfx_shader_test)
     endif()
     # pixels, read back from WebGL2 in a browser
     wgf_web_test(gfx wgf_gfx_frame_web_test 1)
@@ -89,6 +93,10 @@ if(WGF_TESTS)
     wgf_window_test(gfx wgf_gfx_stage3d_window_test)
     wgf_window_test(gfx wgf_gfx_texture_window_test)
     wgf_window_test(gfx wgf_gfx_target_window_test)
+    wgf_window_test(gfx wgf_gfx_shader_window_test)
+    if(TARGET wgf_gfx_shader_window_test) # the tests' packed shaders, from where they are
+        target_compile_definitions(wgf_gfx_shader_window_test PRIVATE WGF_TEST_FILES="${CMAKE_CURRENT_SOURCE_DIR}/tests")
+    endif()
     wgf_web_test(gfx wgf_gfx_texture_web_test 1)
     wgf_web_test(gfx wgf_gfx_text_web_test 1)
     wgf_web_test(gfx wgf_gfx_stage2d_web_test 1)
@@ -96,6 +104,19 @@ if(WGF_TESTS)
     wgf_web_test(gfx wgf_gfx_stage3d_web_test 1)
     wgf_web_test(gfx wgf_gfx_shadow_web_test 1)
     wgf_web_test(gfx wgf_gfx_target_web_test 1)
+    wgf_web_test(gfx wgf_gfx_shader_web_test 1)
+    if(TARGET wgf_gfx_shader_web_test)
+        target_link_options(wgf_gfx_shader_web_test PRIVATE
+            "SHELL:--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/tests/shaders/flat.wgfshader@/wgf/shaders/flat.wgfshader")
+    endif()
     wgf_web_test(gfx wgf_gfx_environment_web_test 1)
     wgf_web_test(gfx wgf_gfx_gltf_web_test 1)
 endif()
+
+# Custom shaders' tool and interface (wgf_shader.h), staged with the variant as libwgt's are: a
+# program outside libwgf packs its shaders with share/wgf/tools/pack_shader.py, which finds
+# share/wgf/shaders/wgf.glsl beside it.
+install(FILES "${PROJECT_SOURCE_DIR}/tools/pack_shader.py" "${PROJECT_SOURCE_DIR}/tools/spirv.py"
+              "${PROJECT_SOURCE_DIR}/tools/setup_shdc.py" "${PROJECT_SOURCE_DIR}/tools/usercache.py"
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/wgf/tools)
+install(FILES shaders/wgf.glsl DESTINATION ${CMAKE_INSTALL_DATADIR}/wgf/shaders)

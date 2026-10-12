@@ -431,10 +431,12 @@ class Reach {
 		"wgf_loop_set_tick_rate",
 		"wgf_loop_set_time_scale",
 		"wgf_material_create",
+		"wgf_material_create_custom",
 		"wgf_material_get_alpha_cutoff",
 		"wgf_material_get_alpha_mode",
 		"wgf_material_get_float",
 		"wgf_material_get_int",
+		"wgf_material_get_shader",
 		"wgf_material_get_shading",
 		"wgf_material_get_texture",
 		"wgf_material_get_texture_filter",
@@ -544,6 +546,7 @@ class Reach {
 		"wgf_scene_get_prefab_name",
 		"wgf_scene_has_prefab",
 		"wgf_scene_instantiate",
+		"wgf_shader_create",
 		"wgf_shape2d_create",
 		"wgf_shape2d_get_color",
 		"wgf_shape2d_get_kind",
@@ -783,7 +786,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...774) 0];
+	static final counts:Array<Int> = [for (_ in 0...777) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

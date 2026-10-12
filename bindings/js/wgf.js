@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "72a516112f6bde8f" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "770bb114563e9b8f" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -618,6 +618,7 @@ export const WGF_TEXTURE_FILTER_NEAREST = 1;
 
 export const WGF_MATERIAL_SHADING_PBR = 0;
 export const WGF_MATERIAL_SHADING_UNLIT = 1;
+export const WGF_MATERIAL_SHADING_CUSTOM = 2;
 
 /**
  * How something drawn uses its alpha. In a stage, OPAQUE and MASK parts write depth and
@@ -3910,6 +3911,20 @@ export function wgf_font_measure(font, text, size, into) {
     return vector(ret, 2, into);
 }
 
+// wgf: call wgf_shader_create
+/**
+ * The shader in the .wgfshader file at `path` under fs's root. 0 only when there is no
+ * room for another; one that can't be loaded FAILED (logged once, saying why: a file made
+ * by another version of pack_shader.py, one with no program for this graphics backend, or
+ * one the graphics backend refused).
+ */
+export function wgf_shader_create(path) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_shader_create"](cstr(path));
+    host["stackRestore"](mark);
+    return value >>> 0;
+}
+
 // wgf: call wgf_texture_create
 /**
  * A texture from an image file: PNG, JPEG, BMP, TGA, or GIF (its first frame), or a
@@ -4017,9 +4032,29 @@ export function wgf_material_create(shading) {
     return value >>> 0;
 }
 
+// wgf: call wgf_material_create_custom
+/**
+ * A material drawn by `shader` (wgf_shader_create), loaded or still loading; the material
+ * holds its own reference to it. A surface shader's draws a stage's models. 0 when `shader`
+ * isn't a shader (logged), or there is no room for another material.
+ */
+export function wgf_material_create_custom(shader) {
+    const value = host["_wgf_material_create_custom"](shader);
+    return value >>> 0;
+}
+
+// wgf: call wgf_material_get_shader
+/**
+ * The custom material's shader; 0 for a built-in shading's.
+ */
+export function wgf_material_get_shader(material) {
+    const value = host["_wgf_material_get_shader"](material);
+    return value >>> 0;
+}
+
 // wgf: call wgf_material_set_shading
 /**
- * False when `shading` isn't one.
+ * False when `shading` isn't PBR or UNLIT, or the material is a custom one.
  */
 export function wgf_material_set_shading(material, shading) {
     const value = host["_wgf_material_set_shading"](material, shading);
@@ -4028,7 +4063,7 @@ export function wgf_material_set_shading(material, shading) {
 
 // wgf: call wgf_material_get_shading
 /**
- * False when `shading` isn't one.
+ * False when `shading` isn't PBR or UNLIT, or the material is a custom one.
  */
 export function wgf_material_get_shading(material) {
     const value = host["_wgf_material_get_shading"](material);

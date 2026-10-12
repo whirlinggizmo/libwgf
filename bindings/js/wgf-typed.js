@@ -974,6 +974,10 @@ export const Loop = Object.freeze({
 export const Material = Object.freeze({
     // wgf: call wgf_material_create
     create: raw.wgf_material_create,
+    // wgf: call wgf_material_create_custom
+    createCustom: raw.wgf_material_create_custom,
+    // wgf: call wgf_material_get_shader
+    getShader: raw.wgf_material_get_shader,
     // wgf: call wgf_material_set_shading
     setShading: raw.wgf_material_set_shading,
     // wgf: call wgf_material_get_shading
@@ -1254,6 +1258,13 @@ export const Scene = Object.freeze({
         return x === undefined ? raw.wgf_prefab_spawn(prefab, parent)
             : raw.wgf_prefab_spawn_at(prefab, parent, x, y ?? 0, z ?? 0, angle ?? 0);
     },
+});
+// wgf: typed Shader
+export const Shader = Object.freeze({
+    // wgf: call wgf_shader_create
+    create: raw.wgf_shader_create,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
 });
 // wgf: typed Shape2d
 export const Shape2d = Object.freeze({
@@ -1839,7 +1850,7 @@ export const LightType = Object.freeze({ DIRECTIONAL: 0, POINT: 1, SPOT: 2 });
 // wgf: enum LogLevel
 export const LogLevel = Object.freeze({ TRACE: 0, DEBUG: 1, INFO: 2, WARN: 3, ERROR: 4, FATAL: 5 });
 // wgf: enum MaterialShading
-export const MaterialShading = Object.freeze({ PBR: 0, UNLIT: 1 });
+export const MaterialShading = Object.freeze({ PBR: 0, UNLIT: 1, CUSTOM: 2 });
 // wgf: enum MouseButton
 export const MouseButton = Object.freeze({ LEFT: 0, RIGHT: 1, MIDDLE: 2 });
 // wgf: enum PlayState

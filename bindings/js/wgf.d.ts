@@ -42,6 +42,8 @@ export type wgf_asset_task_t = number & { readonly [kind]: "wgf_asset_task_t" };
 export type wgf_actor_t = number & { readonly [kind]: "wgf_actor_t" };
 /** A handle of kind wgf_font_t; 0 is none. */
 export type wgf_font_t = number & { readonly [kind]: "wgf_font_t" };
+/** A handle of kind wgf_shader_t; 0 is none. */
+export type wgf_shader_t = number & { readonly [kind]: "wgf_shader_t" };
 /** A handle of kind wgf_texture_t; 0 is none. */
 export type wgf_texture_t = number & { readonly [kind]: "wgf_texture_t" };
 /** A handle of kind wgf_material_t; 0 is none. */
@@ -463,7 +465,8 @@ export type wgf_texture_filter_t = typeof WGF_TEXTURE_FILTER_LINEAR | typeof WGF
 
 export declare const WGF_MATERIAL_SHADING_PBR: 0;
 export declare const WGF_MATERIAL_SHADING_UNLIT: 1;
-export type wgf_material_shading_t = typeof WGF_MATERIAL_SHADING_PBR | typeof WGF_MATERIAL_SHADING_UNLIT;
+export declare const WGF_MATERIAL_SHADING_CUSTOM: 2;
+export type wgf_material_shading_t = typeof WGF_MATERIAL_SHADING_PBR | typeof WGF_MATERIAL_SHADING_UNLIT | typeof WGF_MATERIAL_SHADING_CUSTOM;
 
 /**
  * How something drawn uses its alpha. In a stage, OPAQUE and MASK parts write depth and
@@ -2664,6 +2667,14 @@ export declare function wgf_font_measure<T extends number[] | Float32Array | Flo
 export declare function wgf_font_measure(font: wgf_font_t | 0, text: string | null, size: number, into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
+ * The shader in the .wgfshader file at `path` under fs's root. 0 only when there is no
+ * room for another; one that can't be loaded FAILED (logged once, saying why: a file made
+ * by another version of pack_shader.py, one with no program for this graphics backend, or
+ * one the graphics backend refused).
+ */
+export declare function wgf_shader_create(path: string | null): wgf_shader_t;
+
+/**
  * A texture from an image file: PNG, JPEG, BMP, TGA, or GIF (its first frame), or a
  * compressed one. "name.ktx" names a texture compressed for GPUs
  * (tools/compress_textures.py, which writes them beside name.png): the first of
@@ -2733,12 +2744,24 @@ export declare function wgf_texture_get_filter(texture: wgf_texture_t | 0): wgf_
 export declare function wgf_material_create(shading: wgf_material_shading_t): wgf_material_t;
 
 /**
- * False when `shading` isn't one.
+ * A material drawn by `shader` (wgf_shader_create), loaded or still loading; the material
+ * holds its own reference to it. A surface shader's draws a stage's models. 0 when `shader`
+ * isn't a shader (logged), or there is no room for another material.
+ */
+export declare function wgf_material_create_custom(shader: wgf_shader_t | 0): wgf_material_t;
+
+/**
+ * The custom material's shader; 0 for a built-in shading's.
+ */
+export declare function wgf_material_get_shader(material: wgf_material_t | 0): wgf_shader_t;
+
+/**
+ * False when `shading` isn't PBR or UNLIT, or the material is a custom one.
  */
 export declare function wgf_material_set_shading(material: wgf_material_t | 0, shading: wgf_material_shading_t): boolean;
 
 /**
- * False when `shading` isn't one.
+ * False when `shading` isn't PBR or UNLIT, or the material is a custom one.
  */
 export declare function wgf_material_get_shading(material: wgf_material_t | 0): wgf_material_shading_t;
 

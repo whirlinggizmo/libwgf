@@ -46,8 +46,12 @@ def say(text):
 
 
 def pinned_commit():
-    """The sokol-tools-bin commit deps/sokol/VERSION pins: its `sokol-tools-bin <commit>` line."""
+    """The sokol-tools-bin commit deps/sokol/VERSION pins: its `sokol-tools-bin <commit>` line.
+    In a staged variant (share/wgf/tools/, beside pack_shader.py), where there is no deps/,
+    the one the hashes are for, as libwgt's."""
     version = ROOT / 'deps' / 'sokol' / 'VERSION'
+    if not version.exists():
+        return HASHES_PIN
     for line in version.read_text().splitlines():
         words = line.split()
         if len(words) == 2 and words[0] == 'sokol-tools-bin':

@@ -354,6 +354,13 @@ class Main {
 			&& own.getTextureWrapV("base_color_texture") == TextureWrap.MIRROR
 			&& own.getTextureFilter("base_color_texture") == TextureFilter.NEAREST, "its sampling");
 		expect(Resource.release(own), "a material let go of");
+		// a custom shader's material (wgf_shader.h): its values kept by the shader's names while it loads
+		final shader = Shader.create("shaders/toon.wgfshader");
+		final toon = Material.createCustom(shader);
+		expect(!shader.isNone() && toon.getShader() == shader && toon.getShading() == MaterialShading.CUSTOM
+			&& Resource.release(shader), "a custom material, holding its shader");
+		expect(toon.setFloat("bands", 3) && toon.getFloat("bands") == 3, "a custom material's value");
+		expect(Resource.release(toon), "a custom material let go of");
 	}
 
 	/** The 3D camera, look_at, and immediate mode in 3D. **/

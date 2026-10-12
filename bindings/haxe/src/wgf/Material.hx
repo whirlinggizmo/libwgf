@@ -21,13 +21,27 @@ abstract Material(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_material_create(shading);
 
 	/**
-	    False when `shading` isn't one.
+	    A material drawn by `shader` (wgf_shader_create), loaded or still loading; the material
+	    holds its own reference to it. A surface shader's draws a stage's models. 0 when `shader`
+	    isn't a shader (logged), or there is no room for another material.
+	**/
+	public static inline function createCustom(shader:Shader):Material
+		return Raw.wgf_material_create_custom(shader);
+
+	/**
+	    The custom material's shader; 0 for a built-in shading's.
+	**/
+	public inline function getShader():Shader
+		return Raw.wgf_material_get_shader(this);
+
+	/**
+	    False when `shading` isn't PBR or UNLIT, or the material is a custom one.
 	**/
 	public inline function setShading(shading:MaterialShading):Bool
 		return Raw.wgf_material_set_shading(this, shading);
 
 	/**
-	    False when `shading` isn't one.
+	    False when `shading` isn't PBR or UNLIT, or the material is a custom one.
 	**/
 	public inline function getShading():MaterialShading
 		return Raw.wgf_material_get_shading(this);

@@ -4,4 +4,5 @@ package wgf;
 enum abstract MaterialShading(Int) from Int to Int {
 	var PBR = 0;
 	var UNLIT = 1;
+	var CUSTOM = 2;
 }

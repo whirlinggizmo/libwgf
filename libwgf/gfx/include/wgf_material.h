@@ -7,6 +7,7 @@
 #include "wgf_color.h"
 #include "wgf_handle.h"
 #include "wgf_resource.h"
+#include "wgf_shader.h"
 #include "wgf_texture.h"
 #include "wgf_vec2.h"
 #include "wgf_vec3.h"
@@ -57,12 +58,22 @@ extern "C" {
  * counterclockwise in texture space. Textures repeat, sample smoothly, and use their
  * mipmaps unless wgf_material_set_texture_sampling says otherwise. A texture still
  * loading draws as nothing set would, but a base color texture, which draws the
- * placeholder checker once it has FAILED, as sprites do. */
+ * placeholder checker once it has FAILED, as sprites do.
+ *
+ * A custom material (wgf_material_create_custom) is drawn by a shader of your own
+ * (wgf_shader.h): its parameters and textures are the ones that shader declares, set by
+ * the same calls by its names (float, int, vec2, vec3, vec4; set_color for a vec3 or vec4;
+ * set_int takes any int), and the names above don't apply. Values set while its shader is
+ * still loading are kept, and checked once it is READY: a name it has none of, or a value of
+ * another type, is then warned about and dropped. Its alpha mode, cutoff, and double sides
+ * work as above. It draws nothing until its shader is READY, and nothing if that FAILED
+ * (warned once). */
 typedef wgf_handle_t wgf_material_t;
 
 typedef enum wgf_material_shading_t {
     WGF_MATERIAL_SHADING_PBR = 0,  /* glTF metallic-roughness, lit by the stage's lights */
-    WGF_MATERIAL_SHADING_UNLIT = 1 /* base color x texture x tint; ignores lights (KHR_materials_unlit) */
+    WGF_MATERIAL_SHADING_UNLIT = 1, /* base color x texture x tint; ignores lights (KHR_materials_unlit) */
+    WGF_MATERIAL_SHADING_CUSTOM = 2 /* a custom shader's (wgf_material_create_custom); not for create or set_shading */
 } wgf_material_shading_t;
 
 /* How something drawn uses its alpha. In a stage, OPAQUE and MASK parts write depth and
@@ -79,7 +90,15 @@ typedef enum wgf_alpha_mode_t {
  * room for another material. */
 WGF_API wgf_material_t wgf_material_create(wgf_material_shading_t shading);
 
-/* False when `shading` isn't one. */
+/* A material drawn by `shader` (wgf_shader_create), loaded or still loading; the material
+ * holds its own reference to it. A surface shader's draws a stage's models. 0 when `shader`
+ * isn't a shader (logged), or there is no room for another material. */
+WGF_API wgf_material_t wgf_material_create_custom(wgf_shader_t shader);
+
+/* The custom material's shader; 0 for a built-in shading's. */
+WGF_API wgf_shader_t wgf_material_get_shader(wgf_material_t material);
+
+/* False when `shading` isn't PBR or UNLIT, or the material is a custom one. */
 WGF_API bool wgf_material_set_shading(wgf_material_t material, wgf_material_shading_t shading);
 WGF_API wgf_material_shading_t wgf_material_get_shading(wgf_material_t material);
 
