@@ -162,8 +162,10 @@ void wgf_voice_destroy(wgf_handle_t voice)
     wgf_audio_priv_lock();
     voice_ptr = wgf_audio_priv_voice_of(voice);
     busy = voice_ptr != NULL && voice_ptr->busy;
-    if (voice_ptr != NULL && busy) {
-        voice_ptr->dying = true; /* freed by the next sweep */
+    if (voice_ptr != NULL) {
+        /* dying while the lock that found it idle is held: the mixer copies no dying
+         * voice, so none takes its decoder before free_voice closes it */
+        voice_ptr->dying = true; /* if busy, freed by the next sweep */
         voice_ptr->state = WGF_PLAY_STATE_STOPPED;
     }
     wgf_audio_priv_unlock();
