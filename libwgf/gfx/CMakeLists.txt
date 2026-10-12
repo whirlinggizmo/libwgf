@@ -22,6 +22,7 @@ wgf_layer(gfx
         src/render/wgf_gfx_presentation.c
         src/render/wgf_gfx_render.c
         src/render/wgf_gfx_render_commands.c
+        src/render/wgf_gfx_render_effect.c
         src/render/wgf_gfx_render_target.c
         src/shape/wgf_gfx_shape2d.c
         src/shape/wgf_gfx_shape3d.c
@@ -94,9 +95,12 @@ if(WGF_TESTS)
     wgf_window_test(gfx wgf_gfx_texture_window_test)
     wgf_window_test(gfx wgf_gfx_target_window_test)
     wgf_window_test(gfx wgf_gfx_shader_window_test)
-    if(TARGET wgf_gfx_shader_window_test) # the tests' packed shaders, from where they are
-        target_compile_definitions(wgf_gfx_shader_window_test PRIVATE WGF_TEST_FILES="${CMAKE_CURRENT_SOURCE_DIR}/tests")
-    endif()
+    wgf_window_test(gfx wgf_gfx_effect_window_test)
+    foreach(test wgf_gfx_shader_window_test wgf_gfx_effect_window_test)
+        if(TARGET ${test}) # the tests' packed shaders, from where they are
+            target_compile_definitions(${test} PRIVATE WGF_TEST_FILES="${CMAKE_CURRENT_SOURCE_DIR}/tests")
+        endif()
+    endforeach()
     wgf_web_test(gfx wgf_gfx_texture_web_test 1)
     wgf_web_test(gfx wgf_gfx_text_web_test 1)
     wgf_web_test(gfx wgf_gfx_stage2d_web_test 1)
@@ -108,6 +112,11 @@ if(WGF_TESTS)
     if(TARGET wgf_gfx_shader_web_test)
         target_link_options(wgf_gfx_shader_web_test PRIVATE
             "SHELL:--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/tests/shaders/flat.wgfshader@/wgf/shaders/flat.wgfshader")
+    endif()
+    wgf_web_test(gfx wgf_gfx_effect_web_test 1)
+    if(TARGET wgf_gfx_effect_web_test)
+        target_link_options(wgf_gfx_effect_web_test PRIVATE
+            "SHELL:--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/tests/shaders/invert.wgfshader@/wgf/shaders/invert.wgfshader")
     endif()
     wgf_web_test(gfx wgf_gfx_environment_web_test 1)
     wgf_web_test(gfx wgf_gfx_gltf_web_test 1)

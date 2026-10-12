@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "770bb114563e9b8f" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "1975b6b77214bbd9" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -4035,7 +4035,8 @@ export function wgf_material_create(shading) {
 // wgf: call wgf_material_create_custom
 /**
  * A material drawn by `shader` (wgf_shader_create), loaded or still loading; the material
- * holds its own reference to it. A surface shader's draws a stage's models. 0 when `shader`
+ * holds its own reference to it. A surface shader's draws a stage's models; a screen
+ * effect's is added to the frame's effects (wgf_render_add_effect). 0 when `shader`
  * isn't a shader (logged), or there is no room for another material.
  */
 export function wgf_material_create_custom(shader) {
@@ -7503,6 +7504,59 @@ export function wgf_render_set_target_clear_color(target, color) {
 export function wgf_render_get_target_clear_color(target) {
     const value = host["_wgf_render_get_target_clear_color"](target);
     return value >>> 0;
+}
+
+// wgf: call wgf_render_add_effect
+/**
+ * Screen effects, libwgt's (wgrender's post-processing): the finished frame -- stages,
+ * sprites, text, the UI -- redrawn by each effect in the order added, the last onto the
+ * screen. An effect is a custom material (wgf_material_create_custom) whose shader is a
+ * screen effect (wgf.glsl's wgf_screen; wgf_shader.h): its parameters are the material's,
+ * and can change any frame. One whose shader is still loading is skipped until it is READY,
+ * and one that FAILED is skipped. The chain is taken as each frame begins: adding or
+ * clearing inside a frame shows from the next. The effects hold their own references to
+ * their materials, let go of when cleared. Up to 8; add is false (logged) past that, for
+ * anything but a custom material, for a surface shader's material, and before gfx runs
+ * (from init on).
+ */
+export function wgf_render_add_effect(material) {
+    const value = host["_wgf_render_add_effect"](material);
+    return value !== 0;
+}
+
+// wgf: call wgf_render_clear_effects
+/**
+ * Screen effects, libwgt's (wgrender's post-processing): the finished frame -- stages,
+ * sprites, text, the UI -- redrawn by each effect in the order added, the last onto the
+ * screen. An effect is a custom material (wgf_material_create_custom) whose shader is a
+ * screen effect (wgf.glsl's wgf_screen; wgf_shader.h): its parameters are the material's,
+ * and can change any frame. One whose shader is still loading is skipped until it is READY,
+ * and one that FAILED is skipped. The chain is taken as each frame begins: adding or
+ * clearing inside a frame shows from the next. The effects hold their own references to
+ * their materials, let go of when cleared. Up to 8; add is false (logged) past that, for
+ * anything but a custom material, for a surface shader's material, and before gfx runs
+ * (from init on).
+ */
+export function wgf_render_clear_effects() {
+    host["_wgf_render_clear_effects"]();
+}
+
+// wgf: call wgf_render_get_effect_count
+/**
+ * Screen effects, libwgt's (wgrender's post-processing): the finished frame -- stages,
+ * sprites, text, the UI -- redrawn by each effect in the order added, the last onto the
+ * screen. An effect is a custom material (wgf_material_create_custom) whose shader is a
+ * screen effect (wgf.glsl's wgf_screen; wgf_shader.h): its parameters are the material's,
+ * and can change any frame. One whose shader is still loading is skipped until it is READY,
+ * and one that FAILED is skipped. The chain is taken as each frame begins: adding or
+ * clearing inside a frame shows from the next. The effects hold their own references to
+ * their materials, let go of when cleared. Up to 8; add is false (logged) past that, for
+ * anything but a custom material, for a surface shader's material, and before gfx runs
+ * (from init on).
+ */
+export function wgf_render_get_effect_count() {
+    const value = host["_wgf_render_get_effect_count"]();
+    return value;
 }
 
 // wgf: call wgf_render_push_clip

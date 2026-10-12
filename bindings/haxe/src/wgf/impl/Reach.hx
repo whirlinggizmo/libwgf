@@ -523,10 +523,13 @@ class Reach {
 		"wgf_random_get_range",
 		"wgf_random_get_seed",
 		"wgf_random_set_seed",
+		"wgf_render_add_effect",
 		"wgf_render_begin_target",
+		"wgf_render_clear_effects",
 		"wgf_render_end_target",
 		"wgf_render_get_clear_color",
 		"wgf_render_get_dpi_scale",
+		"wgf_render_get_effect_count",
 		"wgf_render_get_height",
 		"wgf_render_get_target_clear_color",
 		"wgf_render_get_width",
@@ -786,7 +789,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...777) 0];
+	static final counts:Array<Int> = [for (_ in 0...780) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

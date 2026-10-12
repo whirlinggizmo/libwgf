@@ -94,6 +94,51 @@ class Render {
 		return Raw.wgf_render_get_target_clear_color(target);
 
 	/**
+	    Screen effects, libwgt's (wgrender's post-processing): the finished frame -- stages,
+	    sprites, text, the UI -- redrawn by each effect in the order added, the last onto the
+	    screen. An effect is a custom material (wgf_material_create_custom) whose shader is a
+	    screen effect (wgf.glsl's wgf_screen; wgf_shader.h): its parameters are the material's,
+	    and can change any frame. One whose shader is still loading is skipped until it is READY,
+	    and one that FAILED is skipped. The chain is taken as each frame begins: adding or
+	    clearing inside a frame shows from the next. The effects hold their own references to
+	    their materials, let go of when cleared. Up to 8; add is false (logged) past that, for
+	    anything but a custom material, for a surface shader's material, and before gfx runs
+	    (from init on).
+	**/
+	public static inline function addEffect(material:Material):Bool
+		return Raw.wgf_render_add_effect(material);
+
+	/**
+	    Screen effects, libwgt's (wgrender's post-processing): the finished frame -- stages,
+	    sprites, text, the UI -- redrawn by each effect in the order added, the last onto the
+	    screen. An effect is a custom material (wgf_material_create_custom) whose shader is a
+	    screen effect (wgf.glsl's wgf_screen; wgf_shader.h): its parameters are the material's,
+	    and can change any frame. One whose shader is still loading is skipped until it is READY,
+	    and one that FAILED is skipped. The chain is taken as each frame begins: adding or
+	    clearing inside a frame shows from the next. The effects hold their own references to
+	    their materials, let go of when cleared. Up to 8; add is false (logged) past that, for
+	    anything but a custom material, for a surface shader's material, and before gfx runs
+	    (from init on).
+	**/
+	public static inline function clearEffects():Void
+		Raw.wgf_render_clear_effects();
+
+	/**
+	    Screen effects, libwgt's (wgrender's post-processing): the finished frame -- stages,
+	    sprites, text, the UI -- redrawn by each effect in the order added, the last onto the
+	    screen. An effect is a custom material (wgf_material_create_custom) whose shader is a
+	    screen effect (wgf.glsl's wgf_screen; wgf_shader.h): its parameters are the material's,
+	    and can change any frame. One whose shader is still loading is skipped until it is READY,
+	    and one that FAILED is skipped. The chain is taken as each frame begins: adding or
+	    clearing inside a frame shows from the next. The effects hold their own references to
+	    their materials, let go of when cleared. Up to 8; add is false (logged) past that, for
+	    anything but a custom material, for a surface shader's material, and before gfx runs
+	    (from init on).
+	**/
+	public static inline function getEffectCount():Int
+		return Raw.wgf_render_get_effect_count();
+
+	/**
 	    Clip drawing to a rectangle (logical pixels, top-left origin; a render target's own
 	    pixels inside one) until the matching pop. Clips nest: each push intersects with the
 	    clip it's pushed inside, so a scroll area inside a panel stays inside the panel.

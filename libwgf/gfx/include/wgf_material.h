@@ -91,7 +91,8 @@ typedef enum wgf_alpha_mode_t {
 WGF_API wgf_material_t wgf_material_create(wgf_material_shading_t shading);
 
 /* A material drawn by `shader` (wgf_shader_create), loaded or still loading; the material
- * holds its own reference to it. A surface shader's draws a stage's models. 0 when `shader`
+ * holds its own reference to it. A surface shader's draws a stage's models; a screen
+ * effect's is added to the frame's effects (wgf_render_add_effect). 0 when `shader`
  * isn't a shader (logged), or there is no room for another material. */
 WGF_API wgf_material_t wgf_material_create_custom(wgf_shader_t shader);
 

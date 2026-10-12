@@ -2745,7 +2745,8 @@ export declare function wgf_material_create(shading: wgf_material_shading_t): wg
 
 /**
  * A material drawn by `shader` (wgf_shader_create), loaded or still loading; the material
- * holds its own reference to it. A surface shader's draws a stage's models. 0 when `shader`
+ * holds its own reference to it. A surface shader's draws a stage's models; a screen
+ * effect's is added to the frame's effects (wgf_render_add_effect). 0 when `shader`
  * isn't a shader (logged), or there is no room for another material.
  */
 export declare function wgf_material_create_custom(shader: wgf_shader_t | 0): wgf_material_t;
@@ -5057,6 +5058,48 @@ export declare function wgf_render_set_target_clear_color(target: wgf_texture_t 
  * render target.
  */
 export declare function wgf_render_get_target_clear_color(target: wgf_texture_t | 0): wgf_color_t;
+
+/**
+ * Screen effects, libwgt's (wgrender's post-processing): the finished frame -- stages,
+ * sprites, text, the UI -- redrawn by each effect in the order added, the last onto the
+ * screen. An effect is a custom material (wgf_material_create_custom) whose shader is a
+ * screen effect (wgf.glsl's wgf_screen; wgf_shader.h): its parameters are the material's,
+ * and can change any frame. One whose shader is still loading is skipped until it is READY,
+ * and one that FAILED is skipped. The chain is taken as each frame begins: adding or
+ * clearing inside a frame shows from the next. The effects hold their own references to
+ * their materials, let go of when cleared. Up to 8; add is false (logged) past that, for
+ * anything but a custom material, for a surface shader's material, and before gfx runs
+ * (from init on).
+ */
+export declare function wgf_render_add_effect(material: wgf_material_t | 0): boolean;
+
+/**
+ * Screen effects, libwgt's (wgrender's post-processing): the finished frame -- stages,
+ * sprites, text, the UI -- redrawn by each effect in the order added, the last onto the
+ * screen. An effect is a custom material (wgf_material_create_custom) whose shader is a
+ * screen effect (wgf.glsl's wgf_screen; wgf_shader.h): its parameters are the material's,
+ * and can change any frame. One whose shader is still loading is skipped until it is READY,
+ * and one that FAILED is skipped. The chain is taken as each frame begins: adding or
+ * clearing inside a frame shows from the next. The effects hold their own references to
+ * their materials, let go of when cleared. Up to 8; add is false (logged) past that, for
+ * anything but a custom material, for a surface shader's material, and before gfx runs
+ * (from init on).
+ */
+export declare function wgf_render_clear_effects(): void;
+
+/**
+ * Screen effects, libwgt's (wgrender's post-processing): the finished frame -- stages,
+ * sprites, text, the UI -- redrawn by each effect in the order added, the last onto the
+ * screen. An effect is a custom material (wgf_material_create_custom) whose shader is a
+ * screen effect (wgf.glsl's wgf_screen; wgf_shader.h): its parameters are the material's,
+ * and can change any frame. One whose shader is still loading is skipped until it is READY,
+ * and one that FAILED is skipped. The chain is taken as each frame begins: adding or
+ * clearing inside a frame shows from the next. The effects hold their own references to
+ * their materials, let go of when cleared. Up to 8; add is false (logged) past that, for
+ * anything but a custom material, for a surface shader's material, and before gfx runs
+ * (from init on).
+ */
+export declare function wgf_render_get_effect_count(): number;
 
 /**
  * Clip drawing to a rectangle (logical pixels, top-left origin; a render target's own

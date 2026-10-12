@@ -90,6 +90,8 @@ ROWS = [
     ('gfx-textures', 'gfx-textures', 'textures', 'same', ''),
     ('gfx-render-target', 'gfx-render-target', 'render_target', 'differs',
      'libwgf has no skinning or animation yet: the toy car drives the circle in place of the walking character'),
+    ('gfx-postprocess', 'gfx-postprocess', 'postprocess', 'differs',
+     'libwgf has no skinning or animation yet: the toy car in place of the walking character'),
     ('gfx-sprite3d', 'gfx-sprite3d', 'sprite3d', 'same', ''),
     ('gfx-text3d', 'gfx-text3d', 'text3d', 'differs',
      'libwgf has no picking yet: the hover highlight and the cube made pickable or not are left out'),

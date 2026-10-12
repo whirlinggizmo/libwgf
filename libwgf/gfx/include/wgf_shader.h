@@ -20,7 +20,8 @@ extern "C" {
  *   (wgf_material.h): the material's parameters and textures are the shader's, set by their
  *   names with the wgf_material_set_* calls.
  * - A surface shader draws a stage's models (not their shadows: a model casts the shadow
- *   of its mesh as it is, without the vertex hook).
+ *   of its mesh as it is, without the vertex hook); a screen effect redraws the finished
+ *   frame (wgf_render_add_effect, wgf_render.h).
  * - It is a resource (wgf_resource.h): shared by its path, reference counted, and loaded on
  *   create, PENDING at once and READY or FAILED in a later update. Materials hold their own
  *   references. */

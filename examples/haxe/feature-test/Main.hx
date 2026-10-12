@@ -361,6 +361,15 @@ class Main {
 			&& Resource.release(shader), "a custom material, holding its shader");
 		expect(toon.setFloat("bands", 3) && toon.getFloat("bands") == 3, "a custom material's value");
 		expect(Resource.release(toon), "a custom material let go of");
+		// a screen effect (wgf_render_add_effect): a custom material over the finished frame
+		final vignette = Shader.create("shaders/vignette.wgfshader");
+		final effect = Material.createCustom(vignette);
+		final unlit = Material.create(MaterialShading.UNLIT);
+		Resource.release(vignette);
+		expect(!Render.addEffect(unlit) && Render.addEffect(effect) && Render.getEffectCount() == 1
+			&& Resource.release(unlit), "an effect, and a built-in material refused");
+		Render.clearEffects();
+		expect(Render.getEffectCount() == 0 && Resource.release(effect), "the effects cleared");
 	}
 
 	/** The 3D camera, look_at, and immediate mode in 3D. **/

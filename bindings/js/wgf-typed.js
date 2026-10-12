@@ -1216,6 +1216,12 @@ export const Render = Object.freeze({
     setTargetClearColor: raw.wgf_render_set_target_clear_color,
     // wgf: call wgf_render_get_target_clear_color
     getTargetClearColor: raw.wgf_render_get_target_clear_color,
+    // wgf: call wgf_render_add_effect
+    addEffect: raw.wgf_render_add_effect,
+    // wgf: call wgf_render_clear_effects
+    clearEffects: raw.wgf_render_clear_effects,
+    // wgf: call wgf_render_get_effect_count
+    getEffectCount: raw.wgf_render_get_effect_count,
     // wgf: call wgf_render_push_clip
     pushClip: raw.wgf_render_push_clip,
     // wgf: call wgf_render_pop_clip

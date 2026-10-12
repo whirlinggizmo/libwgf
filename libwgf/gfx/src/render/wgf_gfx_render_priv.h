@@ -93,6 +93,18 @@ void wgf_gfx_priv_render_enter_pass(int pass, wgf_handle_t texture, int width, i
  * drawn (`draw` false: a target left open is ended), and after the uploads (true: each
  * target's pass drawn, before the screen's). */
 void wgf_gfx_priv_render_set_targets(void (*hook)(bool draw));
+/* The screen effects' hook (wgf_gfx_render_effect.c), set by the first effect added:
+ * BEGIN as a frame starts (true: its screen's pass goes through the effects and is
+ * recorded flipped, as a target's is on GL), SCREEN before the screen's pass begins
+ * (`pass` turned into the frame's texture), and END after it ends, before the commit
+ * (the effects drawn, the last onto the screen); the last two do nothing in a frame
+ * without effects. */
+typedef enum wgf_gfx_priv_render_effects_t {
+    WGF_GFX_PRIV_RENDER_EFFECTS_BEGIN,
+    WGF_GFX_PRIV_RENDER_EFFECTS_SCREEN,
+    WGF_GFX_PRIV_RENDER_EFFECTS_END
+} wgf_gfx_priv_render_effects_t;
+void wgf_gfx_priv_render_set_effects(bool (*hook)(wgf_gfx_priv_render_effects_t when, sg_pass *pass));
 /* The render target drawn into now, while recording or drawing its pass; 0 the screen. A
  * texture can't be read in the pass that draws into it. The pass draws into `texture`
  * from now until 0 (the targets' draw). */

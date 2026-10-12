@@ -40,11 +40,12 @@ static unsigned viewport_3d_frame;
  * the screen's size and presentation, kept while a target's are in their place. */
 static int current_pass;
 static wgf_handle_t pass_target, drawing_into;
-static bool pass_flipped;
+static bool pass_flipped, screen_flipped; /* screen_flipped: the screen's pass, drawn into the effects' texture */
 static int screen_width, screen_height;
 static float screen_dpi_scale;
 static wgf_platform_priv_presentation_t screen_present;
 static void (*targets)(bool draw); /* the targets' (wgf_gfx_render_target.c); NULL before any is begun */
+static bool (*effects)(wgf_gfx_priv_render_effects_t when, sg_pass *pass); /* wgf_gfx_render_effect.c's */
 
 /* Immediate mode drawing records into a sokol_gl context of gfx's own, drawn inside the
  * frame's pass. sokol_gl's default context can't be resized, so it stays tiny and
@@ -346,6 +347,7 @@ void wgf_gfx_priv_begin_frame(void)
     sgl_set_context(draw_context);
     sgl_defaults();
     in_frame = true; /* before the 2D projection, which reads the frame's size */
+    pass_flipped = screen_flipped = effects != NULL && effects(WGF_GFX_PRIV_RENDER_EFFECTS_BEGIN, NULL);
     wgf_gfx_priv_render_set_2d();
     if (present.bars && fill_bars != NULL) fill_bars();
     frame_number++;
@@ -374,11 +376,13 @@ void wgf_gfx_priv_end_frame(void)
         pass.action.colors[0].clear_value.b = (float)wgf_color_get_blue(cleared) / 255.0f;
         pass.action.colors[0].clear_value.a = (float)wgf_color_get_alpha(cleared) / 255.0f;
     }
+    if (effects != NULL) effects(WGF_GFX_PRIV_RENDER_EFFECTS_SCREEN, &pass);
     sg_begin_pass(&pass);
     if (drawing != NULL) drawing(0);
     else sgl_context_draw(draw_context);
     error = sgl_context_error(draw_context);
     sg_end_pass();
+    if (effects != NULL) effects(WGF_GFX_PRIV_RENDER_EFFECTS_END, &pass);
     sg_commit();
     in_frame = false;
     last_frame = frame_number;
@@ -517,7 +521,7 @@ void wgf_gfx_priv_render_enter_pass(int pass, wgf_handle_t texture, int width, i
         frame_height = screen_height;
         frame_dpi_scale = screen_dpi_scale;
         present = screen_present;
-        pass_flipped = false;
+        pass_flipped = screen_flipped;
     }
     current_pass = pass;
     pass_target = pass != 0 ? texture : 0;
@@ -531,6 +535,11 @@ void wgf_gfx_priv_render_enter_pass(int pass, wgf_handle_t texture, int width, i
 void wgf_gfx_priv_render_set_targets(void (*hook)(bool draw))
 {
     targets = hook;
+}
+
+void wgf_gfx_priv_render_set_effects(bool (*hook)(wgf_gfx_priv_render_effects_t when, sg_pass *pass))
+{
+    effects = hook;
 }
 
 wgf_handle_t wgf_gfx_priv_render_get_target(void)
