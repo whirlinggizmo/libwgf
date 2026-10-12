@@ -780,7 +780,7 @@
    "game:asteroids": 400,
    "game:racer": 600
   },
-  "commit": "7960f87 2026-10-12",
+  "commit": "ed446ef 2026-10-12",
   "programs": {
    "app-gamepad": {
     "js": {
@@ -933,19 +933,19 @@
    },
    "game:racer": {
     "binding": {
-     "br": 3972,
-     "gz": 4508,
-     "raw": 25363
+     "br": 4180,
+     "gz": 4739,
+     "raw": 27325
     },
     "js": {
-     "br": 39250,
-     "gz": 45422,
-     "raw": 165021
+     "br": 40737,
+     "gz": 47134,
+     "raw": 173788
     },
     "wasm": {
-     "br": 424064,
-     "gz": 538098,
-     "raw": 1344853
+     "br": 432552,
+     "gz": 549093,
+     "raw": 1371347
     }
    },
    "gfx-environment": {

@@ -1040,6 +1040,10 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## The size baseline for the racer's mirror and speed effect (2026-10-12)
+
+Re-recorded alone (a guard moved): the racer's part 8 (0ee2d68) draws a mirror into a render target, reads its pixels back, and applies a screen effect of its own shader, so it now links libwgf's targets, read-back, custom shaders, and effects: 569.8 to 582.3 KB of gzip (its wasm 525.5 to 536.2), within the game's own 600 KB (its export: 584.8). No other program moved.
+
 ## The racer's part 8, triaged (2026-10-12)
 
 The racer's part 8 (0ee2d68, against libwgf at 29a9d3b): a rear-view mirror drawn into a render target through a camera on the car, shown mirrored by a sprite scaled -1, and a speed effect of the game's own shader, packed with `pack_shader.py`; part 7's warm-up and curves undone, held by libwgf's fixes. Its friction (FRICTION.md, part 8, S1 to S8), each a fix or a task:
