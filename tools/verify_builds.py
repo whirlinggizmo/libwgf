@@ -3,6 +3,7 @@
 
     tools/verify_builds.py [--web] [--windows HOST] [--only STEP[,STEP...]] [--list]
     tools/verify_builds.py --quick [--only STEP[,STEP...]] [--list]
+    tools/verify_builds.py ... --wait-quiet [SECONDS]
 
 This machine's own presets, each configured, built, and tested (ctest, which runs the
 header checks, tools/check_api.py, and tools/check_tools.py too), fastest first:
@@ -65,7 +66,12 @@ the build, toolchain, dependencies, platform code, or a guard.
 
 --only runs the steps named (a preset's name, or a check's); --list prints the steps it
 would run, and runs nothing. Stops at the first step that fails; a PASS names what was
-skipped for want of a tool, so it can't be misread. Standard library only.
+skipped for want of a tool, so it can't be misread.
+
+--wait-quiet waits, before the first step, for a quiet machine: no headless browser running
+(another session's checks) and the load average under QUIET_LOAD, both for SECONDS on end
+(QUIET_SECONDS by default), since the timing steps (actors, frames) fail on a loaded one.
+Linux only (it reads /proc). Standard library only.
 """
 import argparse
 import os
@@ -80,6 +86,56 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools'))  # an embedded Python (Windows) doesn't add it
 from variants import names, native, web  # noqa: E402
 from wine import find_wine  # noqa: E402
+
+QUIET_LOAD = 3.0      # the 1-minute load average --wait-quiet waits under
+QUIET_SECONDS = 120   # for this long on end, unless --wait-quiet names another
+QUIET_POLL = 15
+# What the browsers tools/browser.py starts are named as processes (/proc/<pid>/comm, 15
+# characters at most)
+BROWSERS = ('brave', 'chrome', 'chromium', 'chromium-browse', 'msedge', 'headless_shell')
+
+
+def headless_browsers():
+    """The pids of the headless browsers running: a process named as a browser (its comm,
+    never a match over a command line, which a shell running this would match too) that was
+    started with --headless."""
+    found = []
+    for entry in Path('/proc').iterdir():
+        if not entry.name.isdigit():
+            continue
+        try:
+            if (entry / 'comm').read_text().strip() not in BROWSERS:
+                continue
+            # Chromium rewrites its processes' arguments as one string, joined by spaces
+            argv = (entry / 'cmdline').read_bytes().replace(b'\0', b' ').split()
+        except OSError:  # gone since, or not ours to read
+            continue
+        if any(arg.startswith(b'--headless') for arg in argv):
+            found.append(int(entry.name))
+    return found
+
+
+def wait_quiet(seconds):
+    """Wait until no headless browser has run and the load has been under QUIET_LOAD for
+    `seconds` on end, saying why while it waits."""
+    if not Path('/proc/loadavg').exists():
+        sys.exit('verify_builds: --wait-quiet reads /proc, which this machine has none of')
+    said, start, quiet_since = None, time.monotonic(), None
+    while True:
+        load = float(Path('/proc/loadavg').read_text().split()[0])
+        why = ('a headless browser running' if headless_browsers() else
+               f'the load over {QUIET_LOAD}' if load >= QUIET_LOAD else None)
+        now = time.monotonic()
+        quiet_since = None if why else (quiet_since or now)
+        if why and why != said:  # said once each time the reason changes
+            print(f'verify_builds: waiting for a quiet machine: {why} (load {load:.2f})', flush=True)
+        said = why
+        if quiet_since is not None and now - quiet_since >= seconds:
+            break
+        time.sleep(QUIET_POLL)
+    print(f'verify_builds: quiet (load {load:.2f}, no headless browser for {seconds} s; '
+          f'waited {time.monotonic() - start:.0f} s)', flush=True)
+
 
 # fastest first
 NATIVE = ['debug-headless', 'debug', 'release', 'release-headless', 'debug-ubsan', 'debug-asan', 'debug-tsan']
@@ -209,6 +265,9 @@ def main():
                     help='the quick tier: the steps run before every commit (quick_steps); not with --web or --windows')
     ap.add_argument('--only', help='comma-separated steps to run')
     ap.add_argument('--list', action='store_true', help='print the steps, and run nothing')
+    ap.add_argument('--wait-quiet', type=int, nargs='?', const=QUIET_SECONDS, metavar='SECONDS',
+                    help=f'first wait for no headless browser and a load under {QUIET_LOAD}, '
+                         f'for SECONDS on end (default {QUIET_SECONDS})')
     args = ap.parse_args()
     only = set(args.only.split(',')) if args.only else None
     if args.quick:
@@ -235,6 +294,8 @@ def main():
         for name, _ in plan:
             print(name)
         return
+    if args.wait_quiet is not None:
+        wait_quiet(args.wait_quiet)
     start_all = time.monotonic()
     for name, what in plan:
         print(f'== {name}', flush=True)

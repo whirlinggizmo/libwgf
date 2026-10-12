@@ -170,6 +170,7 @@ No other pointer, no struct, no function pointer, no `void *`, no variadic call.
 - **The quick tier** (`--quick`, about ten minutes): this machine's debug, release, and sanitized presets, the release web build, the examples headless and in a browser, both bindings and the feature test, the actor benchmark, and the web sizes. It runs before every commit; then the commit is pushed and CI checked, and a CI failure is fixed first, before new work.
 - **The full tier** (`--web --windows HOST`: every preset and check this machine can run, and a Windows machine's). It runs when a ROADMAP step closes, before every hand-off to a game session, and before a commit that touches the build system, the toolchain, `deps/`, platform code, or a guard. A step isn't done without a full-tier pass recorded.
 - Each commit's report says which tier ran, and every skip as a skip.
+- The timing steps (`actors`, `frames`) fail on a loaded machine. When another session's checks or builds may be running, `--wait-quiet` waits first for no headless browser and a low load, rather than a hand-written wait.
 
 ## Guards
 
