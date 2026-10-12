@@ -1,0 +1,237 @@
+wgfshader 1
+kind screen
+param strength float fs 0
+param radius float fs 4
+param blur float fs 8
+param dark float fs 12
+param warm vec4 fs 16
+param keep0 vec4 fs 32
+param keep1 vec4 fs 48
+param keep2 vec4 fs 64
+program screen glsl410
+ub 0 vertex 16 wgf_screen_view 1
+ub 1 fragment 16 wgf_screen_frame 1
+ub 2 fragment 80 params 5
+view 8 fragment wgf_screen_tex 2d float
+sampler 8 fragment wgf_screen_smp filtering
+pair 0 fragment 8 8 wgf_screen_tex_wgf_screen_smp
+source vs 336
+#version 410
+
+uniform vec4 wgf_screen_view[1];
+layout(location = 0) out vec2 wgf_screen_uv;
+
+void main()
+{
+    float _18 = float((gl_VertexID << 1) & 2);
+    float _21 = float(gl_VertexID & 2);
+    gl_Position = vec4((_18 * 2.0) - 1.0, ((_21 * 2.0) - 1.0) * wgf_screen_view[0].y, 0.0, 1.0);
+    wgf_screen_uv = vec2(_18, 1.0 - _21);
+}
+
+
+source fs 2849
+#version 410
+
+uniform vec4 wgf_screen_frame[1];
+uniform vec4 params[5];
+uniform sampler2D wgf_screen_tex_wgf_screen_smp;
+
+layout(location = 0) in vec2 wgf_screen_uv;
+layout(location = 0) out vec4 wgf_frag_color;
+
+vec3 wgf_srgb_to_linear(vec3 c)
+{
+    return mix(c * vec3(0.077399380505084991455078125), pow((max(c, vec3(0.040449999272823333740234375)) + vec3(0.054999999701976776123046875)) * vec3(0.947867333889007568359375), vec3(2.400000095367431640625)), step(vec3(0.040449999272823333740234375), c));
+}
+
+vec4 wgf_screen_color_at(vec2 uv)
+{
+    vec4 _121 = texture(wgf_screen_tex_wgf_screen_smp, uv);
+    vec3 param = _121.xyz;
+    return vec4(wgf_srgb_to_linear(param), _121.w);
+}
+
+vec4 wgf_screen_color()
+{
+    vec2 param = wgf_screen_uv;
+    return wgf_screen_color_at(param);
+}
+
+vec2 wgf_screen_texel()
+{
+    return vec2(1.0) / max(wgf_screen_frame[0].xy, vec2(1.0));
+}
+
+float inside(vec4 r, vec2 uv)
+{
+    vec2 _156 = wgf_screen_texel() * 3.0;
+    vec2 _165 = smoothstep(r.xy - _156, r.xy, uv);
+    vec2 _182 = vec2(1.0) - smoothstep(r.xy + r.zw, (r.xy + r.zw) + _156, uv);
+    return ((_165.x * _165.y) * _182.x) * _182.y;
+}
+
+vec3 wgf_linear_to_srgb(inout vec3 c)
+{
+    c = clamp(c, vec3(0.0), vec3(1.0));
+    return mix(c * 12.9200000762939453125, (pow(max(c, vec3(0.003130800090730190277099609375)), vec3(0.4166666567325592041015625)) * 1.05499994754791259765625) - vec3(0.054999999701976776123046875), step(vec3(0.003130800090730190277099609375), c));
+}
+
+void wgf_output(vec3 color, float alpha)
+{
+    vec3 param = color;
+    vec3 _147 = wgf_linear_to_srgb(param);
+    wgf_frag_color = vec4(_147, alpha);
+}
+
+void main()
+{
+    vec4 _199 = wgf_screen_color();
+    float _207 = clamp(params[0].x, 0.0, 1.0);
+    float edge = smoothstep(params[0].y, 1.0, length((wgf_screen_uv - vec2(0.5)) * 2.0) * 0.707106769084930419921875) * _207;
+    vec4 param = params[2];
+    vec2 param_1 = wgf_screen_uv;
+    vec4 param_2 = params[3];
+    vec2 param_3 = wgf_screen_uv;
+    vec4 param_4 = params[4];
+    vec2 param_5 = wgf_screen_uv;
+    float _253 = 1.0 - max(inside(param, param_1), max(inside(param_2, param_3), inside(param_4, param_5)));
+    float _254 = edge;
+    float _255 = _254 * _253;
+    edge = _255;
+    vec3 c = _199.xyz;
+    if (_255 > 0.001000000047497451305389404296875)
+    {
+        vec2 _276 = (((vec2(0.5) - wgf_screen_uv) * params[0].z) * edge) * vec2(0.125);
+        vec3 sum = vec3(0.0);
+        for (int i = 0; i < 8; i++)
+        {
+            vec2 param_6 = wgf_screen_uv + (_276 * float(i));
+            sum += wgf_screen_color_at(param_6).xyz;
+        }
+        c = sum * vec3(0.125);
+    }
+    vec3 _310 = c;
+    vec3 _323 = (_310 * (1.0 - (edge * params[0].w))) * mix(vec3(1.0), params[1].xyz, vec3(_207 * _253));
+    c = _323;
+    vec3 param_7 = _323;
+    float param_8 = _199.w;
+    wgf_output(param_7, param_8);
+}
+
+
+program screen glsl300es
+ub 0 vertex 16 wgf_screen_view 1
+ub 1 fragment 16 wgf_screen_frame 1
+ub 2 fragment 80 params 5
+view 8 fragment wgf_screen_tex 2d float
+sampler 8 fragment wgf_screen_smp filtering
+pair 0 fragment 8 8 wgf_screen_tex_wgf_screen_smp
+source vs 318
+#version 300 es
+
+uniform vec4 wgf_screen_view[1];
+out vec2 wgf_screen_uv;
+
+void main()
+{
+    float _18 = float((gl_VertexID << 1) & 2);
+    float _21 = float(gl_VertexID & 2);
+    gl_Position = vec4((_18 * 2.0) - 1.0, ((_21 * 2.0) - 1.0) * wgf_screen_view[0].y, 0.0, 1.0);
+    wgf_screen_uv = vec2(_18, 1.0 - _21);
+}
+
+
+source fs 3153
+#version 300 es
+precision mediump float;
+precision highp int;
+
+uniform highp vec4 wgf_screen_frame[1];
+uniform highp vec4 params[5];
+uniform highp sampler2D wgf_screen_tex_wgf_screen_smp;
+
+in highp vec2 wgf_screen_uv;
+layout(location = 0) out highp vec4 wgf_frag_color;
+
+highp vec3 wgf_srgb_to_linear(highp vec3 c)
+{
+    return mix(c * vec3(0.077399380505084991455078125), pow((max(c, vec3(0.040449999272823333740234375)) + vec3(0.054999999701976776123046875)) * vec3(0.947867333889007568359375), vec3(2.400000095367431640625)), step(vec3(0.040449999272823333740234375), c));
+}
+
+highp vec4 wgf_screen_color_at(highp vec2 uv)
+{
+    highp vec4 _121 = texture(wgf_screen_tex_wgf_screen_smp, uv);
+    highp vec3 param = _121.xyz;
+    return vec4(wgf_srgb_to_linear(param), _121.w);
+}
+
+highp vec4 wgf_screen_color()
+{
+    highp vec2 param = wgf_screen_uv;
+    return wgf_screen_color_at(param);
+}
+
+highp vec2 wgf_screen_texel()
+{
+    return vec2(1.0) / max(wgf_screen_frame[0].xy, vec2(1.0));
+}
+
+highp float inside(highp vec4 r, highp vec2 uv)
+{
+    highp vec2 _156 = wgf_screen_texel() * 3.0;
+    highp vec2 _165 = smoothstep(r.xy - _156, r.xy, uv);
+    highp vec2 _182 = vec2(1.0) - smoothstep(r.xy + r.zw, (r.xy + r.zw) + _156, uv);
+    return ((_165.x * _165.y) * _182.x) * _182.y;
+}
+
+highp vec3 wgf_linear_to_srgb(inout highp vec3 c)
+{
+    c = clamp(c, vec3(0.0), vec3(1.0));
+    return mix(c * 12.9200000762939453125, (pow(max(c, vec3(0.003130800090730190277099609375)), vec3(0.4166666567325592041015625)) * 1.05499994754791259765625) - vec3(0.054999999701976776123046875), step(vec3(0.003130800090730190277099609375), c));
+}
+
+void wgf_output(highp vec3 color, highp float alpha)
+{
+    highp vec3 param = color;
+    highp vec3 _147 = wgf_linear_to_srgb(param);
+    wgf_frag_color = vec4(_147, alpha);
+}
+
+void main()
+{
+    highp vec4 _199 = wgf_screen_color();
+    highp float _207 = clamp(params[0].x, 0.0, 1.0);
+    highp float edge = smoothstep(params[0].y, 1.0, length((wgf_screen_uv - vec2(0.5)) * 2.0) * 0.707106769084930419921875) * _207;
+    highp vec4 param = params[2];
+    highp vec2 param_1 = wgf_screen_uv;
+    highp vec4 param_2 = params[3];
+    highp vec2 param_3 = wgf_screen_uv;
+    highp vec4 param_4 = params[4];
+    highp vec2 param_5 = wgf_screen_uv;
+    highp float _253 = 1.0 - max(inside(param, param_1), max(inside(param_2, param_3), inside(param_4, param_5)));
+    highp float _254 = edge;
+    highp float _255 = _254 * _253;
+    edge = _255;
+    highp vec3 c = _199.xyz;
+    if (_255 > 0.001000000047497451305389404296875)
+    {
+        highp vec2 _276 = (((vec2(0.5) - wgf_screen_uv) * params[0].z) * edge) * vec2(0.125);
+        highp vec3 sum = vec3(0.0);
+        for (int i = 0; i < 8; i++)
+        {
+            highp vec2 param_6 = wgf_screen_uv + (_276 * float(i));
+            sum += wgf_screen_color_at(param_6).xyz;
+        }
+        c = sum * vec3(0.125);
+    }
+    highp vec3 _310 = c;
+    highp vec3 _323 = (_310 * (1.0 - (edge * params[0].w))) * mix(vec3(1.0), params[1].xyz, vec3(_207 * _253));
+    c = _323;
+    highp vec3 param_7 = _323;
+    highp float param_8 = _199.w;
+    wgf_output(param_7, param_8);
+}
+
+
+end

@@ -29,7 +29,6 @@ class Car extends Behavior {
 
 	final ahead = new Vec3();
 	final smoke:Array<Emitter3d> = [];
-	var warming = 0; // frames left of the smoke's first puffs, made on the grid and then cleared
 	var upsideDown = 0.0;
 	var offTrack = 0.0;
 	var stuck = 0.0;
@@ -38,13 +37,7 @@ class Car extends Behavior {
 		drive = new Drive(actor);
 		paint();
 		for (name in ["smoke_rl", "smoke_rr"])
-			smoke.push(curves(actor.find(name)));
-		// a puff each now, behind the loading screen, cleared two frames on: an emitter's first
-		// particles cost a frame of about 25 ms (the stream check's worst frame, at the
-		// race's wheelspinning start), so that frame is the grid's, not the race's
-		for (e in smoke)
-			e.burst(1);
-		warming = 2;
+			smoke.push(actor.find(name));
 		Main.carReady(this);
 	}
 
@@ -81,23 +74,6 @@ class Car extends Behavior {
 		Probe.setValue("racer.smoke", smoke[0].getCount() + smoke[1].getCount());
 	}
 
-	/**
-		A puff's life, beyond the scene line's two keys: it fades in as it leaves the tire,
-		grows fast and then slowly, and greys as it thins.
-	**/
-	static function curves(e:Emitter3d):Emitter3d {
-		e.clearSizeKeys();
-		e.addSizeKey(0, 0.4);
-		e.addSizeKey(0.25, 1.8);
-		e.addSizeKey(1, 3.6);
-		e.clearColorKeys();
-		e.addColorKey(0, Color.make(235, 235, 235, 0));
-		e.addColorKey(0.08, Color.make(235, 235, 235, 110));
-		e.addColorKey(0.5, Color.make(205, 205, 205, 60));
-		e.addColorKey(1, Color.make(180, 180, 180, 0));
-		return e;
-	}
-
 	/** Whether the car has been upside down, off the track, or stuck long enough to be put back. **/
 	function lost(dt:Float, driving:Bool):Bool {
 		upsideDown = drive.upright < 0.3 ? upsideDown + dt : 0;
@@ -108,9 +84,6 @@ class Car extends Behavior {
 	}
 
 	override function onFrame(dt:Float) {
-		if (warming > 0 && --warming == 0)
-			for (e in smoke)
-				e.clear();
 		actor.getDrawnPosition(drawn);
 		final d = actor.getDrawnDirection(0, 0, 1, ahead);
 		drawnHeading = Math.atan2(d.x, d.z);

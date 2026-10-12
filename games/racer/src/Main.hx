@@ -39,6 +39,10 @@ class Main {
 	static inline var SUN_X = 0.5826; // cos 25 sin 40
 	static inline var SUN_Y = 0.4226; // sin 25
 	static inline var SUN_Z = -0.6943; // -cos 25 cos 40
+	// the rear-view mirror and the speed effect, each switched off to measure what it costs
+	// (tools/frames.py; FRICTION part 8)
+	static inline var MIRROR = true;
+	static inline var EFFECT = true;
 
 	public static var stage:Stage3d;
 	public static var scene:Scene;
@@ -88,6 +92,8 @@ class Main {
 		sun.setShadowStrength(0.85);
 
 		camera = new ChaseCamera(stage);
+		if (EFFECT)
+			SpeedEffect.create();
 
 		bindControls();
 		Behavior.register("Car", e -> new Car(e));
@@ -124,6 +130,7 @@ class Main {
 	/** The car's behavior is made: the race can start. **/
 	public static function carReady(c:Car) {
 		car = c;
+		Mirror.create(c.actor);
 		grid();
 	}
 
@@ -245,7 +252,9 @@ class Main {
 		#end
 		if (car != null)
 			camera.update(car, Loop.getFrameDelta());
+		Mirror.draw(stage, MIRROR && (state == State.COUNTDOWN || state == State.RACING)); // into its target, drawn before the screen
 		stage.draw();
+		SpeedEffect.update(car == null ? 0 : car.drive.speed, state == State.RACING);
 		if (Action.isPressed("bodies"))
 			showBodies = !showBodies;
 		if (showBodies && Draw.begin3d(camera.camera)) {
@@ -275,6 +284,7 @@ class Main {
 	#end
 
 	static final visible = new Vec4();
+	static final panel = new Vec4();
 
 	static function hud() {
 		final white = Color.get(ColorStock.WHITE);
@@ -286,6 +296,10 @@ class Main {
 			return;
 		}
 		Draw.rectangle(left - 12, top - 8, 300, 128, shade);
+		SpeedEffect.keep(v, 0, panel.set(left - 12, top - 8, 300, 128));
+		// the speed's panel: the effect leaves both panels as they are, so each is a shaded box
+		Draw.rectangle(right - 138, bottom - 88, 150, 100, shade);
+		SpeedEffect.keep(v, 1, panel.set(right - 138, bottom - 88, 150, 100));
 		Draw.text(0, 'LAP ${Std.int(Math.min(Laps.lap, Laps.LAPS))}/${Laps.LAPS}', left, top, 32, white);
 		Draw.text(0, 'time  ${Laps.format(Laps.current)}', left, top + 42, 20, white);
 		Draw.text(0, 'best  ${Laps.best > 0 ? Laps.format(Laps.best) : "-:--.--"}', left, top + 66, 20, Color.get(ColorStock.GOLD));
@@ -293,6 +307,11 @@ class Main {
 		Draw.textAligned(0, '$kmh', right, bottom - 22, 56, white, TextHalign.RIGHT, TextValign.BOTTOM);
 		Draw.textAligned(0, 'km/h', right, bottom, 18, white, TextHalign.RIGHT, TextValign.BOTTOM);
 		Draw.text(0, 'checkpoint ${Laps.passed == 0 ? 0 : (Laps.next == 0 ? Track.CHECKPOINTS : Laps.next)}/${Track.CHECKPOINTS}', left, top + 92, 16, Color.get(ColorStock.LIGHTGRAY));
+		Mirror.show(v);
+		if (Mirror.shown)
+			SpeedEffect.keep(v, 2, Mirror.rect);
+		else
+			SpeedEffect.clearKeep(2);
 		if (state == State.READY)
 			Draw.textAligned(0, 'press ${Action.getBindingText("throttle", 0)} to start', v.x + v.z / 2, v.y + v.w * 0.35, 40, white,
 				TextHalign.CENTER, TextValign.MIDDLE);

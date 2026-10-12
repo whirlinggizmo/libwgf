@@ -240,6 +240,14 @@ def expect(path, passes, pressed_at, ready_at):
     ats.append(f'at {first_key + 1} expect racer.state == 2')
     ats.append(f'at {first_key + 200} expect racer.state == 3')
     ats.append(f'at {first_key + 200} expect racer.gantry == "LAP 1 / 3"')  # the start gantry's board
+    # the mirror and the speed effect: neither on the grid; the mirror drawn while racing,
+    # its pixels read back a second in (DONE in a browser, FAILED headless: either is an
+    # answer, 0 is none); the effect near its full strength at the line
+    ats.append(f'at {first_key - 1} expect racer.mirror == 0')
+    ats.append(f'at {first_key - 1} expect racer.effect == 0')
+    ats.append(f'at {first_key + 200} expect racer.mirror == 1')
+    ats.append(f'at {first_key + 300} expect racer.mirror_read >= 2')
+    ats.append(f'at {first_key + 300} expect racer.mirror_seen != 0')
     count = 8
     for n, f in passes:
         ats.append(f'at {f - WINDOW} expect racer.passed == {n - 1}')
@@ -250,6 +258,7 @@ def expect(path, passes, pressed_at, ready_at):
     best = [float(l.split('==')[1]) for l in tail if 'racer.best ==' in l]
     lap = best[0] if best else (passes[-1][1] - passes[0][1]) / 60
     ats.append(f'at {line_frame - WINDOW} expect racer.lap == 1')
+    ats.append(f'at {line_frame - WINDOW} expect racer.effect > 0.5')
     ats.append(f'at {line_frame + WINDOW} expect racer.lap == 2')
     ats.append(f'at {line_frame + WINDOW} expect racer.best > {lap - 1.5:.0f}')
     ats.append(f'at {line_frame + WINDOW} expect racer.best < {lap + 1.5:.0f}')
@@ -401,7 +410,7 @@ def race(recorded, dest):
     best = [float(l.split('==')[1]) for l in tail if 'racer.best ==' in l][0]
     ats += ['at 1 wait racer.state >= 1', f'at {end} expect racer.state == 4', f'at {end} expect racer.lap == 4',
             f'at {end} expect racer.passed == 25', f'at {end} expect racer.best > {best - 1.5:.1f}',
-            f'at {end} expect racer.best < {best + 1.5:.1f}', f'at {end} expect racer.gantry == "FINISH"',
+            f'at {end} expect racer.best < {best + 1.5:.1f}', f'at {end} expect racer.gantry == "FINISH"', f'at {end} expect racer.mirror == 0', f'at {end} expect racer.effect == 0',
             f'at {end + 30} screenshot results',
             f'at {end + 40} key tap enter', f'at {end + 42} expect racer.state == 2', f'at {end + 42} expect racer.lap == 1',
             f'at {end + 42} expect racer.passed == 0', f'at {end + 42} expect racer.gantry == "LAP 1 / 3"',

@@ -36,17 +36,17 @@ prefab car/lamp_r
   transform position=-0.6,0.12,2.01
 end
 # Tire smoke: an emitter behind each rear tire's contact patch, a little up, its rate set
-# from that wheel's slip (src/Car.hx, which also gives it its curves: a scene line has
-# two keys). They hang from the car, not the wheels: a wheel turns about its x each tick,
+# from that wheel's slip (src/Car.hx). Its curves: a puff fades in as it leaves the tire,
+# grows fast and then slowly, and greys as it thins. They hang from the car, not the wheels: a wheel turns about its x each tick,
 # and an emitter's particle velocity turns with its actor, so under a wheel they'd be
 # thrown round it. Each puff drifts up and back from the tire and stays where it was born
 # as the car goes on.
 prefab car/smoke_rl
-  emitter3d texture="fx/puff.png" rate=0 max=384 life=1.0,1.8 spawn_box=0.12,0.04,0.2 velocity=0,1.4,-1.0,0.9,0.4 gravity=0,0.9,0 drag=1.4 inherit=0.1 spin=-0.8,0.8 alpha=blend
+  emitter3d texture="fx/puff.png" rate=0 max=384 life=1.0,1.8 spawn_box=0.12,0.04,0.2 velocity=0,1.4,-1.0,0.9,0.4 gravity=0,0.9,0 drag=1.4 inherit=0.1 spin=-0.8,0.8 alpha=blend size_keys=0:0.4,0.25:1.8,1:3.6 color_keys=0:#EBEBEB00,0.08:#EBEBEB6E,0.5:#CDCDCD3C,1:#B4B4B400
   transform position=1.0,-0.22,-1.65
 end
 prefab car/smoke_rr
-  emitter3d texture="fx/puff.png" rate=0 max=384 life=1.0,1.8 spawn_box=0.12,0.04,0.2 velocity=0,1.4,-1.0,0.9,0.4 gravity=0,0.9,0 drag=1.4 inherit=0.1 spin=-0.8,0.8 alpha=blend
+  emitter3d texture="fx/puff.png" rate=0 max=384 life=1.0,1.8 spawn_box=0.12,0.04,0.2 velocity=0,1.4,-1.0,0.9,0.4 gravity=0,0.9,0 drag=1.4 inherit=0.1 spin=-0.8,0.8 alpha=blend size_keys=0:0.4,0.25:1.8,1:3.6 color_keys=0:#EBEBEB00,0.08:#EBEBEB6E,0.5:#CDCDCD3C,1:#B4B4B400
   transform position=-1.0,-0.22,-1.65
 end
 prefab car/wheel_fl

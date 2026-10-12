@@ -3362,6 +3362,8 @@ at 7800 expect racer.passed == 25
 at 7800 expect racer.best > 39.3
 at 7800 expect racer.best < 42.3
 at 7800 expect racer.gantry == "FINISH"
+at 7800 expect racer.mirror == 0
+at 7800 expect racer.effect == 0
 at 7830 screenshot results
 at 7840 key tap enter
 at 7842 expect racer.state == 2

@@ -11,13 +11,18 @@ at 0 pad 0 axis right_x 0.08
 at 0 pad 0 axis right_y -0.04
 at 1 wait racer.state >= 1
 at 1 expect racer.state == 1
+at 9 expect racer.mirror == 0
+at 9 expect racer.effect == 0
 at 10 key down up
 at 11 expect racer.state == 2
 at 190 log streaming
 at 190 expect racer.state == 3
 at 190 expect racer.stream_pending_at_start >= 1
 at 210 expect racer.state == 3
+at 210 expect racer.mirror == 1
 at 301 expect racer.passed == 0
+at 310 expect racer.mirror_read >= 2
+at 310 expect racer.mirror_seen != 0
 at 313 expect racer.passed == 1
 at 313 expect racer.checkpoint == 1
 at 319 key down left
@@ -1049,6 +1054,7 @@ at 2802 key down left
 at 2803 key up left
 at 2841 expect racer.passed == 8
 at 2841 expect racer.lap == 1
+at 2841 expect racer.effect > 0.5
 at 2853 expect racer.passed == 9
 at 2853 expect racer.checkpoint == 1
 at 2853 expect racer.lap == 2
