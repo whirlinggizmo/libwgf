@@ -12,6 +12,11 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# hxcpp, pinned (BUILDING.md): fetched from lib.haxe.org on a cache miss alone, as the
+# pinned Emscripten is cached, since anything stable and external is cached in CI.
+env:
+  HXCPP_VERSION: 4.3.2
+
 jobs:
   linux:
     name: linux (debug, release, headless, sanitizers, the actor benchmark)
@@ -26,8 +31,28 @@ jobs:
       - uses: krdlab/setup-haxe@v1
         with:
           haxe-version: 4.3.7
-      - name: hxcpp
-        run: haxelib install hxcpp 4.3.2 --always --quiet
+      - name: hxcpp's haxelib folder
+        run: echo "HAXELIB_PATH=$HOME/haxelib" >> "$GITHUB_ENV"
+      - uses: actions/cache/restore@v4
+        id: hxcpp
+        with:
+          path: ~/haxelib
+          key: haxelib-hxcpp-${{ env.HXCPP_VERSION }}-${{ runner.os }}
+      - name: hxcpp, fetched on a cache miss (retried)
+        if: steps.hxcpp.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "$HAXELIB_PATH"
+          for attempt in 1 2 3 4 5; do
+            haxelib install hxcpp "$HXCPP_VERSION" --always --quiet && exit 0
+            echo "haxelib install failed (attempt $attempt); retrying in $((attempt * 30)) s"
+            sleep $((attempt * 30))
+          done
+          exit 1
+      - uses: actions/cache/save@v4
+        if: steps.hxcpp.outputs.cache-hit != 'true'
+        with:
+          path: ~/haxelib
+          key: haxelib-hxcpp-${{ env.HXCPP_VERSION }}-${{ runner.os }}
       - name: Presets, every example headless and in a window, and the binding on hxcpp
         run: >-
           python3 tools/verify_builds.py --only
@@ -72,8 +97,31 @@ jobs:
       - uses: krdlab/setup-haxe@v1
         with:
           haxe-version: 4.3.7
-      - name: hxcpp
-        run: haxelib install hxcpp 4.3.2 --always --quiet
+      - name: hxcpp's haxelib folder
+        shell: pwsh
+        run: Add-Content -Path $env:GITHUB_ENV -Value "HAXELIB_PATH=$HOME\haxelib"
+      - uses: actions/cache/restore@v4
+        id: hxcpp
+        with:
+          path: ~/haxelib
+          key: haxelib-hxcpp-${{ env.HXCPP_VERSION }}-${{ runner.os }}
+      - name: hxcpp, fetched on a cache miss (retried)
+        if: steps.hxcpp.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path $env:HAXELIB_PATH | Out-Null
+          foreach ($attempt in 1..5) {
+            haxelib install hxcpp $env:HXCPP_VERSION --always --quiet
+            if ($LASTEXITCODE -eq 0) { exit 0 }
+            Write-Host "haxelib install failed (attempt $attempt); retrying in $($attempt * 30) s"
+            Start-Sleep -Seconds ($attempt * 30)
+          }
+          exit 1
+      - uses: actions/cache/save@v4
+        if: steps.hxcpp.outputs.cache-hit != 'true'
+        with:
+          path: ~/haxelib
+          key: haxelib-hxcpp-${{ env.HXCPP_VERSION }}-${{ runner.os }}
       - name: Presets, every example headless, and the binding on hxcpp
         run: python tools/verify_builds.py --only windows-x64-msvc-debug-headless,windows-x64-msvc-debug,windows-x64-msvc-release,smoke,binding,features
       # headless only: the runner has no GPU, so no OpenGL 4.1 for a window (sokol's GL core);
