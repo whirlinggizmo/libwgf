@@ -1517,6 +1517,25 @@ export const Texture = Object.freeze({
     getWrapV: raw.wgf_texture_get_wrap_v,
     // wgf: call wgf_texture_get_filter
     getFilter: raw.wgf_texture_get_filter,
+    // wgf: call wgf_texture_read
+    read: raw.wgf_texture_read,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
+});
+// wgf: typed TextureRead
+export const TextureRead = Object.freeze({
+    // wgf: call wgf_texture_read_get_status
+    getStatus: raw.wgf_texture_read_get_status,
+    // wgf: call wgf_texture_read_get_width
+    getWidth: raw.wgf_texture_read_get_width,
+    // wgf: call wgf_texture_read_get_height
+    getHeight: raw.wgf_texture_read_get_height,
+    // wgf: call wgf_texture_read_get_data
+    getData: raw.wgf_texture_read_get_data,
+    // wgf: call wgf_texture_read_get_size
+    getSize: raw.wgf_texture_read_get_size,
+    // wgf: call wgf_texture_read_destroy
+    destroy: raw.wgf_texture_read_destroy,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
@@ -1879,6 +1898,8 @@ export const TextHalign = Object.freeze({ LEFT: 0, CENTER: 1, RIGHT: 2 });
 export const TextValign = Object.freeze({ TOP: 0, MIDDLE: 1, BOTTOM: 2 });
 // wgf: enum TextureFilter
 export const TextureFilter = Object.freeze({ LINEAR: 0, NEAREST: 1 });
+// wgf: enum TextureReadStatus
+export const TextureReadStatus = Object.freeze({ NONE: 0, PENDING: 1, DONE: 2, FAILED: 3 });
 // wgf: enum TextureWrap
 export const TextureWrap = Object.freeze({ REPEAT: 0, CLAMP: 1, MIRROR: 2 });
 // wgf: enum UiAlign

@@ -627,6 +627,7 @@ class Main {
 	}
 
 	static var target:Texture;
+	static var targetRead:TextureRead;
 
 	/** A render target: drawn into with the stage through another camera, then on the screen. **/
 	static function renderTarget():Void {
@@ -639,6 +640,21 @@ class Main {
 		stage3d.drawWith(camera3d);
 		Render.endTarget();
 		Draw.texture(target, 220, 4, 64, 48, Color.get(ColorStock.WHITE));
+		targetRead = target.read();
+		expect(targetRead.getStatus() == TextureReadStatus.PENDING && tiles.read().isNone(),
+			"a target read back, PENDING; a texture that isn't one refused");
+	}
+
+	/** The read, the frame after: DONE with the target's pixels, or FAILED with no GPU (headless). **/
+	static function targetReadBack():Void {
+		final status = targetRead.getStatus();
+		final done = status == TextureReadStatus.DONE;
+		final data = targetRead.getData();
+		final width = targetRead.getWidth(), height = targetRead.getHeight(), size = targetRead.getSize();
+		expect(done || status == TextureReadStatus.FAILED, "read in the next frame");
+		expect(done ? width == 64 && height == 48 && size == 64 * 48 * 4 && data.length == size
+			: width == 0 && height == 0 && size == 0, "DONE: its pixels, 4 bytes each; FAILED: none");
+		expect(targetRead.destroy() && !targetRead.isAlive(), "the read destroyed");
 	}
 
 	// ---- the frames ----------------------------------------------------------------------
@@ -677,6 +693,7 @@ class Main {
 			expect(Debug.isFpsShown(), "and shown");
 		}
 		if (frames == 3) {
+			targetReadBack();
 			expect(Loop.getFrameCost() > 0, "a frame's cost, measured");
 			Debug.hideFps();
 			expect(!Debug.isFpsShown(), "the overlay hidden");

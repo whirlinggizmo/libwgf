@@ -641,6 +641,16 @@ bool wgf_gfx_priv_texture_get_target(wgf_texture_t texture, sg_attachments *atta
     return true;
 }
 
+bool wgf_gfx_priv_texture_get_target_image(wgf_texture_t texture, sg_image *image, int *width, int *height)
+{
+    const texture_t *texture_ptr = texture_of(texture);
+    if (texture_ptr == NULL || !texture_ptr->target) return false;
+    *image = texture_ptr->image;
+    *width = texture_ptr->width;
+    *height = texture_ptr->height;
+    return true;
+}
+
 bool wgf_gfx_priv_texture_set_clear_color(wgf_texture_t texture, wgf_color_t color)
 {
     texture_t *texture_ptr = texture_of(texture);

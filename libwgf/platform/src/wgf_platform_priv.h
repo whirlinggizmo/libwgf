@@ -73,6 +73,12 @@ bool wgf_platform_priv_can_quit(void);
  * wgrender's wgri_platform_environment and _swapchain. */
 sg_environment wgf_platform_priv_get_environment(void);
 sg_swapchain wgf_platform_priv_get_swapchain(void);
+/* An image's pixels into `rgba` (width * height * 4 bytes, the bottom row of GL's
+ * framebuffer first: a render target's top row, since gfx stores them top row first),
+ * read on the GPU's own thread outside any pass. Here, not in gfx, since only the file
+ * compiling sokol sees the GL calls it loads. False where nothing can be read: the dummy
+ * backend (headless) or an image GL doesn't have. */
+bool wgf_platform_priv_read_image(sg_image image, int width, int height, unsigned char *rgba);
 /* Seconds the display shows a frame for, measured. */
 double wgf_platform_priv_get_frame_duration(void);
 

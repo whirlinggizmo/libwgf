@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "render/wgf_gfx_render_priv.h"
+#include "wgf_core_part_priv.h"
 #include "wgf_core_priv.h"
 #include "wgf_platform_priv.h"
 #include "wgf_color.h"
@@ -10,8 +11,10 @@
 
 /* Render targets on sokol's dummy backend (a headless build): what makes one and what
  * refuses one, a target's own size and scale while it is drawn into and the screen's
- * after, the clips of each pass, a target's clear color, and the passes a frame allows.
- * No GPU, so no pixels: those are wgf_gfx_target_window_test's. */
+ * after, the clips of each pass, a target's clear color, the passes a frame allows, and a
+ * read of one (wgf_texture_read): PENDING until the update after its frame is drawn,
+ * FAILED then, and holding its target till then. No GPU, so no pixels: those are
+ * wgf_gfx_target_window_test's, and wgf_gfx_texture_read_window_test's. */
 
 static int failures;
 
@@ -26,6 +29,7 @@ static void expect(int ok, const char *what)
 int main(void)
 {
     wgf_texture_t target, other;
+    wgf_texture_read_t read, pending;
     float x, y, w, h;
     int i;
 
@@ -86,7 +90,29 @@ int main(void)
     wgf_render_end_target();
     wgf_gfx_priv_end_frame();
 
+    expect(wgf_texture_read(other) == 0 && wgf_texture_read(0) == 0, "no read of a texture that isn't a target");
+    read = wgf_texture_read(target);
+    expect(read != 0 && wgf_texture_read_get_status(read) == WGF_TEXTURE_READ_STATUS_PENDING, "a read, PENDING");
+    pending = wgf_texture_read(target);
+    expect(wgf_texture_read_destroy(pending) && wgf_texture_read_get_status(pending) == WGF_TEXTURE_READ_STATUS_NONE,
+           "one destroyed PENDING: gone");
+    wgf_core_priv_part_update(0.0f);
+    expect(wgf_texture_read_get_status(read) == WGF_TEXTURE_READ_STATUS_PENDING,
+           "PENDING in an update before its frame is drawn");
     wgf_resource_release(target);
+    expect(wgf_resource_get_status(target) == WGF_RESOURCE_STATUS_READY, "its target held while it is PENDING");
+    wgf_gfx_priv_begin_frame();
+    wgf_gfx_priv_end_frame();
+    wgf_core_priv_part_update(0.0f);
+    expect(wgf_texture_read_get_status(read) == WGF_TEXTURE_READ_STATUS_FAILED, "FAILED next: no GPU to read");
+    expect(wgf_texture_read_get_data(read) == NULL && wgf_texture_read_get_size(read) == 0 &&
+               wgf_texture_read_get_width(read) == 0 && wgf_texture_read_get_height(read) == 0,
+           "no pixels, and no size");
+    expect(!wgf_handle_is_alive(target), "its target let go of once read");
+    expect(wgf_texture_read_destroy(read) && !wgf_texture_read_destroy(read) &&
+               wgf_texture_read_get_status(read) == WGF_TEXTURE_READ_STATUS_NONE,
+           "destroyed once");
+
     wgf_gfx_priv_begin_frame();
     expect(!wgf_render_begin_target(target), "a target released isn't begun");
     wgf_gfx_priv_end_frame();

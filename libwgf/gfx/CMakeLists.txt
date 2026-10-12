@@ -42,6 +42,7 @@ wgf_layer(gfx
         src/texture/wgf_gfx_ktx.c
         src/texture/wgf_gfx_stb_impl.c
         src/texture/wgf_gfx_texture.c
+        src/texture/wgf_gfx_texture_read.c
     DEPS
         math core platform asset)
 
@@ -96,6 +97,7 @@ if(WGF_TESTS)
     wgf_window_test(gfx wgf_gfx_target_window_test)
     wgf_window_test(gfx wgf_gfx_shader_window_test)
     wgf_window_test(gfx wgf_gfx_effect_window_test)
+    wgf_window_test(gfx wgf_gfx_texture_read_window_test)
     foreach(test wgf_gfx_shader_window_test wgf_gfx_effect_window_test)
         if(TARGET ${test}) # the tests' packed shaders, from where they are
             target_compile_definitions(${test} PRIVATE WGF_TEST_FILES="${CMAKE_CURRENT_SOURCE_DIR}/tests")
@@ -108,6 +110,7 @@ if(WGF_TESTS)
     wgf_web_test(gfx wgf_gfx_stage3d_web_test 1)
     wgf_web_test(gfx wgf_gfx_shadow_web_test 1)
     wgf_web_test(gfx wgf_gfx_target_web_test 1)
+    wgf_web_test(gfx wgf_gfx_texture_read_web_test 1)
     wgf_web_test(gfx wgf_gfx_shader_web_test 1)
     if(TARGET wgf_gfx_shader_web_test)
         target_link_options(wgf_gfx_shader_web_test PRIVATE

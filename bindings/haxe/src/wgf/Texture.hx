@@ -83,4 +83,12 @@ abstract Texture(Int) from Int to Int to wgf.Handle {
 	**/
 	public inline function getFilter():TextureFilter
 		return Raw.wgf_texture_get_filter(this);
+
+	/**
+	    A read of `target`, which it holds a reference to until it is read. 0 for a texture
+	    that isn't a render target (wgf_texture_create_target), or no room for another read,
+	    each logged.
+	**/
+	public inline function read():TextureRead
+		return Raw.wgf_texture_read(this);
 }

@@ -46,6 +46,8 @@ export type wgf_font_t = number & { readonly [kind]: "wgf_font_t" };
 export type wgf_shader_t = number & { readonly [kind]: "wgf_shader_t" };
 /** A handle of kind wgf_texture_t; 0 is none. */
 export type wgf_texture_t = number & { readonly [kind]: "wgf_texture_t" };
+/** A handle of kind wgf_texture_read_t; 0 is none. */
+export type wgf_texture_read_t = number & { readonly [kind]: "wgf_texture_read_t" };
 /** A handle of kind wgf_material_t; 0 is none. */
 export type wgf_material_t = number & { readonly [kind]: "wgf_material_t" };
 /** A handle of kind wgf_environment_t; 0 is none. */
@@ -462,6 +464,12 @@ export type wgf_texture_wrap_t = typeof WGF_TEXTURE_WRAP_REPEAT | typeof WGF_TEX
 export declare const WGF_TEXTURE_FILTER_LINEAR: 0;
 export declare const WGF_TEXTURE_FILTER_NEAREST: 1;
 export type wgf_texture_filter_t = typeof WGF_TEXTURE_FILTER_LINEAR | typeof WGF_TEXTURE_FILTER_NEAREST;
+
+export declare const WGF_TEXTURE_READ_STATUS_NONE: 0;
+export declare const WGF_TEXTURE_READ_STATUS_PENDING: 1;
+export declare const WGF_TEXTURE_READ_STATUS_DONE: 2;
+export declare const WGF_TEXTURE_READ_STATUS_FAILED: 3;
+export type wgf_texture_read_status_t = typeof WGF_TEXTURE_READ_STATUS_NONE | typeof WGF_TEXTURE_READ_STATUS_PENDING | typeof WGF_TEXTURE_READ_STATUS_DONE | typeof WGF_TEXTURE_READ_STATUS_FAILED;
 
 export declare const WGF_MATERIAL_SHADING_PBR: 0;
 export declare const WGF_MATERIAL_SHADING_UNLIT: 1;
@@ -2736,6 +2744,48 @@ export declare function wgf_texture_get_wrap_v(texture: wgf_texture_t | 0): wgf_
  * texture, or a wrap or filter that isn't one.
  */
 export declare function wgf_texture_get_filter(texture: wgf_texture_t | 0): wgf_texture_filter_t;
+
+/**
+ * A read of `target`, which it holds a reference to until it is read. 0 for a texture
+ * that isn't a render target (wgf_texture_create_target), or no room for another read,
+ * each logged.
+ */
+export declare function wgf_texture_read(target: wgf_texture_t | 0): wgf_texture_read_t;
+
+/**
+ * Its status: PENDING until the next frame's update, then DONE or FAILED. A getter
+ * answers NONE, 0, or NULL for a handle that isn't a read.
+ */
+export declare function wgf_texture_read_get_status(read: wgf_texture_read_t | 0): wgf_texture_read_status_t;
+
+/**
+ * The target's size as it was read; 0 until DONE.
+ */
+export declare function wgf_texture_read_get_width(read: wgf_texture_read_t | 0): number;
+
+/**
+ * The target's size as it was read; 0 until DONE.
+ */
+export declare function wgf_texture_read_get_height(read: wgf_texture_read_t | 0): number;
+
+/**
+ * A DONE read's pixels: RGBA, 8 bits a channel, width * 4 bytes a row, the top row
+ * first, as an image file stores them; valid until the read is destroyed. Any other read:
+ * NULL and 0.
+ */
+export declare function wgf_texture_read_get_data(read: wgf_texture_read_t | 0): Uint8Array;
+
+/**
+ * A DONE read's pixels: RGBA, 8 bits a channel, width * 4 bytes a row, the top row
+ * first, as an image file stores them; valid until the read is destroyed. Any other read:
+ * NULL and 0.
+ */
+export declare function wgf_texture_read_get_size(read: wgf_texture_read_t | 0): number;
+
+/**
+ * False for a handle that isn't a read. One still PENDING is dropped, unread.
+ */
+export declare function wgf_texture_read_destroy(read: wgf_texture_read_t | 0): boolean;
 
 /**
  * A material with glTF's defaults. 0 when `shading` isn't one (logged), or there is no

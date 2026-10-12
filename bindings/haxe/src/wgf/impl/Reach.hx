@@ -653,6 +653,13 @@ class Reach {
 		"wgf_texture_get_width",
 		"wgf_texture_get_wrap_u",
 		"wgf_texture_get_wrap_v",
+		"wgf_texture_read",
+		"wgf_texture_read_destroy",
+		"wgf_texture_read_get_data",
+		"wgf_texture_read_get_height",
+		"wgf_texture_read_get_size",
+		"wgf_texture_read_get_status",
+		"wgf_texture_read_get_width",
 		"wgf_texture_set_sampling",
 		"wgf_time_get_seconds",
 		"wgf_touch_get_count",
@@ -789,7 +796,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...780) 0];
+	static final counts:Array<Int> = [for (_ in 0...787) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

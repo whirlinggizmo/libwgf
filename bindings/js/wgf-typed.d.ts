@@ -4659,6 +4659,47 @@ export declare const Texture: {
      * texture, or a wrap or filter that isn't one.
      */
     readonly getFilter: typeof raw.wgf_texture_get_filter;
+    /**
+     * A read of `target`, which it holds a reference to until it is read. 0 for a texture
+     * that isn't a render target (wgf_texture_create_target), or no room for another read,
+     * each logged.
+     */
+    readonly read: typeof raw.wgf_texture_read;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
+};
+/** A handle of kind wgf_texture_read_t: the raw binding's branded type. */
+export type TextureRead = raw.wgf_texture_read_t;
+export declare const TextureRead: {
+    /**
+     * Its status: PENDING until the next frame's update, then DONE or FAILED. A getter
+     * answers NONE, 0, or NULL for a handle that isn't a read.
+     */
+    readonly getStatus: typeof raw.wgf_texture_read_get_status;
+    /**
+     * The target's size as it was read; 0 until DONE.
+     */
+    readonly getWidth: typeof raw.wgf_texture_read_get_width;
+    /**
+     * The target's size as it was read; 0 until DONE.
+     */
+    readonly getHeight: typeof raw.wgf_texture_read_get_height;
+    /**
+     * A DONE read's pixels: RGBA, 8 bits a channel, width * 4 bytes a row, the top row
+     * first, as an image file stores them; valid until the read is destroyed. Any other read:
+     * NULL and 0.
+     */
+    readonly getData: typeof raw.wgf_texture_read_get_data;
+    /**
+     * A DONE read's pixels: RGBA, 8 bits a channel, width * 4 bytes a row, the top row
+     * first, as an image file stores them; valid until the read is destroyed. Any other read:
+     * NULL and 0.
+     */
+    readonly getSize: typeof raw.wgf_texture_read_get_size;
+    /**
+     * False for a handle that isn't a read. One still PENDING is dropped, unread.
+     */
+    readonly destroy: typeof raw.wgf_texture_read_destroy;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
@@ -5637,6 +5678,8 @@ export type TextValign = raw.wgf_text_valign_t;
 export declare const TextValign: { readonly TOP: TextValign; readonly MIDDLE: TextValign; readonly BOTTOM: TextValign; };
 export type TextureFilter = raw.wgf_texture_filter_t;
 export declare const TextureFilter: { readonly LINEAR: TextureFilter; readonly NEAREST: TextureFilter; };
+export type TextureReadStatus = raw.wgf_texture_read_status_t;
+export declare const TextureReadStatus: { readonly NONE: TextureReadStatus; readonly PENDING: TextureReadStatus; readonly DONE: TextureReadStatus; readonly FAILED: TextureReadStatus; };
 export type TextureWrap = raw.wgf_texture_wrap_t;
 export declare const TextureWrap: { readonly REPEAT: TextureWrap; readonly CLAMP: TextureWrap; readonly MIRROR: TextureWrap; };
 export type UiAlign = raw.wgf_ui_align_t;

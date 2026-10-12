@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "1975b6b77214bbd9" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "3644bb0c4722b036" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -615,6 +615,11 @@ export const WGF_TEXTURE_WRAP_MIRROR = 2;
 
 export const WGF_TEXTURE_FILTER_LINEAR = 0;
 export const WGF_TEXTURE_FILTER_NEAREST = 1;
+
+export const WGF_TEXTURE_READ_STATUS_NONE = 0;
+export const WGF_TEXTURE_READ_STATUS_PENDING = 1;
+export const WGF_TEXTURE_READ_STATUS_DONE = 2;
+export const WGF_TEXTURE_READ_STATUS_FAILED = 3;
 
 export const WGF_MATERIAL_SHADING_PBR = 0;
 export const WGF_MATERIAL_SHADING_UNLIT = 1;
@@ -4020,6 +4025,76 @@ export function wgf_texture_get_wrap_v(texture) {
 export function wgf_texture_get_filter(texture) {
     const value = host["_wgf_texture_get_filter"](texture);
     return value;
+}
+
+// wgf: call wgf_texture_read
+/**
+ * A read of `target`, which it holds a reference to until it is read. 0 for a texture
+ * that isn't a render target (wgf_texture_create_target), or no room for another read,
+ * each logged.
+ */
+export function wgf_texture_read(target) {
+    const value = host["_wgf_texture_read"](target);
+    return value >>> 0;
+}
+
+// wgf: call wgf_texture_read_get_status
+/**
+ * Its status: PENDING until the next frame's update, then DONE or FAILED. A getter
+ * answers NONE, 0, or NULL for a handle that isn't a read.
+ */
+export function wgf_texture_read_get_status(read) {
+    const value = host["_wgf_texture_read_get_status"](read);
+    return value;
+}
+
+// wgf: call wgf_texture_read_get_width
+/**
+ * The target's size as it was read; 0 until DONE.
+ */
+export function wgf_texture_read_get_width(read) {
+    const value = host["_wgf_texture_read_get_width"](read);
+    return value;
+}
+
+// wgf: call wgf_texture_read_get_height
+/**
+ * The target's size as it was read; 0 until DONE.
+ */
+export function wgf_texture_read_get_height(read) {
+    const value = host["_wgf_texture_read_get_height"](read);
+    return value;
+}
+
+// wgf: call wgf_texture_read_get_data
+/**
+ * A DONE read's pixels: RGBA, 8 bits a channel, width * 4 bytes a row, the top row
+ * first, as an image file stores them; valid until the read is destroyed. Any other read:
+ * NULL and 0.
+ */
+export function wgf_texture_read_get_data(read) {
+    const value = host["_wgf_texture_read_get_data"](read);
+    return bytesOut(value, host["_wgf_texture_read_get_size"](read));
+}
+
+// wgf: call wgf_texture_read_get_size
+/**
+ * A DONE read's pixels: RGBA, 8 bits a channel, width * 4 bytes a row, the top row
+ * first, as an image file stores them; valid until the read is destroyed. Any other read:
+ * NULL and 0.
+ */
+export function wgf_texture_read_get_size(read) {
+    const value = host["_wgf_texture_read_get_size"](read);
+    return value;
+}
+
+// wgf: call wgf_texture_read_destroy
+/**
+ * False for a handle that isn't a read. One still PENDING is dropped, unread.
+ */
+export function wgf_texture_read_destroy(read) {
+    const value = host["_wgf_texture_read_destroy"](read);
+    return value !== 0;
 }
 
 // wgf: call wgf_material_create

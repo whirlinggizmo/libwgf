@@ -67,6 +67,41 @@ WGF_API wgf_texture_wrap_t wgf_texture_get_wrap_u(wgf_texture_t texture);
 WGF_API wgf_texture_wrap_t wgf_texture_get_wrap_v(wgf_texture_t texture);
 WGF_API wgf_texture_filter_t wgf_texture_get_filter(wgf_texture_t texture);
 
+/* A render target read back: its pixels in memory, for a screenshot of it, a tool, or a
+ * pixel check. A read is a task, a handle of kind "gfx.texture_read" (CONVENTIONS.md's
+ * asynchronous work): PENDING as it is made, then, in the runtime's update at the start of
+ * the next frame, DONE with what the target held once the frame the read was asked in was
+ * drawn -- or FAILED where there is no GPU to read (a headless build) or no memory for its
+ * pixels. Reading stalls that update until the GPU has drawn the frame:
+ * fine for a screenshot, not every frame. */
+typedef wgf_handle_t wgf_texture_read_t;
+
+typedef enum wgf_texture_read_status_t {
+    WGF_TEXTURE_READ_STATUS_NONE = 0, /* not a read */
+    WGF_TEXTURE_READ_STATUS_PENDING = 1,
+    WGF_TEXTURE_READ_STATUS_DONE = 2,
+    WGF_TEXTURE_READ_STATUS_FAILED = 3
+} wgf_texture_read_status_t;
+
+/* A read of `target`, which it holds a reference to until it is read. 0 for a texture
+ * that isn't a render target (wgf_texture_create_target), or no room for another read,
+ * each logged. */
+WGF_API wgf_texture_read_t wgf_texture_read(wgf_texture_t target);
+
+/* Its status: PENDING until the next frame's update, then DONE or FAILED. A getter
+ * answers NONE, 0, or NULL for a handle that isn't a read. */
+WGF_API wgf_texture_read_status_t wgf_texture_read_get_status(wgf_texture_read_t read);
+/* The target's size as it was read; 0 until DONE. */
+WGF_API int wgf_texture_read_get_width(wgf_texture_read_t read);
+WGF_API int wgf_texture_read_get_height(wgf_texture_read_t read);
+/* A DONE read's pixels: RGBA, 8 bits a channel, width * 4 bytes a row, the top row
+ * first, as an image file stores them; valid until the read is destroyed. Any other read:
+ * NULL and 0. */
+WGF_API const unsigned char *wgf_texture_read_get_data(wgf_texture_read_t read);
+WGF_API int wgf_texture_read_get_size(wgf_texture_read_t read);
+/* False for a handle that isn't a read. One still PENDING is dropped, unread. */
+WGF_API bool wgf_texture_read_destroy(wgf_texture_read_t read);
+
 #ifdef __cplusplus
 }
 #endif

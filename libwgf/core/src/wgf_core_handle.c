@@ -19,6 +19,7 @@ static const char *const kind_names[WGF_CORE_PRIV_HANDLE_KIND_MASK + 1] = {
     [WGF_CORE_PRIV_HANDLE_KIND_MATERIAL] = "gfx.material",
     [WGF_CORE_PRIV_HANDLE_KIND_ENVIRONMENT] = "gfx.environment",
     [WGF_CORE_PRIV_HANDLE_KIND_SHADER] = "gfx.shader",
+    [WGF_CORE_PRIV_HANDLE_KIND_TEXTURE_READ] = "gfx.texture_read",
     [WGF_CORE_PRIV_HANDLE_KIND_COMPONENTS] = "ecs.components",
     [WGF_CORE_PRIV_HANDLE_KIND_SCENE] = "ecs.scene",
     [WGF_CORE_PRIV_HANDLE_KIND_PREFAB] = "ecs.prefab",

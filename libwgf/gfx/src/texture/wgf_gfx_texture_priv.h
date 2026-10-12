@@ -27,6 +27,9 @@ bool wgf_gfx_priv_texture_get_binding(wgf_texture_t texture, sg_view *view, sg_s
  * (wgf_render_set_target_clear_color), kept with it: transparent black unset, and read
  * back for a texture that isn't one. */
 bool wgf_gfx_priv_texture_get_target(wgf_texture_t texture, sg_attachments *attachments, int *width, int *height);
+/* A render target's image as it is sampled (with MSAA, the one its samples resolve
+ * into), and its size, for reading it back; false for a texture that isn't one. */
+bool wgf_gfx_priv_texture_get_target_image(wgf_texture_t texture, sg_image *image, int *width, int *height);
 bool wgf_gfx_priv_texture_set_clear_color(wgf_texture_t texture, wgf_color_t color);
 wgf_color_t wgf_gfx_priv_texture_get_clear_color(wgf_texture_t texture);
 
