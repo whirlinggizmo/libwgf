@@ -322,7 +322,7 @@ cmake --preset windows-x64-mingw-debug-headless && cmake --build --preset window
 ctest --preset windows-x64-mingw-debug-headless   # under Wine
 ```
 
-The tests run through `tools/run_wine.py`: `$WINE`, else `wine64` or `wine` on PATH, else the newest Proton in a Steam library; its prefix is in the per-user cache unless `WINEPREFIX` says otherwise. On Windows, the MinGW presets build with the pinned gcc (`tools/setup_mingw.py`, which configuring runs), or `LIBWGF_MINGW_BIN`'s on purpose.
+The tests run through `tools/run_wine.py`: `$WINE`, else `wine64` or `wine` on PATH, else the newest Proton in a Steam library; its prefix is in the per-user cache unless `WINEPREFIX` says otherwise, and `verify_builds.py` stops that prefix's Wine server once its MinGW steps are done, whether they passed, failed, or were stopped. On Windows, the MinGW presets build with the pinned gcc (`tools/setup_mingw.py`, which configuring runs), or `LIBWGF_MINGW_BIN`'s on purpose.
 
 To build and test on a Windows machine from Linux without pushing, over ssh:
 

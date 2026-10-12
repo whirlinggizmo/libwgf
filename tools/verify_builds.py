@@ -77,6 +77,7 @@ import argparse
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -85,7 +86,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools'))  # an embedded Python (Windows) doesn't add it
 from variants import names, native, web  # noqa: E402
-from wine import find_wine  # noqa: E402
+from usercache import cache_dir  # noqa: E402
+from wine import find_wine, stop_server  # noqa: E402
 
 QUIET_LOAD = 3.0      # the 1-minute load average --wait-quiet waits under
 QUIET_SECONDS = 120   # for this long on end, unless --wait-quiet names another
@@ -297,6 +299,20 @@ def main():
     if args.wait_quiet is not None:
         wait_quiet(args.wait_quiet)
     start_all = time.monotonic()
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))  # a stopped run cleans up as a failed one does
+    try:
+        run_plan(plan, args, notes)
+    finally:
+        if any('mingw' in name and name not in REMOTE for name, _ in plan) and find_wine():  # run_wine.py's prefix
+            stop_server(os.environ.get('WINEPREFIX') or cache_dir('wine'))
+    skipped = f'; SKIPPED: {"; ".join(notes)}' if notes else ''
+    tier = 'the quick tier' if args.quick else ('steps ' + ','.join(sorted(only)) if only else
+                                                ('the full tier' if args.web and args.windows else 'this machine\'s'))
+    print(f'verify_builds: PASS ({tier}: {len(plan)} steps, {time.monotonic() - start_all:.0f} s{skipped})')
+
+
+def run_plan(plan, args, notes):
+    """Each step of the plan in turn, stopping at the first that fails."""
     for name, what in plan:
         print(f'== {name}', flush=True)
         start = time.monotonic()
@@ -319,10 +335,6 @@ def main():
         if not ok:
             sys.exit(f'verify_builds: FAIL at {name}')
         print(f'== {name}: ok ({time.monotonic() - start:.0f} s)', flush=True)
-    skipped = f'; SKIPPED: {"; ".join(notes)}' if notes else ''
-    tier = 'the quick tier' if args.quick else ('steps ' + ','.join(sorted(only)) if only else
-                                                ('the full tier' if args.web and args.windows else 'this machine\'s'))
-    print(f'verify_builds: PASS ({tier}: {len(plan)} steps, {time.monotonic() - start_all:.0f} s{skipped})')
 
 
 if __name__ == '__main__':
