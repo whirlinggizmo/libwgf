@@ -1,5 +1,7 @@
 # libwgf's CI: what tools/verify_builds.py runs locally, on Linux, Windows, and the web,
-# on every push and pull request (BUILDING.md, "Continuous integration").
+# on every push and pull request (BUILDING.md, "Continuous integration"). Each platform's
+# steps are split into parallel jobs, so a push's result comes back in about a quarter of
+# an hour: every check verify_builds runs here, each in one job.
 name: ci
 
 on:
@@ -14,20 +16,44 @@ concurrency:
 
 # hxcpp, pinned (BUILDING.md): fetched from lib.haxe.org on a cache miss alone, as the
 # pinned Emscripten is cached, since anything stable and external is cached in CI.
+# Compiles go through ccache, its folder cached per job: natively through CMake's
+# launcher, on the web through Emscripten's compiler wrapper.
 env:
   HXCPP_VERSION: 4.3.2
+  CCACHE_MAXSIZE: 500M
 
 jobs:
   linux:
-    name: linux (debug, release, headless, sanitizers, the actor benchmark)
+    name: linux ${{ matrix.name }}
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: debug (headless and windowed, every example headless and in a window, the binding on hxcpp)
+            key: debug
+            steps: linux-x64-debug-headless,linux-x64-debug,smoke,desktop,binding,features
+          - name: release (release and release-headless, the wgf tool, the games, the actor benchmark)
+            key: release
+            steps: linux-x64-release,linux-x64-release-headless,cli,games,actors
+          - name: sanitizers (ubsan, asan, tsan)
+            key: sanitizers
+            steps: linux-x64-debug-ubsan,linux-x64-debug-asan,linux-x64-debug-tsan
+    env:
+      CMAKE_C_COMPILER_LAUNCHER: ccache
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
     steps:
       - uses: actions/checkout@v4
       - name: System packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build xvfb libgl1-mesa-dri
+          sudo apt-get install -y ninja-build xvfb libgl1-mesa-dri ccache
           python3 tools/setup_system_packages.py install
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-linux-${{ matrix.key }}-${{ github.sha }}
+          restore-keys: ccache-linux-${{ matrix.key }}-
       - uses: krdlab/setup-haxe@v1
         with:
           haxe-version: 4.3.7
@@ -53,14 +79,55 @@ jobs:
         with:
           path: ~/haxelib
           key: haxelib-hxcpp-${{ env.HXCPP_VERSION }}-${{ runner.os }}
-      - name: Presets, every example headless and in a window, and the binding on hxcpp
-        run: >-
-          python3 tools/verify_builds.py --only
-          linux-x64-debug-headless,linux-x64-debug,linux-x64-release,linux-x64-release-headless,linux-x64-debug-ubsan,linux-x64-debug-asan,linux-x64-debug-tsan,smoke,desktop,binding,features,cli,games,actors
+      - name: ${{ matrix.steps }}
+        run: python3 tools/verify_builds.py --only ${{ matrix.steps }}
+      - name: ccache's hits
+        if: always()
+        run: ccache --show-stats
 
   web:
-    name: web (wasm32 debug and release, node and Chrome)
+    name: web ${{ matrix.name }}
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: wasm32 debug (headless and in Chrome)
+            key: debug
+            run: python3 tools/verify_builds.py --web --only wasm32-debug-headless,wasm32-debug
+          - name: wasm32 release
+            key: release
+            run: python3 tools/verify_builds.py --web --only wasm32-release
+          - name: in Chrome and node (every example, both bindings, the JS examples, the wgf tool)
+            key: checks
+            run: python3 tools/verify_builds.py --web --only web,binding-web,features-web,js-binding,cli
+            typescript: true
+          - name: games, asteroids
+            key: games-asteroids
+            run: python3 tools/check_games.py asteroids
+          - name: games, the racer in Chrome
+            key: games-racer-browser
+            run: python3 tools/check_games.py --only browser racer
+          - name: games, the racer's export
+            key: games-racer
+            run: python3 tools/check_games.py --only generated,playthrough,web,desktop racer
+          - name: sizes, 1 of 3
+            key: sizes-1
+            run: python3 tools/measure_sizes.py --check --shard 1/3
+          - name: sizes, 2 of 3
+            key: sizes-2
+            run: python3 tools/measure_sizes.py --check --shard 2/3
+          - name: sizes, 3 of 3
+            key: sizes-3
+            run: python3 tools/measure_sizes.py --check --shard 3/3
+          - name: frames, asteroids
+            key: frames-asteroids
+            run: python3 tools/bench/measure_frames.py --display headless game:asteroids
+          - name: frames, the racer
+            key: frames-racer
+            run: python3 tools/bench/measure_frames.py --display headless game:racer
+    env:
+      EM_COMPILER_WRAPPER: ccache
     steps:
       - uses: actions/checkout@v4
       - name: The pinned Emscripten
@@ -74,21 +141,41 @@ jobs:
         with:
           version: ${{ steps.pins.outputs.emscripten }}
           actions-cache-folder: emsdk-cache
-      - name: Ninja
-        run: sudo apt-get update && sudo apt-get install -y ninja-build
+      - name: Ninja and ccache
+        run: sudo apt-get update && sudo apt-get install -y ninja-build ccache
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-web-${{ matrix.key }}-${{ github.sha }}
+          restore-keys: ccache-web-${{ matrix.key }}-
       - uses: krdlab/setup-haxe@v1
         with:
           haxe-version: 4.3.7
       - name: TypeScript, for the JS binding's type test (the version tools/check_js_binding.py pins)
+        if: matrix.typescript
         run: |
           version=$(python3 -c 'import sys; sys.path.insert(0, "tools"); import check_js_binding as c; print(c.TYPESCRIPT)')
           npm install -g "typescript@$version"
-      - name: Presets, every example in Chrome, both bindings under node and in Chrome
-        run: python3 tools/verify_builds.py --web --only wasm32-debug-headless,wasm32-debug,wasm32-release,web,binding-web,features-web,js-binding,cli,games,sizes,frames
+      - name: ${{ matrix.name }}
+        run: ${{ matrix.run }}
+      - name: ccache's hits
+        if: always()
+        run: ccache --show-stats
 
   windows:
-    name: windows (MSVC debug, headless, release)
+    name: windows ${{ matrix.name }}
     runs-on: windows-2025
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: MSVC debug-headless (every example headless, the binding on hxcpp, each game's playthrough, the wgf launcher)
+            steps: windows-x64-msvc-debug-headless,smoke,binding,features
+            more: true
+          - name: MSVC debug
+            steps: windows-x64-msvc-debug
+          - name: MSVC release
+            steps: windows-x64-msvc-release
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -122,11 +209,13 @@ jobs:
         with:
           path: ~/haxelib
           key: haxelib-hxcpp-${{ env.HXCPP_VERSION }}-${{ runner.os }}
-      - name: Presets, every example headless, and the binding on hxcpp
-        run: python tools/verify_builds.py --only windows-x64-msvc-debug-headless,windows-x64-msvc-debug,windows-x64-msvc-release,smoke,binding,features
+      - name: ${{ matrix.steps }}
+        run: python tools/verify_builds.py --only ${{ matrix.steps }}
       # headless only: the runner has no GPU, so no OpenGL 4.1 for a window (sokol's GL core);
       # a game's desktop export runs in a window on Windows in tools/verify_builds.py --windows
       - name: Every game's playthrough, headless
+        if: matrix.more
         run: python tools/check_games.py --only generated,playthrough
       - name: The wgf launcher, wgf.cmd, from cmd and PowerShell
+        if: matrix.more
         run: python tools/check_cli.py --only new

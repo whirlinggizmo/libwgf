@@ -3,7 +3,7 @@
 wgrender-c's same programs, in docs/benchmarks.md; and a check against the committed
 baseline.
 
-    tools/measure_sizes.py [--references] [--write] [--check] [--render] [--only NAME[,NAME...]]
+    tools/measure_sizes.py [--references] [--write] [--check] [--render] [--only NAME[,NAME...] | --shard K/N]
 
 libwgf's programs are built in wasm32-release, as a page ships them: each C example
 (tools/examples.py), each game's web export (wgf export --web: its trimmed host, its
@@ -25,6 +25,8 @@ its program's, and the binding's share is given too.
   --check       measure libwgf's programs and compare each with the baseline: one more
                 than TOLERANCE larger (gzip, wasm and JS together) fails; one smaller
                 says to --write a new baseline. CI runs this.
+  --shard K/N   only the K-th of N shares of libwgf's programs (every N-th by name, from
+                the K-th), so N machines measure them all at once: CI's sizes jobs
 
 The rows of the comparison are ROWS: libwgf's example, libwgt's, and wgrender-c's that
 does the same thing, each marked same or differs (docs/HISTORY.md, "Web sizes, measured",
@@ -234,6 +236,25 @@ def libwgf_js_examples(only):
         modules = sorted(p for p in site.glob('*.js') if p.name != 'wgf-host.js')
         out[name] = measure([site / 'wgf-host.wasm'], [site / 'wgf-host.js', *modules])
     return out
+
+
+def program_names():
+    """Every program of libwgf's measured: the C examples, the ladder, each game, each JS
+    example, by the names their rows have."""
+    names = list(examples.names())
+    names += [d.name for d in LADDER_DIR.iterdir() if (d / 'CMakeLists.txt').exists()] if LADDER_DIR.is_dir() else []
+    games = ROOT / 'games'
+    names += [f'game:{json.loads(g.read_text())["name"]}' for g in games.glob('*/wgf.json')] if games.is_dir() else []
+    names += [f'js:{p.name}' for p in webhost.JS_EXAMPLES.iterdir() if (p / 'main.js').is_file()]
+    return sorted(names)
+
+
+def shard(text):
+    """--shard K/N's programs: every N-th of them by name, from the K-th."""
+    k, n = (int(part) for part in text.split('/'))
+    if not 1 <= k <= n:
+        raise SystemExit(f'measure_sizes: --shard {text}: K must be 1 to N')
+    return set(program_names()[k - 1::n])
 
 
 # ---- the references --------------------------------------------------------------------
@@ -479,12 +500,15 @@ def main():
     ap.add_argument('--check', action='store_true', help='fail on a program grown past the baseline')
     ap.add_argument('--render', action='store_true', help='write docs/benchmarks.md from the baseline alone')
     ap.add_argument('--only', help='comma-separated programs (game:<name> for a game)')
+    ap.add_argument('--shard', metavar='K/N', help='the K-th of N shares of the programs, for parallel checks')
     args = ap.parse_args()
     if args.render:
         TABLE.write_text(markdown(json.loads(BASELINE.read_text())))
         print(f'measure_sizes: wrote {TABLE.relative_to(ROOT)} from {BASELINE.relative_to(ROOT)}')
         return 0
-    only = set(args.only.split(',')) if args.only else None
+    if args.shard and (args.only or args.write):
+        ap.error('--shard measures a share for --check; not with --only or --write')
+    only = set(args.only.split(',')) if args.only else shard(args.shard) if args.shard else None
     try:
         webhost.emcc()
     except RuntimeError as e:
