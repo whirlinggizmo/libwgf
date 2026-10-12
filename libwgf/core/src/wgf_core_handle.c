@@ -6,7 +6,9 @@
 
 #include "wgf_log.h"
 
-/* Each kind's name, by number; "" for a number no kind has. */
+/* Each kind's name, by number; "" for a number no kind has. Read in a release build only
+ * by wgf_handle_get_kind_name, so a program that never asks carries no kind's name, as it
+ * carries no call's (WGF_CORE_PRIV_CALLER): a pool says its kind by number there. */
 static const char *const kind_names[WGF_CORE_PRIV_HANDLE_KIND_MASK + 1] = {
     [WGF_CORE_PRIV_HANDLE_KIND_FS_TASK] = "core.fs_task",
     [WGF_CORE_PRIV_HANDLE_KIND_LOAD_REQUEST] = "core.load_request",
@@ -71,6 +73,18 @@ const char *wgf_handle_get_kind_name(wgf_handle_t handle)
     return name != NULL ? name : "";
 }
 
+/* A pool's kind in its logs, and whether a kind number is one a pool may take: by name
+ * in a debug build; in a release one by number, any number but none's taken. */
+#ifdef NDEBUG
+#define POOL_FORMAT "handle kind %u"
+#define POOL_KIND(pool) (unsigned)(pool)->kind
+#define KIND_NAMED(kind) true
+#else
+#define POOL_FORMAT "%s"
+#define POOL_KIND(pool) kind_names[(pool)->kind]
+#define KIND_NAMED(kind) (kind_names[kind] != NULL)
+#endif
+
 /* The generation after `generation` (its free bit, if any, dropped), 1..1023, wrapping
  * past 0, which a handle never has. */
 static uint16_t bump_slot_generation(uint16_t generation)
@@ -115,7 +129,8 @@ bool wgf_core_priv_handle_pool_init(wgf_core_priv_handle_pool_t *pool, wgf_core_
                                    size_t item_size, uint16_t initial, uint16_t max)
 {
     if (pool == NULL || items == NULL || item_size == 0) return false;
-    if ((unsigned)kind > WGF_CORE_PRIV_HANDLE_KIND_MASK || kind_names[kind] == NULL) {
+    if (kind == WGF_CORE_PRIV_HANDLE_KIND_NONE || (unsigned)kind > WGF_CORE_PRIV_HANDLE_KIND_MASK ||
+        !KIND_NAMED(kind)) {
         wgf_log_error("wgf_core_handle: %d isn't a kind of handle", (int)kind);
         return false;
     }
@@ -191,10 +206,10 @@ static uint16_t find_free_slot_index(wgf_core_priv_handle_pool_t *pool)
         const uint32_t doubled = (uint32_t)old_capacity * 2u;
         const uint16_t capacity = (uint16_t)(doubled < pool->max ? doubled : pool->max);
         if (!grow(pool, capacity)) {
-            wgf_log_error("%s: out of memory growing to %u slots", kind_names[pool->kind], (unsigned)capacity);
+            wgf_log_error(POOL_FORMAT ": out of memory growing to %u slots", POOL_KIND(pool), (unsigned)capacity);
             return 0;
         }
-        wgf_log_debug("%s: grown to %u slots", kind_names[pool->kind], (unsigned)capacity);
+        wgf_log_debug(POOL_FORMAT ": grown to %u slots", POOL_KIND(pool), (unsigned)capacity);
         pool->next_index = (uint16_t)(old_capacity + 1u);
         return old_capacity;
     }

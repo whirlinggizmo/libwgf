@@ -106,9 +106,14 @@ int main(void)
         expect(after != 0 && after != before && !wgf_core_priv_handle_pool_resolve(&again, before, NULL),
                "the slot again, under another generation");
     }
+    expect(!wgf_core_priv_handle_pool_init(&textures, WGF_CORE_PRIV_HANDLE_KIND_NONE, (void **)&texture_items,
+                                           sizeof(item_t), 2, 8),
+           "none's kind is refused");
+#ifndef NDEBUG /* a release build carries no kind names to know one by */
     expect(!wgf_core_priv_handle_pool_init(&textures, (wgf_core_priv_handle_kind_t)39, (void **)&texture_items,
                                            sizeof(item_t), 2, 8),
            "a kind that isn't one is refused");
+#endif
 
     wgf_core_priv_handle_pool_destroy(&models);
     wgf_core_priv_handle_pool_destroy(&again);

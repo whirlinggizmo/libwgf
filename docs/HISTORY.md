@@ -1040,6 +1040,10 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## No kind names in a release program that doesn't ask for one (2026-10-12)
+
+Found landing the read back: its kind's name, "gfx.texture_read", put 26 bytes of gzip in every program, gfx-hello3d past its target (116,814 of 116,807), since every handle pool read core's table of kind names, to refuse a kind number no kind has and to name its kind in its growth's logs. In a release build a pool now refuses only none's kind, and its logs say the kind by number ("handle kind 23"), as a release program carries no call names (`WGF_CORE_PRIV_CALLER`); a debug build names it, and refuses a number no kind has, as before. The table is then read only by `wgf_handle_get_kind_name`, so a program that never asks carries no names: every program about 230 bytes of gzip smaller (gfx-hello3d 116,575 with the read back, 232 under its target).
+
 ## The size baseline for gfx-shaders, a differs row (2026-10-12)
 
 Re-recorded alone (a guard added): gfx-shaders, 241.2 KB of gzip, differs from libwgt's 275.2 for its walker (skinning, milestone 3) and its logo's sprite effects (milestone 2.5). No other program moved.
