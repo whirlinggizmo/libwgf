@@ -1040,6 +1040,10 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## The size baseline for screen effects, and gfx-postprocess a differs row (2026-10-12)
+
+Re-recorded alone (a guard moved): every program carries render's effects hook (its three calls and the screen's flip), about 55 bytes of gzip each (app-skeleton and gfx-stage2d still 77.3 and 173.3 KB, rounded; the racer 569.6 to 569.8, within its 600); gfx-hello3d, a same row, stays within its target (116,806 of 116,807 bytes, so the next byte any program gains there must be won back). gfx-postprocess, 228.2, differs from libwgt's 244.7 for its walker (skinning, milestone 3).
+
 ## Milestone 2, step 12, screen effects (2026-10-12)
 
 Read first: libwgt's effects (`wgt_render_add_effect` in `gfx/include/wgt_render.h`, its render's effect chain, `gfx-postprocess`, and the vignette and scanlines shaders) and wgrender-c's postprocess (`wgr_render`'s post chain, its `postprocess` example), and their record: libwgt's HISTORY on the effect pass's flip (`wgt_screen_info.w`, the frame stored bottom-up on GL).
