@@ -470,6 +470,25 @@ def trim(text, names, constants=False):
     return '\n'.join(out) + '\n'
 
 
+def host_calls(text, names):
+    """`names` (the host's calls, with their leading _) and every host call the binding's
+    calls among them make besides their own (a byte span's _get_data reads its length with
+    its _get_size), read from wgf.js's `text`: what a host trimmed to `names` must export,
+    since the program calls the binding and the binding calls the host."""
+    wanted = {n.lstrip('_') for n in names}
+    calls, current = set(names), None
+    for line in text.splitlines():
+        if line.startswith(SECTION):
+            what = line[len(SECTION):].split()
+            current = what[1] if what[0] == 'call' and what[1] in wanted else None
+            continue
+        if current is None:
+            continue
+        for piece in line.split('host["_wgf_')[1:]:  # not the runtime's (stackSave), which every host has
+            calls.add('_wgf_' + piece.split('"', 1)[0])
+    return sorted(calls)
+
+
 def names_in(program):
     """The calls and the enums a JS program names (`wgf.wgf_draw_text`, `wgf.WGF_KEY_UP`),
     read from its text: identifiers, which a program can't make at run time; a name that

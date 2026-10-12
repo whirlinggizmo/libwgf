@@ -52,7 +52,10 @@ def build(variant, exports_file=None, out=None, stage=True, constants=True, type
     archive = staged / 'lib' / 'libwgf.a'
     if not archive.exists():
         raise RuntimeError(f'no staged libwgf in {staged}: run tools/stage_variant.py {variant}')
+    whole = (jsbinding.BINDING / 'wgf.js').read_text(encoding='utf-8')
     listed = json.loads(Path(exports_file or FULL).read_text(encoding='utf-8'))['exports']
+    if exports_file is not None:  # with the host calls the listed calls' binding makes (FRICTION.md, racer part 8)
+        listed = jsbinding.host_calls(whole, listed)
     linked = listed if exports_file is None else jsbinding.local_exports(listed)  # the full host keeps every call's C
     exports = sorted(set(linked) | set(jsbinding.LIBRARY) | set(jsbinding.RUN_CALLS))
     out = Path(out) if out else staged / 'host'
@@ -84,7 +87,6 @@ def build(variant, exports_file=None, out=None, stage=True, constants=True, type
                           errors='replace')
     if done.returncode != 0:
         raise RuntimeError('linking the host failed:\n' + '\n'.join(done.stdout.strip().splitlines()[-30:]))
-    whole = (jsbinding.BINDING / 'wgf.js').read_text(encoding='utf-8')
     binding = whole if exports_file is None else jsbinding.trim(whole, listed, constants)
     (out / 'wgf.js').write_text(binding, encoding='utf-8', newline='\n')
     typed = (jsbinding.BINDING / f'{jsbinding.TYPED}.js').read_text(encoding='utf-8')
