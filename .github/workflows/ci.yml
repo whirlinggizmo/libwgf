@@ -125,7 +125,9 @@ jobs:
             run: python3 tools/bench/measure_frames.py --display headless game:asteroids
           - name: frames, the racer
             key: frames-racer
-            run: python3 tools/bench/measure_frames.py --display headless game:racer
+            # unthrottled: CI keeps the benchmark working and records nothing (Rob's, 2026-10-12);
+            # 4x on SwiftShader made this the run's long pole
+            run: python3 tools/bench/measure_frames.py --display headless --throttle 1 game:racer
     env:
       EM_COMPILER_WRAPPER: ccache
     steps:
