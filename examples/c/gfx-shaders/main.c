@@ -58,6 +58,8 @@ static struct {
     wgf_actor_t car, dissolving, rippling; /* models */
     wgf_actor_t sun, lamp, lamp_marker;
     wgf_material_t toon; /* the car's, once its file's tree is built */
+    wgf_environment_t environment; /* held while it is prepared */
+    float load_budget;             /* the default, given back once it is */
     bool sun_on, lamp_on;
     float time;
 } g = {.sun_on = true, .lamp_on = true};
@@ -105,11 +107,10 @@ static void init(void *user)
     wgf_actor_look_at(g.camera, 0, 0.3f, 0, 0, 1, 0);
     wgf_stage3d_set_camera(g.stage, g.camera);
     wgf_stage3d_set_ambient(g.stage, WGF_COLOR_WHITE, 0.15f);
-    {
-        const wgf_environment_t environment = wgf_environment_create(ENVIRONMENT_PATH);
-        wgf_stage3d_set_environment(g.stage, environment, 1.0f, 0.0f); /* lighting only: the background stays dark */
-        wgf_resource_release(environment); /* the stage holds its own reference */
-    }
+    g.environment = wgf_environment_create(ENVIRONMENT_PATH);
+    wgf_stage3d_set_environment(g.stage, g.environment, 1.0f, 0.0f); /* lighting only: the background stays dark */
+    g.load_budget = wgf_resource_get_load_budget();
+    wgf_resource_set_load_budget(50.0f); /* more of each frame while the environment is prepared */
 
     g.sun = wgf_light_create(WGF_LIGHT_TYPE_DIRECTIONAL);
     wgf_light_set_color(g.sun, wgf_color_make(255, 244, 228, 255));
@@ -192,6 +193,11 @@ static void frame(void *user)
     lz = 1.8f;
     wgf_actor_set_position(g.lamp, lx, ly, lz);
     wgf_actor_set_rotation(g.dissolving, 0, g.time * 0.4f, 0);
+    if (g.environment != 0 && wgf_resource_get_status(g.environment) != WGF_RESOURCE_STATUS_PENDING) {
+        wgf_resource_set_load_budget(g.load_budget);
+        wgf_resource_release(g.environment); /* the stage holds its own reference */
+        g.environment = 0;
+    }
     if (g.toon != 0 && wgf_actor_get_child_count(g.car) > 0) {
         set_below(g.car, g.toon);
         wgf_resource_release(g.toon); /* its models hold their own references */
