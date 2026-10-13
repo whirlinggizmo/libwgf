@@ -7,7 +7,7 @@ and print its path.
 sokol-shdc turns a shader written once in GLSL into the sources and reflection each
 graphics backend needs (tools/gen_shaders.py runs it). It is downloaded once, from
 floooh/sokol-tools-bin at the commit deps/sokol/VERSION records, or from the mirror
-(robknopf/sokol-tools-bin, a fork that keeps the pin tagged) when floooh's can't give
+(whirlinggizmo/sokol-tools-bin, a fork that keeps the pin tagged) when floooh's can't give
 it; checked against its SHA-256 below, wherever it came from; and kept in the per-user
 cache (tools/usercache.py: ~/.cache/libwgf/sokol-shdc/<commit>/). It prints the
 program's path on stdout; progress goes to stderr. Run again, it checks the cached
@@ -30,7 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))  # an embedded Python (
 from usercache import cache_dir  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCES = ('floooh/sokol-tools-bin', 'robknopf/sokol-tools-bin')  # tried in order
+SOURCES = ('floooh/sokol-tools-bin', 'whirlinggizmo/sokol-tools-bin')  # tried in order
 HASHES_PIN = '11d0cf678105d614d675e6d9bd2aaf3eeff12f8c'  # the sokol-tools-bin commit the hashes are for
 BINARIES = {  # (system, machine): (path in the repository, SHA-256)
     ('Linux', 'x86_64'): ('linux/sokol-shdc', 'ed35e89ef381d521a499096ed4ada85e4d135d8011e151cca6b7d893c43b21df'),
