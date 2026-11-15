@@ -137,7 +137,9 @@ def check(measured, rows, local=False):
               if name in rows and rows[name].get('ns', 0) > 0}
     if ratios:
         machine = statistics.median(ratios.values())
-        notes.append(f'this machine at {machine:.2f} times the baseline\'s time, the median of {len(ratios)} rows')
+        notes.append(f'this machine ({cpu_name()}) at {machine:.2f} times the baseline\'s time, the median of '
+                     f'{len(ratios)} rows; the lookup rows at ' + ', '.join(f'{n[len("10k-lookup"):] or "frames"} {r:.2f}'
+                                                              for n, r in sorted(ratios.items()) if n.startswith('10k-lookup')))
         if machine > MACHINE_TOLERANCE:
             worse.append(f'every row {machine:.2f} times the baseline\'s time (allowed {MACHINE_TOLERANCE:g})')
         for name, ratio in sorted(ratios.items()):
