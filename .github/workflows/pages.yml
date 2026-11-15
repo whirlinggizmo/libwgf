@@ -1,14 +1,11 @@
 # libwgf's games on GitHub Pages: every game's web export (tools/build_pages.py), each
-# smoke-tested in Chrome and held to its size budget, deployed on every push to main but
-# one of docs alone.
+# smoke-tested in Chrome and held to its size budget, deployed daily and on demand (gh
+# workflow run pages, or the Actions tab), not on every push.
 name: pages
 
 on:
-  push:
-    branches: [main]
-    # a push of docs alone runs nothing (CONVENTIONS.md, "Verifying"): Markdown a tool
-    # writes or copies still does
-    paths: ['**', '!**.md', 'docs/benchmarks.md', 'templates/**', 'games/**']
+  schedule:
+    - cron: '47 9 * * *'
   workflow_dispatch:
 
 permissions:

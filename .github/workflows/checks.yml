@@ -1,0 +1,181 @@
+# libwgf's checks, every job CI runs, on Linux, Windows, and the web: what
+# tools/verify_builds.py runs locally, each check in one job. Called by ci.yml (each push and
+# pull request but one of docs alone: the builds, the tests, and every example in a browser)
+# and ci-daily.yml (daily and on demand: the games, the sizes, the frames, and Windows' slower
+# jobs), each passing the jobs it runs as a JSON list a platform (BUILDING.md, "Continuous
+# integration").
+name: checks
+
+on:
+  workflow_call:
+    inputs:
+      linux:
+        type: string
+        default: '[]'
+      web:
+        type: string
+        default: '[]'
+      windows:
+        type: string
+        default: '[]'
+
+# hxcpp, pinned (tools/hxcpp.py, its release written there alone; tools/setup_hxcpp.py): fetched from
+# lib.haxe.org on a cache miss alone, as the pinned Emscripten is cached, since anything
+# stable and external is cached in CI.
+# Compiles go through ccache, its folder cached per job: natively through CMake's
+# launcher, on the web through Emscripten's compiler wrapper.
+env:
+  CCACHE_MAXSIZE: 500M
+
+jobs:
+  linux:
+    name: linux ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    if: inputs.linux != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(inputs.linux) }}
+    env:
+      CMAKE_C_COMPILER_LAUNCHER: ccache
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
+    steps:
+      - uses: actions/checkout@v4
+      - name: System packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build xvfb libgl1-mesa-dri ccache
+          python3 tools/setup_system_packages.py install
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-linux-${{ matrix.key }}-${{ github.sha }}
+          restore-keys: ccache-linux-${{ matrix.key }}-
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.7
+      - name: hxcpp's pin and haxelib folder (tools/setup_hxcpp.py)
+        run: |
+          echo "LIBWGF_HAXELIB=$HOME/haxelib" >> "$GITHUB_ENV"
+          echo "HXCPP_VERSION=$(python3 tools/setup_hxcpp.py --version)" >> "$GITHUB_ENV"
+      - uses: actions/cache/restore@v4
+        id: hxcpp
+        with:
+          path: ~/haxelib
+          key: haxelib-hxcpp-${{ env.HXCPP_VERSION }}-${{ runner.os }}
+      - name: hxcpp, fetched on a cache miss (retried)
+        if: steps.hxcpp.outputs.cache-hit != 'true'
+        run: |
+          for attempt in 1 2 3 4 5; do
+            python3 tools/setup_hxcpp.py && exit 0
+            echo "installing hxcpp failed (attempt $attempt); retrying in $((attempt * 30)) s"
+            sleep $((attempt * 30))
+          done
+          exit 1
+      - uses: actions/cache/save@v4
+        if: steps.hxcpp.outputs.cache-hit != 'true'
+        with:
+          path: ~/haxelib
+          key: haxelib-hxcpp-${{ env.HXCPP_VERSION }}-${{ runner.os }}
+      - name: ${{ matrix.steps }}
+        run: python3 tools/verify_builds.py --only ${{ matrix.steps }}
+      - name: ccache's hits
+        if: always()
+        run: ccache --show-stats
+
+  web:
+    name: web ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    if: inputs.web != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(inputs.web) }}
+    env:
+      EM_COMPILER_WRAPPER: ccache
+    steps:
+      - uses: actions/checkout@v4
+      - name: The pinned Emscripten
+        id: pins
+        run: echo "emscripten=$(head -n1 cmake/emscripten-version.txt)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: emsdk-cache
+          key: emsdk-${{ steps.pins.outputs.emscripten }}-${{ runner.os }}
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: ${{ steps.pins.outputs.emscripten }}
+          actions-cache-folder: emsdk-cache
+      - name: Ninja and ccache
+        run: sudo apt-get update && sudo apt-get install -y ninja-build ccache
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-web-${{ matrix.key }}-${{ github.sha }}
+          restore-keys: ccache-web-${{ matrix.key }}-
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.7
+      - name: TypeScript, for the JS binding's type test (the version tools/check_js_binding.py pins)
+        if: matrix.typescript
+        run: |
+          version=$(python3 -c 'import sys; sys.path.insert(0, "tools"); import check_js_binding as c; print(c.TYPESCRIPT)')
+          npm install -g "typescript@$version"
+      - name: ${{ matrix.name }}
+        run: ${{ matrix.run }}
+      - name: ccache's hits
+        if: always()
+        run: ccache --show-stats
+
+  windows:
+    name: windows ${{ matrix.name }}
+    runs-on: windows-2025
+    if: inputs.windows != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(inputs.windows) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.7
+      - name: hxcpp's pin and haxelib folder (tools/setup_hxcpp.py)
+        shell: pwsh
+        run: |
+          Add-Content -Path $env:GITHUB_ENV -Value "LIBWGF_HAXELIB=$HOME\haxelib"
+          Add-Content -Path $env:GITHUB_ENV -Value "HXCPP_VERSION=$(python tools/setup_hxcpp.py --version)"
+      - uses: actions/cache/restore@v4
+        id: hxcpp
+        with:
+          path: ~/haxelib
+          key: haxelib-hxcpp-${{ env.HXCPP_VERSION }}-${{ runner.os }}
+      - name: hxcpp, fetched on a cache miss (retried)
+        if: steps.hxcpp.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          foreach ($attempt in 1..5) {
+            python tools/setup_hxcpp.py
+            if ($LASTEXITCODE -eq 0) { exit 0 }
+            Write-Host "installing hxcpp failed (attempt $attempt); retrying in $($attempt * 30) s"
+            Start-Sleep -Seconds ($attempt * 30)
+          }
+          exit 1
+      - uses: actions/cache/save@v4
+        if: steps.hxcpp.outputs.cache-hit != 'true'
+        with:
+          path: ~/haxelib
+          key: haxelib-hxcpp-${{ env.HXCPP_VERSION }}-${{ runner.os }}
+      - name: ${{ matrix.steps }}
+        run: python tools/verify_builds.py --only ${{ matrix.steps }}
+      # headless only: the runner has no GPU, so no OpenGL 4.1 for a window (sokol's GL core);
+      # a game's desktop export runs in a window on Windows in tools/verify_builds.py --windows
+      - name: Every game's playthrough, headless
+        if: matrix.more
+        run: python tools/check_games.py --only generated,playthrough
+      - name: The wgf launcher, wgf.cmd, from cmd and PowerShell
+        if: matrix.more
+        run: python tools/check_cli.py --only new
