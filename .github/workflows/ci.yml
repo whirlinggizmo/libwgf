@@ -1,13 +1,18 @@
 # libwgf's CI: what tools/verify_builds.py runs locally, on Linux, Windows, and the web,
-# on every push and pull request (BUILDING.md, "Continuous integration"). Each platform's
-# steps are split into parallel jobs, so a push's result comes back in about a quarter of
-# an hour: every check verify_builds runs here, each in one job.
+# on every push and pull request but one of docs alone (BUILDING.md, "Continuous
+# integration"). Each platform's steps are split into parallel jobs, so a push's result
+# comes back in about a quarter of an hour: every check verify_builds runs here, each in
+# one job.
 name: ci
 
 on:
   push:
     branches: [main]
+    # a push of docs alone runs nothing (CONVENTIONS.md, "Verifying"): Markdown a tool
+    # writes or copies still does
+    paths: ['**', '!**.md', 'docs/benchmarks.md', 'templates/**', 'games/**']
   pull_request:
+    paths: ['**', '!**.md', 'docs/benchmarks.md', 'templates/**', 'games/**']
   workflow_dispatch:
 
 concurrency:
