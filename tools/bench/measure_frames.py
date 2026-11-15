@@ -13,7 +13,7 @@ the game's autopilot/bench.autopilot, else its playthrough (wgf.json's "playthro
 playthrough.autopilot by default). A game's frame budget (HISTORY.md, "Milestone 2's
 plan"): a median of 6 ms and a 95th percentile of 10 ms of main-thread work on the
 reference machine, and no frame over 33 ms once play has started. Or bench:<name>, a benchmark in tools/bench/<name>/
-(BENCHES: shadowbench and spritebench, libwgt's), built in wasm32-release against the staged
+(BENCHES: shadowbench and spritebench, libwgt's; SPEED_BENCHES: bunnymark, helix's), built in wasm32-release against the staged
 variant, served with the examples' files at /assets/ as an example is, and
 run with no autopilot until it logs "<name>: done": it marks each case in the trace
 (console.timeStamp "<name> <case> <models>" as the case's measured frames begin, "<name>
@@ -68,6 +68,12 @@ FRAME_EVENTS = ('FireAnimationFrame',)
 GC_EVENTS = ('MinorGC', 'MajorGC')
 MARK_EVENTS = ('TimeStamp',)
 BENCHES = ('shadowbench', 'spritebench')
+# A benchmark timed as helix times its contenders (../helix's tools/speed/README.md): each
+# query a page run of its own, unthrottled, its frame rate cap lifted, untraced, the
+# program timing its frames itself and printing helix's JSON line ("contender").
+SPEED_BENCHES = {'bunnymark': ('count=10000', 'count=50000', 'incrementCount=1000')}
+NO_ROOM = 'no room for another actor'  # what a sprite past the actor limit logs
+UNCAPPED = ('--disable-gpu-vsync', '--disable-frame-rate-limit')
 GPU = """(() => { const gl = document.createElement('canvas').getContext('webgl2');
     const info = gl && gl.getExtension('WEBGL_debug_renderer_info');
     return info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : (gl ? gl.getParameter(gl.RENDERER) : ''); })()"""
@@ -133,9 +139,12 @@ def percentile(sorted_values, q):
     return sorted_values[min(len(sorted_values) - 1, int(len(sorted_values) * q))]
 
 
-def run(site, flown, display, throttle, browser_path, timeout=600, bench=None, assets=False):
+def run(site, flown, display, throttle, browser_path, timeout=600, bench=None, assets=False, query=None):
     """One flown run, traced: its numbers, and the GPU it drew on. A benchmark's (`bench`, its
-    name; `flown` None) runs until it logs that it is done: its numbers are its cases'."""
+    name; `flown` None) runs until it logs that it is done: its numbers are its cases'. With
+    `query`, a speed benchmark's run (SPEED_BENCHES): the page at index.html?<query> in an
+    800 x 450 viewport, the frame rate cap lifted, untraced; its numbers the JSON lines it
+    printed."""
     # a benchmark is an example's kind of page: the examples' files at /assets/, as check_web serves them
     base, httpd = server.serve(site, assets=server.ASSETS if bench is not None or assets else None)
     processes = browser.RunProcesses('frames')
@@ -159,7 +168,8 @@ def run(site, flown, display, throttle, browser_path, timeout=600, bench=None, a
             traced.set()
 
     try:
-        debug_base, session = browser.launch_browser(processes, browser_path, display)
+        debug_base, session = browser.launch_browser(processes, browser_path, display,
+                                                     extra_args=UNCAPPED if query is not None else ())
         session.close()
         page = browser.open_session(browser.page_target(debug_base)['webSocketDebuggerUrl'])
         page.on_event(on_event)
@@ -167,15 +177,20 @@ def run(site, flown, display, throttle, browser_path, timeout=600, bench=None, a
         page.send('Page.enable')
         if throttle > 1:
             page.send('Emulation.setCPUThrottlingRate', {'rate': throttle})
+        if query is not None:  # helix's viewport, the program's window
+            page.send('Emulation.setDeviceMetricsOverride', {'width': 800, 'height': 450, 'deviceScaleFactor': 1,
+                                                             'mobile': False})
         if flown is not None:
             page.send('Page.addScriptToEvaluateOnNewDocument',
                       {'source': f'globalThis.wgfAutopilot = {json.dumps(flown.read_text(encoding="utf-8"))};'})
-        page.send('Tracing.start', {'traceConfig': {'includedCategories': ['devtools.timeline', 'v8']},
-                                    'transferMode': 'ReportEvents'})
-        page.send('Page.navigate', {'url': f'{base}/index.html'})
+        if query is None:
+            page.send('Tracing.start', {'traceConfig': {'includedCategories': ['devtools.timeline', 'v8']},
+                                        'transferMode': 'ReportEvents'})
+        page.send('Page.navigate', {'url': f'{base}/index.html' + (f'?{query}' if query else '')})
         finished = ended.wait(timeout)
-        page.send('Tracing.end')
-        traced.wait(60)
+        if query is None:
+            page.send('Tracing.end')
+            traced.wait(60)
         gpu = page.send('Runtime.evaluate', {'expression': GPU, 'returnByValue': True})['result'].get('value', '')
         page.close()
     finally:
@@ -185,8 +200,15 @@ def run(site, flown, display, throttle, browser_path, timeout=600, bench=None, a
         raise RuntimeError(f'the autopilot didn\'t end within {timeout} s' if bench is None
                            else f'it didn\'t log "{bench}: done" within {timeout} s')
     failed = [line for line in lines if FAIL in line or '[ERROR]' in line or '[FATAL]' in line]
+    if query is not None and any('"limit":true' in line for line in lines):  # the program said it met the actor limit
+        failed = [line for line in failed if NO_ROOM not in line]
     if failed:
         raise RuntimeError('the run failed, so its numbers mean nothing:\n  ' + '\n  '.join(failed[:5]))
+    if query is not None:
+        printed = [json.loads(line) for line in lines if line.startswith('{') and '"contender"' in line]
+        if not printed:
+            raise RuntimeError(f'{query}: no result line')
+        return printed[-1], gpu
     if bench is not None:
         split = cases(events, bench)
         if not split:
@@ -219,10 +241,43 @@ def commit():
     return done.stdout.strip()
 
 
+def run_speed_bench(name, args, found):
+    """bench:<name> of SPEED_BENCHES: built, each query run --runs times, round-robin (as
+    helix's gen_speed.py takes them, so a drift in the machine spreads over all), each
+    number the runs' median, printed; the exit code. Unthrottled whatever --throttle says,
+    as helix's are; recorded nowhere yet."""
+    try:
+        site = build_bench(name)
+        runs, gpu = {q: [] for q in SPEED_BENCHES[name]}, ''
+        for _ in range(max(args.runs, 1)):
+            for query in SPEED_BENCHES[name]:
+                line, gpu = run(site, None, args.display, 1, found, timeout=900, bench=name, query=query)
+                runs[query].append(line)
+    except RuntimeError as e:
+        print(f'measure_frames: bench:{name}: {e}')
+        return 1
+    print(f'bench:{name}: frame to frame, as helix measures (median of {max(args.runs, 1)} run(s))')
+    for query, lines in runs.items():
+        if lines[0]['mode'] == 'ramp':
+            held = statistics.median(line['max_count'] for line in lines)
+            limit = any(line.get('limit') for line in lines)
+            print(f'  {query:<20} most held {held:,.0f}' + (' (the actor limit, not the frame rate)' if limit else ''))
+        else:
+            mean = statistics.median(line['mean_ms'] for line in lines)
+            p95 = statistics.median(line['p95_ms'] for line in lines)
+            limit = any(line.get('limit') for line in lines)
+            print(f'  {query:<20} {lines[0]["count"]:>6} bunnies  mean {mean:7.2f} ms  95th {p95:7.2f} ms'
+                  + (f' (asked {lines[0]["asked"]:,}: the actor limit)' if limit else ''))
+    print(f'  on {cpu_name()}, {gpu or "an unknown GPU"}, {args.display}, unthrottled, frame rate cap lifted')
+    return 0
+
+
 def run_bench(name, args, found, results):
     """bench:<name>: built, run, its cases printed, and put in `results`; the exit code."""
+    if name in SPEED_BENCHES:
+        return run_speed_bench(name, args, found)
     if name not in BENCHES:
-        print(f'measure_frames: bench:{name}: no such benchmark ({", ".join(BENCHES)})')
+        print(f'measure_frames: bench:{name}: no such benchmark ({", ".join(BENCHES + tuple(SPEED_BENCHES))})')
         return 2
     try:
         site = build_bench(name)

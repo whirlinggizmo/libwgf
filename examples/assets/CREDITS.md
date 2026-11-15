@@ -14,6 +14,7 @@ From libwgt's `examples/assets/`, which took them from wgrender's, unchanged:
 | `models/kit/*.glb` | seven of Racing Kit 2.0's models (the long straight, the grandstand, the barrier wall, two trees, the large light post, the pylon), for scene-stream | Kenney | [kenney.nl/assets/racing-kit](https://kenney.nl/assets/racing-kit); copied from `games/racer/assets/kit/`, written there by the racer's `tools/gen_kit.py` (triangles unchanged, colors linear, a roughness) | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | `sounds/click_004.ogg` | UI Audio | Kenney | [kenney.nl](https://kenney.nl) | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | `environments/venice_sunset_1k.hdr` | Venice Sunset | Greg Zaal | [Poly Haven](https://polyhaven.com/a/venice_sunset) | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `textures/wabbit_alpha.png` | the bunnymark's bunny, for `tools/bench/bunnymark` | unknown | raylib 5.5's `examples/textures/resources/`, unchanged; redistributed with the bunnymarks of raylib, PixiJS, and others | unknown: raylib's resources table lists its author and license as unknown; carried by Rob's decision (2026-11-14) |
 | `environments/studio_small_09_1k.hdr` | Studio Small 09 | Sergej Majboroda | [Poly Haven](https://polyhaven.com/a/studio_small_09) | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |
 
 ## Whirling Gizmo's own
