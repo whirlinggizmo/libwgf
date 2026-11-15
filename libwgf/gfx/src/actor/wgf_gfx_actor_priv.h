@@ -181,9 +181,17 @@ wgf_actor_t wgf_gfx_priv_actor_get_root(wgf_actor_t actor);
 /* The actor `actor` names; NULL for anything else. The pointer moves when an actor is
  * created: don't keep it across one. */
 wgf_gfx_priv_actor_t *wgf_gfx_priv_actor_of_at(wgf_actor_t actor, const char *caller);
+/* The same, never warned: a check that a handle is an actor. */
+wgf_gfx_priv_actor_t *wgf_gfx_priv_actor_of_silently(wgf_actor_t actor);
 /* The actor's record, NULL for a handle that isn't a live actor (a dead one warned of in a
- * debug build, naming the call it reached: wgf_core_priv_handle_stale). */
+ * debug build, naming the call it reached: wgf_core_priv_handle_stale). A release build,
+ * which warns of nothing, resolves without the caller: a find resolves one an actor it
+ * passes, and the caller's argument and warning branch cost a name find 14%. */
+#ifdef NDEBUG
+#define wgf_gfx_priv_actor_of(actor) wgf_gfx_priv_actor_of_silently(actor)
+#else
 #define wgf_gfx_priv_actor_of(actor) wgf_gfx_priv_actor_of_at((actor), WGF_CORE_PRIV_CALLER)
+#endif
 
 /* The actor's own transform, and its world transform (every parent's, composed),
  * each rebuilt only when it is dirty. */
