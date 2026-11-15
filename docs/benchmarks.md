@@ -143,15 +143,15 @@ Each game's web export flown by its autopilot in a browser (`tools/bench/measure
 
 ## Actors
 
-What an actor costs (`tools/bench/measure_actors.py`, the program `tools/bench/actors/main.c`, whose header says what each row and number is): the heap's growth an actor, its pools' slack included, and the frames' own cost an actor a frame (a find's rows: a find, or an actor found), the median of 3 runs, on 13th Gen Intel(R) Core(TM) i9-13900HX, `linux-x64-release-headless`, 8f3a822 2026-10-07. A check fails a row past its bytes by 5%, or past its time by twice the run's own speed against these (the median of its rows' ratios), and on this machine past 1.5 times its time. Before: the same program on the nodes and entities actors replaced, 8f3a822 2026-10-07 (docs/HISTORY.md, "One kind of object, the actor"); a dash where there was no such call. The store- rows are the ecs's store on its own (`ecs/bench/wgf_ecs_store_bench.c`), each storage's worst case among them. The flecs columns: the same on the store step 3b replaced (docs/HISTORY.md, "flecs or sparse sets, measured"), recorded before it went.
+What an actor costs (`tools/bench/measure_actors.py`, the program `tools/bench/actors/main.c`, whose header says what each row and number is): the heap's growth an actor, its pools' slack included, and the frames' own cost an actor a frame (a find's rows: a find, or an actor found), the median of 5 runs, on 13th Gen Intel(R) Core(TM) i9-13900HX, `linux-x64-release-headless`, 7dbb0fe 2026-11-15. A check fails a row past its bytes by 5%, or past its time by twice the run's own speed against these (the median of its rows' ratios), and on this machine past 1.5 times its time. Before: the same program on the nodes and entities actors replaced, 8f3a822 2026-10-07 (docs/HISTORY.md, "One kind of object, the actor"); a dash where there was no such call. The store- rows are the ecs's store on its own (`ecs/bench/wgf_ecs_store_bench.c`), each storage's worst case among them. The flecs columns: the same on the store step 3b replaced (docs/HISTORY.md, "flecs or sparse sets, measured"), recorded before it went.
 
 | row | bytes | ns | flecs: bytes | flecs: ns | before: bytes | before: ns |
 |---|---:|---:|---:|---:|---:|---:|
 | 10k-churn | 933.6 | 59.81 | 929.1 | 73.78 | 988.7 | 565.17 |
 | 10k-lookup | 856.2 | 50.24 | 864.8 | 63.43 | 1020.6 | 82.39 |
-| 10k-lookup-component | - | 40.85 | - | 40.76 | - | - |
+| 10k-lookup-component | - | 38.52 | - | 40.76 | - | - |
 | 10k-lookup-name | - | 33.30 | - | 34.90 | - | 218006.20 |
-| 10k-lookup-path | - | 23.50 | - | 24.70 | - | 74.60 |
+| 10k-lookup-path | - | 18.90 | - | 24.70 | - | 74.60 |
 | 10k-moving-behaviors | 933.6 | 51.79 | 929.1 | 64.69 | 988.7 | 64.82 |
 | 10k-moving-deep | 817.1 | 59.90 | 825.7 | 70.33 | 1013.3 | 72.41 |
 | 10k-moving-flat | 792.6 | 48.89 | 801.1 | 59.23 | 988.7 | 64.91 |

@@ -54,7 +54,7 @@
    "runs": 3,
    "variant": "linux-x64-release-headless"
   },
-  "commit": "8f3a822 2026-10-07",
+  "commit": "7dbb0fe 2026-11-15",
   "cpu": "13th Gen Intel(R) Core(TM) i9-13900HX",
   "flecs": {
    "commit": "8f3a822 2026-10-07",
@@ -145,13 +145,13 @@
     "ns": 50.24
    },
    "10k-lookup-component": {
-    "ns": 40.85
+    "ns": 38.52
    },
    "10k-lookup-name": {
     "ns": 33.3
    },
    "10k-lookup-path": {
-    "ns": 23.5
+    "ns": 18.9
    },
    "10k-moving-behaviors": {
     "bytes": 933.6,
@@ -208,7 +208,7 @@
     "ns": 2.9
    }
   },
-  "runs": 3,
+  "runs": 5,
   "variant": "linux-x64-release-headless"
  },
  "benches": {

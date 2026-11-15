@@ -36,7 +36,8 @@
 #define WARM 60         /* frames before measuring: the churn's first second */
 #define MEASURED 240    /* frames measured */
 #define CHURN 1000      /* actors spawned, and as many destroyed, a second */
-#define CARS 1000       /* the lookup row's cars, each with a wheel_rl/smoke */
+#define CARS 100        /* the lookup row's cars, each with a wheel_rl/smoke: few enough (300 actors) that
+                         * a path's find fits any core's L2, so it measures the find, not the runner's caches */
 
 typedef struct row_t {
     const char *name;
