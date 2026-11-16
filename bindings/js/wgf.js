@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "3644bb0c4722b036" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "353182788e55bdf9" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -8473,6 +8473,43 @@ export function wgf_sound_add_segment(sound, name, start, end) {
     return value !== 0;
 }
 
+// wgf: call wgf_sound_play
+/**
+ * Play `sound` once and forget it: on a voice the mixer owns and lets go of when it
+ * ends, at `volume` (0 or more), `pitch` (a voice's: clamped to -16 to 16, negative from
+ * the end), and `pan` (-1 left to 1 right, clamped). A sound still PENDING plays once it
+ * is READY. Its polyphony is how many of it play at once: past that, the oldest of it
+ * starts again with these. At most 64 play at once, of every sound: past that, the
+ * oldest is let go of. A game's own voices (wgf_voice.h) count in neither: a loop, or a
+ * sound the game must stop, wants one of those. False for a handle that isn't a decoded sound (a
+ * streamed one plays on a voice), one that FAILED, a volume, pitch, or pan that isn't
+ * finite, and a volume below 0.
+ */
+export function wgf_sound_play(sound, volume, pitch, pan) {
+    const value = host["_wgf_sound_play"](sound, volume, pitch, pan);
+    return value !== 0;
+}
+
+// wgf: call wgf_sound_set_polyphony
+/**
+ * How many plays of `sound` (wgf_sound_play) sound at once, 1 to 64; 8 until set. A lower
+ * count stops none playing: each play past it takes the oldest. False for a handle that
+ * isn't a decoded sound, and a count outside 1 to 64.
+ */
+export function wgf_sound_set_polyphony(sound, count) {
+    const value = host["_wgf_sound_set_polyphony"](sound, count);
+    return value !== 0;
+}
+
+// wgf: call wgf_sound_get_polyphony
+/**
+ * Its polyphony; 0 for a handle that isn't a decoded sound.
+ */
+export function wgf_sound_get_polyphony(sound) {
+    const value = host["_wgf_sound_get_polyphony"](sound);
+    return value;
+}
+
 // wgf: call wgf_sound_get_duration
 /**
  * Its length in seconds; 0 until it is READY, and for a handle that isn't a sound. A
@@ -8984,7 +9021,9 @@ export function wgf_actor_has_component(actor, component) {
 // wgf: call wgf_actor_get_voice
 /**
  * The voice component's voice; 0 for an actor without one. The actor's: play it, never
- * destroy it.
+ * destroy it. For a sound that lasts as long as the actor (a car's engine, a ship's
+ * thrust, looping): it stops when the actor goes, with nothing for the game to end. A
+ * sound played once is wgf_sound_play's.
  */
 export function wgf_actor_get_voice(actor) {
     const value = host["_wgf_actor_get_voice"](actor);

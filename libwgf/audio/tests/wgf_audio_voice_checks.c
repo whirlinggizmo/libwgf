@@ -1,7 +1,8 @@
 /* Voices' checks, one source for both platforms (included by wgf_audio_voice_test.c,
  * natively, and wgf_audio_voice_web_test.c, in a browser): every state, transition, and
  * refusal (wgf_play_state.h, wgf_voice.h), loop, reverse, pitch 0, positions wrapping
- * and clamping, a streamed sound's refusals, and audio's pause. A sequence of steps, each
+ * and clamping, a streamed sound's refusals, audio's pause, and a sound's plays
+ * (wgf_sound_play: polyphony, the cap on every sound's, let go of once ended). A sequence of steps, each
  * acting and checking, then saying how long to wait before the next: the driver waits
  * by mixing natively and by the browser's audio clock on the web, so positions are
  * checked within TOLERANCE, the driver's. The sound is a second of mono WAV the driver
@@ -12,6 +13,7 @@
 #include <string.h>
 
 #include "wgf_audio.h"
+#include "wgf_audio_priv.h" /* wgf_audio_priv_play_count */
 #include "wgf_play_state.h"
 #include "wgf_resource.h"
 #include "wgf_sound.h"
@@ -255,6 +257,43 @@ static double step(int index)
         }
         wgf_voice_destroy(voice);
         wgf_voice_destroy(other);
+        return 0.0;
+    case 19:
+        expect(wgf_sound_get_polyphony(sound) == 8 && wgf_sound_get_polyphony(streamed) == 0 &&
+                   wgf_sound_get_polyphony(0) == 0,
+               "a sound's polyphony 8 until set; 0 for a streamed sound and a non-sound");
+        expect(!wgf_sound_set_polyphony(sound, 0) && !wgf_sound_set_polyphony(sound, 65) &&
+                   !wgf_sound_set_polyphony(streamed, 2) && wgf_sound_get_polyphony(sound) == 8,
+               "polyphony outside 1 to 64, and a streamed sound's, refused");
+        expect(!wgf_sound_play(streamed, 1.0f, 1.0f, 0.0f) && !wgf_sound_play(0, 1.0f, 1.0f, 0.0f) &&
+                   !wgf_sound_play(sound, -1.0f, 1.0f, 0.0f) && !wgf_sound_play(sound, 1.0f, NAN, 0.0f) &&
+                   !wgf_sound_play(sound, 1.0f, 1.0f, INFINITY),
+               "play refused: a streamed sound, a non-sound, a volume below 0, a pitch or pan not finite");
+        expect(wgf_audio_priv_play_count(0) == 0, "nothing refused plays");
+        expect(wgf_sound_set_polyphony(sound, 2) && wgf_sound_get_polyphony(sound) == 2, "polyphony set to 2");
+        expect(wgf_sound_play(sound, 0.5f, 1.0f, -1.0f) && wgf_sound_play(sound, 0.5f, 2.0f, 0.0f) &&
+                   wgf_sound_play(sound, 0.5f, 1.0f, 1.0f),
+               "three plays");
+        expect(wgf_audio_priv_play_count(sound) == 2 && wgf_audio_priv_play_count(0) == 2,
+               "past its polyphony the oldest starts again: two sounding");
+        return 1.2; /* past the second-long sound's end, at pitch 1 */
+    case 20:
+        expect(wgf_audio_priv_play_count(0) == 0, "plays let go of once ended");
+        expect(wgf_sound_set_polyphony(sound, 64), "polyphony 64");
+        {
+            const wgf_handle_t kept = wgf_voice_create(sound);
+            int played = 0;
+            expect(wgf_voice_play(kept), "a voice of the game's own");
+            for (int i = 0; i < 65; i++) played += wgf_sound_play(sound, 0.01f, 1.0f, 0.0f);
+            expect(played == 65 && wgf_audio_priv_play_count(0) == 64,
+                   "65 plays: 64 sounding, every sound's cap, the oldest let go of");
+            expect(wgf_voice_get_state(kept) == WGF_PLAY_STATE_PLAYING, "the game's own voice counts in neither");
+            wgf_voice_destroy(kept);
+        }
+        expect(wgf_sound_set_polyphony(sound, 8), "polyphony 8 again");
+        return 1.2;
+    case 21:
+        expect(wgf_audio_priv_play_count(0) == 0, "all 64 let go of once ended");
         return -1.0;
     default:
         return -1.0;

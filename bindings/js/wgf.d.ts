@@ -5705,6 +5705,31 @@ export declare function wgf_sound_create_streamed(path: string | null): wgf_soun
 export declare function wgf_sound_add_segment(sound: wgf_sound_t | 0, name: string | null, start: number, end: number): boolean;
 
 /**
+ * Play `sound` once and forget it: on a voice the mixer owns and lets go of when it
+ * ends, at `volume` (0 or more), `pitch` (a voice's: clamped to -16 to 16, negative from
+ * the end), and `pan` (-1 left to 1 right, clamped). A sound still PENDING plays once it
+ * is READY. Its polyphony is how many of it play at once: past that, the oldest of it
+ * starts again with these. At most 64 play at once, of every sound: past that, the
+ * oldest is let go of. A game's own voices (wgf_voice.h) count in neither: a loop, or a
+ * sound the game must stop, wants one of those. False for a handle that isn't a decoded sound (a
+ * streamed one plays on a voice), one that FAILED, a volume, pitch, or pan that isn't
+ * finite, and a volume below 0.
+ */
+export declare function wgf_sound_play(sound: wgf_sound_t | 0, volume: number, pitch: number, pan: number): boolean;
+
+/**
+ * How many plays of `sound` (wgf_sound_play) sound at once, 1 to 64; 8 until set. A lower
+ * count stops none playing: each play past it takes the oldest. False for a handle that
+ * isn't a decoded sound, and a count outside 1 to 64.
+ */
+export declare function wgf_sound_set_polyphony(sound: wgf_sound_t | 0, count: number): boolean;
+
+/**
+ * Its polyphony; 0 for a handle that isn't a decoded sound.
+ */
+export declare function wgf_sound_get_polyphony(sound: wgf_sound_t | 0): number;
+
+/**
  * Its length in seconds; 0 until it is READY, and for a handle that isn't a sound. A
  * streamed sound READY while its file arrives (wgf_sound_create_streamed) has its length
  * when the file says it at its start (natively a WAV's header, an MP3's Xing or Info
@@ -6033,7 +6058,9 @@ export declare function wgf_actor_has_component(actor: wgf_actor_t | 0, componen
 
 /**
  * The voice component's voice; 0 for an actor without one. The actor's: play it, never
- * destroy it.
+ * destroy it. For a sound that lasts as long as the actor (a car's engine, a ship's
+ * thrust, looping): it stops when the actor goes, with nothing for the game to end. A
+ * sound played once is wgf_sound_play's.
  */
 export declare function wgf_actor_get_voice(actor: wgf_actor_t | 0): wgf_voice_t;
 

@@ -404,7 +404,9 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 
 	/**
 	    The voice component's voice; 0 for an actor without one. The actor's: play it, never
-	    destroy it.
+	    destroy it. For a sound that lasts as long as the actor (a car's engine, a ship's
+	    thrust, looping): it stops when the actor goes, with nothing for the game to end. A
+	    sound played once is wgf_sound_play's.
 	**/
 	public inline function getVoice():Voice
 		return Raw.wgf_actor_get_voice(this);

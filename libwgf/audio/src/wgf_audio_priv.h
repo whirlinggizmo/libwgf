@@ -78,7 +78,12 @@ typedef struct wgf_audio_priv_sound_t {
     struct wgf_audio_priv_arriving_t *arriving; /* natively, its file arriving: the main thread's */
     wgf_audio_priv_segment_t **segments; /* decoded only; changed under the lock */
     int segment_count, segment_capacity;
+    int polyphony; /* its plays at once (wgf_sound_play); 0 until set: WGF_AUDIO_PRIV_POLYPHONY */
 } wgf_audio_priv_sound_t;
+
+/* A sound's plays at once until set, and every sound's (wgf_sound_play). */
+#define WGF_AUDIO_PRIV_POLYPHONY 8
+#define WGF_AUDIO_PRIV_PLAYS 64
 
 /* The segment of `sound_ptr` named `name`; NULL for none. Under the lock. */
 wgf_audio_priv_segment_t *wgf_audio_priv_sound_segment(const wgf_audio_priv_sound_t *sound_ptr, const char *name);
@@ -124,6 +129,8 @@ typedef struct wgf_audio_priv_voice_t {
     bool dying;          /* destroyed while busy: freed by the next sweep */
     wgf_handle_t let_go; /* natively: a sound let go of while busy: released by the next sweep */
     struct wgf_audio_priv_decoder_t *decoder; /* natively, streamed: the mixer's */
+    bool played;         /* wgf_sound_play's: let go of by the sweep once COMPLETE */
+    unsigned long long started; /* played: when, in plays, so the oldest is taken first */
 } wgf_audio_priv_voice_t;
 
 /* What a voice plays, in seconds of its sound: its segment's range (the end clamped to
@@ -166,6 +173,8 @@ void wgf_audio_priv_voice_complete(wgf_audio_priv_voice_t *voice_ptr, double end
 /* Voices' sweep, once a frame and at stop: what was destroyed or let go of while busy,
  * and a voice whose sound failed, to COMPLETE. */
 void wgf_audio_priv_voice_sweep(void);
+/* The plays of `sound` (wgf_sound_play) sounding now, 0 for every sound's: for tests. */
+int wgf_audio_priv_play_count(wgf_handle_t sound);
 /* audio's stop: every voice freed. */
 void wgf_audio_priv_voice_stop_all(void);
 

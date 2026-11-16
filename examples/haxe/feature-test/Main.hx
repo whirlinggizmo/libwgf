@@ -209,6 +209,8 @@ class Main {
 		voice.getState();
 		voice.pause();
 		voice.resume();
+		expect(click.setPolyphony(3) && click.getPolyphony() == 3, "a sound's polyphony");
+		expect(click.play(0.5, 1, 0) && !music.play(1, 1, 0), "a sound played once; a streamed one refused");
 	}
 
 	static var camera3d:Camera3d;

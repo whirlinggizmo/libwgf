@@ -8,6 +8,7 @@
 #include "wgf_core_handle_priv.h"
 #include "wgf_core_resource_priv.h"
 #include "wgf_resource.h"
+#include "wgf_sound.h" /* wgf_sound_play: a play is a voice */
 
 /* Voices: one playing of a sound, the same state machine on both platforms
  * (wgf_play_state.h), every change made under the audio lock and carried out by the
@@ -504,6 +505,9 @@ static void sweep_one(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr, voi
     if (voice_ptr->state == WGF_PLAY_STATE_PLAYING && sound_ptr != NULL &&
         sound_ptr->resource.status == WGF_RESOURCE_STATUS_FAILED) {
         wgf_audio_priv_voice_complete(voice_ptr, 0.0); /* nothing to play */
+    }
+    if (voice_ptr->played && voice_ptr->state == WGF_PLAY_STATE_COMPLETE) {
+        voice_ptr->dying = true; /* a play ended: freed below, once not busy */
     } else if (voice_ptr->state == WGF_PLAY_STATE_PLAYING && voice_ptr->fresh && sound_ptr != NULL &&
                sound_ptr->resource.status == WGF_RESOURCE_STATUS_READY && !voice_ptr->busy) {
         voice_ptr->fresh = false; /* its sound came: from the start in its direction */
@@ -544,6 +548,76 @@ void wgf_audio_priv_voice_sweep(void)
     for (int i = 0; i < sweep.dead_count; i++) free_voice(sweep.dead[i]);
     free(sweep.dead);
     free(sweep.let_go);
+}
+
+/* ------------------------------------------------------------------- plays ---- */
+
+/* wgf_sound_play's: each a voice marked played, let go of by the sweep once COMPLETE, so
+ * a game needs no pool of its own (FRICTION.md: Asteroids' voice pool). */
+
+typedef struct oldest_t {
+    wgf_handle_t sound; /* the plays of this sound, or 0 for every sound's */
+    int count;
+    wgf_handle_t voice; /* the oldest of them */
+    unsigned long long started;
+} oldest_t;
+
+static void find_oldest(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr, void *user)
+{
+    oldest_t *oldest = (oldest_t *)user;
+    if (!voice_ptr->played || (oldest->sound != 0 && voice_ptr->sound != oldest->sound)) return;
+    oldest->count++;
+    if (oldest->voice == 0 || voice_ptr->started < oldest->started) {
+        oldest->voice = voice;
+        oldest->started = voice_ptr->started;
+    }
+}
+
+int wgf_audio_priv_play_count(wgf_handle_t sound)
+{
+    oldest_t oldest = {sound, 0, 0, 0};
+    if (!vp.ready) return 0;
+    wgf_audio_priv_lock();
+    wgf_audio_priv_voice_each(find_oldest, &oldest);
+    wgf_audio_priv_unlock();
+    return oldest.count;
+}
+
+bool wgf_sound_play(wgf_handle_t sound, float volume, float pitch, float pan)
+{
+    static unsigned long long plays;
+    const wgf_audio_priv_sound_t *sound_ptr;
+    wgf_audio_priv_voice_t *voice_ptr;
+    oldest_t same = {sound, 0, 0, 0}, every = {0, 0, 0, 0};
+    wgf_handle_t voice = 0, ended = 0;
+    if (!isfinite(volume) || volume < 0.0f || !isfinite(pitch) || !isfinite(pan)) return false;
+    if (WGF_CORE_PRIV_HANDLE_KIND(sound) != WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND) return false;
+    sound_ptr = wgf_audio_priv_sound_of(sound);
+    if (sound_ptr == NULL || sound_ptr->resource.status == WGF_RESOURCE_STATUS_FAILED) return false;
+    wgf_audio_priv_lock();
+    wgf_audio_priv_voice_each(find_oldest, &same);
+    if (same.count >= (sound_ptr->polyphony > 0 ? sound_ptr->polyphony : WGF_AUDIO_PRIV_POLYPHONY)) {
+        voice = same.voice; /* the oldest of it, again */
+    } else {
+        wgf_audio_priv_voice_each(find_oldest, &every);
+        if (every.count >= WGF_AUDIO_PRIV_PLAYS) ended = every.voice;
+    }
+    wgf_audio_priv_unlock();
+    if (ended != 0) wgf_voice_destroy(ended);
+    if (voice == 0 && (voice = wgf_voice_create(sound)) == 0) return false;
+    wgf_audio_priv_lock();
+    voice_ptr = wgf_audio_priv_voice_of(voice);
+    if (voice_ptr != NULL) {
+        voice_ptr->played = true;
+        voice_ptr->started = ++plays;
+    }
+    wgf_audio_priv_unlock();
+    if (!wgf_voice_set_volume(voice, volume) || !wgf_voice_set_pitch(voice, pitch) || !wgf_voice_set_pan(voice, pan) ||
+        !wgf_voice_play(voice)) {
+        wgf_voice_destroy(voice);
+        return false;
+    }
+    return true;
 }
 
 void wgf_audio_priv_voice_stop_all(void)

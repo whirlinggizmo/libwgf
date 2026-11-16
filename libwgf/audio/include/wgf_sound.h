@@ -80,6 +80,23 @@ WGF_API wgf_sound_t wgf_sound_create_streamed(const char *path);
  * a file of many effects is best WAV or Ogg. */
 WGF_API bool wgf_sound_add_segment(wgf_sound_t sound, const char *name, float start, float end);
 
+/* Play `sound` once and forget it: on a voice the mixer owns and lets go of when it
+ * ends, at `volume` (0 or more), `pitch` (a voice's: clamped to -16 to 16, negative from
+ * the end), and `pan` (-1 left to 1 right, clamped). A sound still PENDING plays once it
+ * is READY. Its polyphony is how many of it play at once: past that, the oldest of it
+ * starts again with these. At most 64 play at once, of every sound: past that, the
+ * oldest is let go of. A game's own voices (wgf_voice.h) count in neither: a loop, or a
+ * sound the game must stop, wants one of those. False for a handle that isn't a decoded sound (a
+ * streamed one plays on a voice), one that FAILED, a volume, pitch, or pan that isn't
+ * finite, and a volume below 0. */
+WGF_API bool wgf_sound_play(wgf_sound_t sound, float volume, float pitch, float pan);
+/* How many plays of `sound` (wgf_sound_play) sound at once, 1 to 64; 8 until set. A lower
+ * count stops none playing: each play past it takes the oldest. False for a handle that
+ * isn't a decoded sound, and a count outside 1 to 64. */
+WGF_API bool wgf_sound_set_polyphony(wgf_sound_t sound, int count);
+/* Its polyphony; 0 for a handle that isn't a decoded sound. */
+WGF_API int wgf_sound_get_polyphony(wgf_sound_t sound);
+
 /* Its length in seconds; 0 until it is READY, and for a handle that isn't a sound. A
  * streamed sound READY while its file arrives (wgf_sound_create_streamed) has its length
  * when the file says it at its start (natively a WAV's header, an MP3's Xing or Info

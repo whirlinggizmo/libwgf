@@ -235,6 +235,28 @@ bool wgf_sound_add_segment(wgf_handle_t sound, const char *name, float start, fl
     return added;
 }
 
+bool wgf_sound_set_polyphony(wgf_handle_t sound, int count)
+{
+    wgf_audio_priv_sound_t *sound_ptr;
+    bool set = false;
+    if (count < 1 || count > WGF_AUDIO_PRIV_PLAYS) return false;
+    wgf_audio_priv_lock();
+    sound_ptr = wgf_audio_priv_sound_of(sound);
+    if (sound_ptr != NULL && WGF_CORE_PRIV_HANDLE_KIND(sound) == WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND) {
+        sound_ptr->polyphony = count;
+        set = true;
+    }
+    wgf_audio_priv_unlock();
+    return set;
+}
+
+int wgf_sound_get_polyphony(wgf_handle_t sound)
+{
+    const wgf_audio_priv_sound_t *sound_ptr = wgf_audio_priv_sound_of(sound);
+    if (sound_ptr == NULL || WGF_CORE_PRIV_HANDLE_KIND(sound) != WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND) return 0;
+    return sound_ptr->polyphony > 0 ? sound_ptr->polyphony : WGF_AUDIO_PRIV_POLYPHONY;
+}
+
 float wgf_sound_get_duration(wgf_handle_t sound)
 {
     const wgf_audio_priv_sound_t *sound_ptr = wgf_audio_priv_sound_of(sound);

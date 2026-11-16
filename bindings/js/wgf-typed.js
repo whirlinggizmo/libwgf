@@ -1358,6 +1358,12 @@ export const Sound = Object.freeze({
     createStreamed: raw.wgf_sound_create_streamed,
     // wgf: call wgf_sound_add_segment
     addSegment: raw.wgf_sound_add_segment,
+    // wgf: call wgf_sound_play
+    play: raw.wgf_sound_play,
+    // wgf: call wgf_sound_set_polyphony
+    setPolyphony: raw.wgf_sound_set_polyphony,
+    // wgf: call wgf_sound_get_polyphony
+    getPolyphony: raw.wgf_sound_get_polyphony,
     // wgf: call wgf_sound_get_duration
     getDuration: raw.wgf_sound_get_duration,
     // wgf: call wgf_handle_is_alive
