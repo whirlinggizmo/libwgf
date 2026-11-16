@@ -1040,6 +1040,12 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## The quick tier without the actor benchmark and the sizes (2026-11-16)
+
+Rob's: the time goes to features now, not to numbers ahead of need. The quick tier ran the actor benchmark and the web sizes before every commit (since "a quick tier", when Rob kept the sizes in it because small delivery is the point); the two were about 140 of its 470 seconds, and the benchmark's timing waits on a quiet machine. Both are guarded still, by CI and the full tier: the actor benchmark in a push's run (the Linux release job), the sizes in the daily run, and both in `--web --windows HOST`. A regression in either is found at the push or within a day, where it was found before the commit.
+
+Guards changed: the quick tier's checks narrowed, `actors` and `sizes` out (`QUICK_CHECKS` in `tools/verify_builds.py`), in a commit of their own.
+
 ## A release build's actor lookup without its caller: the name row back (2026-11-15)
 
 `10k-lookup-name` was 17% over its baseline of 2026-10-07 (the finding above), and, on CI's release runner at 2a78c60, 2.38 times it against the runner's 1.59 in its median: 1.50 times the runner's own speed, of the 2 allowed. Bisected (the row's bench at each commit since 8f3a822, round-robin on one P-core, the machine quiet), two steps, every other commit flat:

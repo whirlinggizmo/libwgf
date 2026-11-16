@@ -337,7 +337,7 @@ It copies the working tree, committed or not, builds and tests there, runs what 
 ## Before calling a change done
 
 ```sh
-python3 tools/verify_builds.py --quick                 # the quick tier, before every commit (about 10 minutes)
+python3 tools/verify_builds.py --quick                 # the quick tier, before every commit (about 8 minutes)
 python3 tools/verify_builds.py                         # this machine's presets, MinGW under Wine
 python3 tools/verify_builds.py --web                   # and the web presets
 python3 tools/verify_builds.py --web --windows HOST    # the full tier: and MSVC and MinGW on a Windows machine over ssh

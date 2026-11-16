@@ -57,11 +57,11 @@ With --windows HOST, also, on that Windows machine over ssh, the working tree as
   windows-mingw   windows-x64-mingw-debug-headless and -debug, natively, then the same
 
 --quick is the quick tier, run before every commit (CONVENTIONS.md, "Verifying"): the
-steps that catch most of what breaks, in about ten minutes, against the full tier's (the
+steps that catch most of what breaks, in about eight minutes, against the full tier's (the
 above with --web --windows HOST) forty-odd, much of which CI runs again: quick_steps below, this
 machine's of them -- the debug, release, sanitized, and release web presets, the examples
-headless and in a browser, both bindings and the feature test, the actor benchmark, and the
-web sizes. The full tier is for a step's close, a hand-off to a game session, and a change to
+headless and in a browser, both bindings and the feature test. The actor benchmark and the
+web sizes are CI's (a push's run, and the daily one) and the full tier's. The full tier is for a step's close, a hand-off to a game session, and a change to
 the build, toolchain, dependencies, platform code, or a guard.
 
 --only runs the steps named (a preset's name, or a check's); --list prints the steps it
@@ -171,7 +171,7 @@ CHECKS = {
 # The quick tier (--quick), by step, run in the full tier's order. wasm32-debug-headless and wasm32-debug are built by the web checks
 # that run on them (check_binding's node and browser, check_js_binding), as they need them.
 QUICK_VARIANTS = ('debug-headless', 'debug', 'release', 'debug-asan', 'debug-ubsan')  # those this machine has
-QUICK_CHECKS = {'smoke', 'binding', 'features', 'actors', 'web', 'binding-web', 'js-binding', 'sizes'}
+QUICK_CHECKS = {'smoke', 'binding', 'features', 'web', 'binding-web', 'js-binding'}
 
 
 def quick_steps():
