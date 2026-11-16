@@ -15,7 +15,7 @@ Each is CONVENTIONS.md's; the words here only find it.
 - Tools in Python, standard library only; nothing in shell; no regular expressions over C source ("Tooling").
 - Which doc is true, and what moves to HISTORY.md ("Docs").
 - A guard loosened only in a commit of its own, and every guard change reported ("Guards").
-- Which verify tier runs when: quick before every commit (a commit of docs alone, `tools/check_docs.py`), full at a step's close, a hand-off, or a change to the build, toolchain, deps, platform code, or a guard ("Verifying").
+- Which verify tier runs when: quick before every commit (a commit of docs alone, `tools/check_docs.py`), full at a milestone's close or when Rob asks; a change to the build, toolchain, deps, platform code, or a guard adds the full tier's steps it touches ("Verifying").
 
 ## Agent practice
 
