@@ -179,6 +179,7 @@ A guard is a check that holds a number or a rule: a tolerance, a threshold, a ba
 - A timing guard holds every row to an absolute limit on the machine that recorded its baseline (the baseline names it), so a slowdown of every row alike fails there; elsewhere, a runner of another speed, it holds rows relative to the run's own speed.
 - A guard is never loosened in the commit whose code needs it loosened: a looser tolerance, a higher threshold, a baseline re-recorded upward, or a check narrowed to fewer presets goes in a commit of its own, with its reason, so it is judged on its own.
 - Every change to a guard, either way, is reported in the step's report under "Guards changed": what it was, what it is, and why.
+- Speed is worked on when a guard fails, or a game or example is visibly slow (a FRICTION.md entry, a frame over its budget): a row drifting within its tolerance is recorded in HISTORY.md, not chased, and a measurement no decision waits on isn't made.
 
 ## Docs
 
