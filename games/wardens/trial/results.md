@@ -1,7 +1,7 @@
 # Wardens on libwgf, by fresh agents (2026-11-20)
 
 What an agent pays to build Wardens with libwgf, beside what helix's entrants paid with helix-raylib and with raylib in C (helix's
-`docs/trials/2026-11-15-wardens-baseline/results.md`). Three fresh Sonnet agents built helix's [Wardens](../../../../helix/docs/trials/templates/wardens/spec.md)
+`docs/trials/2026-11-15-wardens-baseline/results.md`). Three fresh Sonnet agents built helix's Wardens (its `docs/trials/templates/wardens/spec.md`)
 natively from the spec alone, in Haxe on libwgf's binding, 3 hours each at most, under the conditions helix's entrants had:
 `tools/run_entrant.py` (a bubblewrap sandbox, a private display drawn on the CPU, no sound, an empty home, a worktree of libwgf at
 `8d20ceb` of its own each), the brief [brief.md](brief.md) (helix's native brief in libwgf's words: the binding's API files with their
