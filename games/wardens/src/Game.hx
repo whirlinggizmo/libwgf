@@ -440,8 +440,10 @@ class Game {
 	}
 
 	function makeEnemy(px:Float, pz:Float) {
-		// the other outfits' parts: each slot from any outfit but the warden's Adventurer
-		final outfits = [for (_ in 0...4) Random.nextInt(spawner, 1, Assets.OUTFITS.length - 1)];
+		// the other outfits' parts: one outfit but the warden's Adventurer, all four of its parts (an outfit's legs and feet are
+		// made for each other; mixed across outfits, they leave gaps at the shin)
+		final outfit = Random.nextInt(spawner, 1, Assets.OUTFITS.length - 1);
+		final outfits = [for (_ in 0...4) outfit];
 		final c = new Character(world, outfits, ENEMY_RED);
 		final e = new Enemy(c, px, pz, 20 + 5 * Std.int(time / 60));
 		e.heading = Trig.atan2(x - px, z - pz);
