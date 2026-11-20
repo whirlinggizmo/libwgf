@@ -2482,6 +2482,10 @@ export const Ui = Object.freeze({
     setDocumentFont: raw.wgf_ui_set_document_font,
     // wgf: call wgf_ui_get_document_font
     getDocumentFont: raw.wgf_ui_get_document_font,
+    // wgf: call wgf_ui_set_document_font_face
+    setDocumentFontFace: raw.wgf_ui_set_document_font_face,
+    // wgf: call wgf_ui_get_document_font_face
+    getDocumentFontFace: raw.wgf_ui_get_document_font_face,
     // wgf: call wgf_ui_draw_documents
     drawDocuments: raw.wgf_ui_draw_documents,
 });

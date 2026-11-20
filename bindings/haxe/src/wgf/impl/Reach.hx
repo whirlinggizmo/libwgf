@@ -1074,6 +1074,7 @@ class Reach {
 		"wgf_ui_end_box",
 		"wgf_ui_end_panel",
 		"wgf_ui_get_document_font",
+		"wgf_ui_get_document_font_face",
 		"wgf_ui_get_focus",
 		"wgf_ui_get_style_color",
 		"wgf_ui_get_style_font",
@@ -1084,6 +1085,7 @@ class Reach {
 		"wgf_ui_set_align",
 		"wgf_ui_set_color",
 		"wgf_ui_set_document_font",
+		"wgf_ui_set_document_font_face",
 		"wgf_ui_set_focus",
 		"wgf_ui_set_gap",
 		"wgf_ui_set_height",
@@ -1199,7 +1201,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1190) 0];
+	static final counts:Array<Int> = [for (_ in 0...1192) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

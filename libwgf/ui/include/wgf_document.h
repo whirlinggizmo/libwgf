@@ -24,8 +24,12 @@ extern "C" {
  *
  * Shown documents are drawn by wgf_ui_draw_documents (wgf_ui.h), called in the frame callback, at that
  * point in the frame: over what was drawn before it. The input is read as they are drawn:
- * the pointer (the mouse, which touch drives too), its buttons and wheel, the keys and the
- * characters typed, and a pad's D-pad (as the arrow keys) and south button (as Enter). The
+ * the pointer (the mouse), its buttons and wheel, the fingers (as touches: a tap clicks, and
+ * a finger dragged scrolls what it drags, gliding on as it lifts), the keys and the
+ * characters typed, and a pad's D-pad (as the arrow keys) and south button (as Enter). A
+ * text field typed into asks for the device's on-screen keyboard while it has the focus
+ * (on a phone's browser, a hidden input element of the page's at its caret, what is typed
+ * there typed into the field). The
  * focus moves by Tab and Shift+Tab through what can take it (RCSS `tab-index: auto`, and
  * every form control), and by the arrow keys and the D-pad as each element's `nav`
  * properties say (`nav: auto`, or `nav-up: #id`...); Enter, Space, or the south button
@@ -36,9 +40,10 @@ extern "C" {
  *
  * Text is drawn in libwgf's fonts: RCSS's `font-family` names a family the program set
  * (wgf_ui_set_document_font, in wgf_ui.h), and one it didn't set draws in the default font
- * (wgf_font.h). A face's weight and style (bold, italic) are the family's one font. Set
- * the fonts before creating the documents: a document waits for the fonts set to be
- * loaded before it is laid out.
+ * (wgf_font.h). A family's bold and italic are faces of their own
+ * (wgf_ui_set_document_font_face): `font-weight` and `font-style` draw in the family's
+ * face nearest them. Set the fonts before creating the documents: a document waits for
+ * the fonts set to be loaded before it is laid out.
  *
  * Elements are found by their id. An element's handle lives as long as its element: one
  * removed from its document (its parent's inner RML set again) or whose document is

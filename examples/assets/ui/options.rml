@@ -16,6 +16,7 @@
                     <option value="normal" selected="selected">Normal</option>
                     <option value="hard">Hard</option>
                 </select>
+                <div class="hint">?<div class="tip"><b>Hard</b> keeps the <i>night</i> levels dark.</div></div>
             </div>
             <div class="row"><label for="sound">Sound</label><input id="sound" type="checkbox" value="on" checked="checked"/></div>
             <div class="row"><label for="volume">Volume</label><input id="volume" type="range" min="0" max="10" step="1" value="7"/><span id="volume-value">7</span></div>
@@ -39,7 +40,7 @@
         </panel>
     </tabset>
     <div id="buttons"><button id="play">Play</button><button id="quit">Quit</button></div>
-    <p id="status">Tab, the arrows, or a pad's D-pad move; Enter or its south button chooses.</p>
+    <p id="status"><b>Tab</b>, the arrows, or a pad's D-pad move; <b>Enter</b> or its south button chooses. <i>Point at the ? for a tip.</i></p>
 </div>
 </body>
 </rml>

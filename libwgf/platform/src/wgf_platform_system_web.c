@@ -1,6 +1,8 @@
 #include "wgf_platform_priv.h"
 
 #include <emscripten.h>
+#include <stdint.h>
+#include <string.h>
 #include <emscripten/eventloop.h>
 
 #include "sokol_app.h"
@@ -146,6 +148,133 @@ bool wgf_platform_priv_open_url(const char *url)
 bool wgf_platform_priv_has_touch(void)
 {
     return web_has_touch() != 0;
+}
+
+/* ---- the on-screen keyboard: a hidden input element of the page's ------------------- */
+
+/* The input made the first time one is shown: transparent, a pixel, at the caret, so the
+ * page doesn't scroll away from it. It keeps one space, so a phone's Backspace has
+ * something to delete: what it is given past the space is typed, the space gone is a
+ * Backspace, each queued for the next frame. A desktop's keys reach the window's handlers
+ * as before, which keep them from the input. Phones show a keyboard only for a focus
+ * given while the user touches the page, so a keyboard asked for is focused again at
+ * every touch's end or click until it isn't wanted. */
+EM_JS(void, web_show_keyboard, (int shown, float x, float y, float height), {
+    var k = Module.wgfKeyboard;
+    if (!k) {
+        if (!shown) return;
+        var input = document.createElement("input");
+        input.type = "text";
+        input.setAttribute("autocomplete", "off");
+        input.setAttribute("autocorrect", "off");
+        input.setAttribute("autocapitalize", "off");
+        input.setAttribute("spellcheck", "false");
+        input.setAttribute("aria-hidden", "true");
+        input.style.cssText = "position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;padding:0;border:0;" +
+                              "margin:0;outline:none;font-size:16px;pointer-events:none;z-index:-1";
+        input.value = " ";
+        k = Module.wgfKeyboard = {input : input, typed : "", wanted : false};
+        input.addEventListener("input", function() {
+            var value = input.value;
+            if (value.length === 0) k.typed += "\b";
+            else if (value.length > 1) k.typed += value.charAt(0) === " " ? value.substring(1) : value;
+            input.value = " ";
+            input.setSelectionRange(1, 1);
+        });
+        var refocus = function() {
+            if (k.wanted && document.activeElement !== input) input.focus({preventScroll : true});
+        };
+        window.addEventListener("touchend", refocus, true);
+        window.addEventListener("click", refocus, true);
+        document.body.appendChild(input);
+    }
+    k.wanted = shown !== 0;
+    if (k.wanted) {
+        var rect = Module.canvas ? Module.canvas.getBoundingClientRect() : {left : 0, top : 0};
+        k.input.style.left = Math.max(0, Math.round(rect.left + x)) + "px";
+        k.input.style.top = Math.max(0, Math.round(rect.top + y + height)) + "px";
+        if (document.activeElement !== k.input) k.input.focus({preventScroll : true});
+    } else if (document.activeElement === k.input) {
+        k.input.blur();
+    }
+})
+
+EM_JS_DEPS(wgf_platform_keyboard, "$stringToUTF8,$lengthBytesUTF8")
+
+/* What the input was given since, as UTF-8 into `out` (as much as fits whole), and taken. */
+EM_JS(int, web_take_keyboard, (char *out, int size), {
+    var k = Module.wgfKeyboard;
+    if (!k || k.typed.length === 0) return 0;
+    var text = k.typed;
+    while (text.length > 0 && lengthBytesUTF8(text) >= size) text = text.substring(0, text.length - 1);
+    k.typed = k.typed.substring(text.length);
+    stringToUTF8(text, out, size);
+    return lengthBytesUTF8(text);
+})
+
+static bool keyboard_shown;
+
+void wgf_platform_priv_show_keyboard(bool shown, float x, float y, float height)
+{
+    keyboard_shown = shown;
+    web_show_keyboard(shown ? 1 : 0, x, y, height);
+}
+
+bool wgf_platform_priv_is_keyboard_shown(void)
+{
+    return keyboard_shown;
+}
+
+static void deliver_key(void (*deliver)(const sapp_event *event), sapp_keycode code)
+{
+    sapp_event event;
+    memset(&event, 0, sizeof(event));
+    event.type = SAPP_EVENTTYPE_KEY_DOWN;
+    event.key_code = code;
+    deliver(&event);
+    event.type = SAPP_EVENTTYPE_KEY_UP;
+    deliver(&event);
+}
+
+void wgf_platform_priv_sokol_poll(void (*deliver)(const sapp_event *event))
+{
+    char text[256];
+    const int n = web_take_keyboard(text, (int)sizeof(text));
+    int i = 0;
+    while (i < n) {
+        const unsigned char c = (unsigned char)text[i];
+        uint32_t code = c;
+        int length = 1, k;
+        if (c == '\b') {
+            deliver_key(deliver, SAPP_KEYCODE_BACKSPACE);
+            i++;
+            continue;
+        }
+        if (c == '\n' || c == '\r') {
+            deliver_key(deliver, SAPP_KEYCODE_ENTER);
+            i++;
+            continue;
+        }
+        if (c >= 0xF0) {
+            code = c & 0x07u;
+            length = 4;
+        } else if (c >= 0xE0) {
+            code = c & 0x0Fu;
+            length = 3;
+        } else if (c >= 0xC0) {
+            code = c & 0x1Fu;
+            length = 2;
+        }
+        for (k = 1; k < length && i + k < n; k++) code = (code << 6) | ((unsigned char)text[i + k] & 0x3Fu);
+        i += length;
+        if (code >= 32) {
+            sapp_event event;
+            memset(&event, 0, sizeof(event));
+            event.type = SAPP_EVENTTYPE_CHAR;
+            event.char_code = code;
+            deliver(&event);
+        }
+    }
 }
 
 bool wgf_platform_priv_has_fine_pointer(void)

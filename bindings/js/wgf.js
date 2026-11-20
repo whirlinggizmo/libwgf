@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "b5f7e16bd0ae3245" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "4a596fadf1cc94b8" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -15801,6 +15801,42 @@ export function wgf_ui_set_document_font(family, font) {
 export function wgf_ui_get_document_font(family) {
     const mark = host["stackSave"]();
     const value = host["_wgf_ui_get_document_font"](cstr(family));
+    host["stackRestore"](mark);
+    return value >>> 0;
+}
+
+// wgf: call wgf_ui_set_document_font_face
+/**
+ * A face of a family's own: the font `font-family: <family>` draws in at `font-weight:
+ * <weight>` (1 to 1000: 400 normal, 700 bold) and, `italic`, `font-style: italic`. Text
+ * draws in the family's face nearest the one it asks for: of its style when the family
+ * has one of it (else of the other), the nearest weight, a tie to the heavier above 400
+ * and to the lighter at or below; the family's font (wgf_ui_set_document_font) is its
+ * face at 400, upright. A face no font is set for is never made up (no bold drawn from a
+ * regular). 0 unsets it. It holds a reference to `font`. False for no family, a weight
+ * outside 1 to 1000, or a handle that isn't a font.
+ */
+export function wgf_ui_set_document_font_face(family, weight, italic, font) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_ui_set_document_font_face"](cstr(family), weight, (italic ? 1 : 0), font);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_ui_get_document_font_face
+/**
+ * A face of a family's own: the font `font-family: <family>` draws in at `font-weight:
+ * <weight>` (1 to 1000: 400 normal, 700 bold) and, `italic`, `font-style: italic`. Text
+ * draws in the family's face nearest the one it asks for: of its style when the family
+ * has one of it (else of the other), the nearest weight, a tie to the heavier above 400
+ * and to the lighter at or below; the family's font (wgf_ui_set_document_font) is its
+ * face at 400, upright. A face no font is set for is never made up (no bold drawn from a
+ * regular). 0 unsets it. It holds a reference to `font`. False for no family, a weight
+ * outside 1 to 1000, or a handle that isn't a font.
+ */
+export function wgf_ui_get_document_font_face(family, weight, italic) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_ui_get_document_font_face"](cstr(family), weight, (italic ? 1 : 0));
     host["stackRestore"](mark);
     return value >>> 0;
 }

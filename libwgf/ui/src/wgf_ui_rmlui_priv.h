@@ -91,6 +91,14 @@ typedef struct wgf_ui_priv_rml_input_t {
     const int *keys_up;
     int key_up_count;
     const char *text; /* typed, UTF-8 */
+    /* fingers that touched down, moved, lifted, or were lost (`touch_phase`: 0 to 3)
+       this frame; `touching` while any is down and drives the mouse too, which isn't
+       read then */
+    int touch_count;
+    int touch_ids[8];
+    int touch_phase[8];
+    float touch_x[8], touch_y[8];
+    bool touching;
 } wgf_ui_priv_rml_input_t;
 
 /* The context worked by `input` (NULL: none, its size kept) and updated; then drawn, through
@@ -107,6 +115,9 @@ void wgf_ui_priv_doc_set_clipboard(const char *text);
 const char *wgf_ui_priv_doc_get_clipboard(void);
 /* The pointer's shape, by CSS's name for it ("pointer", "text", "move"...). */
 void wgf_ui_priv_doc_set_cursor(const char *name);
+/* A text field typed into wants an on-screen keyboard (shown), its caret at x, y (the
+ * context's pixels), a line `height` tall; or no longer does. */
+void wgf_ui_priv_doc_keyboard(bool shown, float x, float y, float height);
 
 /* A file under fs's root (local: the document's loader made it so), whole: malloc'd,
  * freed with file_free; NULL when it can't be read. */
@@ -140,11 +151,12 @@ void wgf_ui_priv_doc_draw(const wgf_ui_priv_vertex_t *vertices, int vertex_count
 void wgf_ui_priv_doc_scissor(bool enable, int x, int y, int width, int height);
 void wgf_ui_priv_doc_transform(const float *matrix);
 
-/* Fonts: a face, a family at a size in pixels (1.. ; 0 when none can be had), its metrics,
+/* Fonts: a face, a family at a size in pixels (1.. ; 0 when none can be had), a weight (1 to
+ * 1000; another, 400), and a style, its metrics,
  * a line's width, and its glyphs' quads (8 floats each: x0, y0, x1, y1, s0, t0, s1, t1 in
  * the atlas) from x along the baseline y, as many as fit in max; and the version the
  * quads made are good for, changed whenever they would be laid out again. */
-int wgf_ui_priv_doc_font_face(const char *family, int size);
+int wgf_ui_priv_doc_font_face(const char *family, int size, int weight, bool italic);
 bool wgf_ui_priv_doc_font_metrics(int face, float *ascent, float *descent, float *line_height, float *x_height);
 float wgf_ui_priv_doc_font_width(int face, const char *text, int length);
 int wgf_ui_priv_doc_font_quads(int face, const char *text, int length, float x, float y, float *quads, int max);

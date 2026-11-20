@@ -8,7 +8,7 @@ From libwgt's `examples/assets/`, which took them from wgrender's, unchanged:
 
 | File | Work | Author | Source | License |
 |---|---|---|---|---|
-| `fonts/JetBrainsMono/JetBrainsMono-Regular.ttf` | JetBrains Mono | JetBrains | [jetbrains.com/lp/mono](https://www.jetbrains.com/lp/mono/) | [SIL OFL 1.1](fonts/JetBrainsMono/OFL.txt) |
+| `fonts/JetBrainsMono/JetBrainsMono-Regular.ttf`, `-Bold.ttf`, `-Italic.ttf` (the last two from the project's repository, fonts/ttf/, 2026-11-20) | JetBrains Mono | JetBrains | [jetbrains.com/lp/mono](https://www.jetbrains.com/lp/mono/) | [SIL OFL 1.1](fonts/JetBrainsMono/OFL.txt) |
 | `fonts/Komika/KOMIKAH_.ttf` | Komika Hand | © 1999-2001 WolfBainX & Apostrophic Labs | [apostrophiclab.com](https://www.apostrophiclab.com) | Freeware, unmodified; terms in `fonts/Komika/readme.txt`, the authors' notes in `Komika.txt` |
 | `music/a_hero_is_born.mp3` | "A Hero Is Born", its first 90 s | HoliznaCC0 | [Free Music Archive](https://freemusicarchive.org/music/holiznacc0/retro-gamer-soundtrack/a-hero-is-born/) | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | `models/kit/*.glb` | seven of Racing Kit 2.0's models (the long straight, the grandstand, the barrier wall, two trees, the large light post, the pylon), for scene-stream | Kenney | [kenney.nl/assets/racing-kit](https://kenney.nl/assets/racing-kit); copied from `games/racer/assets/kit/`, written there by the racer's `tools/gen_kit.py` (triangles unchanged, colors linear, a roughness) | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |

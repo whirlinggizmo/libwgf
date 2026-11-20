@@ -90,6 +90,10 @@ void wgf_platform_priv_sokol_hold(bool hold);
  * program set if `size_set`. On the web the canvas is laid out by the page, so it
  * takes the size only when the program set one; natively, sokol_app opened it so. */
 void wgf_platform_priv_sokol_open(int width, int height, bool size_set);
+/* sokol_app only: before each frame, what the page's own elements were given since (the
+ * web's on-screen keyboard: wgf_platform_priv_show_keyboard), delivered as the window's
+ * events through `deliver`; natively nothing. */
+void wgf_platform_priv_sokol_poll(void (*deliver)(const sapp_event *event));
 
 /* Frame pacing, for a target fps: the next frame is due in `wait` seconds (0 or
  * less: now). Natively this sleeps until then and says to run the frame; on the
@@ -134,6 +138,14 @@ void wgf_platform_priv_set_cursor(int cursor);
 void wgf_platform_priv_set_clipboard(const char *text);
 const char *wgf_platform_priv_get_clipboard(void);
 bool wgf_platform_priv_open_url(const char *url);
+/* An on-screen keyboard, for a text field being typed into (the ui's documents ask, as
+ * RmlUi does), shown or hidden, the caret at x, y (logical) on a line `height` tall: on the
+ * web a hidden input element of the page's, focused there so a phone shows its keyboard,
+ * what is typed into it delivered as the window's typed characters, Backspace, and Enter
+ * (wgf_platform_priv_sokol_poll); natively sokol_app's (a phone's; nothing on a desktop);
+ * headless, only kept, for a test. Shown: whether it was last asked for. */
+void wgf_platform_priv_show_keyboard(bool shown, float x, float y, float height);
+bool wgf_platform_priv_is_keyboard_shown(void);
 bool wgf_platform_priv_has_touch(void);
 bool wgf_platform_priv_has_fine_pointer(void);
 int wgf_platform_priv_get_os(void);

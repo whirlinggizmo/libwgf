@@ -548,6 +548,9 @@ class Main {
 		expect(Font.getDefault().isNone() && font.setDefault() && Font.getDefault() == font, "the default font");
 		expect(font.measure("feature", 16).x > 0, "text measured");
 		expect(Ui.setDocumentFont("Mono", font) && Ui.getDocumentFont("mono") == font, "a document's font family");
+		expect(Ui.setDocumentFontFace("Mono", 700, false, font) && Ui.getDocumentFontFace("mono", 700, false) == font
+			&& Ui.setDocumentFontFace("Mono", 700, false, 0) && Ui.getDocumentFontFace("mono", 700, false).isNone(),
+			"a family's bold face, set and unset");
 		menu = Document.create("ui/options.rml");
 		expect(menu.setVisible(true) && menu.isVisible(), "a document, shown once loaded");
 

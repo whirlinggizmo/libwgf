@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "jetbrains_mono_ascii.h"
@@ -28,7 +29,9 @@
  * the pointer clicking a button and a checkbox, typed text and keys in a text field, Tab
  * and a pad's D-pad moving the focus, each seen as the events taken; the captures; an
  * element gone with its RML; a document released, its elements with it; one that isn't
- * there FAILED; and every refusal. */
+ * there FAILED; and every refusal. And what RCSS does over time: a transition, an
+ * animation, and a tooltip shown by `:hover` on its parent; a finger dragging a list,
+ * which scrolls; a text field's on-screen keyboard; and a family's bold and italic faces. */
 
 static int failures;
 
@@ -57,12 +60,19 @@ static const char rml[] =
     "  <div id=\"list\"><p id=\"first\">one</p></div>\n"
     "  <img id=\"logo\" src=\"dot.png\"/>\n"
     "  <a href=\"https://example.com/elsewhere.png\">away</a>\n"
+    "  <div id=\"help\">?<div id=\"tip\">A tooltip</div></div>\n"
+    "  <div id=\"fade\"></div>\n"
+    "  <div id=\"pulse\"></div>\n"
+    "  <div id=\"scroller\"><div id=\"row-1\">1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div></div>\n"
+    "  <p><b>bold</b> <i>italic</i></p>\n"
     "</body>\n"
     "</rml>\n";
 
 static const char rcss[] =
     "body { display: block; width: 100%; height: 100%; font-family: Mono; font-size: 16px; color: #ffffff; }\n"
     "h1, div, p, button { display: block; }\n"
+    "b { font-weight: bold; }\n"
+    "i { font-style: italic; }\n"
     "button { width: 200px; height: 32px; tab-index: auto; nav: auto; background-color: #334; }\n"
     "input.checkbox { display: block; width: 20px; height: 20px; nav: auto; }\n"
     "input.range { display: block; width: 200px; height: 20px; nav: auto; }\n"
@@ -70,7 +80,16 @@ static const char rcss[] =
     "input.range sliderbar { width: 10px; height: 20px; }\n"
     "input.text { display: block; width: 200px; height: 24px; nav: auto; }\n"
     "img { display: block; }\n"
-    ".hot { color: #ff0000; }\n";
+    ".hot { color: #ff0000; }\n"
+    "#help { width: 40px; height: 20px; }\n"
+    "#tip { display: none; }\n"
+    "#help:hover #tip { display: block; width: 100px; height: 20px; }\n"
+    "#fade { height: 10px; opacity: 1; transition: opacity 0.5s linear-in; }\n"
+    "#fade.out { opacity: 0; }\n"
+    "@keyframes grow { from { width: 100px; } to { width: 200px; } }\n"
+    "#pulse { height: 10px; animation: 0.6s linear-in infinite alternate grow; }\n"
+    "#scroller { height: 60px; overflow-y: auto; }\n"
+    "#scroller div { height: 30px; }\n";
 
 /* a 2 by 2 PNG, white, opaque */
 static const unsigned char png[] = {
@@ -79,10 +98,13 @@ static const unsigned char png[] = {
     0x0E, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0xF8, 0x0F, 0x06, 0x0C, 0x10, 0x0A, 0x00, 0x53, 0xBA, 0x0B,
     0xF5, 0x98, 0xAC, 0x20, 0x67, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82};
 
-static wgf_handle_t tasks[4];
-static wgf_font_t font;
+static wgf_handle_t tasks[5];
+static wgf_font_t font, bold;
 static wgf_document_t document, missing;
-static wgf_element_t play, sound, volume, name, quit, first, logo;
+static wgf_element_t play, sound, volume, name, quit, first, logo, help, tip, fade, pulse, row;
+static double hold_until; /* the steps wait until then: what RCSS does over time */
+static double faded_at;
+static float pulse_width, row_x, row_y;
 static int frame_number, ready_frame = -1;
 static double started;
 static wgf_platform_priv_gamepad_t pad;
@@ -101,6 +123,24 @@ static void mouse(sapp_event_type type, float x, float y)
     event.mouse_x = x;
     event.mouse_y = y;
     push(event);
+}
+
+static void finger(sapp_event_type type, float x, float y)
+{
+    sapp_event event;
+    memset(&event, 0, sizeof(event));
+    event.type = type;
+    event.num_touches = 1;
+    event.touches[0].identifier = 7;
+    event.touches[0].pos_x = x;
+    event.touches[0].pos_y = y;
+    event.touches[0].changed = true;
+    push(event);
+}
+
+static float number_of(const char *text)
+{
+    return (float)atof(text);
 }
 
 static void key(sapp_event_type type, sapp_keycode code)
@@ -173,6 +213,7 @@ static void on_init(void *user)
     tasks[1] = wgf_fs_write("doc_test/test.rcss", (const unsigned char *)rcss, (int)strlen(rcss));
     tasks[2] = wgf_fs_write("doc_test/dot.png", png, (int)sizeof(png));
     tasks[3] = wgf_fs_write("doc_test/mono.ttf", jetbrains_mono_ascii_ttf, (int)sizeof(jetbrains_mono_ascii_ttf));
+    tasks[4] = wgf_fs_write("doc_test/mono-bold.ttf", jetbrains_mono_ascii_ttf, (int)sizeof(jetbrains_mono_ascii_ttf));
     memset(&pad, 0, sizeof(pad));
     pad.connected = true;
     snprintf(pad.name, sizeof(pad.name), "%s", "test pad");
@@ -190,11 +231,11 @@ static void before_ready(void)
 {
     int i;
     if (font != 0) return;
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < 5; i++) {
         if (tasks[i] == 0 || wgf_fs_task_get_status(tasks[i]) == WGF_FS_TASK_STATUS_PENDING) return;
     }
     if (font == 0) {
-        for (i = 0; i < 4; i++) {
+        for (i = 0; i < 5; i++) {
             expect(wgf_fs_task_get_status(tasks[i]) == WGF_FS_TASK_STATUS_DONE, "a file written");
             wgf_fs_task_destroy(tasks[i]);
         }
@@ -212,6 +253,30 @@ static void before_ready(void)
         expect(!wgf_ui_set_document_font("", font) && !wgf_ui_set_document_font(NULL, font) &&
                    !wgf_ui_set_document_font("x", 12345) && wgf_ui_get_document_font("serif") == 0,
                "no family, or no font: refused; a family unset is none");
+        /* a family's faces: its bold, and its italic, each a font of its own */
+        bold = wgf_font_create("doc_test/mono-bold.ttf");
+        expect(wgf_ui_set_document_font_face("Mono", 700, false, bold) &&
+                   wgf_ui_get_document_font_face("mono", 700, false) == bold &&
+                   wgf_ui_get_document_font_face("mono", 400, false) == font &&
+                   wgf_ui_get_document_font_face("mono", 600, false) == 0,
+               "a family's bold face, set and read; the family's font its face at 400");
+        expect(wgf_ui_priv_document_face_font("Mono", 700, false) == bold &&
+                   wgf_ui_priv_document_face_font("Mono", 550, false) == bold &&
+                   wgf_ui_priv_document_face_font("Mono", 450, false) == font &&
+                   wgf_ui_priv_document_face_font("Mono", 900, true) == bold &&
+                   wgf_ui_priv_document_face_font("Mono", 300, true) == font &&
+                   wgf_ui_priv_document_face_font("Serif", 400, false) == 0,
+               "a face drawn in the nearest the family has; another style's when it has none of its own");
+        expect(wgf_ui_set_document_font_face("Mono", 400, true, bold) &&
+                   wgf_ui_priv_document_face_font("Mono", 700, true) == bold &&
+                   wgf_ui_priv_document_face_font("Mono", 700, false) == bold &&
+                   wgf_ui_priv_document_face_font("Mono", 400, false) == font,
+               "an italic face: italic text draws in it, upright text never");
+        expect(!wgf_ui_set_document_font_face("Mono", 0, false, bold) &&
+                   !wgf_ui_set_document_font_face("Mono", 1001, false, bold) &&
+                   !wgf_ui_set_document_font_face(NULL, 700, false, bold) &&
+                   !wgf_ui_set_document_font_face("Mono", 700, false, 12345),
+               "a weight past 1 to 1000, no family, or no font: refused");
         expect(!wgf_ui_draw_documents(), "nothing to draw before a document");
         document = wgf_document_create("doc_test/menu.rml");
         missing = wgf_document_create("doc_test/missing.rml");
@@ -237,7 +302,13 @@ static void ready(void)
     title = wgf_document_find(document, "title");
     list = wgf_document_find(document, "list");
     logo = wgf_document_find(document, "logo");
+    help = wgf_document_find(document, "help");
+    tip = wgf_document_find(document, "tip");
+    fade = wgf_document_find(document, "fade");
+    pulse = wgf_document_find(document, "pulse");
+    row = wgf_document_find(document, "row-1");
     expect(play && sound && volume && name && quit && first && title && list && logo, "every element found");
+    expect(help && tip && fade && pulse && row, "and those for what RCSS does over time");
     expect(wgf_document_find(document, "play") == play, "the same element, the same handle");
     expect(strcmp(wgf_handle_get_kind_name(play), "ui.element") == 0, "an element's kind");
     expect(wgf_document_find(document, "nothing") == 0 && wgf_document_find(document, "") == 0 &&
@@ -315,7 +386,7 @@ static void ready(void)
 
 static void on_frame(void *user)
 {
-    float x, y, w, h;
+    float x = 0.0f, y = 0.0f, w = 0.0f, h = 0.0f;
     (void)user;
     if (ready_frame < 0) {
         before_ready();
@@ -333,6 +404,7 @@ static void on_frame(void *user)
         }
     }
     expect(wgf_ui_draw_documents(), "drawn");
+    if (wgf_time_get_seconds() < hold_until) return; /* a step waiting on time: the steps hold still */
     switch (frame_number++ - ready_frame) {
     case 0: {
         const int before = sgl_num_vertices();
@@ -384,6 +456,7 @@ static void on_frame(void *user)
         take();
         expect(strcmp(wgf_element_get_value(name), "xAnn") == 0 && happened(WGF_DOCUMENT_EVENT_CHANGE, name),
                "typed into a text field, at its start");
+        expect(wgf_platform_priv_is_keyboard_shown(), "a text field typed into: an on-screen keyboard asked for");
         key(SAPP_EVENTTYPE_KEY_DOWN, SAPP_KEYCODE_BACKSPACE);
         break;
     case 7:
@@ -394,6 +467,7 @@ static void on_frame(void *user)
     case 8:
         key(SAPP_EVENTTYPE_KEY_UP, SAPP_KEYCODE_TAB);
         expect(wgf_document_get_focus(document) == quit, "Tab: the next that takes the focus");
+        expect(!wgf_platform_priv_is_keyboard_shown(), "the text field left: the keyboard let go");
         press_pad(WGF_GAMEPAD_BUTTON_DPAD_UP, true);
         break;
     case 9:
@@ -409,9 +483,54 @@ static void on_frame(void *user)
         expect(wgf_document_set_focus(document, 0) && wgf_document_get_focus(document) == 0 &&
                    !wgf_document_set_focus(document, document) && !wgf_document_set_focus(0, play),
                "the focus taken away; another kind, or no document: refused");
-        expect(wgf_document_set_visible(document, false) && !wgf_document_is_visible(document), "hidden");
+        /* a tooltip: shown by `:hover` on its parent */
+        expect(strcmp(wgf_element_get_property(tip, "display"), "none") == 0, "a tooltip hidden");
+        click_at(help, SAPP_EVENTTYPE_MOUSE_MOVE);
         break;
     case 11:
+        expect(strcmp(wgf_element_get_property(tip, "display"), "block") == 0 &&
+                   wgf_ui_priv_document_element_bounds(tip, &x, &y, &w, &h) && w == 100 && h == 20,
+               "the pointer over its parent: the tooltip shown, laid out");
+        click_at(play, SAPP_EVENTTYPE_MOUSE_MOVE);
+        /* a transition: a class taken on fades it over half a second */
+        expect(wgf_element_set_class(fade, "out", true), "a class on");
+        faded_at = wgf_time_get_seconds();
+        pulse_width = number_of(wgf_element_get_property(pulse, "width"));
+        expect(pulse_width >= 100.0f && pulse_width <= 200.0f, "an animation under way, within its keyframes");
+        hold_until = faded_at + 0.2;
+        break;
+    case 12: {
+        const float opacity = number_of(wgf_element_get_property(fade, "opacity"));
+        const float width = number_of(wgf_element_get_property(pulse, "width"));
+        expect(strcmp(wgf_element_get_property(tip, "display"), "none") == 0, "the pointer gone: the tooltip hidden");
+        expect(opacity > 0.05f && opacity < 0.95f, "a transition part of its way");
+        expect(width >= 100.0f && width <= 200.0f && width != pulse_width, "the animation moved on");
+        hold_until = faded_at + 0.7;
+        break;
+    }
+    case 13:
+        expect(number_of(wgf_element_get_property(fade, "opacity")) == 0.0f, "a transition at its end");
+        /* a finger dragging a list scrolls it */
+        expect(wgf_ui_priv_document_element_bounds(row, &x, &y, &w, &h), "the list's first row laid out");
+        row_x = x + 10.0f; /* where it was */
+        row_y = y;
+        finger(SAPP_EVENTTYPE_TOUCHES_BEGAN, row_x, y + 45.0f);
+        break;
+    case 14:
+        finger(SAPP_EVENTTYPE_TOUCHES_MOVED, row_x, row_y + 25.0f);
+        break;
+    case 15:
+        finger(SAPP_EVENTTYPE_TOUCHES_MOVED, row_x, row_y + 5.0f);
+        break;
+    case 16:
+        expect(wgf_ui_priv_document_element_bounds(row, &x, &y, &w, &h) && y <= row_y - 39.0f,
+               "a finger dragged up: the list scrolled with it");
+        finger(SAPP_EVENTTYPE_TOUCHES_ENDED, row_x, row_y + 5.0f);
+        break;
+    case 17:
+        expect(wgf_document_set_visible(document, false) && !wgf_document_is_visible(document), "hidden");
+        break;
+    case 18:
         expect(!wgf_input_is_pointer_captured() && !wgf_input_is_keyboard_captured(),
                "hidden: neither the pointer nor the keyboard the document's");
         /* released: the document and its elements gone */
@@ -423,6 +542,7 @@ static void on_frame(void *user)
         wgf_log_set_level(WGF_LOG_LEVEL_INFO);
         wgf_resource_release(missing);
         wgf_resource_release(font);
+        wgf_resource_release(bold);
         wgf_app_quit();
         break;
     default: break;
@@ -433,6 +553,6 @@ int main(void)
 {
     wgf_window_set_size(800, 600);
     wgf_app_run(on_init, NULL, on_frame, NULL, NULL);
-    expect(ready_frame >= 0 && frame_number - ready_frame >= 12, "every frame ran");
+    expect(ready_frame >= 0 && frame_number - ready_frame >= 19, "every frame ran");
     return failures == 0 ? 0 : 1;
 }

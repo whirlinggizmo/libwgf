@@ -17,8 +17,11 @@
 /* A game's options menu as a document: RML and RCSS files (examples/assets/ui/), laid out
  * and drawn by libwgf on RmlUi, over a scene drawn behind it. Its tabs, a text field, a
  * choice, a check box, a slider, a scrolling list of levels, and buttons, each drawn from
- * one sprite sheet as nine-patches, a sprite for every state. The pointer, the wheel, Tab
- * and the arrow keys, Enter, and a pad's D-pad and south button all work it; the program
+ * one sprite sheet as nine-patches, a sprite for every state; a title that glows by an
+ * animation, buttons whose color eases by a transition, a tooltip shown by `:hover`, and
+ * text in the family's bold and italic faces. The pointer, the wheel, a finger (a list
+ * dragged scrolls), Tab and the arrow keys, Enter, and a pad's D-pad and south button all
+ * work it, and a text field asks a phone for its keyboard; the program
  * reads what happened as events each frame and answers by changing the document's text.
  * Escape quits where quitting means anything. */
 
@@ -34,6 +37,9 @@ static void init(void *user)
     wgf_render_set_clear_color(wgf_color_make(10, 12, 20, 255));
     /* the families the style sheet names, set before the document is made */
     wgf_ui_set_document_font("Mono", wgf_font_create("fonts/JetBrainsMono/JetBrainsMono-Regular.ttf"));
+    /* the family's bold and italic, faces of their own: `<b>`, `<i>`, `font-weight: bold` */
+    wgf_ui_set_document_font_face("Mono", 700, false, wgf_font_create("fonts/JetBrainsMono/JetBrainsMono-Bold.ttf"));
+    wgf_ui_set_document_font_face("Mono", 400, true, wgf_font_create("fonts/JetBrainsMono/JetBrainsMono-Italic.ttf"));
     wgf_ui_set_document_font("Komika", wgf_font_create("fonts/Komika/KOMIKAH_.ttf"));
     menu = wgf_document_create("ui/options.rml");
     wgf_document_set_visible(menu, true);

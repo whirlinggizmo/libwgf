@@ -52,13 +52,19 @@ static void on_event(const sapp_event *event)
     run_desc.event(event);
 }
 
+static void on_frame(void)
+{
+    wgf_platform_priv_sokol_poll(on_event); /* what the page's keyboard was given, as events */
+    run_desc.frame();
+}
+
 void wgf_platform_priv_run(const wgf_platform_priv_desc_t *desc)
 {
     sapp_desc app;
     run_desc = *desc;
     memset(&app, 0, sizeof(app));
     app.init_cb = on_init;
-    app.frame_cb = desc->frame;
+    app.frame_cb = on_frame;
     app.event_cb = on_event;
     app.cleanup_cb = on_shutdown;
     app.width = desc->width;
@@ -69,6 +75,7 @@ void wgf_platform_priv_run(const wgf_platform_priv_desc_t *desc)
     app.sample_count = desc->msaa ? 4 : 1; /* a hint: the platform may give fewer */
     app.swap_interval = 1;
     app.disable_vsync = !desc->vsync;
+    app.depth_format = SAPP_PIXELFORMAT_DEPTH_STENCIL; /* a stencil: documents clip to rounded corners by it */
     app.composite_mode = desc->transparent ? SAPP_COMPOSITEMODE_PREMULTIPLIED : SAPP_COMPOSITEMODE_OPAQUE;
     app.logger.func = sokol_log;
     app.enable_clipboard = true;

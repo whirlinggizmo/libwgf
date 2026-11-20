@@ -1050,6 +1050,9 @@ Four of the parity rest's rows:
 ## Animation layers, four (2026-11-20)
 
 The player's single layer became four (`WGF_MODEL_LAYERS`), each blended over what is under it in order: an attack from the waist up over the run, a flinch of the head over both. The layer calls take a layer's index, and a synced model gets every layer. That finishes what Wardens needs of skeletal animation.
+## Documents: faces, touch, a phone's keyboard, and what RCSS does over time (2026-11-20)
+
+Four of the UI item's rest. A family's bold and italic are faces of their own (`wgf_ui_set_document_font_face`: a family, a weight of 1 to 1000, italic, a font), text drawing in the face nearest what it asks for, of its style first, the family's font its face at 400; none is made up from another, as fontstash can't embolden or slant. Fingers are RmlUi's touches, which press and move its pointer and scroll what they drag, gliding on as they lift; the mouse touch drives too isn't read while one is down, so a tap isn't two. A text field asks for an on-screen keyboard (RmlUi's `ActivateKeyboard`), which platform shows: natively sokol_app's (a phone's), on the web a hidden input element of the page's, kept holding one space so a phone's Backspace has something to delete, what it is given polled before each frame and delivered as the window's characters and keys, and focused again at each touch's end while wanted, since phones show a keyboard only for a focus given in a touch. The test now covers a transition, an animation, and a tooltip shown by `:hover` on its parent, which RmlUi's core had all along; and a finger dragging a list, the keyboard asked for and let go, and the faces' matching.
 
 ## Sockets and synced parts (2026-11-20)
 

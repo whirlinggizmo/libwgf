@@ -153,6 +153,27 @@ bool wgf_platform_priv_open_url(const char *url)
 #endif
 }
 
+static bool keyboard_shown;
+
+void wgf_platform_priv_show_keyboard(bool shown, float x, float y, float height)
+{
+    (void)x;
+    (void)y;
+    (void)height;
+    if (shown != keyboard_shown) sapp_show_keyboard(shown); /* a phone's; a desktop has its own */
+    keyboard_shown = shown;
+}
+
+bool wgf_platform_priv_is_keyboard_shown(void)
+{
+    return keyboard_shown;
+}
+
+void wgf_platform_priv_sokol_poll(void (*deliver)(const sapp_event *event))
+{
+    (void)deliver; /* sokol_app delivers every event itself */
+}
+
 bool wgf_platform_priv_has_touch(void)
 {
     return false; /* a desktop's window: sokol_app gives touches on phones only */

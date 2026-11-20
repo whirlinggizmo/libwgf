@@ -24,9 +24,11 @@
 #include "wgf_log.h"
 #include "wgf_material.h"
 #include "wgf_mouse.h"
+#include "wgf_platform_priv.h" /* the on-screen keyboard */
 #include "wgf_render.h"
 #include "wgf_texture.h"
 #include "wgf_time.h"
+#include "wgf_touch.h"
 #include "wgf_ui_priv.h"
 #include "wgf_ui_rmlui_priv.h"
 
@@ -39,7 +41,7 @@
 #define DOCUMENTS_MAX 4096
 #define ELEMENTS_MAX 65535
 #define FAMILY_MAX 64
-#define FAMILIES_MAX 32
+#define FAMILIES_MAX 64 /* faces of families set (wgf_ui_set_document_font_face) */
 
 typedef struct document_t {
     wgf_core_priv_resource_t resource; /* first: the resource core's (status, path, references) */
@@ -58,14 +60,20 @@ typedef struct loaded_t {
     char path[WGF_CORE_PRIV_FS_PATH_MAX];
 } loaded_t;
 
+/* A family's face the program set: its font at a weight and style. */
 typedef struct family_t {
     char name[FAMILY_MAX]; /* lowercase */
+    int weight;            /* 1 to 1000 */
+    bool italic;
     wgf_font_t font;
 } family_t;
 
+/* A face RmlUi asked for: the families it names, at a size, weight, and style. */
 typedef struct face_t {
     char family[FAMILY_MAX]; /* as RmlUi asked, lowercase */
     int size;
+    int weight;
+    bool italic;
 } face_t;
 
 /* A texture RmlUi holds: one of libwgf's (a reference), or an image of its own (RmlUi's
@@ -123,6 +131,9 @@ static struct {
     unsigned input_frame;
     int cursor;
     char *clipboard;
+    bool keyboard; /* an on-screen keyboard asked for */
+    bool touched[8]; /* a finger RmlUi has as a touch, and where it was last */
+    float touch_x[8], touch_y[8];
 } doc;
 
 static void ensure_started(void);
@@ -489,6 +500,7 @@ static void stop(void)
 {
     int i;
     let_go();
+    if (doc.keyboard) wgf_platform_priv_show_keyboard(false, 0.0f, 0.0f, 0.0f);
     for (i = 0; i < doc.held_count; i++) free_held(&doc.held[i]);
     free(doc.held);
     if (doc.started) {
@@ -758,32 +770,60 @@ static bool family_name(const char *text, size_t length, char *out)
     return true;
 }
 
-static int family_index(const char *name)
+/* The face set for `name` at exactly `weight` and `italic`, or -1. */
+static int family_index(const char *name, int weight, bool italic)
 {
     int i;
     for (i = 0; i < doc.family_count; i++) {
-        if (strcmp(doc.families[i].name, name) == 0) return i;
+        const family_t *f = &doc.families[i];
+        if (f->weight == weight && f->italic == italic && strcmp(f->name, name) == 0) return i;
     }
     return -1;
 }
 
-bool wgf_ui_set_document_font(const char *family, wgf_font_t font)
+/* The face of `name` text at `weight` and `italic` draws in: of its style if the family has
+ * one (else of the other), the nearest weight, a tie to the heavier above 400 and the
+ * lighter at or below; -1 for a family with none. */
+static int family_match(const char *name, int weight, bool italic)
+{
+    int i, best = -1, best_distance = 0;
+    bool styled = false;
+    for (i = 0; i < doc.family_count; i++) {
+        styled = styled || (doc.families[i].italic == italic && strcmp(doc.families[i].name, name) == 0);
+    }
+    for (i = 0; i < doc.family_count; i++) {
+        const family_t *f = &doc.families[i];
+        int distance;
+        if (strcmp(f->name, name) != 0 || (styled && f->italic != italic)) continue;
+        distance = f->weight > weight ? f->weight - weight : weight - f->weight;
+        if (best < 0 || distance < best_distance ||
+            (distance == best_distance && (weight > 400 ? f->weight > weight : f->weight < weight))) {
+            best = i;
+            best_distance = distance;
+        }
+    }
+    return best;
+}
+
+bool wgf_ui_set_document_font_face(const char *family, int weight, bool italic, wgf_font_t font)
 {
     char name[FAMILY_MAX];
     int at;
-    if (family == NULL || !family_name(family, strlen(family), name)) return false;
+    if (family == NULL || !family_name(family, strlen(family), name) || weight < 1 || weight > 1000) return false;
     if (font != 0 && (WGF_CORE_PRIV_HANDLE_KIND(font) != WGF_CORE_PRIV_HANDLE_KIND_FONT ||
                       wgf_resource_get_status(font) == WGF_RESOURCE_STATUS_NONE))
         return false;
-    at = family_index(name);
+    at = family_index(name, weight, italic);
     if (at < 0) {
         if (font == 0) return true;
         if (doc.family_count == FAMILIES_MAX) {
-            wgf_log_warn("wgf_ui_set_document_font: more than %d families", FAMILIES_MAX);
+            wgf_log_warn("wgf_ui_set_document_font_face: more than %d faces", FAMILIES_MAX);
             return false;
         }
         at = doc.family_count++;
         snprintf(doc.families[at].name, sizeof(doc.families[at].name), "%s", name);
+        doc.families[at].weight = weight;
+        doc.families[at].italic = italic;
         doc.families[at].font = 0;
     }
     if (font != 0) wgf_gfx_priv_font_retain(font); /* before the release, in case it is the same */
@@ -794,16 +834,27 @@ bool wgf_ui_set_document_font(const char *family, wgf_font_t font)
     return true;
 }
 
-wgf_font_t wgf_ui_get_document_font(const char *family)
+wgf_font_t wgf_ui_get_document_font_face(const char *family, int weight, bool italic)
 {
     char name[FAMILY_MAX];
     int at;
     if (family == NULL || !family_name(family, strlen(family), name)) return 0;
-    at = family_index(name);
+    at = family_index(name, weight, italic);
     return at >= 0 ? doc.families[at].font : 0;
 }
 
-/* The font a face draws in: its family's, the first of a list set, else the default. */
+bool wgf_ui_set_document_font(const char *family, wgf_font_t font)
+{
+    return wgf_ui_set_document_font_face(family, 400, false, font);
+}
+
+wgf_font_t wgf_ui_get_document_font(const char *family)
+{
+    return wgf_ui_get_document_font_face(family, 400, false);
+}
+
+/* The font a face draws in: the first family of its list that has a face set, its face
+ * nearest the one asked for; else the default. */
 static wgf_font_t face_font(int face)
 {
     const char *family, *comma;
@@ -814,7 +865,7 @@ static wgf_font_t face_font(int face)
         int at;
         comma = strchr(family, ',');
         if (family_name(family, comma != NULL ? (size_t)(comma - family) : strlen(family), name)) {
-            at = family_index(name);
+            at = family_match(name, doc.faces[face - 1].weight, doc.faces[face - 1].italic);
             if (at >= 0) return doc.families[at].font;
         }
         if (comma == NULL) return 0;
@@ -822,16 +873,27 @@ static wgf_font_t face_font(int face)
     }
 }
 
-int wgf_ui_priv_doc_font_face(const char *family, int size)
+uint32_t wgf_ui_priv_document_face_font(const char *family, int weight, bool italic)
+{
+    char name[FAMILY_MAX];
+    int at;
+    if (family == NULL || !family_name(family, strlen(family), name)) return 0;
+    at = family_match(name, weight, italic);
+    return at >= 0 ? doc.families[at].font : 0;
+}
+
+int wgf_ui_priv_doc_font_face(const char *family, int size, int weight, bool italic)
 {
     char name[FAMILY_MAX];
     int i;
     if (size <= 0) return 0;
+    if (weight < 1 || weight > 1000) weight = 400; /* RmlUi's auto */
     if (family == NULL || strlen(family) >= FAMILY_MAX) family = "";
     for (i = 0; family[i] != '\0'; i++) name[i] = (char)tolower((unsigned char)family[i]);
     name[i] = '\0';
     for (i = 0; i < doc.face_count; i++) {
-        if (doc.faces[i].size == size && strcmp(doc.faces[i].family, name) == 0) return i + 1;
+        const face_t *f = &doc.faces[i];
+        if (f->size == size && f->weight == weight && f->italic == italic && strcmp(f->family, name) == 0) return i + 1;
     }
     if (doc.face_count == doc.face_capacity) {
         const int capacity = doc.face_capacity > 0 ? doc.face_capacity * 2 : 16;
@@ -842,6 +904,8 @@ int wgf_ui_priv_doc_font_face(const char *family, int size)
     }
     snprintf(doc.faces[doc.face_count].family, FAMILY_MAX, "%s", name);
     doc.faces[doc.face_count].size = size;
+    doc.faces[doc.face_count].weight = weight;
+    doc.faces[doc.face_count].italic = italic;
     return ++doc.face_count;
 }
 
@@ -933,6 +997,12 @@ void wgf_ui_priv_doc_set_cursor(const char *name)
     if ((int)cursor == doc.cursor) return;
     doc.cursor = (int)cursor;
     wgf_mouse_set_cursor(cursor);
+}
+
+void wgf_ui_priv_doc_keyboard(bool shown, float x, float y, float height)
+{
+    doc.keyboard = shown;
+    wgf_platform_priv_show_keyboard(shown, doc.origin_x + x, doc.origin_y + y, height);
 }
 
 unsigned char *wgf_ui_priv_doc_file_read(const char *path, int *size)
@@ -1172,6 +1242,42 @@ static int key_at(int i)
 
 #define KEYS_MAX 160
 
+/* The fingers, as RmlUi's touches: each touched down, moved, or lifted this frame; a
+ * finger seen gone without lifting (pressed and lifted between two frames) lifted where
+ * it was last. While touch drives the mouse too, the mouse isn't read while any finger is
+ * down or changed. */
+static void read_touches(wgf_ui_priv_rml_input_t *input, float visible_x, float visible_y)
+{
+    int id;
+    bool any = false;
+    for (id = 0; id < 8; id++) {
+        const wgf_input_state_t state = wgf_touch_get_state(id);
+        const wgf_vec2_t at = wgf_touch_get_position(id), delta = wgf_touch_get_delta(id);
+        int phase = -1;
+        if (state != WGF_INPUT_STATE_UP) {
+            doc.touch_x[id] = at.x - visible_x;
+            doc.touch_y[id] = at.y - visible_y;
+        }
+        if (state == WGF_INPUT_STATE_PRESSED && !doc.touched[id]) {
+            phase = 0;
+            doc.touched[id] = true;
+        } else if ((state == WGF_INPUT_STATE_DOWN || state == WGF_INPUT_STATE_PRESSED) && doc.touched[id]) {
+            if (delta.x != 0.0f || delta.y != 0.0f) phase = 1;
+        } else if ((state == WGF_INPUT_STATE_RELEASED || state == WGF_INPUT_STATE_UP) && doc.touched[id]) {
+            phase = 2;
+            doc.touched[id] = false;
+        }
+        any = any || doc.touched[id] || phase >= 0;
+        if (phase < 0 || input->touch_count == 8) continue;
+        input->touch_ids[input->touch_count] = id;
+        input->touch_phase[input->touch_count] = phase;
+        input->touch_x[input->touch_count] = doc.touch_x[id];
+        input->touch_y[input->touch_count] = doc.touch_y[id];
+        input->touch_count++;
+    }
+    input->touching = any && wgf_touch_is_mouse_emulated();
+}
+
 bool wgf_ui_draw_documents(void)
 {
     static const struct {
@@ -1229,6 +1335,7 @@ bool wgf_ui_draw_documents(void)
         input.keys_down = down;
         input.keys_up = up;
         input.text = wgf_input_get_chars();
+        read_touches(&input, visible_x, visible_y);
     } else {
         /* drawn again: the pointer where it was */
         const wgf_vec2_t mouse = wgf_mouse_get_position();

@@ -46,6 +46,11 @@ public:
     }
 
     void SetMouseCursor(const Rml::String &name) override { wgf_ui_priv_doc_set_cursor(name.c_str()); }
+    void ActivateKeyboard(Rml::Vector2f caret, float line_height) override
+    {
+        wgf_ui_priv_doc_keyboard(true, caret.x, caret.y, line_height);
+    }
+    void DeactivateKeyboard() override { wgf_ui_priv_doc_keyboard(false, 0.0f, 0.0f, 0.0f); }
     void SetClipboardText(const Rml::String &text) override { wgf_ui_priv_doc_set_clipboard(text.c_str()); }
     void GetClipboardText(Rml::String &text) override
     {
@@ -207,10 +212,11 @@ public:
     /* faces are libwgf's fonts, which the program sets by family (wgf_ui_set_document_font) */
     bool LoadFontFace(const Rml::String &, int, bool, Rml::Style::FontWeight) override { return true; }
 
-    Rml::FontFaceHandle GetFontFaceHandle(const Rml::String &family, Rml::Style::FontStyle, Rml::Style::FontWeight,
-                                          int size) override
+    Rml::FontFaceHandle GetFontFaceHandle(const Rml::String &family, Rml::Style::FontStyle style,
+                                          Rml::Style::FontWeight weight, int size) override
     {
-        const int face = wgf_ui_priv_doc_font_face(family.c_str(), size);
+        const int face = wgf_ui_priv_doc_font_face(family.c_str(), size, (int)weight,
+                                                   style == Rml::Style::FontStyle::Italic);
         if (face <= 0) return 0;
         if ((size_t)face >= metrics.size()) metrics.resize((size_t)face + 1);
         Rml::FontMetrics &m = metrics[(size_t)face];
@@ -863,14 +869,33 @@ void wgf_ui_priv_rml_frame(const wgf_ui_priv_rml_input_t *input, bool *pointer, 
         if (context->GetDimensions() != Rml::Vector2i(w, h)) context->SetDimensions(Rml::Vector2i(w, h));
         const int modifiers = (input->ctrl ? Rml::Input::KM_CTRL : 0) | (input->shift ? Rml::Input::KM_SHIFT : 0) |
                               (input->alt ? Rml::Input::KM_ALT : 0) | (input->super ? Rml::Input::KM_META : 0);
-        if (input->mouse_inside) {
-            context->ProcessMouseMove((int)input->mouse_x, (int)input->mouse_y, modifiers);
-        } else {
-            context->ProcessMouseLeave();
+        if (input->touch_count > 0) {
+            /* fingers as RmlUi's touches, which press and move its pointer themselves and
+               scroll what they drag */
+            Rml::TouchList phases[4];
+            for (int i = 0; i < input->touch_count && i < 8; i++) {
+                const int phase = input->touch_phase[i];
+                if (phase < 0 || phase > 3) continue;
+                Rml::Touch touch;
+                touch.identifier = (Rml::TouchId)(input->touch_ids[i] + 1);
+                touch.position = Rml::Vector2f(input->touch_x[i], input->touch_y[i]);
+                phases[phase].push_back(touch);
+            }
+            if (!phases[0].empty()) context->ProcessTouchStart(phases[0], modifiers);
+            if (!phases[1].empty()) context->ProcessTouchMove(phases[1], modifiers);
+            if (!phases[2].empty()) context->ProcessTouchEnd(phases[2], modifiers);
+            if (!phases[3].empty()) context->ProcessTouchCancel(phases[3]);
         }
-        for (int b = 0; b < 3; b++) {
-            if (input->buttons_pressed & (1 << b)) context->ProcessMouseButtonDown(b, modifiers);
-            if (input->buttons_released & (1 << b)) context->ProcessMouseButtonUp(b, modifiers);
+        if (!input->touching) { /* the mouse, unless it is touch's */
+            if (input->mouse_inside) {
+                context->ProcessMouseMove((int)input->mouse_x, (int)input->mouse_y, modifiers);
+            } else {
+                context->ProcessMouseLeave();
+            }
+            for (int b = 0; b < 3; b++) {
+                if (input->buttons_pressed & (1 << b)) context->ProcessMouseButtonDown(b, modifiers);
+                if (input->buttons_released & (1 << b)) context->ProcessMouseButtonUp(b, modifiers);
+            }
         }
         if (input->wheel_x != 0.0f || input->wheel_y != 0.0f)
             context->ProcessMouseWheel(Rml::Vector2f(input->wheel_x, input->wheel_y), modifiers);

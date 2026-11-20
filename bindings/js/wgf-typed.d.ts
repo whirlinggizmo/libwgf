@@ -8427,6 +8427,28 @@ export declare const Ui: {
      */
     readonly getDocumentFont: typeof raw.wgf_ui_get_document_font;
     /**
+     * A face of a family's own: the font `font-family: <family>` draws in at `font-weight:
+     * <weight>` (1 to 1000: 400 normal, 700 bold) and, `italic`, `font-style: italic`. Text
+     * draws in the family's face nearest the one it asks for: of its style when the family
+     * has one of it (else of the other), the nearest weight, a tie to the heavier above 400
+     * and to the lighter at or below; the family's font (wgf_ui_set_document_font) is its
+     * face at 400, upright. A face no font is set for is never made up (no bold drawn from a
+     * regular). 0 unsets it. It holds a reference to `font`. False for no family, a weight
+     * outside 1 to 1000, or a handle that isn't a font.
+     */
+    readonly setDocumentFontFace: typeof raw.wgf_ui_set_document_font_face;
+    /**
+     * A face of a family's own: the font `font-family: <family>` draws in at `font-weight:
+     * <weight>` (1 to 1000: 400 normal, 700 bold) and, `italic`, `font-style: italic`. Text
+     * draws in the family's face nearest the one it asks for: of its style when the family
+     * has one of it (else of the other), the nearest weight, a tie to the heavier above 400
+     * and to the lighter at or below; the family's font (wgf_ui_set_document_font) is its
+     * face at 400, upright. A face no font is set for is never made up (no bold drawn from a
+     * regular). 0 unsets it. It holds a reference to `font`. False for no family, a weight
+     * outside 1 to 1000, or a handle that isn't a font.
+     */
+    readonly getDocumentFontFace: typeof raw.wgf_ui_get_document_font_face;
+    /**
      * The shown documents, worked by this frame's input, laid out, and drawn here, in the frame
      * callback, over what was drawn before; their events are raised as they are worked. Once a
      * frame: a second call in a frame draws them again without the input. False outside a

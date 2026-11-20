@@ -43,6 +43,8 @@ body {
 }
 
 div, p, h1, tabs, panels, panel { display: block; }
+b { font-weight: bold; }
+i { font-style: italic; }
 
 #window {
     width: 560px;
@@ -56,6 +58,11 @@ h1 {
     text-align: center;
     color: #ffd040;
     margin-bottom: 10px;
+    animation: 1.8s sine-in-out infinite alternate glow;
+}
+@keyframes glow {
+    from { color: #ffd040; }
+    to { color: #ff8a3a; }
 }
 
 /* buttons */
@@ -69,7 +76,8 @@ button {
     nav: auto;
     decorator: ninepatch(button, button-inner);
 }
-button:hover { decorator: ninepatch(button-hover, button-hover-inner); }
+button:hover { decorator: ninepatch(button-hover, button-hover-inner); color: #ffd040; }
+button, tabset tab { transition: color 0.3s cubic-out; }
 button:active { decorator: ninepatch(button-active, button-active-inner); }
 button:focus-visible { decorator: ninepatch(button-focus, button-focus-inner); color: #ffffff; }
 
@@ -77,6 +85,37 @@ button:focus-visible { decorator: ninepatch(button-focus, button-focus-inner); c
 #buttons button { width: 140px; margin: 0px 8px; }
 
 #status { margin-top: 14px; text-align: center; font-size: 14px; color: #9aa4b8; }
+#status b { color: #e6e9f0; }
+
+/* a tooltip: shown while the pointer is over its parent */
+.hint {
+    display: inline-block;
+    position: relative;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    margin-left: 10px;
+    text-align: center;
+    font-weight: bold;
+    color: #10131c;
+    background-color: #ffd040;
+}
+.hint .tip {
+    display: none;
+    position: absolute;
+    left: -200px;
+    top: 30px;
+    width: 220px;
+    padding: 8px 10px;
+    line-height: 18px;
+    text-align: left;
+    font-weight: normal;
+    font-size: 14px;
+    color: #e6e9f0;
+    z-index: 10;
+    decorator: ninepatch(panel, panel-inner);
+}
+.hint:hover .tip { display: block; }
 
 /* the rows of the game's tab */
 .row { display: flex; align-items: center; height: 46px; }
