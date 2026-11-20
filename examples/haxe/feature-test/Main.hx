@@ -393,6 +393,13 @@ class Main {
 		expect(smoke.setDrag(0.5) && near(smoke.getDrag(), 0.5), "its drag");
 		expect(smoke.setInheritVelocity(0.5) && near(smoke.getInheritVelocity(), 0.5), "its inherited velocity");
 		expect(smoke.setStretch(0.1) && near(smoke.getStretch(), 0.1), "its stretch");
+		expect(smoke.setSpawnShell(true) && smoke.isSpawnShell() && smoke.setSpawnShell(false), "its spawn shell");
+		expect(smoke.setAlignedToMotion(true) && smoke.isAlignedToMotion(), "aligned to its motion");
+		expect(smoke.setWander(0.5, 2) && near(smoke.getWanderDistance(), 0.5) && near(smoke.getWanderRate(), 2)
+			&& !smoke.setWander(-1, 1), "its wander");
+		expect(smoke.setOrbit(1, 3) && near(smoke.getOrbitMin(), 1) && near(smoke.getOrbitMax(), 3), "its orbit");
+		expect(smoke.setPulse(2, 1.5) && near(smoke.getPulseRate(), 2) && near(smoke.getPulseDepth(), 1), "its pulse, its depth held to 1");
+		expect(smoke.setLocalSpace(true) && smoke.isLocalSpace() && smoke.setLocalSpace(false), "local space");
 		expect(smoke.setSize(4, 1, 0.5) && near(smoke.getSizeKeyValue(0), 4) && near(smoke.getSizeVariance(), 0.5), "its sizes");
 		expect(smoke.clearSizeKeys() && smoke.addSizeKey(0.5, 2) && smoke.getSizeKeyCount() == 1
 			&& near(smoke.getSizeKeyTime(0), 0.5), "a size key");
@@ -757,6 +764,13 @@ class Main {
 		expect(emitter.setDrag(0.5) && near(emitter.getDrag(), 0.5), "its drag");
 		expect(emitter.setInheritVelocity(0.5) && near(emitter.getInheritVelocity(), 0.5), "its inherited velocity");
 		expect(emitter.setStretch(0.1) && near(emitter.getStretch(), 0.1), "its stretch");
+		expect(emitter.setSpawnShell(true) && emitter.isSpawnShell() && emitter.setSpawnShell(false), "its spawn shell");
+		expect(emitter.setAlignedToMotion(true) && emitter.isAlignedToMotion(), "aligned to its motion");
+		expect(emitter.setWander(0.5, 2) && near(emitter.getWanderDistance(), 0.5) && near(emitter.getWanderRate(), 2)
+			&& !emitter.setWander(-1, 1), "its wander");
+		expect(emitter.setOrbit(1, 3) && near(emitter.getOrbitMin(), 1) && near(emitter.getOrbitMax(), 3), "its orbit");
+		expect(emitter.setPulse(2, 1.5) && near(emitter.getPulseRate(), 2) && near(emitter.getPulseDepth(), 1), "its pulse, its depth held to 1");
+		expect(emitter.setLocalSpace(true) && emitter.isLocalSpace() && emitter.setLocalSpace(false), "local space");
 		expect(emitter.setSize(4, 1, 0.5) && near(emitter.getSizeKeyValue(0), 4) && near(emitter.getSizeVariance(), 0.5), "its sizes");
 		expect(emitter.clearSizeKeys() && emitter.addSizeKey(0.5, 2) && emitter.getSizeKeyCount() == 1
 			&& near(emitter.getSizeKeyTime(0), 0.5), "a size key");

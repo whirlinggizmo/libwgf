@@ -16,7 +16,11 @@ layout(binding=0) uniform particle_params {
     vec4 gravity_now; /* xyz gravity, w the emitter's time now (seconds) */
     vec4 counts;      /* x size keys, y color keys, z alpha (> 0 the cutoff, < 0 opaque, 0 as it is), w palette colors */
     vec4 source;      /* the texture region: u0, v0, u1, v1 */
-    vec4 dynamics;    /* x drag (per second), y stretch (seconds of motion; 0 none) */
+    vec4 dynamics;    /* x drag (per second), y stretch (seconds of motion; 0 none), z 1 aligned to motion,
+                         w 1 on a 2D stage */
+    vec4 wander_pulse; /* x how far a particle wanders off its path (0 none), y its course's turns a second,
+                          z the pulse's beats a second (0 none), w how far a beat takes the alpha down (0..1) */
+    vec4 emitter_now; /* xyz where the emitter is now, w 1 when its particles move with it (local space) */
     vec4 frames;      /* flipbook: x columns, y rows, z frames (< 2: none), w per second (0: over life) */
     vec4 size_times[2];  /* up to 8 keys over life (0..1), in order */
     vec4 size_values[2];
@@ -28,6 +32,8 @@ in vec2 corner;
 in vec4 born;   /* xyz where, w when */
 in vec4 motion; /* xyz velocity, w life (seconds) */
 in vec4 shape;  /* x size scale, y spin (radians / s), z angle at birth, w a random 0..1 */
+in vec4 origin; /* xyz where the emitter was at its birth, w its orbit (radians / s) */
+in vec4 axis;   /* xyz the axis it orbits (2D: +z), w its pulse's phase 0..1 */
 out vec2 uv;
 out vec4 color;
 out float alpha_mode;
@@ -102,6 +108,35 @@ void main() {
         pos = born.xyz + motion.xyz * age + 0.5 * gravity_now.xyz * age * age;
         vel = motion.xyz + gravity_now.xyz * age;
     }
+    /* its orbit: where it is from where the emitter was at its birth, turned about the axis
+       through that point (counterclockwise seen from where the axis points; on a 2D stage
+       +z, clockwise on screen), its motion turned with it and the orbit's own added */
+    if (origin.w != 0.0) {
+        float turn = origin.w * age;
+        float oc = cos(turn);
+        float os = sin(turn);
+        vec3 away = pos - origin.xyz;
+        vec3 turned = away * oc + cross(axis.xyz, away) * os + axis.xyz * dot(axis.xyz, away) * (1.0 - oc);
+        vel = vel * oc + cross(axis.xyz, vel) * os + axis.xyz * dot(axis.xyz, vel) * (1.0 - oc) +
+              origin.w * cross(axis.xyz, turned);
+        pos = origin.xyz + turned;
+    }
+    /* in local space, moved as far as the emitter has moved since its birth */
+    if (emitter_now.w > 0.0) {
+        pos += emitter_now.xyz - origin.xyz;
+    }
+    /* a smooth wandering course off its path, starting on it (helix-raylib's), and its
+       motion along it; none across a 2D stage's depth */
+    if (wander_pulse.x > 0.0) {
+        float course = 6.28318530718 * wander_pulse.y * age;
+        vec3 first = fract(shape.w * vec3(1.0, 7.31, 13.7)) * 6.28318530718;
+        vec3 second = fract(shape.w * vec3(3.17, 5.93, 11.1)) * 6.28318530718;
+        vec3 flat_mask = vec3(1.0, 1.0, 1.0 - dynamics.w);
+        pos += wander_pulse.x * flat_mask *
+               (0.6 * sin(course + first) + 0.4 * sin(2.3 * course + second) - 0.6 * sin(first) - 0.4 * sin(second));
+        vel += wander_pulse.x * flat_mask * (6.28318530718 * wander_pulse.y) *
+               (0.6 * cos(course + first) + 0.92 * cos(2.3 * course + second));
+    }
     float size = size_at(t) * shape.x;
     float along = size;
     vec3 right;
@@ -118,11 +153,24 @@ void main() {
         along = size + extra;
         pos -= up * (extra * 0.5);
     } else {
-        float angle = shape.z + shape.y * age; /* positive turns clockwise on screen */
+        /* turned by its spin, positive clockwise on screen: from a random angle, or, aligned,
+           from its top along its motion across the screen */
+        float angle = shape.y * age;
+        vec3 base_x = axis_x.xyz;
+        vec3 base_y = axis_y.xyz;
+        if (dynamics.z > 0.0) {
+            if (speed > 0.00001) {
+                vec2 d = screen_vel / speed;
+                base_y = axis_x.xyz * d.x + axis_y.xyz * d.y;
+                base_x = axis_x.xyz * d.y - axis_y.xyz * d.x;
+            }
+        } else {
+            angle += shape.z;
+        }
         float c = cos(angle);
         float s = sin(angle);
-        right = axis_x.xyz * c - axis_y.xyz * s;
-        up = axis_x.xyz * s + axis_y.xyz * c;
+        right = base_x * c - base_y * s;
+        up = base_x * s + base_y * c;
     }
     gl_Position = view_proj * vec4(pos + right * (corner.x * size) + up * (corner.y * along), 1.0);
     /* the flipbook's frame: played once over the life, or looped from a random frame */
@@ -139,6 +187,10 @@ void main() {
     int colors = int(counts.w);
     if (colors > 0) {
         color *= palette[min(int(shape.w * float(colors)), colors - 1)];
+    }
+    /* the pulse: the alpha down by up to its depth, on the particle's own phase */
+    if (wander_pulse.z > 0.0) {
+        color.a *= 1.0 - wander_pulse.w * (0.5 + 0.5 * sin(6.28318530718 * fract(wander_pulse.z * age + axis.w)));
     }
     alpha_mode = counts.z;
 }

@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "51b7d37df9cf3338" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "59c73d60ffc6d0fb" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -7672,6 +7672,28 @@ export function wgf_emitter2d_get_gravity(emitter, into) {
     return vector(ret, 2, into);
 }
 
+// wgf: call wgf_emitter2d_set_spawn_shell
+/**
+ * Shell: particles born on the spawn shape's outline rather than inside it: the circle's,
+ * at its radius, or the box's edges, an edge picked by its length (a box with a half size
+ * of 0 is a line, and its shell that line's ends). Default off.
+ */
+export function wgf_emitter2d_set_spawn_shell(emitter, on) {
+    const value = host["_wgf_emitter2d_set_spawn_shell"](emitter, (on ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_emitter2d_is_spawn_shell
+/**
+ * Shell: particles born on the spawn shape's outline rather than inside it: the circle's,
+ * at its radius, or the box's edges, an edge picked by its length (a box with a half size
+ * of 0 is a line, and its shell that line's ends). Default off.
+ */
+export function wgf_emitter2d_is_spawn_shell(emitter) {
+    const value = host["_wgf_emitter2d_is_spawn_shell"](emitter);
+    return value !== 0;
+}
+
 // wgf: call wgf_emitter2d_set_drag
 /**
  * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
@@ -7760,6 +7782,156 @@ export function wgf_emitter2d_set_stretch(emitter, seconds) {
 export function wgf_emitter2d_get_stretch(emitter) {
     const value = host["_wgf_emitter2d_get_stretch"](emitter);
     return value;
+}
+
+// wgf: call wgf_emitter2d_set_aligned_to_motion
+/**
+ * Aligned to motion: each particle's top turned along its motion across the screen (an
+ * arrow, a thrown spark), its spin, clockwise on screen, added to that rather than to a
+ * random angle; one standing still keeps its top up the screen. A stretched particle is
+ * aligned already. Default off.
+ */
+export function wgf_emitter2d_set_aligned_to_motion(emitter, on) {
+    const value = host["_wgf_emitter2d_set_aligned_to_motion"](emitter, (on ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_emitter2d_is_aligned_to_motion
+/**
+ * Aligned to motion: each particle's top turned along its motion across the screen (an
+ * arrow, a thrown spark), its spin, clockwise on screen, added to that rather than to a
+ * random angle; one standing still keeps its top up the screen. A stretched particle is
+ * aligned already. Default off.
+ */
+export function wgf_emitter2d_is_aligned_to_motion(emitter) {
+    const value = host["_wgf_emitter2d_is_aligned_to_motion"](emitter);
+    return value !== 0;
+}
+
+// wgf: call wgf_emitter2d_set_wander
+/**
+ * Wander: each particle strays off its path on a smooth course of its own (fireflies, dust
+ * motes), up to about `distance` stage units, its course turning about `per_second`
+ * times a second, starting on its path; its motion, for alignment and stretch, includes
+ * the stray. False for either below 0. Default 0 (none), 1 a second.
+ */
+export function wgf_emitter2d_set_wander(emitter, distance, per_second) {
+    const value = host["_wgf_emitter2d_set_wander"](emitter, distance, per_second);
+    return value !== 0;
+}
+
+// wgf: call wgf_emitter2d_get_wander_distance
+/**
+ * Wander: each particle strays off its path on a smooth course of its own (fireflies, dust
+ * motes), up to about `distance` stage units, its course turning about `per_second`
+ * times a second, starting on its path; its motion, for alignment and stretch, includes
+ * the stray. False for either below 0. Default 0 (none), 1 a second.
+ */
+export function wgf_emitter2d_get_wander_distance(emitter) {
+    const value = host["_wgf_emitter2d_get_wander_distance"](emitter);
+    return value;
+}
+
+// wgf: call wgf_emitter2d_get_wander_rate
+/**
+ * Wander: each particle strays off its path on a smooth course of its own (fireflies, dust
+ * motes), up to about `distance` stage units, its course turning about `per_second`
+ * times a second, starting on its path; its motion, for alignment and stretch, includes
+ * the stray. False for either below 0. Default 0 (none), 1 a second.
+ */
+export function wgf_emitter2d_get_wander_rate(emitter) {
+    const value = host["_wgf_emitter2d_get_wander_rate"](emitter);
+    return value;
+}
+
+// wgf: call wgf_emitter2d_set_orbit
+/**
+ * Orbit: each particle circles where the emitter was at its birth, at a speed picked
+ * between min and max, radians a second, positive clockwise on screen. Its whole path
+ * turns, its own motion included, so a particle thrown outward spirals. Default none.
+ */
+export function wgf_emitter2d_set_orbit(emitter, min, max) {
+    const value = host["_wgf_emitter2d_set_orbit"](emitter, min, max);
+    return value !== 0;
+}
+
+// wgf: call wgf_emitter2d_get_orbit_min
+/**
+ * Orbit: each particle circles where the emitter was at its birth, at a speed picked
+ * between min and max, radians a second, positive clockwise on screen. Its whole path
+ * turns, its own motion included, so a particle thrown outward spirals. Default none.
+ */
+export function wgf_emitter2d_get_orbit_min(emitter) {
+    const value = host["_wgf_emitter2d_get_orbit_min"](emitter);
+    return value;
+}
+
+// wgf: call wgf_emitter2d_get_orbit_max
+/**
+ * Orbit: each particle circles where the emitter was at its birth, at a speed picked
+ * between min and max, radians a second, positive clockwise on screen. Its whole path
+ * turns, its own motion included, so a particle thrown outward spirals. Default none.
+ */
+export function wgf_emitter2d_get_orbit_max(emitter) {
+    const value = host["_wgf_emitter2d_get_orbit_max"](emitter);
+    return value;
+}
+
+// wgf: call wgf_emitter2d_set_pulse
+/**
+ * Pulse: each particle's alpha beats `per_second` times a second, on a phase of its own,
+ * falling by `depth` of itself (0..1, clamped) at each beat's low: twinkling. False for a
+ * rate below 0. Default 0 (none), depth 1 (to clear).
+ */
+export function wgf_emitter2d_set_pulse(emitter, per_second, depth) {
+    const value = host["_wgf_emitter2d_set_pulse"](emitter, per_second, depth);
+    return value !== 0;
+}
+
+// wgf: call wgf_emitter2d_get_pulse_rate
+/**
+ * Pulse: each particle's alpha beats `per_second` times a second, on a phase of its own,
+ * falling by `depth` of itself (0..1, clamped) at each beat's low: twinkling. False for a
+ * rate below 0. Default 0 (none), depth 1 (to clear).
+ */
+export function wgf_emitter2d_get_pulse_rate(emitter) {
+    const value = host["_wgf_emitter2d_get_pulse_rate"](emitter);
+    return value;
+}
+
+// wgf: call wgf_emitter2d_get_pulse_depth
+/**
+ * Pulse: each particle's alpha beats `per_second` times a second, on a phase of its own,
+ * falling by `depth` of itself (0..1, clamped) at each beat's low: twinkling. False for a
+ * rate below 0. Default 0 (none), depth 1 (to clear).
+ */
+export function wgf_emitter2d_get_pulse_depth(emitter) {
+    const value = host["_wgf_emitter2d_get_pulse_depth"](emitter);
+    return value;
+}
+
+// wgf: call wgf_emitter2d_set_local_space
+/**
+ * Local space: particles move with the emitter (an aura around a moving character), each
+ * moved as far as its actor has moved since the particle's birth (its place, not its
+ * turn), an orbit circling where the emitter is now; inherited velocity then does nothing.
+ * Default off: each particle keeps to its own path as the emitter moves.
+ */
+export function wgf_emitter2d_set_local_space(emitter, on) {
+    const value = host["_wgf_emitter2d_set_local_space"](emitter, (on ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_emitter2d_is_local_space
+/**
+ * Local space: particles move with the emitter (an aura around a moving character), each
+ * moved as far as its actor has moved since the particle's birth (its place, not its
+ * turn), an orbit circling where the emitter is now; inherited velocity then does nothing.
+ * Default off: each particle keeps to its own path as the emitter moves.
+ */
+export function wgf_emitter2d_is_local_space(emitter) {
+    const value = host["_wgf_emitter2d_is_local_space"](emitter);
+    return value !== 0;
 }
 
 // wgf: call wgf_emitter2d_set_size
@@ -8589,6 +8761,28 @@ export function wgf_emitter3d_get_gravity(emitter, into) {
     return vector(ret, 3, into);
 }
 
+// wgf: call wgf_emitter3d_set_spawn_shell
+/**
+ * Shell: particles born on the spawn shape's surface rather than inside it: the sphere's,
+ * at its radius, or the box's faces, a face picked by its area (a box with a half size of 0
+ * is a rectangle, and its shell that rectangle's outline). Default off.
+ */
+export function wgf_emitter3d_set_spawn_shell(emitter, on) {
+    const value = host["_wgf_emitter3d_set_spawn_shell"](emitter, (on ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_emitter3d_is_spawn_shell
+/**
+ * Shell: particles born on the spawn shape's surface rather than inside it: the sphere's,
+ * at its radius, or the box's faces, a face picked by its area (a box with a half size of 0
+ * is a rectangle, and its shell that rectangle's outline). Default off.
+ */
+export function wgf_emitter3d_is_spawn_shell(emitter) {
+    const value = host["_wgf_emitter3d_is_spawn_shell"](emitter);
+    return value !== 0;
+}
+
 // wgf: call wgf_emitter3d_set_drag
 /**
  * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
@@ -8677,6 +8871,162 @@ export function wgf_emitter3d_set_stretch(emitter, seconds) {
 export function wgf_emitter3d_get_stretch(emitter) {
     const value = host["_wgf_emitter3d_get_stretch"](emitter);
     return value;
+}
+
+// wgf: call wgf_emitter3d_set_aligned_to_motion
+/**
+ * Aligned to motion: each particle's top turned along its motion across the screen (an
+ * arrow, a thrown spark), its spin, clockwise as the camera sees it, added to that rather than to a
+ * random angle; one standing still keeps its top up the screen. A stretched particle is
+ * aligned already. Default off.
+ */
+export function wgf_emitter3d_set_aligned_to_motion(emitter, on) {
+    const value = host["_wgf_emitter3d_set_aligned_to_motion"](emitter, (on ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_emitter3d_is_aligned_to_motion
+/**
+ * Aligned to motion: each particle's top turned along its motion across the screen (an
+ * arrow, a thrown spark), its spin, clockwise as the camera sees it, added to that rather than to a
+ * random angle; one standing still keeps its top up the screen. A stretched particle is
+ * aligned already. Default off.
+ */
+export function wgf_emitter3d_is_aligned_to_motion(emitter) {
+    const value = host["_wgf_emitter3d_is_aligned_to_motion"](emitter);
+    return value !== 0;
+}
+
+// wgf: call wgf_emitter3d_set_wander
+/**
+ * Wander: each particle strays off its path on a smooth course of its own (fireflies, dust
+ * motes), up to about `distance` stage units, its course turning about `per_second`
+ * times a second, starting on its path; its motion, for alignment and stretch, includes
+ * the stray. False for either below 0. Default 0 (none), 1 a second.
+ */
+export function wgf_emitter3d_set_wander(emitter, distance, per_second) {
+    const value = host["_wgf_emitter3d_set_wander"](emitter, distance, per_second);
+    return value !== 0;
+}
+
+// wgf: call wgf_emitter3d_get_wander_distance
+/**
+ * Wander: each particle strays off its path on a smooth course of its own (fireflies, dust
+ * motes), up to about `distance` stage units, its course turning about `per_second`
+ * times a second, starting on its path; its motion, for alignment and stretch, includes
+ * the stray. False for either below 0. Default 0 (none), 1 a second.
+ */
+export function wgf_emitter3d_get_wander_distance(emitter) {
+    const value = host["_wgf_emitter3d_get_wander_distance"](emitter);
+    return value;
+}
+
+// wgf: call wgf_emitter3d_get_wander_rate
+/**
+ * Wander: each particle strays off its path on a smooth course of its own (fireflies, dust
+ * motes), up to about `distance` stage units, its course turning about `per_second`
+ * times a second, starting on its path; its motion, for alignment and stretch, includes
+ * the stray. False for either below 0. Default 0 (none), 1 a second.
+ */
+export function wgf_emitter3d_get_wander_rate(emitter) {
+    const value = host["_wgf_emitter3d_get_wander_rate"](emitter);
+    return value;
+}
+
+// wgf: call wgf_emitter3d_set_orbit
+/**
+ * Orbit: each particle circles the line through where the emitter was at its birth, along
+ * its velocity's direction then (up without one; turned as its actor was), at a speed
+ * picked between min and max, radians a second, positive counterclockwise seen from where
+ * that line points. Its whole path turns, its own motion included, so a particle thrown
+ * outward spirals. Default none.
+ */
+export function wgf_emitter3d_set_orbit(emitter, min, max) {
+    const value = host["_wgf_emitter3d_set_orbit"](emitter, min, max);
+    return value !== 0;
+}
+
+// wgf: call wgf_emitter3d_get_orbit_min
+/**
+ * Orbit: each particle circles the line through where the emitter was at its birth, along
+ * its velocity's direction then (up without one; turned as its actor was), at a speed
+ * picked between min and max, radians a second, positive counterclockwise seen from where
+ * that line points. Its whole path turns, its own motion included, so a particle thrown
+ * outward spirals. Default none.
+ */
+export function wgf_emitter3d_get_orbit_min(emitter) {
+    const value = host["_wgf_emitter3d_get_orbit_min"](emitter);
+    return value;
+}
+
+// wgf: call wgf_emitter3d_get_orbit_max
+/**
+ * Orbit: each particle circles the line through where the emitter was at its birth, along
+ * its velocity's direction then (up without one; turned as its actor was), at a speed
+ * picked between min and max, radians a second, positive counterclockwise seen from where
+ * that line points. Its whole path turns, its own motion included, so a particle thrown
+ * outward spirals. Default none.
+ */
+export function wgf_emitter3d_get_orbit_max(emitter) {
+    const value = host["_wgf_emitter3d_get_orbit_max"](emitter);
+    return value;
+}
+
+// wgf: call wgf_emitter3d_set_pulse
+/**
+ * Pulse: each particle's alpha beats `per_second` times a second, on a phase of its own,
+ * falling by `depth` of itself (0..1, clamped) at each beat's low: twinkling. False for a
+ * rate below 0. Default 0 (none), depth 1 (to clear).
+ */
+export function wgf_emitter3d_set_pulse(emitter, per_second, depth) {
+    const value = host["_wgf_emitter3d_set_pulse"](emitter, per_second, depth);
+    return value !== 0;
+}
+
+// wgf: call wgf_emitter3d_get_pulse_rate
+/**
+ * Pulse: each particle's alpha beats `per_second` times a second, on a phase of its own,
+ * falling by `depth` of itself (0..1, clamped) at each beat's low: twinkling. False for a
+ * rate below 0. Default 0 (none), depth 1 (to clear).
+ */
+export function wgf_emitter3d_get_pulse_rate(emitter) {
+    const value = host["_wgf_emitter3d_get_pulse_rate"](emitter);
+    return value;
+}
+
+// wgf: call wgf_emitter3d_get_pulse_depth
+/**
+ * Pulse: each particle's alpha beats `per_second` times a second, on a phase of its own,
+ * falling by `depth` of itself (0..1, clamped) at each beat's low: twinkling. False for a
+ * rate below 0. Default 0 (none), depth 1 (to clear).
+ */
+export function wgf_emitter3d_get_pulse_depth(emitter) {
+    const value = host["_wgf_emitter3d_get_pulse_depth"](emitter);
+    return value;
+}
+
+// wgf: call wgf_emitter3d_set_local_space
+/**
+ * Local space: particles move with the emitter (an aura around a moving character), each
+ * moved as far as its actor has moved since the particle's birth (its place, not its
+ * turn), an orbit circling where the emitter is now; inherited velocity then does nothing.
+ * Default off: each particle keeps to its own path as the emitter moves.
+ */
+export function wgf_emitter3d_set_local_space(emitter, on) {
+    const value = host["_wgf_emitter3d_set_local_space"](emitter, (on ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_emitter3d_is_local_space
+/**
+ * Local space: particles move with the emitter (an aura around a moving character), each
+ * moved as far as its actor has moved since the particle's birth (its place, not its
+ * turn), an orbit circling where the emitter is now; inherited velocity then does nothing.
+ * Default off: each particle keeps to its own path as the emitter moves.
+ */
+export function wgf_emitter3d_is_local_space(emitter) {
+    const value = host["_wgf_emitter3d_is_local_space"](emitter);
+    return value !== 0;
 }
 
 // wgf: call wgf_emitter3d_set_size

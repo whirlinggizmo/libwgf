@@ -398,7 +398,9 @@ int main(void)
                                                          "  emitter3d rate=10 max=32 velocity=0,1,0,0.5 size=1,2 "
                                                          "alpha=blend ending=true palette=#FF0000,#00FF00 "
                                                          "size_keys=0:0.5,0.2:2,1:3 "
-                                                         "color_keys=0:#E0E0E000,0.1:#E0E0E080,1:#60606000\n"
+                                                         "color_keys=0:#E0E0E000,0.1:#E0E0E080,1:#60606000 "
+                                                         "spawn_shell=true aligned=true wander=0.5,2 orbit=1,3 "
+                                                         "pulse=4,2 local_space=true\n"
                                                          "  motion\n"
                                                          "end\n");
             wgf_actor_t smoke;
@@ -415,6 +417,16 @@ int main(void)
                        wgf_emitter3d_get_color_key_count(smoke) == 3 &&
                        wgf_emitter3d_get_color_key_value(smoke, 1) == 0xE0E0E080u,
                    "its curves' keys, in place of size= and color='s two");
+            expect(wgf_emitter3d_is_spawn_shell(smoke) && wgf_emitter3d_is_aligned_to_motion(smoke) &&
+                       wgf_emitter3d_get_wander_distance(smoke) == 0.5f &&
+                       wgf_emitter3d_get_wander_rate(smoke) == 2.0f &&
+                       wgf_emitter3d_get_orbit_min(smoke) == 1.0f && wgf_emitter3d_get_orbit_max(smoke) == 3.0f &&
+                       wgf_emitter3d_get_pulse_rate(smoke) == 4.0f && wgf_emitter3d_get_pulse_depth(smoke) == 1.0f &&
+                       wgf_emitter3d_is_local_space(smoke),
+                   "its shell, alignment, wander, orbit, pulse (its depth held to 1), and local space");
+            expect(strstr(wgf_world_dump(), "spawn_shell=true drag=0 inherit=0 stretch=0 aligned=true wander=0.5,2 "
+                                            "orbit=1,3 pulse=4,1 local_space=true") != NULL,
+                   "and dumped");
             expect(strstr(wgf_world_dump(), "size=0.5,3,0 size_keys=0:0.5,0.200000003:2,1:3 color=#E0E0E000,#60606000 "
                                             "color_keys=0:#E0E0E000,0.100000001:#E0E0E080,1:#60606000") != NULL,
                    "its curves dumped with their keys");

@@ -222,7 +222,9 @@ text       string="..."  font="path"  size=s  color=#..  wrap=w
            align=left|center|right,top|middle|bottom  facing=camera|camera-y|up|free
 emitter2d  texture="path"  source=x,y,w,h  frames=columns,rows,count,per_second  rate=r
            emitting=true|false  max=n  life=min,max  spawn_box=hw,hh | spawn_circle=r
-           velocity=x,y[,spread[,variance]]  gravity=x,y  drag=d  inherit=f  stretch=s
+           spawn_shell=true|false  velocity=x,y[,spread[,variance]]  gravity=x,y  drag=d
+           inherit=f  stretch=s  aligned=true|false  wander=distance,per_second
+           orbit=min,max  pulse=per_second,depth  local_space=true|false
            size=start,end[,variance]  color=#..,#..  size_keys=t:s,...  color_keys=t:#..,...
            (a curve's keys, up to 8, each t 0..1 of a life, in place of size= and color='s
            two)  palette=#..,...  spin=min,max

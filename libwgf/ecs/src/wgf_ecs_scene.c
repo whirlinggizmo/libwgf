@@ -43,7 +43,7 @@
 #define WORDS_MAX 128
 #define POINTS_MAX 2048 /* floats in a polygon: 1024 points, as wgf_shape2d_set_polygon takes */
 #define DEPTH_MAX 32    /* actors inside actors */
-#define KEYS_MAX 32     /* a line's keys, an emitter's the most */
+#define KEYS_MAX 40     /* a line's keys, an emitter's the most */
 
 /* ---- the format's table --------------------------------------------------------------- */
 
@@ -91,7 +91,8 @@ typedef struct kind_t {
         {"max", V_INT}, {"life", V_NUM2}, {"burst", V_INT}, {"prewarm", V_NUM}, {"drag", V_NUM}, {"inherit", V_NUM},   \
         {"stretch", V_NUM}, {"size", V_NUM23}, {"color", V_COLOR2}, {"palette", V_COLORS}, {"spin", V_NUM2},           \
         {"size_keys", V_SIZE_KEYS}, {"color_keys", V_COLOR_KEYS}, {"alpha", V_ALPHA}, {"cutoff", V_NUM}, {"seed", V_INT}, {"ending", V_BOOL}, {"lingering", V_BOOL},            \
-        {"visible", V_BOOL}
+        {"spawn_shell", V_BOOL}, {"aligned", V_BOOL}, {"wander", V_NUM2}, {"orbit", V_NUM2}, {"pulse", V_NUM2},       \
+        {"local_space", V_BOOL}, {"visible", V_BOOL}
 
 static const kind_t kinds[] = {
     {"transform", ROLE_TRANSFORM, 0, {{"position", V_NUM3}, {"rotation", V_NUM3}, {"scale", V_NUM3}}, false},

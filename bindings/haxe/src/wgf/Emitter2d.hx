@@ -346,6 +346,22 @@ import wgf.impl.Raw;
 		return Raw.wgf_emitter2d_get_gravity(this, into);
 
 	/**
+	    Shell: particles born on the spawn shape's outline rather than inside it: the circle's,
+	    at its radius, or the box's edges, an edge picked by its length (a box with a half size
+	    of 0 is a line, and its shell that line's ends). Default off.
+	**/
+	public inline function setSpawnShell(on:Bool):Bool
+		return Raw.wgf_emitter2d_set_spawn_shell(this, on);
+
+	/**
+	    Shell: particles born on the spawn shape's outline rather than inside it: the circle's,
+	    at its radius, or the box's edges, an edge picked by its length (a box with a half size
+	    of 0 is a line, and its shell that line's ends). Default off.
+	**/
+	public inline function isSpawnShell():Bool
+		return Raw.wgf_emitter2d_is_spawn_shell(this);
+
+	/**
 	    After birth: drag slows particles in proportion to their speed (a second: 1 loses about
 	    63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
 	    that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
@@ -416,6 +432,117 @@ import wgf.impl.Raw;
 	**/
 	public inline function getStretch():Float
 		return Raw.wgf_emitter2d_get_stretch(this);
+
+	/**
+	    Aligned to motion: each particle's top turned along its motion across the screen (an
+	    arrow, a thrown spark), its spin, clockwise on screen, added to that rather than to a
+	    random angle; one standing still keeps its top up the screen. A stretched particle is
+	    aligned already. Default off.
+	**/
+	public inline function setAlignedToMotion(on:Bool):Bool
+		return Raw.wgf_emitter2d_set_aligned_to_motion(this, on);
+
+	/**
+	    Aligned to motion: each particle's top turned along its motion across the screen (an
+	    arrow, a thrown spark), its spin, clockwise on screen, added to that rather than to a
+	    random angle; one standing still keeps its top up the screen. A stretched particle is
+	    aligned already. Default off.
+	**/
+	public inline function isAlignedToMotion():Bool
+		return Raw.wgf_emitter2d_is_aligned_to_motion(this);
+
+	/**
+	    Wander: each particle strays off its path on a smooth course of its own (fireflies, dust
+	    motes), up to about `distance` stage units, its course turning about `per_second`
+	    times a second, starting on its path; its motion, for alignment and stretch, includes
+	    the stray. False for either below 0. Default 0 (none), 1 a second.
+	**/
+	public inline function setWander(distance:Float, per_second:Float):Bool
+		return Raw.wgf_emitter2d_set_wander(this, distance, per_second);
+
+	/**
+	    Wander: each particle strays off its path on a smooth course of its own (fireflies, dust
+	    motes), up to about `distance` stage units, its course turning about `per_second`
+	    times a second, starting on its path; its motion, for alignment and stretch, includes
+	    the stray. False for either below 0. Default 0 (none), 1 a second.
+	**/
+	public inline function getWanderDistance():Float
+		return Raw.wgf_emitter2d_get_wander_distance(this);
+
+	/**
+	    Wander: each particle strays off its path on a smooth course of its own (fireflies, dust
+	    motes), up to about `distance` stage units, its course turning about `per_second`
+	    times a second, starting on its path; its motion, for alignment and stretch, includes
+	    the stray. False for either below 0. Default 0 (none), 1 a second.
+	**/
+	public inline function getWanderRate():Float
+		return Raw.wgf_emitter2d_get_wander_rate(this);
+
+	/**
+	    Orbit: each particle circles where the emitter was at its birth, at a speed picked
+	    between min and max, radians a second, positive clockwise on screen. Its whole path
+	    turns, its own motion included, so a particle thrown outward spirals. Default none.
+	**/
+	public inline function setOrbit(min:Float, max:Float):Bool
+		return Raw.wgf_emitter2d_set_orbit(this, min, max);
+
+	/**
+	    Orbit: each particle circles where the emitter was at its birth, at a speed picked
+	    between min and max, radians a second, positive clockwise on screen. Its whole path
+	    turns, its own motion included, so a particle thrown outward spirals. Default none.
+	**/
+	public inline function getOrbitMin():Float
+		return Raw.wgf_emitter2d_get_orbit_min(this);
+
+	/**
+	    Orbit: each particle circles where the emitter was at its birth, at a speed picked
+	    between min and max, radians a second, positive clockwise on screen. Its whole path
+	    turns, its own motion included, so a particle thrown outward spirals. Default none.
+	**/
+	public inline function getOrbitMax():Float
+		return Raw.wgf_emitter2d_get_orbit_max(this);
+
+	/**
+	    Pulse: each particle's alpha beats `per_second` times a second, on a phase of its own,
+	    falling by `depth` of itself (0..1, clamped) at each beat's low: twinkling. False for a
+	    rate below 0. Default 0 (none), depth 1 (to clear).
+	**/
+	public inline function setPulse(per_second:Float, depth:Float):Bool
+		return Raw.wgf_emitter2d_set_pulse(this, per_second, depth);
+
+	/**
+	    Pulse: each particle's alpha beats `per_second` times a second, on a phase of its own,
+	    falling by `depth` of itself (0..1, clamped) at each beat's low: twinkling. False for a
+	    rate below 0. Default 0 (none), depth 1 (to clear).
+	**/
+	public inline function getPulseRate():Float
+		return Raw.wgf_emitter2d_get_pulse_rate(this);
+
+	/**
+	    Pulse: each particle's alpha beats `per_second` times a second, on a phase of its own,
+	    falling by `depth` of itself (0..1, clamped) at each beat's low: twinkling. False for a
+	    rate below 0. Default 0 (none), depth 1 (to clear).
+	**/
+	public inline function getPulseDepth():Float
+		return Raw.wgf_emitter2d_get_pulse_depth(this);
+
+	/**
+	    Local space: particles move with the emitter (an aura around a moving character), each
+	    moved as far as its actor has moved since the particle's birth (its place, not its
+	    turn), an orbit circling where the emitter is now; inherited velocity then does nothing.
+	    Default off: each particle keeps to its own path as the emitter moves.
+	**/
+	public inline function setLocalSpace(on:Bool):Bool
+		return Raw.wgf_emitter2d_set_local_space(this, on);
+
+	/**
+	    Local space: particles move with the emitter (an aura around a moving character), each
+	    moved as far as its actor has moved since the particle's birth (its place, not its
+	    turn), an orbit circling where the emitter is now; inherited velocity then does nothing.
+	    Default off: each particle keeps to its own path as the emitter moves.
+	**/
+	public inline function isLocalSpace():Bool
+		return Raw.wgf_emitter2d_is_local_space(this);
 
 	/**
 	    Over a particle's life, curves: its size (stage units; each particle's scaled by up to

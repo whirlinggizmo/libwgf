@@ -2780,6 +2780,18 @@ export declare const Emitter2d: {
      */
     readonly getGravity: typeof raw.wgf_emitter2d_get_gravity;
     /**
+     * Shell: particles born on the spawn shape's outline rather than inside it: the circle's,
+     * at its radius, or the box's edges, an edge picked by its length (a box with a half size
+     * of 0 is a line, and its shell that line's ends). Default off.
+     */
+    readonly setSpawnShell: typeof raw.wgf_emitter2d_set_spawn_shell;
+    /**
+     * Shell: particles born on the spawn shape's outline rather than inside it: the circle's,
+     * at its radius, or the box's edges, an edge picked by its length (a box with a half size
+     * of 0 is a line, and its shell that line's ends). Default off.
+     */
+    readonly isSpawnShell: typeof raw.wgf_emitter2d_is_spawn_shell;
+    /**
      * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
      * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
      * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
@@ -2839,6 +2851,91 @@ export declare const Emitter2d: {
      * 0). Defaults 0.
      */
     readonly getStretch: typeof raw.wgf_emitter2d_get_stretch;
+    /**
+     * Aligned to motion: each particle's top turned along its motion across the screen (an
+     * arrow, a thrown spark), its spin, clockwise on screen, added to that rather than to a
+     * random angle; one standing still keeps its top up the screen. A stretched particle is
+     * aligned already. Default off.
+     */
+    readonly setAlignedToMotion: typeof raw.wgf_emitter2d_set_aligned_to_motion;
+    /**
+     * Aligned to motion: each particle's top turned along its motion across the screen (an
+     * arrow, a thrown spark), its spin, clockwise on screen, added to that rather than to a
+     * random angle; one standing still keeps its top up the screen. A stretched particle is
+     * aligned already. Default off.
+     */
+    readonly isAlignedToMotion: typeof raw.wgf_emitter2d_is_aligned_to_motion;
+    /**
+     * Wander: each particle strays off its path on a smooth course of its own (fireflies, dust
+     * motes), up to about `distance` stage units, its course turning about `per_second`
+     * times a second, starting on its path; its motion, for alignment and stretch, includes
+     * the stray. False for either below 0. Default 0 (none), 1 a second.
+     */
+    readonly setWander: typeof raw.wgf_emitter2d_set_wander;
+    /**
+     * Wander: each particle strays off its path on a smooth course of its own (fireflies, dust
+     * motes), up to about `distance` stage units, its course turning about `per_second`
+     * times a second, starting on its path; its motion, for alignment and stretch, includes
+     * the stray. False for either below 0. Default 0 (none), 1 a second.
+     */
+    readonly getWanderDistance: typeof raw.wgf_emitter2d_get_wander_distance;
+    /**
+     * Wander: each particle strays off its path on a smooth course of its own (fireflies, dust
+     * motes), up to about `distance` stage units, its course turning about `per_second`
+     * times a second, starting on its path; its motion, for alignment and stretch, includes
+     * the stray. False for either below 0. Default 0 (none), 1 a second.
+     */
+    readonly getWanderRate: typeof raw.wgf_emitter2d_get_wander_rate;
+    /**
+     * Orbit: each particle circles where the emitter was at its birth, at a speed picked
+     * between min and max, radians a second, positive clockwise on screen. Its whole path
+     * turns, its own motion included, so a particle thrown outward spirals. Default none.
+     */
+    readonly setOrbit: typeof raw.wgf_emitter2d_set_orbit;
+    /**
+     * Orbit: each particle circles where the emitter was at its birth, at a speed picked
+     * between min and max, radians a second, positive clockwise on screen. Its whole path
+     * turns, its own motion included, so a particle thrown outward spirals. Default none.
+     */
+    readonly getOrbitMin: typeof raw.wgf_emitter2d_get_orbit_min;
+    /**
+     * Orbit: each particle circles where the emitter was at its birth, at a speed picked
+     * between min and max, radians a second, positive clockwise on screen. Its whole path
+     * turns, its own motion included, so a particle thrown outward spirals. Default none.
+     */
+    readonly getOrbitMax: typeof raw.wgf_emitter2d_get_orbit_max;
+    /**
+     * Pulse: each particle's alpha beats `per_second` times a second, on a phase of its own,
+     * falling by `depth` of itself (0..1, clamped) at each beat's low: twinkling. False for a
+     * rate below 0. Default 0 (none), depth 1 (to clear).
+     */
+    readonly setPulse: typeof raw.wgf_emitter2d_set_pulse;
+    /**
+     * Pulse: each particle's alpha beats `per_second` times a second, on a phase of its own,
+     * falling by `depth` of itself (0..1, clamped) at each beat's low: twinkling. False for a
+     * rate below 0. Default 0 (none), depth 1 (to clear).
+     */
+    readonly getPulseRate: typeof raw.wgf_emitter2d_get_pulse_rate;
+    /**
+     * Pulse: each particle's alpha beats `per_second` times a second, on a phase of its own,
+     * falling by `depth` of itself (0..1, clamped) at each beat's low: twinkling. False for a
+     * rate below 0. Default 0 (none), depth 1 (to clear).
+     */
+    readonly getPulseDepth: typeof raw.wgf_emitter2d_get_pulse_depth;
+    /**
+     * Local space: particles move with the emitter (an aura around a moving character), each
+     * moved as far as its actor has moved since the particle's birth (its place, not its
+     * turn), an orbit circling where the emitter is now; inherited velocity then does nothing.
+     * Default off: each particle keeps to its own path as the emitter moves.
+     */
+    readonly setLocalSpace: typeof raw.wgf_emitter2d_set_local_space;
+    /**
+     * Local space: particles move with the emitter (an aura around a moving character), each
+     * moved as far as its actor has moved since the particle's birth (its place, not its
+     * turn), an orbit circling where the emitter is now; inherited velocity then does nothing.
+     * Default off: each particle keeps to its own path as the emitter moves.
+     */
+    readonly isLocalSpace: typeof raw.wgf_emitter2d_is_local_space;
     /**
      * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
      * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color
@@ -3354,6 +3451,18 @@ export declare const Emitter3d: {
      */
     readonly getGravity: typeof raw.wgf_emitter3d_get_gravity;
     /**
+     * Shell: particles born on the spawn shape's surface rather than inside it: the sphere's,
+     * at its radius, or the box's faces, a face picked by its area (a box with a half size of 0
+     * is a rectangle, and its shell that rectangle's outline). Default off.
+     */
+    readonly setSpawnShell: typeof raw.wgf_emitter3d_set_spawn_shell;
+    /**
+     * Shell: particles born on the spawn shape's surface rather than inside it: the sphere's,
+     * at its radius, or the box's faces, a face picked by its area (a box with a half size of 0
+     * is a rectangle, and its shell that rectangle's outline). Default off.
+     */
+    readonly isSpawnShell: typeof raw.wgf_emitter3d_is_spawn_shell;
+    /**
      * After birth: drag slows particles in proportion to their speed (a second: 1 loses about
      * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
      * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
@@ -3413,6 +3522,97 @@ export declare const Emitter3d: {
      * 0). Defaults 0.
      */
     readonly getStretch: typeof raw.wgf_emitter3d_get_stretch;
+    /**
+     * Aligned to motion: each particle's top turned along its motion across the screen (an
+     * arrow, a thrown spark), its spin, clockwise as the camera sees it, added to that rather than to a
+     * random angle; one standing still keeps its top up the screen. A stretched particle is
+     * aligned already. Default off.
+     */
+    readonly setAlignedToMotion: typeof raw.wgf_emitter3d_set_aligned_to_motion;
+    /**
+     * Aligned to motion: each particle's top turned along its motion across the screen (an
+     * arrow, a thrown spark), its spin, clockwise as the camera sees it, added to that rather than to a
+     * random angle; one standing still keeps its top up the screen. A stretched particle is
+     * aligned already. Default off.
+     */
+    readonly isAlignedToMotion: typeof raw.wgf_emitter3d_is_aligned_to_motion;
+    /**
+     * Wander: each particle strays off its path on a smooth course of its own (fireflies, dust
+     * motes), up to about `distance` stage units, its course turning about `per_second`
+     * times a second, starting on its path; its motion, for alignment and stretch, includes
+     * the stray. False for either below 0. Default 0 (none), 1 a second.
+     */
+    readonly setWander: typeof raw.wgf_emitter3d_set_wander;
+    /**
+     * Wander: each particle strays off its path on a smooth course of its own (fireflies, dust
+     * motes), up to about `distance` stage units, its course turning about `per_second`
+     * times a second, starting on its path; its motion, for alignment and stretch, includes
+     * the stray. False for either below 0. Default 0 (none), 1 a second.
+     */
+    readonly getWanderDistance: typeof raw.wgf_emitter3d_get_wander_distance;
+    /**
+     * Wander: each particle strays off its path on a smooth course of its own (fireflies, dust
+     * motes), up to about `distance` stage units, its course turning about `per_second`
+     * times a second, starting on its path; its motion, for alignment and stretch, includes
+     * the stray. False for either below 0. Default 0 (none), 1 a second.
+     */
+    readonly getWanderRate: typeof raw.wgf_emitter3d_get_wander_rate;
+    /**
+     * Orbit: each particle circles the line through where the emitter was at its birth, along
+     * its velocity's direction then (up without one; turned as its actor was), at a speed
+     * picked between min and max, radians a second, positive counterclockwise seen from where
+     * that line points. Its whole path turns, its own motion included, so a particle thrown
+     * outward spirals. Default none.
+     */
+    readonly setOrbit: typeof raw.wgf_emitter3d_set_orbit;
+    /**
+     * Orbit: each particle circles the line through where the emitter was at its birth, along
+     * its velocity's direction then (up without one; turned as its actor was), at a speed
+     * picked between min and max, radians a second, positive counterclockwise seen from where
+     * that line points. Its whole path turns, its own motion included, so a particle thrown
+     * outward spirals. Default none.
+     */
+    readonly getOrbitMin: typeof raw.wgf_emitter3d_get_orbit_min;
+    /**
+     * Orbit: each particle circles the line through where the emitter was at its birth, along
+     * its velocity's direction then (up without one; turned as its actor was), at a speed
+     * picked between min and max, radians a second, positive counterclockwise seen from where
+     * that line points. Its whole path turns, its own motion included, so a particle thrown
+     * outward spirals. Default none.
+     */
+    readonly getOrbitMax: typeof raw.wgf_emitter3d_get_orbit_max;
+    /**
+     * Pulse: each particle's alpha beats `per_second` times a second, on a phase of its own,
+     * falling by `depth` of itself (0..1, clamped) at each beat's low: twinkling. False for a
+     * rate below 0. Default 0 (none), depth 1 (to clear).
+     */
+    readonly setPulse: typeof raw.wgf_emitter3d_set_pulse;
+    /**
+     * Pulse: each particle's alpha beats `per_second` times a second, on a phase of its own,
+     * falling by `depth` of itself (0..1, clamped) at each beat's low: twinkling. False for a
+     * rate below 0. Default 0 (none), depth 1 (to clear).
+     */
+    readonly getPulseRate: typeof raw.wgf_emitter3d_get_pulse_rate;
+    /**
+     * Pulse: each particle's alpha beats `per_second` times a second, on a phase of its own,
+     * falling by `depth` of itself (0..1, clamped) at each beat's low: twinkling. False for a
+     * rate below 0. Default 0 (none), depth 1 (to clear).
+     */
+    readonly getPulseDepth: typeof raw.wgf_emitter3d_get_pulse_depth;
+    /**
+     * Local space: particles move with the emitter (an aura around a moving character), each
+     * moved as far as its actor has moved since the particle's birth (its place, not its
+     * turn), an orbit circling where the emitter is now; inherited velocity then does nothing.
+     * Default off: each particle keeps to its own path as the emitter moves.
+     */
+    readonly setLocalSpace: typeof raw.wgf_emitter3d_set_local_space;
+    /**
+     * Local space: particles move with the emitter (an aura around a moving character), each
+     * moved as far as its actor has moved since the particle's birth (its place, not its
+     * turn), an orbit circling where the emitter is now; inherited velocity then does nothing.
+     * Default off: each particle keeps to its own path as the emitter moves.
+     */
+    readonly isLocalSpace: typeof raw.wgf_emitter3d_is_local_space;
     /**
      * Over a particle's life, curves: its size (stage units; each particle's scaled by up to
      * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color

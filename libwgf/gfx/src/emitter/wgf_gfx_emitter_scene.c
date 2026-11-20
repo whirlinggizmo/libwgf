@@ -101,6 +101,25 @@ static void apply(wgf_actor_t actor, const char *key, const double *n, int count
         e->ending = truth;
     } else if (strcmp(key, "lingering") == 0) {
         e->lingering = truth;
+    } else if (strcmp(key, "spawn_shell") == 0) {
+        e->shell = truth;
+    } else if (strcmp(key, "aligned") == 0) {
+        e->aligned = truth;
+    } else if (strcmp(key, "wander") == 0) {
+        if (n[0] >= 0.0 && n[1] >= 0.0) {
+            e->wander = (float)n[0];
+            e->wander_rate = (float)n[1];
+        }
+    } else if (strcmp(key, "orbit") == 0) {
+        e->orbit_min = (float)n[0];
+        e->orbit_max = (float)n[1];
+    } else if (strcmp(key, "pulse") == 0) {
+        if (n[0] >= 0.0) {
+            e->pulse_rate = (float)n[0];
+            e->pulse_depth = fminf(fmaxf((float)n[1], 0.0f), 1.0f);
+        }
+    } else if (strcmp(key, "local_space") == 0) {
+        e->local = truth;
     }
 }
 
@@ -158,7 +177,10 @@ static const char *line(wgf_actor_t actor)
             e->box.x, e->box.y, e->box.z, e->sphere, e->velocity.x, e->velocity.y, e->velocity.z, e->spread,
             e->speed_variance, e->gravity.x, e->gravity.y, e->gravity.z);
     }
-    put(" drag=%.9g inherit=%.9g stretch=%.9g", e->drag, e->inherit, e->stretch);
+    put(" spawn_shell=%s drag=%.9g inherit=%.9g stretch=%.9g aligned=%s wander=%.9g,%.9g orbit=%.9g,%.9g "
+        "pulse=%.9g,%.9g local_space=%s",
+        e->shell ? "true" : "false", e->drag, e->inherit, e->stretch, e->aligned ? "true" : "false", e->wander,
+        e->wander_rate, e->orbit_min, e->orbit_max, e->pulse_rate, e->pulse_depth, e->local ? "true" : "false");
     if (e->size_keys > 0) put(" size=%.9g,%.9g,%.9g", e->size_values[0], e->size_values[e->size_keys - 1], e->size_variance);
     if (e->size_keys > 0 && !two_ends(e->size_times, e->size_keys)) {
         for (i = 0; i < e->size_keys; i++) put(i == 0 ? " size_keys=%.9g:%.9g" : ",%.9g:%.9g", e->size_times[i], e->size_values[i]);

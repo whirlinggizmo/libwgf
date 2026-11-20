@@ -24,13 +24,14 @@ extern "C" {
  *
  * Every emitter is advanced once a frame, by the frame's time, before the frame is drawn,
  * unless it or an actor above it is disabled. Its position is its actor's: particles stay
- * where they were born when it moves (trails), a move spreads the next frame's steady
- * spawns along the way, and the move is the velocity they can inherit; their velocity is
- * turned as the actor is (an exhaust leaves a ship's back however it faces). Hidden, it
- * still spawns, but draws nothing. Its particles are drawn in tree order, unsorted. Its
- * random numbers are its own, seeded from wgf_random as it is made, so an autopilot run's
- * particles are the same every time. It holds a reference to its texture. Emitters are
- * actors (wgf_actor.h): place, parent, and destroy them with the actor calls. */
+ * where they were born when it moves (trails; local space, below, moves them with it), a
+ * move spreads the next frame's steady spawns along the way, and the move is the velocity
+ * they can inherit; their velocity is turned as the actor is (an exhaust leaves a ship's
+ * back however it faces). Hidden, it still spawns, but draws nothing. Its particles are
+ * drawn in tree order, unsorted. Its random numbers are its own, seeded from wgf_random as
+ * it is made, so an autopilot run's particles are the same every time. It holds a
+ * reference to its texture. Emitters are actors (wgf_actor.h): place, parent, and destroy
+ * them with the actor calls. */
 
 /* An emitter, emitting at no rate yet: white 8-unit squares living a second, added. 0
  * when there is no room for another actor. */
@@ -102,6 +103,12 @@ WGF_API float wgf_emitter2d_get_speed_variance(wgf_actor_t emitter);
 WGF_API bool wgf_emitter2d_set_gravity(wgf_actor_t emitter, float x, float y);
 WGF_API wgf_vec2_t wgf_emitter2d_get_gravity(wgf_actor_t emitter);
 
+/* Shell: particles born on the spawn shape's outline rather than inside it: the circle's,
+ * at its radius, or the box's edges, an edge picked by its length (a box with a half size
+ * of 0 is a line, and its shell that line's ends). Default off. */
+WGF_API bool wgf_emitter2d_set_spawn_shell(wgf_actor_t emitter, bool on);
+WGF_API bool wgf_emitter2d_is_spawn_shell(wgf_actor_t emitter);
+
 /* After birth: drag slows particles in proportion to their speed (a second: 1 loses about
  * 63% of the speed in a second, less gravity's pull; false below 0). Inherit velocity adds
  * that fraction of the emitter's own velocity, its actor's movement, at birth: 1 carries
@@ -115,6 +122,42 @@ WGF_API bool wgf_emitter2d_set_inherit_velocity(wgf_actor_t emitter, float fract
 WGF_API float wgf_emitter2d_get_inherit_velocity(wgf_actor_t emitter);
 WGF_API bool wgf_emitter2d_set_stretch(wgf_actor_t emitter, float seconds);
 WGF_API float wgf_emitter2d_get_stretch(wgf_actor_t emitter);
+
+/* Aligned to motion: each particle's top turned along its motion across the screen (an
+ * arrow, a thrown spark), its spin, clockwise on screen, added to that rather than to a
+ * random angle; one standing still keeps its top up the screen. A stretched particle is
+ * aligned already. Default off. */
+WGF_API bool wgf_emitter2d_set_aligned_to_motion(wgf_actor_t emitter, bool on);
+WGF_API bool wgf_emitter2d_is_aligned_to_motion(wgf_actor_t emitter);
+
+/* Wander: each particle strays off its path on a smooth course of its own (fireflies, dust
+ * motes), up to about `distance` stage units, its course turning about `per_second`
+ * times a second, starting on its path; its motion, for alignment and stretch, includes
+ * the stray. False for either below 0. Default 0 (none), 1 a second. */
+WGF_API bool wgf_emitter2d_set_wander(wgf_actor_t emitter, float distance, float per_second);
+WGF_API float wgf_emitter2d_get_wander_distance(wgf_actor_t emitter);
+WGF_API float wgf_emitter2d_get_wander_rate(wgf_actor_t emitter);
+
+/* Orbit: each particle circles where the emitter was at its birth, at a speed picked
+ * between min and max, radians a second, positive clockwise on screen. Its whole path
+ * turns, its own motion included, so a particle thrown outward spirals. Default none. */
+WGF_API bool wgf_emitter2d_set_orbit(wgf_actor_t emitter, float min, float max);
+WGF_API float wgf_emitter2d_get_orbit_min(wgf_actor_t emitter);
+WGF_API float wgf_emitter2d_get_orbit_max(wgf_actor_t emitter);
+
+/* Pulse: each particle's alpha beats `per_second` times a second, on a phase of its own,
+ * falling by `depth` of itself (0..1, clamped) at each beat's low: twinkling. False for a
+ * rate below 0. Default 0 (none), depth 1 (to clear). */
+WGF_API bool wgf_emitter2d_set_pulse(wgf_actor_t emitter, float per_second, float depth);
+WGF_API float wgf_emitter2d_get_pulse_rate(wgf_actor_t emitter);
+WGF_API float wgf_emitter2d_get_pulse_depth(wgf_actor_t emitter);
+
+/* Local space: particles move with the emitter (an aura around a moving character), each
+ * moved as far as its actor has moved since the particle's birth (its place, not its
+ * turn), an orbit circling where the emitter is now; inherited velocity then does nothing.
+ * Default off: each particle keeps to its own path as the emitter moves. */
+WGF_API bool wgf_emitter2d_set_local_space(wgf_actor_t emitter, bool on);
+WGF_API bool wgf_emitter2d_is_local_space(wgf_actor_t emitter);
 
 /* Over a particle's life, curves: its size (stage units; each particle's scaled by up to
  * `variance`, 0..1) and color (a tint, alpha included, so a fade). set_size and set_color

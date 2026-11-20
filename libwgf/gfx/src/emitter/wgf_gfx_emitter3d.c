@@ -184,6 +184,20 @@ float wgf_emitter3d_get_spawn_sphere(wgf_actor_t emitter)
     return e != NULL ? e->sphere : 0.0f;
 }
 
+bool wgf_emitter3d_set_spawn_shell(wgf_actor_t emitter, bool on)
+{
+    wgf_gfx_priv_emitter_t *e = EMITTER(emitter);
+    if (e == NULL) return false;
+    e->shell = on;
+    return true;
+}
+
+bool wgf_emitter3d_is_spawn_shell(wgf_actor_t emitter)
+{
+    const wgf_gfx_priv_emitter_t *e = EMITTER(emitter);
+    return e != NULL && e->shell;
+}
+
 bool wgf_emitter3d_set_velocity(wgf_actor_t emitter, float x, float y, float z, float spread, float speed_variance)
 {
     wgf_gfx_priv_emitter_t *e = EMITTER(emitter);
@@ -266,6 +280,97 @@ float wgf_emitter3d_get_stretch(wgf_actor_t emitter)
 {
     const wgf_gfx_priv_emitter_t *e = EMITTER(emitter);
     return e != NULL ? e->stretch : 0.0f;
+}
+
+bool wgf_emitter3d_set_aligned_to_motion(wgf_actor_t emitter, bool on)
+{
+    wgf_gfx_priv_emitter_t *e = EMITTER(emitter);
+    if (e == NULL) return false;
+    e->aligned = on;
+    return true;
+}
+
+bool wgf_emitter3d_is_aligned_to_motion(wgf_actor_t emitter)
+{
+    const wgf_gfx_priv_emitter_t *e = EMITTER(emitter);
+    return e != NULL && e->aligned;
+}
+
+bool wgf_emitter3d_set_wander(wgf_actor_t emitter, float distance, float per_second)
+{
+    wgf_gfx_priv_emitter_t *e = EMITTER(emitter);
+    if (e == NULL || !(distance >= 0.0f) || !(per_second >= 0.0f)) return false;
+    e->wander = distance;
+    e->wander_rate = per_second;
+    return true;
+}
+
+float wgf_emitter3d_get_wander_distance(wgf_actor_t emitter)
+{
+    const wgf_gfx_priv_emitter_t *e = EMITTER(emitter);
+    return e != NULL ? e->wander : 0.0f;
+}
+
+float wgf_emitter3d_get_wander_rate(wgf_actor_t emitter)
+{
+    const wgf_gfx_priv_emitter_t *e = EMITTER(emitter);
+    return e != NULL ? e->wander_rate : 0.0f;
+}
+
+bool wgf_emitter3d_set_orbit(wgf_actor_t emitter, float min, float max)
+{
+    wgf_gfx_priv_emitter_t *e = EMITTER(emitter);
+    if (e == NULL) return false;
+    e->orbit_min = min;
+    e->orbit_max = max;
+    return true;
+}
+
+float wgf_emitter3d_get_orbit_min(wgf_actor_t emitter)
+{
+    const wgf_gfx_priv_emitter_t *e = EMITTER(emitter);
+    return e != NULL ? e->orbit_min : 0.0f;
+}
+
+float wgf_emitter3d_get_orbit_max(wgf_actor_t emitter)
+{
+    const wgf_gfx_priv_emitter_t *e = EMITTER(emitter);
+    return e != NULL ? e->orbit_max : 0.0f;
+}
+
+bool wgf_emitter3d_set_pulse(wgf_actor_t emitter, float per_second, float depth)
+{
+    wgf_gfx_priv_emitter_t *e = EMITTER(emitter);
+    if (e == NULL || !(per_second >= 0.0f)) return false;
+    e->pulse_rate = per_second;
+    e->pulse_depth = fminf(fmaxf(depth, 0.0f), 1.0f);
+    return true;
+}
+
+float wgf_emitter3d_get_pulse_rate(wgf_actor_t emitter)
+{
+    const wgf_gfx_priv_emitter_t *e = EMITTER(emitter);
+    return e != NULL ? e->pulse_rate : 0.0f;
+}
+
+float wgf_emitter3d_get_pulse_depth(wgf_actor_t emitter)
+{
+    const wgf_gfx_priv_emitter_t *e = EMITTER(emitter);
+    return e != NULL ? e->pulse_depth : 0.0f;
+}
+
+bool wgf_emitter3d_set_local_space(wgf_actor_t emitter, bool on)
+{
+    wgf_gfx_priv_emitter_t *e = EMITTER(emitter);
+    if (e == NULL) return false;
+    e->local = on;
+    return true;
+}
+
+bool wgf_emitter3d_is_local_space(wgf_actor_t emitter)
+{
+    const wgf_gfx_priv_emitter_t *e = EMITTER(emitter);
+    return e != NULL && e->local;
 }
 
 bool wgf_emitter3d_set_size(wgf_actor_t emitter, float start, float end, float variance)

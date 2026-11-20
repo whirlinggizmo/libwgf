@@ -862,6 +862,10 @@ export const Emitter2d = Object.freeze({
     setGravity: raw.wgf_emitter2d_set_gravity,
     // wgf: call wgf_emitter2d_get_gravity
     getGravity: raw.wgf_emitter2d_get_gravity,
+    // wgf: call wgf_emitter2d_set_spawn_shell
+    setSpawnShell: raw.wgf_emitter2d_set_spawn_shell,
+    // wgf: call wgf_emitter2d_is_spawn_shell
+    isSpawnShell: raw.wgf_emitter2d_is_spawn_shell,
     // wgf: call wgf_emitter2d_set_drag
     setDrag: raw.wgf_emitter2d_set_drag,
     // wgf: call wgf_emitter2d_get_drag
@@ -874,6 +878,32 @@ export const Emitter2d = Object.freeze({
     setStretch: raw.wgf_emitter2d_set_stretch,
     // wgf: call wgf_emitter2d_get_stretch
     getStretch: raw.wgf_emitter2d_get_stretch,
+    // wgf: call wgf_emitter2d_set_aligned_to_motion
+    setAlignedToMotion: raw.wgf_emitter2d_set_aligned_to_motion,
+    // wgf: call wgf_emitter2d_is_aligned_to_motion
+    isAlignedToMotion: raw.wgf_emitter2d_is_aligned_to_motion,
+    // wgf: call wgf_emitter2d_set_wander
+    setWander: raw.wgf_emitter2d_set_wander,
+    // wgf: call wgf_emitter2d_get_wander_distance
+    getWanderDistance: raw.wgf_emitter2d_get_wander_distance,
+    // wgf: call wgf_emitter2d_get_wander_rate
+    getWanderRate: raw.wgf_emitter2d_get_wander_rate,
+    // wgf: call wgf_emitter2d_set_orbit
+    setOrbit: raw.wgf_emitter2d_set_orbit,
+    // wgf: call wgf_emitter2d_get_orbit_min
+    getOrbitMin: raw.wgf_emitter2d_get_orbit_min,
+    // wgf: call wgf_emitter2d_get_orbit_max
+    getOrbitMax: raw.wgf_emitter2d_get_orbit_max,
+    // wgf: call wgf_emitter2d_set_pulse
+    setPulse: raw.wgf_emitter2d_set_pulse,
+    // wgf: call wgf_emitter2d_get_pulse_rate
+    getPulseRate: raw.wgf_emitter2d_get_pulse_rate,
+    // wgf: call wgf_emitter2d_get_pulse_depth
+    getPulseDepth: raw.wgf_emitter2d_get_pulse_depth,
+    // wgf: call wgf_emitter2d_set_local_space
+    setLocalSpace: raw.wgf_emitter2d_set_local_space,
+    // wgf: call wgf_emitter2d_is_local_space
+    isLocalSpace: raw.wgf_emitter2d_is_local_space,
     // wgf: call wgf_emitter2d_set_size
     setSize: raw.wgf_emitter2d_set_size,
     // wgf: call wgf_emitter2d_get_size_variance
@@ -1005,6 +1035,10 @@ export const Emitter3d = Object.freeze({
     setGravity: raw.wgf_emitter3d_set_gravity,
     // wgf: call wgf_emitter3d_get_gravity
     getGravity: raw.wgf_emitter3d_get_gravity,
+    // wgf: call wgf_emitter3d_set_spawn_shell
+    setSpawnShell: raw.wgf_emitter3d_set_spawn_shell,
+    // wgf: call wgf_emitter3d_is_spawn_shell
+    isSpawnShell: raw.wgf_emitter3d_is_spawn_shell,
     // wgf: call wgf_emitter3d_set_drag
     setDrag: raw.wgf_emitter3d_set_drag,
     // wgf: call wgf_emitter3d_get_drag
@@ -1017,6 +1051,32 @@ export const Emitter3d = Object.freeze({
     setStretch: raw.wgf_emitter3d_set_stretch,
     // wgf: call wgf_emitter3d_get_stretch
     getStretch: raw.wgf_emitter3d_get_stretch,
+    // wgf: call wgf_emitter3d_set_aligned_to_motion
+    setAlignedToMotion: raw.wgf_emitter3d_set_aligned_to_motion,
+    // wgf: call wgf_emitter3d_is_aligned_to_motion
+    isAlignedToMotion: raw.wgf_emitter3d_is_aligned_to_motion,
+    // wgf: call wgf_emitter3d_set_wander
+    setWander: raw.wgf_emitter3d_set_wander,
+    // wgf: call wgf_emitter3d_get_wander_distance
+    getWanderDistance: raw.wgf_emitter3d_get_wander_distance,
+    // wgf: call wgf_emitter3d_get_wander_rate
+    getWanderRate: raw.wgf_emitter3d_get_wander_rate,
+    // wgf: call wgf_emitter3d_set_orbit
+    setOrbit: raw.wgf_emitter3d_set_orbit,
+    // wgf: call wgf_emitter3d_get_orbit_min
+    getOrbitMin: raw.wgf_emitter3d_get_orbit_min,
+    // wgf: call wgf_emitter3d_get_orbit_max
+    getOrbitMax: raw.wgf_emitter3d_get_orbit_max,
+    // wgf: call wgf_emitter3d_set_pulse
+    setPulse: raw.wgf_emitter3d_set_pulse,
+    // wgf: call wgf_emitter3d_get_pulse_rate
+    getPulseRate: raw.wgf_emitter3d_get_pulse_rate,
+    // wgf: call wgf_emitter3d_get_pulse_depth
+    getPulseDepth: raw.wgf_emitter3d_get_pulse_depth,
+    // wgf: call wgf_emitter3d_set_local_space
+    setLocalSpace: raw.wgf_emitter3d_set_local_space,
+    // wgf: call wgf_emitter3d_is_local_space
+    isLocalSpace: raw.wgf_emitter3d_is_local_space,
     // wgf: call wgf_emitter3d_set_size
     setSize: raw.wgf_emitter3d_set_size,
     // wgf: call wgf_emitter3d_get_size_variance

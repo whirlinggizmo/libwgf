@@ -128,6 +128,19 @@ static float signed_random(wgf_gfx_priv_emitter_t *e)
     return random01(e) * 2.0f - 1.0f;
 }
 
+/* A number 0..1 from the generator's state, without moving it on (a particle's pulse
+ * phase): the particles of a seed set before pulses were added stay as they were. */
+static float hashed01(const wgf_gfx_priv_emitter_t *e)
+{
+    uint32_t x = e->rng ^ 0x9E3779B9u; /* lowbias32 */
+    x ^= x >> 16;
+    x *= 0x7FEB352Du;
+    x ^= x >> 15;
+    x *= 0x846CA68Bu;
+    x ^= x >> 16;
+    return (float)(x >> 8) / 16777216.0f;
+}
+
 /* ------------------------------------------------------------ spawning ---- */
 
 /* A velocity for a new particle: the emitter's, turned within its spread and scaled
@@ -161,24 +174,63 @@ static wgf_vec3_t birth_velocity(wgf_gfx_priv_emitter_t *e)
     return wgf_vec3_scale(wgf_mat4_transform_direction(e->turn, dir), speed);
 }
 
+/* A point on the box's surface (the rectangle's outline in 2D), from `inside` within it: a
+ * face picked by its area (an edge by its length; a line's ends alike), put on it, either
+ * side (helix-raylib's). Only the half sizes above 0 are the shape's own dimensions. */
+static wgf_vec3_t on_box(wgf_gfx_priv_emitter_t *e, wgf_vec3_t inside)
+{
+    float half[3], offset[3], area[3], total = 0.0f, pick;
+    int axes[3], count = 0, k, j;
+    half[0] = e->box.x, half[1] = e->box.y, half[2] = e->two_d ? 0.0f : e->box.z;
+    offset[0] = inside.x, offset[1] = inside.y, offset[2] = inside.z;
+    for (k = 0; k < 3; k++) {
+        if (half[k] > 0.0f) axes[count++] = k;
+    }
+    if (count == 0) return inside;
+    for (k = 0; k < count; k++) { /* the face across axis k: the full sizes of the others */
+        area[k] = 1.0f;
+        for (j = 0; j < count; j++) {
+            if (j != k) area[k] *= 2.0f * half[axes[j]];
+        }
+        total += area[k];
+    }
+    pick = random01(e) * total;
+    for (k = 0; k < count - 1 && pick >= area[k]; k++) pick -= area[k];
+    offset[axes[k]] = (random01(e) < 0.5f ? -1.0f : 1.0f) * half[axes[k]];
+    return wgf_vec3_make(offset[0], offset[1], offset[2]);
+}
+
 /* Where in the spawn shape, from its middle: anywhere in the box, or evenly within the
- * sphere (circle). */
+ * sphere (circle); with a shell, on its surface (outline) instead. */
 static wgf_vec3_t spawn_offset(wgf_gfx_priv_emitter_t *e)
 {
     const wgf_vec3_t box = e->box;
+    wgf_vec3_t inside;
     if (e->sphere > 0.0f) {
         const float phi = TAU * random01(e);
         if (e->two_d) {
-            const float r = e->sphere * sqrtf(random01(e));
+            const float r = e->shell ? e->sphere : e->sphere * sqrtf(random01(e));
             return wgf_vec3_make(cosf(phi) * r, sinf(phi) * r, 0.0f);
         }
         {
             const float z = signed_random(e), ring = sqrtf(fmaxf(0.0f, 1.0f - z * z));
-            const float r = e->sphere * cbrtf(random01(e));
+            const float r = e->shell ? e->sphere : e->sphere * cbrtf(random01(e));
             return wgf_vec3_make(cosf(phi) * ring * r, sinf(phi) * ring * r, z * r);
         }
     }
-    return wgf_vec3_make(box.x * signed_random(e), box.y * signed_random(e), box.z * signed_random(e));
+    inside = wgf_vec3_make(box.x * signed_random(e), box.y * signed_random(e), box.z * signed_random(e));
+    return e->shell ? on_box(e, inside) : inside;
+}
+
+/* The axis a new particle orbits: the emitter's velocity's direction, turned as its actor
+ * is (up, turned, when it has none); on a 2D stage, +z, so clockwise on screen. */
+static wgf_vec3_t orbit_axis(const wgf_gfx_priv_emitter_t *e)
+{
+    const wgf_vec3_t v = e->velocity;
+    const float length = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+    const wgf_vec3_t along = length > 0.0f ? wgf_vec3_scale(v, 1.0f / length) : wgf_vec3_make(0, 1, 0);
+    if (e->two_d) return wgf_vec3_make(0.0f, 0.0f, 1.0f);
+    return wgf_vec3_normalize(wgf_mat4_transform_direction(e->turn, along));
 }
 
 /* A new particle, born at `when` on the emitter's clock around `at` (replacing the oldest
@@ -187,8 +239,10 @@ static void spawn(wgf_gfx_priv_emitter_t *e, float when, wgf_vec3_t at)
 {
     const wgf_vec3_t v = birth_velocity(e);
     const wgf_vec3_t offset = spawn_offset(e);
-    const wgf_vec3_t moving = wgf_vec3_scale(e->movement_velocity, e->inherit);
+    /* in local space, particles move with the emitter: none of its motion is thrown in too */
+    const wgf_vec3_t moving = wgf_vec3_scale(e->movement_velocity, e->local ? 0.0f : e->inherit);
     wgf_gfx_priv_particle_t *p = &e->ring[e->next];
+    wgf_vec3_t axis;
 
     p->born[0] = at.x + offset.x;
     p->born[1] = at.y + offset.y;
@@ -202,6 +256,16 @@ static void spawn(wgf_gfx_priv_emitter_t *e, float when, wgf_vec3_t at)
     p->shape[1] = random_between(e, e->spin_min, e->spin_max);
     p->shape[2] = TAU * random01(e);
     p->shape[3] = random01(e);
+    /* a drawn orbit only for a range, so a seed's particles without one stay as they were */
+    p->origin[0] = at.x;
+    p->origin[1] = at.y;
+    p->origin[2] = e->two_d ? 0.0f : at.z;
+    p->origin[3] = e->orbit_min == e->orbit_max ? e->orbit_min : random_between(e, e->orbit_min, e->orbit_max);
+    axis = orbit_axis(e);
+    p->axis[0] = axis.x;
+    p->axis[1] = axis.y;
+    p->axis[2] = axis.z;
+    p->axis[3] = hashed01(e);
     e->next = (e->next + 1) % e->max;
     if (e->live < e->max) e->live++;
     e->emitted = true;
@@ -437,6 +501,8 @@ wgf_actor_t wgf_gfx_priv_emitter_create(bool two_d)
     e->columns = e->rows = e->frames = 1;
     e->alpha_mode = WGF_ALPHA_MODE_ADD;
     e->alpha_cutoff = 0.5f;
+    e->wander_rate = 1.0f;
+    e->pulse_depth = 1.0f;
     e->turn = wgf_mat4_identity();
     wgf_gfx_priv_emitter_set_seed(e, (uint32_t)(wgf_random_get_float() * 4294967040.0f) | 1u);
     wgf_gfx_priv_actor_of(actor)->as.emitter = e;
@@ -696,6 +762,126 @@ bool wgf_gfx_priv_emitter_particle(wgf_actor_t actor, int index, float born[4], 
     return true;
 }
 
+/* The size curve at `t`, as vs_particle's size_at. */
+static float size_at(const wgf_gfx_priv_emitter_t *e, float t)
+{
+    float value = e->size_values[0], prev_t = e->size_times[0];
+    int i;
+    for (i = 1; i < e->size_keys; i++) {
+        float key_t, key_v;
+        if (t <= prev_t) break;
+        key_t = e->size_times[i];
+        key_v = e->size_values[i];
+        value = t >= key_t ? key_v : value + (key_v - value) * ((t - prev_t) / fmaxf(key_t - prev_t, 0.000001f));
+        prev_t = key_t;
+    }
+    return value;
+}
+
+static wgf_vec3_t turned_about(wgf_vec3_t v, wgf_vec3_t k, float c, float s)
+{
+    return wgf_vec3_add(wgf_vec3_add(wgf_vec3_scale(v, c), wgf_vec3_scale(wgf_vec3_cross(k, v), s)),
+                        wgf_vec3_scale(k, wgf_vec3_dot(k, v) * (1.0f - c)));
+}
+
+static float fraction(float x)
+{
+    return x - floorf(x);
+}
+
+/* vs_particle's working, step for step (wgf_gfx_particle.glsl): a change to one is made to
+ * the other. */
+bool wgf_gfx_priv_emitter_particle_now(wgf_actor_t actor, int index, wgf_vec3_t axis_x, wgf_vec3_t axis_y,
+                                       float out[6])
+{
+    float born[4], motion[4], shape[4];
+    const wgf_gfx_priv_emitter_t *e;
+    const wgf_gfx_priv_particle_t *p;
+    wgf_vec3_t pos, vel, up = axis_y;
+    float age, t, size, along_shift = 0.0f, speed, sx, sy, pulse = 1.0f;
+    if (!wgf_gfx_priv_emitter_particle(actor, index, born, motion, shape)) return false;
+    e = wgf_gfx_priv_actor_of(actor)->as.emitter;
+    p = &e->ring[(oldest(e) + index) % e->max];
+    age = e->time - born[3];
+    t = age / motion[3];
+    if (age < 0.0f || t >= 1.0f) return false;
+    {
+        const wgf_vec3_t b = wgf_vec3_make(born[0], born[1], born[2]);
+        const wgf_vec3_t m = wgf_vec3_make(motion[0], motion[1], motion[2]);
+        if (e->drag > 0.0001f) {
+            const wgf_vec3_t terminal = wgf_vec3_scale(e->gravity, 1.0f / e->drag);
+            const float decay = expf(-e->drag * age);
+            pos = wgf_vec3_add(wgf_vec3_add(b, wgf_vec3_scale(terminal, age)),
+                               wgf_vec3_scale(wgf_vec3_sub(m, terminal), (1.0f - decay) / e->drag));
+            vel = wgf_vec3_add(terminal, wgf_vec3_scale(wgf_vec3_sub(m, terminal), decay));
+        } else {
+            pos = wgf_vec3_add(wgf_vec3_add(b, wgf_vec3_scale(m, age)), wgf_vec3_scale(e->gravity, 0.5f * age * age));
+            vel = wgf_vec3_add(m, wgf_vec3_scale(e->gravity, age));
+        }
+    }
+    if (p->origin[3] != 0.0f) {
+        const wgf_vec3_t o = wgf_vec3_make(p->origin[0], p->origin[1], p->origin[2]);
+        const wgf_vec3_t k = wgf_vec3_make(p->axis[0], p->axis[1], p->axis[2]);
+        const float c = cosf(p->origin[3] * age), s = sinf(p->origin[3] * age);
+        const wgf_vec3_t turned = turned_about(wgf_vec3_sub(pos, o), k, c, s);
+        vel = wgf_vec3_add(turned_about(vel, k, c, s), wgf_vec3_scale(wgf_vec3_cross(k, turned), p->origin[3]));
+        pos = wgf_vec3_add(o, turned);
+    }
+    if (e->local) {
+        pos = wgf_vec3_add(pos, wgf_vec3_sub(e->position, wgf_vec3_make(p->origin[0], p->origin[1], p->origin[2])));
+    }
+    if (e->wander > 0.0f) {
+        static const float a[3] = {1.0f, 7.31f, 13.7f}, b[3] = {3.17f, 5.93f, 11.1f};
+        const float course = TAU * e->wander_rate * age;
+        float drift[3], drifting[3];
+        int i;
+        for (i = 0; i < 3; i++) {
+            const float first = fraction(shape[3] * a[i]) * TAU, second = fraction(shape[3] * b[i]) * TAU;
+            const float flat = i == 2 && e->two_d ? 0.0f : 1.0f;
+            drift[i] = e->wander * flat *
+                       (0.6f * sinf(course + first) + 0.4f * sinf(2.3f * course + second) - 0.6f * sinf(first) -
+                        0.4f * sinf(second));
+            drifting[i] = e->wander * flat * TAU * e->wander_rate *
+                          (0.6f * cosf(course + first) + 0.92f * cosf(2.3f * course + second));
+        }
+        pos = wgf_vec3_add(pos, wgf_vec3_make(drift[0], drift[1], drift[2]));
+        vel = wgf_vec3_add(vel, wgf_vec3_make(drifting[0], drifting[1], drifting[2]));
+    }
+    size = size_at(e, t) * shape[0];
+    sx = wgf_vec3_dot(vel, axis_x);
+    sy = wgf_vec3_dot(vel, axis_y);
+    speed = sqrtf(sx * sx + sy * sy);
+    if (e->stretch > 0.0f && speed > 0.00001f) {
+        up = wgf_vec3_add(wgf_vec3_scale(axis_x, sx / speed), wgf_vec3_scale(axis_y, sy / speed));
+        along_shift = speed * e->stretch * 0.5f;
+    } else {
+        float angle = shape[1] * age, c, s;
+        wgf_vec3_t base_x = axis_x, base_y = axis_y;
+        if (e->aligned) {
+            if (speed > 0.00001f) {
+                base_y = wgf_vec3_add(wgf_vec3_scale(axis_x, sx / speed), wgf_vec3_scale(axis_y, sy / speed));
+                base_x = wgf_vec3_sub(wgf_vec3_scale(axis_x, sy / speed), wgf_vec3_scale(axis_y, sx / speed));
+            }
+        } else {
+            angle += shape[2];
+        }
+        c = cosf(angle);
+        s = sinf(angle);
+        up = wgf_vec3_add(wgf_vec3_scale(base_x, s), wgf_vec3_scale(base_y, c));
+    }
+    pos = wgf_vec3_sub(pos, wgf_vec3_scale(up, along_shift));
+    if (e->pulse_rate > 0.0f) {
+        pulse = 1.0f - e->pulse_depth * (0.5f + 0.5f * sinf(TAU * fraction(e->pulse_rate * age + p->axis[3])));
+    }
+    out[0] = pos.x;
+    out[1] = pos.y;
+    out[2] = pos.z;
+    out[3] = size;
+    out[4] = atan2f(wgf_vec3_dot(up, axis_x), wgf_vec3_dot(up, axis_y));
+    out[5] = pulse;
+    return true;
+}
+
 /* ------------------------------------------------------------- drawing ---- */
 
 static sg_backend shader_backend(void)
@@ -728,6 +914,10 @@ static void ensure_gpu(void)
     desc.layout.attrs[ATTR_particle_motion].buffer_index = 1;
     desc.layout.attrs[ATTR_particle_shape].format = SG_VERTEXFORMAT_FLOAT4;
     desc.layout.attrs[ATTR_particle_shape].buffer_index = 1;
+    desc.layout.attrs[ATTR_particle_origin].format = SG_VERTEXFORMAT_FLOAT4;
+    desc.layout.attrs[ATTR_particle_origin].buffer_index = 1;
+    desc.layout.attrs[ATTR_particle_axis].format = SG_VERTEXFORMAT_FLOAT4;
+    desc.layout.attrs[ATTR_particle_axis].buffer_index = 1;
     desc.label = "wgf-particles";
     memset(&blend, 0, sizeof(blend));
     blend.enabled = true;
@@ -828,7 +1018,9 @@ int wgf_gfx_priv_emitter_record(wgf_actor_t actor, const float view_proj[16], wg
     set4(d->params.axis_x, axis_x.x, axis_x.y, axis_x.z, 0);
     set4(d->params.axis_y, axis_y.x, axis_y.y, axis_y.z, 0);
     set4(d->params.gravity_now, e->gravity.x, e->gravity.y, e->gravity.z, e->time);
-    set4(d->params.dynamics, e->drag, e->stretch, 0, 0);
+    set4(d->params.dynamics, e->drag, e->stretch, e->aligned ? 1.0f : 0.0f, e->two_d ? 1.0f : 0.0f);
+    set4(d->params.wander_pulse, e->wander, e->wander_rate, e->pulse_rate, e->pulse_depth);
+    set4(d->params.emitter_now, e->position.x, e->position.y, e->position.z, e->local ? 1.0f : 0.0f);
     set4(d->params.frames, (float)e->columns, (float)e->rows, (float)e->frames, e->frames_per_second);
     set4(d->params.counts, (float)e->size_keys, (float)e->color_keys,
          e->alpha_mode == WGF_ALPHA_MODE_MASK     ? fmaxf(e->alpha_cutoff, 1e-6f)

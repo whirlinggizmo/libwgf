@@ -21,11 +21,13 @@
 #define WGF_GFX_PRIV_EMITTER_MAX_PALETTE 8
 #define WGF_GFX_PRIV_EMITTER_MAX_PARTICLES 65536
 
-/* One particle as the shader reads it (per-instance data, 48 bytes). */
+/* One particle as the shader reads it (per-instance data, 80 bytes). */
 typedef struct wgf_gfx_priv_particle_t {
     float born[4];   /* xyz where, w when (the emitter's clock) */
     float motion[4]; /* xyz velocity, w life (seconds) */
     float shape[4];  /* x size scale, y spin (radians / s), z angle at birth, w a random 0..1 */
+    float origin[4]; /* xyz where the emitter was at its birth, w its orbit (radians / s) */
+    float axis[4];   /* xyz the axis it orbits (2D: +z), w its pulse's phase 0..1 */
 } wgf_gfx_priv_particle_t;
 
 typedef struct wgf_gfx_priv_emitter_t {
@@ -54,6 +56,12 @@ typedef struct wgf_gfx_priv_emitter_t {
     wgf_vec3_t gravity;
     float drag;              /* per second */
     float stretch;           /* seconds of motion */
+    bool aligned;            /* each quad's top turned along its motion on screen, its spin added */
+    bool shell;              /* born on the spawn shape's surface rather than inside it */
+    bool local;              /* particles moved with the emitter (local space) */
+    float wander, wander_rate; /* how far a particle strays off its path, and its course's turns a second */
+    float orbit_min, orbit_max; /* radians a second about the emitter's axis */
+    float pulse_rate, pulse_depth; /* alpha beats a second, and how far each takes it down (0..1) */
     float inherit;           /* of the emitter's own velocity */
     float size_times[WGF_GFX_PRIV_EMITTER_MAX_KEYS], size_values[WGF_GFX_PRIV_EMITTER_MAX_KEYS];
     int size_keys;
@@ -117,5 +125,12 @@ void wgf_gfx_priv_emitter_draw(int index);
  * window that may be alive, oldest first. */
 int wgf_gfx_priv_emitter_get_draw_count(void);
 bool wgf_gfx_priv_emitter_particle(wgf_actor_t actor, int index, float born[4], float motion[4], float shape[4]);
+
+/* For tests: particle `index` (as above) now, as vs_particle works it out, the quad's right
+ * and up before spin `axis_x` and `axis_y`: where its middle is (xyz), its size, its turn
+ * (radians its top is turned clockwise from `axis_y`, -PI..PI), and what its pulse leaves of
+ * its alpha (0..1), in `out`. False for no such particle, or one not alive now. */
+bool wgf_gfx_priv_emitter_particle_now(wgf_actor_t actor, int index, wgf_vec3_t axis_x, wgf_vec3_t axis_y,
+                                       float out[6]);
 
 #endif

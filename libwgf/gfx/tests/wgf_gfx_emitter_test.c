@@ -22,8 +22,10 @@
  * circle, flipbooks, and moving -- the trail along a move, velocity inherited, a skipped
  * trail -- with the position its actor's; and libwgf's own: velocity turned with the actor,
  * the default seed drawn from wgf_random, ending, lingering, and an emitter drawn on a 3D
- * stage and a 2D one. The frame update is the parts' (wgf_core_priv_part_update), as the
- * runtime runs it. Pixels: wgf_gfx_emitter_web_test. */
+ * stage and a 2D one. helix-raylib's: wander, orbit, pulse, shells, local space, and
+ * alignment to motion, their particles worked out as vs_particle does
+ * (wgf_gfx_priv_emitter_particle_now). The frame update is the parts'
+ * (wgf_core_priv_part_update), as the runtime runs it. Pixels: wgf_gfx_emitter_web_test. */
 
 static int failures;
 
@@ -419,6 +421,453 @@ static void test_drawing(void)
     wgf_actor_destroy(flat, WGF_ACTOR_DESTROY_CHILDREN);
 }
 
+/* The quad's axes before spin: a 2D stage's (right, and up the screen, -y) and a 3D
+ * camera's looking down -z. */
+static const wgf_vec3_t SCREEN_X = {1, 0, 0}, SCREEN_UP_2D = {0, -1, 0}, SCREEN_UP_3D = {0, 1, 0};
+
+static float wrapped(float angle) /* to -PI..PI */
+{
+    while (angle > 3.14159265f) angle -= 6.28318531f;
+    while (angle < -3.14159265f) angle += 6.28318531f;
+    return angle;
+}
+
+/* The settings: defaults, read back, clamped or refused, and a 2D call on a 3D emitter. */
+static void test_behavior_settings(void)
+{
+    const wgf_actor_t flat = wgf_emitter2d_create(), deep = wgf_emitter3d_create();
+    expect(wgf_emitter2d_get_wander_distance(flat) == 0 && wgf_emitter2d_get_wander_rate(flat) == 1 &&
+               wgf_emitter2d_get_orbit_min(flat) == 0 && wgf_emitter2d_get_orbit_max(flat) == 0 &&
+               wgf_emitter2d_get_pulse_rate(flat) == 0 && wgf_emitter2d_get_pulse_depth(flat) == 1 &&
+               !wgf_emitter2d_is_spawn_shell(flat) && !wgf_emitter2d_is_local_space(flat) &&
+               !wgf_emitter2d_is_aligned_to_motion(flat),
+           "2D defaults: no wander (1 a second), orbit, pulse (depth 1), shell, local space, or alignment");
+    expect(wgf_emitter3d_get_wander_rate(deep) == 1 && wgf_emitter3d_get_pulse_depth(deep) == 1 &&
+               !wgf_emitter3d_is_spawn_shell(deep) && !wgf_emitter3d_is_local_space(deep) &&
+               !wgf_emitter3d_is_aligned_to_motion(deep),
+           "3D defaults");
+    expect(wgf_emitter2d_set_wander(flat, 12, 0.5f) && wgf_emitter2d_get_wander_distance(flat) == 12 &&
+               wgf_emitter2d_get_wander_rate(flat) == 0.5f,
+           "2D wander");
+    expect(wgf_emitter3d_set_wander(deep, 0.25f, 3) && wgf_emitter3d_get_wander_distance(deep) == 0.25f &&
+               wgf_emitter3d_get_wander_rate(deep) == 3,
+           "3D wander");
+    expect(wgf_emitter2d_set_orbit(flat, -1, 2) && wgf_emitter2d_get_orbit_min(flat) == -1 &&
+               wgf_emitter2d_get_orbit_max(flat) == 2 && wgf_emitter3d_set_orbit(deep, 0.5f, 0.5f) &&
+               wgf_emitter3d_get_orbit_min(deep) == 0.5f && wgf_emitter3d_get_orbit_max(deep) == 0.5f,
+           "orbits");
+    expect(wgf_emitter2d_set_pulse(flat, 3, 2) && wgf_emitter2d_get_pulse_rate(flat) == 3 &&
+               wgf_emitter2d_get_pulse_depth(flat) == 1 && wgf_emitter3d_set_pulse(deep, 1, -1) &&
+               wgf_emitter3d_get_pulse_depth(deep) == 0,
+           "pulses, the depth held to 0..1");
+    expect(wgf_emitter2d_set_spawn_shell(flat, true) && wgf_emitter2d_is_spawn_shell(flat) &&
+               wgf_emitter2d_set_local_space(flat, true) && wgf_emitter2d_is_local_space(flat) &&
+               wgf_emitter2d_set_aligned_to_motion(flat, true) && wgf_emitter2d_is_aligned_to_motion(flat) &&
+               wgf_emitter3d_set_spawn_shell(deep, true) && wgf_emitter3d_is_spawn_shell(deep) &&
+               wgf_emitter3d_set_local_space(deep, true) && wgf_emitter3d_is_local_space(deep) &&
+               wgf_emitter3d_set_aligned_to_motion(deep, true) && wgf_emitter3d_is_aligned_to_motion(deep),
+           "shell, local space, and alignment");
+    expect(!wgf_emitter2d_set_wander(flat, -1, 1) && !wgf_emitter2d_set_wander(flat, 1, -1) &&
+               !wgf_emitter3d_set_wander(deep, NAN, 1) && !wgf_emitter2d_set_pulse(flat, -1, 0.5f) &&
+               !wgf_emitter3d_set_pulse(deep, NAN, 0.5f),
+           "refused: a negative wander, course, or pulse rate");
+    expect(wgf_emitter2d_get_wander_distance(flat) == 12 && wgf_emitter2d_get_pulse_rate(flat) == 3,
+           "a refusal changes nothing");
+    expect(!wgf_emitter2d_set_orbit(deep, 1, 1) && !wgf_emitter3d_set_local_space(flat, true) &&
+               !wgf_emitter3d_is_spawn_shell(flat) && wgf_emitter3d_get_pulse_rate(flat) == 0,
+           "a 2D call on a 3D emitter, and the other way, refused");
+    wgf_actor_destroy(flat, WGF_ACTOR_DESTROY_CHILDREN);
+    expect(!wgf_emitter2d_set_wander(flat, 1, 1) && !wgf_emitter2d_is_aligned_to_motion(flat) &&
+               wgf_emitter2d_get_orbit_max(flat) == 0,
+           "gone: refused");
+    wgf_actor_destroy(deep, WGF_ACTOR_DESTROY_CHILDREN);
+}
+
+/* Wander: off the path by at most twice its distance an axis (its course's two waves),
+ * starting on it, none across a 2D stage's depth, and the same for the same seed. */
+static void test_wander(void)
+{
+    float now[6], again[6], born[4], motion[4], shape[4];
+    bool bounded = true, flat = true, same = true, differs = false;
+    float farthest = 0.0f;
+    wgf_actor_t a = wgf_emitter2d_create(), b = wgf_emitter2d_create(), c = wgf_emitter2d_create();
+    for (int k = 0; k < 3; k++) {
+        const wgf_actor_t e = k == 0 ? a : k == 1 ? b : c;
+        wgf_emitter2d_set_seed(e, k == 2 ? 8 : 7);
+        wgf_emitter2d_set_life(e, 100, 100);
+        wgf_emitter2d_set_spawn_box(e, 50, 50);
+        expect(wgf_emitter2d_set_wander(e, 10, 1.5f), "a wander");
+        wgf_emitter2d_burst(e, 40);
+    }
+    expect(wgf_gfx_priv_emitter_particle_now(a, 0, SCREEN_X, SCREEN_UP_2D, now) &&
+               wgf_gfx_priv_emitter_particle(a, 0, born, motion, shape) && now[0] == born[0] && now[1] == born[1],
+           "born on its path");
+    for (int step = 0; step < 40; step++) {
+        update(0.05f);
+        for (int i = 0; i < 40; i++) {
+            wgf_gfx_priv_emitter_particle(a, i, born, motion, shape);
+            if (!wgf_gfx_priv_emitter_particle_now(a, i, SCREEN_X, SCREEN_UP_2D, now) ||
+                !wgf_gfx_priv_emitter_particle_now(b, i, SCREEN_X, SCREEN_UP_2D, again)) {
+                bounded = false;
+                continue;
+            }
+            bounded = bounded && fabsf(now[0] - born[0]) <= 20.0f + 1e-3f && fabsf(now[1] - born[1]) <= 20.0f + 1e-3f;
+            flat = flat && now[2] == 0.0f;
+            same = same && now[0] == again[0] && now[1] == again[1];
+            farthest = fmaxf(farthest, fabsf(now[0] - born[0]));
+            wgf_gfx_priv_emitter_particle_now(c, i, SCREEN_X, SCREEN_UP_2D, again);
+            differs = differs || now[0] != again[0];
+        }
+    }
+    expect(bounded && farthest > 5.0f, "wandering, within twice its distance an axis");
+    expect(flat, "a 2D particle wanders in the plane");
+    expect(same, "the same seed: the same courses");
+    expect(differs, "another seed: other courses");
+    wgf_actor_destroy(a, WGF_ACTOR_DESTROY_CHILDREN);
+    wgf_actor_destroy(b, WGF_ACTOR_DESTROY_CHILDREN);
+    wgf_actor_destroy(c, WGF_ACTOR_DESTROY_CHILDREN);
+}
+
+/* Orbit: the distance from the axis kept, the angle advancing at its speed: on a 2D stage
+ * clockwise on screen about where the emitter was; in 3D about its velocity's line (up,
+ * with none), counterclockwise seen from above. */
+static void test_orbit(void)
+{
+    float now[6], born[4], motion[4], shape[4];
+    bool kept = true, advanced = true, ranged = true;
+    const wgf_actor_t flat = wgf_emitter2d_create(), deep = wgf_emitter3d_create(), range = wgf_emitter2d_create();
+    wgf_actor_set_position(flat, 200, 100, 0);
+    wgf_emitter2d_set_life(flat, 100, 100);
+    wgf_emitter2d_set_spawn_circle(flat, 40);
+    expect(wgf_emitter2d_set_orbit(flat, 2, 2), "a 2D orbit");
+    wgf_emitter2d_burst(flat, 20);
+    wgf_actor_set_position(deep, 1, 2, 3);
+    wgf_emitter3d_set_life(deep, 100, 100);
+    wgf_emitter3d_set_spawn_sphere(deep, 2);
+    expect(wgf_emitter3d_set_orbit(deep, 0.5f, 0.5f), "a 3D orbit");
+    wgf_emitter3d_burst(deep, 20);
+    for (int step = 1; step <= 10; step++) {
+        update(0.1f);
+        for (int i = 0; i < 20; i++) {
+            const float age = 0.1f * (float)step;
+            float r0, r1, a0, a1;
+            wgf_gfx_priv_emitter_particle(flat, i, born, motion, shape);
+            wgf_gfx_priv_emitter_particle_now(flat, i, SCREEN_X, SCREEN_UP_2D, now);
+            r0 = hypotf(born[0] - 200, born[1] - 100);
+            r1 = hypotf(now[0] - 200, now[1] - 100);
+            a0 = atan2f(born[1] - 100, born[0] - 200);
+            a1 = atan2f(now[1] - 100, now[0] - 200);
+            kept = kept && fabsf(r0 - r1) < 1e-3f;
+            advanced = advanced && fabsf(wrapped(a1 - a0 - 2.0f * age)) < 1e-3f; /* y down: clockwise on screen */
+            wgf_gfx_priv_emitter_particle(deep, i, born, motion, shape);
+            wgf_gfx_priv_emitter_particle_now(deep, i, SCREEN_X, SCREEN_UP_3D, now);
+            r0 = hypotf(born[0] - 1, born[2] - 3);
+            r1 = hypotf(now[0] - 1, now[2] - 3);
+            a0 = atan2f(-(born[2] - 3), born[0] - 1);
+            a1 = atan2f(-(now[2] - 3), now[0] - 1);
+            kept = kept && fabsf(r0 - r1) < 1e-3f && fabsf(now[1] - born[1]) < 1e-4f;
+            advanced = advanced && fabsf(wrapped(a1 - a0 - 0.5f * age)) < 1e-3f;
+        }
+    }
+    expect(kept, "the distance from the axis kept");
+    expect(advanced, "the angle advancing at its speed");
+
+    /* a range: each particle's speed within it */
+    wgf_actor_set_position(range, 0, 0, 0);
+    wgf_emitter2d_set_life(range, 100, 100);
+    wgf_emitter2d_set_spawn_box(range, 10, 0);
+    expect(wgf_emitter2d_set_spawn_shell(range, true) && wgf_emitter2d_set_orbit(range, 1, 3), "an orbit's range");
+    wgf_emitter2d_burst(range, 50);
+    update(0.25f);
+    for (int i = 0; i < 50; i++) {
+        float turn;
+        wgf_gfx_priv_emitter_particle(range, i, born, motion, shape);
+        wgf_gfx_priv_emitter_particle_now(range, i, SCREEN_X, SCREEN_UP_2D, now);
+        turn = wrapped(atan2f(now[1], now[0]) - atan2f(born[1], born[0]));
+        ranged = ranged && turn >= 0.25f - 1e-3f && turn <= 0.75f + 1e-3f;
+    }
+    expect(ranged, "each orbit's speed within its range");
+    wgf_actor_destroy(flat, WGF_ACTOR_DESTROY_CHILDREN);
+    wgf_actor_destroy(deep, WGF_ACTOR_DESTROY_CHILDREN);
+    wgf_actor_destroy(range, WGF_ACTOR_DESTROY_CHILDREN);
+}
+
+/* Pulse: the alpha left at known points of a beat (its high, low, and between, on each
+ * particle's own phase), one beat apart the same, the phases spread; none without one. */
+static void test_pulse(void)
+{
+    float now[6];
+    bool known = true, periodic = true, bounded = true;
+    float lowest = 1.0f, highest = 0.0f, first = -1.0f;
+    bool phases_differ = false;
+    const wgf_actor_t e = wgf_emitter2d_create();
+    wgf_gfx_priv_emitter_t *emitter = wgf_gfx_priv_emitter_of_at(e, true, NULL);
+    wgf_emitter2d_set_life(e, 100, 100);
+    wgf_emitter2d_burst(e, 30);
+    update(0.1f);
+    expect(wgf_gfx_priv_emitter_particle_now(e, 0, SCREEN_X, SCREEN_UP_2D, now) && now[5] == 1.0f,
+           "no pulse: all alpha");
+    expect(wgf_emitter2d_set_pulse(e, 2, 0.6f), "a pulse, two beats a second");
+    for (int step = 0; step < 20; step++) {
+        update(0.05f);
+        for (int i = 0; i < 30; i++) {
+            const wgf_gfx_priv_particle_t *p = &emitter->ring[i];
+            const float age = emitter->time - p->born[3];
+            float beat = 2.0f * age + p->axis[3], expected;
+            beat -= floorf(beat);
+            expected = 1.0f - 0.6f * (0.5f + 0.5f * sinf(6.28318531f * beat));
+            wgf_gfx_priv_emitter_particle_now(e, i, SCREEN_X, SCREEN_UP_2D, now);
+            known = known && fabsf(now[5] - expected) < 1e-4f;
+            bounded = bounded && now[5] >= 0.4f - 1e-5f && now[5] <= 1.0f + 1e-5f;
+            lowest = fminf(lowest, now[5]);
+            highest = fmaxf(highest, now[5]);
+            if (step == 0) {
+                if (i == 0) first = p->axis[3];
+                phases_differ = phases_differ || p->axis[3] != first;
+            }
+        }
+    }
+    expect(known, "the alpha left on each particle's phase");
+    expect(bounded && lowest < 0.45f && highest > 0.95f, "from all of it down to 1 less its depth");
+    expect(phases_differ, "a phase each");
+    {
+        /* a beat's high (a quarter before its low), its low, and its middle, at known ages */
+        float values[3];
+        const wgf_gfx_priv_particle_t *p = &emitter->ring[0];
+        const float phase = p->axis[3];
+        const float ages[3] = {0.75f, 0.25f, 0.0f}; /* in beats: sin's low (-1), high (+1), and 0 */
+        for (int k = 0; k < 3; k++) {
+            float target = ages[k] - phase; /* in beats from birth: where fract(beat) is ages[k] */
+            target -= floorf(target);
+            target += 10.0f; /* a while after birth, half a second a beat */
+            emitter->time = p->born[3] + target / 2.0f;
+            wgf_gfx_priv_emitter_particle_now(e, 0, SCREEN_X, SCREEN_UP_2D, now);
+            values[k] = now[5];
+            emitter->time = p->born[3] + target / 2.0f + 0.5f; /* a beat on */
+            wgf_gfx_priv_emitter_particle_now(e, 0, SCREEN_X, SCREEN_UP_2D, now);
+            periodic = periodic && fabsf(now[5] - values[k]) < 1e-3f;
+        }
+        expect(fabsf(values[0] - 1.0f) < 1e-3f && fabsf(values[1] - 0.4f) < 1e-3f && fabsf(values[2] - 0.7f) < 1e-3f,
+               "all of it at a beat's high, 1 less its depth at its low, half its depth between");
+        expect(periodic, "one beat on, the same");
+    }
+    wgf_actor_destroy(e, WGF_ACTOR_DESTROY_CHILDREN);
+}
+
+/* Shells: born on the circle's and sphere's radius, and on a box's or rectangle's faces
+ * (edges), never inside; without one, inside. */
+static void test_shells(void)
+{
+    float born[4], motion[4], shape[4];
+    bool circle = true, sphere = true, box = true, outline = true, inside = false;
+    const wgf_actor_t ring = wgf_emitter2d_create(), ball = wgf_emitter3d_create(), crate = wgf_emitter3d_create(),
+                      flat = wgf_emitter3d_create();
+    wgf_actor_set_position(ring, 10, 20, 0);
+    wgf_emitter2d_set_spawn_circle(ring, 30);
+    expect(wgf_emitter2d_set_spawn_shell(ring, true), "a circle's shell");
+    wgf_emitter2d_burst(ring, 200);
+    wgf_emitter3d_set_spawn_sphere(ball, 2);
+    wgf_emitter3d_set_spawn_shell(ball, true);
+    wgf_emitter3d_burst(ball, 200);
+    wgf_emitter3d_set_spawn_box(crate, 1, 2, 3);
+    wgf_emitter3d_set_spawn_shell(crate, true);
+    wgf_emitter3d_burst(crate, 200);
+    wgf_emitter3d_set_spawn_box(flat, 1, 0, 3); /* a rectangle: its outline */
+    wgf_emitter3d_set_spawn_shell(flat, true);
+    wgf_emitter3d_burst(flat, 200);
+    for (int i = 0; i < 200; i++) {
+        float x, y, z;
+        wgf_gfx_priv_emitter_particle(ring, i, born, motion, shape);
+        circle = circle && fabsf(hypotf(born[0] - 10, born[1] - 20) - 30) < 1e-3f && born[2] == 0;
+        wgf_gfx_priv_emitter_particle(ball, i, born, motion, shape);
+        sphere = sphere && fabsf(sqrtf(born[0] * born[0] + born[1] * born[1] + born[2] * born[2]) - 2) < 1e-4f;
+        wgf_gfx_priv_emitter_particle(crate, i, born, motion, shape);
+        x = fabsf(born[0]), y = fabsf(born[1]), z = fabsf(born[2]);
+        box = box && x <= 1 && y <= 2 && z <= 3 && (x == 1 || y == 2 || z == 3);
+        wgf_gfx_priv_emitter_particle(flat, i, born, motion, shape);
+        x = fabsf(born[0]), z = fabsf(born[2]);
+        outline = outline && born[1] == 0 && x <= 1 && z <= 3 && (x == 1 || z == 3);
+    }
+    expect(circle, "on the circle");
+    expect(sphere, "on the sphere");
+    expect(box, "on the box's faces");
+    expect(outline, "on the rectangle's outline");
+    wgf_emitter2d_set_spawn_shell(ring, false);
+    wgf_emitter2d_clear(ring);
+    wgf_emitter2d_burst(ring, 50);
+    for (int i = 0; i < 50; i++) {
+        wgf_gfx_priv_emitter_particle(ring, i, born, motion, shape);
+        inside = inside || hypotf(born[0] - 10, born[1] - 20) < 29;
+    }
+    expect(inside, "no shell: within");
+    wgf_actor_destroy(ring, WGF_ACTOR_DESTROY_CHILDREN);
+    wgf_actor_destroy(ball, WGF_ACTOR_DESTROY_CHILDREN);
+    wgf_actor_destroy(crate, WGF_ACTOR_DESTROY_CHILDREN);
+    wgf_actor_destroy(flat, WGF_ACTOR_DESTROY_CHILDREN);
+}
+
+/* Local space: particles follow a moved emitter (paused, they hold, as it does); in world
+ * space they stay; and in local space no velocity is inherited. */
+static void test_local_space(void)
+{
+    float now[6], born[4], motion[4], shape[4];
+    bool followed = true, stayed = true, held = true, none_inherited = true;
+    const wgf_actor_t local = wgf_emitter2d_create(), world = wgf_emitter2d_create();
+    for (int k = 0; k < 2; k++) {
+        const wgf_actor_t e = k == 0 ? local : world;
+        wgf_actor_set_position(e, 100, 100, 0);
+        wgf_emitter2d_set_life(e, 100, 100);
+        wgf_emitter2d_set_spawn_circle(e, 20);
+        wgf_emitter2d_set_inherit_velocity(e, 1);
+        wgf_emitter2d_burst(e, 10);
+    }
+    expect(wgf_emitter2d_set_local_space(local, true), "local space");
+    update(0.1f);
+    wgf_actor_set_position(local, 150, 120, 0);
+    wgf_actor_set_position(world, 150, 120, 0);
+    update(0.1f);
+    for (int i = 0; i < 10; i++) {
+        wgf_gfx_priv_emitter_particle(local, i, born, motion, shape);
+        wgf_gfx_priv_emitter_particle_now(local, i, SCREEN_X, SCREEN_UP_2D, now);
+        followed = followed && fabsf(now[0] - (born[0] + 50)) < 1e-3f && fabsf(now[1] - (born[1] + 20)) < 1e-3f;
+        wgf_gfx_priv_emitter_particle(world, i, born, motion, shape);
+        wgf_gfx_priv_emitter_particle_now(world, i, SCREEN_X, SCREEN_UP_2D, now);
+        stayed = stayed && now[0] == born[0] && now[1] == born[1];
+    }
+    expect(followed, "local space: moved with the emitter");
+    expect(stayed, "world space: left where they were");
+
+    /* paused, it isn't moved on: they hold; then follow */
+    wgf_actor_set_paused(local, true);
+    wgf_actor_set_position(local, 300, 300, 0);
+    update(0.1f);
+    for (int i = 0; i < 10; i++) {
+        wgf_gfx_priv_emitter_particle(local, i, born, motion, shape);
+        wgf_gfx_priv_emitter_particle_now(local, i, SCREEN_X, SCREEN_UP_2D, now);
+        held = held && fabsf(now[0] - (born[0] + 50)) < 1e-3f;
+    }
+    expect(held, "paused: held");
+    wgf_actor_set_paused(local, false);
+    update(0.1f);
+    wgf_gfx_priv_emitter_particle(local, 0, born, motion, shape);
+    wgf_gfx_priv_emitter_particle_now(local, 0, SCREEN_X, SCREEN_UP_2D, now);
+    expect(fabsf(now[0] - (born[0] + 200)) < 1e-3f, "resumed: following");
+
+    /* moving while emitting: nothing inherited in local space; world space inherits */
+    wgf_emitter2d_set_rate(local, 100);
+    wgf_emitter2d_set_rate(world, 100);
+    wgf_actor_set_position(local, 400, 300, 0);
+    wgf_actor_set_position(world, 400, 300, 0);
+    update(0.1f);
+    update(0.1f);
+    for (int i = 10; i < wgf_emitter2d_get_count(local); i++) {
+        wgf_gfx_priv_emitter_particle(local, i, born, motion, shape);
+        none_inherited = none_inherited && motion[0] == 0 && motion[1] == 0;
+    }
+    wgf_gfx_priv_emitter_particle(world, 10, born, motion, shape); /* born in the update after the move */
+    expect(none_inherited && wgf_emitter2d_get_count(local) > 10, "local space: nothing inherited");
+    expect(motion[0] > 0, "world space: inherited");
+    wgf_actor_destroy(local, WGF_ACTOR_DESTROY_CHILDREN);
+    wgf_actor_destroy(world, WGF_ACTOR_DESTROY_CHILDREN);
+}
+
+/* Aligned to motion: the quad's top along its motion on screen, its spin added; standing
+ * still, upright; not aligned, its random angle. */
+static void test_aligned(void)
+{
+    float now[6], born[4], motion[4], shape[4];
+    bool along = true, spun = true, still = true, unaligned = true;
+    const wgf_actor_t thrown = wgf_emitter2d_create(), deep = wgf_emitter3d_create();
+    wgf_emitter2d_set_life(thrown, 100, 100);
+    wgf_emitter2d_set_velocity(thrown, 100, 0, 0.8f, 0.5f);
+    wgf_emitter2d_set_gravity(thrown, 0, 200);
+    expect(wgf_emitter2d_set_aligned_to_motion(thrown, true), "aligned");
+    wgf_emitter2d_burst(thrown, 30);
+    for (int step = 1; step <= 10; step++) {
+        update(0.05f);
+        for (int i = 0; i < 30; i++) {
+            const float age = 0.05f * (float)step;
+            float vx, vy;
+            wgf_gfx_priv_emitter_particle(thrown, i, born, motion, shape);
+            wgf_gfx_priv_emitter_particle_now(thrown, i, SCREEN_X, SCREEN_UP_2D, now);
+            vx = motion[0];
+            vy = motion[1] + 200.0f * age;
+            along = along && fabsf(wrapped(now[4] - atan2f(vx, -vy))) < 1e-3f; /* up the screen is -y */
+        }
+    }
+    expect(along, "its top along its motion: the velocity's angle");
+    wgf_emitter2d_set_spin(thrown, 1, 1);
+    wgf_emitter2d_clear(thrown);
+    wgf_emitter2d_burst(thrown, 10);
+    update(0.5f);
+    for (int i = 0; i < 10; i++) {
+        float vy;
+        wgf_gfx_priv_emitter_particle(thrown, i, born, motion, shape);
+        wgf_gfx_priv_emitter_particle_now(thrown, i, SCREEN_X, SCREEN_UP_2D, now);
+        vy = motion[1] + 200.0f * 0.5f;
+        spun = spun && fabsf(wrapped(now[4] - atan2f(motion[0], -vy) - 0.5f)) < 1e-3f;
+    }
+    expect(spun, "its spin added");
+
+    /* 3D: across the screen as the camera sees it; along the view, upright */
+    wgf_emitter3d_set_life(deep, 100, 100);
+    wgf_emitter3d_set_aligned_to_motion(deep, true);
+    wgf_emitter3d_set_velocity(deep, 0, 0, 5, 0, 0);
+    wgf_emitter3d_burst(deep, 5);
+    wgf_emitter3d_set_velocity(deep, 3, 4, 0, 0, 0);
+    wgf_emitter3d_burst(deep, 5);
+    update(0.01f);
+    for (int i = 0; i < 10; i++) {
+        wgf_gfx_priv_emitter_particle_now(deep, i, SCREEN_X, SCREEN_UP_3D, now);
+        if (i < 5) still = still && now[4] == 0.0f;
+        else along = along && fabsf(now[4] - atan2f(3, 4)) < 1e-4f;
+    }
+    expect(still, "3D, moving along the view: upright");
+    expect(along, "3D, across the screen: its top along");
+    wgf_emitter3d_set_aligned_to_motion(deep, false);
+    for (int i = 0; i < 10; i++) {
+        wgf_gfx_priv_emitter_particle(deep, i, born, motion, shape);
+        wgf_gfx_priv_emitter_particle_now(deep, i, SCREEN_X, SCREEN_UP_3D, now);
+        unaligned = unaligned && fabsf(wrapped(now[4] - shape[2])) < 1e-4f;
+    }
+    expect(unaligned, "not aligned: its random angle");
+    wgf_actor_destroy(thrown, WGF_ACTOR_DESTROY_CHILDREN);
+    wgf_actor_destroy(deep, WGF_ACTOR_DESTROY_CHILDREN);
+}
+
+/* Every behavior at once, drawn: on a 2D stage and a 3D one. */
+static void test_behaviors_drawn(void)
+{
+    const wgf_actor_t world = wgf_stage3d_create(), camera = wgf_camera3d_create(), flat = wgf_stage2d_create();
+    const wgf_actor_t deep = wgf_emitter3d_create(), thin = wgf_emitter2d_create();
+    wgf_actor_set_position(camera, 0, 2, 10);
+    wgf_actor_set_parent(camera, world);
+    wgf_stage3d_set_camera(world, camera);
+    wgf_actor_set_parent(deep, world);
+    wgf_actor_set_parent(thin, flat);
+    wgf_emitter3d_set_wander(deep, 1, 1);
+    wgf_emitter3d_set_orbit(deep, 1, 2);
+    wgf_emitter3d_set_pulse(deep, 2, 1);
+    wgf_emitter3d_set_spawn_sphere(deep, 1);
+    wgf_emitter3d_set_spawn_shell(deep, true);
+    wgf_emitter3d_set_local_space(deep, true);
+    wgf_emitter3d_set_aligned_to_motion(deep, true);
+    wgf_emitter2d_set_wander(thin, 5, 1);
+    wgf_emitter2d_set_aligned_to_motion(thin, true);
+    wgf_emitter2d_set_local_space(thin, true);
+    wgf_emitter3d_burst(deep, 50);
+    wgf_emitter2d_burst(thin, 50);
+    update(0.1f);
+    wgf_platform_priv_set_size(64, 64);
+    wgf_gfx_priv_begin_frame();
+    wgf_stage3d_draw(world);
+    wgf_stage2d_draw(flat);
+    wgf_gfx_priv_end_frame();
+    expect(wgf_gfx_priv_emitter_get_draw_count() == 2, "drawn with every behavior");
+    wgf_actor_destroy(world, WGF_ACTOR_DESTROY_CHILDREN);
+    wgf_actor_destroy(flat, WGF_ACTOR_DESTROY_CHILDREN);
+}
+
 int main(void)
 {
     wgf_core_priv_init();
@@ -431,6 +880,14 @@ int main(void)
     test_turned();
     test_ending();
     test_drawing();
+    test_behavior_settings();
+    test_wander();
+    test_orbit();
+    test_pulse();
+    test_shells();
+    test_local_space();
+    test_aligned();
+    test_behaviors_drawn();
     {
         /* gfx stopping with an emitter alive frees it (asan) */
         const wgf_actor_t e = wgf_emitter3d_create();
