@@ -243,6 +243,10 @@ class Main {
 		expect(voice.setBus(ui) && voice.getBus() == ui && click.setBus(ui) && click.getBus() == ui, "a voice's and a sound's bus");
 		ui.destroy();
 		expect(voice.getBus() == effects && click.getBus() == effects, "its bus gone: back to its parent");
+		expect(voice.setSpatial(true) && voice.isSpatial() && voice.setPlace(1, 2, 3) && near(voice.getPlace().z, 3)
+			&& voice.setRange(2, 30) && near(voice.getRange().y, 30) && voice.setSpatial(false), "a spatial voice");
+		expect(Audio.setListenerPosition(0, 1, 0) && near(Audio.getListenerPosition().y, 1) && Audio.setListenerFacing(0, 0, -1)
+			&& near(Audio.getListenerFacing().z, -1), "the listener");
 	}
 
 	static var camera3d:Camera3d;
@@ -471,6 +475,7 @@ class Main {
 		expect(follower.setOffset(0, 2, 5) && near(follower.getOffset().z, 5) && follower.setMode(FollowMode.ORBIT)
 			&& follower.getMode() == FollowMode.ORBIT && follower.setOrbit(0.5, 0.2, 7) && near(follower.getOrbit().z, 7),
 			"its offset, mode, and orbit");
+		expect(World.setListener(followed) && World.getListener() == followed && World.setListener(cast 0), "a listener actor");
 		expect(follower.shake(0.5) && near(follower.getTrauma(), 0.5) && follower.snap() && follower.setTarget(cast 0),
 			"shaken, snapped, and let go");
 

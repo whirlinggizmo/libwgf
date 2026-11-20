@@ -784,6 +784,38 @@ export declare const Audio: {
      * screen. Paused or not, voices are told to play, pause, and stop as usual.
      */
     readonly isPaused: typeof raw.wgf_audio_is_paused;
+    /**
+     * The listener, what a spatial voice (wgf_voice_set_spatial) is heard from: where it is,
+     * and the way it faces (y up; normalized when set), at the origin facing -z by default. A
+     * spatial voice is quieter with distance (wgf_voice_set_range) and panned by which side of
+     * the listener it is on. The ecs sets them from an actor (wgf_world_set_listener). Refuses
+     * a non-finite one, and a facing of no length or straight up or down.
+     */
+    readonly setListenerPosition: typeof raw.wgf_audio_set_listener_position;
+    /**
+     * The listener, what a spatial voice (wgf_voice_set_spatial) is heard from: where it is,
+     * and the way it faces (y up; normalized when set), at the origin facing -z by default. A
+     * spatial voice is quieter with distance (wgf_voice_set_range) and panned by which side of
+     * the listener it is on. The ecs sets them from an actor (wgf_world_set_listener). Refuses
+     * a non-finite one, and a facing of no length or straight up or down.
+     */
+    readonly getListenerPosition: typeof raw.wgf_audio_get_listener_position;
+    /**
+     * The listener, what a spatial voice (wgf_voice_set_spatial) is heard from: where it is,
+     * and the way it faces (y up; normalized when set), at the origin facing -z by default. A
+     * spatial voice is quieter with distance (wgf_voice_set_range) and panned by which side of
+     * the listener it is on. The ecs sets them from an actor (wgf_world_set_listener). Refuses
+     * a non-finite one, and a facing of no length or straight up or down.
+     */
+    readonly setListenerFacing: typeof raw.wgf_audio_set_listener_facing;
+    /**
+     * The listener, what a spatial voice (wgf_voice_set_spatial) is heard from: where it is,
+     * and the way it faces (y up; normalized when set), at the origin facing -z by default. A
+     * spatial voice is quieter with distance (wgf_voice_set_range) and panned by which side of
+     * the listener it is on. The ecs sets them from an actor (wgf_world_set_listener). Refuses
+     * a non-finite one, and a facing of no length or straight up or down.
+     */
+    readonly getListenerFacing: typeof raw.wgf_audio_get_listener_facing;
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type BehaviorComponent = raw.wgf_actor_t;
@@ -5739,6 +5771,60 @@ export declare const Voice: {
      */
     readonly getBus: typeof raw.wgf_voice_get_bus;
     /**
+     * Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+     * distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+     * by its side of the listener, on top of its own volume and pan. An actor's voice component
+     * that is spatial is placed at its actor each frame. False only for a handle that isn't a
+     * voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+     * it. Read back as x, y, z and as near, far.
+     */
+    readonly setSpatial: typeof raw.wgf_voice_set_spatial;
+    /**
+     * Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+     * distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+     * by its side of the listener, on top of its own volume and pan. An actor's voice component
+     * that is spatial is placed at its actor each frame. False only for a handle that isn't a
+     * voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+     * it. Read back as x, y, z and as near, far.
+     */
+    readonly isSpatial: typeof raw.wgf_voice_is_spatial;
+    /**
+     * Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+     * distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+     * by its side of the listener, on top of its own volume and pan. An actor's voice component
+     * that is spatial is placed at its actor each frame. False only for a handle that isn't a
+     * voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+     * it. Read back as x, y, z and as near, far.
+     */
+    readonly setPlace: typeof raw.wgf_voice_set_place;
+    /**
+     * Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+     * distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+     * by its side of the listener, on top of its own volume and pan. An actor's voice component
+     * that is spatial is placed at its actor each frame. False only for a handle that isn't a
+     * voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+     * it. Read back as x, y, z and as near, far.
+     */
+    readonly getPlace: typeof raw.wgf_voice_get_place;
+    /**
+     * Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+     * distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+     * by its side of the listener, on top of its own volume and pan. An actor's voice component
+     * that is spatial is placed at its actor each frame. False only for a handle that isn't a
+     * voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+     * it. Read back as x, y, z and as near, far.
+     */
+    readonly setRange: typeof raw.wgf_voice_set_range;
+    /**
+     * Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+     * distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+     * by its side of the listener, on top of its own volume and pan. An actor's voice component
+     * that is spatial is placed at its actor each frame. False only for a handle that isn't a
+     * voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+     * it. Read back as x, y, z and as near, far.
+     */
+    readonly getRange: typeof raw.wgf_voice_get_range;
+    /**
      * Where it is, in seconds from the sound's start (its segment's, when it plays one), in
      * any state: it wraps into the sound (the segment) when looping and is clamped to [0, its
      * length] otherwise. Setting it while PLAYING plays on from there (a non-looping voice
@@ -6106,6 +6192,18 @@ export declare const World: {
      * first.
      */
     readonly clear: typeof raw.wgf_world_clear;
+    /**
+     * The actor spatial audio is heard from (wgf_audio.h's listener): each frame the listener
+     * is put where the actor is drawn, facing its -z (a camera's view). 0 for none (the
+     * listener stays as last set). False for a handle that isn't an actor.
+     */
+    readonly setListener: typeof raw.wgf_world_set_listener;
+    /**
+     * The actor spatial audio is heard from (wgf_audio.h's listener): each frame the listener
+     * is put where the actor is drawn, facing its -z (a camera's view). 0 for none (the
+     * listener stays as last set). False for a handle that isn't an actor.
+     */
+    readonly getListener: typeof raw.wgf_world_get_listener;
     /**
      * The simulated actors as a scene's text (wgf_scene.h's format): each top one -- an actor
      * with a component or a behavior whose parent has none -- oldest first, as a `actor`

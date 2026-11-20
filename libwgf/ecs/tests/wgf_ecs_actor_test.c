@@ -17,6 +17,7 @@
 #include "wgf_actor.h"
 #include "wgf_shape2d.h"
 #include "wgf_voice.h"
+#include "wgf_audio.h"
 
 /* Components and behaviors on actors, headless: every component added with its defaults
  * and removed, on a plain actor and on a shape; several behaviors on an actor, their ids and
@@ -77,6 +78,21 @@ int main(void)
     expect(wgf_actor_add_component(ship, WGF_COMPONENT_VOICE) && wgf_actor_get_voice(ship) != 0 &&
                wgf_voice_get_sound(wgf_actor_get_voice(ship)) == 0,
            "a voice of no sound yet");
+    { /* a spatial voice placed at its actor, and the listener at its actor, each frame */
+        const wgf_actor_t ear = wgf_actor_create();
+        wgf_actor_set_parent(ear, stage);
+        wgf_actor_set_position(ear, 5, 6, 7);
+        expect(wgf_world_set_listener(ear) && wgf_world_get_listener() == ear && !wgf_world_set_listener(12345),
+               "a listener actor; a handle that isn't one refused");
+        wgf_actor_add_component(ear, WGF_COMPONENT_VOICE);
+        wgf_voice_set_spatial(wgf_actor_get_voice(ear), true);
+        wgf_core_priv_part_update(0.0f);
+        expect(wgf_voice_get_place(wgf_actor_get_voice(ear)).y == 6.0f && wgf_audio_get_listener_position().z == 7.0f &&
+                   wgf_audio_get_listener_facing().z < -0.99f,
+               "placed where they are drawn, the listener facing its -z");
+        wgf_world_set_listener(0);
+        wgf_actor_destroy(ear, WGF_ACTOR_DESTROY_CHILDREN);
+    }
     expect(!wgf_actor_add_component(ship, WGF_COMPONENT_NONE) && !wgf_actor_add_component(ship, (wgf_component_t)99) &&
                !wgf_actor_add_component(12345, WGF_COMPONENT_MOTION) && !wgf_motion_set_velocity(stage, 1, 0, 0),
            "a component that isn't one, a handle that isn't an actor, or an actor without it: refused");

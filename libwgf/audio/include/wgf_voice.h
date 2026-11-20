@@ -8,6 +8,8 @@
 #include "wgf_handle.h"
 #include "wgf_play_state.h"
 #include "wgf_sound.h"
+#include "wgf_vec2.h"
+#include "wgf_vec3.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -90,6 +92,18 @@ WGF_API float wgf_voice_get_pan(wgf_voice_t voice);
  * isn't a voice, or a bus that isn't one. */
 WGF_API bool wgf_voice_set_bus(wgf_voice_t voice, wgf_bus_t bus);
 WGF_API wgf_bus_t wgf_voice_get_bus(wgf_voice_t voice);
+/* Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+ * distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+ * by its side of the listener, on top of its own volume and pan. An actor's voice component
+ * that is spatial is placed at its actor each frame. False only for a handle that isn't a
+ * voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+ * it. Read back as x, y, z and as near, far. */
+WGF_API bool wgf_voice_set_spatial(wgf_voice_t voice, bool spatial);
+WGF_API bool wgf_voice_is_spatial(wgf_voice_t voice);
+WGF_API bool wgf_voice_set_place(wgf_voice_t voice, float x, float y, float z);
+WGF_API wgf_vec3_t wgf_voice_get_place(wgf_voice_t voice);
+WGF_API bool wgf_voice_set_range(wgf_voice_t voice, float near_distance, float far_distance);
+WGF_API wgf_vec2_t wgf_voice_get_range(wgf_voice_t voice);
 
 /* Where it is, in seconds from the sound's start (its segment's, when it plays one), in
  * any state: it wraps into the sound (the segment) when looping and is clamped to [0, its

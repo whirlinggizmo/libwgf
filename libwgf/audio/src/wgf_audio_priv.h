@@ -133,6 +133,8 @@ typedef struct wgf_audio_priv_voice_t {
     bool played;         /* wgf_sound_play's: let go of by the sweep once COMPLETE */
     unsigned long long started; /* played: when, in plays, so the oldest is taken first */
     wgf_handle_t bus; /* heard through (wgf_bus.h); 0: effects */
+    bool spatial;         /* heard from `place` by the listener */
+    float place[3], range[2];
 } wgf_audio_priv_voice_t;
 
 /* What a voice plays, in seconds of its sound: its segment's range (the end clamped to
@@ -193,5 +195,9 @@ void wgf_audio_priv_voice_stop_all(void);
 /* Natively: mix `frames` frames of every playing voice into `out`, interleaved stereo,
  * at `rate` frames a second (the device's callback, or a test pulling the mixer). */
 void wgf_audio_priv_mix(float *out, int frames, int rate);
+
+/* What the listener makes of a voice: its gain (1 for a voice that isn't spatial) and its
+ * pan, its own and its side's (wgf_audio.c). Under the lock. */
+void wgf_audio_priv_spatial(const wgf_audio_priv_voice_t *voice_ptr, float *gain, float *pan);
 
 #endif /* WGF_AUDIO_PRIV_H */

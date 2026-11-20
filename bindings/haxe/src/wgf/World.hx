@@ -28,6 +28,22 @@ class World {
 		Raw.wgf_world_clear();
 
 	/**
+	    The actor spatial audio is heard from (wgf_audio.h's listener): each frame the listener
+	    is put where the actor is drawn, facing its -z (a camera's view). 0 for none (the
+	    listener stays as last set). False for a handle that isn't an actor.
+	**/
+	public static inline function setListener(actor:Actor):Bool
+		return Raw.wgf_world_set_listener(actor);
+
+	/**
+	    The actor spatial audio is heard from (wgf_audio.h's listener): each frame the listener
+	    is put where the actor is drawn, facing its -z (a camera's view). 0 for none (the
+	    listener stays as last set). False for a handle that isn't an actor.
+	**/
+	public static inline function getListener():Actor
+		return Raw.wgf_world_get_listener();
+
+	/**
 	    The simulated actors as a scene's text (wgf_scene.h's format): each top one -- an actor
 	    with a component or a behavior whose parent has none -- oldest first, as a `actor`
 	    block, with its kind, its transform, its components, its behaviors, and the actors under

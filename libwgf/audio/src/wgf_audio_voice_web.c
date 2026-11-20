@@ -203,10 +203,12 @@ void wgf_audio_priv_platform_apply(wgf_handle_t voice, wgf_audio_priv_voice_t *v
 {
     const wgf_audio_priv_sound_t *sound_ptr = wgf_audio_priv_sound_of(voice_ptr->sound);
     double low, high;
+    float gain, pan;
     wgf_audio_priv_voice_range(voice_ptr, &low, &high);
+    wgf_audio_priv_spatial(voice_ptr, &gain, &pan);
     wgf_audio_js_voice_apply((int)voice, (int)voice_ptr->sound, voice_ptr->fresh ? 0 : (int)voice_ptr->state,
-                             voice_ptr->position, voice_ptr->loop, voice_ptr->volume * wgf_audio_priv_bus_heard(voice_ptr->bus),
-                             voice_ptr->pitch, voice_ptr->pan,
+                             voice_ptr->position, voice_ptr->loop, voice_ptr->volume * gain * wgf_audio_priv_bus_heard(voice_ptr->bus),
+                             voice_ptr->pitch, pan,
                              (int)voice_ptr->generation, low, high, sound_ptr != NULL && sound_ptr->streamed);
 }
 

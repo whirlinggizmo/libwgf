@@ -31,4 +31,44 @@ class Audio {
 	**/
 	public static inline function isPaused():Bool
 		return Raw.wgf_audio_is_paused();
+
+	/**
+	    The listener, what a spatial voice (wgf_voice_set_spatial) is heard from: where it is,
+	    and the way it faces (y up; normalized when set), at the origin facing -z by default. A
+	    spatial voice is quieter with distance (wgf_voice_set_range) and panned by which side of
+	    the listener it is on. The ecs sets them from an actor (wgf_world_set_listener). Refuses
+	    a non-finite one, and a facing of no length or straight up or down.
+	**/
+	public static inline function setListenerPosition(x:Float, y:Float, z:Float):Bool
+		return Raw.wgf_audio_set_listener_position(x, y, z);
+
+	/**
+	    The listener, what a spatial voice (wgf_voice_set_spatial) is heard from: where it is,
+	    and the way it faces (y up; normalized when set), at the origin facing -z by default. A
+	    spatial voice is quieter with distance (wgf_voice_set_range) and panned by which side of
+	    the listener it is on. The ecs sets them from an actor (wgf_world_set_listener). Refuses
+	    a non-finite one, and a facing of no length or straight up or down.
+	**/
+	public static inline function getListenerPosition(?into:wgf.Vec3):wgf.Vec3
+		return Raw.wgf_audio_get_listener_position(into);
+
+	/**
+	    The listener, what a spatial voice (wgf_voice_set_spatial) is heard from: where it is,
+	    and the way it faces (y up; normalized when set), at the origin facing -z by default. A
+	    spatial voice is quieter with distance (wgf_voice_set_range) and panned by which side of
+	    the listener it is on. The ecs sets them from an actor (wgf_world_set_listener). Refuses
+	    a non-finite one, and a facing of no length or straight up or down.
+	**/
+	public static inline function setListenerFacing(x:Float, y:Float, z:Float):Bool
+		return Raw.wgf_audio_set_listener_facing(x, y, z);
+
+	/**
+	    The listener, what a spatial voice (wgf_voice_set_spatial) is heard from: where it is,
+	    and the way it faces (y up; normalized when set), at the origin facing -z by default. A
+	    spatial voice is quieter with distance (wgf_voice_set_range) and panned by which side of
+	    the listener it is on. The ecs sets them from an actor (wgf_world_set_listener). Refuses
+	    a non-finite one, and a facing of no length or straight up or down.
+	**/
+	public static inline function getListenerFacing(?into:wgf.Vec3):wgf.Vec3
+		return Raw.wgf_audio_get_listener_facing(into);
 }

@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "d8ebaf67a4f28c25" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "85022cc6dd9c39a1" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -9045,6 +9045,60 @@ export function wgf_audio_is_paused() {
     return value !== 0;
 }
 
+// wgf: call wgf_audio_set_listener_position
+/**
+ * The listener, what a spatial voice (wgf_voice_set_spatial) is heard from: where it is,
+ * and the way it faces (y up; normalized when set), at the origin facing -z by default. A
+ * spatial voice is quieter with distance (wgf_voice_set_range) and panned by which side of
+ * the listener it is on. The ecs sets them from an actor (wgf_world_set_listener). Refuses
+ * a non-finite one, and a facing of no length or straight up or down.
+ */
+export function wgf_audio_set_listener_position(x, y, z) {
+    const value = host["_wgf_audio_set_listener_position"](x, y, z);
+    return value !== 0;
+}
+
+// wgf: call wgf_audio_get_listener_position
+/**
+ * The listener, what a spatial voice (wgf_voice_set_spatial) is heard from: where it is,
+ * and the way it faces (y up; normalized when set), at the origin facing -z by default. A
+ * spatial voice is quieter with distance (wgf_voice_set_range) and panned by which side of
+ * the listener it is on. The ecs sets them from an actor (wgf_world_set_listener). Refuses
+ * a non-finite one, and a facing of no length or straight up or down.
+ */
+export function wgf_audio_get_listener_position(into) {
+    const ret = result(12);
+    host["_wgf_audio_get_listener_position"](ret);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_audio_set_listener_facing
+/**
+ * The listener, what a spatial voice (wgf_voice_set_spatial) is heard from: where it is,
+ * and the way it faces (y up; normalized when set), at the origin facing -z by default. A
+ * spatial voice is quieter with distance (wgf_voice_set_range) and panned by which side of
+ * the listener it is on. The ecs sets them from an actor (wgf_world_set_listener). Refuses
+ * a non-finite one, and a facing of no length or straight up or down.
+ */
+export function wgf_audio_set_listener_facing(x, y, z) {
+    const value = host["_wgf_audio_set_listener_facing"](x, y, z);
+    return value !== 0;
+}
+
+// wgf: call wgf_audio_get_listener_facing
+/**
+ * The listener, what a spatial voice (wgf_voice_set_spatial) is heard from: where it is,
+ * and the way it faces (y up; normalized when set), at the origin facing -z by default. A
+ * spatial voice is quieter with distance (wgf_voice_set_range) and panned by which side of
+ * the listener it is on. The ecs sets them from an actor (wgf_world_set_listener). Refuses
+ * a non-finite one, and a facing of no length or straight up or down.
+ */
+export function wgf_audio_get_listener_facing(into) {
+    const ret = result(12);
+    host["_wgf_audio_get_listener_facing"](ret);
+    return vector(ret, 3, into);
+}
+
 // wgf: call wgf_bus_get_master
 /**
  * The three that always exist.
@@ -9525,6 +9579,92 @@ export function wgf_voice_set_bus(voice, bus) {
 export function wgf_voice_get_bus(voice) {
     const value = host["_wgf_voice_get_bus"](voice);
     return value >>> 0;
+}
+
+// wgf: call wgf_voice_set_spatial
+/**
+ * Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+ * distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+ * by its side of the listener, on top of its own volume and pan. An actor's voice component
+ * that is spatial is placed at its actor each frame. False only for a handle that isn't a
+ * voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+ * it. Read back as x, y, z and as near, far.
+ */
+export function wgf_voice_set_spatial(voice, spatial) {
+    const value = host["_wgf_voice_set_spatial"](voice, (spatial ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_voice_is_spatial
+/**
+ * Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+ * distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+ * by its side of the listener, on top of its own volume and pan. An actor's voice component
+ * that is spatial is placed at its actor each frame. False only for a handle that isn't a
+ * voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+ * it. Read back as x, y, z and as near, far.
+ */
+export function wgf_voice_is_spatial(voice) {
+    const value = host["_wgf_voice_is_spatial"](voice);
+    return value !== 0;
+}
+
+// wgf: call wgf_voice_set_place
+/**
+ * Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+ * distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+ * by its side of the listener, on top of its own volume and pan. An actor's voice component
+ * that is spatial is placed at its actor each frame. False only for a handle that isn't a
+ * voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+ * it. Read back as x, y, z and as near, far.
+ */
+export function wgf_voice_set_place(voice, x, y, z) {
+    const value = host["_wgf_voice_set_place"](voice, x, y, z);
+    return value !== 0;
+}
+
+// wgf: call wgf_voice_get_place
+/**
+ * Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+ * distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+ * by its side of the listener, on top of its own volume and pan. An actor's voice component
+ * that is spatial is placed at its actor each frame. False only for a handle that isn't a
+ * voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+ * it. Read back as x, y, z and as near, far.
+ */
+export function wgf_voice_get_place(voice, into) {
+    const ret = result(12);
+    host["_wgf_voice_get_place"](ret, voice);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_voice_set_range
+/**
+ * Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+ * distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+ * by its side of the listener, on top of its own volume and pan. An actor's voice component
+ * that is spatial is placed at its actor each frame. False only for a handle that isn't a
+ * voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+ * it. Read back as x, y, z and as near, far.
+ */
+export function wgf_voice_set_range(voice, near_distance, far_distance) {
+    const value = host["_wgf_voice_set_range"](voice, near_distance, far_distance);
+    return value !== 0;
+}
+
+// wgf: call wgf_voice_get_range
+/**
+ * Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+ * distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+ * by its side of the listener, on top of its own volume and pan. An actor's voice component
+ * that is spatial is placed at its actor each frame. False only for a handle that isn't a
+ * voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+ * it. Read back as x, y, z and as near, far.
+ */
+export function wgf_voice_get_range(voice, into) {
+    const ret = result(8);
+    host["_wgf_voice_get_range"](ret, voice);
+    return vector(ret, 2, into);
 }
 
 // wgf: call wgf_voice_set_position
@@ -10295,6 +10435,28 @@ export function wgf_actor_get_count() {
  */
 export function wgf_world_clear() {
     host["_wgf_world_clear"]();
+}
+
+// wgf: call wgf_world_set_listener
+/**
+ * The actor spatial audio is heard from (wgf_audio.h's listener): each frame the listener
+ * is put where the actor is drawn, facing its -z (a camera's view). 0 for none (the
+ * listener stays as last set). False for a handle that isn't an actor.
+ */
+export function wgf_world_set_listener(actor) {
+    const value = host["_wgf_world_set_listener"](actor);
+    return value !== 0;
+}
+
+// wgf: call wgf_world_get_listener
+/**
+ * The actor spatial audio is heard from (wgf_audio.h's listener): each frame the listener
+ * is put where the actor is drawn, facing its -z (a camera's view). 0 for none (the
+ * listener stays as last set). False for a handle that isn't an actor.
+ */
+export function wgf_world_get_listener() {
+    const value = host["_wgf_world_get_listener"]();
+    return value >>> 0;
 }
 
 // wgf: call wgf_world_dump

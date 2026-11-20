@@ -157,6 +157,72 @@ abstract Voice(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_voice_get_bus(this);
 
 	/**
+	    Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+	    distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+	    by its side of the listener, on top of its own volume and pan. An actor's voice component
+	    that is spatial is placed at its actor each frame. False only for a handle that isn't a
+	    voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+	    it. Read back as x, y, z and as near, far.
+	**/
+	public inline function setSpatial(spatial:Bool):Bool
+		return Raw.wgf_voice_set_spatial(this, spatial);
+
+	/**
+	    Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+	    distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+	    by its side of the listener, on top of its own volume and pan. An actor's voice component
+	    that is spatial is placed at its actor each frame. False only for a handle that isn't a
+	    voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+	    it. Read back as x, y, z and as near, far.
+	**/
+	public inline function isSpatial():Bool
+		return Raw.wgf_voice_is_spatial(this);
+
+	/**
+	    Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+	    distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+	    by its side of the listener, on top of its own volume and pan. An actor's voice component
+	    that is spatial is placed at its actor each frame. False only for a handle that isn't a
+	    voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+	    it. Read back as x, y, z and as near, far.
+	**/
+	public inline function setPlace(x:Float, y:Float, z:Float):Bool
+		return Raw.wgf_voice_set_place(this, x, y, z);
+
+	/**
+	    Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+	    distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+	    by its side of the listener, on top of its own volume and pan. An actor's voice component
+	    that is spatial is placed at its actor each frame. False only for a handle that isn't a
+	    voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+	    it. Read back as x, y, z and as near, far.
+	**/
+	public inline function getPlace(?into:wgf.Vec3):wgf.Vec3
+		return Raw.wgf_voice_get_place(this, into);
+
+	/**
+	    Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+	    distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+	    by its side of the listener, on top of its own volume and pan. An actor's voice component
+	    that is spatial is placed at its actor each frame. False only for a handle that isn't a
+	    voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+	    it. Read back as x, y, z and as near, far.
+	**/
+	public inline function setRange(near_distance:Float, far_distance:Float):Bool
+		return Raw.wgf_voice_set_range(this, near_distance, far_distance);
+
+	/**
+	    Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
+	    distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
+	    by its side of the listener, on top of its own volume and pan. An actor's voice component
+	    that is spatial is placed at its actor each frame. False only for a handle that isn't a
+	    voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
+	    it. Read back as x, y, z and as near, far.
+	**/
+	public inline function getRange(?into:wgf.Vec2):wgf.Vec2
+		return Raw.wgf_voice_get_range(this, into);
+
+	/**
 	    Where it is, in seconds from the sound's start (its segment's, when it plays one), in
 	    any state: it wraps into the sound (the segment) when looping and is clamped to [0, its
 	    length] otherwise. Setting it while PLAYING plays on from there (a non-looping voice

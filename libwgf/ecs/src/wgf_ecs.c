@@ -19,6 +19,8 @@
 #include "wgf_actor.h"
 #include "wgf_probe.h"
 #include "wgf_voice.h"
+#include "wgf_audio.h"
+#include "wgf_handle.h"
 
 /* The ecs (wgf_world.h): the store (wgf_ecs_store_priv.h) made with the first actor given
  * a component or a behavior, the records of those actors, the systems run each tick over
@@ -54,6 +56,7 @@ static struct {
         wgf_ecs_priv_id_t tag;
     } *tags; /* each behavior name's tag, sorted by name */
     int tag_count, tag_capacity;
+    wgf_actor_t listener; /* spatial audio's, set from it each frame */
 } ecs;
 
 bool wgf_ecs_priv_started(void)
@@ -509,6 +512,34 @@ static void update(float dt)
         if (wgf_core_priv_handle_pool_handle_from_index(&ecs.pool, i) == 0) continue;
         wgf_gfx_priv_actor_transform_changed(ecs.records[i].actor);
     }
+    /* spatial voices put at their actors, and the listener at its, where they are drawn */
+    for (i = 1; i < ecs.pool.capacity; i++) {
+        const wgf_voice_t voice = ecs.records[i].voice;
+        if (wgf_core_priv_handle_pool_handle_from_index(&ecs.pool, i) == 0 || voice == 0) continue;
+        if (wgf_voice_is_spatial(voice)) {
+            const wgf_vec3_t at = wgf_actor_get_drawn_position(ecs.records[i].actor);
+            wgf_voice_set_place(voice, at.x, at.y, at.z);
+        }
+    }
+    if (ecs.listener != 0 && wgf_handle_is_alive(ecs.listener)) {
+        const wgf_vec3_t at = wgf_actor_get_drawn_position(ecs.listener);
+        const wgf_vec3_t facing = wgf_actor_get_drawn_direction(ecs.listener, 0.0f, 0.0f, -1.0f);
+        wgf_audio_set_listener_position(at.x, at.y, at.z);
+        wgf_audio_set_listener_facing(facing.x, facing.y, facing.z);
+    }
+}
+
+bool wgf_world_set_listener(wgf_actor_t actor)
+{
+    if (actor != 0 && wgf_actor_get_kind(actor) == WGF_ACTOR_KIND_NONE) return false;
+    if (!wgf_ecs_priv_start()) return false;
+    ecs.listener = actor;
+    return true;
+}
+
+wgf_actor_t wgf_world_get_listener(void)
+{
+    return ecs.listener != 0 && wgf_handle_is_alive(ecs.listener) ? ecs.listener : 0;
 }
 
 static void free_behaviors(wgf_ecs_priv_record_t *record)

@@ -227,6 +227,14 @@ export const Audio = Object.freeze({
     setPaused: raw.wgf_audio_set_paused,
     // wgf: call wgf_audio_is_paused
     isPaused: raw.wgf_audio_is_paused,
+    // wgf: call wgf_audio_set_listener_position
+    setListenerPosition: raw.wgf_audio_set_listener_position,
+    // wgf: call wgf_audio_get_listener_position
+    getListenerPosition: raw.wgf_audio_get_listener_position,
+    // wgf: call wgf_audio_set_listener_facing
+    setListenerFacing: raw.wgf_audio_set_listener_facing,
+    // wgf: call wgf_audio_get_listener_facing
+    getListenerFacing: raw.wgf_audio_get_listener_facing,
 });
 // wgf: typed BehaviorComponent
 export const BehaviorComponent = Object.freeze({
@@ -1929,6 +1937,18 @@ export const Voice = Object.freeze({
     setBus: raw.wgf_voice_set_bus,
     // wgf: call wgf_voice_get_bus
     getBus: raw.wgf_voice_get_bus,
+    // wgf: call wgf_voice_set_spatial
+    setSpatial: raw.wgf_voice_set_spatial,
+    // wgf: call wgf_voice_is_spatial
+    isSpatial: raw.wgf_voice_is_spatial,
+    // wgf: call wgf_voice_set_place
+    setPlace: raw.wgf_voice_set_place,
+    // wgf: call wgf_voice_get_place
+    getPlace: raw.wgf_voice_get_place,
+    // wgf: call wgf_voice_set_range
+    setRange: raw.wgf_voice_set_range,
+    // wgf: call wgf_voice_get_range
+    getRange: raw.wgf_voice_get_range,
     // wgf: call wgf_voice_set_position
     setPosition: raw.wgf_voice_set_position,
     // wgf: call wgf_voice_get_position
@@ -2019,6 +2039,10 @@ export const World = Object.freeze({
     takeEvents: raw.wgf_world_take_events,
     // wgf: call wgf_world_clear
     clear: raw.wgf_world_clear,
+    // wgf: call wgf_world_set_listener
+    setListener: raw.wgf_world_set_listener,
+    // wgf: call wgf_world_get_listener
+    getListener: raw.wgf_world_get_listener,
     // wgf: call wgf_world_dump
     dump: raw.wgf_world_dump,
 });

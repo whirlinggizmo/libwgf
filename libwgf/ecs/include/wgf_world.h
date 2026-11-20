@@ -63,6 +63,12 @@ WGF_API int wgf_actor_get_count(void);
  * first. */
 WGF_API void wgf_world_clear(void);
 
+/* The actor spatial audio is heard from (wgf_audio.h's listener): each frame the listener
+ * is put where the actor is drawn, facing its -z (a camera's view). 0 for none (the
+ * listener stays as last set). False for a handle that isn't an actor. */
+WGF_API bool wgf_world_set_listener(wgf_actor_t actor);
+WGF_API wgf_actor_t wgf_world_get_listener(void);
+
 /* The simulated actors as a scene's text (wgf_scene.h's format): each top one -- an actor
  * with a component or a behavior whose parent has none -- oldest first, as a `actor`
  * block, with its kind, its transform, its components, its behaviors, and the actors under

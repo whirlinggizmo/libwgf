@@ -124,6 +124,7 @@ wgf_handle_t wgf_voice_create(wgf_handle_t sound)
         voice_ptr->sound = sound;
         voice_ptr->state = WGF_PLAY_STATE_STOPPED;
         voice_ptr->volume = voice_ptr->pitch = 1.0f;
+        voice_ptr->range[0] = 1.0f, voice_ptr->range[1] = 50.0f;
         voice_ptr->fresh = true;
         wgf_audio_priv_platform_apply(voice, voice_ptr);
     }
@@ -390,6 +391,50 @@ bool wgf_voice_set_bus(wgf_handle_t voice, wgf_handle_t bus)
 {
     if (!wgf_audio_priv_bus_is(bus)) return false;
     SET(voice, voice_ptr->bus = bus);
+}
+
+bool wgf_voice_set_spatial(wgf_handle_t voice, bool spatial)
+{
+    SET(voice, voice_ptr->spatial = spatial);
+}
+
+bool wgf_voice_is_spatial(wgf_handle_t voice)
+{
+    GET(voice, bool, voice_ptr->spatial, false);
+}
+
+bool wgf_voice_set_place(wgf_handle_t voice, float x, float y, float z)
+{
+    if (!isfinite(x) || !isfinite(y) || !isfinite(z)) return false;
+    SET(voice, (voice_ptr->place[0] = x, voice_ptr->place[1] = y, voice_ptr->place[2] = z));
+}
+
+static float place_of(wgf_handle_t voice, int axis)
+{
+    GET(voice, float, voice_ptr->place[axis], 0.0f);
+}
+
+wgf_vec3_t wgf_voice_get_place(wgf_handle_t voice)
+{
+    return wgf_vec3_make(place_of(voice, 0), place_of(voice, 1), place_of(voice, 2));
+}
+
+bool wgf_voice_set_range(wgf_handle_t voice, float near_distance, float far_distance)
+{
+    if (!isfinite(near_distance) || !isfinite(far_distance) || near_distance < 0.0f || far_distance <= near_distance) {
+        return false;
+    }
+    SET(voice, (voice_ptr->range[0] = near_distance, voice_ptr->range[1] = far_distance));
+}
+
+static float spatial_range_of(wgf_handle_t voice, int end)
+{
+    GET(voice, float, voice_ptr->range[end], 0.0f);
+}
+
+wgf_vec2_t wgf_voice_get_range(wgf_handle_t voice)
+{
+    return wgf_vec2_make(spatial_range_of(voice, 0), spatial_range_of(voice, 1));
 }
 
 static wgf_handle_t bus_of(wgf_handle_t voice)

@@ -1,7 +1,9 @@
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
+#include "wgf_audio.h"
 #include "wgf_audio_priv.h"
 #include "wgf_bus.h"
 #include "wgf_core_fs_priv.h"
@@ -151,6 +153,38 @@ int main(void)
         expect(made == 61, "64 buses at most, the three among them");
     }
 
+    { /* spatial: heard from its place, by the listener's facing */
+        static float out[64 * 2];
+        const wgf_handle_t placed = wgf_voice_create(sound);
+        wgf_voice_set_loop(placed, true);
+        wgf_voice_set_bus(placed, music);
+        wgf_sound_set_polyphony(sound, 1); /* the play from before, still sounding: played again, silent */
+        wgf_sound_play(sound, 0.0f, 1.0f, 0.0f);
+        wgf_voice_play(placed);
+        expect(!wgf_voice_is_spatial(placed) && wgf_voice_get_range(placed).y == 50.0f && wgf_voice_set_spatial(placed, true) &&
+                   wgf_voice_is_spatial(placed) && wgf_voice_set_range(placed, 1, 11) && !wgf_voice_set_range(placed, 5, 2),
+               "a spatial voice, its range; a far below its near refused");
+        expect(wgf_audio_set_listener_position(0, 0, 0) && wgf_audio_set_listener_facing(0, 0, -2) &&
+                   wgf_audio_get_listener_facing().z == -1.0f && !wgf_audio_set_listener_facing(0, 1, 0),
+               "the listener, its facing normalized; straight up refused");
+        wgf_voice_set_place(placed, 0, 0, -1);
+        wgf_audio_priv_mix(out, 64, 44100);
+        expect(near(out[0], 0.5f) && near(out[1], 0.5f), "in front, within its near: as it is, centered");
+        wgf_voice_set_place(placed, 0, 0, -6);
+        wgf_audio_priv_mix(out, 64, 44100);
+        expect(near(out[0], 0.25f), "halfway out: half as loud");
+        wgf_voice_set_place(placed, 0, 0, -20);
+        wgf_audio_priv_mix(out, 64, 44100);
+        expect(out[0] == 0.0f && out[1] == 0.0f, "past its far: silent");
+        wgf_voice_set_place(placed, 1, 0, 0);
+        wgf_audio_priv_mix(out, 64, 44100);
+        expect(out[0] == 0.0f && near(out[1], 0.5f), "on the listener's right: the right only");
+        wgf_audio_set_listener_facing(0, 0, 1);
+        wgf_audio_priv_mix(out, 64, 44100);
+        expect(near(out[0], 0.5f) && out[1] == 0.0f, "the listener turned round: on its left");
+        expect(near(wgf_voice_get_place(placed).x, 1.0f) && !wgf_voice_set_place(placed, NAN, 0, 0), "its place read back");
+        wgf_voice_destroy(placed);
+    }
     wgf_voice_destroy(voice);
     wgf_resource_release(sound);
     wgf_core_priv_fs_rmdir("sounds");

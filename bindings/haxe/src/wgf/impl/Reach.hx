@@ -104,8 +104,12 @@ class Reach {
 		"wgf_asset_task_get_path",
 		"wgf_asset_task_get_progress",
 		"wgf_asset_task_get_status",
+		"wgf_audio_get_listener_facing",
+		"wgf_audio_get_listener_position",
 		"wgf_audio_get_volume",
 		"wgf_audio_is_paused",
+		"wgf_audio_set_listener_facing",
+		"wgf_audio_set_listener_position",
 		"wgf_audio_set_paused",
 		"wgf_audio_set_volume",
 		"wgf_behavior_get_name",
@@ -822,12 +826,15 @@ class Reach {
 		"wgf_voice_get_bus",
 		"wgf_voice_get_pan",
 		"wgf_voice_get_pitch",
+		"wgf_voice_get_place",
 		"wgf_voice_get_position",
+		"wgf_voice_get_range",
 		"wgf_voice_get_segment",
 		"wgf_voice_get_sound",
 		"wgf_voice_get_state",
 		"wgf_voice_get_volume",
 		"wgf_voice_is_loop",
+		"wgf_voice_is_spatial",
 		"wgf_voice_pause",
 		"wgf_voice_play",
 		"wgf_voice_resume",
@@ -835,9 +842,12 @@ class Reach {
 		"wgf_voice_set_loop",
 		"wgf_voice_set_pan",
 		"wgf_voice_set_pitch",
+		"wgf_voice_set_place",
 		"wgf_voice_set_position",
+		"wgf_voice_set_range",
 		"wgf_voice_set_segment",
 		"wgf_voice_set_sound",
+		"wgf_voice_set_spatial",
 		"wgf_voice_set_volume",
 		"wgf_voice_stop",
 		"wgf_window_can_fullscreen",
@@ -877,10 +887,12 @@ class Reach {
 		"wgf_world_clear",
 		"wgf_world_dump",
 		"wgf_world_get_event_count",
+		"wgf_world_get_listener",
+		"wgf_world_set_listener",
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...871) 0];
+	static final counts:Array<Int> = [for (_ in 0...883) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;
