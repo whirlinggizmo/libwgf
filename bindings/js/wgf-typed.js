@@ -2754,6 +2754,18 @@ export const Voice = Object.freeze({
     setSegment: raw.wgf_voice_set_segment,
     // wgf: call wgf_voice_get_segment
     getSegment: raw.wgf_voice_get_segment,
+    // wgf: call wgf_voice_create_pushed
+    createPushed: raw.wgf_voice_create_pushed,
+    // wgf: call wgf_voice_push
+    push: raw.wgf_voice_push,
+    // wgf: call wgf_voice_push_int16
+    pushInt16: raw.wgf_voice_push_int16,
+    // wgf: call wgf_voice_get_room
+    getRoom: raw.wgf_voice_get_room,
+    // wgf: call wgf_voice_get_queued
+    getQueued: raw.wgf_voice_get_queued,
+    // wgf: call wgf_voice_get_underruns
+    getUnderruns: raw.wgf_voice_get_underruns,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });

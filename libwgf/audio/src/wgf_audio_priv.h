@@ -135,6 +135,11 @@ typedef struct wgf_audio_priv_voice_t {
     wgf_handle_t bus; /* heard through (wgf_bus.h); 0: effects */
     bool spatial;         /* heard from `place` by the listener */
     float place[3], range[2];
+    /* a pushed voice's (wgf_voice_create_pushed): its rate (0 for a voice of a sound),
+       channels, and capacity in frames; natively, its queue (wgf_audio_mix.c), the
+       platform's, under the lock */
+    int pushed_rate, pushed_channels, pushed_capacity;
+    struct wgf_audio_priv_pushed_t *pushed;
 } wgf_audio_priv_voice_t;
 
 /* What a voice plays, in seconds of its sound: its segment's range (the end clamped to
@@ -179,6 +184,22 @@ void wgf_audio_priv_platform_free_voice(wgf_handle_t voice, wgf_audio_priv_voice
 void wgf_audio_priv_platform_update(void);
 /* The master volume or pause changed: the web carries it into its master gain. */
 void wgf_audio_priv_platform_master(float volume, bool paused);
+
+/* A pushed voice's queue (wgf_voice_create_pushed), each platform's: natively a ring the
+ * mixer takes from, on the web one in JS a ScriptProcessorNode takes from. All on the
+ * main thread under the lock; the queue is let go of by free_voice.
+ *   pushed_start      made, for the voice's rate, channels, and capacity; false without memory
+ *   pushed_push       `frames` frames of interleaved floats queued, as many as there is room
+ *                     for: how many
+ *   pushed_queued     frames queued
+ *   pushed_underruns  times it ran out while playing, after having had samples
+ *   pushed_clear      emptied (stop), its next start not an underrun */
+bool wgf_audio_priv_platform_pushed_start(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr);
+int wgf_audio_priv_platform_pushed_push(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr, const float *samples,
+                                        int frames);
+int wgf_audio_priv_platform_pushed_queued(wgf_handle_t voice, const wgf_audio_priv_voice_t *voice_ptr);
+int wgf_audio_priv_platform_pushed_underruns(wgf_handle_t voice, const wgf_audio_priv_voice_t *voice_ptr);
+void wgf_audio_priv_platform_pushed_clear(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr);
 
 /* A voice reached its end (natively, the mixer's write-back; on the web, 'ended'): to
  * COMPLETE at its end, under the lock. */

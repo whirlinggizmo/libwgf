@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "2640f855af995598" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "fa4f3a0e2d60221d" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -13621,8 +13621,8 @@ export function wgf_voice_destroy(voice) {
  * play keeps the state): PLAYING, it plays the new sound from its start (its end, with a
  * negative pitch); PAUSED, it waits there; STOPPED or COMPLETE, it is STOPPED there. With
  * nothing it can play (0, a sound that FAILED, a streamed sound another voice holds), it
- * is STOPPED. Any segment is cleared. False for a handle that isn't a voice, or one that
- * isn't a sound.
+ * is STOPPED. Any segment is cleared. False for a handle that isn't a voice, one that
+ * isn't a sound, and a pushed voice (below).
  */
 export function wgf_voice_set_sound(voice, sound) {
     const value = host["_wgf_voice_set_sound"](voice, sound);
@@ -13642,7 +13642,7 @@ export function wgf_voice_get_sound(voice) {
 // wgf: call wgf_voice_play
 /**
  * To PLAYING from the start (the end, with a negative pitch), from any state. False for
- * a voice with no sound, one whose sound FAILED, and a streamed sound another voice is
+ * a voice with no sound (but a pushed one), one whose sound FAILED, and a streamed sound another voice is
  * playing or holding paused (one voice at a time).
  */
 export function wgf_voice_play(voice) {
@@ -13734,7 +13734,7 @@ export function wgf_voice_get_volume(voice) {
  * Speed and tone together: 1 as recorded, 2 an octave up at twice the speed, 0 held
  * where it is (still PLAYING: that is not pause), negative backwards. Clamped to
  * [-16, 16]. Refuses a non-finite one, and a negative one on a streamed sound (its
- * decoders run forwards only).
+ * decoders run forwards only) or a pushed voice.
  */
 export function wgf_voice_set_pitch(voice, pitch) {
     const value = host["_wgf_voice_set_pitch"](voice, pitch);
@@ -13746,7 +13746,7 @@ export function wgf_voice_set_pitch(voice, pitch) {
  * Speed and tone together: 1 as recorded, 2 an octave up at twice the speed, 0 held
  * where it is (still PLAYING: that is not pause), negative backwards. Clamped to
  * [-16, 16]. Refuses a non-finite one, and a negative one on a streamed sound (its
- * decoders run forwards only).
+ * decoders run forwards only) or a pushed voice.
  */
 export function wgf_voice_get_pitch(voice) {
     const value = host["_wgf_voice_get_pitch"](voice);
@@ -13890,7 +13890,8 @@ export function wgf_voice_get_range(voice, into) {
  * moves and the state stays. Refuses a non-finite one, and any while the sound isn't
  * READY. A streamed sound whose file is still arriving and doesn't say its length
  * (wgf_sound_get_duration 0) bounds it only below, by 0: set past what has arrived, the
- * voice waits there for it. 0 for a handle that isn't a voice.
+ * voice waits there for it. Refuses any on a pushed voice. 0 for a handle that isn't a
+ * voice.
  */
 export function wgf_voice_set_position(voice, seconds) {
     const value = host["_wgf_voice_set_position"](voice, seconds);
@@ -13906,7 +13907,8 @@ export function wgf_voice_set_position(voice, seconds) {
  * moves and the state stays. Refuses a non-finite one, and any while the sound isn't
  * READY. A streamed sound whose file is still arriving and doesn't say its length
  * (wgf_sound_get_duration 0) bounds it only below, by 0: set past what has arrived, the
- * voice waits there for it. 0 for a handle that isn't a voice.
+ * voice waits there for it. Refuses any on a pushed voice. 0 for a handle that isn't a
+ * voice.
  */
 export function wgf_voice_get_position(voice) {
     const value = host["_wgf_voice_get_position"](voice);
@@ -13920,8 +13922,8 @@ export function wgf_voice_get_position(voice) {
  * position relative to it (CONVENTIONS.md, a named segment); "" for the whole sound
  * again. Its state is kept, as set_sound keeps it: PLAYING plays the segment from its
  * start, PAUSED waits there, STOPPED or COMPLETE is STOPPED there. Refuses a name its
- * sound has no segment of (a streamed sound has none), NULL, and a handle that isn't a
- * voice.
+ * sound has no segment of (a streamed sound has none), NULL, a pushed voice, and a handle
+ * that isn't a voice.
  */
 export function wgf_voice_set_segment(voice, name) {
     const mark = host["stackSave"]();
@@ -13938,6 +13940,71 @@ export function wgf_voice_set_segment(voice, name) {
 export function wgf_voice_get_segment(voice) {
     const value = host["_wgf_voice_get_segment"](voice);
     return str(value);
+}
+
+// wgf: call wgf_voice_create_pushed
+/**
+ * A pushed voice with room for `capacity` frames (a frame is a sample of each channel) of
+ * `channels` (1 or 2) at `sample_rate` frames a second, STOPPED, its queue empty, at
+ * volume 1, pitch 1, pan 0. 0 for a rate outside 1000 to 384000, channels other than 1 or
+ * 2, a capacity outside 1 to 1048576, or when there's no room for another voice.
+ */
+export function wgf_voice_create_pushed(sample_rate, channels, capacity) {
+    const value = host["_wgf_voice_create_pushed"](sample_rate, channels, capacity);
+    return value >>> 0;
+}
+
+// wgf: call wgf_voice_push
+/**
+ * `samples` (interleaved, `count` of them: a whole number of frames) queued, -1 to 1 full
+ * scale, as many frames as there is room for: how many frames it took. 0 for a voice that
+ * isn't a pushed one, and a count below 0 or not a whole number of frames.
+ */
+export function wgf_voice_push(voice, samples) {
+    const samplesPointer = arrayIn(samples, 0, "HEAPF32");
+    const value = host["_wgf_voice_push"](voice, samplesPointer, lengthOf(samples));
+    return value;
+}
+
+// wgf: call wgf_voice_push_int16
+/**
+ * The same with 16-bit samples, -32768 to 32767 (clamped), one to an int: how many frames
+ * it took.
+ */
+export function wgf_voice_push_int16(voice, samples) {
+    const samplesPointer = arrayIn(samples, 0, "HEAP32");
+    const value = host["_wgf_voice_push_int16"](voice, samplesPointer, lengthOf(samples));
+    return value;
+}
+
+// wgf: call wgf_voice_get_room
+/**
+ * Frames the queue has room for now, and frames queued and not yet played; 0 for a voice
+ * that isn't a pushed one.
+ */
+export function wgf_voice_get_room(voice) {
+    const value = host["_wgf_voice_get_room"](voice);
+    return value;
+}
+
+// wgf: call wgf_voice_get_queued
+/**
+ * Frames the queue has room for now, and frames queued and not yet played; 0 for a voice
+ * that isn't a pushed one.
+ */
+export function wgf_voice_get_queued(voice) {
+    const value = host["_wgf_voice_get_queued"](voice);
+    return value;
+}
+
+// wgf: call wgf_voice_get_underruns
+/**
+ * How many times its queue ran out while it played, after having had samples: each a gap
+ * in the sound. 0 for a voice that isn't a pushed one.
+ */
+export function wgf_voice_get_underruns(voice) {
+    const value = host["_wgf_voice_get_underruns"](voice);
+    return value;
 }
 
 // wgf: call wgf_actor_add_behavior

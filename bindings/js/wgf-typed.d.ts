@@ -9174,8 +9174,8 @@ export declare const Voice: {
      * play keeps the state): PLAYING, it plays the new sound from its start (its end, with a
      * negative pitch); PAUSED, it waits there; STOPPED or COMPLETE, it is STOPPED there. With
      * nothing it can play (0, a sound that FAILED, a streamed sound another voice holds), it
-     * is STOPPED. Any segment is cleared. False for a handle that isn't a voice, or one that
-     * isn't a sound.
+     * is STOPPED. Any segment is cleared. False for a handle that isn't a voice, one that
+     * isn't a sound, and a pushed voice (below).
      */
     readonly setSound: typeof raw.wgf_voice_set_sound;
     /**
@@ -9185,7 +9185,7 @@ export declare const Voice: {
     readonly getSound: typeof raw.wgf_voice_get_sound;
     /**
      * To PLAYING from the start (the end, with a negative pitch), from any state. False for
-     * a voice with no sound, one whose sound FAILED, and a streamed sound another voice is
+     * a voice with no sound (but a pushed one), one whose sound FAILED, and a streamed sound another voice is
      * playing or holding paused (one voice at a time).
      */
     readonly play: typeof raw.wgf_voice_play;
@@ -9232,14 +9232,14 @@ export declare const Voice: {
      * Speed and tone together: 1 as recorded, 2 an octave up at twice the speed, 0 held
      * where it is (still PLAYING: that is not pause), negative backwards. Clamped to
      * [-16, 16]. Refuses a non-finite one, and a negative one on a streamed sound (its
-     * decoders run forwards only).
+     * decoders run forwards only) or a pushed voice.
      */
     readonly setPitch: typeof raw.wgf_voice_set_pitch;
     /**
      * Speed and tone together: 1 as recorded, 2 an octave up at twice the speed, 0 held
      * where it is (still PLAYING: that is not pause), negative backwards. Clamped to
      * [-16, 16]. Refuses a non-finite one, and a negative one on a streamed sound (its
-     * decoders run forwards only).
+     * decoders run forwards only) or a pushed voice.
      */
     readonly getPitch: typeof raw.wgf_voice_get_pitch;
     /**
@@ -9326,7 +9326,8 @@ export declare const Voice: {
      * moves and the state stays. Refuses a non-finite one, and any while the sound isn't
      * READY. A streamed sound whose file is still arriving and doesn't say its length
      * (wgf_sound_get_duration 0) bounds it only below, by 0: set past what has arrived, the
-     * voice waits there for it. 0 for a handle that isn't a voice.
+     * voice waits there for it. Refuses any on a pushed voice. 0 for a handle that isn't a
+     * voice.
      */
     readonly setPosition: typeof raw.wgf_voice_set_position;
     /**
@@ -9337,7 +9338,8 @@ export declare const Voice: {
      * moves and the state stays. Refuses a non-finite one, and any while the sound isn't
      * READY. A streamed sound whose file is still arriving and doesn't say its length
      * (wgf_sound_get_duration 0) bounds it only below, by 0: set past what has arrived, the
-     * voice waits there for it. 0 for a handle that isn't a voice.
+     * voice waits there for it. Refuses any on a pushed voice. 0 for a handle that isn't a
+     * voice.
      */
     readonly getPosition: typeof raw.wgf_voice_get_position;
     /**
@@ -9346,8 +9348,8 @@ export declare const Voice: {
      * position relative to it (CONVENTIONS.md, a named segment); "" for the whole sound
      * again. Its state is kept, as set_sound keeps it: PLAYING plays the segment from its
      * start, PAUSED waits there, STOPPED or COMPLETE is STOPPED there. Refuses a name its
-     * sound has no segment of (a streamed sound has none), NULL, and a handle that isn't a
-     * voice.
+     * sound has no segment of (a streamed sound has none), NULL, a pushed voice, and a handle
+     * that isn't a voice.
      */
     readonly setSegment: typeof raw.wgf_voice_set_segment;
     /**
@@ -9355,6 +9357,39 @@ export declare const Voice: {
      * voice plays that segment of that sound.
      */
     readonly getSegment: typeof raw.wgf_voice_get_segment;
+    /**
+     * A pushed voice with room for `capacity` frames (a frame is a sample of each channel) of
+     * `channels` (1 or 2) at `sample_rate` frames a second, STOPPED, its queue empty, at
+     * volume 1, pitch 1, pan 0. 0 for a rate outside 1000 to 384000, channels other than 1 or
+     * 2, a capacity outside 1 to 1048576, or when there's no room for another voice.
+     */
+    readonly createPushed: typeof raw.wgf_voice_create_pushed;
+    /**
+     * `samples` (interleaved, `count` of them: a whole number of frames) queued, -1 to 1 full
+     * scale, as many frames as there is room for: how many frames it took. 0 for a voice that
+     * isn't a pushed one, and a count below 0 or not a whole number of frames.
+     */
+    readonly push: typeof raw.wgf_voice_push;
+    /**
+     * The same with 16-bit samples, -32768 to 32767 (clamped), one to an int: how many frames
+     * it took.
+     */
+    readonly pushInt16: typeof raw.wgf_voice_push_int16;
+    /**
+     * Frames the queue has room for now, and frames queued and not yet played; 0 for a voice
+     * that isn't a pushed one.
+     */
+    readonly getRoom: typeof raw.wgf_voice_get_room;
+    /**
+     * Frames the queue has room for now, and frames queued and not yet played; 0 for a voice
+     * that isn't a pushed one.
+     */
+    readonly getQueued: typeof raw.wgf_voice_get_queued;
+    /**
+     * How many times its queue ran out while it played, after having had samples: each a gap
+     * in the sound. 0 for a voice that isn't a pushed one.
+     */
+    readonly getUnderruns: typeof raw.wgf_voice_get_underruns;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };

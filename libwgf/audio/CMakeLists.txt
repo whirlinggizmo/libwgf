@@ -73,6 +73,8 @@ if(WGF_TESTS AND NOT EMSCRIPTEN)
         # MP3's encoder delay: markers at known times, with the delay written and without
         wgf_test(audio wgf_audio_markers_test)
         target_compile_definitions(wgf_audio_markers_test PRIVATE WGF_TEST_DATA="${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
+        # pushed voices: the queue's room and fill, resampling, underruns, buses, pause, stop
+        wgf_test(audio wgf_audio_pushed_test)
         # the mixer on a thread beside the game's: the tsan preset's race check
         wgf_test(audio wgf_audio_voice_thread_test)
         target_compile_definitions(wgf_audio_voice_thread_test PRIVATE WGF_TEST_ASSETS="${PROJECT_SOURCE_DIR}/examples/assets")
@@ -115,6 +117,8 @@ if(WGF_TESTS AND EMSCRIPTEN)
     wgf_web_test(audio wgf_audio_voice_web_test 1)
     # a slow frame doesn't stop the sound: the browser mixes on its own thread
     wgf_web_test(audio wgf_audio_stall_web_test 1)
+    # a pushed voice's queue taken from by its ScriptProcessorNode: paused, pitch, underrun, stop
+    wgf_web_test(audio wgf_audio_pushed_web_test 1)
     if(TARGET wgf_audio_stall_web_test)
         target_link_options(wgf_audio_stall_web_test PRIVATE
             "SHELL:--preload-file ${PROJECT_SOURCE_DIR}/examples/assets/music/a_hero_is_born.mp3@/wgf/music/a_hero_is_born.mp3")

@@ -15,7 +15,8 @@
 /* Voices with the mixer on a thread of its own, as a device's: while it mixes without
  * a break, the game's thread creates and destroys voices, plays, pauses, stops, moves,
  * and retargets them between a decoded sound and a streamed one, and sweeps, as wgrender's
- * concurrency test. Nothing may crash, and under the tsan preset nothing may race; the
+ * concurrency test; and pushes into pushed voices, asks about their queues, and makes and
+ * destroys them, while the mixer takes from them. Nothing may crash, and under the tsan preset nothing may race; the
  * longest a game call took (waiting on the lock, behind the mixer's copy or write-back,
  * never its mixing) is printed. The examples' music is the streamed sound, so the mixer
  * decodes MP3 outside the lock throughout. */
@@ -47,6 +48,7 @@ int main(void)
 {
     wgf_core_priv_thread_t thread;
     wgf_handle_t sounds[2], voices[8] = {0};
+    static float samples[512 * 2];
     double longest = 0.0, start;
     unsigned seed = 12345u;
     int failures = 0;
@@ -75,10 +77,15 @@ int main(void)
     start = wgf_time_get_seconds();
     for (int i = 0; i < 20000 || wgf_time_get_seconds() - start < 0.5; i++) { /* long enough to interleave */
         const int slot = (int)((seed = seed * 1664525u + 1013904223u) >> 8) % 8;
-        const int action = (int)(seed >> 20) % 10;
+        const int action = (int)(seed >> 20) % 13;
         const double before = wgf_time_get_seconds();
         switch (action) {
-        case 0: if (voices[slot] == 0) voices[slot] = wgf_voice_create(sounds[slot % 2]); break;
+        case 0:
+            if (voices[slot] == 0) {
+                voices[slot] = slot >= 6 ? wgf_voice_create_pushed(22050 + slot * 1000, 1 + slot % 2, 4096)
+                                         : wgf_voice_create(sounds[slot % 2]);
+            }
+            break;
         case 1: wgf_voice_destroy(voices[slot]); voices[slot] = 0; break;
         case 2: wgf_voice_play(voices[slot]); break;
         case 3: wgf_voice_pause(voices[slot]); break;
@@ -87,6 +94,14 @@ int main(void)
         case 6: wgf_voice_set_sound(voices[slot], sounds[(seed >> 4) % 2]); break;
         case 7: wgf_voice_set_position(voices[slot], (float)((seed >> 3) % 100) * 0.05f); break;
         case 8: wgf_voice_set_pitch(voices[slot], (float)((seed >> 5) % 5) * 0.5f); break;
+        case 9: wgf_voice_push(voices[slot], samples, (int)((seed >> 6) % 256) * 2); break;
+        case 10:
+            if (wgf_voice_get_room(voices[slot]) + wgf_voice_get_queued(voices[slot]) < 0 ||
+                wgf_voice_get_underruns(voices[slot]) < 0) {
+                failures++;
+            }
+            break;
+        case 11: wgf_voice_set_volume(voices[slot], (float)((seed >> 7) % 4) * 0.25f); break;
         default: wgf_core_priv_part_update(0.016f); break; /* the sweep */
         }
         if (wgf_time_get_seconds() - before > longest) longest = wgf_time_get_seconds() - before;

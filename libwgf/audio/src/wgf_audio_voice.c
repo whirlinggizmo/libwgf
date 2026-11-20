@@ -46,6 +46,7 @@ void wgf_audio_priv_voice_each(void (*each)(wgf_handle_t voice, wgf_audio_priv_v
 static double duration_of(const wgf_audio_priv_voice_t *voice_ptr)
 {
     const wgf_audio_priv_sound_t *sound_ptr = wgf_audio_priv_sound_of(voice_ptr->sound);
+    if (voice_ptr->pushed_rate > 0) return HUGE_VAL; /* a queue: no end */
     if (sound_ptr == NULL || sound_ptr->resource.status != WGF_RESOURCE_STATUS_READY) return 0.0;
     return sound_ptr->length_known ? sound_ptr->duration : HUGE_VAL;
 }
@@ -53,12 +54,15 @@ static double duration_of(const wgf_audio_priv_voice_t *voice_ptr)
 static bool is_ready(const wgf_audio_priv_voice_t *voice_ptr)
 {
     const wgf_audio_priv_sound_t *sound_ptr = wgf_audio_priv_sound_of(voice_ptr->sound);
+    if (voice_ptr->pushed_rate > 0) return true; /* its queue: always there */
     return sound_ptr != NULL && sound_ptr->resource.status == WGF_RESOURCE_STATUS_READY;
 }
 
+/* Played forwards only: a streamed sound, or a pushed voice's queue. */
 static bool is_streamed(const wgf_audio_priv_voice_t *voice_ptr)
 {
     const wgf_audio_priv_sound_t *sound_ptr = wgf_audio_priv_sound_of(voice_ptr->sound);
+    if (voice_ptr->pushed_rate > 0) return true;
     return sound_ptr != NULL && sound_ptr->streamed;
 }
 
@@ -183,7 +187,7 @@ bool wgf_voice_set_sound(wgf_handle_t voice, wgf_handle_t sound)
     if (sound != 0 && wgf_audio_priv_sound_of(sound) == NULL) return false;
     wgf_audio_priv_lock();
     voice_ptr = wgf_audio_priv_voice_of(voice);
-    if (voice_ptr == NULL || voice_ptr->dying) {
+    if (voice_ptr == NULL || voice_ptr->dying || voice_ptr->pushed_rate > 0) { /* a pushed voice has no sound */
         wgf_audio_priv_unlock();
         return false;
     }
@@ -261,9 +265,10 @@ bool wgf_voice_play(wgf_handle_t voice)
     wgf_audio_priv_lock();
     voice_ptr = wgf_audio_priv_voice_of(voice);
     sound_ptr = voice_ptr != NULL && !voice_ptr->dying ? wgf_audio_priv_sound_of(voice_ptr->sound) : NULL;
-    if (sound_ptr != NULL && sound_ptr->resource.status != WGF_RESOURCE_STATUS_FAILED) {
+    if ((sound_ptr != NULL && sound_ptr->resource.status != WGF_RESOURCE_STATUS_FAILED) ||
+        (voice_ptr != NULL && !voice_ptr->dying && voice_ptr->pushed_rate > 0)) { /* a pushed voice plays its queue */
         taken_t taken = {voice, voice_ptr->sound, false};
-        if (sound_ptr->streamed) wgf_audio_priv_voice_each(find_taker, &taken);
+        if (sound_ptr != NULL && sound_ptr->streamed) wgf_audio_priv_voice_each(find_taker, &taken);
         if (!taken.taken) {
             voice_ptr->state = WGF_PLAY_STATE_PLAYING;
             voice_ptr->fresh = !is_ready(voice_ptr);
@@ -324,6 +329,7 @@ bool wgf_voice_stop(wgf_handle_t voice)
         voice_ptr->fresh = true;
         voice_ptr->position = start_of(voice_ptr);
         voice_ptr->generation++;
+        if (voice_ptr->pushed_rate > 0) wgf_audio_priv_platform_pushed_clear(voice, voice_ptr); /* its start: empty */
         wgf_audio_priv_platform_apply(voice, voice_ptr);
     }
     wgf_audio_priv_unlock();
@@ -499,7 +505,7 @@ bool wgf_voice_set_position(wgf_handle_t voice, float seconds)
     if (!isfinite(seconds)) return false;
     wgf_audio_priv_lock();
     voice_ptr = wgf_audio_priv_voice_of(voice);
-    if (voice_ptr != NULL && !voice_ptr->dying && is_ready(voice_ptr)) {
+    if (voice_ptr != NULL && !voice_ptr->dying && is_ready(voice_ptr) && voice_ptr->pushed_rate == 0) {
         double start, end, at = seconds;
         range_of(voice_ptr, &start, &end);
         if (voice_ptr->loop && end > start) {
@@ -536,7 +542,7 @@ bool wgf_voice_set_segment(wgf_handle_t voice, const char *name)
     if (name == NULL) return false;
     wgf_audio_priv_lock();
     voice_ptr = wgf_audio_priv_voice_of(voice);
-    if (voice_ptr != NULL && !voice_ptr->dying) {
+    if (voice_ptr != NULL && !voice_ptr->dying && voice_ptr->pushed_rate == 0) {
         segment = name[0] != '\0' ? wgf_audio_priv_sound_segment(wgf_audio_priv_sound_of(voice_ptr->sound), name) : NULL;
         if (name[0] == '\0' || segment != NULL) {
             voice_ptr->segment = segment;
@@ -551,6 +557,134 @@ bool wgf_voice_set_segment(wgf_handle_t voice, const char *name)
 const char *wgf_voice_get_segment(wgf_handle_t voice)
 {
     GET(voice, const char *, voice_ptr->segment != NULL ? voice_ptr->segment->name : "", "");
+}
+
+/* ----------------------------------------------------------- pushed voices ---- */
+
+/* A voice with no sound that plays what the game pushes into its queue (the platform's,
+ * wgf_audio_priv.h), as raylib's AudioStream. */
+
+wgf_voice_t wgf_voice_create_pushed(int sample_rate, int channels, int capacity)
+{
+    wgf_voice_t voice;
+    wgf_audio_priv_voice_t *voice_ptr;
+    bool started = false;
+    if (sample_rate < 1000 || sample_rate > 384000 || (channels != 1 && channels != 2) || capacity < 1 ||
+        capacity > 1048576) {
+        return 0;
+    }
+    voice = wgf_voice_create(0);
+    if (voice == 0) return 0;
+    wgf_audio_priv_lock();
+    voice_ptr = wgf_audio_priv_voice_of(voice);
+    if (voice_ptr != NULL) {
+        voice_ptr->pushed_rate = sample_rate;
+        voice_ptr->pushed_channels = channels;
+        voice_ptr->pushed_capacity = capacity;
+        started = wgf_audio_priv_platform_pushed_start(voice, voice_ptr);
+        voice_ptr->generation++;
+        wgf_audio_priv_platform_apply(voice, voice_ptr);
+    }
+    wgf_audio_priv_unlock();
+    if (!started) {
+        wgf_voice_destroy(voice);
+        return 0;
+    }
+    return voice;
+}
+
+/* `voice`'s record when it is a pushed voice, or NULL; under the lock. */
+static wgf_audio_priv_voice_t *pushed_at(wgf_handle_t voice, const char *caller)
+{
+    wgf_audio_priv_voice_t *voice_ptr = wgf_audio_priv_voice_of_at(voice, caller);
+    return voice_ptr != NULL && !voice_ptr->dying && voice_ptr->pushed_rate > 0 ? voice_ptr : NULL;
+}
+#define pushed_of(voice) pushed_at((voice), WGF_CORE_PRIV_CALLER)
+
+/* The channels of a pushed voice, 0 for anything else. */
+static int channels_of(wgf_handle_t voice)
+{
+    const wgf_audio_priv_voice_t *voice_ptr;
+    int channels;
+    wgf_audio_priv_lock();
+    voice_ptr = pushed_of(voice);
+    channels = voice_ptr != NULL ? voice_ptr->pushed_channels : 0;
+    wgf_audio_priv_unlock();
+    return channels;
+}
+
+/* `frames` frames of floats queued: how many fit. */
+static int push_frames(wgf_handle_t voice, const float *samples, int frames)
+{
+    wgf_audio_priv_voice_t *voice_ptr;
+    int taken = 0;
+    wgf_audio_priv_lock();
+    voice_ptr = pushed_of(voice);
+    if (voice_ptr != NULL && frames > 0) taken = wgf_audio_priv_platform_pushed_push(voice, voice_ptr, samples, frames);
+    wgf_audio_priv_unlock();
+    return taken;
+}
+
+int wgf_voice_push(wgf_voice_t voice, const float *samples, int count)
+{
+    const int channels = channels_of(voice);
+    if (channels == 0 || count < 0 || count % channels != 0 || (samples == NULL && count > 0)) return 0;
+    return push_frames(voice, samples, count / channels);
+}
+
+int wgf_voice_push_int16(wgf_voice_t voice, const int *samples, int count)
+{
+    enum { CHUNK = 1024 }; /* samples converted at a time: a whole number of frames of either */
+    float chunk[CHUNK];
+    const int channels = channels_of(voice);
+    int taken = 0;
+    if (channels == 0 || count < 0 || count % channels != 0 || (samples == NULL && count > 0)) return 0;
+    for (int done = 0; done < count;) {
+        const int n = count - done < CHUNK ? count - done : CHUNK;
+        int took;
+        for (int i = 0; i < n; i++) {
+            const int sample = samples[done + i];
+            chunk[i] = (float)(sample < -32768 ? -32768 : sample > 32767 ? 32767 : sample) / 32768.0f;
+        }
+        took = push_frames(voice, chunk, n / channels);
+        taken += took;
+        if (took < n / channels) break; /* full */
+        done += n;
+    }
+    return taken;
+}
+
+int wgf_voice_get_queued(wgf_voice_t voice)
+{
+    const wgf_audio_priv_voice_t *voice_ptr;
+    int queued;
+    wgf_audio_priv_lock();
+    voice_ptr = pushed_of(voice);
+    queued = voice_ptr != NULL ? wgf_audio_priv_platform_pushed_queued(voice, voice_ptr) : 0;
+    wgf_audio_priv_unlock();
+    return queued;
+}
+
+int wgf_voice_get_room(wgf_voice_t voice)
+{
+    const wgf_audio_priv_voice_t *voice_ptr;
+    int room;
+    wgf_audio_priv_lock();
+    voice_ptr = pushed_of(voice);
+    room = voice_ptr != NULL ? voice_ptr->pushed_capacity - wgf_audio_priv_platform_pushed_queued(voice, voice_ptr) : 0;
+    wgf_audio_priv_unlock();
+    return room;
+}
+
+int wgf_voice_get_underruns(wgf_voice_t voice)
+{
+    const wgf_audio_priv_voice_t *voice_ptr;
+    int underruns;
+    wgf_audio_priv_lock();
+    voice_ptr = pushed_of(voice);
+    underruns = voice_ptr != NULL ? wgf_audio_priv_platform_pushed_underruns(voice, voice_ptr) : 0;
+    wgf_audio_priv_unlock();
+    return underruns;
 }
 
 /* ------------------------------------------------------------------ the sweep ---- */

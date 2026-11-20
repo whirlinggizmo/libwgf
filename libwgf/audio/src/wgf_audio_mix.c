@@ -244,6 +244,149 @@ static bool decoder_frame(wgf_audio_priv_decoder_t *dec, uint64_t index, float *
     return true;
 }
 
+/* ---------------------------------------------------- a pushed voice's queue ---- */
+
+/* A ring of interleaved frames, the game pushing in and the mixer taking out, both
+ * under the lock; and where the mixer is between two frames (`a`, the one it plays, and
+ * `b`, the next, which it took once it needed to look ahead), resampling linearly by
+ * `t`, how far past `a` it is. t at 1 or more: `a` played, the next one wanted. */
+typedef struct wgf_audio_priv_pushed_t {
+    float *ring;
+    int channels, capacity;
+    int head, count; /* the oldest frame, and how many are queued */
+    float a[2], b[2];
+    bool has_b;
+    double t;
+    bool starved;  /* ran out, or nothing pushed since the start: running out isn't a new underrun */
+    int underruns;
+} wgf_audio_priv_pushed_t;
+
+static void pushed_reset(wgf_audio_priv_pushed_t *pushed)
+{
+    pushed->head = pushed->count = 0;
+    pushed->has_b = false;
+    pushed->t = 1.0; /* the first frame wanted */
+    pushed->starved = true;
+}
+
+/* The oldest frame taken into `to`, as stereo; false when none is queued. */
+static bool pushed_pop(wgf_audio_priv_pushed_t *pushed, float *to)
+{
+    const float *frame;
+    if (pushed->count == 0) return false;
+    frame = &pushed->ring[pushed->head * pushed->channels];
+    to[0] = frame[0];
+    to[1] = pushed->channels > 1 ? frame[1] : frame[0];
+    pushed->head = (pushed->head + 1) % pushed->capacity;
+    pushed->count--;
+    return true;
+}
+
+/* The frames a frame at `t` is made from, `a` and, between two, `b`, taken as needed;
+ * false when the queue ran out first. `taken` counts the frames moved past. */
+static bool pushed_ready(wgf_audio_priv_pushed_t *pushed, double *taken)
+{
+    while (pushed->t >= 1.0) { /* on to the next frame */
+        if (pushed->has_b) {
+            pushed->a[0] = pushed->b[0], pushed->a[1] = pushed->b[1];
+            pushed->has_b = false;
+        } else if (!pushed_pop(pushed, pushed->a)) {
+            return false;
+        }
+        pushed->t -= 1.0;
+        *taken += 1.0;
+    }
+    if (pushed->t > 0.0 && !pushed->has_b) { /* between two: the next one too */
+        if (!pushed_pop(pushed, pushed->b)) return false;
+        pushed->has_b = true;
+    }
+    return true;
+}
+
+/* Up to `frames` frames into `out` (stereo, written), stepping `step` frames of the queue
+ * each: how many it made before the queue ran out (an underrun, once a time it runs out).
+ * `taken` counts the frames it moved past. Under the lock. */
+static int pushed_pull(wgf_audio_priv_pushed_t *pushed, float *out, int frames, double step, double *taken)
+{
+    for (int i = 0; i < frames; i++) {
+        if (!pushed_ready(pushed, taken)) {
+            if (!pushed->starved) pushed->underruns++;
+            pushed->starved = true;
+            return i;
+        }
+        out[i * 2] = pushed->a[0];
+        out[i * 2 + 1] = pushed->a[1];
+        if (pushed->t > 0.0) {
+            out[i * 2] += (pushed->b[0] - pushed->a[0]) * (float)pushed->t;
+            out[i * 2 + 1] += (pushed->b[1] - pushed->a[1]) * (float)pushed->t;
+        }
+        pushed->t += step;
+    }
+    return frames;
+}
+
+bool wgf_audio_priv_platform_pushed_start(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr)
+{
+    wgf_audio_priv_pushed_t *pushed = (wgf_audio_priv_pushed_t *)calloc(1, sizeof(*pushed));
+    (void)voice;
+    if (pushed == NULL) return false;
+    pushed->ring = (float *)malloc(sizeof(float) * (size_t)voice_ptr->pushed_capacity * (size_t)voice_ptr->pushed_channels);
+    if (pushed->ring == NULL) {
+        free(pushed);
+        return false;
+    }
+    pushed->channels = voice_ptr->pushed_channels;
+    pushed->capacity = voice_ptr->pushed_capacity;
+    pushed_reset(pushed);
+    voice_ptr->pushed = pushed;
+    return true;
+}
+
+int wgf_audio_priv_platform_pushed_push(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr, const float *samples,
+                                        int frames)
+{
+    wgf_audio_priv_pushed_t *pushed = voice_ptr->pushed;
+    int taken;
+    (void)voice;
+    if (pushed == NULL) return 0;
+    taken = frames < pushed->capacity - pushed->count ? frames : pushed->capacity - pushed->count;
+    for (int done = 0; done < taken;) { /* in at most two runs, around the ring's end */
+        const int at = (pushed->head + pushed->count) % pushed->capacity;
+        const int run = taken - done < pushed->capacity - at ? taken - done : pushed->capacity - at;
+        memcpy(&pushed->ring[at * pushed->channels], &samples[done * pushed->channels],
+               sizeof(float) * (size_t)run * (size_t)pushed->channels);
+        pushed->count += run;
+        done += run;
+    }
+    if (taken > 0) pushed->starved = false;
+    return taken;
+}
+
+int wgf_audio_priv_platform_pushed_queued(wgf_handle_t voice, const wgf_audio_priv_voice_t *voice_ptr)
+{
+    (void)voice;
+    return voice_ptr->pushed != NULL ? voice_ptr->pushed->count : 0;
+}
+
+int wgf_audio_priv_platform_pushed_underruns(wgf_handle_t voice, const wgf_audio_priv_voice_t *voice_ptr)
+{
+    (void)voice;
+    return voice_ptr->pushed != NULL ? voice_ptr->pushed->underruns : 0;
+}
+
+void wgf_audio_priv_platform_pushed_clear(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr)
+{
+    (void)voice;
+    if (voice_ptr->pushed != NULL) pushed_reset(voice_ptr->pushed);
+}
+
+static void pushed_free(wgf_audio_priv_pushed_t *pushed)
+{
+    if (pushed == NULL) return;
+    free(pushed->ring);
+    free(pushed);
+}
+
 /* ------------------------------------------------------------------- mixing ---- */
 
 typedef struct job_t {
@@ -251,6 +394,7 @@ typedef struct job_t {
     unsigned generation;
     const float *pcm;           /* decoded */
     wgf_audio_priv_decoder_t *decoder; /* streamed */
+    wgf_audio_priv_pushed_t *pushed;   /* a pushed voice's queue, taken from under the lock */
     wgf_audio_priv_format_t format;
     wgf_audio_priv_reader_t reader; /* streamed */
     int channels, rate;
@@ -276,7 +420,8 @@ static void copy_voice(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr, vo
     job_t *job;
     if (voice_ptr->state != WGF_PLAY_STATE_PLAYING || voice_ptr->fresh || snapshot->count == MOST_VOICES) return;
     sound_ptr = wgf_audio_priv_sound_of(voice_ptr->sound);
-    if (sound_ptr == NULL || sound_ptr->resource.status != WGF_RESOURCE_STATUS_READY || sound_ptr->sample_rate <= 0) {
+    if (voice_ptr->pushed == NULL &&
+        (sound_ptr == NULL || sound_ptr->resource.status != WGF_RESOURCE_STATUS_READY || sound_ptr->sample_rate <= 0)) {
         return;
     }
     job = &snapshot->jobs[snapshot->count++];
@@ -284,23 +429,27 @@ static void copy_voice(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr, vo
     job->voice = voice;
     job->sound = voice_ptr->sound;
     job->generation = voice_ptr->generation;
-    job->pcm = sound_ptr->pcm;
-    job->decoder = voice_ptr->decoder;
-    job->format = sound_ptr->format;
-    job->reader = sound_ptr->reader;
-    job->length_known = sound_ptr->length_known;
-    job->channels = sound_ptr->channels;
-    job->rate = sound_ptr->sample_rate;
-    job->frames = sound_ptr->frames;
-    job->position = voice_ptr->position * (double)sound_ptr->sample_rate;
-    {
+    job->pitch = voice_ptr->pitch;
+    if (voice_ptr->pushed != NULL) { /* its queue, at its rate */
+        job->pushed = voice_ptr->pushed;
+        job->rate = voice_ptr->pushed_rate;
+        job->position = voice_ptr->position * (double)job->rate;
+    } else {
         double start, end;
+        job->pcm = sound_ptr->pcm;
+        job->decoder = voice_ptr->decoder;
+        job->format = sound_ptr->format;
+        job->reader = sound_ptr->reader;
+        job->length_known = sound_ptr->length_known;
+        job->channels = sound_ptr->channels;
+        job->rate = sound_ptr->sample_rate;
+        job->frames = sound_ptr->frames;
+        job->position = voice_ptr->position * (double)sound_ptr->sample_rate;
         wgf_audio_priv_voice_range(voice_ptr, &start, &end);
         job->low = floor(start * (double)sound_ptr->sample_rate + 0.5); /* the nearest frame */
         job->high = floor(end * (double)sound_ptr->sample_rate + 0.5);
         if (sound_ptr->length_known && job->high > (double)sound_ptr->frames) job->high = (double)sound_ptr->frames;
     }
-    job->pitch = voice_ptr->pitch;
     {
         float gain, pan, heard;
         wgf_audio_priv_spatial(voice_ptr, &gain, &pan);
@@ -320,11 +469,43 @@ static void pcm_frame(const job_t *job, uint64_t index, float *l, float *r)
     *r = job->channels > 1 ? frame[1] : frame[0];
 }
 
+/* A pushed voice's queue summed into `out`, taken under the lock a chunk at a time, while
+ * the game hasn't changed the voice (played, paused, stopped, re-pitched) since the copy. */
+static void mix_pushed(job_t *job, float *out, int frames, int rate)
+{
+    static float chunk[CHUNK_FRAMES * 2]; /* the mixer's alone: one mix at a time */
+    const double step = (double)job->pitch * (double)job->rate / (double)rate;
+    if (job->pitch == 0.0f) return; /* held where it is: silent, nothing taken */
+    for (int done = 0; done < frames;) {
+        const int n = frames - done < CHUNK_FRAMES ? frames - done : CHUNK_FRAMES;
+        const wgf_audio_priv_voice_t *voice_ptr;
+        double taken = 0.0;
+        int made = 0;
+        wgf_audio_priv_lock();
+        voice_ptr = wgf_audio_priv_voice_of(job->voice);
+        if (voice_ptr != NULL && voice_ptr->generation == job->generation && !voice_ptr->dying) {
+            made = pushed_pull(job->pushed, chunk, n, step, &taken);
+        }
+        wgf_audio_priv_unlock();
+        for (int i = 0; i < made; i++) {
+            out[(done + i) * 2] += chunk[i * 2] * job->gain_l;
+            out[(done + i) * 2 + 1] += chunk[i * 2 + 1] * job->gain_r;
+        }
+        job->position += taken;
+        if (made < n) return; /* ran out, or changed: the rest silent */
+        done += n;
+    }
+}
+
 /* `job` summed into `out`, `frames` frames at `rate`, linearly interpolated. */
 static void mix_job(job_t *job, float *out, int frames, int rate)
 {
     const double step = (double)job->pitch * (double)job->rate / (double)rate;
     const double length = job->high - job->low;
+    if (job->pushed != NULL) {
+        mix_pushed(job, out, frames, rate);
+        return;
+    }
     if (job->pitch == 0.0f || length <= 0.0) return; /* held where it is: silent */
     if (job->pcm == NULL) {
         if (job->decoder != NULL && job->decoder->sound != job->sound) { /* the voice's sound changed */
@@ -497,6 +678,8 @@ void wgf_audio_priv_platform_free_voice(wgf_handle_t voice, wgf_audio_priv_voice
     (void)voice;
     decoder_close(voice_ptr->decoder);
     voice_ptr->decoder = NULL;
+    pushed_free(voice_ptr->pushed);
+    voice_ptr->pushed = NULL;
 }
 
 void wgf_audio_priv_platform_update(void)

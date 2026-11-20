@@ -44,15 +44,15 @@ WGF_API void wgf_voice_destroy(wgf_voice_t voice);
  * play keeps the state): PLAYING, it plays the new sound from its start (its end, with a
  * negative pitch); PAUSED, it waits there; STOPPED or COMPLETE, it is STOPPED there. With
  * nothing it can play (0, a sound that FAILED, a streamed sound another voice holds), it
- * is STOPPED. Any segment is cleared. False for a handle that isn't a voice, or one that
- * isn't a sound. */
+ * is STOPPED. Any segment is cleared. False for a handle that isn't a voice, one that
+ * isn't a sound, and a pushed voice (below). */
 WGF_API bool wgf_voice_set_sound(wgf_voice_t voice, wgf_sound_t sound);
 /* Its sound (the voice holds the reference); 0 for none, and for a handle that isn't a
  * voice. */
 WGF_API wgf_sound_t wgf_voice_get_sound(wgf_voice_t voice);
 
 /* To PLAYING from the start (the end, with a negative pitch), from any state. False for
- * a voice with no sound, one whose sound FAILED, and a streamed sound another voice is
+ * a voice with no sound (but a pushed one), one whose sound FAILED, and a streamed sound another voice is
  * playing or holding paused (one voice at a time). */
 WGF_API bool wgf_voice_play(wgf_voice_t voice);
 /* PLAYING to PAUSED, held where it is. False in any other state. */
@@ -79,7 +79,7 @@ WGF_API float wgf_voice_get_volume(wgf_voice_t voice);
 /* Speed and tone together: 1 as recorded, 2 an octave up at twice the speed, 0 held
  * where it is (still PLAYING: that is not pause), negative backwards. Clamped to
  * [-16, 16]. Refuses a non-finite one, and a negative one on a streamed sound (its
- * decoders run forwards only). */
+ * decoders run forwards only) or a pushed voice. */
 WGF_API bool wgf_voice_set_pitch(wgf_voice_t voice, float pitch);
 WGF_API float wgf_voice_get_pitch(wgf_voice_t voice);
 
@@ -112,7 +112,8 @@ WGF_API wgf_vec2_t wgf_voice_get_range(wgf_voice_t voice);
  * moves and the state stays. Refuses a non-finite one, and any while the sound isn't
  * READY. A streamed sound whose file is still arriving and doesn't say its length
  * (wgf_sound_get_duration 0) bounds it only below, by 0: set past what has arrived, the
- * voice waits there for it. 0 for a handle that isn't a voice. */
+ * voice waits there for it. Refuses any on a pushed voice. 0 for a handle that isn't a
+ * voice. */
 WGF_API bool wgf_voice_set_position(wgf_voice_t voice, float seconds);
 WGF_API float wgf_voice_get_position(wgf_voice_t voice);
 
@@ -121,12 +122,55 @@ WGF_API float wgf_voice_get_position(wgf_voice_t voice);
  * position relative to it (CONVENTIONS.md, a named segment); "" for the whole sound
  * again. Its state is kept, as set_sound keeps it: PLAYING plays the segment from its
  * start, PAUSED waits there, STOPPED or COMPLETE is STOPPED there. Refuses a name its
- * sound has no segment of (a streamed sound has none), NULL, and a handle that isn't a
- * voice. */
+ * sound has no segment of (a streamed sound has none), NULL, a pushed voice, and a handle
+ * that isn't a voice. */
 WGF_API bool wgf_voice_set_segment(wgf_voice_t voice, const char *name);
 /* Its segment's name; "" for none, and for a handle that isn't a voice. Valid while the
  * voice plays that segment of that sound. */
 WGF_API const char *wgf_voice_get_segment(wgf_voice_t voice);
+
+/* A pushed voice: samples the game makes as it goes (a synth, a tracker, an emulator,
+ * procedural sound, a voice chat), pushed into the voice's queue and played from it, as
+ * raylib's AudioStream. raylib's stream callback, which its mixer calls for more, is the
+ * push here: nothing calls back, so each frame the game asks how much room the queue has
+ * (wgf_voice_get_room, raylib's IsAudioStreamProcessed) and fills it. Samples are at
+ * the voice's own rate, any rate, played at the mixer's (resampled, linearly
+ * interpolated, by pitch too); mono or stereo; interleaved, left first.
+ *
+ * It is a voice: play, pause, resume, and stop; volume, pitch (0 to 16: a negative one is
+ * refused, a queue runs forwards only), pan, its bus, and spatial, as any voice's. It has
+ * no sound (set_sound refuses), no segments, and no position to set; its position is the
+ * seconds it has played since its last play or stop. Loop means nothing to it. PLAYING, it
+ * takes what is queued as the mixer needs it; when the queue runs out it plays silence,
+ * still PLAYING, and goes on once more is pushed: each time it ran out, after having had
+ * something to play, is an underrun (wgf_voice_get_underruns). Paused, or audio paused, it
+ * takes nothing and the queue waits. Stop empties the queue; play from STOPPED plays what
+ * was pushed meanwhile, so a queue filled before play starts without a gap.
+ *
+ * Natively libwgf's mixer takes from the queue on its own thread; on the web a
+ * ScriptProcessorNode on the page's own thread does, so a long frame there can starve it:
+ * keep a tenth of a second or more queued. On the web, too, nothing is taken before the
+ * page's first input (the top of this header). */
+
+/* A pushed voice with room for `capacity` frames (a frame is a sample of each channel) of
+ * `channels` (1 or 2) at `sample_rate` frames a second, STOPPED, its queue empty, at
+ * volume 1, pitch 1, pan 0. 0 for a rate outside 1000 to 384000, channels other than 1 or
+ * 2, a capacity outside 1 to 1048576, or when there's no room for another voice. */
+WGF_API wgf_voice_t wgf_voice_create_pushed(int sample_rate, int channels, int capacity);
+/* `samples` (interleaved, `count` of them: a whole number of frames) queued, -1 to 1 full
+ * scale, as many frames as there is room for: how many frames it took. 0 for a voice that
+ * isn't a pushed one, and a count below 0 or not a whole number of frames. */
+WGF_API int wgf_voice_push(wgf_voice_t voice, const float *samples, int count);
+/* The same with 16-bit samples, -32768 to 32767 (clamped), one to an int: how many frames
+ * it took. */
+WGF_API int wgf_voice_push_int16(wgf_voice_t voice, const int *samples, int count);
+/* Frames the queue has room for now, and frames queued and not yet played; 0 for a voice
+ * that isn't a pushed one. */
+WGF_API int wgf_voice_get_room(wgf_voice_t voice);
+WGF_API int wgf_voice_get_queued(wgf_voice_t voice);
+/* How many times its queue ran out while it played, after having had samples: each a gap
+ * in the sound. 0 for a voice that isn't a pushed one. */
+WGF_API int wgf_voice_get_underruns(wgf_voice_t voice);
 
 #ifdef __cplusplus
 }

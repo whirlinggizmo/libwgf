@@ -7,7 +7,10 @@
  * comes from the audio clock: where it started, plus the clock since times the pitch.
  * A source's 'ended' queues the voice; the part's update makes it COMPLETE. The context
  * waits, suspended, for the page's first input, which resumes it unless audio is
- * paused. The voices' platform half (wgf_audio_priv.h). */
+ * paused. A pushed voice's queue is a ring in JS, taken from by a ScriptProcessorNode of
+ * its own into its gain, resampled as the native mixer does (wgf_audio_mix.c's
+ * pushed_pull, line for line): it runs on the page's thread, between frames, so nothing
+ * here calls back into C. The voices' platform half (wgf_audio_priv.h). */
 #include <emscripten.h>
 
 #include "wgf_audio_priv.h"
@@ -16,6 +19,7 @@ EM_JS(void, wgf_audio_js_start, (void), {
     var audio = Module.wgf_audio || (Module.wgf_audio = {context: null, sounds: new Map()});
     if (!audio.context) audio.context = new (window.AudioContext || window.webkitAudioContext)();
     audio.voices = new Map();
+    audio.pushed = new Map();
     audio.ended = [];
     audio.paused = false;
     audio.master = audio.context.createGain();
@@ -81,6 +85,18 @@ EM_JS(void, wgf_audio_js_voice_apply,
         v.startPos = position;
         v.startTime = context.currentTime;
         v.rate = pitch;
+        var p = audio.pushed.get(handle);
+        if (p) { /* a pushed voice: its processor takes from the queue while PLAYING */
+            if (!p.node) {
+                p.node = context.createScriptProcessor(2048, 1, 2);
+                p.node.onaudioprocess = function(e) { Module.wgf_audio_pushed_pull(p, e.outputBuffer, context.sampleRate); };
+                p.node.connect(v.gain);
+            }
+            p.active = state === 1;
+            p.pitch = pitch;
+            p.played = 0;
+            return;
+        }
         if (state !== 1 || !entry || entry.state !== 1) return; /* 1: PLAYING, and the sound READY */
         v.playing = true;
         if (streamed) {
@@ -141,6 +157,8 @@ EM_JS(double, wgf_audio_js_voice_position, (int handle), {
     var audio = Module.wgf_audio;
     var v = audio && audio.voices && audio.voices.get(handle);
     if (!v) return 0;
+    var p = audio.pushed.get(handle);
+    if (p) return v.startPos + p.played / p.rate;
     if (v.element) return v.element.currentTime;
     var at = v.startPos + (audio.context.currentTime - v.startTime) * (v.playing ? v.rate : 0);
     var length = v.high - v.low;
@@ -174,9 +192,111 @@ EM_JS(void, wgf_audio_js_voice_free, (int handle), {
         v.element.onended = null;
         v.element.pause();
     }
+    var p = audio.pushed.get(handle);
+    if (p && p.node) {
+        p.node.onaudioprocess = null;
+        p.node.disconnect();
+    }
+    audio.pushed.delete(handle);
     v.gain.disconnect();
     v.panner.disconnect();
     audio.voices.delete(handle);
+})
+
+/* A pushed voice's queue: made, filled from the wasm heap, asked about, emptied. */
+EM_JS(void, wgf_audio_js_pushed_start, (int handle, int rate, int channels, int capacity), {
+    var audio = Module.wgf_audio;
+    if (!audio || !audio.pushed) return;
+    audio.pushed.set(handle, {rate: rate, channels: channels, capacity: capacity,
+                              ring: new Float32Array(capacity * channels), head: 0, count: 0,
+                              a: [0, 0], b: [0, 0], hasB: false, t: 1, starved: true, underruns: 0,
+                              active: false, pitch: 1, played: 0, node: null});
+    /* Up to an output buffer's frames taken from the queue at `step` frames each,
+       linearly between two, silence once it runs out: the native mixer's pushed_pull. */
+    Module.wgf_audio_pushed_pull = Module.wgf_audio_pushed_pull || function(p, buffer, outRate) {
+        var left = buffer.getChannelData(0), right = buffer.getChannelData(1), n = left.length;
+        var step = p.pitch * p.rate / outRate;
+        function pop(to) {
+            if (p.count === 0) return false;
+            var at = p.head * p.channels;
+            to[0] = p.ring[at];
+            to[1] = p.channels > 1 ? p.ring[at + 1] : p.ring[at];
+            p.head = (p.head + 1) % p.capacity;
+            p.count--;
+            return true;
+        }
+        function ready() {
+            while (p.t >= 1) {
+                if (p.hasB) {
+                    p.a[0] = p.b[0];
+                    p.a[1] = p.b[1];
+                    p.hasB = false;
+                } else if (!pop(p.a)) {
+                    return false;
+                }
+                p.t -= 1;
+                p.played += 1;
+            }
+            if (p.t > 0 && !p.hasB) {
+                if (!pop(p.b)) return false;
+                p.hasB = true;
+            }
+            return true;
+        }
+        var i = 0;
+        if (p.active && p.pitch > 0) {
+            for (; i < n; i++) {
+                if (!ready()) {
+                    if (!p.starved) p.underruns++;
+                    p.starved = true;
+                    break;
+                }
+                left[i] = p.a[0] + (p.t > 0 ? (p.b[0] - p.a[0]) * p.t : 0);
+                right[i] = p.a[1] + (p.t > 0 ? (p.b[1] - p.a[1]) * p.t : 0);
+                p.t += step;
+            }
+        }
+        for (; i < n; i++) left[i] = right[i] = 0;
+    };
+})
+
+EM_JS(int, wgf_audio_js_pushed_push, (int handle, const float *samples, int frames), {
+    var audio = Module.wgf_audio;
+    var p = audio && audio.pushed && audio.pushed.get(handle);
+    if (!p) return 0;
+    var taken = Math.min(frames, p.capacity - p.count);
+    var from = samples >> 2;
+    for (var done = 0; done < taken;) { /* in at most two runs, around the ring's end */
+        var at = (p.head + p.count) % p.capacity;
+        var run = Math.min(taken - done, p.capacity - at);
+        p.ring.set(HEAPF32.subarray(from + done * p.channels, from + (done + run) * p.channels), at * p.channels);
+        p.count += run;
+        done += run;
+    }
+    if (taken > 0) p.starved = false;
+    return taken;
+})
+
+EM_JS(int, wgf_audio_js_pushed_queued, (int handle), {
+    var audio = Module.wgf_audio;
+    var p = audio && audio.pushed && audio.pushed.get(handle);
+    return p ? p.count : 0;
+})
+
+EM_JS(int, wgf_audio_js_pushed_underruns, (int handle), {
+    var audio = Module.wgf_audio;
+    var p = audio && audio.pushed && audio.pushed.get(handle);
+    return p ? p.underruns : 0;
+})
+
+EM_JS(void, wgf_audio_js_pushed_clear, (int handle), {
+    var audio = Module.wgf_audio;
+    var p = audio && audio.pushed && audio.pushed.get(handle);
+    if (!p) return;
+    p.head = p.count = 0;
+    p.hasB = false;
+    p.t = 1;
+    p.starved = true;
 })
 
 EM_JS(void, wgf_audio_js_voices_stop, (void), {
@@ -243,4 +363,35 @@ void wgf_audio_priv_platform_update(void)
 void wgf_audio_priv_platform_master(float volume, bool paused)
 {
     wgf_audio_js_master(volume, paused);
+}
+
+bool wgf_audio_priv_platform_pushed_start(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr)
+{
+    wgf_audio_js_pushed_start((int)voice, voice_ptr->pushed_rate, voice_ptr->pushed_channels, voice_ptr->pushed_capacity);
+    return true;
+}
+
+int wgf_audio_priv_platform_pushed_push(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr, const float *samples,
+                                        int frames)
+{
+    (void)voice_ptr;
+    return wgf_audio_js_pushed_push((int)voice, samples, frames);
+}
+
+int wgf_audio_priv_platform_pushed_queued(wgf_handle_t voice, const wgf_audio_priv_voice_t *voice_ptr)
+{
+    (void)voice_ptr;
+    return wgf_audio_js_pushed_queued((int)voice);
+}
+
+int wgf_audio_priv_platform_pushed_underruns(wgf_handle_t voice, const wgf_audio_priv_voice_t *voice_ptr)
+{
+    (void)voice_ptr;
+    return wgf_audio_js_pushed_underruns((int)voice);
+}
+
+void wgf_audio_priv_platform_pushed_clear(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr)
+{
+    (void)voice_ptr;
+    wgf_audio_js_pushed_clear((int)voice);
 }

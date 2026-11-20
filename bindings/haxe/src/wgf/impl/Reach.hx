@@ -1189,21 +1189,27 @@ class Reach {
 		"wgf_version_get_minor",
 		"wgf_version_get_patch",
 		"wgf_voice_create",
+		"wgf_voice_create_pushed",
 		"wgf_voice_destroy",
 		"wgf_voice_get_bus",
 		"wgf_voice_get_pan",
 		"wgf_voice_get_pitch",
 		"wgf_voice_get_place",
 		"wgf_voice_get_position",
+		"wgf_voice_get_queued",
 		"wgf_voice_get_range",
+		"wgf_voice_get_room",
 		"wgf_voice_get_segment",
 		"wgf_voice_get_sound",
 		"wgf_voice_get_state",
+		"wgf_voice_get_underruns",
 		"wgf_voice_get_volume",
 		"wgf_voice_is_loop",
 		"wgf_voice_is_spatial",
 		"wgf_voice_pause",
 		"wgf_voice_play",
+		"wgf_voice_push",
+		"wgf_voice_push_int16",
 		"wgf_voice_resume",
 		"wgf_voice_set_bus",
 		"wgf_voice_set_loop",
@@ -1266,7 +1272,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1257) 0];
+	static final counts:Array<Int> = [for (_ in 0...1263) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

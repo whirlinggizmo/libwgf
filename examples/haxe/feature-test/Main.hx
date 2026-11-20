@@ -340,6 +340,13 @@ class Main {
 			&& voice.setRange(2, 30) && near(voice.getRange().y, 30) && voice.setSpatial(false), "a spatial voice");
 		expect(Audio.setListenerPosition(0, 1, 0) && near(Audio.getListenerPosition().y, 1) && Audio.setListenerFacing(0, 0, -1)
 			&& near(Audio.getListenerFacing().z, -1), "the listener");
+		// a pushed voice: STOPPED, nothing is taken from its queue, so its fill is the same everywhere
+		final pushed = Voice.createPushed(22050, 2, 100);
+		expect(!pushed.isNone() && pushed.push([0.5, -0.5, 0.25, -0.25]) == 2 && pushed.pushInt16([16384, -16384]) == 1
+			&& pushed.getQueued() == 3 && pushed.getRoom() == 97 && pushed.getUnderruns() == 0, "a pushed voice's queue");
+		expect(pushed.push([0.5]) == 0 && Voice.createPushed(22050, 3, 100).isNone(), "part of a frame, and three channels, refused");
+		expect(pushed.play() && pushed.stop() && pushed.getQueued() == 0, "played, and stopped: its queue emptied");
+		pushed.destroy();
 	}
 
 	static var camera3d:Camera3d;
