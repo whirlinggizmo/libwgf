@@ -191,7 +191,7 @@ bool wgf_collide2d_polygon_polygon(const float *points, int count, const float *
 {
     const int an = count / 2, bn = others_count / 2;
     float least = FLT_MAX, nx = 0, ny = 0;
-    if (points == NULL || others == NULL || an < 3 || bn < 3) return false;
+    if (points == NULL || others == NULL || an < 2 || bn < 2) return false; /* 2: a segment */
     if (!axes(points, an, points, an, others, bn, &least, &nx, &ny)) return false;
     if (!axes(others, bn, points, an, others, bn, &least, &nx, &ny)) return false;
     fill(hit, hit_count, nx, ny, least, 0, 0, 0);

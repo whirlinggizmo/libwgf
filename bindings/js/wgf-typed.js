@@ -479,6 +479,22 @@ export const Collider = Object.freeze({
     setRadius: raw.wgf_collider_set_radius,
     // wgf: call wgf_collider_get_radius
     getRadius: raw.wgf_collider_get_radius,
+    // wgf: call wgf_collider_set_rectangle
+    setRectangle: raw.wgf_collider_set_rectangle,
+    // wgf: call wgf_collider_get_size
+    getSize: raw.wgf_collider_get_size,
+    // wgf: call wgf_collider_set_polygon
+    setPolygon: raw.wgf_collider_set_polygon,
+    // wgf: call wgf_collider_set_segment
+    setSegment: raw.wgf_collider_set_segment,
+    // wgf: call wgf_collider_get_shape
+    getShape: raw.wgf_collider_get_shape,
+    // wgf: call wgf_collider_get_points
+    getPoints: raw.wgf_collider_get_points,
+    // wgf: call wgf_collider_set_offset
+    setOffset: raw.wgf_collider_set_offset,
+    // wgf: call wgf_collider_get_offset
+    getOffset: raw.wgf_collider_get_offset,
     // wgf: call wgf_collider_set_layer
     setLayer: raw.wgf_collider_set_layer,
     // wgf: call wgf_collider_get_layer
@@ -493,6 +509,8 @@ export const Collider = Object.freeze({
     isEnabled: raw.wgf_collider_is_enabled,
     // wgf: call wgf_collider_get_overlaps
     getOverlaps: raw.wgf_collider_get_overlaps,
+    // wgf: call wgf_collider_get_push
+    getPush: raw.wgf_collider_get_push,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
@@ -2396,6 +2414,8 @@ export const BodyShape = Object.freeze({ BOX: 0, SPHERE: 1, CAPSULE: 2, CONVEX: 
 export const BodyType = Object.freeze({ STATIC: 0, DYNAMIC: 1, KINEMATIC: 2, SENSOR: 3, CHARACTER: 4 });
 // wgf: enum BoundsMode
 export const BoundsMode = Object.freeze({ WRAP: 0, CLAMP: 1, DESTROY: 2 });
+// wgf: enum ColliderShape
+export const ColliderShape = Object.freeze({ CIRCLE: 0, RECTANGLE: 1, POLYGON: 2, SEGMENT: 3 });
 // wgf: enum ColorStock
 export const ColorStock = Object.freeze({ BLANK: 0, WHITE: 1, BLACK: 2, LIGHTGRAY: 3, GRAY: 4, DARKGRAY: 5, YELLOW: 6, GOLD: 7, ORANGE: 8, PINK: 9, RED: 10, MAROON: 11, GREEN: 12, LIME: 13, DARKGREEN: 14, SKYBLUE: 15, BLUE: 16, DARKBLUE: 17, PURPLE: 18, VIOLET: 19, DARKPURPLE: 20, BEIGE: 21, BROWN: 22, DARKBROWN: 23, MAGENTA: 24, RAYWHITE: 25 });
 // wgf: enum Component

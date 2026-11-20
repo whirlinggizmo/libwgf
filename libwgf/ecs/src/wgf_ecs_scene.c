@@ -108,7 +108,14 @@ static const kind_t kinds[] = {
     {"collider",
      ROLE_COMPONENT,
      WGF_COMPONENT_COLLIDER,
-     {{"radius", V_NUM}, {"layer", V_INT}, {"mask", V_INT}, {"enabled", V_BOOL}},
+     {{"radius", V_NUM},
+      {"rectangle", V_NUM2},
+      {"polygon", V_POINTS},
+      {"segment", V_NUM4},
+      {"offset", V_NUM2},
+      {"layer", V_INT},
+      {"mask", V_INT},
+      {"enabled", V_BOOL}},
      false},
     {"behavior", ROLE_BEHAVIOR, 0, {{"name", V_TEXT}}, true},
     /* physics3d's (wgf_body.h, wgf_vehicle.h): any key, its text handed to physics, which
@@ -803,6 +810,16 @@ static void apply_setting(wgf_actor_t actor, int kind, const setting_t *s, value
         case WGF_COMPONENT_LIFETIME: wgf_lifetime_set_seconds(e, f(v, 0)); break;
         case WGF_COMPONENT_COLLIDER:
             if (strcmp(key, "radius") == 0) wgf_collider_set_radius(e, f(v, 0));
+            else if (strcmp(key, "rectangle") == 0) wgf_collider_set_rectangle(e, f(v, 0), f(v, 1));
+            else if (strcmp(key, "polygon") == 0) {
+                float points[WGF_COLLIDER_POLYGON_MAX * 2];
+                int i, n = v->count < WGF_COLLIDER_POLYGON_MAX * 2 ? v->count : WGF_COLLIDER_POLYGON_MAX * 2;
+                for (i = 0; i < n; i++) points[i] = f(v, i);
+                if (!wgf_collider_set_polygon(e, points, v->count)) {
+                    wgf_log_warn("wgf_scene: a collider's polygon has 3 to %d points", WGF_COLLIDER_POLYGON_MAX);
+                }
+            } else if (strcmp(key, "segment") == 0) wgf_collider_set_segment(e, f(v, 0), f(v, 1), f(v, 2), f(v, 3));
+            else if (strcmp(key, "offset") == 0) wgf_collider_set_offset(e, f(v, 0), f(v, 1));
             else if (strcmp(key, "layer") == 0) wgf_collider_set_layer(e, (int)v->n[0]);
             else if (strcmp(key, "enabled") == 0) wgf_collider_set_enabled(e, v->truth);
             else wgf_collider_set_mask(e, (int)v->n[0]);

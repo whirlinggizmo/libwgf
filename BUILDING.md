@@ -248,7 +248,8 @@ transform  position=x,y,z  rotation=x,y,z (radians)  scale=x,y,z
 motion     velocity=x,y,z  spin=x,y,z  damping=d  max_speed=s
 bounds     rect=x,y,w,h  mode=wrap|clamp|destroy  margin=m  visible=true|false
 lifetime   seconds=s
-collider   radius=r  layer=bits  mask=bits  enabled=true|false
+collider   radius=r | rectangle=w,h | polygon=x,y,x,y,... (3 to 16 points) | segment=x0,y0,x1,y1
+           offset=x,y  layer=bits  mask=bits  enabled=true|false
 voice      sound="path"  streamed=true|false  volume=v  pitch=p  pan=p  loop=true|false
            play=true|false (played as it is made)
 body       type=static|dynamic|kinematic|sensor  shape=box|sphere|capsule|convex|mesh

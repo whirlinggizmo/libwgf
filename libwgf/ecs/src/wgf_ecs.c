@@ -8,6 +8,7 @@
 
 #include "actor/wgf_gfx_actor_priv.h"
 #include "wgf_bounds.h"
+#include "wgf_collide2d.h"
 #include "wgf_collider.h"
 #include "wgf_presentation.h"
 #include "wgf_core_handle_priv.h"
@@ -34,6 +35,7 @@
 typedef struct pair_t {
     wgf_actor_t a, b;          /* a < b */
     int32_t a_layer, b_layer; /* their colliders' layers as they met: what a trigger tells the other */
+    float push_x, push_y;     /* the least move of a that parts them (b's: its opposite) */
 } pair_t;
 
 static struct {
@@ -170,6 +172,18 @@ int wgf_collider_get_overlaps(wgf_actor_t actor, wgf_actor_t *out, int count)
     return n;
 }
 
+wgf_vec2_t wgf_collider_get_push(wgf_actor_t actor, wgf_actor_t other)
+{
+    int i;
+    if (wgf_ecs_priv_get(actor, ecs.ids.collider) == NULL) return wgf_vec2_make(0.0f, 0.0f);
+    for (i = 0; i < ecs.pair_count; i++) {
+        const pair_t *p = &ecs.pairs[i];
+        if (p->a == actor && p->b == other) return wgf_vec2_make(p->push_x, p->push_y);
+        if (p->b == actor && p->a == other) return wgf_vec2_make(-p->push_x, -p->push_y);
+    }
+    return wgf_vec2_make(0.0f, 0.0f);
+}
+
 static int by_pair(const void *a, const void *b)
 {
     const pair_t *x = (const pair_t *)a, *y = (const pair_t *)b;
@@ -177,10 +191,18 @@ static int by_pair(const void *a, const void *b)
     return x->b < y->b ? -1 : (x->b > y->b ? 1 : 0);
 }
 
+/* A collider as the sweep has it, in its parent's space: a circle (with its z), a box
+ * (a rectangle not turned: its top-left and size), or points (a polygon's, a segment's, a
+ * turned rectangle's) in the pass's pool; and its bounds across and down. */
+enum { BODY_CIRCLE, BODY_BOX, BODY_POINTS };
 typedef struct body_t {
     wgf_actor_t handle;
     wgf_actor_t parent;
-    float x, y, z, r;
+    int kind;
+    float x, y, z, r;     /* a circle's center and radius */
+    float bx, by, bw, bh; /* a box's */
+    int first, count;     /* points: the pool's floats from first, count points */
+    float lo_x, hi_x, lo_y, hi_y;
     int32_t layer, mask;
 } body_t;
 
@@ -188,10 +210,11 @@ static int by_sweep(const void *a, const void *b)
 {
     const body_t *x = (const body_t *)a, *y = (const body_t *)b;
     if (x->parent != y->parent) return x->parent < y->parent ? -1 : 1;
-    return x->x - x->r < y->x - y->r ? -1 : (x->x - x->r > y->x - y->r ? 1 : 0);
+    return x->lo_x < y->lo_x ? -1 : (x->lo_x > y->lo_x ? 1 : 0);
 }
 
-static bool add_pair(pair_t **pairs, int *count, int *capacity, const body_t *a, const body_t *b)
+static bool add_pair(pair_t **pairs, int *count, int *capacity, const body_t *a, const body_t *b, float push_x,
+                     float push_y)
 {
     if (*count == *capacity) {
         const int grown_capacity = *capacity > 0 ? *capacity * 2 : 64;
@@ -200,25 +223,168 @@ static bool add_pair(pair_t **pairs, int *count, int *capacity, const body_t *a,
         *pairs = grown;
         *capacity = grown_capacity;
     }
-    if (b->handle < a->handle) {
+    if (b->handle < a->handle) { /* the push is the pair's first's */
         const body_t *swap = a;
         a = b;
         b = swap;
+        push_x = -push_x;
+        push_y = -push_y;
     }
     (*pairs)[*count].a = a->handle;
     (*pairs)[*count].b = b->handle;
     (*pairs)[*count].a_layer = a->layer;
     (*pairs)[*count].b_layer = b->layer;
+    (*pairs)[*count].push_x = push_x;
+    (*pairs)[*count].push_y = push_y;
     (*count)++;
     return true;
 }
 
-/* Every collider's circle, sorted by parent and left edge, swept for overlaps: the new
- * pairs against the last tick's, raising enter and exit, each told to both. */
+/* The pass's points, grown as colliders add theirs. */
+typedef struct pool_t {
+    float *points;
+    int count, capacity; /* floats */
+} pool_t;
+
+static float *pool_take(pool_t *pool, int floats)
+{
+    if (pool->count + floats > pool->capacity) {
+        int capacity = pool->capacity > 0 ? pool->capacity * 2 : 256;
+        float *grown;
+        while (capacity < pool->count + floats) capacity *= 2;
+        grown = (float *)realloc(pool->points, sizeof(float) * (size_t)capacity);
+        if (grown == NULL) return NULL;
+        pool->points = grown;
+        pool->capacity = capacity;
+    }
+    pool->count += floats;
+    return &pool->points[pool->count - floats];
+}
+
+/* Collider `c` of the actor at `actor_ptr` as a body in its parent's space; false out of
+ * memory. A shape's local point is its offset plus it, scaled by the actor's scale, turned
+ * by its turn about z, moved to its position. */
+static bool make_body(const wgf_ecs_priv_collider_t *c, const wgf_gfx_priv_actor_t *actor_ptr, pool_t *pool,
+                      body_t *body)
+{
+    const wgf_quat_t q = actor_ptr->rotation;
+    const float angle = 2.0f * atan2f(q.z, q.w), cs = cosf(angle), sn = sinf(angle);
+    const float sx = actor_ptr->scale.x, sy = actor_ptr->scale.y;
+    const float px = actor_ptr->position.x, py = actor_ptr->position.y;
+    const bool turned = fabsf(sn) > 1e-6f || cs < 0.0f;
+    int i;
+#define PLACE_X(lx, ly) (px + cs * ((lx) * sx) - sn * ((ly) * sy))
+#define PLACE_Y(lx, ly) (py + sn * ((lx) * sx) + cs * ((ly) * sy))
+    body->z = actor_ptr->position.z;
+    if (c->shape == WGF_COLLIDER_SHAPE_CIRCLE) {
+        const float ax = fabsf(sx), ay = fabsf(sy);
+        body->kind = BODY_CIRCLE;
+        body->x = PLACE_X(c->offset_x, c->offset_y);
+        body->y = PLACE_Y(c->offset_x, c->offset_y);
+        body->r = c->radius * (ax > ay ? ax : ay);
+        body->lo_x = body->x - body->r, body->hi_x = body->x + body->r;
+        body->lo_y = body->y - body->r, body->hi_y = body->y + body->r;
+        return true;
+    }
+    if (c->shape == WGF_COLLIDER_SHAPE_RECTANGLE && !turned) {
+        const float w = fabsf(c->width * sx), h = fabsf(c->height * sy);
+        body->kind = BODY_BOX;
+        body->bx = px + c->offset_x * sx - w * 0.5f;
+        body->by = py + c->offset_y * sy - h * 0.5f;
+        body->bw = w;
+        body->bh = h;
+        body->lo_x = body->bx, body->hi_x = body->bx + w;
+        body->lo_y = body->by, body->hi_y = body->by + h;
+        return true;
+    }
+    {
+        float corners[8];
+        const float *local = c->points;
+        float *out;
+        int n = c->point_count;
+        if (c->shape == WGF_COLLIDER_SHAPE_RECTANGLE) {
+            const float hw = c->width * 0.5f, hh = c->height * 0.5f;
+            const float k[8] = {-hw, -hh, hw, -hh, hw, hh, -hw, hh};
+            memcpy(corners, k, sizeof(k));
+            local = corners;
+            n = 4;
+        }
+        out = pool_take(pool, n * 2);
+        if (out == NULL) return false;
+        body->kind = BODY_POINTS;
+        body->first = pool->count - n * 2;
+        body->count = n;
+        body->lo_x = body->lo_y = INFINITY;
+        body->hi_x = body->hi_y = -INFINITY;
+        for (i = 0; i < n; i++) {
+            const float lx = c->offset_x + local[2 * i], ly = c->offset_y + local[2 * i + 1];
+            out[2 * i] = PLACE_X(lx, ly);
+            out[2 * i + 1] = PLACE_Y(lx, ly);
+            body->lo_x = fminf(body->lo_x, out[2 * i]), body->hi_x = fmaxf(body->hi_x, out[2 * i]);
+            body->lo_y = fminf(body->lo_y, out[2 * i + 1]), body->hi_y = fmaxf(body->hi_y, out[2 * i + 1]);
+        }
+    }
+#undef PLACE_X
+#undef PLACE_Y
+    return true;
+}
+
+/* A box's corners, as points. */
+static void box_points(const body_t *b, float out[8])
+{
+    out[0] = b->bx, out[1] = b->by;
+    out[2] = b->bx + b->bw, out[3] = b->by;
+    out[4] = b->bx + b->bw, out[5] = b->by + b->bh;
+    out[6] = b->bx, out[7] = b->by + b->bh;
+}
+
+/* Whether `a` and `b` overlap, and the least move of a that parts them into *px, *py: the
+ * hit's normal (out of the second shape the test was given) times its depth. */
+static bool meet(const body_t *a, const body_t *b, const float *pool, float *px, float *py)
+{
+    float hit[6] = {0, 0, 0, 0, 0, 0}, sign = 1.0f, pa[8], pb[8];
+    const float *ap, *bp;
+    int an, bn;
+    bool met;
+    if (a->kind == BODY_CIRCLE && b->kind == BODY_CIRCLE) { /* spheres: z counts, touching meets */
+        const float dx = a->x - b->x, dy = a->y - b->y, dz = a->z - b->z, reach = a->r + b->r;
+        if (dx * dx + dy * dy + dz * dz > reach * reach) return false;
+        if (!wgf_collide2d_circle_circle(a->x, a->y, a->r, b->x, b->y, b->r, hit, 6)) hit[2] = 0.0f;
+    } else if (a->kind == BODY_CIRCLE || b->kind == BODY_CIRCLE) {
+        const body_t *circle = a->kind == BODY_CIRCLE ? a : b, *other = circle == a ? b : a;
+        sign = circle == a ? 1.0f : -1.0f; /* the hit is out of the other: the circle's way */
+        if (other->kind == BODY_BOX) {
+            met = wgf_collide2d_circle_rect(circle->x, circle->y, circle->r, other->bx, other->by, other->bw, other->bh,
+                                           hit, 6);
+        } else if (other->count == 2) {
+            const float *s = &pool[other->first];
+            met = wgf_collide2d_circle_segment(circle->x, circle->y, circle->r, s[0], s[1], s[2], s[3], hit, 6);
+        } else {
+            met = wgf_collide2d_circle_polygon(circle->x, circle->y, circle->r, &pool[other->first], other->count * 2,
+                                               hit, 6);
+        }
+        if (!met) return false;
+    } else if (a->kind == BODY_BOX && b->kind == BODY_BOX) {
+        if (!wgf_collide2d_rect_rect(a->bx, a->by, a->bw, a->bh, b->bx, b->by, b->bw, b->bh, hit, 6)) return false;
+    } else {
+        if (a->kind == BODY_BOX) box_points(a, pa), ap = pa, an = 4;
+        else ap = &pool[a->first], an = a->count;
+        if (b->kind == BODY_BOX) box_points(b, pb), bp = pb, bn = 4;
+        else bp = &pool[b->first], bn = b->count;
+        if (!wgf_collide2d_polygon_polygon(ap, an * 2, bp, bn * 2, hit, 6)) return false;
+    }
+    *px = sign * hit[0] * hit[2];
+    *py = sign * hit[1] * hit[2];
+    return true;
+}
+
+/* Every collider's bounds, sorted by parent and left edge, swept for overlaps tested by
+ * shape: the new pairs against the last tick's, raising enter and exit, each told to both. */
 static void collide(void)
 {
     body_t *bodies = NULL;
     pair_t *found = NULL;
+    pool_t pool = {NULL, 0, 0};
     int body_count = 0, body_capacity = 0, found_count = 0, found_capacity = 0, i, j;
     void *fields[2];
     wgf_ecs_priv_id_t entity;
@@ -227,10 +393,7 @@ static void collide(void)
         const wgf_ecs_priv_collider_t *c = (const wgf_ecs_priv_collider_t *)fields[0];
         const wgf_ecs_priv_ref_t *ref = (const wgf_ecs_priv_ref_t *)fields[1];
         const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(ref->actor);
-        float sx, sy;
         if (actor_ptr == NULL || !c->enabled) continue; /* switched off: it meets nothing */
-        sx = fabsf(actor_ptr->scale.x);
-        sy = fabsf(actor_ptr->scale.y);
         if (body_count == body_capacity) {
             const int capacity = body_capacity > 0 ? body_capacity * 2 : 64;
             body_t *grown = (body_t *)realloc(bodies, sizeof(body_t) * (size_t)capacity);
@@ -238,12 +401,9 @@ static void collide(void)
             bodies = grown;
             body_capacity = capacity;
         }
+        if (!make_body(c, actor_ptr, &pool, &bodies[body_count])) continue;
         bodies[body_count].handle = ref->actor;
         bodies[body_count].parent = actor_ptr->parent;
-        bodies[body_count].x = actor_ptr->position.x;
-        bodies[body_count].y = actor_ptr->position.y;
-        bodies[body_count].z = actor_ptr->position.z;
-        bodies[body_count].r = c->radius * (sx > sy ? sx : sy);
         bodies[body_count].layer = c->layer;
         bodies[body_count].mask = c->mask;
         body_count++;
@@ -251,20 +411,20 @@ static void collide(void)
     if (body_count > 1) qsort(bodies, (size_t)body_count, sizeof(body_t), by_sweep);
     for (i = 0; i < body_count; i++) {
         const body_t *a = &bodies[i];
-        for (j = i + 1; j < body_count && bodies[j].parent == a->parent && bodies[j].x - bodies[j].r <= a->x + a->r;
-             j++) {
+        for (j = i + 1; j < body_count && bodies[j].parent == a->parent && bodies[j].lo_x <= a->hi_x; j++) {
             const body_t *b = &bodies[j];
-            const float dx = a->x - b->x, dy = a->y - b->y, dz = a->z - b->z, reach = a->r + b->r;
-            if (((a->layer & b->mask) == 0 && (b->layer & a->mask) == 0) || dx * dx + dy * dy + dz * dz > reach * reach) {
-                continue;
-            }
-            if (!add_pair(&found, &found_count, &found_capacity, a, b)) {
+            float push_x = 0.0f, push_y = 0.0f;
+            if ((a->layer & b->mask) == 0 && (b->layer & a->mask) == 0) continue;
+            if (b->lo_y > a->hi_y || a->lo_y > b->hi_y) continue;
+            if (!meet(a, b, pool.points, &push_x, &push_y)) continue;
+            if (!add_pair(&found, &found_count, &found_capacity, a, b, push_x, push_y)) {
                 wgf_log_error("wgf_ecs: out of memory finding overlaps");
                 break;
             }
         }
     }
     free(bodies);
+    free(pool.points);
     if (found_count > 1) qsort(found, (size_t)found_count, sizeof(pair_t), by_pair);
     /* the two sorted lists walked together: in the new alone, entered; in the old alone, exited */
     i = j = 0;

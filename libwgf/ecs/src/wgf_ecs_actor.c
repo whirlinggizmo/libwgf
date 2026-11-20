@@ -96,6 +96,8 @@ bool wgf_actor_add_component(wgf_actor_t actor, wgf_component_t component)
         }
         case WGF_COMPONENT_COLLIDER: {
             wgf_ecs_priv_collider_t c;
+            memset(&c, 0, sizeof(c));
+            c.shape = WGF_COLLIDER_SHAPE_CIRCLE;
             c.radius = 1.0f;
             c.layer = 1;
             c.mask = -1;

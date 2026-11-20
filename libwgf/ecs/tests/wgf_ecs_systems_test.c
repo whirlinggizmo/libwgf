@@ -262,6 +262,83 @@ int main(void)
     step(0.0f);
     expect(wgf_world_get_event_count() == 0, "one destroyed: its pairs forgotten, no exit");
 
+    { /* shapes: rectangles, a turned one, a polygon, a segment, an offset; pushes */
+        const wgf_actor_t p = make(stage), q = make(stage);
+        const float triangle[6] = {0, -5, 5, 5, -5, 5}, two[4] = {0, 0, 1, 1}, odd[7] = {0, 0, 1, 0, 1, 1, 0};
+        float points[8];
+        wgf_actor_t met[2];
+        wgf_vec2_t push;
+        wgf_actor_add_component(p, WGF_COMPONENT_COLLIDER);
+        wgf_actor_add_component(q, WGF_COMPONENT_COLLIDER);
+        wgf_actor_set_position(p, 500, 500, 0); /* clear of a */
+        expect(wgf_collider_set_rectangle(p, 10, 10) && wgf_collider_get_shape(p) == WGF_COLLIDER_SHAPE_RECTANGLE &&
+                   near(wgf_collider_get_size(p).x, 10) && wgf_collider_get_radius(p) == 0,
+               "a rectangle, its size; no radius");
+        wgf_collider_set_rectangle(q, 10, 10);
+        wgf_actor_set_position(q, 508, 500, 0);
+        count_events(0, 0, 0);
+        step(0.0f);
+        push = wgf_collider_get_push(p, q);
+        expect(count_events(WGF_WORLD_EVENT_TRIGGER_ENTER, p, q) == 1 && near(push.x, -2) && near(push.y, 0) &&
+                   near(wgf_collider_get_push(q, p).x, 2),
+               "rectangles overlapping: entered, each pushed out of the other by the overlap");
+        wgf_collider_set_radius(q, 2);
+        wgf_actor_set_position(q, 506, 500, 0);
+        step(0.0f);
+        push = wgf_collider_get_push(q, p);
+        expect(near(push.x, 1) && near(push.y, 0) && near(wgf_collider_get_push(p, q).x, -1),
+               "a circle against a rectangle: out of its side");
+        wgf_collider_set_rectangle(q, 2, 2);
+        wgf_actor_set_position(q, 507.5f, 500, 0);
+        step(0.0f);
+        expect(count_events(WGF_WORLD_EVENT_TRIGGER_EXIT, p, q) == 1, "past the rectangle's side: exited");
+        wgf_actor_set_rotation(p, 0, 0, 0.785398f);
+        step(0.0f);
+        expect(count_events(WGF_WORLD_EVENT_TRIGGER_ENTER, p, q) == 1, "the rectangle turned, its corner reaching it");
+        wgf_actor_set_rotation(p, 0, 0, 0);
+        expect(wgf_collider_set_polygon(p, triangle, 6) && wgf_collider_get_shape(p) == WGF_COLLIDER_SHAPE_POLYGON &&
+                   wgf_collider_get_points(p, points, 8) == 6 && points[3] == 5,
+               "a polygon, its points");
+        expect(!wgf_collider_set_polygon(p, two, 4) && !wgf_collider_set_polygon(p, odd, 7) &&
+                   !wgf_collider_set_polygon(p, NULL, 6) && !wgf_collider_set_polygon(p, triangle, 34),
+               "too few points, an odd count, none, too many: refused");
+        wgf_collider_set_radius(q, 2);
+        wgf_actor_set_position(q, 500, 508, 0);
+        step(0.0f);
+        expect(wgf_collider_get_overlaps(q, met, 2) == 0 && near(wgf_collider_get_push(q, p).y, 0),
+               "a circle below the triangle's base, clear");
+        wgf_actor_set_position(q, 500, 506.5f, 0);
+        step(0.0f);
+        push = wgf_collider_get_push(q, p);
+        expect(near(push.x, 0) && near(push.y, 0.5f), "a circle into its base: out of it, down");
+        expect(wgf_collider_set_segment(p, -10, 0, 10, 0) && wgf_collider_get_shape(p) == WGF_COLLIDER_SHAPE_SEGMENT &&
+                   wgf_collider_get_points(p, points, 8) == 4,
+               "a segment, its points");
+        wgf_actor_set_position(q, 500, 501, 0);
+        step(0.0f);
+        push = wgf_collider_get_push(q, p);
+        expect(near(push.x, 0) && near(push.y, 1), "a circle on a segment: out of it");
+        wgf_collider_set_radius(p, 1);
+        wgf_collider_set_radius(q, 1);
+        wgf_actor_set_position(q, 521, 500, 0);
+        step(0.0f);
+        expect(wgf_collider_get_overlaps(q, met, 2) == 0, "apart");
+        count_events(0, 0, 0); /* what came before, taken */
+        expect(wgf_collider_set_offset(p, 20, 0) && near(wgf_collider_get_offset(p).x, 20), "an offset");
+        step(0.0f);
+        expect(count_events(WGF_WORLD_EVENT_TRIGGER_ENTER, p, q) == 1, "moved by its offset, it meets");
+        wgf_actor_set_scale(p, 0.5f, 0.5f, 1);
+        step(0.0f);
+        expect(count_events(WGF_WORLD_EVENT_TRIGGER_EXIT, p, q) == 1, "its offset scaled with it: apart again");
+        expect(!wgf_collider_set_rectangle(p, -1, 1) && !wgf_collider_set_offset(p, NAN, 0) &&
+                   !wgf_collider_set_segment(p, 0, 0, INFINITY, 0),
+               "a size below 0, numbers that aren't: refused");
+        wgf_actor_destroy(p, WGF_ACTOR_DESTROY_CHILDREN);
+        wgf_actor_destroy(q, WGF_ACTOR_DESTROY_CHILDREN);
+        step(0.0f);
+        wgf_world_take_events(NULL, 0);
+    }
+
     /* the probes */
     wgf_actor_add_behavior(a, "Rock");
     wgf_actor_add_behavior(a, "Rock"); /* two of a name: the actor counted once */

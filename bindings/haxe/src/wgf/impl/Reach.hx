@@ -216,13 +216,22 @@ class Reach {
 		"wgf_collide2d_sweep_rect_rect",
 		"wgf_collider_get_layer",
 		"wgf_collider_get_mask",
+		"wgf_collider_get_offset",
 		"wgf_collider_get_overlaps",
+		"wgf_collider_get_points",
+		"wgf_collider_get_push",
 		"wgf_collider_get_radius",
+		"wgf_collider_get_shape",
+		"wgf_collider_get_size",
 		"wgf_collider_is_enabled",
 		"wgf_collider_set_enabled",
 		"wgf_collider_set_layer",
 		"wgf_collider_set_mask",
+		"wgf_collider_set_offset",
+		"wgf_collider_set_polygon",
 		"wgf_collider_set_radius",
+		"wgf_collider_set_rectangle",
+		"wgf_collider_set_segment",
 		"wgf_color_brighten",
 		"wgf_color_get",
 		"wgf_color_get_alpha",
@@ -1045,7 +1054,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1036) 0];
+	static final counts:Array<Int> = [for (_ in 0...1045) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

@@ -1,4 +1,5 @@
 #include <math.h>
+#include <string.h>
 
 #include "wgf_bounds.h"
 #include "wgf_collider.h"
@@ -187,6 +188,7 @@ bool wgf_collider_set_radius(wgf_actor_t actor, float radius)
 {
     wgf_ecs_priv_collider_t *c = collider_of(actor);
     if (c == NULL || !isfinite(radius) || radius < 0.0f) return false;
+    c->shape = WGF_COLLIDER_SHAPE_CIRCLE;
     c->radius = radius;
     return true;
 }
@@ -194,7 +196,92 @@ bool wgf_collider_set_radius(wgf_actor_t actor, float radius)
 float wgf_collider_get_radius(wgf_actor_t actor)
 {
     const wgf_ecs_priv_collider_t *c = collider_of(actor);
-    return c != NULL ? c->radius : 0.0f;
+    return c != NULL && c->shape == WGF_COLLIDER_SHAPE_CIRCLE ? c->radius : 0.0f;
+}
+
+bool wgf_collider_set_rectangle(wgf_actor_t actor, float width, float height)
+{
+    wgf_ecs_priv_collider_t *c = collider_of(actor);
+    if (c == NULL || !isfinite(width) || !isfinite(height) || width < 0.0f || height < 0.0f) return false;
+    c->shape = WGF_COLLIDER_SHAPE_RECTANGLE;
+    c->width = width;
+    c->height = height;
+    return true;
+}
+
+wgf_vec2_t wgf_collider_get_size(wgf_actor_t actor)
+{
+    const wgf_ecs_priv_collider_t *c = collider_of(actor);
+    return c != NULL && c->shape == WGF_COLLIDER_SHAPE_RECTANGLE ? wgf_vec2_make(c->width, c->height)
+                                                                 : wgf_vec2_make(0.0f, 0.0f);
+}
+
+/* `count` floats of `points` finite. */
+static bool finite_points(const float *points, int count)
+{
+    int i;
+    for (i = 0; i < count; i++) {
+        if (!isfinite(points[i])) return false;
+    }
+    return true;
+}
+
+bool wgf_collider_set_polygon(wgf_actor_t actor, const float *points, int count)
+{
+    wgf_ecs_priv_collider_t *c = collider_of(actor);
+    if (c == NULL || points == NULL || count < 6 || count > WGF_COLLIDER_POLYGON_MAX * 2 || count % 2 != 0 ||
+        !finite_points(points, count)) {
+        return false;
+    }
+    c->shape = WGF_COLLIDER_SHAPE_POLYGON;
+    memcpy(c->points, points, sizeof(float) * (size_t)count);
+    c->point_count = count / 2;
+    return true;
+}
+
+bool wgf_collider_set_segment(wgf_actor_t actor, float x0, float y0, float x1, float y1)
+{
+    wgf_ecs_priv_collider_t *c = collider_of(actor);
+    const float points[4] = {x0, y0, x1, y1};
+    if (c == NULL || !finite_points(points, 4)) return false;
+    c->shape = WGF_COLLIDER_SHAPE_SEGMENT;
+    memcpy(c->points, points, sizeof(points));
+    c->point_count = 2;
+    return true;
+}
+
+wgf_collider_shape_t wgf_collider_get_shape(wgf_actor_t actor)
+{
+    const wgf_ecs_priv_collider_t *c = collider_of(actor);
+    return c != NULL ? (wgf_collider_shape_t)c->shape : WGF_COLLIDER_SHAPE_CIRCLE;
+}
+
+int wgf_collider_get_points(wgf_actor_t actor, float *out, int count)
+{
+    const wgf_ecs_priv_collider_t *c = collider_of(actor);
+    int n;
+    if (c == NULL || out == NULL || count <= 0 ||
+        (c->shape != WGF_COLLIDER_SHAPE_POLYGON && c->shape != WGF_COLLIDER_SHAPE_SEGMENT)) {
+        return 0;
+    }
+    n = c->point_count * 2 < count ? c->point_count * 2 : count;
+    memcpy(out, c->points, sizeof(float) * (size_t)n);
+    return n;
+}
+
+bool wgf_collider_set_offset(wgf_actor_t actor, float x, float y)
+{
+    wgf_ecs_priv_collider_t *c = collider_of(actor);
+    if (c == NULL || !isfinite(x) || !isfinite(y)) return false;
+    c->offset_x = x;
+    c->offset_y = y;
+    return true;
+}
+
+wgf_vec2_t wgf_collider_get_offset(wgf_actor_t actor)
+{
+    const wgf_ecs_priv_collider_t *c = collider_of(actor);
+    return c != NULL ? wgf_vec2_make(c->offset_x, c->offset_y) : wgf_vec2_make(0.0f, 0.0f);
 }
 
 bool wgf_collider_set_layer(wgf_actor_t actor, int layer)

@@ -6,16 +6,75 @@ import wgf.impl.Raw;
 /** Collider's calls, on a Actor: `var x:Collider = handle` gives it them, and a Collider is still a Actor; it starts as 0, none, as a Actor does. **/
 @:forward abstract Collider(Actor) from Actor from Int to Actor {
 	/**
-	    False too for a radius below 0.
+	    A circle of `radius`. False too for a radius below 0. get_radius is a circle's (0 for
+	    another shape).
 	**/
 	public inline function setRadius(radius:Float):Bool
 		return Raw.wgf_collider_set_radius(this, radius);
 
 	/**
-	    False too for a radius below 0.
+	    A circle of `radius`. False too for a radius below 0. get_radius is a circle's (0 for
+	    another shape).
 	**/
 	public inline function getRadius():Float
 		return Raw.wgf_collider_get_radius(this);
+
+	/**
+	    A rectangle `width` by `height`, centered. False too for a size below 0. Its size (0, 0
+	    for another shape).
+	**/
+	public inline function setRectangle(width:Float, height:Float):Bool
+		return Raw.wgf_collider_set_rectangle(this, width, height);
+
+	/**
+	    A rectangle `width` by `height`, centered. False too for a size below 0. Its size (0, 0
+	    for another shape).
+	**/
+	public inline function getSize(?into:wgf.Vec2):wgf.Vec2
+		return Raw.wgf_collider_get_size(this, into);
+
+	/**
+	    A convex polygon of `points`, x and y in turn (`count` floats: 3 to
+	    WGF_COLLIDER_POLYGON_MAX points), about the actor's position. False too for no points,
+	    too few or too many, or a count that is odd. A polygon that isn't convex overlaps as its
+	    convex hull would.
+	**/
+	public inline function setPolygon(points:Array<Float>):Bool
+		return Raw.wgf_collider_set_polygon(this, points);
+
+	/**
+	    A segment from x0, y0 to x1, y1, about the actor's position: a wall, a laser.
+	**/
+	public inline function setSegment(x0:Float, y0:Float, x1:Float, y1:Float):Bool
+		return Raw.wgf_collider_set_segment(this, x0, y0, x1, y1);
+
+	/**
+	    Its shape; and a polygon's or a segment's points, into `out` (x and y in turn, as many
+	    as fit in `count` floats), returning how many floats it filled (0 for a circle or a
+	    rectangle).
+	**/
+	public inline function getShape():ColliderShape
+		return Raw.wgf_collider_get_shape(this);
+
+	/**
+	    Its shape; and a polygon's or a segment's points, into `out` (x and y in turn, as many
+	    as fit in `count` floats), returning how many floats it filled (0 for a circle or a
+	    rectangle).
+	**/
+	public inline function getPoints(out:Array<Float>):Int
+		return Raw.wgf_collider_get_points(this, out);
+
+	/**
+	    Its shape moved from the actor's position, before the actor's scale and turn.
+	**/
+	public inline function setOffset(x:Float, y:Float):Bool
+		return Raw.wgf_collider_set_offset(this, x, y);
+
+	/**
+	    Its shape moved from the actor's position, before the actor's scale and turn.
+	**/
+	public inline function getOffset(?into:wgf.Vec2):wgf.Vec2
+		return Raw.wgf_collider_get_offset(this, into);
 
 	/**
 	    Bits: what it is, and what it meets. A pair meets when either side's mask has the
@@ -71,4 +130,12 @@ import wgf.impl.Raw;
 	**/
 	public inline function getOverlaps(out:Array<Actor>):Int
 		return Raw.wgf_collider_get_overlaps(this, cast out);
+
+	/**
+	    The least move of `actor` that would part it from `other`, as of the last tick: out of
+	    the other along the way they meet, as deep as they overlap (a push out, for a game that
+	    pushes). 0, 0 when they don't overlap.
+	**/
+	public inline function getPush(other:Actor, ?into:wgf.Vec2):wgf.Vec2
+		return Raw.wgf_collider_get_push(this, other, into);
 }

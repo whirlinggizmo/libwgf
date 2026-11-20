@@ -697,6 +697,13 @@ class Main {
 		expect(collider.setRadius(8) && near(collider.getRadius(), 8), "a collider");
 		expect(collider.setLayer(2) && collider.getLayer() == 2 && collider.setMask(1) && collider.getMask() == 1, "its layers");
 		collider.getOverlaps([ship]);
+		expect(collider.setRectangle(16, 8) && collider.getShape() == ColliderShape.RECTANGLE && near(collider.getSize().x, 16),
+			"a rectangle collider");
+		expect(collider.setPolygon([0, 0, 8, 0, 8, 8]) && collider.getShape() == ColliderShape.POLYGON
+			&& collider.getPoints([0, 0, 0, 0, 0, 0]) == 6, "a polygon collider");
+		expect(collider.setSegment(0, 0, 0, 8) && collider.getShape() == ColliderShape.SEGMENT, "a segment collider");
+		expect(collider.setOffset(1, 2) && near(collider.getOffset().y, 2) && collider.setOffset(0, 0), "an offset");
+		expect(collider.getPush(ship).x == 0 && collider.setRadius(8), "no push from itself; a circle again");
 		expect(collider.isEnabled() && collider.setEnabled(false) && !collider.isEnabled() && collider.setEnabled(true),
 			"a collider switched off and on");
 		final id = ship.addBehavior("Probe");

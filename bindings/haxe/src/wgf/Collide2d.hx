@@ -35,7 +35,8 @@ class Collide2d {
 		return Raw.wgf_collide2d_circle_polygon(cx, cy, r, points, hit);
 
 	/**
-	    Two convex polygons (the separating axis theorem); the hit's point is 0, 0.
+	    Two convex polygons (the separating axis theorem); the hit's point is 0, 0. Either may
+	    be a segment, two points.
 	**/
 	public static inline function polygonPolygon(points:Array<Float>, others:Array<Float>, hit:Array<Float>):Bool
 		return Raw.wgf_collide2d_polygon_polygon(points, others, hit);

@@ -1400,7 +1400,8 @@ export declare const Collide2d: {
      */
     readonly circlePolygon: typeof raw.wgf_collide2d_circle_polygon;
     /**
-     * Two convex polygons (the separating axis theorem); the hit's point is 0, 0.
+     * Two convex polygons (the separating axis theorem); the hit's point is 0, 0. Either may
+     * be a segment, two points.
      */
     readonly polygonPolygon: typeof raw.wgf_collide2d_polygon_polygon;
     /**
@@ -1479,13 +1480,56 @@ export declare const Collide2d: {
 export type Collider = raw.wgf_actor_t;
 export declare const Collider: {
     /**
-     * False too for a radius below 0.
+     * A circle of `radius`. False too for a radius below 0. get_radius is a circle's (0 for
+     * another shape).
      */
     readonly setRadius: typeof raw.wgf_collider_set_radius;
     /**
-     * False too for a radius below 0.
+     * A circle of `radius`. False too for a radius below 0. get_radius is a circle's (0 for
+     * another shape).
      */
     readonly getRadius: typeof raw.wgf_collider_get_radius;
+    /**
+     * A rectangle `width` by `height`, centered. False too for a size below 0. Its size (0, 0
+     * for another shape).
+     */
+    readonly setRectangle: typeof raw.wgf_collider_set_rectangle;
+    /**
+     * A rectangle `width` by `height`, centered. False too for a size below 0. Its size (0, 0
+     * for another shape).
+     */
+    readonly getSize: typeof raw.wgf_collider_get_size;
+    /**
+     * A convex polygon of `points`, x and y in turn (`count` floats: 3 to
+     * WGF_COLLIDER_POLYGON_MAX points), about the actor's position. False too for no points,
+     * too few or too many, or a count that is odd. A polygon that isn't convex overlaps as its
+     * convex hull would.
+     */
+    readonly setPolygon: typeof raw.wgf_collider_set_polygon;
+    /**
+     * A segment from x0, y0 to x1, y1, about the actor's position: a wall, a laser.
+     */
+    readonly setSegment: typeof raw.wgf_collider_set_segment;
+    /**
+     * Its shape; and a polygon's or a segment's points, into `out` (x and y in turn, as many
+     * as fit in `count` floats), returning how many floats it filled (0 for a circle or a
+     * rectangle).
+     */
+    readonly getShape: typeof raw.wgf_collider_get_shape;
+    /**
+     * Its shape; and a polygon's or a segment's points, into `out` (x and y in turn, as many
+     * as fit in `count` floats), returning how many floats it filled (0 for a circle or a
+     * rectangle).
+     */
+    readonly getPoints: typeof raw.wgf_collider_get_points;
+    /**
+     * Its shape moved from the actor's position, before the actor's scale and turn.
+     */
+    readonly setOffset: typeof raw.wgf_collider_set_offset;
+    /**
+     * Its shape moved from the actor's position, before the actor's scale and turn.
+     */
+    readonly getOffset: typeof raw.wgf_collider_get_offset;
     /**
      * Bits: what it is, and what it meets. A pair meets when either side's mask has the
      * other's layer, so clearing one collider's mask doesn't stop another whose mask has its
@@ -1527,6 +1571,12 @@ export declare const Collider: {
      * how many it filled.
      */
     readonly getOverlaps: typeof raw.wgf_collider_get_overlaps;
+    /**
+     * The least move of `actor` that would part it from `other`, as of the last tick: out of
+     * the other along the way they meet, as deep as they overlap (a push out, for a game that
+     * pushes). 0, 0 when they don't overlap.
+     */
+    readonly getPush: typeof raw.wgf_collider_get_push;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
@@ -7977,6 +8027,8 @@ export type BodyType = raw.wgf_body_type_t;
 export declare const BodyType: { readonly STATIC: BodyType; readonly DYNAMIC: BodyType; readonly KINEMATIC: BodyType; readonly SENSOR: BodyType; readonly CHARACTER: BodyType; };
 export type BoundsMode = raw.wgf_bounds_mode_t;
 export declare const BoundsMode: { readonly WRAP: BoundsMode; readonly CLAMP: BoundsMode; readonly DESTROY: BoundsMode; };
+export type ColliderShape = raw.wgf_collider_shape_t;
+export declare const ColliderShape: { readonly CIRCLE: ColliderShape; readonly RECTANGLE: ColliderShape; readonly POLYGON: ColliderShape; readonly SEGMENT: ColliderShape; };
 export type ColorStock = raw.wgf_color_stock_t;
 export declare const ColorStock: { readonly BLANK: ColorStock; readonly WHITE: ColorStock; readonly BLACK: ColorStock; readonly LIGHTGRAY: ColorStock; readonly GRAY: ColorStock; readonly DARKGRAY: ColorStock; readonly YELLOW: ColorStock; readonly GOLD: ColorStock; readonly ORANGE: ColorStock; readonly PINK: ColorStock; readonly RED: ColorStock; readonly MAROON: ColorStock; readonly GREEN: ColorStock; readonly LIME: ColorStock; readonly DARKGREEN: ColorStock; readonly SKYBLUE: ColorStock; readonly BLUE: ColorStock; readonly DARKBLUE: ColorStock; readonly PURPLE: ColorStock; readonly VIOLET: ColorStock; readonly DARKPURPLE: ColorStock; readonly BEIGE: ColorStock; readonly BROWN: ColorStock; readonly DARKBROWN: ColorStock; readonly MAGENTA: ColorStock; readonly RAYWHITE: ColorStock; };
 export type Component = raw.wgf_component_t;

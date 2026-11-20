@@ -284,8 +284,28 @@ static void dump_lines(out_t *out, wgf_actor_t e, const char *pad)
         put(out, "%s    lifetime seconds=%.9g\n", pad, wgf_lifetime_get_seconds(e));
     }
     if (wgf_actor_has_component(e, WGF_COMPONENT_COLLIDER)) {
-        put(out, "%s    collider radius=%.9g layer=%d mask=%d%s\n", pad, wgf_collider_get_radius(e),
-            wgf_collider_get_layer(e), wgf_collider_get_mask(e), wgf_collider_is_enabled(e) ? "" : " enabled=false");
+        const wgf_vec2_t offset = wgf_collider_get_offset(e);
+        put(out, "%s    collider", pad);
+        switch (wgf_collider_get_shape(e)) {
+        case WGF_COLLIDER_SHAPE_RECTANGLE: {
+            const wgf_vec2_t size = wgf_collider_get_size(e);
+            put(out, " rectangle=%.9g,%.9g", size.x, size.y);
+            break;
+        }
+        case WGF_COLLIDER_SHAPE_POLYGON:
+        case WGF_COLLIDER_SHAPE_SEGMENT: {
+            float points[WGF_COLLIDER_POLYGON_MAX * 2];
+            const int n = wgf_collider_get_points(e, points, WGF_COLLIDER_POLYGON_MAX * 2);
+            int i;
+            put(out, wgf_collider_get_shape(e) == WGF_COLLIDER_SHAPE_POLYGON ? " polygon=" : " segment=");
+            for (i = 0; i < n; i++) put(out, i > 0 ? ",%.9g" : "%.9g", points[i]);
+            break;
+        }
+        default: put(out, " radius=%.9g", wgf_collider_get_radius(e)); break;
+        }
+        if (offset.x != 0.0f || offset.y != 0.0f) put(out, " offset=%.9g,%.9g", offset.x, offset.y);
+        put(out, " layer=%d mask=%d%s\n", wgf_collider_get_layer(e), wgf_collider_get_mask(e),
+            wgf_collider_is_enabled(e) ? "" : " enabled=false");
     }
     if (wgf_actor_has_component(e, WGF_COMPONENT_VOICE)) {
         put(out, "%s", pad);

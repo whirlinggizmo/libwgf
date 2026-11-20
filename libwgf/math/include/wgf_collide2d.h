@@ -37,7 +37,8 @@ WGF_API bool wgf_collide2d_circle_segment(float cx, float cy, float r, float x0,
 /* A circle and a polygon, convex or not, as long as its edges don't cross. */
 WGF_API bool wgf_collide2d_circle_polygon(float cx, float cy, float r, const float *points, int count, float *hit,
                                           int hit_count);
-/* Two convex polygons (the separating axis theorem); the hit's point is 0, 0. */
+/* Two convex polygons (the separating axis theorem); the hit's point is 0, 0. Either may
+ * be a segment, two points. */
 WGF_API bool wgf_collide2d_polygon_polygon(const float *points, int count, const float *others, int others_count,
                                            float *hit, int hit_count);
 

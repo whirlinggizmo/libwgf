@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "ce6e78911cb45556" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "4dbdb93c0bdb5367" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -893,6 +893,28 @@ export const WGF_BOUNDS_MODE_CLAMP = 1;
 export const WGF_BOUNDS_MODE_DESTROY = 2;
 
 /**
+ * A collider (WGF_COMPONENT_COLLIDER): a shape about the actor's position, in its parent's
+ * space, that overlaps others as a trigger: each tick, after motion and bounds, two colliders
+ * that start to overlap raise TRIGGER_ENTER and two that stop raise TRIGGER_EXIT
+ * (wgf_world.h), told to each. They overlap only where one's layer meets the other's mask:
+ * (a's layer & b's mask) or (b's layer & a's mask). Nothing is pushed apart by it: how far
+ * apart would part a pair is read (get_push), and a body (wgf_body2d.h) is stopped by solid
+ * ones. Only colliders under the same parent actor are compared, found by a sweep of their
+ * bounds (a few thousand at once).
+ *
+ * Its shape: a circle (a sphere: its z counts against another circle's), its radius scaled
+ * by the larger of the actor's scale's x and y; or, on a 2D stage's plane (x and y; z
+ * ignored), a rectangle, a convex polygon, or a segment, scaled by the actor's scale and
+ * turned by its turn about z. Each is about the actor's position moved by its offset
+ * (scaled and turned with it). Defaults: a circle of radius 1, no offset, layer 1, mask
+ * everything (-1), enabled. Every call is false (or 0) for an actor without a collider.
+ */
+export const WGF_COLLIDER_SHAPE_CIRCLE = 0;
+export const WGF_COLLIDER_SHAPE_RECTANGLE = 1;
+export const WGF_COLLIDER_SHAPE_POLYGON = 2;
+export const WGF_COLLIDER_SHAPE_SEGMENT = 3;
+
+/**
  * The simulation as a whole: libwgf's systems over the actors' components
  * (wgf_component.h), the events they raise, and the simulated actors written out as text;
  * the actors with a behavior or a component are found by wgf_actor_find_with_behavior
@@ -1113,7 +1135,8 @@ export function wgf_collide2d_circle_polygon(cx, cy, r, points, hit) {
 
 // wgf: call wgf_collide2d_polygon_polygon
 /**
- * Two convex polygons (the separating axis theorem); the hit's point is 0, 0.
+ * Two convex polygons (the separating axis theorem); the hit's point is 0, 0. Either may
+ * be a segment, two points.
  */
 export function wgf_collide2d_polygon_polygon(points, others, hit) {
     const pointsPointer = arrayIn(points, 0, "HEAPF32");
@@ -12092,7 +12115,8 @@ export function wgf_bounds_get_margin(actor) {
 
 // wgf: call wgf_collider_set_radius
 /**
- * False too for a radius below 0.
+ * A circle of `radius`. False too for a radius below 0. get_radius is a circle's (0 for
+ * another shape).
  */
 export function wgf_collider_set_radius(actor, radius) {
     const value = host["_wgf_collider_set_radius"](actor, radius);
@@ -12101,11 +12125,98 @@ export function wgf_collider_set_radius(actor, radius) {
 
 // wgf: call wgf_collider_get_radius
 /**
- * False too for a radius below 0.
+ * A circle of `radius`. False too for a radius below 0. get_radius is a circle's (0 for
+ * another shape).
  */
 export function wgf_collider_get_radius(actor) {
     const value = host["_wgf_collider_get_radius"](actor);
     return value;
+}
+
+// wgf: call wgf_collider_set_rectangle
+/**
+ * A rectangle `width` by `height`, centered. False too for a size below 0. Its size (0, 0
+ * for another shape).
+ */
+export function wgf_collider_set_rectangle(actor, width, height) {
+    const value = host["_wgf_collider_set_rectangle"](actor, width, height);
+    return value !== 0;
+}
+
+// wgf: call wgf_collider_get_size
+/**
+ * A rectangle `width` by `height`, centered. False too for a size below 0. Its size (0, 0
+ * for another shape).
+ */
+export function wgf_collider_get_size(actor, into) {
+    const ret = result(8);
+    host["_wgf_collider_get_size"](ret, actor);
+    return vector(ret, 2, into);
+}
+
+// wgf: call wgf_collider_set_polygon
+/**
+ * A convex polygon of `points`, x and y in turn (`count` floats: 3 to
+ * WGF_COLLIDER_POLYGON_MAX points), about the actor's position. False too for no points,
+ * too few or too many, or a count that is odd. A polygon that isn't convex overlaps as its
+ * convex hull would.
+ */
+export function wgf_collider_set_polygon(actor, points) {
+    const pointsPointer = arrayIn(points, 0, "HEAPF32");
+    const value = host["_wgf_collider_set_polygon"](actor, pointsPointer, lengthOf(points));
+    return value !== 0;
+}
+
+// wgf: call wgf_collider_set_segment
+/**
+ * A segment from x0, y0 to x1, y1, about the actor's position: a wall, a laser.
+ */
+export function wgf_collider_set_segment(actor, x0, y0, x1, y1) {
+    const value = host["_wgf_collider_set_segment"](actor, x0, y0, x1, y1);
+    return value !== 0;
+}
+
+// wgf: call wgf_collider_get_shape
+/**
+ * Its shape; and a polygon's or a segment's points, into `out` (x and y in turn, as many
+ * as fit in `count` floats), returning how many floats it filled (0 for a circle or a
+ * rectangle).
+ */
+export function wgf_collider_get_shape(actor) {
+    const value = host["_wgf_collider_get_shape"](actor);
+    return value;
+}
+
+// wgf: call wgf_collider_get_points
+/**
+ * Its shape; and a polygon's or a segment's points, into `out` (x and y in turn, as many
+ * as fit in `count` floats), returning how many floats it filled (0 for a circle or a
+ * rectangle).
+ */
+export function wgf_collider_get_points(actor, out) {
+    const outPointer = arrayOut(out, 0);
+    const value = host["_wgf_collider_get_points"](actor, outPointer, lengthOf(out));
+    arrayBack(outPointer, out, "HEAPF32");
+    return value;
+}
+
+// wgf: call wgf_collider_set_offset
+/**
+ * Its shape moved from the actor's position, before the actor's scale and turn.
+ */
+export function wgf_collider_set_offset(actor, x, y) {
+    const value = host["_wgf_collider_set_offset"](actor, x, y);
+    return value !== 0;
+}
+
+// wgf: call wgf_collider_get_offset
+/**
+ * Its shape moved from the actor's position, before the actor's scale and turn.
+ */
+export function wgf_collider_get_offset(actor, into) {
+    const ret = result(8);
+    host["_wgf_collider_get_offset"](ret, actor);
+    return vector(ret, 2, into);
 }
 
 // wgf: call wgf_collider_set_layer
@@ -12184,6 +12295,18 @@ export function wgf_collider_get_overlaps(actor, out) {
     const value = host["_wgf_collider_get_overlaps"](actor, outPointer, lengthOf(out));
     arrayBack(outPointer, out, "HEAPU32");
     return value;
+}
+
+// wgf: call wgf_collider_get_push
+/**
+ * The least move of `actor` that would part it from `other`, as of the last tick: out of
+ * the other along the way they meet, as deep as they overlap (a push out, for a game that
+ * pushes). 0, 0 when they don't overlap.
+ */
+export function wgf_collider_get_push(actor, other, into) {
+    const ret = result(8);
+    host["_wgf_collider_get_push"](ret, actor, other);
+    return vector(ret, 2, into);
 }
 
 // wgf: call wgf_lifetime_set_seconds

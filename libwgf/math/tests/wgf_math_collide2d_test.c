@@ -50,7 +50,13 @@ int main(void)
            "a circle below a polygon, and clear of it");
     expect(wgf_collide2d_polygon_polygon(square, 8, shifted, 8, hit, 6) && near(hit[0], -1) && near(hit[2], 2),
            "convex polygons: out by the least overlap");
-    expect(!wgf_collide2d_polygon_polygon(square, 8, shifted, 5, NULL, 0), "a polygon of too few points");
+    expect(!wgf_collide2d_polygon_polygon(square, 8, shifted, 3, NULL, 0), "a polygon of too few points");
+    {
+        const float across[4] = {-1, 1, 3, 1}, beside[4] = {12, 0, 12, 4};
+        expect(wgf_collide2d_polygon_polygon(across, 4, square, 8, hit, 6) && near(hit[2], 1),
+               "a segment through a polygon: out along its normal");
+        expect(!wgf_collide2d_polygon_polygon(beside, 4, square, 8, NULL, 0), "a segment clear of one");
+    }
 
     expect(wgf_collide2d_point_in_rect(0, 0, 0, 0, 10, 10) && !wgf_collide2d_point_in_rect(10, 5, 0, 0, 10, 10),
            "a point on a rectangle's left edge is in it, on its right isn't");

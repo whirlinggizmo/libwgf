@@ -121,6 +121,18 @@ static const char *field_scene =
     "  lifetime seconds=4\n"
     "end\n";
 
+/* Colliders of every shape, a scene of their own. */
+static const char *shapes_scene = "wgf-scene 2\n"
+                                  "actor crate\n"
+                                  "  collider rectangle=16,8 offset=0,-4 layer=4\n"
+                                  "end\n"
+                                  "actor ramp\n"
+                                  "  collider polygon=0,0,32,0,32,-16\n"
+                                  "end\n"
+                                  "actor wall\n"
+                                  "  collider segment=0,0,0,64\n"
+                                  "end\n";
+
 int main(void)
 {
     wgf_actor_t stage, ship, rock, small;
@@ -232,6 +244,39 @@ int main(void)
         wgf_resource_release(field);
         expect(rock_prefab != 0 && wgf_prefab_spawn(rock_prefab, stage) == 0,
                "a released scene's prefabs go with it: their handles stale");
+    }
+
+    /* colliders of every shape, read, dumped, and loaded again the same */
+    {
+        wgf_scene_t shapes, again;
+        char dumped[4096];
+        wgf_world_clear();
+        shapes = load("scenes/shapes.scene", shapes_scene);
+        expect(wgf_scene_instantiate(shapes, stage) == 3, "three shaped colliders");
+        {
+            const wgf_actor_t crate = wgf_actor_find(stage, "crate"), ramp = wgf_actor_find(stage, "ramp"),
+                              wall = wgf_actor_find(stage, "wall");
+            float points[8];
+            expect(wgf_collider_get_shape(crate) == WGF_COLLIDER_SHAPE_RECTANGLE && near(wgf_collider_get_size(crate).y, 8) &&
+                       near(wgf_collider_get_offset(crate).y, -4) && wgf_collider_get_layer(crate) == 4,
+                   "a rectangle collider, offset");
+            expect(wgf_collider_get_shape(ramp) == WGF_COLLIDER_SHAPE_POLYGON && wgf_collider_get_points(ramp, points, 8) == 6 &&
+                       near(points[5], -16),
+                   "a polygon collider");
+            expect(wgf_collider_get_shape(wall) == WGF_COLLIDER_SHAPE_SEGMENT && wgf_collider_get_points(wall, points, 8) == 4 &&
+                       near(points[3], 64),
+                   "a segment collider");
+        }
+        snprintf(dumped, sizeof(dumped), "%s", wgf_world_dump());
+        expect(strstr(dumped, "collider rectangle=16,8 offset=0,-4 layer=4") != NULL &&
+                   strstr(dumped, "collider polygon=0,0,32,0,32,-16") != NULL && strstr(dumped, "collider segment=0,0,0,64") != NULL,
+               "dumped as written");
+        wgf_world_clear();
+        again = load("scenes/shapes_dumped.scene", dumped);
+        expect(wgf_scene_instantiate(again, stage) == 3 && strcmp(wgf_world_dump(), dumped) == 0,
+               "loaded again: dumped the same");
+        wgf_resource_release(again);
+        wgf_resource_release(shapes);
     }
 
     /* references: by a name on the stage, a path from one, from the actor and its parent,

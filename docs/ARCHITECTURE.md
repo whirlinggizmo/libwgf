@@ -172,7 +172,7 @@ Components and behaviors on actors, and the systems that run them at the tick ra
 | motion | `wgf_motion.h` | velocity, spin, damping, a top speed |
 | bounds | `wgf_bounds.h` | a rectangle wrapped around, clamped to, or died outside, with a margin; or the presentation's visible area, read each tick, in place of a rectangle |
 | lifetime | `wgf_lifetime.h` | seconds left |
-| collider | `wgf_collider.h` | a sphere (a circle on a 2D stage), a layer and a mask; switched off and on; what it overlaps |
+| collider | `wgf_collider.h` | a sphere (a circle on a 2D stage), or on a 2D stage's plane a rectangle, a convex polygon, or a segment, turned and scaled with its actor, with an offset; a layer and a mask; switched off and on; what it overlaps and the push that parts each pair, found by a sweep of the colliders' bounds sorted across |
 | behavior | `wgf_behavior.h` | the program's own code, by name, several on an actor, each with an id and text parameters, a parameter `@name` or `@path` referring to another actor |
 | scene | `wgf_scene.h` | a resource: actor trees and prefabs in a text file (BUILDING.md, "Scene files"), instantiated; its prefabs found once as handles (`wgf_prefab_t`, "ecs.prefab", stale with their scene) and spawned, or spawned at a place and turned, snapped before anything it makes starts |
 

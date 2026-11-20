@@ -1,6 +1,7 @@
 #ifndef WGF_ECS_PRIV_H
 #define WGF_ECS_PRIV_H
 
+#include "wgf_collider.h"
 #include "wgf_core_handle_priv.h" /* WGF_CORE_PRIV_CALLER */
 #include <stdbool.h>
 #include <stddef.h>
@@ -46,7 +47,12 @@ typedef struct wgf_ecs_priv_lifetime_t {
 } wgf_ecs_priv_lifetime_t;
 
 typedef struct wgf_ecs_priv_collider_t {
-    float radius;
+    int32_t shape;   /* wgf_collider_shape_t */
+    float radius;    /* a circle's */
+    float width, height; /* a rectangle's */
+    float offset_x, offset_y;
+    int32_t point_count; /* a polygon's points, or a segment's 2 */
+    float points[WGF_COLLIDER_POLYGON_MAX * 2];
     int32_t layer, mask;
     bool enabled; /* off: it meets nothing, its settings kept */
 } wgf_ecs_priv_collider_t;
