@@ -327,6 +327,36 @@ int main(void)
     expect(near(arm_y(root), 0.5f * 1.5f + 0.5f * 1.0f),
            "the one faded from moved on (1.5 up), blended with the rest (1)");
 
+    { /* a layer over the clip below, on a bone and what is under it */
+        const wgf_actor_t hip_now = wgf_actor_find(root, "hip");
+        wgf_model_set_animation_speed(root, 1.0f);
+        wgf_model_set_animation_loop(root, true);
+        expect(wgf_model_play_animation(root, 0, 0.0f) && wgf_model_set_animation_time(root, 0.0f), "raise playing below");
+        expect(wgf_model_play_layer_animation(root, 1, "arm", 0.0f, false) && wgf_model_get_layer_animation(root) == 1 &&
+                   wgf_model_get_layer_state(root) == WGF_PLAY_STATE_PLAYING && near(wgf_model_get_layer_weight(root), 1.0f),
+               "spline layered on the arm, at once");
+        wgf_core_priv_part_update(0.5f);
+        expect(near(arm_y(root), 5.0f), "the arm the layer's, halfway up its spline: 5");
+        expect(near(wgf_actor_get_rotation(hip_now).z, 0.0f) && near(wgf_model_get_animation_time(root), 0.5f),
+               "the hip, outside the mask, the clip below's");
+        wgf_core_priv_part_update(0.6f);
+        expect(wgf_model_get_layer_state(root) == WGF_PLAY_STATE_COMPLETE && wgf_model_get_layer_animation(root) == -1 &&
+                   near(arm_y(root), 2.1f),
+               "played once, ended: gone, the arm the clip below's again");
+        expect(wgf_model_play_layer_animation(root, 1, "arm", 1.0f, true) && near(wgf_model_get_layer_weight(root), 0.0f),
+               "a layer fading in, from nothing");
+        wgf_core_priv_part_update(0.5f);
+        expect(near(wgf_model_get_layer_weight(root), 0.5f), "halfway in");
+        expect(wgf_model_stop_layer_animation(root, 0.0f) && wgf_model_get_layer_animation(root) == -1 &&
+                   near(wgf_model_get_layer_weight(root), 0.0f),
+               "stopped at once");
+        expect(!wgf_model_play_layer_animation(root, 1, "nothing", 0.0f, true) &&
+                   !wgf_model_play_layer_animation(root, 9, "arm", 0.0f, true) &&
+                   !wgf_model_play_layer_animation(root, 1, NULL, 0.0f, true) &&
+                   !wgf_model_play_layer_animation(body, 1, "arm", 0.0f, true),
+               "a bone or an animation it hasn't, no bone, a model that isn't the root: refused");
+    }
+
     /* refusals */
     plain = wgf_model_create(0);
     expect(!wgf_model_play_animation(plain, 0, 0.0f) && wgf_model_get_animation_count(plain) == 0 &&

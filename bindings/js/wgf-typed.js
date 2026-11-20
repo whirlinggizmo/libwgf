@@ -1323,6 +1323,16 @@ export const Model = Object.freeze({
     setAnimationTime: raw.wgf_model_set_animation_time,
     // wgf: call wgf_model_get_animation_time
     getAnimationTime: raw.wgf_model_get_animation_time,
+    // wgf: call wgf_model_play_layer_animation
+    playLayerAnimation: raw.wgf_model_play_layer_animation,
+    // wgf: call wgf_model_stop_layer_animation
+    stopLayerAnimation: raw.wgf_model_stop_layer_animation,
+    // wgf: call wgf_model_get_layer_animation
+    getLayerAnimation: raw.wgf_model_get_layer_animation,
+    // wgf: call wgf_model_get_layer_state
+    getLayerState: raw.wgf_model_get_layer_state,
+    // wgf: call wgf_model_get_layer_weight
+    getLayerWeight: raw.wgf_model_get_layer_weight,
     // wgf: call wgf_model_get_bounds_min
     getBoundsMin: raw.wgf_model_get_bounds_min,
     // wgf: call wgf_model_get_bounds_max

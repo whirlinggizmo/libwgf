@@ -24,7 +24,8 @@
  * skin posed on the GPU by its animations. Five robots of the one file, each a model of
  * its mesh, play its clips at their own times: the one in front steps through every clip,
  * crossfading into each over 0.3 s (N now, or every 3 seconds), and the four behind dance,
- * walk, run, and wave, each started at another point of its clip. The sun casts, so their
+ * walk, run (waving from the torso up as it runs: a layer over its clip, masked to the torso
+ * and what is under it), and wave, each started at another point of its clip. The sun casts, so their
  * shadows are posed too. Clips are found by name once the file has loaded.
  *
  *   N      the front robot's next clip, crossfaded
@@ -99,6 +100,10 @@ static void start(void)
         const int clip = wgf_model_find_animation(g.robots[i], clips[i]);
         wgf_model_play_animation(g.robots[i], clip >= 0 ? clip : 0, 0.0f);
         wgf_model_set_animation_time(g.robots[i], 0.37f * (float)i);
+    }
+    { /* the runner waves from the torso up as it runs: a layer over its run */
+        const int wave = wgf_model_find_animation(g.robots[3], "Robot_Wave");
+        if (wave >= 0) wgf_model_play_layer_animation(g.robots[3], wave, "Torso", 0.5f, true);
     }
     g.clip = wgf_model_get_animation(g.robots[0]);
     g.started = true;

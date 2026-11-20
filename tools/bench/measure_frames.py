@@ -13,7 +13,7 @@ the game's autopilot/bench.autopilot, else its playthrough (wgf.json's "playthro
 playthrough.autopilot by default). A game's frame budget (HISTORY.md, "Milestone 2's
 plan"): a median of 6 ms and a 95th percentile of 10 ms of main-thread work on the
 reference machine, and no frame over 33 ms once play has started. Or bench:<name>, a benchmark in tools/bench/<name>/
-(BENCHES: shadowbench and spritebench, libwgt's; SPEED_BENCHES: bunnymark, helix's), built in wasm32-release against the staged
+(BENCHES: shadowbench and spritebench, libwgt's; SPEED_BENCHES: bunnymark and robots, helix's), built in wasm32-release against the staged
 variant, served with the examples' files at /assets/ as an example is, and
 run with no autopilot until it logs "<name>: done": it marks each case in the trace
 (console.timeStamp "<name> <case> <models>" as the case's measured frames begin, "<name>
@@ -73,7 +73,9 @@ BENCHES = ('shadowbench', 'spritebench')
 # program timing its frames itself and printing helix's JSON line ("contender").
 SPEED_BENCHES = {'bunnymark': ('count=10000', 'count=50000', 'incrementCount=1000',
                                'batch=1&count=10000', 'batch=1&count=50000', 'batch=1&count=100000',
-                               'batch=1&count=150000', 'batch=1&count=200000', 'batch=1&incrementCount=10000')}
+                               'batch=1&count=150000', 'batch=1&count=200000', 'batch=1&incrementCount=10000'),
+                 'robots': ('count=50', 'count=200', 'count=400')}
+SPEED_VIEWPORTS = {'robots': (1280, 720)}  # each program's window as helix's runs it; 800 x 450 otherwise
 NO_ROOM = 'no room for another actor'  # what a sprite past the actor limit logs
 UNCAPPED = ('--disable-gpu-vsync', '--disable-frame-rate-limit')
 GPU = """(() => { const gl = document.createElement('canvas').getContext('webgl2');
@@ -180,7 +182,8 @@ def run(site, flown, display, throttle, browser_path, timeout=600, bench=None, a
         if throttle > 1:
             page.send('Emulation.setCPUThrottlingRate', {'rate': throttle})
         if query is not None:  # helix's viewport, the program's window
-            page.send('Emulation.setDeviceMetricsOverride', {'width': 800, 'height': 450, 'deviceScaleFactor': 1,
+            width, height = SPEED_VIEWPORTS.get(bench, (800, 450))
+            page.send('Emulation.setDeviceMetricsOverride', {'width': width, 'height': height, 'deviceScaleFactor': 1,
                                                              'mobile': False})
         if flown is not None:
             page.send('Page.addScriptToEvaluateOnNewDocument',
@@ -268,7 +271,7 @@ def run_speed_bench(name, args, found):
             mean = statistics.median(line['mean_ms'] for line in lines)
             p95 = statistics.median(line['p95_ms'] for line in lines)
             limit = any(line.get('limit') for line in lines)
-            print(f'  {query:<28} {lines[0]["count"]:>6} bunnies  mean {mean:7.2f} ms  95th {p95:7.2f} ms'
+            print(f'  {query:<28} {lines[0]["count"]:>6} {name}  mean {mean:7.2f} ms  95th {p95:7.2f} ms'
                   + (f' (asked {lines[0]["asked"]:,}: the actor limit)' if limit else ''))
     print(f'  on {cpu_name()}, {gpu or "an unknown GPU"}, {args.display}, unthrottled, frame rate cap lifted')
     return 0

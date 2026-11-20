@@ -6681,6 +6681,71 @@ export declare function wgf_model_set_animation_time(model: wgf_actor_t | 0, sec
 export declare function wgf_model_get_animation_time(model: wgf_actor_t | 0): number;
 
 /**
+ * A layer over the animation playing: `animation` on the file's node named `bone` and every
+ * node under it (a mask: "Spine" for the upper body), blended over the clip below by the
+ * layer's weight, which comes in over `fade` seconds (0 or less: at once); looping, or played
+ * once, when it fades out over the same `fade` as it ends (COMPLETE) and is gone. An attack
+ * from the waist up while the legs run on. Its time runs at the model's speed while the
+ * animation below plays. play is false for a model that isn't a file's root, one whose file
+ * isn't READY or has no animation playing yet, an animation it hasn't, a bone it hasn't, or a
+ * fade not finite. stop fades it out over `fade`. Its animation (-1 for none), its state, and
+ * its weight now (0 to 1).
+ */
+export declare function wgf_model_play_layer_animation(model: wgf_actor_t | 0, animation: number, bone: string | null, fade: number, loop: boolean): boolean;
+
+/**
+ * A layer over the animation playing: `animation` on the file's node named `bone` and every
+ * node under it (a mask: "Spine" for the upper body), blended over the clip below by the
+ * layer's weight, which comes in over `fade` seconds (0 or less: at once); looping, or played
+ * once, when it fades out over the same `fade` as it ends (COMPLETE) and is gone. An attack
+ * from the waist up while the legs run on. Its time runs at the model's speed while the
+ * animation below plays. play is false for a model that isn't a file's root, one whose file
+ * isn't READY or has no animation playing yet, an animation it hasn't, a bone it hasn't, or a
+ * fade not finite. stop fades it out over `fade`. Its animation (-1 for none), its state, and
+ * its weight now (0 to 1).
+ */
+export declare function wgf_model_stop_layer_animation(model: wgf_actor_t | 0, fade: number): boolean;
+
+/**
+ * A layer over the animation playing: `animation` on the file's node named `bone` and every
+ * node under it (a mask: "Spine" for the upper body), blended over the clip below by the
+ * layer's weight, which comes in over `fade` seconds (0 or less: at once); looping, or played
+ * once, when it fades out over the same `fade` as it ends (COMPLETE) and is gone. An attack
+ * from the waist up while the legs run on. Its time runs at the model's speed while the
+ * animation below plays. play is false for a model that isn't a file's root, one whose file
+ * isn't READY or has no animation playing yet, an animation it hasn't, a bone it hasn't, or a
+ * fade not finite. stop fades it out over `fade`. Its animation (-1 for none), its state, and
+ * its weight now (0 to 1).
+ */
+export declare function wgf_model_get_layer_animation(model: wgf_actor_t | 0): number;
+
+/**
+ * A layer over the animation playing: `animation` on the file's node named `bone` and every
+ * node under it (a mask: "Spine" for the upper body), blended over the clip below by the
+ * layer's weight, which comes in over `fade` seconds (0 or less: at once); looping, or played
+ * once, when it fades out over the same `fade` as it ends (COMPLETE) and is gone. An attack
+ * from the waist up while the legs run on. Its time runs at the model's speed while the
+ * animation below plays. play is false for a model that isn't a file's root, one whose file
+ * isn't READY or has no animation playing yet, an animation it hasn't, a bone it hasn't, or a
+ * fade not finite. stop fades it out over `fade`. Its animation (-1 for none), its state, and
+ * its weight now (0 to 1).
+ */
+export declare function wgf_model_get_layer_state(model: wgf_actor_t | 0): wgf_play_state_t;
+
+/**
+ * A layer over the animation playing: `animation` on the file's node named `bone` and every
+ * node under it (a mask: "Spine" for the upper body), blended over the clip below by the
+ * layer's weight, which comes in over `fade` seconds (0 or less: at once); looping, or played
+ * once, when it fades out over the same `fade` as it ends (COMPLETE) and is gone. An attack
+ * from the waist up while the legs run on. Its time runs at the model's speed while the
+ * animation below plays. play is false for a model that isn't a file's root, one whose file
+ * isn't READY or has no animation playing yet, an animation it hasn't, a bone it hasn't, or a
+ * fade not finite. stop fades it out over `fade`. Its animation (-1 for none), its state, and
+ * its weight now (0 to 1).
+ */
+export declare function wgf_model_get_layer_weight(model: wgf_actor_t | 0): number;
+
+/**
  * The box around every model at and under `actor`, each mesh's box placed as it is now, in
  * the tree's root's space: its least and greatest corner (placing a glTF file's tree on the
  * ground, framing it in a camera). 0, 0, 0 for both when none there has a READY mesh.

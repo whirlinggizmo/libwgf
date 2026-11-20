@@ -1009,6 +1009,9 @@ class Main {
 		expect(robot.setAnimationSpeed(0.5) && robot.getAnimationSpeed() == 0.5, "its speed");
 		expect(robot.setAnimationLoop(false) && !robot.isAnimationLoop() && robot.setAnimationLoop(true), "looping");
 		expect(robot.playAnimation(wave, 0.25) && robot.getAnimationWeight() == 0, "crossfaded into another");
+		expect(robot.playLayerAnimation(dance, "Torso", 0, true) && robot.getLayerAnimation() == dance
+			&& robot.getLayerState() == PlayState.PLAYING && robot.getLayerWeight() == 1 && robot.stopLayerAnimation(0),
+			"a layer from the torso up, and stopped");
 		expect(robot.pauseAnimation() && robot.getAnimationState() == PlayState.PAUSED && robot.resumeAnimation()
 			&& robot.stopAnimation() && robot.getAnimationState() == PlayState.STOPPED, "paused, resumed, stopped");
 	}
