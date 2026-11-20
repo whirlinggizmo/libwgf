@@ -393,6 +393,7 @@ static wgf_core_priv_load_step_t finish(void *data, wgf_handle_t resource)
 
     if (shader_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
     if (!wgf_gfx_priv_render_is_running()) return WGF_CORE_PRIV_LOAD_MORE; /* no GPU yet: wait for one */
+    if (wgf_gfx_priv_render_is_lost()) return WGF_CORE_PRIV_LOAD_WAIT; /* the GPU's context lost: until it is back */
     slang = backend_slang();
     if (slang == NULL) {
         wgf_log_warn("wgf_gfx_shader: %s: no custom shaders on this graphics backend", shader_ptr->resource.path);

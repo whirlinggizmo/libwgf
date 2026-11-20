@@ -65,6 +65,8 @@ bool wgf_gfx_priv_fontstash_render_state(struct FONScontext *context, sg_view *a
                                          sg_shader *shader);
 /* sokol_fontstash's 2D pipeline (blended; the atlas's coverage as alpha); false before it has one. */
 bool wgf_gfx_priv_fontstash_pipeline(struct FONScontext *context, sgl_pipeline *pipeline);
+/* The GPU's context given back: the atlas sent again from fontstash's copy at the next flush. */
+void wgf_gfx_priv_fontstash_restore(struct FONScontext *context);
 
 /* Glyphs for meshes of a caller's own (the ui module's documents), in logical pixels,
  * rasterized at the frame's pixel density as the text drawn here is. `font` 0 is the

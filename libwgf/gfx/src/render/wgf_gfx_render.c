@@ -48,6 +48,13 @@ static wgf_platform_priv_presentation_t screen_present;
 static void (*targets)(bool draw); /* the targets' (wgf_gfx_render_target.c); NULL before any is begun */
 static bool (*effects)(wgf_gfx_priv_render_effects_t when, sg_pass *pass); /* wgf_gfx_render_effect.c's */
 
+/* The GPU's context (wgf_render.h): lost now, given back in this frame, and the platform's
+ * count of its restores as last seen (a loss and its restore between two frames shows only
+ * there). */
+static bool context_lost;
+static bool context_restored;
+static unsigned context_restores;
+
 /* Immediate mode drawing records into a sokol_gl context of gfx's own, drawn inside the
  * frame's pass. sokol_gl's default context can't be resized, so it stays tiny and
  * unused, and gfx's is replaced with a larger one when a frame runs out of room. */
@@ -138,6 +145,9 @@ bool wgf_gfx_priv_start(void)
         return false;
     }
     install_stats();
+    wgf_platform_priv_gpu_keep(true); /* on the trace hooks, after the stats': what a restore needs */
+    context_lost = context_restored = false;
+    context_restores = wgf_platform_priv_gpu_get_restores();
     wgf_log_info("wgf_gfx: %s, %d sample%s a pixel", backend_name(sg_query_backend()), samples,
                  samples == 1 ? "" : "s");
 
@@ -238,7 +248,9 @@ void wgf_gfx_priv_stop(void)
     sgl_shutdown(); /* and the 3D pipeline with it */
     draw_pipeline_3d.id = SG_INVALID_ID;
     drawing = NULL; /* the targets' hooks are set again by every target begun */
+    wgf_platform_priv_gpu_keep(false);
     sg_shutdown();
+    context_lost = context_restored = false;
     setup = false;
     frame_width = 0;
     frame_height = 0;
@@ -248,6 +260,57 @@ void wgf_gfx_priv_stop(void)
 bool wgf_gfx_priv_render_is_running(void)
 {
     return setup;
+}
+
+/* ---- a lost GPU context ---------------------------------------------------- */
+
+void wgf_gfx_priv_render_update_context(void)
+{
+    const wgf_core_priv_part_t *part;
+    unsigned restores;
+    context_restored = false;
+    if (!setup) return;
+    if (wgf_platform_priv_gpu_is_lost()) {
+        if (!context_lost) {
+            context_lost = true;
+            wgf_platform_priv_gpu_lost();
+            wgf_log_warn("wgf_gfx: the GPU's context was lost: nothing is drawn until it is given back");
+        }
+        return;
+    }
+    restores = wgf_platform_priv_gpu_get_restores();
+    if (!context_lost && restores == context_restores) return;
+    context_lost = false;
+    context_restores = restores;
+    if (!wgf_platform_priv_gpu_restore()) {
+        wgf_log_error("wgf_gfx: the GPU's context is back, but some of sokol's objects couldn't be made again");
+    }
+    wgf_gfx_priv_texture_restore();
+    for (part = wgf_core_priv_part_list(); part != NULL; part = part->next) {
+        if (part->restore != NULL) part->restore();
+    }
+    context_restored = true;
+    wgf_log_info("wgf_gfx: the GPU's context is back, and what was on it made again (files over the next frames)");
+}
+
+bool wgf_gfx_priv_render_is_lost(void)
+{
+    return context_lost;
+}
+
+bool wgf_gfx_priv_render_can_be_lost(void)
+{
+    return setup && sg_query_backend() == SG_BACKEND_GLES3; /* WebGL2's */
+}
+
+bool wgf_render_is_context_lost(void)
+{
+    return context_lost;
+}
+
+bool wgf_render_is_context_restored(void)
+{
+    return context_restored;
 }
 
 sg_image wgf_gfx_priv_render_white_cube(sg_view *view)
@@ -329,7 +392,7 @@ void wgf_render_push_clip(float x, float y, float width, float height)
     clip_rect_t *clip;
 
     if (!in_frame) {
-        warn_clips("wgf_render_push_clip outside a frame does nothing");
+        if (!context_lost) warn_clips("wgf_render_push_clip outside a frame does nothing");
         return;
     }
     if (clip_depth >= MAX_CLIPS) {
@@ -348,7 +411,7 @@ void wgf_render_push_clip(float x, float y, float width, float height)
 void wgf_render_pop_clip(void)
 {
     if (!in_frame) {
-        warn_clips("wgf_render_pop_clip outside a frame does nothing");
+        if (!context_lost) warn_clips("wgf_render_pop_clip outside a frame does nothing");
         return;
     }
     if (clip_overflow > 0) {
@@ -377,7 +440,7 @@ bool wgf_gfx_priv_render_get_clip(float *x, float *y, float *width, float *heigh
 
 void wgf_gfx_priv_begin_frame(void)
 {
-    if (!setup || in_frame) return;
+    if (!setup || in_frame || context_lost) return; /* lost: no frame, so every draw does nothing */
     frame_width = wgf_platform_priv_get_framebuffer_width();
     frame_height = wgf_platform_priv_get_framebuffer_height();
     frame_dpi_scale = wgf_platform_priv_get_dpi_scale();

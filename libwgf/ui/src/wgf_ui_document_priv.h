@@ -20,6 +20,9 @@ void wgf_ui_priv_doc_draw_end(void);
  * freed, once nothing recorded draws it; and everything, as the part stops. */
 void wgf_ui_priv_doc_draw_update(void);
 void wgf_ui_priv_doc_draw_stop(void);
+/* The GPU's context given back: the gradients' triangles let go of, sent again as each is
+ * next drawn from RmlUi's copy. */
+void wgf_ui_priv_doc_draw_restore(void);
 
 /* A texture RmlUi holds (wgf_ui_priv_doc_texture_load and _generate, or a layer saved):
  * what to bind to draw it, and whether its colors are premultiplied (a layer's are);

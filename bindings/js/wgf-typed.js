@@ -1917,6 +1917,10 @@ export const Render = Object.freeze({
     getTriangleCount: raw.wgf_render_get_triangle_count,
     // wgf: call wgf_render_get_gpu_bytes
     getGpuBytes: raw.wgf_render_get_gpu_bytes,
+    // wgf: call wgf_render_is_context_lost
+    isContextLost: raw.wgf_render_is_context_lost,
+    // wgf: call wgf_render_is_context_restored
+    isContextRestored: raw.wgf_render_is_context_restored,
     // wgf: call wgf_render_begin_target
     beginTarget: raw.wgf_render_begin_target,
     // wgf: call wgf_render_end_target

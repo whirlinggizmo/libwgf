@@ -710,7 +710,7 @@ bool wgf_ui_begin(void)
         wgf_log_error("wgf_ui_begin: a UI is already begun");
         return false;
     }
-    if (!wgf_gfx_priv_is_in_frame()) {
+    if (!wgf_gfx_priv_is_in_frame() && !wgf_gfx_priv_render_is_lost()) { /* lost: laid out, drawing nothing */
         wgf_log_error("wgf_ui_begin: outside a frame (call it in the frame callback)");
         return false;
     }

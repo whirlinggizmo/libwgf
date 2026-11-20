@@ -42,3 +42,9 @@ bool wgf_gfx_priv_fontstash_pipeline(struct FONScontext *context, sgl_pipeline *
     *pipeline = sfons->pip;
     return true;
 }
+
+void wgf_gfx_priv_fontstash_restore(struct FONScontext *context)
+{
+    _sfons_t *sfons = context != NULL ? (_sfons_t *)context->params.userPtr : NULL;
+    if (sfons != NULL) sfons->img_dirty = true;
+}

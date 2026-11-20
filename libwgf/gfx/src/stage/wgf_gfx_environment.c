@@ -892,6 +892,7 @@ static wgf_core_priv_load_step_t finish(void *data, wgf_handle_t resource)
     sg_image background = {SG_INVALID_ID}, cube = {SG_INVALID_ID};
     sg_view background_view = {SG_INVALID_ID}, cube_view = {SG_INVALID_ID};
     if (env_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
+    if (wgf_gfx_priv_render_is_lost()) return WGF_CORE_PRIV_LOAD_WAIT; /* the GPU's context lost: until it is back */
     if (!ensure()) return WGF_CORE_PRIV_LOAD_MORE; /* no GPU yet: wait for one */
     if (!env.ready) {
         wgf_log_warn("wgf_gfx_environment: %s: this graphics backend can't have environments", env_ptr->resource.path);
@@ -1062,9 +1063,23 @@ static void stop(void)
     memset(&env, 0, sizeof(env));
 }
 
+/* The GPU's context given back: every environment READY prepared again from its file (as
+ * this run has it), its cubes black meanwhile (the stage lit by its ambient alone), the new
+ * made before the old go, as a reload's. The table, the background's triangle, and the
+ * shader came back with sokol's objects (wgf_platform_priv_gpu_restore). */
+static void restore(void)
+{
+    uint16_t i;
+    for (i = 1; pool_ready && i < pool.capacity; i++) {
+        const wgf_environment_t environment = wgf_core_priv_handle_pool_handle_from_index(&pool, i);
+        if (environment != 0) wgf_core_priv_resource_load_again(environment, &loader);
+    }
+}
+
 static wgf_core_priv_part_t part = {.name = "environment",
                                     .layer = WGF_CORE_PRIV_PART_LAYER_GFX,
                                     .order = WGF_CORE_PRIV_PART_ENVIRONMENT,
+                                    .restore = restore,
                                     .stop = stop};
 
 static const wgf_gfx_priv_environment_hooks_t hooks = {wgf_gfx_priv_environment_get_lighting, draw_background};

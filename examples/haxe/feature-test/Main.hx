@@ -1133,6 +1133,7 @@ class Main {
 		expect(Draw.setBlendMode(AlphaMode.MULTIPLY) && Draw.getBlendMode() == AlphaMode.MULTIPLY && Draw.setBlendMode(AlphaMode.BLEND),
 			"immediate mode's blend mode");
 		expect(Render.getDrawCalls() >= 0 && Render.getTriangleCount() >= 0 && Render.getGpuBytes() >= 0, "frame stats");
+		expect(!Render.isContextLost() && !Render.isContextRestored(), "the GPU's context neither lost nor given back");
 		expect(Draw.polygon([100.0, 100, 120, 100, 110, 115], Color.get(ColorStock.WHITE)), "a polygon drawn");
 		Render.pushClip(0, 0, 200, 200);
 		Draw.text(font, "feature-test", 4, 120, 14, Color.get(ColorStock.WHITE));

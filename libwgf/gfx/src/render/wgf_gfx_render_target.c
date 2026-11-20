@@ -82,7 +82,9 @@ bool wgf_render_begin_target(wgf_texture_t target)
     sg_attachments attachments;
     int width, height;
     if (!wgf_gfx_priv_is_in_frame()) {
-        wgf_log_warn("wgf_render_begin_target: not in a frame (draw in a frame callback)");
+        if (!wgf_gfx_priv_render_is_lost()) { /* lost: there is no frame, and nothing to say */
+            wgf_log_warn("wgf_render_begin_target: not in a frame (draw in a frame callback)");
+        }
         return false;
     }
     if (wgf_gfx_priv_render_get_pass() != 0) {
@@ -117,7 +119,7 @@ bool wgf_render_begin_target(wgf_texture_t target)
 void wgf_render_end_target(void)
 {
     if (!wgf_gfx_priv_is_in_frame() || wgf_gfx_priv_render_get_pass() == 0) {
-        wgf_log_warn("wgf_render_end_target: not drawing into a target");
+        if (!wgf_gfx_priv_render_is_lost()) wgf_log_warn("wgf_render_end_target: not drawing into a target");
         return;
     }
     wgf_gfx_priv_render_add_command(NULL, 0); /* what the target drew is its own */

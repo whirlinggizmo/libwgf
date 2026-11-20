@@ -199,7 +199,8 @@ void wgf_core_priv_resource_failed(wgf_handle_t resource)
     if (record_ptr == NULL) return;
     if (record_ptr->reloading) { /* what it had is kept */
         record_ptr->reloading = false;
-        wgf_log_error("wgf_asset_reload: %s didn't load again: what was loaded is kept", record_ptr->path);
+        wgf_log_error("wgf_core: %s didn't load again: what was loaded is kept",
+                      record_ptr->path[0] != '\0' ? record_ptr->path : record_ptr->found);
         return;
     }
     record_ptr->status = WGF_RESOURCE_STATUS_FAILED;
@@ -243,6 +244,20 @@ int wgf_core_priv_resource_reload(const char *path)
         }
     }
     return count;
+}
+
+bool wgf_core_priv_resource_load_again(wgf_handle_t resource, const wgf_core_priv_loader_t *loader)
+{
+    wgf_core_priv_resource_t *record_ptr = wgf_core_priv_resource_get(resource);
+    if (record_ptr == NULL || loader == NULL || record_ptr->status != WGF_RESOURCE_STATUS_READY ||
+        record_ptr->reloading || record_ptr->found[0] == '\0') {
+        return false;
+    }
+    record_ptr->reloading = true;
+    if (wgf_core_priv_load_request(loader, record_ptr->found, resource)) return true;
+    record_ptr = wgf_core_priv_resource_get(resource); /* resolved again, as reload does */
+    if (record_ptr != NULL) record_ptr->reloading = false;
+    return false;
 }
 
 wgf_resource_status_t wgf_resource_get_status(wgf_handle_t resource)

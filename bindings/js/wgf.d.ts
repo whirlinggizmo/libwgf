@@ -3962,8 +3962,9 @@ export declare function wgf_texture_create(path: string | null): wgf_texture_t;
  * then used as any texture -- drawn (wgf_draw_texture), on a sprite, or on a material. It
  * has the screen's pixel format and samples (wgf_window_set_msaa), and a depth buffer of
  * its own, so whatever draws to the screen draws into it; it has no mipmaps. Made from
- * numbers: READY at once, with no path. 0 for a size of 0 or less, or over 16384, or
- * before gfx runs (in init or later), each logged.
+ * numbers: READY at once, with no path. What was drawn into it is gone when the web's GPU
+ * context is lost (wgf_render_is_context_lost): it comes back blank. 0 for a size of 0 or
+ * less, or over 16384, or before gfx runs (in init or later), each logged.
  */
 export declare function wgf_texture_create_target(width: number, height: number): wgf_texture_t;
 
@@ -3978,8 +3979,11 @@ export declare function wgf_texture_create_blank(width: number, height: number):
 /**
  * Its every pixel written, RGBA, 8 bits each, rows from the top (width x height x 4
  * bytes), copied; seen from the next frame drawn. Once a frame: a second write in a frame
- * is refused, as the GPU takes one. False for a texture not made blank, a size that isn't
- * its, NULL, and a second write in a frame.
+ * is refused, as the GPU takes one. On the web the last write is also kept, a copy the
+ * texture's size, so the texture comes back as it was when the GPU's context does
+ * (wgf_render.h): the frame it comes back in takes no other write; while the context is lost,
+ * every write is kept and taken. False for a texture not made blank, a size that isn't its,
+ * NULL, and a second write in a frame.
  */
 export declare function wgf_texture_write(texture: wgf_texture_t | 0, data: Uint8Array | ArrayBuffer | null): boolean;
 
@@ -8832,6 +8836,44 @@ export declare function wgf_render_get_triangle_count(): number;
  * raylib's frame stats, read by sokol's trace hooks. 0 before the first frame.
  */
 export declare function wgf_render_get_gpu_bytes(): number;
+
+/**
+ * A lost GPU context: on the web, the browser drops WebGL when a phone backgrounds the page
+ * or the GPU resets, and gives it back later. While it is lost (is_context_lost) nothing is
+ * drawn and nothing is sent to the GPU, but frames, ticks, input, and sound go on: a draw,
+ * a stage's draw, a document's, or a target begun does nothing and says nothing (a UI is
+ * laid out and its buttons answer, drawing nothing); a texture, mesh, shader, font, or other
+ * resource loading finishes once the context is back; and a target or blank texture made
+ * meanwhile gets its GPU side then. When it comes back, before the next frame is drawn,
+ * everything is made again under the same handles: shaders and pipelines; a texture,
+ * cubemap, environment, bitmap font's pages, or glTF file's images read again from its
+ * file (as this run has it: nothing fetched), each blank until it is in (a few frames);
+ * meshes from their vertices; a blank texture with its last write (wgf_texture.h); fonts'
+ * glyphs; RmlUi's documents' textures. Render targets come back blank: a game that draws
+ * one only when something changes draws it again in the frame is_context_restored is true
+ * (once, the frame the context is back in). Natively the context is never lost, and both
+ * are always false.
+ */
+export declare function wgf_render_is_context_lost(): boolean;
+
+/**
+ * A lost GPU context: on the web, the browser drops WebGL when a phone backgrounds the page
+ * or the GPU resets, and gives it back later. While it is lost (is_context_lost) nothing is
+ * drawn and nothing is sent to the GPU, but frames, ticks, input, and sound go on: a draw,
+ * a stage's draw, a document's, or a target begun does nothing and says nothing (a UI is
+ * laid out and its buttons answer, drawing nothing); a texture, mesh, shader, font, or other
+ * resource loading finishes once the context is back; and a target or blank texture made
+ * meanwhile gets its GPU side then. When it comes back, before the next frame is drawn,
+ * everything is made again under the same handles: shaders and pipelines; a texture,
+ * cubemap, environment, bitmap font's pages, or glTF file's images read again from its
+ * file (as this run has it: nothing fetched), each blank until it is in (a few frames);
+ * meshes from their vertices; a blank texture with its last write (wgf_texture.h); fonts'
+ * glyphs; RmlUi's documents' textures. Render targets come back blank: a game that draws
+ * one only when something changes draws it again in the frame is_context_restored is true
+ * (once, the frame the context is back in). Natively the context is never lost, and both
+ * are always false.
+ */
+export declare function wgf_render_is_context_restored(): boolean;
 
 /**
  * Draw into a render target (wgf_texture_create_target) instead of the screen, until

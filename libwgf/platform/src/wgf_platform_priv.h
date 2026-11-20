@@ -86,6 +86,34 @@ bool wgf_platform_priv_read_screen(int width, int height, unsigned char *rgba);
 /* Seconds the display shows a frame for, measured. */
 double wgf_platform_priv_get_frame_duration(void);
 
+/* The GPU's context, which the web's WebGL loses (a phone backgrounding the page, a GPU
+ * reset) and the browser may give back: sokol_app cancels the loss's event (its listener
+ * returns true to Emscripten, which calls preventDefault), so the browser restores it; it
+ * also sends SUSPENDED and RESUMED, which nothing needs, since the canvas's context is asked
+ * here directly (the loss shows there before its event). Natively there is no loss (false
+ * and 0 always); a headless build is lost when a test says so
+ * (wgf_platform_priv_headless_set_gpu_lost). */
+bool wgf_platform_priv_gpu_is_lost(void);
+/* How many times the context has come back since the program started: a loss and its
+ * return between two frames show here alone. */
+unsigned wgf_platform_priv_gpu_get_restores(void);
+/* sokol_gfx's objects on a context lost, then given back (WebGL2 only; elsewhere these do
+ * nothing, and restore returns true): `lost` reads the context's one lost error, so no
+ * sokol check trips on it (nothing on the GPU is called after it until restore); `restore`
+ * makes every live buffer, image, sampler, shader, and view again under its own id, so
+ * every handle gfx, sokol_gl, and sokol_fontstash hold stays good: sokol's own objects,
+ * every shader from what was kept of its description, and every buffer and image empty but
+ * those made with at most 16 KB of data, sent again as they were made (a white texture, a
+ * quad, a table, the placeholder checker); what is bigger, its owner sends again. False
+ * when something couldn't be made. Here, since only the file compiling sokol sees its
+ * objects. */
+void wgf_platform_priv_gpu_lost(void);
+bool wgf_platform_priv_gpu_restore(void);
+/* What restore needs, kept from sokol_gfx's creates from now on (true, at gfx's start, on
+ * sokol's trace hooks, calling on to those installed before), or let go of (false, at its
+ * stop). WebGL2 only: elsewhere nothing is kept. */
+void wgf_platform_priv_gpu_keep(bool keep);
+
 /* sokol_app only: keep the program alive while the loop runs (true), and let it
  * end (false). On the web, main returns while the browser runs the frames, which
  * would otherwise end the program before the first; natively, nothing to do. */
@@ -178,6 +206,10 @@ void wgf_platform_priv_headless_set_framebuffer(int width, int height);
 /* Headless builds only, for tests: queue an event, delivered before the next
  * frame as sokol_app delivers the window's. False when the queue is full. */
 bool wgf_platform_priv_headless_push_event(const sapp_event *event);
+
+/* Headless builds only, for tests: the GPU's context lost (true) or given back (false, which
+ * counts a restore), as the web's is; nothing on the dummy backend is really lost. */
+void wgf_platform_priv_headless_set_gpu_lost(bool lost);
 
 /* A named point in startup, for measuring it: on the web a performance mark
  * (performance.mark, which DevTools and tools/measure_example_startup.py read);

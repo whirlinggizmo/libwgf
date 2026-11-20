@@ -41,6 +41,7 @@ typedef struct texture_t {
     /* made blank (wgf_texture_create_blank): written by the program */
     bool blank;
     uint32_t written; /* the frame it was last written in, + 1 */
+    unsigned char *kept; /* its last write, where the GPU's context can be lost (the web): sent again on its return */
     bool compressed;  /* a KTX file's levels, as they are: not read back */
 } texture_t;
 
@@ -243,6 +244,7 @@ static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
     sg_view view = {SG_INVALID_ID};
     if (texture_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
     if (!wgf_gfx_priv_render_is_running()) return WGF_CORE_PRIV_LOAD_MORE; /* no GPU yet: wait for one */
+    if (wgf_gfx_priv_render_is_lost()) return WGF_CORE_PRIV_LOAD_WAIT; /* the GPU's context lost: until it is back */
     if (!make_image(decoded->width, decoded->height, decoded->mip_count, decoded->levels, &image, &view)) {
         wgf_log_warn("wgf_gfx_texture: %s: the GPU didn't take it (%d by %d)", texture_ptr->resource.found,
                      decoded->width, decoded->height);
@@ -394,6 +396,7 @@ static wgf_core_priv_load_step_t finish_ktx(void *prepared, wgf_handle_t resourc
     sg_view view = {SG_INVALID_ID};
     if (texture_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
     if (!wgf_gfx_priv_render_is_running()) return WGF_CORE_PRIV_LOAD_MORE; /* no GPU yet: wait for one */
+    if (wgf_gfx_priv_render_is_lost()) return WGF_CORE_PRIV_LOAD_WAIT; /* the GPU's context lost: until it is back */
     if (!make_ktx_image(ktx, texture_ptr->resource.found, &image, &view)) return WGF_CORE_PRIV_LOAD_FAILED;
     texture_ptr->compressed = true;
     loaded(resource, texture_ptr, image, view, ktx->width, ktx->height);
@@ -513,6 +516,43 @@ wgf_texture_t wgf_gfx_priv_texture_create_ktx(const wgf_gfx_priv_ktx_t *ktx, con
     return texture;
 }
 
+/* A texture's image made again from pixels, in place, under its handle (the GPU's context
+ * given back): the old image and view go once the new are made. */
+static bool refill(texture_t *texture_ptr, sg_image image, sg_view view, int width, int height)
+{
+    if (texture_ptr->view.id != SG_INVALID_ID) sg_destroy_view(texture_ptr->view);
+    if (texture_ptr->image.id != SG_INVALID_ID) sg_destroy_image(texture_ptr->image);
+    texture_ptr->image = image;
+    texture_ptr->view = view;
+    texture_ptr->width = width;
+    texture_ptr->height = height;
+    return true;
+}
+
+bool wgf_gfx_priv_texture_refill_decoded(wgf_texture_t texture, void *decoded_data)
+{
+    decoded_t *decoded = (decoded_t *)decoded_data;
+    texture_t *texture_ptr = texture_of(texture);
+    sg_image image = {SG_INVALID_ID};
+    sg_view view = {SG_INVALID_ID};
+    bool made = false;
+    if (texture_ptr != NULL && decoded != NULL &&
+        make_image(decoded->width, decoded->height, decoded->mip_count, decoded->levels, &image, &view)) {
+        made = refill(texture_ptr, image, view, decoded->width, decoded->height);
+    }
+    if (decoded != NULL) discard(decoded);
+    return made;
+}
+
+bool wgf_gfx_priv_texture_refill_ktx(wgf_texture_t texture, const wgf_gfx_priv_ktx_t *ktx, const char *what)
+{
+    texture_t *texture_ptr = texture_of(texture);
+    sg_image image = {SG_INVALID_ID};
+    sg_view view = {SG_INVALID_ID};
+    if (texture_ptr == NULL || !make_ktx_image(ktx, what, &image, &view)) return false;
+    return refill(texture_ptr, image, view, ktx->width, ktx->height);
+}
+
 wgf_texture_t wgf_gfx_priv_texture_get_placeholder(void)
 {
     return placeholder;
@@ -552,6 +592,8 @@ static void free_texture(wgf_handle_t texture, void *record)
     if (texture_ptr->view.id != SG_INVALID_ID) sg_destroy_view(texture_ptr->view);
     if (texture_ptr->image.id != SG_INVALID_ID) sg_destroy_image(texture_ptr->image);
     if (free_target != NULL) free_target(texture_ptr);
+    free(texture_ptr->kept);
+    texture_ptr->kept = NULL;
 }
 
 /* Its file side (map, loader) is set by wgf_texture_create, the only way a texture comes
@@ -576,40 +618,22 @@ static void free_target_objects(texture_t *texture_ptr)
     for (i = 0; i < 2; i++) sg_destroy_image(texture_ptr->images[i]);
 }
 
-/* libwgt's: the screen's pixel format, samples, and a depth buffer, so every pipeline
- * made for the screen draws into it; with samples, the image drawn is resolved into the
- * one sampled. */
-wgf_texture_t wgf_texture_create_target(int width, int height)
+/* A target's GPU objects, libwgt's: the screen's pixel format, samples, and a depth buffer,
+ * so every pipeline made for the screen draws into it; with samples, the image drawn is
+ * resolved into the one sampled. False when the GPU didn't take them. */
+static bool make_target_objects(texture_t *t)
 {
     sg_environment_defaults env;
     sg_image_desc image;
     sg_view_desc view;
     int samples;
-    wgf_texture_t texture = 0;
-    texture_t *t;
-    if (width <= 0 || height <= 0 || width > 16384 || height > 16384) {
-        wgf_log_error("wgf_texture_create_target: a size of %dx%d", width, height);
-        return 0;
-    }
-    if (!wgf_gfx_priv_render_is_running()) {
-        wgf_log_error("wgf_texture_create_target: gfx isn't running (make targets in init or later)");
-        return 0;
-    }
-    if (ensure_pool()) texture = wgf_core_priv_resource_add(WGF_CORE_PRIV_HANDLE_KIND_TEXTURE);
-    t = texture_of(texture);
-    if (t == NULL) return 0;
-    free_target = free_target_objects;
     env = sg_query_desc().environment.defaults;
     samples = env.sample_count > 1 ? env.sample_count : 1;
-    t->width = width;
-    t->height = height; /* READY as it was added: made from numbers */
-    t->target = true;
-    t->clear_color = 0x00000000u; /* transparent black */
     memset(&image, 0, sizeof(image));
     image.usage.color_attachment = samples == 1;
     image.usage.resolve_attachment = samples > 1;
-    image.width = width;
-    image.height = height;
+    image.width = t->width;
+    image.height = t->height;
     image.pixel_format = env.color_format != _SG_PIXELFORMAT_DEFAULT ? env.color_format : SG_PIXELFORMAT_RGBA8;
     image.sample_count = 1;
     image.label = "wgf-target-color";
@@ -632,8 +656,8 @@ wgf_texture_t wgf_texture_create_target(int width, int height)
     }
     memset(&image, 0, sizeof(image));
     image.usage.depth_stencil_attachment = true;
-    image.width = width;
-    image.height = height;
+    image.width = t->width;
+    image.height = t->height;
     image.pixel_format = env.depth_format != _SG_PIXELFORMAT_DEFAULT ? env.depth_format : SG_PIXELFORMAT_DEPTH_STENCIL;
     image.sample_count = samples;
     image.label = "wgf-target-depth";
@@ -644,9 +668,33 @@ wgf_texture_t wgf_texture_create_target(int width, int height)
     memset(&view, 0, sizeof(view));
     view.texture.image = t->image;
     t->view = sg_make_view(&view);
-    if (sg_query_image_state(t->image) != SG_RESOURCESTATE_VALID ||
-        sg_query_image_state(t->images[1]) != SG_RESOURCESTATE_VALID ||
-        sg_query_view_state(t->view) != SG_RESOURCESTATE_VALID) {
+    return sg_query_image_state(t->image) == SG_RESOURCESTATE_VALID &&
+           sg_query_image_state(t->images[1]) == SG_RESOURCESTATE_VALID &&
+           sg_query_view_state(t->view) == SG_RESOURCESTATE_VALID;
+}
+
+wgf_texture_t wgf_texture_create_target(int width, int height)
+{
+    wgf_texture_t texture = 0;
+    texture_t *t;
+    if (width <= 0 || height <= 0 || width > 16384 || height > 16384) {
+        wgf_log_error("wgf_texture_create_target: a size of %dx%d", width, height);
+        return 0;
+    }
+    if (!wgf_gfx_priv_render_is_running()) {
+        wgf_log_error("wgf_texture_create_target: gfx isn't running (make targets in init or later)");
+        return 0;
+    }
+    if (ensure_pool()) texture = wgf_core_priv_resource_add(WGF_CORE_PRIV_HANDLE_KIND_TEXTURE);
+    t = texture_of(texture);
+    if (t == NULL) return 0;
+    free_target = free_target_objects;
+    t->width = width;
+    t->height = height; /* READY as it was added: made from numbers */
+    t->target = true;
+    t->clear_color = 0x00000000u; /* transparent black */
+    if (wgf_gfx_priv_render_is_lost()) return texture; /* its GPU objects made when the context is back */
+    if (!make_target_objects(t)) {
         wgf_log_error("wgf_texture_create_target: the GPU didn't take a %dx%d target", width, height);
         wgf_resource_release(texture);
         return 0;
@@ -654,10 +702,26 @@ wgf_texture_t wgf_texture_create_target(int width, int height)
     return texture;
 }
 
-wgf_texture_t wgf_texture_create_blank(int width, int height)
+/* A blank texture's GPU objects: an image the program writes, and its view. */
+static bool make_blank_objects(texture_t *t)
 {
     sg_image_desc image;
     sg_view_desc view;
+    memset(&image, 0, sizeof(image));
+    image.usage.dynamic_update = true;
+    image.width = t->width;
+    image.height = t->height;
+    image.pixel_format = SG_PIXELFORMAT_RGBA8;
+    image.label = "wgf-texture-blank";
+    t->image = sg_make_image(&image);
+    memset(&view, 0, sizeof(view));
+    view.texture.image = t->image;
+    t->view = sg_make_view(&view);
+    return sg_query_image_state(t->image) == SG_RESOURCESTATE_VALID;
+}
+
+wgf_texture_t wgf_texture_create_blank(int width, int height)
+{
     wgf_texture_t texture = 0;
     texture_t *t;
     if (width <= 0 || height <= 0 || width > 16384 || height > 16384) {
@@ -674,22 +738,21 @@ wgf_texture_t wgf_texture_create_blank(int width, int height)
     t->width = width;
     t->height = height; /* READY as it was added: made from numbers */
     t->blank = true;
-    memset(&image, 0, sizeof(image));
-    image.usage.dynamic_update = true;
-    image.width = width;
-    image.height = height;
-    image.pixel_format = SG_PIXELFORMAT_RGBA8;
-    image.label = "wgf-texture-blank";
-    t->image = sg_make_image(&image);
-    memset(&view, 0, sizeof(view));
-    view.texture.image = t->image;
-    t->view = sg_make_view(&view);
-    if (sg_query_image_state(t->image) != SG_RESOURCESTATE_VALID) {
+    if (wgf_gfx_priv_render_is_lost()) return texture; /* its GPU objects made when the context is back */
+    if (!make_blank_objects(t)) {
         wgf_log_error("wgf_texture_create_blank: the GPU didn't take a %dx%d texture", width, height);
         wgf_resource_release(texture);
         return 0;
     }
     return texture;
+}
+
+/* Its last write kept, where the GPU's context can be lost, to send again when it is back. */
+static void keep_write(texture_t *t, const unsigned char *data, int size)
+{
+    if (!wgf_gfx_priv_render_can_be_lost()) return;
+    if (t->kept == NULL) t->kept = (unsigned char *)malloc((size_t)size);
+    if (t->kept != NULL) memcpy(t->kept, data, (size_t)size);
 }
 
 bool wgf_texture_write(wgf_texture_t texture, const unsigned char *data, int size)
@@ -698,6 +761,10 @@ bool wgf_texture_write(wgf_texture_t texture, const unsigned char *data, int siz
     uint32_t frame;
     sg_image_data pixels;
     if (t == NULL || !t->blank || data == NULL || (int64_t)size != (int64_t)t->width * t->height * 4) return false;
+    if (wgf_gfx_priv_render_is_lost()) { /* kept, and sent when the context is back */
+        keep_write(t, data, size);
+        return true;
+    }
     frame = wgf_gfx_priv_render_get_last_frame() + 1; /* the frames ended: one write between two */
     if (t->written == frame) return false; /* the GPU takes one write a frame */
     memset(&pixels, 0, sizeof(pixels));
@@ -705,7 +772,43 @@ bool wgf_texture_write(wgf_texture_t texture, const unsigned char *data, int siz
     pixels.mip_levels[0].size = (size_t)size;
     sg_update_image(t->image, &pixels);
     t->written = frame;
+    keep_write(t, data, size);
     return true;
+}
+
+/* The GPU's context given back (wgf_gfx_priv_render_update_context): sokol's objects are
+ * made again empty under their ids, so what a texture holds is sent again: a file's read
+ * again with its own loader (blank until it is in), a blank texture's last write, and a
+ * target or blank texture made while the context was lost its objects. A texture of
+ * another file's (a glTF's images, a bitmap font's pages) is its part's to send again. */
+void wgf_gfx_priv_texture_restore(void)
+{
+    uint16_t i;
+    for (i = 1; pool_ready && i < texture_pool.capacity; i++) {
+        const wgf_texture_t texture = wgf_core_priv_handle_pool_handle_from_index(&texture_pool, i);
+        texture_t *t = &textures[i];
+        if (texture == 0 || t->resource.status != WGF_RESOURCE_STATUS_READY) continue;
+        if (t->target || t->blank) {
+            if (t->image.id == SG_INVALID_ID) {
+                const bool made = t->target ? make_target_objects(t) : make_blank_objects(t);
+                if (!made) wgf_log_warn("wgf_gfx_texture: the GPU didn't take a %dx%d texture", t->width, t->height);
+            }
+            if (t->blank && t->kept != NULL) {
+                sg_image_data pixels;
+                memset(&pixels, 0, sizeof(pixels));
+                pixels.mip_levels[0].ptr = t->kept;
+                pixels.mip_levels[0].size = (size_t)t->width * (size_t)t->height * 4;
+                sg_update_image(t->image, &pixels);
+                t->written = wgf_gfx_priv_render_get_last_frame() + 1;
+            }
+            continue;
+        }
+        /* through the kind's hook, which wgf_texture_create sets: a program that loads no
+           file links no image decoder */
+        if (t->resource.path[0] != '\0' && !t->resource.permanent && resource_kind.loader != NULL) {
+            wgf_core_priv_resource_load_again(texture, resource_kind.loader(t->resource.found));
+        }
+    }
 }
 
 bool wgf_gfx_priv_texture_get_target(wgf_texture_t texture, sg_attachments *attachments, int *width, int *height)

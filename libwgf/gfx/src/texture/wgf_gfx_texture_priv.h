@@ -85,4 +85,14 @@ wgf_texture_t wgf_gfx_priv_texture_get_placeholder(void);
 void wgf_gfx_priv_texture_setup(void);
 void wgf_gfx_priv_texture_shutdown(void);
 
+/* The GPU's context given back (wgf_gfx_priv_render_update_context): every texture's own
+ * sent again, as wgf_render.h says (a file's read again, a blank texture's last write, a
+ * target's or blank texture's objects made while lost). */
+void wgf_gfx_priv_texture_restore(void);
+/* A texture of another file's (a glTF's image, a bitmap font's page) made again in place
+ * from what that file's part decoded again: refill_decoded takes the image, as
+ * create_decoded does. False (the texture left as it was) when the GPU didn't take it. */
+bool wgf_gfx_priv_texture_refill_decoded(wgf_texture_t texture, void *decoded);
+bool wgf_gfx_priv_texture_refill_ktx(wgf_texture_t texture, const struct wgf_gfx_priv_ktx_t *ktx, const char *what);
+
 #endif

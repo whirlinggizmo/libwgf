@@ -33,6 +33,18 @@ bool wgf_gfx_priv_is_in_frame(void);
  * inside a frame, so a draw outside one can't land in the next. */
 bool wgf_gfx_priv_render_is_running(void);
 
+/* The GPU's context (wgf_render.h's is_context_lost), asked of the platform by app's runtime
+ * at a frame's start, before anything (a load's finish) can reach the GPU: lost, nothing
+ * reaches it until it is back, and a frame begun draws nothing (in_frame stays false); back,
+ * sokol's objects are made again in place, then every part's restore and the textures' run,
+ * before that frame. While lost, a load that would make GPU objects waits
+ * (WGF_CORE_PRIV_LOAD_WAIT), and a call that would make them now leaves them to the restore. */
+void wgf_gfx_priv_render_update_context(void);
+bool wgf_gfx_priv_render_is_lost(void);
+/* Whether the context can be lost here at all (the web): what a part keeps only for a
+ * restore (a blank texture's last write) is kept only where it can. */
+bool wgf_gfx_priv_render_can_be_lost(void);
+
 /* A white cube, a texel a face, and a view of it: what a custom shader's textureCube samples
  * with no cubemap set, or one still loading. The caller destroys both. */
 sg_image wgf_gfx_priv_render_white_cube(sg_view *view);

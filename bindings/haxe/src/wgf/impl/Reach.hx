@@ -858,6 +858,8 @@ class Reach {
 		"wgf_render_get_target_clear_color",
 		"wgf_render_get_triangle_count",
 		"wgf_render_get_width",
+		"wgf_render_is_context_lost",
+		"wgf_render_is_context_restored",
 		"wgf_render_pop_clip",
 		"wgf_render_push_clip",
 		"wgf_render_read_screen",
@@ -1358,7 +1360,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1349) 0];
+	static final counts:Array<Int> = [for (_ in 0...1351) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

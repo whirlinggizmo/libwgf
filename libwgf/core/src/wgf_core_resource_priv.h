@@ -95,6 +95,14 @@ void wgf_core_priv_resource_loaded(wgf_handle_t resource, const char *found);
  * or of a kind that doesn't reload (warned), is left. The number set loading. */
 int wgf_core_priv_resource_reload(const char *path);
 
+/* `resource` (READY, read from a file) loaded again from its file as this run has it (no
+ * fetch: the web's copy, where wgf_core_priv_resource_reload fetches anew), with `loader`,
+ * which fills it in place as a reload does (its finish freeing the old only once the new is
+ * made): how a part sends its resources to a GPU context given back (gfx's). Its status and
+ * handle kept; a failure leaves it as it was, logged. False when it isn't READY, is loading
+ * already, has no file, or the request can't be held. */
+bool wgf_core_priv_resource_load_again(wgf_handle_t resource, const wgf_core_priv_loader_t *loader);
+
 /* Whether `resource` is loading again (its loader replaces what it holds, freeing the old
  * only once the new is made). */
 bool wgf_core_priv_resource_is_reloading(wgf_handle_t resource);

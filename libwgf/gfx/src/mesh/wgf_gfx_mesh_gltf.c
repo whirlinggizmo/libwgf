@@ -976,10 +976,13 @@ static wgf_core_priv_load_step_t finish(void *data, wgf_handle_t resource)
     prepared_t *prepared = (prepared_t *)data;
     mesh_t *mesh_ptr = wgf_gfx_priv_mesh_record(resource);
     wgf_mesh_t *parts = NULL;
+    wgf_texture_t *images = NULL;
     int p, part_count = 0;
+    size_t i;
 
     if (mesh_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
     if (!wgf_gfx_priv_render_is_running()) return WGF_CORE_PRIV_LOAD_MORE; /* no GPU yet: wait for one */
+    if (wgf_gfx_priv_render_is_lost()) return WGF_CORE_PRIV_LOAD_WAIT; /* the GPU's context lost: until it is back */
     if (prepared->step == 0) {
         for (p = 0; p < prepared->mesh.primitive_count; p++) {
             prepared->mesh.primitives[p].vertex_buffer.id = SG_INVALID_ID;
@@ -1008,6 +1011,10 @@ static wgf_core_priv_load_step_t finish(void *data, wgf_handle_t resource)
     }
     load_materials(prepared);
     if (!make_parts(prepared, &parts, &part_count)) return WGF_CORE_PRIV_LOAD_FAILED;
+    images = prepared->gltf->images_count > 0
+                 ? (wgf_texture_t *)calloc(prepared->gltf->images_count, sizeof(wgf_texture_t))
+                 : NULL;
+    for (i = 0; images != NULL && i < prepared->gltf->images_count; i++) images[i] = prepared->images[i].texture;
     mesh_ptr = wgf_gfx_priv_mesh_record(resource); /* resolved again: the parts' adds may have moved the pool */
     if (wgf_core_priv_resource_is_reloading(resource)) {
         reload_into(mesh_ptr, parts, part_count);
@@ -1029,10 +1036,49 @@ static wgf_core_priv_load_step_t finish(void *data, wgf_handle_t resource)
     mesh_ptr->animated = prepared->mesh.animated;
     mesh_ptr->bounds_min = prepared->mesh.bounds_min;
     mesh_ptr->bounds_max = prepared->mesh.bounds_max;
+    free(mesh_ptr->images); /* loaded again: the old file's */
+    mesh_ptr->images = images;
+    mesh_ptr->image_count = images != NULL ? (int)prepared->gltf->images_count : 0;
     memset(&prepared->mesh, 0, sizeof(prepared->mesh));
     wgf_core_priv_resource_loaded(resource, NULL);
     wgf_gfx_priv_model_mesh_done(resource);
     return WGF_CORE_PRIV_LOAD_DONE;
+}
+
+/* The GPU's context given back: the file read again (as this run has it) and only its
+ * images made again, each into the texture it made before (its handle, which its materials
+ * hold), one a step; its triangles, kept on the CPU, are the meshes' part's to send again. */
+static wgf_core_priv_load_step_t finish_images(void *data, wgf_handle_t resource)
+{
+    prepared_t *prepared = (prepared_t *)data;
+    const mesh_t *mesh_ptr = wgf_gfx_priv_mesh_record(resource);
+    if (mesh_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
+    if (!wgf_gfx_priv_render_is_running()) return WGF_CORE_PRIV_LOAD_MORE;
+    if (wgf_gfx_priv_render_is_lost()) return WGF_CORE_PRIV_LOAD_WAIT; /* lost again: until it is back */
+    while (prepared->next_image < prepared->gltf->images_count) {
+        const size_t at = prepared->next_image++;
+        gltf_image_t *image = &prepared->images[at];
+        const wgf_texture_t texture = (int)at < mesh_ptr->image_count ? mesh_ptr->images[at] : 0;
+        if (texture == 0) continue;
+        if (image->ktx_file != NULL) {
+            wgf_gfx_priv_texture_refill_ktx(texture, image->ktx, prepared->path); /* warns */
+            wgf_gfx_priv_texture_ktx_free(image->ktx_file);
+            image->ktx_file = NULL;
+            return WGF_CORE_PRIV_LOAD_MORE;
+        }
+        if (image->decoded != NULL) {
+            wgf_gfx_priv_texture_refill_decoded(texture, image->decoded); /* takes it */
+            image->decoded = NULL;
+            return WGF_CORE_PRIV_LOAD_MORE;
+        }
+    }
+    wgf_core_priv_resource_loaded(resource, NULL); /* no longer loading again */
+    return WGF_CORE_PRIV_LOAD_DONE;
+}
+
+static void fail_images(wgf_handle_t resource)
+{
+    wgf_core_priv_resource_failed(resource); /* loading again: kept as it was, logged */
 }
 
 static void fail(wgf_handle_t resource)
@@ -1044,6 +1090,13 @@ static void fail(wgf_handle_t resource)
 }
 
 static const wgf_core_priv_loader_t loader = {"mesh", prepare, finish, discard, fail, NULL, true, NULL};
+static const wgf_core_priv_loader_t images_loader = {"mesh's images", prepare, finish_images, discard,
+                                                     fail_images,   NULL,    false,         NULL};
+
+static void load_images_again(wgf_mesh_t file)
+{
+    wgf_core_priv_resource_load_again(file, &images_loader);
+}
 
 static bool is_file_uri(const cgltf_image *img)
 {
@@ -1129,7 +1182,7 @@ wgf_mesh_t wgf_mesh_create(const char *path)
         return 0;
     }
     if (!wgf_gfx_priv_mesh_ensure_pool()) return 0;
-    wgf_gfx_priv_mesh_set_loader(&loader); /* this object's: what a mesh from a path loads through */
+    wgf_gfx_priv_mesh_set_loader(&loader, load_images_again); /* this object's: what a mesh from a path loads through */
     mesh = wgf_asset_priv_resource_create(WGF_CORE_PRIV_HANDLE_KIND_MESH, path);
     record = wgf_gfx_priv_mesh_record(mesh);
     if (record != NULL) record->from_file = true;

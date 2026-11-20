@@ -38,6 +38,24 @@ WGF_API int wgf_render_get_draw_calls(void);
 WGF_API double wgf_render_get_triangle_count(void);
 WGF_API double wgf_render_get_gpu_bytes(void);
 
+/* A lost GPU context: on the web, the browser drops WebGL when a phone backgrounds the page
+ * or the GPU resets, and gives it back later. While it is lost (is_context_lost) nothing is
+ * drawn and nothing is sent to the GPU, but frames, ticks, input, and sound go on: a draw,
+ * a stage's draw, a document's, or a target begun does nothing and says nothing (a UI is
+ * laid out and its buttons answer, drawing nothing); a texture, mesh, shader, font, or other
+ * resource loading finishes once the context is back; and a target or blank texture made
+ * meanwhile gets its GPU side then. When it comes back, before the next frame is drawn,
+ * everything is made again under the same handles: shaders and pipelines; a texture,
+ * cubemap, environment, bitmap font's pages, or glTF file's images read again from its
+ * file (as this run has it: nothing fetched), each blank until it is in (a few frames);
+ * meshes from their vertices; a blank texture with its last write (wgf_texture.h); fonts'
+ * glyphs; RmlUi's documents' textures. Render targets come back blank: a game that draws
+ * one only when something changes draws it again in the frame is_context_restored is true
+ * (once, the frame the context is back in). Natively the context is never lost, and both
+ * are always false. */
+WGF_API bool wgf_render_is_context_lost(void);
+WGF_API bool wgf_render_is_context_restored(void);
+
 /* Draw into a render target (wgf_texture_create_target) instead of the screen, until
  * wgf_render_end_target, as libwgt's. Inside a frame, and everything draws there:
  * stages, sprites, particles, text, the UI, immediate mode. Targets are drawn before the

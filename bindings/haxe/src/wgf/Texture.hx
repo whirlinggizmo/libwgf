@@ -34,8 +34,9 @@ abstract Texture(Int) from Int to Int to wgf.Handle {
 	    then used as any texture -- drawn (wgf_draw_texture), on a sprite, or on a material. It
 	    has the screen's pixel format and samples (wgf_window_set_msaa), and a depth buffer of
 	    its own, so whatever draws to the screen draws into it; it has no mipmaps. Made from
-	    numbers: READY at once, with no path. 0 for a size of 0 or less, or over 16384, or
-	    before gfx runs (in init or later), each logged.
+	    numbers: READY at once, with no path. What was drawn into it is gone when the web's GPU
+	    context is lost (wgf_render_is_context_lost): it comes back blank. 0 for a size of 0 or
+	    less, or over 16384, or before gfx runs (in init or later), each logged.
 	**/
 	public static inline function createTarget(width:Int, height:Int):Texture
 		return Raw.wgf_texture_create_target(width, height);
@@ -52,8 +53,11 @@ abstract Texture(Int) from Int to Int to wgf.Handle {
 	/**
 	    Its every pixel written, RGBA, 8 bits each, rows from the top (width x height x 4
 	    bytes), copied; seen from the next frame drawn. Once a frame: a second write in a frame
-	    is refused, as the GPU takes one. False for a texture not made blank, a size that isn't
-	    its, NULL, and a second write in a frame.
+	    is refused, as the GPU takes one. On the web the last write is also kept, a copy the
+	    texture's size, so the texture comes back as it was when the GPU's context does
+	    (wgf_render.h): the frame it comes back in takes no other write; while the context is lost,
+	    every write is kept and taken. False for a texture not made blank, a size that isn't its,
+	    NULL, and a second write in a frame.
 	**/
 	public inline function write(data:haxe.io.Bytes):Bool
 		return Raw.wgf_texture_write(this, data);

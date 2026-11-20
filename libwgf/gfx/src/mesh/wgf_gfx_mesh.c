@@ -53,6 +53,9 @@ void wgf_gfx_priv_mesh_free_data(mesh_t *mesh_ptr)
         free(primitive->skin);
     }
     free(mesh_ptr->primitives);
+    free(mesh_ptr->images);
+    mesh_ptr->images = NULL;
+    mesh_ptr->image_count = 0;
     for (i = 0; i < mesh_ptr->material_count; i++) wgf_resource_release(mesh_ptr->materials[i]);
     free(mesh_ptr->materials);
     for (i = 0; i < mesh_ptr->part_count; i++) { /* gone already at gfx's stop, when the pool frees all */
@@ -133,10 +136,12 @@ static const wgf_core_priv_loader_t *loader_of(const char *path)
 }
 
 static wgf_core_priv_resource_kind_t resource_kind = {.create = "wgf_mesh_create", .free = free_mesh};
+static void (*file_load_again)(wgf_mesh_t file); /* glTF's: a file's images read again */
 
-void wgf_gfx_priv_mesh_set_loader(const wgf_core_priv_loader_t *loader)
+void wgf_gfx_priv_mesh_set_loader(const wgf_core_priv_loader_t *loader, void (*load_again)(wgf_mesh_t file))
 {
     file_loader = loader;
+    file_load_again = load_again;
     resource_kind.loader = loader_of;
 }
 
@@ -149,9 +154,37 @@ static void stop(void)
     pool_ready = false;
 }
 
+/* The GPU's context given back: every primitive's buffers dropped (sokol made them again
+ * empty), so its next draw sends its vertices again, as its first did, from the copy every
+ * mesh keeps; a changing one made changing again. A file's images read again by glTF's file. */
+static void restore(void)
+{
+    uint16_t i;
+    int p;
+    for (i = 1; pool_ready && i < pool.capacity; i++) {
+        const wgf_mesh_t mesh = wgf_core_priv_handle_pool_handle_from_index(&pool, i);
+        mesh_t *mesh_ptr = &meshes[i];
+        if (mesh == 0) continue;
+        for (p = 0; p < mesh_ptr->primitive_count; p++) {
+            primitive_t *primitive = &mesh_ptr->primitives[p];
+            if (primitive->vertex_buffer.id != SG_INVALID_ID) sg_destroy_buffer(primitive->vertex_buffer);
+            if (primitive->index_buffer.id != SG_INVALID_ID) sg_destroy_buffer(primitive->index_buffer);
+            if (primitive->skin_buffer.id != SG_INVALID_ID) sg_destroy_buffer(primitive->skin_buffer);
+            primitive->vertex_buffer.id = primitive->index_buffer.id = primitive->skin_buffer.id = SG_INVALID_ID;
+            primitive->changed = false;
+            primitive->written = 0;
+        }
+    }
+    for (i = 1; pool_ready && file_load_again != NULL && i < pool.capacity; i++) {
+        const wgf_mesh_t mesh = wgf_core_priv_handle_pool_handle_from_index(&pool, i);
+        if (mesh != 0 && meshes[i].image_count > 0) file_load_again(mesh); /* may add: index again after */
+    }
+}
+
 static wgf_core_priv_part_t part = {.name = "meshes",
                                     .layer = WGF_CORE_PRIV_PART_LAYER_GFX,
                                     .order = WGF_CORE_PRIV_PART_MESHES,
+                                    .restore = restore,
                                     .stop = stop};
 
 bool wgf_gfx_priv_mesh_ensure_pool(void)

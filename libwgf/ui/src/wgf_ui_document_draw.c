@@ -715,6 +715,16 @@ void wgf_ui_priv_doc_draw_update(void)
     free_doomed();
 }
 
+void wgf_ui_priv_doc_draw_restore(void)
+{
+    int i;
+    for (i = 0; i < dr.mesh_count; i++) {
+        doom_buffer(dr.meshes[i].vertices);
+        doom_buffer(dr.meshes[i].indices);
+    }
+    dr.mesh_count = 0;
+}
+
 void wgf_ui_priv_doc_draw_stop(void)
 {
     int i, b, r;

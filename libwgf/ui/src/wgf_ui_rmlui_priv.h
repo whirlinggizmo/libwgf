@@ -23,6 +23,9 @@ extern "C" {
 /* RmlUi started, with its one context; false (logged) when it couldn't be. Once. */
 bool wgf_ui_priv_rml_start(void);
 void wgf_ui_priv_rml_stop(void);
+/* The GPU's context given back: every texture RmlUi holds released (its ReleaseTexture each),
+ * asked for again as it next draws. */
+void wgf_ui_priv_rml_release_textures(void);
 
 /* A document parsed from `rml` (size bytes; its relative paths from `path`'s directory),
  * hidden; 0 (logged by RmlUi) when it isn't one. `owner` is the C side's handle, given back

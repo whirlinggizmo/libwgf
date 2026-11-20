@@ -20,8 +20,8 @@ typedef enum wgf_core_priv_part_layer_t {
     WGF_CORE_PRIV_PART_LAYER_ASSET, /* stopped after gfx and audio, whose loads it locates */
 } wgf_core_priv_part_layer_t;
 
-/* Where a part runs among the others: update, flush, end_frame, and stop run in this
- * order. Naming a part here links nothing. */
+/* Where a part runs among the others: update, flush, end_frame, restore, and stop run in
+ * this order. Naming a part here links nothing. */
 typedef enum wgf_core_priv_part_order_t {
     WGF_CORE_PRIV_PART_ECS,       /* actors' components and their systems (ecs/), whose actors the rest draw */
     WGF_CORE_PRIV_PART_PHYSICS3D, /* bodies and vehicles (physics3d/): ticked after the ecs's systems */
@@ -70,6 +70,10 @@ typedef struct wgf_core_priv_part_t {
     void (*tick)(float dt);
     void (*flush)(void);     /* gfx's frame end, before any pass: the frame's records to the GPU */
     void (*end_frame)(void); /* after gfx's frame is submitted */
+    /* the GPU's context given back after a loss (the web's WebGL): what the part keeps on the
+       GPU sent again, before the frame the context is back in (gfx's; sokol's objects are made
+       again under their ids first, empty but for small ones, wgf_platform_priv.h) */
+    void (*restore)(void);
     void (*stop)(void);      /* when its layer stops: what it holds let go of */
     /* the part's state as text, for an autopilot run's dump (ecs: the world as a scene); its
        to keep until its next dump */

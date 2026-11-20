@@ -185,6 +185,7 @@ static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
     font_t *font_ptr = font_of(resource);
     int id;
     if (font_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
+    if (wgf_gfx_priv_render_is_lost()) return WGF_CORE_PRIV_LOAD_WAIT; /* the GPU's context lost: until it is back */
     if (!ensure()) return WGF_CORE_PRIV_LOAD_MORE; /* gfx isn't running yet: wait for it */
     /* libwgf keeps the bytes (freeData 0): fontstash frees them on some failures
        and not others */
@@ -307,6 +308,7 @@ static wgf_core_priv_load_step_t finish_bitmap(void *prepared, wgf_handle_t reso
     wgf_texture_t pages[WGF_GFX_PRIV_BITMAP_PAGES_MAX] = {0};
     int page;
     if (font_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
+    if (wgf_gfx_priv_render_is_lost()) return WGF_CORE_PRIV_LOAD_WAIT; /* the GPU's context lost: until it is back */
     if (!ensure()) return WGF_CORE_PRIV_LOAD_MORE; /* gfx isn't running yet: wait for it */
     for (page = 0; page < loaded->bitmap->page_count; page++) {
         pages[page] = wgf_gfx_priv_texture_create_decoded(loaded->decoded[page]); /* it takes the image */
@@ -330,6 +332,31 @@ static wgf_core_priv_load_step_t finish_bitmap(void *prepared, wgf_handle_t reso
 
 static const wgf_core_priv_loader_t bitmap_loader = {"bitmap font", prepare_bitmap, finish_bitmap, discard_bitmap,
                                                      fail, NULL, false, NULL};
+
+/* The GPU's context given back: a bitmap font's file read again (as this run has it) and
+ * only its pages made again, each into the texture it made before. */
+static wgf_core_priv_load_step_t finish_pages(void *prepared, wgf_handle_t resource)
+{
+    bitmap_loaded_t *loaded = (bitmap_loaded_t *)prepared;
+    const font_t *font_ptr = font_of(resource);
+    int page;
+    if (font_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
+    if (wgf_gfx_priv_render_is_lost()) return WGF_CORE_PRIV_LOAD_WAIT; /* lost again: until it is back */
+    for (page = 0; page < loaded->bitmap->page_count && page < WGF_GFX_PRIV_BITMAP_PAGES_MAX; page++) {
+        if (font_ptr->pages[page] != 0 && loaded->decoded[page] != NULL) {
+            wgf_gfx_priv_texture_refill_decoded(font_ptr->pages[page], loaded->decoded[page]); /* takes it */
+        }
+        loaded->decoded[page] = NULL;
+    }
+    wgf_core_priv_resource_loaded(resource, NULL); /* no longer loading again */
+    return WGF_CORE_PRIV_LOAD_DONE;
+}
+
+static const wgf_core_priv_loader_t pages_loader = {"bitmap font's pages", prepare_bitmap, finish_pages, discard_bitmap,
+                                                    fail, NULL, false, NULL};
+/* Set by wgf_font_create, the only way a bitmap font comes: text drawn in the built-in font
+ * alone links no image decoder. */
+static const wgf_core_priv_loader_t *pages_again;
 
 /* --- the public API --------------------------------------------------------- */
 
@@ -391,6 +418,7 @@ wgf_handle_t wgf_font_create(const char *path)
     char normalized[WGF_CORE_PRIV_FS_PATH_MAX] = "";
     wgf_handle_t handle;
 
+    pages_again = &pages_loader;
     ensure();
     if (!pool_ready) {
         pool_ready =
@@ -1160,11 +1188,26 @@ static void shutdown(void)
 
 /* ------------------------------------------------------------- the part ---- */
 
+/* The GPU's context given back: fontstash's atlas sent again from its copy on the CPU at the
+ * next flush, and each bitmap font's pages read again from its file. */
+static void restore(void)
+{
+    uint16_t i;
+    if (fons != NULL) wgf_gfx_priv_fontstash_restore(fons);
+    for (i = 1; pool_ready && i < font_pool.capacity; i++) {
+        const wgf_font_t font = wgf_core_priv_handle_pool_handle_from_index(&font_pool, i);
+        if (font != 0 && fonts[i].bitmap != NULL && pages_again != NULL) {
+            wgf_core_priv_resource_load_again(font, pages_again);
+        }
+    }
+}
+
 static wgf_core_priv_part_t part = {.name = "text",
                                     .layer = WGF_CORE_PRIV_PART_LAYER_GFX,
                                     .order = WGF_CORE_PRIV_PART_TEXT,
                                     .flush = flush,
                                     .end_frame = end_frame,
+                                    .restore = restore,
                                     .stop = shutdown};
 
 /* Text joins the frame (render/wgf_gfx_part_priv.h), and fontstash is made once gfx
@@ -1172,6 +1215,6 @@ static wgf_core_priv_part_t part = {.name = "text",
 static bool ensure(void)
 {
     wgf_core_priv_part_install(&part);
-    if (fons == NULL && wgf_gfx_priv_render_is_running()) setup();
+    if (fons == NULL && wgf_gfx_priv_render_is_running() && !wgf_gfx_priv_render_is_lost()) setup();
     return fons != NULL;
 }

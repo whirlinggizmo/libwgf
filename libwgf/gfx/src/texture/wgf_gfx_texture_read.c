@@ -109,6 +109,7 @@ static void update(float dt)
 {
     uint16_t i;
     (void)dt;
+    if (wgf_gfx_priv_render_is_lost()) return; /* nothing read from a lost GPU context: once it is back */
     for (i = 1; i < read_pool.capacity; i++) {
         if (wgf_core_priv_handle_pool_handle_from_index(&read_pool, i) != 0 &&
             reads[i].status == WGF_TEXTURE_READ_STATUS_PENDING && reads[i].drawn && !reads[i].screen) {

@@ -364,3 +364,23 @@ bool wgf_platform_priv_can_lock_orientation(void)
 {
     return false;
 }
+
+/* No GPU to lose: a test's loss alone, and its restores. */
+static bool gpu_lost;
+static unsigned gpu_restores;
+
+void wgf_platform_priv_headless_set_gpu_lost(bool lost)
+{
+    if (gpu_lost && !lost) gpu_restores++;
+    gpu_lost = lost;
+}
+
+bool wgf_platform_priv_gpu_is_lost(void)
+{
+    return gpu_lost;
+}
+
+unsigned wgf_platform_priv_gpu_get_restores(void)
+{
+    return gpu_restores;
+}

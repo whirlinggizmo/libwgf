@@ -741,6 +741,11 @@ bool wgf_ui_priv_rml_start(void)
     return true;
 }
 
+void wgf_ui_priv_rml_release_textures(void)
+{
+    if (state != nullptr) Rml::ReleaseTextures(&state->render);
+}
+
 void wgf_ui_priv_rml_stop(void)
 {
     if (state == nullptr) return;

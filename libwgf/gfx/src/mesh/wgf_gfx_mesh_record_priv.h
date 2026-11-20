@@ -10,6 +10,7 @@
 #include "wgf_mat4.h"
 #include "wgf_mesh.h"
 #include "wgf_quat.h"
+#include "wgf_texture.h"
 #include "wgf_vec3.h"
 
 /* A mesh's record, shared by the mesh's own file (wgf_gfx_mesh.c: generated meshes, a
@@ -121,6 +122,10 @@ typedef struct wgf_gfx_priv_mesh_record_t {
     wgf_gfx_priv_mesh_animation_t *animations;
     int animation_count;
     unsigned char *animated; /* a node at a time, whether any animation moves it; NULL with none */
+    /* A file's images, made textures, by their place in the file (0 for one not made), not
+     * referenced (its materials hold them): what a GPU context given back reads again. */
+    wgf_texture_t *images;
+    int image_count;
     bool from_file; /* made by wgf_mesh_create: a model of it is its file's tree */
     bool from_numbers; /* made by wgf_mesh_create_triangles or _heightmap: changed in place */
 } wgf_gfx_priv_mesh_record_t;
@@ -129,8 +134,10 @@ typedef struct wgf_gfx_priv_mesh_record_t {
 bool wgf_gfx_priv_mesh_ensure_pool(void);
 /* A mesh's record, without logging; NULL for a handle that isn't a mesh. */
 wgf_gfx_priv_mesh_record_t *wgf_gfx_priv_mesh_record(wgf_mesh_t mesh);
-/* What a mesh from a path loads through, set by glTF's file (its only reference). */
-void wgf_gfx_priv_mesh_set_loader(const wgf_core_priv_loader_t *loader);
+/* What a mesh from a path loads through, set by glTF's file (its only reference), and
+ * what sends a file's images again when the GPU's context is given back (its file's images
+ * read again: `load_again`, for each file mesh READY with images). */
+void wgf_gfx_priv_mesh_set_loader(const wgf_core_priv_loader_t *loader, void (*load_again)(wgf_mesh_t file));
 /* A primitive's buffers made on the GPU: false when it didn't take them. */
 bool wgf_gfx_priv_mesh_upload(wgf_gfx_priv_mesh_record_primitive_t *primitive);
 /* A READY mesh of `count` primitives (the array and what it holds taken) drawn with

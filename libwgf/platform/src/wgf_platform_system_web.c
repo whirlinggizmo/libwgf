@@ -402,3 +402,54 @@ bool wgf_platform_priv_can_lock_orientation(void)
 {
     return web_can_lock_orientation() != 0;
 }
+
+/* The canvas's WebGL context: lost now, asked of the context itself (Emscripten's GLctx, the
+ * one sokol_app made current), and the restores counted by a listener of the canvas's,
+ * added at the first ask; sokol_app's own listener cancels the loss, so the browser gives
+ * it back. Under quoted keys of Module, as the asset part's state is, so nothing is
+ * exported. */
+EM_JS(int, gpu_state, (void), {
+    if (typeof GLctx === "undefined" || !GLctx) return 0;
+    if (!Module["wgfGpuWatched"]) {
+        Module["wgfGpuWatched"] = true;
+        Module["wgfGpuRestores"] = 0;
+        GLctx.canvas.addEventListener("webglcontextrestored", function() { Module["wgfGpuRestores"]++; });
+    }
+    return GLctx.isContextLost() ? 1 : 0;
+})
+EM_JS(int, gpu_restores, (void), { return Module["wgfGpuRestores"] | 0; })
+
+/* Emscripten's side of a context given back: its tables' objects, the lost context's, let
+ * go of (never deleted: they belong to no context now, and sokol makes its own again), and
+ * the extensions it enables at a context's creation enabled again on the new one. */
+EM_JS(void, gpu_reset, (void), {
+    /* each table by name in the code, not as a string, so a closure build's renaming reaches it */
+    var tables = [ GL.buffers, GL.programs, GL.framebuffers, GL.renderbuffers, GL.textures, GL.shaders, GL.vaos,
+                   GL.samplers, GL.queries, GL.syncs, GL.transformFeedbacks ];
+    for (var t = 0; t < tables.length; t++) {
+        var table = tables[t];
+        if (table) {
+            for (var i = 0; i < table.length; i++) table[i] = null;
+        }
+    }
+    var context = GL.currentContext;
+    if (context) {
+        context.initExtensionsDone = false;
+        GL.initExtensions(context);
+    }
+})
+
+bool wgf_platform_priv_gpu_is_lost(void)
+{
+    return gpu_state() != 0;
+}
+
+unsigned wgf_platform_priv_gpu_get_restores(void)
+{
+    return (unsigned)gpu_restores();
+}
+
+void wgf_platform_priv_gpu_reset(void)
+{
+    gpu_reset();
+}

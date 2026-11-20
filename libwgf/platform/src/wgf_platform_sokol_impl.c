@@ -67,3 +67,303 @@ bool wgf_platform_priv_read_image(sg_image image, int width, int height, unsigne
     return false;
 #endif
 }
+
+/* ---- a lost GPU context (wgf_platform_priv.h, "The GPU's context") ----------------------
+ *
+ * WebGL2 alone loses its context. sokol_gfx has nothing for it, so its objects are made
+ * again here in place, under their ids, by the GL backend's own creates on the slots sokol
+ * keeps: the ids gfx, sokol_gl, and sokol_fontstash hold stay good, and a pipeline (on GL
+ * only state, its shader's program found again by name) needs nothing. What a create needs
+ * that sokol doesn't keep is kept from the creates, on sokol's trace hooks: every shader's
+ * description, its strings copied (a custom shader frees its sources once made), and the
+ * data an immutable buffer or image was made with when it is small; everything else comes
+ * back empty for its owner to fill. Natively, and on the web's other backends, nothing is
+ * kept and nothing is done. */
+#if defined(SOKOL_GLES3)
+#include <stdlib.h>
+
+void wgf_platform_priv_gpu_reset(void); /* wgf_platform_system_web.c: Emscripten's side */
+
+#define KEPT_MAX 16384 /* bytes: the placeholder checker's 64 by 64 texels, and anything smaller */
+
+typedef struct kept_bytes_t {
+    sg_image_data image; /* an image's levels, or a buffer's bytes as level 0, pointing below */
+    unsigned char bytes[];
+} kept_bytes_t;
+
+static struct {
+    bool on;
+    sg_trace_hooks before; /* the hooks installed before (gfx's stats), called first */
+    kept_bytes_t **buffers, **images; /* by slot, as big as sokol's pools */
+    sg_shader_desc **shaders;
+    int buffer_count, image_count, shader_count;
+} kept;
+
+static int slot_of(uint32_t id, int count)
+{
+    const int slot = (int)(id & _SG_SLOT_MASK);
+    return slot > 0 && slot < count ? slot : 0;
+}
+
+static void forget(void **table, int count, uint32_t id)
+{
+    const int slot = slot_of(id, count);
+    if (table == NULL || slot == 0) return;
+    free(table[slot]);
+    table[slot] = NULL;
+}
+
+/* `levels` (up to SG_MAX_MIPMAPS ranges) copied into one block, or NULL when there is no
+ * data or more than KEPT_MAX bytes of it. */
+static kept_bytes_t *copy_levels(const sg_range *levels, int count)
+{
+    size_t total = 0, at = 0;
+    kept_bytes_t *copy;
+    int i;
+    for (i = 0; i < count; i++) total += levels[i].ptr != NULL ? levels[i].size : 0;
+    if (total == 0 || total > KEPT_MAX) return NULL;
+    copy = (kept_bytes_t *)calloc(1, sizeof(kept_bytes_t) + total);
+    if (copy == NULL) return NULL;
+    for (i = 0; i < count; i++) {
+        if (levels[i].ptr == NULL || levels[i].size == 0) continue;
+        memcpy(copy->bytes + at, levels[i].ptr, levels[i].size);
+        copy->image.mip_levels[i].ptr = copy->bytes + at;
+        copy->image.mip_levels[i].size = levels[i].size;
+        at += levels[i].size;
+    }
+    return copy;
+}
+
+static void keep_buffer(const sg_buffer_desc *desc, sg_buffer result, void *user)
+{
+    const int slot = slot_of(result.id, kept.buffer_count);
+    if (kept.before.make_buffer != NULL) kept.before.make_buffer(desc, result, user);
+    if (!kept.on || slot == 0) return;
+    free(kept.buffers[slot]);
+    kept.buffers[slot] = sg_query_buffer_state(result) == SG_RESOURCESTATE_VALID ? copy_levels(&desc->data, 1) : NULL;
+}
+
+static void keep_image(const sg_image_desc *desc, sg_image result, void *user)
+{
+    const int slot = slot_of(result.id, kept.image_count);
+    if (kept.before.make_image != NULL) kept.before.make_image(desc, result, user);
+    if (!kept.on || slot == 0) return;
+    free(kept.images[slot]);
+    kept.images[slot] = sg_query_image_state(result) == SG_RESOURCESTATE_VALID
+                            ? copy_levels(desc->data.mip_levels, SG_MAX_MIPMAPS)
+                            : NULL;
+}
+
+/* A string's room in a copy, and the copy made there. */
+static size_t string_room(const char *s)
+{
+    return s != NULL ? strlen(s) + 1 : 0;
+}
+
+static const char *copy_string(const char *s, char **at)
+{
+    char *copy;
+    if (s == NULL) return NULL;
+    copy = *at;
+    memcpy(copy, s, strlen(s) + 1);
+    *at += strlen(s) + 1;
+    return copy;
+}
+
+/* What the GL backend's create reads of a shader's description, its strings (sources, and
+ * attribute, uniform, and texture names) copied after it; what it doesn't read let go of. */
+static void keep_shader(const sg_shader_desc *desc, sg_shader result, void *user)
+{
+    const int slot = slot_of(result.id, kept.shader_count);
+    sg_shader_desc *copy;
+    size_t room = sizeof(sg_shader_desc);
+    char *at;
+    int i, u;
+    if (kept.before.make_shader != NULL) kept.before.make_shader(desc, result, user);
+    if (!kept.on || slot == 0) return;
+    free(kept.shaders[slot]);
+    kept.shaders[slot] = NULL;
+    if (sg_query_shader_state(result) != SG_RESOURCESTATE_VALID) return;
+    room += string_room(desc->vertex_func.source) + string_room(desc->fragment_func.source) +
+            string_room(desc->compute_func.source);
+    for (i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; i++) room += string_room(desc->attrs[i].glsl_name);
+    for (i = 0; i < SG_MAX_UNIFORMBLOCK_BINDSLOTS; i++) {
+        for (u = 0; u < SG_MAX_UNIFORMBLOCK_MEMBERS; u++) {
+            room += string_room(desc->uniform_blocks[i].glsl_uniforms[u].glsl_name);
+        }
+    }
+    for (i = 0; i < SG_MAX_TEXTURE_SAMPLER_PAIRS; i++) room += string_room(desc->texture_sampler_pairs[i].glsl_name);
+    copy = (sg_shader_desc *)malloc(room);
+    if (copy == NULL) return;
+    *copy = *desc;
+    at = (char *)(copy + 1);
+    memset(&copy->vertex_func, 0, sizeof(copy->vertex_func));
+    memset(&copy->fragment_func, 0, sizeof(copy->fragment_func));
+    memset(&copy->compute_func, 0, sizeof(copy->compute_func));
+    copy->vertex_func.source = copy_string(desc->vertex_func.source, &at);
+    copy->fragment_func.source = copy_string(desc->fragment_func.source, &at);
+    copy->compute_func.source = copy_string(desc->compute_func.source, &at);
+    for (i = 0; i < SG_MAX_VERTEX_ATTRIBUTES; i++) {
+        copy->attrs[i].glsl_name = copy_string(desc->attrs[i].glsl_name, &at);
+        copy->attrs[i].hlsl_sem_name = NULL;
+    }
+    for (i = 0; i < SG_MAX_UNIFORMBLOCK_BINDSLOTS; i++) {
+        for (u = 0; u < SG_MAX_UNIFORMBLOCK_MEMBERS; u++) {
+            copy->uniform_blocks[i].glsl_uniforms[u].glsl_name =
+                copy_string(desc->uniform_blocks[i].glsl_uniforms[u].glsl_name, &at);
+        }
+    }
+    for (i = 0; i < SG_MAX_TEXTURE_SAMPLER_PAIRS; i++) {
+        copy->texture_sampler_pairs[i].glsl_name = copy_string(desc->texture_sampler_pairs[i].glsl_name, &at);
+    }
+    copy->label = NULL;
+    kept.shaders[slot] = copy;
+}
+
+static void forget_buffer(sg_buffer buffer, void *user)
+{
+    if (kept.before.destroy_buffer != NULL) kept.before.destroy_buffer(buffer, user);
+    forget((void **)kept.buffers, kept.buffer_count, buffer.id);
+}
+
+static void forget_image(sg_image image, void *user)
+{
+    if (kept.before.destroy_image != NULL) kept.before.destroy_image(image, user);
+    forget((void **)kept.images, kept.image_count, image.id);
+}
+
+static void forget_shader(sg_shader shader, void *user)
+{
+    if (kept.before.destroy_shader != NULL) kept.before.destroy_shader(shader, user);
+    forget((void **)kept.shaders, kept.shader_count, shader.id);
+}
+
+static void free_table(void **table, int count)
+{
+    int i;
+    for (i = 0; table != NULL && i < count; i++) free(table[i]);
+    free(table);
+}
+
+void wgf_platform_priv_gpu_keep(bool keep)
+{
+    sg_trace_hooks hooks;
+    if (keep == kept.on) return;
+    if (!keep) {
+        kept.on = false;
+        free_table((void **)kept.buffers, kept.buffer_count);
+        free_table((void **)kept.images, kept.image_count);
+        free_table((void **)kept.shaders, kept.shader_count);
+        kept.buffers = kept.images = NULL;
+        kept.shaders = NULL;
+        kept.buffer_count = kept.image_count = kept.shader_count = 0;
+        return; /* the hooks stay, doing nothing more, until sokol stops */
+    }
+    kept.buffer_count = _sg.pools.buffer_pool.size;
+    kept.image_count = _sg.pools.image_pool.size;
+    kept.shader_count = _sg.pools.shader_pool.size;
+    kept.buffers = (kept_bytes_t **)calloc((size_t)kept.buffer_count, sizeof(kept_bytes_t *));
+    kept.images = (kept_bytes_t **)calloc((size_t)kept.image_count, sizeof(kept_bytes_t *));
+    kept.shaders = (sg_shader_desc **)calloc((size_t)kept.shader_count, sizeof(sg_shader_desc *));
+    if (kept.buffers == NULL || kept.images == NULL || kept.shaders == NULL) {
+        kept.on = true;
+        wgf_platform_priv_gpu_keep(false);
+        return;
+    }
+    memset(&hooks, 0, sizeof(hooks));
+    kept.before = sg_install_trace_hooks(&hooks); /* what was there, called on from these */
+    hooks = kept.before;
+    hooks.make_buffer = keep_buffer;
+    hooks.make_image = keep_image;
+    hooks.make_shader = keep_shader;
+    hooks.destroy_buffer = forget_buffer;
+    hooks.destroy_image = forget_image;
+    hooks.destroy_shader = forget_shader;
+    sg_install_trace_hooks(&hooks);
+    kept.on = true;
+}
+
+void wgf_platform_priv_gpu_lost(void)
+{
+    int i;
+    for (i = 0; i < 16 && glGetError() != GL_NO_ERROR; i++) {
+    } /* the context's lost error, read once, and anything before it */
+}
+
+bool wgf_platform_priv_gpu_restore(void)
+{
+    bool ok = true;
+    int i;
+    wgf_platform_priv_gpu_reset();
+    for (i = 0; i < 16 && glGetError() != GL_NO_ERROR; i++) {
+    }
+    /* sokol's own: its vertex array and framebuffer, and its state as setup leaves it */
+    glGenVertexArrays(1, &_sg.gl.vao);
+    glBindVertexArray(_sg.gl.vao);
+    glGenFramebuffers(1, &_sg.gl.fb);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    _sg_gl_reset_state_cache();
+    for (i = 1; i < _sg.pools.buffer_pool.size; i++) {
+        _sg_buffer_t *buf = &_sg.pools.buffers[i];
+        const kept_bytes_t *data = i < kept.buffer_count && kept.buffers != NULL ? kept.buffers[i] : NULL;
+        sg_buffer_desc desc;
+        if (buf->slot.state != SG_RESOURCESTATE_VALID || buf->gl.injected) continue;
+        memset(&desc, 0, sizeof(desc));
+        if (data != NULL) desc.data = data->image.mip_levels[0];
+        memset(buf->gl.buf, 0, sizeof(buf->gl.buf));
+        if (_sg_gl_create_buffer(buf, &desc) != SG_RESOURCESTATE_VALID) ok = false;
+    }
+    for (i = 1; i < _sg.pools.image_pool.size; i++) {
+        _sg_image_t *img = &_sg.pools.images[i];
+        const kept_bytes_t *data = i < kept.image_count && kept.images != NULL ? kept.images[i] : NULL;
+        sg_image_desc desc;
+        if (img->slot.state != SG_RESOURCESTATE_VALID || img->gl.injected) continue;
+        memset(&desc, 0, sizeof(desc));
+        if (data != NULL) desc.data = data->image;
+        memset(img->gl.tex, 0, sizeof(img->gl.tex));
+        if (_sg_gl_create_image(img, &desc) != SG_RESOURCESTATE_VALID) ok = false;
+    }
+    for (i = 1; i < _sg.pools.sampler_pool.size; i++) {
+        _sg_sampler_t *smp = &_sg.pools.samplers[i];
+        sg_sampler_desc desc;
+        sg_sampler id;
+        if (smp->slot.state != SG_RESOURCESTATE_VALID || smp->gl.injected) continue;
+        id.id = smp->slot.id;
+        desc = sg_query_sampler_desc(id);
+        smp->gl.smp = 0;
+        if (_sg_gl_create_sampler(smp, &desc) != SG_RESOURCESTATE_VALID) ok = false;
+    }
+    for (i = 1; i < _sg.pools.shader_pool.size; i++) {
+        _sg_shader_t *shd = &_sg.pools.shaders[i];
+        const sg_shader_desc *desc = i < kept.shader_count && kept.shaders != NULL ? kept.shaders[i] : NULL;
+        if (shd->slot.state != SG_RESOURCESTATE_VALID) continue;
+        memset(&shd->gl, 0, sizeof(shd->gl));
+        if (desc == NULL || _sg_gl_create_shader(shd, desc) != SG_RESOURCESTATE_VALID) ok = false;
+    }
+    for (i = 1; i < _sg.pools.view_pool.size; i++) {
+        _sg_view_t *view = &_sg.pools.views[i];
+        sg_view_desc desc;
+        if (view->slot.state != SG_RESOURCESTATE_VALID) continue;
+        memset(&desc, 0, sizeof(desc));
+        memset(&view->gl, 0, sizeof(view->gl));
+        if (_sg_gl_create_view(view, &desc) != SG_RESOURCESTATE_VALID) ok = false;
+    }
+    _sg_gl_reset_state_cache();
+    sg_commit(); /* a frame of sokol's: what was written in the last before the loss may be written again */
+    return ok;
+}
+#else
+void wgf_platform_priv_gpu_keep(bool keep)
+{
+    (void)keep;
+}
+
+void wgf_platform_priv_gpu_lost(void)
+{
+}
+
+bool wgf_platform_priv_gpu_restore(void)
+{
+    return true;
+}
+#endif

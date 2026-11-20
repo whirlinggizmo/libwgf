@@ -216,3 +216,14 @@ bool wgf_platform_priv_can_lock_orientation(void)
 {
     return false;
 }
+
+/* Natively the GPU's context isn't lost. */
+bool wgf_platform_priv_gpu_is_lost(void)
+{
+    return false;
+}
+
+unsigned wgf_platform_priv_gpu_get_restores(void)
+{
+    return 0;
+}

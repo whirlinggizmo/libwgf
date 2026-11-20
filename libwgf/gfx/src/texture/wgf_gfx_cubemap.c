@@ -52,7 +52,7 @@ typedef struct cubemap_t {
     int size;
     wgf_cubemap_layout_t layout; /* asked, then, READY, what it was read as */
     bool made;                   /* its first create has said its layout */
-    faces_t *faces;              /* six files, while they load */
+    faces_t *faces;              /* six files: their paths, and their pixels while they load */
 } cubemap_t;
 
 static bool pool_ready;
@@ -335,6 +335,8 @@ static wgf_core_priv_load_step_t finish_with(const pixels_t *pixels, wgf_handle_
                      pixels->size);
         return WGF_CORE_PRIV_LOAD_FAILED;
     }
+    if (cubemap_ptr->view.id != SG_INVALID_ID) sg_destroy_view(cubemap_ptr->view); /* made again: the old */
+    if (cubemap_ptr->image.id != SG_INVALID_ID) sg_destroy_image(cubemap_ptr->image);
     cubemap_ptr->image = image;
     cubemap_ptr->view = view;
     cubemap_ptr->size = pixels->size;
@@ -346,6 +348,7 @@ static wgf_core_priv_load_step_t finish_with(const pixels_t *pixels, wgf_handle_
 static wgf_core_priv_load_step_t finish_image(void *prepared, wgf_handle_t resource)
 {
     if (!wgf_gfx_priv_render_is_running()) return WGF_CORE_PRIV_LOAD_MORE; /* no GPU yet: wait for one */
+    if (wgf_gfx_priv_render_is_lost()) return WGF_CORE_PRIV_LOAD_WAIT; /* the GPU's context lost: until it is back */
     return finish_with((const pixels_t *)prepared, resource, NULL);
 }
 
@@ -451,11 +454,20 @@ static bool join_faces(const faces_t *faces, pixels_t *cube)
     return true;
 }
 
-static void free_faces(cubemap_t *cubemap_ptr)
+/* Six files' pixels let go of, their paths kept (to read again: the GPU's context given back). */
+static void free_face_pixels(cubemap_t *cubemap_ptr)
 {
     int f;
     if (cubemap_ptr->faces == NULL) return;
-    for (f = 0; f < 6; f++) pixels_free(cubemap_ptr->faces->face[f]);
+    for (f = 0; f < 6; f++) {
+        pixels_free(cubemap_ptr->faces->face[f]);
+        cubemap_ptr->faces->face[f] = NULL;
+    }
+}
+
+static void free_faces(cubemap_t *cubemap_ptr)
+{
+    free_face_pixels(cubemap_ptr);
     free(cubemap_ptr->faces);
     cubemap_ptr->faces = NULL;
 }
@@ -473,6 +485,7 @@ static wgf_core_priv_load_step_t finish_face(void *prepared, wgf_handle_t resour
     if (cubemap_ptr == NULL || cubemap_ptr->faces == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
     if (cubemap_ptr->resource.status == WGF_RESOURCE_STATUS_FAILED) return WGF_CORE_PRIV_LOAD_DONE; /* another face's */
     if (!wgf_gfx_priv_render_is_running()) return WGF_CORE_PRIV_LOAD_MORE; /* no GPU yet: wait for one */
+    if (wgf_gfx_priv_render_is_lost()) return WGF_CORE_PRIV_LOAD_WAIT; /* the GPU's context lost: until it is back */
     pixels_free(cubemap_ptr->faces->face[face]);
     cubemap_ptr->faces->face[face] = face_ptr->pixels; /* the record's now */
     face_ptr->pixels = NULL;
@@ -484,7 +497,7 @@ static wgf_core_priv_load_step_t finish_face(void *prepared, wgf_handle_t resour
         return WGF_CORE_PRIV_LOAD_DONE;
     }
     memcpy(found, cubemap_ptr->faces->paths[0], sizeof(found));
-    free_faces(cubemap_ptr);
+    free_face_pixels(cubemap_ptr);
     step = finish_with(&cube, resource, found);
     for (m = 0; m < cube.mip_count; m++) free(cube.levels[m]);
     return step;
@@ -568,9 +581,33 @@ static void stop(void)
     wgf_gfx_priv_cubemap_bind = NULL;
 }
 
+/* The GPU's context given back: every cube READY read again from its file or files (as
+ * this run has them), blank meanwhile; its new cube made before the old goes. */
+static void restore(void)
+{
+    uint16_t i;
+    int f;
+    for (i = 1; pool_ready && i < pool.capacity; i++) {
+        const wgf_cubemap_t cubemap = wgf_core_priv_handle_pool_handle_from_index(&pool, i);
+        cubemap_t *cubemap_ptr = &cubemaps[i];
+        if (cubemap == 0 || cubemap_ptr->resource.status != WGF_RESOURCE_STATUS_READY) continue;
+        if (cubemap_ptr->faces == NULL) {
+            const int layout = (int)cubemap_ptr->layout;
+            if (layout >= WGF_CUBEMAP_LAYOUT_AUTO && layout <= WGF_CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE) {
+                wgf_core_priv_resource_load_again(cubemap, &image_loaders[layout]);
+            }
+            continue;
+        }
+        for (f = 0; f < 6; f++) { /* a request a face, the last making the cube */
+            if (!wgf_core_priv_load_request(&face_loaders[f], cubemaps[i].faces->paths[f], cubemap)) break;
+        }
+    }
+}
+
 static wgf_core_priv_part_t part = {.name = "cubemaps",
                                     .layer = WGF_CORE_PRIV_PART_LAYER_GFX,
                                     .order = WGF_CORE_PRIV_PART_CUBEMAPS,
+                                    .restore = restore,
                                     .stop = stop};
 
 /* The pool and the part, at the first create; false when there is no room. */

@@ -224,7 +224,9 @@ static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
     document_t *document_ptr = document_of(resource);
     int number;
     if (document_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
-    if (!wgf_gfx_priv_render_is_running() || fonts_loading()) return WGF_CORE_PRIV_LOAD_WAIT;
+    if (!wgf_gfx_priv_render_is_running() || wgf_gfx_priv_render_is_lost() || fonts_loading()) {
+        return WGF_CORE_PRIV_LOAD_WAIT; /* no GPU, or its context lost, or its fonts loading: until they are */
+    }
     if (!doc.rml) {
         doc.rml = wgf_ui_priv_rml_start();
         if (!doc.rml) return WGF_CORE_PRIV_LOAD_FAILED;
@@ -532,11 +534,21 @@ static void stop(void)
     memset(&doc, 0, sizeof(doc));
 }
 
+/* The GPU's context given back: every texture RmlUi holds let go of, so it asks for each
+ * again as it next draws (a file's read again, a generated one made again, a saved layer
+ * drawn again), and the gradients' triangles sent again as they are next drawn. */
+static void restore(void)
+{
+    if (doc.rml) wgf_ui_priv_rml_release_textures();
+    wgf_ui_priv_doc_draw_restore();
+}
+
 static wgf_core_priv_part_t part = {.name = "documents",
                                     .layer = WGF_CORE_PRIV_PART_LAYER_GFX,
                                     .order = WGF_CORE_PRIV_PART_UI,
                                     .update = update,
                                     .end_frame = end_frame,
+                                    .restore = restore,
                                     .stop = stop};
 
 static void ensure_started(void)
@@ -1290,7 +1302,9 @@ bool wgf_ui_draw_documents(void)
     size_t p;
     int i, key;
     if (!wgf_gfx_priv_is_in_frame()) {
-        wgf_log_error("wgf_ui_draw_documents: outside a frame (call it in the frame callback)");
+        if (!wgf_gfx_priv_render_is_lost()) {
+            wgf_log_error("wgf_ui_draw_documents: outside a frame (call it in the frame callback)");
+        }
         return false;
     }
     if (!doc.started) return false;

@@ -174,6 +174,7 @@ static void on_frame(void)
 {
     double started;
     if (!app.started) return;
+    wgf_gfx_priv_render_update_context(); /* a GPU context lost, or given back, before a load can reach it */
     wgf_core_priv_update();
     if (!pace()) return;
     started = wgf_time_get_seconds(); /* the frame's own work, from here to its drawing's end */
