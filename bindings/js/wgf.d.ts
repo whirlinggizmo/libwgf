@@ -11445,3 +11445,97 @@ export declare function wgf_loop_get_fps(): number;
  * measured as it would be played. 0 before the first frame.
  */
 export declare function wgf_loop_get_frame_cost(): number;
+
+/**
+ * Recording, from the next frame: each input reaching the program is written, at the
+ * frame it reached it, counted from 0, the pointer where it is written first. A recording
+ * starts with nothing held: a key down as it starts is not in it. False while recording
+ * or while a replay plays or is paused.
+ */
+export declare function wgf_replay_start_recording(): boolean;
+
+/**
+ * Recording stopped: an `end` written at its last frame. False when not recording.
+ */
+export declare function wgf_replay_stop_recording(): boolean;
+
+/**
+ * Whether it is recording.
+ */
+export declare function wgf_replay_is_recording(): boolean;
+
+/**
+ * The recording, as an autopilot's text, so far while recording; "" for none. Valid
+ * until the next start or clear.
+ */
+export declare function wgf_replay_get_recording(): string;
+
+/**
+ * The frames recorded, so far while recording; 0 for none.
+ */
+export declare function wgf_replay_get_recording_frame_count(): number;
+
+/**
+ * The recording let go of, stopped first while recording.
+ */
+export declare function wgf_replay_clear_recording(): void;
+
+/**
+ * A replay: `text`, an autopilot (a recording), played from the next frame, a frame of it
+ * each frame of the program's, in place of whatever plays. Its inputs alone are played: an
+ * autopilot's seed, expectations, waits, logs, screenshots, and dumps are an autopilot
+ * run's, so a replay passes over them. It lasts until its `end`, or without one its last
+ * line's frame, then is COMPLETE.
+ *
+ * While it plays, and while it is paused, the program's input is the replay's alone: real
+ * input (the window's, and an autopilot run's) is held back, never reaching an input call,
+ * and every gamepad is the replay's (disconnected unless it connects one). Whether a real
+ * key, mouse button, finger, or pad button was pressed meanwhile is
+ * wgf_replay_has_real_press, so an attract mode can end on one. Everything held is let go
+ * of as a replay starts and as it ends (stopped or complete), so it starts from nothing
+ * held and leaves nothing held: the releases are that frame's edges. Paused, it holds what
+ * it holds.
+ *
+ * Its state is wgf_play_state_t (wgf_play_state.h), with play, pause, resume, and stop as
+ * that header says. False for text that isn't an autopilot (each bad line logged), with
+ * whatever plays left playing, and while recording.
+ */
+export declare function wgf_replay_play(text: string | null): boolean;
+
+/**
+ * False unless PLAYING.
+ */
+export declare function wgf_replay_pause(): boolean;
+
+/**
+ * False unless PAUSED.
+ */
+export declare function wgf_replay_resume(): boolean;
+
+/**
+ * The replay let go of, its input with it. False when STOPPED.
+ */
+export declare function wgf_replay_stop(): boolean;
+
+/**
+ * The replay's state: STOPPED when none plays.
+ */
+export declare function wgf_replay_get_state(): wgf_play_state_t;
+
+/**
+ * The replay's frames played so far: 0 before its first, its frame count once COMPLETE;
+ * 0 when STOPPED.
+ */
+export declare function wgf_replay_get_frame(): number;
+
+/**
+ * The replay's length in frames: through its end; 0 when STOPPED.
+ */
+export declare function wgf_replay_get_frame_count(): number;
+
+/**
+ * Whether real input held back by a replay pressed something (a key, a mouse button, a
+ * finger, or a pad button) for this frame: since the previous frame, read the whole frame
+ * and its ticks. False while nothing plays.
+ */
+export declare function wgf_replay_has_real_press(): boolean;

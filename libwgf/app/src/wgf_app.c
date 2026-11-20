@@ -47,6 +47,7 @@ static struct {
     bool flown;            /* an autopilot flies it (wgf_app_autopilot_priv.h): its time, not the clock's */
     bool recording;        /* played by hand and recorded as an autopilot: the autopilot's time, at 60 a second */
     const wgf_app_priv_recorder_t *recorder; /* set by a program built to record; NULL in every other */
+    const wgf_app_priv_replay_t *replay;     /* set by a program's first replay call; NULL before */
     long frames;           /* frames run since init */
 } app = {.tick_rate = DEFAULT_TICK_RATE, .time_scale = 1.0f};
 
@@ -89,10 +90,22 @@ void wgf_app_priv_set_recorder(const wgf_app_priv_recorder_t *recorder)
     app.recorder = recorder;
 }
 
+void wgf_app_priv_set_replay(const wgf_app_priv_replay_t *replay)
+{
+    app.replay = replay;
+}
+
+void wgf_app_priv_input_event(const sapp_event *event)
+{
+    const bool held = app.replay != NULL && app.replay->hold(event); /* a replay's input in its place */
+    if (!held) wgf_platform_priv_input_handle_event(event, wgf_platform_priv_get_dpi_scale());
+    if (app.recording) app.recorder->event(event, app.frames); /* reaching the next frame; held too, as flown */
+    if (!held && app.replay != NULL) app.replay->event(event);
+}
+
 static void on_event(const sapp_event *event)
 {
-    wgf_platform_priv_input_handle_event(event, wgf_platform_priv_get_dpi_scale());
-    if (app.recording) app.recorder->event(event, app.frames); /* reaching the next frame */
+    wgf_app_priv_input_event(event);
 }
 
 /* Pacing for a target fps: false when this frame is skipped (the web). */
@@ -165,8 +178,10 @@ static void on_frame(void)
     if (!pace()) return;
     started = wgf_time_get_seconds(); /* the frame's own work, from here to its drawing's end */
     wgf_app_priv_autopilot_begin_frame(app.frames); /* the frame's autopilot inputs, before its ticks */
+    if (app.replay != NULL) app.replay->inputs();   /* and a replay's */
     wgf_platform_priv_gamepad_begin_frame();     /* before the ticks: they read the pads too */
     if (app.recording) app.recorder->frame(app.frames);
+    if (app.replay != NULL) app.replay->frame();
     run_ticks(time_frame());
     wgf_core_priv_part_set_fraction(wgf_loop_get_tick_fraction()); /* for those drawing ticked state */
     wgf_core_priv_part_update(app.frame_delta); /* the parts' (ecs actors, particles): after the ticks, before the frame */
@@ -196,6 +211,7 @@ static void on_shutdown(void)
     wgf_app_priv_autopilot_stop(app.frames);
     if (app.recording) app.recorder->stop(app.frames);
     app.recording = false;
+    if (app.replay != NULL) app.replay->stop();
     wgf_platform_priv_window_set_open(false);
     wgf_platform_priv_gamepad_close();
     wgf_platform_priv_input_reset();

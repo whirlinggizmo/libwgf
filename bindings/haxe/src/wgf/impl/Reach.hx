@@ -769,6 +769,20 @@ class Reach {
 		"wgf_render_read_screen",
 		"wgf_render_set_clear_color",
 		"wgf_render_set_target_clear_color",
+		"wgf_replay_clear_recording",
+		"wgf_replay_get_frame",
+		"wgf_replay_get_frame_count",
+		"wgf_replay_get_recording",
+		"wgf_replay_get_recording_frame_count",
+		"wgf_replay_get_state",
+		"wgf_replay_has_real_press",
+		"wgf_replay_is_recording",
+		"wgf_replay_pause",
+		"wgf_replay_play",
+		"wgf_replay_resume",
+		"wgf_replay_start_recording",
+		"wgf_replay_stop",
+		"wgf_replay_stop_recording",
 		"wgf_resource_get_load_budget",
 		"wgf_resource_get_path",
 		"wgf_resource_get_status",
@@ -1227,7 +1241,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1218) 0];
+	static final counts:Array<Int> = [for (_ in 0...1232) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

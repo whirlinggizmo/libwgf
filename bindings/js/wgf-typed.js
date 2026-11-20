@@ -1730,6 +1730,37 @@ export const Render = Object.freeze({
     // wgf: call wgf_render_pop_clip
     popClip: raw.wgf_render_pop_clip,
 });
+// wgf: typed Replay
+export const Replay = Object.freeze({
+    // wgf: call wgf_replay_start_recording
+    startRecording: raw.wgf_replay_start_recording,
+    // wgf: call wgf_replay_stop_recording
+    stopRecording: raw.wgf_replay_stop_recording,
+    // wgf: call wgf_replay_is_recording
+    isRecording: raw.wgf_replay_is_recording,
+    // wgf: call wgf_replay_get_recording
+    getRecording: raw.wgf_replay_get_recording,
+    // wgf: call wgf_replay_get_recording_frame_count
+    getRecordingFrameCount: raw.wgf_replay_get_recording_frame_count,
+    // wgf: call wgf_replay_clear_recording
+    clearRecording: raw.wgf_replay_clear_recording,
+    // wgf: call wgf_replay_play
+    play: raw.wgf_replay_play,
+    // wgf: call wgf_replay_pause
+    pause: raw.wgf_replay_pause,
+    // wgf: call wgf_replay_resume
+    resume: raw.wgf_replay_resume,
+    // wgf: call wgf_replay_stop
+    stop: raw.wgf_replay_stop,
+    // wgf: call wgf_replay_get_state
+    getState: raw.wgf_replay_get_state,
+    // wgf: call wgf_replay_get_frame
+    getFrame: raw.wgf_replay_get_frame,
+    // wgf: call wgf_replay_get_frame_count
+    getFrameCount: raw.wgf_replay_get_frame_count,
+    // wgf: call wgf_replay_has_real_press
+    hasRealPress: raw.wgf_replay_has_real_press,
+});
 // wgf: typed Resource
 export const Resource = Object.freeze({
     // wgf: call wgf_resource_get_status

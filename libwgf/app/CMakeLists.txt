@@ -11,6 +11,8 @@ wgf_layer(app
         src/wgf_app_autopilot.c
         src/wgf_app_debug.c
         src/wgf_app_options.c
+        src/wgf_app_record.c
+        src/wgf_app_replay.c
         src/wgf_app_tick_clock.c
         ${app_autopilot_source}
     DEPS
@@ -22,6 +24,7 @@ if(WGF_TESTS)
     if(WGF_HEADLESS)
         wgf_test(app wgf_app_loop_test)
         wgf_test(app wgf_app_autopilot_test)
+        wgf_test(app wgf_app_replay_test)
         # Recording writes a run's keystrokes to a file: Windows Defender quarantines a MinGW build
         # of that test as a keylogger (Trojan:Win64/XWorm.GHM!MTB, a false positive; MSVC's isn't
         # flagged), so it runs everywhere but a MinGW build on a Windows host. Under Wine it runs.

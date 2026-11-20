@@ -28,6 +28,9 @@ static struct {
     edges_t tick[WGF_PLATFORM_PRIV_GAMEPADS];
     bool testing;
     wgf_platform_priv_gamepad_t test[WGF_PLATFORM_PRIV_GAMEPADS];
+    const wgf_platform_priv_gamepad_t *played; /* a replay's, in place of the real ones; NULL for none */
+    wgf_platform_priv_gamepad_t real[WGF_PLATFORM_PRIV_GAMEPADS]; /* the real ones (or a test's) as last read */
+    bool held_pressed; /* a real button went down at the last read, held back by a replay */
     float deadzone;
 } pads = {.deadzone = DEFAULT_DEADZONE};
 
@@ -40,6 +43,7 @@ void wgf_platform_priv_gamepad_open(void)
 {
     if (pads.open) return;
     memset(pads.raw, 0, sizeof(pads.raw));
+    memset(pads.real, 0, sizeof(pads.real));
     memset(pads.pads, 0, sizeof(pads.pads));
     memset(pads.frame, 0, sizeof(pads.frame));
     memset(pads.tick, 0, sizeof(pads.tick));
@@ -67,12 +71,35 @@ void wgf_platform_priv_gamepad_set_test_pad(int pad, const wgf_platform_priv_gam
     }
 }
 
+void wgf_platform_priv_gamepad_set_played(const wgf_platform_priv_gamepad_t *played)
+{
+    pads.played = played;
+    pads.held_pressed = false;
+}
+
+bool wgf_platform_priv_gamepad_was_held_pressed(void)
+{
+    return pads.held_pressed;
+}
+
 void wgf_platform_priv_gamepad_begin_frame(void)
 {
     wgf_platform_priv_gamepad_t next[WGF_PLATFORM_PRIV_GAMEPADS];
+    const wgf_platform_priv_gamepad_t *real = pads.testing ? pads.test : pads.raw;
     int i, b, a;
     if (!pads.testing) wgf_platform_priv_gamepad_platform_poll(pads.raw);
-    memcpy(next, pads.testing ? pads.test : pads.raw, sizeof(next));
+    pads.held_pressed = false;
+    if (pads.played != NULL) { /* the real ones held back: only whether one was pressed */
+        for (i = 0; i < WGF_PLATFORM_PRIV_GAMEPADS; i++) {
+            for (b = 0; b < WGF_PLATFORM_PRIV_GAMEPAD_BUTTONS; b++) {
+                if (real[i].connected && real[i].buttons[b] && !(pads.real[i].connected && pads.real[i].buttons[b])) {
+                    pads.held_pressed = true;
+                }
+            }
+        }
+    }
+    memcpy(pads.real, real, sizeof(pads.real));
+    memcpy(next, pads.played != NULL ? pads.played : real, sizeof(next));
     for (i = 0; i < WGF_PLATFORM_PRIV_GAMEPADS; i++) {
         wgf_platform_priv_gamepad_t *pad = &next[i];
         if (!pad->connected) {

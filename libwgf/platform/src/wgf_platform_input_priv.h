@@ -30,6 +30,11 @@ wgf_platform_priv_input_context_t wgf_platform_priv_input_get_context(void);
 void wgf_platform_priv_input_end_tick(void);
 void wgf_platform_priv_input_end_frame(void);
 
+/* Everything held let go: each key, mouse button, and finger down goes up, its release an
+ * edge of the frame's and the tick's, with no gesture. What a replay (wgf_replay.h) does as
+ * it starts and ends, so what it plays starts from nothing held and leaves nothing held. */
+void wgf_platform_priv_input_release_all(void);
+
 /* Called as a tick's or a frame's edges end, before they are cleared: input actions'
  * (wgf_platform_action.c) keep each action's state there, set by the first binding, so a
  * program with no actions links none of them. */

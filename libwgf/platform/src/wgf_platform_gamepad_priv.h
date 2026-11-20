@@ -50,6 +50,14 @@ void wgf_platform_priv_gamepad_end_frame(void);
  * lines set, so a recording of it plays back the same; NULL for no such pad. */
 const wgf_platform_priv_gamepad_t *wgf_platform_priv_gamepad_get(int pad);
 
+/* A replay's pads (wgf_replay.h), `played` (WGF_PLATFORM_PRIV_GAMEPADS of them, kept, not
+ * copied, and read at each frame's start) in place of the real ones (or a test's) while
+ * set; NULL gives the real ones back. The real ones are still read meanwhile: whether a
+ * button of theirs went down at the last frame's start, held back from the program, is
+ * wgf_platform_priv_gamepad_was_held_pressed. */
+void wgf_platform_priv_gamepad_set_played(const wgf_platform_priv_gamepad_t *played);
+bool wgf_platform_priv_gamepad_was_held_pressed(void);
+
 /* Tests: from now on, pads come from here, never the platform. */
 void wgf_platform_priv_gamepad_set_test_pad(int pad, const wgf_platform_priv_gamepad_t *state);
 

@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "7cee19f9ba58a271" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "422eba79159db5e7" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -16833,4 +16833,155 @@ export function wgf_loop_get_fps() {
 export function wgf_loop_get_frame_cost() {
     const value = host["_wgf_loop_get_frame_cost"]();
     return value;
+}
+
+// wgf: call wgf_replay_start_recording
+/**
+ * Recording, from the next frame: each input reaching the program is written, at the
+ * frame it reached it, counted from 0, the pointer where it is written first. A recording
+ * starts with nothing held: a key down as it starts is not in it. False while recording
+ * or while a replay plays or is paused.
+ */
+export function wgf_replay_start_recording() {
+    const value = host["_wgf_replay_start_recording"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_replay_stop_recording
+/**
+ * Recording stopped: an `end` written at its last frame. False when not recording.
+ */
+export function wgf_replay_stop_recording() {
+    const value = host["_wgf_replay_stop_recording"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_replay_is_recording
+/**
+ * Whether it is recording.
+ */
+export function wgf_replay_is_recording() {
+    const value = host["_wgf_replay_is_recording"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_replay_get_recording
+/**
+ * The recording, as an autopilot's text, so far while recording; "" for none. Valid
+ * until the next start or clear.
+ */
+export function wgf_replay_get_recording() {
+    const value = host["_wgf_replay_get_recording"]();
+    return str(value);
+}
+
+// wgf: call wgf_replay_get_recording_frame_count
+/**
+ * The frames recorded, so far while recording; 0 for none.
+ */
+export function wgf_replay_get_recording_frame_count() {
+    const value = host["_wgf_replay_get_recording_frame_count"]();
+    return value;
+}
+
+// wgf: call wgf_replay_clear_recording
+/**
+ * The recording let go of, stopped first while recording.
+ */
+export function wgf_replay_clear_recording() {
+    host["_wgf_replay_clear_recording"]();
+}
+
+// wgf: call wgf_replay_play
+/**
+ * A replay: `text`, an autopilot (a recording), played from the next frame, a frame of it
+ * each frame of the program's, in place of whatever plays. Its inputs alone are played: an
+ * autopilot's seed, expectations, waits, logs, screenshots, and dumps are an autopilot
+ * run's, so a replay passes over them. It lasts until its `end`, or without one its last
+ * line's frame, then is COMPLETE.
+ *
+ * While it plays, and while it is paused, the program's input is the replay's alone: real
+ * input (the window's, and an autopilot run's) is held back, never reaching an input call,
+ * and every gamepad is the replay's (disconnected unless it connects one). Whether a real
+ * key, mouse button, finger, or pad button was pressed meanwhile is
+ * wgf_replay_has_real_press, so an attract mode can end on one. Everything held is let go
+ * of as a replay starts and as it ends (stopped or complete), so it starts from nothing
+ * held and leaves nothing held: the releases are that frame's edges. Paused, it holds what
+ * it holds.
+ *
+ * Its state is wgf_play_state_t (wgf_play_state.h), with play, pause, resume, and stop as
+ * that header says. False for text that isn't an autopilot (each bad line logged), with
+ * whatever plays left playing, and while recording.
+ */
+export function wgf_replay_play(text) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_replay_play"](cstr(text));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_replay_pause
+/**
+ * False unless PLAYING.
+ */
+export function wgf_replay_pause() {
+    const value = host["_wgf_replay_pause"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_replay_resume
+/**
+ * False unless PAUSED.
+ */
+export function wgf_replay_resume() {
+    const value = host["_wgf_replay_resume"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_replay_stop
+/**
+ * The replay let go of, its input with it. False when STOPPED.
+ */
+export function wgf_replay_stop() {
+    const value = host["_wgf_replay_stop"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_replay_get_state
+/**
+ * The replay's state: STOPPED when none plays.
+ */
+export function wgf_replay_get_state() {
+    const value = host["_wgf_replay_get_state"]();
+    return value;
+}
+
+// wgf: call wgf_replay_get_frame
+/**
+ * The replay's frames played so far: 0 before its first, its frame count once COMPLETE;
+ * 0 when STOPPED.
+ */
+export function wgf_replay_get_frame() {
+    const value = host["_wgf_replay_get_frame"]();
+    return value;
+}
+
+// wgf: call wgf_replay_get_frame_count
+/**
+ * The replay's length in frames: through its end; 0 when STOPPED.
+ */
+export function wgf_replay_get_frame_count() {
+    const value = host["_wgf_replay_get_frame_count"]();
+    return value;
+}
+
+// wgf: call wgf_replay_has_real_press
+/**
+ * Whether real input held back by a replay pressed something (a key, a mouse button, a
+ * finger, or a pad button) for this frame: since the previous frame, read the whole frame
+ * and its ticks. False while nothing plays.
+ */
+export function wgf_replay_has_real_press() {
+    const value = host["_wgf_replay_has_real_press"]();
+    return value !== 0;
 }

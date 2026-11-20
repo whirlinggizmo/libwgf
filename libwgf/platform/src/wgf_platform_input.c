@@ -86,6 +86,29 @@ void wgf_platform_priv_input_reset(void)
     input.from_mouse = from_mouse;
 }
 
+void wgf_platform_priv_input_release_all(void)
+{
+    int i;
+    for (i = 0; i < MAX_KEYS; i++) {
+        if (!input.key_down[i]) continue;
+        input.key_down[i] = false;
+        input.frame.key_released[i] = input.tick.key_released[i] = true;
+    }
+    for (i = 0; i < MOUSE_BUTTONS; i++) {
+        if (!input.down[i]) continue;
+        input.down[i] = false;
+        input.frame.released[i] = input.tick.released[i] = true;
+    }
+    for (i = 0; i < MAX_FINGERS; i++) {
+        if (!input.fingers[i].down) continue;
+        input.fingers[i].down = false;
+        input.frame.touch_released[i] = input.tick.touch_released[i] = true;
+    }
+    input.touching = false;
+    input.touch_cancelled = false;
+    input.mouse_finger = false;
+}
+
 void wgf_platform_priv_input_set_pointer_held(bool held)
 {
     input.pointer_held = held;

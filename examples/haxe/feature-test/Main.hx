@@ -994,6 +994,7 @@ class Main {
 		ui();
 		document();
 		input();
+		replay();
 		if (frames == 2) {
 			Loop.getFrameDelta();
 			Loop.getTickFraction();
@@ -1087,6 +1088,31 @@ class Main {
 		final events:Array<Int> = [for (_ in 0...16) 0];
 		menu.getEventCount();
 		expect(menu.takeEvents(events) % 2 == 0, "events, two ints each");
+	}
+
+	// Input recorded and played back: two frames recorded, then a replay holding space for three.
+	static function replay():Void {
+		switch (frames) {
+			case 4:
+				expect(Replay.startRecording() && Replay.isRecording(), "input recorded");
+			case 6:
+				expect(Replay.stopRecording() && !Replay.isRecording() && Replay.getRecordingFrameCount() == 2
+					&& StringTools.startsWith(Replay.getRecording(), "wgf-autopilot 1"), "two frames recorded, as an autopilot");
+				Replay.clearRecording();
+				expect(Replay.getRecording() == "" && Replay.getRecordingFrameCount() == 0, "the recording let go of");
+				expect(!Replay.play("not an autopilot"), "a replay that isn't an autopilot refused");
+				expect(Replay.play("wgf-autopilot 1\nat 0 key down space\nat 2 end\n") && Replay.getState() == PlayState.PLAYING
+					&& Replay.getFrameCount() == 3 && Replay.getFrame() == 0, "a replay played");
+			case 7:
+				expect(Keyboard.isDown(KeyboardKey.SPACE) && Replay.getFrame() == 1 && !Replay.hasRealPress(),
+					"the replay's key down, the real input held back");
+				expect(Replay.pause() && Replay.getState() == PlayState.PAUSED && Replay.resume(), "a replay paused and resumed");
+			case 10:
+				expect(Replay.getState() == PlayState.COMPLETE && Replay.getFrame() == 3 && !Keyboard.isDown(KeyboardKey.SPACE),
+					"the replay complete, its key let go of");
+				expect(Replay.stop() && Replay.getState() == PlayState.STOPPED, "the replay stopped");
+			default:
+		}
 	}
 
 	static function input():Void {

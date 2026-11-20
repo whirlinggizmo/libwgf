@@ -2,6 +2,7 @@
 
 #include <errno.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -24,6 +25,8 @@
 
 #define LINE_MAX_BYTES 512
 #define FRAME_MAX 100000000L /* about 19 days at 60 a second */
+#define FINGERS SAPP_MAX_TOUCHPOINTS /* an autopilot's fingers, 0 to 7 */
+#define FINGER_ID ((uintptr_t)0x57474600u) /* a finger's id as the window system's: this and its number */
 
 typedef enum {
     CMD_KEY_DOWN,
@@ -38,7 +41,10 @@ typedef enum {
     CMD_PAD_DOWN,
     CMD_PAD_UP,
     CMD_PAD_AXIS,
-    CMD_EXPECT,
+    CMD_TOUCH_DOWN,
+    CMD_TOUCH_MOVE,
+    CMD_TOUCH_UP,
+    CMD_EXPECT, /* inputs are before this; what follows isn't one */
     CMD_WAIT,
     CMD_LOG,
     CMD_SCREENSHOT,
@@ -53,7 +59,7 @@ typedef struct command_t {
     int line;  /* in the autopilot, for what is logged */
     int order; /* its place in the autopilot, to keep the order within a frame */
     kind_t kind;
-    int code;  /* a key, a mouse button, a pad's button or axis */
+    int code;  /* a key, a mouse button, a pad's button or axis, a finger */
     int pad;
     op_t op;
     float x, y; /* a position, a scroll, an axis's value */
@@ -63,19 +69,28 @@ typedef struct command_t {
     bool done;  /* played */
 } command_t;
 
+/* An autopilot parsed (wgf_app_autopilot_priv.h): the autopilot run's, or a replay's. */
+struct wgf_app_priv_script_t {
+    command_t *commands;
+    int count, capacity, next;
+    long end_frame; /* the end's frame, -1 when the autopilot has none */
+    long last_frame; /* the last command's frame, -1 for none */
+    bool seeded;
+    int seed;
+    bool real;      /* its input is real input (an autopilot run's), not a replay's */
+    float mouse_x, mouse_y;
+    bool pads_taken;
+    wgf_platform_priv_gamepad_t pads[WGF_PLATFORM_PRIV_GAMEPADS];
+};
+
 static struct {
     bool running;
     bool ended;
     bool passed;
-    command_t *commands;
-    int count, capacity, next;
+    wgf_app_priv_script_t script;
     int failures, expectations;
-    long end_frame; /* the end's frame, -1 when the autopilot has none */
     long shift;     /* the program's frames waited (wait): the autopilot's frame is the program's less this */
     double waiting; /* when the wait under way began, in real seconds; -1 for none */
-    float mouse_x, mouse_y;
-    bool pads_taken;
-    wgf_platform_priv_gamepad_t pads[WGF_PLATFORM_PRIV_GAMEPADS];
 } autopilot;
 
 /* ---- names ------------------------------------------------------------------ */
@@ -171,11 +186,13 @@ typedef struct parser_t {
     int line;
     int order;
     bool failed;
+    wgf_app_priv_script_t *script;
+    const char *who; /* what is logged before a bad line: the autopilot's or a replay's name */
 } parser_t;
 
 static void parse_error(parser_t *parser, const char *what, const char *word)
 {
-    wgf_log_error("wgf_autopilot: line %d: %s%s%s%s", parser->line, what, word != NULL ? " (\"" : "",
+    wgf_log_error("%s: line %d: %s%s%s%s", parser->who, parser->line, what, word != NULL ? " (\"" : "",
                   word != NULL ? word : "", word != NULL ? "\")" : "");
     parser->failed = true;
 }
@@ -267,18 +284,20 @@ static bool parse_number(const char *word, double *out)
 
 static command_t *add(parser_t *parser, long frame, kind_t kind)
 {
+    wgf_app_priv_script_t *script = parser->script;
     command_t *command;
-    if (autopilot.count == autopilot.capacity) {
-        const int capacity = autopilot.capacity > 0 ? autopilot.capacity * 2 : 64;
-        command_t *grown = (command_t *)realloc(autopilot.commands, sizeof(command_t) * (size_t)capacity);
+    if (script->count == script->capacity) {
+        const int capacity = script->capacity > 0 ? script->capacity * 2 : 64;
+        command_t *grown = (command_t *)realloc(script->commands, sizeof(command_t) * (size_t)capacity);
         if (grown == NULL) {
             parse_error(parser, "out of memory", NULL);
             return NULL;
         }
-        autopilot.commands = grown;
-        autopilot.capacity = capacity;
+        script->commands = grown;
+        script->capacity = capacity;
     }
-    command = &autopilot.commands[autopilot.count++];
+    command = &script->commands[script->count++];
+    if (frame > script->last_frame) script->last_frame = frame;
     memset(command, 0, sizeof(*command));
     command->frame = frame;
     command->line = parser->line;
@@ -407,6 +426,28 @@ static void parse_command(parser_t *parser, long frame, char *at)
             parse_error(parser, "pad takes connect, disconnect, down, up, tap, or axis", how);
             return;
         }
+    } else if (strcmp(word, "touch") == 0) {
+        char *how = next_word(&at);
+        long finger;
+        double x, y;
+        if (how == NULL || (strcmp(how, "down") != 0 && strcmp(how, "move") != 0 && strcmp(how, "up") != 0)) {
+            parse_error(parser, "touch takes down, move, or up", how);
+            return;
+        }
+        if (!parse_long(next_word(&at), 0, FINGERS - 1, &finger)) {
+            parse_error(parser, "touch takes a finger from 0 to 7", how);
+            return;
+        }
+        if (!parse_number(next_word(&at), &x) || !parse_number(next_word(&at), &y)) {
+            parse_error(parser, "touch takes a finger and two numbers", how);
+            return;
+        }
+        command = add(parser, frame, how[0] == 'd' ? CMD_TOUCH_DOWN : how[0] == 'm' ? CMD_TOUCH_MOVE : CMD_TOUCH_UP);
+        if (command != NULL) {
+            command->code = (int)finger;
+            command->x = (float)x;
+            command->y = (float)y;
+        }
     } else if (strcmp(word, "expect") == 0 || strcmp(word, "wait") == 0) {
         const bool wait = word[0] == 'w';
         char *probe = next_word(&at), *op = next_word(&at), *want = NULL;
@@ -451,11 +492,11 @@ static void parse_command(parser_t *parser, long frame, char *at)
     } else if (strcmp(word, "dump") == 0) {
         add(parser, frame, CMD_DUMP);
     } else if (strcmp(word, "end") == 0) {
-        if (autopilot.end_frame >= 0) {
+        if (parser->script->end_frame >= 0) {
             parse_error(parser, "a second end", NULL);
             return;
         }
-        autopilot.end_frame = frame;
+        parser->script->end_frame = frame;
         add(parser, frame, CMD_END);
     } else {
         parse_error(parser, "no such command", word);
@@ -471,16 +512,25 @@ static int by_frame(const void *a, const void *b)
     return x->order < y->order ? -1 : (x->order > y->order ? 1 : 0);
 }
 
-static void clear(void)
+static void clear_script(wgf_app_priv_script_t *script)
 {
     int i;
-    for (i = 0; i < autopilot.count; i++) {
-        free(autopilot.commands[i].text);
-        free(autopilot.commands[i].want);
+    for (i = 0; i < script->count; i++) {
+        free(script->commands[i].text);
+        free(script->commands[i].want);
     }
-    free(autopilot.commands);
+    free(script->commands);
+    memset(script, 0, sizeof(*script));
+    script->end_frame = -1;
+    script->last_frame = -1;
+}
+
+static void clear(void)
+{
+    clear_script(&autopilot.script);
     memset(&autopilot, 0, sizeof(autopilot));
-    autopilot.end_frame = -1;
+    autopilot.script.end_frame = -1;
+    autopilot.script.last_frame = -1;
     autopilot.shift = 0;
     autopilot.waiting = -1.0;
 }
@@ -502,12 +552,14 @@ static char *comment_of(char *line)
     return NULL;
 }
 
-static bool parse(const char *text)
+static bool parse(wgf_app_priv_script_t *script, const char *text, const char *who)
 {
-    parser_t parser = {0, 0, false};
+    parser_t parser = {0, 0, false, NULL, NULL};
     const char *p = text;
-    bool header = false, seeded = false;
-    clear();
+    bool header = false;
+    parser.script = script;
+    parser.who = who;
+    clear_script(script);
     while (*p != '\0') {
         char line[LINE_MAX_BYTES], *at, *word;
         size_t n = strcspn(p, "\n");
@@ -541,13 +593,14 @@ static bool parse(const char *text)
             header = true;
         } else if (strcmp(word, "seed") == 0) {
             long seed;
-            if (seeded || autopilot.count > 0 || !parse_long(next_word(&at), -2147483647L - 1, 2147483647L, &seed) ||
+            if (script->seeded || script->count > 0 ||
+                !parse_long(next_word(&at), -2147483647L - 1, 2147483647L, &seed) ||
                 next_word(&at) != NULL) {
                 parse_error(&parser, "seed takes one whole number, once, before the commands", NULL);
                 continue;
             }
-            wgf_random_set_seed((int)seed);
-            seeded = true;
+            script->seed = (int)seed;
+            script->seeded = true;
         } else if (strcmp(word, "at") == 0) {
             long frame;
             if (!parse_long(next_word(&at), 0, FRAME_MAX, &frame)) {
@@ -561,28 +614,37 @@ static bool parse(const char *text)
     }
     if (!header && !parser.failed) parse_error(&parser, "empty: the first line is `wgf-autopilot 1`", NULL);
     if (parser.failed) {
-        clear();
+        clear_script(script);
         return false;
     }
-    if (autopilot.count > 0) qsort(autopilot.commands, (size_t)autopilot.count, sizeof(command_t), by_frame);
+    if (script->count > 0) qsort(script->commands, (size_t)script->count, sizeof(command_t), by_frame);
     return true;
 }
 
 /* ---- playing ---------------------------------------------------------------- */
 
-static void deliver(sapp_event *event)
+/* An autopilot run's input is real input, as the window's is (held back while a replay
+ * plays); a replay's goes straight to the program. */
+static void deliver(const wgf_app_priv_script_t *script, sapp_event *event)
 {
-    wgf_platform_priv_input_handle_event(event, wgf_platform_priv_get_dpi_scale());
+    if (script->real) {
+        wgf_app_priv_input_event(event);
+    } else {
+        wgf_platform_priv_input_handle_event(event, wgf_platform_priv_get_dpi_scale());
+    }
 }
 
-static void pads_changed(int pad)
+/* An autopilot run's pads replace the real ones as test pads; a replay's are read from
+ * where they are (wgf_app_priv_script_get_pads). */
+static void pads_changed(wgf_app_priv_script_t *script, int pad)
 {
     int i;
-    if (!autopilot.pads_taken) { /* from the first, every pad is the autopilot's */
-        autopilot.pads_taken = true;
-        for (i = 0; i < WGF_PLATFORM_PRIV_GAMEPADS; i++) wgf_platform_priv_gamepad_set_test_pad(i, &autopilot.pads[i]);
+    if (!script->real) return;
+    if (!script->pads_taken) { /* from the first, every pad is the autopilot's */
+        script->pads_taken = true;
+        for (i = 0; i < WGF_PLATFORM_PRIV_GAMEPADS; i++) wgf_platform_priv_gamepad_set_test_pad(i, &script->pads[i]);
     }
-    wgf_platform_priv_gamepad_set_test_pad(pad, &autopilot.pads[pad]);
+    wgf_platform_priv_gamepad_set_test_pad(pad, &script->pads[pad]);
 }
 
 /* The code point at `*p`, advanced past it; 0xFFFD for a byte that starts none. */
@@ -608,69 +670,84 @@ static uint32_t next_code_point(const unsigned char **p)
     return c;
 }
 
-static void play_input(const command_t *command)
+static void play_input(wgf_app_priv_script_t *script, const command_t *command)
 {
     sapp_event event;
     wgf_platform_priv_presentation_t to; /* logical to the framebuffer's pixels, as the window's events are */
     memset(&event, 0, sizeof(event));
     wgf_platform_priv_get_presentation(&to);
     if (command->kind == CMD_MOUSE_MOVE) {
-        event.mouse_dx = (command->x - autopilot.mouse_x) * to.scale_x;
-        event.mouse_dy = (command->y - autopilot.mouse_y) * to.scale_y;
-        autopilot.mouse_x = command->x;
-        autopilot.mouse_y = command->y;
+        event.mouse_dx = (command->x - script->mouse_x) * to.scale_x;
+        event.mouse_dy = (command->y - script->mouse_y) * to.scale_y;
+        script->mouse_x = command->x;
+        script->mouse_y = command->y;
     }
-    event.mouse_x = to.offset_x + autopilot.mouse_x * to.scale_x;
-    event.mouse_y = to.offset_y + autopilot.mouse_y * to.scale_y;
+    event.mouse_x = to.offset_x + script->mouse_x * to.scale_x;
+    event.mouse_y = to.offset_y + script->mouse_y * to.scale_y;
     switch (command->kind) {
         case CMD_KEY_DOWN:
         case CMD_KEY_UP:
             event.type = command->kind == CMD_KEY_DOWN ? SAPP_EVENTTYPE_KEY_DOWN : SAPP_EVENTTYPE_KEY_UP;
             event.key_code = (sapp_keycode)command->code;
-            deliver(&event);
+            deliver(script, &event);
             break;
         case CMD_TEXT: {
             const unsigned char *p = (const unsigned char *)command->text;
             event.type = SAPP_EVENTTYPE_CHAR;
             while (*p != '\0') {
                 event.char_code = next_code_point(&p);
-                deliver(&event);
+                deliver(script, &event);
             }
             break;
         }
         case CMD_MOUSE_MOVE:
             event.type = SAPP_EVENTTYPE_MOUSE_MOVE;
-            deliver(&event);
+            deliver(script, &event);
             break;
         case CMD_MOUSE_DOWN:
         case CMD_MOUSE_UP:
             event.type = command->kind == CMD_MOUSE_DOWN ? SAPP_EVENTTYPE_MOUSE_DOWN : SAPP_EVENTTYPE_MOUSE_UP;
             event.mouse_button = (sapp_mousebutton)command->code;
-            deliver(&event);
+            deliver(script, &event);
             break;
         case CMD_MOUSE_SCROLL:
             event.type = SAPP_EVENTTYPE_MOUSE_SCROLL;
             event.scroll_x = command->x;
             event.scroll_y = command->y;
-            deliver(&event);
+            deliver(script, &event);
             break;
         case CMD_PAD_CONNECT:
         case CMD_PAD_DISCONNECT: {
-            wgf_platform_priv_gamepad_t *pad = &autopilot.pads[command->pad];
+            wgf_platform_priv_gamepad_t *pad = &script->pads[command->pad];
             memset(pad, 0, sizeof(*pad));
             pad->connected = command->kind == CMD_PAD_CONNECT;
-            if (pad->connected) memcpy(pad->name, "wgf_autopilot", sizeof("wgf_autopilot"));
-            pads_changed(command->pad);
+            if (pad->connected) {
+                snprintf(pad->name, sizeof(pad->name), "%s", script->real ? "wgf_autopilot" : "wgf_replay");
+            }
+            pads_changed(script, command->pad);
             break;
         }
         case CMD_PAD_DOWN:
         case CMD_PAD_UP:
-            autopilot.pads[command->pad].buttons[command->code] = command->kind == CMD_PAD_DOWN;
-            pads_changed(command->pad);
+            script->pads[command->pad].buttons[command->code] = command->kind == CMD_PAD_DOWN;
+            pads_changed(script, command->pad);
             break;
         case CMD_PAD_AXIS:
-            autopilot.pads[command->pad].axes[command->code] = command->x;
-            pads_changed(command->pad);
+            script->pads[command->pad].axes[command->code] = command->x;
+            pads_changed(script, command->pad);
+            break;
+        case CMD_TOUCH_DOWN:
+        case CMD_TOUCH_MOVE:
+        case CMD_TOUCH_UP:
+            event.type = command->kind == CMD_TOUCH_DOWN   ? SAPP_EVENTTYPE_TOUCHES_BEGAN
+                         : command->kind == CMD_TOUCH_MOVE ? SAPP_EVENTTYPE_TOUCHES_MOVED
+                                                           : SAPP_EVENTTYPE_TOUCHES_ENDED;
+            event.num_touches = 1;
+            event.touches[0].identifier = FINGER_ID + (uintptr_t)command->code;
+            event.touches[0].pos_x = to.offset_x + command->x * to.scale_x;
+            event.touches[0].pos_y = to.offset_y + command->y * to.scale_y;
+            event.touches[0].changed = true;
+            deliver(script, &event);
             break;
         default:
             break;
@@ -745,13 +822,17 @@ static void finish(long frames)
 
 bool wgf_app_priv_autopilot_start_text(const char *text)
 {
-    if (text == NULL || !parse(text)) {
+    clear();
+    if (text == NULL || !parse(&autopilot.script, text, "wgf_autopilot")) {
         wgf_log_error("wgf_autopilot: can't run the autopilot; quitting");
         wgf_platform_priv_request_quit();
         return false;
     }
+    autopilot.script.real = true;
+    if (autopilot.script.seeded) wgf_random_set_seed(autopilot.script.seed);
     autopilot.running = true;
-    wgf_log_info("wgf_autopilot: %d commands%s", autopilot.count, autopilot.end_frame >= 0 ? "" : ", no end");
+    wgf_log_info("wgf_autopilot: %d commands%s", autopilot.script.count,
+                 autopilot.script.end_frame >= 0 ? "" : ", no end");
     return true;
 }
 
@@ -776,18 +857,25 @@ bool wgf_app_priv_autopilot_is_running(void)
     return autopilot.running;
 }
 
-void wgf_app_priv_autopilot_begin_frame(long frame)
+/* The inputs due by `frame` not yet played; a replay's (which reads nothing else) passed
+ * for good. */
+static void play_inputs(wgf_app_priv_script_t *script, long frame)
 {
     int i;
-    if (!autopilot.running) return;
-    frame -= autopilot.shift; /* the autopilot's frame */
-    for (i = autopilot.next; i < autopilot.count && autopilot.commands[i].frame <= frame; i++) {
-        command_t *command = &autopilot.commands[i];
+    for (i = script->next; i < script->count && script->commands[i].frame <= frame; i++) {
+        command_t *command = &script->commands[i];
         if (!command->done && command->kind < CMD_EXPECT) {
-            play_input(command);
+            play_input(script, command);
             command->done = true;
         }
     }
+    if (!script->real) script->next = i;
+}
+
+void wgf_app_priv_autopilot_begin_frame(long frame)
+{
+    if (!autopilot.running) return;
+    play_inputs(&autopilot.script, frame - autopilot.shift); /* the autopilot's frame */
 }
 
 /* Each part's state that has one, as text (wgf_core_part_priv.h's dump), logged a line
@@ -832,16 +920,17 @@ static bool waited(const command_t *command)
 void wgf_app_priv_autopilot_end_frame(long program_frame)
 {
     const long frame = program_frame - autopilot.shift; /* the autopilot's frame */
+    wgf_app_priv_script_t *script = &autopilot.script;
     if (!autopilot.running) return;
-    while (autopilot.next < autopilot.count && autopilot.commands[autopilot.next].frame <= frame) {
-        command_t *command = &autopilot.commands[autopilot.next];
+    while (script->next < script->count && script->commands[script->next].frame <= frame) {
+        command_t *command = &script->commands[script->next];
         if (command->done) {
-            autopilot.next++;
+            script->next++;
             continue;
         }
         if (command->kind == CMD_WAIT && !waited(command)) return; /* the rest of the frame waits too */
         command->done = true;
-        autopilot.next++;
+        script->next++;
         switch (command->kind) {
             case CMD_EXPECT: check(command); break;
             case CMD_LOG: wgf_log_info("wgf_autopilot: %s", command->text); break;
@@ -859,9 +948,9 @@ void wgf_app_priv_autopilot_end_frame(long program_frame)
 
 void wgf_app_priv_autopilot_stop(long frames)
 {
-    if (autopilot.running && autopilot.end_frame >= 0) {
+    if (autopilot.running && autopilot.script.end_frame >= 0) {
         wgf_log_error("wgf_autopilot: FAIL: the program quit at frame %ld, before the end at %ld",
-                      frames, autopilot.end_frame);
+                      frames, autopilot.script.end_frame);
         autopilot.failures++;
         finish(frames);
     } else if (autopilot.running) {
@@ -878,4 +967,43 @@ int wgf_app_priv_autopilot_get_failures(void)
 bool wgf_app_priv_autopilot_has_passed(void)
 {
     return autopilot.ended && autopilot.passed;
+}
+
+/* ---- scripts: an autopilot's inputs, played by a replay ---------------------- */
+
+wgf_app_priv_script_t *wgf_app_priv_script_parse(const char *text, const char *who)
+{
+    wgf_app_priv_script_t *script = (wgf_app_priv_script_t *)calloc(1, sizeof(*script));
+    if (script == NULL) {
+        wgf_log_error("%s: out of memory", who);
+        return NULL;
+    }
+    if (text == NULL) wgf_log_error("%s: no text", who);
+    if (text == NULL || !parse(script, text, who)) {
+        free(script);
+        return NULL;
+    }
+    return script;
+}
+
+void wgf_app_priv_script_destroy(wgf_app_priv_script_t *script)
+{
+    if (script == NULL) return;
+    clear_script(script);
+    free(script);
+}
+
+long wgf_app_priv_script_get_length(const wgf_app_priv_script_t *script)
+{
+    return (script->end_frame >= 0 ? script->end_frame : script->last_frame) + 1;
+}
+
+void wgf_app_priv_script_play(wgf_app_priv_script_t *script, long frame)
+{
+    play_inputs(script, frame);
+}
+
+const wgf_platform_priv_gamepad_t *wgf_app_priv_script_get_pads(const wgf_app_priv_script_t *script)
+{
+    return script->pads;
 }

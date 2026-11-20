@@ -16,6 +16,7 @@
 #include "wgf_mouse.h"
 #include "wgf_probe.h"
 #include "wgf_random.h"
+#include "wgf_touch.h"
 
 /* Autopilot runs, headless, through wgf_app_run as a program runs: an autopilot's inputs
  * reach the program's ticks at their frames, its expectations pass and fail as the
@@ -74,6 +75,8 @@ static void on_tick(void *user)
     wgf_probe_set_value("pad_connected", wgf_gamepad_is_connected(1));
     wgf_probe_set_value("pad_south", wgf_gamepad_is_down(1, WGF_GAMEPAD_BUTTON_SOUTH));
     wgf_probe_set_value("pad_x", wgf_gamepad_get_stick(1, WGF_GAMEPAD_STICK_LEFT).x);
+    wgf_probe_set_value("touches", wgf_touch_get_count());
+    wgf_probe_set_value("touch_x", wgf_touch_get_count() > 0 ? wgf_touch_get_position(wgf_touch_get_id(0)).x : -1.0f);
 }
 
 static void on_frame(void *user)
@@ -132,6 +135,12 @@ static const char *passing =
     "at 12 expect pad_x > 0.9\n"
     "at 13 pad 1 up south\n"
     "at 13 expect pad_south == 0\n"
+    "at 14 touch down 3 50 60\n"
+    "at 14 expect touches == 1\n"
+    "at 15 touch move 3 55 60\n"
+    "at 15 expect touch_x == 55\n"
+    "at 16 touch up 3 56 60\n"
+    "at 17 expect touches == 0\n"
     "at 29 expect ticks == 30        # one tick a frame: 60 a second, a sixtieth a frame\n"
     "at 29 log thirty frames\n"
     "at 29 screenshot thirty\n"
