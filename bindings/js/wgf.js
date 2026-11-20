@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "85022cc6dd9c39a1" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "341c8965ff4c0bc8" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -236,6 +236,40 @@ export function wgf_app_run(init, tick, frame, shutdown) {
 }
 
 // wgf: constants
+/**
+ * Easing, helix-legacy's Ease (Robert Penner's set): how a tween (wgf_tween.h) runs from its
+ * start to its end. Each but LINEAR in three forms: IN starts slow, OUT ends slow, IN_OUT
+ * both. BACK goes a little past and returns, ELASTIC springs, BOUNCE bounces at the end.
+ */
+export const WGF_EASING_LINEAR = 0;
+export const WGF_EASING_QUAD_IN = 1;
+export const WGF_EASING_QUAD_OUT = 2;
+export const WGF_EASING_QUAD_IN_OUT = 3;
+export const WGF_EASING_CUBIC_IN = 4;
+export const WGF_EASING_CUBIC_OUT = 5;
+export const WGF_EASING_CUBIC_IN_OUT = 6;
+export const WGF_EASING_QUART_IN = 7;
+export const WGF_EASING_QUART_OUT = 8;
+export const WGF_EASING_QUART_IN_OUT = 9;
+export const WGF_EASING_SINE_IN = 10;
+export const WGF_EASING_SINE_OUT = 11;
+export const WGF_EASING_SINE_IN_OUT = 12;
+export const WGF_EASING_EXPO_IN = 13;
+export const WGF_EASING_EXPO_OUT = 14;
+export const WGF_EASING_EXPO_IN_OUT = 15;
+export const WGF_EASING_CIRC_IN = 16;
+export const WGF_EASING_CIRC_OUT = 17;
+export const WGF_EASING_CIRC_IN_OUT = 18;
+export const WGF_EASING_BACK_IN = 19;
+export const WGF_EASING_BACK_OUT = 20;
+export const WGF_EASING_BACK_IN_OUT = 21;
+export const WGF_EASING_ELASTIC_IN = 22;
+export const WGF_EASING_ELASTIC_OUT = 23;
+export const WGF_EASING_ELASTIC_IN_OUT = 24;
+export const WGF_EASING_BOUNCE_IN = 25;
+export const WGF_EASING_BOUNCE_OUT = 26;
+export const WGF_EASING_BOUNCE_IN_OUT = 27;
+
 export const WGF_FS_TASK_STATUS_NONE = 0;
 export const WGF_FS_TASK_STATUS_PENDING = 1;
 export const WGF_FS_TASK_STATUS_DONE = 2;
@@ -1176,6 +1210,16 @@ export function wgf_collide2d_move_cells(x, y, w, h, dx, dy, size, cells, column
     const value = host["_wgf_collide2d_move_cells"](x, y, w, h, dx, dy, size, cellsPointer, lengthOf(cells), columns, outPointer, lengthOf(out));
     arrayBack(outPointer, out, "HEAPF32");
     return value !== 0;
+}
+
+// wgf: call wgf_ease_value
+/**
+ * `t` (0 to 1, clamped) eased: 0 at 0 and 1 at 1, BACK and ELASTIC going past between. An
+ * ease that isn't one is LINEAR.
+ */
+export function wgf_ease_value(easing, t) {
+    const value = host["_wgf_ease_value"](easing, t);
+    return value;
 }
 
 // wgf: local trig
@@ -10393,6 +10437,170 @@ export function wgf_prefab_spawn(prefab, parent) {
 export function wgf_prefab_spawn_at(prefab, parent, x, y, z, angle) {
     const value = host["_wgf_prefab_spawn_at"](prefab, parent, x, y, z, angle);
     return value >>> 0;
+}
+
+// wgf: call wgf_tween_create
+/**
+ * Tweens, helix-legacy's Tweens: a number, or an actor's position, turn, or scale, moved to
+ * a value over seconds on an ease (wgf_ease.h), stepped on the tick clock (wgf_loop.h), so
+ * an autopilot's run is the same each time. An actor's starts from where the actor is when
+ * it begins (after its delay), and ends with the actor: a tween of an actor destroyed is let
+ * go of. A tween that ends (its repeats done) is let go of too, its handle dead
+ * (wgf_handle_is_alive): what a program asks to know it ended. At most 4096.
+ *
+ * Each makes a tween, running; 0 for seconds not above 0 or not finite, an actor that isn't
+ * one, or no room.
+ */
+export function wgf_tween_create(from, to, seconds, easing) {
+    const value = host["_wgf_tween_create"](from, to, seconds, easing);
+    return value >>> 0;
+}
+
+// wgf: call wgf_tween_move
+/**
+ * Tweens, helix-legacy's Tweens: a number, or an actor's position, turn, or scale, moved to
+ * a value over seconds on an ease (wgf_ease.h), stepped on the tick clock (wgf_loop.h), so
+ * an autopilot's run is the same each time. An actor's starts from where the actor is when
+ * it begins (after its delay), and ends with the actor: a tween of an actor destroyed is let
+ * go of. A tween that ends (its repeats done) is let go of too, its handle dead
+ * (wgf_handle_is_alive): what a program asks to know it ended. At most 4096.
+ *
+ * Each makes a tween, running; 0 for seconds not above 0 or not finite, an actor that isn't
+ * one, or no room.
+ */
+export function wgf_tween_move(actor, x, y, z, seconds, easing) {
+    const value = host["_wgf_tween_move"](actor, x, y, z, seconds, easing);
+    return value >>> 0;
+}
+
+// wgf: call wgf_tween_turn
+/**
+ * Tweens, helix-legacy's Tweens: a number, or an actor's position, turn, or scale, moved to
+ * a value over seconds on an ease (wgf_ease.h), stepped on the tick clock (wgf_loop.h), so
+ * an autopilot's run is the same each time. An actor's starts from where the actor is when
+ * it begins (after its delay), and ends with the actor: a tween of an actor destroyed is let
+ * go of. A tween that ends (its repeats done) is let go of too, its handle dead
+ * (wgf_handle_is_alive): what a program asks to know it ended. At most 4096.
+ *
+ * Each makes a tween, running; 0 for seconds not above 0 or not finite, an actor that isn't
+ * one, or no room.
+ */
+export function wgf_tween_turn(actor, x, y, z, seconds, easing) {
+    const value = host["_wgf_tween_turn"](actor, x, y, z, seconds, easing);
+    return value >>> 0;
+}
+
+// wgf: call wgf_tween_scale
+/**
+ * Tweens, helix-legacy's Tweens: a number, or an actor's position, turn, or scale, moved to
+ * a value over seconds on an ease (wgf_ease.h), stepped on the tick clock (wgf_loop.h), so
+ * an autopilot's run is the same each time. An actor's starts from where the actor is when
+ * it begins (after its delay), and ends with the actor: a tween of an actor destroyed is let
+ * go of. A tween that ends (its repeats done) is let go of too, its handle dead
+ * (wgf_handle_is_alive): what a program asks to know it ended. At most 4096.
+ *
+ * Each makes a tween, running; 0 for seconds not above 0 or not finite, an actor that isn't
+ * one, or no room.
+ */
+export function wgf_tween_scale(actor, x, y, z, seconds, easing) {
+    const value = host["_wgf_tween_scale"](actor, x, y, z, seconds, easing);
+    return value >>> 0;
+}
+
+// wgf: call wgf_tween_destroy
+/**
+ * Let go of at once, where it is. Nothing for a handle that isn't a tween.
+ */
+export function wgf_tween_destroy(tween) {
+    host["_wgf_tween_destroy"](tween);
+}
+
+// wgf: call wgf_tween_get_value
+/**
+ * A number's tween's value now (from, to, or between); an actor's tween's eased progress, 0
+ * to 1. 0 for a handle that isn't a tween.
+ */
+export function wgf_tween_get_value(tween) {
+    const value = host["_wgf_tween_get_value"](tween);
+    return value;
+}
+
+// wgf: call wgf_tween_set_delay
+/**
+ * The seconds it waits before it begins (0 by default), set before it begins. Refuses a
+ * negative or non-finite one, and one begun.
+ */
+export function wgf_tween_set_delay(tween, seconds) {
+    const value = host["_wgf_tween_set_delay"](tween, seconds);
+    return value !== 0;
+}
+
+// wgf: call wgf_tween_get_delay
+/**
+ * The seconds it waits before it begins (0 by default), set before it begins. Refuses a
+ * negative or non-finite one, and one begun.
+ */
+export function wgf_tween_get_delay(tween) {
+    const value = host["_wgf_tween_get_delay"](tween);
+    return value;
+}
+
+// wgf: call wgf_tween_set_repeat
+/**
+ * How many times more it runs after the first (0 by default; -1 for ever), and whether each
+ * run after the first goes back the way it came (yoyo). Refuses a count below -1.
+ */
+export function wgf_tween_set_repeat(tween, count) {
+    const value = host["_wgf_tween_set_repeat"](tween, count);
+    return value !== 0;
+}
+
+// wgf: call wgf_tween_get_repeat
+/**
+ * How many times more it runs after the first (0 by default; -1 for ever), and whether each
+ * run after the first goes back the way it came (yoyo). Refuses a count below -1.
+ */
+export function wgf_tween_get_repeat(tween) {
+    const value = host["_wgf_tween_get_repeat"](tween);
+    return value;
+}
+
+// wgf: call wgf_tween_set_yoyo
+/**
+ * How many times more it runs after the first (0 by default; -1 for ever), and whether each
+ * run after the first goes back the way it came (yoyo). Refuses a count below -1.
+ */
+export function wgf_tween_set_yoyo(tween, yoyo) {
+    const value = host["_wgf_tween_set_yoyo"](tween, (yoyo ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_tween_is_yoyo
+/**
+ * How many times more it runs after the first (0 by default; -1 for ever), and whether each
+ * run after the first goes back the way it came (yoyo). Refuses a count below -1.
+ */
+export function wgf_tween_is_yoyo(tween) {
+    const value = host["_wgf_tween_is_yoyo"](tween);
+    return value !== 0;
+}
+
+// wgf: call wgf_tween_set_paused
+/**
+ * Held where it is, and on again. False only for a handle that isn't a tween.
+ */
+export function wgf_tween_set_paused(tween, paused) {
+    const value = host["_wgf_tween_set_paused"](tween, (paused ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_tween_is_paused
+/**
+ * Held where it is, and on again. False only for a handle that isn't a tween.
+ */
+export function wgf_tween_is_paused(tween) {
+    const value = host["_wgf_tween_is_paused"](tween);
+    return value !== 0;
 }
 
 // wgf: call wgf_world_get_event_count

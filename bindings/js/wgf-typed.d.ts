@@ -1674,6 +1674,13 @@ export declare const Draw: {
      */
     readonly text3d: typeof raw.wgf_draw_text_3d;
 };
+export declare const Ease: {
+    /**
+     * `t` (0 to 1, clamped) eased: 0 at 0 and 1 at 1, BACK and ELASTIC going past between. An
+     * ease that isn't one is LINEAR.
+     */
+    readonly value: typeof raw.wgf_ease_value;
+};
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Emitter2d = raw.wgf_actor_t;
 export declare const Emitter2d: {
@@ -5341,6 +5348,107 @@ export declare const Trig: {
      */
     readonly acos: typeof raw.wgf_trig_acos;
 };
+/** A handle of kind wgf_tween_t: the raw binding's branded type. */
+export type Tween = raw.wgf_tween_t;
+export declare const Tween: {
+    /**
+     * Tweens, helix-legacy's Tweens: a number, or an actor's position, turn, or scale, moved to
+     * a value over seconds on an ease (wgf_ease.h), stepped on the tick clock (wgf_loop.h), so
+     * an autopilot's run is the same each time. An actor's starts from where the actor is when
+     * it begins (after its delay), and ends with the actor: a tween of an actor destroyed is let
+     * go of. A tween that ends (its repeats done) is let go of too, its handle dead
+     * (wgf_handle_is_alive): what a program asks to know it ended. At most 4096.
+     *
+     * Each makes a tween, running; 0 for seconds not above 0 or not finite, an actor that isn't
+     * one, or no room.
+     */
+    readonly create: typeof raw.wgf_tween_create;
+    /**
+     * Tweens, helix-legacy's Tweens: a number, or an actor's position, turn, or scale, moved to
+     * a value over seconds on an ease (wgf_ease.h), stepped on the tick clock (wgf_loop.h), so
+     * an autopilot's run is the same each time. An actor's starts from where the actor is when
+     * it begins (after its delay), and ends with the actor: a tween of an actor destroyed is let
+     * go of. A tween that ends (its repeats done) is let go of too, its handle dead
+     * (wgf_handle_is_alive): what a program asks to know it ended. At most 4096.
+     *
+     * Each makes a tween, running; 0 for seconds not above 0 or not finite, an actor that isn't
+     * one, or no room.
+     */
+    readonly move: typeof raw.wgf_tween_move;
+    /**
+     * Tweens, helix-legacy's Tweens: a number, or an actor's position, turn, or scale, moved to
+     * a value over seconds on an ease (wgf_ease.h), stepped on the tick clock (wgf_loop.h), so
+     * an autopilot's run is the same each time. An actor's starts from where the actor is when
+     * it begins (after its delay), and ends with the actor: a tween of an actor destroyed is let
+     * go of. A tween that ends (its repeats done) is let go of too, its handle dead
+     * (wgf_handle_is_alive): what a program asks to know it ended. At most 4096.
+     *
+     * Each makes a tween, running; 0 for seconds not above 0 or not finite, an actor that isn't
+     * one, or no room.
+     */
+    readonly turn: typeof raw.wgf_tween_turn;
+    /**
+     * Tweens, helix-legacy's Tweens: a number, or an actor's position, turn, or scale, moved to
+     * a value over seconds on an ease (wgf_ease.h), stepped on the tick clock (wgf_loop.h), so
+     * an autopilot's run is the same each time. An actor's starts from where the actor is when
+     * it begins (after its delay), and ends with the actor: a tween of an actor destroyed is let
+     * go of. A tween that ends (its repeats done) is let go of too, its handle dead
+     * (wgf_handle_is_alive): what a program asks to know it ended. At most 4096.
+     *
+     * Each makes a tween, running; 0 for seconds not above 0 or not finite, an actor that isn't
+     * one, or no room.
+     */
+    readonly scale: typeof raw.wgf_tween_scale;
+    /**
+     * Let go of at once, where it is. Nothing for a handle that isn't a tween.
+     */
+    readonly destroy: typeof raw.wgf_tween_destroy;
+    /**
+     * A number's tween's value now (from, to, or between); an actor's tween's eased progress, 0
+     * to 1. 0 for a handle that isn't a tween.
+     */
+    readonly getValue: typeof raw.wgf_tween_get_value;
+    /**
+     * The seconds it waits before it begins (0 by default), set before it begins. Refuses a
+     * negative or non-finite one, and one begun.
+     */
+    readonly setDelay: typeof raw.wgf_tween_set_delay;
+    /**
+     * The seconds it waits before it begins (0 by default), set before it begins. Refuses a
+     * negative or non-finite one, and one begun.
+     */
+    readonly getDelay: typeof raw.wgf_tween_get_delay;
+    /**
+     * How many times more it runs after the first (0 by default; -1 for ever), and whether each
+     * run after the first goes back the way it came (yoyo). Refuses a count below -1.
+     */
+    readonly setRepeat: typeof raw.wgf_tween_set_repeat;
+    /**
+     * How many times more it runs after the first (0 by default; -1 for ever), and whether each
+     * run after the first goes back the way it came (yoyo). Refuses a count below -1.
+     */
+    readonly getRepeat: typeof raw.wgf_tween_get_repeat;
+    /**
+     * How many times more it runs after the first (0 by default; -1 for ever), and whether each
+     * run after the first goes back the way it came (yoyo). Refuses a count below -1.
+     */
+    readonly setYoyo: typeof raw.wgf_tween_set_yoyo;
+    /**
+     * How many times more it runs after the first (0 by default; -1 for ever), and whether each
+     * run after the first goes back the way it came (yoyo). Refuses a count below -1.
+     */
+    readonly isYoyo: typeof raw.wgf_tween_is_yoyo;
+    /**
+     * Held where it is, and on again. False only for a handle that isn't a tween.
+     */
+    readonly setPaused: typeof raw.wgf_tween_set_paused;
+    /**
+     * Held where it is, and on again. False only for a handle that isn't a tween.
+     */
+    readonly isPaused: typeof raw.wgf_tween_is_paused;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
+};
 export declare const Ui: {
     /**
      * The frame's UI begun, the screen at its logical size as the root; false when one is
@@ -6237,6 +6345,8 @@ export type ColorStock = raw.wgf_color_stock_t;
 export declare const ColorStock: { readonly BLANK: ColorStock; readonly WHITE: ColorStock; readonly BLACK: ColorStock; readonly LIGHTGRAY: ColorStock; readonly GRAY: ColorStock; readonly DARKGRAY: ColorStock; readonly YELLOW: ColorStock; readonly GOLD: ColorStock; readonly ORANGE: ColorStock; readonly PINK: ColorStock; readonly RED: ColorStock; readonly MAROON: ColorStock; readonly GREEN: ColorStock; readonly LIME: ColorStock; readonly DARKGREEN: ColorStock; readonly SKYBLUE: ColorStock; readonly BLUE: ColorStock; readonly DARKBLUE: ColorStock; readonly PURPLE: ColorStock; readonly VIOLET: ColorStock; readonly DARKPURPLE: ColorStock; readonly BEIGE: ColorStock; readonly BROWN: ColorStock; readonly DARKBROWN: ColorStock; readonly MAGENTA: ColorStock; readonly RAYWHITE: ColorStock; };
 export type Component = raw.wgf_component_t;
 export declare const Component: { readonly NONE: Component; readonly MOTION: Component; readonly BOUNDS: Component; readonly LIFETIME: Component; readonly COLLIDER: Component; readonly VOICE: Component; readonly BODY: Component; readonly VEHICLE: Component; };
+export type Easing = raw.wgf_easing_t;
+export declare const Easing: { readonly LINEAR: Easing; readonly QUAD_IN: Easing; readonly QUAD_OUT: Easing; readonly QUAD_IN_OUT: Easing; readonly CUBIC_IN: Easing; readonly CUBIC_OUT: Easing; readonly CUBIC_IN_OUT: Easing; readonly QUART_IN: Easing; readonly QUART_OUT: Easing; readonly QUART_IN_OUT: Easing; readonly SINE_IN: Easing; readonly SINE_OUT: Easing; readonly SINE_IN_OUT: Easing; readonly EXPO_IN: Easing; readonly EXPO_OUT: Easing; readonly EXPO_IN_OUT: Easing; readonly CIRC_IN: Easing; readonly CIRC_OUT: Easing; readonly CIRC_IN_OUT: Easing; readonly BACK_IN: Easing; readonly BACK_OUT: Easing; readonly BACK_IN_OUT: Easing; readonly ELASTIC_IN: Easing; readonly ELASTIC_OUT: Easing; readonly ELASTIC_IN_OUT: Easing; readonly BOUNCE_IN: Easing; readonly BOUNCE_OUT: Easing; readonly BOUNCE_IN_OUT: Easing; };
 export type FollowMode = raw.wgf_follow_mode_t;
 export declare const FollowMode: { readonly CHASE: FollowMode; readonly FIXED: FollowMode; readonly ORBIT: FollowMode; };
 export type FsTaskStatus = raw.wgf_fs_task_status_t;

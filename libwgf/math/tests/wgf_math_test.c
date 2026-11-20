@@ -8,6 +8,7 @@
 #include "wgf_mat4.h"
 #include "wgf_trig.h"
 #include "wgf_quat.h"
+#include "wgf_scalar.h"
 #include "wgf_vec2.h"
 #include "wgf_vec3.h"
 #include "wgf_vec4.h"
@@ -200,6 +201,14 @@ int main(void)
                    "its edges");
         }
     }
+
+    /* single numbers */
+    expect(wgf_scalar_clamp(5, 0, 2) == 2 && wgf_scalar_lerp(0, 10, 0.25f) == 2.5f && wgf_scalar_remap(5, 0, 10, 100, 200) == 150, "clamp, lerp, remap");
+    expect(fabsf(wgf_scalar_wrap(370, 0, 360) - 10) < 1e-3f && fabsf(wgf_scalar_wrap(-10, 0, 360) - 350) < 1e-3f, "wrap");
+    expect(wgf_scalar_smooth_step(0, 1, -1) == 0 && wgf_scalar_smooth_step(0, 1, 0.5f) == 0.5f && wgf_scalar_smooth_step(0, 1, 2) == 1, "smooth step");
+    expect(fabsf(wgf_scalar_damp(0, 10, 1, 1) - 10 * (1 - expf(-1))) < 1e-3f && wgf_scalar_damp(0, 10, 0, 1) == 10, "damp");
+    expect(wgf_scalar_move_toward(0, 10, 3) == 3 && wgf_scalar_move_toward(9, 10, 3) == 10 && wgf_scalar_move_toward(0, -10, 3) == -3, "move toward");
+    expect(fabsf(wgf_scalar_angle_delta(0.1f, 2 * pi - 0.1f) + 0.2f) < 1e-3f && fabsf(wgf_scalar_angle_delta(0, pi / 2) - pi / 2) < 1e-4f, "the short way round");
 
     return failures == 0 ? 0 : 1;
 }

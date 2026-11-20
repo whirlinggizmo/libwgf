@@ -62,6 +62,7 @@ class Main {
 	static function init():Void {
 		core();
 		collide2d();
+		tweens();
 		platform();
 		assets();
 		audio();
@@ -90,6 +91,22 @@ class Main {
 		final cells = [for (i in 0...20) i >= 10 ? 1 : 0];
 		expect(Collide2d.moveCells(20, -10, 16, 16, 0, 40, 16, cells, 10, out) && near(out[1], 0) && out[5] == 1,
 			"moved onto a row of cells");
+	}
+
+	static function tweens():Void {
+		expect(near(Ease.value(Easing.QUAD_IN, 0.5), 0.25) && near(Ease.value(Easing.BOUNCE_OUT, 1), 1), "easing");
+		final number = Tween.create(0, 10, 1, Easing.LINEAR);
+		expect(number.setDelay(0.1) && near(number.getDelay(), 0.1) && number.setRepeat(1) && number.getRepeat() == 1
+			&& number.setYoyo(true) && number.isYoyo() && number.setPaused(true) && number.isPaused() && number.setPaused(false),
+			"a number's tween, its delay, repeat, yoyo, and pause");
+		number.getValue();
+		number.destroy();
+		final mover = Actor.create();
+		final moving = Tween.move(mover, 1, 2, 3, 0.5, Easing.SINE_OUT);
+		final turning = Tween.turn(mover, 0, 1, 0, 0.5, Easing.BACK_OUT);
+		final growing = Tween.scale(mover, 2, 2, 2, 0.5, Easing.ELASTIC_OUT);
+		expect(moving.isAlive() && turning.isAlive() && growing.isAlive(), "an actor moved, turned, and scaled");
+		mover.destroy(ActorDestroy.DESTROY_CHILDREN);
 	}
 
 	static function core():Void {

@@ -246,6 +246,7 @@ class Reach {
 		"wgf_draw_texture",
 		"wgf_draw_texture_region",
 		"wgf_draw_triangle",
+		"wgf_ease_value",
 		"wgf_emitter2d_add_color_key",
 		"wgf_emitter2d_add_palette_color",
 		"wgf_emitter2d_add_size_key",
@@ -766,6 +767,20 @@ class Reach {
 		"wgf_trig_cos",
 		"wgf_trig_sin",
 		"wgf_trig_tan",
+		"wgf_tween_create",
+		"wgf_tween_destroy",
+		"wgf_tween_get_delay",
+		"wgf_tween_get_repeat",
+		"wgf_tween_get_value",
+		"wgf_tween_is_paused",
+		"wgf_tween_is_yoyo",
+		"wgf_tween_move",
+		"wgf_tween_scale",
+		"wgf_tween_set_delay",
+		"wgf_tween_set_paused",
+		"wgf_tween_set_repeat",
+		"wgf_tween_set_yoyo",
+		"wgf_tween_turn",
 		"wgf_ui_begin",
 		"wgf_ui_begin_box",
 		"wgf_ui_begin_panel",
@@ -892,7 +907,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...883) 0];
+	static final counts:Array<Int> = [for (_ in 0...898) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

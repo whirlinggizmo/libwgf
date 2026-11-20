@@ -10,6 +10,7 @@ wgf_layer(ecs
         src/wgf_ecs_actor.c
         src/wgf_ecs_store.c
         src/wgf_ecs_scene.c
+        src/wgf_ecs_tween.c
     DEPS
         math core platform asset gfx audio)
 
@@ -21,6 +22,7 @@ endif()
 
 if(WGF_TESTS AND WGF_HEADLESS)
     wgf_test(ecs wgf_ecs_actor_test)
+    wgf_test(ecs wgf_ecs_tween_test)
     wgf_test(ecs wgf_ecs_systems_test)
     wgf_test(ecs wgf_ecs_scene_test)
 endif()

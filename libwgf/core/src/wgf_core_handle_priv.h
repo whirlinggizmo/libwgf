@@ -65,6 +65,7 @@ typedef enum wgf_core_priv_handle_kind_t {
     WGF_CORE_PRIV_HANDLE_KIND_COMPONENTS = 32, /* "ecs.components" */
     WGF_CORE_PRIV_HANDLE_KIND_SCENE = 33,  /* "ecs.scene": a scene file, a resource */
     WGF_CORE_PRIV_HANDLE_KIND_PREFAB = 34, /* "ecs.prefab": one of a scene's prefabs */
+    WGF_CORE_PRIV_HANDLE_KIND_TWEEN = 35,  /* "ecs.tween" */
     /* audio: 40.. */
     WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND = 40,          /* "audio.sound": decoded whole */
     WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND_STREAMED = 41, /* "audio.sound_streamed": a kind of its own, so a path

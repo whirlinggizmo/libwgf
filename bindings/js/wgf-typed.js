@@ -551,6 +551,11 @@ export const Draw = Object.freeze({
     // wgf: call wgf_draw_text_3d
     text3d: raw.wgf_draw_text_3d,
 });
+// wgf: typed Ease
+export const Ease = Object.freeze({
+    // wgf: call wgf_ease_value
+    value: raw.wgf_ease_value,
+});
 // wgf: typed Emitter2d
 export const Emitter2d = Object.freeze({
     // wgf: call wgf_emitter2d_create
@@ -1776,6 +1781,39 @@ export const Trig = Object.freeze({
     // wgf: call wgf_trig_acos
     acos: raw.wgf_trig_acos,
 });
+// wgf: typed Tween
+export const Tween = Object.freeze({
+    // wgf: call wgf_tween_create
+    create: raw.wgf_tween_create,
+    // wgf: call wgf_tween_move
+    move: raw.wgf_tween_move,
+    // wgf: call wgf_tween_turn
+    turn: raw.wgf_tween_turn,
+    // wgf: call wgf_tween_scale
+    scale: raw.wgf_tween_scale,
+    // wgf: call wgf_tween_destroy
+    destroy: raw.wgf_tween_destroy,
+    // wgf: call wgf_tween_get_value
+    getValue: raw.wgf_tween_get_value,
+    // wgf: call wgf_tween_set_delay
+    setDelay: raw.wgf_tween_set_delay,
+    // wgf: call wgf_tween_get_delay
+    getDelay: raw.wgf_tween_get_delay,
+    // wgf: call wgf_tween_set_repeat
+    setRepeat: raw.wgf_tween_set_repeat,
+    // wgf: call wgf_tween_get_repeat
+    getRepeat: raw.wgf_tween_get_repeat,
+    // wgf: call wgf_tween_set_yoyo
+    setYoyo: raw.wgf_tween_set_yoyo,
+    // wgf: call wgf_tween_is_yoyo
+    isYoyo: raw.wgf_tween_is_yoyo,
+    // wgf: call wgf_tween_set_paused
+    setPaused: raw.wgf_tween_set_paused,
+    // wgf: call wgf_tween_is_paused
+    isPaused: raw.wgf_tween_is_paused,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
+});
 // wgf: typed Ui
 export const Ui = Object.freeze({
     // wgf: call wgf_ui_begin
@@ -2066,6 +2104,8 @@ export const BoundsMode = Object.freeze({ WRAP: 0, CLAMP: 1, DESTROY: 2 });
 export const ColorStock = Object.freeze({ BLANK: 0, WHITE: 1, BLACK: 2, LIGHTGRAY: 3, GRAY: 4, DARKGRAY: 5, YELLOW: 6, GOLD: 7, ORANGE: 8, PINK: 9, RED: 10, MAROON: 11, GREEN: 12, LIME: 13, DARKGREEN: 14, SKYBLUE: 15, BLUE: 16, DARKBLUE: 17, PURPLE: 18, VIOLET: 19, DARKPURPLE: 20, BEIGE: 21, BROWN: 22, DARKBROWN: 23, MAGENTA: 24, RAYWHITE: 25 });
 // wgf: enum Component
 export const Component = Object.freeze({ NONE: 0, MOTION: 1, BOUNDS: 2, LIFETIME: 3, COLLIDER: 4, VOICE: 5, BODY: 6, VEHICLE: 7 });
+// wgf: enum Easing
+export const Easing = Object.freeze({ LINEAR: 0, QUAD_IN: 1, QUAD_OUT: 2, QUAD_IN_OUT: 3, CUBIC_IN: 4, CUBIC_OUT: 5, CUBIC_IN_OUT: 6, QUART_IN: 7, QUART_OUT: 8, QUART_IN_OUT: 9, SINE_IN: 10, SINE_OUT: 11, SINE_IN_OUT: 12, EXPO_IN: 13, EXPO_OUT: 14, EXPO_IN_OUT: 15, CIRC_IN: 16, CIRC_OUT: 17, CIRC_IN_OUT: 18, BACK_IN: 19, BACK_OUT: 20, BACK_IN_OUT: 21, ELASTIC_IN: 22, ELASTIC_OUT: 23, ELASTIC_IN_OUT: 24, BOUNCE_IN: 25, BOUNCE_OUT: 26, BOUNCE_IN_OUT: 27 });
 // wgf: enum FollowMode
 export const FollowMode = Object.freeze({ CHASE: 0, FIXED: 1, ORBIT: 2 });
 // wgf: enum FsTaskStatus

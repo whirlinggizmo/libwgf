@@ -25,6 +25,7 @@ typedef enum wgf_core_priv_part_layer_t {
 typedef enum wgf_core_priv_part_order_t {
     WGF_CORE_PRIV_PART_ECS,       /* actors' components and their systems (ecs/), whose actors the rest draw */
     WGF_CORE_PRIV_PART_PHYSICS3D, /* bodies and vehicles (physics3d/): ticked after the ecs's systems */
+    WGF_CORE_PRIV_PART_TWEENS,    /* tweens (libwgf/ecs/src/wgf_ecs_tween.c): ticked after the ecs's systems and physics */
     WGF_CORE_PRIV_PART_FOLLOW,    /* cameras that follow (libwgf/gfx/src/actor/wgf_gfx_follow.c): after what moves their targets */
     WGF_CORE_PRIV_PART_TEXT,      /* fonts and fontstash (libwgf/gfx/src/text/wgf_gfx_font.c) */
     WGF_CORE_PRIV_PART_STAGE3D,   /* 3D stages' frames and their GPU objects (libwgf/gfx/src/stage/) */
