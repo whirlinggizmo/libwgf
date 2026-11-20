@@ -1,237 +1,193 @@
+#include <math.h>
 #include <stdbool.h>
-#include <stddef.h>
 #include <stdio.h>
 
+#include "wgf_actor.h"
 #include "wgf_app.h"
 #include "wgf_asset.h"
+#include "wgf_behavior.h"
+#include "wgf_body2d.h"
 #include "wgf_camera2d.h"
-#include "wgf_stage2d.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
 #include "wgf_keyboard.h"
-#include "wgf_loop.h"
 #include "wgf_mouse.h"
-#include "wgf_actor.h"
 #include "wgf_render.h"
 #include "wgf_resource.h"
-#include "wgf_sprite.h"
-#include "wgf_texture.h"
+#include "wgf_scene.h"
+#include "wgf_stage2d.h"
+#include "wgf_tilemap.h"
+#include "wgf_tilemap_layer.h"
 #include "wgf_window.h"
+#include "wgf_world.h"
 
-/* A scrolling 2D tile map: sprites on a 2D stage, seen through a 2D camera.
- *   - one sprite sheet (textures/tiles.png), one sprite a cell, cut out with
- *     wgf_sprite_set_source
- *   - trees and flags are 16x32 in the sheet, drawn 1x2 world units, and stand on
- *     their cell because their pivot is the bottom edge (pivot 0.5, 1)
- *   - drag or use the arrow keys to scroll, the wheel to zoom (the world units seen
- *     top to bottom)
- *   - coins react to the pointer: hovering lights them up, clicking collects them
+/* A Tiled map: maps/island.tmj, its tileset maps/tiles.tsj over textures/tiles.png and an
+ * embedded one of animated water (textures/water.png), Tiled's JSON written by hand.
+ *   - its tile layers drawn as sprite batches (one for each tileset a layer uses), the water
+ *     animated as its tileset says, the props layer's rocks flipped and turned by Tiled's
+ *     flip bits
+ *   - its object layer made actors: each object whose class is a prefab of
+ *     scenes/island.scene (trees, a flag, coins, the hero) spawned there, its custom
+ *     properties (a coin's value, the hero's speed) its behaviors' parameters
+ *   - the hero a 2D body sliding against the props layer's cells (its solid grid)
+ *   - a coin taken turns the path under it to sand: a cell set, found from a point
  *
- *   Esc   quit, where quitting means anything
- *
- * libwgt's gfx-tilemap (wgrender's tilemap) done 1:1, so the two compare in the size
- * table: the same window, map, controls, and text. Where it differs, and why:
- *   - "libwgt" reads "libwgf" in the window's title and the heading: the library's name.
- *   - A 2D stage and a 2D camera, where libwgt has 3D sprites (WGT_SPRITE_FACING_FREE) in
- *     a scene under an orthographic camera: libwgf is 2D only. The world is the same,
- *     y up, in world units: a cell at (x, y) is at (x, -y) on the stage, and the
- *     camera's zoom is the window's height over the units seen (a 2D camera is
- *     orthographic), so the picture is the same.
- *   - Ground and props are drawn in their order, the ground first, where libwgt orders
- *     them by depth and draws them OPAQUE and MASK: libwgf's sprites have no alpha
- *     modes, and a 2D stage needs none, drawing in order.
- *   - The coins' hover and click are the example's own test of the pointer against each
- *     coin's disc, where libwgt's pointer picking (wgt_pointer.h) finds them by their
- *     texels: libwgf has no picking. A click is a press and a release on the same coin,
- *     as wgt_pointer_is_clicked's is. */
+ *   arrows or WASD   walk (left alone, the hero walks the path by itself)
+ *   wheel            zoom
+ *   Esc              quit, where quitting means anything */
 
-#define TILES_PATH "textures/tiles.png"
-
-enum { WORLD_W = 24, WORLD_H = 16, MAX_PROPS = 64, COIN_COUNT = 8 };
-
-/* Cells of the sheet, in texture pixels: x, y, width, height (each cell has a gutter
- * around it that repeats its edge, so sampling never reaches a neighbour). */
-static const float GRASS[4] = {2, 2, 16, 16};
-static const float SAND[4] = {22, 2, 16, 16};
-static const float WATER[4] = {42, 2, 16, 16};
-static const float STONE[4] = {62, 2, 16, 16};
-static const float TREE[4] = {2, 22, 16, 32};
-static const float FLAG[4] = {22, 22, 16, 32};
-static const float COIN[4] = {42, 22, 16, 16};
-static const float ROCK[4] = {62, 22, 16, 16};
+#define MAP_PATH "maps/island.tmj"
+#define SCENE_PATH "scenes/island.scene"
+#define MAX_COINS 32
+#define SAND 2 /* tiles.tsj's second tile */
 
 static struct {
-    wgf_actor_t stage, camera;
-    wgf_texture_t texture;
-    wgf_color_t shade, text, dim, highlight;
-    wgf_actor_t props[MAX_PROPS];
-    bool is_coin[MAX_PROPS];
-    float prop_x[MAX_PROPS], prop_y[MAX_PROPS], prop_size[MAX_PROPS]; /* a coin's bottom middle, and size */
-    int prop_count;
-    int collected;
-    int pressed; /* the coin the left button went down on, or -1 */
-    float center_x, center_y; /* what the camera looks at, in world units */
-    float zoom;               /* world units seen top to bottom */
+    wgf_actor_t stage, camera, root, ground, things, hero;
+    wgf_tilemap_t map;
+    wgf_scene_t scene;
+    wgf_actor_t coins[MAX_COINS];
+    int coin_count, taken, score, worth, sanded;
+    float speed, walk; /* the hero's speed (its object's property), and its way when left alone */
+    float zoom;        /* map pixels seen top to bottom */
+    bool played;       /* a key pressed: no longer walking by itself */
+    wgf_color_t shade, text, dim;
 } g;
-
-static void place_camera(void)
-{
-    const float height = (float)wgf_window_get_height();
-    wgf_actor_set_position(g.camera, g.center_x, -g.center_y, 0.0f); /* the stage's y is down */
-    if (height > 0.0f) wgf_camera2d_set_zoom(g.camera, height / g.zoom);
-}
-
-/* One cell of the sheet in the world, at (x, y) with y up; the ones added later draw
- * over the ones before. */
-static wgf_actor_t add_sprite(const float cell[4], float x, float y, float width, float height, float pivot_y)
-{
-    const wgf_actor_t sprite = wgf_sprite_create(g.texture);
-    wgf_sprite_set_source(sprite, cell[0], cell[1], cell[2], cell[3]);
-    wgf_sprite_set_size(sprite, width, height);
-    wgf_sprite_set_pivot(sprite, 0.5f, pivot_y);
-    wgf_actor_set_position(sprite, x, -y, 0.0f);
-    wgf_actor_set_parent(sprite, g.stage);
-    return sprite;
-}
-
-static void add_prop(const float cell[4], float x, float y, float width, float height, bool coin)
-{
-    if (g.prop_count >= MAX_PROPS) return;
-    /* The pivot is the bottom edge, so a prop stands on its cell whatever its height. */
-    g.props[g.prop_count] = add_sprite(cell, x, y - 0.5f, width, height, 1.0f);
-    g.is_coin[g.prop_count] = coin;
-    g.prop_x[g.prop_count] = x;
-    g.prop_y[g.prop_count] = y - 0.5f;
-    g.prop_size[g.prop_count] = width;
-    g.prop_count++;
-}
-
-/* A small hand-made map: water along the bottom, a sand shore, stone paths. */
-static const float *tile_at(int x, int y)
-{
-    if (y < 2) return WATER;
-    if (y < 3) return SAND;
-    if (x == 8 || y == 9) return STONE;
-    return GRASS;
-}
 
 static void init(void *user)
 {
-    int x, y, i;
     (void)user;
     wgf_asset_set_host("../assets"); /* the examples' files, one level above every program */
-    wgf_render_set_clear_color(wgf_color_make(24, 28, 38, 255));
+    wgf_render_set_clear_color(wgf_color_make(24, 32, 44, 255));
     g.shade = wgf_color_make(18, 20, 28, 190);
     g.text = wgf_color_make(235, 238, 245, 255);
     g.dim = wgf_color_make(140, 146, 158, 255);
-    g.highlight = wgf_color_make(255, 230, 140, 255);
-    g.pressed = -1;
-
     g.stage = wgf_stage2d_create();
     g.camera = wgf_camera2d_create();
     wgf_stage2d_set_camera(g.stage, g.camera);
-    g.center_x = WORLD_W * 0.5f;
-    g.center_y = WORLD_H * 0.5f;
-    g.zoom = 12.0f;
-    place_camera();
-
-    g.texture = wgf_texture_create(TILES_PATH);
-    /* Pixel art: keep the texels crisp when zoomed in. */
-    wgf_texture_set_sampling(g.texture, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_FILTER_NEAREST);
-    for (y = 0; y < WORLD_H; y++) {
-        for (x = 0; x < WORLD_W; x++) {
-            /* A hair over one unit: neighbouring quads are drawn separately, so edges
-             * that land exactly on a pixel boundary would let the background through
-             * as a hairline seam. */
-            add_sprite(tile_at(x, y), (float)x + 0.5f, (float)y + 0.5f, 1.01f, 1.01f, 0.5f);
-        }
-    }
-    for (i = 0; i < 7; i++) { /* trees and flags: 16x32 cells drawn 1x2 */
-        add_prop(TREE, 2.5f + (float)i * 3.0f, 12.5f - (float)(i % 3), 1.0f, 2.0f, false);
-    }
-    add_prop(FLAG, 8.5f, 9.5f, 1.0f, 2.0f, false);
-    for (i = 0; i < 6; i++) add_prop(ROCK, 4.5f + (float)i * 3.5f, 4.5f + (float)(i % 2) * 2.0f, 1.0f, 1.0f, false);
-    for (i = 0; i < COIN_COUNT; i++) {
-        add_prop(COIN, 3.5f + (float)i * 2.5f, 7.5f + (float)(i % 3), 0.8f, 0.8f, true);
-    }
-    wgf_resource_release(g.texture); /* the sprites hold their own references */
+    g.map = wgf_tilemap_create(MAP_PATH);
+    g.scene = wgf_scene_create(SCENE_PATH);
+    g.zoom = 200.0f;
+    g.walk = 1.0f;
 }
 
-/* The coin under the pointer at world (x, y), the topmost (the last added) first; -1
- * for none. A coin is hit inside its disc, as its see-through corners let a click
- * through. */
-static int coin_at(float x, float y)
+static double coin_value(wgf_actor_t coin)
+{
+    return wgf_behavior_get_param_number(coin, wgf_actor_find_behavior(coin, "Coin"), "value");
+}
+
+/* Once the map and the scene are READY: the map placed, its objects spawned, the hero given
+ * the props layer as its walls. */
+static void place(void)
 {
     int i;
-    for (i = g.prop_count - 1; i >= 0; i--) {
-        const float r = g.prop_size[i] * 0.5f;
-        const float dx = x - g.prop_x[i], dy = y - (g.prop_y[i] + r);
-        if (g.is_coin[i] && wgf_actor_is_visible(g.props[i]) && dx * dx + dy * dy <= r * r) return i;
+    g.root = wgf_tilemap_instantiate(g.map, g.stage);
+    g.ground = wgf_actor_find(g.root, "ground");
+    g.things = wgf_actor_find(g.root, "things");
+    wgf_scene_spawn_objects(g.scene, g.things);
+    g.hero = wgf_actor_find(g.things, "hero");
+    g.speed = (float)wgf_behavior_get_param_number(g.hero, wgf_actor_find_behavior(g.hero, "Hero"), "speed");
+    if (g.speed <= 0.0f) g.speed = 40.0f;
+    /* The bodies under the object layer (the hero) slide against the props layer's rocks. */
+    wgf_body2d_set_grid_from_layer(g.things, wgf_actor_find(g.root, "props"));
+    g.coin_count = wgf_actor_find_with_behavior("Coin", g.coins, MAX_COINS);
+    for (i = 0; i < g.coin_count; i++) g.worth += (int)coin_value(g.coins[i]);
+    if (wgf_tilemap_get_background_color(g.map) != 0) {
+        wgf_render_set_clear_color(wgf_tilemap_get_background_color(g.map));
     }
-    return -1;
+}
+
+static void walk(void)
+{
+    float x = 0.0f, y = 0.0f;
+    if (wgf_keyboard_is_down(WGF_KEY_LEFT) || wgf_keyboard_is_down(WGF_KEY_A)) x -= 1.0f;
+    if (wgf_keyboard_is_down(WGF_KEY_RIGHT) || wgf_keyboard_is_down(WGF_KEY_D)) x += 1.0f;
+    if (wgf_keyboard_is_down(WGF_KEY_UP) || wgf_keyboard_is_down(WGF_KEY_W)) y -= 1.0f;
+    if (wgf_keyboard_is_down(WGF_KEY_DOWN) || wgf_keyboard_is_down(WGF_KEY_S)) y += 1.0f;
+    if (x != 0.0f || y != 0.0f) g.played = true;
+    if (!g.played) { /* along the path, turning at the rocks */
+        if (wgf_body2d_is_blocked_right(g.hero)) g.walk = -1.0f;
+        if (wgf_body2d_is_blocked_left(g.hero)) g.walk = 1.0f;
+        x = g.walk;
+    }
+    if (x != 0.0f && y != 0.0f) {
+        x *= 0.7071f;
+        y *= 0.7071f;
+    }
+    wgf_body2d_set_velocity(g.hero, x * g.speed, y * g.speed);
+}
+
+/* A coin under the hero taken: its value scored, the cell under it sanded. */
+static void take_coins(void)
+{
+    const wgf_vec3_t at = wgf_actor_get_position(g.hero);
+    int i;
+    for (i = 0; i < g.coin_count; i++) {
+        const wgf_vec3_t coin = wgf_actor_get_position(g.coins[i]);
+        const float dx = coin.x - at.x, dy = coin.y - at.y;
+        int column, row;
+        if (!wgf_actor_is_visible(g.coins[i]) || dx * dx + dy * dy > 10.0f * 10.0f) continue;
+        wgf_actor_set_visible(g.coins[i], false);
+        g.taken++;
+        g.score += (int)coin_value(g.coins[i]);
+        /* The coin is under the object layer and the ground under the map's root, both at
+         * the map's pixels, so the coin's point is the ground's too. */
+        column = wgf_tilemap_layer_get_column_at(g.ground, coin.x, coin.y);
+        row = wgf_tilemap_layer_get_row_at(g.ground, coin.x, coin.y);
+        if (wgf_tilemap_layer_get_cell(g.ground, column, row) != SAND &&
+            wgf_tilemap_layer_set_cell(g.ground, column, row, SAND, WGF_TILEMAP_FLIP_NONE)) {
+            g.sanded++;
+        }
+    }
+}
+
+/* The camera on the hero (the map's middle before), kept over the map. */
+static void place_camera(void)
+{
+    const float height = (float)wgf_window_get_height(), width = (float)wgf_window_get_width();
+    const float map_w = (float)(wgf_tilemap_get_columns(g.map) * wgf_tilemap_get_tile_width(g.map));
+    const float map_h = (float)(wgf_tilemap_get_rows(g.map) * wgf_tilemap_get_tile_height(g.map));
+    const float seen_h = g.zoom, seen_w = height > 0.0f ? g.zoom * width / height : g.zoom;
+    wgf_vec3_t at = g.hero != 0 ? wgf_actor_get_drawn_position(g.hero) : wgf_vec3_make(map_w * 0.5f, map_h * 0.5f, 0);
+    at.x = map_w > seen_w ? fminf(fmaxf(at.x, seen_w * 0.5f), map_w - seen_w * 0.5f) : map_w * 0.5f;
+    at.y = map_h > seen_h ? fminf(fmaxf(at.y, seen_h * 0.5f), map_h - seen_h * 0.5f) : map_h * 0.5f;
+    wgf_actor_set_position(g.camera, at.x, at.y, 0.0f);
+    if (height > 0.0f) wgf_camera2d_set_zoom(g.camera, height / g.zoom);
 }
 
 static void frame(void *user)
 {
-    const float dt = wgf_loop_get_frame_delta();
     const float width = (float)wgf_window_get_width();
-    const float height = (float)wgf_window_get_height();
-    const float units_per_pixel = height > 0.0f ? g.zoom / height : 0.0f;
+    int events[4 * 64];
     char line[160];
-    int hovered, i;
     (void)user;
 
     if (wgf_app_can_quit() && wgf_keyboard_is_pressed(WGF_KEY_ESCAPE)) wgf_app_quit();
-
-    /* Scroll: drag, or the arrow keys. */
-    if (wgf_mouse_is_down(WGF_MOUSE_BUTTON_LEFT)) {
-        const wgf_vec2_t delta = wgf_mouse_get_delta();
-        g.center_x -= delta.x * units_per_pixel;
-        g.center_y += delta.y * units_per_pixel; /* screen y is down, world y is up */
+    while (wgf_world_take_events(events, 4 * 64) > 0) {
     }
-    {
-        const float speed = g.zoom * 0.6f * dt;
-        if (wgf_keyboard_is_down(WGF_KEY_LEFT)) g.center_x -= speed;
-        if (wgf_keyboard_is_down(WGF_KEY_RIGHT)) g.center_x += speed;
-        if (wgf_keyboard_is_down(WGF_KEY_DOWN)) g.center_y -= speed;
-        if (wgf_keyboard_is_down(WGF_KEY_UP)) g.center_y += speed;
+    if (g.root == 0 && wgf_resource_get_status(g.map) == WGF_RESOURCE_STATUS_READY &&
+        wgf_resource_get_status(g.scene) == WGF_RESOURCE_STATUS_READY) {
+        place();
     }
-    if (wgf_mouse_get_wheel().y != 0.0f) { /* zoom: fewer world units seen = closer */
-        g.zoom -= wgf_mouse_get_wheel().y * 1.5f;
-        g.zoom = g.zoom < 4.0f ? 4.0f : g.zoom > 32.0f ? 32.0f : g.zoom;
+    if (g.hero != 0) {
+        walk();
+        take_coins();
     }
-    g.center_x = g.center_x < 0.0f ? 0.0f : g.center_x > (float)WORLD_W ? (float)WORLD_W : g.center_x;
-    g.center_y = g.center_y < 0.0f ? 0.0f : g.center_y > (float)WORLD_H ? (float)WORLD_H : g.center_y;
+    if (wgf_mouse_get_wheel().y != 0.0f) { /* fewer pixels seen = closer */
+        g.zoom -= wgf_mouse_get_wheel().y * 24.0f;
+        g.zoom = g.zoom < 96.0f ? 96.0f : g.zoom > 320.0f ? 320.0f : g.zoom;
+    }
     place_camera();
-
-    /* Coins: hover lights them up, a click collects them. */
-    {
-        const wgf_vec2_t mouse = wgf_mouse_get_position();
-        const float zoom_now = height > 0.0f ? g.zoom / height : 0.0f;
-        hovered = coin_at(g.center_x + (mouse.x - width * 0.5f) * zoom_now,
-                          g.center_y - (mouse.y - height * 0.5f) * zoom_now);
-    }
-    if (wgf_mouse_is_pressed(WGF_MOUSE_BUTTON_LEFT)) g.pressed = hovered;
-    if (wgf_mouse_is_released(WGF_MOUSE_BUTTON_LEFT)) {
-        if (g.pressed >= 0 && g.pressed == hovered) {
-            wgf_actor_set_visible(g.props[hovered], false);
-            g.collected++;
-            hovered = -1;
-        }
-        g.pressed = -1;
-    }
-    for (i = 0; i < g.prop_count; i++) {
-        if (g.is_coin[i]) wgf_sprite_set_tint(g.props[i], i == hovered ? g.highlight : WGF_COLOR_WHITE);
-    }
 
     wgf_stage2d_draw(g.stage);
     wgf_draw_rectangle(0, 0, width, 88, g.shade);
-    wgf_draw_text(0, "libwgf tilemap: an orthographic camera over sprite tiles", 20, 20, 20, g.text);
-    snprintf(line, sizeof(line), "coins: %d of 8   zoom: %.1f units   center: %.1f, %.1f%s", g.collected,
-             (double)g.zoom, (double)g.center_x, (double)g.center_y,
-             wgf_resource_get_status(g.texture) == WGF_RESOURCE_STATUS_READY ? "" : "   (loading)");
+    snprintf(line, sizeof(line), "libwgf tilemap: %s, a Tiled map on sprite batches",
+             g.root != 0 ? wgf_tilemap_get_property(g.map, -1, -1, "title") : "loading");
+    wgf_draw_text(0, line, 20, 20, 20, g.text);
+    snprintf(line, sizeof(line), "coins: %d of %d   worth: %d of %d   cells set: %d   layers: %d   tilesets: %d",
+             g.taken, g.coin_count, g.score, g.worth, g.sanded, wgf_tilemap_get_layer_count(g.map),
+             wgf_tilemap_get_tileset_count(g.map));
     wgf_draw_text(0, line, 20, 46, 15, g.dim);
-    wgf_draw_text(0, "drag or arrows to scroll, wheel to zoom, click the coins", 20, 68, 15, g.dim);
+    wgf_draw_text(0, "arrows or WASD to walk (it walks by itself when left alone), wheel to zoom", 20, 68, 15, g.dim);
 }
 
 int main(void)

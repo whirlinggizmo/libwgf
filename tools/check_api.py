@@ -89,6 +89,8 @@ GETTERS_PAIRED = {
     'wgf_collider_set_rectangle': ('wgf_collider_get_shape', 'wgf_collider_get_size'),
     'wgf_body2d_set_grid': ('wgf_body2d_get_grid_cell',),
     'wgf_text_set_spacing': ('wgf_text_get_letter_spacing', 'wgf_text_get_line_spacing'),
+    'wgf_body2d_set_grid_from_layer': ('wgf_body2d_get_grid_cell',),
+    'wgf_tilemap_layer_set_cell': ('wgf_tilemap_layer_get_cell', 'wgf_tilemap_layer_get_cell_flips'),
     'wgf_collider_set_polygon': ('wgf_collider_get_shape', 'wgf_collider_get_points'),
     'wgf_collider_set_segment': ('wgf_collider_get_shape', 'wgf_collider_get_points'),
     'wgf_light_set_shadow_bias': ('wgf_light_get_shadow_bias_constant', 'wgf_light_get_shadow_bias_slope'),
@@ -132,7 +134,8 @@ ANY_HANDLE = {
 # Sections named for what an actor is, or has, whose calls take the actor: wgf_sprite_*
 # on a sprite, wgf_motion_* on an actor with motion, wgf_stage2d_* on a 2D stage.
 ACTOR_FACETS = ('sprite', 'text', 'shape2d', 'shape3d', 'emitter2d', 'model', 'light', 'camera2d', 'camera3d',
-                'collider', 'motion', 'bounds', 'lifetime', 'behavior', 'stage2d', 'stage3d', 'body', 'vehicle')
+                'collider', 'motion', 'bounds', 'lifetime', 'behavior', 'stage2d', 'stage3d', 'body', 'vehicle',
+                'tilemap_layer')
 
 # The calls that take what they are made from, before what they act on: their first handle
 # isn't their prefix's kind. A new one is listed here with what it is made from.

@@ -44,6 +44,8 @@ wgf_layer(gfx
         src/text/wgf_gfx_font.c
         src/text/wgf_gfx_fontstash_impl.c
         src/text/wgf_gfx_text.c
+        src/tilemap/wgf_gfx_tilemap.c
+        src/tilemap/wgf_gfx_tilemap_layer.c
         src/texture/wgf_gfx_ktx.c
         src/texture/wgf_gfx_stb_impl.c
         src/texture/wgf_gfx_texture.c
@@ -92,6 +94,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_sprite_batch_test)
         wgf_test(gfx wgf_gfx_follow_test)
         wgf_test(gfx wgf_gfx_sheet_test)
+        wgf_test(gfx wgf_gfx_tilemap_test)
         wgf_test(gfx wgf_gfx_emitter_test)
         wgf_test(gfx wgf_gfx_target_test)
         wgf_test(gfx wgf_gfx_shader_test)

@@ -1,0 +1,32 @@
+{
+ "type": "tileset",
+ "version": "1.10",
+ "tiledversion": "1.10.2",
+ "name": "tiles",
+ "image": "../textures/tiles.png",
+ "imagewidth": 80,
+ "imageheight": 56,
+ "tilewidth": 16,
+ "tileheight": 16,
+ "tilecount": 8,
+ "columns": 4,
+ "margin": 2,
+ "spacing": 4,
+ "tiles": [
+  {
+   "id": 2,
+   "type": "water"
+  },
+  {
+   "id": 7,
+   "type": "rock",
+   "properties": [
+    {
+     "name": "solid",
+     "type": "bool",
+     "value": true
+    }
+   ]
+  }
+ ]
+}

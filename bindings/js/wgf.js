@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "af0098d121c2b18d" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "3e8f3796281bfc56" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -648,6 +648,7 @@ export const WGF_ACTOR_KIND_MODEL = 11;
 export const WGF_ACTOR_KIND_SHAPE3D = 12;
 export const WGF_ACTOR_KIND_EMITTER3D = 13;
 export const WGF_ACTOR_KIND_SPRITE_BATCH = 14;
+export const WGF_ACTOR_KIND_TILEMAP_LAYER = 15;
 
 /**
  * What wgf_actor_destroy does with the actor's children.
@@ -876,6 +877,48 @@ export const WGF_SHAPE3D_KIND_LINE_STRIP = 6;
 export const WGF_STAGE3D_TONEMAP_NONE = 0;
 export const WGF_STAGE3D_TONEMAP_NEUTRAL = 1;
 export const WGF_STAGE3D_TONEMAP_ACES = 2;
+
+/**
+ * What a layer holds.
+ */
+export const WGF_TILEMAP_LAYER_KIND_NONE = 0;
+export const WGF_TILEMAP_LAYER_KIND_TILES = 1;
+export const WGF_TILEMAP_LAYER_KIND_OBJECTS = 2;
+export const WGF_TILEMAP_LAYER_KIND_IMAGE = 3;
+
+/**
+ * An object's shape.
+ */
+export const WGF_TILEMAP_SHAPE_NONE = 0;
+export const WGF_TILEMAP_SHAPE_RECTANGLE = 1;
+export const WGF_TILEMAP_SHAPE_POINT = 2;
+export const WGF_TILEMAP_SHAPE_ELLIPSE = 3;
+export const WGF_TILEMAP_SHAPE_POLYGON = 4;
+export const WGF_TILEMAP_SHAPE_POLYLINE = 5;
+export const WGF_TILEMAP_SHAPE_TILE = 6;
+export const WGF_TILEMAP_SHAPE_TEXT = 7;
+
+/**
+ * A tile's flips, as bits: Tiled flips it across its diagonal first (with the others, its
+ * turns by a quarter), then left for right, then top for bottom.
+ */
+export const WGF_TILEMAP_FLIP_NONE = 0;
+export const WGF_TILEMAP_FLIP_X = 1;
+export const WGF_TILEMAP_FLIP_Y = 2;
+export const WGF_TILEMAP_FLIP_DIAGONAL = 4;
+
+/**
+ * A custom property's type, Tiled's.
+ */
+export const WGF_TILEMAP_PROPERTY_TYPE_NONE = 0;
+export const WGF_TILEMAP_PROPERTY_TYPE_STRING = 1;
+export const WGF_TILEMAP_PROPERTY_TYPE_INT = 2;
+export const WGF_TILEMAP_PROPERTY_TYPE_FLOAT = 3;
+export const WGF_TILEMAP_PROPERTY_TYPE_BOOL = 4;
+export const WGF_TILEMAP_PROPERTY_TYPE_COLOR = 5;
+export const WGF_TILEMAP_PROPERTY_TYPE_FILE = 6;
+export const WGF_TILEMAP_PROPERTY_TYPE_OBJECT = 7;
+export const WGF_TILEMAP_PROPERTY_TYPE_CLASS = 8;
 
 /**
  * Components: the simulation's data on an actor -- any actor, of any kind, a 2D stage's UI
@@ -11084,8 +11127,9 @@ export function wgf_sprite_batch_get_positions(batch, first, out) {
 
 // wgf: call wgf_sprite_batch_set_sizes
 /**
- * The quads' sizes, width and height in turn, as positions are; a width or height of 0 or
- * less is the region's size in texels.
+ * The quads' sizes, width and height in turn, as positions are; a width or height of 0 is
+ * the region's size in texels, and a negative one mirrors the quad across that axis, about
+ * its pivot (a tile flipped).
  */
 export function wgf_sprite_batch_set_sizes(batch, first, sizes) {
     const sizesPointer = arrayIn(sizes, 0, "HEAPF32");
@@ -11095,8 +11139,9 @@ export function wgf_sprite_batch_set_sizes(batch, first, sizes) {
 
 // wgf: call wgf_sprite_batch_get_sizes
 /**
- * The quads' sizes, width and height in turn, as positions are; a width or height of 0 or
- * less is the region's size in texels.
+ * The quads' sizes, width and height in turn, as positions are; a width or height of 0 is
+ * the region's size in texels, and a negative one mirrors the quad across that axis, about
+ * its pivot (a tile flipped).
  */
 export function wgf_sprite_batch_get_sizes(batch, first, out) {
     const outPointer = arrayOut(out, 0);
@@ -11571,6 +11616,583 @@ export function wgf_stage3d_set_culling(stage, culling) {
 export function wgf_stage3d_is_culling(stage) {
     const value = host["_wgf_stage3d_is_culling"](stage);
     return value !== 0;
+}
+
+// wgf: call wgf_tilemap_create
+/**
+ * The map at `path` (a `.tmj` file): loaded as a resource is (PENDING at once, READY or FAILED
+ * in a later update), its tilesets' images too. The same path again gives the same map, with
+ * one more reference. 0 only when there is no room for another.
+ */
+export function wgf_tilemap_create(path) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_tilemap_create"](cstr(path));
+    host["stackRestore"](mark);
+    return value >>> 0;
+}
+
+// wgf: call wgf_tilemap_get_columns
+/**
+ * Its size in tiles, and a tile's size in pixels.
+ */
+export function wgf_tilemap_get_columns(map) {
+    const value = host["_wgf_tilemap_get_columns"](map);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_rows
+/**
+ * Its size in tiles, and a tile's size in pixels.
+ */
+export function wgf_tilemap_get_rows(map) {
+    const value = host["_wgf_tilemap_get_rows"](map);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_tile_width
+/**
+ * Its size in tiles, and a tile's size in pixels.
+ */
+export function wgf_tilemap_get_tile_width(map) {
+    const value = host["_wgf_tilemap_get_tile_width"](map);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_tile_height
+/**
+ * Its size in tiles, and a tile's size in pixels.
+ */
+export function wgf_tilemap_get_tile_height(map) {
+    const value = host["_wgf_tilemap_get_tile_height"](map);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_background_color
+/**
+ * Its background color (Tiled's), 0 when it has none.
+ */
+export function wgf_tilemap_get_background_color(map) {
+    const value = host["_wgf_tilemap_get_background_color"](map);
+    return value >>> 0;
+}
+
+// wgf: call wgf_tilemap_get_layer_count
+/**
+ * Its layers, groups flattened, in drawing order: how many, one's name and kind (NONE past
+ * the end), and the first named `name` (-1 for none).
+ */
+export function wgf_tilemap_get_layer_count(map) {
+    const value = host["_wgf_tilemap_get_layer_count"](map);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_layer_name
+/**
+ * Its layers, groups flattened, in drawing order: how many, one's name and kind (NONE past
+ * the end), and the first named `name` (-1 for none).
+ */
+export function wgf_tilemap_get_layer_name(map, layer) {
+    const value = host["_wgf_tilemap_get_layer_name"](map, layer);
+    return str(value);
+}
+
+// wgf: call wgf_tilemap_get_layer_kind
+/**
+ * Its layers, groups flattened, in drawing order: how many, one's name and kind (NONE past
+ * the end), and the first named `name` (-1 for none).
+ */
+export function wgf_tilemap_get_layer_kind(map, layer) {
+    const value = host["_wgf_tilemap_get_layer_kind"](map, layer);
+    return value;
+}
+
+// wgf: call wgf_tilemap_find_layer
+/**
+ * Its layers, groups flattened, in drawing order: how many, one's name and kind (NONE past
+ * the end), and the first named `name` (-1 for none).
+ */
+export function wgf_tilemap_find_layer(map, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_tilemap_find_layer"](map, cstr(name));
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_tileset_count
+/**
+ * Its tilesets by first gid: how many, one's name, its first gid, how many tiles it has, and
+ * its image (0 past the end).
+ */
+export function wgf_tilemap_get_tileset_count(map) {
+    const value = host["_wgf_tilemap_get_tileset_count"](map);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_tileset_name
+/**
+ * Its tilesets by first gid: how many, one's name, its first gid, how many tiles it has, and
+ * its image (0 past the end).
+ */
+export function wgf_tilemap_get_tileset_name(map, tileset) {
+    const value = host["_wgf_tilemap_get_tileset_name"](map, tileset);
+    return str(value);
+}
+
+// wgf: call wgf_tilemap_get_tileset_first_gid
+/**
+ * Its tilesets by first gid: how many, one's name, its first gid, how many tiles it has, and
+ * its image (0 past the end).
+ */
+export function wgf_tilemap_get_tileset_first_gid(map, tileset) {
+    const value = host["_wgf_tilemap_get_tileset_first_gid"](map, tileset);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_tileset_tile_count
+/**
+ * Its tilesets by first gid: how many, one's name, its first gid, how many tiles it has, and
+ * its image (0 past the end).
+ */
+export function wgf_tilemap_get_tileset_tile_count(map, tileset) {
+    const value = host["_wgf_tilemap_get_tileset_tile_count"](map, tileset);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_tileset_texture
+/**
+ * Its tilesets by first gid: how many, one's name, its first gid, how many tiles it has, and
+ * its image (0 past the end).
+ */
+export function wgf_tilemap_get_tileset_texture(map, tileset) {
+    const value = host["_wgf_tilemap_get_tileset_texture"](map, tileset);
+    return value >>> 0;
+}
+
+// wgf: call wgf_tilemap_get_object_count
+/**
+ * An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
+ * each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
+ * the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
+ * shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
+ * polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
+ * Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
+ * object or layer that isn't one.
+ */
+export function wgf_tilemap_get_object_count(map, layer) {
+    const value = host["_wgf_tilemap_get_object_count"](map, layer);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_object_id
+/**
+ * An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
+ * each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
+ * the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
+ * shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
+ * polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
+ * Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
+ * object or layer that isn't one.
+ */
+export function wgf_tilemap_get_object_id(map, layer, object) {
+    const value = host["_wgf_tilemap_get_object_id"](map, layer, object);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_object_name
+/**
+ * An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
+ * each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
+ * the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
+ * shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
+ * polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
+ * Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
+ * object or layer that isn't one.
+ */
+export function wgf_tilemap_get_object_name(map, layer, object) {
+    const value = host["_wgf_tilemap_get_object_name"](map, layer, object);
+    return str(value);
+}
+
+// wgf: call wgf_tilemap_get_object_class
+/**
+ * An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
+ * each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
+ * the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
+ * shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
+ * polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
+ * Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
+ * object or layer that isn't one.
+ */
+export function wgf_tilemap_get_object_class(map, layer, object) {
+    const value = host["_wgf_tilemap_get_object_class"](map, layer, object);
+    return str(value);
+}
+
+// wgf: call wgf_tilemap_get_object_shape
+/**
+ * An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
+ * each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
+ * the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
+ * shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
+ * polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
+ * Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
+ * object or layer that isn't one.
+ */
+export function wgf_tilemap_get_object_shape(map, layer, object) {
+    const value = host["_wgf_tilemap_get_object_shape"](map, layer, object);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_object_position
+/**
+ * An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
+ * each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
+ * the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
+ * shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
+ * polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
+ * Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
+ * object or layer that isn't one.
+ */
+export function wgf_tilemap_get_object_position(map, layer, object, into) {
+    const ret = result(8);
+    host["_wgf_tilemap_get_object_position"](ret, map, layer, object);
+    return vector(ret, 2, into);
+}
+
+// wgf: call wgf_tilemap_get_object_size
+/**
+ * An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
+ * each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
+ * the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
+ * shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
+ * polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
+ * Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
+ * object or layer that isn't one.
+ */
+export function wgf_tilemap_get_object_size(map, layer, object, into) {
+    const ret = result(8);
+    host["_wgf_tilemap_get_object_size"](ret, map, layer, object);
+    return vector(ret, 2, into);
+}
+
+// wgf: call wgf_tilemap_get_object_rotation
+/**
+ * An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
+ * each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
+ * the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
+ * shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
+ * polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
+ * Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
+ * object or layer that isn't one.
+ */
+export function wgf_tilemap_get_object_rotation(map, layer, object) {
+    const value = host["_wgf_tilemap_get_object_rotation"](map, layer, object);
+    return value;
+}
+
+// wgf: call wgf_tilemap_is_object_visible
+/**
+ * An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
+ * each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
+ * the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
+ * shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
+ * polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
+ * Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
+ * object or layer that isn't one.
+ */
+export function wgf_tilemap_is_object_visible(map, layer, object) {
+    const value = host["_wgf_tilemap_is_object_visible"](map, layer, object);
+    return value !== 0;
+}
+
+// wgf: call wgf_tilemap_get_object_tile
+/**
+ * An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
+ * each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
+ * the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
+ * shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
+ * polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
+ * Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
+ * object or layer that isn't one.
+ */
+export function wgf_tilemap_get_object_tile(map, layer, object) {
+    const value = host["_wgf_tilemap_get_object_tile"](map, layer, object);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_object_points
+/**
+ * A polygon's or a polyline's points, from its place (unturned), x and y in turn, into `out`
+ * as many as fit in `count` floats, returning how many floats it filled; 0 for another
+ * shape. get_object_point_count is how many points it has.
+ */
+export function wgf_tilemap_get_object_points(map, layer, object, out) {
+    const outPointer = arrayOut(out, 0);
+    const value = host["_wgf_tilemap_get_object_points"](map, layer, object, outPointer, lengthOf(out));
+    arrayBack(outPointer, out, "HEAPF32");
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_object_point_count
+/**
+ * A polygon's or a polyline's points, from its place (unturned), x and y in turn, into `out`
+ * as many as fit in `count` floats, returning how many floats it filled; 0 for another
+ * shape. get_object_point_count is how many points it has.
+ */
+export function wgf_tilemap_get_object_point_count(map, layer, object) {
+    const value = host["_wgf_tilemap_get_object_point_count"](map, layer, object);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_property_count
+/**
+ * Custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an object's of
+ * that layer. How many, each one's name in Tiled's order ("" past the end), one's type by
+ * name (NONE for one it hasn't), its value as text (a number written out, a bool "true" or
+ * "false"; "" for one it hasn't), and as a number (a bool 1 or 0; 0 for one it hasn't, or
+ * text). Text is the map's, valid while it is.
+ */
+export function wgf_tilemap_get_property_count(map, layer, object) {
+    const value = host["_wgf_tilemap_get_property_count"](map, layer, object);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_property_name
+/**
+ * Custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an object's of
+ * that layer. How many, each one's name in Tiled's order ("" past the end), one's type by
+ * name (NONE for one it hasn't), its value as text (a number written out, a bool "true" or
+ * "false"; "" for one it hasn't), and as a number (a bool 1 or 0; 0 for one it hasn't, or
+ * text). Text is the map's, valid while it is.
+ */
+export function wgf_tilemap_get_property_name(map, layer, object, index) {
+    const value = host["_wgf_tilemap_get_property_name"](map, layer, object, index);
+    return str(value);
+}
+
+// wgf: call wgf_tilemap_get_property_type
+/**
+ * Custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an object's of
+ * that layer. How many, each one's name in Tiled's order ("" past the end), one's type by
+ * name (NONE for one it hasn't), its value as text (a number written out, a bool "true" or
+ * "false"; "" for one it hasn't), and as a number (a bool 1 or 0; 0 for one it hasn't, or
+ * text). Text is the map's, valid while it is.
+ */
+export function wgf_tilemap_get_property_type(map, layer, object, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_tilemap_get_property_type"](map, layer, object, cstr(name));
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_property
+/**
+ * Custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an object's of
+ * that layer. How many, each one's name in Tiled's order ("" past the end), one's type by
+ * name (NONE for one it hasn't), its value as text (a number written out, a bool "true" or
+ * "false"; "" for one it hasn't), and as a number (a bool 1 or 0; 0 for one it hasn't, or
+ * text). Text is the map's, valid while it is.
+ */
+export function wgf_tilemap_get_property(map, layer, object, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_tilemap_get_property"](map, layer, object, cstr(name));
+    host["stackRestore"](mark);
+    return str(value);
+}
+
+// wgf: call wgf_tilemap_get_property_number
+/**
+ * Custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an object's of
+ * that layer. How many, each one's name in Tiled's order ("" past the end), one's type by
+ * name (NONE for one it hasn't), its value as text (a number written out, a bool "true" or
+ * "false"; "" for one it hasn't), and as a number (a bool 1 or 0; 0 for one it hasn't, or
+ * text). Text is the map's, valid while it is.
+ */
+export function wgf_tilemap_get_property_number(map, layer, object, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_tilemap_get_property_number"](map, layer, object, cstr(name));
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_tile_class
+/**
+ * A tile's (by gid, its flips apart): its class ("" none), and its custom properties as
+ * above.
+ */
+export function wgf_tilemap_get_tile_class(map, gid) {
+    const value = host["_wgf_tilemap_get_tile_class"](map, gid);
+    return str(value);
+}
+
+// wgf: call wgf_tilemap_get_tile_property_count
+/**
+ * A tile's (by gid, its flips apart): its class ("" none), and its custom properties as
+ * above.
+ */
+export function wgf_tilemap_get_tile_property_count(map, gid) {
+    const value = host["_wgf_tilemap_get_tile_property_count"](map, gid);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_tile_property_name
+/**
+ * A tile's (by gid, its flips apart): its class ("" none), and its custom properties as
+ * above.
+ */
+export function wgf_tilemap_get_tile_property_name(map, gid, index) {
+    const value = host["_wgf_tilemap_get_tile_property_name"](map, gid, index);
+    return str(value);
+}
+
+// wgf: call wgf_tilemap_get_tile_property_type
+/**
+ * A tile's (by gid, its flips apart): its class ("" none), and its custom properties as
+ * above.
+ */
+export function wgf_tilemap_get_tile_property_type(map, gid, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_tilemap_get_tile_property_type"](map, gid, cstr(name));
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_tilemap_get_tile_property
+/**
+ * A tile's (by gid, its flips apart): its class ("" none), and its custom properties as
+ * above.
+ */
+export function wgf_tilemap_get_tile_property(map, gid, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_tilemap_get_tile_property"](map, gid, cstr(name));
+    host["stackRestore"](mark);
+    return str(value);
+}
+
+// wgf: call wgf_tilemap_get_tile_property_number
+/**
+ * A tile's (by gid, its flips apart): its class ("" none), and its custom properties as
+ * above.
+ */
+export function wgf_tilemap_get_tile_property_number(map, gid, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_tilemap_get_tile_property_number"](map, gid, cstr(name));
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_tilemap_instantiate
+/**
+ * The map placed under `parent` (0: none): a plain actor named for its file ("level" for
+ * "maps/level.tmj"), in the map's pixels from its top-left, y down (scale it to place the map
+ * in other units), with a layer actor under it for each of the map's layers in their order
+ * (wgf_tilemap_layer.h): named for its layer, shown or hidden and at its offset as in Tiled.
+ * A tile layer's cells are drawn on a 2D stage, faded by its opacity, one sprite batch
+ * (wgf_sprite_batch.h) under it for each tileset it uses, each tile flipped as the map says,
+ * its bottom-left on its cell's (a tile larger than the map's cells reaches up and right, as
+ * Tiled draws it), and its animated tiles stepped each frame, held still under a paused actor
+ * (wgf_actor_set_paused). The layers hold a reference to the map. 0 for a map that isn't
+ * READY, a `parent` that isn't an actor (0 is), or no room for the actors.
+ */
+export function wgf_tilemap_instantiate(map, parent) {
+    const value = host["_wgf_tilemap_instantiate"](map, parent);
+    return value >>> 0;
+}
+
+// wgf: call wgf_tilemap_layer_get_map
+/**
+ * The map it is of, and its layer's index there.
+ */
+export function wgf_tilemap_layer_get_map(layer) {
+    const value = host["_wgf_tilemap_layer_get_map"](layer);
+    return value >>> 0;
+}
+
+// wgf: call wgf_tilemap_layer_get_index
+/**
+ * The map it is of, and its layer's index there.
+ */
+export function wgf_tilemap_layer_get_index(layer) {
+    const value = host["_wgf_tilemap_layer_get_index"](layer);
+    return value;
+}
+
+// wgf: call wgf_tilemap_layer_get_cell
+/**
+ * The tile at `column`, `row` (from the top-left), and its flips: 0 for an empty cell, or
+ * one outside the layer.
+ */
+export function wgf_tilemap_layer_get_cell(layer, column, row) {
+    const value = host["_wgf_tilemap_layer_get_cell"](layer, column, row);
+    return value;
+}
+
+// wgf: call wgf_tilemap_layer_get_cell_flips
+/**
+ * The tile at `column`, `row` (from the top-left), and its flips: 0 for an empty cell, or
+ * one outside the layer.
+ */
+export function wgf_tilemap_layer_get_cell_flips(layer, column, row) {
+    const value = host["_wgf_tilemap_layer_get_cell_flips"](layer, column, row);
+    return value;
+}
+
+// wgf: call wgf_tilemap_layer_set_cell
+/**
+ * The cell given tile `gid` flipped by `flips` (0 empties it), drawn so from the next frame
+ * (an animated tile's animation starting in step with the others). False for a cell outside
+ * the layer, a gid none of the map's tilesets holds, or flips past the three bits.
+ */
+export function wgf_tilemap_layer_set_cell(layer, column, row, gid, flips) {
+    const value = host["_wgf_tilemap_layer_set_cell"](layer, column, row, gid, flips);
+    return value !== 0;
+}
+
+// wgf: call wgf_tilemap_layer_get_cells
+/**
+ * Every cell, row by row from the top-left, as one int each (above), into `out`, as many as
+ * fit in `count`, returning how many it filled: what a game saves of a layer it changed.
+ */
+export function wgf_tilemap_layer_get_cells(layer, out) {
+    const outPointer = arrayOut(out, 0);
+    const value = host["_wgf_tilemap_layer_get_cells"](layer, outPointer, lengthOf(out));
+    arrayBack(outPointer, out, "HEAP32");
+    return value;
+}
+
+// wgf: call wgf_tilemap_layer_set_cells
+/**
+ * Every cell at once, as get_cells gives them. False, changing nothing, for a count other
+ * than the map's columns times its rows, or a cell set_cell refuses.
+ */
+export function wgf_tilemap_layer_set_cells(layer, cells) {
+    const cellsPointer = arrayIn(cells, 0, "HEAP32");
+    const value = host["_wgf_tilemap_layer_set_cells"](layer, cellsPointer, lengthOf(cells));
+    return value !== 0;
+}
+
+// wgf: call wgf_tilemap_layer_get_column_at
+/**
+ * The column and the row at the point `x`, `y` in its parent's units (the placed map's: the
+ * map's pixels from its top-left), through the layer's own place, turn, and scale: outside
+ * the layer too (below 0, or its columns or rows and past). 0 for an actor that isn't a
+ * placed layer.
+ */
+export function wgf_tilemap_layer_get_column_at(layer, x, y) {
+    const value = host["_wgf_tilemap_layer_get_column_at"](layer, x, y);
+    return value;
+}
+
+// wgf: call wgf_tilemap_layer_get_row_at
+/**
+ * The column and the row at the point `x`, `y` in its parent's units (the placed map's: the
+ * map's pixels from its top-left), through the layer's own place, turn, and scale: outside
+ * the layer too (below 0, or its columns or rows and past). 0 for an actor that isn't a
+ * placed layer.
+ */
+export function wgf_tilemap_layer_get_row_at(layer, x, y) {
+    const value = host["_wgf_tilemap_layer_get_row_at"](layer, x, y);
+    return value;
 }
 
 // wgf: call wgf_audio_set_volume
@@ -12763,14 +13385,28 @@ export function wgf_body2d_set_grid(parent, cells, columns, size, x, y) {
     return value !== 0;
 }
 
+// wgf: call wgf_body2d_set_grid_from_layer
+/**
+ * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
+ * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left is
+ * in the parent's space (the layer's offset, for the map's root; a layer scaled or turned
+ * under the parent is placed, not scaled or turned). Its cells as they are now: a cell set on
+ * the layer later is set here too with set_grid_cell. False too for a layer that isn't a
+ * placed tile layer, or a map whose tiles aren't square.
+ */
+export function wgf_body2d_set_grid_from_layer(parent, layer) {
+    const value = host["_wgf_body2d_set_grid_from_layer"](parent, layer);
+    return value !== 0;
+}
+
 // wgf: call wgf_body2d_clear_grid
 /**
- * The grid of solid cells the bodies under `parent` slide against: `cells` row by row from
- * the top, `columns` a row, `count` of them (copied), nonzero solid; cell 0's top-left at
- * x, y in the parent's space, each `size` square; outside it is open. One a parent, set
- * again replacing it. False for a parent that isn't an actor, no cells, columns of 0 or less,
- * or a size that isn't above 0. clear: none again. A cell read (0 outside the grid, or with
- * none) and set (false outside it): a door opened, a block broken.
+ * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
+ * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left is
+ * in the parent's space (the layer's offset, for the map's root; a layer scaled or turned
+ * under the parent is placed, not scaled or turned). Its cells as they are now: a cell set on
+ * the layer later is set here too with set_grid_cell. False too for a layer that isn't a
+ * placed tile layer, or a map whose tiles aren't square.
  */
 export function wgf_body2d_clear_grid(parent) {
     const value = host["_wgf_body2d_clear_grid"](parent);
@@ -12779,12 +13415,12 @@ export function wgf_body2d_clear_grid(parent) {
 
 // wgf: call wgf_body2d_get_grid_cell
 /**
- * The grid of solid cells the bodies under `parent` slide against: `cells` row by row from
- * the top, `columns` a row, `count` of them (copied), nonzero solid; cell 0's top-left at
- * x, y in the parent's space, each `size` square; outside it is open. One a parent, set
- * again replacing it. False for a parent that isn't an actor, no cells, columns of 0 or less,
- * or a size that isn't above 0. clear: none again. A cell read (0 outside the grid, or with
- * none) and set (false outside it): a door opened, a block broken.
+ * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
+ * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left is
+ * in the parent's space (the layer's offset, for the map's root; a layer scaled or turned
+ * under the parent is placed, not scaled or turned). Its cells as they are now: a cell set on
+ * the layer later is set here too with set_grid_cell. False too for a layer that isn't a
+ * placed tile layer, or a map whose tiles aren't square.
  */
 export function wgf_body2d_get_grid_cell(parent, column, row) {
     const value = host["_wgf_body2d_get_grid_cell"](parent, column, row);
@@ -12793,12 +13429,12 @@ export function wgf_body2d_get_grid_cell(parent, column, row) {
 
 // wgf: call wgf_body2d_set_grid_cell
 /**
- * The grid of solid cells the bodies under `parent` slide against: `cells` row by row from
- * the top, `columns` a row, `count` of them (copied), nonzero solid; cell 0's top-left at
- * x, y in the parent's space, each `size` square; outside it is open. One a parent, set
- * again replacing it. False for a parent that isn't an actor, no cells, columns of 0 or less,
- * or a size that isn't above 0. clear: none again. A cell read (0 outside the grid, or with
- * none) and set (false outside it): a door opened, a block broken.
+ * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
+ * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left is
+ * in the parent's space (the layer's offset, for the map's root; a layer scaled or turned
+ * under the parent is placed, not scaled or turned). Its cells as they are now: a cell set on
+ * the layer later is set here too with set_grid_cell. False too for a layer that isn't a
+ * placed tile layer, or a map whose tiles aren't square.
  */
 export function wgf_body2d_set_grid_cell(parent, column, row, value_) {
     const value = host["_wgf_body2d_set_grid_cell"](parent, column, row, value_);
@@ -13278,6 +13914,24 @@ export function wgf_prefab_spawn(prefab, parent) {
 export function wgf_prefab_spawn_at(prefab, parent, x, y, z, angle) {
     const value = host["_wgf_prefab_spawn_at"](prefab, parent, x, y, z, angle);
     return value >>> 0;
+}
+
+// wgf: call wgf_scene_spawn_objects
+/**
+ * A placed Tiled map's object layer (wgf_tilemap_layer.h) made actors: for each of its
+ * objects whose class (wgf_tilemap_get_object_class) names one of the scene's prefabs, that
+ * prefab spawned under the layer (wgf_prefab_spawn_at) at the object's middle -- a point's
+ * point, a polygon's or a polyline's place -- turned as the object is, named for it (when it
+ * has a name), hidden when Tiled hides it, and each of the object's custom properties set as
+ * a parameter of each behavior on its top actor, as text (wgf_tilemap_get_property; a value
+ * starting '@' a reference, wgf_behavior.h), before the binding takes their CREATED. Objects
+ * of no class, or a class the scene has no prefab of, are left for the program to read. The
+ * number spawned; 0 for a scene that isn't READY, or an actor that isn't a placed layer of
+ * objects.
+ */
+export function wgf_scene_spawn_objects(scene, layer) {
+    const value = host["_wgf_scene_spawn_objects"](scene, layer);
+    return value;
 }
 
 // wgf: call wgf_screen_create

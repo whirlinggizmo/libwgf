@@ -5,7 +5,8 @@
  *
  * A record's attributes: where its pivot is and its size, its turn, its region of the
  * texture in texels, and its tint. A batch binds its records at an offset, so it needs no
- * base instance (WebGL2 has none); a size or region of 0 is the region's or the texture's.
+ * base instance (WebGL2 has none); a size or region of 0 is the region's or the texture's,
+ * and a negative size mirrors the quad across that axis, about its pivot.
  * Colors are sRGB values, like immediate mode's: texture x tint. */
 
 @vs vs_quads
@@ -29,8 +30,8 @@ void main() {
         region = vec4(0.0, 0.0, texture_size.xy);
     }
     vec2 size = inst_place.zw;
-    if (size.x <= 0.0 || size.y <= 0.0) {
-        size = region.zw;
+    if (size.x == 0.0 || size.y == 0.0) { /* the region's size, its sign kept */
+        size = region.zw * vec2(size.x < 0.0 ? -1.0 : 1.0, size.y < 0.0 ? -1.0 : 1.0);
     }
     vec2 local = (corner - texture_size.zw) * size;
     float c = cos(inst_rotation);

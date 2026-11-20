@@ -201,14 +201,19 @@ class Binding:
 
     def place(self, f):
         """(Haxe type, member name, instance?) for a call. A call named for a handle kind
-        goes on that kind's abstract, a method when it takes that kind first; any other on
-        its section's type, a method when its section is over a kind it takes first."""
+        goes on that kind's abstract, a method when it takes that kind first, unless its
+        header's section is longer than the kind's name and the call is named for it (the
+        tilemap_layer section's, on a placed map's actors); any other on its section's type,
+        a method when its section is over a kind it takes first."""
         first = f.params[0].type if f.params else None
         for ctype, haxe in sorted(self.kinds.items(), key=lambda kv: -len(kv[0])):
             stem = ctype[len('wgf_'):-len('_t')]
             if f.name.startswith(f'wgf_{stem}_'):
                 if stem == 'handle' and self.section_of(f) != 'handle':
                     continue  # wgf_handle_* is the handle section's own, nothing else's
+                section = self.section_of(f)
+                if section.startswith(f'{stem}_') and f.name.startswith(f'wgf_{section}_'):
+                    break  # a section named longer than the kind (wgf_tilemap_layer_*): its own type
                 return haxe, MEMBER_NAMES.get(f.name, camel(f.name[len(f'wgf_{stem}_'):])), first == ctype
         section = self.section_of(f)
         prefix = f'wgf_{section}_'

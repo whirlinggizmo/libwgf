@@ -1,0 +1,18 @@
+wgf-scene 2
+# gfx-tilemap's prefabs: each spawned where an object of its class is in maps/island.tmj
+# (wgf_scene_spawn_objects), the object's custom properties its behaviors' parameters.
+prefab tree
+  sprite texture="textures/tiles.png" source=2,22,16,32 size=16,32
+end
+prefab flag
+  sprite texture="textures/tiles.png" source=22,22,16,32 size=16,32
+end
+prefab coin
+  sprite texture="textures/tiles.png" source=42,22,16,16 size=12,12
+  behavior name=Coin
+end
+prefab hero
+  shape2d circle=6 color=#FFD84A
+  body2d size=10,10
+  behavior name=Hero
+end

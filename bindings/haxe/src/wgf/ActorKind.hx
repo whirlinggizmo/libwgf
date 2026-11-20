@@ -17,4 +17,5 @@ enum abstract ActorKind(Int) from Int to Int {
 	var SHAPE3D = 12;
 	var EMITTER3D = 13;
 	var SPRITE_BATCH = 14;
+	var TILEMAP_LAYER = 15;
 }

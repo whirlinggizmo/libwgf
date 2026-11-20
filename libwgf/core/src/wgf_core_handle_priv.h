@@ -63,6 +63,7 @@ typedef enum wgf_core_priv_handle_kind_t {
     WGF_CORE_PRIV_HANDLE_KIND_SHADER = 22,      /* "gfx.shader" */
     WGF_CORE_PRIV_HANDLE_KIND_TEXTURE_READ = 23, /* "gfx.texture_read": a render target read back */
     WGF_CORE_PRIV_HANDLE_KIND_SHEET = 24,        /* "gfx.sheet" */
+    WGF_CORE_PRIV_HANDLE_KIND_TILEMAP = 25,      /* "gfx.tilemap": a Tiled map, a resource */
     /* ecs: 32.. */
     WGF_CORE_PRIV_HANDLE_KIND_COMPONENTS = 32, /* "ecs.components" */
     WGF_CORE_PRIV_HANDLE_KIND_SCENE = 33,  /* "ecs.scene": a scene file, a resource */

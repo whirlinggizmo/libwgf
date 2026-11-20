@@ -59,15 +59,17 @@ import wgf.impl.Raw;
 		return Raw.wgf_sprite_batch_get_positions(this, first, out);
 
 	/**
-	    The quads' sizes, width and height in turn, as positions are; a width or height of 0 or
-	    less is the region's size in texels.
+	    The quads' sizes, width and height in turn, as positions are; a width or height of 0 is
+	    the region's size in texels, and a negative one mirrors the quad across that axis, about
+	    its pivot (a tile flipped).
 	**/
 	public inline function setSizes(first:Int, sizes:Array<Float>):Int
 		return Raw.wgf_sprite_batch_set_sizes(this, first, sizes);
 
 	/**
-	    The quads' sizes, width and height in turn, as positions are; a width or height of 0 or
-	    less is the region's size in texels.
+	    The quads' sizes, width and height in turn, as positions are; a width or height of 0 is
+	    the region's size in texels, and a negative one mirrors the quad across that axis, about
+	    its pivot (a tile flipped).
 	**/
 	public inline function getSizes(first:Int, out:Array<Float>):Int
 		return Raw.wgf_sprite_batch_get_sizes(this, first, out);

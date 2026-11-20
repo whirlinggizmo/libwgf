@@ -41,6 +41,7 @@ class Main {
 	static var car:Model = 0; // a section type starts as none, as a handle does
 	static var robot:Model = 0; // a skinned, animated glTF file's root
 	static var gems:Sheet = 0; // an atlas, TexturePacker's hash
+	static var island:Tilemap = 0; // a Tiled map, gfx-tilemap's
 	static var font:Font;
 	static var menu:Document;
 	static var menuDone = false;
@@ -625,6 +626,8 @@ class Main {
 		sheet.destroy();
 		gems = Sheet.create("sheets/gem.json");
 		expect(Resource.getStatus(gems) == ResourceStatus.PENDING, "an atlas loading");
+		island = Tilemap.create("maps/island.tmj");
+		expect(Resource.getStatus(island) == ResourceStatus.PENDING && island.getColumns() == 0, "a Tiled map loading");
 		final quads = SpriteBatch.create(tiles);
 		quads.setParent(group);
 		final floats:Array<Float> = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -978,7 +981,7 @@ class Main {
 		}
 		if (frames >= 30 && instantiated && stage > 3 && menuDone && !reported
 			&& Resource.getStatus(robot.getMesh()) != ResourceStatus.PENDING
-			&& Resource.getStatus(gems) != ResourceStatus.PENDING)
+			&& Resource.getStatus(gems) != ResourceStatus.PENDING && Resource.getStatus(island) != ResourceStatus.PENDING)
 			finish();
 		if (frames > 600 && !reported) {
 			expect(false, 'still waiting at frame 600 (scene ${Resource.getStatus(scene)}, storage stage $stage)');
@@ -1157,6 +1160,7 @@ class Main {
 		expect(Resource.getStatus(car.getMesh()) == ResourceStatus.READY && !car.find("toy_car/body/wheel_fl").isNone(),
 			"a glTF file loaded, its nodes under its model");
 		skinning();
+		tilemap();
 		{ // the atlas, loaded
 			expect(Resource.getStatus(gems) == ResourceStatus.READY && gems.getFrameCount() == 4
 				&& gems.getFrameName(0) == "gem_1.png" && gems.findFrame("gem_3.png") == 2, "an atlas read: its frames by name");
@@ -1199,6 +1203,48 @@ class Main {
 		#end
 		Log.message(failures == 0 && reach ? LogLevel.INFO : LogLevel.ERROR,
 			'feature test: ${failures == 0 && reach ? "PASS" : verdict + (reach ? "" : ", calls unreached")}');
+	}
+
+	static function tilemap():Void {
+		expect(Resource.getStatus(island) == ResourceStatus.READY && island.getColumns() == 24 && island.getRows() == 16
+			&& island.getTileWidth() == 16 && island.getTileHeight() == 16 && island.getBackgroundColor() == 0x18202cff,
+			"a Tiled map read: its size, tile size, background");
+		expect(island.getLayerCount() == 3 && island.getLayerName(0) == "ground" && island.findLayer("props") == 1
+			&& island.getLayerKind(2) == TilemapLayerKind.OBJECTS, "its layers");
+		expect(island.getTilesetCount() == 2 && island.getTilesetName(0) == "tiles" && island.getTilesetFirstGid(1) == 9
+			&& island.getTilesetTileCount(0) == 8 && !island.getTilesetTexture(1).isNone(), "its tilesets");
+		var hero = 0;
+		while (hero < island.getObjectCount(2) && island.getObjectName(2, hero) != "hero")
+			hero++;
+		expect(island.getObjectClass(2, hero) == "hero" && island.getObjectShape(2, hero) == TilemapShape.POINT
+			&& island.getObjectId(2, hero) == hero + 1 && near(island.getObjectPosition(2, hero).x, 72)
+			&& island.getObjectSize(2, hero).x == 0 && island.getObjectRotation(2, hero) == 0 && island.isObjectVisible(2, hero)
+			&& island.getObjectTile(2, hero) == 0 && island.getObjectPointCount(2, hero) == 0
+			&& island.getObjectPoints(2, hero, [0.0, 0]) == 0, "an object: its name, class, shape, place");
+		expect(island.getPropertyCount(-1, -1) == 1 && island.getPropertyName(-1, -1, 0) == "title"
+			&& island.getProperty(-1, -1, "title") == "Coin island"
+			&& island.getPropertyType(2, hero, "speed") == TilemapPropertyType.FLOAT
+			&& near(island.getPropertyNumber(2, hero, "speed"), 40), "the map's and an object's properties");
+		expect(island.getTileClass(8) == "rock" && island.getTilePropertyCount(8) == 1 && island.getTilePropertyName(8, 0) == "solid"
+			&& island.getTilePropertyType(8, "solid") == TilemapPropertyType.BOOL && island.getTileProperty(8, "solid") == "true"
+			&& island.getTilePropertyNumber(8, "solid") == 1, "a tile's class and properties");
+		final root = island.instantiate(world);
+		final ground:TilemapLayer = root.find("ground");
+		final props:TilemapLayer = root.find("props");
+		final things:TilemapLayer = root.find("things");
+		expect(!root.isNone() && root.getChildCount() == 3 && ground.getMap() == island && props.getIndex() == 1
+			&& (ground : Actor).getKind() == ActorKind.TILEMAP_LAYER, "placed: a layer actor each");
+		expect(ground.getCell(0, 0) == 1 && props.getCell(21, 9) == 8 && props.getCellFlips(21, 9) == TilemapFlip.X
+			&& ground.setCell(0, 0, 2, TilemapFlip.NONE) && ground.getCell(0, 0) == 2, "a cell read and set");
+		final cells = [for (_ in 0...24 * 16) 0];
+		expect(ground.getCells(cells) == 24 * 16 && cells[0] == 2 && ground.setCells(cells), "every cell, in bulk");
+		expect(ground.getColumnAt(40, 0) == 2 && ground.getRowAt(0, 40) == 2, "a cell from a point");
+		final walls:Body2d = (things : Actor);
+		expect(walls.setGridFromLayer(props) && walls.getGridCell(21, 9) == 1 && walls.getGridCell(4, 9) == 0,
+			"a layer's cells a 2D body's solid grid");
+		expect(scene.spawnObjects(things) == 0, "the field's scene has no prefab of the map's classes");
+		root.destroy(ActorDestroy.DESTROY_CHILDREN);
+		Resource.release(island);
 	}
 
 	static function shutdown():Void {

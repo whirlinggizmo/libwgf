@@ -39,7 +39,8 @@ typedef enum wgf_actor_kind_t {
     WGF_ACTOR_KIND_MODEL = 11,
     WGF_ACTOR_KIND_SHAPE3D = 12,
     WGF_ACTOR_KIND_EMITTER3D = 13,
-    WGF_ACTOR_KIND_SPRITE_BATCH = 14
+    WGF_ACTOR_KIND_SPRITE_BATCH = 14,
+    WGF_ACTOR_KIND_TILEMAP_LAYER = 15 /* a placed Tiled map's layer (wgf_tilemap_layer.h) */
 } wgf_actor_kind_t;
 
 /* What wgf_actor_destroy does with the actor's children. */

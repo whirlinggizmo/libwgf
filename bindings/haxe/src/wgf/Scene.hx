@@ -65,6 +65,21 @@ abstract Scene(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_scene_has_prefab(this, name);
 
 	/**
+	    A placed Tiled map's object layer (wgf_tilemap_layer.h) made actors: for each of its
+	    objects whose class (wgf_tilemap_get_object_class) names one of the scene's prefabs, that
+	    prefab spawned under the layer (wgf_prefab_spawn_at) at the object's middle -- a point's
+	    point, a polygon's or a polyline's place -- turned as the object is, named for it (when it
+	    has a name), hidden when Tiled hides it, and each of the object's custom properties set as
+	    a parameter of each behavior on its top actor, as text (wgf_tilemap_get_property; a value
+	    starting '@' a reference, wgf_behavior.h), before the binding takes their CREATED. Objects
+	    of no class, or a class the scene has no prefab of, are left for the program to read. The
+	    number spawned; 0 for a scene that isn't READY, or an actor that isn't a placed layer of
+	    objects.
+	**/
+	public inline function spawnObjects(layer:Actor):Int
+		return Raw.wgf_scene_spawn_objects(this, layer);
+
+	/**
 		The prefab `name` found (scene.prefab) and spawned under `parent`: placed at (x, y, z), turned `angle`, and snapped when a place is given (Prefab.spawnAt), else at the prefab's own transform (Prefab.spawn). It looks the prefab up on every call: a hot path finds it once and keeps the handle. 0 as those calls give it.
 	**/
 	public inline function spawnPrefab(name:String, parent:Actor, ?x:Float, ?y:Float, ?z:Float, ?angle:Float):Actor {

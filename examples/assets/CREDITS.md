@@ -30,3 +30,5 @@ Made by Whirling Gizmo for its libraries, under libwgf's MIT license:
 - `sprites/logo/wg-logo-bw-alpha.png`, `sprites/logo/wg-logo-white-alpha.png`: the Whirling Gizmo logo, from libwgt's `examples/assets/`; `sprites/logo/wg-logo-bw-alpha.{bc7,astc,etc2}.ktx` made from the PNG by `tools/compress_textures.py`.
 - `textures/noise.png`: made by `tools/gen_noise.py` (wgrender's `tools/gen_noise_texture.py`, written again): the dissolve shader's.
 - `textures/tiles.png`: from libwgt's `examples/assets/`, made by wgrender's `tools/gen_tiles.py`; the page `tools/check_asset_cache.py` visits draws it.
+- `maps/island.tmj`, `maps/tiles.tsj`, `scenes/island.scene`: gfx-tilemap's Tiled map (a `.tmj` and its tileset `.tsj` over `textures/tiles.png`, Tiled's JSON written by hand, not in Tiled), and the prefabs its objects spawn, written here.
+- `textures/water.png`: four frames of rippling water, gfx-tilemap's animated tile, drawn in a throwaway script.

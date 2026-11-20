@@ -38,6 +38,10 @@ const char *wgf_core_priv_json_string(const wgf_core_priv_json_t *value);
 bool wgf_core_priv_json_truth(const wgf_core_priv_json_t *value);
 const char *wgf_core_priv_json_key(const wgf_core_priv_json_t *member);
 
+/* A value written out as compact JSON text, malloc'd (freed with free); NULL for none, or out
+ * of memory: a Tiled class property's members. */
+char *wgf_core_priv_json_print(const wgf_core_priv_json_t *value);
+
 /* An object's member read as a number or a string, as above. */
 double wgf_core_priv_json_get_number(const wgf_core_priv_json_t *object, const char *key, double fallback);
 const char *wgf_core_priv_json_get_string(const wgf_core_priv_json_t *object, const char *key);

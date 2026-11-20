@@ -110,3 +110,8 @@ const char *wgf_core_priv_json_get_string(const wgf_core_priv_json_t *object, co
 {
     return wgf_core_priv_json_string(wgf_core_priv_json_get(object, key));
 }
+
+char *wgf_core_priv_json_print(const wgf_core_priv_json_t *value)
+{
+    return value != NULL ? cJSON_PrintUnformatted(NODE(value)) : NULL;
+}

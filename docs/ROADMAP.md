@@ -19,7 +19,7 @@ Out of the parity work, as not libwgf's (the checklist's skips): desktop window 
 
 What a game of any genre writes in its first day, in this order, each done as a core system is, carrying helix-legacy's.
 
-1. **Tilemaps.** Tiled's maps (`.tmj`, its tilesets `.tsj`): tile layers drawn as one actor each (the sprite batch's records, or a mesh, which the plan measures), object layers read as actors and prefabs by class with their properties, animated tiles, a cell read and set, and the solid cells 2D move-and-slide collides with. helix-legacy's `tiled/`; today's `examples/c/gfx-tilemap` rebuilt on it.
+1. **Tilemaps, the rest** (Tiled maps are in: `wgf_tilemap.h`, `wgf_tilemap_layer.h`; HISTORY.md, "Tiled maps"): what helix-legacy's `tiled/` has that they don't -- terrain (Wang) sets read and painted into a layer as Tiled's Terrain brush does (helix's `setTerrain`); image layers drawn (listed today); tile objects drawn as their tiles (read today, drawn only as a prefab a class names); a map's files read again in place when they change during development (`wgf_asset_reload`; a map doesn't reload today); and a layer's tilesets drawn cell by cell where their tiles overlap (each tileset's batch is drawn whole, in tileset order). Isometric, staggered, hexagonal, and infinite maps, which helix-legacy refuses too, stay out until a game on the ROADMAP needs one.
 
 Done when every item's calls are in the bindings and the feature test, and each has an example in the browser check.
 
