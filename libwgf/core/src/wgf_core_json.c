@@ -1,6 +1,7 @@
 #include "wgf_core_json_priv.h"
 
 #include "cJSON.h"
+#include "wgf_core_thread_priv.h"
 
 /* JSON through cJSON (wgf_core_json_priv.h): its tree, its node the wrapper's value. cJSON is
  * compiled with it, in wgf_core_cjson_impl.c. */
@@ -8,9 +9,31 @@
 #define NODE(value) ((const cJSON *)(const void *)(value))
 #define VALUE(node) ((const wgf_core_priv_json_t *)(const void *)(node))
 
+static wgf_core_priv_mutex_t lock;
+static bool locking;
+
+void wgf_core_priv_json_init(void)
+{
+    if (locking) return;
+    wgf_core_priv_mutex_init(&lock);
+    locking = true;
+}
+
+void wgf_core_priv_json_deinit(void)
+{
+    if (!locking) return;
+    wgf_core_priv_mutex_destroy(&lock);
+    locking = false;
+}
+
 wgf_core_priv_json_t *wgf_core_priv_json_parse(const char *text, size_t length)
 {
-    return text != NULL ? (wgf_core_priv_json_t *)(void *)cJSON_ParseWithLength(text, length) : NULL;
+    cJSON *json;
+    if (text == NULL) return NULL;
+    if (locking) wgf_core_priv_mutex_lock(&lock);
+    json = cJSON_ParseWithLength(text, length);
+    if (locking) wgf_core_priv_mutex_unlock(&lock);
+    return (wgf_core_priv_json_t *)(void *)json;
 }
 
 void wgf_core_priv_json_free(wgf_core_priv_json_t *json)

@@ -75,39 +75,39 @@ int main(void)
         const int whole = wgf_random_get_int(-2147483647 - 1, 2147483647);
         (void)whole; /* the whole range of int, without overflow (ubsan's to catch) */
     }
-    { /* a shuffle, and a game's own generators */
-        int deck[10], seen[10] = {0}, i, all = 1, moved = 0;
-        wgf_generator_t a, b;
-        for (i = 0; i < 10; i++) deck[i] = i;
+    { /* gen_a shuffle, and gen_a game's own generators */
+        int deck[10], counted[10] = {0}, k, all = 1, moved = 0;
+        wgf_generator_t gen_a, gen_b;
+        for (k = 0; k < 10; k++) deck[k] = k;
         expect(wgf_random_shuffle(deck, 10) == 10 && wgf_random_shuffle(NULL, 3) == 0, "a shuffle, how many");
-        for (i = 0; i < 10; i++) seen[deck[i]]++, moved += deck[i] != i;
-        for (i = 0; i < 10; i++) all = all && seen[i] == 1;
+        for (k = 0; k < 10; k++) counted[deck[k]]++, moved += deck[k] != k;
+        for (k = 0; k < 10; k++) all = all && counted[k] == 1;
         expect(all && moved > 0, "every one still there, in another order");
         wgf_random_set_seed(99);
-        a = wgf_random_create(7);
-        b = wgf_random_create(7);
-        expect(a != 0 && b != 0 && wgf_random_get_generator_seed(a) == 7, "two generators of one seed");
+        gen_a = wgf_random_create(7);
+        gen_b = wgf_random_create(7);
+        expect(gen_a != 0 && gen_b != 0 && wgf_random_get_generator_seed(gen_a) == 7, "two generators of one seed");
         {
-            const float first = wgf_random_next_float(a);
+            const float first = wgf_random_next_float(gen_a);
             const int program = wgf_random_get_int(0, 1000000);
-            expect(wgf_random_next_float(b) == first && first >= 0.0f && first < 1.0f, "the same numbers from the same seed");
+            expect(wgf_random_next_float(gen_b) == first && first >= 0.0f && first < 1.0f, "the same numbers from the same seed");
             wgf_random_set_seed(99);
             expect(wgf_random_get_int(0, 1000000) == program, "the program's sequence untouched by them");
         }
-        wgf_random_set_generator_seed(a, 7);
-        wgf_random_set_generator_seed(b, 7);
-        expect(wgf_random_next_int(a, 0, 100) == wgf_random_next_int(b, 0, 100) &&
-                   wgf_random_next_range(a, 2, 3) == wgf_random_next_range(b, 2, 3),
+        wgf_random_set_generator_seed(gen_a, 7);
+        wgf_random_set_generator_seed(gen_b, 7);
+        expect(wgf_random_next_int(gen_a, 0, 100) == wgf_random_next_int(gen_b, 0, 100) &&
+                   wgf_random_next_range(gen_a, 2, 3) == wgf_random_next_range(gen_b, 2, 3),
                "seeded again: again the same");
         {
             int x[5] = {1, 2, 3, 4, 5}, y[5] = {1, 2, 3, 4, 5};
-            wgf_random_next_shuffle(a, x, 5);
-            wgf_random_next_shuffle(b, y, 5);
+            wgf_random_next_shuffle(gen_a, x, 5);
+            wgf_random_next_shuffle(gen_b, y, 5);
             expect(memcmp(x, y, sizeof(x)) == 0, "and shuffled alike");
         }
-        wgf_random_destroy(a);
-        expect(wgf_random_next_float(a) == 0.0f && !wgf_random_set_generator_seed(a, 1), "destroyed: refused");
-        wgf_random_destroy(b);
+        wgf_random_destroy(gen_a);
+        expect(wgf_random_next_float(gen_a) == 0.0f && !wgf_random_set_generator_seed(gen_a, 1), "destroyed: refused");
+        wgf_random_destroy(gen_b);
     }
     wgf_core_priv_shutdown();
     return failures == 0 ? 0 : 1;

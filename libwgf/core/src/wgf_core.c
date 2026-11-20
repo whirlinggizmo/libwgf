@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "wgf_core_fs_priv.h"
+#include "wgf_core_json_priv.h"
 #include "wgf_core_load_priv.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_core_probe_priv.h"
@@ -39,6 +40,7 @@ void wgf_core_priv_init(void)
     wgf_core_priv_random_init();
     wgf_core_priv_probe_init();
     wgf_core_priv_fs_init(NULL);
+    wgf_core_priv_json_init(); /* before the load workers, who parse */
     wgf_core_priv_load_init();
     running = true;
 }
@@ -51,6 +53,7 @@ void wgf_core_priv_shutdown(void)
     wgf_core_priv_part_stop(WGF_CORE_PRIV_PART_LAYER_GFX);
     wgf_core_priv_part_stop(WGF_CORE_PRIV_PART_LAYER_ASSET); /* after the layers loading through it */
     wgf_core_priv_load_deinit(); /* before fs: its workers read files */
+    wgf_core_priv_json_deinit();
     wgf_core_priv_fs_deinit();
     wgf_core_priv_probe_deinit();
     wgf_core_priv_random_shutdown();

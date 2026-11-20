@@ -411,13 +411,14 @@ static void *prepare(const char *path)
                                                                     : WGF_SHEET_DIRECTION_FORWARD);
     }
     numbered_clips(a);
-    beside(path, wgf_core_priv_json_get_string(meta, "image"), a->image, sizeof(a->image));
-    wgf_core_priv_json_free(json);
-    if (wgf_core_priv_json_get_string(meta, "image")[0] == '\0' && a->image[0] == '\0') {
+    if (wgf_core_priv_json_get_string(meta, "image")[0] == '\0') { /* read before the tree is freed */
         wgf_log_warn("wgf_sheet: %s: its meta names no image", path);
         free_atlas(a);
+        wgf_core_priv_json_free(json);
         return NULL;
     }
+    beside(path, wgf_core_priv_json_get_string(meta, "image"), a->image, sizeof(a->image));
+    wgf_core_priv_json_free(json);
     return a;
 }
 

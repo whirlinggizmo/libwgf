@@ -10,6 +10,12 @@
 
 typedef struct wgf_core_priv_json_t wgf_core_priv_json_t;
 
+/* Core's init and shutdown: the lock parses take. cJSON keeps its last error in a global each
+ * parse writes, so parses on the load workers are taken one at a time; before init (one
+ * thread, a test) they run unlocked. */
+void wgf_core_priv_json_init(void);
+void wgf_core_priv_json_deinit(void);
+
 /* The text's tree, or NULL for text that isn't JSON (or out of memory). Freed with free. */
 wgf_core_priv_json_t *wgf_core_priv_json_parse(const char *text, size_t length);
 void wgf_core_priv_json_free(wgf_core_priv_json_t *json);
