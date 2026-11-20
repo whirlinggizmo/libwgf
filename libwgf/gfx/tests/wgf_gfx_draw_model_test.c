@@ -180,7 +180,7 @@ int main(void)
 
     wgf_core_priv_init();
     wgf_log_set_level(WGF_LOG_LEVEL_ERROR); /* the refusals below warn, on purpose */
-    write_glb("models/arm.glb");
+    write_glb("draw-model-test/arm.glb");
     wgf_platform_priv_set_size(640, 480);
     expect(wgf_gfx_priv_start(), "gfx starts");
     camera = wgf_camera3d_create();
@@ -227,7 +227,7 @@ int main(void)
                !wgf_draw_model_skeleton(camera, WGF_COLOR_RED) && !wgf_draw_model_wires(gone, WGF_COLOR_RED) &&
                sgl_num_vertices() == before,
            "a camera, 0, and a destroyed model: refused, nothing drawn");
-    late_mesh = wgf_mesh_create("models/late.glb"); /* never written: PENDING, then FAILED */
+    late_mesh = wgf_mesh_create("draw-model-test/late.glb"); /* never written: PENDING, then FAILED */
     late = wgf_model_create(late_mesh);
     expect(!wgf_draw_model_wires(late, WGF_COLOR_RED) && !wgf_draw_model_skeleton(late, WGF_COLOR_RED) &&
                sgl_num_vertices() == before,
@@ -236,7 +236,7 @@ int main(void)
     wgf_gfx_priv_end_frame();
 
     /* a skinned file, played, posed on the CPU */
-    file_mesh = wgf_mesh_create("models/arm.glb");
+    file_mesh = wgf_mesh_create("draw-model-test/arm.glb");
     root = wgf_model_create(file_mesh);
     settle(file_mesh);
     expect(wgf_resource_get_status(file_mesh) == WGF_RESOURCE_STATUS_READY, "the file READY");
