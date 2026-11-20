@@ -342,6 +342,49 @@ export const Body = Object.freeze({
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
+// wgf: typed Body2d
+export const Body2d = Object.freeze({
+    // wgf: call wgf_body2d_set_size
+    setSize: raw.wgf_body2d_set_size,
+    // wgf: call wgf_body2d_get_size
+    getSize: raw.wgf_body2d_get_size,
+    // wgf: call wgf_body2d_set_velocity
+    setVelocity: raw.wgf_body2d_set_velocity,
+    // wgf: call wgf_body2d_get_velocity
+    getVelocity: raw.wgf_body2d_get_velocity,
+    // wgf: call wgf_body2d_set_gravity
+    setGravity: raw.wgf_body2d_set_gravity,
+    // wgf: call wgf_body2d_get_gravity
+    getGravity: raw.wgf_body2d_get_gravity,
+    // wgf: call wgf_body2d_set_max_fall_speed
+    setMaxFallSpeed: raw.wgf_body2d_set_max_fall_speed,
+    // wgf: call wgf_body2d_get_max_fall_speed
+    getMaxFallSpeed: raw.wgf_body2d_get_max_fall_speed,
+    // wgf: call wgf_body2d_set_solid_mask
+    setSolidMask: raw.wgf_body2d_set_solid_mask,
+    // wgf: call wgf_body2d_get_solid_mask
+    getSolidMask: raw.wgf_body2d_get_solid_mask,
+    // wgf: call wgf_body2d_is_grounded
+    isGrounded: raw.wgf_body2d_is_grounded,
+    // wgf: call wgf_body2d_is_blocked_left
+    isBlockedLeft: raw.wgf_body2d_is_blocked_left,
+    // wgf: call wgf_body2d_is_blocked_right
+    isBlockedRight: raw.wgf_body2d_is_blocked_right,
+    // wgf: call wgf_body2d_is_blocked_above
+    isBlockedAbove: raw.wgf_body2d_is_blocked_above,
+    // wgf: call wgf_body2d_get_air_time
+    getAirTime: raw.wgf_body2d_get_air_time,
+    // wgf: call wgf_body2d_set_grid
+    setGrid: raw.wgf_body2d_set_grid,
+    // wgf: call wgf_body2d_clear_grid
+    clearGrid: raw.wgf_body2d_clear_grid,
+    // wgf: call wgf_body2d_get_grid_cell
+    getGridCell: raw.wgf_body2d_get_grid_cell,
+    // wgf: call wgf_body2d_set_grid_cell
+    setGridCell: raw.wgf_body2d_set_grid_cell,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
+});
 // wgf: typed Bounds
 export const Bounds = Object.freeze({
     // wgf: call wgf_bounds_set_rect
@@ -2419,7 +2462,7 @@ export const ColliderShape = Object.freeze({ CIRCLE: 0, RECTANGLE: 1, POLYGON: 2
 // wgf: enum ColorStock
 export const ColorStock = Object.freeze({ BLANK: 0, WHITE: 1, BLACK: 2, LIGHTGRAY: 3, GRAY: 4, DARKGRAY: 5, YELLOW: 6, GOLD: 7, ORANGE: 8, PINK: 9, RED: 10, MAROON: 11, GREEN: 12, LIME: 13, DARKGREEN: 14, SKYBLUE: 15, BLUE: 16, DARKBLUE: 17, PURPLE: 18, VIOLET: 19, DARKPURPLE: 20, BEIGE: 21, BROWN: 22, DARKBROWN: 23, MAGENTA: 24, RAYWHITE: 25 });
 // wgf: enum Component
-export const Component = Object.freeze({ NONE: 0, MOTION: 1, BOUNDS: 2, LIFETIME: 3, COLLIDER: 4, VOICE: 5, BODY: 6, VEHICLE: 7 });
+export const Component = Object.freeze({ NONE: 0, MOTION: 1, BOUNDS: 2, LIFETIME: 3, COLLIDER: 4, VOICE: 5, BODY: 6, VEHICLE: 7, BODY2D: 8 });
 // wgf: enum DocumentEvent
 export const DocumentEvent = Object.freeze({ NONE: 0, CLICK: 1, CHANGE: 2, SUBMIT: 3, FOCUS: 4, BLUR: 5 });
 // wgf: enum DrawFill

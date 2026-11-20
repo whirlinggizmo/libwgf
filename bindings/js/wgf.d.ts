@@ -759,7 +759,8 @@ export declare const WGF_COMPONENT_COLLIDER: 4;
 export declare const WGF_COMPONENT_VOICE: 5;
 export declare const WGF_COMPONENT_BODY: 6;
 export declare const WGF_COMPONENT_VEHICLE: 7;
-export type wgf_component_t = typeof WGF_COMPONENT_NONE | typeof WGF_COMPONENT_MOTION | typeof WGF_COMPONENT_BOUNDS | typeof WGF_COMPONENT_LIFETIME | typeof WGF_COMPONENT_COLLIDER | typeof WGF_COMPONENT_VOICE | typeof WGF_COMPONENT_BODY | typeof WGF_COMPONENT_VEHICLE;
+export declare const WGF_COMPONENT_BODY2D: 8;
+export type wgf_component_t = typeof WGF_COMPONENT_NONE | typeof WGF_COMPONENT_MOTION | typeof WGF_COMPONENT_BOUNDS | typeof WGF_COMPONENT_LIFETIME | typeof WGF_COMPONENT_COLLIDER | typeof WGF_COMPONENT_VOICE | typeof WGF_COMPONENT_BODY | typeof WGF_COMPONENT_VEHICLE | typeof WGF_COMPONENT_BODY2D;
 
 /**
  * Bounds (WGF_COMPONENT_BOUNDS): a rectangle in the actor's parent's space, x and y,
@@ -8286,6 +8287,147 @@ export declare function wgf_actor_find_with_component(component: wgf_component_t
  * actor; NONE, or a value that isn't a component, finds none.
  */
 export declare function wgf_actor_count_with_component(component: wgf_component_t): number;
+
+/**
+ * False too for a size below 0, or not finite.
+ */
+export declare function wgf_body2d_set_size(actor: wgf_actor_t | 0, width: number, height: number): boolean;
+
+/**
+ * False too for a size below 0, or not finite.
+ */
+export declare function wgf_body2d_get_size<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_body2d_get_size(actor: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * Units a second, + right and down. False too for numbers that aren't finite.
+ */
+export declare function wgf_body2d_set_velocity(actor: wgf_actor_t | 0, x: number, y: number): boolean;
+
+/**
+ * Units a second, + right and down. False too for numbers that aren't finite.
+ */
+export declare function wgf_body2d_get_velocity<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_body2d_get_velocity(actor: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * Its fall speeding up, units a second each second (+ down; 0, none: top-down). False too for
+ * a number that isn't finite.
+ */
+export declare function wgf_body2d_set_gravity(actor: wgf_actor_t | 0, gravity: number): boolean;
+
+/**
+ * Its fall speeding up, units a second each second (+ down; 0, none: top-down). False too for
+ * a number that isn't finite.
+ */
+export declare function wgf_body2d_get_gravity(actor: wgf_actor_t | 0): number;
+
+/**
+ * The fastest it falls, units a second; 0 or less for no limit. False too for a number that
+ * isn't finite.
+ */
+export declare function wgf_body2d_set_max_fall_speed(actor: wgf_actor_t | 0, speed: number): boolean;
+
+/**
+ * The fastest it falls, units a second; 0 or less for no limit. False too for a number that
+ * isn't finite.
+ */
+export declare function wgf_body2d_get_max_fall_speed(actor: wgf_actor_t | 0): number;
+
+/**
+ * The collider layers that are solid to it.
+ */
+export declare function wgf_body2d_set_solid_mask(actor: wgf_actor_t | 0, mask: number): boolean;
+
+/**
+ * The collider layers that are solid to it.
+ */
+export declare function wgf_body2d_get_solid_mask(actor: wgf_actor_t | 0): number;
+
+/**
+ * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+ * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+ * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+ * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+ * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+ */
+export declare function wgf_body2d_is_grounded(actor: wgf_actor_t | 0): boolean;
+
+/**
+ * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+ * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+ * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+ * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+ * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+ */
+export declare function wgf_body2d_is_blocked_left(actor: wgf_actor_t | 0): boolean;
+
+/**
+ * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+ * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+ * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+ * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+ * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+ */
+export declare function wgf_body2d_is_blocked_right(actor: wgf_actor_t | 0): boolean;
+
+/**
+ * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+ * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+ * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+ * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+ * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+ */
+export declare function wgf_body2d_is_blocked_above(actor: wgf_actor_t | 0): boolean;
+
+/**
+ * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+ * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+ * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+ * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+ * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+ */
+export declare function wgf_body2d_get_air_time(actor: wgf_actor_t | 0): number;
+
+/**
+ * The grid of solid cells the bodies under `parent` slide against: `cells` row by row from
+ * the top, `columns` a row, `count` of them (copied), nonzero solid; cell 0's top-left at
+ * x, y in the parent's space, each `size` square; outside it is open. One a parent, set
+ * again replacing it. False for a parent that isn't an actor, no cells, columns of 0 or less,
+ * or a size that isn't above 0. clear: none again. A cell read (0 outside the grid, or with
+ * none) and set (false outside it): a door opened, a block broken.
+ */
+export declare function wgf_body2d_set_grid(parent: wgf_actor_t | 0, cells: readonly number[] | Int32Array | null, columns: number, size: number, x: number, y: number): boolean;
+
+/**
+ * The grid of solid cells the bodies under `parent` slide against: `cells` row by row from
+ * the top, `columns` a row, `count` of them (copied), nonzero solid; cell 0's top-left at
+ * x, y in the parent's space, each `size` square; outside it is open. One a parent, set
+ * again replacing it. False for a parent that isn't an actor, no cells, columns of 0 or less,
+ * or a size that isn't above 0. clear: none again. A cell read (0 outside the grid, or with
+ * none) and set (false outside it): a door opened, a block broken.
+ */
+export declare function wgf_body2d_clear_grid(parent: wgf_actor_t | 0): boolean;
+
+/**
+ * The grid of solid cells the bodies under `parent` slide against: `cells` row by row from
+ * the top, `columns` a row, `count` of them (copied), nonzero solid; cell 0's top-left at
+ * x, y in the parent's space, each `size` square; outside it is open. One a parent, set
+ * again replacing it. False for a parent that isn't an actor, no cells, columns of 0 or less,
+ * or a size that isn't above 0. clear: none again. A cell read (0 outside the grid, or with
+ * none) and set (false outside it): a door opened, a block broken.
+ */
+export declare function wgf_body2d_get_grid_cell(parent: wgf_actor_t | 0, column: number, row: number): number;
+
+/**
+ * The grid of solid cells the bodies under `parent` slide against: `cells` row by row from
+ * the top, `columns` a row, `count` of them (copied), nonzero solid; cell 0's top-left at
+ * x, y in the parent's space, each `size` square; outside it is open. One a parent, set
+ * again replacing it. False for a parent that isn't an actor, no cells, columns of 0 or less,
+ * or a size that isn't above 0. clear: none again. A cell read (0 outside the grid, or with
+ * none) and set (false outside it): a door opened, a block broken.
+ */
+export declare function wgf_body2d_set_grid_cell(parent: wgf_actor_t | 0, column: number, row: number, value_: number): boolean;
 
 /**
  * False too for a width or height below 0. Read back as x, y, width, height.

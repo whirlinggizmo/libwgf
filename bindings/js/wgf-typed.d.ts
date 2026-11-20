@@ -1162,6 +1162,132 @@ export declare const Body: {
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
+export type Body2d = raw.wgf_actor_t;
+export declare const Body2d: {
+    /**
+     * False too for a size below 0, or not finite.
+     */
+    readonly setSize: typeof raw.wgf_body2d_set_size;
+    /**
+     * False too for a size below 0, or not finite.
+     */
+    readonly getSize: typeof raw.wgf_body2d_get_size;
+    /**
+     * Units a second, + right and down. False too for numbers that aren't finite.
+     */
+    readonly setVelocity: typeof raw.wgf_body2d_set_velocity;
+    /**
+     * Units a second, + right and down. False too for numbers that aren't finite.
+     */
+    readonly getVelocity: typeof raw.wgf_body2d_get_velocity;
+    /**
+     * Its fall speeding up, units a second each second (+ down; 0, none: top-down). False too for
+     * a number that isn't finite.
+     */
+    readonly setGravity: typeof raw.wgf_body2d_set_gravity;
+    /**
+     * Its fall speeding up, units a second each second (+ down; 0, none: top-down). False too for
+     * a number that isn't finite.
+     */
+    readonly getGravity: typeof raw.wgf_body2d_get_gravity;
+    /**
+     * The fastest it falls, units a second; 0 or less for no limit. False too for a number that
+     * isn't finite.
+     */
+    readonly setMaxFallSpeed: typeof raw.wgf_body2d_set_max_fall_speed;
+    /**
+     * The fastest it falls, units a second; 0 or less for no limit. False too for a number that
+     * isn't finite.
+     */
+    readonly getMaxFallSpeed: typeof raw.wgf_body2d_get_max_fall_speed;
+    /**
+     * The collider layers that are solid to it.
+     */
+    readonly setSolidMask: typeof raw.wgf_body2d_set_solid_mask;
+    /**
+     * The collider layers that are solid to it.
+     */
+    readonly getSolidMask: typeof raw.wgf_body2d_get_solid_mask;
+    /**
+     * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+     * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+     * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+     * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+     * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+     */
+    readonly isGrounded: typeof raw.wgf_body2d_is_grounded;
+    /**
+     * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+     * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+     * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+     * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+     * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+     */
+    readonly isBlockedLeft: typeof raw.wgf_body2d_is_blocked_left;
+    /**
+     * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+     * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+     * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+     * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+     * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+     */
+    readonly isBlockedRight: typeof raw.wgf_body2d_is_blocked_right;
+    /**
+     * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+     * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+     * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+     * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+     * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+     */
+    readonly isBlockedAbove: typeof raw.wgf_body2d_is_blocked_above;
+    /**
+     * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+     * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+     * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+     * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+     * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+     */
+    readonly getAirTime: typeof raw.wgf_body2d_get_air_time;
+    /**
+     * The grid of solid cells the bodies under `parent` slide against: `cells` row by row from
+     * the top, `columns` a row, `count` of them (copied), nonzero solid; cell 0's top-left at
+     * x, y in the parent's space, each `size` square; outside it is open. One a parent, set
+     * again replacing it. False for a parent that isn't an actor, no cells, columns of 0 or less,
+     * or a size that isn't above 0. clear: none again. A cell read (0 outside the grid, or with
+     * none) and set (false outside it): a door opened, a block broken.
+     */
+    readonly setGrid: typeof raw.wgf_body2d_set_grid;
+    /**
+     * The grid of solid cells the bodies under `parent` slide against: `cells` row by row from
+     * the top, `columns` a row, `count` of them (copied), nonzero solid; cell 0's top-left at
+     * x, y in the parent's space, each `size` square; outside it is open. One a parent, set
+     * again replacing it. False for a parent that isn't an actor, no cells, columns of 0 or less,
+     * or a size that isn't above 0. clear: none again. A cell read (0 outside the grid, or with
+     * none) and set (false outside it): a door opened, a block broken.
+     */
+    readonly clearGrid: typeof raw.wgf_body2d_clear_grid;
+    /**
+     * The grid of solid cells the bodies under `parent` slide against: `cells` row by row from
+     * the top, `columns` a row, `count` of them (copied), nonzero solid; cell 0's top-left at
+     * x, y in the parent's space, each `size` square; outside it is open. One a parent, set
+     * again replacing it. False for a parent that isn't an actor, no cells, columns of 0 or less,
+     * or a size that isn't above 0. clear: none again. A cell read (0 outside the grid, or with
+     * none) and set (false outside it): a door opened, a block broken.
+     */
+    readonly getGridCell: typeof raw.wgf_body2d_get_grid_cell;
+    /**
+     * The grid of solid cells the bodies under `parent` slide against: `cells` row by row from
+     * the top, `columns` a row, `count` of them (copied), nonzero solid; cell 0's top-left at
+     * x, y in the parent's space, each `size` square; outside it is open. One a parent, set
+     * again replacing it. False for a parent that isn't an actor, no cells, columns of 0 or less,
+     * or a size that isn't above 0. clear: none again. A cell read (0 outside the grid, or with
+     * none) and set (false outside it): a door opened, a block broken.
+     */
+    readonly setGridCell: typeof raw.wgf_body2d_set_grid_cell;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
+};
+/** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Bounds = raw.wgf_actor_t;
 export declare const Bounds: {
     /**
@@ -8032,7 +8158,7 @@ export declare const ColliderShape: { readonly CIRCLE: ColliderShape; readonly R
 export type ColorStock = raw.wgf_color_stock_t;
 export declare const ColorStock: { readonly BLANK: ColorStock; readonly WHITE: ColorStock; readonly BLACK: ColorStock; readonly LIGHTGRAY: ColorStock; readonly GRAY: ColorStock; readonly DARKGRAY: ColorStock; readonly YELLOW: ColorStock; readonly GOLD: ColorStock; readonly ORANGE: ColorStock; readonly PINK: ColorStock; readonly RED: ColorStock; readonly MAROON: ColorStock; readonly GREEN: ColorStock; readonly LIME: ColorStock; readonly DARKGREEN: ColorStock; readonly SKYBLUE: ColorStock; readonly BLUE: ColorStock; readonly DARKBLUE: ColorStock; readonly PURPLE: ColorStock; readonly VIOLET: ColorStock; readonly DARKPURPLE: ColorStock; readonly BEIGE: ColorStock; readonly BROWN: ColorStock; readonly DARKBROWN: ColorStock; readonly MAGENTA: ColorStock; readonly RAYWHITE: ColorStock; };
 export type Component = raw.wgf_component_t;
-export declare const Component: { readonly NONE: Component; readonly MOTION: Component; readonly BOUNDS: Component; readonly LIFETIME: Component; readonly COLLIDER: Component; readonly VOICE: Component; readonly BODY: Component; readonly VEHICLE: Component; };
+export declare const Component: { readonly NONE: Component; readonly MOTION: Component; readonly BOUNDS: Component; readonly LIFETIME: Component; readonly COLLIDER: Component; readonly VOICE: Component; readonly BODY: Component; readonly VEHICLE: Component; readonly BODY2D: Component; };
 export type DocumentEvent = raw.wgf_document_event_t;
 export declare const DocumentEvent: { readonly NONE: DocumentEvent; readonly CLICK: DocumentEvent; readonly CHANGE: DocumentEvent; readonly SUBMIT: DocumentEvent; readonly FOCUS: DocumentEvent; readonly BLUR: DocumentEvent; };
 export type DrawFill = raw.wgf_draw_fill_t;

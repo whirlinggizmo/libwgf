@@ -6,6 +6,7 @@
 #include "wgf_actor.h"
 #include "wgf_behavior.h"
 #include "wgf_bounds.h"
+#include "wgf_body2d.h"
 #include "wgf_collider.h"
 #include "wgf_component.h"
 #include "wgf_core_handle_priv.h"
@@ -306,6 +307,12 @@ static void dump_lines(out_t *out, wgf_actor_t e, const char *pad)
         if (offset.x != 0.0f || offset.y != 0.0f) put(out, " offset=%.9g,%.9g", offset.x, offset.y);
         put(out, " layer=%d mask=%d%s\n", wgf_collider_get_layer(e), wgf_collider_get_mask(e),
             wgf_collider_is_enabled(e) ? "" : " enabled=false");
+    }
+    if (wgf_actor_has_component(e, WGF_COMPONENT_BODY2D)) {
+        const wgf_vec2_t size = wgf_body2d_get_size(e), velocity = wgf_body2d_get_velocity(e);
+        put(out, "%s    body2d size=%.9g,%.9g velocity=%.9g,%.9g gravity=%.9g max_fall=%.9g solid_mask=%d\n", pad, size.x,
+            size.y, velocity.x, velocity.y, wgf_body2d_get_gravity(e), wgf_body2d_get_max_fall_speed(e),
+            wgf_body2d_get_solid_mask(e));
     }
     if (wgf_actor_has_component(e, WGF_COMPONENT_VOICE)) {
         put(out, "%s", pad);

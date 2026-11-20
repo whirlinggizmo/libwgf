@@ -5,6 +5,7 @@ wgf_layer(ecs
     SOURCES
         src/wgf_ecs.c
         src/wgf_ecs_behavior.c
+        src/wgf_ecs_body2d.c
         src/wgf_ecs_components.c
         src/wgf_ecs_dump.c
         src/wgf_ecs_actor.c

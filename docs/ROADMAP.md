@@ -6,28 +6,19 @@ What is left to build, in order. A finished item is deleted from this file, not 
 
 Rob's (2026-11-19): libwgf is finished so that a pure C and wasm engine can be compared with helix. Done means three things: **helix-raylib's feature set as a floor** (what a helix-raylib program can do, a libwgf program can, in libwgf's own way: feature parity, not its API, and not only what it does); **helix's benchmarks** (the bunnymark and the animated robots, `../helix/docs/benchmarks.md`) run on libwgf beside helix-raylib's rows, speed and size; and **Wardens** (helix's engine trial) built on libwgf and graded as helix's entrants are. The blocks below are in order; each item has its tests, an example where there is something to see, its calls in the bindings and the feature test, and a look at how helix-raylib and helix-legacy did it (read-only).
 
-1. **The core systems** (below), in their order.
-2. **The game structure block** (below), in its order.
-3. **Parity, the small gaps** (from the parity checklist, the rows helix-raylib has and libwgf has nowhere planned):
+1. **The game structure block** (below), in its order.
+2. **Parity, the small gaps** (from the parity checklist, the rows helix-raylib has and libwgf has nowhere planned):
    - shape tests as plain math: a point in a rectangle, circle, triangle, polygon; segments; boxes and spheres; a ray against a sphere, a box, a triangle;
    - splines: a point along a linear, Catmull-Rom, or Bézier path, and drawing one;
    - a lost GPU context recovered (phones and browsers drop WebGL when backgrounded);
    - text's letter and line spacing;
    - the last pad button pressed (a rebinding screen's, beside the last key);
-4. **The UI on RmlUi, the rest.** Documents are in (`wgf_document.h`, on RmlUi 6.3; HISTORY.md, "Documents on RmlUi, for menus"), with form controls, tabs, scrolling lists, nine-patch decorators in every state, focus by keys and pads, and events polled; the Clay UI stays for HUDs and small UIs, and the racer's and Asteroids' screens on it. Left, each with a test: what RmlUi draws through layers, filters, shaders, and clip masks (`box-shadow`, gradients, `filter`, `backdrop-filter`, `mask-image`, and clipping to rounded corners), on gfx's render targets; a phone's keyboard for a text field (RmlUi's `ActivateKeyboard`: a hidden input element of the page's on the web); a family's bold and italic as faces of their own; touch as RmlUi's touch events (scrolling a list by dragging), not only as the mouse; and a test of transitions, animations, and a tooltip (RCSS's `:hover` on a child), which RmlUi's core has and the example doesn't show.
-5. **Wardens** (below), what it needs, then the game.
-6. **Parity, the rest:** the parity checklist's remaining rows, each a capability helix-raylib has: textured polygons and tiled draws; 3D debug draws of a model as wireframe and a skeleton; multiply and premultiplied blending; heightmap meshes, meshes updated in place, vertex colors; images on the CPU (load, read a texture's pixels, generate noise and gradients); a cubemap for a custom shader; frame stats (draw calls, triangles, GPU bytes); a free-fly and a first-person camera; particles' wander, orbit, pulse, shells, local space, and alignment to motion; tilt, and touch from the mouse; input recorded and replayed; bitmap fonts; raw audio streams and a callback; listing a directory; a log callback; a screenshot saved; a window's resize event and icon. Then milestone 2.5's items below that helix-raylib also has (picking, rounded rectangles, rumble, safe areas and orientation).
-7. **The comparison.** The bunnymark and the robots on libwgf, on the web and natively, beside helix's rows on this machine; Wardens' grades beside helix's entrants'; the parity checklist's rows, each as libwgf has it, and what libwgf has that helix-raylib doesn't. Written up in HISTORY.md.
+3. **The UI on RmlUi, the rest.** Documents are in (`wgf_document.h`, on RmlUi 6.3; HISTORY.md, "Documents on RmlUi, for menus"), with form controls, tabs, scrolling lists, nine-patch decorators in every state, focus by keys and pads, and events polled; the Clay UI stays for HUDs and small UIs, and the racer's and Asteroids' screens on it. Left, each with a test: what RmlUi draws through layers, filters, shaders, and clip masks (`box-shadow`, gradients, `filter`, `backdrop-filter`, `mask-image`, and clipping to rounded corners), on gfx's render targets; a phone's keyboard for a text field (RmlUi's `ActivateKeyboard`: a hidden input element of the page's on the web); a family's bold and italic as faces of their own; touch as RmlUi's touch events (scrolling a list by dragging), not only as the mouse; and a test of transitions, animations, and a tooltip (RCSS's `:hover` on a child), which RmlUi's core has and the example doesn't show.
+4. **Wardens** (below), what it needs, then the game.
+5. **Parity, the rest:** the parity checklist's remaining rows, each a capability helix-raylib has: textured polygons and tiled draws; 3D debug draws of a model as wireframe and a skeleton; multiply and premultiplied blending; heightmap meshes, meshes updated in place, vertex colors; images on the CPU (load, read a texture's pixels, generate noise and gradients); a cubemap for a custom shader; frame stats (draw calls, triangles, GPU bytes); a free-fly and a first-person camera; particles' wander, orbit, pulse, shells, local space, and alignment to motion; tilt, and touch from the mouse; input recorded and replayed; bitmap fonts; raw audio streams and a callback; listing a directory; a log callback; a screenshot saved; a window's resize event and icon. Then milestone 2.5's items below that helix-raylib also has (picking, rounded rectangles, rumble, safe areas and orientation).
+6. **The comparison.** The bunnymark and the robots on libwgf, on the web and natively, beside helix's rows on this machine; Wardens' grades beside helix's entrants'; the parity checklist's rows, each as libwgf has it, and what libwgf has that helix-raylib doesn't. Written up in HISTORY.md.
 
 Out of the parity work, as not libwgf's (the checklist's skips): desktop window chrome, the program owning the frame loop, warping the mouse; path, string, and codepoint helpers, compression, Base64, and hashes (the host language's); VR stereo; rlgl's immediate vertices, matrix stack, and global GL state; image editing on the CPU, pixel formats, and exporting images, meshes, and code; raygui's color picker, grid, built-in icons, style files, and draggable windows; OBJ, IQM, VOX, and M3D models.
-
-## Core systems
-
-The systems nearly every game needs, in this order, each a 2D and a 3D half where it has them, carrying what helix-legacy (`../helix-legacy`) did.
-
-1. **2D collision on actors.** The math and colliders of every shape with their push out are done (`wgf_collide2d.h`, `wgf_collider.h`); left: a 2D body component that moves and slides each tick with gravity, grounded, against colliders and a tilemap's solid cells (helix-legacy's `Body2D`).
-
-Done when every item's calls are in the bindings and the feature test, and each has an example in the browser check.
 
 ## Game structure
 
@@ -51,7 +42,7 @@ Done when Wardens is graded.
 
 ## Milestone 2.5: jam-ready
 
-After the comparison, unless an item is helix-raylib's too (block 6 above).
+After the comparison, unless an item is helix-raylib's too (block 5 above).
 
 libwgf is a framework, not one game's library: a game jam must not have to stop and add a feature under a deadline (SPEC.md, "Done means games", 2.5). After the racer, what was trimmed from wgrender-c and libwgt and no game has brought back is restored (the catalog below, less what milestone 2 carries), each feature with a showcase example in the browser check and the size table, wgrender-c's suite the model; breadth stays cheap, since a program links only what it calls. Outlined here; planned in full once milestone 2 closes.
 

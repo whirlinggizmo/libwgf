@@ -128,6 +128,25 @@ class Reach {
 		"wgf_behavior_get_param_number",
 		"wgf_behavior_has_param",
 		"wgf_behavior_set_param",
+		"wgf_body2d_clear_grid",
+		"wgf_body2d_get_air_time",
+		"wgf_body2d_get_gravity",
+		"wgf_body2d_get_grid_cell",
+		"wgf_body2d_get_max_fall_speed",
+		"wgf_body2d_get_size",
+		"wgf_body2d_get_solid_mask",
+		"wgf_body2d_get_velocity",
+		"wgf_body2d_is_blocked_above",
+		"wgf_body2d_is_blocked_left",
+		"wgf_body2d_is_blocked_right",
+		"wgf_body2d_is_grounded",
+		"wgf_body2d_set_gravity",
+		"wgf_body2d_set_grid",
+		"wgf_body2d_set_grid_cell",
+		"wgf_body2d_set_max_fall_speed",
+		"wgf_body2d_set_size",
+		"wgf_body2d_set_solid_mask",
+		"wgf_body2d_set_velocity",
 		"wgf_body_add_impulse",
 		"wgf_body_get_bounce",
 		"wgf_body_get_damping",
@@ -1054,7 +1073,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1045) 0];
+	static final counts:Array<Int> = [for (_ in 0...1064) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

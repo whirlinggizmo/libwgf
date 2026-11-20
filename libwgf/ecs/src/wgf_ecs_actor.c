@@ -39,6 +39,7 @@ static wgf_ecs_priv_id_t data_id(wgf_component_t component)
         case WGF_COMPONENT_BOUNDS: return ids()->bounds;
         case WGF_COMPONENT_LIFETIME: return ids()->lifetime;
         case WGF_COMPONENT_COLLIDER: return ids()->collider;
+        case WGF_COMPONENT_BODY2D: return ids()->body2d;
         default: return 0;
     }
 }
@@ -57,7 +58,7 @@ bool wgf_actor_has_component(wgf_actor_t actor, wgf_component_t component)
 bool wgf_actor_add_component(wgf_actor_t actor, wgf_component_t component)
 {
     wgf_ecs_priv_record_t *record;
-    if ((int)component <= WGF_COMPONENT_NONE || component > WGF_COMPONENT_VEHICLE) return false;
+    if ((int)component <= WGF_COMPONENT_NONE || component > WGF_COMPONENT_BODY2D) return false;
     if (wgf_actor_has_component(actor, component)) return true;
     if (component == WGF_COMPONENT_BODY || component == WGF_COMPONENT_VEHICLE) {
         static bool told;
@@ -103,6 +104,14 @@ bool wgf_actor_add_component(wgf_actor_t actor, wgf_component_t component)
             c.mask = -1;
             c.enabled = true;
             wgf_ecs_priv_store_set(record->id, ids()->collider, &c);
+            return true;
+        }
+        case WGF_COMPONENT_BODY2D: {
+            wgf_ecs_priv_body2d_t b;
+            memset(&b, 0, sizeof(b));
+            b.width = b.height = 1.0f;
+            b.solid_mask = -1;
+            wgf_ecs_priv_store_set(record->id, ids()->body2d, &b);
             return true;
         }
         default: /* the voice */

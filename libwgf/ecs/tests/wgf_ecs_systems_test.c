@@ -4,6 +4,7 @@
 
 #include "render/wgf_gfx_render_priv.h"
 #include "wgf_behavior.h"
+#include "wgf_body2d.h"
 #include "wgf_bounds.h"
 #include "wgf_stage2d.h"
 #include "wgf_collider.h"
@@ -337,6 +338,85 @@ int main(void)
         wgf_actor_destroy(q, WGF_ACTOR_DESTROY_CHILDREN);
         step(0.0f);
         wgf_world_take_events(NULL, 0);
+    }
+
+    { /* 2D bodies: falling onto a floor, walking into a wall, a jump to a ceiling, a grid */
+        const wgf_actor_t floor = make(stage), wall = make(stage), roof = make(stage), hero = make(stage);
+        const int cells[8] = {0, 0, 0, 0, 1, 1, 1, 1}; /* two rows of four: the lower solid */
+        int i;
+        wgf_actor_add_component(floor, WGF_COMPONENT_COLLIDER);
+        wgf_collider_set_rectangle(floor, 400, 20);
+        wgf_actor_set_position(floor, 1000, 1100, 0); /* its top at 1090 */
+        wgf_actor_add_component(wall, WGF_COMPONENT_COLLIDER);
+        wgf_collider_set_rectangle(wall, 20, 200);
+        wgf_actor_set_position(wall, 1060, 1000, 0); /* its left at 1050 */
+        wgf_actor_add_component(roof, WGF_COMPONENT_COLLIDER);
+        wgf_collider_set_rectangle(roof, 400, 20);
+        wgf_actor_set_position(roof, 1000, 1000, 0); /* its bottom at 1010 */
+        wgf_actor_add_component(hero, WGF_COMPONENT_BODY2D);
+        expect(near(wgf_body2d_get_size(hero).x, 1) && wgf_body2d_get_solid_mask(hero) == -1 &&
+                   wgf_body2d_get_gravity(hero) == 0 && wgf_body2d_get_max_fall_speed(hero) == 0,
+               "a body: 1 by 1, no gravity, every layer solid");
+        expect(wgf_body2d_set_size(hero, 10, 10) && wgf_body2d_set_gravity(hero, 1000) &&
+                   wgf_body2d_set_max_fall_speed(hero, 400) && near(wgf_body2d_get_max_fall_speed(hero), 400),
+               "its size, gravity, and fastest fall");
+        wgf_actor_set_position(hero, 1000, 1040, 0);
+        for (i = 0; i < 120; i++) step(1.0f / 60.0f);
+        expect(near(wgf_actor_get_position(hero).y, 1085) && wgf_body2d_is_grounded(hero) &&
+                   near(wgf_body2d_get_velocity(hero).y, 0) && wgf_body2d_get_air_time(hero) == 0,
+               "fallen onto the floor: standing on it, its fall stopped");
+        expect(wgf_body2d_set_velocity(hero, 300, 0), "walking right");
+        for (i = 0; i < 30; i++) { /* held: pushing on each tick, as a key held down */
+            wgf_body2d_set_velocity(hero, 300, wgf_body2d_get_velocity(hero).y);
+            step(1.0f / 60.0f);
+        }
+        expect(near(wgf_actor_get_position(hero).x, 1045) && wgf_body2d_is_blocked_right(hero) &&
+                   near(wgf_body2d_get_velocity(hero).x, 0) && wgf_body2d_is_grounded(hero),
+               "pushing against the wall: stopped by it, still standing");
+        wgf_body2d_set_velocity(hero, 0, -2000);
+        step(1.0f / 60.0f);
+        expect(!wgf_body2d_is_grounded(hero) && wgf_body2d_get_air_time(hero) > 0, "jumped: in the air");
+        for (i = 0; i < 10 && !wgf_body2d_is_blocked_above(hero); i++) step(1.0f / 60.0f);
+        expect(near(wgf_actor_get_position(hero).y, 1015) && near(wgf_body2d_get_velocity(hero).y, 0),
+               "its head against the roof: stopped");
+        wgf_body2d_set_velocity(hero, 0, 0);
+        wgf_body2d_set_gravity(hero, 100000);
+        step(1.0f / 60.0f);
+        expect(near(wgf_body2d_get_velocity(hero).y, 400), "its fall held to its fastest");
+        expect(wgf_body2d_set_solid_mask(hero, 2), "the colliders' layer 1 not solid to it");
+        for (i = 0; i < 30; i++) step(1.0f / 60.0f);
+        expect(wgf_actor_get_position(hero).y > 1100 && !wgf_body2d_is_grounded(hero), "through the floor");
+
+        /* a grid of cells: under another parent */
+        wgf_body2d_set_solid_mask(hero, -1);
+        wgf_actor_set_parent(hero, other_stage);
+        wgf_actor_set_position(hero, 20, 0, 0);
+        wgf_body2d_set_gravity(hero, 1000);
+        expect(wgf_body2d_set_grid(other_stage, cells, 8, 4, 16, 0, 0) && wgf_body2d_get_grid_cell(other_stage, 1, 1) == 1 &&
+                   wgf_body2d_get_grid_cell(other_stage, 1, 0) == 0 && wgf_body2d_get_grid_cell(other_stage, 9, 9) == 0,
+               "a grid, its cells read");
+        for (i = 0; i < 60; i++) step(1.0f / 60.0f);
+        expect(near(wgf_actor_get_position(hero).y, 11) && wgf_body2d_is_grounded(hero), "standing on the grid's solid row");
+        expect(wgf_body2d_set_grid_cell(other_stage, 1, 1, 0) && wgf_body2d_set_grid_cell(other_stage, 0, 1, 0) &&
+                   !wgf_body2d_set_grid_cell(other_stage, 4, 0, 1),
+               "cells under it opened; one outside refused");
+        for (i = 0; i < 30; i++) step(1.0f / 60.0f);
+        expect(wgf_actor_get_position(hero).y > 40, "fallen through the opening");
+        expect(wgf_body2d_clear_grid(other_stage) && wgf_body2d_get_grid_cell(other_stage, 2, 1) == 0 &&
+                   !wgf_body2d_clear_grid(other_stage),
+               "the grid cleared");
+        expect(!wgf_body2d_set_size(hero, -1, 1) && !wgf_body2d_set_velocity(hero, NAN, 0) &&
+                   !wgf_body2d_set_gravity(hero, INFINITY) && !wgf_body2d_set_grid(other_stage, cells, 8, 0, 16, 0, 0) &&
+                   !wgf_body2d_set_grid(other_stage, NULL, 8, 4, 16, 0, 0) &&
+                   !wgf_body2d_set_grid(12345, cells, 8, 4, 16, 0, 0) && !wgf_body2d_set_grid(other_stage, cells, 8, 4, 0, 0, 0),
+               "refusals");
+        expect(!wgf_body2d_set_size(floor, 1, 1) && !wgf_body2d_is_grounded(floor), "no body: false");
+        wgf_actor_destroy(floor, WGF_ACTOR_DESTROY_CHILDREN);
+        wgf_actor_destroy(wall, WGF_ACTOR_DESTROY_CHILDREN);
+        wgf_actor_destroy(roof, WGF_ACTOR_DESTROY_CHILDREN);
+        wgf_actor_destroy(hero, WGF_ACTOR_DESTROY_CHILDREN);
+        step(0.0f);
+        count_events(0, 0, 0);
     }
 
     /* the probes */

@@ -704,6 +704,22 @@ class Main {
 		expect(collider.setSegment(0, 0, 0, 8) && collider.getShape() == ColliderShape.SEGMENT, "a segment collider");
 		expect(collider.setOffset(1, 2) && near(collider.getOffset().y, 2) && collider.setOffset(0, 0), "an offset");
 		expect(collider.getPush(ship).x == 0 && collider.setRadius(8), "no push from itself; a circle again");
+		{
+			final hero = Actor.create();
+			expect(hero.addComponent(Component.BODY2D), "a 2D body");
+			final body:Body2d = hero;
+			expect(body.setSize(12, 20) && near(body.getSize().y, 20) && body.setVelocity(3, 0) && near(body.getVelocity().x, 3),
+				"its size and velocity");
+			expect(body.setGravity(900) && near(body.getGravity(), 900) && body.setMaxFallSpeed(600)
+				&& near(body.getMaxFallSpeed(), 600) && body.setSolidMask(1) && body.getSolidMask() == 1, "its gravity, fall, mask");
+			expect(!body.isGrounded() && !body.isBlockedLeft() && !body.isBlockedRight() && !body.isBlockedAbove()
+				&& body.getAirTime() == 0, "touching nothing yet");
+			final ground:Body2d = Actor.create();
+			expect(ground.setGrid([0, 1, 1, 1], 2, 16, 0, 0) && ground.getGridCell(1, 0) == 1 && ground.setGridCell(0, 0, 1)
+				&& ground.clearGrid(), "a grid of solid cells");
+			(ground : Actor).destroy(ActorDestroy.DESTROY_CHILDREN);
+			hero.destroy(ActorDestroy.DESTROY_CHILDREN);
+		}
 		expect(collider.isEnabled() && collider.setEnabled(false) && !collider.isEnabled() && collider.setEnabled(true),
 			"a collider switched off and on");
 		final id = ship.addBehavior("Probe");

@@ -28,10 +28,11 @@ typedef enum wgf_component_t {
     WGF_COMPONENT_MOTION = 1,   /* velocity, spin, damping (wgf_motion.h) */
     WGF_COMPONENT_BOUNDS = 2,   /* a rectangle it wraps around, is clamped to, or dies outside (wgf_bounds.h) */
     WGF_COMPONENT_LIFETIME = 3, /* seconds until it is destroyed (wgf_lifetime.h) */
-    WGF_COMPONENT_COLLIDER = 4, /* a circle that overlaps others, as triggers (wgf_collider.h) */
+    WGF_COMPONENT_COLLIDER = 4, /* a shape that overlaps others, as triggers (wgf_collider.h) */
     WGF_COMPONENT_VOICE = 5,    /* a voice of no sound yet (wgf_voice.h), destroyed with the actor: a loop it ends */
     WGF_COMPONENT_BODY = 6,     /* a rigid body in the physics world (wgf_body.h): physics started first */
-    WGF_COMPONENT_VEHICLE = 7   /* wheels, an engine, and a gearbox on a body (wgf_vehicle.h): physics started first */
+    WGF_COMPONENT_VEHICLE = 7,  /* wheels, an engine, and a gearbox on a body (wgf_vehicle.h): physics started first */
+    WGF_COMPONENT_BODY2D = 8    /* an arcade box that moves and slides against what is solid (wgf_body2d.h) */
 } wgf_component_t;
 
 /* add makes one with its defaults (each component's header says them); adding one it has

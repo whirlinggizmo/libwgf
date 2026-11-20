@@ -12,6 +12,7 @@
 #include "wgf_behavior.h"
 #include "wgf_component.h"
 #include "wgf_bounds.h"
+#include "wgf_body2d.h"
 #include "wgf_collider.h"
 #include "wgf_core_fs_priv.h"
 #include "wgf_core_handle_priv.h"
@@ -116,6 +117,11 @@ static const kind_t kinds[] = {
       {"layer", V_INT},
       {"mask", V_INT},
       {"enabled", V_BOOL}},
+     false},
+    {"body2d",
+     ROLE_COMPONENT,
+     WGF_COMPONENT_BODY2D,
+     {{"size", V_NUM2}, {"velocity", V_NUM2}, {"gravity", V_NUM}, {"max_fall", V_NUM}, {"solid_mask", V_INT}},
      false},
     {"behavior", ROLE_BEHAVIOR, 0, {{"name", V_TEXT}}, true},
     /* physics3d's (wgf_body.h, wgf_vehicle.h): any key, its text handed to physics, which
@@ -823,6 +829,13 @@ static void apply_setting(wgf_actor_t actor, int kind, const setting_t *s, value
             else if (strcmp(key, "layer") == 0) wgf_collider_set_layer(e, (int)v->n[0]);
             else if (strcmp(key, "enabled") == 0) wgf_collider_set_enabled(e, v->truth);
             else wgf_collider_set_mask(e, (int)v->n[0]);
+            break;
+        case WGF_COMPONENT_BODY2D:
+            if (strcmp(key, "size") == 0) wgf_body2d_set_size(e, f(v, 0), f(v, 1));
+            else if (strcmp(key, "velocity") == 0) wgf_body2d_set_velocity(e, f(v, 0), f(v, 1));
+            else if (strcmp(key, "gravity") == 0) wgf_body2d_set_gravity(e, f(v, 0));
+            else if (strcmp(key, "max_fall") == 0) wgf_body2d_set_max_fall_speed(e, f(v, 0));
+            else wgf_body2d_set_solid_mask(e, (int)v->n[0]);
             break;
         case WGF_COMPONENT_BODY:
         case WGF_COMPONENT_VEHICLE: { /* through physics' hooks: none was added without them */

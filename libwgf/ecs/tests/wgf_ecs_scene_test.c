@@ -7,6 +7,7 @@
 #include "wgf_behavior.h"
 #include "wgf_bounds.h"
 #include "wgf_stage2d.h"
+#include "wgf_body2d.h"
 #include "wgf_collider.h"
 #include "wgf_color.h"
 #include "wgf_core_priv.h"
@@ -131,6 +132,9 @@ static const char *shapes_scene = "wgf-scene 2\n"
                                   "end\n"
                                   "actor wall\n"
                                   "  collider segment=0,0,0,64\n"
+                                  "end\n"
+                                  "actor hero\n"
+                                  "  body2d size=12,20 gravity=900 max_fall=600 solid_mask=3\n"
                                   "end\n";
 
 int main(void)
@@ -246,13 +250,19 @@ int main(void)
                "a released scene's prefabs go with it: their handles stale");
     }
 
-    /* colliders of every shape, read, dumped, and loaded again the same */
+    /* colliders of every shape and a 2D body, read, dumped, and loaded again the same */
     {
         wgf_scene_t shapes, again;
         char dumped[4096];
         wgf_world_clear();
         shapes = load("scenes/shapes.scene", shapes_scene);
-        expect(wgf_scene_instantiate(shapes, stage) == 3, "three shaped colliders");
+        expect(wgf_scene_instantiate(shapes, stage) == 4, "three shaped colliders and a body");
+        {
+            const wgf_actor_t hero = wgf_actor_find(stage, "hero");
+            expect(near(wgf_body2d_get_size(hero).y, 20) && near(wgf_body2d_get_gravity(hero), 900) &&
+                       near(wgf_body2d_get_max_fall_speed(hero), 600) && wgf_body2d_get_solid_mask(hero) == 3,
+                   "a 2D body");
+        }
         {
             const wgf_actor_t crate = wgf_actor_find(stage, "crate"), ramp = wgf_actor_find(stage, "ramp"),
                               wall = wgf_actor_find(stage, "wall");
@@ -273,7 +283,7 @@ int main(void)
                "dumped as written");
         wgf_world_clear();
         again = load("scenes/shapes_dumped.scene", dumped);
-        expect(wgf_scene_instantiate(again, stage) == 3 && strcmp(wgf_world_dump(), dumped) == 0,
+        expect(wgf_scene_instantiate(again, stage) == 4 && strcmp(wgf_world_dump(), dumped) == 0,
                "loaded again: dumped the same");
         wgf_resource_release(again);
         wgf_resource_release(shapes);

@@ -250,6 +250,7 @@ bounds     rect=x,y,w,h  mode=wrap|clamp|destroy  margin=m  visible=true|false
 lifetime   seconds=s
 collider   radius=r | rectangle=w,h | polygon=x,y,x,y,... (3 to 16 points) | segment=x0,y0,x1,y1
            offset=x,y  layer=bits  mask=bits  enabled=true|false
+body2d     size=w,h  velocity=x,y  gravity=g  max_fall=s (0: no limit)  solid_mask=bits
 voice      sound="path"  streamed=true|false  volume=v  pitch=p  pan=p  loop=true|false
            play=true|false (played as it is made)
 body       type=static|dynamic|kinematic|sensor  shape=box|sphere|capsule|convex|mesh
