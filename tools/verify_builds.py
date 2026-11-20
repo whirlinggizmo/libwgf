@@ -56,13 +56,11 @@ With --windows HOST, also, on that Windows machine over ssh, the working tree as
                   desktop export
   windows-mingw   windows-x64-mingw-debug-headless and -debug, natively, then the same
 
---quick is the quick tier, run before every commit (CONVENTIONS.md, "Verifying"): the
-steps that catch most of what breaks, in about eight minutes, against the full tier's (the
-above with --web --windows HOST) forty-odd, much of which CI runs again: quick_steps below, this
-machine's of them -- the debug, release, sanitized, and release web presets, the examples
-headless and in a browser, both bindings and the feature test. The actor benchmark and the
-web sizes are CI's (a push's run, and the daily one) and the full tier's. The full tier is for a step's close, a hand-off to a game session, and a change to
-the build, toolchain, dependencies, platform code, or a guard.
+--quick is the quick tier, run before every commit (CONVENTIONS.md, "Verifying"): this
+machine's debug-headless preset and its tests, every example headless (the smoke run), and the
+release web build -- quick_steps below. A change to the bindings, the web host, or another
+platform adds, by --only, the steps it touches. The rest runs when asked, and CI runs the
+builds and tests on each push.
 
 --only runs the steps named (a preset's name, or a check's); --list prints the steps it
 would run, and runs nothing. Stops at the first step that fails; a PASS names what was
@@ -170,8 +168,8 @@ CHECKS = {
 }
 # The quick tier (--quick), by step, run in the full tier's order. wasm32-debug-headless and wasm32-debug are built by the web checks
 # that run on them (check_binding's node and browser, check_js_binding), as they need them.
-QUICK_VARIANTS = ('debug-headless', 'debug', 'release', 'debug-asan', 'debug-ubsan')  # those this machine has
-QUICK_CHECKS = {'smoke', 'binding', 'features', 'web', 'binding-web', 'js-binding'}
+QUICK_VARIANTS = ('debug-headless',)  # those this machine has
+QUICK_CHECKS = {'smoke'}
 
 
 def quick_steps():

@@ -1,8 +1,7 @@
 # libwgf's checks, every job CI runs, on Linux, Windows, and the web: what
 # tools/verify_builds.py runs locally, each check in one job. Called by ci.yml (each push and
-# pull request but one of docs alone: the builds, the tests, and every example in a browser)
-# and ci-daily.yml (daily and on demand: the games, the sizes, the frames, and Windows' slower
-# jobs), each passing the jobs it runs as a JSON list a platform (BUILDING.md, "Continuous
+# pull request but one of docs alone: the builds, the tests, and every example in a browser),
+# passing the jobs it runs as a JSON list a platform (BUILDING.md, "Continuous
 # integration").
 name: checks
 

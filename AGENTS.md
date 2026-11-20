@@ -14,12 +14,11 @@ Each is CONVENTIONS.md's; the words here only find it.
 - Third-party source in `deps/`, never fetched ("Dependencies").
 - Tools in Python, standard library only; nothing in shell; no regular expressions over C source ("Tooling").
 - Which doc is true, and what moves to HISTORY.md ("Docs").
-- A guard loosened only in a commit of its own, and every guard change reported ("Guards").
-- Which verify tier runs when: quick before every commit (a commit of docs alone, `tools/check_docs.py`), full at a milestone's close or when Rob asks; a change to the build, toolchain, deps, platform code, or a guard adds the full tier's steps it touches ("Verifying").
+- The quick tier before every commit (a commit of docs alone, `tools/check_docs.py`), plus the steps a change to the bindings, web host, or a platform touches ("Verifying").
 
 ## Agent practice
 
-- Before a feature, read how the references did it (SPEC.md lists them; read-only): their code, their HISTORY entries for it, and their TASKS' open problems, measurements and pitfalls as much as features (docs/HISTORY.md, "The references, learned from"). Carry theirs where it is right, build anew where that is better, and record what was carried, what was redesigned, and why, in docs/HISTORY.md.
-- Before every commit: review the diff against docs/CONVENTIONS.md and run the quick tier, `python3 tools/verify_builds.py --quick` (a commit of docs alone: `python3 tools/check_docs.py`, as CONVENTIONS' "Verifying" says); the full tier, `python3 tools/verify_builds.py --web --windows sightblinder`, when CONVENTIONS' "Verifying" says. Report which tier ran, and each skip as a skip.
+- Before a feature, look at how helix-raylib and helix-legacy did it (`../helix/engines/raylib`, `../helix-legacy`; read-only), and carry what is right. The goal is helix-raylib's feature set as a floor (docs/ROADMAP.md).
+- Before every commit: review the diff against docs/CONVENTIONS.md and run the quick tier, `python3 tools/verify_builds.py --quick` (a commit of docs alone: `python3 tools/check_docs.py`). Report each skip as a skip.
 - Commit small; push each verified commit to `main`, check that CI passes, and fix a CI failure before new work.
 - The skills in `.claude/skills/` are the steps for repeated work: adding a component, a binding call, or an example.

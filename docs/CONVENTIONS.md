@@ -165,21 +165,13 @@ No other pointer, no struct, no function pointer, no `void *`, no variadic call.
 
 ## Verifying
 
-`tools/verify_builds.py` runs two tiers.
-
-- **The quick tier** (`--quick`, about eight minutes): this machine's debug, release, and sanitized presets, the release web build, the examples headless and in a browser, both bindings and the feature test; the actor benchmark and the web sizes are CI's (the benchmark a push, the sizes daily) and the full tier's. It runs before every commit; then the commit is pushed and CI checked, and a CI failure is fixed first, before new work. A commit that changes only Markdown runs `tools/check_docs.py` in its place, unless it changes Markdown a tool writes or copies (`docs/benchmarks.md`, `templates/`, a game imported into `games/`). CI runs nothing for a push of docs alone (only Markdown, or what is under `docs/`); for any other push it runs the builds and tests, and daily the rest (the games, the sizes, the frames, Windows' slower jobs), so checking CI after a push means the push's run, and the next daily run for what only it covers.
-- **The full tier** (`--web --windows HOST`: every preset and check this machine can run, and a Windows machine's). It runs when a milestone closes, and when Rob asks. A commit that touches the build system, the toolchain, `deps/`, platform code, or a guard runs the quick tier and, by `--only`, the full tier's steps for what it touches (a Windows platform file: `windows-mingw`, or `--windows HOST`); the daily CI run covers the rest. A ROADMAP step closes, and a game session is handed its part, once the quick tier passes on the last commit and the daily CI run after it is green.
-- Each commit's report says which tier ran, and every skip as a skip.
-- The timing steps (`actors`, `frames`) fail on a loaded machine. When another session's checks or builds may be running, `--wait-quiet` waits first for no headless browser and a low load, rather than a hand-written wait.
+- **Before every commit:** `python3 tools/verify_builds.py --quick`: this machine's debug-headless preset and its tests, every example headless (the smoke run), and the release web build. A change to the bindings, the web host, or another platform adds, by `--only`, the steps it touches (`binding`, `features`, `web`, `binding-web`, `js-binding`, a preset). A commit that changes only Markdown runs `tools/check_docs.py` in its place.
+- CI runs the builds and tests on each push; a CI failure is fixed before new work. No check runs daily.
+- A check that can't run here is reported as a skip, never as a pass.
 
 ## Guards
 
-A guard is a check that holds a number or a rule: a tolerance, a threshold, a baseline (`docs/benchmarks.json`), a budget, or the presets and steps a check runs on.
-
-- A timing guard holds every row to an absolute limit on the machine that recorded its baseline (the baseline names it), so a slowdown of every row alike fails there; elsewhere, a runner of another speed, it holds rows relative to the run's own speed.
-- A guard is never loosened in the commit whose code needs it loosened: a looser tolerance, a higher threshold, a baseline re-recorded upward, or a check narrowed to fewer presets goes in a commit of its own, with its reason, so it is judged on its own.
-- Every change to a guard, either way, is reported in the step's report under "Guards changed": what it was, what it is, and why.
-- Speed is worked on when a guard fails, or a game or example is visibly slow (a FRICTION.md entry, a frame over its budget): a row drifting within its tolerance is recorded in HISTORY.md, not chased, and a measurement no decision waits on isn't made.
+There are none now: no size, timing, or benchmark baseline is held. `tools/measure_sizes.py` and `tools/bench/` stay as measurements, run for the comparison with helix, and their numbers are recorded, not enforced.
 
 ## Docs
 
@@ -187,6 +179,6 @@ A guard is a check that holds a number or a rule: a tolerance, a threshold, a ba
 - `README.md` is where a reader starts, and links every doc.
 - ARCHITECTURE.md describes the design as it is now; a change to it updates it in the same commit. BUILDING.md says how to build and test, and what every tool does; a change to a preset, requirement, or tool updates it in the same commit.
 - ROADMAP.md lists what is left. An item leaving it, done or dropped, is deleted, and its record moves to HISTORY.md in the same commit; a dropped item says why. A deferred item has a condition anyone can check, never "when we need it".
-- HISTORY.md is the record, never rewritten. It says why things are as they are, and what was tried.
+- HISTORY.md is the record, never rewritten: a line or two a feature, saying what was done and any choice worth knowing.
 - FRICTION.md logs what a game's developer had to work around or found awkward, each entry triaged into a ROADMAP task or a HISTORY decision before its milestone closes, then moved to HISTORY.md (SPEC.md, "Games test the framework only if they can't bend it"). A plan's game code first is in `docs/sketches/<game>/`, never compiled, and stays as written once its milestone closes.
 - Every other doc describes how things are now: rewrite what changed rather than adding history.

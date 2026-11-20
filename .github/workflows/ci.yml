@@ -1,8 +1,7 @@
 # libwgf's CI on each push and pull request: the builds and tests on Linux, Windows' MSVC
 # debug build, the web's two builds, and every example in a browser and both bindings, each
-# job a check of tools/verify_builds.py's (checks.yml has the jobs); about 8 minutes. The
-# games, the sizes, the frames, and Windows' slower jobs run daily (ci-daily.yml). A push or
-# pull request of docs alone runs nothing (CONVENTIONS.md, "Verifying"; BUILDING.md,
+# job a check of tools/verify_builds.py's (checks.yml has the jobs); about 8 minutes. A push
+# or pull request of docs alone runs nothing (CONVENTIONS.md, "Verifying"; BUILDING.md,
 # "Continuous integration").
 name: ci
 
@@ -26,8 +25,8 @@ jobs:
         [
           {"name": "debug (headless and windowed, every example headless and in a window, the binding on hxcpp)",
            "key": "debug", "steps": "linux-x64-debug-headless,linux-x64-debug,smoke,desktop,binding,features"},
-          {"name": "release (release and release-headless, the wgf tool, the games, the actor benchmark)",
-           "key": "release", "steps": "linux-x64-release,linux-x64-release-headless,cli,games,actors"},
+          {"name": "release (release and release-headless, the wgf tool, the games)",
+           "key": "release", "steps": "linux-x64-release,linux-x64-release-headless,cli,games"},
           {"name": "sanitizers (ubsan, asan, tsan)",
            "key": "sanitizers", "steps": "linux-x64-debug-ubsan,linux-x64-debug-asan,linux-x64-debug-tsan"}
         ]

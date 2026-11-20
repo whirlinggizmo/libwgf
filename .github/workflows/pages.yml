@@ -1,5 +1,5 @@
 # libwgf's games on GitHub Pages: every game's web export (tools/build_pages.py), each
-# smoke-tested in Chrome and held to its size budget, deployed daily and on demand (gh
+# smoke-tested in Chrome (and held to its size budget, if its wgf.json gives one), deployed daily and on demand (gh
 # workflow run pages, or the Actions tab), not on every push.
 name: pages
 
