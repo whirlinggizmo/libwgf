@@ -88,6 +88,17 @@ int main(void)
     frames(6, 0.05f);
     expect(wgf_sprite_get_clip_frame(sprite) == 0 && wgf_sprite_get_clip_state(sprite) == WGF_PLAY_STATE_PLAYING,
            "looping round to its first");
+    {
+        const wgf_actor_t level = wgf_actor_create();
+        const int frame = wgf_sprite_get_clip_frame(sprite);
+        wgf_actor_set_parent(sprite, level);
+        wgf_actor_set_paused(level, true);
+        frames(4, 0.05f);
+        expect(wgf_sprite_get_clip_frame(sprite) == frame && wgf_sprite_get_clip_state(sprite) == WGF_PLAY_STATE_PLAYING,
+               "under a paused actor: its clip held, still playing");
+        wgf_actor_set_parent(sprite, 0);
+        wgf_actor_destroy(level, WGF_ACTOR_DESTROY_CHILDREN);
+    }
     expect(wgf_sprite_pause_clip(sprite) && wgf_sprite_get_clip_state(sprite) == WGF_PLAY_STATE_PAUSED, "paused");
     frames(10, 0.05f);
     expect(wgf_sprite_get_clip_frame(sprite) == 0 && wgf_sprite_resume_clip(sprite), "held, and on again");

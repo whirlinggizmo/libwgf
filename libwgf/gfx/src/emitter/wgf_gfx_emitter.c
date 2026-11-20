@@ -269,12 +269,13 @@ static void update_emitter(wgf_gfx_priv_emitter_t *e, float dt)
     }
 }
 
-/* Whether `actor` and everything above it are enabled: a disabled one isn't moved on. */
+/* Whether `actor` and everything above it are enabled and not paused: a disabled or frozen
+ * one isn't moved on (its particles hold where they are, on its clock). */
 static bool enabled_in_tree(wgf_actor_t actor)
 {
     const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
     while (actor_ptr != NULL) {
-        if (!actor_ptr->enabled) return false;
+        if (!actor_ptr->enabled || actor_ptr->paused) return false;
         actor_ptr = actor_ptr->parent != 0 ? wgf_gfx_priv_actor_of(actor_ptr->parent) : NULL;
     }
     return true;

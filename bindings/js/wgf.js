@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "869e9438664f2825" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "81d6d0b6886ba913" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -4276,7 +4276,7 @@ export function wgf_actor_find(actor, path) {
 
 // wgf: call wgf_actor_set_enabled
 /**
- * Two flags say what an actor takes part in, each the actor's own, read back as set:
+ * Three flags say what an actor takes part in, each the actor's own, read back as set:
  *
  *   enabled   off: the actor is skipped altogether, with everything under it, as if
  *             it weren't in the tree, by drawing and by every update (an emitter
@@ -4286,8 +4286,15 @@ export function wgf_actor_find(actor, path) {
  *   visible   off: the actor's own output is off -- a sprite, shape, text, or
  *             emitter isn't drawn -- while it is still placed and its children are
  *             as they are
+ *   paused    on: it and everything under it are frozen, still drawn: its behaviors
+ *             don't tick, its components' systems (motion, 2D bodies, bounds,
+ *             lifetimes) and tweens leave it, and what moves by itself holds still --
+ *             an emitter's particles, a sprite's clip, a model's animation. A level held
+ *             under a pause menu (wgf_screen.h pauses the screens under the top one).
+ *             Its colliders still meet as triggers. is_frozen: it or one above it
+ *             paused
  *
- * Defaults: enabled, visible.
+ * Defaults: enabled, visible, not paused.
  */
 export function wgf_actor_set_enabled(actor, enabled) {
     const value = host["_wgf_actor_set_enabled"](actor, (enabled ? 1 : 0));
@@ -4296,7 +4303,7 @@ export function wgf_actor_set_enabled(actor, enabled) {
 
 // wgf: call wgf_actor_is_enabled
 /**
- * Two flags say what an actor takes part in, each the actor's own, read back as set:
+ * Three flags say what an actor takes part in, each the actor's own, read back as set:
  *
  *   enabled   off: the actor is skipped altogether, with everything under it, as if
  *             it weren't in the tree, by drawing and by every update (an emitter
@@ -4306,17 +4313,24 @@ export function wgf_actor_set_enabled(actor, enabled) {
  *   visible   off: the actor's own output is off -- a sprite, shape, text, or
  *             emitter isn't drawn -- while it is still placed and its children are
  *             as they are
+ *   paused    on: it and everything under it are frozen, still drawn: its behaviors
+ *             don't tick, its components' systems (motion, 2D bodies, bounds,
+ *             lifetimes) and tweens leave it, and what moves by itself holds still --
+ *             an emitter's particles, a sprite's clip, a model's animation. A level held
+ *             under a pause menu (wgf_screen.h pauses the screens under the top one).
+ *             Its colliders still meet as triggers. is_frozen: it or one above it
+ *             paused
  *
- * Defaults: enabled, visible.
+ * Defaults: enabled, visible, not paused.
  */
 export function wgf_actor_is_enabled(actor) {
     const value = host["_wgf_actor_is_enabled"](actor);
     return value !== 0;
 }
 
-// wgf: call wgf_actor_set_visible
+// wgf: call wgf_actor_set_paused
 /**
- * Two flags say what an actor takes part in, each the actor's own, read back as set:
+ * Three flags say what an actor takes part in, each the actor's own, read back as set:
  *
  *   enabled   off: the actor is skipped altogether, with everything under it, as if
  *             it weren't in the tree, by drawing and by every update (an emitter
@@ -4326,8 +4340,96 @@ export function wgf_actor_is_enabled(actor) {
  *   visible   off: the actor's own output is off -- a sprite, shape, text, or
  *             emitter isn't drawn -- while it is still placed and its children are
  *             as they are
+ *   paused    on: it and everything under it are frozen, still drawn: its behaviors
+ *             don't tick, its components' systems (motion, 2D bodies, bounds,
+ *             lifetimes) and tweens leave it, and what moves by itself holds still --
+ *             an emitter's particles, a sprite's clip, a model's animation. A level held
+ *             under a pause menu (wgf_screen.h pauses the screens under the top one).
+ *             Its colliders still meet as triggers. is_frozen: it or one above it
+ *             paused
  *
- * Defaults: enabled, visible.
+ * Defaults: enabled, visible, not paused.
+ */
+export function wgf_actor_set_paused(actor, paused) {
+    const value = host["_wgf_actor_set_paused"](actor, (paused ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_actor_is_paused
+/**
+ * Three flags say what an actor takes part in, each the actor's own, read back as set:
+ *
+ *   enabled   off: the actor is skipped altogether, with everything under it, as if
+ *             it weren't in the tree, by drawing and by every update (an emitter
+ *             under it isn't moved on): the switch on a part of the game that is off
+ *             for now. The only one that reaches the children; their own flags are
+ *             kept, so enabling it again brings each back as it was set
+ *   visible   off: the actor's own output is off -- a sprite, shape, text, or
+ *             emitter isn't drawn -- while it is still placed and its children are
+ *             as they are
+ *   paused    on: it and everything under it are frozen, still drawn: its behaviors
+ *             don't tick, its components' systems (motion, 2D bodies, bounds,
+ *             lifetimes) and tweens leave it, and what moves by itself holds still --
+ *             an emitter's particles, a sprite's clip, a model's animation. A level held
+ *             under a pause menu (wgf_screen.h pauses the screens under the top one).
+ *             Its colliders still meet as triggers. is_frozen: it or one above it
+ *             paused
+ *
+ * Defaults: enabled, visible, not paused.
+ */
+export function wgf_actor_is_paused(actor) {
+    const value = host["_wgf_actor_is_paused"](actor);
+    return value !== 0;
+}
+
+// wgf: call wgf_actor_is_frozen
+/**
+ * Three flags say what an actor takes part in, each the actor's own, read back as set:
+ *
+ *   enabled   off: the actor is skipped altogether, with everything under it, as if
+ *             it weren't in the tree, by drawing and by every update (an emitter
+ *             under it isn't moved on): the switch on a part of the game that is off
+ *             for now. The only one that reaches the children; their own flags are
+ *             kept, so enabling it again brings each back as it was set
+ *   visible   off: the actor's own output is off -- a sprite, shape, text, or
+ *             emitter isn't drawn -- while it is still placed and its children are
+ *             as they are
+ *   paused    on: it and everything under it are frozen, still drawn: its behaviors
+ *             don't tick, its components' systems (motion, 2D bodies, bounds,
+ *             lifetimes) and tweens leave it, and what moves by itself holds still --
+ *             an emitter's particles, a sprite's clip, a model's animation. A level held
+ *             under a pause menu (wgf_screen.h pauses the screens under the top one).
+ *             Its colliders still meet as triggers. is_frozen: it or one above it
+ *             paused
+ *
+ * Defaults: enabled, visible, not paused.
+ */
+export function wgf_actor_is_frozen(actor) {
+    const value = host["_wgf_actor_is_frozen"](actor);
+    return value !== 0;
+}
+
+// wgf: call wgf_actor_set_visible
+/**
+ * Three flags say what an actor takes part in, each the actor's own, read back as set:
+ *
+ *   enabled   off: the actor is skipped altogether, with everything under it, as if
+ *             it weren't in the tree, by drawing and by every update (an emitter
+ *             under it isn't moved on): the switch on a part of the game that is off
+ *             for now. The only one that reaches the children; their own flags are
+ *             kept, so enabling it again brings each back as it was set
+ *   visible   off: the actor's own output is off -- a sprite, shape, text, or
+ *             emitter isn't drawn -- while it is still placed and its children are
+ *             as they are
+ *   paused    on: it and everything under it are frozen, still drawn: its behaviors
+ *             don't tick, its components' systems (motion, 2D bodies, bounds,
+ *             lifetimes) and tweens leave it, and what moves by itself holds still --
+ *             an emitter's particles, a sprite's clip, a model's animation. A level held
+ *             under a pause menu (wgf_screen.h pauses the screens under the top one).
+ *             Its colliders still meet as triggers. is_frozen: it or one above it
+ *             paused
+ *
+ * Defaults: enabled, visible, not paused.
  */
 export function wgf_actor_set_visible(actor, visible) {
     const value = host["_wgf_actor_set_visible"](actor, (visible ? 1 : 0));
@@ -4336,7 +4438,7 @@ export function wgf_actor_set_visible(actor, visible) {
 
 // wgf: call wgf_actor_is_visible
 /**
- * Two flags say what an actor takes part in, each the actor's own, read back as set:
+ * Three flags say what an actor takes part in, each the actor's own, read back as set:
  *
  *   enabled   off: the actor is skipped altogether, with everything under it, as if
  *             it weren't in the tree, by drawing and by every update (an emitter
@@ -4346,8 +4448,15 @@ export function wgf_actor_set_visible(actor, visible) {
  *   visible   off: the actor's own output is off -- a sprite, shape, text, or
  *             emitter isn't drawn -- while it is still placed and its children are
  *             as they are
+ *   paused    on: it and everything under it are frozen, still drawn: its behaviors
+ *             don't tick, its components' systems (motion, 2D bodies, bounds,
+ *             lifetimes) and tweens leave it, and what moves by itself holds still --
+ *             an emitter's particles, a sprite's clip, a model's animation. A level held
+ *             under a pause menu (wgf_screen.h pauses the screens under the top one).
+ *             Its colliders still meet as triggers. is_frozen: it or one above it
+ *             paused
  *
- * Defaults: enabled, visible.
+ * Defaults: enabled, visible, not paused.
  */
 export function wgf_actor_is_visible(actor) {
     const value = host["_wgf_actor_is_visible"](actor);

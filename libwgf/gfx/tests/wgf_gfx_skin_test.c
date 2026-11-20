@@ -347,6 +347,18 @@ int main(void)
     expect(near(arm_y(root), 0.5f * 1.5f + 0.5f * 1.0f),
            "the one faded from moved on (1.5 up), blended with the rest (1)");
 
+    { /* paused: its animation held */
+        float before;
+        wgf_model_set_animation_speed(root, 1.0f);
+        wgf_model_play_animation(root, 0, 0.0f);
+        before = wgf_model_get_animation_time(root);
+        wgf_actor_set_paused(root, true);
+        wgf_core_priv_part_update(0.5f);
+        expect(near(wgf_model_get_animation_time(root), before), "a paused model's animation held");
+        wgf_actor_set_paused(root, false);
+        wgf_core_priv_part_update(0.5f);
+        expect(near(wgf_model_get_animation_time(root), before + 0.5f), "resumed: moving on");
+    }
     { /* a layer over the clip below, on a bone and what is under it */
         const wgf_actor_t hip_now = wgf_actor_find(root, "hip");
         wgf_model_set_animation_speed(root, 1.0f);

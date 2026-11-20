@@ -429,7 +429,7 @@ static void update(float dt)
             continue; /* destroyed */
         }
         anim = root_ptr->as.model.animation;
-        if (anim->state == WGF_PLAY_STATE_PLAYING) advance(model, root_ptr, dt);
+        if (anim->state == WGF_PLAY_STATE_PLAYING && !wgf_gfx_priv_actor_is_frozen(model)) advance(model, root_ptr, dt);
         root_ptr = wgf_gfx_priv_actor_of_silently(model); /* posing makes nothing, but read it again all the same */
         anim = root_ptr->as.model.animation;
         if (anim->state == WGF_PLAY_STATE_PLAYING) {

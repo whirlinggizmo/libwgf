@@ -150,6 +150,7 @@ typedef struct wgf_gfx_priv_actor_t {
     bool world_dirty;
     bool enabled;
     bool visible;
+    bool paused; /* it and everything under it frozen: drawn, not moved on */
     bool from_file; /* made from a glTF file's nodes, under its root: the root's path makes it again */
     /* Simulated (it has a component the ticks move, ecs/): `position`, `rotation`, and
      * `scale` are the simulation's, at the tick rate, and the actor is drawn between
@@ -203,6 +204,10 @@ wgf_gfx_priv_actor_t *wgf_gfx_priv_actor_of_silently(wgf_actor_t actor);
 #else
 #define wgf_gfx_priv_actor_of(actor) wgf_gfx_priv_actor_of_at((actor), WGF_CORE_PRIV_CALLER)
 #endif
+
+/* Whether `actor` or one above it is paused (wgf_actor_set_paused): what moves by itself under
+ * it holds still. */
+bool wgf_gfx_priv_actor_is_frozen(wgf_actor_t actor);
 
 /* The actor's own transform, and its world transform (every parent's, composed),
  * each rebuilt only when it is dirty. */

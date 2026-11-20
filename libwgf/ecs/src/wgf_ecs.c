@@ -494,6 +494,7 @@ static void count_down(float dt)
     while (wgf_ecs_priv_store_next(ecs.q_lifetime, fields, &entity)) {
         wgf_ecs_priv_lifetime_t *life = (wgf_ecs_priv_lifetime_t *)fields[0];
         const wgf_ecs_priv_ref_t *ref = (const wgf_ecs_priv_ref_t *)fields[1];
+        if (wgf_gfx_priv_actor_is_frozen(ref->actor)) continue; /* paused: left as it is */
         life->seconds -= dt;
         if (life->seconds <= 0.0f) {
             life->seconds = 0.0f;
@@ -512,6 +513,7 @@ static void move(float dt)
     while (wgf_ecs_priv_store_next(ecs.q_motion, fields, &entity)) {
         wgf_ecs_priv_motion_t *m = (wgf_ecs_priv_motion_t *)fields[0];
         const wgf_ecs_priv_ref_t *ref = (const wgf_ecs_priv_ref_t *)fields[1];
+        if (wgf_gfx_priv_actor_is_frozen(ref->actor)) continue; /* paused: left as it is */
         wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(ref->actor);
         if (actor_ptr == NULL) continue;
         if (m->damping > 0.0f) {
@@ -587,6 +589,7 @@ static void bound(void)
     while (wgf_ecs_priv_store_next(ecs.q_bounds, fields, &entity)) {
         const wgf_ecs_priv_bounds_t *b = (const wgf_ecs_priv_bounds_t *)fields[0];
         const wgf_ecs_priv_ref_t *ref = (const wgf_ecs_priv_ref_t *)fields[1];
+        if (wgf_gfx_priv_actor_is_frozen(ref->actor)) continue; /* paused: left as it is */
         const wgf_ecs_priv_record_t *record = wgf_ecs_priv_record_of(ref->actor);
         wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(ref->actor);
         wgf_ecs_priv_motion_t *motion =

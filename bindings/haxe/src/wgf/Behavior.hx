@@ -219,17 +219,19 @@ class Behavior {
 		return list != null && list.indexOf(behavior) >= 0;
 	}
 
+	/** Each tick and each frame: every live behavior, but those on an actor frozen (it or one above it
+		paused, C's wgf_actor_set_paused: a screen under the top one). **/
 	public static function tickAll(dt:Float):Void {
 		poll();
 		for (behavior in order.copy())
-			if (liveNow(behavior))
+			if (liveNow(behavior) && !behavior.actor.isFrozen())
 				behavior.onTick(dt);
 	}
 
 	public static function frameAll(dt:Float):Void {
 		poll();
 		for (behavior in order.copy())
-			if (liveNow(behavior))
+			if (liveNow(behavior) && !behavior.actor.isFrozen())
 				behavior.onFrame(dt);
 	}
 

@@ -5,6 +5,7 @@
 #include <math.h>
 #include <string.h>
 
+#include "actor/wgf_gfx_actor_priv.h"
 #include "wgf_core_handle_priv.h"
 #include "wgf_core_part_priv.h"
 
@@ -78,6 +79,7 @@ static void tick(float dt)
             wgf_core_priv_handle_pool_free(&tw.pool, handle);
             continue;
         }
+        if (t->kind != KIND_VALUE && wgf_gfx_priv_actor_is_frozen(t->actor)) continue; /* its actor paused */
         if (t->delay > 0.0f) {
             t->delay -= step;
             if (t->delay > 0.0f) continue;

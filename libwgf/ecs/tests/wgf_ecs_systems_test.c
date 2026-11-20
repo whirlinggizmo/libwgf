@@ -13,6 +13,7 @@
 #include "wgf_world.h"
 #include "wgf_component.h"
 #include "actor/wgf_gfx_actor_priv.h"
+#include "wgf_handle.h"
 #include "wgf_lifetime.h"
 #include "wgf_motion.h"
 #include "wgf_actor.h"
@@ -338,6 +339,33 @@ int main(void)
         wgf_actor_destroy(q, WGF_ACTOR_DESTROY_CHILDREN);
         step(0.0f);
         wgf_world_take_events(NULL, 0);
+    }
+
+    { /* paused: an actor and everything under it frozen, its systems leaving it */
+        const wgf_actor_t level = make(stage), mover = make(level), dying = make(level), faller = make(level);
+        int i;
+        wgf_actor_add_component(mover, WGF_COMPONENT_MOTION);
+        wgf_motion_set_velocity(mover, 60, 0, 0);
+        wgf_actor_add_component(dying, WGF_COMPONENT_LIFETIME);
+        wgf_lifetime_set_seconds(dying, 0.5f);
+        wgf_actor_add_component(faller, WGF_COMPONENT_BODY2D);
+        wgf_body2d_set_gravity(faller, 100);
+        expect(wgf_actor_set_paused(level, true) && wgf_actor_is_paused(level) && !wgf_actor_is_paused(mover) &&
+                   wgf_actor_is_frozen(mover) && !wgf_actor_is_frozen(stage),
+               "paused: its own flag, frozen under it");
+        for (i = 0; i < 60; i++) step(1.0f / 60.0f);
+        expect(near(wgf_actor_get_position(mover).x, 0) && wgf_handle_is_alive(dying) &&
+                   near(wgf_lifetime_get_seconds(dying), 0.5f) && near(wgf_actor_get_position(faller).y, 0),
+               "frozen a second: not moved, not counted down, not fallen");
+        wgf_actor_set_paused(level, false);
+        for (i = 0; i < 60; i++) step(1.0f / 60.0f);
+        expect(near(wgf_actor_get_position(mover).x, 60) && !wgf_handle_is_alive(dying) &&
+                   wgf_actor_get_position(faller).y > 1,
+               "resumed: moved, counted down, fallen");
+        expect(!wgf_actor_set_paused(0, true) && !wgf_actor_is_paused(0) && !wgf_actor_is_frozen(0), "no actor: false");
+        wgf_actor_destroy(level, WGF_ACTOR_DESTROY_CHILDREN);
+        step(0.0f);
+        count_events(0, 0, 0);
     }
 
     { /* 2D bodies: falling onto a floor, walking into a wall, a jump to a ceiling, a grid */

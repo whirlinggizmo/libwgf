@@ -555,6 +555,8 @@ class Main {
 		expect(near(group.getDrawnPosition().x, at.x) && near(group.getDrawnDirection(1, 0, 0).y, heading.y)
 			&& near(heading.x * heading.x + heading.y * heading.y, 1), "where it is, drawn there, and its heading");
 		expect(group.setEnabled(true) && group.isEnabled() && group.setVisible(true) && group.isVisible(), "on and shown");
+		expect(group.setPaused(true) && group.isPaused() && group.isFrozen() && group.setPaused(false) && !group.isFrozen(),
+			"paused and resumed");
 		expect(group.getKind() == ActorKind.PLAIN && group.setIndex(0) && group.getIndex() == 0, "its type and index");
 
 		final shape = Shape2d.create();

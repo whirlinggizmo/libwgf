@@ -144,7 +144,7 @@ WGF_API const char *wgf_actor_get_name(wgf_actor_t actor);
  * ("a//b"), or an empty or NULL path. */
 WGF_API wgf_actor_t wgf_actor_find(wgf_actor_t actor, const char *path);
 
-/* Two flags say what an actor takes part in, each the actor's own, read back as set:
+/* Three flags say what an actor takes part in, each the actor's own, read back as set:
  *
  *   enabled   off: the actor is skipped altogether, with everything under it, as if
  *             it weren't in the tree, by drawing and by every update (an emitter
@@ -154,11 +154,21 @@ WGF_API wgf_actor_t wgf_actor_find(wgf_actor_t actor, const char *path);
  *   visible   off: the actor's own output is off -- a sprite, shape, text, or
  *             emitter isn't drawn -- while it is still placed and its children are
  *             as they are
+ *   paused    on: it and everything under it are frozen, still drawn: its behaviors
+ *             don't tick, its components' systems (motion, 2D bodies, bounds,
+ *             lifetimes) and tweens leave it, and what moves by itself holds still --
+ *             an emitter's particles, a sprite's clip, a model's animation. A level held
+ *             under a pause menu (wgf_screen.h pauses the screens under the top one).
+ *             Its colliders still meet as triggers. is_frozen: it or one above it
+ *             paused
  *
- * Defaults: enabled, visible. */
+ * Defaults: enabled, visible, not paused. */
 WGF_API bool wgf_actor_set_enabled(wgf_actor_t actor, bool enabled);
 WGF_API bool wgf_actor_is_enabled(wgf_actor_t actor);
 
+WGF_API bool wgf_actor_set_paused(wgf_actor_t actor, bool paused);
+WGF_API bool wgf_actor_is_paused(wgf_actor_t actor);
+WGF_API bool wgf_actor_is_frozen(wgf_actor_t actor);
 WGF_API bool wgf_actor_set_visible(wgf_actor_t actor, bool visible);
 WGF_API bool wgf_actor_is_visible(wgf_actor_t actor);
 

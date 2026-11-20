@@ -58,6 +58,8 @@ class Reach {
 		"wgf_actor_get_world_position",
 		"wgf_actor_has_component",
 		"wgf_actor_is_enabled",
+		"wgf_actor_is_frozen",
+		"wgf_actor_is_paused",
 		"wgf_actor_is_visible",
 		"wgf_actor_look_at",
 		"wgf_actor_remove_behavior",
@@ -66,6 +68,7 @@ class Reach {
 		"wgf_actor_set_index",
 		"wgf_actor_set_name",
 		"wgf_actor_set_parent",
+		"wgf_actor_set_paused",
 		"wgf_actor_set_position",
 		"wgf_actor_set_positions",
 		"wgf_actor_set_rotation",
@@ -1073,7 +1076,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1064) 0];
+	static final counts:Array<Int> = [for (_ in 0...1067) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

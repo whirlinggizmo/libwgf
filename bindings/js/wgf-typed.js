@@ -109,6 +109,12 @@ export const Actor = Object.freeze({
     setEnabled: raw.wgf_actor_set_enabled,
     // wgf: call wgf_actor_is_enabled
     isEnabled: raw.wgf_actor_is_enabled,
+    // wgf: call wgf_actor_set_paused
+    setPaused: raw.wgf_actor_set_paused,
+    // wgf: call wgf_actor_is_paused
+    isPaused: raw.wgf_actor_is_paused,
+    // wgf: call wgf_actor_is_frozen
+    isFrozen: raw.wgf_actor_is_frozen,
     // wgf: call wgf_actor_set_visible
     setVisible: raw.wgf_actor_set_visible,
     // wgf: call wgf_actor_is_visible

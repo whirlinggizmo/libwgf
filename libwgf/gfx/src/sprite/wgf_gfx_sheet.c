@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "actor/wgf_gfx_actor_priv.h"
 #include "wgf_core_handle_priv.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_resource.h"
@@ -121,7 +122,7 @@ static void update(float dt)
             continue;
         }
         i++;
-        if (p->state != WGF_PLAY_STATE_PLAYING || p->clip < 0) continue;
+        if (p->state != WGF_PLAY_STATE_PLAYING || p->clip < 0 || wgf_gfx_priv_actor_is_frozen(p->sprite)) continue;
         p->elapsed += dt > 0.0f ? dt * p->speed : 0.0f;
         while (p->elapsed >= s->clips[p->clip].seconds) {
             p->elapsed -= s->clips[p->clip].seconds;

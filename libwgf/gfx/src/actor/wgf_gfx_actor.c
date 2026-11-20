@@ -921,6 +921,35 @@ bool wgf_actor_is_enabled(wgf_actor_t actor)
     return actor_ptr != NULL && actor_ptr->enabled;
 }
 
+bool wgf_actor_set_paused(wgf_actor_t actor, bool paused)
+{
+    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
+    if (actor_ptr == NULL) return false;
+    actor_ptr->paused = paused;
+    return true;
+}
+
+bool wgf_actor_is_paused(wgf_actor_t actor)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
+    return actor_ptr != NULL && actor_ptr->paused;
+}
+
+bool wgf_gfx_priv_actor_is_frozen(wgf_actor_t actor)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
+    while (actor_ptr != NULL) {
+        if (actor_ptr->paused) return true;
+        actor_ptr = actor_ptr->parent != 0 ? wgf_gfx_priv_actor_of(actor_ptr->parent) : NULL;
+    }
+    return false;
+}
+
+bool wgf_actor_is_frozen(wgf_actor_t actor)
+{
+    return wgf_gfx_priv_actor_is_frozen(actor);
+}
+
 bool wgf_actor_set_visible(wgf_actor_t actor, bool visible)
 {
     wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);

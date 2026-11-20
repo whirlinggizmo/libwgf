@@ -78,6 +78,10 @@ static void test_spawning(void)
     wgf_actor_set_enabled(e, true);
     update(0.1f);
     expect(wgf_emitter3d_get_count(e) == 10, "enabled again: ticked");
+    wgf_actor_set_paused(e, true);
+    update(0.5f);
+    expect(wgf_emitter3d_get_count(e) == 10, "paused: held, its particles kept");
+    wgf_actor_set_paused(e, false);
 
     /* refused */
     wgf_log_set_level(WGF_LOG_LEVEL_ERROR);

@@ -315,7 +315,7 @@ void wgf_ecs_priv_body2d_step(float dt, wgf_ecs_priv_query_t *query, wgf_ecs_pri
         const grid_t *grid;
         float w, h, x, y, dx, dy, out[6];
         int rect_count = 0, i;
-        if (actor_ptr == NULL) continue;
+        if (actor_ptr == NULL || wgf_gfx_priv_actor_is_frozen(ref->actor)) continue; /* paused: left as it is */
         if (solid_count < 0) solid_count = gather_solids(colliders);
         b->vy += b->gravity * dt;
         if (b->max_fall > 0.0f && b->vy > b->max_fall) b->vy = b->max_fall;
