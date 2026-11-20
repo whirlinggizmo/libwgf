@@ -87,20 +87,20 @@ static void on_frame(void *user)
     run->frames_in_frame &= wgf_gfx_priv_is_in_frame();
     if (run->frames == 5 && !run->no_readout) wgf_debug_show_fps(0, 8, 8, 16, wgf_color_make(0, 255, 0, 255)); /* drawn over the rest */
     run->frame_sizes_ok &= wgf_render_get_width() == 320 && wgf_render_get_height() == 200;
-    if (run->frames == 20) { /* looked away from, held: no ticks from the next frame */
+    /* after the first 30 frames, whose ticks are counted at their rate: looked away from and
+       held (no ticks from the next frame), then paused by the time scale */
+    if (run->frames == 30) {
         wgf_loop_set_pause_unfocused(true);
         wgf_platform_priv_set_test_focused(false);
         run->unfocused = true;
-    } else if (run->frames == 25) {
+    } else if (run->frames == 35) {
         wgf_platform_priv_set_test_focused(true);
         run->unfocused = false;
         wgf_loop_set_pause_unfocused(false);
-    }
-    if (run->frames == 30) {
         wgf_loop_set_time_scale(0.0f); /* paused from the next frame */
-    } else if (run->frames == 31) {
+    } else if (run->frames == 36) {
         run->paused_fraction_first = wgf_loop_get_tick_fraction();
-    } else if (run->frames == 45) {
+    } else if (run->frames == 50) {
         run->paused_fraction_last = wgf_loop_get_tick_fraction();
         run->fps = wgf_loop_get_fps();
         run->cost = wgf_loop_get_frame_cost();
@@ -164,7 +164,7 @@ int main(void)
     expect(!wgf_debug_is_fps_shown(), "and hidden");
 
     expect(run.inits == 1 && run.shutdowns == 1, "init and shutdown once each");
-    expect(run.frames == 45, "frames until it quit");
+    expect(run.frames == 50, "frames until it quit");
     expect(run.ticks_in_order, "ticks between init and shutdown, outside frames");
     expect(run.frames_in_frame, "the frame callback runs inside gfx's frame");
     expect(run.frame_sizes_ok, "frames of the window's size");
