@@ -47,6 +47,7 @@ class Function:
     variadic: bool = False
     exported: bool = False   # marked WGF_API: clang's visibility attribute
     static: bool = False     # static inline: C sugar no binding sees
+    offset: int = -1         # where its name is in the header, in bytes (-1 when unknown)
 
 
 @dataclass
@@ -70,6 +71,7 @@ class Enum:
     values: dict     # {'WGF_LIGHT_SPOT': 2, ...} in declaration order
     header: str
     doc: str
+    offset: int = -1  # where its typedef's name is in the header, in bytes (-1 when unknown)
 
 
 @dataclass
@@ -283,7 +285,7 @@ def read(root=ROOT, headers=None, emcc=None):
                 canonical(returns, aliases) if returns is not None else None, params, header, _doc(node, sources),
                 variadic=bool(node.get('variadic')),
                 exported=any(k.get('kind') == 'VisibilityAttr' for k in node.get('inner') or ()),
-                static=node.get('storageClass') == 'static'))
+                static=node.get('storageClass') == 'static', offset=node.get('loc', {}).get('offset', -1)))
         elif kind == 'TypedefDecl':
             pending.append((node, header))
 
@@ -313,7 +315,8 @@ def read(root=ROOT, headers=None, emcc=None):
                     continue
                 value = next((int(k['value']) for k in c.get('inner') or () if 'value' in k), last + 1)
                 values[c['name']] = last = value
-            api.enums[name] = Enum(name, values, header, _doc(node, sources) or _doc(owned, sources))
+            api.enums[name] = Enum(name, values, header, _doc(node, sources) or _doc(owned, sources),
+                                   node.get('loc', {}).get('offset', -1))
         else:
             api.typedefs[name] = (node['type']['qualType'], header)
 

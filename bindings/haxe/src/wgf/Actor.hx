@@ -27,8 +27,8 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 		Raw.wgf_actor_destroy(this, children);
 
 	/**
-	    End an actor of any kind, at once. What it held is released, never destroyed: a
-	    sprite drops its reference to its texture.
+	    What kind of actor it is (a sprite, a model, a stage), which says which calls it takes;
+	    NONE when it isn't an actor, or is gone.
 	**/
 	public inline function getKind():ActorKind
 		return Raw.wgf_actor_get_kind(this);

@@ -245,11 +245,9 @@ class Draw {
 		Raw.wgf_draw_texture_nine_slice(texture, source_x, source_y, source_width, source_height, left, top, right, bottom, x, y, width, height, tint);
 
 	/**
-	    A texture's region drawn as a nine-slice into the rectangle: its borders `left`, `top`,
-	    `right`, and `bottom` texels in from the region's edges, the corners kept at their size
-	    (scaled down together when the rectangle is smaller than its borders), the edges stretched
-	    along, the middle both ways: a panel or a button of any size from one small image. A source
-	    width or height of 0 or less: the whole texture.
+	    A texture drawn into the rectangle only up to `amount` (0 to 1): a bar filled from the
+	    left or from the bottom, or swept clockwise from 12 o'clock (a cooldown, a health orb).
+	    A width or height of 0 or less: the texture's size.
 	**/
 	public static inline function textureFill(texture:Texture, x:Float, y:Float, width:Float, height:Float, amount:Float, fill:DrawFill, tint:Int):Void
 		Raw.wgf_draw_texture_fill(texture, x, y, width, height, amount, fill, tint);

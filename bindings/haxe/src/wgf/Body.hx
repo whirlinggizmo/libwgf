@@ -5,9 +5,45 @@ import wgf.impl.Raw;
 
 /** Body's calls, on a Actor: `var x:Body = handle` gives it them, and a Body is still a Actor; it starts as 0, none, as a Actor does. **/
 @:forward abstract Body(Actor) from Actor from Int to Actor {
+	/**
+	    A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
+	    (wgf_physics.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
+	    its size (1000 kg a cubic meter), friction 0.5, no bounce, damping of 0.05, layer 1,
+	    mask every layer. Friction, bounce, and damping take effect at once, its motion kept (a
+	    car's drag on grass, set as it goes); its other settings take effect at the next tick,
+	    when the world's body is made again from them, at rest: set them together, before the
+	    first tick, as a scene does.
+
+	    The actor's transform is the body's: where the world moves a dynamic body, each tick,
+	    the actor is set; a transform the program sets puts the body there (a static or
+	    dynamic one jumps; a kinematic one is moved there over the tick, pushing what it meets).
+	    A box's, sphere's, or capsule's size isn't scaled with its actor; a convex or mesh shape
+	    is read from the models at and under the actor, as they are drawn: the actor's own scale
+	    and each model's place under it included. Its place is in its 3D
+	    stage's space, the actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
+	    body.
+	**/
 	public inline function setType(type:BodyType):Bool
 		return Raw.wgf_body_set_type(this, type);
 
+	/**
+	    A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
+	    (wgf_physics.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
+	    its size (1000 kg a cubic meter), friction 0.5, no bounce, damping of 0.05, layer 1,
+	    mask every layer. Friction, bounce, and damping take effect at once, its motion kept (a
+	    car's drag on grass, set as it goes); its other settings take effect at the next tick,
+	    when the world's body is made again from them, at rest: set them together, before the
+	    first tick, as a scene does.
+
+	    The actor's transform is the body's: where the world moves a dynamic body, each tick,
+	    the actor is set; a transform the program sets puts the body there (a static or
+	    dynamic one jumps; a kinematic one is moved there over the tick, pushing what it meets).
+	    A box's, sphere's, or capsule's size isn't scaled with its actor; a convex or mesh shape
+	    is read from the models at and under the actor, as they are drawn: the actor's own scale
+	    and each model's place under it included. Its place is in its 3D
+	    stage's space, the actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
+	    body.
+	**/
 	public inline function getType():BodyType
 		return Raw.wgf_body_get_type(this);
 

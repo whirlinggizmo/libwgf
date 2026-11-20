@@ -488,22 +488,22 @@ class Window {
 		return Raw.wgf_window_get_orientation();
 
 	/**
-	    Which way the window is now, by its shape (wgf_window_get_width against _height):
-	    PORTRAIT when taller than wide, else LANDSCAPE; never ANY.
+	    What the device has: touch (to show on-screen controls), a fine pointer (a mouse or a
+	    pad: hover means something), and its system, on the web the one the browser runs on.
 	**/
 	public static inline function hasTouch():Bool
 		return Raw.wgf_window_has_touch();
 
 	/**
-	    Which way the window is now, by its shape (wgf_window_get_width against _height):
-	    PORTRAIT when taller than wide, else LANDSCAPE; never ANY.
+	    What the device has: touch (to show on-screen controls), a fine pointer (a mouse or a
+	    pad: hover means something), and its system, on the web the one the browser runs on.
 	**/
 	public static inline function hasFinePointer():Bool
 		return Raw.wgf_window_has_fine_pointer();
 
 	/**
-	    Which way the window is now, by its shape (wgf_window_get_width against _height):
-	    PORTRAIT when taller than wide, else LANDSCAPE; never ANY.
+	    What the device has: touch (to show on-screen controls), a fine pointer (a mouse or a
+	    pad: hover means something), and its system, on the web the one the browser runs on.
 	**/
 	public static inline function getOs():WindowOs
 		return Raw.wgf_window_get_os();

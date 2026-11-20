@@ -58,6 +58,8 @@ WGF_API wgf_actor_t wgf_actor_create(void);
  * sprite drops its reference to its texture. */
 WGF_API void wgf_actor_destroy(wgf_actor_t actor, wgf_actor_destroy_t children);
 
+/* What kind of actor it is (a sprite, a model, a stage), which says which calls it takes;
+ * NONE when it isn't an actor, or is gone. */
 WGF_API wgf_actor_kind_t wgf_actor_get_kind(wgf_actor_t actor);
 
 /* Put `actor` under `parent`, last among its children, keeping its own transform

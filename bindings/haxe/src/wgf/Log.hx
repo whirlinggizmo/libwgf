@@ -4,9 +4,25 @@ package wgf;
 import wgf.impl.Raw;
 
 class Log {
+	/**
+	    Logging to stderr (the browser console on the web). A message below the
+	    current level is dropped; the level starts at INFO. Text is UTF-8.
+
+	    The exported calls take finished text, so a binding formats in its own
+	    language and passes one string. C code formats with the wgf_log_<level> macros,
+	    or with wgf_log_debug and the rest from wgf_log.h.
+	**/
 	public static inline function setLevel(level:LogLevel):Void
 		Raw.wgf_log_set_level(level);
 
+	/**
+	    Logging to stderr (the browser console on the web). A message below the
+	    current level is dropped; the level starts at INFO. Text is UTF-8.
+
+	    The exported calls take finished text, so a binding formats in its own
+	    language and passes one string. C code formats with the wgf_log_<level> macros,
+	    or with wgf_log_debug and the rest from wgf_log.h.
+	**/
 	public static inline function getLevel():LogLevel
 		return Raw.wgf_log_get_level();
 

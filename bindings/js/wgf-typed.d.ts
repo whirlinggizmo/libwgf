@@ -152,8 +152,8 @@ export declare const Actor: {
      */
     readonly destroy: typeof raw.wgf_actor_destroy;
     /**
-     * End an actor of any kind, at once. What it held is released, never destroyed: a
-     * sprite drops its reference to its texture.
+     * What kind of actor it is (a sprite, a model, a stage), which says which calls it takes;
+     * NONE when it isn't an actor, or is gone.
      */
     readonly getKind: typeof raw.wgf_actor_get_kind;
     /**
@@ -1169,7 +1169,43 @@ export declare const BehaviorComponent: {
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Body = raw.wgf_actor_t;
 export declare const Body: {
+    /**
+     * A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
+     * (wgf_physics.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
+     * its size (1000 kg a cubic meter), friction 0.5, no bounce, damping of 0.05, layer 1,
+     * mask every layer. Friction, bounce, and damping take effect at once, its motion kept (a
+     * car's drag on grass, set as it goes); its other settings take effect at the next tick,
+     * when the world's body is made again from them, at rest: set them together, before the
+     * first tick, as a scene does.
+     *
+     * The actor's transform is the body's: where the world moves a dynamic body, each tick,
+     * the actor is set; a transform the program sets puts the body there (a static or
+     * dynamic one jumps; a kinematic one is moved there over the tick, pushing what it meets).
+     * A box's, sphere's, or capsule's size isn't scaled with its actor; a convex or mesh shape
+     * is read from the models at and under the actor, as they are drawn: the actor's own scale
+     * and each model's place under it included. Its place is in its 3D
+     * stage's space, the actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
+     * body.
+     */
     readonly setType: typeof raw.wgf_body_set_type;
+    /**
+     * A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
+     * (wgf_physics.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
+     * its size (1000 kg a cubic meter), friction 0.5, no bounce, damping of 0.05, layer 1,
+     * mask every layer. Friction, bounce, and damping take effect at once, its motion kept (a
+     * car's drag on grass, set as it goes); its other settings take effect at the next tick,
+     * when the world's body is made again from them, at rest: set them together, before the
+     * first tick, as a scene does.
+     *
+     * The actor's transform is the body's: where the world moves a dynamic body, each tick,
+     * the actor is set; a transform the program sets puts the body there (a static or
+     * dynamic one jumps; a kinematic one is moved there over the tick, pushing what it meets).
+     * A box's, sphere's, or capsule's size isn't scaled with its actor; a convex or mesh shape
+     * is read from the models at and under the actor, as they are drawn: the actor's own scale
+     * and each model's place under it included. Its place is in its 3D
+     * stage's space, the actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
+     * body.
+     */
     readonly getType: typeof raw.wgf_body_get_type;
     /**
      * Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
@@ -2327,11 +2363,9 @@ export declare const Draw: {
      */
     readonly textureNineSlice: typeof raw.wgf_draw_texture_nine_slice;
     /**
-     * A texture's region drawn as a nine-slice into the rectangle: its borders `left`, `top`,
-     * `right`, and `bottom` texels in from the region's edges, the corners kept at their size
-     * (scaled down together when the rectangle is smaller than its borders), the edges stretched
-     * along, the middle both ways: a panel or a button of any size from one small image. A source
-     * width or height of 0 or less: the whole texture.
+     * A texture drawn into the rectangle only up to `amount` (0 to 1): a bar filled from the
+     * left or from the bottom, or swept clockwise from 12 o'clock (a cooldown, a health orb).
+     * A width or height of 0 or less: the texture's size.
      */
     readonly textureFill: typeof raw.wgf_draw_texture_fill;
     /**
@@ -4858,7 +4892,23 @@ export declare const Light: {
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
 export declare const Log: {
+    /**
+     * Logging to stderr (the browser console on the web). A message below the
+     * current level is dropped; the level starts at INFO. Text is UTF-8.
+     *
+     * The exported calls take finished text, so a binding formats in its own
+     * language and passes one string. C code formats with the wgf_log_<level> macros,
+     * or with wgf_log_debug and the rest from wgf_log.h.
+     */
     readonly setLevel: typeof raw.wgf_log_set_level;
+    /**
+     * Logging to stderr (the browser console on the web). A message below the
+     * current level is dropped; the level starts at INFO. Text is UTF-8.
+     *
+     * The exported calls take finished text, so a binding formats in its own
+     * language and passes one string. C code formats with the wgf_log_<level> macros,
+     * or with wgf_log_debug and the rest from wgf_log.h.
+     */
     readonly getLevel: typeof raw.wgf_log_get_level;
     /**
      * The last lines logged kept for the program to read, a game's console or a bug report:
@@ -6664,11 +6714,15 @@ export declare const Mouse: {
      */
     readonly isCursorVisible: typeof raw.wgf_mouse_is_cursor_visible;
     /**
-     * Show the pointer over the window (default true).
+     * The cursor's shape over the window, sokol_app's set: DEFAULT the system's, a hand over a
+     * button, an I-beam over text, the resizing arrows. Nothing on a phone. False for one that
+     * isn't one.
      */
     readonly setCursor: typeof raw.wgf_mouse_set_cursor;
     /**
-     * Show the pointer over the window (default true).
+     * The cursor's shape over the window, sokol_app's set: DEFAULT the system's, a hand over a
+     * button, an I-beam over text, the resizing arrows. Nothing on a phone. False for one that
+     * isn't one.
      */
     readonly getCursor: typeof raw.wgf_mouse_get_cursor;
 };
@@ -6787,7 +6841,57 @@ export declare const Prefab: {
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
 export declare const Presentation: {
+    /**
+     * How a game's design is fitted to the window or the screen (Godot's stretch modes
+     * and aspects are the prior art). A game is written for a design resolution, and its
+     * logical coordinates stay the design's at any window size and in fullscreen: drawing,
+     * 2D stages, the UI, the pointer and touches (mapped back into them), and an autopilot's
+     * mouse. The same on the desktop, in a resized browser window, and in fullscreen.
+     *
+     *   NONE     the default: logical pixels are the window's (a framebuffer pixel over the
+     *            DPI scale), and the visible area is the window
+     *   STRETCH  the design scaled to the window on each axis apart, its aspect lost
+     *   FIT      scaled alike on both axes, as large as it fits whole, centered; the rest
+     *            are bars (wgf_presentation_set_bar_color), nothing drawn in them
+     *   FILL     scaled alike, as small as covers the window, centered; what is past the
+     *            window's edges is cropped
+     *   EXPAND   scaled as FIT is, but the visible area grows past the design to the
+     *            window's edges, centered on it: the design is the least the game shows,
+     *            and a UI anchored to the visible area's edges stays at them
+     *   INTEGER  as FIT, at a whole number of framebuffer pixels to a logical one (at
+     *            least 1), for pixel art; bars around it
+     *
+     * Set any time; it takes effect at the next frame. A program that never sets a mode
+     * links none of its fitting. Natively, a window whose size the program didn't set
+     * (wgf_window_set_size) opens at the design size. False for a size under 1 (but for
+     * NONE, which takes none) or a mode that isn't one.
+     */
     readonly set: typeof raw.wgf_presentation_set;
+    /**
+     * How a game's design is fitted to the window or the screen (Godot's stretch modes
+     * and aspects are the prior art). A game is written for a design resolution, and its
+     * logical coordinates stay the design's at any window size and in fullscreen: drawing,
+     * 2D stages, the UI, the pointer and touches (mapped back into them), and an autopilot's
+     * mouse. The same on the desktop, in a resized browser window, and in fullscreen.
+     *
+     *   NONE     the default: logical pixels are the window's (a framebuffer pixel over the
+     *            DPI scale), and the visible area is the window
+     *   STRETCH  the design scaled to the window on each axis apart, its aspect lost
+     *   FIT      scaled alike on both axes, as large as it fits whole, centered; the rest
+     *            are bars (wgf_presentation_set_bar_color), nothing drawn in them
+     *   FILL     scaled alike, as small as covers the window, centered; what is past the
+     *            window's edges is cropped
+     *   EXPAND   scaled as FIT is, but the visible area grows past the design to the
+     *            window's edges, centered on it: the design is the least the game shows,
+     *            and a UI anchored to the visible area's edges stays at them
+     *   INTEGER  as FIT, at a whole number of framebuffer pixels to a logical one (at
+     *            least 1), for pixel art; bars around it
+     *
+     * Set any time; it takes effect at the next frame. A program that never sets a mode
+     * links none of its fitting. Natively, a window whose size the program didn't set
+     * (wgf_window_set_size) opens at the design size. False for a size under 1 (but for
+     * NONE, which takes none) or a mode that isn't one.
+     */
     readonly getMode: typeof raw.wgf_presentation_get_mode;
     /**
      * The bars (FIT and INTEGER): the framebuffer outside the visible area, which nothing is
@@ -10686,18 +10790,18 @@ export declare const Window: {
      */
     readonly getOrientation: typeof raw.wgf_window_get_orientation;
     /**
-     * Which way the window is now, by its shape (wgf_window_get_width against _height):
-     * PORTRAIT when taller than wide, else LANDSCAPE; never ANY.
+     * What the device has: touch (to show on-screen controls), a fine pointer (a mouse or a
+     * pad: hover means something), and its system, on the web the one the browser runs on.
      */
     readonly hasTouch: typeof raw.wgf_window_has_touch;
     /**
-     * Which way the window is now, by its shape (wgf_window_get_width against _height):
-     * PORTRAIT when taller than wide, else LANDSCAPE; never ANY.
+     * What the device has: touch (to show on-screen controls), a fine pointer (a mouse or a
+     * pad: hover means something), and its system, on the web the one the browser runs on.
      */
     readonly hasFinePointer: typeof raw.wgf_window_has_fine_pointer;
     /**
-     * Which way the window is now, by its shape (wgf_window_get_width against _height):
-     * PORTRAIT when taller than wide, else LANDSCAPE; never ANY.
+     * What the device has: touch (to show on-screen controls), a fine pointer (a mouse or a
+     * pad: hover means something), and its system, on the web the one the browser runs on.
      */
     readonly getOs: typeof raw.wgf_window_get_os;
     /**

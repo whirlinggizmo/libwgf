@@ -242,16 +242,25 @@ class Binding:
         return found
 
     def docs(self):
-        """Each call's doc: its own comment, or the comment of the group it is in (the
-        calls after a comment, up to the next comment or a blank line between them, in
-        the header's order)."""
-        out, last_doc, last_header = {}, '', None
+        """Each call's doc: its own comment, or the comment of the group it is in: the
+        nearest comment above it in its header, a call's or an enum's (an enum's comment
+        written for the call right after it, as wgf_draw_texture_fill's)."""
+        enums = {}
+        for e in self.api.enums.values():
+            if e.doc and e.offset >= 0:
+                enums.setdefault(e.header, []).append(e)
+        out, last_doc, last = {}, '', None
         for f in self.api.functions.values():
-            if f.header != last_header:
-                last_doc, last_header = '', f.header
+            if last is None or f.header != last.header:
+                last_doc = ''
+            start = last.offset if last is not None and f.header == last.header else -1
+            between = [e for e in enums.get(f.header, ()) if start < e.offset < f.offset]
+            if between:
+                last_doc = max(between, key=lambda e: e.offset).doc
             if f.doc:
                 last_doc = f.doc
             out[f.name] = f.doc or last_doc
+            last = f
         return out
 
 

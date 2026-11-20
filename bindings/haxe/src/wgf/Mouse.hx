@@ -77,13 +77,17 @@ class Mouse {
 		return Raw.wgf_mouse_is_cursor_visible();
 
 	/**
-	    Show the pointer over the window (default true).
+	    The cursor's shape over the window, sokol_app's set: DEFAULT the system's, a hand over a
+	    button, an I-beam over text, the resizing arrows. Nothing on a phone. False for one that
+	    isn't one.
 	**/
 	public static inline function setCursor(cursor:MouseCursor):Bool
 		return Raw.wgf_mouse_set_cursor(cursor);
 
 	/**
-	    Show the pointer over the window (default true).
+	    The cursor's shape over the window, sokol_app's set: DEFAULT the system's, a hand over a
+	    button, an I-beam over text, the resizing arrows. Nothing on a phone. False for one that
+	    isn't one.
 	**/
 	public static inline function getCursor():MouseCursor
 		return Raw.wgf_mouse_get_cursor();
