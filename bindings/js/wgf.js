@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "4f757e6bad40ba5c" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "d91a689be9275219" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -1028,6 +1028,16 @@ export const WGF_UI_VALUE_BUTTON_WIDTH = 5;
 export const WGF_UI_VALUE_FOCUS_WIDTH = 6;
 export const WGF_UI_VALUE_BAR_WIDTH = 7;
 export const WGF_UI_VALUE_BAR_HEIGHT = 8;
+
+/**
+ * What happened to an element, as wgf_document_take_events gives it.
+ */
+export const WGF_DOCUMENT_EVENT_NONE = 0;
+export const WGF_DOCUMENT_EVENT_CLICK = 1;
+export const WGF_DOCUMENT_EVENT_CHANGE = 2;
+export const WGF_DOCUMENT_EVENT_SUBMIT = 3;
+export const WGF_DOCUMENT_EVENT_FOCUS = 4;
+export const WGF_DOCUMENT_EVENT_BLUR = 5;
 
 // wgf: call wgf_collide2d_rect_rect
 /**
@@ -12135,6 +12145,419 @@ export function wgf_ui_get_style_font() {
  */
 export function wgf_ui_reset_style() {
     host["_wgf_ui_reset_style"]();
+}
+
+// wgf: call wgf_ui_set_document_font
+/**
+ * The font RCSS's `font-family: <family>` means in every document (its name matched
+ * without case); 0 unsets it, so the family draws in the default font. It holds a
+ * reference to `font`. False for no family, or a handle that isn't a font.
+ */
+export function wgf_ui_set_document_font(family, font) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_ui_set_document_font"](cstr(family), font);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_ui_get_document_font
+/**
+ * The font RCSS's `font-family: <family>` means in every document (its name matched
+ * without case); 0 unsets it, so the family draws in the default font. It holds a
+ * reference to `font`. False for no family, or a handle that isn't a font.
+ */
+export function wgf_ui_get_document_font(family) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_ui_get_document_font"](cstr(family));
+    host["stackRestore"](mark);
+    return value >>> 0;
+}
+
+// wgf: call wgf_ui_draw_documents
+/**
+ * The shown documents, worked by this frame's input, laid out, and drawn here, in the frame
+ * callback, over what was drawn before; their events are raised as they are worked. Once a
+ * frame: a second call in a frame draws them again without the input. False outside a
+ * frame (logged), or before any document was created.
+ */
+export function wgf_ui_draw_documents() {
+    const value = host["_wgf_ui_draw_documents"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_document_create
+/**
+ * The document in the .rml file at `path` under fs's root, loading: hidden until shown. A
+ * path created before gives the same document with one more reference. 0 only when there
+ * is no room for another (4096).
+ */
+export function wgf_document_create(path) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_document_create"](cstr(path));
+    host["stackRestore"](mark);
+    return value >>> 0;
+}
+
+// wgf: call wgf_document_set_visible
+/**
+ * Shown (drawn by wgf_ui_draw_documents, and worked by the input) or hidden; a document
+ * asked to show while it loads is shown once READY. Shown documents are drawn in the
+ * order they were last shown, the last on top. False for a handle that isn't a document,
+ * or one that FAILED.
+ */
+export function wgf_document_set_visible(document, visible) {
+    const value = host["_wgf_document_set_visible"](document, (visible ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_document_is_visible
+/**
+ * Shown (drawn by wgf_ui_draw_documents, and worked by the input) or hidden; a document
+ * asked to show while it loads is shown once READY. Shown documents are drawn in the
+ * order they were last shown, the last on top. False for a handle that isn't a document,
+ * or one that FAILED.
+ */
+export function wgf_document_is_visible(document) {
+    const value = host["_wgf_document_is_visible"](document);
+    return value !== 0;
+}
+
+// wgf: call wgf_document_find
+/**
+ * The element of `document` whose id is `id`, or 0: none has it, or the document isn't
+ * READY. The same element gives the same handle.
+ */
+export function wgf_document_find(document, id) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_document_find"](document, cstr(id));
+    host["stackRestore"](mark);
+    return value >>> 0;
+}
+
+// wgf: call wgf_document_set_focus
+/**
+ * The element of `document` that has the focus, or 0. Setting it moves the focus there,
+ * shown as keys move it (`:focus-visible`); 0 takes it from the document. False for a
+ * handle that isn't a document, an element of another document, or one that can't take
+ * the focus (hidden, disabled, or neither a form control nor `tab-index: auto`).
+ */
+export function wgf_document_set_focus(document, element) {
+    const value = host["_wgf_document_set_focus"](document, element);
+    return value !== 0;
+}
+
+// wgf: call wgf_document_get_focus
+/**
+ * The element of `document` that has the focus, or 0. Setting it moves the focus there,
+ * shown as keys move it (`:focus-visible`); 0 takes it from the document. False for a
+ * handle that isn't a document, an element of another document, or one that can't take
+ * the focus (hidden, disabled, or neither a form control nor `tab-index: auto`).
+ */
+export function wgf_document_get_focus(document) {
+    const value = host["_wgf_document_get_focus"](document);
+    return value >>> 0;
+}
+
+// wgf: call wgf_document_get_event_count
+/**
+ * The events of `document` since they were last taken, oldest first: how many wait, and
+ * the oldest taken into `out`, two ints each (the event, a wgf_document_event_t, and its
+ * element, a wgf_element_t), as many whole events as fit in `count` ints, returning how many
+ * ints it filled. An event's element is the one it happened to, or, when that has no id,
+ * the nearest element around it with one (a click on a button's label is the button's).
+ * Events wait while nobody takes them, the oldest dropped past 1024. 0 for a handle that
+ * isn't a document, or no array.
+ */
+export function wgf_document_get_event_count(document) {
+    const value = host["_wgf_document_get_event_count"](document);
+    return value;
+}
+
+// wgf: call wgf_document_take_events
+/**
+ * The events of `document` since they were last taken, oldest first: how many wait, and
+ * the oldest taken into `out`, two ints each (the event, a wgf_document_event_t, and its
+ * element, a wgf_element_t), as many whole events as fit in `count` ints, returning how many
+ * ints it filled. An event's element is the one it happened to, or, when that has no id,
+ * the nearest element around it with one (a click on a button's label is the button's).
+ * Events wait while nobody takes them, the oldest dropped past 1024. 0 for a handle that
+ * isn't a document, or no array.
+ */
+export function wgf_document_take_events(document, out) {
+    const outPointer = arrayOut(out, 0);
+    const value = host["_wgf_document_take_events"](document, outPointer, lengthOf(out));
+    arrayBack(outPointer, out, "HEAP32");
+    return value;
+}
+
+// wgf: call wgf_element_get_document
+/**
+ * The document an element is in, and its id ("" for none). 0 or "" for a handle that isn't
+ * an element.
+ */
+export function wgf_element_get_document(element) {
+    const value = host["_wgf_element_get_document"](element);
+    return value >>> 0;
+}
+
+// wgf: call wgf_element_get_id
+/**
+ * The document an element is in, and its id ("" for none). 0 or "" for a handle that isn't
+ * an element.
+ */
+export function wgf_element_get_id(element) {
+    const value = host["_wgf_element_get_id"](element);
+    return str(value);
+}
+
+// wgf: call wgf_element_set_text
+/**
+ * Its content as plain text (`text` shown as it is: no markup), or as RML (parsed, its
+ * elements made). The text getter gives the text of every element inside it, in order;
+ * the RML getter its content as RML. False for a handle that isn't an element, or no
+ * text. Text a getter returns is valid until the next call of this header that returns
+ * text.
+ */
+export function wgf_element_set_text(element, text) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_element_set_text"](element, cstr(text));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_element_get_text
+/**
+ * Its content as plain text (`text` shown as it is: no markup), or as RML (parsed, its
+ * elements made). The text getter gives the text of every element inside it, in order;
+ * the RML getter its content as RML. False for a handle that isn't an element, or no
+ * text. Text a getter returns is valid until the next call of this header that returns
+ * text.
+ */
+export function wgf_element_get_text(element) {
+    const value = host["_wgf_element_get_text"](element);
+    return str(value);
+}
+
+// wgf: call wgf_element_set_rml
+/**
+ * Its content as plain text (`text` shown as it is: no markup), or as RML (parsed, its
+ * elements made). The text getter gives the text of every element inside it, in order;
+ * the RML getter its content as RML. False for a handle that isn't an element, or no
+ * text. Text a getter returns is valid until the next call of this header that returns
+ * text.
+ */
+export function wgf_element_set_rml(element, rml) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_element_set_rml"](element, cstr(rml));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_element_get_rml
+/**
+ * Its content as plain text (`text` shown as it is: no markup), or as RML (parsed, its
+ * elements made). The text getter gives the text of every element inside it, in order;
+ * the RML getter its content as RML. False for a handle that isn't an element, or no
+ * text. Text a getter returns is valid until the next call of this header that returns
+ * text.
+ */
+export function wgf_element_get_rml(element) {
+    const value = host["_wgf_element_get_rml"](element);
+    return str(value);
+}
+
+// wgf: call wgf_element_set_attribute
+/**
+ * An attribute, set to `value` (`class`, `src`, a form control's `value`...); has: whether
+ * it is set; remove: unset, false when it wasn't. get gives "" for an attribute unset.
+ * False for a handle that isn't an element, or no name.
+ */
+export function wgf_element_set_attribute(element, name, value_) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_element_set_attribute"](element, cstr(name), cstr(value_));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_element_get_attribute
+/**
+ * An attribute, set to `value` (`class`, `src`, a form control's `value`...); has: whether
+ * it is set; remove: unset, false when it wasn't. get gives "" for an attribute unset.
+ * False for a handle that isn't an element, or no name.
+ */
+export function wgf_element_get_attribute(element, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_element_get_attribute"](element, cstr(name));
+    host["stackRestore"](mark);
+    return str(value);
+}
+
+// wgf: call wgf_element_has_attribute
+/**
+ * An attribute, set to `value` (`class`, `src`, a form control's `value`...); has: whether
+ * it is set; remove: unset, false when it wasn't. get gives "" for an attribute unset.
+ * False for a handle that isn't an element, or no name.
+ */
+export function wgf_element_has_attribute(element, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_element_has_attribute"](element, cstr(name));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_element_remove_attribute
+/**
+ * An attribute, set to `value` (`class`, `src`, a form control's `value`...); has: whether
+ * it is set; remove: unset, false when it wasn't. get gives "" for an attribute unset.
+ * False for a handle that isn't an element, or no name.
+ */
+export function wgf_element_remove_attribute(element, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_element_remove_attribute"](element, cstr(name));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_element_set_class
+/**
+ * A class, added (`on`) or taken off, as RCSS's selectors see it; has: whether it is on.
+ * False for a handle that isn't an element, or no name.
+ */
+export function wgf_element_set_class(element, name, on) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_element_set_class"](element, cstr(name), (on ? 1 : 0));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_element_has_class
+/**
+ * A class, added (`on`) or taken off, as RCSS's selectors see it; has: whether it is on.
+ * False for a handle that isn't an element, or no name.
+ */
+export function wgf_element_has_class(element, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_element_has_class"](element, cstr(name));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_element_set_property
+/**
+ * An RCSS property set on the element itself, over its style sheets' (`"color"`,
+ * `"#ffcc00"`); "" or NULL takes the element's own off. get gives the property's value as
+ * the element has it now, from wherever it comes, as RCSS text ("" for a name that isn't
+ * one). False for a handle that isn't an element, a name that isn't a property, or a value
+ * that isn't one of its values (logged).
+ */
+export function wgf_element_set_property(element, name, value_) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_element_set_property"](element, cstr(name), cstr(value_));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_element_get_property
+/**
+ * An RCSS property set on the element itself, over its style sheets' (`"color"`,
+ * `"#ffcc00"`); "" or NULL takes the element's own off. get gives the property's value as
+ * the element has it now, from wherever it comes, as RCSS text ("" for a name that isn't
+ * one). False for a handle that isn't an element, a name that isn't a property, or a value
+ * that isn't one of its values (logged).
+ */
+export function wgf_element_get_property(element, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_element_get_property"](element, cstr(name));
+    host["stackRestore"](mark);
+    return str(value);
+}
+
+// wgf: call wgf_element_set_value
+/**
+ * A form control's value: a text field's text, a slider's number, a choice's chosen value,
+ * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
+ * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
+ * for a handle that isn't a form control.
+ */
+export function wgf_element_set_value(element, value_) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_element_set_value"](element, cstr(value_));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_element_get_value
+/**
+ * A form control's value: a text field's text, a slider's number, a choice's chosen value,
+ * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
+ * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
+ * for a handle that isn't a form control.
+ */
+export function wgf_element_get_value(element) {
+    const value = host["_wgf_element_get_value"](element);
+    return str(value);
+}
+
+// wgf: call wgf_element_set_number
+/**
+ * A form control's value: a text field's text, a slider's number, a choice's chosen value,
+ * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
+ * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
+ * for a handle that isn't a form control.
+ */
+export function wgf_element_set_number(element, value_) {
+    const value = host["_wgf_element_set_number"](element, value_);
+    return value !== 0;
+}
+
+// wgf: call wgf_element_get_number
+/**
+ * A form control's value: a text field's text, a slider's number, a choice's chosen value,
+ * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
+ * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
+ * for a handle that isn't a form control.
+ */
+export function wgf_element_get_number(element) {
+    const value = host["_wgf_element_get_number"](element);
+    return value;
+}
+
+// wgf: call wgf_element_set_checked
+/**
+ * A checkbox or a radio button checked; false for a handle that isn't one.
+ */
+export function wgf_element_set_checked(element, checked) {
+    const value = host["_wgf_element_set_checked"](element, (checked ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_element_is_checked
+/**
+ * A checkbox or a radio button checked; false for a handle that isn't one.
+ */
+export function wgf_element_is_checked(element) {
+    const value = host["_wgf_element_is_checked"](element);
+    return value !== 0;
+}
+
+// wgf: call wgf_element_set_disabled
+/**
+ * A form control disabled: drawn as RCSS's `:disabled` says, taking no input or focus;
+ * false for a handle that isn't a form control.
+ */
+export function wgf_element_set_disabled(element, disabled) {
+    const value = host["_wgf_element_set_disabled"](element, (disabled ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_element_is_disabled
+/**
+ * A form control disabled: drawn as RCSS's `:disabled` says, taking no input or focus;
+ * false for a handle that isn't a form control.
+ */
+export function wgf_element_is_disabled(element) {
+    const value = host["_wgf_element_is_disabled"](element);
+    return value !== 0;
 }
 
 // wgf: call wgf_app_quit

@@ -518,6 +518,27 @@ export const Debug = Object.freeze({
     // wgf: call wgf_debug_is_fps_shown
     isFpsShown: raw.wgf_debug_is_fps_shown,
 });
+// wgf: typed Document
+export const Document = Object.freeze({
+    // wgf: call wgf_document_create
+    create: raw.wgf_document_create,
+    // wgf: call wgf_document_set_visible
+    setVisible: raw.wgf_document_set_visible,
+    // wgf: call wgf_document_is_visible
+    isVisible: raw.wgf_document_is_visible,
+    // wgf: call wgf_document_find
+    find: raw.wgf_document_find,
+    // wgf: call wgf_document_set_focus
+    setFocus: raw.wgf_document_set_focus,
+    // wgf: call wgf_document_get_focus
+    getFocus: raw.wgf_document_get_focus,
+    // wgf: call wgf_document_get_event_count
+    getEventCount: raw.wgf_document_get_event_count,
+    // wgf: call wgf_document_take_events
+    takeEvents: raw.wgf_document_take_events,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
+});
 // wgf: typed Draw
 export const Draw = Object.freeze({
     // wgf: call wgf_draw_rectangle
@@ -569,6 +590,55 @@ export const Draw = Object.freeze({
 export const Ease = Object.freeze({
     // wgf: call wgf_ease_value
     value: raw.wgf_ease_value,
+});
+// wgf: typed Element
+export const Element = Object.freeze({
+    // wgf: call wgf_element_get_document
+    getDocument: raw.wgf_element_get_document,
+    // wgf: call wgf_element_get_id
+    getId: raw.wgf_element_get_id,
+    // wgf: call wgf_element_set_text
+    setText: raw.wgf_element_set_text,
+    // wgf: call wgf_element_get_text
+    getText: raw.wgf_element_get_text,
+    // wgf: call wgf_element_set_rml
+    setRml: raw.wgf_element_set_rml,
+    // wgf: call wgf_element_get_rml
+    getRml: raw.wgf_element_get_rml,
+    // wgf: call wgf_element_set_attribute
+    setAttribute: raw.wgf_element_set_attribute,
+    // wgf: call wgf_element_get_attribute
+    getAttribute: raw.wgf_element_get_attribute,
+    // wgf: call wgf_element_has_attribute
+    hasAttribute: raw.wgf_element_has_attribute,
+    // wgf: call wgf_element_remove_attribute
+    removeAttribute: raw.wgf_element_remove_attribute,
+    // wgf: call wgf_element_set_class
+    setClass: raw.wgf_element_set_class,
+    // wgf: call wgf_element_has_class
+    hasClass: raw.wgf_element_has_class,
+    // wgf: call wgf_element_set_property
+    setProperty: raw.wgf_element_set_property,
+    // wgf: call wgf_element_get_property
+    getProperty: raw.wgf_element_get_property,
+    // wgf: call wgf_element_set_value
+    setValue: raw.wgf_element_set_value,
+    // wgf: call wgf_element_get_value
+    getValue: raw.wgf_element_get_value,
+    // wgf: call wgf_element_set_number
+    setNumber: raw.wgf_element_set_number,
+    // wgf: call wgf_element_get_number
+    getNumber: raw.wgf_element_get_number,
+    // wgf: call wgf_element_set_checked
+    setChecked: raw.wgf_element_set_checked,
+    // wgf: call wgf_element_is_checked
+    isChecked: raw.wgf_element_is_checked,
+    // wgf: call wgf_element_set_disabled
+    setDisabled: raw.wgf_element_set_disabled,
+    // wgf: call wgf_element_is_disabled
+    isDisabled: raw.wgf_element_is_disabled,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
 });
 // wgf: typed Emitter2d
 export const Emitter2d = Object.freeze({
@@ -1941,6 +2011,12 @@ export const Ui = Object.freeze({
     getStyleFont: raw.wgf_ui_get_style_font,
     // wgf: call wgf_ui_reset_style
     resetStyle: raw.wgf_ui_reset_style,
+    // wgf: call wgf_ui_set_document_font
+    setDocumentFont: raw.wgf_ui_set_document_font,
+    // wgf: call wgf_ui_get_document_font
+    getDocumentFont: raw.wgf_ui_get_document_font,
+    // wgf: call wgf_ui_draw_documents
+    drawDocuments: raw.wgf_ui_draw_documents,
 });
 // wgf: typed Vehicle
 export const Vehicle = Object.freeze({
@@ -2189,6 +2265,8 @@ export const BoundsMode = Object.freeze({ WRAP: 0, CLAMP: 1, DESTROY: 2 });
 export const ColorStock = Object.freeze({ BLANK: 0, WHITE: 1, BLACK: 2, LIGHTGRAY: 3, GRAY: 4, DARKGRAY: 5, YELLOW: 6, GOLD: 7, ORANGE: 8, PINK: 9, RED: 10, MAROON: 11, GREEN: 12, LIME: 13, DARKGREEN: 14, SKYBLUE: 15, BLUE: 16, DARKBLUE: 17, PURPLE: 18, VIOLET: 19, DARKPURPLE: 20, BEIGE: 21, BROWN: 22, DARKBROWN: 23, MAGENTA: 24, RAYWHITE: 25 });
 // wgf: enum Component
 export const Component = Object.freeze({ NONE: 0, MOTION: 1, BOUNDS: 2, LIFETIME: 3, COLLIDER: 4, VOICE: 5, BODY: 6, VEHICLE: 7 });
+// wgf: enum DocumentEvent
+export const DocumentEvent = Object.freeze({ NONE: 0, CLICK: 1, CHANGE: 2, SUBMIT: 3, FOCUS: 4, BLUR: 5 });
 // wgf: enum Easing
 export const Easing = Object.freeze({ LINEAR: 0, QUAD_IN: 1, QUAD_OUT: 2, QUAD_IN_OUT: 3, CUBIC_IN: 4, CUBIC_OUT: 5, CUBIC_IN_OUT: 6, QUART_IN: 7, QUART_OUT: 8, QUART_IN_OUT: 9, SINE_IN: 10, SINE_OUT: 11, SINE_IN_OUT: 12, EXPO_IN: 13, EXPO_OUT: 14, EXPO_IN_OUT: 15, CIRC_IN: 16, CIRC_OUT: 17, CIRC_IN_OUT: 18, BACK_IN: 19, BACK_OUT: 20, BACK_IN_OUT: 21, ELASTIC_IN: 22, ELASTIC_OUT: 23, ELASTIC_IN_OUT: 24, BOUNCE_IN: 25, BOUNCE_OUT: 26, BOUNCE_IN_OUT: 27 });
 // wgf: enum FollowMode

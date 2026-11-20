@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "sokol_gfx.h"
+#include "util/sokol_gl.h"
 #include "wgf_handle.h"
 #include "wgf_color.h"
 #include "wgf_text.h"
@@ -57,5 +58,28 @@ void wgf_gfx_priv_font_draw_block_3d(wgf_handle_t font, const char *text, float 
 struct FONScontext;
 bool wgf_gfx_priv_fontstash_render_state(struct FONScontext *context, sg_view *atlas, sg_sampler *sampler,
                                          sg_shader *shader);
+/* sokol_fontstash's 2D pipeline (blended; the atlas's coverage as alpha); false before it has one. */
+bool wgf_gfx_priv_fontstash_pipeline(struct FONScontext *context, sgl_pipeline *pipeline);
+
+/* Glyphs for meshes of a caller's own (the ui module's documents), in logical pixels,
+ * rasterized at the frame's pixel density as the text drawn here is. `font` 0 is the
+ * default font, and a font not READY draws as the default (then the built-in) does.
+ * vertical_metrics: `size`'s ascender and descender (both positive, above and below the
+ * baseline) and line height; false before setup. span_width: the advance of
+ * [start, end), one line. quads: [start, end)'s glyphs from `x` along the baseline at
+ * `baseline`, up to `max_quads` of them into `out`, 8 floats each (x0, y0, x1, y1, then
+ * s0, t0, s1, t1 in the atlas, 0 to 1), how many: a glyph rasterized here reaches the
+ * atlas's texture at the frame's flush. */
+bool wgf_gfx_priv_font_vertical_metrics(wgf_handle_t font, float size, float *ascender, float *descender,
+                                        float *line_height);
+float wgf_gfx_priv_font_span_width(wgf_handle_t font, const char *start, const char *end, float size);
+int wgf_gfx_priv_font_quads(wgf_handle_t font, const char *start, const char *end, float size, float x,
+                            float baseline, float *out, int max_quads);
+/* What to draw those quads with: the atlas, its sampler, and sokol_fontstash's 2D
+ * pipeline; false before setup. The atlas's view changes as it grows, so ask for every
+ * draw. And its version: changed whenever glyphs move in it (it grew, or fontstash was
+ * made again), when quads made before are wrong. */
+bool wgf_gfx_priv_font_atlas(sg_view *atlas, sg_sampler *sampler, sgl_pipeline *pipeline);
+unsigned wgf_gfx_priv_font_atlas_version(void);
 
 #endif

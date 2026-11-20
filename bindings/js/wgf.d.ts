@@ -68,6 +68,10 @@ export type wgf_scene_t = number & { readonly [kind]: "wgf_scene_t" };
 export type wgf_prefab_t = number & { readonly [kind]: "wgf_prefab_t" };
 /** A handle of kind wgf_tween_t; 0 is none. */
 export type wgf_tween_t = number & { readonly [kind]: "wgf_tween_t" };
+/** A handle of kind wgf_document_t; 0 is none. */
+export type wgf_document_t = number & { readonly [kind]: "wgf_document_t" };
+/** A handle of kind wgf_element_t; 0 is none. */
+export type wgf_element_t = number & { readonly [kind]: "wgf_element_t" };
 export type wgf_color_t = number;
 export interface wgf_vec2_t { x: number; y: number; }
 export interface wgf_vec3_t { x: number; y: number; z: number; }
@@ -909,6 +913,17 @@ export declare const WGF_UI_VALUE_FOCUS_WIDTH: 6;
 export declare const WGF_UI_VALUE_BAR_WIDTH: 7;
 export declare const WGF_UI_VALUE_BAR_HEIGHT: 8;
 export type wgf_ui_value_t = typeof WGF_UI_VALUE_TEXT_SIZE | typeof WGF_UI_VALUE_PADDING | typeof WGF_UI_VALUE_GAP | typeof WGF_UI_VALUE_CORNER_RADIUS | typeof WGF_UI_VALUE_BUTTON_PADDING | typeof WGF_UI_VALUE_BUTTON_WIDTH | typeof WGF_UI_VALUE_FOCUS_WIDTH | typeof WGF_UI_VALUE_BAR_WIDTH | typeof WGF_UI_VALUE_BAR_HEIGHT;
+
+/**
+ * What happened to an element, as wgf_document_take_events gives it.
+ */
+export declare const WGF_DOCUMENT_EVENT_NONE: 0;
+export declare const WGF_DOCUMENT_EVENT_CLICK: 1;
+export declare const WGF_DOCUMENT_EVENT_CHANGE: 2;
+export declare const WGF_DOCUMENT_EVENT_SUBMIT: 3;
+export declare const WGF_DOCUMENT_EVENT_FOCUS: 4;
+export declare const WGF_DOCUMENT_EVENT_BLUR: 5;
+export type wgf_document_event_t = typeof WGF_DOCUMENT_EVENT_NONE | typeof WGF_DOCUMENT_EVENT_CLICK | typeof WGF_DOCUMENT_EVENT_CHANGE | typeof WGF_DOCUMENT_EVENT_SUBMIT | typeof WGF_DOCUMENT_EVENT_FOCUS | typeof WGF_DOCUMENT_EVENT_BLUR;
 
 /**
  * Overlaps.
@@ -8026,6 +8041,255 @@ export declare function wgf_ui_get_style_font(): wgf_font_t;
  * False for a handle that isn't a font (0 is).
  */
 export declare function wgf_ui_reset_style(): void;
+
+/**
+ * The font RCSS's `font-family: <family>` means in every document (its name matched
+ * without case); 0 unsets it, so the family draws in the default font. It holds a
+ * reference to `font`. False for no family, or a handle that isn't a font.
+ */
+export declare function wgf_ui_set_document_font(family: string | null, font: wgf_font_t | 0): boolean;
+
+/**
+ * The font RCSS's `font-family: <family>` means in every document (its name matched
+ * without case); 0 unsets it, so the family draws in the default font. It holds a
+ * reference to `font`. False for no family, or a handle that isn't a font.
+ */
+export declare function wgf_ui_get_document_font(family: string | null): wgf_font_t;
+
+/**
+ * The shown documents, worked by this frame's input, laid out, and drawn here, in the frame
+ * callback, over what was drawn before; their events are raised as they are worked. Once a
+ * frame: a second call in a frame draws them again without the input. False outside a
+ * frame (logged), or before any document was created.
+ */
+export declare function wgf_ui_draw_documents(): boolean;
+
+/**
+ * The document in the .rml file at `path` under fs's root, loading: hidden until shown. A
+ * path created before gives the same document with one more reference. 0 only when there
+ * is no room for another (4096).
+ */
+export declare function wgf_document_create(path: string | null): wgf_document_t;
+
+/**
+ * Shown (drawn by wgf_ui_draw_documents, and worked by the input) or hidden; a document
+ * asked to show while it loads is shown once READY. Shown documents are drawn in the
+ * order they were last shown, the last on top. False for a handle that isn't a document,
+ * or one that FAILED.
+ */
+export declare function wgf_document_set_visible(document: wgf_document_t | 0, visible: boolean): boolean;
+
+/**
+ * Shown (drawn by wgf_ui_draw_documents, and worked by the input) or hidden; a document
+ * asked to show while it loads is shown once READY. Shown documents are drawn in the
+ * order they were last shown, the last on top. False for a handle that isn't a document,
+ * or one that FAILED.
+ */
+export declare function wgf_document_is_visible(document: wgf_document_t | 0): boolean;
+
+/**
+ * The element of `document` whose id is `id`, or 0: none has it, or the document isn't
+ * READY. The same element gives the same handle.
+ */
+export declare function wgf_document_find(document: wgf_document_t | 0, id: string | null): wgf_element_t;
+
+/**
+ * The element of `document` that has the focus, or 0. Setting it moves the focus there,
+ * shown as keys move it (`:focus-visible`); 0 takes it from the document. False for a
+ * handle that isn't a document, an element of another document, or one that can't take
+ * the focus (hidden, disabled, or neither a form control nor `tab-index: auto`).
+ */
+export declare function wgf_document_set_focus(document: wgf_document_t | 0, element: wgf_element_t | 0): boolean;
+
+/**
+ * The element of `document` that has the focus, or 0. Setting it moves the focus there,
+ * shown as keys move it (`:focus-visible`); 0 takes it from the document. False for a
+ * handle that isn't a document, an element of another document, or one that can't take
+ * the focus (hidden, disabled, or neither a form control nor `tab-index: auto`).
+ */
+export declare function wgf_document_get_focus(document: wgf_document_t | 0): wgf_element_t;
+
+/**
+ * The events of `document` since they were last taken, oldest first: how many wait, and
+ * the oldest taken into `out`, two ints each (the event, a wgf_document_event_t, and its
+ * element, a wgf_element_t), as many whole events as fit in `count` ints, returning how many
+ * ints it filled. An event's element is the one it happened to, or, when that has no id,
+ * the nearest element around it with one (a click on a button's label is the button's).
+ * Events wait while nobody takes them, the oldest dropped past 1024. 0 for a handle that
+ * isn't a document, or no array.
+ */
+export declare function wgf_document_get_event_count(document: wgf_document_t | 0): number;
+
+/**
+ * The events of `document` since they were last taken, oldest first: how many wait, and
+ * the oldest taken into `out`, two ints each (the event, a wgf_document_event_t, and its
+ * element, a wgf_element_t), as many whole events as fit in `count` ints, returning how many
+ * ints it filled. An event's element is the one it happened to, or, when that has no id,
+ * the nearest element around it with one (a click on a button's label is the button's).
+ * Events wait while nobody takes them, the oldest dropped past 1024. 0 for a handle that
+ * isn't a document, or no array.
+ */
+export declare function wgf_document_take_events(document: wgf_document_t | 0, out: number[] | Int32Array | null): number;
+
+/**
+ * The document an element is in, and its id ("" for none). 0 or "" for a handle that isn't
+ * an element.
+ */
+export declare function wgf_element_get_document(element: wgf_element_t | 0): wgf_document_t;
+
+/**
+ * The document an element is in, and its id ("" for none). 0 or "" for a handle that isn't
+ * an element.
+ */
+export declare function wgf_element_get_id(element: wgf_element_t | 0): string;
+
+/**
+ * Its content as plain text (`text` shown as it is: no markup), or as RML (parsed, its
+ * elements made). The text getter gives the text of every element inside it, in order;
+ * the RML getter its content as RML. False for a handle that isn't an element, or no
+ * text. Text a getter returns is valid until the next call of this header that returns
+ * text.
+ */
+export declare function wgf_element_set_text(element: wgf_element_t | 0, text: string | null): boolean;
+
+/**
+ * Its content as plain text (`text` shown as it is: no markup), or as RML (parsed, its
+ * elements made). The text getter gives the text of every element inside it, in order;
+ * the RML getter its content as RML. False for a handle that isn't an element, or no
+ * text. Text a getter returns is valid until the next call of this header that returns
+ * text.
+ */
+export declare function wgf_element_get_text(element: wgf_element_t | 0): string;
+
+/**
+ * Its content as plain text (`text` shown as it is: no markup), or as RML (parsed, its
+ * elements made). The text getter gives the text of every element inside it, in order;
+ * the RML getter its content as RML. False for a handle that isn't an element, or no
+ * text. Text a getter returns is valid until the next call of this header that returns
+ * text.
+ */
+export declare function wgf_element_set_rml(element: wgf_element_t | 0, rml: string | null): boolean;
+
+/**
+ * Its content as plain text (`text` shown as it is: no markup), or as RML (parsed, its
+ * elements made). The text getter gives the text of every element inside it, in order;
+ * the RML getter its content as RML. False for a handle that isn't an element, or no
+ * text. Text a getter returns is valid until the next call of this header that returns
+ * text.
+ */
+export declare function wgf_element_get_rml(element: wgf_element_t | 0): string;
+
+/**
+ * An attribute, set to `value` (`class`, `src`, a form control's `value`...); has: whether
+ * it is set; remove: unset, false when it wasn't. get gives "" for an attribute unset.
+ * False for a handle that isn't an element, or no name.
+ */
+export declare function wgf_element_set_attribute(element: wgf_element_t | 0, name: string | null, value_: string | null): boolean;
+
+/**
+ * An attribute, set to `value` (`class`, `src`, a form control's `value`...); has: whether
+ * it is set; remove: unset, false when it wasn't. get gives "" for an attribute unset.
+ * False for a handle that isn't an element, or no name.
+ */
+export declare function wgf_element_get_attribute(element: wgf_element_t | 0, name: string | null): string;
+
+/**
+ * An attribute, set to `value` (`class`, `src`, a form control's `value`...); has: whether
+ * it is set; remove: unset, false when it wasn't. get gives "" for an attribute unset.
+ * False for a handle that isn't an element, or no name.
+ */
+export declare function wgf_element_has_attribute(element: wgf_element_t | 0, name: string | null): boolean;
+
+/**
+ * An attribute, set to `value` (`class`, `src`, a form control's `value`...); has: whether
+ * it is set; remove: unset, false when it wasn't. get gives "" for an attribute unset.
+ * False for a handle that isn't an element, or no name.
+ */
+export declare function wgf_element_remove_attribute(element: wgf_element_t | 0, name: string | null): boolean;
+
+/**
+ * A class, added (`on`) or taken off, as RCSS's selectors see it; has: whether it is on.
+ * False for a handle that isn't an element, or no name.
+ */
+export declare function wgf_element_set_class(element: wgf_element_t | 0, name: string | null, on: boolean): boolean;
+
+/**
+ * A class, added (`on`) or taken off, as RCSS's selectors see it; has: whether it is on.
+ * False for a handle that isn't an element, or no name.
+ */
+export declare function wgf_element_has_class(element: wgf_element_t | 0, name: string | null): boolean;
+
+/**
+ * An RCSS property set on the element itself, over its style sheets' (`"color"`,
+ * `"#ffcc00"`); "" or NULL takes the element's own off. get gives the property's value as
+ * the element has it now, from wherever it comes, as RCSS text ("" for a name that isn't
+ * one). False for a handle that isn't an element, a name that isn't a property, or a value
+ * that isn't one of its values (logged).
+ */
+export declare function wgf_element_set_property(element: wgf_element_t | 0, name: string | null, value_: string | null): boolean;
+
+/**
+ * An RCSS property set on the element itself, over its style sheets' (`"color"`,
+ * `"#ffcc00"`); "" or NULL takes the element's own off. get gives the property's value as
+ * the element has it now, from wherever it comes, as RCSS text ("" for a name that isn't
+ * one). False for a handle that isn't an element, a name that isn't a property, or a value
+ * that isn't one of its values (logged).
+ */
+export declare function wgf_element_get_property(element: wgf_element_t | 0, name: string | null): string;
+
+/**
+ * A form control's value: a text field's text, a slider's number, a choice's chosen value,
+ * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
+ * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
+ * for a handle that isn't a form control.
+ */
+export declare function wgf_element_set_value(element: wgf_element_t | 0, value_: string | null): boolean;
+
+/**
+ * A form control's value: a text field's text, a slider's number, a choice's chosen value,
+ * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
+ * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
+ * for a handle that isn't a form control.
+ */
+export declare function wgf_element_get_value(element: wgf_element_t | 0): string;
+
+/**
+ * A form control's value: a text field's text, a slider's number, a choice's chosen value,
+ * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
+ * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
+ * for a handle that isn't a form control.
+ */
+export declare function wgf_element_set_number(element: wgf_element_t | 0, value_: number): boolean;
+
+/**
+ * A form control's value: a text field's text, a slider's number, a choice's chosen value,
+ * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
+ * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
+ * for a handle that isn't a form control.
+ */
+export declare function wgf_element_get_number(element: wgf_element_t | 0): number;
+
+/**
+ * A checkbox or a radio button checked; false for a handle that isn't one.
+ */
+export declare function wgf_element_set_checked(element: wgf_element_t | 0, checked: boolean): boolean;
+
+/**
+ * A checkbox or a radio button checked; false for a handle that isn't one.
+ */
+export declare function wgf_element_is_checked(element: wgf_element_t | 0): boolean;
+
+/**
+ * A form control disabled: drawn as RCSS's `:disabled` says, taking no input or focus;
+ * false for a handle that isn't a form control.
+ */
+export declare function wgf_element_set_disabled(element: wgf_element_t | 0, disabled: boolean): boolean;
+
+/**
+ * A form control disabled: drawn as RCSS's `:disabled` says, taking no input or focus;
+ * false for a handle that isn't a form control.
+ */
+export declare function wgf_element_is_disabled(element: wgf_element_t | 0): boolean;
 
 /**
  * Ask the program to quit: the frame under way finishes, then shutdown runs.

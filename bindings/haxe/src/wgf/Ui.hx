@@ -198,4 +198,29 @@ class Ui {
 	**/
 	public static inline function resetStyle():Void
 		Raw.wgf_ui_reset_style();
+
+	/**
+	    The font RCSS's `font-family: <family>` means in every document (its name matched
+	    without case); 0 unsets it, so the family draws in the default font. It holds a
+	    reference to `font`. False for no family, or a handle that isn't a font.
+	**/
+	public static inline function setDocumentFont(family:String, font:Font):Bool
+		return Raw.wgf_ui_set_document_font(family, font);
+
+	/**
+	    The font RCSS's `font-family: <family>` means in every document (its name matched
+	    without case); 0 unsets it, so the family draws in the default font. It holds a
+	    reference to `font`. False for no family, or a handle that isn't a font.
+	**/
+	public static inline function getDocumentFont(family:String):Font
+		return Raw.wgf_ui_get_document_font(family);
+
+	/**
+	    The shown documents, worked by this frame's input, laid out, and drawn here, in the frame
+	    callback, over what was drawn before; their events are raised as they are worked. Once a
+	    frame: a second call in a frame draws them again without the input. False outside a
+	    frame (logged), or before any document was created.
+	**/
+	public static inline function drawDocuments():Bool
+		return Raw.wgf_ui_draw_documents();
 }

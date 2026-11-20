@@ -1562,6 +1562,71 @@ export declare const Debug: {
      */
     readonly isFpsShown: typeof raw.wgf_debug_is_fps_shown;
 };
+/** A handle of kind wgf_document_t: the raw binding's branded type. */
+export type Document = raw.wgf_document_t;
+export declare const Document: {
+    /**
+     * The document in the .rml file at `path` under fs's root, loading: hidden until shown. A
+     * path created before gives the same document with one more reference. 0 only when there
+     * is no room for another (4096).
+     */
+    readonly create: typeof raw.wgf_document_create;
+    /**
+     * Shown (drawn by wgf_ui_draw_documents, and worked by the input) or hidden; a document
+     * asked to show while it loads is shown once READY. Shown documents are drawn in the
+     * order they were last shown, the last on top. False for a handle that isn't a document,
+     * or one that FAILED.
+     */
+    readonly setVisible: typeof raw.wgf_document_set_visible;
+    /**
+     * Shown (drawn by wgf_ui_draw_documents, and worked by the input) or hidden; a document
+     * asked to show while it loads is shown once READY. Shown documents are drawn in the
+     * order they were last shown, the last on top. False for a handle that isn't a document,
+     * or one that FAILED.
+     */
+    readonly isVisible: typeof raw.wgf_document_is_visible;
+    /**
+     * The element of `document` whose id is `id`, or 0: none has it, or the document isn't
+     * READY. The same element gives the same handle.
+     */
+    readonly find: typeof raw.wgf_document_find;
+    /**
+     * The element of `document` that has the focus, or 0. Setting it moves the focus there,
+     * shown as keys move it (`:focus-visible`); 0 takes it from the document. False for a
+     * handle that isn't a document, an element of another document, or one that can't take
+     * the focus (hidden, disabled, or neither a form control nor `tab-index: auto`).
+     */
+    readonly setFocus: typeof raw.wgf_document_set_focus;
+    /**
+     * The element of `document` that has the focus, or 0. Setting it moves the focus there,
+     * shown as keys move it (`:focus-visible`); 0 takes it from the document. False for a
+     * handle that isn't a document, an element of another document, or one that can't take
+     * the focus (hidden, disabled, or neither a form control nor `tab-index: auto`).
+     */
+    readonly getFocus: typeof raw.wgf_document_get_focus;
+    /**
+     * The events of `document` since they were last taken, oldest first: how many wait, and
+     * the oldest taken into `out`, two ints each (the event, a wgf_document_event_t, and its
+     * element, a wgf_element_t), as many whole events as fit in `count` ints, returning how many
+     * ints it filled. An event's element is the one it happened to, or, when that has no id,
+     * the nearest element around it with one (a click on a button's label is the button's).
+     * Events wait while nobody takes them, the oldest dropped past 1024. 0 for a handle that
+     * isn't a document, or no array.
+     */
+    readonly getEventCount: typeof raw.wgf_document_get_event_count;
+    /**
+     * The events of `document` since they were last taken, oldest first: how many wait, and
+     * the oldest taken into `out`, two ints each (the event, a wgf_document_event_t, and its
+     * element, a wgf_element_t), as many whole events as fit in `count` ints, returning how many
+     * ints it filled. An event's element is the one it happened to, or, when that has no id,
+     * the nearest element around it with one (a click on a button's label is the button's).
+     * Events wait while nobody takes them, the oldest dropped past 1024. 0 for a handle that
+     * isn't a document, or no array.
+     */
+    readonly takeEvents: typeof raw.wgf_document_take_events;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
+};
 export declare const Draw: {
     /**
      * Immediate mode 2D: each call draws once, in the frame it is made in, in call order
@@ -1743,6 +1808,150 @@ export declare const Ease: {
      * ease that isn't one is LINEAR.
      */
     readonly value: typeof raw.wgf_ease_value;
+};
+/** A handle of kind wgf_element_t: the raw binding's branded type. */
+export type Element = raw.wgf_element_t;
+export declare const Element: {
+    /**
+     * The document an element is in, and its id ("" for none). 0 or "" for a handle that isn't
+     * an element.
+     */
+    readonly getDocument: typeof raw.wgf_element_get_document;
+    /**
+     * The document an element is in, and its id ("" for none). 0 or "" for a handle that isn't
+     * an element.
+     */
+    readonly getId: typeof raw.wgf_element_get_id;
+    /**
+     * Its content as plain text (`text` shown as it is: no markup), or as RML (parsed, its
+     * elements made). The text getter gives the text of every element inside it, in order;
+     * the RML getter its content as RML. False for a handle that isn't an element, or no
+     * text. Text a getter returns is valid until the next call of this header that returns
+     * text.
+     */
+    readonly setText: typeof raw.wgf_element_set_text;
+    /**
+     * Its content as plain text (`text` shown as it is: no markup), or as RML (parsed, its
+     * elements made). The text getter gives the text of every element inside it, in order;
+     * the RML getter its content as RML. False for a handle that isn't an element, or no
+     * text. Text a getter returns is valid until the next call of this header that returns
+     * text.
+     */
+    readonly getText: typeof raw.wgf_element_get_text;
+    /**
+     * Its content as plain text (`text` shown as it is: no markup), or as RML (parsed, its
+     * elements made). The text getter gives the text of every element inside it, in order;
+     * the RML getter its content as RML. False for a handle that isn't an element, or no
+     * text. Text a getter returns is valid until the next call of this header that returns
+     * text.
+     */
+    readonly setRml: typeof raw.wgf_element_set_rml;
+    /**
+     * Its content as plain text (`text` shown as it is: no markup), or as RML (parsed, its
+     * elements made). The text getter gives the text of every element inside it, in order;
+     * the RML getter its content as RML. False for a handle that isn't an element, or no
+     * text. Text a getter returns is valid until the next call of this header that returns
+     * text.
+     */
+    readonly getRml: typeof raw.wgf_element_get_rml;
+    /**
+     * An attribute, set to `value` (`class`, `src`, a form control's `value`...); has: whether
+     * it is set; remove: unset, false when it wasn't. get gives "" for an attribute unset.
+     * False for a handle that isn't an element, or no name.
+     */
+    readonly setAttribute: typeof raw.wgf_element_set_attribute;
+    /**
+     * An attribute, set to `value` (`class`, `src`, a form control's `value`...); has: whether
+     * it is set; remove: unset, false when it wasn't. get gives "" for an attribute unset.
+     * False for a handle that isn't an element, or no name.
+     */
+    readonly getAttribute: typeof raw.wgf_element_get_attribute;
+    /**
+     * An attribute, set to `value` (`class`, `src`, a form control's `value`...); has: whether
+     * it is set; remove: unset, false when it wasn't. get gives "" for an attribute unset.
+     * False for a handle that isn't an element, or no name.
+     */
+    readonly hasAttribute: typeof raw.wgf_element_has_attribute;
+    /**
+     * An attribute, set to `value` (`class`, `src`, a form control's `value`...); has: whether
+     * it is set; remove: unset, false when it wasn't. get gives "" for an attribute unset.
+     * False for a handle that isn't an element, or no name.
+     */
+    readonly removeAttribute: typeof raw.wgf_element_remove_attribute;
+    /**
+     * A class, added (`on`) or taken off, as RCSS's selectors see it; has: whether it is on.
+     * False for a handle that isn't an element, or no name.
+     */
+    readonly setClass: typeof raw.wgf_element_set_class;
+    /**
+     * A class, added (`on`) or taken off, as RCSS's selectors see it; has: whether it is on.
+     * False for a handle that isn't an element, or no name.
+     */
+    readonly hasClass: typeof raw.wgf_element_has_class;
+    /**
+     * An RCSS property set on the element itself, over its style sheets' (`"color"`,
+     * `"#ffcc00"`); "" or NULL takes the element's own off. get gives the property's value as
+     * the element has it now, from wherever it comes, as RCSS text ("" for a name that isn't
+     * one). False for a handle that isn't an element, a name that isn't a property, or a value
+     * that isn't one of its values (logged).
+     */
+    readonly setProperty: typeof raw.wgf_element_set_property;
+    /**
+     * An RCSS property set on the element itself, over its style sheets' (`"color"`,
+     * `"#ffcc00"`); "" or NULL takes the element's own off. get gives the property's value as
+     * the element has it now, from wherever it comes, as RCSS text ("" for a name that isn't
+     * one). False for a handle that isn't an element, a name that isn't a property, or a value
+     * that isn't one of its values (logged).
+     */
+    readonly getProperty: typeof raw.wgf_element_get_property;
+    /**
+     * A form control's value: a text field's text, a slider's number, a choice's chosen value,
+     * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
+     * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
+     * for a handle that isn't a form control.
+     */
+    readonly setValue: typeof raw.wgf_element_set_value;
+    /**
+     * A form control's value: a text field's text, a slider's number, a choice's chosen value,
+     * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
+     * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
+     * for a handle that isn't a form control.
+     */
+    readonly getValue: typeof raw.wgf_element_get_value;
+    /**
+     * A form control's value: a text field's text, a slider's number, a choice's chosen value,
+     * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
+     * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
+     * for a handle that isn't a form control.
+     */
+    readonly setNumber: typeof raw.wgf_element_set_number;
+    /**
+     * A form control's value: a text field's text, a slider's number, a choice's chosen value,
+     * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
+     * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
+     * for a handle that isn't a form control.
+     */
+    readonly getNumber: typeof raw.wgf_element_get_number;
+    /**
+     * A checkbox or a radio button checked; false for a handle that isn't one.
+     */
+    readonly setChecked: typeof raw.wgf_element_set_checked;
+    /**
+     * A checkbox or a radio button checked; false for a handle that isn't one.
+     */
+    readonly isChecked: typeof raw.wgf_element_is_checked;
+    /**
+     * A form control disabled: drawn as RCSS's `:disabled` says, taking no input or focus;
+     * false for a handle that isn't a form control.
+     */
+    readonly setDisabled: typeof raw.wgf_element_set_disabled;
+    /**
+     * A form control disabled: drawn as RCSS's `:disabled` says, taking no input or focus;
+     * false for a handle that isn't a form control.
+     */
+    readonly isDisabled: typeof raw.wgf_element_is_disabled;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Emitter2d = raw.wgf_actor_t;
@@ -5833,6 +6042,25 @@ export declare const Ui: {
      * False for a handle that isn't a font (0 is).
      */
     readonly resetStyle: typeof raw.wgf_ui_reset_style;
+    /**
+     * The font RCSS's `font-family: <family>` means in every document (its name matched
+     * without case); 0 unsets it, so the family draws in the default font. It holds a
+     * reference to `font`. False for no family, or a handle that isn't a font.
+     */
+    readonly setDocumentFont: typeof raw.wgf_ui_set_document_font;
+    /**
+     * The font RCSS's `font-family: <family>` means in every document (its name matched
+     * without case); 0 unsets it, so the family draws in the default font. It holds a
+     * reference to `font`. False for no family, or a handle that isn't a font.
+     */
+    readonly getDocumentFont: typeof raw.wgf_ui_get_document_font;
+    /**
+     * The shown documents, worked by this frame's input, laid out, and drawn here, in the frame
+     * callback, over what was drawn before; their events are raised as they are worked. Once a
+     * frame: a second call in a frame draws them again without the input. False outside a
+     * frame (logged), or before any document was created.
+     */
+    readonly drawDocuments: typeof raw.wgf_ui_draw_documents;
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Vehicle = raw.wgf_actor_t;
@@ -6611,6 +6839,8 @@ export type ColorStock = raw.wgf_color_stock_t;
 export declare const ColorStock: { readonly BLANK: ColorStock; readonly WHITE: ColorStock; readonly BLACK: ColorStock; readonly LIGHTGRAY: ColorStock; readonly GRAY: ColorStock; readonly DARKGRAY: ColorStock; readonly YELLOW: ColorStock; readonly GOLD: ColorStock; readonly ORANGE: ColorStock; readonly PINK: ColorStock; readonly RED: ColorStock; readonly MAROON: ColorStock; readonly GREEN: ColorStock; readonly LIME: ColorStock; readonly DARKGREEN: ColorStock; readonly SKYBLUE: ColorStock; readonly BLUE: ColorStock; readonly DARKBLUE: ColorStock; readonly PURPLE: ColorStock; readonly VIOLET: ColorStock; readonly DARKPURPLE: ColorStock; readonly BEIGE: ColorStock; readonly BROWN: ColorStock; readonly DARKBROWN: ColorStock; readonly MAGENTA: ColorStock; readonly RAYWHITE: ColorStock; };
 export type Component = raw.wgf_component_t;
 export declare const Component: { readonly NONE: Component; readonly MOTION: Component; readonly BOUNDS: Component; readonly LIFETIME: Component; readonly COLLIDER: Component; readonly VOICE: Component; readonly BODY: Component; readonly VEHICLE: Component; };
+export type DocumentEvent = raw.wgf_document_event_t;
+export declare const DocumentEvent: { readonly NONE: DocumentEvent; readonly CLICK: DocumentEvent; readonly CHANGE: DocumentEvent; readonly SUBMIT: DocumentEvent; readonly FOCUS: DocumentEvent; readonly BLUR: DocumentEvent; };
 export type Easing = raw.wgf_easing_t;
 export declare const Easing: { readonly LINEAR: Easing; readonly QUAD_IN: Easing; readonly QUAD_OUT: Easing; readonly QUAD_IN_OUT: Easing; readonly CUBIC_IN: Easing; readonly CUBIC_OUT: Easing; readonly CUBIC_IN_OUT: Easing; readonly QUART_IN: Easing; readonly QUART_OUT: Easing; readonly QUART_IN_OUT: Easing; readonly SINE_IN: Easing; readonly SINE_OUT: Easing; readonly SINE_IN_OUT: Easing; readonly EXPO_IN: Easing; readonly EXPO_OUT: Easing; readonly EXPO_IN_OUT: Easing; readonly CIRC_IN: Easing; readonly CIRC_OUT: Easing; readonly CIRC_IN_OUT: Easing; readonly BACK_IN: Easing; readonly BACK_OUT: Easing; readonly BACK_IN_OUT: Easing; readonly ELASTIC_IN: Easing; readonly ELASTIC_OUT: Easing; readonly ELASTIC_IN_OUT: Easing; readonly BOUNCE_IN: Easing; readonly BOUNCE_OUT: Easing; readonly BOUNCE_IN_OUT: Easing; };
 export type FollowMode = raw.wgf_follow_mode_t;

@@ -1,0 +1,147 @@
+/* The ui-document example's menu (examples/c/ui-document), drawn from skin.png
+   (tools/gen_ui_skin.py): each panel a nine-patch, its corners kept and the rest
+   stretched, a sprite for every state. */
+
+@spritesheet skin {
+    src: skin.png;
+    button: 0px 0px 48px 48px;
+    button-inner: 12px 12px 24px 24px;
+    button-hover: 48px 0px 48px 48px;
+    button-hover-inner: 60px 12px 24px 24px;
+    button-active: 96px 0px 48px 48px;
+    button-active-inner: 108px 12px 24px 24px;
+    button-focus: 144px 0px 48px 48px;
+    button-focus-inner: 156px 12px 24px 24px;
+    button-disabled: 192px 0px 48px 48px;
+    button-disabled-inner: 204px 12px 24px 24px;
+    panel: 0px 48px 64px 64px;
+    panel-inner: 18px 66px 28px 28px;
+    check: 64px 48px 24px 24px;
+    check-on: 88px 48px 24px 24px;
+    check-focus: 112px 48px 24px 24px;
+    check-on-focus: 136px 48px 24px 24px;
+    track: 160px 48px 48px 12px;
+    track-inner: 167px 53px 34px 2px;
+    thumb: 208px 48px 20px 28px;
+    thumb-inner: 215px 56px 6px 12px;
+    thumb-focus: 228px 48px 20px 28px;
+    tab: 64px 80px 48px 32px;
+    tab-inner: 74px 90px 28px 12px;
+    tab-chosen: 112px 80px 48px 32px;
+    tab-chosen-inner: 122px 90px 28px 12px;
+}
+
+body {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Mono;
+    font-size: 16px;
+    color: #e6e9f0;
+}
+
+div, p, h1, tabs, panels, panel { display: block; }
+
+#window {
+    width: 560px;
+    padding: 22px 28px;
+    decorator: ninepatch(panel, panel-inner);
+}
+
+h1 {
+    font-family: Komika;
+    font-size: 44px;
+    text-align: center;
+    color: #ffd040;
+    margin-bottom: 10px;
+}
+
+/* buttons */
+button {
+    display: inline-block;
+    height: 40px;
+    line-height: 40px;
+    padding: 0px 18px;
+    text-align: center;
+    tab-index: auto;
+    nav: auto;
+    decorator: ninepatch(button, button-inner);
+}
+button:hover { decorator: ninepatch(button-hover, button-hover-inner); }
+button:active { decorator: ninepatch(button-active, button-active-inner); }
+button:focus-visible { decorator: ninepatch(button-focus, button-focus-inner); color: #ffffff; }
+
+#buttons { text-align: center; margin-top: 16px; }
+#buttons button { width: 140px; margin: 0px 8px; }
+
+#status { margin-top: 14px; text-align: center; font-size: 14px; color: #9aa4b8; }
+
+/* the rows of the game's tab */
+.row { display: flex; align-items: center; height: 46px; }
+.row label { width: 140px; }
+#volume-value { margin-left: 14px; }
+
+/* a text field */
+input.text {
+    width: 220px;
+    height: 20px;
+    padding: 6px 10px;
+    nav: auto;
+    decorator: ninepatch(button-active, button-active-inner);
+}
+input.text:focus-visible { decorator: ninepatch(button-focus, button-focus-inner); }
+
+/* a check box */
+input.checkbox { width: 24px; height: 24px; nav: auto; decorator: image(check); }
+input.checkbox:checked { decorator: image(check-on); }
+input.checkbox:focus-visible { decorator: image(check-focus); }
+input.checkbox:checked:focus-visible { decorator: image(check-on-focus); }
+
+/* a slider */
+input.range { width: 220px; height: 28px; nav: auto; }
+input.range slidertrack { margin-top: 8px; height: 12px; decorator: ninepatch(track, track-inner); }
+input.range sliderbar { width: 20px; height: 28px; margin-top: -8px; decorator: image(thumb); }
+input.range:focus-visible sliderbar { decorator: image(thumb-focus); }
+input.range sliderarrowdec, input.range sliderarrowinc { width: 0px; height: 0px; }
+
+/* a choice */
+select {
+    width: 240px;
+    height: 32px;
+    nav: auto;
+    decorator: ninepatch(button, button-inner);
+}
+select:focus-visible { decorator: ninepatch(button-focus, button-focus-inner); }
+select selectvalue { margin-right: 28px; padding: 6px 10px; height: 20px; }
+select selectarrow { width: 28px; height: 32px; }
+select selectbox { margin-top: 2px; padding: 6px; decorator: ninepatch(panel, panel-inner); }
+select selectbox option { padding: 4px 8px; }
+select selectbox option:hover, select selectbox option:checked { background-color: #3f4860; }
+
+/* tabs */
+tabset tabs { height: 38px; }
+tabset tab {
+    display: inline-block;
+    width: 120px;
+    height: 32px;
+    line-height: 32px;
+    margin-right: 6px;
+    text-align: center;
+    tab-index: auto;
+    nav: auto;
+    decorator: ninepatch(tab, tab-inner);
+}
+tabset tab:selected { decorator: ninepatch(tab-chosen, tab-chosen-inner); color: #ffffff; }
+tabset tab:focus-visible { color: #ffd040; }
+tabset panels { padding-top: 8px; }
+tabset panel { height: 200px; }
+
+/* a scrolling list */
+#levels { height: 196px; overflow-y: auto; padding-right: 6px; }
+#levels button.level { display: block; width: auto; margin-bottom: 6px; text-align: left; }
+scrollbarvertical { width: 12px; margin-left: 4px; }
+scrollbarvertical slidertrack { decorator: ninepatch(track, track-inner); }
+scrollbarvertical sliderbar { min-height: 28px; decorator: ninepatch(thumb, thumb-inner); }
+scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc { width: 0px; height: 0px; }
