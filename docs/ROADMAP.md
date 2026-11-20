@@ -6,7 +6,11 @@ What is left to build, in order. A finished item is deleted from this file, not 
 
 Rob's (2026-11-19): libwgf is finished so that a pure C and wasm engine can be compared with helix. Done means three things: **helix-raylib's feature set as a floor** (what a helix-raylib program can do, a libwgf program can, in libwgf's own way: feature parity, not its API, and not only what it does); **helix's benchmarks** (the bunnymark and the animated robots, `../helix/docs/benchmarks.md`) run on libwgf beside helix-raylib's rows, speed and size; and **Wardens** (helix's engine trial) built on libwgf and graded as helix's entrants are. The blocks below are in order; each item has its tests, an example where there is something to see, its calls in the bindings and the feature test, and a look at how helix-raylib and helix-legacy did it (read-only).
 
-1. **The comparison.** The bunnymark and the robots on libwgf, on the web and natively, beside helix's rows on this machine; Wardens' grades beside helix's entrants'; the parity checklist's rows, each as libwgf has it, and what libwgf has that helix-raylib doesn't. Written up in HISTORY.md.
+The comparison is done (HISTORY.md, "The comparison"). What it found still missing from helix-raylib's floor, and what its entrants met:
+
+1. **Parity's last gaps.** A sound made from samples, as a sound and not only a pushed voice (raylib's LoadSoundFromWave); vector clamp; whether the cursor is over the window; the monitor's refresh rate; frame-time percentiles and a recording of the frame stats (helix's Debug extra); tabs and tooltips in documents; a pads' mapping database.
+2. **What the Wardens entrants met.** A file root's tint and visibility reaching its nodes, or a call that says how they don't; a bar in the world facing the camera; the immediate UI skinned from a game's art, or the way to RmlUi's skinned controls shown where the immediate UI's docs are.
+3. **Sizes re-baselined.** `measure_sizes.py --check` holds libwgf to 2026-10-12's sizes, which the features since have outgrown.
 
 Out of the parity work, as not libwgf's (the checklist's skips): desktop window chrome, the program owning the frame loop, warping the mouse; path, string, and codepoint helpers, compression, Base64, and hashes (the host language's); VR stereo; rlgl's immediate vertices, matrix stack, and global GL state; image editing on the CPU, pixel formats, and exporting images, meshes, and code; raygui's color picker, grid, built-in icons, style files, and draggable windows; OBJ, IQM, VOX, and M3D models.
 
