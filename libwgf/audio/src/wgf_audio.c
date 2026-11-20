@@ -29,7 +29,7 @@ void wgf_audio_priv_unlock(void)
 
 static void update(float dt)
 {
-    (void)dt;
+    wgf_audio_priv_bus_update(dt);
     wgf_audio_priv_sound_feed(); /* files arriving: before the voices, so a sound READY now plays */
     wgf_audio_priv_platform_update();
     wgf_audio_priv_voice_sweep();
@@ -40,6 +40,7 @@ static void stop(void)
     wgf_audio_priv_platform_stop(); /* nothing mixes from here on */
     wgf_audio_priv_voice_stop_all();
     wgf_audio_priv_sound_stop_all();
+    wgf_audio_priv_bus_reset();
     wgf_core_priv_mutex_destroy(&mutex);
 }
 
@@ -59,6 +60,11 @@ void wgf_audio_priv_install(void)
 }
 
 /* ---------------------------------------------------------------- the mixer ---- */
+
+bool wgf_audio_priv_is_running(void)
+{
+    return part.installed;
+}
 
 float wgf_audio_priv_get_volume(void)
 {

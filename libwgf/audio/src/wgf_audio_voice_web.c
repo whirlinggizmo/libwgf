@@ -205,7 +205,8 @@ void wgf_audio_priv_platform_apply(wgf_handle_t voice, wgf_audio_priv_voice_t *v
     double low, high;
     wgf_audio_priv_voice_range(voice_ptr, &low, &high);
     wgf_audio_js_voice_apply((int)voice, (int)voice_ptr->sound, voice_ptr->fresh ? 0 : (int)voice_ptr->state,
-                             voice_ptr->position, voice_ptr->loop, voice_ptr->volume, voice_ptr->pitch, voice_ptr->pan,
+                             voice_ptr->position, voice_ptr->loop, voice_ptr->volume * wgf_audio_priv_bus_heard(voice_ptr->bus),
+                             voice_ptr->pitch, voice_ptr->pan,
                              (int)voice_ptr->generation, low, high, sound_ptr != NULL && sound_ptr->streamed);
 }
 

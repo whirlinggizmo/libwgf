@@ -257,6 +257,28 @@ int wgf_sound_get_polyphony(wgf_handle_t sound)
     return sound_ptr->polyphony > 0 ? sound_ptr->polyphony : WGF_AUDIO_PRIV_POLYPHONY;
 }
 
+bool wgf_sound_set_bus(wgf_handle_t sound, wgf_handle_t bus)
+{
+    wgf_audio_priv_sound_t *sound_ptr;
+    bool set = false;
+    if (!wgf_audio_priv_bus_is(bus)) return false;
+    if (wgf_audio_priv_is_running()) wgf_audio_priv_lock();
+    sound_ptr = wgf_audio_priv_sound_of(sound);
+    if (sound_ptr != NULL && WGF_CORE_PRIV_HANDLE_KIND(sound) == WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND) {
+        sound_ptr->bus = bus;
+        set = true;
+    }
+    if (wgf_audio_priv_is_running()) wgf_audio_priv_unlock();
+    return set;
+}
+
+wgf_handle_t wgf_sound_get_bus(wgf_handle_t sound)
+{
+    const wgf_audio_priv_sound_t *sound_ptr = wgf_audio_priv_sound_of(sound);
+    if (sound_ptr == NULL || WGF_CORE_PRIV_HANDLE_KIND(sound) != WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND) return 0;
+    return wgf_audio_priv_bus_is(sound_ptr->bus) ? sound_ptr->bus : wgf_bus_get_effects();
+}
+
 float wgf_sound_get_duration(wgf_handle_t sound)
 {
     const wgf_audio_priv_sound_t *sound_ptr = wgf_audio_priv_sound_of(sound);

@@ -104,6 +104,22 @@ abstract Sound(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_sound_get_polyphony(this);
 
 	/**
+	    The bus its plays (wgf_sound_play) are heard through (wgf_bus.h): effects until set, and
+	    once the one set is destroyed. False for a handle that isn't a decoded sound, or a bus
+	    that isn't one.
+	**/
+	public inline function setBus(bus:Bus):Bool
+		return Raw.wgf_sound_set_bus(this, bus);
+
+	/**
+	    The bus its plays (wgf_sound_play) are heard through (wgf_bus.h): effects until set, and
+	    once the one set is destroyed. False for a handle that isn't a decoded sound, or a bus
+	    that isn't one.
+	**/
+	public inline function getBus():Bus
+		return Raw.wgf_sound_get_bus(this);
+
+	/**
 	    Its length in seconds; 0 until it is READY, and for a handle that isn't a sound. A
 	    streamed sound READY while its file arrives (wgf_sound_create_streamed) has its length
 	    when the file says it at its start (natively a WAV's header, an MP3's Xing or Info

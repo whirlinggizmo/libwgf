@@ -79,6 +79,7 @@ typedef struct wgf_audio_priv_sound_t {
     wgf_audio_priv_segment_t **segments; /* decoded only; changed under the lock */
     int segment_count, segment_capacity;
     int polyphony; /* its plays at once (wgf_sound_play); 0 until set: WGF_AUDIO_PRIV_POLYPHONY */
+    wgf_handle_t bus; /* its plays' (wgf_sound_set_bus); 0, or one gone: effects */
 } wgf_audio_priv_sound_t;
 
 /* A sound's plays at once until set, and every sound's (wgf_sound_play). */
@@ -131,6 +132,7 @@ typedef struct wgf_audio_priv_voice_t {
     struct wgf_audio_priv_decoder_t *decoder; /* natively, streamed: the mixer's */
     bool played;         /* wgf_sound_play's: let go of by the sweep once COMPLETE */
     unsigned long long started; /* played: when, in plays, so the oldest is taken first */
+    wgf_handle_t bus; /* heard through (wgf_bus.h); 0: effects */
 } wgf_audio_priv_voice_t;
 
 /* What a voice plays, in seconds of its sound: its segment's range (the end clamped to
@@ -144,6 +146,16 @@ wgf_audio_priv_voice_t *wgf_audio_priv_voice_of_at(wgf_handle_t voice, const cha
 /* Every voice, for the mixer, under the lock: calls `each` with each live one. */
 void wgf_audio_priv_voice_each(void (*each)(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr, void *user),
                                void *user);
+
+/* Buses (wgf_audio_bus.c): what a voice on `bus` (0, or one gone: effects) is heard at,
+ * under the lock, from any thread; whether `bus` is one; their fades stepped, once a
+ * frame (audio's update); and the table let go of at audio's stop. Whether audio runs
+ * (its lock made). */
+float wgf_audio_priv_bus_heard(wgf_handle_t bus);
+bool wgf_audio_priv_bus_is(wgf_handle_t bus);
+void wgf_audio_priv_bus_update(float dt);
+void wgf_audio_priv_bus_reset(void);
+bool wgf_audio_priv_is_running(void);
 
 /* The mixer's settings (wgf_audio.h), read under the lock. */
 float wgf_audio_priv_get_volume(void);

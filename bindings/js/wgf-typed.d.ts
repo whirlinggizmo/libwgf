@@ -1066,6 +1066,79 @@ export declare const Bounds: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+/** A handle of kind wgf_bus_t: the raw binding's branded type. */
+export type Bus = raw.wgf_bus_t;
+export declare const Bus: {
+    /**
+     * The three that always exist.
+     */
+    readonly getMaster: typeof raw.wgf_bus_get_master;
+    /**
+     * The three that always exist.
+     */
+    readonly getMusic: typeof raw.wgf_bus_get_music;
+    /**
+     * The three that always exist.
+     */
+    readonly getEffects: typeof raw.wgf_bus_get_effects;
+    /**
+     * A game's own bus under `parent`, at volume 1, unmuted. 0 for a handle that isn't a bus,
+     * or when there are 64.
+     */
+    readonly create: typeof raw.wgf_bus_create;
+    /**
+     * The bus ended: its voices, and the buses under it, move to its parent. Nothing for the
+     * three that always exist, or a handle that isn't a bus.
+     */
+    readonly destroy: typeof raw.wgf_bus_destroy;
+    /**
+     * Its parent; 0 for the master, and for a handle that isn't a bus.
+     */
+    readonly getParent: typeof raw.wgf_bus_get_parent;
+    /**
+     * Its volume: 1 as its voices are, 0 silent, above 1 louder (and may clip). Setting it
+     * ends a fade. Refuses a negative or non-finite one, and a handle that isn't a bus.
+     */
+    readonly setVolume: typeof raw.wgf_bus_set_volume;
+    /**
+     * Its volume: 1 as its voices are, 0 silent, above 1 louder (and may clip). Setting it
+     * ends a fade. Refuses a negative or non-finite one, and a handle that isn't a bus.
+     */
+    readonly getVolume: typeof raw.wgf_bus_get_volume;
+    /**
+     * Muted: its heard volume, and everything heard through it or a bus under it, is 0, its
+     * volume kept for unmuting. False only for a handle that isn't a bus.
+     */
+    readonly setMuted: typeof raw.wgf_bus_set_muted;
+    /**
+     * Muted: its heard volume, and everything heard through it or a bus under it, is 0, its
+     * volume kept for unmuting. False only for a handle that isn't a bus.
+     */
+    readonly isMuted: typeof raw.wgf_bus_is_muted;
+    /**
+     * What it is heard at now: its volume times its parents', 0 when it or one is muted. 0
+     * for a handle that isn't a bus.
+     */
+    readonly getHeardVolume: typeof raw.wgf_bus_get_heard_volume;
+    /**
+     * Its volume moved to `volume` over `seconds` of the runtime's frames, even in decibels
+     * (as an ear hears it; silence taken as -60 dB), helix's; 0 seconds or less sets it at
+     * once. A fade over another, or a volume set, ends the one before. Refuses a negative or
+     * non-finite volume, non-finite seconds, and a handle that isn't a bus. is_fading: a fade
+     * not yet ended.
+     */
+    readonly fade: typeof raw.wgf_bus_fade;
+    /**
+     * Its volume moved to `volume` over `seconds` of the runtime's frames, even in decibels
+     * (as an ear hears it; silence taken as -60 dB), helix's; 0 seconds or less sets it at
+     * once. A fade over another, or a volume set, ends the one before. Refuses a negative or
+     * non-finite volume, non-finite seconds, and a handle that isn't a bus. is_fading: a fade
+     * not yet ended.
+     */
+    readonly isFading: typeof raw.wgf_bus_is_fading;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
+};
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Camera2d = raw.wgf_actor_t;
 export declare const Camera2d: {
@@ -4231,6 +4304,18 @@ export declare const Sound: {
      */
     readonly getPolyphony: typeof raw.wgf_sound_get_polyphony;
     /**
+     * The bus its plays (wgf_sound_play) are heard through (wgf_bus.h): effects until set, and
+     * once the one set is destroyed. False for a handle that isn't a decoded sound, or a bus
+     * that isn't one.
+     */
+    readonly setBus: typeof raw.wgf_sound_set_bus;
+    /**
+     * The bus its plays (wgf_sound_play) are heard through (wgf_bus.h): effects until set, and
+     * once the one set is destroyed. False for a handle that isn't a decoded sound, or a bus
+     * that isn't one.
+     */
+    readonly getBus: typeof raw.wgf_sound_get_bus;
+    /**
      * Its length in seconds; 0 until it is READY, and for a handle that isn't a sound. A
      * streamed sound READY while its file arrives (wgf_sound_create_streamed) has its length
      * when the file says it at its start (natively a WAV's header, an MP3's Xing or Info
@@ -5379,6 +5464,18 @@ export declare const Voice: {
      * fading. Clamped to [-1, 1]; refuses a non-finite one.
      */
     readonly getPan: typeof raw.wgf_voice_get_pan;
+    /**
+     * The bus it is heard through (wgf_bus.h): effects until set, its parent's once the one
+     * set is destroyed. A play (wgf_sound_play) is on its sound's. False for a handle that
+     * isn't a voice, or a bus that isn't one.
+     */
+    readonly setBus: typeof raw.wgf_voice_set_bus;
+    /**
+     * The bus it is heard through (wgf_bus.h): effects until set, its parent's once the one
+     * set is destroyed. A play (wgf_sound_play) is on its sound's. False for a handle that
+     * isn't a voice, or a bus that isn't one.
+     */
+    readonly getBus: typeof raw.wgf_voice_get_bus;
     /**
      * Where it is, in seconds from the sound's start (its segment's, when it plays one), in
      * any state: it wraps into the sound (the segment) when looping and is clamped to [0, its

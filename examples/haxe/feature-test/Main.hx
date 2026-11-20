@@ -211,6 +211,15 @@ class Main {
 		voice.resume();
 		expect(click.setPolyphony(3) && click.getPolyphony() == 3, "a sound's polyphony");
 		expect(click.play(0.5, 1, 0) && !music.play(1, 1, 0), "a sound played once; a streamed one refused");
+		final master = Bus.getMaster(), effects = Bus.getEffects();
+		expect(Bus.getMusic().getParent() == master && effects.getParent() == master, "the buses that always exist");
+		final ui = effects.create();
+		expect(ui.setVolume(0.5) && near(ui.getVolume(), 0.5) && near(ui.getHeardVolume(), 0.5), "a bus's volume, heard");
+		expect(ui.setMuted(true) && ui.isMuted() && ui.getHeardVolume() == 0 && ui.setMuted(false), "muted");
+		expect(ui.fade(0, 0.5) && ui.isFading(), "a fade");
+		expect(voice.setBus(ui) && voice.getBus() == ui && click.setBus(ui) && click.getBus() == ui, "a voice's and a sound's bus");
+		ui.destroy();
+		expect(voice.getBus() == effects && click.getBus() == effects, "its bus gone: back to its parent");
 	}
 
 	static var camera3d:Camera3d;

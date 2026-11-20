@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "wgf_api.h"
+#include "wgf_bus.h"
 #include "wgf_handle.h"
 
 #ifdef __cplusplus
@@ -96,6 +97,11 @@ WGF_API bool wgf_sound_play(wgf_sound_t sound, float volume, float pitch, float 
 WGF_API bool wgf_sound_set_polyphony(wgf_sound_t sound, int count);
 /* Its polyphony; 0 for a handle that isn't a decoded sound. */
 WGF_API int wgf_sound_get_polyphony(wgf_sound_t sound);
+/* The bus its plays (wgf_sound_play) are heard through (wgf_bus.h): effects until set, and
+ * once the one set is destroyed. False for a handle that isn't a decoded sound, or a bus
+ * that isn't one. */
+WGF_API bool wgf_sound_set_bus(wgf_sound_t sound, wgf_bus_t bus);
+WGF_API wgf_bus_t wgf_sound_get_bus(wgf_sound_t sound);
 
 /* Its length in seconds; 0 until it is READY, and for a handle that isn't a sound. A
  * streamed sound READY while its file arrives (wgf_sound_create_streamed) has its length

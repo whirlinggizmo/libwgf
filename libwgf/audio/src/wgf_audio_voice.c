@@ -386,6 +386,24 @@ float wgf_voice_get_volume(wgf_handle_t voice)
     GET(voice, float, voice_ptr->volume, 0.0f);
 }
 
+bool wgf_voice_set_bus(wgf_handle_t voice, wgf_handle_t bus)
+{
+    if (!wgf_audio_priv_bus_is(bus)) return false;
+    SET(voice, voice_ptr->bus = bus);
+}
+
+static wgf_handle_t bus_of(wgf_handle_t voice)
+{
+    GET(voice, wgf_handle_t, voice_ptr->bus, 0);
+}
+
+wgf_handle_t wgf_voice_get_bus(wgf_handle_t voice)
+{
+    const wgf_handle_t bus = bus_of(voice);
+    if (wgf_audio_priv_voice_of(voice) == NULL) return 0;
+    return wgf_audio_priv_bus_is(bus) ? bus : wgf_bus_get_effects();
+}
+
 bool wgf_voice_set_pitch(wgf_handle_t voice, float pitch)
 {
     wgf_audio_priv_voice_t *voice_ptr;
@@ -610,6 +628,7 @@ bool wgf_sound_play(wgf_handle_t sound, float volume, float pitch, float pan)
     if (voice_ptr != NULL) {
         voice_ptr->played = true;
         voice_ptr->started = ++plays;
+        voice_ptr->bus = wgf_audio_priv_bus_is(sound_ptr->bus) ? sound_ptr->bus : 0;
     }
     wgf_audio_priv_unlock();
     if (!wgf_voice_set_volume(voice, volume) || !wgf_voice_set_pitch(voice, pitch) || !wgf_voice_set_pan(voice, pan) ||

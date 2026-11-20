@@ -141,6 +141,22 @@ abstract Voice(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_voice_get_pan(this);
 
 	/**
+	    The bus it is heard through (wgf_bus.h): effects until set, its parent's once the one
+	    set is destroyed. A play (wgf_sound_play) is on its sound's. False for a handle that
+	    isn't a voice, or a bus that isn't one.
+	**/
+	public inline function setBus(bus:Bus):Bool
+		return Raw.wgf_voice_set_bus(this, bus);
+
+	/**
+	    The bus it is heard through (wgf_bus.h): effects until set, its parent's once the one
+	    set is destroyed. A play (wgf_sound_play) is on its sound's. False for a handle that
+	    isn't a voice, or a bus that isn't one.
+	**/
+	public inline function getBus():Bus
+		return Raw.wgf_voice_get_bus(this);
+
+	/**
 	    Where it is, in seconds from the sound's start (its segment's, when it plays one), in
 	    any state: it wraps into the sound (the segment) when looping and is clamped to [0, its
 	    length] otherwise. Setting it while PLAYING plays on from there (a non-looping voice

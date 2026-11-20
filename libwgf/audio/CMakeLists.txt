@@ -2,7 +2,7 @@
 # does all audio; natively, libwgf's mixer and these decoders, as wgrender's
 # wgr_audio.c and wgr_sound.c.
 set(xiph "${PROJECT_SOURCE_DIR}/deps/xiph")
-set(audio_sources src/wgf_audio.c src/wgf_audio_sound.c src/wgf_audio_voice.c)
+set(audio_sources src/wgf_audio.c src/wgf_audio_bus.c src/wgf_audio_sound.c src/wgf_audio_voice.c)
 set(audio_decoders "")
 if(WGF_BROWSER)
     list(APPEND audio_sources src/wgf_audio_sound_web.c src/wgf_audio_voice_web.c)
@@ -68,6 +68,8 @@ if(WGF_TESTS AND NOT EMSCRIPTEN)
     # voices, the mixer pulled in place of a device: wgf_audio_voice_checks.c's steps
     if(WGF_HEADLESS)
         wgf_test(audio wgf_audio_voice_test)
+        # buses: volumes, mutes, and fades heard in what the mixer makes
+        wgf_test(audio wgf_audio_bus_test)
         # MP3's encoder delay: markers at known times, with the delay written and without
         wgf_test(audio wgf_audio_markers_test)
         target_compile_definitions(wgf_audio_markers_test PRIVATE WGF_TEST_DATA="${CMAKE_CURRENT_SOURCE_DIR}/tests/data")

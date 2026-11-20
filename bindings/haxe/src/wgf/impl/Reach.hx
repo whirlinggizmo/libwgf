@@ -150,6 +150,19 @@ class Reach {
 		"wgf_bounds_set_mode",
 		"wgf_bounds_set_rect",
 		"wgf_bounds_set_visible",
+		"wgf_bus_create",
+		"wgf_bus_destroy",
+		"wgf_bus_fade",
+		"wgf_bus_get_effects",
+		"wgf_bus_get_heard_volume",
+		"wgf_bus_get_master",
+		"wgf_bus_get_music",
+		"wgf_bus_get_parent",
+		"wgf_bus_get_volume",
+		"wgf_bus_is_fading",
+		"wgf_bus_is_muted",
+		"wgf_bus_set_muted",
+		"wgf_bus_set_volume",
 		"wgf_camera2d_create",
 		"wgf_camera2d_get_zoom",
 		"wgf_camera2d_set_zoom",
@@ -587,9 +600,11 @@ class Reach {
 		"wgf_sound_add_segment",
 		"wgf_sound_create",
 		"wgf_sound_create_streamed",
+		"wgf_sound_get_bus",
 		"wgf_sound_get_duration",
 		"wgf_sound_get_polyphony",
 		"wgf_sound_play",
+		"wgf_sound_set_bus",
 		"wgf_sound_set_polyphony",
 		"wgf_sprite_batch_create",
 		"wgf_sprite_batch_get_alpha_cutoff",
@@ -760,6 +775,7 @@ class Reach {
 		"wgf_version_get_patch",
 		"wgf_voice_create",
 		"wgf_voice_destroy",
+		"wgf_voice_get_bus",
 		"wgf_voice_get_pan",
 		"wgf_voice_get_pitch",
 		"wgf_voice_get_position",
@@ -771,6 +787,7 @@ class Reach {
 		"wgf_voice_pause",
 		"wgf_voice_play",
 		"wgf_voice_resume",
+		"wgf_voice_set_bus",
 		"wgf_voice_set_loop",
 		"wgf_voice_set_pan",
 		"wgf_voice_set_pitch",
@@ -819,7 +836,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...810) 0];
+	static final counts:Array<Int> = [for (_ in 0...827) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

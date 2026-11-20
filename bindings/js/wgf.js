@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "bd673d146ece6b80" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "a67797a053bf7a4f" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -8627,6 +8627,137 @@ export function wgf_audio_is_paused() {
     return value !== 0;
 }
 
+// wgf: call wgf_bus_get_master
+/**
+ * The three that always exist.
+ */
+export function wgf_bus_get_master() {
+    const value = host["_wgf_bus_get_master"]();
+    return value >>> 0;
+}
+
+// wgf: call wgf_bus_get_music
+/**
+ * The three that always exist.
+ */
+export function wgf_bus_get_music() {
+    const value = host["_wgf_bus_get_music"]();
+    return value >>> 0;
+}
+
+// wgf: call wgf_bus_get_effects
+/**
+ * The three that always exist.
+ */
+export function wgf_bus_get_effects() {
+    const value = host["_wgf_bus_get_effects"]();
+    return value >>> 0;
+}
+
+// wgf: call wgf_bus_create
+/**
+ * A game's own bus under `parent`, at volume 1, unmuted. 0 for a handle that isn't a bus,
+ * or when there are 64.
+ */
+export function wgf_bus_create(parent) {
+    const value = host["_wgf_bus_create"](parent);
+    return value >>> 0;
+}
+
+// wgf: call wgf_bus_destroy
+/**
+ * The bus ended: its voices, and the buses under it, move to its parent. Nothing for the
+ * three that always exist, or a handle that isn't a bus.
+ */
+export function wgf_bus_destroy(bus) {
+    host["_wgf_bus_destroy"](bus);
+}
+
+// wgf: call wgf_bus_get_parent
+/**
+ * Its parent; 0 for the master, and for a handle that isn't a bus.
+ */
+export function wgf_bus_get_parent(bus) {
+    const value = host["_wgf_bus_get_parent"](bus);
+    return value >>> 0;
+}
+
+// wgf: call wgf_bus_set_volume
+/**
+ * Its volume: 1 as its voices are, 0 silent, above 1 louder (and may clip). Setting it
+ * ends a fade. Refuses a negative or non-finite one, and a handle that isn't a bus.
+ */
+export function wgf_bus_set_volume(bus, volume) {
+    const value = host["_wgf_bus_set_volume"](bus, volume);
+    return value !== 0;
+}
+
+// wgf: call wgf_bus_get_volume
+/**
+ * Its volume: 1 as its voices are, 0 silent, above 1 louder (and may clip). Setting it
+ * ends a fade. Refuses a negative or non-finite one, and a handle that isn't a bus.
+ */
+export function wgf_bus_get_volume(bus) {
+    const value = host["_wgf_bus_get_volume"](bus);
+    return value;
+}
+
+// wgf: call wgf_bus_set_muted
+/**
+ * Muted: its heard volume, and everything heard through it or a bus under it, is 0, its
+ * volume kept for unmuting. False only for a handle that isn't a bus.
+ */
+export function wgf_bus_set_muted(bus, muted) {
+    const value = host["_wgf_bus_set_muted"](bus, (muted ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_bus_is_muted
+/**
+ * Muted: its heard volume, and everything heard through it or a bus under it, is 0, its
+ * volume kept for unmuting. False only for a handle that isn't a bus.
+ */
+export function wgf_bus_is_muted(bus) {
+    const value = host["_wgf_bus_is_muted"](bus);
+    return value !== 0;
+}
+
+// wgf: call wgf_bus_get_heard_volume
+/**
+ * What it is heard at now: its volume times its parents', 0 when it or one is muted. 0
+ * for a handle that isn't a bus.
+ */
+export function wgf_bus_get_heard_volume(bus) {
+    const value = host["_wgf_bus_get_heard_volume"](bus);
+    return value;
+}
+
+// wgf: call wgf_bus_fade
+/**
+ * Its volume moved to `volume` over `seconds` of the runtime's frames, even in decibels
+ * (as an ear hears it; silence taken as -60 dB), helix's; 0 seconds or less sets it at
+ * once. A fade over another, or a volume set, ends the one before. Refuses a negative or
+ * non-finite volume, non-finite seconds, and a handle that isn't a bus. is_fading: a fade
+ * not yet ended.
+ */
+export function wgf_bus_fade(bus, volume, seconds) {
+    const value = host["_wgf_bus_fade"](bus, volume, seconds);
+    return value !== 0;
+}
+
+// wgf: call wgf_bus_is_fading
+/**
+ * Its volume moved to `volume` over `seconds` of the runtime's frames, even in decibels
+ * (as an ear hears it; silence taken as -60 dB), helix's; 0 seconds or less sets it at
+ * once. A fade over another, or a volume set, ends the one before. Refuses a negative or
+ * non-finite volume, non-finite seconds, and a handle that isn't a bus. is_fading: a fade
+ * not yet ended.
+ */
+export function wgf_bus_is_fading(bus) {
+    const value = host["_wgf_bus_is_fading"](bus);
+    return value !== 0;
+}
+
 // wgf: call wgf_sound_create
 /**
  * The sound at `path`, decoded whole as it loads: PENDING at once, then READY, or FAILED
@@ -8739,6 +8870,28 @@ export function wgf_sound_set_polyphony(sound, count) {
 export function wgf_sound_get_polyphony(sound) {
     const value = host["_wgf_sound_get_polyphony"](sound);
     return value;
+}
+
+// wgf: call wgf_sound_set_bus
+/**
+ * The bus its plays (wgf_sound_play) are heard through (wgf_bus.h): effects until set, and
+ * once the one set is destroyed. False for a handle that isn't a decoded sound, or a bus
+ * that isn't one.
+ */
+export function wgf_sound_set_bus(sound, bus) {
+    const value = host["_wgf_sound_set_bus"](sound, bus);
+    return value !== 0;
+}
+
+// wgf: call wgf_sound_get_bus
+/**
+ * The bus its plays (wgf_sound_play) are heard through (wgf_bus.h): effects until set, and
+ * once the one set is destroyed. False for a handle that isn't a decoded sound, or a bus
+ * that isn't one.
+ */
+export function wgf_sound_get_bus(sound) {
+    const value = host["_wgf_sound_get_bus"](sound);
+    return value >>> 0;
 }
 
 // wgf: call wgf_sound_get_duration
@@ -8932,6 +9085,28 @@ export function wgf_voice_set_pan(voice, pan) {
 export function wgf_voice_get_pan(voice) {
     const value = host["_wgf_voice_get_pan"](voice);
     return value;
+}
+
+// wgf: call wgf_voice_set_bus
+/**
+ * The bus it is heard through (wgf_bus.h): effects until set, its parent's once the one
+ * set is destroyed. A play (wgf_sound_play) is on its sound's. False for a handle that
+ * isn't a voice, or a bus that isn't one.
+ */
+export function wgf_voice_set_bus(voice, bus) {
+    const value = host["_wgf_voice_set_bus"](voice, bus);
+    return value !== 0;
+}
+
+// wgf: call wgf_voice_get_bus
+/**
+ * The bus it is heard through (wgf_bus.h): effects until set, its parent's once the one
+ * set is destroyed. A play (wgf_sound_play) is on its sound's. False for a handle that
+ * isn't a voice, or a bus that isn't one.
+ */
+export function wgf_voice_get_bus(voice) {
+    const value = host["_wgf_voice_get_bus"](voice);
+    return value >>> 0;
 }
 
 // wgf: call wgf_voice_set_position

@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "wgf_api.h"
+#include "wgf_bus.h"
 #include "wgf_handle.h"
 #include "wgf_play_state.h"
 #include "wgf_sound.h"
@@ -84,6 +85,11 @@ WGF_API float wgf_voice_get_pitch(wgf_voice_t voice);
  * fading. Clamped to [-1, 1]; refuses a non-finite one. */
 WGF_API bool wgf_voice_set_pan(wgf_voice_t voice, float pan);
 WGF_API float wgf_voice_get_pan(wgf_voice_t voice);
+/* The bus it is heard through (wgf_bus.h): effects until set, its parent's once the one
+ * set is destroyed. A play (wgf_sound_play) is on its sound's. False for a handle that
+ * isn't a voice, or a bus that isn't one. */
+WGF_API bool wgf_voice_set_bus(wgf_voice_t voice, wgf_bus_t bus);
+WGF_API wgf_bus_t wgf_voice_get_bus(wgf_voice_t voice);
 
 /* Where it is, in seconds from the sound's start (its segment's, when it plays one), in
  * any state: it wraps into the sound (the segment) when looping and is clamped to [0, its

@@ -54,6 +54,8 @@ export type wgf_material_t = number & { readonly [kind]: "wgf_material_t" };
 export type wgf_environment_t = number & { readonly [kind]: "wgf_environment_t" };
 /** A handle of kind wgf_mesh_t; 0 is none. */
 export type wgf_mesh_t = number & { readonly [kind]: "wgf_mesh_t" };
+/** A handle of kind wgf_bus_t; 0 is none. */
+export type wgf_bus_t = number & { readonly [kind]: "wgf_bus_t" };
 /** A handle of kind wgf_sound_t; 0 is none. */
 export type wgf_sound_t = number & { readonly [kind]: "wgf_sound_t" };
 /** A handle of kind wgf_voice_t; 0 is none. */
@@ -5782,6 +5784,86 @@ export declare function wgf_audio_set_paused(paused: boolean): void;
 export declare function wgf_audio_is_paused(): boolean;
 
 /**
+ * The three that always exist.
+ */
+export declare function wgf_bus_get_master(): wgf_bus_t;
+
+/**
+ * The three that always exist.
+ */
+export declare function wgf_bus_get_music(): wgf_bus_t;
+
+/**
+ * The three that always exist.
+ */
+export declare function wgf_bus_get_effects(): wgf_bus_t;
+
+/**
+ * A game's own bus under `parent`, at volume 1, unmuted. 0 for a handle that isn't a bus,
+ * or when there are 64.
+ */
+export declare function wgf_bus_create(parent: wgf_bus_t | 0): wgf_bus_t;
+
+/**
+ * The bus ended: its voices, and the buses under it, move to its parent. Nothing for the
+ * three that always exist, or a handle that isn't a bus.
+ */
+export declare function wgf_bus_destroy(bus: wgf_bus_t | 0): void;
+
+/**
+ * Its parent; 0 for the master, and for a handle that isn't a bus.
+ */
+export declare function wgf_bus_get_parent(bus: wgf_bus_t | 0): wgf_bus_t;
+
+/**
+ * Its volume: 1 as its voices are, 0 silent, above 1 louder (and may clip). Setting it
+ * ends a fade. Refuses a negative or non-finite one, and a handle that isn't a bus.
+ */
+export declare function wgf_bus_set_volume(bus: wgf_bus_t | 0, volume: number): boolean;
+
+/**
+ * Its volume: 1 as its voices are, 0 silent, above 1 louder (and may clip). Setting it
+ * ends a fade. Refuses a negative or non-finite one, and a handle that isn't a bus.
+ */
+export declare function wgf_bus_get_volume(bus: wgf_bus_t | 0): number;
+
+/**
+ * Muted: its heard volume, and everything heard through it or a bus under it, is 0, its
+ * volume kept for unmuting. False only for a handle that isn't a bus.
+ */
+export declare function wgf_bus_set_muted(bus: wgf_bus_t | 0, muted: boolean): boolean;
+
+/**
+ * Muted: its heard volume, and everything heard through it or a bus under it, is 0, its
+ * volume kept for unmuting. False only for a handle that isn't a bus.
+ */
+export declare function wgf_bus_is_muted(bus: wgf_bus_t | 0): boolean;
+
+/**
+ * What it is heard at now: its volume times its parents', 0 when it or one is muted. 0
+ * for a handle that isn't a bus.
+ */
+export declare function wgf_bus_get_heard_volume(bus: wgf_bus_t | 0): number;
+
+/**
+ * Its volume moved to `volume` over `seconds` of the runtime's frames, even in decibels
+ * (as an ear hears it; silence taken as -60 dB), helix's; 0 seconds or less sets it at
+ * once. A fade over another, or a volume set, ends the one before. Refuses a negative or
+ * non-finite volume, non-finite seconds, and a handle that isn't a bus. is_fading: a fade
+ * not yet ended.
+ */
+export declare function wgf_bus_fade(bus: wgf_bus_t | 0, volume: number, seconds: number): boolean;
+
+/**
+ * Its volume moved to `volume` over `seconds` of the runtime's frames, even in decibels
+ * (as an ear hears it; silence taken as -60 dB), helix's; 0 seconds or less sets it at
+ * once. A fade over another, or a volume set, ends the one before. Refuses a negative or
+ * non-finite volume, non-finite seconds, and a handle that isn't a bus. is_fading: a fade
+ * not yet ended.
+ */
+export declare function wgf_bus_is_fading(bus: wgf_bus_t | 0): boolean;
+
+/**
  * The sound at `path`, decoded whole as it loads: PENDING at once, then READY, or FAILED
  * in a later update for a file that is missing or won't decode. The same path again
  * gives the same sound, with one more reference. 0 only when there's no room for
@@ -5864,6 +5946,20 @@ export declare function wgf_sound_set_polyphony(sound: wgf_sound_t | 0, count: n
  * Its polyphony; 0 for a handle that isn't a decoded sound.
  */
 export declare function wgf_sound_get_polyphony(sound: wgf_sound_t | 0): number;
+
+/**
+ * The bus its plays (wgf_sound_play) are heard through (wgf_bus.h): effects until set, and
+ * once the one set is destroyed. False for a handle that isn't a decoded sound, or a bus
+ * that isn't one.
+ */
+export declare function wgf_sound_set_bus(sound: wgf_sound_t | 0, bus: wgf_bus_t | 0): boolean;
+
+/**
+ * The bus its plays (wgf_sound_play) are heard through (wgf_bus.h): effects until set, and
+ * once the one set is destroyed. False for a handle that isn't a decoded sound, or a bus
+ * that isn't one.
+ */
+export declare function wgf_sound_get_bus(sound: wgf_sound_t | 0): wgf_bus_t;
 
 /**
  * Its length in seconds; 0 until it is READY, and for a handle that isn't a sound. A
@@ -5986,6 +6082,20 @@ export declare function wgf_voice_set_pan(voice: wgf_voice_t | 0, pan: number): 
  * fading. Clamped to [-1, 1]; refuses a non-finite one.
  */
 export declare function wgf_voice_get_pan(voice: wgf_voice_t | 0): number;
+
+/**
+ * The bus it is heard through (wgf_bus.h): effects until set, its parent's once the one
+ * set is destroyed. A play (wgf_sound_play) is on its sound's. False for a handle that
+ * isn't a voice, or a bus that isn't one.
+ */
+export declare function wgf_voice_set_bus(voice: wgf_voice_t | 0, bus: wgf_bus_t | 0): boolean;
+
+/**
+ * The bus it is heard through (wgf_bus.h): effects until set, its parent's once the one
+ * set is destroyed. A play (wgf_sound_play) is on its sound's. False for a handle that
+ * isn't a voice, or a bus that isn't one.
+ */
+export declare function wgf_voice_get_bus(voice: wgf_voice_t | 0): wgf_bus_t;
 
 /**
  * Where it is, in seconds from the sound's start (its segment's, when it plays one), in

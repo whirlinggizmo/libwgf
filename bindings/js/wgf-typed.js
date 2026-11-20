@@ -327,6 +327,37 @@ export const Bounds = Object.freeze({
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
+// wgf: typed Bus
+export const Bus = Object.freeze({
+    // wgf: call wgf_bus_get_master
+    getMaster: raw.wgf_bus_get_master,
+    // wgf: call wgf_bus_get_music
+    getMusic: raw.wgf_bus_get_music,
+    // wgf: call wgf_bus_get_effects
+    getEffects: raw.wgf_bus_get_effects,
+    // wgf: call wgf_bus_create
+    create: raw.wgf_bus_create,
+    // wgf: call wgf_bus_destroy
+    destroy: raw.wgf_bus_destroy,
+    // wgf: call wgf_bus_get_parent
+    getParent: raw.wgf_bus_get_parent,
+    // wgf: call wgf_bus_set_volume
+    setVolume: raw.wgf_bus_set_volume,
+    // wgf: call wgf_bus_get_volume
+    getVolume: raw.wgf_bus_get_volume,
+    // wgf: call wgf_bus_set_muted
+    setMuted: raw.wgf_bus_set_muted,
+    // wgf: call wgf_bus_is_muted
+    isMuted: raw.wgf_bus_is_muted,
+    // wgf: call wgf_bus_get_heard_volume
+    getHeardVolume: raw.wgf_bus_get_heard_volume,
+    // wgf: call wgf_bus_fade
+    fade: raw.wgf_bus_fade,
+    // wgf: call wgf_bus_is_fading
+    isFading: raw.wgf_bus_is_fading,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
+});
 // wgf: typed Camera2d
 export const Camera2d = Object.freeze({
     // wgf: call wgf_camera2d_create
@@ -1364,6 +1395,10 @@ export const Sound = Object.freeze({
     setPolyphony: raw.wgf_sound_set_polyphony,
     // wgf: call wgf_sound_get_polyphony
     getPolyphony: raw.wgf_sound_get_polyphony,
+    // wgf: call wgf_sound_set_bus
+    setBus: raw.wgf_sound_set_bus,
+    // wgf: call wgf_sound_get_bus
+    getBus: raw.wgf_sound_get_bus,
     // wgf: call wgf_sound_get_duration
     getDuration: raw.wgf_sound_get_duration,
     // wgf: call wgf_handle_is_alive
@@ -1794,6 +1829,10 @@ export const Voice = Object.freeze({
     setPan: raw.wgf_voice_set_pan,
     // wgf: call wgf_voice_get_pan
     getPan: raw.wgf_voice_get_pan,
+    // wgf: call wgf_voice_set_bus
+    setBus: raw.wgf_voice_set_bus,
+    // wgf: call wgf_voice_get_bus
+    getBus: raw.wgf_voice_get_bus,
     // wgf: call wgf_voice_set_position
     setPosition: raw.wgf_voice_set_position,
     // wgf: call wgf_voice_get_position

@@ -70,6 +70,7 @@ typedef enum wgf_core_priv_handle_kind_t {
     WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND_STREAMED = 41, /* "audio.sound_streamed": a kind of its own, so a path
                                                            made both ways is two sounds */
     WGF_CORE_PRIV_HANDLE_KIND_AUDIO_VOICE = 42,          /* "audio.voice" */
+    WGF_CORE_PRIV_HANDLE_KIND_AUDIO_BUS = 43,            /* "audio.bus" */
     /* asset: 48.. */
     WGF_CORE_PRIV_HANDLE_KIND_ASSET_TASK = 48, /* "asset.task": a load's file */
     /* tests: 62 and 63 */

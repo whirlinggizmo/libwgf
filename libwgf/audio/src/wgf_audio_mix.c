@@ -301,8 +301,11 @@ static void copy_voice(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr, vo
         if (sound_ptr->length_known && job->high > (double)sound_ptr->frames) job->high = (double)sound_ptr->frames;
     }
     job->pitch = voice_ptr->pitch;
-    job->gain_l = voice_ptr->volume * snapshot->master * (voice_ptr->pan > 0.0f ? 1.0f - voice_ptr->pan : 1.0f);
-    job->gain_r = voice_ptr->volume * snapshot->master * (voice_ptr->pan < 0.0f ? 1.0f + voice_ptr->pan : 1.0f);
+    {
+        const float heard = voice_ptr->volume * snapshot->master * wgf_audio_priv_bus_heard(voice_ptr->bus);
+        job->gain_l = heard * (voice_ptr->pan > 0.0f ? 1.0f - voice_ptr->pan : 1.0f);
+        job->gain_r = heard * (voice_ptr->pan < 0.0f ? 1.0f + voice_ptr->pan : 1.0f);
+    }
     job->loop = voice_ptr->loop;
     voice_ptr->busy = true;
 }
