@@ -4826,6 +4826,57 @@ export declare const Shape3d: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+/** A handle of kind wgf_sheet_t: the raw binding's branded type. */
+export type Sheet = raw.wgf_sheet_t;
+export declare const Sheet: {
+    /**
+     * A sheet over `texture` cut into cells of frame_width by frame_height texels, left to right
+     * then down, `margin` texels in from its edges and `spacing` between cells: `count` frames
+     * (0: every cell that fits), cut once the texture is READY. 0 for a texture that isn't one, a
+     * frame size not above 0, or a count, margin, or spacing below 0.
+     */
+    readonly createGrid: typeof raw.wgf_sheet_create_grid;
+    /**
+     * A sheet over `texture` cut into cells of frame_width by frame_height texels, left to right
+     * then down, `margin` texels in from its edges and `spacing` between cells: `count` frames
+     * (0: every cell that fits), cut once the texture is READY. 0 for a texture that isn't one, a
+     * frame size not above 0, or a count, margin, or spacing below 0.
+     */
+    readonly destroy: typeof raw.wgf_sheet_destroy;
+    /**
+     * A sheet over `texture` cut into cells of frame_width by frame_height texels, left to right
+     * then down, `margin` texels in from its edges and `spacing` between cells: `count` frames
+     * (0: every cell that fits), cut once the texture is READY. 0 for a texture that isn't one, a
+     * frame size not above 0, or a count, margin, or spacing below 0.
+     */
+    readonly getTexture: typeof raw.wgf_sheet_get_texture;
+    /**
+     * Its frames, and one's region of the texture (x, y, width, height in texels); none while its
+     * texture isn't READY. 0 for a handle that isn't a sheet, or an index outside it.
+     */
+    readonly getFrameCount: typeof raw.wgf_sheet_get_frame_count;
+    /**
+     * Its frames, and one's region of the texture (x, y, width, height in texels); none while its
+     * texture isn't READY. 0 for a handle that isn't a sheet, or an index outside it.
+     */
+    readonly getFrame: typeof raw.wgf_sheet_get_frame;
+    /**
+     * A clip named `name` over the sheet's frames by index (`count` of them), each shown for
+     * `seconds`, run in `direction`, in place of one of that name. At most 64 clips a sheet;
+     * false for a name empty or over 31 bytes, no frames, seconds not above 0, or a direction
+     * that isn't one.
+     */
+    readonly addClip: typeof raw.wgf_sheet_add_clip;
+    /**
+     * A clip named `name` over the sheet's frames by index (`count` of them), each shown for
+     * `seconds`, run in `direction`, in place of one of that name. At most 64 clips a sheet;
+     * false for a name empty or over 31 bytes, no frames, seconds not above 0, or a direction
+     * that isn't one.
+     */
+    readonly getClipCount: typeof raw.wgf_sheet_get_clip_count;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
+};
 /** A handle of kind wgf_sound_t: the raw binding's branded type. */
 export type Sound = raw.wgf_sound_t;
 export declare const Sound: {
@@ -5026,6 +5077,89 @@ export declare const Sprite: {
      * Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
      */
     readonly getFacing: typeof raw.wgf_sprite_get_facing;
+    /**
+     * A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+     * named `name` played from its start, looping or once (a clip already playing goes on);
+     * stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+     * state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+     * STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+     * have.
+     */
+    readonly setSheet: typeof raw.wgf_sprite_set_sheet;
+    /**
+     * A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+     * named `name` played from its start, looping or once (a clip already playing goes on);
+     * stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+     * state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+     * STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+     * have.
+     */
+    readonly getSheet: typeof raw.wgf_sprite_get_sheet;
+    /**
+     * A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+     * named `name` played from its start, looping or once (a clip already playing goes on);
+     * stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+     * state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+     * STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+     * have.
+     */
+    readonly playClip: typeof raw.wgf_sprite_play_clip;
+    /**
+     * A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+     * named `name` played from its start, looping or once (a clip already playing goes on);
+     * stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+     * state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+     * STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+     * have.
+     */
+    readonly pauseClip: typeof raw.wgf_sprite_pause_clip;
+    /**
+     * A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+     * named `name` played from its start, looping or once (a clip already playing goes on);
+     * stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+     * state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+     * STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+     * have.
+     */
+    readonly resumeClip: typeof raw.wgf_sprite_resume_clip;
+    /**
+     * A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+     * named `name` played from its start, looping or once (a clip already playing goes on);
+     * stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+     * state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+     * STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+     * have.
+     */
+    readonly stopClip: typeof raw.wgf_sprite_stop_clip;
+    /**
+     * A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+     * named `name` played from its start, looping or once (a clip already playing goes on);
+     * stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+     * state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+     * STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+     * have.
+     */
+    readonly getClipState: typeof raw.wgf_sprite_get_clip_state;
+    /**
+     * The clip playing's name ("" for none), and which of its frames shows (0 its first; -1 for
+     * none).
+     */
+    readonly getClip: typeof raw.wgf_sprite_get_clip;
+    /**
+     * The clip playing's name ("" for none), and which of its frames shows (0 its first; -1 for
+     * none).
+     */
+    readonly getClipFrame: typeof raw.wgf_sprite_get_clip_frame;
+    /**
+     * The clip playing's name ("" for none), and which of its frames shows (0 its first; -1 for
+     * none).
+     */
+    readonly setClipSpeed: typeof raw.wgf_sprite_set_clip_speed;
+    /**
+     * The clip playing's name ("" for none), and which of its frames shows (0 its first; -1 for
+     * none).
+     */
+    readonly getClipSpeed: typeof raw.wgf_sprite_get_clip_speed;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
@@ -6784,6 +6918,8 @@ export type Shape2dKind = raw.wgf_shape2d_kind_t;
 export declare const Shape2dKind: { readonly NONE: Shape2dKind; readonly RECTANGLE: Shape2dKind; readonly CIRCLE: Shape2dKind; readonly LINE: Shape2dKind; readonly POLYGON: Shape2dKind; };
 export type Shape3dKind = raw.wgf_shape3d_kind_t;
 export declare const Shape3dKind: { readonly NONE: Shape3dKind; readonly CUBE: Shape3dKind; readonly SPHERE: Shape3dKind; readonly RECTANGLE: Shape3dKind; readonly CIRCLE: Shape3dKind; readonly LINE: Shape3dKind; readonly LINE_STRIP: Shape3dKind; };
+export type SheetDirection = raw.wgf_sheet_direction_t;
+export declare const SheetDirection: { readonly FORWARD: SheetDirection; readonly BACKWARD: SheetDirection; readonly PING_PONG: SheetDirection; };
 export type SpriteFacing = raw.wgf_sprite_facing_t;
 export declare const SpriteFacing: { readonly CAMERA: SpriteFacing; readonly CAMERA_FIXED_Y: SpriteFacing; readonly Y_UP: SpriteFacing; readonly FREE: SpriteFacing; };
 export type Stage3dTonemap = raw.wgf_stage3d_tonemap_t;

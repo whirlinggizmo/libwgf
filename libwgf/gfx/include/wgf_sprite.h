@@ -6,6 +6,8 @@
 #include "wgf_api.h"
 #include "wgf_color.h"
 #include "wgf_material.h"
+#include "wgf_play_state.h"
+#include "wgf_sheet.h"
 #include "wgf_actor.h"
 #include "wgf_texture.h"
 #include "wgf_vec2.h"
@@ -78,6 +80,26 @@ typedef enum wgf_sprite_facing_t {
 /* Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one. */
 WGF_API bool wgf_sprite_set_facing(wgf_actor_t sprite, wgf_sprite_facing_t facing);
 WGF_API wgf_sprite_facing_t wgf_sprite_get_facing(wgf_actor_t sprite);
+
+/* A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+ * named `name` played from its start, looping or once (a clip already playing goes on);
+ * stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+ * state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+ * STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+ * have. */
+WGF_API bool wgf_sprite_set_sheet(wgf_actor_t sprite, wgf_sheet_t sheet);
+WGF_API wgf_sheet_t wgf_sprite_get_sheet(wgf_actor_t sprite);
+WGF_API bool wgf_sprite_play_clip(wgf_actor_t sprite, const char *name, bool loop);
+WGF_API bool wgf_sprite_pause_clip(wgf_actor_t sprite);
+WGF_API bool wgf_sprite_resume_clip(wgf_actor_t sprite);
+WGF_API bool wgf_sprite_stop_clip(wgf_actor_t sprite);
+WGF_API wgf_play_state_t wgf_sprite_get_clip_state(wgf_actor_t sprite);
+/* The clip playing's name ("" for none), and which of its frames shows (0 its first; -1 for
+ * none). */
+WGF_API const char *wgf_sprite_get_clip(wgf_actor_t sprite);
+WGF_API int wgf_sprite_get_clip_frame(wgf_actor_t sprite);
+WGF_API bool wgf_sprite_set_clip_speed(wgf_actor_t sprite, float speed);
+WGF_API float wgf_sprite_get_clip_speed(wgf_actor_t sprite);
 
 #ifdef __cplusplus
 }

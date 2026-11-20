@@ -52,6 +52,8 @@ export type wgf_texture_t = number & { readonly [kind]: "wgf_texture_t" };
 export type wgf_texture_read_t = number & { readonly [kind]: "wgf_texture_read_t" };
 /** A handle of kind wgf_material_t; 0 is none. */
 export type wgf_material_t = number & { readonly [kind]: "wgf_material_t" };
+/** A handle of kind wgf_sheet_t; 0 is none. */
+export type wgf_sheet_t = number & { readonly [kind]: "wgf_sheet_t" };
 /** A handle of kind wgf_environment_t; 0 is none. */
 export type wgf_environment_t = number & { readonly [kind]: "wgf_environment_t" };
 /** A handle of kind wgf_mesh_t; 0 is none. */
@@ -559,6 +561,14 @@ export declare const WGF_ALPHA_MODE_MASK: 1;
 export declare const WGF_ALPHA_MODE_BLEND: 2;
 export declare const WGF_ALPHA_MODE_ADD: 3;
 export type wgf_alpha_mode_t = typeof WGF_ALPHA_MODE_OPAQUE | typeof WGF_ALPHA_MODE_MASK | typeof WGF_ALPHA_MODE_BLEND | typeof WGF_ALPHA_MODE_ADD;
+
+/**
+ * How a clip runs through its frames.
+ */
+export declare const WGF_SHEET_DIRECTION_FORWARD: 0;
+export declare const WGF_SHEET_DIRECTION_BACKWARD: 1;
+export declare const WGF_SHEET_DIRECTION_PING_PONG: 2;
+export type wgf_sheet_direction_t = typeof WGF_SHEET_DIRECTION_FORWARD | typeof WGF_SHEET_DIRECTION_BACKWARD | typeof WGF_SHEET_DIRECTION_PING_PONG;
 
 /**
  * How a sprite on a 3D stage faces, libwgt's and wgrender-c's (on a 2D stage it lies in
@@ -3504,6 +3514,59 @@ export declare function wgf_material_get_texture_wrap_v(material: wgf_material_t
 export declare function wgf_material_get_texture_filter(material: wgf_material_t | 0, name: string | null): wgf_texture_filter_t;
 
 /**
+ * A sheet over `texture` cut into cells of frame_width by frame_height texels, left to right
+ * then down, `margin` texels in from its edges and `spacing` between cells: `count` frames
+ * (0: every cell that fits), cut once the texture is READY. 0 for a texture that isn't one, a
+ * frame size not above 0, or a count, margin, or spacing below 0.
+ */
+export declare function wgf_sheet_create_grid(texture: wgf_texture_t | 0, frame_width: number, frame_height: number, count: number, margin: number, spacing: number): wgf_sheet_t;
+
+/**
+ * A sheet over `texture` cut into cells of frame_width by frame_height texels, left to right
+ * then down, `margin` texels in from its edges and `spacing` between cells: `count` frames
+ * (0: every cell that fits), cut once the texture is READY. 0 for a texture that isn't one, a
+ * frame size not above 0, or a count, margin, or spacing below 0.
+ */
+export declare function wgf_sheet_destroy(sheet: wgf_sheet_t | 0): void;
+
+/**
+ * A sheet over `texture` cut into cells of frame_width by frame_height texels, left to right
+ * then down, `margin` texels in from its edges and `spacing` between cells: `count` frames
+ * (0: every cell that fits), cut once the texture is READY. 0 for a texture that isn't one, a
+ * frame size not above 0, or a count, margin, or spacing below 0.
+ */
+export declare function wgf_sheet_get_texture(sheet: wgf_sheet_t | 0): wgf_texture_t;
+
+/**
+ * Its frames, and one's region of the texture (x, y, width, height in texels); none while its
+ * texture isn't READY. 0 for a handle that isn't a sheet, or an index outside it.
+ */
+export declare function wgf_sheet_get_frame_count(sheet: wgf_sheet_t | 0): number;
+
+/**
+ * Its frames, and one's region of the texture (x, y, width, height in texels); none while its
+ * texture isn't READY. 0 for a handle that isn't a sheet, or an index outside it.
+ */
+export declare function wgf_sheet_get_frame<T extends number[] | Float32Array | Float64Array>(sheet: wgf_sheet_t | 0, index: number, into: T): T;
+export declare function wgf_sheet_get_frame(sheet: wgf_sheet_t | 0, index: number, into?: wgf_vec4_t | null): wgf_vec4_t;
+
+/**
+ * A clip named `name` over the sheet's frames by index (`count` of them), each shown for
+ * `seconds`, run in `direction`, in place of one of that name. At most 64 clips a sheet;
+ * false for a name empty or over 31 bytes, no frames, seconds not above 0, or a direction
+ * that isn't one.
+ */
+export declare function wgf_sheet_add_clip(sheet: wgf_sheet_t | 0, name: string | null, frames: readonly number[] | Int32Array | null, seconds: number, direction: wgf_sheet_direction_t): boolean;
+
+/**
+ * A clip named `name` over the sheet's frames by index (`count` of them), each shown for
+ * `seconds`, run in `direction`, in place of one of that name. At most 64 clips a sheet;
+ * false for a name empty or over 31 bytes, no frames, seconds not above 0, or a direction
+ * that isn't one.
+ */
+export declare function wgf_sheet_get_clip_count(sheet: wgf_sheet_t | 0): number;
+
+/**
  * A sprite of `texture` (0 for none: it draws nothing). 0 when there is no room for
  * another actor.
  */
@@ -3611,6 +3674,100 @@ export declare function wgf_sprite_set_facing(sprite: wgf_actor_t | 0, facing: w
  * Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
  */
 export declare function wgf_sprite_get_facing(sprite: wgf_actor_t | 0): wgf_sprite_facing_t;
+
+/**
+ * A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+ * named `name` played from its start, looping or once (a clip already playing goes on);
+ * stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+ * state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+ * STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+ * have.
+ */
+export declare function wgf_sprite_set_sheet(sprite: wgf_actor_t | 0, sheet: wgf_sheet_t | 0): boolean;
+
+/**
+ * A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+ * named `name` played from its start, looping or once (a clip already playing goes on);
+ * stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+ * state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+ * STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+ * have.
+ */
+export declare function wgf_sprite_get_sheet(sprite: wgf_actor_t | 0): wgf_sheet_t;
+
+/**
+ * A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+ * named `name` played from its start, looping or once (a clip already playing goes on);
+ * stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+ * state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+ * STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+ * have.
+ */
+export declare function wgf_sprite_play_clip(sprite: wgf_actor_t | 0, name: string | null, loop: boolean): boolean;
+
+/**
+ * A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+ * named `name` played from its start, looping or once (a clip already playing goes on);
+ * stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+ * state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+ * STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+ * have.
+ */
+export declare function wgf_sprite_pause_clip(sprite: wgf_actor_t | 0): boolean;
+
+/**
+ * A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+ * named `name` played from its start, looping or once (a clip already playing goes on);
+ * stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+ * state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+ * STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+ * have.
+ */
+export declare function wgf_sprite_resume_clip(sprite: wgf_actor_t | 0): boolean;
+
+/**
+ * A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+ * named `name` played from its start, looping or once (a clip already playing goes on);
+ * stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+ * state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+ * STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+ * have.
+ */
+export declare function wgf_sprite_stop_clip(sprite: wgf_actor_t | 0): boolean;
+
+/**
+ * A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+ * named `name` played from its start, looping or once (a clip already playing goes on);
+ * stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+ * state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+ * STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+ * have.
+ */
+export declare function wgf_sprite_get_clip_state(sprite: wgf_actor_t | 0): wgf_play_state_t;
+
+/**
+ * The clip playing's name ("" for none), and which of its frames shows (0 its first; -1 for
+ * none).
+ */
+export declare function wgf_sprite_get_clip(sprite: wgf_actor_t | 0): string;
+
+/**
+ * The clip playing's name ("" for none), and which of its frames shows (0 its first; -1 for
+ * none).
+ */
+export declare function wgf_sprite_get_clip_frame(sprite: wgf_actor_t | 0): number;
+
+/**
+ * The clip playing's name ("" for none), and which of its frames shows (0 its first; -1 for
+ * none).
+ */
+export declare function wgf_sprite_set_clip_speed(sprite: wgf_actor_t | 0, speed: number): boolean;
+
+/**
+ * The clip playing's name ("" for none), and which of its frames shows (0 its first; -1 for
+ * none).
+ */
+export declare function wgf_sprite_get_clip_speed(sprite: wgf_actor_t | 0): number;
 
 /**
  * A text actor in `font` (0: the default font), with no string yet. 0 when `font`

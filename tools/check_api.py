@@ -134,6 +134,7 @@ ACTOR_FACETS = ('sprite', 'text', 'shape2d', 'shape3d', 'emitter2d', 'model', 'l
 MADE_FROM = {
     'wgf_sprite_create': 'a sprite is made from its texture',
     'wgf_sprite_batch_create': 'a sprite batch is made from its texture',
+    'wgf_sheet_create_grid': 'a sprite sheet is made from its texture',
     'wgf_tween_move': 'a tween is made from the actor it moves',
     'wgf_tween_turn': 'a tween is made from the actor it turns',
     'wgf_tween_scale': 'a tween is made from the actor it scales',

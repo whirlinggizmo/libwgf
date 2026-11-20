@@ -1593,6 +1593,25 @@ export const Shape3d = Object.freeze({
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
+// wgf: typed Sheet
+export const Sheet = Object.freeze({
+    // wgf: call wgf_sheet_create_grid
+    createGrid: raw.wgf_sheet_create_grid,
+    // wgf: call wgf_sheet_destroy
+    destroy: raw.wgf_sheet_destroy,
+    // wgf: call wgf_sheet_get_texture
+    getTexture: raw.wgf_sheet_get_texture,
+    // wgf: call wgf_sheet_get_frame_count
+    getFrameCount: raw.wgf_sheet_get_frame_count,
+    // wgf: call wgf_sheet_get_frame
+    getFrame: raw.wgf_sheet_get_frame,
+    // wgf: call wgf_sheet_add_clip
+    addClip: raw.wgf_sheet_add_clip,
+    // wgf: call wgf_sheet_get_clip_count
+    getClipCount: raw.wgf_sheet_get_clip_count,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
+});
 // wgf: typed Sound
 export const Sound = Object.freeze({
     // wgf: call wgf_sound_create
@@ -1650,6 +1669,28 @@ export const Sprite = Object.freeze({
     setFacing: raw.wgf_sprite_set_facing,
     // wgf: call wgf_sprite_get_facing
     getFacing: raw.wgf_sprite_get_facing,
+    // wgf: call wgf_sprite_set_sheet
+    setSheet: raw.wgf_sprite_set_sheet,
+    // wgf: call wgf_sprite_get_sheet
+    getSheet: raw.wgf_sprite_get_sheet,
+    // wgf: call wgf_sprite_play_clip
+    playClip: raw.wgf_sprite_play_clip,
+    // wgf: call wgf_sprite_pause_clip
+    pauseClip: raw.wgf_sprite_pause_clip,
+    // wgf: call wgf_sprite_resume_clip
+    resumeClip: raw.wgf_sprite_resume_clip,
+    // wgf: call wgf_sprite_stop_clip
+    stopClip: raw.wgf_sprite_stop_clip,
+    // wgf: call wgf_sprite_get_clip_state
+    getClipState: raw.wgf_sprite_get_clip_state,
+    // wgf: call wgf_sprite_get_clip
+    getClip: raw.wgf_sprite_get_clip,
+    // wgf: call wgf_sprite_get_clip_frame
+    getClipFrame: raw.wgf_sprite_get_clip_frame,
+    // wgf: call wgf_sprite_set_clip_speed
+    setClipSpeed: raw.wgf_sprite_set_clip_speed,
+    // wgf: call wgf_sprite_get_clip_speed
+    getClipSpeed: raw.wgf_sprite_get_clip_speed,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
@@ -2275,6 +2316,8 @@ export const ResourceStatus = Object.freeze({ NONE: 0, PENDING: 1, READY: 2, FAI
 export const Shape2dKind = Object.freeze({ NONE: 0, RECTANGLE: 1, CIRCLE: 2, LINE: 3, POLYGON: 4 });
 // wgf: enum Shape3dKind
 export const Shape3dKind = Object.freeze({ NONE: 0, CUBE: 1, SPHERE: 2, RECTANGLE: 3, CIRCLE: 4, LINE: 5, LINE_STRIP: 6 });
+// wgf: enum SheetDirection
+export const SheetDirection = Object.freeze({ FORWARD: 0, BACKWARD: 1, PING_PONG: 2 });
 // wgf: enum SpriteFacing
 export const SpriteFacing = Object.freeze({ CAMERA: 0, CAMERA_FIXED_Y: 1, Y_UP: 2, FREE: 3 });
 // wgf: enum Stage3dTonemap

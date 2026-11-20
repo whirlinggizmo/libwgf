@@ -32,6 +32,7 @@ wgf_layer(gfx
         src/sprite/wgf_gfx_sprite3d.c
         src/sprite/wgf_gfx_sprite_batch.c
         src/sprite/wgf_gfx_sprite_batch2d.c
+        src/sprite/wgf_gfx_sheet.c
         src/stage/wgf_gfx_light.c
         src/stage/wgf_gfx_model.c
         src/stage/wgf_gfx_model_file.c
@@ -88,6 +89,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_sprite_test)
         wgf_test(gfx wgf_gfx_sprite_batch_test)
         wgf_test(gfx wgf_gfx_follow_test)
+        wgf_test(gfx wgf_gfx_sheet_test)
         wgf_test(gfx wgf_gfx_emitter_test)
         wgf_test(gfx wgf_gfx_target_test)
         wgf_test(gfx wgf_gfx_shader_test)

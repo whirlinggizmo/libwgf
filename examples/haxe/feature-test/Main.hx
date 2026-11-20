@@ -567,6 +567,19 @@ class Main {
 			&& near(sprite.getAlphaCutoff(), 0.25) && sprite.setAlphaMode(AlphaMode.BLEND, 0.5), "its alpha mode");
 		expect(sprite.setFacing(SpriteFacing.CAMERA_FIXED_Y) && sprite.getFacing() == SpriteFacing.CAMERA_FIXED_Y
 			&& sprite.setFacing(SpriteFacing.CAMERA), "its facing on a 3D stage");
+		final sheet = Sheet.createGrid(tiles, 16, 16, 0, 0, 0);
+		expect(sheet.getTexture() == tiles && sheet.addClip("spin", [0, 1, 2], 0.1, SheetDirection.PING_PONG)
+			&& sheet.getClipCount() == 1, "a sprite sheet and a clip");
+		sheet.getFrameCount();
+		sheet.getFrame(0);
+		final flipbook = Sprite.create(tiles);
+		expect(flipbook.setSheet(sheet) && flipbook.getSheet() == sheet && flipbook.playClip("spin", true)
+			&& flipbook.getClip() == "spin" && flipbook.getClipFrame() == 0 && flipbook.getClipState() == PlayState.PLAYING,
+			"a sprite playing it");
+		expect(flipbook.setClipSpeed(2) && near(flipbook.getClipSpeed(), 2) && flipbook.pauseClip() && flipbook.resumeClip()
+			&& flipbook.stopClip(), "its speed, paused, resumed, stopped");
+		flipbook.destroy(ActorDestroy.DESTROY_CHILDREN);
+		sheet.destroy();
 		final quads = SpriteBatch.create(tiles);
 		quads.setParent(group);
 		final floats:Array<Float> = [0, 0, 0, 0, 0, 0, 0, 0];

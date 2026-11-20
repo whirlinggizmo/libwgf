@@ -126,4 +126,109 @@ import wgf.impl.Raw;
 	**/
 	public inline function getFacing():SpriteFacing
 		return Raw.wgf_sprite_get_facing(this);
+
+	/**
+	    A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+	    named `name` played from its start, looping or once (a clip already playing goes on);
+	    stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+	    state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+	    STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+	    have.
+	**/
+	public inline function setSheet(sheet:Sheet):Bool
+		return Raw.wgf_sprite_set_sheet(this, sheet);
+
+	/**
+	    A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+	    named `name` played from its start, looping or once (a clip already playing goes on);
+	    stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+	    state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+	    STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+	    have.
+	**/
+	public inline function getSheet():Sheet
+		return Raw.wgf_sprite_get_sheet(this);
+
+	/**
+	    A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+	    named `name` played from its start, looping or once (a clip already playing goes on);
+	    stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+	    state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+	    STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+	    have.
+	**/
+	public inline function playClip(name:String, loop:Bool):Bool
+		return Raw.wgf_sprite_play_clip(this, name, loop);
+
+	/**
+	    A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+	    named `name` played from its start, looping or once (a clip already playing goes on);
+	    stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+	    state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+	    STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+	    have.
+	**/
+	public inline function pauseClip():Bool
+		return Raw.wgf_sprite_pause_clip(this);
+
+	/**
+	    A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+	    named `name` played from its start, looping or once (a clip already playing goes on);
+	    stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+	    state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+	    STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+	    have.
+	**/
+	public inline function resumeClip():Bool
+		return Raw.wgf_sprite_resume_clip(this);
+
+	/**
+	    A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+	    named `name` played from its start, looping or once (a clip already playing goes on);
+	    stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+	    state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+	    STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+	    have.
+	**/
+	public inline function stopClip():Bool
+		return Raw.wgf_sprite_stop_clip(this);
+
+	/**
+	    A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
+	    named `name` played from its start, looping or once (a clip already playing goes on);
+	    stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
+	    state: PLAYING, PAUSED, COMPLETE once a clip played once ends (holding its last frame),
+	    STOPPED. False for a sprite that isn't one, a sheet that isn't one, or a clip it doesn't
+	    have.
+	**/
+	public inline function getClipState():PlayState
+		return Raw.wgf_sprite_get_clip_state(this);
+
+	/**
+	    The clip playing's name ("" for none), and which of its frames shows (0 its first; -1 for
+	    none).
+	**/
+	public inline function getClip():String
+		return Raw.wgf_sprite_get_clip(this);
+
+	/**
+	    The clip playing's name ("" for none), and which of its frames shows (0 its first; -1 for
+	    none).
+	**/
+	public inline function getClipFrame():Int
+		return Raw.wgf_sprite_get_clip_frame(this);
+
+	/**
+	    The clip playing's name ("" for none), and which of its frames shows (0 its first; -1 for
+	    none).
+	**/
+	public inline function setClipSpeed(speed:Float):Bool
+		return Raw.wgf_sprite_set_clip_speed(this, speed);
+
+	/**
+	    The clip playing's name ("" for none), and which of its frames shows (0 its first; -1 for
+	    none).
+	**/
+	public inline function getClipSpeed():Float
+		return Raw.wgf_sprite_get_clip_speed(this);
 }
