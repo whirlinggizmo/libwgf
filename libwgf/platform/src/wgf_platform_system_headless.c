@@ -191,6 +191,15 @@ bool wgf_platform_priv_pace(double wait)
     return true;
 }
 
+bool wgf_platform_priv_set_icon(const unsigned char *rgba, int size, int width, int height)
+{
+    (void)rgba; /* no window to show it on: taken, kept nowhere */
+    (void)size;
+    (void)width;
+    (void)height;
+    return true;
+}
+
 void wgf_platform_priv_set_title(const char *title)
 {
     (void)title;

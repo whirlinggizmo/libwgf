@@ -150,6 +150,12 @@ class Main {
 			"the version");
 		Log.setLevel(LogLevel.INFO);
 		expect(Log.getLevel() == LogLevel.INFO, "the log level");
+		expect(Log.setHistory(4) && Log.getHistory() == 4, "log lines kept");
+		Log.message(LogLevel.WARN, "kept for the game");
+		expect(Log.getHistoryCount() == 1 && Log.getHistoryLine(0) == "kept for the game" && Log.getHistoryLevel(0) == LogLevel.WARN,
+			"a line kept, read back");
+		Log.clearHistory();
+		Log.setHistory(0);
 		Log.message(LogLevel.INFO, "feature-test begins");
 		Log.messageSource(LogLevel.DEBUG, "Main.hx", 1, "a line at its source, below the level shown");
 		expect(Identity.setCompany("Whirling Gizmo") && Identity.getCompany() == "Whirling Gizmo", "the company");
@@ -180,6 +186,7 @@ class Main {
 		// the root is the program's directory, or "" (the working directory) where that can't be told
 		expect(Fs.setRoot(Fs.getRoot()), "the storage's root, set to itself");
 		tasks.push(Fs.mkdir("feature"));
+		tasks.push(Fs.list("feature"));
 		tasks.push(Fs.write("feature/a.txt", haxe.io.Bytes.ofString("feature")));
 		expect(Resource.setLoadBudget(4) && near(Resource.getLoadBudget(), 4), "the load budget");
 	}
@@ -210,6 +217,8 @@ class Main {
 		Window.setDecorated(true);
 		Window.isDecorated();
 		Window.isFocused();
+		Window.isResized();
+		expect(Window.setIcon(haxe.io.Bytes.alloc(16 * 16 * 4), 16, 16), "a window icon");
 		Window.setTransparent(false);
 		Window.isTransparent();
 		Window.setHighDpi(true);

@@ -106,6 +106,11 @@ bool wgf_platform_priv_pace(double wait);
 void wgf_platform_priv_set_paced(bool paced);
 
 void wgf_platform_priv_set_title(const char *title);
+/* The window's icon from RGBA pixels, `width` by `height` (`size` bytes, width x height x 4):
+ * false where there is none to set (headless keeps nothing). */
+bool wgf_platform_priv_set_icon(const unsigned char *rgba, int size, int width, int height);
+/* Each frame's end: the window's size kept, for wgf_window_is_resized. */
+void wgf_platform_priv_window_end_frame(void);
 bool wgf_platform_priv_set_size(int width, int height); /* logical */
 bool wgf_platform_priv_has_fullscreen(void);
 void wgf_platform_priv_set_fullscreen(bool fullscreen);

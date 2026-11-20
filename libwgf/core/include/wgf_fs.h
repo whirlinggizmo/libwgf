@@ -71,6 +71,10 @@ WGF_API wgf_fs_task_t wgf_fs_mkdir(const char *path);
  * directory (a link to one isn't one: remove the link instead); FAILED when
  * something in it couldn't be removed. */
 WGF_API wgf_fs_task_t wgf_fs_rmdir(const char *path);
+/* What a directory holds: DONE, its names as the task's text, sorted, one a line, a
+ * directory's with a slash after it ("levels/\nsave.json\n"; "" for an empty one), on the web
+ * those kept only in the browser's store too; NOT_FOUND when there is no such directory. */
+WGF_API wgf_fs_task_t wgf_fs_list(const char *path);
 
 static inline wgf_fs_task_t wgf_fs_write_text(const char *path, const char *text)
 {
@@ -80,8 +84,8 @@ static inline wgf_fs_task_t wgf_fs_write_text(const char *path, const char *text
 /* Tasks. A getter answers NONE, "", NULL, or 0 for a handle that isn't a task. */
 WGF_API wgf_fs_task_status_t wgf_fs_task_get_status(wgf_fs_task_t task);
 WGF_API const char *wgf_fs_task_get_path(wgf_fs_task_t task);
-/* A DONE read's bytes, NUL-terminated so they also read as text, valid until the
- * task is destroyed. Any other task: NULL, 0, and "". */
+/* A DONE read's bytes (or a list's text), NUL-terminated so they also read as text, valid
+ * until the task is destroyed. Any other task: NULL, 0, and "". */
 WGF_API const unsigned char *wgf_fs_task_get_data(wgf_fs_task_t task);
 WGF_API int wgf_fs_task_get_size(wgf_fs_task_t task);
 WGF_API const char *wgf_fs_task_get_text(wgf_fs_task_t task);

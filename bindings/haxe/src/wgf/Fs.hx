@@ -67,4 +67,12 @@ class Fs {
 	**/
 	public static inline function rmdir(path:String):FsTask
 		return Raw.wgf_fs_rmdir(path);
+
+	/**
+	    What a directory holds: DONE, its names as the task's text, sorted, one a line, a
+	    directory's with a slash after it ("levels/\nsave.json\n"; "" for an empty one), on the web
+	    those kept only in the browser's store too; NOT_FOUND when there is no such directory.
+	**/
+	public static inline function list(path:String):FsTask
+		return Raw.wgf_fs_list(path);
 }

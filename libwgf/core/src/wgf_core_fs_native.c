@@ -206,6 +206,12 @@ bool wgf_core_priv_fs_is_settled(void)
     return true; /* a write is on disk when it returns */
 }
 
+void wgf_core_priv_fs_platform_list_stored(const char *full, struct wgf_core_priv_names_t *names)
+{
+    (void)full; /* files are files: the directory's own are all there is */
+    (void)names;
+}
+
 bool wgf_core_priv_fs_platform_has_stored_dir(const char *full)
 {
     (void)full; /* files are files: a directory is on disk or isn't there */

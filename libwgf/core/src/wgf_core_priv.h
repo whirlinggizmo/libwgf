@@ -29,4 +29,8 @@ bool wgf_core_priv_app_cache_dir(char *out, size_t out_size);
  * where there is no user data directory (the web). */
 bool wgf_core_priv_app_data_dir(char *out, size_t out_size);
 
+/* The log's history lock: made before the load workers start, gone after they stop. */
+void wgf_core_priv_log_init(void);
+void wgf_core_priv_log_deinit(void);
+
 #endif

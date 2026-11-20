@@ -37,6 +37,7 @@ typedef struct run_t {
     int frame_sizes_ok;
     int paused_ticks;   /* ticks while the time scale was 0 */
     int unfocused_ticks; /* ticks while unfocused, held */
+    int resized_ok;      /* resized in the frame the size changed, not before or after */
     bool unfocused;
     float paused_fraction_first, paused_fraction_last;
     double started, ended;
@@ -86,7 +87,13 @@ static void on_frame(void *user)
     run->frames++;
     run->frames_in_frame &= wgf_gfx_priv_is_in_frame();
     if (run->frames == 5 && !run->no_readout) wgf_debug_show_fps(0, 8, 8, 16, wgf_color_make(0, 255, 0, 255)); /* drawn over the rest */
-    run->frame_sizes_ok &= wgf_render_get_width() == 320 && wgf_render_get_height() == 200;
+    if (run->frames < 48) run->frame_sizes_ok &= wgf_render_get_width() == 320 && wgf_render_get_height() == 200;
+    if (run->frames == 47) run->resized_ok = !wgf_window_is_resized();
+    if (run->frames == 48) { /* the window made larger: resized this frame */
+        wgf_platform_priv_set_size(400, 300);
+        run->resized_ok &= wgf_window_is_resized();
+    }
+    if (run->frames == 49) run->resized_ok &= !wgf_window_is_resized();
     /* after the first 30 frames, whose ticks are counted at their rate: looked away from and
        held (no ticks from the next frame), then paused by the time scale */
     if (run->frames == 30) {
@@ -168,6 +175,13 @@ int main(void)
     expect(run.ticks_in_order, "ticks between init and shutdown, outside frames");
     expect(run.frames_in_frame, "the frame callback runs inside gfx's frame");
     expect(run.frame_sizes_ok, "frames of the window's size");
+    expect(run.resized_ok, "resized in the frame its size changed, not before or after");
+    {
+        static unsigned char icon[16 * 16 * 4];
+        expect(wgf_window_set_icon(icon, (int)sizeof(icon), 16, 16) && !wgf_window_set_icon(icon, 10, 16, 16) &&
+                   !wgf_window_set_icon(NULL, 0, 16, 16) && !wgf_window_set_icon(icon, (int)sizeof(icon), 0, 16),
+               "an icon set; a byte count that doesn't fit, no pixels, no size: refused");
+    }
     expect(run.nested_run_refused, "wgf_app_run while running is refused");
     expect(run.open_options_refused, "options fixed at open are refused once it is open");
     expect(run.samples == 4, "gfx draws with the samples the window got");

@@ -1040,6 +1040,16 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## Parity: directories, resizing, icons, log lines (2026-11-20)
+
+Four more parity rows:
+- A directory listed as an fs task. Its text is the names, sorted, with directories marked by a trailing slash. On the web, the in-memory directory and the browser store's keys under it are merged.
+- `wgf_window_is_resized`: true in a frame whose size differs from the last frame's.
+- A window icon (the page's on the web) from RGBA bytes.
+- raylib's log callback without the callback: the last lines logged are kept for the game to read, under a lock core sets up before its load workers start.
+
+A saved screenshot is left: sokol can't read the screen's framebuffer back, so it needs the frame drawn into a render target first.
+
 ## Parity: textured polygons, tiles, blend modes, frame stats (2026-11-20)
 
 Four of the parity rest's rows:

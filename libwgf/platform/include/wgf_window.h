@@ -84,6 +84,15 @@ WGF_API bool wgf_window_is_decorated(void);
  * wants to (wgf_loop_set_time_scale). */
 WGF_API bool wgf_window_is_focused(void);
 
+/* Whether the window's size (wgf_window_get_width, _height) is other than it was as the last
+ * frame ended: raylib's IsWindowResized, true for that frame. */
+WGF_API bool wgf_window_is_resized(void);
+
+/* The window's icon (on the web, the page's), from RGBA pixels `width` by `height` (`size`
+ * bytes: width x height x 4, row by row from the top): raylib's SetWindowIcon. False for no
+ * pixels, a size of 0 or over 1024 either way, or a byte count that doesn't fit it. */
+WGF_API bool wgf_window_set_icon(const unsigned char *rgba, int size, int width, int height);
+
 /* Options fixed when the window opens: refused (false) once it has.
  *   transparent  what is behind the window shows through where gfx clears with
  *                alpha below 1 (default off). Desktop: where the window system

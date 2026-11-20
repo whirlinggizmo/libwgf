@@ -165,6 +165,10 @@ void wgf_core_priv_fs_platform_root_changed(const char *root);
  * memory? Web: a returning visit's files are only in IndexedDB until read. Native:
  * never. */
 bool wgf_core_priv_fs_platform_has_stored_dir(const char *full);
+/* The names directly under `full` that only the web's store holds (none natively), added to
+ * `names`. */
+struct wgf_core_priv_names_t;
+void wgf_core_priv_fs_platform_list_stored(const char *full, struct wgf_core_priv_names_t *names);
 /* The directory `path` (resolved to `full`) and all under it were removed. */
 void wgf_core_priv_fs_platform_removed_dir(const char *path, const char *full);
 /* Around a write of `path` (resolved to `full`) with `meta` or NULL. */

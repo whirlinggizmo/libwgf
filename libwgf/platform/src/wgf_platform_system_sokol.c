@@ -126,6 +126,18 @@ sg_swapchain wgf_platform_priv_get_swapchain(void)
     return sglue_swapchain();
 }
 
+bool wgf_platform_priv_set_icon(const unsigned char *rgba, int size, int width, int height)
+{
+    sapp_icon_desc desc;
+    memset(&desc, 0, sizeof(desc));
+    desc.images[0].width = width;
+    desc.images[0].height = height;
+    desc.images[0].pixels.ptr = rgba;
+    desc.images[0].pixels.size = (size_t)size;
+    sapp_set_icon(&desc);
+    return true;
+}
+
 void wgf_platform_priv_set_title(const char *title)
 {
     sapp_set_window_title(title);

@@ -90,6 +90,28 @@ bool wgf_platform_priv_window_is_open(void)
     return window.open;
 }
 
+/* The size the last frame ended at, for is_resized; -1 before the first. */
+static int seen_width = -1, seen_height = -1;
+
+void wgf_platform_priv_window_end_frame(void)
+{
+    seen_width = wgf_window_get_width();
+    seen_height = wgf_window_get_height();
+}
+
+bool wgf_window_is_resized(void)
+{
+    return seen_width >= 0 && (wgf_window_get_width() != seen_width || wgf_window_get_height() != seen_height);
+}
+
+bool wgf_window_set_icon(const unsigned char *rgba, int size, int width, int height)
+{
+    if (rgba == NULL || width <= 0 || height <= 0 || width > 1024 || height > 1024 || size != width * height * 4) {
+        return false;
+    }
+    return wgf_platform_priv_set_icon(rgba, size, width, height);
+}
+
 void wgf_window_set_title(const char *title)
 {
     snprintf(window.title, sizeof(window.title), "%s", title != NULL ? title : "");

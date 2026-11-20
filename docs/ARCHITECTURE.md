@@ -45,10 +45,10 @@ The base every other layer uses. It has no window and no loop: app's runtime sta
 |---------|--------|----------|
 | version | `wgf.h` | `wgf_version_get`, "MAJOR.MINOR.PATCH" from `VERSION` |
 | identity | `wgf_identity.h` | the company and product the program's files on the desktop are kept under |
-| log | `wgf_log.h` | levels, `wgf_log_message`, and for C the `wgf_log_<level>` macros, which format |
+| log | `wgf_log.h` | levels, `wgf_log_message`, and for C the `wgf_log_<level>` macros, which format; the last lines kept for the program to read (`wgf_log_set_history`), under a lock the load workers share |
 | time | `wgf_time.h` | `wgf_time_get_seconds`, monotonic seconds since core started, on sokol_time |
 | handle | `wgf_handle.h` | `wgf_handle_t`, `wgf_handle_get_kind_name`, and `wgf_handle_is_alive` (any kind's, through the pools each kind registers); the pools are private, and a dead handle given to a call is refused and, in a debug build, warned of once a call |
-| fs | `wgf_fs.h` | read, write, exists, remove, mkdir, rmdir, each a task (`wgf_fs_task_t`); the root; `user:` paths for the program's own files that last |
+| fs | `wgf_fs.h` | read, write, exists, remove, mkdir, rmdir, each a task (`wgf_fs_task_t`); the root; `user:` paths for the program's own files that last; a directory listed (`wgf_fs_list`: its names sorted, the web's store merged in) |
 | probe | `wgf_probe.h` | named numbers, or text, a program publishes about itself (the UI's focus as `ui.focus`), read by autopilot runs, tools, and tests |
 | random | `wgf_random.h` | one seeded generator (PCG32): a seed's sequence is the same on every platform; a shuffle; and a game's own generators, handles of kind "core.generator", seeded, the same steps on a state of their own |
 | resource | `wgf_resource.h` | what every resource kind shares: status, path, release; the load budget |
@@ -63,7 +63,7 @@ The window, its events, and input, under gfx and audio, which ask it for what th
 
 | Section | Header | Provides |
 |---------|--------|----------|
-| window | `wgf_window.h` | title, size, fullscreen (and whether it can be), visible, resizable, decorated, focused; position and monitors; transparent, high DPI, vsync, and MSAA, fixed when it opens; a URL opened in the system's browser (a new tab on the web); the device: touch, a fine pointer, its system (on the web, the browser's), whether it is the web |
+| window | `wgf_window.h` | title, size, fullscreen (and whether it can be), visible, resizable, decorated, focused; position and monitors; transparent, high DPI, vsync, and MSAA, fixed when it opens; a URL opened in the system's browser (a new tab on the web); the device: touch, a fine pointer, its system (on the web, the browser's), whether it is the web; resized as a frame's state (`wgf_window_is_resized`); an icon from RGBA (`wgf_window_set_icon`) |
 | input | `wgf_input.h` | `wgf_input_state_t` (UP, PRESSED, DOWN, RELEASED); the characters typed, as UTF-8; the capture flags: whether game controls should leave the pointer or keyboard to a UI; the system's clipboard text (sokol_app's, 64 KB) |
 | keyboard | `wgf_keyboard.h` | sokol's keys as `WGF_KEY_*`, by place on a US layout; each key's state, and down, pressed, released; a key repeated by the system as it is held, and the last key pressed |
 | mouse | `wgf_mouse.h` | position, movement, and scrolling in logical pixels; each button's state; locking the pointer; hiding the cursor; the cursor's shape (sokol_app's set) |

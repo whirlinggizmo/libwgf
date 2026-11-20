@@ -3802,6 +3802,12 @@ export declare const Fs: {
      * something in it couldn't be removed.
      */
     readonly rmdir: typeof raw.wgf_fs_rmdir;
+    /**
+     * What a directory holds: DONE, its names as the task's text, sorted, one a line, a
+     * directory's with a slash after it ("levels/\nsave.json\n"; "" for an empty one), on the web
+     * those kept only in the browser's store too; NOT_FOUND when there is no such directory.
+     */
+    readonly list: typeof raw.wgf_fs_list;
 };
 /** A handle of kind wgf_fs_task_t: the raw binding's branded type. */
 export type FsTask = raw.wgf_fs_task_t;
@@ -3815,18 +3821,18 @@ export declare const FsTask: {
      */
     readonly getPath: typeof raw.wgf_fs_task_get_path;
     /**
-     * A DONE read's bytes, NUL-terminated so they also read as text, valid until the
-     * task is destroyed. Any other task: NULL, 0, and "".
+     * A DONE read's bytes (or a list's text), NUL-terminated so they also read as text, valid
+     * until the task is destroyed. Any other task: NULL, 0, and "".
      */
     readonly getData: typeof raw.wgf_fs_task_get_data;
     /**
-     * A DONE read's bytes, NUL-terminated so they also read as text, valid until the
-     * task is destroyed. Any other task: NULL, 0, and "".
+     * A DONE read's bytes (or a list's text), NUL-terminated so they also read as text, valid
+     * until the task is destroyed. Any other task: NULL, 0, and "".
      */
     readonly getSize: typeof raw.wgf_fs_task_get_size;
     /**
-     * A DONE read's bytes, NUL-terminated so they also read as text, valid until the
-     * task is destroyed. Any other task: NULL, 0, and "".
+     * A DONE read's bytes (or a list's text), NUL-terminated so they also read as text, valid
+     * until the task is destroyed. Any other task: NULL, 0, and "".
      */
     readonly getText: typeof raw.wgf_fs_task_get_text;
     /**
@@ -4247,6 +4253,60 @@ export declare const Light: {
 export declare const Log: {
     readonly setLevel: typeof raw.wgf_log_set_level;
     readonly getLevel: typeof raw.wgf_log_get_level;
+    /**
+     * The last lines logged kept for the program to read, a game's console or a bug report:
+     * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+     * default, none; at most 1024), forgetting those kept; false for a count outside that.
+     * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+     * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+     * valid until the next read. Lines below the level aren't kept, as they aren't shown.
+     */
+    readonly setHistory: typeof raw.wgf_log_set_history;
+    /**
+     * The last lines logged kept for the program to read, a game's console or a bug report:
+     * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+     * default, none; at most 1024), forgetting those kept; false for a count outside that.
+     * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+     * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+     * valid until the next read. Lines below the level aren't kept, as they aren't shown.
+     */
+    readonly getHistory: typeof raw.wgf_log_get_history;
+    /**
+     * The last lines logged kept for the program to read, a game's console or a bug report:
+     * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+     * default, none; at most 1024), forgetting those kept; false for a count outside that.
+     * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+     * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+     * valid until the next read. Lines below the level aren't kept, as they aren't shown.
+     */
+    readonly getHistoryCount: typeof raw.wgf_log_get_history_count;
+    /**
+     * The last lines logged kept for the program to read, a game's console or a bug report:
+     * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+     * default, none; at most 1024), forgetting those kept; false for a count outside that.
+     * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+     * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+     * valid until the next read. Lines below the level aren't kept, as they aren't shown.
+     */
+    readonly getHistoryLine: typeof raw.wgf_log_get_history_line;
+    /**
+     * The last lines logged kept for the program to read, a game's console or a bug report:
+     * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+     * default, none; at most 1024), forgetting those kept; false for a count outside that.
+     * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+     * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+     * valid until the next read. Lines below the level aren't kept, as they aren't shown.
+     */
+    readonly getHistoryLevel: typeof raw.wgf_log_get_history_level;
+    /**
+     * The last lines logged kept for the program to read, a game's console or a bug report:
+     * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+     * default, none; at most 1024), forgetting those kept; false for a count outside that.
+     * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+     * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+     * valid until the next read. Lines below the level aren't kept, as they aren't shown.
+     */
+    readonly clearHistory: typeof raw.wgf_log_clear_history;
     /**
      * Log one message.
      */
@@ -9013,6 +9073,17 @@ export declare const Window: {
      * wants to (wgf_loop_set_time_scale).
      */
     readonly isFocused: typeof raw.wgf_window_is_focused;
+    /**
+     * Whether the window's size (wgf_window_get_width, _height) is other than it was as the last
+     * frame ended: raylib's IsWindowResized, true for that frame.
+     */
+    readonly isResized: typeof raw.wgf_window_is_resized;
+    /**
+     * The window's icon (on the web, the page's), from RGBA pixels `width` by `height` (`size`
+     * bytes: width x height x 4, row by row from the top): raylib's SetWindowIcon. False for no
+     * pixels, a size of 0 or over 1024 either way, or a byte count that doesn't fit it.
+     */
+    readonly setIcon: typeof raw.wgf_window_set_icon;
     /**
      * Options fixed when the window opens: refused (false) once it has.
      *   transparent  what is behind the window shows through where gfx clears with

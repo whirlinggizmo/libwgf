@@ -517,6 +517,7 @@ class Reach {
 		"wgf_font_set_default",
 		"wgf_fs_exists",
 		"wgf_fs_get_root",
+		"wgf_fs_list",
 		"wgf_fs_mkdir",
 		"wgf_fs_read",
 		"wgf_fs_remove",
@@ -586,9 +587,15 @@ class Reach {
 		"wgf_light_set_shadow_map_size",
 		"wgf_light_set_shadow_strength",
 		"wgf_light_set_spot_cone",
+		"wgf_log_clear_history",
+		"wgf_log_get_history",
+		"wgf_log_get_history_count",
+		"wgf_log_get_history_level",
+		"wgf_log_get_history_line",
 		"wgf_log_get_level",
 		"wgf_log_message",
 		"wgf_log_message_source",
+		"wgf_log_set_history",
 		"wgf_log_set_level",
 		"wgf_loop_get_fps",
 		"wgf_loop_get_frame_cost",
@@ -1176,6 +1183,7 @@ class Reach {
 		"wgf_window_is_high_dpi",
 		"wgf_window_is_msaa",
 		"wgf_window_is_resizable",
+		"wgf_window_is_resized",
 		"wgf_window_is_transparent",
 		"wgf_window_is_visible",
 		"wgf_window_is_vsync",
@@ -1184,6 +1192,7 @@ class Reach {
 		"wgf_window_request_fullscreen",
 		"wgf_window_set_decorated",
 		"wgf_window_set_high_dpi",
+		"wgf_window_set_icon",
 		"wgf_window_set_monitor",
 		"wgf_window_set_msaa",
 		"wgf_window_set_position",
@@ -1201,7 +1210,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1192) 0];
+	static final counts:Array<Int> = [for (_ in 0...1201) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

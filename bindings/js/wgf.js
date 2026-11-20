@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "4a596fadf1cc94b8" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "ac9964328222f92e" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -1845,6 +1845,19 @@ export function wgf_fs_rmdir(path) {
     return value >>> 0;
 }
 
+// wgf: call wgf_fs_list
+/**
+ * What a directory holds: DONE, its names as the task's text, sorted, one a line, a
+ * directory's with a slash after it ("levels/\nsave.json\n"; "" for an empty one), on the web
+ * those kept only in the browser's store too; NOT_FOUND when there is no such directory.
+ */
+export function wgf_fs_list(path) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_fs_list"](cstr(path));
+    host["stackRestore"](mark);
+    return value >>> 0;
+}
+
 // wgf: call wgf_fs_task_get_status
 /**
  * Tasks. A getter answers NONE, "", NULL, or 0 for a handle that isn't a task.
@@ -1865,8 +1878,8 @@ export function wgf_fs_task_get_path(task) {
 
 // wgf: call wgf_fs_task_get_data
 /**
- * A DONE read's bytes, NUL-terminated so they also read as text, valid until the
- * task is destroyed. Any other task: NULL, 0, and "".
+ * A DONE read's bytes (or a list's text), NUL-terminated so they also read as text, valid
+ * until the task is destroyed. Any other task: NULL, 0, and "".
  */
 export function wgf_fs_task_get_data(task) {
     const value = host["_wgf_fs_task_get_data"](task);
@@ -1875,8 +1888,8 @@ export function wgf_fs_task_get_data(task) {
 
 // wgf: call wgf_fs_task_get_size
 /**
- * A DONE read's bytes, NUL-terminated so they also read as text, valid until the
- * task is destroyed. Any other task: NULL, 0, and "".
+ * A DONE read's bytes (or a list's text), NUL-terminated so they also read as text, valid
+ * until the task is destroyed. Any other task: NULL, 0, and "".
  */
 export function wgf_fs_task_get_size(task) {
     const value = host["_wgf_fs_task_get_size"](task);
@@ -1885,8 +1898,8 @@ export function wgf_fs_task_get_size(task) {
 
 // wgf: call wgf_fs_task_get_text
 /**
- * A DONE read's bytes, NUL-terminated so they also read as text, valid until the
- * task is destroyed. Any other task: NULL, 0, and "".
+ * A DONE read's bytes (or a list's text), NUL-terminated so they also read as text, valid
+ * until the task is destroyed. Any other task: NULL, 0, and "".
  */
 export function wgf_fs_task_get_text(task) {
     const value = host["_wgf_fs_task_get_text"](task);
@@ -1995,6 +2008,89 @@ export function wgf_log_set_level(level) {
 export function wgf_log_get_level() {
     const value = host["_wgf_log_get_level"]();
     return value;
+}
+
+// wgf: call wgf_log_set_history
+/**
+ * The last lines logged kept for the program to read, a game's console or a bug report:
+ * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+ * default, none; at most 1024), forgetting those kept; false for a count outside that.
+ * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+ * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+ * valid until the next read. Lines below the level aren't kept, as they aren't shown.
+ */
+export function wgf_log_set_history(count) {
+    const value = host["_wgf_log_set_history"](count);
+    return value !== 0;
+}
+
+// wgf: call wgf_log_get_history
+/**
+ * The last lines logged kept for the program to read, a game's console or a bug report:
+ * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+ * default, none; at most 1024), forgetting those kept; false for a count outside that.
+ * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+ * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+ * valid until the next read. Lines below the level aren't kept, as they aren't shown.
+ */
+export function wgf_log_get_history() {
+    const value = host["_wgf_log_get_history"]();
+    return value;
+}
+
+// wgf: call wgf_log_get_history_count
+/**
+ * The last lines logged kept for the program to read, a game's console or a bug report:
+ * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+ * default, none; at most 1024), forgetting those kept; false for a count outside that.
+ * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+ * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+ * valid until the next read. Lines below the level aren't kept, as they aren't shown.
+ */
+export function wgf_log_get_history_count() {
+    const value = host["_wgf_log_get_history_count"]();
+    return value;
+}
+
+// wgf: call wgf_log_get_history_line
+/**
+ * The last lines logged kept for the program to read, a game's console or a bug report:
+ * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+ * default, none; at most 1024), forgetting those kept; false for a count outside that.
+ * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+ * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+ * valid until the next read. Lines below the level aren't kept, as they aren't shown.
+ */
+export function wgf_log_get_history_line(index) {
+    const value = host["_wgf_log_get_history_line"](index);
+    return str(value);
+}
+
+// wgf: call wgf_log_get_history_level
+/**
+ * The last lines logged kept for the program to read, a game's console or a bug report:
+ * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+ * default, none; at most 1024), forgetting those kept; false for a count outside that.
+ * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+ * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+ * valid until the next read. Lines below the level aren't kept, as they aren't shown.
+ */
+export function wgf_log_get_history_level(index) {
+    const value = host["_wgf_log_get_history_level"](index);
+    return value;
+}
+
+// wgf: call wgf_log_clear_history
+/**
+ * The last lines logged kept for the program to read, a game's console or a bug report:
+ * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+ * default, none; at most 1024), forgetting those kept; false for a count outside that.
+ * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+ * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+ * valid until the next read. Lines below the level aren't kept, as they aren't shown.
+ */
+export function wgf_log_clear_history() {
+    host["_wgf_log_clear_history"]();
 }
 
 // wgf: call wgf_log_message
@@ -3498,6 +3594,28 @@ export function wgf_window_is_decorated() {
  */
 export function wgf_window_is_focused() {
     const value = host["_wgf_window_is_focused"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_window_is_resized
+/**
+ * Whether the window's size (wgf_window_get_width, _height) is other than it was as the last
+ * frame ended: raylib's IsWindowResized, true for that frame.
+ */
+export function wgf_window_is_resized() {
+    const value = host["_wgf_window_is_resized"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_window_set_icon
+/**
+ * The window's icon (on the web, the page's), from RGBA pixels `width` by `height` (`size`
+ * bytes: width x height x 4, row by row from the top): raylib's SetWindowIcon. False for no
+ * pixels, a size of 0 or over 1024 either way, or a byte count that doesn't fit it.
+ */
+export function wgf_window_set_icon(rgba, width, height) {
+    const rgbaPointer = bytesIn(rgba, 0);
+    const value = host["_wgf_window_set_icon"](rgbaPointer, lengthOf(rgba), width, height);
     return value !== 0;
 }
 

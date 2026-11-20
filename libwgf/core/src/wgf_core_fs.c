@@ -275,9 +275,75 @@ bool wgf_core_priv_fs_replace(const char *from, const char *to)
     return wgf_core_priv_os_rename_replace(source, target);
 }
 
+/* --- names, gathered and sorted -------------------------------------------- */
+
+bool wgf_core_priv_names_add(wgf_core_priv_names_t *names, const char *name, size_t length, bool dir)
+{
+    const size_t need = names->length + length + 3;
+    if (need > names->capacity) {
+        size_t capacity = names->capacity > 0 ? names->capacity * 2 : 256;
+        char *grown;
+        while (capacity < need) capacity *= 2;
+        grown = (char *)realloc(names->text, capacity);
+        if (grown == NULL) return false;
+        names->text = grown;
+        names->capacity = capacity;
+    }
+    memcpy(names->text + names->length, name, length);
+    names->length += length;
+    if (dir) names->text[names->length++] = '/';
+    names->text[names->length++] = '\n';
+    names->text[names->length] = '\0';
+    return true;
+}
+
+static int by_name(const void *a, const void *b)
+{
+    return strcmp(*(const char *const *)a, *(const char *const *)b);
+}
+
+/* `names` sorted, each once, as one NUL-terminated text (malloc'd; its length in *size, the
+ * NUL not counted); `names` freed. NULL out of memory. */
+static unsigned char *sorted_names(wgf_core_priv_names_t *names, int *size)
+{
+    char **lines, *text, *at;
+    unsigned char *out;
+    size_t count = 0, i, kept = 0, length = 0;
+    text = names->text != NULL ? names->text : (char *)"";
+    for (at = text; *at != '\0'; at++) count += *at == '\n';
+    lines = (char **)malloc(sizeof(char *) * (count + 1));
+    out = (unsigned char *)malloc(names->length + 1);
+    if (lines == NULL || out == NULL) {
+        free(lines);
+        free(out);
+        free(names->text);
+        return NULL;
+    }
+    for (at = text, i = 0; *at != '\0'; i++) { /* each line ended in place */
+        char *end = strchr(at, '\n');
+        lines[i] = at;
+        *end = '\0';
+        at = end + 1;
+    }
+    qsort(lines, count, sizeof(char *), by_name);
+    for (i = 0; i < count; i++) {
+        const size_t n = strlen(lines[i]);
+        if (kept > 0 && strcmp(lines[i], lines[i - 1]) == 0) continue; /* in memory and in the store: once */
+        memcpy(out + length, lines[i], n);
+        length += n;
+        out[length++] = '\n';
+        kept++;
+    }
+    out[length] = '\0';
+    *size = (int)length;
+    free(lines);
+    free(names->text);
+    return out;
+}
+
 /* --- the public API: requests as tasks ------------------------------------ */
 
-typedef enum op_t { OP_READ, OP_WRITE, OP_EXISTS, OP_REMOVE, OP_MKDIR, OP_RMDIR } op_t;
+typedef enum op_t { OP_READ, OP_WRITE, OP_EXISTS, OP_REMOVE, OP_MKDIR, OP_RMDIR, OP_LIST } op_t;
 
 typedef struct task_t {
     op_t op;
@@ -429,6 +495,26 @@ static void run(task_t *task_ptr)
             task_ptr->status = wgf_core_priv_fs_mkdir(path) ? WGF_FS_TASK_STATUS_DONE
                                                            : WGF_FS_TASK_STATUS_FAILED;
             return;
+        case OP_LIST: {
+            char full[1100];
+            wgf_core_priv_names_t names = {NULL, 0, 0};
+            bool real;
+            wgf_core_priv_fs_resolve(path, full, sizeof(full));
+            real = wgf_core_priv_os_is_real_dir(full);
+            if (!real && !wgf_core_priv_fs_platform_has_stored_dir(full)) {
+                task_ptr->status = WGF_FS_TASK_STATUS_NOT_FOUND;
+                return;
+            }
+            if (real && !wgf_core_priv_os_list(full, &names)) {
+                free(names.text);
+                task_ptr->status = WGF_FS_TASK_STATUS_FAILED;
+                return;
+            }
+            wgf_core_priv_fs_platform_list_stored(full, &names);
+            task_ptr->data = sorted_names(&names, &task_ptr->size);
+            task_ptr->status = task_ptr->data != NULL ? WGF_FS_TASK_STATUS_DONE : WGF_FS_TASK_STATUS_FAILED;
+            return;
+        }
         case OP_RMDIR: {
             char full[1100];
             wgf_core_priv_fs_resolve(path, full, sizeof(full));
@@ -546,6 +632,11 @@ wgf_fs_task_t wgf_fs_rmdir(const char *path)
     return new_task(OP_RMDIR, path);
 }
 
+wgf_fs_task_t wgf_fs_list(const char *path)
+{
+    return new_task(OP_LIST, path);
+}
+
 wgf_fs_task_status_t wgf_fs_task_get_status(wgf_fs_task_t task)
 {
     const task_t *task_ptr = task_of(task);
@@ -561,7 +652,10 @@ const char *wgf_fs_task_get_path(wgf_fs_task_t task)
 const unsigned char *wgf_fs_task_get_data(wgf_fs_task_t task)
 {
     const task_t *task_ptr = task_of(task);
-    if (task_ptr == NULL || task_ptr->op != OP_READ || task_ptr->status != WGF_FS_TASK_STATUS_DONE) return NULL;
+    if (task_ptr == NULL || (task_ptr->op != OP_READ && task_ptr->op != OP_LIST) ||
+        task_ptr->status != WGF_FS_TASK_STATUS_DONE) {
+        return NULL;
+    }
     return task_ptr->data;
 }
 

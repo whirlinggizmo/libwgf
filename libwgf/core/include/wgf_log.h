@@ -29,6 +29,19 @@ typedef enum wgf_log_level_t {
 WGF_API void wgf_log_set_level(wgf_log_level_t level);
 WGF_API wgf_log_level_t wgf_log_get_level(void);
 
+/* The last lines logged kept for the program to read, a game's console or a bug report:
+ * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+ * default, none; at most 1024), forgetting those kept; false for a count outside that.
+ * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+ * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+ * valid until the next read. Lines below the level aren't kept, as they aren't shown. */
+WGF_API bool wgf_log_set_history(int count);
+WGF_API int wgf_log_get_history(void);
+WGF_API int wgf_log_get_history_count(void);
+WGF_API const char *wgf_log_get_history_line(int index);
+WGF_API wgf_log_level_t wgf_log_get_history_level(int index);
+WGF_API void wgf_log_clear_history(void);
+
 /* Log one message. */
 WGF_API void wgf_log_message(wgf_log_level_t level, const char *text);
 

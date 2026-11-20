@@ -79,6 +79,22 @@ bool wgf_core_priv_os_remove_tree(const char *path)
     return (rmdir(path) == 0) && ok;
 }
 
+bool wgf_core_priv_os_list(const char *path, wgf_core_priv_names_t *names)
+{
+    DIR *dir = opendir(path);
+    struct dirent *entry;
+    bool ok = true;
+    if (dir == NULL) return false;
+    while ((entry = readdir(dir)) != NULL) {
+        char child[1100];
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+        snprintf(child, sizeof(child), "%s/%s", path, entry->d_name);
+        ok = wgf_core_priv_names_add(names, entry->d_name, strlen(entry->d_name), wgf_core_priv_os_is_dir(child)) && ok;
+    }
+    closedir(dir);
+    return ok;
+}
+
 bool wgf_core_priv_os_rmdir(const char *path)
 {
     return rmdir(path) == 0;

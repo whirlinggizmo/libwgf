@@ -237,6 +237,21 @@ class Window {
 		return Raw.wgf_window_is_focused();
 
 	/**
+	    Whether the window's size (wgf_window_get_width, _height) is other than it was as the last
+	    frame ended: raylib's IsWindowResized, true for that frame.
+	**/
+	public static inline function isResized():Bool
+		return Raw.wgf_window_is_resized();
+
+	/**
+	    The window's icon (on the web, the page's), from RGBA pixels `width` by `height` (`size`
+	    bytes: width x height x 4, row by row from the top): raylib's SetWindowIcon. False for no
+	    pixels, a size of 0 or over 1024 either way, or a byte count that doesn't fit it.
+	**/
+	public static inline function setIcon(rgba:haxe.io.Bytes, width:Int, height:Int):Bool
+		return Raw.wgf_window_set_icon(rgba, width, height);
+
+	/**
 	    Options fixed when the window opens: refused (false) once it has.
 	      transparent  what is behind the window shows through where gfx clears with
 	                   alpha below 1 (default off). Desktop: where the window system

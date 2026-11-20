@@ -46,6 +46,23 @@ bool wgf_core_priv_os_is_real_dir(const char *path)
            (attributes & FILE_ATTRIBUTE_REPARSE_POINT) == 0; /* a symbolic link or junction isn't one */
 }
 
+bool wgf_core_priv_os_list(const char *path, wgf_core_priv_names_t *names)
+{
+    char pattern[1100];
+    struct _finddata_t entry;
+    intptr_t find;
+    bool ok = true;
+    if ((size_t)snprintf(pattern, sizeof(pattern), "%s/*", path) >= sizeof(pattern)) return false;
+    find = _findfirst(pattern, &entry);
+    if (find == -1) return false;
+    do {
+        if (strcmp(entry.name, ".") == 0 || strcmp(entry.name, "..") == 0) continue;
+        ok = wgf_core_priv_names_add(names, entry.name, strlen(entry.name), (entry.attrib & _A_SUBDIR) != 0) && ok;
+    } while (_findnext(find, &entry) == 0);
+    _findclose(find);
+    return ok;
+}
+
 bool wgf_core_priv_os_remove_tree(const char *path)
 {
     char pattern[1100];

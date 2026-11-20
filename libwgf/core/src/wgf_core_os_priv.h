@@ -27,6 +27,19 @@ bool wgf_core_priv_os_is_real_dir(const char *path);
  * when anything couldn't be removed. */
 bool wgf_core_priv_os_remove_tree(const char *path);
 
+/* Names gathered, one a line ("name\n", a directory's "name/\n"), malloc'd as they grow. */
+typedef struct wgf_core_priv_names_t {
+    char *text;
+    size_t length, capacity;
+} wgf_core_priv_names_t;
+
+/* `name` (a directory's when `dir`) added to `names`; false out of memory. */
+bool wgf_core_priv_names_add(wgf_core_priv_names_t *names, const char *name, size_t length, bool dir);
+
+/* The names in the real directory `path` (not . or ..) added to `names`; false when it can't
+ * be read. */
+bool wgf_core_priv_os_list(const char *path, wgf_core_priv_names_t *names);
+
 /* Remove the directory `path` if it is empty; false otherwise. */
 bool wgf_core_priv_os_rmdir(const char *path);
 

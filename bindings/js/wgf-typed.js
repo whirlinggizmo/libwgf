@@ -1153,6 +1153,8 @@ export const Fs = Object.freeze({
     mkdir: raw.wgf_fs_mkdir,
     // wgf: call wgf_fs_rmdir
     rmdir: raw.wgf_fs_rmdir,
+    // wgf: call wgf_fs_list
+    list: raw.wgf_fs_list,
 });
 // wgf: typed FsTask
 export const FsTask = Object.freeze({
@@ -1321,6 +1323,18 @@ export const Log = Object.freeze({
     setLevel: raw.wgf_log_set_level,
     // wgf: call wgf_log_get_level
     getLevel: raw.wgf_log_get_level,
+    // wgf: call wgf_log_set_history
+    setHistory: raw.wgf_log_set_history,
+    // wgf: call wgf_log_get_history
+    getHistory: raw.wgf_log_get_history,
+    // wgf: call wgf_log_get_history_count
+    getHistoryCount: raw.wgf_log_get_history_count,
+    // wgf: call wgf_log_get_history_line
+    getHistoryLine: raw.wgf_log_get_history_line,
+    // wgf: call wgf_log_get_history_level
+    getHistoryLevel: raw.wgf_log_get_history_level,
+    // wgf: call wgf_log_clear_history
+    clearHistory: raw.wgf_log_clear_history,
     // wgf: call wgf_log_message
     message: raw.wgf_log_message,
     // wgf: call wgf_log_message_source
@@ -2674,6 +2688,10 @@ export const Window = Object.freeze({
     isDecorated: raw.wgf_window_is_decorated,
     // wgf: call wgf_window_is_focused
     isFocused: raw.wgf_window_is_focused,
+    // wgf: call wgf_window_is_resized
+    isResized: raw.wgf_window_is_resized,
+    // wgf: call wgf_window_set_icon
+    setIcon: raw.wgf_window_set_icon,
     // wgf: call wgf_window_set_transparent
     setTransparent: raw.wgf_window_set_transparent,
     // wgf: call wgf_window_is_transparent

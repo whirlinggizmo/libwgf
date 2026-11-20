@@ -1409,6 +1409,13 @@ export declare function wgf_fs_mkdir(path: string | null): wgf_fs_task_t;
 export declare function wgf_fs_rmdir(path: string | null): wgf_fs_task_t;
 
 /**
+ * What a directory holds: DONE, its names as the task's text, sorted, one a line, a
+ * directory's with a slash after it ("levels/\nsave.json\n"; "" for an empty one), on the web
+ * those kept only in the browser's store too; NOT_FOUND when there is no such directory.
+ */
+export declare function wgf_fs_list(path: string | null): wgf_fs_task_t;
+
+/**
  * Tasks. A getter answers NONE, "", NULL, or 0 for a handle that isn't a task.
  */
 export declare function wgf_fs_task_get_status(task: wgf_fs_task_t | 0): wgf_fs_task_status_t;
@@ -1419,20 +1426,20 @@ export declare function wgf_fs_task_get_status(task: wgf_fs_task_t | 0): wgf_fs_
 export declare function wgf_fs_task_get_path(task: wgf_fs_task_t | 0): string;
 
 /**
- * A DONE read's bytes, NUL-terminated so they also read as text, valid until the
- * task is destroyed. Any other task: NULL, 0, and "".
+ * A DONE read's bytes (or a list's text), NUL-terminated so they also read as text, valid
+ * until the task is destroyed. Any other task: NULL, 0, and "".
  */
 export declare function wgf_fs_task_get_data(task: wgf_fs_task_t | 0): Uint8Array;
 
 /**
- * A DONE read's bytes, NUL-terminated so they also read as text, valid until the
- * task is destroyed. Any other task: NULL, 0, and "".
+ * A DONE read's bytes (or a list's text), NUL-terminated so they also read as text, valid
+ * until the task is destroyed. Any other task: NULL, 0, and "".
  */
 export declare function wgf_fs_task_get_size(task: wgf_fs_task_t | 0): number;
 
 /**
- * A DONE read's bytes, NUL-terminated so they also read as text, valid until the
- * task is destroyed. Any other task: NULL, 0, and "".
+ * A DONE read's bytes (or a list's text), NUL-terminated so they also read as text, valid
+ * until the task is destroyed. Any other task: NULL, 0, and "".
  */
 export declare function wgf_fs_task_get_text(task: wgf_fs_task_t | 0): string;
 
@@ -1508,6 +1515,66 @@ export declare function wgf_identity_get_product(): string;
 export declare function wgf_log_set_level(level: wgf_log_level_t): void;
 
 export declare function wgf_log_get_level(): wgf_log_level_t;
+
+/**
+ * The last lines logged kept for the program to read, a game's console or a bug report:
+ * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+ * default, none; at most 1024), forgetting those kept; false for a count outside that.
+ * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+ * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+ * valid until the next read. Lines below the level aren't kept, as they aren't shown.
+ */
+export declare function wgf_log_set_history(count: number): boolean;
+
+/**
+ * The last lines logged kept for the program to read, a game's console or a bug report:
+ * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+ * default, none; at most 1024), forgetting those kept; false for a count outside that.
+ * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+ * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+ * valid until the next read. Lines below the level aren't kept, as they aren't shown.
+ */
+export declare function wgf_log_get_history(): number;
+
+/**
+ * The last lines logged kept for the program to read, a game's console or a bug report:
+ * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+ * default, none; at most 1024), forgetting those kept; false for a count outside that.
+ * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+ * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+ * valid until the next read. Lines below the level aren't kept, as they aren't shown.
+ */
+export declare function wgf_log_get_history_count(): number;
+
+/**
+ * The last lines logged kept for the program to read, a game's console or a bug report:
+ * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+ * default, none; at most 1024), forgetting those kept; false for a count outside that.
+ * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+ * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+ * valid until the next read. Lines below the level aren't kept, as they aren't shown.
+ */
+export declare function wgf_log_get_history_line(index: number): string;
+
+/**
+ * The last lines logged kept for the program to read, a game's console or a bug report:
+ * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+ * default, none; at most 1024), forgetting those kept; false for a count outside that.
+ * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+ * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+ * valid until the next read. Lines below the level aren't kept, as they aren't shown.
+ */
+export declare function wgf_log_get_history_level(index: number): wgf_log_level_t;
+
+/**
+ * The last lines logged kept for the program to read, a game's console or a bug report:
+ * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
+ * default, none; at most 1024), forgetting those kept; false for a count outside that.
+ * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
+ * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
+ * valid until the next read. Lines below the level aren't kept, as they aren't shown.
+ */
+export declare function wgf_log_clear_history(): void;
 
 /**
  * Log one message.
@@ -2442,6 +2509,19 @@ export declare function wgf_window_is_decorated(): boolean;
  * wants to (wgf_loop_set_time_scale).
  */
 export declare function wgf_window_is_focused(): boolean;
+
+/**
+ * Whether the window's size (wgf_window_get_width, _height) is other than it was as the last
+ * frame ended: raylib's IsWindowResized, true for that frame.
+ */
+export declare function wgf_window_is_resized(): boolean;
+
+/**
+ * The window's icon (on the web, the page's), from RGBA pixels `width` by `height` (`size`
+ * bytes: width x height x 4, row by row from the top): raylib's SetWindowIcon. False for no
+ * pixels, a size of 0 or over 1024 either way, or a byte count that doesn't fit it.
+ */
+export declare function wgf_window_set_icon(rgba: Uint8Array | ArrayBuffer | null, width: number, height: number): boolean;
 
 /**
  * Options fixed when the window opens: refused (false) once it has.

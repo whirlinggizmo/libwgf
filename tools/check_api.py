@@ -57,6 +57,7 @@ SKIP = 77
 UI_OPEN_BOX = 'immediate mode: it describes the open box for this frame alone, and nothing keeps it to read back'
 GETTERS_EXEMPT = {
     'wgf_vehicle_set_input': 'the driver\'s intent, a tick\'s: what it did is read back (speed, rpm, gear, slip)',
+    'wgf_window_set_icon': 'pixels handed to the window or page, kept by neither for reading back',
     'wgf_ui_set_width': UI_OPEN_BOX,
     'wgf_ui_set_height': UI_OPEN_BOX,
     'wgf_ui_set_padding': UI_OPEN_BOX,

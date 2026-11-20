@@ -1,4 +1,5 @@
 #include "wgf_core_fs_priv.h"
+#include "wgf_core_os_priv.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -107,6 +108,23 @@ EM_JS(int, wgf_core_priv_fs_js_has_prefix, (const char *prefix_c), {
     for (const key of Module.wgf_core_fs_keys) if (key.startsWith(prefix)) return 1;
     return 0;
 })
+
+/* The names directly under `prefix` among the stored keys, one a line, a directory's with a
+ * slash after it: malloc'd, NULL for none. */
+EM_JS(char *, wgf_core_priv_fs_js_list_prefix, (const char *prefix_c), {
+    if (!Module.wgf_core_fs_keys) return 0;
+    const prefix = UTF8ToString(prefix_c), names = new Set();
+    for (const key of Module.wgf_core_fs_keys) {
+        if (!key.startsWith(prefix) || key.length == prefix.length) continue;
+        const rest = key.substring(prefix.length), slash = rest.indexOf('/');
+        names.add(slash < 0 ? rest : rest.substring(0, slash + 1));
+    }
+    if (names.size == 0) return 0;
+    const text = Array.from(names).join('\n') + '\n', size = lengthBytesUTF8(text) + 1, out = _malloc(size);
+    if (out) stringToUTF8(text, out, size);
+    return out;
+})
+EM_JS_DEPS(wgf_core_priv_fs_list, "$stringToUTF8,$lengthBytesUTF8")
 
 EM_JS(int, wgf_core_priv_fs_js_has, (const char *full_c), {
     return Module.wgf_core_fs_keys && Module.wgf_core_fs_keys.has(UTF8ToString(full_c)) ? 1 : 0;
@@ -357,6 +375,22 @@ bool wgf_core_priv_fs_platform_has_stored_dir(const char *full)
     char prefix[1104];
     snprintf(prefix, sizeof(prefix), "%s/", full);
     return wgf_core_priv_fs_js_has_prefix(prefix) != 0;
+}
+
+void wgf_core_priv_fs_platform_list_stored(const char *full, struct wgf_core_priv_names_t *names)
+{
+    char prefix[1104];
+    char *text, *line;
+    snprintf(prefix, sizeof(prefix), "%s/", full);
+    text = wgf_core_priv_fs_js_list_prefix(prefix);
+    for (line = text; line != NULL && *line != '\0';) {
+        char *end = strchr(line, '\n');
+        const size_t length = end != NULL ? (size_t)(end - line) : strlen(line);
+        const bool dir = length > 0 && line[length - 1] == '/';
+        if (length > (dir ? 1u : 0u)) wgf_core_priv_names_add(names, line, dir ? length - 1 : length, dir);
+        line = end != NULL ? end + 1 : line + length;
+    }
+    free(text);
 }
 
 void wgf_core_priv_fs_platform_root_changed(const char *root)

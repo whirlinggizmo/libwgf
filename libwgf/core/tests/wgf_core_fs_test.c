@@ -147,6 +147,22 @@ int main(void)
     expect(settle(t) == WGF_FS_TASK_STATUS_DONE, "mkdir of an existing directory is DONE");
     wgf_fs_task_destroy(t);
     settle(wgf_fs_write_text("dirs/a/b/deep.txt", "deep"));
+    settle(wgf_fs_write_text("dirs/a/zeta.txt", "z"));
+    settle(wgf_fs_write_text("dirs/a/alpha.txt", "a"));
+    t = wgf_fs_list("dirs/a");
+    expect(settle(t) == WGF_FS_TASK_STATUS_DONE && strcmp(wgf_fs_task_get_text(t), "alpha.txt\nb/\nzeta.txt\n") == 0,
+           "a directory listed: sorted, one a line, a directory's with a slash");
+    wgf_fs_task_destroy(t);
+    t = wgf_fs_mkdir("dirs/empty");
+    settle(t);
+    wgf_fs_task_destroy(t);
+    t = wgf_fs_list("dirs/empty");
+    expect(settle(t) == WGF_FS_TASK_STATUS_DONE && strcmp(wgf_fs_task_get_text(t), "") == 0 && wgf_fs_task_get_size(t) == 0,
+           "an empty one: \"\"");
+    wgf_fs_task_destroy(t);
+    t = wgf_fs_list("dirs/nothing");
+    expect(settle(t) == WGF_FS_TASK_STATUS_NOT_FOUND, "no such directory: NOT_FOUND");
+    wgf_fs_task_destroy(t);
     t = wgf_fs_rmdir("dirs");
     expect(settle(t) == WGF_FS_TASK_STATUS_DONE, "rmdir removes a tree");
     wgf_fs_task_destroy(t);

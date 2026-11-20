@@ -26,22 +26,22 @@ abstract FsTask(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_fs_task_get_path(this);
 
 	/**
-	    A DONE read's bytes, NUL-terminated so they also read as text, valid until the
-	    task is destroyed. Any other task: NULL, 0, and "".
+	    A DONE read's bytes (or a list's text), NUL-terminated so they also read as text, valid
+	    until the task is destroyed. Any other task: NULL, 0, and "".
 	**/
 	public inline function getData():haxe.io.Bytes
 		return Raw.wgf_fs_task_get_data(this);
 
 	/**
-	    A DONE read's bytes, NUL-terminated so they also read as text, valid until the
-	    task is destroyed. Any other task: NULL, 0, and "".
+	    A DONE read's bytes (or a list's text), NUL-terminated so they also read as text, valid
+	    until the task is destroyed. Any other task: NULL, 0, and "".
 	**/
 	public inline function getSize():Int
 		return Raw.wgf_fs_task_get_size(this);
 
 	/**
-	    A DONE read's bytes, NUL-terminated so they also read as text, valid until the
-	    task is destroyed. Any other task: NULL, 0, and "".
+	    A DONE read's bytes (or a list's text), NUL-terminated so they also read as text, valid
+	    until the task is destroyed. Any other task: NULL, 0, and "".
 	**/
 	public inline function getText():String
 		return Raw.wgf_fs_task_get_text(this);

@@ -180,6 +180,7 @@ static void on_frame(void)
     }
     wgf_platform_priv_input_end_frame();
     wgf_platform_priv_gamepad_end_frame();
+    wgf_platform_priv_window_end_frame();
     wgf_app_priv_autopilot_end_frame(app.frames); /* its expectations, after it */
     app.frames++;
 }
