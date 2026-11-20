@@ -7,8 +7,9 @@ within the game's size budget.
 
 For each game (default: every games/<name>/ with a wgf.json), with the wgf tool, run in
 the game's directory as a developer would:
-  generated   tools/gen_sounds.py --check, for a game whose sounds it makes, and the
-              racer's games/racer/tools/gen_track.py --check, its track
+  generated   tools/gen_sounds.py --check, for a game whose sounds it makes, the racer's
+              games/racer/tools/gen_track.py --check, its track, and Wardens'
+              games/wardens/tools/pack_shaders.py --check, its packed shaders
   playthrough wgf autopilot <its playthrough>, headless: wgf.json's "playthrough" in its
               autopilot folder, playthrough.autopilot by default
   browser     the same in a headless browser (wgf autopilot --web), or the autopilot
@@ -36,7 +37,8 @@ ROOT = Path(__file__).resolve().parents[1]
 GAMES = ROOT / 'games'
 WGF = ROOT / 'wgf'
 STEPS = ('generated', 'playthrough', 'browser', 'web', 'desktop')
-GENERATORS = {'asteroids': ['tools/gen_sounds.py', '--check'], 'racer': ['games/racer/tools/gen_track.py', '--check']}
+GENERATORS = {'asteroids': ['tools/gen_sounds.py', '--check'], 'racer': ['games/racer/tools/gen_track.py', '--check'],
+              'wardens': ['games/wardens/tools/pack_shaders.py', '--check']}
 
 # A game's browser step flies this autopilot in place of its playthrough, and why, and the seconds
 # it is given: CI's browser draws with a software renderer. The racer's full lap (2,600 frames,
@@ -45,7 +47,9 @@ GENERATORS = {'asteroids': ['tools/gen_sounds.py', '--check'], 'racer': ['games/
 # Its Racing Kit track (part 6: 275 pieces, its files streamed at the start) ran past the 350 s
 # autopilot gives 750 frames on CI's runner (147 s here, the build included): it is given 900.
 BROWSER_FLIGHTS = {'racer': ('bench.autopilot', "its full lap, shadows and all, is past a software renderer's "
-                                                "time; the headless playthrough flies it", 900)}
+                                                "time; the headless playthrough flies it", 900),
+                   'wardens': ('smoke.autopilot', "its playthrough, a crowd of skinned enemies to the first level, is past a "
+                                                  "software renderer's time; the headless playthrough flies it", 600)}
 
 
 def games(names):

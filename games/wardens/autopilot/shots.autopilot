@@ -1,0 +1,62 @@
+wgf-autopilot 1
+# Wardens' playthrough with screenshots (wgf autopilot shots.autopilot --web): the title once its files have loaded, Play, a run to the right, a
+# pause and back, then the warden turning to meet the enemies (a step one way, then the
+# other, around the four directions) as her sword works through them, to the first level's
+# cards (the second picked), and the run going on.
+seed 1
+at 1 wait wardens.ready == 1
+at 10 expect wardens.state == 1
+at 20 key tap enter
+at 22 expect wardens.state == 2
+at 30 expect wardens.alive >= 1
+at 31 screenshot play
+at 40 key down d
+at 100 key up d
+at 101 expect wardens.x > 4.5
+at 101 expect wardens.x < 5.5
+at 120 key tap escape
+at 122 expect wardens.state == 3
+at 140 key tap escape
+at 142 expect wardens.state == 2
+at 160 key down d
+at 210 key up d
+at 211 key down a
+at 214 key up a
+at 274 key down w
+at 324 key up w
+at 325 key down s
+at 328 key up s
+at 388 key down a
+at 438 key up a
+at 439 key down d
+at 442 key up d
+at 502 key down s
+at 552 key up s
+at 553 key down w
+at 556 key up w
+at 616 key down d
+at 666 key up d
+at 667 key down a
+at 670 key up a
+at 730 key down w
+at 780 key up w
+at 781 key down s
+at 784 key up s
+at 844 key down a
+at 894 key up a
+at 895 key down d
+at 898 key up d
+at 958 key down s
+at 1008 key up s
+at 1009 key down w
+at 1012 key up w
+at 1100 wait wardens.state == 4
+at 1101 expect wardens.level == 2
+at 1101 expect wardens.kills >= 5
+at 1102 screenshot cards
+at 1110 key tap right
+at 1120 key tap enter
+at 1122 expect wardens.state == 2
+at 1180 screenshot after-card
+at 1300 expect wardens.hp > 0
+at 1300 end

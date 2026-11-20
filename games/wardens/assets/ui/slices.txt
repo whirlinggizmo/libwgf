@@ -1,0 +1,5 @@
+# image left top right bottom (pixels), then any notes
+panel.png 16 16 16 16
+button.png 14 14 14 14 states=4 layout=vertical size=190x49 order=normal,focused,pressed,disabled
+# Each button state is its own 190x49 cell, nine-sliced with those margins on its own.
+# The pressed cell's shape is 45 rows (Kenney's pressed art sits 4 px lower), the rest of its cell is transparent.

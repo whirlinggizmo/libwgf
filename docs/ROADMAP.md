@@ -25,7 +25,7 @@ Done when every item's calls are in the bindings and the feature test, and each 
 Helix's engine trial Wardens (`../helix/docs/trials/templates/wardens/`: `spec.md`, the game naming no engine; `grading.md`, its 37 items; its assets, every one CC0), built on libwgf once what it needs is here, and graded as helix's entrants are (helix-raylib, raylib in C, three.js), so libwgf's score stands beside theirs. What it needs that the blocks before don't give, in order:
 
 1. **Skeletal animation, what is left:** the robots benchmark (`bench:robots`) run on the GPU beside helix-raylib's rows (everything Wardens needs of the player is built: HISTORY.md, "Skeletal animation" and after).
-2. **The game:** `games/wardens/`, with helix's spec and assets unchanged, in Haxe on libwgf's public API, a page and native; its native program shot by helix's `take_screenshots.py` and graded with helix's `review-brief.md`, the grades recorded in HISTORY.md beside helix's entrants'.
+2. **The game:** `games/wardens/`, with helix's spec and assets unchanged, in Haxe on libwgf's public API, a page and native; its native program shot by helix's `take_screenshots.py` and graded with helix's `review-brief.md`, the grades recorded in HISTORY.md beside helix's entrants'. Built (HISTORY.md, "Wardens, the game"); grading next.
 
 Done when Wardens is graded.
 
