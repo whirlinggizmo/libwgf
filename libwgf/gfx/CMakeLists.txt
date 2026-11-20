@@ -19,6 +19,7 @@ wgf_layer(gfx
         src/actor/wgf_gfx_camera3d.c
         src/actor/wgf_gfx_stage2d.c
         src/actor/wgf_gfx_actor.c
+        src/actor/wgf_gfx_follow.c
         src/render/wgf_gfx_presentation.c
         src/render/wgf_gfx_render.c
         src/render/wgf_gfx_render_commands.c
@@ -85,6 +86,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_shape_test)
         wgf_test(gfx wgf_gfx_sprite_test)
         wgf_test(gfx wgf_gfx_sprite_batch_test)
+        wgf_test(gfx wgf_gfx_follow_test)
         wgf_test(gfx wgf_gfx_emitter_test)
         wgf_test(gfx wgf_gfx_target_test)
         wgf_test(gfx wgf_gfx_shader_test)

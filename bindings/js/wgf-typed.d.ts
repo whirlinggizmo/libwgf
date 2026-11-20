@@ -2811,6 +2811,100 @@ export declare const Environment: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+/** A handle of kind wgf_actor_t: the raw binding's branded type. */
+export type Follow = raw.wgf_actor_t;
+export declare const Follow: {
+    /**
+     * The camera follows `target` (0: stops following, staying where it is). False for a
+     * camera that isn't a 2D or 3D camera, a target that isn't an actor, or 64 following.
+     */
+    readonly setTarget: typeof raw.wgf_follow_set_target;
+    /**
+     * The camera follows `target` (0: stops following, staying where it is). False for a
+     * camera that isn't a 2D or 3D camera, a target that isn't an actor, or 64 following.
+     */
+    readonly getTarget: typeof raw.wgf_follow_get_target;
+    /**
+     * How quickly the point catches up, a rate a second (8 by default: about a fifth of a
+     * second); 0 or less: at once. The setters below are false for a camera that follows
+     * nothing.
+     */
+    readonly setSmoothing: typeof raw.wgf_follow_set_smoothing;
+    /**
+     * How quickly the point catches up, a rate a second (8 by default: about a fifth of a
+     * second); 0 or less: at once. The setters below are false for a camera that follows
+     * nothing.
+     */
+    readonly getSmoothing: typeof raw.wgf_follow_get_smoothing;
+    /**
+     * The dead zone around the point the target moves in freely: width and height (0, 0 by
+     * default: always catching up). Refuses a negative one.
+     */
+    readonly setDeadZone: typeof raw.wgf_follow_set_dead_zone;
+    /**
+     * The dead zone around the point the target moves in freely: width and height (0, 0 by
+     * default: always catching up). Refuses a negative one.
+     */
+    readonly getDeadZone: typeof raw.wgf_follow_get_dead_zone;
+    /**
+     * 2D: the world the view stays inside, left, top, right, bottom (centered on one smaller than
+     * the view); a right not above the left (the default) lets it go anywhere.
+     */
+    readonly setBounds: typeof raw.wgf_follow_set_bounds;
+    /**
+     * 2D: the world the view stays inside, left, top, right, bottom (centered on one smaller than
+     * the view); a right not above the left (the default) lets it go anywhere.
+     */
+    readonly getBounds: typeof raw.wgf_follow_get_bounds;
+    /**
+     * 3D: where the camera sits from the point (0, 3, 6 by default: behind a target facing -z,
+     * and up), and how.
+     */
+    readonly setOffset: typeof raw.wgf_follow_set_offset;
+    /**
+     * 3D: where the camera sits from the point (0, 3, 6 by default: behind a target facing -z,
+     * and up), and how.
+     */
+    readonly getOffset: typeof raw.wgf_follow_get_offset;
+    /**
+     * 3D: where the camera sits from the point (0, 3, 6 by default: behind a target facing -z,
+     * and up), and how.
+     */
+    readonly setMode: typeof raw.wgf_follow_set_mode;
+    /**
+     * 3D: where the camera sits from the point (0, 3, 6 by default: behind a target facing -z,
+     * and up), and how.
+     */
+    readonly getMode: typeof raw.wgf_follow_get_mode;
+    /**
+     * 3D, ORBIT: round the point, `yaw` radians about y (0 on its +z side), `pitch` radians up
+     * (clamped to just short of straight up or down), `distance` out. Refuses a distance not
+     * above 0. Read back as yaw, pitch, distance.
+     */
+    readonly setOrbit: typeof raw.wgf_follow_set_orbit;
+    /**
+     * 3D, ORBIT: round the point, `yaw` radians about y (0 on its +z side), `pitch` radians up
+     * (clamped to just short of straight up or down), `distance` out. Refuses a distance not
+     * above 0. Read back as yaw, pitch, distance.
+     */
+    readonly getOrbit: typeof raw.wgf_follow_get_orbit;
+    /**
+     * Trauma added (held to 1): 0.3 a bump, 1 an explosion; lost at 1.5 a second. The
+     * getter is the trauma now.
+     */
+    readonly shake: typeof raw.wgf_follow_shake;
+    /**
+     * Trauma added (held to 1): 0.3 a bump, 1 an explosion; lost at 1.5 a second. The
+     * getter is the trauma now.
+     */
+    readonly getTrauma: typeof raw.wgf_follow_get_trauma;
+    /**
+     * The point put on the target at once, and the camera with it (a respawn, a new level).
+     */
+    readonly snap: typeof raw.wgf_follow_snap;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
+};
 /** A handle of kind wgf_font_t: the raw binding's branded type. */
 export type Font = raw.wgf_font_t;
 export declare const Font: {
@@ -6045,6 +6139,8 @@ export type ColorStock = raw.wgf_color_stock_t;
 export declare const ColorStock: { readonly BLANK: ColorStock; readonly WHITE: ColorStock; readonly BLACK: ColorStock; readonly LIGHTGRAY: ColorStock; readonly GRAY: ColorStock; readonly DARKGRAY: ColorStock; readonly YELLOW: ColorStock; readonly GOLD: ColorStock; readonly ORANGE: ColorStock; readonly PINK: ColorStock; readonly RED: ColorStock; readonly MAROON: ColorStock; readonly GREEN: ColorStock; readonly LIME: ColorStock; readonly DARKGREEN: ColorStock; readonly SKYBLUE: ColorStock; readonly BLUE: ColorStock; readonly DARKBLUE: ColorStock; readonly PURPLE: ColorStock; readonly VIOLET: ColorStock; readonly DARKPURPLE: ColorStock; readonly BEIGE: ColorStock; readonly BROWN: ColorStock; readonly DARKBROWN: ColorStock; readonly MAGENTA: ColorStock; readonly RAYWHITE: ColorStock; };
 export type Component = raw.wgf_component_t;
 export declare const Component: { readonly NONE: Component; readonly MOTION: Component; readonly BOUNDS: Component; readonly LIFETIME: Component; readonly COLLIDER: Component; readonly VOICE: Component; readonly BODY: Component; readonly VEHICLE: Component; };
+export type FollowMode = raw.wgf_follow_mode_t;
+export declare const FollowMode: { readonly CHASE: FollowMode; readonly FIXED: FollowMode; readonly ORBIT: FollowMode; };
 export type FsTaskStatus = raw.wgf_fs_task_status_t;
 export declare const FsTaskStatus: { readonly NONE: FsTaskStatus; readonly PENDING: FsTaskStatus; readonly DONE: FsTaskStatus; readonly NOT_FOUND: FsTaskStatus; readonly FAILED: FsTaskStatus; };
 export type GamepadAxis = raw.wgf_gamepad_axis_t;

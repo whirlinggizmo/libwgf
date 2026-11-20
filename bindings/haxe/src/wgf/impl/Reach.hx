@@ -381,6 +381,23 @@ class Reach {
 		"wgf_emitter3d_set_velocity",
 		"wgf_emitter3d_skip_trail",
 		"wgf_environment_create",
+		"wgf_follow_get_bounds",
+		"wgf_follow_get_dead_zone",
+		"wgf_follow_get_mode",
+		"wgf_follow_get_offset",
+		"wgf_follow_get_orbit",
+		"wgf_follow_get_smoothing",
+		"wgf_follow_get_target",
+		"wgf_follow_get_trauma",
+		"wgf_follow_set_bounds",
+		"wgf_follow_set_dead_zone",
+		"wgf_follow_set_mode",
+		"wgf_follow_set_offset",
+		"wgf_follow_set_orbit",
+		"wgf_follow_set_smoothing",
+		"wgf_follow_set_target",
+		"wgf_follow_shake",
+		"wgf_follow_snap",
 		"wgf_font_create",
 		"wgf_font_get_default",
 		"wgf_font_measure",
@@ -863,7 +880,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...854) 0];
+	static final counts:Array<Int> = [for (_ in 0...871) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

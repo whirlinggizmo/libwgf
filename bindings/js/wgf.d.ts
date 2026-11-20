@@ -519,6 +519,30 @@ export declare const WGF_TEXT_VALIGN_BOTTOM: 2;
 export type wgf_text_valign_t = typeof WGF_TEXT_VALIGN_TOP | typeof WGF_TEXT_VALIGN_MIDDLE | typeof WGF_TEXT_VALIGN_BOTTOM;
 
 /**
+ * Cameras that follow, helix-legacy's CameraFollow2D, CameraFollow3D, and Orbit3D: a camera
+ * actor (wgf_camera2d.h, wgf_camera3d.h) given a target actor is moved each frame, before
+ * the frame callback, to follow where the target is drawn. At most 64 cameras follow.
+ *
+ * A 2D camera centers the view on a point that follows the target: the target moves freely
+ * inside a dead zone around it, and when it leaves, the point catches up, smoothed; the
+ * view is kept inside its bounds when it has them (the presentation's visible area, over
+ * the camera's zoom, is what must fit).
+ *
+ * A 3D camera sits at its offset from a point that follows the target the same way (a dead
+ * zone of width across and height up, and smoothing), and looks at the point: in CHASE the
+ * offset is turned with the target's heading (its turn about y), swinging round to it
+ * smoothed, so it stays behind a car; in FIXED it isn't turned; in ORBIT it is the orbit's
+ * (a yaw, a pitch, and a distance the program sets, from a stick or the pointer).
+ *
+ * Either shakes: trauma (0 to 1) added by shake and lost over time, the view thrown by its
+ * square so small shakes are gentle, as helix's.
+ */
+export declare const WGF_FOLLOW_MODE_CHASE: 0;
+export declare const WGF_FOLLOW_MODE_FIXED: 1;
+export declare const WGF_FOLLOW_MODE_ORBIT: 2;
+export type wgf_follow_mode_t = typeof WGF_FOLLOW_MODE_CHASE | typeof WGF_FOLLOW_MODE_FIXED | typeof WGF_FOLLOW_MODE_ORBIT;
+
+/**
  * A light: an actor that lights the stage it is on (wgf_stage3d.h), placed and aimed with
  * the actor calls (wgf_actor_look_at): a light shines down its -z. Lights work as
  * libwgt's (wgrender's):
@@ -4787,6 +4811,115 @@ export declare function wgf_emitter3d_clear(emitter: wgf_actor_t | 0): boolean;
  * a path or file that can't be loaded gives one that FAILED.
  */
 export declare function wgf_environment_create(path: string | null): wgf_environment_t;
+
+/**
+ * The camera follows `target` (0: stops following, staying where it is). False for a
+ * camera that isn't a 2D or 3D camera, a target that isn't an actor, or 64 following.
+ */
+export declare function wgf_follow_set_target(camera: wgf_actor_t | 0, target: wgf_actor_t | 0): boolean;
+
+/**
+ * The camera follows `target` (0: stops following, staying where it is). False for a
+ * camera that isn't a 2D or 3D camera, a target that isn't an actor, or 64 following.
+ */
+export declare function wgf_follow_get_target(camera: wgf_actor_t | 0): wgf_actor_t;
+
+/**
+ * How quickly the point catches up, a rate a second (8 by default: about a fifth of a
+ * second); 0 or less: at once. The setters below are false for a camera that follows
+ * nothing.
+ */
+export declare function wgf_follow_set_smoothing(camera: wgf_actor_t | 0, rate: number): boolean;
+
+/**
+ * How quickly the point catches up, a rate a second (8 by default: about a fifth of a
+ * second); 0 or less: at once. The setters below are false for a camera that follows
+ * nothing.
+ */
+export declare function wgf_follow_get_smoothing(camera: wgf_actor_t | 0): number;
+
+/**
+ * The dead zone around the point the target moves in freely: width and height (0, 0 by
+ * default: always catching up). Refuses a negative one.
+ */
+export declare function wgf_follow_set_dead_zone(camera: wgf_actor_t | 0, width: number, height: number): boolean;
+
+/**
+ * The dead zone around the point the target moves in freely: width and height (0, 0 by
+ * default: always catching up). Refuses a negative one.
+ */
+export declare function wgf_follow_get_dead_zone<T extends number[] | Float32Array | Float64Array>(camera: wgf_actor_t | 0, into: T): T;
+export declare function wgf_follow_get_dead_zone(camera: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * 2D: the world the view stays inside, left, top, right, bottom (centered on one smaller than
+ * the view); a right not above the left (the default) lets it go anywhere.
+ */
+export declare function wgf_follow_set_bounds(camera: wgf_actor_t | 0, left: number, top: number, right: number, bottom: number): boolean;
+
+/**
+ * 2D: the world the view stays inside, left, top, right, bottom (centered on one smaller than
+ * the view); a right not above the left (the default) lets it go anywhere.
+ */
+export declare function wgf_follow_get_bounds<T extends number[] | Float32Array | Float64Array>(camera: wgf_actor_t | 0, into: T): T;
+export declare function wgf_follow_get_bounds(camera: wgf_actor_t | 0, into?: wgf_vec4_t | null): wgf_vec4_t;
+
+/**
+ * 3D: where the camera sits from the point (0, 3, 6 by default: behind a target facing -z,
+ * and up), and how.
+ */
+export declare function wgf_follow_set_offset(camera: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
+
+/**
+ * 3D: where the camera sits from the point (0, 3, 6 by default: behind a target facing -z,
+ * and up), and how.
+ */
+export declare function wgf_follow_get_offset<T extends number[] | Float32Array | Float64Array>(camera: wgf_actor_t | 0, into: T): T;
+export declare function wgf_follow_get_offset(camera: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * 3D: where the camera sits from the point (0, 3, 6 by default: behind a target facing -z,
+ * and up), and how.
+ */
+export declare function wgf_follow_set_mode(camera: wgf_actor_t | 0, mode: wgf_follow_mode_t): boolean;
+
+/**
+ * 3D: where the camera sits from the point (0, 3, 6 by default: behind a target facing -z,
+ * and up), and how.
+ */
+export declare function wgf_follow_get_mode(camera: wgf_actor_t | 0): wgf_follow_mode_t;
+
+/**
+ * 3D, ORBIT: round the point, `yaw` radians about y (0 on its +z side), `pitch` radians up
+ * (clamped to just short of straight up or down), `distance` out. Refuses a distance not
+ * above 0. Read back as yaw, pitch, distance.
+ */
+export declare function wgf_follow_set_orbit(camera: wgf_actor_t | 0, yaw: number, pitch: number, distance: number): boolean;
+
+/**
+ * 3D, ORBIT: round the point, `yaw` radians about y (0 on its +z side), `pitch` radians up
+ * (clamped to just short of straight up or down), `distance` out. Refuses a distance not
+ * above 0. Read back as yaw, pitch, distance.
+ */
+export declare function wgf_follow_get_orbit<T extends number[] | Float32Array | Float64Array>(camera: wgf_actor_t | 0, into: T): T;
+export declare function wgf_follow_get_orbit(camera: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * Trauma added (held to 1): 0.3 a bump, 1 an explosion; lost at 1.5 a second. The
+ * getter is the trauma now.
+ */
+export declare function wgf_follow_shake(camera: wgf_actor_t | 0, amount: number): boolean;
+
+/**
+ * Trauma added (held to 1): 0.3 a bump, 1 an explosion; lost at 1.5 a second. The
+ * getter is the trauma now.
+ */
+export declare function wgf_follow_get_trauma(camera: wgf_actor_t | 0): number;
+
+/**
+ * The point put on the target at once, and the camera with it (a respawn, a new level).
+ */
+export declare function wgf_follow_snap(camera: wgf_actor_t | 0): boolean;
 
 /**
  * A white light of intensity 1, no range limit, a spot's cone pi/6 to pi/4. 0 when

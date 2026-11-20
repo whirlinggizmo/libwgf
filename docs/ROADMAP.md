@@ -35,7 +35,6 @@ The systems nearly every game needs, in this order, each a 2D and a 3D half wher
 
 1. **Spatial audio** (the buses are done): a listener (an actor, the camera's by default) and voices placed in the world (a voice on an actor follows it), heard by distance (a near and a far, the falloff between) and panned by direction; on the web Web Audio's PannerNode, natively the mixer's own gain and pan.
 2. **2D collision on actors.** The math is done (`wgf_collide2d.h`); left: rectangles, polygons, and segments as a collider's shape beside today's circle, its overlaps' push out in the trigger events; a broadphase so a scene of a few thousand finds its pairs (helix-legacy's `SpatialHash2D`); and a 2D body component that moves and slides each tick with gravity, grounded, against colliders and a tilemap's solid cells (helix-legacy's `Body2D`).
-3. **Cameras that follow.** 2D: following an actor with smoothing, a dead zone, world bounds it stays inside, and shake. 3D: a chase camera (behind and above, smoothed, looking ahead: the racer's own, made the library's) and an orbit camera (around a target, by pointer or stick, zoomed), and shake. helix-legacy's `CameraFollow2D`, `CameraFollow3D`, and `Orbit3D`.
 
 Done when every item's calls are in the bindings and the feature test, and each has an example in the browser check.
 

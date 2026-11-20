@@ -463,6 +463,16 @@ class Main {
 		camera = Camera2d.create();
 		expect(camera.setZoom(1.5) && near(camera.getZoom(), 1.5), "a camera's zoom");
 		expect(world.setCamera(camera) && (world.getCamera() : Actor) == camera, "a 2D stage's camera");
+		final follower:Follow = Camera2d.create(), followed = Actor.create();
+		expect(follower.setTarget(followed) && follower.getTarget() == followed, "a camera following");
+		expect(follower.setSmoothing(4) && near(follower.getSmoothing(), 4) && follower.setDeadZone(10, 8)
+			&& near(follower.getDeadZone().x, 10) && follower.setBounds(0, 0, 100, 100) && near(follower.getBounds().z, 100),
+			"its smoothing, dead zone, and bounds");
+		expect(follower.setOffset(0, 2, 5) && near(follower.getOffset().z, 5) && follower.setMode(FollowMode.ORBIT)
+			&& follower.getMode() == FollowMode.ORBIT && follower.setOrbit(0.5, 0.2, 7) && near(follower.getOrbit().z, 7),
+			"its offset, mode, and orbit");
+		expect(follower.shake(0.5) && near(follower.getTrauma(), 0.5) && follower.snap() && follower.setTarget(cast 0),
+			"shaken, snapped, and let go");
 
 		final group = Actor.create();
 		expect(group.setParent(world) && group.getParent() == world && world.getChildCount() == 1

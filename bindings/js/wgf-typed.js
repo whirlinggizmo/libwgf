@@ -836,6 +836,45 @@ export const Environment = Object.freeze({
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
+// wgf: typed Follow
+export const Follow = Object.freeze({
+    // wgf: call wgf_follow_set_target
+    setTarget: raw.wgf_follow_set_target,
+    // wgf: call wgf_follow_get_target
+    getTarget: raw.wgf_follow_get_target,
+    // wgf: call wgf_follow_set_smoothing
+    setSmoothing: raw.wgf_follow_set_smoothing,
+    // wgf: call wgf_follow_get_smoothing
+    getSmoothing: raw.wgf_follow_get_smoothing,
+    // wgf: call wgf_follow_set_dead_zone
+    setDeadZone: raw.wgf_follow_set_dead_zone,
+    // wgf: call wgf_follow_get_dead_zone
+    getDeadZone: raw.wgf_follow_get_dead_zone,
+    // wgf: call wgf_follow_set_bounds
+    setBounds: raw.wgf_follow_set_bounds,
+    // wgf: call wgf_follow_get_bounds
+    getBounds: raw.wgf_follow_get_bounds,
+    // wgf: call wgf_follow_set_offset
+    setOffset: raw.wgf_follow_set_offset,
+    // wgf: call wgf_follow_get_offset
+    getOffset: raw.wgf_follow_get_offset,
+    // wgf: call wgf_follow_set_mode
+    setMode: raw.wgf_follow_set_mode,
+    // wgf: call wgf_follow_get_mode
+    getMode: raw.wgf_follow_get_mode,
+    // wgf: call wgf_follow_set_orbit
+    setOrbit: raw.wgf_follow_set_orbit,
+    // wgf: call wgf_follow_get_orbit
+    getOrbit: raw.wgf_follow_get_orbit,
+    // wgf: call wgf_follow_shake
+    shake: raw.wgf_follow_shake,
+    // wgf: call wgf_follow_get_trauma
+    getTrauma: raw.wgf_follow_get_trauma,
+    // wgf: call wgf_follow_snap
+    snap: raw.wgf_follow_snap,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
+});
 // wgf: typed Font
 export const Font = Object.freeze({
     // wgf: call wgf_font_create
@@ -2003,6 +2042,8 @@ export const BoundsMode = Object.freeze({ WRAP: 0, CLAMP: 1, DESTROY: 2 });
 export const ColorStock = Object.freeze({ BLANK: 0, WHITE: 1, BLACK: 2, LIGHTGRAY: 3, GRAY: 4, DARKGRAY: 5, YELLOW: 6, GOLD: 7, ORANGE: 8, PINK: 9, RED: 10, MAROON: 11, GREEN: 12, LIME: 13, DARKGREEN: 14, SKYBLUE: 15, BLUE: 16, DARKBLUE: 17, PURPLE: 18, VIOLET: 19, DARKPURPLE: 20, BEIGE: 21, BROWN: 22, DARKBROWN: 23, MAGENTA: 24, RAYWHITE: 25 });
 // wgf: enum Component
 export const Component = Object.freeze({ NONE: 0, MOTION: 1, BOUNDS: 2, LIFETIME: 3, COLLIDER: 4, VOICE: 5, BODY: 6, VEHICLE: 7 });
+// wgf: enum FollowMode
+export const FollowMode = Object.freeze({ CHASE: 0, FIXED: 1, ORBIT: 2 });
 // wgf: enum FsTaskStatus
 export const FsTaskStatus = Object.freeze({ NONE: 0, PENDING: 1, DONE: 2, NOT_FOUND: 3, FAILED: 4 });
 // wgf: enum GamepadAxis
