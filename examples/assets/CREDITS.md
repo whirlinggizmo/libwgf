@@ -17,6 +17,7 @@ From libwgt's `examples/assets/`, which took them from wgrender's, unchanged:
 | `textures/wabbit_alpha.png` | the bunnymark's bunny, for `tools/bench/bunnymark` | unknown | raylib 5.5's `examples/textures/resources/`, unchanged; redistributed with the bunnymarks of raylib, PixiJS, and others | unknown: raylib's resources table lists its author and license as unknown; carried by Rob's decision (2026-11-14) |
 | `environments/studio_small_09_1k.hdr` | Studio Small 09 | Sergej Majboroda | [Poly Haven](https://polyhaven.com/a/studio_small_09) | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | `models/robot.glb` | the robot, skinned, with its 14 animations, for gfx-skinning and the robots benchmark | @Quaternius ([patreon.com/quaternius](https://www.patreon.com/quaternius)) | raylib 6.2's `examples/models/resources/models/gltf/`, unchanged, copied from helix's `engines/raylib/parity/assets/` | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `models/characters/Adventurer_*.glb`, `Animations.glb` | Ultimate Modular Women: the Adventurer outfit (a head, body, legs and feet, each a part model on one skeleton) and the pack's 24 animations, for gfx-skinning's modular character and Wardens | Quaternius | [quaternius.com](https://quaternius.com), converted from the pack's FBX files in Blender (materials opaque, normals smoothed by angle), copied from helix's Wardens trial assets | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 
 ## Whirling Gizmo's own
 

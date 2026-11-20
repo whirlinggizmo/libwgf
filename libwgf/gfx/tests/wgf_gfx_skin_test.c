@@ -99,6 +99,27 @@ static int make_bin(unsigned char *bin)
     return 376;
 }
 
+#define ACCESSOR_LIST \
+    "{\"bufferView\":0,\"byteOffset\":0,\"componentType\":5126,\"count\":3,\"type\":\"VEC3\",\"min\":[0,0,0]," \
+    "\"max\":[1,1,0]}," \
+    "{\"bufferView\":0,\"byteOffset\":36,\"componentType\":5121,\"count\":3,\"type\":\"VEC4\"}," \
+    "{\"bufferView\":0,\"byteOffset\":48,\"componentType\":5126,\"count\":3,\"type\":\"VEC4\"}," \
+    "{\"bufferView\":0,\"byteOffset\":96,\"componentType\":5126,\"count\":2,\"type\":\"MAT4\"}," \
+    "{\"bufferView\":0,\"byteOffset\":224,\"componentType\":5126,\"count\":2,\"type\":\"SCALAR\",\"min\":[0]," \
+    "\"max\":[2]}," \
+    "{\"bufferView\":0,\"byteOffset\":232,\"componentType\":5126,\"count\":2,\"type\":\"VEC3\"}," \
+    "{\"bufferView\":0,\"byteOffset\":256,\"componentType\":5126,\"count\":2,\"type\":\"SCALAR\",\"min\":[0]," \
+    "\"max\":[1]}," \
+    "{\"bufferView\":0,\"byteOffset\":264,\"componentType\":5126,\"count\":2,\"type\":\"VEC4\"}," \
+    "{\"bufferView\":0,\"byteOffset\":296,\"componentType\":5126,\"count\":2,\"type\":\"SCALAR\",\"min\":[0]," \
+    "\"max\":[1]}," \
+    "{\"bufferView\":0,\"byteOffset\":304,\"componentType\":5126,\"count\":6,\"type\":\"VEC3\"}]}"
+
+#define ACCESSORS \
+    "\"buffers\":[{\"byteLength\":376}],\"bufferViews\":[{\"buffer\":0,\"byteLength\":376}],"           \
+    "\"accessors\":["                                                                                       \
+    ACCESSOR_LIST
+
 static const char json[] =
     "{\"asset\":{\"version\":\"2.0\"},\"scene\":0,\"scenes\":[{\"nodes\":[0,2]}],"
     "\"nodes\":[{\"name\":\"hip\",\"children\":[1]},{\"name\":\"arm\",\"translation\":[0,1,0]},"
@@ -112,29 +133,27 @@ static const char json[] =
     "{\"name\":\"spline\",\"channels\":[{\"sampler\":0,\"target\":{\"node\":1,\"path\":\"translation\"}}],"
     "\"samplers\":[{\"input\":8,\"output\":9,\"interpolation\":\"CUBICSPLINE\"}]},"
     "{\"name\":\"empty\",\"channels\":[],\"samplers\":[]}],"
-    "\"buffers\":[{\"byteLength\":376}],\"bufferViews\":[{\"buffer\":0,\"byteLength\":376}],"
-    "\"accessors\":["
-    "{\"bufferView\":0,\"byteOffset\":0,\"componentType\":5126,\"count\":3,\"type\":\"VEC3\",\"min\":[0,0,0],"
-    "\"max\":[1,1,0]},"
-    "{\"bufferView\":0,\"byteOffset\":36,\"componentType\":5121,\"count\":3,\"type\":\"VEC4\"},"
-    "{\"bufferView\":0,\"byteOffset\":48,\"componentType\":5126,\"count\":3,\"type\":\"VEC4\"},"
-    "{\"bufferView\":0,\"byteOffset\":96,\"componentType\":5126,\"count\":2,\"type\":\"MAT4\"},"
-    "{\"bufferView\":0,\"byteOffset\":224,\"componentType\":5126,\"count\":2,\"type\":\"SCALAR\",\"min\":[0],"
-    "\"max\":[2]},"
-    "{\"bufferView\":0,\"byteOffset\":232,\"componentType\":5126,\"count\":2,\"type\":\"VEC3\"},"
-    "{\"bufferView\":0,\"byteOffset\":256,\"componentType\":5126,\"count\":2,\"type\":\"SCALAR\",\"min\":[0],"
-    "\"max\":[1]},"
-    "{\"bufferView\":0,\"byteOffset\":264,\"componentType\":5126,\"count\":2,\"type\":\"VEC4\"},"
-    "{\"bufferView\":0,\"byteOffset\":296,\"componentType\":5126,\"count\":2,\"type\":\"SCALAR\",\"min\":[0],"
-    "\"max\":[1]},"
-    "{\"bufferView\":0,\"byteOffset\":304,\"componentType\":5126,\"count\":6,\"type\":\"VEC3\"}]}";
+    ACCESSORS;
 
-static void write_glb(const char *path)
+/* A file of animations alone, its skeleton's nodes in another order (the arm first): "raise"
+ * by the nodes' names, as Wardens' Animations.glb is for its part models. */
+static const char clips_json[] =
+    "{\"asset\":{\"version\":\"2.0\"},\"scene\":0,\"scenes\":[{\"nodes\":[1]}],"
+    "\"nodes\":[{\"name\":\"arm\",\"translation\":[0,1,0]},{\"name\":\"hip\",\"children\":[0]}],"
+    "\"animations\":["
+    "{\"name\":\"raise\",\"channels\":[{\"sampler\":0,\"target\":{\"node\":0,\"path\":\"translation\"}},"
+    "{\"sampler\":1,\"target\":{\"node\":1,\"path\":\"rotation\"}}],"
+    "\"samplers\":[{\"input\":4,\"output\":5},{\"input\":6,\"output\":7,\"interpolation\":\"STEP\"}]}],"
+    ACCESSORS;
+
+/* `text` and the buffer as a .glb file at `path`. */
+static void write_glb(const char *path, const char *text)
 {
     static unsigned char glb[8192];
     unsigned char bin[512];
     const int bin_size = make_bin(bin);
-    const unsigned int json_size = (unsigned int)((sizeof(json) - 1 + 3) & ~3u);
+    const size_t text_size = strlen(text);
+    const unsigned int json_size = (unsigned int)((text_size + 3) & ~3u);
     const unsigned int total = 12 + 8 + json_size + 8 + (unsigned int)bin_size;
     memset(glb, ' ', sizeof(glb));
     memcpy(glb, "glTF", 4);
@@ -142,7 +161,7 @@ static void write_glb(const char *path)
     put32(glb + 8, total);
     put32(glb + 12, json_size);
     memcpy(glb + 16, "JSON", 4);
-    memcpy(glb + 20, json, sizeof(json) - 1);
+    memcpy(glb + 20, text, text_size);
     put32(glb + 20 + json_size, (unsigned int)bin_size);
     memcpy(glb + 24 + json_size, "BIN\0", 4);
     memcpy(glb + 28 + json_size, bin, (size_t)bin_size);
@@ -178,7 +197,8 @@ int main(void)
 
     wgf_core_priv_init();
     wgf_log_set_level(WGF_LOG_LEVEL_ERROR); /* the refusals below warn, on purpose */
-    write_glb("models/arm.glb");
+    write_glb("models/arm.glb", json);
+    write_glb("models/clips.glb", clips_json);
     wgf_platform_priv_set_size(640, 480);
     expect(wgf_gfx_priv_start(), "gfx starts");
     stage = wgf_stage3d_create();
@@ -355,6 +375,27 @@ int main(void)
                    !wgf_model_play_layer_animation(root, 1, NULL, 0.0f, true) &&
                    !wgf_model_play_layer_animation(body, 1, "arm", 0.0f, true),
                "a bone or an animation it hasn't, no bone, a model that isn't the root: refused");
+    }
+
+    { /* clips from another file: its channels on this file's nodes of the same names */
+        const wgf_mesh_t clips = wgf_mesh_create("models/clips.glb");
+        const wgf_actor_t other = wgf_model_create(mesh);
+        wgf_actor_set_parent(other, stage);
+        settle(clips);
+        expect(wgf_resource_get_status(clips) == WGF_RESOURCE_STATUS_READY,
+               "a file of animations alone loads: no triangles, no lights");
+        expect(wgf_model_set_animations(other, clips) && wgf_model_get_animations(other) == clips &&
+                   wgf_model_get_animation_count(other) == 1,
+               "another file's clips");
+        wgf_resource_release(clips); /* the model holds them */
+        expect(wgf_model_play_animation(other, wgf_model_find_animation(other, "raise"), 0.0f) &&
+                   wgf_model_set_animation_time(other, 1.0f) && near(arm_y(other), 2.0f),
+               "played: the arm moved by name, halfway up");
+        expect(near(wgf_actor_get_rotation(wgf_actor_find(other, "hip")).z, 1.5707963f), "the hip turned by name");
+        expect(wgf_model_set_animations(other, 0) && wgf_model_get_animations(other) == 0 &&
+                   wgf_model_get_animation_state(other) == WGF_PLAY_STATE_STOPPED && !wgf_model_set_animations(other, 12345),
+               "its own again, what played stopped; a mesh that isn't one refused");
+        wgf_actor_destroy(other, WGF_ACTOR_DESTROY_CHILDREN);
     }
 
     /* refusals */

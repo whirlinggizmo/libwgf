@@ -572,6 +572,7 @@ class Reach {
 		"wgf_model_get_animation_state",
 		"wgf_model_get_animation_time",
 		"wgf_model_get_animation_weight",
+		"wgf_model_get_animations",
 		"wgf_model_get_bounds_max",
 		"wgf_model_get_bounds_min",
 		"wgf_model_get_layer_animation",
@@ -590,6 +591,7 @@ class Reach {
 		"wgf_model_set_animation_loop",
 		"wgf_model_set_animation_speed",
 		"wgf_model_set_animation_time",
+		"wgf_model_set_animations",
 		"wgf_model_set_material",
 		"wgf_model_set_mesh",
 		"wgf_model_set_shadow_casting",
@@ -1010,7 +1012,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1001) 0];
+	static final counts:Array<Int> = [for (_ in 0...1003) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

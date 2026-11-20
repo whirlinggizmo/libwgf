@@ -40,8 +40,16 @@
 
 static const char *const clips[ROBOTS] = {"Robot_Idle", "Robot_Dance", "Robot_Walking", "Robot_Running", "Robot_Wave"};
 
+/* A modular character: four part models on one skeleton, each given the clips of a file of
+ * animations alone and played alike, so they move as one. */
+#define CLIPS_PATH "models/characters/Animations.glb"
+#define PARTS 4
+static const char *const part_paths[PARTS] = {"models/characters/Adventurer_Body.glb", "models/characters/Adventurer_Legs.glb",
+                                              "models/characters/Adventurer_Head.glb", "models/characters/Adventurer_Feet.glb"};
+
 static struct {
-    wgf_actor_t stage, camera, robots[ROBOTS];
+    wgf_actor_t stage, camera, robots[ROBOTS], character, parts[PARTS];
+    bool dressed;
     bool started, orbit, paused;
     int clip; /* the front robot's */
     float angle, since;
@@ -89,6 +97,31 @@ static void init(void *user)
         }
     }
     wgf_resource_release(mesh); /* each robot holds its own reference */
+
+    g.character = wgf_actor_create();
+    wgf_actor_set_parent(g.character, g.stage);
+    wgf_actor_set_position(g.character, 5.0f, 0.0f, 3.0f);
+    wgf_actor_set_scale(g.character, 2.0f, 2.0f, 2.0f); /* the pack's people are half a robot's height */
+    mesh = wgf_mesh_create(CLIPS_PATH);
+    for (i = 0; i < PARTS; i++) {
+        wgf_mesh_t part = wgf_mesh_create(part_paths[i]);
+        g.parts[i] = wgf_model_create(part);
+        wgf_resource_release(part);
+        wgf_model_set_animations(g.parts[i], mesh); /* the clips file's channels, by its nodes' names */
+        wgf_actor_set_parent(g.parts[i], g.character);
+    }
+    wgf_resource_release(mesh); /* each part holds the clips */
+}
+
+/* Once the clips and the parts are READY: every part plays the same clip from the same time. */
+static void dress(void)
+{
+    int i;
+    for (i = 0; i < PARTS; i++) {
+        const int clip = wgf_model_find_animation(g.parts[i], "CharacterArmature|Run");
+        wgf_model_play_animation(g.parts[i], clip >= 0 ? clip : 0, 0.0f);
+    }
+    g.dressed = true;
 }
 
 /* Once the file is READY: each robot's clip found by name and played, the ones behind each
@@ -127,6 +160,13 @@ static void frame(void *user)
     if (wgf_app_can_quit() && wgf_keyboard_is_pressed(WGF_KEY_ESCAPE)) wgf_app_quit();
     if (wgf_keyboard_is_pressed(WGF_KEY_O)) g.orbit = !g.orbit;
     if (!g.started && wgf_model_get_animation_count(g.robots[0]) > 0) start();
+    if (!g.dressed && wgf_model_get_animation_count(g.parts[0]) > 0) {
+        bool ready = true; /* every part's file too: one loaded later would start behind */
+        for (i = 0; i < PARTS; i++) {
+            ready = ready && wgf_resource_get_status(wgf_model_get_mesh(g.parts[i])) == WGF_RESOURCE_STATUS_READY;
+        }
+        if (ready) dress();
+    }
     if (g.started) {
         if (wgf_keyboard_is_pressed(WGF_KEY_SPACE)) {
             g.paused = !g.paused;

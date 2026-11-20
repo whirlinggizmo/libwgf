@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "264b567124711613" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "389dc5f493cd5b5a" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -9699,6 +9699,32 @@ export function wgf_model_get_layer_state(model) {
 export function wgf_model_get_layer_weight(model) {
     const value = host["_wgf_model_get_layer_weight"](model);
     return value;
+}
+
+// wgf: call wgf_model_set_animations
+/**
+ * Its animations from another glTF file, `clips` (a file of animations alone, its skeleton
+ * named as this file's: Wardens' Animations.glb for each of a character's part models), each
+ * clip's channels moving this file's nodes of the same names; 0 for its own again. Each part
+ * of a character given the same clips and played the same way moves as one. What played stops.
+ * False for a model that isn't a file's root, or a mesh that isn't one.
+ */
+export function wgf_model_set_animations(model, clips) {
+    const value = host["_wgf_model_set_animations"](model, clips);
+    return value !== 0;
+}
+
+// wgf: call wgf_model_get_animations
+/**
+ * Its animations from another glTF file, `clips` (a file of animations alone, its skeleton
+ * named as this file's: Wardens' Animations.glb for each of a character's part models), each
+ * clip's channels moving this file's nodes of the same names; 0 for its own again. Each part
+ * of a character given the same clips and played the same way moves as one. What played stops.
+ * False for a model that isn't a file's root, or a mesh that isn't one.
+ */
+export function wgf_model_get_animations(model) {
+    const value = host["_wgf_model_get_animations"](model);
+    return value >>> 0;
 }
 
 // wgf: call wgf_model_get_bounds_min

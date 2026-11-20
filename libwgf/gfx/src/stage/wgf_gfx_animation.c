@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "actor/wgf_gfx_actor_priv.h"
+#include "mesh/wgf_gfx_mesh_priv.h"
 #include "mesh/wgf_gfx_mesh_record_priv.h"
 #include "stage/wgf_gfx_model_priv.h"
 #include "wgf_core_part_priv.h"
@@ -53,6 +54,11 @@ struct wgf_gfx_priv_animation_t {
     bool layer_loop;
     unsigned char *mask;
     trs_t *layered;
+    /* clips from another file (wgf_model_set_animations): its channels applied to this file's
+       nodes of the same names (`map`, a source node at a time; -1 none), and the nodes they move */
+    wgf_mesh_t source;
+    int *map, map_count;
+    unsigned char *moved;
 };
 typedef struct wgf_gfx_priv_animation_t animation_t;
 
@@ -90,6 +96,50 @@ static const wgf_gfx_priv_mesh_animation_t *clip_of(const wgf_gfx_priv_mesh_reco
                                                                                     : NULL;
 }
 
+/* Where its clips come from: another file's (READY; NULL while it loads), or its own. */
+static const wgf_gfx_priv_mesh_record_t *clips_of(const wgf_gfx_priv_actor_t *root_ptr)
+{
+    const animation_t *anim = root_ptr->as.model.animation;
+    if (anim != NULL && anim->source != 0) {
+        return wgf_resource_get_status(anim->source) == WGF_RESOURCE_STATUS_READY ? wgf_gfx_priv_mesh_record(anim->source)
+                                                                                  : NULL;
+    }
+    return file_of(root_ptr);
+}
+
+/* Its own file's nodes the clips move (made once both files are READY, from another's); NULL
+ * for none. */
+static const unsigned char *moved_of(animation_t *anim, const wgf_gfx_priv_mesh_record_t *record,
+                                     const wgf_gfx_priv_mesh_record_t *clips)
+{
+    int s, n, c, a;
+    if (anim == NULL || anim->source == 0) return record->animated;
+    if (clips == NULL) return NULL;
+    if (anim->map != NULL && anim->map_count == clips->node_count) return anim->moved;
+    free(anim->map);
+    free(anim->moved);
+    anim->map = (int *)malloc(sizeof(int) * (size_t)(clips->node_count + 1));
+    anim->moved = (unsigned char *)calloc((size_t)record->node_count + 1, 1);
+    if (anim->map == NULL || anim->moved == NULL) return NULL;
+    anim->map_count = clips->node_count;
+    for (s = 0; s < clips->node_count; s++) { /* each of its nodes to ours of its name */
+        anim->map[s] = -1;
+        for (n = 0; n < record->node_count && clips->nodes[s].name != NULL; n++) {
+            if (record->nodes[n].name != NULL && strcmp(record->nodes[n].name, clips->nodes[s].name) == 0) {
+                anim->map[s] = n;
+                break;
+            }
+        }
+    }
+    for (a = 0; a < clips->animation_count; a++) {
+        for (c = 0; c < clips->animations[a].channel_count; c++) {
+            const int node = clips->animations[a].channels[c].node;
+            if (node >= 0 && node < clips->node_count && anim->map[node] >= 0) anim->moved[anim->map[node]] = 1;
+        }
+    }
+    return anim->moved;
+}
+
 static void free_animation(animation_t *anim)
 {
     if (anim == NULL) return;
@@ -98,6 +148,9 @@ static void free_animation(animation_t *anim)
     free(anim->scratch);
     free(anim->mask);
     free(anim->layered);
+    free(anim->map);
+    free(anim->moved);
+    if (anim->source != 0) wgf_resource_release(anim->source);
     free(anim);
 }
 
@@ -163,27 +216,28 @@ static void sample(const wgf_gfx_priv_mesh_channel_t *c, float t, float out[4])
 
 /* Animation `clip` at `t` into `out`: every node an animation of the file moves at its rest,
  * as the file has it, then this one's channels over it. */
-static void evaluate(const wgf_gfx_priv_mesh_record_t *record, const wgf_gfx_priv_mesh_animation_t *clip, float t,
-                     trs_t *out)
+static void evaluate(const wgf_gfx_priv_mesh_record_t *record, const unsigned char *moved, const int *map,
+                     const wgf_gfx_priv_mesh_animation_t *clip, float t, trs_t *out)
 {
     int n, c;
     for (n = 0; n < record->node_count; n++) {
-        if (record->animated == NULL || !record->animated[n]) continue;
+        if (moved == NULL || !moved[n]) continue;
         out[n].position = record->nodes[n].position;
         out[n].rotation = record->nodes[n].rotation;
         out[n].scale = record->nodes[n].scale;
     }
     for (c = 0; clip != NULL && c < clip->channel_count; c++) {
         const wgf_gfx_priv_mesh_channel_t *channel = &clip->channels[c];
+        const int node = map != NULL ? (channel->node >= 0 ? map[channel->node] : -1) : channel->node;
         float v[4];
-        if (channel->node < 0 || channel->node >= record->node_count) continue;
+        if (node < 0 || node >= record->node_count) continue;
         sample(channel, t, v);
         if (channel->path == WGF_GFX_PRIV_MESH_PATH_TRANSLATION) {
-            out[channel->node].position = wgf_vec3_make(v[0], v[1], v[2]);
+            out[node].position = wgf_vec3_make(v[0], v[1], v[2]);
         } else if (channel->path == WGF_GFX_PRIV_MESH_PATH_ROTATION) {
-            out[channel->node].rotation = wgf_quat_make(v[0], v[1], v[2], v[3]);
+            out[node].rotation = wgf_quat_make(v[0], v[1], v[2], v[3]);
         } else {
-            out[channel->node].scale = wgf_vec3_make(v[0], v[1], v[2]);
+            out[node].scale = wgf_vec3_make(v[0], v[1], v[2]);
         }
     }
 }
@@ -250,26 +304,31 @@ static void pose(wgf_actor_t model)
     animation_t *anim = root_ptr != NULL ? root_ptr->as.model.animation : NULL;
     const wgf_gfx_priv_model_tree_t *tree = root_ptr != NULL ? root_ptr->as.model.tree : NULL;
     const wgf_gfx_priv_mesh_record_t *record = root_ptr != NULL ? file_of(root_ptr) : NULL;
+    const wgf_gfx_priv_mesh_record_t *clips = root_ptr != NULL ? clips_of(root_ptr) : NULL;
     const wgf_gfx_priv_mesh_animation_t *clip;
+    const unsigned char *moved;
+    const int *map;
     int n;
-    if (anim == NULL || tree == NULL || record == NULL || record->animated == NULL) return;
-    clip = clip_of(record, anim->animation);
-    if (clip == NULL || !fit(anim, record->node_count)) return;
+    if (anim == NULL || tree == NULL || record == NULL || clips == NULL) return;
+    moved = moved_of(anim, record, clips);
+    map = anim->source != 0 ? anim->map : NULL;
+    clip = clip_of(clips, anim->animation);
+    if (moved == NULL || clip == NULL || !fit(anim, record->node_count)) return;
     if (anim->fresh) {
-        anim->time = start_of(anim, record);
+        anim->time = start_of(anim, clips);
         anim->fresh = false;
     }
-    evaluate(record, clip, anim->time, anim->pose);
+    evaluate(record, moved, map, clip, anim->time, anim->pose);
     if (anim->fading) {
         const float w = anim->fade > 0.0f ? anim->faded / anim->fade : 1.0f;
         const trs_t *from = anim->held;
         if (!anim->from_held) {
-            evaluate(record, clip_of(record, anim->from), anim->from_time, anim->scratch);
+            evaluate(record, moved, map, clip_of(clips, anim->from), anim->from_time, anim->scratch);
             from = anim->scratch;
         }
         for (n = 0; n < record->node_count; n++) {
             trs_t *to = &anim->pose[n];
-            if (!record->animated[n]) continue;
+            if (!moved[n]) continue;
             to->position = wgf_vec3_lerp(from[n].position, to->position, w);
             to->scale = wgf_vec3_lerp(from[n].scale, to->scale, w);
             to->rotation = wgf_quat_nlerp(from[n].rotation, to->rotation, w);
@@ -277,10 +336,10 @@ static void pose(wgf_actor_t model)
     }
     if (anim->layer >= 0 && anim->layer_weight > 0.0f && anim->mask != NULL && anim->layered != NULL) {
         const float w = anim->layer_weight;
-        evaluate(record, clip_of(record, anim->layer), anim->layer_time, anim->layered);
+        evaluate(record, moved, map, clip_of(clips, anim->layer), anim->layer_time, anim->layered);
         for (n = 0; n < record->node_count; n++) {
             trs_t *to = &anim->pose[n];
-            if (!record->animated[n] || !anim->mask[n]) continue;
+            if (!moved[n] || !anim->mask[n]) continue;
             to->position = wgf_vec3_lerp(to->position, anim->layered[n].position, w);
             to->scale = wgf_vec3_lerp(to->scale, anim->layered[n].scale, w);
             to->rotation = wgf_quat_nlerp(to->rotation, anim->layered[n].rotation, w);
@@ -289,7 +348,7 @@ static void pose(wgf_actor_t model)
     anim->posed = true;
     for (n = 0; n < record->node_count && n < tree->node_count; n++) {
         wgf_gfx_priv_actor_t *node_ptr;
-        if (!record->animated[n] || (node_ptr = wgf_gfx_priv_actor_of_silently(tree->nodes[n])) == NULL) {
+        if (!moved[n] || (node_ptr = wgf_gfx_priv_actor_of_silently(tree->nodes[n])) == NULL) {
             continue; /* not moved, or destroyed since its tree was made */
         }
         node_ptr->position = anim->pose[n].position;
@@ -306,7 +365,7 @@ static void pose(wgf_actor_t model)
 static void advance(wgf_actor_t model, wgf_gfx_priv_actor_t *root_ptr, float dt)
 {
     animation_t *anim = root_ptr->as.model.animation;
-    const wgf_gfx_priv_mesh_record_t *record = file_of(root_ptr);
+    const wgf_gfx_priv_mesh_record_t *record = file_of(root_ptr) != NULL ? clips_of(root_ptr) : NULL;
     float duration;
     if (record == NULL) {
         if (wgf_resource_get_status(root_ptr->as.model.mesh) == WGF_RESOURCE_STATUS_FAILED) {
@@ -404,9 +463,9 @@ static void built(wgf_actor_t model)
     animation_t *anim = root_ptr != NULL ? root_ptr->as.model.animation : NULL;
     const wgf_gfx_priv_mesh_record_t *record;
     if (anim == NULL) return;
-    record = file_of(root_ptr);
+    record = file_of(root_ptr) != NULL ? clips_of(root_ptr) : NULL;
     if (record == NULL) {
-        if (anim->state == WGF_PLAY_STATE_PLAYING) anim->state = WGF_PLAY_STATE_COMPLETE;
+        if (anim->state == WGF_PLAY_STATE_PLAYING && file_of(root_ptr) == NULL) anim->state = WGF_PLAY_STATE_COMPLETE;
         return;
     }
     if (anim->animation >= record->animation_count) {
@@ -480,21 +539,21 @@ static animation_t *existing(wgf_actor_t model)
 int wgf_model_get_animation_count(wgf_actor_t model)
 {
     const wgf_gfx_priv_actor_t *root_ptr = root_of(model);
-    const wgf_gfx_priv_mesh_record_t *record = root_ptr != NULL ? file_of(root_ptr) : NULL;
+    const wgf_gfx_priv_mesh_record_t *record = root_ptr != NULL ? clips_of(root_ptr) : NULL;
     return record != NULL ? record->animation_count : 0;
 }
 
 const char *wgf_model_get_animation_name(wgf_actor_t model, int animation)
 {
     const wgf_gfx_priv_actor_t *root_ptr = root_of(model);
-    const wgf_gfx_priv_mesh_animation_t *clip = root_ptr != NULL ? clip_of(file_of(root_ptr), animation) : NULL;
+    const wgf_gfx_priv_mesh_animation_t *clip = root_ptr != NULL ? clip_of(clips_of(root_ptr), animation) : NULL;
     return clip != NULL ? clip->name : "";
 }
 
 int wgf_model_find_animation(wgf_actor_t model, const char *name)
 {
     const wgf_gfx_priv_actor_t *root_ptr = root_of(model);
-    const wgf_gfx_priv_mesh_record_t *record = root_ptr != NULL ? file_of(root_ptr) : NULL;
+    const wgf_gfx_priv_mesh_record_t *record = root_ptr != NULL ? clips_of(root_ptr) : NULL;
     int i;
     if (record == NULL || name == NULL || name[0] == '\0') return -1;
     for (i = 0; i < record->animation_count; i++) {
@@ -506,13 +565,13 @@ int wgf_model_find_animation(wgf_actor_t model, const char *name)
 float wgf_model_get_animation_duration(wgf_actor_t model, int animation)
 {
     const wgf_gfx_priv_actor_t *root_ptr = root_of(model);
-    return root_ptr != NULL ? duration_of(file_of(root_ptr), animation) : 0.0f;
+    return root_ptr != NULL ? duration_of(clips_of(root_ptr), animation) : 0.0f;
 }
 
 bool wgf_model_play_animation(wgf_actor_t model, int animation, float fade)
 {
     const wgf_gfx_priv_actor_t *root_ptr = root_of(model);
-    const wgf_gfx_priv_mesh_record_t *record = root_ptr != NULL ? file_of(root_ptr) : NULL;
+    const wgf_gfx_priv_mesh_record_t *record = root_ptr != NULL ? clips_of(root_ptr) : NULL;
     animation_t *anim;
     if (root_ptr == NULL || animation < 0 || isnan(fade) ||
         wgf_resource_get_status(root_ptr->as.model.mesh) == WGF_RESOURCE_STATUS_FAILED ||
@@ -626,7 +685,7 @@ bool wgf_model_is_animation_loop(wgf_actor_t model)
 bool wgf_model_set_animation_time(wgf_actor_t model, float seconds)
 {
     const wgf_gfx_priv_actor_t *root_ptr = root_of(model);
-    const wgf_gfx_priv_mesh_record_t *record = root_ptr != NULL ? file_of(root_ptr) : NULL;
+    const wgf_gfx_priv_mesh_record_t *record = root_ptr != NULL ? clips_of(root_ptr) : NULL;
     animation_t *anim;
     if (root_ptr == NULL || !isfinite(seconds) || (anim = player_of(model)) == NULL) return false;
     anim->fresh = false;
@@ -640,7 +699,7 @@ float wgf_model_get_animation_time(wgf_actor_t model)
     const wgf_gfx_priv_actor_t *root_ptr = root_of(model);
     const animation_t *anim = existing(model);
     if (root_ptr == NULL || anim == NULL) return 0.0f;
-    return anim->fresh ? start_of(anim, file_of(root_ptr)) : anim->time;
+    return anim->fresh ? start_of(anim, clips_of(root_ptr)) : anim->time;
 }
 
 /* ------------------------------------------------------------ the layer ---- */
@@ -673,9 +732,10 @@ bool wgf_model_play_layer_animation(wgf_actor_t model, int animation, const char
     animation_t *anim = existing(model);
     wgf_gfx_priv_actor_t *root_ptr = root_of(model);
     const wgf_gfx_priv_mesh_record_t *record = root_ptr != NULL ? file_of(root_ptr) : NULL;
+    const wgf_gfx_priv_mesh_record_t *clips = root_ptr != NULL ? clips_of(root_ptr) : NULL;
     unsigned char *mask;
     trs_t *layered;
-    if (anim == NULL || record == NULL || bone == NULL || clip_of(record, animation) == NULL || !isfinite(fade)) {
+    if (anim == NULL || record == NULL || bone == NULL || clip_of(clips, animation) == NULL || !isfinite(fade)) {
         return false;
     }
     mask = (unsigned char *)calloc((size_t)record->node_count + 1, 1);
@@ -730,4 +790,34 @@ float wgf_model_get_layer_weight(wgf_actor_t model)
 {
     const animation_t *anim = existing(model);
     return anim != NULL && anim->layer >= 0 ? anim->layer_weight : 0.0f;
+}
+
+/* ------------------------------------------------------ clips from another file ---- */
+
+bool wgf_model_set_animations(wgf_actor_t model, wgf_mesh_t clips)
+{
+    animation_t *anim;
+    if (root_of(model) == NULL || (clips != 0 && wgf_gfx_priv_mesh_record(clips) == NULL)) return false;
+    anim = player_of(model);
+    if (anim == NULL) return false;
+    if (clips == anim->source) return true;
+    if (clips != 0) wgf_gfx_priv_mesh_retain(clips);
+    if (anim->source != 0) wgf_resource_release(anim->source);
+    anim->source = clips;
+    free(anim->map);
+    free(anim->moved);
+    anim->map = NULL;
+    anim->moved = NULL;
+    anim->map_count = 0;
+    anim->animation = -1; /* another file's clips: what played is gone */
+    anim->layer = -1;
+    anim->state = WGF_PLAY_STATE_STOPPED;
+    anim->fading = false;
+    return true;
+}
+
+wgf_mesh_t wgf_model_get_animations(wgf_actor_t model)
+{
+    const animation_t *anim = existing(model);
+    return anim != NULL ? anim->source : 0;
 }

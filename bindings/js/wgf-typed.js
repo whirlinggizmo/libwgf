@@ -1333,6 +1333,10 @@ export const Model = Object.freeze({
     getLayerState: raw.wgf_model_get_layer_state,
     // wgf: call wgf_model_get_layer_weight
     getLayerWeight: raw.wgf_model_get_layer_weight,
+    // wgf: call wgf_model_set_animations
+    setAnimations: raw.wgf_model_set_animations,
+    // wgf: call wgf_model_get_animations
+    getAnimations: raw.wgf_model_get_animations,
     // wgf: call wgf_model_get_bounds_min
     getBoundsMin: raw.wgf_model_get_bounds_min,
     // wgf: call wgf_model_get_bounds_max

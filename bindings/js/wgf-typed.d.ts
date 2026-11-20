@@ -4878,6 +4878,22 @@ export declare const Model: {
      */
     readonly getLayerWeight: typeof raw.wgf_model_get_layer_weight;
     /**
+     * Its animations from another glTF file, `clips` (a file of animations alone, its skeleton
+     * named as this file's: Wardens' Animations.glb for each of a character's part models), each
+     * clip's channels moving this file's nodes of the same names; 0 for its own again. Each part
+     * of a character given the same clips and played the same way moves as one. What played stops.
+     * False for a model that isn't a file's root, or a mesh that isn't one.
+     */
+    readonly setAnimations: typeof raw.wgf_model_set_animations;
+    /**
+     * Its animations from another glTF file, `clips` (a file of animations alone, its skeleton
+     * named as this file's: Wardens' Animations.glb for each of a character's part models), each
+     * clip's channels moving this file's nodes of the same names; 0 for its own again. Each part
+     * of a character given the same clips and played the same way moves as one. What played stops.
+     * False for a model that isn't a file's root, or a mesh that isn't one.
+     */
+    readonly getAnimations: typeof raw.wgf_model_get_animations;
+    /**
      * The box around every model at and under `actor`, each mesh's box placed as it is now, in
      * the tree's root's space: its least and greatest corner (placing a glTF file's tree on the
      * ground, framing it in a camera). 0, 0, 0 for both when none there has a READY mesh.

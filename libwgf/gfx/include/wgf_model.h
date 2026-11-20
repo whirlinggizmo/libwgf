@@ -132,6 +132,14 @@ WGF_API int wgf_model_get_layer_animation(wgf_actor_t model);
 WGF_API wgf_play_state_t wgf_model_get_layer_state(wgf_actor_t model);
 WGF_API float wgf_model_get_layer_weight(wgf_actor_t model);
 
+/* Its animations from another glTF file, `clips` (a file of animations alone, its skeleton
+ * named as this file's: Wardens' Animations.glb for each of a character's part models), each
+ * clip's channels moving this file's nodes of the same names; 0 for its own again. Each part
+ * of a character given the same clips and played the same way moves as one. What played stops.
+ * False for a model that isn't a file's root, or a mesh that isn't one. */
+WGF_API bool wgf_model_set_animations(wgf_actor_t model, wgf_mesh_t clips);
+WGF_API wgf_mesh_t wgf_model_get_animations(wgf_actor_t model);
+
 /* The box around every model at and under `actor`, each mesh's box placed as it is now, in
  * the tree's root's space: its least and greatest corner (placing a glTF file's tree on the
  * ground, framing it in a camera). 0, 0, 0 for both when none there has a READY mesh. */

@@ -1014,6 +1014,8 @@ class Main {
 			"a layer from the torso up, and stopped");
 		expect(robot.pauseAnimation() && robot.getAnimationState() == PlayState.PAUSED && robot.resumeAnimation()
 			&& robot.stopAnimation() && robot.getAnimationState() == PlayState.STOPPED, "paused, resumed, stopped");
+		expect(robot.setAnimations(robot.getMesh()) && robot.getAnimations() == robot.getMesh() && robot.getAnimationCount() == 14
+			&& robot.setAnimations(cast 0), "clips from a file by its nodes' names, and its own again");
 	}
 
 	static function finish():Void {

@@ -737,6 +737,9 @@ static void merge_bounds(mesh_t *mesh)
         mesh->bounds_max = wgf_vec3_make(fmaxf(mesh->bounds_max.x, prim->bounds_max.x),
                                          fmaxf(mesh->bounds_max.y, prim->bounds_max.y),
                                          fmaxf(mesh->bounds_max.z, prim->bounds_max.z));
+    }    if (mesh->primitive_count == 0) { /* lights or animations alone: no extent */
+        mesh->bounds_min = wgf_vec3_make(0.0f, 0.0f, 0.0f);
+        mesh->bounds_max = mesh->bounds_min;
     }
 }
 
@@ -827,8 +830,8 @@ static bool parse_model(prepared_t *prepared, int size)
     for (i = 0; i < mesh->node_count; i++) {
         if (mesh->nodes[i].name == NULL) return false; /* out of memory */
     }
-    if (mesh->primitive_count == 0 && mesh->light_count == 0) {
-        wgf_log_warn("wgf_gfx_mesh: %s: no triangles or lights in it", prepared->path);
+    if (mesh->primitive_count == 0 && mesh->light_count == 0 && mesh->animation_count == 0) {
+        wgf_log_warn("wgf_gfx_mesh: %s: no triangles, lights, or animations in it", prepared->path);
         return false;
     }
     merge_bounds(mesh);
