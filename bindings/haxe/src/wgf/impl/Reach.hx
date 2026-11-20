@@ -70,6 +70,10 @@ class Reach {
 		"wgf_actor_set_visible",
 		"wgf_actor_snap",
 		"wgf_app_can_quit",
+		"wgf_app_get_option",
+		"wgf_app_get_option_float",
+		"wgf_app_get_option_int",
+		"wgf_app_has_option",
 		"wgf_app_is_running",
 		"wgf_app_quit",
 		"wgf_app_run",
@@ -941,7 +945,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...932) 0];
+	static final counts:Array<Int> = [for (_ in 0...936) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

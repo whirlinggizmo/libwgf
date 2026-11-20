@@ -53,6 +53,17 @@ WGF_API bool wgf_app_can_quit(void);
 /* Between wgf_app_run starting the program and shutdown finishing. */
 WGF_API bool wgf_app_is_running(void);
 
+/* The program's options by name, read the same way on both platforms: natively `--name=value`
+ * (or `--name`) among its arguments, on the web `name=value` (or `name`) in its page's
+ * address after the `?` (Wardens' `enemies=200`, a benchmark's `count=10000`). has: whether it
+ * was given; get: its value, "" for one given without a value or not given (valid for the
+ * program's life); get_int and get_float: the value as a number, `otherwise` when it wasn't
+ * given or isn't one. The last of a name given wins. False, "", or `otherwise` for NULL. */
+WGF_API bool wgf_app_has_option(const char *name);
+WGF_API const char *wgf_app_get_option(const char *name);
+WGF_API int wgf_app_get_option_int(const char *name, int otherwise);
+WGF_API float wgf_app_get_option_float(const char *name, float otherwise);
+
 #ifdef __cplusplus
 }
 #endif

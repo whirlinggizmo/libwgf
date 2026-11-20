@@ -243,39 +243,14 @@ static void frame(void *user)
     }
 }
 
-/* An option's value: N from "name=N" in `text` (the query, or one argument), else `fallback`. */
-static int option(const char *text, const char *name, int fallback)
+int main(void)
 {
-    char key[32];
-    const char *found;
-    snprintf(key, sizeof(key), "%s=", name);
-    found = strstr(text, key);
-    while (found && found != text && found[-1] != '?' && found[-1] != '&' && found[-1] != '-') {
-        found = strstr(found + 1, key); /* "count=" inside "incrementCount=" */
-    }
-    return found ? atoi(found + strlen(key)) : fallback;
-}
-
-int main(int argc, char **argv)
-{
-    char options[512] = "";
-    int i;
-#ifdef __EMSCRIPTEN__
-    const char *query = emscripten_run_script_string("location.search");
-    snprintf(options, sizeof(options), "%s", query);
-    (void)argc, (void)argv;
-#else
-    for (i = 1; i < argc; i++) {
-        strncat(options, argv[i], sizeof(options) - strlen(options) - 2);
-        strcat(options, "&");
-    }
-#endif
-    (void)i;
-    b.asked = option(options, "count", 1000);
-    b.increment = option(options, "incrementCount", 0);
-    b.start = option(options, "startCount", 0);
+    /* from the page's query, natively --count=N and so on (wgf_app.h's options) */
+    b.asked = wgf_app_get_option_int("count", 1000);
+    b.increment = wgf_app_get_option_int("incrementCount", 0);
+    b.start = wgf_app_get_option_int("startCount", 0);
     if (b.increment) b.asked = b.start > 0 ? b.start : b.increment;
-    b.batched = option(options, "batch", 0) != 0;
+    b.batched = wgf_app_get_option_int("batch", 0) != 0;
     wgf_window_set_title("libwgf bunnymark");
     wgf_window_set_size(SCREEN_W, SCREEN_H);
     wgf_window_set_vsync(false);

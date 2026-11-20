@@ -7,4 +7,8 @@
 typedef void (*wgf_app_priv_overlay_t)(void);
 void wgf_app_priv_set_overlay(wgf_app_priv_overlay_t overlay);
 
+/* For tests: the options as a page's query would give them ("a=1&b"), in place of the
+ * program's own (wgf_app_options.c). NULL: the program's again. */
+void wgf_app_priv_set_options(const char *query);
+
 #endif

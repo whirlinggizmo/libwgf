@@ -8029,6 +8029,46 @@ export declare function wgf_app_can_quit(): boolean;
 export declare function wgf_app_is_running(): boolean;
 
 /**
+ * The program's options by name, read the same way on both platforms: natively `--name=value`
+ * (or `--name`) among its arguments, on the web `name=value` (or `name`) in its page's
+ * address after the `?` (Wardens' `enemies=200`, a benchmark's `count=10000`). has: whether it
+ * was given; get: its value, "" for one given without a value or not given (valid for the
+ * program's life); get_int and get_float: the value as a number, `otherwise` when it wasn't
+ * given or isn't one. The last of a name given wins. False, "", or `otherwise` for NULL.
+ */
+export declare function wgf_app_has_option(name: string | null): boolean;
+
+/**
+ * The program's options by name, read the same way on both platforms: natively `--name=value`
+ * (or `--name`) among its arguments, on the web `name=value` (or `name`) in its page's
+ * address after the `?` (Wardens' `enemies=200`, a benchmark's `count=10000`). has: whether it
+ * was given; get: its value, "" for one given without a value or not given (valid for the
+ * program's life); get_int and get_float: the value as a number, `otherwise` when it wasn't
+ * given or isn't one. The last of a name given wins. False, "", or `otherwise` for NULL.
+ */
+export declare function wgf_app_get_option(name: string | null): string;
+
+/**
+ * The program's options by name, read the same way on both platforms: natively `--name=value`
+ * (or `--name`) among its arguments, on the web `name=value` (or `name`) in its page's
+ * address after the `?` (Wardens' `enemies=200`, a benchmark's `count=10000`). has: whether it
+ * was given; get: its value, "" for one given without a value or not given (valid for the
+ * program's life); get_int and get_float: the value as a number, `otherwise` when it wasn't
+ * given or isn't one. The last of a name given wins. False, "", or `otherwise` for NULL.
+ */
+export declare function wgf_app_get_option_int(name: string | null, otherwise: number): number;
+
+/**
+ * The program's options by name, read the same way on both platforms: natively `--name=value`
+ * (or `--name`) among its arguments, on the web `name=value` (or `name`) in its page's
+ * address after the `?` (Wardens' `enemies=200`, a benchmark's `count=10000`). has: whether it
+ * was given; get: its value, "" for one given without a value or not given (valid for the
+ * program's life); get_int and get_float: the value as a number, `otherwise` when it wasn't
+ * given or isn't one. The last of a name given wins. False, "", or `otherwise` for NULL.
+ */
+export declare function wgf_app_get_option_float(name: string | null, otherwise: number): number;
+
+/**
  * The frame-rate overlay, for a program under development: "<fps> FPS <cost> ms" (the
  * frames a second and a frame's own cost, wgf_loop.h's), drawn by the runtime over
  * everything the program drew, every frame, at (x, y) in logical pixels, in `font` (0:

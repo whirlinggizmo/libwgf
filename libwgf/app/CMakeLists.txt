@@ -10,6 +10,7 @@ wgf_layer(app
         src/wgf_app.c
         src/wgf_app_autopilot.c
         src/wgf_app_debug.c
+        src/wgf_app_options.c
         src/wgf_app_tick_clock.c
         ${app_autopilot_source}
     DEPS
@@ -17,6 +18,7 @@ wgf_layer(app
 
 if(WGF_TESTS)
     wgf_test(app wgf_app_tick_clock_test)
+    wgf_test(app wgf_app_options_test)
     if(WGF_HEADLESS)
         wgf_test(app wgf_app_loop_test)
         wgf_test(app wgf_app_autopilot_test)

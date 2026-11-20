@@ -133,6 +133,9 @@ class Main {
 			&& Random.nextRange(own, 2, 3) >= 2 && Random.nextInt(own, 1, 6) >= 1 && Random.nextShuffle(own, deck) == 4,
 			"a game's own generator");
 		Random.destroy(own);
+		expect(!App.hasOption("wgf-feature-missing") && App.getOption("wgf-feature-missing") == ""
+			&& App.getOptionInt("wgf-feature-missing", 3) == 3 && App.getOptionFloat("wgf-feature-missing", 1.5) == 1.5,
+			"an option not given");
 		expect(Time.getSeconds() >= 0, "the time");
 		expect(Probe.setValue("feature.answer", 42) && Probe.hasValue("feature.answer") && Probe.getValue("feature.answer") == 42,
 			"a probe");

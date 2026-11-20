@@ -211,7 +211,7 @@ The runtime: it opens the window, starts and drives the layers below it, and run
 
 | Section | Header | Provides |
 |---------|--------|----------|
-| (lifecycle) | `wgf_app.h` | `wgf_app_run(init, tick, frame, shutdown, user)`, `wgf_app_quit`, `wgf_app_can_quit` (false on the web), `wgf_app_is_running`. `wgf_app_run` is the one public call that takes callbacks |
+| (lifecycle) | `wgf_app.h` | `wgf_app_run(init, tick, frame, shutdown, user)`, `wgf_app_quit`, `wgf_app_can_quit` (false on the web), `wgf_app_is_running`. `wgf_app_run` is the one public call that takes callbacks; the program's options by name (`--name=value` among its arguments natively, read from the system as `wgf_app_run` is given none; `name=value` in its page's query on the web), as text or numbers |
 | loop | `wgf_loop.h` | the frame delta; the tick rate, delta, and fraction; the time scale (0 pauses ticks while frames go on); a target fps; frames per second; a frame's own cost, in real time |
 | debug | `wgf_debug.h` | the frame-rate overlay (the frames a second and a frame's cost), drawn by the runtime over the program's frame through a hook its show call sets, so a program that never shows it links none of it |
 | (autopilot runs) | private | an autopilot: inputs at frames and expectations on probes, numbers or text (BUILDING.md, "Autopilot files", has the format), flown in its own time; natively, a run played by hand recorded as one (`LIBWGF_AUTOPILOT_RECORD`), in the autopilot's time, so it flies back the same, by a recorder linked only into a program built to record (`wgf_app_priv_record_install`, the Haxe binding's `-D wgf_record`), never a shipped one |

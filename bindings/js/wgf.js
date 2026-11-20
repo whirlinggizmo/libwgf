@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "ffcba45505c1cf69" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "7a002b96b756ca7f" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -12138,6 +12138,70 @@ export function wgf_app_can_quit() {
 export function wgf_app_is_running() {
     const value = host["_wgf_app_is_running"]();
     return value !== 0;
+}
+
+// wgf: call wgf_app_has_option
+/**
+ * The program's options by name, read the same way on both platforms: natively `--name=value`
+ * (or `--name`) among its arguments, on the web `name=value` (or `name`) in its page's
+ * address after the `?` (Wardens' `enemies=200`, a benchmark's `count=10000`). has: whether it
+ * was given; get: its value, "" for one given without a value or not given (valid for the
+ * program's life); get_int and get_float: the value as a number, `otherwise` when it wasn't
+ * given or isn't one. The last of a name given wins. False, "", or `otherwise` for NULL.
+ */
+export function wgf_app_has_option(name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_app_has_option"](cstr(name));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_app_get_option
+/**
+ * The program's options by name, read the same way on both platforms: natively `--name=value`
+ * (or `--name`) among its arguments, on the web `name=value` (or `name`) in its page's
+ * address after the `?` (Wardens' `enemies=200`, a benchmark's `count=10000`). has: whether it
+ * was given; get: its value, "" for one given without a value or not given (valid for the
+ * program's life); get_int and get_float: the value as a number, `otherwise` when it wasn't
+ * given or isn't one. The last of a name given wins. False, "", or `otherwise` for NULL.
+ */
+export function wgf_app_get_option(name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_app_get_option"](cstr(name));
+    host["stackRestore"](mark);
+    return str(value);
+}
+
+// wgf: call wgf_app_get_option_int
+/**
+ * The program's options by name, read the same way on both platforms: natively `--name=value`
+ * (or `--name`) among its arguments, on the web `name=value` (or `name`) in its page's
+ * address after the `?` (Wardens' `enemies=200`, a benchmark's `count=10000`). has: whether it
+ * was given; get: its value, "" for one given without a value or not given (valid for the
+ * program's life); get_int and get_float: the value as a number, `otherwise` when it wasn't
+ * given or isn't one. The last of a name given wins. False, "", or `otherwise` for NULL.
+ */
+export function wgf_app_get_option_int(name, otherwise) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_app_get_option_int"](cstr(name), otherwise);
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_app_get_option_float
+/**
+ * The program's options by name, read the same way on both platforms: natively `--name=value`
+ * (or `--name`) among its arguments, on the web `name=value` (or `name`) in its page's
+ * address after the `?` (Wardens' `enemies=200`, a benchmark's `count=10000`). has: whether it
+ * was given; get: its value, "" for one given without a value or not given (valid for the
+ * program's life); get_int and get_float: the value as a number, `otherwise` when it wasn't
+ * given or isn't one. The last of a name given wins. False, "", or `otherwise` for NULL.
+ */
+export function wgf_app_get_option_float(name, otherwise) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_app_get_option_float"](cstr(name), otherwise);
+    host["stackRestore"](mark);
+    return value;
 }
 
 // wgf: call wgf_debug_show_fps

@@ -146,6 +146,14 @@ export const App = Object.freeze({
     canQuit: raw.wgf_app_can_quit,
     // wgf: call wgf_app_is_running
     isRunning: raw.wgf_app_is_running,
+    // wgf: call wgf_app_has_option
+    hasOption: raw.wgf_app_has_option,
+    // wgf: call wgf_app_get_option
+    getOption: raw.wgf_app_get_option,
+    // wgf: call wgf_app_get_option_int
+    getOptionInt: raw.wgf_app_get_option_int,
+    // wgf: call wgf_app_get_option_float
+    getOptionFloat: raw.wgf_app_get_option_float,
 });
 // wgf: typed Asset
 export const Asset = Object.freeze({
