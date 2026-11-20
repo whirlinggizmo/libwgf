@@ -158,6 +158,16 @@ bool wgf_platform_priv_is_keyboard_shown(void);
 bool wgf_platform_priv_has_touch(void);
 bool wgf_platform_priv_has_fine_pointer(void);
 int wgf_platform_priv_get_os(void);
+/* The safe area's insets in logical pixels, top, right, bottom, left, into `insets`, before
+ * they are held to the window's size: on the web the page's CSS safe-area insets less what
+ * lies outside the canvas; natively 0. */
+void wgf_platform_priv_get_safe_insets(int insets[4]);
+/* The screen held one way (wgf_window_orientation_t's values), or let go (0): whether the
+ * request was made (false natively). The lock granted, read at each frame's start (web:
+ * wgf_platform_priv_sokol_poll), ANY natively; whether a lock can be asked for. */
+bool wgf_platform_priv_request_orientation(int orientation);
+int wgf_platform_priv_get_orientation_lock(void);
+bool wgf_platform_priv_can_lock_orientation(void);
 
 /* Headless builds only, for tests: the DPI scale the window reports (1 by default). */
 void wgf_platform_priv_headless_set_dpi_scale(float scale);

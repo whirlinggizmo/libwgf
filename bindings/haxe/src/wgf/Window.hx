@@ -404,25 +404,106 @@ class Window {
 		return Raw.wgf_window_open_url(url);
 
 	/**
-	    A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
-	    browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
-	    the system refused.
+	    The safe area: how far in from each edge of the window, in logical pixels, the display
+	    covers or keeps for itself (a phone's notch, rounded corners, home indicator), where a HUD
+	    and buttons shouldn't go. On the web, the page's CSS safe-area insets
+	    (env(safe-area-inset-*), which a browser reports only to a page whose viewport meta has
+	    viewport-fit=cover, as libwgf's pages' do), less what lies outside the canvas, each at
+	    most the window's size; natively 0 (a desktop's window has nothing over it). Read as
+	    they are now: they change as the device turns or the window is resized.
+	**/
+	public static inline function getSafeInsetTop():Int
+		return Raw.wgf_window_get_safe_inset_top();
+
+	/**
+	    The safe area: how far in from each edge of the window, in logical pixels, the display
+	    covers or keeps for itself (a phone's notch, rounded corners, home indicator), where a HUD
+	    and buttons shouldn't go. On the web, the page's CSS safe-area insets
+	    (env(safe-area-inset-*), which a browser reports only to a page whose viewport meta has
+	    viewport-fit=cover, as libwgf's pages' do), less what lies outside the canvas, each at
+	    most the window's size; natively 0 (a desktop's window has nothing over it). Read as
+	    they are now: they change as the device turns or the window is resized.
+	**/
+	public static inline function getSafeInsetRight():Int
+		return Raw.wgf_window_get_safe_inset_right();
+
+	/**
+	    The safe area: how far in from each edge of the window, in logical pixels, the display
+	    covers or keeps for itself (a phone's notch, rounded corners, home indicator), where a HUD
+	    and buttons shouldn't go. On the web, the page's CSS safe-area insets
+	    (env(safe-area-inset-*), which a browser reports only to a page whose viewport meta has
+	    viewport-fit=cover, as libwgf's pages' do), less what lies outside the canvas, each at
+	    most the window's size; natively 0 (a desktop's window has nothing over it). Read as
+	    they are now: they change as the device turns or the window is resized.
+	**/
+	public static inline function getSafeInsetBottom():Int
+		return Raw.wgf_window_get_safe_inset_bottom();
+
+	/**
+	    The safe area: how far in from each edge of the window, in logical pixels, the display
+	    covers or keeps for itself (a phone's notch, rounded corners, home indicator), where a HUD
+	    and buttons shouldn't go. On the web, the page's CSS safe-area insets
+	    (env(safe-area-inset-*), which a browser reports only to a page whose viewport meta has
+	    viewport-fit=cover, as libwgf's pages' do), less what lies outside the canvas, each at
+	    most the window's size; natively 0 (a desktop's window has nothing over it). Read as
+	    they are now: they change as the device turns or the window is resized.
+	**/
+	public static inline function getSafeInsetLeft():Int
+		return Raw.wgf_window_get_safe_inset_left();
+
+	/**
+	    Ask for the screen to be held LANDSCAPE or PORTRAIT whichever way the device turns, or
+	    let go (ANY); the answer is wgf_window_get_orientation_lock, not the return, a frame or
+	    more later. On the web, the browser's screen.orientation.lock, which most browsers grant
+	    only to a page in fullscreen on a phone (Android's Chrome); a refusal is warned of, with
+	    the browser's reason, at the next frame. False for a value that isn't one, and where
+	    nothing can lock: natively, and a browser without screen.orientation.lock (iOS). Where
+	    the lock is refused, a game says "turn your device" while wgf_window_get_orientation is
+	    the wrong one.
+	**/
+	public static inline function requestOrientation(orientation:WindowOrientation):Bool
+		return Raw.wgf_window_request_orientation(orientation);
+
+	/**
+	    The lock granted: LANDSCAPE or PORTRAIT, or ANY with none. The browser lets go of it as
+	    the page leaves fullscreen, so outside fullscreen it reads ANY. Changes only at a
+	    frame's start.
+	**/
+	public static inline function getOrientationLock():WindowOrientation
+		return Raw.wgf_window_get_orientation_lock();
+
+	/**
+	    Whether a lock can be asked for at all: on the web a browser with screen.orientation.lock
+	    on a device with touch (a desktop browser's lock is always refused); natively false. Ask
+	    before offering it.
+	**/
+	public static inline function canLockOrientation():Bool
+		return Raw.wgf_window_can_lock_orientation();
+
+	/**
+	    Which way the window is now, by its shape (wgf_window_get_width against _height):
+	    PORTRAIT when taller than wide, else LANDSCAPE; never ANY.
+	**/
+	public static inline function getOrientation():WindowOrientation
+		return Raw.wgf_window_get_orientation();
+
+	/**
+	    Which way the window is now, by its shape (wgf_window_get_width against _height):
+	    PORTRAIT when taller than wide, else LANDSCAPE; never ANY.
 	**/
 	public static inline function hasTouch():Bool
 		return Raw.wgf_window_has_touch();
 
 	/**
-	    A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
-	    browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
-	    the system refused.
+	    Which way the window is now, by its shape (wgf_window_get_width against _height):
+	    PORTRAIT when taller than wide, else LANDSCAPE; never ANY.
 	**/
 	public static inline function hasFinePointer():Bool
 		return Raw.wgf_window_has_fine_pointer();
 
 	/**
-	    A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
-	    browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
-	    the system refused.
+	    Which way the window is now, by its shape (wgf_window_get_width against _height):
+	    PORTRAIT when taller than wide, else LANDSCAPE; never ANY.
 	**/
 	public static inline function getOs():WindowOs
 		return Raw.wgf_window_get_os();

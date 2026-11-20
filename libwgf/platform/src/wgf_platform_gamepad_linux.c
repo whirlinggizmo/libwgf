@@ -16,9 +16,12 @@
 #include "wgf_time.h"
 
 /* Gamepads on Linux, through evdev: the /dev/input/event* devices that have gamepad
- * buttons, opened read-only and non-blocking, and checked for new ones every couple
- * of seconds. A desktop session can read its own joysticks (logind grants it); without
- * that, no pad is found. Cribbed from wgrender's wgr_gamepad. */
+ * buttons, opened non-blocking, and checked for new ones every couple of seconds. A
+ * desktop session can read and write its own joysticks (logind grants it); without
+ * that, no pad is found. A device is opened for writing where it can be, else for
+ * reading alone: rumble (force feedback's FF_RUMBLE, an effect uploaded once and played
+ * again with each rumble's motors and length) needs writing, so a pad opened read-only
+ * reads as one without motors. Cribbed from wgrender's wgr_gamepad. */
 
 #define RESCAN_SECONDS 2.0
 #define LONG_BITS (sizeof(long) * CHAR_BIT)
@@ -29,6 +32,8 @@ typedef struct device_t {
     char path[288];
     bool xpad;       /* its X and Y buttons use BTN_NORTH's and BTN_WEST's codes */
     bool right_on_z; /* no RX and RY: the right stick is on Z and RZ (generic HID pads) */
+    bool rumble;     /* opened for writing, with FF_RUMBLE */
+    int effect;      /* the rumble effect's id, once uploaded; -1 before */
     struct input_absinfo abs[ABS_HAT0Y + 1];
 } device_t;
 
@@ -134,6 +139,8 @@ static void try_open(const char *event_name, wgf_platform_priv_gamepad_t pads[WG
     unsigned long key_bits[(KEY_MAX + LONG_BITS) / LONG_BITS] = {0};
     unsigned long abs_bits[(ABS_MAX + LONG_BITS) / LONG_BITS] = {0};
     unsigned long keys_down[(KEY_MAX + LONG_BITS) / LONG_BITS] = {0};
+    unsigned long ff_bits[(FF_MAX + LONG_BITS) / LONG_BITS] = {0};
+    bool writable = true;
     char path[288];
     int slot = -1, fd, i, code;
     device_t *dev;
@@ -145,7 +152,11 @@ static void try_open(const char *event_name, wgf_platform_priv_gamepad_t pads[WG
         if (devices[i].fd < 0) slot = i;
     }
     if (slot < 0) return;
-    fd = open(path, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+    fd = open(path, O_RDWR | O_NONBLOCK | O_CLOEXEC);
+    if (fd < 0) {
+        writable = false;
+        fd = open(path, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+    }
     if (fd < 0) return;
     if (ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(key_bits)), key_bits) < 0 || !HAS_BIT(key_bits, BTN_GAMEPAD)) {
         close(fd); /* not a gamepad: a keyboard, a mouse, ... */
@@ -161,6 +172,9 @@ static void try_open(const char *event_name, wgf_platform_priv_gamepad_t pads[WG
     snprintf(dev->path, sizeof(dev->path), "%s", path);
     dev->xpad = driver_is(event_name, "xpad");
     dev->right_on_z = !HAS_BIT(abs_bits, ABS_RX) && HAS_BIT(abs_bits, ABS_Z) && HAS_BIT(abs_bits, ABS_RZ);
+    dev->rumble = writable && ioctl(fd, EVIOCGBIT(EV_FF, sizeof(ff_bits)), ff_bits) >= 0 && HAS_BIT(ff_bits, FF_RUMBLE);
+    dev->effect = -1;
+    pad->rumble = dev->rumble;
     if (ioctl(fd, EVIOCGNAME(sizeof(pad->name)), pad->name) < 0) snprintf(pad->name, sizeof(pad->name), "gamepad");
     pad->name[WGF_PLATFORM_PRIV_GAMEPAD_NAME_SIZE - 1] = '\0';
     for (code = 0; code <= ABS_HAT0Y; code++) {
@@ -242,4 +256,39 @@ void wgf_platform_priv_gamepad_platform_poll(wgf_platform_priv_gamepad_t pads[WG
             if (n < (ssize_t)sizeof(events)) break;
         }
     }
+}
+
+/* An effect played (1) or stopped (0). */
+static void play_effect(const device_t *dev, int value)
+{
+    struct input_event event;
+    memset(&event, 0, sizeof(event));
+    event.type = EV_FF;
+    event.code = (unsigned short)dev->effect;
+    event.value = value;
+    if (write(dev->fd, &event, sizeof(event)) != (ssize_t)sizeof(event)) {
+        /* a pad unplugged meanwhile: the next poll's read closes it */
+    }
+}
+
+void wgf_platform_priv_gamepad_platform_rumble(int pad, float low, float high, float seconds)
+{
+    device_t *dev;
+    struct ff_effect effect;
+    if (pad < 0 || pad >= WGF_PLATFORM_PRIV_GAMEPADS) return;
+    dev = &devices[pad];
+    if (dev->fd < 0 || !dev->rumble) return;
+    if (seconds <= 0.0f) {
+        if (dev->effect >= 0) play_effect(dev, 0);
+        return;
+    }
+    memset(&effect, 0, sizeof(effect));
+    effect.type = FF_RUMBLE;
+    effect.id = (short)dev->effect; /* -1 uploads a new one; its own id changes it */
+    effect.u.rumble.strong_magnitude = (unsigned short)(low * 65535.0f + 0.5f);
+    effect.u.rumble.weak_magnitude = (unsigned short)(high * 65535.0f + 0.5f);
+    effect.replay.length = (unsigned short)(seconds * 1000.0f + 0.5f);
+    if (ioctl(dev->fd, EVIOCSFF, &effect) < 0) return;
+    dev->effect = effect.id;
+    play_effect(dev, 1);
 }

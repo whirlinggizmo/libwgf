@@ -6,6 +6,7 @@
 #include <emscripten/eventloop.h>
 
 #include "sokol_app.h"
+#include "wgf_log.h"
 
 /* The window on the web, where it is the page's canvas: what differs from the
  * desktop. */
@@ -236,11 +237,14 @@ static void deliver_key(void (*deliver)(const sapp_event *event), sapp_keycode c
     deliver(&event);
 }
 
+static void poll_orientation(void);
+
 void wgf_platform_priv_sokol_poll(void (*deliver)(const sapp_event *event))
 {
     char text[256];
     const int n = web_take_keyboard(text, (int)sizeof(text));
     int i = 0;
+    poll_orientation();
     while (i < n) {
         const unsigned char c = (unsigned char)text[i];
         uint32_t code = c;
@@ -285,4 +289,116 @@ bool wgf_platform_priv_has_fine_pointer(void)
 int wgf_platform_priv_get_os(void)
 {
     return web_os();
+}
+
+/* ---- the safe area, and the screen's orientation -------------------------------------- */
+
+/* The page's safe-area insets, read through an element out of sight whose padding is them (a
+ * script reads env() only through a style, as helix's DomWindowAdapter does), made at the
+ * first read; less what of each lies outside the canvas, in CSS pixels (logical), rounded
+ * out. */
+EM_JS(void, web_safe_insets, (int *out), {
+    let probe = Module.wgfSafeArea;
+    if (!probe) {
+        probe = Module.wgfSafeArea = document.createElement("div");
+        probe.style.cssText = "position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;" +
+                              "padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) " +
+                              "env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)";
+        document.body.appendChild(probe);
+    }
+    const style = window.getComputedStyle(probe);
+    const inset = (side) => {
+        const value = parseFloat(style.getPropertyValue("padding-" + side));
+        return value > 0 ? value : 0;
+    };
+    const root = document.documentElement;
+    const width = root.clientWidth || window.innerWidth, height = root.clientHeight || window.innerHeight;
+    const rect = Module.canvas ? Module.canvas.getBoundingClientRect()
+                               : {left : 0, top : 0, right : width, bottom : height};
+    HEAP32[out >> 2] = Math.ceil(Math.max(0, inset("top") - rect.top));
+    HEAP32[(out >> 2) + 1] = Math.ceil(Math.max(0, inset("right") - (width - rect.right)));
+    HEAP32[(out >> 2) + 2] = Math.ceil(Math.max(0, inset("bottom") - (height - rect.bottom)));
+    HEAP32[(out >> 2) + 3] = Math.ceil(Math.max(0, inset("left") - rect.left));
+})
+
+void wgf_platform_priv_get_safe_insets(int insets[4])
+{
+    web_safe_insets(insets);
+}
+
+/* The lock: asked of screen.orientation, granted when its promise resolves, kept until let
+ * go or the page leaves fullscreen (the browser lets go then); a refusal's reason kept for
+ * the next frame to warn of. 1 landscape, 2 portrait, 0 none, as wgf_window_orientation_t. */
+EM_JS(int, web_request_orientation, (int orientation), {
+    const screen_orientation = window.screen && window.screen.orientation;
+    if (!screen_orientation || typeof screen_orientation.lock !== "function") return 0;
+    let state = Module.wgfOrientation;
+    if (!state) {
+        state = Module.wgfOrientation = {locked : 0, refused : ""};
+        document.addEventListener("fullscreenchange", () => {
+            if (!document.fullscreenElement) state.locked = 0;
+        });
+    }
+    if (orientation === 0) {
+        try {
+            screen_orientation.unlock();
+        } catch (e) {
+        }
+        state.locked = 0;
+        return 1;
+    }
+    const refused = (e) => {
+        state.refused = (e && e.name ? e.name + ": " : "") + (e && e.message ? e.message : String(e));
+    };
+    try {
+        screen_orientation.lock(orientation === 1 ? "landscape" : "portrait")
+            .then(() => { state.locked = orientation; }, refused);
+    } catch (e) {
+        refused(e);
+    }
+    return 1;
+})
+EM_JS_DEPS(wgf_platform_orientation, "$stringToUTF8")
+/* The lock held now (none outside fullscreen), and a refusal's reason since into `reason`,
+ * taken: the lock, plus 4 when there is a reason. */
+EM_JS(int, web_poll_orientation, (char *reason, int size), {
+    const state = Module.wgfOrientation;
+    if (!state) return 0;
+    let answer = document.fullscreenElement ? state.locked : 0;
+    if (state.refused) {
+        stringToUTF8(state.refused, reason, size);
+        state.refused = "";
+        answer |= 4;
+    }
+    return answer;
+})
+EM_JS(int, web_can_lock_orientation, (void), {
+    const screen_orientation = window.screen && window.screen.orientation;
+    const lock = screen_orientation && typeof screen_orientation.lock === "function";
+    return lock && (navigator.maxTouchPoints | 0) > 0 ? 1 : 0;
+})
+
+static int orientation_lock;
+
+static void poll_orientation(void)
+{
+    char reason[256];
+    const int answer = web_poll_orientation(reason, (int)sizeof(reason));
+    orientation_lock = answer & 3;
+    if (answer & 4) wgf_log_warn("wgf_window_request_orientation: the browser refused the lock: %s", reason);
+}
+
+bool wgf_platform_priv_request_orientation(int orientation)
+{
+    return web_request_orientation(orientation) != 0;
+}
+
+int wgf_platform_priv_get_orientation_lock(void)
+{
+    return orientation_lock;
+}
+
+bool wgf_platform_priv_can_lock_orientation(void)
+{
+    return web_can_lock_orientation() != 0;
 }

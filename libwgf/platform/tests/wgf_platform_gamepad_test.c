@@ -7,11 +7,15 @@
 #include "wgf_platform_input_priv.h"
 #include "wgf_gamepad.h"
 #include "wgf.h"
+#include "wgf_time.h"
 
 /* Gamepads with test pads in place of the platform's, read frame by frame as the loop
  * reads them: connecting, slots, edges per frame and per tick, the triggers as
  * buttons, a pad unplugged while a button is held, the round dead zone, and values
- * clamped. */
+ * clamped; and rumble, what the test pads were asked recorded in place of the platform:
+ * refused for a pad without motors, a bad length, or none connected; motors and length
+ * clamped; stopped, by a call, once its time is up, and as the pads close; forgotten,
+ * nothing sent, for a pad unplugged. */
 
 static int failures;
 
@@ -148,6 +152,82 @@ static void sticks(void)
            "a trigger or pad that isn't one");
 }
 
+/* What test pad `pad` was last asked: its count of asks, and low, high, and seconds. */
+static int asked(int pad, float *low, float *high, float *seconds)
+{
+    float out[3] = {0.0f, 0.0f, 0.0f};
+    const int count = wgf_platform_priv_gamepad_get_test_rumble(pad, out);
+    *low = out[0];
+    *high = out[1];
+    *seconds = out[2];
+    return count;
+}
+
+static void rumble(void)
+{
+    wgf_platform_priv_gamepad_t motors = pad_state("rumbling pad"), still = pad_state("still pad");
+    float low = 0.0f, high = 0.0f, seconds = 0.0f;
+    double until;
+    int count;
+
+    motors.rumble = true;
+    wgf_platform_priv_gamepad_set_test_pad(0, &motors);
+    wgf_platform_priv_gamepad_set_test_pad(1, &still);
+    wgf_platform_priv_gamepad_set_test_pad(2, NULL);
+    next_frame();
+    expect(wgf_gamepad_can_rumble(0) && !wgf_gamepad_can_rumble(1) && !wgf_gamepad_can_rumble(2) &&
+               !wgf_gamepad_can_rumble(-1) && !wgf_gamepad_can_rumble(99),
+           "a pad with motors can rumble; one without, none there, or none at all can't");
+    expect(!wgf_gamepad_rumble(1, 1.0f, 1.0f, 0.5f) && asked(1, &low, &high, &seconds) == 0 &&
+               !wgf_gamepad_is_rumbling(1),
+           "a pad without motors is refused, nothing asked");
+    expect(!wgf_gamepad_rumble(2, 1.0f, 1.0f, 0.5f) && !wgf_gamepad_rumble(99, 1.0f, 1.0f, 0.5f),
+           "no pad there, or out of range: refused");
+    expect(!wgf_gamepad_rumble(0, 1.0f, 1.0f, 0.0f) && !wgf_gamepad_rumble(0, 1.0f, 1.0f, -1.0f) &&
+               !wgf_gamepad_rumble(0, 1.0f, 1.0f, nanf("")) && asked(0, &low, &high, &seconds) == 0,
+           "no length, a negative one, or NaN: refused, nothing asked");
+    expect(!wgf_gamepad_is_rumbling(0) && !wgf_gamepad_stop_rumble(0), "not rumbling: nothing to stop");
+
+    expect(wgf_gamepad_rumble(0, -0.5f, 2.0f, 5.0f) && wgf_gamepad_is_rumbling(0), "rumbling");
+    count = asked(0, &low, &high, &seconds);
+    expect(count == 1 && low == 0.0f && high == 1.0f && seconds == 2.0f,
+           "the motors clamped to 0 to 1, the length to 2 seconds");
+    next_frame();
+    expect(wgf_gamepad_is_rumbling(0) && asked(0, &low, &high, &seconds) == 1, "still rumbling a frame on");
+    expect(wgf_gamepad_stop_rumble(0) && !wgf_gamepad_is_rumbling(0), "stopped");
+    count = asked(0, &low, &high, &seconds);
+    expect(count == 2 && seconds == 0.0f && low == 0.0f && high == 0.0f, "a stop asked");
+    expect(!wgf_gamepad_stop_rumble(0) && asked(0, &low, &high, &seconds) == 2, "stopped twice: refused");
+
+    /* its time up: stopped at the next frame's read */
+    expect(wgf_gamepad_rumble(0, 0.25f, 0.75f, 0.05f), "a short rumble");
+    count = asked(0, &low, &high, &seconds);
+    expect(count == 3 && low == 0.25f && high == 0.75f && seconds == 0.05f, "its motors and length asked");
+    until = wgf_time_get_seconds() + 0.06;
+    while (wgf_time_get_seconds() < until) {
+    }
+    next_frame();
+    count = asked(0, &low, &high, &seconds);
+    expect(!wgf_gamepad_is_rumbling(0) && count == 4 && seconds == 0.0f, "stopped once its time was up");
+
+    /* unplugged while rumbling: forgotten, and nothing sent to a pad that isn't there */
+    expect(wgf_gamepad_rumble(0, 1.0f, 0.0f, 1.0f) && asked(0, &low, &high, &seconds) == 5, "rumbling again");
+    wgf_platform_priv_gamepad_set_test_pad(0, NULL);
+    next_frame();
+    expect(!wgf_gamepad_is_rumbling(0) && asked(0, &low, &high, &seconds) == 5,
+           "unplugged: not rumbling, no stop sent");
+    motors.rumble = true;
+    wgf_platform_priv_gamepad_set_test_pad(0, &motors);
+    next_frame();
+    expect(!wgf_gamepad_is_rumbling(0) && wgf_gamepad_can_rumble(0), "plugged in again: still");
+
+    /* the pads closing stop what rumbles */
+    expect(wgf_gamepad_rumble(0, 0.5f, 0.5f, 1.0f) && asked(0, &low, &high, &seconds) == 6, "rumbling as they close");
+    wgf_platform_priv_gamepad_close();
+    expect(asked(0, &low, &high, &seconds) == 7 && seconds == 0.0f, "closing stopped it");
+    wgf_platform_priv_gamepad_open();
+}
+
 int main(void)
 {
     wgf_core_priv_init();
@@ -155,6 +235,7 @@ int main(void)
     wgf_platform_priv_gamepad_open();
     buttons();
     sticks();
+    rumble();
     wgf_platform_priv_gamepad_close();
     wgf_core_priv_shutdown();
     return failures == 0 ? 0 : 1;

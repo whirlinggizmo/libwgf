@@ -15,3 +15,11 @@ void wgf_platform_priv_gamepad_platform_poll(wgf_platform_priv_gamepad_t pads[WG
 {
     (void)pads;
 }
+
+void wgf_platform_priv_gamepad_platform_rumble(int pad, float low, float high, float seconds)
+{
+    (void)pad;
+    (void)low;
+    (void)high;
+    (void)seconds;
+}

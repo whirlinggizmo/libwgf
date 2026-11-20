@@ -1291,6 +1291,15 @@ class Main {
 		Gamepad.isReleased(0, GamepadButton.SOUTH);
 		Gamepad.getStick(0, GamepadStick.LEFT);
 		Gamepad.getTrigger(0, GamepadTrigger.LEFT);
+		expect(!Gamepad.canRumble(0) && !Gamepad.rumble(0, 1, 1, 0.5) && !Gamepad.isRumbling(0) && !Gamepad.stopRumble(0),
+			"no pad: no rumble");
+		expect(Window.getSafeInsetTop() >= 0 && Window.getSafeInsetRight() >= 0 && Window.getSafeInsetBottom() >= 0
+			&& Window.getSafeInsetLeft() >= 0, "the safe area's insets");
+		expect(Window.getOrientation() == (Window.getHeight() > Window.getWidth() ? WindowOrientation.PORTRAIT : WindowOrientation.LANDSCAPE),
+			"the orientation is the window's shape");
+		Window.canLockOrientation();
+		Window.requestOrientation(WindowOrientation.ANY); // natively refused; a page lets go of what it never held
+		expect(Window.getOrientationLock() == WindowOrientation.ANY, "no orientation locked");
 	}
 
 	/** The storage's tasks, a stage at a time: each stage's done before the next is asked. **/

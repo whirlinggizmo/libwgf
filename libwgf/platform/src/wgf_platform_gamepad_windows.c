@@ -11,7 +11,9 @@
  * the system has, so the program needs none of them to start. Its documented
  * XInputGetState leaves out the Guide button; XInputGetStateEx, which the DLLs export
  * by ordinal 100 only, reports it too, so that is used where there is one, as SDL and
- * others do. Cribbed from wgrender's wgr_gamepad. */
+ * others do. Rumble is XInputSetState's two motors, which run until set again, so the
+ * shared code stops them once a rumble's time is up; every XInput pad reads as having
+ * them where the DLL has XInputSetState. Cribbed from wgrender's wgr_gamepad. */
 
 #define EMPTY_CHECK_MS 2000 /* asking XInput about an empty slot is slow */
 #define GET_STATE_EX_ORDINAL 100
@@ -28,9 +30,14 @@ typedef struct xinput_state_t {
     xinput_gamepad_t gamepad;
 } xinput_state_t;
 typedef DWORD(WINAPI *xinput_get_state_fn)(DWORD, xinput_state_t *);
+typedef struct xinput_vibration_t {
+    WORD left_motor, right_motor; /* the low-frequency motor, the high-frequency one */
+} xinput_vibration_t;
+typedef DWORD(WINAPI *xinput_set_state_fn)(DWORD, xinput_vibration_t *);
 
 static HMODULE xinput;
 static xinput_get_state_fn xinput_get_state;
+static xinput_set_state_fn xinput_set_state;
 static DWORD next_empty_check[WGF_PLATFORM_PRIV_GAMEPADS];
 
 void wgf_platform_priv_gamepad_platform_open(void)
@@ -40,8 +47,10 @@ void wgf_platform_priv_gamepad_platform_open(void)
     for (i = 0; i < 3 && xinput == NULL; i++) xinput = LoadLibraryA(dlls[i]);
     if (xinput != NULL) {
         FARPROC get_state = GetProcAddress(xinput, (LPCSTR)(ULONG_PTR)GET_STATE_EX_ORDINAL);
+        const FARPROC set_state = GetProcAddress(xinput, "XInputSetState");
         if (get_state == NULL) get_state = GetProcAddress(xinput, "XInputGetState");
         memcpy(&xinput_get_state, &get_state, sizeof(xinput_get_state)); /* a function pointer of another type */
+        memcpy(&xinput_set_state, &set_state, sizeof(xinput_set_state));
     }
     memset(next_empty_check, 0, sizeof(next_empty_check));
 }
@@ -51,6 +60,7 @@ void wgf_platform_priv_gamepad_platform_close(void)
     if (xinput != NULL) FreeLibrary(xinput);
     xinput = NULL;
     xinput_get_state = NULL;
+    xinput_set_state = NULL;
 }
 
 static float stick(SHORT value, bool flip)
@@ -87,6 +97,7 @@ void wgf_platform_priv_gamepad_platform_poll(wgf_platform_priv_gamepad_t pads[WG
             continue;
         }
         pads[i].connected = true;
+        pads[i].rumble = xinput_set_state != NULL;
         snprintf(pads[i].name, sizeof(pads[i].name), "XInput controller %d", i + 1);
         for (b = 0; b < sizeof(map) / sizeof(map[0]); b++) {
             pads[i].buttons[map[b].button] = (state.gamepad.buttons & map[b].mask) != 0;
@@ -98,4 +109,15 @@ void wgf_platform_priv_gamepad_platform_poll(wgf_platform_priv_gamepad_t pads[WG
         pads[i].axes[WGF_PLATFORM_PRIV_GAMEPAD_LEFT_TRIGGER] = (float)state.gamepad.left_trigger / 255.0f;
         pads[i].axes[WGF_PLATFORM_PRIV_GAMEPAD_RIGHT_TRIGGER] = (float)state.gamepad.right_trigger / 255.0f;
     }
+}
+
+void wgf_platform_priv_gamepad_platform_rumble(int pad, float low, float high, float seconds)
+{
+    xinput_vibration_t vibration = {0, 0}; /* a stop */
+    if (xinput_set_state == NULL || pad < 0 || pad >= WGF_PLATFORM_PRIV_GAMEPADS) return;
+    if (seconds > 0.0f) {
+        vibration.left_motor = (WORD)(low * 65535.0f + 0.5f);
+        vibration.right_motor = (WORD)(high * 65535.0f + 0.5f);
+    }
+    xinput_set_state((DWORD)pad, &vibration);
 }

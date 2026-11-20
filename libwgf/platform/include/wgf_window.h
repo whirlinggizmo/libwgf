@@ -120,6 +120,46 @@ WGF_API bool wgf_window_is_msaa(void);
  * the system refused. */
 WGF_API bool wgf_window_open_url(const char *url);
 
+/* The safe area: how far in from each edge of the window, in logical pixels, the display
+ * covers or keeps for itself (a phone's notch, rounded corners, home indicator), where a HUD
+ * and buttons shouldn't go. On the web, the page's CSS safe-area insets
+ * (env(safe-area-inset-*), which a browser reports only to a page whose viewport meta has
+ * viewport-fit=cover, as libwgf's pages' do), less what lies outside the canvas, each at
+ * most the window's size; natively 0 (a desktop's window has nothing over it). Read as
+ * they are now: they change as the device turns or the window is resized. */
+WGF_API int wgf_window_get_safe_inset_top(void);
+WGF_API int wgf_window_get_safe_inset_right(void);
+WGF_API int wgf_window_get_safe_inset_bottom(void);
+WGF_API int wgf_window_get_safe_inset_left(void);
+
+/* Which way up the screen is held. */
+typedef enum wgf_window_orientation_t {
+    WGF_WINDOW_ORIENTATION_ANY = 0,       /* as the device is held: no lock */
+    WGF_WINDOW_ORIENTATION_LANDSCAPE = 1, /* wider than tall */
+    WGF_WINDOW_ORIENTATION_PORTRAIT = 2   /* taller than wide */
+} wgf_window_orientation_t;
+
+/* Ask for the screen to be held LANDSCAPE or PORTRAIT whichever way the device turns, or
+ * let go (ANY); the answer is wgf_window_get_orientation_lock, not the return, a frame or
+ * more later. On the web, the browser's screen.orientation.lock, which most browsers grant
+ * only to a page in fullscreen on a phone (Android's Chrome); a refusal is warned of, with
+ * the browser's reason, at the next frame. False for a value that isn't one, and where
+ * nothing can lock: natively, and a browser without screen.orientation.lock (iOS). Where
+ * the lock is refused, a game says "turn your device" while wgf_window_get_orientation is
+ * the wrong one. */
+WGF_API bool wgf_window_request_orientation(wgf_window_orientation_t orientation);
+/* The lock granted: LANDSCAPE or PORTRAIT, or ANY with none. The browser lets go of it as
+ * the page leaves fullscreen, so outside fullscreen it reads ANY. Changes only at a
+ * frame's start. */
+WGF_API wgf_window_orientation_t wgf_window_get_orientation_lock(void);
+/* Whether a lock can be asked for at all: on the web a browser with screen.orientation.lock
+ * on a device with touch (a desktop browser's lock is always refused); natively false. Ask
+ * before offering it. */
+WGF_API bool wgf_window_can_lock_orientation(void);
+/* Which way the window is now, by its shape (wgf_window_get_width against _height):
+ * PORTRAIT when taller than wide, else LANDSCAPE; never ANY. */
+WGF_API wgf_window_orientation_t wgf_window_get_orientation(void);
+
 /* What the device has: touch (to show on-screen controls), a fine pointer (a mouse or a
  * pad: hover means something), and its system, on the web the one the browser runs on. */
 typedef enum wgf_window_os_t {

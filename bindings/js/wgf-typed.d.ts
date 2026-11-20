@@ -4277,6 +4277,31 @@ export declare const Gamepad: {
      * default 0.15, clamped to 0 to 0.9.
      */
     readonly getDeadzone: typeof raw.wgf_gamepad_get_deadzone;
+    /**
+     * Rumble: a pad's two motors, the low-frequency one (the heavy, left one) and the
+     * high-frequency one (the light, right one), each 0 to 1 (clamped), for `seconds`
+     * (clamped to at most 2, raylib's limit), in place of whatever it was doing; stopped by
+     * libwgf once the time is up, or by wgf_gamepad_stop_rumble. Linux: evdev's FF_RUMBLE,
+     * where the pad's device could be opened for writing; Windows: XInput; web: the Gamepad
+     * API's vibration actuator ("dual-rumble"), or a haptic actuator's pulse, where the
+     * browser has one (Firefox has neither). False for a pad that isn't connected or can't
+     * rumble (the first such refusal a run warns of), or `seconds` not above 0.
+     */
+    readonly rumble: typeof raw.wgf_gamepad_rumble;
+    /**
+     * Stops a pad's rumble. False where it isn't rumbling.
+     */
+    readonly stopRumble: typeof raw.wgf_gamepad_stop_rumble;
+    /**
+     * Whether a pad is rumbling: from wgf_gamepad_rumble until its time is up, it is stopped,
+     * or the pad is unplugged.
+     */
+    readonly isRumbling: typeof raw.wgf_gamepad_is_rumbling;
+    /**
+     * Whether a pad is connected and has motors libwgf can reach: ask before offering a
+     * rumble setting.
+     */
+    readonly canRumble: typeof raw.wgf_gamepad_can_rumble;
 };
 /** A handle of kind wgf_generator_t: the raw binding's branded type. */
 export type Generator = raw.wgf_generator_t;
@@ -10082,21 +10107,86 @@ export declare const Window: {
      */
     readonly openUrl: typeof raw.wgf_window_open_url;
     /**
-     * A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
-     * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
-     * the system refused.
+     * The safe area: how far in from each edge of the window, in logical pixels, the display
+     * covers or keeps for itself (a phone's notch, rounded corners, home indicator), where a HUD
+     * and buttons shouldn't go. On the web, the page's CSS safe-area insets
+     * (env(safe-area-inset-*), which a browser reports only to a page whose viewport meta has
+     * viewport-fit=cover, as libwgf's pages' do), less what lies outside the canvas, each at
+     * most the window's size; natively 0 (a desktop's window has nothing over it). Read as
+     * they are now: they change as the device turns or the window is resized.
+     */
+    readonly getSafeInsetTop: typeof raw.wgf_window_get_safe_inset_top;
+    /**
+     * The safe area: how far in from each edge of the window, in logical pixels, the display
+     * covers or keeps for itself (a phone's notch, rounded corners, home indicator), where a HUD
+     * and buttons shouldn't go. On the web, the page's CSS safe-area insets
+     * (env(safe-area-inset-*), which a browser reports only to a page whose viewport meta has
+     * viewport-fit=cover, as libwgf's pages' do), less what lies outside the canvas, each at
+     * most the window's size; natively 0 (a desktop's window has nothing over it). Read as
+     * they are now: they change as the device turns or the window is resized.
+     */
+    readonly getSafeInsetRight: typeof raw.wgf_window_get_safe_inset_right;
+    /**
+     * The safe area: how far in from each edge of the window, in logical pixels, the display
+     * covers or keeps for itself (a phone's notch, rounded corners, home indicator), where a HUD
+     * and buttons shouldn't go. On the web, the page's CSS safe-area insets
+     * (env(safe-area-inset-*), which a browser reports only to a page whose viewport meta has
+     * viewport-fit=cover, as libwgf's pages' do), less what lies outside the canvas, each at
+     * most the window's size; natively 0 (a desktop's window has nothing over it). Read as
+     * they are now: they change as the device turns or the window is resized.
+     */
+    readonly getSafeInsetBottom: typeof raw.wgf_window_get_safe_inset_bottom;
+    /**
+     * The safe area: how far in from each edge of the window, in logical pixels, the display
+     * covers or keeps for itself (a phone's notch, rounded corners, home indicator), where a HUD
+     * and buttons shouldn't go. On the web, the page's CSS safe-area insets
+     * (env(safe-area-inset-*), which a browser reports only to a page whose viewport meta has
+     * viewport-fit=cover, as libwgf's pages' do), less what lies outside the canvas, each at
+     * most the window's size; natively 0 (a desktop's window has nothing over it). Read as
+     * they are now: they change as the device turns or the window is resized.
+     */
+    readonly getSafeInsetLeft: typeof raw.wgf_window_get_safe_inset_left;
+    /**
+     * Ask for the screen to be held LANDSCAPE or PORTRAIT whichever way the device turns, or
+     * let go (ANY); the answer is wgf_window_get_orientation_lock, not the return, a frame or
+     * more later. On the web, the browser's screen.orientation.lock, which most browsers grant
+     * only to a page in fullscreen on a phone (Android's Chrome); a refusal is warned of, with
+     * the browser's reason, at the next frame. False for a value that isn't one, and where
+     * nothing can lock: natively, and a browser without screen.orientation.lock (iOS). Where
+     * the lock is refused, a game says "turn your device" while wgf_window_get_orientation is
+     * the wrong one.
+     */
+    readonly requestOrientation: typeof raw.wgf_window_request_orientation;
+    /**
+     * The lock granted: LANDSCAPE or PORTRAIT, or ANY with none. The browser lets go of it as
+     * the page leaves fullscreen, so outside fullscreen it reads ANY. Changes only at a
+     * frame's start.
+     */
+    readonly getOrientationLock: typeof raw.wgf_window_get_orientation_lock;
+    /**
+     * Whether a lock can be asked for at all: on the web a browser with screen.orientation.lock
+     * on a device with touch (a desktop browser's lock is always refused); natively false. Ask
+     * before offering it.
+     */
+    readonly canLockOrientation: typeof raw.wgf_window_can_lock_orientation;
+    /**
+     * Which way the window is now, by its shape (wgf_window_get_width against _height):
+     * PORTRAIT when taller than wide, else LANDSCAPE; never ANY.
+     */
+    readonly getOrientation: typeof raw.wgf_window_get_orientation;
+    /**
+     * Which way the window is now, by its shape (wgf_window_get_width against _height):
+     * PORTRAIT when taller than wide, else LANDSCAPE; never ANY.
      */
     readonly hasTouch: typeof raw.wgf_window_has_touch;
     /**
-     * A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
-     * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
-     * the system refused.
+     * Which way the window is now, by its shape (wgf_window_get_width against _height):
+     * PORTRAIT when taller than wide, else LANDSCAPE; never ANY.
      */
     readonly hasFinePointer: typeof raw.wgf_window_has_fine_pointer;
     /**
-     * A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
-     * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
-     * the system refused.
+     * Which way the window is now, by its shape (wgf_window_get_width against _height):
+     * PORTRAIT when taller than wide, else LANDSCAPE; never ANY.
      */
     readonly getOs: typeof raw.wgf_window_get_os;
     /**
@@ -10257,6 +10347,8 @@ export type UiValue = raw.wgf_ui_value_t;
 export declare const UiValue: { readonly TEXT_SIZE: UiValue; readonly PADDING: UiValue; readonly GAP: UiValue; readonly CORNER_RADIUS: UiValue; readonly BUTTON_PADDING: UiValue; readonly BUTTON_WIDTH: UiValue; readonly FOCUS_WIDTH: UiValue; readonly BAR_WIDTH: UiValue; readonly BAR_HEIGHT: UiValue; };
 export type VehicleDrive = raw.wgf_vehicle_drive_t;
 export declare const VehicleDrive: { readonly FRONT: VehicleDrive; readonly REAR: VehicleDrive; readonly ALL: VehicleDrive; };
+export type WindowOrientation = raw.wgf_window_orientation_t;
+export declare const WindowOrientation: { readonly ANY: WindowOrientation; readonly LANDSCAPE: WindowOrientation; readonly PORTRAIT: WindowOrientation; };
 export type WindowOs = raw.wgf_window_os_t;
 export declare const WindowOs: { readonly OTHER: WindowOs; readonly LINUX: WindowOs; readonly WINDOWS: WindowOs; readonly MACOS: WindowOs; readonly ANDROID: WindowOs; readonly IOS: WindowOs; };
 export type WorldEvent = raw.wgf_world_event_t;

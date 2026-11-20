@@ -360,6 +360,64 @@ wgf_window_os_t wgf_window_get_os(void)
     return (wgf_window_os_t)wgf_platform_priv_get_os();
 }
 
+/* ---------------------------------------------------------------- the safe area, orientation ---- */
+
+/* One inset, held to the window's size along its axis. */
+static int safe_inset(int side)
+{
+    int insets[4] = {0, 0, 0, 0};
+    int limit, value;
+    wgf_platform_priv_get_safe_insets(insets);
+    limit = side == 0 || side == 2 ? wgf_window_get_height() : wgf_window_get_width();
+    value = insets[side];
+    return value < 0 ? 0 : (value > limit ? limit : value);
+}
+
+int wgf_window_get_safe_inset_top(void)
+{
+    return safe_inset(0);
+}
+
+int wgf_window_get_safe_inset_right(void)
+{
+    return safe_inset(1);
+}
+
+int wgf_window_get_safe_inset_bottom(void)
+{
+    return safe_inset(2);
+}
+
+int wgf_window_get_safe_inset_left(void)
+{
+    return safe_inset(3);
+}
+
+bool wgf_window_request_orientation(wgf_window_orientation_t orientation)
+{
+    if (orientation != WGF_WINDOW_ORIENTATION_ANY && orientation != WGF_WINDOW_ORIENTATION_LANDSCAPE &&
+        orientation != WGF_WINDOW_ORIENTATION_PORTRAIT) {
+        return false;
+    }
+    return wgf_platform_priv_request_orientation((int)orientation);
+}
+
+wgf_window_orientation_t wgf_window_get_orientation_lock(void)
+{
+    return (wgf_window_orientation_t)wgf_platform_priv_get_orientation_lock();
+}
+
+bool wgf_window_can_lock_orientation(void)
+{
+    return wgf_platform_priv_can_lock_orientation();
+}
+
+wgf_window_orientation_t wgf_window_get_orientation(void)
+{
+    return wgf_window_get_height() > wgf_window_get_width() ? WGF_WINDOW_ORIENTATION_PORTRAIT
+                                                            : WGF_WINDOW_ORIENTATION_LANDSCAPE;
+}
+
 bool wgf_window_is_web(void)
 {
 #if defined(__EMSCRIPTEN__)

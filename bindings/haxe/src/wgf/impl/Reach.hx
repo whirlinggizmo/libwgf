@@ -582,6 +582,7 @@ class Reach {
 		"wgf_fs_task_get_status",
 		"wgf_fs_task_get_text",
 		"wgf_fs_write",
+		"wgf_gamepad_can_rumble",
 		"wgf_gamepad_get_axis",
 		"wgf_gamepad_get_button_state",
 		"wgf_gamepad_get_deadzone",
@@ -593,7 +594,10 @@ class Reach {
 		"wgf_gamepad_is_down",
 		"wgf_gamepad_is_pressed",
 		"wgf_gamepad_is_released",
+		"wgf_gamepad_is_rumbling",
+		"wgf_gamepad_rumble",
 		"wgf_gamepad_set_deadzone",
+		"wgf_gamepad_stop_rumble",
 		"wgf_handle_get_kind_name",
 		"wgf_handle_is_alive",
 		"wgf_identity_get_company",
@@ -1279,6 +1283,7 @@ class Reach {
 		"wgf_voice_set_volume",
 		"wgf_voice_stop",
 		"wgf_window_can_fullscreen",
+		"wgf_window_can_lock_orientation",
 		"wgf_window_get_height",
 		"wgf_window_get_monitor",
 		"wgf_window_get_monitor_count",
@@ -1287,7 +1292,13 @@ class Reach {
 		"wgf_window_get_monitor_width",
 		"wgf_window_get_monitor_x",
 		"wgf_window_get_monitor_y",
+		"wgf_window_get_orientation",
+		"wgf_window_get_orientation_lock",
 		"wgf_window_get_os",
+		"wgf_window_get_safe_inset_bottom",
+		"wgf_window_get_safe_inset_left",
+		"wgf_window_get_safe_inset_right",
+		"wgf_window_get_safe_inset_top",
 		"wgf_window_get_title",
 		"wgf_window_get_width",
 		"wgf_window_get_x",
@@ -1307,6 +1318,7 @@ class Reach {
 		"wgf_window_is_web",
 		"wgf_window_open_url",
 		"wgf_window_request_fullscreen",
+		"wgf_window_request_orientation",
 		"wgf_window_set_decorated",
 		"wgf_window_set_high_dpi",
 		"wgf_window_set_icon",
@@ -1327,7 +1339,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1318) 0];
+	static final counts:Array<Int> = [for (_ in 0...1330) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

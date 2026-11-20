@@ -342,3 +342,25 @@ int wgf_platform_priv_get_os(void)
     return 1;
 #endif
 }
+
+/* Nothing covers a desktop's window, and nothing turns it: its shape is its orientation. */
+void wgf_platform_priv_get_safe_insets(int insets[4])
+{
+    insets[0] = insets[1] = insets[2] = insets[3] = 0;
+}
+
+bool wgf_platform_priv_request_orientation(int orientation)
+{
+    (void)orientation;
+    return false;
+}
+
+int wgf_platform_priv_get_orientation_lock(void)
+{
+    return 0;
+}
+
+bool wgf_platform_priv_can_lock_orientation(void)
+{
+    return false;
+}

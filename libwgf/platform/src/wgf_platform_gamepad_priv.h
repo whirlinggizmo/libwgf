@@ -29,6 +29,7 @@ typedef struct wgf_platform_priv_gamepad_t {
     char name[WGF_PLATFORM_PRIV_GAMEPAD_NAME_SIZE];
     bool buttons[WGF_PLATFORM_PRIV_GAMEPAD_BUTTONS];
     float axes[WGF_PLATFORM_PRIV_GAMEPAD_AXES];
+    bool rumble; /* it has motors the platform can reach */
 } wgf_platform_priv_gamepad_t;
 
 /* The platform's side (wgf_app_gamepad_<platform>.c): start, stop, and update the
@@ -37,6 +38,11 @@ typedef struct wgf_platform_priv_gamepad_t {
 void wgf_platform_priv_gamepad_platform_open(void);
 void wgf_platform_priv_gamepad_platform_close(void);
 void wgf_platform_priv_gamepad_platform_poll(wgf_platform_priv_gamepad_t pads[WGF_PLATFORM_PRIV_GAMEPADS]);
+/* Rumble pad `pad`'s motors, `low` and `high` 0 to 1, for `seconds` (at most 2), in place of
+ * what it was doing; `seconds` 0 stops it. Only for a connected pad whose `rumble` is set;
+ * a platform with no timing of its own (XInput) rumbles until it is stopped, which the
+ * shared code does once the time is up. */
+void wgf_platform_priv_gamepad_platform_rumble(int pad, float low, float high, float seconds);
 
 /* The loop's: started and stopped with the window; read the pads before a frame's
  * ticks; edges cleared as input's are (wgf_app_input_priv.h). */
@@ -60,5 +66,9 @@ bool wgf_platform_priv_gamepad_was_held_pressed(void);
 
 /* Tests: from now on, pads come from here, never the platform. */
 void wgf_platform_priv_gamepad_set_test_pad(int pad, const wgf_platform_priv_gamepad_t *state);
+/* Tests: what test pad `pad` was last asked to rumble, in place of the platform: its low and
+ * high motors and its seconds (0 for a stop) into `out` (3 floats); how many asks it has had,
+ * 0 for none or a pad out of range. */
+int wgf_platform_priv_gamepad_get_test_rumble(int pad, float out[3]);
 
 #endif

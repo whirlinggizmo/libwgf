@@ -6,6 +6,7 @@
 #include "wgf_platform_gamepad_priv.h"
 #include "wgf_platform_input_priv.h"
 #include "wgf_log.h"
+#include "wgf_time.h"
 
 /* Gamepads, the same on every platform: each frame the platform's pads are read, held
  * values are clamped, the triggers count as buttons past halfway, and what changed
@@ -14,6 +15,7 @@
 
 #define DEFAULT_DEADZONE 0.15f
 #define MAX_DEADZONE 0.9f
+#define MAX_RUMBLE_SECONDS 2.0f
 
 typedef struct edges_t {
     bool pressed[WGF_PLATFORM_PRIV_GAMEPAD_BUTTONS];
@@ -32,11 +34,36 @@ static struct {
     wgf_platform_priv_gamepad_t real[WGF_PLATFORM_PRIV_GAMEPADS]; /* the real ones (or a test's) as last read */
     bool held_pressed; /* a real button went down at the last read, held back by a replay */
     float deadzone;
+    bool rumbling[WGF_PLATFORM_PRIV_GAMEPADS];
+    double rumble_until[WGF_PLATFORM_PRIV_GAMEPADS]; /* wgf_time_get_seconds' */
+    bool rumble_warned;                              /* a refusal for a pad without motors, once a run */
+    float test_rumble[WGF_PLATFORM_PRIV_GAMEPADS][3]; /* a test pad's last ask: low, high, seconds */
+    int test_rumble_count[WGF_PLATFORM_PRIV_GAMEPADS];
 } pads = {.deadzone = DEFAULT_DEADZONE};
 
 static float clamp(float value, float lo, float hi)
 {
     return value < lo ? lo : (value > hi ? hi : value);
+}
+
+/* A rumble (seconds 0: a stop) sent to the platform, or recorded for a test pad. */
+static void send_rumble(int pad, float low, float high, float seconds)
+{
+    if (pads.testing) {
+        pads.test_rumble[pad][0] = low;
+        pads.test_rumble[pad][1] = high;
+        pads.test_rumble[pad][2] = seconds;
+        pads.test_rumble_count[pad]++;
+    } else {
+        wgf_platform_priv_gamepad_platform_rumble(pad, low, high, seconds);
+    }
+}
+
+int wgf_platform_priv_gamepad_get_test_rumble(int pad, float out[3])
+{
+    if (pad < 0 || pad >= WGF_PLATFORM_PRIV_GAMEPADS) return 0;
+    memcpy(out, pads.test_rumble[pad], sizeof(pads.test_rumble[pad]));
+    return pads.test_rumble_count[pad];
 }
 
 void wgf_platform_priv_gamepad_open(void)
@@ -53,7 +80,12 @@ void wgf_platform_priv_gamepad_open(void)
 
 void wgf_platform_priv_gamepad_close(void)
 {
+    int i;
     if (!pads.open) return;
+    for (i = 0; i < WGF_PLATFORM_PRIV_GAMEPADS; i++) {
+        if (pads.rumbling[i] && pads.real[i].connected) send_rumble(i, 0.0f, 0.0f, 0.0f);
+        pads.rumbling[i] = false;
+    }
     if (!pads.testing) wgf_platform_priv_gamepad_platform_close();
     memset(pads.pads, 0, sizeof(pads.pads));
     pads.open = false;
@@ -99,6 +131,15 @@ void wgf_platform_priv_gamepad_begin_frame(void)
         }
     }
     memcpy(pads.real, real, sizeof(pads.real));
+    for (i = 0; i < WGF_PLATFORM_PRIV_GAMEPADS; i++) { /* rumbles over, or their pads gone */
+        if (!pads.rumbling[i]) continue;
+        if (!pads.real[i].connected || !pads.real[i].rumble) {
+            pads.rumbling[i] = false;
+        } else if (wgf_time_get_seconds() >= pads.rumble_until[i]) {
+            send_rumble(i, 0.0f, 0.0f, 0.0f);
+            pads.rumbling[i] = false;
+        }
+    }
     memcpy(next, pads.played != NULL ? pads.played : real, sizeof(next));
     for (i = 0; i < WGF_PLATFORM_PRIV_GAMEPADS; i++) {
         wgf_platform_priv_gamepad_t *pad = &next[i];
@@ -262,4 +303,44 @@ void wgf_gamepad_set_deadzone(float radius)
 float wgf_gamepad_get_deadzone(void)
 {
     return pads.deadzone;
+}
+
+/* Rumble goes to the pads as they really are (or a test's), never a replay's. */
+bool wgf_gamepad_can_rumble(int pad)
+{
+    return pad >= 0 && pad < WGF_PLATFORM_PRIV_GAMEPADS && pads.real[pad].connected && pads.real[pad].rumble;
+}
+
+bool wgf_gamepad_rumble(int pad, float low, float high, float seconds)
+{
+    if (!(seconds > 0.0f)) return false; /* NaN too */
+    if (!wgf_gamepad_can_rumble(pad)) {
+        if (!pads.rumble_warned && pad >= 0 && pad < WGF_PLATFORM_PRIV_GAMEPADS && pads.real[pad].connected) {
+            wgf_log_warn("wgf_gamepad_rumble: pad %d can't rumble: it has no motors, or none libwgf can reach "
+                         "(Linux: its device not writable; web: a browser with no vibration)",
+                         pad);
+            pads.rumble_warned = true;
+        }
+        return false;
+    }
+    low = isnan(low) ? 0.0f : clamp(low, 0.0f, 1.0f);
+    high = isnan(high) ? 0.0f : clamp(high, 0.0f, 1.0f);
+    if (seconds > MAX_RUMBLE_SECONDS) seconds = MAX_RUMBLE_SECONDS;
+    send_rumble(pad, low, high, seconds);
+    pads.rumbling[pad] = true;
+    pads.rumble_until[pad] = wgf_time_get_seconds() + (double)seconds;
+    return true;
+}
+
+bool wgf_gamepad_stop_rumble(int pad)
+{
+    if (!wgf_gamepad_is_rumbling(pad)) return false;
+    send_rumble(pad, 0.0f, 0.0f, 0.0f);
+    pads.rumbling[pad] = false;
+    return true;
+}
+
+bool wgf_gamepad_is_rumbling(int pad)
+{
+    return wgf_gamepad_can_rumble(pad) && pads.rumbling[pad];
 }

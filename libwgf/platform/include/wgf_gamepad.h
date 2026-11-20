@@ -98,6 +98,24 @@ WGF_API float wgf_gamepad_get_axis(int pad, wgf_gamepad_axis_t axis);
 WGF_API void wgf_gamepad_set_deadzone(float radius);
 WGF_API float wgf_gamepad_get_deadzone(void);
 
+/* Rumble: a pad's two motors, the low-frequency one (the heavy, left one) and the
+ * high-frequency one (the light, right one), each 0 to 1 (clamped), for `seconds`
+ * (clamped to at most 2, raylib's limit), in place of whatever it was doing; stopped by
+ * libwgf once the time is up, or by wgf_gamepad_stop_rumble. Linux: evdev's FF_RUMBLE,
+ * where the pad's device could be opened for writing; Windows: XInput; web: the Gamepad
+ * API's vibration actuator ("dual-rumble"), or a haptic actuator's pulse, where the
+ * browser has one (Firefox has neither). False for a pad that isn't connected or can't
+ * rumble (the first such refusal a run warns of), or `seconds` not above 0. */
+WGF_API bool wgf_gamepad_rumble(int pad, float low, float high, float seconds);
+/* Stops a pad's rumble. False where it isn't rumbling. */
+WGF_API bool wgf_gamepad_stop_rumble(int pad);
+/* Whether a pad is rumbling: from wgf_gamepad_rumble until its time is up, it is stopped,
+ * or the pad is unplugged. */
+WGF_API bool wgf_gamepad_is_rumbling(int pad);
+/* Whether a pad is connected and has motors libwgf can reach: ask before offering a
+ * rumble setting. */
+WGF_API bool wgf_gamepad_can_rumble(int pad);
+
 #ifdef __cplusplus
 }
 #endif

@@ -86,4 +86,37 @@ class Gamepad {
 	**/
 	public static inline function getDeadzone():Float
 		return Raw.wgf_gamepad_get_deadzone();
+
+	/**
+	    Rumble: a pad's two motors, the low-frequency one (the heavy, left one) and the
+	    high-frequency one (the light, right one), each 0 to 1 (clamped), for `seconds`
+	    (clamped to at most 2, raylib's limit), in place of whatever it was doing; stopped by
+	    libwgf once the time is up, or by wgf_gamepad_stop_rumble. Linux: evdev's FF_RUMBLE,
+	    where the pad's device could be opened for writing; Windows: XInput; web: the Gamepad
+	    API's vibration actuator ("dual-rumble"), or a haptic actuator's pulse, where the
+	    browser has one (Firefox has neither). False for a pad that isn't connected or can't
+	    rumble (the first such refusal a run warns of), or `seconds` not above 0.
+	**/
+	public static inline function rumble(pad:Int, low:Float, high:Float, seconds:Float):Bool
+		return Raw.wgf_gamepad_rumble(pad, low, high, seconds);
+
+	/**
+	    Stops a pad's rumble. False where it isn't rumbling.
+	**/
+	public static inline function stopRumble(pad:Int):Bool
+		return Raw.wgf_gamepad_stop_rumble(pad);
+
+	/**
+	    Whether a pad is rumbling: from wgf_gamepad_rumble until its time is up, it is stopped,
+	    or the pad is unplugged.
+	**/
+	public static inline function isRumbling(pad:Int):Bool
+		return Raw.wgf_gamepad_is_rumbling(pad);
+
+	/**
+	    Whether a pad is connected and has motors libwgf can reach: ask before offering a
+	    rumble setting.
+	**/
+	public static inline function canRumble(pad:Int):Bool
+		return Raw.wgf_gamepad_can_rumble(pad);
 }

@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "5bc2c83f225df919" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "0da53c89f1a3d2ae" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -572,6 +572,13 @@ export const WGF_TILT_STATUS_ON = 3;
 export const WGF_TILT_STATUS_REFUSED = 4;
 export const WGF_TILT_STATUS_UNAVAILABLE = 5;
 export const WGF_TILT_STATUS_NEEDS_HTTPS = 6;
+
+/**
+ * Which way up the screen is held.
+ */
+export const WGF_WINDOW_ORIENTATION_ANY = 0;
+export const WGF_WINDOW_ORIENTATION_LANDSCAPE = 1;
+export const WGF_WINDOW_ORIENTATION_PORTRAIT = 2;
 
 /**
  * What the device has: touch (to show on-screen controls), a fine pointer (a mouse or a
@@ -2697,6 +2704,51 @@ export function wgf_gamepad_get_deadzone() {
     return value;
 }
 
+// wgf: call wgf_gamepad_rumble
+/**
+ * Rumble: a pad's two motors, the low-frequency one (the heavy, left one) and the
+ * high-frequency one (the light, right one), each 0 to 1 (clamped), for `seconds`
+ * (clamped to at most 2, raylib's limit), in place of whatever it was doing; stopped by
+ * libwgf once the time is up, or by wgf_gamepad_stop_rumble. Linux: evdev's FF_RUMBLE,
+ * where the pad's device could be opened for writing; Windows: XInput; web: the Gamepad
+ * API's vibration actuator ("dual-rumble"), or a haptic actuator's pulse, where the
+ * browser has one (Firefox has neither). False for a pad that isn't connected or can't
+ * rumble (the first such refusal a run warns of), or `seconds` not above 0.
+ */
+export function wgf_gamepad_rumble(pad, low, high, seconds) {
+    const value = host["_wgf_gamepad_rumble"](pad, low, high, seconds);
+    return value !== 0;
+}
+
+// wgf: call wgf_gamepad_stop_rumble
+/**
+ * Stops a pad's rumble. False where it isn't rumbling.
+ */
+export function wgf_gamepad_stop_rumble(pad) {
+    const value = host["_wgf_gamepad_stop_rumble"](pad);
+    return value !== 0;
+}
+
+// wgf: call wgf_gamepad_is_rumbling
+/**
+ * Whether a pad is rumbling: from wgf_gamepad_rumble until its time is up, it is stopped,
+ * or the pad is unplugged.
+ */
+export function wgf_gamepad_is_rumbling(pad) {
+    const value = host["_wgf_gamepad_is_rumbling"](pad);
+    return value !== 0;
+}
+
+// wgf: call wgf_gamepad_can_rumble
+/**
+ * Whether a pad is connected and has motors libwgf can reach: ask before offering a
+ * rumble setting.
+ */
+export function wgf_gamepad_can_rumble(pad) {
+    const value = host["_wgf_gamepad_can_rumble"](pad);
+    return value !== 0;
+}
+
 // wgf: call wgf_keyboard_get_state
 /**
  * Where `key` is: UP, PRESSED (went down since the previous tick or frame), DOWN,
@@ -3974,11 +4026,118 @@ export function wgf_window_open_url(url) {
     return value !== 0;
 }
 
+// wgf: call wgf_window_get_safe_inset_top
+/**
+ * The safe area: how far in from each edge of the window, in logical pixels, the display
+ * covers or keeps for itself (a phone's notch, rounded corners, home indicator), where a HUD
+ * and buttons shouldn't go. On the web, the page's CSS safe-area insets
+ * (env(safe-area-inset-*), which a browser reports only to a page whose viewport meta has
+ * viewport-fit=cover, as libwgf's pages' do), less what lies outside the canvas, each at
+ * most the window's size; natively 0 (a desktop's window has nothing over it). Read as
+ * they are now: they change as the device turns or the window is resized.
+ */
+export function wgf_window_get_safe_inset_top() {
+    const value = host["_wgf_window_get_safe_inset_top"]();
+    return value;
+}
+
+// wgf: call wgf_window_get_safe_inset_right
+/**
+ * The safe area: how far in from each edge of the window, in logical pixels, the display
+ * covers or keeps for itself (a phone's notch, rounded corners, home indicator), where a HUD
+ * and buttons shouldn't go. On the web, the page's CSS safe-area insets
+ * (env(safe-area-inset-*), which a browser reports only to a page whose viewport meta has
+ * viewport-fit=cover, as libwgf's pages' do), less what lies outside the canvas, each at
+ * most the window's size; natively 0 (a desktop's window has nothing over it). Read as
+ * they are now: they change as the device turns or the window is resized.
+ */
+export function wgf_window_get_safe_inset_right() {
+    const value = host["_wgf_window_get_safe_inset_right"]();
+    return value;
+}
+
+// wgf: call wgf_window_get_safe_inset_bottom
+/**
+ * The safe area: how far in from each edge of the window, in logical pixels, the display
+ * covers or keeps for itself (a phone's notch, rounded corners, home indicator), where a HUD
+ * and buttons shouldn't go. On the web, the page's CSS safe-area insets
+ * (env(safe-area-inset-*), which a browser reports only to a page whose viewport meta has
+ * viewport-fit=cover, as libwgf's pages' do), less what lies outside the canvas, each at
+ * most the window's size; natively 0 (a desktop's window has nothing over it). Read as
+ * they are now: they change as the device turns or the window is resized.
+ */
+export function wgf_window_get_safe_inset_bottom() {
+    const value = host["_wgf_window_get_safe_inset_bottom"]();
+    return value;
+}
+
+// wgf: call wgf_window_get_safe_inset_left
+/**
+ * The safe area: how far in from each edge of the window, in logical pixels, the display
+ * covers or keeps for itself (a phone's notch, rounded corners, home indicator), where a HUD
+ * and buttons shouldn't go. On the web, the page's CSS safe-area insets
+ * (env(safe-area-inset-*), which a browser reports only to a page whose viewport meta has
+ * viewport-fit=cover, as libwgf's pages' do), less what lies outside the canvas, each at
+ * most the window's size; natively 0 (a desktop's window has nothing over it). Read as
+ * they are now: they change as the device turns or the window is resized.
+ */
+export function wgf_window_get_safe_inset_left() {
+    const value = host["_wgf_window_get_safe_inset_left"]();
+    return value;
+}
+
+// wgf: call wgf_window_request_orientation
+/**
+ * Ask for the screen to be held LANDSCAPE or PORTRAIT whichever way the device turns, or
+ * let go (ANY); the answer is wgf_window_get_orientation_lock, not the return, a frame or
+ * more later. On the web, the browser's screen.orientation.lock, which most browsers grant
+ * only to a page in fullscreen on a phone (Android's Chrome); a refusal is warned of, with
+ * the browser's reason, at the next frame. False for a value that isn't one, and where
+ * nothing can lock: natively, and a browser without screen.orientation.lock (iOS). Where
+ * the lock is refused, a game says "turn your device" while wgf_window_get_orientation is
+ * the wrong one.
+ */
+export function wgf_window_request_orientation(orientation) {
+    const value = host["_wgf_window_request_orientation"](orientation);
+    return value !== 0;
+}
+
+// wgf: call wgf_window_get_orientation_lock
+/**
+ * The lock granted: LANDSCAPE or PORTRAIT, or ANY with none. The browser lets go of it as
+ * the page leaves fullscreen, so outside fullscreen it reads ANY. Changes only at a
+ * frame's start.
+ */
+export function wgf_window_get_orientation_lock() {
+    const value = host["_wgf_window_get_orientation_lock"]();
+    return value;
+}
+
+// wgf: call wgf_window_can_lock_orientation
+/**
+ * Whether a lock can be asked for at all: on the web a browser with screen.orientation.lock
+ * on a device with touch (a desktop browser's lock is always refused); natively false. Ask
+ * before offering it.
+ */
+export function wgf_window_can_lock_orientation() {
+    const value = host["_wgf_window_can_lock_orientation"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_window_get_orientation
+/**
+ * Which way the window is now, by its shape (wgf_window_get_width against _height):
+ * PORTRAIT when taller than wide, else LANDSCAPE; never ANY.
+ */
+export function wgf_window_get_orientation() {
+    const value = host["_wgf_window_get_orientation"]();
+    return value;
+}
+
 // wgf: call wgf_window_has_touch
 /**
- * A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
- * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
- * the system refused.
+ * Which way the window is now, by its shape (wgf_window_get_width against _height):
+ * PORTRAIT when taller than wide, else LANDSCAPE; never ANY.
  */
 export function wgf_window_has_touch() {
     const value = host["_wgf_window_has_touch"]();
@@ -3987,9 +4146,8 @@ export function wgf_window_has_touch() {
 
 // wgf: call wgf_window_has_fine_pointer
 /**
- * A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
- * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
- * the system refused.
+ * Which way the window is now, by its shape (wgf_window_get_width against _height):
+ * PORTRAIT when taller than wide, else LANDSCAPE; never ANY.
  */
 export function wgf_window_has_fine_pointer() {
     const value = host["_wgf_window_has_fine_pointer"]();
@@ -3998,9 +4156,8 @@ export function wgf_window_has_fine_pointer() {
 
 // wgf: call wgf_window_get_os
 /**
- * A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
- * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
- * the system refused.
+ * Which way the window is now, by its shape (wgf_window_get_width against _height):
+ * PORTRAIT when taller than wide, else LANDSCAPE; never ANY.
  */
 export function wgf_window_get_os() {
     const value = host["_wgf_window_get_os"]();

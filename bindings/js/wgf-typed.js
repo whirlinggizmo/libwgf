@@ -1313,6 +1313,14 @@ export const Gamepad = Object.freeze({
     setDeadzone: raw.wgf_gamepad_set_deadzone,
     // wgf: call wgf_gamepad_get_deadzone
     getDeadzone: raw.wgf_gamepad_get_deadzone,
+    // wgf: call wgf_gamepad_rumble
+    rumble: raw.wgf_gamepad_rumble,
+    // wgf: call wgf_gamepad_stop_rumble
+    stopRumble: raw.wgf_gamepad_stop_rumble,
+    // wgf: call wgf_gamepad_is_rumbling
+    isRumbling: raw.wgf_gamepad_is_rumbling,
+    // wgf: call wgf_gamepad_can_rumble
+    canRumble: raw.wgf_gamepad_can_rumble,
 });
 // wgf: typed Generator
 export const Generator = Object.freeze({
@@ -2965,6 +2973,22 @@ export const Window = Object.freeze({
     isMsaa: raw.wgf_window_is_msaa,
     // wgf: call wgf_window_open_url
     openUrl: raw.wgf_window_open_url,
+    // wgf: call wgf_window_get_safe_inset_top
+    getSafeInsetTop: raw.wgf_window_get_safe_inset_top,
+    // wgf: call wgf_window_get_safe_inset_right
+    getSafeInsetRight: raw.wgf_window_get_safe_inset_right,
+    // wgf: call wgf_window_get_safe_inset_bottom
+    getSafeInsetBottom: raw.wgf_window_get_safe_inset_bottom,
+    // wgf: call wgf_window_get_safe_inset_left
+    getSafeInsetLeft: raw.wgf_window_get_safe_inset_left,
+    // wgf: call wgf_window_request_orientation
+    requestOrientation: raw.wgf_window_request_orientation,
+    // wgf: call wgf_window_get_orientation_lock
+    getOrientationLock: raw.wgf_window_get_orientation_lock,
+    // wgf: call wgf_window_can_lock_orientation
+    canLockOrientation: raw.wgf_window_can_lock_orientation,
+    // wgf: call wgf_window_get_orientation
+    getOrientation: raw.wgf_window_get_orientation,
     // wgf: call wgf_window_has_touch
     hasTouch: raw.wgf_window_has_touch,
     // wgf: call wgf_window_has_fine_pointer
@@ -3099,6 +3123,8 @@ export const UiSizing = Object.freeze({ FIT: 0, GROW: 1, FIXED: 2, PERCENT: 3 })
 export const UiValue = Object.freeze({ TEXT_SIZE: 0, PADDING: 1, GAP: 2, CORNER_RADIUS: 3, BUTTON_PADDING: 4, BUTTON_WIDTH: 5, FOCUS_WIDTH: 6, BAR_WIDTH: 7, BAR_HEIGHT: 8 });
 // wgf: enum VehicleDrive
 export const VehicleDrive = Object.freeze({ FRONT: 0, REAR: 1, ALL: 2 });
+// wgf: enum WindowOrientation
+export const WindowOrientation = Object.freeze({ ANY: 0, LANDSCAPE: 1, PORTRAIT: 2 });
 // wgf: enum WindowOs
 export const WindowOs = Object.freeze({ OTHER: 0, LINUX: 1, WINDOWS: 2, MACOS: 3, ANDROID: 5, IOS: 6 });
 // wgf: enum WorldEvent
