@@ -151,6 +151,8 @@ MADE_FROM = {
     'wgf_model_create': 'a model is made from its mesh',
     'wgf_voice_create': 'a voice is made from its sound',
     'wgf_material_create_custom': 'a custom material is made from its shader',
+    'wgf_image_create_from_read': 'an image is made from a texture\'s read',
+    'wgf_texture_create_from_image': 'a texture is made from its image',
 }
 
 # Math values a public call may return by value: their layout can never change. None is

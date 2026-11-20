@@ -41,6 +41,7 @@ typedef struct texture_t {
     /* made blank (wgf_texture_create_blank): written by the program */
     bool blank;
     uint32_t written; /* the frame it was last written in, + 1 */
+    bool compressed;  /* a KTX file's levels, as they are: not read back */
 } texture_t;
 
 typedef struct decoded_t {
@@ -394,6 +395,7 @@ static wgf_core_priv_load_step_t finish_ktx(void *prepared, wgf_handle_t resourc
     if (texture_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
     if (!wgf_gfx_priv_render_is_running()) return WGF_CORE_PRIV_LOAD_MORE; /* no GPU yet: wait for one */
     if (!make_ktx_image(ktx, texture_ptr->resource.found, &image, &view)) return WGF_CORE_PRIV_LOAD_FAILED;
+    texture_ptr->compressed = true;
     loaded(resource, texture_ptr, image, view, ktx->width, ktx->height);
     return WGF_CORE_PRIV_LOAD_DONE;
 }
@@ -507,6 +509,7 @@ wgf_texture_t wgf_gfx_priv_texture_create_ktx(const wgf_gfx_priv_ktx_t *ktx, con
     }
     texture_ptr->width = ktx->width;
     texture_ptr->height = ktx->height; /* READY as it was added: made from numbers */
+    texture_ptr->compressed = true;
     return texture;
 }
 
@@ -718,10 +721,18 @@ bool wgf_gfx_priv_texture_get_target(wgf_texture_t texture, sg_attachments *atta
     return true;
 }
 
-bool wgf_gfx_priv_texture_get_target_image(wgf_texture_t texture, sg_image *image, int *width, int *height)
+bool wgf_gfx_priv_texture_is_texture(wgf_texture_t texture)
+{
+    return texture_of(texture) != NULL;
+}
+
+bool wgf_gfx_priv_texture_get_readable_image(wgf_texture_t texture, sg_image *image, int *width, int *height)
 {
     const texture_t *texture_ptr = texture_of(texture);
-    if (texture_ptr == NULL || !texture_ptr->target) return false;
+    if (texture_ptr == NULL || texture_ptr->resource.status != WGF_RESOURCE_STATUS_READY || texture_ptr->compressed ||
+        texture_ptr->image.id == SG_INVALID_ID) {
+        return false;
+    }
     *image = texture_ptr->image;
     *width = texture_ptr->width;
     *height = texture_ptr->height;

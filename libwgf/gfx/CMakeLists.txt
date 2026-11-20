@@ -49,6 +49,9 @@ wgf_layer(gfx
         src/text/wgf_gfx_text.c
         src/tilemap/wgf_gfx_tilemap.c
         src/tilemap/wgf_gfx_tilemap_layer.c
+        src/texture/wgf_gfx_image.c
+        src/texture/wgf_gfx_image_gen.c
+        src/texture/wgf_gfx_image_texture.c
         src/texture/wgf_gfx_ktx.c
         src/texture/wgf_gfx_stb_impl.c
         src/texture/wgf_gfx_png.c
@@ -95,6 +98,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_text_test)
         wgf_test(gfx wgf_gfx_font_bitmap_test)
         wgf_test(gfx wgf_gfx_texture_test)
+        wgf_test(gfx wgf_gfx_image_test)
         wgf_test(gfx wgf_gfx_draw_test)
         wgf_test(gfx wgf_gfx_draw_model_test)
         wgf_test(gfx wgf_gfx_shape_test)

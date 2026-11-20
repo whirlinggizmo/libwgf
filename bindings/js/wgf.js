@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "fa4f3a0e2d60221d" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "51b7d37df9cf3338" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -5437,12 +5437,12 @@ export function wgf_texture_get_filter(texture) {
 
 // wgf: call wgf_texture_read
 /**
- * A read of `target`, which it holds a reference to until it is read. 0 for a texture
- * that isn't a render target (wgf_texture_create_target), or no room for another read,
- * each logged.
+ * A read of `texture` -- a render target, a texture made in code, or one loaded from a
+ * file (its largest level) -- which it holds a reference to until it is read. 0 for a
+ * handle that isn't a texture, or no room for another read, each logged.
  */
-export function wgf_texture_read(target) {
-    const value = host["_wgf_texture_read"](target);
+export function wgf_texture_read(texture) {
+    const value = host["_wgf_texture_read"](texture);
     return value >>> 0;
 }
 
@@ -5458,7 +5458,7 @@ export function wgf_texture_read_get_status(read) {
 
 // wgf: call wgf_texture_read_get_width
 /**
- * The target's size as it was read; 0 until DONE.
+ * The texture's size as it was read; 0 until DONE.
  */
 export function wgf_texture_read_get_width(read) {
     const value = host["_wgf_texture_read_get_width"](read);
@@ -5467,7 +5467,7 @@ export function wgf_texture_read_get_width(read) {
 
 // wgf: call wgf_texture_read_get_height
 /**
- * The target's size as it was read; 0 until DONE.
+ * The texture's size as it was read; 0 until DONE.
  */
 export function wgf_texture_read_get_height(read) {
     const value = host["_wgf_texture_read_get_height"](read);
@@ -9389,6 +9389,213 @@ export function wgf_follow_get_trauma(camera) {
  */
 export function wgf_follow_snap(camera) {
     const value = host["_wgf_follow_snap"](camera);
+    return value !== 0;
+}
+
+// wgf: call wgf_image_create
+/**
+ * An image from a file: PNG, JPEG, BMP, TGA, or GIF (its first frame), decoded with
+ * stb_image on a worker. 0 only when there is no room for another image; a path or file
+ * that can't be loaded gives an image that FAILED (logged once, naming the file). Not
+ * loaded again in place (wgf_asset_reload leaves it).
+ */
+export function wgf_image_create(path) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_image_create"](cstr(path));
+    host["stackRestore"](mark);
+    return value >>> 0;
+}
+
+// wgf: call wgf_image_create_color
+/**
+ * Every pixel `color` (raylib's GenImageColor).
+ */
+export function wgf_image_create_color(width, height, color) {
+    const value = host["_wgf_image_create_color"](width, height, color);
+    return value >>> 0;
+}
+
+// wgf: call wgf_image_create_gradient_linear
+/**
+ * A gradient from `start` to `end` along a direction `angle` degrees clockwise from
+ * rightward (0 runs left to right, 90 top to bottom): the corner furthest back along it is
+ * `start` exactly, the one furthest along it `end` (raylib's GenImageGradientLinear, its
+ * angle measured from rightward).
+ */
+export function wgf_image_create_gradient_linear(width, height, angle, start, end) {
+    const value = host["_wgf_image_create_gradient_linear"](width, height, angle, start, end);
+    return value >>> 0;
+}
+
+// wgf: call wgf_image_create_gradient_radial
+/**
+ * A gradient out from the middle, `inner` within `density` (0 to 1, clamped) of the
+ * radius -- from the middle to the nearer sides' pixels -- then toward `outer` at the
+ * radius and beyond: the middle `inner`, the corners `outer` (raylib's
+ * GenImageGradientRadial).
+ */
+export function wgf_image_create_gradient_radial(width, height, density, inner, outer) {
+    const value = host["_wgf_image_create_gradient_radial"](width, height, density, inner, outer);
+    return value >>> 0;
+}
+
+// wgf: call wgf_image_create_gradient_square
+/**
+ * As radial, in squares rather than circles: `inner` within `density` of the way from the
+ * middle to the edges, then toward `outer`, every edge pixel `outer` (raylib's
+ * GenImageGradientSquare).
+ */
+export function wgf_image_create_gradient_square(width, height, density, inner, outer) {
+    const value = host["_wgf_image_create_gradient_square"](width, height, density, inner, outer);
+    return value >>> 0;
+}
+
+// wgf: call wgf_image_create_checked
+/**
+ * A checkerboard of `check_width` by `check_height` pixel squares, `a` at the top-left (raylib's
+ * GenImageChecked). 0 too for a check's side of 0 or less.
+ */
+export function wgf_image_create_checked(width, height, check_width, check_height, a, b) {
+    const value = host["_wgf_image_create_checked"](width, height, check_width, check_height, a, b);
+    return value >>> 0;
+}
+
+// wgf: call wgf_image_create_white_noise
+/**
+ * Each pixel white with the chance `factor` (0 to 1, clamped), else black (raylib's
+ * GenImageWhiteNoise).
+ */
+export function wgf_image_create_white_noise(width, height, factor, seed) {
+    const value = host["_wgf_image_create_white_noise"](width, height, factor, seed);
+    return value >>> 0;
+}
+
+// wgf: call wgf_image_create_perlin_noise
+/**
+ * Perlin noise in six octaves (each twice the last's frequency and half its weight),
+ * `scale` cells of the first octave across the image (raylib's GenImagePerlinNoise),
+ * shifted by `offset_x` and `offset_y` pixels so neighboring images tile; 0 too for a scale
+ * of 0 or less, over 4096, or not finite.
+ */
+export function wgf_image_create_perlin_noise(width, height, offset_x, offset_y, scale, seed) {
+    const value = host["_wgf_image_create_perlin_noise"](width, height, offset_x, offset_y, scale, seed);
+    return value >>> 0;
+}
+
+// wgf: call wgf_image_create_cellular
+/**
+ * Cells (Worley noise): a point at random in each `tile_size` square, each pixel as bright
+ * as it is far from the nearest point, white a tile's side away (raylib's
+ * GenImageCellular). 0 too for a tile's side of 0 or less.
+ */
+export function wgf_image_create_cellular(width, height, tile_size, seed) {
+    const value = host["_wgf_image_create_cellular"](width, height, tile_size, seed);
+    return value >>> 0;
+}
+
+// wgf: call wgf_image_create_from_read
+/**
+ * A copy of a texture's pixels read back (wgf_texture_read, DONE): raylib's
+ * LoadImageFromTexture. READY at once; 0 for a read that isn't DONE (logged).
+ */
+export function wgf_image_create_from_read(read) {
+    const value = host["_wgf_image_create_from_read"](read);
+    return value >>> 0;
+}
+
+// wgf: call wgf_image_get_width
+/**
+ * Its size in pixels; 0 until it is READY.
+ */
+export function wgf_image_get_width(image) {
+    const value = host["_wgf_image_get_width"](image);
+    return value;
+}
+
+// wgf: call wgf_image_get_height
+/**
+ * Its size in pixels; 0 until it is READY.
+ */
+export function wgf_image_get_height(image) {
+    const value = host["_wgf_image_get_height"](image);
+    return value;
+}
+
+// wgf: call wgf_image_get_pixel
+/**
+ * The pixel at column `x`, row `y` from the top-left (raylib's GetImageColor); 0 (transparent
+ * black) outside it or for an image that isn't READY.
+ */
+export function wgf_image_get_pixel(image, x, y) {
+    const value = host["_wgf_image_get_pixel"](image, x, y);
+    return value >>> 0;
+}
+
+// wgf: call wgf_image_set_pixel
+/**
+ * That pixel set to `color` (raylib's ImageDrawPixel). Refused, false, outside it or for an
+ * image that isn't READY.
+ */
+export function wgf_image_set_pixel(image, x, y, color) {
+    const value = host["_wgf_image_set_pixel"](image, x, y, color);
+    return value !== 0;
+}
+
+// wgf: call wgf_image_get_data
+/**
+ * Its pixels: RGBA, 8 bits a channel, width * 4 bytes a row, the top row first; valid until
+ * it is released. NULL and 0 for an image that isn't READY.
+ */
+export function wgf_image_get_data(image) {
+    const value = host["_wgf_image_get_data"](image);
+    return bytesOut(value, host["_wgf_image_get_size"](image));
+}
+
+// wgf: call wgf_image_get_size
+/**
+ * Its pixels: RGBA, 8 bits a channel, width * 4 bytes a row, the top row first; valid until
+ * it is released. NULL and 0 for an image that isn't READY.
+ */
+export function wgf_image_get_size(image) {
+    const value = host["_wgf_image_get_size"](image);
+    return value;
+}
+
+// wgf: call wgf_image_save
+/**
+ * Saved as a PNG file at `path` (as wgf_fs_write: under the root, its directories made; on
+ * the web, kept in the browser's store), libwgf's own writer. The write's task, or 0 for an
+ * image that isn't READY, a NULL or refused path, or no memory to encode it. Encoded on the
+ * calling thread.
+ */
+export function wgf_image_save(image, path) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_image_save"](image, cstr(path));
+    host["stackRestore"](mark);
+    return value >>> 0;
+}
+
+// wgf: call wgf_texture_create_from_image
+/**
+ * A texture made in code (as wgf_texture_create_blank) holding the image's pixels as they
+ * are now, seen from the next frame drawn (raylib's LoadTextureFromImage): no mipmaps,
+ * written again by wgf_texture_write or wgf_texture_write_image -- though not in the frame
+ * it is made, whose one write this is. 0 for an image that isn't READY, or before gfx
+ * runs, each logged.
+ */
+export function wgf_texture_create_from_image(image) {
+    const value = host["_wgf_texture_create_from_image"](image);
+    return value >>> 0;
+}
+
+// wgf: call wgf_texture_write_image
+/**
+ * A texture made in code written whole with the image's pixels (raylib's UpdateTexture),
+ * as wgf_texture_write. False for a texture not made in code, an image that isn't READY
+ * or isn't the texture's size, and a second write in a frame.
+ */
+export function wgf_texture_write_image(texture, image) {
+    const value = host["_wgf_texture_write_image"](texture, image);
     return value !== 0;
 }
 

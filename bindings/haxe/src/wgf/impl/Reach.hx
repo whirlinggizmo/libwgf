@@ -566,6 +566,23 @@ class Reach {
 		"wgf_identity_get_product",
 		"wgf_identity_set_company",
 		"wgf_identity_set_product",
+		"wgf_image_create",
+		"wgf_image_create_cellular",
+		"wgf_image_create_checked",
+		"wgf_image_create_color",
+		"wgf_image_create_from_read",
+		"wgf_image_create_gradient_linear",
+		"wgf_image_create_gradient_radial",
+		"wgf_image_create_gradient_square",
+		"wgf_image_create_perlin_noise",
+		"wgf_image_create_white_noise",
+		"wgf_image_get_data",
+		"wgf_image_get_height",
+		"wgf_image_get_pixel",
+		"wgf_image_get_size",
+		"wgf_image_get_width",
+		"wgf_image_save",
+		"wgf_image_set_pixel",
 		"wgf_input_get_chars",
 		"wgf_input_get_clipboard",
 		"wgf_input_is_keyboard_captured",
@@ -1014,6 +1031,7 @@ class Reach {
 		"wgf_text_set_wrap_width",
 		"wgf_texture_create",
 		"wgf_texture_create_blank",
+		"wgf_texture_create_from_image",
 		"wgf_texture_create_target",
 		"wgf_texture_get_filter",
 		"wgf_texture_get_height",
@@ -1030,6 +1048,7 @@ class Reach {
 		"wgf_texture_read_save",
 		"wgf_texture_set_sampling",
 		"wgf_texture_write",
+		"wgf_texture_write_image",
 		"wgf_tilemap_create",
 		"wgf_tilemap_find_layer",
 		"wgf_tilemap_get_background_color",
@@ -1272,7 +1291,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1263) 0];
+	static final counts:Array<Int> = [for (_ in 0...1282) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

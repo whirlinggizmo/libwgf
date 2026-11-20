@@ -56,6 +56,8 @@ export type wgf_material_t = number & { readonly [kind]: "wgf_material_t" };
 export type wgf_sheet_t = number & { readonly [kind]: "wgf_sheet_t" };
 /** A handle of kind wgf_environment_t; 0 is none. */
 export type wgf_environment_t = number & { readonly [kind]: "wgf_environment_t" };
+/** A handle of kind wgf_image_t; 0 is none. */
+export type wgf_image_t = number & { readonly [kind]: "wgf_image_t" };
 /** A handle of kind wgf_mesh_t; 0 is none. */
 export type wgf_mesh_t = number & { readonly [kind]: "wgf_mesh_t" };
 /** A handle of kind wgf_tilemap_t; 0 is none. */
@@ -3777,11 +3779,11 @@ export declare function wgf_texture_get_wrap_v(texture: wgf_texture_t | 0): wgf_
 export declare function wgf_texture_get_filter(texture: wgf_texture_t | 0): wgf_texture_filter_t;
 
 /**
- * A read of `target`, which it holds a reference to until it is read. 0 for a texture
- * that isn't a render target (wgf_texture_create_target), or no room for another read,
- * each logged.
+ * A read of `texture` -- a render target, a texture made in code, or one loaded from a
+ * file (its largest level) -- which it holds a reference to until it is read. 0 for a
+ * handle that isn't a texture, or no room for another read, each logged.
  */
-export declare function wgf_texture_read(target: wgf_texture_t | 0): wgf_texture_read_t;
+export declare function wgf_texture_read(texture: wgf_texture_t | 0): wgf_texture_read_t;
 
 /**
  * Its status: PENDING until the next frame's update, then DONE or FAILED. A getter
@@ -3790,12 +3792,12 @@ export declare function wgf_texture_read(target: wgf_texture_t | 0): wgf_texture
 export declare function wgf_texture_read_get_status(read: wgf_texture_read_t | 0): wgf_texture_read_status_t;
 
 /**
- * The target's size as it was read; 0 until DONE.
+ * The texture's size as it was read; 0 until DONE.
  */
 export declare function wgf_texture_read_get_width(read: wgf_texture_read_t | 0): number;
 
 /**
- * The target's size as it was read; 0 until DONE.
+ * The texture's size as it was read; 0 until DONE.
  */
 export declare function wgf_texture_read_get_height(read: wgf_texture_read_t | 0): number;
 
@@ -6404,6 +6406,133 @@ export declare function wgf_follow_get_trauma(camera: wgf_actor_t | 0): number;
  * The point put on the target at once, and the camera with it (a respawn, a new level).
  */
 export declare function wgf_follow_snap(camera: wgf_actor_t | 0): boolean;
+
+/**
+ * An image from a file: PNG, JPEG, BMP, TGA, or GIF (its first frame), decoded with
+ * stb_image on a worker. 0 only when there is no room for another image; a path or file
+ * that can't be loaded gives an image that FAILED (logged once, naming the file). Not
+ * loaded again in place (wgf_asset_reload leaves it).
+ */
+export declare function wgf_image_create(path: string | null): wgf_image_t;
+
+/**
+ * Every pixel `color` (raylib's GenImageColor).
+ */
+export declare function wgf_image_create_color(width: number, height: number, color: wgf_color_t): wgf_image_t;
+
+/**
+ * A gradient from `start` to `end` along a direction `angle` degrees clockwise from
+ * rightward (0 runs left to right, 90 top to bottom): the corner furthest back along it is
+ * `start` exactly, the one furthest along it `end` (raylib's GenImageGradientLinear, its
+ * angle measured from rightward).
+ */
+export declare function wgf_image_create_gradient_linear(width: number, height: number, angle: number, start: wgf_color_t, end: wgf_color_t): wgf_image_t;
+
+/**
+ * A gradient out from the middle, `inner` within `density` (0 to 1, clamped) of the
+ * radius -- from the middle to the nearer sides' pixels -- then toward `outer` at the
+ * radius and beyond: the middle `inner`, the corners `outer` (raylib's
+ * GenImageGradientRadial).
+ */
+export declare function wgf_image_create_gradient_radial(width: number, height: number, density: number, inner: wgf_color_t, outer: wgf_color_t): wgf_image_t;
+
+/**
+ * As radial, in squares rather than circles: `inner` within `density` of the way from the
+ * middle to the edges, then toward `outer`, every edge pixel `outer` (raylib's
+ * GenImageGradientSquare).
+ */
+export declare function wgf_image_create_gradient_square(width: number, height: number, density: number, inner: wgf_color_t, outer: wgf_color_t): wgf_image_t;
+
+/**
+ * A checkerboard of `check_width` by `check_height` pixel squares, `a` at the top-left (raylib's
+ * GenImageChecked). 0 too for a check's side of 0 or less.
+ */
+export declare function wgf_image_create_checked(width: number, height: number, check_width: number, check_height: number, a: wgf_color_t, b: wgf_color_t): wgf_image_t;
+
+/**
+ * Each pixel white with the chance `factor` (0 to 1, clamped), else black (raylib's
+ * GenImageWhiteNoise).
+ */
+export declare function wgf_image_create_white_noise(width: number, height: number, factor: number, seed: number): wgf_image_t;
+
+/**
+ * Perlin noise in six octaves (each twice the last's frequency and half its weight),
+ * `scale` cells of the first octave across the image (raylib's GenImagePerlinNoise),
+ * shifted by `offset_x` and `offset_y` pixels so neighboring images tile; 0 too for a scale
+ * of 0 or less, over 4096, or not finite.
+ */
+export declare function wgf_image_create_perlin_noise(width: number, height: number, offset_x: number, offset_y: number, scale: number, seed: number): wgf_image_t;
+
+/**
+ * Cells (Worley noise): a point at random in each `tile_size` square, each pixel as bright
+ * as it is far from the nearest point, white a tile's side away (raylib's
+ * GenImageCellular). 0 too for a tile's side of 0 or less.
+ */
+export declare function wgf_image_create_cellular(width: number, height: number, tile_size: number, seed: number): wgf_image_t;
+
+/**
+ * A copy of a texture's pixels read back (wgf_texture_read, DONE): raylib's
+ * LoadImageFromTexture. READY at once; 0 for a read that isn't DONE (logged).
+ */
+export declare function wgf_image_create_from_read(read: wgf_texture_read_t | 0): wgf_image_t;
+
+/**
+ * Its size in pixels; 0 until it is READY.
+ */
+export declare function wgf_image_get_width(image: wgf_image_t | 0): number;
+
+/**
+ * Its size in pixels; 0 until it is READY.
+ */
+export declare function wgf_image_get_height(image: wgf_image_t | 0): number;
+
+/**
+ * The pixel at column `x`, row `y` from the top-left (raylib's GetImageColor); 0 (transparent
+ * black) outside it or for an image that isn't READY.
+ */
+export declare function wgf_image_get_pixel(image: wgf_image_t | 0, x: number, y: number): wgf_color_t;
+
+/**
+ * That pixel set to `color` (raylib's ImageDrawPixel). Refused, false, outside it or for an
+ * image that isn't READY.
+ */
+export declare function wgf_image_set_pixel(image: wgf_image_t | 0, x: number, y: number, color: wgf_color_t): boolean;
+
+/**
+ * Its pixels: RGBA, 8 bits a channel, width * 4 bytes a row, the top row first; valid until
+ * it is released. NULL and 0 for an image that isn't READY.
+ */
+export declare function wgf_image_get_data(image: wgf_image_t | 0): Uint8Array;
+
+/**
+ * Its pixels: RGBA, 8 bits a channel, width * 4 bytes a row, the top row first; valid until
+ * it is released. NULL and 0 for an image that isn't READY.
+ */
+export declare function wgf_image_get_size(image: wgf_image_t | 0): number;
+
+/**
+ * Saved as a PNG file at `path` (as wgf_fs_write: under the root, its directories made; on
+ * the web, kept in the browser's store), libwgf's own writer. The write's task, or 0 for an
+ * image that isn't READY, a NULL or refused path, or no memory to encode it. Encoded on the
+ * calling thread.
+ */
+export declare function wgf_image_save(image: wgf_image_t | 0, path: string | null): wgf_fs_task_t;
+
+/**
+ * A texture made in code (as wgf_texture_create_blank) holding the image's pixels as they
+ * are now, seen from the next frame drawn (raylib's LoadTextureFromImage): no mipmaps,
+ * written again by wgf_texture_write or wgf_texture_write_image -- though not in the frame
+ * it is made, whose one write this is. 0 for an image that isn't READY, or before gfx
+ * runs, each logged.
+ */
+export declare function wgf_texture_create_from_image(image: wgf_image_t | 0): wgf_texture_t;
+
+/**
+ * A texture made in code written whole with the image's pixels (raylib's UpdateTexture),
+ * as wgf_texture_write. False for a texture not made in code, an image that isn't READY
+ * or isn't the texture's size, and a second write in a frame.
+ */
+export declare function wgf_texture_write_image(texture: wgf_texture_t | 0, image: wgf_image_t | 0): boolean;
 
 /**
  * A white light of intensity 1, no range limit, a spot's cone pi/6 to pi/4. 0 when

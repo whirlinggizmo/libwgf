@@ -79,12 +79,13 @@ WGF_API wgf_texture_wrap_t wgf_texture_get_wrap_u(wgf_texture_t texture);
 WGF_API wgf_texture_wrap_t wgf_texture_get_wrap_v(wgf_texture_t texture);
 WGF_API wgf_texture_filter_t wgf_texture_get_filter(wgf_texture_t texture);
 
-/* A render target read back: its pixels in memory, for a screenshot of it, a tool, or a
- * pixel check. A read is a task, a handle of kind "gfx.texture_read" (CONVENTIONS.md's
- * asynchronous work): PENDING as it is made, then, in the runtime's update at the start of
- * the next frame, DONE with what the target held once the frame the read was asked in was
- * drawn -- or FAILED where there is no GPU to read (a headless build) or no memory for its
- * pixels. Reading stalls that update until the GPU has drawn the frame:
+/* A texture read back: its pixels in memory, for a screenshot of a render target, a tool,
+ * a pixel check, or an image (wgf_image_create_from_read). A read is a task, a handle of
+ * kind "gfx.texture_read" (CONVENTIONS.md's asynchronous work): PENDING as it is made, then,
+ * in the runtime's update at the start of the next frame, DONE with what the texture held
+ * once the frame the read was asked in was drawn -- or FAILED where there is no GPU to read
+ * (a headless build), for a texture not READY by then or compressed (a .ktx), or with no
+ * memory for its pixels. Reading stalls that update until the GPU has drawn the frame:
  * fine for a screenshot, not every frame. */
 typedef wgf_handle_t wgf_texture_read_t;
 
@@ -95,15 +96,15 @@ typedef enum wgf_texture_read_status_t {
     WGF_TEXTURE_READ_STATUS_FAILED = 3
 } wgf_texture_read_status_t;
 
-/* A read of `target`, which it holds a reference to until it is read. 0 for a texture
- * that isn't a render target (wgf_texture_create_target), or no room for another read,
- * each logged. */
-WGF_API wgf_texture_read_t wgf_texture_read(wgf_texture_t target);
+/* A read of `texture` -- a render target, a texture made in code, or one loaded from a
+ * file (its largest level) -- which it holds a reference to until it is read. 0 for a
+ * handle that isn't a texture, or no room for another read, each logged. */
+WGF_API wgf_texture_read_t wgf_texture_read(wgf_texture_t texture);
 
 /* Its status: PENDING until the next frame's update, then DONE or FAILED. A getter
  * answers NONE, 0, or NULL for a handle that isn't a read. */
 WGF_API wgf_texture_read_status_t wgf_texture_read_get_status(wgf_texture_read_t read);
-/* The target's size as it was read; 0 until DONE. */
+/* The texture's size as it was read; 0 until DONE. */
 WGF_API int wgf_texture_read_get_width(wgf_texture_read_t read);
 WGF_API int wgf_texture_read_get_height(wgf_texture_read_t read);
 /* A DONE read's pixels: RGBA, 8 bits a channel, width * 4 bytes a row, the top row

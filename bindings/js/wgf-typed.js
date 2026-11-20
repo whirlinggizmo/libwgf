@@ -1264,6 +1264,45 @@ export const Identity = Object.freeze({
     // wgf: call wgf_identity_get_product
     getProduct: raw.wgf_identity_get_product,
 });
+// wgf: typed Image
+export const Image = Object.freeze({
+    // wgf: call wgf_image_create
+    create: raw.wgf_image_create,
+    // wgf: call wgf_image_create_color
+    createColor: raw.wgf_image_create_color,
+    // wgf: call wgf_image_create_gradient_linear
+    createGradientLinear: raw.wgf_image_create_gradient_linear,
+    // wgf: call wgf_image_create_gradient_radial
+    createGradientRadial: raw.wgf_image_create_gradient_radial,
+    // wgf: call wgf_image_create_gradient_square
+    createGradientSquare: raw.wgf_image_create_gradient_square,
+    // wgf: call wgf_image_create_checked
+    createChecked: raw.wgf_image_create_checked,
+    // wgf: call wgf_image_create_white_noise
+    createWhiteNoise: raw.wgf_image_create_white_noise,
+    // wgf: call wgf_image_create_perlin_noise
+    createPerlinNoise: raw.wgf_image_create_perlin_noise,
+    // wgf: call wgf_image_create_cellular
+    createCellular: raw.wgf_image_create_cellular,
+    // wgf: call wgf_image_create_from_read
+    createFromRead: raw.wgf_image_create_from_read,
+    // wgf: call wgf_image_get_width
+    getWidth: raw.wgf_image_get_width,
+    // wgf: call wgf_image_get_height
+    getHeight: raw.wgf_image_get_height,
+    // wgf: call wgf_image_get_pixel
+    getPixel: raw.wgf_image_get_pixel,
+    // wgf: call wgf_image_set_pixel
+    setPixel: raw.wgf_image_set_pixel,
+    // wgf: call wgf_image_get_data
+    getData: raw.wgf_image_get_data,
+    // wgf: call wgf_image_get_size
+    getSize: raw.wgf_image_get_size,
+    // wgf: call wgf_image_save
+    save: raw.wgf_image_save,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
+});
 // wgf: typed Input
 export const Input = Object.freeze({
     // wgf: call wgf_input_get_chars
@@ -2318,6 +2357,10 @@ export const Texture = Object.freeze({
     getFilter: raw.wgf_texture_get_filter,
     // wgf: call wgf_texture_read
     read: raw.wgf_texture_read,
+    // wgf: call wgf_texture_create_from_image
+    createFromImage: raw.wgf_texture_create_from_image,
+    // wgf: call wgf_texture_write_image
+    writeImage: raw.wgf_texture_write_image,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });

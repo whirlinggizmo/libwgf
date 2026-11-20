@@ -4134,6 +4134,106 @@ export declare const Identity: {
      */
     readonly getProduct: typeof raw.wgf_identity_get_product;
 };
+/** A handle of kind wgf_image_t: the raw binding's branded type. */
+export type Image = raw.wgf_image_t;
+export declare const Image: {
+    /**
+     * An image from a file: PNG, JPEG, BMP, TGA, or GIF (its first frame), decoded with
+     * stb_image on a worker. 0 only when there is no room for another image; a path or file
+     * that can't be loaded gives an image that FAILED (logged once, naming the file). Not
+     * loaded again in place (wgf_asset_reload leaves it).
+     */
+    readonly create: typeof raw.wgf_image_create;
+    /**
+     * Every pixel `color` (raylib's GenImageColor).
+     */
+    readonly createColor: typeof raw.wgf_image_create_color;
+    /**
+     * A gradient from `start` to `end` along a direction `angle` degrees clockwise from
+     * rightward (0 runs left to right, 90 top to bottom): the corner furthest back along it is
+     * `start` exactly, the one furthest along it `end` (raylib's GenImageGradientLinear, its
+     * angle measured from rightward).
+     */
+    readonly createGradientLinear: typeof raw.wgf_image_create_gradient_linear;
+    /**
+     * A gradient out from the middle, `inner` within `density` (0 to 1, clamped) of the
+     * radius -- from the middle to the nearer sides' pixels -- then toward `outer` at the
+     * radius and beyond: the middle `inner`, the corners `outer` (raylib's
+     * GenImageGradientRadial).
+     */
+    readonly createGradientRadial: typeof raw.wgf_image_create_gradient_radial;
+    /**
+     * As radial, in squares rather than circles: `inner` within `density` of the way from the
+     * middle to the edges, then toward `outer`, every edge pixel `outer` (raylib's
+     * GenImageGradientSquare).
+     */
+    readonly createGradientSquare: typeof raw.wgf_image_create_gradient_square;
+    /**
+     * A checkerboard of `check_width` by `check_height` pixel squares, `a` at the top-left (raylib's
+     * GenImageChecked). 0 too for a check's side of 0 or less.
+     */
+    readonly createChecked: typeof raw.wgf_image_create_checked;
+    /**
+     * Each pixel white with the chance `factor` (0 to 1, clamped), else black (raylib's
+     * GenImageWhiteNoise).
+     */
+    readonly createWhiteNoise: typeof raw.wgf_image_create_white_noise;
+    /**
+     * Perlin noise in six octaves (each twice the last's frequency and half its weight),
+     * `scale` cells of the first octave across the image (raylib's GenImagePerlinNoise),
+     * shifted by `offset_x` and `offset_y` pixels so neighboring images tile; 0 too for a scale
+     * of 0 or less, over 4096, or not finite.
+     */
+    readonly createPerlinNoise: typeof raw.wgf_image_create_perlin_noise;
+    /**
+     * Cells (Worley noise): a point at random in each `tile_size` square, each pixel as bright
+     * as it is far from the nearest point, white a tile's side away (raylib's
+     * GenImageCellular). 0 too for a tile's side of 0 or less.
+     */
+    readonly createCellular: typeof raw.wgf_image_create_cellular;
+    /**
+     * A copy of a texture's pixels read back (wgf_texture_read, DONE): raylib's
+     * LoadImageFromTexture. READY at once; 0 for a read that isn't DONE (logged).
+     */
+    readonly createFromRead: typeof raw.wgf_image_create_from_read;
+    /**
+     * Its size in pixels; 0 until it is READY.
+     */
+    readonly getWidth: typeof raw.wgf_image_get_width;
+    /**
+     * Its size in pixels; 0 until it is READY.
+     */
+    readonly getHeight: typeof raw.wgf_image_get_height;
+    /**
+     * The pixel at column `x`, row `y` from the top-left (raylib's GetImageColor); 0 (transparent
+     * black) outside it or for an image that isn't READY.
+     */
+    readonly getPixel: typeof raw.wgf_image_get_pixel;
+    /**
+     * That pixel set to `color` (raylib's ImageDrawPixel). Refused, false, outside it or for an
+     * image that isn't READY.
+     */
+    readonly setPixel: typeof raw.wgf_image_set_pixel;
+    /**
+     * Its pixels: RGBA, 8 bits a channel, width * 4 bytes a row, the top row first; valid until
+     * it is released. NULL and 0 for an image that isn't READY.
+     */
+    readonly getData: typeof raw.wgf_image_get_data;
+    /**
+     * Its pixels: RGBA, 8 bits a channel, width * 4 bytes a row, the top row first; valid until
+     * it is released. NULL and 0 for an image that isn't READY.
+     */
+    readonly getSize: typeof raw.wgf_image_get_size;
+    /**
+     * Saved as a PNG file at `path` (as wgf_fs_write: under the root, its directories made; on
+     * the web, kept in the browser's store), libwgf's own writer. The write's task, or 0 for an
+     * image that isn't READY, a NULL or refused path, or no memory to encode it. Encoded on the
+     * calling thread.
+     */
+    readonly save: typeof raw.wgf_image_save;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
+};
 export declare const Input: {
     /**
      * The characters typed since the previous tick or frame, in order, as one UTF-8
@@ -8100,11 +8200,25 @@ export declare const Texture: {
      */
     readonly getFilter: typeof raw.wgf_texture_get_filter;
     /**
-     * A read of `target`, which it holds a reference to until it is read. 0 for a texture
-     * that isn't a render target (wgf_texture_create_target), or no room for another read,
-     * each logged.
+     * A read of `texture` -- a render target, a texture made in code, or one loaded from a
+     * file (its largest level) -- which it holds a reference to until it is read. 0 for a
+     * handle that isn't a texture, or no room for another read, each logged.
      */
     readonly read: typeof raw.wgf_texture_read;
+    /**
+     * A texture made in code (as wgf_texture_create_blank) holding the image's pixels as they
+     * are now, seen from the next frame drawn (raylib's LoadTextureFromImage): no mipmaps,
+     * written again by wgf_texture_write or wgf_texture_write_image -- though not in the frame
+     * it is made, whose one write this is. 0 for an image that isn't READY, or before gfx
+     * runs, each logged.
+     */
+    readonly createFromImage: typeof raw.wgf_texture_create_from_image;
+    /**
+     * A texture made in code written whole with the image's pixels (raylib's UpdateTexture),
+     * as wgf_texture_write. False for a texture not made in code, an image that isn't READY
+     * or isn't the texture's size, and a second write in a frame.
+     */
+    readonly writeImage: typeof raw.wgf_texture_write_image;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
@@ -8117,11 +8231,11 @@ export declare const TextureRead: {
      */
     readonly getStatus: typeof raw.wgf_texture_read_get_status;
     /**
-     * The target's size as it was read; 0 until DONE.
+     * The texture's size as it was read; 0 until DONE.
      */
     readonly getWidth: typeof raw.wgf_texture_read_get_width;
     /**
-     * The target's size as it was read; 0 until DONE.
+     * The texture's size as it was read; 0 until DONE.
      */
     readonly getHeight: typeof raw.wgf_texture_read_get_height;
     /**

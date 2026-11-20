@@ -12,7 +12,7 @@
 /* Render targets on sokol's dummy backend (a headless build): what makes one and what
  * refuses one, a target's own size and scale while it is drawn into and the screen's
  * after, the clips of each pass, a target's clear color, the passes a frame allows, and a
- * read of one (wgf_texture_read): PENDING until the update after its frame is drawn,
+ * read of one (wgf_texture_read, of any texture): PENDING until the update after its frame is drawn,
  * FAILED then, and holding its target till then; the screen's, FAILED as its frame ends. No GPU, so no pixels: those are
  * wgf_gfx_target_window_test's, and wgf_gfx_texture_read_window_test's. */
 
@@ -29,7 +29,7 @@ static void expect(int ok, const char *what)
 int main(void)
 {
     wgf_texture_t target, other;
-    wgf_texture_read_t read, pending;
+    wgf_texture_read_t read, pending, unready;
     float x, y, w, h;
     int i;
 
@@ -90,7 +90,9 @@ int main(void)
     wgf_render_end_target();
     wgf_gfx_priv_end_frame();
 
-    expect(wgf_texture_read(other) == 0 && wgf_texture_read(0) == 0, "no read of a texture that isn't a target");
+    expect(wgf_texture_read(0) == 0 && wgf_texture_read(12345) == 0, "no read of a handle that isn't a texture");
+    unready = wgf_texture_read(other); /* any texture is read, but this one never loads */
+    expect(unready != 0, "a read of a texture that isn't a target");
     read = wgf_texture_read(target);
     expect(read != 0 && wgf_texture_read_get_status(read) == WGF_TEXTURE_READ_STATUS_PENDING, "a read, PENDING");
     pending = wgf_texture_read(target);
@@ -105,6 +107,8 @@ int main(void)
     wgf_gfx_priv_end_frame();
     wgf_core_priv_part_update(0.0f);
     expect(wgf_texture_read_get_status(read) == WGF_TEXTURE_READ_STATUS_FAILED, "FAILED next: no GPU to read");
+    expect(wgf_texture_read_get_status(unready) == WGF_TEXTURE_READ_STATUS_FAILED && wgf_texture_read_destroy(unready),
+           "and one of a texture not READY by then FAILED");
     expect(wgf_texture_read_get_data(read) == NULL && wgf_texture_read_get_size(read) == 0 &&
                wgf_texture_read_get_width(read) == 0 && wgf_texture_read_get_height(read) == 0,
            "no pixels, and no size");

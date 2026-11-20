@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #define finish emscripten_force_exit
@@ -11,6 +12,7 @@
 #include "wgf_color.h"
 #include "wgf_draw.h"
 #include "wgf_fs.h"
+#include "wgf_image.h"
 #include "wgf_render.h"
 #include "wgf_resource.h"
 #include "wgf_texture.h"
@@ -24,7 +26,9 @@
  * the top first; a read of another target released in its frame still reads it, the read
  * holding it; and one destroyed while PENDING is gone. The screen read (wgf_render_read_screen)
  * as its frame ends, a red square at its top-left, and saved (wgf_texture_read_save), the
- * file written. */
+ * file written. Images (wgf_image.h): a texture made from one reads back as its pixels, an
+ * image made from that read is them again, and the image saved as a PNG and loaded as a
+ * texture from the file reads back as them too. */
 
 #define WIDTH 32
 #define HEIGHT 24
@@ -34,12 +38,40 @@ static int frames;
 static wgf_texture_t target, blue;
 static wgf_texture_read_t read, blue_read, screen;
 static wgf_fs_task_t saved;
+static wgf_image_t image;                    /* checks, 16 by 8, one color half see-through, its last pixel lime */
+static wgf_texture_t from_image, from_file;  /* made from it; loaded from its PNG */
+static wgf_texture_read_t image_read, file_read;
+static wgf_fs_task_t image_saved;
+static bool file_checked;
 
 static void expect(int ok, const char *what)
 {
     if (!ok) {
         printf("FAIL: %s\n", what);
         failures++;
+    }
+}
+
+/* A read's pixels are exactly the image's. */
+static bool read_is_image(wgf_texture_read_t r)
+{
+    return wgf_texture_read_get_status(r) == WGF_TEXTURE_READ_STATUS_DONE &&
+           wgf_texture_read_get_size(r) == wgf_image_get_size(image) &&
+           memcmp(wgf_texture_read_get_data(r), wgf_image_get_data(image), (size_t)wgf_image_get_size(image)) == 0;
+}
+
+/* The texture loaded from the image's file, once it is written, then read once READY. */
+static void step_file(void)
+{
+    if (from_file == 0 && wgf_fs_task_get_status(image_saved) == WGF_FS_TASK_STATUS_DONE) {
+        from_file = wgf_texture_create("read-test/image.png");
+    } else if (from_file != 0 && file_read == 0 && wgf_resource_get_status(from_file) == WGF_RESOURCE_STATUS_READY) {
+        file_read = wgf_texture_read(from_file);
+    } else if (file_read != 0 && wgf_texture_read_get_status(file_read) != WGF_TEXTURE_READ_STATUS_PENDING) {
+        expect(read_is_image(file_read), "a texture loaded from the image's PNG reads back as its pixels");
+        wgf_texture_read_destroy(file_read);
+        wgf_resource_release(from_file);
+        file_checked = true;
     }
 }
 
@@ -61,6 +93,7 @@ static void on_frame(void *user)
     wgf_texture_read_t dropped;
     (void)user;
     frames++;
+    if (!file_checked) step_file();
     if (frames == 2) { /* the first frame's drawing may wait on the window */
         wgf_render_begin_target(target);
         wgf_draw_rectangle(0, 0, 8, 8, WGF_COLOR_YELLOW);
@@ -78,6 +111,7 @@ static void on_frame(void *user)
         wgf_resource_release(blue); /* the read holds it */
         dropped = wgf_texture_read(target);
         expect(wgf_texture_read_destroy(dropped), "one destroyed PENDING");
+        image_read = wgf_texture_read(from_image);
     } else if (frames == 3) {
         expect(wgf_texture_read_get_status(read) == WGF_TEXTURE_READ_STATUS_DONE, "DONE in the next frame");
         expect(wgf_texture_read_get_width(read) == WIDTH && wgf_texture_read_get_height(read) == HEIGHT &&
@@ -102,11 +136,22 @@ static void on_frame(void *user)
             expect_pixel(screen, 2, 2, WGF_COLOR_RED, "the square at the screen's top-left, in the first rows");
             expect_pixel(screen, 60, 28, wgf_render_get_clear_color(), "the clear color at its bottom-right");
         }
+        expect(read_is_image(image_read), "a texture made from an image reads back as its pixels");
+        {
+            const wgf_image_t copy = wgf_image_create_from_read(image_read);
+            expect(copy != 0 && wgf_image_get_width(copy) == 16 && wgf_image_get_size(copy) == wgf_image_get_size(image) &&
+                       memcmp(wgf_image_get_data(copy), wgf_image_get_data(image), (size_t)wgf_image_get_size(image)) == 0,
+                   "and an image made from the read is them again");
+            wgf_resource_release(copy);
+        }
+        wgf_texture_read_destroy(image_read);
         saved = wgf_texture_read_save(screen, "read-test/shot.png");
         expect(saved != 0, "saved");
         wgf_texture_read_destroy(screen);
-    } else if (frames > 3 && wgf_fs_task_get_status(saved) != WGF_FS_TASK_STATUS_PENDING) {
+    } else if (frames > 3 && wgf_fs_task_get_status(saved) != WGF_FS_TASK_STATUS_PENDING && (file_checked || frames > 600)) {
         expect(wgf_fs_task_get_status(saved) == WGF_FS_TASK_STATUS_DONE, "and written");
+        expect(file_checked, "the image's PNG loaded and read in 600 frames");
+        wgf_fs_task_destroy(image_saved);
         wgf_fs_task_destroy(saved);
         wgf_fs_task_destroy(wgf_fs_rmdir("read-test"));
         finish(failures == 0 ? 0 : 1);
@@ -120,6 +165,10 @@ static void init(void *user)
     wgf_render_set_target_clear_color(target, WGF_COLOR_DARKGRAY);
     blue = wgf_texture_create_target(8, 8);
     wgf_render_set_target_clear_color(blue, WGF_COLOR_BLUE);
+    image = wgf_image_create_checked(16, 8, 4, 4, WGF_COLOR_ORANGE, 0x20406080u);
+    wgf_image_set_pixel(image, 15, 7, WGF_COLOR_LIME); /* its last pixel: the bottom row last */
+    from_image = wgf_texture_create_from_image(image);
+    image_saved = wgf_image_save(image, "read-test/image.png");
 }
 
 int main(void)

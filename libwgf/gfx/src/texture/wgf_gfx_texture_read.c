@@ -12,14 +12,16 @@
 #include "wgf_platform_priv.h"
 #include "wgf_render.h"
 
-/* Render targets read back, new to libwgf: wgrender-c left it open among its targets'
- * follow-ups ("reading pixels back / screenshots"), and libwgt's tests read the screen
+/* Textures read back (render targets, textures made in code, and those of files), new to
+ * libwgf: wgrender-c left it open among its targets' follow-ups ("reading pixels back /
+ * screenshots"), and libwgt's tests read the screen
  * with GL of their own. Each read is a task; the part's update, at the start of the frame
  * after it was asked, reads every one whose frame has been drawn and committed (marked at
  * the frame's end, so one asked in a tick, before the update, waits a frame), outside any
  * pass, through platform's GL (wgf_platform_priv_read_image).
  * A target is stored top row first (wgf_gfx_render.c's flipped passes), which is GL's
- * first row read, so the rows need no flipping. A part of its own, installed by the first
+ * first row read, so the rows need no flipping; so is any other texture, uploaded top row
+ * first. A part of its own, installed by the first
  * read, so a program that reads none links none of it.
  * The screen is read too (wgf_render_read_screen): at the end of the frame, after its last
  * pass and before it is shown, the only time the window's framebuffer holds it; its rows,
@@ -27,7 +29,7 @@
 
 typedef struct read_t {
     wgf_texture_read_status_t status;
-    wgf_texture_t target; /* a reference held while PENDING */
+    wgf_texture_t target; /* the texture read: a reference held while PENDING */
     bool drawn;           /* the frame it was asked in has been drawn: read at the next update */
     bool screen;          /* the screen's: read as the frame ends */
     int width, height;
@@ -46,14 +48,16 @@ static read_t *read_of_at(wgf_texture_read_t read, const char *caller)
 }
 #define read_of(...) read_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
-/* One read: DONE with its pixels, or FAILED; its target let go of either way. */
+/* One read: DONE with its pixels, or FAILED; its texture let go of either way. */
 static void read_target(read_t *read_ptr)
 {
     static bool warned;
-    sg_image image;
-    int width, height;
+    sg_image image = {SG_INVALID_ID};
+    int width = 0, height = 0;
     unsigned char *data = NULL;
-    if (wgf_gfx_priv_texture_get_target_image(read_ptr->target, &image, &width, &height)) {
+    if (!wgf_gfx_priv_texture_get_readable_image(read_ptr->target, &image, &width, &height)) {
+        wgf_log_warn("wgf_texture_read: a texture not READY when read, or compressed: nothing to read");
+    } else {
         data = malloc((size_t)width * (size_t)height * 4u);
         if (data != NULL && !wgf_platform_priv_read_image(image, width, height, data)) {
             free(data);
@@ -171,19 +175,17 @@ static wgf_texture_read_t new_read(const char *caller)
     return read;
 }
 
-wgf_texture_read_t wgf_texture_read(wgf_texture_t target)
+wgf_texture_read_t wgf_texture_read(wgf_texture_t texture)
 {
-    sg_image image;
-    int width, height;
     wgf_texture_read_t read;
-    if (!wgf_gfx_priv_texture_get_target_image(target, &image, &width, &height)) {
-        wgf_log_warn("wgf_texture_read: not a render target (wgf_texture_create_target makes one)");
+    if (!wgf_gfx_priv_texture_is_texture(texture)) {
+        wgf_log_warn("wgf_texture_read: not a texture");
         return 0;
     }
     read = new_read("wgf_texture_read");
     if (read == 0) return 0;
-    read_of(read)->target = target;
-    wgf_gfx_priv_texture_retain(target);
+    read_of(read)->target = texture;
+    wgf_gfx_priv_texture_retain(texture);
     return read;
 }
 

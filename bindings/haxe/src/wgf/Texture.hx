@@ -103,10 +103,28 @@ abstract Texture(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_texture_get_filter(this);
 
 	/**
-	    A read of `target`, which it holds a reference to until it is read. 0 for a texture
-	    that isn't a render target (wgf_texture_create_target), or no room for another read,
-	    each logged.
+	    A read of `texture` -- a render target, a texture made in code, or one loaded from a
+	    file (its largest level) -- which it holds a reference to until it is read. 0 for a
+	    handle that isn't a texture, or no room for another read, each logged.
 	**/
 	public inline function read():TextureRead
 		return Raw.wgf_texture_read(this);
+
+	/**
+	    A texture made in code (as wgf_texture_create_blank) holding the image's pixels as they
+	    are now, seen from the next frame drawn (raylib's LoadTextureFromImage): no mipmaps,
+	    written again by wgf_texture_write or wgf_texture_write_image -- though not in the frame
+	    it is made, whose one write this is. 0 for an image that isn't READY, or before gfx
+	    runs, each logged.
+	**/
+	public static inline function createFromImage(image:Image):Texture
+		return Raw.wgf_texture_create_from_image(image);
+
+	/**
+	    A texture made in code written whole with the image's pixels (raylib's UpdateTexture),
+	    as wgf_texture_write. False for a texture not made in code, an image that isn't READY
+	    or isn't the texture's size, and a second write in a frame.
+	**/
+	public inline function writeImage(image:Image):Bool
+		return Raw.wgf_texture_write_image(this, image);
 }

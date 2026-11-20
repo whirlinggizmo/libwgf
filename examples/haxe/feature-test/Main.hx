@@ -44,6 +44,10 @@ class Main {
 	static var island:Tilemap = 0; // a Tiled map, gfx-tilemap's
 	static var font:Font;
 	static var pixelFont:Font = 0; // a bitmap font, a BMFont's .fnt and its page
+	static var picture:Image = 0; // an image on the CPU, loaded from a file
+	static var checks:Image = 0; // an image made in code
+	static var checksTexture:Texture = 0; // a texture made from it
+	static var tilesRead:TextureRead = 0; // a texture loaded from a file, read back
 	static var menu:Document;
 	static var menuDone = false;
 	static var click:Sound;
@@ -84,6 +88,7 @@ class Main {
 		assets();
 		audio();
 		gfx();
+		images();
 		ecs();
 		physics();
 	}
@@ -963,8 +968,48 @@ class Main {
 		Draw.texture(target, 220, 4, 64, 48, Color.get(ColorStock.WHITE));
 		targetRead = target.read();
 		screenRead = Render.readScreen();
-		expect(targetRead.getStatus() == TextureReadStatus.PENDING && tiles.read().isNone(),
-			"a target read back, PENDING; a texture that isn't one refused");
+		tilesRead = tiles.read();
+		expect(targetRead.getStatus() == TextureReadStatus.PENDING && tilesRead.getStatus() == TextureReadStatus.PENDING,
+			"a target read back, PENDING, and a texture of a file");
+	}
+
+	/** Images on the CPU: made in code (each generator), a pixel read and set, their bytes, a
+		texture made from one, saved as a PNG, and one loaded from a file (checked once READY). **/
+	static function images():Void {
+		final red = Color.get(ColorStock.RED), blue = Color.get(ColorStock.BLUE), green = Color.get(ColorStock.GREEN);
+		final black = Color.get(ColorStock.BLACK), white = Color.get(ColorStock.WHITE);
+		checks = Image.createChecked(8, 4, 2, 2, red, blue);
+		expect(!checks.isNone() && Resource.getStatus(checks) == ResourceStatus.READY && (checks : Handle).getKindName() == "gfx.image",
+			"an image made in code: READY at once");
+		expect(checks.getWidth() == 8 && checks.getHeight() == 4 && checks.getSize() == 128 && checks.getData().length == 128,
+			"its size, and its bytes");
+		expect(checks.getPixel(0, 0) == red && checks.getPixel(2, 0) == blue && checks.getPixel(2, 2) == red, "checks");
+		expect(checks.setPixel(1, 1, green) && checks.getPixel(1, 1) == green && !checks.setPixel(8, 0, green)
+			&& checks.getPixel(-1, 0) == 0, "a pixel set and read; outside it refused");
+		final ramp = Image.createGradientLinear(4, 2, 0, black, white);
+		expect(ramp.getPixel(0, 1) == black && ramp.getPixel(3, 0) == white, "a linear gradient's ends");
+		final radial = Image.createGradientRadial(5, 5, 0, white, black), square = Image.createGradientSquare(5, 5, 0, white, black);
+		expect(radial.getPixel(2, 2) == white && radial.getPixel(0, 0) == black && square.getPixel(2, 2) == white
+			&& square.getPixel(4, 2) == black, "radial and square gradients: the middle inner, the edges outer");
+		final flat = Image.createColor(2, 2, green);
+		expect(flat.getPixel(1, 1) == green, "a color");
+		final noise = Image.createWhiteNoise(16, 16, 0.5, 7), perlin = Image.createPerlinNoise(16, 16, 0, 0, 2, 7);
+		final cells = Image.createCellular(16, 16, 4, 7);
+		expect(noise.getData().compare(Image.createWhiteNoise(16, 16, 0.5, 7).getData()) == 0
+			&& perlin.getData().compare(Image.createPerlinNoise(16, 16, 0, 0, 2, 7).getData()) == 0
+			&& cells.getData().compare(Image.createCellular(16, 16, 4, 7).getData()) == 0,
+			"noise: the same for a seed");
+		checksTexture = Texture.createFromImage(checks);
+		expect(!checksTexture.isNone() && checksTexture.getWidth() == 8 && !checksTexture.writeImage(checks),
+			"a texture from an image; written once in its frame");
+		final saved = checks.save("feature-image.png");
+		expect(!saved.isNone(), "an image saved as a PNG");
+		saved.destroy();
+		Fs.remove("feature-image.png").destroy();
+		picture = Image.create("textures/tiles.png");
+		expect(Resource.getStatus(picture) == ResourceStatus.PENDING && picture.getWidth() == 0, "an image from a file, PENDING");
+		for (image in [ramp, radial, square, flat, noise, perlin, cells])
+			Resource.release(image);
 	}
 
 	/** The read, the frame after: DONE with the target's pixels, or FAILED with no GPU (headless). **/
@@ -977,6 +1022,18 @@ class Main {
 		expect(done ? width == 64 && height == 48 && size == 64 * 48 * 4 && data.length == size
 			: width == 0 && height == 0 && size == 0, "DONE: its pixels, 4 bytes each; FAILED: none");
 		expect(targetRead.destroy() && !targetRead.isAlive(), "the read destroyed");
+		{ // a file's texture read: DONE where there is a GPU and it was READY in time, and made an image
+			final tilesDone = tilesRead.getStatus() == TextureReadStatus.DONE;
+			expect(tilesDone || tilesRead.getStatus() == TextureReadStatus.FAILED, "a file's texture read");
+			final copy = Image.createFromRead(tilesRead);
+			expect(tilesDone ? copy.getWidth() == tilesRead.getWidth() && copy.getSize() == tilesRead.getSize() : copy.isNone(),
+				"an image of the read: its pixels; none of a FAILED read");
+			if (tilesDone)
+				Resource.release(copy);
+			tilesRead.destroy();
+		}
+		expect(checksTexture.writeImage(checks) && !checksTexture.writeImage(checks),
+			"a texture written with an image the frames after it was made; once a frame");
 		final screenDone = screenRead.getStatus() == TextureReadStatus.DONE;
 		expect(screenDone || screenRead.getStatus() == TextureReadStatus.FAILED, "the screen read as its frame ended");
 		final shot = screenRead.save("feature-shot.png");
@@ -1071,7 +1128,9 @@ class Main {
 		if (frames >= 30 && instantiated && stage > 3 && menuDone && !reported
 			&& Resource.getStatus(robot.getMesh()) != ResourceStatus.PENDING
 			&& Resource.getStatus(gems) != ResourceStatus.PENDING && Resource.getStatus(island) != ResourceStatus.PENDING
-			&& Resource.getStatus(pixelFont) != ResourceStatus.PENDING) {
+			&& Resource.getStatus(pixelFont) != ResourceStatus.PENDING && Resource.getStatus(picture) != ResourceStatus.PENDING) {
+			expect(Resource.getStatus(picture) == ResourceStatus.READY && picture.getWidth() == tiles.getWidth()
+				&& picture.getSize() == picture.getWidth() * picture.getHeight() * 4, "an image from a file READY, at its size");
 			expect(pixelFont.getSize() == 10 && pixelFont.measure("AV", 10).x == 11,
 				"a bitmap font READY: its own size, A and V kerned a pixel closer");
 			finish();

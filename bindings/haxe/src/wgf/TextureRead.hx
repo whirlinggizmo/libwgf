@@ -21,13 +21,13 @@ abstract TextureRead(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_texture_read_get_status(this);
 
 	/**
-	    The target's size as it was read; 0 until DONE.
+	    The texture's size as it was read; 0 until DONE.
 	**/
 	public inline function getWidth():Int
 		return Raw.wgf_texture_read_get_width(this);
 
 	/**
-	    The target's size as it was read; 0 until DONE.
+	    The texture's size as it was read; 0 until DONE.
 	**/
 	public inline function getHeight():Int
 		return Raw.wgf_texture_read_get_height(this);
