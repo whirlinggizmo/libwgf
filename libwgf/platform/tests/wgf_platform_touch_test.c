@@ -241,9 +241,13 @@ static void system_calls(void)
     expect(wgf_input_set_clipboard("copied") && strcmp(wgf_input_get_clipboard(), "copied") == 0 && !wgf_input_set_clipboard(NULL),
            "the clipboard's text");
     expect(wgf_window_open_url("https://example.com") && !wgf_window_open_url("") && !wgf_window_open_url(NULL), "a URL");
-    expect(!wgf_window_has_touch() && wgf_window_has_fine_pointer() && wgf_window_get_os() != WGF_WINDOW_OS_OTHER &&
-               !wgf_window_is_web(),
-           "a desktop's device");
+#if defined(__EMSCRIPTEN__)
+    expect(wgf_window_is_web(), "in a page: the web");
+#else
+    expect(!wgf_window_is_web(), "natively: not the web");
+#endif
+    expect(!wgf_window_has_touch() && wgf_window_has_fine_pointer() && wgf_window_get_os() != WGF_WINDOW_OS_OTHER,
+           "a headless run's device: a desktop's");
 }
 
 int main(void)

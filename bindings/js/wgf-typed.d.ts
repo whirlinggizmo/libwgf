@@ -40,6 +40,46 @@ export declare const Action: {
      */
     readonly bindTouch: typeof raw.wgf_action_bind_touch;
     /**
+     * An on-screen stick: a finger landing in the region (logical pixels) makes a stick where
+     * it landed, and its pull, up to `radius` away, is read as `action_x` across and `action_y`
+     * up (-1 to 1, held within the circle), as a pad's left stick bound to them is; it ends when
+     * the finger lifts. At most 4 sticks; false for two actions alike, a region with no area, or
+     * a radius not above 0 (and as the other bindings are refused). For drawing it: whether a
+     * finger holds it, where it landed, and where its knob is (logical pixels; 0, 0 while none
+     * holds it), by its across action.
+     */
+    readonly bindTouchStick: typeof raw.wgf_action_bind_touch_stick;
+    /**
+     * An on-screen stick: a finger landing in the region (logical pixels) makes a stick where
+     * it landed, and its pull, up to `radius` away, is read as `action_x` across and `action_y`
+     * up (-1 to 1, held within the circle), as a pad's left stick bound to them is; it ends when
+     * the finger lifts. At most 4 sticks; false for two actions alike, a region with no area, or
+     * a radius not above 0 (and as the other bindings are refused). For drawing it: whether a
+     * finger holds it, where it landed, and where its knob is (logical pixels; 0, 0 while none
+     * holds it), by its across action.
+     */
+    readonly isStickHeld: typeof raw.wgf_action_is_stick_held;
+    /**
+     * An on-screen stick: a finger landing in the region (logical pixels) makes a stick where
+     * it landed, and its pull, up to `radius` away, is read as `action_x` across and `action_y`
+     * up (-1 to 1, held within the circle), as a pad's left stick bound to them is; it ends when
+     * the finger lifts. At most 4 sticks; false for two actions alike, a region with no area, or
+     * a radius not above 0 (and as the other bindings are refused). For drawing it: whether a
+     * finger holds it, where it landed, and where its knob is (logical pixels; 0, 0 while none
+     * holds it), by its across action.
+     */
+    readonly getStickOrigin: typeof raw.wgf_action_get_stick_origin;
+    /**
+     * An on-screen stick: a finger landing in the region (logical pixels) makes a stick where
+     * it landed, and its pull, up to `radius` away, is read as `action_x` across and `action_y`
+     * up (-1 to 1, held within the circle), as a pad's left stick bound to them is; it ends when
+     * the finger lifts. At most 4 sticks; false for two actions alike, a region with no area, or
+     * a radius not above 0 (and as the other bindings are refused). For drawing it: whether a
+     * finger holds it, where it landed, and where its knob is (logical pixels; 0, 0 while none
+     * holds it), by its across action.
+     */
+    readonly getStickKnob: typeof raw.wgf_action_get_stick_knob;
+    /**
      * Every binding of `action` taken off, the action kept (a remap screen binds it again);
      * false for an action there isn't.
      */

@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "b5ba87fff88600a1" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "812461f8780639d5" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -2403,6 +2403,76 @@ export function wgf_action_bind_touch(action, x, y, width, height) {
     const value = host["_wgf_action_bind_touch"](cstr(action), x, y, width, height);
     host["stackRestore"](mark);
     return value !== 0;
+}
+
+// wgf: call wgf_action_bind_touch_stick
+/**
+ * An on-screen stick: a finger landing in the region (logical pixels) makes a stick where
+ * it landed, and its pull, up to `radius` away, is read as `action_x` across and `action_y`
+ * up (-1 to 1, held within the circle), as a pad's left stick bound to them is; it ends when
+ * the finger lifts. At most 4 sticks; false for two actions alike, a region with no area, or
+ * a radius not above 0 (and as the other bindings are refused). For drawing it: whether a
+ * finger holds it, where it landed, and where its knob is (logical pixels; 0, 0 while none
+ * holds it), by its across action.
+ */
+export function wgf_action_bind_touch_stick(action_x, action_y, x, y, width, height, radius) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_action_bind_touch_stick"](cstr(action_x), cstr(action_y), x, y, width, height, radius);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_action_is_stick_held
+/**
+ * An on-screen stick: a finger landing in the region (logical pixels) makes a stick where
+ * it landed, and its pull, up to `radius` away, is read as `action_x` across and `action_y`
+ * up (-1 to 1, held within the circle), as a pad's left stick bound to them is; it ends when
+ * the finger lifts. At most 4 sticks; false for two actions alike, a region with no area, or
+ * a radius not above 0 (and as the other bindings are refused). For drawing it: whether a
+ * finger holds it, where it landed, and where its knob is (logical pixels; 0, 0 while none
+ * holds it), by its across action.
+ */
+export function wgf_action_is_stick_held(action_x) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_action_is_stick_held"](cstr(action_x));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_action_get_stick_origin
+/**
+ * An on-screen stick: a finger landing in the region (logical pixels) makes a stick where
+ * it landed, and its pull, up to `radius` away, is read as `action_x` across and `action_y`
+ * up (-1 to 1, held within the circle), as a pad's left stick bound to them is; it ends when
+ * the finger lifts. At most 4 sticks; false for two actions alike, a region with no area, or
+ * a radius not above 0 (and as the other bindings are refused). For drawing it: whether a
+ * finger holds it, where it landed, and where its knob is (logical pixels; 0, 0 while none
+ * holds it), by its across action.
+ */
+export function wgf_action_get_stick_origin(action_x, into) {
+    const mark = host["stackSave"]();
+    const ret = result(8);
+    host["_wgf_action_get_stick_origin"](ret, cstr(action_x));
+    host["stackRestore"](mark);
+    return vector(ret, 2, into);
+}
+
+// wgf: call wgf_action_get_stick_knob
+/**
+ * An on-screen stick: a finger landing in the region (logical pixels) makes a stick where
+ * it landed, and its pull, up to `radius` away, is read as `action_x` across and `action_y`
+ * up (-1 to 1, held within the circle), as a pad's left stick bound to them is; it ends when
+ * the finger lifts. At most 4 sticks; false for two actions alike, a region with no area, or
+ * a radius not above 0 (and as the other bindings are refused). For drawing it: whether a
+ * finger holds it, where it landed, and where its knob is (logical pixels; 0, 0 while none
+ * holds it), by its across action.
+ */
+export function wgf_action_get_stick_knob(action_x, into) {
+    const mark = host["stackSave"]();
+    const ret = result(8);
+    host["_wgf_action_get_stick_knob"](ret, cstr(action_x));
+    host["stackRestore"](mark);
+    return vector(ret, 2, into);
 }
 
 // wgf: call wgf_action_clear

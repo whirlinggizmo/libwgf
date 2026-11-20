@@ -18,6 +18,14 @@ export const Action = Object.freeze({
     bindPadAxis: raw.wgf_action_bind_pad_axis,
     // wgf: call wgf_action_bind_touch
     bindTouch: raw.wgf_action_bind_touch,
+    // wgf: call wgf_action_bind_touch_stick
+    bindTouchStick: raw.wgf_action_bind_touch_stick,
+    // wgf: call wgf_action_is_stick_held
+    isStickHeld: raw.wgf_action_is_stick_held,
+    // wgf: call wgf_action_get_stick_origin
+    getStickOrigin: raw.wgf_action_get_stick_origin,
+    // wgf: call wgf_action_get_stick_knob
+    getStickKnob: raw.wgf_action_get_stick_knob,
     // wgf: call wgf_action_clear
     clear: raw.wgf_action_clear,
     // wgf: call wgf_action_get_axis

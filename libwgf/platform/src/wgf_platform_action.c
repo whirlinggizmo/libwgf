@@ -1,5 +1,6 @@
 #include "wgf_action.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -17,7 +18,7 @@
 #define NAME_MAX 32
 #define PADS 4
 
-typedef enum binding_kind_t { KEY, KEYS, PAD_BUTTON, PAD_BUTTONS, PAD_AXIS, TOUCH } binding_kind_t;
+typedef enum binding_kind_t { KEY, KEYS, PAD_BUTTON, PAD_BUTTONS, PAD_AXIS, TOUCH, STICK } binding_kind_t;
 
 typedef struct binding_t {
     binding_kind_t kind;
@@ -25,6 +26,7 @@ typedef struct binding_t {
     int direction;      /* a pad axis: -1, 0, or 1 */
     float threshold;    /* a pad axis: below it, 0 */
     float rect[4];      /* a touch region */
+    int stick, part;    /* a stick's: which, and which way (0 across, 1 up) */
 } binding_t;
 
 typedef struct action_t {
@@ -33,6 +35,21 @@ typedef struct action_t {
     int binding_count;
     bool was_down[2]; /* as the last frame (0) and tick (1) ended */
 } action_t;
+
+/* An on-screen stick: where a finger may land to make it, how far it pulls, and the finger
+ * holding it now (-1 none) with where it landed. */
+#define STICKS_MAX 4
+typedef struct stick_t {
+    float rect[4], radius;
+    int finger;
+    float origin[2], at[2];
+    char action_x[NAME_MAX];
+} stick_t;
+
+static struct {
+    stick_t sticks[STICKS_MAX];
+    int count;
+} sticks;
 
 static struct {
     action_t actions[ACTIONS_MAX];
@@ -85,6 +102,52 @@ static bool touched(const binding_t *b)
     return false;
 }
 
+/* The stick as its finger has it now: a finger lifted lets it go; a finger landing in its
+ * region, not another stick's, takes it; its pull read as -1 to 1 each way. */
+static stick_t *stick_now(int index)
+{
+    stick_t *s = &sticks.sticks[index];
+    int i;
+    if (s->finger >= 0) {
+        const wgf_input_state_t state = wgf_touch_get_state(s->finger);
+        if (state == WGF_INPUT_STATE_PRESSED || state == WGF_INPUT_STATE_DOWN) {
+            const wgf_vec2_t at = wgf_touch_get_position(s->finger);
+            s->at[0] = at.x, s->at[1] = at.y;
+            return s;
+        }
+        s->finger = -1;
+    }
+    for (i = 0; i < wgf_touch_get_count(); i++) {
+        const int id = wgf_touch_get_id(i);
+        const wgf_vec2_t at = wgf_touch_get_position(id);
+        int k;
+        bool taken = false;
+        if (wgf_touch_get_state(id) != WGF_INPUT_STATE_PRESSED) continue;
+        for (k = 0; k < sticks.count; k++) taken = taken || sticks.sticks[k].finger == id;
+        if (taken || at.x < s->rect[0] || at.y < s->rect[1] || at.x >= s->rect[0] + s->rect[2] ||
+            at.y >= s->rect[1] + s->rect[3]) {
+            continue;
+        }
+        s->finger = id;
+        s->origin[0] = s->at[0] = at.x;
+        s->origin[1] = s->at[1] = at.y;
+        break;
+    }
+    return s;
+}
+
+/* A stick's pull each way, -1 to 1, held within its circle; y up as a pad's is (the
+ * screen's y runs down). */
+static void stick_pull(const stick_t *s, float *x, float *y)
+{
+    float dx = (s->at[0] - s->origin[0]) / s->radius, dy = -(s->at[1] - s->origin[1]) / s->radius;
+    const float len = sqrtf(dx * dx + dy * dy);
+    if (s->finger < 0) dx = dy = 0.0f;
+    else if (len > 1.0f) dx /= len, dy /= len;
+    *x = dx;
+    *y = dy;
+}
+
 static bool pad_button_down(int button)
 {
     int pad;
@@ -104,6 +167,11 @@ static float value_of(const binding_t *b)
         case PAD_BUTTON: return pad_button_down(b->a) ? 1.0f : 0.0f;
         case PAD_BUTTONS: return (pad_button_down(b->b) ? 1.0f : 0.0f) - (pad_button_down(b->a) ? 1.0f : 0.0f);
         case PAD_AXIS: return pad_axis(b);
+        case STICK: {
+            float x, y;
+            stick_pull(stick_now(b->stick), &x, &y);
+            return b->part == 0 ? x : y;
+        }
         default: return touched(b) ? 1.0f : 0.0f;
     }
 }
@@ -307,6 +375,64 @@ bool wgf_action_bind_touch(const char *action, float x, float y, float width, fl
     return true;
 }
 
+bool wgf_action_bind_touch_stick(const char *action_x, const char *action_y, float x, float y, float width,
+                                 float height, float radius)
+{
+    binding_t *bx, *by;
+    stick_t *s;
+    if (!(width > 0.0f && height > 0.0f && radius > 0.0f) || sticks.count >= STICKS_MAX || action_x == NULL ||
+        action_y == NULL || strcmp(action_x, action_y) == 0 || (bx = add(action_x)) == NULL) {
+        return false;
+    }
+    if ((by = add(action_y)) == NULL) {
+        find(action_x)->binding_count--;
+        return false;
+    }
+    s = &sticks.sticks[sticks.count];
+    memset(s, 0, sizeof(*s));
+    s->rect[0] = x, s->rect[1] = y, s->rect[2] = width, s->rect[3] = height;
+    s->radius = radius;
+    s->finger = -1;
+    strncpy(s->action_x, action_x, NAME_MAX - 1);
+    bx->kind = by->kind = STICK;
+    bx->stick = by->stick = sticks.count;
+    bx->part = 0;
+    by->part = 1;
+    sticks.count++;
+    return true;
+}
+
+/* The stick whose across action is `action_x`, as its finger has it now; NULL for none. */
+static stick_t *stick_of(const char *action_x)
+{
+    int i;
+    for (i = 0; action_x != NULL && i < sticks.count; i++) {
+        if (strcmp(sticks.sticks[i].action_x, action_x) == 0) return stick_now(i);
+    }
+    return NULL;
+}
+
+bool wgf_action_is_stick_held(const char *action_x)
+{
+    const stick_t *s = stick_of(action_x);
+    return s != NULL && s->finger >= 0;
+}
+
+wgf_vec2_t wgf_action_get_stick_origin(const char *action_x)
+{
+    const stick_t *s = stick_of(action_x);
+    return s != NULL && s->finger >= 0 ? wgf_vec2_make(s->origin[0], s->origin[1]) : wgf_vec2_make(0.0f, 0.0f);
+}
+
+wgf_vec2_t wgf_action_get_stick_knob(const char *action_x)
+{
+    const stick_t *s = stick_of(action_x);
+    float x, y;
+    if (s == NULL || s->finger < 0) return wgf_vec2_make(0.0f, 0.0f);
+    stick_pull(s, &x, &y);
+    return wgf_vec2_make(s->origin[0] + x * s->radius, s->origin[1] - y * s->radius);
+}
+
 bool wgf_action_clear(const char *action)
 {
     action_t *a = find(action);
@@ -388,6 +514,7 @@ const char *wgf_action_get_binding_text(const char *action, int index)
             snprintf(table.text, sizeof(table.text), "%s%s", axes[b->a],
                      b->direction < 0 ? " -" : (b->direction > 0 && b->a < WGF_GAMEPAD_AXIS_LEFT_TRIGGER ? " +" : ""));
             break;
+        case STICK: snprintf(table.text, sizeof(table.text), "Touch stick %s", b->part == 0 ? "X" : "Y"); break;
         default: snprintf(table.text, sizeof(table.text), "Touch"); break;
     }
     return table.text;

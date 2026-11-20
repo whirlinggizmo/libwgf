@@ -13,6 +13,7 @@ class Reach {
 		"wgf_action_bind_pad_button",
 		"wgf_action_bind_pad_buttons",
 		"wgf_action_bind_touch",
+		"wgf_action_bind_touch_stick",
 		"wgf_action_clear",
 		"wgf_action_get_axis",
 		"wgf_action_get_binding_count",
@@ -20,10 +21,13 @@ class Reach {
 		"wgf_action_get_count",
 		"wgf_action_get_name",
 		"wgf_action_get_state",
+		"wgf_action_get_stick_knob",
+		"wgf_action_get_stick_origin",
 		"wgf_action_get_value",
 		"wgf_action_is_down",
 		"wgf_action_is_pressed",
 		"wgf_action_is_released",
+		"wgf_action_is_stick_held",
 		"wgf_actor_add_behavior",
 		"wgf_actor_add_component",
 		"wgf_actor_count_with_behavior",
@@ -966,7 +970,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...957) 0];
+	static final counts:Array<Int> = [for (_ in 0...961) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

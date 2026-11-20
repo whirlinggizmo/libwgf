@@ -208,6 +208,8 @@ class Main {
 		expect(Action.getAxis("steer") == 0 && Action.getValue("fire") == 0 && Action.getState("fire") == InputState.UP
 			&& !Action.isDown("fire") && !Action.isPressed("fire") && !Action.isReleased("fire"), "read, at rest");
 		expect(Action.clear("fire") && Action.getBindingCount("fire") == 0, "cleared");
+		expect(Action.bindTouchStick("move_x", "move_y", 0, 0, 400, 600, 60) && !Action.isStickHeld("move_x")
+			&& Action.getStickOrigin("move_x").x == 0 && Action.getStickKnob("move_x").y == 0, "an on-screen stick, not held");
 		Touch.setMouseEmulated(true);
 		expect(Touch.isMouseEmulated(), "touch drives the mouse");
 		Mouse.setLocked(false);

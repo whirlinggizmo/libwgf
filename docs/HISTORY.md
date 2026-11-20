@@ -1040,6 +1040,10 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## Touch controls: an on-screen stick (2026-11-19)
+
+Wardens' block's third item and helix-raylib's virtual gamepad: `wgf_action_bind_touch_stick`, a stick made where a finger lands in a region and read as two actions, the way a pad's left stick bound to them is (libwgf drives actions, not a pretend pad, so a game's bindings take it as they take a pad); its origin and knob for the game to draw. On-screen buttons were already `wgf_action_bind_touch` regions. Not done: keeping the stick's finger from also driving the mouse (touch's first finger does, for the UI), which a game's own UI capture covers for now.
+
 ## Parity: color math (2026-11-19)
 
 raylib's ColorFromHSV, ColorToHSV, ColorBrightness, and ColorTint: a color from hue, saturation, and value and its three read back, brightened toward white or darkened toward black, and two multiplied, exported since a color is a value a binding passes.

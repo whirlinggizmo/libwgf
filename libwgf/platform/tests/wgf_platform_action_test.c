@@ -188,6 +188,36 @@ static void touch(void)
     expect(!wgf_action_is_down("jump"), "lifted");
 }
 
+/* An on-screen stick: made where a finger lands in its region, its pull read as two axes, held
+ * within its circle, ended when the finger lifts. */
+static void stick(void)
+{
+    wgf_vec2_t at;
+    expect(wgf_action_bind_touch_stick("walk_x", "walk_y", 0, 300, 400, 300, 50), "a stick on the left half's bottom");
+    expect(!wgf_action_bind_touch_stick("a", "a", 0, 0, 10, 10, 5) && !wgf_action_bind_touch_stick("b", "c", 0, 0, 10, 10, 0),
+           "two actions alike, or no radius: refused");
+    finger(SAPP_EVENTTYPE_TOUCHES_BEGAN, 100, 400);
+    expect(wgf_action_is_stick_held("walk_x") && wgf_action_get_axis("walk_x") == 0.0f, "a finger lands: a stick, at rest");
+    at = wgf_action_get_stick_origin("walk_x");
+    expect(at.x == 100.0f && at.y == 400.0f, "where it landed");
+    finger(SAPP_EVENTTYPE_TOUCHES_MOVED, 125, 400);
+    expect(fabsf(wgf_action_get_axis("walk_x") - 0.5f) < 1e-4f && wgf_action_get_axis("walk_y") == 0.0f,
+           "pulled right half its radius: 0.5 across");
+    finger(SAPP_EVENTTYPE_TOUCHES_MOVED, 100, 300);
+    expect(fabsf(wgf_action_get_axis("walk_y") - 1.0f) < 1e-4f && wgf_action_is_down("walk_y"),
+           "pulled far up: held to 1 up, down");
+    at = wgf_action_get_stick_knob("walk_x");
+    expect(fabsf(at.y - 350.0f) < 1e-3f, "its knob at the circle's edge");
+    finger(SAPP_EVENTTYPE_TOUCHES_ENDED, 100, 300);
+    next_frame();
+    expect(!wgf_action_is_stick_held("walk_x") && wgf_action_get_axis("walk_y") == 0.0f, "lifted: gone");
+    finger(SAPP_EVENTTYPE_TOUCHES_BEGAN, 600, 100);
+    expect(!wgf_action_is_stick_held("walk_x"), "a finger outside its region: none");
+    finger(SAPP_EVENTTYPE_TOUCHES_ENDED, 600, 100);
+    next_frame();
+    expect(strcmp(wgf_action_get_binding_text("walk_y", 0), "Touch stick Y") == 0, "named");
+}
+
 static void listing(void)
 {
     expect(wgf_action_get_binding_count("steer") == 2 &&
@@ -203,7 +233,7 @@ static void listing(void)
     expect(strcmp(wgf_action_get_binding_text("fire", 2), "") == 0 && wgf_action_get_binding_count("none") == 0 &&
                strcmp(wgf_action_get_binding_text("none", 0), "") == 0,
            "past the end, or no such action: none");
-    expect(wgf_action_clear("fire") && wgf_action_get_binding_count("fire") == 0 && wgf_action_get_count() == 6 &&
+    expect(wgf_action_clear("fire") && wgf_action_get_binding_count("fire") == 0 && wgf_action_get_count() == 8 &&
                wgf_action_bind_key("fire", WGF_KEY_F) && strcmp(wgf_action_get_binding_text("fire", 0), "F") == 0,
            "cleared, kept, and bound again");
     expect(!wgf_action_clear("none") && wgf_action_get_state("none") == WGF_INPUT_STATE_UP &&
@@ -219,6 +249,7 @@ int main(void)
     keys_and_axes();
     buttons_taps_and_ticks();
     touch();
+    stick();
     listing();
     return failures == 0 ? 0 : 1;
 }
