@@ -22,11 +22,12 @@ game `wgf new` makes (wgf.json, src/Main.hx), with:
 A directory inside a git repository is refused, as the entrant would read its commits.
 
 --libwgf names the worktree of libwgf the entrant builds against, at the commit being
-tried: a checkout of its own, so nothing changes under the entrant, its linux-x64-debug
+tried: a checkout of the entrant's own, so nothing changes under it, its linux-x64-debug
 variant built and staged (`wgf build --desktop` in any game does it). Its build/ and out/
-are writable to the entrant, as `wgf build` stages the variant again (a no-op when
-current); its games/ and docs/ are hidden, as they hold libwgf's own Wardens and its
-history.
+are writable to the entrant, as `wgf build` stages the variant again, fresh, each time:
+two entrants on one worktree would replace each other's libwgf.a as the other links, so
+the worktree is marked with its entrant (.entrant) and refused to another. Its games/ and
+docs/ are hidden, as they hold libwgf's own Wardens and its history.
 
 The entrant runs in a bubblewrap sandbox: an empty home with the Claude Code binary, the
 toolchains, and libwgf's user cache (hxcpp, sokol-shdc) read-only, and only ~/.claude (its
@@ -55,6 +56,7 @@ ROOT = Path(__file__).resolve().parents[1]
 BRIEF = ROOT / 'games' / 'wardens' / 'trial' / 'brief.md'
 NAME = 'wardens'  # the game's name in wgf.json: its program is build/desktop/wardens
 VARIANT_OUT = Path('out') / 'linux-x64' / 'debug'  # what `wgf build --desktop` builds against
+FREE_GB = 20  # the disk an entrant's run wants free: its builds, hxcpp's, and the variant staged again
 # Claude Code's own session variables, so the entrant starts as a session of its own, not a child of this one (helix's list).
 CLAUDE_VARS = ('CLAUDECODE', 'CLAUDE_CODE_ENTRYPOINT', 'CLAUDE_CODE_CHILD_SESSION', 'CLAUDE_CODE_SESSION_ID', 'CLAUDE_PID',
                'CLAUDE_CODE_MESSAGING_SOCKET', 'CLAUDE_CODE_MESSAGING_TOKEN', 'CLAUDE_CODE_BRIDGE_SESSION_ID',
@@ -146,6 +148,13 @@ def main():
         sys.exit(f"run_entrant: {helix} has no docs/trials/templates/wardens/spec.md (helix's checkout: --helix)")
     if not shutil.which('bwrap') or not browser.find_xvfb():
         sys.exit('run_entrant: needs bubblewrap (bwrap) and Xvfb')
+    free = shutil.disk_usage(libwgf).free
+    if free < FREE_GB * 2**30:
+        sys.exit(f'run_entrant: {free / 2**30:.1f} GB free; an entrant wants {FREE_GB} (a full disk fails its builds as if its code did)')
+    mark = libwgf / '.entrant'
+    if mark.exists() and mark.read_text(encoding='utf-8').strip() != str(entrant):
+        sys.exit(f'run_entrant: {libwgf} is {mark.read_text(encoding="utf-8").strip()}\'s; each entrant builds against a worktree of its own')
+    mark.write_text(str(entrant) + '\n', encoding='utf-8')
     probe = entrant if entrant.exists() else entrant.parent
     probe.mkdir(parents=True, exist_ok=True)
     if subprocess.run(['git', '-C', str(probe), 'rev-parse'], capture_output=True).returncode == 0:
