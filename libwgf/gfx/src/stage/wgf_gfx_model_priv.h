@@ -5,10 +5,12 @@
 
 #include "wgf_actor.h"
 #include "wgf_material.h"
+#include "wgf_mat4.h"
 #include "wgf_mesh.h"
 #include "wgf_vec3.h"
 
 struct wgf_gfx_priv_animation_t;
+struct wgf_gfx_priv_mesh_skin_t;
 
 /* A file's mesh done loading (READY or FAILED), or loaded again, from glTF's loader: the
  * models of it make their trees now, or make them again in place (or, failed, stay empty,
@@ -43,6 +45,15 @@ typedef struct wgf_gfx_priv_model_tree_t {
     int *joint_base; /* -1: none this frame (no room, or nothing to place) */
     wgf_vec3_t *skin_lo, *skin_hi;
 } wgf_gfx_priv_model_tree_t;
+
+/* Joint `joint` of `skin` (one of the file's skins, the tree's root's) as a skinned part is
+ * posed by it, on the GPU (the stage) and on the CPU (immediate mode's model draws): the
+ * joint's actor's world matrix taken into the root's space (`to_root`, the inverse of the
+ * root's world matrix) times the joint's inverse bind matrix; the identity for a joint not
+ * made, or destroyed since. */
+wgf_mat4_t wgf_gfx_priv_model_joint_matrix(const wgf_gfx_priv_model_tree_t *tree,
+                                           const struct wgf_gfx_priv_mesh_skin_t *skin, int joint,
+                                           const wgf_mat4_t *to_root);
 
 /* A file root's tree let go of (its model's free), and its animation player, through the
  * animation part's hook (set as it installs; NULL before, when there is none). */

@@ -227,10 +227,22 @@ static void normal_of(float ax, float ay, float bx, float by, float *nx, float *
     *ny = dx / length;
 }
 
-/* The polyline's points with repeats dropped, kept between calls and grown as needed,
- * so drawing shapes every frame allocates nothing once warm. The main thread's. */
+/* Immediate mode's scratch (a polyline's points with repeats dropped, a model's posed
+ * vertices), kept between calls and grown as needed, so drawing shapes every frame
+ * allocates nothing once warm. The main thread's. */
 static float *scratch;
 static int scratch_capacity;
+
+float *wgf_gfx_priv_draw_scratch(int count)
+{
+    if (count > scratch_capacity) {
+        float *grown = (float *)realloc(scratch, sizeof(float) * (size_t)count);
+        if (grown == NULL) return NULL;
+        scratch = grown;
+        scratch_capacity = count;
+    }
+    return scratch;
+}
 
 bool wgf_draw_polyline(const float *points, int count, bool closed, float thickness, wgf_color_t color)
 {
@@ -239,13 +251,8 @@ bool wgf_draw_polyline(const float *points, int count, bool closed, float thickn
     int n = 0, segments, i;
     if (points == NULL || count < 4 || count % 2 != 0) return false;
     if (!wgf_gfx_priv_is_in_frame()) return true;
-    if (count > scratch_capacity) {
-        float *grown = (float *)realloc(scratch, sizeof(float) * (size_t)count);
-        if (grown == NULL) return true;
-        scratch = grown;
-        scratch_capacity = count;
-    }
-    p = scratch;
+    p = wgf_gfx_priv_draw_scratch(count);
+    if (p == NULL) return true;
     for (i = 0; i < count; i += 2) {
         if (n > 0 && p[n - 2] == points[i] && p[n - 1] == points[i + 1]) continue;
         p[n++] = points[i];

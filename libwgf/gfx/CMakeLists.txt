@@ -5,6 +5,7 @@ wgf_layer(gfx
         src/draw/wgf_gfx_draw.c
         src/draw/wgf_gfx_draw_more.c
         src/draw/wgf_gfx_draw3d.c
+        src/draw/wgf_gfx_draw_model.c
         src/emitter/wgf_gfx_emitter.c
         src/emitter/wgf_gfx_emitter2d.c
         src/emitter/wgf_gfx_emitter3d.c
@@ -92,6 +93,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_text_test)
         wgf_test(gfx wgf_gfx_texture_test)
         wgf_test(gfx wgf_gfx_draw_test)
+        wgf_test(gfx wgf_gfx_draw_model_test)
         wgf_test(gfx wgf_gfx_shape_test)
         wgf_test(gfx wgf_gfx_sprite_test)
         wgf_test(gfx wgf_gfx_sprite_batch_test)

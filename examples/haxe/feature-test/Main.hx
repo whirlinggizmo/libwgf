@@ -534,6 +534,14 @@ class Main {
 		Draw.line3d(0, 0, 0, 1, 1, 1, Color.get(ColorStock.RED));
 		Draw.cube(0, 0.5, 0, 1, 1, 1, Color.get(ColorStock.SKYBLUE));
 		Draw.cubeWires(0, 0.5, 0, 1, 1, 1, Color.get(ColorStock.DARKBLUE));
+		{ // a skinned model as it stands, once its file is READY; refused before
+			final ready = Resource.getStatus(robot.getMesh()) == ResourceStatus.READY;
+			final drawn = Draw.modelWires(robot, Color.get(ColorStock.LIME))
+				&& Draw.modelPoints(robot, Color.get(ColorStock.YELLOW))
+				&& Draw.modelSkeleton(robot, Color.get(ColorStock.MAGENTA));
+			expect(drawn == ready, "a model's wires, points, and skeleton, drawn once it is READY");
+			expect(!Draw.modelWires(camera3d, Color.get(ColorStock.LIME)), "a camera's wires refused: not a model");
+		}
 		Draw.sphere(2, 0.5, 0, 0.5, Color.get(ColorStock.GOLD));
 		Draw.triangle3d(0, 0, 0, 1, 0, 0, 0, 1, 0, Color.get(ColorStock.GOLD));
 		Draw.cylinder(-2, 0.5, 0, 0.3, 1, Color.get(ColorStock.GOLD));

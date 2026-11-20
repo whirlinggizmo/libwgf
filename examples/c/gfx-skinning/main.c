@@ -28,9 +28,13 @@
  * walk, run (waving from the torso up as it runs: a layer over its clip, masked to the torso
  * and what is under it), and wave (drawn by the toon shader, a custom material on skinned
  * parts), each started at another point of its clip. The sun casts, so their
- * shadows are posed too. Clips are found by name once the file has loaded.
+ * shadows are posed too. Clips are found by name once the file has loaded. D draws the
+ * Adventurer over itself for debugging, as it is posed this frame: its triangles' wires,
+ * its vertices as points, or its skeleton (immediate mode's model draws), the skeleton
+ * alone, the Adventurer hidden, since its lines are inside it.
  *
  *   N      the front robot's next clip, crossfaded
+ *   D      the Adventurer's debug view: wires, points, skeleton, none
  *   SPACE  pause or resume them all
  *   O      stop or start the camera's circling
  *   ESC    quit, where quitting means anything */
@@ -54,6 +58,7 @@ static struct {
     bool dressed;
     bool started, orbit, paused;
     int clip; /* the front robot's */
+    int debug; /* the Adventurer's debug view: 0 none, then wires, points, skeleton */
     float angle, since;
 } g = {.orbit = true};
 
@@ -138,6 +143,17 @@ static void set_below(wgf_actor_t actor, wgf_material_t material)
     }
 }
 
+/* Every model under `actor` shown or hidden (a file's tree, made once it has loaded). */
+static void show_below(wgf_actor_t actor, bool visible)
+{
+    int i;
+    for (i = 0; i < wgf_actor_get_child_count(actor); i++) {
+        const wgf_actor_t child = wgf_actor_get_child(actor, i);
+        if (wgf_actor_get_kind(child) == WGF_ACTOR_KIND_MODEL) wgf_actor_set_visible(child, visible);
+        show_below(child, visible);
+    }
+}
+
 /* Once the file is READY: each robot's clip found by name and played, the ones behind each
  * from another point of its clip. */
 static void start(void)
@@ -166,6 +182,21 @@ static void start(void)
     g.started = true;
 }
 
+static const char *const debug_views[4] = {"", "wires", "points", "skeleton"};
+
+/* The Adventurer drawn over itself as the debug view has it, through the stage's camera. */
+static void draw_debug(void)
+{
+    int i;
+    if (g.debug == 0 || !wgf_draw_begin_3d(g.camera)) return;
+    for (i = 0; i < PARTS; i++) {
+        if (g.debug == 1) wgf_draw_model_wires(g.parts[i], wgf_color_make(80, 255, 120, 255));
+        else if (g.debug == 2) wgf_draw_model_points(g.parts[i], wgf_color_make(255, 220, 60, 255));
+        else if (i == 0) wgf_draw_model_skeleton(g.parts[i], wgf_color_make(255, 80, 200, 255)); /* one: the body's */
+    }
+    wgf_draw_end_3d();
+}
+
 static void next_clip(void)
 {
     const int count = wgf_model_get_animation_count(g.robots[0]);
@@ -183,6 +214,8 @@ static void frame(void *user)
     (void)user;
     if (wgf_app_can_quit() && wgf_keyboard_is_pressed(WGF_KEY_ESCAPE)) wgf_app_quit();
     if (wgf_keyboard_is_pressed(WGF_KEY_O)) g.orbit = !g.orbit;
+    if (wgf_keyboard_is_pressed(WGF_KEY_D)) g.debug = (g.debug + 1) % 4;
+    show_below(g.character, g.debug != 3); /* the skeleton alone; every frame, as the parts load */
     if (!g.started && wgf_model_get_animation_count(g.robots[0]) > 0) start();
     if (!g.dressed && wgf_model_get_animation_count(g.parts[0]) > 0) {
         bool ready = true; /* every part's file too: one loaded later would start behind */
@@ -207,16 +240,18 @@ static void frame(void *user)
     wgf_actor_look_at(g.camera, 0, 1.5f, 0, 0, 1, 0);
 
     wgf_stage3d_draw(g.stage);
+    draw_debug();
     if (g.started) {
-        snprintf(line, sizeof(line), "libwgf skinning: %s, %.2f s%s", wgf_model_get_animation_name(g.robots[0], g.clip),
-                 (double)wgf_model_get_animation_time(g.robots[0]),
-                 wgf_model_get_animation_weight(g.robots[0]) < 1.0f ? " (crossfading)" : "");
+        snprintf(line, sizeof(line), "libwgf skinning: %s, %.2f s%s%s%s",
+                 wgf_model_get_animation_name(g.robots[0], g.clip), (double)wgf_model_get_animation_time(g.robots[0]),
+                 wgf_model_get_animation_weight(g.robots[0]) < 1.0f ? " (crossfading)" : "",
+                 g.debug != 0 ? "; the Adventurer's " : "", debug_views[g.debug]);
     } else {
         snprintf(line, sizeof(line), "libwgf skinning: loading %s", MODEL_PATH);
     }
     wgf_draw_text(0, line, 12, 36, 20, WGF_COLOR_RAYWHITE);
-    wgf_draw_text(0, wgf_app_can_quit() ? "N: next clip   SPACE: pause   O: the camera   ESC: quit"
-                                        : "N: next clip   SPACE: pause   O: the camera",
+    wgf_draw_text(0, wgf_app_can_quit() ? "N: next clip   SPACE: pause   O: the camera   D: debug view   ESC: quit"
+                                        : "N: next clip   SPACE: pause   O: the camera   D: debug view",
                   12, 64, 16, WGF_COLOR_LIGHTGRAY);
 }
 

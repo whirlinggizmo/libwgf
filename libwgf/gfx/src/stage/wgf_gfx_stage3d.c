@@ -604,14 +604,9 @@ static bool place_skin(wgf_actor_t root, int skin, wgf_mat4_t *root_world, int *
     }
     to_root = wgf_mat4_invert(*root_world);
     for (j = 0; j < sk->joint_count; j++) {
-        const int node = sk->joints[j];
-        const wgf_actor_t joint = node >= 0 && node < tree->node_count ? tree->nodes[node] : 0;
         float *out = &frame.joints[(size_t)(frame.joint_count + j) * JOINT_FLOATS];
-        wgf_mat4_t m = wgf_mat4_identity();
+        const wgf_mat4_t m = wgf_gfx_priv_model_joint_matrix(tree, sk, j, &to_root);
         int row, col;
-        if (joint != 0 && wgf_gfx_priv_actor_of_silently(joint) != NULL) {
-            m = wgf_mat4_mul(wgf_mat4_mul(to_root, wgf_gfx_priv_actor_get_world_matrix(joint)), sk->inverse_bind[j]);
-        }
         for (row = 0; row < 3; row++) {
             for (col = 0; col < 4; col++) out[row * 4 + col] = m.m[col * 4 + row];
         }

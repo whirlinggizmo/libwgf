@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "63efa0eed72abbb7" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "7cee19f9ba58a271" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -7088,6 +7088,63 @@ export function wgf_draw_rectangle_3d(cx, cy, cz, width, height, rx, ry, rz, col
  */
 export function wgf_draw_circle_3d(cx, cy, cz, radius, rx, ry, rz, color) {
     host["_wgf_draw_circle_3d"](cx, cy, cz, radius, rx, ry, rz, color);
+}
+
+// wgf: call wgf_draw_model_wires
+/**
+ * A model as it stands this frame, for debugging (raylib's DrawModelWires and
+ * DrawModelPoints, and a skeleton): its mesh placed by the model's actor, or, a file's
+ * root (wgf_mesh_create), each visible node of its tree placed by its own, a skinned part
+ * posed as its animation has it (the stage's joint matrices, applied on the CPU). Wires:
+ * every triangle's three edges; points: every vertex, a few pixels wide; skeleton: each
+ * joint of each skin of a file's root (of a node's skin, given a node), a line from the
+ * nearest joint above it to it, and a small cross at a joint with none above it. Unlit, in
+ * `color`, its lines a pixel wide; a crowd's costs add up (wires record 6 vertices a
+ * triangle). False outside begin_3d and end_3d, for a handle that isn't a model, and for
+ * a model whose mesh isn't READY (a file's root before its tree is made), drawing
+ * nothing; a model with no skin has no skeleton, and draws none.
+ */
+export function wgf_draw_model_wires(model, color) {
+    const value = host["_wgf_draw_model_wires"](model, color);
+    return value !== 0;
+}
+
+// wgf: call wgf_draw_model_points
+/**
+ * A model as it stands this frame, for debugging (raylib's DrawModelWires and
+ * DrawModelPoints, and a skeleton): its mesh placed by the model's actor, or, a file's
+ * root (wgf_mesh_create), each visible node of its tree placed by its own, a skinned part
+ * posed as its animation has it (the stage's joint matrices, applied on the CPU). Wires:
+ * every triangle's three edges; points: every vertex, a few pixels wide; skeleton: each
+ * joint of each skin of a file's root (of a node's skin, given a node), a line from the
+ * nearest joint above it to it, and a small cross at a joint with none above it. Unlit, in
+ * `color`, its lines a pixel wide; a crowd's costs add up (wires record 6 vertices a
+ * triangle). False outside begin_3d and end_3d, for a handle that isn't a model, and for
+ * a model whose mesh isn't READY (a file's root before its tree is made), drawing
+ * nothing; a model with no skin has no skeleton, and draws none.
+ */
+export function wgf_draw_model_points(model, color) {
+    const value = host["_wgf_draw_model_points"](model, color);
+    return value !== 0;
+}
+
+// wgf: call wgf_draw_model_skeleton
+/**
+ * A model as it stands this frame, for debugging (raylib's DrawModelWires and
+ * DrawModelPoints, and a skeleton): its mesh placed by the model's actor, or, a file's
+ * root (wgf_mesh_create), each visible node of its tree placed by its own, a skinned part
+ * posed as its animation has it (the stage's joint matrices, applied on the CPU). Wires:
+ * every triangle's three edges; points: every vertex, a few pixels wide; skeleton: each
+ * joint of each skin of a file's root (of a node's skin, given a node), a line from the
+ * nearest joint above it to it, and a small cross at a joint with none above it. Unlit, in
+ * `color`, its lines a pixel wide; a crowd's costs add up (wires record 6 vertices a
+ * triangle). False outside begin_3d and end_3d, for a handle that isn't a model, and for
+ * a model whose mesh isn't READY (a file's root before its tree is made), drawing
+ * nothing; a model with no skin has no skeleton, and draws none.
+ */
+export function wgf_draw_model_skeleton(model, color) {
+    const value = host["_wgf_draw_model_skeleton"](model, color);
+    return value !== 0;
 }
 
 // wgf: call wgf_draw_text_3d

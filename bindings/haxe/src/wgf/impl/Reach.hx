@@ -308,6 +308,9 @@ class Reach {
 		"wgf_draw_grid",
 		"wgf_draw_line",
 		"wgf_draw_line_3d",
+		"wgf_draw_model_points",
+		"wgf_draw_model_skeleton",
+		"wgf_draw_model_wires",
 		"wgf_draw_polygon",
 		"wgf_draw_polyline",
 		"wgf_draw_rectangle",
@@ -1224,7 +1227,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1215) 0];
+	static final counts:Array<Int> = [for (_ in 0...1218) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

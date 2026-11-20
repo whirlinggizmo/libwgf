@@ -28,6 +28,11 @@ static bool in_3d(void)
            wgf_actor_get_kind(camera_3d) == WGF_ACTOR_KIND_CAMERA3D;
 }
 
+bool wgf_gfx_priv_draw3d_is_on(void)
+{
+    return in_3d();
+}
+
 bool wgf_draw_begin_3d(wgf_actor_t camera)
 {
     float x, y, width, height;

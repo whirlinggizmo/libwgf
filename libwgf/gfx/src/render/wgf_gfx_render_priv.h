@@ -120,8 +120,11 @@ void wgf_gfx_priv_render_set_drawing_into(wgf_handle_t texture);
 bool wgf_gfx_priv_render_is_flipped(void);
 wgf_mat4_t wgf_gfx_priv_render_clip(wgf_mat4_t m);
 
-/* What immediate mode keeps between frames (a polyline's scratch), freed at gfx's stop. */
+/* What immediate mode keeps between frames (its scratch), freed at gfx's stop. */
 void wgf_gfx_priv_draw_shutdown(void);
+/* Immediate mode's scratch, grown to hold `count` floats: the caller's until its draw call
+ * returns; NULL out of memory. */
+float *wgf_gfx_priv_draw_scratch(int count);
 
 /* From wgf_presentation_set: how the bars are filled from here on, when a mode has
  * them; and the fill itself, which only that hook reaches. */

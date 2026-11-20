@@ -30,6 +30,15 @@ bool wgf_gfx_priv_model_placeholder(wgf_mesh_t *mesh, wgf_material_t *material)
     return file_part != NULL && file_part->placeholder(mesh, material);
 }
 
+wgf_mat4_t wgf_gfx_priv_model_joint_matrix(const wgf_gfx_priv_model_tree_t *tree, const wgf_gfx_priv_mesh_skin_t *skin,
+                                           int joint, const wgf_mat4_t *to_root)
+{
+    const int node = skin->joints[joint];
+    const wgf_actor_t actor = node >= 0 && node < tree->node_count ? tree->nodes[node] : 0;
+    if (actor == 0 || wgf_gfx_priv_actor_of_silently(actor) == NULL) return wgf_mat4_identity();
+    return wgf_mat4_mul(wgf_mat4_mul(*to_root, wgf_gfx_priv_actor_get_world_matrix(actor)), skin->inverse_bind[joint]);
+}
+
 static wgf_gfx_priv_actor_t *model_of_at(wgf_actor_t model, const char *caller)
 {
     wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of_at(model, caller);

@@ -1052,6 +1052,10 @@ Platform's first browser test dispatches the events, through the tap path with t
 
 `wgf_touch_set_from_mouse` makes the left button a finger, so touch controls can be tried with a mouse. The existing emulation (touch driving the mouse) and this one don't answer each other.
 
+## Parity: a model's wires, points, and skeleton (2026-11-20)
+
+raylib's DrawModelWires and DrawModelPoints, and helix-raylib's skeleton, in immediate mode's 3D (`wgf_draw_model_wires`, `_points`, `_skeleton`, in `src/draw/wgf_gfx_draw_model.c`, its own file). Each draws a model as it stands this frame: a file's root draws every visible node of its tree, and a skinned part is posed on the CPU. The joint matrices are the stage's, shared through `wgf_gfx_priv_model_joint_matrix` rather than copied, from the joints and weights a mesh already kept after upload. A point is a sokol_gl point 3 pixels wide. A skeleton is a line from each joint to the nearest joint above it, and a cross (helix's, 2% of the model's size) at a joint with none above it. Each call is false outside 3D, for a handle that isn't a model, and for a mesh not READY. Edges aren't deduplicated, so wires record 6 vertices a triangle; that is fine for a debug draw, and immediate mode grows to hold it. gfx-skinning's D key cycles through them over the Adventurer.
+
 ## Parity: screenshots (2026-11-20)
 
 The screen is read back as a frame ends (`wgf_render_read_screen`): after the frame's last pass and before it is shown, the only time the window's framebuffer holds it. The result is a texture read, like a render target's, with its rows turned top first. Any finished read is saved as a PNG through fs (`wgf_texture_read_save`). Together they are raylib's TakeScreenshot.

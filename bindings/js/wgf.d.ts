@@ -4806,6 +4806,51 @@ export declare function wgf_draw_rectangle_3d(cx: number, cy: number, cz: number
 export declare function wgf_draw_circle_3d(cx: number, cy: number, cz: number, radius: number, rx: number, ry: number, rz: number, color: wgf_color_t): void;
 
 /**
+ * A model as it stands this frame, for debugging (raylib's DrawModelWires and
+ * DrawModelPoints, and a skeleton): its mesh placed by the model's actor, or, a file's
+ * root (wgf_mesh_create), each visible node of its tree placed by its own, a skinned part
+ * posed as its animation has it (the stage's joint matrices, applied on the CPU). Wires:
+ * every triangle's three edges; points: every vertex, a few pixels wide; skeleton: each
+ * joint of each skin of a file's root (of a node's skin, given a node), a line from the
+ * nearest joint above it to it, and a small cross at a joint with none above it. Unlit, in
+ * `color`, its lines a pixel wide; a crowd's costs add up (wires record 6 vertices a
+ * triangle). False outside begin_3d and end_3d, for a handle that isn't a model, and for
+ * a model whose mesh isn't READY (a file's root before its tree is made), drawing
+ * nothing; a model with no skin has no skeleton, and draws none.
+ */
+export declare function wgf_draw_model_wires(model: wgf_actor_t | 0, color: wgf_color_t): boolean;
+
+/**
+ * A model as it stands this frame, for debugging (raylib's DrawModelWires and
+ * DrawModelPoints, and a skeleton): its mesh placed by the model's actor, or, a file's
+ * root (wgf_mesh_create), each visible node of its tree placed by its own, a skinned part
+ * posed as its animation has it (the stage's joint matrices, applied on the CPU). Wires:
+ * every triangle's three edges; points: every vertex, a few pixels wide; skeleton: each
+ * joint of each skin of a file's root (of a node's skin, given a node), a line from the
+ * nearest joint above it to it, and a small cross at a joint with none above it. Unlit, in
+ * `color`, its lines a pixel wide; a crowd's costs add up (wires record 6 vertices a
+ * triangle). False outside begin_3d and end_3d, for a handle that isn't a model, and for
+ * a model whose mesh isn't READY (a file's root before its tree is made), drawing
+ * nothing; a model with no skin has no skeleton, and draws none.
+ */
+export declare function wgf_draw_model_points(model: wgf_actor_t | 0, color: wgf_color_t): boolean;
+
+/**
+ * A model as it stands this frame, for debugging (raylib's DrawModelWires and
+ * DrawModelPoints, and a skeleton): its mesh placed by the model's actor, or, a file's
+ * root (wgf_mesh_create), each visible node of its tree placed by its own, a skinned part
+ * posed as its animation has it (the stage's joint matrices, applied on the CPU). Wires:
+ * every triangle's three edges; points: every vertex, a few pixels wide; skeleton: each
+ * joint of each skin of a file's root (of a node's skin, given a node), a line from the
+ * nearest joint above it to it, and a small cross at a joint with none above it. Unlit, in
+ * `color`, its lines a pixel wide; a crowd's costs add up (wires record 6 vertices a
+ * triangle). False outside begin_3d and end_3d, for a handle that isn't a model, and for
+ * a model whose mesh isn't READY (a file's root before its tree is made), drawing
+ * nothing; a model with no skin has no skeleton, and draws none.
+ */
+export declare function wgf_draw_model_skeleton(model: wgf_actor_t | 0, color: wgf_color_t): boolean;
+
+/**
  * Text in the world: a block centered on (x, y, z), facing the camera, its lines `size`
  * world units tall (1 for 0 or less), in `font` (0: the default font), depth tested
  * and not hiding what is drawn behind it after it. wgrender's wgr_text_draw_3d.

@@ -733,6 +733,12 @@ export const Draw = Object.freeze({
     rectangle3d: raw.wgf_draw_rectangle_3d,
     // wgf: call wgf_draw_circle_3d
     circle3d: raw.wgf_draw_circle_3d,
+    // wgf: call wgf_draw_model_wires
+    modelWires: raw.wgf_draw_model_wires,
+    // wgf: call wgf_draw_model_points
+    modelPoints: raw.wgf_draw_model_points,
+    // wgf: call wgf_draw_model_skeleton
+    modelSkeleton: raw.wgf_draw_model_skeleton,
     // wgf: call wgf_draw_text_3d
     text3d: raw.wgf_draw_text_3d,
 });

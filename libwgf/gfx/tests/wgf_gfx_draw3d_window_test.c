@@ -8,18 +8,22 @@
 #include "wgf_camera3d.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
+#include "wgf_mesh.h"
+#include "wgf_model.h"
 #include "wgf_presentation.h"
 #include "wgf_render.h"
+#include "wgf_resource.h"
 #include "wgf_window.h"
 
 /* Immediate mode in 3D, in a window (tools/run_in_xvfb.py, OpenGL on a virtual display),
  * its pixels read back: a red cube in front of a camera, a larger green one behind it drawn
  * after it and hidden by it where they overlap (the depth test), and 2D drawn after the
- * 3D over both. Then under a presentation (FIT, 32 by 32 on 64 by 32): the 3D fills the
+ * 3D over both; a cube model's wires (lines, the canvas between them clear) and its points
+ * (a few pixels). Then under a presentation (FIT, 32 by 32 on 64 by 32): the 3D fills the
  * design area, centered between the bars. */
 
 static int failures;
-static wgf_actor_t camera;
+static wgf_actor_t camera, cube;
 
 static void expect(int ok, const char *what)
 {
@@ -54,18 +58,55 @@ static void frame_3d(void)
     wgf_gfx_priv_end_frame();
 }
 
+/* How many of the canvas's pixels are `color`. */
+static int count_pixels(wgf_color_t color)
+{
+    static unsigned char rgba[64 * 32 * 4];
+    int i, count = 0;
+    glReadPixels(0, 0, 64, 32, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+    for (i = 0; i < 64 * 32; i++) {
+        count += rgba[i * 4] == wgf_color_get_red(color) && rgba[i * 4 + 1] == wgf_color_get_green(color) &&
+                 rgba[i * 4 + 2] == wgf_color_get_blue(color);
+    }
+    return count;
+}
+
+/* The cube model drawn by `draw` alone, in `color`: how many pixels it covered. */
+static int model_frame(bool (*draw)(wgf_actor_t model, wgf_color_t color), wgf_color_t color)
+{
+    if (wgf_gfx_priv_is_in_frame()) wgf_gfx_priv_end_frame();
+    wgf_gfx_priv_begin_frame();
+    expect(wgf_draw_begin_3d(camera), "begin_3d");
+    expect(draw(cube, color), "the cube model drawn");
+    wgf_draw_end_3d();
+    wgf_gfx_priv_end_frame();
+    return count_pixels(color);
+}
+
 static int frames;
 
 static void on_frame(void *user)
 {
     (void)user;
-    if (++frames != 2) return;
+    if (++frames == 1) {
+        const wgf_mesh_t mesh = wgf_mesh_create_cube(2, 2, 2);
+        cube = wgf_model_create(mesh);
+        wgf_resource_release(mesh);
+        wgf_actor_set_rotation(cube, 0.4f, 0.6f, 0.0f);
+    }
+    if (frames != 2) return;
     /* 64 by 32, no presentation: the camera's view is the canvas */
     frame_3d();
     expect_pixel(32, 16, WGF_COLOR_RED, "the near cube, in the middle");
     expect_pixel(40, 6, WGF_COLOR_GREEN, "the far one around it");
     expect_pixel(1, 1, WGF_COLOR_WHITE, "2D drawn after, over the 3D");
     expect_pixel(62, 16, WGF_COLOR_DARKGRAY, "past the far cube: the clear color");
+    {
+        const int wires = model_frame(wgf_draw_model_wires, WGF_COLOR_RED);
+        const int points = model_frame(wgf_draw_model_points, WGF_COLOR_GREEN);
+        expect(wires > 40 && wires < 64 * 32 / 2, "a cube model's wires: its edges, the canvas between them clear");
+        expect(points > 0 && points < 24 * 3 * 3 + 1, "its points: a few pixels a vertex");
+    }
     /* FIT 32 by 32 on 64 by 32: the view is the design area, 16 pixels of bar either side */
     wgf_presentation_set(WGF_PRESENTATION_MODE_FIT, 32, 32);
     frame_3d();
