@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "a67797a053bf7a4f" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "2162008a4cb4fec1" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -812,6 +812,9 @@ export const WGF_BOUNDS_MODE_DESTROY = 2;
  *   TRIGGER_ENTER    two colliders starting to overlap, told to each: the actor, the other,
  *                    and the other's collider layer as they met
  *   TRIGGER_EXIT     and ceasing to
+ *   CONTACT_BEGIN    two solid bodies beginning to touch (wgf_body.h), told to each: the
+ *                    actor, the other, and the other's body layer
+ *   CONTACT_END      and ceasing to
  *
  * An actor destroyed while it overlaps another raises no TRIGGER_EXIT. Events taken in a
  * batch can name an actor the program destroyed while handling an earlier one of the
@@ -824,6 +827,8 @@ export const WGF_WORLD_EVENT_CREATED = 1;
 export const WGF_WORLD_EVENT_DESTROYED = 2;
 export const WGF_WORLD_EVENT_TRIGGER_ENTER = 3;
 export const WGF_WORLD_EVENT_TRIGGER_EXIT = 4;
+export const WGF_WORLD_EVENT_CONTACT_BEGIN = 5;
+export const WGF_WORLD_EVENT_CONTACT_END = 6;
 
 /**
  * A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
@@ -847,6 +852,7 @@ export const WGF_BODY_TYPE_STATIC = 0;
 export const WGF_BODY_TYPE_DYNAMIC = 1;
 export const WGF_BODY_TYPE_KINEMATIC = 2;
 export const WGF_BODY_TYPE_SENSOR = 3;
+export const WGF_BODY_TYPE_CHARACTER = 4;
 
 export const WGF_BODY_SHAPE_BOX = 0;
 export const WGF_BODY_SHAPE_SPHERE = 1;
@@ -10171,6 +10177,70 @@ export function wgf_body_add_impulse(actor, x, y, z) {
     return value !== 0;
 }
 
+// wgf: call wgf_body_is_grounded
+/**
+ * A character (Jolt's CharacterVirtual) is moved by its velocity each tick, sliding along
+ * walls and slopes, climbing steps up to its step height and kept on the floor going down
+ * them, pushing dynamic bodies, standing on ground no steeper than its max slope: a
+ * player, an enemy that walks. Its velocity is its own: what is set stays across (a walk),
+ * while its up part falls under the world's gravity whenever it isn't standing, and is 0
+ * on the ground; a jump sets it upward once. Its turn is its actor's; a transform the
+ * program sets puts it there. Rays, sensors, and queries find it as a body of its shape.
+ * A capsule is its usual shape, its center at the actor.
+ */
+export function wgf_body_is_grounded(actor) {
+    const value = host["_wgf_body_is_grounded"](actor);
+    return value !== 0;
+}
+
+// wgf: call wgf_body_get_ground_normal
+/**
+ * The ground it stands on's normal; 0, 0, 0 when it isn't standing, or isn't a character.
+ */
+export function wgf_body_get_ground_normal(actor, into) {
+    const ret = result(12);
+    host["_wgf_body_get_ground_normal"](ret, actor);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_body_set_step_height
+/**
+ * The steps it climbs (default 0.3), at once. Refuses a negative or non-finite one.
+ */
+export function wgf_body_set_step_height(actor, height) {
+    const value = host["_wgf_body_set_step_height"](actor, height);
+    return value !== 0;
+}
+
+// wgf: call wgf_body_get_step_height
+/**
+ * The steps it climbs (default 0.3), at once. Refuses a negative or non-finite one.
+ */
+export function wgf_body_get_step_height(actor) {
+    const value = host["_wgf_body_get_step_height"](actor);
+    return value;
+}
+
+// wgf: call wgf_body_set_max_slope
+/**
+ * The steepest ground it stands on, in radians from level (default 50 degrees), at the
+ * next tick. Refuses one outside 0 to a right angle.
+ */
+export function wgf_body_set_max_slope(actor, radians) {
+    const value = host["_wgf_body_set_max_slope"](actor, radians);
+    return value !== 0;
+}
+
+// wgf: call wgf_body_get_max_slope
+/**
+ * The steepest ground it stands on, in radians from level (default 50 degrees), at the
+ * next tick. Refuses one outside 0 to a right angle.
+ */
+export function wgf_body_get_max_slope(actor) {
+    const value = host["_wgf_body_get_max_slope"](actor);
+    return value;
+}
+
 // wgf: call wgf_physics_set_gravity
 /**
  * The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
@@ -10200,6 +10270,76 @@ export function wgf_physics_get_gravity(into) {
  */
 export function wgf_physics_draw_bodies(color) {
     host["_wgf_physics_draw_bodies"](color);
+}
+
+// wgf: call wgf_physics_cast_ray
+/**
+ * Queries of the world as its bodies are now (their last tick's), in its 3D stage's space,
+ * each meeting the bodies whose layer is in `mask` (wgf_body_set_layer) and never a sensor;
+ * starting physics.
+ *
+ * A ray from x, y, z along dx, dy, dz (any length; it is normalized) for `distance`, and a
+ * sphere of `radius` swept so: what they hit, nearest first, a body once (its nearest
+ * hit), as many as fit in `count`: each one's actor into `actors`, and into `hits`, when
+ * it is given, 7 floats a hit as fit in `hits_count` (the point, the surface's normal
+ * there, and the distance along the ray), returning how many hits. 0 for nothing hit, a
+ * direction of no length, a distance or radius not above 0, or no array.
+ */
+export function wgf_physics_cast_ray(x, y, z, dx, dy, dz, distance, mask, actors, hits) {
+    const actorsPointer = arrayOut(actors, 0);
+    const hitsPointer = arrayOut(hits, 1);
+    const value = host["_wgf_physics_cast_ray"](x, y, z, dx, dy, dz, distance, mask, actorsPointer, lengthOf(actors), hitsPointer, lengthOf(hits));
+    arrayBack(actorsPointer, actors, "HEAPU32");
+    arrayBack(hitsPointer, hits, "HEAPF32");
+    return value;
+}
+
+// wgf: call wgf_physics_cast_sphere
+/**
+ * Queries of the world as its bodies are now (their last tick's), in its 3D stage's space,
+ * each meeting the bodies whose layer is in `mask` (wgf_body_set_layer) and never a sensor;
+ * starting physics.
+ *
+ * A ray from x, y, z along dx, dy, dz (any length; it is normalized) for `distance`, and a
+ * sphere of `radius` swept so: what they hit, nearest first, a body once (its nearest
+ * hit), as many as fit in `count`: each one's actor into `actors`, and into `hits`, when
+ * it is given, 7 floats a hit as fit in `hits_count` (the point, the surface's normal
+ * there, and the distance along the ray), returning how many hits. 0 for nothing hit, a
+ * direction of no length, a distance or radius not above 0, or no array.
+ */
+export function wgf_physics_cast_sphere(x, y, z, radius, dx, dy, dz, distance, mask, actors, hits) {
+    const actorsPointer = arrayOut(actors, 0);
+    const hitsPointer = arrayOut(hits, 1);
+    const value = host["_wgf_physics_cast_sphere"](x, y, z, radius, dx, dy, dz, distance, mask, actorsPointer, lengthOf(actors), hitsPointer, lengthOf(hits));
+    arrayBack(actorsPointer, actors, "HEAPU32");
+    arrayBack(hitsPointer, hits, "HEAPF32");
+    return value;
+}
+
+// wgf: call wgf_physics_overlap_sphere
+/**
+ * The bodies overlapping a sphere of `radius` at x, y, z, or a box of width, height, and
+ * depth centered there (its axes the world's), in no order, as many as fit in `count`,
+ * returning how many. 0 for none, a size not above 0, or no array.
+ */
+export function wgf_physics_overlap_sphere(x, y, z, radius, mask, actors) {
+    const actorsPointer = arrayOut(actors, 0);
+    const value = host["_wgf_physics_overlap_sphere"](x, y, z, radius, mask, actorsPointer, lengthOf(actors));
+    arrayBack(actorsPointer, actors, "HEAPU32");
+    return value;
+}
+
+// wgf: call wgf_physics_overlap_box
+/**
+ * The bodies overlapping a sphere of `radius` at x, y, z, or a box of width, height, and
+ * depth centered there (its axes the world's), in no order, as many as fit in `count`,
+ * returning how many. 0 for none, a size not above 0, or no array.
+ */
+export function wgf_physics_overlap_box(x, y, z, width, height, depth, mask, actors) {
+    const actorsPointer = arrayOut(actors, 0);
+    const value = host["_wgf_physics_overlap_box"](x, y, z, width, height, depth, mask, actorsPointer, lengthOf(actors));
+    arrayBack(actorsPointer, actors, "HEAPU32");
+    return value;
 }
 
 // wgf: call wgf_vehicle_set_wheels

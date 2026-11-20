@@ -1017,6 +1017,39 @@ export declare const Body: {
      * yet made in the world (before its first tick) reads 0 and takes them when it is.
      */
     readonly addImpulse: typeof raw.wgf_body_add_impulse;
+    /**
+     * A character (Jolt's CharacterVirtual) is moved by its velocity each tick, sliding along
+     * walls and slopes, climbing steps up to its step height and kept on the floor going down
+     * them, pushing dynamic bodies, standing on ground no steeper than its max slope: a
+     * player, an enemy that walks. Its velocity is its own: what is set stays across (a walk),
+     * while its up part falls under the world's gravity whenever it isn't standing, and is 0
+     * on the ground; a jump sets it upward once. Its turn is its actor's; a transform the
+     * program sets puts it there. Rays, sensors, and queries find it as a body of its shape.
+     * A capsule is its usual shape, its center at the actor.
+     */
+    readonly isGrounded: typeof raw.wgf_body_is_grounded;
+    /**
+     * The ground it stands on's normal; 0, 0, 0 when it isn't standing, or isn't a character.
+     */
+    readonly getGroundNormal: typeof raw.wgf_body_get_ground_normal;
+    /**
+     * The steps it climbs (default 0.3), at once. Refuses a negative or non-finite one.
+     */
+    readonly setStepHeight: typeof raw.wgf_body_set_step_height;
+    /**
+     * The steps it climbs (default 0.3), at once. Refuses a negative or non-finite one.
+     */
+    readonly getStepHeight: typeof raw.wgf_body_get_step_height;
+    /**
+     * The steepest ground it stands on, in radians from level (default 50 degrees), at the
+     * next tick. Refuses one outside 0 to a right angle.
+     */
+    readonly setMaxSlope: typeof raw.wgf_body_set_max_slope;
+    /**
+     * The steepest ground it stands on, in radians from level (default 50 degrees), at the
+     * next tick. Refuses one outside 0 to a right angle.
+     */
+    readonly getMaxSlope: typeof raw.wgf_body_get_max_slope;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
@@ -3650,6 +3683,44 @@ export declare const Physics: {
      * nothing outside one, or before physics starts. A mesh is drawn by its triangles' edges.
      */
     readonly drawBodies: typeof raw.wgf_physics_draw_bodies;
+    /**
+     * Queries of the world as its bodies are now (their last tick's), in its 3D stage's space,
+     * each meeting the bodies whose layer is in `mask` (wgf_body_set_layer) and never a sensor;
+     * starting physics.
+     *
+     * A ray from x, y, z along dx, dy, dz (any length; it is normalized) for `distance`, and a
+     * sphere of `radius` swept so: what they hit, nearest first, a body once (its nearest
+     * hit), as many as fit in `count`: each one's actor into `actors`, and into `hits`, when
+     * it is given, 7 floats a hit as fit in `hits_count` (the point, the surface's normal
+     * there, and the distance along the ray), returning how many hits. 0 for nothing hit, a
+     * direction of no length, a distance or radius not above 0, or no array.
+     */
+    readonly castRay: typeof raw.wgf_physics_cast_ray;
+    /**
+     * Queries of the world as its bodies are now (their last tick's), in its 3D stage's space,
+     * each meeting the bodies whose layer is in `mask` (wgf_body_set_layer) and never a sensor;
+     * starting physics.
+     *
+     * A ray from x, y, z along dx, dy, dz (any length; it is normalized) for `distance`, and a
+     * sphere of `radius` swept so: what they hit, nearest first, a body once (its nearest
+     * hit), as many as fit in `count`: each one's actor into `actors`, and into `hits`, when
+     * it is given, 7 floats a hit as fit in `hits_count` (the point, the surface's normal
+     * there, and the distance along the ray), returning how many hits. 0 for nothing hit, a
+     * direction of no length, a distance or radius not above 0, or no array.
+     */
+    readonly castSphere: typeof raw.wgf_physics_cast_sphere;
+    /**
+     * The bodies overlapping a sphere of `radius` at x, y, z, or a box of width, height, and
+     * depth centered there (its axes the world's), in no order, as many as fit in `count`,
+     * returning how many. 0 for none, a size not above 0, or no array.
+     */
+    readonly overlapSphere: typeof raw.wgf_physics_overlap_sphere;
+    /**
+     * The bodies overlapping a sphere of `radius` at x, y, z, or a box of width, height, and
+     * depth centered there (its axes the world's), in no order, as many as fit in `count`,
+     * returning how many. 0 for none, a size not above 0, or no array.
+     */
+    readonly overlapBox: typeof raw.wgf_physics_overlap_box;
 };
 /** A handle of kind wgf_prefab_t: the raw binding's branded type. */
 export type Prefab = raw.wgf_prefab_t;
@@ -5870,7 +5941,7 @@ export declare const AssetTaskStatus: { readonly NONE: AssetTaskStatus; readonly
 export type BodyShape = raw.wgf_body_shape_t;
 export declare const BodyShape: { readonly BOX: BodyShape; readonly SPHERE: BodyShape; readonly CAPSULE: BodyShape; readonly CONVEX: BodyShape; readonly MESH: BodyShape; };
 export type BodyType = raw.wgf_body_type_t;
-export declare const BodyType: { readonly STATIC: BodyType; readonly DYNAMIC: BodyType; readonly KINEMATIC: BodyType; readonly SENSOR: BodyType; };
+export declare const BodyType: { readonly STATIC: BodyType; readonly DYNAMIC: BodyType; readonly KINEMATIC: BodyType; readonly SENSOR: BodyType; readonly CHARACTER: BodyType; };
 export type BoundsMode = raw.wgf_bounds_mode_t;
 export declare const BoundsMode: { readonly WRAP: BoundsMode; readonly CLAMP: BoundsMode; readonly DESTROY: BoundsMode; };
 export type ColorStock = raw.wgf_color_stock_t;
@@ -5936,4 +6007,4 @@ export declare const UiValue: { readonly TEXT_SIZE: UiValue; readonly PADDING: U
 export type VehicleDrive = raw.wgf_vehicle_drive_t;
 export declare const VehicleDrive: { readonly FRONT: VehicleDrive; readonly REAR: VehicleDrive; readonly ALL: VehicleDrive; };
 export type WorldEvent = raw.wgf_world_event_t;
-export declare const WorldEvent: { readonly NONE: WorldEvent; readonly CREATED: WorldEvent; readonly DESTROYED: WorldEvent; readonly TRIGGER_ENTER: WorldEvent; readonly TRIGGER_EXIT: WorldEvent; };
+export declare const WorldEvent: { readonly NONE: WorldEvent; readonly CREATED: WorldEvent; readonly DESTROYED: WorldEvent; readonly TRIGGER_ENTER: WorldEvent; readonly TRIGGER_EXIT: WorldEvent; readonly CONTACT_BEGIN: WorldEvent; readonly CONTACT_END: WorldEvent; };

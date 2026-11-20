@@ -303,6 +303,18 @@ export const Body = Object.freeze({
     getSpin: raw.wgf_body_get_spin,
     // wgf: call wgf_body_add_impulse
     addImpulse: raw.wgf_body_add_impulse,
+    // wgf: call wgf_body_is_grounded
+    isGrounded: raw.wgf_body_is_grounded,
+    // wgf: call wgf_body_get_ground_normal
+    getGroundNormal: raw.wgf_body_get_ground_normal,
+    // wgf: call wgf_body_set_step_height
+    setStepHeight: raw.wgf_body_set_step_height,
+    // wgf: call wgf_body_get_step_height
+    getStepHeight: raw.wgf_body_get_step_height,
+    // wgf: call wgf_body_set_max_slope
+    setMaxSlope: raw.wgf_body_set_max_slope,
+    // wgf: call wgf_body_get_max_slope
+    getMaxSlope: raw.wgf_body_get_max_slope,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
@@ -1168,6 +1180,14 @@ export const Physics = Object.freeze({
     getGravity: raw.wgf_physics_get_gravity,
     // wgf: call wgf_physics_draw_bodies
     drawBodies: raw.wgf_physics_draw_bodies,
+    // wgf: call wgf_physics_cast_ray
+    castRay: raw.wgf_physics_cast_ray,
+    // wgf: call wgf_physics_cast_sphere
+    castSphere: raw.wgf_physics_cast_sphere,
+    // wgf: call wgf_physics_overlap_sphere
+    overlapSphere: raw.wgf_physics_overlap_sphere,
+    // wgf: call wgf_physics_overlap_box
+    overlapBox: raw.wgf_physics_overlap_box,
 });
 // wgf: typed Prefab
 export const Prefab = Object.freeze({
@@ -1939,7 +1959,7 @@ export const AssetTaskStatus = Object.freeze({ NONE: 0, PENDING: 1, DONE: 2, FAI
 // wgf: enum BodyShape
 export const BodyShape = Object.freeze({ BOX: 0, SPHERE: 1, CAPSULE: 2, CONVEX: 3, MESH: 4 });
 // wgf: enum BodyType
-export const BodyType = Object.freeze({ STATIC: 0, DYNAMIC: 1, KINEMATIC: 2, SENSOR: 3 });
+export const BodyType = Object.freeze({ STATIC: 0, DYNAMIC: 1, KINEMATIC: 2, SENSOR: 3, CHARACTER: 4 });
 // wgf: enum BoundsMode
 export const BoundsMode = Object.freeze({ WRAP: 0, CLAMP: 1, DESTROY: 2 });
 // wgf: enum ColorStock
@@ -2005,4 +2025,4 @@ export const UiValue = Object.freeze({ TEXT_SIZE: 0, PADDING: 1, GAP: 2, CORNER_
 // wgf: enum VehicleDrive
 export const VehicleDrive = Object.freeze({ FRONT: 0, REAR: 1, ALL: 2 });
 // wgf: enum WorldEvent
-export const WorldEvent = Object.freeze({ NONE: 0, CREATED: 1, DESTROYED: 2, TRIGGER_ENTER: 3, TRIGGER_EXIT: 4 });
+export const WorldEvent = Object.freeze({ NONE: 0, CREATED: 1, DESTROYED: 2, TRIGGER_ENTER: 3, TRIGGER_EXIT: 4, CONTACT_BEGIN: 5, CONTACT_END: 6 });

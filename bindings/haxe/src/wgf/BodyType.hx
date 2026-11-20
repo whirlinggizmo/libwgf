@@ -24,4 +24,5 @@ enum abstract BodyType(Int) from Int to Int {
 	var DYNAMIC = 1;
 	var KINEMATIC = 2;
 	var SENSOR = 3;
+	var CHARACTER = 4;
 }

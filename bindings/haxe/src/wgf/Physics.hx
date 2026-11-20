@@ -25,4 +25,50 @@ class Physics {
 	**/
 	public static inline function drawBodies(color:Int):Void
 		Raw.wgf_physics_draw_bodies(color);
+
+	/**
+	    Queries of the world as its bodies are now (their last tick's), in its 3D stage's space,
+	    each meeting the bodies whose layer is in `mask` (wgf_body_set_layer) and never a sensor;
+	    starting physics.
+
+	    A ray from x, y, z along dx, dy, dz (any length; it is normalized) for `distance`, and a
+	    sphere of `radius` swept so: what they hit, nearest first, a body once (its nearest
+	    hit), as many as fit in `count`: each one's actor into `actors`, and into `hits`, when
+	    it is given, 7 floats a hit as fit in `hits_count` (the point, the surface's normal
+	    there, and the distance along the ray), returning how many hits. 0 for nothing hit, a
+	    direction of no length, a distance or radius not above 0, or no array.
+	**/
+	public static inline function castRay(x:Float, y:Float, z:Float, dx:Float, dy:Float, dz:Float, distance:Float, mask:Int, actors:Array<Actor>, hits:Array<Float>):Int
+		return Raw.wgf_physics_cast_ray(x, y, z, dx, dy, dz, distance, mask, cast actors, hits);
+
+	/**
+	    Queries of the world as its bodies are now (their last tick's), in its 3D stage's space,
+	    each meeting the bodies whose layer is in `mask` (wgf_body_set_layer) and never a sensor;
+	    starting physics.
+
+	    A ray from x, y, z along dx, dy, dz (any length; it is normalized) for `distance`, and a
+	    sphere of `radius` swept so: what they hit, nearest first, a body once (its nearest
+	    hit), as many as fit in `count`: each one's actor into `actors`, and into `hits`, when
+	    it is given, 7 floats a hit as fit in `hits_count` (the point, the surface's normal
+	    there, and the distance along the ray), returning how many hits. 0 for nothing hit, a
+	    direction of no length, a distance or radius not above 0, or no array.
+	**/
+	public static inline function castSphere(x:Float, y:Float, z:Float, radius:Float, dx:Float, dy:Float, dz:Float, distance:Float, mask:Int, actors:Array<Actor>, hits:Array<Float>):Int
+		return Raw.wgf_physics_cast_sphere(x, y, z, radius, dx, dy, dz, distance, mask, cast actors, hits);
+
+	/**
+	    The bodies overlapping a sphere of `radius` at x, y, z, or a box of width, height, and
+	    depth centered there (its axes the world's), in no order, as many as fit in `count`,
+	    returning how many. 0 for none, a size not above 0, or no array.
+	**/
+	public static inline function overlapSphere(x:Float, y:Float, z:Float, radius:Float, mask:Int, actors:Array<Actor>):Int
+		return Raw.wgf_physics_overlap_sphere(x, y, z, radius, mask, cast actors);
+
+	/**
+	    The bodies overlapping a sphere of `radius` at x, y, z, or a box of width, height, and
+	    depth centered there (its axes the world's), in no order, as many as fit in `count`,
+	    returning how many. 0 for none, a size not above 0, or no array.
+	**/
+	public static inline function overlapBox(x:Float, y:Float, z:Float, width:Float, height:Float, depth:Float, mask:Int, actors:Array<Actor>):Int
+		return Raw.wgf_physics_overlap_box(x, y, z, width, height, depth, mask, cast actors);
 }

@@ -76,9 +76,37 @@ bool wgf_physics3d_priv_jolt_body_is_active(uint32_t body);
 void wgf_physics3d_priv_jolt_step(float dt);
 typedef struct wgf_physics3d_priv_overlap_t {
     bool entered;
-    uint64_t sensor, other; /* their users */
+    bool contact;           /* two solid bodies touching (one moving), not a sensor's overlap */
+    uint64_t sensor, other; /* their users (a contact's two, in either order) */
 } wgf_physics3d_priv_overlap_t;
 int wgf_physics3d_priv_jolt_take_overlaps(wgf_physics3d_priv_overlap_t *out, int count);
+
+/* Queries of the world as it is, meeting bodies whose layer is in `mask` and no sensor: a
+ * ray and a shape (a sphere of radius size[0], or a box of half extents `size`) swept from
+ * `origin` along `direction` for `distance`, their hits nearest first, a body once; and the
+ * bodies overlapping a shape at `center`, by their users. How many, up to `count`. */
+typedef struct wgf_physics3d_priv_hit_t {
+    uint64_t user;
+    float point[3], normal[3], distance;
+} wgf_physics3d_priv_hit_t;
+int wgf_physics3d_priv_jolt_cast_ray(const float origin[3], const float direction[3], float distance, uint32_t mask,
+                                     wgf_physics3d_priv_hit_t *out, int count);
+int wgf_physics3d_priv_jolt_cast_shape(int shape, const float size[3], const float origin[3], const float direction[3],
+                                       float distance, uint32_t mask, wgf_physics3d_priv_hit_t *out, int count);
+int wgf_physics3d_priv_jolt_overlap(int shape, const float size[3], const float center[3], uint32_t mask, uint64_t *out,
+                                    int count);
+
+/* A character (Jolt's CharacterVirtual): a shape moved by the program, sliding along what
+ * it meets, with a body of its shape in the world so rays, sensors, and queries find it.
+ * An index from 0, or -1. update moves it by `velocity` over dt, climbing steps up to
+ * `step` and kept on the floor going down them, and gives where it went and its velocity
+ * after; ground is whether it stands on ground it can walk on, and that ground's normal. */
+int wgf_physics3d_priv_jolt_character_create(const wgf_physics3d_priv_body_desc_t *desc, float max_slope);
+void wgf_physics3d_priv_jolt_character_destroy(int character);
+void wgf_physics3d_priv_jolt_character_update(int character, const float velocity[3], float step, float dt,
+                                              float position[3], float out_velocity[3]);
+void wgf_physics3d_priv_jolt_character_set_pose(int character, const float position[3], const float rotation[4]);
+bool wgf_physics3d_priv_jolt_character_ground(int character, float normal[3]);
 
 /* A wheeled vehicle on a dynamic body: wheels at points in its space (+y up, +z forward),
  * the first pair steering, driven by axle per `drive` (0 front, 1 rear, 2 both). */

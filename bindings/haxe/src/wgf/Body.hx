@@ -195,4 +195,49 @@ import wgf.impl.Raw;
 	**/
 	public inline function addImpulse(x:Float, y:Float, z:Float):Bool
 		return Raw.wgf_body_add_impulse(this, x, y, z);
+
+	/**
+	    A character (Jolt's CharacterVirtual) is moved by its velocity each tick, sliding along
+	    walls and slopes, climbing steps up to its step height and kept on the floor going down
+	    them, pushing dynamic bodies, standing on ground no steeper than its max slope: a
+	    player, an enemy that walks. Its velocity is its own: what is set stays across (a walk),
+	    while its up part falls under the world's gravity whenever it isn't standing, and is 0
+	    on the ground; a jump sets it upward once. Its turn is its actor's; a transform the
+	    program sets puts it there. Rays, sensors, and queries find it as a body of its shape.
+	    A capsule is its usual shape, its center at the actor.
+	**/
+	public inline function isGrounded():Bool
+		return Raw.wgf_body_is_grounded(this);
+
+	/**
+	    The ground it stands on's normal; 0, 0, 0 when it isn't standing, or isn't a character.
+	**/
+	public inline function getGroundNormal(?into:wgf.Vec3):wgf.Vec3
+		return Raw.wgf_body_get_ground_normal(this, into);
+
+	/**
+	    The steps it climbs (default 0.3), at once. Refuses a negative or non-finite one.
+	**/
+	public inline function setStepHeight(height:Float):Bool
+		return Raw.wgf_body_set_step_height(this, height);
+
+	/**
+	    The steps it climbs (default 0.3), at once. Refuses a negative or non-finite one.
+	**/
+	public inline function getStepHeight():Float
+		return Raw.wgf_body_get_step_height(this);
+
+	/**
+	    The steepest ground it stands on, in radians from level (default 50 degrees), at the
+	    next tick. Refuses one outside 0 to a right angle.
+	**/
+	public inline function setMaxSlope(radians:Float):Bool
+		return Raw.wgf_body_set_max_slope(this, radians);
+
+	/**
+	    The steepest ground it stands on, in radians from level (default 50 degrees), at the
+	    next tick. Refuses one outside 0 to a right angle.
+	**/
+	public inline function getMaxSlope():Float
+		return Raw.wgf_body_get_max_slope(this);
 }

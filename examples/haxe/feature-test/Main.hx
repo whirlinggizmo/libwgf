@@ -654,6 +654,21 @@ class Main {
 		vehicle.getGear();
 		vehicle.getWheelSlip(0);
 		expect(vehicle.reset(), "reset");
+		final found:Array<Actor> = [for (i in 0...4) cast 0];
+		final hits:Array<Float> = [for (i in 0...28) 0];
+		Physics.castRay(0, 10, 0, 0, -1, 0, 20, 0x7FFF, found, hits);
+		Physics.castSphere(0, 10, 0, 0.5, 0, -1, 0, 20, 0x7FFF, found, hits);
+		Physics.overlapSphere(0, 0, 0, 1, 0x7FFF, found);
+		Physics.overlapBox(0, 0, 0, 1, 1, 1, 0x7FFF, found);
+		final walker = Actor.create();
+		walker.setParent(stage3d);
+		walker.setPosition(10, 3, 0);
+		walker.addComponent(Component.BODY);
+		final character:Body = walker;
+		expect(character.setType(BodyType.CHARACTER) && character.setShape(BodyShape.CAPSULE, 0.4, 1.8, 0), "a character");
+		expect(character.setStepHeight(0.25) && near(character.getStepHeight(), 0.25) && character.setMaxSlope(0.7)
+			&& near(character.getMaxSlope(), 0.7), "its step and slope");
+		expect(!character.isGrounded() && character.getGroundNormal().y == 0, "not yet standing");
 	}
 
 	static var target:Texture;

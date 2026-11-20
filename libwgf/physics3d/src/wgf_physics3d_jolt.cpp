@@ -14,6 +14,12 @@
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Core/UnorderedMap.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Character/CharacterVirtual.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/CollideShape.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/ShapeCast.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayerInterfaceMask.h>
 #include <Jolt/Physics/Collision/BroadPhase/ObjectVsBroadPhaseLayerFilterMask.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
@@ -43,6 +49,7 @@ constexpr uint MAX_BODIES = 16384;
 constexpr uint MAX_PAIRS = 16384;
 constexpr uint MAX_CONTACTS = 8192;
 constexpr int MAX_VEHICLES = 64;
+constexpr int MAX_CHARACTERS = 256;
 constexpr uint32 STATIC_GROUP = 0x8000; // the group bit a static body has, so movers' masks reach statics
 constexpr uint32 USER_BITS = 0x7FFF;
 constexpr float PEAK_ALONG = 0.06f;                 // the tires' grip peaks: their curves' (below)
@@ -58,10 +65,12 @@ class Overlaps final : public ContactListener {
 public:
     void OnContactAdded(const Body &a, const Body &b, const ContactManifold &, ContactSettings &) override
     {
-        if (!a.IsSensor() && !b.IsSensor()) return;
+        const bool sensor = a.IsSensor() || b.IsSensor();
+        // two solid bodies touching: told when one of them moves (a static pair never meets)
+        if (!sensor && a.IsStatic() && b.IsStatic()) return;
         const uint64 key = Key(a.GetID(), b.GetID());
         uint32 &count = mCounts[key];
-        if (count++ == 0) Note(true, a.IsSensor() ? a : b, a.IsSensor() ? b : a);
+        if (count++ == 0) Note(true, a.IsSensor() ? a : b, a.IsSensor() ? b : a, !sensor);
     }
 
     void OnContactRemoved(const SubShapeIDPair &pair) override
@@ -80,8 +89,8 @@ public:
     {
         for (uint64 key : mGone) {
             const BodyID a{uint32(key >> 32)}, b{uint32(key)};
-            const bool a_sensor = bodies.IsSensor(a);
-            NoteIds(false, a_sensor ? a : b, a_sensor ? b : a, bodies);
+            const bool a_sensor = bodies.IsSensor(a), contact = !a_sensor && !bodies.IsSensor(b);
+            NoteIds(false, a_sensor ? a : b, a_sensor ? b : a, bodies, contact);
         }
         mGone.clear();
     }
@@ -95,10 +104,10 @@ public:
             if (a == id || b == id) {
                 const BodyID other = a == id ? b : a;
                 if (bodies.IsAdded(other)) {
-                    const bool id_sensor = bodies.IsSensor(id);
+                    const bool id_sensor = bodies.IsSensor(id), contact = !id_sensor && !bodies.IsSensor(other);
                     const uint64 sensor_user = bodies.GetUserData(id_sensor ? id : other);
                     const uint64 other_user = bodies.GetUserData(id_sensor ? other : id);
-                    mOut.push_back({false, sensor_user, other_user});
+                    mOut.push_back({false, contact, sensor_user, other_user});
                 }
                 gone.push_back(it->first);
             }
@@ -115,14 +124,14 @@ private:
         return x < y ? (uint64(x) << 32) | y : (uint64(y) << 32) | x;
     }
 
-    void Note(bool entered, const Body &sensor, const Body &other)
+    void Note(bool entered, const Body &sensor, const Body &other, bool contact)
     {
-        mOut.push_back({entered, sensor.GetUserData(), other.GetUserData()});
+        mOut.push_back({entered, contact, sensor.GetUserData(), other.GetUserData()});
     }
 
-    void NoteIds(bool entered, BodyID sensor, BodyID other, const BodyInterface &bodies)
+    void NoteIds(bool entered, BodyID sensor, BodyID other, const BodyInterface &bodies, bool contact)
     {
-        mOut.push_back({entered, bodies.GetUserData(sensor), bodies.GetUserData(other)});
+        mOut.push_back({entered, contact, bodies.GetUserData(sensor), bodies.GetUserData(other)});
     }
 
     UnorderedMap<uint64, uint32> mCounts;
@@ -138,6 +147,8 @@ struct World {
     PhysicsSystem system;
     Overlaps overlaps;
     VehicleConstraint *vehicles[MAX_VEHICLES] = {};
+    CharacterVirtual *characters[MAX_CHARACTERS] = {};
+    ObjectLayer character_layers[MAX_CHARACTERS] = {};
 };
 
 World *world = nullptr;
@@ -239,6 +250,51 @@ WheeledVehicleController *ControllerOf(int vehicle)
     return static_cast<WheeledVehicleController *>(world->vehicles[vehicle]->GetController());
 }
 
+// ------------------------------------------------------------------ queries ----
+
+
+// A query meets a body whose layer is in its mask, and no sensor.
+class QueryLayers final : public ObjectLayerFilter {
+public:
+    explicit QueryLayers(uint32 mask) : mMask(mask & USER_BITS) {}
+    bool ShouldCollide(ObjectLayer layer) const override
+    {
+        return (ObjectLayerPairFilterMask::sGetGroup(layer) & mMask) != 0;
+    }
+
+private:
+    uint32 mMask;
+};
+
+class NoSensors final : public BodyFilter {
+public:
+    bool ShouldCollideLocked(const Body &body) const override { return !body.IsSensor(); }
+};
+
+// The nearest hit of each body, nearest first, into `out`: how many.
+int Nearest(Array<wgf_physics3d_priv_hit_t> &hits, wgf_physics3d_priv_hit_t *out, int count)
+{
+    std::sort(hits.begin(), hits.end(), [](const wgf_physics3d_priv_hit_t &a, const wgf_physics3d_priv_hit_t &b) {
+        return a.distance < b.distance;
+    });
+    int n = 0;
+    for (const wgf_physics3d_priv_hit_t &hit : hits) {
+        bool seen = false;
+        for (int i = 0; i < n && !seen; i++) seen = out[i].user == hit.user;
+        if (seen) continue;
+        if (n == count) break;
+        out[n++] = hit;
+    }
+    return n;
+}
+
+RefConst<Shape> QueryShape(int shape, const float size[3])
+{
+    if (shape == WGF_PHYSICS3D_PRIV_SPHERE) return new SphereShape(std::max(size[0], 0.001f));
+    return new BoxShape(Vec3(std::max(size[0], 0.001f), std::max(size[1], 0.001f), std::max(size[2], 0.001f)),
+                        std::min({size[0], size[1], size[2], 0.05f}) * 0.5f);
+}
+
 } // namespace
 
 extern "C" {
@@ -273,6 +329,7 @@ void wgf_physics3d_priv_jolt_stop(void)
 {
     if (world == nullptr) return;
     BodyInterface &bodies = world->system.GetBodyInterface();
+    for (int i = 0; i < MAX_CHARACTERS; i++) wgf_physics3d_priv_jolt_character_destroy(i);
     for (int i = 0; i < MAX_VEHICLES; i++) wgf_physics3d_priv_jolt_vehicle_destroy(i);
     BodyIDVector ids;
     world->system.GetBodies(ids);
@@ -575,6 +632,156 @@ void wgf_physics3d_priv_jolt_vehicle_reset(int vehicle)
         w->SetAngularVelocity(0.0f);
         w->SetSteerAngle(0.0f);
     }
+}
+
+int wgf_physics3d_priv_jolt_cast_ray(const float origin[3], const float direction[3], float distance, uint32_t mask,
+                                     wgf_physics3d_priv_hit_t *out, int count)
+{
+    if (world == nullptr || out == nullptr || count <= 0 || !(distance > 0.0f)) return 0;
+    const Vec3 dir = V(direction);
+    if (dir.LengthSq() < 1e-12f) return 0;
+    const RRayCast ray(V(origin), dir.Normalized() * distance);
+    AllHitCollisionCollector<CastRayCollector> collector;
+    RayCastSettings settings;
+    settings.mBackFaceModeTriangles = EBackFaceMode::IgnoreBackFaces;
+    QueryLayers layers(mask);
+    NoSensors bodies;
+    world->system.GetNarrowPhaseQuery().CastRay(ray, settings, collector, {}, layers, bodies);
+    Array<wgf_physics3d_priv_hit_t> hits;
+    const BodyLockInterface &locks = world->system.GetBodyLockInterface();
+    for (const RayCastResult &r : collector.mHits) {
+        BodyLockRead lock(locks, r.mBodyID);
+        if (!lock.Succeeded()) continue;
+        const RVec3 point = ray.GetPointOnRay(r.mFraction);
+        const Vec3 normal = lock.GetBody().GetWorldSpaceSurfaceNormal(r.mSubShapeID2, point);
+        hits.push_back({lock.GetBody().GetUserData(),
+                        {float(point.GetX()), float(point.GetY()), float(point.GetZ())},
+                        {normal.GetX(), normal.GetY(), normal.GetZ()},
+                        r.mFraction * distance});
+    }
+    return Nearest(hits, out, count);
+}
+
+int wgf_physics3d_priv_jolt_cast_shape(int shape, const float size[3], const float origin[3], const float direction[3],
+                                       float distance, uint32_t mask, wgf_physics3d_priv_hit_t *out, int count)
+{
+    if (world == nullptr || out == nullptr || count <= 0 || !(distance > 0.0f)) return 0;
+    const Vec3 dir = V(direction);
+    if (dir.LengthSq() < 1e-12f) return 0;
+    RefConst<Shape> cast = QueryShape(shape, size);
+    const RShapeCast sweep =
+        RShapeCast::sFromWorldTransform(cast, Vec3::sOne(), RMat44::sTranslation(V(origin)), dir.Normalized() * distance);
+    ShapeCastSettings settings;
+    settings.mBackFaceModeTriangles = EBackFaceMode::IgnoreBackFaces;
+    AllHitCollisionCollector<CastShapeCollector> collector;
+    QueryLayers layers(mask);
+    NoSensors bodies;
+    world->system.GetNarrowPhaseQuery().CastShape(sweep, settings, RVec3::sZero(), collector, {}, layers, bodies);
+    Array<wgf_physics3d_priv_hit_t> hits;
+    const BodyLockInterface &locks = world->system.GetBodyLockInterface();
+    for (const ShapeCastResult &r : collector.mHits) {
+        BodyLockRead lock(locks, r.mBodyID2);
+        if (!lock.Succeeded()) continue;
+        const Vec3 axis = r.mPenetrationAxis.LengthSq() > 1e-12f ? -r.mPenetrationAxis.Normalized() : -dir.Normalized();
+        hits.push_back({lock.GetBody().GetUserData(),
+                        {float(r.mContactPointOn2.GetX()), float(r.mContactPointOn2.GetY()), float(r.mContactPointOn2.GetZ())},
+                        {axis.GetX(), axis.GetY(), axis.GetZ()},
+                        r.mFraction * distance});
+    }
+    return Nearest(hits, out, count);
+}
+
+int wgf_physics3d_priv_jolt_overlap(int shape, const float size[3], const float center[3], uint32_t mask, uint64_t *out,
+                                    int count)
+{
+    if (world == nullptr || out == nullptr || count <= 0) return 0;
+    RefConst<Shape> probe = QueryShape(shape, size);
+    CollideShapeSettings settings;
+    AllHitCollisionCollector<CollideShapeCollector> collector;
+    QueryLayers layers(mask);
+    NoSensors bodies;
+    world->system.GetNarrowPhaseQuery().CollideShape(probe, Vec3::sOne(), RMat44::sTranslation(V(center)), settings,
+                                                    RVec3::sZero(), collector, {}, layers, bodies);
+    int n = 0;
+    const BodyInterface &all = world->system.GetBodyInterface();
+    for (const CollideShapeResult &r : collector.mHits) {
+        const uint64 user = all.GetUserData(r.mBodyID2);
+        bool seen = false;
+        for (int i = 0; i < n && !seen; i++) seen = out[i] == user;
+        if (seen) continue;
+        if (n == count) break;
+        out[n++] = user;
+    }
+    return n;
+}
+
+// ------------------------------------------------------------- characters ----
+
+int wgf_physics3d_priv_jolt_character_create(const wgf_physics3d_priv_body_desc_t *d, float max_slope)
+{
+    if (world == nullptr || d == nullptr) return -1;
+    int slot = 0;
+    while (slot < MAX_CHARACTERS && world->characters[slot] != nullptr) slot++;
+    if (slot == MAX_CHARACTERS) return -1;
+    RefConst<Shape> made = MakeShape(*d);
+    if (made == nullptr) return -1;
+    RefConst<Shape> shape = Placed(made, *d);
+    Ref<CharacterVirtualSettings> settings = new CharacterVirtualSettings();
+    settings->mShape = shape;
+    settings->mMaxSlopeAngle = max_slope;
+    settings->mInnerBodyShape = shape; // a body in the world too, so rays, sensors, and queries find it
+    settings->mInnerBodyLayer = LayerOf(*d);
+    CharacterVirtual *character = new CharacterVirtual(settings, RVec3(V(d->position)), Q(d->rotation), d->user, &world->system);
+    character->AddRef();
+    world->characters[slot] = character;
+    world->character_layers[slot] = LayerOf(*d);
+    return slot;
+}
+
+void wgf_physics3d_priv_jolt_character_destroy(int character)
+{
+    if (world == nullptr || character < 0 || character >= MAX_CHARACTERS || world->characters[character] == nullptr) return;
+    world->characters[character]->Release();
+    world->characters[character] = nullptr;
+}
+
+// One step of the character: moved by `velocity` (gravity added while it isn't supported),
+// sliding, climbing steps up to `step`, kept on the floor going down them.
+void wgf_physics3d_priv_jolt_character_update(int character, const float velocity[3], float step, float dt,
+                                              float position[3], float out_velocity[3])
+{
+    if (world == nullptr || character < 0 || character >= MAX_CHARACTERS || world->characters[character] == nullptr) return;
+    CharacterVirtual *c = world->characters[character];
+    Vec3 v = V(velocity);
+    if (!c->IsSupported()) v += world->system.GetGravity() * dt;
+    else if (v.GetY() < 0.0f) v.SetY(0.0f);
+    c->SetLinearVelocity(v);
+    CharacterVirtual::ExtendedUpdateSettings settings;
+    settings.mWalkStairsStepUp = Vec3(0.0f, std::max(step, 0.0f), 0.0f);
+    settings.mStickToFloorStepDown = Vec3(0.0f, -std::max(step, 0.05f), 0.0f);
+    const ObjectLayer layer = world->character_layers[character];
+    c->ExtendedUpdate(dt, world->system.GetGravity(), settings, world->system.GetDefaultBroadPhaseLayerFilter(layer),
+                      world->system.GetDefaultLayerFilter(layer), {}, {}, world->temp);
+    const RVec3 p = c->GetPosition();
+    position[0] = float(p.GetX()), position[1] = float(p.GetY()), position[2] = float(p.GetZ());
+    const Vec3 moved = c->GetLinearVelocity();
+    out_velocity[0] = moved.GetX(), out_velocity[1] = moved.GetY(), out_velocity[2] = moved.GetZ();
+}
+
+void wgf_physics3d_priv_jolt_character_set_pose(int character, const float position[3], const float rotation[4])
+{
+    if (world == nullptr || character < 0 || character >= MAX_CHARACTERS || world->characters[character] == nullptr) return;
+    world->characters[character]->SetPosition(RVec3(V(position)));
+    world->characters[character]->SetRotation(Q(rotation));
+}
+
+bool wgf_physics3d_priv_jolt_character_ground(int character, float normal[3])
+{
+    if (world == nullptr || character < 0 || character >= MAX_CHARACTERS || world->characters[character] == nullptr) return false;
+    const CharacterVirtual *c = world->characters[character];
+    const Vec3 n = c->GetGroundNormal();
+    normal[0] = n.GetX(), normal[1] = n.GetY(), normal[2] = n.GetZ();
+    return c->GetGroundState() == CharacterBase::EGroundState::OnGround;
 }
 
 } // extern "C"

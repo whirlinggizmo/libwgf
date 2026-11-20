@@ -46,6 +46,10 @@ typedef struct body_t {
     wgf_quat_t placed_rotation;
     float *edges; /* a convex or mesh body's triangles, for the debug view: 9 floats each, malloc'd */
     int triangles;
+    int character;         /* a character's: Jolt's index + 1; 0 none */
+    float step, max_slope; /* a character's: the steps it climbs, the steepest ground it walks */
+    bool grounded;         /* a character's, as its last tick left it */
+    float ground[3];
 } body_t;
 
 typedef struct vehicle_t {
@@ -250,6 +254,9 @@ static void unmake_body(wgf_actor_t actor, body_t *b)
     }
     if (b->id != WGF_PHYSICS3D_PRIV_NO_BODY) wgf_physics3d_priv_jolt_body_destroy(b->id);
     b->id = WGF_PHYSICS3D_PRIV_NO_BODY;
+    if (b->character > 0) wgf_physics3d_priv_jolt_character_destroy(b->character - 1);
+    b->character = 0;
+    b->grounded = false;
     forget_edges(b);
 }
 
@@ -260,8 +267,8 @@ static void make_body(wgf_actor_t actor, body_t *b)
     memset(&d, 0, sizeof(d));
     memset(&soup, 0, sizeof(soup));
     unmake_body(actor, b);
-    d.motion = b->type == WGF_BODY_TYPE_DYNAMIC     ? WGF_PHYSICS3D_PRIV_DYNAMIC
-               : b->type == WGF_BODY_TYPE_KINEMATIC ? WGF_PHYSICS3D_PRIV_KINEMATIC
+    d.motion = b->type == WGF_BODY_TYPE_DYNAMIC                                             ? WGF_PHYSICS3D_PRIV_DYNAMIC
+               : b->type == WGF_BODY_TYPE_KINEMATIC || b->type == WGF_BODY_TYPE_CHARACTER ? WGF_PHYSICS3D_PRIV_KINEMATIC
                                                     : WGF_PHYSICS3D_PRIV_STATIC;
     d.sensor = b->type == WGF_BODY_TYPE_SENSOR;
     d.shape = (wgf_physics3d_priv_shape_t)b->shape;
@@ -311,6 +318,15 @@ static void make_body(wgf_actor_t actor, body_t *b)
     d.layer = (uint32_t)b->layer;
     d.mask = (uint32_t)b->mask;
     d.user = (uint64_t)actor;
+    if (b->type == WGF_BODY_TYPE_CHARACTER) {
+        b->character = wgf_physics3d_priv_jolt_character_create(&d, b->max_slope) + 1;
+        b->dirty = false;
+        if (b->character == 0) wgf_log_warn("wgf_physics: a character couldn't be made (more than 256, or no shape)");
+        free(soup.points);
+        free(soup.indices);
+        note_place(b, actor);
+        return;
+    }
     b->id = wgf_physics3d_priv_jolt_body_create(&d);
     b->dirty = false;
     if (b->id == WGF_PHYSICS3D_PRIV_NO_BODY) {
@@ -417,6 +433,8 @@ static void body_add(wgf_actor_t actor)
     b.damping[0] = b.damping[1] = 0.05f;
     b.layer = 1;
     b.mask = 0x7FFF;
+    b.step = 0.3f;
+    b.max_slope = 0.8726646f; /* 50 degrees, Jolt's */
     b.dirty = true;
     wgf_ecs_priv_store_set(record->id, physics.body_id, &b);
 }
@@ -473,7 +491,7 @@ static int numbers_of(const char *text, double *n, int most)
     }
 }
 
-static const char *const types[] = {"static", "dynamic", "kinematic", "sensor"};
+static const char *const types[] = {"static", "dynamic", "kinematic", "sensor", "character"};
 static const char *const shapes[] = {"box", "sphere", "capsule", "convex", "mesh"};
 static const char *const drives[] = {"front", "rear", "all"};
 
@@ -533,7 +551,7 @@ static void body_set(wgf_actor_t actor, const char *key, const char *text)
     int w;
     if (b == NULL || count < 0) return;
     if (strcmp(key, "type") == 0) {
-        if ((w = word_of(text, types, 4)) >= 0) wgf_body_set_type(actor, (wgf_body_type_t)w);
+        if ((w = word_of(text, types, 5)) >= 0) wgf_body_set_type(actor, (wgf_body_type_t)w);
         else wgf_log_warn("wgf_physics: a body's type is static, dynamic, kinematic, or sensor (\"%s\")", text);
     } else if (strcmp(key, "shape") == 0) {
         if ((w = word_of(text, shapes, 5)) >= 0) {
@@ -690,6 +708,31 @@ static void tree_built(wgf_actor_t root)
     }
 }
 
+/* A character's step, before the world's: put where its actor was moved to, if it was;
+ * moved by its velocity (falling while unsupported, the up part taken from where it went:
+ * stopped on a ceiling, 0 on the ground); its actor set where it went, its turn kept. */
+static void step_character(wgf_actor_t actor, body_t *b, float dt)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
+    float p[3], q[4], v[3], out[3];
+    const int c = b->character - 1;
+    if (actor_ptr == NULL || c < 0) return;
+    if (!same_place(b, actor_ptr)) {
+        world_pose(actor, p, q);
+        wgf_physics3d_priv_jolt_character_set_pose(c, p, q);
+    }
+    memcpy(v, b->velocity, sizeof(v));
+    if (b->grounded && v[1] < 0.0f) v[1] = 0.0f;
+    if (!b->grounded) v[1] += physics.gravity[1] * dt;
+    wgf_physics3d_priv_jolt_character_update(c, v, b->step, dt, p, out);
+    b->velocity[1] = out[1];
+    b->grounded = wgf_physics3d_priv_jolt_character_ground(c, b->ground);
+    if (b->grounded && b->velocity[1] < 0.0f) b->velocity[1] = 0.0f;
+    world_pose(actor, v, q);
+    put_actor(actor, p, q);
+    note_place(b, actor);
+}
+
 static void tick(float dt)
 {
     void *fields[2];
@@ -705,6 +748,10 @@ static void tick(float dt)
         const wgf_actor_t actor = ((const wgf_ecs_priv_ref_t *)fields[1])->actor;
         const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
         if (actor_ptr == NULL) continue;
+        if (b->type == WGF_BODY_TYPE_CHARACTER && !b->dirty) {
+            step_character(actor, b, dt);
+            continue;
+        }
         if (b->dirty || b->id == WGF_PHYSICS3D_PRIV_NO_BODY) {
             if (b->dirty) make_body(actor, b);
             continue;
@@ -763,7 +810,9 @@ static void tick(float dt)
     while ((n = wgf_physics3d_priv_jolt_take_overlaps(overlaps, 64)) > 0) {
         for (i = 0; i < n; i++) {
             const wgf_actor_t sensor = (wgf_actor_t)overlaps[i].sensor, other = (wgf_actor_t)overlaps[i].other;
-            const wgf_world_event_t event = overlaps[i].entered ? WGF_WORLD_EVENT_TRIGGER_ENTER : WGF_WORLD_EVENT_TRIGGER_EXIT;
+            const wgf_world_event_t event = overlaps[i].contact
+                                                ? (overlaps[i].entered ? WGF_WORLD_EVENT_CONTACT_BEGIN : WGF_WORLD_EVENT_CONTACT_END)
+                                                : (overlaps[i].entered ? WGF_WORLD_EVENT_TRIGGER_ENTER : WGF_WORLD_EVENT_TRIGGER_EXIT);
             wgf_ecs_priv_raise(event, (int)sensor, (int)other, layer_of(other));
             wgf_ecs_priv_raise(event, (int)other, (int)sensor, layer_of(sensor));
         }
@@ -836,7 +885,7 @@ wgf_vec3_t wgf_physics_get_gravity(void)
 bool wgf_body_set_type(wgf_actor_t actor, wgf_body_type_t type)
 {
     body_t *b;
-    if ((int)type < WGF_BODY_TYPE_STATIC || type > WGF_BODY_TYPE_SENSOR) return false;
+    if ((int)type < WGF_BODY_TYPE_STATIC || type > WGF_BODY_TYPE_CHARACTER) return false;
     if ((b = changing(actor)) == NULL) return false;
     b->type = type;
     return true;
@@ -1024,6 +1073,10 @@ static bool set_moving(wgf_actor_t actor, const float *linear, const float *angu
 {
     body_t *b;
     if (!start() || (b = body_of(actor)) == NULL) return false;
+    if (b->type == WGF_BODY_TYPE_CHARACTER) { /* its own, which its steps move it by */
+        if (linear != NULL) memcpy(b->velocity, linear, sizeof(b->velocity));
+        return true;
+    }
     if (b->id != WGF_PHYSICS3D_PRIV_NO_BODY && !b->dirty) {
         float l[3], a[3];
         wgf_physics3d_priv_jolt_body_get_velocity(b->id, l, a);
@@ -1053,6 +1106,9 @@ static wgf_vec3_t moving_of(wgf_actor_t actor, bool angular)
     const body_t *b = body_of(actor);
     float l[3] = {0, 0, 0}, a[3] = {0, 0, 0};
     if (b == NULL) return wgf_vec3_make(0.0f, 0.0f, 0.0f);
+    if (b->type == WGF_BODY_TYPE_CHARACTER) {
+        return angular ? wgf_vec3_make(0.0f, 0.0f, 0.0f) : wgf_vec3_make(b->velocity[0], b->velocity[1], b->velocity[2]);
+    }
     if (b->id != WGF_PHYSICS3D_PRIV_NO_BODY) {
         wgf_physics3d_priv_jolt_body_get_velocity(b->id, l, a);
     } else if (b->moving_set) {
@@ -1384,4 +1440,125 @@ void wgf_physics_draw_bodies(wgf_color_t color)
             ring(wheel, v->radius, 0, 0.0f, color); /* a wheel turns about its x */
         }
     }
+}
+
+/* ------------------------------------------------------------------ queries ---- */
+
+#define QUERY_HITS 256
+
+/* Hits into the caller's arrays: each hit's actor, and its point, normal, and distance (7
+ * floats). How many. */
+static int put_hits(const wgf_physics3d_priv_hit_t *hits, int n, wgf_actor_t *actors, int count, float *out,
+                    int out_count)
+{
+    int i;
+    if (n > count) n = count;
+    for (i = 0; i < n; i++) {
+        actors[i] = (wgf_actor_t)hits[i].user;
+        if (out != NULL && (i + 1) * 7 <= out_count) {
+            float *h = &out[i * 7];
+            h[0] = hits[i].point[0], h[1] = hits[i].point[1], h[2] = hits[i].point[2];
+            h[3] = hits[i].normal[0], h[4] = hits[i].normal[1], h[5] = hits[i].normal[2];
+            h[6] = hits[i].distance;
+        }
+    }
+    return n;
+}
+
+int wgf_physics_cast_ray(float x, float y, float z, float dx, float dy, float dz, float distance, int mask,
+                         wgf_actor_t *actors, int count, float *hits, int hits_count)
+{
+    static wgf_physics3d_priv_hit_t found[QUERY_HITS];
+    const float origin[3] = {x, y, z}, direction[3] = {dx, dy, dz};
+    int n;
+    if (actors == NULL || count <= 0 || !start()) return 0;
+    n = wgf_physics3d_priv_jolt_cast_ray(origin, direction, distance, (uint32_t)mask, found,
+                                         count < QUERY_HITS ? count : QUERY_HITS);
+    return put_hits(found, n, actors, count, hits, hits_count);
+}
+
+int wgf_physics_cast_sphere(float x, float y, float z, float radius, float dx, float dy, float dz, float distance,
+                            int mask, wgf_actor_t *actors, int count, float *hits, int hits_count)
+{
+    static wgf_physics3d_priv_hit_t found[QUERY_HITS];
+    const float origin[3] = {x, y, z}, direction[3] = {dx, dy, dz}, size[3] = {radius, radius, radius};
+    int n;
+    if (actors == NULL || count <= 0 || !(radius > 0.0f) || !start()) return 0;
+    n = wgf_physics3d_priv_jolt_cast_shape(WGF_PHYSICS3D_PRIV_SPHERE, size, origin, direction, distance, (uint32_t)mask,
+                                           found, count < QUERY_HITS ? count : QUERY_HITS);
+    return put_hits(found, n, actors, count, hits, hits_count);
+}
+
+static int put_actors(const uint64_t *found, int n, wgf_actor_t *actors)
+{
+    int i;
+    for (i = 0; i < n; i++) actors[i] = (wgf_actor_t)found[i];
+    return n;
+}
+
+int wgf_physics_overlap_sphere(float x, float y, float z, float radius, int mask, wgf_actor_t *actors, int count)
+{
+    static uint64_t found[QUERY_HITS];
+    const float center[3] = {x, y, z}, size[3] = {radius, radius, radius};
+    if (actors == NULL || count <= 0 || !(radius > 0.0f) || !start()) return 0;
+    return put_actors(found,
+                      wgf_physics3d_priv_jolt_overlap(WGF_PHYSICS3D_PRIV_SPHERE, size, center, (uint32_t)mask, found,
+                                                      count < QUERY_HITS ? count : QUERY_HITS),
+                      actors);
+}
+
+int wgf_physics_overlap_box(float x, float y, float z, float width, float height, float depth, int mask,
+                            wgf_actor_t *actors, int count)
+{
+    static uint64_t found[QUERY_HITS];
+    const float center[3] = {x, y, z}, size[3] = {width * 0.5f, height * 0.5f, depth * 0.5f};
+    if (actors == NULL || count <= 0 || !(width > 0.0f && height > 0.0f && depth > 0.0f) || !start()) return 0;
+    return put_actors(found,
+                      wgf_physics3d_priv_jolt_overlap(WGF_PHYSICS3D_PRIV_BOX, size, center, (uint32_t)mask, found,
+                                                      count < QUERY_HITS ? count : QUERY_HITS),
+                      actors);
+}
+
+/* ---------------------------------------------------------------- characters ---- */
+
+bool wgf_body_is_grounded(wgf_actor_t actor)
+{
+    const body_t *b = body_of(actor);
+    return b != NULL && b->type == WGF_BODY_TYPE_CHARACTER && b->grounded;
+}
+
+wgf_vec3_t wgf_body_get_ground_normal(wgf_actor_t actor)
+{
+    const body_t *b = body_of(actor);
+    if (b == NULL || b->type != WGF_BODY_TYPE_CHARACTER || !b->grounded) return wgf_vec3_make(0.0f, 0.0f, 0.0f);
+    return wgf_vec3_make(b->ground[0], b->ground[1], b->ground[2]);
+}
+
+bool wgf_body_set_step_height(wgf_actor_t actor, float height)
+{
+    body_t *b;
+    if (!isfinite(height) || height < 0.0f || !start() || (b = body_of(actor)) == NULL) return false;
+    b->step = height;
+    return true;
+}
+
+float wgf_body_get_step_height(wgf_actor_t actor)
+{
+    const body_t *b = body_of(actor);
+    return b != NULL ? b->step : 0.0f;
+}
+
+bool wgf_body_set_max_slope(wgf_actor_t actor, float radians)
+{
+    body_t *b;
+    if (!isfinite(radians) || radians < 0.0f || radians > 1.5707964f) return false;
+    if ((b = changing(actor)) == NULL) return false;
+    b->max_slope = radians;
+    return true;
+}
+
+float wgf_body_get_max_slope(wgf_actor_t actor)
+{
+    const body_t *b = body_of(actor);
+    return b != NULL ? b->max_slope : 0.0f;
 }

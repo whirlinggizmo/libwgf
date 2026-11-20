@@ -676,6 +676,9 @@ export type wgf_bounds_mode_t = typeof WGF_BOUNDS_MODE_WRAP | typeof WGF_BOUNDS_
  *   TRIGGER_ENTER    two colliders starting to overlap, told to each: the actor, the other,
  *                    and the other's collider layer as they met
  *   TRIGGER_EXIT     and ceasing to
+ *   CONTACT_BEGIN    two solid bodies beginning to touch (wgf_body.h), told to each: the
+ *                    actor, the other, and the other's body layer
+ *   CONTACT_END      and ceasing to
  *
  * An actor destroyed while it overlaps another raises no TRIGGER_EXIT. Events taken in a
  * batch can name an actor the program destroyed while handling an earlier one of the
@@ -688,7 +691,9 @@ export declare const WGF_WORLD_EVENT_CREATED: 1;
 export declare const WGF_WORLD_EVENT_DESTROYED: 2;
 export declare const WGF_WORLD_EVENT_TRIGGER_ENTER: 3;
 export declare const WGF_WORLD_EVENT_TRIGGER_EXIT: 4;
-export type wgf_world_event_t = typeof WGF_WORLD_EVENT_NONE | typeof WGF_WORLD_EVENT_CREATED | typeof WGF_WORLD_EVENT_DESTROYED | typeof WGF_WORLD_EVENT_TRIGGER_ENTER | typeof WGF_WORLD_EVENT_TRIGGER_EXIT;
+export declare const WGF_WORLD_EVENT_CONTACT_BEGIN: 5;
+export declare const WGF_WORLD_EVENT_CONTACT_END: 6;
+export type wgf_world_event_t = typeof WGF_WORLD_EVENT_NONE | typeof WGF_WORLD_EVENT_CREATED | typeof WGF_WORLD_EVENT_DESTROYED | typeof WGF_WORLD_EVENT_TRIGGER_ENTER | typeof WGF_WORLD_EVENT_TRIGGER_EXIT | typeof WGF_WORLD_EVENT_CONTACT_BEGIN | typeof WGF_WORLD_EVENT_CONTACT_END;
 
 /**
  * A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
@@ -712,7 +717,8 @@ export declare const WGF_BODY_TYPE_STATIC: 0;
 export declare const WGF_BODY_TYPE_DYNAMIC: 1;
 export declare const WGF_BODY_TYPE_KINEMATIC: 2;
 export declare const WGF_BODY_TYPE_SENSOR: 3;
-export type wgf_body_type_t = typeof WGF_BODY_TYPE_STATIC | typeof WGF_BODY_TYPE_DYNAMIC | typeof WGF_BODY_TYPE_KINEMATIC | typeof WGF_BODY_TYPE_SENSOR;
+export declare const WGF_BODY_TYPE_CHARACTER: 4;
+export type wgf_body_type_t = typeof WGF_BODY_TYPE_STATIC | typeof WGF_BODY_TYPE_DYNAMIC | typeof WGF_BODY_TYPE_KINEMATIC | typeof WGF_BODY_TYPE_SENSOR | typeof WGF_BODY_TYPE_CHARACTER;
 
 export declare const WGF_BODY_SHAPE_BOX: 0;
 export declare const WGF_BODY_SHAPE_SPHERE: 1;
@@ -6759,6 +6765,46 @@ export declare function wgf_body_get_spin(actor: wgf_actor_t | 0, into?: wgf_vec
 export declare function wgf_body_add_impulse(actor: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
 
 /**
+ * A character (Jolt's CharacterVirtual) is moved by its velocity each tick, sliding along
+ * walls and slopes, climbing steps up to its step height and kept on the floor going down
+ * them, pushing dynamic bodies, standing on ground no steeper than its max slope: a
+ * player, an enemy that walks. Its velocity is its own: what is set stays across (a walk),
+ * while its up part falls under the world's gravity whenever it isn't standing, and is 0
+ * on the ground; a jump sets it upward once. Its turn is its actor's; a transform the
+ * program sets puts it there. Rays, sensors, and queries find it as a body of its shape.
+ * A capsule is its usual shape, its center at the actor.
+ */
+export declare function wgf_body_is_grounded(actor: wgf_actor_t | 0): boolean;
+
+/**
+ * The ground it stands on's normal; 0, 0, 0 when it isn't standing, or isn't a character.
+ */
+export declare function wgf_body_get_ground_normal<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_body_get_ground_normal(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * The steps it climbs (default 0.3), at once. Refuses a negative or non-finite one.
+ */
+export declare function wgf_body_set_step_height(actor: wgf_actor_t | 0, height: number): boolean;
+
+/**
+ * The steps it climbs (default 0.3), at once. Refuses a negative or non-finite one.
+ */
+export declare function wgf_body_get_step_height(actor: wgf_actor_t | 0): number;
+
+/**
+ * The steepest ground it stands on, in radians from level (default 50 degrees), at the
+ * next tick. Refuses one outside 0 to a right angle.
+ */
+export declare function wgf_body_set_max_slope(actor: wgf_actor_t | 0, radians: number): boolean;
+
+/**
+ * The steepest ground it stands on, in radians from level (default 50 degrees), at the
+ * next tick. Refuses one outside 0 to a right angle.
+ */
+export declare function wgf_body_get_max_slope(actor: wgf_actor_t | 0): number;
+
+/**
  * The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
  * starting physics. False only when physics couldn't start (logged).
  */
@@ -6777,6 +6823,48 @@ export declare function wgf_physics_get_gravity(into?: wgf_vec3_t | null): wgf_v
  * nothing outside one, or before physics starts. A mesh is drawn by its triangles' edges.
  */
 export declare function wgf_physics_draw_bodies(color: wgf_color_t): void;
+
+/**
+ * Queries of the world as its bodies are now (their last tick's), in its 3D stage's space,
+ * each meeting the bodies whose layer is in `mask` (wgf_body_set_layer) and never a sensor;
+ * starting physics.
+ *
+ * A ray from x, y, z along dx, dy, dz (any length; it is normalized) for `distance`, and a
+ * sphere of `radius` swept so: what they hit, nearest first, a body once (its nearest
+ * hit), as many as fit in `count`: each one's actor into `actors`, and into `hits`, when
+ * it is given, 7 floats a hit as fit in `hits_count` (the point, the surface's normal
+ * there, and the distance along the ray), returning how many hits. 0 for nothing hit, a
+ * direction of no length, a distance or radius not above 0, or no array.
+ */
+export declare function wgf_physics_cast_ray(x: number, y: number, z: number, dx: number, dy: number, dz: number, distance: number, mask: number, actors: wgf_actor_t[] | Uint32Array | null, hits: number[] | Float32Array | Float64Array | null): number;
+
+/**
+ * Queries of the world as its bodies are now (their last tick's), in its 3D stage's space,
+ * each meeting the bodies whose layer is in `mask` (wgf_body_set_layer) and never a sensor;
+ * starting physics.
+ *
+ * A ray from x, y, z along dx, dy, dz (any length; it is normalized) for `distance`, and a
+ * sphere of `radius` swept so: what they hit, nearest first, a body once (its nearest
+ * hit), as many as fit in `count`: each one's actor into `actors`, and into `hits`, when
+ * it is given, 7 floats a hit as fit in `hits_count` (the point, the surface's normal
+ * there, and the distance along the ray), returning how many hits. 0 for nothing hit, a
+ * direction of no length, a distance or radius not above 0, or no array.
+ */
+export declare function wgf_physics_cast_sphere(x: number, y: number, z: number, radius: number, dx: number, dy: number, dz: number, distance: number, mask: number, actors: wgf_actor_t[] | Uint32Array | null, hits: number[] | Float32Array | Float64Array | null): number;
+
+/**
+ * The bodies overlapping a sphere of `radius` at x, y, z, or a box of width, height, and
+ * depth centered there (its axes the world's), in no order, as many as fit in `count`,
+ * returning how many. 0 for none, a size not above 0, or no array.
+ */
+export declare function wgf_physics_overlap_sphere(x: number, y: number, z: number, radius: number, mask: number, actors: wgf_actor_t[] | Uint32Array | null): number;
+
+/**
+ * The bodies overlapping a sphere of `radius` at x, y, z, or a box of width, height, and
+ * depth centered there (its axes the world's), in no order, as many as fit in `count`,
+ * returning how many. 0 for none, a size not above 0, or no array.
+ */
+export declare function wgf_physics_overlap_box(x: number, y: number, z: number, width: number, height: number, depth: number, mask: number, actors: wgf_actor_t[] | Uint32Array | null): number;
 
 /**
  * Its wheels: 2 to 8 actors under it, in left and right pairs, front first; false for an

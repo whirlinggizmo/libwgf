@@ -120,16 +120,20 @@ class Reach {
 		"wgf_body_get_bounce",
 		"wgf_body_get_damping",
 		"wgf_body_get_friction",
+		"wgf_body_get_ground_normal",
 		"wgf_body_get_layer",
 		"wgf_body_get_mask",
 		"wgf_body_get_mass",
 		"wgf_body_get_mass_offset",
+		"wgf_body_get_max_slope",
 		"wgf_body_get_offset",
 		"wgf_body_get_shape",
 		"wgf_body_get_size",
 		"wgf_body_get_spin",
+		"wgf_body_get_step_height",
 		"wgf_body_get_type",
 		"wgf_body_get_velocity",
+		"wgf_body_is_grounded",
 		"wgf_body_set_bounce",
 		"wgf_body_set_damping",
 		"wgf_body_set_friction",
@@ -137,9 +141,11 @@ class Reach {
 		"wgf_body_set_mask",
 		"wgf_body_set_mass",
 		"wgf_body_set_mass_offset",
+		"wgf_body_set_max_slope",
 		"wgf_body_set_offset",
 		"wgf_body_set_shape",
 		"wgf_body_set_spin",
+		"wgf_body_set_step_height",
 		"wgf_body_set_type",
 		"wgf_body_set_velocity",
 		"wgf_bounds_get_margin",
@@ -511,8 +517,12 @@ class Reach {
 		"wgf_mouse_is_released",
 		"wgf_mouse_set_cursor_visible",
 		"wgf_mouse_set_locked",
+		"wgf_physics_cast_ray",
+		"wgf_physics_cast_sphere",
 		"wgf_physics_draw_bodies",
 		"wgf_physics_get_gravity",
+		"wgf_physics_overlap_box",
+		"wgf_physics_overlap_sphere",
 		"wgf_physics_set_gravity",
 		"wgf_prefab_spawn",
 		"wgf_prefab_spawn_at",
@@ -836,7 +846,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...827) 0];
+	static final counts:Array<Int> = [for (_ in 0...837) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

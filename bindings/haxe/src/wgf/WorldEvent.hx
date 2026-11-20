@@ -23,6 +23,9 @@ package wgf;
       TRIGGER_ENTER    two colliders starting to overlap, told to each: the actor, the other,
                        and the other's collider layer as they met
       TRIGGER_EXIT     and ceasing to
+      CONTACT_BEGIN    two solid bodies beginning to touch (wgf_body.h), told to each: the
+                       actor, the other, and the other's body layer
+      CONTACT_END      and ceasing to
 
     An actor destroyed while it overlaps another raises no TRIGGER_EXIT. Events taken in a
     batch can name an actor the program destroyed while handling an earlier one of the
@@ -36,4 +39,6 @@ enum abstract WorldEvent(Int) from Int to Int {
 	var DESTROYED = 2;
 	var TRIGGER_ENTER = 3;
 	var TRIGGER_EXIT = 4;
+	var CONTACT_BEGIN = 5;
+	var CONTACT_END = 6;
 }

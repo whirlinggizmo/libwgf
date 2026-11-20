@@ -434,6 +434,91 @@ int main(void)
         expect(fabsf(wgf_actor_get_position(on_scaled).y - 6.5f) < 0.05f,
                "a scaled root's mesh body scaled with it: a ball rests where only the scaled deck reaches");
     }
+    { /* queries, contacts, and a character, at x 60 and beyond on the floor */
+        const wgf_actor_t pillar = put(stage, 60, 1, 5), drop = put(stage, 64, 3, 0), walker = put(stage, 70, 3, 0);
+        const wgf_actor_t wall = put(stage, 74, 1, 0);
+        wgf_actor_t found[8];
+        float hits[7 * 8];
+        int n;
+        wgf_actor_add_component(pillar, WGF_COMPONENT_BODY);
+        wgf_body_set_type(pillar, WGF_BODY_TYPE_STATIC);
+        wgf_body_set_shape(pillar, WGF_BODY_SHAPE_BOX, 1, 2, 1);
+        wgf_body_set_layer(pillar, 4);
+        wgf_actor_add_component(wall, WGF_COMPONENT_BODY);
+        wgf_body_set_type(wall, WGF_BODY_TYPE_STATIC);
+        wgf_body_set_shape(wall, WGF_BODY_SHAPE_BOX, 1, 2, 4);
+        step(1);
+        n = wgf_physics_cast_ray(60, 10, 0, 0, -3, 0, 20, 0x7FFF, found, 8, hits, 7 * 8);
+        expect(n == 1 && found[0] == floor_actor && fabsf(hits[1]) < 0.01f && fabsf(hits[4] - 1.0f) < 0.01f &&
+                   fabsf(hits[6] - 10.0f) < 0.01f,
+               "a ray down: the floor, its point, its normal up, its distance");
+        expect(wgf_physics_cast_ray(60, 10, 0, 0, -1, 0, 20, 4, found, 8, NULL, 0) == 0, "a mask without the floor's layer: none");
+        expect(wgf_physics_cast_ray(60, 10, 0, 0, -1, 0, 5, 0x7FFF, found, 8, NULL, 0) == 0, "too short: none");
+        n = wgf_physics_cast_ray(60, 1, 0, 0, 0, 1, 20, 0x7FFF, found, 8, hits, 7 * 8);
+        expect(n == 1 && found[0] == pillar && fabsf(hits[2] - 4.5f) < 0.01f && fabsf(hits[5] + 1.0f) < 0.01f,
+               "a ray along z: the pillar's near face");
+        n = wgf_physics_cast_sphere(60, 10, 5, 0.5f, 0, -1, 0, 20, 0x7FFF, found, 8, hits, 7 * 8);
+        expect(n == 2 && found[0] == pillar && found[1] == floor_actor && fabsf(hits[6] - 7.5f) < 0.02f,
+               "a sphere swept down: the pillar first, then the floor");
+        n = wgf_physics_overlap_sphere(60, 1, 5, 0.2f, 0x7FFF, found, 8);
+        expect(n == 1 && found[0] == pillar, "a sphere inside the pillar overlaps it alone");
+        expect(wgf_physics_overlap_box(60, 0, 0, 1, 1, 1, 0x7FFF, found, 8) == 1 && found[0] == floor_actor,
+               "a box on the floor overlaps it");
+        expect(wgf_physics_overlap_sphere(60, 1, 5, 0, 0x7FFF, found, 8) == 0 &&
+                   wgf_physics_cast_ray(60, 1, 0, 0, 0, 0, 20, 0x7FFF, found, 8, NULL, 0) == 0,
+               "no size, no direction: none");
+
+        wgf_actor_add_component(drop, WGF_COMPONENT_BODY);
+        wgf_body_set_shape(drop, WGF_BODY_SHAPE_SPHERE, 0.5f, 0, 0);
+        wgf_world_take_events(NULL, 0);
+        for (i = 0; i < 120; i++) {
+            step(1);
+            take();
+            if (told(WGF_WORLD_EVENT_CONTACT_BEGIN, drop, floor_actor)) break;
+        }
+        expect(told(WGF_WORLD_EVENT_CONTACT_BEGIN, drop, floor_actor) && told(WGF_WORLD_EVENT_CONTACT_BEGIN, floor_actor, drop),
+               "a ball landing on the floor: a contact, told to both");
+        wgf_actor_set_position(drop, 64, 6, 0);
+        for (i = 0; i < 30; i++) {
+            step(1);
+            take();
+            if (told(WGF_WORLD_EVENT_CONTACT_END, drop, floor_actor)) break;
+        }
+        expect(told(WGF_WORLD_EVENT_CONTACT_END, drop, floor_actor), "lifted off: the contact ended");
+
+        wgf_actor_add_component(walker, WGF_COMPONENT_BODY);
+        expect(wgf_body_set_type(walker, WGF_BODY_TYPE_CHARACTER) && wgf_body_get_type(walker) == WGF_BODY_TYPE_CHARACTER &&
+                   wgf_body_set_shape(walker, WGF_BODY_SHAPE_CAPSULE, 0.4f, 1.8f, 0),
+               "a character, a capsule");
+        expect(fabsf(wgf_body_get_step_height(walker) - 0.3f) < 1e-6f && wgf_body_set_step_height(walker, 0.25f) &&
+                   wgf_body_set_max_slope(walker, 0.7f) && fabsf(wgf_body_get_max_slope(walker) - 0.7f) < 1e-6f &&
+                   !wgf_body_set_max_slope(walker, 2.0f) && !wgf_body_set_step_height(walker, -1.0f),
+               "its step and slope, set and refused");
+        step(120);
+        at = wgf_actor_get_position(walker);
+        expect(wgf_body_is_grounded(walker) && fabsf(at.y - 0.9f) < 0.05f && wgf_body_get_ground_normal(walker).y > 0.99f,
+               "fallen to the floor, standing on it");
+        wgf_body_set_velocity(walker, 2, 0, 0);
+        step(60);
+        at = wgf_actor_get_position(walker);
+        expect(at.x > 71.8f && at.x < 72.2f && fabsf(at.y - 0.9f) < 0.05f, "walked 2 m in a second");
+        step(120);
+        at = wgf_actor_get_position(walker);
+        expect(at.x < 73.2f && at.x > 72.9f, "stopped by the wall");
+        expect(wgf_physics_cast_ray(70, 0.9f, 0, 1, 0, 0, 10, 0x7FFF, found, 8, NULL, 0) >= 1 && found[0] == walker,
+               "a ray finds the character");
+        wgf_body_set_velocity(walker, 0, 0, 0);
+        wgf_actor_set_position(walker, 66, 0.9f, 3);
+        step(1);
+        expect(fabsf(wgf_actor_get_position(walker).z - 3.0f) < 0.05f, "put somewhere new by the program");
+        wgf_body_set_velocity(walker, 0, 5, 0);
+        step(10);
+        expect(!wgf_body_is_grounded(walker) && wgf_actor_get_position(walker).y > 1.3f, "a jump, away from the wall: in the air");
+        step(90);
+        expect(wgf_body_is_grounded(walker) && fabsf(wgf_actor_get_position(walker).y - 0.9f) < 0.05f &&
+                   fabsf(wgf_body_get_velocity(walker).y) < 1e-4f,
+               "and down again, still");
+    }
     wgf_gfx_priv_stop();
     expect(!wgf_actor_has_component(ball, WGF_COMPONENT_BODY), "stopped with gfx");
     wgf_core_priv_shutdown();

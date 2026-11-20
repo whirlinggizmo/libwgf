@@ -32,7 +32,8 @@ typedef enum wgf_body_type_t {
     WGF_BODY_TYPE_STATIC = 0,    /* never moves: the track, the ground */
     WGF_BODY_TYPE_DYNAMIC = 1,   /* moved by the world: falling, pushed, a car */
     WGF_BODY_TYPE_KINEMATIC = 2, /* moved by the program, pushing dynamic ones aside */
-    WGF_BODY_TYPE_SENSOR = 3     /* meets nothing, but tells: a checkpoint (below) */
+    WGF_BODY_TYPE_SENSOR = 3,    /* meets nothing, but tells: a checkpoint (below) */
+    WGF_BODY_TYPE_CHARACTER = 4  /* moved by its velocity, sliding and climbing: a player (below) */
 } wgf_body_type_t;
 
 typedef enum wgf_body_shape_t {
@@ -95,7 +96,30 @@ WGF_API bool wgf_body_set_spin(wgf_actor_t actor, float x, float y, float z);
 WGF_API wgf_vec3_t wgf_body_get_spin(wgf_actor_t actor);
 WGF_API bool wgf_body_add_impulse(wgf_actor_t actor, float x, float y, float z);
 
-/* A sensor tells, as a collider does (wgf_collider.h, wgf_world.h): a TRIGGER_ENTER when a
+/* A character (Jolt's CharacterVirtual) is moved by its velocity each tick, sliding along
+ * walls and slopes, climbing steps up to its step height and kept on the floor going down
+ * them, pushing dynamic bodies, standing on ground no steeper than its max slope: a
+ * player, an enemy that walks. Its velocity is its own: what is set stays across (a walk),
+ * while its up part falls under the world's gravity whenever it isn't standing, and is 0
+ * on the ground; a jump sets it upward once. Its turn is its actor's; a transform the
+ * program sets puts it there. Rays, sensors, and queries find it as a body of its shape.
+ * A capsule is its usual shape, its center at the actor. */
+WGF_API bool wgf_body_is_grounded(wgf_actor_t actor);
+/* The ground it stands on's normal; 0, 0, 0 when it isn't standing, or isn't a character. */
+WGF_API wgf_vec3_t wgf_body_get_ground_normal(wgf_actor_t actor);
+/* The steps it climbs (default 0.3), at once. Refuses a negative or non-finite one. */
+WGF_API bool wgf_body_set_step_height(wgf_actor_t actor, float height);
+WGF_API float wgf_body_get_step_height(wgf_actor_t actor);
+/* The steepest ground it stands on, in radians from level (default 50 degrees), at the
+ * next tick. Refuses one outside 0 to a right angle. */
+WGF_API bool wgf_body_set_max_slope(wgf_actor_t actor, float radians);
+WGF_API float wgf_body_get_max_slope(wgf_actor_t actor);
+
+/* A contact is told for two solid bodies that begin to touch, one of them moving (dynamic,
+ * kinematic, or a character's): a CONTACT_BEGIN to each, with the other's layer, and a
+ * CONTACT_END when they stop (or one goes) (wgf_world.h); a behavior's onContactBegin.
+ *
+ * A sensor tells, as a collider does (wgf_collider.h, wgf_world.h): a TRIGGER_ENTER when a
  * moving body it may meet begins to overlap it, and a TRIGGER_EXIT when it stops (or goes),
  * each to both, with the other's layer; a behavior's onTriggerEnter. */
 

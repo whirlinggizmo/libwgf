@@ -31,6 +31,9 @@ extern "C" {
  *   TRIGGER_ENTER    two colliders starting to overlap, told to each: the actor, the other,
  *                    and the other's collider layer as they met
  *   TRIGGER_EXIT     and ceasing to
+ *   CONTACT_BEGIN    two solid bodies beginning to touch (wgf_body.h), told to each: the
+ *                    actor, the other, and the other's body layer
+ *   CONTACT_END      and ceasing to
  *
  * An actor destroyed while it overlaps another raises no TRIGGER_EXIT. Events taken in a
  * batch can name an actor the program destroyed while handling an earlier one of the
@@ -42,7 +45,9 @@ typedef enum wgf_world_event_t {
     WGF_WORLD_EVENT_CREATED = 1,
     WGF_WORLD_EVENT_DESTROYED = 2,
     WGF_WORLD_EVENT_TRIGGER_ENTER = 3,
-    WGF_WORLD_EVENT_TRIGGER_EXIT = 4
+    WGF_WORLD_EVENT_TRIGGER_EXIT = 4,
+    WGF_WORLD_EVENT_CONTACT_BEGIN = 5,
+    WGF_WORLD_EVENT_CONTACT_END = 6
 } wgf_world_event_t;
 
 /* Events waiting, and the oldest taken off the queue into `out`, four ints each (the

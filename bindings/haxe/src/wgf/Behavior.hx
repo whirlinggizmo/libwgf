@@ -57,6 +57,12 @@ class Behavior {
 	/** Its actor stopped overlapping `other`, of `layer`. **/
 	public function onTriggerExit(other:Actor, layer:Int):Void {}
 
+	/** Its actor's body began to touch `other`'s, of body layer `layer` (wgf_body.h's contacts). **/
+	public function onContactBegin(other:Actor, layer:Int):Void {}
+
+	/** Its actor's body stopped touching `other`'s. **/
+	public function onContactEnd(other:Actor, layer:Int):Void {}
+
 	/** It was removed, or its actor is gone: `actor` may be stale from here. **/
 	public function onDestroy():Void {}
 
@@ -148,6 +154,17 @@ class Behavior {
 									behavior.onTriggerEnter(second, layer);
 								else
 									behavior.onTriggerExit(second, layer);
+							}
+					case WorldEvent.CONTACT_BEGIN | WorldEvent.CONTACT_END:
+						final list = live.get(actor);
+						if (list != null)
+							for (behavior in list.copy()) {
+								if (!liveNow(behavior) || !actor.isAlive() || !(second : Actor).isAlive())
+									break;
+								if (kind == WorldEvent.CONTACT_BEGIN)
+									behavior.onContactBegin(second, layer);
+								else
+									behavior.onContactEnd(second, layer);
 							}
 					default:
 				}
