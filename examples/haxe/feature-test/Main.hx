@@ -463,6 +463,21 @@ class Main {
 			expect(!mesh.isNone() && mesh.getMaterialCount() == 1 && Resource.release(mesh), "a generated shape");
 		final strip = Mesh.createTriangles([0.0, 0, 0, 0, 0, 1, 1, 0, 0], [], [], [0, 1, 2]);
 		expect(!strip.isNone() && strip.getMaterialCount() == 1 && Resource.release(strip), "the program's own triangles");
+		final land = Mesh.createHeightmap([0.0, 1, 0, 0, 1, 0], 3, 2, 2, 4);
+		final corners = [for (_ in 0...24) 0.0];
+		expect(land.getVertexCount() == 6 && land.getPositions(corners) == 18 && near(corners[4], 2)
+			&& land.getNormals(corners) == 18 && land.getUvs(corners) == 12 && near(corners[10], 1),
+			"a heightmap: its corners, normals, and texture coordinates");
+		final flat = [for (_ in 0...18) 0.0];
+		land.getPositions(flat);
+		for (i in 0...6)
+			flat[i * 3 + 1] = 0.5;
+		expect(land.setPositions(flat) && near(land.getBoundsMax().y, 0.5) && land.setNormals([]) && land.setUvs([])
+			&& land.getNormals(corners) == 18 && near(corners[1], 1), "changed in place: flattened, its normals made again");
+		expect(land.setColors([for (i in 0...24) i % 4 == 1 ? 0.5 : 1.0]) && land.getColors(corners) == 24
+			&& Math.abs(corners[1] - 0.5) < 1e-3 && !land.setColors([1.0, 0, 0, 1]),
+			"its corners colored; a count that isn't its corners': refused");
+		expect(Resource.release(land), "a heightmap let go of");
 		final file = Mesh.create("models/toy_car.glb");
 		car = Model.create(file);
 		expect(!file.isNone() && !car.isNone() && Resource.release(file), "a glTF file's mesh, a model of it");

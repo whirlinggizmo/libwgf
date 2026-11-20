@@ -30,6 +30,12 @@ typedef struct wgf_gfx_priv_mesh_record_primitive_t {
        other reader of the vertices sees one layout; NULL for a primitive with none */
     float *skin;
     sg_buffer skin_buffer;
+    /* a mesh made from numbers changed in place (wgf_mesh_set_positions, ...): its vertices
+       changed since they were last sent, its tangents to make again before they are, and
+       its vertex buffer one the GPU expects to change (made so by its first change), last
+       written in frame `written` (the GPU takes one write a frame) */
+    bool changed, tangents_stale, dynamic;
+    unsigned written;
 } wgf_gfx_priv_mesh_record_primitive_t;
 
 /* A light a file's node carries (KHR_lights_punctual): what a model's tree makes a light
@@ -116,6 +122,7 @@ typedef struct wgf_gfx_priv_mesh_record_t {
     int animation_count;
     unsigned char *animated; /* a node at a time, whether any animation moves it; NULL with none */
     bool from_file; /* made by wgf_mesh_create: a model of it is its file's tree */
+    bool from_numbers; /* made by wgf_mesh_create_triangles or _heightmap: changed in place */
 } wgf_gfx_priv_mesh_record_t;
 
 /* The meshes' pool made and their part installed, once; false out of memory. */

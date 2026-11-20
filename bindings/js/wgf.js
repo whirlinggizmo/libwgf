@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "8b00b45b803fc0b7" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "2640f855af995598" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -9717,6 +9717,231 @@ export function wgf_mesh_create_triangles(positions, normals, uvs, indices) {
     const indicesPointer = arrayIn(indices, 3, "HEAP32");
     const value = host["_wgf_mesh_create_triangles"](positionsPointer, lengthOf(positions), normalsPointer, lengthOf(normals), uvsPointer, lengthOf(uvs), indicesPointer, lengthOf(indices));
     return value >>> 0;
+}
+
+// wgf: call wgf_mesh_create_heightmap
+/**
+ * A terrain from a grid of heights (raylib's GenMeshHeightmap, its heights from anything a
+ * game fills an array from): `columns` heights a row along x, rows along z (height_count /
+ * columns of them), each a corner, its y the height times `height`; the grid spans `width`
+ * in x and `length` in z, centered on the origin in both, two triangles a cell facing up
+ * (counterclockwise from +y), the corners shared, their normals smooth (made from the
+ * triangles, as wgf_mesh_create_triangles makes them), and texture coordinates spanning it
+ * once (u along x, v along z). A mesh made from numbers, as wgf_mesh_create_triangles's is:
+ * its own, ready at once, and changed in place by the calls below. 0 (logged) for fewer
+ * than 2 columns or rows, more than 4096 of either, a height_count that isn't a whole
+ * number of rows, or a width or length of 0 or less.
+ */
+export function wgf_mesh_create_heightmap(heights, columns, width, height, length) {
+    const heightsPointer = arrayIn(heights, 0, "HEAPF32");
+    const value = host["_wgf_mesh_create_heightmap"](heightsPointer, lengthOf(heights), columns, width, height, length);
+    return value >>> 0;
+}
+
+// wgf: call wgf_mesh_set_positions
+/**
+ * A mesh made from numbers (wgf_mesh_create_triangles, wgf_mesh_create_heightmap) changed in
+ * place, raylib's UpdateMeshBuffer: its corners' positions, normals, texture coordinates, or
+ * colors replaced from the caller's arrays, as many as it has corners, and sent to the GPU
+ * as it is next drawn; its triangles stay as they are. A terrain deformed, water, geometry
+ * made each frame. Its first change makes its vertices a buffer the GPU expects to change
+ * (a mesh never changed keeps one it doesn't); the GPU takes one change a frame, so of
+ * several in a frame it draws the last, the next frame. Each true when changed; false (and
+ * nothing changed) for a mesh not made from numbers (a generated shape is shared by its
+ * parameters, and a file's is its file's) and for a count that isn't the mesh's corners'
+ * (3 a corner for positions and normals, 2 for texture coordinates, 4 for colors), but 0,
+ * the default its create call gives:
+ *
+ *   positions  x, y, z each; its box (wgf_mesh_get_bounds_min, _max) made again. A count
+ *              of 0 is refused. Its normals stay as they were: set them, or make them
+ *              smooth again with a count of 0
+ *   normals    x, y, z each, unit length; 0: smooth, made from the triangles as they are
+ *   uvs        u, v each (both texture coordinate sets); 0: all 0, 0
+ *   colors     red, green, blue, alpha each, 0..1 (clamped), as a wgf_color_t's channels
+ *              are (sRGB, stored linear); the built-in shadings multiply the material's
+ *              color by them, and a custom shader reads them as wgf_color; 0: white
+ *
+ * Its tangents follow. A physics body made from the mesh (wgf_body.h) keeps the shape it
+ * was made with: make it again to collide with the new one.
+ */
+export function wgf_mesh_set_positions(mesh, positions) {
+    const positionsPointer = arrayIn(positions, 0, "HEAPF32");
+    const value = host["_wgf_mesh_set_positions"](mesh, positionsPointer, lengthOf(positions));
+    return value !== 0;
+}
+
+// wgf: call wgf_mesh_set_normals
+/**
+ * A mesh made from numbers (wgf_mesh_create_triangles, wgf_mesh_create_heightmap) changed in
+ * place, raylib's UpdateMeshBuffer: its corners' positions, normals, texture coordinates, or
+ * colors replaced from the caller's arrays, as many as it has corners, and sent to the GPU
+ * as it is next drawn; its triangles stay as they are. A terrain deformed, water, geometry
+ * made each frame. Its first change makes its vertices a buffer the GPU expects to change
+ * (a mesh never changed keeps one it doesn't); the GPU takes one change a frame, so of
+ * several in a frame it draws the last, the next frame. Each true when changed; false (and
+ * nothing changed) for a mesh not made from numbers (a generated shape is shared by its
+ * parameters, and a file's is its file's) and for a count that isn't the mesh's corners'
+ * (3 a corner for positions and normals, 2 for texture coordinates, 4 for colors), but 0,
+ * the default its create call gives:
+ *
+ *   positions  x, y, z each; its box (wgf_mesh_get_bounds_min, _max) made again. A count
+ *              of 0 is refused. Its normals stay as they were: set them, or make them
+ *              smooth again with a count of 0
+ *   normals    x, y, z each, unit length; 0: smooth, made from the triangles as they are
+ *   uvs        u, v each (both texture coordinate sets); 0: all 0, 0
+ *   colors     red, green, blue, alpha each, 0..1 (clamped), as a wgf_color_t's channels
+ *              are (sRGB, stored linear); the built-in shadings multiply the material's
+ *              color by them, and a custom shader reads them as wgf_color; 0: white
+ *
+ * Its tangents follow. A physics body made from the mesh (wgf_body.h) keeps the shape it
+ * was made with: make it again to collide with the new one.
+ */
+export function wgf_mesh_set_normals(mesh, normals) {
+    const normalsPointer = arrayIn(normals, 0, "HEAPF32");
+    const value = host["_wgf_mesh_set_normals"](mesh, normalsPointer, lengthOf(normals));
+    return value !== 0;
+}
+
+// wgf: call wgf_mesh_set_uvs
+/**
+ * A mesh made from numbers (wgf_mesh_create_triangles, wgf_mesh_create_heightmap) changed in
+ * place, raylib's UpdateMeshBuffer: its corners' positions, normals, texture coordinates, or
+ * colors replaced from the caller's arrays, as many as it has corners, and sent to the GPU
+ * as it is next drawn; its triangles stay as they are. A terrain deformed, water, geometry
+ * made each frame. Its first change makes its vertices a buffer the GPU expects to change
+ * (a mesh never changed keeps one it doesn't); the GPU takes one change a frame, so of
+ * several in a frame it draws the last, the next frame. Each true when changed; false (and
+ * nothing changed) for a mesh not made from numbers (a generated shape is shared by its
+ * parameters, and a file's is its file's) and for a count that isn't the mesh's corners'
+ * (3 a corner for positions and normals, 2 for texture coordinates, 4 for colors), but 0,
+ * the default its create call gives:
+ *
+ *   positions  x, y, z each; its box (wgf_mesh_get_bounds_min, _max) made again. A count
+ *              of 0 is refused. Its normals stay as they were: set them, or make them
+ *              smooth again with a count of 0
+ *   normals    x, y, z each, unit length; 0: smooth, made from the triangles as they are
+ *   uvs        u, v each (both texture coordinate sets); 0: all 0, 0
+ *   colors     red, green, blue, alpha each, 0..1 (clamped), as a wgf_color_t's channels
+ *              are (sRGB, stored linear); the built-in shadings multiply the material's
+ *              color by them, and a custom shader reads them as wgf_color; 0: white
+ *
+ * Its tangents follow. A physics body made from the mesh (wgf_body.h) keeps the shape it
+ * was made with: make it again to collide with the new one.
+ */
+export function wgf_mesh_set_uvs(mesh, uvs) {
+    const uvsPointer = arrayIn(uvs, 0, "HEAPF32");
+    const value = host["_wgf_mesh_set_uvs"](mesh, uvsPointer, lengthOf(uvs));
+    return value !== 0;
+}
+
+// wgf: call wgf_mesh_set_colors
+/**
+ * A mesh made from numbers (wgf_mesh_create_triangles, wgf_mesh_create_heightmap) changed in
+ * place, raylib's UpdateMeshBuffer: its corners' positions, normals, texture coordinates, or
+ * colors replaced from the caller's arrays, as many as it has corners, and sent to the GPU
+ * as it is next drawn; its triangles stay as they are. A terrain deformed, water, geometry
+ * made each frame. Its first change makes its vertices a buffer the GPU expects to change
+ * (a mesh never changed keeps one it doesn't); the GPU takes one change a frame, so of
+ * several in a frame it draws the last, the next frame. Each true when changed; false (and
+ * nothing changed) for a mesh not made from numbers (a generated shape is shared by its
+ * parameters, and a file's is its file's) and for a count that isn't the mesh's corners'
+ * (3 a corner for positions and normals, 2 for texture coordinates, 4 for colors), but 0,
+ * the default its create call gives:
+ *
+ *   positions  x, y, z each; its box (wgf_mesh_get_bounds_min, _max) made again. A count
+ *              of 0 is refused. Its normals stay as they were: set them, or make them
+ *              smooth again with a count of 0
+ *   normals    x, y, z each, unit length; 0: smooth, made from the triangles as they are
+ *   uvs        u, v each (both texture coordinate sets); 0: all 0, 0
+ *   colors     red, green, blue, alpha each, 0..1 (clamped), as a wgf_color_t's channels
+ *              are (sRGB, stored linear); the built-in shadings multiply the material's
+ *              color by them, and a custom shader reads them as wgf_color; 0: white
+ *
+ * Its tangents follow. A physics body made from the mesh (wgf_body.h) keeps the shape it
+ * was made with: make it again to collide with the new one.
+ */
+export function wgf_mesh_set_colors(mesh, colors) {
+    const colorsPointer = arrayIn(colors, 0, "HEAPF32");
+    const value = host["_wgf_mesh_set_colors"](mesh, colorsPointer, lengthOf(colors));
+    return value !== 0;
+}
+
+// wgf: call wgf_mesh_get_vertex_count
+/**
+ * A mesh of one part's corners: how many (0 for a handle that isn't a READY mesh, and for
+ * a mesh of several parts or none, as a file's own is), and their positions, normals,
+ * texture coordinates (set 0), or colors (sRGB, as wgf_mesh_set_colors takes them; a file's
+ * COLOR_0, white where it has none), as many whole corners as fit in the caller's array:
+ * each returns how many numbers it filled. Any such mesh's: a generated shape's and a
+ * file's too.
+ */
+export function wgf_mesh_get_vertex_count(mesh) {
+    const value = host["_wgf_mesh_get_vertex_count"](mesh);
+    return value;
+}
+
+// wgf: call wgf_mesh_get_positions
+/**
+ * A mesh of one part's corners: how many (0 for a handle that isn't a READY mesh, and for
+ * a mesh of several parts or none, as a file's own is), and their positions, normals,
+ * texture coordinates (set 0), or colors (sRGB, as wgf_mesh_set_colors takes them; a file's
+ * COLOR_0, white where it has none), as many whole corners as fit in the caller's array:
+ * each returns how many numbers it filled. Any such mesh's: a generated shape's and a
+ * file's too.
+ */
+export function wgf_mesh_get_positions(mesh, positions) {
+    const positionsPointer = arrayOut(positions, 0);
+    const value = host["_wgf_mesh_get_positions"](mesh, positionsPointer, lengthOf(positions));
+    arrayBack(positionsPointer, positions, "HEAPF32");
+    return value;
+}
+
+// wgf: call wgf_mesh_get_normals
+/**
+ * A mesh of one part's corners: how many (0 for a handle that isn't a READY mesh, and for
+ * a mesh of several parts or none, as a file's own is), and their positions, normals,
+ * texture coordinates (set 0), or colors (sRGB, as wgf_mesh_set_colors takes them; a file's
+ * COLOR_0, white where it has none), as many whole corners as fit in the caller's array:
+ * each returns how many numbers it filled. Any such mesh's: a generated shape's and a
+ * file's too.
+ */
+export function wgf_mesh_get_normals(mesh, normals) {
+    const normalsPointer = arrayOut(normals, 0);
+    const value = host["_wgf_mesh_get_normals"](mesh, normalsPointer, lengthOf(normals));
+    arrayBack(normalsPointer, normals, "HEAPF32");
+    return value;
+}
+
+// wgf: call wgf_mesh_get_uvs
+/**
+ * A mesh of one part's corners: how many (0 for a handle that isn't a READY mesh, and for
+ * a mesh of several parts or none, as a file's own is), and their positions, normals,
+ * texture coordinates (set 0), or colors (sRGB, as wgf_mesh_set_colors takes them; a file's
+ * COLOR_0, white where it has none), as many whole corners as fit in the caller's array:
+ * each returns how many numbers it filled. Any such mesh's: a generated shape's and a
+ * file's too.
+ */
+export function wgf_mesh_get_uvs(mesh, uvs) {
+    const uvsPointer = arrayOut(uvs, 0);
+    const value = host["_wgf_mesh_get_uvs"](mesh, uvsPointer, lengthOf(uvs));
+    arrayBack(uvsPointer, uvs, "HEAPF32");
+    return value;
+}
+
+// wgf: call wgf_mesh_get_colors
+/**
+ * A mesh of one part's corners: how many (0 for a handle that isn't a READY mesh, and for
+ * a mesh of several parts or none, as a file's own is), and their positions, normals,
+ * texture coordinates (set 0), or colors (sRGB, as wgf_mesh_set_colors takes them; a file's
+ * COLOR_0, white where it has none), as many whole corners as fit in the caller's array:
+ * each returns how many numbers it filled. Any such mesh's: a generated shape's and a
+ * file's too.
+ */
+export function wgf_mesh_get_colors(mesh, colors) {
+    const colorsPointer = arrayOut(colors, 0);
+    const value = host["_wgf_mesh_get_colors"](mesh, colorsPointer, lengthOf(colors));
+    arrayBack(colorsPointer, colors, "HEAPF32");
+    return value;
 }
 
 // wgf: call wgf_mesh_create

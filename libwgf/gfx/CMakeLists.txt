@@ -120,6 +120,7 @@ if(WGF_TESTS)
     wgf_window_test(gfx wgf_gfx_effect_window_test)
     wgf_window_test(gfx wgf_gfx_texture_read_window_test)
     wgf_window_test(gfx wgf_gfx_font_bitmap_window_test)
+    wgf_window_test(gfx wgf_gfx_mesh_window_test)
     foreach(test wgf_gfx_shader_window_test wgf_gfx_effect_window_test)
         if(TARGET ${test}) # the tests' packed shaders, from where they are
             target_compile_definitions(${test} PRIVATE WGF_TEST_FILES="${CMAKE_CURRENT_SOURCE_DIR}/tests")

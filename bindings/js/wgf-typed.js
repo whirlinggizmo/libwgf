@@ -1487,6 +1487,26 @@ export const Mesh = Object.freeze({
     createTorus: raw.wgf_mesh_create_torus,
     // wgf: call wgf_mesh_create_triangles
     createTriangles: raw.wgf_mesh_create_triangles,
+    // wgf: call wgf_mesh_create_heightmap
+    createHeightmap: raw.wgf_mesh_create_heightmap,
+    // wgf: call wgf_mesh_set_positions
+    setPositions: raw.wgf_mesh_set_positions,
+    // wgf: call wgf_mesh_set_normals
+    setNormals: raw.wgf_mesh_set_normals,
+    // wgf: call wgf_mesh_set_uvs
+    setUvs: raw.wgf_mesh_set_uvs,
+    // wgf: call wgf_mesh_set_colors
+    setColors: raw.wgf_mesh_set_colors,
+    // wgf: call wgf_mesh_get_vertex_count
+    getVertexCount: raw.wgf_mesh_get_vertex_count,
+    // wgf: call wgf_mesh_get_positions
+    getPositions: raw.wgf_mesh_get_positions,
+    // wgf: call wgf_mesh_get_normals
+    getNormals: raw.wgf_mesh_get_normals,
+    // wgf: call wgf_mesh_get_uvs
+    getUvs: raw.wgf_mesh_get_uvs,
+    // wgf: call wgf_mesh_get_colors
+    getColors: raw.wgf_mesh_get_colors,
     // wgf: call wgf_mesh_create
     create: raw.wgf_mesh_create,
     // wgf: call wgf_mesh_get_material_count

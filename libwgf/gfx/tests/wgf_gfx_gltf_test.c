@@ -122,6 +122,17 @@ static const unsigned char crate_png[] = {
 };
 
 static const float tri[9] = {0, 0, 0, 1, 0, 0, 0, 1, 0};
+
+/* TRI_JSON's triangle with COLOR_0, linear rgba a corner (red, green, half see-through
+ * blue), after its positions in painted.bin. */
+static const char painted[] =
+    "{\"asset\":{\"version\":\"2.0\"},\"scene\":0,\"scenes\":[{\"nodes\":[0]}],\"nodes\":[{\"mesh\":0}],"
+    "\"meshes\":[{\"primitives\":[{\"attributes\":{\"POSITION\":0,\"COLOR_0\":1}}]}],"
+    "\"buffers\":[{\"uri\":\"painted.bin\",\"byteLength\":84}],"
+    "\"bufferViews\":[{\"buffer\":0,\"byteLength\":36},{\"buffer\":0,\"byteOffset\":36,\"byteLength\":48}],"
+    "\"accessors\":[{\"bufferView\":0,\"componentType\":5126,\"count\":3,\"type\":\"VEC3\","
+    "\"min\":[0,0,0],\"max\":[1,1,0]},{\"bufferView\":1,\"componentType\":5126,\"count\":3,\"type\":\"VEC4\"}]}";
+static const float painted_bin[21] = {0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0.5f};
 static const float big[9] = {0, 0, 0, 2, 0, 0, 0, 2, 0};
 
 /* TRI_JSON saved again, changed: "body" moved to x 3, "wheel" gone, "door" new. */
@@ -287,6 +298,28 @@ int main(void)
     root = wgf_model_create(glb);
     expect_tree(root, glb, "a .glb");
     wgf_actor_destroy(root, WGF_ACTOR_DESTROY_CHILDREN);
+
+    { /* a file's vertex colors (COLOR_0), read back as sRGB; a file's mesh isn't changed in place */
+        float colors[12] = {0}, positions[9] = {0};
+        const wgf_gfx_priv_mesh_record_t *record;
+        wgf_mesh_t file;
+        write_file("models/painted.gltf", painted, (int)sizeof(painted) - 1);
+        write_file("models/painted.bin", painted_bin, (int)sizeof(painted_bin));
+        file = wgf_mesh_create("models/painted.gltf");
+        settle(&file, 1);
+        record = wgf_gfx_priv_mesh_record(file);
+        part = record != NULL && record->part_count == 1 ? record->parts[0] : 0;
+        expect(wgf_mesh_get_vertex_count(file) == 0 && wgf_mesh_get_vertex_count(part) == 3,
+               "a file's own mesh has no corners; its part, three");
+        expect(wgf_mesh_get_colors(part, colors, 12) == 12 && near(colors[0], 1) && near(colors[1], 0) &&
+                   near(colors[5], 1) && near(colors[10], 1) && near(colors[11], 0.5f),
+               "its COLOR_0, a color a corner");
+        expect(wgf_mesh_get_positions(part, positions, 9) == 9 && near(positions[3], 1) && near(positions[7], 1),
+               "its positions");
+        expect(!wgf_mesh_set_colors(part, colors, 12) && !wgf_mesh_set_positions(part, positions, 9),
+               "a file's mesh isn't changed in place");
+        wgf_resource_release(file);
+    }
 
     failed[0] = wgf_mesh_create("models/missing.gltf");
     failed[1] = wgf_mesh_create("models/broken.gltf");

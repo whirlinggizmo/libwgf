@@ -23,8 +23,9 @@ extern "C" {
  * model differently, scale it, or make another mesh. Each has one material slot,
  * white, not metallic, roughness 0.5: draw a model of it with another with
  * wgf_model_set_material. 0 (logged) for a size of 0 or less; counts are clamped to
- * their ranges. A mesh from a file is glTF's (wgf_mesh_create, below); a mesh of a
- * program's own triangles (wgf_mesh_create_triangles) is its own, never shared.
+ * their ranges. A mesh from a file is glTF's (wgf_mesh_create, below); a mesh made from
+ * numbers, a program's own triangles (wgf_mesh_create_triangles) or heights
+ * (wgf_mesh_create_heightmap), is its own, never shared, and can be changed in place.
  *
  *   plane     flat in x and z, facing +y; subdivisions 0..256 more cells each way.
  *             Texture coordinates span it once
@@ -58,6 +59,59 @@ WGF_API wgf_mesh_t wgf_mesh_create_torus(float radius, float thickness, int ring
 WGF_API wgf_mesh_t wgf_mesh_create_triangles(const float *positions, int position_count, const float *normals,
                                              int normal_count, const float *uvs, int uv_count, const int *indices,
                                              int index_count);
+
+/* A terrain from a grid of heights (raylib's GenMeshHeightmap, its heights from anything a
+ * game fills an array from): `columns` heights a row along x, rows along z (height_count /
+ * columns of them), each a corner, its y the height times `height`; the grid spans `width`
+ * in x and `length` in z, centered on the origin in both, two triangles a cell facing up
+ * (counterclockwise from +y), the corners shared, their normals smooth (made from the
+ * triangles, as wgf_mesh_create_triangles makes them), and texture coordinates spanning it
+ * once (u along x, v along z). A mesh made from numbers, as wgf_mesh_create_triangles's is:
+ * its own, ready at once, and changed in place by the calls below. 0 (logged) for fewer
+ * than 2 columns or rows, more than 4096 of either, a height_count that isn't a whole
+ * number of rows, or a width or length of 0 or less. */
+WGF_API wgf_mesh_t wgf_mesh_create_heightmap(const float *heights, int height_count, int columns, float width,
+                                             float height, float length);
+
+/* A mesh made from numbers (wgf_mesh_create_triangles, wgf_mesh_create_heightmap) changed in
+ * place, raylib's UpdateMeshBuffer: its corners' positions, normals, texture coordinates, or
+ * colors replaced from the caller's arrays, as many as it has corners, and sent to the GPU
+ * as it is next drawn; its triangles stay as they are. A terrain deformed, water, geometry
+ * made each frame. Its first change makes its vertices a buffer the GPU expects to change
+ * (a mesh never changed keeps one it doesn't); the GPU takes one change a frame, so of
+ * several in a frame it draws the last, the next frame. Each true when changed; false (and
+ * nothing changed) for a mesh not made from numbers (a generated shape is shared by its
+ * parameters, and a file's is its file's) and for a count that isn't the mesh's corners'
+ * (3 a corner for positions and normals, 2 for texture coordinates, 4 for colors), but 0,
+ * the default its create call gives:
+ *
+ *   positions  x, y, z each; its box (wgf_mesh_get_bounds_min, _max) made again. A count
+ *              of 0 is refused. Its normals stay as they were: set them, or make them
+ *              smooth again with a count of 0
+ *   normals    x, y, z each, unit length; 0: smooth, made from the triangles as they are
+ *   uvs        u, v each (both texture coordinate sets); 0: all 0, 0
+ *   colors     red, green, blue, alpha each, 0..1 (clamped), as a wgf_color_t's channels
+ *              are (sRGB, stored linear); the built-in shadings multiply the material's
+ *              color by them, and a custom shader reads them as wgf_color; 0: white
+ *
+ * Its tangents follow. A physics body made from the mesh (wgf_body.h) keeps the shape it
+ * was made with: make it again to collide with the new one. */
+WGF_API bool wgf_mesh_set_positions(wgf_mesh_t mesh, const float *positions, int position_count);
+WGF_API bool wgf_mesh_set_normals(wgf_mesh_t mesh, const float *normals, int normal_count);
+WGF_API bool wgf_mesh_set_uvs(wgf_mesh_t mesh, const float *uvs, int uv_count);
+WGF_API bool wgf_mesh_set_colors(wgf_mesh_t mesh, const float *colors, int color_count);
+
+/* A mesh of one part's corners: how many (0 for a handle that isn't a READY mesh, and for
+ * a mesh of several parts or none, as a file's own is), and their positions, normals,
+ * texture coordinates (set 0), or colors (sRGB, as wgf_mesh_set_colors takes them; a file's
+ * COLOR_0, white where it has none), as many whole corners as fit in the caller's array:
+ * each returns how many numbers it filled. Any such mesh's: a generated shape's and a
+ * file's too. */
+WGF_API int wgf_mesh_get_vertex_count(wgf_mesh_t mesh);
+WGF_API int wgf_mesh_get_positions(wgf_mesh_t mesh, float *positions, int position_count);
+WGF_API int wgf_mesh_get_normals(wgf_mesh_t mesh, float *normals, int normal_count);
+WGF_API int wgf_mesh_get_uvs(wgf_mesh_t mesh, float *uvs, int uv_count);
+WGF_API int wgf_mesh_get_colors(wgf_mesh_t mesh, float *colors, int color_count);
 
 /* The mesh in a glTF file (.gltf, its buffers and images beside it, or .glb), loaded in the
  * background as a texture is (wgf_resource.h: PENDING, then READY or FAILED, the asset

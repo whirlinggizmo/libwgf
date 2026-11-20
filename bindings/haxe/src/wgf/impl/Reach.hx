@@ -660,14 +660,24 @@ class Reach {
 		"wgf_mesh_create_cone",
 		"wgf_mesh_create_cube",
 		"wgf_mesh_create_cylinder",
+		"wgf_mesh_create_heightmap",
 		"wgf_mesh_create_plane",
 		"wgf_mesh_create_sphere",
 		"wgf_mesh_create_torus",
 		"wgf_mesh_create_triangles",
 		"wgf_mesh_get_bounds_max",
 		"wgf_mesh_get_bounds_min",
+		"wgf_mesh_get_colors",
 		"wgf_mesh_get_material",
 		"wgf_mesh_get_material_count",
+		"wgf_mesh_get_normals",
+		"wgf_mesh_get_positions",
+		"wgf_mesh_get_uvs",
+		"wgf_mesh_get_vertex_count",
+		"wgf_mesh_set_colors",
+		"wgf_mesh_set_normals",
+		"wgf_mesh_set_positions",
+		"wgf_mesh_set_uvs",
 		"wgf_model_create",
 		"wgf_model_find_animation",
 		"wgf_model_find_node",
@@ -1256,7 +1266,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1247) 0];
+	static final counts:Array<Int> = [for (_ in 0...1257) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

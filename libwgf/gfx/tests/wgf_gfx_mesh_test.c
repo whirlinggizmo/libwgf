@@ -3,6 +3,7 @@
 
 #include "material/wgf_gfx_material_priv.h"
 #include "mesh/wgf_gfx_mesh_priv.h"
+#include "mesh/wgf_gfx_mesh_record_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "wgf_material.h"
 #include "wgf_mesh.h"
@@ -125,6 +126,105 @@ int main(void)
                "an index past the corners, or counts that don't fit: none (logged)");
     }
 
+    /* a heightmap: three corners a row along x, two rows along z, a ridge up the middle */
+    {
+        const float heights[6] = {0, 1, 0, 0, 1, 0};
+        const wgf_mesh_t land = wgf_mesh_create_heightmap(heights, 6, 3, 2.0f, 2.0f, 4.0f);
+        float positions[18], normals[18], uvs[12], colors[24];
+        int index_count;
+        expect(land != 0 && wgf_resource_get_status(land) == WGF_RESOURCE_STATUS_READY &&
+                   wgf_mesh_get_vertex_count(land) == 6 && wgf_gfx_priv_mesh_get_indices(land, &index_count) != NULL &&
+                   index_count == 12,
+               "a heightmap: a corner a height, two triangles a cell");
+        expect_shape(land, "heightmap");
+        expect(wgf_mesh_get_positions(land, positions, 18) == 18 && near(positions[0], -1) && near(positions[2], -2) &&
+                   near(positions[3], 0) && near(positions[4], 2) && near(positions[5], -2) &&
+                   near(positions[15], 1) && near(positions[16], 0) && near(positions[17], 2),
+               "its corners: centered in x and z, each height times the height");
+        expect(wgf_mesh_get_normals(land, normals, 18) == 18 && fabsf(normals[0] + 0.8944f) < 1e-3f &&
+                   fabsf(normals[1] - 0.4472f) < 1e-3f && near(normals[2], 0),
+               "a corner's normal, smooth: off the slope beside it");
+        expect(wgf_mesh_get_uvs(land, uvs, 12) == 12 && near(uvs[0], 0) && near(uvs[2], 0.5f) && near(uvs[10], 1) &&
+                   near(uvs[11], 1),
+               "its texture coordinates span it once");
+        expect(wgf_mesh_get_colors(land, colors, 24) == 24 && near(colors[0], 1) && near(colors[23], 1),
+               "white, until colored");
+        expect(wgf_gfx_priv_mesh_get_bounds(land, &lo, &hi) && near(lo.x, -1) && near(lo.y, 0) && near(hi.y, 2) &&
+                   near(hi.z, 2),
+               "its box");
+        expect(wgf_mesh_get_positions(land, positions, 5) == 3 && wgf_mesh_get_positions(land, NULL, 18) == 0 &&
+                   wgf_mesh_get_positions(cube, positions, 18) == 18,
+               "read: whole corners that fit, none into nothing, a generated shape's too");
+        expect(wgf_mesh_create_heightmap(heights, 6, 1, 2, 2, 2) == 0 &&
+                   wgf_mesh_create_heightmap(heights, 5, 3, 2, 2, 2) == 0 &&
+                   wgf_mesh_create_heightmap(heights, 3, 3, 2, 2, 2) == 0 &&
+                   wgf_mesh_create_heightmap(heights, 6, 3, 0, 2, 2) == 0 &&
+                   wgf_mesh_create_heightmap(NULL, 6, 3, 2, 2, 2) == 0,
+               "one column, part of a row, one row, no width, no heights: none (logged)");
+
+        /* changed in place: flattened and lifted, its normals as they were until made again */
+        {
+            int i;
+            for (i = 0; i < 6; i++) positions[i * 3 + 1] = 3.0f;
+            positions[0] = -5.0f;
+        }
+        expect(wgf_mesh_set_positions(land, positions, 18), "its positions changed");
+        expect(wgf_gfx_priv_mesh_get_bounds(land, &lo, &hi) && near(lo.x, -5) && near(lo.y, 3) && near(hi.y, 3) &&
+                   near(wgf_mesh_get_bounds_min(land).x, -5),
+               "its box made again");
+        wgf_mesh_get_positions(land, positions, 18);
+        wgf_mesh_get_normals(land, normals, 18);
+        expect(near(positions[1], 3) && near(positions[0], -5) && fabsf(normals[0] + 0.8944f) < 1e-3f,
+               "read back as set, its normals as they were");
+        expect(wgf_mesh_set_normals(land, NULL, 0) && wgf_mesh_get_normals(land, normals, 18) == 18 &&
+                   near(normals[0], 0) && near(normals[1], 1) && near(normals[16], 1),
+               "normals made smooth again: flat, up");
+        {
+            const float given[18] = {1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0};
+            expect(wgf_mesh_set_normals(land, given, 18) && wgf_mesh_get_normals(land, normals, 18) == 18 &&
+                       near(normals[0], 1) && near(normals[1], 0),
+                   "normals given");
+        }
+        expect(wgf_mesh_set_uvs(land, NULL, 0) && wgf_mesh_get_uvs(land, uvs, 12) == 12 && near(uvs[10], 0),
+               "texture coordinates: 0 for none");
+        {
+            float paint[24];
+            const float *v;
+            int i;
+            for (i = 0; i < 6; i++) {
+                paint[i * 4] = 1.0f;
+                paint[i * 4 + 1] = 0.5f;
+                paint[i * 4 + 2] = 2.0f;
+                paint[i * 4 + 3] = -1.0f;
+            }
+            expect(wgf_mesh_set_colors(land, paint, 24) && wgf_mesh_get_colors(land, colors, 24) == 24 &&
+                       near(colors[0], 1) && fabsf(colors[1] - 0.5f) < 1e-3f && near(colors[2], 1) &&
+                       near(colors[3], 0),
+                   "colors: read back as given, clamped to 0..1");
+            v = wgf_gfx_priv_mesh_get_vertices(land, &count);
+            expect(count == 6 && near(v[14], 1) && fabsf(v[15] - 0.2140f) < 1e-3f && near(v[16], 1) && near(v[17], 0),
+                   "stored linear, in each corner");
+            expect(wgf_mesh_set_colors(land, NULL, 0) && wgf_mesh_get_colors(land, colors, 24) == 24 &&
+                       near(colors[1], 1) && near(colors[3], 1),
+                   "colors: white for none");
+            expect(!wgf_mesh_set_positions(land, positions, 15) && !wgf_mesh_set_positions(land, NULL, 0) &&
+                       !wgf_mesh_set_positions(land, NULL, 18) && !wgf_mesh_set_normals(land, normals, 3) &&
+                       !wgf_mesh_set_uvs(land, uvs, 18) && !wgf_mesh_set_colors(land, paint, 18),
+                   "a count that isn't the corners': refused");
+            expect(!wgf_mesh_set_positions(cube, positions, 18) && !wgf_mesh_set_colors(cube, NULL, 0) &&
+                       !wgf_mesh_set_positions(12345, positions, 18) && wgf_mesh_get_vertex_count(12345) == 0 &&
+                       wgf_mesh_get_colors(12345, colors, 24) == 0,
+                   "a generated shape, shared, isn't changed in place; nor what isn't a mesh");
+        }
+        {
+            const float strip[] = {0, 0, 0, 0, 0, 1, 1, 0, 0};
+            const float moved[] = {0, 1, 0, 0, 1, 1, 1, 1, 0};
+            const wgf_mesh_t made = wgf_mesh_create_triangles(strip, 9, NULL, 0, NULL, 0, NULL, 0);
+            expect(wgf_mesh_set_positions(made, moved, 9) && near(wgf_mesh_get_bounds_min(made).y, 1),
+                   "the program's own triangles, changed in place");
+        }
+    }
+
     /* a generated mesh's one material */
     expect(wgf_mesh_get_material_count(cube) == 1 && wgf_mesh_get_material(cube, 1) == 0, "one material slot");
     material = wgf_mesh_get_material(cube, 0);
@@ -191,6 +291,38 @@ int main(void)
                    primitive.index_count == 36 && primitive.vertices.id != SG_INVALID_ID,
                "the primitive uploaded when asked for");
         expect(!wgf_gfx_priv_mesh_get_primitive(cube, 1, &primitive), "no second primitive");
+    }
+    { /* a mesh changed in place after it was sent: its vertices sent again, in a buffer that changes */
+        const float heights[4] = {0, 0, 0, 0}, lifted[12] = {0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1};
+        const wgf_mesh_t land = wgf_mesh_create_heightmap(heights, 4, 2, 1, 1, 1);
+        const wgf_gfx_priv_mesh_record_t *record = wgf_gfx_priv_mesh_record(land);
+        wgf_gfx_priv_mesh_primitive_t primitive;
+        uint32_t first;
+        expect(wgf_gfx_priv_mesh_get_primitive(land, 0, &primitive) && record != NULL &&
+                   !record->primitives[0].dynamic,
+               "sent as made: a buffer that doesn't change");
+        first = primitive.vertices.id;
+        expect(wgf_mesh_set_positions(land, lifted, 12) && record->primitives[0].changed &&
+                   record->primitives[0].tangents_stale,
+               "changed: to be sent again");
+        expect(wgf_gfx_priv_mesh_get_primitive(land, 0, &primitive) && primitive.vertices.id != first &&
+                   sg_query_buffer_state(primitive.vertices) == SG_RESOURCESTATE_VALID &&
+                   record->primitives[0].dynamic && !record->primitives[0].changed &&
+                   !record->primitives[0].tangents_stale,
+               "sent again, in a buffer that changes, its tangents made again");
+        first = primitive.vertices.id;
+        wgf_gfx_priv_begin_frame();
+        wgf_gfx_priv_end_frame();
+        expect(wgf_mesh_set_colors(land, NULL, 0) && wgf_gfx_priv_mesh_get_primitive(land, 0, &primitive) &&
+                   primitive.vertices.id == first && !record->primitives[0].changed,
+               "a frame on: written into the same buffer");
+        expect(wgf_mesh_set_colors(land, NULL, 0) && wgf_gfx_priv_mesh_get_primitive(land, 0, &primitive) &&
+                   record->primitives[0].changed,
+               "a second change in the frame: kept for the next");
+        wgf_gfx_priv_begin_frame();
+        wgf_gfx_priv_end_frame();
+        expect(wgf_gfx_priv_mesh_get_primitive(land, 0, &primitive) && !record->primitives[0].changed,
+               "and written then");
     }
     { /* bounds: the mesh's own, and a tree of models' placed */
         const wgf_actor_t root = wgf_actor_create(), model = wgf_model_create(cube);

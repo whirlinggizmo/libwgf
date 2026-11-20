@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "material/wgf_gfx_material_priv.h"
 #include "mesh/wgf_gfx_mesh_priv.h"
 #include "mesh/wgf_gfx_mesh_record_priv.h"
 #include "mesh/wgf_gfx_mesh_shapes_priv.h"
@@ -397,6 +398,16 @@ static void smooth_normals(const float *positions, int vertex_count, const uint3
     }
 }
 
+/* A mesh made from numbers, of `shape` (taken): its own, never found by another's
+ * parameters, and changed in place. */
+static wgf_mesh_t create_from_numbers(wgf_gfx_priv_mesh_shape_t *shape)
+{
+    const wgf_mesh_t mesh = create_generated("", shape);
+    mesh_t *mesh_ptr = record_of(mesh);
+    if (mesh_ptr != NULL) mesh_ptr->from_numbers = true;
+    return mesh;
+}
+
 wgf_mesh_t wgf_mesh_create_triangles(const float *positions, int position_count, const float *normals,
                                      int normal_count, const float *uvs, int uv_count, const int *indices,
                                      int index_count)
@@ -442,7 +453,60 @@ wgf_mesh_t wgf_mesh_create_triangles(const float *positions, int position_count,
     } else {
         smooth_normals(shape.positions, vertex_count, shape.indices, triangles, shape.normals);
     }
-    return create_generated("", &shape); /* no key: its own, never found by another's parameters */
+    return create_from_numbers(&shape);
+}
+
+#define HEIGHTMAP_MAX 4096 /* corners a side: 16M corners at most */
+
+wgf_mesh_t wgf_mesh_create_heightmap(const float *heights, int height_count, int columns, float width,
+                                     float height, float length)
+{
+    wgf_gfx_priv_mesh_shape_t shape;
+    int rows, row, column, at;
+    if (heights == NULL || columns < 2 || columns > HEIGHTMAP_MAX || height_count < columns * 2 ||
+        height_count % columns != 0 || height_count / columns > HEIGHTMAP_MAX || !(width > 0.0f) ||
+        !(length > 0.0f)) {
+        wgf_log_error("wgf_mesh_create_heightmap: a grid of %d heights, %d a row: at least 2 rows and columns, at "
+                      "most %d, whole rows, and a width and length more than 0",
+                      height_count, columns, HEIGHTMAP_MAX);
+        return 0;
+    }
+    rows = height_count / columns;
+    memset(&shape, 0, sizeof(shape));
+    shape.vertex_count = height_count;
+    shape.index_count = (columns - 1) * (rows - 1) * 6;
+    shape.positions = (float *)malloc(sizeof(float) * 3 * (size_t)height_count);
+    shape.normals = (float *)calloc((size_t)height_count * 3, sizeof(float));
+    shape.uvs = (float *)malloc(sizeof(float) * 2 * (size_t)height_count);
+    shape.indices = (uint32_t *)malloc(sizeof(uint32_t) * (size_t)shape.index_count);
+    if (shape.positions == NULL || shape.normals == NULL || shape.uvs == NULL || shape.indices == NULL) {
+        wgf_log_error("wgf_mesh_create_heightmap: out of memory");
+        wgf_gfx_priv_mesh_shape_free(&shape);
+        return 0;
+    }
+    for (row = 0; row < rows; row++) {
+        for (column = 0; column < columns; column++) {
+            const int corner = row * columns + column;
+            const float u = (float)column / (float)(columns - 1), v = (float)row / (float)(rows - 1);
+            shape.positions[corner * 3] = (u - 0.5f) * width;
+            shape.positions[corner * 3 + 1] = heights[corner] * height;
+            shape.positions[corner * 3 + 2] = (v - 0.5f) * length;
+            shape.uvs[corner * 2] = u;
+            shape.uvs[corner * 2 + 1] = v;
+        }
+    }
+    at = 0;
+    for (row = 0; row + 1 < rows; row++) {
+        for (column = 0; column + 1 < columns; column++) {
+            /* a, c along x, b, d a row on along z: a b c and c b d, counterclockwise from +y */
+            const uint32_t a = (uint32_t)(row * columns + column), c = a + 1, b = a + (uint32_t)columns, d = b + 1;
+            const uint32_t cell[6] = {a, b, c, c, b, d};
+            memcpy(&shape.indices[at], cell, sizeof(cell));
+            at += 6;
+        }
+    }
+    smooth_normals(shape.positions, shape.vertex_count, shape.indices, shape.index_count, shape.normals);
+    return create_from_numbers(&shape);
 }
 
 wgf_mesh_t wgf_mesh_create_plane(float width, float length, int subdivisions)
@@ -533,6 +597,199 @@ wgf_material_t wgf_mesh_get_material(wgf_mesh_t mesh, int slot)
     return mesh_ptr != NULL && slot >= 0 && slot < mesh_ptr->material_count ? mesh_ptr->materials[slot] : 0;
 }
 
+/* ------------------------------------------------- corners, in place ---- */
+
+enum { AT_POSITION = 0, AT_NORMAL = 3, AT_UV = 6, AT_UV1 = 8, AT_TANGENT = 10, AT_COLOR = 14 };
+
+/* The one part of a READY mesh of one, or NULL. */
+static primitive_t *one_part_at(wgf_mesh_t mesh, const char *caller)
+{
+    mesh_t *mesh_ptr = record_of_at(mesh, caller);
+    if (mesh_ptr == NULL || mesh_ptr->resource.status != WGF_RESOURCE_STATUS_READY || mesh_ptr->primitive_count != 1) {
+        return NULL;
+    }
+    return &mesh_ptr->primitives[0];
+}
+
+/* The part of a mesh made from numbers that `count` numbers, `per` a corner, change (0 when
+ * `empty` allows it), or NULL: the setters' refusals. */
+static primitive_t *changing_at(wgf_mesh_t mesh, const float *values, int count, int per, bool empty,
+                                const char *caller)
+{
+    mesh_t *mesh_ptr = record_of_at(mesh, caller);
+    primitive_t *primitive;
+    if (mesh_ptr == NULL || !mesh_ptr->from_numbers || mesh_ptr->primitive_count != 1) return NULL;
+    primitive = &mesh_ptr->primitives[0];
+    if (count == 0) return empty ? primitive : NULL;
+    return values != NULL && (int64_t)count == (int64_t)primitive->vertex_count * per ? primitive : NULL;
+}
+
+/* `count` numbers into the vertices, `per` a corner from `offset`; a count of 0 writes `none`. */
+static void write_corners(primitive_t *primitive, int offset, const float *values, int count, int per,
+                          const float *none)
+{
+    int i;
+    for (i = 0; i < primitive->vertex_count; i++) {
+        memcpy(&primitive->vertices[(size_t)i * WGF_GFX_PRIV_MESH_VERTEX_FLOATS + (size_t)offset],
+               count > 0 ? &values[(size_t)i * (size_t)per] : none, sizeof(float) * (size_t)per);
+    }
+    primitive->changed = true;
+}
+
+/* As many whole corners as fit in `count` numbers, `per` a corner from `offset`, out of the
+ * mesh's one part; how many numbers. */
+static int read_corners(const primitive_t *primitive, int offset, float *out, int count, int per)
+{
+    int corners, i;
+    if (primitive == NULL || out == NULL || count <= 0) return 0;
+    corners = count / per < primitive->vertex_count ? count / per : primitive->vertex_count;
+    for (i = 0; i < corners; i++) {
+        memcpy(&out[(size_t)i * (size_t)per],
+               &primitive->vertices[(size_t)i * WGF_GFX_PRIV_MESH_VERTEX_FLOATS + (size_t)offset],
+               sizeof(float) * (size_t)per);
+    }
+    return corners * per;
+}
+
+/* One of a part's attributes, `per` a corner from `offset`, copied out (NULL out of memory). */
+static float *copy_out(const primitive_t *primitive, int offset, int per)
+{
+    float *out = (float *)malloc(sizeof(float) * (size_t)per * (size_t)primitive->vertex_count);
+    if (out != NULL) read_corners(primitive, offset, out, per * primitive->vertex_count, per);
+    return out;
+}
+
+/* A changed part's tangents, made again from its positions, normals, and texture
+ * coordinates, as it is sent to the GPU. */
+static void remake_tangents(primitive_t *primitive)
+{
+    const int count = primitive->vertex_count;
+    float *positions = copy_out(primitive, AT_POSITION, 3), *normals = copy_out(primitive, AT_NORMAL, 3);
+    float *uvs = copy_out(primitive, AT_UV, 2), *tangents = (float *)malloc(sizeof(float) * 4 * (size_t)count);
+    if (positions != NULL && normals != NULL && uvs != NULL && tangents != NULL) {
+        wgf_gfx_priv_mesh_generate_tangents(positions, normals, uvs, count, primitive->indices,
+                                            primitive->index_count, tangents);
+        write_corners(primitive, AT_TANGENT, tangents, count * 4, 4, NULL);
+        primitive->tangents_stale = false;
+    }
+    free(positions);
+    free(normals);
+    free(uvs);
+    free(tangents);
+}
+
+bool wgf_mesh_set_positions(wgf_mesh_t mesh, const float *positions, int position_count)
+{
+    primitive_t *primitive = changing_at(mesh, positions, position_count, 3, false, WGF_CORE_PRIV_CALLER);
+    mesh_t *mesh_ptr;
+    wgf_vec3_t lo = wgf_vec3_make(1e30f, 1e30f, 1e30f), hi = wgf_vec3_make(-1e30f, -1e30f, -1e30f);
+    int i;
+    if (primitive == NULL) return false;
+    write_corners(primitive, AT_POSITION, positions, position_count, 3, NULL);
+    for (i = 0; i < primitive->vertex_count; i++) {
+        const float *p = &positions[i * 3];
+        lo = wgf_vec3_make(fminf(lo.x, p[0]), fminf(lo.y, p[1]), fminf(lo.z, p[2]));
+        hi = wgf_vec3_make(fmaxf(hi.x, p[0]), fmaxf(hi.y, p[1]), fmaxf(hi.z, p[2]));
+    }
+    mesh_ptr = wgf_gfx_priv_mesh_record(mesh);
+    primitive->bounds_min = mesh_ptr->bounds_min = lo;
+    primitive->bounds_max = mesh_ptr->bounds_max = hi;
+    primitive->tangents_stale = true;
+    return true;
+}
+
+bool wgf_mesh_set_normals(wgf_mesh_t mesh, const float *normals, int normal_count)
+{
+    primitive_t *primitive = changing_at(mesh, normals, normal_count, 3, true, WGF_CORE_PRIV_CALLER);
+    if (primitive == NULL) return false;
+    if (normal_count == 0) { /* smooth, from the triangles as they are */
+        float *positions = copy_out(primitive, AT_POSITION, 3);
+        float *smooth = (float *)calloc((size_t)primitive->vertex_count * 3, sizeof(float));
+        const bool made = positions != NULL && smooth != NULL;
+        if (made) {
+            smooth_normals(positions, primitive->vertex_count, primitive->indices, primitive->index_count, smooth);
+            write_corners(primitive, AT_NORMAL, smooth, primitive->vertex_count * 3, 3, NULL);
+        } else {
+            wgf_log_error("wgf_mesh_set_normals: out of memory");
+        }
+        free(positions);
+        free(smooth);
+        if (!made) return false;
+    } else {
+        write_corners(primitive, AT_NORMAL, normals, normal_count, 3, NULL);
+    }
+    primitive->tangents_stale = true;
+    return true;
+}
+
+bool wgf_mesh_set_uvs(wgf_mesh_t mesh, const float *uvs, int uv_count)
+{
+    static const float none[2] = {0.0f, 0.0f};
+    primitive_t *primitive = changing_at(mesh, uvs, uv_count, 2, true, WGF_CORE_PRIV_CALLER);
+    if (primitive == NULL) return false;
+    write_corners(primitive, AT_UV, uvs, uv_count, 2, none);
+    write_corners(primitive, AT_UV1, uvs, uv_count, 2, none); /* both sets */
+    primitive->tangents_stale = true;
+    return true;
+}
+
+static float clamp_unit(float value)
+{
+    return value > 0.0f ? (value < 1.0f ? value : 1.0f) : 0.0f; /* NaN: 0 */
+}
+
+static float linear_to_srgb(float c)
+{
+    return c <= 0.0031308f ? c * 12.92f : 1.055f * powf(c, 1.0f / 2.4f) - 0.055f;
+}
+
+bool wgf_mesh_set_colors(wgf_mesh_t mesh, const float *colors, int color_count)
+{
+    static const float white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    primitive_t *primitive = changing_at(mesh, colors, color_count, 4, true, WGF_CORE_PRIV_CALLER);
+    int i, c;
+    if (primitive == NULL) return false;
+    for (i = 0; i < primitive->vertex_count; i++) {
+        float *out = &primitive->vertices[(size_t)i * WGF_GFX_PRIV_MESH_VERTEX_FLOATS + AT_COLOR];
+        const float *in = color_count > 0 ? &colors[i * 4] : white;
+        for (c = 0; c < 3; c++) out[c] = wgf_gfx_priv_srgb_to_linear(clamp_unit(in[c]));
+        out[3] = clamp_unit(in[3]);
+    }
+    primitive->changed = true;
+    return true;
+}
+
+int wgf_mesh_get_vertex_count(wgf_mesh_t mesh)
+{
+    const primitive_t *primitive = one_part_at(mesh, WGF_CORE_PRIV_CALLER);
+    return primitive != NULL ? primitive->vertex_count : 0;
+}
+
+int wgf_mesh_get_positions(wgf_mesh_t mesh, float *positions, int position_count)
+{
+    return read_corners(one_part_at(mesh, WGF_CORE_PRIV_CALLER), AT_POSITION, positions, position_count, 3);
+}
+
+int wgf_mesh_get_normals(wgf_mesh_t mesh, float *normals, int normal_count)
+{
+    return read_corners(one_part_at(mesh, WGF_CORE_PRIV_CALLER), AT_NORMAL, normals, normal_count, 3);
+}
+
+int wgf_mesh_get_uvs(wgf_mesh_t mesh, float *uvs, int uv_count)
+{
+    return read_corners(one_part_at(mesh, WGF_CORE_PRIV_CALLER), AT_UV, uvs, uv_count, 2);
+}
+
+int wgf_mesh_get_colors(wgf_mesh_t mesh, float *colors, int color_count)
+{
+    const int filled = read_corners(one_part_at(mesh, WGF_CORE_PRIV_CALLER), AT_COLOR, colors, color_count, 4);
+    int i;
+    for (i = 0; i < filled; i++) {
+        if (i % 4 != 3) colors[i] = linear_to_srgb(colors[i]); /* as they were given */
+    }
+    return filled;
+}
+
 /* ------------------------------------------------------------- internal ---- */
 
 bool wgf_gfx_priv_mesh_retain(wgf_mesh_t mesh)
@@ -560,19 +817,55 @@ int wgf_gfx_priv_mesh_get_primitive_count(wgf_mesh_t mesh)
 /* The primitive's buffers made; false (logged) when the GPU didn't take them. */
 bool wgf_gfx_priv_mesh_upload(primitive_t *primitive)
 {
+    const size_t vertex_size = sizeof(float) * WGF_GFX_PRIV_MESH_VERTEX_FLOATS * (size_t)primitive->vertex_count;
+    const unsigned frame = wgf_gfx_priv_render_get_last_frame() + 1; /* the frames ended: one write between two */
     sg_buffer_desc desc;
-    if (primitive->vertex_buffer.id != SG_INVALID_ID) return true;
+    if (primitive->vertex_buffer.id != SG_INVALID_ID && !primitive->changed) return true;
+    if (primitive->tangents_stale) remake_tangents(primitive);
+    if (primitive->vertex_buffer.id != SG_INVALID_ID && !primitive->dynamic) {
+        /* its first change: made again as a buffer the GPU expects to change (the draws
+           already made with the old one keep it until they are done) */
+        sg_destroy_buffer(primitive->vertex_buffer);
+        primitive->vertex_buffer.id = SG_INVALID_ID;
+        primitive->dynamic = true;
+    }
+    if (primitive->vertex_buffer.id != SG_INVALID_ID) { /* changed, and changing */
+        if (primitive->written != frame) {
+            sg_range range;
+            range.ptr = primitive->vertices;
+            range.size = vertex_size;
+            sg_update_buffer(primitive->vertex_buffer, &range);
+            primitive->written = frame;
+            primitive->changed = false;
+        }
+        return true; /* written already this frame: the change goes the next */
+    }
     memset(&desc, 0, sizeof(desc));
     desc.usage.vertex_buffer = true;
-    desc.data.ptr = primitive->vertices;
-    desc.data.size = sizeof(float) * WGF_GFX_PRIV_MESH_VERTEX_FLOATS * (size_t)primitive->vertex_count;
+    if (primitive->dynamic) {
+        desc.usage.dynamic_update = true;
+        desc.size = vertex_size;
+    } else {
+        desc.data.ptr = primitive->vertices;
+        desc.data.size = vertex_size;
+    }
     primitive->vertex_buffer = sg_make_buffer(&desc);
-    memset(&desc, 0, sizeof(desc));
-    desc.usage.index_buffer = true;
-    desc.data.ptr = primitive->indices;
-    desc.data.size = sizeof(uint32_t) * (size_t)primitive->index_count;
-    primitive->index_buffer = sg_make_buffer(&desc);
-    if (primitive->skin != NULL) {
+    if (primitive->dynamic && sg_query_buffer_state(primitive->vertex_buffer) == SG_RESOURCESTATE_VALID) {
+        sg_range range;
+        range.ptr = primitive->vertices;
+        range.size = vertex_size;
+        sg_update_buffer(primitive->vertex_buffer, &range);
+        primitive->written = frame;
+    }
+    primitive->changed = false;
+    if (primitive->index_buffer.id == SG_INVALID_ID) {
+        memset(&desc, 0, sizeof(desc));
+        desc.usage.index_buffer = true;
+        desc.data.ptr = primitive->indices;
+        desc.data.size = sizeof(uint32_t) * (size_t)primitive->index_count;
+        primitive->index_buffer = sg_make_buffer(&desc);
+    }
+    if (primitive->skin != NULL && primitive->skin_buffer.id == SG_INVALID_ID) {
         memset(&desc, 0, sizeof(desc));
         desc.usage.vertex_buffer = true;
         desc.data.ptr = primitive->skin;
