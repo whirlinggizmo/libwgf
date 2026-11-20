@@ -37,8 +37,8 @@
  *   Escape       quit, where quitting means anything
  *
  * libwgt's gfx-environment (wgrender's environment), which differs for the size table:
- * its walking character is a skinned, animated glTF, and libwgf has no skinning until
- * milestone 3, so the toy car (tools/gen_model.py) stands in its place. And the readout is
+ * its walking character is a skinned, animated glTF (gfx-skinning's robots now), and the
+ * toy car (tools/gen_model.py) stands in its place. And the readout is
  * fixed labels, no snprintf, as gfx-shadows. */
 
 enum { COLUMNS = 5, ENVIRONMENT_COUNT = 2, BLUR_COUNT = 3 };

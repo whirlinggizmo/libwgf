@@ -31,9 +31,10 @@
  * it names for the asset part (the lister, registered when this object is linked), and
  * wgf_mesh_create, the one call that references this object, so a program with no glTF
  * links none of cgltf (libwgt's design; its HISTORY, "The glTF leak"). libwgt's
- * wgt_gfx_mesh_gltf.c, without its skinning and animation (milestone 3's), and with the file's lights (KHR_lights_punctual), which libwgt didn't
- * read. The file's node tree is kept in the mesh, for a model to make actors of, and each
- * of the file's meshes is a mesh of its own, shared by the nodes showing it. */
+ * wgt_gfx_mesh_gltf.c, with every skin (libwgt read the first) and the file's animations,
+ * and with the file's lights (KHR_lights_punctual), which libwgt didn't read. The file's
+ * node tree is kept in the mesh, for a model to make actors of, and each of the file's
+ * meshes is a mesh of its own, shared by the nodes showing it. */
 
 typedef wgf_gfx_priv_mesh_record_primitive_t primitive_t;
 typedef wgf_gfx_priv_mesh_record_t mesh_t;
@@ -341,7 +342,8 @@ static void load_materials(prepared_t *prepared)
  * shader takes: tangents from the file, or made from texture coordinate set 0. */
 static bool build_primitive(const cgltf_data *g, const cgltf_primitive *prim, int default_material, primitive_t *out)
 {
-    const cgltf_accessor *pos = NULL, *nrm = NULL, *uv[2] = {NULL, NULL}, *tan = NULL, *col = NULL;
+    const cgltf_accessor *pos = NULL, *nrm = NULL, *uv[2] = {NULL, NULL}, *tan = NULL, *col = NULL, *jnt = NULL,
+                         *wgt = NULL;
     const size_t stride = WGF_GFX_PRIV_MESH_VERTEX_FLOATS;
     cgltf_size vcount, icount, i, a;
     float *verts = NULL, *positions = NULL, *normals = NULL, *uvs[2] = {NULL, NULL}, *tangents = NULL, *colors = NULL;
@@ -360,6 +362,12 @@ static bool build_primitive(const cgltf_data *g, const cgltf_primitive *prim, in
                 break;
             case cgltf_attribute_type_color:
                 if (attr->index == 0) col = attr->data;
+                break;
+            case cgltf_attribute_type_joints:
+                if (attr->index == 0) jnt = attr->data;
+                break;
+            case cgltf_attribute_type_weights:
+                if (attr->index == 0) wgt = attr->data;
                 break;
             default: break;
         }
@@ -423,6 +431,31 @@ static bool build_primitive(const cgltf_data *g, const cgltf_primitive *prim, in
         memcpy(v + 10, &tangents[i * 4], 4 * sizeof(float));
         memcpy(v + 14, &colors[i * 4], 4 * sizeof(float));
     }
+    if (jnt != NULL && wgt != NULL && jnt->count >= vcount && wgt->count >= vcount) {
+        /* its 4 joints and their weights, beside the vertices (a further set, JOINTS_1, is
+           left out: up to 4 weights a vertex) */
+        out->skin = (float *)calloc(vcount * WGF_GFX_PRIV_MESH_SKIN_FLOATS, sizeof(float));
+        if (out->skin == NULL) goto done;
+        for (i = 0; i < vcount; i++) {
+            float *k = &out->skin[i * WGF_GFX_PRIV_MESH_SKIN_FLOATS], sum;
+            cgltf_uint joints[4] = {0, 0, 0, 0};
+            int j;
+            cgltf_accessor_read_uint(jnt, i, joints, 4);
+            cgltf_accessor_read_float(wgt, i, k + 4, 4);
+            for (j = 0; j < 4; j++) {
+                k[j] = (float)joints[j];
+                if (!(k[4 + j] > 0.0f)) k[4 + j] = 0.0f; /* NaN and negatives weigh nothing */
+            }
+            /* glTF asks the weights to sum to 1, and exported files often miss: a vertex
+               would be drawn pulled toward the origin (libwgt's) */
+            sum = k[4] + k[5] + k[6] + k[7];
+            if (sum > 0.0f) {
+                for (j = 4; j < 8; j++) k[j] /= sum;
+            } else {
+                k[4] = 1.0f; /* weighing nothing: its first joint's */
+            }
+        }
+    }
     out->vertices = verts;
     out->vertex_count = (int)vcount;
     out->indices = indices;
@@ -430,6 +463,7 @@ static bool build_primitive(const cgltf_data *g, const cgltf_primitive *prim, in
     out->material = prim->material != NULL ? (int)(prim->material - g->materials) : default_material;
     out->vertex_buffer.id = SG_INVALID_ID;
     out->index_buffer.id = SG_INVALID_ID;
+    out->skin_buffer.id = SG_INVALID_ID;
     verts = NULL;
     indices = NULL;
     ok = true;
@@ -500,6 +534,7 @@ static void add_node(mesh_t *mesh, const cgltf_data *g, const cgltf_node *n, int
     node->name = copy_name(n->name);
     node->parent = parent;
     node->light = n->light != NULL ? (int)(n->light - g->lights) : -1;
+    node->skin = n->skin != NULL && n->mesh != NULL ? (int)(n->skin - g->skins) : -1;
     node_local_trs(n, node);
     node->mesh = n->mesh != NULL && counts[n->mesh - g->meshes] > 0 ? (int)(n->mesh - g->meshes) : -1;
     for (c = 0; c < n->children_count; c++) add_node(mesh, g, n->children[c], index, built, counts);
@@ -527,6 +562,163 @@ static bool parse_lights(mesh_t *mesh, const cgltf_data *g)
         light->outer = src->spot_outer_cone_angle;
     }
     mesh->light_count = (int)g->lights_count;
+    return true;
+}
+
+/* The file's skins (libwgt read the first alone): each joint the node it is in the tree
+ * (`built`, -1 outside it), its inverse bind matrix, and what bounds the skin: its place in
+ * the bind pose, and the reach of the vertices it weights, over every skinned primitive a
+ * node shows with it. A joint index past the skin's joints weighs nothing (a broken file). */
+static bool parse_skins(prepared_t *prepared, const cgltf_data *g, const int *built)
+{
+    mesh_t *mesh = &prepared->mesh;
+    cgltf_size s, n;
+    if (g->skins_count == 0) return true;
+    mesh->skins = (wgf_gfx_priv_mesh_skin_t *)calloc(g->skins_count, sizeof(wgf_gfx_priv_mesh_skin_t));
+    if (mesh->skins == NULL) return false;
+    mesh->skin_count = (int)g->skins_count;
+    for (s = 0; s < g->skins_count; s++) {
+        const cgltf_skin *src = &g->skins[s];
+        wgf_gfx_priv_mesh_skin_t *skin = &mesh->skins[s];
+        int j, count = (int)src->joints_count;
+        if (count > WGF_GFX_PRIV_MESH_MAX_JOINTS) {
+            wgf_log_warn("wgf_gfx_mesh: %s: a skin of %d joints; the first %d are used", prepared->path, count,
+                         WGF_GFX_PRIV_MESH_MAX_JOINTS);
+            count = WGF_GFX_PRIV_MESH_MAX_JOINTS;
+        }
+        skin->joints = (int *)calloc((size_t)count + 1, sizeof(int));
+        skin->inverse_bind = (wgf_mat4_t *)calloc((size_t)count + 1, sizeof(wgf_mat4_t));
+        skin->centers = (wgf_vec3_t *)calloc((size_t)count + 1, sizeof(wgf_vec3_t));
+        skin->radii = (float *)calloc((size_t)count + 1, sizeof(float));
+        if (skin->joints == NULL || skin->inverse_bind == NULL || skin->centers == NULL || skin->radii == NULL) {
+            return false;
+        }
+        skin->joint_count = count;
+        for (j = 0; j < count; j++) {
+            skin->joints[j] = src->joints[j] != NULL ? built[src->joints[j] - g->nodes] : -1;
+            skin->inverse_bind[j] = wgf_mat4_identity();
+            if (src->inverse_bind_matrices != NULL && (cgltf_size)j < src->inverse_bind_matrices->count) {
+                cgltf_accessor_read_float(src->inverse_bind_matrices, (cgltf_size)j, skin->inverse_bind[j].m, 16);
+            }
+            skin->centers[j] = wgf_mat4_get_translation(wgf_mat4_invert(skin->inverse_bind[j]));
+            skin->radii[j] = -1.0f;
+        }
+    }
+    for (n = 0; n < g->nodes_count; n++) { /* each skinned primitive shown with a skin: its joints checked, its reach */
+        const cgltf_node *node = &g->nodes[n];
+        wgf_gfx_priv_mesh_skin_t *skin;
+        int p;
+        if (node->skin == NULL || node->mesh == NULL || built[n] < 0) continue;
+        skin = &mesh->skins[node->skin - g->skins];
+        for (p = 0; p < prepared->mesh_count[node->mesh - g->meshes]; p++) {
+            primitive_t *prim = &mesh->primitives[prepared->mesh_first[node->mesh - g->meshes] + p];
+            int v, k;
+            for (v = 0; prim->skin != NULL && v < prim->vertex_count; v++) {
+                float *w = &prim->skin[(size_t)v * WGF_GFX_PRIV_MESH_SKIN_FLOATS];
+                const float *at = &prim->vertices[(size_t)v * WGF_GFX_PRIV_MESH_VERTEX_FLOATS];
+                for (k = 0; k < 4; k++) {
+                    const int j = (int)w[k];
+                    float d;
+                    if (j >= skin->joint_count) {
+                        w[k] = 0.0f;
+                        w[4 + k] = 0.0f;
+                        continue;
+                    }
+                    if (w[4 + k] <= 0.0f) continue;
+                    d = wgf_vec3_length(wgf_vec3_sub(wgf_vec3_make(at[0], at[1], at[2]), skin->centers[j]));
+                    if (d > skin->radii[j]) skin->radii[j] = d;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+/* The file's animations (libwgt's parse_animations): each channel moving a node of the tree's
+ * translation, rotation, or scale (morph weights aren't read), its keys' times and values,
+ * a cubic spline's with their tangents. A channel whose keys are missing or out of order is
+ * left out, warned; an animation's length is its last key's time. Which nodes any of them
+ * moves is kept, a node at a time. */
+static bool parse_animations(prepared_t *prepared, const cgltf_data *g, const int *built)
+{
+    mesh_t *mesh = &prepared->mesh;
+    cgltf_size a, c;
+    if (g->animations_count == 0) return true;
+    mesh->animations =
+        (wgf_gfx_priv_mesh_animation_t *)calloc(g->animations_count, sizeof(wgf_gfx_priv_mesh_animation_t));
+    mesh->animated = (unsigned char *)calloc((size_t)g->nodes_count + g->meshes_count + 1, 1);
+    if (mesh->animations == NULL || mesh->animated == NULL) return false;
+    mesh->animation_count = (int)g->animations_count;
+    for (a = 0; a < g->animations_count; a++) {
+        const cgltf_animation *src = &g->animations[a];
+        wgf_gfx_priv_mesh_animation_t *animation = &mesh->animations[a];
+        animation->name = copy_name(src->name);
+        animation->channels =
+            (wgf_gfx_priv_mesh_channel_t *)calloc(src->channels_count + 1, sizeof(wgf_gfx_priv_mesh_channel_t));
+        if (animation->name == NULL || animation->channels == NULL) return false;
+        for (c = 0; c < src->channels_count; c++) {
+            const cgltf_animation_channel *from = &src->channels[c];
+            const cgltf_animation_sampler *sampler = from->sampler;
+            wgf_gfx_priv_mesh_channel_t *channel = &animation->channels[animation->channel_count];
+            bool cubic, ordered = true;
+            int comp, k, path;
+            if (from->target_path == cgltf_animation_path_type_translation) path = WGF_GFX_PRIV_MESH_PATH_TRANSLATION;
+            else if (from->target_path == cgltf_animation_path_type_rotation) path = WGF_GFX_PRIV_MESH_PATH_ROTATION;
+            else if (from->target_path == cgltf_animation_path_type_scale) path = WGF_GFX_PRIV_MESH_PATH_SCALE;
+            else continue; /* morph weights */
+            if (from->target_node == NULL || built[from->target_node - g->nodes] < 0 || sampler == NULL ||
+                sampler->input == NULL || sampler->output == NULL) {
+                continue; /* a node outside the tree */
+            }
+            cubic = sampler->interpolation == cgltf_interpolation_type_cubic_spline;
+            comp = path == WGF_GFX_PRIV_MESH_PATH_ROTATION ? 4 : 3;
+            channel->node = built[from->target_node - g->nodes];
+            channel->path = path;
+            channel->interpolation = cubic ? WGF_GFX_PRIV_MESH_LERP_CUBIC
+                                     : sampler->interpolation == cgltf_interpolation_type_step
+                                         ? WGF_GFX_PRIV_MESH_LERP_STEP
+                                         : WGF_GFX_PRIV_MESH_LERP_LINEAR;
+            channel->key_count = (int)sampler->input->count;
+            if (sampler->input->count == 0 || sampler->input->count > (1u << 24) ||
+                sampler->output->count < sampler->input->count * (cubic ? 3u : 1u)) {
+                wgf_log_warn("wgf_gfx_mesh: %s: animation %d has a channel with its keys missing; left out",
+                             prepared->path, (int)a);
+                memset(channel, 0, sizeof(*channel));
+                continue;
+            }
+            channel->times = (float *)malloc((size_t)channel->key_count * sizeof(float));
+            channel->values =
+                (float *)malloc((size_t)channel->key_count * (size_t)comp * (cubic ? 3u : 1u) * sizeof(float));
+            if (channel->times == NULL || channel->values == NULL) {
+                free(channel->times);
+                free(channel->values);
+                memset(channel, 0, sizeof(*channel));
+                return false;
+            }
+            for (k = 0; k < channel->key_count * (cubic ? 3 : 1); k++) {
+                cgltf_accessor_read_float(sampler->output, (cgltf_size)k, &channel->values[k * comp], (cgltf_size)comp);
+            }
+            for (k = 0; k < channel->key_count; k++) {
+                cgltf_accessor_read_float(sampler->input, (cgltf_size)k, &channel->times[k], 1);
+                if (!isfinite(channel->times[k]) || (k > 0 && channel->times[k] < channel->times[k - 1])) {
+                    ordered = false;
+                }
+            }
+            if (!ordered) {
+                wgf_log_warn("wgf_gfx_mesh: %s: animation %d has a channel whose keys' times aren't in order; left out",
+                             prepared->path, (int)a);
+                free(channel->times);
+                free(channel->values);
+                memset(channel, 0, sizeof(*channel));
+                continue;
+            }
+            if (channel->times[channel->key_count - 1] > animation->duration) {
+                animation->duration = channel->times[channel->key_count - 1];
+            }
+            mesh->animated[channel->node] = 1;
+            animation->channel_count++;
+        }
+    }
     return true;
 }
 
@@ -610,6 +802,10 @@ static bool parse_model(prepared_t *prepared, int size)
             if (g->nodes[n].parent == NULL) add_node(mesh, g, &g->nodes[n], -1, built, prepared->mesh_count);
         }
     }
+    if (!parse_skins(prepared, g, built) || !parse_animations(prepared, g, built)) {
+        free(built);
+        return false;
+    }
     free(built);
     shown = false;
     for (i = 0; i < mesh->node_count; i++) shown = shown || mesh->nodes[i].mesh >= 0;
@@ -622,6 +818,7 @@ static bool parse_model(prepared_t *prepared, int size)
             node->name = copy_name(g->meshes[m].name);
             node->parent = -1;
             node->light = -1;
+            node->skin = -1;
             node->rotation = wgf_quat_identity();
             node->scale = wgf_vec3_make(1.0f, 1.0f, 1.0f);
             node->mesh = (int)m;
@@ -697,10 +894,10 @@ static void *prepare(const char *path)
 /* Each glTF mesh made a mesh of its own, its primitives moved into it, drawn with the
  * file's materials: the file's meshes, which the nodes showing them share (Rob's decision
  * over a copy a node: the toy car's four wheels are one mesh). The skin a node gives with
- * its mesh (milestone 3's) is kept beside the mesh, never in it, so a skinned mesh is
- * shared too. Made before the file's record is resolved again: each is a resource added, and
- * the pool may move. Into `out`, of `out_count`; false (the parts made let go of) out of
- * memory. */
+ * its mesh is the file's, kept by the node, never in the mesh, so a skinned mesh is shared
+ * too: its primitives carry their joints and weights, the skin's joints place them. Made
+ * before the file's record is resolved again: each is a resource added, and the pool may
+ * move. Into `out`, of `out_count`; false (the parts made let go of) out of memory. */
 static bool make_parts(prepared_t *prepared, wgf_mesh_t **out, int *out_count)
 {
     const int count = (int)prepared->gltf->meshes_count;
@@ -752,6 +949,11 @@ static void reload_into(mesh_t *mesh_ptr, wgf_mesh_t *parts, int part_count)
     old.light_count = mesh_ptr->light_count;
     old.materials = mesh_ptr->materials;
     old.material_count = mesh_ptr->material_count;
+    old.skins = mesh_ptr->skins;
+    old.skin_count = mesh_ptr->skin_count;
+    old.animations = mesh_ptr->animations;
+    old.animation_count = mesh_ptr->animation_count;
+    old.animated = mesh_ptr->animated;
     for (m = 0; m < part_count && m < old.part_count; m++) {
         if (parts[m] == 0 || old.parts[m] == 0) continue;
         wgf_gfx_priv_mesh_swap(old.parts[m], parts[m]);
@@ -779,6 +981,7 @@ static wgf_core_priv_load_step_t finish(void *data, wgf_handle_t resource)
         for (p = 0; p < prepared->mesh.primitive_count; p++) {
             prepared->mesh.primitives[p].vertex_buffer.id = SG_INVALID_ID;
             prepared->mesh.primitives[p].index_buffer.id = SG_INVALID_ID;
+            prepared->mesh.primitives[p].skin_buffer.id = SG_INVALID_ID;
             if (!wgf_gfx_priv_mesh_upload(&prepared->mesh.primitives[p])) return WGF_CORE_PRIV_LOAD_FAILED;
         }
         prepared->step = 1;
@@ -816,6 +1019,11 @@ static wgf_core_priv_load_step_t finish(void *data, wgf_handle_t resource)
     mesh_ptr->light_count = prepared->mesh.light_count;
     mesh_ptr->materials = prepared->mesh.materials;
     mesh_ptr->material_count = prepared->mesh.material_count;
+    mesh_ptr->skins = prepared->mesh.skins;
+    mesh_ptr->skin_count = prepared->mesh.skin_count;
+    mesh_ptr->animations = prepared->mesh.animations;
+    mesh_ptr->animation_count = prepared->mesh.animation_count;
+    mesh_ptr->animated = prepared->mesh.animated;
     mesh_ptr->bounds_min = prepared->mesh.bounds_min;
     mesh_ptr->bounds_max = prepared->mesh.bounds_max;
     memset(&prepared->mesh, 0, sizeof(prepared->mesh));

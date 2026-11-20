@@ -32,8 +32,8 @@
  *   Escape   quit, where quitting means anything
  *
  * libwgt's gfx-instancing (wgrender's), which differs for the size table: its six walkers
- * are a skinned, animated glTF, and libwgf has no skinning until milestone 3; six of the toy
- * car (tools/gen_model.py) stand in their place, turning. And the readout is fixed labels,
+ * are a skinned, animated glTF (gfx-skinning's robots now, each robot's parts instanced);
+ * six of the toy car (tools/gen_model.py) stand in their place, turning. And the readout is fixed labels,
  * no snprintf, so the program links no formatting, as gfx-shadows. */
 
 #define FIELD_SIDE 20

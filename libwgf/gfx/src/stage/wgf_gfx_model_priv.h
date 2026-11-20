@@ -6,6 +6,9 @@
 #include "wgf_actor.h"
 #include "wgf_material.h"
 #include "wgf_mesh.h"
+#include "wgf_vec3.h"
+
+struct wgf_gfx_priv_animation_t;
 
 /* A file's mesh done loading (READY or FAILED), or loaded again, from glTF's loader: the
  * models of it make their trees now, or make them again in place (or, failed, stay empty,
@@ -27,6 +30,24 @@ typedef struct wgf_gfx_priv_model_file_t {
 } wgf_gfx_priv_model_file_t;
 void wgf_gfx_priv_model_set_file(const wgf_gfx_priv_model_file_t *part);
 void wgf_gfx_priv_model_file_install(void);
+
+/* A file root's tree (the file part's build makes it): each of its file's nodes' actor, by
+ * the node's index (0: one not made, or destroyed since), and, a skin at a time, where the
+ * stage last put its joint matrices among the frame's (`serial` the frame's number, `base`
+ * the first matrix) and the box around its posed vertices in the root's space. */
+typedef struct wgf_gfx_priv_model_tree_t {
+    wgf_actor_t *nodes;
+    int node_count;
+    int skin_count;
+    unsigned *joint_serial;
+    int *joint_base; /* -1: none this frame (no room, or nothing to place) */
+    wgf_vec3_t *skin_lo, *skin_hi;
+} wgf_gfx_priv_model_tree_t;
+
+/* A file root's tree let go of (its model's free), and its animation player, through the
+ * animation part's hook (set as it installs; NULL before, when there is none). */
+void wgf_gfx_priv_model_tree_free(wgf_gfx_priv_model_tree_t *tree);
+void wgf_gfx_priv_model_set_animation_free(void (*free_animation)(struct wgf_gfx_priv_animation_t *animation));
 
 /* What a failed model draws, the file part's (a unit cube of the placeholder checker, unlit):
  * false in a program without glTF, where no mesh fails. */

@@ -1289,6 +1289,40 @@ export const Model = Object.freeze({
     setShadowReceiving: raw.wgf_model_set_shadow_receiving,
     // wgf: call wgf_model_is_shadow_receiving
     isShadowReceiving: raw.wgf_model_is_shadow_receiving,
+    // wgf: call wgf_model_get_animation_count
+    getAnimationCount: raw.wgf_model_get_animation_count,
+    // wgf: call wgf_model_get_animation_name
+    getAnimationName: raw.wgf_model_get_animation_name,
+    // wgf: call wgf_model_find_animation
+    findAnimation: raw.wgf_model_find_animation,
+    // wgf: call wgf_model_get_animation_duration
+    getAnimationDuration: raw.wgf_model_get_animation_duration,
+    // wgf: call wgf_model_play_animation
+    playAnimation: raw.wgf_model_play_animation,
+    // wgf: call wgf_model_get_animation
+    getAnimation: raw.wgf_model_get_animation,
+    // wgf: call wgf_model_get_animation_weight
+    getAnimationWeight: raw.wgf_model_get_animation_weight,
+    // wgf: call wgf_model_pause_animation
+    pauseAnimation: raw.wgf_model_pause_animation,
+    // wgf: call wgf_model_resume_animation
+    resumeAnimation: raw.wgf_model_resume_animation,
+    // wgf: call wgf_model_stop_animation
+    stopAnimation: raw.wgf_model_stop_animation,
+    // wgf: call wgf_model_get_animation_state
+    getAnimationState: raw.wgf_model_get_animation_state,
+    // wgf: call wgf_model_set_animation_speed
+    setAnimationSpeed: raw.wgf_model_set_animation_speed,
+    // wgf: call wgf_model_get_animation_speed
+    getAnimationSpeed: raw.wgf_model_get_animation_speed,
+    // wgf: call wgf_model_set_animation_loop
+    setAnimationLoop: raw.wgf_model_set_animation_loop,
+    // wgf: call wgf_model_is_animation_loop
+    isAnimationLoop: raw.wgf_model_is_animation_loop,
+    // wgf: call wgf_model_set_animation_time
+    setAnimationTime: raw.wgf_model_set_animation_time,
+    // wgf: call wgf_model_get_animation_time
+    getAnimationTime: raw.wgf_model_get_animation_time,
     // wgf: call wgf_model_get_bounds_min
     getBoundsMin: raw.wgf_model_get_bounds_min,
     // wgf: call wgf_model_get_bounds_max

@@ -1,9 +1,9 @@
 /* libwgf's custom shaders: what libwgf gives a material's shader (wgf_shader.h), libwgt's
  * wgt.glsl (wgrender's wgr.glsl) with libwgt's names wgf_ for wgt_, trimmed to what libwgf
- * draws: models without skinning (libwgf has none yet), and no sprites (custom sprites are
- * milestone 2.5's). tools/pack_shader.py puts this file in front of yours, adds libwgf's
- * vertex shader, and compiles the result for every backend libwgf runs on into a .wgfshader
- * file (wgf_shader_create).
+ * draws: models without skinning (a skinned part with a custom material draws in its bind
+ * pose), and no sprites (custom sprites are milestone 2.5's). tools/pack_shader.py puts
+ * this file in front of yours, adds libwgf's vertex shader, and compiles the result for
+ * every backend libwgf runs on into a .wgfshader file (wgf_shader_create).
  *
  * Your file has a fragment shader named `fs`, and may have a vertex hook:
  *

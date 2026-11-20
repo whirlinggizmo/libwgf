@@ -38,6 +38,8 @@ static struct {
     bool unsupported; /* the backend can't sample a depth array (said once) */
     sg_shader shader;
     sg_pipeline pipeline;
+    sg_shader skinned_shader; /* a skinned caster's, made the first time one casts */
+    sg_pipeline skinned_pipeline;
     sg_image white_image; /* what an alpha test reads without a texture */
     sg_view white_view;
     sg_sampler white_sampler;
@@ -438,6 +440,40 @@ static void ensure_pipeline(void)
     }
 }
 
+/* The skinned casters' pipeline, the static one's with their joints and weights from the
+ * primitive's second buffer, made the first time one casts. */
+static sg_pipeline skinned_pipeline(void)
+{
+    sg_pipeline_desc desc;
+    if (sm.skinned_pipeline.id != SG_INVALID_ID) return sm.skinned_pipeline;
+    sm.skinned_shader = sg_make_shader(depth_skinned_shader_desc(shader_backend()));
+    memset(&desc, 0, sizeof(desc));
+    desc.shader = sm.skinned_shader;
+    desc.layout.buffers[0].stride = (int)(sizeof(float) * WGF_GFX_PRIV_MESH_VERTEX_FLOATS);
+    desc.layout.buffers[1].stride = (int)(sizeof(float) * WGF_GFX_PRIV_MESH_SKIN_FLOATS);
+    desc.layout.attrs[ATTR_depth_skinned_position].format = SG_VERTEXFORMAT_FLOAT3;
+    desc.layout.attrs[ATTR_depth_skinned_position].offset = 0;
+    desc.layout.attrs[ATTR_depth_skinned_texcoord0].format = SG_VERTEXFORMAT_FLOAT2;
+    desc.layout.attrs[ATTR_depth_skinned_texcoord0].offset = 24;
+    desc.layout.attrs[ATTR_depth_skinned_joints].buffer_index = 1;
+    desc.layout.attrs[ATTR_depth_skinned_joints].format = SG_VERTEXFORMAT_FLOAT4;
+    desc.layout.attrs[ATTR_depth_skinned_joints].offset = 0;
+    desc.layout.attrs[ATTR_depth_skinned_weights].buffer_index = 1;
+    desc.layout.attrs[ATTR_depth_skinned_weights].format = SG_VERTEXFORMAT_FLOAT4;
+    desc.layout.attrs[ATTR_depth_skinned_weights].offset = 16;
+    desc.index_type = SG_INDEXTYPE_UINT32;
+    desc.cull_mode = SG_CULLMODE_NONE;
+    desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
+    desc.depth.write_enabled = true;
+    desc.depth.pixel_format = SG_PIXELFORMAT_DEPTH;
+    desc.colors[0].pixel_format = SG_PIXELFORMAT_NONE;
+    desc.color_count = 0;
+    desc.sample_count = 1;
+    desc.label = "wgf-depth-skinned";
+    sm.skinned_pipeline = sg_make_pipeline(&desc);
+    return sm.skinned_pipeline;
+}
+
 /* ------------------------------------------------------------------- the pass ---- */
 
 /* A view's six planes (Gribb and Hartmann), each ax + by + cz + d >= 0 inside. */
@@ -477,12 +513,11 @@ static void draw_casters(const wgf_gfx_priv_shadow_frame_t *job, wgf_mat4_t view
     float planes[6][4];
     float applied_cutoff = -1.0f;
     const int end = job->first + job->count;
-    sg_view instances;
-    sg_sampler instance_sampler;
-    int i = job->first;
+    sg_view instances, joints;
+    sg_sampler instance_sampler, joint_sampler;
+    int i = job->first, applied = -1; /* the pipeline applied: 0 static, 1 skinned */
     if (!wgf_gfx_priv_stage3d_instances(&instances, &instance_sampler)) return; /* the records didn't fit */
     frustum_planes(&view_proj, planes);
-    sg_apply_pipeline(sm.pipeline);
     while (i < end) {
         wgf_gfx_priv_mesh_primitive_t primitive, next_primitive;
         wgf_material_t material_handle, next_material;
@@ -504,9 +539,22 @@ static void draw_casters(const wgf_gfx_priv_shadow_frame_t *job, wgf_mat4_t view
             i = last + 1;
             continue;
         }
+        { /* a skinned caster's pipeline, or the static one: applied when it changes, with what it uses */
+            const int wanted = primitive.skin.id != SG_INVALID_ID ? 1 : 0;
+            if (wanted != applied) {
+                sg_apply_pipeline(wanted ? skinned_pipeline() : sm.pipeline);
+                applied = wanted;
+                applied_cutoff = -1.0f;
+            }
+        }
         memset(&bindings, 0, sizeof(bindings));
         bindings.vertex_buffers[0] = primitive.vertices;
         bindings.index_buffer = primitive.indices;
+        if (primitive.skin.id != SG_INVALID_ID && wgf_gfx_priv_stage3d_joints(&joints, &joint_sampler)) {
+            bindings.vertex_buffers[1] = primitive.skin;
+            bindings.views[VIEW_joint_tex] = joints;
+            bindings.samplers[SMP_joint_smp] = joint_sampler;
+        }
         bindings.views[VIEW_base_color_tex] = sm.white_view;
         bindings.samplers[SMP_base_color_smp] = sm.white_sampler;
         bindings.views[VIEW_instance_tex] = instances;
@@ -616,6 +664,10 @@ static void stop(void)
     if (sm.pipeline.id != SG_INVALID_ID) {
         sg_destroy_pipeline(sm.pipeline);
         sg_destroy_shader(sm.shader);
+        if (sm.skinned_pipeline.id != SG_INVALID_ID) {
+            sg_destroy_pipeline(sm.skinned_pipeline);
+            sg_destroy_shader(sm.skinned_shader);
+        }
         sg_destroy_view(sm.white_view);
         sg_destroy_image(sm.white_image);
         sg_destroy_sampler(sm.white_sampler);

@@ -98,8 +98,9 @@ typedef struct wgf_gfx_priv_shadow_frame_t {
 bool wgf_gfx_priv_stage3d_shadow_frame(wgf_gfx_priv_shadow_frame_t *out);
 
 /* Item `item` of the frame's as a caster: an opaque part of a model that casts, its box in
- * the stage, its primitive, and its material; where it stands is its record in the frame's
- * instance texture (wgf_gfx_priv_stage3d_record). False for any other. */
+ * the stage, its primitive (its `skin` SG_INVALID_ID unless it is drawn skinned), and its
+ * material; where it stands is its record in the frame's instance texture
+ * (wgf_gfx_priv_stage3d_record). False for any other. */
 bool wgf_gfx_priv_stage3d_caster(int item, wgf_vec3_t *lo, wgf_vec3_t *hi, wgf_gfx_priv_mesh_primitive_t *primitive,
                                  wgf_material_t *material);
 /* Whether casters `a` and `b` can go up as one draw: the same mesh, primitive, and material
@@ -111,6 +112,9 @@ int wgf_gfx_priv_stage3d_record(int item);
 /* The frame's instance records, written before the passes: false when there are none, or
  * they didn't fit (nothing is drawn then). */
 bool wgf_gfx_priv_stage3d_instances(sg_view *view, sg_sampler *sampler);
+/* The frame's joint matrices, which a skinned caster's are among (its record says where):
+ * false when none were written (no skin drawn, or they didn't fit: no skinned part is drawn). */
+bool wgf_gfx_priv_stage3d_joints(sg_view *view, sg_sampler *sampler);
 
 /* The part installed: the first light set to cast. */
 void wgf_gfx_priv_shadow_install(void);

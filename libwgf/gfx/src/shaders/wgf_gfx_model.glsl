@@ -1,6 +1,7 @@
 /* A stage's models (libwgf/gfx/src/stage/wgf_gfx_stage.c): glTF metallic-roughness materials,
  * lit by up to 8 lights, tone mapped. libwgt's wgt_gfx_model.glsl and wgt_gfx_pbr.glsl
- * (wgrender's), trimmed to what milestone 2 draws so far: no skinning (milestone 3's).
+ * (wgrender's): a static part (model) and a GPU-skinned one (model_skinned, its joints from the
+ * frame's joint texture, wgf_gfx_instance.glsl).
  * Each part's placement, its normals' matrix, and its tint are its record in the frame's
  * instance texture (wgf_gfx_instance.glsl), so a run of parts alike in everything else
  * is one draw; with shadows (step 8) and an environment's light (step 9). Written once in sokol-shdc's annotated
@@ -12,7 +13,8 @@
  * result is tone mapped and encoded back to sRGB. Vertex colors (linear rgba; white for
  * generated meshes) multiply the base color.
  *
- * vs_params: view_proj, and instance_base (x: the draw's first record)
+ * vs_params: view_proj, and instance_base (x: the draw's first record); a skinned part's
+ *   record's extra.x is its skin's first joint matrix
  * fs_params, the material's (the model's tint is its record's, times the vertex color):
  *   u_base_color      linear rgba
  *   u_emissive        rgb linear emissive, w normal scale
@@ -74,6 +76,45 @@ void main() {
     v_uv0 = texcoord0;
     v_uv1 = texcoord1;
     v_color = color0 * instance_tint(record); /* the placement's tint, already linear */
+    v_world_pos = world.xyz;
+}
+@end
+
+/* A skinned part (glTF's skins): its vertex posed by its joints, then placed by its record,
+ * which is its file's root's placement. Joints are rigid (and uniformly scaled), so mat3 of
+ * the skin keeps normals perpendicular. */
+@vs vs_skinned
+@include_block instance_data
+@include_block joint_data
+layout(binding=0) uniform vs_params {
+    mat4 view_proj;
+    vec4 instance_base; /* x: the draw's first record */
+};
+in vec3 position;
+in vec3 normal;
+in vec2 texcoord0;
+in vec2 texcoord1;
+in vec4 tangent;
+in vec4 color0;
+in vec4 joints;
+in vec4 weights;
+out vec3 v_normal;
+out vec4 v_tangent;
+out vec2 v_uv0;
+out vec2 v_uv1;
+out vec4 v_color;
+out vec3 v_world_pos;
+void main() {
+    int record = int(instance_base.x) + gl_InstanceIndex;
+    mat4 model = instance_model(record);
+    mat4 skin = skin_matrix(int(instance_extra(record).x), joints, weights);
+    vec4 world = model * (skin * vec4(position, 1.0));
+    gl_Position = view_proj * world;
+    v_normal = instance_normal(record) * (mat3(skin) * normal);
+    v_tangent = vec4(mat3(model) * (mat3(skin) * tangent.xyz), tangent.w * instance_extra(record).y);
+    v_uv0 = texcoord0;
+    v_uv1 = texcoord1;
+    v_color = color0 * instance_tint(record);
     v_world_pos = world.xyz;
 }
 @end
@@ -332,3 +373,4 @@ void main() {
 @end
 
 @program model vs fs
+@program model_skinned vs_skinned fs

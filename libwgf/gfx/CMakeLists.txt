@@ -33,6 +33,7 @@ wgf_layer(gfx
         src/sprite/wgf_gfx_sprite_batch.c
         src/sprite/wgf_gfx_sprite_batch2d.c
         src/sprite/wgf_gfx_sheet.c
+        src/stage/wgf_gfx_animation.c
         src/stage/wgf_gfx_light.c
         src/stage/wgf_gfx_model.c
         src/stage/wgf_gfx_model_file.c
@@ -78,6 +79,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_camera3d_test)
         wgf_test(gfx wgf_gfx_mesh_test)
         wgf_test(gfx wgf_gfx_gltf_test)
+        wgf_test(gfx wgf_gfx_skin_test)
         wgf_test(gfx wgf_gfx_stage3d_test)
         wgf_test(gfx wgf_gfx_shadow_test)
         wgf_test(gfx wgf_gfx_environment_test)

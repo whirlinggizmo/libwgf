@@ -42,7 +42,7 @@
  *   Escape       quit, where quitting means anything
  *
  * libwgt's gfx-shadows (wgrender's shadows), which differs for the size table: its walking
- * character is a skinned, animated glTF, and libwgf has no skinning until milestone 3; the
+ * character is a skinned, animated glTF (gfx-skinning's robots now, shadows posed); the
  * toy car (tools/gen_model.py) stands in its place. And the readout is libwgf's overlay and
  * fixed labels, no snprintf, so the program links no formatting, as gfx-lights. */
 

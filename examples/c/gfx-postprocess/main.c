@@ -45,8 +45,8 @@
  *   Esc          quit, where quitting means anything
  *
  * libwgt's postprocess example (wgrender's), but for the walker: libwgt's is a skinned
- * character, playing its animation, and skinning is milestone 3's, so the toy car stands
- * in its place. */
+ * character, playing its animation (gfx-skinning's robots now), and the toy car stands in
+ * its place. */
 
 #define CAR_PATH "models/toy_car.glb"
 

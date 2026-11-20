@@ -27,7 +27,7 @@
  * O stops the camera, and Escape quits where quitting means anything.
  *
  * libwgt's model example, on a model of libwgf's own: libwgt's is a skinned character,
- * playing its animation, and skinning is milestone 3's. */
+ * playing its animation, which is gfx-skinning's here. */
 
 #define MODEL_PATH "models/toy_car.glb"
 

@@ -122,12 +122,39 @@ static void drop_untaken(wgf_actor_t actor, const wgf_actor_t *taken, int taken_
     }
 }
 
+/* A tree for `node_count` nodes and `skin_count` skins, its joints placed in no frame yet;
+ * NULL out of memory. */
+static wgf_gfx_priv_model_tree_t *make_tree(int node_count, int skin_count)
+{
+    wgf_gfx_priv_model_tree_t *tree = (wgf_gfx_priv_model_tree_t *)calloc(1, sizeof(wgf_gfx_priv_model_tree_t));
+    int s;
+    if (tree == NULL) return NULL;
+    tree->nodes = (wgf_actor_t *)calloc((size_t)node_count + 1, sizeof(wgf_actor_t));
+    tree->joint_serial = (unsigned *)calloc((size_t)skin_count + 1, sizeof(unsigned));
+    tree->joint_base = (int *)calloc((size_t)skin_count + 1, sizeof(int));
+    tree->skin_lo = (wgf_vec3_t *)calloc((size_t)skin_count + 1, sizeof(wgf_vec3_t));
+    tree->skin_hi = (wgf_vec3_t *)calloc((size_t)skin_count + 1, sizeof(wgf_vec3_t));
+    if (tree->nodes == NULL || tree->joint_serial == NULL || tree->joint_base == NULL || tree->skin_lo == NULL ||
+        tree->skin_hi == NULL) {
+        wgf_gfx_priv_model_tree_free(tree);
+        return NULL;
+    }
+    tree->node_count = node_count;
+    tree->skin_count = skin_count;
+    for (s = 0; s < skin_count; s++) tree->joint_base[s] = -1;
+    return tree;
+}
+
 /* `root`'s tree, made from its file's mesh's nodes, each under its parent's actor: the
  * actor already there for a node kept (found by its name under its parent's, of the kind
- * the node makes), placed and given its mesh again, and its lights made again. */
+ * the node makes), placed and given its mesh again, and its lights made again. The actors
+ * are kept by the root, a node at a time (what an animation moves and a skin's joints are),
+ * and a node showing a skinned mesh is placed by its root's skin. */
 static void build(wgf_actor_t root, wgf_mesh_t mesh)
 {
     const wgf_gfx_priv_mesh_record_t *record = wgf_gfx_priv_mesh_record(mesh);
+    wgf_gfx_priv_model_tree_t *tree;
+    wgf_gfx_priv_actor_t *root_ptr;
     wgf_actor_t *built, *taken;
     int i, taken_count = 0;
     if (record == NULL) return;
@@ -167,6 +194,11 @@ static void build(wgf_actor_t root, wgf_mesh_t mesh)
         actor_ptr->position = node->position;
         actor_ptr->rotation = node->rotation;
         actor_ptr->scale = node->scale;
+        if (shows) {
+            const bool skinned = node->skin >= 0 && node->skin < record->skin_count;
+            actor_ptr->as.model.skin_root = skinned ? root : 0;
+            actor_ptr->as.model.skin = skinned ? node->skin : 0;
+        }
         wgf_gfx_priv_actor_transform_changed(actor);
         built[i] = actor;
         taken[taken_count++] = actor;
@@ -183,8 +215,19 @@ static void build(wgf_actor_t root, wgf_mesh_t mesh)
         }
     }
     drop_untaken(root, taken, taken_count, 0);
-    free(built);
     free(taken);
+    tree = make_tree(record->node_count, record->skin_count);
+    root_ptr = wgf_gfx_priv_actor_of(root);
+    if (tree == NULL || root_ptr == NULL) {
+        if (tree == NULL) wgf_log_error("wgf_model: out of memory keeping a file's tree");
+        wgf_gfx_priv_model_tree_free(tree);
+        free(built);
+        return;
+    }
+    memcpy(tree->nodes, built, sizeof(wgf_actor_t) * (size_t)record->node_count);
+    free(built);
+    wgf_gfx_priv_model_tree_free(root_ptr->as.model.tree); /* the one made before a reload */
+    root_ptr->as.model.tree = tree;
 }
 
 void wgf_gfx_priv_model_mesh_done(wgf_mesh_t mesh)

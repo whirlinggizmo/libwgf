@@ -99,6 +99,16 @@ typedef struct wgf_gfx_priv_model_t {
     wgf_handle_t *materials;   /* its own, a slot each, referenced (0: the mesh's); malloc'd, NULL for none */
     bool file_root; /* of a glTF file's mesh: its tree is actors under it, and it draws nothing itself */
     bool shadow_off, receive_off; /* casting and receiving shadows, each on unless set off (wgf_gfx_shadow.c) */
+    /* a file root's, once its tree is made (stage/wgf_gfx_model_priv.h): its nodes' actors and
+       its skins' joints for the frame; malloc'd, NULL for any other model */
+    struct wgf_gfx_priv_model_tree_t *tree;
+    /* a file root's animation player (stage/wgf_gfx_animation.c), once an animation call made
+       one; malloc'd, NULL for none */
+    struct wgf_gfx_priv_animation_t *animation;
+    /* a file's node showing a skinned mesh: the root whose skin `skin` (into its file's skins)
+       places its skinned parts; 0 for none */
+    wgf_actor_t skin_root;
+    int skin;
 } wgf_gfx_priv_model_t;
 
 typedef struct wgf_gfx_priv_shape3d_t {

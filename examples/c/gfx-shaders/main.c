@@ -42,8 +42,8 @@
  *   Esc      quit, where quitting means anything
  *
  * libwgt's gfx-shaders (wgrender's shaders), which differs for the size table: libwgf
- * has no skinning or animation yet, so the toon shading is on the toy car in place of
- * the walking character; and no custom sprite materials yet (milestone 2.5), so the
+ * draws a custom material on a skinned part in its bind pose, so the toon shading is on the
+ * toy car in place of the walking character; and no custom sprite materials yet (milestone 2.5), so the
  * logo outlined and flashing by its sprite effects shader, in the world and in the
  * screen's corner, is left out. */
 

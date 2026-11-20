@@ -57,5 +57,10 @@ int wgf_gfx_priv_stage3d_get_item_count(void);
 /* For tests: the draws the last frame's shading pass made (a run of alike parts one draw). */
 int wgf_gfx_priv_stage3d_get_draw_calls(void);
 int wgf_gfx_priv_stage3d_get_item_lights(int item);
+/* For tests: item `item`'s placement (a skinned part's its root's); and the joint matrices
+ * the frame's draws wrote so far, and matrix `index` of them. False for one it hasn't. */
+bool wgf_gfx_priv_stage3d_get_item_world(int item, wgf_mat4_t *world);
+int wgf_gfx_priv_stage3d_get_joint_count(void);
+bool wgf_gfx_priv_stage3d_get_joint(int index, wgf_mat4_t *joint);
 
 #endif

@@ -7,6 +7,7 @@
 #include "sokol_gfx.h"
 #include "wgf_core_load_priv.h"
 #include "wgf_core_resource_priv.h"
+#include "wgf_mat4.h"
 #include "wgf_mesh.h"
 #include "wgf_quat.h"
 #include "wgf_vec3.h"
@@ -24,6 +25,11 @@ typedef struct wgf_gfx_priv_mesh_record_primitive_t {
     int material; /* its slot in the mesh's materials */
     wgf_vec3_t bounds_min, bounds_max;
     sg_buffer vertex_buffer, index_buffer; /* SG_INVALID_ID until uploaded */
+    /* a skinned one's (glTF's JOINTS_0 and WEIGHTS_0): WGF_GFX_PRIV_MESH_SKIN_FLOATS a vertex,
+       its 4 joints and their 4 weights, a buffer of their own beside the vertices, so every
+       other reader of the vertices sees one layout; NULL for a primitive with none */
+    float *skin;
+    sg_buffer skin_buffer;
 } wgf_gfx_priv_mesh_record_primitive_t;
 
 /* A light a file's node carries (KHR_lights_punctual): what a model's tree makes a light
@@ -46,7 +52,43 @@ typedef struct wgf_gfx_priv_mesh_node_t {
     wgf_vec3_t scale;
     int mesh;  /* what it shows, into the file's meshes; -1 none: a plain actor */
     int light; /* into the file's lights; -1 none */
+    int skin;  /* the skin placing its mesh's skinned primitives, into the file's skins; -1 none */
 } wgf_gfx_priv_mesh_node_t;
+
+/* A file's skin: its joints, each a node of the file's (-1: one outside its tree, the
+ * identity), with its inverse bind matrix; and what bounds the skin in any pose, made as the
+ * file is read (libwgt's joint bounds): each joint's place in the bind pose, in the skinned
+ * vertices' space, and how far the vertices it weights reach from there (-1: it weights
+ * none). A pose's joint matrix moves a center and scales its radius by its longest axis. */
+#define WGF_GFX_PRIV_MESH_MAX_JOINTS 256
+typedef struct wgf_gfx_priv_mesh_skin_t {
+    int joint_count;
+    int *joints;
+    wgf_mat4_t *inverse_bind;
+    wgf_vec3_t *centers;
+    float *radii;
+} wgf_gfx_priv_mesh_skin_t;
+
+/* An animation's channel: one node's translation, rotation, or scale over time, its keys'
+ * times (seconds, non-decreasing) and values (3 floats a key, a rotation's 4; a cubic
+ * spline's each an in-tangent, the value, and an out-tangent). */
+enum { WGF_GFX_PRIV_MESH_PATH_TRANSLATION, WGF_GFX_PRIV_MESH_PATH_ROTATION, WGF_GFX_PRIV_MESH_PATH_SCALE };
+enum { WGF_GFX_PRIV_MESH_LERP_LINEAR, WGF_GFX_PRIV_MESH_LERP_STEP, WGF_GFX_PRIV_MESH_LERP_CUBIC };
+typedef struct wgf_gfx_priv_mesh_channel_t {
+    int node; /* into the file's nodes */
+    int path, interpolation;
+    int key_count;
+    float *times, *values;
+} wgf_gfx_priv_mesh_channel_t;
+
+/* A file's animation (a clip): its name ("" for none), its length (its last key's time), and
+ * its channels. */
+typedef struct wgf_gfx_priv_mesh_animation_t {
+    char *name;
+    float duration;
+    wgf_gfx_priv_mesh_channel_t *channels;
+    int channel_count;
+} wgf_gfx_priv_mesh_animation_t;
 
 typedef struct wgf_gfx_priv_mesh_record_t {
     wgf_core_priv_resource_t resource; /* first: the resource core's (status, path, references) */
@@ -68,6 +110,11 @@ typedef struct wgf_gfx_priv_mesh_record_t {
     int part_count;
     wgf_gfx_priv_mesh_light_t *lights;
     int light_count;
+    wgf_gfx_priv_mesh_skin_t *skins;
+    int skin_count;
+    wgf_gfx_priv_mesh_animation_t *animations;
+    int animation_count;
+    unsigned char *animated; /* a node at a time, whether any animation moves it; NULL with none */
     bool from_file; /* made by wgf_mesh_create: a model of it is its file's tree */
 } wgf_gfx_priv_mesh_record_t;
 

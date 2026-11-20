@@ -30,8 +30,8 @@
  *
  * wgrender-c's lights example, which differs for the size table: its models are a
  * glTF character, animated, and behind them stand lit billboard sprites with a normal
- * map, which libwgf has none of until glTF (milestone 2, step 6), skinning (milestone
- * 3), and sprites in 3D (step 11). Here the models are generated capsules, white, at
+ * map, which libwgf had none of until glTF (milestone 2, step 6), skinning (gfx-skinning's
+ * now), and sprites in 3D (step 11). Here the models are generated capsules, white, at
  * the characters' places, and there are no billboards. And:
  *   - a light is switched with wgf_actor_set_visible, and aimed with wgf_actor_look_at
  *     where wgrender's is given a direction;

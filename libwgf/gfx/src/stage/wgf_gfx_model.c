@@ -42,11 +42,33 @@ static bool is_material(wgf_material_t material)
     return wgf_gfx_priv_material_get(material) != NULL;
 }
 
-/* A model let go of: its mesh and its own materials. */
+static void (*animation_free)(struct wgf_gfx_priv_animation_t *animation); /* the animation part's */
+
+void wgf_gfx_priv_model_set_animation_free(void (*free_animation)(struct wgf_gfx_priv_animation_t *animation))
+{
+    animation_free = free_animation;
+}
+
+void wgf_gfx_priv_model_tree_free(wgf_gfx_priv_model_tree_t *tree)
+{
+    if (tree == NULL) return;
+    free(tree->nodes);
+    free(tree->joint_serial);
+    free(tree->joint_base);
+    free(tree->skin_lo);
+    free(tree->skin_hi);
+    free(tree);
+}
+
+/* A model let go of: its mesh, its own materials, and a file root's tree and player. */
 static void model_free(wgf_actor_t model, wgf_gfx_priv_actor_t *actor_ptr)
 {
     int slot;
     if (actor_ptr->as.model.file_root && file_part != NULL) file_part->forget(model);
+    wgf_gfx_priv_model_tree_free(actor_ptr->as.model.tree);
+    actor_ptr->as.model.tree = NULL;
+    if (actor_ptr->as.model.animation != NULL && animation_free != NULL) animation_free(actor_ptr->as.model.animation);
+    actor_ptr->as.model.animation = NULL;
     if (actor_ptr->as.model.mesh != 0) wgf_resource_release(actor_ptr->as.model.mesh);
     if (actor_ptr->as.model.materials != NULL) {
         for (slot = 0; slot < WGF_GFX_PRIV_MODEL_MATERIAL_SLOTS; slot++) {

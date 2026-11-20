@@ -8,6 +8,7 @@
 #include "draw/wgf_gfx_draw3d_priv.h"
 #include "material/wgf_gfx_material_priv.h"
 #include "mesh/wgf_gfx_mesh_priv.h"
+#include "mesh/wgf_gfx_mesh_record_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "stage/wgf_gfx_environment_priv.h"
 #include "stage/wgf_gfx_model_priv.h"
@@ -29,14 +30,22 @@
 #endif
 #include "shaders/wgf_gfx_model.glsl.h"
 
-/* Stages: libwgt's scene, trimmed to what milestone 2 has so far (no skinning, picking,
- * sprites, or particles: their steps bring them). A draw walks the stage's tree as it is
+/* Stages: libwgt's scene, without its picking. A draw walks the stage's tree as it is
  * now -- its lights (the first 4 that cast shadows each given a slot of the frame's shadow
  * map), then its models, each part of a model's mesh an item: placed, culled against the
  * camera's view (a caster out of view kept for the shadow pass alone when its shadow
  * reaches the view), given its lights; the opaque ones sorted to bring alike ones together,
  * the see-through ones back to front -- and records the items, as a command of the frame's
  * (render/wgf_gfx_render_commands.c).
+ *
+ * Skinning, libwgt's (wgrender-c's joint texture): a skinned part of a file's node is placed
+ * by its file's root and posed on the GPU by its skin's joints, whose matrices -- each joint
+ * actor's world taken into the root's space, times its inverse bind matrix -- are written
+ * once a frame for each root's skin the first time one of its parts is drawn, all of the
+ * frame's in one RGBA32F texture uploaded as the frame flushes, the part's record saying
+ * where its skin's begin; so a hundred robots of one file at a hundred poses are one upload
+ * and, a part at a time, one instanced draw. A skinned part is culled by the box its joints
+ * bound (libwgt's joint bounds).
  *
  * Instancing, libwgt's (wgrender's phase 2), with no API: each item's placement, its
  * normals' matrix, its tint, and whether it mirrors are its record, numbered in drawing order in an
@@ -92,6 +101,10 @@ static struct {
 #define INSTANCES_PER_ROW 128
 #define INSTANCE_TEXTURE_WIDTH (INSTANCES_PER_ROW * INSTANCE_TEXELS)
 #define INSTANCE_FLOATS (INSTANCE_TEXELS * 4)
+#define JOINT_TEXELS 3 /* a joint matrix's rows 0..2 */
+#define JOINTS_PER_ROW 256
+#define JOINT_TEXTURE_WIDTH (JOINTS_PER_ROW * JOINT_TEXELS)
+#define JOINT_FLOATS (JOINT_TEXELS * 4)
 
 static wgf_gfx_priv_environment_hooks_t environment_hooks; /* the environment part's, once installed */
 static wgf_gfx_priv_particle_hooks_t particle_hooks;       /* the particles part's, once installed */
@@ -134,6 +147,9 @@ static bool grow(void **items, int *capacity, int needed, size_t size)
 static void end_frame(void)
 {
     frame.item_count = frame.draw_count = frame.light_count = 0;
+    frame.joint_count = 0;
+    frame.joints_written = false;
+    frame.serial = frame.serial + 1u > 0u ? frame.serial + 1u : 1u; /* 0 is no frame's: a tree's joints never placed */
     frame.shadowed = -1;
     frame.instances_written = false;
     frame.last_draw_calls = frame.draw_calls;
@@ -156,16 +172,22 @@ static void stop(void)
     free(sorting.moved);
     memset(&sorting, 0, sizeof(sorting));
     free(frame.instances);
+    free(frame.joints);
+    if (frame.joint_image.id != SG_INVALID_ID) {
+        sg_destroy_view(frame.joint_view);
+        sg_destroy_image(frame.joint_image);
+    }
     if (frame.instance_image.id != SG_INVALID_ID) { /* sokol_gfx is still up, as below */
         sg_destroy_view(frame.instance_view);
         sg_destroy_image(frame.instance_image);
         sg_destroy_sampler(frame.instance_sampler);
     }
     if (frame.ready) { /* sokol_gfx is still up: gfx stops its parts first */
-        for (i = 0; i < 8; i++) {
+        for (i = 0; i < 16; i++) {
             if (frame.pipelines[i].id != SG_INVALID_ID) sg_destroy_pipeline(frame.pipelines[i]);
         }
         sg_destroy_shader(frame.shader);
+        sg_destroy_shader(frame.skinned_shader);
         sg_destroy_view(frame.white_view);
         sg_destroy_view(frame.flat_normal_view);
         sg_destroy_image(frame.white_image);
@@ -503,7 +525,7 @@ typedef struct group_key_t {
     wgf_material_t material;
     wgf_mesh_t mesh;
     int primitive;
-    bool blended, double_sided, mirrored, receiving, shadow_only;
+    bool blended, double_sided, mirrored, skinned, receiving, shadow_only;
     int light_count, lights[WGF_GFX_PRIV_MAX_DRAW_LIGHTS];
 } group_key_t;
 
@@ -518,6 +540,7 @@ static void item_key(const item_t *item, group_key_t *key)
     key->blended = item->blended;
     key->double_sided = material != NULL && material->double_sided;
     key->mirrored = item->mirrored;
+    key->skinned = item->skinned;
     key->receiving = item->receiving;
     key->shadow_only = item->shadow_only;
     key->light_count = item->light_count;
@@ -547,6 +570,70 @@ static uint64_t key_hash(const group_key_t *key)
     return h;
 }
 
+/* The joint matrices of skin `skin` of the file root `root` for this frame (placed by
+ * `root_world`): written among the frame's the first time the frame asks, each joint's world
+ * matrix taken back into the root's space times its inverse bind matrix (a joint not made, or
+ * destroyed, the identity), and the box around the skin's posed vertices, in the root's space
+ * (libwgt's joint bounds: each weighting joint's bind place moved by its matrix, its reach
+ * scaled by its longest axis). Its first matrix into `base`; false when there is none (the
+ * root has no tree, or no room). */
+static bool place_skin(wgf_actor_t root, int skin, wgf_mat4_t *root_world, int *base, wgf_vec3_t *lo, wgf_vec3_t *hi)
+{
+    wgf_gfx_priv_actor_t *root_ptr = wgf_gfx_priv_actor_of_silently(root);
+    wgf_gfx_priv_model_tree_t *tree =
+        root_ptr != NULL && root_ptr->type == WGF_ACTOR_KIND_MODEL ? root_ptr->as.model.tree : NULL;
+    const wgf_gfx_priv_mesh_record_t *record = tree != NULL ? wgf_gfx_priv_mesh_record(root_ptr->as.model.mesh) : NULL;
+    const wgf_gfx_priv_mesh_skin_t *sk;
+    wgf_mat4_t to_root;
+    bool any = false;
+    int j;
+    if (record == NULL || skin < 0 || skin >= tree->skin_count || skin >= record->skin_count) return false;
+    *root_world = wgf_gfx_priv_actor_get_world_matrix(root);
+    if (tree->joint_serial[skin] == frame.serial) {
+        *base = tree->joint_base[skin];
+        *lo = tree->skin_lo[skin];
+        *hi = tree->skin_hi[skin];
+        return *base >= 0;
+    }
+    tree->joint_serial[skin] = frame.serial;
+    tree->joint_base[skin] = -1;
+    sk = &record->skins[skin];
+    if (sk->joint_count == 0 || !grow((void **)&frame.joints, &frame.joint_capacity,
+                                      frame.joint_count + sk->joint_count, sizeof(float) * JOINT_FLOATS)) {
+        return false;
+    }
+    to_root = wgf_mat4_invert(*root_world);
+    for (j = 0; j < sk->joint_count; j++) {
+        const int node = sk->joints[j];
+        const wgf_actor_t joint = node >= 0 && node < tree->node_count ? tree->nodes[node] : 0;
+        float *out = &frame.joints[(size_t)(frame.joint_count + j) * JOINT_FLOATS];
+        wgf_mat4_t m = wgf_mat4_identity();
+        int row, col;
+        if (joint != 0 && wgf_gfx_priv_actor_of_silently(joint) != NULL) {
+            m = wgf_mat4_mul(wgf_mat4_mul(to_root, wgf_gfx_priv_actor_get_world_matrix(joint)), sk->inverse_bind[j]);
+        }
+        for (row = 0; row < 3; row++) {
+            for (col = 0; col < 4; col++) out[row * 4 + col] = m.m[col * 4 + row];
+        }
+        if (sk->radii[j] >= 0.0f) {
+            const wgf_vec3_t center = wgf_mat4_transform_point(m, sk->centers[j]);
+            const wgf_vec3_t scale = wgf_mat4_get_scale(m);
+            const float r = sk->radii[j] * fmaxf(scale.x, fmaxf(scale.y, scale.z));
+            const wgf_vec3_t a = wgf_vec3_sub(center, wgf_vec3_make(r, r, r));
+            const wgf_vec3_t b = wgf_vec3_add(center, wgf_vec3_make(r, r, r));
+            *lo = any ? wgf_vec3_min(*lo, a) : a;
+            *hi = any ? wgf_vec3_max(*hi, b) : b;
+            any = true;
+        }
+    }
+    if (!any) *lo = *hi = wgf_vec3_make(0.0f, 0.0f, 0.0f); /* it weights nothing */
+    tree->joint_base[skin] = *base = frame.joint_count;
+    tree->skin_lo[skin] = *lo;
+    tree->skin_hi[skin] = *hi;
+    frame.joint_count += sk->joint_count;
+    return true;
+}
+
 static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *world, void *user)
 {
     const walk_models_t *w = (const walk_models_t *)user;
@@ -554,9 +641,10 @@ static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
     wgf_mesh_t mesh = actor_ptr->type == WGF_ACTOR_KIND_MODEL ? actor_ptr->as.model.mesh : 0;
     wgf_material_t forced = 0; /* the placeholder's, for a failed mesh */
     wgf_vec3_t lo, hi, box_lo, box_hi;
+    wgf_mat4_t skin_world = wgf_mat4_identity();
     float tint[4];
-    int count = 0, p;
-    bool shadow_only = false;
+    int count = 0, p, joint_base = -1;
+    bool shadow_only = false, skinned = false, has_skin = false;
     if (mesh == 0) return;
     if (wgf_resource_get_status(mesh) == WGF_RESOURCE_STATUS_FAILED) {
         if (!wgf_gfx_priv_model_placeholder(&mesh, &forced)) return; /* the file part's: only a file's mesh fails */
@@ -569,6 +657,23 @@ static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
         count = wgf_gfx_priv_mesh_get_primitive_count(mesh);
     }
     place_box(world, lo, hi, &box_lo, &box_hi);
+    if (forced == 0 && actor_ptr->as.model.skin_root != 0) { /* a file's node showing a skinned mesh */
+        wgf_vec3_t skin_lo, skin_hi;
+        for (p = 0; p < count && !has_skin; p++) {
+            wgf_gfx_priv_mesh_primitive_t primitive;
+            has_skin = wgf_gfx_priv_mesh_get_primitive(mesh, p, &primitive) && primitive.skin.id != SG_INVALID_ID;
+        }
+        skinned = has_skin && place_skin(actor_ptr->as.model.skin_root, actor_ptr->as.model.skin, &skin_world,
+                                         &joint_base, &skin_lo, &skin_hi);
+        actor_ptr = wgf_gfx_priv_actor_of_silently(actor); /* nothing was made, but read it again all the same */
+        if (actor_ptr == NULL) return;
+        if (skinned) { /* its skinned parts' box, posed, in the stage; with its static parts' */
+            wgf_vec3_t a, b;
+            place_box(&skin_world, skin_lo, skin_hi, &a, &b);
+            box_lo = wgf_vec3_min(box_lo, a);
+            box_hi = wgf_vec3_max(box_hi, b);
+        }
+    }
     if (w->culling && outside(w->planes, box_lo, box_hi)) {
         if (actor_ptr->as.model.shadow_off || draw->shadow_count == 0 ||
             !shadow_reaches_view(draw, w->planes, box_lo, box_hi)) {
@@ -582,17 +687,22 @@ static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
         const wgf_gfx_priv_material_t *material;
         item_t *item;
         if (!wgf_gfx_priv_mesh_get_primitive(mesh, p, &primitive)) continue;
+        if (has_skin && primitive.skin.id != SG_INVALID_ID && !skinned) continue; /* its joints had no room */
         if (!grow((void **)&frame.items, &frame.item_capacity, frame.item_count + 1, sizeof(item_t))) return;
         item = &frame.items[frame.item_count];
         item->material = forced != 0 ? forced : wgf_model_get_material(actor, primitive.material);
         material = wgf_gfx_priv_material_get(item->material);
         if (material == NULL) continue; /* a slot with none draws nothing */
-        item->world = *world;
+        /* a skinned part is placed by its root, posed by its joints (glTF ignores its node's own
+           placement); a static one by its node */
+        item->skinned = skinned && primitive.skin.id != SG_INVALID_ID;
+        item->joint_base = item->skinned ? joint_base : 0;
+        item->world = item->skinned ? skin_world : *world;
         item->particles = -1;
         item->sprite = item->sprite_batch = item->text = -1;
         item->sprite_batches = 0;
         item->additive = false;
-        item->mirrored = wgf_mat4_determinant(*world) < 0.0f;
+        item->mirrored = wgf_mat4_determinant(item->world) < 0.0f;
         item->mesh = mesh;
         item->primitive = p;
         memcpy(item->tint, tint, sizeof(tint));
@@ -888,6 +998,7 @@ static void draw_through(wgf_actor_t stage, wgf_actor_t camera)
         return;
     }
     if (!grow((void **)&frame.draws, &frame.draw_capacity, frame.draw_count + 1, sizeof(stage_draw_t))) return;
+    if (frame.serial == 0) frame.serial = 1; /* the first frame's: 0 is none's */
     draw = &frame.draws[frame.draw_count];
     memset(draw, 0, sizeof(*draw));
     draw->shapes = -1;
@@ -1049,13 +1160,27 @@ static void ensure_ready(void)
 
 /* The pipeline for see-through or not, double sided or not, and a placement that
  * mirrors (its triangles' winding turned), made the first time it's needed. */
-static sg_pipeline pipeline(bool blended, bool double_sided, bool mirrored)
+static sg_pipeline pipeline(bool blended, bool double_sided, bool mirrored, bool skinned)
 {
-    const int key = (blended ? 1 : 0) | (double_sided ? 2 : 0) | (mirrored ? 4 : 0);
+    const int key = (blended ? 1 : 0) | (double_sided ? 2 : 0) | (mirrored ? 4 : 0) | (skinned ? 8 : 0);
     if (frame.pipelines[key].id == SG_INVALID_ID) {
         sg_pipeline_desc desc;
         memset(&desc, 0, sizeof(desc));
-        desc.shader = frame.shader;
+        if (skinned && frame.skinned_shader.id == SG_INVALID_ID) {
+            frame.skinned_shader = sg_make_shader(model_skinned_shader_desc(shader_backend()));
+        }
+        desc.shader = skinned ? frame.skinned_shader : frame.shader;
+        /* the skinned shader's attributes are numbered as the static one's, its joints and weights
+           after them, from the primitive's second buffer */
+        if (skinned) {
+            desc.layout.buffers[1].stride = (int)(sizeof(float) * WGF_GFX_PRIV_MESH_SKIN_FLOATS);
+            desc.layout.attrs[ATTR_model_skinned_joints].buffer_index = 1;
+            desc.layout.attrs[ATTR_model_skinned_joints].format = SG_VERTEXFORMAT_FLOAT4;
+            desc.layout.attrs[ATTR_model_skinned_joints].offset = 0;
+            desc.layout.attrs[ATTR_model_skinned_weights].buffer_index = 1;
+            desc.layout.attrs[ATTR_model_skinned_weights].format = SG_VERTEXFORMAT_FLOAT4;
+            desc.layout.attrs[ATTR_model_skinned_weights].offset = 16;
+        }
         desc.layout.buffers[0].stride = (int)(sizeof(float) * WGF_GFX_PRIV_MESH_VERTEX_FLOATS);
         desc.layout.attrs[ATTR_model_position].format = SG_VERTEXFORMAT_FLOAT3;
         desc.layout.attrs[ATTR_model_position].offset = 0;
@@ -1135,10 +1260,16 @@ static void draw_run(const stage_draw_t *draw, int first, int count, bool lit, c
         return;
     }
     if (material == NULL || !wgf_gfx_priv_mesh_get_primitive(item->mesh, item->primitive, &primitive)) return;
-    sg_apply_pipeline(pipeline(item->blended, material->double_sided, item->mirrored != draw->flipped));
+    if (item->skinned && (!frame.joints_written || primitive.skin.id == SG_INVALID_ID)) return; /* no room */
+    sg_apply_pipeline(pipeline(item->blended, material->double_sided, item->mirrored != draw->flipped, item->skinned));
     memset(&bindings, 0, sizeof(bindings));
     bindings.vertex_buffers[0] = primitive.vertices;
     bindings.index_buffer = primitive.indices;
+    if (item->skinned) {
+        bindings.vertex_buffers[1] = primitive.skin;
+        bindings.views[VIEW_joint_tex] = frame.joint_view;
+        bindings.samplers[SMP_joint_smp] = frame.instance_sampler;
+    }
     for (t = 0; t < WGF_GFX_PRIV_MATERIAL_TEXTURE_COUNT; t++) {
         bindings.views[t] = texture_view(&material->textures[t],
                                          t == WGF_GFX_PRIV_MATERIAL_TEXTURE_NORMAL ? frame.flat_normal_view
@@ -1317,7 +1448,7 @@ static void write_instance(float *r, const item_t *item)
         }
     }
     memcpy(&r[24], item->tint, sizeof(item->tint)); /* linear already */
-    r[28] = 0.0f;
+    r[28] = item->skinned ? (float)item->joint_base : 0.0f; /* its skin's first joint matrix */
     r[29] = item->mirrored ? -1.0f : 1.0f;
     r[30] = r[31] = 0.0f;
 }
@@ -1358,6 +1489,59 @@ static bool ensure_instance_texture(int rows)
         frame.instance_sampler = sg_make_sampler(&sampler);
     }
     return true;
+}
+
+/* The frame's joint matrices up, before its passes: whole rows, the tail unwritten, into a
+ * texture grown by doubling up to the GPU's limit. When they don't fit no skinned part is
+ * drawn, said once. */
+static void flush_joints(void)
+{
+    const int rows = (frame.joint_count + JOINTS_PER_ROW - 1) / JOINTS_PER_ROW;
+    const int max_rows = sg_query_limits().max_image_size_2d;
+    sg_write_image_desc write;
+    if (frame.joint_count == 0) return;
+    if (rows > max_rows || !grow((void **)&frame.joints, &frame.joint_capacity, rows * JOINTS_PER_ROW,
+                                 sizeof(float) * JOINT_FLOATS)) {
+        if (!frame.joint_overflow_logged) {
+            wgf_log_error("wgf_gfx_stage: %d joint matrices in a frame, more than the joint texture holds; no skinned "
+                          "part drawn", frame.joint_count);
+            frame.joint_overflow_logged = true;
+        }
+        return;
+    }
+    if (rows > frame.joint_rows) {
+        sg_image_desc desc;
+        sg_view_desc view;
+        int height = frame.joint_rows > 0 ? frame.joint_rows : 4;
+        while (height < rows) height *= 2;
+        if (height > max_rows) height = max_rows;
+        if (frame.joint_image.id != SG_INVALID_ID) {
+            sg_destroy_view(frame.joint_view);
+            sg_destroy_image(frame.joint_image);
+        }
+        memset(&desc, 0, sizeof(desc));
+        desc.width = JOINT_TEXTURE_WIDTH;
+        desc.height = height;
+        desc.pixel_format = SG_PIXELFORMAT_RGBA32F;
+        desc.usage.write_transient = true;
+        desc.label = "wgf-joints";
+        frame.joint_image = sg_make_image(&desc);
+        memset(&view, 0, sizeof(view));
+        view.texture.image = frame.joint_image;
+        frame.joint_view = sg_make_view(&view);
+        frame.joint_rows = height;
+    }
+    memset(&write, 0, sizeof(write));
+    write.src.data.ptr = frame.joints;
+    write.src.data.size = sizeof(float) * JOINT_FLOATS * (size_t)(rows * JOINTS_PER_ROW);
+    write.src.bytes_per_row = (int)sizeof(float) * 4 * JOINT_TEXTURE_WIDTH;
+    write.src.bytes_per_slice = (int)sizeof(float) * 4 * JOINT_TEXTURE_WIDTH * rows;
+    write.dst.image = frame.joint_image;
+    write.size.width = JOINT_TEXTURE_WIDTH;
+    write.size.height = rows;
+    write.size.num_slices = 1;
+    sg_write_image_transient(&write);
+    frame.joints_written = true;
 }
 
 /* The part's flush, before the frame's passes (the shadow part's among them): each model
@@ -1409,6 +1593,7 @@ static void flush(void)
     write.size.num_slices = 1;
     sg_write_image_transient(&write);
     frame.instances_written = true;
+    flush_joints(); /* the records' sampler is theirs too */
 }
 
 /* ------------------------------------------------- the shadow pass's view ---- */
@@ -1449,7 +1634,9 @@ bool wgf_gfx_priv_stage3d_caster(int index, wgf_vec3_t *lo, wgf_vec3_t *hi, wgf_
     *lo = item->box_lo;
     *hi = item->box_hi;
     *material = item->material;
-    return wgf_gfx_priv_mesh_get_primitive(item->mesh, item->primitive, primitive);
+    if (!wgf_gfx_priv_mesh_get_primitive(item->mesh, item->primitive, primitive)) return false;
+    if (!item->skinned) primitive->skin.id = SG_INVALID_ID; /* drawn as its node places it */
+    return !item->skinned || frame.joints_written;
 }
 
 int wgf_gfx_priv_stage3d_record(int item)
@@ -1460,7 +1647,15 @@ int wgf_gfx_priv_stage3d_record(int item)
 bool wgf_gfx_priv_stage3d_same_caster(int a, int b)
 {
     const item_t *x = &frame.items[a], *y = &frame.items[b];
-    return x->mesh == y->mesh && x->primitive == y->primitive && x->material == y->material;
+    return x->mesh == y->mesh && x->primitive == y->primitive && x->material == y->material &&
+           x->skinned == y->skinned;
+}
+
+bool wgf_gfx_priv_stage3d_joints(sg_view *view, sg_sampler *sampler)
+{
+    *view = frame.joint_view;
+    *sampler = frame.instance_sampler;
+    return frame.joints_written;
 }
 
 bool wgf_gfx_priv_stage3d_instances(sg_view *view, sg_sampler *sampler)
@@ -1486,4 +1681,29 @@ int wgf_gfx_priv_stage3d_get_item_count(void)
 int wgf_gfx_priv_stage3d_get_item_lights(int item)
 {
     return item >= 0 && item < frame.item_count ? frame.items[item].light_count : -1;
+}
+
+bool wgf_gfx_priv_stage3d_get_item_world(int item, wgf_mat4_t *world)
+{
+    if (item < 0 || item >= frame.item_count) return false;
+    *world = frame.items[item].world;
+    return true;
+}
+
+int wgf_gfx_priv_stage3d_get_joint_count(void)
+{
+    return frame.joint_count;
+}
+
+bool wgf_gfx_priv_stage3d_get_joint(int index, wgf_mat4_t *joint)
+{
+    const float *r;
+    int row, col;
+    if (index < 0 || index >= frame.joint_count) return false;
+    r = &frame.joints[(size_t)index * JOINT_FLOATS];
+    *joint = wgf_mat4_identity();
+    for (row = 0; row < 3; row++) {
+        for (col = 0; col < 4; col++) joint->m[col * 4 + row] = r[row * 4 + col];
+    }
+    return true;
 }

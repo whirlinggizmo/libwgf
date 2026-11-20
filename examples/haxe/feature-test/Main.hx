@@ -28,6 +28,7 @@ class Main {
 	static var camera:Camera2d;
 	static var tiles:Texture;
 	static var car:Model = 0; // a section type starts as none, as a handle does
+	static var robot:Model = 0; // a skinned, animated glTF file's root
 	static var font:Font;
 	static var click:Sound;
 	static var music:Sound;
@@ -413,6 +414,13 @@ class Main {
 		final file = Mesh.create("models/toy_car.glb");
 		car = Model.create(file);
 		expect(!file.isNone() && !car.isNone() && Resource.release(file), "a glTF file's mesh, a model of it");
+		final robotFile = Mesh.create("models/robot.glb");
+		robot = Model.create(robotFile);
+		Resource.release(robotFile);
+		expect(robot.getAnimationCount() == 0 && robot.findAnimation("Robot_Dance") == -1 && robot.getAnimation() == -1
+			&& robot.getAnimationState() == PlayState.STOPPED, "no animations while a skinned file loads");
+		expect(robot.playAnimation(0, 0) && robot.getAnimationState() == PlayState.PLAYING,
+			"an animation played while it loads");
 		final material = cube.getMaterial(0);
 		expect(material.getShading() == MaterialShading.PBR && material.getFloat("metallic") == 0, "the mesh's material");
 		final own = Material.create(MaterialShading.UNLIT);
@@ -872,7 +880,8 @@ class Main {
 			Behavior.tag("Spark");
 			expect(World.dump().indexOf("wgf-scene 2") == 0, "the world dumped");
 		}
-		if (frames >= 30 && instantiated && stage > 3 && !reported)
+		if (frames >= 30 && instantiated && stage > 3 && !reported
+			&& Resource.getStatus(robot.getMesh()) != ResourceStatus.PENDING)
 			finish();
 		if (frames > 600 && !reported) {
 			expect(false, 'still waiting at frame 600 (scene ${Resource.getStatus(scene)}, storage stage $stage)');
@@ -986,6 +995,24 @@ class Main {
 		}
 	}
 
+	/** A skinned glTF file's animations, played on its root, once it has loaded. **/
+	static function skinning():Void {
+		expect(Resource.getStatus(robot.getMesh()) == ResourceStatus.READY && robot.getAnimationCount() == 14,
+			"a skinned file loaded: its 14 animations");
+		final dance = robot.findAnimation("Robot_Dance"), wave = robot.findAnimation("Robot_Wave");
+		expect(dance >= 0 && robot.getAnimationName(dance) == "Robot_Dance" && robot.findAnimation("nope") == -1,
+			"animations found by name");
+		expect(near(robot.getAnimationDuration(dance), 3.3333333), "an animation's length");
+		expect(robot.playAnimation(dance, 0) && robot.getAnimation() == dance && robot.getAnimationWeight() == 1,
+			"played, cut to");
+		expect(robot.setAnimationTime(1.5) && near(robot.getAnimationTime(), 1.5), "its time set");
+		expect(robot.setAnimationSpeed(0.5) && robot.getAnimationSpeed() == 0.5, "its speed");
+		expect(robot.setAnimationLoop(false) && !robot.isAnimationLoop() && robot.setAnimationLoop(true), "looping");
+		expect(robot.playAnimation(wave, 0.25) && robot.getAnimationWeight() == 0, "crossfaded into another");
+		expect(robot.pauseAnimation() && robot.getAnimationState() == PlayState.PAUSED && robot.resumeAnimation()
+			&& robot.stopAnimation() && robot.getAnimationState() == PlayState.STOPPED, "paused, resumed, stopped");
+	}
+
 	static function finish():Void {
 		reported = true;
 		expect(Rock.made == 3, 'the scene\'s rocks given their behaviors (${Rock.made})');
@@ -994,6 +1021,7 @@ class Main {
 		expect((tiles : Handle).getKindName() == "gfx.texture", "its kind");
 		expect(Resource.getStatus(car.getMesh()) == ResourceStatus.READY && !car.find("toy_car/body/wheel_fl").isNone(),
 			"a glTF file loaded, its nodes under its model");
+		skinning();
 		expect(music.getDuration() >= 0 && click.getDuration() > 0, "the sounds' lengths");
 		ensure.getStatus();
 		ensure.getPath();

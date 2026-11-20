@@ -16,10 +16,15 @@
 
 enum { WGF_GFX_PRIV_MESH_VERTEX_FLOATS = 18 };
 
+/* A skinned primitive's second buffer: a vertex's 4 joints (as floats, into its skin's
+ * joints) and their 4 weights, summing to 1. */
+enum { WGF_GFX_PRIV_MESH_SKIN_FLOATS = 8 };
+
 /* What drawing a primitive takes: its buffers, uploaded the first time they're asked
  * for, how many indices to draw, its material slot, and its box in the mesh's space. */
 typedef struct wgf_gfx_priv_mesh_primitive_t {
     sg_buffer vertices, indices;
+    sg_buffer skin; /* a skinned one's joints and weights; SG_INVALID_ID for one with none */
     int index_count;
     int material;
     wgf_vec3_t bounds_min, bounds_max;

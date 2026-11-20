@@ -46,8 +46,10 @@ void wgf_gfx_priv_mesh_free_data(mesh_t *mesh_ptr)
         primitive_t *primitive = &mesh_ptr->primitives[i];
         if (primitive->vertex_buffer.id != SG_INVALID_ID) sg_destroy_buffer(primitive->vertex_buffer);
         if (primitive->index_buffer.id != SG_INVALID_ID) sg_destroy_buffer(primitive->index_buffer);
+        if (primitive->skin_buffer.id != SG_INVALID_ID) sg_destroy_buffer(primitive->skin_buffer);
         free(primitive->vertices);
         free(primitive->indices);
+        free(primitive->skin);
     }
     free(mesh_ptr->primitives);
     for (i = 0; i < mesh_ptr->material_count; i++) wgf_resource_release(mesh_ptr->materials[i]);
@@ -61,6 +63,30 @@ void wgf_gfx_priv_mesh_free_data(mesh_t *mesh_ptr)
     for (i = 0; i < mesh_ptr->node_count; i++) free(mesh_ptr->nodes[i].name);
     free(mesh_ptr->nodes);
     free(mesh_ptr->lights);
+    for (i = 0; i < mesh_ptr->skin_count; i++) {
+        const wgf_gfx_priv_mesh_skin_t *skin = &mesh_ptr->skins[i];
+        free(skin->joints);
+        free(skin->inverse_bind);
+        free(skin->centers);
+        free(skin->radii);
+    }
+    free(mesh_ptr->skins);
+    for (i = 0; i < mesh_ptr->animation_count; i++) {
+        wgf_gfx_priv_mesh_animation_t *animation = &mesh_ptr->animations[i];
+        int c;
+        for (c = 0; c < animation->channel_count; c++) {
+            free(animation->channels[c].times);
+            free(animation->channels[c].values);
+        }
+        free(animation->channels);
+        free(animation->name);
+    }
+    free(mesh_ptr->animations);
+    free(mesh_ptr->animated);
+    mesh_ptr->skins = NULL;
+    mesh_ptr->animations = NULL;
+    mesh_ptr->animated = NULL;
+    mesh_ptr->skin_count = mesh_ptr->animation_count = 0;
     mesh_ptr->primitives = NULL;
     mesh_ptr->materials = NULL;
     mesh_ptr->nodes = NULL;
@@ -546,8 +572,16 @@ bool wgf_gfx_priv_mesh_upload(primitive_t *primitive)
     desc.data.ptr = primitive->indices;
     desc.data.size = sizeof(uint32_t) * (size_t)primitive->index_count;
     primitive->index_buffer = sg_make_buffer(&desc);
+    if (primitive->skin != NULL) {
+        memset(&desc, 0, sizeof(desc));
+        desc.usage.vertex_buffer = true;
+        desc.data.ptr = primitive->skin;
+        desc.data.size = sizeof(float) * WGF_GFX_PRIV_MESH_SKIN_FLOATS * (size_t)primitive->vertex_count;
+        primitive->skin_buffer = sg_make_buffer(&desc);
+    }
     if (sg_query_buffer_state(primitive->vertex_buffer) != SG_RESOURCESTATE_VALID ||
-        sg_query_buffer_state(primitive->index_buffer) != SG_RESOURCESTATE_VALID) {
+        sg_query_buffer_state(primitive->index_buffer) != SG_RESOURCESTATE_VALID ||
+        (primitive->skin != NULL && sg_query_buffer_state(primitive->skin_buffer) != SG_RESOURCESTATE_VALID)) {
         wgf_log_error("wgf_gfx_mesh: the GPU didn't take a mesh's buffers");
         return false;
     }
@@ -565,6 +599,7 @@ bool wgf_gfx_priv_mesh_get_primitive(wgf_mesh_t mesh, int index, wgf_gfx_priv_me
     if (!wgf_gfx_priv_mesh_upload(p)) return false;
     primitive->vertices = p->vertex_buffer;
     primitive->indices = p->index_buffer;
+    primitive->skin = p->skin_buffer;
     primitive->index_count = p->index_count;
     primitive->material = p->material;
     primitive->bounds_min = p->bounds_min;

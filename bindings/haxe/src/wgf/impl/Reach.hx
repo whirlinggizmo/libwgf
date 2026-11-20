@@ -563,18 +563,35 @@ class Reach {
 		"wgf_mesh_get_material",
 		"wgf_mesh_get_material_count",
 		"wgf_model_create",
+		"wgf_model_find_animation",
+		"wgf_model_get_animation",
+		"wgf_model_get_animation_count",
+		"wgf_model_get_animation_duration",
+		"wgf_model_get_animation_name",
+		"wgf_model_get_animation_speed",
+		"wgf_model_get_animation_state",
+		"wgf_model_get_animation_time",
+		"wgf_model_get_animation_weight",
 		"wgf_model_get_bounds_max",
 		"wgf_model_get_bounds_min",
 		"wgf_model_get_material",
 		"wgf_model_get_mesh",
 		"wgf_model_get_tint",
+		"wgf_model_is_animation_loop",
 		"wgf_model_is_shadow_casting",
 		"wgf_model_is_shadow_receiving",
+		"wgf_model_pause_animation",
+		"wgf_model_play_animation",
+		"wgf_model_resume_animation",
+		"wgf_model_set_animation_loop",
+		"wgf_model_set_animation_speed",
+		"wgf_model_set_animation_time",
 		"wgf_model_set_material",
 		"wgf_model_set_mesh",
 		"wgf_model_set_shadow_casting",
 		"wgf_model_set_shadow_receiving",
 		"wgf_model_set_tint",
+		"wgf_model_stop_animation",
 		"wgf_motion_get_damping",
 		"wgf_motion_get_max_speed",
 		"wgf_motion_get_spin",
@@ -988,7 +1005,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...979) 0];
+	static final counts:Array<Int> = [for (_ in 0...996) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

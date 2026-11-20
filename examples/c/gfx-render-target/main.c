@@ -36,7 +36,7 @@
  * Escape quits, where quitting means anything.
  *
  * libwgt's render target example (wgrender's), but for the walker: libwgt's is a skinned
- * character, playing its animation, and skinning is milestone 3's, so the toy car drives
+ * character, playing its animation (gfx-skinning's robots now), and the toy car drives
  * the circle in its place. */
 
 #define CAR_PATH "models/toy_car.glb"

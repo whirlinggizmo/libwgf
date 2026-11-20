@@ -31,6 +31,8 @@ typedef struct wgf_gfx_priv_stage3d_item_t {
     int text;        /* a text's: its index into the draw's texts until recorded, then its side layer; -1 none */
     int record;      /* a model part's, in the instance texture: model parts numbered in drawing order */
     bool mirrored;   /* its placement turns its triangles' winding (a negative determinant) */
+    bool skinned;    /* posed by its skin's joints (`world` its file root's placement) */
+    int joint_base;  /* a skinned one's first joint matrix among the frame's */
     float depth;     /* along the camera's view, for the sort */
     int order;       /* as found, so equal depths keep it */
     uint64_t group;  /* its group key's hash: alike opaque ones sorted together */
@@ -81,7 +83,8 @@ typedef struct wgf_gfx_priv_stage3d_frame_t {
     /* the GPU's, made at the first replay */
     bool ready;
     sg_shader shader;
-    sg_pipeline pipelines[8]; /* by blended, double sided, mirrored */
+    sg_pipeline pipelines[16]; /* by blended, double sided, mirrored, skinned */
+    sg_shader skinned_shader;
     sg_image white_image, flat_normal_image;
     sg_view white_view, flat_normal_view;
     sg_sampler sampler;
@@ -99,6 +102,16 @@ typedef struct wgf_gfx_priv_stage3d_frame_t {
     int instance_rows;
     bool instances_written;       /* this frame's are up */
     bool instance_overflow_logged;
+    /* the skins' joint matrices (wgf_gfx_instance.glsl's joint texture), 12 floats each, written
+       as a skin is first drawn in the frame, up as the frame flushes */
+    float *joints;
+    int joint_count, joint_capacity; /* matrices */
+    unsigned serial;                 /* the frame's number: which frame a tree's joints are of */
+    sg_image joint_image;
+    sg_view joint_view;
+    int joint_rows;
+    bool joints_written;
+    bool joint_overflow_logged;
     int draw_calls, last_draw_calls; /* for tests: the shading pass's draws */
 } wgf_gfx_priv_stage3d_frame_t;
 
