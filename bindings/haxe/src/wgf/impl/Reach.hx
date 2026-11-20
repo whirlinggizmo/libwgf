@@ -182,10 +182,13 @@ class Reach {
 		"wgf_camera3d_get_near",
 		"wgf_camera3d_get_ortho_height",
 		"wgf_camera3d_is_orthographic",
+		"wgf_camera3d_screen_to_direction",
+		"wgf_camera3d_screen_to_origin",
 		"wgf_camera3d_set_clip",
 		"wgf_camera3d_set_fov",
 		"wgf_camera3d_set_ortho_height",
 		"wgf_camera3d_set_orthographic",
+		"wgf_camera3d_world_to_screen",
 		"wgf_collide2d_circle_circle",
 		"wgf_collide2d_circle_polygon",
 		"wgf_collide2d_circle_rect",
@@ -524,9 +527,13 @@ class Reach {
 		"wgf_mesh_create_sphere",
 		"wgf_mesh_create_torus",
 		"wgf_mesh_create_triangles",
+		"wgf_mesh_get_bounds_max",
+		"wgf_mesh_get_bounds_min",
 		"wgf_mesh_get_material",
 		"wgf_mesh_get_material_count",
 		"wgf_model_create",
+		"wgf_model_get_bounds_max",
+		"wgf_model_get_bounds_min",
 		"wgf_model_get_material",
 		"wgf_model_get_mesh",
 		"wgf_model_get_tint",
@@ -695,7 +702,9 @@ class Reach {
 		"wgf_stage2d_draw",
 		"wgf_stage2d_find",
 		"wgf_stage2d_get_camera",
+		"wgf_stage2d_screen_to_world",
 		"wgf_stage2d_set_camera",
+		"wgf_stage2d_world_to_screen",
 		"wgf_stage3d_create",
 		"wgf_stage3d_draw",
 		"wgf_stage3d_draw_with",
@@ -907,7 +916,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...898) 0];
+	static final counts:Array<Int> = [for (_ in 0...907) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

@@ -69,4 +69,37 @@ import wgf.impl.Raw;
 	**/
 	public inline function getOrthoHeight():Float
 		return Raw.wgf_camera3d_get_ortho_height(this);
+
+	/**
+	    Between the world (its tree's root's space) and the screen's logical pixels, through the
+	    camera as it is now, filling the visible area as a stage draws it: where a point shows (x
+	    and y; z its depth, 0 at the near plane to 1 at the far, below 0 behind the camera: a
+	    name tag hidden), and the ray under a place on the screen, from the near plane (its origin)
+	    along a unit direction: picking, a click in the world. 0, 0, 0 for a handle that isn't a 3D
+	    camera.
+	**/
+	public inline function worldToScreen(x:Float, y:Float, z:Float, ?into:wgf.Vec3):wgf.Vec3
+		return Raw.wgf_camera3d_world_to_screen(this, x, y, z, into);
+
+	/**
+	    Between the world (its tree's root's space) and the screen's logical pixels, through the
+	    camera as it is now, filling the visible area as a stage draws it: where a point shows (x
+	    and y; z its depth, 0 at the near plane to 1 at the far, below 0 behind the camera: a
+	    name tag hidden), and the ray under a place on the screen, from the near plane (its origin)
+	    along a unit direction: picking, a click in the world. 0, 0, 0 for a handle that isn't a 3D
+	    camera.
+	**/
+	public inline function screenToOrigin(x:Float, y:Float, ?into:wgf.Vec3):wgf.Vec3
+		return Raw.wgf_camera3d_screen_to_origin(this, x, y, into);
+
+	/**
+	    Between the world (its tree's root's space) and the screen's logical pixels, through the
+	    camera as it is now, filling the visible area as a stage draws it: where a point shows (x
+	    and y; z its depth, 0 at the near plane to 1 at the far, below 0 behind the camera: a
+	    name tag hidden), and the ray under a place on the screen, from the near plane (its origin)
+	    along a unit direction: picking, a click in the world. 0, 0, 0 for a handle that isn't a 3D
+	    camera.
+	**/
+	public inline function screenToDirection(x:Float, y:Float, ?into:wgf.Vec3):wgf.Vec3
+		return Raw.wgf_camera3d_screen_to_direction(this, x, y, into);
 }

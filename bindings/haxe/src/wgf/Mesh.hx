@@ -82,4 +82,18 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 	**/
 	public inline function getMaterial(slot:Int):Material
 		return Raw.wgf_mesh_get_material(this, slot);
+
+	/**
+	    The box around the mesh in its own space, its least and greatest corner; 0, 0, 0 for
+	    both while it isn't READY, and for a handle that isn't a mesh.
+	**/
+	public inline function getBoundsMin(?into:wgf.Vec3):wgf.Vec3
+		return Raw.wgf_mesh_get_bounds_min(this, into);
+
+	/**
+	    The box around the mesh in its own space, its least and greatest corner; 0, 0, 0 for
+	    both while it isn't READY, and for a handle that isn't a mesh.
+	**/
+	public inline function getBoundsMax(?into:wgf.Vec3):wgf.Vec3
+		return Raw.wgf_mesh_get_bounds_max(this, into);
 }

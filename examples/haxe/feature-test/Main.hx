@@ -106,6 +106,10 @@ class Main {
 		final turning = Tween.turn(mover, 0, 1, 0, 0.5, Easing.BACK_OUT);
 		final growing = Tween.scale(mover, 2, 2, 2, 0.5, Easing.ELASTIC_OUT);
 		expect(moving.isAlive() && turning.isAlive() && growing.isAlive(), "an actor moved, turned, and scaled");
+		final box = Mesh.createCube(2, 4, 6), boxed:Model = Model.create(box);
+		expect(near(box.getBoundsMax().z, 3) && near(box.getBoundsMin().y, -2) && near(boxed.getBoundsMax().y, 2)
+			&& near(boxed.getBoundsMin().x, -1), "a mesh's and a model's bounds");
+		boxed.destroy(ActorDestroy.DESTROY_CHILDREN);
 		mover.destroy(ActorDestroy.DESTROY_CHILDREN);
 	}
 
@@ -438,6 +442,9 @@ class Main {
 			expect(camera3d.setOrthoHeight(6) && camera3d.getOrthoHeight() == 6 && camera3d.setOrthographic(true)
 				&& camera3d.isOrthographic() && camera3d.setOrthographic(false), "orthographic");
 			camera3d.setPosition(6, 4, 6);
+			final onScreen = camera3d.worldToScreen(0, 0, 0);
+			camera3d.screenToOrigin(onScreen.x, onScreen.y);
+			camera3d.screenToDirection(onScreen.x, onScreen.y);
 			expect(camera3d.lookAt(0, 0, 0, 0, 1, 0) && !camera3d.lookAt(6, 4, 6, 0, 1, 0), "aimed with lookAt");
 		}
 		if (frames == 2) meshes();
@@ -484,6 +491,8 @@ class Main {
 		camera = Camera2d.create();
 		expect(camera.setZoom(1.5) && near(camera.getZoom(), 1.5), "a camera's zoom");
 		expect(world.setCamera(camera) && (world.getCamera() : Actor) == camera, "a 2D stage's camera");
+		final shown = world.worldToScreen(10, 20), under = world.screenToWorld(shown.x, shown.y);
+		expect(near(under.x, 10) && near(under.y, 20), "a 2D stage's point on the screen and back");
 		final follower:Follow = Camera2d.create(), followed = Actor.create();
 		expect(follower.setTarget(followed) && follower.getTarget() == followed, "a camera following");
 		expect(follower.setSmoothing(4) && near(follower.getSmoothing(), 4) && follower.setDeadZone(10, 8)

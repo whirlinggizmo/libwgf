@@ -1272,6 +1272,33 @@ export declare const Camera3d: {
      * less.
      */
     readonly getOrthoHeight: typeof raw.wgf_camera3d_get_ortho_height;
+    /**
+     * Between the world (its tree's root's space) and the screen's logical pixels, through the
+     * camera as it is now, filling the visible area as a stage draws it: where a point shows (x
+     * and y; z its depth, 0 at the near plane to 1 at the far, below 0 behind the camera: a
+     * name tag hidden), and the ray under a place on the screen, from the near plane (its origin)
+     * along a unit direction: picking, a click in the world. 0, 0, 0 for a handle that isn't a 3D
+     * camera.
+     */
+    readonly worldToScreen: typeof raw.wgf_camera3d_world_to_screen;
+    /**
+     * Between the world (its tree's root's space) and the screen's logical pixels, through the
+     * camera as it is now, filling the visible area as a stage draws it: where a point shows (x
+     * and y; z its depth, 0 at the near plane to 1 at the far, below 0 behind the camera: a
+     * name tag hidden), and the ray under a place on the screen, from the near plane (its origin)
+     * along a unit direction: picking, a click in the world. 0, 0, 0 for a handle that isn't a 3D
+     * camera.
+     */
+    readonly screenToOrigin: typeof raw.wgf_camera3d_screen_to_origin;
+    /**
+     * Between the world (its tree's root's space) and the screen's logical pixels, through the
+     * camera as it is now, filling the visible area as a stage draws it: where a point shows (x
+     * and y; z its depth, 0 at the near plane to 1 at the far, below 0 behind the camera: a
+     * name tag hidden), and the ray under a place on the screen, from the near plane (its origin)
+     * along a unit direction: picking, a click in the world. 0, 0, 0 for a handle that isn't a 3D
+     * camera.
+     */
+    readonly screenToDirection: typeof raw.wgf_camera3d_screen_to_direction;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
@@ -3710,6 +3737,16 @@ export declare const Mesh: {
      * drawing the mesh with it. 0 for a slot it hasn't.
      */
     readonly getMaterial: typeof raw.wgf_mesh_get_material;
+    /**
+     * The box around the mesh in its own space, its least and greatest corner; 0, 0, 0 for
+     * both while it isn't READY, and for a handle that isn't a mesh.
+     */
+    readonly getBoundsMin: typeof raw.wgf_mesh_get_bounds_min;
+    /**
+     * The box around the mesh in its own space, its least and greatest corner; 0, 0, 0 for
+     * both while it isn't READY, and for a handle that isn't a mesh.
+     */
+    readonly getBoundsMax: typeof raw.wgf_mesh_get_bounds_max;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
@@ -3799,6 +3836,18 @@ export declare const Model: {
      * casts nothing; its see-through parts never cast.
      */
     readonly isShadowReceiving: typeof raw.wgf_model_is_shadow_receiving;
+    /**
+     * The box around every model at and under `actor`, each mesh's box placed as it is now, in
+     * the tree's root's space: its least and greatest corner (placing a glTF file's tree on the
+     * ground, framing it in a camera). 0, 0, 0 for both when none there has a READY mesh.
+     */
+    readonly getBoundsMin: typeof raw.wgf_model_get_bounds_min;
+    /**
+     * The box around every model at and under `actor`, each mesh's box placed as it is now, in
+     * the tree's root's space: its least and greatest corner (placing a glTF file's tree on the
+     * ground, framing it in a camera). 0, 0, 0 for both when none there has a READY mesh.
+     */
+    readonly getBoundsMax: typeof raw.wgf_model_get_bounds_max;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
@@ -4875,6 +4924,20 @@ export declare const Stage2d: {
      * that is destroyed leaves the stage with none.
      */
     readonly getCamera: typeof raw.wgf_stage2d_get_camera;
+    /**
+     * Between the stage's units and the screen's logical pixels (what the pointer reads,
+     * wgf_mouse.h), through its camera as it is now: where a point of the stage shows, and the
+     * stage's point under a place on the screen (a click in the world). 0, 0 for a handle that
+     * isn't a 2D stage.
+     */
+    readonly worldToScreen: typeof raw.wgf_stage2d_world_to_screen;
+    /**
+     * Between the stage's units and the screen's logical pixels (what the pointer reads,
+     * wgf_mouse.h), through its camera as it is now: where a point of the stage shows, and the
+     * stage's point under a place on the screen (a click in the world). 0, 0 for a handle that
+     * isn't a 2D stage.
+     */
+    readonly screenToWorld: typeof raw.wgf_stage2d_screen_to_world;
     /**
      * The actor on this stage named `name` (wgf_actor_set_name), at any depth, found by an
      * index of names rather than a walk of the tree. 0 for none, for a stage that isn't a

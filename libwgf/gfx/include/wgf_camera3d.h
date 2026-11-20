@@ -41,6 +41,16 @@ WGF_API bool wgf_camera3d_is_orthographic(wgf_actor_t camera);
 WGF_API bool wgf_camera3d_set_ortho_height(wgf_actor_t camera, float height);
 WGF_API float wgf_camera3d_get_ortho_height(wgf_actor_t camera);
 
+/* Between the world (its tree's root's space) and the screen's logical pixels, through the
+ * camera as it is now, filling the visible area as a stage draws it: where a point shows (x
+ * and y; z its depth, 0 at the near plane to 1 at the far, below 0 behind the camera: a
+ * name tag hidden), and the ray under a place on the screen, from the near plane (its origin)
+ * along a unit direction: picking, a click in the world. 0, 0, 0 for a handle that isn't a 3D
+ * camera. */
+WGF_API wgf_vec3_t wgf_camera3d_world_to_screen(wgf_actor_t camera, float x, float y, float z);
+WGF_API wgf_vec3_t wgf_camera3d_screen_to_origin(wgf_actor_t camera, float x, float y);
+WGF_API wgf_vec3_t wgf_camera3d_screen_to_direction(wgf_actor_t camera, float x, float y);
+
 #ifdef __cplusplus
 }
 #endif

@@ -93,6 +93,54 @@ static inline wgf_vec3_t wgf_vec3_cross(wgf_vec3_t a, wgf_vec3_t b)
     return r;
 }
 
+/* How far a is from b. */
+static inline float wgf_vec3_distance(wgf_vec3_t a, wgf_vec3_t b)
+{
+    return wgf_vec3_length(wgf_vec3_sub(a, b));
+}
+
+/* The angle between a and b, radians, 0 to pi (0 when either has no length). */
+static inline float wgf_vec3_angle(wgf_vec3_t a, wgf_vec3_t b)
+{
+    const float len = wgf_vec3_length(a) * wgf_vec3_length(b);
+    float c;
+    if (len == 0.0f) return 0.0f;
+    c = wgf_vec3_dot(a, b) / len;
+    return acosf(c < -1.0f ? -1.0f : c > 1.0f ? 1.0f : c);
+}
+
+/* `from` toward `to` by at most `step`, never past it. */
+static inline wgf_vec3_t wgf_vec3_move_toward(wgf_vec3_t from, wgf_vec3_t to, float step)
+{
+    const wgf_vec3_t d = wgf_vec3_sub(to, from);
+    const float len = wgf_vec3_length(d);
+    return len <= step || len == 0.0f ? to : wgf_vec3_add(from, wgf_vec3_scale(d, step / len));
+}
+
+/* Bounced off a surface of unit `normal`. */
+static inline wgf_vec3_t wgf_vec3_reflect(wgf_vec3_t v, wgf_vec3_t normal)
+{
+    return wgf_vec3_sub(v, wgf_vec3_scale(normal, 2.0f * wgf_vec3_dot(v, normal)));
+}
+
+/* Its part along `onto` (any length; 0 when it has none). */
+static inline wgf_vec3_t wgf_vec3_project(wgf_vec3_t v, wgf_vec3_t onto)
+{
+    const float d = wgf_vec3_dot(onto, onto);
+    return d == 0.0f ? wgf_vec3_make(0.0f, 0.0f, 0.0f) : wgf_vec3_scale(onto, wgf_vec3_dot(v, onto) / d);
+}
+
+/* Each part the smaller, or the larger, of the two. */
+static inline wgf_vec3_t wgf_vec3_min(wgf_vec3_t a, wgf_vec3_t b)
+{
+    return wgf_vec3_make(a.x < b.x ? a.x : b.x, a.y < b.y ? a.y : b.y, a.z < b.z ? a.z : b.z);
+}
+
+static inline wgf_vec3_t wgf_vec3_max(wgf_vec3_t a, wgf_vec3_t b)
+{
+    return wgf_vec3_make(a.x > b.x ? a.x : b.x, a.y > b.y ? a.y : b.y, a.z > b.z ? a.z : b.z);
+}
+
 #ifdef __cplusplus
 }
 #endif

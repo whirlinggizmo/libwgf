@@ -9,12 +9,9 @@ Rob's (2026-11-19): libwgf is finished so that a pure C and wasm engine can be c
 1. **The core systems** (below), in their order.
 2. **The game structure block** (below), in its order.
 3. **Parity, the small gaps** (from the parity checklist, the rows helix-raylib has and libwgf has nowhere planned):
-   - world to screen and screen to world, in 2D and 3D;
-   - math: scalar clamp, remap, wrap, lerp; vector distance, angle, rotate, move toward, clamp, min and max, reflect, project; a quaternion from one direction to another, and nlerp;
    - shape tests as plain math: a point in a rectangle, circle, triangle, polygon; segments; boxes and spheres; a ray against a sphere, a box, a triangle;
    - splines: a point along a linear, Catmull-Rom, or Bézier path, and drawing one;
    - a texture made from bytes, and updated;
-   - a model's and a mesh's bounds;
    - a lost GPU context recovered (phones and browsers drop WebGL when backgrounded);
    - device queries: touch capable, a fine pointer, the OS, the web;
    - gestures: tap, double tap, hold, swipe;

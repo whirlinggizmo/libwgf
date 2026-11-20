@@ -3,6 +3,7 @@
 #include <stddef.h>
 
 #include "actor/wgf_gfx_actor_priv.h"
+#include "wgf_presentation.h"
 
 /* 3D cameras, libwgt's: their settings, and what they see as a matrix. */
 
@@ -109,4 +110,60 @@ wgf_mat4_t wgf_gfx_priv_camera3d_view_projection(wgf_actor_t camera, float aspec
         projection = wgf_mat4_perspective(c.fov, aspect, c.near_z, c.far_z);
     }
     return wgf_mat4_mul(projection, view);
+}
+
+/* ---- the screen and the world ---------------------------------------------------- */
+
+/* The camera's view-projection over the visible area, and that area. */
+static bool seen(wgf_actor_t camera, wgf_mat4_t *view_proj, float area[4])
+{
+    wgf_vec3_t position;
+    wgf_vec4_t visible;
+    if (camera_of(camera) == NULL) return false;
+    visible = wgf_presentation_get_visible(); /* the screen's, outside a frame too */
+    area[0] = visible.x, area[1] = visible.y, area[2] = visible.z, area[3] = visible.w;
+    *view_proj = wgf_gfx_priv_camera3d_view_projection(camera, area[3] > 0.0f ? area[2] / area[3] : 1.0f, &position);
+    return true;
+}
+
+wgf_vec3_t wgf_camera3d_world_to_screen(wgf_actor_t camera, float x, float y, float z)
+{
+    wgf_mat4_t m;
+    float area[4], cx, cy, cz, cw;
+    if (!seen(camera, &m, area)) return wgf_vec3_make(0.0f, 0.0f, 0.0f);
+    cx = m.m[0] * x + m.m[4] * y + m.m[8] * z + m.m[12];
+    cy = m.m[1] * x + m.m[5] * y + m.m[9] * z + m.m[13];
+    cz = m.m[2] * x + m.m[6] * y + m.m[10] * z + m.m[14];
+    cw = m.m[3] * x + m.m[7] * y + m.m[11] * z + m.m[15];
+    if (cw <= 1e-6f && cw >= -1e-6f) cw = 1e-6f;
+    return wgf_vec3_make(area[0] + (cx / cw * 0.5f + 0.5f) * area[2], area[1] + (0.5f - cy / cw * 0.5f) * area[3],
+                         cw < 0.0f ? -1.0f : cz / cw * 0.5f + 0.5f);
+}
+
+/* The world point under screen x, y at clip depth `ndc_z` (-1 near, 1 far). */
+static wgf_vec3_t unproject(wgf_mat4_t inverse, const float area[4], float x, float y, float ndc_z)
+{
+    const float nx = area[2] > 0.0f ? (x - area[0]) / area[2] * 2.0f - 1.0f : 0.0f;
+    const float ny = area[3] > 0.0f ? 1.0f - (y - area[1]) / area[3] * 2.0f : 0.0f;
+    const float *m = inverse.m;
+    const float wx = m[0] * nx + m[4] * ny + m[8] * ndc_z + m[12], wy = m[1] * nx + m[5] * ny + m[9] * ndc_z + m[13];
+    const float wz = m[2] * nx + m[6] * ny + m[10] * ndc_z + m[14], ww = m[3] * nx + m[7] * ny + m[11] * ndc_z + m[15];
+    return ww != 0.0f ? wgf_vec3_make(wx / ww, wy / ww, wz / ww) : wgf_vec3_make(wx, wy, wz);
+}
+
+wgf_vec3_t wgf_camera3d_screen_to_origin(wgf_actor_t camera, float x, float y)
+{
+    wgf_mat4_t m;
+    float area[4];
+    if (!seen(camera, &m, area)) return wgf_vec3_make(0.0f, 0.0f, 0.0f);
+    return unproject(wgf_mat4_invert(m), area, x, y, -1.0f);
+}
+
+wgf_vec3_t wgf_camera3d_screen_to_direction(wgf_actor_t camera, float x, float y)
+{
+    wgf_mat4_t m, inverse;
+    float area[4];
+    if (!seen(camera, &m, area)) return wgf_vec3_make(0.0f, 0.0f, 0.0f);
+    inverse = wgf_mat4_invert(m);
+    return wgf_vec3_normalize(wgf_vec3_sub(unproject(inverse, area, x, y, 1.0f), unproject(inverse, area, x, y, -1.0f)));
 }

@@ -129,6 +129,41 @@ int main(void)
     expect(near(wgf_actor_get_position(eye).x, 50, 1e-3f), "its target gone: staying where it is");
     expect(wgf_follow_set_target(eye, 0) && wgf_follow_get_target(eye) == 0, "stopped following");
 
+    { /* the screen and the world */
+        const wgf_actor_t flat = wgf_stage2d_create(), view = wgf_camera2d_create();
+        const wgf_actor_t space = wgf_stage3d_create(), lens = wgf_camera3d_create();
+        wgf_vec2_t p;
+        wgf_vec3_t q;
+        wgf_actor_set_parent(view, flat);
+        wgf_stage2d_set_camera(flat, view);
+        wgf_actor_set_position(view, 300, 200, 0);
+        wgf_camera2d_set_zoom(view, 2);
+        p = wgf_stage2d_world_to_screen(flat, 310, 200);
+        expect(near(p.x, 420, 1e-3f) && near(p.y, 300, 1e-3f), "2D: a point of the stage on the screen, zoomed");
+        p = wgf_stage2d_screen_to_world(flat, 400, 300);
+        expect(near(p.x, 300, 1e-3f) && near(p.y, 200, 1e-3f), "and the screen's center back in the stage");
+        wgf_actor_set_parent(lens, space);
+        wgf_actor_set_position(lens, 0, 0, 10);
+        q = wgf_camera3d_world_to_screen(lens, 0, 0, 0);
+        expect(near(q.x, 400, 1e-2f) && near(q.y, 300, 1e-2f) && q.z > 0 && q.z < 1, "3D: in front, at the screen's center");
+        q = wgf_camera3d_world_to_screen(lens, 1, 1, 0);
+        expect(q.x > 400 && q.y < 300, "up and right of it: up and right on the screen");
+        expect(wgf_camera3d_world_to_screen(lens, 0, 0, 20).z < 0, "behind the camera: below 0");
+        q = wgf_camera3d_screen_to_direction(lens, 400, 300);
+        expect(near(q.x, 0, 1e-4f) && near(q.z, -1, 1e-4f), "the ray under the center: straight ahead");
+        q = wgf_camera3d_screen_to_origin(lens, 400, 300);
+        expect(near(q.x, 0, 1e-3f) && q.z < 10 && q.z > 9, "from the near plane");
+        q = wgf_camera3d_world_to_screen(lens, 2, -1, 3);
+        {
+            const wgf_vec3_t o = wgf_camera3d_screen_to_origin(lens, q.x, q.y), d = wgf_camera3d_screen_to_direction(lens, q.x, q.y);
+            const float t = (3 - o.z) / d.z;
+            expect(near(o.x + d.x * t, 2, 1e-2f) && near(o.y + d.y * t, -1, 1e-2f), "a point's place on the screen, cast back, meets it");
+        }
+        expect(wgf_camera3d_world_to_screen(flat, 0, 0, 0).x == 0 && wgf_stage2d_world_to_screen(space, 1, 1).x == 0,
+               "the wrong kind: 0");
+        wgf_actor_destroy(flat, WGF_ACTOR_DESTROY_CHILDREN);
+        wgf_actor_destroy(space, WGF_ACTOR_DESTROY_CHILDREN);
+    }
     wgf_actor_destroy(world, WGF_ACTOR_DESTROY_CHILDREN);
     wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
     wgf_gfx_priv_stop();

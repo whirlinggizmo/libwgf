@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "341c8965ff4c0bc8" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "aeb5672160b7c3ff" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -4048,6 +4048,51 @@ export function wgf_camera3d_get_ortho_height(camera) {
     return value;
 }
 
+// wgf: call wgf_camera3d_world_to_screen
+/**
+ * Between the world (its tree's root's space) and the screen's logical pixels, through the
+ * camera as it is now, filling the visible area as a stage draws it: where a point shows (x
+ * and y; z its depth, 0 at the near plane to 1 at the far, below 0 behind the camera: a
+ * name tag hidden), and the ray under a place on the screen, from the near plane (its origin)
+ * along a unit direction: picking, a click in the world. 0, 0, 0 for a handle that isn't a 3D
+ * camera.
+ */
+export function wgf_camera3d_world_to_screen(camera, x, y, z, into) {
+    const ret = result(12);
+    host["_wgf_camera3d_world_to_screen"](ret, camera, x, y, z);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_camera3d_screen_to_origin
+/**
+ * Between the world (its tree's root's space) and the screen's logical pixels, through the
+ * camera as it is now, filling the visible area as a stage draws it: where a point shows (x
+ * and y; z its depth, 0 at the near plane to 1 at the far, below 0 behind the camera: a
+ * name tag hidden), and the ray under a place on the screen, from the near plane (its origin)
+ * along a unit direction: picking, a click in the world. 0, 0, 0 for a handle that isn't a 3D
+ * camera.
+ */
+export function wgf_camera3d_screen_to_origin(camera, x, y, into) {
+    const ret = result(12);
+    host["_wgf_camera3d_screen_to_origin"](ret, camera, x, y);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_camera3d_screen_to_direction
+/**
+ * Between the world (its tree's root's space) and the screen's logical pixels, through the
+ * camera as it is now, filling the visible area as a stage draws it: where a point shows (x
+ * and y; z its depth, 0 at the near plane to 1 at the far, below 0 behind the camera: a
+ * name tag hidden), and the ray under a place on the screen, from the near plane (its origin)
+ * along a unit direction: picking, a click in the world. 0, 0, 0 for a handle that isn't a 3D
+ * camera.
+ */
+export function wgf_camera3d_screen_to_direction(camera, x, y, into) {
+    const ret = result(12);
+    host["_wgf_camera3d_screen_to_direction"](ret, camera, x, y);
+    return vector(ret, 3, into);
+}
+
 // wgf: local color
 const LOCAL_STOCK = [
     0x00000000, 0xFFFFFFFF, 0x000000FF, 0xC8C8C8FF, 0x828282FF, 0x505050FF, 0xFFFF00FF, 0xFFCB00FF, 0xFFA100FF,
@@ -7721,6 +7766,28 @@ export function wgf_mesh_get_material(mesh, slot_) {
     return value >>> 0;
 }
 
+// wgf: call wgf_mesh_get_bounds_min
+/**
+ * The box around the mesh in its own space, its least and greatest corner; 0, 0, 0 for
+ * both while it isn't READY, and for a handle that isn't a mesh.
+ */
+export function wgf_mesh_get_bounds_min(mesh, into) {
+    const ret = result(12);
+    host["_wgf_mesh_get_bounds_min"](ret, mesh);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_mesh_get_bounds_max
+/**
+ * The box around the mesh in its own space, its least and greatest corner; 0, 0, 0 for
+ * both while it isn't READY, and for a handle that isn't a mesh.
+ */
+export function wgf_mesh_get_bounds_max(mesh, into) {
+    const ret = result(12);
+    host["_wgf_mesh_get_bounds_max"](ret, mesh);
+    return vector(ret, 3, into);
+}
+
 // wgf: call wgf_model_create
 /**
  * A model of `mesh`; 0 for none yet. 0 when `mesh` isn't a mesh, or there is no room
@@ -7857,6 +7924,30 @@ export function wgf_model_set_shadow_receiving(model, receiving) {
 export function wgf_model_is_shadow_receiving(model) {
     const value = host["_wgf_model_is_shadow_receiving"](model);
     return value !== 0;
+}
+
+// wgf: call wgf_model_get_bounds_min
+/**
+ * The box around every model at and under `actor`, each mesh's box placed as it is now, in
+ * the tree's root's space: its least and greatest corner (placing a glTF file's tree on the
+ * ground, framing it in a camera). 0, 0, 0 for both when none there has a READY mesh.
+ */
+export function wgf_model_get_bounds_min(actor, into) {
+    const ret = result(12);
+    host["_wgf_model_get_bounds_min"](ret, actor);
+    return vector(ret, 3, into);
+}
+
+// wgf: call wgf_model_get_bounds_max
+/**
+ * The box around every model at and under `actor`, each mesh's box placed as it is now, in
+ * the tree's root's space: its least and greatest corner (placing a glTF file's tree on the
+ * ground, framing it in a camera). 0, 0, 0 for both when none there has a READY mesh.
+ */
+export function wgf_model_get_bounds_max(actor, into) {
+    const ret = result(12);
+    host["_wgf_model_get_bounds_max"](ret, actor);
+    return vector(ret, 3, into);
 }
 
 // wgf: call wgf_presentation_set
@@ -8781,6 +8872,32 @@ export function wgf_stage2d_set_camera(stage, camera) {
 export function wgf_stage2d_get_camera(stage) {
     const value = host["_wgf_stage2d_get_camera"](stage);
     return value >>> 0;
+}
+
+// wgf: call wgf_stage2d_world_to_screen
+/**
+ * Between the stage's units and the screen's logical pixels (what the pointer reads,
+ * wgf_mouse.h), through its camera as it is now: where a point of the stage shows, and the
+ * stage's point under a place on the screen (a click in the world). 0, 0 for a handle that
+ * isn't a 2D stage.
+ */
+export function wgf_stage2d_world_to_screen(stage, x, y, into) {
+    const ret = result(8);
+    host["_wgf_stage2d_world_to_screen"](ret, stage, x, y);
+    return vector(ret, 2, into);
+}
+
+// wgf: call wgf_stage2d_screen_to_world
+/**
+ * Between the stage's units and the screen's logical pixels (what the pointer reads,
+ * wgf_mouse.h), through its camera as it is now: where a point of the stage shows, and the
+ * stage's point under a place on the screen (a click in the world). 0, 0 for a handle that
+ * isn't a 2D stage.
+ */
+export function wgf_stage2d_screen_to_world(stage, x, y, into) {
+    const ret = result(8);
+    host["_wgf_stage2d_screen_to_world"](ret, stage, x, y);
+    return vector(ret, 2, into);
 }
 
 // wgf: call wgf_stage2d_find

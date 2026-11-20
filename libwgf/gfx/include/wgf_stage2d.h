@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "wgf_api.h"
+#include "wgf_vec2.h"
 #include "wgf_actor.h"
 
 #ifdef __cplusplus
@@ -31,6 +32,13 @@ WGF_API void wgf_stage2d_draw(wgf_actor_t stage);
  * that is destroyed leaves the stage with none. */
 WGF_API bool wgf_stage2d_set_camera(wgf_actor_t stage, wgf_actor_t camera);
 WGF_API wgf_actor_t wgf_stage2d_get_camera(wgf_actor_t stage);
+
+/* Between the stage's units and the screen's logical pixels (what the pointer reads,
+ * wgf_mouse.h), through its camera as it is now: where a point of the stage shows, and the
+ * stage's point under a place on the screen (a click in the world). 0, 0 for a handle that
+ * isn't a 2D stage. */
+WGF_API wgf_vec2_t wgf_stage2d_world_to_screen(wgf_actor_t stage, float x, float y);
+WGF_API wgf_vec2_t wgf_stage2d_screen_to_world(wgf_actor_t stage, float x, float y);
 
 /* The actor on this stage named `name` (wgf_actor_set_name), at any depth, found by an
  * index of names rather than a walk of the tree. 0 for none, for a stage that isn't a

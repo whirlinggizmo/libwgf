@@ -411,6 +411,12 @@ export const Camera3d = Object.freeze({
     setOrthoHeight: raw.wgf_camera3d_set_ortho_height,
     // wgf: call wgf_camera3d_get_ortho_height
     getOrthoHeight: raw.wgf_camera3d_get_ortho_height,
+    // wgf: call wgf_camera3d_world_to_screen
+    worldToScreen: raw.wgf_camera3d_world_to_screen,
+    // wgf: call wgf_camera3d_screen_to_origin
+    screenToOrigin: raw.wgf_camera3d_screen_to_origin,
+    // wgf: call wgf_camera3d_screen_to_direction
+    screenToDirection: raw.wgf_camera3d_screen_to_direction,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
@@ -1185,6 +1191,10 @@ export const Mesh = Object.freeze({
     getMaterialCount: raw.wgf_mesh_get_material_count,
     // wgf: call wgf_mesh_get_material
     getMaterial: raw.wgf_mesh_get_material,
+    // wgf: call wgf_mesh_get_bounds_min
+    getBoundsMin: raw.wgf_mesh_get_bounds_min,
+    // wgf: call wgf_mesh_get_bounds_max
+    getBoundsMax: raw.wgf_mesh_get_bounds_max,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
@@ -1212,6 +1222,10 @@ export const Model = Object.freeze({
     setShadowReceiving: raw.wgf_model_set_shadow_receiving,
     // wgf: call wgf_model_is_shadow_receiving
     isShadowReceiving: raw.wgf_model_is_shadow_receiving,
+    // wgf: call wgf_model_get_bounds_min
+    getBoundsMin: raw.wgf_model_get_bounds_min,
+    // wgf: call wgf_model_get_bounds_max
+    getBoundsMax: raw.wgf_model_get_bounds_max,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
@@ -1605,6 +1619,10 @@ export const Stage2d = Object.freeze({
     setCamera: raw.wgf_stage2d_set_camera,
     // wgf: call wgf_stage2d_get_camera
     getCamera: raw.wgf_stage2d_get_camera,
+    // wgf: call wgf_stage2d_world_to_screen
+    worldToScreen: raw.wgf_stage2d_world_to_screen,
+    // wgf: call wgf_stage2d_screen_to_world
+    screenToWorld: raw.wgf_stage2d_screen_to_world,
     // wgf: call wgf_stage2d_find
     find: raw.wgf_stage2d_find,
     // wgf: call wgf_handle_is_alive

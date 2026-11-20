@@ -40,6 +40,24 @@ import wgf.impl.Raw;
 		return Raw.wgf_stage2d_get_camera(this);
 
 	/**
+	    Between the stage's units and the screen's logical pixels (what the pointer reads,
+	    wgf_mouse.h), through its camera as it is now: where a point of the stage shows, and the
+	    stage's point under a place on the screen (a click in the world). 0, 0 for a handle that
+	    isn't a 2D stage.
+	**/
+	public inline function worldToScreen(x:Float, y:Float, ?into:wgf.Vec2):wgf.Vec2
+		return Raw.wgf_stage2d_world_to_screen(this, x, y, into);
+
+	/**
+	    Between the stage's units and the screen's logical pixels (what the pointer reads,
+	    wgf_mouse.h), through its camera as it is now: where a point of the stage shows, and the
+	    stage's point under a place on the screen (a click in the world). 0, 0 for a handle that
+	    isn't a 2D stage.
+	**/
+	public inline function screenToWorld(x:Float, y:Float, ?into:wgf.Vec2):wgf.Vec2
+		return Raw.wgf_stage2d_screen_to_world(this, x, y, into);
+
+	/**
 	    The actor on this stage named `name` (wgf_actor_set_name), at any depth, found by an
 	    index of names rather than a walk of the tree. 0 for none, for a stage that isn't a
 	    2D stage, and for a name two of its actors share (warned: find it by its path from an

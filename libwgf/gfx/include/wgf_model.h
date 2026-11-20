@@ -55,6 +55,12 @@ WGF_API bool wgf_model_is_shadow_casting(wgf_actor_t model);
 WGF_API bool wgf_model_set_shadow_receiving(wgf_actor_t model, bool receiving);
 WGF_API bool wgf_model_is_shadow_receiving(wgf_actor_t model);
 
+/* The box around every model at and under `actor`, each mesh's box placed as it is now, in
+ * the tree's root's space: its least and greatest corner (placing a glTF file's tree on the
+ * ground, framing it in a camera). 0, 0, 0 for both when none there has a READY mesh. */
+WGF_API wgf_vec3_t wgf_model_get_bounds_min(wgf_actor_t actor);
+WGF_API wgf_vec3_t wgf_model_get_bounds_max(wgf_actor_t actor);
+
 #ifdef __cplusplus
 }
 #endif

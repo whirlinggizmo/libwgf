@@ -5,6 +5,7 @@
 #include "wgf_handle.h"
 #include "wgf_material.h"
 #include "wgf_resource.h"
+#include "wgf_vec3.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -80,6 +81,11 @@ WGF_API wgf_mesh_t wgf_mesh_create(const char *path);
  * drawing the mesh with it. 0 for a slot it hasn't. */
 WGF_API int wgf_mesh_get_material_count(wgf_mesh_t mesh);
 WGF_API wgf_material_t wgf_mesh_get_material(wgf_mesh_t mesh, int slot);
+
+/* The box around the mesh in its own space, its least and greatest corner; 0, 0, 0 for
+ * both while it isn't READY, and for a handle that isn't a mesh. */
+WGF_API wgf_vec3_t wgf_mesh_get_bounds_min(wgf_mesh_t mesh);
+WGF_API wgf_vec3_t wgf_mesh_get_bounds_max(wgf_mesh_t mesh);
 
 #ifdef __cplusplus
 }

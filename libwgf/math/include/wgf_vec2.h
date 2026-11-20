@@ -77,6 +77,50 @@ static inline wgf_vec2_t wgf_vec2_lerp(wgf_vec2_t a, wgf_vec2_t b, float t)
     return r;
 }
 
+/* How far a is from b. */
+static inline float wgf_vec2_distance(wgf_vec2_t a, wgf_vec2_t b)
+{
+    return wgf_vec2_length(wgf_vec2_sub(a, b));
+}
+
+/* Its angle, radians from +x toward +y (atan2). */
+static inline float wgf_vec2_angle(wgf_vec2_t v)
+{
+    return atan2f(v.y, v.x);
+}
+
+/* Turned by `radians`, from +x toward +y. */
+static inline wgf_vec2_t wgf_vec2_rotate(wgf_vec2_t v, float radians)
+{
+    const float c = cosf(radians), s = sinf(radians);
+    return wgf_vec2_make(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+/* `from` toward `to` by at most `step`, never past it. */
+static inline wgf_vec2_t wgf_vec2_move_toward(wgf_vec2_t from, wgf_vec2_t to, float step)
+{
+    const wgf_vec2_t d = wgf_vec2_sub(to, from);
+    const float len = wgf_vec2_length(d);
+    return len <= step || len == 0.0f ? to : wgf_vec2_add(from, wgf_vec2_scale(d, step / len));
+}
+
+/* Bounced off a surface of unit `normal`. */
+static inline wgf_vec2_t wgf_vec2_reflect(wgf_vec2_t v, wgf_vec2_t normal)
+{
+    return wgf_vec2_sub(v, wgf_vec2_scale(normal, 2.0f * wgf_vec2_dot(v, normal)));
+}
+
+/* Each part the smaller, or the larger, of the two. */
+static inline wgf_vec2_t wgf_vec2_min(wgf_vec2_t a, wgf_vec2_t b)
+{
+    return wgf_vec2_make(a.x < b.x ? a.x : b.x, a.y < b.y ? a.y : b.y);
+}
+
+static inline wgf_vec2_t wgf_vec2_max(wgf_vec2_t a, wgf_vec2_t b)
+{
+    return wgf_vec2_make(a.x > b.x ? a.x : b.x, a.y > b.y ? a.y : b.y);
+}
+
 #ifdef __cplusplus
 }
 #endif

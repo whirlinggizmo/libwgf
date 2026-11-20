@@ -2783,6 +2783,39 @@ export declare function wgf_camera3d_set_ortho_height(camera: wgf_actor_t | 0, h
 export declare function wgf_camera3d_get_ortho_height(camera: wgf_actor_t | 0): number;
 
 /**
+ * Between the world (its tree's root's space) and the screen's logical pixels, through the
+ * camera as it is now, filling the visible area as a stage draws it: where a point shows (x
+ * and y; z its depth, 0 at the near plane to 1 at the far, below 0 behind the camera: a
+ * name tag hidden), and the ray under a place on the screen, from the near plane (its origin)
+ * along a unit direction: picking, a click in the world. 0, 0, 0 for a handle that isn't a 3D
+ * camera.
+ */
+export declare function wgf_camera3d_world_to_screen<T extends number[] | Float32Array | Float64Array>(camera: wgf_actor_t | 0, x: number, y: number, z: number, into: T): T;
+export declare function wgf_camera3d_world_to_screen(camera: wgf_actor_t | 0, x: number, y: number, z: number, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * Between the world (its tree's root's space) and the screen's logical pixels, through the
+ * camera as it is now, filling the visible area as a stage draws it: where a point shows (x
+ * and y; z its depth, 0 at the near plane to 1 at the far, below 0 behind the camera: a
+ * name tag hidden), and the ray under a place on the screen, from the near plane (its origin)
+ * along a unit direction: picking, a click in the world. 0, 0, 0 for a handle that isn't a 3D
+ * camera.
+ */
+export declare function wgf_camera3d_screen_to_origin<T extends number[] | Float32Array | Float64Array>(camera: wgf_actor_t | 0, x: number, y: number, into: T): T;
+export declare function wgf_camera3d_screen_to_origin(camera: wgf_actor_t | 0, x: number, y: number, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * Between the world (its tree's root's space) and the screen's logical pixels, through the
+ * camera as it is now, filling the visible area as a stage draws it: where a point shows (x
+ * and y; z its depth, 0 at the near plane to 1 at the far, below 0 behind the camera: a
+ * name tag hidden), and the ray under a place on the screen, from the near plane (its origin)
+ * along a unit direction: picking, a click in the world. 0, 0, 0 for a handle that isn't a 3D
+ * camera.
+ */
+export declare function wgf_camera3d_screen_to_direction<T extends number[] | Float32Array | Float64Array>(camera: wgf_actor_t | 0, x: number, y: number, into: T): T;
+export declare function wgf_camera3d_screen_to_direction(camera: wgf_actor_t | 0, x: number, y: number, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
  * The stock color `stock` names; 0 (transparent) for a value that names none.
  */
 export declare function wgf_color_get(stock: wgf_color_stock_t): wgf_color_t;
@@ -5193,6 +5226,20 @@ export declare function wgf_mesh_get_material_count(mesh: wgf_mesh_t | 0): numbe
 export declare function wgf_mesh_get_material(mesh: wgf_mesh_t | 0, slot_: number): wgf_material_t;
 
 /**
+ * The box around the mesh in its own space, its least and greatest corner; 0, 0, 0 for
+ * both while it isn't READY, and for a handle that isn't a mesh.
+ */
+export declare function wgf_mesh_get_bounds_min<T extends number[] | Float32Array | Float64Array>(mesh: wgf_mesh_t | 0, into: T): T;
+export declare function wgf_mesh_get_bounds_min(mesh: wgf_mesh_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * The box around the mesh in its own space, its least and greatest corner; 0, 0, 0 for
+ * both while it isn't READY, and for a handle that isn't a mesh.
+ */
+export declare function wgf_mesh_get_bounds_max<T extends number[] | Float32Array | Float64Array>(mesh: wgf_mesh_t | 0, into: T): T;
+export declare function wgf_mesh_get_bounds_max(mesh: wgf_mesh_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
  * A model of `mesh`; 0 for none yet. 0 when `mesh` isn't a mesh, or there is no room
  * for another actor. Tinted white: as its materials are.
  */
@@ -5285,6 +5332,22 @@ export declare function wgf_model_set_shadow_receiving(model: wgf_actor_t | 0, r
  * casts nothing; its see-through parts never cast.
  */
 export declare function wgf_model_is_shadow_receiving(model: wgf_actor_t | 0): boolean;
+
+/**
+ * The box around every model at and under `actor`, each mesh's box placed as it is now, in
+ * the tree's root's space: its least and greatest corner (placing a glTF file's tree on the
+ * ground, framing it in a camera). 0, 0, 0 for both when none there has a READY mesh.
+ */
+export declare function wgf_model_get_bounds_min<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_model_get_bounds_min(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
+
+/**
+ * The box around every model at and under `actor`, each mesh's box placed as it is now, in
+ * the tree's root's space: its least and greatest corner (placing a glTF file's tree on the
+ * ground, framing it in a camera). 0, 0, 0 for both when none there has a READY mesh.
+ */
+export declare function wgf_model_get_bounds_max<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
+export declare function wgf_model_get_bounds_max(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
 
 export declare function wgf_presentation_set(mode: wgf_presentation_mode_t, width: number, height: number): boolean;
 
@@ -5875,6 +5938,24 @@ export declare function wgf_stage2d_set_camera(stage: wgf_actor_t | 0, camera: w
  * that is destroyed leaves the stage with none.
  */
 export declare function wgf_stage2d_get_camera(stage: wgf_actor_t | 0): wgf_actor_t;
+
+/**
+ * Between the stage's units and the screen's logical pixels (what the pointer reads,
+ * wgf_mouse.h), through its camera as it is now: where a point of the stage shows, and the
+ * stage's point under a place on the screen (a click in the world). 0, 0 for a handle that
+ * isn't a 2D stage.
+ */
+export declare function wgf_stage2d_world_to_screen<T extends number[] | Float32Array | Float64Array>(stage: wgf_actor_t | 0, x: number, y: number, into: T): T;
+export declare function wgf_stage2d_world_to_screen(stage: wgf_actor_t | 0, x: number, y: number, into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * Between the stage's units and the screen's logical pixels (what the pointer reads,
+ * wgf_mouse.h), through its camera as it is now: where a point of the stage shows, and the
+ * stage's point under a place on the screen (a click in the world). 0, 0 for a handle that
+ * isn't a 2D stage.
+ */
+export declare function wgf_stage2d_screen_to_world<T extends number[] | Float32Array | Float64Array>(stage: wgf_actor_t | 0, x: number, y: number, into: T): T;
+export declare function wgf_stage2d_screen_to_world(stage: wgf_actor_t | 0, x: number, y: number, into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
  * The actor on this stage named `name` (wgf_actor_set_name), at any depth, found by an

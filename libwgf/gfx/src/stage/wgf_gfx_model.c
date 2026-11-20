@@ -238,3 +238,51 @@ wgf_material_t wgf_model_get_material(wgf_actor_t model, int slot)
     }
     return wgf_mesh_get_material(actor_ptr->as.model.mesh, slot);
 }
+
+/* ---- bounds -------------------------------------------------------------------- */
+
+wgf_vec3_t wgf_mesh_get_bounds_min(wgf_mesh_t mesh)
+{
+    wgf_vec3_t lo, hi;
+    return wgf_gfx_priv_mesh_get_bounds(mesh, &lo, &hi) ? lo : wgf_vec3_make(0.0f, 0.0f, 0.0f);
+}
+
+wgf_vec3_t wgf_mesh_get_bounds_max(wgf_mesh_t mesh)
+{
+    wgf_vec3_t lo, hi;
+    return wgf_gfx_priv_mesh_get_bounds(mesh, &lo, &hi) ? hi : wgf_vec3_make(0.0f, 0.0f, 0.0f);
+}
+
+/* The box around the models at and under `actor` grown into lo, hi; whether any. */
+static bool grow_bounds(wgf_actor_t actor, wgf_vec3_t *lo, wgf_vec3_t *hi, bool any, int depth)
+{
+    int i, n;
+    wgf_vec3_t a, b;
+    if (depth > 256) return any;
+    if (wgf_actor_get_kind(actor) == WGF_ACTOR_KIND_MODEL && wgf_gfx_priv_mesh_get_bounds(wgf_model_get_mesh(actor), &a, &b)) {
+        const wgf_mat4_t world = wgf_gfx_priv_actor_get_world_matrix(actor);
+        int c;
+        for (c = 0; c < 8; c++) {
+            const wgf_vec3_t corner = wgf_mat4_transform_point(
+                world, wgf_vec3_make(c & 1 ? b.x : a.x, c & 2 ? b.y : a.y, c & 4 ? b.z : a.z));
+            *lo = any ? wgf_vec3_min(*lo, corner) : corner;
+            *hi = any ? wgf_vec3_max(*hi, corner) : corner;
+            any = true;
+        }
+    }
+    n = wgf_actor_get_child_count(actor);
+    for (i = 0; i < n; i++) any = grow_bounds(wgf_actor_get_child(actor, i), lo, hi, any, depth + 1);
+    return any;
+}
+
+wgf_vec3_t wgf_model_get_bounds_min(wgf_actor_t actor)
+{
+    wgf_vec3_t lo = wgf_vec3_make(0.0f, 0.0f, 0.0f), hi = lo;
+    return grow_bounds(actor, &lo, &hi, false, 0) ? lo : wgf_vec3_make(0.0f, 0.0f, 0.0f);
+}
+
+wgf_vec3_t wgf_model_get_bounds_max(wgf_actor_t actor)
+{
+    wgf_vec3_t lo = wgf_vec3_make(0.0f, 0.0f, 0.0f), hi = lo;
+    return grow_bounds(actor, &lo, &hi, false, 0) ? hi : wgf_vec3_make(0.0f, 0.0f, 0.0f);
+}

@@ -162,6 +162,33 @@ static inline wgf_quat_t wgf_quat_look_rotation(wgf_vec3_t forward, wgf_vec3_t u
     }
 }
 
+/* The shortest turn taking direction `from` to direction `to` (any lengths); identity
+ * when either has none. */
+static inline wgf_quat_t wgf_quat_from_to(wgf_vec3_t from, wgf_vec3_t to)
+{
+    const float lf = wgf_vec3_length(from), lt = wgf_vec3_length(to);
+    wgf_vec3_t a, b, c;
+    float d;
+    if (lf == 0.0f || lt == 0.0f) return wgf_quat_identity();
+    a = wgf_vec3_scale(from, 1.0f / lf), b = wgf_vec3_scale(to, 1.0f / lt);
+    d = wgf_vec3_dot(a, b);
+    if (d < -0.999999f) { /* opposite: half a turn about any axis across them */
+        c = wgf_vec3_cross(wgf_vec3_make(1.0f, 0.0f, 0.0f), a);
+        if (wgf_vec3_length(c) < 1e-6f) c = wgf_vec3_cross(wgf_vec3_make(0.0f, 1.0f, 0.0f), a);
+        return wgf_quat_from_axis_angle(wgf_vec3_normalize(c), 3.14159265f);
+    }
+    c = wgf_vec3_cross(a, b);
+    return wgf_quat_normalize(wgf_quat_make(c.x, c.y, c.z, 1.0f + d));
+}
+
+/* a to b by t, straight and normalized: slerp's cheaper kin, for small steps. */
+static inline wgf_quat_t wgf_quat_nlerp(wgf_quat_t a, wgf_quat_t b, float t)
+{
+    const float s = wgf_quat_dot(a, b) < 0.0f ? -1.0f : 1.0f;
+    return wgf_quat_normalize(wgf_quat_make(a.x + (b.x * s - a.x) * t, a.y + (b.y * s - a.y) * t,
+                                            a.z + (b.z * s - a.z) * t, a.w + (b.w * s - a.w) * t));
+}
+
 #ifdef __cplusplus
 }
 #endif

@@ -5,6 +5,7 @@
 #include "actor/wgf_gfx_actor_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "wgf_camera2d.h"
+#include "wgf_presentation.h"
 #include "wgf_log.h"
 #include "wgf_render.h"
 
@@ -39,14 +40,13 @@ wgf_actor_t wgf_stage2d_get_camera(wgf_actor_t stage)
 
 /* Stage units to the frame's logical pixels: none without a camera; with one, its
  * world position to the frame's center, turned back by its angle and zoomed. */
-static wgf_mat4_t view_of(wgf_actor_t stage)
+static wgf_mat4_t view_in(wgf_actor_t stage, float x, float y, float width, float height)
 {
     const wgf_actor_t camera = wgf_stage2d_get_camera(stage);
     wgf_mat4_t world, view, step;
     wgf_vec3_t position;
-    float zoom, angle, x, y, width, height;
+    float zoom, angle;
     if (camera == 0) return wgf_mat4_identity();
-    wgf_gfx_priv_render_get_visible(&x, &y, &width, &height); /* the camera looks at what is visible's center */
     world = wgf_gfx_priv_actor_get_world_matrix(camera);
     position = wgf_mat4_get_translation(world);
     angle = wgf_quat_to_euler(wgf_mat4_get_rotation(world)).z;
@@ -57,6 +57,21 @@ static wgf_mat4_t view_of(wgf_actor_t stage)
     step = wgf_mat4_from_trs(wgf_vec3_make(-position.x, -position.y, 0.0f), wgf_quat_identity(),
                              wgf_vec3_make(1.0f, 1.0f, 1.0f));
     return wgf_mat4_mul(view, step);
+}
+
+/* In the frame's visible area: the camera looks at what is visible's center. */
+static wgf_mat4_t view_of(wgf_actor_t stage)
+{
+    float x, y, width, height;
+    wgf_gfx_priv_render_get_visible(&x, &y, &width, &height);
+    return view_in(stage, x, y, width, height);
+}
+
+/* In the presentation's visible area now: the screen's, outside a frame too. */
+static wgf_mat4_t view_now(wgf_actor_t stage)
+{
+    const wgf_vec4_t visible = wgf_presentation_get_visible();
+    return view_in(stage, visible.x, visible.y, visible.z, visible.w);
 }
 
 void wgf_stage2d_draw(wgf_actor_t stage)
@@ -113,4 +128,20 @@ wgf_actor_t wgf_stage2d_find(wgf_actor_t stage, const char *name)
 {
     if (wgf_actor_get_kind(stage) != WGF_ACTOR_KIND_STAGE2D) return 0;
     return wgf_gfx_priv_actor_find_on_stage(stage, name);
+}
+
+wgf_vec2_t wgf_stage2d_world_to_screen(wgf_actor_t stage, float x, float y)
+{
+    wgf_vec3_t at;
+    if (wgf_actor_get_kind(stage) != WGF_ACTOR_KIND_STAGE2D) return wgf_vec2_make(0.0f, 0.0f);
+    at = wgf_mat4_transform_point(view_now(stage), wgf_vec3_make(x, y, 0.0f));
+    return wgf_vec2_make(at.x, at.y);
+}
+
+wgf_vec2_t wgf_stage2d_screen_to_world(wgf_actor_t stage, float x, float y)
+{
+    wgf_vec3_t at;
+    if (wgf_actor_get_kind(stage) != WGF_ACTOR_KIND_STAGE2D) return wgf_vec2_make(0.0f, 0.0f);
+    at = wgf_mat4_transform_point(wgf_mat4_invert(view_now(stage)), wgf_vec3_make(x, y, 0.0f));
+    return wgf_vec2_make(at.x, at.y);
 }

@@ -210,5 +210,22 @@ int main(void)
     expect(wgf_scalar_move_toward(0, 10, 3) == 3 && wgf_scalar_move_toward(9, 10, 3) == 10 && wgf_scalar_move_toward(0, -10, 3) == -3, "move toward");
     expect(fabsf(wgf_scalar_angle_delta(0.1f, 2 * pi - 0.1f) + 0.2f) < 1e-3f && fabsf(wgf_scalar_angle_delta(0, pi / 2) - pi / 2) < 1e-4f, "the short way round");
 
+    /* vectors' and turns' helpers */
+    expect(near(wgf_vec2_distance(wgf_vec2_make(0, 0), wgf_vec2_make(3, 4)), 5) && near(wgf_vec2_angle(wgf_vec2_make(0, 1)), pi / 2) &&
+               near(wgf_vec2_rotate(wgf_vec2_make(1, 0), pi / 2).y, 1) && near(wgf_vec2_move_toward(wgf_vec2_make(0, 0), wgf_vec2_make(10, 0), 3).x, 3) &&
+               near(wgf_vec2_reflect(wgf_vec2_make(1, -1), wgf_vec2_make(0, 1)).y, 1) && wgf_vec2_min(wgf_vec2_make(1, 5), wgf_vec2_make(3, 2)).y == 2,
+           "vec2 distance, angle, rotate, move toward, reflect, min");
+    expect(near(wgf_vec3_distance(wgf_vec3_make(1, 2, 3), wgf_vec3_make(1, 2, 5)), 2) &&
+               near(wgf_vec3_angle(wgf_vec3_make(1, 0, 0), wgf_vec3_make(0, 3, 0)), pi / 2) &&
+               near3(wgf_vec3_project(wgf_vec3_make(2, 3, 0), wgf_vec3_make(5, 0, 0)), 2, 0, 0) &&
+               near3(wgf_vec3_reflect(wgf_vec3_make(1, -1, 0), wgf_vec3_make(0, 1, 0)), 1, 1, 0) &&
+               near3(wgf_vec3_move_toward(wgf_vec3_make(0, 0, 0), wgf_vec3_make(0, 0, 1), 3), 0, 0, 1) &&
+               wgf_vec3_max(wgf_vec3_make(1, 5, 0), wgf_vec3_make(3, 2, 0)).y == 5,
+           "vec3 distance, angle, project, reflect, move toward, max");
+    expect(near3(wgf_quat_rotate(wgf_quat_from_to(wgf_vec3_make(1, 0, 0), wgf_vec3_make(0, 2, 0)), wgf_vec3_make(1, 0, 0)), 0, 1, 0) &&
+               near3(wgf_quat_rotate(wgf_quat_from_to(wgf_vec3_make(1, 0, 0), wgf_vec3_make(-1, 0, 0)), wgf_vec3_make(1, 0, 0)), -1, 0, 0) &&
+               near(wgf_quat_nlerp(wgf_quat_identity(), wgf_quat_identity(), 0.5f).w, 1),
+           "a turn from one direction to another, and nlerp");
+
     return failures == 0 ? 0 : 1;
 }
