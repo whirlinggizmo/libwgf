@@ -1040,6 +1040,18 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## Parity: tilt, and touch from the mouse (2026-11-20)
+
+`wgf_tilt.h` is helix's Tilt service in C:
+- The page's device orientation, taken as each frame ends.
+- Where the browser asks permission (iOS, and Chrome on Android, and Chrome on the desktop now too), it's asked inside the player's next tap, the only place it can be.
+- Level is measured once the device is held within 3 degrees for half a second, again when the screen turns a quarter, and on `wgf_tilt_calibrate`. Readings are taken from level, turned with the screen, and scaled by a range.
+- Natively it's UNAVAILABLE: sokol reads no sensors.
+
+Platform's first browser test dispatches the events, through the tap path with the prompt stood in for.
+
+`wgf_touch_set_from_mouse` makes the left button a finger, so touch controls can be tried with a mouse. The existing emulation (touch driving the mouse) and this one don't answer each other.
+
 ## Parity: screenshots (2026-11-20)
 
 The screen is read back as a frame ends (`wgf_render_read_screen`): after the frame's last pass and before it is shown, the only time the window's framebuffer holds it. The result is a texture read, like a render target's, with its rows turned top first. Any finished read is saved as a PNG through fs (`wgf_texture_read_save`). Together they are raylib's TakeScreenshot.

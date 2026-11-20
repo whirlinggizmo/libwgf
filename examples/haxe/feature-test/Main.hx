@@ -252,6 +252,18 @@ class Main {
 			&& Action.getStickOrigin("move_x").x == 0 && Action.getStickKnob("move_x").y == 0, "an on-screen stick, not held");
 		Touch.setMouseEmulated(true);
 		expect(Touch.isMouseEmulated(), "touch drives the mouse");
+		Touch.setFromMouse(true);
+		expect(Touch.isFromMouse(), "the mouse's left button a finger");
+		Touch.setFromMouse(false);
+		final tilted = Tilt.request();
+		expect(tilted ? Tilt.getStatus() != TiltStatus.OFF : Tilt.getStatus() == TiltStatus.UNAVAILABLE
+			|| Tilt.getStatus() == TiltStatus.NEEDS_HTTPS, "the tilt asked for");
+		Tilt.setRange(45);
+		expect(Tilt.getRange() == 45 && Tilt.getX() == 0 && Tilt.getY() == 0 && !Tilt.isReady() && !Tilt.isCalibrating(),
+			"no reading yet, a range");
+		Tilt.calibrate();
+		Tilt.release();
+		expect(Tilt.getStatus() == TiltStatus.OFF, "the tilt released");
 		Mouse.setLocked(false);
 		expect(!Mouse.isLocked(), "the mouse free");
 		Mouse.setCursorVisible(true);

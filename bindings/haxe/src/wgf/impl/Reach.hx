@@ -1036,6 +1036,16 @@ class Reach {
 		"wgf_tilemap_layer_get_row_at",
 		"wgf_tilemap_layer_set_cell",
 		"wgf_tilemap_layer_set_cells",
+		"wgf_tilt_calibrate",
+		"wgf_tilt_get_range",
+		"wgf_tilt_get_status",
+		"wgf_tilt_get_x",
+		"wgf_tilt_get_y",
+		"wgf_tilt_is_calibrating",
+		"wgf_tilt_is_ready",
+		"wgf_tilt_release",
+		"wgf_tilt_request",
+		"wgf_tilt_set_range",
 		"wgf_time_get_seconds",
 		"wgf_touch_get_count",
 		"wgf_touch_get_delta",
@@ -1049,10 +1059,12 @@ class Reach {
 		"wgf_touch_get_swipe",
 		"wgf_touch_get_tap_position",
 		"wgf_touch_is_double_tapped",
+		"wgf_touch_is_from_mouse",
 		"wgf_touch_is_gesture",
 		"wgf_touch_is_holding",
 		"wgf_touch_is_mouse_emulated",
 		"wgf_touch_is_tapped",
+		"wgf_touch_set_from_mouse",
 		"wgf_touch_set_mouse_emulated",
 		"wgf_trig_acos",
 		"wgf_trig_asin",
@@ -1212,7 +1224,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1203) 0];
+	static final counts:Array<Int> = [for (_ in 0...1215) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

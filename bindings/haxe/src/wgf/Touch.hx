@@ -56,6 +56,26 @@ class Touch {
 		return Raw.wgf_touch_is_mouse_emulated();
 
 	/**
+	    Whether the mouse's left button is a finger (default off): pressed, a finger touches down
+	    where the pointer is, follows it, and lifts with the button, so touch controls are tried
+	    with a mouse (raylib's touch point 0 on a desktop). Its own id, as any finger's. The two
+	    don't answer each other: the finger a press makes doesn't drive the mouse back. Turned
+	    off while pressed, the finger lifts.
+	**/
+	public static inline function setFromMouse(from_mouse:Bool):Void
+		Raw.wgf_touch_set_from_mouse(from_mouse);
+
+	/**
+	    Whether the mouse's left button is a finger (default off): pressed, a finger touches down
+	    where the pointer is, follows it, and lifts with the button, so touch controls are tried
+	    with a mouse (raylib's touch point 0 on a desktop). Its own id, as any finger's. The two
+	    don't answer each other: the finger a press makes doesn't drive the mouse back. Turned
+	    off while pressed, the finger lifts.
+	**/
+	public static inline function isFromMouse():Bool
+		return Raw.wgf_touch_is_from_mouse();
+
+	/**
 	    Two or more fingers are down.
 	**/
 	public static inline function isGesture():Bool

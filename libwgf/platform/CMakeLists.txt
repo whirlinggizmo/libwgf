@@ -22,14 +22,23 @@ else()
     set(platform_gamepad_source src/wgf_platform_gamepad_none.c)
 endif()
 
+# tilt: the page's device orientation, or none
+if(EMSCRIPTEN AND NOT WGF_HEADLESS)
+    set(platform_tilt_source src/wgf_platform_tilt_web.c)
+else()
+    set(platform_tilt_source src/wgf_platform_tilt_none.c)
+endif()
+
 wgf_layer(platform
     SOURCES
         src/wgf_platform_action.c
         src/wgf_platform_gamepad.c
         src/wgf_platform_input.c
         src/wgf_platform_sokol_impl.c
+        src/wgf_platform_tilt.c
         src/wgf_platform_window.c
         ${platform_gamepad_source}
+        ${platform_tilt_source}
         ${platform_sources}
     DEPS
         math core)
@@ -83,4 +92,8 @@ if(WGF_TESTS AND WGF_HEADLESS)
     wgf_test(platform wgf_platform_action_test)
     wgf_test(platform wgf_platform_touch_test)
     wgf_test(platform wgf_platform_gamepad_test)
+    wgf_test(platform wgf_platform_tilt_test)
+endif()
+if(WGF_TESTS AND NOT WGF_HEADLESS)
+    wgf_web_test(platform wgf_platform_tilt_web_test 1)
 endif()

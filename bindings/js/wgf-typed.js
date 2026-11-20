@@ -2354,6 +2354,29 @@ export const TilemapLayer = Object.freeze({
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
+// wgf: typed Tilt
+export const Tilt = Object.freeze({
+    // wgf: call wgf_tilt_request
+    request: raw.wgf_tilt_request,
+    // wgf: call wgf_tilt_release
+    release: raw.wgf_tilt_release,
+    // wgf: call wgf_tilt_get_status
+    getStatus: raw.wgf_tilt_get_status,
+    // wgf: call wgf_tilt_is_calibrating
+    isCalibrating: raw.wgf_tilt_is_calibrating,
+    // wgf: call wgf_tilt_is_ready
+    isReady: raw.wgf_tilt_is_ready,
+    // wgf: call wgf_tilt_calibrate
+    calibrate: raw.wgf_tilt_calibrate,
+    // wgf: call wgf_tilt_get_x
+    getX: raw.wgf_tilt_get_x,
+    // wgf: call wgf_tilt_get_y
+    getY: raw.wgf_tilt_get_y,
+    // wgf: call wgf_tilt_set_range
+    setRange: raw.wgf_tilt_set_range,
+    // wgf: call wgf_tilt_get_range
+    getRange: raw.wgf_tilt_get_range,
+});
 // wgf: typed Time
 export const Time = Object.freeze({
     // wgf: call wgf_time_get_seconds
@@ -2375,6 +2398,10 @@ export const Touch = Object.freeze({
     setMouseEmulated: raw.wgf_touch_set_mouse_emulated,
     // wgf: call wgf_touch_is_mouse_emulated
     isMouseEmulated: raw.wgf_touch_is_mouse_emulated,
+    // wgf: call wgf_touch_set_from_mouse
+    setFromMouse: raw.wgf_touch_set_from_mouse,
+    // wgf: call wgf_touch_is_from_mouse
+    isFromMouse: raw.wgf_touch_is_from_mouse,
     // wgf: call wgf_touch_is_gesture
     isGesture: raw.wgf_touch_is_gesture,
     // wgf: call wgf_touch_get_gesture_center
@@ -2828,6 +2855,8 @@ export const TilemapLayerKind = Object.freeze({ NONE: 0, TILES: 1, OBJECTS: 2, I
 export const TilemapPropertyType = Object.freeze({ NONE: 0, STRING: 1, INT: 2, FLOAT: 3, BOOL: 4, COLOR: 5, FILE: 6, OBJECT: 7, CLASS: 8 });
 // wgf: enum TilemapShape
 export const TilemapShape = Object.freeze({ NONE: 0, RECTANGLE: 1, POINT: 2, ELLIPSE: 3, POLYGON: 4, POLYLINE: 5, TILE: 6, TEXT: 7 });
+// wgf: enum TiltStatus
+export const TiltStatus = Object.freeze({ OFF: 0, WAITING_FOR_TAP: 1, STARTING: 2, ON: 3, REFUSED: 4, UNAVAILABLE: 5, NEEDS_HTTPS: 6 });
 // wgf: enum Transition
 export const Transition = Object.freeze({ NONE: 0, FADE: 1, SLIDE_LEFT: 2, SLIDE_RIGHT: 3, SLIDE_UP: 4, SLIDE_DOWN: 5, WIPE: 6, IRIS: 7 });
 // wgf: enum UiAlign

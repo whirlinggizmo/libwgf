@@ -47,6 +47,13 @@ WGF_API wgf_vec2_t wgf_touch_get_delta(int id);
  * is clicked -- and the mouse stays up until every finger has lifted. */
 WGF_API void wgf_touch_set_mouse_emulated(bool emulated);
 WGF_API bool wgf_touch_is_mouse_emulated(void);
+/* Whether the mouse's left button is a finger (default off): pressed, a finger touches down
+ * where the pointer is, follows it, and lifts with the button, so touch controls are tried
+ * with a mouse (raylib's touch point 0 on a desktop). Its own id, as any finger's. The two
+ * don't answer each other: the finger a press makes doesn't drive the mouse back. Turned
+ * off while pressed, the finger lifts. */
+WGF_API void wgf_touch_set_from_mouse(bool from_mouse);
+WGF_API bool wgf_touch_is_from_mouse(void);
 
 /* Two fingers, the first two down: how they panned, pinched, and twisted since the
  * previous tick, or the previous frame, for zooming, panning, and turning a view by

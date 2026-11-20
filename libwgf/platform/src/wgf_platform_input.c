@@ -67,6 +67,9 @@ static struct {
     bool touch_cancelled;
     bool cursor_visible;
     bool mouse_emulated;
+    bool from_mouse;  /* the left button is a finger (wgf_touch_set_from_mouse) */
+    bool mouse_finger; /* and is down */
+    bool emulating;   /* inside one emulation: the other doesn't answer it */
     bool pointer_held;        /* the pointer section's press on an actor */
     bool ui_pointer_captured; /* the game's UI's say, sticky */
     bool ui_keyboard_captured;
@@ -76,10 +79,11 @@ static struct {
 
 void wgf_platform_priv_input_reset(void)
 {
-    const bool cursor_visible = input.cursor_visible, mouse_emulated = input.mouse_emulated;
+    const bool cursor_visible = input.cursor_visible, mouse_emulated = input.mouse_emulated, from_mouse = input.from_mouse;
     memset(&input, 0, sizeof(input));
     input.cursor_visible = cursor_visible;
     input.mouse_emulated = mouse_emulated;
+    input.from_mouse = from_mouse;
 }
 
 void wgf_platform_priv_input_set_pointer_held(bool held)
@@ -280,8 +284,18 @@ static void pointer_event(sapp_event_type type, float x, float y)
     }
 }
 
+static void touch_pointer_emulated(sapp_event_type type, uintptr_t system_id, const finger_t *finger);
+
 /* The mouse follows the first finger; a second one cancels its press. */
 static void touch_pointer(sapp_event_type type, uintptr_t system_id, const finger_t *finger)
+{
+    if (input.emulating) return; /* the mouse's own finger: it is the mouse already */
+    input.emulating = true;
+    touch_pointer_emulated(type, system_id, finger);
+    input.emulating = false;
+}
+
+static void touch_pointer_emulated(sapp_event_type type, uintptr_t system_id, const finger_t *finger)
 {
     if (type == SAPP_EVENTTYPE_TOUCHES_BEGAN) {
         if (!input.touching && !input.touch_cancelled && fingers_down() == 1) {
@@ -339,6 +353,39 @@ static void gesture_ended(const finger_t *finger)
             sets[set]->swipe_y = finger->y - finger->start_y;
         }
     }
+}
+
+static void handle_touch(const sapp_event *event);
+
+/* The left button as a finger (wgf_touch_set_from_mouse): pressed, it touches down where the
+ * pointer is, follows it, and lifts with the button. Its id among the window system's: */
+#define MOUSE_FINGER_ID ((uintptr_t)-1)
+
+static void mouse_touch(const sapp_event *event)
+{
+    sapp_event touch;
+    sapp_event_type type = SAPP_EVENTTYPE_INVALID;
+    if (event->type == SAPP_EVENTTYPE_MOUSE_DOWN && event->mouse_button == SAPP_MOUSEBUTTON_LEFT && !input.mouse_finger) {
+        type = SAPP_EVENTTYPE_TOUCHES_BEGAN;
+        input.mouse_finger = true;
+    } else if (event->type == SAPP_EVENTTYPE_MOUSE_MOVE && input.mouse_finger) {
+        type = SAPP_EVENTTYPE_TOUCHES_MOVED;
+    } else if (event->type == SAPP_EVENTTYPE_MOUSE_UP && event->mouse_button == SAPP_MOUSEBUTTON_LEFT && input.mouse_finger) {
+        type = SAPP_EVENTTYPE_TOUCHES_ENDED;
+        input.mouse_finger = false;
+    } else {
+        return;
+    }
+    memset(&touch, 0, sizeof(touch));
+    touch.type = type;
+    touch.num_touches = 1;
+    touch.touches[0].identifier = MOUSE_FINGER_ID;
+    touch.touches[0].pos_x = event->mouse_x;
+    touch.touches[0].pos_y = event->mouse_y;
+    touch.touches[0].changed = true;
+    input.emulating = true;
+    handle_touch(&touch);
+    input.emulating = false;
 }
 
 static void handle_touch(const sapp_event *event)
@@ -479,6 +526,7 @@ void wgf_platform_priv_input_handle_event(const sapp_event *event, float dpi_sca
     }
     add_edges(&input.frame, event, key_was_down);
     add_edges(&input.tick, event, key_was_down);
+    if (input.from_mouse && !input.emulating) mouse_touch(event);
     switch (event->type) {
         case SAPP_EVENTTYPE_MOUSE_MOVE:
             input.x = (event->mouse_x - input.offset_x) / input.scale_x;
@@ -671,6 +719,25 @@ void wgf_touch_set_mouse_emulated(bool emulated)
 bool wgf_touch_is_mouse_emulated(void)
 {
     return input.mouse_emulated;
+}
+
+void wgf_touch_set_from_mouse(bool from_mouse)
+{
+    if (!from_mouse && input.mouse_finger) { /* a finger held by the button lifts */
+        sapp_event up;
+        memset(&up, 0, sizeof(up));
+        up.type = SAPP_EVENTTYPE_MOUSE_UP;
+        up.mouse_button = SAPP_MOUSEBUTTON_LEFT;
+        up.mouse_x = input.offset_x + input.x * input.scale_x;
+        up.mouse_y = input.offset_y + input.y * input.scale_y;
+        mouse_touch(&up);
+    }
+    input.from_mouse = from_mouse;
+}
+
+bool wgf_touch_is_from_mouse(void)
+{
+    return input.from_mouse;
 }
 
 /* -------------------------------------------------------------- gesture ---- */

@@ -14,7 +14,8 @@
 /* Touch, through input's private calls, frame by frame as the loop drives them:
  * fingers listed oldest first with ids that stay put, edges per frame, the mouse
  * following the first finger and cancelled by a second, the gesture's pan, pinch,
- * and twist, the edges ticks see, and pixels in logical pixels. */
+ * and twist, the edges ticks see, and pixels in logical pixels; and the mouse's left button
+ * as a finger, without the two emulations answering each other. */
 
 static int failures;
 
@@ -117,6 +118,62 @@ static void fingers_and_mouse(void)
     expect(wgf_touch_get_state(-1) == WGF_INPUT_STATE_UP && wgf_touch_get_state(99) == WGF_INPUT_STATE_UP &&
                near(wgf_touch_get_position(99), 0, 0),
            "an id that isn't one");
+}
+
+/* One mouse event at (x, y), the left button's for a press or a release. */
+static void mouse(sapp_event_type type, float x, float y)
+{
+    sapp_event event;
+    memset(&event, 0, sizeof(event));
+    event.type = type;
+    event.mouse_button = SAPP_MOUSEBUTTON_LEFT;
+    event.mouse_x = x;
+    event.mouse_y = y;
+    wgf_platform_priv_input_handle_event(&event, 1.0f);
+}
+
+static void from_mouse(void)
+{
+    const float left_down[] = {101, 14, 23, 1}; /* fingers_and_mouse's last, lifted first */
+    int id;
+    touches(SAPP_EVENTTYPE_TOUCHES_ENDED, 1, left_down, 1.0f);
+    next_frame();
+    next_frame();
+    expect(!wgf_touch_is_from_mouse(), "the mouse no finger by default");
+    mouse(SAPP_EVENTTYPE_MOUSE_DOWN, 30, 40);
+    expect(wgf_touch_get_count() == 0, "so a press touches nothing");
+    mouse(SAPP_EVENTTYPE_MOUSE_UP, 30, 40);
+    next_frame();
+    next_frame();
+
+    wgf_touch_set_from_mouse(true);
+    expect(wgf_touch_is_from_mouse(), "the left button a finger");
+    mouse(SAPP_EVENTTYPE_MOUSE_MOVE, 30, 40);
+    expect(wgf_touch_get_count() == 0, "a pointer moved without a press touches nothing");
+    mouse(SAPP_EVENTTYPE_MOUSE_DOWN, 30, 40);
+    id = wgf_touch_get_id(0);
+    expect(wgf_touch_get_count() == 1 && wgf_touch_get_state(id) == WGF_INPUT_STATE_PRESSED &&
+               near(wgf_touch_get_position(id), 30, 40),
+           "pressed: a finger down where the pointer is");
+    expect(wgf_mouse_is_pressed(WGF_MOUSE_BUTTON_LEFT), "the mouse pressed as it was, once");
+    next_frame();
+    mouse(SAPP_EVENTTYPE_MOUSE_MOVE, 50, 45);
+    expect(wgf_touch_get_state(id) == WGF_INPUT_STATE_DOWN && near(wgf_touch_get_position(id), 50, 45) &&
+               near(wgf_touch_get_delta(id), 20, 5) && near(wgf_mouse_get_position(), 50, 45),
+           "it follows the pointer, which isn't moved again by it");
+    mouse(SAPP_EVENTTYPE_MOUSE_UP, 50, 45);
+    expect(wgf_touch_get_state(id) == WGF_INPUT_STATE_RELEASED && wgf_mouse_is_released(WGF_MOUSE_BUTTON_LEFT),
+           "lifted with the button");
+    next_frame();
+    next_frame();
+    mouse(SAPP_EVENTTYPE_MOUSE_DOWN, 60, 60);
+    expect(wgf_touch_get_count() == 1, "pressed again");
+    wgf_touch_set_from_mouse(false);
+    next_frame();
+    expect(!wgf_touch_is_from_mouse() && wgf_touch_get_count() == 0, "turned off while pressed: the finger lifts");
+    mouse(SAPP_EVENTTYPE_MOUSE_UP, 60, 60);
+    expect(wgf_touch_get_count() == 0, "and the button's release lifts nothing more");
+    next_frame();
 }
 
 static void gesture(void)
@@ -257,6 +314,7 @@ int main(void)
     one_finger();
     keys();
     fingers_and_mouse();
+    from_mouse();
     gesture();
     too_many();
     wgf_core_priv_shutdown();

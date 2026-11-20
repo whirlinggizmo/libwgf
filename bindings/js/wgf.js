@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "a7eda5ee26fa8af6" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "63efa0eed72abbb7" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -551,6 +551,27 @@ export const WGF_MOUSE_CURSOR_RESIZE_NWSE = 7;
 export const WGF_MOUSE_CURSOR_RESIZE_NESW = 8;
 export const WGF_MOUSE_CURSOR_RESIZE_ALL = 9;
 export const WGF_MOUSE_CURSOR_NOT_ALLOWED = 10;
+
+/**
+ * The device's tilt, from level and turned with the screen, for a game steered by tilting a
+ * phone or a tablet: on the web, the page's device orientation; natively, UNAVAILABLE (as
+ * helix's Tilt service, whose behavior this is). Ask with wgf_tilt_request, then read each
+ * frame:
+ *
+ *   x += speed * wgf_tilt_get_x() * dt;
+ *
+ * A page may need permission, asked at the player's next tap (iOS, and Chrome on Android),
+ * so a game asks before the tap that starts play. Level is measured once the device is held
+ * within 3 degrees for half a second (as the tilt starts, after the screen turns, and after
+ * wgf_tilt_calibrate); the tilt reads 0 meanwhile. Readings are taken as each frame ends.
+ */
+export const WGF_TILT_STATUS_OFF = 0;
+export const WGF_TILT_STATUS_WAITING_FOR_TAP = 1;
+export const WGF_TILT_STATUS_STARTING = 2;
+export const WGF_TILT_STATUS_ON = 3;
+export const WGF_TILT_STATUS_REFUSED = 4;
+export const WGF_TILT_STATUS_UNAVAILABLE = 5;
+export const WGF_TILT_STATUS_NEEDS_HTTPS = 6;
 
 /**
  * What the device has: touch (to show on-screen controls), a fine pointer (a mouse or a
@@ -3100,6 +3121,96 @@ export function wgf_mouse_get_cursor() {
     return value;
 }
 
+// wgf: call wgf_tilt_request
+/**
+ * Ask for the tilt. False where it can't be had at once (UNAVAILABLE, NEEDS_HTTPS); true when
+ * asked, the status then saying how it goes. Asking again while asked does nothing.
+ */
+export function wgf_tilt_request() {
+    const value = host["_wgf_tilt_request"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_tilt_release
+/**
+ * Stop the readings, OFF, reading 0 from then. A permission granted stays granted.
+ */
+export function wgf_tilt_release() {
+    host["_wgf_tilt_release"]();
+}
+
+// wgf: call wgf_tilt_get_status
+/**
+ * Stop the readings, OFF, reading 0 from then. A permission granted stays granted.
+ */
+export function wgf_tilt_get_status() {
+    const value = host["_wgf_tilt_get_status"]();
+    return value;
+}
+
+// wgf: call wgf_tilt_is_calibrating
+/**
+ * Whether level is being measured, reading 0 until it is.
+ */
+export function wgf_tilt_is_calibrating() {
+    const value = host["_wgf_tilt_is_calibrating"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_tilt_is_ready
+/**
+ * ON, and level measured: the tilt steers.
+ */
+export function wgf_tilt_is_ready() {
+    const value = host["_wgf_tilt_is_ready"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_tilt_calibrate
+/**
+ * Measure level again from how the device is held next, as a game's "Level" button does.
+ */
+export function wgf_tilt_calibrate() {
+    host["_wgf_tilt_calibrate"]();
+}
+
+// wgf: call wgf_tilt_get_x
+/**
+ * How far the device is tilted from level, -1 to 1, `range` degrees reading 1: x across the
+ * screen, right positive; y up and down it, down positive. 0 while calibrating, or not ON.
+ */
+export function wgf_tilt_get_x() {
+    const value = host["_wgf_tilt_get_x"]();
+    return value;
+}
+
+// wgf: call wgf_tilt_get_y
+/**
+ * How far the device is tilted from level, -1 to 1, `range` degrees reading 1: x across the
+ * screen, right positive; y up and down it, down positive. 0 while calibrating, or not ON.
+ */
+export function wgf_tilt_get_y() {
+    const value = host["_wgf_tilt_get_y"]();
+    return value;
+}
+
+// wgf: call wgf_tilt_set_range
+/**
+ * The degrees of tilt that read 1, at least 1; default 30.
+ */
+export function wgf_tilt_set_range(degrees) {
+    host["_wgf_tilt_set_range"](degrees);
+}
+
+// wgf: call wgf_tilt_get_range
+/**
+ * The degrees of tilt that read 1, at least 1; default 30.
+ */
+export function wgf_tilt_get_range() {
+    const value = host["_wgf_tilt_get_range"]();
+    return value;
+}
+
 // wgf: call wgf_touch_get_count
 /**
  * Fingers down, plus those lifted since the previous tick or frame.
@@ -3170,6 +3281,31 @@ export function wgf_touch_set_mouse_emulated(emulated) {
  */
 export function wgf_touch_is_mouse_emulated() {
     const value = host["_wgf_touch_is_mouse_emulated"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_touch_set_from_mouse
+/**
+ * Whether the mouse's left button is a finger (default off): pressed, a finger touches down
+ * where the pointer is, follows it, and lifts with the button, so touch controls are tried
+ * with a mouse (raylib's touch point 0 on a desktop). Its own id, as any finger's. The two
+ * don't answer each other: the finger a press makes doesn't drive the mouse back. Turned
+ * off while pressed, the finger lifts.
+ */
+export function wgf_touch_set_from_mouse(from_mouse) {
+    host["_wgf_touch_set_from_mouse"]((from_mouse ? 1 : 0));
+}
+
+// wgf: call wgf_touch_is_from_mouse
+/**
+ * Whether the mouse's left button is a finger (default off): pressed, a finger touches down
+ * where the pointer is, follows it, and lifts with the button, so touch controls are tried
+ * with a mouse (raylib's touch point 0 on a desktop). Its own id, as any finger's. The two
+ * don't answer each other: the finger a press makes doesn't drive the mouse back. Turned
+ * off while pressed, the finger lifts.
+ */
+export function wgf_touch_is_from_mouse() {
+    const value = host["_wgf_touch_is_from_mouse"]();
     return value !== 0;
 }
 

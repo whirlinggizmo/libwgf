@@ -8088,6 +8088,51 @@ export declare const TilemapLayer: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+export declare const Tilt: {
+    /**
+     * Ask for the tilt. False where it can't be had at once (UNAVAILABLE, NEEDS_HTTPS); true when
+     * asked, the status then saying how it goes. Asking again while asked does nothing.
+     */
+    readonly request: typeof raw.wgf_tilt_request;
+    /**
+     * Stop the readings, OFF, reading 0 from then. A permission granted stays granted.
+     */
+    readonly release: typeof raw.wgf_tilt_release;
+    /**
+     * Stop the readings, OFF, reading 0 from then. A permission granted stays granted.
+     */
+    readonly getStatus: typeof raw.wgf_tilt_get_status;
+    /**
+     * Whether level is being measured, reading 0 until it is.
+     */
+    readonly isCalibrating: typeof raw.wgf_tilt_is_calibrating;
+    /**
+     * ON, and level measured: the tilt steers.
+     */
+    readonly isReady: typeof raw.wgf_tilt_is_ready;
+    /**
+     * Measure level again from how the device is held next, as a game's "Level" button does.
+     */
+    readonly calibrate: typeof raw.wgf_tilt_calibrate;
+    /**
+     * How far the device is tilted from level, -1 to 1, `range` degrees reading 1: x across the
+     * screen, right positive; y up and down it, down positive. 0 while calibrating, or not ON.
+     */
+    readonly getX: typeof raw.wgf_tilt_get_x;
+    /**
+     * How far the device is tilted from level, -1 to 1, `range` degrees reading 1: x across the
+     * screen, right positive; y up and down it, down positive. 0 while calibrating, or not ON.
+     */
+    readonly getY: typeof raw.wgf_tilt_get_y;
+    /**
+     * The degrees of tilt that read 1, at least 1; default 30.
+     */
+    readonly setRange: typeof raw.wgf_tilt_set_range;
+    /**
+     * The degrees of tilt that read 1, at least 1; default 30.
+     */
+    readonly getRange: typeof raw.wgf_tilt_get_range;
+};
 export declare const Time: {
     /**
      * Seconds since the runtime started, from a monotonic clock: it never goes back, and
@@ -8133,6 +8178,22 @@ export declare const Touch: {
      * is clicked -- and the mouse stays up until every finger has lifted.
      */
     readonly isMouseEmulated: typeof raw.wgf_touch_is_mouse_emulated;
+    /**
+     * Whether the mouse's left button is a finger (default off): pressed, a finger touches down
+     * where the pointer is, follows it, and lifts with the button, so touch controls are tried
+     * with a mouse (raylib's touch point 0 on a desktop). Its own id, as any finger's. The two
+     * don't answer each other: the finger a press makes doesn't drive the mouse back. Turned
+     * off while pressed, the finger lifts.
+     */
+    readonly setFromMouse: typeof raw.wgf_touch_set_from_mouse;
+    /**
+     * Whether the mouse's left button is a finger (default off): pressed, a finger touches down
+     * where the pointer is, follows it, and lifts with the button, so touch controls are tried
+     * with a mouse (raylib's touch point 0 on a desktop). Its own id, as any finger's. The two
+     * don't answer each other: the finger a press makes doesn't drive the mouse back. Turned
+     * off while pressed, the finger lifts.
+     */
+    readonly isFromMouse: typeof raw.wgf_touch_is_from_mouse;
     /**
      * Two or more fingers are down.
      */
@@ -9390,6 +9451,8 @@ export type TilemapPropertyType = raw.wgf_tilemap_property_type_t;
 export declare const TilemapPropertyType: { readonly NONE: TilemapPropertyType; readonly STRING: TilemapPropertyType; readonly INT: TilemapPropertyType; readonly FLOAT: TilemapPropertyType; readonly BOOL: TilemapPropertyType; readonly COLOR: TilemapPropertyType; readonly FILE: TilemapPropertyType; readonly OBJECT: TilemapPropertyType; readonly CLASS: TilemapPropertyType; };
 export type TilemapShape = raw.wgf_tilemap_shape_t;
 export declare const TilemapShape: { readonly NONE: TilemapShape; readonly RECTANGLE: TilemapShape; readonly POINT: TilemapShape; readonly ELLIPSE: TilemapShape; readonly POLYGON: TilemapShape; readonly POLYLINE: TilemapShape; readonly TILE: TilemapShape; readonly TEXT: TilemapShape; };
+export type TiltStatus = raw.wgf_tilt_status_t;
+export declare const TiltStatus: { readonly OFF: TiltStatus; readonly WAITING_FOR_TAP: TiltStatus; readonly STARTING: TiltStatus; readonly ON: TiltStatus; readonly REFUSED: TiltStatus; readonly UNAVAILABLE: TiltStatus; readonly NEEDS_HTTPS: TiltStatus; };
 export type Transition = raw.wgf_transition_t;
 export declare const Transition: { readonly NONE: Transition; readonly FADE: Transition; readonly SLIDE_LEFT: Transition; readonly SLIDE_RIGHT: Transition; readonly SLIDE_UP: Transition; readonly SLIDE_DOWN: Transition; readonly WIPE: Transition; readonly IRIS: Transition; };
 export type UiAlign = raw.wgf_ui_align_t;

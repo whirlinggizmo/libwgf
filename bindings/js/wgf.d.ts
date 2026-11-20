@@ -412,6 +412,28 @@ export declare const WGF_MOUSE_CURSOR_NOT_ALLOWED: 10;
 export type wgf_mouse_cursor_t = typeof WGF_MOUSE_CURSOR_DEFAULT | typeof WGF_MOUSE_CURSOR_ARROW | typeof WGF_MOUSE_CURSOR_IBEAM | typeof WGF_MOUSE_CURSOR_CROSSHAIR | typeof WGF_MOUSE_CURSOR_HAND | typeof WGF_MOUSE_CURSOR_RESIZE_EW | typeof WGF_MOUSE_CURSOR_RESIZE_NS | typeof WGF_MOUSE_CURSOR_RESIZE_NWSE | typeof WGF_MOUSE_CURSOR_RESIZE_NESW | typeof WGF_MOUSE_CURSOR_RESIZE_ALL | typeof WGF_MOUSE_CURSOR_NOT_ALLOWED;
 
 /**
+ * The device's tilt, from level and turned with the screen, for a game steered by tilting a
+ * phone or a tablet: on the web, the page's device orientation; natively, UNAVAILABLE (as
+ * helix's Tilt service, whose behavior this is). Ask with wgf_tilt_request, then read each
+ * frame:
+ *
+ *   x += speed * wgf_tilt_get_x() * dt;
+ *
+ * A page may need permission, asked at the player's next tap (iOS, and Chrome on Android),
+ * so a game asks before the tap that starts play. Level is measured once the device is held
+ * within 3 degrees for half a second (as the tilt starts, after the screen turns, and after
+ * wgf_tilt_calibrate); the tilt reads 0 meanwhile. Readings are taken as each frame ends.
+ */
+export declare const WGF_TILT_STATUS_OFF: 0;
+export declare const WGF_TILT_STATUS_WAITING_FOR_TAP: 1;
+export declare const WGF_TILT_STATUS_STARTING: 2;
+export declare const WGF_TILT_STATUS_ON: 3;
+export declare const WGF_TILT_STATUS_REFUSED: 4;
+export declare const WGF_TILT_STATUS_UNAVAILABLE: 5;
+export declare const WGF_TILT_STATUS_NEEDS_HTTPS: 6;
+export type wgf_tilt_status_t = typeof WGF_TILT_STATUS_OFF | typeof WGF_TILT_STATUS_WAITING_FOR_TAP | typeof WGF_TILT_STATUS_STARTING | typeof WGF_TILT_STATUS_ON | typeof WGF_TILT_STATUS_REFUSED | typeof WGF_TILT_STATUS_UNAVAILABLE | typeof WGF_TILT_STATUS_NEEDS_HTTPS;
+
+/**
  * What the device has: touch (to show on-screen controls), a fine pointer (a mouse or a
  * pad: hover means something), and its system, on the web the one the browser runs on.
  */
@@ -2183,6 +2205,59 @@ export declare function wgf_mouse_set_cursor(cursor: wgf_mouse_cursor_t): boolea
 export declare function wgf_mouse_get_cursor(): wgf_mouse_cursor_t;
 
 /**
+ * Ask for the tilt. False where it can't be had at once (UNAVAILABLE, NEEDS_HTTPS); true when
+ * asked, the status then saying how it goes. Asking again while asked does nothing.
+ */
+export declare function wgf_tilt_request(): boolean;
+
+/**
+ * Stop the readings, OFF, reading 0 from then. A permission granted stays granted.
+ */
+export declare function wgf_tilt_release(): void;
+
+/**
+ * Stop the readings, OFF, reading 0 from then. A permission granted stays granted.
+ */
+export declare function wgf_tilt_get_status(): wgf_tilt_status_t;
+
+/**
+ * Whether level is being measured, reading 0 until it is.
+ */
+export declare function wgf_tilt_is_calibrating(): boolean;
+
+/**
+ * ON, and level measured: the tilt steers.
+ */
+export declare function wgf_tilt_is_ready(): boolean;
+
+/**
+ * Measure level again from how the device is held next, as a game's "Level" button does.
+ */
+export declare function wgf_tilt_calibrate(): void;
+
+/**
+ * How far the device is tilted from level, -1 to 1, `range` degrees reading 1: x across the
+ * screen, right positive; y up and down it, down positive. 0 while calibrating, or not ON.
+ */
+export declare function wgf_tilt_get_x(): number;
+
+/**
+ * How far the device is tilted from level, -1 to 1, `range` degrees reading 1: x across the
+ * screen, right positive; y up and down it, down positive. 0 while calibrating, or not ON.
+ */
+export declare function wgf_tilt_get_y(): number;
+
+/**
+ * The degrees of tilt that read 1, at least 1; default 30.
+ */
+export declare function wgf_tilt_set_range(degrees: number): void;
+
+/**
+ * The degrees of tilt that read 1, at least 1; default 30.
+ */
+export declare function wgf_tilt_get_range(): number;
+
+/**
  * Fingers down, plus those lifted since the previous tick or frame.
  */
 export declare function wgf_touch_get_count(): number;
@@ -2227,6 +2302,24 @@ export declare function wgf_touch_set_mouse_emulated(emulated: boolean): void;
  * is clicked -- and the mouse stays up until every finger has lifted.
  */
 export declare function wgf_touch_is_mouse_emulated(): boolean;
+
+/**
+ * Whether the mouse's left button is a finger (default off): pressed, a finger touches down
+ * where the pointer is, follows it, and lifts with the button, so touch controls are tried
+ * with a mouse (raylib's touch point 0 on a desktop). Its own id, as any finger's. The two
+ * don't answer each other: the finger a press makes doesn't drive the mouse back. Turned
+ * off while pressed, the finger lifts.
+ */
+export declare function wgf_touch_set_from_mouse(from_mouse: boolean): void;
+
+/**
+ * Whether the mouse's left button is a finger (default off): pressed, a finger touches down
+ * where the pointer is, follows it, and lifts with the button, so touch controls are tried
+ * with a mouse (raylib's touch point 0 on a desktop). Its own id, as any finger's. The two
+ * don't answer each other: the finger a press makes doesn't drive the mouse back. Turned
+ * off while pressed, the finger lifts.
+ */
+export declare function wgf_touch_is_from_mouse(): boolean;
 
 /**
  * Two or more fingers are down.
