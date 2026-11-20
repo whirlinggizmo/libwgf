@@ -84,10 +84,9 @@ static void draw_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
     y0 = -pivot[1] * size[1];
     x1 = x0 + size[0];
     y1 = y0 + size[1];
-    if (sprite->alpha_mode != WGF_ALPHA_MODE_BLEND && sprite->alpha_mode != WGF_ALPHA_MODE_MASK) {
-        sgl_push_pipeline();
-        sgl_load_pipeline(wgf_gfx_priv_render_pipeline_2d(sprite->alpha_mode));
-    }
+    sgl_push_pipeline(); /* its own mode, whatever immediate mode's is (MASK drawn as BLEND) */
+    sgl_load_pipeline(wgf_gfx_priv_render_pipeline_2d(sprite->alpha_mode == WGF_ALPHA_MODE_MASK ? WGF_ALPHA_MODE_BLEND
+                                                                                                : sprite->alpha_mode));
     sgl_enable_texture();
     sgl_texture(image, sampler);
     sgl_begin_triangles();
@@ -118,7 +117,7 @@ static void draw_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
     }
     sgl_end();
     sgl_disable_texture();
-    if (sprite->alpha_mode != WGF_ALPHA_MODE_BLEND && sprite->alpha_mode != WGF_ALPHA_MODE_MASK) sgl_pop_pipeline();
+    sgl_pop_pipeline();
 }
 
 static void free_sprite(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr)
@@ -259,7 +258,7 @@ wgf_color_t wgf_sprite_get_tint(wgf_actor_t sprite)
 bool wgf_sprite_set_alpha_mode(wgf_actor_t sprite, wgf_alpha_mode_t mode, float cutoff)
 {
     wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
-    if (sprite_ptr == NULL || (int)mode < WGF_ALPHA_MODE_OPAQUE || mode > WGF_ALPHA_MODE_ADD) return false;
+    if (sprite_ptr == NULL || (int)mode < WGF_ALPHA_MODE_OPAQUE || mode > WGF_ALPHA_MODE_PREMULTIPLIED) return false;
     sprite_ptr->alpha_mode = (int)mode;
     sprite_ptr->alpha_cutoff = cutoff < 0.0f ? 0.0f : (cutoff > 1.0f ? 1.0f : cutoff);
     return true;

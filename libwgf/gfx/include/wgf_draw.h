@@ -50,6 +50,12 @@ WGF_API bool wgf_draw_polygon(const float *points, int count, wgf_color_t color)
 /* Text (UTF-8) in `font` (0: the default font) at `size` logical pixels (16 for 0 or
  * less), its top-left at (x, y). Newlines break lines. */
 WGF_API void wgf_draw_text(wgf_font_t font, const char *text, float x, float y, float size, wgf_color_t color);
+/* How immediate mode's drawing after it blends with what is under it (wgf_material.h's alpha
+ * modes): BLEND to start, OPAQUE, ADD, MULTIPLY, PREMULTIPLIED (MASK draws as BLEND: immediate
+ * mode cuts out nothing). raylib's BeginBlendMode. False for a mode that isn't one. */
+WGF_API bool wgf_draw_set_blend_mode(wgf_alpha_mode_t mode);
+WGF_API wgf_alpha_mode_t wgf_draw_get_blend_mode(void);
+
 /* Logical pixels added between letters and between lines of the text drawn and measured
  * after it (wgf_draw_text, wgf_font_measure; a text actor has its own): raylib's spacing and
  * line spacing. 0 to start; a number that isn't finite is 0. */
@@ -98,6 +104,20 @@ WGF_API void wgf_draw_circle_gradient(float center_x, float center_y, float radi
 WGF_API void wgf_draw_texture_rotated(wgf_texture_t texture, float source_x, float source_y, float source_width,
                                       float source_height, float x, float y, float width, float height, float pivot_x,
                                       float pivot_y, float radians, wgf_color_t tint);
+
+/* A texture over a polygon, raylib's DrawTexturePoly: `points` x and y in turn (`count`
+ * floats, 3 points or more, convex, or fanning from its first point), each with its texture
+ * coordinates in `uvs` (0 to 1 across the whole texture; `uvs_count` floats, as many as the
+ * points'). False for too few points, an odd count, or coordinates not one a point. */
+WGF_API bool wgf_draw_texture_polygon(wgf_texture_t texture, const float *points, int count, const float *uvs,
+                                      int uvs_count, wgf_color_t tint);
+
+/* A texture's region repeated over the rectangle at `scale` (1: a texel a logical pixel),
+ * from its top-left, the last row and column cut where the rectangle ends: raylib's
+ * DrawTextureTiled. A source width or height of 0 or less: the whole texture. */
+WGF_API void wgf_draw_texture_tiled(wgf_texture_t texture, float source_x, float source_y, float source_width,
+                                    float source_height, float x, float y, float width, float height, float scale,
+                                    wgf_color_t tint);
 
 /* A texture's region drawn as a nine-slice into the rectangle: its borders `left`, `top`,
  * `right`, and `bottom` texels in from the region's edges, the corners kept at their size

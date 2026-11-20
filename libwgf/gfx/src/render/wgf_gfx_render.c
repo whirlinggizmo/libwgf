@@ -58,6 +58,16 @@ static bool (*effects)(wgf_gfx_priv_render_effects_t when, sg_pass *pass); /* wg
 static sgl_context draw_context;
 static sgl_pipeline draw_pipeline_2d;
 static sgl_pipeline draw_pipeline_2d_add, draw_pipeline_2d_opaque; /* a sprite's other alpha modes */
+static sgl_pipeline draw_pipeline_2d_multiply, draw_pipeline_2d_premultiplied;
+static int draw_mode = WGF_ALPHA_MODE_BLEND; /* immediate mode's (wgf_draw_set_blend_mode) */
+static void install_stats(void);
+/* The frame's stats, counted by sokol's trace hooks (below). */
+static struct {
+    int draws, last_draws;
+    double triangles, last_triangles;
+    double gpu_bytes; /* buffers' and images' alive */
+} stats;
+
 static sgl_pipeline draw_pipeline_3d; /* made by the first 3D draw: depth tested and written */
 static int vertex_capacity;
 static int command_capacity;
@@ -126,6 +136,7 @@ bool wgf_gfx_priv_start(void)
         wgf_log_error("wgf_gfx: couldn't start on the window's device");
         return false;
     }
+    install_stats();
     wgf_log_info("wgf_gfx: %s, %d sample%s a pixel", backend_name(sg_query_backend()), samples,
                  samples == 1 ? "" : "s");
 
@@ -151,6 +162,11 @@ bool wgf_gfx_priv_start(void)
     pipeline_desc.colors[0].blend.src_factor_alpha = SG_BLENDFACTOR_ONE;
     pipeline_desc.colors[0].blend.dst_factor_alpha = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
     draw_pipeline_2d = sgl_make_pipeline(&pipeline_desc);
+    pipeline_desc.colors[0].blend.src_factor_rgb = SG_BLENDFACTOR_ONE; /* premultiplied: its color its alpha's */
+    draw_pipeline_2d_premultiplied = sgl_make_pipeline(&pipeline_desc);
+    pipeline_desc.colors[0].blend.src_factor_rgb = SG_BLENDFACTOR_DST_COLOR; /* multiplied, raylib's */
+    draw_pipeline_2d_multiply = sgl_make_pipeline(&pipeline_desc);
+    pipeline_desc.colors[0].blend.src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA;
     pipeline_desc.colors[0].blend.dst_factor_rgb = SG_BLENDFACTOR_ONE; /* added */
     pipeline_desc.colors[0].blend.dst_factor_alpha = SG_BLENDFACTOR_ONE;
     draw_pipeline_2d_add = sgl_make_pipeline(&pipeline_desc);
@@ -215,6 +231,8 @@ void wgf_gfx_priv_stop(void)
     sgl_destroy_pipeline(draw_pipeline_2d);
     sgl_destroy_pipeline(draw_pipeline_2d_add);
     sgl_destroy_pipeline(draw_pipeline_2d_opaque);
+    sgl_destroy_pipeline(draw_pipeline_2d_multiply);
+    sgl_destroy_pipeline(draw_pipeline_2d_premultiplied);
     sgl_destroy_context(draw_context);
     sgl_shutdown(); /* and the 3D pipeline with it */
     draw_pipeline_3d.id = SG_INVALID_ID;
@@ -384,6 +402,10 @@ void wgf_gfx_priv_end_frame(void)
     sg_end_pass();
     if (effects != NULL) effects(WGF_GFX_PRIV_RENDER_EFFECTS_END, &pass);
     sg_commit();
+    stats.last_draws = stats.draws; /* the frame's stats kept, counted again from 0 */
+    stats.last_triangles = stats.triangles;
+    stats.draws = 0;
+    stats.triangles = 0;
     in_frame = false;
     last_frame = frame_number;
     grow_draw_context(error);
@@ -400,7 +422,7 @@ void wgf_gfx_priv_render_set_2d(void)
     const float right = ((float)frame_width - present.offset_x) / present.scale_x;
     const float bottom = ((float)frame_height - present.offset_y) / present.scale_y;
     sgl_set_context(draw_context);
-    sgl_load_pipeline(draw_pipeline_2d);
+    sgl_load_pipeline(wgf_gfx_priv_render_pipeline_2d(draw_mode));
     sgl_matrix_mode_projection();
     sgl_load_identity();
     if (pass_flipped) sgl_scale(1.0f, -1.0f, 1.0f); /* clip space's y flipped */
@@ -409,10 +431,120 @@ void wgf_gfx_priv_render_set_2d(void)
     sgl_load_identity();
 }
 
+/* ---- frame stats, by sokol's trace hooks ----------------------------------------------- */
+
+static void count_draw(int base_element, int num_elements, int num_instances, void *user)
+{
+    (void)base_element;
+    (void)user;
+    stats.draws++;
+    stats.triangles += (double)(num_elements / 3) * (double)(num_instances > 0 ? num_instances : 1);
+}
+
+static void count_draw_ex(int base_element, int num_elements, int num_instances, int base_vertex, int base_instance,
+                          void *user)
+{
+    (void)base_vertex;
+    (void)base_instance;
+    count_draw(base_element, num_elements, num_instances, user);
+}
+
+/* An image's bytes: its levels' surfaces, each slice. */
+static double image_bytes(sg_image image)
+{
+    const sg_pixel_format fmt = sg_query_image_pixelformat(image);
+    int w = sg_query_image_width(image), h = sg_query_image_height(image), level;
+    const int levels = sg_query_image_num_mipmaps(image), slices = sg_query_image_num_slices(image);
+    double bytes = 0;
+    if (fmt == _SG_PIXELFORMAT_DEFAULT || fmt == SG_PIXELFORMAT_NONE) return 0;
+    for (level = 0; level < (levels > 0 ? levels : 1) && w > 0 && h > 0; level++) {
+        bytes += (double)sg_query_surface_pitch(fmt, w, h, 1);
+        w = w > 1 ? w / 2 : 1;
+        h = h > 1 ? h / 2 : 1;
+    }
+    return bytes * (double)(slices > 0 ? slices : 1);
+}
+
+static void count_make_buffer(const sg_buffer_desc *desc, sg_buffer result, void *user)
+{
+    (void)desc;
+    (void)user;
+    if (result.id != SG_INVALID_ID) stats.gpu_bytes += (double)sg_query_buffer_size(result);
+}
+
+static void count_destroy_buffer(sg_buffer buffer, void *user)
+{
+    (void)user;
+    if (sg_query_buffer_state(buffer) == SG_RESOURCESTATE_VALID) stats.gpu_bytes -= (double)sg_query_buffer_size(buffer);
+}
+
+static void count_make_image(const sg_image_desc *desc, sg_image result, void *user)
+{
+    (void)desc;
+    (void)user;
+    if (sg_query_image_state(result) == SG_RESOURCESTATE_VALID) stats.gpu_bytes += image_bytes(result);
+}
+
+static void count_destroy_image(sg_image image, void *user)
+{
+    (void)user;
+    if (sg_query_image_state(image) == SG_RESOURCESTATE_VALID) stats.gpu_bytes -= image_bytes(image);
+}
+
+static void install_stats(void)
+{
+    sg_trace_hooks hooks;
+    memset(&hooks, 0, sizeof(hooks));
+    memset(&stats, 0, sizeof(stats));
+    hooks.draw = count_draw;
+    hooks.draw_ex = count_draw_ex;
+    hooks.make_buffer = count_make_buffer;
+    hooks.destroy_buffer = count_destroy_buffer;
+    hooks.make_image = count_make_image;
+    hooks.destroy_image = count_destroy_image;
+    sg_install_trace_hooks(&hooks);
+}
+
+int wgf_render_get_draw_calls(void)
+{
+    return stats.last_draws;
+}
+
+double wgf_render_get_triangle_count(void)
+{
+    return stats.last_triangles;
+}
+
+double wgf_render_get_gpu_bytes(void)
+{
+    return stats.gpu_bytes > 0 ? stats.gpu_bytes : 0;
+}
+
 sgl_pipeline wgf_gfx_priv_render_pipeline_2d(int mode)
 {
-    return mode == WGF_ALPHA_MODE_ADD ? draw_pipeline_2d_add : mode == WGF_ALPHA_MODE_OPAQUE ? draw_pipeline_2d_opaque
-                                                                                           : draw_pipeline_2d;
+    switch (mode) {
+    case WGF_ALPHA_MODE_ADD: return draw_pipeline_2d_add;
+    case WGF_ALPHA_MODE_OPAQUE: return draw_pipeline_2d_opaque;
+    case WGF_ALPHA_MODE_MULTIPLY: return draw_pipeline_2d_multiply;
+    case WGF_ALPHA_MODE_PREMULTIPLIED: return draw_pipeline_2d_premultiplied;
+    default: return draw_pipeline_2d;
+    }
+}
+
+bool wgf_draw_set_blend_mode(wgf_alpha_mode_t mode)
+{
+    if ((int)mode < WGF_ALPHA_MODE_OPAQUE || mode > WGF_ALPHA_MODE_PREMULTIPLIED) return false;
+    draw_mode = mode == WGF_ALPHA_MODE_MASK ? WGF_ALPHA_MODE_BLEND : (int)mode; /* immediate mode cuts out nothing */
+    if (setup && wgf_gfx_priv_is_in_frame()) {
+        sgl_set_context(draw_context);
+        sgl_load_pipeline(wgf_gfx_priv_render_pipeline_2d(draw_mode));
+    }
+    return true;
+}
+
+wgf_alpha_mode_t wgf_draw_get_blend_mode(void)
+{
+    return (wgf_alpha_mode_t)draw_mode;
 }
 
 wgf_mat4_t wgf_gfx_priv_render_projection_2d(void)

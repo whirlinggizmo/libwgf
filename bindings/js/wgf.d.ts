@@ -579,13 +579,17 @@ export type wgf_material_shading_t = typeof WGF_MATERIAL_SHADING_PBR | typeof WG
 /**
  * How something drawn uses its alpha. In a stage, OPAQUE and MASK parts write depth and
  * aren't sorted; BLEND parts are drawn after them, sorted back to front; ADD, particles'
- * alone (a material refuses it), after those.
+ * alone (a material refuses it), after those. MULTIPLY and PREMULTIPLIED are 2D drawing's:
+ * immediate mode's (wgf_draw_set_blend_mode) and a sprite's on a 2D stage (on a 3D one they
+ * draw as BLEND); a material, an emitter, and a sprite batch refuse them.
  */
 export declare const WGF_ALPHA_MODE_OPAQUE: 0;
 export declare const WGF_ALPHA_MODE_MASK: 1;
 export declare const WGF_ALPHA_MODE_BLEND: 2;
 export declare const WGF_ALPHA_MODE_ADD: 3;
-export type wgf_alpha_mode_t = typeof WGF_ALPHA_MODE_OPAQUE | typeof WGF_ALPHA_MODE_MASK | typeof WGF_ALPHA_MODE_BLEND | typeof WGF_ALPHA_MODE_ADD;
+export declare const WGF_ALPHA_MODE_MULTIPLY: 4;
+export declare const WGF_ALPHA_MODE_PREMULTIPLIED: 5;
+export type wgf_alpha_mode_t = typeof WGF_ALPHA_MODE_OPAQUE | typeof WGF_ALPHA_MODE_MASK | typeof WGF_ALPHA_MODE_BLEND | typeof WGF_ALPHA_MODE_ADD | typeof WGF_ALPHA_MODE_MULTIPLY | typeof WGF_ALPHA_MODE_PREMULTIPLIED;
 
 /**
  * How a clip runs through its frames.
@@ -4373,6 +4377,20 @@ export declare function wgf_draw_polygon(points: readonly number[] | Float32Arra
 export declare function wgf_draw_text(font: wgf_font_t | 0, text: string | null, x: number, y: number, size: number, color: wgf_color_t): void;
 
 /**
+ * How immediate mode's drawing after it blends with what is under it (wgf_material.h's alpha
+ * modes): BLEND to start, OPAQUE, ADD, MULTIPLY, PREMULTIPLIED (MASK draws as BLEND: immediate
+ * mode cuts out nothing). raylib's BeginBlendMode. False for a mode that isn't one.
+ */
+export declare function wgf_draw_set_blend_mode(mode: wgf_alpha_mode_t): boolean;
+
+/**
+ * How immediate mode's drawing after it blends with what is under it (wgf_material.h's alpha
+ * modes): BLEND to start, OPAQUE, ADD, MULTIPLY, PREMULTIPLIED (MASK draws as BLEND: immediate
+ * mode cuts out nothing). raylib's BeginBlendMode. False for a mode that isn't one.
+ */
+export declare function wgf_draw_get_blend_mode(): wgf_alpha_mode_t;
+
+/**
  * Logical pixels added between letters and between lines of the text drawn and measured
  * after it (wgf_draw_text, wgf_font_measure; a text actor has its own): raylib's spacing and
  * line spacing. 0 to start; a number that isn't finite is 0.
@@ -4454,6 +4472,21 @@ export declare function wgf_draw_circle_gradient(center_x: number, center_y: num
  * pivot (a share of its size: 0.5, 0.5 its middle) at x, y, turned `radians` about it.
  */
 export declare function wgf_draw_texture_rotated(texture: wgf_texture_t | 0, source_x: number, source_y: number, source_width: number, source_height: number, x: number, y: number, width: number, height: number, pivot_x: number, pivot_y: number, radians: number, tint: wgf_color_t): void;
+
+/**
+ * A texture over a polygon, raylib's DrawTexturePoly: `points` x and y in turn (`count`
+ * floats, 3 points or more, convex, or fanning from its first point), each with its texture
+ * coordinates in `uvs` (0 to 1 across the whole texture; `uvs_count` floats, as many as the
+ * points'). False for too few points, an odd count, or coordinates not one a point.
+ */
+export declare function wgf_draw_texture_polygon(texture: wgf_texture_t | 0, points: readonly number[] | Float32Array | Float64Array | null, uvs: readonly number[] | Float32Array | Float64Array | null, tint: wgf_color_t): boolean;
+
+/**
+ * A texture's region repeated over the rectangle at `scale` (1: a texel a logical pixel),
+ * from its top-left, the last row and column cut where the rectangle ends: raylib's
+ * DrawTextureTiled. A source width or height of 0 or less: the whole texture.
+ */
+export declare function wgf_draw_texture_tiled(texture: wgf_texture_t | 0, source_x: number, source_y: number, source_width: number, source_height: number, x: number, y: number, width: number, height: number, scale: number, tint: wgf_color_t): void;
 
 /**
  * A texture's region drawn as a nine-slice into the rectangle: its borders `left`, `top`,
@@ -7526,6 +7559,30 @@ export declare function wgf_render_get_height(): number;
  * aspect ratio.
  */
 export declare function wgf_render_get_dpi_scale(): number;
+
+/**
+ * The last frame's draw calls and triangles (every pass's: the stages', the shadows', the
+ * render targets', immediate mode's), and the bytes the GPU holds for the buffers and images
+ * alive now (their sizes as made, each mip level and slice; a GPU's own padding not counted):
+ * raylib's frame stats, read by sokol's trace hooks. 0 before the first frame.
+ */
+export declare function wgf_render_get_draw_calls(): number;
+
+/**
+ * The last frame's draw calls and triangles (every pass's: the stages', the shadows', the
+ * render targets', immediate mode's), and the bytes the GPU holds for the buffers and images
+ * alive now (their sizes as made, each mip level and slice; a GPU's own padding not counted):
+ * raylib's frame stats, read by sokol's trace hooks. 0 before the first frame.
+ */
+export declare function wgf_render_get_triangle_count(): number;
+
+/**
+ * The last frame's draw calls and triangles (every pass's: the stages', the shadows', the
+ * render targets', immediate mode's), and the bytes the GPU holds for the buffers and images
+ * alive now (their sizes as made, each mip level and slice; a GPU's own padding not counted):
+ * raylib's frame stats, read by sokol's trace hooks. 0 before the first frame.
+ */
+export declare function wgf_render_get_gpu_bytes(): number;
 
 /**
  * Draw into a render target (wgf_texture_create_target) instead of the screen, until

@@ -4,11 +4,15 @@ package wgf;
 /**
     How something drawn uses its alpha. In a stage, OPAQUE and MASK parts write depth and
     aren't sorted; BLEND parts are drawn after them, sorted back to front; ADD, particles'
-    alone (a material refuses it), after those.
+    alone (a material refuses it), after those. MULTIPLY and PREMULTIPLIED are 2D drawing's:
+    immediate mode's (wgf_draw_set_blend_mode) and a sprite's on a 2D stage (on a 3D one they
+    draw as BLEND); a material, an emitter, and a sprite batch refuse them.
 **/
 enum abstract AlphaMode(Int) from Int to Int {
 	var OPAQUE = 0;
 	var MASK = 1;
 	var BLEND = 2;
 	var ADD = 3;
+	var MULTIPLY = 4;
+	var PREMULTIPLIED = 5;
 }

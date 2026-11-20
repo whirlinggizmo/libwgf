@@ -925,6 +925,11 @@ class Main {
 		expect(Draw.spline(SplineKind.CATMULL_ROM, [0.0, 100, 20, 110, 40, 100, 60, 110], 8, 2, Color.get(ColorStock.WHITE)),
 			"a spline drawn");
 		Draw.textureNineSlice(tiles, 0, 0, 16, 16, 4, 4, 4, 4, 10, 10, 80, 40, Color.get(ColorStock.WHITE));
+		Draw.textureTiled(tiles, 0, 0, 16, 16, 10, 60, 50, 20, 1, Color.get(ColorStock.WHITE));
+		expect(Draw.texturePolygon(tiles, [0, 0, 10, 0, 0, 10], [0, 0, 1, 0, 0, 1], Color.get(ColorStock.WHITE)), "a textured polygon");
+		expect(Draw.setBlendMode(AlphaMode.MULTIPLY) && Draw.getBlendMode() == AlphaMode.MULTIPLY && Draw.setBlendMode(AlphaMode.BLEND),
+			"immediate mode's blend mode");
+		expect(Render.getDrawCalls() >= 0 && Render.getTriangleCount() >= 0 && Render.getGpuBytes() >= 0, "frame stats");
 		expect(Draw.polygon([100.0, 100, 120, 100, 110, 115], Color.get(ColorStock.WHITE)), "a polygon drawn");
 		Render.pushClip(0, 0, 200, 200);
 		Draw.text(font, "feature-test", 4, 120, 14, Color.get(ColorStock.WHITE));

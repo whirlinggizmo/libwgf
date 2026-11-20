@@ -90,6 +90,22 @@ class Draw {
 		Raw.wgf_draw_text(font, text, x, y, size, color);
 
 	/**
+	    How immediate mode's drawing after it blends with what is under it (wgf_material.h's alpha
+	    modes): BLEND to start, OPAQUE, ADD, MULTIPLY, PREMULTIPLIED (MASK draws as BLEND: immediate
+	    mode cuts out nothing). raylib's BeginBlendMode. False for a mode that isn't one.
+	**/
+	public static inline function setBlendMode(mode:AlphaMode):Bool
+		return Raw.wgf_draw_set_blend_mode(mode);
+
+	/**
+	    How immediate mode's drawing after it blends with what is under it (wgf_material.h's alpha
+	    modes): BLEND to start, OPAQUE, ADD, MULTIPLY, PREMULTIPLIED (MASK draws as BLEND: immediate
+	    mode cuts out nothing). raylib's BeginBlendMode. False for a mode that isn't one.
+	**/
+	public static inline function getBlendMode():AlphaMode
+		return Raw.wgf_draw_get_blend_mode();
+
+	/**
 	    Logical pixels added between letters and between lines of the text drawn and measured
 	    after it (wgf_draw_text, wgf_font_measure; a text actor has its own): raylib's spacing and
 	    line spacing. 0 to start; a number that isn't finite is 0.
@@ -182,6 +198,23 @@ class Draw {
 	**/
 	public static inline function textureRotated(texture:Texture, source_x:Float, source_y:Float, source_width:Float, source_height:Float, x:Float, y:Float, width:Float, height:Float, pivot_x:Float, pivot_y:Float, radians:Float, tint:Int):Void
 		Raw.wgf_draw_texture_rotated(texture, source_x, source_y, source_width, source_height, x, y, width, height, pivot_x, pivot_y, radians, tint);
+
+	/**
+	    A texture over a polygon, raylib's DrawTexturePoly: `points` x and y in turn (`count`
+	    floats, 3 points or more, convex, or fanning from its first point), each with its texture
+	    coordinates in `uvs` (0 to 1 across the whole texture; `uvs_count` floats, as many as the
+	    points'). False for too few points, an odd count, or coordinates not one a point.
+	**/
+	public static inline function texturePolygon(texture:Texture, points:Array<Float>, uvs:Array<Float>, tint:Int):Bool
+		return Raw.wgf_draw_texture_polygon(texture, points, uvs, tint);
+
+	/**
+	    A texture's region repeated over the rectangle at `scale` (1: a texel a logical pixel),
+	    from its top-left, the last row and column cut where the rectangle ends: raylib's
+	    DrawTextureTiled. A source width or height of 0 or less: the whole texture.
+	**/
+	public static inline function textureTiled(texture:Texture, source_x:Float, source_y:Float, source_width:Float, source_height:Float, x:Float, y:Float, width:Float, height:Float, scale:Float, tint:Int):Void
+		Raw.wgf_draw_texture_tiled(texture, source_x, source_y, source_width, source_height, x, y, width, height, scale, tint);
 
 	/**
 	    A texture's region drawn as a nine-slice into the rectangle: its borders `left`, `top`,

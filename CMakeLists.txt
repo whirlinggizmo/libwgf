@@ -59,6 +59,9 @@ endif()
 # sokol's graphics backend, one for the whole library: the dummy one (no GPU) in a
 # headless build, WebGL2 on the web, OpenGL core natively. Every layer is compiled with
 # it, as are the tests.
+# Its trace hooks too: gfx counts the frame's draws and triangles, and the GPU's bytes, by them
+# (wgf_render_get_draw_calls).
+add_compile_definitions(SOKOL_TRACE_HOOKS)
 if(WGF_HEADLESS)
     add_compile_definitions(SOKOL_DUMMY_BACKEND)
 elseif(EMSCRIPTEN)

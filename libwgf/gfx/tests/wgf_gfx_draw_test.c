@@ -7,6 +7,10 @@
 #include "util/sokol_gl.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
+#include "wgf_material.h"
+#include "wgf_resource.h"
+#include "wgf_texture.h"
+#include "wgf_render.h"
 
 /* Immediate mode on sokol's dummy backend (a headless build): what can be checked
  * without pixels. A draw outside a frame records nothing, and a frame that runs out
@@ -98,6 +102,32 @@ int main(void)
     expect(sgl_num_vertices() >= 20000 * 6, "so the next frame holds every draw");
     wgf_gfx_priv_end_frame();
     expect(wgf_gfx_priv_render_get_vertex_capacity() == 131072, "and it doesn't grow again");
+    expect(wgf_render_get_draw_calls() >= 1 && wgf_render_get_triangle_count() >= 20000 * 2,
+           "the frame's draw calls and triangles counted");
+
+    { /* blending, a textured polygon, a tiled draw; the GPU's bytes */
+        const double before = wgf_render_get_gpu_bytes();
+        const wgf_texture_t blank = wgf_texture_create_blank(64, 64);
+        const float points[6] = {0, 0, 10, 0, 0, 10}, uvs[6] = {0, 0, 1, 0, 0, 1};
+        expect(wgf_render_get_gpu_bytes() >= before + 64 * 64 * 4, "a texture made: the GPU's bytes up by its size");
+        begin_frame(640, 480, 1.0f);
+        expect(wgf_draw_get_blend_mode() == WGF_ALPHA_MODE_BLEND && wgf_draw_set_blend_mode(WGF_ALPHA_MODE_MULTIPLY) &&
+                   wgf_draw_get_blend_mode() == WGF_ALPHA_MODE_MULTIPLY && wgf_draw_set_blend_mode(WGF_ALPHA_MODE_MASK) &&
+                   wgf_draw_get_blend_mode() == WGF_ALPHA_MODE_BLEND && !wgf_draw_set_blend_mode((wgf_alpha_mode_t)9),
+               "immediate mode's blend mode (MASK drawn as BLEND); one that isn't refused");
+        vertices = sgl_num_vertices();
+        expect(wgf_draw_texture_polygon(blank, points, 6, uvs, 6, WGF_COLOR_WHITE) && sgl_num_vertices() == vertices + 3,
+               "a textured triangle");
+        expect(!wgf_draw_texture_polygon(blank, points, 4, uvs, 4, WGF_COLOR_WHITE) &&
+                   !wgf_draw_texture_polygon(blank, points, 6, uvs, 4, WGF_COLOR_WHITE),
+               "too few points, or coordinates not one a point: refused");
+        vertices = sgl_num_vertices();
+        wgf_draw_texture_tiled(blank, 0, 0, 64, 64, 0, 0, 100, 70, 1.0f, WGF_COLOR_WHITE);
+        expect(sgl_num_vertices() >= vertices + 4 * 6, "tiled: two across and two down, the last cut");
+        wgf_draw_set_blend_mode(WGF_ALPHA_MODE_BLEND);
+        wgf_gfx_priv_end_frame();
+        wgf_resource_release(blank);
+    }
 
     wgf_gfx_priv_stop();
     return failures == 0 ? 0 : 1;

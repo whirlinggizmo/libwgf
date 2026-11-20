@@ -50,6 +50,33 @@ class Render {
 		return Raw.wgf_render_get_dpi_scale();
 
 	/**
+	    The last frame's draw calls and triangles (every pass's: the stages', the shadows', the
+	    render targets', immediate mode's), and the bytes the GPU holds for the buffers and images
+	    alive now (their sizes as made, each mip level and slice; a GPU's own padding not counted):
+	    raylib's frame stats, read by sokol's trace hooks. 0 before the first frame.
+	**/
+	public static inline function getDrawCalls():Int
+		return Raw.wgf_render_get_draw_calls();
+
+	/**
+	    The last frame's draw calls and triangles (every pass's: the stages', the shadows', the
+	    render targets', immediate mode's), and the bytes the GPU holds for the buffers and images
+	    alive now (their sizes as made, each mip level and slice; a GPU's own padding not counted):
+	    raylib's frame stats, read by sokol's trace hooks. 0 before the first frame.
+	**/
+	public static inline function getTriangleCount():Float
+		return Raw.wgf_render_get_triangle_count();
+
+	/**
+	    The last frame's draw calls and triangles (every pass's: the stages', the shadows', the
+	    render targets', immediate mode's), and the bytes the GPU holds for the buffers and images
+	    alive now (their sizes as made, each mip level and slice; a GPU's own padding not counted):
+	    raylib's frame stats, read by sokol's trace hooks. 0 before the first frame.
+	**/
+	public static inline function getGpuBytes():Float
+		return Raw.wgf_render_get_gpu_bytes();
+
+	/**
 	    Draw into a render target (wgf_texture_create_target) instead of the screen, until
 	    wgf_render_end_target, as libwgt's. Inside a frame, and everything draws there:
 	    stages, sprites, particles, text, the UI, immediate mode. Targets are drawn before the

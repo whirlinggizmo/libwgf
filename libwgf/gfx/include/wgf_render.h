@@ -30,6 +30,14 @@ WGF_API int wgf_render_get_width(void);
 WGF_API int wgf_render_get_height(void);
 WGF_API float wgf_render_get_dpi_scale(void);
 
+/* The last frame's draw calls and triangles (every pass's: the stages', the shadows', the
+ * render targets', immediate mode's), and the bytes the GPU holds for the buffers and images
+ * alive now (their sizes as made, each mip level and slice; a GPU's own padding not counted):
+ * raylib's frame stats, read by sokol's trace hooks. 0 before the first frame. */
+WGF_API int wgf_render_get_draw_calls(void);
+WGF_API double wgf_render_get_triangle_count(void);
+WGF_API double wgf_render_get_gpu_bytes(void);
+
 /* Draw into a render target (wgf_texture_create_target) instead of the screen, until
  * wgf_render_end_target, as libwgt's. Inside a frame, and everything draws there:
  * stages, sprites, particles, text, the UI, immediate mode. Targets are drawn before the

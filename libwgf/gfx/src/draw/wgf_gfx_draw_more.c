@@ -289,3 +289,57 @@ bool wgf_draw_spline(wgf_spline_kind_t kind, const float *points, int count, int
     free(line);
     return drawn;
 }
+
+bool wgf_draw_texture_polygon(wgf_texture_t texture, const float *points, int count, const float *uvs, int uvs_count,
+                              wgf_color_t tint)
+{
+    float source[4] = {0, 0, 0, 0}, uv[4];
+    sg_view view;
+    sg_sampler sampler;
+    int i, n;
+    if (points == NULL || uvs == NULL || count < 6 || count % 2 != 0 || uvs_count != count) return false;
+    if (!region_of(texture, source, uv, &view, &sampler)) return true; /* outside a frame, or loading: nothing */
+    n = count / 2;
+    sgl_enable_texture();
+    sgl_texture(view, sampler);
+    sgl_begin_triangles();
+    set_color(tint);
+    for (i = 1; i + 1 < n; i++) { /* a fan from its first point */
+        sgl_v2f_t2f(points[0], points[1], uvs[0], uvs[1]);
+        sgl_v2f_t2f(points[2 * i], points[2 * i + 1], uvs[2 * i], uvs[2 * i + 1]);
+        sgl_v2f_t2f(points[2 * i + 2], points[2 * i + 3], uvs[2 * i + 2], uvs[2 * i + 3]);
+    }
+    sgl_end();
+    sgl_disable_texture();
+    return true;
+}
+
+void wgf_draw_texture_tiled(wgf_texture_t texture, float source_x, float source_y, float source_width,
+                            float source_height, float x, float y, float width, float height, float scale,
+                            wgf_color_t tint)
+{
+    float source[4] = {source_x, source_y, source_width, source_height}, uv[4], tile_w, tile_h, ty;
+    sg_view view;
+    sg_sampler sampler;
+    if (width <= 0.0f || height <= 0.0f || !(scale > 0.0f) || !region_of(texture, source, uv, &view, &sampler)) return;
+    tile_w = source[2] * scale;
+    tile_h = source[3] * scale;
+    if (tile_w <= 0.0f || tile_h <= 0.0f) return;
+    sgl_enable_texture();
+    sgl_texture(view, sampler);
+    sgl_begin_quads();
+    set_color(tint);
+    for (ty = 0.0f; ty < height; ty += tile_h) {
+        const float h = fminf(tile_h, height - ty), v1 = uv[1] + (uv[3] - uv[1]) * (h / tile_h);
+        float tx;
+        for (tx = 0.0f; tx < width; tx += tile_w) {
+            const float w = fminf(tile_w, width - tx), u1 = uv[0] + (uv[2] - uv[0]) * (w / tile_w);
+            sgl_v2f_t2f(x + tx, y + ty, uv[0], uv[1]);
+            sgl_v2f_t2f(x + tx + w, y + ty, u1, uv[1]);
+            sgl_v2f_t2f(x + tx + w, y + ty + h, u1, v1);
+            sgl_v2f_t2f(x + tx, y + ty + h, uv[0], v1);
+        }
+    }
+    sgl_end();
+    sgl_disable_texture();
+}

@@ -669,6 +669,10 @@ export const Draw = Object.freeze({
     polygon: raw.wgf_draw_polygon,
     // wgf: call wgf_draw_text
     text: raw.wgf_draw_text,
+    // wgf: call wgf_draw_set_blend_mode
+    setBlendMode: raw.wgf_draw_set_blend_mode,
+    // wgf: call wgf_draw_get_blend_mode
+    getBlendMode: raw.wgf_draw_get_blend_mode,
     // wgf: call wgf_draw_set_text_spacing
     setTextSpacing: raw.wgf_draw_set_text_spacing,
     // wgf: call wgf_draw_get_text_spacing
@@ -693,6 +697,10 @@ export const Draw = Object.freeze({
     circleGradient: raw.wgf_draw_circle_gradient,
     // wgf: call wgf_draw_texture_rotated
     textureRotated: raw.wgf_draw_texture_rotated,
+    // wgf: call wgf_draw_texture_polygon
+    texturePolygon: raw.wgf_draw_texture_polygon,
+    // wgf: call wgf_draw_texture_tiled
+    textureTiled: raw.wgf_draw_texture_tiled,
     // wgf: call wgf_draw_texture_nine_slice
     textureNineSlice: raw.wgf_draw_texture_nine_slice,
     // wgf: call wgf_draw_texture_fill
@@ -1675,6 +1683,12 @@ export const Render = Object.freeze({
     getHeight: raw.wgf_render_get_height,
     // wgf: call wgf_render_get_dpi_scale
     getDpiScale: raw.wgf_render_get_dpi_scale,
+    // wgf: call wgf_render_get_draw_calls
+    getDrawCalls: raw.wgf_render_get_draw_calls,
+    // wgf: call wgf_render_get_triangle_count
+    getTriangleCount: raw.wgf_render_get_triangle_count,
+    // wgf: call wgf_render_get_gpu_bytes
+    getGpuBytes: raw.wgf_render_get_gpu_bytes,
     // wgf: call wgf_render_begin_target
     beginTarget: raw.wgf_render_begin_target,
     // wgf: call wgf_render_end_target
@@ -2703,7 +2717,7 @@ export const ActorDestroy = Object.freeze({ DESTROY_CHILDREN: 0, KEEP_CHILDREN: 
 // wgf: enum ActorKind
 export const ActorKind = Object.freeze({ NONE: 0, PLAIN: 1, STAGE2D: 2, SPRITE: 3, CAMERA2D: 4, TEXT: 5, SHAPE2D: 6, EMITTER2D: 7, CAMERA3D: 8, STAGE3D: 9, LIGHT: 10, MODEL: 11, SHAPE3D: 12, EMITTER3D: 13, SPRITE_BATCH: 14, TILEMAP_LAYER: 15 });
 // wgf: enum AlphaMode
-export const AlphaMode = Object.freeze({ OPAQUE: 0, MASK: 1, BLEND: 2, ADD: 3 });
+export const AlphaMode = Object.freeze({ OPAQUE: 0, MASK: 1, BLEND: 2, ADD: 3, MULTIPLY: 4, PREMULTIPLIED: 5 });
 // wgf: enum AssetCacheMode
 export const AssetCacheMode = Object.freeze({ REVALIDATE: 0, TRUST: 1, OFF: 2 });
 // wgf: enum AssetTaskStatus

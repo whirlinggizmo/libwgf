@@ -78,12 +78,16 @@ typedef enum wgf_material_shading_t {
 
 /* How something drawn uses its alpha. In a stage, OPAQUE and MASK parts write depth and
  * aren't sorted; BLEND parts are drawn after them, sorted back to front; ADD, particles'
- * alone (a material refuses it), after those. */
+ * alone (a material refuses it), after those. MULTIPLY and PREMULTIPLIED are 2D drawing's:
+ * immediate mode's (wgf_draw_set_blend_mode) and a sprite's on a 2D stage (on a 3D one they
+ * draw as BLEND); a material, an emitter, and a sprite batch refuse them. */
 typedef enum wgf_alpha_mode_t {
-    WGF_ALPHA_MODE_OPAQUE = 0, /* alpha ignored */
-    WGF_ALPHA_MODE_MASK = 1,   /* drawn where alpha reaches the cutoff, not elsewhere */
-    WGF_ALPHA_MODE_BLEND = 2,  /* alpha blended, back to front */
-    WGF_ALPHA_MODE_ADD = 3     /* added, alpha its weight: glows, sparks, fire */
+    WGF_ALPHA_MODE_OPAQUE = 0,       /* alpha ignored */
+    WGF_ALPHA_MODE_MASK = 1,         /* drawn where alpha reaches the cutoff, not elsewhere */
+    WGF_ALPHA_MODE_BLEND = 2,        /* alpha blended, back to front */
+    WGF_ALPHA_MODE_ADD = 3,          /* added, alpha its weight: glows, sparks, fire */
+    WGF_ALPHA_MODE_MULTIPLY = 4,     /* what is under it multiplied by its color: shadows, tints, darkening */
+    WGF_ALPHA_MODE_PREMULTIPLIED = 5 /* its color already multiplied by its alpha (a premultiplied image's) */
 } wgf_alpha_mode_t;
 
 /* A material with glTF's defaults. 0 when `shading` isn't one (logged), or there is no

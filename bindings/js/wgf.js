@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "548942f31ed8d2c9" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "b5f7e16bd0ae3245" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -710,12 +710,16 @@ export const WGF_MATERIAL_SHADING_CUSTOM = 2;
 /**
  * How something drawn uses its alpha. In a stage, OPAQUE and MASK parts write depth and
  * aren't sorted; BLEND parts are drawn after them, sorted back to front; ADD, particles'
- * alone (a material refuses it), after those.
+ * alone (a material refuses it), after those. MULTIPLY and PREMULTIPLIED are 2D drawing's:
+ * immediate mode's (wgf_draw_set_blend_mode) and a sprite's on a 2D stage (on a 3D one they
+ * draw as BLEND); a material, an emitter, and a sprite batch refuse them.
  */
 export const WGF_ALPHA_MODE_OPAQUE = 0;
 export const WGF_ALPHA_MODE_MASK = 1;
 export const WGF_ALPHA_MODE_BLEND = 2;
 export const WGF_ALPHA_MODE_ADD = 3;
+export const WGF_ALPHA_MODE_MULTIPLY = 4;
+export const WGF_ALPHA_MODE_PREMULTIPLIED = 5;
 
 /**
  * How a clip runs through its frames.
@@ -6465,6 +6469,28 @@ export function wgf_draw_text(font, text, x, y, size, color) {
     host["stackRestore"](mark);
 }
 
+// wgf: call wgf_draw_set_blend_mode
+/**
+ * How immediate mode's drawing after it blends with what is under it (wgf_material.h's alpha
+ * modes): BLEND to start, OPAQUE, ADD, MULTIPLY, PREMULTIPLIED (MASK draws as BLEND: immediate
+ * mode cuts out nothing). raylib's BeginBlendMode. False for a mode that isn't one.
+ */
+export function wgf_draw_set_blend_mode(mode) {
+    const value = host["_wgf_draw_set_blend_mode"](mode);
+    return value !== 0;
+}
+
+// wgf: call wgf_draw_get_blend_mode
+/**
+ * How immediate mode's drawing after it blends with what is under it (wgf_material.h's alpha
+ * modes): BLEND to start, OPAQUE, ADD, MULTIPLY, PREMULTIPLIED (MASK draws as BLEND: immediate
+ * mode cuts out nothing). raylib's BeginBlendMode. False for a mode that isn't one.
+ */
+export function wgf_draw_get_blend_mode() {
+    const value = host["_wgf_draw_get_blend_mode"]();
+    return value;
+}
+
 // wgf: call wgf_draw_set_text_spacing
 /**
  * Logical pixels added between letters and between lines of the text drawn and measured
@@ -6585,6 +6611,30 @@ export function wgf_draw_circle_gradient(center_x, center_y, radius, inner, oute
  */
 export function wgf_draw_texture_rotated(texture, source_x, source_y, source_width, source_height, x, y, width, height, pivot_x, pivot_y, radians, tint) {
     host["_wgf_draw_texture_rotated"](texture, source_x, source_y, source_width, source_height, x, y, width, height, pivot_x, pivot_y, radians, tint);
+}
+
+// wgf: call wgf_draw_texture_polygon
+/**
+ * A texture over a polygon, raylib's DrawTexturePoly: `points` x and y in turn (`count`
+ * floats, 3 points or more, convex, or fanning from its first point), each with its texture
+ * coordinates in `uvs` (0 to 1 across the whole texture; `uvs_count` floats, as many as the
+ * points'). False for too few points, an odd count, or coordinates not one a point.
+ */
+export function wgf_draw_texture_polygon(texture, points, uvs, tint) {
+    const pointsPointer = arrayIn(points, 0, "HEAPF32");
+    const uvsPointer = arrayIn(uvs, 1, "HEAPF32");
+    const value = host["_wgf_draw_texture_polygon"](texture, pointsPointer, lengthOf(points), uvsPointer, lengthOf(uvs), tint);
+    return value !== 0;
+}
+
+// wgf: call wgf_draw_texture_tiled
+/**
+ * A texture's region repeated over the rectangle at `scale` (1: a texel a logical pixel),
+ * from its top-left, the last row and column cut where the rectangle ends: raylib's
+ * DrawTextureTiled. A source width or height of 0 or less: the whole texture.
+ */
+export function wgf_draw_texture_tiled(texture, source_x, source_y, source_width, source_height, x, y, width, height, scale, tint) {
+    host["_wgf_draw_texture_tiled"](texture, source_x, source_y, source_width, source_height, x, y, width, height, scale, tint);
 }
 
 // wgf: call wgf_draw_texture_nine_slice
@@ -10702,6 +10752,42 @@ export function wgf_render_get_height() {
  */
 export function wgf_render_get_dpi_scale() {
     const value = host["_wgf_render_get_dpi_scale"]();
+    return value;
+}
+
+// wgf: call wgf_render_get_draw_calls
+/**
+ * The last frame's draw calls and triangles (every pass's: the stages', the shadows', the
+ * render targets', immediate mode's), and the bytes the GPU holds for the buffers and images
+ * alive now (their sizes as made, each mip level and slice; a GPU's own padding not counted):
+ * raylib's frame stats, read by sokol's trace hooks. 0 before the first frame.
+ */
+export function wgf_render_get_draw_calls() {
+    const value = host["_wgf_render_get_draw_calls"]();
+    return value;
+}
+
+// wgf: call wgf_render_get_triangle_count
+/**
+ * The last frame's draw calls and triangles (every pass's: the stages', the shadows', the
+ * render targets', immediate mode's), and the bytes the GPU holds for the buffers and images
+ * alive now (their sizes as made, each mip level and slice; a GPU's own padding not counted):
+ * raylib's frame stats, read by sokol's trace hooks. 0 before the first frame.
+ */
+export function wgf_render_get_triangle_count() {
+    const value = host["_wgf_render_get_triangle_count"]();
+    return value;
+}
+
+// wgf: call wgf_render_get_gpu_bytes
+/**
+ * The last frame's draw calls and triangles (every pass's: the stages', the shadows', the
+ * render targets', immediate mode's), and the bytes the GPU holds for the buffers and images
+ * alive now (their sizes as made, each mip level and slice; a GPU's own padding not counted):
+ * raylib's frame stats, read by sokol's trace hooks. 0 before the first frame.
+ */
+export function wgf_render_get_gpu_bytes() {
+    const value = host["_wgf_render_get_gpu_bytes"]();
     return value;
 }
 

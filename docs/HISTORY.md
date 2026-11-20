@@ -1040,6 +1040,13 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## Parity: textured polygons, tiles, blend modes, frame stats (2026-11-20)
+
+Four of the parity rest's rows:
+- Textured polygons and tiled draws in immediate mode.
+- MULTIPLY and PREMULTIPLIED alpha modes for 2D drawing. Immediate mode now has a blend mode (raylib's `BeginBlendMode`), and a sprite always loads its own mode's pipeline, so a blend sprite isn't multiplied by it.
+- Frame stats: the last frame's draw calls and triangles, and the GPU's bytes. These come from sokol's trace hooks, now compiled into the whole library: a draw's elements are counted, and each buffer and image's size as it is made and destroyed.
+
 ## Animation layers, four (2026-11-20)
 
 The player's single layer became four (`WGF_MODEL_LAYERS`), each blended over what is under it in order: an attack from the waist up over the run, a flinch of the head over both. The layer calls take a layer's index, and a synced model gets every layer. That finishes what Wardens needs of skeletal animation.

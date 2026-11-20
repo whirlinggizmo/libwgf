@@ -2087,6 +2087,18 @@ export declare const Draw: {
      */
     readonly text: typeof raw.wgf_draw_text;
     /**
+     * How immediate mode's drawing after it blends with what is under it (wgf_material.h's alpha
+     * modes): BLEND to start, OPAQUE, ADD, MULTIPLY, PREMULTIPLIED (MASK draws as BLEND: immediate
+     * mode cuts out nothing). raylib's BeginBlendMode. False for a mode that isn't one.
+     */
+    readonly setBlendMode: typeof raw.wgf_draw_set_blend_mode;
+    /**
+     * How immediate mode's drawing after it blends with what is under it (wgf_material.h's alpha
+     * modes): BLEND to start, OPAQUE, ADD, MULTIPLY, PREMULTIPLIED (MASK draws as BLEND: immediate
+     * mode cuts out nothing). raylib's BeginBlendMode. False for a mode that isn't one.
+     */
+    readonly getBlendMode: typeof raw.wgf_draw_get_blend_mode;
+    /**
      * Logical pixels added between letters and between lines of the text drawn and measured
      * after it (wgf_draw_text, wgf_font_measure; a text actor has its own): raylib's spacing and
      * line spacing. 0 to start; a number that isn't finite is 0.
@@ -2156,6 +2168,19 @@ export declare const Draw: {
      * pivot (a share of its size: 0.5, 0.5 its middle) at x, y, turned `radians` about it.
      */
     readonly textureRotated: typeof raw.wgf_draw_texture_rotated;
+    /**
+     * A texture over a polygon, raylib's DrawTexturePoly: `points` x and y in turn (`count`
+     * floats, 3 points or more, convex, or fanning from its first point), each with its texture
+     * coordinates in `uvs` (0 to 1 across the whole texture; `uvs_count` floats, as many as the
+     * points'). False for too few points, an odd count, or coordinates not one a point.
+     */
+    readonly texturePolygon: typeof raw.wgf_draw_texture_polygon;
+    /**
+     * A texture's region repeated over the rectangle at `scale` (1: a texel a logical pixel),
+     * from its top-left, the last row and column cut where the rectangle ends: raylib's
+     * DrawTextureTiled. A source width or height of 0 or less: the whole texture.
+     */
+    readonly textureTiled: typeof raw.wgf_draw_texture_tiled;
     /**
      * A texture's region drawn as a nine-slice into the rectangle: its borders `left`, `top`,
      * `right`, and `bottom` texels in from the region's edges, the corners kept at their size
@@ -6049,6 +6074,27 @@ export declare const Render: {
      */
     readonly getDpiScale: typeof raw.wgf_render_get_dpi_scale;
     /**
+     * The last frame's draw calls and triangles (every pass's: the stages', the shadows', the
+     * render targets', immediate mode's), and the bytes the GPU holds for the buffers and images
+     * alive now (their sizes as made, each mip level and slice; a GPU's own padding not counted):
+     * raylib's frame stats, read by sokol's trace hooks. 0 before the first frame.
+     */
+    readonly getDrawCalls: typeof raw.wgf_render_get_draw_calls;
+    /**
+     * The last frame's draw calls and triangles (every pass's: the stages', the shadows', the
+     * render targets', immediate mode's), and the bytes the GPU holds for the buffers and images
+     * alive now (their sizes as made, each mip level and slice; a GPU's own padding not counted):
+     * raylib's frame stats, read by sokol's trace hooks. 0 before the first frame.
+     */
+    readonly getTriangleCount: typeof raw.wgf_render_get_triangle_count;
+    /**
+     * The last frame's draw calls and triangles (every pass's: the stages', the shadows', the
+     * render targets', immediate mode's), and the bytes the GPU holds for the buffers and images
+     * alive now (their sizes as made, each mip level and slice; a GPU's own padding not counted):
+     * raylib's frame stats, read by sokol's trace hooks. 0 before the first frame.
+     */
+    readonly getGpuBytes: typeof raw.wgf_render_get_gpu_bytes;
+    /**
      * Draw into a render target (wgf_texture_create_target) instead of the screen, until
      * wgf_render_end_target, as libwgt's. Inside a frame, and everything draws there:
      * stages, sprites, particles, text, the UI, immediate mode. Targets are drawn before the
@@ -9150,7 +9196,7 @@ export declare const ActorDestroy: { readonly DESTROY_CHILDREN: ActorDestroy; re
 export type ActorKind = raw.wgf_actor_kind_t;
 export declare const ActorKind: { readonly NONE: ActorKind; readonly PLAIN: ActorKind; readonly STAGE2D: ActorKind; readonly SPRITE: ActorKind; readonly CAMERA2D: ActorKind; readonly TEXT: ActorKind; readonly SHAPE2D: ActorKind; readonly EMITTER2D: ActorKind; readonly CAMERA3D: ActorKind; readonly STAGE3D: ActorKind; readonly LIGHT: ActorKind; readonly MODEL: ActorKind; readonly SHAPE3D: ActorKind; readonly EMITTER3D: ActorKind; readonly SPRITE_BATCH: ActorKind; readonly TILEMAP_LAYER: ActorKind; };
 export type AlphaMode = raw.wgf_alpha_mode_t;
-export declare const AlphaMode: { readonly OPAQUE: AlphaMode; readonly MASK: AlphaMode; readonly BLEND: AlphaMode; readonly ADD: AlphaMode; };
+export declare const AlphaMode: { readonly OPAQUE: AlphaMode; readonly MASK: AlphaMode; readonly BLEND: AlphaMode; readonly ADD: AlphaMode; readonly MULTIPLY: AlphaMode; readonly PREMULTIPLIED: AlphaMode; };
 export type AssetCacheMode = raw.wgf_asset_cache_mode_t;
 export declare const AssetCacheMode: { readonly REVALIDATE: AssetCacheMode; readonly TRUST: AssetCacheMode; readonly OFF: AssetCacheMode; };
 export type AssetTaskStatus = raw.wgf_asset_task_status_t;

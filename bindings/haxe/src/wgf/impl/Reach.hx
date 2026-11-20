@@ -303,6 +303,7 @@ class Reach {
 		"wgf_draw_ellipse",
 		"wgf_draw_ellipse_lines",
 		"wgf_draw_end_3d",
+		"wgf_draw_get_blend_mode",
 		"wgf_draw_get_text_spacing",
 		"wgf_draw_grid",
 		"wgf_draw_line",
@@ -314,6 +315,7 @@ class Reach {
 		"wgf_draw_rectangle_gradient",
 		"wgf_draw_rectangle_lines",
 		"wgf_draw_ring",
+		"wgf_draw_set_blend_mode",
 		"wgf_draw_set_text_spacing",
 		"wgf_draw_sphere",
 		"wgf_draw_sphere_wires",
@@ -324,8 +326,10 @@ class Reach {
 		"wgf_draw_texture",
 		"wgf_draw_texture_fill",
 		"wgf_draw_texture_nine_slice",
+		"wgf_draw_texture_polygon",
 		"wgf_draw_texture_region",
 		"wgf_draw_texture_rotated",
+		"wgf_draw_texture_tiled",
 		"wgf_draw_triangle",
 		"wgf_draw_triangle_3d",
 		"wgf_ease_value",
@@ -743,9 +747,12 @@ class Reach {
 		"wgf_render_end_target",
 		"wgf_render_get_clear_color",
 		"wgf_render_get_dpi_scale",
+		"wgf_render_get_draw_calls",
 		"wgf_render_get_effect_count",
+		"wgf_render_get_gpu_bytes",
 		"wgf_render_get_height",
 		"wgf_render_get_target_clear_color",
+		"wgf_render_get_triangle_count",
 		"wgf_render_get_width",
 		"wgf_render_pop_clip",
 		"wgf_render_push_clip",
@@ -1192,7 +1199,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1183) 0];
+	static final counts:Array<Int> = [for (_ in 0...1190) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;
