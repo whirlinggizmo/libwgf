@@ -24,8 +24,7 @@ Out of the parity work, as not libwgf's (the checklist's skips): desktop window 
 
 What a game of any genre writes in its first day, in this order, each done as a core system is, carrying helix-legacy's.
 
-1. **2D animation's rest:** a packer's atlas of named frames read from its file (TexturePacker's or Aseprite's JSON), events on a frame, directions (a clip a facing), and a sheet made from a folder of frames by a tool (helix-legacy's `tools/gen_sprite_sheet.py`); grid sheets and clips are done (`wgf_sheet.h`).
-2. **Tilemaps.** Tiled's maps (`.tmj`, its tilesets `.tsj`): tile layers drawn as one actor each (the sprite batch's records, or a mesh, which the plan measures), object layers read as actors and prefabs by class with their properties, animated tiles, a cell read and set, and the solid cells 2D move-and-slide collides with. helix-legacy's `tiled/`; today's `examples/c/gfx-tilemap` rebuilt on it.
+1. **Tilemaps.** Tiled's maps (`.tmj`, its tilesets `.tsj`): tile layers drawn as one actor each (the sprite batch's records, or a mesh, which the plan measures), object layers read as actors and prefabs by class with their properties, animated tiles, a cell read and set, and the solid cells 2D move-and-slide collides with. helix-legacy's `tiled/`; today's `examples/c/gfx-tilemap` rebuilt on it.
 
 Done when every item's calls are in the bindings and the feature test, and each has an example in the browser check.
 

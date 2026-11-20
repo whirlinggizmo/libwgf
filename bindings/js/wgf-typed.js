@@ -1853,6 +1853,8 @@ export const Shape3d = Object.freeze({
 export const Sheet = Object.freeze({
     // wgf: call wgf_sheet_create_grid
     createGrid: raw.wgf_sheet_create_grid,
+    // wgf: call wgf_sheet_create
+    create: raw.wgf_sheet_create,
     // wgf: call wgf_sheet_destroy
     destroy: raw.wgf_sheet_destroy,
     // wgf: call wgf_sheet_get_texture
@@ -1861,10 +1863,22 @@ export const Sheet = Object.freeze({
     getFrameCount: raw.wgf_sheet_get_frame_count,
     // wgf: call wgf_sheet_get_frame
     getFrame: raw.wgf_sheet_get_frame,
+    // wgf: call wgf_sheet_get_frame_name
+    getFrameName: raw.wgf_sheet_get_frame_name,
+    // wgf: call wgf_sheet_find_frame
+    findFrame: raw.wgf_sheet_find_frame,
     // wgf: call wgf_sheet_add_clip
     addClip: raw.wgf_sheet_add_clip,
     // wgf: call wgf_sheet_get_clip_count
     getClipCount: raw.wgf_sheet_get_clip_count,
+    // wgf: call wgf_sheet_get_clip_name
+    getClipName: raw.wgf_sheet_get_clip_name,
+    // wgf: call wgf_sheet_find_clip
+    findClip: raw.wgf_sheet_find_clip,
+    // wgf: call wgf_sheet_set_clip_event
+    setClipEvent: raw.wgf_sheet_set_clip_event,
+    // wgf: call wgf_sheet_get_clip_event
+    getClipEvent: raw.wgf_sheet_get_clip_event,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
@@ -1947,6 +1961,12 @@ export const Sprite = Object.freeze({
     setClipSpeed: raw.wgf_sprite_set_clip_speed,
     // wgf: call wgf_sprite_get_clip_speed
     getClipSpeed: raw.wgf_sprite_get_clip_speed,
+    // wgf: call wgf_sprite_take_clip_events
+    takeClipEvents: raw.wgf_sprite_take_clip_events,
+    // wgf: call wgf_sprite_set_clip_facing
+    setClipFacing: raw.wgf_sprite_set_clip_facing,
+    // wgf: call wgf_sprite_get_clip_facing
+    getClipFacing: raw.wgf_sprite_get_clip_facing,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
@@ -2583,7 +2603,7 @@ export const Shape2dKind = Object.freeze({ NONE: 0, RECTANGLE: 1, CIRCLE: 2, LIN
 // wgf: enum Shape3dKind
 export const Shape3dKind = Object.freeze({ NONE: 0, CUBE: 1, SPHERE: 2, RECTANGLE: 3, CIRCLE: 4, LINE: 5, LINE_STRIP: 6 });
 // wgf: enum SheetDirection
-export const SheetDirection = Object.freeze({ FORWARD: 0, BACKWARD: 1, PING_PONG: 2 });
+export const SheetDirection = Object.freeze({ FORWARD: 0, BACKWARD: 1, PING_PONG: 2, PING_PONG_BACKWARD: 3 });
 // wgf: enum SpriteFacing
 export const SpriteFacing = Object.freeze({ CAMERA: 0, CAMERA_FIXED_Y: 1, Y_UP: 2, FREE: 3 });
 // wgf: enum Stage3dTonemap

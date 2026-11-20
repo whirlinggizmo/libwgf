@@ -25,7 +25,28 @@ typedef struct wgf_gfx_priv_sprite_t {
     int alpha_mode;     /* wgf_alpha_mode_t */
     float alpha_cutoff; /* MASK's */
     int facing;         /* wgf_sprite_facing_t: on a 3D stage */
+    /* a frame trimmed when packed (a sheet's atlas): its texels' offset into the whole
+       picture, and the picture's size; trim[2] <= 0: none. The sprite is the whole picture:
+       its default size, and its pivot a fraction of it; what is drawn, the region within it. */
+    float trim[4];
 } wgf_gfx_priv_sprite_t;
+
+/* A trimmed sprite's drawing: the region's size `region_w` by `region_h` within the whole
+ * picture drawn at `size`, its pivot `pivot`, into the size and pivot of the region's own
+ * quad (as they are for a sprite not trimmed). */
+static inline void wgf_gfx_priv_sprite_trimmed(const wgf_gfx_priv_sprite_t *sprite, float region_w, float region_h,
+                                               float size[2], float pivot[2])
+{
+    if (sprite->trim[2] <= 0.0f || sprite->trim[3] <= 0.0f || region_w <= 0.0f || region_h <= 0.0f) return;
+    pivot[0] = (pivot[0] * sprite->trim[2] - sprite->trim[0]) / region_w;
+    pivot[1] = (pivot[1] * sprite->trim[3] - sprite->trim[1]) / region_h;
+    size[0] *= region_w / sprite->trim[2];
+    size[1] *= region_h / sprite->trim[3];
+}
+
+/* Its trim set (a sheet's frame showing): offset x, y into a whole picture `w` by `h`; w or h
+ * <= 0 for none. */
+void wgf_gfx_priv_sprite_set_trim(wgf_actor_t sprite, float x, float y, float w, float h);
 
 typedef struct wgf_gfx_priv_shape2d_t {
     int kind;      /* wgf_shape2d_kind_t */

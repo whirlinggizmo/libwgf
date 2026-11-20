@@ -88,6 +88,9 @@ bool wgf_gfx_priv_sprite_quad(const wgf_gfx_priv_actor_t *actor_ptr, wgf_mat4_t 
     quad->pivot[0] = sprite->pivot[0];
     quad->pivot[1] = sprite->pivot[1];
     quad->uv[2] = quad->uv[3] = 1.0f;
+    if (!placeholder && sprite->source[2] > 0.0f && sprite->source[3] > 0.0f) {
+        wgf_gfx_priv_sprite_trimmed(sprite, sprite->source[2], sprite->source[3], quad->size, quad->pivot);
+    }
     if (!placeholder && tw > 0 && th > 0 && sprite->source[2] > 0.0f && sprite->source[3] > 0.0f) {
         quad->uv[0] = sprite->source[0] / (float)tw;
         quad->uv[1] = sprite->source[1] / (float)th;

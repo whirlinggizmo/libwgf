@@ -231,4 +231,32 @@ import wgf.impl.Raw;
 	**/
 	public inline function getClipSpeed():Float
 		return Raw.wgf_sprite_get_clip_speed(this);
+
+	/**
+	    The events its clip raised as its frames came (wgf_sheet_set_clip_event), oldest first,
+	    into `out` (as many as fit in `count`), returning how many; taken, so read again they are
+	    gone. At most the last 16 are kept. 0 for a sprite with no sheet.
+	**/
+	public inline function takeClipEvents(out:Array<Int>):Int
+		return Raw.wgf_sprite_take_clip_events(this, out);
+
+	/**
+	    A facing for its clips (a direction a character faces: "up", "left"): a clip played, or
+	    playing, by name plays the sheet's clip named name_facing when it has one ("walk" facing
+	    "left": "walk_left"), else name. Changed while one plays, the clip for the new facing goes
+	    on from the same place and time. "" or NULL for none. False for a sprite with no sheet, or a
+	    facing over 15 bytes.
+	**/
+	public inline function setClipFacing(facing:String):Bool
+		return Raw.wgf_sprite_set_clip_facing(this, facing);
+
+	/**
+	    A facing for its clips (a direction a character faces: "up", "left"): a clip played, or
+	    playing, by name plays the sheet's clip named name_facing when it has one ("walk" facing
+	    "left": "walk_left"), else name. Changed while one plays, the clip for the new facing goes
+	    on from the same place and time. "" or NULL for none. False for a sprite with no sheet, or a
+	    facing over 15 bytes.
+	**/
+	public inline function getClipFacing():String
+		return Raw.wgf_sprite_get_clip_facing(this);
 }

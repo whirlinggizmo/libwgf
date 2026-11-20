@@ -1,0 +1,97 @@
+{
+ "frames": {
+  "gem_1.png": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 12
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 2,
+    "y": 2,
+    "w": 12,
+    "h": 12
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 120
+  },
+  "gem_2.png": {
+   "frame": {
+    "x": 13,
+    "y": 0,
+    "w": 8,
+    "h": 12
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 4,
+    "y": 2,
+    "w": 8,
+    "h": 12
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 120
+  },
+  "gem_3.png": {
+   "frame": {
+    "x": 31,
+    "y": 0,
+    "w": 2,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 7,
+    "y": 3,
+    "w": 2,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 120
+  },
+  "gem_4.png": {
+   "frame": {
+    "x": 22,
+    "y": 0,
+    "w": 8,
+    "h": 12
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 4,
+    "y": 2,
+    "w": 8,
+    "h": 12
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 120
+  }
+ },
+ "meta": {
+  "image": "gem.png",
+  "size": {
+   "w": 33,
+   "h": 12
+  },
+  "app": "libwgf tools/pack_sprite_sheet.py",
+  "format": "RGBA8888"
+ }
+}

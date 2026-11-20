@@ -23,19 +23,20 @@ abstract Sheet(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_sheet_create_grid(texture, frame_width, frame_height, count, margin, spacing);
 
 	/**
-	    A sheet over `texture` cut into cells of frame_width by frame_height texels, left to right
-	    then down, `margin` texels in from its edges and `spacing` between cells: `count` frames
-	    (0: every cell that fits), cut once the texture is READY. 0 for a texture that isn't one, a
-	    frame size not above 0, or a count, margin, or spacing below 0.
+	    The atlas at `path`: loaded as a resource is (PENDING at once, READY or FAILED in a later
+	    update), its image too. 0 only when there is no room for another.
+	**/
+	public static inline function create(path:String):Sheet
+		return Raw.wgf_sheet_create(path);
+
+	/**
+	    One reference let go of (wgf_resource_release): a grid's only one frees it.
 	**/
 	public inline function destroy():Void
 		Raw.wgf_sheet_destroy(this);
 
 	/**
-	    A sheet over `texture` cut into cells of frame_width by frame_height texels, left to right
-	    then down, `margin` texels in from its edges and `spacing` between cells: `count` frames
-	    (0: every cell that fits), cut once the texture is READY. 0 for a texture that isn't one, a
-	    frame size not above 0, or a count, margin, or spacing below 0.
+	    One reference let go of (wgf_resource_release): a grid's only one frees it.
 	**/
 	public inline function getTexture():Texture
 		return Raw.wgf_sheet_get_texture(this);
@@ -55,20 +56,74 @@ abstract Sheet(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_sheet_get_frame(this, index, into);
 
 	/**
+	    A frame's name ("" for a grid's, or an index outside it), and the frame named `name` (-1
+	    for none).
+	**/
+	public inline function getFrameName(index:Int):String
+		return Raw.wgf_sheet_get_frame_name(this, index);
+
+	/**
+	    A frame's name ("" for a grid's, or an index outside it), and the frame named `name` (-1
+	    for none).
+	**/
+	public inline function findFrame(name:String):Int
+		return Raw.wgf_sheet_find_frame(this, name);
+
+	/**
 	    A clip named `name` over the sheet's frames by index (`count` of them), each shown for
-	    `seconds`, run in `direction`, in place of one of that name. At most 64 clips a sheet;
-	    false for a name empty or over 31 bytes, no frames, seconds not above 0, or a direction
-	    that isn't one.
+	    `seconds` (0: each frame's own duration, an atlas's), run in `direction`, in place of one of
+	    that name. At most 64 clips a sheet; false for a name empty or over 63 bytes, no frames,
+	    seconds below 0, or a direction that isn't one. Its clips counted, one's name ("" for none),
+	    and the one named `name` (-1 for none).
 	**/
 	public inline function addClip(name:String, frames:Array<Int>, seconds:Float, direction:SheetDirection):Bool
 		return Raw.wgf_sheet_add_clip(this, name, frames, seconds, direction);
 
 	/**
 	    A clip named `name` over the sheet's frames by index (`count` of them), each shown for
-	    `seconds`, run in `direction`, in place of one of that name. At most 64 clips a sheet;
-	    false for a name empty or over 31 bytes, no frames, seconds not above 0, or a direction
-	    that isn't one.
+	    `seconds` (0: each frame's own duration, an atlas's), run in `direction`, in place of one of
+	    that name. At most 64 clips a sheet; false for a name empty or over 63 bytes, no frames,
+	    seconds below 0, or a direction that isn't one. Its clips counted, one's name ("" for none),
+	    and the one named `name` (-1 for none).
 	**/
 	public inline function getClipCount():Int
 		return Raw.wgf_sheet_get_clip_count(this);
+
+	/**
+	    A clip named `name` over the sheet's frames by index (`count` of them), each shown for
+	    `seconds` (0: each frame's own duration, an atlas's), run in `direction`, in place of one of
+	    that name. At most 64 clips a sheet; false for a name empty or over 63 bytes, no frames,
+	    seconds below 0, or a direction that isn't one. Its clips counted, one's name ("" for none),
+	    and the one named `name` (-1 for none).
+	**/
+	public inline function getClipName(index:Int):String
+		return Raw.wgf_sheet_get_clip_name(this, index);
+
+	/**
+	    A clip named `name` over the sheet's frames by index (`count` of them), each shown for
+	    `seconds` (0: each frame's own duration, an atlas's), run in `direction`, in place of one of
+	    that name. At most 64 clips a sheet; false for a name empty or over 63 bytes, no frames,
+	    seconds below 0, or a direction that isn't one. Its clips counted, one's name ("" for none),
+	    and the one named `name` (-1 for none).
+	**/
+	public inline function findClip(name:String):Int
+		return Raw.wgf_sheet_find_clip(this, name);
+
+	/**
+	    An event on a clip's frame: `event` (above 0; 0 takes one off) raised each time the clip
+	    comes to its `place`th frame (0 its first, by place in the clip as added), read from the
+	    sprite playing it (wgf_sprite_take_clip_events): a footstep's sound, an attack's hit
+	    frame. False for a clip it hasn't, a place outside it, or an event below 0.
+	**/
+	public inline function setClipEvent(clip:String, place:Int, event:Int):Bool
+		return Raw.wgf_sheet_set_clip_event(this, clip, place, event);
+
+	/**
+	    An event on a clip's frame: `event` (above 0; 0 takes one off) raised each time the clip
+	    comes to its `place`th frame (0 its first, by place in the clip as added), read from the
+	    sprite playing it (wgf_sprite_take_clip_events): a footstep's sound, an attack's hit
+	    frame. False for a clip it hasn't, a place outside it, or an event below 0.
+	**/
+	public inline function getClipEvent(clip:String, place:Int):Int
+		return Raw.wgf_sheet_get_clip_event(this, clip, place);
 }

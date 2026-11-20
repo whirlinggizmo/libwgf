@@ -572,7 +572,8 @@ export type wgf_alpha_mode_t = typeof WGF_ALPHA_MODE_OPAQUE | typeof WGF_ALPHA_M
 export declare const WGF_SHEET_DIRECTION_FORWARD: 0;
 export declare const WGF_SHEET_DIRECTION_BACKWARD: 1;
 export declare const WGF_SHEET_DIRECTION_PING_PONG: 2;
-export type wgf_sheet_direction_t = typeof WGF_SHEET_DIRECTION_FORWARD | typeof WGF_SHEET_DIRECTION_BACKWARD | typeof WGF_SHEET_DIRECTION_PING_PONG;
+export declare const WGF_SHEET_DIRECTION_PING_PONG_BACKWARD: 3;
+export type wgf_sheet_direction_t = typeof WGF_SHEET_DIRECTION_FORWARD | typeof WGF_SHEET_DIRECTION_BACKWARD | typeof WGF_SHEET_DIRECTION_PING_PONG | typeof WGF_SHEET_DIRECTION_PING_PONG_BACKWARD;
 
 /**
  * How a sprite on a 3D stage faces, libwgt's and wgrender-c's (on a 2D stage it lies in
@@ -3703,18 +3704,18 @@ export declare function wgf_material_get_texture_filter(material: wgf_material_t
 export declare function wgf_sheet_create_grid(texture: wgf_texture_t | 0, frame_width: number, frame_height: number, count: number, margin: number, spacing: number): wgf_sheet_t;
 
 /**
- * A sheet over `texture` cut into cells of frame_width by frame_height texels, left to right
- * then down, `margin` texels in from its edges and `spacing` between cells: `count` frames
- * (0: every cell that fits), cut once the texture is READY. 0 for a texture that isn't one, a
- * frame size not above 0, or a count, margin, or spacing below 0.
+ * The atlas at `path`: loaded as a resource is (PENDING at once, READY or FAILED in a later
+ * update), its image too. 0 only when there is no room for another.
+ */
+export declare function wgf_sheet_create(path: string | null): wgf_sheet_t;
+
+/**
+ * One reference let go of (wgf_resource_release): a grid's only one frees it.
  */
 export declare function wgf_sheet_destroy(sheet: wgf_sheet_t | 0): void;
 
 /**
- * A sheet over `texture` cut into cells of frame_width by frame_height texels, left to right
- * then down, `margin` texels in from its edges and `spacing` between cells: `count` frames
- * (0: every cell that fits), cut once the texture is READY. 0 for a texture that isn't one, a
- * frame size not above 0, or a count, margin, or spacing below 0.
+ * One reference let go of (wgf_resource_release): a grid's only one frees it.
  */
 export declare function wgf_sheet_get_texture(sheet: wgf_sheet_t | 0): wgf_texture_t;
 
@@ -3732,20 +3733,68 @@ export declare function wgf_sheet_get_frame<T extends number[] | Float32Array | 
 export declare function wgf_sheet_get_frame(sheet: wgf_sheet_t | 0, index: number, into?: wgf_vec4_t | null): wgf_vec4_t;
 
 /**
+ * A frame's name ("" for a grid's, or an index outside it), and the frame named `name` (-1
+ * for none).
+ */
+export declare function wgf_sheet_get_frame_name(sheet: wgf_sheet_t | 0, index: number): string;
+
+/**
+ * A frame's name ("" for a grid's, or an index outside it), and the frame named `name` (-1
+ * for none).
+ */
+export declare function wgf_sheet_find_frame(sheet: wgf_sheet_t | 0, name: string | null): number;
+
+/**
  * A clip named `name` over the sheet's frames by index (`count` of them), each shown for
- * `seconds`, run in `direction`, in place of one of that name. At most 64 clips a sheet;
- * false for a name empty or over 31 bytes, no frames, seconds not above 0, or a direction
- * that isn't one.
+ * `seconds` (0: each frame's own duration, an atlas's), run in `direction`, in place of one of
+ * that name. At most 64 clips a sheet; false for a name empty or over 63 bytes, no frames,
+ * seconds below 0, or a direction that isn't one. Its clips counted, one's name ("" for none),
+ * and the one named `name` (-1 for none).
  */
 export declare function wgf_sheet_add_clip(sheet: wgf_sheet_t | 0, name: string | null, frames: readonly number[] | Int32Array | null, seconds: number, direction: wgf_sheet_direction_t): boolean;
 
 /**
  * A clip named `name` over the sheet's frames by index (`count` of them), each shown for
- * `seconds`, run in `direction`, in place of one of that name. At most 64 clips a sheet;
- * false for a name empty or over 31 bytes, no frames, seconds not above 0, or a direction
- * that isn't one.
+ * `seconds` (0: each frame's own duration, an atlas's), run in `direction`, in place of one of
+ * that name. At most 64 clips a sheet; false for a name empty or over 63 bytes, no frames,
+ * seconds below 0, or a direction that isn't one. Its clips counted, one's name ("" for none),
+ * and the one named `name` (-1 for none).
  */
 export declare function wgf_sheet_get_clip_count(sheet: wgf_sheet_t | 0): number;
+
+/**
+ * A clip named `name` over the sheet's frames by index (`count` of them), each shown for
+ * `seconds` (0: each frame's own duration, an atlas's), run in `direction`, in place of one of
+ * that name. At most 64 clips a sheet; false for a name empty or over 63 bytes, no frames,
+ * seconds below 0, or a direction that isn't one. Its clips counted, one's name ("" for none),
+ * and the one named `name` (-1 for none).
+ */
+export declare function wgf_sheet_get_clip_name(sheet: wgf_sheet_t | 0, index: number): string;
+
+/**
+ * A clip named `name` over the sheet's frames by index (`count` of them), each shown for
+ * `seconds` (0: each frame's own duration, an atlas's), run in `direction`, in place of one of
+ * that name. At most 64 clips a sheet; false for a name empty or over 63 bytes, no frames,
+ * seconds below 0, or a direction that isn't one. Its clips counted, one's name ("" for none),
+ * and the one named `name` (-1 for none).
+ */
+export declare function wgf_sheet_find_clip(sheet: wgf_sheet_t | 0, name: string | null): number;
+
+/**
+ * An event on a clip's frame: `event` (above 0; 0 takes one off) raised each time the clip
+ * comes to its `place`th frame (0 its first, by place in the clip as added), read from the
+ * sprite playing it (wgf_sprite_take_clip_events): a footstep's sound, an attack's hit
+ * frame. False for a clip it hasn't, a place outside it, or an event below 0.
+ */
+export declare function wgf_sheet_set_clip_event(sheet: wgf_sheet_t | 0, clip: string | null, place: number, event: number): boolean;
+
+/**
+ * An event on a clip's frame: `event` (above 0; 0 takes one off) raised each time the clip
+ * comes to its `place`th frame (0 its first, by place in the clip as added), read from the
+ * sprite playing it (wgf_sprite_take_clip_events): a footstep's sound, an attack's hit
+ * frame. False for a clip it hasn't, a place outside it, or an event below 0.
+ */
+export declare function wgf_sheet_get_clip_event(sheet: wgf_sheet_t | 0, clip: string | null, place: number): number;
 
 /**
  * A sprite of `texture` (0 for none: it draws nothing). 0 when there is no room for
@@ -3949,6 +3998,31 @@ export declare function wgf_sprite_set_clip_speed(sprite: wgf_actor_t | 0, speed
  * none).
  */
 export declare function wgf_sprite_get_clip_speed(sprite: wgf_actor_t | 0): number;
+
+/**
+ * The events its clip raised as its frames came (wgf_sheet_set_clip_event), oldest first,
+ * into `out` (as many as fit in `count`), returning how many; taken, so read again they are
+ * gone. At most the last 16 are kept. 0 for a sprite with no sheet.
+ */
+export declare function wgf_sprite_take_clip_events(sprite: wgf_actor_t | 0, out: number[] | Int32Array | null): number;
+
+/**
+ * A facing for its clips (a direction a character faces: "up", "left"): a clip played, or
+ * playing, by name plays the sheet's clip named name_facing when it has one ("walk" facing
+ * "left": "walk_left"), else name. Changed while one plays, the clip for the new facing goes
+ * on from the same place and time. "" or NULL for none. False for a sprite with no sheet, or a
+ * facing over 15 bytes.
+ */
+export declare function wgf_sprite_set_clip_facing(sprite: wgf_actor_t | 0, facing: string | null): boolean;
+
+/**
+ * A facing for its clips (a direction a character faces: "up", "left"): a clip played, or
+ * playing, by name plays the sheet's clip named name_facing when it has one ("walk" facing
+ * "left": "walk_left"), else name. Changed while one plays, the clip for the new facing goes
+ * on from the same place and time. "" or NULL for none. False for a sprite with no sheet, or a
+ * facing over 15 bytes.
+ */
+export declare function wgf_sprite_get_clip_facing(sprite: wgf_actor_t | 0): string;
 
 /**
  * A text actor in `font` (0: the default font), with no string yet. 0 when `font`

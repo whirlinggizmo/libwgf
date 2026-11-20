@@ -40,6 +40,7 @@ class Main {
 	static var tiles:Texture;
 	static var car:Model = 0; // a section type starts as none, as a handle does
 	static var robot:Model = 0; // a skinned, animated glTF file's root
+	static var gems:Sheet = 0; // an atlas, TexturePacker's hash
 	static var font:Font;
 	static var menu:Document;
 	static var menuDone = false;
@@ -609,6 +610,8 @@ class Main {
 			&& flipbook.stopClip(), "its speed, paused, resumed, stopped");
 		flipbook.destroy(ActorDestroy.DESTROY_CHILDREN);
 		sheet.destroy();
+		gems = Sheet.create("sheets/gem.json");
+		expect(Resource.getStatus(gems) == ResourceStatus.PENDING, "an atlas loading");
 		final quads = SpriteBatch.create(tiles);
 		quads.setParent(group);
 		final floats:Array<Float> = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -954,7 +957,8 @@ class Main {
 			expect(World.dump().indexOf("wgf-scene 2") == 0, "the world dumped");
 		}
 		if (frames >= 30 && instantiated && stage > 3 && menuDone && !reported
-			&& Resource.getStatus(robot.getMesh()) != ResourceStatus.PENDING)
+			&& Resource.getStatus(robot.getMesh()) != ResourceStatus.PENDING
+			&& Resource.getStatus(gems) != ResourceStatus.PENDING)
 			finish();
 		if (frames > 600 && !reported) {
 			expect(false, 'still waiting at frame 600 (scene ${Resource.getStatus(scene)}, storage stage $stage)');
@@ -1126,6 +1130,20 @@ class Main {
 		expect(Resource.getStatus(car.getMesh()) == ResourceStatus.READY && !car.find("toy_car/body/wheel_fl").isNone(),
 			"a glTF file loaded, its nodes under its model");
 		skinning();
+		{ // the atlas, loaded
+			expect(Resource.getStatus(gems) == ResourceStatus.READY && gems.getFrameCount() == 4
+				&& gems.getFrameName(0) == "gem_1.png" && gems.findFrame("gem_3.png") == 2, "an atlas read: its frames by name");
+			expect(gems.getClipCount() == 1 && gems.getClipName(0) == "gem" && gems.findClip("gem") == 0,
+				"its numbered run, a clip");
+			expect(gems.setClipEvent("gem", 0, 5) && gems.getClipEvent("gem", 0) == 5, "an event on its first frame");
+			final gem = Sprite.create(cast 0);
+			final taken:Array<Int> = [0, 0];
+			expect(gem.setSheet(gems) && gem.playClip("gem", true) && gem.takeClipEvents(taken) == 1 && taken[0] == 5,
+				"played: its first frame's event");
+			expect(gem.setClipFacing("left") && gem.getClipFacing() == "left" && gem.getClip() == "gem", "a facing it has no clip for");
+			gem.destroy(ActorDestroy.DESTROY_CHILDREN);
+			Resource.release(gems);
+		}
 		expect(music.getDuration() >= 0 && click.getDuration() > 0, "the sounds' lengths");
 		ensure.getStatus();
 		ensure.getPath();

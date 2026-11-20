@@ -8,4 +8,5 @@ enum abstract SheetDirection(Int) from Int to Int {
 	var FORWARD = 0;
 	var BACKWARD = 1;
 	var PING_PONG = 2;
+	var PING_PONG_BACKWARD = 3;
 }

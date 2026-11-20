@@ -23,6 +23,7 @@ From libwgt's `examples/assets/`, which took them from wgrender's, unchanged:
 
 Made by Whirling Gizmo for its libraries, under libwgf's MIT license:
 
+- `sheets/gem.png`, `sheets/gem.json`: a gem turning, four frames drawn in a script and packed by `tools/pack_sprite_sheet.py` (trimmed, 120 ms each); the feature test's atlas.
 - `ui/options.rml`, `ui/options.rcss`, `ui/skin.png`: the ui-document example's menu, written here; the sprite sheet made by `tools/gen_ui_skin.py`.
 - `textures/flame.png`, `textures/particle.png`: from libwgt's `examples/assets/`, made by wgrender's `tools/gen_particle_textures.py`; `textures/flame.{bc7,astc,etc2}.ktx` made from the PNG by `tools/compress_textures.py`.
 - `textures/tiles_normal.png`: from libwgt's `examples/assets/`, made by wgrender's `tools/gen_material_assets.py`.

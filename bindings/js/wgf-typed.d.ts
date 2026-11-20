@@ -6385,17 +6385,16 @@ export declare const Sheet: {
      */
     readonly createGrid: typeof raw.wgf_sheet_create_grid;
     /**
-     * A sheet over `texture` cut into cells of frame_width by frame_height texels, left to right
-     * then down, `margin` texels in from its edges and `spacing` between cells: `count` frames
-     * (0: every cell that fits), cut once the texture is READY. 0 for a texture that isn't one, a
-     * frame size not above 0, or a count, margin, or spacing below 0.
+     * The atlas at `path`: loaded as a resource is (PENDING at once, READY or FAILED in a later
+     * update), its image too. 0 only when there is no room for another.
+     */
+    readonly create: typeof raw.wgf_sheet_create;
+    /**
+     * One reference let go of (wgf_resource_release): a grid's only one frees it.
      */
     readonly destroy: typeof raw.wgf_sheet_destroy;
     /**
-     * A sheet over `texture` cut into cells of frame_width by frame_height texels, left to right
-     * then down, `margin` texels in from its edges and `spacing` between cells: `count` frames
-     * (0: every cell that fits), cut once the texture is READY. 0 for a texture that isn't one, a
-     * frame size not above 0, or a count, margin, or spacing below 0.
+     * One reference let go of (wgf_resource_release): a grid's only one frees it.
      */
     readonly getTexture: typeof raw.wgf_sheet_get_texture;
     /**
@@ -6409,19 +6408,61 @@ export declare const Sheet: {
      */
     readonly getFrame: typeof raw.wgf_sheet_get_frame;
     /**
+     * A frame's name ("" for a grid's, or an index outside it), and the frame named `name` (-1
+     * for none).
+     */
+    readonly getFrameName: typeof raw.wgf_sheet_get_frame_name;
+    /**
+     * A frame's name ("" for a grid's, or an index outside it), and the frame named `name` (-1
+     * for none).
+     */
+    readonly findFrame: typeof raw.wgf_sheet_find_frame;
+    /**
      * A clip named `name` over the sheet's frames by index (`count` of them), each shown for
-     * `seconds`, run in `direction`, in place of one of that name. At most 64 clips a sheet;
-     * false for a name empty or over 31 bytes, no frames, seconds not above 0, or a direction
-     * that isn't one.
+     * `seconds` (0: each frame's own duration, an atlas's), run in `direction`, in place of one of
+     * that name. At most 64 clips a sheet; false for a name empty or over 63 bytes, no frames,
+     * seconds below 0, or a direction that isn't one. Its clips counted, one's name ("" for none),
+     * and the one named `name` (-1 for none).
      */
     readonly addClip: typeof raw.wgf_sheet_add_clip;
     /**
      * A clip named `name` over the sheet's frames by index (`count` of them), each shown for
-     * `seconds`, run in `direction`, in place of one of that name. At most 64 clips a sheet;
-     * false for a name empty or over 31 bytes, no frames, seconds not above 0, or a direction
-     * that isn't one.
+     * `seconds` (0: each frame's own duration, an atlas's), run in `direction`, in place of one of
+     * that name. At most 64 clips a sheet; false for a name empty or over 63 bytes, no frames,
+     * seconds below 0, or a direction that isn't one. Its clips counted, one's name ("" for none),
+     * and the one named `name` (-1 for none).
      */
     readonly getClipCount: typeof raw.wgf_sheet_get_clip_count;
+    /**
+     * A clip named `name` over the sheet's frames by index (`count` of them), each shown for
+     * `seconds` (0: each frame's own duration, an atlas's), run in `direction`, in place of one of
+     * that name. At most 64 clips a sheet; false for a name empty or over 63 bytes, no frames,
+     * seconds below 0, or a direction that isn't one. Its clips counted, one's name ("" for none),
+     * and the one named `name` (-1 for none).
+     */
+    readonly getClipName: typeof raw.wgf_sheet_get_clip_name;
+    /**
+     * A clip named `name` over the sheet's frames by index (`count` of them), each shown for
+     * `seconds` (0: each frame's own duration, an atlas's), run in `direction`, in place of one of
+     * that name. At most 64 clips a sheet; false for a name empty or over 63 bytes, no frames,
+     * seconds below 0, or a direction that isn't one. Its clips counted, one's name ("" for none),
+     * and the one named `name` (-1 for none).
+     */
+    readonly findClip: typeof raw.wgf_sheet_find_clip;
+    /**
+     * An event on a clip's frame: `event` (above 0; 0 takes one off) raised each time the clip
+     * comes to its `place`th frame (0 its first, by place in the clip as added), read from the
+     * sprite playing it (wgf_sprite_take_clip_events): a footstep's sound, an attack's hit
+     * frame. False for a clip it hasn't, a place outside it, or an event below 0.
+     */
+    readonly setClipEvent: typeof raw.wgf_sheet_set_clip_event;
+    /**
+     * An event on a clip's frame: `event` (above 0; 0 takes one off) raised each time the clip
+     * comes to its `place`th frame (0 its first, by place in the clip as added), read from the
+     * sprite playing it (wgf_sprite_take_clip_events): a footstep's sound, an attack's hit
+     * frame. False for a clip it hasn't, a place outside it, or an event below 0.
+     */
+    readonly getClipEvent: typeof raw.wgf_sheet_get_clip_event;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
@@ -6708,6 +6749,28 @@ export declare const Sprite: {
      * none).
      */
     readonly getClipSpeed: typeof raw.wgf_sprite_get_clip_speed;
+    /**
+     * The events its clip raised as its frames came (wgf_sheet_set_clip_event), oldest first,
+     * into `out` (as many as fit in `count`), returning how many; taken, so read again they are
+     * gone. At most the last 16 are kept. 0 for a sprite with no sheet.
+     */
+    readonly takeClipEvents: typeof raw.wgf_sprite_take_clip_events;
+    /**
+     * A facing for its clips (a direction a character faces: "up", "left"): a clip played, or
+     * playing, by name plays the sheet's clip named name_facing when it has one ("walk" facing
+     * "left": "walk_left"), else name. Changed while one plays, the clip for the new facing goes
+     * on from the same place and time. "" or NULL for none. False for a sprite with no sheet, or a
+     * facing over 15 bytes.
+     */
+    readonly setClipFacing: typeof raw.wgf_sprite_set_clip_facing;
+    /**
+     * A facing for its clips (a direction a character faces: "up", "left"): a clip played, or
+     * playing, by name plays the sheet's clip named name_facing when it has one ("walk" facing
+     * "left": "walk_left"), else name. Changed while one plays, the clip for the new facing goes
+     * on from the same place and time. "" or NULL for none. False for a sprite with no sheet, or a
+     * facing over 15 bytes.
+     */
+    readonly getClipFacing: typeof raw.wgf_sprite_get_clip_facing;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
@@ -8490,7 +8553,7 @@ export declare const Shape2dKind: { readonly NONE: Shape2dKind; readonly RECTANG
 export type Shape3dKind = raw.wgf_shape3d_kind_t;
 export declare const Shape3dKind: { readonly NONE: Shape3dKind; readonly CUBE: Shape3dKind; readonly SPHERE: Shape3dKind; readonly RECTANGLE: Shape3dKind; readonly CIRCLE: Shape3dKind; readonly LINE: Shape3dKind; readonly LINE_STRIP: Shape3dKind; };
 export type SheetDirection = raw.wgf_sheet_direction_t;
-export declare const SheetDirection: { readonly FORWARD: SheetDirection; readonly BACKWARD: SheetDirection; readonly PING_PONG: SheetDirection; };
+export declare const SheetDirection: { readonly FORWARD: SheetDirection; readonly BACKWARD: SheetDirection; readonly PING_PONG: SheetDirection; readonly PING_PONG_BACKWARD: SheetDirection; };
 export type SpriteFacing = raw.wgf_sprite_facing_t;
 export declare const SpriteFacing: { readonly CAMERA: SpriteFacing; readonly CAMERA_FIXED_Y: SpriteFacing; readonly Y_UP: SpriteFacing; readonly FREE: SpriteFacing; };
 export type Stage3dTonemap = raw.wgf_stage3d_tonemap_t;

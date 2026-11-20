@@ -14,17 +14,20 @@
 #include "wgf_render.h"
 #include "wgf_resource.h"
 #include "wgf_shape2d.h"
+#include "wgf_sheet.h"
 #include "wgf_sprite.h"
 #include "wgf_text.h"
 #include "wgf_texture.h"
 #include "wgf_window.h"
 
 /* A 2D world on a 2D stage with a camera, and a HUD stage over it: a polygon rock
- * turning, a ring and a box, a sprite of a loaded texture, a text actor, and a particle
- * emitter circling and trailing; the camera zooms in and out. Escape quits where
+ * turning, a ring and a box, a sprite of a loaded texture, a gem turning (a sprite playing
+ * an atlas's clip, sheets/gem.json), a text actor, and a particle emitter circling and
+ * trailing; the camera zooms in and out. Escape quits where
  * quitting means anything. */
 
-static wgf_actor_t world, hud, camera, rock, sprite, emitter;
+static wgf_actor_t world, hud, camera, rock, sprite, emitter, gem;
+static wgf_sheet_t gems;
 static float time_passed;
 
 static void init(void *user)
@@ -66,6 +69,12 @@ static void init(void *user)
     wgf_actor_set_position(sprite, 0, 110, 0);
     wgf_actor_set_parent(sprite, world);
 
+    gems = wgf_sheet_create("sheets/gem.json"); /* an atlas: its clip played once it has loaded */
+    gem = wgf_sprite_create(0);
+    wgf_sprite_set_size(gem, 48, 48);
+    wgf_actor_set_position(gem, 0, -110, 0);
+    wgf_actor_set_parent(gem, world);
+
     emitter = wgf_emitter2d_create();
     wgf_emitter2d_set_rate(emitter, 120);
     wgf_emitter2d_set_life(emitter, 0.4f, 0.9f);
@@ -92,6 +101,10 @@ static void frame(void *user)
     wgf_actor_set_rotation(sprite, 0, 0, -time_passed * 0.3f);
     wgf_actor_set_position(emitter, cosf(time_passed * 1.5f) * 160.0f, sinf(time_passed * 1.5f) * 80.0f, 0);
     wgf_camera2d_set_zoom(camera, 1.25f + 0.25f * sinf(time_passed * 0.5f));
+    if (gems != 0 && wgf_resource_get_status(gems) == WGF_RESOURCE_STATUS_READY && wgf_sprite_get_sheet(gem) == 0) {
+        wgf_sprite_set_sheet(gem, gems);
+        wgf_sprite_play_clip(gem, "gem", true);
+    }
     wgf_stage2d_draw(world);
     wgf_stage2d_draw(hud);
     wgf_draw_text(0, "immediate mode text, over the 2D stages", 12, 40, 14, WGF_COLOR_LIGHTGRAY);

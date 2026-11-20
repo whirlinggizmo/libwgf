@@ -815,12 +815,19 @@ class Reach {
 		"wgf_shape3d_set_rectangle",
 		"wgf_shape3d_set_sphere",
 		"wgf_sheet_add_clip",
+		"wgf_sheet_create",
 		"wgf_sheet_create_grid",
 		"wgf_sheet_destroy",
+		"wgf_sheet_find_clip",
+		"wgf_sheet_find_frame",
 		"wgf_sheet_get_clip_count",
+		"wgf_sheet_get_clip_event",
+		"wgf_sheet_get_clip_name",
 		"wgf_sheet_get_frame",
 		"wgf_sheet_get_frame_count",
+		"wgf_sheet_get_frame_name",
 		"wgf_sheet_get_texture",
+		"wgf_sheet_set_clip_event",
 		"wgf_sound_add_segment",
 		"wgf_sound_create",
 		"wgf_sound_create_streamed",
@@ -854,6 +861,7 @@ class Reach {
 		"wgf_sprite_get_alpha_cutoff",
 		"wgf_sprite_get_alpha_mode",
 		"wgf_sprite_get_clip",
+		"wgf_sprite_get_clip_facing",
 		"wgf_sprite_get_clip_frame",
 		"wgf_sprite_get_clip_speed",
 		"wgf_sprite_get_clip_state",
@@ -868,6 +876,7 @@ class Reach {
 		"wgf_sprite_play_clip",
 		"wgf_sprite_resume_clip",
 		"wgf_sprite_set_alpha_mode",
+		"wgf_sprite_set_clip_facing",
 		"wgf_sprite_set_clip_speed",
 		"wgf_sprite_set_facing",
 		"wgf_sprite_set_pivot",
@@ -877,6 +886,7 @@ class Reach {
 		"wgf_sprite_set_texture",
 		"wgf_sprite_set_tint",
 		"wgf_sprite_stop_clip",
+		"wgf_sprite_take_clip_events",
 		"wgf_stage2d_create",
 		"wgf_stage2d_draw",
 		"wgf_stage2d_find",
@@ -1110,7 +1120,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1101) 0];
+	static final counts:Array<Int> = [for (_ in 0...1111) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

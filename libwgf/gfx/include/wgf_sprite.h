@@ -101,6 +101,19 @@ WGF_API int wgf_sprite_get_clip_frame(wgf_actor_t sprite);
 WGF_API bool wgf_sprite_set_clip_speed(wgf_actor_t sprite, float speed);
 WGF_API float wgf_sprite_get_clip_speed(wgf_actor_t sprite);
 
+/* The events its clip raised as its frames came (wgf_sheet_set_clip_event), oldest first,
+ * into `out` (as many as fit in `count`), returning how many; taken, so read again they are
+ * gone. At most the last 16 are kept. 0 for a sprite with no sheet. */
+WGF_API int wgf_sprite_take_clip_events(wgf_actor_t sprite, int *out, int count);
+
+/* A facing for its clips (a direction a character faces: "up", "left"): a clip played, or
+ * playing, by name plays the sheet's clip named name_facing when it has one ("walk" facing
+ * "left": "walk_left"), else name. Changed while one plays, the clip for the new facing goes
+ * on from the same place and time. "" or NULL for none. False for a sprite with no sheet, or a
+ * facing over 15 bytes. */
+WGF_API bool wgf_sprite_set_clip_facing(wgf_actor_t sprite, const char *facing);
+WGF_API const char *wgf_sprite_get_clip_facing(wgf_actor_t sprite);
+
 #ifdef __cplusplus
 }
 #endif

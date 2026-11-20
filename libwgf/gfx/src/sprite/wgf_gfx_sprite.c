@@ -31,8 +31,21 @@ static void region_of(const wgf_gfx_priv_sprite_t *sprite, float region[4], floa
     region[1] = whole ? 0.0f : sprite->source[1];
     region[2] = whole ? tw : sprite->source[2];
     region[3] = whole ? th : sprite->source[3];
-    size[0] = sprite->size[0] > 0.0f && sprite->size[1] > 0.0f ? sprite->size[0] : region[2];
-    size[1] = sprite->size[0] > 0.0f && sprite->size[1] > 0.0f ? sprite->size[1] : region[3];
+    { /* a trimmed frame's default size: the whole picture's */
+        const bool trimmed = sprite->trim[2] > 0.0f && sprite->trim[3] > 0.0f;
+        size[0] = sprite->size[0] > 0.0f && sprite->size[1] > 0.0f ? sprite->size[0] : (trimmed ? sprite->trim[2] : region[2]);
+        size[1] = sprite->size[0] > 0.0f && sprite->size[1] > 0.0f ? sprite->size[1] : (trimmed ? sprite->trim[3] : region[3]);
+    }
+}
+
+void wgf_gfx_priv_sprite_set_trim(wgf_actor_t sprite, float x, float y, float w, float h)
+{
+    wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
+    if (sprite_ptr == NULL) return;
+    sprite_ptr->trim[0] = x;
+    sprite_ptr->trim[1] = y;
+    sprite_ptr->trim[2] = w > 0.0f && h > 0.0f ? w : 0.0f;
+    sprite_ptr->trim[3] = w > 0.0f && h > 0.0f ? h : 0.0f;
 }
 
 static void vertex(const wgf_mat4_t *m, float x, float y, float u, float v)
@@ -48,7 +61,7 @@ static void draw_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
     sg_sampler sampler;
     int tw, th;
     bool placeholder;
-    float region[4], size[2], u0 = 0.0f, v0 = 0.0f, u1 = 1.0f, v1 = 1.0f, x0, y0, x1, y1;
+    float region[4], size[2], pivot[2], u0 = 0.0f, v0 = 0.0f, u1 = 1.0f, v1 = 1.0f, x0, y0, x1, y1;
     (void)actor;
     (void)view;
     if (!wgf_gfx_priv_texture_get_binding(sprite->texture, &image, &sampler, &tw, &th, &placeholder)) return;
@@ -63,8 +76,11 @@ static void draw_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
         u1 = (region[0] + region[2]) / (float)tw;
         v1 = (region[1] + region[3]) / (float)th;
     }
-    x0 = -sprite->pivot[0] * size[0];
-    y0 = -sprite->pivot[1] * size[1];
+    pivot[0] = sprite->pivot[0];
+    pivot[1] = sprite->pivot[1];
+    if (!placeholder) wgf_gfx_priv_sprite_trimmed(sprite, region[2], region[3], size, pivot);
+    x0 = -pivot[0] * size[0];
+    y0 = -pivot[1] * size[1];
     x1 = x0 + size[0];
     y1 = y0 + size[1];
     if (sprite->alpha_mode != WGF_ALPHA_MODE_BLEND && sprite->alpha_mode != WGF_ALPHA_MODE_MASK) {

@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "bf1255fdd84647ed" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "eb8446ad9d115cdb" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -705,6 +705,7 @@ export const WGF_ALPHA_MODE_ADD = 3;
 export const WGF_SHEET_DIRECTION_FORWARD = 0;
 export const WGF_SHEET_DIRECTION_BACKWARD = 1;
 export const WGF_SHEET_DIRECTION_PING_PONG = 2;
+export const WGF_SHEET_DIRECTION_PING_PONG_BACKWARD = 3;
 
 /**
  * How a sprite on a 3D stage faces, libwgt's and wgrender-c's (on a 2D stage it lies in
@@ -5429,12 +5430,21 @@ export function wgf_sheet_create_grid(texture, frame_width, frame_height, count,
     return value >>> 0;
 }
 
+// wgf: call wgf_sheet_create
+/**
+ * The atlas at `path`: loaded as a resource is (PENDING at once, READY or FAILED in a later
+ * update), its image too. 0 only when there is no room for another.
+ */
+export function wgf_sheet_create(path) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_sheet_create"](cstr(path));
+    host["stackRestore"](mark);
+    return value >>> 0;
+}
+
 // wgf: call wgf_sheet_destroy
 /**
- * A sheet over `texture` cut into cells of frame_width by frame_height texels, left to right
- * then down, `margin` texels in from its edges and `spacing` between cells: `count` frames
- * (0: every cell that fits), cut once the texture is READY. 0 for a texture that isn't one, a
- * frame size not above 0, or a count, margin, or spacing below 0.
+ * One reference let go of (wgf_resource_release): a grid's only one frees it.
  */
 export function wgf_sheet_destroy(sheet) {
     host["_wgf_sheet_destroy"](sheet);
@@ -5442,10 +5452,7 @@ export function wgf_sheet_destroy(sheet) {
 
 // wgf: call wgf_sheet_get_texture
 /**
- * A sheet over `texture` cut into cells of frame_width by frame_height texels, left to right
- * then down, `margin` texels in from its edges and `spacing` between cells: `count` frames
- * (0: every cell that fits), cut once the texture is READY. 0 for a texture that isn't one, a
- * frame size not above 0, or a count, margin, or spacing below 0.
+ * One reference let go of (wgf_resource_release): a grid's only one frees it.
  */
 export function wgf_sheet_get_texture(sheet) {
     const value = host["_wgf_sheet_get_texture"](sheet);
@@ -5473,12 +5480,35 @@ export function wgf_sheet_get_frame(sheet, index, into) {
     return vector(ret, 4, into);
 }
 
+// wgf: call wgf_sheet_get_frame_name
+/**
+ * A frame's name ("" for a grid's, or an index outside it), and the frame named `name` (-1
+ * for none).
+ */
+export function wgf_sheet_get_frame_name(sheet, index) {
+    const value = host["_wgf_sheet_get_frame_name"](sheet, index);
+    return str(value);
+}
+
+// wgf: call wgf_sheet_find_frame
+/**
+ * A frame's name ("" for a grid's, or an index outside it), and the frame named `name` (-1
+ * for none).
+ */
+export function wgf_sheet_find_frame(sheet, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_sheet_find_frame"](sheet, cstr(name));
+    host["stackRestore"](mark);
+    return value;
+}
+
 // wgf: call wgf_sheet_add_clip
 /**
  * A clip named `name` over the sheet's frames by index (`count` of them), each shown for
- * `seconds`, run in `direction`, in place of one of that name. At most 64 clips a sheet;
- * false for a name empty or over 31 bytes, no frames, seconds not above 0, or a direction
- * that isn't one.
+ * `seconds` (0: each frame's own duration, an atlas's), run in `direction`, in place of one of
+ * that name. At most 64 clips a sheet; false for a name empty or over 63 bytes, no frames,
+ * seconds below 0, or a direction that isn't one. Its clips counted, one's name ("" for none),
+ * and the one named `name` (-1 for none).
  */
 export function wgf_sheet_add_clip(sheet, name, frames, seconds, direction) {
     const mark = host["stackSave"]();
@@ -5491,12 +5521,69 @@ export function wgf_sheet_add_clip(sheet, name, frames, seconds, direction) {
 // wgf: call wgf_sheet_get_clip_count
 /**
  * A clip named `name` over the sheet's frames by index (`count` of them), each shown for
- * `seconds`, run in `direction`, in place of one of that name. At most 64 clips a sheet;
- * false for a name empty or over 31 bytes, no frames, seconds not above 0, or a direction
- * that isn't one.
+ * `seconds` (0: each frame's own duration, an atlas's), run in `direction`, in place of one of
+ * that name. At most 64 clips a sheet; false for a name empty or over 63 bytes, no frames,
+ * seconds below 0, or a direction that isn't one. Its clips counted, one's name ("" for none),
+ * and the one named `name` (-1 for none).
  */
 export function wgf_sheet_get_clip_count(sheet) {
     const value = host["_wgf_sheet_get_clip_count"](sheet);
+    return value;
+}
+
+// wgf: call wgf_sheet_get_clip_name
+/**
+ * A clip named `name` over the sheet's frames by index (`count` of them), each shown for
+ * `seconds` (0: each frame's own duration, an atlas's), run in `direction`, in place of one of
+ * that name. At most 64 clips a sheet; false for a name empty or over 63 bytes, no frames,
+ * seconds below 0, or a direction that isn't one. Its clips counted, one's name ("" for none),
+ * and the one named `name` (-1 for none).
+ */
+export function wgf_sheet_get_clip_name(sheet, index) {
+    const value = host["_wgf_sheet_get_clip_name"](sheet, index);
+    return str(value);
+}
+
+// wgf: call wgf_sheet_find_clip
+/**
+ * A clip named `name` over the sheet's frames by index (`count` of them), each shown for
+ * `seconds` (0: each frame's own duration, an atlas's), run in `direction`, in place of one of
+ * that name. At most 64 clips a sheet; false for a name empty or over 63 bytes, no frames,
+ * seconds below 0, or a direction that isn't one. Its clips counted, one's name ("" for none),
+ * and the one named `name` (-1 for none).
+ */
+export function wgf_sheet_find_clip(sheet, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_sheet_find_clip"](sheet, cstr(name));
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_sheet_set_clip_event
+/**
+ * An event on a clip's frame: `event` (above 0; 0 takes one off) raised each time the clip
+ * comes to its `place`th frame (0 its first, by place in the clip as added), read from the
+ * sprite playing it (wgf_sprite_take_clip_events): a footstep's sound, an attack's hit
+ * frame. False for a clip it hasn't, a place outside it, or an event below 0.
+ */
+export function wgf_sheet_set_clip_event(sheet, clip, place, event) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_sheet_set_clip_event"](sheet, cstr(clip), place, event);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_sheet_get_clip_event
+/**
+ * An event on a clip's frame: `event` (above 0; 0 takes one off) raised each time the clip
+ * comes to its `place`th frame (0 its first, by place in the clip as added), read from the
+ * sprite playing it (wgf_sprite_take_clip_events): a footstep's sound, an attack's hit
+ * frame. False for a clip it hasn't, a place outside it, or an event below 0.
+ */
+export function wgf_sheet_get_clip_event(sheet, clip, place) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_sheet_get_clip_event"](sheet, cstr(clip), place);
+    host["stackRestore"](mark);
     return value;
 }
 
@@ -5811,6 +5898,47 @@ export function wgf_sprite_set_clip_speed(sprite, speed) {
 export function wgf_sprite_get_clip_speed(sprite) {
     const value = host["_wgf_sprite_get_clip_speed"](sprite);
     return value;
+}
+
+// wgf: call wgf_sprite_take_clip_events
+/**
+ * The events its clip raised as its frames came (wgf_sheet_set_clip_event), oldest first,
+ * into `out` (as many as fit in `count`), returning how many; taken, so read again they are
+ * gone. At most the last 16 are kept. 0 for a sprite with no sheet.
+ */
+export function wgf_sprite_take_clip_events(sprite, out) {
+    const outPointer = arrayOut(out, 0);
+    const value = host["_wgf_sprite_take_clip_events"](sprite, outPointer, lengthOf(out));
+    arrayBack(outPointer, out, "HEAP32");
+    return value;
+}
+
+// wgf: call wgf_sprite_set_clip_facing
+/**
+ * A facing for its clips (a direction a character faces: "up", "left"): a clip played, or
+ * playing, by name plays the sheet's clip named name_facing when it has one ("walk" facing
+ * "left": "walk_left"), else name. Changed while one plays, the clip for the new facing goes
+ * on from the same place and time. "" or NULL for none. False for a sprite with no sheet, or a
+ * facing over 15 bytes.
+ */
+export function wgf_sprite_set_clip_facing(sprite, facing) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_sprite_set_clip_facing"](sprite, cstr(facing));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_sprite_get_clip_facing
+/**
+ * A facing for its clips (a direction a character faces: "up", "left"): a clip played, or
+ * playing, by name plays the sheet's clip named name_facing when it has one ("walk" facing
+ * "left": "walk_left"), else name. Changed while one plays, the clip for the new facing goes
+ * on from the same place and time. "" or NULL for none. False for a sprite with no sheet, or a
+ * facing over 15 bytes.
+ */
+export function wgf_sprite_get_clip_facing(sprite) {
+    const value = host["_wgf_sprite_get_clip_facing"](sprite);
+    return str(value);
 }
 
 // wgf: call wgf_text_create
