@@ -70,6 +70,20 @@ typedef struct face_t {
 
 /* A texture RmlUi holds: one of libwgf's (a reference), or an image of its own (RmlUi's
  * generated ones). */
+/* A change to an element held until the images it names are local (on the web, a file a
+ * document's files didn't name isn't, and RmlUi reads images synchronously): RML, an
+ * attribute, or a property, with a texture loading each image (its load makes the file
+ * local, and RmlUi then takes the texture READY at the path). */
+enum { HELD_RML, HELD_ATTRIBUTE, HELD_PROPERTY };
+#define HELD_IMAGES 8
+typedef struct held_t {
+    wgf_element_t element;
+    int what;
+    char *name, *value; /* name NULL for RML */
+    wgf_texture_t images[HELD_IMAGES];
+    int image_count;
+} held_t;
+
 typedef struct texture_t {
     bool used;
     wgf_texture_t texture;
@@ -96,6 +110,9 @@ static struct {
 
     texture_t *textures; /* by handle less 2 (1 is the atlas) */
     int texture_count;
+
+    held_t *held; /* changes waiting on their images, in the order made */
+    int held_count, held_capacity;
 
     /* the frame's drawing */
     bool drawing;
@@ -133,6 +150,19 @@ static int slot_of_at(wgf_element_t element, const char *caller)
     return element_ptr->slot;
 }
 #define slot_of(element) slot_of_at((element), WGF_CORE_PRIV_CALLER)
+
+/* The same, for an element that may have gone without its caller knowing: nothing logged. */
+static int slot_of_silently(wgf_element_t element)
+{
+    uint16_t index;
+    const element_t *element_ptr;
+    if (!doc.started || !wgf_core_priv_handle_pool_resolve(&doc.element_pool, element, &index)) return 0;
+    element_ptr = &doc.elements[index];
+    if (!wgf_core_priv_handle_pool_resolve(&doc.document_pool, element_ptr->document, NULL) ||
+        !wgf_ui_priv_rml_element_alive(element_ptr->slot))
+        return 0;
+    return element_ptr->slot;
+}
 
 uint32_t wgf_ui_priv_doc_element_made(int slot, uint32_t owner)
 {
@@ -300,6 +330,146 @@ static void end_frame(void)
     doc.drawn = false;
 }
 
+/* ---- changes held until their images are local --------------------------------------- */
+
+static void free_held(held_t *h)
+{
+    int i;
+    for (i = 0; i < h->image_count; i++) {
+        if (wgf_resource_get_status(h->images[i]) != WGF_RESOURCE_STATUS_NONE) wgf_resource_release(h->images[i]);
+    }
+    free(h->name);
+    free(h->value);
+    memset(h, 0, sizeof(*h));
+}
+
+static char *copy_of(const char *text)
+{
+    const size_t size = strlen(text) + 1;
+    char *copy = (char *)malloc(size);
+    if (copy != NULL) memcpy(copy, text, size);
+    return copy;
+}
+
+/* `h` made now; false when RmlUi refused it. */
+static bool apply_held(const held_t *h, int slot)
+{
+    if (h->what == HELD_RML) return wgf_ui_priv_rml_set_text(slot, WGF_UI_PRIV_RML_RML, h->value);
+    if (h->what == HELD_ATTRIBUTE) return wgf_ui_priv_rml_set_attribute(slot, h->name, h->value);
+    return wgf_ui_priv_rml_set_property(slot, h->name, h->value);
+}
+
+typedef struct images_t {
+    const char *base; /* the document's path, what a name is read against */
+    held_t *held;
+} images_t;
+
+/* One name in a change's text (the documents' lister's): an image not local, a texture
+ * started on it. Style sheets and RML are left to RmlUi. */
+static void hold_image(const char *uri, const char *fallback_uri, bool required, void *context)
+{
+    images_t *images = (images_t *)context;
+    char path[WGF_CORE_PRIV_FS_PATH_MAX];
+    const char *dot = strrchr(uri, '.');
+    wgf_texture_t texture;
+    (void)fallback_uri;
+    (void)required;
+    if (dot == NULL || strcmp(dot, ".rcss") == 0 || strcmp(dot, ".rml") == 0) return;
+    if (uri[0] == '/' ? !wgf_core_priv_fs_normalize_path(uri + 1, path, sizeof(path))
+                      : !wgf_asset_priv_is_relative_uri(uri) ||
+                            !wgf_asset_priv_join_relative(images->base, uri, path, sizeof(path))) {
+        return;
+    }
+    if (wgf_core_priv_fs_exists(path)) return;
+    texture = wgf_core_priv_resource_find(WGF_CORE_PRIV_HANDLE_KIND_TEXTURE, path);
+    if (texture != 0 && wgf_resource_get_status(texture) == WGF_RESOURCE_STATUS_READY) {
+        wgf_resource_release(texture);
+        return;
+    }
+    if (texture != 0) wgf_resource_release(texture);
+    if (images->held->image_count == HELD_IMAGES) return; /* more than that: the rest as RmlUi finds them */
+    texture = wgf_texture_create(path);
+    if (texture != 0) images->held->images[images->held->image_count++] = texture;
+}
+
+/* A change to `element` (slot `slot`): made now when every image its text names is local,
+ * else held until they are, in a later update; a change held for the same element and
+ * name (or its RML) is dropped for this one. False when RmlUi refused it, or out of
+ * memory. */
+static bool change(wgf_element_t element, int slot, int what, const char *name, const char *value)
+{
+    held_t h;
+    images_t images;
+    wgf_document_t document = wgf_element_get_document(element);
+    const char *base = wgf_resource_get_path(document);
+    int i, kept = 0;
+    for (i = 0; i < doc.held_count; i++) { /* superseded */
+        held_t *old = &doc.held[i];
+        if (old->element == element && old->what == what &&
+            (what == HELD_RML || (old->name != NULL && name != NULL && strcmp(old->name, name) == 0))) {
+            free_held(old);
+        } else {
+            doc.held[kept++] = *old;
+        }
+    }
+    doc.held_count = kept;
+    memset(&h, 0, sizeof(h));
+    h.element = element;
+    h.what = what;
+    h.value = (char *)value; /* borrowed until it is held */
+    h.name = (char *)name;
+    if (value != NULL && base != NULL && base[0] != '\0') {
+        images.base = base;
+        images.held = &h;
+        list_document_files((const unsigned char *)value, (int)strlen(value), hold_image, &images);
+    }
+    if (h.image_count == 0) return apply_held(&h, slot);
+    if (doc.held_count == doc.held_capacity) {
+        const int capacity = doc.held_capacity > 0 ? doc.held_capacity * 2 : 8;
+        held_t *grown = (held_t *)realloc(doc.held, sizeof(held_t) * (size_t)capacity);
+        if (grown == NULL) {
+            h.name = h.value = NULL;
+            free_held(&h);
+            wgf_log_error("wgf_document: out of memory holding a change for its images");
+            return false;
+        }
+        doc.held = grown;
+        doc.held_capacity = capacity;
+    }
+    h.name = name != NULL ? copy_of(name) : NULL;
+    h.value = copy_of(value);
+    if (h.value == NULL || (name != NULL && h.name == NULL)) {
+        free_held(&h);
+        wgf_log_error("wgf_document: out of memory holding a change for its images");
+        return false;
+    }
+    doc.held[doc.held_count++] = h;
+    return true;
+}
+
+/* Each update: a change whose images have all settled (READY, or FAILED: RmlUi says what
+ * it can't find) made, in the order made; one whose element went is dropped. */
+static void update(float dt)
+{
+    int i, k, kept = 0;
+    (void)dt;
+    for (i = 0; i < doc.held_count; i++) {
+        held_t *h = &doc.held[i];
+        const int slot = slot_of_silently(h->element);
+        bool settled = true;
+        for (k = 0; k < h->image_count && settled; k++) {
+            settled = wgf_resource_get_status(h->images[k]) != WGF_RESOURCE_STATUS_PENDING;
+        }
+        if (slot != 0 && !settled) {
+            doc.held[kept++] = *h;
+            continue;
+        }
+        if (slot != 0) apply_held(h, slot);
+        free_held(h);
+    }
+    doc.held_count = kept;
+}
+
 static void free_textures(void)
 {
     int i;
@@ -319,6 +489,8 @@ static void stop(void)
 {
     int i;
     let_go();
+    for (i = 0; i < doc.held_count; i++) free_held(&doc.held[i]);
+    free(doc.held);
     if (doc.started) {
         wgf_core_priv_resource_unregister(&doc.document_pool); /* each document unloaded */
         wgf_core_priv_handle_pool_destroy(&doc.document_pool);
@@ -338,6 +510,7 @@ static void stop(void)
 static wgf_core_priv_part_t part = {.name = "documents",
                                     .layer = WGF_CORE_PRIV_PART_LAYER_GFX,
                                     .order = WGF_CORE_PRIV_PART_UI,
+                                    .update = update,
                                     .end_frame = end_frame,
                                     .stop = stop};
 
@@ -458,7 +631,7 @@ const char *wgf_element_get_text(wgf_element_t element)
 bool wgf_element_set_rml(wgf_element_t element, const char *rml)
 {
     const int slot = slot_of(element);
-    return slot != 0 && rml != NULL && wgf_ui_priv_rml_set_text(slot, WGF_UI_PRIV_RML_RML, rml);
+    return slot != 0 && rml != NULL && change(element, slot, HELD_RML, NULL, rml);
 }
 
 const char *wgf_element_get_rml(wgf_element_t element)
@@ -470,7 +643,7 @@ const char *wgf_element_get_rml(wgf_element_t element)
 bool wgf_element_set_attribute(wgf_element_t element, const char *name, const char *value)
 {
     const int slot = slot_of(element);
-    return slot != 0 && wgf_ui_priv_rml_set_attribute(slot, name, value != NULL ? value : "");
+    return slot != 0 && name != NULL && change(element, slot, HELD_ATTRIBUTE, name, value != NULL ? value : "");
 }
 
 const char *wgf_element_get_attribute(wgf_element_t element, const char *name)
@@ -491,7 +664,7 @@ bool wgf_element_has_attribute(wgf_element_t element, const char *name)
 bool wgf_element_remove_attribute(wgf_element_t element, const char *name)
 {
     const int slot = slot_of(element);
-    return slot != 0 && wgf_ui_priv_rml_set_attribute(slot, name, NULL);
+    return slot != 0 && name != NULL && change(element, slot, HELD_ATTRIBUTE, name, NULL); /* a change held for it dropped */
 }
 
 bool wgf_element_set_class(wgf_element_t element, const char *name, bool on)
@@ -509,7 +682,7 @@ bool wgf_element_has_class(wgf_element_t element, const char *name)
 bool wgf_element_set_property(wgf_element_t element, const char *name, const char *value)
 {
     const int slot = slot_of(element);
-    return slot != 0 && wgf_ui_priv_rml_set_property(slot, name, value);
+    return slot != 0 && name != NULL && change(element, slot, HELD_PROPERTY, name, value != NULL ? value : "");
 }
 
 const char *wgf_element_get_property(wgf_element_t element, const char *name)

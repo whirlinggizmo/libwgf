@@ -341,6 +341,13 @@ static void on_frame(void *user)
         expect(wgf_ui_priv_document_element_bounds(play, &x, &y, &w, &h) && w == 200 && h == 32, "laid out by RCSS");
         expect(wgf_ui_priv_document_element_bounds(logo, &x, &y, &w, &h) && w == 2 && h == 2,
                "an image the document names, its size its file's");
+        /* an image named at run time that isn't local: the change held until its load settles
+           (here it fails: there is no such file), and a later change to the same name drops it */
+        expect(wgf_element_set_attribute(logo, "src", "late.png") && strcmp(wgf_element_get_attribute(logo, "src"), "dot.png") == 0,
+               "an image not local: the change held, the element as it was");
+        expect(wgf_element_set_attribute(logo, "data-a", "late2.png") && wgf_element_set_attribute(logo, "data-a", "x") &&
+                   strcmp(wgf_element_get_attribute(logo, "data-a"), "x") == 0,
+               "a change to the same name: made at once, the held one dropped");
         click_at(play, SAPP_EVENTTYPE_MOUSE_MOVE);
         break;
     }
@@ -366,6 +373,9 @@ static void on_frame(void *user)
     case 5:
         take();
         expect(happened(WGF_DOCUMENT_EVENT_CHANGE, sound) && wgf_element_is_checked(sound), "a checkbox clicked: checked");
+        expect(strcmp(wgf_element_get_attribute(logo, "src"), "late.png") == 0 &&
+                   strcmp(wgf_element_get_attribute(logo, "data-a"), "x") == 0,
+               "the held change made once its image settled; the dropped one never");
         expect(happened(WGF_DOCUMENT_EVENT_BLUR, play), "the button lost the focus");
         expect(wgf_document_set_focus(document, name) && wgf_document_get_focus(document) == name, "focus given");
         typed('x');

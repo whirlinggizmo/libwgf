@@ -101,6 +101,13 @@ WGF_API int wgf_document_take_events(wgf_document_t document, int *out, int coun
 WGF_API wgf_document_t wgf_element_get_document(wgf_element_t element);
 WGF_API const char *wgf_element_get_id(wgf_element_t element);
 
+/* An image named at run time -- in RML set, an attribute (`src`), or a property (a
+ * decorator's) -- that isn't local yet (on the web, one the document's files didn't name)
+ * is fetched first: the change is held, the element as it was, and made in the update its
+ * images have arrived (or failed, which RmlUi logs). Held, the call is true and the getters
+ * read the element as it is until then; another change to the same element's same
+ * attribute or property (or RML) drops a held one. Natively a file on disk is local. */
+
 /* Its content as plain text (`text` shown as it is: no markup), or as RML (parsed, its
  * elements made). The text getter gives the text of every element inside it, in order;
  * the RML getter its content as RML. False for a handle that isn't an element, or no
