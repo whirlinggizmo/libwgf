@@ -153,7 +153,8 @@ import wgf.impl.Raw;
 	    Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
 	    an animation is for what is seen; for what a game decides by (a hit frame, a replay),
 	    drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-	    (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+	    (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+	    before the joints pose it.
 	**/
 	public inline function getAnimationCount():Int
 		return Raw.wgf_model_get_animation_count(this);
@@ -201,7 +202,8 @@ import wgf.impl.Raw;
 	    Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
 	    an animation is for what is seen; for what a game decides by (a hit frame, a replay),
 	    drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-	    (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+	    (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+	    before the joints pose it.
 	**/
 	public inline function getAnimationName(animation:Int):String
 		return Raw.wgf_model_get_animation_name(this, animation);
@@ -249,7 +251,8 @@ import wgf.impl.Raw;
 	    Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
 	    an animation is for what is seen; for what a game decides by (a hit frame, a replay),
 	    drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-	    (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+	    (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+	    before the joints pose it.
 	**/
 	public inline function findAnimation(name:String):Int
 		return Raw.wgf_model_find_animation(this, name);
@@ -297,7 +300,8 @@ import wgf.impl.Raw;
 	    Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
 	    an animation is for what is seen; for what a game decides by (a hit frame, a replay),
 	    drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-	    (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+	    (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+	    before the joints pose it.
 	**/
 	public inline function getAnimationDuration(animation:Int):Float
 		return Raw.wgf_model_get_animation_duration(this, animation);
@@ -345,7 +349,8 @@ import wgf.impl.Raw;
 	    Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
 	    an animation is for what is seen; for what a game decides by (a hit frame, a replay),
 	    drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-	    (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+	    (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+	    before the joints pose it.
 	**/
 	public inline function playAnimation(animation:Int, fade:Float):Bool
 		return Raw.wgf_model_play_animation(this, animation, fade);
@@ -393,7 +398,8 @@ import wgf.impl.Raw;
 	    Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
 	    an animation is for what is seen; for what a game decides by (a hit frame, a replay),
 	    drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-	    (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+	    (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+	    before the joints pose it.
 	**/
 	public inline function getAnimation():Int
 		return Raw.wgf_model_get_animation(this);
@@ -441,7 +447,8 @@ import wgf.impl.Raw;
 	    Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
 	    an animation is for what is seen; for what a game decides by (a hit frame, a replay),
 	    drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-	    (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+	    (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+	    before the joints pose it.
 	**/
 	public inline function getAnimationWeight():Float
 		return Raw.wgf_model_get_animation_weight(this);
@@ -489,7 +496,8 @@ import wgf.impl.Raw;
 	    Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
 	    an animation is for what is seen; for what a game decides by (a hit frame, a replay),
 	    drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-	    (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+	    (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+	    before the joints pose it.
 	**/
 	public inline function pauseAnimation():Bool
 		return Raw.wgf_model_pause_animation(this);
@@ -537,7 +545,8 @@ import wgf.impl.Raw;
 	    Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
 	    an animation is for what is seen; for what a game decides by (a hit frame, a replay),
 	    drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-	    (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+	    (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+	    before the joints pose it.
 	**/
 	public inline function resumeAnimation():Bool
 		return Raw.wgf_model_resume_animation(this);
@@ -585,7 +594,8 @@ import wgf.impl.Raw;
 	    Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
 	    an animation is for what is seen; for what a game decides by (a hit frame, a replay),
 	    drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-	    (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+	    (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+	    before the joints pose it.
 	**/
 	public inline function stopAnimation():Bool
 		return Raw.wgf_model_stop_animation(this);
@@ -633,7 +643,8 @@ import wgf.impl.Raw;
 	    Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
 	    an animation is for what is seen; for what a game decides by (a hit frame, a replay),
 	    drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-	    (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+	    (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+	    before the joints pose it.
 	**/
 	public inline function getAnimationState():PlayState
 		return Raw.wgf_model_get_animation_state(this);
@@ -681,7 +692,8 @@ import wgf.impl.Raw;
 	    Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
 	    an animation is for what is seen; for what a game decides by (a hit frame, a replay),
 	    drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-	    (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+	    (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+	    before the joints pose it.
 	**/
 	public inline function setAnimationSpeed(speed:Float):Bool
 		return Raw.wgf_model_set_animation_speed(this, speed);
@@ -729,7 +741,8 @@ import wgf.impl.Raw;
 	    Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
 	    an animation is for what is seen; for what a game decides by (a hit frame, a replay),
 	    drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-	    (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+	    (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+	    before the joints pose it.
 	**/
 	public inline function getAnimationSpeed():Float
 		return Raw.wgf_model_get_animation_speed(this);
@@ -777,7 +790,8 @@ import wgf.impl.Raw;
 	    Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
 	    an animation is for what is seen; for what a game decides by (a hit frame, a replay),
 	    drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-	    (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+	    (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+	    before the joints pose it.
 	**/
 	public inline function setAnimationLoop(loop:Bool):Bool
 		return Raw.wgf_model_set_animation_loop(this, loop);
@@ -825,7 +839,8 @@ import wgf.impl.Raw;
 	    Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
 	    an animation is for what is seen; for what a game decides by (a hit frame, a replay),
 	    drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-	    (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+	    (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+	    before the joints pose it.
 	**/
 	public inline function isAnimationLoop():Bool
 		return Raw.wgf_model_is_animation_loop(this);
@@ -873,7 +888,8 @@ import wgf.impl.Raw;
 	    Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
 	    an animation is for what is seen; for what a game decides by (a hit frame, a replay),
 	    drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-	    (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+	    (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+	    before the joints pose it.
 	**/
 	public inline function setAnimationTime(seconds:Float):Bool
 		return Raw.wgf_model_set_animation_time(this, seconds);
@@ -921,7 +937,8 @@ import wgf.impl.Raw;
 	    Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
 	    an animation is for what is seen; for what a game decides by (a hit frame, a replay),
 	    drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-	    (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+	    (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+	    before the joints pose it.
 	**/
 	public inline function getAnimationTime():Float
 		return Raw.wgf_model_get_animation_time(this);

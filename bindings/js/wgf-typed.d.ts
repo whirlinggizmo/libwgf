@@ -4078,7 +4078,8 @@ export declare const Model: {
      * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
      * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
      * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-     * (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+     * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+     * before the joints pose it.
      */
     readonly getAnimationCount: typeof raw.wgf_model_get_animation_count;
     /**
@@ -4124,7 +4125,8 @@ export declare const Model: {
      * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
      * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
      * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-     * (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+     * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+     * before the joints pose it.
      */
     readonly getAnimationName: typeof raw.wgf_model_get_animation_name;
     /**
@@ -4170,7 +4172,8 @@ export declare const Model: {
      * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
      * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
      * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-     * (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+     * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+     * before the joints pose it.
      */
     readonly findAnimation: typeof raw.wgf_model_find_animation;
     /**
@@ -4216,7 +4219,8 @@ export declare const Model: {
      * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
      * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
      * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-     * (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+     * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+     * before the joints pose it.
      */
     readonly getAnimationDuration: typeof raw.wgf_model_get_animation_duration;
     /**
@@ -4262,7 +4266,8 @@ export declare const Model: {
      * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
      * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
      * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-     * (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+     * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+     * before the joints pose it.
      */
     readonly playAnimation: typeof raw.wgf_model_play_animation;
     /**
@@ -4308,7 +4313,8 @@ export declare const Model: {
      * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
      * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
      * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-     * (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+     * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+     * before the joints pose it.
      */
     readonly getAnimation: typeof raw.wgf_model_get_animation;
     /**
@@ -4354,7 +4360,8 @@ export declare const Model: {
      * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
      * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
      * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-     * (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+     * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+     * before the joints pose it.
      */
     readonly getAnimationWeight: typeof raw.wgf_model_get_animation_weight;
     /**
@@ -4400,7 +4407,8 @@ export declare const Model: {
      * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
      * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
      * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-     * (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+     * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+     * before the joints pose it.
      */
     readonly pauseAnimation: typeof raw.wgf_model_pause_animation;
     /**
@@ -4446,7 +4454,8 @@ export declare const Model: {
      * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
      * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
      * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-     * (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+     * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+     * before the joints pose it.
      */
     readonly resumeAnimation: typeof raw.wgf_model_resume_animation;
     /**
@@ -4492,7 +4501,8 @@ export declare const Model: {
      * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
      * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
      * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-     * (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+     * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+     * before the joints pose it.
      */
     readonly stopAnimation: typeof raw.wgf_model_stop_animation;
     /**
@@ -4538,7 +4548,8 @@ export declare const Model: {
      * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
      * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
      * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-     * (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+     * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+     * before the joints pose it.
      */
     readonly getAnimationState: typeof raw.wgf_model_get_animation_state;
     /**
@@ -4584,7 +4595,8 @@ export declare const Model: {
      * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
      * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
      * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-     * (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+     * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+     * before the joints pose it.
      */
     readonly setAnimationSpeed: typeof raw.wgf_model_set_animation_speed;
     /**
@@ -4630,7 +4642,8 @@ export declare const Model: {
      * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
      * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
      * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-     * (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+     * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+     * before the joints pose it.
      */
     readonly getAnimationSpeed: typeof raw.wgf_model_get_animation_speed;
     /**
@@ -4676,7 +4689,8 @@ export declare const Model: {
      * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
      * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
      * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-     * (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+     * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+     * before the joints pose it.
      */
     readonly setAnimationLoop: typeof raw.wgf_model_set_animation_loop;
     /**
@@ -4722,7 +4736,8 @@ export declare const Model: {
      * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
      * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
      * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-     * (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+     * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+     * before the joints pose it.
      */
     readonly isAnimationLoop: typeof raw.wgf_model_is_animation_loop;
     /**
@@ -4768,7 +4783,8 @@ export declare const Model: {
      * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
      * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
      * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-     * (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+     * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+     * before the joints pose it.
      */
     readonly setAnimationTime: typeof raw.wgf_model_set_animation_time;
     /**
@@ -4814,7 +4830,8 @@ export declare const Model: {
      * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
      * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
      * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
-     * (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose.
+     * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+     * before the joints pose it.
      */
     readonly getAnimationTime: typeof raw.wgf_model_get_animation_time;
     /**
