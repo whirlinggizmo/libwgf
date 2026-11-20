@@ -37,6 +37,13 @@ WGF_API bool wgf_input_is_pointer_captured(void);
 WGF_API void wgf_input_set_keyboard_captured(bool captured);
 WGF_API bool wgf_input_is_keyboard_captured(void);
 
+/* The system's clipboard, its text: copied to, and read (on the web, a copy takes only in
+ * the frame of an input, as browsers allow, and what is read is what the page last copied
+ * or was pasted). Text is UTF-8, at most 64 KB; the string read is valid until the next
+ * clipboard call. False for NULL. */
+WGF_API bool wgf_input_set_clipboard(const char *text);
+WGF_API const char *wgf_input_get_clipboard(void);
+
 #ifdef __cplusplus
 }
 #endif

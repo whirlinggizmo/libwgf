@@ -75,4 +75,16 @@ class Mouse {
 	**/
 	public static inline function isCursorVisible():Bool
 		return Raw.wgf_mouse_is_cursor_visible();
+
+	/**
+	    Show the pointer over the window (default true).
+	**/
+	public static inline function setCursor(cursor:MouseCursor):Bool
+		return Raw.wgf_mouse_set_cursor(cursor);
+
+	/**
+	    Show the pointer over the window (default true).
+	**/
+	public static inline function getCursor():MouseCursor
+		return Raw.wgf_mouse_get_cursor();
 }

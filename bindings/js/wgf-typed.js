@@ -998,6 +998,10 @@ export const Input = Object.freeze({
     setKeyboardCaptured: raw.wgf_input_set_keyboard_captured,
     // wgf: call wgf_input_is_keyboard_captured
     isKeyboardCaptured: raw.wgf_input_is_keyboard_captured,
+    // wgf: call wgf_input_set_clipboard
+    setClipboard: raw.wgf_input_set_clipboard,
+    // wgf: call wgf_input_get_clipboard
+    getClipboard: raw.wgf_input_get_clipboard,
 });
 // wgf: typed Keyboard
 export const Keyboard = Object.freeze({
@@ -1009,6 +1013,10 @@ export const Keyboard = Object.freeze({
     isPressed: raw.wgf_keyboard_is_pressed,
     // wgf: call wgf_keyboard_is_released
     isReleased: raw.wgf_keyboard_is_released,
+    // wgf: call wgf_keyboard_is_repeated
+    isRepeated: raw.wgf_keyboard_is_repeated,
+    // wgf: call wgf_keyboard_get_last_pressed
+    getLastPressed: raw.wgf_keyboard_get_last_pressed,
 });
 // wgf: typed Lifetime
 export const Lifetime = Object.freeze({
@@ -1274,6 +1282,10 @@ export const Mouse = Object.freeze({
     setCursorVisible: raw.wgf_mouse_set_cursor_visible,
     // wgf: call wgf_mouse_is_cursor_visible
     isCursorVisible: raw.wgf_mouse_is_cursor_visible,
+    // wgf: call wgf_mouse_set_cursor
+    setCursor: raw.wgf_mouse_set_cursor,
+    // wgf: call wgf_mouse_get_cursor
+    getCursor: raw.wgf_mouse_get_cursor,
 });
 // wgf: typed Physics
 export const Physics = Object.freeze({
@@ -1783,6 +1795,16 @@ export const Touch = Object.freeze({
     getGestureScale: raw.wgf_touch_get_gesture_scale,
     // wgf: call wgf_touch_get_gesture_rotation
     getGestureRotation: raw.wgf_touch_get_gesture_rotation,
+    // wgf: call wgf_touch_is_tapped
+    isTapped: raw.wgf_touch_is_tapped,
+    // wgf: call wgf_touch_is_double_tapped
+    isDoubleTapped: raw.wgf_touch_is_double_tapped,
+    // wgf: call wgf_touch_get_tap_position
+    getTapPosition: raw.wgf_touch_get_tap_position,
+    // wgf: call wgf_touch_get_swipe
+    getSwipe: raw.wgf_touch_get_swipe,
+    // wgf: call wgf_touch_is_holding
+    isHolding: raw.wgf_touch_is_holding,
 });
 // wgf: typed Trig
 export const Trig = Object.freeze({
@@ -2086,6 +2108,16 @@ export const Window = Object.freeze({
     setMsaa: raw.wgf_window_set_msaa,
     // wgf: call wgf_window_is_msaa
     isMsaa: raw.wgf_window_is_msaa,
+    // wgf: call wgf_window_open_url
+    openUrl: raw.wgf_window_open_url,
+    // wgf: call wgf_window_has_touch
+    hasTouch: raw.wgf_window_has_touch,
+    // wgf: call wgf_window_has_fine_pointer
+    hasFinePointer: raw.wgf_window_has_fine_pointer,
+    // wgf: call wgf_window_get_os
+    getOs: raw.wgf_window_get_os,
+    // wgf: call wgf_window_is_web
+    isWeb: raw.wgf_window_is_web,
 });
 // wgf: typed World
 export const World = Object.freeze({
@@ -2139,7 +2171,7 @@ export const GamepadTrigger = Object.freeze({ LEFT: 0, RIGHT: 1 });
 // wgf: enum InputState
 export const InputState = Object.freeze({ UP: 0, PRESSED: 1, DOWN: 2, RELEASED: 3 });
 // wgf: enum KeyboardKey
-export const KeyboardKey = Object.freeze({ SPACE: 32, APOSTROPHE: 39, COMMA: 44, MINUS: 45, PERIOD: 46, SLASH: 47, KEY_0: 48, KEY_1: 49, KEY_2: 50, KEY_3: 51, KEY_4: 52, KEY_5: 53, KEY_6: 54, KEY_7: 55, KEY_8: 56, KEY_9: 57, SEMICOLON: 59, EQUAL: 61, A: 65, B: 66, C: 67, D: 68, E: 69, F: 70, G: 71, H: 72, I: 73, J: 74, K: 75, L: 76, M: 77, N: 78, O: 79, P: 80, Q: 81, R: 82, S: 83, T: 84, U: 85, V: 86, W: 87, X: 88, Y: 89, Z: 90, LEFT_BRACKET: 91, BACKSLASH: 92, RIGHT_BRACKET: 93, GRAVE_ACCENT: 96, WORLD_1: 161, WORLD_2: 162, ESCAPE: 256, ENTER: 257, TAB: 258, BACKSPACE: 259, INSERT: 260, DELETE: 261, RIGHT: 262, LEFT: 263, DOWN: 264, UP: 265, PAGE_UP: 266, PAGE_DOWN: 267, HOME: 268, END: 269, CAPS_LOCK: 280, SCROLL_LOCK: 281, NUM_LOCK: 282, PRINT_SCREEN: 283, PAUSE: 284, F1: 290, F2: 291, F3: 292, F4: 293, F5: 294, F6: 295, F7: 296, F8: 297, F9: 298, F10: 299, F11: 300, F12: 301, F13: 302, F14: 303, F15: 304, F16: 305, F17: 306, F18: 307, F19: 308, F20: 309, F21: 310, F22: 311, F23: 312, F24: 313, F25: 314, KP_0: 320, KP_1: 321, KP_2: 322, KP_3: 323, KP_4: 324, KP_5: 325, KP_6: 326, KP_7: 327, KP_8: 328, KP_9: 329, KP_DECIMAL: 330, KP_DIVIDE: 331, KP_MULTIPLY: 332, KP_SUBTRACT: 333, KP_ADD: 334, KP_ENTER: 335, KP_EQUAL: 336, LEFT_SHIFT: 340, LEFT_CONTROL: 341, LEFT_ALT: 342, LEFT_SUPER: 343, RIGHT_SHIFT: 344, RIGHT_CONTROL: 345, RIGHT_ALT: 346, RIGHT_SUPER: 347, MENU: 348 });
+export const KeyboardKey = Object.freeze({ NONE: 0, SPACE: 32, APOSTROPHE: 39, COMMA: 44, MINUS: 45, PERIOD: 46, SLASH: 47, KEY_0: 48, KEY_1: 49, KEY_2: 50, KEY_3: 51, KEY_4: 52, KEY_5: 53, KEY_6: 54, KEY_7: 55, KEY_8: 56, KEY_9: 57, SEMICOLON: 59, EQUAL: 61, A: 65, B: 66, C: 67, D: 68, E: 69, F: 70, G: 71, H: 72, I: 73, J: 74, K: 75, L: 76, M: 77, N: 78, O: 79, P: 80, Q: 81, R: 82, S: 83, T: 84, U: 85, V: 86, W: 87, X: 88, Y: 89, Z: 90, LEFT_BRACKET: 91, BACKSLASH: 92, RIGHT_BRACKET: 93, GRAVE_ACCENT: 96, WORLD_1: 161, WORLD_2: 162, ESCAPE: 256, ENTER: 257, TAB: 258, BACKSPACE: 259, INSERT: 260, DELETE: 261, RIGHT: 262, LEFT: 263, DOWN: 264, UP: 265, PAGE_UP: 266, PAGE_DOWN: 267, HOME: 268, END: 269, CAPS_LOCK: 280, SCROLL_LOCK: 281, NUM_LOCK: 282, PRINT_SCREEN: 283, PAUSE: 284, F1: 290, F2: 291, F3: 292, F4: 293, F5: 294, F6: 295, F7: 296, F8: 297, F9: 298, F10: 299, F11: 300, F12: 301, F13: 302, F14: 303, F15: 304, F16: 305, F17: 306, F18: 307, F19: 308, F20: 309, F21: 310, F22: 311, F23: 312, F24: 313, F25: 314, KP_0: 320, KP_1: 321, KP_2: 322, KP_3: 323, KP_4: 324, KP_5: 325, KP_6: 326, KP_7: 327, KP_8: 328, KP_9: 329, KP_DECIMAL: 330, KP_DIVIDE: 331, KP_MULTIPLY: 332, KP_SUBTRACT: 333, KP_ADD: 334, KP_ENTER: 335, KP_EQUAL: 336, LEFT_SHIFT: 340, LEFT_CONTROL: 341, LEFT_ALT: 342, LEFT_SUPER: 343, RIGHT_SHIFT: 344, RIGHT_CONTROL: 345, RIGHT_ALT: 346, RIGHT_SUPER: 347, MENU: 348 });
 // wgf: enum LightType
 export const LightType = Object.freeze({ DIRECTIONAL: 0, POINT: 1, SPOT: 2 });
 // wgf: enum LogLevel
@@ -2148,6 +2180,8 @@ export const LogLevel = Object.freeze({ TRACE: 0, DEBUG: 1, INFO: 2, WARN: 3, ER
 export const MaterialShading = Object.freeze({ PBR: 0, UNLIT: 1, CUSTOM: 2 });
 // wgf: enum MouseButton
 export const MouseButton = Object.freeze({ LEFT: 0, RIGHT: 1, MIDDLE: 2 });
+// wgf: enum MouseCursor
+export const MouseCursor = Object.freeze({ DEFAULT: 0, ARROW: 1, IBEAM: 2, CROSSHAIR: 3, HAND: 4, RESIZE_EW: 5, RESIZE_NS: 6, RESIZE_NWSE: 7, RESIZE_NESW: 8, RESIZE_ALL: 9, NOT_ALLOWED: 10 });
 // wgf: enum PlayState
 export const PlayState = Object.freeze({ STOPPED: 0, PLAYING: 1, PAUSED: 2, COMPLETE: 3 });
 // wgf: enum PresentationMode
@@ -2184,5 +2218,7 @@ export const UiSizing = Object.freeze({ FIT: 0, GROW: 1, FIXED: 2, PERCENT: 3 })
 export const UiValue = Object.freeze({ TEXT_SIZE: 0, PADDING: 1, GAP: 2, CORNER_RADIUS: 3, BUTTON_PADDING: 4, BUTTON_WIDTH: 5, FOCUS_WIDTH: 6, BAR_WIDTH: 7, BAR_HEIGHT: 8 });
 // wgf: enum VehicleDrive
 export const VehicleDrive = Object.freeze({ FRONT: 0, REAR: 1, ALL: 2 });
+// wgf: enum WindowOs
+export const WindowOs = Object.freeze({ OTHER: 0, LINUX: 1, WINDOWS: 2, MACOS: 3, ANDROID: 5, IOS: 6 });
 // wgf: enum WorldEvent
 export const WorldEvent = Object.freeze({ NONE: 0, CREATED: 1, DESTROYED: 2, TRIGGER_ENTER: 3, TRIGGER_EXIT: 4, CONTACT_BEGIN: 5, CONTACT_END: 6 });

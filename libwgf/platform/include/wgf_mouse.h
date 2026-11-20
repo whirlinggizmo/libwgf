@@ -48,6 +48,25 @@ WGF_API bool wgf_mouse_is_locked(void);
 WGF_API void wgf_mouse_set_cursor_visible(bool visible);
 WGF_API bool wgf_mouse_is_cursor_visible(void);
 
+/* The cursor's shape over the window, sokol_app's set: DEFAULT the system's, a hand over a
+ * button, an I-beam over text, the resizing arrows. Nothing on a phone. False for one that
+ * isn't one. */
+typedef enum wgf_mouse_cursor_t {
+    WGF_MOUSE_CURSOR_DEFAULT = 0,
+    WGF_MOUSE_CURSOR_ARROW = 1,
+    WGF_MOUSE_CURSOR_IBEAM = 2,
+    WGF_MOUSE_CURSOR_CROSSHAIR = 3,
+    WGF_MOUSE_CURSOR_HAND = 4,
+    WGF_MOUSE_CURSOR_RESIZE_EW = 5,
+    WGF_MOUSE_CURSOR_RESIZE_NS = 6,
+    WGF_MOUSE_CURSOR_RESIZE_NWSE = 7,
+    WGF_MOUSE_CURSOR_RESIZE_NESW = 8,
+    WGF_MOUSE_CURSOR_RESIZE_ALL = 9,
+    WGF_MOUSE_CURSOR_NOT_ALLOWED = 10
+} wgf_mouse_cursor_t;
+WGF_API bool wgf_mouse_set_cursor(wgf_mouse_cursor_t cursor);
+WGF_API wgf_mouse_cursor_t wgf_mouse_get_cursor(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -106,6 +106,27 @@ WGF_API bool wgf_window_is_vsync(void);
 WGF_API bool wgf_window_set_msaa(bool msaa);
 WGF_API bool wgf_window_is_msaa(void);
 
+/* A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
+ * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
+ * the system refused. */
+WGF_API bool wgf_window_open_url(const char *url);
+
+/* What the device has: touch (to show on-screen controls), a fine pointer (a mouse or a
+ * pad: hover means something), and its system, on the web the one the browser runs on. */
+typedef enum wgf_window_os_t {
+    WGF_WINDOW_OS_OTHER = 0,
+    WGF_WINDOW_OS_LINUX = 1,
+    WGF_WINDOW_OS_WINDOWS = 2,
+    WGF_WINDOW_OS_MACOS = 3,
+    WGF_WINDOW_OS_ANDROID = 5,
+    WGF_WINDOW_OS_IOS = 6
+} wgf_window_os_t;
+WGF_API bool wgf_window_has_touch(void);
+WGF_API bool wgf_window_has_fine_pointer(void);
+WGF_API wgf_window_os_t wgf_window_get_os(void);
+/* Whether it runs in a page. */
+WGF_API bool wgf_window_is_web(void);
+
 #ifdef __cplusplus
 }
 #endif

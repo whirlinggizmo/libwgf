@@ -117,3 +117,43 @@ void wgf_platform_priv_mark(const char *name)
 {
     wgf_platform_js_mark(name);
 }
+
+/* ---- the browser's tab, and the device ----------------------------------------------- */
+
+EM_JS(int, web_open_url, (const char *url), {
+    var opened = window.open(UTF8ToString(url), "_blank", "noopener");
+    return opened !== null ? 1 : 0;
+})
+EM_JS(int, web_has_touch, (void), { return (navigator.maxTouchPoints | 0) > 0 ? 1 : 0; })
+EM_JS(int, web_has_fine_pointer, (void), {
+    return window.matchMedia && window.matchMedia("(any-pointer: fine)").matches ? 1 : 0;
+})
+EM_JS(int, web_os, (void), {
+    var agent = (navigator.userAgent || "") + " " + (navigator.platform || "");
+    if (/Android/i.test(agent)) return 5;
+    if (/iPhone|iPad|iPod/i.test(agent) || (/Mac/i.test(agent) && (navigator.maxTouchPoints | 0) > 1)) return 6;
+    if (/Win/i.test(agent)) return 2;
+    if (/Mac/i.test(agent)) return 3;
+    if (/Linux|X11|CrOS/i.test(agent)) return 1;
+    return 0;
+})
+
+bool wgf_platform_priv_open_url(const char *url)
+{
+    return web_open_url(url) != 0;
+}
+
+bool wgf_platform_priv_has_touch(void)
+{
+    return web_has_touch() != 0;
+}
+
+bool wgf_platform_priv_has_fine_pointer(void)
+{
+    return web_has_fine_pointer() != 0;
+}
+
+int wgf_platform_priv_get_os(void)
+{
+    return web_os();
+}

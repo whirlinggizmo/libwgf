@@ -3271,6 +3271,20 @@ export declare const Input: {
      * lets them go in a frame it isn't.
      */
     readonly isKeyboardCaptured: typeof raw.wgf_input_is_keyboard_captured;
+    /**
+     * The system's clipboard, its text: copied to, and read (on the web, a copy takes only in
+     * the frame of an input, as browsers allow, and what is read is what the page last copied
+     * or was pasted). Text is UTF-8, at most 64 KB; the string read is valid until the next
+     * clipboard call. False for NULL.
+     */
+    readonly setClipboard: typeof raw.wgf_input_set_clipboard;
+    /**
+     * The system's clipboard, its text: copied to, and read (on the web, a copy takes only in
+     * the frame of an input, as browsers allow, and what is read is what the page last copied
+     * or was pasted). Text is UTF-8, at most 64 KB; the string read is valid until the next
+     * clipboard call. False for NULL.
+     */
+    readonly getClipboard: typeof raw.wgf_input_get_clipboard;
 };
 export declare const Keyboard: {
     /**
@@ -3291,6 +3305,16 @@ export declare const Keyboard: {
      * Went up since the previous tick or frame.
      */
     readonly isReleased: typeof raw.wgf_keyboard_is_released;
+    /**
+     * Pressed, or repeated by the key held (the system's key repeat): a menu's cursor moving
+     * while an arrow is held, a text field's backspace.
+     */
+    readonly isRepeated: typeof raw.wgf_keyboard_is_repeated;
+    /**
+     * The last key pressed in this frame (in a tick, the tick), not repeated; WGF_KEY_NONE for
+     * none: a rebinding screen's "press a key".
+     */
+    readonly getLastPressed: typeof raw.wgf_keyboard_get_last_pressed;
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Lifetime = raw.wgf_actor_t;
@@ -3944,6 +3968,14 @@ export declare const Mouse: {
      * Show the pointer over the window (default true).
      */
     readonly isCursorVisible: typeof raw.wgf_mouse_is_cursor_visible;
+    /**
+     * Show the pointer over the window (default true).
+     */
+    readonly setCursor: typeof raw.wgf_mouse_set_cursor;
+    /**
+     * Show the pointer over the window (default true).
+     */
+    readonly getCursor: typeof raw.wgf_mouse_get_cursor;
 };
 export declare const Physics: {
     /**
@@ -5363,6 +5395,46 @@ export declare const Touch: {
      * screen.
      */
     readonly getGestureRotation: typeof raw.wgf_touch_get_gesture_rotation;
+    /**
+     * One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+     * within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+     * and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+     * (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+     * for 0.5 s or more, still), true while it lasts.
+     */
+    readonly isTapped: typeof raw.wgf_touch_is_tapped;
+    /**
+     * One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+     * within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+     * and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+     * (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+     * for 0.5 s or more, still), true while it lasts.
+     */
+    readonly isDoubleTapped: typeof raw.wgf_touch_is_double_tapped;
+    /**
+     * One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+     * within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+     * and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+     * (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+     * for 0.5 s or more, still), true while it lasts.
+     */
+    readonly getTapPosition: typeof raw.wgf_touch_get_tap_position;
+    /**
+     * One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+     * within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+     * and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+     * (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+     * for 0.5 s or more, still), true while it lasts.
+     */
+    readonly getSwipe: typeof raw.wgf_touch_get_swipe;
+    /**
+     * One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+     * within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+     * and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+     * (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+     * for 0.5 s or more, still), true while it lasts.
+     */
+    readonly isHolding: typeof raw.wgf_touch_is_holding;
 };
 export declare const Trig: {
     /**
@@ -6344,6 +6416,34 @@ export declare const Window: {
      *                what the window got
      */
     readonly isMsaa: typeof raw.wgf_window_is_msaa;
+    /**
+     * A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
+     * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
+     * the system refused.
+     */
+    readonly openUrl: typeof raw.wgf_window_open_url;
+    /**
+     * A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
+     * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
+     * the system refused.
+     */
+    readonly hasTouch: typeof raw.wgf_window_has_touch;
+    /**
+     * A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
+     * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
+     * the system refused.
+     */
+    readonly hasFinePointer: typeof raw.wgf_window_has_fine_pointer;
+    /**
+     * A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
+     * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
+     * the system refused.
+     */
+    readonly getOs: typeof raw.wgf_window_get_os;
+    /**
+     * Whether it runs in a page.
+     */
+    readonly isWeb: typeof raw.wgf_window_is_web;
 };
 export declare const World: {
     /**
@@ -6425,7 +6525,7 @@ export declare const GamepadTrigger: { readonly LEFT: GamepadTrigger; readonly R
 export type InputState = raw.wgf_input_state_t;
 export declare const InputState: { readonly UP: InputState; readonly PRESSED: InputState; readonly DOWN: InputState; readonly RELEASED: InputState; };
 export type KeyboardKey = raw.wgf_keyboard_key_t;
-export declare const KeyboardKey: { readonly SPACE: KeyboardKey; readonly APOSTROPHE: KeyboardKey; readonly COMMA: KeyboardKey; readonly MINUS: KeyboardKey; readonly PERIOD: KeyboardKey; readonly SLASH: KeyboardKey; readonly KEY_0: KeyboardKey; readonly KEY_1: KeyboardKey; readonly KEY_2: KeyboardKey; readonly KEY_3: KeyboardKey; readonly KEY_4: KeyboardKey; readonly KEY_5: KeyboardKey; readonly KEY_6: KeyboardKey; readonly KEY_7: KeyboardKey; readonly KEY_8: KeyboardKey; readonly KEY_9: KeyboardKey; readonly SEMICOLON: KeyboardKey; readonly EQUAL: KeyboardKey; readonly A: KeyboardKey; readonly B: KeyboardKey; readonly C: KeyboardKey; readonly D: KeyboardKey; readonly E: KeyboardKey; readonly F: KeyboardKey; readonly G: KeyboardKey; readonly H: KeyboardKey; readonly I: KeyboardKey; readonly J: KeyboardKey; readonly K: KeyboardKey; readonly L: KeyboardKey; readonly M: KeyboardKey; readonly N: KeyboardKey; readonly O: KeyboardKey; readonly P: KeyboardKey; readonly Q: KeyboardKey; readonly R: KeyboardKey; readonly S: KeyboardKey; readonly T: KeyboardKey; readonly U: KeyboardKey; readonly V: KeyboardKey; readonly W: KeyboardKey; readonly X: KeyboardKey; readonly Y: KeyboardKey; readonly Z: KeyboardKey; readonly LEFT_BRACKET: KeyboardKey; readonly BACKSLASH: KeyboardKey; readonly RIGHT_BRACKET: KeyboardKey; readonly GRAVE_ACCENT: KeyboardKey; readonly WORLD_1: KeyboardKey; readonly WORLD_2: KeyboardKey; readonly ESCAPE: KeyboardKey; readonly ENTER: KeyboardKey; readonly TAB: KeyboardKey; readonly BACKSPACE: KeyboardKey; readonly INSERT: KeyboardKey; readonly DELETE: KeyboardKey; readonly RIGHT: KeyboardKey; readonly LEFT: KeyboardKey; readonly DOWN: KeyboardKey; readonly UP: KeyboardKey; readonly PAGE_UP: KeyboardKey; readonly PAGE_DOWN: KeyboardKey; readonly HOME: KeyboardKey; readonly END: KeyboardKey; readonly CAPS_LOCK: KeyboardKey; readonly SCROLL_LOCK: KeyboardKey; readonly NUM_LOCK: KeyboardKey; readonly PRINT_SCREEN: KeyboardKey; readonly PAUSE: KeyboardKey; readonly F1: KeyboardKey; readonly F2: KeyboardKey; readonly F3: KeyboardKey; readonly F4: KeyboardKey; readonly F5: KeyboardKey; readonly F6: KeyboardKey; readonly F7: KeyboardKey; readonly F8: KeyboardKey; readonly F9: KeyboardKey; readonly F10: KeyboardKey; readonly F11: KeyboardKey; readonly F12: KeyboardKey; readonly F13: KeyboardKey; readonly F14: KeyboardKey; readonly F15: KeyboardKey; readonly F16: KeyboardKey; readonly F17: KeyboardKey; readonly F18: KeyboardKey; readonly F19: KeyboardKey; readonly F20: KeyboardKey; readonly F21: KeyboardKey; readonly F22: KeyboardKey; readonly F23: KeyboardKey; readonly F24: KeyboardKey; readonly F25: KeyboardKey; readonly KP_0: KeyboardKey; readonly KP_1: KeyboardKey; readonly KP_2: KeyboardKey; readonly KP_3: KeyboardKey; readonly KP_4: KeyboardKey; readonly KP_5: KeyboardKey; readonly KP_6: KeyboardKey; readonly KP_7: KeyboardKey; readonly KP_8: KeyboardKey; readonly KP_9: KeyboardKey; readonly KP_DECIMAL: KeyboardKey; readonly KP_DIVIDE: KeyboardKey; readonly KP_MULTIPLY: KeyboardKey; readonly KP_SUBTRACT: KeyboardKey; readonly KP_ADD: KeyboardKey; readonly KP_ENTER: KeyboardKey; readonly KP_EQUAL: KeyboardKey; readonly LEFT_SHIFT: KeyboardKey; readonly LEFT_CONTROL: KeyboardKey; readonly LEFT_ALT: KeyboardKey; readonly LEFT_SUPER: KeyboardKey; readonly RIGHT_SHIFT: KeyboardKey; readonly RIGHT_CONTROL: KeyboardKey; readonly RIGHT_ALT: KeyboardKey; readonly RIGHT_SUPER: KeyboardKey; readonly MENU: KeyboardKey; };
+export declare const KeyboardKey: { readonly NONE: KeyboardKey; readonly SPACE: KeyboardKey; readonly APOSTROPHE: KeyboardKey; readonly COMMA: KeyboardKey; readonly MINUS: KeyboardKey; readonly PERIOD: KeyboardKey; readonly SLASH: KeyboardKey; readonly KEY_0: KeyboardKey; readonly KEY_1: KeyboardKey; readonly KEY_2: KeyboardKey; readonly KEY_3: KeyboardKey; readonly KEY_4: KeyboardKey; readonly KEY_5: KeyboardKey; readonly KEY_6: KeyboardKey; readonly KEY_7: KeyboardKey; readonly KEY_8: KeyboardKey; readonly KEY_9: KeyboardKey; readonly SEMICOLON: KeyboardKey; readonly EQUAL: KeyboardKey; readonly A: KeyboardKey; readonly B: KeyboardKey; readonly C: KeyboardKey; readonly D: KeyboardKey; readonly E: KeyboardKey; readonly F: KeyboardKey; readonly G: KeyboardKey; readonly H: KeyboardKey; readonly I: KeyboardKey; readonly J: KeyboardKey; readonly K: KeyboardKey; readonly L: KeyboardKey; readonly M: KeyboardKey; readonly N: KeyboardKey; readonly O: KeyboardKey; readonly P: KeyboardKey; readonly Q: KeyboardKey; readonly R: KeyboardKey; readonly S: KeyboardKey; readonly T: KeyboardKey; readonly U: KeyboardKey; readonly V: KeyboardKey; readonly W: KeyboardKey; readonly X: KeyboardKey; readonly Y: KeyboardKey; readonly Z: KeyboardKey; readonly LEFT_BRACKET: KeyboardKey; readonly BACKSLASH: KeyboardKey; readonly RIGHT_BRACKET: KeyboardKey; readonly GRAVE_ACCENT: KeyboardKey; readonly WORLD_1: KeyboardKey; readonly WORLD_2: KeyboardKey; readonly ESCAPE: KeyboardKey; readonly ENTER: KeyboardKey; readonly TAB: KeyboardKey; readonly BACKSPACE: KeyboardKey; readonly INSERT: KeyboardKey; readonly DELETE: KeyboardKey; readonly RIGHT: KeyboardKey; readonly LEFT: KeyboardKey; readonly DOWN: KeyboardKey; readonly UP: KeyboardKey; readonly PAGE_UP: KeyboardKey; readonly PAGE_DOWN: KeyboardKey; readonly HOME: KeyboardKey; readonly END: KeyboardKey; readonly CAPS_LOCK: KeyboardKey; readonly SCROLL_LOCK: KeyboardKey; readonly NUM_LOCK: KeyboardKey; readonly PRINT_SCREEN: KeyboardKey; readonly PAUSE: KeyboardKey; readonly F1: KeyboardKey; readonly F2: KeyboardKey; readonly F3: KeyboardKey; readonly F4: KeyboardKey; readonly F5: KeyboardKey; readonly F6: KeyboardKey; readonly F7: KeyboardKey; readonly F8: KeyboardKey; readonly F9: KeyboardKey; readonly F10: KeyboardKey; readonly F11: KeyboardKey; readonly F12: KeyboardKey; readonly F13: KeyboardKey; readonly F14: KeyboardKey; readonly F15: KeyboardKey; readonly F16: KeyboardKey; readonly F17: KeyboardKey; readonly F18: KeyboardKey; readonly F19: KeyboardKey; readonly F20: KeyboardKey; readonly F21: KeyboardKey; readonly F22: KeyboardKey; readonly F23: KeyboardKey; readonly F24: KeyboardKey; readonly F25: KeyboardKey; readonly KP_0: KeyboardKey; readonly KP_1: KeyboardKey; readonly KP_2: KeyboardKey; readonly KP_3: KeyboardKey; readonly KP_4: KeyboardKey; readonly KP_5: KeyboardKey; readonly KP_6: KeyboardKey; readonly KP_7: KeyboardKey; readonly KP_8: KeyboardKey; readonly KP_9: KeyboardKey; readonly KP_DECIMAL: KeyboardKey; readonly KP_DIVIDE: KeyboardKey; readonly KP_MULTIPLY: KeyboardKey; readonly KP_SUBTRACT: KeyboardKey; readonly KP_ADD: KeyboardKey; readonly KP_ENTER: KeyboardKey; readonly KP_EQUAL: KeyboardKey; readonly LEFT_SHIFT: KeyboardKey; readonly LEFT_CONTROL: KeyboardKey; readonly LEFT_ALT: KeyboardKey; readonly LEFT_SUPER: KeyboardKey; readonly RIGHT_SHIFT: KeyboardKey; readonly RIGHT_CONTROL: KeyboardKey; readonly RIGHT_ALT: KeyboardKey; readonly RIGHT_SUPER: KeyboardKey; readonly MENU: KeyboardKey; };
 export type LightType = raw.wgf_light_type_t;
 export declare const LightType: { readonly DIRECTIONAL: LightType; readonly POINT: LightType; readonly SPOT: LightType; };
 export type LogLevel = raw.wgf_log_level_t;
@@ -6434,6 +6534,8 @@ export type MaterialShading = raw.wgf_material_shading_t;
 export declare const MaterialShading: { readonly PBR: MaterialShading; readonly UNLIT: MaterialShading; readonly CUSTOM: MaterialShading; };
 export type MouseButton = raw.wgf_mouse_button_t;
 export declare const MouseButton: { readonly LEFT: MouseButton; readonly RIGHT: MouseButton; readonly MIDDLE: MouseButton; };
+export type MouseCursor = raw.wgf_mouse_cursor_t;
+export declare const MouseCursor: { readonly DEFAULT: MouseCursor; readonly ARROW: MouseCursor; readonly IBEAM: MouseCursor; readonly CROSSHAIR: MouseCursor; readonly HAND: MouseCursor; readonly RESIZE_EW: MouseCursor; readonly RESIZE_NS: MouseCursor; readonly RESIZE_NWSE: MouseCursor; readonly RESIZE_NESW: MouseCursor; readonly RESIZE_ALL: MouseCursor; readonly NOT_ALLOWED: MouseCursor; };
 export type PlayState = raw.wgf_play_state_t;
 export declare const PlayState: { readonly STOPPED: PlayState; readonly PLAYING: PlayState; readonly PAUSED: PlayState; readonly COMPLETE: PlayState; };
 export type PresentationMode = raw.wgf_presentation_mode_t;
@@ -6470,5 +6572,7 @@ export type UiValue = raw.wgf_ui_value_t;
 export declare const UiValue: { readonly TEXT_SIZE: UiValue; readonly PADDING: UiValue; readonly GAP: UiValue; readonly CORNER_RADIUS: UiValue; readonly BUTTON_PADDING: UiValue; readonly BUTTON_WIDTH: UiValue; readonly FOCUS_WIDTH: UiValue; readonly BAR_WIDTH: UiValue; readonly BAR_HEIGHT: UiValue; };
 export type VehicleDrive = raw.wgf_vehicle_drive_t;
 export declare const VehicleDrive: { readonly FRONT: VehicleDrive; readonly REAR: VehicleDrive; readonly ALL: VehicleDrive; };
+export type WindowOs = raw.wgf_window_os_t;
+export declare const WindowOs: { readonly OTHER: WindowOs; readonly LINUX: WindowOs; readonly WINDOWS: WindowOs; readonly MACOS: WindowOs; readonly ANDROID: WindowOs; readonly IOS: WindowOs; };
 export type WorldEvent = raw.wgf_world_event_t;
 export declare const WorldEvent: { readonly NONE: WorldEvent; readonly CREATED: WorldEvent; readonly DESTROYED: WorldEvent; readonly TRIGGER_ENTER: WorldEvent; readonly TRIGGER_EXIT: WorldEvent; readonly CONTACT_BEGIN: WorldEvent; readonly CONTACT_END: WorldEvent; };

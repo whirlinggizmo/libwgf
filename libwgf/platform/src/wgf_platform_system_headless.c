@@ -263,3 +263,52 @@ void wgf_platform_priv_set_paced(bool paced_frames)
 {
     paced = paced_frames;
 }
+
+/* For tests: a clipboard of its own, the last URL asked for, and a desktop's device. */
+static char clipboard[1024];
+static int cursor_now;
+
+void wgf_platform_priv_set_cursor(int cursor)
+{
+    cursor_now = cursor;
+}
+
+void wgf_platform_priv_set_clipboard(const char *text)
+{
+    size_t n = strlen(text);
+    if (n >= sizeof(clipboard)) n = sizeof(clipboard) - 1;
+    memcpy(clipboard, text, n);
+    clipboard[n] = '\0';
+}
+
+const char *wgf_platform_priv_get_clipboard(void)
+{
+    return clipboard;
+}
+
+bool wgf_platform_priv_open_url(const char *url)
+{
+    (void)url;
+    return true; /* nothing to open it in: as if opened */
+}
+
+bool wgf_platform_priv_has_touch(void)
+{
+    return false;
+}
+
+bool wgf_platform_priv_has_fine_pointer(void)
+{
+    return true;
+}
+
+int wgf_platform_priv_get_os(void)
+{
+#if defined(_WIN32)
+    return 2;
+#elif defined(__APPLE__)
+    return 3;
+#else
+    return 1;
+#endif
+}

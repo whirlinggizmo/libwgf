@@ -379,4 +379,42 @@ class Window {
 	**/
 	public static inline function isMsaa():Bool
 		return Raw.wgf_window_is_msaa();
+
+	/**
+	    A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
+	    browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
+	    the system refused.
+	**/
+	public static inline function openUrl(url:String):Bool
+		return Raw.wgf_window_open_url(url);
+
+	/**
+	    A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
+	    browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
+	    the system refused.
+	**/
+	public static inline function hasTouch():Bool
+		return Raw.wgf_window_has_touch();
+
+	/**
+	    A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
+	    browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
+	    the system refused.
+	**/
+	public static inline function hasFinePointer():Bool
+		return Raw.wgf_window_has_fine_pointer();
+
+	/**
+	    A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
+	    browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
+	    the system refused.
+	**/
+	public static inline function getOs():WindowOs
+		return Raw.wgf_window_get_os();
+
+	/**
+	    Whether it runs in a page.
+	**/
+	public static inline function isWeb():Bool
+		return Raw.wgf_window_is_web();
 }

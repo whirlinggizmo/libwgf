@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "aeb5672160b7c3ff" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "352b0e05053ce9c2" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -387,6 +387,7 @@ export const WGF_GAMEPAD_AXIS_RIGHT_TRIGGER = 5;
  * WGF_KEY_Z is the key left of X, whatever the layout prints on it. For the
  * characters the user typed, read wgf_input_get_chars.
  */
+export const WGF_KEY_NONE = 0;
 export const WGF_KEY_SPACE = 32;
 export const WGF_KEY_APOSTROPHE = 39;
 export const WGF_KEY_COMMA = 44;
@@ -516,6 +517,34 @@ export const WGF_KEY_MENU = 348;
 export const WGF_MOUSE_BUTTON_LEFT = 0;
 export const WGF_MOUSE_BUTTON_RIGHT = 1;
 export const WGF_MOUSE_BUTTON_MIDDLE = 2;
+
+/**
+ * The cursor's shape over the window, sokol_app's set: DEFAULT the system's, a hand over a
+ * button, an I-beam over text, the resizing arrows. Nothing on a phone. False for one that
+ * isn't one.
+ */
+export const WGF_MOUSE_CURSOR_DEFAULT = 0;
+export const WGF_MOUSE_CURSOR_ARROW = 1;
+export const WGF_MOUSE_CURSOR_IBEAM = 2;
+export const WGF_MOUSE_CURSOR_CROSSHAIR = 3;
+export const WGF_MOUSE_CURSOR_HAND = 4;
+export const WGF_MOUSE_CURSOR_RESIZE_EW = 5;
+export const WGF_MOUSE_CURSOR_RESIZE_NS = 6;
+export const WGF_MOUSE_CURSOR_RESIZE_NWSE = 7;
+export const WGF_MOUSE_CURSOR_RESIZE_NESW = 8;
+export const WGF_MOUSE_CURSOR_RESIZE_ALL = 9;
+export const WGF_MOUSE_CURSOR_NOT_ALLOWED = 10;
+
+/**
+ * What the device has: touch (to show on-screen controls), a fine pointer (a mouse or a
+ * pad: hover means something), and its system, on the web the one the browser runs on.
+ */
+export const WGF_WINDOW_OS_OTHER = 0;
+export const WGF_WINDOW_OS_LINUX = 1;
+export const WGF_WINDOW_OS_WINDOWS = 2;
+export const WGF_WINDOW_OS_MACOS = 3;
+export const WGF_WINDOW_OS_ANDROID = 5;
+export const WGF_WINDOW_OS_IOS = 6;
 
 /**
  * Assets: where a resource's file comes from. A path is an asset: creating a resource
@@ -2002,6 +2031,32 @@ export function wgf_input_is_keyboard_captured() {
     return value !== 0;
 }
 
+// wgf: call wgf_input_set_clipboard
+/**
+ * The system's clipboard, its text: copied to, and read (on the web, a copy takes only in
+ * the frame of an input, as browsers allow, and what is read is what the page last copied
+ * or was pasted). Text is UTF-8, at most 64 KB; the string read is valid until the next
+ * clipboard call. False for NULL.
+ */
+export function wgf_input_set_clipboard(text) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_input_set_clipboard"](cstr(text));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_input_get_clipboard
+/**
+ * The system's clipboard, its text: copied to, and read (on the web, a copy takes only in
+ * the frame of an input, as browsers allow, and what is read is what the page last copied
+ * or was pasted). Text is UTF-8, at most 64 KB; the string read is valid until the next
+ * clipboard call. False for NULL.
+ */
+export function wgf_input_get_clipboard() {
+    const value = host["_wgf_input_get_clipboard"]();
+    return str(value);
+}
+
 // wgf: call wgf_gamepad_is_connected
 /**
  * Whether pad 0 to 3 is connected.
@@ -2146,6 +2201,26 @@ export function wgf_keyboard_is_pressed(key) {
 export function wgf_keyboard_is_released(key) {
     const value = host["_wgf_keyboard_is_released"](key);
     return value !== 0;
+}
+
+// wgf: call wgf_keyboard_is_repeated
+/**
+ * Pressed, or repeated by the key held (the system's key repeat): a menu's cursor moving
+ * while an arrow is held, a text field's backspace.
+ */
+export function wgf_keyboard_is_repeated(key) {
+    const value = host["_wgf_keyboard_is_repeated"](key);
+    return value !== 0;
+}
+
+// wgf: call wgf_keyboard_get_last_pressed
+/**
+ * The last key pressed in this frame (in a tick, the tick), not repeated; WGF_KEY_NONE for
+ * none: a rebinding screen's "press a key".
+ */
+export function wgf_keyboard_get_last_pressed() {
+    const value = host["_wgf_keyboard_get_last_pressed"]();
+    return value;
 }
 
 // wgf: call wgf_action_bind_key
@@ -2464,6 +2539,24 @@ export function wgf_mouse_is_cursor_visible() {
     return value !== 0;
 }
 
+// wgf: call wgf_mouse_set_cursor
+/**
+ * Show the pointer over the window (default true).
+ */
+export function wgf_mouse_set_cursor(cursor) {
+    const value = host["_wgf_mouse_set_cursor"](cursor);
+    return value !== 0;
+}
+
+// wgf: call wgf_mouse_get_cursor
+/**
+ * Show the pointer over the window (default true).
+ */
+export function wgf_mouse_get_cursor() {
+    const value = host["_wgf_mouse_get_cursor"]();
+    return value;
+}
+
 // wgf: call wgf_touch_get_count
 /**
  * Fingers down, plus those lifted since the previous tick or frame.
@@ -2584,6 +2677,73 @@ export function wgf_touch_get_gesture_scale() {
 export function wgf_touch_get_gesture_rotation() {
     const value = host["_wgf_touch_get_gesture_rotation"]();
     return value;
+}
+
+// wgf: call wgf_touch_is_tapped
+/**
+ * One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+ * within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+ * and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+ * (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+ * for 0.5 s or more, still), true while it lasts.
+ */
+export function wgf_touch_is_tapped() {
+    const value = host["_wgf_touch_is_tapped"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_touch_is_double_tapped
+/**
+ * One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+ * within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+ * and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+ * (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+ * for 0.5 s or more, still), true while it lasts.
+ */
+export function wgf_touch_is_double_tapped() {
+    const value = host["_wgf_touch_is_double_tapped"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_touch_get_tap_position
+/**
+ * One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+ * within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+ * and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+ * (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+ * for 0.5 s or more, still), true while it lasts.
+ */
+export function wgf_touch_get_tap_position(into) {
+    const ret = result(8);
+    host["_wgf_touch_get_tap_position"](ret);
+    return vector(ret, 2, into);
+}
+
+// wgf: call wgf_touch_get_swipe
+/**
+ * One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+ * within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+ * and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+ * (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+ * for 0.5 s or more, still), true while it lasts.
+ */
+export function wgf_touch_get_swipe(into) {
+    const ret = result(8);
+    host["_wgf_touch_get_swipe"](ret);
+    return vector(ret, 2, into);
+}
+
+// wgf: call wgf_touch_is_holding
+/**
+ * One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+ * within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+ * and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+ * (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+ * for 0.5 s or more, still), true while it lasts.
+ */
+export function wgf_touch_is_holding() {
+    const value = host["_wgf_touch_is_holding"]();
+    return value !== 0;
 }
 
 // wgf: call wgf_window_set_title
@@ -3059,6 +3219,61 @@ export function wgf_window_set_msaa(msaa) {
  */
 export function wgf_window_is_msaa() {
     const value = host["_wgf_window_is_msaa"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_window_open_url
+/**
+ * A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
+ * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
+ * the system refused.
+ */
+export function wgf_window_open_url(url) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_window_open_url"](cstr(url));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_window_has_touch
+/**
+ * A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
+ * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
+ * the system refused.
+ */
+export function wgf_window_has_touch() {
+    const value = host["_wgf_window_has_touch"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_window_has_fine_pointer
+/**
+ * A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
+ * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
+ * the system refused.
+ */
+export function wgf_window_has_fine_pointer() {
+    const value = host["_wgf_window_has_fine_pointer"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_window_get_os
+/**
+ * A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
+ * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
+ * the system refused.
+ */
+export function wgf_window_get_os() {
+    const value = host["_wgf_window_get_os"]();
+    return value;
+}
+
+// wgf: call wgf_window_is_web
+/**
+ * Whether it runs in a page.
+ */
+export function wgf_window_is_web() {
+    const value = host["_wgf_window_is_web"]();
     return value !== 0;
 }
 

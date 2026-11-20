@@ -16,6 +16,7 @@ extern "C" {
  * characters the user typed, read wgf_input_get_chars. */
 
 typedef enum wgf_keyboard_key_t {
+    WGF_KEY_NONE = 0, /* no key */
     WGF_KEY_SPACE = 32,
     WGF_KEY_APOSTROPHE = 39,
     WGF_KEY_COMMA = 44,
@@ -149,6 +150,12 @@ WGF_API bool wgf_keyboard_is_down(wgf_keyboard_key_t key);
 WGF_API bool wgf_keyboard_is_pressed(wgf_keyboard_key_t key);
 /* Went up since the previous tick or frame. */
 WGF_API bool wgf_keyboard_is_released(wgf_keyboard_key_t key);
+/* Pressed, or repeated by the key held (the system's key repeat): a menu's cursor moving
+ * while an arrow is held, a text field's backspace. */
+WGF_API bool wgf_keyboard_is_repeated(wgf_keyboard_key_t key);
+/* The last key pressed in this frame (in a tick, the tick), not repeated; WGF_KEY_NONE for
+ * none: a rebinding screen's "press a key". */
+WGF_API wgf_keyboard_key_t wgf_keyboard_get_last_pressed(void);
 
 #ifdef __cplusplus
 }

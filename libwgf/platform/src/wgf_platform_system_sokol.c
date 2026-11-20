@@ -71,6 +71,8 @@ void wgf_platform_priv_run(const wgf_platform_priv_desc_t *desc)
     app.disable_vsync = !desc->vsync;
     app.composite_mode = desc->transparent ? SAPP_COMPOSITEMODE_PREMULTIPLIED : SAPP_COMPOSITEMODE_OPAQUE;
     app.logger.func = sokol_log;
+    app.enable_clipboard = true;
+    app.clipboard_size = 64 * 1024;
     wgf_platform_priv_sokol_hold(true);
     sapp_run(&app);
 }
@@ -169,6 +171,22 @@ bool wgf_platform_priv_is_mouse_locked(void)
 void wgf_platform_priv_show_mouse(bool shown)
 {
     sapp_show_mouse(shown);
+}
+
+void wgf_platform_priv_set_cursor(int cursor)
+{
+    if (sapp_isvalid()) sapp_set_mouse_cursor((sapp_mouse_cursor)cursor);
+}
+
+void wgf_platform_priv_set_clipboard(const char *text)
+{
+    if (sapp_isvalid()) sapp_set_clipboard_string(text);
+}
+
+const char *wgf_platform_priv_get_clipboard(void)
+{
+    const char *text = sapp_isvalid() ? sapp_get_clipboard_string() : NULL;
+    return text != NULL ? text : "";
 }
 
 void wgf_platform_priv_set_paced(bool paced)

@@ -866,6 +866,21 @@ class Main {
 		Keyboard.isDown(KeyboardKey.SPACE);
 		Keyboard.isPressed(KeyboardKey.SPACE);
 		Keyboard.isReleased(KeyboardKey.SPACE);
+		Keyboard.isRepeated(KeyboardKey.SPACE);
+		Keyboard.getLastPressed();
+		Touch.isTapped();
+		Touch.isDoubleTapped();
+		Touch.getTapPosition();
+		Touch.getSwipe();
+		Touch.isHolding();
+		expect(Mouse.setCursor(MouseCursor.HAND) && Mouse.getCursor() == MouseCursor.HAND && Mouse.setCursor(MouseCursor.DEFAULT),
+			"the cursor's shape");
+		expect(Input.setClipboard("wgf") && Input.getClipboard() != null, "the clipboard");
+		expect(!Window.openUrl(""), "an empty URL refused (a real one would open a browser)");
+		Window.hasTouch();
+		Window.hasFinePointer();
+		Window.getOs();
+		Window.isWeb();
 		Mouse.getPosition();
 		Mouse.getDelta();
 		Mouse.getWheel();

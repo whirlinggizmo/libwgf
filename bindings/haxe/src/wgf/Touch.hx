@@ -86,4 +86,54 @@ class Touch {
 	**/
 	public static inline function getGestureRotation():Float
 		return Raw.wgf_touch_get_gesture_rotation();
+
+	/**
+	    One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+	    within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+	    and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+	    (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+	    for 0.5 s or more, still), true while it lasts.
+	**/
+	public static inline function isTapped():Bool
+		return Raw.wgf_touch_is_tapped();
+
+	/**
+	    One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+	    within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+	    and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+	    (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+	    for 0.5 s or more, still), true while it lasts.
+	**/
+	public static inline function isDoubleTapped():Bool
+		return Raw.wgf_touch_is_double_tapped();
+
+	/**
+	    One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+	    within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+	    and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+	    (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+	    for 0.5 s or more, still), true while it lasts.
+	**/
+	public static inline function getTapPosition(?into:wgf.Vec2):wgf.Vec2
+		return Raw.wgf_touch_get_tap_position(into);
+
+	/**
+	    One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+	    within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+	    and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+	    (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+	    for 0.5 s or more, still), true while it lasts.
+	**/
+	public static inline function getSwipe(?into:wgf.Vec2):wgf.Vec2
+		return Raw.wgf_touch_get_swipe(into);
+
+	/**
+	    One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+	    within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+	    and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+	    (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+	    for 0.5 s or more, still), true while it lasts.
+	**/
+	public static inline function isHolding():Bool
+		return Raw.wgf_touch_is_holding();
 }

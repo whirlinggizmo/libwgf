@@ -62,4 +62,22 @@ class Input {
 	**/
 	public static inline function isKeyboardCaptured():Bool
 		return Raw.wgf_input_is_keyboard_captured();
+
+	/**
+	    The system's clipboard, its text: copied to, and read (on the web, a copy takes only in
+	    the frame of an input, as browsers allow, and what is read is what the page last copied
+	    or was pasted). Text is UTF-8, at most 64 KB; the string read is valid until the next
+	    clipboard call. False for NULL.
+	**/
+	public static inline function setClipboard(text:String):Bool
+		return Raw.wgf_input_set_clipboard(text);
+
+	/**
+	    The system's clipboard, its text: copied to, and read (on the web, a copy takes only in
+	    the frame of an input, as browsers allow, and what is read is what the page last copied
+	    or was pasted). Text is UTF-8, at most 64 KB; the string read is valid until the next
+	    clipboard call. False for NULL.
+	**/
+	public static inline function getClipboard():String
+		return Raw.wgf_input_get_clipboard();
 }

@@ -8,6 +8,7 @@
 #include "wgf_keyboard.h"
 #include "wgf_mouse.h"
 #include "wgf_touch.h"
+#include "wgf_time.h"
 #include "wgf_platform_window_priv.h"
 
 #define MAX_KEYS 512 /* sokol's key codes are under this */
@@ -23,6 +24,10 @@ typedef struct edges_t {
     bool released[MOUSE_BUTTONS];
     bool key_pressed[MAX_KEYS];
     bool key_released[MAX_KEYS];
+    bool key_repeated[MAX_KEYS]; /* pressed, or repeated by the key held */
+    int last_key;                /* the last key pressed (not repeated) */
+    bool tapped, double_tapped;
+    float tap_x, tap_y, swipe_x, swipe_y;
     char typed[MAX_TYPED];
     int typed_size;
     bool touch_pressed[MAX_FINGERS];
@@ -40,6 +45,9 @@ typedef struct finger_t {
     uintptr_t system_id; /* the window system's */
     float x, y;
     unsigned order; /* when it touched down: fingers are listed oldest first */
+    double began;   /* when, for its gestures: a tap, a hold, a swipe */
+    float start_x, start_y, travel; /* where it began, and the farthest it went from there */
+    bool alone;     /* no other finger came down while it was */
 } finger_t;
 
 static struct {
@@ -62,6 +70,8 @@ static struct {
     bool pointer_held;        /* the pointer section's press on an actor */
     bool ui_pointer_captured; /* the game's UI's say, sticky */
     bool ui_keyboard_captured;
+    double last_tap;          /* when, and where, the last tap was: a second near it soon after is a double */
+    float last_tap_x, last_tap_y;
 } input = {.cursor_visible = true, .mouse_emulated = true};
 
 void wgf_platform_priv_input_reset(void)
@@ -180,7 +190,11 @@ static void add_edges(edges_t *edges, const sapp_event *event, bool key_was_down
             edges->wheel_y += event->scroll_y;
             break;
         case SAPP_EVENTTYPE_KEY_DOWN:
-            if (!event->key_repeat && !key_was_down) edges->key_pressed[event->key_code] = true;
+            if (!event->key_repeat && !key_was_down) {
+                edges->key_pressed[event->key_code] = true;
+                edges->last_key = event->key_code;
+            }
+            edges->key_repeated[event->key_code] = true;
             break;
         case SAPP_EVENTTYPE_KEY_UP:
             edges->key_released[event->key_code] = true;
@@ -290,6 +304,43 @@ static void touch_pointer(sapp_event_type type, uintptr_t system_id, const finge
 }
 
 /* Fingers, their edges, the mouse, and the gesture, from one touch event. */
+/* A finger alone lifted: a tap (quick, and still), a second tap near the last soon after
+ * (a double), or a swipe (quick, and far). */
+#define TAP_SECONDS 0.3
+#define TAP_TRAVEL 12.0f
+#define DOUBLE_SECONDS 0.35
+#define DOUBLE_TRAVEL 30.0f
+#define SWIPE_SECONDS 0.5
+#define SWIPE_TRAVEL 50.0f
+#define HOLD_SECONDS 0.5
+
+static void gesture_ended(const finger_t *finger)
+{
+    const double now = wgf_time_get_seconds(), took = now - finger->began;
+    edges_t *sets[2];
+    int set;
+    sets[0] = &input.frame;
+    sets[1] = &input.tick;
+    if (took < TAP_SECONDS && finger->travel < TAP_TRAVEL) {
+        const bool twice = now - input.last_tap < DOUBLE_SECONDS &&
+                           hypotf(finger->x - input.last_tap_x, finger->y - input.last_tap_y) < DOUBLE_TRAVEL;
+        for (set = 0; set < 2; set++) {
+            sets[set]->tapped = true;
+            sets[set]->double_tapped = sets[set]->double_tapped || twice;
+            sets[set]->tap_x = finger->x;
+            sets[set]->tap_y = finger->y;
+        }
+        input.last_tap = twice ? 0.0 : now; /* a third starts again */
+        input.last_tap_x = finger->x;
+        input.last_tap_y = finger->y;
+    } else if (took < SWIPE_SECONDS && finger->travel >= SWIPE_TRAVEL) {
+        for (set = 0; set < 2; set++) {
+            sets[set]->swipe_x = finger->x - finger->start_x;
+            sets[set]->swipe_y = finger->y - finger->start_y;
+        }
+    }
+}
+
 static void handle_touch(const sapp_event *event)
 {
     const sapp_event_type type =
@@ -322,6 +373,17 @@ static void handle_touch(const sapp_event *event)
             input.fingers[slot].x = x;
             input.fingers[slot].y = y;
             input.fingers[slot].order = ++input.finger_order;
+            input.fingers[slot].began = wgf_time_get_seconds();
+            input.fingers[slot].start_x = x;
+            input.fingers[slot].start_y = y;
+            input.fingers[slot].travel = 0.0f;
+            input.fingers[slot].alone = fingers_down() == 1;
+            {
+                int other;
+                for (other = 0; other < MAX_FINGERS; other++) {
+                    if (other != slot && input.fingers[other].down) input.fingers[other].alone = false;
+                }
+            }
             input.frame.touch_pressed[slot] = input.tick.touch_pressed[slot] = true;
         } else if (slot < 0) {
             continue;
@@ -333,8 +395,13 @@ static void handle_touch(const sapp_event *event)
         input.tick.touch_dy[slot] += y - finger->y;
         finger->x = x;
         finger->y = y;
+        {
+            const float went = hypotf(x - finger->start_x, y - finger->start_y);
+            if (went > finger->travel) finger->travel = went;
+        }
         if (type == SAPP_EVENTTYPE_TOUCHES_ENDED) {
             finger->down = false;
+            if (finger->alone && event->type == SAPP_EVENTTYPE_TOUCHES_ENDED) gesture_ended(finger);
             input.frame.touch_released[slot] = input.tick.touch_released[slot] = true;
         }
         if (input.mouse_emulated) touch_pointer(type, touch->identifier, finger);
@@ -639,4 +706,76 @@ float wgf_touch_get_gesture_scale(void)
 float wgf_touch_get_gesture_rotation(void)
 {
     return current()->gesture_rotation;
+}
+
+/* ---------------------------------------------------------------- more input ---- */
+
+bool wgf_keyboard_is_repeated(wgf_keyboard_key_t key)
+{
+    return (int)key > 0 && (int)key < MAX_KEYS && current()->key_repeated[key];
+}
+
+wgf_keyboard_key_t wgf_keyboard_get_last_pressed(void)
+{
+    return (wgf_keyboard_key_t)current()->last_key;
+}
+
+bool wgf_touch_is_tapped(void)
+{
+    return current()->tapped;
+}
+
+bool wgf_touch_is_double_tapped(void)
+{
+    return current()->double_tapped;
+}
+
+wgf_vec2_t wgf_touch_get_tap_position(void)
+{
+    return wgf_vec2_make(current()->tap_x, current()->tap_y);
+}
+
+wgf_vec2_t wgf_touch_get_swipe(void)
+{
+    return wgf_vec2_make(current()->swipe_x, current()->swipe_y);
+}
+
+bool wgf_touch_is_holding(void)
+{
+    const double now = wgf_time_get_seconds();
+    int i;
+    for (i = 0; i < MAX_FINGERS; i++) {
+        const finger_t *f = &input.fingers[i];
+        if (f->down && f->alone && f->travel < TAP_TRAVEL && now - f->began >= HOLD_SECONDS) return true;
+    }
+    return false;
+}
+
+/* ---------------------------------------------------------------- the cursor, the clipboard ---- */
+
+static int cursor_shape;
+
+bool wgf_mouse_set_cursor(wgf_mouse_cursor_t cursor)
+{
+    if ((int)cursor < WGF_MOUSE_CURSOR_DEFAULT || cursor > WGF_MOUSE_CURSOR_NOT_ALLOWED) return false;
+    cursor_shape = (int)cursor;
+    if (wgf_platform_priv_window_is_open()) wgf_platform_priv_set_cursor(cursor_shape);
+    return true;
+}
+
+wgf_mouse_cursor_t wgf_mouse_get_cursor(void)
+{
+    return (wgf_mouse_cursor_t)cursor_shape;
+}
+
+bool wgf_input_set_clipboard(const char *text)
+{
+    if (text == NULL) return false;
+    wgf_platform_priv_set_clipboard(text);
+    return true;
+}
+
+const char *wgf_input_get_clipboard(void)
+{
+    return wgf_platform_priv_get_clipboard();
 }

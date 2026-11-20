@@ -69,6 +69,17 @@ WGF_API float wgf_touch_get_gesture_scale(void);
  * screen. */
 WGF_API float wgf_touch_get_gesture_rotation(void);
 
+/* One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+ * within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+ * and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+ * (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+ * for 0.5 s or more, still), true while it lasts. */
+WGF_API bool wgf_touch_is_tapped(void);
+WGF_API bool wgf_touch_is_double_tapped(void);
+WGF_API wgf_vec2_t wgf_touch_get_tap_position(void);
+WGF_API wgf_vec2_t wgf_touch_get_swipe(void);
+WGF_API bool wgf_touch_is_holding(void);
+
 #ifdef __cplusplus
 }
 #endif

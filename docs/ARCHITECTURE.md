@@ -61,12 +61,12 @@ The window, its events, and input, under gfx and audio, which ask it for what th
 
 | Section | Header | Provides |
 |---------|--------|----------|
-| window | `wgf_window.h` | title, size, fullscreen (and whether it can be), visible, resizable, decorated, focused; position and monitors; transparent, high DPI, vsync, and MSAA, fixed when it opens |
-| input | `wgf_input.h` | `wgf_input_state_t` (UP, PRESSED, DOWN, RELEASED); the characters typed, as UTF-8; the capture flags: whether game controls should leave the pointer or keyboard to a UI |
-| keyboard | `wgf_keyboard.h` | sokol's keys as `WGF_KEY_*`, by place on a US layout; each key's state, and down, pressed, released |
-| mouse | `wgf_mouse.h` | position, movement, and scrolling in logical pixels; each button's state; locking the pointer; hiding the cursor |
+| window | `wgf_window.h` | title, size, fullscreen (and whether it can be), visible, resizable, decorated, focused; position and monitors; transparent, high DPI, vsync, and MSAA, fixed when it opens; a URL opened in the system's browser (a new tab on the web); the device: touch, a fine pointer, its system (on the web, the browser's), whether it is the web |
+| input | `wgf_input.h` | `wgf_input_state_t` (UP, PRESSED, DOWN, RELEASED); the characters typed, as UTF-8; the capture flags: whether game controls should leave the pointer or keyboard to a UI; the system's clipboard text (sokol_app's, 64 KB) |
+| keyboard | `wgf_keyboard.h` | sokol's keys as `WGF_KEY_*`, by place on a US layout; each key's state, and down, pressed, released; a key repeated by the system as it is held, and the last key pressed |
+| mouse | `wgf_mouse.h` | position, movement, and scrolling in logical pixels; each button's state; locking the pointer; hiding the cursor; the cursor's shape (sokol_app's set) |
 | gamepad | `wgf_gamepad.h` | up to 4 pads, each keeping its number while connected: buttons by position on an Xbox-style pad; sticks with a round dead zone, rescaled to reach 1; triggers 0 to 1; each axis by name (`wgf_gamepad_axis_t`). Read once a frame, before its ticks: evdev on Linux, XInput on Windows, the Gamepad API on the web |
-| touch | `wgf_touch.h` | fingers, oldest first, by an id that holds while each is down; the two-finger gesture's center, pan, pinch, and twist; the first finger driving the mouse |
+| touch | `wgf_touch.h` | fingers, oldest first, by an id that holds while each is down; the two-finger gesture's center, pan, pinch, and twist; the first finger driving the mouse; one finger's gestures: a tap and a double tap (where), a swipe (how far), a hold (while it lasts), each from a finger alone |
 | action | `wgf_action.h` | input actions: names bound to keys, pairs of keys, pad buttons, pad axes (a side, a threshold), and touch regions, read across every pad as one axis, value, and state, the binding pushed furthest winning; listed as text for help and remapping. Their state between ticks and frames kept through input's edges hook, set by the first binding, so a program with none links none of it |
 | (the window system) | private | sokol_app, or none in a headless build, which runs frames at a display's rate (or as fast as it can, for an autopilot run), for `LIBWGF_HEADLESS_FRAMES` frames when that is set; the device and each frame's swapchain for gfx, through sokol_glue |
 

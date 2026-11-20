@@ -124,6 +124,17 @@ const char *wgf_platform_priv_get_monitor_name(int monitor);
 void wgf_platform_priv_lock_mouse(bool locked);
 bool wgf_platform_priv_is_mouse_locked(void);
 void wgf_platform_priv_show_mouse(bool shown);
+/* The cursor's shape (sapp_mouse_cursor's values, wgf_mouse_cursor_t's); the clipboard's
+ * text (on the web, what the page was last given or pasted); a URL opened in the system's
+ * browser (a new tab on the web); and what the device has: touch, a fine pointer (a mouse),
+ * and its system (wgf_window_os_t). */
+void wgf_platform_priv_set_cursor(int cursor);
+void wgf_platform_priv_set_clipboard(const char *text);
+const char *wgf_platform_priv_get_clipboard(void);
+bool wgf_platform_priv_open_url(const char *url);
+bool wgf_platform_priv_has_touch(void);
+bool wgf_platform_priv_has_fine_pointer(void);
+int wgf_platform_priv_get_os(void);
 
 /* Headless builds only, for tests: the DPI scale the window reports (1 by default). */
 void wgf_platform_priv_headless_set_dpi_scale(float scale);

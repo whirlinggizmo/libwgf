@@ -125,3 +125,51 @@ void wgf_platform_priv_mark(const char *name)
 {
     (void)name;
 }
+
+/* ---- the system's browser, and the device ------------------------------------------- */
+
+#if defined(_WIN32)
+#include <windows.h>
+#include <shellapi.h>
+#else
+#include <spawn.h>
+#include <sys/wait.h>
+extern char **environ;
+#endif
+
+bool wgf_platform_priv_open_url(const char *url)
+{
+#if defined(_WIN32)
+    return (INT_PTR)ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL) > 32;
+#else
+    /* the opener run with the URL as one argument, never through a shell */
+#if defined(__APPLE__)
+    char *argv[] = {"open", (char *)url, NULL};
+#else
+    char *argv[] = {"xdg-open", (char *)url, NULL};
+#endif
+    pid_t pid;
+    return posix_spawnp(&pid, argv[0], NULL, NULL, argv, environ) == 0;
+#endif
+}
+
+bool wgf_platform_priv_has_touch(void)
+{
+    return false; /* a desktop's window: sokol_app gives touches on phones only */
+}
+
+bool wgf_platform_priv_has_fine_pointer(void)
+{
+    return true;
+}
+
+int wgf_platform_priv_get_os(void)
+{
+#if defined(_WIN32)
+    return 2;
+#elif defined(__APPLE__)
+    return 3;
+#else
+    return 1;
+#endif
+}

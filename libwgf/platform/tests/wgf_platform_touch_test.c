@@ -6,6 +6,10 @@
 #include "wgf_input.h"
 #include "wgf_mouse.h"
 #include "wgf_touch.h"
+#include "wgf_keyboard.h"
+#include "wgf_window.h"
+#include "wgf_time.h"
+#include "wgf_core_priv.h"
 
 /* Touch, through input's private calls, frame by frame as the loop drives them:
  * fingers listed oldest first with ids that stay put, edges per frame, the mouse
@@ -166,10 +170,91 @@ static void too_many(void)
     wgf_platform_priv_input_reset();
 }
 
+/* One finger alone: a tap, a second (a double), a swipe, a hold; and two fingers, no tap. */
+static void one_finger(void)
+{
+    const float at[] = {7, 100, 100, 1}, near_it[] = {7, 104, 102, 1}, far_off[] = {7, 300, 110, 1};
+    const float pair[] = {7, 100, 100, 0, 8, 200, 200, 1}, pair_up[] = {7, 100, 100, 1, 8, 200, 200, 1};
+    double start;
+    wgf_platform_priv_input_reset();
+    touches(SAPP_EVENTTYPE_TOUCHES_BEGAN, 1, at, 1.0f);
+    touches(SAPP_EVENTTYPE_TOUCHES_ENDED, 1, near_it, 1.0f);
+    expect(wgf_touch_is_tapped() && !wgf_touch_is_double_tapped() && near(wgf_touch_get_tap_position(), 104, 102),
+           "a quick still touch: a tap, where");
+    next_frame();
+    expect(!wgf_touch_is_tapped(), "for the frame it was in");
+    touches(SAPP_EVENTTYPE_TOUCHES_BEGAN, 1, at, 1.0f);
+    touches(SAPP_EVENTTYPE_TOUCHES_ENDED, 1, at, 1.0f);
+    expect(wgf_touch_is_tapped() && wgf_touch_is_double_tapped(), "a second soon after, near: a double tap");
+    next_frame();
+    touches(SAPP_EVENTTYPE_TOUCHES_BEGAN, 1, at, 1.0f);
+    touches(SAPP_EVENTTYPE_TOUCHES_MOVED, 1, far_off, 1.0f);
+    touches(SAPP_EVENTTYPE_TOUCHES_ENDED, 1, far_off, 1.0f);
+    expect(!wgf_touch_is_tapped() && near(wgf_touch_get_swipe(), 200, 10), "a quick long move: a swipe, how far");
+    next_frame();
+    expect(near(wgf_touch_get_swipe(), 0, 0), "none after");
+    touches(SAPP_EVENTTYPE_TOUCHES_BEGAN, 1, at, 1.0f);
+    expect(!wgf_touch_is_holding(), "not held yet");
+    start = wgf_time_get_seconds();
+    while (wgf_time_get_seconds() - start < 0.55 && wgf_time_get_seconds() > 0.0) {
+    }
+    expect(wgf_touch_is_holding(), "held still half a second: a hold");
+    touches(SAPP_EVENTTYPE_TOUCHES_ENDED, 1, at, 1.0f);
+    expect(!wgf_touch_is_holding() && !wgf_touch_is_tapped(), "lifted: no hold, and too slow for a tap");
+    next_frame();
+    touches(SAPP_EVENTTYPE_TOUCHES_BEGAN, 1, at, 1.0f);
+    touches(SAPP_EVENTTYPE_TOUCHES_BEGAN, 2, pair, 1.0f);
+    touches(SAPP_EVENTTYPE_TOUCHES_ENDED, 2, pair_up, 1.0f);
+    expect(!wgf_touch_is_tapped(), "two fingers: no tap");
+    wgf_platform_priv_input_reset();
+}
+
+/* Keys: a repeat, and the last pressed. */
+static void keys(void)
+{
+    sapp_event event;
+    wgf_platform_priv_input_reset();
+    memset(&event, 0, sizeof(event));
+    event.type = SAPP_EVENTTYPE_KEY_DOWN;
+    event.key_code = SAPP_KEYCODE_LEFT;
+    wgf_platform_priv_input_handle_event(&event, 1.0f);
+    event.key_code = SAPP_KEYCODE_A;
+    wgf_platform_priv_input_handle_event(&event, 1.0f);
+    expect(wgf_keyboard_is_repeated(WGF_KEY_LEFT) && wgf_keyboard_get_last_pressed() == WGF_KEY_A, "pressed: repeated, the last");
+    next_frame();
+    expect(!wgf_keyboard_is_repeated(WGF_KEY_LEFT) && wgf_keyboard_get_last_pressed() == WGF_KEY_NONE, "held, no repeat yet: none");
+    event.key_code = SAPP_KEYCODE_LEFT;
+    event.key_repeat = true;
+    wgf_platform_priv_input_handle_event(&event, 1.0f);
+    expect(wgf_keyboard_is_repeated(WGF_KEY_LEFT) && !wgf_keyboard_is_pressed(WGF_KEY_LEFT) &&
+               wgf_keyboard_get_last_pressed() == WGF_KEY_NONE,
+           "the system's repeat: repeated, not pressed, not the last pressed");
+    wgf_platform_priv_input_reset();
+}
+
+/* The cursor, the clipboard, a URL, and the device, headless. */
+static void system_calls(void)
+{
+    expect(wgf_mouse_get_cursor() == WGF_MOUSE_CURSOR_DEFAULT && wgf_mouse_set_cursor(WGF_MOUSE_CURSOR_HAND) &&
+               wgf_mouse_get_cursor() == WGF_MOUSE_CURSOR_HAND && !wgf_mouse_set_cursor((wgf_mouse_cursor_t)11),
+           "a cursor's shape; one that isn't refused");
+    expect(wgf_input_set_clipboard("copied") && strcmp(wgf_input_get_clipboard(), "copied") == 0 && !wgf_input_set_clipboard(NULL),
+           "the clipboard's text");
+    expect(wgf_window_open_url("https://example.com") && !wgf_window_open_url("") && !wgf_window_open_url(NULL), "a URL");
+    expect(!wgf_window_has_touch() && wgf_window_has_fine_pointer() && wgf_window_get_os() != WGF_WINDOW_OS_OTHER &&
+               !wgf_window_is_web(),
+           "a desktop's device");
+}
+
 int main(void)
 {
+    system_calls();
+    wgf_core_priv_init(); /* the clock, for a hold */
+    one_finger();
+    keys();
     fingers_and_mouse();
     gesture();
     too_many();
+    wgf_core_priv_shutdown();
     return failures == 0 ? 0 : 1;
 }

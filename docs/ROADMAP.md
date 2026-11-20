@@ -13,11 +13,8 @@ Rob's (2026-11-19): libwgf is finished so that a pure C and wasm engine can be c
    - splines: a point along a linear, Catmull-Rom, or Bézier path, and drawing one;
    - a texture made from bytes, and updated;
    - a lost GPU context recovered (phones and browsers drop WebGL when backgrounded);
-   - device queries: touch capable, a fine pointer, the OS, the web;
-   - gestures: tap, double tap, hold, swipe;
-   - keys pressed or repeated, and the last key or pad button pressed (a rebinding screen);
    - text's letter and line spacing;
-   - opening a URL; the clipboard's text; cursor shapes;
+   - the last pad button pressed (a rebinding screen's, beside the last key);
    - a shuffled sequence with no repeats (with the seeded generators, Wardens' item 5).
 4. **The UI on RmlUi, for menus.** RmlUi (MIT; documents in RML, styled in RCSS) as a part of the ui layer a program links only by loading a document, beside today's immediate UI on Clay, which stays for HUDs and small UIs: documents and their elements as typed handles, events read each frame (no callback crosses the API), its geometry, textures, and scissor drawn by gfx, its text through fontstash. It brings the parity checklist's controls (toggles and check boxes, a choice selector and a dropdown, a slider, text fields with the clipboard and a phone's keyboard, scrolling lists, tabs, tooltips), menus drawn from images (nine-slice decorators, every state), transitions and animations, and focus by keys and pads (`nav-*`, `tab-index`). Measured (2026-11-19, the same menu at -Oz): RmlUi 264 KB of gzip, Clay 33, Yoga 26 (layout alone; not taken). The racer's and Asteroids' screens stay on Clay.
 5. **Wardens** (below), what it needs, then the game.

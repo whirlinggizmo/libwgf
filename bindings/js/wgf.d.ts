@@ -232,6 +232,7 @@ export type wgf_gamepad_axis_t = typeof WGF_GAMEPAD_AXIS_LEFT_X | typeof WGF_GAM
  * WGF_KEY_Z is the key left of X, whatever the layout prints on it. For the
  * characters the user typed, read wgf_input_get_chars.
  */
+export declare const WGF_KEY_NONE: 0;
 export declare const WGF_KEY_SPACE: 32;
 export declare const WGF_KEY_APOSTROPHE: 39;
 export declare const WGF_KEY_COMMA: 44;
@@ -352,7 +353,7 @@ export declare const WGF_KEY_RIGHT_CONTROL: 345;
 export declare const WGF_KEY_RIGHT_ALT: 346;
 export declare const WGF_KEY_RIGHT_SUPER: 347;
 export declare const WGF_KEY_MENU: 348;
-export type wgf_keyboard_key_t = typeof WGF_KEY_SPACE | typeof WGF_KEY_APOSTROPHE | typeof WGF_KEY_COMMA | typeof WGF_KEY_MINUS | typeof WGF_KEY_PERIOD | typeof WGF_KEY_SLASH | typeof WGF_KEY_0 | typeof WGF_KEY_1 | typeof WGF_KEY_2 | typeof WGF_KEY_3 | typeof WGF_KEY_4 | typeof WGF_KEY_5 | typeof WGF_KEY_6 | typeof WGF_KEY_7 | typeof WGF_KEY_8 | typeof WGF_KEY_9 | typeof WGF_KEY_SEMICOLON | typeof WGF_KEY_EQUAL | typeof WGF_KEY_A | typeof WGF_KEY_B | typeof WGF_KEY_C | typeof WGF_KEY_D | typeof WGF_KEY_E | typeof WGF_KEY_F | typeof WGF_KEY_G | typeof WGF_KEY_H | typeof WGF_KEY_I | typeof WGF_KEY_J | typeof WGF_KEY_K | typeof WGF_KEY_L | typeof WGF_KEY_M | typeof WGF_KEY_N | typeof WGF_KEY_O | typeof WGF_KEY_P | typeof WGF_KEY_Q | typeof WGF_KEY_R | typeof WGF_KEY_S | typeof WGF_KEY_T | typeof WGF_KEY_U | typeof WGF_KEY_V | typeof WGF_KEY_W | typeof WGF_KEY_X | typeof WGF_KEY_Y | typeof WGF_KEY_Z | typeof WGF_KEY_LEFT_BRACKET | typeof WGF_KEY_BACKSLASH | typeof WGF_KEY_RIGHT_BRACKET | typeof WGF_KEY_GRAVE_ACCENT | typeof WGF_KEY_WORLD_1 | typeof WGF_KEY_WORLD_2 | typeof WGF_KEY_ESCAPE | typeof WGF_KEY_ENTER | typeof WGF_KEY_TAB | typeof WGF_KEY_BACKSPACE | typeof WGF_KEY_INSERT | typeof WGF_KEY_DELETE | typeof WGF_KEY_RIGHT | typeof WGF_KEY_LEFT | typeof WGF_KEY_DOWN | typeof WGF_KEY_UP | typeof WGF_KEY_PAGE_UP | typeof WGF_KEY_PAGE_DOWN | typeof WGF_KEY_HOME | typeof WGF_KEY_END | typeof WGF_KEY_CAPS_LOCK | typeof WGF_KEY_SCROLL_LOCK | typeof WGF_KEY_NUM_LOCK | typeof WGF_KEY_PRINT_SCREEN | typeof WGF_KEY_PAUSE | typeof WGF_KEY_F1 | typeof WGF_KEY_F2 | typeof WGF_KEY_F3 | typeof WGF_KEY_F4 | typeof WGF_KEY_F5 | typeof WGF_KEY_F6 | typeof WGF_KEY_F7 | typeof WGF_KEY_F8 | typeof WGF_KEY_F9 | typeof WGF_KEY_F10 | typeof WGF_KEY_F11 | typeof WGF_KEY_F12 | typeof WGF_KEY_F13 | typeof WGF_KEY_F14 | typeof WGF_KEY_F15 | typeof WGF_KEY_F16 | typeof WGF_KEY_F17 | typeof WGF_KEY_F18 | typeof WGF_KEY_F19 | typeof WGF_KEY_F20 | typeof WGF_KEY_F21 | typeof WGF_KEY_F22 | typeof WGF_KEY_F23 | typeof WGF_KEY_F24 | typeof WGF_KEY_F25 | typeof WGF_KEY_KP_0 | typeof WGF_KEY_KP_1 | typeof WGF_KEY_KP_2 | typeof WGF_KEY_KP_3 | typeof WGF_KEY_KP_4 | typeof WGF_KEY_KP_5 | typeof WGF_KEY_KP_6 | typeof WGF_KEY_KP_7 | typeof WGF_KEY_KP_8 | typeof WGF_KEY_KP_9 | typeof WGF_KEY_KP_DECIMAL | typeof WGF_KEY_KP_DIVIDE | typeof WGF_KEY_KP_MULTIPLY | typeof WGF_KEY_KP_SUBTRACT | typeof WGF_KEY_KP_ADD | typeof WGF_KEY_KP_ENTER | typeof WGF_KEY_KP_EQUAL | typeof WGF_KEY_LEFT_SHIFT | typeof WGF_KEY_LEFT_CONTROL | typeof WGF_KEY_LEFT_ALT | typeof WGF_KEY_LEFT_SUPER | typeof WGF_KEY_RIGHT_SHIFT | typeof WGF_KEY_RIGHT_CONTROL | typeof WGF_KEY_RIGHT_ALT | typeof WGF_KEY_RIGHT_SUPER | typeof WGF_KEY_MENU;
+export type wgf_keyboard_key_t = typeof WGF_KEY_NONE | typeof WGF_KEY_SPACE | typeof WGF_KEY_APOSTROPHE | typeof WGF_KEY_COMMA | typeof WGF_KEY_MINUS | typeof WGF_KEY_PERIOD | typeof WGF_KEY_SLASH | typeof WGF_KEY_0 | typeof WGF_KEY_1 | typeof WGF_KEY_2 | typeof WGF_KEY_3 | typeof WGF_KEY_4 | typeof WGF_KEY_5 | typeof WGF_KEY_6 | typeof WGF_KEY_7 | typeof WGF_KEY_8 | typeof WGF_KEY_9 | typeof WGF_KEY_SEMICOLON | typeof WGF_KEY_EQUAL | typeof WGF_KEY_A | typeof WGF_KEY_B | typeof WGF_KEY_C | typeof WGF_KEY_D | typeof WGF_KEY_E | typeof WGF_KEY_F | typeof WGF_KEY_G | typeof WGF_KEY_H | typeof WGF_KEY_I | typeof WGF_KEY_J | typeof WGF_KEY_K | typeof WGF_KEY_L | typeof WGF_KEY_M | typeof WGF_KEY_N | typeof WGF_KEY_O | typeof WGF_KEY_P | typeof WGF_KEY_Q | typeof WGF_KEY_R | typeof WGF_KEY_S | typeof WGF_KEY_T | typeof WGF_KEY_U | typeof WGF_KEY_V | typeof WGF_KEY_W | typeof WGF_KEY_X | typeof WGF_KEY_Y | typeof WGF_KEY_Z | typeof WGF_KEY_LEFT_BRACKET | typeof WGF_KEY_BACKSLASH | typeof WGF_KEY_RIGHT_BRACKET | typeof WGF_KEY_GRAVE_ACCENT | typeof WGF_KEY_WORLD_1 | typeof WGF_KEY_WORLD_2 | typeof WGF_KEY_ESCAPE | typeof WGF_KEY_ENTER | typeof WGF_KEY_TAB | typeof WGF_KEY_BACKSPACE | typeof WGF_KEY_INSERT | typeof WGF_KEY_DELETE | typeof WGF_KEY_RIGHT | typeof WGF_KEY_LEFT | typeof WGF_KEY_DOWN | typeof WGF_KEY_UP | typeof WGF_KEY_PAGE_UP | typeof WGF_KEY_PAGE_DOWN | typeof WGF_KEY_HOME | typeof WGF_KEY_END | typeof WGF_KEY_CAPS_LOCK | typeof WGF_KEY_SCROLL_LOCK | typeof WGF_KEY_NUM_LOCK | typeof WGF_KEY_PRINT_SCREEN | typeof WGF_KEY_PAUSE | typeof WGF_KEY_F1 | typeof WGF_KEY_F2 | typeof WGF_KEY_F3 | typeof WGF_KEY_F4 | typeof WGF_KEY_F5 | typeof WGF_KEY_F6 | typeof WGF_KEY_F7 | typeof WGF_KEY_F8 | typeof WGF_KEY_F9 | typeof WGF_KEY_F10 | typeof WGF_KEY_F11 | typeof WGF_KEY_F12 | typeof WGF_KEY_F13 | typeof WGF_KEY_F14 | typeof WGF_KEY_F15 | typeof WGF_KEY_F16 | typeof WGF_KEY_F17 | typeof WGF_KEY_F18 | typeof WGF_KEY_F19 | typeof WGF_KEY_F20 | typeof WGF_KEY_F21 | typeof WGF_KEY_F22 | typeof WGF_KEY_F23 | typeof WGF_KEY_F24 | typeof WGF_KEY_F25 | typeof WGF_KEY_KP_0 | typeof WGF_KEY_KP_1 | typeof WGF_KEY_KP_2 | typeof WGF_KEY_KP_3 | typeof WGF_KEY_KP_4 | typeof WGF_KEY_KP_5 | typeof WGF_KEY_KP_6 | typeof WGF_KEY_KP_7 | typeof WGF_KEY_KP_8 | typeof WGF_KEY_KP_9 | typeof WGF_KEY_KP_DECIMAL | typeof WGF_KEY_KP_DIVIDE | typeof WGF_KEY_KP_MULTIPLY | typeof WGF_KEY_KP_SUBTRACT | typeof WGF_KEY_KP_ADD | typeof WGF_KEY_KP_ENTER | typeof WGF_KEY_KP_EQUAL | typeof WGF_KEY_LEFT_SHIFT | typeof WGF_KEY_LEFT_CONTROL | typeof WGF_KEY_LEFT_ALT | typeof WGF_KEY_LEFT_SUPER | typeof WGF_KEY_RIGHT_SHIFT | typeof WGF_KEY_RIGHT_CONTROL | typeof WGF_KEY_RIGHT_ALT | typeof WGF_KEY_RIGHT_SUPER | typeof WGF_KEY_MENU;
 
 /**
  * The mouse, read inside a tick or a frame: what changed since the previous tick,
@@ -363,6 +364,36 @@ export declare const WGF_MOUSE_BUTTON_LEFT: 0;
 export declare const WGF_MOUSE_BUTTON_RIGHT: 1;
 export declare const WGF_MOUSE_BUTTON_MIDDLE: 2;
 export type wgf_mouse_button_t = typeof WGF_MOUSE_BUTTON_LEFT | typeof WGF_MOUSE_BUTTON_RIGHT | typeof WGF_MOUSE_BUTTON_MIDDLE;
+
+/**
+ * The cursor's shape over the window, sokol_app's set: DEFAULT the system's, a hand over a
+ * button, an I-beam over text, the resizing arrows. Nothing on a phone. False for one that
+ * isn't one.
+ */
+export declare const WGF_MOUSE_CURSOR_DEFAULT: 0;
+export declare const WGF_MOUSE_CURSOR_ARROW: 1;
+export declare const WGF_MOUSE_CURSOR_IBEAM: 2;
+export declare const WGF_MOUSE_CURSOR_CROSSHAIR: 3;
+export declare const WGF_MOUSE_CURSOR_HAND: 4;
+export declare const WGF_MOUSE_CURSOR_RESIZE_EW: 5;
+export declare const WGF_MOUSE_CURSOR_RESIZE_NS: 6;
+export declare const WGF_MOUSE_CURSOR_RESIZE_NWSE: 7;
+export declare const WGF_MOUSE_CURSOR_RESIZE_NESW: 8;
+export declare const WGF_MOUSE_CURSOR_RESIZE_ALL: 9;
+export declare const WGF_MOUSE_CURSOR_NOT_ALLOWED: 10;
+export type wgf_mouse_cursor_t = typeof WGF_MOUSE_CURSOR_DEFAULT | typeof WGF_MOUSE_CURSOR_ARROW | typeof WGF_MOUSE_CURSOR_IBEAM | typeof WGF_MOUSE_CURSOR_CROSSHAIR | typeof WGF_MOUSE_CURSOR_HAND | typeof WGF_MOUSE_CURSOR_RESIZE_EW | typeof WGF_MOUSE_CURSOR_RESIZE_NS | typeof WGF_MOUSE_CURSOR_RESIZE_NWSE | typeof WGF_MOUSE_CURSOR_RESIZE_NESW | typeof WGF_MOUSE_CURSOR_RESIZE_ALL | typeof WGF_MOUSE_CURSOR_NOT_ALLOWED;
+
+/**
+ * What the device has: touch (to show on-screen controls), a fine pointer (a mouse or a
+ * pad: hover means something), and its system, on the web the one the browser runs on.
+ */
+export declare const WGF_WINDOW_OS_OTHER: 0;
+export declare const WGF_WINDOW_OS_LINUX: 1;
+export declare const WGF_WINDOW_OS_WINDOWS: 2;
+export declare const WGF_WINDOW_OS_MACOS: 3;
+export declare const WGF_WINDOW_OS_ANDROID: 5;
+export declare const WGF_WINDOW_OS_IOS: 6;
+export type wgf_window_os_t = typeof WGF_WINDOW_OS_OTHER | typeof WGF_WINDOW_OS_LINUX | typeof WGF_WINDOW_OS_WINDOWS | typeof WGF_WINDOW_OS_MACOS | typeof WGF_WINDOW_OS_ANDROID | typeof WGF_WINDOW_OS_IOS;
 
 /**
  * Assets: where a resource's file comes from. A path is an asset: creating a resource
@@ -1439,6 +1470,22 @@ export declare function wgf_input_set_keyboard_captured(captured: boolean): void
 export declare function wgf_input_is_keyboard_captured(): boolean;
 
 /**
+ * The system's clipboard, its text: copied to, and read (on the web, a copy takes only in
+ * the frame of an input, as browsers allow, and what is read is what the page last copied
+ * or was pasted). Text is UTF-8, at most 64 KB; the string read is valid until the next
+ * clipboard call. False for NULL.
+ */
+export declare function wgf_input_set_clipboard(text: string | null): boolean;
+
+/**
+ * The system's clipboard, its text: copied to, and read (on the web, a copy takes only in
+ * the frame of an input, as browsers allow, and what is read is what the page last copied
+ * or was pasted). Text is UTF-8, at most 64 KB; the string read is valid until the next
+ * clipboard call. False for NULL.
+ */
+export declare function wgf_input_get_clipboard(): string;
+
+/**
  * Whether pad 0 to 3 is connected.
  */
 export declare function wgf_gamepad_is_connected(pad: number): boolean;
@@ -1524,6 +1571,18 @@ export declare function wgf_keyboard_is_pressed(key: wgf_keyboard_key_t): boolea
  * Went up since the previous tick or frame.
  */
 export declare function wgf_keyboard_is_released(key: wgf_keyboard_key_t): boolean;
+
+/**
+ * Pressed, or repeated by the key held (the system's key repeat): a menu's cursor moving
+ * while an arrow is held, a text field's backspace.
+ */
+export declare function wgf_keyboard_is_repeated(key: wgf_keyboard_key_t): boolean;
+
+/**
+ * The last key pressed in this frame (in a tick, the tick), not repeated; WGF_KEY_NONE for
+ * none: a rebinding screen's "press a key".
+ */
+export declare function wgf_keyboard_get_last_pressed(): wgf_keyboard_key_t;
 
 /**
  * Bindings added to `action` (made by the first); false for a name breaking the rule, a
@@ -1702,6 +1761,16 @@ export declare function wgf_mouse_set_cursor_visible(visible: boolean): void;
 export declare function wgf_mouse_is_cursor_visible(): boolean;
 
 /**
+ * Show the pointer over the window (default true).
+ */
+export declare function wgf_mouse_set_cursor(cursor: wgf_mouse_cursor_t): boolean;
+
+/**
+ * Show the pointer over the window (default true).
+ */
+export declare function wgf_mouse_get_cursor(): wgf_mouse_cursor_t;
+
+/**
  * Fingers down, plus those lifted since the previous tick or frame.
  */
 export declare function wgf_touch_get_count(): number;
@@ -1775,6 +1844,53 @@ export declare function wgf_touch_get_gesture_scale(): number;
  * screen.
  */
 export declare function wgf_touch_get_gesture_rotation(): number;
+
+/**
+ * One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+ * within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+ * and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+ * (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+ * for 0.5 s or more, still), true while it lasts.
+ */
+export declare function wgf_touch_is_tapped(): boolean;
+
+/**
+ * One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+ * within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+ * and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+ * (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+ * for 0.5 s or more, still), true while it lasts.
+ */
+export declare function wgf_touch_is_double_tapped(): boolean;
+
+/**
+ * One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+ * within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+ * and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+ * (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+ * for 0.5 s or more, still), true while it lasts.
+ */
+export declare function wgf_touch_get_tap_position<T extends number[] | Float32Array | Float64Array>(into: T): T;
+export declare function wgf_touch_get_tap_position(into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+ * within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+ * and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+ * (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+ * for 0.5 s or more, still), true while it lasts.
+ */
+export declare function wgf_touch_get_swipe<T extends number[] | Float32Array | Float64Array>(into: T): T;
+export declare function wgf_touch_get_swipe(into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * One finger's gestures, each a finger that was alone while it was down: a tap (lifted
+ * within 0.3 s, having moved under 12 logical pixels) in this frame (in a tick, the tick),
+ * and a double tap (a second within 0.35 s of the last, near it), where it was; a swipe
+ * (lifted within 0.5 s, having gone 50 or more): how far, 0, 0 for none; and a hold (down
+ * for 0.5 s or more, still), true while it lasts.
+ */
+export declare function wgf_touch_is_holding(): boolean;
 
 /**
  * The title (default "libwgf"). Natively the window's title bar; on the web the
@@ -2117,6 +2233,39 @@ export declare function wgf_window_set_msaa(msaa: boolean): boolean;
  *                what the window got
  */
 export declare function wgf_window_is_msaa(): boolean;
+
+/**
+ * A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
+ * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
+ * the system refused.
+ */
+export declare function wgf_window_open_url(url: string | null): boolean;
+
+/**
+ * A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
+ * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
+ * the system refused.
+ */
+export declare function wgf_window_has_touch(): boolean;
+
+/**
+ * A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
+ * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
+ * the system refused.
+ */
+export declare function wgf_window_has_fine_pointer(): boolean;
+
+/**
+ * A URL opened in the system's browser (on the web, a new tab: in the frame of an input, as
+ * browsers allow): a store page, the credits' links. False for NULL, an empty one, or one
+ * the system refused.
+ */
+export declare function wgf_window_get_os(): wgf_window_os_t;
+
+/**
+ * Whether it runs in a page.
+ */
+export declare function wgf_window_is_web(): boolean;
 
 /**
  * The asset host relative paths resolve against. A URL ("https://host/assets") is a

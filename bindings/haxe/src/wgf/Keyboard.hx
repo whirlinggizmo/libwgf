@@ -29,4 +29,18 @@ class Keyboard {
 	**/
 	public static inline function isReleased(key:KeyboardKey):Bool
 		return Raw.wgf_keyboard_is_released(key);
+
+	/**
+	    Pressed, or repeated by the key held (the system's key repeat): a menu's cursor moving
+	    while an arrow is held, a text field's backspace.
+	**/
+	public static inline function isRepeated(key:KeyboardKey):Bool
+		return Raw.wgf_keyboard_is_repeated(key);
+
+	/**
+	    The last key pressed in this frame (in a tick, the tick), not repeated; WGF_KEY_NONE for
+	    none: a rebinding screen's "press a key".
+	**/
+	public static inline function getLastPressed():KeyboardKey
+		return Raw.wgf_keyboard_get_last_pressed();
 }

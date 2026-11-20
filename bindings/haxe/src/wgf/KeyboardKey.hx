@@ -8,6 +8,7 @@ package wgf;
     characters the user typed, read wgf_input_get_chars.
 **/
 enum abstract KeyboardKey(Int) from Int to Int {
+	var NONE = 0;
 	var SPACE = 32;
 	var APOSTROPHE = 39;
 	var COMMA = 44;

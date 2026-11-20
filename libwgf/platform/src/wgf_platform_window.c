@@ -315,3 +315,34 @@ bool wgf_mouse_is_locked(void)
 {
     return window.open ? wgf_platform_priv_is_mouse_locked() : window.mouse_locked;
 }
+
+/* ---------------------------------------------------------------- the browser, the device ---- */
+
+bool wgf_window_open_url(const char *url)
+{
+    return url != NULL && url[0] != '\0' && wgf_platform_priv_open_url(url);
+}
+
+bool wgf_window_has_touch(void)
+{
+    return wgf_platform_priv_has_touch();
+}
+
+bool wgf_window_has_fine_pointer(void)
+{
+    return wgf_platform_priv_has_fine_pointer();
+}
+
+wgf_window_os_t wgf_window_get_os(void)
+{
+    return (wgf_window_os_t)wgf_platform_priv_get_os();
+}
+
+bool wgf_window_is_web(void)
+{
+#if defined(__EMSCRIPTEN__)
+    return true;
+#else
+    return false;
+#endif
+}
