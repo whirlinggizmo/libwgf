@@ -86,11 +86,13 @@ EM_JS(char *, page_query, (void), {
 })
 #endif
 
+#if !defined(__EMSCRIPTEN__)
 /* "--name=value" arguments, the rest left alone. */
 static void add_argument(const char *argument)
 {
     if (strncmp(argument, "--", 2) == 0 && argument[2] != '\0') add(argument + 2, strlen(argument + 2), false);
 }
+#endif
 
 static void read_options(void)
 {
