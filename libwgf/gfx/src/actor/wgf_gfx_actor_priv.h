@@ -72,6 +72,7 @@ typedef struct wgf_gfx_priv_text_t {
     wgf_text_halign_t halign;
     wgf_text_valign_t valign;
     int facing; /* on a stage3d: a wgf_sprite_facing_t (CAMERA by default) */
+    float letter_spacing, line_spacing; /* logical pixels added */
 } wgf_gfx_priv_text_t;
 
 typedef struct wgf_gfx_priv_camera3d_t {

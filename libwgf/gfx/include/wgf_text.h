@@ -70,6 +70,12 @@ WGF_API bool wgf_text_set_align(wgf_actor_t text, wgf_text_halign_t horizontal,
 WGF_API wgf_text_halign_t wgf_text_get_halign(wgf_actor_t text);
 WGF_API wgf_text_valign_t wgf_text_get_valign(wgf_actor_t text);
 
+/* Logical pixels added between its letters and between its lines (0 to start; below 0
+ * tightens). False for numbers that aren't finite. */
+WGF_API bool wgf_text_set_spacing(wgf_actor_t text, float letter, float line);
+WGF_API float wgf_text_get_letter_spacing(wgf_actor_t text);
+WGF_API float wgf_text_get_line_spacing(wgf_actor_t text);
+
 /* Which way its block faces on a 3D stage, as a sprite's (wgf_sprite.h): the camera (the
  * default), the camera about Y, flat facing up, or its actor's turn. A 2D stage's text is
  * flat on the screen whatever this says. False when `facing` isn't one. */

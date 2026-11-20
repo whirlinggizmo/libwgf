@@ -98,6 +98,18 @@ class Main {
 		expect(Collide2d.pointInRect(1, 1, 0, 0, 10, 10) && Collide2d.pointInCircle(1, 1, 0, 0, 2)
 			&& Collide2d.pointInTriangle(2, 1, 0, 0, 10, 0, 0, 10) && Collide2d.pointInPolygon(5, 5, square), "points in shapes");
 		expect(Collide2d.segmentSegment(0, 5, 10, 5, 4, 0, 4, 10, hit) && near(hit[5], 0.4), "segments crossing");
+		{ // 3D shapes and rays, and splines
+			final hit3:Array<Float> = [0, 0, 0, 0, 0, 0, 0, 0];
+			expect(Collide3d.pointInBox(1, 1, 1, 0, 0, 0, 2, 2, 2) && Collide3d.pointInSphere(0, 0.5, 0, 0, 0, 0, 1)
+				&& Collide3d.boxBox(0, 0, 0, 2, 2, 2, 1, 0, 0, 3, 2, 2, hit3) && Collide3d.sphereSphere(0, 0, 0, 1, 1.5, 0, 0, 1, hit3)
+				&& Collide3d.sphereBox(0, 2.5, 0, 1, -1, -1, -1, 1, 2, 1, hit3), "3D points and overlaps");
+			expect(Collide3d.raySphere(-5, 0, 0, 1, 0, 0, 0, 0, 0, 1, hit3) && near(hit3[7], 4)
+				&& Collide3d.rayBox(0, 5, 0, 0, -1, 0, -1, -1, -1, 1, 1, 1, hit3)
+				&& Collide3d.rayTriangle(1, 1, 0, 0, 0, 1, [0, 0, 5, 4, 0, 5, 0, 4, 5], hit3) && near(hit3[7], 5), "rays");
+			final path:Array<Float> = [0, 0, 5, 10, 10, 0];
+			expect(Spline.getSegmentCount(SplineKind.BEZIER_QUADRATIC, path) == 1
+				&& near(Spline.getPoint(SplineKind.BEZIER_QUADRATIC, path, 0.5).y, 5), "a spline's point");
+		}
 		expect(Collide2d.rayRect(-10, 5, 20, 0, 0, 0, 10, 10, hit) && Collide2d.rayCircle(-10, 0, 20, 0, 0, 0, 2, hit)
 			&& Collide2d.sweepRectRect(-20, 0, 10, 10, 20, 0, 0, 0, 10, 10, hit)
 			&& Collide2d.sweepCircleCircle(-10, 0, 1, 20, 0, 0, 0, 1, hit), "rays and sweeps");
@@ -633,6 +645,10 @@ class Main {
 			&& near(quads.getAlphaCutoff(), 0.5), "its alpha mode");
 
 		final label = Text.create(font);
+		expect(label.setSpacing(1, 4) && label.getLetterSpacing() == 1 && label.getLineSpacing() == 4 && label.setSpacing(0, 0),
+			"a text's letter and line spacing");
+		Draw.setTextSpacing(0, 0);
+		expect(Draw.getTextSpacing().x == 0, "immediate mode's");
 		label.setParent(hud);
 		expect(label.setFont(font) && label.getFont() == font, "a text's font");
 		expect(label.setString("feature-test") && label.getString() == "feature-test", "its string");
@@ -902,6 +918,8 @@ class Main {
 		Draw.circleLines(70, 50, 5, 1, Color.get(ColorStock.ORANGE));
 		Draw.triangle(80, 80, 90, 80, 85, 90, Color.get(ColorStock.PURPLE));
 		expect(Draw.polyline([0.0, 100, 20, 110, 40, 100], false, 2, Color.get(ColorStock.WHITE)), "a polyline");
+		expect(Draw.spline(SplineKind.CATMULL_ROM, [0.0, 100, 20, 110, 40, 100, 60, 110], 8, 2, Color.get(ColorStock.WHITE)),
+			"a spline drawn");
 		expect(Draw.polygon([100.0, 100, 120, 100, 110, 115], Color.get(ColorStock.WHITE)), "a polygon drawn");
 		Render.pushClip(0, 0, 200, 200);
 		Draw.text(font, "feature-test", 4, 120, 14, Color.get(ColorStock.WHITE));
@@ -1026,6 +1044,7 @@ class Main {
 		Keyboard.isReleased(KeyboardKey.SPACE);
 		Keyboard.isRepeated(KeyboardKey.SPACE);
 		Keyboard.getLastPressed();
+		expect(Gamepad.getLastPressed(0) == GamepadButton.NONE, "no pad button pressed");
 		Touch.isTapped();
 		Touch.isDoubleTapped();
 		Touch.getTapPosition();

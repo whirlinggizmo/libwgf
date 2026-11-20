@@ -236,6 +236,14 @@ class Reach {
 		"wgf_collide2d_segment_segment",
 		"wgf_collide2d_sweep_circle_circle",
 		"wgf_collide2d_sweep_rect_rect",
+		"wgf_collide3d_box_box",
+		"wgf_collide3d_point_in_box",
+		"wgf_collide3d_point_in_sphere",
+		"wgf_collide3d_ray_box",
+		"wgf_collide3d_ray_sphere",
+		"wgf_collide3d_ray_triangle",
+		"wgf_collide3d_sphere_box",
+		"wgf_collide3d_sphere_sphere",
 		"wgf_collider_get_layer",
 		"wgf_collider_get_mask",
 		"wgf_collider_get_offset",
@@ -294,6 +302,7 @@ class Reach {
 		"wgf_draw_ellipse",
 		"wgf_draw_ellipse_lines",
 		"wgf_draw_end_3d",
+		"wgf_draw_get_text_spacing",
 		"wgf_draw_grid",
 		"wgf_draw_line",
 		"wgf_draw_line_3d",
@@ -304,8 +313,10 @@ class Reach {
 		"wgf_draw_rectangle_gradient",
 		"wgf_draw_rectangle_lines",
 		"wgf_draw_ring",
+		"wgf_draw_set_text_spacing",
 		"wgf_draw_sphere",
 		"wgf_draw_sphere_wires",
+		"wgf_draw_spline",
 		"wgf_draw_text",
 		"wgf_draw_text_3d",
 		"wgf_draw_text_aligned",
@@ -515,6 +526,7 @@ class Reach {
 		"wgf_gamepad_get_axis",
 		"wgf_gamepad_get_button_state",
 		"wgf_gamepad_get_deadzone",
+		"wgf_gamepad_get_last_pressed",
 		"wgf_gamepad_get_name",
 		"wgf_gamepad_get_stick",
 		"wgf_gamepad_get_trigger",
@@ -837,6 +849,8 @@ class Reach {
 		"wgf_sound_play",
 		"wgf_sound_set_bus",
 		"wgf_sound_set_polyphony",
+		"wgf_spline_get_point",
+		"wgf_spline_get_segment_count",
 		"wgf_sprite_batch_create",
 		"wgf_sprite_batch_get_alpha_cutoff",
 		"wgf_sprite_batch_get_alpha_mode",
@@ -921,6 +935,8 @@ class Reach {
 		"wgf_text_get_font",
 		"wgf_text_get_font_size",
 		"wgf_text_get_halign",
+		"wgf_text_get_letter_spacing",
+		"wgf_text_get_line_spacing",
 		"wgf_text_get_string",
 		"wgf_text_get_valign",
 		"wgf_text_get_wrap_width",
@@ -929,6 +945,7 @@ class Reach {
 		"wgf_text_set_facing",
 		"wgf_text_set_font",
 		"wgf_text_set_font_size",
+		"wgf_text_set_spacing",
 		"wgf_text_set_string",
 		"wgf_text_set_wrap_width",
 		"wgf_texture_create",
@@ -1120,7 +1137,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1111) 0];
+	static final counts:Array<Int> = [for (_ in 0...1128) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

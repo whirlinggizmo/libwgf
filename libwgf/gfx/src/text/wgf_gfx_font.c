@@ -1,5 +1,6 @@
 #include "wgf_font.h"
 
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +18,7 @@
 #include "wgf_core_handle_priv.h"
 #include "wgf_core_load_priv.h"
 #include "wgf_core_resource_priv.h"
+#include "wgf_draw.h"
 #include "wgf_log.h"
 #include "wgf_render.h"
 #include "wgf_asset_priv.h" /* a resource made from a path: the asset part locates it */
@@ -283,6 +285,42 @@ static float pixel_scale(void)
 
 /* Select `font` at `size` logical pixels (WGF_GFX_PRIV_FONT_DEFAULT_SIZE for 0 or
  * less), rasterized at `scale`, in `color`; false before setup. */
+/* Spacing, logical pixels added between letters and lines: immediate mode's (wgf_draw.h),
+ * and a text actor's while it lays out (wgf_gfx_priv_font_set_spacing). */
+static struct {
+    float draw_letter, draw_line;
+    bool own;
+    float letter, line;
+} spacing;
+
+void wgf_draw_set_text_spacing(float letter, float line)
+{
+    spacing.draw_letter = isfinite(letter) ? letter : 0.0f;
+    spacing.draw_line = isfinite(line) ? line : 0.0f;
+}
+
+wgf_vec2_t wgf_draw_get_text_spacing(void)
+{
+    return wgf_vec2_make(spacing.draw_letter, spacing.draw_line);
+}
+
+void wgf_gfx_priv_font_set_spacing(bool own, float letter, float line)
+{
+    spacing.own = own;
+    spacing.letter = letter;
+    spacing.line = line;
+}
+
+static float letter_spacing(void)
+{
+    return spacing.own ? spacing.letter : spacing.draw_letter;
+}
+
+static float line_spacing(void)
+{
+    return spacing.own ? spacing.line : spacing.draw_line;
+}
+
 static bool use_font(wgf_handle_t font, float size, float scale, wgf_color_t color)
 {
     if (!ensure()) return false;
@@ -292,6 +330,7 @@ static bool use_font(wgf_handle_t font, float size, float scale, wgf_color_t col
     fonsSetColor(fons, sfons_rgba((uint8_t)wgf_color_get_red(color), (uint8_t)wgf_color_get_green(color),
                                   (uint8_t)wgf_color_get_blue(color), (uint8_t)wgf_color_get_alpha(color)));
     fonsSetAlign(fons, FONS_ALIGN_LEFT | FONS_ALIGN_TOP);
+    fonsSetSpacing(fons, letter_spacing() * scale);
     return true;
 }
 
@@ -365,9 +404,11 @@ static int walk_lines(const char *text, const char *end, float max_width, float 
 
 /* The block `text` makes, in the selected font's pixels: its lines, the widest
  * one's width, and the line height. */
-static int block_lines(const char *text, float max_width, float *widest, float *line_height)
+static int block_lines(const char *text, float max_width, float *widest, float *line_height, float scale)
 {
     fonsVertMetrics(fons, NULL, NULL, line_height);
+    *line_height += line_spacing() * scale;
+    if (*line_height < 0.0f) *line_height = 0.0f;
     return walk_lines(text, text + strlen(text), max_width, widest, NULL, NULL);
 }
 
@@ -389,7 +430,7 @@ wgf_vec2_t wgf_font_measure(wgf_handle_t font, const char *text, float size)
     float widest = 0.0f, line_height = 0.0f;
     int lines;
     if (text == NULL || !use_font(font, size, scale, 0xFFFFFFFFu)) return wgf_vec2_make(0.0f, 0.0f);
-    lines = block_lines(text, 0.0f, &widest, &line_height);
+    lines = block_lines(text, 0.0f, &widest, &line_height, scale);
     return wgf_vec2_make(widest / scale, (float)lines * line_height / scale);
 }
 
@@ -401,7 +442,7 @@ static bool block_bounds_at(wgf_handle_t font, const char *text, float size, flo
     float widest = 0.0f, line_height = 0.0f;
     int lines;
     if (text == NULL || !use_font(font, size, scale, 0xFFFFFFFFu)) return false;
-    lines = block_lines(text, wrap_width * scale, &widest, &line_height);
+    lines = block_lines(text, wrap_width * scale, &widest, &line_height, scale);
     if (lines == 0) return false;
     *width = box_width(widest / scale, wrap_width);
     *height = (float)lines * line_height / scale;
@@ -450,7 +491,7 @@ void wgf_gfx_priv_font_draw_block(wgf_handle_t font, const char *text, float siz
     int lines;
 
     if (text == NULL || !use_font(font, size, scale, color)) return;
-    lines = block_lines(text, wrap_width * scale, &widest, &line_height);
+    lines = block_lines(text, wrap_width * scale, &widest, &line_height, scale);
     if (lines == 0) return;
     width = box_width(widest, wrap_width * scale);
     ctx.left = align_offset(width, (int)halign);
@@ -510,7 +551,7 @@ void wgf_gfx_priv_font_draw_block_3d(wgf_handle_t font, const char *text, float 
         !wgf_gfx_priv_fontstash_render_state(fons, &atlas, &sampler, &shader)) {
         return;
     }
-    lines = block_lines(text, wrap_width * scale, &widest, &line_height);
+    lines = block_lines(text, wrap_width * scale, &widest, &line_height, scale);
     if (lines == 0) return;
     if (pipeline_3d.id == SG_INVALID_ID || pipeline_3d_shader.id != shader.id) {
         sg_pipeline_desc desc;

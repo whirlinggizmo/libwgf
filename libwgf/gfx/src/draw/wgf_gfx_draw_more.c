@@ -1,6 +1,7 @@
 #include "wgf_draw.h"
 
 #include <math.h>
+#include <stdlib.h>
 
 #include "render/wgf_gfx_render_priv.h"
 #include "texture/wgf_gfx_texture_priv.h"
@@ -236,4 +237,25 @@ void wgf_draw_texture_fill(wgf_texture_t texture, float x, float y, float width,
         sgl_end();
     }
     sgl_disable_texture();
+}
+
+bool wgf_draw_spline(wgf_spline_kind_t kind, const float *points, int count, int steps, float thickness, wgf_color_t color)
+{
+    const int segments = wgf_spline_get_segment_count(kind, points, count);
+    float *line;
+    int n, i;
+    bool drawn;
+    if (segments == 0) return false;
+    if (steps <= 0) steps = 24;
+    n = segments * steps + 1;
+    line = (float *)malloc(sizeof(float) * 2 * (size_t)n);
+    if (line == NULL) return false;
+    for (i = 0; i < n; i++) {
+        const wgf_vec2_t p = wgf_spline_get_point(kind, points, count, (float)i / (float)(n - 1));
+        line[2 * i] = p.x;
+        line[2 * i + 1] = p.y;
+    }
+    drawn = wgf_draw_polyline(line, 2 * n, false, thickness, color);
+    free(line);
+    return drawn;
 }

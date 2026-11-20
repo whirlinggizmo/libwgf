@@ -46,6 +46,14 @@ class Gamepad {
 		return Raw.wgf_gamepad_is_released(pad, button);
 
 	/**
+	    The button of `pad` pressed in this frame (in a tick, the tick), the lowest-numbered when
+	    several were; WGF_GAMEPAD_BUTTON_NONE for none, or a pad out of range: a rebinding
+	    screen's "press a button", beside wgf_keyboard_get_last_pressed.
+	**/
+	public static inline function getLastPressed(pad:Int):GamepadButton
+		return Raw.wgf_gamepad_get_last_pressed(pad);
+
+	/**
 	    Where a stick points, -1 to 1 on each axis, y down as the screen's is. Within the
 	    dead zone it is (0, 0); past it, the length is rescaled to reach 1 at the edge,
 	    so a stick moves smoothly out of the dead zone in every direction.

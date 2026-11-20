@@ -22,6 +22,7 @@ extern "C" {
 
 /* Buttons by where they are on an Xbox-style pad, not by what they're labeled. */
 typedef enum wgf_gamepad_button_t {
+    WGF_GAMEPAD_BUTTON_NONE = -1, /* none (wgf_gamepad_get_last_pressed) */
     WGF_GAMEPAD_BUTTON_SOUTH = 0, /* A on Xbox, cross on PlayStation, B on Switch */
     WGF_GAMEPAD_BUTTON_EAST = 1,
     WGF_GAMEPAD_BUTTON_WEST = 2,
@@ -76,6 +77,10 @@ WGF_API wgf_input_state_t wgf_gamepad_get_button_state(int pad, wgf_gamepad_butt
 WGF_API bool wgf_gamepad_is_down(int pad, wgf_gamepad_button_t button);
 WGF_API bool wgf_gamepad_is_pressed(int pad, wgf_gamepad_button_t button);
 WGF_API bool wgf_gamepad_is_released(int pad, wgf_gamepad_button_t button);
+/* The button of `pad` pressed in this frame (in a tick, the tick), the lowest-numbered when
+ * several were; WGF_GAMEPAD_BUTTON_NONE for none, or a pad out of range: a rebinding
+ * screen's "press a button", beside wgf_keyboard_get_last_pressed. */
+WGF_API wgf_gamepad_button_t wgf_gamepad_get_last_pressed(int pad);
 
 /* Where a stick points, -1 to 1 on each axis, y down as the screen's is. Within the
  * dead zone it is (0, 0); past it, the length is rescaled to reach 1 at the edge,

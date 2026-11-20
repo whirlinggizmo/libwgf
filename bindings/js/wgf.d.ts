@@ -114,6 +114,23 @@ export declare const WGF_EASING_BOUNCE_OUT: 26;
 export declare const WGF_EASING_BOUNCE_IN_OUT: 27;
 export type wgf_easing_t = typeof WGF_EASING_LINEAR | typeof WGF_EASING_QUAD_IN | typeof WGF_EASING_QUAD_OUT | typeof WGF_EASING_QUAD_IN_OUT | typeof WGF_EASING_CUBIC_IN | typeof WGF_EASING_CUBIC_OUT | typeof WGF_EASING_CUBIC_IN_OUT | typeof WGF_EASING_QUART_IN | typeof WGF_EASING_QUART_OUT | typeof WGF_EASING_QUART_IN_OUT | typeof WGF_EASING_SINE_IN | typeof WGF_EASING_SINE_OUT | typeof WGF_EASING_SINE_IN_OUT | typeof WGF_EASING_EXPO_IN | typeof WGF_EASING_EXPO_OUT | typeof WGF_EASING_EXPO_IN_OUT | typeof WGF_EASING_CIRC_IN | typeof WGF_EASING_CIRC_OUT | typeof WGF_EASING_CIRC_IN_OUT | typeof WGF_EASING_BACK_IN | typeof WGF_EASING_BACK_OUT | typeof WGF_EASING_BACK_IN_OUT | typeof WGF_EASING_ELASTIC_IN | typeof WGF_EASING_ELASTIC_OUT | typeof WGF_EASING_ELASTIC_IN_OUT | typeof WGF_EASING_BOUNCE_IN | typeof WGF_EASING_BOUNCE_OUT | typeof WGF_EASING_BOUNCE_IN_OUT;
 
+/**
+ * Splines, raylib's GetSplinePoint* (wgf_draw_spline draws one): a path through or near
+ * `points`, x and y in turn (`count` floats), read at `t` from 0 (its start) to 1 (its end),
+ * each of its segments an equal share of t. Its kinds:
+ *   LINEAR            straight between each point and the next (2 points or more)
+ *   BASIS             a cubic B-spline, near its points, through none (4 or more)
+ *   CATMULL_ROM       through every point but its first and last, which steer its ends (4 or more)
+ *   BEZIER_QUADRATIC  start, control, end; each next segment's start the last's end (3, 5, 7...)
+ *   BEZIER_CUBIC      start, control, control, end; and on (4, 7, 10...)
+ */
+export declare const WGF_SPLINE_KIND_LINEAR: 0;
+export declare const WGF_SPLINE_KIND_BASIS: 1;
+export declare const WGF_SPLINE_KIND_CATMULL_ROM: 2;
+export declare const WGF_SPLINE_KIND_BEZIER_QUADRATIC: 3;
+export declare const WGF_SPLINE_KIND_BEZIER_CUBIC: 4;
+export type wgf_spline_kind_t = typeof WGF_SPLINE_KIND_LINEAR | typeof WGF_SPLINE_KIND_BASIS | typeof WGF_SPLINE_KIND_CATMULL_ROM | typeof WGF_SPLINE_KIND_BEZIER_QUADRATIC | typeof WGF_SPLINE_KIND_BEZIER_CUBIC;
+
 export declare const WGF_FS_TASK_STATUS_NONE: 0;
 export declare const WGF_FS_TASK_STATUS_PENDING: 1;
 export declare const WGF_FS_TASK_STATUS_DONE: 2;
@@ -194,6 +211,7 @@ export type wgf_input_state_t = typeof WGF_INPUT_STATE_UP | typeof WGF_INPUT_STA
 /**
  * Buttons by where they are on an Xbox-style pad, not by what they're labeled.
  */
+export declare const WGF_GAMEPAD_BUTTON_NONE: -1;
 export declare const WGF_GAMEPAD_BUTTON_SOUTH: 0;
 export declare const WGF_GAMEPAD_BUTTON_EAST: 1;
 export declare const WGF_GAMEPAD_BUTTON_WEST: 2;
@@ -211,7 +229,7 @@ export declare const WGF_GAMEPAD_BUTTON_DPAD_UP: 13;
 export declare const WGF_GAMEPAD_BUTTON_DPAD_DOWN: 14;
 export declare const WGF_GAMEPAD_BUTTON_DPAD_LEFT: 15;
 export declare const WGF_GAMEPAD_BUTTON_DPAD_RIGHT: 16;
-export type wgf_gamepad_button_t = typeof WGF_GAMEPAD_BUTTON_SOUTH | typeof WGF_GAMEPAD_BUTTON_EAST | typeof WGF_GAMEPAD_BUTTON_WEST | typeof WGF_GAMEPAD_BUTTON_NORTH | typeof WGF_GAMEPAD_BUTTON_LEFT_BUMPER | typeof WGF_GAMEPAD_BUTTON_RIGHT_BUMPER | typeof WGF_GAMEPAD_BUTTON_LEFT_TRIGGER | typeof WGF_GAMEPAD_BUTTON_RIGHT_TRIGGER | typeof WGF_GAMEPAD_BUTTON_BACK | typeof WGF_GAMEPAD_BUTTON_START | typeof WGF_GAMEPAD_BUTTON_GUIDE | typeof WGF_GAMEPAD_BUTTON_LEFT_STICK | typeof WGF_GAMEPAD_BUTTON_RIGHT_STICK | typeof WGF_GAMEPAD_BUTTON_DPAD_UP | typeof WGF_GAMEPAD_BUTTON_DPAD_DOWN | typeof WGF_GAMEPAD_BUTTON_DPAD_LEFT | typeof WGF_GAMEPAD_BUTTON_DPAD_RIGHT;
+export type wgf_gamepad_button_t = typeof WGF_GAMEPAD_BUTTON_NONE | typeof WGF_GAMEPAD_BUTTON_SOUTH | typeof WGF_GAMEPAD_BUTTON_EAST | typeof WGF_GAMEPAD_BUTTON_WEST | typeof WGF_GAMEPAD_BUTTON_NORTH | typeof WGF_GAMEPAD_BUTTON_LEFT_BUMPER | typeof WGF_GAMEPAD_BUTTON_RIGHT_BUMPER | typeof WGF_GAMEPAD_BUTTON_LEFT_TRIGGER | typeof WGF_GAMEPAD_BUTTON_RIGHT_TRIGGER | typeof WGF_GAMEPAD_BUTTON_BACK | typeof WGF_GAMEPAD_BUTTON_START | typeof WGF_GAMEPAD_BUTTON_GUIDE | typeof WGF_GAMEPAD_BUTTON_LEFT_STICK | typeof WGF_GAMEPAD_BUTTON_RIGHT_STICK | typeof WGF_GAMEPAD_BUTTON_DPAD_UP | typeof WGF_GAMEPAD_BUTTON_DPAD_DOWN | typeof WGF_GAMEPAD_BUTTON_DPAD_LEFT | typeof WGF_GAMEPAD_BUTTON_DPAD_RIGHT;
 
 export declare const WGF_GAMEPAD_STICK_LEFT: 0;
 export declare const WGF_GAMEPAD_STICK_RIGHT: 1;
@@ -1128,6 +1146,52 @@ export declare function wgf_collide2d_move_rects(x: number, y: number, w: number
 export declare function wgf_collide2d_move_cells(x: number, y: number, w: number, h: number, dx: number, dy: number, size: number, cells: readonly number[] | Int32Array | null, columns: number, out: number[] | Float32Array | Float64Array | null): boolean;
 
 /**
+ * Points.
+ */
+export declare function wgf_collide3d_point_in_box(px: number, py: number, pz: number, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number): boolean;
+
+/**
+ * Points.
+ */
+export declare function wgf_collide3d_point_in_sphere(px: number, py: number, pz: number, cx: number, cy: number, cz: number, r: number): boolean;
+
+/**
+ * Overlaps: two boxes, two spheres, a sphere and a box. Touching doesn't count.
+ */
+export declare function wgf_collide3d_box_box(ax0: number, ay0: number, az0: number, ax1: number, ay1: number, az1: number, bx0: number, by0: number, bz0: number, bx1: number, by1: number, bz1: number, hit: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * Overlaps: two boxes, two spheres, a sphere and a box. Touching doesn't count.
+ */
+export declare function wgf_collide3d_sphere_sphere(ax: number, ay: number, az: number, ar: number, bx: number, by: number, bz: number, br: number, hit: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * Overlaps: two boxes, two spheres, a sphere and a box. Touching doesn't count.
+ */
+export declare function wgf_collide3d_sphere_box(cx: number, cy: number, cz: number, r: number, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, hit: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * A ray's first meeting with a sphere, a box, or a triangle (either face; its points in
+ * order), at or after its origin; false for none. The ray goes on without end: the time in
+ * the hit says how far, for a game that wants a segment (a time of 1 or less).
+ */
+export declare function wgf_collide3d_ray_sphere(ox: number, oy: number, oz: number, dx: number, dy: number, dz: number, cx: number, cy: number, cz: number, r: number, hit: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * A ray's first meeting with a sphere, a box, or a triangle (either face; its points in
+ * order), at or after its origin; false for none. The ray goes on without end: the time in
+ * the hit says how far, for a game that wants a segment (a time of 1 or less).
+ */
+export declare function wgf_collide3d_ray_box(ox: number, oy: number, oz: number, dx: number, dy: number, dz: number, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, hit: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * A ray's first meeting with a sphere, a box, or a triangle (either face; its points in
+ * order), at or after its origin; false for none. The ray goes on without end: the time in
+ * the hit says how far, for a game that wants a segment (a time of 1 or less).
+ */
+export declare function wgf_collide3d_ray_triangle(ox: number, oy: number, oz: number, dx: number, dy: number, dz: number, points: readonly number[] | Float32Array | Float64Array | null, hit: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
  * `t` (0 to 1, clamped) eased: 0 at 0 and 1 at 1, BACK and ELASTIC going past between. An
  * ease that isn't one is LINEAR.
  */
@@ -1183,6 +1247,18 @@ export declare function wgf_trig_asin(x: number): number;
  * The angle whose sine (asin, -pi/2..pi/2) or cosine (acos, 0..pi) is x.
  */
 export declare function wgf_trig_acos(x: number): number;
+
+/**
+ * How many segments `count` floats of points make for `kind`; 0 for too few, an odd count, or
+ * a kind that isn't one.
+ */
+export declare function wgf_spline_get_segment_count(kind: wgf_spline_kind_t, points: readonly number[] | Float32Array | Float64Array | null): number;
+
+/**
+ * The point at `t` (held to 0..1); 0, 0 for points that make no segment.
+ */
+export declare function wgf_spline_get_point<T extends number[] | Float32Array | Float64Array>(kind: wgf_spline_kind_t, points: readonly number[] | Float32Array | Float64Array | null, t: number, into: T): T;
+export declare function wgf_spline_get_point(kind: wgf_spline_kind_t, points: readonly number[] | Float32Array | Float64Array | null, t: number, into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
  * The libwgf version, "MAJOR.MINOR.PATCH", from the repo's VERSION file.
@@ -1682,6 +1758,13 @@ export declare function wgf_gamepad_is_pressed(pad: number, button: wgf_gamepad_
  * while a button is held releases it. UP for a pad or button that isn't one.
  */
 export declare function wgf_gamepad_is_released(pad: number, button: wgf_gamepad_button_t): boolean;
+
+/**
+ * The button of `pad` pressed in this frame (in a tick, the tick), the lowest-numbered when
+ * several were; WGF_GAMEPAD_BUTTON_NONE for none, or a pad out of range: a rebinding
+ * screen's "press a button", beside wgf_keyboard_get_last_pressed.
+ */
+export declare function wgf_gamepad_get_last_pressed(pad: number): wgf_gamepad_button_t;
 
 /**
  * Where a stick points, -1 to 1 on each axis, y down as the screen's is. Within the
@@ -4113,6 +4196,24 @@ export declare function wgf_text_get_halign(text: wgf_actor_t | 0): wgf_text_hal
 export declare function wgf_text_get_valign(text: wgf_actor_t | 0): wgf_text_valign_t;
 
 /**
+ * Logical pixels added between its letters and between its lines (0 to start; below 0
+ * tightens). False for numbers that aren't finite.
+ */
+export declare function wgf_text_set_spacing(text: wgf_actor_t | 0, letter: number, line: number): boolean;
+
+/**
+ * Logical pixels added between its letters and between its lines (0 to start; below 0
+ * tightens). False for numbers that aren't finite.
+ */
+export declare function wgf_text_get_letter_spacing(text: wgf_actor_t | 0): number;
+
+/**
+ * Logical pixels added between its letters and between its lines (0 to start; below 0
+ * tightens). False for numbers that aren't finite.
+ */
+export declare function wgf_text_get_line_spacing(text: wgf_actor_t | 0): number;
+
+/**
  * Which way its block faces on a 3D stage, as a sprite's (wgf_sprite.h): the camera (the
  * default), the camera about Y, flat facing up, or its actor's turn. A 2D stage's text is
  * flat on the screen whatever this says. False when `facing` isn't one.
@@ -4182,6 +4283,12 @@ export declare function wgf_draw_triangle(x0: number, y0: number, x1: number, y1
 export declare function wgf_draw_polyline(points: readonly number[] | Float32Array | Float64Array | null, closed: boolean, thickness: number, color: wgf_color_t): boolean;
 
 /**
+ * A spline (wgf_spline.h) through or near `points` as its kind makes it, as a polyline of
+ * `steps` points a segment (24 for 0 or less). False for points that make no segment.
+ */
+export declare function wgf_draw_spline(kind: wgf_spline_kind_t, points: readonly number[] | Float32Array | Float64Array | null, steps: number, thickness: number, color: wgf_color_t): boolean;
+
+/**
  * The polygon through `points` filled, x and y in turn (count floats), convex or not,
  * in either winding, as long as its edges don't cross (one that crosses itself is
  * filled as the fan from its first point). False, drawing nothing, for an odd count,
@@ -4194,6 +4301,21 @@ export declare function wgf_draw_polygon(points: readonly number[] | Float32Arra
  * less), its top-left at (x, y). Newlines break lines.
  */
 export declare function wgf_draw_text(font: wgf_font_t | 0, text: string | null, x: number, y: number, size: number, color: wgf_color_t): void;
+
+/**
+ * Logical pixels added between letters and between lines of the text drawn and measured
+ * after it (wgf_draw_text, wgf_font_measure; a text actor has its own): raylib's spacing and
+ * line spacing. 0 to start; a number that isn't finite is 0.
+ */
+export declare function wgf_draw_set_text_spacing(letter: number, line: number): void;
+
+/**
+ * Logical pixels added between letters and between lines of the text drawn and measured
+ * after it (wgf_draw_text, wgf_font_measure; a text actor has its own): raylib's spacing and
+ * line spacing. 0 to start; a number that isn't finite is 0.
+ */
+export declare function wgf_draw_get_text_spacing<T extends number[] | Float32Array | Float64Array>(into: T): T;
+export declare function wgf_draw_get_text_spacing(into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
  * The same, (x, y) the point the text is aligned to: its left, center, or right, and its

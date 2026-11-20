@@ -15,7 +15,8 @@
 
 /* Immediate mode's shapes beyond the basics: a ring, a sector, and an arc sweeping round, an
  * ellipse and its outline, a rectangle and a circle in gradients, a texture turning about
- * its middle, a texture filling as a bar and as a clockwise sweep (a cooldown); and in 3D,
+ * its middle, a texture filling as a bar and as a clockwise sweep (a cooldown), splines (a
+ * Catmull-Rom through its points, a cubic Bezier and its controls, a dot along it); and in 3D,
  * a triangle, a cylinder, and wire spheres, cylinders, and capsules, round a turning camera.
  * Escape quits where quitting means anything. */
 
@@ -51,6 +52,17 @@ static void frame(void *user)
     wgf_draw_texture_rotated(tiles, 0, 0, 16, 16, 460, 230, 80, 80, 0.5f, 0.5f, t, wgf_color_make(255, 255, 255, 255));
     wgf_draw_texture_fill(tiles, 560, 190, 160, 24, sweep, WGF_DRAW_FILL_LEFT_TO_RIGHT, wgf_color_make(255, 255, 255, 255));
     wgf_draw_texture_fill(tiles, 620, 220, 70, 70, sweep, WGF_DRAW_FILL_CLOCKWISE, wgf_color_make(255, 255, 255, 255));
+    {
+        const float wave[12] = {20, 330, 60, 320, 140, 300 + 30 * sinf(t), 220, 340, 300, 310, 340, 320};
+        const float bend[8] = {420, 340, 480, 280 + 40 * sinf(t), 640, 380, 760, 310};
+        const wgf_vec2_t dot = wgf_spline_get_point(WGF_SPLINE_KIND_BEZIER_CUBIC, bend, 8, sweep);
+        int k;
+        wgf_draw_spline(WGF_SPLINE_KIND_CATMULL_ROM, wave, 12, 0, 3, wgf_color_make(120, 220, 255, 255));
+        for (k = 0; k < 12; k += 2) wgf_draw_circle(wave[k], wave[k + 1], 3, wgf_color_make(255, 255, 255, 255));
+        wgf_draw_polyline(bend, 8, false, 1, wgf_color_make(90, 90, 120, 255));
+        wgf_draw_spline(WGF_SPLINE_KIND_BEZIER_CUBIC, bend, 8, 32, 3, wgf_color_make(255, 160, 80, 255));
+        wgf_draw_circle(dot.x, dot.y, 6, wgf_color_make(255, 255, 255, 255));
+    }
 
     wgf_actor_set_position(eye, sinf(t * 0.3f) * 9.0f, 4.0f, cosf(t * 0.3f) * 9.0f);
     wgf_actor_look_at(eye, 0, 0.5f, 0, 0, 1, 0);

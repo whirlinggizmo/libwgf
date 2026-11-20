@@ -181,9 +181,32 @@ static void text_draw(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, 
     (void)actor;
     (void)view;
     if (text->string == NULL) return;
+    wgf_gfx_priv_font_set_spacing(true, text->letter_spacing, text->line_spacing);
     wgf_gfx_priv_font_draw_block(text->font, text->string, text->size, text->color, text->wrap_width, text->halign,
                                  text->valign, placed->m);
+    wgf_gfx_priv_font_set_spacing(false, 0.0f, 0.0f);
     wgf_gfx_priv_render_set_2d(); /* fontstash left its own state */
+}
+
+bool wgf_text_set_spacing(wgf_actor_t text, float letter, float line)
+{
+    wgf_gfx_priv_actor_t *actor_ptr = text_of(text);
+    if (actor_ptr == NULL || !isfinite(letter) || !isfinite(line)) return false;
+    actor_ptr->as.text.letter_spacing = letter;
+    actor_ptr->as.text.line_spacing = line;
+    return true;
+}
+
+float wgf_text_get_letter_spacing(wgf_actor_t text)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = text_of(text);
+    return actor_ptr != NULL ? actor_ptr->as.text.letter_spacing : 0.0f;
+}
+
+float wgf_text_get_line_spacing(wgf_actor_t text)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = text_of(text);
+    return actor_ptr != NULL ? actor_ptr->as.text.line_spacing : 0.0f;
 }
 
 bool wgf_text_set_facing(wgf_actor_t text, wgf_sprite_facing_t facing)
@@ -212,11 +235,13 @@ static bool text_place_3d(const wgf_gfx_priv_actor_t *actor_ptr, wgf_mat4_t worl
     const float size = text->size > 0.0f ? text->size : TEXT_STAGE3D_SIZE;
     wgf_vec3_t right, up;
     float left, top, width, height;
-    if (text->string == NULL || !wgf_gfx_priv_font_block_bounds_3d(text->font, text->string, size, text->wrap_width,
-                                                                   text->halign, text->valign, &left, &top, &width,
-                                                                   &height)) {
-        return false;
-    }
+    bool laid_out;
+    if (text->string == NULL) return false;
+    wgf_gfx_priv_font_set_spacing(true, text->letter_spacing, text->line_spacing);
+    laid_out = wgf_gfx_priv_font_block_bounds_3d(text->font, text->string, size, text->wrap_width, text->halign,
+                                                 text->valign, &left, &top, &width, &height);
+    wgf_gfx_priv_font_set_spacing(false, 0.0f, 0.0f);
+    if (!laid_out) return false;
     wgf_gfx_priv_facing_axes(text->facing, world, view, &right, &up);
     right = wgf_vec3_scale(right, scale.x);
     up = wgf_vec3_scale(up, -scale.y); /* the block's y runs down */
@@ -234,6 +259,8 @@ static bool text_place_3d(const wgf_gfx_priv_actor_t *actor_ptr, wgf_mat4_t worl
 static void text_draw_3d(const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *plane)
 {
     const wgf_gfx_priv_text_t *text = &actor_ptr->as.text;
+    wgf_gfx_priv_font_set_spacing(true, text->letter_spacing, text->line_spacing);
     wgf_gfx_priv_font_draw_block_3d(text->font, text->string, text->size > 0.0f ? text->size : TEXT_STAGE3D_SIZE,
                                     text->color, text->wrap_width, text->halign, text->valign, plane->m);
+    wgf_gfx_priv_font_set_spacing(false, 0.0f, 0.0f);
 }

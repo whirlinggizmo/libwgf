@@ -88,6 +88,7 @@ GETTERS_PAIRED = {
     'wgf_shape2d_set_polygon': ('wgf_shape2d_get_kind', 'wgf_shape2d_get_point_count', 'wgf_shape2d_get_points'),
     'wgf_collider_set_rectangle': ('wgf_collider_get_shape', 'wgf_collider_get_size'),
     'wgf_body2d_set_grid': ('wgf_body2d_get_grid_cell',),
+    'wgf_text_set_spacing': ('wgf_text_get_letter_spacing', 'wgf_text_get_line_spacing'),
     'wgf_collider_set_polygon': ('wgf_collider_get_shape', 'wgf_collider_get_points'),
     'wgf_collider_set_segment': ('wgf_collider_get_shape', 'wgf_collider_get_points'),
     'wgf_light_set_shadow_bias': ('wgf_light_get_shadow_bias_constant', 'wgf_light_get_shadow_bias_slope'),

@@ -5,6 +5,7 @@ package wgf;
     Buttons by where they are on an Xbox-style pad, not by what they're labeled.
 **/
 enum abstract GamepadButton(Int) from Int to Int {
+	var NONE = -1;
 	var SOUTH = 0;
 	var EAST = 1;
 	var WEST = 2;

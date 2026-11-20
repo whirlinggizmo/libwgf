@@ -173,6 +173,15 @@ bool wgf_gamepad_is_released(int pad, wgf_gamepad_button_t button)
     return valid_button(pad, button) && edges_of(pad)->released[button];
 }
 
+wgf_gamepad_button_t wgf_gamepad_get_last_pressed(int pad)
+{
+    int b;
+    for (b = WGF_GAMEPAD_BUTTON_SOUTH; b <= WGF_GAMEPAD_BUTTON_DPAD_RIGHT; b++) {
+        if (valid_button(pad, (wgf_gamepad_button_t)b) && edges_of(pad)->pressed[b]) return (wgf_gamepad_button_t)b;
+    }
+    return WGF_GAMEPAD_BUTTON_NONE;
+}
+
 wgf_vec2_t wgf_gamepad_get_stick(int pad, wgf_gamepad_stick_t stick)
 {
     const wgf_platform_priv_gamepad_t *pad_ptr = connected(pad);

@@ -67,6 +67,13 @@ class Draw {
 		return Raw.wgf_draw_polyline(points, closed, thickness, color);
 
 	/**
+	    A spline (wgf_spline.h) through or near `points` as its kind makes it, as a polyline of
+	    `steps` points a segment (24 for 0 or less). False for points that make no segment.
+	**/
+	public static inline function spline(kind:SplineKind, points:Array<Float>, steps:Int, thickness:Float, color:Int):Bool
+		return Raw.wgf_draw_spline(kind, points, steps, thickness, color);
+
+	/**
 	    The polygon through `points` filled, x and y in turn (count floats), convex or not,
 	    in either winding, as long as its edges don't cross (one that crosses itself is
 	    filled as the fan from its first point). False, drawing nothing, for an odd count,
@@ -81,6 +88,22 @@ class Draw {
 	**/
 	public static inline function text(font:Font, text:String, x:Float, y:Float, size:Float, color:Int):Void
 		Raw.wgf_draw_text(font, text, x, y, size, color);
+
+	/**
+	    Logical pixels added between letters and between lines of the text drawn and measured
+	    after it (wgf_draw_text, wgf_font_measure; a text actor has its own): raylib's spacing and
+	    line spacing. 0 to start; a number that isn't finite is 0.
+	**/
+	public static inline function setTextSpacing(letter:Float, line:Float):Void
+		Raw.wgf_draw_set_text_spacing(letter, line);
+
+	/**
+	    Logical pixels added between letters and between lines of the text drawn and measured
+	    after it (wgf_draw_text, wgf_font_measure; a text actor has its own): raylib's spacing and
+	    line spacing. 0 to start; a number that isn't finite is 0.
+	**/
+	public static inline function getTextSpacing(?into:wgf.Vec2):wgf.Vec2
+		return Raw.wgf_draw_get_text_spacing(into);
 
 	/**
 	    The same, (x, y) the point the text is aligned to: its left, center, or right, and its

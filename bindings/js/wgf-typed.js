@@ -522,6 +522,25 @@ export const Collide2d = Object.freeze({
     // wgf: call wgf_collide2d_move_cells
     moveCells: raw.wgf_collide2d_move_cells,
 });
+// wgf: typed Collide3d
+export const Collide3d = Object.freeze({
+    // wgf: call wgf_collide3d_point_in_box
+    pointInBox: raw.wgf_collide3d_point_in_box,
+    // wgf: call wgf_collide3d_point_in_sphere
+    pointInSphere: raw.wgf_collide3d_point_in_sphere,
+    // wgf: call wgf_collide3d_box_box
+    boxBox: raw.wgf_collide3d_box_box,
+    // wgf: call wgf_collide3d_sphere_sphere
+    sphereSphere: raw.wgf_collide3d_sphere_sphere,
+    // wgf: call wgf_collide3d_sphere_box
+    sphereBox: raw.wgf_collide3d_sphere_box,
+    // wgf: call wgf_collide3d_ray_sphere
+    raySphere: raw.wgf_collide3d_ray_sphere,
+    // wgf: call wgf_collide3d_ray_box
+    rayBox: raw.wgf_collide3d_ray_box,
+    // wgf: call wgf_collide3d_ray_triangle
+    rayTriangle: raw.wgf_collide3d_ray_triangle,
+});
 // wgf: typed Collider
 export const Collider = Object.freeze({
     // wgf: call wgf_collider_set_radius
@@ -642,10 +661,16 @@ export const Draw = Object.freeze({
     triangle: raw.wgf_draw_triangle,
     // wgf: call wgf_draw_polyline
     polyline: raw.wgf_draw_polyline,
+    // wgf: call wgf_draw_spline
+    spline: raw.wgf_draw_spline,
     // wgf: call wgf_draw_polygon
     polygon: raw.wgf_draw_polygon,
     // wgf: call wgf_draw_text
     text: raw.wgf_draw_text,
+    // wgf: call wgf_draw_set_text_spacing
+    setTextSpacing: raw.wgf_draw_set_text_spacing,
+    // wgf: call wgf_draw_get_text_spacing
+    getTextSpacing: raw.wgf_draw_get_text_spacing,
     // wgf: call wgf_draw_text_aligned
     textAligned: raw.wgf_draw_text_aligned,
     // wgf: call wgf_draw_texture
@@ -1148,6 +1173,8 @@ export const Gamepad = Object.freeze({
     isPressed: raw.wgf_gamepad_is_pressed,
     // wgf: call wgf_gamepad_is_released
     isReleased: raw.wgf_gamepad_is_released,
+    // wgf: call wgf_gamepad_get_last_pressed
+    getLastPressed: raw.wgf_gamepad_get_last_pressed,
     // wgf: call wgf_gamepad_get_stick
     getStick: raw.wgf_gamepad_get_stick,
     // wgf: call wgf_gamepad_get_trigger
@@ -1905,6 +1932,13 @@ export const Sound = Object.freeze({
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
+// wgf: typed Spline
+export const Spline = Object.freeze({
+    // wgf: call wgf_spline_get_segment_count
+    getSegmentCount: raw.wgf_spline_get_segment_count,
+    // wgf: call wgf_spline_get_point
+    getPoint: raw.wgf_spline_get_point,
+});
 // wgf: typed Sprite
 export const Sprite = Object.freeze({
     // wgf: call wgf_sprite_create
@@ -2111,6 +2145,12 @@ export const Text = Object.freeze({
     getHalign: raw.wgf_text_get_halign,
     // wgf: call wgf_text_get_valign
     getValign: raw.wgf_text_get_valign,
+    // wgf: call wgf_text_set_spacing
+    setSpacing: raw.wgf_text_set_spacing,
+    // wgf: call wgf_text_get_letter_spacing
+    getLetterSpacing: raw.wgf_text_get_letter_spacing,
+    // wgf: call wgf_text_get_line_spacing
+    getLineSpacing: raw.wgf_text_get_line_spacing,
     // wgf: call wgf_text_set_facing
     setFacing: raw.wgf_text_set_facing,
     // wgf: call wgf_text_get_facing
@@ -2573,7 +2613,7 @@ export const FsTaskStatus = Object.freeze({ NONE: 0, PENDING: 1, DONE: 2, NOT_FO
 // wgf: enum GamepadAxis
 export const GamepadAxis = Object.freeze({ LEFT_X: 0, LEFT_Y: 1, RIGHT_X: 2, RIGHT_Y: 3, LEFT_TRIGGER: 4, RIGHT_TRIGGER: 5 });
 // wgf: enum GamepadButton
-export const GamepadButton = Object.freeze({ SOUTH: 0, EAST: 1, WEST: 2, NORTH: 3, LEFT_BUMPER: 4, RIGHT_BUMPER: 5, LEFT_TRIGGER: 6, RIGHT_TRIGGER: 7, BACK: 8, START: 9, GUIDE: 10, LEFT_STICK: 11, RIGHT_STICK: 12, DPAD_UP: 13, DPAD_DOWN: 14, DPAD_LEFT: 15, DPAD_RIGHT: 16 });
+export const GamepadButton = Object.freeze({ NONE: -1, SOUTH: 0, EAST: 1, WEST: 2, NORTH: 3, LEFT_BUMPER: 4, RIGHT_BUMPER: 5, LEFT_TRIGGER: 6, RIGHT_TRIGGER: 7, BACK: 8, START: 9, GUIDE: 10, LEFT_STICK: 11, RIGHT_STICK: 12, DPAD_UP: 13, DPAD_DOWN: 14, DPAD_LEFT: 15, DPAD_RIGHT: 16 });
 // wgf: enum GamepadStick
 export const GamepadStick = Object.freeze({ LEFT: 0, RIGHT: 1 });
 // wgf: enum GamepadTrigger
@@ -2604,6 +2644,8 @@ export const Shape2dKind = Object.freeze({ NONE: 0, RECTANGLE: 1, CIRCLE: 2, LIN
 export const Shape3dKind = Object.freeze({ NONE: 0, CUBE: 1, SPHERE: 2, RECTANGLE: 3, CIRCLE: 4, LINE: 5, LINE_STRIP: 6 });
 // wgf: enum SheetDirection
 export const SheetDirection = Object.freeze({ FORWARD: 0, BACKWARD: 1, PING_PONG: 2, PING_PONG_BACKWARD: 3 });
+// wgf: enum SplineKind
+export const SplineKind = Object.freeze({ LINEAR: 0, BASIS: 1, CATMULL_ROM: 2, BEZIER_QUADRATIC: 3, BEZIER_CUBIC: 4 });
 // wgf: enum SpriteFacing
 export const SpriteFacing = Object.freeze({ CAMERA: 0, CAMERA_FIXED_Y: 1, Y_UP: 2, FREE: 3 });
 // wgf: enum Stage3dTonemap

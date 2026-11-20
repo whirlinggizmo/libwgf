@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "eb8446ad9d115cdb" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "81a0cb73953c898a" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -270,6 +270,22 @@ export const WGF_EASING_BOUNCE_IN = 25;
 export const WGF_EASING_BOUNCE_OUT = 26;
 export const WGF_EASING_BOUNCE_IN_OUT = 27;
 
+/**
+ * Splines, raylib's GetSplinePoint* (wgf_draw_spline draws one): a path through or near
+ * `points`, x and y in turn (`count` floats), read at `t` from 0 (its start) to 1 (its end),
+ * each of its segments an equal share of t. Its kinds:
+ *   LINEAR            straight between each point and the next (2 points or more)
+ *   BASIS             a cubic B-spline, near its points, through none (4 or more)
+ *   CATMULL_ROM       through every point but its first and last, which steer its ends (4 or more)
+ *   BEZIER_QUADRATIC  start, control, end; each next segment's start the last's end (3, 5, 7...)
+ *   BEZIER_CUBIC      start, control, control, end; and on (4, 7, 10...)
+ */
+export const WGF_SPLINE_KIND_LINEAR = 0;
+export const WGF_SPLINE_KIND_BASIS = 1;
+export const WGF_SPLINE_KIND_CATMULL_ROM = 2;
+export const WGF_SPLINE_KIND_BEZIER_QUADRATIC = 3;
+export const WGF_SPLINE_KIND_BEZIER_CUBIC = 4;
+
 export const WGF_FS_TASK_STATUS_NONE = 0;
 export const WGF_FS_TASK_STATUS_PENDING = 1;
 export const WGF_FS_TASK_STATUS_DONE = 2;
@@ -345,6 +361,7 @@ export const WGF_INPUT_STATE_RELEASED = 3;
 /**
  * Buttons by where they are on an Xbox-style pad, not by what they're labeled.
  */
+export const WGF_GAMEPAD_BUTTON_NONE = -1;
 export const WGF_GAMEPAD_BUTTON_SOUTH = 0;
 export const WGF_GAMEPAD_BUTTON_EAST = 1;
 export const WGF_GAMEPAD_BUTTON_WEST = 2;
@@ -1335,6 +1352,97 @@ export function wgf_collide2d_move_cells(x, y, w, h, dx, dy, size, cells, column
     return value !== 0;
 }
 
+// wgf: call wgf_collide3d_point_in_box
+/**
+ * Points.
+ */
+export function wgf_collide3d_point_in_box(px, py, pz, x0, y0, z0, x1, y1, z1) {
+    const value = host["_wgf_collide3d_point_in_box"](px, py, pz, x0, y0, z0, x1, y1, z1);
+    return value !== 0;
+}
+
+// wgf: call wgf_collide3d_point_in_sphere
+/**
+ * Points.
+ */
+export function wgf_collide3d_point_in_sphere(px, py, pz, cx, cy, cz, r) {
+    const value = host["_wgf_collide3d_point_in_sphere"](px, py, pz, cx, cy, cz, r);
+    return value !== 0;
+}
+
+// wgf: call wgf_collide3d_box_box
+/**
+ * Overlaps: two boxes, two spheres, a sphere and a box. Touching doesn't count.
+ */
+export function wgf_collide3d_box_box(ax0, ay0, az0, ax1, ay1, az1, bx0, by0, bz0, bx1, by1, bz1, hit) {
+    const hitPointer = arrayOut(hit, 0);
+    const value = host["_wgf_collide3d_box_box"](ax0, ay0, az0, ax1, ay1, az1, bx0, by0, bz0, bx1, by1, bz1, hitPointer, lengthOf(hit));
+    arrayBack(hitPointer, hit, "HEAPF32");
+    return value !== 0;
+}
+
+// wgf: call wgf_collide3d_sphere_sphere
+/**
+ * Overlaps: two boxes, two spheres, a sphere and a box. Touching doesn't count.
+ */
+export function wgf_collide3d_sphere_sphere(ax, ay, az, ar, bx, by, bz, br, hit) {
+    const hitPointer = arrayOut(hit, 0);
+    const value = host["_wgf_collide3d_sphere_sphere"](ax, ay, az, ar, bx, by, bz, br, hitPointer, lengthOf(hit));
+    arrayBack(hitPointer, hit, "HEAPF32");
+    return value !== 0;
+}
+
+// wgf: call wgf_collide3d_sphere_box
+/**
+ * Overlaps: two boxes, two spheres, a sphere and a box. Touching doesn't count.
+ */
+export function wgf_collide3d_sphere_box(cx, cy, cz, r, x0, y0, z0, x1, y1, z1, hit) {
+    const hitPointer = arrayOut(hit, 0);
+    const value = host["_wgf_collide3d_sphere_box"](cx, cy, cz, r, x0, y0, z0, x1, y1, z1, hitPointer, lengthOf(hit));
+    arrayBack(hitPointer, hit, "HEAPF32");
+    return value !== 0;
+}
+
+// wgf: call wgf_collide3d_ray_sphere
+/**
+ * A ray's first meeting with a sphere, a box, or a triangle (either face; its points in
+ * order), at or after its origin; false for none. The ray goes on without end: the time in
+ * the hit says how far, for a game that wants a segment (a time of 1 or less).
+ */
+export function wgf_collide3d_ray_sphere(ox, oy, oz, dx, dy, dz, cx, cy, cz, r, hit) {
+    const hitPointer = arrayOut(hit, 0);
+    const value = host["_wgf_collide3d_ray_sphere"](ox, oy, oz, dx, dy, dz, cx, cy, cz, r, hitPointer, lengthOf(hit));
+    arrayBack(hitPointer, hit, "HEAPF32");
+    return value !== 0;
+}
+
+// wgf: call wgf_collide3d_ray_box
+/**
+ * A ray's first meeting with a sphere, a box, or a triangle (either face; its points in
+ * order), at or after its origin; false for none. The ray goes on without end: the time in
+ * the hit says how far, for a game that wants a segment (a time of 1 or less).
+ */
+export function wgf_collide3d_ray_box(ox, oy, oz, dx, dy, dz, x0, y0, z0, x1, y1, z1, hit) {
+    const hitPointer = arrayOut(hit, 0);
+    const value = host["_wgf_collide3d_ray_box"](ox, oy, oz, dx, dy, dz, x0, y0, z0, x1, y1, z1, hitPointer, lengthOf(hit));
+    arrayBack(hitPointer, hit, "HEAPF32");
+    return value !== 0;
+}
+
+// wgf: call wgf_collide3d_ray_triangle
+/**
+ * A ray's first meeting with a sphere, a box, or a triangle (either face; its points in
+ * order), at or after its origin; false for none. The ray goes on without end: the time in
+ * the hit says how far, for a game that wants a segment (a time of 1 or less).
+ */
+export function wgf_collide3d_ray_triangle(ox, oy, oz, dx, dy, dz, points, hit) {
+    const pointsPointer = arrayIn(points, 0, "HEAPF32");
+    const hitPointer = arrayOut(hit, 1);
+    const value = host["_wgf_collide3d_ray_triangle"](ox, oy, oz, dx, dy, dz, pointsPointer, lengthOf(points), hitPointer, lengthOf(hit));
+    arrayBack(hitPointer, hit, "HEAPF32");
+    return value !== 0;
+}
+
 // wgf: call wgf_ease_value
 /**
  * `t` (0 to 1, clamped) eased: 0 at 0 and 1 at 1, BACK and ELASTIC going past between. An
@@ -1500,6 +1608,28 @@ export function wgf_trig_acos(xIn) {
     if (d === 0) return Math.fround(LOCAL_PI / 2);
     const a = localAtan(Math.sqrt((1 - d) * (1 + d)) / d);
     return Math.fround(d > 0 ? a : a + LOCAL_PI);
+}
+
+// wgf: call wgf_spline_get_segment_count
+/**
+ * How many segments `count` floats of points make for `kind`; 0 for too few, an odd count, or
+ * a kind that isn't one.
+ */
+export function wgf_spline_get_segment_count(kind, points) {
+    const pointsPointer = arrayIn(points, 0, "HEAPF32");
+    const value = host["_wgf_spline_get_segment_count"](kind, pointsPointer, lengthOf(points));
+    return value;
+}
+
+// wgf: call wgf_spline_get_point
+/**
+ * The point at `t` (held to 0..1); 0, 0 for points that make no segment.
+ */
+export function wgf_spline_get_point(kind, points, t, into) {
+    const pointsPointer = arrayIn(points, 0, "HEAPF32");
+    const ret = result(8);
+    host["_wgf_spline_get_point"](ret, kind, pointsPointer, lengthOf(points), t);
+    return vector(ret, 2, into);
 }
 
 // wgf: call wgf_version_get
@@ -2303,6 +2433,17 @@ export function wgf_gamepad_is_pressed(pad, button) {
 export function wgf_gamepad_is_released(pad, button) {
     const value = host["_wgf_gamepad_is_released"](pad, button);
     return value !== 0;
+}
+
+// wgf: call wgf_gamepad_get_last_pressed
+/**
+ * The button of `pad` pressed in this frame (in a tick, the tick), the lowest-numbered when
+ * several were; WGF_GAMEPAD_BUTTON_NONE for none, or a pad out of range: a rebinding
+ * screen's "press a button", beside wgf_keyboard_get_last_pressed.
+ */
+export function wgf_gamepad_get_last_pressed(pad) {
+    const value = host["_wgf_gamepad_get_last_pressed"](pad);
+    return value;
 }
 
 // wgf: call wgf_gamepad_get_stick
@@ -6087,6 +6228,36 @@ export function wgf_text_get_valign(text) {
     return value;
 }
 
+// wgf: call wgf_text_set_spacing
+/**
+ * Logical pixels added between its letters and between its lines (0 to start; below 0
+ * tightens). False for numbers that aren't finite.
+ */
+export function wgf_text_set_spacing(text, letter, line) {
+    const value = host["_wgf_text_set_spacing"](text, letter, line);
+    return value !== 0;
+}
+
+// wgf: call wgf_text_get_letter_spacing
+/**
+ * Logical pixels added between its letters and between its lines (0 to start; below 0
+ * tightens). False for numbers that aren't finite.
+ */
+export function wgf_text_get_letter_spacing(text) {
+    const value = host["_wgf_text_get_letter_spacing"](text);
+    return value;
+}
+
+// wgf: call wgf_text_get_line_spacing
+/**
+ * Logical pixels added between its letters and between its lines (0 to start; below 0
+ * tightens). False for numbers that aren't finite.
+ */
+export function wgf_text_get_line_spacing(text) {
+    const value = host["_wgf_text_get_line_spacing"](text);
+    return value;
+}
+
 // wgf: call wgf_text_set_facing
 /**
  * Which way its block faces on a 3D stage, as a sprite's (wgf_sprite.h): the camera (the
@@ -6187,6 +6358,17 @@ export function wgf_draw_polyline(points, closed, thickness, color) {
     return value !== 0;
 }
 
+// wgf: call wgf_draw_spline
+/**
+ * A spline (wgf_spline.h) through or near `points` as its kind makes it, as a polyline of
+ * `steps` points a segment (24 for 0 or less). False for points that make no segment.
+ */
+export function wgf_draw_spline(kind, points, steps, thickness, color) {
+    const pointsPointer = arrayIn(points, 0, "HEAPF32");
+    const value = host["_wgf_draw_spline"](kind, pointsPointer, lengthOf(points), steps, thickness, color);
+    return value !== 0;
+}
+
 // wgf: call wgf_draw_polygon
 /**
  * The polygon through `points` filled, x and y in turn (count floats), convex or not,
@@ -6209,6 +6391,28 @@ export function wgf_draw_text(font, text, x, y, size, color) {
     const mark = host["stackSave"]();
     host["_wgf_draw_text"](font, cstr(text), x, y, size, color);
     host["stackRestore"](mark);
+}
+
+// wgf: call wgf_draw_set_text_spacing
+/**
+ * Logical pixels added between letters and between lines of the text drawn and measured
+ * after it (wgf_draw_text, wgf_font_measure; a text actor has its own): raylib's spacing and
+ * line spacing. 0 to start; a number that isn't finite is 0.
+ */
+export function wgf_draw_set_text_spacing(letter, line) {
+    host["_wgf_draw_set_text_spacing"](letter, line);
+}
+
+// wgf: call wgf_draw_get_text_spacing
+/**
+ * Logical pixels added between letters and between lines of the text drawn and measured
+ * after it (wgf_draw_text, wgf_font_measure; a text actor has its own): raylib's spacing and
+ * line spacing. 0 to start; a number that isn't finite is 0.
+ */
+export function wgf_draw_get_text_spacing(into) {
+    const ret = result(8);
+    host["_wgf_draw_get_text_spacing"](ret);
+    return vector(ret, 2, into);
 }
 
 // wgf: call wgf_draw_text_aligned

@@ -108,6 +108,27 @@ import wgf.impl.Raw;
 		return Raw.wgf_text_get_valign(this);
 
 	/**
+	    Logical pixels added between its letters and between its lines (0 to start; below 0
+	    tightens). False for numbers that aren't finite.
+	**/
+	public inline function setSpacing(letter:Float, line:Float):Bool
+		return Raw.wgf_text_set_spacing(this, letter, line);
+
+	/**
+	    Logical pixels added between its letters and between its lines (0 to start; below 0
+	    tightens). False for numbers that aren't finite.
+	**/
+	public inline function getLetterSpacing():Float
+		return Raw.wgf_text_get_letter_spacing(this);
+
+	/**
+	    Logical pixels added between its letters and between its lines (0 to start; below 0
+	    tightens). False for numbers that aren't finite.
+	**/
+	public inline function getLineSpacing():Float
+		return Raw.wgf_text_get_line_spacing(this);
+
+	/**
 	    Which way its block faces on a 3D stage, as a sprite's (wgf_sprite.h): the camera (the
 	    default), the camera about Y, flat facing up, or its actor's turn. A 2D stage's text is
 	    flat on the screen whatever this says. False when `facing` isn't one.

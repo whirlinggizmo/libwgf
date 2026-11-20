@@ -64,6 +64,9 @@ static void buttons(void)
     /* a tick reads its own edges: one tick sees the press, the next doesn't */
     wgf_platform_priv_input_set_context(WGF_PLATFORM_PRIV_INPUT_TICK);
     expect(wgf_gamepad_is_pressed(1, WGF_GAMEPAD_BUTTON_SOUTH), "the tick sees the press");
+    expect(wgf_gamepad_get_last_pressed(1) == WGF_GAMEPAD_BUTTON_SOUTH && wgf_gamepad_get_last_pressed(0) == WGF_GAMEPAD_BUTTON_NONE &&
+               wgf_gamepad_get_last_pressed(99) == WGF_GAMEPAD_BUTTON_NONE,
+           "the last pressed: its button; none on another pad, or one out of range");
     wgf_platform_priv_gamepad_end_tick();
     expect(!wgf_gamepad_is_pressed(1, WGF_GAMEPAD_BUTTON_SOUTH) && wgf_gamepad_is_down(1, WGF_GAMEPAD_BUTTON_SOUTH),
            "the next tick sees it held");

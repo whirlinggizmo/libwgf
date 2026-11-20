@@ -84,6 +84,18 @@ int main(void)
         float left, top, width, height;
         expect(wgf_font_measure(0, "", 16).x == 0 && wgf_font_measure(0, "", 16).y == 0, "empty text is 0 by 0");
         expect(wgf_font_measure(0, " ", 16).x > 0, "a line keeps its spaces: a space measures its advance");
+        {
+            const wgf_vec2_t plain = wgf_font_measure(0, "Hello\nWorld", 16);
+            wgf_vec2_t spaced;
+            wgf_draw_set_text_spacing(2, 10);
+            spaced = wgf_font_measure(0, "Hello\nWorld", 16);
+            expect(fabsf(spaced.x - (plain.x + 8)) < 0.5f && fabsf(spaced.y - (plain.y + 20)) < 0.5f,
+                   "spaced: two pixels wider a gap between letters (four in Hello), ten deeper a line");
+            expect(wgf_draw_get_text_spacing().x == 2 && wgf_draw_get_text_spacing().y == 10, "the spacing read back");
+            wgf_draw_set_text_spacing(NAN, 0);
+            expect(wgf_draw_get_text_spacing().x == 0 && fabsf(wgf_font_measure(0, "Hello\nWorld", 16).x - plain.x) < 0.01f,
+                   "back to none (a number that isn't: 0)");
+        }
         expect(wgf_font_measure(0, "Hello", 0).x == one.x && wgf_font_measure(0, "Hello", -2).x == one.x,
                "a size of 0 or less is the default size, 16");
         expect(wgf_gfx_priv_font_block_bounds(0, "Hello\tWorld", 16, one.x + 1, WGF_TEXT_HALIGN_LEFT,
@@ -166,6 +178,10 @@ int main(void)
     wgf_text_set_font_size(text, 24);
     expect(wgf_text_set_color(text, WGF_COLOR_RED) && wgf_text_get_color(text) == WGF_COLOR_RED, "a color");
     expect(wgf_text_set_wrap_width(text, 100) && wgf_text_get_wrap_width(text) == 100, "a wrap width");
+    expect(wgf_text_get_letter_spacing(text) == 0 && wgf_text_set_spacing(text, 1.5f, -2) &&
+               wgf_text_get_letter_spacing(text) == 1.5f && wgf_text_get_line_spacing(text) == -2 &&
+               !wgf_text_set_spacing(text, INFINITY, 0) && !wgf_text_set_spacing(12345, 0, 0),
+           "a text actor's own spacing; numbers that aren't, or not a text: refused");
     expect(!wgf_text_set_wrap_width(text, -1), "a negative wrap width is refused");
     expect(wgf_text_set_align(text, WGF_TEXT_HALIGN_CENTER, WGF_TEXT_VALIGN_BOTTOM) &&
                wgf_text_get_halign(text) == WGF_TEXT_HALIGN_CENTER && wgf_text_get_valign(text) == WGF_TEXT_VALIGN_BOTTOM,

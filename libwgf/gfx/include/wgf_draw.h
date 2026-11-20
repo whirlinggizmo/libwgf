@@ -8,6 +8,7 @@
 #include "wgf_font.h"
 #include "wgf_actor.h"
 #include "wgf_text.h"
+#include "wgf_spline.h"
 #include "wgf_texture.h"
 
 #ifdef __cplusplus
@@ -36,6 +37,10 @@ WGF_API void wgf_draw_triangle(float x0, float y0, float x1, float y1, float x2,
  * joined to the first when `closed`. False, drawing nothing, for an odd count, fewer
  * than 2 points, or NULL. */
 WGF_API bool wgf_draw_polyline(const float *points, int count, bool closed, float thickness, wgf_color_t color);
+/* A spline (wgf_spline.h) through or near `points` as its kind makes it, as a polyline of
+ * `steps` points a segment (24 for 0 or less). False for points that make no segment. */
+WGF_API bool wgf_draw_spline(wgf_spline_kind_t kind, const float *points, int count, int steps, float thickness,
+                             wgf_color_t color);
 /* The polygon through `points` filled, x and y in turn (count floats), convex or not,
  * in either winding, as long as its edges don't cross (one that crosses itself is
  * filled as the fan from its first point). False, drawing nothing, for an odd count,
@@ -45,6 +50,11 @@ WGF_API bool wgf_draw_polygon(const float *points, int count, wgf_color_t color)
 /* Text (UTF-8) in `font` (0: the default font) at `size` logical pixels (16 for 0 or
  * less), its top-left at (x, y). Newlines break lines. */
 WGF_API void wgf_draw_text(wgf_font_t font, const char *text, float x, float y, float size, wgf_color_t color);
+/* Logical pixels added between letters and between lines of the text drawn and measured
+ * after it (wgf_draw_text, wgf_font_measure; a text actor has its own): raylib's spacing and
+ * line spacing. 0 to start; a number that isn't finite is 0. */
+WGF_API void wgf_draw_set_text_spacing(float letter, float line);
+WGF_API wgf_vec2_t wgf_draw_get_text_spacing(void);
 
 /* The same, (x, y) the point the text is aligned to: its left, center, or right, and its
  * top, middle, or bottom (wgf_text.h's alignments), so a HUD anchored to the visible

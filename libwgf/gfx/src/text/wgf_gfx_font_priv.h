@@ -49,6 +49,10 @@ void wgf_gfx_priv_font_draw_block(wgf_handle_t font, const char *text, float siz
 bool wgf_gfx_priv_font_block_bounds_3d(wgf_handle_t font, const char *text, float size, float wrap_width,
                                       wgf_text_halign_t halign, wgf_text_valign_t valign, float *left, float *top,
                                       float *width, float *height);
+/* The spacing the layouts after it use: a text actor's own (`own`, `letter` and `line` logical
+ * pixels) around its layout and drawing, or immediate mode's again (own false). */
+void wgf_gfx_priv_font_set_spacing(bool own, float letter, float line);
+
 void wgf_gfx_priv_font_draw_block_3d(wgf_handle_t font, const char *text, float size, wgf_color_t color,
                                     float wrap_width, wgf_text_halign_t halign, wgf_text_valign_t valign,
                                     const float *matrix);

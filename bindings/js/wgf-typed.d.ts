@@ -1696,6 +1696,46 @@ export declare const Collide2d: {
      */
     readonly moveCells: typeof raw.wgf_collide2d_move_cells;
 };
+export declare const Collide3d: {
+    /**
+     * Points.
+     */
+    readonly pointInBox: typeof raw.wgf_collide3d_point_in_box;
+    /**
+     * Points.
+     */
+    readonly pointInSphere: typeof raw.wgf_collide3d_point_in_sphere;
+    /**
+     * Overlaps: two boxes, two spheres, a sphere and a box. Touching doesn't count.
+     */
+    readonly boxBox: typeof raw.wgf_collide3d_box_box;
+    /**
+     * Overlaps: two boxes, two spheres, a sphere and a box. Touching doesn't count.
+     */
+    readonly sphereSphere: typeof raw.wgf_collide3d_sphere_sphere;
+    /**
+     * Overlaps: two boxes, two spheres, a sphere and a box. Touching doesn't count.
+     */
+    readonly sphereBox: typeof raw.wgf_collide3d_sphere_box;
+    /**
+     * A ray's first meeting with a sphere, a box, or a triangle (either face; its points in
+     * order), at or after its origin; false for none. The ray goes on without end: the time in
+     * the hit says how far, for a game that wants a segment (a time of 1 or less).
+     */
+    readonly raySphere: typeof raw.wgf_collide3d_ray_sphere;
+    /**
+     * A ray's first meeting with a sphere, a box, or a triangle (either face; its points in
+     * order), at or after its origin; false for none. The ray goes on without end: the time in
+     * the hit says how far, for a game that wants a segment (a time of 1 or less).
+     */
+    readonly rayBox: typeof raw.wgf_collide3d_ray_box;
+    /**
+     * A ray's first meeting with a sphere, a box, or a triangle (either face; its points in
+     * order), at or after its origin; false for none. The ray goes on without end: the time in
+     * the hit says how far, for a game that wants a segment (a time of 1 or less).
+     */
+    readonly rayTriangle: typeof raw.wgf_collide3d_ray_triangle;
+};
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Collider = raw.wgf_actor_t;
 export declare const Collider: {
@@ -2021,6 +2061,11 @@ export declare const Draw: {
      */
     readonly polyline: typeof raw.wgf_draw_polyline;
     /**
+     * A spline (wgf_spline.h) through or near `points` as its kind makes it, as a polyline of
+     * `steps` points a segment (24 for 0 or less). False for points that make no segment.
+     */
+    readonly spline: typeof raw.wgf_draw_spline;
+    /**
      * The polygon through `points` filled, x and y in turn (count floats), convex or not,
      * in either winding, as long as its edges don't cross (one that crosses itself is
      * filled as the fan from its first point). False, drawing nothing, for an odd count,
@@ -2032,6 +2077,18 @@ export declare const Draw: {
      * less), its top-left at (x, y). Newlines break lines.
      */
     readonly text: typeof raw.wgf_draw_text;
+    /**
+     * Logical pixels added between letters and between lines of the text drawn and measured
+     * after it (wgf_draw_text, wgf_font_measure; a text actor has its own): raylib's spacing and
+     * line spacing. 0 to start; a number that isn't finite is 0.
+     */
+    readonly setTextSpacing: typeof raw.wgf_draw_set_text_spacing;
+    /**
+     * Logical pixels added between letters and between lines of the text drawn and measured
+     * after it (wgf_draw_text, wgf_font_measure; a text actor has its own): raylib's spacing and
+     * line spacing. 0 to start; a number that isn't finite is 0.
+     */
+    readonly getTextSpacing: typeof raw.wgf_draw_get_text_spacing;
     /**
      * The same, (x, y) the point the text is aligned to: its left, center, or right, and its
      * top, middle, or bottom (wgf_text.h's alignments), so a HUD anchored to the visible
@@ -3764,6 +3821,12 @@ export declare const Gamepad: {
      * while a button is held releases it. UP for a pad or button that isn't one.
      */
     readonly isReleased: typeof raw.wgf_gamepad_is_released;
+    /**
+     * The button of `pad` pressed in this frame (in a tick, the tick), the lowest-numbered when
+     * several were; WGF_GAMEPAD_BUTTON_NONE for none, or a pad out of range: a rebinding
+     * screen's "press a button", beside wgf_keyboard_get_last_pressed.
+     */
+    readonly getLastPressed: typeof raw.wgf_gamepad_get_last_pressed;
     /**
      * Where a stick points, -1 to 1 on each axis, y down as the screen's is. Within the
      * dead zone it is (0, 0); past it, the length is rescaled to reach 1 at the edge,
@@ -6573,6 +6636,17 @@ export declare const Sound: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+export declare const Spline: {
+    /**
+     * How many segments `count` floats of points make for `kind`; 0 for too few, an odd count, or
+     * a kind that isn't one.
+     */
+    readonly getSegmentCount: typeof raw.wgf_spline_get_segment_count;
+    /**
+     * The point at `t` (held to 0..1); 0, 0 for points that make no segment.
+     */
+    readonly getPoint: typeof raw.wgf_spline_get_point;
+};
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Sprite = raw.wgf_actor_t;
 export declare const Sprite: {
@@ -7178,6 +7252,21 @@ export declare const Text: {
      * up the same way inside the block. False for a value that isn't one.
      */
     readonly getValign: typeof raw.wgf_text_get_valign;
+    /**
+     * Logical pixels added between its letters and between its lines (0 to start; below 0
+     * tightens). False for numbers that aren't finite.
+     */
+    readonly setSpacing: typeof raw.wgf_text_set_spacing;
+    /**
+     * Logical pixels added between its letters and between its lines (0 to start; below 0
+     * tightens). False for numbers that aren't finite.
+     */
+    readonly getLetterSpacing: typeof raw.wgf_text_get_letter_spacing;
+    /**
+     * Logical pixels added between its letters and between its lines (0 to start; below 0
+     * tightens). False for numbers that aren't finite.
+     */
+    readonly getLineSpacing: typeof raw.wgf_text_get_line_spacing;
     /**
      * Which way its block faces on a 3D stage, as a sprite's (wgf_sprite.h): the camera (the
      * default), the camera about Y, flat facing up, or its actor's turn. A 2D stage's text is
@@ -8523,7 +8612,7 @@ export declare const FsTaskStatus: { readonly NONE: FsTaskStatus; readonly PENDI
 export type GamepadAxis = raw.wgf_gamepad_axis_t;
 export declare const GamepadAxis: { readonly LEFT_X: GamepadAxis; readonly LEFT_Y: GamepadAxis; readonly RIGHT_X: GamepadAxis; readonly RIGHT_Y: GamepadAxis; readonly LEFT_TRIGGER: GamepadAxis; readonly RIGHT_TRIGGER: GamepadAxis; };
 export type GamepadButton = raw.wgf_gamepad_button_t;
-export declare const GamepadButton: { readonly SOUTH: GamepadButton; readonly EAST: GamepadButton; readonly WEST: GamepadButton; readonly NORTH: GamepadButton; readonly LEFT_BUMPER: GamepadButton; readonly RIGHT_BUMPER: GamepadButton; readonly LEFT_TRIGGER: GamepadButton; readonly RIGHT_TRIGGER: GamepadButton; readonly BACK: GamepadButton; readonly START: GamepadButton; readonly GUIDE: GamepadButton; readonly LEFT_STICK: GamepadButton; readonly RIGHT_STICK: GamepadButton; readonly DPAD_UP: GamepadButton; readonly DPAD_DOWN: GamepadButton; readonly DPAD_LEFT: GamepadButton; readonly DPAD_RIGHT: GamepadButton; };
+export declare const GamepadButton: { readonly NONE: GamepadButton; readonly SOUTH: GamepadButton; readonly EAST: GamepadButton; readonly WEST: GamepadButton; readonly NORTH: GamepadButton; readonly LEFT_BUMPER: GamepadButton; readonly RIGHT_BUMPER: GamepadButton; readonly LEFT_TRIGGER: GamepadButton; readonly RIGHT_TRIGGER: GamepadButton; readonly BACK: GamepadButton; readonly START: GamepadButton; readonly GUIDE: GamepadButton; readonly LEFT_STICK: GamepadButton; readonly RIGHT_STICK: GamepadButton; readonly DPAD_UP: GamepadButton; readonly DPAD_DOWN: GamepadButton; readonly DPAD_LEFT: GamepadButton; readonly DPAD_RIGHT: GamepadButton; };
 export type GamepadStick = raw.wgf_gamepad_stick_t;
 export declare const GamepadStick: { readonly LEFT: GamepadStick; readonly RIGHT: GamepadStick; };
 export type GamepadTrigger = raw.wgf_gamepad_trigger_t;
@@ -8554,6 +8643,8 @@ export type Shape3dKind = raw.wgf_shape3d_kind_t;
 export declare const Shape3dKind: { readonly NONE: Shape3dKind; readonly CUBE: Shape3dKind; readonly SPHERE: Shape3dKind; readonly RECTANGLE: Shape3dKind; readonly CIRCLE: Shape3dKind; readonly LINE: Shape3dKind; readonly LINE_STRIP: Shape3dKind; };
 export type SheetDirection = raw.wgf_sheet_direction_t;
 export declare const SheetDirection: { readonly FORWARD: SheetDirection; readonly BACKWARD: SheetDirection; readonly PING_PONG: SheetDirection; readonly PING_PONG_BACKWARD: SheetDirection; };
+export type SplineKind = raw.wgf_spline_kind_t;
+export declare const SplineKind: { readonly LINEAR: SplineKind; readonly BASIS: SplineKind; readonly CATMULL_ROM: SplineKind; readonly BEZIER_QUADRATIC: SplineKind; readonly BEZIER_CUBIC: SplineKind; };
 export type SpriteFacing = raw.wgf_sprite_facing_t;
 export declare const SpriteFacing: { readonly CAMERA: SpriteFacing; readonly CAMERA_FIXED_Y: SpriteFacing; readonly Y_UP: SpriteFacing; readonly FREE: SpriteFacing; };
 export type Stage3dTonemap = raw.wgf_stage3d_tonemap_t;
