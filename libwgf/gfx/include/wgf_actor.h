@@ -145,7 +145,7 @@ WGF_API const char *wgf_actor_get_name(wgf_actor_t actor);
  * ("a//b"), or an empty or NULL path. */
 WGF_API wgf_actor_t wgf_actor_find(wgf_actor_t actor, const char *path);
 
-/* Three flags say what an actor takes part in, each the actor's own, read back as set:
+/* Four flags say what an actor takes part in, each the actor's own, read back as set:
  *
  *   enabled   off: the actor is skipped altogether, with everything under it, as if
  *             it weren't in the tree, by drawing and by every update (an emitter
@@ -162,8 +162,13 @@ WGF_API wgf_actor_t wgf_actor_find(wgf_actor_t actor, const char *path);
  *             under a pause menu (wgf_screen.h pauses the screens under the top one).
  *             Its colliders still meet as triggers. is_frozen: it or one above it
  *             paused
+ *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+ *             (wgf_pointer.h) pass through it to what is under it, while its children
+ *             can still be hit: a panel that isn't clickable holding buttons that are.
+ *             Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+ *             3D shape) is ever picked; for any other kind it changes nothing
  *
- * Defaults: enabled, visible, not paused. */
+ * Defaults: enabled, visible, not paused, pickable. */
 WGF_API bool wgf_actor_set_enabled(wgf_actor_t actor, bool enabled);
 WGF_API bool wgf_actor_is_enabled(wgf_actor_t actor);
 
@@ -172,6 +177,8 @@ WGF_API bool wgf_actor_is_paused(wgf_actor_t actor);
 WGF_API bool wgf_actor_is_frozen(wgf_actor_t actor);
 WGF_API bool wgf_actor_set_visible(wgf_actor_t actor, bool visible);
 WGF_API bool wgf_actor_is_visible(wgf_actor_t actor);
+WGF_API bool wgf_actor_set_pickable(wgf_actor_t actor, bool pickable);
+WGF_API bool wgf_actor_is_pickable(wgf_actor_t actor);
 
 #ifdef __cplusplus
 }

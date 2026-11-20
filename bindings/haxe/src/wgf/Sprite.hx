@@ -138,6 +138,28 @@ import wgf.impl.Raw;
 		return Raw.wgf_sprite_get_alpha_cutoff(this);
 
 	/**
+	    A pick on a 2D stage (wgf_stage2d_pick, and the pointer, wgf_pointer.h) passes through
+	    its texels whose alpha is below `threshold` (0..1; 0, the default, hits its whole quad),
+	    so a round button or a character is hit where it shows. Its texture's texels are read
+	    from its file on the CPU the first time a pick tests it, and kept while the texture is;
+	    until they arrive, and for a texture made in code, a nine-slice, or the placeholder, its
+	    quad is hit. False for a handle that isn't a sprite, or a threshold outside 0..1.
+	**/
+	public inline function setPickAlpha(threshold:Float):Bool
+		return Raw.wgf_sprite_set_pick_alpha(this, threshold);
+
+	/**
+	    A pick on a 2D stage (wgf_stage2d_pick, and the pointer, wgf_pointer.h) passes through
+	    its texels whose alpha is below `threshold` (0..1; 0, the default, hits its whole quad),
+	    so a round button or a character is hit where it shows. Its texture's texels are read
+	    from its file on the CPU the first time a pick tests it, and kept while the texture is;
+	    until they arrive, and for a texture made in code, a nine-slice, or the placeholder, its
+	    quad is hit. False for a handle that isn't a sprite, or a threshold outside 0..1.
+	**/
+	public inline function getPickAlpha():Float
+		return Raw.wgf_sprite_get_pick_alpha(this);
+
+	/**
 	    Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
 	**/
 	public inline function setFacing(facing:SpriteFacing):Bool

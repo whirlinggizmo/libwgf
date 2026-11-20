@@ -25,6 +25,7 @@ static bool setup;
 static bool in_frame;
 static unsigned frame_number;
 static unsigned last_frame;
+static int drawn_order; /* stages drawn on the screen this frame, counted */
 static wgf_color_t clear_color = 0x000000FFu; /* black */
 static wgf_color_t bar_color = 0x000000FFu;   /* black: the presentation's bars (wgf_presentation.h) */
 static int frame_width;
@@ -389,6 +390,7 @@ void wgf_gfx_priv_begin_frame(void)
     wgf_gfx_priv_render_set_2d();
     if (present.bars && fill_bars != NULL) fill_bars();
     frame_number++;
+    drawn_order = 0;
 }
 
 void wgf_gfx_priv_end_frame(void)
@@ -741,6 +743,13 @@ unsigned wgf_gfx_priv_render_get_frame(void)
 unsigned wgf_gfx_priv_render_get_last_frame(void)
 {
     return last_frame;
+}
+
+void wgf_gfx_priv_render_note_drawn(unsigned *frame, int *order)
+{
+    if (!in_frame || wgf_gfx_priv_render_get_pass() != 0) return;
+    *frame = frame_number;
+    *order = ++drawn_order;
 }
 
 bool wgf_gfx_priv_is_in_frame(void)

@@ -78,6 +78,15 @@ WGF_API bool wgf_sprite_set_alpha_mode(wgf_actor_t sprite, wgf_alpha_mode_t mode
 WGF_API wgf_alpha_mode_t wgf_sprite_get_alpha_mode(wgf_actor_t sprite);
 WGF_API float wgf_sprite_get_alpha_cutoff(wgf_actor_t sprite);
 
+/* A pick on a 2D stage (wgf_stage2d_pick, and the pointer, wgf_pointer.h) passes through
+ * its texels whose alpha is below `threshold` (0..1; 0, the default, hits its whole quad),
+ * so a round button or a character is hit where it shows. Its texture's texels are read
+ * from its file on the CPU the first time a pick tests it, and kept while the texture is;
+ * until they arrive, and for a texture made in code, a nine-slice, or the placeholder, its
+ * quad is hit. False for a handle that isn't a sprite, or a threshold outside 0..1. */
+WGF_API bool wgf_sprite_set_pick_alpha(wgf_actor_t sprite, float threshold);
+WGF_API float wgf_sprite_get_pick_alpha(wgf_actor_t sprite);
+
 /* How a sprite on a 3D stage faces, libwgt's and wgrender-c's (on a 2D stage it lies in
  * the stage, turned by its actor): */
 typedef enum wgf_sprite_facing_t {

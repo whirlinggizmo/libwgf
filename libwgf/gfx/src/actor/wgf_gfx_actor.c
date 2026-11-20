@@ -59,6 +59,7 @@ wgf_actor_t wgf_gfx_priv_actor_create(wgf_actor_kind_t type)
     actor_ptr->world_dirty = true;
     actor_ptr->enabled = true;
     actor_ptr->visible = true;
+    actor_ptr->pickable = true;
     return handle;
 }
 
@@ -962,6 +963,20 @@ bool wgf_actor_is_visible(wgf_actor_t actor)
 {
     const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
     return actor_ptr != NULL && actor_ptr->visible;
+}
+
+bool wgf_actor_set_pickable(wgf_actor_t actor, bool pickable)
+{
+    wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
+    if (actor_ptr == NULL) return false;
+    actor_ptr->pickable = pickable;
+    return true;
+}
+
+bool wgf_actor_is_pickable(wgf_actor_t actor)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
+    return actor_ptr != NULL && actor_ptr->pickable;
 }
 
 void wgf_gfx_priv_actor_shutdown(void)

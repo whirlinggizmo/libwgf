@@ -163,6 +163,16 @@ WGF_API wgf_mesh_t wgf_model_get_animations(wgf_actor_t model);
 WGF_API wgf_vec3_t wgf_model_get_bounds_min(wgf_actor_t actor);
 WGF_API wgf_vec3_t wgf_model_get_bounds_max(wgf_actor_t actor);
 
+/* Where a ray meets this model as it is drawn now, raylib's GetRayCollisionModel: its
+ * triangles (its box tested first; skinned, in its pose this frame), or a glTF file's root,
+ * its file's visible nodes; whether it is pickable or not (wgf_stage3d_pick finds it among
+ * others). The ray is its origin and its direction (not needing to be a unit vector), in its
+ * stage's space; the hit goes into `hit` as wgf_stage3d_pick_ray's does, all 0 after a miss.
+ * False for a miss, a handle that isn't a model, a mesh not READY, or a direction of 0 or
+ * not finite. */
+WGF_API bool wgf_model_pick_ray(wgf_actor_t model, float ox, float oy, float oz, float dx, float dy, float dz,
+                                float *hit, int hit_count);
+
 #ifdef __cplusplus
 }
 #endif

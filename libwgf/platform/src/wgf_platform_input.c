@@ -114,6 +114,11 @@ void wgf_platform_priv_input_set_pointer_held(bool held)
     input.pointer_held = held;
 }
 
+bool wgf_platform_priv_input_is_ui_pointer_captured(void)
+{
+    return input.ui_pointer_captured;
+}
+
 void wgf_input_set_pointer_captured(bool captured)
 {
     input.ui_pointer_captured = captured;

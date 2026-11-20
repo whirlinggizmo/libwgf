@@ -182,6 +182,7 @@ static void on_frame(void)
     wgf_platform_priv_gamepad_begin_frame();     /* before the ticks: they read the pads too */
     if (app.recording) app.recorder->frame(app.frames);
     if (app.replay != NULL) app.replay->frame();
+    wgf_core_priv_part_begin_frame();            /* the parts' reading of the frame's input (the pointer) */
     run_ticks(time_frame());
     wgf_core_priv_part_set_fraction(wgf_loop_get_tick_fraction()); /* for those drawing ticked state */
     wgf_core_priv_part_update(app.frame_delta); /* the parts' (ecs actors, particles): after the ticks, before the frame */

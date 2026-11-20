@@ -64,6 +64,12 @@ int main(void)
            "outlined: four sides of two triangles");
     expect(wgf_shape2d_set_outline(shape, -1) && wgf_shape2d_get_outline(shape) == 0, "an outline below 0 is clamped");
     expect(!wgf_shape2d_set_rectangle(shape, -1, 5) && wgf_shape2d_get_size(shape).x == 40, "a negative size is refused");
+    expect(wgf_shape2d_get_corner_radius(shape) == 0.0f && wgf_shape2d_set_corner_radius(shape, 6) &&
+               wgf_shape2d_get_corner_radius(shape) == 6.0f && drawn(stage) > 6,
+           "its corners rounded: more triangles");
+    expect(wgf_shape2d_set_corner_radius(shape, -3) && wgf_shape2d_get_corner_radius(shape) == 0.0f &&
+               drawn(stage) == 6 && !wgf_shape2d_set_corner_radius(stage, 3),
+           "a corner radius below 0 is clamped to square; a stage refused");
 
     expect(wgf_shape2d_set_circle(shape, 10) && wgf_shape2d_get_kind(shape) == WGF_SHAPE2D_KIND_CIRCLE &&
                wgf_shape2d_get_radius(shape) == 10 && wgf_shape2d_get_size(shape).x == 0,

@@ -76,6 +76,13 @@ WGF_API wgf_vec2_t wgf_shape2d_get_pivot(wgf_actor_t shape);
 WGF_API bool wgf_shape2d_set_outline(wgf_actor_t shape, float thickness);
 WGF_API float wgf_shape2d_get_outline(wgf_actor_t shape);
 
+/* A rectangle's corners rounded to `radius` in its own units (wgf_draw_rectangle_rounded's),
+ * filled or outlined: clamped to 0 or more (0, the default: square), and drawn at no more
+ * than half its shorter side. Kept for the other kinds, which it doesn't change. False for a
+ * handle that isn't a 2D shape. */
+WGF_API bool wgf_shape2d_set_corner_radius(wgf_actor_t shape, float radius);
+WGF_API float wgf_shape2d_get_corner_radius(wgf_actor_t shape);
+
 /* Default: white. False for a handle that isn't a 2D shape. */
 WGF_API bool wgf_shape2d_set_color(wgf_actor_t shape, wgf_color_t color);
 WGF_API wgf_color_t wgf_shape2d_get_color(wgf_actor_t shape);

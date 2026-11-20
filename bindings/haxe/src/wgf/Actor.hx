@@ -253,7 +253,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_actor_find(this, path);
 
 	/**
-	    Three flags say what an actor takes part in, each the actor's own, read back as set:
+	    Four flags say what an actor takes part in, each the actor's own, read back as set:
 
 	      enabled   off: the actor is skipped altogether, with everything under it, as if
 	                it weren't in the tree, by drawing and by every update (an emitter
@@ -270,14 +270,19 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	                under a pause menu (wgf_screen.h pauses the screens under the top one).
 	                Its colliders still meet as triggers. is_frozen: it or one above it
 	                paused
+	      pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+	                (wgf_pointer.h) pass through it to what is under it, while its children
+	                can still be hit: a panel that isn't clickable holding buttons that are.
+	                Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+	                3D shape) is ever picked; for any other kind it changes nothing
 
-	    Defaults: enabled, visible, not paused.
+	    Defaults: enabled, visible, not paused, pickable.
 	**/
 	public inline function setEnabled(enabled:Bool):Bool
 		return Raw.wgf_actor_set_enabled(this, enabled);
 
 	/**
-	    Three flags say what an actor takes part in, each the actor's own, read back as set:
+	    Four flags say what an actor takes part in, each the actor's own, read back as set:
 
 	      enabled   off: the actor is skipped altogether, with everything under it, as if
 	                it weren't in the tree, by drawing and by every update (an emitter
@@ -294,14 +299,19 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	                under a pause menu (wgf_screen.h pauses the screens under the top one).
 	                Its colliders still meet as triggers. is_frozen: it or one above it
 	                paused
+	      pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+	                (wgf_pointer.h) pass through it to what is under it, while its children
+	                can still be hit: a panel that isn't clickable holding buttons that are.
+	                Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+	                3D shape) is ever picked; for any other kind it changes nothing
 
-	    Defaults: enabled, visible, not paused.
+	    Defaults: enabled, visible, not paused, pickable.
 	**/
 	public inline function isEnabled():Bool
 		return Raw.wgf_actor_is_enabled(this);
 
 	/**
-	    Three flags say what an actor takes part in, each the actor's own, read back as set:
+	    Four flags say what an actor takes part in, each the actor's own, read back as set:
 
 	      enabled   off: the actor is skipped altogether, with everything under it, as if
 	                it weren't in the tree, by drawing and by every update (an emitter
@@ -318,14 +328,19 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	                under a pause menu (wgf_screen.h pauses the screens under the top one).
 	                Its colliders still meet as triggers. is_frozen: it or one above it
 	                paused
+	      pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+	                (wgf_pointer.h) pass through it to what is under it, while its children
+	                can still be hit: a panel that isn't clickable holding buttons that are.
+	                Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+	                3D shape) is ever picked; for any other kind it changes nothing
 
-	    Defaults: enabled, visible, not paused.
+	    Defaults: enabled, visible, not paused, pickable.
 	**/
 	public inline function setPaused(paused:Bool):Bool
 		return Raw.wgf_actor_set_paused(this, paused);
 
 	/**
-	    Three flags say what an actor takes part in, each the actor's own, read back as set:
+	    Four flags say what an actor takes part in, each the actor's own, read back as set:
 
 	      enabled   off: the actor is skipped altogether, with everything under it, as if
 	                it weren't in the tree, by drawing and by every update (an emitter
@@ -342,14 +357,19 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	                under a pause menu (wgf_screen.h pauses the screens under the top one).
 	                Its colliders still meet as triggers. is_frozen: it or one above it
 	                paused
+	      pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+	                (wgf_pointer.h) pass through it to what is under it, while its children
+	                can still be hit: a panel that isn't clickable holding buttons that are.
+	                Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+	                3D shape) is ever picked; for any other kind it changes nothing
 
-	    Defaults: enabled, visible, not paused.
+	    Defaults: enabled, visible, not paused, pickable.
 	**/
 	public inline function isPaused():Bool
 		return Raw.wgf_actor_is_paused(this);
 
 	/**
-	    Three flags say what an actor takes part in, each the actor's own, read back as set:
+	    Four flags say what an actor takes part in, each the actor's own, read back as set:
 
 	      enabled   off: the actor is skipped altogether, with everything under it, as if
 	                it weren't in the tree, by drawing and by every update (an emitter
@@ -366,14 +386,19 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	                under a pause menu (wgf_screen.h pauses the screens under the top one).
 	                Its colliders still meet as triggers. is_frozen: it or one above it
 	                paused
+	      pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+	                (wgf_pointer.h) pass through it to what is under it, while its children
+	                can still be hit: a panel that isn't clickable holding buttons that are.
+	                Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+	                3D shape) is ever picked; for any other kind it changes nothing
 
-	    Defaults: enabled, visible, not paused.
+	    Defaults: enabled, visible, not paused, pickable.
 	**/
 	public inline function isFrozen():Bool
 		return Raw.wgf_actor_is_frozen(this);
 
 	/**
-	    Three flags say what an actor takes part in, each the actor's own, read back as set:
+	    Four flags say what an actor takes part in, each the actor's own, read back as set:
 
 	      enabled   off: the actor is skipped altogether, with everything under it, as if
 	                it weren't in the tree, by drawing and by every update (an emitter
@@ -390,14 +415,19 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	                under a pause menu (wgf_screen.h pauses the screens under the top one).
 	                Its colliders still meet as triggers. is_frozen: it or one above it
 	                paused
+	      pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+	                (wgf_pointer.h) pass through it to what is under it, while its children
+	                can still be hit: a panel that isn't clickable holding buttons that are.
+	                Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+	                3D shape) is ever picked; for any other kind it changes nothing
 
-	    Defaults: enabled, visible, not paused.
+	    Defaults: enabled, visible, not paused, pickable.
 	**/
 	public inline function setVisible(visible:Bool):Bool
 		return Raw.wgf_actor_set_visible(this, visible);
 
 	/**
-	    Three flags say what an actor takes part in, each the actor's own, read back as set:
+	    Four flags say what an actor takes part in, each the actor's own, read back as set:
 
 	      enabled   off: the actor is skipped altogether, with everything under it, as if
 	                it weren't in the tree, by drawing and by every update (an emitter
@@ -414,11 +444,74 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	                under a pause menu (wgf_screen.h pauses the screens under the top one).
 	                Its colliders still meet as triggers. is_frozen: it or one above it
 	                paused
+	      pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+	                (wgf_pointer.h) pass through it to what is under it, while its children
+	                can still be hit: a panel that isn't clickable holding buttons that are.
+	                Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+	                3D shape) is ever picked; for any other kind it changes nothing
 
-	    Defaults: enabled, visible, not paused.
+	    Defaults: enabled, visible, not paused, pickable.
 	**/
 	public inline function isVisible():Bool
 		return Raw.wgf_actor_is_visible(this);
+
+	/**
+	    Four flags say what an actor takes part in, each the actor's own, read back as set:
+
+	      enabled   off: the actor is skipped altogether, with everything under it, as if
+	                it weren't in the tree, by drawing and by every update (an emitter
+	                under it isn't moved on): the switch on a part of the game that is off
+	                for now. The only one that reaches the children; their own flags are
+	                kept, so enabling it again brings each back as it was set
+	      visible   off: the actor's own output is off -- a sprite, shape, text, or
+	                emitter isn't drawn -- while it is still placed and its children are
+	                as they are
+	      paused    on: it and everything under it are frozen, still drawn: its behaviors
+	                don't tick, its components' systems (motion, 2D bodies, bounds,
+	                lifetimes) and tweens leave it, and what moves by itself holds still --
+	                an emitter's particles, a sprite's clip, a model's animation. A level held
+	                under a pause menu (wgf_screen.h pauses the screens under the top one).
+	                Its colliders still meet as triggers. is_frozen: it or one above it
+	                paused
+	      pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+	                (wgf_pointer.h) pass through it to what is under it, while its children
+	                can still be hit: a panel that isn't clickable holding buttons that are.
+	                Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+	                3D shape) is ever picked; for any other kind it changes nothing
+
+	    Defaults: enabled, visible, not paused, pickable.
+	**/
+	public inline function setPickable(pickable:Bool):Bool
+		return Raw.wgf_actor_set_pickable(this, pickable);
+
+	/**
+	    Four flags say what an actor takes part in, each the actor's own, read back as set:
+
+	      enabled   off: the actor is skipped altogether, with everything under it, as if
+	                it weren't in the tree, by drawing and by every update (an emitter
+	                under it isn't moved on): the switch on a part of the game that is off
+	                for now. The only one that reaches the children; their own flags are
+	                kept, so enabling it again brings each back as it was set
+	      visible   off: the actor's own output is off -- a sprite, shape, text, or
+	                emitter isn't drawn -- while it is still placed and its children are
+	                as they are
+	      paused    on: it and everything under it are frozen, still drawn: its behaviors
+	                don't tick, its components' systems (motion, 2D bodies, bounds,
+	                lifetimes) and tweens leave it, and what moves by itself holds still --
+	                an emitter's particles, a sprite's clip, a model's animation. A level held
+	                under a pause menu (wgf_screen.h pauses the screens under the top one).
+	                Its colliders still meet as triggers. is_frozen: it or one above it
+	                paused
+	      pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+	                (wgf_pointer.h) pass through it to what is under it, while its children
+	                can still be hit: a panel that isn't clickable holding buttons that are.
+	                Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+	                3D shape) is ever picked; for any other kind it changes nothing
+
+	    Defaults: enabled, visible, not paused, pickable.
+	**/
+	public inline function isPickable():Bool
+		return Raw.wgf_actor_is_pickable(this);
 
 	/**
 	    A behavior named `name` added to `actor`, after the ones it has: its id, or 0 when

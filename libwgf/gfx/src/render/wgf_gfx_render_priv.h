@@ -154,4 +154,10 @@ int wgf_gfx_priv_render_get_command_capacity(void);
 unsigned wgf_gfx_priv_render_get_frame(void);
 unsigned wgf_gfx_priv_render_get_last_frame(void);
 
+/* A stage drawn on the screen: the frame it was drawn in and its place among the stages
+ * drawn in it (1 first), into `frame` and `order`, the stage's own; nothing outside a frame,
+ * or into a render target. The pointer (wgf_gfx_pointer.c) picks the stages drawn in the
+ * last frame, the one drawn last first. */
+void wgf_gfx_priv_render_note_drawn(unsigned *frame, int *order);
+
 #endif

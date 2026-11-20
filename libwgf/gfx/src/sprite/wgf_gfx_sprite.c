@@ -120,6 +120,49 @@ static void draw_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
     sgl_pop_pipeline();
 }
 
+bool wgf_gfx_priv_sprite_quad_2d(const wgf_gfx_priv_actor_t *actor_ptr, float quad[4], float region[4], bool *whole)
+{
+    const wgf_gfx_priv_sprite_t *sprite = &actor_ptr->as.sprite;
+    sg_view image;
+    sg_sampler sampler;
+    int tw, th;
+    bool placeholder;
+    float size[2], pivot[2];
+    if (actor_ptr->type != WGF_ACTOR_KIND_SPRITE ||
+        !wgf_gfx_priv_texture_get_binding(sprite->texture, &image, &sampler, &tw, &th, &placeholder)) {
+        return false;
+    }
+    region_of(sprite, region, size);
+    if (placeholder && (size[0] <= 0.0f || size[1] <= 0.0f)) {
+        size[0] = (float)tw;
+        size[1] = (float)th;
+    }
+    pivot[0] = sprite->pivot[0];
+    pivot[1] = sprite->pivot[1];
+    if (!placeholder) wgf_gfx_priv_sprite_trimmed(sprite, region[2], region[3], size, pivot);
+    quad[0] = -pivot[0] * size[0];
+    quad[1] = -pivot[1] * size[1];
+    quad[2] = quad[0] + size[0];
+    quad[3] = quad[1] + size[1];
+    *whole = placeholder || sprite->nine[0] > 0.0f || sprite->nine[1] > 0.0f || sprite->nine[2] > 0.0f ||
+             sprite->nine[3] > 0.0f;
+    return true;
+}
+
+bool wgf_sprite_set_pick_alpha(wgf_actor_t sprite, float threshold)
+{
+    wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
+    if (sprite_ptr == NULL || !(threshold >= 0.0f && threshold <= 1.0f)) return false;
+    sprite_ptr->pick_alpha = threshold;
+    return true;
+}
+
+float wgf_sprite_get_pick_alpha(wgf_actor_t sprite)
+{
+    const wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
+    return sprite_ptr != NULL ? sprite_ptr->pick_alpha : 0.0f;
+}
+
 static void free_sprite(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr)
 {
     (void)actor;

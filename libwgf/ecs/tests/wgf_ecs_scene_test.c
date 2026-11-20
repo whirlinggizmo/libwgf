@@ -370,8 +370,25 @@ int main(void)
                                              "actor wall\n"
                                              "  model cube=1,1,1 visible=false\n"
                                              "  motion\n"
+                                             "end\n"
+                                             "actor panel\n"
+                                             "  shape2d rectangle=40,20 corner=6 pickable=false\n"
+                                             "  motion\n"
+                                             "end\n"
+                                             "actor coin\n"
+                                             "  sprite size=8,8 pick_alpha=0.5\n"
+                                             "  motion\n"
                                              "end\n");
-        expect(wgf_scene_instantiate(garage, stage) == 2, "the models made");
+        expect(wgf_scene_instantiate(garage, stage) == 4, "the models made, and the 2D");
+        {
+            const wgf_actor_t panel = wgf_actor_find(stage, "panel"), coin = wgf_actor_find(stage, "coin");
+            expect(!wgf_actor_is_pickable(panel) && near(wgf_shape2d_get_corner_radius(panel), 6) &&
+                       near(wgf_sprite_get_pick_alpha(coin), 0.5f) && wgf_actor_is_pickable(coin),
+                   "pickable=false, a corner radius, and a sprite's pick alpha");
+            expect(strstr(wgf_world_dump(), "outline=0 corner=6 color=#FFFFFFFF pivot=0,0 pickable=false\n") != NULL &&
+                       strstr(wgf_world_dump(), " pick_alpha=0.5\n") != NULL,
+                   "dumped as written");
+        }
         cone = wgf_prefab_spawn_at(wgf_scene_find_prefab(garage, "cone"), world3d, 1, 2, 3, 0.25f);
         expect(near(wgf_actor_get_position(cone).z, 3) && near(wgf_actor_get_rotation(cone).y, 0.25f) &&
                    near(wgf_actor_get_rotation(cone).x, 0.5f) && near(wgf_actor_get_scale(cone).x, 2),

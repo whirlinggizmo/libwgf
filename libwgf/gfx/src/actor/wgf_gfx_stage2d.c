@@ -88,6 +88,7 @@ void wgf_stage2d_draw(wgf_actor_t stage)
         return;
     }
     wgf_gfx_priv_render_set_2d(); /* vertices go in already placed */
+    wgf_gfx_priv_render_note_drawn(&stage_ptr->as.stage2d.drawn_frame, &stage_ptr->as.stage2d.drawn_order);
     view = view_of(stage);
     todo[count++] = stage;
     while (count > 0) {

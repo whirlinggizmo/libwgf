@@ -30,6 +30,7 @@ typedef struct wgf_gfx_priv_sprite_t {
        its default size, and its pivot a fraction of it; what is drawn, the region within it. */
     float trim[4];
     float nine[4]; /* a nine-slice's borders in texels (left, top, right, bottom); all 0: none */
+    float pick_alpha; /* a pick passes through its texels with less alpha (0..1); 0: its whole quad */
 } wgf_gfx_priv_sprite_t;
 
 /* A trimmed sprite's drawing: the region's size `region_w` by `region_h` within the whole
@@ -57,11 +58,14 @@ typedef struct wgf_gfx_priv_shape2d_t {
     float pivot[2];
     bool has_pivot; /* false: the kind's own origin */
     float outline;  /* the line's thickness for outlines and lines; 0 fills (a line: a hairline) */
+    float corner;   /* a rectangle's corners' radius, in its own units; 0 square */
     wgf_color_t color;
 } wgf_gfx_priv_shape2d_t;
 
 typedef struct wgf_gfx_priv_stage2d_t {
     wgf_actor_t camera;
+    unsigned drawn_frame; /* when it was last drawn on the screen, and its place then (render_note_drawn) */
+    int drawn_order;
 } wgf_gfx_priv_stage2d_t;
 
 typedef struct wgf_gfx_priv_text_t {
@@ -96,6 +100,8 @@ typedef struct wgf_gfx_priv_stage3d_t {
     float environment_intensity, environment_rotation;
     wgf_handle_t background;
     float background_blur;
+    unsigned drawn_frame; /* when it was last drawn on the screen through its camera, and its place then */
+    int drawn_order;
 } wgf_gfx_priv_stage3d_t;
 
 typedef struct wgf_gfx_priv_light_t {
@@ -174,6 +180,7 @@ typedef struct wgf_gfx_priv_actor_t {
     bool enabled;
     bool visible;
     bool paused; /* it and everything under it frozen: drawn, not moved on */
+    bool pickable; /* hit by a pick (wgf_stage2d_pick, wgf_stage3d_pick); off, a pick passes through it */
     bool from_file; /* made from a glTF file's nodes, under its root: the root's path makes it again */
     /* Simulated (it has a component the ticks move, ecs/): `position`, `rotation`, and
      * `scale` are the simulation's, at the tick rate, and the actor is drawn between
@@ -198,6 +205,12 @@ typedef struct wgf_gfx_priv_actor_t {
         struct wgf_gfx_priv_tilemap_layer_t *tilemap_layer; /* malloc'd (tilemap/wgf_gfx_tilemap_layer.c) */
     } as;
 } wgf_gfx_priv_actor_t;
+
+/* A 2D sprite's quad as it is drawn, in its own units (x0, y0, x1, y1), and the texels it
+ * shows (x, y, width, height); `whole` when its texels don't map straight onto the quad (a
+ * nine-slice, or the placeholder). False for an actor that isn't a sprite, or one with
+ * nothing to draw (no texture, or one PENDING). */
+bool wgf_gfx_priv_sprite_quad_2d(const wgf_gfx_priv_actor_t *actor_ptr, float quad[4], float region[4], bool *whole);
 
 /* `actor`'s children, dense and in order (its holes closed first, if it has any), and how
  * many: valid until the tree under it next changes. NULL and 0 for none. */

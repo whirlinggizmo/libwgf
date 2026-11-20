@@ -6,5 +6,5 @@ class BuiltVersion {
 	public static inline final MAJOR = 0;
 	public static inline final MINOR = 1;
 	public static inline final PATCH = 0;
-	public static inline final HEADERS = "0da53c89f1a3d2ae";
+	public static inline final HEADERS = "b8571d4172ae2de2";
 }

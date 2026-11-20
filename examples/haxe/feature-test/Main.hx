@@ -692,6 +692,7 @@ class Main {
 		expect(shape.getPoints(points) == 6 && near(points[2], 10), "its points");
 		expect(shape.setPivot(0.5, 0.5) && near(shape.getPivot().y, 0.5), "a pivot");
 		expect(shape.setOutline(2) && near(shape.getOutline(), 2), "an outline");
+		expect(shape.setCornerRadius(3) && near(shape.getCornerRadius(), 3) && shape.setCornerRadius(0), "a corner radius");
 		expect(shape.setColor(white) && shape.getColor() == white, "its color");
 
 		final sprite = Sprite.create(tiles);
@@ -703,6 +704,9 @@ class Main {
 		expect(sprite.setTint(white) && sprite.getTint() == white, "its tint");
 		expect(sprite.setAlphaMode(AlphaMode.MASK, 0.25) && sprite.getAlphaMode() == AlphaMode.MASK
 			&& near(sprite.getAlphaCutoff(), 0.25) && sprite.setAlphaMode(AlphaMode.BLEND, 0.5), "its alpha mode");
+		expect(sprite.setPickAlpha(0.5) && near(sprite.getPickAlpha(), 0.5) && !sprite.setPickAlpha(2) && sprite.setPickAlpha(0),
+			"its pick alpha");
+		expect(sprite.setPickable(false) && !sprite.isPickable() && sprite.setPickable(true) && sprite.isPickable(), "pickable");
 		expect(sprite.setNineSlice(4, 4, 4, 4) && sprite.getNineSlice().x == 4 && sprite.setNineSlice(0, 0, 0, 0), "a nine-slice");
 		expect(sprite.setFacing(SpriteFacing.CAMERA_FIXED_Y) && sprite.getFacing() == SpriteFacing.CAMERA_FIXED_Y
 			&& sprite.setFacing(SpriteFacing.CAMERA), "its facing on a 3D stage");
@@ -1073,6 +1077,38 @@ class Main {
 
 	// ---- the frames ----------------------------------------------------------------------
 
+	/** Picking in 3D and 2D, and the pointer over a stage's actors. **/
+	static function picking():Void {
+		final hit = [for (_ in 0...8) 0.0];
+		final cube = Mesh.createCube(1, 1, 1);
+		final box:Model = Model.create(cube);
+		Resource.release(cube); // the model holds its own
+		box.setParent(stage3d);
+		box.setPosition(100, 0, 0);
+		expect(stage3d.pickRay(100, 0, 10, 0, 0, -1, hit) == (box : Actor) && near(hit[2], 1) && near(hit[6], 0.5)
+			&& near(hit[7], 9.5), "a ray picks the nearest model: its normal, point, and distance");
+		expect(box.pickRay(100, 0, 10, 0, 0, -1, hit) && near(hit[6], 0.5), "a model tested alone");
+		expect(stage3d.pickRay(100, 10, 10, 0, 0, -1, hit) == 0 && hit[7] == 0, "a ray past it: nothing");
+		stage3d.pick(320, 180, hit); // the screen's middle: whatever the stage has there
+		box.destroy(ActorDestroy.DESTROY_CHILDREN);
+
+		final target = Shape2d.create();
+		target.setRectangle(20, 20);
+		target.setPosition(600, 300, 0);
+		target.setParent(hud);
+		expect(hud.pick(605, 307, hit) == (target : Actor) && near(hit[2], 5) && near(hit[3], 7), "a 2D pick, its own point");
+		expect(hud.pick(500, 300, hit) == 0, "a 2D miss");
+		final pointer:Pointer = (hud : Actor);
+		expect(pointer.setInteractive(true) && pointer.isInteractive(), "the HUD under the pointer");
+		Pointer.getHovered();
+		Pointer.getHeld();
+		final over:Pointer = (target : Actor);
+		expect(over.getHoverState() != InputState.PRESSED || Pointer.getHovered() == (target : Actor), "its hover state");
+		expect(over.getPressState() == InputState.UP && !over.isClicked(), "no press, no click without input");
+		expect(pointer.setInteractive(false) && !pointer.isInteractive(), "and taken off");
+		target.destroy(ActorDestroy.DESTROY_CHILDREN);
+	}
+
 	static function tick():Void {}
 
 	static function frame():Void {
@@ -1082,6 +1118,8 @@ class Main {
 		hud.draw();
 		Draw.rectangle(4, 4, 20, 10, Color.get(ColorStock.RED));
 		Draw.rectangleLines(4, 20, 20, 10, 1, Color.get(ColorStock.GREEN));
+		Draw.rectangleRounded(30, 4, 30, 16, 6, 0, Color.get(ColorStock.RED));
+		Draw.rectangleRoundedLines(30, 24, 30, 16, 6, 4, 2, Color.get(ColorStock.GREEN));
 		Draw.line(0, 0, 30, 30, 2, Color.get(ColorStock.BLUE));
 		Draw.circle(50, 50, 5, Color.get(ColorStock.YELLOW));
 		Draw.circleLines(70, 50, 5, 1, Color.get(ColorStock.ORANGE));
@@ -1128,6 +1166,7 @@ class Main {
 			expect(Debug.isFpsShown(), "and shown");
 		}
 		if (frames == 3) {
+			picking();
 			targetReadBack();
 			expect(Loop.getFrameCost() > 0, "a frame's cost, measured");
 			Debug.hideFps();

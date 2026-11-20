@@ -1241,4 +1241,16 @@ import wgf.impl.Raw;
 	**/
 	public inline function getBoundsMax(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_model_get_bounds_max(this, into);
+
+	/**
+	    Where a ray meets this model as it is drawn now, raylib's GetRayCollisionModel: its
+	    triangles (its box tested first; skinned, in its pose this frame), or a glTF file's root,
+	    its file's visible nodes; whether it is pickable or not (wgf_stage3d_pick finds it among
+	    others). The ray is its origin and its direction (not needing to be a unit vector), in its
+	    stage's space; the hit goes into `hit` as wgf_stage3d_pick_ray's does, all 0 after a miss.
+	    False for a miss, a handle that isn't a model, a mesh not READY, or a direction of 0 or
+	    not finite.
+	**/
+	public inline function pickRay(ox:Float, oy:Float, oz:Float, dx:Float, dy:Float, dz:Float, hit:Array<Float>):Bool
+		return Raw.wgf_model_pick_ray(this, ox, oy, oz, dx, dy, dz, hit);
 }

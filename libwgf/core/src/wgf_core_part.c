@@ -37,6 +37,14 @@ float wgf_core_priv_part_get_fraction(void)
     return fraction;
 }
 
+void wgf_core_priv_part_begin_frame(void)
+{
+    const wgf_core_priv_part_t *part;
+    for (part = parts; part != NULL; part = part->next) {
+        if (part->begin_frame != NULL) part->begin_frame();
+    }
+}
+
 void wgf_core_priv_part_tick_begin(void)
 {
     const wgf_core_priv_part_t *part;

@@ -30,6 +30,8 @@ typedef enum wgf_core_priv_part_order_t {
     WGF_CORE_PRIV_PART_ANIMATION, /* models' animations (libwgf/gfx/src/stage/wgf_gfx_animation.c): before follow */
     WGF_CORE_PRIV_PART_FOLLOW,    /* cameras that follow (libwgf/gfx/src/actor/wgf_gfx_follow.c): after what moves their targets */
     WGF_CORE_PRIV_PART_FLY,       /* cameras flown by input (libwgf/gfx/src/actor/wgf_gfx_fly.c) */
+    WGF_CORE_PRIV_PART_POINTER,   /* the pointer over actors (libwgf/gfx/src/actor/wgf_gfx_pointer.c) */
+    WGF_CORE_PRIV_PART_PICKS,     /* sprites' texels for picking (libwgf/gfx/src/actor/wgf_gfx_pick2d.c): before the images */
     WGF_CORE_PRIV_PART_TEXT,      /* fonts and fontstash (libwgf/gfx/src/text/wgf_gfx_font.c) */
     WGF_CORE_PRIV_PART_STAGE3D,   /* 3D stages' frames and their GPU objects (libwgf/gfx/src/stage/) */
     WGF_CORE_PRIV_PART_SHADOWS,   /* shadow maps (libwgf/gfx/src/stage/wgf_gfx_shadow.c): drawn as the frame flushes */
@@ -59,6 +61,9 @@ typedef struct wgf_core_priv_part_t {
        (wgf_core_priv_part_update) after the ticks and before the frame callback, where
        wgrender's runtime ran its modules' updates */
     void (*update)(float dt);
+    /* every frame, before its ticks, once its input is in: what the ticks and the frame read
+       (the pointer over actors) */
+    void (*begin_frame)(void);
     /* every tick, just before the program's: a module's state as the tick begins (ecs) */
     void (*tick_begin)(void);
     /* every tick, after the program's, with the tick's dt: a module's systems (ecs) */
@@ -78,6 +83,9 @@ void wgf_core_priv_part_install(wgf_core_priv_part_t *part);
 
 /* Every part's update, in order. */
 void wgf_core_priv_part_update(float dt);
+
+/* Every part's begin_frame, in order. */
+void wgf_core_priv_part_begin_frame(void);
 
 /* Every part's tick_begin, and every part's tick, in order. */
 void wgf_core_priv_part_tick_begin(void);

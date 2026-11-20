@@ -1074,7 +1074,13 @@ static void draw_through(wgf_actor_t stage, wgf_actor_t camera)
 
 void wgf_stage3d_draw(wgf_actor_t stage)
 {
-    draw_through(stage, wgf_stage3d_get_camera(stage));
+    wgf_gfx_priv_actor_t *stage_ptr;
+    const wgf_actor_t camera = wgf_stage3d_get_camera(stage);
+    draw_through(stage, camera);
+    stage_ptr = wgf_gfx_priv_actor_of_silently(stage);
+    if (stage_ptr != NULL && stage_ptr->type == WGF_ACTOR_KIND_STAGE3D && camera != 0) {
+        wgf_gfx_priv_render_note_drawn(&stage_ptr->as.stage3d.drawn_frame, &stage_ptr->as.stage3d.drawn_order);
+    }
 }
 
 void wgf_stage3d_draw_with(wgf_actor_t stage, wgf_actor_t camera)

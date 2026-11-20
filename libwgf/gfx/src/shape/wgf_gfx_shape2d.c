@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "actor/wgf_gfx_actor_priv.h"
+#include "draw/wgf_gfx_rounded_priv.h"
 #include "wgf_draw.h"
 #include "wgf_log.h"
 #include "wgf_render.h"
@@ -62,7 +63,15 @@ static void draw_shape(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr,
         return;
     }
     pivot_offset(shape, &dx, &dy);
-    if (shape->kind == WGF_SHAPE2D_KIND_RECTANGLE) {
+    if (shape->kind == WGF_SHAPE2D_KIND_RECTANGLE && wgf_gfx_priv_rounded_radius(shape->dim[0], shape->dim[1],
+                                                                                  shape->corner) > 0.0f) {
+        /* its corners' arcs, with enough segments for their size on screen, as a circle's */
+        const float r = wgf_gfx_priv_rounded_radius(shape->dim[0], shape->dim[1], shape->corner);
+        const float sx = sqrtf(placed->m[0] * placed->m[0] + placed->m[1] * placed->m[1]);
+        const float sy = sqrtf(placed->m[4] * placed->m[4] + placed->m[5] * placed->m[5]);
+        const int segments = wgf_gfx_priv_rounded_segments(r * (sx > sy ? sx : sy) * wgf_render_get_dpi_scale());
+        n = wgf_gfx_priv_rounded_points(0.0f, 0.0f, shape->dim[0], shape->dim[1], r, segments, local);
+    } else if (shape->kind == WGF_SHAPE2D_KIND_RECTANGLE) {
         const float w = shape->dim[0], h = shape->dim[1];
         const float corners[8] = {0, 0, w, 0, w, h, 0, h};
         memcpy(local, corners, sizeof(corners));
@@ -254,6 +263,20 @@ float wgf_shape2d_get_outline(wgf_actor_t shape)
 {
     const wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
     return shape_ptr != NULL ? shape_ptr->outline : 0.0f;
+}
+
+bool wgf_shape2d_set_corner_radius(wgf_actor_t shape, float radius)
+{
+    wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
+    if (shape_ptr == NULL) return false;
+    shape_ptr->corner = radius > 0.0f ? radius : 0.0f;
+    return true;
+}
+
+float wgf_shape2d_get_corner_radius(wgf_actor_t shape)
+{
+    const wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
+    return shape_ptr != NULL ? shape_ptr->corner : 0.0f;
 }
 
 bool wgf_shape2d_set_color(wgf_actor_t shape, wgf_color_t color)

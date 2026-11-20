@@ -328,7 +328,7 @@ export declare const Actor: {
      */
     readonly find: typeof raw.wgf_actor_find;
     /**
-     * Three flags say what an actor takes part in, each the actor's own, read back as set:
+     * Four flags say what an actor takes part in, each the actor's own, read back as set:
      *
      *   enabled   off: the actor is skipped altogether, with everything under it, as if
      *             it weren't in the tree, by drawing and by every update (an emitter
@@ -345,12 +345,17 @@ export declare const Actor: {
      *             under a pause menu (wgf_screen.h pauses the screens under the top one).
      *             Its colliders still meet as triggers. is_frozen: it or one above it
      *             paused
+     *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+     *             (wgf_pointer.h) pass through it to what is under it, while its children
+     *             can still be hit: a panel that isn't clickable holding buttons that are.
+     *             Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+     *             3D shape) is ever picked; for any other kind it changes nothing
      *
-     * Defaults: enabled, visible, not paused.
+     * Defaults: enabled, visible, not paused, pickable.
      */
     readonly setEnabled: typeof raw.wgf_actor_set_enabled;
     /**
-     * Three flags say what an actor takes part in, each the actor's own, read back as set:
+     * Four flags say what an actor takes part in, each the actor's own, read back as set:
      *
      *   enabled   off: the actor is skipped altogether, with everything under it, as if
      *             it weren't in the tree, by drawing and by every update (an emitter
@@ -367,12 +372,17 @@ export declare const Actor: {
      *             under a pause menu (wgf_screen.h pauses the screens under the top one).
      *             Its colliders still meet as triggers. is_frozen: it or one above it
      *             paused
+     *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+     *             (wgf_pointer.h) pass through it to what is under it, while its children
+     *             can still be hit: a panel that isn't clickable holding buttons that are.
+     *             Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+     *             3D shape) is ever picked; for any other kind it changes nothing
      *
-     * Defaults: enabled, visible, not paused.
+     * Defaults: enabled, visible, not paused, pickable.
      */
     readonly isEnabled: typeof raw.wgf_actor_is_enabled;
     /**
-     * Three flags say what an actor takes part in, each the actor's own, read back as set:
+     * Four flags say what an actor takes part in, each the actor's own, read back as set:
      *
      *   enabled   off: the actor is skipped altogether, with everything under it, as if
      *             it weren't in the tree, by drawing and by every update (an emitter
@@ -389,12 +399,17 @@ export declare const Actor: {
      *             under a pause menu (wgf_screen.h pauses the screens under the top one).
      *             Its colliders still meet as triggers. is_frozen: it or one above it
      *             paused
+     *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+     *             (wgf_pointer.h) pass through it to what is under it, while its children
+     *             can still be hit: a panel that isn't clickable holding buttons that are.
+     *             Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+     *             3D shape) is ever picked; for any other kind it changes nothing
      *
-     * Defaults: enabled, visible, not paused.
+     * Defaults: enabled, visible, not paused, pickable.
      */
     readonly setPaused: typeof raw.wgf_actor_set_paused;
     /**
-     * Three flags say what an actor takes part in, each the actor's own, read back as set:
+     * Four flags say what an actor takes part in, each the actor's own, read back as set:
      *
      *   enabled   off: the actor is skipped altogether, with everything under it, as if
      *             it weren't in the tree, by drawing and by every update (an emitter
@@ -411,12 +426,17 @@ export declare const Actor: {
      *             under a pause menu (wgf_screen.h pauses the screens under the top one).
      *             Its colliders still meet as triggers. is_frozen: it or one above it
      *             paused
+     *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+     *             (wgf_pointer.h) pass through it to what is under it, while its children
+     *             can still be hit: a panel that isn't clickable holding buttons that are.
+     *             Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+     *             3D shape) is ever picked; for any other kind it changes nothing
      *
-     * Defaults: enabled, visible, not paused.
+     * Defaults: enabled, visible, not paused, pickable.
      */
     readonly isPaused: typeof raw.wgf_actor_is_paused;
     /**
-     * Three flags say what an actor takes part in, each the actor's own, read back as set:
+     * Four flags say what an actor takes part in, each the actor's own, read back as set:
      *
      *   enabled   off: the actor is skipped altogether, with everything under it, as if
      *             it weren't in the tree, by drawing and by every update (an emitter
@@ -433,12 +453,17 @@ export declare const Actor: {
      *             under a pause menu (wgf_screen.h pauses the screens under the top one).
      *             Its colliders still meet as triggers. is_frozen: it or one above it
      *             paused
+     *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+     *             (wgf_pointer.h) pass through it to what is under it, while its children
+     *             can still be hit: a panel that isn't clickable holding buttons that are.
+     *             Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+     *             3D shape) is ever picked; for any other kind it changes nothing
      *
-     * Defaults: enabled, visible, not paused.
+     * Defaults: enabled, visible, not paused, pickable.
      */
     readonly isFrozen: typeof raw.wgf_actor_is_frozen;
     /**
-     * Three flags say what an actor takes part in, each the actor's own, read back as set:
+     * Four flags say what an actor takes part in, each the actor's own, read back as set:
      *
      *   enabled   off: the actor is skipped altogether, with everything under it, as if
      *             it weren't in the tree, by drawing and by every update (an emitter
@@ -455,12 +480,17 @@ export declare const Actor: {
      *             under a pause menu (wgf_screen.h pauses the screens under the top one).
      *             Its colliders still meet as triggers. is_frozen: it or one above it
      *             paused
+     *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+     *             (wgf_pointer.h) pass through it to what is under it, while its children
+     *             can still be hit: a panel that isn't clickable holding buttons that are.
+     *             Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+     *             3D shape) is ever picked; for any other kind it changes nothing
      *
-     * Defaults: enabled, visible, not paused.
+     * Defaults: enabled, visible, not paused, pickable.
      */
     readonly setVisible: typeof raw.wgf_actor_set_visible;
     /**
-     * Three flags say what an actor takes part in, each the actor's own, read back as set:
+     * Four flags say what an actor takes part in, each the actor's own, read back as set:
      *
      *   enabled   off: the actor is skipped altogether, with everything under it, as if
      *             it weren't in the tree, by drawing and by every update (an emitter
@@ -477,10 +507,69 @@ export declare const Actor: {
      *             under a pause menu (wgf_screen.h pauses the screens under the top one).
      *             Its colliders still meet as triggers. is_frozen: it or one above it
      *             paused
+     *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+     *             (wgf_pointer.h) pass through it to what is under it, while its children
+     *             can still be hit: a panel that isn't clickable holding buttons that are.
+     *             Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+     *             3D shape) is ever picked; for any other kind it changes nothing
      *
-     * Defaults: enabled, visible, not paused.
+     * Defaults: enabled, visible, not paused, pickable.
      */
     readonly isVisible: typeof raw.wgf_actor_is_visible;
+    /**
+     * Four flags say what an actor takes part in, each the actor's own, read back as set:
+     *
+     *   enabled   off: the actor is skipped altogether, with everything under it, as if
+     *             it weren't in the tree, by drawing and by every update (an emitter
+     *             under it isn't moved on): the switch on a part of the game that is off
+     *             for now. The only one that reaches the children; their own flags are
+     *             kept, so enabling it again brings each back as it was set
+     *   visible   off: the actor's own output is off -- a sprite, shape, text, or
+     *             emitter isn't drawn -- while it is still placed and its children are
+     *             as they are
+     *   paused    on: it and everything under it are frozen, still drawn: its behaviors
+     *             don't tick, its components' systems (motion, 2D bodies, bounds,
+     *             lifetimes) and tweens leave it, and what moves by itself holds still --
+     *             an emitter's particles, a sprite's clip, a model's animation. A level held
+     *             under a pause menu (wgf_screen.h pauses the screens under the top one).
+     *             Its colliders still meet as triggers. is_frozen: it or one above it
+     *             paused
+     *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+     *             (wgf_pointer.h) pass through it to what is under it, while its children
+     *             can still be hit: a panel that isn't clickable holding buttons that are.
+     *             Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+     *             3D shape) is ever picked; for any other kind it changes nothing
+     *
+     * Defaults: enabled, visible, not paused, pickable.
+     */
+    readonly setPickable: typeof raw.wgf_actor_set_pickable;
+    /**
+     * Four flags say what an actor takes part in, each the actor's own, read back as set:
+     *
+     *   enabled   off: the actor is skipped altogether, with everything under it, as if
+     *             it weren't in the tree, by drawing and by every update (an emitter
+     *             under it isn't moved on): the switch on a part of the game that is off
+     *             for now. The only one that reaches the children; their own flags are
+     *             kept, so enabling it again brings each back as it was set
+     *   visible   off: the actor's own output is off -- a sprite, shape, text, or
+     *             emitter isn't drawn -- while it is still placed and its children are
+     *             as they are
+     *   paused    on: it and everything under it are frozen, still drawn: its behaviors
+     *             don't tick, its components' systems (motion, 2D bodies, bounds,
+     *             lifetimes) and tweens leave it, and what moves by itself holds still --
+     *             an emitter's particles, a sprite's clip, a model's animation. A level held
+     *             under a pause menu (wgf_screen.h pauses the screens under the top one).
+     *             Its colliders still meet as triggers. is_frozen: it or one above it
+     *             paused
+     *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
+     *             (wgf_pointer.h) pass through it to what is under it, while its children
+     *             can still be hit: a panel that isn't clickable holding buttons that are.
+     *             Only what has something to hit (a sprite, a 2D shape, a text, a model, a
+     *             3D shape) is ever picked; for any other kind it changes nothing
+     *
+     * Defaults: enabled, visible, not paused, pickable.
+     */
+    readonly isPickable: typeof raw.wgf_actor_is_pickable;
     /**
      * A behavior named `name` added to `actor`, after the ones it has: its id, or 0 when
      * `actor` isn't an actor, the name breaks the rule above, or it is out of memory.
@@ -2072,13 +2161,27 @@ export declare const Draw: {
      */
     readonly rectangleLines: typeof raw.wgf_draw_rectangle_lines;
     /**
-     * Immediate mode 2D: each call draws once, in the frame it is made in, in call order
-     * with everything else drawn that frame, and keeps nothing. Logical pixels from the
-     * frame's top-left, y down (wgf_render.h). A draw outside a frame draws nothing.
-     *
-     * Outlines and lines have a thickness in logical pixels, centered on the line; one
-     * of 0 or less is a hairline of one logical pixel. A polyline's corners are mitred,
-     * and bevelled where a sharp corner's miter would reach past four thicknesses.
+     * A rectangle with rounded corners, filled or outlined (raylib's DrawRectangleRounded and
+     * DrawRectangleRoundedLinesEx: a panel, a button): each corner a quarter circle of `radius`
+     * logical pixels, clamped to half the rectangle's shorter side (0 or less: square corners,
+     * the plain rectangle), drawn with `segments` straight edges a corner (at most 64; 0 or
+     * less: enough for its size on screen, as a circle's).
+     */
+    readonly rectangleRounded: typeof raw.wgf_draw_rectangle_rounded;
+    /**
+     * A rectangle with rounded corners, filled or outlined (raylib's DrawRectangleRounded and
+     * DrawRectangleRoundedLinesEx: a panel, a button): each corner a quarter circle of `radius`
+     * logical pixels, clamped to half the rectangle's shorter side (0 or less: square corners,
+     * the plain rectangle), drawn with `segments` straight edges a corner (at most 64; 0 or
+     * less: enough for its size on screen, as a circle's).
+     */
+    readonly rectangleRoundedLines: typeof raw.wgf_draw_rectangle_rounded_lines;
+    /**
+     * A rectangle with rounded corners, filled or outlined (raylib's DrawRectangleRounded and
+     * DrawRectangleRoundedLinesEx: a panel, a button): each corner a quarter circle of `radius`
+     * logical pixels, clamped to half the rectangle's shorter side (0 or less: square corners,
+     * the plain rectangle), drawn with `segments` straight edges a corner (at most 64; 0 or
+     * less: enough for its size on screen, as a circle's).
      */
     readonly line: typeof raw.wgf_draw_line;
     /**
@@ -6450,6 +6553,16 @@ export declare const Model: {
      * ground, framing it in a camera). 0, 0, 0 for both when none there has a READY mesh.
      */
     readonly getBoundsMax: typeof raw.wgf_model_get_bounds_max;
+    /**
+     * Where a ray meets this model as it is drawn now, raylib's GetRayCollisionModel: its
+     * triangles (its box tested first; skinned, in its pose this frame), or a glTF file's root,
+     * its file's visible nodes; whether it is pickable or not (wgf_stage3d_pick finds it among
+     * others). The ray is its origin and its direction (not needing to be a unit vector), in its
+     * stage's space; the hit goes into `hit` as wgf_stage3d_pick_ray's does, all 0 after a miss.
+     * False for a miss, a handle that isn't a model, a mesh not READY, or a direction of 0 or
+     * not finite.
+     */
+    readonly pickRay: typeof raw.wgf_model_pick_ray;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
@@ -6610,6 +6723,45 @@ export declare const Physics: {
      * returning how many. 0 for none, a size not above 0, or no array.
      */
     readonly overlapBox: typeof raw.wgf_physics_overlap_box;
+};
+/** A handle of kind wgf_actor_t: the raw binding's branded type. */
+export type Pointer = raw.wgf_actor_t;
+export declare const Pointer: {
+    /**
+     * Which stages the pointer picks (default: none). False for a handle that isn't a 2D or a
+     * 3D stage. A stage destroyed leaves the list by itself.
+     */
+    readonly setInteractive: typeof raw.wgf_pointer_set_interactive;
+    /**
+     * Which stages the pointer picks (default: none). False for a handle that isn't a 2D or a
+     * 3D stage. A stage destroyed leaves the list by itself.
+     */
+    readonly isInteractive: typeof raw.wgf_pointer_is_interactive;
+    /**
+     * The topmost actor under the pointer; 0 for none.
+     */
+    readonly getHovered: typeof raw.wgf_pointer_get_hovered;
+    /**
+     * PRESSED: came under the pointer; DOWN: under it; RELEASED: the pointer left it; UP: not
+     * under it.
+     */
+    readonly getHoverState: typeof raw.wgf_pointer_get_hover_state;
+    /**
+     * The left button, or a finger, for a press that started on `actor`: PRESSED when it went
+     * down on it, DOWN while held, also once the pointer has moved off it (a drag), RELEASED when
+     * let go, wherever the pointer is then; UP otherwise.
+     */
+    readonly getPressState: typeof raw.wgf_pointer_get_press_state;
+    /**
+     * A press let go while still over the actor it started on: a click.
+     */
+    readonly isClicked: typeof raw.wgf_pointer_is_clicked;
+    /**
+     * The actor a held press started on, 0 with none held: what is being dragged.
+     */
+    readonly getHeld: typeof raw.wgf_pointer_get_held;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
 /** A handle of kind wgf_prefab_t: the raw binding's branded type. */
 export type Prefab = raw.wgf_prefab_t;
@@ -7434,6 +7586,20 @@ export declare const Shape2d: {
      */
     readonly getOutline: typeof raw.wgf_shape2d_get_outline;
     /**
+     * A rectangle's corners rounded to `radius` in its own units (wgf_draw_rectangle_rounded's),
+     * filled or outlined: clamped to 0 or more (0, the default: square), and drawn at no more
+     * than half its shorter side. Kept for the other kinds, which it doesn't change. False for a
+     * handle that isn't a 2D shape.
+     */
+    readonly setCornerRadius: typeof raw.wgf_shape2d_set_corner_radius;
+    /**
+     * A rectangle's corners rounded to `radius` in its own units (wgf_draw_rectangle_rounded's),
+     * filled or outlined: clamped to 0 or more (0, the default: square), and drawn at no more
+     * than half its shorter side. Kept for the other kinds, which it doesn't change. False for a
+     * handle that isn't a 2D shape.
+     */
+    readonly getCornerRadius: typeof raw.wgf_shape2d_get_corner_radius;
+    /**
      * Default: white. False for a handle that isn't a 2D shape.
      */
     readonly setColor: typeof raw.wgf_shape2d_set_color;
@@ -7849,6 +8015,24 @@ export declare const Sprite: {
      */
     readonly getAlphaCutoff: typeof raw.wgf_sprite_get_alpha_cutoff;
     /**
+     * A pick on a 2D stage (wgf_stage2d_pick, and the pointer, wgf_pointer.h) passes through
+     * its texels whose alpha is below `threshold` (0..1; 0, the default, hits its whole quad),
+     * so a round button or a character is hit where it shows. Its texture's texels are read
+     * from its file on the CPU the first time a pick tests it, and kept while the texture is;
+     * until they arrive, and for a texture made in code, a nine-slice, or the placeholder, its
+     * quad is hit. False for a handle that isn't a sprite, or a threshold outside 0..1.
+     */
+    readonly setPickAlpha: typeof raw.wgf_sprite_set_pick_alpha;
+    /**
+     * A pick on a 2D stage (wgf_stage2d_pick, and the pointer, wgf_pointer.h) passes through
+     * its texels whose alpha is below `threshold` (0..1; 0, the default, hits its whole quad),
+     * so a round button or a character is hit where it shows. Its texture's texels are read
+     * from its file on the CPU the first time a pick tests it, and kept while the texture is;
+     * until they arrive, and for a texture made in code, a nine-slice, or the placeholder, its
+     * quad is hit. False for a handle that isn't a sprite, or a threshold outside 0..1.
+     */
+    readonly getPickAlpha: typeof raw.wgf_sprite_get_pick_alpha;
+    /**
      * Default CAMERA. False for a handle that isn't a sprite, or a facing that isn't one.
      */
     readonly setFacing: typeof raw.wgf_sprite_set_facing;
@@ -8130,6 +8314,23 @@ export declare const Stage2d: {
      */
     readonly screenToWorld: typeof raw.wgf_stage2d_screen_to_world;
     /**
+     * The topmost actor on this stage at the screen's point (x, y), in logical pixels (where the
+     * pointer is, wgf_mouse.h), through its camera as it is now; libwgt's canvas pick, raylib's
+     * CheckCollisionPointRec over a stage. The topmost is the one drawn last. What can be hit:
+     * a sprite by its quad, turned and scaled as it is drawn, or by its texels' alpha
+     * (wgf_sprite_set_pick_alpha); a 2D shape's rectangle (its corners rounded), circle, or
+     * polygon, filled or outlined, by its area (a line isn't hit); a text by its block. An
+     * actor not enabled isn't hit, nor anything under it; one not visible, or not pickable
+     * (wgf_actor_set_pickable), lets the point through, its children still hit.
+     *
+     * Where it hit goes into `hit`, a caller's array, as many as fit in `hit_count` (NULL, 0
+     * for none): 0, 1 the point in the stage's units; 2, 3 in the hit actor's own (its origin
+     * at its position: a sprite's top-left corner at minus its pivot times its size). All 0
+     * after a miss. Returns the actor hit; 0 for none, or a stage that isn't a 2D stage. Works
+     * outside a frame, as the stage is placed now.
+     */
+    readonly pick: typeof raw.wgf_stage2d_pick;
+    /**
      * The actor on this stage named `name` (wgf_actor_set_name), at any depth, found by an
      * index of names rather than a walk of the tree. 0 for none, for a stage that isn't a
      * 2D stage, and for a name two of its actors share (warned: find it by its path from an
@@ -8180,6 +8381,48 @@ export declare const Stage3d: {
      * 0 for none, for a stage that isn't a 3D stage, and for a shared name (warned).
      */
     readonly find: typeof raw.wgf_stage3d_find;
+    /**
+     * The nearest thing on this stage a ray meets, raylib's GetRayCollisionMesh over a stage
+     * (libwgt's scene pick): the ray from the screen's point (x, y), in logical pixels (where the
+     * pointer is, wgf_mouse.h), through the stage's camera, as wgf_camera3d_screen_to_origin and
+     * _direction make it; or any ray, its origin and its direction (not needing to be a unit
+     * vector). What can be hit: a model's triangles as it is drawn now (its box tested first; a
+     * skinned one in its pose this frame, with no box first), a glTF file's node reported as its
+     * file's root (the model wgf_model_create made), and a 3D shape's cube or sphere. An actor
+     * not enabled isn't hit, nor anything under it; one not visible, or not pickable
+     * (wgf_actor_set_pickable), lets the ray through, its children still hit. A
+     * MASK or BLEND part is hit where it is drawn at all, its see-through texels too.
+     *
+     * The hit goes into `hit`, a caller's array, as many as fit in `hit_count` (NULL, 0 for
+     * none), wgf_collide3d.h's ray hit: 0, 1, 2 the surface's normal there, a unit vector facing
+     * the ray; 3 zero; 4, 5, 6 the point, in the stage's space; 7 how far along the ray, in its
+     * direction's lengths (from the camera's near plane, in units, for a point on the screen).
+     * All 0 after a miss. Returns the actor hit; 0 for none, for a stage that isn't a 3D stage,
+     * one with no camera (the screen's point), or a direction of 0 or not finite (any ray).
+     * Works outside a frame, as the stage is placed now.
+     */
+    readonly pick: typeof raw.wgf_stage3d_pick;
+    /**
+     * The nearest thing on this stage a ray meets, raylib's GetRayCollisionMesh over a stage
+     * (libwgt's scene pick): the ray from the screen's point (x, y), in logical pixels (where the
+     * pointer is, wgf_mouse.h), through the stage's camera, as wgf_camera3d_screen_to_origin and
+     * _direction make it; or any ray, its origin and its direction (not needing to be a unit
+     * vector). What can be hit: a model's triangles as it is drawn now (its box tested first; a
+     * skinned one in its pose this frame, with no box first), a glTF file's node reported as its
+     * file's root (the model wgf_model_create made), and a 3D shape's cube or sphere. An actor
+     * not enabled isn't hit, nor anything under it; one not visible, or not pickable
+     * (wgf_actor_set_pickable), lets the ray through, its children still hit. A
+     * MASK or BLEND part is hit where it is drawn at all, its see-through texels too.
+     *
+     * The hit goes into `hit`, a caller's array, as many as fit in `hit_count` (NULL, 0 for
+     * none), wgf_collide3d.h's ray hit: 0, 1, 2 the surface's normal there, a unit vector facing
+     * the ray; 3 zero; 4, 5, 6 the point, in the stage's space; 7 how far along the ray, in its
+     * direction's lengths (from the camera's near plane, in units, for a point on the screen).
+     * All 0 after a miss. Returns the actor hit; 0 for none, for a stage that isn't a 3D stage,
+     * one with no camera (the screen's point), or a direction of 0 or not finite (any ray).
+     * Works outside a frame, as the stage is placed now.
+     */
+    readonly pickRay: typeof raw.wgf_stage3d_pick_ray;
     /**
      * The light that reaches everything evenly, from no direction: its color times
      * `intensity` (clamped to 0 or more). Default: none, an intensity of 0. Alpha is

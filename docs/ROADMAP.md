@@ -9,8 +9,7 @@ Rob's (2026-11-19): libwgf is finished so that a pure C and wasm engine can be c
 1. **The game structure block** (below), in its order.
 2. **Parity, a lost GPU context:** phones and browsers drop WebGL when a page is backgrounded; sokol tells it (SUSPENDED, then RESUMED), but every GPU object then has to be made again: textures and meshes from their files (the resources' reload, `wgf_core_priv_resource_reload`) or from CPU copies kept for those made in code (a blank texture written, a mesh made from numbers), and each part's own (pipelines, buffers, render targets, the font atlas, sprite batches, shadow maps, environments). The rest of the small gaps are done (HISTORY.md, "Parity: 3D shapes, splines, text spacing, the last pad button").
 3. **Wardens** (below), what it needs, then the game.
-4. **Parity, the rest:** milestone 2.5's items below that helix-raylib also has (picking, rounded rectangles).
-5. **The comparison.** The bunnymark and the robots on libwgf, on the web and natively, beside helix's rows on this machine; Wardens' grades beside helix's entrants'; the parity checklist's rows, each as libwgf has it, and what libwgf has that helix-raylib doesn't. Written up in HISTORY.md.
+4. **The comparison.** The bunnymark and the robots on libwgf, on the web and natively, beside helix's rows on this machine; Wardens' grades beside helix's entrants'; the parity checklist's rows, each as libwgf has it, and what libwgf has that helix-raylib doesn't. Written up in HISTORY.md.
 
 Out of the parity work, as not libwgf's (the checklist's skips): desktop window chrome, the program owning the frame loop, warping the mouse; path, string, and codepoint helpers, compression, Base64, and hashes (the host language's); VR stereo; rlgl's immediate vertices, matrix stack, and global GL state; image editing on the CPU, pixel formats, and exporting images, meshes, and code; raygui's color picker, grid, built-in icons, style files, and draggable windows; OBJ, IQM, VOX, and M3D models.
 
@@ -33,15 +32,15 @@ Done when Wardens is graded.
 
 ## Milestone 2.5: jam-ready
 
-After the comparison, unless an item is helix-raylib's too (block 4 above).
+After the comparison.
 
 libwgf is a framework, not one game's library: a game jam must not have to stop and add a feature under a deadline (SPEC.md, "Done means games", 2.5). After the racer, what was trimmed from wgrender-c and libwgt and no game has brought back is restored (the catalog below, less what milestone 2 carries), each feature with a showcase example in the browser check and the size table, wgrender-c's suite the model; breadth stays cheap, since a program links only what it calls. Outlined here; planned in full once milestone 2 closes.
 
 In order of what a jam game hits first:
 
-- **Picking and the pointer:** ray picking in a stage3d and a stage2d, sprites by their texels, the pointer's hover, press, and click over actors, and the pointer captured by a press on an interactive actor (point-and-click, tilemaps, menus in the world, and milestone 3's click-to-move); app-touch, gfx-pick, and gfx-tilemap become same rows.
+- **Picking and the pointer, the rest** (picking and the pointer over actors are in: HISTORY.md, "Parity: picking, the pointer over actors, rounded rectangles"): app-touch, gfx-pick, and gfx-tilemap become same rows.
 - **Shaders warmed before the first frame** (wgrender-c's open task: a first frame of about 220 ms on WebGL2 while its pipelines compile), so a game's first impression isn't a stall.
-- **2D drawing:** rounded rectangles and borders, a line thickness and a corner radius on shapes, text slices drawn and measured without copying, and clip actors (scrolling regions).
+- **2D drawing:** borders, text slices drawn and measured without copying, and clip actors (scrolling regions).
 - **Layered stages:** a stage drawn over another with the depth cleared (a weapon over the world).
 - **Textures:** a settable placeholder.
 - **What 3D milestone 2 didn't need:** lit and custom-material sprites, and whatever the catalog holds then.
@@ -75,13 +74,10 @@ Every feature the two references had that libwgf does not, its source, and why i
 | Gamepad connect events, a mapping database | wgrender-c `docs/TASKS.md` ("gamepads later") | no game needed them | milestone 2.5 |
 | Lit particles, sprite shadow casters, instancing per instance light sets | wgrender-c `docs/TASKS.md`, PLAN-instancing phase 5, PLAN-shadows phase 3 (open there and in libwgt) | built by neither reference | milestone 3 |
 | macOS presets, lightmaps, a persistent instance buffer | wgrender-c `CMakePresets.json` (`macos-arm64`), `docs/TASKS.md` | unverifiable here (macOS), or no game's cost yet | "Later", on its condition |
-| Rounded rectangles and borders | wgrender-c `include/wgr_shape2d.h` (`draw_rounded_rectangle`, `draw_border`); clay, ui | milestone 1's UI didn't need them (Clay's corners are drawn by the UI) | milestone 2.5 |
-| A line thickness and a corner radius on shapes | libwgt `wgt_shape2d.h` (`get_corner_radius`, `get_line_thickness`) | Asteroids' shapes didn't need them | milestone 2.5 |
+| Borders | wgrender-c `include/wgr_shape2d.h` (`draw_border`); clay, ui | milestone 1's UI didn't need them (Clay's corners are drawn by the UI) | milestone 2.5 |
 | Nine-slice textures | wgrender-c `include/wgr_texture.h` (`draw_nine_slice`), `wgr_sprite2d.h`; libwgt `wgt_sprite.h` (`set_nine_slice`); wgrender-c clay, ui | no milestone 1 use | Wardens' block |
 | Text slices without copying | wgrender-c `include/wgr_text.h` (`wgr_text_draw_n`, `wgr_text_measure_n`); clay | Asteroids' text is whole strings | milestone 2.5 |
 | A settable placeholder texture | libwgt `wgt_texture.h`, wgrender-c `include/wgr_texture.h` (`set_placeholder`, `get_placeholder`) | the built-in one served | milestone 2.5 |
-| Picking: rays in a stage3d and a stage2d, sprites by their texels, actors pickable | libwgt `wgt_scene.h` (`pick`), `wgt_canvas.h` (`pick`), `wgt_sprite.h` (`set_pick_alpha_threshold`), `wgt_node.h` (`set_pickable`); gfx-pick; wgrender-c `include/wgr_pick.h`, pick | the racer doesn't pick | milestone 2.5 |
-| The pointer over actors: hover, press, click, and a press on an interactive actor capturing it | libwgt `wgt_pointer.h`; gfx-pick, gfx-tilemap, app-touch, gfx-sprite2d, gfx-scroll, gfx-text3d; wgrender-c `include/wgr_input.h` (pointer captured by an interactive scene); tilemap, ui | needs picking. libwgf has the game's own capture (`wgf_input_set_pointer_captured`, set by its UI each frame it draws) and the cursor's (`wgf_mouse_set_locked`), which SPEC's catalog line also names | milestone 2.5 |
 | Clip actors (scrolling regions) | libwgt `wgt_clip.h`; gfx-scroll | no milestone 1 use | milestone 2.5 |
 | Layered stages (the depth cleared between) | libwgt `wgt_scene.h` (`set_depth_cleared`), `wgt_render.h` (`clear_depth`); gfx-layers | no milestone use | milestone 2.5 |
 | Lit and custom-material sprites | libwgt `wgt_sprite.h` (`set_material`); gfx-shaders | the racer's signs are unlit | milestone 2.5 |

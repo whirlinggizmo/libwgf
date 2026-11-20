@@ -6,6 +6,7 @@ wgf_layer(gfx
         src/draw/wgf_gfx_draw_more.c
         src/draw/wgf_gfx_draw3d.c
         src/draw/wgf_gfx_draw_model.c
+        src/draw/wgf_gfx_draw_rounded.c
         src/emitter/wgf_gfx_emitter.c
         src/emitter/wgf_gfx_emitter2d.c
         src/emitter/wgf_gfx_emitter3d.c
@@ -20,6 +21,8 @@ wgf_layer(gfx
         src/actor/wgf_gfx_camera2d.c
         src/actor/wgf_gfx_camera3d.c
         src/actor/wgf_gfx_stage2d.c
+        src/actor/wgf_gfx_pick2d.c
+        src/actor/wgf_gfx_pointer.c
         src/actor/wgf_gfx_actor.c
         src/actor/wgf_gfx_follow.c
         src/actor/wgf_gfx_fly.c
@@ -43,6 +46,7 @@ wgf_layer(gfx
         src/stage/wgf_gfx_environment.c
         src/stage/wgf_gfx_stage3d.c
         src/stage/wgf_gfx_stage3d_custom.c
+        src/stage/wgf_gfx_pick3d.c
         src/text/wgf_gfx_font.c
         src/text/wgf_gfx_font_bitmap.c
         src/text/wgf_gfx_fontstash_impl.c
@@ -102,6 +106,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_image_test)
         wgf_test(gfx wgf_gfx_draw_test)
         wgf_test(gfx wgf_gfx_draw_model_test)
+        wgf_test(gfx wgf_gfx_pick_test)
         wgf_test(gfx wgf_gfx_shape_test)
         wgf_test(gfx wgf_gfx_sprite_test)
         wgf_test(gfx wgf_gfx_sprite_batch_test)
@@ -128,6 +133,7 @@ if(WGF_TESTS)
     wgf_window_test(gfx wgf_gfx_font_bitmap_window_test)
     wgf_window_test(gfx wgf_gfx_mesh_window_test)
     wgf_window_test(gfx wgf_gfx_cubemap_window_test)
+    wgf_window_test(gfx wgf_gfx_rounded_window_test)
     foreach(test wgf_gfx_shader_window_test wgf_gfx_effect_window_test wgf_gfx_cubemap_window_test)
         if(TARGET ${test}) # the tests' packed shaders, from where they are
             target_compile_definitions(${test} PRIVATE WGF_TEST_FILES="${CMAKE_CURRENT_SOURCE_DIR}/tests")

@@ -140,6 +140,24 @@ import wgf.impl.Raw;
 		return Raw.wgf_shape2d_get_outline(this);
 
 	/**
+	    A rectangle's corners rounded to `radius` in its own units (wgf_draw_rectangle_rounded's),
+	    filled or outlined: clamped to 0 or more (0, the default: square), and drawn at no more
+	    than half its shorter side. Kept for the other kinds, which it doesn't change. False for a
+	    handle that isn't a 2D shape.
+	**/
+	public inline function setCornerRadius(radius:Float):Bool
+		return Raw.wgf_shape2d_set_corner_radius(this, radius);
+
+	/**
+	    A rectangle's corners rounded to `radius` in its own units (wgf_draw_rectangle_rounded's),
+	    filled or outlined: clamped to 0 or more (0, the default: square), and drawn at no more
+	    than half its shorter side. Kept for the other kinds, which it doesn't change. False for a
+	    handle that isn't a 2D shape.
+	**/
+	public inline function getCornerRadius():Float
+		return Raw.wgf_shape2d_get_corner_radius(this);
+
+	/**
 	    Default: white. False for a handle that isn't a 2D shape.
 	**/
 	public inline function setColor(color:Int):Bool

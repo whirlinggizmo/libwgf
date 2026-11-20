@@ -214,9 +214,10 @@ A value is a number, a list of numbers (`1,2,3`), a color (`#RRGGBB` or `#RRGGBB
 
 ```
 shape2d    rectangle=w,h | circle=r | line=x0,y0,x1,y1 | polygon=x,y,x,y,...
-           outline=t  color=#..  pivot=x,y
+           outline=t  corner=r (a rectangle's corners' radius)  color=#..  pivot=x,y
 sprite     texture="path"  source=x,y,w,h  size=w,h  pivot=x,y  tint=#..
            alpha=opaque|mask|blend|add  cutoff=c  facing=camera|camera-y|up|free
+           pick_alpha=a (picked only where its texels' alpha reaches a, wgf_sprite.h)
            (on a stage3d: wgf_sprite.h)
 text       string="..."  font="path"  size=s  color=#..  wrap=w
            align=left|center|right,top|middle|bottom  facing=camera|camera-y|up|free
@@ -244,7 +245,9 @@ model      a glTF file, path="path" (its nodes made under it once it loads; in a
            receive_shadows=true|false (wgf_model.h; both true by default) (made once a
            stage3d has been, as it is drawn on one: before, a plain actor, warned)
 each kind  visible=true|false (wgf_actor.h, true by default): false, the actor's own output
-           isn't drawn, its children as they are -- a body's model that collides unseen
+           isn't drawn, its children as they are -- a body's model that collides unseen;
+           pickable=true|false (true by default): false, a pick and the pointer pass
+           through it (wgf_stage2d_pick, wgf_stage3d_pick, wgf_pointer.h)
 ```
 
 and the transform and the components:

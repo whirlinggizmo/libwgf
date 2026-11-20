@@ -100,9 +100,11 @@ static void put_color(out_t *out, const char *key, wgf_color_t color)
     put(out, " %s=#%08X", key, (unsigned)color);
 }
 
-/* A kind line's end: visible=false where the actor's own output is off (wgf_actor.h). */
+/* A kind line's end: visible=false where the actor's own output is off, pickable=false where
+ * a pick passes through it (wgf_actor.h). */
 static void end_kind(out_t *out, wgf_actor_t actor)
 {
+    if (!wgf_actor_is_pickable(actor)) put(out, " pickable=false");
     put(out, wgf_actor_is_visible(actor) ? "\n" : " visible=false\n");
 }
 
@@ -133,6 +135,7 @@ static void dump_shape(out_t *out, wgf_actor_t actor)
         default: break;
     }
     put(out, " outline=%.9g", wgf_shape2d_get_outline(actor));
+    if (wgf_shape2d_get_corner_radius(actor) > 0.0f) put(out, " corner=%.9g", wgf_shape2d_get_corner_radius(actor));
     put_color(out, "color", wgf_shape2d_get_color(actor));
     put(out, " pivot=%.9g,%.9g", pivot.x, pivot.y);
     end_kind(out, actor);
@@ -160,6 +163,7 @@ static void dump_sprite(out_t *out, wgf_actor_t actor)
     }
     if (wgf_sprite_get_alpha_mode(actor) == WGF_ALPHA_MODE_MASK) put(out, " cutoff=%.9g", wgf_sprite_get_alpha_cutoff(actor));
     if (wgf_sprite_get_facing(actor) != WGF_SPRITE_FACING_CAMERA) put(out, " facing=%s", facings[wgf_sprite_get_facing(actor)]);
+    if (wgf_sprite_get_pick_alpha(actor) > 0.0f) put(out, " pick_alpha=%.9g", wgf_sprite_get_pick_alpha(actor));
     end_kind(out, actor);
 }
 
@@ -235,14 +239,14 @@ static bool shadows_changed(wgf_actor_t model)
 }
 
 /* `e`'s lines, a level in from its block's: its kind's (for a glTF file's node, which its
- * file makes, only its shadows and visibility where they aren't the default), then its
+ * file makes, only its shadows, visibility, and pickability where they aren't the default), then its
  * transform, components, and behaviors. */
 static void dump_lines(out_t *out, wgf_actor_t e, const char *pad)
 {
     const wgf_vec3_t p = wgf_actor_get_position(e), r = wgf_actor_get_rotation(e), s = wgf_actor_get_scale(e);
     int i, b;
     if (from_file(e) && wgf_actor_get_kind(e) == WGF_ACTOR_KIND_MODEL &&
-        (shadows_changed(e) || !wgf_actor_is_visible(e))) {
+        (shadows_changed(e) || !wgf_actor_is_visible(e) || !wgf_actor_is_pickable(e))) {
         /* a file's node's own kind line: only what the file doesn't give it */
         const wgf_gfx_priv_model_hooks_t *hooks = wgf_gfx_priv_get_model_hooks();
         put(out, "%s    model cast_shadows=%s receive_shadows=%s", pad, hooks->get_shadows(e, true) ? "true" : "false",

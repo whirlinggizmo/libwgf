@@ -56,6 +56,52 @@ import wgf.impl.Raw;
 		return Raw.wgf_stage3d_find(this, name);
 
 	/**
+	    The nearest thing on this stage a ray meets, raylib's GetRayCollisionMesh over a stage
+	    (libwgt's scene pick): the ray from the screen's point (x, y), in logical pixels (where the
+	    pointer is, wgf_mouse.h), through the stage's camera, as wgf_camera3d_screen_to_origin and
+	    _direction make it; or any ray, its origin and its direction (not needing to be a unit
+	    vector). What can be hit: a model's triangles as it is drawn now (its box tested first; a
+	    skinned one in its pose this frame, with no box first), a glTF file's node reported as its
+	    file's root (the model wgf_model_create made), and a 3D shape's cube or sphere. An actor
+	    not enabled isn't hit, nor anything under it; one not visible, or not pickable
+	    (wgf_actor_set_pickable), lets the ray through, its children still hit. A
+	    MASK or BLEND part is hit where it is drawn at all, its see-through texels too.
+
+	    The hit goes into `hit`, a caller's array, as many as fit in `hit_count` (NULL, 0 for
+	    none), wgf_collide3d.h's ray hit: 0, 1, 2 the surface's normal there, a unit vector facing
+	    the ray; 3 zero; 4, 5, 6 the point, in the stage's space; 7 how far along the ray, in its
+	    direction's lengths (from the camera's near plane, in units, for a point on the screen).
+	    All 0 after a miss. Returns the actor hit; 0 for none, for a stage that isn't a 3D stage,
+	    one with no camera (the screen's point), or a direction of 0 or not finite (any ray).
+	    Works outside a frame, as the stage is placed now.
+	**/
+	public inline function pick(x:Float, y:Float, hit:Array<Float>):Actor
+		return Raw.wgf_stage3d_pick(this, x, y, hit);
+
+	/**
+	    The nearest thing on this stage a ray meets, raylib's GetRayCollisionMesh over a stage
+	    (libwgt's scene pick): the ray from the screen's point (x, y), in logical pixels (where the
+	    pointer is, wgf_mouse.h), through the stage's camera, as wgf_camera3d_screen_to_origin and
+	    _direction make it; or any ray, its origin and its direction (not needing to be a unit
+	    vector). What can be hit: a model's triangles as it is drawn now (its box tested first; a
+	    skinned one in its pose this frame, with no box first), a glTF file's node reported as its
+	    file's root (the model wgf_model_create made), and a 3D shape's cube or sphere. An actor
+	    not enabled isn't hit, nor anything under it; one not visible, or not pickable
+	    (wgf_actor_set_pickable), lets the ray through, its children still hit. A
+	    MASK or BLEND part is hit where it is drawn at all, its see-through texels too.
+
+	    The hit goes into `hit`, a caller's array, as many as fit in `hit_count` (NULL, 0 for
+	    none), wgf_collide3d.h's ray hit: 0, 1, 2 the surface's normal there, a unit vector facing
+	    the ray; 3 zero; 4, 5, 6 the point, in the stage's space; 7 how far along the ray, in its
+	    direction's lengths (from the camera's near plane, in units, for a point on the screen).
+	    All 0 after a miss. Returns the actor hit; 0 for none, for a stage that isn't a 3D stage,
+	    one with no camera (the screen's point), or a direction of 0 or not finite (any ray).
+	    Works outside a frame, as the stage is placed now.
+	**/
+	public inline function pickRay(ox:Float, oy:Float, oz:Float, dx:Float, dy:Float, dz:Float, hit:Array<Float>):Actor
+		return Raw.wgf_stage3d_pick_ray(this, ox, oy, oz, dx, dy, dz, hit);
+
+	/**
 	    The light that reaches everything evenly, from no direction: its color times
 	    `intensity` (clamped to 0 or more). Default: none, an intensity of 0. Alpha is
 	    ignored.

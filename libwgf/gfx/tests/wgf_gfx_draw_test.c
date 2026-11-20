@@ -1,7 +1,9 @@
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "wgf_platform_priv.h"
+#include "draw/wgf_gfx_rounded_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "sokol_gfx.h" /* sokol_gl needs it first */
 #include "util/sokol_gl.h"
@@ -24,6 +26,11 @@ static void expect(int ok, const char *what)
         printf("FAIL: %s\n", what);
         failures++;
     }
+}
+
+static int near(float a, float b)
+{
+    return fabsf(a - b) < 1e-3f;
 }
 
 /* A frame at a size and DPI scale: the headless window's, as the runtime begins one. */
@@ -89,6 +96,45 @@ int main(void)
         expect(!wgf_draw_polygon(square, 4, WGF_COLOR_RED) && !wgf_draw_polygon(square, 7, WGF_COLOR_RED) &&
                    !wgf_draw_polygon(NULL, 8, WGF_COLOR_RED),
                "a polygon refuses fewer than three points, an odd count, and NULL");
+    }
+    {
+        /* rounded rectangles: their outline's points, and what is recorded */
+        float points[8 * (WGF_GFX_PRIV_ROUNDED_MAX_SEGMENTS + 1)];
+        float lo_x = 1e9f, lo_y = 1e9f, hi_x = -1e9f, hi_y = -1e9f;
+        int n, before;
+        n = wgf_gfx_priv_rounded_points(10, 20, 100, 40, 1000, 4, points);
+        for (i = 0; i < n; i++) {
+            lo_x = points[2 * i] < lo_x ? points[2 * i] : lo_x;
+            hi_x = points[2 * i] > hi_x ? points[2 * i] : hi_x;
+            lo_y = points[2 * i + 1] < lo_y ? points[2 * i + 1] : lo_y;
+            hi_y = points[2 * i + 1] > hi_y ? points[2 * i + 1] : hi_y;
+        }
+        expect(n == 4 * 5, "four corners of five points each, at four segments a corner");
+        expect(near(lo_x, 10) && near(hi_x, 110) && near(lo_y, 20) && near(hi_y, 60), "within its rectangle, touching each side");
+        expect(near(wgf_gfx_priv_rounded_radius(100, 40, 1000), 20) && near(points[0], 10) && near(points[1], 40) &&
+                   near(points[8], 30) && near(points[9], 20) && near(points[10], 90) && near(points[11], 20),
+               "a radius of 1000 clamped to half the shorter side: the left edge's middle to the top's, 20 in");
+        expect(near(wgf_gfx_priv_rounded_radius(100, 40, -5), 0) && near(wgf_gfx_priv_rounded_radius(10, 40, 3), 3) &&
+                   wgf_gfx_priv_rounded_segments(0.1f) == 1 &&
+                   wgf_gfx_priv_rounded_segments(1e6f) == WGF_GFX_PRIV_ROUNDED_MAX_SEGMENTS &&
+                   wgf_gfx_priv_rounded_segments(20) < wgf_gfx_priv_rounded_segments(200),
+               "a radius below 0 is none, one that fits kept; more segments for a larger corner, within 1..64");
+        before = sgl_num_vertices();
+        wgf_draw_rectangle_rounded(10, 20, 100, 40, 10, 4, WGF_COLOR_RED);
+        expect(sgl_num_vertices() - before == 3 * 4 * 5, "filled: a fan of a triangle a point");
+        before = sgl_num_vertices();
+        wgf_draw_rectangle_rounded_lines(10, 20, 100, 40, 10, 4, 2, WGF_COLOR_RED);
+        expect(sgl_num_vertices() - before == 6 * 4 * 5, "outlined: a quad a point, between the outline grown and shrunk");
+        before = sgl_num_vertices();
+        wgf_draw_rectangle_rounded(10, 20, 100, 40, 0, 4, WGF_COLOR_RED);
+        expect(sgl_num_vertices() - before == 6, "no radius: the plain rectangle");
+        before = sgl_num_vertices();
+        wgf_draw_rectangle_rounded_lines(10, 20, 100, 40, 0, 4, 2, WGF_COLOR_RED);
+        expect(sgl_num_vertices() - before == 4 * 6, "no radius, outlined: the plain outline");
+        before = sgl_num_vertices();
+        wgf_draw_rectangle_rounded(10, 20, 100, 40, 10, 0, WGF_COLOR_RED);
+        expect(sgl_num_vertices() - before > 3 * 4 * 2 && (sgl_num_vertices() - before) % (3 * 4) == 0,
+               "segments of 0: enough for its size");
     }
     wgf_gfx_priv_end_frame();
 

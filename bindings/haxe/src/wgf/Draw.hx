@@ -29,13 +29,31 @@ class Draw {
 		Raw.wgf_draw_rectangle_lines(x, y, width, height, thickness, color);
 
 	/**
-	    Immediate mode 2D: each call draws once, in the frame it is made in, in call order
-	    with everything else drawn that frame, and keeps nothing. Logical pixels from the
-	    frame's top-left, y down (wgf_render.h). A draw outside a frame draws nothing.
+	    A rectangle with rounded corners, filled or outlined (raylib's DrawRectangleRounded and
+	    DrawRectangleRoundedLinesEx: a panel, a button): each corner a quarter circle of `radius`
+	    logical pixels, clamped to half the rectangle's shorter side (0 or less: square corners,
+	    the plain rectangle), drawn with `segments` straight edges a corner (at most 64; 0 or
+	    less: enough for its size on screen, as a circle's).
+	**/
+	public static inline function rectangleRounded(x:Float, y:Float, width:Float, height:Float, radius:Float, segments:Int, color:Int):Void
+		Raw.wgf_draw_rectangle_rounded(x, y, width, height, radius, segments, color);
 
-	    Outlines and lines have a thickness in logical pixels, centered on the line; one
-	    of 0 or less is a hairline of one logical pixel. A polyline's corners are mitred,
-	    and bevelled where a sharp corner's miter would reach past four thicknesses.
+	/**
+	    A rectangle with rounded corners, filled or outlined (raylib's DrawRectangleRounded and
+	    DrawRectangleRoundedLinesEx: a panel, a button): each corner a quarter circle of `radius`
+	    logical pixels, clamped to half the rectangle's shorter side (0 or less: square corners,
+	    the plain rectangle), drawn with `segments` straight edges a corner (at most 64; 0 or
+	    less: enough for its size on screen, as a circle's).
+	**/
+	public static inline function rectangleRoundedLines(x:Float, y:Float, width:Float, height:Float, radius:Float, segments:Int, thickness:Float, color:Int):Void
+		Raw.wgf_draw_rectangle_rounded_lines(x, y, width, height, radius, segments, thickness, color);
+
+	/**
+	    A rectangle with rounded corners, filled or outlined (raylib's DrawRectangleRounded and
+	    DrawRectangleRoundedLinesEx: a panel, a button): each corner a quarter circle of `radius`
+	    logical pixels, clamped to half the rectangle's shorter side (0 or less: square corners,
+	    the plain rectangle), drawn with `segments` straight edges a corner (at most 64; 0 or
+	    less: enough for its size on screen, as a circle's).
 	**/
 	public static inline function line(x0:Float, y0:Float, x1:Float, y1:Float, thickness:Float, color:Int):Void
 		Raw.wgf_draw_line(x0, y0, x1, y1, thickness, color);

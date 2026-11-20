@@ -43,5 +43,8 @@ void wgf_platform_priv_input_set_edges_hook(void (*ended)(wgf_platform_priv_inpu
 /* The pointer's: a press that started on an interactive actor is held (or was let go
  * this frame), which captures the pointer along with the UI's own say. */
 void wgf_platform_priv_input_set_pointer_held(bool held);
+/* The UI's say alone (wgf_input_set_pointer_captured), without the pointer's hold: what the
+ * pointer section leaves the pointer to. */
+bool wgf_platform_priv_input_is_ui_pointer_captured(void);
 
 #endif

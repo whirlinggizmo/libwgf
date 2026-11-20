@@ -119,6 +119,10 @@ export const Actor = Object.freeze({
     setVisible: raw.wgf_actor_set_visible,
     // wgf: call wgf_actor_is_visible
     isVisible: raw.wgf_actor_is_visible,
+    // wgf: call wgf_actor_set_pickable
+    setPickable: raw.wgf_actor_set_pickable,
+    // wgf: call wgf_actor_is_pickable
+    isPickable: raw.wgf_actor_is_pickable,
     // wgf: call wgf_actor_add_behavior
     addBehavior: raw.wgf_actor_add_behavior,
     // wgf: call wgf_actor_remove_behavior
@@ -666,6 +670,10 @@ export const Draw = Object.freeze({
     rectangle: raw.wgf_draw_rectangle,
     // wgf: call wgf_draw_rectangle_lines
     rectangleLines: raw.wgf_draw_rectangle_lines,
+    // wgf: call wgf_draw_rectangle_rounded
+    rectangleRounded: raw.wgf_draw_rectangle_rounded,
+    // wgf: call wgf_draw_rectangle_rounded_lines
+    rectangleRoundedLines: raw.wgf_draw_rectangle_rounded_lines,
     // wgf: call wgf_draw_line
     line: raw.wgf_draw_line,
     // wgf: call wgf_draw_circle
@@ -1724,6 +1732,8 @@ export const Model = Object.freeze({
     getBoundsMin: raw.wgf_model_get_bounds_min,
     // wgf: call wgf_model_get_bounds_max
     getBoundsMax: raw.wgf_model_get_bounds_max,
+    // wgf: call wgf_model_pick_ray
+    pickRay: raw.wgf_model_pick_ray,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
@@ -1793,6 +1803,25 @@ export const Physics = Object.freeze({
     overlapSphere: raw.wgf_physics_overlap_sphere,
     // wgf: call wgf_physics_overlap_box
     overlapBox: raw.wgf_physics_overlap_box,
+});
+// wgf: typed Pointer
+export const Pointer = Object.freeze({
+    // wgf: call wgf_pointer_set_interactive
+    setInteractive: raw.wgf_pointer_set_interactive,
+    // wgf: call wgf_pointer_is_interactive
+    isInteractive: raw.wgf_pointer_is_interactive,
+    // wgf: call wgf_pointer_get_hovered
+    getHovered: raw.wgf_pointer_get_hovered,
+    // wgf: call wgf_pointer_get_hover_state
+    getHoverState: raw.wgf_pointer_get_hover_state,
+    // wgf: call wgf_pointer_get_press_state
+    getPressState: raw.wgf_pointer_get_press_state,
+    // wgf: call wgf_pointer_is_clicked
+    isClicked: raw.wgf_pointer_is_clicked,
+    // wgf: call wgf_pointer_get_held
+    getHeld: raw.wgf_pointer_get_held,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
 });
 // wgf: typed Prefab
 export const Prefab = Object.freeze({
@@ -2088,6 +2117,10 @@ export const Shape2d = Object.freeze({
     setOutline: raw.wgf_shape2d_set_outline,
     // wgf: call wgf_shape2d_get_outline
     getOutline: raw.wgf_shape2d_get_outline,
+    // wgf: call wgf_shape2d_set_corner_radius
+    setCornerRadius: raw.wgf_shape2d_set_corner_radius,
+    // wgf: call wgf_shape2d_get_corner_radius
+    getCornerRadius: raw.wgf_shape2d_get_corner_radius,
     // wgf: call wgf_shape2d_set_color
     setColor: raw.wgf_shape2d_set_color,
     // wgf: call wgf_shape2d_get_color
@@ -2229,6 +2262,10 @@ export const Sprite = Object.freeze({
     getAlphaMode: raw.wgf_sprite_get_alpha_mode,
     // wgf: call wgf_sprite_get_alpha_cutoff
     getAlphaCutoff: raw.wgf_sprite_get_alpha_cutoff,
+    // wgf: call wgf_sprite_set_pick_alpha
+    setPickAlpha: raw.wgf_sprite_set_pick_alpha,
+    // wgf: call wgf_sprite_get_pick_alpha
+    getPickAlpha: raw.wgf_sprite_get_pick_alpha,
     // wgf: call wgf_sprite_set_facing
     setFacing: raw.wgf_sprite_set_facing,
     // wgf: call wgf_sprite_get_facing
@@ -2323,6 +2360,8 @@ export const Stage2d = Object.freeze({
     worldToScreen: raw.wgf_stage2d_world_to_screen,
     // wgf: call wgf_stage2d_screen_to_world
     screenToWorld: raw.wgf_stage2d_screen_to_world,
+    // wgf: call wgf_stage2d_pick
+    pick: raw.wgf_stage2d_pick,
     // wgf: call wgf_stage2d_find
     find: raw.wgf_stage2d_find,
     // wgf: call wgf_handle_is_alive
@@ -2342,6 +2381,10 @@ export const Stage3d = Object.freeze({
     getCamera: raw.wgf_stage3d_get_camera,
     // wgf: call wgf_stage3d_find
     find: raw.wgf_stage3d_find,
+    // wgf: call wgf_stage3d_pick
+    pick: raw.wgf_stage3d_pick,
+    // wgf: call wgf_stage3d_pick_ray
+    pickRay: raw.wgf_stage3d_pick_ray,
     // wgf: call wgf_stage3d_set_ambient
     setAmbient: raw.wgf_stage3d_set_ambient,
     // wgf: call wgf_stage3d_get_ambient_color

@@ -92,7 +92,7 @@ typedef struct kind_t {
         {"stretch", V_NUM}, {"size", V_NUM23}, {"color", V_COLOR2}, {"palette", V_COLORS}, {"spin", V_NUM2},           \
         {"size_keys", V_SIZE_KEYS}, {"color_keys", V_COLOR_KEYS}, {"alpha", V_ALPHA}, {"cutoff", V_NUM}, {"seed", V_INT}, {"ending", V_BOOL}, {"lingering", V_BOOL},            \
         {"spawn_shell", V_BOOL}, {"aligned", V_BOOL}, {"wander", V_NUM2}, {"orbit", V_NUM2}, {"pulse", V_NUM2},       \
-        {"local_space", V_BOOL}, {"visible", V_BOOL}
+        {"local_space", V_BOOL}, {"visible", V_BOOL}, {"pickable", V_BOOL}
 
 static const kind_t kinds[] = {
     {"transform", ROLE_TRANSFORM, 0, {{"position", V_NUM3}, {"rotation", V_NUM3}, {"scale", V_NUM3}}, false},
@@ -137,21 +137,24 @@ static const kind_t kinds[] = {
       {"line", V_NUM4},
       {"polygon", V_POINTS},
       {"outline", V_NUM},
+      {"corner", V_NUM},
       {"color", V_COLOR},
       {"pivot", V_NUM2},
-      {"visible", V_BOOL}},
+      {"visible", V_BOOL},
+      {"pickable", V_BOOL}},
      false},
     {"sprite",
      ROLE_KIND,
      WGF_ACTOR_KIND_SPRITE,
      {{"texture", V_TEXT}, {"source", V_NUM4}, {"size", V_NUM2}, {"pivot", V_NUM2}, {"tint", V_COLOR},
-      {"alpha", V_ALPHA}, {"cutoff", V_NUM}, {"facing", V_FACING}, {"visible", V_BOOL}},
+      {"alpha", V_ALPHA}, {"cutoff", V_NUM}, {"facing", V_FACING}, {"pick_alpha", V_NUM}, {"visible", V_BOOL},
+      {"pickable", V_BOOL}},
      false},
     {"text",
      ROLE_KIND,
      WGF_ACTOR_KIND_TEXT,
      {{"string", V_TEXT}, {"font", V_TEXT}, {"size", V_NUM}, {"color", V_COLOR}, {"wrap", V_NUM}, {"align", V_ALIGN},
-      {"facing", V_FACING}, {"visible", V_BOOL}},
+      {"facing", V_FACING}, {"visible", V_BOOL}, {"pickable", V_BOOL}},
      false},
     {"emitter2d",
      ROLE_KIND,
@@ -196,7 +199,8 @@ static const kind_t kinds[] = {
       {"tint", V_COLOR},
       {"cast_shadows", V_BOOL},
       {"receive_shadows", V_BOOL},
-      {"visible", V_BOOL}},
+      {"visible", V_BOOL},
+      {"pickable", V_BOOL}},
      false},
 };
 #define KIND_COUNT ((int)(sizeof(kinds) / sizeof(kinds[0])))
@@ -796,6 +800,10 @@ static void apply_setting(wgf_actor_t actor, int kind, const setting_t *s, value
         wgf_actor_set_visible(e, v->truth);
         return;
     }
+    if (kinds[kind].role == ROLE_KIND && strcmp(key, "pickable") == 0) { /* every kind's too */
+        wgf_actor_set_pickable(e, v->truth);
+        return;
+    }
     switch (what_of(kind)) {
         case 0:
             if (strcmp(key, "position") == 0) wgf_actor_set_position(e, f(v, 0), f(v, 1), f(v, 2));
@@ -859,6 +867,7 @@ static void apply_setting(wgf_actor_t actor, int kind, const setting_t *s, value
                 for (i = 0; i < v->count; i++) points[i] = f(v, i);
                 wgf_shape2d_set_polygon(actor, points, v->count);
             } else if (strcmp(key, "outline") == 0) wgf_shape2d_set_outline(actor, f(v, 0));
+            else if (strcmp(key, "corner") == 0) wgf_shape2d_set_corner_radius(actor, f(v, 0));
             else if (strcmp(key, "color") == 0) wgf_shape2d_set_color(actor, v->colors[0]);
             else wgf_shape2d_set_pivot(actor, f(v, 0), f(v, 1));
             break;
@@ -875,6 +884,7 @@ static void apply_setting(wgf_actor_t actor, int kind, const setting_t *s, value
             } else if (strcmp(key, "cutoff") == 0) {
                 wgf_sprite_set_alpha_mode(actor, wgf_sprite_get_alpha_mode(actor), f(v, 0));
             } else if (strcmp(key, "facing") == 0) wgf_sprite_set_facing(actor, (wgf_sprite_facing_t)(int)v->n[0]);
+            else if (strcmp(key, "pick_alpha") == 0) wgf_sprite_set_pick_alpha(actor, f(v, 0));
             else wgf_sprite_set_tint(actor, v->colors[0]);
             break;
         case KIND + WGF_ACTOR_KIND_TEXT:

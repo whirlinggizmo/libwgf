@@ -26,6 +26,15 @@ extern "C" {
 WGF_API void wgf_draw_rectangle(float x, float y, float width, float height, wgf_color_t color);
 WGF_API void wgf_draw_rectangle_lines(float x, float y, float width, float height, float thickness,
                                       wgf_color_t color);
+/* A rectangle with rounded corners, filled or outlined (raylib's DrawRectangleRounded and
+ * DrawRectangleRoundedLinesEx: a panel, a button): each corner a quarter circle of `radius`
+ * logical pixels, clamped to half the rectangle's shorter side (0 or less: square corners,
+ * the plain rectangle), drawn with `segments` straight edges a corner (at most 64; 0 or
+ * less: enough for its size on screen, as a circle's). */
+WGF_API void wgf_draw_rectangle_rounded(float x, float y, float width, float height, float radius, int segments,
+                                        wgf_color_t color);
+WGF_API void wgf_draw_rectangle_rounded_lines(float x, float y, float width, float height, float radius,
+                                              int segments, float thickness, wgf_color_t color);
 WGF_API void wgf_draw_line(float x0, float y0, float x1, float y1, float thickness, wgf_color_t color);
 /* Circles are drawn with enough segments for their size on screen. */
 WGF_API void wgf_draw_circle(float center_x, float center_y, float radius, wgf_color_t color);
