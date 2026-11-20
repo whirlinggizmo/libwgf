@@ -56,6 +56,15 @@ WGF_API wgf_vec2_t wgf_sprite_get_size(wgf_actor_t sprite);
 WGF_API bool wgf_sprite_set_pivot(wgf_actor_t sprite, float x, float y);
 WGF_API wgf_vec2_t wgf_sprite_get_pivot(wgf_actor_t sprite);
 
+/* A nine-slice: its region drawn with borders `left`, `top`, `right`, and `bottom` texels in
+ * from its edges kept at their size (one texel a unit; scaled down together when its size is
+ * smaller than its borders), the edges stretched along, the middle both ways: a panel or a
+ * health bar's frame of any size from one small image. All 0 (the default, and anything below
+ * 0) for none. On a 2D stage; on a 3D one it draws whole. False for a handle that isn't a
+ * sprite, or numbers that aren't finite. Read back as left, top, right, bottom. */
+WGF_API bool wgf_sprite_set_nine_slice(wgf_actor_t sprite, float left, float top, float right, float bottom);
+WGF_API wgf_vec4_t wgf_sprite_get_nine_slice(wgf_actor_t sprite);
+
 /* What its texels are multiplied by; white (the default) leaves them as they are. False
  * for a handle that isn't a sprite. */
 WGF_API bool wgf_sprite_set_tint(wgf_actor_t sprite, wgf_color_t tint);

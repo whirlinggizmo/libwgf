@@ -29,6 +29,7 @@ typedef struct wgf_gfx_priv_sprite_t {
        picture, and the picture's size; trim[2] <= 0: none. The sprite is the whole picture:
        its default size, and its pivot a fraction of it; what is drawn, the region within it. */
     float trim[4];
+    float nine[4]; /* a nine-slice's borders in texels (left, top, right, bottom); all 0: none */
 } wgf_gfx_priv_sprite_t;
 
 /* A trimmed sprite's drawing: the region's size `region_w` by `region_h` within the whole

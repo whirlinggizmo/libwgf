@@ -2148,8 +2148,19 @@ export declare const Draw: {
      */
     readonly textureRotated: typeof raw.wgf_draw_texture_rotated;
     /**
-     * A texture's region, as wgf_draw_texture_region draws it, `width` by `height` with its
-     * pivot (a share of its size: 0.5, 0.5 its middle) at x, y, turned `radians` about it.
+     * A texture's region drawn as a nine-slice into the rectangle: its borders `left`, `top`,
+     * `right`, and `bottom` texels in from the region's edges, the corners kept at their size
+     * (scaled down together when the rectangle is smaller than its borders), the edges stretched
+     * along, the middle both ways: a panel or a button of any size from one small image. A source
+     * width or height of 0 or less: the whole texture.
+     */
+    readonly textureNineSlice: typeof raw.wgf_draw_texture_nine_slice;
+    /**
+     * A texture's region drawn as a nine-slice into the rectangle: its borders `left`, `top`,
+     * `right`, and `bottom` texels in from the region's edges, the corners kept at their size
+     * (scaled down together when the rectangle is smaller than its borders), the edges stretched
+     * along, the middle both ways: a panel or a button of any size from one small image. A source
+     * width or height of 0 or less: the whole texture.
      */
     readonly textureFill: typeof raw.wgf_draw_texture_fill;
     /**
@@ -5449,6 +5460,20 @@ export declare const Model: {
      */
     readonly getLayerWeight: typeof raw.wgf_model_get_layer_weight;
     /**
+     * `model` playing as `from` does now: its animation, time, speed, loop, and state, and its
+     * layer (its bone found again by name); a crossfade running in `from` ends at its clip. For a
+     * part of a character put on while the others play (a part model swapped, each given the same
+     * clips, wgf_model_set_animations), so it doesn't start its clip again. False for a model that
+     * isn't a file's root, `from` with no animation, or one whose clips `model` hasn't.
+     */
+    readonly syncAnimation: typeof raw.wgf_model_sync_animation;
+    /**
+     * A socket: the first node named `name` under a file's root, at any depth (its joints are
+     * actors: a bone "Hand.R", "Head"), 0 for none or a model that isn't a file's root. A sword
+     * parented to it (wgf_actor_set_parent) follows the hand through every clip.
+     */
+    readonly findNode: typeof raw.wgf_model_find_node;
+    /**
      * Its animations from another glTF file, `clips` (a file of animations alone, its skeleton
      * named as this file's: Wardens' Animations.glb for each of a character's part models), each
      * clip's channels moving this file's nodes of the same names; 0 for its own again. Each part
@@ -6701,6 +6726,24 @@ export declare const Sprite: {
      * for a handle that isn't a sprite.
      */
     readonly getPivot: typeof raw.wgf_sprite_get_pivot;
+    /**
+     * A nine-slice: its region drawn with borders `left`, `top`, `right`, and `bottom` texels in
+     * from its edges kept at their size (one texel a unit; scaled down together when its size is
+     * smaller than its borders), the edges stretched along, the middle both ways: a panel or a
+     * health bar's frame of any size from one small image. All 0 (the default, and anything below
+     * 0) for none. On a 2D stage; on a 3D one it draws whole. False for a handle that isn't a
+     * sprite, or numbers that aren't finite. Read back as left, top, right, bottom.
+     */
+    readonly setNineSlice: typeof raw.wgf_sprite_set_nine_slice;
+    /**
+     * A nine-slice: its region drawn with borders `left`, `top`, `right`, and `bottom` texels in
+     * from its edges kept at their size (one texel a unit; scaled down together when its size is
+     * smaller than its borders), the edges stretched along, the middle both ways: a panel or a
+     * health bar's frame of any size from one small image. All 0 (the default, and anything below
+     * 0) for none. On a 2D stage; on a 3D one it draws whole. False for a handle that isn't a
+     * sprite, or numbers that aren't finite. Read back as left, top, right, bottom.
+     */
+    readonly getNineSlice: typeof raw.wgf_sprite_get_nine_slice;
     /**
      * What its texels are multiplied by; white (the default) leaves them as they are. False
      * for a handle that isn't a sprite.

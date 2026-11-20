@@ -1,5 +1,7 @@
+#include <math.h>
 #include <stdio.h>
 
+#include "draw/wgf_gfx_nine_slice_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "sprite/wgf_gfx_sprite_batch_priv.h"
 #include "wgf_camera3d.h"
@@ -108,6 +110,18 @@ int main(void)
     expect(wgf_sprite_set_size(sprite, 32, 16) && wgf_sprite_get_size(sprite).x == 32.0f, "a size set");
     expect(wgf_sprite_set_size(sprite, 0, 16) && wgf_sprite_get_size(sprite).x == 1.0f, "unset again: the region's");
     expect(wgf_sprite_set_pivot(sprite, 0, 1) && wgf_sprite_get_pivot(sprite).y == 1.0f, "a pivot");
+    expect(wgf_sprite_set_nine_slice(sprite, 4, 4, 6, -1) && wgf_sprite_get_nine_slice(sprite).z == 6.0f &&
+               wgf_sprite_get_nine_slice(sprite).w == 0.0f && !wgf_sprite_set_nine_slice(sprite, NAN, 0, 0, 0) &&
+               wgf_sprite_set_nine_slice(sprite, 0, 0, 0, 0),
+           "a nine-slice's borders, below 0 none; a number that isn't refused; off again");
+    { /* the grid: corners at their texels, edges and the middle stretched; a box too small, all scaled */
+        const float border[4] = {4, 4, 4, 4};
+        float xs[4], ys[4], us[4], vs[4];
+        wgf_gfx_priv_nine_slice(0, 0, 100, 50, 0, 0, 1, 1, 16, 16, border, xs, ys, us, vs);
+        expect(xs[1] == 4 && xs[2] == 96 && ys[2] == 46 && us[1] == 0.25f && us[2] == 0.75f, "a nine-slice's grid");
+        wgf_gfx_priv_nine_slice(0, 0, 4, 50, 0, 0, 1, 1, 16, 16, border, xs, ys, us, vs);
+        expect(xs[1] == 2 && xs[2] == 2 && ys[1] == 2, "narrower than its borders: the corners halved together");
+    }
     expect(wgf_sprite_set_tint(sprite, WGF_COLOR_RED) && wgf_sprite_get_tint(sprite) == WGF_COLOR_RED, "a tint");
     expect(wgf_sprite_get_alpha_mode(sprite) == WGF_ALPHA_MODE_BLEND && wgf_sprite_get_alpha_cutoff(sprite) == 0.5f &&
                wgf_sprite_set_alpha_mode(sprite, WGF_ALPHA_MODE_MASK, 2.0f) &&

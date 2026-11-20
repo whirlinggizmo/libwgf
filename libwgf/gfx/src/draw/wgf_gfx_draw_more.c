@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stdlib.h>
 
+#include "draw/wgf_gfx_nine_slice_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "texture/wgf_gfx_texture_priv.h"
 #include "sokol_gfx.h" /* sokol_gl needs it first */
@@ -182,6 +183,35 @@ void wgf_draw_texture_rotated(wgf_texture_t texture, float source_x, float sourc
     sgl_v2f_t2f(corners[1][0], corners[1][1], uv[2], uv[1]);
     sgl_v2f_t2f(corners[2][0], corners[2][1], uv[2], uv[3]);
     sgl_v2f_t2f(corners[3][0], corners[3][1], uv[0], uv[3]);
+    sgl_end();
+    sgl_disable_texture();
+}
+
+void wgf_draw_texture_nine_slice(wgf_texture_t texture, float source_x, float source_y, float source_width,
+                                 float source_height, float left, float top, float right, float bottom, float x,
+                                 float y, float width, float height, wgf_color_t tint)
+{
+    float source[4] = {source_x, source_y, source_width, source_height}, uv[4], xs[4], ys[4], us[4], vs[4];
+    const float border[4] = {left > 0.0f ? left : 0.0f, top > 0.0f ? top : 0.0f, right > 0.0f ? right : 0.0f,
+                             bottom > 0.0f ? bottom : 0.0f};
+    sg_view view;
+    sg_sampler sampler;
+    int i, j;
+    if (width <= 0.0f || height <= 0.0f || !region_of(texture, source, uv, &view, &sampler)) return;
+    wgf_gfx_priv_nine_slice(x, y, x + width, y + height, uv[0], uv[1], uv[2], uv[3], source[2], source[3], border, xs,
+                            ys, us, vs);
+    sgl_enable_texture();
+    sgl_texture(view, sampler);
+    sgl_begin_quads();
+    set_color(tint);
+    for (j = 0; j < 3; j++) {
+        for (i = 0; i < 3; i++) {
+            sgl_v2f_t2f(xs[i], ys[j], us[i], vs[j]);
+            sgl_v2f_t2f(xs[i + 1], ys[j], us[i + 1], vs[j]);
+            sgl_v2f_t2f(xs[i + 1], ys[j + 1], us[i + 1], vs[j + 1]);
+            sgl_v2f_t2f(xs[i], ys[j + 1], us[i], vs[j + 1]);
+        }
+    }
     sgl_end();
     sgl_disable_texture();
 }

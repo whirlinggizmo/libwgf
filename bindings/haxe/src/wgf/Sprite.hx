@@ -75,6 +75,28 @@ import wgf.impl.Raw;
 		return Raw.wgf_sprite_get_pivot(this, into);
 
 	/**
+	    A nine-slice: its region drawn with borders `left`, `top`, `right`, and `bottom` texels in
+	    from its edges kept at their size (one texel a unit; scaled down together when its size is
+	    smaller than its borders), the edges stretched along, the middle both ways: a panel or a
+	    health bar's frame of any size from one small image. All 0 (the default, and anything below
+	    0) for none. On a 2D stage; on a 3D one it draws whole. False for a handle that isn't a
+	    sprite, or numbers that aren't finite. Read back as left, top, right, bottom.
+	**/
+	public inline function setNineSlice(left:Float, top:Float, right:Float, bottom:Float):Bool
+		return Raw.wgf_sprite_set_nine_slice(this, left, top, right, bottom);
+
+	/**
+	    A nine-slice: its region drawn with borders `left`, `top`, `right`, and `bottom` texels in
+	    from its edges kept at their size (one texel a unit; scaled down together when its size is
+	    smaller than its borders), the edges stretched along, the middle both ways: a panel or a
+	    health bar's frame of any size from one small image. All 0 (the default, and anything below
+	    0) for none. On a 2D stage; on a 3D one it draws whole. False for a handle that isn't a
+	    sprite, or numbers that aren't finite. Read back as left, top, right, bottom.
+	**/
+	public inline function getNineSlice(?into:wgf.Vec4):wgf.Vec4
+		return Raw.wgf_sprite_get_nine_slice(this, into);
+
+	/**
 	    What its texels are multiplied by; white (the default) leaves them as they are. False
 	    for a handle that isn't a sprite.
 	**/

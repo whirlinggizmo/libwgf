@@ -322,6 +322,7 @@ class Reach {
 		"wgf_draw_text_aligned",
 		"wgf_draw_texture",
 		"wgf_draw_texture_fill",
+		"wgf_draw_texture_nine_slice",
 		"wgf_draw_texture_region",
 		"wgf_draw_texture_rotated",
 		"wgf_draw_triangle",
@@ -639,6 +640,7 @@ class Reach {
 		"wgf_mesh_get_material_count",
 		"wgf_model_create",
 		"wgf_model_find_animation",
+		"wgf_model_find_node",
 		"wgf_model_get_animation",
 		"wgf_model_get_animation_count",
 		"wgf_model_get_animation_duration",
@@ -674,6 +676,7 @@ class Reach {
 		"wgf_model_set_tint",
 		"wgf_model_stop_animation",
 		"wgf_model_stop_layer_animation",
+		"wgf_model_sync_animation",
 		"wgf_motion_get_damping",
 		"wgf_motion_get_max_speed",
 		"wgf_motion_get_spin",
@@ -880,6 +883,7 @@ class Reach {
 		"wgf_sprite_get_clip_speed",
 		"wgf_sprite_get_clip_state",
 		"wgf_sprite_get_facing",
+		"wgf_sprite_get_nine_slice",
 		"wgf_sprite_get_pivot",
 		"wgf_sprite_get_sheet",
 		"wgf_sprite_get_size",
@@ -893,6 +897,7 @@ class Reach {
 		"wgf_sprite_set_clip_facing",
 		"wgf_sprite_set_clip_speed",
 		"wgf_sprite_set_facing",
+		"wgf_sprite_set_nine_slice",
 		"wgf_sprite_set_pivot",
 		"wgf_sprite_set_sheet",
 		"wgf_sprite_set_size",
@@ -1137,7 +1142,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1128) 0];
+	static final counts:Array<Int> = [for (_ in 0...1133) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

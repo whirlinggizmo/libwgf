@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "actor/wgf_gfx_actor_priv.h"
+#include "draw/wgf_gfx_nine_slice_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "sokol_gfx.h" /* sokol_gl needs it first */
 #include "texture/wgf_gfx_texture_priv.h"
@@ -92,12 +93,29 @@ static void draw_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
     sgl_begin_triangles();
     sgl_c4b((uint8_t)wgf_color_get_red(sprite->tint), (uint8_t)wgf_color_get_green(sprite->tint),
             (uint8_t)wgf_color_get_blue(sprite->tint), (uint8_t)wgf_color_get_alpha(sprite->tint));
-    vertex(placed, x0, y0, u0, v0);
-    vertex(placed, x1, y0, u1, v0);
-    vertex(placed, x1, y1, u1, v1);
-    vertex(placed, x0, y0, u0, v0);
-    vertex(placed, x1, y1, u1, v1);
-    vertex(placed, x0, y1, u0, v1);
+    if (!placeholder && (sprite->nine[0] > 0.0f || sprite->nine[1] > 0.0f || sprite->nine[2] > 0.0f ||
+                         sprite->nine[3] > 0.0f)) { /* a nine-slice: its corners at their texels, the rest stretched */
+        float xs[4], ys[4], us[4], vs[4];
+        int i, j;
+        wgf_gfx_priv_nine_slice(x0, y0, x1, y1, u0, v0, u1, v1, region[2], region[3], sprite->nine, xs, ys, us, vs);
+        for (j = 0; j < 3; j++) {
+            for (i = 0; i < 3; i++) {
+                vertex(placed, xs[i], ys[j], us[i], vs[j]);
+                vertex(placed, xs[i + 1], ys[j], us[i + 1], vs[j]);
+                vertex(placed, xs[i + 1], ys[j + 1], us[i + 1], vs[j + 1]);
+                vertex(placed, xs[i], ys[j], us[i], vs[j]);
+                vertex(placed, xs[i + 1], ys[j + 1], us[i + 1], vs[j + 1]);
+                vertex(placed, xs[i], ys[j + 1], us[i], vs[j + 1]);
+            }
+        }
+    } else {
+        vertex(placed, x0, y0, u0, v0);
+        vertex(placed, x1, y0, u1, v0);
+        vertex(placed, x1, y1, u1, v1);
+        vertex(placed, x0, y0, u0, v0);
+        vertex(placed, x1, y1, u1, v1);
+        vertex(placed, x0, y1, u0, v1);
+    }
     sgl_end();
     sgl_disable_texture();
     if (sprite->alpha_mode != WGF_ALPHA_MODE_BLEND && sprite->alpha_mode != WGF_ALPHA_MODE_MASK) sgl_pop_pipeline();
@@ -204,6 +222,24 @@ wgf_vec2_t wgf_sprite_get_pivot(wgf_actor_t sprite)
 {
     const wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
     return sprite_ptr != NULL ? wgf_vec2_make(sprite_ptr->pivot[0], sprite_ptr->pivot[1]) : wgf_vec2_make(0.0f, 0.0f);
+}
+
+bool wgf_sprite_set_nine_slice(wgf_actor_t sprite, float left, float top, float right, float bottom)
+{
+    wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
+    if (sprite_ptr == NULL || !isfinite(left) || !isfinite(top) || !isfinite(right) || !isfinite(bottom)) return false;
+    sprite_ptr->nine[0] = left > 0.0f ? left : 0.0f;
+    sprite_ptr->nine[1] = top > 0.0f ? top : 0.0f;
+    sprite_ptr->nine[2] = right > 0.0f ? right : 0.0f;
+    sprite_ptr->nine[3] = bottom > 0.0f ? bottom : 0.0f;
+    return true;
+}
+
+wgf_vec4_t wgf_sprite_get_nine_slice(wgf_actor_t sprite)
+{
+    const wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
+    return sprite_ptr != NULL ? wgf_vec4_make(sprite_ptr->nine[0], sprite_ptr->nine[1], sprite_ptr->nine[2], sprite_ptr->nine[3])
+                              : wgf_vec4_make(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 bool wgf_sprite_set_tint(wgf_actor_t sprite, wgf_color_t tint)

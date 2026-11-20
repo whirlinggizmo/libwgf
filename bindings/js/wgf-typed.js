@@ -691,6 +691,8 @@ export const Draw = Object.freeze({
     circleGradient: raw.wgf_draw_circle_gradient,
     // wgf: call wgf_draw_texture_rotated
     textureRotated: raw.wgf_draw_texture_rotated,
+    // wgf: call wgf_draw_texture_nine_slice
+    textureNineSlice: raw.wgf_draw_texture_nine_slice,
     // wgf: call wgf_draw_texture_fill
     textureFill: raw.wgf_draw_texture_fill,
     // wgf: call wgf_draw_begin_3d
@@ -1501,6 +1503,10 @@ export const Model = Object.freeze({
     getLayerState: raw.wgf_model_get_layer_state,
     // wgf: call wgf_model_get_layer_weight
     getLayerWeight: raw.wgf_model_get_layer_weight,
+    // wgf: call wgf_model_sync_animation
+    syncAnimation: raw.wgf_model_sync_animation,
+    // wgf: call wgf_model_find_node
+    findNode: raw.wgf_model_find_node,
     // wgf: call wgf_model_set_animations
     setAnimations: raw.wgf_model_set_animations,
     // wgf: call wgf_model_get_animations
@@ -1959,6 +1965,10 @@ export const Sprite = Object.freeze({
     setPivot: raw.wgf_sprite_set_pivot,
     // wgf: call wgf_sprite_get_pivot
     getPivot: raw.wgf_sprite_get_pivot,
+    // wgf: call wgf_sprite_set_nine_slice
+    setNineSlice: raw.wgf_sprite_set_nine_slice,
+    // wgf: call wgf_sprite_get_nine_slice
+    getNineSlice: raw.wgf_sprite_get_nine_slice,
     // wgf: call wgf_sprite_set_tint
     setTint: raw.wgf_sprite_set_tint,
     // wgf: call wgf_sprite_get_tint

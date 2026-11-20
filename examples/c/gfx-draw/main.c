@@ -16,11 +16,12 @@
 /* Immediate mode's shapes beyond the basics: a ring, a sector, and an arc sweeping round, an
  * ellipse and its outline, a rectangle and a circle in gradients, a texture turning about
  * its middle, a texture filling as a bar and as a clockwise sweep (a cooldown), splines (a
- * Catmull-Rom through its points, a cubic Bezier and its controls, a dot along it); and in 3D,
+ * Catmull-Rom through its points, a cubic Bezier and its controls, a dot along it), a
+ * nine-slice panel growing and shrinking; and in 3D,
  * a triangle, a cylinder, and wire spheres, cylinders, and capsules, round a turning camera.
  * Escape quits where quitting means anything. */
 
-static wgf_texture_t tiles;
+static wgf_texture_t tiles, skin;
 static wgf_actor_t eye;
 static float time_passed;
 
@@ -30,6 +31,7 @@ static void init(void *user)
     wgf_asset_set_host("../assets"); /* the examples' files, one level above every program */
     wgf_render_set_clear_color(wgf_color_make(16, 18, 26, 255));
     tiles = wgf_texture_create("textures/tiles.png");
+    skin = wgf_texture_create("ui/skin.png"); /* ui-document's skin: its panel a nine-slice */
     eye = wgf_camera3d_create();
 }
 
@@ -63,6 +65,9 @@ static void frame(void *user)
         wgf_draw_spline(WGF_SPLINE_KIND_BEZIER_CUBIC, bend, 8, 32, 3, wgf_color_make(255, 160, 80, 255));
         wgf_draw_circle(dot.x, dot.y, 6, wgf_color_make(255, 255, 255, 255));
     }
+    /* a nine-slice: the skin's 64x64 panel, its 18-texel borders kept, any size */
+    wgf_draw_texture_nine_slice(skin, 0, 48, 64, 64, 18, 18, 18, 18, 30, 420, 160 + 80 * sinf(t), 120,
+                                wgf_color_make(255, 255, 255, 255));
 
     wgf_actor_set_position(eye, sinf(t * 0.3f) * 9.0f, 4.0f, cosf(t * 0.3f) * 9.0f);
     wgf_actor_look_at(eye, 0, 0.5f, 0, 0, 1, 0);

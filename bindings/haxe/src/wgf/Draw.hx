@@ -184,8 +184,21 @@ class Draw {
 		Raw.wgf_draw_texture_rotated(texture, source_x, source_y, source_width, source_height, x, y, width, height, pivot_x, pivot_y, radians, tint);
 
 	/**
-	    A texture's region, as wgf_draw_texture_region draws it, `width` by `height` with its
-	    pivot (a share of its size: 0.5, 0.5 its middle) at x, y, turned `radians` about it.
+	    A texture's region drawn as a nine-slice into the rectangle: its borders `left`, `top`,
+	    `right`, and `bottom` texels in from the region's edges, the corners kept at their size
+	    (scaled down together when the rectangle is smaller than its borders), the edges stretched
+	    along, the middle both ways: a panel or a button of any size from one small image. A source
+	    width or height of 0 or less: the whole texture.
+	**/
+	public static inline function textureNineSlice(texture:Texture, source_x:Float, source_y:Float, source_width:Float, source_height:Float, left:Float, top:Float, right:Float, bottom:Float, x:Float, y:Float, width:Float, height:Float, tint:Int):Void
+		Raw.wgf_draw_texture_nine_slice(texture, source_x, source_y, source_width, source_height, left, top, right, bottom, x, y, width, height, tint);
+
+	/**
+	    A texture's region drawn as a nine-slice into the rectangle: its borders `left`, `top`,
+	    `right`, and `bottom` texels in from the region's edges, the corners kept at their size
+	    (scaled down together when the rectangle is smaller than its borders), the edges stretched
+	    along, the middle both ways: a panel or a button of any size from one small image. A source
+	    width or height of 0 or less: the whole texture.
 	**/
 	public static inline function textureFill(texture:Texture, x:Float, y:Float, width:Float, height:Float, amount:Float, fill:DrawFill, tint:Int):Void
 		Raw.wgf_draw_texture_fill(texture, x, y, width, height, amount, fill, tint);

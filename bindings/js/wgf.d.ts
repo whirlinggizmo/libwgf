@@ -3943,6 +3943,27 @@ export declare function wgf_sprite_get_pivot<T extends number[] | Float32Array |
 export declare function wgf_sprite_get_pivot(sprite: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
+ * A nine-slice: its region drawn with borders `left`, `top`, `right`, and `bottom` texels in
+ * from its edges kept at their size (one texel a unit; scaled down together when its size is
+ * smaller than its borders), the edges stretched along, the middle both ways: a panel or a
+ * health bar's frame of any size from one small image. All 0 (the default, and anything below
+ * 0) for none. On a 2D stage; on a 3D one it draws whole. False for a handle that isn't a
+ * sprite, or numbers that aren't finite. Read back as left, top, right, bottom.
+ */
+export declare function wgf_sprite_set_nine_slice(sprite: wgf_actor_t | 0, left: number, top: number, right: number, bottom: number): boolean;
+
+/**
+ * A nine-slice: its region drawn with borders `left`, `top`, `right`, and `bottom` texels in
+ * from its edges kept at their size (one texel a unit; scaled down together when its size is
+ * smaller than its borders), the edges stretched along, the middle both ways: a panel or a
+ * health bar's frame of any size from one small image. All 0 (the default, and anything below
+ * 0) for none. On a 2D stage; on a 3D one it draws whole. False for a handle that isn't a
+ * sprite, or numbers that aren't finite. Read back as left, top, right, bottom.
+ */
+export declare function wgf_sprite_get_nine_slice<T extends number[] | Float32Array | Float64Array>(sprite: wgf_actor_t | 0, into: T): T;
+export declare function wgf_sprite_get_nine_slice(sprite: wgf_actor_t | 0, into?: wgf_vec4_t | null): wgf_vec4_t;
+
+/**
  * What its texels are multiplied by; white (the default) leaves them as they are. False
  * for a handle that isn't a sprite.
  */
@@ -4386,8 +4407,20 @@ export declare function wgf_draw_circle_gradient(center_x: number, center_y: num
 export declare function wgf_draw_texture_rotated(texture: wgf_texture_t | 0, source_x: number, source_y: number, source_width: number, source_height: number, x: number, y: number, width: number, height: number, pivot_x: number, pivot_y: number, radians: number, tint: wgf_color_t): void;
 
 /**
- * A texture's region, as wgf_draw_texture_region draws it, `width` by `height` with its
- * pivot (a share of its size: 0.5, 0.5 its middle) at x, y, turned `radians` about it.
+ * A texture's region drawn as a nine-slice into the rectangle: its borders `left`, `top`,
+ * `right`, and `bottom` texels in from the region's edges, the corners kept at their size
+ * (scaled down together when the rectangle is smaller than its borders), the edges stretched
+ * along, the middle both ways: a panel or a button of any size from one small image. A source
+ * width or height of 0 or less: the whole texture.
+ */
+export declare function wgf_draw_texture_nine_slice(texture: wgf_texture_t | 0, source_x: number, source_y: number, source_width: number, source_height: number, left: number, top: number, right: number, bottom: number, x: number, y: number, width: number, height: number, tint: wgf_color_t): void;
+
+/**
+ * A texture's region drawn as a nine-slice into the rectangle: its borders `left`, `top`,
+ * `right`, and `bottom` texels in from the region's edges, the corners kept at their size
+ * (scaled down together when the rectangle is smaller than its borders), the edges stretched
+ * along, the middle both ways: a panel or a button of any size from one small image. A source
+ * width or height of 0 or less: the whole texture.
  */
 export declare function wgf_draw_texture_fill(texture: wgf_texture_t | 0, x: number, y: number, width: number, height: number, amount: number, fill: wgf_draw_fill_t, tint: wgf_color_t): void;
 
@@ -7138,6 +7171,22 @@ export declare function wgf_model_get_layer_state(model: wgf_actor_t | 0): wgf_p
  * its weight now (0 to 1).
  */
 export declare function wgf_model_get_layer_weight(model: wgf_actor_t | 0): number;
+
+/**
+ * `model` playing as `from` does now: its animation, time, speed, loop, and state, and its
+ * layer (its bone found again by name); a crossfade running in `from` ends at its clip. For a
+ * part of a character put on while the others play (a part model swapped, each given the same
+ * clips, wgf_model_set_animations), so it doesn't start its clip again. False for a model that
+ * isn't a file's root, `from` with no animation, or one whose clips `model` hasn't.
+ */
+export declare function wgf_model_sync_animation(model: wgf_actor_t | 0, from: wgf_actor_t | 0): boolean;
+
+/**
+ * A socket: the first node named `name` under a file's root, at any depth (its joints are
+ * actors: a bone "Hand.R", "Head"), 0 for none or a model that isn't a file's root. A sword
+ * parented to it (wgf_actor_set_parent) follows the hand through every clip.
+ */
+export declare function wgf_model_find_node(model: wgf_actor_t | 0, name: string | null): wgf_actor_t;
 
 /**
  * Its animations from another glTF file, `clips` (a file of animations alone, its skeleton

@@ -22,7 +22,7 @@
 
 /* A 2D world on a 2D stage with a camera, and a HUD stage over it: a polygon rock
  * turning, a ring and a box, a sprite of a loaded texture, a gem turning (a sprite playing
- * an atlas's clip, sheets/gem.json), a text actor, and a particle emitter circling and
+ * an atlas's clip, sheets/gem.json), a text actor on a nine-slice panel, and a particle emitter circling and
  * trailing; the camera zooms in and out. Escape quits where
  * quitting means anything. */
 
@@ -84,6 +84,17 @@ static void init(void *user)
     wgf_actor_set_parent(emitter, world);
 
     hud = wgf_stage2d_create();
+    { /* the label's panel: a sprite drawn as a nine-slice of ui-document's skin */
+        const wgf_texture_t skin = wgf_texture_create("ui/skin.png");
+        const wgf_actor_t panel = wgf_sprite_create(skin);
+        wgf_resource_release(skin); /* the sprite holds its own */
+        wgf_sprite_set_source(panel, 0, 48, 64, 64);
+        wgf_sprite_set_nine_slice(panel, 18, 18, 18, 18);
+        wgf_sprite_set_size(panel, 250, 44);
+        wgf_sprite_set_pivot(panel, 0, 0);
+        wgf_actor_set_position(panel, 2, 2, 0);
+        wgf_actor_set_parent(panel, hud);
+    }
     label = wgf_text_create(0);
     wgf_text_set_string(label, "libwgf: gfx-stage2d");
     wgf_text_set_font_size(label, 20);

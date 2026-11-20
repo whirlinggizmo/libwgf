@@ -607,6 +607,7 @@ class Main {
 		expect(sprite.setTint(white) && sprite.getTint() == white, "its tint");
 		expect(sprite.setAlphaMode(AlphaMode.MASK, 0.25) && sprite.getAlphaMode() == AlphaMode.MASK
 			&& near(sprite.getAlphaCutoff(), 0.25) && sprite.setAlphaMode(AlphaMode.BLEND, 0.5), "its alpha mode");
+		expect(sprite.setNineSlice(4, 4, 4, 4) && sprite.getNineSlice().x == 4 && sprite.setNineSlice(0, 0, 0, 0), "a nine-slice");
 		expect(sprite.setFacing(SpriteFacing.CAMERA_FIXED_Y) && sprite.getFacing() == SpriteFacing.CAMERA_FIXED_Y
 			&& sprite.setFacing(SpriteFacing.CAMERA), "its facing on a 3D stage");
 		final sheet = Sheet.createGrid(tiles, 16, 16, 0, 0, 0);
@@ -920,6 +921,7 @@ class Main {
 		expect(Draw.polyline([0.0, 100, 20, 110, 40, 100], false, 2, Color.get(ColorStock.WHITE)), "a polyline");
 		expect(Draw.spline(SplineKind.CATMULL_ROM, [0.0, 100, 20, 110, 40, 100, 60, 110], 8, 2, Color.get(ColorStock.WHITE)),
 			"a spline drawn");
+		Draw.textureNineSlice(tiles, 0, 0, 16, 16, 4, 4, 4, 4, 10, 10, 80, 40, Color.get(ColorStock.WHITE));
 		expect(Draw.polygon([100.0, 100, 120, 100, 110, 115], Color.get(ColorStock.WHITE)), "a polygon drawn");
 		Render.pushClip(0, 0, 200, 200);
 		Draw.text(font, "feature-test", 4, 120, 14, Color.get(ColorStock.WHITE));
@@ -1133,6 +1135,12 @@ class Main {
 		expect(robot.playLayerAnimation(dance, "Torso", 0, true) && robot.getLayerAnimation() == dance
 			&& robot.getLayerState() == PlayState.PLAYING && robot.getLayerWeight() == 1 && robot.stopLayerAnimation(0),
 			"a layer from the torso up, and stopped");
+		{
+			final twin:Model = Model.create(robot.getMesh());
+			expect(twin.syncAnimation(robot) && twin.getAnimation() == robot.getAnimation(), "a model synced to another");
+			expect(!robot.findNode("Hand.R").isNone() && robot.findNode("nope").isNone(), "a socket found by name");
+			(twin : Actor).destroy(ActorDestroy.DESTROY_CHILDREN);
+		}
 		expect(robot.pauseAnimation() && robot.getAnimationState() == PlayState.PAUSED && robot.resumeAnimation()
 			&& robot.stopAnimation() && robot.getAnimationState() == PlayState.STOPPED, "paused, resumed, stopped");
 		expect(robot.setAnimations(robot.getMesh()) && robot.getAnimations() == robot.getMesh() && robot.getAnimationCount() == 14

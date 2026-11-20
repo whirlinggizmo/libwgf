@@ -1014,6 +1014,24 @@ import wgf.impl.Raw;
 		return Raw.wgf_model_get_layer_weight(this);
 
 	/**
+	    `model` playing as `from` does now: its animation, time, speed, loop, and state, and its
+	    layer (its bone found again by name); a crossfade running in `from` ends at its clip. For a
+	    part of a character put on while the others play (a part model swapped, each given the same
+	    clips, wgf_model_set_animations), so it doesn't start its clip again. False for a model that
+	    isn't a file's root, `from` with no animation, or one whose clips `model` hasn't.
+	**/
+	public inline function syncAnimation(from:Actor):Bool
+		return Raw.wgf_model_sync_animation(this, from);
+
+	/**
+	    A socket: the first node named `name` under a file's root, at any depth (its joints are
+	    actors: a bone "Hand.R", "Head"), 0 for none or a model that isn't a file's root. A sword
+	    parented to it (wgf_actor_set_parent) follows the hand through every clip.
+	**/
+	public inline function findNode(name:String):Actor
+		return Raw.wgf_model_find_node(this, name);
+
+	/**
 	    Its animations from another glTF file, `clips` (a file of animations alone, its skeleton
 	    named as this file's: Wardens' Animations.glb for each of a character's part models), each
 	    clip's channels moving this file's nodes of the same names; 0 for its own again. Each part

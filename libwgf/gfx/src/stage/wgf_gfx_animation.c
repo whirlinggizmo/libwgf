@@ -1,6 +1,7 @@
 #include "wgf_model.h"
 
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -52,6 +53,7 @@ struct wgf_gfx_priv_animation_t {
     int layer_state;
     float layer_time, layer_weight, layer_target, layer_fade;
     bool layer_loop;
+    char layer_bone[64]; /* its mask's bone, by name: made again on another file's tree */
     unsigned char *mask;
     trs_t *layered;
     /* clips from another file (wgf_model_set_animations): its channels applied to this file's
@@ -753,6 +755,7 @@ bool wgf_model_play_layer_animation(wgf_actor_t model, int animation, const char
     anim->layer = animation;
     anim->layer_time = 0.0f;
     anim->layer_loop = loop;
+    snprintf(anim->layer_bone, sizeof(anim->layer_bone), "%s", bone);
     anim->layer_fade = fade > 0.0f ? fade : 0.0f;
     anim->layer_target = 1.0f;
     anim->layer_state = WGF_PLAY_STATE_PLAYING;
@@ -820,4 +823,62 @@ wgf_mesh_t wgf_model_get_animations(wgf_actor_t model)
 {
     const animation_t *anim = existing(model);
     return anim != NULL ? anim->source : 0;
+}
+
+/* ------------------------------------------------------- sync, sockets ---- */
+
+bool wgf_model_sync_animation(wgf_actor_t model, wgf_actor_t from)
+{
+    const animation_t *src = existing(from);
+    wgf_gfx_priv_actor_t *root_ptr = root_of(model);
+    const wgf_gfx_priv_mesh_record_t *clips = root_ptr != NULL ? clips_of(root_ptr) : NULL;
+    animation_t *anim;
+    if (src == NULL || root_ptr == NULL || model == from || src->animation < 0 || clips == NULL ||
+        clip_of(clips, src->animation) == NULL) {
+        return false;
+    }
+    anim = player_of(model);
+    if (anim == NULL) return false;
+    anim->animation = src->animation;
+    anim->state = src->state;
+    anim->time = src->fresh ? start_of(src, clips) : src->time;
+    anim->speed = src->speed;
+    anim->loop = src->loop;
+    anim->fresh = false;
+    anim->fading = false; /* a crossfade's held pose is the other's tree's: the clip as it is now */
+    if (src->layer >= 0 && clip_of(clips, src->layer) != NULL &&
+        wgf_model_play_layer_animation(model, src->layer, src->layer_bone, src->layer_fade, src->layer_loop)) {
+        anim = existing(model);
+        anim->layer_state = src->layer_state;
+        anim->layer_time = src->layer_time;
+        anim->layer_weight = src->layer_weight;
+        anim->layer_target = src->layer_target;
+    } else {
+        anim->layer = -1;
+        anim->layer_state = WGF_PLAY_STATE_STOPPED;
+    }
+    if (anim->state == WGF_PLAY_STATE_PLAYING) listen(model, anim);
+    pose(model);
+    return true;
+}
+
+/* The first actor named `name` under `actor`, depth first. */
+static wgf_actor_t find_named(wgf_actor_t actor, const char *name)
+{
+    const int n = wgf_actor_get_child_count(actor);
+    int i;
+    for (i = 0; i < n; i++) {
+        const wgf_actor_t child = wgf_actor_get_child(actor, i);
+        wgf_actor_t found;
+        if (strcmp(wgf_actor_get_name(child), name) == 0) return child;
+        found = find_named(child, name);
+        if (found != 0) return found;
+    }
+    return 0;
+}
+
+wgf_actor_t wgf_model_find_node(wgf_actor_t model, const char *name)
+{
+    if (root_of(model) == NULL || name == NULL || name[0] == '\0') return 0;
+    return find_named(model, name);
 }

@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "81a0cb73953c898a" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "af0098d121c2b18d" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -5827,6 +5827,35 @@ export function wgf_sprite_get_pivot(sprite, into) {
     return vector(ret, 2, into);
 }
 
+// wgf: call wgf_sprite_set_nine_slice
+/**
+ * A nine-slice: its region drawn with borders `left`, `top`, `right`, and `bottom` texels in
+ * from its edges kept at their size (one texel a unit; scaled down together when its size is
+ * smaller than its borders), the edges stretched along, the middle both ways: a panel or a
+ * health bar's frame of any size from one small image. All 0 (the default, and anything below
+ * 0) for none. On a 2D stage; on a 3D one it draws whole. False for a handle that isn't a
+ * sprite, or numbers that aren't finite. Read back as left, top, right, bottom.
+ */
+export function wgf_sprite_set_nine_slice(sprite, left, top, right, bottom) {
+    const value = host["_wgf_sprite_set_nine_slice"](sprite, left, top, right, bottom);
+    return value !== 0;
+}
+
+// wgf: call wgf_sprite_get_nine_slice
+/**
+ * A nine-slice: its region drawn with borders `left`, `top`, `right`, and `bottom` texels in
+ * from its edges kept at their size (one texel a unit; scaled down together when its size is
+ * smaller than its borders), the edges stretched along, the middle both ways: a panel or a
+ * health bar's frame of any size from one small image. All 0 (the default, and anything below
+ * 0) for none. On a 2D stage; on a 3D one it draws whole. False for a handle that isn't a
+ * sprite, or numbers that aren't finite. Read back as left, top, right, bottom.
+ */
+export function wgf_sprite_get_nine_slice(sprite, into) {
+    const ret = result(16);
+    host["_wgf_sprite_get_nine_slice"](ret, sprite);
+    return vector(ret, 4, into);
+}
+
 // wgf: call wgf_sprite_set_tint
 /**
  * What its texels are multiplied by; white (the default) leaves them as they are. False
@@ -6515,10 +6544,25 @@ export function wgf_draw_texture_rotated(texture, source_x, source_y, source_wid
     host["_wgf_draw_texture_rotated"](texture, source_x, source_y, source_width, source_height, x, y, width, height, pivot_x, pivot_y, radians, tint);
 }
 
+// wgf: call wgf_draw_texture_nine_slice
+/**
+ * A texture's region drawn as a nine-slice into the rectangle: its borders `left`, `top`,
+ * `right`, and `bottom` texels in from the region's edges, the corners kept at their size
+ * (scaled down together when the rectangle is smaller than its borders), the edges stretched
+ * along, the middle both ways: a panel or a button of any size from one small image. A source
+ * width or height of 0 or less: the whole texture.
+ */
+export function wgf_draw_texture_nine_slice(texture, source_x, source_y, source_width, source_height, left, top, right, bottom, x, y, width, height, tint) {
+    host["_wgf_draw_texture_nine_slice"](texture, source_x, source_y, source_width, source_height, left, top, right, bottom, x, y, width, height, tint);
+}
+
 // wgf: call wgf_draw_texture_fill
 /**
- * A texture's region, as wgf_draw_texture_region draws it, `width` by `height` with its
- * pivot (a share of its size: 0.5, 0.5 its middle) at x, y, turned `radians` about it.
+ * A texture's region drawn as a nine-slice into the rectangle: its borders `left`, `top`,
+ * `right`, and `bottom` texels in from the region's edges, the corners kept at their size
+ * (scaled down together when the rectangle is smaller than its borders), the edges stretched
+ * along, the middle both ways: a panel or a button of any size from one small image. A source
+ * width or height of 0 or less: the whole texture.
  */
 export function wgf_draw_texture_fill(texture, x, y, width, height, amount, fill, tint) {
     host["_wgf_draw_texture_fill"](texture, x, y, width, height, amount, fill, tint);
@@ -10234,6 +10278,32 @@ export function wgf_model_get_layer_state(model) {
 export function wgf_model_get_layer_weight(model) {
     const value = host["_wgf_model_get_layer_weight"](model);
     return value;
+}
+
+// wgf: call wgf_model_sync_animation
+/**
+ * `model` playing as `from` does now: its animation, time, speed, loop, and state, and its
+ * layer (its bone found again by name); a crossfade running in `from` ends at its clip. For a
+ * part of a character put on while the others play (a part model swapped, each given the same
+ * clips, wgf_model_set_animations), so it doesn't start its clip again. False for a model that
+ * isn't a file's root, `from` with no animation, or one whose clips `model` hasn't.
+ */
+export function wgf_model_sync_animation(model, from) {
+    const value = host["_wgf_model_sync_animation"](model, from);
+    return value !== 0;
+}
+
+// wgf: call wgf_model_find_node
+/**
+ * A socket: the first node named `name` under a file's root, at any depth (its joints are
+ * actors: a bone "Hand.R", "Head"), 0 for none or a model that isn't a file's root. A sword
+ * parented to it (wgf_actor_set_parent) follows the hand through every clip.
+ */
+export function wgf_model_find_node(model, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_model_find_node"](model, cstr(name));
+    host["stackRestore"](mark);
+    return value >>> 0;
 }
 
 // wgf: call wgf_model_set_animations

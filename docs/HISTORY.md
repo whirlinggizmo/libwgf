@@ -1040,6 +1040,14 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## Sockets and synced parts (2026-11-20)
+
+Two of Wardens' animation needs. `wgf_model_find_node` finds a bone by name at any depth (joints are actors), so a sword parented to "Hand.R" follows the hand through every clip. `wgf_model_sync_animation` sets a part put on mid-clip to another's clip, time, speed, loop, state and layer. The layer's mask is made again from its bone's name, which the player now keeps, since masks and held crossfade poses are per-node arrays of one file's tree. A crossfade running in the other ends at its clip.
+
+## Nine-slice textures (2026-11-20)
+
+Wardens' menus from images, the part documents don't cover. A texture's region is drawn as a nine-slice: corners kept at their texels, edges and middle stretched, the corners scaled down together when the box is smaller than its borders. It works in immediate mode (`wgf_draw_texture_nine_slice`) and as a 2D sprite (`wgf_sprite_set_nine_slice`), both through one private grid. `gfx-draw` grows and shrinks ui-document's panel, and `gfx-stage2d`'s label sits on one.
+
 ## Parity: 3D shapes, splines, text spacing, the last pad button (2026-11-20)
 
 Most of the parity block's small gaps. 3D collision as plain math (`wgf_collide3d.h`): raylib's boxes, spheres, and rays against them and triangles, their hits shaped as `wgf_collide2d.h`'s with z. Splines (`wgf_spline.h`, `wgf_draw_spline`): linear, B-spline basis, Catmull-Rom, and Bezier paths, read along t over the whole path. Their enum is `wgf_spline_kind_t`, since `wgf_spline_t` clashed with its section's name in the bindings, as the easing enum did. Text spacing for a text actor and for immediate mode, through fontstash's own spacing and the line height. The last pad button pressed, for a rebinding screen. Recovering a lost GPU context is left: it means re-making every GPU object (ROADMAP's block 2).

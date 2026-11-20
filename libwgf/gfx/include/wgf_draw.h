@@ -99,6 +99,15 @@ WGF_API void wgf_draw_texture_rotated(wgf_texture_t texture, float source_x, flo
                                       float source_height, float x, float y, float width, float height, float pivot_x,
                                       float pivot_y, float radians, wgf_color_t tint);
 
+/* A texture's region drawn as a nine-slice into the rectangle: its borders `left`, `top`,
+ * `right`, and `bottom` texels in from the region's edges, the corners kept at their size
+ * (scaled down together when the rectangle is smaller than its borders), the edges stretched
+ * along, the middle both ways: a panel or a button of any size from one small image. A source
+ * width or height of 0 or less: the whole texture. */
+WGF_API void wgf_draw_texture_nine_slice(wgf_texture_t texture, float source_x, float source_y, float source_width,
+                                         float source_height, float left, float top, float right, float bottom, float x,
+                                         float y, float width, float height, wgf_color_t tint);
+
 /* A texture drawn into the rectangle only up to `amount` (0 to 1): a bar filled from the
  * left or from the bottom, or swept clockwise from 12 o'clock (a cooldown, a health orb).
  * A width or height of 0 or less: the texture's size. */
