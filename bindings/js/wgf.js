@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "2162008a4cb4fec1" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "11b63ee946205f86" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -942,6 +942,218 @@ export const WGF_UI_VALUE_BUTTON_WIDTH = 5;
 export const WGF_UI_VALUE_FOCUS_WIDTH = 6;
 export const WGF_UI_VALUE_BAR_WIDTH = 7;
 export const WGF_UI_VALUE_BAR_HEIGHT = 8;
+
+// wgf: call wgf_collide2d_rect_rect
+/**
+ * Overlaps.
+ */
+export function wgf_collide2d_rect_rect(ax, ay, aw, ah, bx, by, bw, bh, hit) {
+    const hitPointer = arrayOut(hit, 0);
+    const value = host["_wgf_collide2d_rect_rect"](ax, ay, aw, ah, bx, by, bw, bh, hitPointer, lengthOf(hit));
+    arrayBack(hitPointer, hit, "HEAPF32");
+    return value !== 0;
+}
+
+// wgf: call wgf_collide2d_circle_circle
+/**
+ * Overlaps.
+ */
+export function wgf_collide2d_circle_circle(ax, ay, ar, bx, by, br, hit) {
+    const hitPointer = arrayOut(hit, 0);
+    const value = host["_wgf_collide2d_circle_circle"](ax, ay, ar, bx, by, br, hitPointer, lengthOf(hit));
+    arrayBack(hitPointer, hit, "HEAPF32");
+    return value !== 0;
+}
+
+// wgf: call wgf_collide2d_circle_rect
+/**
+ * Overlaps.
+ */
+export function wgf_collide2d_circle_rect(cx, cy, r, rx, ry, rw, rh, hit) {
+    const hitPointer = arrayOut(hit, 0);
+    const value = host["_wgf_collide2d_circle_rect"](cx, cy, r, rx, ry, rw, rh, hitPointer, lengthOf(hit));
+    arrayBack(hitPointer, hit, "HEAPF32");
+    return value !== 0;
+}
+
+// wgf: call wgf_collide2d_circle_segment
+/**
+ * A circle and the segment from x0, y0 to x1, y1 (a wall, a slope).
+ */
+export function wgf_collide2d_circle_segment(cx, cy, r, x0, y0, x1, y1, hit) {
+    const hitPointer = arrayOut(hit, 0);
+    const value = host["_wgf_collide2d_circle_segment"](cx, cy, r, x0, y0, x1, y1, hitPointer, lengthOf(hit));
+    arrayBack(hitPointer, hit, "HEAPF32");
+    return value !== 0;
+}
+
+// wgf: call wgf_collide2d_circle_polygon
+/**
+ * A circle and a polygon, convex or not, as long as its edges don't cross.
+ */
+export function wgf_collide2d_circle_polygon(cx, cy, r, points, hit) {
+    const pointsPointer = arrayIn(points, 0, "HEAPF32");
+    const hitPointer = arrayOut(hit, 1);
+    const value = host["_wgf_collide2d_circle_polygon"](cx, cy, r, pointsPointer, lengthOf(points), hitPointer, lengthOf(hit));
+    arrayBack(hitPointer, hit, "HEAPF32");
+    return value !== 0;
+}
+
+// wgf: call wgf_collide2d_polygon_polygon
+/**
+ * Two convex polygons (the separating axis theorem); the hit's point is 0, 0.
+ */
+export function wgf_collide2d_polygon_polygon(points, others, hit) {
+    const pointsPointer = arrayIn(points, 0, "HEAPF32");
+    const othersPointer = arrayIn(others, 1, "HEAPF32");
+    const hitPointer = arrayOut(hit, 2);
+    const value = host["_wgf_collide2d_polygon_polygon"](pointsPointer, lengthOf(points), othersPointer, lengthOf(others), hitPointer, lengthOf(hit));
+    arrayBack(hitPointer, hit, "HEAPF32");
+    return value !== 0;
+}
+
+// wgf: call wgf_collide2d_point_in_rect
+/**
+ * Points: in a rectangle (its left and top edges count, its right and bottom don't), a
+ * circle, a triangle, a polygon (convex or not, by crossings).
+ */
+export function wgf_collide2d_point_in_rect(px, py, rx, ry, rw, rh) {
+    const value = host["_wgf_collide2d_point_in_rect"](px, py, rx, ry, rw, rh);
+    return value !== 0;
+}
+
+// wgf: call wgf_collide2d_point_in_circle
+/**
+ * Points: in a rectangle (its left and top edges count, its right and bottom don't), a
+ * circle, a triangle, a polygon (convex or not, by crossings).
+ */
+export function wgf_collide2d_point_in_circle(px, py, cx, cy, r) {
+    const value = host["_wgf_collide2d_point_in_circle"](px, py, cx, cy, r);
+    return value !== 0;
+}
+
+// wgf: call wgf_collide2d_point_in_triangle
+/**
+ * Points: in a rectangle (its left and top edges count, its right and bottom don't), a
+ * circle, a triangle, a polygon (convex or not, by crossings).
+ */
+export function wgf_collide2d_point_in_triangle(px, py, x0, y0, x1, y1, x2, y2) {
+    const value = host["_wgf_collide2d_point_in_triangle"](px, py, x0, y0, x1, y1, x2, y2);
+    return value !== 0;
+}
+
+// wgf: call wgf_collide2d_point_in_polygon
+/**
+ * Points: in a rectangle (its left and top edges count, its right and bottom don't), a
+ * circle, a triangle, a polygon (convex or not, by crossings).
+ */
+export function wgf_collide2d_point_in_polygon(px, py, points) {
+    const pointsPointer = arrayIn(points, 0, "HEAPF32");
+    const value = host["_wgf_collide2d_point_in_polygon"](px, py, pointsPointer, lengthOf(points));
+    return value !== 0;
+}
+
+// wgf: call wgf_collide2d_segment_segment
+/**
+ * The segment a crossing segment b (not only touching, nor lying along it): the hit's time
+ * along a, the point, and b's normal facing a's start.
+ */
+export function wgf_collide2d_segment_segment(ax0, ay0, ax1, ay1, bx0, by0, bx1, by1, hit) {
+    const hitPointer = arrayOut(hit, 0);
+    const value = host["_wgf_collide2d_segment_segment"](ax0, ay0, ax1, ay1, bx0, by0, bx1, by1, hitPointer, lengthOf(hit));
+    arrayBack(hitPointer, hit, "HEAPF32");
+    return value !== 0;
+}
+
+// wgf: call wgf_collide2d_ray_rect
+/**
+ * A ray from ox, oy along dx, dy (its whole length: time 1 is its end) meeting a rectangle or
+ * a circle: the time, the point, the normal.
+ */
+export function wgf_collide2d_ray_rect(ox, oy, dx, dy, rx, ry, rw, rh, hit) {
+    const hitPointer = arrayOut(hit, 0);
+    const value = host["_wgf_collide2d_ray_rect"](ox, oy, dx, dy, rx, ry, rw, rh, hitPointer, lengthOf(hit));
+    arrayBack(hitPointer, hit, "HEAPF32");
+    return value !== 0;
+}
+
+// wgf: call wgf_collide2d_ray_circle
+/**
+ * A ray from ox, oy along dx, dy (its whole length: time 1 is its end) meeting a rectangle or
+ * a circle: the time, the point, the normal.
+ */
+export function wgf_collide2d_ray_circle(ox, oy, dx, dy, cx, cy, r, hit) {
+    const hitPointer = arrayOut(hit, 0);
+    const value = host["_wgf_collide2d_ray_circle"](ox, oy, dx, dy, cx, cy, r, hitPointer, lengthOf(hit));
+    arrayBack(hitPointer, hit, "HEAPF32");
+    return value !== 0;
+}
+
+// wgf: call wgf_collide2d_sweep_rect_rect
+/**
+ * A rectangle (a circle) moved by dx, dy meeting another on the way: the time, its top-left
+ * (its center) then, and the normal; time 0 and no normal when they already overlap.
+ */
+export function wgf_collide2d_sweep_rect_rect(ax, ay, aw, ah, dx, dy, bx, by, bw, bh, hit) {
+    const hitPointer = arrayOut(hit, 0);
+    const value = host["_wgf_collide2d_sweep_rect_rect"](ax, ay, aw, ah, dx, dy, bx, by, bw, bh, hitPointer, lengthOf(hit));
+    arrayBack(hitPointer, hit, "HEAPF32");
+    return value !== 0;
+}
+
+// wgf: call wgf_collide2d_sweep_circle_circle
+/**
+ * A rectangle (a circle) moved by dx, dy meeting another on the way: the time, its top-left
+ * (its center) then, and the normal; time 0 and no normal when they already overlap.
+ */
+export function wgf_collide2d_sweep_circle_circle(ax, ay, ar, dx, dy, bx, by, br, hit) {
+    const hitPointer = arrayOut(hit, 0);
+    const value = host["_wgf_collide2d_sweep_circle_circle"](ax, ay, ar, dx, dy, bx, by, br, hitPointer, lengthOf(hit));
+    arrayBack(hitPointer, hit, "HEAPF32");
+    return value !== 0;
+}
+
+// wgf: call wgf_collide2d_move_rects
+/**
+ * Move and slide: the box at x, y (its top-left), w by h, moved by dx, dy, across first,
+ * stopped at the nearest solid's side the way it moves, then down or up at its new x,
+ * sliding along what it meets; into `out` (as fit in `out_count`) where it ended, x and y,
+ * then whether its left, right, top, and bottom met a solid (1 or 0: bottom is standing on
+ * something). A box starting inside a solid is left where it is on that axis. False for no
+ * `out`.
+ *
+ * Against solid rectangles (`rects`, four floats each, `count` floats), or a grid of cells
+ * (`cells`, row by row from the top, `columns` a row, `count` of them, nonzero
+ * solid; cell 0's top-left at 0, 0, each `size` square; outside the grid is open).
+ */
+export function wgf_collide2d_move_rects(x, y, w, h, dx, dy, rects, out) {
+    const rectsPointer = arrayIn(rects, 0, "HEAPF32");
+    const outPointer = arrayOut(out, 1);
+    const value = host["_wgf_collide2d_move_rects"](x, y, w, h, dx, dy, rectsPointer, lengthOf(rects), outPointer, lengthOf(out));
+    arrayBack(outPointer, out, "HEAPF32");
+    return value !== 0;
+}
+
+// wgf: call wgf_collide2d_move_cells
+/**
+ * Move and slide: the box at x, y (its top-left), w by h, moved by dx, dy, across first,
+ * stopped at the nearest solid's side the way it moves, then down or up at its new x,
+ * sliding along what it meets; into `out` (as fit in `out_count`) where it ended, x and y,
+ * then whether its left, right, top, and bottom met a solid (1 or 0: bottom is standing on
+ * something). A box starting inside a solid is left where it is on that axis. False for no
+ * `out`.
+ *
+ * Against solid rectangles (`rects`, four floats each, `count` floats), or a grid of cells
+ * (`cells`, row by row from the top, `columns` a row, `count` of them, nonzero
+ * solid; cell 0's top-left at 0, 0, each `size` square; outside the grid is open).
+ */
+export function wgf_collide2d_move_cells(x, y, w, h, dx, dy, size, cells, columns, out) {
+    const cellsPointer = arrayIn(cells, 0, "HEAP32");
+    const outPointer = arrayOut(out, 1);
+    const value = host["_wgf_collide2d_move_cells"](x, y, w, h, dx, dy, size, cellsPointer, lengthOf(cells), columns, outPointer, lengthOf(out));
+    arrayBack(outPointer, out, "HEAPF32");
+    return value !== 0;
+}
 
 // wgf: local trig
 const LOCAL_PI = 3.14159265358979323846;

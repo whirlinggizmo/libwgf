@@ -406,6 +406,43 @@ export const Camera3d = Object.freeze({
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
+// wgf: typed Collide2d
+export const Collide2d = Object.freeze({
+    // wgf: call wgf_collide2d_rect_rect
+    rectRect: raw.wgf_collide2d_rect_rect,
+    // wgf: call wgf_collide2d_circle_circle
+    circleCircle: raw.wgf_collide2d_circle_circle,
+    // wgf: call wgf_collide2d_circle_rect
+    circleRect: raw.wgf_collide2d_circle_rect,
+    // wgf: call wgf_collide2d_circle_segment
+    circleSegment: raw.wgf_collide2d_circle_segment,
+    // wgf: call wgf_collide2d_circle_polygon
+    circlePolygon: raw.wgf_collide2d_circle_polygon,
+    // wgf: call wgf_collide2d_polygon_polygon
+    polygonPolygon: raw.wgf_collide2d_polygon_polygon,
+    // wgf: call wgf_collide2d_point_in_rect
+    pointInRect: raw.wgf_collide2d_point_in_rect,
+    // wgf: call wgf_collide2d_point_in_circle
+    pointInCircle: raw.wgf_collide2d_point_in_circle,
+    // wgf: call wgf_collide2d_point_in_triangle
+    pointInTriangle: raw.wgf_collide2d_point_in_triangle,
+    // wgf: call wgf_collide2d_point_in_polygon
+    pointInPolygon: raw.wgf_collide2d_point_in_polygon,
+    // wgf: call wgf_collide2d_segment_segment
+    segmentSegment: raw.wgf_collide2d_segment_segment,
+    // wgf: call wgf_collide2d_ray_rect
+    rayRect: raw.wgf_collide2d_ray_rect,
+    // wgf: call wgf_collide2d_ray_circle
+    rayCircle: raw.wgf_collide2d_ray_circle,
+    // wgf: call wgf_collide2d_sweep_rect_rect
+    sweepRectRect: raw.wgf_collide2d_sweep_rect_rect,
+    // wgf: call wgf_collide2d_sweep_circle_circle
+    sweepCircleCircle: raw.wgf_collide2d_sweep_circle_circle,
+    // wgf: call wgf_collide2d_move_rects
+    moveRects: raw.wgf_collide2d_move_rects,
+    // wgf: call wgf_collide2d_move_cells
+    moveCells: raw.wgf_collide2d_move_cells,
+});
 // wgf: typed Collider
 export const Collider = Object.freeze({
     // wgf: call wgf_collider_set_radius

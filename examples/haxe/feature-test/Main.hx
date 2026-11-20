@@ -61,12 +61,35 @@ class Main {
 
 	static function init():Void {
 		core();
+		collide2d();
 		platform();
 		assets();
 		audio();
 		gfx();
 		ecs();
 		physics();
+	}
+
+	static function collide2d():Void {
+		final hit:Array<Float> = [0, 0, 0, 0, 0, 0];
+		final out:Array<Float> = [0, 0, 0, 0, 0, 0];
+		final square:Array<Float> = [0, 0, 10, 0, 10, 10, 0, 10];
+		final shifted:Array<Float> = [8, 2, 18, 2, 18, 12, 8, 12];
+		expect(Collide2d.rectRect(0, 0, 10, 10, 8, 2, 10, 10, hit) && near(hit[2], 2), "rectangles overlapping");
+		expect(Collide2d.circleCircle(0, 0, 5, 8, 0, 5, hit) && Collide2d.circleRect(5, -2, 3, 0, 0, 10, 10, hit)
+			&& Collide2d.circleSegment(5, 1, 2, 0, 0, 10, 0, hit) && Collide2d.circlePolygon(5, 12, 3, square, hit)
+			&& Collide2d.polygonPolygon(square, shifted, hit), "circles and polygons overlapping");
+		expect(Collide2d.pointInRect(1, 1, 0, 0, 10, 10) && Collide2d.pointInCircle(1, 1, 0, 0, 2)
+			&& Collide2d.pointInTriangle(2, 1, 0, 0, 10, 0, 0, 10) && Collide2d.pointInPolygon(5, 5, square), "points in shapes");
+		expect(Collide2d.segmentSegment(0, 5, 10, 5, 4, 0, 4, 10, hit) && near(hit[5], 0.4), "segments crossing");
+		expect(Collide2d.rayRect(-10, 5, 20, 0, 0, 0, 10, 10, hit) && Collide2d.rayCircle(-10, 0, 20, 0, 0, 0, 2, hit)
+			&& Collide2d.sweepRectRect(-20, 0, 10, 10, 20, 0, 0, 0, 10, 10, hit)
+			&& Collide2d.sweepCircleCircle(-10, 0, 1, 20, 0, 0, 0, 1, hit), "rays and sweeps");
+		expect(Collide2d.moveRects(10, 80, 16, 16, 0, 10, [0, 100, 200, 10], out) && near(out[1], 84) && out[5] == 1,
+			"moved onto a floor");
+		final cells = [for (i in 0...20) i >= 10 ? 1 : 0];
+		expect(Collide2d.moveCells(20, -10, 16, 16, 0, 40, 16, cells, 10, out) && near(out[1], 0) && out[5] == 1,
+			"moved onto a row of cells");
 	}
 
 	static function core():Void {

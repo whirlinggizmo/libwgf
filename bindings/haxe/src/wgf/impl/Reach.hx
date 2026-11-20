@@ -182,6 +182,23 @@ class Reach {
 		"wgf_camera3d_set_fov",
 		"wgf_camera3d_set_ortho_height",
 		"wgf_camera3d_set_orthographic",
+		"wgf_collide2d_circle_circle",
+		"wgf_collide2d_circle_polygon",
+		"wgf_collide2d_circle_rect",
+		"wgf_collide2d_circle_segment",
+		"wgf_collide2d_move_cells",
+		"wgf_collide2d_move_rects",
+		"wgf_collide2d_point_in_circle",
+		"wgf_collide2d_point_in_polygon",
+		"wgf_collide2d_point_in_rect",
+		"wgf_collide2d_point_in_triangle",
+		"wgf_collide2d_polygon_polygon",
+		"wgf_collide2d_ray_circle",
+		"wgf_collide2d_ray_rect",
+		"wgf_collide2d_rect_rect",
+		"wgf_collide2d_segment_segment",
+		"wgf_collide2d_sweep_circle_circle",
+		"wgf_collide2d_sweep_rect_rect",
 		"wgf_collider_get_layer",
 		"wgf_collider_get_mask",
 		"wgf_collider_get_overlaps",
@@ -846,7 +863,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...837) 0];
+	static final counts:Array<Int> = [for (_ in 0...854) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

@@ -817,6 +817,118 @@ export declare const WGF_UI_VALUE_BAR_HEIGHT: 8;
 export type wgf_ui_value_t = typeof WGF_UI_VALUE_TEXT_SIZE | typeof WGF_UI_VALUE_PADDING | typeof WGF_UI_VALUE_GAP | typeof WGF_UI_VALUE_CORNER_RADIUS | typeof WGF_UI_VALUE_BUTTON_PADDING | typeof WGF_UI_VALUE_BUTTON_WIDTH | typeof WGF_UI_VALUE_FOCUS_WIDTH | typeof WGF_UI_VALUE_BAR_WIDTH | typeof WGF_UI_VALUE_BAR_HEIGHT;
 
 /**
+ * Overlaps.
+ */
+export declare function wgf_collide2d_rect_rect(ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number, hit: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * Overlaps.
+ */
+export declare function wgf_collide2d_circle_circle(ax: number, ay: number, ar: number, bx: number, by: number, br: number, hit: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * Overlaps.
+ */
+export declare function wgf_collide2d_circle_rect(cx: number, cy: number, r: number, rx: number, ry: number, rw: number, rh: number, hit: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * A circle and the segment from x0, y0 to x1, y1 (a wall, a slope).
+ */
+export declare function wgf_collide2d_circle_segment(cx: number, cy: number, r: number, x0: number, y0: number, x1: number, y1: number, hit: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * A circle and a polygon, convex or not, as long as its edges don't cross.
+ */
+export declare function wgf_collide2d_circle_polygon(cx: number, cy: number, r: number, points: readonly number[] | Float32Array | Float64Array | null, hit: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * Two convex polygons (the separating axis theorem); the hit's point is 0, 0.
+ */
+export declare function wgf_collide2d_polygon_polygon(points: readonly number[] | Float32Array | Float64Array | null, others: readonly number[] | Float32Array | Float64Array | null, hit: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * Points: in a rectangle (its left and top edges count, its right and bottom don't), a
+ * circle, a triangle, a polygon (convex or not, by crossings).
+ */
+export declare function wgf_collide2d_point_in_rect(px: number, py: number, rx: number, ry: number, rw: number, rh: number): boolean;
+
+/**
+ * Points: in a rectangle (its left and top edges count, its right and bottom don't), a
+ * circle, a triangle, a polygon (convex or not, by crossings).
+ */
+export declare function wgf_collide2d_point_in_circle(px: number, py: number, cx: number, cy: number, r: number): boolean;
+
+/**
+ * Points: in a rectangle (its left and top edges count, its right and bottom don't), a
+ * circle, a triangle, a polygon (convex or not, by crossings).
+ */
+export declare function wgf_collide2d_point_in_triangle(px: number, py: number, x0: number, y0: number, x1: number, y1: number, x2: number, y2: number): boolean;
+
+/**
+ * Points: in a rectangle (its left and top edges count, its right and bottom don't), a
+ * circle, a triangle, a polygon (convex or not, by crossings).
+ */
+export declare function wgf_collide2d_point_in_polygon(px: number, py: number, points: readonly number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * The segment a crossing segment b (not only touching, nor lying along it): the hit's time
+ * along a, the point, and b's normal facing a's start.
+ */
+export declare function wgf_collide2d_segment_segment(ax0: number, ay0: number, ax1: number, ay1: number, bx0: number, by0: number, bx1: number, by1: number, hit: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * A ray from ox, oy along dx, dy (its whole length: time 1 is its end) meeting a rectangle or
+ * a circle: the time, the point, the normal.
+ */
+export declare function wgf_collide2d_ray_rect(ox: number, oy: number, dx: number, dy: number, rx: number, ry: number, rw: number, rh: number, hit: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * A ray from ox, oy along dx, dy (its whole length: time 1 is its end) meeting a rectangle or
+ * a circle: the time, the point, the normal.
+ */
+export declare function wgf_collide2d_ray_circle(ox: number, oy: number, dx: number, dy: number, cx: number, cy: number, r: number, hit: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * A rectangle (a circle) moved by dx, dy meeting another on the way: the time, its top-left
+ * (its center) then, and the normal; time 0 and no normal when they already overlap.
+ */
+export declare function wgf_collide2d_sweep_rect_rect(ax: number, ay: number, aw: number, ah: number, dx: number, dy: number, bx: number, by: number, bw: number, bh: number, hit: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * A rectangle (a circle) moved by dx, dy meeting another on the way: the time, its top-left
+ * (its center) then, and the normal; time 0 and no normal when they already overlap.
+ */
+export declare function wgf_collide2d_sweep_circle_circle(ax: number, ay: number, ar: number, dx: number, dy: number, bx: number, by: number, br: number, hit: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * Move and slide: the box at x, y (its top-left), w by h, moved by dx, dy, across first,
+ * stopped at the nearest solid's side the way it moves, then down or up at its new x,
+ * sliding along what it meets; into `out` (as fit in `out_count`) where it ended, x and y,
+ * then whether its left, right, top, and bottom met a solid (1 or 0: bottom is standing on
+ * something). A box starting inside a solid is left where it is on that axis. False for no
+ * `out`.
+ *
+ * Against solid rectangles (`rects`, four floats each, `count` floats), or a grid of cells
+ * (`cells`, row by row from the top, `columns` a row, `count` of them, nonzero
+ * solid; cell 0's top-left at 0, 0, each `size` square; outside the grid is open).
+ */
+export declare function wgf_collide2d_move_rects(x: number, y: number, w: number, h: number, dx: number, dy: number, rects: readonly number[] | Float32Array | Float64Array | null, out: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
+ * Move and slide: the box at x, y (its top-left), w by h, moved by dx, dy, across first,
+ * stopped at the nearest solid's side the way it moves, then down or up at its new x,
+ * sliding along what it meets; into `out` (as fit in `out_count`) where it ended, x and y,
+ * then whether its left, right, top, and bottom met a solid (1 or 0: bottom is standing on
+ * something). A box starting inside a solid is left where it is on that axis. False for no
+ * `out`.
+ *
+ * Against solid rectangles (`rects`, four floats each, `count` floats), or a grid of cells
+ * (`cells`, row by row from the top, `columns` a row, `count` of them, nonzero
+ * solid; cell 0's top-left at 0, 0, each `size` square; outside the grid is open).
+ */
+export declare function wgf_collide2d_move_cells(x: number, y: number, w: number, h: number, dx: number, dy: number, size: number, cells: readonly number[] | Int32Array | null, columns: number, out: number[] | Float32Array | Float64Array | null): boolean;
+
+/**
  * Trigonometry that gives the same bits on every target -- natively, under Windows, and in a
  * browser -- which the rotations (wgf_quat.h) and the generated meshes are made with, so a
  * simulation started from the same numbers runs the same everywhere. The C library's sinf and
