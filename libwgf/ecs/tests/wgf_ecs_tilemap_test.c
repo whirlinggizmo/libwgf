@@ -20,7 +20,8 @@
 
 /* A placed Tiled map in the ecs, headless: an object layer's objects spawned as a scene's
  * prefabs by class, at their middles, turned, named, hidden, and their properties set on
- * their behaviors; and a tile layer made a 2D body's solid grid, the body standing on it. */
+ * their behaviors (a tile object's sprite replaced by its prefab); and a tile layer made a 2D
+ * body's solid grid, the body standing on it. */
 
 static int failures;
 
@@ -105,8 +106,12 @@ int main(void)
     walls = wgf_actor_find(root, "walls");
     things = wgf_actor_find(root, "things");
 
-    expect(wgf_scene_spawn_objects(scene, things) == 3 && wgf_actor_get_child_count(things) == 3,
-           "the objects of a class the scene has a prefab of spawned, under their layer");
+    expect(wgf_tilemap_layer_get_object_actor(things, 1) != 0 && wgf_actor_get_child_count(things) == 1,
+           "placed: the tile object drawn as its tile");
+    expect(wgf_scene_spawn_objects(scene, things) == 3 && wgf_actor_get_child_count(things) == 3 &&
+               wgf_tilemap_layer_get_object_actor(things, 1) == 0,
+           "the objects of a class the scene has a prefab of spawned, under their layer; the prefab in place of the "
+           "tile object's sprite");
     gold = wgf_actor_find(things, "gold");
     hidden = wgf_actor_get_child(things, 1);
     turned = wgf_actor_get_child(things, 2);

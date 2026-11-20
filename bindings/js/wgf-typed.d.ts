@@ -1442,38 +1442,42 @@ export declare const Body2d: {
     readonly setGrid: typeof raw.wgf_body2d_set_grid;
     /**
      * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
-     * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left is
-     * in the parent's space (the layer's offset, for the map's root; a layer scaled or turned
-     * under the parent is placed, not scaled or turned). Its cells as they are now: a cell set on
-     * the layer later is set here too with set_grid_cell. False too for a layer that isn't a
-     * placed tile layer, or a map whose tiles aren't square.
+     * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
+     * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
+     * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
+     * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
+     * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
+     * whose tiles aren't square.
      */
     readonly setGridFromLayer: typeof raw.wgf_body2d_set_grid_from_layer;
     /**
      * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
-     * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left is
-     * in the parent's space (the layer's offset, for the map's root; a layer scaled or turned
-     * under the parent is placed, not scaled or turned). Its cells as they are now: a cell set on
-     * the layer later is set here too with set_grid_cell. False too for a layer that isn't a
-     * placed tile layer, or a map whose tiles aren't square.
+     * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
+     * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
+     * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
+     * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
+     * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
+     * whose tiles aren't square.
      */
     readonly clearGrid: typeof raw.wgf_body2d_clear_grid;
     /**
      * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
-     * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left is
-     * in the parent's space (the layer's offset, for the map's root; a layer scaled or turned
-     * under the parent is placed, not scaled or turned). Its cells as they are now: a cell set on
-     * the layer later is set here too with set_grid_cell. False too for a layer that isn't a
-     * placed tile layer, or a map whose tiles aren't square.
+     * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
+     * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
+     * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
+     * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
+     * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
+     * whose tiles aren't square.
      */
     readonly getGridCell: typeof raw.wgf_body2d_get_grid_cell;
     /**
      * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
-     * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left is
-     * in the parent's space (the layer's offset, for the map's root; a layer scaled or turned
-     * under the parent is placed, not scaled or turned). Its cells as they are now: a cell set on
-     * the layer later is set here too with set_grid_cell. False too for a layer that isn't a
-     * placed tile layer, or a map whose tiles aren't square.
+     * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
+     * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
+     * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
+     * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
+     * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
+     * whose tiles aren't square.
      */
     readonly setGridCell: typeof raw.wgf_body2d_set_grid_cell;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
@@ -7304,9 +7308,11 @@ export declare const Scene: {
     /**
      * A placed Tiled map's object layer (wgf_tilemap_layer.h) made actors: for each of its
      * objects whose class (wgf_tilemap_get_object_class) names one of the scene's prefabs, that
-     * prefab spawned under the layer (wgf_prefab_spawn_at) at the object's middle -- a point's
-     * point, a polygon's or a polyline's place -- turned as the object is, named for it (when it
-     * has a name), hidden when Tiled hides it, and each of the object's custom properties set as
+     * prefab spawned under the layer (wgf_prefab_spawn_at) at the object's middle
+     * (wgf_tilemap_get_object_middle: a point's point, a polygon's or a polyline's place, a tile
+     * object's tile's as drawn), in place of a tile object's sprite (destroyed), turned as the
+     * object is, named for it (when it has a name), hidden when Tiled hides it, and each of the
+     * object's custom properties set as
      * a parameter of each behavior on its top actor, as text (wgf_tilemap_get_property; a value
      * starting '@' a reference, wgf_behavior.h), before the binding takes their CREATED. Objects
      * of no class, or a class the scene has no prefab of, are left for the program to read. The
@@ -8851,6 +8857,58 @@ export declare const Tilemap: {
      */
     readonly getBackgroundColor: typeof raw.wgf_tilemap_get_background_color;
     /**
+     * How its cells are laid out, and whether it is infinite (NONE and false for a map not READY).
+     */
+    readonly getOrientation: typeof raw.wgf_tilemap_get_orientation;
+    /**
+     * How its cells are laid out, and whether it is infinite (NONE and false for a map not READY).
+     */
+    readonly isInfinite: typeof raw.wgf_tilemap_is_infinite;
+    /**
+     * Tiled's column and row of its cell 0, 0: an infinite map's chunks' top-left, 0 for a
+     * finite map.
+     */
+    readonly getOriginColumn: typeof raw.wgf_tilemap_get_origin_column;
+    /**
+     * Tiled's column and row of its cell 0, 0: an infinite map's chunks' top-left, 0 for a
+     * finite map.
+     */
+    readonly getOriginRow: typeof raw.wgf_tilemap_get_origin_row;
+    /**
+     * The size of the box its cells cover, in its pixels, as Tiled gives a map's size (an
+     * isometric map's diamond's box; a staggered or hexagonal map's, its tile size made even).
+     */
+    readonly getPixelWidth: typeof raw.wgf_tilemap_get_pixel_width;
+    /**
+     * The size of the box its cells cover, in its pixels, as Tiled gives a map's size (an
+     * isometric map's diamond's box; a staggered or hexagonal map's, its tile size made even).
+     */
+    readonly getPixelHeight: typeof raw.wgf_tilemap_get_pixel_height;
+    /**
+     * Where a cell is, in the map's pixels from its top-left (y down; a layer's offset not
+     * added, wgf_tilemap_layer.h's calls add it): the middle of cell `column`, `row`'s shape (a
+     * rectangle, a diamond, or a hexagon), outside the map too; and the column and the row whose
+     * shape holds the point `x`, `y` (outside the map too: below 0, or its columns or rows and
+     * past), as Tiled finds them. 0 for a map that isn't READY.
+     */
+    readonly getCellMiddle: typeof raw.wgf_tilemap_get_cell_middle;
+    /**
+     * Where a cell is, in the map's pixels from its top-left (y down; a layer's offset not
+     * added, wgf_tilemap_layer.h's calls add it): the middle of cell `column`, `row`'s shape (a
+     * rectangle, a diamond, or a hexagon), outside the map too; and the column and the row whose
+     * shape holds the point `x`, `y` (outside the map too: below 0, or its columns or rows and
+     * past), as Tiled finds them. 0 for a map that isn't READY.
+     */
+    readonly getColumnAt: typeof raw.wgf_tilemap_get_column_at;
+    /**
+     * Where a cell is, in the map's pixels from its top-left (y down; a layer's offset not
+     * added, wgf_tilemap_layer.h's calls add it): the middle of cell `column`, `row`'s shape (a
+     * rectangle, a diamond, or a hexagon), outside the map too; and the column and the row whose
+     * shape holds the point `x`, `y` (outside the map too: below 0, or its columns or rows and
+     * past), as Tiled finds them. 0 for a map that isn't READY.
+     */
+    readonly getRowAt: typeof raw.wgf_tilemap_get_row_at;
+    /**
      * Its layers, groups flattened, in drawing order: how many, one's name and kind (NONE past
      * the end), and the first named `name` (-1 for none).
      */
@@ -8870,6 +8928,11 @@ export declare const Tilemap: {
      * the end), and the first named `name` (-1 for none).
      */
     readonly findLayer: typeof raw.wgf_tilemap_find_layer;
+    /**
+     * An image layer's image (a texture sampled nearest, the map's reference), 0 for a layer of
+     * another kind or one with no image.
+     */
+    readonly getLayerTexture: typeof raw.wgf_tilemap_get_layer_texture;
     /**
      * Its tilesets by first gid: how many, one's name, its first gid, how many tiles it has, and
      * its image (0 past the end).
@@ -8996,6 +9059,19 @@ export declare const Tilemap: {
      */
     readonly getObjectTile: typeof raw.wgf_tilemap_get_object_tile;
     /**
+     * A tile object's flips (wgf_tilemap_flip_t's X and Y; Tiled doesn't turn one by its
+     * diagonal), 0 for another shape.
+     */
+    readonly getObjectTileFlips: typeof raw.wgf_tilemap_get_object_tile_flips;
+    /**
+     * An object's middle in the map's pixels (an isometric map's objects' places taken to its
+     * pixels): a tile object's tile's as drawn (its place the point of it its tileset's object
+     * alignment says: the bottom-left, or an isometric map's bottom middle, by default), a
+     * rectangle's, an ellipse's, or a text's half its size across and down from its place, turned
+     * with it, and any other shape's place. 0, 0 for an object that isn't one.
+     */
+    readonly getObjectMiddle: typeof raw.wgf_tilemap_get_object_middle;
+    /**
      * A polygon's or a polyline's points, from its place (unturned), x and y in turn, into `out`
      * as many as fit in `count` floats, returning how many floats it filled; 0 for another
      * shape. get_object_point_count is how many points it has.
@@ -9078,16 +9154,141 @@ export declare const Tilemap: {
      */
     readonly getTilePropertyNumber: typeof raw.wgf_tilemap_get_tile_property_number;
     /**
+     * Its terrain (Wang) sets, by tileset and then as Tiled lists them: how many, one's name,
+     * kind (NONE past the end), and tileset's index (-1 past the end), and the first named
+     * `name` (-1 for none). A set's terrains are numbered from 1 (0 is none, as Tiled's): how
+     * many, one's name ("" for 0 or past the end), and the number of the first named `name` (0
+     * for none). A tile's terrain (by gid, its flips apart) at `place`, Tiled's order from its
+     * top clockwise: 0 its top edge, 1 its top-right corner, 2 its right edge, and so on to 7 its
+     * top-left corner (an edge set's tiles have terrains at the even places, a corner set's at
+     * the odd); 0 for a tile the set doesn't hold, or a place past 7. Painted into a layer with
+     * wgf_tilemap_layer_paint_terrain.
+     */
+    readonly getTerrainsetCount: typeof raw.wgf_tilemap_get_terrainset_count;
+    /**
+     * Its terrain (Wang) sets, by tileset and then as Tiled lists them: how many, one's name,
+     * kind (NONE past the end), and tileset's index (-1 past the end), and the first named
+     * `name` (-1 for none). A set's terrains are numbered from 1 (0 is none, as Tiled's): how
+     * many, one's name ("" for 0 or past the end), and the number of the first named `name` (0
+     * for none). A tile's terrain (by gid, its flips apart) at `place`, Tiled's order from its
+     * top clockwise: 0 its top edge, 1 its top-right corner, 2 its right edge, and so on to 7 its
+     * top-left corner (an edge set's tiles have terrains at the even places, a corner set's at
+     * the odd); 0 for a tile the set doesn't hold, or a place past 7. Painted into a layer with
+     * wgf_tilemap_layer_paint_terrain.
+     */
+    readonly getTerrainsetName: typeof raw.wgf_tilemap_get_terrainset_name;
+    /**
+     * Its terrain (Wang) sets, by tileset and then as Tiled lists them: how many, one's name,
+     * kind (NONE past the end), and tileset's index (-1 past the end), and the first named
+     * `name` (-1 for none). A set's terrains are numbered from 1 (0 is none, as Tiled's): how
+     * many, one's name ("" for 0 or past the end), and the number of the first named `name` (0
+     * for none). A tile's terrain (by gid, its flips apart) at `place`, Tiled's order from its
+     * top clockwise: 0 its top edge, 1 its top-right corner, 2 its right edge, and so on to 7 its
+     * top-left corner (an edge set's tiles have terrains at the even places, a corner set's at
+     * the odd); 0 for a tile the set doesn't hold, or a place past 7. Painted into a layer with
+     * wgf_tilemap_layer_paint_terrain.
+     */
+    readonly getTerrainsetKind: typeof raw.wgf_tilemap_get_terrainset_kind;
+    /**
+     * Its terrain (Wang) sets, by tileset and then as Tiled lists them: how many, one's name,
+     * kind (NONE past the end), and tileset's index (-1 past the end), and the first named
+     * `name` (-1 for none). A set's terrains are numbered from 1 (0 is none, as Tiled's): how
+     * many, one's name ("" for 0 or past the end), and the number of the first named `name` (0
+     * for none). A tile's terrain (by gid, its flips apart) at `place`, Tiled's order from its
+     * top clockwise: 0 its top edge, 1 its top-right corner, 2 its right edge, and so on to 7 its
+     * top-left corner (an edge set's tiles have terrains at the even places, a corner set's at
+     * the odd); 0 for a tile the set doesn't hold, or a place past 7. Painted into a layer with
+     * wgf_tilemap_layer_paint_terrain.
+     */
+    readonly getTerrainsetTileset: typeof raw.wgf_tilemap_get_terrainset_tileset;
+    /**
+     * Its terrain (Wang) sets, by tileset and then as Tiled lists them: how many, one's name,
+     * kind (NONE past the end), and tileset's index (-1 past the end), and the first named
+     * `name` (-1 for none). A set's terrains are numbered from 1 (0 is none, as Tiled's): how
+     * many, one's name ("" for 0 or past the end), and the number of the first named `name` (0
+     * for none). A tile's terrain (by gid, its flips apart) at `place`, Tiled's order from its
+     * top clockwise: 0 its top edge, 1 its top-right corner, 2 its right edge, and so on to 7 its
+     * top-left corner (an edge set's tiles have terrains at the even places, a corner set's at
+     * the odd); 0 for a tile the set doesn't hold, or a place past 7. Painted into a layer with
+     * wgf_tilemap_layer_paint_terrain.
+     */
+    readonly findTerrainset: typeof raw.wgf_tilemap_find_terrainset;
+    /**
+     * Its terrain (Wang) sets, by tileset and then as Tiled lists them: how many, one's name,
+     * kind (NONE past the end), and tileset's index (-1 past the end), and the first named
+     * `name` (-1 for none). A set's terrains are numbered from 1 (0 is none, as Tiled's): how
+     * many, one's name ("" for 0 or past the end), and the number of the first named `name` (0
+     * for none). A tile's terrain (by gid, its flips apart) at `place`, Tiled's order from its
+     * top clockwise: 0 its top edge, 1 its top-right corner, 2 its right edge, and so on to 7 its
+     * top-left corner (an edge set's tiles have terrains at the even places, a corner set's at
+     * the odd); 0 for a tile the set doesn't hold, or a place past 7. Painted into a layer with
+     * wgf_tilemap_layer_paint_terrain.
+     */
+    readonly getTerrainCount: typeof raw.wgf_tilemap_get_terrain_count;
+    /**
+     * Its terrain (Wang) sets, by tileset and then as Tiled lists them: how many, one's name,
+     * kind (NONE past the end), and tileset's index (-1 past the end), and the first named
+     * `name` (-1 for none). A set's terrains are numbered from 1 (0 is none, as Tiled's): how
+     * many, one's name ("" for 0 or past the end), and the number of the first named `name` (0
+     * for none). A tile's terrain (by gid, its flips apart) at `place`, Tiled's order from its
+     * top clockwise: 0 its top edge, 1 its top-right corner, 2 its right edge, and so on to 7 its
+     * top-left corner (an edge set's tiles have terrains at the even places, a corner set's at
+     * the odd); 0 for a tile the set doesn't hold, or a place past 7. Painted into a layer with
+     * wgf_tilemap_layer_paint_terrain.
+     */
+    readonly getTerrainName: typeof raw.wgf_tilemap_get_terrain_name;
+    /**
+     * Its terrain (Wang) sets, by tileset and then as Tiled lists them: how many, one's name,
+     * kind (NONE past the end), and tileset's index (-1 past the end), and the first named
+     * `name` (-1 for none). A set's terrains are numbered from 1 (0 is none, as Tiled's): how
+     * many, one's name ("" for 0 or past the end), and the number of the first named `name` (0
+     * for none). A tile's terrain (by gid, its flips apart) at `place`, Tiled's order from its
+     * top clockwise: 0 its top edge, 1 its top-right corner, 2 its right edge, and so on to 7 its
+     * top-left corner (an edge set's tiles have terrains at the even places, a corner set's at
+     * the odd); 0 for a tile the set doesn't hold, or a place past 7. Painted into a layer with
+     * wgf_tilemap_layer_paint_terrain.
+     */
+    readonly findTerrain: typeof raw.wgf_tilemap_find_terrain;
+    /**
+     * Its terrain (Wang) sets, by tileset and then as Tiled lists them: how many, one's name,
+     * kind (NONE past the end), and tileset's index (-1 past the end), and the first named
+     * `name` (-1 for none). A set's terrains are numbered from 1 (0 is none, as Tiled's): how
+     * many, one's name ("" for 0 or past the end), and the number of the first named `name` (0
+     * for none). A tile's terrain (by gid, its flips apart) at `place`, Tiled's order from its
+     * top clockwise: 0 its top edge, 1 its top-right corner, 2 its right edge, and so on to 7 its
+     * top-left corner (an edge set's tiles have terrains at the even places, a corner set's at
+     * the odd); 0 for a tile the set doesn't hold, or a place past 7. Painted into a layer with
+     * wgf_tilemap_layer_paint_terrain.
+     */
+    readonly getTileTerrain: typeof raw.wgf_tilemap_get_tile_terrain;
+    /**
      * The map placed under `parent` (0: none): a plain actor named for its file ("level" for
      * "maps/level.tmj"), in the map's pixels from its top-left, y down (scale it to place the map
      * in other units), with a layer actor under it for each of the map's layers in their order
      * (wgf_tilemap_layer.h): named for its layer, shown or hidden and at its offset as in Tiled.
-     * A tile layer's cells are drawn on a 2D stage, faded by its opacity, one sprite batch
-     * (wgf_sprite_batch.h) under it for each tileset it uses, each tile flipped as the map says,
-     * its bottom-left on its cell's (a tile larger than the map's cells reaches up and right, as
-     * Tiled draws it), and its animated tiles stepped each frame, held still under a paused actor
-     * (wgf_actor_set_paused). The layers hold a reference to the map. 0 for a map that isn't
-     * READY, a `parent` that isn't an actor (0 is), or no room for the actors.
+     * Drawn on a 2D stage, each faded by its layer's opacity:
+     *   - a tile layer's cells as sprite batches' quads (wgf_sprite_batch.h) under it, each tile
+     *     flipped as the map says, its bottom-left on its cell's box's (a tile larger than the
+     *     map's cells reaches up and right, as Tiled draws it), and its animated tiles stepped each
+     *     frame, held still under a paused actor (wgf_actor_set_paused). Where no tile can reach
+     *     past its cell (an orthogonal map whose tiles are its cells' size, unmoved by their
+     *     tilesets' offsets), a batch for each tileset the layer uses; where one can (larger or
+     *     moved tiles, and every isometric, staggered, or hexagonal map), the cells are drawn in
+     *     Tiled's order, a batch for each run of a tileset's tiles along a row of that order, so a
+     *     tile drawn later in Tiled's order is drawn over one before it whatever their tilesets;
+     *   - an object layer's tile objects as sprites (wgf_sprite.h) under it, each its tile sized
+     *     as the object, at its middle (wgf_tilemap_get_object_middle), turned, flipped, and shown
+     *     as Tiled has it, in the layer's draw order (by their y, Tiled's default, or as listed);
+     *     wgf_tilemap_layer_get_object_actor finds one;
+     *   - an image layer's image as a sprite under it, its top-left on the layer's.
+     * The layers hold a reference to the map. 0 for a map that isn't READY, a `parent` that isn't
+     * an actor (0 is), or no room for the actors.
+     *
+     * Built again when the map is loaded again in place (wgf_asset_reload): the root kept, and
+     * each layer actor whose layer the new file still has (by name and kind; the first of a
+     * name) kept with what was put under it, showing the new file's layer (what set_cell and
+     * paint_terrain changed gone with the rest); a layer actor the file no longer has destroyed
+     * with what is under it, and a new layer's made; tile objects' sprites made anew.
      */
     readonly instantiate: typeof raw.wgf_tilemap_instantiate;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
@@ -9144,6 +9345,33 @@ export declare const TilemapLayer: {
      * placed layer.
      */
     readonly getRowAt: typeof raw.wgf_tilemap_layer_get_row_at;
+    /**
+     * The middle of cell `column`, `row` (outside the layer too) in its parent's units: the
+     * reverse of get_column_at and get_row_at. 0, 0 for an actor that isn't a placed layer.
+     */
+    readonly getCellMiddle: typeof raw.wgf_tilemap_layer_get_cell_middle;
+    /**
+     * Terrain `terrain` of terrain set `set` (wgf_tilemap.h, numbered from 1; 0 none) painted
+     * into cell `column`, `row` as Tiled's Terrain brush paints it (helix-legacy's setTerrain): a
+     * corner set's cell takes it at its four corners, an edge set's at its four edges, and the
+     * cell and the neighbors sharing them take the set's tile that fits what is around them (the
+     * first in the set's order; flips are never chosen). The terrains around are read from the
+     * layer's cells the first time a set is painted, and kept as painted until a cell is set
+     * another way (set_cell, set_cells), when they are read again. Where none of the set's tiles
+     * fits, a cell is left as it was; where nothing of the set is left, a cell showing a tile of
+     * the set's tileset is emptied. False, painting nothing, for a cell outside the layer, a set
+     * or terrain the map hasn't, a mixed set, or a staggered or hexagonal map; true once painted,
+     * whether every cell found its tile or not (each does when the set has a tile for every
+     * arrangement).
+     */
+    readonly paintTerrain: typeof raw.wgf_tilemap_layer_paint_terrain;
+    /**
+     * A tile object of an object layer drawn as its tile (wgf_tilemap_instantiate): its sprite
+     * (wgf_sprite.h), under the layer. 0 for an object that isn't a tile, an object past the
+     * layer's, or a sprite destroyed (wgf_scene_spawn_objects destroys one it spawns a prefab in
+     * place of).
+     */
+    readonly getObjectActor: typeof raw.wgf_tilemap_layer_get_object_actor;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
@@ -10610,10 +10838,14 @@ export type TilemapFlip = raw.wgf_tilemap_flip_t;
 export declare const TilemapFlip: { readonly NONE: TilemapFlip; readonly X: TilemapFlip; readonly Y: TilemapFlip; readonly DIAGONAL: TilemapFlip; };
 export type TilemapLayerKind = raw.wgf_tilemap_layer_kind_t;
 export declare const TilemapLayerKind: { readonly NONE: TilemapLayerKind; readonly TILES: TilemapLayerKind; readonly OBJECTS: TilemapLayerKind; readonly IMAGE: TilemapLayerKind; };
+export type TilemapOrientation = raw.wgf_tilemap_orientation_t;
+export declare const TilemapOrientation: { readonly NONE: TilemapOrientation; readonly ORTHOGONAL: TilemapOrientation; readonly ISOMETRIC: TilemapOrientation; readonly STAGGERED: TilemapOrientation; readonly HEXAGONAL: TilemapOrientation; };
 export type TilemapPropertyType = raw.wgf_tilemap_property_type_t;
 export declare const TilemapPropertyType: { readonly NONE: TilemapPropertyType; readonly STRING: TilemapPropertyType; readonly INT: TilemapPropertyType; readonly FLOAT: TilemapPropertyType; readonly BOOL: TilemapPropertyType; readonly COLOR: TilemapPropertyType; readonly FILE: TilemapPropertyType; readonly OBJECT: TilemapPropertyType; readonly CLASS: TilemapPropertyType; };
 export type TilemapShape = raw.wgf_tilemap_shape_t;
 export declare const TilemapShape: { readonly NONE: TilemapShape; readonly RECTANGLE: TilemapShape; readonly POINT: TilemapShape; readonly ELLIPSE: TilemapShape; readonly POLYGON: TilemapShape; readonly POLYLINE: TilemapShape; readonly TILE: TilemapShape; readonly TEXT: TilemapShape; };
+export type TilemapTerrainKind = raw.wgf_tilemap_terrain_kind_t;
+export declare const TilemapTerrainKind: { readonly NONE: TilemapTerrainKind; readonly CORNER: TilemapTerrainKind; readonly EDGE: TilemapTerrainKind; readonly MIXED: TilemapTerrainKind; };
 export type TiltStatus = raw.wgf_tilt_status_t;
 export declare const TiltStatus: { readonly OFF: TiltStatus; readonly WAITING_FOR_TAP: TiltStatus; readonly STARTING: TiltStatus; readonly ON: TiltStatus; readonly REFUSED: TiltStatus; readonly UNAVAILABLE: TiltStatus; readonly NEEDS_HTTPS: TiltStatus; };
 export type Transition = raw.wgf_transition_t;

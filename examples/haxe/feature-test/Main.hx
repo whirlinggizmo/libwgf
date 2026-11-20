@@ -1461,22 +1461,35 @@ class Main {
 		expect(Resource.getStatus(island) == ResourceStatus.READY && island.getColumns() == 24 && island.getRows() == 16
 			&& island.getTileWidth() == 16 && island.getTileHeight() == 16 && island.getBackgroundColor() == 0x18202cff,
 			"a Tiled map read: its size, tile size, background");
-		expect(island.getLayerCount() == 3 && island.getLayerName(0) == "ground" && island.findLayer("props") == 1
-			&& island.getLayerKind(2) == TilemapLayerKind.OBJECTS, "its layers");
-		expect(island.getTilesetCount() == 2 && island.getTilesetName(0) == "tiles" && island.getTilesetFirstGid(1) == 9
+		expect(island.getLayerCount() == 5 && island.getLayerName(0) == "ground" && island.findLayer("props") == 2
+			&& island.getLayerKind(3) == TilemapLayerKind.OBJECTS && island.getLayerKind(4) == TilemapLayerKind.IMAGE
+			&& !island.getLayerTexture(4).isNone() && island.getLayerTexture(0).isNone(), "its layers, an image layer's image");
+		expect(island.getTilesetCount() == 3 && island.getTilesetName(0) == "tiles" && island.getTilesetFirstGid(1) == 9
 			&& island.getTilesetTileCount(0) == 8 && !island.getTilesetTexture(1).isNone(), "its tilesets");
+		expect(island.getOrientation() == TilemapOrientation.ORTHOGONAL && !island.isInfinite() && island.getOriginColumn() == 0
+			&& island.getOriginRow() == 0 && island.getPixelWidth() == 384 && island.getPixelHeight() == 256
+			&& island.getCellMiddle(1, 1).x == 24 && island.getColumnAt(40, 40) == 2 && island.getRowAt(40, 40) == 2,
+			"its grid: orthogonal, finite, its size in pixels, cells and points");
+		expect(island.getTerrainsetCount() == 1 && island.getTerrainsetName(0) == "trail"
+			&& island.getTerrainsetKind(0) == TilemapTerrainKind.CORNER && island.getTerrainsetTileset(0) == 2
+			&& island.findTerrainset("trail") == 0 && island.getTerrainCount(0) == 1 && island.getTerrainName(0, 1) == "dirt"
+			&& island.findTerrain(0, "dirt") == 1 && island.getTileTerrain(0, 13 + 15, 1) == 1, "its terrain set");
 		var hero = 0;
-		while (hero < island.getObjectCount(2) && island.getObjectName(2, hero) != "hero")
+		while (hero < island.getObjectCount(3) && island.getObjectName(3, hero) != "hero")
 			hero++;
-		expect(island.getObjectClass(2, hero) == "hero" && island.getObjectShape(2, hero) == TilemapShape.POINT
-			&& island.getObjectId(2, hero) == hero + 1 && near(island.getObjectPosition(2, hero).x, 72)
-			&& island.getObjectSize(2, hero).x == 0 && island.getObjectRotation(2, hero) == 0 && island.isObjectVisible(2, hero)
-			&& island.getObjectTile(2, hero) == 0 && island.getObjectPointCount(2, hero) == 0
-			&& island.getObjectPoints(2, hero, [0.0, 0]) == 0, "an object: its name, class, shape, place");
+		expect(island.getObjectClass(3, hero) == "hero" && island.getObjectShape(3, hero) == TilemapShape.POINT
+			&& island.getObjectId(3, hero) == hero + 1 && near(island.getObjectPosition(3, hero).x, 72)
+			&& island.getObjectSize(3, hero).x == 0 && island.getObjectRotation(3, hero) == 0 && island.isObjectVisible(3, hero)
+			&& island.getObjectTile(3, hero) == 0 && island.getObjectPointCount(3, hero) == 0
+			&& island.getObjectPoints(3, hero, [0.0, 0]) == 0 && near(island.getObjectMiddle(3, hero).y, 152),
+			"an object: its name, class, shape, place");
+		expect(island.getObjectTile(3, 20) == 8 && island.getObjectTileFlips(3, 20) == TilemapFlip.X
+			&& near(island.getObjectMiddle(3, 20).x, 48) && near(island.getObjectMiddle(3, 20).y, 56),
+			"a tile object: its tile, flips, and middle");
 		expect(island.getPropertyCount(-1, -1) == 1 && island.getPropertyName(-1, -1, 0) == "title"
 			&& island.getProperty(-1, -1, "title") == "Coin island"
-			&& island.getPropertyType(2, hero, "speed") == TilemapPropertyType.FLOAT
-			&& near(island.getPropertyNumber(2, hero, "speed"), 40), "the map's and an object's properties");
+			&& island.getPropertyType(3, hero, "speed") == TilemapPropertyType.FLOAT
+			&& near(island.getPropertyNumber(3, hero, "speed"), 40), "the map's and an object's properties");
 		expect(island.getTileClass(8) == "rock" && island.getTilePropertyCount(8) == 1 && island.getTilePropertyName(8, 0) == "solid"
 			&& island.getTilePropertyType(8, "solid") == TilemapPropertyType.BOOL && island.getTileProperty(8, "solid") == "true"
 			&& island.getTilePropertyNumber(8, "solid") == 1, "a tile's class and properties");
@@ -1484,8 +1497,12 @@ class Main {
 		final ground:TilemapLayer = root.find("ground");
 		final props:TilemapLayer = root.find("props");
 		final things:TilemapLayer = root.find("things");
-		expect(!root.isNone() && root.getChildCount() == 3 && ground.getMap() == island && props.getIndex() == 1
+		final trail:TilemapLayer = root.find("trail");
+		expect(!root.isNone() && root.getChildCount() == 5 && ground.getMap() == island && props.getIndex() == 2
 			&& (ground : Actor).getKind() == ActorKind.TILEMAP_LAYER, "placed: a layer actor each");
+		expect(!things.getObjectActor(20).isNone() && things.getObjectActor(0).isNone(), "a tile object drawn as its tile");
+		expect(trail.paintTerrain(5, 5, 0, 1) && trail.getCell(5, 5) == 13 + 15 && trail.getCell(4, 4) == 13 + 4
+			&& trail.getCellMiddle(5, 5).x == 88, "terrain painted, the cells around fitted");
 		expect(ground.getCell(0, 0) == 1 && props.getCell(21, 9) == 8 && props.getCellFlips(21, 9) == TilemapFlip.X
 			&& ground.setCell(0, 0, 2, TilemapFlip.NONE) && ground.getCell(0, 0) == 2, "a cell read and set");
 		final cells = [for (_ in 0...24 * 16) 0];

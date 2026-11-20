@@ -73,11 +73,12 @@ WGF_API float wgf_body2d_get_air_time(wgf_actor_t actor);
 WGF_API bool wgf_body2d_set_grid(wgf_actor_t parent, const int *cells, int count, int columns, float size, float x,
                                  float y);
 /* The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
- * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left is
- * in the parent's space (the layer's offset, for the map's root; a layer scaled or turned
- * under the parent is placed, not scaled or turned). Its cells as they are now: a cell set on
- * the layer later is set here too with set_grid_cell. False too for a layer that isn't a
- * placed tile layer, or a map whose tiles aren't square. */
+ * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
+ * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
+ * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
+ * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
+ * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
+ * whose tiles aren't square. */
 WGF_API bool wgf_body2d_set_grid_from_layer(wgf_actor_t parent, wgf_actor_t layer);
 WGF_API bool wgf_body2d_clear_grid(wgf_actor_t parent);
 WGF_API int wgf_body2d_get_grid_cell(wgf_actor_t parent, int column, int row);

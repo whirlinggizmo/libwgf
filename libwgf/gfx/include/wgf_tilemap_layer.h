@@ -19,7 +19,9 @@ extern "C" {
  * no cells.
  *
  * A cell is a tile's gid (0 empty) and its flips (wgf_tilemap_flip_t's bits). In bulk
- * (get_cells, set_cells), a cell is one int: its gid plus its flips times 0x10000000. */
+ * (get_cells, set_cells), a cell is one int: its gid plus its flips times 0x10000000. Columns
+ * and rows are the map's (wgf_tilemap.h: an isometric map's along its axes, a staggered or
+ * hexagonal map's as Tiled counts them, an infinite map's from its origin). */
 
 /* The map it is of, and its layer's index there. */
 WGF_API wgf_tilemap_t wgf_tilemap_layer_get_map(wgf_actor_t layer);
@@ -47,6 +49,29 @@ WGF_API bool wgf_tilemap_layer_set_cells(wgf_actor_t layer, const int *cells, in
  * placed layer. */
 WGF_API int wgf_tilemap_layer_get_column_at(wgf_actor_t layer, float x, float y);
 WGF_API int wgf_tilemap_layer_get_row_at(wgf_actor_t layer, float x, float y);
+/* The middle of cell `column`, `row` (outside the layer too) in its parent's units: the
+ * reverse of get_column_at and get_row_at. 0, 0 for an actor that isn't a placed layer. */
+WGF_API wgf_vec2_t wgf_tilemap_layer_get_cell_middle(wgf_actor_t layer, int column, int row);
+
+/* Terrain `terrain` of terrain set `set` (wgf_tilemap.h, numbered from 1; 0 none) painted
+ * into cell `column`, `row` as Tiled's Terrain brush paints it (helix-legacy's setTerrain): a
+ * corner set's cell takes it at its four corners, an edge set's at its four edges, and the
+ * cell and the neighbors sharing them take the set's tile that fits what is around them (the
+ * first in the set's order; flips are never chosen). The terrains around are read from the
+ * layer's cells the first time a set is painted, and kept as painted until a cell is set
+ * another way (set_cell, set_cells), when they are read again. Where none of the set's tiles
+ * fits, a cell is left as it was; where nothing of the set is left, a cell showing a tile of
+ * the set's tileset is emptied. False, painting nothing, for a cell outside the layer, a set
+ * or terrain the map hasn't, a mixed set, or a staggered or hexagonal map; true once painted,
+ * whether every cell found its tile or not (each does when the set has a tile for every
+ * arrangement). */
+WGF_API bool wgf_tilemap_layer_paint_terrain(wgf_actor_t layer, int column, int row, int set, int terrain);
+
+/* A tile object of an object layer drawn as its tile (wgf_tilemap_instantiate): its sprite
+ * (wgf_sprite.h), under the layer. 0 for an object that isn't a tile, an object past the
+ * layer's, or a sprite destroyed (wgf_scene_spawn_objects destroys one it spawns a prefab in
+ * place of). */
+WGF_API wgf_actor_t wgf_tilemap_layer_get_object_actor(wgf_actor_t layer, int object);
 
 #ifdef __cplusplus
 }

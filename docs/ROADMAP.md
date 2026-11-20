@@ -6,19 +6,10 @@ What is left to build, in order. A finished item is deleted from this file, not 
 
 Rob's (2026-11-19): libwgf is finished so that a pure C and wasm engine can be compared with helix. Done means three things: **helix-raylib's feature set as a floor** (what a helix-raylib program can do, a libwgf program can, in libwgf's own way: feature parity, not its API, and not only what it does); **helix's benchmarks** (the bunnymark and the animated robots, `../helix/docs/benchmarks.md`) run on libwgf beside helix-raylib's rows, speed and size; and **Wardens** (helix's engine trial) built on libwgf and graded as helix's entrants are. The blocks below are in order; each item has its tests, an example where there is something to see, its calls in the bindings and the feature test, and a look at how helix-raylib and helix-legacy did it (read-only).
 
-1. **The game structure block** (below), in its order.
-2. **Wardens** (below), what it needs, then the game.
-3. **The comparison.** The bunnymark and the robots on libwgf, on the web and natively, beside helix's rows on this machine; Wardens' grades beside helix's entrants'; the parity checklist's rows, each as libwgf has it, and what libwgf has that helix-raylib doesn't. Written up in HISTORY.md.
+1. **Wardens** (below), what it needs, then the game.
+2. **The comparison.** The bunnymark and the robots on libwgf, on the web and natively, beside helix's rows on this machine; Wardens' grades beside helix's entrants'; the parity checklist's rows, each as libwgf has it, and what libwgf has that helix-raylib doesn't. Written up in HISTORY.md.
 
 Out of the parity work, as not libwgf's (the checklist's skips): desktop window chrome, the program owning the frame loop, warping the mouse; path, string, and codepoint helpers, compression, Base64, and hashes (the host language's); VR stereo; rlgl's immediate vertices, matrix stack, and global GL state; image editing on the CPU, pixel formats, and exporting images, meshes, and code; raygui's color picker, grid, built-in icons, style files, and draggable windows; OBJ, IQM, VOX, and M3D models.
-
-## Game structure
-
-What a game of any genre writes in its first day, in this order, each done as a core system is, carrying helix-legacy's.
-
-1. **Tilemaps, the rest** (Tiled maps are in: `wgf_tilemap.h`, `wgf_tilemap_layer.h`; HISTORY.md, "Tiled maps"): what helix-legacy's `tiled/` has that they don't -- terrain (Wang) sets read and painted into a layer as Tiled's Terrain brush does (helix's `setTerrain`); image layers drawn (listed today); tile objects drawn as their tiles (read today, drawn only as a prefab a class names); a map's files read again in place when they change during development (`wgf_asset_reload`; a map doesn't reload today); and a layer's tilesets drawn cell by cell where their tiles overlap (each tileset's batch is drawn whole, in tileset order). Isometric, staggered, hexagonal, and infinite maps, which helix-legacy refuses too, stay out until a game on the ROADMAP needs one.
-
-Done when every item's calls are in the bindings and the feature test, and each has an example in the browser check.
 
 ## Wardens: what it needs, then the game
 

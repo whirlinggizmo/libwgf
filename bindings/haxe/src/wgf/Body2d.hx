@@ -132,44 +132,48 @@ import wgf.impl.Raw;
 
 	/**
 	    The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
-	    tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left is
-	    in the parent's space (the layer's offset, for the map's root; a layer scaled or turned
-	    under the parent is placed, not scaled or turned). Its cells as they are now: a cell set on
-	    the layer later is set here too with set_grid_cell. False too for a layer that isn't a
-	    placed tile layer, or a map whose tiles aren't square.
+	    tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
+	    is in the parent's space (the layer's offset, for the map's root, and an infinite map's
+	    origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
+	    cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
+	    False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
+	    whose tiles aren't square.
 	**/
 	public inline function setGridFromLayer(layer:Actor):Bool
 		return Raw.wgf_body2d_set_grid_from_layer(this, layer);
 
 	/**
 	    The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
-	    tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left is
-	    in the parent's space (the layer's offset, for the map's root; a layer scaled or turned
-	    under the parent is placed, not scaled or turned). Its cells as they are now: a cell set on
-	    the layer later is set here too with set_grid_cell. False too for a layer that isn't a
-	    placed tile layer, or a map whose tiles aren't square.
+	    tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
+	    is in the parent's space (the layer's offset, for the map's root, and an infinite map's
+	    origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
+	    cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
+	    False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
+	    whose tiles aren't square.
 	**/
 	public inline function clearGrid():Bool
 		return Raw.wgf_body2d_clear_grid(this);
 
 	/**
 	    The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
-	    tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left is
-	    in the parent's space (the layer's offset, for the map's root; a layer scaled or turned
-	    under the parent is placed, not scaled or turned). Its cells as they are now: a cell set on
-	    the layer later is set here too with set_grid_cell. False too for a layer that isn't a
-	    placed tile layer, or a map whose tiles aren't square.
+	    tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
+	    is in the parent's space (the layer's offset, for the map's root, and an infinite map's
+	    origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
+	    cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
+	    False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
+	    whose tiles aren't square.
 	**/
 	public inline function getGridCell(column:Int, row:Int):Int
 		return Raw.wgf_body2d_get_grid_cell(this, column, row);
 
 	/**
 	    The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
-	    tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left is
-	    in the parent's space (the layer's offset, for the map's root; a layer scaled or turned
-	    under the parent is placed, not scaled or turned). Its cells as they are now: a cell set on
-	    the layer later is set here too with set_grid_cell. False too for a layer that isn't a
-	    placed tile layer, or a map whose tiles aren't square.
+	    tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
+	    is in the parent's space (the layer's offset, for the map's root, and an infinite map's
+	    origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
+	    cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
+	    False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
+	    whose tiles aren't square.
 	**/
 	public inline function setGridCell(column:Int, row:Int, value:Int):Bool
 		return Raw.wgf_body2d_set_grid_cell(this, column, row, value);

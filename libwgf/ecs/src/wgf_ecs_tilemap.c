@@ -15,27 +15,6 @@
 #include "wgf_resource.h"
 #include "wgf_tilemap.h"
 #include "wgf_tilemap_layer.h"
-#include "wgf_trig.h"
-
-/* The object's middle in its layer's units: half its size across and down from its place,
- * turned with it (a tile object's place is its bottom-left, so up); a point's, a polygon's,
- * or a polyline's place itself. */
-static void middle_of(wgf_tilemap_t map, int layer, int object, float *x, float *y)
-{
-    const wgf_tilemap_shape_t shape = wgf_tilemap_get_object_shape(map, layer, object);
-    const wgf_vec2_t place = wgf_tilemap_get_object_position(map, layer, object);
-    const wgf_vec2_t size = wgf_tilemap_get_object_size(map, layer, object);
-    const float turn = wgf_tilemap_get_object_rotation(map, layer, object);
-    const float c = wgf_trig_cos(turn), s = wgf_trig_sin(turn);
-    float across = 0.0f, down = 0.0f;
-    if (shape == WGF_TILEMAP_SHAPE_RECTANGLE || shape == WGF_TILEMAP_SHAPE_ELLIPSE || shape == WGF_TILEMAP_SHAPE_TEXT) {
-        across = size.x * 0.5f, down = size.y * 0.5f;
-    } else if (shape == WGF_TILEMAP_SHAPE_TILE) {
-        across = size.x * 0.5f, down = -size.y * 0.5f;
-    }
-    *x = place.x + across * c - down * s;
-    *y = place.y + across * s + down * c;
-}
 
 /* The object's properties set on each behavior of `actor`'s, as text. */
 static void set_params(wgf_tilemap_t map, int layer, int object, wgf_actor_t actor)
@@ -69,13 +48,16 @@ int wgf_scene_spawn_objects(wgf_scene_t scene, wgf_actor_t layer)
     for (object = 0; object < wgf_tilemap_get_object_count(map, index); object++) {
         const char *class_name = wgf_tilemap_get_object_class(map, index, object);
         wgf_prefab_t prefab;
-        wgf_actor_t actor;
-        float x, y;
+        wgf_actor_t actor, drawn;
+        wgf_vec2_t middle;
         if (class_name[0] == '\0' || !wgf_scene_has_prefab(scene, class_name)) continue;
         prefab = wgf_scene_find_prefab(scene, class_name);
-        middle_of(map, index, object, &x, &y);
-        actor = wgf_prefab_spawn_at(prefab, layer, x, y, 0.0f, wgf_tilemap_get_object_rotation(map, index, object));
+        middle = wgf_tilemap_get_object_middle(map, index, object);
+        actor = wgf_prefab_spawn_at(prefab, layer, middle.x, middle.y, 0.0f,
+                                    wgf_tilemap_get_object_rotation(map, index, object));
         if (actor == 0) continue;
+        drawn = wgf_tilemap_layer_get_object_actor(layer, object);
+        if (drawn != 0) wgf_actor_destroy(drawn, WGF_ACTOR_DESTROY_CHILDREN); /* the prefab in its place */
         if (wgf_tilemap_get_object_name(map, index, object)[0] != '\0') {
             wgf_actor_set_name(actor, wgf_tilemap_get_object_name(map, index, object));
         }
@@ -95,17 +77,18 @@ bool wgf_body2d_set_grid_from_layer(wgf_actor_t parent, wgf_actor_t layer)
     int *cells, count, i;
     bool set;
     if (map == 0 || wgf_gfx_priv_actor_of(parent) == NULL || columns <= 0 || rows <= 0 ||
-        size != wgf_tilemap_get_tile_height(map)) {
+        size != wgf_tilemap_get_tile_height(map) || wgf_tilemap_get_orientation(map) != WGF_TILEMAP_ORIENTATION_ORTHOGONAL) {
         return false;
     }
     cells = (int *)malloc(sizeof(int) * (size_t)columns * (size_t)rows);
     if (cells == NULL) return false;
     count = wgf_tilemap_layer_get_cells(layer, cells, columns * rows);
     for (i = 0; i < count; i++) cells[i] = cells[i] != 0 ? 1 : 0;
-    /* The layer's top-left in the parent's space. */
+    /* The layer's top-left cell's corner in the parent's space (an infinite map's from its origin). */
     corner = wgf_mat4_transform_point(wgf_mat4_mul(wgf_mat4_invert(wgf_gfx_priv_actor_get_world_matrix(parent)),
                                                    wgf_gfx_priv_actor_get_world_matrix(layer)),
-                                      wgf_vec3_make(0.0f, 0.0f, 0.0f));
+                                      wgf_vec3_make((float)(wgf_tilemap_get_origin_column(map) * size),
+                                                    (float)(wgf_tilemap_get_origin_row(map) * size), 0.0f));
     set = count == columns * rows && wgf_body2d_set_grid(parent, cells, count, columns, (float)size, corner.x, corner.y);
     free(cells);
     return set;

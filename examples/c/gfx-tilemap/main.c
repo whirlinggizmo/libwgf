@@ -21,15 +21,20 @@
 #include "wgf_window.h"
 #include "wgf_world.h"
 
-/* A Tiled map: maps/island.tmj, its tileset maps/tiles.tsj over textures/tiles.png and an
- * embedded one of animated water (textures/water.png), Tiled's JSON written by hand.
+/* A Tiled map: maps/island.tmj, its tileset maps/tiles.tsj over textures/tiles.png, an
+ * embedded one of animated water (textures/water.png), and maps/terrain.tsj, a terrain (Wang)
+ * set of a dirt trail; Tiled's JSON written by hand.
  *   - its tile layers drawn as sprite batches (one for each tileset a layer uses), the water
  *     animated as its tileset says, the props layer's rocks flipped and turned by Tiled's
  *     flip bits
  *   - its object layer made actors: each object whose class is a prefab of
  *     scenes/island.scene (trees, a flag, coins, the hero) spawned there, its custom
- *     properties (a coin's value, the hero's speed) its behaviors' parameters
- *   - the hero a 2D body sliding against the props layer's cells (its solid grid)
+ *     properties (a coin's value, the hero's speed) its behaviors' parameters; a tile object
+ *     (a boulder, mirrored) drawn as its tile
+ *   - an image layer (textures/clouds.png) drawn over it all, drifting: a layer is an actor
+ *   - the hero a 2D body sliding against the props layer's cells (its solid grid), wearing a
+ *     trail: dirt painted into the trail layer at each cell it enters, as Tiled's Terrain
+ *     brush paints, the cells around taking the tiles that fit
  *   - a coin taken turns the path under it to sand: a cell set, found from a point
  *
  *   arrows or WASD   walk (left alone, the hero walks the path by itself)
@@ -42,11 +47,12 @@
 #define SAND 2 /* tiles.tsj's second tile */
 
 static struct {
-    wgf_actor_t stage, camera, root, ground, things, hero;
+    wgf_actor_t stage, camera, root, ground, trail, things, hero, clouds;
     wgf_tilemap_t map;
     wgf_scene_t scene;
     wgf_actor_t coins[MAX_COINS];
     int coin_count, taken, score, worth, sanded;
+    int trail_set, dirt, painted, last_column, last_row; /* the trail's terrain set and terrain, cells painted */
     float speed, walk; /* the hero's speed (its object's property), and its way when left alone */
     float zoom;        /* map pixels seen top to bottom */
     bool played;       /* a key pressed: no longer walking by itself */
@@ -82,6 +88,11 @@ static void place(void)
     int i;
     g.root = wgf_tilemap_instantiate(g.map, g.stage);
     g.ground = wgf_actor_find(g.root, "ground");
+    g.trail = wgf_actor_find(g.root, "trail");
+    g.clouds = wgf_actor_find(g.root, "clouds");
+    g.trail_set = wgf_tilemap_find_terrainset(g.map, "trail");
+    g.dirt = wgf_tilemap_find_terrain(g.map, g.trail_set, "dirt");
+    g.last_column = g.last_row = -1;
     g.things = wgf_actor_find(g.root, "things");
     wgf_scene_spawn_objects(g.scene, g.things);
     g.hero = wgf_actor_find(g.things, "hero");
@@ -140,6 +151,17 @@ static void take_coins(void)
     }
 }
 
+/* Dirt painted where the hero is, once a cell: a trail, its edges fitted to the grass. */
+static void wear_trail(void)
+{
+    const wgf_vec3_t at = wgf_actor_get_position(g.hero);
+    const int column = wgf_tilemap_layer_get_column_at(g.trail, at.x, at.y);
+    const int row = wgf_tilemap_layer_get_row_at(g.trail, at.x, at.y);
+    if (column == g.last_column && row == g.last_row) return;
+    g.last_column = column, g.last_row = row;
+    if (wgf_tilemap_layer_paint_terrain(g.trail, column, row, g.trail_set, g.dirt)) g.painted++;
+}
+
 /* The camera on the hero (the map's middle before), kept over the map. */
 static void place_camera(void)
 {
@@ -171,6 +193,12 @@ static void frame(void *user)
     if (g.hero != 0) {
         walk();
         take_coins();
+        wear_trail();
+    }
+    if (g.clouds != 0) { /* the image layer drifting across, round again past the map's right */
+        const wgf_vec3_t at = wgf_actor_get_position(g.clouds);
+        const float x = at.x + 0.25f;
+        wgf_actor_set_position(g.clouds, x > (float)wgf_tilemap_get_pixel_width(g.map) ? -192.0f : x, at.y, 0.0f);
     }
     if (wgf_mouse_get_wheel().y != 0.0f) { /* fewer pixels seen = closer */
         g.zoom -= wgf_mouse_get_wheel().y * 24.0f;
@@ -183,8 +211,9 @@ static void frame(void *user)
     snprintf(line, sizeof(line), "libwgf tilemap: %s, a Tiled map on sprite batches",
              g.root != 0 ? wgf_tilemap_get_property(g.map, -1, -1, "title") : "loading");
     wgf_draw_text(0, line, 20, 20, 20, g.text);
-    snprintf(line, sizeof(line), "coins: %d of %d   worth: %d of %d   cells set: %d   layers: %d   tilesets: %d",
-             g.taken, g.coin_count, g.score, g.worth, g.sanded, wgf_tilemap_get_layer_count(g.map),
+    snprintf(line, sizeof(line),
+             "coins: %d of %d   worth: %d of %d   cells set: %d   trail painted: %d   layers: %d   tilesets: %d",
+             g.taken, g.coin_count, g.score, g.worth, g.sanded, g.painted, wgf_tilemap_get_layer_count(g.map),
              wgf_tilemap_get_tileset_count(g.map));
     wgf_draw_text(0, line, 20, 46, 15, g.dim);
     wgf_draw_text(0, "arrows or WASD to walk (it walks by itself when left alone), wheel to zoom", 20, 68, 15, g.dim);

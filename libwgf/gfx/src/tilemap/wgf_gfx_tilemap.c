@@ -22,12 +22,14 @@
 #include "wgf_core_resource_priv.h"
 #include "wgf_log.h"
 #include "wgf_resource.h"
+#include "wgf_trig.h"
 
 #define MAX_SIDE 65536          /* a map's columns or rows */
 #define MAX_CELLS (1 << 24)     /* a map's cells */
 #define MAX_TILE_SIDE 4096      /* a tile's pixels */
 #define MAX_TILES (1 << 20)     /* a tileset's tiles */
 #define MAX_GROUP_DEPTH 32
+#define MAX_CHUNK_PLACE 16777216.0 /* an infinite map's chunk's column or row, either way */
 #define PI_F 3.14159265358979f
 
 typedef struct map_t {
@@ -85,9 +87,20 @@ static void free_data(wgf_gfx_priv_tilemap_data_t *d)
             free_properties(&l->objects[k].properties);
         }
         free(l->objects);
+        free(l->image);
+        if (l->texture != 0) wgf_resource_release(l->texture);
         free_properties(&l->properties);
     }
     free(d->layers);
+    for (i = 0; i < d->terrain_set_count; i++) {
+        wgf_gfx_priv_tilemap_terrain_set_t *set = &d->terrain_sets[i];
+        free(set->name);
+        for (k = 0; set->terrains != NULL && k < set->terrain_count; k++) free(set->terrains[k]);
+        free(set->terrains);
+        free(set->tiles);
+        free(set->places);
+    }
+    free(d->terrain_sets);
     for (i = 0; i < d->tileset_count; i++) {
         wgf_gfx_priv_tilemap_tileset_t *t = &d->tilesets[i];
         free(t->name);
@@ -205,11 +218,93 @@ static bool in_range(double value, double low, double high)
     return value >= low && value <= high && value == floor(value);
 }
 
+typedef struct reading_t {
+    const char *path; /* the map's */
+    wgf_gfx_priv_tilemap_data_t *data;
+    int layer_capacity, terrain_set_capacity;
+} reading_t;
+
+/* A tile object's anchor by Tiled's name for it; "unspecified" (or none) is Tiled's default,
+ * the bottom's middle on an isometric map and the bottom-left on any other. */
+static int alignment_of(const char *name, bool isometric)
+{
+    static const char *const names[] = {"bottomleft", "bottom", "bottomright", "left",   "center",
+                                         "right",      "topleft", "top",        "topright"};
+    int i;
+    for (i = 0; i < (int)(sizeof(names) / sizeof(names[0])); i++) {
+        if (strcmp(name, names[i]) == 0) return i;
+    }
+    return isometric ? WGF_GFX_PRIV_TILEMAP_ALIGN_BOTTOM : WGF_GFX_PRIV_TILEMAP_ALIGN_BOTTOM_LEFT;
+}
+
+/* A tileset's terrain (Wang) sets, appended to the map's, their tileset noted by its first
+ * gid until the tilesets are sorted. A tile whose places name a terrain the set hasn't is
+ * left out. False only for no memory. */
+static bool read_terrain_sets(reading_t *r, const wgf_core_priv_json_t *list, const wgf_gfx_priv_tilemap_tileset_t *t)
+{
+    int i, k, n;
+    for (i = 0; i < wgf_core_priv_json_size(list); i++) {
+        const wgf_core_priv_json_t *json = wgf_core_priv_json_at(list, i);
+        const wgf_core_priv_json_t *colors = wgf_core_priv_json_get(json, "colors");
+        const wgf_core_priv_json_t *tiles = wgf_core_priv_json_get(json, "wangtiles");
+        const char *type = wgf_core_priv_json_get_string(json, "type");
+        wgf_gfx_priv_tilemap_terrain_set_t *set;
+        if (!wgf_core_priv_json_is_object(json)) continue;
+        if (r->data->terrain_set_count == r->terrain_set_capacity) {
+            const int grown = r->terrain_set_capacity > 0 ? r->terrain_set_capacity * 2 : 4;
+            void *moved = realloc(r->data->terrain_sets, sizeof(*r->data->terrain_sets) * (size_t)grown);
+            if (moved == NULL) return false;
+            r->data->terrain_sets = (wgf_gfx_priv_tilemap_terrain_set_t *)moved;
+            r->terrain_set_capacity = grown;
+        }
+        set = &r->data->terrain_sets[r->data->terrain_set_count++];
+        memset(set, 0, sizeof(*set));
+        set->tileset = t->first_gid;
+        set->kind = strcmp(type, "edge") == 0    ? WGF_TILEMAP_TERRAIN_KIND_EDGE
+                    : strcmp(type, "mixed") == 0 ? WGF_TILEMAP_TERRAIN_KIND_MIXED
+                                                 : WGF_TILEMAP_TERRAIN_KIND_CORNER;
+        set->name = copy(wgf_core_priv_json_get_string(json, "name"));
+        if (set->name == NULL) return false;
+        n = wgf_core_priv_json_size(colors);
+        if (n > 254) n = 254; /* Tiled's most */
+        if (n > 0) {
+            set->terrains = (char **)calloc((size_t)n, sizeof(char *));
+            if (set->terrains == NULL) return false;
+        }
+        for (k = 0; k < n; k++) {
+            set->terrains[k] = copy(wgf_core_priv_json_get_string(wgf_core_priv_json_at(colors, k), "name"));
+            if (set->terrains[k] == NULL) return false;
+            set->terrain_count++;
+        }
+        n = wgf_core_priv_json_size(tiles);
+        if (n <= 0) continue;
+        set->tiles = (int *)calloc((size_t)n, sizeof(int));
+        set->places = (unsigned char (*)[8])calloc((size_t)n, sizeof(*set->places));
+        if (set->tiles == NULL || set->places == NULL) return false;
+        for (k = 0; k < n; k++) {
+            const wgf_core_priv_json_t *tile = wgf_core_priv_json_at(tiles, k);
+            const wgf_core_priv_json_t *wang = wgf_core_priv_json_get(tile, "wangid");
+            const double id = wgf_core_priv_json_get_number(tile, "tileid", -1);
+            int p;
+            if (!in_range(id, 0, t->tile_count - 1) || wgf_core_priv_json_size(wang) != 8) continue;
+            for (p = 0; p < 8; p++) {
+                const double v = wgf_core_priv_json_number(wgf_core_priv_json_at(wang, p), -1);
+                if (!in_range(v, 0, set->terrain_count)) break;
+                set->places[set->tile_count][p] = (unsigned char)v;
+            }
+            if (p < 8) continue;
+            set->tiles[set->tile_count++] = (int)id;
+        }
+    }
+    return true;
+}
+
 /* One tileset, embedded in the map at `path` or the `.tsj` it names. False (logged) for one
  * that can't be used. */
-static bool read_tileset(const wgf_core_priv_json_t *json, const char *path, int first_gid, const char *map_path,
+static bool read_tileset(reading_t *r, const wgf_core_priv_json_t *json, const char *path, int first_gid,
                          wgf_gfx_priv_tilemap_tileset_t *t)
 {
+    const char *map_path = r->path;
     const wgf_core_priv_json_t *tiles = wgf_core_priv_json_get(json, "tiles");
     const wgf_core_priv_json_t *offset = wgf_core_priv_json_get(json, "tileoffset");
     const double tw = wgf_core_priv_json_get_number(json, "tilewidth", 0), th = wgf_core_priv_json_get_number(json, "tileheight", 0);
@@ -244,8 +339,11 @@ static bool read_tileset(const wgf_core_priv_json_t *json, const char *path, int
     t->margin = (int)margin, t->spacing = (int)spacing;
     t->offset_x = (int)wgf_core_priv_json_get_number(offset, "x", 0);
     t->offset_y = (int)wgf_core_priv_json_get_number(offset, "y", 0);
+    t->alignment = alignment_of(wgf_core_priv_json_get_string(json, "objectalignment"),
+                                r->data->orientation == WGF_TILEMAP_ORIENTATION_ISOMETRIC);
     t->tiles = (wgf_gfx_priv_tilemap_tile_t **)calloc((size_t)t->tile_count, sizeof(*t->tiles));
     if (t->image == NULL || t->tiles == NULL) return false;
+    if (!read_terrain_sets(r, wgf_core_priv_json_get(json, "wangsets"), t)) return false;
     for (i = 0; i < wgf_core_priv_json_size(tiles); i++) {
         const wgf_core_priv_json_t *tile = wgf_core_priv_json_at(tiles, i);
         const wgf_core_priv_json_t *frames = wgf_core_priv_json_get(tile, "animation");
@@ -345,11 +443,12 @@ static int gzip_start(const unsigned char *data, int size)
     return at < size ? at : -1;
 }
 
-/* A tile layer's `count` cells from its data: an array of ids, or base64 of little-endian
- * 32-bit ids, plain or zlib or gzip compressed. */
-static uint32_t *read_cells(const wgf_core_priv_json_t *json, int count, const char *map_path, const char *name)
+/* A tile layer's (or an infinite map's chunk's) `count` cells from its `data`, as its layer's
+ * `json` says it is written: an array of ids, or base64 of little-endian 32-bit ids, plain or
+ * zlib or gzip compressed. */
+static uint32_t *read_cells(const wgf_core_priv_json_t *json, const wgf_core_priv_json_t *data, int count,
+                            const char *map_path, const char *name)
 {
-    const wgf_core_priv_json_t *data = wgf_core_priv_json_get(json, "data");
     const char *encoding = wgf_core_priv_json_get_string(json, "encoding");
     const char *compression = wgf_core_priv_json_get_string(json, "compression");
     uint32_t *cells = (uint32_t *)calloc((size_t)count, sizeof(uint32_t));
@@ -431,8 +530,11 @@ static bool read_object(const wgf_core_priv_json_t *json, wgf_gfx_priv_tilemap_o
     if (!read_properties(wgf_core_priv_json_get(json, "properties"), &o->properties)) return false;
     o->shape = WGF_TILEMAP_SHAPE_RECTANGLE;
     if (in_range(wgf_core_priv_json_get_number(json, "gid", -1), 1, 4294967295.0)) {
+        const uint32_t gid = (uint32_t)wgf_core_priv_json_get_number(json, "gid", 0);
         o->shape = WGF_TILEMAP_SHAPE_TILE;
-        o->gid = (int)((uint32_t)wgf_core_priv_json_get_number(json, "gid", 0) & WGF_GFX_PRIV_TILEMAP_GID_MASK);
+        o->gid = (int)(gid & WGF_GFX_PRIV_TILEMAP_GID_MASK);
+        o->flips = ((gid & WGF_GFX_PRIV_TILEMAP_FLIP_X) ? WGF_TILEMAP_FLIP_X : 0) |
+                   ((gid & WGF_GFX_PRIV_TILEMAP_FLIP_Y) ? WGF_TILEMAP_FLIP_Y : 0);
     } else if (wgf_core_priv_json_truth(wgf_core_priv_json_get(json, "point"))) {
         o->shape = WGF_TILEMAP_SHAPE_POINT;
     } else if (wgf_core_priv_json_truth(wgf_core_priv_json_get(json, "ellipse"))) {
@@ -457,11 +559,66 @@ static bool read_object(const wgf_core_priv_json_t *json, wgf_gfx_priv_tilemap_o
     return true;
 }
 
-typedef struct reading_t {
-    const char *path; /* the map's */
-    wgf_gfx_priv_tilemap_data_t *data;
-    int layer_capacity;
-} reading_t;
+/* An infinite map's tile layer's chunks, each copied into the layer's cells where it is from
+ * the map's origin. False (logged) for a chunk that can't be read. */
+static bool read_chunks(reading_t *r, const wgf_core_priv_json_t *json, wgf_gfx_priv_tilemap_layer_data_t *l)
+{
+    const wgf_core_priv_json_t *chunks = wgf_core_priv_json_get(json, "chunks");
+    int i, k;
+    l->cells = (uint32_t *)calloc((size_t)l->columns * (size_t)l->rows, sizeof(uint32_t));
+    if (l->cells == NULL) return false;
+    for (i = 0; i < wgf_core_priv_json_size(chunks); i++) {
+        const wgf_core_priv_json_t *chunk = wgf_core_priv_json_at(chunks, i);
+        const int x = (int)wgf_core_priv_json_get_number(chunk, "x", 0) - r->data->origin_column;
+        const int y = (int)wgf_core_priv_json_get_number(chunk, "y", 0) - r->data->origin_row;
+        const int w = (int)wgf_core_priv_json_get_number(chunk, "width", 0);
+        const int h = (int)wgf_core_priv_json_get_number(chunk, "height", 0);
+        uint32_t *cells = read_cells(json, wgf_core_priv_json_get(chunk, "data"), w * h, r->path, l->name);
+        if (cells == NULL) return false; /* its bounds were checked as the map's were found */
+        for (k = 0; k < h; k++) memcpy(&l->cells[(y + k) * l->columns + x], &cells[k * w], sizeof(uint32_t) * (size_t)w);
+        free(cells);
+    }
+    return true;
+}
+
+/* The box of every chunk of an infinite map's tile layers (in groups too), in Tiled's
+ * columns and rows: grown into `box` (left, top, right, bottom; right below left for none
+ * yet). False (logged) for a chunk out of range. */
+static bool chunk_bounds(const char *path, const wgf_core_priv_json_t *list, double box[4], int depth)
+{
+    int i, k;
+    if (depth > MAX_GROUP_DEPTH) return true; /* refused as the layers are read */
+    for (i = 0; i < wgf_core_priv_json_size(list); i++) {
+        const wgf_core_priv_json_t *json = wgf_core_priv_json_at(list, i);
+        const wgf_core_priv_json_t *chunks = wgf_core_priv_json_get(json, "chunks");
+        if (strcmp(wgf_core_priv_json_get_string(json, "type"), "group") == 0) {
+            if (!chunk_bounds(path, wgf_core_priv_json_get(json, "layers"), box, depth + 1)) return false;
+            continue;
+        }
+        for (k = 0; k < wgf_core_priv_json_size(chunks); k++) {
+            const wgf_core_priv_json_t *chunk = wgf_core_priv_json_at(chunks, k);
+            const double x = wgf_core_priv_json_get_number(chunk, "x", 0.5);
+            const double y = wgf_core_priv_json_get_number(chunk, "y", 0.5);
+            const double w = wgf_core_priv_json_get_number(chunk, "width", 0);
+            const double h = wgf_core_priv_json_get_number(chunk, "height", 0);
+            if (!in_range(x, -MAX_CHUNK_PLACE, MAX_CHUNK_PLACE) || !in_range(y, -MAX_CHUNK_PLACE, MAX_CHUNK_PLACE) ||
+                !in_range(w, 1, MAX_SIDE) || !in_range(h, 1, MAX_SIDE)) {
+                wgf_log_warn("wgf_tilemap: %s: layer %s has a chunk out of range", path,
+                             wgf_core_priv_json_get_string(json, "name"));
+                return false;
+            }
+            if (box[2] < box[0]) {
+                box[0] = x, box[1] = y, box[2] = x + w, box[3] = y + h;
+            } else {
+                box[0] = x < box[0] ? x : box[0];
+                box[1] = y < box[1] ? y : box[1];
+                box[2] = x + w > box[2] ? x + w : box[2];
+                box[3] = y + h > box[3] ? y + h : box[3];
+            }
+        }
+    }
+    return true;
+}
 
 /* A list of layers, groups flattened: each appended with its groups' offset, opacity, and
  * visibility. False (logged) for one that can't be read. */
@@ -503,10 +660,13 @@ static bool read_layers(reading_t *r, const wgf_core_priv_json_t *list, float of
         if (l->name == NULL || !read_properties(wgf_core_priv_json_get(json, "properties"), &l->properties)) return false;
         if (strcmp(type, "tilelayer") == 0) {
             l->kind = WGF_TILEMAP_LAYER_KIND_TILES;
+            l->columns = r->data->columns, l->rows = r->data->rows;
+            if (r->data->infinite) {
+                if (!read_chunks(r, json, l)) return false;
+                continue;
+            }
             if (wgf_core_priv_json_get(json, "chunks") != NULL) {
-                wgf_log_warn("wgf_tilemap: %s: layer %s is an infinite map's, which isn't read: untick Infinite in the "
-                             "map's properties",
-                             r->path, l->name);
+                wgf_log_warn("wgf_tilemap: %s: layer %s has chunks, but the map isn't infinite", r->path, l->name);
                 return false;
             }
             if (wgf_core_priv_json_get_number(json, "width", 0) != r->data->columns ||
@@ -514,12 +674,12 @@ static bool read_layers(reading_t *r, const wgf_core_priv_json_t *list, float of
                 wgf_log_warn("wgf_tilemap: %s: layer %s isn't the map's size", r->path, l->name);
                 return false;
             }
-            l->columns = r->data->columns, l->rows = r->data->rows;
-            l->cells = read_cells(json, l->columns * l->rows, r->path, l->name);
+            l->cells = read_cells(json, wgf_core_priv_json_get(json, "data"), l->columns * l->rows, r->path, l->name);
             if (l->cells == NULL) return false;
         } else if (strcmp(type, "objectgroup") == 0) {
             const wgf_core_priv_json_t *objects = wgf_core_priv_json_get(json, "objects");
             l->kind = WGF_TILEMAP_LAYER_KIND_OBJECTS;
+            l->topdown = strcmp(wgf_core_priv_json_get_string(json, "draworder"), "index") != 0;
             if (wgf_core_priv_json_size(objects) > 0) {
                 l->objects = (wgf_gfx_priv_tilemap_object_t *)calloc((size_t)wgf_core_priv_json_size(objects),
                                                                      sizeof(*l->objects));
@@ -530,7 +690,15 @@ static bool read_layers(reading_t *r, const wgf_core_priv_json_t *list, float of
                 if (!read_object(wgf_core_priv_json_at(objects, k), &l->objects[k])) return false;
             }
         } else if (strcmp(type, "imagelayer") == 0) {
+            const char *image = wgf_core_priv_json_get_string(json, "image");
+            char resolved[WGF_CORE_PRIV_FS_PATH_MAX];
             l->kind = WGF_TILEMAP_LAYER_KIND_IMAGE;
+            if (image[0] == '\0') continue; /* an image layer without one draws nothing */
+            if (!beside(r->path, image, resolved, sizeof(resolved))) {
+                wgf_log_warn("wgf_tilemap: %s: layer %s names an image outside the host: %s", r->path, l->name, image);
+                return false;
+            }
+            if ((l->image = copy(resolved)) == NULL) return false;
         } else {
             wgf_log_warn("wgf_tilemap: %s: layer %s is of a kind not read: %s", r->path, l->name, type);
             return false;
@@ -558,23 +726,61 @@ static int by_first_gid(const void *a, const void *b)
     return ((const wgf_gfx_priv_tilemap_tileset_t *)a)->first_gid - ((const wgf_gfx_priv_tilemap_tileset_t *)b)->first_gid;
 }
 
+/* Its orientation, render order, and stagger, as Tiled names them. False (logged) for one
+ * that isn't Tiled's. */
+static bool read_shape(const wgf_core_priv_json_t *json, const char *path, wgf_gfx_priv_tilemap_data_t *d)
+{
+    static const char *const orders[] = {"right-down", "right-up", "left-down", "left-up"};
+    const char *orientation = wgf_core_priv_json_get_string(json, "orientation");
+    const char *order = wgf_core_priv_json_get_string(json, "renderorder");
+    const double side = wgf_core_priv_json_get_number(json, "hexsidelength", 0);
+    int i;
+    d->orientation = orientation[0] == '\0' || strcmp(orientation, "orthogonal") == 0 ? WGF_TILEMAP_ORIENTATION_ORTHOGONAL
+                     : strcmp(orientation, "isometric") == 0                         ? WGF_TILEMAP_ORIENTATION_ISOMETRIC
+                     : strcmp(orientation, "staggered") == 0                         ? WGF_TILEMAP_ORIENTATION_STAGGERED
+                     : strcmp(orientation, "hexagonal") == 0                         ? WGF_TILEMAP_ORIENTATION_HEXAGONAL
+                                                                                     : WGF_TILEMAP_ORIENTATION_NONE;
+    if (d->orientation == WGF_TILEMAP_ORIENTATION_NONE) {
+        wgf_log_warn("wgf_tilemap: %s is %s, which isn't one of Tiled's orientations", path, orientation);
+        return false;
+    }
+    for (i = 0; i < 4 && strcmp(order, orders[i]) != 0; i++) {
+    }
+    d->render_order = i < 4 ? i : 0;
+    d->stagger_x = strcmp(wgf_core_priv_json_get_string(json, "staggeraxis"), "x") == 0;
+    d->stagger_even = strcmp(wgf_core_priv_json_get_string(json, "staggerindex"), "even") == 0;
+    if (d->orientation == WGF_TILEMAP_ORIENTATION_HEXAGONAL) {
+        if (!in_range(side, 0, MAX_TILE_SIDE)) {
+            wgf_log_warn("wgf_tilemap: %s: its hexagons' side length is out of range", path);
+            return false;
+        }
+        d->hex_side = (int)side;
+    }
+    return true;
+}
+
 static bool read_map(const wgf_core_priv_json_t *json, const char *path, wgf_gfx_priv_tilemap_data_t *d)
 {
-    const char *orientation = wgf_core_priv_json_get_string(json, "orientation");
     const wgf_core_priv_json_t *tilesets = wgf_core_priv_json_get(json, "tilesets");
-    const double columns = wgf_core_priv_json_get_number(json, "width", 0);
-    const double rows = wgf_core_priv_json_get_number(json, "height", 0);
+    double columns = wgf_core_priv_json_get_number(json, "width", 0);
+    double rows = wgf_core_priv_json_get_number(json, "height", 0);
     const double tw = wgf_core_priv_json_get_number(json, "tilewidth", 0);
     const double th = wgf_core_priv_json_get_number(json, "tileheight", 0);
     reading_t r;
-    int i;
-    if (orientation[0] != '\0' && strcmp(orientation, "orthogonal") != 0) {
-        wgf_log_warn("wgf_tilemap: %s is %s: only orthogonal maps are read", path, orientation);
+    int i, k;
+    if (!read_shape(json, path, d)) return false;
+    d->infinite = wgf_core_priv_json_truth(wgf_core_priv_json_get(json, "infinite"));
+    if (!in_range(rows, d->infinite ? 0 : 1, MAX_SIDE)) {
+        wgf_log_warn("wgf_tilemap: %s: its size or tile size is out of range", path);
         return false;
     }
-    if (wgf_core_priv_json_truth(wgf_core_priv_json_get(json, "infinite"))) {
-        wgf_log_warn("wgf_tilemap: %s is infinite, which isn't read: untick Infinite in its properties", path);
-        return false;
+    d->file_rows = (int)rows;
+    if (d->infinite) { /* its size the box its chunks fill */
+        double box[4] = {0.0, 0.0, -1.0, -1.0};
+        if (!chunk_bounds(path, wgf_core_priv_json_get(json, "layers"), box, 0)) return false;
+        if (box[2] < box[0]) box[0] = 0.0, box[1] = 0.0, box[2] = 1.0, box[3] = 1.0; /* no chunks: a cell */
+        d->origin_column = (int)box[0], d->origin_row = (int)box[1];
+        columns = box[2] - box[0], rows = box[3] - box[1];
     }
     if (!in_range(columns, 1, MAX_SIDE) || !in_range(rows, 1, MAX_SIDE) || columns * rows > MAX_CELLS ||
         !in_range(tw, 1, MAX_TILE_SIDE) || !in_range(th, 1, MAX_TILE_SIDE)) {
@@ -582,6 +788,10 @@ static bool read_map(const wgf_core_priv_json_t *json, const char *path, wgf_gfx
         return false;
     }
     d->columns = (int)columns, d->rows = (int)rows, d->tile_width = (int)tw, d->tile_height = (int)th;
+    r.path = path;
+    r.data = d;
+    r.layer_capacity = 0;
+    r.terrain_set_capacity = 0;
     d->background = parse_color(wgf_core_priv_json_get_string(json, "backgroundcolor"));
     d->file = file_name(path);
     if (d->file == NULL || !read_properties(wgf_core_priv_json_get(json, "properties"), &d->properties)) return false;
@@ -601,7 +811,7 @@ static bool read_map(const wgf_core_priv_json_t *json, const char *path, wgf_gfx
             return false;
         }
         if (source[0] == '\0') {
-            ok = read_tileset(entry, path, (int)first, path, t);
+            ok = read_tileset(&r, entry, path, (int)first, t);
         } else {
             char file[WGF_CORE_PRIV_FS_PATH_MAX];
             unsigned char *bytes = NULL;
@@ -624,15 +834,22 @@ static bool read_map(const wgf_core_priv_json_t *json, const char *path, wgf_gfx
                 wgf_core_priv_json_free(tileset);
                 return false;
             }
-            ok = read_tileset(tileset, file, (int)first, path, t);
+            ok = read_tileset(&r, tileset, file, (int)first, t);
             wgf_core_priv_json_free(tileset);
         }
         if (!ok) return false;
     }
     if (d->tileset_count > 1) qsort(d->tilesets, (size_t)d->tileset_count, sizeof(*d->tilesets), by_first_gid);
-    r.path = path;
-    r.data = d;
-    r.layer_capacity = 0;
+    for (i = 0; i < d->terrain_set_count; i++) { /* each set's tileset by its index, and the sets in its order */
+        for (k = 0; k < d->tileset_count && d->tilesets[k].first_gid != d->terrain_sets[i].tileset; k++) {
+        }
+        d->terrain_sets[i].tileset = k;
+    }
+    for (i = 1; i < d->terrain_set_count; i++) { /* stable: a tileset's sets stay in the file's order */
+        const wgf_gfx_priv_tilemap_terrain_set_t moved = d->terrain_sets[i];
+        for (k = i; k > 0 && d->terrain_sets[k - 1].tileset > moved.tileset; k--) d->terrain_sets[k] = d->terrain_sets[k - 1];
+        d->terrain_sets[k] = moved;
+    }
     return read_layers(&r, wgf_core_priv_json_get(json, "layers"), 0.0f, 0.0f, 1.0f, true, 0);
 }
 
@@ -676,6 +893,7 @@ static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
 {
     wgf_gfx_priv_tilemap_data_t *d = ((prepared_t *)prepared)->data;
     map_t *m = map_of(resource);
+    const bool reloading = wgf_core_priv_resource_is_reloading(resource);
     int i;
     if (m == NULL || d == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
     ((prepared_t *)prepared)->data = NULL; /* the map's now */
@@ -685,11 +903,18 @@ static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
         wgf_texture_set_sampling(t->texture, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP,
                                  WGF_TEXTURE_FILTER_NEAREST);
     }
+    for (i = 0; i < d->layer_count; i++) { /* image layers' too */
+        wgf_gfx_priv_tilemap_layer_data_t *l = &d->layers[i];
+        if (l->image == NULL) continue;
+        l->texture = wgf_texture_create(l->image);
+        wgf_texture_set_sampling(l->texture, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_FILTER_NEAREST);
+    }
     m = map_of(resource); /* maps don't move as textures are made, but be sure */
     if (m == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
-    free_data(m->data);
+    free_data(m->data); /* the old one's textures let go of once the new hold theirs */
     m->data = d;
     wgf_core_priv_resource_loaded(resource, NULL);
+    if (reloading && wgf_gfx_priv_tilemap_reloaded != NULL) wgf_gfx_priv_tilemap_reloaded(resource);
     return WGF_CORE_PRIV_LOAD_DONE;
 }
 
@@ -705,7 +930,9 @@ static void fail(wgf_handle_t resource)
     wgf_core_priv_resource_failed(resource);
 }
 
-static const wgf_core_priv_loader_t loader = {"tilemap", prepare, finish, discard, fail, NULL, false, NULL};
+static const wgf_core_priv_loader_t loader = {"tilemap", prepare, finish, discard, fail, NULL, true, NULL};
+
+void (*wgf_gfx_priv_tilemap_reloaded)(wgf_tilemap_t map);
 
 static const wgf_core_priv_loader_t *loader_of(const char *path)
 {
@@ -755,8 +982,25 @@ static bool ensure_started(void)
 
 /* ---- the files a map names, for the web ---------------------------------------------- */
 
-/* A `.tmj`'s tilesets in files of their own (required) and its embedded tilesets' images,
- * and a `.tsj`'s image (neither required: a missing image draws the checker). */
+/* Image layers' images, in groups too. */
+static void list_layer_images(const wgf_core_priv_json_t *list, wgf_core_priv_load_add_fn add, void *context,
+                              int depth)
+{
+    int i;
+    for (i = 0; depth <= MAX_GROUP_DEPTH && i < wgf_core_priv_json_size(list); i++) {
+        const wgf_core_priv_json_t *layer = wgf_core_priv_json_at(list, i);
+        if (strcmp(wgf_core_priv_json_get_string(layer, "type"), "group") == 0) {
+            list_layer_images(wgf_core_priv_json_get(layer, "layers"), add, context, depth + 1);
+        } else if (strcmp(wgf_core_priv_json_get_string(layer, "type"), "imagelayer") == 0 &&
+                   wgf_core_priv_json_get_string(layer, "image")[0] != '\0') {
+            add(wgf_core_priv_json_get_string(layer, "image"), NULL, false, context);
+        }
+    }
+}
+
+/* A `.tmj`'s tilesets in files of their own (required), its embedded tilesets' images, and
+ * its image layers' images, and a `.tsj`'s image (none of the images required: a missing
+ * image draws the checker). */
 static void list_map_files(const unsigned char *data, int size, wgf_core_priv_load_add_fn add, void *context)
 {
     wgf_core_priv_json_t *json = wgf_core_priv_json_parse((const char *)data, (size_t)size);
@@ -773,6 +1017,7 @@ static void list_map_files(const unsigned char *data, int size, wgf_core_priv_lo
             add(wgf_core_priv_json_get_string(t, "image"), NULL, false, context);
         }
     }
+    list_layer_images(wgf_core_priv_json_get(json, "layers"), add, context, 0);
     wgf_core_priv_json_free(json);
 }
 
@@ -798,6 +1043,205 @@ int wgf_gfx_priv_tilemap_find_tileset(const wgf_gfx_priv_tilemap_data_t *data, u
     if (found < 0 || id - data->tilesets[found].first_gid >= data->tilesets[found].tile_count) return -1;
     if (tile != NULL) *tile = id - data->tilesets[found].first_gid;
     return found;
+}
+
+/* ---- where cells are ------------------------------------------------------------------ */
+
+/* A staggered or hexagonal map's measures, Tiled's RenderParams: its tile size made even, and
+ * the side lengths, offsets, and steps between columns and rows that follow. */
+typedef struct hex_t {
+    int tw, th, side_x, side_y, offset_x, offset_y, column_width, row_height;
+} hex_t;
+
+static hex_t hex_of(const wgf_gfx_priv_tilemap_data_t *d)
+{
+    hex_t h;
+    h.tw = d->tile_width & ~1;
+    h.th = d->tile_height & ~1;
+    h.side_x = d->stagger_x ? d->hex_side : 0;
+    h.side_y = d->stagger_x ? 0 : d->hex_side;
+    h.offset_x = (h.tw - h.side_x) / 2;
+    h.offset_y = (h.th - h.side_y) / 2;
+    h.column_width = h.offset_x + h.side_x;
+    h.row_height = h.offset_y + h.side_y;
+    return h;
+}
+
+static bool is_staggered(const wgf_gfx_priv_tilemap_data_t *d)
+{
+    return d->orientation == WGF_TILEMAP_ORIENTATION_STAGGERED || d->orientation == WGF_TILEMAP_ORIENTATION_HEXAGONAL;
+}
+
+/* Whether a staggered map's column (stagger x) or row (stagger y), Tiled's, is the one moved. */
+static bool shifted(const wgf_gfx_priv_tilemap_data_t *d, int index)
+{
+    return ((index & 1) != 0) != d->stagger_even;
+}
+
+/* An isometric map's middle across: Tiled's originX, from the height its file gives. */
+static float iso_origin(const wgf_gfx_priv_tilemap_data_t *d)
+{
+    return (float)d->file_rows * (float)d->tile_width * 0.5f;
+}
+
+/* The box of Tiled's cell `column`, `row` (an infinite map's columns and rows, not the
+ * grid's). */
+static void box_of(const wgf_gfx_priv_tilemap_data_t *d, int column, int row, float *x, float *y)
+{
+    if (d->orientation == WGF_TILEMAP_ORIENTATION_ISOMETRIC) {
+        *x = (float)(column - row) * (float)d->tile_width * 0.5f + iso_origin(d) - (float)d->tile_width * 0.5f;
+        *y = (float)(column + row) * (float)d->tile_height * 0.5f;
+    } else if (is_staggered(d)) {
+        const hex_t h = hex_of(d);
+        if (d->stagger_x) {
+            *x = (float)(column * h.column_width);
+            *y = (float)(row * (h.th + h.side_y) + (shifted(d, column) ? h.row_height : 0));
+        } else {
+            *x = (float)(column * (h.tw + h.side_x) + (shifted(d, row) ? h.column_width : 0));
+            *y = (float)(row * h.row_height);
+        }
+    } else {
+        *x = (float)(column * d->tile_width);
+        *y = (float)(row * d->tile_height);
+    }
+}
+
+void wgf_gfx_priv_tilemap_cell_box(const wgf_gfx_priv_tilemap_data_t *d, int column, int row, float *x, float *y,
+                                   float *w, float *h)
+{
+    box_of(d, column + d->origin_column, row + d->origin_row, x, y);
+    if (is_staggered(d)) {
+        const hex_t hex = hex_of(d);
+        *w = (float)hex.tw, *h = (float)hex.th;
+    } else {
+        *w = (float)d->tile_width, *h = (float)d->tile_height;
+    }
+}
+
+/* Whether Tiled's cell `column`, `row` of a staggered or hexagonal map holds the point: a
+ * hexagon, whose sides along its stagger axis are hex_side long (a diamond, for none). */
+static bool hex_holds(const wgf_gfx_priv_tilemap_data_t *d, int column, int row, float x, float y)
+{
+    const hex_t h = hex_of(d);
+    float left, top, dx, dy;
+    const float a = (float)h.tw * 0.5f, b = (float)h.th * 0.5f;
+    box_of(d, column, row, &left, &top);
+    dx = fabsf(x - (left + a));
+    dy = fabsf(y - (top + b));
+    if (dx > a || dy > b) return false;
+    if (d->stagger_x) { /* flat sides on top and bottom */
+        const float s = (float)h.side_x * 0.5f;
+        return dx <= s + (a - s) * (1.0f - dy / b);
+    }
+    {
+        const float s = (float)h.side_y * 0.5f; /* flat sides left and right */
+        return dy <= s + (b - s) * (1.0f - dx / a);
+    }
+}
+
+void wgf_gfx_priv_tilemap_cell_at(const wgf_gfx_priv_tilemap_data_t *d, float x, float y, int *column, int *row)
+{
+    int c = 0, r = 0;
+    if (d->orientation == WGF_TILEMAP_ORIENTATION_ISOMETRIC) {
+        const float across = (x - iso_origin(d)) / (float)d->tile_width, down = y / (float)d->tile_height;
+        c = (int)floorf(down + across);
+        r = (int)floorf(down - across);
+    } else if (is_staggered(d)) {
+        const hex_t h = hex_of(d);
+        float best = 0.0f;
+        int dc, dr, found = 0;
+        if (d->stagger_x) {
+            c = (int)floorf(x / (float)h.column_width);
+            r = (int)floorf((y - (shifted(d, c) ? (float)h.row_height : 0.0f)) / (float)(h.th + h.side_y));
+        } else {
+            r = (int)floorf(y / (float)h.row_height);
+            c = (int)floorf((x - (shifted(d, r) ? (float)h.column_width : 0.0f)) / (float)(h.tw + h.side_x));
+        }
+        /* The cell holding it is one of these, or else (on an edge) the one whose middle is nearest. */
+        for (dr = -1; dr <= 1 && found != 2; dr++) {
+            for (dc = -1; dc <= 1 && found != 2; dc++) {
+                float left, top, mx, my, distance;
+                if (hex_holds(d, c + dc, r + dr, x, y)) {
+                    c += dc, r += dr, found = 2;
+                    break;
+                }
+                box_of(d, c + dc, r + dr, &left, &top);
+                mx = left + (float)h.tw * 0.5f - x;
+                my = top + (float)h.th * 0.5f - y;
+                distance = mx * mx + my * my;
+                if (found == 0 || distance < best) best = distance, found = 1, *column = c + dc, *row = r + dr;
+            }
+        }
+        if (found == 1) c = *column, r = *row;
+    } else {
+        c = (int)floorf(x / (float)d->tile_width);
+        r = (int)floorf(y / (float)d->tile_height);
+    }
+    *column = c - d->origin_column;
+    *row = r - d->origin_row;
+}
+
+void wgf_gfx_priv_tilemap_draw_slot(const wgf_gfx_priv_tilemap_data_t *d, int column, int row, int *draw_row,
+                                    int *place)
+{
+    if (d->orientation == WGF_TILEMAP_ORIENTATION_ISOMETRIC) { /* by diagonals, each from the left */
+        *draw_row = column + row;
+        *place = column;
+    } else if (is_staggered(d) && d->stagger_x) { /* a row's raised columns, then its lowered ones */
+        *draw_row = row * 2 + (shifted(d, column + d->origin_column) ? 1 : 0);
+        *place = column;
+    } else if (is_staggered(d)) {
+        *draw_row = row;
+        *place = column;
+    } else { /* right-down, right-up, left-down, left-up */
+        *draw_row = (d->render_order & 1) ? d->rows - 1 - row : row;
+        *place = (d->render_order & 2) ? d->columns - 1 - column : column;
+    }
+}
+
+int wgf_gfx_priv_tilemap_draw_row_count(const wgf_gfx_priv_tilemap_data_t *d)
+{
+    if (d->orientation == WGF_TILEMAP_ORIENTATION_ISOMETRIC) return d->columns + d->rows - 1;
+    if (is_staggered(d) && d->stagger_x) return d->rows * 2;
+    return d->rows;
+}
+
+void wgf_gfx_priv_tilemap_project(const wgf_gfx_priv_tilemap_data_t *d, float x, float y, float *out_x, float *out_y)
+{
+    if (d->orientation == WGF_TILEMAP_ORIENTATION_ISOMETRIC) {
+        const float across = x / (float)d->tile_height, down = y / (float)d->tile_height;
+        *out_x = (across - down) * (float)d->tile_width * 0.5f + iso_origin(d);
+        *out_y = (across + down) * (float)d->tile_height * 0.5f;
+    } else {
+        *out_x = x;
+        *out_y = y;
+    }
+}
+
+void wgf_gfx_priv_tilemap_object_middle(const wgf_gfx_priv_tilemap_data_t *d, const wgf_gfx_priv_tilemap_object_t *o,
+                                        float *x, float *y)
+{
+    const float c = wgf_trig_cos(o->rotation), s = wgf_trig_sin(o->rotation);
+    float across = 0.0f, down = 0.0f;
+    if (o->shape == WGF_TILEMAP_SHAPE_TILE) { /* from its anchor, in the map's pixels */
+        static const float fractions[9][2] = {{0.0f, 1.0f}, {0.5f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.5f}, {0.5f, 0.5f},
+                                              {1.0f, 0.5f}, {0.0f, 0.0f}, {0.5f, 0.0f}, {1.0f, 0.0f}};
+        const int tileset = wgf_gfx_priv_tilemap_find_tileset(d, (uint32_t)o->gid, NULL);
+        const int align = tileset >= 0 ? d->tilesets[tileset].alignment
+                          : d->orientation == WGF_TILEMAP_ORIENTATION_ISOMETRIC ? WGF_GFX_PRIV_TILEMAP_ALIGN_BOTTOM
+                                                                                : WGF_GFX_PRIV_TILEMAP_ALIGN_BOTTOM_LEFT;
+        across = (0.5f - fractions[align][0]) * o->width;
+        down = (0.5f - fractions[align][1]) * o->height;
+        wgf_gfx_priv_tilemap_project(d, o->x, o->y, x, y);
+        *x += across * c - down * s;
+        *y += across * s + down * c;
+        return;
+    }
+    if (o->shape == WGF_TILEMAP_SHAPE_RECTANGLE || o->shape == WGF_TILEMAP_SHAPE_ELLIPSE ||
+        o->shape == WGF_TILEMAP_SHAPE_TEXT) {
+        across = o->width * 0.5f, down = o->height * 0.5f;
+    }
+    wgf_gfx_priv_tilemap_project(d, o->x + across * c - down * s, o->y + across * s + down * c, x, y);
 }
 
 void wgf_gfx_priv_tilemap_retain(wgf_tilemap_t map)
@@ -1102,4 +1546,201 @@ double wgf_tilemap_get_tile_property_number(wgf_tilemap_t map, int gid, const ch
 {
     const wgf_gfx_priv_tilemap_property_t *p = property_named(tile_properties_at(map, gid, WGF_CORE_PRIV_CALLER), name);
     return p != NULL ? p->number : 0.0;
+}
+
+/* ---- shapes, terrain, images ------------------------------------------------------------ */
+
+wgf_tilemap_orientation_t wgf_tilemap_get_orientation(wgf_tilemap_t map)
+{
+    const wgf_gfx_priv_tilemap_data_t *d = data_of(map);
+    return d != NULL ? (wgf_tilemap_orientation_t)d->orientation : WGF_TILEMAP_ORIENTATION_NONE;
+}
+
+bool wgf_tilemap_is_infinite(wgf_tilemap_t map)
+{
+    const wgf_gfx_priv_tilemap_data_t *d = data_of(map);
+    return d != NULL && d->infinite;
+}
+
+int wgf_tilemap_get_origin_column(wgf_tilemap_t map)
+{
+    const wgf_gfx_priv_tilemap_data_t *d = data_of(map);
+    return d != NULL ? d->origin_column : 0;
+}
+
+int wgf_tilemap_get_origin_row(wgf_tilemap_t map)
+{
+    const wgf_gfx_priv_tilemap_data_t *d = data_of(map);
+    return d != NULL ? d->origin_row : 0;
+}
+
+/* The size of the box its cells cover, Tiled's map size. */
+static void pixel_size(const wgf_gfx_priv_tilemap_data_t *d, int *w, int *h)
+{
+    if (d->orientation == WGF_TILEMAP_ORIENTATION_ISOMETRIC) {
+        *w = (d->columns + d->rows) * d->tile_width / 2;
+        *h = (d->columns + d->rows) * d->tile_height / 2;
+    } else if (is_staggered(d)) {
+        const hex_t hex = hex_of(d);
+        if (d->stagger_x) {
+            *w = d->columns * hex.column_width + hex.offset_x;
+            *h = d->rows * (hex.th + hex.side_y) + (d->columns > 1 ? hex.row_height : 0);
+        } else {
+            *w = d->columns * (hex.tw + hex.side_x) + (d->rows > 1 ? hex.column_width : 0);
+            *h = d->rows * hex.row_height + hex.offset_y;
+        }
+    } else {
+        *w = d->columns * d->tile_width;
+        *h = d->rows * d->tile_height;
+    }
+}
+
+int wgf_tilemap_get_pixel_width(wgf_tilemap_t map)
+{
+    const wgf_gfx_priv_tilemap_data_t *d = data_of(map);
+    int w = 0, h = 0;
+    if (d != NULL) pixel_size(d, &w, &h);
+    return w;
+}
+
+int wgf_tilemap_get_pixel_height(wgf_tilemap_t map)
+{
+    const wgf_gfx_priv_tilemap_data_t *d = data_of(map);
+    int w = 0, h = 0;
+    if (d != NULL) pixel_size(d, &w, &h);
+    return h;
+}
+
+wgf_vec2_t wgf_tilemap_get_cell_middle(wgf_tilemap_t map, int column, int row)
+{
+    const wgf_gfx_priv_tilemap_data_t *d = data_of(map);
+    float x = 0.0f, y = 0.0f, w = 0.0f, h = 0.0f;
+    if (d == NULL) return wgf_vec2_make(0.0f, 0.0f);
+    wgf_gfx_priv_tilemap_cell_box(d, column, row, &x, &y, &w, &h);
+    return wgf_vec2_make(x + w * 0.5f, y + h * 0.5f);
+}
+
+int wgf_tilemap_get_column_at(wgf_tilemap_t map, float x, float y)
+{
+    const wgf_gfx_priv_tilemap_data_t *d = data_of(map);
+    int column = 0, row = 0;
+    if (d != NULL) wgf_gfx_priv_tilemap_cell_at(d, x, y, &column, &row);
+    return column;
+}
+
+int wgf_tilemap_get_row_at(wgf_tilemap_t map, float x, float y)
+{
+    const wgf_gfx_priv_tilemap_data_t *d = data_of(map);
+    int column = 0, row = 0;
+    if (d != NULL) wgf_gfx_priv_tilemap_cell_at(d, x, y, &column, &row);
+    return row;
+}
+
+wgf_texture_t wgf_tilemap_get_layer_texture(wgf_tilemap_t map, int layer)
+{
+    const wgf_gfx_priv_tilemap_layer_data_t *l = layer_at(data_of(map), layer);
+    return l != NULL ? l->texture : 0;
+}
+
+int wgf_tilemap_get_object_tile_flips(wgf_tilemap_t map, int layer, int object)
+{
+    const wgf_gfx_priv_tilemap_object_t *o = object_of(map, layer, object);
+    return o != NULL ? o->flips : 0;
+}
+
+wgf_vec2_t wgf_tilemap_get_object_middle(wgf_tilemap_t map, int layer, int object)
+{
+    const wgf_gfx_priv_tilemap_data_t *d = data_of(map);
+    const wgf_gfx_priv_tilemap_layer_data_t *l = layer_at(d, layer);
+    float x = 0.0f, y = 0.0f;
+    if (l == NULL || object < 0 || object >= l->object_count) return wgf_vec2_make(0.0f, 0.0f);
+    wgf_gfx_priv_tilemap_object_middle(d, &l->objects[object], &x, &y);
+    return wgf_vec2_make(x, y);
+}
+
+static const wgf_gfx_priv_tilemap_terrain_set_t *terrain_set_at(wgf_tilemap_t map, int set, const char *caller)
+{
+    const wgf_gfx_priv_tilemap_data_t *d = data_of_at(map, caller);
+    return d != NULL && set >= 0 && set < d->terrain_set_count ? &d->terrain_sets[set] : NULL;
+}
+#define terrain_set_of(map, set) terrain_set_at((map), (set), WGF_CORE_PRIV_CALLER)
+
+int wgf_tilemap_get_terrainset_count(wgf_tilemap_t map)
+{
+    const wgf_gfx_priv_tilemap_data_t *d = data_of(map);
+    return d != NULL ? d->terrain_set_count : 0;
+}
+
+const char *wgf_tilemap_get_terrainset_name(wgf_tilemap_t map, int set)
+{
+    const wgf_gfx_priv_tilemap_terrain_set_t *t = terrain_set_of(map, set);
+    return t != NULL ? t->name : "";
+}
+
+wgf_tilemap_terrain_kind_t wgf_tilemap_get_terrainset_kind(wgf_tilemap_t map, int set)
+{
+    const wgf_gfx_priv_tilemap_terrain_set_t *t = terrain_set_of(map, set);
+    return t != NULL ? (wgf_tilemap_terrain_kind_t)t->kind : WGF_TILEMAP_TERRAIN_KIND_NONE;
+}
+
+int wgf_tilemap_get_terrainset_tileset(wgf_tilemap_t map, int set)
+{
+    const wgf_gfx_priv_tilemap_terrain_set_t *t = terrain_set_of(map, set);
+    return t != NULL ? t->tileset : -1;
+}
+
+int wgf_tilemap_find_terrainset(wgf_tilemap_t map, const char *name)
+{
+    const wgf_gfx_priv_tilemap_data_t *d = data_of(map);
+    int i;
+    for (i = 0; d != NULL && name != NULL && i < d->terrain_set_count; i++) {
+        if (strcmp(d->terrain_sets[i].name, name) == 0) return i;
+    }
+    return -1;
+}
+
+int wgf_tilemap_get_terrain_count(wgf_tilemap_t map, int set)
+{
+    const wgf_gfx_priv_tilemap_terrain_set_t *t = terrain_set_of(map, set);
+    return t != NULL ? t->terrain_count : 0;
+}
+
+const char *wgf_tilemap_get_terrain_name(wgf_tilemap_t map, int set, int terrain)
+{
+    const wgf_gfx_priv_tilemap_terrain_set_t *t = terrain_set_of(map, set);
+    return t != NULL && terrain >= 1 && terrain <= t->terrain_count ? t->terrains[terrain - 1] : "";
+}
+
+int wgf_tilemap_find_terrain(wgf_tilemap_t map, int set, const char *name)
+{
+    const wgf_gfx_priv_tilemap_terrain_set_t *t = terrain_set_of(map, set);
+    int i;
+    for (i = 0; t != NULL && name != NULL && i < t->terrain_count; i++) {
+        if (strcmp(t->terrains[i], name) == 0) return i + 1;
+    }
+    return 0;
+}
+
+int wgf_gfx_priv_tilemap_terrain_tile(const wgf_gfx_priv_tilemap_terrain_set_t *set, int tile)
+{
+    int i;
+    for (i = 0; i < set->tile_count; i++) {
+        if (set->tiles[i] == tile) return i;
+    }
+    return -1;
+}
+
+int wgf_tilemap_get_tile_terrain(wgf_tilemap_t map, int set, int gid, int place)
+{
+    const wgf_gfx_priv_tilemap_data_t *d = data_of(map);
+    const wgf_gfx_priv_tilemap_terrain_set_t *t = d != NULL && set >= 0 && set < d->terrain_set_count
+                                                       ? &d->terrain_sets[set]
+                                                       : NULL;
+    int tile = 0, found;
+    if (t == NULL || gid <= 0 || place < 0 || place > 7 ||
+        wgf_gfx_priv_tilemap_find_tileset(d, (uint32_t)gid, &tile) != t->tileset) {
+        return 0;
+    }
+    found = wgf_gfx_priv_tilemap_terrain_tile(t, tile);
+    return found >= 0 ? t->places[found][place] : 0;
 }

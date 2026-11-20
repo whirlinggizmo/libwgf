@@ -1,0 +1,21 @@
+{
+ "columns": 4,
+ "image": "../textures/hex_tiles.png",
+ "imageheight": 32,
+ "imagewidth": 112,
+ "margin": 0,
+ "name": "hex_tiles",
+ "spacing": 0,
+ "tilecount": 4,
+ "tiledversion": "1.10.2",
+ "tileheight": 32,
+ "tilewidth": 28,
+ "type": "tileset",
+ "version": "1.10",
+ "tiles": [
+  {
+   "id": 2,
+   "type": "water"
+  }
+ ]
+}

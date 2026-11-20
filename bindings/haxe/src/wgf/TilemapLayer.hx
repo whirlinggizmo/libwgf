@@ -70,4 +70,37 @@ import wgf.impl.Raw;
 	**/
 	public inline function getRowAt(x:Float, y:Float):Int
 		return Raw.wgf_tilemap_layer_get_row_at(this, x, y);
+
+	/**
+	    The middle of cell `column`, `row` (outside the layer too) in its parent's units: the
+	    reverse of get_column_at and get_row_at. 0, 0 for an actor that isn't a placed layer.
+	**/
+	public inline function getCellMiddle(column:Int, row:Int, ?into:wgf.Vec2):wgf.Vec2
+		return Raw.wgf_tilemap_layer_get_cell_middle(this, column, row, into);
+
+	/**
+	    Terrain `terrain` of terrain set `set` (wgf_tilemap.h, numbered from 1; 0 none) painted
+	    into cell `column`, `row` as Tiled's Terrain brush paints it (helix-legacy's setTerrain): a
+	    corner set's cell takes it at its four corners, an edge set's at its four edges, and the
+	    cell and the neighbors sharing them take the set's tile that fits what is around them (the
+	    first in the set's order; flips are never chosen). The terrains around are read from the
+	    layer's cells the first time a set is painted, and kept as painted until a cell is set
+	    another way (set_cell, set_cells), when they are read again. Where none of the set's tiles
+	    fits, a cell is left as it was; where nothing of the set is left, a cell showing a tile of
+	    the set's tileset is emptied. False, painting nothing, for a cell outside the layer, a set
+	    or terrain the map hasn't, a mixed set, or a staggered or hexagonal map; true once painted,
+	    whether every cell found its tile or not (each does when the set has a tile for every
+	    arrangement).
+	**/
+	public inline function paintTerrain(column:Int, row:Int, set:Int, terrain:Int):Bool
+		return Raw.wgf_tilemap_layer_paint_terrain(this, column, row, set, terrain);
+
+	/**
+	    A tile object of an object layer drawn as its tile (wgf_tilemap_instantiate): its sprite
+	    (wgf_sprite.h), under the layer. 0 for an object that isn't a tile, an object past the
+	    layer's, or a sprite destroyed (wgf_scene_spawn_objects destroys one it spawns a prefab in
+	    place of).
+	**/
+	public inline function getObjectActor(object:Int):Actor
+		return Raw.wgf_tilemap_layer_get_object_actor(this, object);
 }

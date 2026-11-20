@@ -2529,6 +2529,24 @@ export const Tilemap = Object.freeze({
     getTileHeight: raw.wgf_tilemap_get_tile_height,
     // wgf: call wgf_tilemap_get_background_color
     getBackgroundColor: raw.wgf_tilemap_get_background_color,
+    // wgf: call wgf_tilemap_get_orientation
+    getOrientation: raw.wgf_tilemap_get_orientation,
+    // wgf: call wgf_tilemap_is_infinite
+    isInfinite: raw.wgf_tilemap_is_infinite,
+    // wgf: call wgf_tilemap_get_origin_column
+    getOriginColumn: raw.wgf_tilemap_get_origin_column,
+    // wgf: call wgf_tilemap_get_origin_row
+    getOriginRow: raw.wgf_tilemap_get_origin_row,
+    // wgf: call wgf_tilemap_get_pixel_width
+    getPixelWidth: raw.wgf_tilemap_get_pixel_width,
+    // wgf: call wgf_tilemap_get_pixel_height
+    getPixelHeight: raw.wgf_tilemap_get_pixel_height,
+    // wgf: call wgf_tilemap_get_cell_middle
+    getCellMiddle: raw.wgf_tilemap_get_cell_middle,
+    // wgf: call wgf_tilemap_get_column_at
+    getColumnAt: raw.wgf_tilemap_get_column_at,
+    // wgf: call wgf_tilemap_get_row_at
+    getRowAt: raw.wgf_tilemap_get_row_at,
     // wgf: call wgf_tilemap_get_layer_count
     getLayerCount: raw.wgf_tilemap_get_layer_count,
     // wgf: call wgf_tilemap_get_layer_name
@@ -2537,6 +2555,8 @@ export const Tilemap = Object.freeze({
     getLayerKind: raw.wgf_tilemap_get_layer_kind,
     // wgf: call wgf_tilemap_find_layer
     findLayer: raw.wgf_tilemap_find_layer,
+    // wgf: call wgf_tilemap_get_layer_texture
+    getLayerTexture: raw.wgf_tilemap_get_layer_texture,
     // wgf: call wgf_tilemap_get_tileset_count
     getTilesetCount: raw.wgf_tilemap_get_tileset_count,
     // wgf: call wgf_tilemap_get_tileset_name
@@ -2567,6 +2587,10 @@ export const Tilemap = Object.freeze({
     isObjectVisible: raw.wgf_tilemap_is_object_visible,
     // wgf: call wgf_tilemap_get_object_tile
     getObjectTile: raw.wgf_tilemap_get_object_tile,
+    // wgf: call wgf_tilemap_get_object_tile_flips
+    getObjectTileFlips: raw.wgf_tilemap_get_object_tile_flips,
+    // wgf: call wgf_tilemap_get_object_middle
+    getObjectMiddle: raw.wgf_tilemap_get_object_middle,
     // wgf: call wgf_tilemap_get_object_points
     getObjectPoints: raw.wgf_tilemap_get_object_points,
     // wgf: call wgf_tilemap_get_object_point_count
@@ -2593,6 +2617,24 @@ export const Tilemap = Object.freeze({
     getTileProperty: raw.wgf_tilemap_get_tile_property,
     // wgf: call wgf_tilemap_get_tile_property_number
     getTilePropertyNumber: raw.wgf_tilemap_get_tile_property_number,
+    // wgf: call wgf_tilemap_get_terrainset_count
+    getTerrainsetCount: raw.wgf_tilemap_get_terrainset_count,
+    // wgf: call wgf_tilemap_get_terrainset_name
+    getTerrainsetName: raw.wgf_tilemap_get_terrainset_name,
+    // wgf: call wgf_tilemap_get_terrainset_kind
+    getTerrainsetKind: raw.wgf_tilemap_get_terrainset_kind,
+    // wgf: call wgf_tilemap_get_terrainset_tileset
+    getTerrainsetTileset: raw.wgf_tilemap_get_terrainset_tileset,
+    // wgf: call wgf_tilemap_find_terrainset
+    findTerrainset: raw.wgf_tilemap_find_terrainset,
+    // wgf: call wgf_tilemap_get_terrain_count
+    getTerrainCount: raw.wgf_tilemap_get_terrain_count,
+    // wgf: call wgf_tilemap_get_terrain_name
+    getTerrainName: raw.wgf_tilemap_get_terrain_name,
+    // wgf: call wgf_tilemap_find_terrain
+    findTerrain: raw.wgf_tilemap_find_terrain,
+    // wgf: call wgf_tilemap_get_tile_terrain
+    getTileTerrain: raw.wgf_tilemap_get_tile_terrain,
     // wgf: call wgf_tilemap_instantiate
     instantiate: raw.wgf_tilemap_instantiate,
     // wgf: call wgf_handle_is_alive
@@ -2618,6 +2660,12 @@ export const TilemapLayer = Object.freeze({
     getColumnAt: raw.wgf_tilemap_layer_get_column_at,
     // wgf: call wgf_tilemap_layer_get_row_at
     getRowAt: raw.wgf_tilemap_layer_get_row_at,
+    // wgf: call wgf_tilemap_layer_get_cell_middle
+    getCellMiddle: raw.wgf_tilemap_layer_get_cell_middle,
+    // wgf: call wgf_tilemap_layer_paint_terrain
+    paintTerrain: raw.wgf_tilemap_layer_paint_terrain,
+    // wgf: call wgf_tilemap_layer_get_object_actor
+    getObjectActor: raw.wgf_tilemap_layer_get_object_actor,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
@@ -3150,10 +3198,14 @@ export const TextureWrap = Object.freeze({ REPEAT: 0, CLAMP: 1, MIRROR: 2 });
 export const TilemapFlip = Object.freeze({ NONE: 0, X: 1, Y: 2, DIAGONAL: 4 });
 // wgf: enum TilemapLayerKind
 export const TilemapLayerKind = Object.freeze({ NONE: 0, TILES: 1, OBJECTS: 2, IMAGE: 3 });
+// wgf: enum TilemapOrientation
+export const TilemapOrientation = Object.freeze({ NONE: 0, ORTHOGONAL: 1, ISOMETRIC: 2, STAGGERED: 3, HEXAGONAL: 4 });
 // wgf: enum TilemapPropertyType
 export const TilemapPropertyType = Object.freeze({ NONE: 0, STRING: 1, INT: 2, FLOAT: 3, BOOL: 4, COLOR: 5, FILE: 6, OBJECT: 7, CLASS: 8 });
 // wgf: enum TilemapShape
 export const TilemapShape = Object.freeze({ NONE: 0, RECTANGLE: 1, POINT: 2, ELLIPSE: 3, POLYGON: 4, POLYLINE: 5, TILE: 6, TEXT: 7 });
+// wgf: enum TilemapTerrainKind
+export const TilemapTerrainKind = Object.freeze({ NONE: 0, CORNER: 1, EDGE: 2, MIXED: 3 });
 // wgf: enum TiltStatus
 export const TiltStatus = Object.freeze({ OFF: 0, WAITING_FOR_TAP: 1, STARTING: 2, ON: 3, REFUSED: 4, UNAVAILABLE: 5, NEEDS_HTTPS: 6 });
 // wgf: enum Transition
