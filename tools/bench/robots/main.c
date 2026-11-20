@@ -10,6 +10,13 @@
 #include <emscripten.h>
 #endif
 
+/* where it runs, in its JSON line: a page or a native program */
+#ifdef __EMSCRIPTEN__
+#define TARGET "page"
+#else
+#define TARGET "native"
+#endif
+
 #include "wgf_actor.h"
 #include "wgf_app.h"
 #include "wgf_asset.h"
@@ -149,7 +156,7 @@ static void frame(void *user)
         for (i = 0; i < TIMED; i++) sum += sorted[i];
         qsort(sorted, TIMED, sizeof(double), compare);
         mean = sum / TIMED;
-        printf("{\"contender\":\"libwgf\",\"target\":\"page\",\"mode\":\"count\",\"count\":%d,\"mean_ms\":%.6f,"
+        printf("{\"contender\":\"libwgf\",\"target\":\"" TARGET "\",\"mode\":\"count\",\"count\":%d,\"mean_ms\":%.6f,"
                "\"median_ms\":%.6f,\"p95_ms\":%.6f,\"fps\":%.3f}\n",
                r.count, mean, sorted[TIMED / 2], sorted[TIMED * 95 / 100], 1000.0 / mean);
         fflush(stdout);

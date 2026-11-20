@@ -18,7 +18,13 @@ variant, served with the examples' files at /assets/ as an example is, and
 run with no autopilot until it logs "<name>: done": it marks each case in the trace
 (console.timeStamp "<name> <case> <models>" as the case's measured frames begin, "<name>
 rest" as they end), and each case is the frames between, a frame a mark falls in left
-out. A benchmark is never part of the default set. Or scene:<name>, a combination scene in
+out. A speed benchmark with --native is built in linux-x64-release instead and run
+in a window on this display, vsync off, as helix's native rows are, each query's options
+its --name=value arguments. A speed benchmark's page here reads slower than helix's
+own runner reads it (Xvfb's display and the devtools session: the bunnymark's 200,000
+batched, 8.8 ms against 1.8): the comparison's page rows were taken with helix's
+tools/speed/run_page.cjs (HISTORY.md, "The comparison"). A benchmark is never part of
+the default set. Or scene:<name>, a combination scene in
 examples/scenes/<name>/, built in wasm32-release as an example is, served with the
 examples' files, and flown by its frames.autopilot (its own view for a while, then `end`):
 measured as a game is.
@@ -78,6 +84,7 @@ SPEED_BENCHES = {'bunnymark': ('count=10000', 'count=50000', 'incrementCount=100
 SPEED_VIEWPORTS = {'robots': (1280, 720)}  # each program's window as helix's runs it; 800 x 450 otherwise
 NO_ROOM = 'no room for another actor'  # what a sprite past the actor limit logs
 UNCAPPED = ('--disable-gpu-vsync', '--disable-frame-rate-limit')
+NATIVE_VARIANT = 'linux-x64-release'  # a speed benchmark's native runs (--native)
 GPU = """(() => { const gl = document.createElement('canvas').getContext('webgl2');
     const info = gl && gl.getExtension('WEBGL_debug_renderer_info');
     return info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : (gl ? gl.getParameter(gl.RENDERER) : ''); })()"""
@@ -117,6 +124,30 @@ def build_scene(name):
 def build_bench(name):
     """The benchmark's page, built fresh in wasm32-release; its folder, the site."""
     return examples.build_at('wasm32-release', name, ROOT / 'tools' / 'bench' / name).parent
+
+
+def build_native_bench(name):
+    """The benchmark's program, built fresh in linux-x64-release against the variant staged
+    again; its path."""
+    examples.prepare(NATIVE_VARIANT)
+    return examples.build_at(NATIVE_VARIANT, name, ROOT / 'tools' / 'bench' / name)
+
+
+def run_native(program, name, query, timeout=900):
+    """One native run of a speed benchmark: the program in a window on this display (the
+    real one, as helix's native rows are), the query's options as its --name=value
+    arguments; the JSON line it printed."""
+    options = [f'--{option}' for option in query.split('&')]
+    try:
+        done = subprocess.run([str(program), *options], cwd=program.parent, stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT, text=True, errors='replace', timeout=timeout)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f'{query}: still running after {timeout} s')
+    output = done.stdout.splitlines()
+    printed = [json.loads(line) for line in output if line.startswith('{') and '"contender"' in line]
+    if done.returncode != 0 or not printed or f'{name}: done' not in done.stdout:
+        raise RuntimeError(f'{query}: exit {done.returncode}, no result line\n  ' + '\n  '.join(output[-5:]))
+    return printed[-1]
 
 
 def cases(events, name):
@@ -252,12 +283,15 @@ def run_speed_bench(name, args, found):
     number the runs' median, printed; the exit code. Unthrottled whatever --throttle says,
     as helix's are; recorded nowhere yet."""
     try:
-        site = build_bench(name)
+        site = build_native_bench(name) if args.native else build_bench(name)
         runs, gpu = {q: [] for q in SPEED_BENCHES[name]}, ''
         for _ in range(max(args.runs, 1)):
             for query in SPEED_BENCHES[name]:
-                line, gpu = run(site, None, args.display, 1, found, timeout=900, bench=name, query=query)
-                runs[query].append(line)
+                if args.native:
+                    runs[query].append(run_native(site, name, query))
+                else:
+                    line, gpu = run(site, None, args.display, 1, found, timeout=900, bench=name, query=query)
+                    runs[query].append(line)
     except RuntimeError as e:
         print(f'measure_frames: bench:{name}: {e}')
         return 1
@@ -273,7 +307,10 @@ def run_speed_bench(name, args, found):
             limit = any(line.get('limit') for line in lines)
             print(f'  {query:<28} {lines[0]["count"]:>6} {name}  mean {mean:7.2f} ms  95th {p95:7.2f} ms'
                   + (f' (asked {lines[0]["asked"]:,}: the actor limit)' if limit else ''))
-    print(f'  on {cpu_name()}, {gpu or "an unknown GPU"}, {args.display}, unthrottled, frame rate cap lifted')
+    if args.native:
+        print(f'  on {cpu_name()}, natively ({NATIVE_VARIANT}) in a window on this display, vsync off')
+    else:
+        print(f'  on {cpu_name()}, {gpu or "an unknown GPU"}, {args.display}, unthrottled, frame rate cap lifted')
     return 0
 
 
@@ -317,6 +354,8 @@ def main():
                     help='xvfb: the real GPU under Xvfb (the reference); headless: SwiftShader (CI)')
     ap.add_argument('--throttle', type=float, default=4.0, help="Chrome's CPU throttling rate (default 4)")
     ap.add_argument('--runs', type=int, default=1, help='runs of each, each number their median (default 1)')
+    ap.add_argument('--native', action='store_true',
+                    help=f'a speed benchmark natively ({NATIVE_VARIANT}), in a window on this display')
     ap.add_argument('--write', action='store_true', help='record into docs/benchmarks.json and .md')
     ap.add_argument('--browser', help='a Chromium-based browser (default: found)')
     args = ap.parse_args()
