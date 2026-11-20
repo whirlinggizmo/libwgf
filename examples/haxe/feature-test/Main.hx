@@ -137,6 +137,9 @@ class Main {
 			&& Random.nextRange(own, 2, 3) >= 2 && Random.nextInt(own, 1, 6) >= 1 && Random.nextShuffle(own, deck) == 4,
 			"a game's own generator");
 		Random.destroy(own);
+		final hued = Color.makeHsv(120, 1, 1, 255);
+		expect(near(Color.getHue(hued), 120) && near(Color.getSaturation(hued), 1) && near(Color.getValue(hued), 1)
+			&& Color.brighten(hued, 0.5) != hued && Color.multiply(hued, Color.get(ColorStock.WHITE)) == hued, "color math");
 		expect(!App.hasOption("wgf-feature-missing") && App.getOption("wgf-feature-missing") == ""
 			&& App.getOptionInt("wgf-feature-missing", 3) == 3 && App.getOptionFloat("wgf-feature-missing", 1.5) == 1.5,
 			"an option not given");

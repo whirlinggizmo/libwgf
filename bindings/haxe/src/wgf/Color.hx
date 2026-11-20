@@ -62,4 +62,50 @@ class Color {
 	**/
 	public static inline function lerp(from:Int, to:Int, t:Float):Int
 		return Raw.wgf_color_lerp(from, to, t);
+
+	/**
+	    A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
+	    alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
+	    ColorToHSV): a palette walked round the wheel, a hit flash.
+	**/
+	public static inline function makeHsv(hue:Float, saturation:Float, value:Float, a:Int):Int
+		return Raw.wgf_color_make_hsv(hue, saturation, value, a);
+
+	/**
+	    A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
+	    alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
+	    ColorToHSV): a palette walked round the wheel, a hit flash.
+	**/
+	public static inline function getHue(color:Int):Float
+		return Raw.wgf_color_get_hue(color);
+
+	/**
+	    A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
+	    alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
+	    ColorToHSV): a palette walked round the wheel, a hit flash.
+	**/
+	public static inline function getSaturation(color:Int):Float
+		return Raw.wgf_color_get_saturation(color);
+
+	/**
+	    A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
+	    alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
+	    ColorToHSV): a palette walked round the wheel, a hit flash.
+	**/
+	public static inline function getValue(color:Int):Float
+		return Raw.wgf_color_get_value(color);
+
+	/**
+	    Lighter toward white by `amount` (0..1), or darker toward black by a negative one, its
+	    alpha kept; and two colors multiplied, channel by channel (a tint applied).
+	**/
+	public static inline function brighten(color:Int, amount:Float):Int
+		return Raw.wgf_color_brighten(color, amount);
+
+	/**
+	    Lighter toward white by `amount` (0..1), or darker toward black by a negative one, its
+	    alpha kept; and two colors multiplied, channel by channel (a tint applied).
+	**/
+	public static inline function multiply(color:Int, by:Int):Int
+		return Raw.wgf_color_multiply(color, by);
 }

@@ -3083,6 +3083,46 @@ export declare function wgf_color_get_alpha(color: wgf_color_t): number;
 export declare function wgf_color_lerp(from: wgf_color_t, to: wgf_color_t, t: number): wgf_color_t;
 
 /**
+ * A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
+ * alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
+ * ColorToHSV): a palette walked round the wheel, a hit flash.
+ */
+export declare function wgf_color_make_hsv(hue: number, saturation: number, value_: number, a: number): wgf_color_t;
+
+/**
+ * A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
+ * alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
+ * ColorToHSV): a palette walked round the wheel, a hit flash.
+ */
+export declare function wgf_color_get_hue(color: wgf_color_t): number;
+
+/**
+ * A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
+ * alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
+ * ColorToHSV): a palette walked round the wheel, a hit flash.
+ */
+export declare function wgf_color_get_saturation(color: wgf_color_t): number;
+
+/**
+ * A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
+ * alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
+ * ColorToHSV): a palette walked round the wheel, a hit flash.
+ */
+export declare function wgf_color_get_value(color: wgf_color_t): number;
+
+/**
+ * Lighter toward white by `amount` (0..1), or darker toward black by a negative one, its
+ * alpha kept; and two colors multiplied, channel by channel (a tint applied).
+ */
+export declare function wgf_color_brighten(color: wgf_color_t, amount: number): wgf_color_t;
+
+/**
+ * Lighter toward white by `amount` (0..1), or darker toward black by a negative one, its
+ * alpha kept; and two colors multiplied, channel by channel (a tint applied).
+ */
+export declare function wgf_color_multiply(color: wgf_color_t, by: wgf_color_t): wgf_color_t;
+
+/**
  * A font from a .ttf or .otf file under fs's root. 0 only when there is no room
  * for another font; one that can't be loaded FAILED. A font loaded before, and
  * released since, comes back READY at once.

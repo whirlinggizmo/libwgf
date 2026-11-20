@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "944d4b97968bd2ab" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "b5ba87fff88600a1" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -4514,6 +4514,70 @@ export function wgf_color_lerp(from, to, t) {
         out |= (Math.trunc(Math.fround(Math.fround(a + step) + 0.5)) & 0xFF) << shift;
     }
     return out >>> 0;
+}
+
+// wgf: call wgf_color_make_hsv
+/**
+ * A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
+ * alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
+ * ColorToHSV): a palette walked round the wheel, a hit flash.
+ */
+export function wgf_color_make_hsv(hue, saturation, value_, a) {
+    const value = host["_wgf_color_make_hsv"](hue, saturation, value_, a);
+    return value >>> 0;
+}
+
+// wgf: call wgf_color_get_hue
+/**
+ * A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
+ * alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
+ * ColorToHSV): a palette walked round the wheel, a hit flash.
+ */
+export function wgf_color_get_hue(color) {
+    const value = host["_wgf_color_get_hue"](color);
+    return value;
+}
+
+// wgf: call wgf_color_get_saturation
+/**
+ * A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
+ * alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
+ * ColorToHSV): a palette walked round the wheel, a hit flash.
+ */
+export function wgf_color_get_saturation(color) {
+    const value = host["_wgf_color_get_saturation"](color);
+    return value;
+}
+
+// wgf: call wgf_color_get_value
+/**
+ * A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
+ * alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
+ * ColorToHSV): a palette walked round the wheel, a hit flash.
+ */
+export function wgf_color_get_value(color) {
+    const value = host["_wgf_color_get_value"](color);
+    return value;
+}
+
+// wgf: call wgf_color_brighten
+/**
+ * Lighter toward white by `amount` (0..1), or darker toward black by a negative one, its
+ * alpha kept; and two colors multiplied, channel by channel (a tint applied).
+ */
+export function wgf_color_brighten(color, amount) {
+    const value = host["_wgf_color_brighten"](color, amount);
+    return value >>> 0;
+}
+
+// wgf: call wgf_color_multiply
+/**
+ * Lighter toward white by `amount` (0..1), or darker toward black by a negative one, its
+ * alpha kept; and two colors multiplied, channel by channel (a tint applied).
+ */
+export function wgf_color_multiply(color, by) {
+    const value = host["_wgf_color_multiply"](color, by);
+    return value >>> 0;
 }
 
 // wgf: call wgf_font_create

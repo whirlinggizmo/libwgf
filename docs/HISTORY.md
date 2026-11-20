@@ -1040,6 +1040,10 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## Parity: color math (2026-11-19)
+
+raylib's ColorFromHSV, ColorToHSV, ColorBrightness, and ColorTint: a color from hue, saturation, and value and its three read back, brightened toward white or darkened toward black, and two multiplied, exported since a color is a value a binding passes.
+
 ## Parity: more of immediate mode's drawing (2026-11-19)
 
 raylib's shapes libwgf lacked, as a file of their own so a program drawing none links none: rings and sectors (one call: a ring between two radii from one angle to another, an inner radius of 0 a sector), arcs, ellipses filled and outlined, gradients on a rectangle's four corners and from a circle's center, a texture turned about a pivot (DrawTexturePro), and helix-raylib's texture fill (across, up, or swept clockwise from 12 o'clock); in 3D a triangle, a cylinder, and wire spheres, cylinders, and capsules. Segments follow the curve's length on the frame's pixels. The gfx-draw example shows them.

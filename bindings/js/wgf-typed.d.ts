@@ -1532,6 +1532,40 @@ export declare const Color: {
      * t is clamped to 0..1.
      */
     readonly lerp: typeof raw.wgf_color_lerp;
+    /**
+     * A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
+     * alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
+     * ColorToHSV): a palette walked round the wheel, a hit flash.
+     */
+    readonly makeHsv: typeof raw.wgf_color_make_hsv;
+    /**
+     * A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
+     * alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
+     * ColorToHSV): a palette walked round the wheel, a hit flash.
+     */
+    readonly getHue: typeof raw.wgf_color_get_hue;
+    /**
+     * A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
+     * alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
+     * ColorToHSV): a palette walked round the wheel, a hit flash.
+     */
+    readonly getSaturation: typeof raw.wgf_color_get_saturation;
+    /**
+     * A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
+     * alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
+     * ColorToHSV): a palette walked round the wheel, a hit flash.
+     */
+    readonly getValue: typeof raw.wgf_color_get_value;
+    /**
+     * Lighter toward white by `amount` (0..1), or darker toward black by a negative one, its
+     * alpha kept; and two colors multiplied, channel by channel (a tint applied).
+     */
+    readonly brighten: typeof raw.wgf_color_brighten;
+    /**
+     * Lighter toward white by `amount` (0..1), or darker toward black by a negative one, its
+     * alpha kept; and two colors multiplied, channel by channel (a tint applied).
+     */
+    readonly multiply: typeof raw.wgf_color_multiply;
 };
 export declare const Debug: {
     /**

@@ -98,6 +98,18 @@ WGF_API int wgf_color_get_alpha(wgf_color_t color);
  * t is clamped to 0..1. */
 WGF_API wgf_color_t wgf_color_lerp(wgf_color_t from, wgf_color_t to, float t);
 
+/* A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
+ * alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
+ * ColorToHSV): a palette walked round the wheel, a hit flash. */
+WGF_API wgf_color_t wgf_color_make_hsv(float hue, float saturation, float value, int a);
+WGF_API float wgf_color_get_hue(wgf_color_t color);
+WGF_API float wgf_color_get_saturation(wgf_color_t color);
+WGF_API float wgf_color_get_value(wgf_color_t color);
+/* Lighter toward white by `amount` (0..1), or darker toward black by a negative one, its
+ * alpha kept; and two colors multiplied, channel by channel (a tint applied). */
+WGF_API wgf_color_t wgf_color_brighten(wgf_color_t color, float amount);
+WGF_API wgf_color_t wgf_color_multiply(wgf_color_t color, wgf_color_t by);
+
 #ifdef __cplusplus
 }
 #endif

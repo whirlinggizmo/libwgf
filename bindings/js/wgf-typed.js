@@ -508,6 +508,18 @@ export const Color = Object.freeze({
     getAlpha: raw.wgf_color_get_alpha,
     // wgf: call wgf_color_lerp
     lerp: raw.wgf_color_lerp,
+    // wgf: call wgf_color_make_hsv
+    makeHsv: raw.wgf_color_make_hsv,
+    // wgf: call wgf_color_get_hue
+    getHue: raw.wgf_color_get_hue,
+    // wgf: call wgf_color_get_saturation
+    getSaturation: raw.wgf_color_get_saturation,
+    // wgf: call wgf_color_get_value
+    getValue: raw.wgf_color_get_value,
+    // wgf: call wgf_color_brighten
+    brighten: raw.wgf_color_brighten,
+    // wgf: call wgf_color_multiply
+    multiply: raw.wgf_color_multiply,
 });
 // wgf: typed Debug
 export const Debug = Object.freeze({
