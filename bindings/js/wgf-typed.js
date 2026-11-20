@@ -1089,6 +1089,35 @@ export const Environment = Object.freeze({
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
+// wgf: typed Fly
+export const Fly = Object.freeze({
+    // wgf: call wgf_fly_set_mode
+    setMode: raw.wgf_fly_set_mode,
+    // wgf: call wgf_fly_get_mode
+    getMode: raw.wgf_fly_get_mode,
+    // wgf: call wgf_fly_set_speed
+    setSpeed: raw.wgf_fly_set_speed,
+    // wgf: call wgf_fly_get_speed
+    getSpeed: raw.wgf_fly_get_speed,
+    // wgf: call wgf_fly_set_sensitivity
+    setSensitivity: raw.wgf_fly_set_sensitivity,
+    // wgf: call wgf_fly_get_sensitivity
+    getSensitivity: raw.wgf_fly_get_sensitivity,
+    // wgf: call wgf_fly_set_turn_speed
+    setTurnSpeed: raw.wgf_fly_set_turn_speed,
+    // wgf: call wgf_fly_get_turn_speed
+    getTurnSpeed: raw.wgf_fly_get_turn_speed,
+    // wgf: call wgf_fly_set_look
+    setLook: raw.wgf_fly_set_look,
+    // wgf: call wgf_fly_get_look
+    getLook: raw.wgf_fly_get_look,
+    // wgf: call wgf_fly_set_look_held
+    setLookHeld: raw.wgf_fly_set_look_held,
+    // wgf: call wgf_fly_is_look_held
+    isLookHeld: raw.wgf_fly_is_look_held,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
+});
 // wgf: typed Follow
 export const Follow = Object.freeze({
     // wgf: call wgf_follow_set_target
@@ -2830,6 +2859,8 @@ export const DocumentEvent = Object.freeze({ NONE: 0, CLICK: 1, CHANGE: 2, SUBMI
 export const DrawFill = Object.freeze({ LEFT_TO_RIGHT: 0, BOTTOM_TO_TOP: 1, CLOCKWISE: 2 });
 // wgf: enum Easing
 export const Easing = Object.freeze({ LINEAR: 0, QUAD_IN: 1, QUAD_OUT: 2, QUAD_IN_OUT: 3, CUBIC_IN: 4, CUBIC_OUT: 5, CUBIC_IN_OUT: 6, QUART_IN: 7, QUART_OUT: 8, QUART_IN_OUT: 9, SINE_IN: 10, SINE_OUT: 11, SINE_IN_OUT: 12, EXPO_IN: 13, EXPO_OUT: 14, EXPO_IN_OUT: 15, CIRC_IN: 16, CIRC_OUT: 17, CIRC_IN_OUT: 18, BACK_IN: 19, BACK_OUT: 20, BACK_IN_OUT: 21, ELASTIC_IN: 22, ELASTIC_OUT: 23, ELASTIC_IN_OUT: 24, BOUNCE_IN: 25, BOUNCE_OUT: 26, BOUNCE_IN_OUT: 27 });
+// wgf: enum FlyMode
+export const FlyMode = Object.freeze({ NONE: 0, FREE: 1, FIRST_PERSON: 2 });
 // wgf: enum FollowMode
 export const FollowMode = Object.freeze({ CHASE: 0, FIXED: 1, ORBIT: 2 });
 // wgf: enum FsTaskStatus

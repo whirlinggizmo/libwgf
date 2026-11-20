@@ -9,6 +9,7 @@
 #include "wgf_color.h"
 #include "wgf_debug.h"
 #include "wgf_draw.h"
+#include "wgf_fly.h"
 #include "wgf_keyboard.h"
 #include "wgf_light.h"
 #include "wgf_loop.h"
@@ -24,7 +25,10 @@
  * the file's nodes appear under it once it has loaded (tools/gen_model.py's toy car: a body,
  * a see-through cabin, four wheels, emissive headlights, and a spot light at each). Its parts
  * are found by name, as any actor is: the wheels turn, and H switches the headlights' lights.
- * O stops the camera, and Escape quits where quitting means anything.
+ * O stops the camera, and C flies it instead (wgf_fly.h): free (the mouse looks, WASD or the
+ * arrows move, Space and Left Control rise and fall), then first person (on the ground, at
+ * eye height), then circling again. Escape lands a flying camera, and otherwise quits where
+ * quitting means anything.
  *
  * libwgt's model example, on a model of libwgf's own: libwgt's is a skinned character,
  * playing its animation, which is gfx-skinning's here. */
@@ -38,7 +42,22 @@ static struct {
     wgf_actor_t stage, camera, car;
     bool orbit, lights;
     float angle, roll;
+    wgf_fly_mode_t fly; /* NONE: circling */
 } g = {.orbit = true, .lights = true};
+
+/* The camera circling, flown free, or walked in first person, in that order. */
+static void next_camera(void)
+{
+    g.fly = g.fly == WGF_FLY_MODE_NONE ? WGF_FLY_MODE_FREE
+            : g.fly == WGF_FLY_MODE_FREE ? WGF_FLY_MODE_FIRST_PERSON
+                                         : WGF_FLY_MODE_NONE;
+    if (g.fly == WGF_FLY_MODE_FIRST_PERSON) { /* down to eye height, looking level */
+        const wgf_vec3_t at = wgf_actor_get_position(g.camera);
+        wgf_actor_set_position(g.camera, at.x, 1.2f, at.z);
+        wgf_fly_set_look(g.camera, wgf_fly_get_look(g.camera).x, 0.0f);
+    }
+    wgf_fly_set_mode(g.camera, g.fly);
+}
 
 static void init(void *user)
 {
@@ -80,24 +99,37 @@ static void frame(void *user)
     const bool loaded = wgf_actor_get_child_count(g.car) > 0; /* the file's nodes, made once it is READY */
     int i;
     (void)user;
-    if (wgf_app_can_quit() && wgf_keyboard_is_pressed(WGF_KEY_ESCAPE)) wgf_app_quit();
+    if (wgf_keyboard_is_pressed(WGF_KEY_ESCAPE) && g.fly != WGF_FLY_MODE_NONE) {
+        wgf_fly_set_mode(g.camera, g.fly = WGF_FLY_MODE_NONE); /* landed: circling again */
+    } else if (wgf_app_can_quit() && wgf_keyboard_is_pressed(WGF_KEY_ESCAPE)) {
+        wgf_app_quit();
+    }
+    if (wgf_keyboard_is_pressed(WGF_KEY_C)) next_camera();
     if (wgf_keyboard_is_pressed(WGF_KEY_O)) g.orbit = !g.orbit;
     if (loaded && wgf_keyboard_is_pressed(WGF_KEY_H)) {
         g.lights = !g.lights;
         wgf_actor_set_enabled(wgf_actor_find(g.car, "toy_car/body/headlight_l/headlight_l_beam"), g.lights);
         wgf_actor_set_enabled(wgf_actor_find(g.car, "toy_car/body/headlight_r/headlight_r_beam"), g.lights);
     }
-    if (g.orbit) g.angle += dt * 0.25f;
-    wgf_actor_set_position(g.camera, 7.0f * sinf(g.angle), 3.0f, 7.0f * cosf(g.angle));
-    wgf_actor_look_at(g.camera, 0, 0.5f, 0, 0, 1, 0);
+    if (g.fly == WGF_FLY_MODE_NONE) { /* flying, wgf_fly moves it before the frame */
+        if (g.orbit) g.angle += dt * 0.25f;
+        wgf_actor_set_position(g.camera, 7.0f * sinf(g.angle), 3.0f, 7.0f * cosf(g.angle));
+        wgf_actor_look_at(g.camera, 0, 0.5f, 0, 0, 1, 0);
+    }
     g.roll += dt * 3.0f; /* the wheels, found by name */
     for (i = 0; loaded && i < 4; i++) wgf_actor_set_rotation(wgf_actor_find(g.car, wheel_names[i]), g.roll, 0, 0);
 
     wgf_stage3d_draw(g.stage);
     wgf_draw_text(0, loaded ? "libwgf glTF model: " MODEL_PATH : "libwgf glTF model: loading " MODEL_PATH,
                   12, 36, 20, WGF_COLOR_RAYWHITE);
-    wgf_draw_text(0, wgf_app_can_quit() ? "O: the camera   H: the headlights   ESC: quit" : "O: the camera   H: the headlights",
+    wgf_draw_text(0, wgf_app_can_quit() ? "O: the camera   C: fly it   H: the headlights   ESC: quit"
+                                        : "O: the camera   C: fly it   H: the headlights",
                   12, 64, 16, WGF_COLOR_LIGHTGRAY);
+    if (g.fly != WGF_FLY_MODE_NONE) {
+        wgf_draw_text(0, g.fly == WGF_FLY_MODE_FREE ? "free: mouse looks, WASD moves, Space / Ctrl up and down, ESC lands"
+                                                    : "first person: mouse looks, WASD walks, ESC lands",
+                      12, 86, 16, WGF_COLOR_GRAY);
+    }
 }
 
 int main(void)

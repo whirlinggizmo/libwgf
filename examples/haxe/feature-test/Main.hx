@@ -601,6 +601,17 @@ class Main {
 		expect(World.setListener(followed) && World.getListener() == followed && World.setListener(cast 0), "a listener actor");
 		expect(follower.shake(0.5) && near(follower.getTrauma(), 0.5) && follower.snap() && follower.setTarget(cast 0),
 			"shaken, snapped, and let go");
+		final flier:Fly = (Camera3d.create() : Actor);
+		expect(flier.getMode() == FlyMode.NONE && flier.setSpeed(3) && near(flier.getSpeed(), 3) && flier.setSensitivity(0.002)
+			&& near(flier.getSensitivity(), 0.002) && flier.setTurnSpeed(1.5) && near(flier.getTurnSpeed(), 1.5),
+			"a flown camera's speed, sensitivity, and turn speed");
+		expect(flier.setLook(0.5, 2) && near(flier.getLook().x, 0.5) && near(flier.getLook().y, 1.5533430)
+			&& flier.setLookHeld(true) && flier.isLookHeld() && !flier.setSpeed(-1),
+			"its look, the pitch clamped; looking while held; a negative speed refused");
+		expect(flier.setMode(FlyMode.FREE) && flier.getMode() == FlyMode.FREE && flier.setMode(FlyMode.FIRST_PERSON)
+			&& flier.setMode(FlyMode.NONE) && flier.getMode() == FlyMode.NONE && !((follower : Actor) : Fly).setMode(FlyMode.FREE),
+			"flown free, first person, and stopped; a 2D camera refused");
+		(flier : Actor).destroy(ActorDestroy.DESTROY_CHILDREN);
 
 		final group = Actor.create();
 		expect(group.setParent(world) && group.getParent() == world && world.getChildCount() == 1

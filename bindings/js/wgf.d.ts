@@ -661,6 +661,34 @@ export declare const WGF_DRAW_FILL_CLOCKWISE: 2;
 export type wgf_draw_fill_t = typeof WGF_DRAW_FILL_LEFT_TO_RIGHT | typeof WGF_DRAW_FILL_BOTTOM_TO_TOP | typeof WGF_DRAW_FILL_CLOCKWISE;
 
 /**
+ * Cameras flown by input, raylib's CAMERA_FREE and CAMERA_FIRST_PERSON (UpdateCamera): a 3D
+ * camera actor (wgf_camera3d.h) given a mode is turned and moved each frame, before the frame
+ * callback, by the keyboard, the mouse, and the pads. At most 64 cameras have a mode or a
+ * setting.
+ *
+ *   the mouse            looks: yaw and pitch, the pitch held just short of straight up or
+ *                        down; the pointer is locked while it looks (wgf_mouse_set_locked),
+ *                        and a click locks it again once the platform let it go (Escape in
+ *                        a browser)
+ *   the right stick      looks, at the turn speed
+ *   W A S D, the arrows  move forward, left, back, and right; the left stick too
+ *   Space or E           FREE: up (the world's +y); a pad's right bumper too
+ *   Left Control or Q    FREE: down; a pad's left bumper too
+ *
+ * FREE moves where it looks; FIRST_PERSON moves on the ground plane, its height kept (what
+ * the program sets it to: stairs, a jump). Every pad is read, the one pushed furthest
+ * winning. Keys aren't read while the keyboard is captured, and the mouse doesn't look while
+ * the pointer is (wgf_input.h: a UI has it). The camera's position is read each frame, so the
+ * program may move it; it is turned only by the look below while it flies. Every flown
+ * camera moves by the same input, so fly one at a time; a camera that also follows
+ * (wgf_follow.h) is placed by both.
+ */
+export declare const WGF_FLY_MODE_NONE: 0;
+export declare const WGF_FLY_MODE_FREE: 1;
+export declare const WGF_FLY_MODE_FIRST_PERSON: 2;
+export type wgf_fly_mode_t = typeof WGF_FLY_MODE_NONE | typeof WGF_FLY_MODE_FREE | typeof WGF_FLY_MODE_FIRST_PERSON;
+
+/**
  * Cameras that follow, helix-legacy's CameraFollow2D, CameraFollow3D, and Orbit3D: a camera
  * actor (wgf_camera2d.h, wgf_camera3d.h) given a target actor is moved each frame, before
  * the frame callback, to follow where the target is drawn. At most 64 cameras follow.
@@ -6154,6 +6182,85 @@ export declare function wgf_emitter3d_clear(emitter: wgf_actor_t | 0): boolean;
  * a path or file that can't be loaded gives one that FAILED.
  */
 export declare function wgf_environment_create(path: string | null): wgf_environment_t;
+
+/**
+ * The camera flown in `mode` (NONE: no longer, staying where it is and its settings kept).
+ * Starting, its look is taken from where it faces now. False for a camera that isn't a 3D
+ * camera, a mode that isn't one, or 64 cameras with a mode or a setting.
+ */
+export declare function wgf_fly_set_mode(camera: wgf_actor_t | 0, mode: wgf_fly_mode_t): boolean;
+
+/**
+ * The camera flown in `mode` (NONE: no longer, staying where it is and its settings kept).
+ * Starting, its look is taken from where it faces now. False for a camera that isn't a 3D
+ * camera, a mode that isn't one, or 64 cameras with a mode or a setting.
+ */
+export declare function wgf_fly_get_mode(camera: wgf_actor_t | 0): wgf_fly_mode_t;
+
+/**
+ * How fast it moves, world units a second (5.4 by default, raylib's); a stick part way, part
+ * of it. False for a negative one, and, as every setter here, a camera refused as above.
+ */
+export declare function wgf_fly_set_speed(camera: wgf_actor_t | 0, speed: number): boolean;
+
+/**
+ * How fast it moves, world units a second (5.4 by default, raylib's); a stick part way, part
+ * of it. False for a negative one, and, as every setter here, a camera refused as above.
+ */
+export declare function wgf_fly_get_speed(camera: wgf_actor_t | 0): number;
+
+/**
+ * How far the mouse turns it, radians a logical pixel (0.003 by default, raylib's); 0: the
+ * mouse doesn't look. False for a negative one.
+ */
+export declare function wgf_fly_set_sensitivity(camera: wgf_actor_t | 0, radians: number): boolean;
+
+/**
+ * How far the mouse turns it, radians a logical pixel (0.003 by default, raylib's); 0: the
+ * mouse doesn't look. False for a negative one.
+ */
+export declare function wgf_fly_get_sensitivity(camera: wgf_actor_t | 0): number;
+
+/**
+ * How fast a stick pushed all the way turns it, radians a second (2 by default). False for
+ * a negative one.
+ */
+export declare function wgf_fly_set_turn_speed(camera: wgf_actor_t | 0, radians: number): boolean;
+
+/**
+ * How fast a stick pushed all the way turns it, radians a second (2 by default). False for
+ * a negative one.
+ */
+export declare function wgf_fly_get_turn_speed(camera: wgf_actor_t | 0): number;
+
+/**
+ * Where it looks, turned at once: `yaw` radians about y (0 facing -z, a quarter turn
+ * facing -x), `pitch` radians up (clamped to just short of straight up or down). Read back
+ * as where it looks now, yaw (-pi to pi) and pitch. False for a value not finite.
+ */
+export declare function wgf_fly_set_look(camera: wgf_actor_t | 0, yaw: number, pitch: number): boolean;
+
+/**
+ * Where it looks, turned at once: `yaw` radians about y (0 facing -z, a quarter turn
+ * facing -x), `pitch` radians up (clamped to just short of straight up or down). Read back
+ * as where it looks now, yaw (-pi to pi) and pitch. False for a value not finite.
+ */
+export declare function wgf_fly_get_look<T extends number[] | Float32Array | Float64Array>(camera: wgf_actor_t | 0, into: T): T;
+export declare function wgf_fly_get_look(camera: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * The mouse looking only while its right button is held, the pointer locked while it is (a
+ * debug camera beside a game's own clicks); false (the default): always, the pointer locked
+ * while it flies.
+ */
+export declare function wgf_fly_set_look_held(camera: wgf_actor_t | 0, held: boolean): boolean;
+
+/**
+ * The mouse looking only while its right button is held, the pointer locked while it is (a
+ * debug camera beside a game's own clicks); false (the default): always, the pointer locked
+ * while it flies.
+ */
+export declare function wgf_fly_is_look_held(camera: wgf_actor_t | 0): boolean;
 
 /**
  * The camera follows `target` (0: stops following, staying where it is). False for a

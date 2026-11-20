@@ -29,6 +29,7 @@ typedef enum wgf_core_priv_part_order_t {
     WGF_CORE_PRIV_PART_SCREENS,   /* the screen stack's changes (libwgf/ecs/src/wgf_ecs_screen.c), on real time */
     WGF_CORE_PRIV_PART_ANIMATION, /* models' animations (libwgf/gfx/src/stage/wgf_gfx_animation.c): before follow */
     WGF_CORE_PRIV_PART_FOLLOW,    /* cameras that follow (libwgf/gfx/src/actor/wgf_gfx_follow.c): after what moves their targets */
+    WGF_CORE_PRIV_PART_FLY,       /* cameras flown by input (libwgf/gfx/src/actor/wgf_gfx_fly.c) */
     WGF_CORE_PRIV_PART_TEXT,      /* fonts and fontstash (libwgf/gfx/src/text/wgf_gfx_font.c) */
     WGF_CORE_PRIV_PART_STAGE3D,   /* 3D stages' frames and their GPU objects (libwgf/gfx/src/stage/) */
     WGF_CORE_PRIV_PART_SHADOWS,   /* shadow maps (libwgf/gfx/src/stage/wgf_gfx_shadow.c): drawn as the frame flushes */

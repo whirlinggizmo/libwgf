@@ -3670,6 +3670,78 @@ export declare const Environment: {
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
+export type Fly = raw.wgf_actor_t;
+export declare const Fly: {
+    /**
+     * The camera flown in `mode` (NONE: no longer, staying where it is and its settings kept).
+     * Starting, its look is taken from where it faces now. False for a camera that isn't a 3D
+     * camera, a mode that isn't one, or 64 cameras with a mode or a setting.
+     */
+    readonly setMode: typeof raw.wgf_fly_set_mode;
+    /**
+     * The camera flown in `mode` (NONE: no longer, staying where it is and its settings kept).
+     * Starting, its look is taken from where it faces now. False for a camera that isn't a 3D
+     * camera, a mode that isn't one, or 64 cameras with a mode or a setting.
+     */
+    readonly getMode: typeof raw.wgf_fly_get_mode;
+    /**
+     * How fast it moves, world units a second (5.4 by default, raylib's); a stick part way, part
+     * of it. False for a negative one, and, as every setter here, a camera refused as above.
+     */
+    readonly setSpeed: typeof raw.wgf_fly_set_speed;
+    /**
+     * How fast it moves, world units a second (5.4 by default, raylib's); a stick part way, part
+     * of it. False for a negative one, and, as every setter here, a camera refused as above.
+     */
+    readonly getSpeed: typeof raw.wgf_fly_get_speed;
+    /**
+     * How far the mouse turns it, radians a logical pixel (0.003 by default, raylib's); 0: the
+     * mouse doesn't look. False for a negative one.
+     */
+    readonly setSensitivity: typeof raw.wgf_fly_set_sensitivity;
+    /**
+     * How far the mouse turns it, radians a logical pixel (0.003 by default, raylib's); 0: the
+     * mouse doesn't look. False for a negative one.
+     */
+    readonly getSensitivity: typeof raw.wgf_fly_get_sensitivity;
+    /**
+     * How fast a stick pushed all the way turns it, radians a second (2 by default). False for
+     * a negative one.
+     */
+    readonly setTurnSpeed: typeof raw.wgf_fly_set_turn_speed;
+    /**
+     * How fast a stick pushed all the way turns it, radians a second (2 by default). False for
+     * a negative one.
+     */
+    readonly getTurnSpeed: typeof raw.wgf_fly_get_turn_speed;
+    /**
+     * Where it looks, turned at once: `yaw` radians about y (0 facing -z, a quarter turn
+     * facing -x), `pitch` radians up (clamped to just short of straight up or down). Read back
+     * as where it looks now, yaw (-pi to pi) and pitch. False for a value not finite.
+     */
+    readonly setLook: typeof raw.wgf_fly_set_look;
+    /**
+     * Where it looks, turned at once: `yaw` radians about y (0 facing -z, a quarter turn
+     * facing -x), `pitch` radians up (clamped to just short of straight up or down). Read back
+     * as where it looks now, yaw (-pi to pi) and pitch. False for a value not finite.
+     */
+    readonly getLook: typeof raw.wgf_fly_get_look;
+    /**
+     * The mouse looking only while its right button is held, the pointer locked while it is (a
+     * debug camera beside a game's own clicks); false (the default): always, the pointer locked
+     * while it flies.
+     */
+    readonly setLookHeld: typeof raw.wgf_fly_set_look_held;
+    /**
+     * The mouse looking only while its right button is held, the pointer locked while it is (a
+     * debug camera beside a game's own clicks); false (the default): always, the pointer locked
+     * while it flies.
+     */
+    readonly isLookHeld: typeof raw.wgf_fly_is_look_held;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
+};
+/** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Follow = raw.wgf_actor_t;
 export declare const Follow: {
     /**
@@ -9513,6 +9585,8 @@ export type DrawFill = raw.wgf_draw_fill_t;
 export declare const DrawFill: { readonly LEFT_TO_RIGHT: DrawFill; readonly BOTTOM_TO_TOP: DrawFill; readonly CLOCKWISE: DrawFill; };
 export type Easing = raw.wgf_easing_t;
 export declare const Easing: { readonly LINEAR: Easing; readonly QUAD_IN: Easing; readonly QUAD_OUT: Easing; readonly QUAD_IN_OUT: Easing; readonly CUBIC_IN: Easing; readonly CUBIC_OUT: Easing; readonly CUBIC_IN_OUT: Easing; readonly QUART_IN: Easing; readonly QUART_OUT: Easing; readonly QUART_IN_OUT: Easing; readonly SINE_IN: Easing; readonly SINE_OUT: Easing; readonly SINE_IN_OUT: Easing; readonly EXPO_IN: Easing; readonly EXPO_OUT: Easing; readonly EXPO_IN_OUT: Easing; readonly CIRC_IN: Easing; readonly CIRC_OUT: Easing; readonly CIRC_IN_OUT: Easing; readonly BACK_IN: Easing; readonly BACK_OUT: Easing; readonly BACK_IN_OUT: Easing; readonly ELASTIC_IN: Easing; readonly ELASTIC_OUT: Easing; readonly ELASTIC_IN_OUT: Easing; readonly BOUNCE_IN: Easing; readonly BOUNCE_OUT: Easing; readonly BOUNCE_IN_OUT: Easing; };
+export type FlyMode = raw.wgf_fly_mode_t;
+export declare const FlyMode: { readonly NONE: FlyMode; readonly FREE: FlyMode; readonly FIRST_PERSON: FlyMode; };
 export type FollowMode = raw.wgf_follow_mode_t;
 export declare const FollowMode: { readonly CHASE: FollowMode; readonly FIXED: FollowMode; readonly ORBIT: FollowMode; };
 export type FsTaskStatus = raw.wgf_fs_task_status_t;

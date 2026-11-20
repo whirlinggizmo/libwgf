@@ -497,6 +497,18 @@ class Reach {
 		"wgf_emitter3d_set_velocity",
 		"wgf_emitter3d_skip_trail",
 		"wgf_environment_create",
+		"wgf_fly_get_look",
+		"wgf_fly_get_mode",
+		"wgf_fly_get_sensitivity",
+		"wgf_fly_get_speed",
+		"wgf_fly_get_turn_speed",
+		"wgf_fly_is_look_held",
+		"wgf_fly_set_look",
+		"wgf_fly_set_look_held",
+		"wgf_fly_set_mode",
+		"wgf_fly_set_sensitivity",
+		"wgf_fly_set_speed",
+		"wgf_fly_set_turn_speed",
 		"wgf_follow_get_bounds",
 		"wgf_follow_get_dead_zone",
 		"wgf_follow_get_mode",
@@ -1241,7 +1253,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1232) 0];
+	static final counts:Array<Int> = [for (_ in 0...1244) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;
