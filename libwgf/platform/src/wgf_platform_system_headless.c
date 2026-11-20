@@ -264,13 +264,12 @@ void wgf_platform_priv_set_paced(bool paced_frames)
     paced = paced_frames;
 }
 
-/* For tests: a clipboard of its own, the last URL asked for, and a desktop's device. */
+/* For tests: a clipboard of its own, a URL taken as opened, and a desktop's device. */
 static char clipboard[1024];
-static int cursor_now;
 
 void wgf_platform_priv_set_cursor(int cursor)
 {
-    cursor_now = cursor;
+    (void)cursor; /* no window to show it on */
 }
 
 void wgf_platform_priv_set_clipboard(const char *text)

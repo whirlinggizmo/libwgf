@@ -38,6 +38,9 @@ typedef struct texture_t {
     wgf_color_t clear_color; /* what a pass into it starts cleared to */
     sg_image images[2];     /* its samples (with MSAA), its depth */
     sg_view attachments[3]; /* color, resolve (with MSAA), depth */
+    /* made blank (wgf_texture_create_blank): written by the program */
+    bool blank;
+    uint32_t written; /* the frame it was last written in, + 1 */
 } texture_t;
 
 typedef struct decoded_t {
@@ -628,6 +631,60 @@ wgf_texture_t wgf_texture_create_target(int width, int height)
     return texture;
 }
 
+wgf_texture_t wgf_texture_create_blank(int width, int height)
+{
+    sg_image_desc image;
+    sg_view_desc view;
+    wgf_texture_t texture = 0;
+    texture_t *t;
+    if (width <= 0 || height <= 0 || width > 16384 || height > 16384) {
+        wgf_log_error("wgf_texture_create_blank: a size of %dx%d", width, height);
+        return 0;
+    }
+    if (!wgf_gfx_priv_render_is_running()) {
+        wgf_log_error("wgf_texture_create_blank: gfx isn't running (make textures in init or later)");
+        return 0;
+    }
+    if (ensure_pool()) texture = wgf_core_priv_resource_add(WGF_CORE_PRIV_HANDLE_KIND_TEXTURE);
+    t = texture_of(texture);
+    if (t == NULL) return 0;
+    t->width = width;
+    t->height = height; /* READY as it was added: made from numbers */
+    t->blank = true;
+    memset(&image, 0, sizeof(image));
+    image.usage.dynamic_update = true;
+    image.width = width;
+    image.height = height;
+    image.pixel_format = SG_PIXELFORMAT_RGBA8;
+    image.label = "wgf-texture-blank";
+    t->image = sg_make_image(&image);
+    memset(&view, 0, sizeof(view));
+    view.texture.image = t->image;
+    t->view = sg_make_view(&view);
+    if (sg_query_image_state(t->image) != SG_RESOURCESTATE_VALID) {
+        wgf_log_error("wgf_texture_create_blank: the GPU didn't take a %dx%d texture", width, height);
+        wgf_resource_release(texture);
+        return 0;
+    }
+    return texture;
+}
+
+bool wgf_texture_write(wgf_texture_t texture, const unsigned char *data, int size)
+{
+    texture_t *t = texture_of(texture);
+    uint32_t frame;
+    sg_image_data pixels;
+    if (t == NULL || !t->blank || data == NULL || (int64_t)size != (int64_t)t->width * t->height * 4) return false;
+    frame = wgf_gfx_priv_render_get_last_frame() + 1; /* the frames ended: one write between two */
+    if (t->written == frame) return false; /* the GPU takes one write a frame */
+    memset(&pixels, 0, sizeof(pixels));
+    pixels.mip_levels[0].ptr = data;
+    pixels.mip_levels[0].size = (size_t)size;
+    sg_update_image(t->image, &pixels);
+    t->written = frame;
+    return true;
+}
+
 bool wgf_gfx_priv_texture_get_target(wgf_texture_t texture, sg_attachments *attachments, int *width, int *height)
 {
     const texture_t *texture_ptr = texture_of(texture);
@@ -730,7 +787,7 @@ bool wgf_gfx_priv_texture_get_binding(wgf_texture_t texture, sg_view *view, sg_s
     if (texture_ptr->resource.status == WGF_RESOURCE_STATUS_READY) {
         *view = texture_ptr->view;
         *sampler = wgf_gfx_priv_texture_sampler(texture_ptr->wrap_u, texture_ptr->wrap_v, texture_ptr->filter,
-                                                !texture_ptr->target); /* a target has no mipmaps */
+                                                !texture_ptr->target && !texture_ptr->blank); /* a target or a blank has no mipmaps */
         *width = texture_ptr->width;
         *height = texture_ptr->height;
         *is_placeholder = false;

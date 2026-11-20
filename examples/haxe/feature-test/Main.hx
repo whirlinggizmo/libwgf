@@ -106,6 +106,10 @@ class Main {
 		final turning = Tween.turn(mover, 0, 1, 0, 0.5, Easing.BACK_OUT);
 		final growing = Tween.scale(mover, 2, 2, 2, 0.5, Easing.ELASTIC_OUT);
 		expect(moving.isAlive() && turning.isAlive() && growing.isAlive(), "an actor moved, turned, and scaled");
+		final drawn = Texture.createBlank(2, 2);
+		final pixels = haxe.io.Bytes.alloc(16);
+		pixels.fill(0, 16, 255);
+		expect(drawn.getWidth() == 2 && drawn.write(pixels) && !drawn.write(pixels), "a texture made in code, written once a frame");
 		final box = Mesh.createCube(2, 4, 6), boxed:Model = Model.create(box);
 		expect(near(box.getBoundsMax().z, 3) && near(box.getBoundsMin().y, -2) && near(boxed.getBoundsMax().y, 2)
 			&& near(boxed.getBoundsMin().x, -1), "a mesh's and a model's bounds");

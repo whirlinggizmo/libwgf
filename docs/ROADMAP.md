@@ -11,7 +11,6 @@ Rob's (2026-11-19): libwgf is finished so that a pure C and wasm engine can be c
 3. **Parity, the small gaps** (from the parity checklist, the rows helix-raylib has and libwgf has nowhere planned):
    - shape tests as plain math: a point in a rectangle, circle, triangle, polygon; segments; boxes and spheres; a ray against a sphere, a box, a triangle;
    - splines: a point along a linear, Catmull-Rom, or Bézier path, and drawing one;
-   - a texture made from bytes, and updated;
    - a lost GPU context recovered (phones and browsers drop WebGL when backgrounded);
    - text's letter and line spacing;
    - the last pad button pressed (a rebinding screen's, beside the last key);

@@ -1761,6 +1761,10 @@ export const Texture = Object.freeze({
     create: raw.wgf_texture_create,
     // wgf: call wgf_texture_create_target
     createTarget: raw.wgf_texture_create_target,
+    // wgf: call wgf_texture_create_blank
+    createBlank: raw.wgf_texture_create_blank,
+    // wgf: call wgf_texture_write
+    write: raw.wgf_texture_write,
     // wgf: call wgf_texture_get_width
     getWidth: raw.wgf_texture_get_width,
     // wgf: call wgf_texture_get_height

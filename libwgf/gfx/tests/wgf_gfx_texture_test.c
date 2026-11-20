@@ -274,6 +274,28 @@ int main(void)
 
     compressed();
 
+    { /* a texture made in code, written */
+        static unsigned char pixels[4 * 2 * 4];
+        const wgf_texture_t blank = wgf_texture_create_blank(4, 2);
+        sg_view view;
+        sg_sampler sampler;
+        int w = 0, h = 0;
+        bool placeholder = true;
+        memset(pixels, 0xFF, sizeof(pixels));
+        expect(blank != 0 && wgf_resource_get_status(blank) == WGF_RESOURCE_STATUS_READY && wgf_texture_get_width(blank) == 4,
+               "a blank texture, READY at once");
+        expect(wgf_gfx_priv_texture_get_binding(blank, &view, &sampler, &w, &h, &placeholder) && !placeholder && w == 4,
+               "drawable");
+        expect(!wgf_texture_write(blank, pixels, 4) && !wgf_texture_write(blank, NULL, 32) && !wgf_texture_write(rock, pixels, 32),
+               "a size that isn't its, NULL, a texture not made blank: refused");
+        expect(wgf_texture_write(blank, pixels, 32) && !wgf_texture_write(blank, pixels, 32), "written; once a frame");
+        wgf_gfx_priv_begin_frame();
+        wgf_gfx_priv_end_frame();
+        expect(wgf_texture_write(blank, pixels, 32), "the next frame: again");
+        expect(wgf_texture_create_blank(0, 4) == 0 && wgf_texture_create_blank(4, 20000) == 0, "a size of 0 or too large");
+        wgf_resource_release(blank);
+    }
+
     wgf_resource_release(rock);
     wgf_resource_release(missing);
     wgf_resource_release(broken);

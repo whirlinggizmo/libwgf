@@ -1040,6 +1040,10 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## A texture made in code (2026-11-19)
+
+The parity row for raylib's LoadTextureFromImage and UpdateTexture: `wgf_texture_create_blank` and `wgf_texture_write` (a whole RGBA image, a byte span), not a texture "from memory", which CONVENTIONS keeps out for files. Once a frame, as sokol's dynamic images allow, counted by gfx's frames ended so a write after a frame's end and one in the next frame are one frame's. A region written, and other pixel formats, wait for a need.
+
 ## Run options (2026-11-19)
 
 Wardens' block's fourth item: the program's options by name, read the same way on both platforms, `--name=value` natively and `name=value` in a page's query, the last of a name winning, as text or numbers. `wgf_app_run` takes no arguments (they'd be a `char **`, which the hard rule keeps out), so natively they are read from the system: /proc/self/cmdline, the C runtime's `__argv`, or `_NSGetArgv`. The bunnymark reads its options through it now.

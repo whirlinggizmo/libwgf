@@ -5342,6 +5342,20 @@ export declare const Texture: {
      */
     readonly createTarget: typeof raw.wgf_texture_create_target;
     /**
+     * A texture made in code, `width` by `height` pixels of RGBA, transparent black until
+     * written: a minimap, fog of war, a picture worked out by the program. Made from numbers:
+     * READY at once, with no path; no mipmaps. 0 for a size of 0 or less, or over 16384, or
+     * before gfx runs, each logged.
+     */
+    readonly createBlank: typeof raw.wgf_texture_create_blank;
+    /**
+     * Its every pixel written, RGBA, 8 bits each, rows from the top (width x height x 4
+     * bytes), copied; seen from the next frame drawn. Once a frame: a second write in a frame
+     * is refused, as the GPU takes one. False for a texture not made blank, a size that isn't
+     * its, NULL, and a second write in a frame.
+     */
+    readonly write: typeof raw.wgf_texture_write;
+    /**
      * Its size in pixels; 0 until it is READY.
      */
     readonly getWidth: typeof raw.wgf_texture_get_width;

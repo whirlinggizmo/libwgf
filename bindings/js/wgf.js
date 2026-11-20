@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "7a002b96b756ca7f" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "4f757e6bad40ba5c" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -4605,6 +4605,31 @@ export function wgf_texture_create(path) {
 export function wgf_texture_create_target(width, height) {
     const value = host["_wgf_texture_create_target"](width, height);
     return value >>> 0;
+}
+
+// wgf: call wgf_texture_create_blank
+/**
+ * A texture made in code, `width` by `height` pixels of RGBA, transparent black until
+ * written: a minimap, fog of war, a picture worked out by the program. Made from numbers:
+ * READY at once, with no path; no mipmaps. 0 for a size of 0 or less, or over 16384, or
+ * before gfx runs, each logged.
+ */
+export function wgf_texture_create_blank(width, height) {
+    const value = host["_wgf_texture_create_blank"](width, height);
+    return value >>> 0;
+}
+
+// wgf: call wgf_texture_write
+/**
+ * Its every pixel written, RGBA, 8 bits each, rows from the top (width x height x 4
+ * bytes), copied; seen from the next frame drawn. Once a frame: a second write in a frame
+ * is refused, as the GPU takes one. False for a texture not made blank, a size that isn't
+ * its, NULL, and a second write in a frame.
+ */
+export function wgf_texture_write(texture, data) {
+    const dataPointer = bytesIn(data, 0);
+    const value = host["_wgf_texture_write"](texture, dataPointer, lengthOf(data));
+    return value !== 0;
 }
 
 // wgf: call wgf_texture_get_width

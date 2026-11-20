@@ -762,6 +762,7 @@ class Reach {
 		"wgf_text_set_string",
 		"wgf_text_set_wrap_width",
 		"wgf_texture_create",
+		"wgf_texture_create_blank",
 		"wgf_texture_create_target",
 		"wgf_texture_get_filter",
 		"wgf_texture_get_height",
@@ -776,6 +777,7 @@ class Reach {
 		"wgf_texture_read_get_status",
 		"wgf_texture_read_get_width",
 		"wgf_texture_set_sampling",
+		"wgf_texture_write",
 		"wgf_time_get_seconds",
 		"wgf_touch_get_count",
 		"wgf_touch_get_delta",
@@ -945,7 +947,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...936) 0];
+	static final counts:Array<Int> = [for (_ in 0...938) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

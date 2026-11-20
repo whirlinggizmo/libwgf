@@ -41,6 +41,24 @@ abstract Texture(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_texture_create_target(width, height);
 
 	/**
+	    A texture made in code, `width` by `height` pixels of RGBA, transparent black until
+	    written: a minimap, fog of war, a picture worked out by the program. Made from numbers:
+	    READY at once, with no path; no mipmaps. 0 for a size of 0 or less, or over 16384, or
+	    before gfx runs, each logged.
+	**/
+	public static inline function createBlank(width:Int, height:Int):Texture
+		return Raw.wgf_texture_create_blank(width, height);
+
+	/**
+	    Its every pixel written, RGBA, 8 bits each, rows from the top (width x height x 4
+	    bytes), copied; seen from the next frame drawn. Once a frame: a second write in a frame
+	    is refused, as the GPU takes one. False for a texture not made blank, a size that isn't
+	    its, NULL, and a second write in a frame.
+	**/
+	public inline function write(data:haxe.io.Bytes):Bool
+		return Raw.wgf_texture_write(this, data);
+
+	/**
 	    Its size in pixels; 0 until it is READY.
 	**/
 	public inline function getWidth():Int
