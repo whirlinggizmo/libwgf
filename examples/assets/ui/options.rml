@@ -34,11 +34,12 @@
         <button class="level" id="level-8">Level 8: Grey Tower</button>
         <button class="level" id="level-9">Level 9: Salt Marsh</button>
         <button class="level" id="level-10">Level 10: The Ford</button>
-        <button class="level" id="level-11">Level 11: Crown Keep</button>
-        <button class="level" id="level-12">Level 12: Last Light</button>
+        <button class="level locked" id="level-11">Level 11: Crown Keep</button>
+        <button class="level locked" id="level-12">Level 12: Last Light</button>
             </div>
         </panel>
     </tabset>
+    <div class="rule"></div>
     <div id="buttons"><button id="play">Play</button><button id="quit">Quit</button></div>
     <p id="status"><b>Tab</b>, the arrows, or a pad's D-pad move; <b>Enter</b> or its south button chooses. <i>Point at the ? for a tip.</i></p>
 </div>

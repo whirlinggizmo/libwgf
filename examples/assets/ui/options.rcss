@@ -50,6 +50,8 @@ i { font-style: italic; }
     width: 560px;
     padding: 22px 28px;
     decorator: ninepatch(panel, panel-inner);
+    border-radius: 12px;
+    box-shadow: #000000d0 0px 14px 40px 6px; /* drawn on layers once, then kept as a texture */
 }
 
 h1 {
@@ -81,7 +83,14 @@ button, tabset tab { transition: color 0.3s cubic-out; }
 button:active { decorator: ninepatch(button-active, button-active-inner); }
 button:focus-visible { decorator: ninepatch(button-focus, button-focus-inner); color: #ffffff; }
 
-#buttons { text-align: center; margin-top: 16px; }
+#buttons { text-align: center; margin-top: 10px; }
+
+/* a rule: a gradient, fading at both ends */
+.rule {
+    height: 2px;
+    margin: 8px 0px 6px 0px;
+    decorator: linear-gradient(90deg, #ffd04000, #ffd040c0 50%, #ffd04000);
+}
 #buttons button { width: 140px; margin: 0px 8px; }
 
 #status { margin-top: 14px; text-align: center; font-size: 14px; color: #9aa4b8; }
@@ -98,7 +107,8 @@ button:focus-visible { decorator: ninepatch(button-focus, button-focus-inner); c
     text-align: center;
     font-weight: bold;
     color: #10131c;
-    background-color: #ffd040;
+    border-radius: 12px;
+    decorator: radial-gradient(circle farthest-side at 40% 35%, #fff2b0, #ffd040 55%, #d08a10);
 }
 .hint .tip {
     display: none;
@@ -114,6 +124,7 @@ button:focus-visible { decorator: ninepatch(button-focus, button-focus-inner); c
     color: #e6e9f0;
     z-index: 10;
     decorator: ninepatch(panel, panel-inner);
+    backdrop-filter: blur(3px); /* what is under it, blurred */
 }
 .hint:hover .tip { display: block; }
 
@@ -178,7 +189,14 @@ tabset panels { padding-top: 8px; }
 tabset panel { height: 200px; }
 
 /* a scrolling list */
-#levels { height: 196px; overflow-y: auto; padding-right: 6px; }
+#levels {
+    height: 184px;
+    overflow-y: auto;
+    padding: 6px 6px 0px 6px;
+    border-radius: 12px; /* the list's rows clipped to its rounded corners */
+    background-color: #0a0d1680;
+}
+#levels button.locked { filter: grayscale(1) opacity(0.55); }
 #levels button.level { display: block; width: auto; margin-bottom: 6px; text-align: left; }
 scrollbarvertical { width: 12px; margin-left: 4px; }
 scrollbarvertical slidertrack { decorator: ninepatch(track, track-inner); }

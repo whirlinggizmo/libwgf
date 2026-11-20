@@ -29,13 +29,14 @@
 #include "wgf_texture.h"
 #include "wgf_time.h"
 #include "wgf_touch.h"
+#include "wgf_ui_document_priv.h"
 #include "wgf_ui_priv.h"
 #include "wgf_ui_rmlui_priv.h"
 
 /* Documents (wgf_document.h): RmlUi's documents as libwgf's resources, their elements as
  * handles, and what RmlUi asks of libwgf (wgf_ui_rmlui_priv.h's C side): files read through
- * fs, textures made by gfx, glyphs laid out by fontstash, and drawing into the frame's
- * immediate mode. A part, installed by the first document created, so a program that makes
+ * fs, textures made by gfx, glyphs laid out by fontstash, and the frame's input; drawing is
+ * wgf_ui_document_draw.c's. A part, installed by the first document created, so a program that makes
  * none links none of RmlUi (whose C++ is wgf_ui_rmlui.cpp alone). */
 
 #define DOCUMENTS_MAX 4096
@@ -94,6 +95,8 @@ typedef struct held_t {
 
 typedef struct texture_t {
     bool used;
+    bool dying;         /* let go of: freed in the next update, once no frame draws it */
+    bool premultiplied; /* a layer saved */
     wgf_texture_t texture;
     sg_image image;
     sg_view view;
@@ -123,9 +126,7 @@ static struct {
     int held_count, held_capacity;
 
     /* the frame's drawing */
-    bool drawing;
     float origin_x, origin_y;
-    bool clipped;
     bool captured;
     bool drawn; /* wgf_ui_draw_documents ran this frame */
     unsigned input_frame;
@@ -460,10 +461,16 @@ static bool change(wgf_element_t element, int slot, int what, const char *name, 
 
 /* Each update: a change whose images have all settled (READY, or FAILED: RmlUi says what
  * it can't find) made, in the order made; one whose element went is dropped. */
+static void free_texture(texture_t *t);
+
 static void update(float dt)
 {
     int i, k, kept = 0;
     (void)dt;
+    for (i = 0; i < doc.texture_count; i++) { /* let go of in a frame drawn since */
+        if (doc.textures[i].dying) free_texture(&doc.textures[i]);
+    }
+    wgf_ui_priv_doc_draw_update();
     for (i = 0; i < doc.held_count; i++) {
         held_t *h = &doc.held[i];
         const int slot = slot_of_silently(h->element);
@@ -481,15 +488,20 @@ static void update(float dt)
     doc.held_count = kept;
 }
 
+static void free_texture(texture_t *t)
+{
+    if (t->texture != 0 && wgf_resource_get_status(t->texture) != WGF_RESOURCE_STATUS_NONE)
+        wgf_resource_release(t->texture);
+    if (t->view.id != SG_INVALID_ID) sg_destroy_view(t->view);
+    if (t->image.id != SG_INVALID_ID) sg_destroy_image(t->image);
+    memset(t, 0, sizeof(*t));
+}
+
 static void free_textures(void)
 {
     int i;
     for (i = 0; i < doc.texture_count; i++) {
-        texture_t *t = &doc.textures[i];
-        if (!t->used) continue;
-        if (wgf_resource_get_status(t->texture) != WGF_RESOURCE_STATUS_NONE) wgf_resource_release(t->texture);
-        if (t->view.id != SG_INVALID_ID) sg_destroy_view(t->view);
-        if (t->image.id != SG_INVALID_ID) sg_destroy_image(t->image);
+        if (doc.textures[i].used) free_texture(&doc.textures[i]);
     }
     free(doc.textures);
     doc.textures = NULL;
@@ -510,6 +522,7 @@ static void stop(void)
     if (doc.rml) wgf_ui_priv_rml_stop(); /* its textures and the elements' handles let go of */
     if (doc.started) wgf_core_priv_handle_pool_destroy(&doc.element_pool);
     free_textures();
+    wgf_ui_priv_doc_draw_stop();
     for (i = 0; i < doc.family_count; i++) { /* the fonts may have gone with text, which stops first */
         if (wgf_resource_get_status(doc.families[i].font) != WGF_RESOURCE_STATUS_NONE)
             wgf_resource_release(doc.families[i].font);
@@ -1024,7 +1037,7 @@ void wgf_ui_priv_doc_file_free(unsigned char *data)
 static uintptr_t add_texture(const texture_t *t)
 {
     int i;
-    for (i = 0; i < doc.texture_count && doc.textures[i].used; i++) {
+    for (i = 0; i < doc.texture_count && (doc.textures[i].used || doc.textures[i].dying); i++) {
     }
     if (i == doc.texture_count) {
         texture_t *grown = (texture_t *)realloc(doc.textures, sizeof(texture_t) * (size_t)(doc.texture_count + 16));
@@ -1040,7 +1053,9 @@ static uintptr_t add_texture(const texture_t *t)
 
 static texture_t *texture_at(uintptr_t texture)
 {
-    if (texture < 2 || texture - 2 >= (uintptr_t)doc.texture_count || !doc.textures[texture - 2].used) return NULL;
+    if (texture < 2 || texture - 2 >= (uintptr_t)doc.texture_count || !doc.textures[texture - 2].used ||
+        doc.textures[texture - 2].dying)
+        return NULL;
     return &doc.textures[texture - 2];
 }
 
@@ -1131,86 +1146,36 @@ uintptr_t wgf_ui_priv_doc_texture_generate(const unsigned char *rgba, int width,
 void wgf_ui_priv_doc_texture_release(uintptr_t texture)
 {
     texture_t *t = texture_at(texture);
-    if (t == NULL) return;
-    if (wgf_resource_get_status(t->texture) != WGF_RESOURCE_STATUS_NONE) wgf_resource_release(t->texture);
-    if (t->view.id != SG_INVALID_ID) sg_destroy_view(t->view);
-    if (t->image.id != SG_INVALID_ID) sg_destroy_image(t->image);
-    memset(t, 0, sizeof(*t));
+    if (t != NULL) t->dying = true; /* the frame may still draw it: freed in the next update */
 }
 
-/* ---- drawing ------------------------------------------------------------------------ */
-
-void wgf_ui_priv_doc_draw(const wgf_ui_priv_vertex_t *vertices, int vertex_count, const int *indices, int index_count,
-                          float tx, float ty, uintptr_t texture)
+uintptr_t wgf_ui_priv_doc_texture_adopt(wgf_texture_t target, int width, int height)
 {
-    sg_view view = {SG_INVALID_ID};
-    sg_sampler sampler = {SG_INVALID_ID}; /* set when textured */
-    sgl_pipeline pipeline = wgf_gfx_priv_render_pipeline_2d(WGF_ALPHA_MODE_BLEND);
-    bool textured = false;
-    int i;
-    if (!doc.drawing || vertices == NULL || indices == NULL || index_count < 3) return;
-    if (texture == WGF_UI_PRIV_ATLAS) {
-        if (!wgf_gfx_priv_font_atlas(&view, &sampler, &pipeline)) return;
-        textured = true;
-    } else if (texture != 0) {
-        const texture_t *t = texture_at(texture);
-        int width, height;
-        bool placeholder;
-        if (t == NULL) return;
-        if (t->texture != 0) {
-            if (!wgf_gfx_priv_texture_get_binding(t->texture, &view, &sampler, &width, &height, &placeholder)) return;
-        } else {
-            view = t->view;
-            sampler = wgf_gfx_priv_texture_sampler(WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP,
-                                                   WGF_TEXTURE_FILTER_LINEAR, false);
-        }
-        textured = true;
-    }
-    sgl_push_pipeline();
-    sgl_load_pipeline(pipeline);
-    if (textured) {
-        sgl_enable_texture();
-        sgl_texture(view, sampler);
-    } else {
-        sgl_disable_texture();
-    }
-    sgl_begin_triangles();
-    for (i = 0; i + 2 < index_count; i += 3) {
-        int k;
-        if (indices[i] < 0 || indices[i] >= vertex_count || indices[i + 1] < 0 || indices[i + 1] >= vertex_count ||
-            indices[i + 2] < 0 || indices[i + 2] >= vertex_count)
-            continue;
-        for (k = 0; k < 3; k++) {
-            const wgf_ui_priv_vertex_t *v = &vertices[indices[i + k]];
-            sgl_v2f_t2f_c4b(v->x + tx, v->y + ty, v->u, v->v, v->r, v->g, v->b, v->a);
-        }
-    }
-    sgl_end();
-    if (textured) sgl_disable_texture();
-    sgl_pop_pipeline();
+    texture_t t;
+    uintptr_t handle;
+    memset(&t, 0, sizeof(t));
+    t.texture = target;
+    t.premultiplied = true;
+    t.width = width;
+    t.height = height;
+    handle = add_texture(&t);
+    if (handle == 0) wgf_resource_release(target);
+    return handle;
 }
 
-void wgf_ui_priv_doc_scissor(bool enable, int x, int y, int width, int height)
+bool wgf_ui_priv_doc_texture_binding(uintptr_t texture, sg_view *view, sg_sampler *sampler, bool *premultiplied)
 {
-    if (!doc.drawing) return;
-    if (doc.clipped) {
-        wgf_render_pop_clip();
-        doc.clipped = false;
-    }
-    if (enable) {
-        wgf_render_push_clip(doc.origin_x + (float)x, doc.origin_y + (float)y, (float)(width > 0 ? width : 0),
-                             (float)(height > 0 ? height : 0));
-        doc.clipped = true;
-    }
-}
-
-void wgf_ui_priv_doc_transform(const float *matrix)
-{
-    if (!doc.drawing) return;
-    sgl_matrix_mode_modelview();
-    sgl_load_identity();
-    sgl_translate(doc.origin_x, doc.origin_y, 0.0f);
-    if (matrix != NULL) sgl_mult_matrix(matrix);
+    const texture_t *t = texture_at(texture);
+    int width, height;
+    bool placeholder;
+    *premultiplied = false;
+    if (t == NULL) return false;
+    *premultiplied = t->premultiplied;
+    if (t->texture != 0) return wgf_gfx_priv_texture_get_binding(t->texture, view, sampler, &width, &height, &placeholder);
+    *view = t->view;
+    *sampler = wgf_gfx_priv_texture_sampler(WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_FILTER_LINEAR,
+                                           false);
+    return true;
 }
 
 /* ---- the frame ---------------------------------------------------------------------- */
@@ -1345,14 +1310,9 @@ bool wgf_ui_draw_documents(void)
     }
     doc.origin_x = visible_x;
     doc.origin_y = visible_y;
-    wgf_gfx_priv_render_set_2d();
-    doc.drawing = true;
-    doc.clipped = false;
-    wgf_ui_priv_doc_transform(NULL);
+    wgf_ui_priv_doc_draw_begin(visible_x, visible_y, visible_w, visible_h);
     wgf_ui_priv_rml_frame(&input, &pointer, &keyboard);
-    doc.drawing = false;
-    sgl_matrix_mode_modelview();
-    sgl_load_identity(); /* back as the rest of the frame expects it */
+    wgf_ui_priv_doc_draw_end(); /* the frame back as the rest of it expects it */
     wgf_input_set_pointer_captured(pointer);
     wgf_input_set_keyboard_captured(keyboard);
     doc.captured = true;

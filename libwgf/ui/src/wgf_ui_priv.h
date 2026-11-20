@@ -19,4 +19,9 @@ bool wgf_ui_priv_document_element_bounds(uint32_t element, float *x, float *y, f
  * face set nearest it (wgf_ui_set_document_font_face), or 0 for none, the default's. */
 uint32_t wgf_ui_priv_document_face_font(const char *family, int weight, bool italic);
 
+/* What documents drew this frame past triangles, for tests: gradients, clip mask parts,
+ * layers pushed, layers composited, layers saved (as a texture or a mask), and layers
+ * refused (drawn inside a program's render target, where none can be). */
+void wgf_ui_priv_document_draw_counts(int counts[6]);
+
 #endif

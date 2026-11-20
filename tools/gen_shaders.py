@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Regenerate gfx's committed shaders.
+"""Regenerate gfx's and the ui's committed shaders.
 
     tools/gen_shaders.py [--check]
 
-Each shader in libwgf/gfx/src/shaders/, written once in sokol-shdc's annotated GLSL, becomes
-the *.glsl.h beside it: the sources and reflection for every backend gfx runs on -- GL
+Each shader in libwgf/gfx/src/shaders/ and libwgf/ui/src/shaders/, written once in
+sokol-shdc's annotated GLSL, becomes the *.glsl.h beside it: the sources and reflection for every backend gfx runs on -- GL
 4.1 natively and WebGL2 (GLSL 300 es) on the web -- each behind #if
 defined(SOKOL_<backend>) (--ifdef), so a build carries only its own. Run it after
 changing a shader, and commit the headers with it: building libwgf never runs
@@ -26,7 +26,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SHADERS = ROOT / 'libwgf' / 'gfx' / 'src' / 'shaders'
+SHADERS = [ROOT / 'libwgf' / 'gfx' / 'src' / 'shaders', ROOT / 'libwgf' / 'ui' / 'src' / 'shaders']
 # custom shaders' sources, and where each folder's are packed to
 CUSTOM = [(ROOT / 'examples' / 'shaders', ROOT / 'examples' / 'assets' / 'shaders'),
           (ROOT / 'libwgf' / 'gfx' / 'tests' / 'shaders', ROOT / 'libwgf' / 'gfx' / 'tests' / 'shaders')]
@@ -46,13 +46,13 @@ def main():
     shdc = found.stdout.strip()
     stale = []
     with tempfile.TemporaryDirectory() as scratch:
-        for source in sorted(SHADERS.glob('*.glsl')):
+        for source in sorted(source for folder in SHADERS for source in folder.glob('*.glsl')):
             if '@program' not in source.read_text(encoding='utf-8'):
                 continue  # blocks the others include (wgf_gfx_display.glsl), no program of its own
             header = source.with_name(source.name + '.h')
             out = Path(scratch) / header.name if opts.check else header
             done = subprocess.run([shdc, '-i', source.name, '-o', str(out), '-l', SLANG, '--ifdef',
-                                   '--no-log-cmdline'], cwd=SHADERS)
+                                   '--no-log-cmdline'], cwd=source.parent)
             if done.returncode != 0:
                 print(f'gen_shaders: {source.relative_to(ROOT)} failed')
                 return 1

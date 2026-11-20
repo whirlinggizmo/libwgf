@@ -656,6 +656,13 @@ bool wgf_gfx_priv_font_atlas(sg_view *atlas, sg_sampler *sampler, sgl_pipeline *
            wgf_gfx_priv_fontstash_pipeline(fons, pipeline);
 }
 
+bool wgf_gfx_priv_font_shader(sg_shader *shader)
+{
+    sg_view atlas;
+    sg_sampler sampler;
+    return ensure() && wgf_gfx_priv_fontstash_render_state(fons, &atlas, &sampler, shader);
+}
+
 unsigned wgf_gfx_priv_font_atlas_version(void)
 {
     return atlas_version;

@@ -79,14 +79,14 @@ int main(void)
 
     wgf_gfx_priv_begin_frame();
     expect(wgf_render_get_width() == 400 && wgf_gfx_priv_render_get_pass() == 0, "the next frame starts on the screen");
-    for (i = 0; i < 16; i++) {
-        expect(wgf_render_begin_target(target), "16 target passes a frame");
+    for (i = 0; i < 256; i++) {
+        expect(wgf_render_begin_target(target), "256 target passes a frame");
         wgf_render_end_target();
     }
-    expect(!wgf_render_begin_target(target), "not a 17th");
+    expect(!wgf_render_begin_target(target), "not a 257th");
     wgf_gfx_priv_end_frame();
     wgf_gfx_priv_begin_frame();
-    expect(wgf_render_begin_target(target), "16 again the next frame");
+    expect(wgf_render_begin_target(target), "256 again the next frame");
     wgf_render_end_target();
     wgf_gfx_priv_end_frame();
 

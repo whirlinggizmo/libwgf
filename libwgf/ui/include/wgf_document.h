@@ -49,8 +49,12 @@ extern "C" {
  * removed from its document (its parent's inner RML set again) or whose document is
  * released is refused from then on.
  *
- * What RmlUi draws with filters, shaders, masks, or layers (`filter`, `backdrop-filter`,
- * `box-shadow`, gradients, `mask-image`, and clipping to rounded corners) isn't drawn. */
+ * RCSS's gradients (linear, radial, conic, repeating), `box-shadow`, `filter` (blur,
+ * drop-shadow, opacity, and the color filters), `backdrop-filter` (over what the documents
+ * drew), `mask-image`, and clipping to rounded corners are drawn. Inside a program's own
+ * render target (wgf_render_begin_target) documents draw without `filter`,
+ * `backdrop-filter`, `mask-image`, and `box-shadow`, which need render targets of their
+ * own. */
 
 /* A document, a resource: a handle of kind "ui.document". */
 typedef wgf_handle_t wgf_document_t;

@@ -84,6 +84,10 @@ int wgf_gfx_priv_font_quads(wgf_handle_t font, const char *start, const char *en
  * draw. And its version: changed whenever glyphs move in it (it grew, or fontstash was
  * made again), when quads made before are wrong. */
 bool wgf_gfx_priv_font_atlas(sg_view *atlas, sg_sampler *sampler, sgl_pipeline *pipeline);
+/* sokol_fontstash's shader (the atlas's coverage as alpha), for pipelines of another's
+ * own (the documents' blending and clip masks); it changes when fontstash is made again.
+ * False before setup. */
+bool wgf_gfx_priv_font_shader(sg_shader *shader);
 unsigned wgf_gfx_priv_font_atlas_version(void);
 
 #endif

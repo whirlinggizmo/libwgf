@@ -151,6 +151,55 @@ void wgf_ui_priv_doc_draw(const wgf_ui_priv_vertex_t *vertices, int vertex_count
 void wgf_ui_priv_doc_scissor(bool enable, int x, int y, int width, int height);
 void wgf_ui_priv_doc_transform(const float *matrix);
 
+/* What RmlUi draws past triangles (wgf_ui_document_draw.c), as its render interface's
+ * optional calls ask.
+ *
+ * The clip mask: on or off; set to triangles (operation 0), to what is outside them (1),
+ * or narrowed to them (2), moved by tx, ty and the transform. While it is on, nothing
+ * drawn (triangles, gradients, a layer composited) falls outside it. */
+void wgf_ui_priv_doc_clip_mask(bool enable);
+void wgf_ui_priv_doc_clip_mask_draw(int operation, const wgf_ui_priv_vertex_t *vertices, int vertex_count,
+                                    const int *indices, int index_count, float tx, float ty);
+
+/* Layers: a new one, transparent, drawn into from now (its number, 1 up; 0 is what the
+ * documents draw on); one drawn onto another or itself through filters (in order),
+ * blended or replacing it, under the scissor and the clip mask; the top one let go of,
+ * the one below drawn into again. The top layer saved: the scissor's region of it as a
+ * texture, premultiplied; or the whole of it as a mask, a filter keeping what is drawn
+ * through it by its alpha. 0 when it can't be. */
+int wgf_ui_priv_doc_layer_push(void);
+void wgf_ui_priv_doc_layer_composite(int source, int destination, bool replace, const uintptr_t *filters,
+                                     int filter_count);
+void wgf_ui_priv_doc_layer_pop(void);
+uintptr_t wgf_ui_priv_doc_layer_save_texture(int x, int y, int width, int height);
+uintptr_t wgf_ui_priv_doc_layer_save_mask(void);
+
+/* Filters, each a few numbers: a color matrix (16, column by column, on premultiplied
+ * colors: opacity and CSS's color filters), a blur (its sigma, in the context's pixels),
+ * or a shadow (its sigma, its offset x and y, its color r, g, b, a, 0 to 1, straight). 0
+ * when there is no room. */
+typedef enum wgf_ui_priv_filter_t {
+    WGF_UI_PRIV_FILTER_MATRIX,
+    WGF_UI_PRIV_FILTER_BLUR,
+    WGF_UI_PRIV_FILTER_SHADOW,
+    WGF_UI_PRIV_FILTER_MASK /* the C side's own: a layer saved as a mask */
+} wgf_ui_priv_filter_t;
+uintptr_t wgf_ui_priv_doc_filter_make(wgf_ui_priv_filter_t kind, const float *values);
+void wgf_ui_priv_doc_filter_release(uintptr_t filter);
+
+/* Gradients, RmlUi's shaders: linear (0: from p toward p + v), radial (1: about p, v its
+ * radii), or conic (2: about p, from the angle v points at), repeating or not, in the
+ * element's pixels (a vertex's u, v); their stops, five floats each (where along it, then
+ * r, g, b, a, 0 to 1, premultiplied), up to 16. Drawn on a geometry's triangles, which
+ * the C side keeps on the GPU by `geometry` (any number the C++ side names it by) until
+ * told it is gone. 0 when there is no room. */
+uintptr_t wgf_ui_priv_doc_gradient_make(int kind, bool repeating, float px, float py, float vx, float vy,
+                                        const float *stops, int stop_count);
+void wgf_ui_priv_doc_gradient_draw(uintptr_t gradient, uintptr_t geometry, const wgf_ui_priv_vertex_t *vertices,
+                                   int vertex_count, const int *indices, int index_count, float tx, float ty);
+void wgf_ui_priv_doc_gradient_release(uintptr_t gradient);
+void wgf_ui_priv_doc_geometry_gone(uintptr_t geometry);
+
 /* Fonts: a face, a family at a size in pixels (1.. ; 0 when none can be had), a weight (1 to
  * 1000; another, 400), and a style, its metrics,
  * a line's width, and its glyphs' quads (8 floats each: x0, y0, x1, y1, s0, t0, s1, t1 in

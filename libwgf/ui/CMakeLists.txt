@@ -31,6 +31,7 @@ wgf_layer(ui
         src/wgf_ui.c
         src/wgf_ui_clay_impl.c
         src/wgf_ui_document.c
+        src/wgf_ui_document_draw.c
     DEPS
         math core platform asset gfx)
 

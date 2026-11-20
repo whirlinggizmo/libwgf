@@ -5,10 +5,12 @@
  * libwgf. C++17 without exceptions or RTTI (RmlUi's own type ids serve its casts). */
 
 #include <RmlUi/Core.h>
+#include <RmlUi/Core/DecorationTypes.h>
 #include <RmlUi/Core/Elements/ElementFormControl.h>
 #include <RmlUi/Core/Elements/ElementFormControlInput.h>
 #include <RmlUi/Core/ElementText.h>
 
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -145,7 +147,11 @@ public:
                              (int)geometry->indices.size(), translation.x, translation.y, (uintptr_t)texture);
     }
 
-    void ReleaseGeometry(Rml::CompiledGeometryHandle handle) override { delete (Geometry *)handle; }
+    void ReleaseGeometry(Rml::CompiledGeometryHandle handle) override
+    {
+        wgf_ui_priv_doc_geometry_gone((uintptr_t)handle); /* its triangles on the GPU, for a gradient */
+        delete (Geometry *)handle;
+    }
 
     Rml::TextureHandle LoadTexture(Rml::Vector2i &dimensions, const Rml::String &source) override
     {
@@ -183,6 +189,172 @@ public:
         }
         wgf_ui_priv_doc_transform(transform->data()); /* column by column: RmlUi's default layout */
     }
+
+    void EnableClipMask(bool enable) override { wgf_ui_priv_doc_clip_mask(enable); }
+
+    void RenderToClipMask(Rml::ClipMaskOperation operation, Rml::CompiledGeometryHandle handle,
+                          Rml::Vector2f translation) override
+    {
+        const Geometry *geometry = (const Geometry *)handle;
+        const int op = operation == Rml::ClipMaskOperation::Set          ? 0
+                       : operation == Rml::ClipMaskOperation::SetInverse ? 1
+                                                                          : 2;
+        wgf_ui_priv_doc_clip_mask_draw(op, geometry->vertices.data(), (int)geometry->vertices.size(),
+                                       geometry->indices.data(), (int)geometry->indices.size(), translation.x,
+                                       translation.y);
+    }
+
+    Rml::LayerHandle PushLayer() override { return (Rml::LayerHandle)wgf_ui_priv_doc_layer_push(); }
+
+    void CompositeLayers(Rml::LayerHandle source, Rml::LayerHandle destination, Rml::BlendMode blend_mode,
+                         Rml::Span<const Rml::CompiledFilterHandle> filters) override
+    {
+        std::vector<uintptr_t> list;
+        for (Rml::CompiledFilterHandle filter : filters) list.push_back((uintptr_t)filter);
+        wgf_ui_priv_doc_layer_composite((int)source, (int)destination, blend_mode == Rml::BlendMode::Replace,
+                                        list.data(), (int)list.size());
+    }
+
+    void PopLayer() override { wgf_ui_priv_doc_layer_pop(); }
+
+    Rml::TextureHandle SaveLayerAsTexture() override
+    {
+        return (Rml::TextureHandle)wgf_ui_priv_doc_layer_save_texture(scissor.Left(), scissor.Top(), scissor.Width(),
+                                                                      scissor.Height());
+    }
+
+    Rml::CompiledFilterHandle SaveLayerAsMaskImage() override
+    {
+        return (Rml::CompiledFilterHandle)wgf_ui_priv_doc_layer_save_mask();
+    }
+
+    /* CSS's filters: opacity and the color filters as a matrix on premultiplied colors
+       (the Filter Effects spec's, its offsets times alpha), a blur, and a drop shadow */
+    Rml::CompiledFilterHandle CompileFilter(const Rml::String &name, const Rml::Dictionary &parameters) override
+    {
+        float v[16] = {};
+        const float value = Rml::Get(parameters, "value", 1.0f);
+        if (name == "blur") {
+            v[0] = Rml::Get(parameters, "sigma", 0.0f);
+            return (Rml::CompiledFilterHandle)wgf_ui_priv_doc_filter_make(WGF_UI_PRIV_FILTER_BLUR, v);
+        }
+        if (name == "drop-shadow") {
+            const Rml::Colourb color = Rml::Get(parameters, "color", Rml::Colourb(0, 0, 0, 255));
+            const Rml::Vector2f offset = Rml::Get(parameters, "offset", Rml::Vector2f(0.0f, 0.0f));
+            v[0] = Rml::Get(parameters, "sigma", 0.0f);
+            v[1] = offset.x;
+            v[2] = offset.y;
+            v[3] = color.red / 255.0f;
+            v[4] = color.green / 255.0f;
+            v[5] = color.blue / 255.0f;
+            v[6] = color.alpha / 255.0f;
+            return (Rml::CompiledFilterHandle)wgf_ui_priv_doc_filter_make(WGF_UI_PRIV_FILTER_SHADOW, v);
+        }
+        /* rows r, g, b of a 3 by 3 on the color, and an offset each, times alpha */
+        float m[3][4] = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}};
+        float alpha = 1.0f;
+        const float a = 1.0f - (value < 0.0f ? 0.0f : value > 1.0f ? 1.0f : value);
+        if (name == "opacity") {
+            m[0][0] = m[1][1] = m[2][2] = alpha = value;
+        } else if (name == "brightness") {
+            m[0][0] = m[1][1] = m[2][2] = value;
+        } else if (name == "contrast") {
+            m[0][0] = m[1][1] = m[2][2] = value;
+            m[0][3] = m[1][3] = m[2][3] = 0.5f - 0.5f * value;
+        } else if (name == "invert") {
+            const float inverted = 1.0f - a;
+            m[0][0] = m[1][1] = m[2][2] = 1.0f - 2.0f * inverted;
+            m[0][3] = m[1][3] = m[2][3] = inverted;
+        } else if (name == "grayscale") {
+            const float g[3][3] = {{0.2126f + 0.7874f * a, 0.7152f - 0.7152f * a, 0.0722f - 0.0722f * a},
+                                   {0.2126f - 0.2126f * a, 0.7152f + 0.2848f * a, 0.0722f - 0.0722f * a},
+                                   {0.2126f - 0.2126f * a, 0.7152f - 0.7152f * a, 0.0722f + 0.9278f * a}};
+            for (int r = 0; r < 3; r++)
+                for (int c = 0; c < 3; c++) m[r][c] = g[r][c];
+        } else if (name == "sepia") {
+            const float g[3][3] = {{0.393f + 0.607f * a, 0.769f - 0.769f * a, 0.189f - 0.189f * a},
+                                   {0.349f - 0.349f * a, 0.686f + 0.314f * a, 0.168f - 0.168f * a},
+                                   {0.272f - 0.272f * a, 0.534f - 0.534f * a, 0.131f + 0.869f * a}};
+            for (int r = 0; r < 3; r++)
+                for (int c = 0; c < 3; c++) m[r][c] = g[r][c];
+        } else if (name == "saturate") {
+            const float s = value;
+            const float g[3][3] = {{0.213f + 0.787f * s, 0.715f - 0.715f * s, 0.072f - 0.072f * s},
+                                   {0.213f - 0.213f * s, 0.715f + 0.285f * s, 0.072f - 0.072f * s},
+                                   {0.213f - 0.213f * s, 0.715f - 0.715f * s, 0.072f + 0.928f * s}};
+            for (int r = 0; r < 3; r++)
+                for (int c = 0; c < 3; c++) m[r][c] = g[r][c];
+        } else if (name == "hue-rotate") {
+            const float c = std::cos(value), s = std::sin(value); /* radians */
+            const float g[3][3] = {{0.213f + c * 0.787f - s * 0.213f, 0.715f - c * 0.715f - s * 0.715f,
+                                    0.072f - c * 0.072f + s * 0.928f},
+                                   {0.213f - c * 0.213f + s * 0.143f, 0.715f + c * 0.285f + s * 0.140f,
+                                    0.072f - c * 0.072f - s * 0.283f},
+                                   {0.213f - c * 0.213f - s * 0.787f, 0.715f - c * 0.715f + s * 0.715f,
+                                    0.072f + c * 0.928f + s * 0.072f}};
+            for (int r = 0; r < 3; r++)
+                for (int k = 0; k < 3; k++) m[r][k] = g[r][k];
+        } else {
+            return 0; /* not one of CSS's: drawn without it */
+        }
+        for (int c = 0; c < 4; c++) { /* column by column: v[column * 4 + row] */
+            for (int r = 0; r < 3; r++) v[c * 4 + r] = m[r][c];
+        }
+        v[15] = alpha;
+        return (Rml::CompiledFilterHandle)wgf_ui_priv_doc_filter_make(WGF_UI_PRIV_FILTER_MATRIX, v);
+    }
+
+    void ReleaseFilter(Rml::CompiledFilterHandle filter) override { wgf_ui_priv_doc_filter_release((uintptr_t)filter); }
+
+    /* gradients, RmlUi's shaders; another (a "shader" decorator of the program's own) isn't drawn */
+    Rml::CompiledShaderHandle CompileShader(const Rml::String &name, const Rml::Dictionary &parameters) override
+    {
+        int kind;
+        Rml::Vector2f p(0.0f, 0.0f), v(0.0f, 0.0f);
+        if (name == "linear-gradient") {
+            kind = 0;
+            p = Rml::Get(parameters, "p0", Rml::Vector2f(0.0f, 0.0f));
+            v = Rml::Get(parameters, "p1", Rml::Vector2f(0.0f, 0.0f)) - p;
+        } else if (name == "radial-gradient") {
+            kind = 1;
+            p = Rml::Get(parameters, "center", Rml::Vector2f(0.0f, 0.0f));
+            const Rml::Vector2f radius = Rml::Get(parameters, "radius", Rml::Vector2f(1.0f, 1.0f));
+            v = Rml::Vector2f(radius.x > 0.0f ? 1.0f / radius.x : 0.0f, radius.y > 0.0f ? 1.0f / radius.y : 0.0f);
+        } else if (name == "conic-gradient") {
+            kind = 2;
+            p = Rml::Get(parameters, "center", Rml::Vector2f(0.0f, 0.0f));
+            const float angle = Rml::Get(parameters, "angle", 0.0f);
+            v = Rml::Vector2f(std::cos(angle), std::sin(angle));
+        } else {
+            return 0;
+        }
+        auto found = parameters.find("color_stop_list");
+        if (found == parameters.end() || found->second.GetType() != Rml::Variant::COLORSTOPLIST) return 0;
+        const Rml::ColorStopList &list = found->second.GetReference<Rml::ColorStopList>();
+        std::vector<float> stops;
+        for (const Rml::ColorStop &stop : list) {
+            if (stops.size() == 16 * 5) break;
+            stops.push_back(stop.position.number);
+            stops.push_back(stop.color.red / 255.0f); /* premultiplied, as RmlUi gives them */
+            stops.push_back(stop.color.green / 255.0f);
+            stops.push_back(stop.color.blue / 255.0f);
+            stops.push_back(stop.color.alpha / 255.0f);
+        }
+        if (stops.empty()) return 0;
+        return (Rml::CompiledShaderHandle)wgf_ui_priv_doc_gradient_make(
+            kind, Rml::Get(parameters, "repeating", false), p.x, p.y, v.x, v.y, stops.data(), (int)(stops.size() / 5));
+    }
+
+    void RenderShader(Rml::CompiledShaderHandle shader, Rml::CompiledGeometryHandle handle, Rml::Vector2f translation,
+                      Rml::TextureHandle) override
+    {
+        const Geometry *geometry = (const Geometry *)handle;
+        wgf_ui_priv_doc_gradient_draw((uintptr_t)shader, (uintptr_t)handle, geometry->vertices.data(),
+                                      (int)geometry->vertices.size(), geometry->indices.data(),
+                                      (int)geometry->indices.size(), translation.x, translation.y);
+    }
+
+    void ReleaseShader(Rml::CompiledShaderHandle shader) override { wgf_ui_priv_doc_gradient_release((uintptr_t)shader); }
 
     /* the frame's drawing starts with no scissor */
     void Begin()

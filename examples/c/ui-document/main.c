@@ -19,7 +19,10 @@
  * choice, a check box, a slider, a scrolling list of levels, and buttons, each drawn from
  * one sprite sheet as nine-patches, a sprite for every state; a title that glows by an
  * animation, buttons whose color eases by a transition, a tooltip shown by `:hover`, and
- * text in the family's bold and italic faces. The pointer, the wheel, a finger (a list
+ * text in the family's bold and italic faces; and what RmlUi draws on layers and through
+ * shaders: the window's box shadow, a gradient rule and a round
+ * radial-gradient badge, the tooltip's blurred backdrop, the level list clipped to its
+ * rounded corners, and locked levels grayed by a filter. The pointer, the wheel, a finger (a list
  * dragged scrolls), Tab and the arrow keys, Enter, and a pad's D-pad and south button all
  * work it, and a text field asks a phone for its keyboard; the program
  * reads what happened as events each frame and answers by changing the document's text.

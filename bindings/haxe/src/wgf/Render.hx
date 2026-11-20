@@ -84,7 +84,7 @@ class Render {
 	    begun again in the same frame keeps what it drew before. Not nested. A target isn't
 	    read while it is drawn into: used inside its own pass, it draws nothing there (warned
 	    once). False (logged) outside a frame, inside another target, for a texture that isn't
-	    a target, or past 16 target passes a frame. A frame that ends inside a target ends it
+	    a target, or past 256 target passes a frame. A frame that ends inside a target ends it
 	    (warned).
 	**/
 	public static inline function beginTarget(target:Texture):Bool
@@ -98,7 +98,7 @@ class Render {
 	    begun again in the same frame keeps what it drew before. Not nested. A target isn't
 	    read while it is drawn into: used inside its own pass, it draws nothing there (warned
 	    once). False (logged) outside a frame, inside another target, for a texture that isn't
-	    a target, or past 16 target passes a frame. A frame that ends inside a target ends it
+	    a target, or past 256 target passes a frame. A frame that ends inside a target ends it
 	    (warned).
 	**/
 	public static inline function endTarget():Void

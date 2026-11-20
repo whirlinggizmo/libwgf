@@ -17,6 +17,8 @@
 #include "wgf_log.h"
 #include "wgf_platform_gamepad_priv.h"
 #include "wgf_platform_priv.h"
+#include "wgf_render.h"
+#include "wgf_texture.h"
 #include "wgf_resource.h"
 #include "wgf_time.h"
 #include "wgf_ui_priv.h"
@@ -31,7 +33,11 @@
  * element gone with its RML; a document released, its elements with it; one that isn't
  * there FAILED; and every refusal. And what RCSS does over time: a transition, an
  * animation, and a tooltip shown by `:hover` on its parent; a finger dragging a list,
- * which scrolls; a text field's on-screen keyboard; and a family's bold and italic faces. */
+ * which scrolls; a text field's on-screen keyboard; and a family's bold and italic faces.
+ * And what RmlUi draws past triangles, counted as it is drawn (the dummy backend draws
+ * nothing): gradients, a clip mask for rounded corners, a box shadow made on layers and
+ * saved, filters and a backdrop filter composited, a mask image; and inside a program's
+ * own render target, where layers can't be, the documents drawn without them. */
 
 static int failures;
 
@@ -65,6 +71,9 @@ static const char rml[] =
     "  <div id=\"pulse\"></div>\n"
     "  <div id=\"scroller\"><div id=\"row-1\">1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div></div>\n"
     "  <p><b>bold</b> <i>italic</i></p>\n"
+    "  <div id=\"fx\"><div id=\"shadowed\">s</div><div id=\"linear\"></div><div id=\"radial\"></div>"
+    "<div id=\"conic\"></div><div id=\"rounded\"><p>clipped</p></div><div id=\"filtered\">f</div>"
+    "<div id=\"backdrop\"></div><div id=\"masked\">m</div></div>\n"
     "</body>\n"
     "</rml>\n";
 
@@ -89,7 +98,18 @@ static const char rcss[] =
     "@keyframes grow { from { width: 100px; } to { width: 200px; } }\n"
     "#pulse { height: 10px; animation: 0.6s linear-in infinite alternate grow; }\n"
     "#scroller { height: 60px; overflow-y: auto; }\n"
-    "#scroller div { height: 30px; }\n";
+    "#scroller div { height: 30px; }\n"
+    "#fx { display: flex; height: 30px; }\n"
+    "#fx div { width: 50px; height: 24px; margin-right: 6px; }\n"
+    "#shadowed { background-color: #446; border-radius: 6px; box-shadow: #000c 2px 3px 6px 1px; }\n"
+    "#linear { decorator: linear-gradient(90deg, #f00, #00f 60%, #0f0); }\n"
+    "#radial { decorator: radial-gradient(circle, #fff, #0000); }\n"
+    "#conic { decorator: repeating-conic-gradient(#f00, #0f0 25%, #f00 50%); }\n"
+    "#rounded { border-radius: 8px; overflow: hidden; background-color: #888; }\n"
+    "#filtered { background-color: #c84; filter: blur(2px) opacity(0.5) drop-shadow(#000 1px 2px 2px) "
+    "grayscale(1) hue-rotate(30deg); }\n"
+    "#backdrop { backdrop-filter: blur(3px) brightness(1.2); }\n"
+    "#masked { background-color: #4c8; mask-image: linear-gradient(#000, #0000); }\n";
 
 /* a 2 by 2 PNG, white, opaque */
 static const unsigned char png[] = {
@@ -105,6 +125,7 @@ static wgf_element_t play, sound, volume, name, quit, first, logo, help, tip, fa
 static double hold_until; /* the steps wait until then: what RCSS does over time */
 static double faded_at;
 static float pulse_width, row_x, row_y;
+static wgf_texture_t own_target; /* a program's own render target, which documents are drawn into */
 static int frame_number, ready_frame = -1;
 static double started;
 static wgf_platform_priv_gamepad_t pad;
@@ -309,6 +330,8 @@ static void ready(void)
     row = wgf_document_find(document, "row-1");
     expect(play && sound && volume && name && quit && first && title && list && logo, "every element found");
     expect(help && tip && fade && pulse && row, "and those for what RCSS does over time");
+    own_target = wgf_texture_create_target(200, 100);
+    expect(own_target != 0, "a render target of the program's own");
     expect(wgf_document_find(document, "play") == play, "the same element, the same handle");
     expect(strcmp(wgf_handle_get_kind_name(play), "ui.element") == 0, "an element's kind");
     expect(wgf_document_find(document, "nothing") == 0 && wgf_document_find(document, "") == 0 &&
@@ -408,8 +431,22 @@ static void on_frame(void *user)
     switch (frame_number++ - ready_frame) {
     case 0: {
         const int before = sgl_num_vertices();
+        int counts[6];
+        wgf_ui_priv_document_draw_counts(counts);
+        expect(counts[0] >= 3, "gradients drawn: linear, radial, conic");
+        expect(counts[1] >= 2, "clip masks drawn: rounded corners, and the box shadow's");
+        expect(counts[2] >= 4 && counts[3] >= 4, "layers pushed and composited: filters, a backdrop, a mask, a shadow");
+        expect(counts[4] >= 2, "layers saved: the box shadow as a texture, the mask image as a mask");
+        expect(counts[5] == 0, "no layer refused on the screen");
         expect(wgf_ui_draw_documents(), "drawn twice");
         expect(sgl_num_vertices() > before, "its boxes and text recorded");
+        wgf_ui_priv_document_draw_counts(counts);
+        expect(counts[4] >= 2 && counts[2] >= 8, "drawn again: its filters again, its box shadow kept");
+        expect(wgf_render_begin_target(own_target), "into the program's own target");
+        expect(wgf_ui_draw_documents(), "documents drawn inside it");
+        wgf_render_end_target();
+        wgf_ui_priv_document_draw_counts(counts);
+        expect(counts[5] > 0, "inside a program's target: layers refused, drawn into it instead");
         expect(wgf_ui_priv_document_element_bounds(play, &x, &y, &w, &h) && w == 200 && h == 32, "laid out by RCSS");
         expect(wgf_ui_priv_document_element_bounds(logo, &x, &y, &w, &h) && w == 2 && h == 2,
                "an image the document names, its size its file's");
@@ -543,6 +580,7 @@ static void on_frame(void *user)
         wgf_resource_release(missing);
         wgf_resource_release(font);
         wgf_resource_release(bold);
+        wgf_resource_release(own_target);
         wgf_app_quit();
         break;
     default: break;

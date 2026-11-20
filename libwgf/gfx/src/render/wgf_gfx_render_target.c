@@ -15,7 +15,7 @@
  * frame's hooks by the first target begun, so a program that draws into none links none
  * of it. */
 
-#define MAX_TARGET_PASSES 16
+#define MAX_TARGET_PASSES 256 /* documents' layers and filters take a pass each */
 
 typedef struct pass_t {
     wgf_texture_t target;
