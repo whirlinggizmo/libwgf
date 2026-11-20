@@ -493,7 +493,7 @@ class Main {
 		expect(world.setCamera(camera) && (world.getCamera() : Actor) == camera, "a 2D stage's camera");
 		final shown = world.worldToScreen(10, 20), under = world.screenToWorld(shown.x, shown.y);
 		expect(near(under.x, 10) && near(under.y, 20), "a 2D stage's point on the screen and back");
-		final follower:Follow = Camera2d.create(), followed = Actor.create();
+		final follower:Follow = (Camera2d.create() : Actor), followed = Actor.create();
 		expect(follower.setTarget(followed) && follower.getTarget() == followed, "a camera following");
 		expect(follower.setSmoothing(4) && near(follower.getSmoothing(), 4) && follower.setDeadZone(10, 8)
 			&& near(follower.getDeadZone().x, 10) && follower.setBounds(0, 0, 100, 100) && near(follower.getBounds().z, 100),
