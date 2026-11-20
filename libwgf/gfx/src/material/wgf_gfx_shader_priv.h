@@ -9,7 +9,7 @@
 
 /* A custom shader (.wgfshader, written by tools/pack_shader.py), libwgt's
  * wgt_gfx_shader_priv.h: the running backend's programs, and its parameters and textures
- * by name. A surface shader has the model program and draws through a stage
+ * by name. A surface shader has the model programs (static and skinned) and draws through a stage
  * (stage/wgf_gfx_stage3d_custom.c); a screen effect's (its fragment shader includes
  * wgf_screen) has one program and redraws the finished frame. */
 
@@ -48,6 +48,7 @@ typedef enum wgf_gfx_priv_shader_view_t {
     WGF_GFX_PRIV_SHADER_VIEW_SHADOW,      /* wgf_shadow_tex: the casting lights' maps */
     WGF_GFX_PRIV_SHADER_VIEW_INSTANCE,    /* wgf_instance_tex: the frame's placements */
     WGF_GFX_PRIV_SHADER_VIEW_SCREEN,      /* wgf_screen_tex: a screen effect's frame */
+    WGF_GFX_PRIV_SHADER_VIEW_JOINT,       /* wgf_joint_tex: the frame's joint matrices, a skinned part's */
     WGF_GFX_PRIV_SHADER_VIEW_COUNT
 } wgf_gfx_priv_shader_view_t;
 
@@ -63,12 +64,13 @@ typedef struct wgf_gfx_priv_shader_program_t {
 enum {
     WGF_GFX_PRIV_SHADER_PROGRAM_MODEL,  /* a surface shader's */
     WGF_GFX_PRIV_SHADER_PROGRAM_SCREEN, /* a screen effect's */
+    WGF_GFX_PRIV_SHADER_PROGRAM_MODEL_SKINNED, /* a surface shader's, for a skinned part */
     WGF_GFX_PRIV_SHADER_PROGRAM_COUNT
 };
 
 typedef struct wgf_gfx_priv_shader_t {
     wgf_gfx_priv_shader_program_t programs[WGF_GFX_PRIV_SHADER_PROGRAM_COUNT];
-    sg_pipeline pipelines[8];         /* a surface's models': by blended, double sided, mirrored; made on first use */
+    sg_pipeline pipelines[16];        /* a surface's models': by blended, double sided, mirrored, skinned; made on first use */
     sg_pipeline screen_pipelines[2];  /* a screen effect's: by whether its pass is multisampled */
     bool screen;                      /* a screen effect, not a surface shader */
     wgf_gfx_priv_shader_param_t params[WGF_GFX_PRIV_SHADER_MAX_PARAMS];

@@ -20,7 +20,7 @@
  * makes its program: a surface shader's model one, or a screen effect's. A part, installed
  * by the first shader made; its stop, after the materials that hold shaders, frees them. */
 
-#define FORMAT_VERSION 1
+#define FORMAT_VERSION 2 /* 2: a surface's skinned program beside its static one */
 #define GLSL_NAME_MAX 128 /* a texture-sampler pair joins two names: longer than the parameters' */
 #define NAMES_MAX 64
 
@@ -267,7 +267,8 @@ static bool parse(const unsigned char *bytes, size_t size, const char *slang, wg
             }
             memcpy(out->textures[out->texture_count++], a, strlen(a) + 1);
         } else if (sscanf(line, "program %63s %63s", a, b) == 2) {
-            const int which = strcmp(a, "model") == 0    ? WGF_GFX_PRIV_SHADER_PROGRAM_MODEL
+            const int which = strcmp(a, "model") == 0           ? WGF_GFX_PRIV_SHADER_PROGRAM_MODEL
+                              : strcmp(a, "model_skinned") == 0 ? WGF_GFX_PRIV_SHADER_PROGRAM_MODEL_SKINNED
                               : strcmp(a, "screen") == 0 ? WGF_GFX_PRIV_SHADER_PROGRAM_SCREEN
                                                          : -1;
             current = which >= 0 && strcmp(b, slang) == 0 ? &programs[which] : NULL;
@@ -309,7 +310,8 @@ static void find_slots(const wgf_gfx_priv_shader_t *shader, const program_desc_t
                        wgf_gfx_priv_shader_program_t *program)
 {
     static const char *const names[WGF_GFX_PRIV_SHADER_VIEW_COUNT] = {"wgf_env_tex", "wgf_brdf_tex", "wgf_shadow_tex",
-                                                                       "wgf_instance_tex", "wgf_screen_tex"};
+                                                                       "wgf_instance_tex", "wgf_screen_tex",
+                                                                       "wgf_joint_tex"};
     int n, v, k, t;
     for (n = 0; n < WGF_GFX_PRIV_SHADER_VIEW_COUNT; n++) {
         program->library_view[n] = program->library_sampler[n] = -1;
@@ -340,7 +342,7 @@ static void find_slots(const wgf_gfx_priv_shader_t *shader, const program_desc_t
 static void destroy_gpu(wgf_gfx_priv_shader_t *shader)
 {
     int i;
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < 16; i++) {
         if (shader->pipelines[i].id != SG_INVALID_ID) sg_destroy_pipeline(shader->pipelines[i]);
     }
     for (i = 0; i < 2; i++) {
@@ -378,7 +380,8 @@ static void discard(void *data)
 
 static wgf_core_priv_load_step_t finish(void *data, wgf_handle_t resource)
 {
-    static const char *const labels[WGF_GFX_PRIV_SHADER_PROGRAM_COUNT] = {"wgf-custom-model", "wgf-custom-screen"};
+    static const char *const labels[WGF_GFX_PRIV_SHADER_PROGRAM_COUNT] = {"wgf-custom-model", "wgf-custom-screen",
+                                                                           "wgf-custom-model-skinned"};
     const prepared_t *prepared = (const prepared_t *)data;
     shader_t *shader_ptr = shader_of(resource);
     const char *slang, *error = NULL;
@@ -398,10 +401,16 @@ static wgf_core_priv_load_step_t finish(void *data, wgf_handle_t resource)
     programs = (program_desc_t *)calloc(WGF_GFX_PRIV_SHADER_PROGRAM_COUNT, sizeof(program_desc_t));
     memset(&shader, 0, sizeof(shader));
     ok = programs != NULL && parse(prepared->bytes, (size_t)prepared->size, slang, &shader, programs, &error);
-    if (ok) {
-        i = wanted_program(&shader);
+    for (i = 0; ok && i < WGF_GFX_PRIV_SHADER_PROGRAM_COUNT; i++) {
+        /* the one its kind draws with, and a surface's skinned one */
+        if (i != wanted_program(&shader) && (shader.screen || i != WGF_GFX_PRIV_SHADER_PROGRAM_MODEL_SKINNED)) continue;
         p = &programs[i];
         program = &shader.programs[i];
+        if (!p->found || p->sources[0] == NULL || p->sources[1] == NULL) {
+            error = "no program for this graphics backend";
+            ok = false;
+            break;
+        }
         p->desc.vertex_func.source = p->sources[0];
         p->desc.vertex_func.entry = "main";
         p->desc.fragment_func.source = p->sources[1];

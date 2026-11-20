@@ -1,4 +1,4 @@
-wgfshader 1
+wgfshader 2
 kind screen
 param lines float fs 0
 param darkness float fs 4

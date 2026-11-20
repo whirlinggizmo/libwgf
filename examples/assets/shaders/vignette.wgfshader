@@ -1,4 +1,4 @@
-wgfshader 1
+wgfshader 2
 kind screen
 param strength float fs 0
 param radius float fs 4

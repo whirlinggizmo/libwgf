@@ -1,7 +1,7 @@
 /* libwgf's custom shaders: what libwgf gives a material's shader (wgf_shader.h), libwgt's
  * wgt.glsl (wgrender's wgr.glsl) with libwgt's names wgf_ for wgt_, trimmed to what libwgf
- * draws: models without skinning (a skinned part with a custom material draws in its bind
- * pose), and no sprites (custom sprites are milestone 2.5's). tools/pack_shader.py puts
+ * draws: models, skinned ones too (a skinned part is posed by its joints after the vertex
+ * hook), and no sprites (custom sprites are milestone 2.5's). tools/pack_shader.py puts
  * this file in front of yours, adds libwgf's vertex shader, and compiles the result for
  * every backend libwgf runs on into a .wgfshader file (wgf_shader_create).
  *
@@ -171,6 +171,51 @@ void main() {
     wgf_normal = normal_mat * n;
     /* the record's last texel: y the tangents' handedness, -1 where the placement mirrors */
     wgf_tangent = vec4(mat3(model) * tangent.xyz, tangent.w * wgf_instance_texel(record, 7).y);
+    wgf_uv0 = texcoord0;
+    wgf_uv1 = texcoord1;
+    wgf_color = color0;
+    wgf_tint = wgf_instance_texel(record, 6);
+}
+@end
+
+/* A skinned part's (glTF's skins): its vertex, after the hook, posed by its joints (four,
+ * weighted) from the frame's joint matrices, then placed by its record, its file root's
+ * placement (the built-in shading's, libwgf/gfx/src/shaders/wgf_gfx_model.glsl). Joints are
+ * rigid and uniformly scaled, so mat3 of the skin keeps normals perpendicular. */
+@block wgf_vs_model_skinned_main
+layout(binding=12) uniform texture2D wgf_joint_tex;
+@image_sample_type wgf_joint_tex unfilterable_float
+layout(location=6) in vec4 wgf_joints;
+layout(location=7) in vec4 wgf_weights;
+
+mat4 wgf_joint_at(int index) {
+    ivec2 t = ivec2((index % 256) * 3, index / 256);
+    vec4 r0 = texelFetch(sampler2D(wgf_joint_tex, wgf_data_smp), t, 0);
+    vec4 r1 = texelFetch(sampler2D(wgf_joint_tex, wgf_data_smp), t + ivec2(1, 0), 0);
+    vec4 r2 = texelFetch(sampler2D(wgf_joint_tex, wgf_data_smp), t + ivec2(2, 0), 0);
+    return mat4(vec4(r0.x, r1.x, r2.x, 0.0), vec4(r0.y, r1.y, r2.y, 0.0),
+                vec4(r0.z, r1.z, r2.z, 0.0), vec4(r0.w, r1.w, r2.w, 1.0));
+}
+
+void main() {
+    vec3 p = position;
+    vec3 n = normal;
+    int record = int(wgf_object_time.y) + gl_InstanceIndex;
+    vec4 r0 = wgf_instance_texel(record, 0), r1 = wgf_instance_texel(record, 1), r2 = wgf_instance_texel(record, 2);
+    mat4 model = mat4(vec4(r0.x, r1.x, r2.x, 0.0), vec4(r0.y, r1.y, r2.y, 0.0),
+                      vec4(r0.z, r1.z, r2.z, 0.0), vec4(r0.w, r1.w, r2.w, 1.0));
+    vec4 n0 = wgf_instance_texel(record, 3), n1 = wgf_instance_texel(record, 4), n2 = wgf_instance_texel(record, 5);
+    mat3 normal_mat = mat3(vec3(n0.x, n1.x, n2.x), vec3(n0.y, n1.y, n2.y), vec3(n0.z, n1.z, n2.z));
+    vec4 extra = wgf_instance_texel(record, 7); /* x the skin's first joint matrix, y handedness */
+    int base = int(extra.x);
+    mat4 skin = wgf_weights.x * wgf_joint_at(base + int(wgf_joints.x)) + wgf_weights.y * wgf_joint_at(base + int(wgf_joints.y))
+              + wgf_weights.z * wgf_joint_at(base + int(wgf_joints.z)) + wgf_weights.w * wgf_joint_at(base + int(wgf_joints.w));
+    wgf_vertex(p, n);
+    vec4 world = model * (skin * vec4(p, 1.0));
+    gl_Position = wgf_view_proj * world;
+    wgf_world_pos = world.xyz;
+    wgf_normal = normal_mat * (mat3(skin) * n);
+    wgf_tangent = vec4(mat3(model) * (mat3(skin) * tangent.xyz), tangent.w * extra.y);
     wgf_uv0 = texcoord0;
     wgf_uv1 = texcoord1;
     wgf_color = color0;

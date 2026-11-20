@@ -1,4 +1,4 @@
-wgfshader 1
+wgfshader 2
 kind screen
 param amount float fs 0
 program screen glsl410

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "material/wgf_gfx_shader_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "stage/wgf_gfx_stage3d_priv.h"
 #include "wgf_actor.h"
@@ -64,8 +65,25 @@ static int surface_file(char *out, size_t size, int version, const char *slang)
                     "pair 1 fragment 0 0 noise_tex_noise_smp\n"
                     "source vs 4\nmain\n"
                     "source fs 4\nmain\n"
+                    "program model_skinned %s\n"
+                    "attr 0 position\nattr 1 normal\nattr 2 texcoord0\nattr 3 texcoord1\nattr 4 tangent\nattr 5 color0\n"
+                    "attr 6 wgf_joints\nattr 7 wgf_weights\n"
+                    "ub 0 vertex 80 wgf_object 5\n"
+                    "ub 1 fragment 1184 wgf_frame 74\n"
+                    "ub 2 fragment 32 params 2\n"
+                    "ub 3 vertex 16 wave_params 1\n"
+                    "view 0 fragment noise_tex 2d float\n"
+                    "view 11 vertex wgf_instance_tex 2d unfilterable_float\n"
+                    "view 12 vertex wgf_joint_tex 2d unfilterable_float\n"
+                    "sampler 10 vertex wgf_data_smp nonfiltering\n"
+                    "sampler 0 fragment noise_smp filtering\n"
+                    "pair 0 vertex 11 10 wgf_instance_tex_wgf_data_smp\n"
+                    "pair 2 vertex 12 10 wgf_joint_tex_wgf_data_smp\n"
+                    "pair 1 fragment 0 0 noise_tex_noise_smp\n"
+                    "source vs 4\nmain\n"
+                    "source fs 4\nmain\n"
                     "end\n",
-                    version, slang);
+                    version, slang, slang);
 }
 
 static void write_file(const char *path, const char *text, int size)
@@ -91,11 +109,11 @@ static void test_files(void)
     wgf_shader_t shader, again, failed;
     int size;
 
-    size = surface_file(text, sizeof(text), 1, "glsl410");
-    write_file("good.wgfshader", text, size);
     size = surface_file(text, sizeof(text), 2, "glsl410");
+    write_file("good.wgfshader", text, size);
+    size = surface_file(text, sizeof(text), 1, "glsl410"); /* before the skinned program */
     write_file("version.wgfshader", text, size);
-    size = surface_file(text, sizeof(text), 1, "glsl300es"); /* the web's alone: none for this backend */
+    size = surface_file(text, sizeof(text), 2, "glsl300es"); /* the web's alone: none for this backend */
     write_file("web_only.wgfshader", text, size);
     write_file("nonsense.wgfshader", "not a shader\n", 13);
 
@@ -106,6 +124,13 @@ static void test_files(void)
     wgf_resource_release(again);
     settle(shader);
     CHECK(wgf_resource_get_status(shader) == WGF_RESOURCE_STATUS_READY);
+    { /* its skinned program made beside the static one, the joint texture at its slot */
+        const wgf_gfx_priv_shader_t *made = wgf_gfx_priv_shader_get(shader);
+        CHECK(made != NULL && made->programs[WGF_GFX_PRIV_SHADER_PROGRAM_MODEL].shader.id != SG_INVALID_ID &&
+              made->programs[WGF_GFX_PRIV_SHADER_PROGRAM_MODEL_SKINNED].shader.id != SG_INVALID_ID);
+        CHECK(made != NULL && made->programs[WGF_GFX_PRIV_SHADER_PROGRAM_MODEL_SKINNED].library_view[WGF_GFX_PRIV_SHADER_VIEW_JOINT] == 12 &&
+              made->programs[WGF_GFX_PRIV_SHADER_PROGRAM_MODEL].library_view[WGF_GFX_PRIV_SHADER_VIEW_JOINT] == -1);
+    }
 
     failed = wgf_shader_create("version.wgfshader");
     settle(failed);

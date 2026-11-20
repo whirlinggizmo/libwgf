@@ -17,6 +17,7 @@
 #include "wgf_model.h"
 #include "wgf_render.h"
 #include "wgf_resource.h"
+#include "wgf_shader.h"
 #include "wgf_stage3d.h"
 #include "wgf_window.h"
 
@@ -25,7 +26,8 @@
  * its mesh, play its clips at their own times: the one in front steps through every clip,
  * crossfading into each over 0.3 s (N now, or every 3 seconds), and the four behind dance,
  * walk, run (waving from the torso up as it runs: a layer over its clip, masked to the torso
- * and what is under it), and wave, each started at another point of its clip. The sun casts, so their
+ * and what is under it), and wave (drawn by the toon shader, a custom material on skinned
+ * parts), each started at another point of its clip. The sun casts, so their
  * shadows are posed too. Clips are found by name once the file has loaded.
  *
  *   N      the front robot's next clip, crossfaded
@@ -124,6 +126,18 @@ static void dress(void)
     g.dressed = true;
 }
 
+/* `material` in every slot of every model under `actor`: a file's models are its tree's
+ * actors, made once it has loaded, each with its own slots. */
+static void set_below(wgf_actor_t actor, wgf_material_t material)
+{
+    int i;
+    for (i = 0; i < wgf_actor_get_child_count(actor); i++) {
+        const wgf_actor_t child = wgf_actor_get_child(actor, i);
+        if (wgf_actor_get_kind(child) == WGF_ACTOR_KIND_MODEL) wgf_model_set_material(child, -1, material);
+        set_below(child, material);
+    }
+}
+
 /* Once the file is READY: each robot's clip found by name and played, the ones behind each
  * from another point of its clip. */
 static void start(void)
@@ -137,6 +151,16 @@ static void start(void)
     { /* the runner waves from the torso up as it runs: a layer over its run */
         const int wave = wgf_model_find_animation(g.robots[3], "Robot_Wave");
         if (wave >= 0) wgf_model_play_layer_animation(g.robots[3], wave, "Torso", 0.5f, true);
+    }
+    { /* the waving robot drawn by a custom shader of its own, posed as the others */
+        const wgf_shader_t shader = wgf_shader_create("shaders/toon.wgfshader");
+        const wgf_material_t toon = wgf_material_create_custom(shader);
+        wgf_resource_release(shader); /* the material holds it */
+        wgf_material_set_color(toon, "color", wgf_color_make(120, 200, 255, 255));
+        wgf_material_set_float(toon, "bands", 3.0f);
+        wgf_material_set_float(toon, "rim", 0.35f);
+        set_below(g.robots[4], toon);
+        wgf_resource_release(toon); /* its models hold it */
     }
     g.clip = wgf_model_get_animation(g.robots[0]);
     g.started = true;

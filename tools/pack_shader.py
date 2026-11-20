@@ -16,9 +16,8 @@ compiled SPIR-V (tools/spirv.py), not from the source.
 A fragment shader that includes wgf_screen instead of wgf_surface is a screen effect
 (wgf_render_add_effect): it gets one program, drawn over the finished frame.
 
-libwgt's tools/pack_shader.py (wgrender's), with one model program where libwgt has
-static, skinned, and two sprite ones (libwgf has no skinning yet, and custom sprites are
-milestone 2.5's). Standard library only.
+libwgt's tools/pack_shader.py (wgrender's): a surface shader's static and skinned model
+programs, where libwgt has two sprite ones too (custom sprites are milestone 2.5's). Standard library only.
 """
 import argparse
 import subprocess
@@ -34,7 +33,7 @@ HERE = Path(__file__).resolve().parent
 # or in the checkout
 INTERFACES = [HERE.parent / 'shaders' / 'wgf.glsl', HERE.parent / 'libwgf' / 'gfx' / 'shaders' / 'wgf.glsl']
 SLANGS = ['glsl410', 'glsl300es']
-FORMAT_VERSION = 1
+FORMAT_VERSION = 2  # 2: a surface's skinned program beside its static one
 
 LIBRARY_BLOCKS = (0, 1)  # libwgf's: the vertex shader's (camera, time, first record), the fragment's frame
 FS_PARAMS_BINDING = 2
@@ -238,9 +237,10 @@ def pack(source, out):
     if screen:
         generated = '\n@vs wgf_vs_screen\n@include_block wgf_vs_screen_main\n@end\n\n@program screen wgf_vs_screen fs\n'
     else:
-        generated = ('\n@vs wgf_vs_model\n@include_block wgf_vs_model_uniforms\n'
-                     f'@include_block {"vertex" if vertex_hook else "wgf_vertex_default"}\n'
-                     '@include_block wgf_vs_model_main\n@end\n\n@program model wgf_vs_model fs\n')
+        hook = "vertex" if vertex_hook else "wgf_vertex_default"
+        generated = ''.join(f'\n@vs wgf_vs_{name}\n@include_block wgf_vs_model_uniforms\n@include_block {hook}\n'
+                            f'@include_block wgf_vs_{name}_main\n@end\n\n@program {name} wgf_vs_{name} fs\n'
+                            for name in ('model', 'model_skinned'))
 
     with tempfile.TemporaryDirectory(prefix='pack_shader.') as work:
         combined_path = str(Path(work) / source.name)

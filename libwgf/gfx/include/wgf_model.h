@@ -98,7 +98,8 @@ WGF_API bool wgf_model_is_shadow_receiving(wgf_actor_t model);
  * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
  * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
  * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
- * (wgf_material_create_custom) on a skinned part draws it unposed, in its bind pose. */
+ * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+ * before the joints pose it. */
 WGF_API int wgf_model_get_animation_count(wgf_actor_t model);
 WGF_API const char *wgf_model_get_animation_name(wgf_actor_t model, int animation);
 WGF_API int wgf_model_find_animation(wgf_actor_t model, const char *name);

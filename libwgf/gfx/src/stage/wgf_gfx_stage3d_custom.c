@@ -9,7 +9,7 @@
 #include "wgf_time.h"
 
 /* A stage's items drawn by a custom material's shader (wgf_shader.h), libwgt's scene's
- * draw_custom (wgrender's): its model program with libwgf's vertex shader, which reads the
+ * draw_custom (wgrender's): its model program (a skinned part: its skinned one) with libwgf's vertex shader, which reads the
  * placements from the frame's instance records as the built-in shading does, and the
  * blocks wgf.glsl declares -- the camera and time, the frame's lights, environment, and
  * shadows as the built-in shading gets them, and the material's parameters -- with its
@@ -41,11 +41,13 @@ typedef struct frame_block_t {
 } frame_block_t;
 
 /* The pipeline for `shader` drawing see-through or not, double sided or not, its winding
- * turned or not: the built-in shading's (wgf_gfx_stage3d.c's pipeline), made the first time
- * it's needed. */
-static sg_pipeline pipeline_of(wgf_gfx_priv_shader_t *shader, bool blended, bool double_sided, bool mirrored)
+ * turned or not, skinned or not: the built-in shading's (wgf_gfx_stage3d.c's pipeline), made
+ * the first time it's needed. A skinned part's joints and weights are its primitive's second
+ * buffer, at wgf.glsl's locations 6 and 7. */
+static sg_pipeline pipeline_of(wgf_gfx_priv_shader_t *shader, bool blended, bool double_sided, bool mirrored,
+                               bool skinned)
 {
-    const int key = (blended ? 1 : 0) | (double_sided ? 2 : 0) | (mirrored ? 4 : 0);
+    const int key = (blended ? 1 : 0) | (double_sided ? 2 : 0) | (mirrored ? 4 : 0) | (skinned ? 8 : 0);
     static const sg_vertex_format formats[6] = {SG_VERTEXFORMAT_FLOAT3, SG_VERTEXFORMAT_FLOAT3, SG_VERTEXFORMAT_FLOAT2,
                                                 SG_VERTEXFORMAT_FLOAT2, SG_VERTEXFORMAT_FLOAT4, SG_VERTEXFORMAT_FLOAT4};
     static const int offsets[6] = {0, 12, 24, 32, 40, 56}; /* position, normal, uv0, uv1, tangent, color */
@@ -53,7 +55,16 @@ static sg_pipeline pipeline_of(wgf_gfx_priv_shader_t *shader, bool blended, bool
     int a;
     if (shader->pipelines[key].id != SG_INVALID_ID) return shader->pipelines[key];
     memset(&desc, 0, sizeof(desc));
-    desc.shader = shader->programs[WGF_GFX_PRIV_SHADER_PROGRAM_MODEL].shader;
+    desc.shader = shader->programs[skinned ? WGF_GFX_PRIV_SHADER_PROGRAM_MODEL_SKINNED : WGF_GFX_PRIV_SHADER_PROGRAM_MODEL]
+                      .shader;
+    if (skinned) {
+        desc.layout.buffers[1].stride = (int)(sizeof(float) * WGF_GFX_PRIV_MESH_SKIN_FLOATS);
+        for (a = 6; a < 8; a++) {
+            desc.layout.attrs[a].buffer_index = 1;
+            desc.layout.attrs[a].format = SG_VERTEXFORMAT_FLOAT4;
+            desc.layout.attrs[a].offset = (a - 6) * 16;
+        }
+    }
     desc.layout.buffers[0].stride = (int)(sizeof(float) * WGF_GFX_PRIV_MESH_VERTEX_FLOATS);
     for (a = 0; a < 6; a++) { /* wgf.glsl's locations are the mesh's attributes in order */
         desc.layout.attrs[a].format = formats[a];
@@ -163,11 +174,14 @@ void wgf_gfx_priv_stage3d_draw_custom(wgf_gfx_priv_stage3d_frame_t *frame, const
 
     if (shader == NULL || shader->screen || material == NULL) return; /* still loading, failed, or an effect's */
     if (!wgf_gfx_priv_mesh_get_primitive(item->mesh, item->primitive, &primitive)) return;
-    program = &shader->programs[WGF_GFX_PRIV_SHADER_PROGRAM_MODEL];
-    sg_apply_pipeline(pipeline_of(shader, item->blended, material->double_sided, item->mirrored != draw->flipped));
+    if (item->skinned && (!frame->joints_written || primitive.skin.id == SG_INVALID_ID)) return; /* no room */
+    program = &shader->programs[item->skinned ? WGF_GFX_PRIV_SHADER_PROGRAM_MODEL_SKINNED : WGF_GFX_PRIV_SHADER_PROGRAM_MODEL];
+    sg_apply_pipeline(
+        pipeline_of(shader, item->blended, material->double_sided, item->mirrored != draw->flipped, item->skinned));
 
     memset(&bindings, 0, sizeof(bindings));
     bindings.vertex_buffers[0] = primitive.vertices;
+    if (item->skinned) bindings.vertex_buffers[1] = primitive.skin;
     bindings.index_buffer = primitive.indices;
     for (t = 0; t < shader->texture_count; t++) {
         const wgf_gfx_priv_material_texture_t *texture = textures[t];
@@ -194,6 +208,9 @@ void wgf_gfx_priv_stage3d_draw_custom(wgf_gfx_priv_stage3d_frame_t *frame, const
     bind_library(program, WGF_GFX_PRIV_SHADER_VIEW_ENVIRONMENT, env != NULL ? env->cube : frame->no_environment_view,
                  env != NULL ? env->cube_sampler : frame->sampler, &bindings);
     bind_library(program, WGF_GFX_PRIV_SHADER_VIEW_INSTANCE, frame->instance_view, frame->instance_sampler, &bindings);
+    if (item->skinned) {
+        bind_library(program, WGF_GFX_PRIV_SHADER_VIEW_JOINT, frame->joint_view, frame->instance_sampler, &bindings);
+    }
     sg_apply_bindings(&bindings);
 
     if (program->has_block[WGF_GFX_PRIV_SHADER_BLOCK_OBJECT]) {
