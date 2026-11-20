@@ -658,7 +658,7 @@ static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
     }
     place_box(world, lo, hi, &box_lo, &box_hi);
     if (forced == 0 && actor_ptr->as.model.skin_root != 0) { /* a file's node showing a skinned mesh */
-        wgf_vec3_t skin_lo, skin_hi;
+        wgf_vec3_t skin_lo = wgf_vec3_make(0, 0, 0), skin_hi = skin_lo; /* set by place_skin when it places one */
         for (p = 0; p < count && !has_skin; p++) {
             wgf_gfx_priv_mesh_primitive_t primitive;
             has_skin = wgf_gfx_priv_mesh_get_primitive(mesh, p, &primitive) && primitive.skin.id != SG_INVALID_ID;
