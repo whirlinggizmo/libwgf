@@ -670,7 +670,7 @@ void wgf_core_priv_load_deinit(void)
 
 /* --- listers -------------------------------------------------------------- */
 
-#define MAX_LISTERS 8
+#define MAX_LISTERS 16
 static struct {
     char extension[16];
     wgf_core_priv_load_lister_fn list;

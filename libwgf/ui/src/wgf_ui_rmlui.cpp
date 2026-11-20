@@ -378,6 +378,7 @@ public:
     void Shutdown() override
     {
         atlas = Rml::CallbackTextureSource();
+        pages.clear();
         metrics.clear();
     }
 
@@ -426,36 +427,44 @@ public:
     {
         const int length = (int)string.size();
         const Rml::ColourbPremultiplied tint = opacity < 1.0f ? colour * opacity : colour;
+        const int pages = wgf_ui_priv_doc_font_page_count((int)handle);
         quads.resize((size_t)(length > 0 ? length : 1) * 8);
-        const int count = wgf_ui_priv_doc_font_quads((int)handle, string.begin(), length, position.x, position.y,
-                                                     quads.data(), length);
-        Rml::TexturedMesh textured;
-        textured.texture = atlas.GetTexture(render_manager);
-        Rml::Mesh &mesh = textured.mesh;
-        mesh.vertices.reserve((size_t)count * 4);
-        mesh.indices.reserve((size_t)count * 6);
-        for (int i = 0; i < count; i++) {
-            const float *q = &quads[(size_t)i * 8];
-            const int base = (int)mesh.vertices.size();
-            const float xs[4] = {q[0], q[2], q[2], q[0]}, ys[4] = {q[1], q[1], q[3], q[3]};
-            const float us[4] = {q[4], q[6], q[6], q[4]}, vs[4] = {q[5], q[5], q[7], q[7]};
-            for (int c = 0; c < 4; c++) {
-                Rml::Vertex vertex;
-                vertex.position = Rml::Vector2f(xs[c], ys[c]);
-                vertex.colour = tint;
-                vertex.tex_coord = Rml::Vector2f(us[c], vs[c]);
-                mesh.vertices.push_back(vertex);
+        for (int page = 0; page < pages; page++) { /* a mesh a page: the atlas, or a bitmap font's pages */
+            const int count = wgf_ui_priv_doc_font_quads((int)handle, string.begin(), length, position.x, position.y,
+                                                         page, quads.data(), length);
+            if (count <= 0) continue;
+            Rml::TexturedMesh textured;
+            textured.texture = page_texture(render_manager, wgf_ui_priv_doc_font_page((int)handle, page));
+            Rml::Mesh &mesh = textured.mesh;
+            mesh.vertices.reserve((size_t)count * 4);
+            mesh.indices.reserve((size_t)count * 6);
+            for (int i = 0; i < count; i++) {
+                const float *q = &quads[(size_t)i * 8];
+                const int base = (int)mesh.vertices.size();
+                const float xs[4] = {q[0], q[2], q[2], q[0]}, ys[4] = {q[1], q[1], q[3], q[3]};
+                const float us[4] = {q[4], q[6], q[6], q[4]}, vs[4] = {q[5], q[5], q[7], q[7]};
+                for (int c = 0; c < 4; c++) {
+                    Rml::Vertex vertex;
+                    vertex.position = Rml::Vector2f(xs[c], ys[c]);
+                    vertex.colour = tint;
+                    vertex.tex_coord = Rml::Vector2f(us[c], vs[c]);
+                    mesh.vertices.push_back(vertex);
+                }
+                const int order[6] = {0, 1, 2, 0, 2, 3};
+                for (int k = 0; k < 6; k++) mesh.indices.push_back(base + order[k]);
             }
-            const int order[6] = {0, 1, 2, 0, 2, 3};
-            for (int k = 0; k < 6; k++) mesh.indices.push_back(base + order[k]);
+            mesh_list.push_back(std::move(textured));
         }
-        if (count > 0) mesh_list.push_back(std::move(textured));
         return GetStringWidth(handle, string, Rml::TextShapingContext{Rml::String()}, Rml::Character::Null);
     }
 
     int GetVersion(Rml::FontFaceHandle) override { return wgf_ui_priv_doc_font_version(); }
 
-    void ReleaseFontResources() override { metrics.clear(); }
+    void ReleaseFontResources() override
+    {
+        pages.clear();
+        metrics.clear();
+    }
 
 private:
     /* the font atlas, which the C side binds as it is now each time it is drawn */
@@ -467,7 +476,28 @@ private:
         };
     }
 
+    /* a page's texture: the atlas for 0, else a bitmap font's page, shared with the C side as
+       it is first drawn (a reference held until RmlUi lets go of it) */
+    Rml::Texture page_texture(Rml::RenderManager &render_manager, uint32_t page)
+    {
+        if (page == 0) return atlas.GetTexture(render_manager);
+        auto found = pages.find(page);
+        if (found == pages.end()) {
+            found = pages
+                        .emplace(page, Rml::CallbackTextureSource([page](const Rml::CallbackTextureInterface &texture) {
+                            int width = 0, height = 0;
+                            const uintptr_t shared = wgf_ui_priv_doc_texture_share(page, &width, &height);
+                            if (shared == 0) return false;
+                            texture.SetTextureHandle((Rml::TextureHandle)shared, Rml::Vector2i(width, height));
+                            return true;
+                        }))
+                        .first;
+        }
+        return found->second.GetTexture(render_manager);
+    }
+
     Rml::CallbackTextureSource atlas;
+    std::unordered_map<uint32_t, Rml::CallbackTextureSource> pages;
     std::vector<Rml::FontMetrics> metrics;
     std::vector<float> quads;
 };

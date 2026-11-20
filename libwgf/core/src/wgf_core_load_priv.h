@@ -127,7 +127,7 @@ extern wgf_core_priv_load_hooks_t wgf_core_priv_load_hooks;
 typedef void (*wgf_core_priv_load_add_fn)(const char *uri, const char *fallback_uri, bool required, void *context);
 typedef void (*wgf_core_priv_load_lister_fn)(const unsigned char *data, int size, wgf_core_priv_load_add_fn add,
                                              void *context);
-/* `extension` with its dot (".gltf"), matched without case; up to 8, kept across runs.
+/* `extension` with its dot (".gltf"), matched without case; up to 16, kept across runs.
  * False when full. */
 bool wgf_core_priv_load_set_lister(const char *extension, wgf_core_priv_load_lister_fn list);
 /* The lister for the file at `path`, by its extension, or NULL. */

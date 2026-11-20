@@ -423,7 +423,7 @@ static const wgf_core_priv_loader_t ktx_loader = {"compressed texture", prepare_
 
 /* --- an image of another file's (a glTF's) ------------------------------------ */
 
-void *wgf_gfx_priv_texture_decode(const unsigned char *bytes, int size, const char *what)
+void *wgf_gfx_priv_texture_decode_base(const unsigned char *bytes, int size, const char *what)
 {
     int comp;
     decoded_t *decoded = (decoded_t *)calloc(1, sizeof(decoded_t));
@@ -434,7 +434,27 @@ void *wgf_gfx_priv_texture_decode(const unsigned char *bytes, int size, const ch
         free(decoded);
         return NULL;
     }
-    if (!build_mipmaps(decoded)) {
+    decoded->mip_count = 1;
+    return decoded;
+}
+
+unsigned char *wgf_gfx_priv_texture_decoded_base(void *data, int *width, int *height)
+{
+    decoded_t *decoded = (decoded_t *)data;
+    *width = decoded->width;
+    *height = decoded->height;
+    return decoded->levels[0];
+}
+
+bool wgf_gfx_priv_texture_decoded_build_mipmaps(void *data)
+{
+    return build_mipmaps((decoded_t *)data);
+}
+
+void *wgf_gfx_priv_texture_decode(const unsigned char *bytes, int size, const char *what)
+{
+    decoded_t *decoded = (decoded_t *)wgf_gfx_priv_texture_decode_base(bytes, size, what);
+    if (decoded != NULL && !build_mipmaps(decoded)) {
         wgf_log_warn("wgf_gfx_texture: %s: out of memory", what);
         discard(decoded);
         return NULL;

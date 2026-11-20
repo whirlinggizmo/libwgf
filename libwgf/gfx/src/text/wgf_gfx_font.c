@@ -11,7 +11,9 @@
 #include "wgf_core_part_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "sokol_gfx.h" /* sokol_gl and sokol_fontstash need it first */
+#include "text/wgf_gfx_font_bitmap_priv.h"
 #include "text/wgf_gfx_font_priv.h"
+#include "texture/wgf_gfx_texture_priv.h"
 #include "util/sokol_gl.h"
 #include "util/sokol_fontstash.h"
 #include "wgf_core_fs_priv.h"
@@ -26,7 +28,13 @@
 /* Fonts: a resource loaded on create, its bytes read on a worker and handed to
  * fontstash on the main thread. fontstash can't let go of a font, so a font
  * released for the last time is parked, bytes and all, and a later create of the
- * same file takes it back at once. Cribbed from wgrender's wgr_font and wgr_text. */
+ * same file takes it back at once. Cribbed from wgrender's wgr_font and wgr_text.
+ *
+ * Or a bitmap font (a BMFont .fnt, or an image of glyphs): read and its pages decoded on
+ * the worker (wgf_gfx_font_bitmap.c), the pages made textures of its own on the main
+ * thread, its glyphs drawn as their pages' quads; laid out by the code fontstash's fonts
+ * are, through the few calls that ask a font (use_font, span_width, vertical_metrics,
+ * and the glyphs' quads). */
 
 #define ATLAS_START 1024
 #define ATLAS_MOST 4096 /* 16 MB of 8-bit coverage at most */
@@ -35,6 +43,10 @@ typedef struct font_t {
     wgf_core_priv_resource_t resource; /* first: the resource core's (status, path, references) */
     int fons_id;
     unsigned char *bytes; /* fontstash reads them for as long as it has the font */
+    /* a bitmap font's, once READY: its glyphs, and its pages as textures of its own */
+    wgf_gfx_priv_bitmap_t *bitmap;
+    wgf_texture_t pages[WGF_GFX_PRIV_BITMAP_PAGES_MAX];
+    wgf_texture_filter_t filter; /* its pages' (NEAREST unset), kept from before it is READY */
 } font_t;
 
 typedef struct parked_t {
@@ -72,15 +84,44 @@ static font_t *font_of_at(wgf_handle_t font, const char *caller)
 }
 #define font_of(...) font_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
-/* The fontstash font to draw `font` with: its own when ready, else the default's,
- * else the built-in one. */
-static int fons_id_of(wgf_handle_t font)
+/* The font to draw `font` with: its own when ready, else the default's, else NULL, the
+ * built-in one. */
+static const font_t *drawn_font(wgf_handle_t font)
 {
     const font_t *font_ptr = font_of(font != 0 ? font : default_font);
-    if (font_ptr != NULL && font_ptr->resource.status == WGF_RESOURCE_STATUS_READY) return font_ptr->fons_id;
+    if (font_ptr != NULL && font_ptr->resource.status == WGF_RESOURCE_STATUS_READY) return font_ptr;
     font_ptr = font_of(default_font);
-    if (font_ptr != NULL && font_ptr->resource.status == WGF_RESOURCE_STATUS_READY) return font_ptr->fons_id;
-    return builtin_id;
+    if (font_ptr != NULL && font_ptr->resource.status == WGF_RESOURCE_STATUS_READY) return font_ptr;
+    return NULL;
+}
+
+static bool has_extension(const char *path, const char *extension)
+{
+    const size_t length = strlen(path), wanted = strlen(extension);
+    size_t i;
+    if (length < wanted) return false;
+    for (i = 0; i < wanted; i++) {
+        char c = path[length - wanted + i];
+        if (c >= 'A' && c <= 'Z') c = (char)(c - 'A' + 'a');
+        if (c != extension[i]) return false;
+    }
+    return true;
+}
+
+/* Whether a path names a bitmap font: a BMFont, or an image of glyphs. */
+static bool is_fnt_path(const char *path)
+{
+    return has_extension(path, ".fnt");
+}
+
+static bool is_image_path(const char *path)
+{
+    static const char *const extensions[] = {".png", ".jpg", ".jpeg", ".bmp", ".tga", ".gif"};
+    size_t i;
+    for (i = 0; i < sizeof(extensions) / sizeof(extensions[0]); i++) {
+        if (has_extension(path, extensions[i])) return true;
+    }
+    return false;
 }
 
 /* --- the loader ------------------------------------------------------------ */
@@ -173,17 +214,134 @@ static void fail(wgf_handle_t resource)
 
 static const wgf_core_priv_loader_t loader = {"font", prepare, finish, discard, fail, NULL, false, NULL};
 
+/* --- the bitmap fonts' loader ------------------------------------------------- */
+
+/* An image of glyphs is raylib's LoadFont's: glyphs on magenta, from the space on. */
+#define IMAGE_KEY 0xFF00FFFFu
+#define IMAGE_FIRST 32u
+
+typedef struct bitmap_loaded_t {
+    wgf_gfx_priv_bitmap_t *bitmap;
+    void *decoded[WGF_GFX_PRIV_BITMAP_PAGES_MAX]; /* its pages, decoded with their mipmaps */
+} bitmap_loaded_t;
+
+static void discard_bitmap(void *prepared)
+{
+    bitmap_loaded_t *loaded = (bitmap_loaded_t *)prepared;
+    int i;
+    for (i = 0; i < WGF_GFX_PRIV_BITMAP_PAGES_MAX; i++) wgf_gfx_priv_texture_decoded_free(loaded->decoded[i]);
+    wgf_gfx_priv_bitmap_free(loaded->bitmap);
+    free(loaded);
+}
+
+/* An image of glyphs: its key made transparent before its mipmaps are built from it. */
+static bool prepare_image(bitmap_loaded_t *loaded, const unsigned char *bytes, int size, const char *path)
+{
+    void *decoded = wgf_gfx_priv_texture_decode_base(bytes, size, path);
+    unsigned char *rgba;
+    int width = 0, height = 0;
+    if (decoded == NULL) return false;
+    loaded->decoded[0] = decoded;
+    rgba = wgf_gfx_priv_texture_decoded_base(decoded, &width, &height);
+    loaded->bitmap = wgf_gfx_priv_bitmap_from_image(rgba, width, height, IMAGE_KEY, IMAGE_FIRST, path);
+    if (loaded->bitmap == NULL) return false;
+    if (!wgf_gfx_priv_texture_decoded_build_mipmaps(decoded)) {
+        wgf_log_warn("wgf_gfx_font: %s: out of memory", path);
+        return false;
+    }
+    return true;
+}
+
+/* A .fnt and its pages, each named beside it. */
+static bool prepare_fnt(bitmap_loaded_t *loaded, const unsigned char *bytes, int size, const char *path)
+{
+    int page;
+    loaded->bitmap = wgf_gfx_priv_bitmap_parse_fnt(bytes, size, path);
+    if (loaded->bitmap == NULL) return false;
+    for (page = 0; page < loaded->bitmap->page_count; page++) {
+        char page_path[WGF_CORE_PRIV_FS_PATH_MAX];
+        unsigned char *page_bytes;
+        int page_size, width = 0, height = 0;
+        if (!wgf_asset_priv_is_relative_uri(loaded->bitmap->pages[page]) ||
+            !wgf_asset_priv_join_relative(path, loaded->bitmap->pages[page], page_path, sizeof(page_path))) {
+            wgf_log_warn("wgf_gfx_font: %s: page %s isn't a file beside it", path, loaded->bitmap->pages[page]);
+            return false;
+        }
+        if (!wgf_core_priv_fs_read(page_path, &page_bytes, &page_size)) {
+            wgf_log_warn("wgf_gfx_font: %s: its page %s couldn't be read", path, page_path);
+            return false;
+        }
+        loaded->decoded[page] = wgf_gfx_priv_texture_decode(page_bytes, page_size, page_path);
+        wgf_core_priv_fs_read_free(page_bytes);
+        if (loaded->decoded[page] == NULL) return false;
+        wgf_gfx_priv_texture_decoded_pixels(loaded->decoded[page], &width, &height);
+        wgf_gfx_priv_bitmap_set_page_size(loaded->bitmap, page, width, height);
+    }
+    return true;
+}
+
+static void *prepare_bitmap(const char *path)
+{
+    bitmap_loaded_t *loaded = (bitmap_loaded_t *)calloc(1, sizeof(bitmap_loaded_t));
+    unsigned char *bytes;
+    int size;
+    bool ok;
+    if (loaded == NULL) return NULL;
+    if (!wgf_core_priv_fs_read(path, &bytes, &size)) {
+        free(loaded);
+        return NULL;
+    }
+    ok = is_fnt_path(path) ? prepare_fnt(loaded, bytes, size, path) : prepare_image(loaded, bytes, size, path);
+    wgf_core_priv_fs_read_free(bytes);
+    if (!ok) {
+        discard_bitmap(loaded);
+        return NULL;
+    }
+    return loaded;
+}
+
+static wgf_core_priv_load_step_t finish_bitmap(void *prepared, wgf_handle_t resource)
+{
+    bitmap_loaded_t *loaded = (bitmap_loaded_t *)prepared;
+    font_t *font_ptr = font_of(resource);
+    wgf_texture_t pages[WGF_GFX_PRIV_BITMAP_PAGES_MAX] = {0};
+    int page;
+    if (font_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
+    if (!ensure()) return WGF_CORE_PRIV_LOAD_MORE; /* gfx isn't running yet: wait for it */
+    for (page = 0; page < loaded->bitmap->page_count; page++) {
+        pages[page] = wgf_gfx_priv_texture_create_decoded(loaded->decoded[page]); /* it takes the image */
+        loaded->decoded[page] = NULL;
+        if (pages[page] == 0) {
+            wgf_log_warn("wgf_gfx_font: %s: its page %d couldn't be made a texture", font_ptr->resource.path, page);
+            for (page = 0; page < loaded->bitmap->page_count; page++) {
+                if (pages[page] != 0) wgf_resource_release(pages[page]);
+            }
+            return WGF_CORE_PRIV_LOAD_FAILED;
+        }
+        wgf_texture_set_sampling(pages[page], WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP, font_ptr->filter);
+    }
+    font_ptr = font_of(resource); /* making textures made no fonts, but ask again */
+    memcpy(font_ptr->pages, pages, sizeof(pages));
+    font_ptr->bitmap = loaded->bitmap;
+    loaded->bitmap = NULL; /* the font's now */
+    wgf_core_priv_resource_loaded(resource, NULL);
+    return WGF_CORE_PRIV_LOAD_DONE;
+}
+
+static const wgf_core_priv_loader_t bitmap_loader = {"bitmap font", prepare_bitmap, finish_bitmap, discard_bitmap,
+                                                     fail, NULL, false, NULL};
+
 /* --- the public API --------------------------------------------------------- */
 
 static const wgf_core_priv_loader_t *loader_of(const char *path)
 {
-    (void)path;
-    return &loader;
+    return is_fnt_path(path) || is_image_path(path) ? &bitmap_loader : &loader;
 }
 
 static void init_font(void *record)
 {
     ((font_t *)record)->fons_id = FONS_INVALID;
+    ((font_t *)record)->filter = WGF_TEXTURE_FILTER_NEAREST;
 }
 
 /* What a record holds past the header. fontstash keeps a font it was given, so a READY
@@ -192,7 +350,14 @@ static void init_font(void *record)
 static void free_font(wgf_handle_t font, void *record)
 {
     font_t *font_ptr = (font_t *)record;
+    int page;
     (void)font;
+    if (font_ptr->bitmap != NULL) { /* a bitmap font is its own: let go of whole */
+        for (page = 0; page < font_ptr->bitmap->page_count; page++) wgf_resource_release(font_ptr->pages[page]);
+        wgf_gfx_priv_bitmap_free(font_ptr->bitmap);
+        font_ptr->bitmap = NULL;
+        return;
+    }
     if (font_ptr->resource.status != WGF_RESOURCE_STATUS_READY || fons == NULL) {
         free(font_ptr->bytes);
         return;
@@ -269,6 +434,38 @@ wgf_handle_t wgf_font_get_default(void)
     return default_font;
 }
 
+float wgf_font_get_size(wgf_font_t font)
+{
+    const font_t *font_ptr = font_of(font != 0 ? font : default_font);
+    if (font_ptr == NULL || font_ptr->resource.status != WGF_RESOURCE_STATUS_READY || font_ptr->bitmap == NULL)
+        return 0.0f;
+    return (float)font_ptr->bitmap->line_height;
+}
+
+bool wgf_font_set_filter(wgf_font_t font, wgf_texture_filter_t filter)
+{
+    font_t *font_ptr = font_of(font);
+    int page;
+    if (font_ptr == NULL || (filter != WGF_TEXTURE_FILTER_LINEAR && filter != WGF_TEXTURE_FILTER_NEAREST) ||
+        !(is_fnt_path(font_ptr->resource.path) || is_image_path(font_ptr->resource.path)))
+        return false;
+    font_ptr->filter = filter;
+    if (font_ptr->bitmap != NULL) {
+        for (page = 0; page < font_ptr->bitmap->page_count; page++) {
+            wgf_texture_set_sampling(font_ptr->pages[page], WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP, filter);
+        }
+    }
+    return true;
+}
+
+wgf_texture_filter_t wgf_font_get_filter(wgf_font_t font)
+{
+    const font_t *font_ptr = font_of(font);
+    if (font_ptr == NULL || !(is_fnt_path(font_ptr->resource.path) || is_image_path(font_ptr->resource.path)))
+        return WGF_TEXTURE_FILTER_LINEAR;
+    return font_ptr->filter;
+}
+
 /* --- layout ------------------------------------------------------------------ */
 
 /* Ported from wgrender's wgr_text.c: text is laid out at the size it is rasterized
@@ -321,11 +518,32 @@ static float line_spacing(void)
     return spacing.own ? spacing.line : spacing.draw_line;
 }
 
+/* What the layout measures and draws with, chosen by use_font: fontstash's font, or a
+ * bitmap font's glyphs (`bitmap` set), `scale` layout pixels a font pixel, `letter`
+ * layout pixels between letters. */
+static struct {
+    const wgf_gfx_priv_bitmap_t *bitmap;
+    wgf_texture_t pages[WGF_GFX_PRIV_BITMAP_PAGES_MAX];
+    float scale, letter;
+    wgf_color_t color;
+} sel;
+
 static bool use_font(wgf_handle_t font, float size, float scale, wgf_color_t color)
 {
+    const font_t *font_ptr;
     if (!ensure()) return false;
+    font_ptr = drawn_font(font);
+    sel.color = color;
+    if (font_ptr != NULL && font_ptr->bitmap != NULL) { /* drawn at its own size times size / its line's height */
+        sel.bitmap = font_ptr->bitmap;
+        memcpy(sel.pages, font_ptr->pages, sizeof(sel.pages));
+        sel.scale = (size > 0.0f ? size : WGF_GFX_PRIV_FONT_DEFAULT_SIZE) * scale / (float)sel.bitmap->line_height;
+        sel.letter = letter_spacing() * scale;
+        return true;
+    }
+    sel.bitmap = NULL;
     fonsClearState(fons);
-    fonsSetFont(fons, fons_id_of(font));
+    fonsSetFont(fons, font_ptr != NULL ? font_ptr->fons_id : builtin_id);
     fonsSetSize(fons, (size > 0.0f ? size : WGF_GFX_PRIV_FONT_DEFAULT_SIZE) * scale);
     fonsSetColor(fons, sfons_rgba((uint8_t)wgf_color_get_red(color), (uint8_t)wgf_color_get_green(color),
                                   (uint8_t)wgf_color_get_blue(color), (uint8_t)wgf_color_get_alpha(color)));
@@ -334,11 +552,112 @@ static bool use_font(wgf_handle_t font, float size, float scale, wgf_color_t col
     return true;
 }
 
+/* A bitmap font's glyphs along text[start, end) from the pen at `x`, the line's top at
+ * `top`, in the layout's pixels: each glyph on `page` (any, for -1) with a rectangle given
+ * to `fn` (x0, y0, x1, y1, then s0, t0, s1, t1 on its page), kerned and spaced between
+ * glyphs as fontstash spaces them. Returns the pen's advance. */
+typedef void (*glyph_fn)(const float quad[8], void *user);
+
+static float bitmap_run(const char *start, const char *end, float x, float top, int page, glyph_fn fn, void *user)
+{
+    const wgf_gfx_priv_bitmap_t *bitmap = sel.bitmap;
+    const float s = sel.scale;
+    const char *at = start;
+    uint32_t previous = 0;
+    bool first = true;
+    float pen = x;
+    while (at < end) {
+        const uint32_t codepoint = wgf_gfx_priv_bitmap_next_codepoint(&at, end);
+        const wgf_gfx_priv_bitmap_glyph_t *glyph = wgf_gfx_priv_bitmap_glyph(bitmap, codepoint);
+        if (!first) pen += (float)wgf_gfx_priv_bitmap_kerning(bitmap, previous, codepoint) * s + sel.letter;
+        first = false;
+        previous = codepoint;
+        if (glyph == NULL) continue;
+        if (fn != NULL && glyph->width > 0 && glyph->height > 0 && (page < 0 || glyph->page == page)) {
+            const float page_width = (float)bitmap->page_width[glyph->page];
+            const float page_height = (float)bitmap->page_height[glyph->page];
+            float quad[8];
+            quad[0] = pen + (float)glyph->x_offset * s;
+            quad[1] = top + (float)glyph->y_offset * s;
+            quad[2] = quad[0] + (float)glyph->width * s;
+            quad[3] = quad[1] + (float)glyph->height * s;
+            quad[4] = (float)glyph->x / page_width;
+            quad[5] = (float)glyph->y / page_height;
+            quad[6] = (float)(glyph->x + glyph->width) / page_width;
+            quad[7] = (float)(glyph->y + glyph->height) / page_height;
+            fn(quad, user);
+        }
+        pen += (float)glyph->advance * s;
+    }
+    return pen - x;
+}
+
+/* A glyph's quad as two triangles, in the recording begun. */
+static void emit_quad(const float q[8], void *user)
+{
+    (void)user;
+    sgl_v2f_t2f(q[0], q[1], q[4], q[5]);
+    sgl_v2f_t2f(q[2], q[1], q[6], q[5]);
+    sgl_v2f_t2f(q[2], q[3], q[6], q[7]);
+    sgl_v2f_t2f(q[0], q[1], q[4], q[5]);
+    sgl_v2f_t2f(q[2], q[3], q[6], q[7]);
+    sgl_v2f_t2f(q[0], q[3], q[4], q[7]);
+}
+
+/* A bitmap font's page as it is drawn; false while it can't be. */
+static bool page_binding(int page, sg_view *view, sg_sampler *sampler)
+{
+    int width, height;
+    bool placeholder;
+    return wgf_gfx_priv_texture_get_binding(sel.pages[page], view, sampler, &width, &height, &placeholder) &&
+           !placeholder;
+}
+
+static void set_color(wgf_color_t color)
+{
+    sgl_c4b((uint8_t)wgf_color_get_red(color), (uint8_t)wgf_color_get_green(color), (uint8_t)wgf_color_get_blue(color),
+            (uint8_t)wgf_color_get_alpha(color));
+}
+
+/* A line of a bitmap font's text in 2D, page by page, through the pipeline immediate mode
+ * has now (its blend mode). */
+static void bitmap_draw_line(const char *start, const char *end, float x, float top)
+{
+    int page;
+    for (page = 0; page < sel.bitmap->page_count; page++) {
+        sg_view view;
+        sg_sampler sampler;
+        if (!page_binding(page, &view, &sampler)) continue;
+        sgl_enable_texture();
+        sgl_texture(view, sampler);
+        sgl_begin_triangles();
+        set_color(sel.color);
+        bitmap_run(start, end, x, top, page, emit_quad, NULL);
+        sgl_end();
+        sgl_disable_texture();
+    }
+}
+
 /* Advance width of text[start, end) in the selected font's pixels. */
 static float span_width(const char *start, const char *end)
 {
     float bounds[4] = {0};
-    return end > start ? fonsTextBounds(fons, 0.0f, 0.0f, start, end, bounds) : 0.0f;
+    if (end <= start) return 0.0f;
+    if (sel.bitmap != NULL) return bitmap_run(start, end, 0.0f, 0.0f, -1, NULL, NULL);
+    return fonsTextBounds(fons, 0.0f, 0.0f, start, end, bounds);
+}
+
+/* The selected font's ascender and descender (below the baseline: negative) and line
+ * height, in its pixels, as fontstash gives them. */
+static void vertical_metrics(float *ascender, float *descender, float *line_height)
+{
+    if (sel.bitmap != NULL) {
+        if (ascender != NULL) *ascender = (float)sel.bitmap->base * sel.scale;
+        if (descender != NULL) *descender = -(float)(sel.bitmap->line_height - sel.bitmap->base) * sel.scale;
+        if (line_height != NULL) *line_height = (float)sel.bitmap->line_height * sel.scale;
+        return;
+    }
+    fonsVertMetrics(fons, ascender, descender, line_height);
 }
 
 typedef void (*line_fn)(const char *start, const char *end, int index, void *user);
@@ -406,7 +725,7 @@ static int walk_lines(const char *text, const char *end, float max_width, float 
  * one's width, and the line height. */
 static int block_lines(const char *text, float max_width, float *widest, float *line_height, float scale)
 {
-    fonsVertMetrics(fons, NULL, NULL, line_height);
+    vertical_metrics(NULL, NULL, line_height);
     *line_height += line_spacing() * scale;
     if (*line_height < 0.0f) *line_height = 0.0f;
     return walk_lines(text, text + strlen(text), max_width, widest, NULL, NULL);
@@ -469,6 +788,7 @@ bool wgf_gfx_priv_font_block_bounds_3d(wgf_handle_t font, const char *text, floa
 typedef struct block_draw_t {
     float left, top, line_height, box_width; /* in the font's (rasterized) pixels */
     wgf_text_halign_t halign;
+    int page; /* a bitmap font's page drawn in 3D */
 } block_draw_t;
 
 static void draw_line(const char *start, const char *end, int index, void *user)
@@ -478,7 +798,8 @@ static void draw_line(const char *start, const char *end, int index, void *user)
     if (end <= start) return;
     if (ctx->halign == WGF_TEXT_HALIGN_CENTER) x += (ctx->box_width - span_width(start, end)) * 0.5f;
     else if (ctx->halign == WGF_TEXT_HALIGN_RIGHT) x += ctx->box_width - span_width(start, end);
-    fonsDrawText(fons, x, ctx->top + (float)index * ctx->line_height, start, end);
+    if (sel.bitmap != NULL) bitmap_draw_line(start, end, x, ctx->top + (float)index * ctx->line_height);
+    else fonsDrawText(fons, x, ctx->top + (float)index * ctx->line_height, start, end);
 }
 
 void wgf_gfx_priv_font_draw_block(wgf_handle_t font, const char *text, float size, wgf_color_t color,
@@ -499,6 +820,7 @@ void wgf_gfx_priv_font_draw_block(wgf_handle_t font, const char *text, float siz
     ctx.line_height = line_height;
     ctx.box_width = width;
     ctx.halign = halign;
+    ctx.page = -1;
 
     /* laid out and drawn in the rasterized pixels, scaled back to logical ones:
        fontstash emits each call's vertices before returning, so they get this matrix */
@@ -514,6 +836,7 @@ void wgf_gfx_priv_font_draw_block(wgf_handle_t font, const char *text, float siz
  * a depth-tested pipeline on sokol_fontstash's own shader and atlas. */
 static sgl_pipeline pipeline_3d;
 static sg_shader pipeline_3d_shader;
+static sgl_pipeline bitmap_pipeline_3d; /* a bitmap font's pages: sokol_gl's own shader, the same depth test */
 
 static void draw_line_quads(const char *start, const char *end, int index, void *user)
 {
@@ -524,6 +847,10 @@ static void draw_line_quads(const char *start, const char *end, int index, void 
     if (end <= start) return;
     if (ctx->halign == WGF_TEXT_HALIGN_CENTER) x += (ctx->box_width - span_width(start, end)) * 0.5f;
     else if (ctx->halign == WGF_TEXT_HALIGN_RIGHT) x += ctx->box_width - span_width(start, end);
+    if (sel.bitmap != NULL) {
+        bitmap_run(start, end, x, ctx->top + (float)index * ctx->line_height, ctx->page, emit_quad, NULL);
+        return;
+    }
     fonsTextIterInit(fons, &iter, x, ctx->top + (float)index * ctx->line_height, start, end);
     while (fonsTextIterNext(fons, &iter, &quad)) {
         sgl_v2f_t2f(quad.x0, quad.y0, quad.s0, quad.t0);
@@ -535,6 +862,49 @@ static void draw_line_quads(const char *start, const char *end, int index, void 
     }
 }
 
+/* The depth-tested pipeline on `shader` (none: sokol_gl's own), blended, not written. */
+static sgl_pipeline make_pipeline_3d(sg_shader shader)
+{
+    sg_pipeline_desc desc;
+    memset(&desc, 0, sizeof(desc));
+    desc.shader = shader;
+    desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
+    desc.depth.write_enabled = false;
+    desc.colors[0].blend.enabled = true;
+    desc.colors[0].blend.src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA;
+    desc.colors[0].blend.dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+    desc.colors[0].write_mask = SG_COLORMASK_RGBA;
+    return sgl_make_pipeline(&desc);
+}
+
+/* A bitmap font's block in 3D, page by page, in the recording's modelview. */
+static void bitmap_draw_block_3d(const char *text, float wrap_width, block_draw_t *ctx)
+{
+    float widest = 0.0f;
+    int page;
+    if (bitmap_pipeline_3d.id == SG_INVALID_ID) {
+        sg_shader none;
+        memset(&none, 0, sizeof(none));
+        bitmap_pipeline_3d = make_pipeline_3d(none);
+    }
+    sgl_push_pipeline();
+    sgl_load_pipeline(bitmap_pipeline_3d);
+    for (page = 0; page < sel.bitmap->page_count; page++) {
+        sg_view view;
+        sg_sampler sampler;
+        if (!page_binding(page, &view, &sampler)) continue;
+        ctx->page = page;
+        sgl_enable_texture();
+        sgl_texture(view, sampler);
+        sgl_begin_triangles();
+        set_color(sel.color);
+        walk_lines(text, text + strlen(text), wrap_width, &widest, draw_line_quads, ctx);
+        sgl_end();
+        sgl_disable_texture();
+    }
+    sgl_pop_pipeline();
+}
+
 void wgf_gfx_priv_font_draw_block_3d(wgf_handle_t font, const char *text, float size, wgf_color_t color,
                                     float wrap_width, wgf_text_halign_t halign, wgf_text_valign_t valign,
                                     const float *matrix)
@@ -542,49 +912,43 @@ void wgf_gfx_priv_font_draw_block_3d(wgf_handle_t font, const char *text, float 
     const float scale = size > 0.0f ? WGF_GFX_PRIV_FONT_RASTER_3D / size : 0.0f;
     float widest = 0.0f, line_height = 0.0f, width;
     block_draw_t ctx;
-    sg_view atlas;
-    sg_sampler sampler;
-    sg_shader shader;
+    sg_view atlas = {SG_INVALID_ID};
+    sg_sampler sampler = {SG_INVALID_ID};
+    sg_shader shader = {SG_INVALID_ID};
     int lines;
 
-    if (text == NULL || scale <= 0.0f || !use_font(font, size, scale, color) ||
-        !wgf_gfx_priv_fontstash_render_state(fons, &atlas, &sampler, &shader)) {
-        return;
-    }
+    if (text == NULL || scale <= 0.0f || !use_font(font, size, scale, color)) return;
+    if (sel.bitmap == NULL && !wgf_gfx_priv_fontstash_render_state(fons, &atlas, &sampler, &shader)) return;
     lines = block_lines(text, wrap_width * scale, &widest, &line_height, scale);
     if (lines == 0) return;
-    if (pipeline_3d.id == SG_INVALID_ID || pipeline_3d_shader.id != shader.id) {
-        sg_pipeline_desc desc;
-        if (pipeline_3d.id != SG_INVALID_ID) sgl_destroy_pipeline(pipeline_3d);
-        memset(&desc, 0, sizeof(desc));
-        desc.shader = shader;
-        desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
-        desc.depth.write_enabled = false;
-        desc.colors[0].blend.enabled = true;
-        desc.colors[0].blend.src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA;
-        desc.colors[0].blend.dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
-        desc.colors[0].write_mask = SG_COLORMASK_RGBA;
-        pipeline_3d = sgl_make_pipeline(&desc);
-        pipeline_3d_shader = shader;
-    }
     width = box_width(widest, wrap_width * scale);
     ctx.left = align_offset(width, (int)halign);
     ctx.top = align_offset((float)lines * line_height, (int)valign);
     ctx.line_height = line_height;
     ctx.box_width = width;
     ctx.halign = halign;
+    ctx.page = -1;
 
     sgl_matrix_mode_modelview();
     sgl_push_matrix();
     sgl_load_matrix(matrix);
     sgl_scale(1.0f / scale, 1.0f / scale, 1.0f);
+    if (sel.bitmap != NULL) {
+        bitmap_draw_block_3d(text, wrap_width * scale, &ctx);
+        sgl_pop_matrix();
+        return;
+    }
+    if (pipeline_3d.id == SG_INVALID_ID || pipeline_3d_shader.id != shader.id) {
+        if (pipeline_3d.id != SG_INVALID_ID) sgl_destroy_pipeline(pipeline_3d);
+        pipeline_3d = make_pipeline_3d(shader);
+        pipeline_3d_shader = shader;
+    }
     sgl_push_pipeline();
     sgl_load_pipeline(pipeline_3d);
     sgl_enable_texture();
     sgl_texture(atlas, sampler);
     sgl_begin_triangles();
-    sgl_c4b((uint8_t)wgf_color_get_red(color), (uint8_t)wgf_color_get_green(color), (uint8_t)wgf_color_get_blue(color),
-            (uint8_t)wgf_color_get_alpha(color));
+    set_color(color);
     walk_lines(text, text + strlen(text), wrap_width * scale, &widest, draw_line_quads, &ctx);
     sgl_end();
     sgl_disable_texture();
@@ -606,7 +970,7 @@ bool wgf_gfx_priv_font_vertical_metrics(wgf_handle_t font, float size, float *as
     const float scale = pixel_scale();
     float a = 0.0f, d = 0.0f, h = 0.0f;
     if (!use_font(font, size, scale, 0xFFFFFFFFu)) return false;
-    fonsVertMetrics(fons, &a, &d, &h);
+    vertical_metrics(&a, &d, &h);
     *ascender = a / scale;
     *descender = -d / scale;
     *line_height = h / scale;
@@ -620,14 +984,42 @@ float wgf_gfx_priv_font_span_width(wgf_handle_t font, const char *start, const c
     return span_width(start, end) / scale;
 }
 
+typedef struct quads_out_t {
+    float *out;
+    int count, most;
+    float scale;
+} quads_out_t;
+
+static void add_quad(const float q[8], void *user)
+{
+    quads_out_t *quads = (quads_out_t *)user;
+    float *o;
+    int k;
+    if (quads->count >= quads->most) return;
+    o = quads->out + 8 * quads->count++;
+    for (k = 0; k < 4; k++) o[k] = q[k] / quads->scale;
+    for (k = 4; k < 8; k++) o[k] = q[k];
+}
+
 int wgf_gfx_priv_font_quads(wgf_handle_t font, const char *start, const char *end, float size, float x,
-                            float baseline, float *out, int max_quads)
+                            float baseline, int page, float *out, int max_quads)
 {
     const float scale = pixel_scale();
     FONStextIter iter;
     FONSquad quad;
     int n = 0;
     if (start == NULL || end <= start || out == NULL || !use_font(font, size, scale, 0xFFFFFFFFu)) return 0;
+    if (sel.bitmap != NULL) {
+        quads_out_t quads;
+        quads.out = out;
+        quads.count = 0;
+        quads.most = max_quads;
+        quads.scale = scale;
+        bitmap_run(start, end, x * scale, baseline * scale - (float)sel.bitmap->base * sel.scale, page, add_quad,
+                   &quads);
+        return quads.count;
+    }
+    if (page > 0) return 0; /* fontstash's glyphs are all on its atlas, page 0 */
     fonsSetAlign(fons, FONS_ALIGN_LEFT | FONS_ALIGN_BASELINE);
     fonsTextIterInit(fons, &iter, x * scale, baseline * scale, start, end);
     while (n < max_quads && fonsTextIterNext(fons, &iter, &quad)) {
@@ -647,6 +1039,19 @@ int wgf_gfx_priv_font_quads(wgf_handle_t font, const char *start, const char *en
        (text in 3D's fix, above): an empty string flushes them, drawing nothing */
     fonsDrawText(fons, 0.0f, 0.0f, "", NULL);
     return n;
+}
+
+int wgf_gfx_priv_font_page_count(wgf_handle_t font)
+{
+    const font_t *font_ptr = drawn_font(font);
+    return font_ptr != NULL && font_ptr->bitmap != NULL ? font_ptr->bitmap->page_count : 1;
+}
+
+wgf_texture_t wgf_gfx_priv_font_page(wgf_handle_t font, int page)
+{
+    const font_t *font_ptr = drawn_font(font);
+    if (font_ptr == NULL || font_ptr->bitmap == NULL || page < 0 || page >= font_ptr->bitmap->page_count) return 0;
+    return font_ptr->pages[page];
 }
 
 bool wgf_gfx_priv_font_atlas(sg_view *atlas, sg_sampler *sampler, sgl_pipeline *pipeline)
@@ -743,6 +1148,8 @@ static void shutdown(void)
         wgf_core_priv_handle_pool_destroy(&font_pool);
         pool_ready = false;
     }
+    if (bitmap_pipeline_3d.id != SG_INVALID_ID) sgl_destroy_pipeline(bitmap_pipeline_3d);
+    bitmap_pipeline_3d.id = SG_INVALID_ID;
     for (p = 0; p < parked_count; p++) free(parked[p].bytes);
     free(parked);
     parked = NULL;

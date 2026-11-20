@@ -44,6 +44,7 @@ wgf_layer(gfx
         src/stage/wgf_gfx_stage3d.c
         src/stage/wgf_gfx_stage3d_custom.c
         src/text/wgf_gfx_font.c
+        src/text/wgf_gfx_font_bitmap.c
         src/text/wgf_gfx_fontstash_impl.c
         src/text/wgf_gfx_text.c
         src/tilemap/wgf_gfx_tilemap.c
@@ -92,6 +93,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_environment_test)
         wgf_test(gfx wgf_gfx_shape3d_test)
         wgf_test(gfx wgf_gfx_text_test)
+        wgf_test(gfx wgf_gfx_font_bitmap_test)
         wgf_test(gfx wgf_gfx_texture_test)
         wgf_test(gfx wgf_gfx_draw_test)
         wgf_test(gfx wgf_gfx_draw_model_test)
@@ -117,6 +119,7 @@ if(WGF_TESTS)
     wgf_window_test(gfx wgf_gfx_shader_window_test)
     wgf_window_test(gfx wgf_gfx_effect_window_test)
     wgf_window_test(gfx wgf_gfx_texture_read_window_test)
+    wgf_window_test(gfx wgf_gfx_font_bitmap_window_test)
     foreach(test wgf_gfx_shader_window_test wgf_gfx_effect_window_test)
         if(TARGET ${test}) # the tests' packed shaders, from where they are
             target_compile_definitions(${test} PRIVATE WGF_TEST_FILES="${CMAKE_CURRENT_SOURCE_DIR}/tests")

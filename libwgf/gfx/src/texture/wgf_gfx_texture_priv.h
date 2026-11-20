@@ -42,6 +42,12 @@ void wgf_gfx_priv_texture_retain(wgf_texture_t texture);
  * made a texture, READY, on the main thread with create_decoded, which takes it (0 when
  * the GPU didn't). */
 void *wgf_gfx_priv_texture_decode(const unsigned char *bytes, int size, const char *what);
+/* The same with its first level alone, for a caller that changes its pixels first (an image
+ * font's key made transparent): those pixels, RGBA, and its size; then its mipmaps built
+ * from them (false for no memory: still made a texture or freed as it is). */
+void *wgf_gfx_priv_texture_decode_base(const unsigned char *bytes, int size, const char *what);
+unsigned char *wgf_gfx_priv_texture_decoded_base(void *decoded, int *width, int *height);
+bool wgf_gfx_priv_texture_decoded_build_mipmaps(void *decoded);
 void wgf_gfx_priv_texture_decoded_free(void *decoded);
 /* A decoded image's first level, RGBA, 8 bits a channel, and its size. */
 const unsigned char *wgf_gfx_priv_texture_decoded_pixels(const void *decoded, int *width, int *height);

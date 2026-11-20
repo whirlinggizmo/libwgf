@@ -43,6 +43,7 @@ class Main {
 	static var gems:Sheet = 0; // an atlas, TexturePacker's hash
 	static var island:Tilemap = 0; // a Tiled map, gfx-tilemap's
 	static var font:Font;
+	static var pixelFont:Font = 0; // a bitmap font, a BMFont's .fnt and its page
 	static var menu:Document;
 	static var menuDone = false;
 	static var click:Sound;
@@ -576,6 +577,11 @@ class Main {
 		font = Font.create("fonts/JetBrainsMono/JetBrainsMono-Regular.ttf");
 		expect(Font.getDefault().isNone() && font.setDefault() && Font.getDefault() == font, "the default font");
 		expect(font.measure("feature", 16).x > 0, "text measured");
+		pixelFont = Font.create("fonts/gizmo5/gizmo5.fnt");
+		expect(pixelFont.getFilter() == TextureFilter.NEAREST && pixelFont.setFilter(TextureFilter.LINEAR)
+			&& pixelFont.getFilter() == TextureFilter.LINEAR && pixelFont.setFilter(TextureFilter.NEAREST)
+			&& !font.setFilter(TextureFilter.LINEAR), "a bitmap font's filter; a TrueType font has none");
+		expect(font.getSize() == 0, "a TrueType font has no size of its own");
 		expect(Ui.setDocumentFont("Mono", font) && Ui.getDocumentFont("mono") == font, "a document's font family");
 		expect(Ui.setDocumentFontFace("Mono", 700, false, font) && Ui.getDocumentFontFace("mono", 700, false) == font
 			&& Ui.setDocumentFontFace("Mono", 700, false, 0) && Ui.getDocumentFontFace("mono", 700, false).isNone(),
@@ -987,6 +993,7 @@ class Main {
 		expect(Draw.polygon([100.0, 100, 120, 100, 110, 115], Color.get(ColorStock.WHITE)), "a polygon drawn");
 		Render.pushClip(0, 0, 200, 200);
 		Draw.text(font, "feature-test", 4, 120, 14, Color.get(ColorStock.WHITE));
+		Draw.text(pixelFont, "pixels", 4, 160, 20, Color.get(ColorStock.WHITE));
 		Draw.textAligned(font, "right", 200, 140, 14, Color.get(ColorStock.WHITE), TextHalign.RIGHT, TextValign.MIDDLE);
 		Draw.texture(tiles, 140, 4, 32, 32, Color.get(ColorStock.WHITE));
 		Draw.textureRegion(tiles, 0, 0, 8, 8, 180, 4, 16, 16, Color.get(ColorStock.WHITE));
@@ -1041,8 +1048,12 @@ class Main {
 		}
 		if (frames >= 30 && instantiated && stage > 3 && menuDone && !reported
 			&& Resource.getStatus(robot.getMesh()) != ResourceStatus.PENDING
-			&& Resource.getStatus(gems) != ResourceStatus.PENDING && Resource.getStatus(island) != ResourceStatus.PENDING)
+			&& Resource.getStatus(gems) != ResourceStatus.PENDING && Resource.getStatus(island) != ResourceStatus.PENDING
+			&& Resource.getStatus(pixelFont) != ResourceStatus.PENDING) {
+			expect(pixelFont.getSize() == 10 && pixelFont.measure("AV", 10).x == 11,
+				"a bitmap font READY: its own size, A and V kerned a pixel closer");
 			finish();
+		}
 		if (frames > 600 && !reported) {
 			expect(false, 'still waiting at frame 600 (scene ${Resource.getStatus(scene)}, storage stage $stage)');
 			finish();

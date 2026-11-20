@@ -135,6 +135,9 @@ void wgf_ui_priv_doc_element_gone(uint32_t element);
 #define WGF_UI_PRIV_ATLAS ((uintptr_t)1)
 uintptr_t wgf_ui_priv_doc_texture_load(const char *path, int *width, int *height);
 uintptr_t wgf_ui_priv_doc_texture_generate(const unsigned char *rgba, int width, int height);
+/* A texture of libwgf's, READY, drawn as it is (a bitmap font's page): a reference held
+ * until it is released; 0 when it isn't READY. */
+uintptr_t wgf_ui_priv_doc_texture_share(uint32_t texture, int *width, int *height);
 void wgf_ui_priv_doc_texture_release(uintptr_t texture);
 
 /* A vertex: where, its texture's coordinates, and its color, not premultiplied. */
@@ -208,7 +211,12 @@ void wgf_ui_priv_doc_geometry_gone(uintptr_t geometry);
 int wgf_ui_priv_doc_font_face(const char *family, int size, int weight, bool italic);
 bool wgf_ui_priv_doc_font_metrics(int face, float *ascent, float *descent, float *line_height, float *x_height);
 float wgf_ui_priv_doc_font_width(int face, const char *text, int length);
-int wgf_ui_priv_doc_font_quads(int face, const char *text, int length, float x, float y, float *quads, int max);
+int wgf_ui_priv_doc_font_quads(int face, const char *text, int length, float x, float y, int page, float *quads,
+                               int max);
+/* The pages a face's glyphs are drawn from: 1 for the atlas; and a bitmap font's page's
+ * texture (a wgf_texture_t), 0 for the atlas. */
+int wgf_ui_priv_doc_font_page_count(int face);
+uint32_t wgf_ui_priv_doc_font_page(int face, int page);
 int wgf_ui_priv_doc_font_version(void);
 
 #ifdef __cplusplus

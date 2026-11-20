@@ -74,6 +74,7 @@ static const char rml[] =
     "  <div id=\"fx\"><div id=\"shadowed\">s</div><div id=\"linear\"></div><div id=\"radial\"></div>"
     "<div id=\"conic\"></div><div id=\"rounded\"><p>clipped</p></div><div id=\"filtered\">f</div>"
     "<div id=\"backdrop\"></div><div id=\"masked\">m</div></div>\n"
+    "  <p id=\"pixel\">AV</p>\n"
     "</body>\n"
     "</rml>\n";
 
@@ -109,7 +110,8 @@ static const char rcss[] =
     "#filtered { background-color: #c84; filter: blur(2px) opacity(0.5) drop-shadow(#000 1px 2px 2px) "
     "grayscale(1) hue-rotate(30deg); }\n"
     "#backdrop { backdrop-filter: blur(3px) brightness(1.2); }\n"
-    "#masked { background-color: #4c8; mask-image: linear-gradient(#000, #0000); }\n";
+    "#masked { background-color: #4c8; mask-image: linear-gradient(#000, #0000); }\n"
+    "#pixel { display: inline-block; font-family: Pixel; font-size: 20px; }\n";
 
 /* a 2 by 2 PNG, white, opaque */
 static const unsigned char png[] = {
@@ -118,8 +120,15 @@ static const unsigned char png[] = {
     0x0E, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0xF8, 0x0F, 0x06, 0x0C, 0x10, 0x0A, 0x00, 0x53, 0xBA, 0x0B,
     0xF5, 0x98, 0xAC, 0x20, 0x67, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82};
 
-static wgf_handle_t tasks[5];
-static wgf_font_t font, bold;
+/* a bitmap font: A and V, 2 by 2 on the white PNG, advancing 6 in a line 10 high, kerned 2 closer */
+static const char fnt[] = "common lineHeight=10 base=8 pages=1\npage id=0 file=\"dot.png\"\n"
+                          "char id=65 x=0 y=0 width=2 height=2 xoffset=0 yoffset=6 xadvance=6 page=0\n"
+                          "char id=86 x=0 y=0 width=2 height=2 xoffset=0 yoffset=6 xadvance=6 page=0\n"
+                          "kerning first=65 second=86 amount=-2\n";
+
+#define TASKS 6
+static wgf_handle_t tasks[TASKS];
+static wgf_font_t font, bold, pixel;
 static wgf_document_t document, missing;
 static wgf_element_t play, sound, volume, name, quit, first, logo, help, tip, fade, pulse, row;
 static double hold_until; /* the steps wait until then: what RCSS does over time */
@@ -235,6 +244,7 @@ static void on_init(void *user)
     tasks[2] = wgf_fs_write("doc_test/dot.png", png, (int)sizeof(png));
     tasks[3] = wgf_fs_write("doc_test/mono.ttf", jetbrains_mono_ascii_ttf, (int)sizeof(jetbrains_mono_ascii_ttf));
     tasks[4] = wgf_fs_write("doc_test/mono-bold.ttf", jetbrains_mono_ascii_ttf, (int)sizeof(jetbrains_mono_ascii_ttf));
+    tasks[5] = wgf_fs_write("doc_test/pixel.fnt", (const unsigned char *)fnt, (int)strlen(fnt));
     memset(&pad, 0, sizeof(pad));
     pad.connected = true;
     snprintf(pad.name, sizeof(pad.name), "%s", "test pad");
@@ -252,11 +262,11 @@ static void before_ready(void)
 {
     int i;
     if (font != 0) return;
-    for (i = 0; i < 5; i++) {
+    for (i = 0; i < TASKS; i++) {
         if (tasks[i] == 0 || wgf_fs_task_get_status(tasks[i]) == WGF_FS_TASK_STATUS_PENDING) return;
     }
     if (font == 0) {
-        for (i = 0; i < 5; i++) {
+        for (i = 0; i < TASKS; i++) {
             expect(wgf_fs_task_get_status(tasks[i]) == WGF_FS_TASK_STATUS_DONE, "a file written");
             wgf_fs_task_destroy(tasks[i]);
         }
@@ -299,6 +309,8 @@ static void before_ready(void)
                    !wgf_ui_set_document_font_face("Mono", 700, false, 12345),
                "a weight past 1 to 1000, no family, or no font: refused");
         expect(!wgf_ui_draw_documents(), "nothing to draw before a document");
+        pixel = wgf_font_create("doc_test/pixel.fnt");
+        expect(wgf_ui_set_document_font("Pixel", pixel), "a bitmap font's family");
         document = wgf_document_create("doc_test/menu.rml");
         missing = wgf_document_create("doc_test/missing.rml");
         expect(document != 0 && wgf_resource_get_status(document) == WGF_RESOURCE_STATUS_PENDING, "pending at once");
@@ -564,9 +576,14 @@ static void on_frame(void *user)
                "a finger dragged up: the list scrolled with it");
         finger(SAPP_EVENTTYPE_TOUCHES_ENDED, row_x, row_y + 5.0f);
         break;
-    case 17:
+    case 17: {
+        const wgf_element_t pixel_text = wgf_document_find(document, "pixel");
+        expect(wgf_resource_get_status(pixel) == WGF_RESOURCE_STATUS_READY, "the bitmap font loaded");
+        expect(wgf_ui_priv_document_element_bounds(pixel_text, &x, &y, &w, &h) && w == 20 && h > 0,
+               "text in a bitmap font: its advances and kerning at twice its size");
         expect(wgf_document_set_visible(document, false) && !wgf_document_is_visible(document), "hidden");
         break;
+    }
     case 18:
         expect(!wgf_input_is_pointer_captured() && !wgf_input_is_keyboard_captured(),
                "hidden: neither the pointer nor the keyboard the document's");
@@ -580,6 +597,7 @@ static void on_frame(void *user)
         wgf_resource_release(missing);
         wgf_resource_release(font);
         wgf_resource_release(bold);
+        wgf_resource_release(pixel);
         wgf_resource_release(own_target);
         wgf_app_quit();
         break;

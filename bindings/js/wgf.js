@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "c29e9d06a7e8e625" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "8b00b45b803fc0b7" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -5313,71 +5313,6 @@ export function wgf_color_multiply(color, by) {
     return value >>> 0;
 }
 
-// wgf: call wgf_font_create
-/**
- * A font from a .ttf or .otf file under fs's root. 0 only when there is no room
- * for another font; one that can't be loaded FAILED. A font loaded before, and
- * released since, comes back READY at once.
- */
-export function wgf_font_create(path) {
-    const mark = host["stackSave"]();
-    const value = host["_wgf_font_create"](cstr(path));
-    host["stackRestore"](mark);
-    return value >>> 0;
-}
-
-// wgf: call wgf_font_set_default
-/**
- * The font that font 0 means. It holds a reference to `font`; 0 goes back to the
- * built-in font. For text beyond ASCII, set a font that has it. False for a handle
- * that isn't a font.
- */
-export function wgf_font_set_default(font) {
-    const value = host["_wgf_font_set_default"](font);
-    return value !== 0;
-}
-
-// wgf: call wgf_font_get_default
-/**
- * The font that font 0 means. It holds a reference to `font`; 0 goes back to the
- * built-in font. For text beyond ASCII, set a font that has it. False for a handle
- * that isn't a font.
- */
-export function wgf_font_get_default() {
-    const value = host["_wgf_font_get_default"]();
-    return value >>> 0;
-}
-
-// wgf: call wgf_font_measure
-/**
- * How much room `text` (UTF-8) takes at `size` logical pixels (16 for 0 or less),
- * measured at the frame's pixel density as it is drawn: the widest line, and the
- * lines' height together. Newlines break lines; nothing wraps. A line keeps its
- * spaces, so " " measures a space's advance. 0, 0 for empty text, or before gfx is
- * set up.
- */
-export function wgf_font_measure(font, text, size, into) {
-    const mark = host["stackSave"]();
-    const ret = result(8);
-    host["_wgf_font_measure"](ret, font, cstr(text), size);
-    host["stackRestore"](mark);
-    return vector(ret, 2, into);
-}
-
-// wgf: call wgf_shader_create
-/**
- * The shader in the .wgfshader file at `path` under fs's root. 0 only when there is no
- * room for another; one that can't be loaded FAILED (logged once, saying why: a file made
- * by another version of pack_shader.py, one with no program for this graphics backend, or
- * one the graphics backend refused).
- */
-export function wgf_shader_create(path) {
-    const mark = host["stackSave"]();
-    const value = host["_wgf_shader_create"](cstr(path));
-    host["stackRestore"](mark);
-    return value >>> 0;
-}
-
 // wgf: call wgf_texture_create
 /**
  * A texture from an image file: PNG, JPEG, BMP, TGA, or GIF (its first frame), or a
@@ -5583,6 +5518,117 @@ export function wgf_texture_read_save(read, path) {
 export function wgf_texture_read_destroy(read) {
     const value = host["_wgf_texture_read_destroy"](read);
     return value !== 0;
+}
+
+// wgf: call wgf_font_create
+/**
+ * A font from a file under fs's root: a .ttf or .otf; or a bitmap font, raylib's two:
+ * an AngelCode BMFont .fnt (its text format, or its binary one, version 3; not its XML),
+ * its pages the images it names beside it, its kerning pairs honored; or an image of
+ * glyphs (.png, .jpg, .jpeg, .bmp, .tga, .gif), raylib's LoadFont of one: rows of glyphs
+ * as high as the first, each bordered by magenta (255, 0, 255), from the space (32) on, at
+ * most 256, each as wide as its cell, magenta made transparent. A bitmap font's glyphs
+ * are drawn from its pages in their colors times the text's color (white glyphs take the
+ * color; colored ones keep theirs under white), at wgf_font_get_size scaled to the size
+ * asked, through its filter (wgf_font_set_filter). A channel-packed .fnt, a page or
+ * number out of range, a character twice, or no glyphs FAILED. 0 only when there is no
+ * room for another font; one that can't be loaded FAILED. A font loaded before, and
+ * released since, comes back READY at once.
+ */
+export function wgf_font_create(path) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_font_create"](cstr(path));
+    host["stackRestore"](mark);
+    return value >>> 0;
+}
+
+// wgf: call wgf_font_get_size
+/**
+ * A bitmap font's own size: the height of its line in its pixels (an image's: its
+ * glyphs' height), the size its text is drawn texel for texel at (times the frame's DPI
+ * scale); a whole multiple of it stays sharp under NEAREST. 0 for a TrueType font, one
+ * not READY, or a handle that isn't a font; font 0 is the default's.
+ */
+export function wgf_font_get_size(font) {
+    const value = host["_wgf_font_get_size"](font);
+    return value;
+}
+
+// wgf: call wgf_font_set_filter
+/**
+ * How a bitmap font's pages are sampled when its text is drawn at a size not its own:
+ * NEAREST (unset), its texels kept sharp, for pixel fonts; LINEAR, smoothed. Kept from
+ * before it is READY. False for a font that isn't a bitmap font (by its file's
+ * extension), font 0, or a filter that isn't one. The getter: LINEAR for those.
+ */
+export function wgf_font_set_filter(font, filter) {
+    const value = host["_wgf_font_set_filter"](font, filter);
+    return value !== 0;
+}
+
+// wgf: call wgf_font_get_filter
+/**
+ * How a bitmap font's pages are sampled when its text is drawn at a size not its own:
+ * NEAREST (unset), its texels kept sharp, for pixel fonts; LINEAR, smoothed. Kept from
+ * before it is READY. False for a font that isn't a bitmap font (by its file's
+ * extension), font 0, or a filter that isn't one. The getter: LINEAR for those.
+ */
+export function wgf_font_get_filter(font) {
+    const value = host["_wgf_font_get_filter"](font);
+    return value;
+}
+
+// wgf: call wgf_font_set_default
+/**
+ * The font that font 0 means. It holds a reference to `font`; 0 goes back to the
+ * built-in font. For text beyond ASCII, set a font that has it. False for a handle
+ * that isn't a font.
+ */
+export function wgf_font_set_default(font) {
+    const value = host["_wgf_font_set_default"](font);
+    return value !== 0;
+}
+
+// wgf: call wgf_font_get_default
+/**
+ * The font that font 0 means. It holds a reference to `font`; 0 goes back to the
+ * built-in font. For text beyond ASCII, set a font that has it. False for a handle
+ * that isn't a font.
+ */
+export function wgf_font_get_default() {
+    const value = host["_wgf_font_get_default"]();
+    return value >>> 0;
+}
+
+// wgf: call wgf_font_measure
+/**
+ * How much room `text` (UTF-8) takes at `size` logical pixels (16 for 0 or less; a
+ * bitmap font's line is `size` high), measured at the frame's pixel density as it is
+ * drawn: the widest line, and the lines' height together; a bitmap font's advances,
+ * kerning, and letter spacing as its glyphs are placed. Newlines break lines; nothing wraps. A line keeps its
+ * spaces, so " " measures a space's advance. 0, 0 for empty text, or before gfx is
+ * set up.
+ */
+export function wgf_font_measure(font, text, size, into) {
+    const mark = host["stackSave"]();
+    const ret = result(8);
+    host["_wgf_font_measure"](ret, font, cstr(text), size);
+    host["stackRestore"](mark);
+    return vector(ret, 2, into);
+}
+
+// wgf: call wgf_shader_create
+/**
+ * The shader in the .wgfshader file at `path` under fs's root. 0 only when there is no
+ * room for another; one that can't be loaded FAILED (logged once, saying why: a file made
+ * by another version of pack_shader.py, one with no program for this graphics backend, or
+ * one the graphics backend refused).
+ */
+export function wgf_shader_create(path) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_shader_create"](cstr(path));
+    host["stackRestore"](mark);
+    return value >>> 0;
 }
 
 // wgf: call wgf_material_create

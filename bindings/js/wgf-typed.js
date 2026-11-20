@@ -1161,6 +1161,12 @@ export const Follow = Object.freeze({
 export const Font = Object.freeze({
     // wgf: call wgf_font_create
     create: raw.wgf_font_create,
+    // wgf: call wgf_font_get_size
+    getSize: raw.wgf_font_get_size,
+    // wgf: call wgf_font_set_filter
+    setFilter: raw.wgf_font_set_filter,
+    // wgf: call wgf_font_get_filter
+    getFilter: raw.wgf_font_get_filter,
     // wgf: call wgf_font_set_default
     setDefault: raw.wgf_font_set_default,
     // wgf: call wgf_font_get_default

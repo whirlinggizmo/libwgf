@@ -42,14 +42,14 @@ export type wgf_generator_t = number & { readonly [kind]: "wgf_generator_t" };
 export type wgf_asset_task_t = number & { readonly [kind]: "wgf_asset_task_t" };
 /** A handle of kind wgf_actor_t; 0 is none. */
 export type wgf_actor_t = number & { readonly [kind]: "wgf_actor_t" };
-/** A handle of kind wgf_font_t; 0 is none. */
-export type wgf_font_t = number & { readonly [kind]: "wgf_font_t" };
-/** A handle of kind wgf_shader_t; 0 is none. */
-export type wgf_shader_t = number & { readonly [kind]: "wgf_shader_t" };
 /** A handle of kind wgf_texture_t; 0 is none. */
 export type wgf_texture_t = number & { readonly [kind]: "wgf_texture_t" };
 /** A handle of kind wgf_texture_read_t; 0 is none. */
 export type wgf_texture_read_t = number & { readonly [kind]: "wgf_texture_read_t" };
+/** A handle of kind wgf_font_t; 0 is none. */
+export type wgf_font_t = number & { readonly [kind]: "wgf_font_t" };
+/** A handle of kind wgf_shader_t; 0 is none. */
+export type wgf_shader_t = number & { readonly [kind]: "wgf_shader_t" };
 /** A handle of kind wgf_material_t; 0 is none. */
 export type wgf_material_t = number & { readonly [kind]: "wgf_material_t" };
 /** A handle of kind wgf_sheet_t; 0 is none. */
@@ -3698,45 +3698,6 @@ export declare function wgf_color_brighten(color: wgf_color_t, amount: number): 
 export declare function wgf_color_multiply(color: wgf_color_t, by: wgf_color_t): wgf_color_t;
 
 /**
- * A font from a .ttf or .otf file under fs's root. 0 only when there is no room
- * for another font; one that can't be loaded FAILED. A font loaded before, and
- * released since, comes back READY at once.
- */
-export declare function wgf_font_create(path: string | null): wgf_font_t;
-
-/**
- * The font that font 0 means. It holds a reference to `font`; 0 goes back to the
- * built-in font. For text beyond ASCII, set a font that has it. False for a handle
- * that isn't a font.
- */
-export declare function wgf_font_set_default(font: wgf_font_t | 0): boolean;
-
-/**
- * The font that font 0 means. It holds a reference to `font`; 0 goes back to the
- * built-in font. For text beyond ASCII, set a font that has it. False for a handle
- * that isn't a font.
- */
-export declare function wgf_font_get_default(): wgf_font_t;
-
-/**
- * How much room `text` (UTF-8) takes at `size` logical pixels (16 for 0 or less),
- * measured at the frame's pixel density as it is drawn: the widest line, and the
- * lines' height together. Newlines break lines; nothing wraps. A line keeps its
- * spaces, so " " measures a space's advance. 0, 0 for empty text, or before gfx is
- * set up.
- */
-export declare function wgf_font_measure<T extends number[] | Float32Array | Float64Array>(font: wgf_font_t | 0, text: string | null, size: number, into: T): T;
-export declare function wgf_font_measure(font: wgf_font_t | 0, text: string | null, size: number, into?: wgf_vec2_t | null): wgf_vec2_t;
-
-/**
- * The shader in the .wgfshader file at `path` under fs's root. 0 only when there is no
- * room for another; one that can't be loaded FAILED (logged once, saying why: a file made
- * by another version of pack_shader.py, one with no program for this graphics backend, or
- * one the graphics backend refused).
- */
-export declare function wgf_shader_create(path: string | null): wgf_shader_t;
-
-/**
  * A texture from an image file: PNG, JPEG, BMP, TGA, or GIF (its first frame), or a
  * compressed one. "name.ktx" names a texture compressed for GPUs
  * (tools/compress_textures.py, which writes them beside name.png): the first of
@@ -3865,6 +3826,79 @@ export declare function wgf_texture_read_save(read: wgf_texture_read_t | 0, path
  * False for a handle that isn't a read. One still PENDING is dropped, unread.
  */
 export declare function wgf_texture_read_destroy(read: wgf_texture_read_t | 0): boolean;
+
+/**
+ * A font from a file under fs's root: a .ttf or .otf; or a bitmap font, raylib's two:
+ * an AngelCode BMFont .fnt (its text format, or its binary one, version 3; not its XML),
+ * its pages the images it names beside it, its kerning pairs honored; or an image of
+ * glyphs (.png, .jpg, .jpeg, .bmp, .tga, .gif), raylib's LoadFont of one: rows of glyphs
+ * as high as the first, each bordered by magenta (255, 0, 255), from the space (32) on, at
+ * most 256, each as wide as its cell, magenta made transparent. A bitmap font's glyphs
+ * are drawn from its pages in their colors times the text's color (white glyphs take the
+ * color; colored ones keep theirs under white), at wgf_font_get_size scaled to the size
+ * asked, through its filter (wgf_font_set_filter). A channel-packed .fnt, a page or
+ * number out of range, a character twice, or no glyphs FAILED. 0 only when there is no
+ * room for another font; one that can't be loaded FAILED. A font loaded before, and
+ * released since, comes back READY at once.
+ */
+export declare function wgf_font_create(path: string | null): wgf_font_t;
+
+/**
+ * A bitmap font's own size: the height of its line in its pixels (an image's: its
+ * glyphs' height), the size its text is drawn texel for texel at (times the frame's DPI
+ * scale); a whole multiple of it stays sharp under NEAREST. 0 for a TrueType font, one
+ * not READY, or a handle that isn't a font; font 0 is the default's.
+ */
+export declare function wgf_font_get_size(font: wgf_font_t | 0): number;
+
+/**
+ * How a bitmap font's pages are sampled when its text is drawn at a size not its own:
+ * NEAREST (unset), its texels kept sharp, for pixel fonts; LINEAR, smoothed. Kept from
+ * before it is READY. False for a font that isn't a bitmap font (by its file's
+ * extension), font 0, or a filter that isn't one. The getter: LINEAR for those.
+ */
+export declare function wgf_font_set_filter(font: wgf_font_t | 0, filter: wgf_texture_filter_t): boolean;
+
+/**
+ * How a bitmap font's pages are sampled when its text is drawn at a size not its own:
+ * NEAREST (unset), its texels kept sharp, for pixel fonts; LINEAR, smoothed. Kept from
+ * before it is READY. False for a font that isn't a bitmap font (by its file's
+ * extension), font 0, or a filter that isn't one. The getter: LINEAR for those.
+ */
+export declare function wgf_font_get_filter(font: wgf_font_t | 0): wgf_texture_filter_t;
+
+/**
+ * The font that font 0 means. It holds a reference to `font`; 0 goes back to the
+ * built-in font. For text beyond ASCII, set a font that has it. False for a handle
+ * that isn't a font.
+ */
+export declare function wgf_font_set_default(font: wgf_font_t | 0): boolean;
+
+/**
+ * The font that font 0 means. It holds a reference to `font`; 0 goes back to the
+ * built-in font. For text beyond ASCII, set a font that has it. False for a handle
+ * that isn't a font.
+ */
+export declare function wgf_font_get_default(): wgf_font_t;
+
+/**
+ * How much room `text` (UTF-8) takes at `size` logical pixels (16 for 0 or less; a
+ * bitmap font's line is `size` high), measured at the frame's pixel density as it is
+ * drawn: the widest line, and the lines' height together; a bitmap font's advances,
+ * kerning, and letter spacing as its glyphs are placed. Newlines break lines; nothing wraps. A line keeps its
+ * spaces, so " " measures a space's advance. 0, 0 for empty text, or before gfx is
+ * set up.
+ */
+export declare function wgf_font_measure<T extends number[] | Float32Array | Float64Array>(font: wgf_font_t | 0, text: string | null, size: number, into: T): T;
+export declare function wgf_font_measure(font: wgf_font_t | 0, text: string | null, size: number, into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * The shader in the .wgfshader file at `path` under fs's root. 0 only when there is no
+ * room for another; one that can't be loaded FAILED (logged once, saying why: a file made
+ * by another version of pack_shader.py, one with no program for this graphics backend, or
+ * one the graphics backend refused).
+ */
+export declare function wgf_shader_create(path: string | null): wgf_shader_t;
 
 /**
  * A material with glTF's defaults. 0 when `shading` isn't one (logged), or there is no

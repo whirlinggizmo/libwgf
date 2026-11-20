@@ -929,7 +929,7 @@ bool wgf_ui_priv_doc_font_metrics(int face, float *ascent, float *descent, float
     static const char x[] = "x"; /* its height: the x-height */
     float quad[8];
     if (!wgf_gfx_priv_font_vertical_metrics(font, size, ascent, descent, line_height)) return false;
-    *x_height = wgf_gfx_priv_font_quads(font, x, x + 1, size, 0.0f, 0.0f, quad, 1) == 1 ? -quad[1] : *ascent * 0.5f;
+    *x_height = wgf_gfx_priv_font_quads(font, x, x + 1, size, 0.0f, 0.0f, -1, quad, 1) == 1 ? -quad[1] : *ascent * 0.5f;
     return true;
 }
 
@@ -939,11 +939,22 @@ float wgf_ui_priv_doc_font_width(int face, const char *text, int length)
     return wgf_gfx_priv_font_span_width(face_font(face), text, text + length, (float)doc.faces[face - 1].size);
 }
 
-int wgf_ui_priv_doc_font_quads(int face, const char *text, int length, float x, float y, float *quads, int max)
+int wgf_ui_priv_doc_font_quads(int face, const char *text, int length, float x, float y, int page, float *quads,
+                               int max)
 {
     if (face <= 0 || face > doc.face_count || text == NULL || length <= 0) return 0;
-    return wgf_gfx_priv_font_quads(face_font(face), text, text + length, (float)doc.faces[face - 1].size, x, y, quads,
-                                   max);
+    return wgf_gfx_priv_font_quads(face_font(face), text, text + length, (float)doc.faces[face - 1].size, x, y, page,
+                                   quads, max);
+}
+
+int wgf_ui_priv_doc_font_page_count(int face)
+{
+    return wgf_gfx_priv_font_page_count(face_font(face));
+}
+
+uint32_t wgf_ui_priv_doc_font_page(int face, int page)
+{
+    return wgf_gfx_priv_font_page(face_font(face), page);
 }
 
 /* Changed when text laid out before would be drawn wrong: the atlas's glyphs moved, the
@@ -1147,6 +1158,24 @@ void wgf_ui_priv_doc_texture_release(uintptr_t texture)
 {
     texture_t *t = texture_at(texture);
     if (t != NULL) t->dying = true; /* the frame may still draw it: freed in the next update */
+}
+
+uintptr_t wgf_ui_priv_doc_texture_share(uint32_t texture, int *width, int *height)
+{
+    texture_t t;
+    uintptr_t handle;
+    *width = *height = 0;
+    if (wgf_resource_get_status(texture) != WGF_RESOURCE_STATUS_READY) return 0;
+    memset(&t, 0, sizeof(t));
+    t.texture = texture;
+    t.width = wgf_texture_get_width(texture);
+    t.height = wgf_texture_get_height(texture);
+    handle = add_texture(&t);
+    if (handle == 0) return 0;
+    wgf_gfx_priv_texture_retain(texture); /* the slot's, let go of as it is freed */
+    *width = t.width;
+    *height = t.height;
+    return handle;
 }
 
 uintptr_t wgf_ui_priv_doc_texture_adopt(wgf_texture_t target, int width, int height)
