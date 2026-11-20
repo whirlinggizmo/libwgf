@@ -160,6 +160,7 @@ typedef struct wgf_gfx_priv_actor_t {
         wgf_gfx_priv_stage2d_t stage2d;
         wgf_gfx_priv_shape2d_t shape2d;
         struct wgf_gfx_priv_emitter_t *emitter; /* malloc'd (emitter/wgf_gfx_emitter_priv.h) */
+        struct wgf_gfx_priv_sprite_batch_t *sprite_batch; /* malloc'd (sprite/wgf_gfx_sprite_batch2d.c) */
     } as;
 } wgf_gfx_priv_actor_t;
 

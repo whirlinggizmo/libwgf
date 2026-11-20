@@ -1406,6 +1406,51 @@ export const Sprite = Object.freeze({
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
+// wgf: typed SpriteBatch
+export const SpriteBatch = Object.freeze({
+    // wgf: call wgf_sprite_batch_create
+    create: raw.wgf_sprite_batch_create,
+    // wgf: call wgf_sprite_batch_set_texture
+    setTexture: raw.wgf_sprite_batch_set_texture,
+    // wgf: call wgf_sprite_batch_get_texture
+    getTexture: raw.wgf_sprite_batch_get_texture,
+    // wgf: call wgf_sprite_batch_set_count
+    setCount: raw.wgf_sprite_batch_set_count,
+    // wgf: call wgf_sprite_batch_get_count
+    getCount: raw.wgf_sprite_batch_get_count,
+    // wgf: call wgf_sprite_batch_set_positions
+    setPositions: raw.wgf_sprite_batch_set_positions,
+    // wgf: call wgf_sprite_batch_get_positions
+    getPositions: raw.wgf_sprite_batch_get_positions,
+    // wgf: call wgf_sprite_batch_set_sizes
+    setSizes: raw.wgf_sprite_batch_set_sizes,
+    // wgf: call wgf_sprite_batch_get_sizes
+    getSizes: raw.wgf_sprite_batch_get_sizes,
+    // wgf: call wgf_sprite_batch_set_rotations
+    setRotations: raw.wgf_sprite_batch_set_rotations,
+    // wgf: call wgf_sprite_batch_get_rotations
+    getRotations: raw.wgf_sprite_batch_get_rotations,
+    // wgf: call wgf_sprite_batch_set_regions
+    setRegions: raw.wgf_sprite_batch_set_regions,
+    // wgf: call wgf_sprite_batch_get_regions
+    getRegions: raw.wgf_sprite_batch_get_regions,
+    // wgf: call wgf_sprite_batch_set_tints
+    setTints: raw.wgf_sprite_batch_set_tints,
+    // wgf: call wgf_sprite_batch_get_tints
+    getTints: raw.wgf_sprite_batch_get_tints,
+    // wgf: call wgf_sprite_batch_set_pivot
+    setPivot: raw.wgf_sprite_batch_set_pivot,
+    // wgf: call wgf_sprite_batch_get_pivot
+    getPivot: raw.wgf_sprite_batch_get_pivot,
+    // wgf: call wgf_sprite_batch_set_alpha_mode
+    setAlphaMode: raw.wgf_sprite_batch_set_alpha_mode,
+    // wgf: call wgf_sprite_batch_get_alpha_mode
+    getAlphaMode: raw.wgf_sprite_batch_get_alpha_mode,
+    // wgf: call wgf_sprite_batch_get_alpha_cutoff
+    getAlphaCutoff: raw.wgf_sprite_batch_get_alpha_cutoff,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
+});
 // wgf: typed Stage2d
 export const Stage2d = Object.freeze({
     // wgf: call wgf_stage2d_create
@@ -1845,7 +1890,7 @@ export const World = Object.freeze({
 // wgf: enum ActorDestroy
 export const ActorDestroy = Object.freeze({ DESTROY_CHILDREN: 0, KEEP_CHILDREN: 1 });
 // wgf: enum ActorKind
-export const ActorKind = Object.freeze({ NONE: 0, PLAIN: 1, STAGE2D: 2, SPRITE: 3, CAMERA2D: 4, TEXT: 5, SHAPE2D: 6, EMITTER2D: 7, CAMERA3D: 8, STAGE3D: 9, LIGHT: 10, MODEL: 11, SHAPE3D: 12, EMITTER3D: 13 });
+export const ActorKind = Object.freeze({ NONE: 0, PLAIN: 1, STAGE2D: 2, SPRITE: 3, CAMERA2D: 4, TEXT: 5, SHAPE2D: 6, EMITTER2D: 7, CAMERA3D: 8, STAGE3D: 9, LIGHT: 10, MODEL: 11, SHAPE3D: 12, EMITTER3D: 13, SPRITE_BATCH: 14 });
 // wgf: enum AlphaMode
 export const AlphaMode = Object.freeze({ OPAQUE: 0, MASK: 1, BLEND: 2, ADD: 3 });
 // wgf: enum AssetCacheMode

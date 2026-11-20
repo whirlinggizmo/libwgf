@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "353182788e55bdf9" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "bd673d146ece6b80" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -567,6 +567,7 @@ export const WGF_ACTOR_KIND_LIGHT = 10;
 export const WGF_ACTOR_KIND_MODEL = 11;
 export const WGF_ACTOR_KIND_SHAPE3D = 12;
 export const WGF_ACTOR_KIND_EMITTER3D = 13;
+export const WGF_ACTOR_KIND_SPRITE_BATCH = 14;
 
 /**
  * What wgf_actor_destroy does with the actor's children.
@@ -8043,6 +8044,236 @@ export function wgf_shape3d_set_color(shape, color) {
 export function wgf_shape3d_get_color(shape) {
     const value = host["_wgf_shape3d_get_color"](shape);
     return value >>> 0;
+}
+
+// wgf: call wgf_sprite_batch_create
+/**
+ * A batch of `texture` with no quads (0 for no texture: it draws nothing). 0 when there is
+ * no room for another actor.
+ */
+export function wgf_sprite_batch_create(texture) {
+    const value = host["_wgf_sprite_batch_create"](texture);
+    return value >>> 0;
+}
+
+// wgf: call wgf_sprite_batch_set_texture
+/**
+ * False for a handle that isn't a batch, or a texture that isn't one (0 is none).
+ */
+export function wgf_sprite_batch_set_texture(batch, texture) {
+    const value = host["_wgf_sprite_batch_set_texture"](batch, texture);
+    return value !== 0;
+}
+
+// wgf: call wgf_sprite_batch_get_texture
+/**
+ * False for a handle that isn't a batch, or a texture that isn't one (0 is none).
+ */
+export function wgf_sprite_batch_get_texture(batch) {
+    const value = host["_wgf_sprite_batch_get_texture"](batch);
+    return value >>> 0;
+}
+
+// wgf: call wgf_sprite_batch_set_count
+/**
+ * How many quads it draws: more are made as above, fewer drop those past the count. False
+ * for a handle that isn't a batch, a count below 0 or over 16777216, or no memory for it.
+ */
+export function wgf_sprite_batch_set_count(batch, count) {
+    const value = host["_wgf_sprite_batch_set_count"](batch, count);
+    return value !== 0;
+}
+
+// wgf: call wgf_sprite_batch_get_count
+/**
+ * How many quads it draws: more are made as above, fewer drop those past the count. False
+ * for a handle that isn't a batch, a count below 0 or over 16777216, or no memory for it.
+ */
+export function wgf_sprite_batch_get_count(batch) {
+    const value = host["_wgf_sprite_batch_get_count"](batch);
+    return value;
+}
+
+// wgf: call wgf_sprite_batch_set_positions
+/**
+ * The quads' positions from quad `first` on, x and y in turn (`count` floats, count / 2
+ * quads): where each one's pivot goes, in the batch's units. Quads past the batch's count
+ * are left out; returns how many quads it wrote (0 for a handle that isn't a batch, a
+ * `first` outside the batch, or an odd count). The getter reads them back into `out`, as
+ * many as fit in `count` floats, returning how many floats it filled.
+ */
+export function wgf_sprite_batch_set_positions(batch, first, positions) {
+    const positionsPointer = arrayIn(positions, 0, "HEAPF32");
+    const value = host["_wgf_sprite_batch_set_positions"](batch, first, positionsPointer, lengthOf(positions));
+    return value;
+}
+
+// wgf: call wgf_sprite_batch_get_positions
+/**
+ * The quads' positions from quad `first` on, x and y in turn (`count` floats, count / 2
+ * quads): where each one's pivot goes, in the batch's units. Quads past the batch's count
+ * are left out; returns how many quads it wrote (0 for a handle that isn't a batch, a
+ * `first` outside the batch, or an odd count). The getter reads them back into `out`, as
+ * many as fit in `count` floats, returning how many floats it filled.
+ */
+export function wgf_sprite_batch_get_positions(batch, first, out) {
+    const outPointer = arrayOut(out, 0);
+    const value = host["_wgf_sprite_batch_get_positions"](batch, first, outPointer, lengthOf(out));
+    arrayBack(outPointer, out, "HEAPF32");
+    return value;
+}
+
+// wgf: call wgf_sprite_batch_set_sizes
+/**
+ * The quads' sizes, width and height in turn, as positions are; a width or height of 0 or
+ * less is the region's size in texels.
+ */
+export function wgf_sprite_batch_set_sizes(batch, first, sizes) {
+    const sizesPointer = arrayIn(sizes, 0, "HEAPF32");
+    const value = host["_wgf_sprite_batch_set_sizes"](batch, first, sizesPointer, lengthOf(sizes));
+    return value;
+}
+
+// wgf: call wgf_sprite_batch_get_sizes
+/**
+ * The quads' sizes, width and height in turn, as positions are; a width or height of 0 or
+ * less is the region's size in texels.
+ */
+export function wgf_sprite_batch_get_sizes(batch, first, out) {
+    const outPointer = arrayOut(out, 0);
+    const value = host["_wgf_sprite_batch_get_sizes"](batch, first, outPointer, lengthOf(out));
+    arrayBack(outPointer, out, "HEAPF32");
+    return value;
+}
+
+// wgf: call wgf_sprite_batch_set_rotations
+/**
+ * The quads' turns, in radians about their pivots, one a quad (`count` floats, count
+ * quads), clockwise on a 2D stage as an actor's turn is.
+ */
+export function wgf_sprite_batch_set_rotations(batch, first, radians) {
+    const radiansPointer = arrayIn(radians, 0, "HEAPF32");
+    const value = host["_wgf_sprite_batch_set_rotations"](batch, first, radiansPointer, lengthOf(radians));
+    return value;
+}
+
+// wgf: call wgf_sprite_batch_get_rotations
+/**
+ * The quads' turns, in radians about their pivots, one a quad (`count` floats, count
+ * quads), clockwise on a 2D stage as an actor's turn is.
+ */
+export function wgf_sprite_batch_get_rotations(batch, first, out) {
+    const outPointer = arrayOut(out, 0);
+    const value = host["_wgf_sprite_batch_get_rotations"](batch, first, outPointer, lengthOf(out));
+    arrayBack(outPointer, out, "HEAPF32");
+    return value;
+}
+
+// wgf: call wgf_sprite_batch_set_regions
+/**
+ * The quads' regions of the texture, x, y, width, and height in its pixels from the
+ * top-left, four floats a quad (count / 4 quads; a count not a multiple of 4 writes none),
+ * each rounded to a whole pixel and clamped to 0..32767; a width or height of 0 shows the
+ * whole texture.
+ */
+export function wgf_sprite_batch_set_regions(batch, first, regions) {
+    const regionsPointer = arrayIn(regions, 0, "HEAPF32");
+    const value = host["_wgf_sprite_batch_set_regions"](batch, first, regionsPointer, lengthOf(regions));
+    return value;
+}
+
+// wgf: call wgf_sprite_batch_get_regions
+/**
+ * The quads' regions of the texture, x, y, width, and height in its pixels from the
+ * top-left, four floats a quad (count / 4 quads; a count not a multiple of 4 writes none),
+ * each rounded to a whole pixel and clamped to 0..32767; a width or height of 0 shows the
+ * whole texture.
+ */
+export function wgf_sprite_batch_get_regions(batch, first, out) {
+    const outPointer = arrayOut(out, 0);
+    const value = host["_wgf_sprite_batch_get_regions"](batch, first, outPointer, lengthOf(out));
+    arrayBack(outPointer, out, "HEAPF32");
+    return value;
+}
+
+// wgf: call wgf_sprite_batch_set_tints
+/**
+ * The quads' tints, one a quad (count quads), each a wgf_color_t (0xRRGGBBAA) as an int.
+ */
+export function wgf_sprite_batch_set_tints(batch, first, tints) {
+    const tintsPointer = arrayIn(tints, 0, "HEAP32");
+    const value = host["_wgf_sprite_batch_set_tints"](batch, first, tintsPointer, lengthOf(tints));
+    return value;
+}
+
+// wgf: call wgf_sprite_batch_get_tints
+/**
+ * The quads' tints, one a quad (count quads), each a wgf_color_t (0xRRGGBBAA) as an int.
+ */
+export function wgf_sprite_batch_get_tints(batch, first, out) {
+    const outPointer = arrayOut(out, 0);
+    const value = host["_wgf_sprite_batch_get_tints"](batch, first, outPointer, lengthOf(out));
+    arrayBack(outPointer, out, "HEAP32");
+    return value;
+}
+
+// wgf: call wgf_sprite_batch_set_pivot
+/**
+ * The point of every quad at its position, which it turns about, as a fraction of its size:
+ * 0.5, 0.5 its center (the default), 0, 0 its top-left. False for a handle that isn't a
+ * batch.
+ */
+export function wgf_sprite_batch_set_pivot(batch, x, y) {
+    const value = host["_wgf_sprite_batch_set_pivot"](batch, x, y);
+    return value !== 0;
+}
+
+// wgf: call wgf_sprite_batch_get_pivot
+/**
+ * The point of every quad at its position, which it turns about, as a fraction of its size:
+ * 0.5, 0.5 its center (the default), 0, 0 its top-left. False for a handle that isn't a
+ * batch.
+ */
+export function wgf_sprite_batch_get_pivot(batch, into) {
+    const ret = result(8);
+    host["_wgf_sprite_batch_get_pivot"](ret, batch);
+    return vector(ret, 2, into);
+}
+
+// wgf: call wgf_sprite_batch_set_alpha_mode
+/**
+ * How its quads use their texels' alpha (wgf_material.h's modes; default BLEND), and the
+ * cutoff MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, MASK
+ * cuts out and draws the rest opaque, ADD adds. False for a handle that isn't a batch, or a
+ * mode that isn't one.
+ */
+export function wgf_sprite_batch_set_alpha_mode(batch, mode, cutoff) {
+    const value = host["_wgf_sprite_batch_set_alpha_mode"](batch, mode, cutoff);
+    return value !== 0;
+}
+
+// wgf: call wgf_sprite_batch_get_alpha_mode
+/**
+ * How its quads use their texels' alpha (wgf_material.h's modes; default BLEND), and the
+ * cutoff MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, MASK
+ * cuts out and draws the rest opaque, ADD adds. False for a handle that isn't a batch, or a
+ * mode that isn't one.
+ */
+export function wgf_sprite_batch_get_alpha_mode(batch) {
+    const value = host["_wgf_sprite_batch_get_alpha_mode"](batch);
+    return value;
+}
+
+// wgf: call wgf_sprite_batch_get_alpha_cutoff
+/**
+ * How its quads use their texels' alpha (wgf_material.h's modes; default BLEND), and the
+ * cutoff MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, MASK
+ * cuts out and draws the rest opaque, ADD adds. False for a handle that isn't a batch, or a
+ * mode that isn't one.
+ */
+export function wgf_sprite_batch_get_alpha_cutoff(batch) {
+    const value = host["_wgf_sprite_batch_get_alpha_cutoff"](batch);
+    return value;
 }
 
 // wgf: call wgf_stage2d_create

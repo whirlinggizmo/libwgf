@@ -321,7 +321,7 @@ static bool is_under(wgf_actor_t actor, wgf_actor_t ancestor)
 }
 
 #define NODE_TYPES 16 /* more than wgf_actor_kind_t's last */
-_Static_assert(WGF_ACTOR_KIND_SHAPE3D < NODE_TYPES, "an actor type past the kinds' table");
+_Static_assert(WGF_ACTOR_KIND_SPRITE_BATCH < NODE_TYPES, "an actor type past the kinds' table");
 static const wgf_gfx_priv_actor_kind_t *kinds[NODE_TYPES];
 
 static const wgf_gfx_priv_model_hooks_t *model_hooks;

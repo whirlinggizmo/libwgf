@@ -71,7 +71,9 @@ BENCHES = ('shadowbench', 'spritebench')
 # A benchmark timed as helix times its contenders (../helix's tools/speed/README.md): each
 # query a page run of its own, unthrottled, its frame rate cap lifted, untraced, the
 # program timing its frames itself and printing helix's JSON line ("contender").
-SPEED_BENCHES = {'bunnymark': ('count=10000', 'count=50000', 'incrementCount=1000')}
+SPEED_BENCHES = {'bunnymark': ('count=10000', 'count=50000', 'incrementCount=1000',
+                               'batch=1&count=10000', 'batch=1&count=50000', 'batch=1&count=100000',
+                               'batch=1&count=150000', 'batch=1&count=200000', 'batch=1&incrementCount=10000')}
 NO_ROOM = 'no room for another actor'  # what a sprite past the actor limit logs
 UNCAPPED = ('--disable-gpu-vsync', '--disable-frame-rate-limit')
 GPU = """(() => { const gl = document.createElement('canvas').getContext('webgl2');
@@ -261,12 +263,12 @@ def run_speed_bench(name, args, found):
         if lines[0]['mode'] == 'ramp':
             held = statistics.median(line['max_count'] for line in lines)
             limit = any(line.get('limit') for line in lines)
-            print(f'  {query:<20} most held {held:,.0f}' + (' (the actor limit, not the frame rate)' if limit else ''))
+            print(f'  {query:<28} most held {held:,.0f}' + (' (the actor limit, not the frame rate)' if limit else ''))
         else:
             mean = statistics.median(line['mean_ms'] for line in lines)
             p95 = statistics.median(line['p95_ms'] for line in lines)
             limit = any(line.get('limit') for line in lines)
-            print(f'  {query:<20} {lines[0]["count"]:>6} bunnies  mean {mean:7.2f} ms  95th {p95:7.2f} ms'
+            print(f'  {query:<28} {lines[0]["count"]:>6} bunnies  mean {mean:7.2f} ms  95th {p95:7.2f} ms'
                   + (f' (asked {lines[0]["asked"]:,}: the actor limit)' if limit else ''))
     print(f'  on {cpu_name()}, {gpu or "an unknown GPU"}, {args.display}, unthrottled, frame rate cap lifted')
     return 0

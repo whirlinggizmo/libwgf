@@ -591,6 +591,26 @@ class Reach {
 		"wgf_sound_get_polyphony",
 		"wgf_sound_play",
 		"wgf_sound_set_polyphony",
+		"wgf_sprite_batch_create",
+		"wgf_sprite_batch_get_alpha_cutoff",
+		"wgf_sprite_batch_get_alpha_mode",
+		"wgf_sprite_batch_get_count",
+		"wgf_sprite_batch_get_pivot",
+		"wgf_sprite_batch_get_positions",
+		"wgf_sprite_batch_get_regions",
+		"wgf_sprite_batch_get_rotations",
+		"wgf_sprite_batch_get_sizes",
+		"wgf_sprite_batch_get_texture",
+		"wgf_sprite_batch_get_tints",
+		"wgf_sprite_batch_set_alpha_mode",
+		"wgf_sprite_batch_set_count",
+		"wgf_sprite_batch_set_pivot",
+		"wgf_sprite_batch_set_positions",
+		"wgf_sprite_batch_set_regions",
+		"wgf_sprite_batch_set_rotations",
+		"wgf_sprite_batch_set_sizes",
+		"wgf_sprite_batch_set_texture",
+		"wgf_sprite_batch_set_tints",
 		"wgf_sprite_create",
 		"wgf_sprite_get_alpha_cutoff",
 		"wgf_sprite_get_alpha_mode",
@@ -799,7 +819,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...790) 0];
+	static final counts:Array<Int> = [for (_ in 0...810) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

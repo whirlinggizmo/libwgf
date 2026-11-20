@@ -470,6 +470,25 @@ class Main {
 			&& near(sprite.getAlphaCutoff(), 0.25) && sprite.setAlphaMode(AlphaMode.BLEND, 0.5), "its alpha mode");
 		expect(sprite.setFacing(SpriteFacing.CAMERA_FIXED_Y) && sprite.getFacing() == SpriteFacing.CAMERA_FIXED_Y
 			&& sprite.setFacing(SpriteFacing.CAMERA), "its facing on a 3D stage");
+		final quads = SpriteBatch.create(tiles);
+		quads.setParent(group);
+		final floats:Array<Float> = [0, 0, 0, 0, 0, 0, 0, 0];
+		final ints:Array<Int> = [0, 0];
+		expect(quads.getKind() == ActorKind.SPRITE_BATCH && quads.setTexture(tiles) && quads.getTexture() == tiles,
+			"a sprite batch's texture");
+		expect(quads.setCount(2) && quads.getCount() == 2, "its count");
+		expect(quads.setPositions(0, [40, 200, 60, 200]) == 2 && quads.getPositions(0, floats) == 4 && near(floats[2], 60),
+			"its positions");
+		expect(quads.setSizes(0, [16, 16, 8, 8]) == 2 && quads.getSizes(1, floats) == 2 && near(floats[0], 8), "its sizes");
+		expect(quads.setRotations(0, [0, 0.5]) == 2 && quads.getRotations(1, floats) == 1 && near(floats[0], 0.5),
+			"its rotations");
+		expect(quads.setRegions(0, [0, 0, 16, 16]) == 1 && quads.getRegions(0, floats) == 8 && near(floats[2], 16),
+			"its regions");
+		expect(quads.setTints(0, [cast white, cast white]) == 2 && quads.getTints(0, ints) == 2 && ints[1] == cast white,
+			"its tints");
+		expect(quads.setPivot(0, 0) && near(quads.getPivot().y, 0), "its pivot");
+		expect(quads.setAlphaMode(AlphaMode.ADD, 0.5) && quads.getAlphaMode() == AlphaMode.ADD
+			&& near(quads.getAlphaCutoff(), 0.5), "its alpha mode");
 
 		final label = Text.create(font);
 		label.setParent(hud);

@@ -411,7 +411,8 @@ export declare const WGF_ACTOR_KIND_LIGHT: 10;
 export declare const WGF_ACTOR_KIND_MODEL: 11;
 export declare const WGF_ACTOR_KIND_SHAPE3D: 12;
 export declare const WGF_ACTOR_KIND_EMITTER3D: 13;
-export type wgf_actor_kind_t = typeof WGF_ACTOR_KIND_NONE | typeof WGF_ACTOR_KIND_PLAIN | typeof WGF_ACTOR_KIND_STAGE2D | typeof WGF_ACTOR_KIND_SPRITE | typeof WGF_ACTOR_KIND_CAMERA2D | typeof WGF_ACTOR_KIND_TEXT | typeof WGF_ACTOR_KIND_SHAPE2D | typeof WGF_ACTOR_KIND_EMITTER2D | typeof WGF_ACTOR_KIND_CAMERA3D | typeof WGF_ACTOR_KIND_STAGE3D | typeof WGF_ACTOR_KIND_LIGHT | typeof WGF_ACTOR_KIND_MODEL | typeof WGF_ACTOR_KIND_SHAPE3D | typeof WGF_ACTOR_KIND_EMITTER3D;
+export declare const WGF_ACTOR_KIND_SPRITE_BATCH: 14;
+export type wgf_actor_kind_t = typeof WGF_ACTOR_KIND_NONE | typeof WGF_ACTOR_KIND_PLAIN | typeof WGF_ACTOR_KIND_STAGE2D | typeof WGF_ACTOR_KIND_SPRITE | typeof WGF_ACTOR_KIND_CAMERA2D | typeof WGF_ACTOR_KIND_TEXT | typeof WGF_ACTOR_KIND_SHAPE2D | typeof WGF_ACTOR_KIND_EMITTER2D | typeof WGF_ACTOR_KIND_CAMERA3D | typeof WGF_ACTOR_KIND_STAGE3D | typeof WGF_ACTOR_KIND_LIGHT | typeof WGF_ACTOR_KIND_MODEL | typeof WGF_ACTOR_KIND_SHAPE3D | typeof WGF_ACTOR_KIND_EMITTER3D | typeof WGF_ACTOR_KIND_SPRITE_BATCH;
 
 /**
  * What wgf_actor_destroy does with the actor's children.
@@ -5413,6 +5414,141 @@ export declare function wgf_shape3d_set_color(shape: wgf_actor_t | 0, color: wgf
  * Default: white. Alpha below 255 makes it see-through.
  */
 export declare function wgf_shape3d_get_color(shape: wgf_actor_t | 0): wgf_color_t;
+
+/**
+ * A batch of `texture` with no quads (0 for no texture: it draws nothing). 0 when there is
+ * no room for another actor.
+ */
+export declare function wgf_sprite_batch_create(texture: wgf_texture_t | 0): wgf_actor_t;
+
+/**
+ * False for a handle that isn't a batch, or a texture that isn't one (0 is none).
+ */
+export declare function wgf_sprite_batch_set_texture(batch: wgf_actor_t | 0, texture: wgf_texture_t | 0): boolean;
+
+/**
+ * False for a handle that isn't a batch, or a texture that isn't one (0 is none).
+ */
+export declare function wgf_sprite_batch_get_texture(batch: wgf_actor_t | 0): wgf_texture_t;
+
+/**
+ * How many quads it draws: more are made as above, fewer drop those past the count. False
+ * for a handle that isn't a batch, a count below 0 or over 16777216, or no memory for it.
+ */
+export declare function wgf_sprite_batch_set_count(batch: wgf_actor_t | 0, count: number): boolean;
+
+/**
+ * How many quads it draws: more are made as above, fewer drop those past the count. False
+ * for a handle that isn't a batch, a count below 0 or over 16777216, or no memory for it.
+ */
+export declare function wgf_sprite_batch_get_count(batch: wgf_actor_t | 0): number;
+
+/**
+ * The quads' positions from quad `first` on, x and y in turn (`count` floats, count / 2
+ * quads): where each one's pivot goes, in the batch's units. Quads past the batch's count
+ * are left out; returns how many quads it wrote (0 for a handle that isn't a batch, a
+ * `first` outside the batch, or an odd count). The getter reads them back into `out`, as
+ * many as fit in `count` floats, returning how many floats it filled.
+ */
+export declare function wgf_sprite_batch_set_positions(batch: wgf_actor_t | 0, first: number, positions: readonly number[] | Float32Array | Float64Array | null): number;
+
+/**
+ * The quads' positions from quad `first` on, x and y in turn (`count` floats, count / 2
+ * quads): where each one's pivot goes, in the batch's units. Quads past the batch's count
+ * are left out; returns how many quads it wrote (0 for a handle that isn't a batch, a
+ * `first` outside the batch, or an odd count). The getter reads them back into `out`, as
+ * many as fit in `count` floats, returning how many floats it filled.
+ */
+export declare function wgf_sprite_batch_get_positions(batch: wgf_actor_t | 0, first: number, out: number[] | Float32Array | Float64Array | null): number;
+
+/**
+ * The quads' sizes, width and height in turn, as positions are; a width or height of 0 or
+ * less is the region's size in texels.
+ */
+export declare function wgf_sprite_batch_set_sizes(batch: wgf_actor_t | 0, first: number, sizes: readonly number[] | Float32Array | Float64Array | null): number;
+
+/**
+ * The quads' sizes, width and height in turn, as positions are; a width or height of 0 or
+ * less is the region's size in texels.
+ */
+export declare function wgf_sprite_batch_get_sizes(batch: wgf_actor_t | 0, first: number, out: number[] | Float32Array | Float64Array | null): number;
+
+/**
+ * The quads' turns, in radians about their pivots, one a quad (`count` floats, count
+ * quads), clockwise on a 2D stage as an actor's turn is.
+ */
+export declare function wgf_sprite_batch_set_rotations(batch: wgf_actor_t | 0, first: number, radians: readonly number[] | Float32Array | Float64Array | null): number;
+
+/**
+ * The quads' turns, in radians about their pivots, one a quad (`count` floats, count
+ * quads), clockwise on a 2D stage as an actor's turn is.
+ */
+export declare function wgf_sprite_batch_get_rotations(batch: wgf_actor_t | 0, first: number, out: number[] | Float32Array | Float64Array | null): number;
+
+/**
+ * The quads' regions of the texture, x, y, width, and height in its pixels from the
+ * top-left, four floats a quad (count / 4 quads; a count not a multiple of 4 writes none),
+ * each rounded to a whole pixel and clamped to 0..32767; a width or height of 0 shows the
+ * whole texture.
+ */
+export declare function wgf_sprite_batch_set_regions(batch: wgf_actor_t | 0, first: number, regions: readonly number[] | Float32Array | Float64Array | null): number;
+
+/**
+ * The quads' regions of the texture, x, y, width, and height in its pixels from the
+ * top-left, four floats a quad (count / 4 quads; a count not a multiple of 4 writes none),
+ * each rounded to a whole pixel and clamped to 0..32767; a width or height of 0 shows the
+ * whole texture.
+ */
+export declare function wgf_sprite_batch_get_regions(batch: wgf_actor_t | 0, first: number, out: number[] | Float32Array | Float64Array | null): number;
+
+/**
+ * The quads' tints, one a quad (count quads), each a wgf_color_t (0xRRGGBBAA) as an int.
+ */
+export declare function wgf_sprite_batch_set_tints(batch: wgf_actor_t | 0, first: number, tints: readonly number[] | Int32Array | null): number;
+
+/**
+ * The quads' tints, one a quad (count quads), each a wgf_color_t (0xRRGGBBAA) as an int.
+ */
+export declare function wgf_sprite_batch_get_tints(batch: wgf_actor_t | 0, first: number, out: number[] | Int32Array | null): number;
+
+/**
+ * The point of every quad at its position, which it turns about, as a fraction of its size:
+ * 0.5, 0.5 its center (the default), 0, 0 its top-left. False for a handle that isn't a
+ * batch.
+ */
+export declare function wgf_sprite_batch_set_pivot(batch: wgf_actor_t | 0, x: number, y: number): boolean;
+
+/**
+ * The point of every quad at its position, which it turns about, as a fraction of its size:
+ * 0.5, 0.5 its center (the default), 0, 0 its top-left. False for a handle that isn't a
+ * batch.
+ */
+export declare function wgf_sprite_batch_get_pivot<T extends number[] | Float32Array | Float64Array>(batch: wgf_actor_t | 0, into: T): T;
+export declare function wgf_sprite_batch_get_pivot(batch: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * How its quads use their texels' alpha (wgf_material.h's modes; default BLEND), and the
+ * cutoff MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, MASK
+ * cuts out and draws the rest opaque, ADD adds. False for a handle that isn't a batch, or a
+ * mode that isn't one.
+ */
+export declare function wgf_sprite_batch_set_alpha_mode(batch: wgf_actor_t | 0, mode: wgf_alpha_mode_t, cutoff: number): boolean;
+
+/**
+ * How its quads use their texels' alpha (wgf_material.h's modes; default BLEND), and the
+ * cutoff MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, MASK
+ * cuts out and draws the rest opaque, ADD adds. False for a handle that isn't a batch, or a
+ * mode that isn't one.
+ */
+export declare function wgf_sprite_batch_get_alpha_mode(batch: wgf_actor_t | 0): wgf_alpha_mode_t;
+
+/**
+ * How its quads use their texels' alpha (wgf_material.h's modes; default BLEND), and the
+ * cutoff MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, MASK
+ * cuts out and draws the rest opaque, ADD adds. False for a handle that isn't a batch, or a
+ * mode that isn't one.
+ */
+export declare function wgf_sprite_batch_get_alpha_cutoff(batch: wgf_actor_t | 0): number;
 
 /**
  * A 2D stage, with no camera. 0 when there is no room for another actor.

@@ -4341,6 +4341,126 @@ export declare const Sprite: {
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
+export type SpriteBatch = raw.wgf_actor_t;
+export declare const SpriteBatch: {
+    /**
+     * A batch of `texture` with no quads (0 for no texture: it draws nothing). 0 when there is
+     * no room for another actor.
+     */
+    readonly create: typeof raw.wgf_sprite_batch_create;
+    /**
+     * False for a handle that isn't a batch, or a texture that isn't one (0 is none).
+     */
+    readonly setTexture: typeof raw.wgf_sprite_batch_set_texture;
+    /**
+     * False for a handle that isn't a batch, or a texture that isn't one (0 is none).
+     */
+    readonly getTexture: typeof raw.wgf_sprite_batch_get_texture;
+    /**
+     * How many quads it draws: more are made as above, fewer drop those past the count. False
+     * for a handle that isn't a batch, a count below 0 or over 16777216, or no memory for it.
+     */
+    readonly setCount: typeof raw.wgf_sprite_batch_set_count;
+    /**
+     * How many quads it draws: more are made as above, fewer drop those past the count. False
+     * for a handle that isn't a batch, a count below 0 or over 16777216, or no memory for it.
+     */
+    readonly getCount: typeof raw.wgf_sprite_batch_get_count;
+    /**
+     * The quads' positions from quad `first` on, x and y in turn (`count` floats, count / 2
+     * quads): where each one's pivot goes, in the batch's units. Quads past the batch's count
+     * are left out; returns how many quads it wrote (0 for a handle that isn't a batch, a
+     * `first` outside the batch, or an odd count). The getter reads them back into `out`, as
+     * many as fit in `count` floats, returning how many floats it filled.
+     */
+    readonly setPositions: typeof raw.wgf_sprite_batch_set_positions;
+    /**
+     * The quads' positions from quad `first` on, x and y in turn (`count` floats, count / 2
+     * quads): where each one's pivot goes, in the batch's units. Quads past the batch's count
+     * are left out; returns how many quads it wrote (0 for a handle that isn't a batch, a
+     * `first` outside the batch, or an odd count). The getter reads them back into `out`, as
+     * many as fit in `count` floats, returning how many floats it filled.
+     */
+    readonly getPositions: typeof raw.wgf_sprite_batch_get_positions;
+    /**
+     * The quads' sizes, width and height in turn, as positions are; a width or height of 0 or
+     * less is the region's size in texels.
+     */
+    readonly setSizes: typeof raw.wgf_sprite_batch_set_sizes;
+    /**
+     * The quads' sizes, width and height in turn, as positions are; a width or height of 0 or
+     * less is the region's size in texels.
+     */
+    readonly getSizes: typeof raw.wgf_sprite_batch_get_sizes;
+    /**
+     * The quads' turns, in radians about their pivots, one a quad (`count` floats, count
+     * quads), clockwise on a 2D stage as an actor's turn is.
+     */
+    readonly setRotations: typeof raw.wgf_sprite_batch_set_rotations;
+    /**
+     * The quads' turns, in radians about their pivots, one a quad (`count` floats, count
+     * quads), clockwise on a 2D stage as an actor's turn is.
+     */
+    readonly getRotations: typeof raw.wgf_sprite_batch_get_rotations;
+    /**
+     * The quads' regions of the texture, x, y, width, and height in its pixels from the
+     * top-left, four floats a quad (count / 4 quads; a count not a multiple of 4 writes none),
+     * each rounded to a whole pixel and clamped to 0..32767; a width or height of 0 shows the
+     * whole texture.
+     */
+    readonly setRegions: typeof raw.wgf_sprite_batch_set_regions;
+    /**
+     * The quads' regions of the texture, x, y, width, and height in its pixels from the
+     * top-left, four floats a quad (count / 4 quads; a count not a multiple of 4 writes none),
+     * each rounded to a whole pixel and clamped to 0..32767; a width or height of 0 shows the
+     * whole texture.
+     */
+    readonly getRegions: typeof raw.wgf_sprite_batch_get_regions;
+    /**
+     * The quads' tints, one a quad (count quads), each a wgf_color_t (0xRRGGBBAA) as an int.
+     */
+    readonly setTints: typeof raw.wgf_sprite_batch_set_tints;
+    /**
+     * The quads' tints, one a quad (count quads), each a wgf_color_t (0xRRGGBBAA) as an int.
+     */
+    readonly getTints: typeof raw.wgf_sprite_batch_get_tints;
+    /**
+     * The point of every quad at its position, which it turns about, as a fraction of its size:
+     * 0.5, 0.5 its center (the default), 0, 0 its top-left. False for a handle that isn't a
+     * batch.
+     */
+    readonly setPivot: typeof raw.wgf_sprite_batch_set_pivot;
+    /**
+     * The point of every quad at its position, which it turns about, as a fraction of its size:
+     * 0.5, 0.5 its center (the default), 0, 0 its top-left. False for a handle that isn't a
+     * batch.
+     */
+    readonly getPivot: typeof raw.wgf_sprite_batch_get_pivot;
+    /**
+     * How its quads use their texels' alpha (wgf_material.h's modes; default BLEND), and the
+     * cutoff MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, MASK
+     * cuts out and draws the rest opaque, ADD adds. False for a handle that isn't a batch, or a
+     * mode that isn't one.
+     */
+    readonly setAlphaMode: typeof raw.wgf_sprite_batch_set_alpha_mode;
+    /**
+     * How its quads use their texels' alpha (wgf_material.h's modes; default BLEND), and the
+     * cutoff MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, MASK
+     * cuts out and draws the rest opaque, ADD adds. False for a handle that isn't a batch, or a
+     * mode that isn't one.
+     */
+    readonly getAlphaMode: typeof raw.wgf_sprite_batch_get_alpha_mode;
+    /**
+     * How its quads use their texels' alpha (wgf_material.h's modes; default BLEND), and the
+     * cutoff MASK cuts out below (0..1, clamped; default 0.5): OPAQUE draws no blending, MASK
+     * cuts out and draws the rest opaque, ADD adds. False for a handle that isn't a batch, or a
+     * mode that isn't one.
+     */
+    readonly getAlphaCutoff: typeof raw.wgf_sprite_batch_get_alpha_cutoff;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
+};
+/** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Stage2d = raw.wgf_actor_t;
 export declare const Stage2d: {
     /**
@@ -5643,7 +5763,7 @@ export declare const World: {
 export type ActorDestroy = raw.wgf_actor_destroy_t;
 export declare const ActorDestroy: { readonly DESTROY_CHILDREN: ActorDestroy; readonly KEEP_CHILDREN: ActorDestroy; };
 export type ActorKind = raw.wgf_actor_kind_t;
-export declare const ActorKind: { readonly NONE: ActorKind; readonly PLAIN: ActorKind; readonly STAGE2D: ActorKind; readonly SPRITE: ActorKind; readonly CAMERA2D: ActorKind; readonly TEXT: ActorKind; readonly SHAPE2D: ActorKind; readonly EMITTER2D: ActorKind; readonly CAMERA3D: ActorKind; readonly STAGE3D: ActorKind; readonly LIGHT: ActorKind; readonly MODEL: ActorKind; readonly SHAPE3D: ActorKind; readonly EMITTER3D: ActorKind; };
+export declare const ActorKind: { readonly NONE: ActorKind; readonly PLAIN: ActorKind; readonly STAGE2D: ActorKind; readonly SPRITE: ActorKind; readonly CAMERA2D: ActorKind; readonly TEXT: ActorKind; readonly SHAPE2D: ActorKind; readonly EMITTER2D: ActorKind; readonly CAMERA3D: ActorKind; readonly STAGE3D: ActorKind; readonly LIGHT: ActorKind; readonly MODEL: ActorKind; readonly SHAPE3D: ActorKind; readonly EMITTER3D: ActorKind; readonly SPRITE_BATCH: ActorKind; };
 export type AlphaMode = raw.wgf_alpha_mode_t;
 export declare const AlphaMode: { readonly OPAQUE: AlphaMode; readonly MASK: AlphaMode; readonly BLEND: AlphaMode; readonly ADD: AlphaMode; };
 export type AssetCacheMode = raw.wgf_asset_cache_mode_t;

@@ -35,6 +35,7 @@ typedef enum wgf_core_priv_part_order_t {
     WGF_CORE_PRIV_PART_MATERIALS, /* materials (libwgf/gfx/src/material/) */
     WGF_CORE_PRIV_PART_SHADERS,   /* custom shaders (libwgf/gfx/src/material/wgf_gfx_shader.c), after the materials holding them */
     WGF_CORE_PRIV_PART_SPRITES,   /* a 3D stage's instanced sprites (libwgf/gfx/src/sprite/wgf_gfx_sprite_batch.c) */
+    WGF_CORE_PRIV_PART_SPRITE_BATCHES, /* 2D sprite batches' GPU buffers (libwgf/gfx/src/sprite/wgf_gfx_sprite_batch2d.c) */
     WGF_CORE_PRIV_PART_PARTICLES, /* emitters (libwgf/gfx/src/emitter/wgf_gfx_emitter.c): after the ecs, which may end one */
     WGF_CORE_PRIV_PART_UI,        /* layout and widgets (ui/) */
     WGF_CORE_PRIV_PART_AUDIO,     /* sounds, voices, the mixer (audio/) */

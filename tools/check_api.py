@@ -133,6 +133,7 @@ ACTOR_FACETS = ('sprite', 'text', 'shape2d', 'shape3d', 'emitter2d', 'model', 'l
 # isn't their prefix's kind. A new one is listed here with what it is made from.
 MADE_FROM = {
     'wgf_sprite_create': 'a sprite is made from its texture',
+    'wgf_sprite_batch_create': 'a sprite batch is made from its texture',
     'wgf_text_create': 'a text is made from its font',
     'wgf_model_create': 'a model is made from its mesh',
     'wgf_voice_create': 'a voice is made from its sound',

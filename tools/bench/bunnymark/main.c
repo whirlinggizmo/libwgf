@@ -16,6 +16,7 @@
 #include "wgf_render.h"
 #include "wgf_resource.h"
 #include "wgf_sprite.h"
+#include "wgf_sprite_batch.h"
 #include "wgf_stage2d.h"
 #include "wgf_texture.h"
 #include "wgf_window.h"
@@ -34,11 +35,13 @@
  * libwgf game would write it (helix-legacy's row, a Sprite2D each, is the like of it).
  *
  * The bunny is raylib's wabbit_alpha.png, as helix's is (examples/assets/CREDITS.md).
- * Differs from helix's: a sprite is an actor, of which there are at most 65535, so past
- * about 65000 bunnies the program says so in its line ("limit") instead of drawing them.
+ * Two ways to draw them: a sprite actor a bunny (the default), of which there are at most
+ * 65535, so past about 65000 bunnies the program says so in its line ("limit") instead of
+ * drawing them; or, with batch=1, one sprite batch (wgf_sprite_batch.h) holding every bunny
+ * as a quad, its positions written as one array a frame, with no limit but memory's.
  *
  * Options, from the page's query (natively, --count=N and so on): count=N, or
- * incrementCount=N with startCount=M. A count run draws 120 frames to warm up, then
+ * incrementCount=N with startCount=M, and batch=1. A count run draws 120 frames to warm up, then
  * times 600 frame to frame, and prints helix's JSON line (mean_ms, median_ms, p95_ms); a
  * ramp starts at M bunnies (N without it), adds N each 60 frames while those averaged 59
  * frames a second or better, and prints the largest count that held (max_count). Then it
@@ -49,7 +52,7 @@
 #define BUNNY 32
 #define WARMUP 120
 #define TIMED 600
-#define MAX_BUNNIES 65536
+#define MAX_SPRITES 65536
 
 typedef struct bunny_t {
     float x, y, vx, vy;
@@ -58,9 +61,12 @@ typedef struct bunny_t {
 static struct {
     wgf_actor_t stage;
     wgf_texture_t texture;
-    wgf_actor_t sprites[MAX_BUNNIES];
-    bunny_t bunnies[MAX_BUNNIES];
-    int count; /* bunnies made */
+    wgf_actor_t sprites[MAX_SPRITES];
+    bunny_t *bunnies;
+    float *positions; /* the batch's, x and y in turn */
+    int count, capacity; /* bunnies made, and room for */
+    bool batched;
+    wgf_actor_t batch;
     bool limit; /* a sprite refused: no room for another actor */
     int asked, increment, start; /* the options */
     int frame; /* -1 until the first bunnies are made */
@@ -95,26 +101,52 @@ static double now_ms(void)
 static void spawn(int n)
 {
     int i;
-    for (i = 0; i < n && b.count < MAX_BUNNIES; i++) {
-        bunny_t *bunny = &b.bunnies[b.count];
-        const wgf_actor_t sprite = wgf_sprite_create(b.texture);
-        int red, green, blue;
-        if (sprite == 0) {
+    if (b.count + n > b.capacity) {
+        int capacity = b.capacity > 0 ? b.capacity : 1024;
+        bunny_t *bunnies;
+        float *positions;
+        while (capacity < b.count + n) capacity *= 2;
+        bunnies = (bunny_t *)realloc(b.bunnies, sizeof(bunny_t) * (size_t)capacity);
+        if (bunnies != NULL) b.bunnies = bunnies;
+        positions = (float *)realloc(b.positions, sizeof(float) * 2 * (size_t)capacity);
+        if (positions != NULL) b.positions = positions;
+        if (bunnies == NULL || positions == NULL) {
             b.limit = true;
             return;
+        }
+        b.capacity = capacity;
+    }
+    if (b.batched && !wgf_sprite_batch_set_count(b.batch, b.count + n)) {
+        b.limit = true;
+        return;
+    }
+    for (i = 0; i < n; i++) {
+        bunny_t *bunny = &b.bunnies[b.count];
+        wgf_actor_t sprite = 0;
+        int red, green, blue, tint;
+        if (!b.batched) {
+            if (b.count == MAX_SPRITES || (sprite = wgf_sprite_create(b.texture)) == 0) {
+                b.limit = true;
+                return;
+            }
         }
         bunny->x = (float)rnd(0, SCREEN_W - BUNNY);
         bunny->y = (float)rnd(40, SCREEN_H - BUNNY);
         bunny->vx = (float)rnd(-250, 250) / 60.0f;
         bunny->vy = (float)rnd(-250, 250) / 60.0f;
         red = rnd(50, 240), green = rnd(80, 240), blue = rnd(100, 240);
-        wgf_sprite_set_size(sprite, BUNNY, BUNNY);
-        wgf_sprite_set_pivot(sprite, 0, 0); /* raylib's DrawTexture places the top-left */
-        wgf_sprite_set_tint(sprite, ((uint32_t)red << 24) | ((uint32_t)green << 16) | ((uint32_t)blue << 8) | 0xFFu);
-        wgf_actor_set_parent(sprite, b.stage);
-        b.sprites[b.count++] = sprite;
+        tint = (int)(((uint32_t)red << 24) | ((uint32_t)green << 16) | ((uint32_t)blue << 8) | 0xFFu);
+        if (b.batched) {
+            wgf_sprite_batch_set_tints(b.batch, b.count, &tint, 1);
+        } else {
+            wgf_sprite_set_size(sprite, BUNNY, BUNNY);
+            wgf_sprite_set_pivot(sprite, 0, 0); /* raylib's DrawTexture places the top-left */
+            wgf_sprite_set_tint(sprite, (uint32_t)tint);
+            wgf_actor_set_parent(sprite, b.stage);
+            b.sprites[b.count] = sprite;
+        }
+        b.count++;
     }
-    if (b.count == MAX_BUNNIES && i < n) b.limit = true;
 }
 
 static int compare(const void *x, const void *y)
@@ -137,6 +169,11 @@ static void init(void *user)
     wgf_render_set_clear_color(0xF5F5F5FFu);
     b.stage = wgf_stage2d_create();
     b.texture = wgf_texture_create("textures/wabbit_alpha.png");
+    if (b.batched) {
+        b.batch = wgf_sprite_batch_create(b.texture);
+        wgf_sprite_batch_set_pivot(b.batch, 0, 0); /* raylib's DrawTexture places the top-left */
+        wgf_actor_set_parent(b.batch, b.stage);
+    }
 }
 
 static void frame(void *user)
@@ -162,8 +199,14 @@ static void frame(void *user)
         bunny->y += bunny->vy;
         if (bunny->x + BUNNY / 2 > SCREEN_W || bunny->x + BUNNY / 2 < 0) bunny->vx *= -1;
         if (bunny->y + BUNNY / 2 > SCREEN_H || bunny->y + BUNNY / 2 - 40 < 0) bunny->vy *= -1;
-        wgf_actor_set_position(b.sprites[i], (float)(int)bunny->x, (float)(int)bunny->y, 0);
+        if (b.batched) {
+            b.positions[2 * i] = (float)(int)bunny->x;
+            b.positions[2 * i + 1] = (float)(int)bunny->y;
+        } else {
+            wgf_actor_set_position(b.sprites[i], (float)(int)bunny->x, (float)(int)bunny->y, 0);
+        }
     }
+    if (b.batched) wgf_sprite_batch_set_positions(b.batch, 0, b.positions, 2 * b.count);
     wgf_stage2d_draw(b.stage);
 
     if (!b.increment) {
@@ -174,10 +217,10 @@ static void frame(void *user)
             for (i = 0; i < TIMED; i++) sum += sorted[i];
             qsort(sorted, TIMED, sizeof(double), compare);
             mean = sum / TIMED;
-            printf("{\"contender\":\"libwgf\",\"target\":\"page\",\"mode\":\"count\",\"count\":%d,\"asked\":%d,"
+            printf("{\"contender\":\"libwgf\",\"draw\":\"%s\",\"target\":\"page\",\"mode\":\"count\",\"count\":%d,\"asked\":%d,"
                    "\"limit\":%s,\"mean_ms\":%.6f,\"median_ms\":%.6f,\"p95_ms\":%.6f,"
                    "\"fps\":%.3f}\n",
-                   b.count, b.asked, b.limit ? "true" : "false", mean,
+                   b.batched ? "batch" : "actors", b.count, b.asked, b.limit ? "true" : "false", mean,
                    sorted[TIMED / 2], sorted[TIMED * 95 / 100], 1000.0 / mean);
             fflush(stdout);
             finish();
@@ -189,9 +232,9 @@ static void frame(void *user)
                 b.max_count = b.count;
                 spawn(b.increment);
             } else {
-                printf("{\"contender\":\"libwgf\",\"target\":\"page\",\"mode\":\"ramp\",\"max_count\":%d,"
+                printf("{\"contender\":\"libwgf\",\"draw\":\"%s\",\"target\":\"page\",\"mode\":\"ramp\",\"max_count\":%d,"
                        "\"limit\":%s,\"last_fps\":%.3f}\n",
-                       b.max_count, b.limit ? "true" : "false", fps);
+                       b.batched ? "batch" : "actors", b.max_count, b.limit ? "true" : "false", fps);
                 fflush(stdout);
                 finish();
             }
@@ -232,6 +275,7 @@ int main(int argc, char **argv)
     b.increment = option(options, "incrementCount", 0);
     b.start = option(options, "startCount", 0);
     if (b.increment) b.asked = b.start > 0 ? b.start : b.increment;
+    b.batched = option(options, "batch", 0) != 0;
     wgf_window_set_title("libwgf bunnymark");
     wgf_window_set_size(SCREEN_W, SCREEN_H);
     wgf_window_set_vsync(false);
