@@ -64,6 +64,11 @@ wgf_core_priv_resource_t *wgf_core_priv_resource_get_at(wgf_handle_t resource, c
  * bad path or a missing file FAILED in a later update). 0 only when the kind isn't
  * registered or its pool is full. */
 wgf_handle_t wgf_core_priv_resource_create(wgf_core_priv_handle_kind_t kind, const char *path);
+/* The same, its file loaded with `loader` in place of the kind's: for a kind whose loading
+ * depends on what the create was given beside the path (a cubemap's layout). A path already
+ * created gives what it gave before, however that was loaded. */
+wgf_handle_t wgf_core_priv_resource_create_with(wgf_core_priv_handle_kind_t kind, const char *path,
+                                               const wgf_core_priv_loader_t *loader);
 
 /* The live resource of `kind` created from `path`, with one more reference, or 0: for a
  * module that may have one ready without loading it (a font fontstash still has). */

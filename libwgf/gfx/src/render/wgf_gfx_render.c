@@ -249,6 +249,26 @@ bool wgf_gfx_priv_render_is_running(void)
     return setup;
 }
 
+sg_image wgf_gfx_priv_render_white_cube(sg_view *view)
+{
+    static const uint32_t white[6] = {0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu};
+    sg_image_desc image_desc;
+    sg_view_desc view_desc;
+    sg_image image;
+    memset(&image_desc, 0, sizeof(image_desc));
+    image_desc.type = SG_IMAGETYPE_CUBE;
+    image_desc.width = image_desc.height = 1;
+    image_desc.pixel_format = SG_PIXELFORMAT_RGBA8;
+    image_desc.data.mip_levels[0].ptr = white;
+    image_desc.data.mip_levels[0].size = sizeof(white);
+    image_desc.label = "wgf-white-cube";
+    image = sg_make_image(&image_desc);
+    memset(&view_desc, 0, sizeof(view_desc));
+    view_desc.texture.image = image;
+    *view = sg_make_view(&view_desc);
+    return image;
+}
+
 /* ---- clipping -------------------------------------------------------------- */
 
 static void warn_clips(const char *what)

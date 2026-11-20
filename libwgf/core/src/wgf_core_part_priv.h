@@ -40,6 +40,7 @@ typedef enum wgf_core_priv_part_order_t {
     WGF_CORE_PRIV_PART_MESHES,    /* meshes (libwgf/gfx/src/mesh/), stopped before the materials they hold */
     WGF_CORE_PRIV_PART_MATERIALS, /* materials (libwgf/gfx/src/material/) */
     WGF_CORE_PRIV_PART_SHADERS,   /* custom shaders (libwgf/gfx/src/material/wgf_gfx_shader.c), after the materials holding them */
+    WGF_CORE_PRIV_PART_CUBEMAPS,  /* cubemaps (libwgf/gfx/src/texture/wgf_gfx_cubemap.c), after the materials */
     WGF_CORE_PRIV_PART_SPRITES,   /* a 3D stage's instanced sprites (libwgf/gfx/src/sprite/wgf_gfx_sprite_batch.c) */
     WGF_CORE_PRIV_PART_SHEETS,    /* sprites playing sheets' clips (libwgf/gfx/src/sprite/wgf_gfx_sheet.c) */
     WGF_CORE_PRIV_PART_TILEMAPS,  /* Tiled maps and their placed layers' animated tiles (libwgf/gfx/src/tilemap/) */

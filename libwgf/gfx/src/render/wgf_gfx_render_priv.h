@@ -33,6 +33,10 @@ bool wgf_gfx_priv_is_in_frame(void);
  * inside a frame, so a draw outside one can't land in the next. */
 bool wgf_gfx_priv_render_is_running(void);
 
+/* A white cube, a texel a face, and a view of it: what a custom shader's textureCube samples
+ * with no cubemap set, or one still loading. The caller destroys both. */
+sg_image wgf_gfx_priv_render_white_cube(sg_view *view);
+
 /* The frame's immediate mode recording (sokol_gl), for gfx's drawing code: made
  * current, with the 2D projection -- logical pixels from the top-left, y down,
  * blended, no depth -- and an identity model-view. Call before recording, since

@@ -52,6 +52,7 @@ wgf_layer(gfx
         src/texture/wgf_gfx_image.c
         src/texture/wgf_gfx_image_gen.c
         src/texture/wgf_gfx_image_texture.c
+        src/texture/wgf_gfx_cubemap.c
         src/texture/wgf_gfx_ktx.c
         src/texture/wgf_gfx_stb_impl.c
         src/texture/wgf_gfx_png.c
@@ -111,6 +112,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_emitter_test)
         wgf_test(gfx wgf_gfx_target_test)
         wgf_test(gfx wgf_gfx_shader_test)
+        wgf_test(gfx wgf_gfx_cubemap_test)
     endif()
     # pixels, read back from WebGL2 in a browser
     wgf_web_test(gfx wgf_gfx_frame_web_test 1)
@@ -125,7 +127,8 @@ if(WGF_TESTS)
     wgf_window_test(gfx wgf_gfx_texture_read_window_test)
     wgf_window_test(gfx wgf_gfx_font_bitmap_window_test)
     wgf_window_test(gfx wgf_gfx_mesh_window_test)
-    foreach(test wgf_gfx_shader_window_test wgf_gfx_effect_window_test)
+    wgf_window_test(gfx wgf_gfx_cubemap_window_test)
+    foreach(test wgf_gfx_shader_window_test wgf_gfx_effect_window_test wgf_gfx_cubemap_window_test)
         if(TARGET ${test}) # the tests' packed shaders, from where they are
             target_compile_definitions(${test} PRIVATE WGF_TEST_FILES="${CMAKE_CURRENT_SOURCE_DIR}/tests")
         endif()

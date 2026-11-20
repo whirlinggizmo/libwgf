@@ -1,0 +1,840 @@
+wgfshader 2
+kind surface
+texture sky
+program model glsl410
+attr 0 position
+attr 1 normal
+attr 2 texcoord0
+attr 3 texcoord1
+attr 4 tangent
+attr 5 color0
+ub 0 vertex 80 wgf_object 5
+ub 1 fragment 1184 wgf_frame 74
+view 0 fragment sky cube float
+view 11 vertex wgf_instance_tex 2d unfilterable_float
+sampler 10 vertex wgf_data_smp nonfiltering
+sampler 0 fragment sky_smp filtering
+pair 0 vertex 11 10 wgf_instance_tex_wgf_data_smp
+pair 1 fragment 0 0 sky_sky_smp
+source vs 2474
+#version 410
+
+uniform vec4 wgf_object[5];
+uniform sampler2D wgf_instance_tex_wgf_data_smp;
+
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec3 normal;
+layout(location = 0) out vec3 wgf_world_pos;
+layout(location = 1) out vec3 wgf_normal;
+layout(location = 2) out vec4 wgf_tangent;
+layout(location = 4) in vec4 tangent;
+layout(location = 3) out vec2 wgf_uv0;
+layout(location = 2) in vec2 texcoord0;
+layout(location = 4) out vec2 wgf_uv1;
+layout(location = 3) in vec2 texcoord1;
+layout(location = 5) out vec4 wgf_color;
+layout(location = 5) in vec4 color0;
+layout(location = 6) out vec4 wgf_tint;
+
+vec4 wgf_instance_texel(int record, int texel)
+{
+    return texelFetch(wgf_instance_tex_wgf_data_smp, ivec2(((record % 128) * 8) + texel, record / 128), 0);
+}
+
+void wgf_vertex(vec3 position_1, vec3 normal_1)
+{
+}
+
+void main()
+{
+    vec3 p = position;
+    vec3 n = normal;
+    int _70 = int(wgf_object[4].y) + gl_InstanceID;
+    int param = _70;
+    int param_1 = 0;
+    vec4 _76 = wgf_instance_texel(param, param_1);
+    int param_2 = _70;
+    int param_3 = 1;
+    vec4 _81 = wgf_instance_texel(param_2, param_3);
+    int param_4 = _70;
+    int param_5 = 2;
+    vec4 _87 = wgf_instance_texel(param_4, param_5);
+    vec4 _140 = vec4(_76.x, _81.x, _87.x, 0.0);
+    vec4 _141 = vec4(_76.y, _81.y, _87.y, 0.0);
+    vec4 _142 = vec4(_76.z, _81.z, _87.z, 0.0);
+    int param_6 = _70;
+    int param_7 = 3;
+    vec4 _150 = wgf_instance_texel(param_6, param_7);
+    int param_8 = _70;
+    int param_9 = 4;
+    vec4 _156 = wgf_instance_texel(param_8, param_9);
+    int param_10 = _70;
+    int param_11 = 5;
+    vec4 _162 = wgf_instance_texel(param_10, param_11);
+    vec3 param_12 = p;
+    vec3 param_13 = n;
+    wgf_vertex(param_12, param_13);
+    p = param_12;
+    n = param_13;
+    vec4 _214 = mat4(_140, _141, _142, vec4(_76.w, _81.w, _87.w, 1.0)) * vec4(param_12, 1.0);
+    gl_Position = mat4(wgf_object[0], wgf_object[1], wgf_object[2], wgf_object[3]) * _214;
+    wgf_world_pos = _214.xyz;
+    wgf_normal = mat3(vec3(_150.x, _156.x, _162.x), vec3(_150.y, _156.y, _162.y), vec3(_150.z, _156.z, _162.z)) * param_13;
+    int param_14 = _70;
+    int param_15 = 7;
+    wgf_tangent = vec4(mat3(_140.xyz, _141.xyz, _142.xyz) * tangent.xyz, tangent.w * wgf_instance_texel(param_14, param_15).y);
+    wgf_uv0 = texcoord0;
+    wgf_uv1 = texcoord1;
+    wgf_color = color0;
+    int param_16 = _70;
+    int param_17 = 6;
+    wgf_tint = wgf_instance_texel(param_16, param_17);
+}
+
+
+source fs 3034
+#version 410
+
+uniform vec4 wgf_frame[74];
+uniform samplerCube sky_sky_smp;
+
+layout(location = 6) in vec4 wgf_tint;
+layout(location = 0) out vec4 wgf_frag_color;
+layout(location = 0) in vec3 wgf_world_pos;
+layout(location = 1) in vec3 wgf_normal;
+layout(location = 2) in vec4 wgf_tangent;
+layout(location = 3) in vec2 wgf_uv0;
+layout(location = 4) in vec2 wgf_uv1;
+layout(location = 5) in vec4 wgf_color;
+
+vec3 wgf_camera_position()
+{
+    return wgf_frame[0].xyz;
+}
+
+vec3 wgf_srgb_to_linear(vec3 c)
+{
+    return mix(c * vec3(0.077399380505084991455078125), pow((max(c, vec3(0.040449999272823333740234375)) + vec3(0.054999999701976776123046875)) * vec3(0.947867333889007568359375), vec3(2.400000095367431640625)), step(vec3(0.040449999272823333740234375), c));
+}
+
+vec3 wgf_tonemap_neutral(inout vec3 color)
+{
+    float _121 = min(color.x, min(color.y, color.z));
+    float _127;
+    if (_121 < 0.07999999821186065673828125)
+    {
+        _127 = _121 - ((6.25 * _121) * _121);
+    }
+    else
+    {
+        _127 = 0.039999999105930328369140625;
+    }
+    color -= vec3(_127);
+    float _146 = color.x;
+    float _148 = color.y;
+    float _150 = color.z;
+    float _152 = max(_146, max(_148, _150));
+    if (_152 < 0.7599999904632568359375)
+    {
+        return color;
+    }
+    float _167 = 1.0 - (0.057599999010562896728515625 / (_152 + (-0.519999980926513671875)));
+    color *= (_167 / _152);
+    return mix(color, vec3(_167), vec3(1.0 - (1.0 / ((0.1500000059604644775390625 * (_152 - _167)) + 1.0))));
+}
+
+vec3 wgf_tonemap_aces(inout vec3 color)
+{
+    color *= 0.60000002384185791015625;
+    return clamp((color * ((color * 2.5099999904632568359375) + vec3(0.02999999932944774627685546875))) / ((color * ((color * 2.4300000667572021484375) + vec3(0.589999973773956298828125))) + vec3(0.14000000059604644775390625)), vec3(0.0), vec3(1.0));
+}
+
+vec3 wgf_linear_to_srgb(inout vec3 c)
+{
+    c = clamp(c, vec3(0.0), vec3(1.0));
+    return mix(c * 12.9200000762939453125, (pow(max(c, vec3(0.003130800090730190277099609375)), vec3(0.4166666567325592041015625)) * 1.05499994754791259765625) - vec3(0.054999999701976776123046875), step(vec3(0.003130800090730190277099609375), c));
+}
+
+void wgf_output(inout vec3 color, inout float alpha)
+{
+    color *= wgf_tint.xyz;
+    alpha *= wgf_tint.w;
+    if (alpha < wgf_frame[2].x)
+    {
+        discard;
+    }
+    color *= wgf_frame[2].z;
+    int _249 = int(wgf_frame[2].y + 0.5);
+    if (_249 == 1)
+    {
+        vec3 param = color;
+        vec3 _257 = wgf_tonemap_neutral(param);
+        color = _257;
+    }
+    else
+    {
+        if (_249 == 2)
+        {
+            vec3 param_1 = color;
+            vec3 _265 = wgf_tonemap_aces(param_1);
+            color = _265;
+        }
+    }
+    vec3 param_2 = color;
+    vec3 _270 = wgf_linear_to_srgb(param_2);
+    wgf_frag_color = vec4(_270, alpha);
+}
+
+void main()
+{
+    vec3 param = texture(sky_sky_smp, wgf_world_pos - wgf_camera_position()).xyz;
+    vec3 param_1 = wgf_srgb_to_linear(param);
+    float param_2 = 1.0;
+    wgf_output(param_1, param_2);
+}
+
+
+program model_skinned glsl410
+attr 0 position
+attr 1 normal
+attr 2 texcoord0
+attr 3 texcoord1
+attr 4 tangent
+attr 5 color0
+attr 6 wgf_joints
+attr 7 wgf_weights
+ub 0 vertex 80 wgf_object 5
+ub 1 fragment 1184 wgf_frame 74
+view 0 fragment sky cube float
+view 11 vertex wgf_instance_tex 2d unfilterable_float
+view 12 vertex wgf_joint_tex 2d unfilterable_float
+sampler 10 vertex wgf_data_smp nonfiltering
+sampler 0 fragment sky_smp filtering
+pair 0 vertex 11 10 wgf_instance_tex_wgf_data_smp
+pair 1 vertex 12 10 wgf_joint_tex_wgf_data_smp
+pair 2 fragment 0 0 sky_sky_smp
+source vs 3849
+#version 410
+
+uniform vec4 wgf_object[5];
+uniform sampler2D wgf_instance_tex_wgf_data_smp;
+uniform sampler2D wgf_joint_tex_wgf_data_smp;
+
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec3 normal;
+layout(location = 7) in vec4 wgf_weights;
+layout(location = 6) in vec4 wgf_joints;
+layout(location = 0) out vec3 wgf_world_pos;
+layout(location = 1) out vec3 wgf_normal;
+layout(location = 2) out vec4 wgf_tangent;
+layout(location = 4) in vec4 tangent;
+layout(location = 3) out vec2 wgf_uv0;
+layout(location = 2) in vec2 texcoord0;
+layout(location = 4) out vec2 wgf_uv1;
+layout(location = 3) in vec2 texcoord1;
+layout(location = 5) out vec4 wgf_color;
+layout(location = 5) in vec4 color0;
+layout(location = 6) out vec4 wgf_tint;
+
+vec4 wgf_instance_texel(int record, int texel)
+{
+    return texelFetch(wgf_instance_tex_wgf_data_smp, ivec2(((record % 128) * 8) + texel, record / 128), 0);
+}
+
+mat4 wgf_joint_at(int index)
+{
+    ivec2 _62 = ivec2((index % 256) * 3, index / 256);
+    vec4 _71 = texelFetch(wgf_joint_tex_wgf_data_smp, _62, 0);
+    vec4 _81 = texelFetch(wgf_joint_tex_wgf_data_smp, _62 + ivec2(1, 0), 0);
+    vec4 _91 = texelFetch(wgf_joint_tex_wgf_data_smp, _62 + ivec2(2, 0), 0);
+    return mat4(vec4(_71.x, _81.x, _91.x, 0.0), vec4(_71.y, _81.y, _91.y, 0.0), vec4(_71.z, _81.z, _91.z, 0.0), vec4(_71.w, _81.w, _91.w, 1.0));
+}
+
+void wgf_vertex(vec3 position_1, vec3 normal_1)
+{
+}
+
+void main()
+{
+    vec3 p = position;
+    vec3 n = normal;
+    int _169 = int(wgf_object[4].y) + gl_InstanceID;
+    int param = _169;
+    int param_1 = 0;
+    vec4 _174 = wgf_instance_texel(param, param_1);
+    int param_2 = _169;
+    int param_3 = 1;
+    vec4 _179 = wgf_instance_texel(param_2, param_3);
+    int param_4 = _169;
+    int param_5 = 2;
+    vec4 _184 = wgf_instance_texel(param_4, param_5);
+    vec4 _231 = vec4(_174.x, _179.x, _184.x, 0.0);
+    vec4 _232 = vec4(_174.y, _179.y, _184.y, 0.0);
+    vec4 _233 = vec4(_174.z, _179.z, _184.z, 0.0);
+    int param_6 = _169;
+    int param_7 = 3;
+    vec4 _240 = wgf_instance_texel(param_6, param_7);
+    int param_8 = _169;
+    int param_9 = 4;
+    vec4 _246 = wgf_instance_texel(param_8, param_9);
+    int param_10 = _169;
+    int param_11 = 5;
+    vec4 _252 = wgf_instance_texel(param_10, param_11);
+    int param_12 = _169;
+    int param_13 = 7;
+    vec4 _295 = wgf_instance_texel(param_12, param_13);
+    int _299 = int(_295.x);
+    int param_14 = _299 + int(wgf_joints.x);
+    mat4 _314 = wgf_joint_at(param_14) * wgf_weights.x;
+    int param_15 = _299 + int(wgf_joints.y);
+    mat4 _324 = wgf_joint_at(param_15) * wgf_weights.y;
+    int param_16 = _299 + int(wgf_joints.z);
+    mat4 _347 = wgf_joint_at(param_16) * wgf_weights.z;
+    int param_17 = _299 + int(wgf_joints.w);
+    mat4 _370 = wgf_joint_at(param_17) * wgf_weights.w;
+    vec4 _373 = ((_314[0] + _324[0]) + _347[0]) + _370[0];
+    vec4 _376 = ((_314[1] + _324[1]) + _347[1]) + _370[1];
+    vec4 _379 = ((_314[2] + _324[2]) + _347[2]) + _370[2];
+    vec3 param_18 = p;
+    vec3 param_19 = n;
+    wgf_vertex(param_18, param_19);
+    p = param_18;
+    n = param_19;
+    vec4 _400 = mat4(_231, _232, _233, vec4(_174.w, _179.w, _184.w, 1.0)) * (mat4(_373, _376, _379, ((_314[3] + _324[3]) + _347[3]) + _370[3]) * vec4(param_18, 1.0));
+    gl_Position = mat4(wgf_object[0], wgf_object[1], wgf_object[2], wgf_object[3]) * _400;
+    wgf_world_pos = _400.xyz;
+    mat3 _425 = mat3(_373.xyz, _376.xyz, _379.xyz);
+    wgf_normal = mat3(vec3(_240.x, _246.x, _252.x), vec3(_240.y, _246.y, _252.y), vec3(_240.z, _246.z, _252.z)) * (_425 * param_19);
+    wgf_tangent = vec4(mat3(_231.xyz, _232.xyz, _233.xyz) * (_425 * tangent.xyz), tangent.w * _295.y);
+    wgf_uv0 = texcoord0;
+    wgf_uv1 = texcoord1;
+    wgf_color = color0;
+    int param_20 = _169;
+    int param_21 = 6;
+    wgf_tint = wgf_instance_texel(param_20, param_21);
+}
+
+
+source fs 3034
+#version 410
+
+uniform vec4 wgf_frame[74];
+uniform samplerCube sky_sky_smp;
+
+layout(location = 6) in vec4 wgf_tint;
+layout(location = 0) out vec4 wgf_frag_color;
+layout(location = 0) in vec3 wgf_world_pos;
+layout(location = 1) in vec3 wgf_normal;
+layout(location = 2) in vec4 wgf_tangent;
+layout(location = 3) in vec2 wgf_uv0;
+layout(location = 4) in vec2 wgf_uv1;
+layout(location = 5) in vec4 wgf_color;
+
+vec3 wgf_camera_position()
+{
+    return wgf_frame[0].xyz;
+}
+
+vec3 wgf_srgb_to_linear(vec3 c)
+{
+    return mix(c * vec3(0.077399380505084991455078125), pow((max(c, vec3(0.040449999272823333740234375)) + vec3(0.054999999701976776123046875)) * vec3(0.947867333889007568359375), vec3(2.400000095367431640625)), step(vec3(0.040449999272823333740234375), c));
+}
+
+vec3 wgf_tonemap_neutral(inout vec3 color)
+{
+    float _121 = min(color.x, min(color.y, color.z));
+    float _127;
+    if (_121 < 0.07999999821186065673828125)
+    {
+        _127 = _121 - ((6.25 * _121) * _121);
+    }
+    else
+    {
+        _127 = 0.039999999105930328369140625;
+    }
+    color -= vec3(_127);
+    float _146 = color.x;
+    float _148 = color.y;
+    float _150 = color.z;
+    float _152 = max(_146, max(_148, _150));
+    if (_152 < 0.7599999904632568359375)
+    {
+        return color;
+    }
+    float _167 = 1.0 - (0.057599999010562896728515625 / (_152 + (-0.519999980926513671875)));
+    color *= (_167 / _152);
+    return mix(color, vec3(_167), vec3(1.0 - (1.0 / ((0.1500000059604644775390625 * (_152 - _167)) + 1.0))));
+}
+
+vec3 wgf_tonemap_aces(inout vec3 color)
+{
+    color *= 0.60000002384185791015625;
+    return clamp((color * ((color * 2.5099999904632568359375) + vec3(0.02999999932944774627685546875))) / ((color * ((color * 2.4300000667572021484375) + vec3(0.589999973773956298828125))) + vec3(0.14000000059604644775390625)), vec3(0.0), vec3(1.0));
+}
+
+vec3 wgf_linear_to_srgb(inout vec3 c)
+{
+    c = clamp(c, vec3(0.0), vec3(1.0));
+    return mix(c * 12.9200000762939453125, (pow(max(c, vec3(0.003130800090730190277099609375)), vec3(0.4166666567325592041015625)) * 1.05499994754791259765625) - vec3(0.054999999701976776123046875), step(vec3(0.003130800090730190277099609375), c));
+}
+
+void wgf_output(inout vec3 color, inout float alpha)
+{
+    color *= wgf_tint.xyz;
+    alpha *= wgf_tint.w;
+    if (alpha < wgf_frame[2].x)
+    {
+        discard;
+    }
+    color *= wgf_frame[2].z;
+    int _249 = int(wgf_frame[2].y + 0.5);
+    if (_249 == 1)
+    {
+        vec3 param = color;
+        vec3 _257 = wgf_tonemap_neutral(param);
+        color = _257;
+    }
+    else
+    {
+        if (_249 == 2)
+        {
+            vec3 param_1 = color;
+            vec3 _265 = wgf_tonemap_aces(param_1);
+            color = _265;
+        }
+    }
+    vec3 param_2 = color;
+    vec3 _270 = wgf_linear_to_srgb(param_2);
+    wgf_frag_color = vec4(_270, alpha);
+}
+
+void main()
+{
+    vec3 param = texture(sky_sky_smp, wgf_world_pos - wgf_camera_position()).xyz;
+    vec3 param_1 = wgf_srgb_to_linear(param);
+    float param_2 = 1.0;
+    wgf_output(param_1, param_2);
+}
+
+
+program model glsl300es
+attr 0 position
+attr 1 normal
+attr 2 texcoord0
+attr 3 texcoord1
+attr 4 tangent
+attr 5 color0
+ub 0 vertex 80 wgf_object 5
+ub 1 fragment 1184 wgf_frame 74
+view 0 fragment sky cube float
+view 11 vertex wgf_instance_tex 2d unfilterable_float
+sampler 10 vertex wgf_data_smp nonfiltering
+sampler 0 fragment sky_smp filtering
+pair 0 vertex 11 10 wgf_instance_tex_wgf_data_smp
+pair 1 fragment 0 0 sky_sky_smp
+source vs 2336
+#version 300 es
+
+uniform vec4 wgf_object[5];
+uniform highp sampler2D wgf_instance_tex_wgf_data_smp;
+
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec3 normal;
+out vec3 wgf_world_pos;
+out vec3 wgf_normal;
+out vec4 wgf_tangent;
+layout(location = 4) in vec4 tangent;
+out vec2 wgf_uv0;
+layout(location = 2) in vec2 texcoord0;
+out vec2 wgf_uv1;
+layout(location = 3) in vec2 texcoord1;
+out vec4 wgf_color;
+layout(location = 5) in vec4 color0;
+out vec4 wgf_tint;
+
+vec4 wgf_instance_texel(int record, int texel)
+{
+    return texelFetch(wgf_instance_tex_wgf_data_smp, ivec2(((record % 128) * 8) + texel, record / 128), 0);
+}
+
+void wgf_vertex(vec3 position_1, vec3 normal_1)
+{
+}
+
+void main()
+{
+    vec3 p = position;
+    vec3 n = normal;
+    int _70 = int(wgf_object[4].y) + gl_InstanceID;
+    int param = _70;
+    int param_1 = 0;
+    vec4 _76 = wgf_instance_texel(param, param_1);
+    int param_2 = _70;
+    int param_3 = 1;
+    vec4 _81 = wgf_instance_texel(param_2, param_3);
+    int param_4 = _70;
+    int param_5 = 2;
+    vec4 _87 = wgf_instance_texel(param_4, param_5);
+    vec4 _140 = vec4(_76.x, _81.x, _87.x, 0.0);
+    vec4 _141 = vec4(_76.y, _81.y, _87.y, 0.0);
+    vec4 _142 = vec4(_76.z, _81.z, _87.z, 0.0);
+    int param_6 = _70;
+    int param_7 = 3;
+    vec4 _150 = wgf_instance_texel(param_6, param_7);
+    int param_8 = _70;
+    int param_9 = 4;
+    vec4 _156 = wgf_instance_texel(param_8, param_9);
+    int param_10 = _70;
+    int param_11 = 5;
+    vec4 _162 = wgf_instance_texel(param_10, param_11);
+    vec3 param_12 = p;
+    vec3 param_13 = n;
+    wgf_vertex(param_12, param_13);
+    p = param_12;
+    n = param_13;
+    vec4 _214 = mat4(_140, _141, _142, vec4(_76.w, _81.w, _87.w, 1.0)) * vec4(param_12, 1.0);
+    gl_Position = mat4(wgf_object[0], wgf_object[1], wgf_object[2], wgf_object[3]) * _214;
+    wgf_world_pos = _214.xyz;
+    wgf_normal = mat3(vec3(_150.x, _156.x, _162.x), vec3(_150.y, _156.y, _162.y), vec3(_150.z, _156.z, _162.z)) * param_13;
+    int param_14 = _70;
+    int param_15 = 7;
+    wgf_tangent = vec4(mat3(_140.xyz, _141.xyz, _142.xyz) * tangent.xyz, tangent.w * wgf_instance_texel(param_14, param_15).y);
+    wgf_uv0 = texcoord0;
+    wgf_uv1 = texcoord1;
+    wgf_color = color0;
+    int param_16 = _70;
+    int param_17 = 6;
+    wgf_tint = wgf_instance_texel(param_16, param_17);
+}
+
+
+source fs 3158
+#version 300 es
+precision mediump float;
+precision highp int;
+
+uniform highp vec4 wgf_frame[74];
+uniform highp samplerCube sky_sky_smp;
+
+in highp vec4 wgf_tint;
+layout(location = 0) out highp vec4 wgf_frag_color;
+in highp vec3 wgf_world_pos;
+in highp vec3 wgf_normal;
+in highp vec4 wgf_tangent;
+in highp vec2 wgf_uv0;
+in highp vec2 wgf_uv1;
+in highp vec4 wgf_color;
+
+highp vec3 wgf_camera_position()
+{
+    return wgf_frame[0].xyz;
+}
+
+highp vec3 wgf_srgb_to_linear(highp vec3 c)
+{
+    return mix(c * vec3(0.077399380505084991455078125), pow((max(c, vec3(0.040449999272823333740234375)) + vec3(0.054999999701976776123046875)) * vec3(0.947867333889007568359375), vec3(2.400000095367431640625)), step(vec3(0.040449999272823333740234375), c));
+}
+
+highp vec3 wgf_tonemap_neutral(inout highp vec3 color)
+{
+    highp float _121 = min(color.x, min(color.y, color.z));
+    highp float _127;
+    if (_121 < 0.07999999821186065673828125)
+    {
+        _127 = _121 - ((6.25 * _121) * _121);
+    }
+    else
+    {
+        _127 = 0.039999999105930328369140625;
+    }
+    color -= vec3(_127);
+    highp float _146 = color.x;
+    highp float _148 = color.y;
+    highp float _150 = color.z;
+    highp float _152 = max(_146, max(_148, _150));
+    if (_152 < 0.7599999904632568359375)
+    {
+        return color;
+    }
+    highp float _167 = 1.0 - (0.057599999010562896728515625 / (_152 + (-0.519999980926513671875)));
+    color *= (_167 / _152);
+    return mix(color, vec3(_167), vec3(1.0 - (1.0 / ((0.1500000059604644775390625 * (_152 - _167)) + 1.0))));
+}
+
+highp vec3 wgf_tonemap_aces(inout highp vec3 color)
+{
+    color *= 0.60000002384185791015625;
+    return clamp((color * ((color * 2.5099999904632568359375) + vec3(0.02999999932944774627685546875))) / ((color * ((color * 2.4300000667572021484375) + vec3(0.589999973773956298828125))) + vec3(0.14000000059604644775390625)), vec3(0.0), vec3(1.0));
+}
+
+highp vec3 wgf_linear_to_srgb(inout highp vec3 c)
+{
+    c = clamp(c, vec3(0.0), vec3(1.0));
+    return mix(c * 12.9200000762939453125, (pow(max(c, vec3(0.003130800090730190277099609375)), vec3(0.4166666567325592041015625)) * 1.05499994754791259765625) - vec3(0.054999999701976776123046875), step(vec3(0.003130800090730190277099609375), c));
+}
+
+void wgf_output(inout highp vec3 color, inout highp float alpha)
+{
+    color *= wgf_tint.xyz;
+    alpha *= wgf_tint.w;
+    if (alpha < wgf_frame[2].x)
+    {
+        discard;
+    }
+    color *= wgf_frame[2].z;
+    int _249 = int(wgf_frame[2].y + 0.5);
+    if (_249 == 1)
+    {
+        highp vec3 param = color;
+        highp vec3 _257 = wgf_tonemap_neutral(param);
+        color = _257;
+    }
+    else
+    {
+        if (_249 == 2)
+        {
+            highp vec3 param_1 = color;
+            highp vec3 _265 = wgf_tonemap_aces(param_1);
+            color = _265;
+        }
+    }
+    highp vec3 param_2 = color;
+    highp vec3 _270 = wgf_linear_to_srgb(param_2);
+    wgf_frag_color = vec4(_270, alpha);
+}
+
+void main()
+{
+    highp vec3 param = texture(sky_sky_smp, wgf_world_pos - wgf_camera_position()).xyz;
+    highp vec3 param_1 = wgf_srgb_to_linear(param);
+    highp float param_2 = 1.0;
+    wgf_output(param_1, param_2);
+}
+
+
+program model_skinned glsl300es
+attr 0 position
+attr 1 normal
+attr 2 texcoord0
+attr 3 texcoord1
+attr 4 tangent
+attr 5 color0
+attr 6 wgf_joints
+attr 7 wgf_weights
+ub 0 vertex 80 wgf_object 5
+ub 1 fragment 1184 wgf_frame 74
+view 0 fragment sky cube float
+view 11 vertex wgf_instance_tex 2d unfilterable_float
+view 12 vertex wgf_joint_tex 2d unfilterable_float
+sampler 10 vertex wgf_data_smp nonfiltering
+sampler 0 fragment sky_smp filtering
+pair 0 vertex 11 10 wgf_instance_tex_wgf_data_smp
+pair 1 vertex 12 10 wgf_joint_tex_wgf_data_smp
+pair 2 fragment 0 0 sky_sky_smp
+source vs 3717
+#version 300 es
+
+uniform vec4 wgf_object[5];
+uniform highp sampler2D wgf_instance_tex_wgf_data_smp;
+uniform highp sampler2D wgf_joint_tex_wgf_data_smp;
+
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec3 normal;
+layout(location = 7) in vec4 wgf_weights;
+layout(location = 6) in vec4 wgf_joints;
+out vec3 wgf_world_pos;
+out vec3 wgf_normal;
+out vec4 wgf_tangent;
+layout(location = 4) in vec4 tangent;
+out vec2 wgf_uv0;
+layout(location = 2) in vec2 texcoord0;
+out vec2 wgf_uv1;
+layout(location = 3) in vec2 texcoord1;
+out vec4 wgf_color;
+layout(location = 5) in vec4 color0;
+out vec4 wgf_tint;
+
+vec4 wgf_instance_texel(int record, int texel)
+{
+    return texelFetch(wgf_instance_tex_wgf_data_smp, ivec2(((record % 128) * 8) + texel, record / 128), 0);
+}
+
+mat4 wgf_joint_at(int index)
+{
+    ivec2 _62 = ivec2((index % 256) * 3, index / 256);
+    vec4 _71 = texelFetch(wgf_joint_tex_wgf_data_smp, _62, 0);
+    vec4 _81 = texelFetch(wgf_joint_tex_wgf_data_smp, _62 + ivec2(1, 0), 0);
+    vec4 _91 = texelFetch(wgf_joint_tex_wgf_data_smp, _62 + ivec2(2, 0), 0);
+    return mat4(vec4(_71.x, _81.x, _91.x, 0.0), vec4(_71.y, _81.y, _91.y, 0.0), vec4(_71.z, _81.z, _91.z, 0.0), vec4(_71.w, _81.w, _91.w, 1.0));
+}
+
+void wgf_vertex(vec3 position_1, vec3 normal_1)
+{
+}
+
+void main()
+{
+    vec3 p = position;
+    vec3 n = normal;
+    int _169 = int(wgf_object[4].y) + gl_InstanceID;
+    int param = _169;
+    int param_1 = 0;
+    vec4 _174 = wgf_instance_texel(param, param_1);
+    int param_2 = _169;
+    int param_3 = 1;
+    vec4 _179 = wgf_instance_texel(param_2, param_3);
+    int param_4 = _169;
+    int param_5 = 2;
+    vec4 _184 = wgf_instance_texel(param_4, param_5);
+    vec4 _231 = vec4(_174.x, _179.x, _184.x, 0.0);
+    vec4 _232 = vec4(_174.y, _179.y, _184.y, 0.0);
+    vec4 _233 = vec4(_174.z, _179.z, _184.z, 0.0);
+    int param_6 = _169;
+    int param_7 = 3;
+    vec4 _240 = wgf_instance_texel(param_6, param_7);
+    int param_8 = _169;
+    int param_9 = 4;
+    vec4 _246 = wgf_instance_texel(param_8, param_9);
+    int param_10 = _169;
+    int param_11 = 5;
+    vec4 _252 = wgf_instance_texel(param_10, param_11);
+    int param_12 = _169;
+    int param_13 = 7;
+    vec4 _295 = wgf_instance_texel(param_12, param_13);
+    int _299 = int(_295.x);
+    int param_14 = _299 + int(wgf_joints.x);
+    mat4 _314 = wgf_joint_at(param_14) * wgf_weights.x;
+    int param_15 = _299 + int(wgf_joints.y);
+    mat4 _324 = wgf_joint_at(param_15) * wgf_weights.y;
+    int param_16 = _299 + int(wgf_joints.z);
+    mat4 _347 = wgf_joint_at(param_16) * wgf_weights.z;
+    int param_17 = _299 + int(wgf_joints.w);
+    mat4 _370 = wgf_joint_at(param_17) * wgf_weights.w;
+    vec4 _373 = ((_314[0] + _324[0]) + _347[0]) + _370[0];
+    vec4 _376 = ((_314[1] + _324[1]) + _347[1]) + _370[1];
+    vec4 _379 = ((_314[2] + _324[2]) + _347[2]) + _370[2];
+    vec3 param_18 = p;
+    vec3 param_19 = n;
+    wgf_vertex(param_18, param_19);
+    p = param_18;
+    n = param_19;
+    vec4 _400 = mat4(_231, _232, _233, vec4(_174.w, _179.w, _184.w, 1.0)) * (mat4(_373, _376, _379, ((_314[3] + _324[3]) + _347[3]) + _370[3]) * vec4(param_18, 1.0));
+    gl_Position = mat4(wgf_object[0], wgf_object[1], wgf_object[2], wgf_object[3]) * _400;
+    wgf_world_pos = _400.xyz;
+    mat3 _425 = mat3(_373.xyz, _376.xyz, _379.xyz);
+    wgf_normal = mat3(vec3(_240.x, _246.x, _252.x), vec3(_240.y, _246.y, _252.y), vec3(_240.z, _246.z, _252.z)) * (_425 * param_19);
+    wgf_tangent = vec4(mat3(_231.xyz, _232.xyz, _233.xyz) * (_425 * tangent.xyz), tangent.w * _295.y);
+    wgf_uv0 = texcoord0;
+    wgf_uv1 = texcoord1;
+    wgf_color = color0;
+    int param_20 = _169;
+    int param_21 = 6;
+    wgf_tint = wgf_instance_texel(param_20, param_21);
+}
+
+
+source fs 3158
+#version 300 es
+precision mediump float;
+precision highp int;
+
+uniform highp vec4 wgf_frame[74];
+uniform highp samplerCube sky_sky_smp;
+
+in highp vec4 wgf_tint;
+layout(location = 0) out highp vec4 wgf_frag_color;
+in highp vec3 wgf_world_pos;
+in highp vec3 wgf_normal;
+in highp vec4 wgf_tangent;
+in highp vec2 wgf_uv0;
+in highp vec2 wgf_uv1;
+in highp vec4 wgf_color;
+
+highp vec3 wgf_camera_position()
+{
+    return wgf_frame[0].xyz;
+}
+
+highp vec3 wgf_srgb_to_linear(highp vec3 c)
+{
+    return mix(c * vec3(0.077399380505084991455078125), pow((max(c, vec3(0.040449999272823333740234375)) + vec3(0.054999999701976776123046875)) * vec3(0.947867333889007568359375), vec3(2.400000095367431640625)), step(vec3(0.040449999272823333740234375), c));
+}
+
+highp vec3 wgf_tonemap_neutral(inout highp vec3 color)
+{
+    highp float _121 = min(color.x, min(color.y, color.z));
+    highp float _127;
+    if (_121 < 0.07999999821186065673828125)
+    {
+        _127 = _121 - ((6.25 * _121) * _121);
+    }
+    else
+    {
+        _127 = 0.039999999105930328369140625;
+    }
+    color -= vec3(_127);
+    highp float _146 = color.x;
+    highp float _148 = color.y;
+    highp float _150 = color.z;
+    highp float _152 = max(_146, max(_148, _150));
+    if (_152 < 0.7599999904632568359375)
+    {
+        return color;
+    }
+    highp float _167 = 1.0 - (0.057599999010562896728515625 / (_152 + (-0.519999980926513671875)));
+    color *= (_167 / _152);
+    return mix(color, vec3(_167), vec3(1.0 - (1.0 / ((0.1500000059604644775390625 * (_152 - _167)) + 1.0))));
+}
+
+highp vec3 wgf_tonemap_aces(inout highp vec3 color)
+{
+    color *= 0.60000002384185791015625;
+    return clamp((color * ((color * 2.5099999904632568359375) + vec3(0.02999999932944774627685546875))) / ((color * ((color * 2.4300000667572021484375) + vec3(0.589999973773956298828125))) + vec3(0.14000000059604644775390625)), vec3(0.0), vec3(1.0));
+}
+
+highp vec3 wgf_linear_to_srgb(inout highp vec3 c)
+{
+    c = clamp(c, vec3(0.0), vec3(1.0));
+    return mix(c * 12.9200000762939453125, (pow(max(c, vec3(0.003130800090730190277099609375)), vec3(0.4166666567325592041015625)) * 1.05499994754791259765625) - vec3(0.054999999701976776123046875), step(vec3(0.003130800090730190277099609375), c));
+}
+
+void wgf_output(inout highp vec3 color, inout highp float alpha)
+{
+    color *= wgf_tint.xyz;
+    alpha *= wgf_tint.w;
+    if (alpha < wgf_frame[2].x)
+    {
+        discard;
+    }
+    color *= wgf_frame[2].z;
+    int _249 = int(wgf_frame[2].y + 0.5);
+    if (_249 == 1)
+    {
+        highp vec3 param = color;
+        highp vec3 _257 = wgf_tonemap_neutral(param);
+        color = _257;
+    }
+    else
+    {
+        if (_249 == 2)
+        {
+            highp vec3 param_1 = color;
+            highp vec3 _265 = wgf_tonemap_aces(param_1);
+            color = _265;
+        }
+    }
+    highp vec3 param_2 = color;
+    highp vec3 _270 = wgf_linear_to_srgb(param_2);
+    wgf_frag_color = vec4(_270, alpha);
+}
+
+void main()
+{
+    highp vec3 param = texture(sky_sky_smp, wgf_world_pos - wgf_camera_position()).xyz;
+    highp vec3 param_1 = wgf_srgb_to_linear(param);
+    highp float param_2 = 1.0;
+    wgf_output(param_1, param_2);
+}
+
+
+end

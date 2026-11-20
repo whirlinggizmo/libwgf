@@ -1926,6 +1926,36 @@ export declare const Color: {
      */
     readonly multiply: typeof raw.wgf_color_multiply;
 };
+/** A handle of kind wgf_cubemap_t: the raw binding's branded type. */
+export type Cubemap = raw.wgf_cubemap_t;
+export declare const Cubemap: {
+    /**
+     * The cubemap in the image file at `path` (PNG, JPEG, BMP, TGA, or GIF's first frame), its
+     * faces laid out by `layout`, or, AUTO, by its shape. Creating the same path again gives the
+     * same cubemap, with one more reference, laid out as the first create said (another layout
+     * is warned of). An image whose shape isn't the layout's, exactly (a 6 by 1 row of square
+     * faces, ...), FAILS; so does AUTO for a shape that is none of them. 0 for a `layout` that
+     * isn't one or is FACES (logged), or no room for another.
+     */
+    readonly create: typeof raw.wgf_cubemap_create;
+    /**
+     * The cubemap of six image files, a face each, square and all the same size, or it FAILS
+     * (logged, naming the face). Made anew by each call, never shared; wgf_resource_get_path
+     * gives +X's file. 0 for a NULL path, or no room for another.
+     */
+    readonly createFaces: typeof raw.wgf_cubemap_create_faces;
+    /**
+     * A face's size in pixels; 0 until it is READY.
+     */
+    readonly getSize: typeof raw.wgf_cubemap_get_size;
+    /**
+     * How its faces were read: the layout given, or once READY, the one AUTO found; FACES for
+     * six files. AUTO for a handle that isn't a cubemap, or one AUTO hasn't read yet.
+     */
+    readonly getLayout: typeof raw.wgf_cubemap_get_layout;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
+};
 export declare const Debug: {
     /**
      * The frame-rate overlay, for a program under development: "<fps> FPS <cost> ms" (the
@@ -4967,23 +4997,41 @@ export declare const Material: {
      */
     readonly getTexture: typeof raw.wgf_material_get_texture;
     /**
-     * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
-     * filter that isn't one.
+     * A custom material's cubemap (wgf_cubemap.h): its shader's textureCube `name`, sampled as
+     * samplerCube (wgf.glsl); the material holds its own reference; 0 clears it. False for a
+     * built-in material, a handle that isn't a cubemap, or a name that is its shader's texture2D
+     * (wgf_material_set_texture's) -- or, set while its shader loads, warned of and dropped once
+     * it is READY. set_texture likewise refuses a textureCube's name, and each getter answers 0
+     * for the other's.
+     */
+    readonly setCubemap: typeof raw.wgf_material_set_cubemap;
+    /**
+     * A custom material's cubemap (wgf_cubemap.h): its shader's textureCube `name`, sampled as
+     * samplerCube (wgf.glsl); the material holds its own reference; 0 clears it. False for a
+     * built-in material, a handle that isn't a cubemap, or a name that is its shader's texture2D
+     * (wgf_material_set_texture's) -- or, set while its shader loads, warned of and dropped once
+     * it is READY. set_texture likewise refuses a textureCube's name, and each getter answers 0
+     * for the other's.
+     */
+    readonly getCubemap: typeof raw.wgf_material_get_cubemap;
+    /**
+     * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
+     * alone, clamped at its edges. False for a wrap or filter that isn't one.
      */
     readonly setTextureSampling: typeof raw.wgf_material_set_texture_sampling;
     /**
-     * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
-     * filter that isn't one.
+     * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
+     * alone, clamped at its edges. False for a wrap or filter that isn't one.
      */
     readonly getTextureWrapU: typeof raw.wgf_material_get_texture_wrap_u;
     /**
-     * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
-     * filter that isn't one.
+     * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
+     * alone, clamped at its edges. False for a wrap or filter that isn't one.
      */
     readonly getTextureWrapV: typeof raw.wgf_material_get_texture_wrap_v;
     /**
-     * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
-     * filter that isn't one.
+     * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
+     * alone, clamped at its edges. False for a wrap or filter that isn't one.
      */
     readonly getTextureFilter: typeof raw.wgf_material_get_texture_filter;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
@@ -10121,6 +10169,8 @@ export type ColorStock = raw.wgf_color_stock_t;
 export declare const ColorStock: { readonly BLANK: ColorStock; readonly WHITE: ColorStock; readonly BLACK: ColorStock; readonly LIGHTGRAY: ColorStock; readonly GRAY: ColorStock; readonly DARKGRAY: ColorStock; readonly YELLOW: ColorStock; readonly GOLD: ColorStock; readonly ORANGE: ColorStock; readonly PINK: ColorStock; readonly RED: ColorStock; readonly MAROON: ColorStock; readonly GREEN: ColorStock; readonly LIME: ColorStock; readonly DARKGREEN: ColorStock; readonly SKYBLUE: ColorStock; readonly BLUE: ColorStock; readonly DARKBLUE: ColorStock; readonly PURPLE: ColorStock; readonly VIOLET: ColorStock; readonly DARKPURPLE: ColorStock; readonly BEIGE: ColorStock; readonly BROWN: ColorStock; readonly DARKBROWN: ColorStock; readonly MAGENTA: ColorStock; readonly RAYWHITE: ColorStock; };
 export type Component = raw.wgf_component_t;
 export declare const Component: { readonly NONE: Component; readonly MOTION: Component; readonly BOUNDS: Component; readonly LIFETIME: Component; readonly COLLIDER: Component; readonly VOICE: Component; readonly BODY: Component; readonly VEHICLE: Component; readonly BODY2D: Component; };
+export type CubemapLayout = raw.wgf_cubemap_layout_t;
+export declare const CubemapLayout: { readonly AUTO: CubemapLayout; readonly LINE_VERTICAL: CubemapLayout; readonly LINE_HORIZONTAL: CubemapLayout; readonly CROSS_THREE_BY_FOUR: CubemapLayout; readonly CROSS_FOUR_BY_THREE: CubemapLayout; readonly FACES: CubemapLayout; };
 export type DocumentEvent = raw.wgf_document_event_t;
 export declare const DocumentEvent: { readonly NONE: DocumentEvent; readonly CLICK: DocumentEvent; readonly CHANGE: DocumentEvent; readonly SUBMIT: DocumentEvent; readonly FOCUS: DocumentEvent; readonly BLUR: DocumentEvent; };
 export type DrawFill = raw.wgf_draw_fill_t;

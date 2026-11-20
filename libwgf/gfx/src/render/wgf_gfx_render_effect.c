@@ -31,8 +31,8 @@ static struct {
     wgf_material_t active[MAX_EFFECTS]; /* this frame's chain, as it began: those READY, a reference each */
     int active_count;
     sg_swapchain swapchain; /* the screen's, kept for the last effect */
-    sg_image white;
-    sg_view white_view;
+    sg_image white, white_cube; /* what an unset texture2D and textureCube sample */
+    sg_view white_view, white_cube_view;
 } effects;
 
 /* The vertex block a screen effect reads (wgf_screen_view in wgf.glsl), and the fragment
@@ -113,18 +113,11 @@ static void draw_effect(wgf_material_t material, wgf_texture_t source, bool flip
     sg_apply_pipeline(pipeline_of(shader));
     memset(&bindings, 0, sizeof(bindings));
     for (t = 0; t < shader->texture_count; t++) {
-        const wgf_gfx_priv_material_texture_t *texture = textures[t];
-        sg_view tv = effects.white_view;
+        sg_view tv;
         sampler = wgf_gfx_priv_texture_sampler(WGF_TEXTURE_WRAP_REPEAT, WGF_TEXTURE_WRAP_REPEAT,
                                                WGF_TEXTURE_FILTER_LINEAR, true);
-        if (texture != NULL) {
-            if (texture->texture != 0 &&
-                wgf_gfx_priv_texture_get_binding(texture->texture, &tv, &sampler, &width, &height, &placeholder) &&
-                placeholder) {
-                tv = effects.white_view;
-            }
-            sampler = wgf_gfx_priv_texture_sampler(texture->wrap_u, texture->wrap_v, texture->filter, texture->mipmaps);
-        }
+        wgf_gfx_priv_material_custom_texture_binding(shader, t, textures[t], effects.white_view,
+                                                     effects.white_cube_view, &tv, &sampler);
         if (program->view_slot[t] >= 0) bindings.views[program->view_slot[t]] = tv;
         if (program->sampler_slot[t] >= 0) bindings.samplers[program->sampler_slot[t]] = sampler;
     }
@@ -224,6 +217,8 @@ static void stop(void)
     if (effects.white.id != SG_INVALID_ID) {
         sg_destroy_view(effects.white_view);
         sg_destroy_image(effects.white);
+        sg_destroy_view(effects.white_cube_view);
+        sg_destroy_image(effects.white_cube);
     }
     memset(&effects, 0, sizeof(effects));
     wgf_gfx_priv_render_set_effects(NULL);
@@ -270,6 +265,7 @@ bool wgf_render_add_effect(wgf_material_t material)
         memset(&view, 0, sizeof(view));
         view.texture.image = effects.white;
         effects.white_view = sg_make_view(&view);
+        effects.white_cube = wgf_gfx_priv_render_white_cube(&effects.white_cube_view);
     }
     wgf_core_priv_part_install(&part);
     wgf_gfx_priv_render_set_effects(at_frame);

@@ -93,6 +93,8 @@ typedef struct wgf_gfx_priv_stage3d_frame_t {
     sg_sampler no_shadow_sampler;
     sg_image no_environment_image; /* a black cube, bound with no environment */
     sg_view no_environment_view;
+    sg_image white_cube_image; /* a white cube, a custom shader's textureCube unset or loading */
+    sg_view white_cube_view;
     /* the instance records: an item's at its index, written as the frame flushes */
     float *instances;
     int instance_capacity; /* records */

@@ -185,29 +185,51 @@ abstract Material(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_material_get_texture(this, name);
 
 	/**
-	    How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
-	    filter that isn't one.
+	    A custom material's cubemap (wgf_cubemap.h): its shader's textureCube `name`, sampled as
+	    samplerCube (wgf.glsl); the material holds its own reference; 0 clears it. False for a
+	    built-in material, a handle that isn't a cubemap, or a name that is its shader's texture2D
+	    (wgf_material_set_texture's) -- or, set while its shader loads, warned of and dropped once
+	    it is READY. set_texture likewise refuses a textureCube's name, and each getter answers 0
+	    for the other's.
+	**/
+	public inline function setCubemap(name:String, cubemap:Cubemap):Bool
+		return Raw.wgf_material_set_cubemap(this, name, cubemap);
+
+	/**
+	    A custom material's cubemap (wgf_cubemap.h): its shader's textureCube `name`, sampled as
+	    samplerCube (wgf.glsl); the material holds its own reference; 0 clears it. False for a
+	    built-in material, a handle that isn't a cubemap, or a name that is its shader's texture2D
+	    (wgf_material_set_texture's) -- or, set while its shader loads, warned of and dropped once
+	    it is READY. set_texture likewise refuses a textureCube's name, and each getter answers 0
+	    for the other's.
+	**/
+	public inline function getCubemap(name:String):Cubemap
+		return Raw.wgf_material_get_cubemap(this, name);
+
+	/**
+	    How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
+	    alone, clamped at its edges. False for a wrap or filter that isn't one.
 	**/
 	public inline function setTextureSampling(name:String, wrap_u:TextureWrap, wrap_v:TextureWrap, filter:TextureFilter):Bool
 		return Raw.wgf_material_set_texture_sampling(this, name, wrap_u, wrap_v, filter);
 
 	/**
-	    How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
-	    filter that isn't one.
+	    How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
+	    alone, clamped at its edges. False for a wrap or filter that isn't one.
 	**/
 	public inline function getTextureWrapU(name:String):TextureWrap
 		return Raw.wgf_material_get_texture_wrap_u(this, name);
 
 	/**
-	    How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
-	    filter that isn't one.
+	    How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
+	    alone, clamped at its edges. False for a wrap or filter that isn't one.
 	**/
 	public inline function getTextureWrapV(name:String):TextureWrap
 		return Raw.wgf_material_get_texture_wrap_v(this, name);
 
 	/**
-	    How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
-	    filter that isn't one.
+	    How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
+	    alone, clamped at its edges. False for a wrap or filter that isn't one.
 	**/
 	public inline function getTextureFilter(name:String):TextureFilter
 		return Raw.wgf_material_get_texture_filter(this, name);

@@ -278,6 +278,10 @@ class Reach {
 		"wgf_color_make_hsv",
 		"wgf_color_multiply",
 		"wgf_color_with_alpha",
+		"wgf_cubemap_create",
+		"wgf_cubemap_create_faces",
+		"wgf_cubemap_get_layout",
+		"wgf_cubemap_get_size",
 		"wgf_debug_hide_fps",
 		"wgf_debug_is_fps_shown",
 		"wgf_debug_show_fps",
@@ -679,6 +683,7 @@ class Reach {
 		"wgf_material_create_custom",
 		"wgf_material_get_alpha_cutoff",
 		"wgf_material_get_alpha_mode",
+		"wgf_material_get_cubemap",
 		"wgf_material_get_float",
 		"wgf_material_get_int",
 		"wgf_material_get_shader",
@@ -693,6 +698,7 @@ class Reach {
 		"wgf_material_is_double_sided",
 		"wgf_material_set_alpha_mode",
 		"wgf_material_set_color",
+		"wgf_material_set_cubemap",
 		"wgf_material_set_double_sided",
 		"wgf_material_set_float",
 		"wgf_material_set_int",
@@ -1321,7 +1327,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1312) 0];
+	static final counts:Array<Int> = [for (_ in 0...1318) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

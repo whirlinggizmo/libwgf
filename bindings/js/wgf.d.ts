@@ -42,6 +42,8 @@ export type wgf_generator_t = number & { readonly [kind]: "wgf_generator_t" };
 export type wgf_asset_task_t = number & { readonly [kind]: "wgf_asset_task_t" };
 /** A handle of kind wgf_actor_t; 0 is none. */
 export type wgf_actor_t = number & { readonly [kind]: "wgf_actor_t" };
+/** A handle of kind wgf_cubemap_t; 0 is none. */
+export type wgf_cubemap_t = number & { readonly [kind]: "wgf_cubemap_t" };
 /** A handle of kind wgf_texture_t; 0 is none. */
 export type wgf_texture_t = number & { readonly [kind]: "wgf_texture_t" };
 /** A handle of kind wgf_texture_read_t; 0 is none. */
@@ -576,6 +578,18 @@ export declare const WGF_COLOR_STOCK_DARKBROWN: 23;
 export declare const WGF_COLOR_STOCK_MAGENTA: 24;
 export declare const WGF_COLOR_STOCK_RAYWHITE: 25;
 export type wgf_color_stock_t = typeof WGF_COLOR_STOCK_BLANK | typeof WGF_COLOR_STOCK_WHITE | typeof WGF_COLOR_STOCK_BLACK | typeof WGF_COLOR_STOCK_LIGHTGRAY | typeof WGF_COLOR_STOCK_GRAY | typeof WGF_COLOR_STOCK_DARKGRAY | typeof WGF_COLOR_STOCK_YELLOW | typeof WGF_COLOR_STOCK_GOLD | typeof WGF_COLOR_STOCK_ORANGE | typeof WGF_COLOR_STOCK_PINK | typeof WGF_COLOR_STOCK_RED | typeof WGF_COLOR_STOCK_MAROON | typeof WGF_COLOR_STOCK_GREEN | typeof WGF_COLOR_STOCK_LIME | typeof WGF_COLOR_STOCK_DARKGREEN | typeof WGF_COLOR_STOCK_SKYBLUE | typeof WGF_COLOR_STOCK_BLUE | typeof WGF_COLOR_STOCK_DARKBLUE | typeof WGF_COLOR_STOCK_PURPLE | typeof WGF_COLOR_STOCK_VIOLET | typeof WGF_COLOR_STOCK_DARKPURPLE | typeof WGF_COLOR_STOCK_BEIGE | typeof WGF_COLOR_STOCK_BROWN | typeof WGF_COLOR_STOCK_DARKBROWN | typeof WGF_COLOR_STOCK_MAGENTA | typeof WGF_COLOR_STOCK_RAYWHITE;
+
+/**
+ * How one image holds the six faces, raylib's CUBEMAP_LAYOUT_*. A face is a square of
+ * `size` pixels.
+ */
+export declare const WGF_CUBEMAP_LAYOUT_AUTO: 0;
+export declare const WGF_CUBEMAP_LAYOUT_LINE_VERTICAL: 1;
+export declare const WGF_CUBEMAP_LAYOUT_LINE_HORIZONTAL: 2;
+export declare const WGF_CUBEMAP_LAYOUT_CROSS_THREE_BY_FOUR: 3;
+export declare const WGF_CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE: 4;
+export declare const WGF_CUBEMAP_LAYOUT_FACES: 5;
+export type wgf_cubemap_layout_t = typeof WGF_CUBEMAP_LAYOUT_AUTO | typeof WGF_CUBEMAP_LAYOUT_LINE_VERTICAL | typeof WGF_CUBEMAP_LAYOUT_LINE_HORIZONTAL | typeof WGF_CUBEMAP_LAYOUT_CROSS_THREE_BY_FOUR | typeof WGF_CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE | typeof WGF_CUBEMAP_LAYOUT_FACES;
 
 /**
  * How a texture is sampled where it is drawn.
@@ -3700,6 +3714,34 @@ export declare function wgf_color_brighten(color: wgf_color_t, amount: number): 
 export declare function wgf_color_multiply(color: wgf_color_t, by: wgf_color_t): wgf_color_t;
 
 /**
+ * The cubemap in the image file at `path` (PNG, JPEG, BMP, TGA, or GIF's first frame), its
+ * faces laid out by `layout`, or, AUTO, by its shape. Creating the same path again gives the
+ * same cubemap, with one more reference, laid out as the first create said (another layout
+ * is warned of). An image whose shape isn't the layout's, exactly (a 6 by 1 row of square
+ * faces, ...), FAILS; so does AUTO for a shape that is none of them. 0 for a `layout` that
+ * isn't one or is FACES (logged), or no room for another.
+ */
+export declare function wgf_cubemap_create(path: string | null, layout: wgf_cubemap_layout_t): wgf_cubemap_t;
+
+/**
+ * The cubemap of six image files, a face each, square and all the same size, or it FAILS
+ * (logged, naming the face). Made anew by each call, never shared; wgf_resource_get_path
+ * gives +X's file. 0 for a NULL path, or no room for another.
+ */
+export declare function wgf_cubemap_create_faces(positive_x: string | null, negative_x: string | null, positive_y: string | null, negative_y: string | null, positive_z: string | null, negative_z: string | null): wgf_cubemap_t;
+
+/**
+ * A face's size in pixels; 0 until it is READY.
+ */
+export declare function wgf_cubemap_get_size(cubemap: wgf_cubemap_t | 0): number;
+
+/**
+ * How its faces were read: the layout given, or once READY, the one AUTO found; FACES for
+ * six files. AUTO for a handle that isn't a cubemap, or one AUTO hasn't read yet.
+ */
+export declare function wgf_cubemap_get_layout(cubemap: wgf_cubemap_t | 0): wgf_cubemap_layout_t;
+
+/**
  * A texture from an image file: PNG, JPEG, BMP, TGA, or GIF (its first frame), or a
  * compressed one. "name.ktx" names a texture compressed for GPUs
  * (tools/compress_textures.py, which writes them beside name.png): the first of
@@ -4054,26 +4096,46 @@ export declare function wgf_material_set_texture(material: wgf_material_t | 0, n
 export declare function wgf_material_get_texture(material: wgf_material_t | 0, name: string | null): wgf_texture_t;
 
 /**
- * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
- * filter that isn't one.
+ * A custom material's cubemap (wgf_cubemap.h): its shader's textureCube `name`, sampled as
+ * samplerCube (wgf.glsl); the material holds its own reference; 0 clears it. False for a
+ * built-in material, a handle that isn't a cubemap, or a name that is its shader's texture2D
+ * (wgf_material_set_texture's) -- or, set while its shader loads, warned of and dropped once
+ * it is READY. set_texture likewise refuses a textureCube's name, and each getter answers 0
+ * for the other's.
+ */
+export declare function wgf_material_set_cubemap(material: wgf_material_t | 0, name: string | null, cubemap: wgf_cubemap_t | 0): boolean;
+
+/**
+ * A custom material's cubemap (wgf_cubemap.h): its shader's textureCube `name`, sampled as
+ * samplerCube (wgf.glsl); the material holds its own reference; 0 clears it. False for a
+ * built-in material, a handle that isn't a cubemap, or a name that is its shader's texture2D
+ * (wgf_material_set_texture's) -- or, set while its shader loads, warned of and dropped once
+ * it is READY. set_texture likewise refuses a textureCube's name, and each getter answers 0
+ * for the other's.
+ */
+export declare function wgf_material_get_cubemap(material: wgf_material_t | 0, name: string | null): wgf_cubemap_t;
+
+/**
+ * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
+ * alone, clamped at its edges. False for a wrap or filter that isn't one.
  */
 export declare function wgf_material_set_texture_sampling(material: wgf_material_t | 0, name: string | null, wrap_u: wgf_texture_wrap_t, wrap_v: wgf_texture_wrap_t, filter: wgf_texture_filter_t): boolean;
 
 /**
- * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
- * filter that isn't one.
+ * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
+ * alone, clamped at its edges. False for a wrap or filter that isn't one.
  */
 export declare function wgf_material_get_texture_wrap_u(material: wgf_material_t | 0, name: string | null): wgf_texture_wrap_t;
 
 /**
- * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
- * filter that isn't one.
+ * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
+ * alone, clamped at its edges. False for a wrap or filter that isn't one.
  */
 export declare function wgf_material_get_texture_wrap_v(material: wgf_material_t | 0, name: string | null): wgf_texture_wrap_t;
 
 /**
- * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
- * filter that isn't one.
+ * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
+ * alone, clamped at its edges. False for a wrap or filter that isn't one.
  */
 export declare function wgf_material_get_texture_filter(material: wgf_material_t | 0, name: string | null): wgf_texture_filter_t;
 

@@ -533,6 +533,18 @@ class Main {
 			&& Resource.release(shader), "a custom material, holding its shader");
 		expect(toon.setFloat("bands", 3) && toon.getFloat("bands") == 3, "a custom material's value");
 		expect(Resource.release(toon), "a custom material let go of");
+		// a cubemap (wgf_cubemap.h): six faces from one image in a layout or six files, sampled by a custom shader
+		final skybox = Cubemap.create("textures/skybox.png", CubemapLayout.AUTO);
+		final faces = Cubemap.createFaces("textures/particle.png", "textures/particle.png", "textures/particle.png",
+			"textures/particle.png", "textures/particle.png", "textures/particle.png");
+		expect(!skybox.isNone() && skybox.getSize() == 0 && faces.getLayout() == CubemapLayout.FACES,
+			"cubemaps, loading");
+		final skyShader = Shader.create("shaders/skybox.wgfshader");
+		final skyMaterial = Material.createCustom(skyShader);
+		Resource.release(skyShader);
+		expect(skyMaterial.setCubemap("sky", skybox) && skyMaterial.getCubemap("sky") == skybox
+			&& !skyMaterial.setCubemap("sky", cast tiles), "a custom material's cubemap, and a texture refused");
+		expect(Resource.release(skyMaterial) && Resource.release(skybox) && Resource.release(faces), "cubemaps let go of");
 		// a screen effect (wgf_render_add_effect): a custom material over the finished frame
 		final vignette = Shader.create("shaders/vignette.wgfshader");
 		final effect = Material.createCustom(vignette);

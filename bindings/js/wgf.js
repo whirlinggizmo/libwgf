@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "59c73d60ffc6d0fb" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "5bc2c83f225df919" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -708,6 +708,17 @@ export const WGF_COLOR_STOCK_BROWN = 22;
 export const WGF_COLOR_STOCK_DARKBROWN = 23;
 export const WGF_COLOR_STOCK_MAGENTA = 24;
 export const WGF_COLOR_STOCK_RAYWHITE = 25;
+
+/**
+ * How one image holds the six faces, raylib's CUBEMAP_LAYOUT_*. A face is a square of
+ * `size` pixels.
+ */
+export const WGF_CUBEMAP_LAYOUT_AUTO = 0;
+export const WGF_CUBEMAP_LAYOUT_LINE_VERTICAL = 1;
+export const WGF_CUBEMAP_LAYOUT_LINE_HORIZONTAL = 2;
+export const WGF_CUBEMAP_LAYOUT_CROSS_THREE_BY_FOUR = 3;
+export const WGF_CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE = 4;
+export const WGF_CUBEMAP_LAYOUT_FACES = 5;
 
 /**
  * How a texture is sampled where it is drawn.
@@ -5313,6 +5324,54 @@ export function wgf_color_multiply(color, by) {
     return value >>> 0;
 }
 
+// wgf: call wgf_cubemap_create
+/**
+ * The cubemap in the image file at `path` (PNG, JPEG, BMP, TGA, or GIF's first frame), its
+ * faces laid out by `layout`, or, AUTO, by its shape. Creating the same path again gives the
+ * same cubemap, with one more reference, laid out as the first create said (another layout
+ * is warned of). An image whose shape isn't the layout's, exactly (a 6 by 1 row of square
+ * faces, ...), FAILS; so does AUTO for a shape that is none of them. 0 for a `layout` that
+ * isn't one or is FACES (logged), or no room for another.
+ */
+export function wgf_cubemap_create(path, layout) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_cubemap_create"](cstr(path), layout);
+    host["stackRestore"](mark);
+    return value >>> 0;
+}
+
+// wgf: call wgf_cubemap_create_faces
+/**
+ * The cubemap of six image files, a face each, square and all the same size, or it FAILS
+ * (logged, naming the face). Made anew by each call, never shared; wgf_resource_get_path
+ * gives +X's file. 0 for a NULL path, or no room for another.
+ */
+export function wgf_cubemap_create_faces(positive_x, negative_x, positive_y, negative_y, positive_z, negative_z) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_cubemap_create_faces"](cstr(positive_x), cstr(negative_x), cstr(positive_y), cstr(negative_y), cstr(positive_z), cstr(negative_z));
+    host["stackRestore"](mark);
+    return value >>> 0;
+}
+
+// wgf: call wgf_cubemap_get_size
+/**
+ * A face's size in pixels; 0 until it is READY.
+ */
+export function wgf_cubemap_get_size(cubemap) {
+    const value = host["_wgf_cubemap_get_size"](cubemap);
+    return value;
+}
+
+// wgf: call wgf_cubemap_get_layout
+/**
+ * How its faces were read: the layout given, or once READY, the one AUTO found; FACES for
+ * six files. AUTO for a handle that isn't a cubemap, or one AUTO hasn't read yet.
+ */
+export function wgf_cubemap_get_layout(cubemap) {
+    const value = host["_wgf_cubemap_get_layout"](cubemap);
+    return value;
+}
+
 // wgf: call wgf_texture_create
 /**
  * A texture from an image file: PNG, JPEG, BMP, TGA, or GIF (its first frame), or a
@@ -5900,10 +5959,42 @@ export function wgf_material_get_texture(material, name) {
     return value >>> 0;
 }
 
+// wgf: call wgf_material_set_cubemap
+/**
+ * A custom material's cubemap (wgf_cubemap.h): its shader's textureCube `name`, sampled as
+ * samplerCube (wgf.glsl); the material holds its own reference; 0 clears it. False for a
+ * built-in material, a handle that isn't a cubemap, or a name that is its shader's texture2D
+ * (wgf_material_set_texture's) -- or, set while its shader loads, warned of and dropped once
+ * it is READY. set_texture likewise refuses a textureCube's name, and each getter answers 0
+ * for the other's.
+ */
+export function wgf_material_set_cubemap(material, name, cubemap) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_material_set_cubemap"](material, cstr(name), cubemap);
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_material_get_cubemap
+/**
+ * A custom material's cubemap (wgf_cubemap.h): its shader's textureCube `name`, sampled as
+ * samplerCube (wgf.glsl); the material holds its own reference; 0 clears it. False for a
+ * built-in material, a handle that isn't a cubemap, or a name that is its shader's texture2D
+ * (wgf_material_set_texture's) -- or, set while its shader loads, warned of and dropped once
+ * it is READY. set_texture likewise refuses a textureCube's name, and each getter answers 0
+ * for the other's.
+ */
+export function wgf_material_get_cubemap(material, name) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_material_get_cubemap"](material, cstr(name));
+    host["stackRestore"](mark);
+    return value >>> 0;
+}
+
 // wgf: call wgf_material_set_texture_sampling
 /**
- * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
- * filter that isn't one.
+ * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
+ * alone, clamped at its edges. False for a wrap or filter that isn't one.
  */
 export function wgf_material_set_texture_sampling(material, name, wrap_u, wrap_v, filter) {
     const mark = host["stackSave"]();
@@ -5914,8 +6005,8 @@ export function wgf_material_set_texture_sampling(material, name, wrap_u, wrap_v
 
 // wgf: call wgf_material_get_texture_wrap_u
 /**
- * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
- * filter that isn't one.
+ * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
+ * alone, clamped at its edges. False for a wrap or filter that isn't one.
  */
 export function wgf_material_get_texture_wrap_u(material, name) {
     const mark = host["stackSave"]();
@@ -5926,8 +6017,8 @@ export function wgf_material_get_texture_wrap_u(material, name) {
 
 // wgf: call wgf_material_get_texture_wrap_v
 /**
- * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
- * filter that isn't one.
+ * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
+ * alone, clamped at its edges. False for a wrap or filter that isn't one.
  */
 export function wgf_material_get_texture_wrap_v(material, name) {
     const mark = host["stackSave"]();
@@ -5938,8 +6029,8 @@ export function wgf_material_get_texture_wrap_v(material, name) {
 
 // wgf: call wgf_material_get_texture_filter
 /**
- * How texture parameter `name` is sampled (default repeat, linear). False for a wrap or
- * filter that isn't one.
+ * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
+ * alone, clamped at its edges. False for a wrap or filter that isn't one.
  */
 export function wgf_material_get_texture_filter(material, name) {
     const mark = host["stackSave"]();

@@ -133,6 +133,12 @@ void wgf_core_priv_resource_set_path(wgf_handle_t resource, const char *path)
 
 wgf_handle_t wgf_core_priv_resource_create(wgf_core_priv_handle_kind_t kind, const char *path)
 {
+    return wgf_core_priv_resource_create_with(kind, path, NULL);
+}
+
+wgf_handle_t wgf_core_priv_resource_create_with(wgf_core_priv_handle_kind_t kind, const char *path,
+                                               const wgf_core_priv_loader_t *loader)
+{
     wgf_core_priv_handle_pool_t *pool = (unsigned)kind < KINDS ? kinds[kind].pool : NULL;
     const wgf_core_priv_resource_kind_t *desc = pool != NULL ? kinds[kind].kind : NULL;
     char key[WGF_CORE_PRIV_FS_PATH_MAX] = "";
@@ -161,9 +167,10 @@ wgf_handle_t wgf_core_priv_resource_create(wgf_core_priv_handle_kind_t kind, con
         memcpy(record->found, key, sizeof(key));
     }
     record->status = WGF_RESOURCE_STATUS_PENDING;
-    if (!wgf_core_priv_load_request(desc->loader(record->found), key[0] != '\0' && strstr(request, "://") != NULL
-                                                                     ? request /* a URL, which the asset part maps */
-                                                                     : record->found,
+    if (loader == NULL) loader = desc->loader(record->found);
+    if (!wgf_core_priv_load_request(loader, key[0] != '\0' && strstr(request, "://") != NULL
+                                                ? request /* a URL, which the asset part maps */
+                                                : record->found,
                                     handle)) {
         wgf_log_warn("%s: %s: nothing to load it with (is core running?)", desc->create, request);
         record->status = WGF_RESOURCE_STATUS_FAILED;

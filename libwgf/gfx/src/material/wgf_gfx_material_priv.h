@@ -41,7 +41,16 @@ typedef struct wgf_gfx_priv_material_texture_t {
     wgf_texture_wrap_t wrap_v;
     wgf_texture_filter_t filter;
     bool mipmaps; /* sampled through its mipmaps (the default), or its base level alone (a glTF sampler's) */
+    bool cube;    /* a custom material's cubemap (wgf_material_set_cubemap): `texture` is a wgf_cubemap_t */
 } wgf_gfx_priv_material_texture_t;
+
+/* What a texture call wants of a texture parameter: a texture's (2D), a cubemap's, or
+ * either (its sampling). */
+enum {
+    WGF_GFX_PRIV_MATERIAL_WANT_2D = 0,
+    WGF_GFX_PRIV_MATERIAL_WANT_CUBE = 1,
+    WGF_GFX_PRIV_MATERIAL_WANT_EITHER = 2
+};
 
 struct wgf_gfx_priv_material_t;
 struct wgf_gfx_priv_material_custom_t; /* a custom material's values (material/wgf_gfx_material_custom.c) */
@@ -60,9 +69,10 @@ typedef struct wgf_gfx_priv_material_custom_hooks_t {
      * of VEC3 or VEC4 finds a COLOR too. */
     float *(*value)(struct wgf_gfx_priv_material_t *material, const char *name, wgf_gfx_priv_material_kind_t kind,
                     bool make);
-    /* Texture `name`, made when `make` (refused, logged, as a value is); NULL otherwise. */
+    /* Texture `name`, made when `make` (refused, logged, as a value is); NULL otherwise.
+     * `want`: WGF_GFX_PRIV_MATERIAL_WANT_*, a texture2D's, a cubemap's, or either (sampling). */
     struct wgf_gfx_priv_material_texture_t *(*texture)(struct wgf_gfx_priv_material_t *material, const char *name,
-                                                        bool make);
+                                                        bool make, int want);
     /* What it holds let go of: its values, textures, and shader. */
     void (*clear)(struct wgf_gfx_priv_material_t *material);
     /* A stage's run of its items (stage/wgf_gfx_stage3d_draw_priv.h's custom draw). */

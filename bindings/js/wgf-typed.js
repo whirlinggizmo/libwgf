@@ -617,6 +617,19 @@ export const Color = Object.freeze({
     // wgf: call wgf_color_multiply
     multiply: raw.wgf_color_multiply,
 });
+// wgf: typed Cubemap
+export const Cubemap = Object.freeze({
+    // wgf: call wgf_cubemap_create
+    create: raw.wgf_cubemap_create,
+    // wgf: call wgf_cubemap_create_faces
+    createFaces: raw.wgf_cubemap_create_faces,
+    // wgf: call wgf_cubemap_get_size
+    getSize: raw.wgf_cubemap_get_size,
+    // wgf: call wgf_cubemap_get_layout
+    getLayout: raw.wgf_cubemap_get_layout,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
+});
 // wgf: typed Debug
 export const Debug = Object.freeze({
     // wgf: call wgf_debug_show_fps
@@ -1557,6 +1570,10 @@ export const Material = Object.freeze({
     setTexture: raw.wgf_material_set_texture,
     // wgf: call wgf_material_get_texture
     getTexture: raw.wgf_material_get_texture,
+    // wgf: call wgf_material_set_cubemap
+    setCubemap: raw.wgf_material_set_cubemap,
+    // wgf: call wgf_material_get_cubemap
+    getCubemap: raw.wgf_material_get_cubemap,
     // wgf: call wgf_material_set_texture_sampling
     setTextureSampling: raw.wgf_material_set_texture_sampling,
     // wgf: call wgf_material_get_texture_wrap_u
@@ -2994,6 +3011,8 @@ export const ColliderShape = Object.freeze({ CIRCLE: 0, RECTANGLE: 1, POLYGON: 2
 export const ColorStock = Object.freeze({ BLANK: 0, WHITE: 1, BLACK: 2, LIGHTGRAY: 3, GRAY: 4, DARKGRAY: 5, YELLOW: 6, GOLD: 7, ORANGE: 8, PINK: 9, RED: 10, MAROON: 11, GREEN: 12, LIME: 13, DARKGREEN: 14, SKYBLUE: 15, BLUE: 16, DARKBLUE: 17, PURPLE: 18, VIOLET: 19, DARKPURPLE: 20, BEIGE: 21, BROWN: 22, DARKBROWN: 23, MAGENTA: 24, RAYWHITE: 25 });
 // wgf: enum Component
 export const Component = Object.freeze({ NONE: 0, MOTION: 1, BOUNDS: 2, LIFETIME: 3, COLLIDER: 4, VOICE: 5, BODY: 6, VEHICLE: 7, BODY2D: 8 });
+// wgf: enum CubemapLayout
+export const CubemapLayout = Object.freeze({ AUTO: 0, LINE_VERTICAL: 1, LINE_HORIZONTAL: 2, CROSS_THREE_BY_FOUR: 3, CROSS_FOUR_BY_THREE: 4, FACES: 5 });
 // wgf: enum DocumentEvent
 export const DocumentEvent = Object.freeze({ NONE: 0, CLICK: 1, CHANGE: 2, SUBMIT: 3, FOCUS: 4, BLUR: 5 });
 // wgf: enum DrawFill

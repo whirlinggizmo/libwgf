@@ -418,6 +418,13 @@ static wgf_core_priv_load_step_t finish(void *data, wgf_handle_t resource)
         p->desc.label = labels[i];
         memcpy(program->has_block, p->has_block, sizeof(program->has_block));
         find_slots(&shader, p, program);
+        if (i == wanted_program(&shader)) { /* which of its textures are cubes: its views say */
+            int t;
+            for (t = 0; t < shader.texture_count; t++) {
+                shader.texture_cube[t] = program->view_slot[t] >= 0 &&
+                                         p->desc.views[program->view_slot[t]].texture.image_type == SG_IMAGETYPE_CUBE;
+            }
+        }
         program->shader = sg_make_shader(&p->desc);
         if (sg_query_shader_state(program->shader) != SG_RESOURCESTATE_VALID) {
             error = "the graphics backend refused it (the error above says why)";

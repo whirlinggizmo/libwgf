@@ -77,6 +77,7 @@ typedef struct wgf_gfx_priv_shader_t {
     int param_count;
     int block_size[WGF_GFX_PRIV_SHADER_BLOCK_COUNT]; /* FS_PARAMS and VS_PARAMS: bytes (std140, a 16-byte multiple) */
     char textures[WGF_GFX_PRIV_SHADER_MAX_TEXTURES][WGF_GFX_PRIV_SHADER_NAME_MAX];
+    bool texture_cube[WGF_GFX_PRIV_SHADER_MAX_TEXTURES]; /* a textureCube (a cubemap's), not a texture2D */
     int texture_count;
 } wgf_gfx_priv_shader_t;
 
@@ -95,6 +96,19 @@ struct wgf_gfx_priv_material_texture_t;
 const wgf_gfx_priv_shader_t *wgf_gfx_priv_material_custom_bind(
     wgf_material_t material, const unsigned char **params,
     const struct wgf_gfx_priv_material_texture_t *textures[WGF_GFX_PRIV_SHADER_MAX_TEXTURES]);
+
+/* What to bind for the shader's texture `t`, the material's `texture` (NULL: none set): its
+ * view and sampler. A texture2D unset, loading, or FAILED is `white`, as libwgt's; a
+ * textureCube unset or loading `white_cube`, FAILED a checker. `sampler` comes in as the one
+ * for none. */
+void wgf_gfx_priv_material_custom_texture_binding(const wgf_gfx_priv_shader_t *shader, int t,
+                                                  const struct wgf_gfx_priv_material_texture_t *texture, sg_view white,
+                                                  sg_view white_cube, sg_view *view, sg_sampler *sampler);
+
+/* What a cubemap is bound as (texture/wgf_gfx_cubemap.c sets it as its part installs, so a
+ * program with none links none of it): its view READY, a checker's FAILED; false while it
+ * loads, or for what isn't one. NULL until a cubemap is made. */
+extern bool (*wgf_gfx_priv_cubemap_bind)(wgf_handle_t cubemap, sg_view *view);
 
 /* Index of the parameter or texture called `name`, or -1. */
 int wgf_gfx_priv_shader_find_param(const wgf_gfx_priv_shader_t *shader, const char *name);

@@ -28,6 +28,7 @@ Made by Whirling Gizmo for its libraries, under libwgf's MIT license:
 - `textures/flame.png`, `textures/particle.png`: from libwgt's `examples/assets/`, made by wgrender's `tools/gen_particle_textures.py`; `textures/flame.{bc7,astc,etc2}.ktx` made from the PNG by `tools/compress_textures.py`.
 - `textures/tiles_normal.png`: from libwgt's `examples/assets/`, made by wgrender's `tools/gen_material_assets.py`.
 - `sprites/logo/wg-logo-bw-alpha.png`, `sprites/logo/wg-logo-white-alpha.png`: the Whirling Gizmo logo, from libwgt's `examples/assets/`; `sprites/logo/wg-logo-bw-alpha.{bc7,astc,etc2}.ktx` made from the PNG by `tools/compress_textures.py`.
+- `textures/skybox.png`: a sky over a checkered plain as a cubemap's 4 by 3 cross, drawn in `tools/gen_skybox.py`.
 - `fonts/gizmo5/gizmo5.fnt`, `gizmo5_0.png`, `gizmo5_image.png`: Gizmo 5, a pixel font of printable ASCII drawn in `tools/gen_bitmap_font.py`, as an AngelCode BMFont and as an image of glyphs.
 - `textures/noise.png`: made by `tools/gen_noise.py` (wgrender's `tools/gen_noise_texture.py`, written again): the dissolve shader's.
 - `textures/tiles.png`: from libwgt's `examples/assets/`, made by wgrender's `tools/gen_tiles.py`; the page `tools/check_asset_cache.py` visits draws it.

@@ -13,6 +13,9 @@ wgf_shader_create(path). Only needed to make the file, never at run time; sokol-
 downloaded the first time (tools/setup_shdc.py). The parameters are read from the
 compiled SPIR-V (tools/spirv.py), not from the source.
 
+Its textures are texture2D, set with wgf_material_set_texture, or textureCube, a cubemap
+set with wgf_material_set_cubemap.
+
 A fragment shader that includes wgf_screen instead of wgf_surface is a screen effect
 (wgf_render_add_effect): it gets one program, drawn over the finished frame.
 
@@ -39,6 +42,9 @@ LIBRARY_BLOCKS = (0, 1)  # libwgf's: the vertex shader's (camera, time, first re
 FS_PARAMS_BINDING = 2
 VS_PARAMS_BINDING = 3
 MAX_TEXTURES = 8
+# a texture's type as sokol-shdc reflects it: a texture2D (wgf_material_set_texture), a textureCube
+# (wgf_material_set_cubemap); the loader tells them apart by the view lines, which carry it
+TEXTURE_TYPES = ('2d', 'cube')
 MAX_PARAMS = 32   # libwgf/gfx/src/material/wgf_gfx_shader_priv.h
 NAME_MAX = 32
 PARAM_TYPES = {  # std140: size, alignment
@@ -186,8 +192,9 @@ def check_program(slang, program, fs_params, vs_params):
             continue  # libwgf's, at bindings 8 and up
         if len(texture['name']) >= NAME_MAX:
             fail(f'texture {texture["name"]}: names are at most {NAME_MAX - 1} characters')
-        if texture['stage'] != 'fragment' or texture['type'] != '2d' or texture['slot'] >= MAX_TEXTURES:
-            fail(f'texture {texture["name"]}: textures are texture2D in the fragment shader, bindings 0-{MAX_TEXTURES - 1}')
+        if texture['stage'] != 'fragment' or texture['type'] not in TEXTURE_TYPES or texture['slot'] >= MAX_TEXTURES:
+            fail(f'texture {texture["name"]}: textures are texture2D or textureCube (a cubemap) in the fragment '
+                 f'shader, bindings 0-{MAX_TEXTURES - 1}')
 
 
 def describe(program):

@@ -30,7 +30,12 @@
  * materials' are. Textures: each texture2D (up to 8, in the fragment shader, bindings 0-7)
  * is set by its name with wgf_material_set_texture, and sampled with the sampler it is
  * paired with in texture(sampler2D(...)), which wgf_material_set_texture_sampling sets up.
- * A texture that isn't set, or is still loading, is white.
+ * A texture that isn't set, or is still loading, is white. A textureCube among them is a
+ * cubemap (wgf_cubemap.h), set by its name with wgf_material_set_cubemap and sampled by a
+ * direction in texture(samplerCube(sky_tex, sky_smp), dir): a skybox by the view's direction
+ * (wgf_world_pos - wgf_camera_position()), a reflection by reflect(). White unset or loading,
+ * a magenta and black checker once it has FAILED; its faces are as stored (an image's sRGB:
+ * wgf_srgb_to_linear), filtered by its sampling's filter, clamped at its edges.
  *
  * Fragment inputs (wgf_surface), world space:
  *   wgf_world_pos   vec3   the surface point

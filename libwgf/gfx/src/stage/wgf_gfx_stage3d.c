@@ -197,6 +197,8 @@ static void stop(void)
         sg_destroy_sampler(frame.no_shadow_sampler);
         sg_destroy_view(frame.no_environment_view);
         sg_destroy_image(frame.no_environment_image);
+        sg_destroy_view(frame.white_cube_view);
+        sg_destroy_image(frame.white_cube_image);
     }
     memset(&frame, 0, sizeof(frame));
 }
@@ -1150,6 +1152,7 @@ static void ensure_ready(void)
         view.texture.image = frame.no_environment_image;
         frame.no_environment_view = sg_make_view(&view);
     }
+    frame.white_cube_image = wgf_gfx_priv_render_white_cube(&frame.white_cube_view);
     frame.ready = true;
 }
 

@@ -7,6 +7,7 @@
 #include "material/wgf_gfx_material_priv.h"
 #include "texture/wgf_gfx_texture_priv.h"
 #include "wgf_core_handle_priv.h"
+#include "wgf_core_resource_priv.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_log.h"
 
@@ -103,12 +104,18 @@ static float *lookup_values(wgf_material_t material, const char *name, param_kin
     return param_ptr != NULL ? (float *)((char *)material_ptr + param_ptr->offset) : NULL;
 }
 
-static wgf_gfx_priv_material_texture_t *lookup_texture(wgf_material_t material, const char *name, bool log)
+/* Texture parameter `name` that `want`s (WGF_GFX_PRIV_MATERIAL_WANT_*): a texture's, a
+ * cubemap's (a custom material's alone), or either. */
+static wgf_gfx_priv_material_texture_t *lookup_texture(wgf_material_t material, const char *name, bool log, int want)
 {
     wgf_gfx_priv_material_t *material_ptr = resolve(material);
     const param_t *param_ptr;
     if (material_ptr != NULL && material_ptr->custom != NULL) {
-        return material_ptr->custom->texture(material_ptr, name, log);
+        return material_ptr->custom->texture(material_ptr, name, log, want);
+    }
+    if (material_ptr != NULL && want == WGF_GFX_PRIV_MATERIAL_WANT_CUBE) {
+        if (log) wgf_log_warn("wgf_gfx_material: a built-in material has no cubemap '%s'", name != NULL ? name : "");
+        return NULL;
     }
     param_ptr = lookup(material_ptr, name, PARAM_TEXTURE, PARAM_TEXTURE, log);
     return param_ptr != NULL ? &material_ptr->textures[param_ptr->offset] : NULL;
@@ -380,7 +387,7 @@ bool wgf_material_set_color(wgf_material_t material, const char *name, wgf_color
 
 bool wgf_material_set_texture(wgf_material_t material, const char *name, wgf_texture_t texture)
 {
-    wgf_gfx_priv_material_texture_t *slot_ptr = lookup_texture(material, name, true);
+    wgf_gfx_priv_material_texture_t *slot_ptr = lookup_texture(material, name, true, WGF_GFX_PRIV_MATERIAL_WANT_2D);
     if (slot_ptr == NULL) return false;
     if (texture != 0 && (WGF_CORE_PRIV_HANDLE_KIND(texture) != WGF_CORE_PRIV_HANDLE_KIND_TEXTURE ||
                          wgf_resource_get_status(texture) == WGF_RESOURCE_STATUS_NONE)) {
@@ -397,14 +404,41 @@ bool wgf_material_set_texture(wgf_material_t material, const char *name, wgf_tex
 
 wgf_texture_t wgf_material_get_texture(wgf_material_t material, const char *name)
 {
-    const wgf_gfx_priv_material_texture_t *slot_ptr = lookup_texture(material, name, false);
+    const wgf_gfx_priv_material_texture_t *slot_ptr =
+        lookup_texture(material, name, false, WGF_GFX_PRIV_MATERIAL_WANT_2D);
+    return slot_ptr != NULL ? slot_ptr->texture : 0;
+}
+
+bool wgf_material_set_cubemap(wgf_material_t material, const char *name, wgf_cubemap_t cubemap)
+{
+    wgf_gfx_priv_material_texture_t *slot_ptr;
+    if (cubemap != 0 && (WGF_CORE_PRIV_HANDLE_KIND(cubemap) != WGF_CORE_PRIV_HANDLE_KIND_CUBEMAP ||
+                         wgf_resource_get_status(cubemap) == WGF_RESOURCE_STATUS_NONE)) {
+        wgf_log_warn("wgf_material_set_cubemap: '%s' takes a cubemap (wgf_cubemap_create)", name != NULL ? name : "");
+        return false;
+    }
+    slot_ptr = lookup_texture(material, name, true, WGF_GFX_PRIV_MATERIAL_WANT_CUBE);
+    if (slot_ptr == NULL) return false;
+    if (slot_ptr->texture != cubemap) {
+        if (cubemap != 0) wgf_core_priv_resource_retain(cubemap); /* before releasing, in case they're the same */
+        if (slot_ptr->texture != 0) wgf_resource_release(slot_ptr->texture);
+        slot_ptr->texture = cubemap;
+    }
+    return true;
+}
+
+wgf_cubemap_t wgf_material_get_cubemap(wgf_material_t material, const char *name)
+{
+    const wgf_gfx_priv_material_texture_t *slot_ptr =
+        lookup_texture(material, name, false, WGF_GFX_PRIV_MATERIAL_WANT_CUBE);
     return slot_ptr != NULL ? slot_ptr->texture : 0;
 }
 
 bool wgf_material_set_texture_sampling(wgf_material_t material, const char *name, wgf_texture_wrap_t wrap_u,
                                        wgf_texture_wrap_t wrap_v, wgf_texture_filter_t filter)
 {
-    wgf_gfx_priv_material_texture_t *texture_ptr = lookup_texture(material, name, true);
+    wgf_gfx_priv_material_texture_t *texture_ptr =
+        lookup_texture(material, name, true, WGF_GFX_PRIV_MATERIAL_WANT_EITHER);
     if (texture_ptr == NULL) return false;
     if ((int)wrap_u < WGF_TEXTURE_WRAP_REPEAT || wrap_u > WGF_TEXTURE_WRAP_MIRROR ||
         (int)wrap_v < WGF_TEXTURE_WRAP_REPEAT || wrap_v > WGF_TEXTURE_WRAP_MIRROR ||
@@ -419,7 +453,8 @@ bool wgf_material_set_texture_sampling(wgf_material_t material, const char *name
 
 bool wgf_gfx_priv_material_set_texture_mipmaps(wgf_material_t material, const char *name, bool mipmaps)
 {
-    wgf_gfx_priv_material_texture_t *texture_ptr = lookup_texture(material, name, true);
+    wgf_gfx_priv_material_texture_t *texture_ptr =
+        lookup_texture(material, name, true, WGF_GFX_PRIV_MATERIAL_WANT_EITHER);
     if (texture_ptr == NULL) return false;
     texture_ptr->mipmaps = mipmaps;
     return true;
@@ -427,18 +462,21 @@ bool wgf_gfx_priv_material_set_texture_mipmaps(wgf_material_t material, const ch
 
 wgf_texture_wrap_t wgf_material_get_texture_wrap_u(wgf_material_t material, const char *name)
 {
-    const wgf_gfx_priv_material_texture_t *texture_ptr = lookup_texture(material, name, false);
+    const wgf_gfx_priv_material_texture_t *texture_ptr =
+        lookup_texture(material, name, false, WGF_GFX_PRIV_MATERIAL_WANT_EITHER);
     return texture_ptr != NULL ? texture_ptr->wrap_u : WGF_TEXTURE_WRAP_REPEAT;
 }
 
 wgf_texture_wrap_t wgf_material_get_texture_wrap_v(wgf_material_t material, const char *name)
 {
-    const wgf_gfx_priv_material_texture_t *texture_ptr = lookup_texture(material, name, false);
+    const wgf_gfx_priv_material_texture_t *texture_ptr =
+        lookup_texture(material, name, false, WGF_GFX_PRIV_MATERIAL_WANT_EITHER);
     return texture_ptr != NULL ? texture_ptr->wrap_v : WGF_TEXTURE_WRAP_REPEAT;
 }
 
 wgf_texture_filter_t wgf_material_get_texture_filter(wgf_material_t material, const char *name)
 {
-    const wgf_gfx_priv_material_texture_t *texture_ptr = lookup_texture(material, name, false);
+    const wgf_gfx_priv_material_texture_t *texture_ptr =
+        lookup_texture(material, name, false, WGF_GFX_PRIV_MATERIAL_WANT_EITHER);
     return texture_ptr != NULL ? texture_ptr->filter : WGF_TEXTURE_FILTER_LINEAR;
 }

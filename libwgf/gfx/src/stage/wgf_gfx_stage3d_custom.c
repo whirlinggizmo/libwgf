@@ -184,19 +184,10 @@ void wgf_gfx_priv_stage3d_draw_custom(wgf_gfx_priv_stage3d_frame_t *frame, const
     if (item->skinned) bindings.vertex_buffers[1] = primitive.skin;
     bindings.index_buffer = primitive.indices;
     for (t = 0; t < shader->texture_count; t++) {
-        const wgf_gfx_priv_material_texture_t *texture = textures[t];
-        sg_view view = frame->white_view; /* none set, still loading, or failed: white, as libwgt's */
+        sg_view view;
         sg_sampler sampler = frame->sampler;
-        int width, height;
-        bool placeholder;
-        if (texture != NULL) {
-            if (texture->texture != 0 &&
-                wgf_gfx_priv_texture_get_binding(texture->texture, &view, &sampler, &width, &height, &placeholder) &&
-                placeholder) {
-                view = frame->white_view;
-            }
-            sampler = wgf_gfx_priv_texture_sampler(texture->wrap_u, texture->wrap_v, texture->filter, texture->mipmaps);
-        }
+        wgf_gfx_priv_material_custom_texture_binding(shader, t, textures[t], frame->white_view, frame->white_cube_view,
+                                                     &view, &sampler);
         if (program->view_slot[t] >= 0) bindings.views[program->view_slot[t]] = view;
         if (program->sampler_slot[t] >= 0) bindings.samplers[program->sampler_slot[t]] = sampler;
     }

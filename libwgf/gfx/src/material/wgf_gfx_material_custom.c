@@ -119,10 +119,20 @@ static const wgf_gfx_priv_shader_t *bind(wgf_gfx_priv_material_t *material_ptr)
     }
     custom->value_count = kept;
     for (i = kept = 0; i < custom->texture_count; i++) {
-        if (wgf_gfx_priv_shader_find_texture(shader, custom->texture_names[i]) < 0) {
+        const int t = wgf_gfx_priv_shader_find_texture(shader, custom->texture_names[i]);
+        if (t < 0) {
             wgf_log_warn("wgf_gfx_material: its shader has no texture '%s'", custom->texture_names[i]);
             if (custom->textures[i].texture != 0) wgf_resource_release(custom->textures[i].texture);
             continue;
+        }
+        if (custom->textures[i].cube != shader->texture_cube[t]) {
+            if (custom->textures[i].texture != 0) {
+                wgf_log_warn("wgf_gfx_material: its shader's '%s' is a %s: what was set is dropped",
+                             custom->texture_names[i], shader->texture_cube[t] ? "textureCube" : "texture2D");
+                wgf_resource_release(custom->textures[i].texture);
+                custom->textures[i].texture = 0;
+            }
+            custom->textures[i].cube = shader->texture_cube[t]; /* its sampling, set alone, kept */
         }
         memcpy(custom->texture_names[kept], custom->texture_names[i], sizeof(custom->texture_names[i]));
         custom->textures[kept++] = custom->textures[i];
@@ -180,18 +190,39 @@ static float *value(wgf_gfx_priv_material_t *material_ptr, const char *name, wgf
     return custom->values[at].values;
 }
 
-static wgf_gfx_priv_material_texture_t *texture(wgf_gfx_priv_material_t *material_ptr, const char *name, bool make)
+/* Whether a texture of `cube` is what `want` asks for. */
+static bool wanted(bool cube, int want)
+{
+    return want == WGF_GFX_PRIV_MATERIAL_WANT_EITHER || cube == (want == WGF_GFX_PRIV_MATERIAL_WANT_CUBE);
+}
+
+static wgf_gfx_priv_material_texture_t *texture(wgf_gfx_priv_material_t *material_ptr, const char *name, bool make,
+                                                int want)
 {
     wgf_gfx_priv_material_custom_t *custom = material_ptr->values;
     const wgf_gfx_priv_shader_t *shader = bind(material_ptr);
+    const int t = shader != NULL ? wgf_gfx_priv_shader_find_texture(shader, name) : -1;
+    const bool cube = want == WGF_GFX_PRIV_MATERIAL_WANT_CUBE;
     int at = find_texture(custom, name);
 
-    if (at >= 0) return &custom->textures[at];
+    if (at >= 0 && wanted(custom->textures[at].cube, want)) return &custom->textures[at];
     if (!make) return NULL;
     if (name == NULL || name[0] == '\0' || strlen(name) >= WGF_GFX_PRIV_SHADER_NAME_MAX ||
-        (shader != NULL && wgf_gfx_priv_shader_find_texture(shader, name) < 0)) {
+        (shader != NULL && t < 0)) {
         wgf_log_warn("wgf_gfx_material: its shader has no texture '%s'", name != NULL ? name : "(null)");
         return NULL;
+    }
+    if (shader != NULL && !wanted(shader->texture_cube[t], want)) { /* its type is the shader's */
+        wgf_log_warn("wgf_gfx_material: its shader's '%s' is a %s (set by wgf_material_set_%s)", name,
+                     shader->texture_cube[t] ? "textureCube" : "texture2D",
+                     shader->texture_cube[t] ? "cubemap" : "texture");
+        return NULL;
+    }
+    if (at >= 0) { /* set as the other while the shader loads: what was set goes, its sampling stays */
+        if (custom->textures[at].texture != 0) wgf_resource_release(custom->textures[at].texture);
+        custom->textures[at].texture = 0;
+        custom->textures[at].cube = cube;
+        return &custom->textures[at];
     }
     if (custom->texture_count >= CUSTOM_TEXTURES) {
         wgf_log_warn("wgf_gfx_material: no room for texture '%s'", name);
@@ -202,6 +233,7 @@ static wgf_gfx_priv_material_texture_t *texture(wgf_gfx_priv_material_t *materia
     memset(&custom->textures[at], 0, sizeof(custom->textures[at]));
     custom->textures[at].scale[0] = custom->textures[at].scale[1] = 1.0f;
     custom->textures[at].mipmaps = true;
+    custom->textures[at].cube = t >= 0 ? shader->texture_cube[t] : cube; /* either: the shader's, or 2D till it says */
     return &custom->textures[at];
 }
 
@@ -221,6 +253,34 @@ static void clear(wgf_gfx_priv_material_t *material_ptr)
 static const wgf_gfx_priv_material_custom_hooks_t hooks = {value, texture, clear, wgf_gfx_priv_stage3d_draw_custom};
 
 /* -------------------------------------------------------------- internal ---- */
+
+bool (*wgf_gfx_priv_cubemap_bind)(wgf_handle_t cubemap, sg_view *view);
+
+void wgf_gfx_priv_material_custom_texture_binding(const wgf_gfx_priv_shader_t *shader, int t,
+                                                  const wgf_gfx_priv_material_texture_t *texture, sg_view white,
+                                                  sg_view white_cube, sg_view *view, sg_sampler *sampler)
+{
+    int width = 0, height = 0;
+    bool placeholder = false;
+    if (shader->texture_cube[t]) {
+        *view = white_cube; /* none set, or still loading */
+        if (texture == NULL) return;
+        if (texture->texture != 0 && wgf_gfx_priv_cubemap_bind != NULL) {
+            wgf_gfx_priv_cubemap_bind(texture->texture, view);
+        }
+        *sampler = wgf_gfx_priv_texture_sampler(WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP, texture->filter,
+                                                texture->mipmaps);
+        return;
+    }
+    *view = white; /* none set, still loading, or failed: white, as libwgt's */
+    if (texture == NULL) return;
+    if (texture->texture != 0 &&
+        wgf_gfx_priv_texture_get_binding(texture->texture, view, sampler, &width, &height, &placeholder) &&
+        placeholder) {
+        *view = white;
+    }
+    *sampler = wgf_gfx_priv_texture_sampler(texture->wrap_u, texture->wrap_v, texture->filter, texture->mipmaps);
+}
 
 const wgf_gfx_priv_shader_t *wgf_gfx_priv_material_custom_bind(
     wgf_material_t material, const unsigned char **params,
