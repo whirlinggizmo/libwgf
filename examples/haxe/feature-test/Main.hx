@@ -20,6 +20,17 @@ class Rock extends Behavior {
 		hits++;
 }
 
+class Title extends Behavior {
+	public static var entered = 0;
+	public static var exited = 0;
+
+	override function onScreenEnter(from:Actor)
+		entered++;
+
+	override function onScreenExit(to:Actor)
+		exited++;
+}
+
 class Main {
 	static var failures = 0;
 	static var frames = 0;
@@ -199,6 +210,9 @@ class Main {
 		expect(Loop.getTimeScale() == 1, "the time scale");
 		Loop.setTargetFps(0);
 		expect(Loop.getTargetFps() == 0, "no target fps");
+		Loop.setPauseUnfocused(true);
+		expect(Loop.isPauseUnfocused(), "held while unfocused");
+		Loop.setPauseUnfocused(false);
 		Gamepad.setDeadzone(0.2);
 		expect(near(Gamepad.getDeadzone(), 0.2), "the dead zone");
 		expect(Gamepad.getAxis(0, GamepadAxis.LEFT_X) == 0, "no pad, no axis");
@@ -669,7 +683,35 @@ class Main {
 			&& tiles.getFilter() == TextureFilter.NEAREST, "a texture's sampling");
 	}
 
+	static function screens():Void {
+		Behavior.register("Title", Title.new);
+		final title = Screen.create(), play = Screen.create(), menu = Screen.create(), loading = Screen.create();
+		final playStage = Stage2d.create();
+		expect(!title.isNone() && Screen.addStage(play, playStage) && Screen.getStageCount(play) == 1
+			&& Screen.getStage(play, 0) == playStage, "screens, one with a stage");
+		title.addBehavior("Title");
+		expect(Screen.setTransition(Transition.NONE, 0) && Screen.getTransition() == Transition.NONE
+			&& Screen.getTransitionSeconds() == 0, "changes at once");
+		Screen.setTransitionColor(Color.make(0, 0, 0, 255));
+		expect(Screen.getTransitionColor() == Color.make(0, 0, 0, 255) && Screen.setTransitionEase(Easing.QUAD_OUT)
+			&& Screen.getTransitionEase() == Easing.QUAD_OUT, "the transition's color and ease");
+		expect(Screen.push(title) && Screen.getTop() == title && Screen.getCount() == 1 && Screen.get(0) == title, "a title pushed");
+		expect(Screen.replace(play) && Screen.getTop() == play, "replaced by play");
+		expect(Screen.setOpaque(menu, false) && !Screen.isOpaque(menu) && Screen.setPausing(menu, true) && Screen.isPausing(menu),
+			"a pause menu over it");
+		expect(Screen.push(menu) && playStage.isFrozen() && Screen.pop() && !playStage.isFrozen(), "pushed, play paused; popped");
+		expect(Screen.setLoadingScreen(loading) && Screen.getLoadingScreen() == loading && Screen.getLoadProgress() == 1
+			&& !Screen.isChanging() && Screen.getChangeProgress() == 0, "a loading screen; nothing changing");
+		expect(!Screen.isWaitLoads(play) && Screen.setWaitLoads(play, true) && Screen.isWaitLoads(play)
+			&& Screen.setWaitLoads(play, false), "waiting for every load, or not");
+		expect(Screen.setAssets(play, cast 0) && Screen.getAssets(play).isNone() && Screen.removeStage(play, playStage),
+			"no assets; a stage removed");
+		Screen.draw();
+		Screen.setLoadingScreen(cast 0);
+	}
+
 	static function ecs():Void {
+		screens();
 		Behavior.register("Rock", Rock.new);
 		scene = Scene.create("scenes/field.scene");
 		final ship:Actor = Shape2d.create();
@@ -1077,6 +1119,7 @@ class Main {
 	static function finish():Void {
 		reported = true;
 		expect(Rock.made == 3, 'the scene\'s rocks given their behaviors (${Rock.made})');
+		expect(Title.entered == 1 && Title.exited == 1, 'a screen\'s behavior told it came and went (${Title.entered}, ${Title.exited})');
 		expect(!tiles.isNone() && tiles.getWidth() > 0 && tiles.getHeight() > 0, "a texture loaded");
 		expect(Resource.getPath(tiles) == "textures/tiles.png" && Resource.getStatus(tiles) == ResourceStatus.READY, "a resource");
 		expect((tiles : Handle).getKindName() == "gfx.texture", "its kind");

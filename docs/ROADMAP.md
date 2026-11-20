@@ -24,9 +24,8 @@ Out of the parity work, as not libwgf's (the checklist's skips): desktop window 
 
 What a game of any genre writes in its first day, in this order, each done as a core system is, carrying helix-legacy's.
 
-1. **Screens and scene flow.** A game as a stack of screens (title, play, pause, game over): push, pop, and replace, a screen's stages and actors its own, paused under the one on top and resumed; transitions between two (fade, slide, wipe, iris, each on an ease, the swap at the middle); a loading screen with one progress over every asset a screen asks for (`wgf_asset_group_*`); and pausing when the page or window loses focus. helix-legacy's `scene/Flow.hx`, `Loader.hx`, `LoadingScreen.hx`, and `scene/transition/`.
-2. **2D animation's rest:** a packer's atlas of named frames read from its file (TexturePacker's or Aseprite's JSON), events on a frame, directions (a clip a facing), and a sheet made from a folder of frames by a tool (helix-legacy's `tools/gen_sprite_sheet.py`); grid sheets and clips are done (`wgf_sheet.h`).
-3. **Tilemaps.** Tiled's maps (`.tmj`, its tilesets `.tsj`): tile layers drawn as one actor each (the sprite batch's records, or a mesh, which the plan measures), object layers read as actors and prefabs by class with their properties, animated tiles, a cell read and set, and the solid cells 2D move-and-slide collides with. helix-legacy's `tiled/`; today's `examples/c/gfx-tilemap` rebuilt on it.
+1. **2D animation's rest:** a packer's atlas of named frames read from its file (TexturePacker's or Aseprite's JSON), events on a frame, directions (a clip a facing), and a sheet made from a folder of frames by a tool (helix-legacy's `tools/gen_sprite_sheet.py`); grid sheets and clips are done (`wgf_sheet.h`).
+2. **Tilemaps.** Tiled's maps (`.tmj`, its tilesets `.tsj`): tile layers drawn as one actor each (the sprite batch's records, or a mesh, which the plan measures), object layers read as actors and prefabs by class with their properties, animated tiles, a cell read and set, and the solid cells 2D move-and-slide collides with. helix-legacy's `tiled/`; today's `examples/c/gfx-tilemap` rebuilt on it.
 
 Done when every item's calls are in the bindings and the feature test, and each has an example in the browser check.
 

@@ -110,6 +110,8 @@ void wgf_platform_priv_set_visible(bool visible);
 bool wgf_platform_priv_is_visible(void);
 void wgf_platform_priv_set_style(bool resizable, bool decorated);
 bool wgf_platform_priv_is_focused(void);
+/* Headless only: whether the window reads focused, for a test (focused to start). */
+void wgf_platform_priv_set_test_focused(bool focused);
 
 /* Where the window is on the desktop, its top-left in the desktop's coordinates, and
  * the monitors: false, or one monitor the size of the screen, where the platform

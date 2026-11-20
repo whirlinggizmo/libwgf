@@ -234,9 +234,16 @@ void wgf_platform_priv_set_style(bool resizable, bool decorated)
     (void)decorated;
 }
 
+static bool unfocused; /* a test's: the window looked away from */
+
+void wgf_platform_priv_set_test_focused(bool focused)
+{
+    unfocused = !focused;
+}
+
 bool wgf_platform_priv_is_focused(void)
 {
-    return true;
+    return !unfocused;
 }
 
 void wgf_platform_priv_lock_mouse(bool locked)

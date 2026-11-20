@@ -26,6 +26,9 @@ package wgf;
       CONTACT_BEGIN    two solid bodies beginning to touch (wgf_body.h), told to each: the
                        actor, the other, and the other's body layer
       CONTACT_END      and ceasing to
+      SCREEN_ENTER     a screen coming to the top of the stack (wgf_screen.h): the screen,
+                       the one it covers or replaced (0 for none)
+      SCREEN_EXIT      a screen leaving the top: the screen, the one now there (0 for none)
 
     An actor destroyed while it overlaps another raises no TRIGGER_EXIT. Events taken in a
     batch can name an actor the program destroyed while handling an earlier one of the
@@ -41,4 +44,6 @@ enum abstract WorldEvent(Int) from Int to Int {
 	var TRIGGER_EXIT = 4;
 	var CONTACT_BEGIN = 5;
 	var CONTACT_END = 6;
+	var SCREEN_ENTER = 7;
+	var SCREEN_EXIT = 8;
 }

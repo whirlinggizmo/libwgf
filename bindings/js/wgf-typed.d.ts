@@ -4188,6 +4188,18 @@ export declare const Loop: {
      */
     readonly getTimeScale: typeof raw.wgf_loop_get_time_scale;
     /**
+     * Whether ticks stop while the window (or the page) isn't focused: the game paused when the
+     * player looks away, frames still drawing. Off to start. A run an autopilot flies or records
+     * isn't held.
+     */
+    readonly setPauseUnfocused: typeof raw.wgf_loop_set_pause_unfocused;
+    /**
+     * Whether ticks stop while the window (or the page) isn't focused: the game paused when the
+     * player looks away, frames still drawing. Off to start. A run an autopilot flies or records
+     * isn't held.
+     */
+    readonly isPauseUnfocused: typeof raw.wgf_loop_is_pause_unfocused;
+    /**
      * The most frames a second, to save power or heat; 0 or less (the default) is
      * the display's rate. With vsync on, a cap can only lower the rate. On the web a
      * frame the browser offers too early is skipped.
@@ -5959,6 +5971,188 @@ export declare const Scene: {
      * The prefab `name` found (scene.prefab) and spawned under `parent`: placed at (x, y, z), turned `angle`, and snapped when a place is given (Prefab.spawnAt), else at the prefab's own transform (Prefab.spawn). It looks the prefab up on every call: a hot path finds it once and keeps the handle. 0 as those calls give it.
      */
     readonly spawnPrefab: (scene: raw.wgf_scene_t | 0, name: string | null, parent: raw.wgf_actor_t | 0, x?: number, y?: number, z?: number, angle?: number) => raw.wgf_actor_t;
+};
+export declare const Screen: {
+    /**
+     * A screen: an actor at the top of its own tree, off the stack (switched off). 0 when there is
+     * no room for another actor.
+     */
+    readonly create: typeof raw.wgf_screen_create;
+    /**
+     * Its stages, drawn in the order added (at most 8): add is false for an actor that isn't a
+     * screen, one that isn't a stage, or one it has; remove, for one it hasn't. A stage destroyed
+     * leaves it.
+     */
+    readonly addStage: typeof raw.wgf_screen_add_stage;
+    /**
+     * Its stages, drawn in the order added (at most 8): add is false for an actor that isn't a
+     * screen, one that isn't a stage, or one it has; remove, for one it hasn't. A stage destroyed
+     * leaves it.
+     */
+    readonly removeStage: typeof raw.wgf_screen_remove_stage;
+    /**
+     * Its stages, drawn in the order added (at most 8): add is false for an actor that isn't a
+     * screen, one that isn't a stage, or one it has; remove, for one it hasn't. A stage destroyed
+     * leaves it.
+     */
+    readonly getStageCount: typeof raw.wgf_screen_get_stage_count;
+    /**
+     * Its stages, drawn in the order added (at most 8): add is false for an actor that isn't a
+     * screen, one that isn't a stage, or one it has; remove, for one it hasn't. A stage destroyed
+     * leaves it.
+     */
+    readonly getStage: typeof raw.wgf_screen_get_stage;
+    /**
+     * The stack's changes, run through the transition. push: false for an actor that isn't one,
+     * or one already on the stack; pop: false with none, or the bottom one alone; replace: false
+     * as push, or with none to replace. All false while a change runs.
+     */
+    readonly push: typeof raw.wgf_screen_push;
+    /**
+     * The stack's changes, run through the transition. push: false for an actor that isn't one,
+     * or one already on the stack; pop: false with none, or the bottom one alone; replace: false
+     * as push, or with none to replace. All false while a change runs.
+     */
+    readonly pop: typeof raw.wgf_screen_pop;
+    /**
+     * The stack's changes, run through the transition. push: false for an actor that isn't one,
+     * or one already on the stack; pop: false with none, or the bottom one alone; replace: false
+     * as push, or with none to replace. All false while a change runs.
+     */
+    readonly replace: typeof raw.wgf_screen_replace;
+    /**
+     * The top (0 with none), how many are on the stack, and the one `index` up from the bottom (0
+     * for an index off it). Each as of the last change made, a change running not yet counted.
+     */
+    readonly getTop: typeof raw.wgf_screen_get_top;
+    /**
+     * The top (0 with none), how many are on the stack, and the one `index` up from the bottom (0
+     * for an index off it). Each as of the last change made, a change running not yet counted.
+     */
+    readonly getCount: typeof raw.wgf_screen_get_count;
+    /**
+     * The top (0 with none), how many are on the stack, and the one `index` up from the bottom (0
+     * for an index off it). Each as of the last change made, a change running not yet counted.
+     */
+    readonly get: typeof raw.wgf_screen_get;
+    /**
+     * opaque: none under it is drawn (on to start; off for a pause menu over the game). pausing:
+     * those under it are paused (on to start; off for a HUD over play). False for an actor that
+     * isn't one.
+     */
+    readonly setOpaque: typeof raw.wgf_screen_set_opaque;
+    /**
+     * opaque: none under it is drawn (on to start; off for a pause menu over the game). pausing:
+     * those under it are paused (on to start; off for a HUD over play). False for an actor that
+     * isn't one.
+     */
+    readonly isOpaque: typeof raw.wgf_screen_is_opaque;
+    /**
+     * opaque: none under it is drawn (on to start; off for a pause menu over the game). pausing:
+     * those under it are paused (on to start; off for a HUD over play). False for an actor that
+     * isn't one.
+     */
+    readonly setPausing: typeof raw.wgf_screen_set_pausing;
+    /**
+     * opaque: none under it is drawn (on to start; off for a pause menu over the game). pausing:
+     * those under it are paused (on to start; off for a HUD over play). False for an actor that
+     * isn't one.
+     */
+    readonly isPausing: typeof raw.wgf_screen_is_pausing;
+    /**
+     * Draw what is shown, into this frame: each shown screen's stages, then the cover.
+     */
+    readonly draw: typeof raw.wgf_screen_draw;
+    /**
+     * The transition the changes run through: its kind and seconds (0 or less: at once), its
+     * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+     * one, or seconds that aren't finite.
+     */
+    readonly setTransition: typeof raw.wgf_screen_set_transition;
+    /**
+     * The transition the changes run through: its kind and seconds (0 or less: at once), its
+     * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+     * one, or seconds that aren't finite.
+     */
+    readonly getTransition: typeof raw.wgf_screen_get_transition;
+    /**
+     * The transition the changes run through: its kind and seconds (0 or less: at once), its
+     * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+     * one, or seconds that aren't finite.
+     */
+    readonly getTransitionSeconds: typeof raw.wgf_screen_get_transition_seconds;
+    /**
+     * The transition the changes run through: its kind and seconds (0 or less: at once), its
+     * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+     * one, or seconds that aren't finite.
+     */
+    readonly setTransitionColor: typeof raw.wgf_screen_set_transition_color;
+    /**
+     * The transition the changes run through: its kind and seconds (0 or less: at once), its
+     * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+     * one, or seconds that aren't finite.
+     */
+    readonly getTransitionColor: typeof raw.wgf_screen_get_transition_color;
+    /**
+     * The transition the changes run through: its kind and seconds (0 or less: at once), its
+     * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+     * one, or seconds that aren't finite.
+     */
+    readonly setTransitionEase: typeof raw.wgf_screen_set_transition_ease;
+    /**
+     * The transition the changes run through: its kind and seconds (0 or less: at once), its
+     * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+     * one, or seconds that aren't finite.
+     */
+    readonly getTransitionEase: typeof raw.wgf_screen_get_transition_ease;
+    /**
+     * Whether a change is running, and how far: 0 to 0.5 covering, 0.5 covered (the change made
+     * there, or waiting on a load), 0.5 to 1 uncovering; 0 with none.
+     */
+    readonly isChanging: typeof raw.wgf_screen_is_changing;
+    /**
+     * Whether a change is running, and how far: 0 to 0.5 covering, 0.5 covered (the change made
+     * there, or waiting on a load), 0.5 to 1 uncovering; 0 with none.
+     */
+    readonly getChangeProgress: typeof raw.wgf_screen_get_change_progress;
+    /**
+     * What `screen` waits for before it is changed to: an asset task (a group of its files, made
+     * local), 0 for none. False for an actor that isn't one, or a handle that isn't a task.
+     */
+    readonly setAssets: typeof raw.wgf_screen_set_assets;
+    /**
+     * What `screen` waits for before it is changed to: an asset task (a group of its files, made
+     * local), 0 for none. False for an actor that isn't one, or a handle that isn't a task.
+     */
+    readonly getAssets: typeof raw.wgf_screen_get_assets;
+    /**
+     * Whether a change to `screen` waits for every load pending in the program too (off to
+     * start). False for an actor that isn't one.
+     */
+    readonly setWaitLoads: typeof raw.wgf_screen_set_wait_loads;
+    /**
+     * Whether a change to `screen` waits for every load pending in the program too (off to
+     * start). False for an actor that isn't one.
+     */
+    readonly isWaitLoads: typeof raw.wgf_screen_is_wait_loads;
+    /**
+     * The screen drawn over the cover while a change waits on loads (0 for none), and how far the
+     * loads have come, 0 to 1: its assets' progress, else the share of the loads pending as the
+     * wait began that have settled; 1 with none waiting.
+     */
+    readonly setLoadingScreen: typeof raw.wgf_screen_set_loading_screen;
+    /**
+     * The screen drawn over the cover while a change waits on loads (0 for none), and how far the
+     * loads have come, 0 to 1: its assets' progress, else the share of the loads pending as the
+     * wait began that have settled; 1 with none waiting.
+     */
+    readonly getLoadingScreen: typeof raw.wgf_screen_get_loading_screen;
+    /**
+     * The screen drawn over the cover while a change waits on loads (0 for none), and how far the
+     * loads have come, 0 to 1: its assets' progress, else the share of the loads pending as the
+     * wait began that have settled; 1 with none waiting.
+     */
+    readonly getLoadProgress: typeof raw.wgf_screen_get_load_progress;
 };
 /** A handle of kind wgf_shader_t: the raw binding's branded type. */
 export type Shader = raw.wgf_shader_t;
@@ -8311,6 +8505,8 @@ export type TextureReadStatus = raw.wgf_texture_read_status_t;
 export declare const TextureReadStatus: { readonly NONE: TextureReadStatus; readonly PENDING: TextureReadStatus; readonly DONE: TextureReadStatus; readonly FAILED: TextureReadStatus; };
 export type TextureWrap = raw.wgf_texture_wrap_t;
 export declare const TextureWrap: { readonly REPEAT: TextureWrap; readonly CLAMP: TextureWrap; readonly MIRROR: TextureWrap; };
+export type Transition = raw.wgf_transition_t;
+export declare const Transition: { readonly NONE: Transition; readonly FADE: Transition; readonly SLIDE_LEFT: Transition; readonly SLIDE_RIGHT: Transition; readonly SLIDE_UP: Transition; readonly SLIDE_DOWN: Transition; readonly WIPE: Transition; readonly IRIS: Transition; };
 export type UiAlign = raw.wgf_ui_align_t;
 export declare const UiAlign: { readonly START: UiAlign; readonly CENTER: UiAlign; readonly END: UiAlign; };
 export type UiColor = raw.wgf_ui_color_t;
@@ -8326,4 +8522,4 @@ export declare const VehicleDrive: { readonly FRONT: VehicleDrive; readonly REAR
 export type WindowOs = raw.wgf_window_os_t;
 export declare const WindowOs: { readonly OTHER: WindowOs; readonly LINUX: WindowOs; readonly WINDOWS: WindowOs; readonly MACOS: WindowOs; readonly ANDROID: WindowOs; readonly IOS: WindowOs; };
 export type WorldEvent = raw.wgf_world_event_t;
-export declare const WorldEvent: { readonly NONE: WorldEvent; readonly CREATED: WorldEvent; readonly DESTROYED: WorldEvent; readonly TRIGGER_ENTER: WorldEvent; readonly TRIGGER_EXIT: WorldEvent; readonly CONTACT_BEGIN: WorldEvent; readonly CONTACT_END: WorldEvent; };
+export declare const WorldEvent: { readonly NONE: WorldEvent; readonly CREATED: WorldEvent; readonly DESTROYED: WorldEvent; readonly TRIGGER_ENTER: WorldEvent; readonly TRIGGER_EXIT: WorldEvent; readonly CONTACT_BEGIN: WorldEvent; readonly CONTACT_END: WorldEvent; readonly SCREEN_ENTER: WorldEvent; readonly SCREEN_EXIT: WorldEvent; };

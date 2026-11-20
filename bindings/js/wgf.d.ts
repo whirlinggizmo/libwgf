@@ -797,6 +797,45 @@ export declare const WGF_COLLIDER_SHAPE_SEGMENT: 3;
 export type wgf_collider_shape_t = typeof WGF_COLLIDER_SHAPE_CIRCLE | typeof WGF_COLLIDER_SHAPE_RECTANGLE | typeof WGF_COLLIDER_SHAPE_POLYGON | typeof WGF_COLLIDER_SHAPE_SEGMENT;
 
 /**
+ * Screens and scene flow: a game as a stack of screens (a title, play, a pause menu, game
+ * over), helix-legacy's scene flow (Flow, Transition, Loader, LoadingScreen) without its
+ * callbacks. A screen is an actor (a game's behaviors for it go on it) with its stages, 2D
+ * and 3D, added to it in the order they draw (stages are always roots: they belong to it
+ * without being its children); everything else of its hangs under them.
+ *
+ * The stack: push puts a screen on top, pop takes the top off, replace swaps the top for
+ * another. The top runs. A screen under one that pauses (the default) is paused
+ * (wgf_actor_set_paused: drawn, frozen), it and its stages; one under one that doesn't (a
+ * HUD laid over play) runs on. A screen off the stack is switched off and paused, it and its
+ * stages (wgf_actor_set_enabled: not drawn, nothing under them moving), kept for the program
+ * to push again or destroy. draw
+ * draws what is shown: from the bottom up, each screen's stages in their order, but none
+ * under an opaque one (the default), then the transition's cover.
+ *
+ * A change runs through the transition set (none to start: at once). It covers the frame
+ * over half its seconds, makes the change at the middle, and uncovers over the other half,
+ * each half on the ease. A screen given assets to wait for (set_assets: a group,
+ * wgf_asset.h), or set to wait for every load pending (set_wait_loads: the textures and
+ * meshes made as it was built), is changed to only once they have settled: the stack held
+ * covered meanwhile, with the loading screen (set_loading_screen) drawn over the cover and
+ * its progress readable. While one runs, another change is refused (false).
+ *
+ * Each change is told as world events (wgf_world.h): SCREEN_ENTER for the screen that
+ * comes to the top, SCREEN_EXIT for the one that leaves it (pushed under, popped, or
+ * replaced), each with the other screen (0 for none) as its second; a binding's behaviors
+ * on a screen hear them.
+ */
+export declare const WGF_TRANSITION_NONE: 0;
+export declare const WGF_TRANSITION_FADE: 1;
+export declare const WGF_TRANSITION_SLIDE_LEFT: 2;
+export declare const WGF_TRANSITION_SLIDE_RIGHT: 3;
+export declare const WGF_TRANSITION_SLIDE_UP: 4;
+export declare const WGF_TRANSITION_SLIDE_DOWN: 5;
+export declare const WGF_TRANSITION_WIPE: 6;
+export declare const WGF_TRANSITION_IRIS: 7;
+export type wgf_transition_t = typeof WGF_TRANSITION_NONE | typeof WGF_TRANSITION_FADE | typeof WGF_TRANSITION_SLIDE_LEFT | typeof WGF_TRANSITION_SLIDE_RIGHT | typeof WGF_TRANSITION_SLIDE_UP | typeof WGF_TRANSITION_SLIDE_DOWN | typeof WGF_TRANSITION_WIPE | typeof WGF_TRANSITION_IRIS;
+
+/**
  * The simulation as a whole: libwgf's systems over the actors' components
  * (wgf_component.h), the events they raise, and the simulated actors written out as text;
  * the actors with a behavior or a component are found by wgf_actor_find_with_behavior
@@ -821,6 +860,9 @@ export type wgf_collider_shape_t = typeof WGF_COLLIDER_SHAPE_CIRCLE | typeof WGF
  *   CONTACT_BEGIN    two solid bodies beginning to touch (wgf_body.h), told to each: the
  *                    actor, the other, and the other's body layer
  *   CONTACT_END      and ceasing to
+ *   SCREEN_ENTER     a screen coming to the top of the stack (wgf_screen.h): the screen,
+ *                    the one it covers or replaced (0 for none)
+ *   SCREEN_EXIT      a screen leaving the top: the screen, the one now there (0 for none)
  *
  * An actor destroyed while it overlaps another raises no TRIGGER_EXIT. Events taken in a
  * batch can name an actor the program destroyed while handling an earlier one of the
@@ -835,7 +877,9 @@ export declare const WGF_WORLD_EVENT_TRIGGER_ENTER: 3;
 export declare const WGF_WORLD_EVENT_TRIGGER_EXIT: 4;
 export declare const WGF_WORLD_EVENT_CONTACT_BEGIN: 5;
 export declare const WGF_WORLD_EVENT_CONTACT_END: 6;
-export type wgf_world_event_t = typeof WGF_WORLD_EVENT_NONE | typeof WGF_WORLD_EVENT_CREATED | typeof WGF_WORLD_EVENT_DESTROYED | typeof WGF_WORLD_EVENT_TRIGGER_ENTER | typeof WGF_WORLD_EVENT_TRIGGER_EXIT | typeof WGF_WORLD_EVENT_CONTACT_BEGIN | typeof WGF_WORLD_EVENT_CONTACT_END;
+export declare const WGF_WORLD_EVENT_SCREEN_ENTER: 7;
+export declare const WGF_WORLD_EVENT_SCREEN_EXIT: 8;
+export type wgf_world_event_t = typeof WGF_WORLD_EVENT_NONE | typeof WGF_WORLD_EVENT_CREATED | typeof WGF_WORLD_EVENT_DESTROYED | typeof WGF_WORLD_EVENT_TRIGGER_ENTER | typeof WGF_WORLD_EVENT_TRIGGER_EXIT | typeof WGF_WORLD_EVENT_CONTACT_BEGIN | typeof WGF_WORLD_EVENT_CONTACT_END | typeof WGF_WORLD_EVENT_SCREEN_ENTER | typeof WGF_WORLD_EVENT_SCREEN_EXIT;
 
 /**
  * A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
@@ -8811,6 +8855,218 @@ export declare function wgf_prefab_spawn(prefab: wgf_prefab_t | 0, parent: wgf_a
 export declare function wgf_prefab_spawn_at(prefab: wgf_prefab_t | 0, parent: wgf_actor_t | 0, x: number, y: number, z: number, angle: number): wgf_actor_t;
 
 /**
+ * A screen: an actor at the top of its own tree, off the stack (switched off). 0 when there is
+ * no room for another actor.
+ */
+export declare function wgf_screen_create(): wgf_actor_t;
+
+/**
+ * Its stages, drawn in the order added (at most 8): add is false for an actor that isn't a
+ * screen, one that isn't a stage, or one it has; remove, for one it hasn't. A stage destroyed
+ * leaves it.
+ */
+export declare function wgf_screen_add_stage(screen: wgf_actor_t | 0, stage: wgf_actor_t | 0): boolean;
+
+/**
+ * Its stages, drawn in the order added (at most 8): add is false for an actor that isn't a
+ * screen, one that isn't a stage, or one it has; remove, for one it hasn't. A stage destroyed
+ * leaves it.
+ */
+export declare function wgf_screen_remove_stage(screen: wgf_actor_t | 0, stage: wgf_actor_t | 0): boolean;
+
+/**
+ * Its stages, drawn in the order added (at most 8): add is false for an actor that isn't a
+ * screen, one that isn't a stage, or one it has; remove, for one it hasn't. A stage destroyed
+ * leaves it.
+ */
+export declare function wgf_screen_get_stage_count(screen: wgf_actor_t | 0): number;
+
+/**
+ * Its stages, drawn in the order added (at most 8): add is false for an actor that isn't a
+ * screen, one that isn't a stage, or one it has; remove, for one it hasn't. A stage destroyed
+ * leaves it.
+ */
+export declare function wgf_screen_get_stage(screen: wgf_actor_t | 0, index: number): wgf_actor_t;
+
+/**
+ * The stack's changes, run through the transition. push: false for an actor that isn't one,
+ * or one already on the stack; pop: false with none, or the bottom one alone; replace: false
+ * as push, or with none to replace. All false while a change runs.
+ */
+export declare function wgf_screen_push(screen: wgf_actor_t | 0): boolean;
+
+/**
+ * The stack's changes, run through the transition. push: false for an actor that isn't one,
+ * or one already on the stack; pop: false with none, or the bottom one alone; replace: false
+ * as push, or with none to replace. All false while a change runs.
+ */
+export declare function wgf_screen_pop(): boolean;
+
+/**
+ * The stack's changes, run through the transition. push: false for an actor that isn't one,
+ * or one already on the stack; pop: false with none, or the bottom one alone; replace: false
+ * as push, or with none to replace. All false while a change runs.
+ */
+export declare function wgf_screen_replace(screen: wgf_actor_t | 0): boolean;
+
+/**
+ * The top (0 with none), how many are on the stack, and the one `index` up from the bottom (0
+ * for an index off it). Each as of the last change made, a change running not yet counted.
+ */
+export declare function wgf_screen_get_top(): wgf_actor_t;
+
+/**
+ * The top (0 with none), how many are on the stack, and the one `index` up from the bottom (0
+ * for an index off it). Each as of the last change made, a change running not yet counted.
+ */
+export declare function wgf_screen_get_count(): number;
+
+/**
+ * The top (0 with none), how many are on the stack, and the one `index` up from the bottom (0
+ * for an index off it). Each as of the last change made, a change running not yet counted.
+ */
+export declare function wgf_screen_get(index: number): wgf_actor_t;
+
+/**
+ * opaque: none under it is drawn (on to start; off for a pause menu over the game). pausing:
+ * those under it are paused (on to start; off for a HUD over play). False for an actor that
+ * isn't one.
+ */
+export declare function wgf_screen_set_opaque(screen: wgf_actor_t | 0, opaque: boolean): boolean;
+
+/**
+ * opaque: none under it is drawn (on to start; off for a pause menu over the game). pausing:
+ * those under it are paused (on to start; off for a HUD over play). False for an actor that
+ * isn't one.
+ */
+export declare function wgf_screen_is_opaque(screen: wgf_actor_t | 0): boolean;
+
+/**
+ * opaque: none under it is drawn (on to start; off for a pause menu over the game). pausing:
+ * those under it are paused (on to start; off for a HUD over play). False for an actor that
+ * isn't one.
+ */
+export declare function wgf_screen_set_pausing(screen: wgf_actor_t | 0, pausing: boolean): boolean;
+
+/**
+ * opaque: none under it is drawn (on to start; off for a pause menu over the game). pausing:
+ * those under it are paused (on to start; off for a HUD over play). False for an actor that
+ * isn't one.
+ */
+export declare function wgf_screen_is_pausing(screen: wgf_actor_t | 0): boolean;
+
+/**
+ * Draw what is shown, into this frame: each shown screen's stages, then the cover.
+ */
+export declare function wgf_screen_draw(): void;
+
+/**
+ * The transition the changes run through: its kind and seconds (0 or less: at once), its
+ * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+ * one, or seconds that aren't finite.
+ */
+export declare function wgf_screen_set_transition(kind: wgf_transition_t, seconds: number): boolean;
+
+/**
+ * The transition the changes run through: its kind and seconds (0 or less: at once), its
+ * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+ * one, or seconds that aren't finite.
+ */
+export declare function wgf_screen_get_transition(): wgf_transition_t;
+
+/**
+ * The transition the changes run through: its kind and seconds (0 or less: at once), its
+ * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+ * one, or seconds that aren't finite.
+ */
+export declare function wgf_screen_get_transition_seconds(): number;
+
+/**
+ * The transition the changes run through: its kind and seconds (0 or less: at once), its
+ * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+ * one, or seconds that aren't finite.
+ */
+export declare function wgf_screen_set_transition_color(color: wgf_color_t): void;
+
+/**
+ * The transition the changes run through: its kind and seconds (0 or less: at once), its
+ * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+ * one, or seconds that aren't finite.
+ */
+export declare function wgf_screen_get_transition_color(): wgf_color_t;
+
+/**
+ * The transition the changes run through: its kind and seconds (0 or less: at once), its
+ * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+ * one, or seconds that aren't finite.
+ */
+export declare function wgf_screen_set_transition_ease(ease: wgf_easing_t): boolean;
+
+/**
+ * The transition the changes run through: its kind and seconds (0 or less: at once), its
+ * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+ * one, or seconds that aren't finite.
+ */
+export declare function wgf_screen_get_transition_ease(): wgf_easing_t;
+
+/**
+ * Whether a change is running, and how far: 0 to 0.5 covering, 0.5 covered (the change made
+ * there, or waiting on a load), 0.5 to 1 uncovering; 0 with none.
+ */
+export declare function wgf_screen_is_changing(): boolean;
+
+/**
+ * Whether a change is running, and how far: 0 to 0.5 covering, 0.5 covered (the change made
+ * there, or waiting on a load), 0.5 to 1 uncovering; 0 with none.
+ */
+export declare function wgf_screen_get_change_progress(): number;
+
+/**
+ * What `screen` waits for before it is changed to: an asset task (a group of its files, made
+ * local), 0 for none. False for an actor that isn't one, or a handle that isn't a task.
+ */
+export declare function wgf_screen_set_assets(screen: wgf_actor_t | 0, task: wgf_asset_task_t | 0): boolean;
+
+/**
+ * What `screen` waits for before it is changed to: an asset task (a group of its files, made
+ * local), 0 for none. False for an actor that isn't one, or a handle that isn't a task.
+ */
+export declare function wgf_screen_get_assets(screen: wgf_actor_t | 0): wgf_asset_task_t;
+
+/**
+ * Whether a change to `screen` waits for every load pending in the program too (off to
+ * start). False for an actor that isn't one.
+ */
+export declare function wgf_screen_set_wait_loads(screen: wgf_actor_t | 0, wait: boolean): boolean;
+
+/**
+ * Whether a change to `screen` waits for every load pending in the program too (off to
+ * start). False for an actor that isn't one.
+ */
+export declare function wgf_screen_is_wait_loads(screen: wgf_actor_t | 0): boolean;
+
+/**
+ * The screen drawn over the cover while a change waits on loads (0 for none), and how far the
+ * loads have come, 0 to 1: its assets' progress, else the share of the loads pending as the
+ * wait began that have settled; 1 with none waiting.
+ */
+export declare function wgf_screen_set_loading_screen(screen: wgf_actor_t | 0): boolean;
+
+/**
+ * The screen drawn over the cover while a change waits on loads (0 for none), and how far the
+ * loads have come, 0 to 1: its assets' progress, else the share of the loads pending as the
+ * wait began that have settled; 1 with none waiting.
+ */
+export declare function wgf_screen_get_loading_screen(): wgf_actor_t;
+
+/**
+ * The screen drawn over the cover while a change waits on loads (0 for none), and how far the
+ * loads have come, 0 to 1: its assets' progress, else the share of the loads pending as the
+ * wait began that have settled; 1 with none waiting.
+ */
+export declare function wgf_screen_get_load_progress(): number;
+
+/**
  * Tweens, helix-legacy's Tweens: a number, or an actor's position, turn, or scale, moved to
  * a value over seconds on an ease (wgf_ease.h), stepped on the tick clock (wgf_loop.h), so
  * an autopilot's run is the same each time. An actor's starts from where the actor is when
@@ -9970,6 +10226,20 @@ export declare function wgf_loop_set_time_scale(scale: number): void;
  * Clamped to 0 or more.
  */
 export declare function wgf_loop_get_time_scale(): number;
+
+/**
+ * Whether ticks stop while the window (or the page) isn't focused: the game paused when the
+ * player looks away, frames still drawing. Off to start. A run an autopilot flies or records
+ * isn't held.
+ */
+export declare function wgf_loop_set_pause_unfocused(pause: boolean): void;
+
+/**
+ * Whether ticks stop while the window (or the page) isn't focused: the game paused when the
+ * player looks away, frames still drawing. Off to start. A run an autopilot flies or records
+ * isn't held.
+ */
+export declare function wgf_loop_is_pause_unfocused(): boolean;
 
 /**
  * The most frames a second, to save power or heat; 0 or less (the default) is

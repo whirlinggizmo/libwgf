@@ -34,6 +34,12 @@ WGF_API float wgf_loop_get_tick_fraction(void);
 WGF_API void wgf_loop_set_time_scale(float scale);
 WGF_API float wgf_loop_get_time_scale(void);
 
+/* Whether ticks stop while the window (or the page) isn't focused: the game paused when the
+ * player looks away, frames still drawing. Off to start. A run an autopilot flies or records
+ * isn't held. */
+WGF_API void wgf_loop_set_pause_unfocused(bool pause);
+WGF_API bool wgf_loop_is_pause_unfocused(void);
+
 /* The most frames a second, to save power or heat; 0 or less (the default) is
  * the display's rate. With vsync on, a cap can only lower the rate. On the web a
  * frame the browser offers too early is skipped. */

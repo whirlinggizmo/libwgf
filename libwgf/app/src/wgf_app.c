@@ -14,6 +14,7 @@
 #include "wgf_app_autopilot_priv.h"
 #include "wgf_app_tick_clock_priv.h"
 #include "wgf_time.h"
+#include "wgf_window.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "wgf_platform_window_priv.h"
 
@@ -33,6 +34,7 @@ static struct {
     int tick_rate;
     unsigned tick_rate_changes; /* to notice a change made inside a tick */
     float time_scale;
+    bool pause_unfocused; /* no ticks while the window or page isn't focused */
     int target_fps;
     double next_frame; /* when a capped frame is due; 0 before the first */
     double last_frame; /* when the previous frame ran; 0 before the first */
@@ -129,7 +131,9 @@ static double time_frame(void)
 static void run_ticks(double elapsed)
 {
     const unsigned changes = app.tick_rate_changes;
-    const int count = wgf_app_priv_tick_clock_advance(&app.clock, elapsed * (double)app.time_scale,
+    /* unfocused, held (but not flown: an autopilot's run has no focus to lose) */
+    const bool held = app.pause_unfocused && !app.flown && !app.recording && !wgf_window_is_focused();
+    const int count = wgf_app_priv_tick_clock_advance(&app.clock, held ? 0.0 : elapsed * (double)app.time_scale,
                                                       WGF_APP_PRIV_MAX_TICKS_PER_FRAME);
     int i;
     if (app.tick == NULL) {
@@ -264,6 +268,16 @@ float wgf_loop_get_tick_fraction(void)
 void wgf_loop_set_time_scale(float scale)
 {
     app.time_scale = scale > 0.0f ? scale : 0.0f;
+}
+
+void wgf_loop_set_pause_unfocused(bool pause)
+{
+    app.pause_unfocused = pause;
+}
+
+bool wgf_loop_is_pause_unfocused(void)
+{
+    return app.pause_unfocused;
 }
 
 float wgf_loop_get_time_scale(void)

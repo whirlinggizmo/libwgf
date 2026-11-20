@@ -1303,6 +1303,10 @@ export const Loop = Object.freeze({
     setTimeScale: raw.wgf_loop_set_time_scale,
     // wgf: call wgf_loop_get_time_scale
     getTimeScale: raw.wgf_loop_get_time_scale,
+    // wgf: call wgf_loop_set_pause_unfocused
+    setPauseUnfocused: raw.wgf_loop_set_pause_unfocused,
+    // wgf: call wgf_loop_is_pause_unfocused
+    isPauseUnfocused: raw.wgf_loop_is_pause_unfocused,
     // wgf: call wgf_loop_set_target_fps
     setTargetFps: raw.wgf_loop_set_target_fps,
     // wgf: call wgf_loop_get_target_fps
@@ -1692,6 +1696,73 @@ export const Scene = Object.freeze({
         return x === undefined ? raw.wgf_prefab_spawn(prefab, parent)
             : raw.wgf_prefab_spawn_at(prefab, parent, x, y ?? 0, z ?? 0, angle ?? 0);
     },
+});
+// wgf: typed Screen
+export const Screen = Object.freeze({
+    // wgf: call wgf_screen_create
+    create: raw.wgf_screen_create,
+    // wgf: call wgf_screen_add_stage
+    addStage: raw.wgf_screen_add_stage,
+    // wgf: call wgf_screen_remove_stage
+    removeStage: raw.wgf_screen_remove_stage,
+    // wgf: call wgf_screen_get_stage_count
+    getStageCount: raw.wgf_screen_get_stage_count,
+    // wgf: call wgf_screen_get_stage
+    getStage: raw.wgf_screen_get_stage,
+    // wgf: call wgf_screen_push
+    push: raw.wgf_screen_push,
+    // wgf: call wgf_screen_pop
+    pop: raw.wgf_screen_pop,
+    // wgf: call wgf_screen_replace
+    replace: raw.wgf_screen_replace,
+    // wgf: call wgf_screen_get_top
+    getTop: raw.wgf_screen_get_top,
+    // wgf: call wgf_screen_get_count
+    getCount: raw.wgf_screen_get_count,
+    // wgf: call wgf_screen_get
+    get: raw.wgf_screen_get,
+    // wgf: call wgf_screen_set_opaque
+    setOpaque: raw.wgf_screen_set_opaque,
+    // wgf: call wgf_screen_is_opaque
+    isOpaque: raw.wgf_screen_is_opaque,
+    // wgf: call wgf_screen_set_pausing
+    setPausing: raw.wgf_screen_set_pausing,
+    // wgf: call wgf_screen_is_pausing
+    isPausing: raw.wgf_screen_is_pausing,
+    // wgf: call wgf_screen_draw
+    draw: raw.wgf_screen_draw,
+    // wgf: call wgf_screen_set_transition
+    setTransition: raw.wgf_screen_set_transition,
+    // wgf: call wgf_screen_get_transition
+    getTransition: raw.wgf_screen_get_transition,
+    // wgf: call wgf_screen_get_transition_seconds
+    getTransitionSeconds: raw.wgf_screen_get_transition_seconds,
+    // wgf: call wgf_screen_set_transition_color
+    setTransitionColor: raw.wgf_screen_set_transition_color,
+    // wgf: call wgf_screen_get_transition_color
+    getTransitionColor: raw.wgf_screen_get_transition_color,
+    // wgf: call wgf_screen_set_transition_ease
+    setTransitionEase: raw.wgf_screen_set_transition_ease,
+    // wgf: call wgf_screen_get_transition_ease
+    getTransitionEase: raw.wgf_screen_get_transition_ease,
+    // wgf: call wgf_screen_is_changing
+    isChanging: raw.wgf_screen_is_changing,
+    // wgf: call wgf_screen_get_change_progress
+    getChangeProgress: raw.wgf_screen_get_change_progress,
+    // wgf: call wgf_screen_set_assets
+    setAssets: raw.wgf_screen_set_assets,
+    // wgf: call wgf_screen_get_assets
+    getAssets: raw.wgf_screen_get_assets,
+    // wgf: call wgf_screen_set_wait_loads
+    setWaitLoads: raw.wgf_screen_set_wait_loads,
+    // wgf: call wgf_screen_is_wait_loads
+    isWaitLoads: raw.wgf_screen_is_wait_loads,
+    // wgf: call wgf_screen_set_loading_screen
+    setLoadingScreen: raw.wgf_screen_set_loading_screen,
+    // wgf: call wgf_screen_get_loading_screen
+    getLoadingScreen: raw.wgf_screen_get_loading_screen,
+    // wgf: call wgf_screen_get_load_progress
+    getLoadProgress: raw.wgf_screen_get_load_progress,
 });
 // wgf: typed Shader
 export const Shader = Object.freeze({
@@ -2527,6 +2598,8 @@ export const TextureFilter = Object.freeze({ LINEAR: 0, NEAREST: 1 });
 export const TextureReadStatus = Object.freeze({ NONE: 0, PENDING: 1, DONE: 2, FAILED: 3 });
 // wgf: enum TextureWrap
 export const TextureWrap = Object.freeze({ REPEAT: 0, CLAMP: 1, MIRROR: 2 });
+// wgf: enum Transition
+export const Transition = Object.freeze({ NONE: 0, FADE: 1, SLIDE_LEFT: 2, SLIDE_RIGHT: 3, SLIDE_UP: 4, SLIDE_DOWN: 5, WIPE: 6, IRIS: 7 });
 // wgf: enum UiAlign
 export const UiAlign = Object.freeze({ START: 0, CENTER: 1, END: 2 });
 // wgf: enum UiColor
@@ -2542,4 +2615,4 @@ export const VehicleDrive = Object.freeze({ FRONT: 0, REAR: 1, ALL: 2 });
 // wgf: enum WindowOs
 export const WindowOs = Object.freeze({ OTHER: 0, LINUX: 1, WINDOWS: 2, MACOS: 3, ANDROID: 5, IOS: 6 });
 // wgf: enum WorldEvent
-export const WorldEvent = Object.freeze({ NONE: 0, CREATED: 1, DESTROYED: 2, TRIGGER_ENTER: 3, TRIGGER_EXIT: 4, CONTACT_BEGIN: 5, CONTACT_END: 6 });
+export const WorldEvent = Object.freeze({ NONE: 0, CREATED: 1, DESTROYED: 2, TRIGGER_ENTER: 3, TRIGGER_EXIT: 4, CONTACT_BEGIN: 5, CONTACT_END: 6, SCREEN_ENTER: 7, SCREEN_EXIT: 8 });

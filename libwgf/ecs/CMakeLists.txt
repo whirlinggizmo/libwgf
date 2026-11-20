@@ -11,6 +11,7 @@ wgf_layer(ecs
         src/wgf_ecs_actor.c
         src/wgf_ecs_store.c
         src/wgf_ecs_scene.c
+        src/wgf_ecs_screen.c
         src/wgf_ecs_tween.c
     DEPS
         math core platform asset gfx audio)
@@ -26,6 +27,7 @@ if(WGF_TESTS AND WGF_HEADLESS)
     wgf_test(ecs wgf_ecs_tween_test)
     wgf_test(ecs wgf_ecs_systems_test)
     wgf_test(ecs wgf_ecs_scene_test)
+    wgf_test(ecs wgf_ecs_screen_test)
 endif()
 
 # The store measured on its own, its worst cases among the rows: built by the native Linux

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "wgf_platform_priv.h"
 #include "wgf_app.h"
 #include "wgf_app_priv.h"
 #include "wgf_color.h"
@@ -35,6 +36,8 @@ typedef struct run_t {
     int frames_in_frame; /* gfx was inside a frame during each frame callback */
     int frame_sizes_ok;
     int paused_ticks;   /* ticks while the time scale was 0 */
+    int unfocused_ticks; /* ticks while unfocused, held */
+    bool unfocused;
     float paused_fraction_first, paused_fraction_last;
     double started, ended;
     int nested_run_refused;
@@ -74,6 +77,7 @@ static void on_tick(void *user)
     run->ticks++;
     run->ticks_in_order &= run->inits == 1 && run->shutdowns == 0 && !wgf_gfx_priv_is_in_frame();
     if (wgf_loop_get_time_scale() == 0.0f) run->paused_ticks++;
+    if (run->unfocused) run->unfocused_ticks++;
 }
 
 static void on_frame(void *user)
@@ -83,6 +87,15 @@ static void on_frame(void *user)
     run->frames_in_frame &= wgf_gfx_priv_is_in_frame();
     if (run->frames == 5 && !run->no_readout) wgf_debug_show_fps(0, 8, 8, 16, wgf_color_make(0, 255, 0, 255)); /* drawn over the rest */
     run->frame_sizes_ok &= wgf_render_get_width() == 320 && wgf_render_get_height() == 200;
+    if (run->frames == 20) { /* looked away from, held: no ticks from the next frame */
+        wgf_loop_set_pause_unfocused(true);
+        wgf_platform_priv_set_test_focused(false);
+        run->unfocused = true;
+    } else if (run->frames == 25) {
+        wgf_platform_priv_set_test_focused(true);
+        run->unfocused = false;
+        wgf_loop_set_pause_unfocused(false);
+    }
     if (run->frames == 30) {
         wgf_loop_set_time_scale(0.0f); /* paused from the next frame */
     } else if (run->frames == 31) {
@@ -163,6 +176,7 @@ int main(void)
     /* 30 frames at 30 a second: about 1 s, so about 50 ticks at 50 a second */
     expect(run.ticks >= 40 && run.ticks <= 60, "ticks at their rate");
     expect(run.paused_ticks == 0, "no ticks while the time scale is 0");
+    expect(run.unfocused_ticks == 0 && !wgf_loop_is_pause_unfocused(), "no ticks while unfocused, set to hold");
     expect(run.paused_fraction_first == run.paused_fraction_last, "the tick fraction holds while paused");
     expect(run.ended - run.started >= 1.3, "the frame cap paces frames");
     expect(run.fps > 25.0f && run.fps < 35.0f, "the readout's fps: the frames that ran, capped at 30");

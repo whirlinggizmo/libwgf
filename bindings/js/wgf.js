@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "81d6d0b6886ba913" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "bf1255fdd84647ed" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -916,6 +916,44 @@ export const WGF_COLLIDER_SHAPE_POLYGON = 2;
 export const WGF_COLLIDER_SHAPE_SEGMENT = 3;
 
 /**
+ * Screens and scene flow: a game as a stack of screens (a title, play, a pause menu, game
+ * over), helix-legacy's scene flow (Flow, Transition, Loader, LoadingScreen) without its
+ * callbacks. A screen is an actor (a game's behaviors for it go on it) with its stages, 2D
+ * and 3D, added to it in the order they draw (stages are always roots: they belong to it
+ * without being its children); everything else of its hangs under them.
+ *
+ * The stack: push puts a screen on top, pop takes the top off, replace swaps the top for
+ * another. The top runs. A screen under one that pauses (the default) is paused
+ * (wgf_actor_set_paused: drawn, frozen), it and its stages; one under one that doesn't (a
+ * HUD laid over play) runs on. A screen off the stack is switched off and paused, it and its
+ * stages (wgf_actor_set_enabled: not drawn, nothing under them moving), kept for the program
+ * to push again or destroy. draw
+ * draws what is shown: from the bottom up, each screen's stages in their order, but none
+ * under an opaque one (the default), then the transition's cover.
+ *
+ * A change runs through the transition set (none to start: at once). It covers the frame
+ * over half its seconds, makes the change at the middle, and uncovers over the other half,
+ * each half on the ease. A screen given assets to wait for (set_assets: a group,
+ * wgf_asset.h), or set to wait for every load pending (set_wait_loads: the textures and
+ * meshes made as it was built), is changed to only once they have settled: the stack held
+ * covered meanwhile, with the loading screen (set_loading_screen) drawn over the cover and
+ * its progress readable. While one runs, another change is refused (false).
+ *
+ * Each change is told as world events (wgf_world.h): SCREEN_ENTER for the screen that
+ * comes to the top, SCREEN_EXIT for the one that leaves it (pushed under, popped, or
+ * replaced), each with the other screen (0 for none) as its second; a binding's behaviors
+ * on a screen hear them.
+ */
+export const WGF_TRANSITION_NONE = 0;
+export const WGF_TRANSITION_FADE = 1;
+export const WGF_TRANSITION_SLIDE_LEFT = 2;
+export const WGF_TRANSITION_SLIDE_RIGHT = 3;
+export const WGF_TRANSITION_SLIDE_UP = 4;
+export const WGF_TRANSITION_SLIDE_DOWN = 5;
+export const WGF_TRANSITION_WIPE = 6;
+export const WGF_TRANSITION_IRIS = 7;
+
+/**
  * The simulation as a whole: libwgf's systems over the actors' components
  * (wgf_component.h), the events they raise, and the simulated actors written out as text;
  * the actors with a behavior or a component are found by wgf_actor_find_with_behavior
@@ -940,6 +978,9 @@ export const WGF_COLLIDER_SHAPE_SEGMENT = 3;
  *   CONTACT_BEGIN    two solid bodies beginning to touch (wgf_body.h), told to each: the
  *                    actor, the other, and the other's body layer
  *   CONTACT_END      and ceasing to
+ *   SCREEN_ENTER     a screen coming to the top of the stack (wgf_screen.h): the screen,
+ *                    the one it covers or replaced (0 for none)
+ *   SCREEN_EXIT      a screen leaving the top: the screen, the one now there (0 for none)
  *
  * An actor destroyed while it overlaps another raises no TRIGGER_EXIT. Events taken in a
  * batch can name an actor the program destroyed while handling an earlier one of the
@@ -954,6 +995,8 @@ export const WGF_WORLD_EVENT_TRIGGER_ENTER = 3;
 export const WGF_WORLD_EVENT_TRIGGER_EXIT = 4;
 export const WGF_WORLD_EVENT_CONTACT_BEGIN = 5;
 export const WGF_WORLD_EVENT_CONTACT_END = 6;
+export const WGF_WORLD_EVENT_SCREEN_ENTER = 7;
+export const WGF_WORLD_EVENT_SCREEN_EXIT = 8;
 
 /**
  * A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
@@ -12835,6 +12878,344 @@ export function wgf_prefab_spawn_at(prefab, parent, x, y, z, angle) {
     return value >>> 0;
 }
 
+// wgf: call wgf_screen_create
+/**
+ * A screen: an actor at the top of its own tree, off the stack (switched off). 0 when there is
+ * no room for another actor.
+ */
+export function wgf_screen_create() {
+    const value = host["_wgf_screen_create"]();
+    return value >>> 0;
+}
+
+// wgf: call wgf_screen_add_stage
+/**
+ * Its stages, drawn in the order added (at most 8): add is false for an actor that isn't a
+ * screen, one that isn't a stage, or one it has; remove, for one it hasn't. A stage destroyed
+ * leaves it.
+ */
+export function wgf_screen_add_stage(screen, stage) {
+    const value = host["_wgf_screen_add_stage"](screen, stage);
+    return value !== 0;
+}
+
+// wgf: call wgf_screen_remove_stage
+/**
+ * Its stages, drawn in the order added (at most 8): add is false for an actor that isn't a
+ * screen, one that isn't a stage, or one it has; remove, for one it hasn't. A stage destroyed
+ * leaves it.
+ */
+export function wgf_screen_remove_stage(screen, stage) {
+    const value = host["_wgf_screen_remove_stage"](screen, stage);
+    return value !== 0;
+}
+
+// wgf: call wgf_screen_get_stage_count
+/**
+ * Its stages, drawn in the order added (at most 8): add is false for an actor that isn't a
+ * screen, one that isn't a stage, or one it has; remove, for one it hasn't. A stage destroyed
+ * leaves it.
+ */
+export function wgf_screen_get_stage_count(screen) {
+    const value = host["_wgf_screen_get_stage_count"](screen);
+    return value;
+}
+
+// wgf: call wgf_screen_get_stage
+/**
+ * Its stages, drawn in the order added (at most 8): add is false for an actor that isn't a
+ * screen, one that isn't a stage, or one it has; remove, for one it hasn't. A stage destroyed
+ * leaves it.
+ */
+export function wgf_screen_get_stage(screen, index) {
+    const value = host["_wgf_screen_get_stage"](screen, index);
+    return value >>> 0;
+}
+
+// wgf: call wgf_screen_push
+/**
+ * The stack's changes, run through the transition. push: false for an actor that isn't one,
+ * or one already on the stack; pop: false with none, or the bottom one alone; replace: false
+ * as push, or with none to replace. All false while a change runs.
+ */
+export function wgf_screen_push(screen) {
+    const value = host["_wgf_screen_push"](screen);
+    return value !== 0;
+}
+
+// wgf: call wgf_screen_pop
+/**
+ * The stack's changes, run through the transition. push: false for an actor that isn't one,
+ * or one already on the stack; pop: false with none, or the bottom one alone; replace: false
+ * as push, or with none to replace. All false while a change runs.
+ */
+export function wgf_screen_pop() {
+    const value = host["_wgf_screen_pop"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_screen_replace
+/**
+ * The stack's changes, run through the transition. push: false for an actor that isn't one,
+ * or one already on the stack; pop: false with none, or the bottom one alone; replace: false
+ * as push, or with none to replace. All false while a change runs.
+ */
+export function wgf_screen_replace(screen) {
+    const value = host["_wgf_screen_replace"](screen);
+    return value !== 0;
+}
+
+// wgf: call wgf_screen_get_top
+/**
+ * The top (0 with none), how many are on the stack, and the one `index` up from the bottom (0
+ * for an index off it). Each as of the last change made, a change running not yet counted.
+ */
+export function wgf_screen_get_top() {
+    const value = host["_wgf_screen_get_top"]();
+    return value >>> 0;
+}
+
+// wgf: call wgf_screen_get_count
+/**
+ * The top (0 with none), how many are on the stack, and the one `index` up from the bottom (0
+ * for an index off it). Each as of the last change made, a change running not yet counted.
+ */
+export function wgf_screen_get_count() {
+    const value = host["_wgf_screen_get_count"]();
+    return value;
+}
+
+// wgf: call wgf_screen_get
+/**
+ * The top (0 with none), how many are on the stack, and the one `index` up from the bottom (0
+ * for an index off it). Each as of the last change made, a change running not yet counted.
+ */
+export function wgf_screen_get(index) {
+    const value = host["_wgf_screen_get"](index);
+    return value >>> 0;
+}
+
+// wgf: call wgf_screen_set_opaque
+/**
+ * opaque: none under it is drawn (on to start; off for a pause menu over the game). pausing:
+ * those under it are paused (on to start; off for a HUD over play). False for an actor that
+ * isn't one.
+ */
+export function wgf_screen_set_opaque(screen, opaque) {
+    const value = host["_wgf_screen_set_opaque"](screen, (opaque ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_screen_is_opaque
+/**
+ * opaque: none under it is drawn (on to start; off for a pause menu over the game). pausing:
+ * those under it are paused (on to start; off for a HUD over play). False for an actor that
+ * isn't one.
+ */
+export function wgf_screen_is_opaque(screen) {
+    const value = host["_wgf_screen_is_opaque"](screen);
+    return value !== 0;
+}
+
+// wgf: call wgf_screen_set_pausing
+/**
+ * opaque: none under it is drawn (on to start; off for a pause menu over the game). pausing:
+ * those under it are paused (on to start; off for a HUD over play). False for an actor that
+ * isn't one.
+ */
+export function wgf_screen_set_pausing(screen, pausing) {
+    const value = host["_wgf_screen_set_pausing"](screen, (pausing ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_screen_is_pausing
+/**
+ * opaque: none under it is drawn (on to start; off for a pause menu over the game). pausing:
+ * those under it are paused (on to start; off for a HUD over play). False for an actor that
+ * isn't one.
+ */
+export function wgf_screen_is_pausing(screen) {
+    const value = host["_wgf_screen_is_pausing"](screen);
+    return value !== 0;
+}
+
+// wgf: call wgf_screen_draw
+/**
+ * Draw what is shown, into this frame: each shown screen's stages, then the cover.
+ */
+export function wgf_screen_draw() {
+    host["_wgf_screen_draw"]();
+}
+
+// wgf: call wgf_screen_set_transition
+/**
+ * The transition the changes run through: its kind and seconds (0 or less: at once), its
+ * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+ * one, or seconds that aren't finite.
+ */
+export function wgf_screen_set_transition(kind, seconds) {
+    const value = host["_wgf_screen_set_transition"](kind, seconds);
+    return value !== 0;
+}
+
+// wgf: call wgf_screen_get_transition
+/**
+ * The transition the changes run through: its kind and seconds (0 or less: at once), its
+ * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+ * one, or seconds that aren't finite.
+ */
+export function wgf_screen_get_transition() {
+    const value = host["_wgf_screen_get_transition"]();
+    return value;
+}
+
+// wgf: call wgf_screen_get_transition_seconds
+/**
+ * The transition the changes run through: its kind and seconds (0 or less: at once), its
+ * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+ * one, or seconds that aren't finite.
+ */
+export function wgf_screen_get_transition_seconds() {
+    const value = host["_wgf_screen_get_transition_seconds"]();
+    return value;
+}
+
+// wgf: call wgf_screen_set_transition_color
+/**
+ * The transition the changes run through: its kind and seconds (0 or less: at once), its
+ * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+ * one, or seconds that aren't finite.
+ */
+export function wgf_screen_set_transition_color(color) {
+    host["_wgf_screen_set_transition_color"](color);
+}
+
+// wgf: call wgf_screen_get_transition_color
+/**
+ * The transition the changes run through: its kind and seconds (0 or less: at once), its
+ * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+ * one, or seconds that aren't finite.
+ */
+export function wgf_screen_get_transition_color() {
+    const value = host["_wgf_screen_get_transition_color"]();
+    return value >>> 0;
+}
+
+// wgf: call wgf_screen_set_transition_ease
+/**
+ * The transition the changes run through: its kind and seconds (0 or less: at once), its
+ * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+ * one, or seconds that aren't finite.
+ */
+export function wgf_screen_set_transition_ease(ease) {
+    const value = host["_wgf_screen_set_transition_ease"](ease);
+    return value !== 0;
+}
+
+// wgf: call wgf_screen_get_transition_ease
+/**
+ * The transition the changes run through: its kind and seconds (0 or less: at once), its
+ * color (black to start), and each half's ease (linear to start). False for a kind that isn't
+ * one, or seconds that aren't finite.
+ */
+export function wgf_screen_get_transition_ease() {
+    const value = host["_wgf_screen_get_transition_ease"]();
+    return value;
+}
+
+// wgf: call wgf_screen_is_changing
+/**
+ * Whether a change is running, and how far: 0 to 0.5 covering, 0.5 covered (the change made
+ * there, or waiting on a load), 0.5 to 1 uncovering; 0 with none.
+ */
+export function wgf_screen_is_changing() {
+    const value = host["_wgf_screen_is_changing"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_screen_get_change_progress
+/**
+ * Whether a change is running, and how far: 0 to 0.5 covering, 0.5 covered (the change made
+ * there, or waiting on a load), 0.5 to 1 uncovering; 0 with none.
+ */
+export function wgf_screen_get_change_progress() {
+    const value = host["_wgf_screen_get_change_progress"]();
+    return value;
+}
+
+// wgf: call wgf_screen_set_assets
+/**
+ * What `screen` waits for before it is changed to: an asset task (a group of its files, made
+ * local), 0 for none. False for an actor that isn't one, or a handle that isn't a task.
+ */
+export function wgf_screen_set_assets(screen, task) {
+    const value = host["_wgf_screen_set_assets"](screen, task);
+    return value !== 0;
+}
+
+// wgf: call wgf_screen_get_assets
+/**
+ * What `screen` waits for before it is changed to: an asset task (a group of its files, made
+ * local), 0 for none. False for an actor that isn't one, or a handle that isn't a task.
+ */
+export function wgf_screen_get_assets(screen) {
+    const value = host["_wgf_screen_get_assets"](screen);
+    return value >>> 0;
+}
+
+// wgf: call wgf_screen_set_wait_loads
+/**
+ * Whether a change to `screen` waits for every load pending in the program too (off to
+ * start). False for an actor that isn't one.
+ */
+export function wgf_screen_set_wait_loads(screen, wait) {
+    const value = host["_wgf_screen_set_wait_loads"](screen, (wait ? 1 : 0));
+    return value !== 0;
+}
+
+// wgf: call wgf_screen_is_wait_loads
+/**
+ * Whether a change to `screen` waits for every load pending in the program too (off to
+ * start). False for an actor that isn't one.
+ */
+export function wgf_screen_is_wait_loads(screen) {
+    const value = host["_wgf_screen_is_wait_loads"](screen);
+    return value !== 0;
+}
+
+// wgf: call wgf_screen_set_loading_screen
+/**
+ * The screen drawn over the cover while a change waits on loads (0 for none), and how far the
+ * loads have come, 0 to 1: its assets' progress, else the share of the loads pending as the
+ * wait began that have settled; 1 with none waiting.
+ */
+export function wgf_screen_set_loading_screen(screen) {
+    const value = host["_wgf_screen_set_loading_screen"](screen);
+    return value !== 0;
+}
+
+// wgf: call wgf_screen_get_loading_screen
+/**
+ * The screen drawn over the cover while a change waits on loads (0 for none), and how far the
+ * loads have come, 0 to 1: its assets' progress, else the share of the loads pending as the
+ * wait began that have settled; 1 with none waiting.
+ */
+export function wgf_screen_get_loading_screen() {
+    const value = host["_wgf_screen_get_loading_screen"]();
+    return value >>> 0;
+}
+
+// wgf: call wgf_screen_get_load_progress
+/**
+ * The screen drawn over the cover while a change waits on loads (0 for none), and how far the
+ * loads have come, 0 to 1: its assets' progress, else the share of the loads pending as the
+ * wait began that have settled; 1 with none waiting.
+ */
+export function wgf_screen_get_load_progress() {
+    const value = host["_wgf_screen_get_load_progress"]();
+    return value;
+}
+
 // wgf: call wgf_tween_create
 /**
  * Tweens, helix-legacy's Tweens: a number, or an actor's position, turn, or scale, moved to
@@ -14695,6 +15076,27 @@ export function wgf_loop_set_time_scale(scale) {
 export function wgf_loop_get_time_scale() {
     const value = host["_wgf_loop_get_time_scale"]();
     return value;
+}
+
+// wgf: call wgf_loop_set_pause_unfocused
+/**
+ * Whether ticks stop while the window (or the page) isn't focused: the game paused when the
+ * player looks away, frames still drawing. Off to start. A run an autopilot flies or records
+ * isn't held.
+ */
+export function wgf_loop_set_pause_unfocused(pause) {
+    host["_wgf_loop_set_pause_unfocused"]((pause ? 1 : 0));
+}
+
+// wgf: call wgf_loop_is_pause_unfocused
+/**
+ * Whether ticks stop while the window (or the page) isn't focused: the game paused when the
+ * player looks away, frames still drawing. Off to start. A run an autopilot flies or records
+ * isn't held.
+ */
+export function wgf_loop_is_pause_unfocused() {
+    const value = host["_wgf_loop_is_pause_unfocused"]();
+    return value !== 0;
 }
 
 // wgf: call wgf_loop_set_target_fps

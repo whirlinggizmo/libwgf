@@ -41,6 +41,13 @@ class Behavior {
 	**/
 	public function onCreate():Void {}
 
+	/** On a screen (C's wgf_screen.h), it came to the top of the stack: `from` the screen it covers
+		or replaced (none for none). **/
+	public function onScreenEnter(from:Actor):Void {}
+
+	/** On a screen, it left the top: `to` the screen now there (none for none). **/
+	public function onScreenExit(to:Actor):Void {}
+
 	/** Each tick, before the program's, with the tick's length in seconds. **/
 	public function onTick(dt:Float):Void {}
 
@@ -154,6 +161,17 @@ class Behavior {
 									behavior.onTriggerEnter(second, layer);
 								else
 									behavior.onTriggerExit(second, layer);
+							}
+					case WorldEvent.SCREEN_ENTER | WorldEvent.SCREEN_EXIT:
+						final list = live.get(actor);
+						if (list != null)
+							for (behavior in list.copy()) {
+								if (!liveNow(behavior) || !actor.isAlive())
+									break;
+								if (kind == WorldEvent.SCREEN_ENTER)
+									behavior.onScreenEnter(second);
+								else
+									behavior.onScreenExit(second);
 							}
 					case WorldEvent.CONTACT_BEGIN | WorldEvent.CONTACT_END:
 						final list = live.get(actor);

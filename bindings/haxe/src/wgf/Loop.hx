@@ -57,6 +57,22 @@ class Loop {
 		return Raw.wgf_loop_get_time_scale();
 
 	/**
+	    Whether ticks stop while the window (or the page) isn't focused: the game paused when the
+	    player looks away, frames still drawing. Off to start. A run an autopilot flies or records
+	    isn't held.
+	**/
+	public static inline function setPauseUnfocused(pause:Bool):Void
+		Raw.wgf_loop_set_pause_unfocused(pause);
+
+	/**
+	    Whether ticks stop while the window (or the page) isn't focused: the game paused when the
+	    player looks away, frames still drawing. Off to start. A run an autopilot flies or records
+	    isn't held.
+	**/
+	public static inline function isPauseUnfocused():Bool
+		return Raw.wgf_loop_is_pause_unfocused();
+
+	/**
 	    The most frames a second, to save power or heat; 0 or less (the default) is
 	    the display's rate. With vsync on, a cap can only lower the rate. On the web a
 	    frame the browser offers too early is skipped.
