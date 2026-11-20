@@ -231,12 +231,19 @@ class Reach {
 		"wgf_debug_hide_fps",
 		"wgf_debug_is_fps_shown",
 		"wgf_debug_show_fps",
+		"wgf_draw_arc",
 		"wgf_draw_begin_3d",
+		"wgf_draw_capsule_wires",
 		"wgf_draw_circle",
 		"wgf_draw_circle_3d",
+		"wgf_draw_circle_gradient",
 		"wgf_draw_circle_lines",
 		"wgf_draw_cube",
 		"wgf_draw_cube_wires",
+		"wgf_draw_cylinder",
+		"wgf_draw_cylinder_wires",
+		"wgf_draw_ellipse",
+		"wgf_draw_ellipse_lines",
 		"wgf_draw_end_3d",
 		"wgf_draw_grid",
 		"wgf_draw_line",
@@ -245,14 +252,20 @@ class Reach {
 		"wgf_draw_polyline",
 		"wgf_draw_rectangle",
 		"wgf_draw_rectangle_3d",
+		"wgf_draw_rectangle_gradient",
 		"wgf_draw_rectangle_lines",
+		"wgf_draw_ring",
 		"wgf_draw_sphere",
+		"wgf_draw_sphere_wires",
 		"wgf_draw_text",
 		"wgf_draw_text_3d",
 		"wgf_draw_text_aligned",
 		"wgf_draw_texture",
+		"wgf_draw_texture_fill",
 		"wgf_draw_texture_region",
+		"wgf_draw_texture_rotated",
 		"wgf_draw_triangle",
+		"wgf_draw_triangle_3d",
 		"wgf_ease_value",
 		"wgf_emitter2d_add_color_key",
 		"wgf_emitter2d_add_palette_color",
@@ -947,7 +960,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...938) 0];
+	static final counts:Array<Int> = [for (_ in 0...951) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

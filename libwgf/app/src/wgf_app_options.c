@@ -80,9 +80,12 @@ static void add_query(const char *query)
 }
 
 #if defined(__EMSCRIPTEN__)
-EM_JS(char *, page_query, (void), {
+/* The page's query into `out` (size bytes, ended), as the autopilot's text is read; its
+ * helpers named, so a program linking nothing else of Emscripten's has them. */
+EM_JS_DEPS(wgf_app_options, "$stringToUTF8,$lengthBytesUTF8")
+EM_JS(void, page_query, (char *out, int size), {
     var q = (typeof location !== "undefined" && location.search) ? location.search : "";
-    return stringToNewUTF8(q);
+    stringToUTF8(lengthBytesUTF8(q) < size ? q : "", out, size);
 })
 #endif
 
@@ -105,11 +108,9 @@ static void read_options(void)
     }
 #if defined(__EMSCRIPTEN__)
     {
-        char *query = page_query();
-        if (query != NULL) {
-            add_query(query);
-            free(query);
-        }
+        static char query[TEXT_MAX];
+        page_query(query, (int)sizeof(query));
+        add_query(query);
     }
 #elif defined(_WIN32)
     {

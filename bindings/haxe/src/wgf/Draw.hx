@@ -108,6 +108,66 @@ class Draw {
 		Raw.wgf_draw_texture_region(texture, source_x, source_y, source_width, source_height, x, y, width, height, tint);
 
 	/**
+	    Rings and sectors: the band between two radii from angle `start` to `end` (radians from
+	    +x, clockwise on the screen; a whole turn is a ring, an inner radius of 0 a sector, a pie);
+	    an arc, a ring `thickness` wide along a circle; ellipses filled and outlined.
+	**/
+	public static inline function ring(center_x:Float, center_y:Float, inner_radius:Float, outer_radius:Float, start:Float, end:Float, color:Int):Void
+		Raw.wgf_draw_ring(center_x, center_y, inner_radius, outer_radius, start, end, color);
+
+	/**
+	    Rings and sectors: the band between two radii from angle `start` to `end` (radians from
+	    +x, clockwise on the screen; a whole turn is a ring, an inner radius of 0 a sector, a pie);
+	    an arc, a ring `thickness` wide along a circle; ellipses filled and outlined.
+	**/
+	public static inline function arc(center_x:Float, center_y:Float, radius:Float, start:Float, end:Float, thickness:Float, color:Int):Void
+		Raw.wgf_draw_arc(center_x, center_y, radius, start, end, thickness, color);
+
+	/**
+	    Rings and sectors: the band between two radii from angle `start` to `end` (radians from
+	    +x, clockwise on the screen; a whole turn is a ring, an inner radius of 0 a sector, a pie);
+	    an arc, a ring `thickness` wide along a circle; ellipses filled and outlined.
+	**/
+	public static inline function ellipse(center_x:Float, center_y:Float, radius_x:Float, radius_y:Float, color:Int):Void
+		Raw.wgf_draw_ellipse(center_x, center_y, radius_x, radius_y, color);
+
+	/**
+	    Rings and sectors: the band between two radii from angle `start` to `end` (radians from
+	    +x, clockwise on the screen; a whole turn is a ring, an inner radius of 0 a sector, a pie);
+	    an arc, a ring `thickness` wide along a circle; ellipses filled and outlined.
+	**/
+	public static inline function ellipseLines(center_x:Float, center_y:Float, radius_x:Float, radius_y:Float, thickness:Float, color:Int):Void
+		Raw.wgf_draw_ellipse_lines(center_x, center_y, radius_x, radius_y, thickness, color);
+
+	/**
+	    Gradients: a rectangle's four corners each its own color, blended between (two alike
+	    for a vertical or a horizontal one), and a circle from its center's color to its edge's.
+	**/
+	public static inline function rectangleGradient(x:Float, y:Float, width:Float, height:Float, top_left:Int, top_right:Int, bottom_right:Int, bottom_left:Int):Void
+		Raw.wgf_draw_rectangle_gradient(x, y, width, height, top_left, top_right, bottom_right, bottom_left);
+
+	/**
+	    Gradients: a rectangle's four corners each its own color, blended between (two alike
+	    for a vertical or a horizontal one), and a circle from its center's color to its edge's.
+	**/
+	public static inline function circleGradient(center_x:Float, center_y:Float, radius:Float, inner:Int, outer:Int):Void
+		Raw.wgf_draw_circle_gradient(center_x, center_y, radius, inner, outer);
+
+	/**
+	    A texture's region, as wgf_draw_texture_region draws it, `width` by `height` with its
+	    pivot (a share of its size: 0.5, 0.5 its middle) at x, y, turned `radians` about it.
+	**/
+	public static inline function textureRotated(texture:Texture, source_x:Float, source_y:Float, source_width:Float, source_height:Float, x:Float, y:Float, width:Float, height:Float, pivot_x:Float, pivot_y:Float, radians:Float, tint:Int):Void
+		Raw.wgf_draw_texture_rotated(texture, source_x, source_y, source_width, source_height, x, y, width, height, pivot_x, pivot_y, radians, tint);
+
+	/**
+	    A texture's region, as wgf_draw_texture_region draws it, `width` by `height` with its
+	    pivot (a share of its size: 0.5, 0.5 its middle) at x, y, turned `radians` about it.
+	**/
+	public static inline function textureFill(texture:Texture, x:Float, y:Float, width:Float, height:Float, amount:Float, fill:DrawFill, tint:Int):Void
+		Raw.wgf_draw_texture_fill(texture, x, y, width, height, amount, fill, tint);
+
+	/**
 	    3D: between begin_3d and end_3d, the 3D calls draw in the world as `camera` (a 3D
 	    camera, wgf_camera3d.h) sees it, into the presentation's visible area, depth tested
 	    against each other and against the frame's 3D before them, and under the clip. False
@@ -190,25 +250,50 @@ class Draw {
 		Raw.wgf_draw_grid(slices, spacing, color);
 
 	/**
-	    Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
-	    a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
-	    (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
-	    x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
-	    centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
-	    actor's rotation turns it. A color with alpha below 255 is blended over what is
-	    behind it, in the order drawn.
+	    A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+	    a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
+	**/
+	public static inline function triangle3d(x0:Float, y0:Float, z0:Float, x1:Float, y1:Float, z1:Float, x2:Float, y2:Float, z2:Float, color:Int):Void
+		Raw.wgf_draw_triangle_3d(x0, y0, z0, x1, y1, z1, x2, y2, z2, color);
+
+	/**
+	    A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+	    a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
+	**/
+	public static inline function cylinder(cx:Float, cy:Float, cz:Float, radius:Float, height:Float, color:Int):Void
+		Raw.wgf_draw_cylinder(cx, cy, cz, radius, height, color);
+
+	/**
+	    A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+	    a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
+	**/
+	public static inline function cylinderWires(cx:Float, cy:Float, cz:Float, radius:Float, height:Float, color:Int):Void
+		Raw.wgf_draw_cylinder_wires(cx, cy, cz, radius, height, color);
+
+	/**
+	    A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+	    a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
+	**/
+	public static inline function sphereWires(cx:Float, cy:Float, cz:Float, radius:Float, color:Int):Void
+		Raw.wgf_draw_sphere_wires(cx, cy, cz, radius, color);
+
+	/**
+	    A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+	    a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
+	**/
+	public static inline function capsuleWires(cx:Float, cy:Float, cz:Float, radius:Float, height:Float, color:Int):Void
+		Raw.wgf_draw_capsule_wires(cx, cy, cz, radius, height, color);
+
+	/**
+	    A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+	    a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
 	**/
 	public static inline function rectangle3d(cx:Float, cy:Float, cz:Float, width:Float, height:Float, rx:Float, ry:Float, rz:Float, color:Int):Void
 		Raw.wgf_draw_rectangle_3d(cx, cy, cz, width, height, rx, ry, rz, color);
 
 	/**
-	    Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
-	    a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
-	    (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
-	    x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
-	    centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
-	    actor's rotation turns it. A color with alpha below 255 is blended over what is
-	    behind it, in the order drawn.
+	    A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+	    a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
 	**/
 	public static inline function circle3d(cx:Float, cy:Float, cz:Float, radius:Float, rx:Float, ry:Float, rz:Float, color:Int):Void
 		Raw.wgf_draw_circle_3d(cx, cy, cz, radius, rx, ry, rz, color);

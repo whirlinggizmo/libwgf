@@ -65,6 +65,41 @@ WGF_API void wgf_draw_texture_region(wgf_texture_t texture, float source_x, floa
                                      float source_height, float x, float y, float width, float height,
                                      wgf_color_t tint);
 
+/* Rings and sectors: the band between two radii from angle `start` to `end` (radians from
+ * +x, clockwise on the screen; a whole turn is a ring, an inner radius of 0 a sector, a pie);
+ * an arc, a ring `thickness` wide along a circle; ellipses filled and outlined. */
+WGF_API void wgf_draw_ring(float center_x, float center_y, float inner_radius, float outer_radius, float start,
+                           float end, wgf_color_t color);
+WGF_API void wgf_draw_arc(float center_x, float center_y, float radius, float start, float end, float thickness,
+                          wgf_color_t color);
+WGF_API void wgf_draw_ellipse(float center_x, float center_y, float radius_x, float radius_y, wgf_color_t color);
+WGF_API void wgf_draw_ellipse_lines(float center_x, float center_y, float radius_x, float radius_y, float thickness,
+                                    wgf_color_t color);
+
+/* Gradients: a rectangle's four corners each its own color, blended between (two alike
+ * for a vertical or a horizontal one), and a circle from its center's color to its edge's. */
+WGF_API void wgf_draw_rectangle_gradient(float x, float y, float width, float height, wgf_color_t top_left,
+                                         wgf_color_t top_right, wgf_color_t bottom_right, wgf_color_t bottom_left);
+WGF_API void wgf_draw_circle_gradient(float center_x, float center_y, float radius, wgf_color_t inner,
+                                      wgf_color_t outer);
+
+/* A texture's region, as wgf_draw_texture_region draws it, `width` by `height` with its
+ * pivot (a share of its size: 0.5, 0.5 its middle) at x, y, turned `radians` about it. */
+WGF_API void wgf_draw_texture_rotated(wgf_texture_t texture, float source_x, float source_y, float source_width,
+                                      float source_height, float x, float y, float width, float height, float pivot_x,
+                                      float pivot_y, float radians, wgf_color_t tint);
+
+/* A texture drawn into the rectangle only up to `amount` (0 to 1): a bar filled from the
+ * left or from the bottom, or swept clockwise from 12 o'clock (a cooldown, a health orb).
+ * A width or height of 0 or less: the texture's size. */
+typedef enum wgf_draw_fill_t {
+    WGF_DRAW_FILL_LEFT_TO_RIGHT = 0,
+    WGF_DRAW_FILL_BOTTOM_TO_TOP = 1,
+    WGF_DRAW_FILL_CLOCKWISE = 2
+} wgf_draw_fill_t;
+WGF_API void wgf_draw_texture_fill(wgf_texture_t texture, float x, float y, float width, float height, float amount,
+                                   wgf_draw_fill_t fill, wgf_color_t tint);
+
 /* 3D: between begin_3d and end_3d, the 3D calls draw in the world as `camera` (a 3D
  * camera, wgf_camera3d.h) sees it, into the presentation's visible area, depth tested
  * against each other and against the frame's 3D before them, and under the clip. False
@@ -87,6 +122,14 @@ WGF_API void wgf_draw_cube_wires(float cx, float cy, float cz, float width, floa
                                  wgf_color_t color);
 WGF_API void wgf_draw_sphere(float cx, float cy, float cz, float radius, wgf_color_t color);
 WGF_API void wgf_draw_grid(int slices, float spacing, wgf_color_t color);
+/* A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+ * a capsule (upright, `height` end to end) as wires: raylib's debug shapes. */
+WGF_API void wgf_draw_triangle_3d(float x0, float y0, float z0, float x1, float y1, float z1, float x2, float y2,
+                                  float z2, wgf_color_t color);
+WGF_API void wgf_draw_cylinder(float cx, float cy, float cz, float radius, float height, wgf_color_t color);
+WGF_API void wgf_draw_cylinder_wires(float cx, float cy, float cz, float radius, float height, wgf_color_t color);
+WGF_API void wgf_draw_sphere_wires(float cx, float cy, float cz, float radius, wgf_color_t color);
+WGF_API void wgf_draw_capsule_wires(float cx, float cy, float cz, float radius, float height, wgf_color_t color);
 WGF_API void wgf_draw_rectangle_3d(float cx, float cy, float cz, float width, float height, float rx, float ry,
                                    float rz, wgf_color_t color);
 WGF_API void wgf_draw_circle_3d(float cx, float cy, float cz, float radius, float rx, float ry, float rz,

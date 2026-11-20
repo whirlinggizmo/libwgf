@@ -544,6 +544,22 @@ export const Draw = Object.freeze({
     texture: raw.wgf_draw_texture,
     // wgf: call wgf_draw_texture_region
     textureRegion: raw.wgf_draw_texture_region,
+    // wgf: call wgf_draw_ring
+    ring: raw.wgf_draw_ring,
+    // wgf: call wgf_draw_arc
+    arc: raw.wgf_draw_arc,
+    // wgf: call wgf_draw_ellipse
+    ellipse: raw.wgf_draw_ellipse,
+    // wgf: call wgf_draw_ellipse_lines
+    ellipseLines: raw.wgf_draw_ellipse_lines,
+    // wgf: call wgf_draw_rectangle_gradient
+    rectangleGradient: raw.wgf_draw_rectangle_gradient,
+    // wgf: call wgf_draw_circle_gradient
+    circleGradient: raw.wgf_draw_circle_gradient,
+    // wgf: call wgf_draw_texture_rotated
+    textureRotated: raw.wgf_draw_texture_rotated,
+    // wgf: call wgf_draw_texture_fill
+    textureFill: raw.wgf_draw_texture_fill,
     // wgf: call wgf_draw_begin_3d
     begin3d: raw.wgf_draw_begin_3d,
     // wgf: call wgf_draw_end_3d
@@ -558,6 +574,16 @@ export const Draw = Object.freeze({
     sphere: raw.wgf_draw_sphere,
     // wgf: call wgf_draw_grid
     grid: raw.wgf_draw_grid,
+    // wgf: call wgf_draw_triangle_3d
+    triangle3d: raw.wgf_draw_triangle_3d,
+    // wgf: call wgf_draw_cylinder
+    cylinder: raw.wgf_draw_cylinder,
+    // wgf: call wgf_draw_cylinder_wires
+    cylinderWires: raw.wgf_draw_cylinder_wires,
+    // wgf: call wgf_draw_sphere_wires
+    sphereWires: raw.wgf_draw_sphere_wires,
+    // wgf: call wgf_draw_capsule_wires
+    capsuleWires: raw.wgf_draw_capsule_wires,
     // wgf: call wgf_draw_rectangle_3d
     rectangle3d: raw.wgf_draw_rectangle_3d,
     // wgf: call wgf_draw_circle_3d
@@ -2189,6 +2215,8 @@ export const BoundsMode = Object.freeze({ WRAP: 0, CLAMP: 1, DESTROY: 2 });
 export const ColorStock = Object.freeze({ BLANK: 0, WHITE: 1, BLACK: 2, LIGHTGRAY: 3, GRAY: 4, DARKGRAY: 5, YELLOW: 6, GOLD: 7, ORANGE: 8, PINK: 9, RED: 10, MAROON: 11, GREEN: 12, LIME: 13, DARKGREEN: 14, SKYBLUE: 15, BLUE: 16, DARKBLUE: 17, PURPLE: 18, VIOLET: 19, DARKPURPLE: 20, BEIGE: 21, BROWN: 22, DARKBROWN: 23, MAGENTA: 24, RAYWHITE: 25 });
 // wgf: enum Component
 export const Component = Object.freeze({ NONE: 0, MOTION: 1, BOUNDS: 2, LIFETIME: 3, COLLIDER: 4, VOICE: 5, BODY: 6, VEHICLE: 7 });
+// wgf: enum DrawFill
+export const DrawFill = Object.freeze({ LEFT_TO_RIGHT: 0, BOTTOM_TO_TOP: 1, CLOCKWISE: 2 });
 // wgf: enum Easing
 export const Easing = Object.freeze({ LINEAR: 0, QUAD_IN: 1, QUAD_OUT: 2, QUAD_IN_OUT: 3, CUBIC_IN: 4, CUBIC_OUT: 5, CUBIC_IN_OUT: 6, QUART_IN: 7, QUART_OUT: 8, QUART_IN_OUT: 9, SINE_IN: 10, SINE_OUT: 11, SINE_IN_OUT: 12, EXPO_IN: 13, EXPO_OUT: 14, EXPO_IN_OUT: 15, CIRC_IN: 16, CIRC_OUT: 17, CIRC_IN_OUT: 18, BACK_IN: 19, BACK_OUT: 20, BACK_IN_OUT: 21, ELASTIC_IN: 22, ELASTIC_OUT: 23, ELASTIC_IN_OUT: 24, BOUNCE_IN: 25, BOUNCE_OUT: 26, BOUNCE_IN_OUT: 27 });
 // wgf: enum FollowMode

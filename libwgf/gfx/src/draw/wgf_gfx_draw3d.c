@@ -239,3 +239,123 @@ void wgf_draw_text_3d(wgf_font_t font, const char *text, float x, float y, float
     wgf_gfx_priv_font_draw_block_3d(font, text, size > 0.0f ? size : 1.0f, color, 0.0f, WGF_TEXT_HALIGN_CENTER,
                                     WGF_TEXT_VALIGN_MIDDLE, m.m);
 }
+
+/* ---- more shapes, raylib's debug drawing that libwgf lacked -------------------------- */
+
+void wgf_draw_triangle_3d(float x0, float y0, float z0, float x1, float y1, float z1, float x2, float y2, float z2,
+                          wgf_color_t color)
+{
+    if (!in_3d()) return;
+    sgl_begin_triangles();
+    set_color(color);
+    sgl_v3f(x0, y0, z0);
+    sgl_v3f(x1, y1, z1);
+    sgl_v3f(x2, y2, z2);
+    sgl_end();
+}
+
+/* A circle of `radius` about y at height y, as CIRCLE_SEGMENTS points. */
+static void ring_point(float cx, float y, float cz, float radius, int i, float *out)
+{
+    const float a = 2.0f * PI * (float)i / (float)CIRCLE_SEGMENTS;
+    out[0] = cx + cosf(a) * radius;
+    out[1] = y;
+    out[2] = cz + sinf(a) * radius;
+}
+
+void wgf_draw_cylinder(float cx, float cy, float cz, float radius, float height, wgf_color_t color)
+{
+    const float y0 = cy - height * 0.5f, y1 = cy + height * 0.5f;
+    int i;
+    if (!in_3d() || radius <= 0.0f) return;
+    sgl_begin_triangles();
+    set_color(color);
+    for (i = 0; i < CIRCLE_SEGMENTS; i++) {
+        float a0[3], a1[3], b0[3], b1[3];
+        ring_point(cx, y0, cz, radius, i, a0);
+        ring_point(cx, y0, cz, radius, i + 1, a1);
+        ring_point(cx, y1, cz, radius, i, b0);
+        ring_point(cx, y1, cz, radius, i + 1, b1);
+        sgl_v3f(a0[0], a0[1], a0[2]), sgl_v3f(b0[0], b0[1], b0[2]), sgl_v3f(b1[0], b1[1], b1[2]); /* the side */
+        sgl_v3f(a0[0], a0[1], a0[2]), sgl_v3f(b1[0], b1[1], b1[2]), sgl_v3f(a1[0], a1[1], a1[2]);
+        sgl_v3f(cx, y1, cz), sgl_v3f(b1[0], b1[1], b1[2]), sgl_v3f(b0[0], b0[1], b0[2]);              /* the top */
+        sgl_v3f(cx, y0, cz), sgl_v3f(a0[0], a0[1], a0[2]), sgl_v3f(a1[0], a1[1], a1[2]);              /* the bottom */
+    }
+    sgl_end();
+}
+
+void wgf_draw_cylinder_wires(float cx, float cy, float cz, float radius, float height, wgf_color_t color)
+{
+    const float y0 = cy - height * 0.5f, y1 = cy + height * 0.5f;
+    int i;
+    if (!in_3d() || radius <= 0.0f) return;
+    sgl_begin_lines();
+    set_color(color);
+    for (i = 0; i < CIRCLE_SEGMENTS; i++) {
+        float a0[3], a1[3], b0[3], b1[3];
+        ring_point(cx, y0, cz, radius, i, a0);
+        ring_point(cx, y0, cz, radius, i + 1, a1);
+        ring_point(cx, y1, cz, radius, i, b0);
+        ring_point(cx, y1, cz, radius, i + 1, b1);
+        sgl_v3f(a0[0], a0[1], a0[2]), sgl_v3f(a1[0], a1[1], a1[2]);
+        sgl_v3f(b0[0], b0[1], b0[2]), sgl_v3f(b1[0], b1[1], b1[2]);
+        if (i % 6 == 0) sgl_v3f(a0[0], a0[1], a0[2]), sgl_v3f(b0[0], b0[1], b0[2]);
+    }
+    sgl_end();
+}
+
+/* Three great circles, about each axis, of a sphere at c; a capsule's ends are its halves. */
+static void wire_circles(float cx, float cy, float cz, float radius, float lift_top, float lift_bottom)
+{
+    int i, axis;
+    for (axis = 0; axis < 3; axis++) {
+        for (i = 0; i < CIRCLE_SEGMENTS; i++) {
+            const float a0 = 2.0f * PI * (float)i / (float)CIRCLE_SEGMENTS, a1 = 2.0f * PI * (float)(i + 1) / (float)CIRCLE_SEGMENTS;
+            float p[2][3];
+            int k;
+            for (k = 0; k < 2; k++) {
+                const float a = k == 0 ? a0 : a1, u = cosf(a) * radius, v = sinf(a) * radius;
+                p[k][0] = cx + (axis == 0 ? 0.0f : u);
+                p[k][1] = cy + (axis == 1 ? 0.0f : (axis == 0 ? u : v));
+                p[k][2] = cz + (axis == 0 ? v : (axis == 1 ? v : 0.0f));
+                if (axis != 1) p[k][1] += p[k][1] >= cy ? lift_top : -lift_bottom; /* a capsule's halves apart */
+            }
+            sgl_v3f(p[0][0], p[0][1], p[0][2]);
+            sgl_v3f(p[1][0], p[1][1], p[1][2]);
+        }
+    }
+}
+
+void wgf_draw_sphere_wires(float cx, float cy, float cz, float radius, wgf_color_t color)
+{
+    if (!in_3d() || radius <= 0.0f) return;
+    sgl_begin_lines();
+    set_color(color);
+    wire_circles(cx, cy, cz, radius, 0.0f, 0.0f);
+    sgl_end();
+}
+
+void wgf_draw_capsule_wires(float cx, float cy, float cz, float radius, float height, wgf_color_t color)
+{
+    const float half = height * 0.5f - radius > 0.0f ? height * 0.5f - radius : 0.0f; /* the cylinder between its ends */
+    int i;
+    if (!in_3d() || radius <= 0.0f) return;
+    sgl_begin_lines();
+    set_color(color);
+    wire_circles(cx, cy, cz, radius, half, half);
+    for (i = 0; i < 4; i++) { /* its sides */
+        const float a = PI * 0.5f * (float)i, x = cx + cosf(a) * radius, z = cz + sinf(a) * radius;
+        sgl_v3f(x, cy - half, z);
+        sgl_v3f(x, cy + half, z);
+    }
+    for (i = 0; i < CIRCLE_SEGMENTS; i++) { /* its waist, top and bottom */
+        float a0[3], a1[3];
+        ring_point(cx, cy + half, cz, radius, i, a0);
+        ring_point(cx, cy + half, cz, radius, i + 1, a1);
+        sgl_v3f(a0[0], a0[1], a0[2]), sgl_v3f(a1[0], a1[1], a1[2]);
+        ring_point(cx, cy - half, cz, radius, i, a0);
+        ring_point(cx, cy - half, cz, radius, i + 1, a1);
+        sgl_v3f(a0[0], a0[1], a0[2]), sgl_v3f(a1[0], a1[1], a1[2]);
+    }
+    sgl_end();
+}

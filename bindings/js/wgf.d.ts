@@ -589,6 +589,16 @@ export declare const WGF_TEXT_VALIGN_BOTTOM: 2;
 export type wgf_text_valign_t = typeof WGF_TEXT_VALIGN_TOP | typeof WGF_TEXT_VALIGN_MIDDLE | typeof WGF_TEXT_VALIGN_BOTTOM;
 
 /**
+ * A texture drawn into the rectangle only up to `amount` (0 to 1): a bar filled from the
+ * left or from the bottom, or swept clockwise from 12 o'clock (a cooldown, a health orb).
+ * A width or height of 0 or less: the texture's size.
+ */
+export declare const WGF_DRAW_FILL_LEFT_TO_RIGHT: 0;
+export declare const WGF_DRAW_FILL_BOTTOM_TO_TOP: 1;
+export declare const WGF_DRAW_FILL_CLOCKWISE: 2;
+export type wgf_draw_fill_t = typeof WGF_DRAW_FILL_LEFT_TO_RIGHT | typeof WGF_DRAW_FILL_BOTTOM_TO_TOP | typeof WGF_DRAW_FILL_CLOCKWISE;
+
+/**
  * Cameras that follow, helix-legacy's CameraFollow2D, CameraFollow3D, and Orbit3D: a camera
  * actor (wgf_camera2d.h, wgf_camera3d.h) given a target actor is moved each frame, before
  * the frame callback, to follow where the target is drawn. At most 64 cameras follow.
@@ -3710,6 +3720,58 @@ export declare function wgf_draw_texture(texture: wgf_texture_t | 0, x: number, 
 export declare function wgf_draw_texture_region(texture: wgf_texture_t | 0, source_x: number, source_y: number, source_width: number, source_height: number, x: number, y: number, width: number, height: number, tint: wgf_color_t): void;
 
 /**
+ * Rings and sectors: the band between two radii from angle `start` to `end` (radians from
+ * +x, clockwise on the screen; a whole turn is a ring, an inner radius of 0 a sector, a pie);
+ * an arc, a ring `thickness` wide along a circle; ellipses filled and outlined.
+ */
+export declare function wgf_draw_ring(center_x: number, center_y: number, inner_radius: number, outer_radius: number, start: number, end: number, color: wgf_color_t): void;
+
+/**
+ * Rings and sectors: the band between two radii from angle `start` to `end` (radians from
+ * +x, clockwise on the screen; a whole turn is a ring, an inner radius of 0 a sector, a pie);
+ * an arc, a ring `thickness` wide along a circle; ellipses filled and outlined.
+ */
+export declare function wgf_draw_arc(center_x: number, center_y: number, radius: number, start: number, end: number, thickness: number, color: wgf_color_t): void;
+
+/**
+ * Rings and sectors: the band between two radii from angle `start` to `end` (radians from
+ * +x, clockwise on the screen; a whole turn is a ring, an inner radius of 0 a sector, a pie);
+ * an arc, a ring `thickness` wide along a circle; ellipses filled and outlined.
+ */
+export declare function wgf_draw_ellipse(center_x: number, center_y: number, radius_x: number, radius_y: number, color: wgf_color_t): void;
+
+/**
+ * Rings and sectors: the band between two radii from angle `start` to `end` (radians from
+ * +x, clockwise on the screen; a whole turn is a ring, an inner radius of 0 a sector, a pie);
+ * an arc, a ring `thickness` wide along a circle; ellipses filled and outlined.
+ */
+export declare function wgf_draw_ellipse_lines(center_x: number, center_y: number, radius_x: number, radius_y: number, thickness: number, color: wgf_color_t): void;
+
+/**
+ * Gradients: a rectangle's four corners each its own color, blended between (two alike
+ * for a vertical or a horizontal one), and a circle from its center's color to its edge's.
+ */
+export declare function wgf_draw_rectangle_gradient(x: number, y: number, width: number, height: number, top_left: wgf_color_t, top_right: wgf_color_t, bottom_right: wgf_color_t, bottom_left: wgf_color_t): void;
+
+/**
+ * Gradients: a rectangle's four corners each its own color, blended between (two alike
+ * for a vertical or a horizontal one), and a circle from its center's color to its edge's.
+ */
+export declare function wgf_draw_circle_gradient(center_x: number, center_y: number, radius: number, inner: wgf_color_t, outer: wgf_color_t): void;
+
+/**
+ * A texture's region, as wgf_draw_texture_region draws it, `width` by `height` with its
+ * pivot (a share of its size: 0.5, 0.5 its middle) at x, y, turned `radians` about it.
+ */
+export declare function wgf_draw_texture_rotated(texture: wgf_texture_t | 0, source_x: number, source_y: number, source_width: number, source_height: number, x: number, y: number, width: number, height: number, pivot_x: number, pivot_y: number, radians: number, tint: wgf_color_t): void;
+
+/**
+ * A texture's region, as wgf_draw_texture_region draws it, `width` by `height` with its
+ * pivot (a share of its size: 0.5, 0.5 its middle) at x, y, turned `radians` about it.
+ */
+export declare function wgf_draw_texture_fill(texture: wgf_texture_t | 0, x: number, y: number, width: number, height: number, amount: number, fill: wgf_draw_fill_t, tint: wgf_color_t): void;
+
+/**
  * 3D: between begin_3d and end_3d, the 3D calls draw in the world as `camera` (a 3D
  * camera, wgf_camera3d.h) sees it, into the presentation's visible area, depth tested
  * against each other and against the frame's 3D before them, and under the clip. False
@@ -3785,24 +3847,44 @@ export declare function wgf_draw_sphere(cx: number, cy: number, cz: number, radi
 export declare function wgf_draw_grid(slices: number, spacing: number, color: wgf_color_t): void;
 
 /**
- * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
- * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
- * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
- * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
- * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * actor's rotation turns it. A color with alpha below 255 is blended over what is
- * behind it, in the order drawn.
+ * A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+ * a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
+ */
+export declare function wgf_draw_triangle_3d(x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, x2: number, y2: number, z2: number, color: wgf_color_t): void;
+
+/**
+ * A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+ * a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
+ */
+export declare function wgf_draw_cylinder(cx: number, cy: number, cz: number, radius: number, height: number, color: wgf_color_t): void;
+
+/**
+ * A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+ * a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
+ */
+export declare function wgf_draw_cylinder_wires(cx: number, cy: number, cz: number, radius: number, height: number, color: wgf_color_t): void;
+
+/**
+ * A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+ * a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
+ */
+export declare function wgf_draw_sphere_wires(cx: number, cy: number, cz: number, radius: number, color: wgf_color_t): void;
+
+/**
+ * A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+ * a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
+ */
+export declare function wgf_draw_capsule_wires(cx: number, cy: number, cz: number, radius: number, height: number, color: wgf_color_t): void;
+
+/**
+ * A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+ * a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
  */
 export declare function wgf_draw_rectangle_3d(cx: number, cy: number, cz: number, width: number, height: number, rx: number, ry: number, rz: number, color: wgf_color_t): void;
 
 /**
- * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
- * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
- * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
- * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
- * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
- * actor's rotation turns it. A color with alpha below 255 is blended over what is
- * behind it, in the order drawn.
+ * A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+ * a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
  */
 export declare function wgf_draw_circle_3d(cx: number, cy: number, cz: number, radius: number, rx: number, ry: number, rz: number, color: wgf_color_t): void;
 

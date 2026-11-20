@@ -3,6 +3,7 @@ wgf_layer(gfx
     SOURCES
         src/color/wgf_gfx_color.c
         src/draw/wgf_gfx_draw.c
+        src/draw/wgf_gfx_draw_more.c
         src/draw/wgf_gfx_draw3d.c
         src/emitter/wgf_gfx_emitter.c
         src/emitter/wgf_gfx_emitter2d.c

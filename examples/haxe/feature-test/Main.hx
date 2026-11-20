@@ -471,6 +471,11 @@ class Main {
 		Draw.cube(0, 0.5, 0, 1, 1, 1, Color.get(ColorStock.SKYBLUE));
 		Draw.cubeWires(0, 0.5, 0, 1, 1, 1, Color.get(ColorStock.DARKBLUE));
 		Draw.sphere(2, 0.5, 0, 0.5, Color.get(ColorStock.GOLD));
+		Draw.triangle3d(0, 0, 0, 1, 0, 0, 0, 1, 0, Color.get(ColorStock.GOLD));
+		Draw.cylinder(-2, 0.5, 0, 0.3, 1, Color.get(ColorStock.GOLD));
+		Draw.cylinderWires(-2, 0.5, 1, 0.3, 1, Color.get(ColorStock.GOLD));
+		Draw.sphereWires(2, 0.5, 1, 0.5, Color.get(ColorStock.GOLD));
+		Draw.capsuleWires(0, 0.5, 2, 0.3, 1, Color.get(ColorStock.GOLD));
 		Draw.rectangle3d(-2, 0.5, 0, 1, 1, 0, 0.5, 0, Color.get(ColorStock.GREEN));
 		Draw.circle3d(0, 0.01, 0, 2, Math.PI / 2, 0, 0, Color.get(ColorStock.WHITE));
 		Draw.text3d(font, "3D", 0, 2, 0, 0.5, Color.get(ColorStock.WHITE));
@@ -802,6 +807,16 @@ class Main {
 		Draw.textAligned(font, "right", 200, 140, 14, Color.get(ColorStock.WHITE), TextHalign.RIGHT, TextValign.MIDDLE);
 		Draw.texture(tiles, 140, 4, 32, 32, Color.get(ColorStock.WHITE));
 		Draw.textureRegion(tiles, 0, 0, 8, 8, 180, 4, 16, 16, Color.get(ColorStock.WHITE));
+		final white = Color.get(ColorStock.WHITE);
+		Draw.ring(40, 300, 10, 20, 0, 3, white);
+		Draw.arc(90, 300, 15, 0, 3, 2, white);
+		Draw.ellipse(140, 300, 20, 10, white);
+		Draw.ellipseLines(190, 300, 20, 10, 2, white);
+		Draw.rectangleGradient(220, 290, 30, 20, white, white, Color.get(ColorStock.RED), Color.get(ColorStock.RED));
+		Draw.circleGradient(280, 300, 12, white, Color.get(ColorStock.BLANK));
+		Draw.textureRotated(tiles, 0, 0, 8, 8, 320, 300, 16, 16, 0.5, 0.5, 0.3, white);
+		Draw.textureFill(tiles, 350, 290, 32, 8, 0.5, DrawFill.LEFT_TO_RIGHT, white);
+		Draw.textureFill(tiles, 390, 290, 16, 16, 0.75, DrawFill.CLOCKWISE, white);
 		Render.popClip();
 		threeD();
 		ui();

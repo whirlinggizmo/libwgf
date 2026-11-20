@@ -1643,6 +1643,50 @@ export declare const Draw: {
      */
     readonly textureRegion: typeof raw.wgf_draw_texture_region;
     /**
+     * Rings and sectors: the band between two radii from angle `start` to `end` (radians from
+     * +x, clockwise on the screen; a whole turn is a ring, an inner radius of 0 a sector, a pie);
+     * an arc, a ring `thickness` wide along a circle; ellipses filled and outlined.
+     */
+    readonly ring: typeof raw.wgf_draw_ring;
+    /**
+     * Rings and sectors: the band between two radii from angle `start` to `end` (radians from
+     * +x, clockwise on the screen; a whole turn is a ring, an inner radius of 0 a sector, a pie);
+     * an arc, a ring `thickness` wide along a circle; ellipses filled and outlined.
+     */
+    readonly arc: typeof raw.wgf_draw_arc;
+    /**
+     * Rings and sectors: the band between two radii from angle `start` to `end` (radians from
+     * +x, clockwise on the screen; a whole turn is a ring, an inner radius of 0 a sector, a pie);
+     * an arc, a ring `thickness` wide along a circle; ellipses filled and outlined.
+     */
+    readonly ellipse: typeof raw.wgf_draw_ellipse;
+    /**
+     * Rings and sectors: the band between two radii from angle `start` to `end` (radians from
+     * +x, clockwise on the screen; a whole turn is a ring, an inner radius of 0 a sector, a pie);
+     * an arc, a ring `thickness` wide along a circle; ellipses filled and outlined.
+     */
+    readonly ellipseLines: typeof raw.wgf_draw_ellipse_lines;
+    /**
+     * Gradients: a rectangle's four corners each its own color, blended between (two alike
+     * for a vertical or a horizontal one), and a circle from its center's color to its edge's.
+     */
+    readonly rectangleGradient: typeof raw.wgf_draw_rectangle_gradient;
+    /**
+     * Gradients: a rectangle's four corners each its own color, blended between (two alike
+     * for a vertical or a horizontal one), and a circle from its center's color to its edge's.
+     */
+    readonly circleGradient: typeof raw.wgf_draw_circle_gradient;
+    /**
+     * A texture's region, as wgf_draw_texture_region draws it, `width` by `height` with its
+     * pivot (a share of its size: 0.5, 0.5 its middle) at x, y, turned `radians` about it.
+     */
+    readonly textureRotated: typeof raw.wgf_draw_texture_rotated;
+    /**
+     * A texture's region, as wgf_draw_texture_region draws it, `width` by `height` with its
+     * pivot (a share of its size: 0.5, 0.5 its middle) at x, y, turned `radians` about it.
+     */
+    readonly textureFill: typeof raw.wgf_draw_texture_fill;
+    /**
      * 3D: between begin_3d and end_3d, the 3D calls draw in the world as `camera` (a 3D
      * camera, wgf_camera3d.h) sees it, into the presentation's visible area, depth tested
      * against each other and against the frame's 3D before them, and under the clip. False
@@ -1711,23 +1755,38 @@ export declare const Draw: {
      */
     readonly grid: typeof raw.wgf_draw_grid;
     /**
-     * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
-     * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
-     * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
-     * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
-     * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
-     * actor's rotation turns it. A color with alpha below 255 is blended over what is
-     * behind it, in the order drawn.
+     * A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+     * a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
+     */
+    readonly triangle3d: typeof raw.wgf_draw_triangle_3d;
+    /**
+     * A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+     * a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
+     */
+    readonly cylinder: typeof raw.wgf_draw_cylinder;
+    /**
+     * A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+     * a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
+     */
+    readonly cylinderWires: typeof raw.wgf_draw_cylinder_wires;
+    /**
+     * A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+     * a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
+     */
+    readonly sphereWires: typeof raw.wgf_draw_sphere_wires;
+    /**
+     * A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+     * a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
+     */
+    readonly capsuleWires: typeof raw.wgf_draw_capsule_wires;
+    /**
+     * A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+     * a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
      */
     readonly rectangle3d: typeof raw.wgf_draw_rectangle_3d;
     /**
-     * Shapes in the world, unlit, their lines a pixel wide (wgrender's shape3d's): a line;
-     * a cube, filled or its edges, `width` (x) by `height` (y) by `length` (z), centered on
-     * (cx, cy, cz); a sphere; a grid of `slices` by `slices` squares `spacing` apart on the
-     * x-z plane, centered on the origin; and a filled rectangle and a circle's outline,
-     * centered on (cx, cy, cz), in their x-y plane turned by (rx, ry, rz) radians, as a
-     * actor's rotation turns it. A color with alpha below 255 is blended over what is
-     * behind it, in the order drawn.
+     * A triangle; a cylinder upright (along y) centered at c, filled or as wires; a sphere and
+     * a capsule (upright, `height` end to end) as wires: raylib's debug shapes.
      */
     readonly circle3d: typeof raw.wgf_draw_circle_3d;
     /**
@@ -6611,6 +6670,8 @@ export type ColorStock = raw.wgf_color_stock_t;
 export declare const ColorStock: { readonly BLANK: ColorStock; readonly WHITE: ColorStock; readonly BLACK: ColorStock; readonly LIGHTGRAY: ColorStock; readonly GRAY: ColorStock; readonly DARKGRAY: ColorStock; readonly YELLOW: ColorStock; readonly GOLD: ColorStock; readonly ORANGE: ColorStock; readonly PINK: ColorStock; readonly RED: ColorStock; readonly MAROON: ColorStock; readonly GREEN: ColorStock; readonly LIME: ColorStock; readonly DARKGREEN: ColorStock; readonly SKYBLUE: ColorStock; readonly BLUE: ColorStock; readonly DARKBLUE: ColorStock; readonly PURPLE: ColorStock; readonly VIOLET: ColorStock; readonly DARKPURPLE: ColorStock; readonly BEIGE: ColorStock; readonly BROWN: ColorStock; readonly DARKBROWN: ColorStock; readonly MAGENTA: ColorStock; readonly RAYWHITE: ColorStock; };
 export type Component = raw.wgf_component_t;
 export declare const Component: { readonly NONE: Component; readonly MOTION: Component; readonly BOUNDS: Component; readonly LIFETIME: Component; readonly COLLIDER: Component; readonly VOICE: Component; readonly BODY: Component; readonly VEHICLE: Component; };
+export type DrawFill = raw.wgf_draw_fill_t;
+export declare const DrawFill: { readonly LEFT_TO_RIGHT: DrawFill; readonly BOTTOM_TO_TOP: DrawFill; readonly CLOCKWISE: DrawFill; };
 export type Easing = raw.wgf_easing_t;
 export declare const Easing: { readonly LINEAR: Easing; readonly QUAD_IN: Easing; readonly QUAD_OUT: Easing; readonly QUAD_IN_OUT: Easing; readonly CUBIC_IN: Easing; readonly CUBIC_OUT: Easing; readonly CUBIC_IN_OUT: Easing; readonly QUART_IN: Easing; readonly QUART_OUT: Easing; readonly QUART_IN_OUT: Easing; readonly SINE_IN: Easing; readonly SINE_OUT: Easing; readonly SINE_IN_OUT: Easing; readonly EXPO_IN: Easing; readonly EXPO_OUT: Easing; readonly EXPO_IN_OUT: Easing; readonly CIRC_IN: Easing; readonly CIRC_OUT: Easing; readonly CIRC_IN_OUT: Easing; readonly BACK_IN: Easing; readonly BACK_OUT: Easing; readonly BACK_IN_OUT: Easing; readonly ELASTIC_IN: Easing; readonly ELASTIC_OUT: Easing; readonly ELASTIC_IN_OUT: Easing; readonly BOUNCE_IN: Easing; readonly BOUNCE_OUT: Easing; readonly BOUNCE_IN_OUT: Easing; };
 export type FollowMode = raw.wgf_follow_mode_t;
