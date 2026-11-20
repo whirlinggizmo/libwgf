@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "ac9964328222f92e" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "a7eda5ee26fa8af6" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -5396,6 +5396,21 @@ export function wgf_texture_read_get_data(read) {
 export function wgf_texture_read_get_size(read) {
     const value = host["_wgf_texture_read_get_size"](read);
     return value;
+}
+
+// wgf: call wgf_texture_read_save
+/**
+ * A DONE read's pixels saved as a PNG file at `path` (as wgf_fs_write: under the root, its
+ * directories made; on the web, kept in the browser's store): raylib's TakeScreenshot with
+ * wgf_render_read_screen. The write's task, or 0 for a read that isn't DONE, a NULL or
+ * refused path, or no memory to encode it. Encoded on the calling thread, a few hundredths
+ * of a second for a 1280 x 720 frame.
+ */
+export function wgf_texture_read_save(read, path) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_texture_read_save"](read, cstr(path));
+    host["stackRestore"](mark);
+    return value >>> 0;
 }
 
 // wgf: call wgf_texture_read_destroy
@@ -10940,6 +10955,19 @@ export function wgf_render_begin_target(target) {
  */
 export function wgf_render_end_target() {
     host["_wgf_render_end_target"]();
+}
+
+// wgf: call wgf_render_read_screen
+/**
+ * The screen read back as this frame ends (or the next, outside a frame), after its last
+ * pass and before it is shown: a read (wgf_texture.h) DONE then with the window's
+ * framebuffer at its pixels' size (wgf_render_get_width times the DPI scale), the top row
+ * first; FAILED headless. With wgf_texture_read_save, a screenshot. 0 for no room for
+ * another read (logged).
+ */
+export function wgf_render_read_screen() {
+    const value = host["_wgf_render_read_screen"]();
+    return value >>> 0;
 }
 
 // wgf: call wgf_render_set_target_clear_color

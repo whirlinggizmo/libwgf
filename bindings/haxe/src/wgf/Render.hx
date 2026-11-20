@@ -105,6 +105,16 @@ class Render {
 		Raw.wgf_render_end_target();
 
 	/**
+	    The screen read back as this frame ends (or the next, outside a frame), after its last
+	    pass and before it is shown: a read (wgf_texture.h) DONE then with the window's
+	    framebuffer at its pixels' size (wgf_render_get_width times the DPI scale), the top row
+	    first; FAILED headless. With wgf_texture_read_save, a screenshot. 0 for no room for
+	    another read (logged).
+	**/
+	public static inline function readScreen():TextureRead
+		return Raw.wgf_render_read_screen();
+
+	/**
 	    What a pass into `target` starts cleared to, kept with it until changed. Default:
 	    transparent black. False, and transparent black read back, for a texture that isn't a
 	    render target.

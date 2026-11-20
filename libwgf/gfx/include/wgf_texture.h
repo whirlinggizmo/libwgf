@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "wgf_api.h"
+#include "wgf_fs.h"
 #include "wgf_handle.h"
 #include "wgf_resource.h"
 
@@ -110,6 +111,12 @@ WGF_API int wgf_texture_read_get_height(wgf_texture_read_t read);
  * NULL and 0. */
 WGF_API const unsigned char *wgf_texture_read_get_data(wgf_texture_read_t read);
 WGF_API int wgf_texture_read_get_size(wgf_texture_read_t read);
+/* A DONE read's pixels saved as a PNG file at `path` (as wgf_fs_write: under the root, its
+ * directories made; on the web, kept in the browser's store): raylib's TakeScreenshot with
+ * wgf_render_read_screen. The write's task, or 0 for a read that isn't DONE, a NULL or
+ * refused path, or no memory to encode it. Encoded on the calling thread, a few hundredths
+ * of a second for a 1280 x 720 frame. */
+WGF_API wgf_fs_task_t wgf_texture_read_save(wgf_texture_read_t read, const char *path);
 /* False for a handle that isn't a read. One still PENDING is dropped, unread. */
 WGF_API bool wgf_texture_read_destroy(wgf_texture_read_t read);
 

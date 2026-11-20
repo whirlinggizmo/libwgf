@@ -889,6 +889,7 @@ class Main {
 
 	static var target:Texture;
 	static var targetRead:TextureRead;
+	static var screenRead:TextureRead;
 
 	/** A render target: drawn into with the stage through another camera, then on the screen. **/
 	static function renderTarget():Void {
@@ -902,6 +903,7 @@ class Main {
 		Render.endTarget();
 		Draw.texture(target, 220, 4, 64, 48, Color.get(ColorStock.WHITE));
 		targetRead = target.read();
+		screenRead = Render.readScreen();
 		expect(targetRead.getStatus() == TextureReadStatus.PENDING && tiles.read().isNone(),
 			"a target read back, PENDING; a texture that isn't one refused");
 	}
@@ -916,6 +918,15 @@ class Main {
 		expect(done ? width == 64 && height == 48 && size == 64 * 48 * 4 && data.length == size
 			: width == 0 && height == 0 && size == 0, "DONE: its pixels, 4 bytes each; FAILED: none");
 		expect(targetRead.destroy() && !targetRead.isAlive(), "the read destroyed");
+		final screenDone = screenRead.getStatus() == TextureReadStatus.DONE;
+		expect(screenDone || screenRead.getStatus() == TextureReadStatus.FAILED, "the screen read as its frame ended");
+		final shot = screenRead.save("feature-shot.png");
+		expect(screenDone ? !shot.isNone() : shot.isNone(), "a screenshot saved; none from a FAILED read");
+		if (screenDone) {
+			shot.destroy();
+			Fs.remove("feature-shot.png").destroy();
+		}
+		screenRead.destroy();
 	}
 
 	// ---- the frames ----------------------------------------------------------------------

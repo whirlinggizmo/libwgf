@@ -49,6 +49,16 @@ abstract TextureRead(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_texture_read_get_size(this);
 
 	/**
+	    A DONE read's pixels saved as a PNG file at `path` (as wgf_fs_write: under the root, its
+	    directories made; on the web, kept in the browser's store): raylib's TakeScreenshot with
+	    wgf_render_read_screen. The write's task, or 0 for a read that isn't DONE, a NULL or
+	    refused path, or no memory to encode it. Encoded on the calling thread, a few hundredths
+	    of a second for a 1280 x 720 frame.
+	**/
+	public inline function save(path:String):FsTask
+		return Raw.wgf_texture_read_save(this, path);
+
+	/**
 	    False for a handle that isn't a read. One still PENDING is dropped, unread.
 	**/
 	public inline function destroy():Bool

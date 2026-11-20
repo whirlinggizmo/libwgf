@@ -1040,6 +1040,12 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## Parity: screenshots (2026-11-20)
+
+The screen is read back as a frame ends (`wgf_render_read_screen`): after the frame's last pass and before it is shown, the only time the window's framebuffer holds it. The result is a texture read, like a render target's, with its rows turned top first. Any finished read is saved as a PNG through fs (`wgf_texture_read_save`). Together they are raylib's TakeScreenshot.
+
+The PNG writer is gfx's own, about 200 lines, rather than stb_image_write. It filters each row by the pixel before it and deflates with the fixed codes, matching through a three-byte hash. A test decodes its files with stb_image. On the web, a saved file goes to the browser's store, not a download.
+
 ## Parity: directories, resizing, icons, log lines (2026-11-20)
 
 Four more parity rows:

@@ -21,6 +21,24 @@
 #include "sokol_glue.h"
 #endif
 
+/* wgf_platform_priv_read_screen, as read_image: the window's own framebuffer bound for the
+ * read, then the one bound before. */
+bool wgf_platform_priv_read_screen(int width, int height, unsigned char *rgba)
+{
+#if (defined(SOKOL_GLCORE) || defined(SOKOL_GLES3)) && !defined(SOKOL_DUMMY_BACKEND)
+    GLint bound = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &bound);
+    glBindFramebuffer(GL_FRAMEBUFFER, (GLuint)sglue_swapchain().gl.framebuffer);
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+    glBindFramebuffer(GL_FRAMEBUFFER, (GLuint)bound);
+    sg_reset_state_cache();
+    return true;
+#else
+    (void)width, (void)height, (void)rgba;
+    return false;
+#endif
+}
+
 /* wgf_platform_priv_read_image (wgf_platform_priv.h, not included: it would include
  * sokol's headers again, here where they are implemented, and sokol_app's headless): GL's
  * own read, the image's texture on a framebuffer of its own, read, and let go of, the

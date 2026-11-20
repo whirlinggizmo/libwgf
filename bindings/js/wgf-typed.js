@@ -1707,6 +1707,8 @@ export const Render = Object.freeze({
     beginTarget: raw.wgf_render_begin_target,
     // wgf: call wgf_render_end_target
     endTarget: raw.wgf_render_end_target,
+    // wgf: call wgf_render_read_screen
+    readScreen: raw.wgf_render_read_screen,
     // wgf: call wgf_render_set_target_clear_color
     setTargetClearColor: raw.wgf_render_set_target_clear_color,
     // wgf: call wgf_render_get_target_clear_color
@@ -2239,6 +2241,8 @@ export const TextureRead = Object.freeze({
     getData: raw.wgf_texture_read_get_data,
     // wgf: call wgf_texture_read_get_size
     getSize: raw.wgf_texture_read_get_size,
+    // wgf: call wgf_texture_read_save
+    save: raw.wgf_texture_read_save,
     // wgf: call wgf_texture_read_destroy
     destroy: raw.wgf_texture_read_destroy,
     // wgf: call wgf_handle_is_alive

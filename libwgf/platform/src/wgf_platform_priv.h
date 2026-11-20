@@ -79,6 +79,10 @@ sg_swapchain wgf_platform_priv_get_swapchain(void);
  * compiling sokol sees the GL calls it loads. False where nothing can be read: the dummy
  * backend (headless) or an image GL doesn't have. */
 bool wgf_platform_priv_read_image(sg_image image, int width, int height, unsigned char *rgba);
+/* The window's framebuffer as the frame left it (after its last pass, before it is shown),
+ * `width` by `height` into `rgba`, GL's bottom row first. False where nothing can be read
+ * (headless). */
+bool wgf_platform_priv_read_screen(int width, int height, unsigned char *rgba);
 /* Seconds the display shows a frame for, measured. */
 double wgf_platform_priv_get_frame_duration(void);
 

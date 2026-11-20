@@ -48,6 +48,7 @@ wgf_layer(gfx
         src/tilemap/wgf_gfx_tilemap_layer.c
         src/texture/wgf_gfx_ktx.c
         src/texture/wgf_gfx_stb_impl.c
+        src/texture/wgf_gfx_png.c
         src/texture/wgf_gfx_texture.c
         src/texture/wgf_gfx_texture_read.c
     DEPS
@@ -66,7 +67,8 @@ set_source_files_properties(src/stage/wgf_gfx_environment.c
                             PROPERTIES COMPILE_OPTIONS "$<$<NOT:$<C_COMPILER_ID:MSVC>>:-O2>")
 # what includes gfx's private headers (app, gfx's tests) sees sokol's
 target_include_directories(wgf_gfx_priv SYSTEM INTERFACE "${PROJECT_SOURCE_DIR}/deps/sokol"
-                           "${PROJECT_SOURCE_DIR}/deps/jetbrains-mono") # the tests compare the built-in font
+                           "${PROJECT_SOURCE_DIR}/deps/jetbrains-mono" # the tests compare the built-in font
+                           "${PROJECT_SOURCE_DIR}/deps/stb") # and decode what the PNG writer wrote
 
 if(NOT WIN32 AND NOT EMSCRIPTEN)
     target_link_libraries(wgf_gfx PRIVATE m)
@@ -74,6 +76,7 @@ endif()
 if(WGF_TESTS)
     wgf_test(gfx wgf_gfx_color_test)
     wgf_test(gfx wgf_gfx_ktx_test)
+    wgf_test(gfx wgf_gfx_png_test)
     if(WGF_HEADLESS)
         wgf_test(gfx wgf_gfx_frame_test)
         wgf_test(gfx wgf_gfx_presentation_test)

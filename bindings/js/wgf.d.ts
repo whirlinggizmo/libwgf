@@ -3732,6 +3732,15 @@ export declare function wgf_texture_read_get_data(read: wgf_texture_read_t | 0):
 export declare function wgf_texture_read_get_size(read: wgf_texture_read_t | 0): number;
 
 /**
+ * A DONE read's pixels saved as a PNG file at `path` (as wgf_fs_write: under the root, its
+ * directories made; on the web, kept in the browser's store): raylib's TakeScreenshot with
+ * wgf_render_read_screen. The write's task, or 0 for a read that isn't DONE, a NULL or
+ * refused path, or no memory to encode it. Encoded on the calling thread, a few hundredths
+ * of a second for a 1280 x 720 frame.
+ */
+export declare function wgf_texture_read_save(read: wgf_texture_read_t | 0, path: string | null): wgf_fs_task_t;
+
+/**
  * False for a handle that isn't a read. One still PENDING is dropped, unread.
  */
 export declare function wgf_texture_read_destroy(read: wgf_texture_read_t | 0): boolean;
@@ -7689,6 +7698,15 @@ export declare function wgf_render_begin_target(target: wgf_texture_t | 0): bool
  * (warned).
  */
 export declare function wgf_render_end_target(): void;
+
+/**
+ * The screen read back as this frame ends (or the next, outside a frame), after its last
+ * pass and before it is shown: a read (wgf_texture.h) DONE then with the window's
+ * framebuffer at its pixels' size (wgf_render_get_width times the DPI scale), the top row
+ * first; FAILED headless. With wgf_texture_read_save, a screenshot. 0 for no room for
+ * another read (logged).
+ */
+export declare function wgf_render_read_screen(): wgf_texture_read_t;
 
 /**
  * What a pass into `target` starts cleared to, kept with it until changed. Default:

@@ -10,6 +10,7 @@
 #include "wgf_app.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
+#include "wgf_fs.h"
 #include "wgf_render.h"
 #include "wgf_resource.h"
 #include "wgf_texture.h"
@@ -21,7 +22,9 @@
  * without MSAA, so a target drawn into directly. A 32 by 24 target, dark gray, with a yellow square at its top-left and a green
  * one at its bottom-right: a read is PENDING in its frame and DONE in the next, its rows
  * the top first; a read of another target released in its frame still reads it, the read
- * holding it; and one destroyed while PENDING is gone. */
+ * holding it; and one destroyed while PENDING is gone. The screen read (wgf_render_read_screen)
+ * as its frame ends, a red square at its top-left, and saved (wgf_texture_read_save), the
+ * file written. */
 
 #define WIDTH 32
 #define HEIGHT 24
@@ -29,7 +32,8 @@
 static int failures;
 static int frames;
 static wgf_texture_t target, blue;
-static wgf_texture_read_t read, blue_read;
+static wgf_texture_read_t read, blue_read, screen;
+static wgf_fs_task_t saved;
 
 static void expect(int ok, const char *what)
 {
@@ -64,6 +68,8 @@ static void on_frame(void *user)
         wgf_render_end_target();
         wgf_render_begin_target(blue);
         wgf_render_end_target(); /* cleared to its color */
+        wgf_draw_rectangle(0, 0, 8, 8, WGF_COLOR_RED);
+        screen = wgf_render_read_screen();
         read = wgf_texture_read(target);
         expect(wgf_texture_read_get_status(read) == WGF_TEXTURE_READ_STATUS_PENDING, "PENDING in its frame");
         expect(wgf_texture_read_get_data(read) == NULL && wgf_texture_read_get_width(read) == 0,
@@ -89,6 +95,20 @@ static void on_frame(void *user)
         }
         expect(!wgf_handle_is_alive(blue), "and let go of once read");
         expect(wgf_texture_read_destroy(read) && wgf_texture_read_destroy(blue_read), "destroyed");
+        expect(wgf_texture_read_get_status(screen) == WGF_TEXTURE_READ_STATUS_DONE && wgf_texture_read_get_width(screen) == 64 &&
+                   wgf_texture_read_get_height(screen) == 32,
+               "the screen read as its frame ended, the window's size");
+        if (wgf_texture_read_get_data(screen) != NULL) {
+            expect_pixel(screen, 2, 2, WGF_COLOR_RED, "the square at the screen's top-left, in the first rows");
+            expect_pixel(screen, 60, 28, wgf_render_get_clear_color(), "the clear color at its bottom-right");
+        }
+        saved = wgf_texture_read_save(screen, "read-test/shot.png");
+        expect(saved != 0, "saved");
+        wgf_texture_read_destroy(screen);
+    } else if (frames > 3 && wgf_fs_task_get_status(saved) != WGF_FS_TASK_STATUS_PENDING) {
+        expect(wgf_fs_task_get_status(saved) == WGF_FS_TASK_STATUS_DONE, "and written");
+        wgf_fs_task_destroy(saved);
+        wgf_fs_task_destroy(wgf_fs_rmdir("read-test"));
         finish(failures == 0 ? 0 : 1);
     }
 }
