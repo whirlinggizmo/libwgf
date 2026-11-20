@@ -1073,8 +1073,8 @@ void wgf_ui_priv_doc_texture_release(uintptr_t texture)
 void wgf_ui_priv_doc_draw(const wgf_ui_priv_vertex_t *vertices, int vertex_count, const int *indices, int index_count,
                           float tx, float ty, uintptr_t texture)
 {
-    sg_view view;
-    sg_sampler sampler;
+    sg_view view = {SG_INVALID_ID};
+    sg_sampler sampler = {SG_INVALID_ID}; /* set when textured */
     sgl_pipeline pipeline = wgf_gfx_priv_render_pipeline_2d(WGF_ALPHA_MODE_BLEND);
     bool textured = false;
     int i;

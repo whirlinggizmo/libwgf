@@ -297,9 +297,9 @@ static void dump_lines(out_t *out, wgf_actor_t e, const char *pad)
         case WGF_COLLIDER_SHAPE_SEGMENT: {
             float points[WGF_COLLIDER_POLYGON_MAX * 2];
             const int n = wgf_collider_get_points(e, points, WGF_COLLIDER_POLYGON_MAX * 2);
-            int i;
+            int k;
             put(out, wgf_collider_get_shape(e) == WGF_COLLIDER_SHAPE_POLYGON ? " polygon=" : " segment=");
-            for (i = 0; i < n; i++) put(out, i > 0 ? ",%.9g" : "%.9g", points[i]);
+            for (k = 0; k < n; k++) put(out, k > 0 ? ",%.9g" : "%.9g", points[k]);
             break;
         }
         default: put(out, " radius=%.9g", wgf_collider_get_radius(e)); break;
