@@ -6,7 +6,8 @@ link in them goes somewhere.
 
   links     every relative link in the repository's Markdown (what git tracks, not deps/,
             nor a game imported into games/, whose docs are its source's: IMPORTED.md
-            beside them) names a file or directory that exists
+            beside them) names a file or directory that exists, inside the repository (a
+            link outside it resolves only on a machine with that checkout beside it)
   headers   every public header (libwgf/<layer>/include/wgf_*.h) is named in
             docs/ARCHITECTURE.md, which describes each section
   tools     every tool a person runs (tools/ and tools/wgf/, check_tools' commands) is
@@ -56,7 +57,10 @@ def check_links():
             file_part = target.split('#', 1)[0]
             if not file_part:
                 continue
-            if not (path.parent / file_part).exists():
+            resolved = (path.parent / file_part).resolve()
+            if not resolved.is_relative_to(ROOT.resolve()):
+                problems.append(f'{path.relative_to(ROOT).as_posix()}: a link to {target}, outside the repository')
+            elif not resolved.exists():
                 problems.append(f'{path.relative_to(ROOT).as_posix()}: a link to {target}, which doesn\'t exist')
     return problems
 
