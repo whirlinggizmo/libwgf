@@ -1040,6 +1040,15 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## Fullscreen held for a tap on the web (2026-11-20)
+
+Rob's, trying the trial's Wardens on a phone: the game couldn't go fullscreen. A browser grants fullscreen only inside a tap, a click, or a key press, and a libwgf program asks in its frame, after the tap's event has ended: sokol_app's request then succeeded only where the browser lets a tap's permission last (Chrome, a few seconds), and a refusal was a console warning, the request lost.
+
+- **Held, not lost.** `wgf_window_request_fullscreen` on the web asks at once, and refused, holds the request and asks again inside the next pointer up, touch end, click, or key press (listened for first, in the capture phase): a game asking as Play is pressed is granted by that tap's release or the next, and one asking at start by the player's first tap anywhere, so a game's own title is its tap-to-start. Asked before the window opens (which the web ignored), it is held the same way. Let go of, it is no longer held; leaving needs no tap.
+- **The orientation lock rides on it.** A phone's browser grants a lock only in fullscreen: asked outside it, the lock is held quietly (no warning) and asked again as fullscreen begins.
+- **Fullscreen read from the browser** (`document.fullscreenElement`), not sokol_app's flag, which a change it didn't ask for left behind.
+- **Tests:** `wgf_platform_fullscreen_web_test`: the browser's calls stood in for by ones that refuse outside a tap's event, as a phone's do.
+
 ## The comparison (2026-11-20)
 
 The finishing plan's last item: libwgf beside helix on helix's benchmarks, helix's engine trial, and helix-raylib's feature set, on coinspinner, the machine helix measured on.

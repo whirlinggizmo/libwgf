@@ -145,6 +145,10 @@ void wgf_platform_priv_set_title(const char *title)
 
 void wgf_platform_priv_set_fullscreen(bool fullscreen)
 {
+#ifdef __EMSCRIPTEN__
+    wgf_platform_priv_web_request_fullscreen(fullscreen); /* held for a tap when refused */
+    return;
+#endif
     if (sapp_is_fullscreen() == fullscreen) return;
     /* a fixed size can keep a window manager from filling the screen; the style
        comes back on leaving */
@@ -155,6 +159,9 @@ void wgf_platform_priv_set_fullscreen(bool fullscreen)
 
 bool wgf_platform_priv_is_fullscreen(void)
 {
+#ifdef __EMSCRIPTEN__
+    return wgf_platform_priv_web_is_fullscreen();
+#endif
     return sapp_is_fullscreen();
 }
 

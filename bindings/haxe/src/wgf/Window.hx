@@ -65,11 +65,14 @@ class Window {
 	    Ask to fill the screen, or to stop (default off); the answer is
 	    wgf_window_is_fullscreen, not the return. False where there is nothing to request
 	    (wgf_window_can_fullscreen); true means the request was made, not that it was
-	    granted: on the web the browser grants it only during a key press or click, and it
-	    arrives a frame or more later, and even on the desktop the switch has not happened
-	    yet when this returns. Named request_ for that reason (wgrender's), as every request
-	    the platform may refuse is (CONVENTIONS.md, "Naming"). Before the window opens, it
-	    opens filling the screen.
+	    granted, and even on the desktop the switch has not happened yet when this returns.
+	    On the web the browser grants it only inside a tap, a click, or a key press, which a
+	    frame comes after: refused, the request is held and asked again inside the next one, so
+	    asked as Play is pressed it is granted by that tap's release or the next, and asked at
+	    start it is granted by the player's first tap anywhere. Named request_ for that reason
+	    (wgrender's), as every request the platform may refuse is (CONVENTIONS.md, "Naming").
+	    Before the window opens, it opens filling the screen (natively; on the web, held for the
+	    first tap).
 	**/
 	public static inline function requestFullscreen(fullscreen:Bool):Bool
 		return Raw.wgf_window_request_fullscreen(fullscreen);
@@ -78,11 +81,14 @@ class Window {
 	    Ask to fill the screen, or to stop (default off); the answer is
 	    wgf_window_is_fullscreen, not the return. False where there is nothing to request
 	    (wgf_window_can_fullscreen); true means the request was made, not that it was
-	    granted: on the web the browser grants it only during a key press or click, and it
-	    arrives a frame or more later, and even on the desktop the switch has not happened
-	    yet when this returns. Named request_ for that reason (wgrender's), as every request
-	    the platform may refuse is (CONVENTIONS.md, "Naming"). Before the window opens, it
-	    opens filling the screen.
+	    granted, and even on the desktop the switch has not happened yet when this returns.
+	    On the web the browser grants it only inside a tap, a click, or a key press, which a
+	    frame comes after: refused, the request is held and asked again inside the next one, so
+	    asked as Play is pressed it is granted by that tap's release or the next, and asked at
+	    start it is granted by the player's first tap anywhere. Named request_ for that reason
+	    (wgrender's), as every request the platform may refuse is (CONVENTIONS.md, "Naming").
+	    Before the window opens, it opens filling the screen (natively; on the web, held for the
+	    first tap).
 	**/
 	public static inline function isFullscreen():Bool
 		return Raw.wgf_window_is_fullscreen();
@@ -462,8 +468,9 @@ class Window {
 	    Ask for the screen to be held LANDSCAPE or PORTRAIT whichever way the device turns, or
 	    let go (ANY); the answer is wgf_window_get_orientation_lock, not the return, a frame or
 	    more later. On the web, the browser's screen.orientation.lock, which most browsers grant
-	    only to a page in fullscreen on a phone (Android's Chrome); a refusal is warned of, with
-	    the browser's reason, at the next frame. False for a value that isn't one, and where
+	    only to a page in fullscreen on a phone (Android's Chrome): asked outside fullscreen, it is
+	    held and asked again as the page goes fullscreen (wgf_window_request_fullscreen); a
+	    refusal in fullscreen is warned of, with the browser's reason, at the next frame. False for a value that isn't one, and where
 	    nothing can lock: natively, and a browser without screen.orientation.lock (iOS). Where
 	    the lock is refused, a game says "turn your device" while wgf_window_get_orientation is
 	    the wrong one.

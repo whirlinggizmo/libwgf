@@ -83,6 +83,10 @@ void wgf_platform_priv_window_set_open(bool open)
     window.open = open;
     if (open && window.mouse_locked) wgf_platform_priv_lock_mouse(true);
     if (open && !wgf_mouse_is_cursor_visible()) wgf_platform_priv_show_mouse(false);
+#ifdef __EMSCRIPTEN__
+    /* the web opens no window filling the screen: asked before, it is held for the first tap */
+    if (open && window.fullscreen && wgf_platform_priv_has_fullscreen()) wgf_platform_priv_set_fullscreen(true);
+#endif
 }
 
 bool wgf_platform_priv_window_is_open(void)

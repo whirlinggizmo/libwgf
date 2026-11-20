@@ -147,6 +147,15 @@ bool wgf_platform_priv_set_size(int width, int height); /* logical */
 bool wgf_platform_priv_has_fullscreen(void);
 void wgf_platform_priv_set_fullscreen(bool fullscreen);
 bool wgf_platform_priv_is_fullscreen(void);
+#ifdef __EMSCRIPTEN__
+/* The web's fullscreen: asked at once, and when the browser refuses (it grants it only
+ * inside a tap, a click, or a key press), asked again inside the next one, until granted or
+ * no longer wanted. Leaving needs no tap. */
+void wgf_platform_priv_web_request_fullscreen(bool fullscreen);
+/* Whether the page is in fullscreen now, as the browser says (document.fullscreenElement),
+ * not as sokol_app last set it. */
+bool wgf_platform_priv_web_is_fullscreen(void);
+#endif
 void wgf_platform_priv_set_visible(bool visible);
 bool wgf_platform_priv_is_visible(void);
 void wgf_platform_priv_set_style(bool resizable, bool decorated);

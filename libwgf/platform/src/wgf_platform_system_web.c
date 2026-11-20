@@ -326,6 +326,50 @@ void wgf_platform_priv_get_safe_insets(int insets[4])
     web_safe_insets(insets);
 }
 
+/* Fullscreen on the web: the canvas sokol_app draws to, asked at once; refused (no tap
+ * this frame: the program asks in its frame, after the tap's event has ended, and only
+ * Chrome lets that through, for a few seconds after a tap), the request is held, and asked
+ * again inside the next pointer up, touch end, click, or key press, caught first (the
+ * capture phase, on the window), so a game's Play tap, or its first tap anywhere when it
+ * asked at start, takes the page fullscreen. sokol_app reads the change from the browser's
+ * fullscreenchange, as it does its own. */
+EM_JS(void, web_request_fullscreen, (int on), {
+    let state = Module.wgfFullscreen;
+    if (!state) {
+        state = Module.wgfFullscreen = {wanted : false};
+        const retry = () => {
+            if (!state.wanted || document.fullscreenElement) return;
+            const canvas = Module.sapp_emsc_target || Module.canvas;
+            if (!canvas || typeof canvas.requestFullscreen !== "function") return;
+            canvas.requestFullscreen().then(() => {}, () => {});
+        };
+        for (const type of [ "pointerup", "touchend", "click", "keydown" ]) {
+            window.addEventListener(type, retry, true);
+        }
+        state.retry = retry;
+    }
+    state.wanted = on !== 0;
+    if (!state.wanted) {
+        if (document.fullscreenElement && typeof document.exitFullscreen === "function") {
+            document.exitFullscreen().then(() => {}, () => {});
+        }
+        return;
+    }
+    state.retry();
+})
+
+void wgf_platform_priv_web_request_fullscreen(bool fullscreen)
+{
+    web_request_fullscreen(fullscreen ? 1 : 0);
+}
+
+EM_JS(int, document_is_fullscreen, (void), { return document.fullscreenElement ? 1 : 0; })
+
+bool wgf_platform_priv_web_is_fullscreen(void)
+{
+    return document_is_fullscreen() != 0;
+}
+
 /* The lock: asked of screen.orientation, granted when its promise resolves, kept until let
  * go or the page leaves fullscreen (the browser lets go then); a refusal's reason kept for
  * the next frame to warn of. 1 landscape, 2 portrait, 0 none, as wgf_window_orientation_t. */
@@ -334,11 +378,28 @@ EM_JS(int, web_request_orientation, (int orientation), {
     if (!screen_orientation || typeof screen_orientation.lock !== "function") return 0;
     let state = Module.wgfOrientation;
     if (!state) {
-        state = Module.wgfOrientation = {locked : 0, refused : ""};
+        state = Module.wgfOrientation = {locked : 0, refused : "", wanted : 0};
+        state.lock = () => {
+            const wanted = state.wanted;
+            const refused = (e) => {
+                /* outside fullscreen a phone's browser refuses any lock: held, asked again as
+                   fullscreen begins, so no warning */
+                if (!document.fullscreenElement) return;
+                state.refused = (e && e.name ? e.name + ": " : "") + (e && e.message ? e.message : String(e));
+            };
+            try {
+                screen_orientation.lock(wanted === 1 ? "landscape" : "portrait")
+                    .then(() => { if (state.wanted === wanted) state.locked = wanted; }, refused);
+            } catch (e) {
+                refused(e);
+            }
+        };
         document.addEventListener("fullscreenchange", () => {
             if (!document.fullscreenElement) state.locked = 0;
+            else if (state.wanted && !state.locked) state.lock();
         });
     }
+    state.wanted = orientation;
     if (orientation === 0) {
         try {
             screen_orientation.unlock();
@@ -347,15 +408,7 @@ EM_JS(int, web_request_orientation, (int orientation), {
         state.locked = 0;
         return 1;
     }
-    const refused = (e) => {
-        state.refused = (e && e.name ? e.name + ": " : "") + (e && e.message ? e.message : String(e));
-    };
-    try {
-        screen_orientation.lock(orientation === 1 ? "landscape" : "portrait")
-            .then(() => { state.locked = orientation; }, refused);
-    } catch (e) {
-        refused(e);
-    }
+    state.lock();
     return 1;
 })
 EM_JS_DEPS(wgf_platform_orientation, "$stringToUTF8")
