@@ -3,7 +3,25 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Collider's calls, on a Actor: `var x:Collider = handle` gives it them, and a Collider is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    A collider (WGF_COMPONENT_COLLIDER): a shape about the actor's position, in its parent's
+    space, that overlaps others as a trigger: each tick, after motion and bounds, two colliders
+    that start to overlap raise TRIGGER_ENTER and two that stop raise TRIGGER_EXIT
+    (wgf_world.h), told to each. They overlap only where one's layer meets the other's mask:
+    (a's layer & b's mask) or (b's layer & a's mask). Nothing is pushed apart by it: how far
+    apart would part a pair is read (get_push), and a body (wgf_body2d.h) is stopped by solid
+    ones. Only colliders under the same parent actor are compared, found by a sweep of their
+    bounds (a few thousand at once).
+
+    Its shape: a circle (a sphere: its z counts against another circle's), its radius scaled
+    by the larger of the actor's scale's x and y; or, on a 2D stage's plane (x and y; z
+    ignored), a rectangle, a convex polygon, or a segment, scaled by the actor's scale and
+    turned by its turn about z. Each is about the actor's position moved by its offset
+    (scaled and turned with it). Defaults: a circle of radius 1, no offset, layer 1, mask
+    everything (-1), enabled. Every call is false (or 0) for an actor without a collider.
+
+    Collider's calls, on a Actor: `var x:Collider = handle` gives it them, and a Collider is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract Collider(Actor) from Actor from Int to Actor {
 	/**
 	    A circle of `radius`. False too for a radius below 0. get_radius is a circle's (0 for

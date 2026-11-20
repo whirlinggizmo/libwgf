@@ -3,7 +3,29 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Body2d's calls, on a Actor: `var x:Body2d = handle` gives it them, and a Body2d is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    A 2D body (WGF_COMPONENT_BODY2D), helix-legacy's Body2D: an arcade box that moves its
+    actor each tick by its velocity and gravity, sliding along what is solid and stopping its
+    velocity against it, and what it touches kept: the ground under it, a wall either side, a
+    ceiling. A platformer's player or enemy; a top-down character, with no gravity. On a 2D
+    stage, y down: gravity is + down, and the ground is under it.
+
+    Its box is `size` about the actor's position, scaled by its scale (not turned). Each tick,
+    after motion, gravity speeds its fall (held to its fastest fall), and it moves across then
+    down (wgf_collide2d_move_rects), against two things under the same parent actor:
+      - colliders (wgf_collider.h) whose layer is in its solid mask, by their bounds (a
+        rectangle's own box; a circle's, a polygon's, a segment's box around it), switched on,
+        on actors without a body: bodies don't push or stop each other (their colliders meet
+        them as triggers);
+      - the parent's grid of solid cells (set_grid below): a tilemap's walls and floors.
+    A body moves its actor itself: an actor with one should have no motion. Its collider, if it
+    has one, isn't solid to it.
+
+    Defaults: 1 by 1, still, no gravity, no fastest fall, a solid mask of every layer (-1).
+    Every call is false (or 0) for an actor without a body.
+
+    Body2d's calls, on a Actor: `var x:Body2d = handle` gives it them, and a Body2d is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract Body2d(Actor) from Actor from Int to Actor {
 	/**
 	    False too for a size below 0, or not finite.

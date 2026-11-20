@@ -3,6 +3,35 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    Screens and scene flow: a game as a stack of screens (a title, play, a pause menu, game
+    over), helix-legacy's scene flow (Flow, Transition, Loader, LoadingScreen) without its
+    callbacks. A screen is an actor (a game's behaviors for it go on it) with its stages, 2D
+    and 3D, added to it in the order they draw (stages are always roots: they belong to it
+    without being its children); everything else of its hangs under them.
+
+    The stack: push puts a screen on top, pop takes the top off, replace swaps the top for
+    another. The top runs. A screen under one that pauses (the default) is paused
+    (wgf_actor_set_paused: drawn, frozen), it and its stages; one under one that doesn't (a
+    HUD laid over play) runs on. A screen off the stack is switched off and paused, it and its
+    stages (wgf_actor_set_enabled: not drawn, nothing under them moving), kept for the program
+    to push again or destroy. draw
+    draws what is shown: from the bottom up, each screen's stages in their order, but none
+    under an opaque one (the default), then the transition's cover.
+
+    A change runs through the transition set (none to start: at once). It covers the frame
+    over half its seconds, makes the change at the middle, and uncovers over the other half,
+    each half on the ease. A screen given assets to wait for (set_assets: a group,
+    wgf_asset.h), or set to wait for every load pending (set_wait_loads: the textures and
+    meshes made as it was built), is changed to only once they have settled: the stack held
+    covered meanwhile, with the loading screen (set_loading_screen) drawn over the cover and
+    its progress readable. While one runs, another change is refused (false).
+
+    Each change is told as world events (wgf_world.h): SCREEN_ENTER for the screen that
+    comes to the top, SCREEN_EXIT for the one that leaves it (pushed under, popped, or
+    replaced), each with the other screen (0 for none) as its second; a binding's behaviors
+    on a screen hear them.
+**/
 class Screen {
 	/**
 	    A screen: an actor at the top of its own tree, off the stack (switched off). 0 when there is

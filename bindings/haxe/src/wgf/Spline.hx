@@ -3,6 +3,16 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    Splines, raylib's GetSplinePoint* (wgf_draw_spline draws one): a path through or near
+    `points`, x and y in turn (`count` floats), read at `t` from 0 (its start) to 1 (its end),
+    each of its segments an equal share of t. Its kinds:
+      LINEAR            straight between each point and the next (2 points or more)
+      BASIS             a cubic B-spline, near its points, through none (4 or more)
+      CATMULL_ROM       through every point but its first and last, which steer its ends (4 or more)
+      BEZIER_QUADRATIC  start, control, end; each next segment's start the last's end (3, 5, 7...)
+      BEZIER_CUBIC      start, control, control, end; and on (4, 7, 10...)
+**/
 class Spline {
 	/**
 	    How many segments `count` floats of points make for `kind`; 0 for too few, an odd count, or

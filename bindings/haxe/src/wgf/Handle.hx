@@ -3,7 +3,16 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_handle_t (libwgf/core/include/wgf_handle.h): 0 is none. **/
+/**
+    An opaque reference to something libwgf owns: a texture, a model, a task. 0 is
+    never a valid handle. A handle to something destroyed stops working, even
+    after its slot is reused.
+
+    A handle is valid only in the running program: never save one or send one
+    over the network.
+
+    A handle of kind wgf_handle_t (libwgf/core/include/wgf_handle.h): 0 is none.
+**/
 abstract Handle(Int) from Int to Int {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

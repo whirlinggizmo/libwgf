@@ -3,6 +3,33 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    Local file storage, the same on every platform. Native: files under the root, the
+    program's own directory by default (where its executable is, wherever it was
+    started from: a double-clicked program finds its files), never the working
+    directory. Web: files kept in the browser between visits.
+    Paths are relative to the root. "\\" is read as "/", "." and empty parts are
+    dropped, and ".." takes back the part before it, so "textures\\..\\models/box.glb"
+    is "models/box.glb". A path that is absolute, has a ":" or a control character,
+    climbs above the root, or names nothing is refused, so a path can only name
+    something under the root. A task's path is the normalized one.
+
+    A path starting with "user:" names the program's own file that must last, such as a
+    save or its settings ("user:highscore.txt"), apart from the files it ships with:
+    natively under the user's data directory, by the program's identity
+    (<data>/<company>/<product>, wgf_identity.h: ~/.local/share on Linux, %APPDATA% on
+    Windows); on the web in the browser's store, beside the root's other files. The rest
+    of such a path keeps the rule above, under that directory. A request for one is
+    refused where there is no user data directory to be found (no HOME), with a warning. A symbolic link you put under the
+    root is followed by read and write; remove and rmdir remove the link itself,
+    never what it points to. Text is UTF-8.
+
+    Every request returns a task (kind "core.fs_task"): poll its status, read its
+    result, then destroy it. A task's status changes only during the runtime's
+    update at the start of a frame, never inside the call that made the request. A request made before storage is
+    ready waits for it. Destroying a task that is still pending lets it finish and
+    discards its result, so a write is never lost.
+**/
 class Fs {
 	/**
 	    The root paths resolve against. Native: a directory, absolute or relative to the

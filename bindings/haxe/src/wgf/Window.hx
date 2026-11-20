@@ -3,6 +3,13 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    The program's window. On the web it is the page's canvas, laid out by the page.
+
+    Set before wgf_app_run, these say how the window opens; after it opens they
+    change it, where the platform can. Sizes are logical pixels: gfx draws at the
+    display's density inside them (wgf_render_get_dpi_scale).
+**/
 class Window {
 	/**
 	    The title (default "libwgf"). Natively the window's title bar; on the web the

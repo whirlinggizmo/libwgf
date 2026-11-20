@@ -3,7 +3,25 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_sound_t (libwgf/audio/include/wgf_sound.h): 0 is none. **/
+/**
+    A sound, a resource: a handle of kind "audio.sound", or "audio.sound_streamed" for one
+    made with wgf_sound_create_streamed.
+
+    Sounds: audio's data, a resource (wgf_resource.h), loaded on create, as wgrender's
+    Audio; a voice is to play one (phase 2, docs/ROADMAP.md). A program pulls in audio
+    only by creating a sound.
+
+    What plays: WAV (PCM or float), MP3, and Ogg Vorbis, mono or stereo. Natively libwgf
+    decodes them (dr_wav, dr_mp3, Xiph's libvorbis); on the web the browser does, so a
+    page plays what its browser plays: Chromium and Firefox play all three (tested);
+    Safari and iOS are not tested yet. A file a platform can't play makes a FAILED sound,
+    logged with its path.
+
+    Memory: a decoded sound is float samples, natively and on the web alike: a minute of
+    stereo at 48 kHz is about 23 MB. So: effects, create; music, create_streamed.
+
+    A handle of kind wgf_sound_t (libwgf/audio/include/wgf_sound.h): 0 is none.
+**/
 abstract Sound(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

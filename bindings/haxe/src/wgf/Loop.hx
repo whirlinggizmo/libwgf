@@ -3,6 +3,10 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    The frame loop's timing: frames as fast as the display shows them, and ticks
+    at a fixed rate, on the runtime's tick clock fed the frames' time.
+**/
 class Loop {
 	/**
 	    Seconds since the previous frame, at most 0.1 (a frame after a stall counts as

@@ -3,7 +3,14 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Shape2d's calls, on a Actor: `var x:Shape2d = handle` gives it them, and a Shape2d is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    A 2D shape: an actor drawing a rectangle, a circle, a line, or a polygon, filled or
+    outlined, in one color, on a 2D stage. Shapes are actors (wgf_actor.h): place, turn,
+    scale, parent, and destroy them with the actor calls; the shape turns and scales with
+    its actor, and an outline's thickness stays in the frame's logical pixels.
+
+    Shape2d's calls, on a Actor: `var x:Shape2d = handle` gives it them, and a Shape2d is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract Shape2d(Actor) from Actor from Int to Actor {
 	/**
 	    A shape with nothing to draw yet, white, filled. 0 when there is no room for another

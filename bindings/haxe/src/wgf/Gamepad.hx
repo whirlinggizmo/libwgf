@@ -3,6 +3,16 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    Gamepads, read inside a tick or a frame: what changed since the previous tick, or
+    the previous frame. Up to 4 at once, pads 0 to 3: a pad keeps its number while it
+    is connected, and a new one takes the lowest free number, so pad 0 stays player one
+    until it is unplugged. Pads are read once a frame, before its ticks.
+
+    Linux: evdev, the kernel's input devices, checked for new pads every couple of
+    seconds. Windows: XInput. Web: the browser's Gamepad API, which lists a pad only
+    once one of its buttons is pressed on the page. macOS: none yet.
+**/
 class Gamepad {
 	/**
 	    Whether pad 0 to 3 is connected.

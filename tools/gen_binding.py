@@ -241,6 +241,24 @@ class Binding:
                 found[haxe] = self.kinds[fits[0]]
         return found
 
+    def class_docs(self):
+        """Each type's own doc: a handle kind's typedef's comment, then the overview of the
+        header whose first call it holds (headers.py's: the comments no declaration owns),
+        so a program reading the binding reads what the header says of the whole."""
+        out, placed = {}, set()
+        for ctype, haxe in self.kinds.items():
+            if self.api.type_docs.get(ctype):
+                out[haxe] = self.api.type_docs[ctype]
+        for f in self.functions:
+            if f.header in placed or f.name in SKIPPED:
+                continue
+            placed.add(f.header)
+            overview = self.api.overviews.get(f.header)
+            if overview:
+                haxe = self.place(f)[0]
+                out[haxe] = out[haxe] + '\n\n' + overview if haxe in out and overview not in out[haxe] else overview
+        return out
+
     def docs(self):
         """Each call's doc: its own comment, or the comment of the group it is in: the
         nearest comment above it in its header, a call's or an enum's (an enum's comment
@@ -512,28 +530,31 @@ def typed_modules(binding):
         seen[key] = f.name
         members.setdefault(haxe, []).append(typed_member(binding, f, haxe, member, instance, docs, kind))
     modules = {}
+    class_docs = binding.class_docs()
     header = f'// {MARK}\npackage wgf;\n\nimport wgf.impl.Raw;\n\n'
     for ctype, haxe in binding.kinds.items():
         doc = binding.api.typedefs[ctype][1]
+        own = class_docs.get(haxe, '')
         to = '' if haxe == 'Handle' else ' to wgf.Handle'
         alive = '' if haxe == 'Handle' else (
             '\t/** Whether this refers to something alive: false for none, and for what was destroyed or released '
             '(wgf_handle_is_alive). Ask it first where a handle may be dead. **/\n'
             '\tpublic inline function isAlive():Bool\n\t\treturn (this : Handle).isAlive();\n\n')
-        text = header + (f'/** A handle of kind {ctype} ({doc}): 0 is none. **/\n'
+        text = header + (doc_block((own + '\n\n' if own else '') + f'A handle of kind {ctype} ({doc}): 0 is none.', '') +
                          f'abstract {haxe}(Int) from Int to Int{to} {{\n'
                          f'\t/** Whether this is no handle (0); right on every target, where `== null` is not. **/\n'
                          f'\tpublic inline function isNone():Bool\n\t\treturn this == 0;\n\n' + alive +
                          '\n'.join(members.pop(haxe, []) + ([HAXE_EXTRAS[haxe]] if haxe in HAXE_EXTRAS else [])) + '}\n')
         modules[haxe] = text
     for haxe, kind in over.items():
-        text = header + (f'/** {haxe}\'s calls, on a {kind}: `var x:{haxe} = handle` gives it them, and a {haxe} is '
-                         f'still a {kind}; it starts as 0, none, as a {kind} does. **/\n'
+        own = class_docs.get(haxe, '')
+        text = header + (doc_block((own + '\n\n' if own else '') + f'{haxe}\'s calls, on a {kind}: `var x:{haxe} = handle` '
+                                   f'gives it them, and a {haxe} is still a {kind}; it starts as 0, none, as a {kind} does.', '') +
                          f'@:forward abstract {haxe}({kind}) from {kind} from Int to {kind} {{\n' +
                          '\n'.join(members.pop(haxe, [])) + '}\n')
         modules[haxe] = text
     for haxe, items in members.items():
-        modules[haxe] = header + f'class {haxe} {{\n' + '\n'.join(items) + '}\n'
+        modules[haxe] = header + doc_block(class_docs.get(haxe, ''), '') + f'class {haxe} {{\n' + '\n'.join(items) + '}\n'
     for cname, haxe in binding.enums.items():
         enum = binding.api.enums[cname]
         body = ''.join(f'\tvar {short} = {v};\n' for short, v, _ in enum_members(binding, cname))
@@ -598,7 +619,7 @@ def outputs(api):
     for name, text in typed_modules(binding).items():
         files[OUT / f'{name}.hx'] = text
     files.update(jsbinding.outputs(binding, version, stamp, SKIPPED))
-    files.update(jsbinding.typed_outputs(*typed_layout(binding, with_skipped=True), JS_EXTRAS, binding.docs()))
+    files.update(jsbinding.typed_outputs(*typed_layout(binding, with_skipped=True), JS_EXTRAS, binding.docs(), binding.class_docs()))
     exports = sorted('_' + f.name for f in binding.functions) + HOST_EXTRA
     files[EXPORTS] = json.dumps({'generated': MARK, 'version': version, 'headers': stamp, 'exports': exports},
                                 indent=1) + '\n'

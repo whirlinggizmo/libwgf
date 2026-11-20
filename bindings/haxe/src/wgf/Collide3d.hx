@@ -3,6 +3,22 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    3D collision as plain math, raylib's shapes (its CheckCollision* and GetRayCollision*):
+    boxes, spheres, and rays against them and triangles, with no actor or body
+    (wgf_physics.h casts against a physics world). A box is axis-aligned, its least corner and
+    its greatest (x0, y0, z0, x1, y1, z1); a ray its origin and its direction, which needn't be
+    a unit vector.
+
+    What a test found goes into `hit`, a caller's array, as many of these as fit in
+    `hit_count` (NULL, 0 for none), as wgf_collide2d.h's with z:
+      0, 1, 2  the normal: the way out of the second shape (a unit vector; a ray's: the
+               surface's at the point it met, facing the ray; 0, 0, 0 when it started inside)
+      3        how deep an overlap goes along the normal (0 for a ray)
+      4, 5, 6  the point: of the second shape nearest the first's center, or where the ray met
+      7        how far along the ray, in its direction's lengths (0 for an overlap; 0 too for a
+               ray starting inside)
+**/
 class Collide3d {
 	/**
 	    Points.

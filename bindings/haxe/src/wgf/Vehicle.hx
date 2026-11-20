@@ -3,7 +3,9 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Vehicle's calls, on a Actor: `var x:Vehicle = handle` gives it them, and a Vehicle is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    Vehicle's calls, on a Actor: `var x:Vehicle = handle` gives it them, and a Vehicle is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract Vehicle(Actor) from Actor from Int to Actor {
 	/**
 	    Its wheels: 2 to 8 actors under it, in left and right pairs, front first; false for an

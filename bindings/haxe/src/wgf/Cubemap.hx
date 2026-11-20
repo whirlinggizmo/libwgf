@@ -3,7 +3,24 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_cubemap_t (libwgf/gfx/include/wgf_cubemap.h): 0 is none. **/
+/**
+    A cubemap: six square images, one a direction (+X, -X, +Y, -Y, +Z, -Z), on the GPU,
+    raylib's LoadTextureCubemap. A custom shader samples one by a direction, as samplerCube
+    (wgf_material_set_cubemap, wgf_material.h; wgf.glsl says how): a skybox, a reflection.
+
+    It is a resource (wgf_resource.h): reference counted and loaded on create -- the handle
+    comes back at once, PENDING; its files are found (the asset layer: fetched on the web),
+    decoded, cut into faces, and given their mipmaps on a worker thread, and uploaded during
+    the runtime's update at the start of a frame. While it is PENDING a shader samples white;
+    once it has FAILED (logged, naming the file and why) a magenta and black checker.
+
+    Each face is as a camera at the middle sees it looking down that axis, OpenGL's (and
+    raylib's) convention: +X's top is +Y and its left +Z; +Y's top is -Z and its left -X;
+    +Z's top is +Y and its left -X; the negative faces are turned to match. Pixels are RGBA, 8
+    bits a channel, as stored (sRGB, for a picture; wgf_srgb_to_linear in the shader).
+
+    A handle of kind wgf_cubemap_t (libwgf/gfx/include/wgf_cubemap.h): 0 is none.
+**/
 abstract Cubemap(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

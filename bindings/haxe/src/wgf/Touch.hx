@@ -3,6 +3,23 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    Fingers on a touch screen, read inside a tick or a frame: what changed since the
+    previous tick, or the previous frame. List them by index, then read each by its
+    id, which stays the same while the finger is down:
+
+      for (i = 0; i < wgf_touch_get_count(); i++) {
+          id = wgf_touch_get_id(i);
+          if (wgf_touch_get_state(id) == WGF_INPUT_STATE_PRESSED) ...
+      }
+
+    At most 8 fingers at once; more are ignored. Positions are logical pixels, as the
+    mouse's are.
+
+    Two fingers, the first two down: how they panned, pinched, and twisted since the
+    previous tick, or the previous frame, for zooming, panning, and turning a view by
+    touch.
+**/
 class Touch {
 	/**
 	    Fingers down, plus those lifted since the previous tick or frame.

@@ -3,7 +3,13 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Motion's calls, on a Actor: `var x:Motion = handle` gives it them, and a Motion is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    Motion (WGF_COMPONENT_MOTION): each tick the actor moves by its velocity and turns by
+    its spin, its velocity first damped and capped at its top speed. Defaults: still, no
+    damping, no top speed. Every call is false (or 0) for an actor without motion.
+
+    Motion's calls, on a Actor: `var x:Motion = handle` gives it them, and a Motion is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract Motion(Actor) from Actor from Int to Actor {
 	/**
 	    Units a second, in its parent's space.

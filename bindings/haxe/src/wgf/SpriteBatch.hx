@@ -3,7 +3,21 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** SpriteBatch's calls, on a Actor: `var x:SpriteBatch = handle` gives it them, and a SpriteBatch is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    A sprite batch: one actor drawing many quads of one texture on a 2D stage, in one draw,
+    for what is too many to be an actor each (bullets, a crowd, a bunnymark's bunnies). Each
+    quad has a position, a size, a turn, a region of the texture, and a tint, which the
+    program writes in bulk, as arrays, whenever they change; the batch draws them all each
+    frame, in their order, through its actor (place, turn, scale, and parent it with the actor
+    calls: a quad's position is in the actor's units). It holds a reference to its texture.
+    While the texture is PENDING it draws nothing; once that FAILED, the checker over every
+    quad. A batch on a 3D stage draws nothing.
+
+    A quad made by set_count is at 0, 0, its size and region 0 (the region's size, and the
+    whole texture), unturned, and white, until written.
+
+    SpriteBatch's calls, on a Actor: `var x:SpriteBatch = handle` gives it them, and a SpriteBatch is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract SpriteBatch(Actor) from Actor from Int to Actor {
 	/**
 	    A batch of `texture` with no quads (0 for no texture: it draws nothing). 0 when there is

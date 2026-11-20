@@ -3,7 +3,48 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_voice_t (libwgf/audio/include/wgf_voice.h): 0 is none. **/
+/**
+    A voice, an object: a handle of kind "audio.voice".
+
+    Voices: one playing of a sound (wgf_sound.h), an object, as wgrender's Sound: as a
+    sprite shows a texture, a voice plays a sound. Many voices may play one decoded sound
+    at once. Music is a looping voice. The same on both platforms: natively libwgf's
+    mixer plays it, on its own thread; on the web the browser does (Web Audio), on its
+    audio thread, so on neither does a slow frame stop the sound.
+
+    Its state is wgf_play_state_t (wgf_play_state.h), with play, pause, resume, and stop
+    as that header says. COMPLETE: a non-looping voice ran to its end and holds there.
+    A voice told to play a sound still loading is PLAYING, and starts from the start when
+    the sound is READY; if the sound fails, it is COMPLETE. On the web the browser keeps
+    sound off until the page's first input: until then a PLAYING voice is silent and its
+    position doesn't move, so a one-shot played before the first click doesn't become
+    COMPLETE until after it.
+
+    A pushed voice: samples the game makes as it goes (a synth, a tracker, an emulator,
+    procedural sound, a voice chat), pushed into the voice's queue and played from it, as
+    raylib's AudioStream. raylib's stream callback, which its mixer calls for more, is the
+    push here: nothing calls back, so each frame the game asks how much room the queue has
+    (wgf_voice_get_room, raylib's IsAudioStreamProcessed) and fills it. Samples are at
+    the voice's own rate, any rate, played at the mixer's (resampled, linearly
+    interpolated, by pitch too); mono or stereo; interleaved, left first.
+
+    It is a voice: play, pause, resume, and stop; volume, pitch (0 to 16: a negative one is
+    refused, a queue runs forwards only), pan, its bus, and spatial, as any voice's. It has
+    no sound (set_sound refuses), no segments, and no position to set; its position is the
+    seconds it has played since its last play or stop. Loop means nothing to it. PLAYING, it
+    takes what is queued as the mixer needs it; when the queue runs out it plays silence,
+    still PLAYING, and goes on once more is pushed: each time it ran out, after having had
+    something to play, is an underrun (wgf_voice_get_underruns). Paused, or audio paused, it
+    takes nothing and the queue waits. Stop empties the queue; play from STOPPED plays what
+    was pushed meanwhile, so a queue filled before play starts without a gap.
+
+    Natively libwgf's mixer takes from the queue on its own thread; on the web a
+    ScriptProcessorNode on the page's own thread does, so a long frame there can starve it:
+    keep a tenth of a second or more queued. On the web, too, nothing is taken before the
+    page's first input (the top of this header).
+
+    A handle of kind wgf_voice_t (libwgf/audio/include/wgf_voice.h): 0 is none.
+**/
 abstract Voice(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

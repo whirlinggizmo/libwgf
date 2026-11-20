@@ -3,7 +3,28 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_sheet_t (libwgf/gfx/include/wgf_sheet.h): 0 is none. **/
+/**
+    A sprite sheet, an object: a handle of kind "gfx.sheet".
+
+    Sprite sheets and 2D animation, helix-legacy's SpriteSheet2D and SpriteAnimator2D: a
+    texture cut into frames, and clips (runs of its frames, each shown for a while, in a
+    direction) a sprite (wgf_sprite.h) plays by name, its region set to the frame showing as
+    the frames go by. A sheet is a resource (wgf_resource.h): a grid made from a texture, READY
+    at once, or a packer's atlas read from its file. It holds a reference to its texture; a
+    sprite playing holds none to the sheet, so releasing a sheet's last reference stops what
+    plays it.
+
+    An atlas is TexturePacker's JSON (a hash or an array of frames) or Aseprite's, its image
+    the file its meta.image names beside it: each frame's region and name, trimmed frames
+    drawn in place in their whole picture (the sprite's size and pivot the whole picture's),
+    each frame's duration (Aseprite's milliseconds; 0.1 s for one without), its clips its
+    tags (Aseprite's frameTags: forward, reverse, ping-pong), and a clip for each run of
+    frames named alike but for a number ("run_01.png", "run_02.png": "run"), in their
+    numbers' order. A frame packed turned (TexturePacker's rotation) isn't read: pack without
+    rotation (logged).
+
+    A handle of kind wgf_sheet_t (libwgf/gfx/include/wgf_sheet.h): 0 is none.
+**/
 abstract Sheet(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

@@ -3,7 +3,61 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_material_t (libwgf/gfx/include/wgf_material.h): 0 is none. **/
+/**
+    A material: how a surface is shaded, libwgt's (wgrender's). It is a resource
+    (wgf_resource.h): shared and reference counted, made from numbers, never a file.
+
+    - A mesh comes with its materials, one a slot (wgf_mesh_get_material), shared by
+      every model of that mesh, so changing one changes all of them. To change one model
+      only, create a material and give it to the model (wgf_model_set_material).
+    - wgf_material_create returns a material with glTF's defaults (white, fully
+      metallic, fully rough, opaque, single sided), with a reference of the caller's.
+      Models hold their own reference, so release yours (wgf_resource_release) when done.
+    - Shading follows glTF metallic-roughness, lit in linear color space. Colors given as
+      wgf_color_t, and color textures (base color, emissive), are sRGB and converted to
+      linear; numeric color values (vec3, vec4) are already linear, as glTF's factors
+      are. Metallic-roughness, normal, and occlusion textures are linear data.
+
+    Parameters are set by name. A setter returns false for an unknown name or a value of
+    the wrong kind (logged); a getter returns 0 for either.
+
+      name                          kind     default    notes
+      base_color                    vec4     1,1,1,1    linear rgba; alpha drives MASK and BLEND
+      base_color_texture            texture  none       sRGB rgba
+      metallic                      float    1          0..1
+      roughness                     float    1          0..1
+      metallic_roughness_texture    texture  none       green = roughness, blue = metallic
+      normal_texture                texture  none       tangent-space normal map
+      normal_scale                  float    1
+      occlusion_texture             texture  none       red = ambient occlusion
+      occlusion_strength            float    1          0..1
+      emissive                      vec3     0,0,0      linear rgb, may exceed 1
+      emissive_texture              texture  none       sRGB rgb
+
+    Each texture <t> above (base_color_texture, ...) also has:
+
+      <t>_texcoord                  int      0          texture coordinate set: 0 or 1
+      <t>_offset                    vec2     0,0        texture transform (glTF
+      <t>_rotation                  float    0          KHR_texture_transform):
+      <t>_scale                     vec2     1,1        uv' = offset + rotate(scale * uv)
+
+    Scale tiles the texture (2,2 repeats it twice each way); rotation is radians,
+    counterclockwise in texture space. Textures repeat, sample smoothly, and use their
+    mipmaps unless wgf_material_set_texture_sampling says otherwise. A texture still
+    loading draws as nothing set would, but a base color texture, which draws the
+    placeholder checker once it has FAILED, as sprites do.
+
+    A custom material (wgf_material_create_custom) is drawn by a shader of your own
+    (wgf_shader.h): its parameters and textures are the ones that shader declares, set by
+    the same calls by its names (float, int, vec2, vec3, vec4; set_color for a vec3 or vec4;
+    set_int takes any int), and the names above don't apply. Values set while its shader is
+    still loading are kept, and checked once it is READY: a name it has none of, or a value of
+    another type, is then warned about and dropped. Its alpha mode, cutoff, and double sides
+    work as above. It draws nothing until its shader is READY, and nothing if that FAILED
+    (warned once).
+
+    A handle of kind wgf_material_t (libwgf/gfx/include/wgf_material.h): 0 is none.
+**/
 abstract Material(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

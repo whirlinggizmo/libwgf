@@ -3,6 +3,14 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    One random number generator for the program, seeded, so a run can be made again:
+    the same seed gives the same numbers in the same order on every platform (PCG32,
+    O'Neill's permuted congruential generator). Core seeds it from the clock when it
+    starts, unless an autopilot run sets the seed (an autopilot's `seed` line), so an
+    autopilot run is the same run everywhere. Simulation that must replay draws from here; what
+    only looks random (a particle's spin) may too.
+**/
 class Random {
 	/**
 	    Start the sequence again from `seed`; a seed's sequence is the same everywhere.

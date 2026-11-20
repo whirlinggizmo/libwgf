@@ -3,6 +3,17 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    Probes: named numbers, or text, a program publishes about itself ("score", "lives",
+    the screen it is on), for what watches it from outside -- an autopilot run's
+    assertions, the `wgf` tool's dump, a test. libwgf's modules publish their own under
+    their layer's name ("ecs.entities", "ui.focus"). A probe is a number or a text, kept
+    until it is set again or core stops; reading one costs a lookup, so a program sets
+    what changed, when it changes.
+
+    A name is 1 to 63 bytes of letters, digits, and "_", ".", ":", "-"; there are at
+    most 256 probes.
+**/
 class Probe {
 	/**
 	    Set `name` to `value`, adding it the first time. False, and nothing set, for a name

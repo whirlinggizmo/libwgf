@@ -3,7 +3,17 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Camera3d's calls, on a Actor: `var x:Camera3d = handle` gives it them, and a Camera3d is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    A 3D camera: an actor the world is seen from (wgf_draw_begin_3d), looking down its -z
+    with +y up. Place and aim it with the actor calls (wgf_actor_look_at), or parent it to
+    what it should follow; its scale is ignored. It sees in perspective by default, or
+    orthographically, with no shrinking with distance, for a plan view or an editor. What
+    it sees fills the presentation's visible area (wgf_presentation.h), the horizontal
+    field following from that area's shape. Space is right-handed, y up. It draws nothing
+    itself.
+
+    Camera3d's calls, on a Actor: `var x:Camera3d = handle` gives it them, and a Camera3d is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract Camera3d(Actor) from Actor from Int to Actor {
 	/**
 	    A camera with a 60 degree vertical field of view, seeing from 0.1 to 1000 units in

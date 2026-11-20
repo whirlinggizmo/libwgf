@@ -3,6 +3,22 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    2D collision as plain math, helix-legacy's Collide2D: shapes tested against each other with
+    no actor or collider, rays and sweeps, and a box moved and slid against solid rectangles
+    or a grid of solid cells (a platformer's, a top-down game's). y runs down, as a 2D stage's
+    does. A rectangle is its top-left x, y and its width and height; a polygon its points, x
+    and y in turn (`count` floats).
+
+    What a test found goes into `hit`, a caller's array, as many of these as fit in
+    `hit_count` (NULL, 0 for none):
+      0, 1  the normal: the way out of the second shape (a unit vector; 0, 0 when a ray or
+            sweep started inside)
+      2     how deep an overlap goes along the normal: the least move apart (0 for a ray)
+      3, 4  the point: of the second shape nearest the first's center, or where a ray or
+            sweep met it (a sweep's: the moving shape's top-left or center then)
+      5     how far along a ray or sweep, 0 at its start to 1 at its end (0 for an overlap)
+**/
 class Collide2d {
 	/**
 	    Overlaps.

@@ -3,7 +3,11 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_element_t (libwgf/ui/include/wgf_document.h): 0 is none. **/
+/**
+    One of a document's elements, an object of the document's: a handle of kind "ui.element".
+
+    A handle of kind wgf_element_t (libwgf/ui/include/wgf_document.h): 0 is none.
+**/
 abstract Element(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

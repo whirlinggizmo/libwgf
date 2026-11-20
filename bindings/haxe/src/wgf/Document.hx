@@ -3,7 +3,61 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_document_t (libwgf/ui/include/wgf_document.h): 0 is none. **/
+/**
+    A document, a resource: a handle of kind "ui.document".
+
+    Documents: menus written as files, in RML (HTML-like markup) styled with RCSS (CSS-like
+    style sheets), as RmlUi reads them: laid out, drawn, and worked by the pointer, the keys,
+    and the pads by libwgf, beside the immediate UI of wgf_ui.h, which stays for HUDs and
+    small screens. A document is a resource (wgf_resource.h): created from its path, loaded
+    with every file it names (its style sheets, images, and templates, made local first, so
+    it loads the same from a page as from a disk), READY once it is parsed, FAILED (logged)
+    when it can't be read or isn't a document. A program that never creates one links none
+    of RmlUi.
+
+    Shown documents are drawn by wgf_ui_draw_documents (wgf_ui.h), called in the frame callback, at that
+    point in the frame: over what was drawn before it. The input is read as they are drawn:
+    the pointer (the mouse), its buttons and wheel, the fingers (as touches: a tap clicks, and
+    a finger dragged scrolls what it drags, gliding on as it lifts), the keys and the
+    characters typed, and a pad's D-pad (as the arrow keys) and south button (as Enter). A
+    text field typed into asks for the device's on-screen keyboard while it has the focus
+    (on a phone's browser, a hidden input element of the page's at its caret, what is typed
+    there typed into the field). The
+    focus moves by Tab and Shift+Tab through what can take it (RCSS `tab-index: auto`, and
+    every form control), and by the arrow keys and the D-pad as each element's `nav`
+    properties say (`nav: auto`, or `nav-up: #id`...); Enter, Space, or the south button
+    clicks what has it. Documents say when they have the pointer and the keyboard
+    (wgf_input_set_pointer_captured): the pointer while it is over an element of a shown
+    document other than its body, and the keyboard while an element of one has the focus;
+    a frame that draws none lets both go.
+
+    Text is drawn in libwgf's fonts: RCSS's `font-family` names a family the program set
+    (wgf_ui_set_document_font, in wgf_ui.h), and one it didn't set draws in the default font
+    (wgf_font.h). A family's bold and italic are faces of their own
+    (wgf_ui_set_document_font_face): `font-weight` and `font-style` draw in the family's
+    face nearest them. Set the fonts before creating the documents: a document waits for
+    the fonts set to be loaded before it is laid out.
+
+    Elements are found by their id. An element's handle lives as long as its element: one
+    removed from its document (its parent's inner RML set again) or whose document is
+    released is refused from then on.
+
+    RCSS's gradients (linear, radial, conic, repeating), `box-shadow`, `filter` (blur,
+    drop-shadow, opacity, and the color filters), `backdrop-filter` (over what the documents
+    drew), `mask-image`, and clipping to rounded corners are drawn. Inside a program's own
+    render target (wgf_render_begin_target) documents draw without `filter`,
+    `backdrop-filter`, `mask-image`, and `box-shadow`, which need render targets of their
+    own.
+
+    An image named at run time -- in RML set, an attribute (`src`), or a property (a
+    decorator's) -- that isn't local yet (on the web, one the document's files didn't name)
+    is fetched first: the change is held, the element as it was, and made in the update its
+    images have arrived (or failed, which RmlUi logs). Held, the call is true and the getters
+    read the element as it is until then; another change to the same element's same
+    attribute or property (or RML) drops a held one. Natively a file on disk is local.
+
+    A handle of kind wgf_document_t (libwgf/ui/include/wgf_document.h): 0 is none.
+**/
 abstract Document(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

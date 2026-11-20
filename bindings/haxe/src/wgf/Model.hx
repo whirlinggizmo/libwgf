@@ -3,7 +3,14 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Model's calls, on a Actor: `var x:Model = handle` gives it them, and a Model is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    A model: an actor showing a mesh on a stage (wgf_stage3d.h), each of the mesh's material
+    slots drawn with the mesh's material or one of the model's own (wgf_material.h), lit
+    by the stage's lights. It holds a reference to its mesh and to its own materials.
+    Place it with the actor calls. On a 2D stage it draws nothing.
+
+    Model's calls, on a Actor: `var x:Model = handle` gives it them, and a Model is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract Model(Actor) from Actor from Int to Actor {
 	/**
 	    A model of `mesh`; 0 for none yet. 0 when `mesh` isn't a mesh, or there is no room

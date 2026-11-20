@@ -3,7 +3,29 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Emitter3d's calls, on a Actor: `var x:Emitter3d = handle` gives it them, and a Emitter3d is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    A 3D particle emitter: an actor that owns many particles, on a 3D stage, in its units,
+    each a quad facing its camera (2D emitters are wgf_emitter2d.h). A particle is decided
+    when it is born (where, how fast, how long it lives, how big, how it spins, within the ranges set
+    here) and the GPU works out where it is from its age, so thousands cost about what
+    spawning them does. Particles are unlit: the texture (white squares with none) times
+    their color.
+
+    Every emitter is advanced once a frame, by the frame's time, before the frame is drawn,
+    unless it or an actor above it is disabled. Its position is its actor's: particles stay
+    where they were born when it moves (trails; local space, below, moves them with it), a
+    move spreads the next frame's steady spawns along the way, and the move is the velocity
+    they can inherit; their velocity is turned as the actor is (a car's dust leaves its
+    back however it faces). Hidden, it still spawns, but draws nothing. On its stage,
+    OPAQUE and MASK particles are drawn with the opaque models, writing depth; BLEND ones
+    among the see-through models, the emitter sorted back to front by where it is; ADD ones
+    after those; its particles unsorted. They cast no shadow, and aren't culled. Its random
+    numbers are its own, seeded from wgf_random as it is made, so an autopilot run's
+    particles are the same every time. It holds a reference to its texture. Emitters are
+    actors (wgf_actor.h): place, parent, and destroy them with the actor calls.
+
+    Emitter3d's calls, on a Actor: `var x:Emitter3d = handle` gives it them, and a Emitter3d is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract Emitter3d(Actor) from Actor from Int to Actor {
 	/**
 	    An emitter, emitting at no rate yet: white 1-unit squares living a second, added. 0

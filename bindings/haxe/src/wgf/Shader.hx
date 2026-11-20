@@ -3,7 +3,26 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_shader_t (libwgf/gfx/include/wgf_shader.h): 0 is none. **/
+/**
+    A custom shader, libwgt's (wgrender's): a material drawn by a shader of your own.
+
+    - Write a fragment shader (and, if you like, a vertex hook) against wgf.glsl, which says
+      what libwgf gives it: the surface, its lights, the environment, shadows, time. Pack it
+      for every graphics backend with tools/pack_shader.py name.glsl, which writes
+      name.wgfshader. Both come with libwgf: in its checkout (libwgf/gfx/shaders/, tools/),
+      and in each staged variant (share/wgf/shaders/, share/wgf/tools/).
+    - Load that file here, and draw with it through wgf_material_create_custom
+      (wgf_material.h): the material's parameters and textures are the shader's, set by their
+      names with the wgf_material_set_* calls.
+    - A surface shader draws a stage's models (not their shadows: a model casts the shadow
+      of its mesh as it is, without the vertex hook); a screen effect redraws the finished
+      frame (wgf_render_add_effect, wgf_render.h).
+    - It is a resource (wgf_resource.h): shared by its path, reference counted, and loaded on
+      create, PENDING at once and READY or FAILED in a later update. Materials hold their own
+      references.
+
+    A handle of kind wgf_shader_t (libwgf/gfx/include/wgf_shader.h): 0 is none.
+**/
 abstract Shader(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

@@ -2,6 +2,31 @@
 
 import * as raw from "./wgf.js";
 export { attach, isAttached } from "./wgf.js";
+/**
+ * Input actions: what the player means ("steer", "fire", "pause"), bound by name to
+ * keys, pad buttons, pad axes, and touch regions, and read as one, so a game asks for
+ * "fire" and never for Space or the south button. An action is made by its first
+ * binding; a name is 1 to 31 bytes; at most 64 actions, each with at most 16 bindings.
+ * Pads are read across all four: the one pushed furthest wins.
+ *
+ * Each binding gives a value from -1 to 1:
+ *
+ *   a key, a pad button   1 while it is down
+ *   a pair of keys        -1 while the first is down, 1 the second, 0 both or neither
+ *   a pair of pad buttons the same, across the pads (the d-pad's left and right as a
+ *                         steering axis)
+ *   a pad axis            its value (sticks -1 to 1, past the dead zone; triggers 0 to 1),
+ *                         either side (direction 0) or one side only (1 or -1, read as
+ *                         0 to 1), below `threshold` as 0
+ *   a touch region        1 while a finger is down in it (logical pixels, as the
+ *                         pointer's)
+ *   an on-screen stick    its pull across or up, -1 to 1 (below)
+ *
+ * and the action is the binding pushed furthest: get_axis its value, get_value how far
+ * (0 to 1), and down while that is at least 0.5 (a pad axis: at least its threshold, or
+ * 0.5 with a threshold of 0). Read inside a tick or a frame, as keys are: pressed and
+ * released are since the previous tick, or the previous frame.
+ */
 export declare const Action: {
     /**
      * Bindings added to `action` (made by the first); false for a name breaking the rule, a
@@ -141,6 +166,32 @@ export declare const Action: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Actor = raw.wgf_actor_t;
+/**
+ * An actor of any type: a handle of kind "gfx.actor".
+ *
+ * Everything placed is an actor, in a tree. A plain actor is only a transform: a group,
+ * or a pivot. The other kinds -- 2D stages, sprites, shapes, text, particle emitters,
+ * cameras -- are actors with content, made by their own create, and every actor call
+ * below works on any of them. An actor's transform is relative to its parent, so moving a parent moves
+ * everything under it. On a 2D stage, an actor uses x and y, and rotates about z.
+ *
+ * An actor is an object: owned by whoever created it, and ended with
+ * wgf_actor_destroy (docs/ARCHITECTURE.md, "Resources and objects"). Every call
+ * on a handle that isn't an actor does nothing, returning false or 0.
+ *
+ * Behaviors: the program's own code on an actor, named here and written in the program's
+ * language. An actor has any number, several of one name too, each its own parameters.
+ * libwgf keeps each behavior's name and parameters (from a scene file, or set) and raises
+ * its lifecycle as events (wgf_world.h): CREATED when it is added, DESTROYED when it is
+ * removed or its actor goes, and its actor's colliders' triggers. The program's binding
+ * takes those and calls its behaviors' create, destroy, and trigger enter and exit, and
+ * their tick and frame from its own: nothing in C calls a behavior.
+ *
+ * A behavior is named by its actor and its id: a number from 1 the actor gives it as it is
+ * added, kept until it is removed, never given to another of the actor's behaviors. A name
+ * is 1 to 63 bytes; a parameter's key 1 to 63 bytes and its value, text, under 256; at
+ * most 32 parameters. Every call is false (or 0, or "") for an actor or id that isn't one.
+ */
 export declare const Actor: {
     /**
      * A plain actor: a transform, with no parent. 0 when there is no room for another.
@@ -660,6 +711,11 @@ export declare const Actor: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+/**
+ * The runtime, as wgrender's wgr_run: app opens the window, starts and drives the
+ * layers below it, and runs the frame loop. A program runs through it; see
+ * docs/ARCHITECTURE.md, "app".
+ */
 export declare const App: {
     /**
      * Open the window and run the program until it quits:
@@ -736,6 +792,71 @@ export declare const App: {
      */
     readonly getOptionFloat: typeof raw.wgf_app_get_option_float;
 };
+/**
+ * Assets: where a resource's file comes from. A path is an asset: creating a resource
+ * from a path (wgf_texture_create, wgf_font_create, wgf_sound_create, a scene's) goes
+ * through here, as does any call below, and that is what links it -- a program that
+ * only makes generated content links none of it. A relative path is looked for under
+ * the asset host, which needs no setting:
+ *
+ *   natively  the host is the program's own directory (where its executable is,
+ *             wherever it was started from), the file storage's root (wgf_fs.h):
+ *             files are read where they are, as without this layer
+ *   web       the host is the page's own directory (its document's base URL, so a
+ *             <base href> moves it): a file not bundled into the page and not cached
+ *             is fetched from beside the page, cached in the browser's storage, and
+ *             checked again on later visits as the cache mode says. A file asked
+ *             for before that storage has opened (the first frames) waits for it,
+ *             so nothing kept is lost to it, and a game needs no wait of its own
+ *
+ * so a web page loads its files with no call here at all, and one that should never
+ * fetch bundles what it loads. Set another host to fetch from elsewhere (a CDN), or
+ * natively to download (fetching, below). A path that is a URL ("https://...") is
+ * fetched from there, cached under its own name; natively that needs fetching turned
+ * on, and without it the load fails, logged with the URL.
+ *
+ * A resource makes its own file local as it loads (wgf_resource.h), so a program only
+ * ENSURES a file to have it local without loading it: to fetch ahead (a level's files
+ * during a menu), from an explicit source (a fetch_url), or to read it itself. An
+ * ensure is a task: a handle whose status, local path and progress the program reads,
+ * nothing called back, destroyed when done with. A path ensured from an explicit
+ * source is what a later create of that path loads, wherever it was found.
+ *
+ * A format whose files name other files is ensured with them, when the layer that
+ * reads it registers how to list them (core's lister, wgf_core_load_priv.h): the task
+ * is DONE once all are local. A glTF file's are listed (its buffers and images), in a
+ * program with glTF (one that calls wgf_mesh_create); a scene's aren't yet, so a scene
+ * ensured ahead is ensured beside the files its lines name.
+ *
+ * libwgt's asset layer, carried whole (docs/HISTORY.md).
+ *
+ * Downloads, natively, by the program: libwgf has no HTTP client there, so a program
+ * that turns fetching on is asked for each download -- a file missing under a URL
+ * host, a URL path, a fetch_url, a "://" redirect. Without it, such a load fails.
+ *
+ * Poll for work once a frame, on the main thread:
+ *
+ *     wgf_asset_task_t request;
+ *     while ((request = wgf_asset_fetch_next()) != 0) {
+ *         start_download(wgf_asset_fetch_get_url(request),
+ *                        wgf_asset_fetch_get_dest(request), request);
+ *     }
+ *
+ * and report each one with wgf_asset_fetch_done, from any thread: start it and return,
+ * do the work on a thread of your own, and answer from there; the answer is taken at
+ * the next update, on the main thread. At most 6 are out at once, a browser's limit per
+ * server; the rest wait their turn. A request nobody takes waits, and so does every
+ * task behind it; one taken and not answered within the fetch timeout fails.
+ *
+ * Bytes never cross this boundary: a downloader deals in files, as curl, WinHTTP and
+ * NSURLSession do. The destination's directories exist. It is where the download is
+ * written until it is whole: libwgf moves it into place when told it succeeded and
+ * deletes it when not, so a failed or broken-off download never leaves half a file to
+ * be read and never costs the copy that was there. Success with nothing written is a
+ * failure, except for a ping (wgf_asset_fetch_is_ping): a request for which only
+ * whether the host answered is wanted, with no destination (wgf_asset_ping_host;
+ * wgrender had no native ping of a URL host).
+ */
 export declare const Asset: {
     /**
      * The asset host relative paths resolve against. A URL ("https://host/assets") is a
@@ -996,6 +1117,10 @@ export declare const Asset: {
 };
 /** A handle of kind wgf_asset_task_t: the raw binding's branded type. */
 export type AssetTask = raw.wgf_asset_task_t;
+/**
+ * An asset task: an ensure, a group, a ping, or a download the program answers (a
+ * fetch request); a handle of kind "asset.task".
+ */
 export declare const AssetTask: {
     /**
      * A task's status: a file's, a group's, or a ping's; NONE for anything that isn't one.
@@ -1022,6 +1147,10 @@ export declare const AssetTask: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+/**
+ * Audio as a whole: what every voice (wgf_voice.h) is played through. As the layer's own
+ * section, these calls don't start audio: the first sound does (wgf_sound.h).
+ */
 export declare const Audio: {
     /**
      * Every voice's loudness, times its own: 1 as they are, 0 silent, above 1 louder (and
@@ -1168,6 +1297,15 @@ export declare const BehaviorComponent: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Body = raw.wgf_actor_t;
+/**
+ * A contact is told for two solid bodies that begin to touch, one of them moving (dynamic,
+ * kinematic, or a character's): a CONTACT_BEGIN to each, with the other's layer, and a
+ * CONTACT_END when they stop (or one goes) (wgf_world.h); a behavior's onContactBegin.
+ *
+ * A sensor tells, as a collider does (wgf_collider.h, wgf_world.h): a TRIGGER_ENTER when a
+ * moving body it may meet begins to overlap it, and a TRIGGER_EXIT when it stops (or goes),
+ * each to both, with the other's layer; a behavior's onTriggerEnter.
+ */
 export declare const Body: {
     /**
      * A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
@@ -1382,6 +1520,27 @@ export declare const Body: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Body2d = raw.wgf_actor_t;
+/**
+ * A 2D body (WGF_COMPONENT_BODY2D), helix-legacy's Body2D: an arcade box that moves its
+ * actor each tick by its velocity and gravity, sliding along what is solid and stopping its
+ * velocity against it, and what it touches kept: the ground under it, a wall either side, a
+ * ceiling. A platformer's player or enemy; a top-down character, with no gravity. On a 2D
+ * stage, y down: gravity is + down, and the ground is under it.
+ *
+ * Its box is `size` about the actor's position, scaled by its scale (not turned). Each tick,
+ * after motion, gravity speeds its fall (held to its fastest fall), and it moves across then
+ * down (wgf_collide2d_move_rects), against two things under the same parent actor:
+ *   - colliders (wgf_collider.h) whose layer is in its solid mask, by their bounds (a
+ *     rectangle's own box; a circle's, a polygon's, a segment's box around it), switched on,
+ *     on actors without a body: bodies don't push or stop each other (their colliders meet
+ *     them as triggers);
+ *   - the parent's grid of solid cells (set_grid below): a tilemap's walls and floors.
+ * A body moves its actor itself: an actor with one should have no motion. Its collider, if it
+ * has one, isn't solid to it.
+ *
+ * Defaults: 1 by 1, still, no gravity, no fastest fall, a solid mask of every layer (-1).
+ * Every call is false (or 0) for an actor without a body.
+ */
 export declare const Body2d: {
     /**
      * False too for a size below 0, or not finite.
@@ -1567,6 +1726,17 @@ export declare const Bounds: {
 };
 /** A handle of kind wgf_bus_t: the raw binding's branded type. */
 export type Bus = raw.wgf_bus_t;
+/**
+ * A bus, an object: a handle of kind "audio.bus".
+ *
+ * Buses: what voices (wgf_voice.h) and plays (wgf_sound_play) are heard through, helix's
+ * Audio.master, music, effects, and a game's own. Each has a volume, a mute, and a fade,
+ * and a parent; a voice is heard at its own volume times its bus's heard volume: the
+ * bus's volume times its parents' up to the master, 0 when it or a parent is muted (and
+ * all of it under wgf_audio_set_volume). The master, music, and effects buses always
+ * exist, music and effects under the master; a voice is on effects until set, and so is
+ * a play, unless its sound says another (wgf_sound_set_bus). At most 64 buses.
+ */
 export declare const Bus: {
     /**
      * The three that always exist.
@@ -1640,6 +1810,12 @@ export declare const Bus: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Camera2d = raw.wgf_actor_t;
+/**
+ * A 2D camera: an actor whose position is the point a 2D stage shows at the frame's
+ * center (wgf_stage2d_set_camera), turned by its rotation about z. Its world
+ * position counts, so a camera parented to the player follows it. It draws nothing
+ * itself.
+ */
 export declare const Camera2d: {
     /**
      * A 2D camera, zoom 1. 0 when there is no room for another actor.
@@ -1660,6 +1836,15 @@ export declare const Camera2d: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Camera3d = raw.wgf_actor_t;
+/**
+ * A 3D camera: an actor the world is seen from (wgf_draw_begin_3d), looking down its -z
+ * with +y up. Place and aim it with the actor calls (wgf_actor_look_at), or parent it to
+ * what it should follow; its scale is ignored. It sees in perspective by default, or
+ * orthographically, with no shrinking with distance, for a plan view or an editor. What
+ * it sees fills the presentation's visible area (wgf_presentation.h), the horizontal
+ * field following from that area's shape. Space is right-handed, y up. It draws nothing
+ * itself.
+ */
 export declare const Camera3d: {
     /**
      * A camera with a 60 degree vertical field of view, seeing from 0.1 to 1000 units in
@@ -1736,6 +1921,22 @@ export declare const Camera3d: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+/**
+ * 2D collision as plain math, helix-legacy's Collide2D: shapes tested against each other with
+ * no actor or collider, rays and sweeps, and a box moved and slid against solid rectangles
+ * or a grid of solid cells (a platformer's, a top-down game's). y runs down, as a 2D stage's
+ * does. A rectangle is its top-left x, y and its width and height; a polygon its points, x
+ * and y in turn (`count` floats).
+ *
+ * What a test found goes into `hit`, a caller's array, as many of these as fit in
+ * `hit_count` (NULL, 0 for none):
+ *   0, 1  the normal: the way out of the second shape (a unit vector; 0, 0 when a ray or
+ *         sweep started inside)
+ *   2     how deep an overlap goes along the normal: the least move apart (0 for a ray)
+ *   3, 4  the point: of the second shape nearest the first's center, or where a ray or
+ *         sweep met it (a sweep's: the moving shape's top-left or center then)
+ *   5     how far along a ray or sweep, 0 at its start to 1 at its end (0 for an overlap)
+ */
 export declare const Collide2d: {
     /**
      * Overlaps.
@@ -1834,6 +2035,22 @@ export declare const Collide2d: {
      */
     readonly moveCells: typeof raw.wgf_collide2d_move_cells;
 };
+/**
+ * 3D collision as plain math, raylib's shapes (its CheckCollision* and GetRayCollision*):
+ * boxes, spheres, and rays against them and triangles, with no actor or body
+ * (wgf_physics.h casts against a physics world). A box is axis-aligned, its least corner and
+ * its greatest (x0, y0, z0, x1, y1, z1); a ray its origin and its direction, which needn't be
+ * a unit vector.
+ *
+ * What a test found goes into `hit`, a caller's array, as many of these as fit in
+ * `hit_count` (NULL, 0 for none), as wgf_collide2d.h's with z:
+ *   0, 1, 2  the normal: the way out of the second shape (a unit vector; a ray's: the
+ *            surface's at the point it met, facing the ray; 0, 0, 0 when it started inside)
+ *   3        how deep an overlap goes along the normal (0 for a ray)
+ *   4, 5, 6  the point: of the second shape nearest the first's center, or where the ray met
+ *   7        how far along the ray, in its direction's lengths (0 for an overlap; 0 too for a
+ *            ray starting inside)
+ */
 export declare const Collide3d: {
     /**
      * Points.
@@ -1876,6 +2093,23 @@ export declare const Collide3d: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Collider = raw.wgf_actor_t;
+/**
+ * A collider (WGF_COMPONENT_COLLIDER): a shape about the actor's position, in its parent's
+ * space, that overlaps others as a trigger: each tick, after motion and bounds, two colliders
+ * that start to overlap raise TRIGGER_ENTER and two that stop raise TRIGGER_EXIT
+ * (wgf_world.h), told to each. They overlap only where one's layer meets the other's mask:
+ * (a's layer & b's mask) or (b's layer & a's mask). Nothing is pushed apart by it: how far
+ * apart would part a pair is read (get_push), and a body (wgf_body2d.h) is stopped by solid
+ * ones. Only colliders under the same parent actor are compared, found by a sweep of their
+ * bounds (a few thousand at once).
+ *
+ * Its shape: a circle (a sphere: its z counts against another circle's), its radius scaled
+ * by the larger of the actor's scale's x and y; or, on a 2D stage's plane (x and y; z
+ * ignored), a rectangle, a convex polygon, or a segment, scaled by the actor's scale and
+ * turned by its turn about z. Each is about the actor's position moved by its offset
+ * (scaled and turned with it). Defaults: a circle of radius 1, no offset, layer 1, mask
+ * everything (-1), enabled. Every call is false (or 0) for an actor without a collider.
+ */
 export declare const Collider: {
     /**
      * A circle of `radius`. False too for a radius below 0. get_radius is a circle's (0 for
@@ -2057,6 +2291,22 @@ export declare const Color: {
 };
 /** A handle of kind wgf_cubemap_t: the raw binding's branded type. */
 export type Cubemap = raw.wgf_cubemap_t;
+/**
+ * A cubemap: six square images, one a direction (+X, -X, +Y, -Y, +Z, -Z), on the GPU,
+ * raylib's LoadTextureCubemap. A custom shader samples one by a direction, as samplerCube
+ * (wgf_material_set_cubemap, wgf_material.h; wgf.glsl says how): a skybox, a reflection.
+ *
+ * It is a resource (wgf_resource.h): reference counted and loaded on create -- the handle
+ * comes back at once, PENDING; its files are found (the asset layer: fetched on the web),
+ * decoded, cut into faces, and given their mipmaps on a worker thread, and uploaded during
+ * the runtime's update at the start of a frame. While it is PENDING a shader samples white;
+ * once it has FAILED (logged, naming the file and why) a magenta and black checker.
+ *
+ * Each face is as a camera at the middle sees it looking down that axis, OpenGL's (and
+ * raylib's) convention: +X's top is +Y and its left +Z; +Y's top is -Z and its left -X;
+ * +Z's top is +Y and its left -X; the negative faces are turned to match. Pixels are RGBA, 8
+ * bits a channel, as stored (sRGB, for a picture; wgf_srgb_to_linear in the shader).
+ */
 export declare const Cubemap: {
     /**
      * The cubemap in the image file at `path` (PNG, JPEG, BMP, TGA, or GIF's first frame), its
@@ -2116,6 +2366,59 @@ export declare const Debug: {
 };
 /** A handle of kind wgf_document_t: the raw binding's branded type. */
 export type Document = raw.wgf_document_t;
+/**
+ * A document, a resource: a handle of kind "ui.document".
+ *
+ * Documents: menus written as files, in RML (HTML-like markup) styled with RCSS (CSS-like
+ * style sheets), as RmlUi reads them: laid out, drawn, and worked by the pointer, the keys,
+ * and the pads by libwgf, beside the immediate UI of wgf_ui.h, which stays for HUDs and
+ * small screens. A document is a resource (wgf_resource.h): created from its path, loaded
+ * with every file it names (its style sheets, images, and templates, made local first, so
+ * it loads the same from a page as from a disk), READY once it is parsed, FAILED (logged)
+ * when it can't be read or isn't a document. A program that never creates one links none
+ * of RmlUi.
+ *
+ * Shown documents are drawn by wgf_ui_draw_documents (wgf_ui.h), called in the frame callback, at that
+ * point in the frame: over what was drawn before it. The input is read as they are drawn:
+ * the pointer (the mouse), its buttons and wheel, the fingers (as touches: a tap clicks, and
+ * a finger dragged scrolls what it drags, gliding on as it lifts), the keys and the
+ * characters typed, and a pad's D-pad (as the arrow keys) and south button (as Enter). A
+ * text field typed into asks for the device's on-screen keyboard while it has the focus
+ * (on a phone's browser, a hidden input element of the page's at its caret, what is typed
+ * there typed into the field). The
+ * focus moves by Tab and Shift+Tab through what can take it (RCSS `tab-index: auto`, and
+ * every form control), and by the arrow keys and the D-pad as each element's `nav`
+ * properties say (`nav: auto`, or `nav-up: #id`...); Enter, Space, or the south button
+ * clicks what has it. Documents say when they have the pointer and the keyboard
+ * (wgf_input_set_pointer_captured): the pointer while it is over an element of a shown
+ * document other than its body, and the keyboard while an element of one has the focus;
+ * a frame that draws none lets both go.
+ *
+ * Text is drawn in libwgf's fonts: RCSS's `font-family` names a family the program set
+ * (wgf_ui_set_document_font, in wgf_ui.h), and one it didn't set draws in the default font
+ * (wgf_font.h). A family's bold and italic are faces of their own
+ * (wgf_ui_set_document_font_face): `font-weight` and `font-style` draw in the family's
+ * face nearest them. Set the fonts before creating the documents: a document waits for
+ * the fonts set to be loaded before it is laid out.
+ *
+ * Elements are found by their id. An element's handle lives as long as its element: one
+ * removed from its document (its parent's inner RML set again) or whose document is
+ * released is refused from then on.
+ *
+ * RCSS's gradients (linear, radial, conic, repeating), `box-shadow`, `filter` (blur,
+ * drop-shadow, opacity, and the color filters), `backdrop-filter` (over what the documents
+ * drew), `mask-image`, and clipping to rounded corners are drawn. Inside a program's own
+ * render target (wgf_render_begin_target) documents draw without `filter`,
+ * `backdrop-filter`, `mask-image`, and `box-shadow`, which need render targets of their
+ * own.
+ *
+ * An image named at run time -- in RML set, an attribute (`src`), or a property (a
+ * decorator's) -- that isn't local yet (on the web, one the document's files didn't name)
+ * is fetched first: the change is held, the element as it was, and made in the update its
+ * images have arrived (or failed, which RmlUi logs). Held, the call is true and the getters
+ * read the element as it is until then; another change to the same element's same
+ * attribute or property (or RML) drops a held one. Natively a file on disk is local.
+ */
 export declare const Document: {
     /**
      * The document in the .rml file at `path` under fs's root, loading: hidden until shown. A
@@ -2179,6 +2482,15 @@ export declare const Document: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+/**
+ * Immediate mode 2D: each call draws once, in the frame it is made in, in call order
+ * with everything else drawn that frame, and keeps nothing. Logical pixels from the
+ * frame's top-left, y down (wgf_render.h). A draw outside a frame draws nothing.
+ *
+ * Outlines and lines have a thickness in logical pixels, centered on the line; one
+ * of 0 or less is a hairline of one logical pixel. A polyline's corners are mitred,
+ * and bevelled where a sharp corner's miter would reach past four thicknesses.
+ */
 export declare const Draw: {
     /**
      * Immediate mode 2D: each call draws once, in the frame it is made in, in call order
@@ -2529,6 +2841,9 @@ export declare const Ease: {
 };
 /** A handle of kind wgf_element_t: the raw binding's branded type. */
 export type Element = raw.wgf_element_t;
+/**
+ * One of a document's elements, an object of the document's: a handle of kind "ui.element".
+ */
 export declare const Element: {
     /**
      * The document an element is in, and its id ("" for none). 0 or "" for a handle that isn't
@@ -2673,6 +2988,25 @@ export declare const Element: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Emitter2d = raw.wgf_actor_t;
+/**
+ * A 2D particle emitter: an actor that owns many particles, on a 2D stage, in its units,
+ * through its camera (3D emitters are wgf_emitter3d.h). A particle is decided when it is
+ * born (where, how fast, how long it lives, how big, how it spins, within the ranges set
+ * here) and the GPU works out where it is from its age, so thousands cost about what
+ * spawning them does. Particles are unlit: the texture (white squares with none) times
+ * their color.
+ *
+ * Every emitter is advanced once a frame, by the frame's time, before the frame is drawn,
+ * unless it or an actor above it is disabled. Its position is its actor's: particles stay
+ * where they were born when it moves (trails; local space, below, moves them with it), a
+ * move spreads the next frame's steady spawns along the way, and the move is the velocity
+ * they can inherit; their velocity is turned as the actor is (an exhaust leaves a ship's
+ * back however it faces). Hidden, it still spawns, but draws nothing. Its particles are
+ * drawn in tree order, unsorted. Its random numbers are its own, seeded from wgf_random as
+ * it is made, so an autopilot run's particles are the same every time. It holds a
+ * reference to its texture. Emitters are actors (wgf_actor.h): place, parent, and destroy
+ * them with the actor calls.
+ */
 export declare const Emitter2d: {
     /**
      * An emitter, emitting at no rate yet: white 8-unit squares living a second, added. 0
@@ -3354,6 +3688,27 @@ export declare const Emitter2d: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Emitter3d = raw.wgf_actor_t;
+/**
+ * A 3D particle emitter: an actor that owns many particles, on a 3D stage, in its units,
+ * each a quad facing its camera (2D emitters are wgf_emitter2d.h). A particle is decided
+ * when it is born (where, how fast, how long it lives, how big, how it spins, within the ranges set
+ * here) and the GPU works out where it is from its age, so thousands cost about what
+ * spawning them does. Particles are unlit: the texture (white squares with none) times
+ * their color.
+ *
+ * Every emitter is advanced once a frame, by the frame's time, before the frame is drawn,
+ * unless it or an actor above it is disabled. Its position is its actor's: particles stay
+ * where they were born when it moves (trails; local space, below, moves them with it), a
+ * move spreads the next frame's steady spawns along the way, and the move is the velocity
+ * they can inherit; their velocity is turned as the actor is (a car's dust leaves its
+ * back however it faces). Hidden, it still spawns, but draws nothing. On its stage,
+ * OPAQUE and MASK particles are drawn with the opaque models, writing depth; BLEND ones
+ * among the see-through models, the emitter sorted back to front by where it is; ADD ones
+ * after those; its particles unsorted. They cast no shadow, and aren't culled. Its random
+ * numbers are its own, seeded from wgf_random as it is made, so an autopilot run's
+ * particles are the same every time. It holds a reference to its texture. Emitters are
+ * actors (wgf_actor.h): place, parent, and destroy them with the actor calls.
+ */
 export declare const Emitter3d: {
     /**
      * An emitter, emitting at no rate yet: white 1-unit squares living a second, added. 0
@@ -4031,6 +4386,22 @@ export declare const Emitter3d: {
 };
 /** A handle of kind wgf_environment_t: the raw binding's branded type. */
 export type Environment = raw.wgf_environment_t;
+/**
+ * An environment: the light all around a 3D stage, from a panorama -- an equirectangular
+ * (2:1 latitude-longitude) image, a .hdr (Radiance RGBE) at its full brightness, or a
+ * PNG or JPEG taken as sRGB -- which lights its PBR models (soft light from every
+ * direction, and reflections sharp or blurred by each surface's roughness) and can be
+ * drawn behind them (wgf_stage3d_set_environment, wgf_stage3d_set_background). It is a
+ * resource (wgf_resource.h): shared, reference counted, and loaded on create, as a
+ * texture is, then uploaded during the runtime's update. Its preparation is about 0.2 s of
+ * a desktop CPU for a 1024 by 512 image: on a worker thread natively, and on the web, which
+ * has no threads, a step of about a millisecond at a time within the load budget
+ * (wgf_resource_set_load_budget), so it lengthens no frame and takes a few hundred of them
+ * (a PNG or JPEG's decoding is one step, as a texture's is). While it is PENDING, or once
+ * it has FAILED (logged once, naming the file), a stage it is set on is lit and drawn as
+ * if it had none. A backend that can't filter half-float textures has no environments: each
+ * FAILS, warned.
+ */
 export declare const Environment: {
     /**
      * An environment from a panorama image file. 0 only when there is no room for another;
@@ -4042,6 +4413,29 @@ export declare const Environment: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Fly = raw.wgf_actor_t;
+/**
+ * Cameras flown by input, raylib's CAMERA_FREE and CAMERA_FIRST_PERSON (UpdateCamera): a 3D
+ * camera actor (wgf_camera3d.h) given a mode is turned and moved each frame, before the frame
+ * callback, by the keyboard, the mouse, and the pads. At most 64 cameras have a mode or a
+ * setting.
+ *
+ *   the mouse            looks: yaw and pitch, the pitch held just short of straight up or
+ *                        down; the pointer is locked while it looks (wgf_mouse_set_locked),
+ *                        and a click locks it again once the platform let it go (Escape in
+ *                        a browser)
+ *   the right stick      looks, at the turn speed
+ *   W A S D, the arrows  move forward, left, back, and right; the left stick too
+ *   Space or E           FREE: up (the world's +y); a pad's right bumper too
+ *   Left Control or Q    FREE: down; a pad's left bumper too
+ *
+ * FREE moves where it looks; FIRST_PERSON moves on the ground plane, its height kept (what
+ * the program sets it to: stairs, a jump). Every pad is read, the one pushed furthest
+ * winning. Keys aren't read while the keyboard is captured, and the mouse doesn't look while
+ * the pointer is (wgf_input.h: a UI has it). The camera's position is read each frame, so the
+ * program may move it; it is turned only by the look below while it flies. Every flown
+ * camera moves by the same input, so fly one at a time; a camera that also follows
+ * (wgf_follow.h) is placed by both.
+ */
 export declare const Fly: {
     /**
      * The camera flown in `mode` (NONE: no longer, staying where it is and its settings kept).
@@ -4114,6 +4508,25 @@ export declare const Fly: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Follow = raw.wgf_actor_t;
+/**
+ * Cameras that follow, helix-legacy's CameraFollow2D, CameraFollow3D, and Orbit3D: a camera
+ * actor (wgf_camera2d.h, wgf_camera3d.h) given a target actor is moved each frame, before
+ * the frame callback, to follow where the target is drawn. At most 64 cameras follow.
+ *
+ * A 2D camera centers the view on a point that follows the target: the target moves freely
+ * inside a dead zone around it, and when it leaves, the point catches up, smoothed; the
+ * view is kept inside its bounds when it has them (the presentation's visible area, over
+ * the camera's zoom, is what must fit).
+ *
+ * A 3D camera sits at its offset from a point that follows the target the same way (a dead
+ * zone of width across and height up, and smoothing), and looks at the point: in CHASE the
+ * offset is turned with the target's heading (its turn about y), swinging round to it
+ * smoothed, so it stays behind a car; in FIXED it isn't turned; in ORBIT it is the orbit's
+ * (a yaw, a pitch, and a distance the program sets, from a stick or the pointer).
+ *
+ * Either shakes: trauma (0 to 1) added by shake and lost over time, the view thrown by its
+ * square so small shakes are gentle, as helix's.
+ */
 export declare const Follow: {
     /**
      * The camera follows `target` (0: stops following, staying where it is). False for a
@@ -4208,6 +4621,17 @@ export declare const Follow: {
 };
 /** A handle of kind wgf_font_t: the raw binding's branded type. */
 export type Font = raw.wgf_font_t;
+/**
+ * A font, a resource: a handle of kind "gfx.font". 0 is the default font.
+ *
+ * A font: a TrueType or OpenType typeface, or a bitmap font, loaded from a file. It is a
+ * resource (wgf_resource.h): shared, reference counted, and loaded on create. Sizes are
+ * chosen where text is drawn, not here.
+ *
+ * Font 0 means the default font, everywhere a font is taken. It starts as the
+ * built-in font -- JetBrains Mono, printable ASCII only -- so text works with no
+ * font file at all. A font not yet ready, or failed, draws as the default font.
+ */
 export declare const Font: {
     /**
      * A font from a file under fs's root: a .ttf or .otf; or a bitmap font, raylib's two:
@@ -4269,6 +4693,33 @@ export declare const Font: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+/**
+ * Local file storage, the same on every platform. Native: files under the root, the
+ * program's own directory by default (where its executable is, wherever it was
+ * started from: a double-clicked program finds its files), never the working
+ * directory. Web: files kept in the browser between visits.
+ * Paths are relative to the root. "\\" is read as "/", "." and empty parts are
+ * dropped, and ".." takes back the part before it, so "textures\\..\\models/box.glb"
+ * is "models/box.glb". A path that is absolute, has a ":" or a control character,
+ * climbs above the root, or names nothing is refused, so a path can only name
+ * something under the root. A task's path is the normalized one.
+ *
+ * A path starting with "user:" names the program's own file that must last, such as a
+ * save or its settings ("user:highscore.txt"), apart from the files it ships with:
+ * natively under the user's data directory, by the program's identity
+ * (<data>/<company>/<product>, wgf_identity.h: ~/.local/share on Linux, %APPDATA% on
+ * Windows); on the web in the browser's store, beside the root's other files. The rest
+ * of such a path keeps the rule above, under that directory. A request for one is
+ * refused where there is no user data directory to be found (no HOME), with a warning. A symbolic link you put under the
+ * root is followed by read and write; remove and rmdir remove the link itself,
+ * never what it points to. Text is UTF-8.
+ *
+ * Every request returns a task (kind "core.fs_task"): poll its status, read its
+ * result, then destroy it. A task's status changes only during the runtime's
+ * update at the start of a frame, never inside the call that made the request. A request made before storage is
+ * ready waits for it. Destroying a task that is still pending lets it finish and
+ * discards its result, so a write is never lost.
+ */
 export declare const Fs: {
     /**
      * The root paths resolve against. Native: a directory, absolute or relative to the
@@ -4327,6 +4778,9 @@ export declare const Fs: {
 };
 /** A handle of kind wgf_fs_task_t: the raw binding's branded type. */
 export type FsTask = raw.wgf_fs_task_t;
+/**
+ * A request's task: a handle of kind "core.fs_task".
+ */
 export declare const FsTask: {
     /**
      * Tasks. A getter answers NONE, "", NULL, or 0 for a handle that isn't a task.
@@ -4358,6 +4812,16 @@ export declare const FsTask: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+/**
+ * Gamepads, read inside a tick or a frame: what changed since the previous tick, or
+ * the previous frame. Up to 4 at once, pads 0 to 3: a pad keeps its number while it
+ * is connected, and a new one takes the lowest free number, so pad 0 stays player one
+ * until it is unplugged. Pads are read once a frame, before its ticks.
+ *
+ * Linux: evdev, the kernel's input devices, checked for new pads every couple of
+ * seconds. Windows: XInput. Web: the browser's Gamepad API, which lists a pad only
+ * once one of its buttons is pressed on the page. macOS: none yet.
+ */
 export declare const Gamepad: {
     /**
      * Whether pad 0 to 3 is connected.
@@ -4446,12 +4910,23 @@ export declare const Gamepad: {
 };
 /** A handle of kind wgf_generator_t: the raw binding's branded type. */
 export type Generator = raw.wgf_generator_t;
+/**
+ * A generator, an object: a handle of kind "core.generator".
+ */
 export declare const Generator: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
 /** A handle of kind wgf_handle_t: the raw binding's branded type. */
 export type Handle = raw.wgf_handle_t;
+/**
+ * An opaque reference to something libwgf owns: a texture, a model, a task. 0 is
+ * never a valid handle. A handle to something destroyed stops working, even
+ * after its slot is reused.
+ *
+ * A handle is valid only in the running program: never save one or send one
+ * over the network.
+ */
 export declare const Handle: {
     /**
      * The kind of thing `handle` refers to, as "<layer>.<type>" ("gfx.texture"); ""
@@ -4532,6 +5007,26 @@ export declare const Identity: {
 };
 /** A handle of kind wgf_image_t: the raw binding's branded type. */
 export type Image = raw.wgf_image_t;
+/**
+ * An image on the CPU: RGBA pixels, 8 bits a channel, rows from the top, in memory, never
+ * on the GPU -- raylib's Image. Loaded from a file, generated (a color, gradients, checks,
+ * noise), made from a texture's pixels read back, read and written a pixel at a time, made
+ * a texture, or saved as a PNG. Pixel formats and editing beyond a pixel (drawing,
+ * resizing, cropping) are not libwgf's.
+ *
+ * An image is a resource (wgf_resource.h): one loaded from a path is shared, reference
+ * counted, and loaded on create (PENDING at once, the file found -- fetched on the web --
+ * and decoded on a worker, then READY or FAILED in a later update; creating the same path
+ * again gives the same image, so a pixel set on it is seen through every handle of it). One
+ * made in code is the program's own, READY at once. Released with wgf_resource_release. A
+ * getter answers 0 or NULL for an image that isn't READY. A handle of kind "gfx.image".
+ *
+ * Images made in code, `width` by `height` pixels, READY at once. Each is 0 for a size of
+ * 0 or less or over 16384, or no memory for it, each logged.
+ *
+ * Noise, the same pixels for the same numbers on every platform (integer arithmetic,
+ * hashed from `seed`; never the C library's rand), opaque gray.
+ */
 export declare const Image: {
     /**
      * An image from a file: PNG, JPEG, BMP, TGA, or GIF (its first frame), decoded with
@@ -4695,6 +5190,12 @@ export declare const Input: {
      */
     readonly getClipboard: typeof raw.wgf_input_get_clipboard;
 };
+/**
+ * The keyboard, read inside a tick or a frame: what changed since the previous
+ * tick, or the previous frame. Keys are named by where they are on a US layout:
+ * WGF_KEY_Z is the key left of X, whatever the layout prints on it. For the
+ * characters the user typed, read wgf_input_get_chars.
+ */
 export declare const Keyboard: {
     /**
      * Where `key` is: UP, PRESSED (went down since the previous tick or frame), DOWN,
@@ -4727,6 +5228,10 @@ export declare const Keyboard: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Lifetime = raw.wgf_actor_t;
+/**
+ * A lifetime (WGF_COMPONENT_LIFETIME): seconds left, counted down each tick; at 0 the
+ * actor is destroyed. Default: 1 second.
+ */
 export declare const Lifetime: {
     /**
      * Seconds left from now. False for an actor without a lifetime, or a time below 0 or
@@ -4891,6 +5396,14 @@ export declare const Light: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+/**
+ * Logging to stderr (the browser console on the web). A message below the
+ * current level is dropped; the level starts at INFO. Text is UTF-8.
+ *
+ * The exported calls take finished text, so a binding formats in its own
+ * language and passes one string. C code formats with the wgf_log_<level> macros,
+ * or with wgf_log_debug and the rest from wgf_log.h.
+ */
 export declare const Log: {
     /**
      * Logging to stderr (the browser console on the web). A message below the
@@ -4973,6 +5486,10 @@ export declare const Log: {
      */
     readonly messageSource: typeof raw.wgf_log_message_source;
 };
+/**
+ * The frame loop's timing: frames as fast as the display shows them, and ticks
+ * at a fixed rate, on the runtime's tick clock fed the frames' time.
+ */
 export declare const Loop: {
     /**
      * Seconds since the previous frame, at most 0.1 (a frame after a stall counts as
@@ -5052,6 +5569,59 @@ export declare const Loop: {
 };
 /** A handle of kind wgf_material_t: the raw binding's branded type. */
 export type Material = raw.wgf_material_t;
+/**
+ * A material: how a surface is shaded, libwgt's (wgrender's). It is a resource
+ * (wgf_resource.h): shared and reference counted, made from numbers, never a file.
+ *
+ * - A mesh comes with its materials, one a slot (wgf_mesh_get_material), shared by
+ *   every model of that mesh, so changing one changes all of them. To change one model
+ *   only, create a material and give it to the model (wgf_model_set_material).
+ * - wgf_material_create returns a material with glTF's defaults (white, fully
+ *   metallic, fully rough, opaque, single sided), with a reference of the caller's.
+ *   Models hold their own reference, so release yours (wgf_resource_release) when done.
+ * - Shading follows glTF metallic-roughness, lit in linear color space. Colors given as
+ *   wgf_color_t, and color textures (base color, emissive), are sRGB and converted to
+ *   linear; numeric color values (vec3, vec4) are already linear, as glTF's factors
+ *   are. Metallic-roughness, normal, and occlusion textures are linear data.
+ *
+ * Parameters are set by name. A setter returns false for an unknown name or a value of
+ * the wrong kind (logged); a getter returns 0 for either.
+ *
+ *   name                          kind     default    notes
+ *   base_color                    vec4     1,1,1,1    linear rgba; alpha drives MASK and BLEND
+ *   base_color_texture            texture  none       sRGB rgba
+ *   metallic                      float    1          0..1
+ *   roughness                     float    1          0..1
+ *   metallic_roughness_texture    texture  none       green = roughness, blue = metallic
+ *   normal_texture                texture  none       tangent-space normal map
+ *   normal_scale                  float    1
+ *   occlusion_texture             texture  none       red = ambient occlusion
+ *   occlusion_strength            float    1          0..1
+ *   emissive                      vec3     0,0,0      linear rgb, may exceed 1
+ *   emissive_texture              texture  none       sRGB rgb
+ *
+ * Each texture <t> above (base_color_texture, ...) also has:
+ *
+ *   <t>_texcoord                  int      0          texture coordinate set: 0 or 1
+ *   <t>_offset                    vec2     0,0        texture transform (glTF
+ *   <t>_rotation                  float    0          KHR_texture_transform):
+ *   <t>_scale                     vec2     1,1        uv' = offset + rotate(scale * uv)
+ *
+ * Scale tiles the texture (2,2 repeats it twice each way); rotation is radians,
+ * counterclockwise in texture space. Textures repeat, sample smoothly, and use their
+ * mipmaps unless wgf_material_set_texture_sampling says otherwise. A texture still
+ * loading draws as nothing set would, but a base color texture, which draws the
+ * placeholder checker once it has FAILED, as sprites do.
+ *
+ * A custom material (wgf_material_create_custom) is drawn by a shader of your own
+ * (wgf_shader.h): its parameters and textures are the ones that shader declares, set by
+ * the same calls by its names (float, int, vec2, vec3, vec4; set_color for a vec3 or vec4;
+ * set_int takes any int), and the names above don't apply. Values set while its shader is
+ * still loading are kept, and checked once it is READY: a name it has none of, or a value of
+ * another type, is then warned about and dropped. Its alpha mode, cutoff, and double sides
+ * work as above. It draws nothing until its shader is READY, and nothing if that FAILED
+ * (warned once).
+ */
 export declare const Material: {
     /**
      * A material with glTF's defaults. 0 when `shading` isn't one (logged), or there is no
@@ -5221,6 +5791,35 @@ export declare const Material: {
 };
 /** A handle of kind wgf_mesh_t: the raw binding's branded type. */
 export type Mesh = raw.wgf_mesh_t;
+/**
+ * A mesh: a shape's triangles on the GPU, with normals, texture coordinates, and
+ * tangents at each corner, so any shading can light it, drawn by the models made from
+ * it (wgf_model.h), each of its parts with one of its material slots. It is a resource
+ * (wgf_resource.h): shared, reference counted, and held by its models.
+ *
+ * Generated meshes are shapes made in code, ready at once (even before gfx starts, as
+ * they go to the GPU the first time they are drawn), centered on the origin, y up, in
+ * units. They are shared by their parameters: the same shape asked for again is the
+ * same mesh, with one more reference, and a mesh never changes once made; to size a
+ * model differently, scale it, or make another mesh. Each has one material slot,
+ * white, not metallic, roughness 0.5: draw a model of it with another with
+ * wgf_model_set_material. 0 (logged) for a size of 0 or less; counts are clamped to
+ * their ranges. A mesh from a file is glTF's (wgf_mesh_create, below); a mesh made from
+ * numbers, a program's own triangles (wgf_mesh_create_triangles) or heights
+ * (wgf_mesh_create_heightmap), is its own, never shared, and can be changed in place.
+ *
+ *   plane     flat in x and z, facing +y; subdivisions 0..256 more cells each way.
+ *             Texture coordinates span it once
+ *   cube      each face its own corners (sharp edges), textured 0..1 per face
+ *   sphere    rings 2..256 from pole to pole, segments 3..512 around; u around, v
+ *             pole to pole
+ *   cylinder  capped; segments 3..512 around
+ *   cone      tip up, its base capped
+ *   capsule   height from end to end (at least 2 x radius; less: a sphere); rings
+ *             across both round ends
+ *   torus     around y; radius to the middle of the tube, thickness the tube's
+ *             radius; rings around the ring, segments around the tube (3..512)
+ */
 export declare const Mesh: {
     readonly createPlane: typeof raw.wgf_mesh_create_plane;
     readonly createCube: typeof raw.wgf_mesh_create_cube;
@@ -5447,6 +6046,12 @@ export declare const Mesh: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Model = raw.wgf_actor_t;
+/**
+ * A model: an actor showing a mesh on a stage (wgf_stage3d.h), each of the mesh's material
+ * slots drawn with the mesh's material or one of the model's own (wgf_material.h), lit
+ * by the stage's lights. It holds a reference to its mesh and to its own materials.
+ * Place it with the actor calls. On a 2D stage it draws nothing.
+ */
 export declare const Model: {
     /**
      * A model of `mesh`; 0 for none yet. 0 when `mesh` isn't a mesh, or there is no room
@@ -6622,6 +7227,11 @@ export declare const Model: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Motion = raw.wgf_actor_t;
+/**
+ * Motion (WGF_COMPONENT_MOTION): each tick the actor moves by its velocity and turns by
+ * its spin, its velocity first damped and capped at its top speed. Defaults: still, no
+ * damping, no top speed. Every call is false (or 0) for an actor without motion.
+ */
 export declare const Motion: {
     /**
      * Units a second, in its parent's space.
@@ -6662,6 +7272,11 @@ export declare const Motion: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+/**
+ * The mouse, read inside a tick or a frame: what changed since the previous tick,
+ * or the previous frame. Positions are logical pixels from the window's top-left,
+ * y down, as gfx draws.
+ */
 export declare const Mouse: {
     /**
      * Where the pointer is: where it last moved over the window.
@@ -6726,6 +7341,19 @@ export declare const Mouse: {
      */
     readonly getCursor: typeof raw.wgf_mouse_get_cursor;
 };
+/**
+ * Physics in 3D: rigid bodies on actors (wgf_body.h), and wheeled vehicles (wgf_vehicle.h),
+ * simulated in the tick, after the program's and the ecs's systems. One world for every
+ * 3D stage, its gravity set here; a body's actor moves where the world moves it, drawn
+ * between ticks as any simulated actor is (wgf_actor.h). The same steps make the same world
+ * to the bit on every target, so an autopilot's lap is the same on the desktop and in a
+ * browser.
+ *
+ * Physics is an optional part: a program that never starts it links none of it. It starts
+ * with the first of these calls, or of wgf_body's or wgf_vehicle's; until then a body or a
+ * vehicle component (added, or a scene's line) is refused, and logged once. A game whose
+ * scene has bodies sets the gravity before it loads the scene.
+ */
 export declare const Physics: {
     /**
      * The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
@@ -6784,6 +7412,23 @@ export declare const Physics: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Pointer = raw.wgf_actor_t;
+/**
+ * The pointer over actors: hover, press, and click on the actors of the interactive 2D and
+ * 3D stages, from their picks (wgf_stage2d_pick, wgf_stage3d_pick) at the mouse's left
+ * button, or the first finger on a touch screen (which drives the mouse,
+ * wgf_touch_set_mouse_emulated); libwgt's pointer, wgrender's scene interaction. Once a
+ * frame, before its ticks, the interactive stages drawn on the screen in the last frame are
+ * picked at the pointer, the one drawn last first, so a HUD drawn over the world takes the
+ * pointer where they overlap; a stage not drawn in the last frame is skipped. Actors are hit
+ * as those picks hit them (a glTF file's node as its file's root).
+ *
+ * While the game's UI has the pointer (wgf_input_set_pointer_captured), nothing is under it
+ * and no press starts on an actor. A press on a 2D stage's actor captures the pointer
+ * (wgf_input_is_pointer_captured) until it is let go, through the frame it is let go in, so
+ * camera drags and the game's own clicks leave it alone; a press on a 3D stage's actor
+ * doesn't, so the world's camera still turns under a drag. States are read inside a tick or
+ * a frame, with edges since the previous tick, or the previous frame, as keys have.
+ */
 export declare const Pointer: {
     /**
      * Which stages the pointer picks (default: none). False for a handle that isn't a 2D or a
@@ -6823,6 +7468,10 @@ export declare const Pointer: {
 };
 /** A handle of kind wgf_prefab_t: the raw binding's branded type. */
 export type Prefab = raw.wgf_prefab_t;
+/**
+ * One of a scene's prefabs, found once by its name (wgf_scene_find_prefab) and kept: what
+ * is spawned, as often as wanted, with no lookup. Valid while its scene is.
+ */
 export declare const Prefab: {
     /**
      * Make one tree of the prefab under `parent` (0: none): its top actor, each actor as the
@@ -6924,6 +7573,17 @@ export declare const Presentation: {
      */
     readonly getScale: typeof raw.wgf_presentation_get_scale;
 };
+/**
+ * Probes: named numbers, or text, a program publishes about itself ("score", "lives",
+ * the screen it is on), for what watches it from outside -- an autopilot run's
+ * assertions, the `wgf` tool's dump, a test. libwgf's modules publish their own under
+ * their layer's name ("ecs.entities", "ui.focus"). A probe is a number or a text, kept
+ * until it is set again or core stops; reading one costs a lookup, so a program sets
+ * what changed, when it changes.
+ *
+ * A name is 1 to 63 bytes of letters, digits, and "_", ".", ":", "-"; there are at
+ * most 256 probes.
+ */
 export declare const Probe: {
     /**
      * Set `name` to `value`, adding it the first time. False, and nothing set, for a name
@@ -6966,6 +7626,14 @@ export declare const Probe: {
      */
     readonly getName: typeof raw.wgf_probe_get_name;
 };
+/**
+ * One random number generator for the program, seeded, so a run can be made again:
+ * the same seed gives the same numbers in the same order on every platform (PCG32,
+ * O'Neill's permuted congruential generator). Core seeds it from the clock when it
+ * starts, unless an autopilot run sets the seed (an autopilot's `seed` line), so an
+ * autopilot run is the same run everywhere. Simulation that must replay draws from here; what
+ * only looks random (a particle's spin) may too.
+ */
 export declare const Random: {
     /**
      * Start the sequence again from `seed`; a seed's sequence is the same everywhere.
@@ -7037,6 +7705,10 @@ export declare const Random: {
      */
     readonly nextShuffle: typeof raw.wgf_random_next_shuffle;
 };
+/**
+ * The frame gfx is drawing into: the window. A frame is recorded while the program's
+ * frame callback runs, and drawn when it returns.
+ */
 export declare const Render: {
     /**
      * What each frame starts cleared to. Default: black.
@@ -7238,6 +7910,26 @@ export declare const Render: {
      */
     readonly popClip: typeof raw.wgf_render_pop_clip;
 };
+/**
+ * Input recorded and played back by the program itself, as it runs: a demo, an attract
+ * mode, a ghost, a bug report's steps (raylib's automation events). A recording is text,
+ * an autopilot (BUILDING.md, "Autopilot files"): every input as it reached the program,
+ * frame by frame -- keys, typed text, the mouse's position, buttons, and wheel, fingers,
+ * and each gamepad's buttons and axes -- which the program keeps as it likes (saved with
+ * wgf_fs_write_text, read back with wgf_fs_read_text), and which an autopilot run can fly
+ * too; any autopilot plays as a replay. The same natively, on the web, and headless; a
+ * program that never calls one of these links none of it.
+ *
+ * A replay reproduces the input, frame by frame: a frame of the replay gives the program
+ * what that frame of the recording got, before the frame's ticks, read by every input call
+ * (wgf_keyboard.h, wgf_mouse.h, wgf_touch.h, wgf_gamepad.h, wgf_input.h, wgf_action.h) as
+ * real input is. It reproduces nothing else: the program's randomness is its own (seed
+ * wgf_random, wgf_random_set_seed, the same as recording starts and as the replay plays),
+ * and ticks run on real time, so a frame's input reaches the same tick only where the
+ * frames last as long (wgf_loop_set_target_fps steadies them; an autopilot run's frames
+ * last exactly a sixtieth of a second). A finger's tap, double tap, and swipe are timed in
+ * real time too. Recording and playing are one at a time.
+ */
 export declare const Replay: {
     /**
      * Recording, from the next frame: each input reaching the program is written, at the
@@ -7320,6 +8012,23 @@ export declare const Replay: {
      */
     readonly hasRealPress: typeof raw.wgf_replay_has_real_press;
 };
+/**
+ * Resources: the shared, reference counted data an object uses -- a texture, a mesh, a
+ * material, a font, an environment, a shader. What every resource has in common is
+ * here, as wgrender's wgr_resource.h; each kind's own calls are in its header
+ * (wgf_texture.h, ...). docs/ARCHITECTURE.md, "Resources and objects".
+ *
+ * A resource loads on create: wgf_<kind>_create(path) takes a path under fs's root and
+ * returns the handle at once, PENDING; a worker prepares the file and the main thread
+ * finishes it, and the handle turns READY or FAILED in a later update. Nothing is
+ * called back. Creating the same path again gives the same handle, with one more
+ * reference, whatever its status; releasing the last reference of one still loading
+ * stops the load. A resource made from nothing but numbers (a generated mesh, a
+ * material) is READY from the start. Objects take a resource in any status and do the
+ * right thing until it is READY (each kind's header says what), so a program can
+ * create everything at once and never wait; the status is for what a program wants to
+ * show, such as a loading screen.
+ */
 export declare const Resource: {
     /**
      * PENDING, READY, or FAILED for a resource of any kind; NONE for anything else.
@@ -7371,6 +8080,26 @@ export declare const Resource: {
 };
 /** A handle of kind wgf_scene_t: the raw binding's branded type. */
 export type Scene = raw.wgf_scene_t;
+/**
+ * A scene: a text file of actor trees -- their kinds, components, and behaviors -- and
+ * prefabs, loaded as a resource (wgf_resource.h: on create, PENDING then READY, or FAILED
+ * with each bad line logged). Instantiating it makes its trees; a prefab is a tree kept in
+ * the file to make at run time, as often as wanted (a rock, a bullet). Text, a line per
+ * fact, so a scene diffs and merges; wgf_world_dump writes the simulated actors in the same
+ * format.
+ *
+ * The format, `wgf-scene 2`, is BUILDING.md's ("Scene files"): flat `actor` and `prefab`
+ * blocks, each naming its parent by path (`prefab ship/flame`), a kind line, component
+ * lines, and behavior lines whose parameters may refer to other actors by name or path
+ * (`target=@start_gate`, wgf_behavior_get_param_actor). A block under a glTF file's model
+ * (`model path=`) that names one of the file's nodes is that node: its lines are applied to
+ * it, and the blocks under it made, once the file has loaded (a block naming none is a new
+ * actor there, made then too); the scene is held until then, and the references in that tree
+ * are found then. Every refusal -- an unknown line,
+ * kind, component, or key, a value of the wrong shape, a path with no parent above it, a
+ * block inside another, a file at version 1 (tools/update_scene.py updates one) -- FAILS
+ * the scene, the line logged with its number.
+ */
 export declare const Scene: {
     /**
      * The scene at `path`, loading. The same path again gives the same scene, with one more
@@ -7431,6 +8160,35 @@ export declare const Scene: {
      */
     readonly spawnPrefab: (scene: raw.wgf_scene_t | 0, name: string | null, parent: raw.wgf_actor_t | 0, x?: number, y?: number, z?: number, angle?: number) => raw.wgf_actor_t;
 };
+/**
+ * Screens and scene flow: a game as a stack of screens (a title, play, a pause menu, game
+ * over), helix-legacy's scene flow (Flow, Transition, Loader, LoadingScreen) without its
+ * callbacks. A screen is an actor (a game's behaviors for it go on it) with its stages, 2D
+ * and 3D, added to it in the order they draw (stages are always roots: they belong to it
+ * without being its children); everything else of its hangs under them.
+ *
+ * The stack: push puts a screen on top, pop takes the top off, replace swaps the top for
+ * another. The top runs. A screen under one that pauses (the default) is paused
+ * (wgf_actor_set_paused: drawn, frozen), it and its stages; one under one that doesn't (a
+ * HUD laid over play) runs on. A screen off the stack is switched off and paused, it and its
+ * stages (wgf_actor_set_enabled: not drawn, nothing under them moving), kept for the program
+ * to push again or destroy. draw
+ * draws what is shown: from the bottom up, each screen's stages in their order, but none
+ * under an opaque one (the default), then the transition's cover.
+ *
+ * A change runs through the transition set (none to start: at once). It covers the frame
+ * over half its seconds, makes the change at the middle, and uncovers over the other half,
+ * each half on the ease. A screen given assets to wait for (set_assets: a group,
+ * wgf_asset.h), or set to wait for every load pending (set_wait_loads: the textures and
+ * meshes made as it was built), is changed to only once they have settled: the stack held
+ * covered meanwhile, with the loading screen (set_loading_screen) drawn over the cover and
+ * its progress readable. While one runs, another change is refused (false).
+ *
+ * Each change is told as world events (wgf_world.h): SCREEN_ENTER for the screen that
+ * comes to the top, SCREEN_EXIT for the one that leaves it (pushed under, popped, or
+ * replaced), each with the other screen (0 for none) as its second; a binding's behaviors
+ * on a screen hear them.
+ */
 export declare const Screen: {
     /**
      * A screen: an actor at the top of its own tree, off the stack (switched off). 0 when there is
@@ -7615,6 +8373,24 @@ export declare const Screen: {
 };
 /** A handle of kind wgf_shader_t: the raw binding's branded type. */
 export type Shader = raw.wgf_shader_t;
+/**
+ * A custom shader, libwgt's (wgrender's): a material drawn by a shader of your own.
+ *
+ * - Write a fragment shader (and, if you like, a vertex hook) against wgf.glsl, which says
+ *   what libwgf gives it: the surface, its lights, the environment, shadows, time. Pack it
+ *   for every graphics backend with tools/pack_shader.py name.glsl, which writes
+ *   name.wgfshader. Both come with libwgf: in its checkout (libwgf/gfx/shaders/, tools/),
+ *   and in each staged variant (share/wgf/shaders/, share/wgf/tools/).
+ * - Load that file here, and draw with it through wgf_material_create_custom
+ *   (wgf_material.h): the material's parameters and textures are the shader's, set by their
+ *   names with the wgf_material_set_* calls.
+ * - A surface shader draws a stage's models (not their shadows: a model casts the shadow
+ *   of its mesh as it is, without the vertex hook); a screen effect redraws the finished
+ *   frame (wgf_render_add_effect, wgf_render.h).
+ * - It is a resource (wgf_resource.h): shared by its path, reference counted, and loaded on
+ *   create, PENDING at once and READY or FAILED in a later update. Materials hold their own
+ *   references.
+ */
 export declare const Shader: {
     /**
      * The shader in the .wgfshader file at `path` under fs's root. 0 only when there is no
@@ -7628,6 +8404,12 @@ export declare const Shader: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Shape2d = raw.wgf_actor_t;
+/**
+ * A 2D shape: an actor drawing a rectangle, a circle, a line, or a polygon, filled or
+ * outlined, in one color, on a 2D stage. Shapes are actors (wgf_actor.h): place, turn,
+ * scale, parent, and destroy them with the actor calls; the shape turns and scales with
+ * its actor, and an outline's thickness stays in the frame's logical pixels.
+ */
 export declare const Shape2d: {
     /**
      * A shape with nothing to draw yet, white, filled. 0 when there is no room for another
@@ -7849,6 +8631,26 @@ export declare const Shape3d: {
 };
 /** A handle of kind wgf_sheet_t: the raw binding's branded type. */
 export type Sheet = raw.wgf_sheet_t;
+/**
+ * A sprite sheet, an object: a handle of kind "gfx.sheet".
+ *
+ * Sprite sheets and 2D animation, helix-legacy's SpriteSheet2D and SpriteAnimator2D: a
+ * texture cut into frames, and clips (runs of its frames, each shown for a while, in a
+ * direction) a sprite (wgf_sprite.h) plays by name, its region set to the frame showing as
+ * the frames go by. A sheet is a resource (wgf_resource.h): a grid made from a texture, READY
+ * at once, or a packer's atlas read from its file. It holds a reference to its texture; a
+ * sprite playing holds none to the sheet, so releasing a sheet's last reference stops what
+ * plays it.
+ *
+ * An atlas is TexturePacker's JSON (a hash or an array of frames) or Aseprite's, its image
+ * the file its meta.image names beside it: each frame's region and name, trimmed frames
+ * drawn in place in their whole picture (the sprite's size and pivot the whole picture's),
+ * each frame's duration (Aseprite's milliseconds; 0.1 s for one without), its clips its
+ * tags (Aseprite's frameTags: forward, reverse, ping-pong), and a clip for each run of
+ * frames named alike but for a number ("run_01.png", "run_02.png": "run"), in their
+ * numbers' order. A frame packed turned (TexturePacker's rotation) isn't read: pack without
+ * rotation (logged).
+ */
 export declare const Sheet: {
     /**
      * A sheet over `texture` cut into cells of frame_width by frame_height texels, left to right
@@ -7941,6 +8743,23 @@ export declare const Sheet: {
 };
 /** A handle of kind wgf_sound_t: the raw binding's branded type. */
 export type Sound = raw.wgf_sound_t;
+/**
+ * A sound, a resource: a handle of kind "audio.sound", or "audio.sound_streamed" for one
+ * made with wgf_sound_create_streamed.
+ *
+ * Sounds: audio's data, a resource (wgf_resource.h), loaded on create, as wgrender's
+ * Audio; a voice is to play one (phase 2, docs/ROADMAP.md). A program pulls in audio
+ * only by creating a sound.
+ *
+ * What plays: WAV (PCM or float), MP3, and Ogg Vorbis, mono or stereo. Natively libwgf
+ * decodes them (dr_wav, dr_mp3, Xiph's libvorbis); on the web the browser does, so a
+ * page plays what its browser plays: Chromium and Firefox play all three (tested);
+ * Safari and iOS are not tested yet. A file a platform can't play makes a FAILED sound,
+ * logged with its path.
+ *
+ * Memory: a decoded sound is float samples, natively and on the web alike: a minute of
+ * stereo at 48 kHz is about 23 MB. So: effects, create; music, create_streamed.
+ */
 export declare const Sound: {
     /**
      * The sound at `path`, decoded whole as it loads: PENDING at once, then READY, or FAILED
@@ -8046,6 +8865,16 @@ export declare const Sound: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+/**
+ * Splines, raylib's GetSplinePoint* (wgf_draw_spline draws one): a path through or near
+ * `points`, x and y in turn (`count` floats), read at `t` from 0 (its start) to 1 (its end),
+ * each of its segments an equal share of t. Its kinds:
+ *   LINEAR            straight between each point and the next (2 points or more)
+ *   BASIS             a cubic B-spline, near its points, through none (4 or more)
+ *   CATMULL_ROM       through every point but its first and last, which steer its ends (4 or more)
+ *   BEZIER_QUADRATIC  start, control, end; each next segment's start the last's end (3, 5, 7...)
+ *   BEZIER_CUBIC      start, control, control, end; and on (4, 7, 10...)
+ */
 export declare const Spline: {
     /**
      * How many segments `count` floats of points make for `kind`; 0 for too few, an odd count, or
@@ -8059,6 +8888,19 @@ export declare const Spline: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Sprite = raw.wgf_actor_t;
+/**
+ * A sprite: an actor showing a texture, or a region of one, on a 2D stage or a 3D one. It
+ * holds a reference to its texture, dropped when it is given another or destroyed. Sprites
+ * are actors (wgf_actor.h): place, turn, scale, parent, and destroy them with the actor
+ * calls. While its texture is PENDING it draws nothing; once that FAILED, the checker.
+ *
+ * On a 2D stage it is drawn in the stage's units through immediate mode. On a 3D stage it
+ * is a quad in the stage's units (its size; 0, the default, is 1 by 1), facing as its
+ * facing says, scaled by its actor, culled by the box its quad can reach, drawn as
+ * libwgt's instanced sprites: OPAQUE and MASK ones with the opaque models, alike ones one
+ * draw; BLEND ones among the see-through models, back to front; ADD ones after them. It
+ * casts no shadow, and is unlit.
+ */
 export declare const Sprite: {
     /**
      * A sprite of `texture` (0 for none: it draws nothing). 0 when there is no room for
@@ -8296,6 +9138,19 @@ export declare const Sprite: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type SpriteBatch = raw.wgf_actor_t;
+/**
+ * A sprite batch: one actor drawing many quads of one texture on a 2D stage, in one draw,
+ * for what is too many to be an actor each (bullets, a crowd, a bunnymark's bunnies). Each
+ * quad has a position, a size, a turn, a region of the texture, and a tint, which the
+ * program writes in bulk, as arrays, whenever they change; the batch draws them all each
+ * frame, in their order, through its actor (place, turn, scale, and parent it with the actor
+ * calls: a quad's position is in the actor's units). It holds a reference to its texture.
+ * While the texture is PENDING it draws nothing; once that FAILED, the checker over every
+ * quad. A batch on a 3D stage draws nothing.
+ *
+ * A quad made by set_count is at 0, 0, its size and region 0 (the region's size, and the
+ * whole texture), unturned, and white, until written.
+ */
 export declare const SpriteBatch: {
     /**
      * A batch of `texture` with no quads (0 for no texture: it draws nothing). 0 when there is
@@ -8418,6 +9273,14 @@ export declare const SpriteBatch: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Stage2d = raw.wgf_actor_t;
+/**
+ * A 2D stage: the root of a 2D tree, in logical pixels from the top-left, y down.
+ * It draws when asked, its actors depth first, a parent before its children and
+ * children in order, so later ones draw over earlier ones. The game composes a
+ * frame by drawing its stages in the order it wants: a backdrop, then the world,
+ * then a HUD. A stage is an actor (wgf_actor.h): its own transform moves
+ * everything on it, and wgf_actor_destroy ends it.
+ */
 export declare const Stage2d: {
     /**
      * A 2D stage, with no camera. 0 when there is no room for another actor.
@@ -8488,6 +9351,19 @@ export declare const Stage2d: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Stage3d = raw.wgf_actor_t;
+/**
+ * A 3D stage: the root of a 3D tree, seen through a 3D camera (wgf_camera3d.h) and lit by
+ * its lights (wgf_light.h) and its ambient light; libwgt's scene, named for what it is
+ * since "scene" is the ecs's data file (wgf_scene.h). It draws when asked, in order with
+ * the frame's other draws: a backdrop 2D stage, then this, then a HUD 2D stage over it,
+ * into the presentation's visible area (wgf_presentation.h), under the clip. A 3D stage is
+ * an actor (wgf_actor.h): its own transform moves everything in it, it is always a root,
+ * and wgf_actor_destroy ends it. Space is right-handed, y up.
+ *
+ * Nothing is lit implicitly: a new stage has no lights and no ambient light, so its lit
+ * models are black until it has some. Lighting happens in linear space and is tone
+ * mapped to the screen, as wgrender's.
+ */
 export declare const Stage3d: {
     /**
      * A stage, with no camera, no ambient light, and NEUTRAL tone mapping at an exposure of
@@ -8684,6 +9560,14 @@ export declare const Stage3d: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Text = raw.wgf_actor_t;
+/**
+ * A text actor: a string drawn in a font. On a 2D stage it is flat on the screen; on a 3D
+ * stage it is a block in the world facing as it is told (wgf_text_set_facing), depth
+ * tested, and sorted with the see-through things. Its actor's position is where its
+ * block of lines sits, by its alignment, and the actor turns and scales it like any
+ * other. It holds a reference to its font (0: the default font). Text is an
+ * actor (wgf_actor.h): place, parent, and destroy it with the actor calls.
+ */
 export declare const Text: {
     /**
      * A text actor in `font` (0: the default font), with no string yet. 0 when `font`
@@ -8791,6 +9675,16 @@ export declare const Text: {
 };
 /** A handle of kind wgf_texture_t: the raw binding's branded type. */
 export type Texture = raw.wgf_texture_t;
+/**
+ * A texture: an image on the GPU, loaded from a file. It is a resource
+ * (wgf_resource.h): shared, reference counted, and loaded on create -- the handle comes
+ * back at once, PENDING, the file is found (the asset layer: fetched on the web), read
+ * and decoded on a worker thread, and uploaded during the runtime's update at the start
+ * of a frame. Creating the same path again gives the same texture, with one more
+ * reference. While a texture is PENDING it draws nothing; once it has FAILED (logged
+ * once, naming the file) it draws a magenta and black checker in its place, hard to
+ * miss.
+ */
 export declare const Texture: {
     /**
      * A texture from an image file: PNG, JPEG, BMP, TGA, or GIF (its first frame), or a
@@ -8890,6 +9784,16 @@ export declare const Texture: {
 };
 /** A handle of kind wgf_texture_read_t: the raw binding's branded type. */
 export type TextureRead = raw.wgf_texture_read_t;
+/**
+ * A texture read back: its pixels in memory, for a screenshot of a render target, a tool,
+ * a pixel check, or an image (wgf_image_create_from_read). A read is a task, a handle of
+ * kind "gfx.texture_read" (CONVENTIONS.md's asynchronous work): PENDING as it is made, then,
+ * in the runtime's update at the start of the next frame, DONE with what the texture held
+ * once the frame the read was asked in was drawn -- or FAILED where there is no GPU to read
+ * (a headless build), for a texture not READY by then or compressed (a .ktx), or with no
+ * memory for its pixels. Reading stalls that update until the GPU has drawn the frame:
+ * fine for a screenshot, not every frame.
+ */
 export declare const TextureRead: {
     /**
      * Its status: PENDING until the next frame's update, then DONE or FAILED. A getter
@@ -8933,6 +9837,43 @@ export declare const TextureRead: {
 };
 /** A handle of kind wgf_tilemap_t: the raw binding's branded type. */
 export type Tilemap = raw.wgf_tilemap_t;
+/**
+ * A Tiled map, a resource: a handle of kind "gfx.tilemap".
+ *
+ * A Tiled map (mapeditor.org), helix-legacy's TiledMap2D: a resource (wgf_resource.h) loaded
+ * from its JSON, a `.tmj` file (Tiled's Save As, JSON map format), with its tilesets, each
+ * embedded or a `.tsj` file beside it, and each one image cut into a grid of tiles (margin
+ * and spacing as Tiled's). On the web the tilesets and their images named by a `.tmj` or a
+ * `.tsj` are fetched with it. Its images are textures (wgf_texture.h) sampled nearest, for
+ * pixel art; the map holds a reference to each.
+ *
+ * What is read: an orthogonal, isometric, staggered, or hexagonal map (its stagger axis and
+ * index, its hexagons' side length, an orthogonal map's render order), finite or infinite;
+ * its tile layers (CSV, or base64 plain, zlib, or gzip; an infinite map's in chunks), object
+ * layers (their draw order), and image layers (their image); groups, flattened into the
+ * layers inside them in their order, each named as its own and offset, faded, and hidden
+ * with its groups; each tileset's tiles' classes, custom properties, and animations, its
+ * object alignment, and its terrain (Wang) sets; every object's shape, place, size, turn,
+ * tile, and custom properties; and the custom properties of the map and its layers. What
+ * fails the load, logged naming the file: image-collection tilesets, zstd-compressed layers,
+ * a tileset `.tsx` (save it as JSON, `.tsj`). Not read: an image layer's repeat, layers'
+ * parallax and tint colors, and Tiled's older terrains (before 1.5: open and save the map in
+ * a newer Tiled).
+ *
+ * An infinite map is read as a finite one the size of the box its chunks fill: its cells
+ * counted from that box's top-left cell, which is Tiled's column and row
+ * get_origin_column and get_origin_row give (negative, for chunks left of or above Tiled's
+ * first cell). It is drawn and its objects placed where Tiled has them.
+ *
+ * A map loaded again in place (wgf_asset_reload, of its file, or of a tileset file or an
+ * image it names) keeps its handle and is READY all the while; once the new file is in, each
+ * placed copy of it is built again (wgf_tilemap_instantiate).
+ *
+ * Everything is read once READY, and 0, "", or none before (and for a handle that isn't a
+ * map). Layers are counted in drawing order, groups flattened (the first under the rest);
+ * a tile is named by its global id (gid), as Tiled numbers a map's tiles across its
+ * tilesets from 1, its flips apart (0 is no tile).
+ */
 export declare const Tilemap: {
     /**
      * The map at `path` (a `.tmj` file): loaded as a resource is (PENDING at once, READY or FAILED
@@ -9400,6 +10341,19 @@ export declare const Tilemap: {
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type TilemapLayer = raw.wgf_actor_t;
+/**
+ * A placed map's layer (WGF_ACTOR_KIND_TILEMAP_LAYER), made by wgf_tilemap_instantiate: an
+ * actor named for its layer, in the map's pixels from its top-left (y down), placed, shown,
+ * and parented with the actor calls. A tile layer's cells are its own once placed: read and
+ * set here, set ones drawn from the next frame (the map's file unchanged). Every call is
+ * false, 0, or -1 for an actor that isn't a placed layer; a layer of objects or an image has
+ * no cells.
+ *
+ * A cell is a tile's gid (0 empty) and its flips (wgf_tilemap_flip_t's bits). In bulk
+ * (get_cells, set_cells), a cell is one int: its gid plus its flips times 0x10000000. Columns
+ * and rows are the map's (wgf_tilemap.h: an isometric map's along its axes, a staggered or
+ * hexagonal map's as Tiled counts them, an infinite map's from its origin).
+ */
 export declare const TilemapLayer: {
     /**
      * The map it is of, and its layer's index there.
@@ -9479,6 +10433,19 @@ export declare const TilemapLayer: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+/**
+ * The device's tilt, from level and turned with the screen, for a game steered by tilting a
+ * phone or a tablet: on the web, the page's device orientation; natively, UNAVAILABLE (as
+ * helix's Tilt service, whose behavior this is). Ask with wgf_tilt_request, then read each
+ * frame:
+ *
+ *   x += speed * wgf_tilt_get_x() * dt;
+ *
+ * A page may need permission, asked at the player's next tap (iOS, and Chrome on Android),
+ * so a game asks before the tap that starts play. Level is measured once the device is held
+ * within 3 degrees for half a second (as the tilt starts, after the screen turns, and after
+ * wgf_tilt_calibrate); the tilt reads 0 meanwhile. Readings are taken as each frame ends.
+ */
 export declare const Tilt: {
     /**
      * Ask for the tilt. False where it can't be had at once (UNAVAILABLE, NEEDS_HTTPS); true when
@@ -9531,6 +10498,23 @@ export declare const Time: {
      */
     readonly getSeconds: typeof raw.wgf_time_get_seconds;
 };
+/**
+ * Fingers on a touch screen, read inside a tick or a frame: what changed since the
+ * previous tick, or the previous frame. List them by index, then read each by its
+ * id, which stays the same while the finger is down:
+ *
+ *   for (i = 0; i < wgf_touch_get_count(); i++) {
+ *       id = wgf_touch_get_id(i);
+ *       if (wgf_touch_get_state(id) == WGF_INPUT_STATE_PRESSED) ...
+ *   }
+ *
+ * At most 8 fingers at once; more are ignored. Positions are logical pixels, as the
+ * mouse's are.
+ *
+ * Two fingers, the first two down: how they panned, pinched, and twisted since the
+ * previous tick, or the previous frame, for zooming, panning, and turning a view by
+ * touch.
+ */
 export declare const Touch: {
     /**
      * Fingers down, plus those lifted since the previous tick or frame.
@@ -9697,6 +10681,9 @@ export declare const Trig: {
 };
 /** A handle of kind wgf_tween_t: the raw binding's branded type. */
 export type Tween = raw.wgf_tween_t;
+/**
+ * A tween, an object: a handle of kind "ecs.tween".
+ */
 export declare const Tween: {
     /**
      * Tweens, helix-legacy's Tweens: a number, or an actor's position, turn, or scale, moved to
@@ -9796,6 +10783,35 @@ export declare const Tween: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+/**
+ * Game UI, immediate mode: each frame the program describes the UI as it is now --
+ * boxes, panels, labels, buttons, progress bars -- between wgf_ui_begin and wgf_ui_end, inside the
+ * frame callback; libwgf lays it out (Clay), answers what the pointer, the keys, and the
+ * pads did to it, and draws it at wgf_ui_end, over what the frame drew before.
+ *
+ * The screen is the root: a column of everything given, centered both ways. A box lays
+ * its children out in a column or a row, sized to fit them unless set otherwise. A
+ * button's answer comes from where things were in the frame before, as with every
+ * immediate-mode UI: a UI that moves under the pointer is answered where it was.
+ *
+ * Focus: one button at a time has it, by its id. Arrow keys, Tab and Shift+Tab, and a
+ * pad's D-pad move it through the frame's buttons in the order they were given (the
+ * first press of one puts it on the first or the last); Enter, Space, or a pad's south
+ * button activates it. The pointer activates the button it is pressed and released over,
+ * and gives it the focus; a focus moved by keys or pads is drawn, one given by the
+ * pointer isn't. A focused button that isn't given in a frame loses the focus.
+ *
+ * The UI says when it has the pointer (wgf_input_set_pointer_captured): while the
+ * pointer is over a panel, a button, or a box with a color, or a press on a button is
+ * held; and the keyboard (wgf_input_set_keyboard_captured) while a button has the focus.
+ * A frame without wgf_ui_end lets both go.
+ *
+ * Ids name boxes, panels, and buttons, and are unique in a frame (Clay refuses a
+ * second, logged); a box or panel may have none (NULL or ""). Text is copied: it may
+ * change or go after the call. Every call but the style's is false outside a begun UI.
+ *
+ * Documents (wgf_document.h), the ui's calls for all of them.
+ */
 export declare const Ui: {
     /**
      * The frame's UI begun, the screen at its logical size as the root; false when one is
@@ -10160,6 +11176,46 @@ export declare const Version: {
 };
 /** A handle of kind wgf_voice_t: the raw binding's branded type. */
 export type Voice = raw.wgf_voice_t;
+/**
+ * A voice, an object: a handle of kind "audio.voice".
+ *
+ * Voices: one playing of a sound (wgf_sound.h), an object, as wgrender's Sound: as a
+ * sprite shows a texture, a voice plays a sound. Many voices may play one decoded sound
+ * at once. Music is a looping voice. The same on both platforms: natively libwgf's
+ * mixer plays it, on its own thread; on the web the browser does (Web Audio), on its
+ * audio thread, so on neither does a slow frame stop the sound.
+ *
+ * Its state is wgf_play_state_t (wgf_play_state.h), with play, pause, resume, and stop
+ * as that header says. COMPLETE: a non-looping voice ran to its end and holds there.
+ * A voice told to play a sound still loading is PLAYING, and starts from the start when
+ * the sound is READY; if the sound fails, it is COMPLETE. On the web the browser keeps
+ * sound off until the page's first input: until then a PLAYING voice is silent and its
+ * position doesn't move, so a one-shot played before the first click doesn't become
+ * COMPLETE until after it.
+ *
+ * A pushed voice: samples the game makes as it goes (a synth, a tracker, an emulator,
+ * procedural sound, a voice chat), pushed into the voice's queue and played from it, as
+ * raylib's AudioStream. raylib's stream callback, which its mixer calls for more, is the
+ * push here: nothing calls back, so each frame the game asks how much room the queue has
+ * (wgf_voice_get_room, raylib's IsAudioStreamProcessed) and fills it. Samples are at
+ * the voice's own rate, any rate, played at the mixer's (resampled, linearly
+ * interpolated, by pitch too); mono or stereo; interleaved, left first.
+ *
+ * It is a voice: play, pause, resume, and stop; volume, pitch (0 to 16: a negative one is
+ * refused, a queue runs forwards only), pan, its bus, and spatial, as any voice's. It has
+ * no sound (set_sound refuses), no segments, and no position to set; its position is the
+ * seconds it has played since its last play or stop. Loop means nothing to it. PLAYING, it
+ * takes what is queued as the mixer needs it; when the queue runs out it plays silence,
+ * still PLAYING, and goes on once more is pushed: each time it ran out, after having had
+ * something to play, is an underrun (wgf_voice_get_underruns). Paused, or audio paused, it
+ * takes nothing and the queue waits. Stop empties the queue; play from STOPPED plays what
+ * was pushed meanwhile, so a queue filled before play starts without a gap.
+ *
+ * Natively libwgf's mixer takes from the queue on its own thread; on the web a
+ * ScriptProcessorNode on the page's own thread does, so a long frame there can starve it:
+ * keep a tenth of a second or more queued. On the web, too, nothing is taken before the
+ * page's first input (the top of this header).
+ */
 export declare const Voice: {
     /**
      * A voice of `sound` (0 for none yet: set_sound later), STOPPED, at volume 1, pitch 1,
@@ -10395,6 +11451,13 @@ export declare const Voice: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+/**
+ * The program's window. On the web it is the page's canvas, laid out by the page.
+ *
+ * Set before wgf_app_run, these say how the window opens; after it opens they
+ * change it, where the platform can. Sizes are logical pixels: gfx draws at the
+ * display's density inside them (wgf_render_get_dpi_scale).
+ */
 export declare const Window: {
     /**
      * The title (default "libwgf"). Natively the window's title bar; on the web the

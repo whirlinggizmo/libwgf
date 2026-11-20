@@ -3,7 +3,25 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Pointer's calls, on a Actor: `var x:Pointer = handle` gives it them, and a Pointer is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    The pointer over actors: hover, press, and click on the actors of the interactive 2D and
+    3D stages, from their picks (wgf_stage2d_pick, wgf_stage3d_pick) at the mouse's left
+    button, or the first finger on a touch screen (which drives the mouse,
+    wgf_touch_set_mouse_emulated); libwgt's pointer, wgrender's scene interaction. Once a
+    frame, before its ticks, the interactive stages drawn on the screen in the last frame are
+    picked at the pointer, the one drawn last first, so a HUD drawn over the world takes the
+    pointer where they overlap; a stage not drawn in the last frame is skipped. Actors are hit
+    as those picks hit them (a glTF file's node as its file's root).
+
+    While the game's UI has the pointer (wgf_input_set_pointer_captured), nothing is under it
+    and no press starts on an actor. A press on a 2D stage's actor captures the pointer
+    (wgf_input_is_pointer_captured) until it is let go, through the frame it is let go in, so
+    camera drags and the game's own clicks leave it alone; a press on a 3D stage's actor
+    doesn't, so the world's camera still turns under a drag. States are read inside a tick or
+    a frame, with edges since the previous tick, or the previous frame, as keys have.
+
+    Pointer's calls, on a Actor: `var x:Pointer = handle` gives it them, and a Pointer is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract Pointer(Actor) from Actor from Int to Actor {
 	/**
 	    Which stages the pointer picks (default: none). False for a handle that isn't a 2D or a

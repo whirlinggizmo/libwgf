@@ -3,6 +3,71 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    Assets: where a resource's file comes from. A path is an asset: creating a resource
+    from a path (wgf_texture_create, wgf_font_create, wgf_sound_create, a scene's) goes
+    through here, as does any call below, and that is what links it -- a program that
+    only makes generated content links none of it. A relative path is looked for under
+    the asset host, which needs no setting:
+
+      natively  the host is the program's own directory (where its executable is,
+                wherever it was started from), the file storage's root (wgf_fs.h):
+                files are read where they are, as without this layer
+      web       the host is the page's own directory (its document's base URL, so a
+                <base href> moves it): a file not bundled into the page and not cached
+                is fetched from beside the page, cached in the browser's storage, and
+                checked again on later visits as the cache mode says. A file asked
+                for before that storage has opened (the first frames) waits for it,
+                so nothing kept is lost to it, and a game needs no wait of its own
+
+    so a web page loads its files with no call here at all, and one that should never
+    fetch bundles what it loads. Set another host to fetch from elsewhere (a CDN), or
+    natively to download (fetching, below). A path that is a URL ("https://...") is
+    fetched from there, cached under its own name; natively that needs fetching turned
+    on, and without it the load fails, logged with the URL.
+
+    A resource makes its own file local as it loads (wgf_resource.h), so a program only
+    ENSURES a file to have it local without loading it: to fetch ahead (a level's files
+    during a menu), from an explicit source (a fetch_url), or to read it itself. An
+    ensure is a task: a handle whose status, local path and progress the program reads,
+    nothing called back, destroyed when done with. A path ensured from an explicit
+    source is what a later create of that path loads, wherever it was found.
+
+    A format whose files name other files is ensured with them, when the layer that
+    reads it registers how to list them (core's lister, wgf_core_load_priv.h): the task
+    is DONE once all are local. A glTF file's are listed (its buffers and images), in a
+    program with glTF (one that calls wgf_mesh_create); a scene's aren't yet, so a scene
+    ensured ahead is ensured beside the files its lines name.
+
+    libwgt's asset layer, carried whole (docs/HISTORY.md).
+
+    Downloads, natively, by the program: libwgf has no HTTP client there, so a program
+    that turns fetching on is asked for each download -- a file missing under a URL
+    host, a URL path, a fetch_url, a "://" redirect. Without it, such a load fails.
+
+    Poll for work once a frame, on the main thread:
+
+        wgf_asset_task_t request;
+        while ((request = wgf_asset_fetch_next()) != 0) {
+            start_download(wgf_asset_fetch_get_url(request),
+                           wgf_asset_fetch_get_dest(request), request);
+        }
+
+    and report each one with wgf_asset_fetch_done, from any thread: start it and return,
+    do the work on a thread of your own, and answer from there; the answer is taken at
+    the next update, on the main thread. At most 6 are out at once, a browser's limit per
+    server; the rest wait their turn. A request nobody takes waits, and so does every
+    task behind it; one taken and not answered within the fetch timeout fails.
+
+    Bytes never cross this boundary: a downloader deals in files, as curl, WinHTTP and
+    NSURLSession do. The destination's directories exist. It is where the download is
+    written until it is whole: libwgf moves it into place when told it succeeded and
+    deletes it when not, so a failed or broken-off download never leaves half a file to
+    be read and never costs the copy that was there. Success with nothing written is a
+    failure, except for a ping (wgf_asset_fetch_is_ping): a request for which only
+    whether the host answered is wanted, with no destination (wgf_asset_ping_host;
+    wgrender had no native ping of a URL host).
+**/
 class Asset {
 	/**
 	    The asset host relative paths resolve against. A URL ("https://host/assets") is a

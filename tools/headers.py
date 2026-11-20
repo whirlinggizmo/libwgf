@@ -83,6 +83,8 @@ class Api:
     defines: dict = field(default_factory=dict)     # name -> (value text, header): object-like
     macros: dict = field(default_factory=dict)      # name -> header: function-like (wgf_log_debug)
     headers: list = field(default_factory=list)     # every public header, from the root
+    type_docs: dict = field(default_factory=dict)   # typedef name -> the comment above it ('' when none)
+    overviews: dict = field(default_factory=dict)   # header -> its overview: a first comment no declaration owns
 
 
 def find_clang(emcc=None):
@@ -190,6 +192,38 @@ def _doc(node, sources):
     while lines and not lines[0]:
         lines.pop(0)
     return textwrap.dedent('\n'.join(lines))
+
+
+def _overview(text):
+    """A header's overview: its comments no declaration owns (a top-level comment a blank
+    line follows: what the header is, and its sections' notes), in order, each as _doc
+    keeps its lines, apart by a blank line; '' when it has none."""
+    lines = text.replace('\r\n', '\n').split('\n')
+    parts, i = [], 0
+    while i < len(lines):
+        if not lines[i].startswith('/*'):
+            i += 1
+            continue
+        end = i
+        while end < len(lines) and '*/' not in lines[end]:
+            end += 1
+        if end + 1 >= len(lines) or not lines[end + 1].strip():
+            body = '\n'.join(lines[i:end + 1])
+            body = body[2:body.rindex('*/')].split('\n')
+            body[0] = body[0].lstrip('*')
+            for k in range(1, len(body)):
+                stripped = body[k].lstrip()
+                if stripped.startswith('*'):
+                    body[k] = stripped[1:]
+            body = [line.rstrip() for line in body]
+            while body and not body[-1]:
+                body.pop()
+            while body and not body[0]:
+                body.pop(0)
+            if body:
+                parts.append(textwrap.dedent('\n'.join(body)))
+        i = end + 1
+    return '\n\n'.join(parts)
 
 
 def _split_array(spelling):
@@ -319,6 +353,7 @@ def read(root=ROOT, headers=None, emcc=None):
                                    node.get('loc', {}).get('offset', -1))
         else:
             api.typedefs[name] = (node['type']['qualType'], header)
+            api.type_docs[name] = _doc(node, sources)
 
     # The #defines: the preprocessor's own listing, with the line markers that say which
     # file each came from.
@@ -335,6 +370,10 @@ def read(root=ROOT, headers=None, emcc=None):
                 api.macros[name.split('(')[0]] = ours[current]
             elif not name.endswith('_H'):
                 api.defines[name] = (value.strip(), ours[current])
+    for path, header in ours.items():
+        overview = _overview(path.read_bytes().decode('utf-8'))
+        if overview:
+            api.overviews[header] = overview
     _cache[key] = api
     return api
 

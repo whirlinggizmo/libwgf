@@ -3,7 +3,9 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** BehaviorComponent's calls, on a Actor: `var x:BehaviorComponent = handle` gives it them, and a BehaviorComponent is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    BehaviorComponent's calls, on a Actor: `var x:BehaviorComponent = handle` gives it them, and a BehaviorComponent is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract BehaviorComponent(Actor) from Actor from Int to Actor {
 	/**
 	    Its name: the actor's, valid while the behavior is.

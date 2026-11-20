@@ -3,6 +3,12 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    The keyboard, read inside a tick or a frame: what changed since the previous
+    tick, or the previous frame. Keys are named by where they are on a US layout:
+    WGF_KEY_Z is the key left of X, whatever the layout prints on it. For the
+    characters the user typed, read wgf_input_get_chars.
+**/
 class Keyboard {
 	/**
 	    Where `key` is: UP, PRESSED (went down since the previous tick or frame), DOWN,

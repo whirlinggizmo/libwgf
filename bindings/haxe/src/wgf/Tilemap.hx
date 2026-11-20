@@ -3,7 +3,45 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_tilemap_t (libwgf/gfx/include/wgf_tilemap.h): 0 is none. **/
+/**
+    A Tiled map, a resource: a handle of kind "gfx.tilemap".
+
+    A Tiled map (mapeditor.org), helix-legacy's TiledMap2D: a resource (wgf_resource.h) loaded
+    from its JSON, a `.tmj` file (Tiled's Save As, JSON map format), with its tilesets, each
+    embedded or a `.tsj` file beside it, and each one image cut into a grid of tiles (margin
+    and spacing as Tiled's). On the web the tilesets and their images named by a `.tmj` or a
+    `.tsj` are fetched with it. Its images are textures (wgf_texture.h) sampled nearest, for
+    pixel art; the map holds a reference to each.
+
+    What is read: an orthogonal, isometric, staggered, or hexagonal map (its stagger axis and
+    index, its hexagons' side length, an orthogonal map's render order), finite or infinite;
+    its tile layers (CSV, or base64 plain, zlib, or gzip; an infinite map's in chunks), object
+    layers (their draw order), and image layers (their image); groups, flattened into the
+    layers inside them in their order, each named as its own and offset, faded, and hidden
+    with its groups; each tileset's tiles' classes, custom properties, and animations, its
+    object alignment, and its terrain (Wang) sets; every object's shape, place, size, turn,
+    tile, and custom properties; and the custom properties of the map and its layers. What
+    fails the load, logged naming the file: image-collection tilesets, zstd-compressed layers,
+    a tileset `.tsx` (save it as JSON, `.tsj`). Not read: an image layer's repeat, layers'
+    parallax and tint colors, and Tiled's older terrains (before 1.5: open and save the map in
+    a newer Tiled).
+
+    An infinite map is read as a finite one the size of the box its chunks fill: its cells
+    counted from that box's top-left cell, which is Tiled's column and row
+    get_origin_column and get_origin_row give (negative, for chunks left of or above Tiled's
+    first cell). It is drawn and its objects placed where Tiled has them.
+
+    A map loaded again in place (wgf_asset_reload, of its file, or of a tileset file or an
+    image it names) keeps its handle and is READY all the while; once the new file is in, each
+    placed copy of it is built again (wgf_tilemap_instantiate).
+
+    Everything is read once READY, and 0, "", or none before (and for a handle that isn't a
+    map). Layers are counted in drawing order, groups flattened (the first under the rest);
+    a tile is named by its global id (gid), as Tiled numbers a map's tiles across its
+    tilesets from 1, its flips apart (0 is no tile).
+
+    A handle of kind wgf_tilemap_t (libwgf/gfx/include/wgf_tilemap.h): 0 is none.
+**/
 abstract Tilemap(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

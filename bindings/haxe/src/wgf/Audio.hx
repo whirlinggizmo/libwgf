@@ -3,6 +3,10 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    Audio as a whole: what every voice (wgf_voice.h) is played through. As the layer's own
+    section, these calls don't start audio: the first sound does (wgf_sound.h).
+**/
 class Audio {
 	/**
 	    Every voice's loudness, times its own: 1 as they are, 0 silent, above 1 louder (and

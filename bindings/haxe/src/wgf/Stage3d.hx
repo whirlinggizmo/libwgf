@@ -3,7 +3,21 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Stage3d's calls, on a Actor: `var x:Stage3d = handle` gives it them, and a Stage3d is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    A 3D stage: the root of a 3D tree, seen through a 3D camera (wgf_camera3d.h) and lit by
+    its lights (wgf_light.h) and its ambient light; libwgt's scene, named for what it is
+    since "scene" is the ecs's data file (wgf_scene.h). It draws when asked, in order with
+    the frame's other draws: a backdrop 2D stage, then this, then a HUD 2D stage over it,
+    into the presentation's visible area (wgf_presentation.h), under the clip. A 3D stage is
+    an actor (wgf_actor.h): its own transform moves everything in it, it is always a root,
+    and wgf_actor_destroy ends it. Space is right-handed, y up.
+
+    Nothing is lit implicitly: a new stage has no lights and no ambient light, so its lit
+    models are black until it has some. Lighting happens in linear space and is tone
+    mapped to the screen, as wgrender's.
+
+    Stage3d's calls, on a Actor: `var x:Stage3d = handle` gives it them, and a Stage3d is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract Stage3d(Actor) from Actor from Int to Actor {
 	/**
 	    A stage, with no camera, no ambient light, and NEUTRAL tone mapping at an exposure of

@@ -293,7 +293,7 @@ def outputs(binding, version, stamp, skipped):
 TYPED = 'wgf-typed'
 
 
-def typed_outputs(members, handle_types, enums, extras, docs):
+def typed_outputs(members, handle_types, enums, extras, docs, class_docs=None):
     """{path: text} for wgf-typed.js and wgf-typed.d.ts: the typed layer, beside the raw
     one, in the typed Haxe API's names (Actor.setPosition, Prefab.spawnAt, World.takeEvents).
     Each type is a frozen namespace of the raw binding's own functions -- no wrapper, so
@@ -313,6 +313,7 @@ def typed_outputs(members, handle_types, enums, extras, docs):
         if haxe in handle_types:
             dts.append(f'/** A handle of kind {handle_types[haxe]}: the raw binding\'s branded type. */\n'
                        f'export type {haxe} = raw.{handle_types[haxe]};\n')
+        dts.append(jsdoc((class_docs or {}).get(haxe, '')))
         dts.append(f'export declare const {haxe}: {{\n')
         for member, cname in entries:
             doc = docs.get(cname, '')

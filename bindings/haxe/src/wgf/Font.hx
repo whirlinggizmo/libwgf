@@ -3,7 +3,19 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_font_t (libwgf/gfx/include/wgf_font.h): 0 is none. **/
+/**
+    A font, a resource: a handle of kind "gfx.font". 0 is the default font.
+
+    A font: a TrueType or OpenType typeface, or a bitmap font, loaded from a file. It is a
+    resource (wgf_resource.h): shared, reference counted, and loaded on create. Sizes are
+    chosen where text is drawn, not here.
+
+    Font 0 means the default font, everywhere a font is taken. It starts as the
+    built-in font -- JetBrains Mono, printable ASCII only -- so text works with no
+    font file at all. A font not yet ready, or failed, draws as the default font.
+
+    A handle of kind wgf_font_t (libwgf/gfx/include/wgf_font.h): 0 is none.
+**/
 abstract Font(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

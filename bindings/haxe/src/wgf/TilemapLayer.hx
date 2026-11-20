@@ -3,7 +3,21 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** TilemapLayer's calls, on a Actor: `var x:TilemapLayer = handle` gives it them, and a TilemapLayer is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    A placed map's layer (WGF_ACTOR_KIND_TILEMAP_LAYER), made by wgf_tilemap_instantiate: an
+    actor named for its layer, in the map's pixels from its top-left (y down), placed, shown,
+    and parented with the actor calls. A tile layer's cells are its own once placed: read and
+    set here, set ones drawn from the next frame (the map's file unchanged). Every call is
+    false, 0, or -1 for an actor that isn't a placed layer; a layer of objects or an image has
+    no cells.
+
+    A cell is a tile's gid (0 empty) and its flips (wgf_tilemap_flip_t's bits). In bulk
+    (get_cells, set_cells), a cell is one int: its gid plus its flips times 0x10000000. Columns
+    and rows are the map's (wgf_tilemap.h: an isometric map's along its axes, a staggered or
+    hexagonal map's as Tiled counts them, an infinite map's from its origin).
+
+    TilemapLayer's calls, on a Actor: `var x:TilemapLayer = handle` gives it them, and a TilemapLayer is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract TilemapLayer(Actor) from Actor from Int to Actor {
 	/**
 	    The map it is of, and its layer's index there.

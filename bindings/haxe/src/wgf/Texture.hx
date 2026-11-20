@@ -3,7 +3,18 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_texture_t (libwgf/gfx/include/wgf_texture.h): 0 is none. **/
+/**
+    A texture: an image on the GPU, loaded from a file. It is a resource
+    (wgf_resource.h): shared, reference counted, and loaded on create -- the handle comes
+    back at once, PENDING, the file is found (the asset layer: fetched on the web), read
+    and decoded on a worker thread, and uploaded during the runtime's update at the start
+    of a frame. Creating the same path again gives the same texture, with one more
+    reference. While a texture is PENDING it draws nothing; once it has FAILED (logged
+    once, naming the file) it draws a magenta and black checker in its place, hard to
+    miss.
+
+    A handle of kind wgf_texture_t (libwgf/gfx/include/wgf_texture.h): 0 is none.
+**/
 abstract Texture(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

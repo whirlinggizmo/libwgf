@@ -3,6 +3,31 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    Input actions: what the player means ("steer", "fire", "pause"), bound by name to
+    keys, pad buttons, pad axes, and touch regions, and read as one, so a game asks for
+    "fire" and never for Space or the south button. An action is made by its first
+    binding; a name is 1 to 31 bytes; at most 64 actions, each with at most 16 bindings.
+    Pads are read across all four: the one pushed furthest wins.
+
+    Each binding gives a value from -1 to 1:
+
+      a key, a pad button   1 while it is down
+      a pair of keys        -1 while the first is down, 1 the second, 0 both or neither
+      a pair of pad buttons the same, across the pads (the d-pad's left and right as a
+                            steering axis)
+      a pad axis            its value (sticks -1 to 1, past the dead zone; triggers 0 to 1),
+                            either side (direction 0) or one side only (1 or -1, read as
+                            0 to 1), below `threshold` as 0
+      a touch region        1 while a finger is down in it (logical pixels, as the
+                            pointer's)
+      an on-screen stick    its pull across or up, -1 to 1 (below)
+
+    and the action is the binding pushed furthest: get_axis its value, get_value how far
+    (0 to 1), and down while that is at least 0.5 (a pad axis: at least its threshold, or
+    0.5 with a threshold of 0). Read inside a tick or a frame, as keys are: pressed and
+    released are since the previous tick, or the previous frame.
+**/
 class Action {
 	/**
 	    Bindings added to `action` (made by the first); false for a name breaking the rule, a

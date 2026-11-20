@@ -3,7 +3,16 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Stage2d's calls, on a Actor: `var x:Stage2d = handle` gives it them, and a Stage2d is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    A 2D stage: the root of a 2D tree, in logical pixels from the top-left, y down.
+    It draws when asked, its actors depth first, a parent before its children and
+    children in order, so later ones draw over earlier ones. The game composes a
+    frame by drawing its stages in the order it wants: a backdrop, then the world,
+    then a HUD. A stage is an actor (wgf_actor.h): its own transform moves
+    everything on it, and wgf_actor_destroy ends it.
+
+    Stage2d's calls, on a Actor: `var x:Stage2d = handle` gives it them, and a Stage2d is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract Stage2d(Actor) from Actor from Int to Actor {
 	/**
 	    A 2D stage, with no camera. 0 when there is no room for another actor.

@@ -3,7 +3,16 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Text's calls, on a Actor: `var x:Text = handle` gives it them, and a Text is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    A text actor: a string drawn in a font. On a 2D stage it is flat on the screen; on a 3D
+    stage it is a block in the world facing as it is told (wgf_text_set_facing), depth
+    tested, and sorted with the see-through things. Its actor's position is where its
+    block of lines sits, by its alignment, and the actor turns and scales it like any
+    other. It holds a reference to its font (0: the default font). Text is an
+    actor (wgf_actor.h): place, parent, and destroy it with the actor calls.
+
+    Text's calls, on a Actor: `var x:Text = handle` gives it them, and a Text is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract Text(Actor) from Actor from Int to Actor {
 	/**
 	    A text actor in `font` (0: the default font), with no string yet. 0 when `font`

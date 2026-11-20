@@ -3,7 +3,19 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_bus_t (libwgf/audio/include/wgf_bus.h): 0 is none. **/
+/**
+    A bus, an object: a handle of kind "audio.bus".
+
+    Buses: what voices (wgf_voice.h) and plays (wgf_sound_play) are heard through, helix's
+    Audio.master, music, effects, and a game's own. Each has a volume, a mute, and a fade,
+    and a parent; a voice is heard at its own volume times its bus's heard volume: the
+    bus's volume times its parents' up to the master, 0 when it or a parent is muted (and
+    all of it under wgf_audio_set_volume). The master, music, and effects buses always
+    exist, music and effects under the master; a voice is on effects until set, and so is
+    a play, unless its sound says another (wgf_sound_set_bus). At most 64 buses.
+
+    A handle of kind wgf_bus_t (libwgf/audio/include/wgf_bus.h): 0 is none.
+**/
 abstract Bus(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

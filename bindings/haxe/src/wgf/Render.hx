@@ -3,6 +3,10 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    The frame gfx is drawing into: the window. A frame is recorded while the program's
+    frame callback runs, and drawn when it returns.
+**/
 class Render {
 	/**
 	    What each frame starts cleared to. Default: black.

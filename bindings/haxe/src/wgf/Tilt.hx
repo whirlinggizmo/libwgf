@@ -3,6 +3,19 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    The device's tilt, from level and turned with the screen, for a game steered by tilting a
+    phone or a tablet: on the web, the page's device orientation; natively, UNAVAILABLE (as
+    helix's Tilt service, whose behavior this is). Ask with wgf_tilt_request, then read each
+    frame:
+
+      x += speed * wgf_tilt_get_x() * dt;
+
+    A page may need permission, asked at the player's next tap (iOS, and Chrome on Android),
+    so a game asks before the tap that starts play. Level is measured once the device is held
+    within 3 degrees for half a second (as the tilt starts, after the screen turns, and after
+    wgf_tilt_calibrate); the tilt reads 0 meanwhile. Readings are taken as each frame ends.
+**/
 class Tilt {
 	/**
 	    Ask for the tilt. False where it can't be had at once (UNAVAILABLE, NEEDS_HTTPS); true when

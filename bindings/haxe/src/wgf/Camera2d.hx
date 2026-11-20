@@ -3,7 +3,14 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Camera2d's calls, on a Actor: `var x:Camera2d = handle` gives it them, and a Camera2d is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    A 2D camera: an actor whose position is the point a 2D stage shows at the frame's
+    center (wgf_stage2d_set_camera), turned by its rotation about z. Its world
+    position counts, so a camera parented to the player follows it. It draws nothing
+    itself.
+
+    Camera2d's calls, on a Actor: `var x:Camera2d = handle` gives it them, and a Camera2d is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract Camera2d(Actor) from Actor from Int to Actor {
 	/**
 	    A 2D camera, zoom 1. 0 when there is no room for another actor.

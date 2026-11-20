@@ -3,7 +3,37 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_mesh_t (libwgf/gfx/include/wgf_mesh.h): 0 is none. **/
+/**
+    A mesh: a shape's triangles on the GPU, with normals, texture coordinates, and
+    tangents at each corner, so any shading can light it, drawn by the models made from
+    it (wgf_model.h), each of its parts with one of its material slots. It is a resource
+    (wgf_resource.h): shared, reference counted, and held by its models.
+
+    Generated meshes are shapes made in code, ready at once (even before gfx starts, as
+    they go to the GPU the first time they are drawn), centered on the origin, y up, in
+    units. They are shared by their parameters: the same shape asked for again is the
+    same mesh, with one more reference, and a mesh never changes once made; to size a
+    model differently, scale it, or make another mesh. Each has one material slot,
+    white, not metallic, roughness 0.5: draw a model of it with another with
+    wgf_model_set_material. 0 (logged) for a size of 0 or less; counts are clamped to
+    their ranges. A mesh from a file is glTF's (wgf_mesh_create, below); a mesh made from
+    numbers, a program's own triangles (wgf_mesh_create_triangles) or heights
+    (wgf_mesh_create_heightmap), is its own, never shared, and can be changed in place.
+
+      plane     flat in x and z, facing +y; subdivisions 0..256 more cells each way.
+                Texture coordinates span it once
+      cube      each face its own corners (sharp edges), textured 0..1 per face
+      sphere    rings 2..256 from pole to pole, segments 3..512 around; u around, v
+                pole to pole
+      cylinder  capped; segments 3..512 around
+      cone      tip up, its base capped
+      capsule   height from end to end (at least 2 x radius; less: a sphere); rings
+                across both round ends
+      torus     around y; radius to the middle of the tube, thickness the tube's
+                radius; rings around the ring, segments around the tube (3..512)
+
+    A handle of kind wgf_mesh_t (libwgf/gfx/include/wgf_mesh.h): 0 is none.
+**/
 abstract Mesh(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

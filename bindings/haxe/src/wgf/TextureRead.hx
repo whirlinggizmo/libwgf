@@ -3,7 +3,18 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_texture_read_t (libwgf/gfx/include/wgf_texture.h): 0 is none. **/
+/**
+    A texture read back: its pixels in memory, for a screenshot of a render target, a tool,
+    a pixel check, or an image (wgf_image_create_from_read). A read is a task, a handle of
+    kind "gfx.texture_read" (CONVENTIONS.md's asynchronous work): PENDING as it is made, then,
+    in the runtime's update at the start of the next frame, DONE with what the texture held
+    once the frame the read was asked in was drawn -- or FAILED where there is no GPU to read
+    (a headless build), for a texture not READY by then or compressed (a .ktx), or with no
+    memory for its pixels. Reading stalls that update until the GPU has drawn the frame:
+    fine for a screenshot, not every frame.
+
+    A handle of kind wgf_texture_read_t (libwgf/gfx/include/wgf_texture.h): 0 is none.
+**/
 abstract TextureRead(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

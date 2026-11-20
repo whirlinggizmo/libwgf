@@ -3,7 +3,31 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Fly's calls, on a Actor: `var x:Fly = handle` gives it them, and a Fly is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    Cameras flown by input, raylib's CAMERA_FREE and CAMERA_FIRST_PERSON (UpdateCamera): a 3D
+    camera actor (wgf_camera3d.h) given a mode is turned and moved each frame, before the frame
+    callback, by the keyboard, the mouse, and the pads. At most 64 cameras have a mode or a
+    setting.
+
+      the mouse            looks: yaw and pitch, the pitch held just short of straight up or
+                           down; the pointer is locked while it looks (wgf_mouse_set_locked),
+                           and a click locks it again once the platform let it go (Escape in
+                           a browser)
+      the right stick      looks, at the turn speed
+      W A S D, the arrows  move forward, left, back, and right; the left stick too
+      Space or E           FREE: up (the world's +y); a pad's right bumper too
+      Left Control or Q    FREE: down; a pad's left bumper too
+
+    FREE moves where it looks; FIRST_PERSON moves on the ground plane, its height kept (what
+    the program sets it to: stairs, a jump). Every pad is read, the one pushed furthest
+    winning. Keys aren't read while the keyboard is captured, and the mouse doesn't look while
+    the pointer is (wgf_input.h: a UI has it). The camera's position is read each frame, so the
+    program may move it; it is turned only by the look below while it flies. Every flown
+    camera moves by the same input, so fly one at a time; a camera that also follows
+    (wgf_follow.h) is placed by both.
+
+    Fly's calls, on a Actor: `var x:Fly = handle` gives it them, and a Fly is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract Fly(Actor) from Actor from Int to Actor {
 	/**
 	    The camera flown in `mode` (NONE: no longer, staying where it is and its settings kept).

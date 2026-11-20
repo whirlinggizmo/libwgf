@@ -3,7 +3,11 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_fs_task_t (libwgf/core/include/wgf_fs.h): 0 is none. **/
+/**
+    A request's task: a handle of kind "core.fs_task".
+
+    A handle of kind wgf_fs_task_t (libwgf/core/include/wgf_fs.h): 0 is none.
+**/
 abstract FsTask(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

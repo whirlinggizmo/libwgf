@@ -3,7 +3,28 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_image_t (libwgf/gfx/include/wgf_image.h): 0 is none. **/
+/**
+    An image on the CPU: RGBA pixels, 8 bits a channel, rows from the top, in memory, never
+    on the GPU -- raylib's Image. Loaded from a file, generated (a color, gradients, checks,
+    noise), made from a texture's pixels read back, read and written a pixel at a time, made
+    a texture, or saved as a PNG. Pixel formats and editing beyond a pixel (drawing,
+    resizing, cropping) are not libwgf's.
+
+    An image is a resource (wgf_resource.h): one loaded from a path is shared, reference
+    counted, and loaded on create (PENDING at once, the file found -- fetched on the web --
+    and decoded on a worker, then READY or FAILED in a later update; creating the same path
+    again gives the same image, so a pixel set on it is seen through every handle of it). One
+    made in code is the program's own, READY at once. Released with wgf_resource_release. A
+    getter answers 0 or NULL for an image that isn't READY. A handle of kind "gfx.image".
+
+    Images made in code, `width` by `height` pixels, READY at once. Each is 0 for a size of
+    0 or less or over 16384, or no memory for it, each logged.
+
+    Noise, the same pixels for the same numbers on every platform (integer arithmetic,
+    hashed from `seed`; never the C library's rand), opaque gray.
+
+    A handle of kind wgf_image_t (libwgf/gfx/include/wgf_image.h): 0 is none.
+**/
 abstract Image(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

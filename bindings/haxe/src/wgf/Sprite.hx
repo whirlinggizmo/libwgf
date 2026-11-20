@@ -3,7 +3,21 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Sprite's calls, on a Actor: `var x:Sprite = handle` gives it them, and a Sprite is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    A sprite: an actor showing a texture, or a region of one, on a 2D stage or a 3D one. It
+    holds a reference to its texture, dropped when it is given another or destroyed. Sprites
+    are actors (wgf_actor.h): place, turn, scale, parent, and destroy them with the actor
+    calls. While its texture is PENDING it draws nothing; once that FAILED, the checker.
+
+    On a 2D stage it is drawn in the stage's units through immediate mode. On a 3D stage it
+    is a quad in the stage's units (its size; 0, the default, is 1 by 1), facing as its
+    facing says, scaled by its actor, culled by the box its quad can reach, drawn as
+    libwgt's instanced sprites: OPAQUE and MASK ones with the opaque models, alike ones one
+    draw; BLEND ones among the see-through models, back to front; ADD ones after them. It
+    casts no shadow, and is unlit.
+
+    Sprite's calls, on a Actor: `var x:Sprite = handle` gives it them, and a Sprite is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract Sprite(Actor) from Actor from Int to Actor {
 	/**
 	    A sprite of `texture` (0 for none: it draws nothing). 0 when there is no room for

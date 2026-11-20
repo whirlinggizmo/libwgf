@@ -3,6 +3,15 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    Immediate mode 2D: each call draws once, in the frame it is made in, in call order
+    with everything else drawn that frame, and keeps nothing. Logical pixels from the
+    frame's top-left, y down (wgf_render.h). A draw outside a frame draws nothing.
+
+    Outlines and lines have a thickness in logical pixels, centered on the line; one
+    of 0 or less is a hairline of one logical pixel. A polyline's corners are mitred,
+    and bevelled where a sharp corner's miter would reach past four thicknesses.
+**/
 class Draw {
 	/**
 	    Immediate mode 2D: each call draws once, in the frame it is made in, in call order

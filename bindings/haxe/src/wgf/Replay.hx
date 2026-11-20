@@ -3,6 +3,26 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    Input recorded and played back by the program itself, as it runs: a demo, an attract
+    mode, a ghost, a bug report's steps (raylib's automation events). A recording is text,
+    an autopilot (BUILDING.md, "Autopilot files"): every input as it reached the program,
+    frame by frame -- keys, typed text, the mouse's position, buttons, and wheel, fingers,
+    and each gamepad's buttons and axes -- which the program keeps as it likes (saved with
+    wgf_fs_write_text, read back with wgf_fs_read_text), and which an autopilot run can fly
+    too; any autopilot plays as a replay. The same natively, on the web, and headless; a
+    program that never calls one of these links none of it.
+
+    A replay reproduces the input, frame by frame: a frame of the replay gives the program
+    what that frame of the recording got, before the frame's ticks, read by every input call
+    (wgf_keyboard.h, wgf_mouse.h, wgf_touch.h, wgf_gamepad.h, wgf_input.h, wgf_action.h) as
+    real input is. It reproduces nothing else: the program's randomness is its own (seed
+    wgf_random, wgf_random_set_seed, the same as recording starts and as the replay plays),
+    and ticks run on real time, so a frame's input reaches the same tick only where the
+    frames last as long (wgf_loop_set_target_fps steadies them; an autopilot run's frames
+    last exactly a sixtieth of a second). A finger's tap, double tap, and swipe are timed in
+    real time too. Recording and playing are one at a time.
+**/
 class Replay {
 	/**
 	    Recording, from the next frame: each input reaching the program is written, at the

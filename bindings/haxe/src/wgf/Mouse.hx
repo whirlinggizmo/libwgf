@@ -3,6 +3,11 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    The mouse, read inside a tick or a frame: what changed since the previous tick,
+    or the previous frame. Positions are logical pixels from the window's top-left,
+    y down, as gfx draws.
+**/
 class Mouse {
 	/**
 	    Where the pointer is: where it last moved over the window.

@@ -3,7 +3,27 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Emitter2d's calls, on a Actor: `var x:Emitter2d = handle` gives it them, and a Emitter2d is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    A 2D particle emitter: an actor that owns many particles, on a 2D stage, in its units,
+    through its camera (3D emitters are wgf_emitter3d.h). A particle is decided when it is
+    born (where, how fast, how long it lives, how big, how it spins, within the ranges set
+    here) and the GPU works out where it is from its age, so thousands cost about what
+    spawning them does. Particles are unlit: the texture (white squares with none) times
+    their color.
+
+    Every emitter is advanced once a frame, by the frame's time, before the frame is drawn,
+    unless it or an actor above it is disabled. Its position is its actor's: particles stay
+    where they were born when it moves (trails; local space, below, moves them with it), a
+    move spreads the next frame's steady spawns along the way, and the move is the velocity
+    they can inherit; their velocity is turned as the actor is (an exhaust leaves a ship's
+    back however it faces). Hidden, it still spawns, but draws nothing. Its particles are
+    drawn in tree order, unsorted. Its random numbers are its own, seeded from wgf_random as
+    it is made, so an autopilot run's particles are the same every time. It holds a
+    reference to its texture. Emitters are actors (wgf_actor.h): place, parent, and destroy
+    them with the actor calls.
+
+    Emitter2d's calls, on a Actor: `var x:Emitter2d = handle` gives it them, and a Emitter2d is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract Emitter2d(Actor) from Actor from Int to Actor {
 	/**
 	    An emitter, emitting at no rate yet: white 8-unit squares living a second, added. 0

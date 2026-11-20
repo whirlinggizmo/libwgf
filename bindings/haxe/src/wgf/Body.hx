@@ -3,7 +3,17 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** Body's calls, on a Actor: `var x:Body = handle` gives it them, and a Body is still a Actor; it starts as 0, none, as a Actor does. **/
+/**
+    A contact is told for two solid bodies that begin to touch, one of them moving (dynamic,
+    kinematic, or a character's): a CONTACT_BEGIN to each, with the other's layer, and a
+    CONTACT_END when they stop (or one goes) (wgf_world.h); a behavior's onContactBegin.
+
+    A sensor tells, as a collider does (wgf_collider.h, wgf_world.h): a TRIGGER_ENTER when a
+    moving body it may meet begins to overlap it, and a TRIGGER_EXIT when it stops (or goes),
+    each to both, with the other's layer; a behavior's onTriggerEnter.
+
+    Body's calls, on a Actor: `var x:Body = handle` gives it them, and a Body is still a Actor; it starts as 0, none, as a Actor does.
+**/
 @:forward abstract Body(Actor) from Actor from Int to Actor {
 	/**
 	    A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world

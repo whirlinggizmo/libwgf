@@ -3,7 +3,28 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_scene_t (libwgf/ecs/include/wgf_scene.h): 0 is none. **/
+/**
+    A scene: a text file of actor trees -- their kinds, components, and behaviors -- and
+    prefabs, loaded as a resource (wgf_resource.h: on create, PENDING then READY, or FAILED
+    with each bad line logged). Instantiating it makes its trees; a prefab is a tree kept in
+    the file to make at run time, as often as wanted (a rock, a bullet). Text, a line per
+    fact, so a scene diffs and merges; wgf_world_dump writes the simulated actors in the same
+    format.
+
+    The format, `wgf-scene 2`, is BUILDING.md's ("Scene files"): flat `actor` and `prefab`
+    blocks, each naming its parent by path (`prefab ship/flame`), a kind line, component
+    lines, and behavior lines whose parameters may refer to other actors by name or path
+    (`target=@start_gate`, wgf_behavior_get_param_actor). A block under a glTF file's model
+    (`model path=`) that names one of the file's nodes is that node: its lines are applied to
+    it, and the blocks under it made, once the file has loaded (a block naming none is a new
+    actor there, made then too); the scene is held until then, and the references in that tree
+    are found then. Every refusal -- an unknown line,
+    kind, component, or key, a value of the wrong shape, a path with no parent above it, a
+    block inside another, a file at version 1 (tools/update_scene.py updates one) -- FAILS
+    the scene, the line logged with its number.
+
+    A handle of kind wgf_scene_t (libwgf/ecs/include/wgf_scene.h): 0 is none.
+**/
 abstract Scene(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

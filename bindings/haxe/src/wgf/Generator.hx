@@ -3,7 +3,11 @@ package wgf;
 
 import wgf.impl.Raw;
 
-/** A handle of kind wgf_generator_t (libwgf/core/include/wgf_random.h): 0 is none. **/
+/**
+    A generator, an object: a handle of kind "core.generator".
+
+    A handle of kind wgf_generator_t (libwgf/core/include/wgf_random.h): 0 is none.
+**/
 abstract Generator(Int) from Int to Int to wgf.Handle {
 	/** Whether this is no handle (0); right on every target, where `== null` is not. **/
 	public inline function isNone():Bool

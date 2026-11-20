@@ -3,6 +3,11 @@ package wgf;
 
 import wgf.impl.Raw;
 
+/**
+    The runtime, as wgrender's wgr_run: app opens the window, starts and drives the
+    layers below it, and runs the frame loop. A program runs through it; see
+    docs/ARCHITECTURE.md, "app".
+**/
 class App {
 	/**
 	    Ask the program to quit: the frame under way finishes, then shutdown runs.
