@@ -17,6 +17,8 @@ wgf_layer(core
         src/wgf_core_fs.c
         src/wgf_core_handle.c
         src/wgf_core_identity.c
+        src/wgf_core_json.c
+        src/wgf_core_cjson_impl.c
         src/wgf_core_load.c
         src/wgf_core_part.c
         src/wgf_core_probe.c
@@ -26,9 +28,9 @@ wgf_layer(core
         src/wgf_core_time.c
         src/wgf_core_sokol_impl.c
         ${core_platform_sources})
-target_include_directories(wgf_core SYSTEM PRIVATE "${PROJECT_SOURCE_DIR}/deps/sokol")
-# sokol's warnings aren't libwgf's to fix
-set_source_files_properties(src/wgf_core_sokol_impl.c PROPERTIES COMPILE_OPTIONS "$<IF:$<C_COMPILER_ID:MSVC>,/w,-w>")
+target_include_directories(wgf_core SYSTEM PRIVATE "${PROJECT_SOURCE_DIR}/deps/sokol" "${PROJECT_SOURCE_DIR}/deps/cjson")
+# sokol's and cJSON's warnings aren't libwgf's to fix
+set_source_files_properties(src/wgf_core_sokol_impl.c src/wgf_core_cjson_impl.c PROPERTIES COMPILE_OPTIONS "$<IF:$<C_COMPILER_ID:MSVC>,/w,-w>")
 if(NOT WIN32 AND NOT EMSCRIPTEN)
     target_link_libraries(wgf_core PRIVATE m Threads::Threads)
 endif()
@@ -37,6 +39,7 @@ target_compile_definitions(wgf_core PRIVATE WGF_VERSION_STRING="${PROJECT_VERSIO
 
 if(WGF_TESTS)
     wgf_test(core wgf_core_version_test)
+    wgf_test(core wgf_core_json_test)
     target_compile_definitions(wgf_core_version_test PRIVATE WGF_TEST_EXPECTED_VERSION="${PROJECT_VERSION}")
     wgf_test(core wgf_core_log_test)
     wgf_test(core wgf_core_handle_test)
