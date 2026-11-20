@@ -48,7 +48,7 @@ The base every other layer uses. It has no window and no loop: app's runtime sta
 | handle | `wgf_handle.h` | `wgf_handle_t`, `wgf_handle_get_kind_name`, and `wgf_handle_is_alive` (any kind's, through the pools each kind registers); the pools are private, and a dead handle given to a call is refused and, in a debug build, warned of once a call |
 | fs | `wgf_fs.h` | read, write, exists, remove, mkdir, rmdir, each a task (`wgf_fs_task_t`); the root; `user:` paths for the program's own files that last |
 | probe | `wgf_probe.h` | named numbers, or text, a program publishes about itself (the UI's focus as `ui.focus`), read by autopilot runs, tools, and tests |
-| random | `wgf_random.h` | one seeded generator (PCG32): a seed's sequence is the same on every platform |
+| random | `wgf_random.h` | one seeded generator (PCG32): a seed's sequence is the same on every platform; a shuffle; and a game's own generators, handles of kind "core.generator", seeded, the same steps on a state of their own |
 | resource | `wgf_resource.h` | what every resource kind shares: status, path, release; the load budget |
 | play state | `wgf_play_state.h` | `wgf_play_state_t`, the state of anything that plays over time |
 | load | private | the load pipeline behind a resource's load on create: make the file local, prepare it on worker threads, finish it on the main thread within a per-frame budget; a long preparation given as steps (a loader's `prepare_step`), run to the end on a worker, or on the web, with no workers, a few an update within the budget |

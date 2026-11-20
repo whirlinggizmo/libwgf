@@ -35,4 +35,69 @@ class Random {
 	**/
 	public static inline function getInt(min:Int, max:Int):Int
 		return Raw.wgf_random_get_int(min, max);
+
+	/**
+	    `values` (count of them) put in a random order, each order equally likely: a deck, a
+	    bag of pieces; how many.
+	**/
+	public static inline function shuffle(values:Array<Int>):Int
+		return Raw.wgf_random_shuffle(values);
+
+	/**
+	    A game's own generator, seeded: a world's layout drawing its own numbers, so the
+	    program's sequence (an autopilot's seed) stays the game's; the same steps as the
+	    program's, so a seed gives the same numbers everywhere. 0 when there are 4096.
+	**/
+	public static inline function create(seed:Int):Generator
+		return Raw.wgf_random_create(seed);
+
+	/**
+	    A game's own generator, seeded: a world's layout drawing its own numbers, so the
+	    program's sequence (an autopilot's seed) stays the game's; the same steps as the
+	    program's, so a seed gives the same numbers everywhere. 0 when there are 4096.
+	**/
+	public static inline function destroy(generator:Generator):Void
+		Raw.wgf_random_destroy(generator);
+
+	/**
+	    Its sequence started again from `seed`, and the seed it last started from. False (0)
+	    for a handle that isn't a generator.
+	**/
+	public static inline function setGeneratorSeed(generator:Generator, seed:Int):Bool
+		return Raw.wgf_random_set_generator_seed(generator, seed);
+
+	/**
+	    Its sequence started again from `seed`, and the seed it last started from. False (0)
+	    for a handle that isn't a generator.
+	**/
+	public static inline function getGeneratorSeed(generator:Generator):Int
+		return Raw.wgf_random_get_generator_seed(generator);
+
+	/**
+	    Its next numbers, as the program's are drawn; a shuffle as wgf_random_shuffle. 0 for a
+	    handle that isn't a generator.
+	**/
+	public static inline function nextFloat(generator:Generator):Float
+		return Raw.wgf_random_next_float(generator);
+
+	/**
+	    Its next numbers, as the program's are drawn; a shuffle as wgf_random_shuffle. 0 for a
+	    handle that isn't a generator.
+	**/
+	public static inline function nextRange(generator:Generator, min:Float, max:Float):Float
+		return Raw.wgf_random_next_range(generator, min, max);
+
+	/**
+	    Its next numbers, as the program's are drawn; a shuffle as wgf_random_shuffle. 0 for a
+	    handle that isn't a generator.
+	**/
+	public static inline function nextInt(generator:Generator, min:Int, max:Int):Int
+		return Raw.wgf_random_next_int(generator, min, max);
+
+	/**
+	    Its next numbers, as the program's are drawn; a shuffle as wgf_random_shuffle. 0 for a
+	    handle that isn't a generator.
+	**/
+	public static inline function nextShuffle(generator:Generator, values:Array<Int>):Int
+		return Raw.wgf_random_next_shuffle(generator, values);
 }

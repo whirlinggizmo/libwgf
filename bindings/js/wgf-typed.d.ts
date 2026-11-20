@@ -3141,6 +3141,12 @@ export declare const Gamepad: {
      */
     readonly getDeadzone: typeof raw.wgf_gamepad_get_deadzone;
 };
+/** A handle of kind wgf_generator_t: the raw binding's branded type. */
+export type Generator = raw.wgf_generator_t;
+export declare const Generator: {
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
+};
 /** A handle of kind wgf_handle_t: the raw binding's branded type. */
 export type Handle = raw.wgf_handle_t;
 export declare const Handle: {
@@ -4151,6 +4157,53 @@ export declare const Random: {
      * less), each equally likely.
      */
     readonly getInt: typeof raw.wgf_random_get_int;
+    /**
+     * `values` (count of them) put in a random order, each order equally likely: a deck, a
+     * bag of pieces; how many.
+     */
+    readonly shuffle: typeof raw.wgf_random_shuffle;
+    /**
+     * A game's own generator, seeded: a world's layout drawing its own numbers, so the
+     * program's sequence (an autopilot's seed) stays the game's; the same steps as the
+     * program's, so a seed gives the same numbers everywhere. 0 when there are 4096.
+     */
+    readonly create: typeof raw.wgf_random_create;
+    /**
+     * A game's own generator, seeded: a world's layout drawing its own numbers, so the
+     * program's sequence (an autopilot's seed) stays the game's; the same steps as the
+     * program's, so a seed gives the same numbers everywhere. 0 when there are 4096.
+     */
+    readonly destroy: typeof raw.wgf_random_destroy;
+    /**
+     * Its sequence started again from `seed`, and the seed it last started from. False (0)
+     * for a handle that isn't a generator.
+     */
+    readonly setGeneratorSeed: typeof raw.wgf_random_set_generator_seed;
+    /**
+     * Its sequence started again from `seed`, and the seed it last started from. False (0)
+     * for a handle that isn't a generator.
+     */
+    readonly getGeneratorSeed: typeof raw.wgf_random_get_generator_seed;
+    /**
+     * Its next numbers, as the program's are drawn; a shuffle as wgf_random_shuffle. 0 for a
+     * handle that isn't a generator.
+     */
+    readonly nextFloat: typeof raw.wgf_random_next_float;
+    /**
+     * Its next numbers, as the program's are drawn; a shuffle as wgf_random_shuffle. 0 for a
+     * handle that isn't a generator.
+     */
+    readonly nextRange: typeof raw.wgf_random_next_range;
+    /**
+     * Its next numbers, as the program's are drawn; a shuffle as wgf_random_shuffle. 0 for a
+     * handle that isn't a generator.
+     */
+    readonly nextInt: typeof raw.wgf_random_next_int;
+    /**
+     * Its next numbers, as the program's are drawn; a shuffle as wgf_random_shuffle. 0 for a
+     * handle that isn't a generator.
+     */
+    readonly nextShuffle: typeof raw.wgf_random_next_shuffle;
 };
 export declare const Render: {
     /**

@@ -36,6 +36,8 @@ declare const kind: unique symbol;
 export type wgf_handle_t = number & { readonly [kind]: string };
 /** A handle of kind wgf_fs_task_t; 0 is none. */
 export type wgf_fs_task_t = number & { readonly [kind]: "wgf_fs_task_t" };
+/** A handle of kind wgf_generator_t; 0 is none. */
+export type wgf_generator_t = number & { readonly [kind]: "wgf_generator_t" };
 /** A handle of kind wgf_asset_task_t; 0 is none. */
 export type wgf_asset_task_t = number & { readonly [kind]: "wgf_asset_task_t" };
 /** A handle of kind wgf_actor_t; 0 is none. */
@@ -1356,6 +1358,62 @@ export declare function wgf_random_get_range(min: number, max: number): number;
  * less), each equally likely.
  */
 export declare function wgf_random_get_int(min: number, max: number): number;
+
+/**
+ * `values` (count of them) put in a random order, each order equally likely: a deck, a
+ * bag of pieces; how many.
+ */
+export declare function wgf_random_shuffle(values: number[] | Int32Array | null): number;
+
+/**
+ * A game's own generator, seeded: a world's layout drawing its own numbers, so the
+ * program's sequence (an autopilot's seed) stays the game's; the same steps as the
+ * program's, so a seed gives the same numbers everywhere. 0 when there are 4096.
+ */
+export declare function wgf_random_create(seed: number): wgf_generator_t;
+
+/**
+ * A game's own generator, seeded: a world's layout drawing its own numbers, so the
+ * program's sequence (an autopilot's seed) stays the game's; the same steps as the
+ * program's, so a seed gives the same numbers everywhere. 0 when there are 4096.
+ */
+export declare function wgf_random_destroy(generator: wgf_generator_t | 0): void;
+
+/**
+ * Its sequence started again from `seed`, and the seed it last started from. False (0)
+ * for a handle that isn't a generator.
+ */
+export declare function wgf_random_set_generator_seed(generator: wgf_generator_t | 0, seed: number): boolean;
+
+/**
+ * Its sequence started again from `seed`, and the seed it last started from. False (0)
+ * for a handle that isn't a generator.
+ */
+export declare function wgf_random_get_generator_seed(generator: wgf_generator_t | 0): number;
+
+/**
+ * Its next numbers, as the program's are drawn; a shuffle as wgf_random_shuffle. 0 for a
+ * handle that isn't a generator.
+ */
+export declare function wgf_random_next_float(generator: wgf_generator_t | 0): number;
+
+/**
+ * Its next numbers, as the program's are drawn; a shuffle as wgf_random_shuffle. 0 for a
+ * handle that isn't a generator.
+ */
+export declare function wgf_random_next_range(generator: wgf_generator_t | 0, min: number, max: number): number;
+
+/**
+ * Its next numbers, as the program's are drawn; a shuffle as wgf_random_shuffle. 0 for a
+ * handle that isn't a generator.
+ */
+export declare function wgf_random_next_int(generator: wgf_generator_t | 0, min: number, max: number): number;
+
+/**
+ * Its next numbers, as the program's are drawn; a shuffle as wgf_random_shuffle. 0 for a
+ * handle that isn't a generator.
+ */
+export declare function wgf_random_next_shuffle(generator: wgf_generator_t | 0, values: number[] | Int32Array | null): number;
 
 /**
  * PENDING, READY, or FAILED for a resource of any kind; NONE for anything else.

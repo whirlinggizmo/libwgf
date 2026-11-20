@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "352b0e05053ce9c2" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "ffcba45505c1cf69" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -1874,6 +1874,101 @@ export function wgf_random_get_range(min, max) {
  */
 export function wgf_random_get_int(min, max) {
     const value = host["_wgf_random_get_int"](min, max);
+    return value;
+}
+
+// wgf: call wgf_random_shuffle
+/**
+ * `values` (count of them) put in a random order, each order equally likely: a deck, a
+ * bag of pieces; how many.
+ */
+export function wgf_random_shuffle(values) {
+    const valuesPointer = arrayOut(values, 0);
+    const value = host["_wgf_random_shuffle"](valuesPointer, lengthOf(values));
+    arrayBack(valuesPointer, values, "HEAP32");
+    return value;
+}
+
+// wgf: call wgf_random_create
+/**
+ * A game's own generator, seeded: a world's layout drawing its own numbers, so the
+ * program's sequence (an autopilot's seed) stays the game's; the same steps as the
+ * program's, so a seed gives the same numbers everywhere. 0 when there are 4096.
+ */
+export function wgf_random_create(seed) {
+    const value = host["_wgf_random_create"](seed);
+    return value >>> 0;
+}
+
+// wgf: call wgf_random_destroy
+/**
+ * A game's own generator, seeded: a world's layout drawing its own numbers, so the
+ * program's sequence (an autopilot's seed) stays the game's; the same steps as the
+ * program's, so a seed gives the same numbers everywhere. 0 when there are 4096.
+ */
+export function wgf_random_destroy(generator) {
+    host["_wgf_random_destroy"](generator);
+}
+
+// wgf: call wgf_random_set_generator_seed
+/**
+ * Its sequence started again from `seed`, and the seed it last started from. False (0)
+ * for a handle that isn't a generator.
+ */
+export function wgf_random_set_generator_seed(generator, seed) {
+    const value = host["_wgf_random_set_generator_seed"](generator, seed);
+    return value !== 0;
+}
+
+// wgf: call wgf_random_get_generator_seed
+/**
+ * Its sequence started again from `seed`, and the seed it last started from. False (0)
+ * for a handle that isn't a generator.
+ */
+export function wgf_random_get_generator_seed(generator) {
+    const value = host["_wgf_random_get_generator_seed"](generator);
+    return value;
+}
+
+// wgf: call wgf_random_next_float
+/**
+ * Its next numbers, as the program's are drawn; a shuffle as wgf_random_shuffle. 0 for a
+ * handle that isn't a generator.
+ */
+export function wgf_random_next_float(generator) {
+    const value = host["_wgf_random_next_float"](generator);
+    return value;
+}
+
+// wgf: call wgf_random_next_range
+/**
+ * Its next numbers, as the program's are drawn; a shuffle as wgf_random_shuffle. 0 for a
+ * handle that isn't a generator.
+ */
+export function wgf_random_next_range(generator, min, max) {
+    const value = host["_wgf_random_next_range"](generator, min, max);
+    return value;
+}
+
+// wgf: call wgf_random_next_int
+/**
+ * Its next numbers, as the program's are drawn; a shuffle as wgf_random_shuffle. 0 for a
+ * handle that isn't a generator.
+ */
+export function wgf_random_next_int(generator, min, max) {
+    const value = host["_wgf_random_next_int"](generator, min, max);
+    return value;
+}
+
+// wgf: call wgf_random_next_shuffle
+/**
+ * Its next numbers, as the program's are drawn; a shuffle as wgf_random_shuffle. 0 for a
+ * handle that isn't a generator.
+ */
+export function wgf_random_next_shuffle(generator, values) {
+    const valuesPointer = arrayOut(values, 0);
+    const value = host["_wgf_random_next_shuffle"](generator, valuesPointer, lengthOf(values));
+    arrayBack(valuesPointer, values, "HEAP32");
     return value;
 }
 

@@ -968,6 +968,11 @@ export const Gamepad = Object.freeze({
     // wgf: call wgf_gamepad_get_deadzone
     getDeadzone: raw.wgf_gamepad_get_deadzone,
 });
+// wgf: typed Generator
+export const Generator = Object.freeze({
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
+});
 // wgf: typed Handle
 export const Handle = Object.freeze({
     // wgf: call wgf_handle_get_kind_name
@@ -1361,6 +1366,24 @@ export const Random = Object.freeze({
     getRange: raw.wgf_random_get_range,
     // wgf: call wgf_random_get_int
     getInt: raw.wgf_random_get_int,
+    // wgf: call wgf_random_shuffle
+    shuffle: raw.wgf_random_shuffle,
+    // wgf: call wgf_random_create
+    create: raw.wgf_random_create,
+    // wgf: call wgf_random_destroy
+    destroy: raw.wgf_random_destroy,
+    // wgf: call wgf_random_set_generator_seed
+    setGeneratorSeed: raw.wgf_random_set_generator_seed,
+    // wgf: call wgf_random_get_generator_seed
+    getGeneratorSeed: raw.wgf_random_get_generator_seed,
+    // wgf: call wgf_random_next_float
+    nextFloat: raw.wgf_random_next_float,
+    // wgf: call wgf_random_next_range
+    nextRange: raw.wgf_random_next_range,
+    // wgf: call wgf_random_next_int
+    nextInt: raw.wgf_random_next_int,
+    // wgf: call wgf_random_next_shuffle
+    nextShuffle: raw.wgf_random_next_shuffle,
 });
 // wgf: typed Render
 export const Render = Object.freeze({

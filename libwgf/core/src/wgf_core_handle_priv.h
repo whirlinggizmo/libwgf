@@ -52,6 +52,7 @@ typedef enum wgf_core_priv_handle_kind_t {
     /* core: 1.. */
     WGF_CORE_PRIV_HANDLE_KIND_FS_TASK = 1,      /* "core.fs_task" */
     WGF_CORE_PRIV_HANDLE_KIND_LOAD_REQUEST = 2, /* "core.load_request" */
+    WGF_CORE_PRIV_HANDLE_KIND_GENERATOR = 3,    /* "core.generator" */
     /* gfx: 16.. */
     WGF_CORE_PRIV_HANDLE_KIND_ACTOR = 16,    /* "gfx.actor": every actor, of every type */
     WGF_CORE_PRIV_HANDLE_KIND_TEXTURE = 17, /* "gfx.texture" */

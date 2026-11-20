@@ -593,11 +593,20 @@ class Reach {
 		"wgf_probe_has_value",
 		"wgf_probe_set_text",
 		"wgf_probe_set_value",
+		"wgf_random_create",
+		"wgf_random_destroy",
 		"wgf_random_get_float",
+		"wgf_random_get_generator_seed",
 		"wgf_random_get_int",
 		"wgf_random_get_range",
 		"wgf_random_get_seed",
+		"wgf_random_next_float",
+		"wgf_random_next_int",
+		"wgf_random_next_range",
+		"wgf_random_next_shuffle",
+		"wgf_random_set_generator_seed",
 		"wgf_random_set_seed",
+		"wgf_random_shuffle",
 		"wgf_render_add_effect",
 		"wgf_render_begin_target",
 		"wgf_render_clear_effects",
@@ -932,7 +941,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...923) 0];
+	static final counts:Array<Int> = [for (_ in 0...932) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

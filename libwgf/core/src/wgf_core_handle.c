@@ -23,6 +23,7 @@ static const char *const kind_names[WGF_CORE_PRIV_HANDLE_KIND_MASK + 1] = {
     [WGF_CORE_PRIV_HANDLE_KIND_COMPONENTS] = "ecs.components",
     [WGF_CORE_PRIV_HANDLE_KIND_SCENE] = "ecs.scene",
     [WGF_CORE_PRIV_HANDLE_KIND_PREFAB] = "ecs.prefab",
+    [WGF_CORE_PRIV_HANDLE_KIND_GENERATOR] = "core.generator",
     [WGF_CORE_PRIV_HANDLE_KIND_TWEEN] = "ecs.tween",
     [WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND] = "audio.sound",
     [WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND_STREAMED] = "audio.sound_streamed",

@@ -53,6 +53,7 @@ void wgf_core_priv_shutdown(void)
     wgf_core_priv_load_deinit(); /* before fs: its workers read files */
     wgf_core_priv_fs_deinit();
     wgf_core_priv_probe_deinit();
+    wgf_core_priv_random_shutdown();
     wgf_core_priv_time_deinit();
     running = false;
 }

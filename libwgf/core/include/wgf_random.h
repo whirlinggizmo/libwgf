@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "wgf.h"
+#include "wgf_handle.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,6 +30,28 @@ WGF_API float wgf_random_get_range(float min, float max);
 /* The next whole number from `min` to `max`, both included (swapped when `max` is
  * less), each equally likely. */
 WGF_API int wgf_random_get_int(int min, int max);
+/* `values` (count of them) put in a random order, each order equally likely: a deck, a
+ * bag of pieces; how many. */
+WGF_API int wgf_random_shuffle(int *values, int count);
+
+/* A generator, an object: a handle of kind "core.generator". */
+typedef wgf_handle_t wgf_generator_t;
+
+/* A game's own generator, seeded: a world's layout drawing its own numbers, so the
+ * program's sequence (an autopilot's seed) stays the game's; the same steps as the
+ * program's, so a seed gives the same numbers everywhere. 0 when there are 4096. */
+WGF_API wgf_generator_t wgf_random_create(int seed);
+WGF_API void wgf_random_destroy(wgf_generator_t generator);
+/* Its sequence started again from `seed`, and the seed it last started from. False (0)
+ * for a handle that isn't a generator. */
+WGF_API bool wgf_random_set_generator_seed(wgf_generator_t generator, int seed);
+WGF_API int wgf_random_get_generator_seed(wgf_generator_t generator);
+/* Its next numbers, as the program's are drawn; a shuffle as wgf_random_shuffle. 0 for a
+ * handle that isn't a generator. */
+WGF_API float wgf_random_next_float(wgf_generator_t generator);
+WGF_API float wgf_random_next_range(wgf_generator_t generator, float min, float max);
+WGF_API int wgf_random_next_int(wgf_generator_t generator, int min, int max);
+WGF_API int wgf_random_next_shuffle(wgf_generator_t generator, int *values, int count);
 
 #ifdef __cplusplus
 }

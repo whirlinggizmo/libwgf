@@ -126,6 +126,13 @@ class Main {
 		expect(Random.getSeed() == 7, "the seed");
 		final f = Random.getFloat(), r = Random.getRange(2, 3), i = Random.getInt(1, 6);
 		expect(f >= 0 && f < 1 && r >= 2 && r <= 3 && i >= 1 && i <= 6, "random numbers in range");
+		final deck = [1, 2, 3, 4];
+		expect(Random.shuffle(deck) == 4, "a shuffle");
+		final own = Random.create(5);
+		expect(Random.getGeneratorSeed(own) == 5 && Random.setGeneratorSeed(own, 6) && Random.nextFloat(own) < 1
+			&& Random.nextRange(own, 2, 3) >= 2 && Random.nextInt(own, 1, 6) >= 1 && Random.nextShuffle(own, deck) == 4,
+			"a game's own generator");
+		Random.destroy(own);
 		expect(Time.getSeconds() >= 0, "the time");
 		expect(Probe.setValue("feature.answer", 42) && Probe.hasValue("feature.answer") && Probe.getValue("feature.answer") == 42,
 			"a probe");
