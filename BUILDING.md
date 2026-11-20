@@ -398,6 +398,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `verify_builds.py` | every build and check this machine can run, in one command (the full tier with `--web --windows HOST`), or the quick tier's (`--quick`) |
 | `run_in_browser.py` | runs a wasm test in a real browser, over several visits (ctest uses it) |
 | `run_in_xvfb.py` | runs a native test in a real window on a virtual display (ctest uses it) |
+| `run_entrant.py` | runs one entrant of helix's Wardens trial on libwgf: a fresh `claude -p` building the game from helix's spec in Haxe on the binding, given the binding's API and libwgf's C examples, in a bubblewrap sandbox on a private display with no sound, against a worktree of libwgf, as helix's entrants ran (`games/wardens/trial/`) |
 | `run_wine.py` | runs a Windows program under Wine (the MinGW presets' test runner), starting it again when Wine's launcher failed |
 | `run_remote_windows.py` | builds and tests the working tree on a Windows machine over ssh, then runs a tool there with `--then` |
 | `run_smoke.py` | runs every example headless, failing a crash, a hang, an error log, or a sokol panic; a Windows variant on Linux under Wine |
