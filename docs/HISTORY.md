@@ -1040,6 +1040,10 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## Animation layers, four (2026-11-20)
+
+The player's single layer became four (`WGF_MODEL_LAYERS`), each blended over what is under it in order: an attack from the waist up over the run, a flinch of the head over both. The layer calls take a layer's index, and a synced model gets every layer. That finishes what Wardens needs of skeletal animation.
+
 ## Sockets and synced parts (2026-11-20)
 
 Two of Wardens' animation needs. `wgf_model_find_node` finds a bone by name at any depth (joints are actors), so a sword parented to "Hand.R" follows the hand through every clip. `wgf_model_sync_animation` sets a part put on mid-clip to another's clip, time, speed, loop, state and layer. The layer's mask is made again from its bone's name, which the player now keeps, since masks and held crossfade poses are per-node arrays of one file's tree. A crossfade running in the other ends at its clip.

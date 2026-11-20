@@ -364,28 +364,28 @@ int main(void)
         wgf_model_set_animation_speed(root, 1.0f);
         wgf_model_set_animation_loop(root, true);
         expect(wgf_model_play_animation(root, 0, 0.0f) && wgf_model_set_animation_time(root, 0.0f), "raise playing below");
-        expect(wgf_model_play_layer_animation(root, 1, "arm", 0.0f, false) && wgf_model_get_layer_animation(root) == 1 &&
-                   wgf_model_get_layer_state(root) == WGF_PLAY_STATE_PLAYING && near(wgf_model_get_layer_weight(root), 1.0f),
+        expect(wgf_model_play_layer_animation(root, 0, 1, "arm", 0.0f, false) && wgf_model_get_layer_animation(root, 0) == 1 &&
+                   wgf_model_get_layer_state(root, 0) == WGF_PLAY_STATE_PLAYING && near(wgf_model_get_layer_weight(root, 0), 1.0f),
                "spline layered on the arm, at once");
         wgf_core_priv_part_update(0.5f);
         expect(near(arm_y(root), 5.0f), "the arm the layer's, halfway up its spline: 5");
         expect(near(wgf_actor_get_rotation(hip_now).z, 0.0f) && near(wgf_model_get_animation_time(root), 0.5f),
                "the hip, outside the mask, the clip below's");
         wgf_core_priv_part_update(0.6f);
-        expect(wgf_model_get_layer_state(root) == WGF_PLAY_STATE_COMPLETE && wgf_model_get_layer_animation(root) == -1 &&
+        expect(wgf_model_get_layer_state(root, 0) == WGF_PLAY_STATE_COMPLETE && wgf_model_get_layer_animation(root, 0) == -1 &&
                    near(arm_y(root), 2.1f),
                "played once, ended: gone, the arm the clip below's again");
-        expect(wgf_model_play_layer_animation(root, 1, "arm", 1.0f, true) && near(wgf_model_get_layer_weight(root), 0.0f),
+        expect(wgf_model_play_layer_animation(root, 0, 1, "arm", 1.0f, true) && near(wgf_model_get_layer_weight(root, 0), 0.0f),
                "a layer fading in, from nothing");
         wgf_core_priv_part_update(0.5f);
-        expect(near(wgf_model_get_layer_weight(root), 0.5f), "halfway in");
-        expect(wgf_model_stop_layer_animation(root, 0.0f) && wgf_model_get_layer_animation(root) == -1 &&
-                   near(wgf_model_get_layer_weight(root), 0.0f),
+        expect(near(wgf_model_get_layer_weight(root, 0), 0.5f), "halfway in");
+        expect(wgf_model_stop_layer_animation(root, 0, 0.0f) && wgf_model_get_layer_animation(root, 0) == -1 &&
+                   near(wgf_model_get_layer_weight(root, 0), 0.0f),
                "stopped at once");
-        expect(!wgf_model_play_layer_animation(root, 1, "nothing", 0.0f, true) &&
-                   !wgf_model_play_layer_animation(root, 9, "arm", 0.0f, true) &&
-                   !wgf_model_play_layer_animation(root, 1, NULL, 0.0f, true) &&
-                   !wgf_model_play_layer_animation(body, 1, "arm", 0.0f, true),
+        expect(!wgf_model_play_layer_animation(root, 0, 1, "nothing", 0.0f, true) &&
+                   !wgf_model_play_layer_animation(root, 0, 9, "arm", 0.0f, true) &&
+                   !wgf_model_play_layer_animation(root, 0, 1, NULL, 0.0f, true) &&
+                   !wgf_model_play_layer_animation(body, 0, 1, "arm", 0.0f, true),
                "a bone or an animation it hasn't, no bone, a model that isn't the root: refused");
     }
 
@@ -410,17 +410,40 @@ int main(void)
         wgf_actor_destroy(other, WGF_ACTOR_DESTROY_CHILDREN);
     }
 
+    { /* two layers at once: the later over the earlier, each over what is under it */
+        float spline_y;
+        wgf_model_set_animation_speed(root, 1.0f);
+        wgf_model_play_animation(root, 0, 0.0f);
+        wgf_model_set_animation_time(root, 0.0f);
+        expect(wgf_model_play_layer_animation(root, 0, 1, "arm", 0.0f, true), "layer 0: spline on the arm");
+        wgf_core_priv_part_update(0.5f);
+        spline_y = arm_y(root);
+        expect(near(spline_y, 5.0f), "the arm layer 0's, halfway up its spline");
+        expect(wgf_model_play_layer_animation(root, 1, 0, "hip", 0.0f, true) && wgf_model_get_layer_animation(root, 1) == 0 &&
+                   wgf_model_get_layer_animation(root, 0) == 1,
+               "layer 1: raise on the hip and what is under it, the arm too");
+        wgf_core_priv_part_update(0.0f);
+        expect(near(arm_y(root), 1.0f), "the arm layer 1's, over layer 0's: raise at its start, 1 up");
+        expect(wgf_model_stop_layer_animation(root, 1, 0.0f), "layer 1 stopped");
+        wgf_core_priv_part_update(0.0f);
+        expect(near(arm_y(root), spline_y), "the arm layer 0's again");
+        expect(!wgf_model_play_layer_animation(root, WGF_MODEL_LAYERS, 1, "arm", 0, true) &&
+                   !wgf_model_play_layer_animation(root, -1, 1, "arm", 0, true) && wgf_model_get_layer_animation(root, 9) == -1,
+               "a layer index outside them: refused, none");
+        wgf_model_stop_layer_animation(root, 0, 0.0f);
+    }
+
     { /* a model synced to another: its clip, time, and layer; a socket found by name */
         const wgf_actor_t part = wgf_model_create(mesh);
         wgf_actor_set_parent(part, stage);
         wgf_model_set_animation_speed(root, 1.0f);
         wgf_model_play_animation(root, 0, 0.0f);
         wgf_model_set_animation_time(root, 1.5f);
-        wgf_model_play_layer_animation(root, 1, "arm", 0.0f, true);
+        wgf_model_play_layer_animation(root, 0, 1, "arm", 0.0f, true);
         wgf_core_priv_part_update(0.25f);
         expect(wgf_model_sync_animation(part, root) && wgf_model_get_animation(part) == 0 &&
                    near(wgf_model_get_animation_time(part), wgf_model_get_animation_time(root)) &&
-                   wgf_model_get_layer_animation(part) == 1 && near(arm_y(part), arm_y(root)),
+                   wgf_model_get_layer_animation(part, 0) == 1 && near(arm_y(part), arm_y(root)),
                "synced: the same clip, time, layer, and pose");
         wgf_core_priv_part_update(0.25f);
         expect(near(wgf_model_get_animation_time(part), wgf_model_get_animation_time(root)) && near(arm_y(part), arm_y(root)),
@@ -429,7 +452,7 @@ int main(void)
                    wgf_model_find_node(part, "") == 0 && wgf_model_find_node(body, "arm") == 0,
                "a socket by name at any depth; none, an empty name, not a root: 0");
         expect(!wgf_model_sync_animation(part, part) && !wgf_model_sync_animation(body, root), "itself, or not a root: refused");
-        wgf_model_stop_layer_animation(root, 0.0f);
+        wgf_model_stop_layer_animation(root, 0, 0.0f);
         wgf_actor_destroy(part, WGF_ACTOR_DESTROY_CHILDREN);
     }
 

@@ -4967,39 +4967,39 @@ class Raw {
 		final value:Float = untyped __cpp__("(double)::wgf_model_get_animation_time((wgf_actor_t){0})", model);
 		return value;
 	}
-	public static function wgf_model_play_layer_animation(model:Int, animation:Int, bone:String, fade:Float, loop:Bool):Bool {
+	public static function wgf_model_play_layer_animation(model:Int, index:Int, animation:Int, bone:String, fade:Float, loop:Bool):Bool {
 		#if wgf_reach
 		Reach.hit(657);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_model_play_layer_animation((wgf_actor_t){0}, (int){1}, ({2}.raw_ptr() ? {2}.utf8_str() : (const char *)0), (float){3}, (bool){4})", model, animation, bone, fade, loop);
+		final value:Bool = untyped __cpp__("(bool)::wgf_model_play_layer_animation((wgf_actor_t){0}, (int){1}, (int){2}, ({3}.raw_ptr() ? {3}.utf8_str() : (const char *)0), (float){4}, (bool){5})", model, index, animation, bone, fade, loop);
 		return value;
 	}
-	public static function wgf_model_stop_layer_animation(model:Int, fade:Float):Bool {
+	public static function wgf_model_stop_layer_animation(model:Int, index:Int, fade:Float):Bool {
 		#if wgf_reach
 		Reach.hit(669);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_model_stop_layer_animation((wgf_actor_t){0}, (float){1})", model, fade);
+		final value:Bool = untyped __cpp__("(bool)::wgf_model_stop_layer_animation((wgf_actor_t){0}, (int){1}, (float){2})", model, index, fade);
 		return value;
 	}
-	public static function wgf_model_get_layer_animation(model:Int):Int {
+	public static function wgf_model_get_layer_animation(model:Int, index:Int):Int {
 		#if wgf_reach
 		Reach.hit(646);
 		#end
-		final value:Int = untyped __cpp__("(int)::wgf_model_get_layer_animation((wgf_actor_t){0})", model);
+		final value:Int = untyped __cpp__("(int)::wgf_model_get_layer_animation((wgf_actor_t){0}, (int){1})", model, index);
 		return value;
 	}
-	public static function wgf_model_get_layer_state(model:Int):Int {
+	public static function wgf_model_get_layer_state(model:Int, index:Int):Int {
 		#if wgf_reach
 		Reach.hit(647);
 		#end
-		final value:Int = untyped __cpp__("(int)::wgf_model_get_layer_state((wgf_actor_t){0})", model);
+		final value:Int = untyped __cpp__("(int)::wgf_model_get_layer_state((wgf_actor_t){0}, (int){1})", model, index);
 		return value;
 	}
-	public static function wgf_model_get_layer_weight(model:Int):Float {
+	public static function wgf_model_get_layer_weight(model:Int, index:Int):Float {
 		#if wgf_reach
 		Reach.hit(648);
 		#end
-		final value:Float = untyped __cpp__("(double)::wgf_model_get_layer_weight((wgf_actor_t){0})", model);
+		final value:Float = untyped __cpp__("(double)::wgf_model_get_layer_weight((wgf_actor_t){0}, (int){1})", model, index);
 		return value;
 	}
 	public static function wgf_model_sync_animation(model:Int, from:Int):Bool {

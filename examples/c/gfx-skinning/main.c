@@ -150,7 +150,7 @@ static void start(void)
     }
     { /* the runner waves from the torso up as it runs: a layer over its run */
         const int wave = wgf_model_find_animation(g.robots[3], "Robot_Wave");
-        if (wave >= 0) wgf_model_play_layer_animation(g.robots[3], wave, "Torso", 0.5f, true);
+        if (wave >= 0) wgf_model_play_layer_animation(g.robots[3], 0, wave, "Torso", 0.5f, true);
     }
     { /* the waving robot drawn by a custom shader of its own, posed as the others */
         const wgf_shader_t shader = wgf_shader_create("shaders/toon.wgfshader");

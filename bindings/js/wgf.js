@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "3e8f3796281bfc56" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "548942f31ed8d2c9" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -10238,88 +10238,263 @@ export function wgf_model_get_animation_time(model) {
 
 // wgf: call wgf_model_play_layer_animation
 /**
- * A layer over the animation playing: `animation` on the file's node named `bone` and every
- * node under it (a mask: "Spine" for the upper body), blended over the clip below by the
- * layer's weight, which comes in over `fade` seconds (0 or less: at once); looping, or played
- * once, when it fades out over the same `fade` as it ends (COMPLETE) and is gone. An attack
- * from the waist up while the legs run on. Its time runs at the model's speed while the
- * animation below plays. play is false for a model that isn't a file's root, one whose file
- * isn't READY or has no animation playing yet, an animation it hasn't, a bone it hasn't, or a
- * fade not finite. stop fades it out over `fade`. Its animation (-1 for none), its state, and
- * its weight now (0 to 1).
+ * A glTF file's animations, played on its root (a model of wgf_mesh_create's mesh), which
+ * moves the actors of its tree -- each joint of a skin is one, and what is put under one
+ * moves with it -- and so poses the skinned parts its skins place, on the GPU, with up to 4
+ * joints a vertex. A clip's translation, rotation, and scale channels play as the file has
+ * them: linear (a rotation along the shorter arc), step, or cubic spline. What plays has
+ * one state, wgf_play_state.h's, its transitions those of play, pause, resume, and stop
+ * (as a voice's), advanced by libwgf once a frame by the frame's time before the frame
+ * callback, and posed then, so the frame reads this frame's pose:
+ *
+ *   count, name, find, duration  the file's animations: how many (0 until it is READY),
+ *                    one's name ("" for none), the first named so (-1 for none), its
+ *                    length in seconds (its last key's time; 0 for none)
+ *   play             `animation` from its start (its end with a negative speed), PLAYING,
+ *                    from any state; posed at once. `fade` > 0 crossfades into it over
+ *                    that many seconds from what shows now -- the clip that was playing,
+ *                    still moving, or the pose held (a crossfade's middle, or a clip not
+ *                    moving) -- each node's place, turn, and scale blended; 0 or less cuts
+ *                    to it. A node one animation of the file moves and this one doesn't is
+ *                    at the file's rest. Played before the file is READY, it plays once the
+ *                    file is there (one the file hasn't is dropped then, warned). False for
+ *                    a model that isn't a file's root, a negative animation, a fade that
+ *                    isn't a number, a file that FAILED, and an animation the READY file
+ *                    hasn't
+ *   get_animation    the one played (or stopped at, paused in); -1 for none
+ *   weight           how much of the pose is the animation played's: 0 as its crossfade
+ *                    begins to 1 when it is through, 1 with none, 0 with no animation
+ *   pause, resume    from PLAYING, and from PAUSED, only; held where it was, the
+ *                    crossfade too
+ *   stop             to STOPPED from any state, at time 0, showing the clip's first pose,
+ *                    its crossfade dropped
+ *   state            COMPLETE when an animation not looping has run to the end it runs
+ *                    toward, held there; and when its file FAILED while it played
+ *   speed            1 normal (the default); negative plays backwards; 0 holds, still
+ *                    PLAYING. False for a speed that isn't finite
+ *   loop             wrap at the end (the default), or hold the last pose and be COMPLETE
+ *   time             where it is, in seconds from its start; set poses it there at once,
+ *                    wrapped when looping and clamped to [0, duration] when not, leaving
+ *                    the state. False for a time that isn't finite
+ *
+ * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
+ * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
+ * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
+ * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+ * before the joints pose it.
  */
-export function wgf_model_play_layer_animation(model, animation, bone, fade, loop) {
+export function wgf_model_play_layer_animation(model, index, animation, bone, fade, loop) {
     const mark = host["stackSave"]();
-    const value = host["_wgf_model_play_layer_animation"](model, animation, cstr(bone), fade, (loop ? 1 : 0));
+    const value = host["_wgf_model_play_layer_animation"](model, index, animation, cstr(bone), fade, (loop ? 1 : 0));
     host["stackRestore"](mark);
     return value !== 0;
 }
 
 // wgf: call wgf_model_stop_layer_animation
 /**
- * A layer over the animation playing: `animation` on the file's node named `bone` and every
- * node under it (a mask: "Spine" for the upper body), blended over the clip below by the
- * layer's weight, which comes in over `fade` seconds (0 or less: at once); looping, or played
- * once, when it fades out over the same `fade` as it ends (COMPLETE) and is gone. An attack
- * from the waist up while the legs run on. Its time runs at the model's speed while the
- * animation below plays. play is false for a model that isn't a file's root, one whose file
- * isn't READY or has no animation playing yet, an animation it hasn't, a bone it hasn't, or a
- * fade not finite. stop fades it out over `fade`. Its animation (-1 for none), its state, and
- * its weight now (0 to 1).
+ * A glTF file's animations, played on its root (a model of wgf_mesh_create's mesh), which
+ * moves the actors of its tree -- each joint of a skin is one, and what is put under one
+ * moves with it -- and so poses the skinned parts its skins place, on the GPU, with up to 4
+ * joints a vertex. A clip's translation, rotation, and scale channels play as the file has
+ * them: linear (a rotation along the shorter arc), step, or cubic spline. What plays has
+ * one state, wgf_play_state.h's, its transitions those of play, pause, resume, and stop
+ * (as a voice's), advanced by libwgf once a frame by the frame's time before the frame
+ * callback, and posed then, so the frame reads this frame's pose:
+ *
+ *   count, name, find, duration  the file's animations: how many (0 until it is READY),
+ *                    one's name ("" for none), the first named so (-1 for none), its
+ *                    length in seconds (its last key's time; 0 for none)
+ *   play             `animation` from its start (its end with a negative speed), PLAYING,
+ *                    from any state; posed at once. `fade` > 0 crossfades into it over
+ *                    that many seconds from what shows now -- the clip that was playing,
+ *                    still moving, or the pose held (a crossfade's middle, or a clip not
+ *                    moving) -- each node's place, turn, and scale blended; 0 or less cuts
+ *                    to it. A node one animation of the file moves and this one doesn't is
+ *                    at the file's rest. Played before the file is READY, it plays once the
+ *                    file is there (one the file hasn't is dropped then, warned). False for
+ *                    a model that isn't a file's root, a negative animation, a fade that
+ *                    isn't a number, a file that FAILED, and an animation the READY file
+ *                    hasn't
+ *   get_animation    the one played (or stopped at, paused in); -1 for none
+ *   weight           how much of the pose is the animation played's: 0 as its crossfade
+ *                    begins to 1 when it is through, 1 with none, 0 with no animation
+ *   pause, resume    from PLAYING, and from PAUSED, only; held where it was, the
+ *                    crossfade too
+ *   stop             to STOPPED from any state, at time 0, showing the clip's first pose,
+ *                    its crossfade dropped
+ *   state            COMPLETE when an animation not looping has run to the end it runs
+ *                    toward, held there; and when its file FAILED while it played
+ *   speed            1 normal (the default); negative plays backwards; 0 holds, still
+ *                    PLAYING. False for a speed that isn't finite
+ *   loop             wrap at the end (the default), or hold the last pose and be COMPLETE
+ *   time             where it is, in seconds from its start; set poses it there at once,
+ *                    wrapped when looping and clamped to [0, duration] when not, leaving
+ *                    the state. False for a time that isn't finite
+ *
+ * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
+ * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
+ * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
+ * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+ * before the joints pose it.
  */
-export function wgf_model_stop_layer_animation(model, fade) {
-    const value = host["_wgf_model_stop_layer_animation"](model, fade);
+export function wgf_model_stop_layer_animation(model, index, fade) {
+    const value = host["_wgf_model_stop_layer_animation"](model, index, fade);
     return value !== 0;
 }
 
 // wgf: call wgf_model_get_layer_animation
 /**
- * A layer over the animation playing: `animation` on the file's node named `bone` and every
- * node under it (a mask: "Spine" for the upper body), blended over the clip below by the
- * layer's weight, which comes in over `fade` seconds (0 or less: at once); looping, or played
- * once, when it fades out over the same `fade` as it ends (COMPLETE) and is gone. An attack
- * from the waist up while the legs run on. Its time runs at the model's speed while the
- * animation below plays. play is false for a model that isn't a file's root, one whose file
- * isn't READY or has no animation playing yet, an animation it hasn't, a bone it hasn't, or a
- * fade not finite. stop fades it out over `fade`. Its animation (-1 for none), its state, and
- * its weight now (0 to 1).
+ * A glTF file's animations, played on its root (a model of wgf_mesh_create's mesh), which
+ * moves the actors of its tree -- each joint of a skin is one, and what is put under one
+ * moves with it -- and so poses the skinned parts its skins place, on the GPU, with up to 4
+ * joints a vertex. A clip's translation, rotation, and scale channels play as the file has
+ * them: linear (a rotation along the shorter arc), step, or cubic spline. What plays has
+ * one state, wgf_play_state.h's, its transitions those of play, pause, resume, and stop
+ * (as a voice's), advanced by libwgf once a frame by the frame's time before the frame
+ * callback, and posed then, so the frame reads this frame's pose:
+ *
+ *   count, name, find, duration  the file's animations: how many (0 until it is READY),
+ *                    one's name ("" for none), the first named so (-1 for none), its
+ *                    length in seconds (its last key's time; 0 for none)
+ *   play             `animation` from its start (its end with a negative speed), PLAYING,
+ *                    from any state; posed at once. `fade` > 0 crossfades into it over
+ *                    that many seconds from what shows now -- the clip that was playing,
+ *                    still moving, or the pose held (a crossfade's middle, or a clip not
+ *                    moving) -- each node's place, turn, and scale blended; 0 or less cuts
+ *                    to it. A node one animation of the file moves and this one doesn't is
+ *                    at the file's rest. Played before the file is READY, it plays once the
+ *                    file is there (one the file hasn't is dropped then, warned). False for
+ *                    a model that isn't a file's root, a negative animation, a fade that
+ *                    isn't a number, a file that FAILED, and an animation the READY file
+ *                    hasn't
+ *   get_animation    the one played (or stopped at, paused in); -1 for none
+ *   weight           how much of the pose is the animation played's: 0 as its crossfade
+ *                    begins to 1 when it is through, 1 with none, 0 with no animation
+ *   pause, resume    from PLAYING, and from PAUSED, only; held where it was, the
+ *                    crossfade too
+ *   stop             to STOPPED from any state, at time 0, showing the clip's first pose,
+ *                    its crossfade dropped
+ *   state            COMPLETE when an animation not looping has run to the end it runs
+ *                    toward, held there; and when its file FAILED while it played
+ *   speed            1 normal (the default); negative plays backwards; 0 holds, still
+ *                    PLAYING. False for a speed that isn't finite
+ *   loop             wrap at the end (the default), or hold the last pose and be COMPLETE
+ *   time             where it is, in seconds from its start; set poses it there at once,
+ *                    wrapped when looping and clamped to [0, duration] when not, leaving
+ *                    the state. False for a time that isn't finite
+ *
+ * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
+ * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
+ * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
+ * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+ * before the joints pose it.
  */
-export function wgf_model_get_layer_animation(model) {
-    const value = host["_wgf_model_get_layer_animation"](model);
+export function wgf_model_get_layer_animation(model, index) {
+    const value = host["_wgf_model_get_layer_animation"](model, index);
     return value;
 }
 
 // wgf: call wgf_model_get_layer_state
 /**
- * A layer over the animation playing: `animation` on the file's node named `bone` and every
- * node under it (a mask: "Spine" for the upper body), blended over the clip below by the
- * layer's weight, which comes in over `fade` seconds (0 or less: at once); looping, or played
- * once, when it fades out over the same `fade` as it ends (COMPLETE) and is gone. An attack
- * from the waist up while the legs run on. Its time runs at the model's speed while the
- * animation below plays. play is false for a model that isn't a file's root, one whose file
- * isn't READY or has no animation playing yet, an animation it hasn't, a bone it hasn't, or a
- * fade not finite. stop fades it out over `fade`. Its animation (-1 for none), its state, and
- * its weight now (0 to 1).
+ * A glTF file's animations, played on its root (a model of wgf_mesh_create's mesh), which
+ * moves the actors of its tree -- each joint of a skin is one, and what is put under one
+ * moves with it -- and so poses the skinned parts its skins place, on the GPU, with up to 4
+ * joints a vertex. A clip's translation, rotation, and scale channels play as the file has
+ * them: linear (a rotation along the shorter arc), step, or cubic spline. What plays has
+ * one state, wgf_play_state.h's, its transitions those of play, pause, resume, and stop
+ * (as a voice's), advanced by libwgf once a frame by the frame's time before the frame
+ * callback, and posed then, so the frame reads this frame's pose:
+ *
+ *   count, name, find, duration  the file's animations: how many (0 until it is READY),
+ *                    one's name ("" for none), the first named so (-1 for none), its
+ *                    length in seconds (its last key's time; 0 for none)
+ *   play             `animation` from its start (its end with a negative speed), PLAYING,
+ *                    from any state; posed at once. `fade` > 0 crossfades into it over
+ *                    that many seconds from what shows now -- the clip that was playing,
+ *                    still moving, or the pose held (a crossfade's middle, or a clip not
+ *                    moving) -- each node's place, turn, and scale blended; 0 or less cuts
+ *                    to it. A node one animation of the file moves and this one doesn't is
+ *                    at the file's rest. Played before the file is READY, it plays once the
+ *                    file is there (one the file hasn't is dropped then, warned). False for
+ *                    a model that isn't a file's root, a negative animation, a fade that
+ *                    isn't a number, a file that FAILED, and an animation the READY file
+ *                    hasn't
+ *   get_animation    the one played (or stopped at, paused in); -1 for none
+ *   weight           how much of the pose is the animation played's: 0 as its crossfade
+ *                    begins to 1 when it is through, 1 with none, 0 with no animation
+ *   pause, resume    from PLAYING, and from PAUSED, only; held where it was, the
+ *                    crossfade too
+ *   stop             to STOPPED from any state, at time 0, showing the clip's first pose,
+ *                    its crossfade dropped
+ *   state            COMPLETE when an animation not looping has run to the end it runs
+ *                    toward, held there; and when its file FAILED while it played
+ *   speed            1 normal (the default); negative plays backwards; 0 holds, still
+ *                    PLAYING. False for a speed that isn't finite
+ *   loop             wrap at the end (the default), or hold the last pose and be COMPLETE
+ *   time             where it is, in seconds from its start; set poses it there at once,
+ *                    wrapped when looping and clamped to [0, duration] when not, leaving
+ *                    the state. False for a time that isn't finite
+ *
+ * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
+ * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
+ * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
+ * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+ * before the joints pose it.
  */
-export function wgf_model_get_layer_state(model) {
-    const value = host["_wgf_model_get_layer_state"](model);
+export function wgf_model_get_layer_state(model, index) {
+    const value = host["_wgf_model_get_layer_state"](model, index);
     return value;
 }
 
 // wgf: call wgf_model_get_layer_weight
 /**
- * A layer over the animation playing: `animation` on the file's node named `bone` and every
- * node under it (a mask: "Spine" for the upper body), blended over the clip below by the
- * layer's weight, which comes in over `fade` seconds (0 or less: at once); looping, or played
- * once, when it fades out over the same `fade` as it ends (COMPLETE) and is gone. An attack
- * from the waist up while the legs run on. Its time runs at the model's speed while the
- * animation below plays. play is false for a model that isn't a file's root, one whose file
- * isn't READY or has no animation playing yet, an animation it hasn't, a bone it hasn't, or a
- * fade not finite. stop fades it out over `fade`. Its animation (-1 for none), its state, and
- * its weight now (0 to 1).
+ * A glTF file's animations, played on its root (a model of wgf_mesh_create's mesh), which
+ * moves the actors of its tree -- each joint of a skin is one, and what is put under one
+ * moves with it -- and so poses the skinned parts its skins place, on the GPU, with up to 4
+ * joints a vertex. A clip's translation, rotation, and scale channels play as the file has
+ * them: linear (a rotation along the shorter arc), step, or cubic spline. What plays has
+ * one state, wgf_play_state.h's, its transitions those of play, pause, resume, and stop
+ * (as a voice's), advanced by libwgf once a frame by the frame's time before the frame
+ * callback, and posed then, so the frame reads this frame's pose:
+ *
+ *   count, name, find, duration  the file's animations: how many (0 until it is READY),
+ *                    one's name ("" for none), the first named so (-1 for none), its
+ *                    length in seconds (its last key's time; 0 for none)
+ *   play             `animation` from its start (its end with a negative speed), PLAYING,
+ *                    from any state; posed at once. `fade` > 0 crossfades into it over
+ *                    that many seconds from what shows now -- the clip that was playing,
+ *                    still moving, or the pose held (a crossfade's middle, or a clip not
+ *                    moving) -- each node's place, turn, and scale blended; 0 or less cuts
+ *                    to it. A node one animation of the file moves and this one doesn't is
+ *                    at the file's rest. Played before the file is READY, it plays once the
+ *                    file is there (one the file hasn't is dropped then, warned). False for
+ *                    a model that isn't a file's root, a negative animation, a fade that
+ *                    isn't a number, a file that FAILED, and an animation the READY file
+ *                    hasn't
+ *   get_animation    the one played (or stopped at, paused in); -1 for none
+ *   weight           how much of the pose is the animation played's: 0 as its crossfade
+ *                    begins to 1 when it is through, 1 with none, 0 with no animation
+ *   pause, resume    from PLAYING, and from PAUSED, only; held where it was, the
+ *                    crossfade too
+ *   stop             to STOPPED from any state, at time 0, showing the clip's first pose,
+ *                    its crossfade dropped
+ *   state            COMPLETE when an animation not looping has run to the end it runs
+ *                    toward, held there; and when its file FAILED while it played
+ *   speed            1 normal (the default); negative plays backwards; 0 holds, still
+ *                    PLAYING. False for a speed that isn't finite
+ *   loop             wrap at the end (the default), or hold the last pose and be COMPLETE
+ *   time             where it is, in seconds from its start; set poses it there at once,
+ *                    wrapped when looping and clamped to [0, duration] when not, leaving
+ *                    the state. False for a time that isn't finite
+ *
+ * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
+ * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
+ * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
+ * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
+ * before the joints pose it.
  */
-export function wgf_model_get_layer_weight(model) {
-    const value = host["_wgf_model_get_layer_weight"](model);
+export function wgf_model_get_layer_weight(model, index) {
+    const value = host["_wgf_model_get_layer_weight"](model, index);
     return value;
 }
 

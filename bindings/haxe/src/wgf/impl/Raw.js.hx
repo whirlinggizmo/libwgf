@@ -4671,39 +4671,39 @@ class Raw {
 		final value:Dynamic = Raw.binding["wgf_model_get_animation_time"](model);
 		return value;
 	}
-	public static function wgf_model_play_layer_animation(model:Int, animation:Int, bone:String, fade:Float, loop:Bool):Bool {
+	public static function wgf_model_play_layer_animation(model:Int, index:Int, animation:Int, bone:String, fade:Float, loop:Bool):Bool {
 		#if wgf_reach
 		Reach.hit(657);
 		#end
-		final value:Dynamic = Raw.binding["wgf_model_play_layer_animation"](model, animation, bone, fade, loop);
+		final value:Dynamic = Raw.binding["wgf_model_play_layer_animation"](model, index, animation, bone, fade, loop);
 		return value;
 	}
-	public static function wgf_model_stop_layer_animation(model:Int, fade:Float):Bool {
+	public static function wgf_model_stop_layer_animation(model:Int, index:Int, fade:Float):Bool {
 		#if wgf_reach
 		Reach.hit(669);
 		#end
-		final value:Dynamic = Raw.binding["wgf_model_stop_layer_animation"](model, fade);
+		final value:Dynamic = Raw.binding["wgf_model_stop_layer_animation"](model, index, fade);
 		return value;
 	}
-	public static function wgf_model_get_layer_animation(model:Int):Int {
+	public static function wgf_model_get_layer_animation(model:Int, index:Int):Int {
 		#if wgf_reach
 		Reach.hit(646);
 		#end
-		final value:Dynamic = Raw.binding["wgf_model_get_layer_animation"](model);
+		final value:Dynamic = Raw.binding["wgf_model_get_layer_animation"](model, index);
 		return value;
 	}
-	public static function wgf_model_get_layer_state(model:Int):Int {
+	public static function wgf_model_get_layer_state(model:Int, index:Int):Int {
 		#if wgf_reach
 		Reach.hit(647);
 		#end
-		final value:Dynamic = Raw.binding["wgf_model_get_layer_state"](model);
+		final value:Dynamic = Raw.binding["wgf_model_get_layer_state"](model, index);
 		return value;
 	}
-	public static function wgf_model_get_layer_weight(model:Int):Float {
+	public static function wgf_model_get_layer_weight(model:Int, index:Int):Float {
 		#if wgf_reach
 		Reach.hit(648);
 		#end
-		final value:Dynamic = Raw.binding["wgf_model_get_layer_weight"](model);
+		final value:Dynamic = Raw.binding["wgf_model_get_layer_weight"](model, index);
 		return value;
 	}
 	public static function wgf_model_sync_animation(model:Int, from:Int):Bool {

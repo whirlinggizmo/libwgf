@@ -118,20 +118,24 @@ WGF_API bool wgf_model_is_animation_loop(wgf_actor_t model);
 WGF_API bool wgf_model_set_animation_time(wgf_actor_t model, float seconds);
 WGF_API float wgf_model_get_animation_time(wgf_actor_t model);
 
-/* A layer over the animation playing: `animation` on the file's node named `bone` and every
- * node under it (a mask: "Spine" for the upper body), blended over the clip below by the
- * layer's weight, which comes in over `fade` seconds (0 or less: at once); looping, or played
- * once, when it fades out over the same `fade` as it ends (COMPLETE) and is gone. An attack
- * from the waist up while the legs run on. Its time runs at the model's speed while the
- * animation below plays. play is false for a model that isn't a file's root, one whose file
- * isn't READY or has no animation playing yet, an animation it hasn't, a bone it hasn't, or a
- * fade not finite. stop fades it out over `fade`. Its animation (-1 for none), its state, and
- * its weight now (0 to 1). */
-WGF_API bool wgf_model_play_layer_animation(wgf_actor_t model, int animation, const char *bone, float fade, bool loop);
-WGF_API bool wgf_model_stop_layer_animation(wgf_actor_t model, float fade);
-WGF_API int wgf_model_get_layer_animation(wgf_actor_t model);
-WGF_API wgf_play_state_t wgf_model_get_layer_state(wgf_actor_t model);
-WGF_API float wgf_model_get_layer_weight(wgf_actor_t model);
+/* Layers over the animation playing, WGF_MODEL_LAYERS of them (`index` 0 up), each blended
+ * over what is under it in order (the clip below, then layer 0, 1...): layer `index` plays
+ * `animation` on the file's node named `bone` and every node under it (a mask: "Spine" for
+ * the upper body), blended by the layer's weight, which comes in over `fade` seconds (0 or
+ * less: at once); looping, or played once, when it fades out over the same `fade` as it ends
+ * (COMPLETE) and is gone. An attack from the waist up while the legs run on, and a flinch of
+ * the head over both. Its time runs at the model's speed while the animation below plays.
+ * play is false for an index outside the layers, a model that isn't a file's root, one whose
+ * file isn't READY or has no animation playing yet, an animation it hasn't, a bone it hasn't,
+ * or a fade not finite. stop fades it out over `fade`. Its animation (-1 for none), its
+ * state, and its weight now (0 to 1). */
+#define WGF_MODEL_LAYERS 4
+WGF_API bool wgf_model_play_layer_animation(wgf_actor_t model, int index, int animation, const char *bone, float fade,
+                                            bool loop);
+WGF_API bool wgf_model_stop_layer_animation(wgf_actor_t model, int index, float fade);
+WGF_API int wgf_model_get_layer_animation(wgf_actor_t model, int index);
+WGF_API wgf_play_state_t wgf_model_get_layer_state(wgf_actor_t model, int index);
+WGF_API float wgf_model_get_layer_weight(wgf_actor_t model, int index);
 
 /* `model` playing as `from` does now: its animation, time, speed, loop, and state, and its
  * layer (its bone found again by name); a crossfade running in `from` ends at its clip. For a
