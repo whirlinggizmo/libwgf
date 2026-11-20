@@ -331,8 +331,8 @@ void wgf_platform_priv_get_safe_insets(int insets[4])
  * Chrome lets that through, for a few seconds after a tap), the request is held, and asked
  * again inside the next pointer up, touch end, click, or key press, caught first (the
  * capture phase, on the window), so a game's Play tap, or its first tap anywhere when it
- * asked at start, takes the page fullscreen. sokol_app reads the change from the browser's
- * fullscreenchange, as it does its own. */
+ * asked at start, takes the page fullscreen. Granted, the request is no longer held, so a
+ * player who leaves fullscreen stays out. */
 EM_JS(void, web_request_fullscreen, (int on), {
     let state = Module.wgfFullscreen;
     if (!state) {
@@ -341,7 +341,9 @@ EM_JS(void, web_request_fullscreen, (int on), {
             if (!state.wanted || document.fullscreenElement) return;
             const canvas = Module.sapp_emsc_target || Module.canvas;
             if (!canvas || typeof canvas.requestFullscreen !== "function") return;
-            canvas.requestFullscreen().then(() => {}, () => {});
+            /* granted, the hold ends: a player leaving fullscreen (Escape, the back gesture)
+               stays out until the program asks again */
+            canvas.requestFullscreen().then(() => { state.wanted = false; }, () => {});
         };
         for (const type of [ "pointerup", "touchend", "click", "keydown" ]) {
             window.addEventListener(type, retry, true);

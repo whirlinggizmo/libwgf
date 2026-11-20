@@ -38,7 +38,8 @@ WGF_API int wgf_window_get_height(void);
  * On the web the browser grants it only inside a tap, a click, or a key press, which a
  * frame comes after: refused, the request is held and asked again inside the next one, so
  * asked as Play is pressed it is granted by that tap's release or the next, and asked at
- * start it is granted by the player's first tap anywhere. Named request_ for that reason
+ * start it is granted by the player's first tap anywhere; once granted it is no longer
+ * held, so a player who leaves fullscreen stays out until asked again. Named request_ for that reason
  * (wgrender's), as every request the platform may refuse is (CONVENTIONS.md, "Naming").
  * Before the window opens, it opens filling the screen (natively; on the web, held for the
  * first tap). */

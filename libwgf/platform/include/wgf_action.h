@@ -49,8 +49,11 @@ WGF_API bool wgf_action_bind_touch(const char *action, float x, float y, float w
 /* An on-screen stick: a finger landing in the region (logical pixels) makes a stick where
  * it landed, and its pull, up to `radius` away, is read as `action_x` across and `action_y`
  * up (-1 to 1, held within the circle), as a pad's left stick bound to them is; it ends when
- * the finger lifts. At most 4 sticks; false for two actions alike, a region with no area, or
- * a radius not above 0 (and as the other bindings are refused). For drawing it: whether a
+ * the finger lifts. At most 4 sticks bound at once: one whose actions are cleared
+ * (wgf_action_clear) is gone, and bound again, as a game does as the screen changes, it is
+ * the same stick, a finger holding it keeping it. False for two actions alike, a region with
+ * no area, a radius not above 0, a fifth stick (and as the other bindings are refused). For
+ * drawing it: whether a
  * finger holds it, where it landed, and where its knob is (logical pixels; 0, 0 while none
  * holds it), by its across action. */
 WGF_API bool wgf_action_bind_touch_stick(const char *action_x, const char *action_y, float x, float y, float width,

@@ -218,6 +218,41 @@ static void stick(void)
     expect(strcmp(wgf_action_get_binding_text("walk_y", 0), "Touch stick Y") == 0, "named");
 }
 
+/* A stick bound again as the screen changes (Wardens' on a phone: fullscreen, the address
+ * bar, a turn): cleared and bound many times over, it is still one stick, read as its axes,
+ * not a fifth refused while the knob found the first; a finger holding it through a rebind
+ * keeps it. */
+static void stick_rebound(void)
+{
+    int i;
+    bool bound = true;
+    for (i = 0; i < 10; i++) {
+        wgf_action_clear("run_x");
+        wgf_action_clear("run_y");
+        bound = bound && wgf_action_bind_touch_stick("run_x", "run_y", 400, 300, 400, 300, 50);
+    }
+    expect(bound, "bound again ten times, each taking its own place back");
+    finger(SAPP_EVENTTYPE_TOUCHES_BEGAN, 500, 400);
+    expect(wgf_action_is_stick_held("run_x"), "a finger lands: the stick");
+    finger(SAPP_EVENTTYPE_TOUCHES_MOVED, 525, 400);
+    expect(fabsf(wgf_action_get_axis("run_x") - 0.5f) < 1e-4f, "its pull read as its axis");
+    wgf_action_clear("run_x");
+    wgf_action_clear("run_y");
+    expect(!wgf_action_is_stick_held("run_x") && wgf_action_get_axis("run_x") == 0.0f, "cleared: gone");
+    expect(wgf_action_bind_touch_stick("run_x", "run_y", 400, 280, 400, 320, 50), "bound again, the region moved");
+    expect(wgf_action_is_stick_held("run_x") && fabsf(wgf_action_get_axis("run_x") - 0.5f) < 1e-4f,
+           "the finger holding it kept it");
+    finger(SAPP_EVENTTYPE_TOUCHES_ENDED, 525, 400);
+    next_frame();
+    wgf_action_clear("run_x");
+    wgf_action_clear("run_y");
+    expect(wgf_action_bind_touch_stick("s1x", "s1y", 0, 0, 10, 10, 5) && wgf_action_bind_touch_stick("s2x", "s2y", 0, 0, 10, 10, 5) &&
+               wgf_action_bind_touch_stick("s3x", "s3y", 0, 0, 10, 10, 5) &&
+               !wgf_action_bind_touch_stick("s4x", "s4y", 0, 0, 10, 10, 5),
+           "with walk's still bound, three more and no fifth");
+    expect(!wgf_action_is_down("s4x") && wgf_action_get_binding_count("s4x") == 0, "the refused one left unbound");
+}
+
 static void listing(void)
 {
     expect(wgf_action_get_binding_count("steer") == 2 &&
@@ -251,5 +286,6 @@ int main(void)
     touch();
     stick();
     listing();
+    stick_rebound();
     return failures == 0 ? 0 : 1;
 }

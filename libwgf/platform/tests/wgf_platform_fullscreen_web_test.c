@@ -12,7 +12,8 @@
  * fullscreen and granted in it. Fullscreen asked before the window opens, and an
  * orientation asked at start, are held: no warning, nothing granted, until a tap; the tap
  * (a pointer up on the window) is answered inside its own event, and the lock follows as
- * fullscreen begins. Leaving needs no tap, and a request let go of is no longer held. */
+ * fullscreen begins. Leaving needs no tap, a request let go of is no longer held, and nor is
+ * one granted: a player who leaves fullscreen isn't taken back by the next tap. */
 
 static int failures;
 static int phase;
@@ -51,6 +52,11 @@ EM_JS(void, stub_browser, (void), {
         element = null;
         setTimeout(changed, 0);
         return Promise.resolve();
+    };
+    /* the player leaving, as Escape or the back gesture does: the browser's, not the page's */
+    Module.leave = () => {
+        element = null;
+        setTimeout(changed, 0);
     };
     /* a tap: its event dispatched as the browser does, the page's listeners run inside it */
     Module.tap = () => {
@@ -137,8 +143,19 @@ static void on_frame(void *user)
                 phase = 4;
             }
             break;
-        case 4:
-            if (wgf_window_is_fullscreen()) done();
+        case 4: /* granted: the player leaves (the browser's own exit), and a tap doesn't bring it back */
+            if (wgf_window_is_fullscreen()) {
+                js("Module.leave()");
+                since = now;
+                phase = 5;
+            }
+            break;
+        case 5:
+            if (!wgf_window_is_fullscreen()) {
+                js("Module.before = Module.fullLog.asked; Module.tap()");
+                expect(js("Module.fullLog.asked === Module.before"), "left by the player: a tap asks for nothing");
+                done();
+            }
             break;
         default: break;
     }

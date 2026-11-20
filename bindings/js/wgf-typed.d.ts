@@ -68,8 +68,11 @@ export declare const Action: {
      * An on-screen stick: a finger landing in the region (logical pixels) makes a stick where
      * it landed, and its pull, up to `radius` away, is read as `action_x` across and `action_y`
      * up (-1 to 1, held within the circle), as a pad's left stick bound to them is; it ends when
-     * the finger lifts. At most 4 sticks; false for two actions alike, a region with no area, or
-     * a radius not above 0 (and as the other bindings are refused). For drawing it: whether a
+     * the finger lifts. At most 4 sticks bound at once: one whose actions are cleared
+     * (wgf_action_clear) is gone, and bound again, as a game does as the screen changes, it is
+     * the same stick, a finger holding it keeping it. False for two actions alike, a region with
+     * no area, a radius not above 0, a fifth stick (and as the other bindings are refused). For
+     * drawing it: whether a
      * finger holds it, where it landed, and where its knob is (logical pixels; 0, 0 while none
      * holds it), by its across action.
      */
@@ -78,8 +81,11 @@ export declare const Action: {
      * An on-screen stick: a finger landing in the region (logical pixels) makes a stick where
      * it landed, and its pull, up to `radius` away, is read as `action_x` across and `action_y`
      * up (-1 to 1, held within the circle), as a pad's left stick bound to them is; it ends when
-     * the finger lifts. At most 4 sticks; false for two actions alike, a region with no area, or
-     * a radius not above 0 (and as the other bindings are refused). For drawing it: whether a
+     * the finger lifts. At most 4 sticks bound at once: one whose actions are cleared
+     * (wgf_action_clear) is gone, and bound again, as a game does as the screen changes, it is
+     * the same stick, a finger holding it keeping it. False for two actions alike, a region with
+     * no area, a radius not above 0, a fifth stick (and as the other bindings are refused). For
+     * drawing it: whether a
      * finger holds it, where it landed, and where its knob is (logical pixels; 0, 0 while none
      * holds it), by its across action.
      */
@@ -88,8 +94,11 @@ export declare const Action: {
      * An on-screen stick: a finger landing in the region (logical pixels) makes a stick where
      * it landed, and its pull, up to `radius` away, is read as `action_x` across and `action_y`
      * up (-1 to 1, held within the circle), as a pad's left stick bound to them is; it ends when
-     * the finger lifts. At most 4 sticks; false for two actions alike, a region with no area, or
-     * a radius not above 0 (and as the other bindings are refused). For drawing it: whether a
+     * the finger lifts. At most 4 sticks bound at once: one whose actions are cleared
+     * (wgf_action_clear) is gone, and bound again, as a game does as the screen changes, it is
+     * the same stick, a finger holding it keeping it. False for two actions alike, a region with
+     * no area, a radius not above 0, a fifth stick (and as the other bindings are refused). For
+     * drawing it: whether a
      * finger holds it, where it landed, and where its knob is (logical pixels; 0, 0 while none
      * holds it), by its across action.
      */
@@ -98,8 +107,11 @@ export declare const Action: {
      * An on-screen stick: a finger landing in the region (logical pixels) makes a stick where
      * it landed, and its pull, up to `radius` away, is read as `action_x` across and `action_y`
      * up (-1 to 1, held within the circle), as a pad's left stick bound to them is; it ends when
-     * the finger lifts. At most 4 sticks; false for two actions alike, a region with no area, or
-     * a radius not above 0 (and as the other bindings are refused). For drawing it: whether a
+     * the finger lifts. At most 4 sticks bound at once: one whose actions are cleared
+     * (wgf_action_clear) is gone, and bound again, as a game does as the screen changes, it is
+     * the same stick, a finger holding it keeping it. False for two actions alike, a region with
+     * no area, a radius not above 0, a fifth stick (and as the other bindings are refused). For
+     * drawing it: whether a
      * finger holds it, where it landed, and where its knob is (logical pixels; 0, 0 while none
      * holds it), by its across action.
      */
@@ -11507,7 +11519,8 @@ export declare const Window: {
      * On the web the browser grants it only inside a tap, a click, or a key press, which a
      * frame comes after: refused, the request is held and asked again inside the next one, so
      * asked as Play is pressed it is granted by that tap's release or the next, and asked at
-     * start it is granted by the player's first tap anywhere. Named request_ for that reason
+     * start it is granted by the player's first tap anywhere; once granted it is no longer
+     * held, so a player who leaves fullscreen stays out until asked again. Named request_ for that reason
      * (wgrender's), as every request the platform may refuse is (CONVENTIONS.md, "Naming").
      * Before the window opens, it opens filling the screen (natively; on the web, held for the
      * first tap).
@@ -11521,7 +11534,8 @@ export declare const Window: {
      * On the web the browser grants it only inside a tap, a click, or a key press, which a
      * frame comes after: refused, the request is held and asked again inside the next one, so
      * asked as Play is pressed it is granted by that tap's release or the next, and asked at
-     * start it is granted by the player's first tap anywhere. Named request_ for that reason
+     * start it is granted by the player's first tap anywhere; once granted it is no longer
+     * held, so a player who leaves fullscreen stays out until asked again. Named request_ for that reason
      * (wgrender's), as every request the platform may refuse is (CONVENTIONS.md, "Naming").
      * Before the window opens, it opens filling the screen (natively; on the web, held for the
      * first tap).

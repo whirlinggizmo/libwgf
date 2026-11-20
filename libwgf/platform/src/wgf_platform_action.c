@@ -375,39 +375,73 @@ bool wgf_action_bind_touch(const char *action, float x, float y, float width, fl
     return true;
 }
 
+/* Whether any action's binding reads stick `index`: one whose actions were all cleared is
+ * free for the next stick bound. */
+static bool stick_bound(int index)
+{
+    int i, k;
+    for (i = 0; i < table.count; i++) {
+        for (k = 0; k < table.actions[i].binding_count; k++) {
+            const binding_t *b = &table.actions[i].bindings[k];
+            if (b->kind == STICK && b->stick == index) return true;
+        }
+    }
+    return false;
+}
+
+/* The slot a stick for `action_x` takes: the free one that was its own (cleared and bound
+ * again, as a game does as the screen changes: a finger holding it keeps it), else any free
+ * one, else a new one; -1 when all are bound. */
+static int stick_slot(const char *action_x)
+{
+    int i, free_slot = -1;
+    for (i = 0; i < sticks.count; i++) {
+        if (stick_bound(i)) continue;
+        if (strcmp(sticks.sticks[i].action_x, action_x) == 0) return i;
+        if (free_slot < 0) free_slot = i;
+    }
+    if (free_slot >= 0) {
+        sticks.sticks[free_slot].finger = -1;
+        return free_slot;
+    }
+    if (sticks.count >= STICKS_MAX) return -1;
+    sticks.sticks[sticks.count].finger = -1;
+    return sticks.count++;
+}
+
 bool wgf_action_bind_touch_stick(const char *action_x, const char *action_y, float x, float y, float width,
                                  float height, float radius)
 {
     binding_t *bx, *by;
     stick_t *s;
-    if (!(width > 0.0f && height > 0.0f && radius > 0.0f) || sticks.count >= STICKS_MAX || action_x == NULL ||
-        action_y == NULL || strcmp(action_x, action_y) == 0 || (bx = add(action_x)) == NULL) {
+    int slot;
+    if (!(width > 0.0f && height > 0.0f && radius > 0.0f) || action_x == NULL || action_y == NULL ||
+        strcmp(action_x, action_y) == 0 || (slot = stick_slot(action_x)) < 0 || (bx = add(action_x)) == NULL) {
         return false;
     }
     if ((by = add(action_y)) == NULL) {
         find(action_x)->binding_count--;
         return false;
     }
-    s = &sticks.sticks[sticks.count];
-    memset(s, 0, sizeof(*s));
+    s = &sticks.sticks[slot];
     s->rect[0] = x, s->rect[1] = y, s->rect[2] = width, s->rect[3] = height;
     s->radius = radius;
-    s->finger = -1;
+    memset(s->action_x, 0, sizeof(s->action_x));
     strncpy(s->action_x, action_x, NAME_MAX - 1);
     bx->kind = by->kind = STICK;
-    bx->stick = by->stick = sticks.count;
+    bx->stick = by->stick = slot;
     bx->part = 0;
     by->part = 1;
-    sticks.count++;
     return true;
 }
 
-/* The stick whose across action is `action_x`, as its finger has it now; NULL for none. */
+/* The bound stick whose across action is `action_x`, as its finger has it now; NULL for
+ * none. */
 static stick_t *stick_of(const char *action_x)
 {
     int i;
     for (i = 0; action_x != NULL && i < sticks.count; i++) {
-        if (strcmp(sticks.sticks[i].action_x, action_x) == 0) return stick_now(i);
+        if (strcmp(sticks.sticks[i].action_x, action_x) == 0 && stick_bound(i)) return stick_now(i);
     }
     return NULL;
 }
