@@ -6,19 +6,9 @@ What is left to build, in order. A finished item is deleted from this file, not 
 
 Rob's (2026-11-19): libwgf is finished so that a pure C and wasm engine can be compared with helix. Done means three things: **helix-raylib's feature set as a floor** (what a helix-raylib program can do, a libwgf program can, in libwgf's own way: feature parity, not its API, and not only what it does); **helix's benchmarks** (the bunnymark and the animated robots, `../helix/docs/benchmarks.md`) run on libwgf beside helix-raylib's rows, speed and size; and **Wardens** (helix's engine trial) built on libwgf and graded as helix's entrants are. The blocks below are in order; each item has its tests, an example where there is something to see, its calls in the bindings and the feature test, and a look at how helix-raylib and helix-legacy did it (read-only).
 
-1. **Wardens** (below), what it needs, then the game.
-2. **The comparison.** The bunnymark and the robots on libwgf, on the web and natively, beside helix's rows on this machine; Wardens' grades beside helix's entrants'; the parity checklist's rows, each as libwgf has it, and what libwgf has that helix-raylib doesn't. Written up in HISTORY.md.
+1. **The comparison.** The bunnymark and the robots on libwgf, on the web and natively, beside helix's rows on this machine; Wardens' grades beside helix's entrants'; the parity checklist's rows, each as libwgf has it, and what libwgf has that helix-raylib doesn't. Written up in HISTORY.md.
 
 Out of the parity work, as not libwgf's (the checklist's skips): desktop window chrome, the program owning the frame loop, warping the mouse; path, string, and codepoint helpers, compression, Base64, and hashes (the host language's); VR stereo; rlgl's immediate vertices, matrix stack, and global GL state; image editing on the CPU, pixel formats, and exporting images, meshes, and code; raygui's color picker, grid, built-in icons, style files, and draggable windows; OBJ, IQM, VOX, and M3D models.
-
-## Wardens: what it needs, then the game
-
-Helix's engine trial Wardens (`../helix/docs/trials/templates/wardens/`: `spec.md`, the game naming no engine; `grading.md`, its 37 items; its assets, every one CC0), built on libwgf once what it needs is here, and graded as helix's entrants are (helix-raylib, raylib in C, three.js), so libwgf's score stands beside theirs. What it needs that the blocks before don't give, in order:
-
-1. **Skeletal animation, what is left:** the robots benchmark (`bench:robots`) run on the GPU beside helix-raylib's rows (everything Wardens needs of the player is built: HISTORY.md, "Skeletal animation" and after).
-2. **The game:** `games/wardens/`, with helix's spec and assets unchanged, in Haxe on libwgf's public API, a page and native; its native program shot by helix's `take_screenshots.py` and graded with helix's `review-brief.md`, the grades recorded in HISTORY.md beside helix's entrants'. Built (HISTORY.md, "Wardens, the game"); grading next.
-
-Done when Wardens is graded.
 
 ## Milestone 2.5: jam-ready
 
