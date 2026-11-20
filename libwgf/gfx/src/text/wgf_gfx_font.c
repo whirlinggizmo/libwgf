@@ -53,6 +53,7 @@ static bool ensure(void);
 static wgf_handle_t default_font; /* 0: the built-in font */
 static bool grow_pending;
 static bool full_warned;
+static unsigned atlas_version = 1; /* changed whenever glyphs' places in the atlas change (wgf_gfx_font_priv.h) */
 
 static bool pool_ready;
 static wgf_core_priv_handle_pool_t font_pool;
@@ -555,6 +556,70 @@ void wgf_gfx_priv_font_draw_block_3d(wgf_handle_t font, const char *text, float 
     fonsDrawText(fons, 0.0f, 0.0f, "", NULL);
 }
 
+/* Glyphs for a caller's own meshes (the ui module's documents): a line's metrics, its
+ * width, and its glyphs' quads, laid out at the frame's pixel density as the text above is
+ * and measured back in logical pixels. */
+bool wgf_gfx_priv_font_vertical_metrics(wgf_handle_t font, float size, float *ascender, float *descender,
+                                        float *line_height)
+{
+    const float scale = pixel_scale();
+    float a = 0.0f, d = 0.0f, h = 0.0f;
+    if (!use_font(font, size, scale, 0xFFFFFFFFu)) return false;
+    fonsVertMetrics(fons, &a, &d, &h);
+    *ascender = a / scale;
+    *descender = -d / scale;
+    *line_height = h / scale;
+    return true;
+}
+
+float wgf_gfx_priv_font_span_width(wgf_handle_t font, const char *start, const char *end, float size)
+{
+    const float scale = pixel_scale();
+    if (start == NULL || end <= start || !use_font(font, size, scale, 0xFFFFFFFFu)) return 0.0f;
+    return span_width(start, end) / scale;
+}
+
+int wgf_gfx_priv_font_quads(wgf_handle_t font, const char *start, const char *end, float size, float x,
+                            float baseline, float *out, int max_quads)
+{
+    const float scale = pixel_scale();
+    FONStextIter iter;
+    FONSquad quad;
+    int n = 0;
+    if (start == NULL || end <= start || out == NULL || !use_font(font, size, scale, 0xFFFFFFFFu)) return 0;
+    fonsSetAlign(fons, FONS_ALIGN_LEFT | FONS_ALIGN_BASELINE);
+    fonsTextIterInit(fons, &iter, x * scale, baseline * scale, start, end);
+    while (n < max_quads && fonsTextIterNext(fons, &iter, &quad)) {
+        float *q = out + 8 * n;
+        if (quad.x1 <= quad.x0 || quad.y1 <= quad.y0) continue; /* a space */
+        q[0] = quad.x0 / scale;
+        q[1] = quad.y0 / scale;
+        q[2] = quad.x1 / scale;
+        q[3] = quad.y1 / scale;
+        q[4] = quad.s0;
+        q[5] = quad.t0;
+        q[6] = quad.s1;
+        q[7] = quad.t1;
+        n++;
+    }
+    /* the glyphs rasterized go to sokol_fontstash's texture only when fontstash flushes
+       (text in 3D's fix, above): an empty string flushes them, drawing nothing */
+    fonsDrawText(fons, 0.0f, 0.0f, "", NULL);
+    return n;
+}
+
+bool wgf_gfx_priv_font_atlas(sg_view *atlas, sg_sampler *sampler, sgl_pipeline *pipeline)
+{
+    sg_shader shader;
+    return ensure() && wgf_gfx_priv_fontstash_render_state(fons, atlas, sampler, &shader) &&
+           wgf_gfx_priv_fontstash_pipeline(fons, pipeline);
+}
+
+unsigned wgf_gfx_priv_font_atlas_version(void)
+{
+    return atlas_version;
+}
+
 /* A full atlas grows, but never in the middle of a frame: draws recorded earlier
  * refer to the atlas and to coordinates for its size, and growing remakes both. So
  * a full atlas only asks to grow, the glyphs that didn't fit skip this one frame,
@@ -584,6 +649,7 @@ static void setup(void)
     if (builtin_id == FONS_INVALID) wgf_log_error("wgf_gfx_font: the built-in font didn't load");
     grow_pending = false;
     full_warned = false;
+    atlas_version++;
 }
 
 static void flush(void)
@@ -601,6 +667,7 @@ static void end_frame(void)
         const bool grow_width = width <= height && width < ATLAS_MOST;
         const int new_width = grow_width ? width * 2 : width, new_height = grow_width ? height : height * 2;
         if (fonsExpandAtlas(fons, new_width, new_height)) {
+            atlas_version++;
             wgf_log_info("wgf_gfx_font: the glyph atlas grew to %dx%d", new_width, new_height);
             return;
         }

@@ -23,6 +23,7 @@ From libwgt's `examples/assets/`, which took them from wgrender's, unchanged:
 
 Made by Whirling Gizmo for its libraries, under libwgf's MIT license:
 
+- `ui/options.rml`, `ui/options.rcss`, `ui/skin.png`: the ui-document example's menu, written here; the sprite sheet made by `tools/gen_ui_skin.py`.
 - `textures/flame.png`, `textures/particle.png`: from libwgt's `examples/assets/`, made by wgrender's `tools/gen_particle_textures.py`; `textures/flame.{bc7,astc,etc2}.ktx` made from the PNG by `tools/compress_textures.py`.
 - `textures/tiles_normal.png`: from libwgt's `examples/assets/`, made by wgrender's `tools/gen_material_assets.py`.
 - `sprites/logo/wg-logo-bw-alpha.png`, `sprites/logo/wg-logo-white-alpha.png`: the Whirling Gizmo logo, from libwgt's `examples/assets/`; `sprites/logo/wg-logo-bw-alpha.{bc7,astc,etc2}.ktx` made from the PNG by `tools/compress_textures.py`.

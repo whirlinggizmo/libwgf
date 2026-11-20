@@ -144,6 +144,20 @@ WGF_API bool wgf_ui_set_style_font(wgf_font_t font);
 WGF_API wgf_font_t wgf_ui_get_style_font(void);
 WGF_API void wgf_ui_reset_style(void);
 
+/* Documents (wgf_document.h), the ui's calls for all of them. */
+
+/* The font RCSS's `font-family: <family>` means in every document (its name matched
+ * without case); 0 unsets it, so the family draws in the default font. It holds a
+ * reference to `font`. False for no family, or a handle that isn't a font. */
+WGF_API bool wgf_ui_set_document_font(const char *family, wgf_font_t font);
+WGF_API wgf_font_t wgf_ui_get_document_font(const char *family);
+
+/* The shown documents, worked by this frame's input, laid out, and drawn here, in the frame
+ * callback, over what was drawn before; their events are raised as they are worked. Once a
+ * frame: a second call in a frame draws them again without the input. False outside a
+ * frame (logged), or before any document was created. */
+WGF_API bool wgf_ui_draw_documents(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,0 +1,10 @@
+# Vendored from the RmlUi Team's RmlUi (MIT, LICENSE.txt in this directory): its
+# Include/RmlUi/Core.h, Include/RmlUi/Core/, Include/RmlUi/Config/, and Source/Core/, at the
+# release tag, unchanged, less what libwgf doesn't build: Include/RmlUi/Core/Containers/
+# (itlib's and robin_hood's containers: libwgf builds RmlUi on the standard library's),
+# Source/Core/FontEngineDefault/ (the FreeType font engine: libwgf's fonts are fontstash's),
+# the CMakeLists.txt files, and the debugger, Lua, SVG, and Lottie plugins, the backends,
+# samples, and tests. Only libwgf's ui module includes it, through the one C++ file there
+# (libwgf/ui/src/wgf_ui_rmlui.cpp); no header outside the module names it.
+RmlUi https://github.com/mikke89/RmlUi.git 6.3 ba95ffe8bfb6370efb2cdcca927eaad4710c5413
+archive https://github.com/mikke89/RmlUi/archive/refs/tags/6.3.tar.gz sha256 d977298bb6147610e5984d5db85ddf284020d655a8713913f6982074f1dbdede

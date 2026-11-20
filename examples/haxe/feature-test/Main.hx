@@ -30,6 +30,8 @@ class Main {
 	static var car:Model = 0; // a section type starts as none, as a handle does
 	static var robot:Model = 0; // a skinned, animated glTF file's root
 	static var font:Font;
+	static var menu:Document;
+	static var menuDone = false;
 	static var click:Sound;
 	static var music:Sound;
 	static var voice:Voice;
@@ -517,6 +519,9 @@ class Main {
 		font = Font.create("fonts/JetBrainsMono/JetBrainsMono-Regular.ttf");
 		expect(Font.getDefault().isNone() && font.setDefault() && Font.getDefault() == font, "the default font");
 		expect(font.measure("feature", 16).x > 0, "text measured");
+		expect(Ui.setDocumentFont("Mono", font) && Ui.getDocumentFont("mono") == font, "a document's font family");
+		menu = Document.create("ui/options.rml");
+		expect(menu.setVisible(true) && menu.isVisible(), "a document, shown once loaded");
 
 		world = Stage2d.create();
 		hud = Stage2d.create();
@@ -846,6 +851,7 @@ class Main {
 		Render.popClip();
 		threeD();
 		ui();
+		document();
 		input();
 		if (frames == 2) {
 			Loop.getFrameDelta();
@@ -880,7 +886,7 @@ class Main {
 			Behavior.tag("Spark");
 			expect(World.dump().indexOf("wgf-scene 2") == 0, "the world dumped");
 		}
-		if (frames >= 30 && instantiated && stage > 3 && !reported
+		if (frames >= 30 && instantiated && stage > 3 && menuDone && !reported
 			&& Resource.getStatus(robot.getMesh()) != ResourceStatus.PENDING)
 			finish();
 		if (frames > 600 && !reported) {
@@ -914,6 +920,31 @@ class Main {
 			expect(Ui.end(), "a UI");
 		}
 		expect(Ui.setFocus("a") && Ui.getFocus() == "a", "the focus");
+	}
+
+	static function document():Void {
+		Ui.drawDocuments();
+		if (menuDone || Resource.getStatus(menu) != ResourceStatus.READY)
+			return;
+		menuDone = true;
+		final play = menu.find("play"), name = menu.find("name"), volume = menu.find("volume"), sound = menu.find("sound");
+		final status = menu.find("status");
+		expect(!play.isNone() && play.getDocument() == menu && play.getId() == "play" && menu.find("nothing").isNone(),
+			"a document's elements, found by id");
+		expect(status.setText("<feature>") && status.getText() == "<feature>" && status.setRml("<b>bold</b>")
+			&& status.getRml().indexOf("<b>") >= 0, "an element's text and RML");
+		expect(status.setAttribute("data-x", "1") && status.getAttribute("data-x") == "1" && status.hasAttribute("data-x")
+			&& status.removeAttribute("data-x"), "an attribute");
+		expect(status.setClass("hot", true) && status.hasClass("hot"), "a class");
+		expect(status.setProperty("color", "#ff0000") && status.getProperty("color") != "", "a property");
+		expect(name.setValue("Feature") && name.getValue() == "Feature", "a text field's value");
+		expect(volume.setNumber(3) && volume.getNumber() == 3, "a slider's number");
+		expect(sound.setChecked(false) && !sound.isChecked(), "a check box");
+		expect(name.setDisabled(true) && name.isDisabled() && name.setDisabled(false), "a form control disabled");
+		expect(menu.setFocus(play) && menu.getFocus() == play, "the focus");
+		final events:Array<Int> = [for (_ in 0...16) 0];
+		menu.getEventCount();
+		expect(menu.takeEvents(events) % 2 == 0, "events, two ints each");
 	}
 
 	static function input():Void {

@@ -32,3 +32,13 @@ bool wgf_gfx_priv_fontstash_render_state(struct FONScontext *context, sg_view *a
     *shader = sfons->shd;
     return true;
 }
+
+/* sokol_fontstash's own 2D pipeline (blended, its shader reading the atlas's coverage as
+ * alpha): what glyph quads drawn by another's code (the ui module's documents) draw with. */
+bool wgf_gfx_priv_fontstash_pipeline(struct FONScontext *context, sgl_pipeline *pipeline)
+{
+    const _sfons_t *sfons = context != NULL ? (const _sfons_t *)context->params.userPtr : NULL;
+    if (sfons == NULL || sfons->pip.id == SG_INVALID_ID) return false;
+    *pipeline = sfons->pip;
+    return true;
+}
