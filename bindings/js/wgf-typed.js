@@ -2854,6 +2854,14 @@ export const Ui = Object.freeze({
     beginGroup: raw.wgf_ui_begin_group,
     // wgf: call wgf_ui_end_group
     endGroup: raw.wgf_ui_end_group,
+    // wgf: call wgf_ui_begin_scroll
+    beginScroll: raw.wgf_ui_begin_scroll,
+    // wgf: call wgf_ui_end_scroll
+    endScroll: raw.wgf_ui_end_scroll,
+    // wgf: call wgf_ui_set_scroll
+    setScroll: raw.wgf_ui_set_scroll,
+    // wgf: call wgf_ui_get_scroll
+    getScroll: raw.wgf_ui_get_scroll,
     // wgf: call wgf_ui_set_width
     setWidth: raw.wgf_ui_set_width,
     // wgf: call wgf_ui_set_height
@@ -2904,6 +2912,8 @@ export const Ui = Object.freeze({
     setDisabled: raw.wgf_ui_set_disabled,
     // wgf: call wgf_ui_is_disabled
     isDisabled: raw.wgf_ui_is_disabled,
+    // wgf: call wgf_ui_list
+    list: raw.wgf_ui_list,
     // wgf: call wgf_ui_progress
     progress: raw.wgf_ui_progress,
     // wgf: call wgf_ui_set_focus
@@ -3337,15 +3347,15 @@ export const UiFill = Object.freeze({ STRETCHED: 0, CLIPPED: 1 });
 // wgf: enum UiFrom
 export const UiFrom = Object.freeze({ LEFT: 0, RIGHT: 1, TOP: 2, BOTTOM: 3 });
 // wgf: enum UiPart
-export const UiPart = Object.freeze({ BASE: 0, FILL: 1, HANDLE: 2, EDGE: 3 });
+export const UiPart = Object.freeze({ BASE: 0, FILL: 1, HANDLE: 2, EDGE: 3, ITEM: 4 });
 // wgf: enum UiSizing
 export const UiSizing = Object.freeze({ FIT: 0, GROW: 1, FIXED: 2, PERCENT: 3 });
 // wgf: enum UiState
 export const UiState = Object.freeze({ NORMAL: 0, HOVERED: 1, PRESSED: 2, DISABLED: 3 });
 // wgf: enum UiValue
-export const UiValue = Object.freeze({ TEXT_SIZE: 0, PADDING: 1, GAP: 2, CORNER_RADIUS: 3, BUTTON_PADDING: 4, BUTTON_WIDTH: 5, FOCUS_WIDTH: 6, BAR_WIDTH: 7, BAR_HEIGHT: 8, CHECK_SIZE: 9, SLIDER_WIDTH: 10, SLIDER_HEIGHT: 11, HANDLE_SIZE: 12, LINE_WIDTH: 13, TILE_SIZE: 14 });
+export const UiValue = Object.freeze({ TEXT_SIZE: 0, PADDING: 1, GAP: 2, CORNER_RADIUS: 3, BUTTON_PADDING: 4, BUTTON_WIDTH: 5, FOCUS_WIDTH: 6, BAR_WIDTH: 7, BAR_HEIGHT: 8, CHECK_SIZE: 9, SLIDER_WIDTH: 10, SLIDER_HEIGHT: 11, HANDLE_SIZE: 12, LINE_WIDTH: 13, TILE_SIZE: 14, SCROLL_BAR: 15 });
 // wgf: enum UiWidget
-export const UiWidget = Object.freeze({ PANEL: 0, BUTTON: 1, TOGGLE: 2, CHECKBOX: 3, SLIDER: 4, PROGRESS: 5, GROUP: 6, TAB: 7, COMBO: 8, NUMBER: 9, TILE: 10 });
+export const UiWidget = Object.freeze({ PANEL: 0, BUTTON: 1, TOGGLE: 2, CHECKBOX: 3, SLIDER: 4, PROGRESS: 5, GROUP: 6, TAB: 7, COMBO: 8, NUMBER: 9, TILE: 10, SCROLL: 11, LIST: 12 });
 // wgf: enum VehicleDrive
 export const VehicleDrive = Object.freeze({ FRONT: 0, REAR: 1, ALL: 2 });
 // wgf: enum WindowOrientation

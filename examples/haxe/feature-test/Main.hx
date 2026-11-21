@@ -1270,11 +1270,15 @@ class Main {
 				"tabs, a choice, and a combo, untouched");
 			expect(near(Ui.number("number", 0.5, 0, 1, 0.1), 0.5), "a number, untouched");
 			expect(Ui.beginGrid("grid", 2) && !Ui.tile("tile", tiles, "Tile") && Ui.endGrid(), "a grid of a tile");
+			expect(Ui.beginScroll("scroll", 120, 40) && Ui.label("A\nB\nC\nD", 0) && Ui.endScroll(), "a scroll area");
+			expect(Ui.list("list", "One\nTwo\nThree", 1, 2) == 1, "a list, untouched");
 			Ui.endPanel();
 			expect(Ui.end(), "a UI");
 		}
 		expect(Ui.setFocus("a") && Ui.getFocus() == "a", "the focus");
 		expect(near(Ui.getBounds("room").z, 20), "where the room was laid out");
+		expect(Ui.setScroll("list", 0, 1000) && Ui.getScroll("list").y > 0 && !Ui.setScroll("nothing", 0, 0),
+			"a list scrolled, held to its content");
 	}
 
 	static function document():Void {

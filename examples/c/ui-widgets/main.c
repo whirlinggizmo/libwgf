@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "wgf_app.h"
 #include "wgf_asset.h"
@@ -20,9 +21,10 @@
  * from one sheet, their faces on a lip their text sinks onto when pressed; the loading
  * bar's blue rail is clipped, shown up to its value over the grey one, its round far end
  * only when full; the star answers on its round face alone, its clear corners left to the
- * screen, and sets the volume full. Save is disabled. Its tabs show two more pages: a
- * choice, a combo, and numbers; and a grid of level tiles, which the arrows move through in
- * two dimensions. The theme row shows the same panel
+ * screen, and sets the volume full. Save is disabled. Its tabs show three more pages: a
+ * choice, a combo, and numbers; a grid of level tiles in a scroll area, which the arrows
+ * move through in two dimensions, scrolled to the one focused; and a list of tracks. The
+ * wheel, a drag, or a scroll bar scrolls them. The theme row shows the same panel
  * in libwgf's own style and in a recolored one. The pointer, the arrow keys, Tab, Enter,
  * and a pad work it; Escape quits where quitting means anything. Laid out for a design of
  * 580 by 640, scaled to fit the window or a phone's screen (EXPAND: the blue past it); on a
@@ -33,7 +35,8 @@ enum { PLAIN, RECOLORED, SKINNED };
 static int theme = -1, chosen = SKINNED;
 static float volume = 0.6f, loaded = 0.4f, speed = 1.5f;
 static bool music = true, loading;
-static int page, difficulty = 1, color, lives = 3, level = -1;
+static int page, difficulty = 1, color, lives = 3, level = -1, track;
+static char tracks[1024];
 static wgf_texture_t tex[13];
 static wgf_image_t star_mask;
 static wgf_font_t font;
@@ -49,6 +52,14 @@ static void skin(wgf_ui_widget_t widget, wgf_ui_part_t part, int which, float bo
 {
     wgf_ui_set_skin(widget, part, WGF_UI_STATE_NORMAL, tex[which], 0, 0, 0, 0);
     wgf_ui_set_skin_borders(widget, part, WGF_UI_STATE_NORMAL, border, caps ? 0 : border, border, caps ? 0 : border);
+}
+
+/* A skin of the check box's white square, tinted: a scroll bar's or a list's. */
+static void tinted(wgf_ui_widget_t widget, wgf_ui_part_t part, wgf_ui_state_t state, wgf_color_t tint)
+{
+    wgf_ui_set_skin(widget, part, state, tex[CHECK_BOX], 0, 0, 0, 0);
+    wgf_ui_set_skin_borders(widget, part, state, 8, 8, 8, 8);
+    wgf_ui_set_skin_tint(widget, part, state, tint);
 }
 
 /* A face from the button sheet: four cells of 192 by 64 down it (normal, hovered,
@@ -107,13 +118,27 @@ static void set_theme(int which)
         wgf_ui_set_fill(WGF_UI_WIDGET_PROGRESS, WGF_UI_FILL_CLIPPED, WGF_UI_FROM_LEFT);
         skin(WGF_UI_WIDGET_CHECKBOX, WGF_UI_PART_BASE, CHECK_BOX, 8, false);
         skin(WGF_UI_WIDGET_CHECKBOX, WGF_UI_PART_FILL, CHECK, 0, false);
+        wgf_ui_set_style_value(WGF_UI_VALUE_SCROLL_BAR, 16);
+        tinted(WGF_UI_WIDGET_SCROLL, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL, wgf_color_make(214, 218, 226, 255));
+        tinted(WGF_UI_WIDGET_SCROLL, WGF_UI_PART_HANDLE, WGF_UI_STATE_NORMAL, wgf_color_make(150, 158, 176, 255));
+        tinted(WGF_UI_WIDGET_SCROLL, WGF_UI_PART_HANDLE, WGF_UI_STATE_HOVERED, wgf_color_make(110, 120, 142, 255));
+        tinted(WGF_UI_WIDGET_SCROLL, WGF_UI_PART_HANDLE, WGF_UI_STATE_PRESSED, wgf_color_make(52, 152, 219, 255));
+        tinted(WGF_UI_WIDGET_LIST, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL, WGF_COLOR_WHITE);
+        tinted(WGF_UI_WIDGET_LIST, WGF_UI_PART_ITEM, WGF_UI_STATE_HOVERED, wgf_color_make(226, 232, 242, 255));
+        tinted(WGF_UI_WIDGET_LIST, WGF_UI_PART_ITEM, WGF_UI_STATE_PRESSED, wgf_color_make(160, 208, 240, 255));
     }
 }
 
 static void init(void *user)
 {
+    static const char *const names_of[10] = {"Sunrise", "Harbor", "Neon", "Dunes", "Glacier",
+                                             "Canyon",  "Forest", "Metro", "Comet", "Lagoon"};
+    size_t used = 0;
     int i;
     (void)user;
+    for (i = 0; i < 30; i++) /* the list's items, one a line */
+        used += (size_t)snprintf(tracks + used, sizeof(tracks) - used, "%d. %s %s\n", i + 1, names_of[i % 10],
+                                 i < 10 ? "Run" : i < 20 ? "Night" : "Storm");
     wgf_asset_set_host("../assets");
     wgf_render_set_clear_color(wgf_color_make(52, 152, 219, 255));
     for (i = 0; i < 13; i++) {
@@ -198,21 +223,44 @@ static void choices(void)
     wgf_ui_end_box();
 }
 
-/* The levels page: a grid of tiles, the one chosen named below it. */
+/* The levels page: a grid of tiles in a scroll area, the one chosen named below it. */
 static void levels(void)
 {
     char text[32];
     int i;
+    wgf_ui_begin_scroll("levels-area", 0, 300);
+    wgf_ui_set_gap(8);
     wgf_ui_begin_grid("levels", 3);
-    for (i = 0; i < 6; i++) {
+    for (i = 0; i < 12; i++) {
         char id[24], name[16];
         snprintf(id, sizeof(id), "level%d", i + 1);
         snprintf(name, sizeof(name), "%d", i + 1);
         if (wgf_ui_tile(id, tex[STAR], name)) level = i + 1;
     }
     wgf_ui_end_grid();
+    wgf_ui_end_scroll();
     if (level > 0) snprintf(text, sizeof(text), "Level %d chosen", level);
     else snprintf(text, sizeof(text), "Choose a level");
+    wgf_ui_label(text, 0);
+}
+
+/* The list page: thirty tracks, the one chosen named below them. */
+static void list(void)
+{
+    char text[48];
+    const char *at = tracks;
+    int i;
+    track = wgf_ui_list("tracks", tracks, track, 7);
+    for (i = 0; i < track && at != NULL; i++) {
+        at = strchr(at, '\n');
+        if (at != NULL) at++;
+    }
+    if (at != NULL && track >= 0) {
+        const char *end = strchr(at, '\n');
+        snprintf(text, sizeof(text), "Playing %.*s", end != NULL ? (int)(end - at) : (int)strlen(at), at);
+    } else {
+        snprintf(text, sizeof(text), "Nothing playing");
+    }
     wgf_ui_label(text, 0);
 }
 
@@ -222,10 +270,11 @@ static void panel(void)
     wgf_ui_set_width(WGF_UI_SIZING_FIXED, 460);
     wgf_ui_set_padding(30, 20);
     wgf_ui_set_gap(14);
-    page = wgf_ui_tabs("pages", "Main\nMore\nLevels", page);
+    page = wgf_ui_tabs("pages", "Main\nMore\nLevels\nList", page);
     if (page == 0) settings();
     else if (page == 1) choices();
-    else levels();
+    else if (page == 2) levels();
+    else list();
     wgf_ui_end_panel();
 }
 

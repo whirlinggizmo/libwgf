@@ -15,13 +15,14 @@ import wgf.impl.Raw;
     immediate-mode UI: a UI that moves under the pointer is answered where it was.
 
     Focus: one widget at a time has it, by its id: a button, a toggle, a checkbox, a slider,
-    a number, tabs, a choice, a combo, or a tile. The arrow keys and a pad's D-pad move it to
+    a number, tabs, a choice, a combo, a tile, or a list. The arrow keys and a pad's D-pad move it to
     the nearest widget that way on the screen, as last laid out (a grid of tiles moves in
     two dimensions), or, with none that way, through the frame's widgets in the order they
     were given, Down and Right to the next and Up and Left to the one before, wrapping; Tab
     and Shift+Tab always go in that order. The first press of one puts it on the first or the
     last widget. A focused widget keeps the arrows it uses (a slider, a number, tabs, a
-    choice, and a combo left and right; a slider that fills up or down, up and down).
+    choice, and a combo left and right; a slider that fills up or down, and a list, up and
+    down).
     Enter, Space, or a pad's south button activates it. The
     pointer activates the widget it is pressed and released over, and gives it the focus;
     a focus moved by keys or pads is drawn, one given by the pointer isn't. A focused
@@ -140,6 +141,60 @@ class Ui {
 	**/
 	public static inline function endGroup():Bool
 		return Raw.wgf_ui_end_group();
+
+	/**
+	    A scroll area: a window `width` by `height` logical pixels (0: the room its parent has
+	    left that way) onto its children, a column, clipped to it and scrolled when they are
+	    longer or wider than it: by the wheel over it (the innermost area under the pointer; a
+	    wheel across, or Shift with it, sideways), a drag (a press that moves a few pixels is the
+	    area's, and the widget it began on, but a slider, isn't pressed), with a fling when let
+	    go moving, and its scroll bars, each shown while there is more to scroll to that way: the
+	    thumb dragged, the track pressed for a page. The focus moved by keys, a pad, or
+	    wgf_ui_set_focus to a widget in it scrolls the widget into view, and Page Up and Page
+	    Down page while the focus is in it. The layout calls (padding, gap, alignment, color) are
+	    its content's; its size is the call's, so wgf_ui_set_width and _height refuse it. Its
+	    scroll is kept while it is given each frame; what it scrolls to shows from the next
+	    frame. Closed by wgf_ui_end_scroll. False too for no id, or a size below 0.
+	**/
+	public static inline function beginScroll(id:String, width:Float, height:Float):Bool
+		return Raw.wgf_ui_begin_scroll(id, width, height);
+
+	/**
+	    A scroll area: a window `width` by `height` logical pixels (0: the room its parent has
+	    left that way) onto its children, a column, clipped to it and scrolled when they are
+	    longer or wider than it: by the wheel over it (the innermost area under the pointer; a
+	    wheel across, or Shift with it, sideways), a drag (a press that moves a few pixels is the
+	    area's, and the widget it began on, but a slider, isn't pressed), with a fling when let
+	    go moving, and its scroll bars, each shown while there is more to scroll to that way: the
+	    thumb dragged, the track pressed for a page. The focus moved by keys, a pad, or
+	    wgf_ui_set_focus to a widget in it scrolls the widget into view, and Page Up and Page
+	    Down page while the focus is in it. The layout calls (padding, gap, alignment, color) are
+	    its content's; its size is the call's, so wgf_ui_set_width and _height refuse it. Its
+	    scroll is kept while it is given each frame; what it scrolls to shows from the next
+	    frame. Closed by wgf_ui_end_scroll. False too for no id, or a size below 0.
+	**/
+	public static inline function endScroll():Bool
+		return Raw.wgf_ui_end_scroll();
+
+	/**
+	    How far the scroll area or list `id` is scrolled, x across and y down, in logical pixels
+	    from its content's top left (0, 0 for one not laid out); and scrolled there, shown from
+	    its next layout, held to its content as last laid out: a chat log kept at its end. False
+	    for an id that isn't a scroll area or list laid out in the frame before, or a value not
+	    finite. These two work outside a begun UI too.
+	**/
+	public static inline function setScroll(id:String, x:Float, y:Float):Bool
+		return Raw.wgf_ui_set_scroll(id, x, y);
+
+	/**
+	    How far the scroll area or list `id` is scrolled, x across and y down, in logical pixels
+	    from its content's top left (0, 0 for one not laid out); and scrolled there, shown from
+	    its next layout, held to its content as last laid out: a chat log kept at its end. False
+	    for an id that isn't a scroll area or list laid out in the frame before, or a value not
+	    finite. These two work outside a begun UI too.
+	**/
+	public static inline function getScroll(id:String, ?into:wgf.Vec2):wgf.Vec2
+		return Raw.wgf_ui_get_scroll(id, into);
 
 	/**
 	    The open box's or panel's layout, before its first child; false after it, with none
@@ -360,6 +415,19 @@ class Ui {
 	**/
 	public static inline function isDisabled():Bool
 		return Raw.wgf_ui_is_disabled();
+
+	/**
+	    A list of `items`, one a line (any number: "" or NULL, none), `rows` of them tall and as
+	    wide as its parent's room (at least the style's button width), one of them chosen:
+	    `selected` (-1: none) as given (clamped to them), or as the user chose this frame. A press
+	    and release on an item chooses it (a drag scrolls, choosing none); when focused, Up and
+	    Down (a pad's too) step, held ones repeating, and Page Up and Page Down step a page, the
+	    chosen one scrolled into view. It scrolls as a scroll area does, down only. Only the
+	    items in view are laid out, so a long list costs its rows. `selected` as given when
+	    refused (no id, `rows` below 1).
+	**/
+	public static inline function list(id:String, items:String, selected:Int, rows:Int):Int
+		return Raw.wgf_ui_list(id, items, selected, rows);
 
 	/**
 	    A bar showing `value`, 0 (empty) to 1 (full), filled from the left (the progress bar's

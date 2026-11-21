@@ -21,6 +21,8 @@ package wgf;
       COMBO      base: the combo
       NUMBER     base: the box its value is in (its minus and plus are BUTTON's)
       TILE       base: the tile
+      SCROLL     base: a scroll bar's track; handle: its thumb (a scroll area's, a list's)
+      LIST       base: its box; item: each item, PRESSED while chosen
 
     A choice's toggles are TOGGLE's, each PRESSED while chosen.
 
@@ -45,4 +47,6 @@ enum abstract UiWidget(Int) from Int to Int {
 	var COMBO = 8;
 	var NUMBER = 9;
 	var TILE = 10;
+	var SCROLL = 11;
+	var LIST = 12;
 }

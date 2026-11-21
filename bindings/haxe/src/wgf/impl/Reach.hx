@@ -1260,6 +1260,7 @@ class Reach {
 		"wgf_ui_begin_grid",
 		"wgf_ui_begin_group",
 		"wgf_ui_begin_panel",
+		"wgf_ui_begin_scroll",
 		"wgf_ui_button",
 		"wgf_ui_checkbox",
 		"wgf_ui_choice",
@@ -1271,12 +1272,14 @@ class Reach {
 		"wgf_ui_end_grid",
 		"wgf_ui_end_group",
 		"wgf_ui_end_panel",
+		"wgf_ui_end_scroll",
 		"wgf_ui_get_bounds",
 		"wgf_ui_get_document_font",
 		"wgf_ui_get_document_font_face",
 		"wgf_ui_get_fill",
 		"wgf_ui_get_fill_from",
 		"wgf_ui_get_focus",
+		"wgf_ui_get_scroll",
 		"wgf_ui_get_skin",
 		"wgf_ui_get_skin_borders",
 		"wgf_ui_get_skin_source",
@@ -1291,6 +1294,7 @@ class Reach {
 		"wgf_ui_image_button",
 		"wgf_ui_is_disabled",
 		"wgf_ui_label",
+		"wgf_ui_list",
 		"wgf_ui_number",
 		"wgf_ui_progress",
 		"wgf_ui_reset_style",
@@ -1305,6 +1309,7 @@ class Reach {
 		"wgf_ui_set_gap",
 		"wgf_ui_set_height",
 		"wgf_ui_set_padding",
+		"wgf_ui_set_scroll",
 		"wgf_ui_set_skin",
 		"wgf_ui_set_skin_borders",
 		"wgf_ui_set_skin_tint",
@@ -1441,7 +1446,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1432) 0];
+	static final counts:Array<Int> = [for (_ in 0...1437) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

@@ -6,4 +6,5 @@ enum abstract UiPart(Int) from Int to Int {
 	var FILL = 1;
 	var HANDLE = 2;
 	var EDGE = 3;
+	var ITEM = 4;
 }

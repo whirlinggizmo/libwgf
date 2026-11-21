@@ -13,13 +13,14 @@ package wgf;
     immediate-mode UI: a UI that moves under the pointer is answered where it was.
 
     Focus: one widget at a time has it, by its id: a button, a toggle, a checkbox, a slider,
-    a number, tabs, a choice, a combo, or a tile. The arrow keys and a pad's D-pad move it to
+    a number, tabs, a choice, a combo, a tile, or a list. The arrow keys and a pad's D-pad move it to
     the nearest widget that way on the screen, as last laid out (a grid of tiles moves in
     two dimensions), or, with none that way, through the frame's widgets in the order they
     were given, Down and Right to the next and Up and Left to the one before, wrapping; Tab
     and Shift+Tab always go in that order. The first press of one puts it on the first or the
     last widget. A focused widget keeps the arrows it uses (a slider, a number, tabs, a
-    choice, and a combo left and right; a slider that fills up or down, up and down).
+    choice, and a combo left and right; a slider that fills up or down, and a list, up and
+    down).
     Enter, Space, or a pad's south button activates it. The
     pointer activates the widget it is pressed and released over, and gives it the focus;
     a focus moved by keys or pads is drawn, one given by the pointer isn't. A focused

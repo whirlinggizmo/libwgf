@@ -23,6 +23,7 @@
 #include "wgf_render.h"
 #include "wgf_resource.h"
 #include "wgf_ui_priv.h"
+#include "wgf_ui_scroll_priv.h"
 #include "wgf_ui_skin_priv.h"
 
 /* The ui module: Clay lays out and hit-tests, this file describes each frame's UI to it,
@@ -41,11 +42,11 @@
 #define WORDS_MAX 8192  /* Clay's cache of measured words */
 #define TEXT_BLOCK 16384
 #define STYLE_COLORS 11 /* wgf_ui_color_t's */
-#define STYLE_VALUES 15 /* wgf_ui_value_t's */
-#define WIDGETS 11      /* wgf_ui_widget_t's */
+#define STYLE_VALUES 16 /* wgf_ui_value_t's */
+#define WIDGETS 13      /* wgf_ui_widget_t's */
 #define CHOICES_MAX 32  /* a tab row's, a choice's, a combo's labels */
 
-enum { KIND_ROOT, KIND_BOX, KIND_PANEL, KIND_GROUP, KIND_GRID };
+enum { KIND_ROOT, KIND_BOX, KIND_PANEL, KIND_GROUP, KIND_GRID, KIND_SCROLL };
 
 /* The arrows a focused widget keeps for itself, not the focus's. */
 enum { ARROWS_NONE, ARROWS_ACROSS, ARROWS_DOWN };
@@ -57,8 +58,9 @@ typedef void (*piece_draw_t)(const piece_t *piece, Clay_BoundingBox box);
 struct piece_t {
     piece_draw_t draw;
     int widget, state;
-    bool on;     /* a checkbox checked */
-    float value; /* a progress bar's or slider's, 0 to 1 */
+    bool on;     /* a checkbox checked, a list's item chosen, a scroll bar down */
+    float value; /* a progress bar's or slider's, 0 to 1; how far a scroll bar's thumb is along */
+    float size;  /* a scroll bar's share in view, 0 to 1 */
     wgf_texture_t texture, pressed;
 };
 
@@ -77,6 +79,13 @@ struct level_t {
     void (*before_child)(level_t *level); /* a grid's: the row its next child goes in */
     int columns, count;                   /* a grid's columns, and its children so far */
     bool row_open;                        /* a grid's row is open in Clay */
+    void (*close)(level_t *level);        /* a scroll area's: its close, its bars after its content */
+    Clay_ElementId window, bars[2];       /* a scroll area's window, and its bars across and down */
+    int first_focusable;                  /* a scroll area's: the frame's first widget in it */
+    bool shown[2];                        /* its bars shown */
+    int bar_states[2];
+    float thumbs[2][2]; /* each bar's share in view and how far its thumb is along, 0 to 1 */
+    float offset[2];    /* how far it is scrolled, as it is laid out this frame */
 };
 
 /* The frame's copies of the text and ids given, which Clay points at until it draws:
@@ -105,9 +114,11 @@ static struct {
         bool activate, tab_next, tab_previous;
         bool up, down, left, right;                 /* pressed: the focus's */
         bool more_up, more_down, more_left, more_right; /* pressed or repeating: a slider's */
+        bool page_up, page_down;                        /* pressed or repeating */
     } keys;
     bool disabled; /* the widgets given now are */
     bool hovering; /* the pointer is over a widget that answers it (an image button's art) */
+    wgf_ui_priv_scroll_t scroll;
 
     char focus[ID_MAX];
     bool focus_visible; /* moved by keys or pads: drawn */
@@ -151,8 +162,8 @@ static const wgf_color_t default_colors[STYLE_COLORS] = {
     0x3F4860FFu, /* separator */
     0xF2F4F8FFu, /* handle */
 };
-static const float default_values[STYLE_VALUES] = {20.0f, 24.0f, 12.0f, 8.0f,  24.0f, 200.0f, 3.0f, 300.0f,
-                                                   12.0f, 24.0f, 200.0f, 8.0f, 20.0f, 2.0f,  96.0f};
+static const float default_values[STYLE_VALUES] = {20.0f, 24.0f, 12.0f, 8.0f, 24.0f, 200.0f, 3.0f,  300.0f,
+                                                   12.0f, 24.0f, 200.0f, 8.0f, 20.0f, 2.0f, 96.0f,  10.0f};
 
 /* ---- the style ---------------------------------------------------------------------- */
 
@@ -264,6 +275,7 @@ bool wgf_ui_set_focus(const char *id)
     snprintf(ui.focus, sizeof(ui.focus), "%s", id);
     ui.focus_visible = id[0] != '\0';
     ui.focus_fresh = true;
+    ui.scroll.reveal_next = true;
     return true;
 }
 
@@ -439,6 +451,8 @@ static void stop(void)
     free(ui.focusables);
     free(ui.pieces);
     free(ui.solids);
+    free(ui.scroll.areas);
+    free(ui.scroll.before);
     free(ui.scratch);
     memset(&ui, 0, sizeof(ui));
     style_set = false;
@@ -534,9 +548,13 @@ static bool child(const char *what)
     return true;
 }
 
-/* A level's close in Clay: a grid's open row first. */
+/* A level's close in Clay: a grid's open row first; a scroll area's its own. */
 static void close_element(level_t *level)
 {
+    if (level->close != NULL) {
+        level->close(level);
+        return;
+    }
     if (level->row_open) Clay__CloseElement();
     level->row_open = false;
     Clay__CloseElement();
@@ -685,7 +703,7 @@ bool wgf_ui_set_width(wgf_ui_sizing_t how, float value)
 {
     level_t *level = settable();
     Clay_SizingAxis axis;
-    if (level == NULL || !sizing(&axis, how, value)) return false;
+    if (level == NULL || level->kind == KIND_SCROLL || !sizing(&axis, how, value)) return false;
     level->declaration.layout.sizing.width = axis;
     return true;
 }
@@ -694,7 +712,7 @@ bool wgf_ui_set_height(wgf_ui_sizing_t how, float value)
 {
     level_t *level = settable();
     Clay_SizingAxis axis;
-    if (level == NULL || !sizing(&axis, how, value)) return false;
+    if (level == NULL || level->kind == KIND_SCROLL || !sizing(&axis, how, value)) return false;
     level->declaration.layout.sizing.height = axis;
     return true;
 }
@@ -946,6 +964,7 @@ static void answer(const char *id, Clay_ElementId element, bool over, int arrows
         snprintf(ui.pressed, sizeof(ui.pressed), "%s", id);
         snprintf(ui.focus, sizeof(ui.focus), "%s", id);
         ui.focus_visible = false;
+        ui.scroll.press_drags = drags;
     }
     if (ui.pointer_released && over && strcmp(ui.pressed, id) == 0) out->activated = true;
     out->focused = strcmp(ui.focus, id) == 0;
@@ -1447,6 +1466,455 @@ bool wgf_ui_tile(const char *id, wgf_texture_t picture, const char *text)
     return answered.activated;
 }
 
+/* ---- scrolling ---------------------------------------------------------------------- */
+
+#define DRAG_SLOP 6.0f /* logical pixels a press moves before it is a drag's */
+
+/* A list's item's height, and how far a wheel's notch scrolls. */
+static float row_height(void)
+{
+    return ui.values[WGF_UI_VALUE_TEXT_SIZE] + ui.values[WGF_UI_VALUE_BUTTON_PADDING] * 0.5f;
+}
+
+static float clamped(float value, float most)
+{
+    return value > 0.0f ? (value < most ? value : most) : 0.0f; /* NaN too: 0 */
+}
+
+/* Each frame's start for scrolling, once a scroll area or list was given (wgf_ui_scroll.c,
+ * through the hook it sets: set here, the optimizer would call it in every UI). */
+static wgf_ui_priv_scroll_frame_t scroll_frame;
+
+void wgf_ui_priv_set_scroll_frame(wgf_ui_priv_scroll_frame_t frame)
+{
+    scroll_frame = frame;
+}
+
+/* How far the area whose window is `window` was scrolled as last laid out (`now` if it
+ * wasn't): what the frame before's bounds inside it are offset by. */
+static void laid_out(uint32_t window, const float now[2], float out[2])
+{
+    int i;
+    out[0] = now[0];
+    out[1] = now[1];
+    for (i = 0; i < ui.scroll.before_count; i++) {
+        if (ui.scroll.before[i].window == window) {
+            out[0] = ui.scroll.before[i].offset[0];
+            out[1] = ui.scroll.before[i].offset[1];
+        }
+    }
+}
+
+/* A scroll bar's thumb along a track `track` long: its start and length, `share` of what
+ * it scrolls in view and `at` (0 to 1) of the way scrolled. */
+static void thumb_of(float track, float share, float at, float *start, float *length)
+{
+    *length = fminf(track, fmaxf(track * share, ui.values[WGF_UI_VALUE_SCROLL_BAR] * 2.0f));
+    *start = (track - *length) * at;
+}
+
+/* What the input does to a scroll area before it is laid out: `offset`, how far it is
+ * scrolled across and down, moved by the wheel, a drag, a fling, or its bars (`bars`), as it
+ * was last laid out (`view` of `content` each way), the ways it scrolls `ways`; and held to
+ * its content. A `live` one alone answers. */
+static void scroll_input(uint32_t window, const Clay_ElementId bars[2], const bool ways[2], const float view[2],
+                         const float content[2], bool live, float offset[2])
+{
+    const float pointer[2] = {ui.pointer_x, ui.pointer_y};
+    const float dt = (float)wgf_platform_priv_get_frame_duration();
+    float before[2], most[2];
+    int a;
+    for (a = 0; a < 2; a++) {
+        most[a] = ways[a] ? fmaxf(content[a] - view[a], 0.0f) : 0.0f;
+        before[a] = offset[a];
+        if (live && ui.scroll.target == window) offset[a] -= ui.scroll.wheel[a] * row_height();
+    }
+    if (live && ui.scroll.held == window && ui.pointer_down) {
+        if (!ui.scroll.started) { /* the press: on a thumb it holds, on a track it pages */
+            ui.scroll.started = true;
+            for (a = 0; a < 2; a++) {
+                const Clay_ElementData bar = Clay_GetElementData(bars[a]);
+                const float track = a == 0 ? bar.boundingBox.width : bar.boundingBox.height;
+                const float at = pointer[a] - (a == 0 ? bar.boundingBox.x : bar.boundingBox.y);
+                float start, length;
+                ui.scroll.from[a] = pointer[a];
+                ui.scroll.offset_from[a] = offset[a];
+                if (most[a] <= 0.0f || !bar.found || !Clay_PointerOver(bars[a])) continue;
+                thumb_of(track, view[a] / content[a], offset[a] / most[a], &start, &length);
+                if (at >= start && at < start + length) {
+                    ui.scroll.bar = a;
+                    ui.scroll.grab = at - start;
+                } else {
+                    ui.scroll.bar = 2;
+                    offset[a] += at < start ? -view[a] : view[a];
+                }
+            }
+        } else if (ui.scroll.bar == 0 || ui.scroll.bar == 1) { /* the thumb dragged */
+            const Clay_ElementData bar = Clay_GetElementData(bars[ui.scroll.bar]);
+            a = ui.scroll.bar;
+            if (bar.found && most[a] > 0.0f) {
+                const float track = a == 0 ? bar.boundingBox.width : bar.boundingBox.height;
+                const float at = pointer[a] - (a == 0 ? bar.boundingBox.x : bar.boundingBox.y);
+                float start, length;
+                thumb_of(track, view[a] / content[a], 0.0f, &start, &length);
+                if (track > length) offset[a] = (at - ui.scroll.grab) / (track - length) * most[a];
+            }
+        } else if (ui.scroll.bar < 0 && !ui.scroll.dragging && !ui.scroll.press_drags) {
+            for (a = 0; a < 2; a++) {
+                if (most[a] > 0.0f && fabsf(pointer[a] - ui.scroll.from[a]) > DRAG_SLOP) ui.scroll.dragging = true;
+            }
+            if (ui.scroll.dragging) ui.pressed[0] = '\0'; /* the widget it began on is let go */
+        }
+        if (ui.scroll.dragging) {
+            for (a = 0; a < 2; a++) {
+                offset[a] = ui.scroll.offset_from[a] - (pointer[a] - ui.scroll.from[a]);
+                ui.scroll.velocity[a] = dt > 0.0f ? (clamped(offset[a], most[a]) - before[a]) / dt : 0.0f;
+            }
+        }
+    }
+    if (live && ui.scroll.flung == window) {
+        const float decay = powf(0.05f, dt); /* to a twentieth in a second */
+        for (a = 0; a < 2; a++) {
+            offset[a] += ui.scroll.velocity[a] * dt;
+            ui.scroll.velocity[a] *= decay;
+        }
+        if (fabsf(ui.scroll.velocity[0]) < 20.0f && fabsf(ui.scroll.velocity[1]) < 20.0f) ui.scroll.flung = 0;
+    }
+    for (a = 0; a < 2; a++) offset[a] = clamped(offset[a], most[a]);
+}
+
+static void close_scroll(level_t *level);
+
+/* A scroll area opened, a list's too: `element` its id's, `name` its id, `width` by `height`
+ * (0: the room left, at least `least` wide), padded by `padding`, drawn by `look` (NULL: its
+ * content alone), scrolling the ways `ways`; its window the open level, for its content. */
+static bool open_scroll(Clay_ElementId element, Clay_String name, float width, float height, float least,
+                        float padding, void *look, bool focused, const bool ways[2], bool live)
+{
+    Clay_ElementDeclaration outer, row;
+    const Clay_ElementId window = Clay_GetElementIdWithIndex(name, 0);
+    const Clay_ScrollContainerData data = Clay_GetScrollContainerData(window);
+    float view[2] = {0.0f, 0.0f}, content[2] = {0.0f, 0.0f}, offset[2] = {0.0f, 0.0f};
+    level_t *level;
+    int a;
+    if (ui.depth == DEPTH_MAX) {
+        wgf_log_error("wgf_ui: more than %d boxes inside each other", DEPTH_MAX);
+        return false;
+    }
+    wgf_ui_priv_install_scrolling();
+    if (ui.scroll.area_count == ui.scroll.area_capacity) {
+        const int capacity = ui.scroll.area_capacity > 0 ? ui.scroll.area_capacity * 2 : 8;
+        wgf_ui_priv_area_t *grown =
+            (wgf_ui_priv_area_t *)realloc(ui.scroll.areas, sizeof(wgf_ui_priv_area_t) * (size_t)capacity);
+        if (grown != NULL) {
+            ui.scroll.areas = grown;
+            ui.scroll.area_capacity = capacity;
+        }
+    }
+    level = &ui.levels[ui.depth];
+    memset(level, 0, sizeof(*level));
+    level->bars[0] = Clay_GetElementIdWithIndex(name, 2);
+    level->bars[1] = Clay_GetElementIdWithIndex(name, 1);
+    if (data.found && data.scrollPosition != NULL) {
+        view[0] = data.scrollContainerDimensions.width;
+        view[1] = data.scrollContainerDimensions.height;
+        content[0] = data.contentDimensions.width;
+        content[1] = data.contentDimensions.height;
+        offset[0] = -data.scrollPosition->x;
+        offset[1] = -data.scrollPosition->y;
+    }
+    scroll_input(window.id, level->bars, ways, view, content, live, offset);
+    if (data.found && data.scrollPosition != NULL) {
+        data.scrollPosition->x = -offset[0];
+        data.scrollPosition->y = -offset[1];
+    }
+    if (ui.scroll.area_count < ui.scroll.area_capacity) { /* for the next frame: under the pointer, laid out */
+        wgf_ui_priv_area_t *area = &ui.scroll.areas[ui.scroll.area_count++];
+        area->element = element.id;
+        area->window = window.id;
+        area->offset[0] = offset[0];
+        area->offset[1] = offset[1];
+    }
+    memset(&outer, 0, sizeof(outer));
+    outer.layout.layoutDirection = CLAY_TOP_TO_BOTTOM;
+    if (width > 0.0f) {
+        sizing(&outer.layout.sizing.width, WGF_UI_SIZING_FIXED, width);
+    } else {
+        outer.layout.sizing.width.type = CLAY__SIZING_TYPE_GROW;
+        outer.layout.sizing.width.size.minMax.min = least;
+    }
+    sizing(&outer.layout.sizing.height, height > 0.0f ? WGF_UI_SIZING_FIXED : WGF_UI_SIZING_GROW, height);
+    outer.layout.padding.left = outer.layout.padding.right = pixels(padding);
+    outer.layout.padding.top = outer.layout.padding.bottom = pixels(padding);
+    outer.cornerRadius = corners(look != NULL ? ui.values[WGF_UI_VALUE_CORNER_RADIUS] : 0.0f);
+    outer.custom.customData = look;
+    ring(&outer, focused);
+    Clay__OpenElementWithId(element);
+    Clay__ConfigureOpenElement(outer);
+    add_solid(element.id); /* the wheel over it is the UI's */
+    memset(&row, 0, sizeof(row));
+    row.layout.sizing.width.type = row.layout.sizing.height.type = CLAY__SIZING_TYPE_GROW;
+    row.layout.layoutDirection = CLAY_LEFT_TO_RIGHT;
+    Clay__OpenElement();
+    Clay__ConfigureOpenElement(row);
+    Clay__OpenElementWithId(window);
+    level->kind = KIND_SCROLL;
+    level->declaration.layout.sizing.width.type = level->declaration.layout.sizing.height.type =
+        CLAY__SIZING_TYPE_GROW;
+    level->declaration.layout.layoutDirection = CLAY_TOP_TO_BOTTOM;
+    level->declaration.clip.horizontal = level->declaration.clip.vertical = true;
+    level->declaration.clip.childOffset.x = -offset[0];
+    level->declaration.clip.childOffset.y = -offset[1];
+    level->close = close_scroll;
+    level->window = window;
+    level->first_focusable = ui.focusable_count;
+    for (a = 0; a < 2; a++) {
+        const float most = content[a] - view[a];
+        level->offset[a] = offset[a];
+        level->shown[a] = ways[a] && most > 0.5f;
+        if (!level->shown[a]) continue;
+        level->thumbs[a][0] = view[a] / content[a];
+        level->thumbs[a][1] = offset[a] / most;
+        level->bar_states[a] = !live                                                  ? WGF_UI_STATE_DISABLED
+                               : ui.scroll.held == window.id && ui.scroll.bar == a   ? WGF_UI_STATE_PRESSED
+                               : Clay_PointerOver(level->bars[a])                    ? WGF_UI_STATE_HOVERED
+                                                                                     : WGF_UI_STATE_NORMAL;
+    }
+    ui.depth++;
+    return true;
+}
+
+static void draw_scroll_bar(const piece_t *piece, Clay_BoundingBox box);
+
+/* A scroll area's bar across (0) or down (1). */
+static void scroll_bar(const level_t *level, int a)
+{
+    Clay_ElementDeclaration bar;
+    piece_t *piece;
+    const float thickness = ui.values[WGF_UI_VALUE_SCROLL_BAR];
+    memset(&bar, 0, sizeof(bar));
+    sizing(a == 0 ? &bar.layout.sizing.width : &bar.layout.sizing.height, WGF_UI_SIZING_GROW, 0.0f);
+    sizing(a == 0 ? &bar.layout.sizing.height : &bar.layout.sizing.width, WGF_UI_SIZING_FIXED, thickness);
+    bar.custom.customData = add_piece(draw_scroll_bar, WGF_UI_WIDGET_SCROLL, level->bar_states[a]);
+    piece = piece_at(bar.custom.customData);
+    if (piece != NULL) {
+        piece->on = a == 1;
+        piece->size = level->thumbs[a][0];
+        piece->value = level->thumbs[a][1];
+    }
+    Clay__OpenElementWithId(level->bars[a]);
+    Clay__ConfigureOpenElement(bar);
+    Clay__CloseElement();
+}
+
+/* A scroll area's close: the widget in it the focus moved to scrolled into view, and Page Up
+ * or Down paging while the focus is in it, but on a list (shown from the next frame); its
+ * window closed, and its bars beside and below it. */
+static void close_scroll(level_t *level)
+{
+    const Clay_ScrollContainerData data = Clay_GetScrollContainerData(level->window);
+    int i, at = -1;
+    for (i = level->first_focusable; i < ui.focusable_count && at < 0; i++) {
+        if (strcmp(ui.focusables[i].id, ui.focus) == 0) at = i;
+    }
+    if (at >= 0 && data.found && data.scrollPosition != NULL) {
+        const float view[2] = {data.scrollContainerDimensions.width, data.scrollContainerDimensions.height};
+        const float content[2] = {data.contentDimensions.width, data.contentDimensions.height};
+        float offset[2];
+        int a;
+        offset[0] = level->offset[0];
+        offset[1] = level->offset[1];
+        if (ui.scroll.reveal) {
+            Clay_ElementId focused;
+            Clay_ElementData widget, window;
+            memset(&focused, 0, sizeof(focused));
+            focused.id = ui.focusables[at].element;
+            widget = Clay_GetElementData(focused);
+            window = Clay_GetElementData(level->window);
+            if (widget.found && window.found) {
+                const float margin = ui.values[WGF_UI_VALUE_FOCUS_WIDTH] * 3.0f;
+                float laid[2], place[2];
+                laid_out(level->window.id, offset, laid);
+                place[0] = widget.boundingBox.x - window.boundingBox.x + laid[0];
+                place[1] = widget.boundingBox.y - window.boundingBox.y + laid[1];
+                for (a = 0; a < 2; a++) {
+                    const float size = a == 0 ? widget.boundingBox.width : widget.boundingBox.height;
+                    offset[a] = fminf(offset[a], place[a] - margin);
+                    offset[a] = fmaxf(offset[a], place[a] + size + margin - view[a]);
+                }
+            }
+        }
+        if (ui.keys.page_down != ui.keys.page_up && ui.focusables[at].arrows != ARROWS_DOWN)
+            offset[1] += ui.keys.page_down ? view[1] : -view[1];
+        for (a = 0; a < 2; a++) offset[a] = level->shown[a] ? clamped(offset[a], content[a] - view[a]) : level->offset[a];
+        data.scrollPosition->x = -offset[0];
+        data.scrollPosition->y = -offset[1];
+    }
+    Clay__CloseElement(); /* the window */
+    if (level->shown[1]) scroll_bar(level, 1);
+    Clay__CloseElement(); /* the row */
+    if (level->shown[0]) {
+        Clay_ElementDeclaration row;
+        memset(&row, 0, sizeof(row));
+        row.layout.sizing.width.type = CLAY__SIZING_TYPE_GROW;
+        row.layout.layoutDirection = CLAY_LEFT_TO_RIGHT;
+        Clay__OpenElement();
+        Clay__ConfigureOpenElement(row);
+        scroll_bar(level, 0);
+        if (level->shown[1]) {
+            Clay_ElementDeclaration corner;
+            memset(&corner, 0, sizeof(corner));
+            fixed(&corner, ui.values[WGF_UI_VALUE_SCROLL_BAR], 0.0f);
+            Clay__OpenElement();
+            Clay__ConfigureOpenElement(corner);
+            Clay__CloseElement();
+        }
+        Clay__CloseElement();
+    }
+    Clay__CloseElement(); /* the area */
+}
+
+bool wgf_ui_begin_scroll(const char *id, float width, float height)
+{
+    static const bool both[2] = {true, true};
+    Clay_ElementId element;
+    Clay_String name;
+    if (!(width >= 0.0f) || !(height >= 0.0f) || !isfinite(width) || !isfinite(height)) return false;
+    if (!widget_named(id, "wgf_ui_begin_scroll", &element, &name)) return false;
+    return open_scroll(element, name, width, height, 0.0f, 0.0f, NULL, false, both, true);
+}
+
+bool wgf_ui_end_scroll(void)
+{
+    return close_level(KIND_SCROLL);
+}
+
+/* The Clay data of the scroll area or list `id`: false for one not laid out. */
+static bool scroll_named(const char *id, Clay_ScrollContainerData *data)
+{
+    Clay_String name;
+    if (!ui.started || id == NULL || id[0] == '\0') return false;
+    name.isStaticallyAllocated = false;
+    name.length = (int32_t)strlen(id);
+    name.chars = id;
+    *data = Clay_GetScrollContainerData(Clay_GetElementIdWithIndex(name, 0));
+    return data->found && data->scrollPosition != NULL;
+}
+
+bool wgf_ui_set_scroll(const char *id, float x, float y)
+{
+    Clay_ScrollContainerData data;
+    if (!isfinite(x) || !isfinite(y) || !scroll_named(id, &data)) return false;
+    data.scrollPosition->x = -clamped(x, data.contentDimensions.width - data.scrollContainerDimensions.width);
+    data.scrollPosition->y = -clamped(y, data.contentDimensions.height - data.scrollContainerDimensions.height);
+    ui.scroll.flung = 0;
+    return true;
+}
+
+wgf_vec2_t wgf_ui_get_scroll(const char *id)
+{
+    Clay_ScrollContainerData data;
+    if (!scroll_named(id, &data)) return wgf_vec2_make(0.0f, 0.0f);
+    return wgf_vec2_make(-data.scrollPosition->x, -data.scrollPosition->y);
+}
+
+static void draw_list_box(const piece_t *piece, Clay_BoundingBox box);
+static void draw_list_item(const piece_t *piece, Clay_BoundingBox box);
+
+/* A list's item `i`, the first `length` bytes of `text`. */
+static void list_item(const char *text, size_t length, int state, bool chosen)
+{
+    Clay_ElementDeclaration item;
+    void *look = add_piece(draw_list_item, WGF_UI_WIDGET_LIST, state);
+    piece_t *piece = piece_at(look);
+    const float padding = ui.values[WGF_UI_VALUE_BUTTON_PADDING] * 0.5f;
+    if (piece != NULL) piece->on = chosen;
+    memset(&item, 0, sizeof(item));
+    sizing(&item.layout.sizing.width, WGF_UI_SIZING_GROW, 0.0f);
+    sizing(&item.layout.sizing.height, WGF_UI_SIZING_FIXED, row_height());
+    item.layout.padding.left = item.layout.padding.right = pixels(padding);
+    item.layout.childAlignment.y = CLAY_ALIGN_Y_CENTER;
+    item.cornerRadius = corners(ui.values[WGF_UI_VALUE_CORNER_RADIUS] * 0.5f);
+    item.custom.customData = look;
+    Clay__OpenElement();
+    Clay__ConfigureOpenElement(item);
+    if (length > 0)
+        text_slice(text, length, 0.0f, dim(ui.colors[WGF_UI_COLOR_TEXT], state), CLAY_TEXT_WRAP_NONE, look);
+    Clay__CloseElement();
+}
+
+int wgf_ui_list(const char *id, const char *items, int selected, int rows)
+{
+    static const bool down[2] = {false, true};
+    Clay_ElementId element, window;
+    Clay_String name;
+    Clay_ScrollContainerData data;
+    answer_t answered;
+    const float row = row_height(), padding = floorf(ui.values[WGF_UI_VALUE_CORNER_RADIUS] * 0.5f);
+    const char *at;
+    float view, offset = 0.0f;
+    int count = 0, over = -1, first, last, i;
+    if (rows < 1 || !widget_named(id, "wgf_ui_list", &element, &name)) return selected;
+    for (at = items; at != NULL && at[0] != '\0'; count++) {
+        at = strchr(at, '\n');
+        if (at != NULL) at++;
+    }
+    selected = selected < -1 ? -1 : selected >= count ? count - 1 : selected;
+    view = row * (float)rows;
+    window = Clay_GetElementIdWithIndex(name, 0);
+    data = Clay_GetScrollContainerData(window);
+    if (data.found && data.scrollPosition != NULL) offset = -data.scrollPosition->y;
+    answer(id, element, Clay_PointerOver(element), ARROWS_DOWN, false, &answered);
+    if (answered.state != WGF_UI_STATE_DISABLED) {
+        const Clay_ElementData box = Clay_GetElementData(window);
+        int step = 0;
+        if (box.found && Clay_PointerOver(window) && row > 0.0f) {
+            const float now[2] = {0.0f, offset};
+            float laid[2];
+            laid_out(window.id, now, laid);
+            over = (int)floorf((ui.pointer_y - box.boundingBox.y + laid[1]) / row);
+            if (over >= count) over = -1;
+        }
+        if (ui.pointer_pressed && answered.over) ui.scroll.item = over;
+        if (ui.pointer_released && answered.activated && over >= 0 && over == ui.scroll.item) selected = over;
+        if (answered.focused && ui.keys.more_down != ui.keys.more_up) step = ui.keys.more_down ? 1 : -1;
+        if (answered.focused && ui.keys.page_down != ui.keys.page_up) step = ui.keys.page_down ? rows : -rows;
+        if (step != 0 && count > 0) {
+            selected = selected < 0 ? 0 : clamp_index(selected + step, count);
+            ui.focus_visible = true;
+            if (data.found && data.scrollPosition != NULL) { /* the chosen one into view */
+                offset = fmaxf(fminf(offset, row * (float)selected), row * (float)(selected + 1) - view);
+                data.scrollPosition->y = -offset;
+            }
+        }
+    }
+    if (!open_scroll(element, name, 0.0f, view + padding * 2.0f, ui.values[WGF_UI_VALUE_BUTTON_WIDTH], padding,
+                     add_piece(draw_list_box, WGF_UI_WIDGET_LIST, answered.state), answered.focused, down,
+                     answered.state != WGF_UI_STATE_DISABLED))
+        return selected;
+    offset = ui.levels[ui.depth - 1].offset[1];
+    configure();
+    first = row > 0.0f ? (int)floorf(offset / row) : 0; /* the items in view alone, the rest room */
+    last = row > 0.0f ? (int)ceilf((offset + view) / row) : count;
+    first = first < 0 ? 0 : first > count ? count : first;
+    last = last < first ? first : last > count ? count : last;
+    if (first > 0) wgf_ui_spacer(row * (float)first);
+    for (i = 0, at = items; i < last && at != NULL; i++) {
+        const char *end = strchr(at, '\n');
+        if (i >= first) {
+            const int state = answered.state == WGF_UI_STATE_DISABLED ? WGF_UI_STATE_DISABLED
+                              : i == selected                          ? WGF_UI_STATE_PRESSED
+                              : i == over                              ? WGF_UI_STATE_HOVERED
+                                                                       : WGF_UI_STATE_NORMAL;
+            list_item(at, end != NULL ? (size_t)(end - at) : strlen(at), state, i == selected);
+        }
+        at = end != NULL ? end + 1 : NULL;
+    }
+    if (last < count) wgf_ui_spacer(row * (float)(count - last));
+    close_level(KIND_SCROLL);
+    return selected;
+}
+
 /* ---- the frame ---------------------------------------------------------------------- */
 
 static bool any_pad(wgf_gamepad_button_t button)
@@ -1482,6 +1950,8 @@ static void read_input(void)
     ui.keys.more_down = wgf_keyboard_is_repeated(WGF_KEY_DOWN) || pad_down;
     ui.keys.more_left = wgf_keyboard_is_repeated(WGF_KEY_LEFT) || pad_left;
     ui.keys.more_right = wgf_keyboard_is_repeated(WGF_KEY_RIGHT) || pad_right;
+    ui.keys.page_up = wgf_keyboard_is_repeated(WGF_KEY_PAGE_UP);
+    ui.keys.page_down = wgf_keyboard_is_repeated(WGF_KEY_PAGE_DOWN);
 }
 
 bool wgf_ui_begin(void)
@@ -1510,6 +1980,9 @@ bool wgf_ui_begin(void)
     pointer.x = ui.pointer_x;
     pointer.y = ui.pointer_y;
     Clay_SetPointerState(pointer, ui.pointer_down);
+    ui.scroll.reveal = ui.scroll.reveal_next;
+    ui.scroll.reveal_next = false;
+    if (scroll_frame != NULL) scroll_frame(&ui.scroll, ui.pointer_pressed, ui.pointer_down);
     Clay_BeginLayout();
     Clay__OpenElement();
     root = &ui.levels[0];
@@ -1589,11 +2062,12 @@ static void navigate(void)
     }
     snprintf(ui.focus, sizeof(ui.focus), "%s", ui.focusables[to].id);
     ui.focus_visible = true;
+    ui.scroll.reveal_next = true;
 }
 
 static void capture(void)
 {
-    bool pointer = (ui.pressed[0] != '\0' && ui.pointer_down) || ui.hovering;
+    bool pointer = ((ui.pressed[0] != '\0' || ui.scroll.held != 0) && ui.pointer_down) || ui.hovering;
     int i;
     for (i = 0; i < ui.solid_count && !pointer; i++) {
         Clay_ElementId id;
@@ -1808,6 +2282,46 @@ static void draw_slider(const piece_t *piece, Clay_BoundingBox box)
     fill(piece->widget, piece->state, track, length > 0.0f ? at / length : 0.0f, radius);
     paint(piece->widget, WGF_UI_PART_HANDLE, piece->state, knob, ui.colors[WGF_UI_COLOR_HANDLE],
          fminf(knob.width, knob.height) * 0.5f);
+}
+
+static void draw_list_box(const piece_t *piece, Clay_BoundingBox box)
+{
+    paint(piece->widget, WGF_UI_PART_BASE, piece->state, box, ui.colors[WGF_UI_COLOR_BAR],
+          ui.values[WGF_UI_VALUE_CORNER_RADIUS]);
+}
+
+/* A list's item: the chosen one in the fill's color, one under the pointer as a hovered
+ * button, the rest the box's (a skin draws each). */
+static void draw_list_item(const piece_t *piece, Clay_BoundingBox box)
+{
+    if (skinned(piece->widget, WGF_UI_PART_ITEM, piece->state, box)) return;
+    if (!piece->on && piece->state != WGF_UI_STATE_HOVERED) return;
+    paint(piece->widget, WGF_UI_PART_ITEM, piece->state, box,
+          ui.colors[piece->on ? WGF_UI_COLOR_BAR_FILL : WGF_UI_COLOR_BUTTON_HOVERED],
+          ui.values[WGF_UI_VALUE_CORNER_RADIUS] * 0.5f);
+}
+
+/* A scroll bar: its track, and its thumb as long as the share in view and as far along as
+ * the scroll, in the handle's color (half its alpha but under the pointer or held). */
+static void draw_scroll_bar(const piece_t *piece, Clay_BoundingBox box)
+{
+    const float track = piece->on ? box.height : box.width, radius = (piece->on ? box.width : box.height) * 0.5f;
+    const wgf_color_t handle = ui.colors[WGF_UI_COLOR_HANDLE];
+    Clay_BoundingBox thumb = box;
+    float start, length;
+    thumb_of(track, piece->size, piece->value, &start, &length);
+    if (piece->on) {
+        thumb.y += start;
+        thumb.height = length;
+    } else {
+        thumb.x += start;
+        thumb.width = length;
+    }
+    paint(piece->widget, WGF_UI_PART_BASE, piece->state == WGF_UI_STATE_DISABLED ? piece->state : WGF_UI_STATE_NORMAL,
+          box, ui.colors[WGF_UI_COLOR_BAR], radius);
+    paint(piece->widget, WGF_UI_PART_HANDLE, piece->state, thumb,
+          piece->state == WGF_UI_STATE_NORMAL ? wgf_color_with_alpha(handle, wgf_color_get_alpha(handle) / 2) : handle,
+          radius);
 }
 
 static void draw(Clay_RenderCommandArray commands)
