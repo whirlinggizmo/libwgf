@@ -1165,6 +1165,9 @@ class Main {
 			expect(!Debug.isFpsShown(), "the frame-rate overlay off by default");
 			Debug.showFps(0, 8, 8, 14, Color.get(ColorStock.LIME));
 			expect(Debug.isFpsShown(), "and shown");
+			expect(Debug.getFrameStat(FrameStat.FRAMES) == 0, "frames counted from the first ask");
+			Debug.startFrameRecording();
+			expect(Debug.isFrameRecording(), "the frames recorded");
 		}
 		if (frames == 3) {
 			picking();
@@ -1172,6 +1175,9 @@ class Main {
 			expect(Loop.getFrameCost() > 0, "a frame's cost, measured");
 			Debug.hideFps();
 			expect(!Debug.isFpsShown(), "the overlay hidden");
+			expect(Debug.getFrameStat(FrameStat.FRAMES) >= 1 && Debug.getFrameStat(FrameStat.TIME_P95) > 0, "the last frames' stats");
+			expect(Debug.stopFrameRecording() && Debug.getRecordedFrameStat(FrameStat.FRAMES) == 0
+				&& Debug.getRecordedFrameTimes([0.0, 0.0], false) == 0, "a recording stopped before its first frame ended");
 		}
 		waitOnTasks();
 		if (!instantiated && Resource.getStatus(scene) == ResourceStatus.READY) {

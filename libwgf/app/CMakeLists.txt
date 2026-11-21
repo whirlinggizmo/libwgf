@@ -10,6 +10,7 @@ wgf_layer(app
         src/wgf_app.c
         src/wgf_app_autopilot.c
         src/wgf_app_debug.c
+        src/wgf_app_frame_stats.c
         src/wgf_app_options.c
         src/wgf_app_record.c
         src/wgf_app_replay.c
@@ -23,6 +24,7 @@ if(WGF_TESTS)
     wgf_test(app wgf_app_options_test)
     if(WGF_HEADLESS)
         wgf_test(app wgf_app_loop_test)
+        wgf_test(app wgf_app_frame_stats_test)
         wgf_test(app wgf_app_autopilot_test)
         wgf_test(app wgf_app_replay_test)
         # Recording writes a run's keystrokes to a file: Windows Defender quarantines a MinGW build

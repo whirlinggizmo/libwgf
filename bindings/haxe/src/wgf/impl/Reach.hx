@@ -284,9 +284,15 @@ class Reach {
 		"wgf_cubemap_create_faces",
 		"wgf_cubemap_get_layout",
 		"wgf_cubemap_get_size",
+		"wgf_debug_get_frame_stat",
+		"wgf_debug_get_recorded_frame_stat",
+		"wgf_debug_get_recorded_frame_times",
 		"wgf_debug_hide_fps",
 		"wgf_debug_is_fps_shown",
+		"wgf_debug_is_frame_recording",
 		"wgf_debug_show_fps",
+		"wgf_debug_start_frame_recording",
+		"wgf_debug_stop_frame_recording",
 		"wgf_document_create",
 		"wgf_document_find",
 		"wgf_document_get_event_count",
@@ -1385,7 +1391,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1376) 0];
+	static final counts:Array<Int> = [for (_ in 0...1382) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

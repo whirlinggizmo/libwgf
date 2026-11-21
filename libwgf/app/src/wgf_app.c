@@ -43,6 +43,8 @@ static struct {
     double fps_delta; /* frame deltas, smoothed, for the fps readout; 0 before the first */
     float frame_cost;  /* the last frame's own work in real time, seconds; 0 before the first */
     wgf_app_priv_overlay_t overlay; /* drawn over the program's frame (wgf_app_priv.h); NULL for none */
+    wgf_app_priv_frame_counted_t frame_counted; /* the frame stats' (wgf_app_priv.h); NULL before they're asked */
+    double frame_ended; /* when the previous frame's drawing ended, for them; 0 before the first */
     bool first_frame_done; /* the first frame's mark made */
     bool flown;            /* an autopilot flies it (wgf_app_autopilot_priv.h): its time, not the clock's */
     bool recording;        /* played by hand and recorded as an autopilot: the autopilot's time, at 60 a second */
@@ -71,6 +73,7 @@ static void on_init(void)
     app.frame_delta = 0.0f;
     app.fps_delta = 0.0;
     app.frame_cost = 0.0f;
+    app.frame_ended = 0.0;
     app.frames = 0;
     app.flown = wgf_app_priv_autopilot_start(); /* before the program's init: it sets the seed */
     app.recording = !app.flown && app.recorder != NULL && app.recorder->start();
@@ -191,7 +194,12 @@ static void on_frame(void)
     call(app.frame);
     if (app.overlay != NULL) app.overlay();
     wgf_gfx_priv_end_frame();
-    app.frame_cost = (float)(wgf_time_get_seconds() - started);
+    {
+        const double ended = wgf_time_get_seconds();
+        app.frame_cost = (float)(ended - started);
+        if (app.frame_counted != NULL) app.frame_counted(app.frame_ended > 0.0 ? ended - app.frame_ended : 0.0, app.frame_cost);
+        app.frame_ended = ended;
+    }
     if (!app.first_frame_done) {
         app.first_frame_done = true;
         wgf_platform_priv_mark("wgf:first-frame");
@@ -325,6 +333,11 @@ float wgf_loop_get_fps(void)
 void wgf_app_priv_set_overlay(wgf_app_priv_overlay_t overlay)
 {
     app.overlay = overlay;
+}
+
+void wgf_app_priv_set_frame_counted(wgf_app_priv_frame_counted_t counted)
+{
+    app.frame_counted = counted;
 }
 
 float wgf_loop_get_frame_cost(void)

@@ -36,4 +36,53 @@ class Debug {
 	**/
 	public static inline function isFpsShown():Bool
 		return Raw.wgf_debug_is_fps_shown();
+
+	/**
+	    A stat of the last half second's frames. Frames are counted from the first call of this
+	    or wgf_debug_start_frame_recording, so the first returns 0 and the next ones cover the
+	    frames since, up to the last half second; a program that never asks counts none. 0 for a
+	    stat that isn't one.
+	**/
+	public static inline function getFrameStat(stat:FrameStat):Float
+		return Raw.wgf_debug_get_frame_stat(stat);
+
+	/**
+	    Records the frames' stats from the next frame's end until stopped, its latest 65,536
+	    frames kept; started again, it drops what it held. Stopped, its stats are kept for reading
+	    (wgf_debug_get_recorded_frame_stat) until the next start; stop is false, nothing kept, for
+	    a recording never started. Recording doesn't change the last half second's stats.
+	**/
+	public static inline function startFrameRecording():Void
+		Raw.wgf_debug_start_frame_recording();
+
+	/**
+	    Records the frames' stats from the next frame's end until stopped, its latest 65,536
+	    frames kept; started again, it drops what it held. Stopped, its stats are kept for reading
+	    (wgf_debug_get_recorded_frame_stat) until the next start; stop is false, nothing kept, for
+	    a recording never started. Recording doesn't change the last half second's stats.
+	**/
+	public static inline function stopFrameRecording():Bool
+		return Raw.wgf_debug_stop_frame_recording();
+
+	/**
+	    Records the frames' stats from the next frame's end until stopped, its latest 65,536
+	    frames kept; started again, it drops what it held. Stopped, its stats are kept for reading
+	    (wgf_debug_get_recorded_frame_stat) until the next start; stop is false, nothing kept, for
+	    a recording never started. Recording doesn't change the last half second's stats.
+	**/
+	public static inline function isFrameRecording():Bool
+		return Raw.wgf_debug_is_frame_recording();
+
+	/**
+	    A stat of the stopped recording's frames; 0 while one runs, or with none.
+	**/
+	public static inline function getRecordedFrameStat(stat:FrameStat):Float
+		return Raw.wgf_debug_get_recorded_frame_stat(stat);
+
+	/**
+	    The stopped recording's frames' times (`costs` false) or costs, oldest first, into `out`, at
+	    most `count`; the number written.
+	**/
+	public static inline function getRecordedFrameTimes(out:Array<Float>, costs:Bool):Int
+		return Raw.wgf_debug_get_recorded_frame_times(out, costs);
 }

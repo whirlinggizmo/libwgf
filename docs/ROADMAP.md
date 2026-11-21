@@ -8,7 +8,7 @@ Rob's (2026-11-19): libwgf is finished so that a pure C and wasm engine can be c
 
 The comparison is done (HISTORY.md, "The comparison"). What it found still missing from helix-raylib's floor, and what its entrants met:
 
-1. **Parity's last gaps.** A sound made from samples, as a sound and not only a pushed voice (raylib's LoadSoundFromWave); frame-time percentiles and a recording of the frame stats (helix's Debug extra); tabs and tooltips in documents; a pads' mapping database.
+1. **Parity's last gaps.** A sound made from samples, as a sound and not only a pushed voice (raylib's LoadSoundFromWave); tabs and tooltips in documents; a pads' mapping database.
 2. **What the Wardens entrants met.** A file root's tint and visibility reaching its nodes, or a call that says how they don't; a bar in the world facing the camera; the immediate UI skinned from a game's art, or the way to RmlUi's skinned controls shown where the immediate UI's docs are.
 3. **Sizes re-baselined.** `measure_sizes.py --check` holds libwgf to 2026-10-12's sizes, which the features since have outgrown.
 

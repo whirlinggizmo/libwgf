@@ -642,6 +642,18 @@ export const Debug = Object.freeze({
     hideFps: raw.wgf_debug_hide_fps,
     // wgf: call wgf_debug_is_fps_shown
     isFpsShown: raw.wgf_debug_is_fps_shown,
+    // wgf: call wgf_debug_get_frame_stat
+    getFrameStat: raw.wgf_debug_get_frame_stat,
+    // wgf: call wgf_debug_start_frame_recording
+    startFrameRecording: raw.wgf_debug_start_frame_recording,
+    // wgf: call wgf_debug_stop_frame_recording
+    stopFrameRecording: raw.wgf_debug_stop_frame_recording,
+    // wgf: call wgf_debug_is_frame_recording
+    isFrameRecording: raw.wgf_debug_is_frame_recording,
+    // wgf: call wgf_debug_get_recorded_frame_stat
+    getRecordedFrameStat: raw.wgf_debug_get_recorded_frame_stat,
+    // wgf: call wgf_debug_get_recorded_frame_times
+    getRecordedFrameTimes: raw.wgf_debug_get_recorded_frame_times,
 });
 // wgf: typed Document
 export const Document = Object.freeze({
@@ -3144,6 +3156,8 @@ export const Easing = Object.freeze({ LINEAR: 0, QUAD_IN: 1, QUAD_OUT: 2, QUAD_I
 export const FlyMode = Object.freeze({ NONE: 0, FREE: 1, FIRST_PERSON: 2 });
 // wgf: enum FollowMode
 export const FollowMode = Object.freeze({ CHASE: 0, FIXED: 1, ORBIT: 2 });
+// wgf: enum FrameStat
+export const FrameStat = Object.freeze({ FRAMES: 0, FPS: 1, TIME_MEAN: 2, TIME_MEDIAN: 3, TIME_P95: 4, TIME_P99: 5, TIME_SLOWEST: 6, COST_MEAN: 7, COST_P95: 8, COST_SLOWEST: 9 });
 // wgf: enum FsTaskStatus
 export const FsTaskStatus = Object.freeze({ NONE: 0, PENDING: 1, DONE: 2, NOT_FOUND: 3, FAILED: 4 });
 // wgf: enum GamepadAxis

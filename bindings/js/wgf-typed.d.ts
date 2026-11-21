@@ -2375,6 +2375,43 @@ export declare const Debug: {
      * shows it links none of it.
      */
     readonly isFpsShown: typeof raw.wgf_debug_is_fps_shown;
+    /**
+     * A stat of the last half second's frames. Frames are counted from the first call of this
+     * or wgf_debug_start_frame_recording, so the first returns 0 and the next ones cover the
+     * frames since, up to the last half second; a program that never asks counts none. 0 for a
+     * stat that isn't one.
+     */
+    readonly getFrameStat: typeof raw.wgf_debug_get_frame_stat;
+    /**
+     * Records the frames' stats from the next frame's end until stopped, its latest 65,536
+     * frames kept; started again, it drops what it held. Stopped, its stats are kept for reading
+     * (wgf_debug_get_recorded_frame_stat) until the next start; stop is false, nothing kept, for
+     * a recording never started. Recording doesn't change the last half second's stats.
+     */
+    readonly startFrameRecording: typeof raw.wgf_debug_start_frame_recording;
+    /**
+     * Records the frames' stats from the next frame's end until stopped, its latest 65,536
+     * frames kept; started again, it drops what it held. Stopped, its stats are kept for reading
+     * (wgf_debug_get_recorded_frame_stat) until the next start; stop is false, nothing kept, for
+     * a recording never started. Recording doesn't change the last half second's stats.
+     */
+    readonly stopFrameRecording: typeof raw.wgf_debug_stop_frame_recording;
+    /**
+     * Records the frames' stats from the next frame's end until stopped, its latest 65,536
+     * frames kept; started again, it drops what it held. Stopped, its stats are kept for reading
+     * (wgf_debug_get_recorded_frame_stat) until the next start; stop is false, nothing kept, for
+     * a recording never started. Recording doesn't change the last half second's stats.
+     */
+    readonly isFrameRecording: typeof raw.wgf_debug_is_frame_recording;
+    /**
+     * A stat of the stopped recording's frames; 0 while one runs, or with none.
+     */
+    readonly getRecordedFrameStat: typeof raw.wgf_debug_get_recorded_frame_stat;
+    /**
+     * The stopped recording's frames' times (`costs` false) or costs, oldest first, into `out`, at
+     * most `count`; the number written.
+     */
+    readonly getRecordedFrameTimes: typeof raw.wgf_debug_get_recorded_frame_times;
 };
 /** A handle of kind wgf_document_t: the raw binding's branded type. */
 export type Document = raw.wgf_document_t;
@@ -11976,6 +12013,8 @@ export type FlyMode = raw.wgf_fly_mode_t;
 export declare const FlyMode: { readonly NONE: FlyMode; readonly FREE: FlyMode; readonly FIRST_PERSON: FlyMode; };
 export type FollowMode = raw.wgf_follow_mode_t;
 export declare const FollowMode: { readonly CHASE: FollowMode; readonly FIXED: FollowMode; readonly ORBIT: FollowMode; };
+export type FrameStat = raw.wgf_frame_stat_t;
+export declare const FrameStat: { readonly FRAMES: FrameStat; readonly FPS: FrameStat; readonly TIME_MEAN: FrameStat; readonly TIME_MEDIAN: FrameStat; readonly TIME_P95: FrameStat; readonly TIME_P99: FrameStat; readonly TIME_SLOWEST: FrameStat; readonly COST_MEAN: FrameStat; readonly COST_P95: FrameStat; readonly COST_SLOWEST: FrameStat; };
 export type FsTaskStatus = raw.wgf_fs_task_status_t;
 export declare const FsTaskStatus: { readonly NONE: FsTaskStatus; readonly PENDING: FsTaskStatus; readonly DONE: FsTaskStatus; readonly NOT_FOUND: FsTaskStatus; readonly FAILED: FsTaskStatus; };
 export type GamepadAxis = raw.wgf_gamepad_axis_t;

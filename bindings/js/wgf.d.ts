@@ -1179,6 +1179,25 @@ export declare const WGF_DOCUMENT_EVENT_BLUR: 5;
 export type wgf_document_event_t = typeof WGF_DOCUMENT_EVENT_NONE | typeof WGF_DOCUMENT_EVENT_CLICK | typeof WGF_DOCUMENT_EVENT_CHANGE | typeof WGF_DOCUMENT_EVENT_SUBMIT | typeof WGF_DOCUMENT_EVENT_FOCUS | typeof WGF_DOCUMENT_EVENT_BLUR;
 
 /**
+ * The frames' stats, helix's Debug extra's: each frame counted as its drawing ends, its time
+ * from the frame before's end (real time, whatever the time scale or an autopilot), and its
+ * cost wgf_loop_get_frame_cost's. Times in seconds; a percentile is the least of the slowest
+ * share (P95: of the slowest 5%), so a single slow frame in twenty shows. Every stat is 0 for
+ * no frames.
+ */
+export declare const WGF_FRAME_STAT_FRAMES: 0;
+export declare const WGF_FRAME_STAT_FPS: 1;
+export declare const WGF_FRAME_STAT_TIME_MEAN: 2;
+export declare const WGF_FRAME_STAT_TIME_MEDIAN: 3;
+export declare const WGF_FRAME_STAT_TIME_P95: 4;
+export declare const WGF_FRAME_STAT_TIME_P99: 5;
+export declare const WGF_FRAME_STAT_TIME_SLOWEST: 6;
+export declare const WGF_FRAME_STAT_COST_MEAN: 7;
+export declare const WGF_FRAME_STAT_COST_P95: 8;
+export declare const WGF_FRAME_STAT_COST_SLOWEST: 9;
+export type wgf_frame_stat_t = typeof WGF_FRAME_STAT_FRAMES | typeof WGF_FRAME_STAT_FPS | typeof WGF_FRAME_STAT_TIME_MEAN | typeof WGF_FRAME_STAT_TIME_MEDIAN | typeof WGF_FRAME_STAT_TIME_P95 | typeof WGF_FRAME_STAT_TIME_P99 | typeof WGF_FRAME_STAT_TIME_SLOWEST | typeof WGF_FRAME_STAT_COST_MEAN | typeof WGF_FRAME_STAT_COST_P95 | typeof WGF_FRAME_STAT_COST_SLOWEST;
+
+/**
  * Overlaps.
  */
 export declare function wgf_collide2d_rect_rect(ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number, hit: number[] | Float32Array | Float64Array | null): boolean;
@@ -12946,6 +12965,49 @@ export declare function wgf_debug_hide_fps(): void;
  * shows it links none of it.
  */
 export declare function wgf_debug_is_fps_shown(): boolean;
+
+/**
+ * A stat of the last half second's frames. Frames are counted from the first call of this
+ * or wgf_debug_start_frame_recording, so the first returns 0 and the next ones cover the
+ * frames since, up to the last half second; a program that never asks counts none. 0 for a
+ * stat that isn't one.
+ */
+export declare function wgf_debug_get_frame_stat(stat: wgf_frame_stat_t): number;
+
+/**
+ * Records the frames' stats from the next frame's end until stopped, its latest 65,536
+ * frames kept; started again, it drops what it held. Stopped, its stats are kept for reading
+ * (wgf_debug_get_recorded_frame_stat) until the next start; stop is false, nothing kept, for
+ * a recording never started. Recording doesn't change the last half second's stats.
+ */
+export declare function wgf_debug_start_frame_recording(): void;
+
+/**
+ * Records the frames' stats from the next frame's end until stopped, its latest 65,536
+ * frames kept; started again, it drops what it held. Stopped, its stats are kept for reading
+ * (wgf_debug_get_recorded_frame_stat) until the next start; stop is false, nothing kept, for
+ * a recording never started. Recording doesn't change the last half second's stats.
+ */
+export declare function wgf_debug_stop_frame_recording(): boolean;
+
+/**
+ * Records the frames' stats from the next frame's end until stopped, its latest 65,536
+ * frames kept; started again, it drops what it held. Stopped, its stats are kept for reading
+ * (wgf_debug_get_recorded_frame_stat) until the next start; stop is false, nothing kept, for
+ * a recording never started. Recording doesn't change the last half second's stats.
+ */
+export declare function wgf_debug_is_frame_recording(): boolean;
+
+/**
+ * A stat of the stopped recording's frames; 0 while one runs, or with none.
+ */
+export declare function wgf_debug_get_recorded_frame_stat(stat: wgf_frame_stat_t): number;
+
+/**
+ * The stopped recording's frames' times (`costs` false) or costs, oldest first, into `out`, at
+ * most `count`; the number written.
+ */
+export declare function wgf_debug_get_recorded_frame_times(out: number[] | Float32Array | Float64Array | null, costs: boolean): number;
 
 /**
  * Seconds since the previous frame, at most 0.1 (a frame after a stall counts as

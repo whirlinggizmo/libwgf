@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "6e2818990419bec3" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "e0c62521f9120750" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -1268,6 +1268,24 @@ export const WGF_DOCUMENT_EVENT_CHANGE = 2;
 export const WGF_DOCUMENT_EVENT_SUBMIT = 3;
 export const WGF_DOCUMENT_EVENT_FOCUS = 4;
 export const WGF_DOCUMENT_EVENT_BLUR = 5;
+
+/**
+ * The frames' stats, helix's Debug extra's: each frame counted as its drawing ends, its time
+ * from the frame before's end (real time, whatever the time scale or an autopilot), and its
+ * cost wgf_loop_get_frame_cost's. Times in seconds; a percentile is the least of the slowest
+ * share (P95: of the slowest 5%), so a single slow frame in twenty shows. Every stat is 0 for
+ * no frames.
+ */
+export const WGF_FRAME_STAT_FRAMES = 0;
+export const WGF_FRAME_STAT_FPS = 1;
+export const WGF_FRAME_STAT_TIME_MEAN = 2;
+export const WGF_FRAME_STAT_TIME_MEDIAN = 3;
+export const WGF_FRAME_STAT_TIME_P95 = 4;
+export const WGF_FRAME_STAT_TIME_P99 = 5;
+export const WGF_FRAME_STAT_TIME_SLOWEST = 6;
+export const WGF_FRAME_STAT_COST_MEAN = 7;
+export const WGF_FRAME_STAT_COST_P95 = 8;
+export const WGF_FRAME_STAT_COST_SLOWEST = 9;
 
 // wgf: call wgf_collide2d_rect_rect
 /**
@@ -18890,6 +18908,74 @@ export function wgf_debug_hide_fps() {
 export function wgf_debug_is_fps_shown() {
     const value = host["_wgf_debug_is_fps_shown"]();
     return value !== 0;
+}
+
+// wgf: call wgf_debug_get_frame_stat
+/**
+ * A stat of the last half second's frames. Frames are counted from the first call of this
+ * or wgf_debug_start_frame_recording, so the first returns 0 and the next ones cover the
+ * frames since, up to the last half second; a program that never asks counts none. 0 for a
+ * stat that isn't one.
+ */
+export function wgf_debug_get_frame_stat(stat) {
+    const value = host["_wgf_debug_get_frame_stat"](stat);
+    return value;
+}
+
+// wgf: call wgf_debug_start_frame_recording
+/**
+ * Records the frames' stats from the next frame's end until stopped, its latest 65,536
+ * frames kept; started again, it drops what it held. Stopped, its stats are kept for reading
+ * (wgf_debug_get_recorded_frame_stat) until the next start; stop is false, nothing kept, for
+ * a recording never started. Recording doesn't change the last half second's stats.
+ */
+export function wgf_debug_start_frame_recording() {
+    host["_wgf_debug_start_frame_recording"]();
+}
+
+// wgf: call wgf_debug_stop_frame_recording
+/**
+ * Records the frames' stats from the next frame's end until stopped, its latest 65,536
+ * frames kept; started again, it drops what it held. Stopped, its stats are kept for reading
+ * (wgf_debug_get_recorded_frame_stat) until the next start; stop is false, nothing kept, for
+ * a recording never started. Recording doesn't change the last half second's stats.
+ */
+export function wgf_debug_stop_frame_recording() {
+    const value = host["_wgf_debug_stop_frame_recording"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_debug_is_frame_recording
+/**
+ * Records the frames' stats from the next frame's end until stopped, its latest 65,536
+ * frames kept; started again, it drops what it held. Stopped, its stats are kept for reading
+ * (wgf_debug_get_recorded_frame_stat) until the next start; stop is false, nothing kept, for
+ * a recording never started. Recording doesn't change the last half second's stats.
+ */
+export function wgf_debug_is_frame_recording() {
+    const value = host["_wgf_debug_is_frame_recording"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_debug_get_recorded_frame_stat
+/**
+ * A stat of the stopped recording's frames; 0 while one runs, or with none.
+ */
+export function wgf_debug_get_recorded_frame_stat(stat) {
+    const value = host["_wgf_debug_get_recorded_frame_stat"](stat);
+    return value;
+}
+
+// wgf: call wgf_debug_get_recorded_frame_times
+/**
+ * The stopped recording's frames' times (`costs` false) or costs, oldest first, into `out`, at
+ * most `count`; the number written.
+ */
+export function wgf_debug_get_recorded_frame_times(out, costs) {
+    const outPointer = arrayOut(out, 0);
+    const value = host["_wgf_debug_get_recorded_frame_times"](outPointer, lengthOf(out), (costs ? 1 : 0));
+    arrayBack(outPointer, out, "HEAPF32");
+    return value;
 }
 
 // wgf: call wgf_loop_get_frame_delta
