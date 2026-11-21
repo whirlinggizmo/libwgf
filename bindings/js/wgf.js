@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "9af538f8ef3a000b" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "199f8ce5bf484532" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -17858,6 +17858,30 @@ export function wgf_physics_enable_characters() {
  */
 export function wgf_physics_is_characters_enabled() {
     const value = host["_wgf_physics_is_characters_enabled"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_physics_enable_vehicles
+/**
+ * Vehicles (wgf_vehicle.h: Jolt's VehicleConstraint), linked on purpose: this call links them
+ * (a game: "vehicles" in wgf.json's features), so a program with physics and no car carries
+ * none of them (about 46 KB of code). Without it, a vehicle component is refused, logged, a
+ * scene's too. Any time before the first vehicle.
+ */
+export function wgf_physics_enable_vehicles() {
+    const value = host["_wgf_physics_enable_vehicles"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_physics_is_vehicles_enabled
+/**
+ * Vehicles (wgf_vehicle.h: Jolt's VehicleConstraint), linked on purpose: this call links them
+ * (a game: "vehicles" in wgf.json's features), so a program with physics and no car carries
+ * none of them (about 46 KB of code). Without it, a vehicle component is refused, logged, a
+ * scene's too. Any time before the first vehicle.
+ */
+export function wgf_physics_is_vehicles_enabled() {
+    const value = host["_wgf_physics_is_vehicles_enabled"]();
     return value !== 0;
 }
 

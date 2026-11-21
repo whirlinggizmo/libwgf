@@ -50,7 +50,7 @@ int wgf_physics3d_priv_jolt_character_create(const wgf_physics3d_priv_body_desc_
     if (slot == MAX_CHARACTERS) return -1;
     RefConst<Shape> shape = wgf_jolt::PlacedShape(*d);
     if (shape == nullptr) return -1;
-    wgf_jolt::SetOnStop(StopAll);
+    wgf_jolt::AddOnStop(StopAll);
     Ref<CharacterVirtualSettings> settings = new CharacterVirtualSettings();
     settings->mShape = shape;
     settings->mMaxSlopeAngle = max_slope;

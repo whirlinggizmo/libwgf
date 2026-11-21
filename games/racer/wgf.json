@@ -6,5 +6,5 @@
 	"assets": "assets",
 	"autopilot": "autopilot",
 	"playthrough": "lap.autopilot",
-	"features": ["gltf", "emitters"]
+	"features": ["gltf", "emitters", "vehicles"]
 }

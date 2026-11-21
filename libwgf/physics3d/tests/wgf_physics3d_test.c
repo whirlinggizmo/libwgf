@@ -112,6 +112,8 @@ int main(void)
     expect(!wgf_actor_add_component(ball, WGF_COMPONENT_BODY) && !wgf_actor_has_component(ball, WGF_COMPONENT_BODY),
            "a body before physics starts: refused");
     expect(wgf_physics_get_gravity().y == -9.81f, "its gravity, as it will start");
+    expect(wgf_physics_enable_vehicles() && wgf_physics_is_vehicles_enabled(),
+           "vehicles linked (named here, so installed as the program loaded)");
 
     /* started; a ball onto a floor */
     expect(wgf_physics_set_gravity(0, -9.81f, 0) && wgf_physics_get_gravity().y == -9.81f, "started, by its gravity");

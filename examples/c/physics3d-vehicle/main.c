@@ -176,6 +176,7 @@ static void frame(void *user)
 
 int main(void)
 {
+    wgf_physics_enable_vehicles(); /* the car's: vehicles linked */
     wgf_window_set_title("libwgf physics3d");
     wgf_window_set_size(1000, 600);
     wgf_window_set_msaa(true);

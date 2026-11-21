@@ -818,8 +818,10 @@ class Reach {
 		"wgf_physics_cast_sphere",
 		"wgf_physics_draw_bodies",
 		"wgf_physics_enable_characters",
+		"wgf_physics_enable_vehicles",
 		"wgf_physics_get_gravity",
 		"wgf_physics_is_characters_enabled",
+		"wgf_physics_is_vehicles_enabled",
 		"wgf_physics_overlap_box",
 		"wgf_physics_overlap_sphere",
 		"wgf_physics_set_gravity",
@@ -1407,7 +1409,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1398) 0];
+	static final counts:Array<Int> = [for (_ in 0...1400) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

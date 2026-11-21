@@ -7,7 +7,7 @@ file(GLOB_RECURSE jolt_sources CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/deps/jol
 # Jolt and physics3d's src, never the other layers' include paths, whose deps/ directories
 # each hold a VERSION file C++'s <version> would find where case is ignored (Windows). For the
 # same reason deps/jolt/src, not deps/jolt, is on its path.
-add_library(wgf_physics3d_jolt OBJECT src/wgf_physics3d_jolt.cpp src/wgf_physics3d_jolt_character.cpp ${jolt_sources})
+add_library(wgf_physics3d_jolt OBJECT src/wgf_physics3d_jolt.cpp src/wgf_physics3d_jolt_character.cpp src/wgf_physics3d_jolt_vehicle.cpp ${jolt_sources})
 target_include_directories(wgf_physics3d_jolt PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_include_directories(wgf_physics3d_jolt SYSTEM PRIVATE "${PROJECT_SOURCE_DIR}/deps/jolt/src")
 wgf_target_defaults(wgf_physics3d_jolt)
@@ -36,6 +36,7 @@ wgf_layer(physics3d
     SOURCES
         src/wgf_physics3d.c
         src/wgf_physics3d_character.c
+        src/wgf_physics3d_vehicle.c
     DEPS
         math core gfx ecs)
 

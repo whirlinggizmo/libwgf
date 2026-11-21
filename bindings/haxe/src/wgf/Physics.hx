@@ -36,6 +36,24 @@ class Physics {
 		return Raw.wgf_physics_is_characters_enabled();
 
 	/**
+	    Vehicles (wgf_vehicle.h: Jolt's VehicleConstraint), linked on purpose: this call links them
+	    (a game: "vehicles" in wgf.json's features), so a program with physics and no car carries
+	    none of them (about 46 KB of code). Without it, a vehicle component is refused, logged, a
+	    scene's too. Any time before the first vehicle.
+	**/
+	public static inline function enableVehicles():Bool
+		return Raw.wgf_physics_enable_vehicles();
+
+	/**
+	    Vehicles (wgf_vehicle.h: Jolt's VehicleConstraint), linked on purpose: this call links them
+	    (a game: "vehicles" in wgf.json's features), so a program with physics and no car carries
+	    none of them (about 46 KB of code). Without it, a vehicle component is refused, logged, a
+	    scene's too. Any time before the first vehicle.
+	**/
+	public static inline function isVehiclesEnabled():Bool
+		return Raw.wgf_physics_is_vehicles_enabled();
+
+	/**
 	    The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
 	    starting physics. False only when physics couldn't start (logged).
 	**/

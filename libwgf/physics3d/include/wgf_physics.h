@@ -31,6 +31,13 @@ extern "C" {
 WGF_API bool wgf_physics_enable_characters(void);
 WGF_API bool wgf_physics_is_characters_enabled(void);
 
+/* Vehicles (wgf_vehicle.h: Jolt's VehicleConstraint), linked on purpose: this call links them
+ * (a game: "vehicles" in wgf.json's features), so a program with physics and no car carries
+ * none of them (about 46 KB of code). Without it, a vehicle component is refused, logged, a
+ * scene's too. Any time before the first vehicle. */
+WGF_API bool wgf_physics_enable_vehicles(void);
+WGF_API bool wgf_physics_is_vehicles_enabled(void);
+
 /* The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
  * starting physics. False only when physics couldn't start (logged). */
 WGF_API bool wgf_physics_set_gravity(float x, float y, float z);

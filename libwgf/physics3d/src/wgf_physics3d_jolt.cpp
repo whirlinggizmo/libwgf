@@ -35,8 +35,6 @@
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/PhysicsSystem.h>
-#include <Jolt/Physics/Vehicle/VehicleConstraint.h>
-#include <Jolt/Physics/Vehicle/WheeledVehicleController.h>
 
 #include <algorithm>
 #include <cmath>
@@ -48,11 +46,8 @@ namespace {
 constexpr uint MAX_BODIES = 16384;
 constexpr uint MAX_PAIRS = 16384;
 constexpr uint MAX_CONTACTS = 8192;
-constexpr int MAX_VEHICLES = 64;
 constexpr uint32 STATIC_GROUP = 0x8000; // the group bit a static body has, so movers' masks reach statics
 constexpr uint32 USER_BITS = 0x7FFF;
-constexpr float PEAK_ALONG = 0.06f;                 // the tires' grip peaks: their curves' (below)
-constexpr float PEAK_ACROSS = 3.0f * JPH_PI / 180.0f;
 
 // Two broadphase trees, the static bodies' and the moving ones', as Jolt advises.
 constexpr BroadPhaseLayer NON_MOVING(0);
@@ -145,11 +140,13 @@ struct World {
     ObjectLayerPairFilterMask pairs;
     PhysicsSystem system;
     Overlaps overlaps;
-    VehicleConstraint *vehicles[MAX_VEHICLES] = {};
 };
 
 World *world = nullptr;
-void (*on_stop)() = nullptr; // a part's own end (characters), set as it first makes something
+// The parts' own (characters, vehicles), each set as the part first makes something: the
+// world's end, and a step's start.
+void (*on_stop[2])() = {};
+void (*before_step)() = nullptr;
 
 Vec3 V(const float v[3])
 {
@@ -242,11 +239,6 @@ ObjectLayer LayerOf(const wgf_physics3d_priv_body_desc_t &d)
     return ObjectLayerPairFilterMask::sGetObjectLayer(group, mask);
 }
 
-WheeledVehicleController *ControllerOf(int vehicle)
-{
-    if (world == nullptr || vehicle < 0 || vehicle >= MAX_VEHICLES || world->vehicles[vehicle] == nullptr) return nullptr;
-    return static_cast<WheeledVehicleController *>(world->vehicles[vehicle]->GetController());
-}
 
 // ------------------------------------------------------------------ queries ----
 
@@ -327,9 +319,30 @@ JPH::Quat Q(const float q[4])
     return ::Q(q);
 }
 
-void SetOnStop(void (*stop)())
+void AddOnStop(void (*stop)())
 {
-    on_stop = stop;
+    for (auto &slot : on_stop) {
+        if (slot == stop) return;
+        if (slot == nullptr) {
+            slot = stop;
+            return;
+        }
+    }
+}
+
+void SetBeforeStep(void (*step)())
+{
+    before_step = step;
+}
+
+void Put(JPH::Vec3 v, float out[3])
+{
+    ::Put(v, out);
+}
+
+void Put(JPH::Quat q, float out[4])
+{
+    ::Put(q, out);
 }
 
 } // namespace wgf_jolt
@@ -348,7 +361,6 @@ bool wgf_physics3d_priv_jolt_start(float gx, float gy, float gz)
     SphereShape::sRegister();
     BoxShape::sRegister();
     CapsuleShape::sRegister();
-    CylinderShape::sRegister(); // the vehicle's wheels, cast as cylinders
     ConvexHullShape::sRegister();
     MeshShape::sRegister();
     RotatedTranslatedShape::sRegister();
@@ -366,8 +378,9 @@ void wgf_physics3d_priv_jolt_stop(void)
 {
     if (world == nullptr) return;
     BodyInterface &bodies = world->system.GetBodyInterface();
-    if (on_stop != nullptr) on_stop(); // a part's own (characters), before the world goes
-    for (int i = 0; i < MAX_VEHICLES; i++) wgf_physics3d_priv_jolt_vehicle_destroy(i);
+    for (auto stop : on_stop) {
+        if (stop != nullptr) stop(); // a part's own (characters, vehicles), before the world goes
+    }
     BodyIDVector ids;
     world->system.GetBodies(ids);
     for (BodyID id : ids) {
@@ -496,9 +509,7 @@ bool wgf_physics3d_priv_jolt_body_is_active(uint32_t body)
 void wgf_physics3d_priv_jolt_step(float dt)
 {
     if (world == nullptr || dt <= 0.0f) return;
-    for (VehicleConstraint *v : world->vehicles) {
-        if (v != nullptr) world->system.GetBodyInterface().ActivateBody(v->GetVehicleBody()->GetID());
-    }
+    if (before_step != nullptr) before_step(); // a part's (vehicles: their bodies kept awake)
     world->system.Update(dt, 1, &world->temp, &world->jobs);
     world->overlaps.Settle(world->system.GetBodyInterface());
 }
@@ -513,163 +524,6 @@ int wgf_physics3d_priv_jolt_take_overlaps(wgf_physics3d_priv_overlap_t *out, int
     return n;
 }
 
-int wgf_physics3d_priv_jolt_vehicle_create(uint32_t body, const wgf_physics3d_priv_vehicle_desc_t *d)
-{
-    if (world == nullptr || d == nullptr || d->wheel_count < 2 || d->wheel_count > 8) return -1;
-    int slot = 0;
-    while (slot < MAX_VEHICLES && world->vehicles[slot] != nullptr) slot++;
-    if (slot == MAX_VEHICLES) return -1;
-    BodyLockWrite lock(world->system.GetBodyLockInterface(), BodyID(body));
-    if (!lock.Succeeded() || !lock.GetBody().IsDynamic()) return -1;
-
-    VehicleConstraintSettings settings;
-    settings.mUp = Vec3::sAxisY();
-    settings.mForward = Vec3::sAxisZ();
-    LinearCurve longitudinal, lateral; // Jolt's tire curves, scaled by the grip
-    longitudinal.Reserve(3);
-    longitudinal.AddPoint(0.0f, 0.0f);
-    longitudinal.AddPoint(PEAK_ALONG, 1.2f * d->grip);
-    longitudinal.AddPoint(0.2f, 1.0f * d->grip);
-    lateral.Reserve(3);
-    lateral.AddPoint(0.0f, 0.0f);
-    lateral.AddPoint(3.0f, 1.2f * d->grip); // degrees: PEAK_ACROSS
-    lateral.AddPoint(20.0f, 1.0f * d->grip);
-    for (int i = 0; i < d->wheel_count; i++) {
-        WheelSettingsWV *w = new WheelSettingsWV;
-        w->mPosition = V(d->wheels[i]);
-        w->mRadius = d->radius;
-        w->mWidth = d->width;
-        w->mSuspensionMinLength = 0.0f;
-        w->mSuspensionMaxLength = d->suspension;
-        w->mSuspensionSpring.mFrequency = d->frequency;
-        w->mSuspensionSpring.mDamping = d->damping;
-        w->mMaxSteerAngle = i < 2 ? d->max_steer : 0.0f;
-        w->mMaxHandBrakeTorque = i < 2 ? 0.0f : 4000.0f;
-        w->mLongitudinalFriction = longitudinal;
-        w->mLateralFriction = lateral;
-        settings.mWheels.push_back(w);
-    }
-    WheeledVehicleControllerSettings *controller = new WheeledVehicleControllerSettings;
-    controller->mEngine.mMaxTorque = d->engine_torque;
-    controller->mEngine.mMaxRPM = d->max_rpm;
-    controller->mEngine.mMinRPM = std::min(1000.0f, d->max_rpm * 0.25f);
-    controller->mTransmission.mShiftUpRPM = d->max_rpm * 0.75f;
-    controller->mTransmission.mShiftDownRPM = d->max_rpm * 0.35f;
-    if (d->gear_count > 0) {
-        controller->mTransmission.mGearRatios.clear();
-        for (int i = 0; i < d->gear_count && i < 8; i++) controller->mTransmission.mGearRatios.push_back(d->gears[i]);
-    }
-    for (int axle = 0; axle * 2 + 1 < d->wheel_count; axle++) {
-        const bool front = axle == 0;
-        if (d->drive == 0 && !front) continue;
-        if (d->drive == 1 && front && d->wheel_count > 2) continue;
-        VehicleDifferentialSettings differential;
-        differential.mLeftWheel = axle * 2;
-        differential.mRightWheel = axle * 2 + 1;
-        controller->mDifferentials.push_back(differential);
-    }
-    for (int axle = 0; d->anti_roll > 0.0f && axle * 2 + 1 < d->wheel_count; axle++) {
-        VehicleAntiRollBar bar;
-        bar.mLeftWheel = axle * 2;
-        bar.mRightWheel = axle * 2 + 1;
-        bar.mStiffness = d->anti_roll;
-        settings.mAntiRollBars.push_back(bar);
-    }
-    const float share = controller->mDifferentials.empty() ? 1.0f : 1.0f / float(controller->mDifferentials.size());
-    for (VehicleDifferentialSettings &differential : controller->mDifferentials) differential.mEngineTorqueRatio = share;
-    settings.mController = controller;
-
-    VehicleConstraint *vehicle = new VehicleConstraint(lock.GetBody(), settings);
-    vehicle->SetVehicleCollisionTester(new VehicleCollisionTesterCastCylinder(lock.GetBody().GetObjectLayer()));
-    world->system.AddConstraint(vehicle);
-    world->system.AddStepListener(vehicle);
-    world->vehicles[slot] = vehicle;
-    return slot;
-}
-
-void wgf_physics3d_priv_jolt_vehicle_destroy(int vehicle)
-{
-    if (world == nullptr || vehicle < 0 || vehicle >= MAX_VEHICLES || world->vehicles[vehicle] == nullptr) return;
-    world->system.RemoveStepListener(world->vehicles[vehicle]);
-    world->system.RemoveConstraint(world->vehicles[vehicle]); // the system's reference was the last
-    world->vehicles[vehicle] = nullptr;
-}
-
-void wgf_physics3d_priv_jolt_vehicle_set_input(int vehicle, float forward, float right, float brake, float hand_brake)
-{
-    WheeledVehicleController *controller = ControllerOf(vehicle);
-    if (controller != nullptr) controller->SetDriverInput(forward, right, brake, hand_brake);
-}
-
-float wgf_physics3d_priv_jolt_vehicle_get_rpm(int vehicle)
-{
-    const WheeledVehicleController *controller = ControllerOf(vehicle);
-    return controller != nullptr ? controller->GetEngine().GetCurrentRPM() : 0.0f;
-}
-
-int wgf_physics3d_priv_jolt_vehicle_get_gear(int vehicle)
-{
-    const WheeledVehicleController *controller = ControllerOf(vehicle);
-    return controller != nullptr ? controller->GetTransmission().GetCurrentGear() : 0;
-}
-
-void wgf_physics3d_priv_jolt_vehicle_set_anti_roll(int vehicle, float stiffness)
-{
-    if (ControllerOf(vehicle) == nullptr) return;
-    VehicleAntiRollBars &bars = world->vehicles[vehicle]->GetAntiRollBars();
-    const int wheels = int(world->vehicles[vehicle]->GetWheels().size());
-    bars.clear();
-    for (int axle = 0; stiffness > 0.0f && axle * 2 + 1 < wheels; axle++) {
-        VehicleAntiRollBar bar;
-        bar.mLeftWheel = axle * 2;
-        bar.mRightWheel = axle * 2 + 1;
-        bar.mStiffness = stiffness;
-        bars.push_back(bar);
-    }
-}
-
-float wgf_physics3d_priv_jolt_vehicle_get_slip(int vehicle, int wheel)
-{
-    if (ControllerOf(vehicle) == nullptr || wheel < 0 || wheel >= int(world->vehicles[vehicle]->GetWheels().size())) return 0.0f;
-    const WheelWV *w = static_cast<const WheelWV *>(world->vehicles[vehicle]->GetWheel(wheel));
-    if (!w->HasContact()) return 0.0f;
-    // as Jolt's tire model measures it (the ground's speed at the contact against the
-    // wheel's rim), but against at least 1 m/s, so a car pulling away from rest reads what
-    // its tires do rather than a ratio of near nothing; each as a share of where its grip
-    // peaks (the tire curves made with the vehicle: a slip ratio of 0.06 along, 3 degrees
-    // across): a free-rolling wheel reads a little above 0, a spinning one well above 1
-    const Body *body = world->vehicles[vehicle]->GetVehicleBody();
-    Vec3 relative = body->GetPointVelocity(w->GetContactPosition()) - w->GetContactPointVelocity();
-    relative -= w->GetContactNormal().Dot(relative) * w->GetContactNormal();
-    const float ground = relative.Dot(w->GetContactLongitudinal()), side = relative.Dot(w->GetContactLateral());
-    const float rim = w->GetAngularVelocity() * w->GetSettings()->mRadius;
-    const float speed = std::max(std::abs(ground), 1.0f);
-    const float along = std::abs(rim - ground) / speed / PEAK_ALONG;
-    const float across = std::atan2(std::abs(side), speed) / PEAK_ACROSS;
-    return std::min(std::max(along, across), 10.0f);
-}
-
-void wgf_physics3d_priv_jolt_vehicle_get_wheel(int vehicle, int wheel, float position[3], float rotation[4])
-{
-    if (ControllerOf(vehicle) == nullptr || wheel < 0 || wheel >= int(world->vehicles[vehicle]->GetWheels().size())) return;
-    // a wheel model's axle along its x, as a cylinder's is along y in Jolt's
-    const Mat44 m = world->vehicles[vehicle]->GetWheelLocalTransform(uint(wheel), Vec3::sAxisX(), Vec3::sAxisY());
-    Put(m.GetTranslation(), position);
-    Put(m.GetQuaternion(), rotation);
-}
-
-void wgf_physics3d_priv_jolt_vehicle_reset(int vehicle)
-{
-    WheeledVehicleController *controller = ControllerOf(vehicle);
-    if (controller == nullptr) return;
-    controller->SetDriverInput(0.0f, 0.0f, 0.0f, 0.0f);
-    controller->GetEngine().SetCurrentRPM(controller->GetEngine().mMinRPM);
-    controller->GetTransmission().Set(0, 1.0f);
-    for (Wheel *w : world->vehicles[vehicle]->GetWheels()) {
-        w->SetAngularVelocity(0.0f);
-        w->SetSteerAngle(0.0f);
-    }
-}
 
 int wgf_physics3d_priv_jolt_cast_ray(const float origin[3], const float direction[3], float distance, uint32_t mask,
                                      wgf_physics3d_priv_hit_t *out, int count)

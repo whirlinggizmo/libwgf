@@ -4,7 +4,8 @@
 /* What the Jolt layer's other C++ files (wgf_physics3d_jolt_character.cpp) take from its
  * world (wgf_physics3d_jolt.cpp), C++ alone: the system and its scratch, a body's shape and
  * layer made as a body's are, and a hook for the world's end, so a part a program may never
- * use is a file of its own that nothing else names (characters: Jolt's CharacterVirtual). */
+ * use is a file of its own that nothing else names (characters: Jolt's CharacterVirtual;
+ * vehicles: its VehicleConstraint). */
 
 #include "wgf_physics3d_jolt_priv.h"
 
@@ -26,8 +27,13 @@ JPH::RefConst<JPH::Shape> PlacedShape(const wgf_physics3d_priv_body_desc_t &d);
 JPH::ObjectLayer LayerOf(const wgf_physics3d_priv_body_desc_t &d);
 JPH::Vec3 V(const float v[3]);
 JPH::Quat Q(const float q[4]);
-/* Called as the world stops, before it goes: set by a part when it first makes something. */
-void SetOnStop(void (*stop)());
+/* A part's own (characters, vehicles), each set as the part first makes something: called as
+ * the world stops, before it goes (two at most), and as each step begins. */
+void AddOnStop(void (*stop)());
+void SetBeforeStep(void (*step)());
+/* A vector or a turn into floats. */
+void Put(JPH::Vec3 v, float out[3]);
+void Put(JPH::Quat q, float out[4]);
 
 } // namespace wgf_jolt
 

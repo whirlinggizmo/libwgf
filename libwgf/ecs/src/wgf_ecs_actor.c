@@ -62,6 +62,12 @@ bool wgf_actor_add_component(wgf_actor_t actor, wgf_component_t component)
     if (wgf_actor_has_component(actor, component)) return true;
     if (component == WGF_COMPONENT_BODY || component == WGF_COMPONENT_VEHICLE) {
         static bool told;
+        if (parts[component] == NULL && component == WGF_COMPONENT_VEHICLE && parts[WGF_COMPONENT_BODY] != NULL) {
+            /* physics running, its vehicles not linked */
+            wgf_log_error("wgf_ecs: a vehicle, but vehicles aren't linked in this program (a game: \"vehicles\" in "
+                          "wgf.json's features; C: wgf_physics_enable_vehicles); refused");
+            return false;
+        }
         if (parts[component] == NULL) {
             if (!told) wgf_log_warn("wgf_ecs: a body or a vehicle before physics has started (wgf_physics_set_gravity); refused");
             told = true;

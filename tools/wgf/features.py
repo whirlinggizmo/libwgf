@@ -21,6 +21,8 @@ FEATURES = {
                         "particles: a scene's emitter2d and emitter3d lines"),
     'characters': Feature('wgf_characters', '_wgf_physics_enable_characters', 'wgf_physics_enable_characters',
                           "characters: a body of type character (Jolt's CharacterVirtual), in code or a scene"),
+    'vehicles': Feature('wgf_vehicles', '_wgf_physics_enable_vehicles', 'wgf_physics_enable_vehicles',
+                        "vehicles: a vehicle component (Jolt's wheeled vehicle), in code or a scene"),
     'bitmap_fonts': Feature('wgf_bitmap_fonts', '_wgf_font_enable_bitmaps', 'wgf_font_enable_bitmaps',
                             "bitmap fonts: a font made from a .fnt or an image of glyphs"),
     'autopilot': Feature('wgf_autopilot', '_wgf_app_enable_autopilot', 'wgf_app_enable_autopilot',
@@ -28,7 +30,7 @@ FEATURES = {
 }
 
 # Features a game declares; the rest are a build's.
-DECLARED = ('gltf', 'emitters', 'characters', 'bitmap_fonts')
+DECLARED = ('gltf', 'emitters', 'characters', 'vehicles', 'bitmap_fonts')
 
 
 def check(names, where):

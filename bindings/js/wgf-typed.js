@@ -1821,6 +1821,10 @@ export const Physics = Object.freeze({
     enableCharacters: raw.wgf_physics_enable_characters,
     // wgf: call wgf_physics_is_characters_enabled
     isCharactersEnabled: raw.wgf_physics_is_characters_enabled,
+    // wgf: call wgf_physics_enable_vehicles
+    enableVehicles: raw.wgf_physics_enable_vehicles,
+    // wgf: call wgf_physics_is_vehicles_enabled
+    isVehiclesEnabled: raw.wgf_physics_is_vehicles_enabled,
     // wgf: call wgf_physics_set_gravity
     setGravity: raw.wgf_physics_set_gravity,
     // wgf: call wgf_physics_get_gravity

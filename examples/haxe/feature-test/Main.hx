@@ -953,6 +953,7 @@ class Main {
 			wheels[i].setParent(car);
 			wheels[i].setPosition(i % 2 == 0 ? -0.8 : 0.8, -0.2, i < 2 ? 1.4 : -1.4);
 		}
+		expect(Physics.enableVehicles() && Physics.isVehiclesEnabled(), "vehicles linked");
 		expect(car.addComponent(Component.VEHICLE), "a vehicle");
 		final vehicle:Vehicle = car;
 		expect(vehicle.setWheels(wheels) && vehicle.getWheelCount() == 4 && vehicle.getWheel(0) == wheels[0], "its wheels");

@@ -9,8 +9,9 @@
 #include "wgf_physics.h"
 #include "wgf_stage3d.h"
 
-/* A program that never names characters (wgf_physics_enable_characters): their file isn't
- * linked, so the character type is refused, said, while every other body still is one. */
+/* A program that never names characters or vehicles (wgf_physics_enable_characters, _vehicles):
+ * their files aren't linked, so the character type and a vehicle component are refused, said,
+ * while every other body still is one. */
 
 static int failures;
 
@@ -37,6 +38,9 @@ int main(void)
     expect(!wgf_body_set_type(walker, WGF_BODY_TYPE_CHARACTER) && wgf_body_get_type(walker) != WGF_BODY_TYPE_CHARACTER,
            "the character type refused");
     expect(wgf_body_set_type(walker, WGF_BODY_TYPE_KINEMATIC), "another type still taken");
+    expect(!wgf_physics_is_vehicles_enabled() && !wgf_actor_add_component(walker, WGF_COMPONENT_VEHICLE) &&
+               !wgf_actor_has_component(walker, WGF_COMPONENT_VEHICLE),
+           "vehicles not linked either: a vehicle component refused");
     wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
     wgf_gfx_priv_stop();
     wgf_core_priv_shutdown();
