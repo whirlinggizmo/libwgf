@@ -39,7 +39,8 @@
 typedef wgf_gfx_priv_mesh_record_primitive_t primitive_t;
 typedef wgf_gfx_priv_mesh_record_t mesh_t;
 
-/* An image of the file being loaded: decoded while preparing, uploaded as a texture while
+/* An image of the file being loaded: decoded while preparing (in a page, its decode started, and
+ * waited for as it is uploaded), uploaded as a texture while
  * finishing. The loader holds one reference to each texture; materials add their own. */
 typedef struct gltf_image_t {
     void *decoded;        /* freed once uploaded */
@@ -1002,7 +1003,18 @@ static wgf_core_priv_load_step_t finish(void *data, wgf_handle_t resource)
             image->ktx_file = NULL;
             return WGF_CORE_PRIV_LOAD_MORE;
         }
-        if (image->decoded != NULL) {
+        if (image->decoded != NULL) { /* in a page, the browser's decode waited for */
+            const wgf_gfx_priv_decode_state_t state = wgf_gfx_priv_texture_decoded_wait(image->decoded, prepared->path);
+            if (state == WGF_GFX_PRIV_DECODE_PENDING) {
+                prepared->next_image--;
+                return WGF_CORE_PRIV_LOAD_WAIT;
+            }
+            if (state == WGF_GFX_PRIV_DECODE_FAILED) { /* warned: the placeholder */
+                wgf_gfx_priv_texture_decoded_free(image->decoded);
+                image->decoded = NULL;
+                image->failed = true;
+                return WGF_CORE_PRIV_LOAD_MORE;
+            }
             image->texture = wgf_gfx_priv_texture_create_decoded(image->decoded); /* takes it */
             image->decoded = NULL;
             image->failed = image->texture == 0;
@@ -1067,6 +1079,16 @@ static wgf_core_priv_load_step_t finish_images(void *data, wgf_handle_t resource
             return WGF_CORE_PRIV_LOAD_MORE;
         }
         if (image->decoded != NULL) {
+            const wgf_gfx_priv_decode_state_t state = wgf_gfx_priv_texture_decoded_wait(image->decoded, prepared->path);
+            if (state == WGF_GFX_PRIV_DECODE_PENDING) {
+                prepared->next_image--;
+                return WGF_CORE_PRIV_LOAD_WAIT;
+            }
+            if (state == WGF_GFX_PRIV_DECODE_FAILED) { /* warned: the old image kept */
+                wgf_gfx_priv_texture_decoded_free(image->decoded);
+                image->decoded = NULL;
+                return WGF_CORE_PRIV_LOAD_MORE;
+            }
             wgf_gfx_priv_texture_refill_decoded(texture, image->decoded); /* takes it */
             image->decoded = NULL;
             return WGF_CORE_PRIV_LOAD_MORE;

@@ -1,6 +1,7 @@
 #ifndef WGF_GFX_TEXTURE_PRIV_H
 #define WGF_GFX_TEXTURE_PRIV_H
 
+#include "texture/wgf_gfx_decode_priv.h"
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -40,10 +41,13 @@ wgf_color_t wgf_gfx_priv_texture_get_clear_color(wgf_texture_t texture);
  * with wgf_resource_release. Nothing for a handle that isn't a texture. */
 void wgf_gfx_priv_texture_retain(wgf_texture_t texture);
 
-/* An image in memory (a glTF's), decoded to RGBA with its mipmaps, on any thread: NULL
- * (warned, naming `what`) when it isn't one stb_image reads; freed with decoded_free, or
- * made a texture, READY, on the main thread with create_decoded, which takes it (0 when
- * the GPU didn't). */
+/* An image in memory (a glTF's), decoded to RGBA with its mipmaps (wgf_gfx_decode_priv.h):
+ * natively on any thread, done at once; in a page the browser's, pending until decoded_wait
+ * says DONE, which a caller asks on the main thread (in its finish, or a step) before it
+ * reads it. NULL (warned, naming `what`) when it isn't an image the decoder reads, natively,
+ * or for memory; one that FAILED in a page is told by decoded_wait (warned), and freed by its
+ * caller. Freed with decoded_free, or made a texture, READY, on the main thread with
+ * create_decoded, which takes it (0 when the GPU didn't). */
 void *wgf_gfx_priv_texture_decode(const unsigned char *bytes, int size, const char *what);
 /* The same with its first level alone, for a caller that changes its pixels first (an image
  * font's key made transparent): those pixels, RGBA, and its size; then its mipmaps built
@@ -52,6 +56,13 @@ void *wgf_gfx_priv_texture_decode_base(const unsigned char *bytes, int size, con
 unsigned char *wgf_gfx_priv_texture_decoded_base(void *decoded, int *width, int *height);
 bool wgf_gfx_priv_texture_decoded_build_mipmaps(void *decoded);
 void wgf_gfx_priv_texture_decoded_free(void *decoded);
+/* The same, decoded now on every target by stb_image, for a caller that can't wait for one
+ * (RmlUi asks for a document's images as it lays out): what keeps stb_image's decoders in a page,
+ * so only a program with documents links them there. */
+void *wgf_gfx_priv_texture_decode_now(const unsigned char *bytes, int size, const char *what);
+/* Whether a decode is done (its pixels and, unless it is a decode_base's, its mipmaps in),
+ * pending (the browser's), or FAILED (warned, naming `what`). Natively always DONE. */
+wgf_gfx_priv_decode_state_t wgf_gfx_priv_texture_decoded_wait(void *decoded, const char *what);
 /* A decoded image's first level, RGBA, 8 bits a channel, and its size. */
 const unsigned char *wgf_gfx_priv_texture_decoded_pixels(const void *decoded, int *width, int *height);
 wgf_texture_t wgf_gfx_priv_texture_create_decoded(void *decoded);

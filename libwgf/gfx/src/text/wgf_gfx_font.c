@@ -222,8 +222,11 @@ static const wgf_core_priv_loader_t loader = {"font", prepare, finish, discard, 
 #define IMAGE_FIRST 32u
 
 typedef struct bitmap_loaded_t {
-    wgf_gfx_priv_bitmap_t *bitmap;
+    wgf_gfx_priv_bitmap_t *bitmap; /* NULL for an image of glyphs while its decode is the browser's */
     void *decoded[WGF_GFX_PRIV_BITMAP_PAGES_MAX]; /* its pages, decoded with their mipmaps */
+    bool image;  /* an image of glyphs, its glyphs read from its pixels once they are in */
+    bool sized;  /* its pages' sizes given to its glyphs */
+    char path[WGF_CORE_PRIV_FS_PATH_MAX];
 } bitmap_loaded_t;
 
 static void discard_bitmap(void *prepared)
@@ -250,21 +253,57 @@ bool wgf_font_is_bitmaps_enabled(void)
     return reader != NULL;
 }
 
-static bool prepare_image(bitmap_loaded_t *loaded, const unsigned char *bytes, int size, const char *path)
+/* An image of glyphs' pixels, decoded: its glyphs read and its key made transparent, then its
+ * mipmaps built from them. */
+static bool read_image_glyphs(bitmap_loaded_t *loaded)
 {
-    void *decoded = wgf_gfx_priv_texture_decode_base(bytes, size, path);
-    unsigned char *rgba;
     int width = 0, height = 0;
-    if (decoded == NULL) return false;
-    loaded->decoded[0] = decoded;
-    rgba = wgf_gfx_priv_texture_decoded_base(decoded, &width, &height);
-    loaded->bitmap = reader->from_image(rgba, width, height, IMAGE_KEY, IMAGE_FIRST, path);
+    unsigned char *rgba = wgf_gfx_priv_texture_decoded_base(loaded->decoded[0], &width, &height);
+    loaded->bitmap = reader->from_image(rgba, width, height, IMAGE_KEY, IMAGE_FIRST, loaded->path);
     if (loaded->bitmap == NULL) return false;
-    if (!wgf_gfx_priv_texture_decoded_build_mipmaps(decoded)) {
-        wgf_log_warn("wgf_gfx_font: %s: out of memory", path);
+    if (!wgf_gfx_priv_texture_decoded_build_mipmaps(loaded->decoded[0])) {
+        wgf_log_warn("wgf_gfx_font: %s: out of memory", loaded->path);
         return false;
     }
+    loaded->sized = true;
     return true;
+}
+
+/* A .fnt's pages' sizes, once they are decoded, given to its glyphs. */
+static void size_pages(bitmap_loaded_t *loaded)
+{
+    int page;
+    for (page = 0; page < loaded->bitmap->page_count; page++) {
+        int width = 0, height = 0;
+        wgf_gfx_priv_texture_decoded_pixels(loaded->decoded[page], &width, &height);
+        wgf_gfx_priv_bitmap_set_page_size(loaded->bitmap, page, width, height);
+    }
+    loaded->sized = true;
+}
+
+/* Its pages' decodes, the browser's in a page: WAIT while any is under way, FAILED (warned) for
+ * one that did, else DONE, an image's glyphs read and a .fnt's pages sized. Natively DONE at once. */
+static wgf_core_priv_load_step_t pages_decoded(bitmap_loaded_t *loaded)
+{
+    const int pages = loaded->bitmap != NULL ? loaded->bitmap->page_count : 1;
+    int page;
+    for (page = 0; page < pages; page++) {
+        const wgf_gfx_priv_decode_state_t state = wgf_gfx_priv_texture_decoded_wait(loaded->decoded[page], loaded->path);
+        if (state == WGF_GFX_PRIV_DECODE_PENDING) return WGF_CORE_PRIV_LOAD_WAIT;
+        if (state == WGF_GFX_PRIV_DECODE_FAILED) return WGF_CORE_PRIV_LOAD_FAILED;
+    }
+    if (loaded->image && loaded->bitmap == NULL && !read_image_glyphs(loaded)) return WGF_CORE_PRIV_LOAD_FAILED;
+    if (!loaded->sized) size_pages(loaded);
+    return WGF_CORE_PRIV_LOAD_DONE;
+}
+
+static bool prepare_image(bitmap_loaded_t *loaded, const unsigned char *bytes, int size, const char *path)
+{
+    loaded->image = true;
+    loaded->decoded[0] = wgf_gfx_priv_texture_decode_base(bytes, size, path);
+    if (loaded->decoded[0] == NULL) return false;
+    if (wgf_gfx_priv_texture_decoded_wait(loaded->decoded[0], path) == WGF_GFX_PRIV_DECODE_PENDING) return true;
+    return read_image_glyphs(loaded); /* natively, at once */
 }
 
 /* A .fnt and its pages, each named beside it. */
@@ -276,7 +315,7 @@ static bool prepare_fnt(bitmap_loaded_t *loaded, const unsigned char *bytes, int
     for (page = 0; page < loaded->bitmap->page_count; page++) {
         char page_path[WGF_CORE_PRIV_FS_PATH_MAX];
         unsigned char *page_bytes;
-        int page_size, width = 0, height = 0;
+        int page_size;
         if (!wgf_asset_priv_is_relative_uri(loaded->bitmap->pages[page]) ||
             !wgf_asset_priv_join_relative(path, loaded->bitmap->pages[page], page_path, sizeof(page_path))) {
             wgf_log_warn("wgf_gfx_font: %s: page %s isn't a file beside it", path, loaded->bitmap->pages[page]);
@@ -289,9 +328,8 @@ static bool prepare_fnt(bitmap_loaded_t *loaded, const unsigned char *bytes, int
         loaded->decoded[page] = wgf_gfx_priv_texture_decode(page_bytes, page_size, page_path);
         wgf_core_priv_fs_read_free(page_bytes);
         if (loaded->decoded[page] == NULL) return false;
-        wgf_gfx_priv_texture_decoded_pixels(loaded->decoded[page], &width, &height);
-        wgf_gfx_priv_bitmap_set_page_size(loaded->bitmap, page, width, height);
     }
+    if (pages_decoded(loaded) == WGF_CORE_PRIV_LOAD_FAILED) return false; /* natively, sized at once */
     return true;
 }
 
@@ -309,6 +347,7 @@ static void *prepare_bitmap(const char *path)
         free(loaded);
         return NULL;
     }
+    snprintf(loaded->path, sizeof(loaded->path), "%s", path);
     if (!wgf_core_priv_fs_read(path, &bytes, &size)) {
         free(loaded);
         return NULL;
@@ -331,6 +370,10 @@ static wgf_core_priv_load_step_t finish_bitmap(void *prepared, wgf_handle_t reso
     if (font_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
     if (wgf_gfx_priv_render_is_lost()) return WGF_CORE_PRIV_LOAD_WAIT; /* the GPU's context lost: until it is back */
     if (!ensure()) return WGF_CORE_PRIV_LOAD_MORE; /* gfx isn't running yet: wait for it */
+    {
+        const wgf_core_priv_load_step_t decoded = pages_decoded(loaded); /* in a page, the browser's */
+        if (decoded != WGF_CORE_PRIV_LOAD_DONE) return decoded;
+    }
     for (page = 0; page < loaded->bitmap->page_count; page++) {
         pages[page] = wgf_gfx_priv_texture_create_decoded(loaded->decoded[page]); /* it takes the image */
         loaded->decoded[page] = NULL;
@@ -363,6 +406,10 @@ static wgf_core_priv_load_step_t finish_pages(void *prepared, wgf_handle_t resou
     int page;
     if (font_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
     if (wgf_gfx_priv_render_is_lost()) return WGF_CORE_PRIV_LOAD_WAIT; /* lost again: until it is back */
+    {
+        const wgf_core_priv_load_step_t decoded = pages_decoded(loaded);
+        if (decoded != WGF_CORE_PRIV_LOAD_DONE) return decoded;
+    }
     for (page = 0; page < loaded->bitmap->page_count && page < WGF_GFX_PRIV_BITMAP_PAGES_MAX; page++) {
         if (font_ptr->pages[page] != 0 && loaded->decoded[page] != NULL) {
             wgf_gfx_priv_texture_refill_decoded(font_ptr->pages[page], loaded->decoded[page]); /* takes it */

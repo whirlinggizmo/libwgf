@@ -52,6 +52,7 @@ typedef struct decoded_t {
     int mip_count;
     unsigned char *levels[SG_MAX_MIPMAPS]; /* malloc'd (stb_image's level 0 too) */
     wgf_gfx_priv_decode_t *pending; /* a file's decode under way (the browser's); NULL once its pixels are in */
+    bool base;                      /* its first level alone, its mipmaps built by its caller (decode_base) */
 } decoded_t;
 
 static bool pool_ready;
@@ -205,8 +206,9 @@ static bool complete(decoded_t *decoded, const char *what)
     wgf_gfx_priv_decode_t *pending = decoded->pending;
     decoded->pending = NULL;
     decoded->levels[0] = wgf_gfx_priv_decode_take(pending, &decoded->width, &decoded->height);
+    decoded->mip_count = 1;
     if (decoded->levels[0] == NULL) return false;
-    if (!build_mipmaps(decoded)) {
+    if (!decoded->base && !build_mipmaps(decoded)) {
         wgf_log_warn("wgf_gfx_texture: %s: out of memory", what);
         return false;
     }
@@ -446,19 +448,34 @@ static const wgf_core_priv_loader_t ktx_loader = {"compressed texture", prepare_
 
 /* --- an image of another file's (a glTF's) ------------------------------------ */
 
-void *wgf_gfx_priv_texture_decode_base(const unsigned char *bytes, int size, const char *what)
+/* A decode started, `base` its first level alone: done at once natively (NULL, warned, when it
+ * FAILED), pending in a page until wgf_gfx_priv_texture_decoded_wait says it is done. */
+static decoded_t *start_decode(const unsigned char *bytes, int size, const char *what, bool base)
 {
-    int comp;
     decoded_t *decoded = (decoded_t *)calloc(1, sizeof(decoded_t));
     if (decoded == NULL) return NULL;
-    decoded->levels[0] = stbi_load_from_memory(bytes, size, &decoded->width, &decoded->height, &comp, 4);
-    if (decoded->levels[0] == NULL) {
-        wgf_log_warn("wgf_gfx_texture: %s: an image it can't read (%s)", what, stbi_failure_reason());
-        free(decoded);
+    decoded->base = base;
+    decoded->pending = wgf_gfx_priv_decode_start(bytes, size, what);
+    if (decoded->pending == NULL || (wgf_gfx_priv_decode_poll(decoded->pending) != WGF_GFX_PRIV_DECODE_PENDING &&
+                                     !complete(decoded, what))) {
+        discard(decoded);
         return NULL;
     }
-    decoded->mip_count = 1;
     return decoded;
+}
+
+void *wgf_gfx_priv_texture_decode_base(const unsigned char *bytes, int size, const char *what)
+{
+    return start_decode(bytes, size, what, true);
+}
+
+wgf_gfx_priv_decode_state_t wgf_gfx_priv_texture_decoded_wait(void *data, const char *what)
+{
+    decoded_t *decoded = (decoded_t *)data;
+    if (decoded == NULL) return WGF_GFX_PRIV_DECODE_FAILED;
+    if (decoded->pending == NULL) return WGF_GFX_PRIV_DECODE_DONE;
+    if (wgf_gfx_priv_decode_poll(decoded->pending) == WGF_GFX_PRIV_DECODE_PENDING) return WGF_GFX_PRIV_DECODE_PENDING;
+    return complete(decoded, what) ? WGF_GFX_PRIV_DECODE_DONE : WGF_GFX_PRIV_DECODE_FAILED;
 }
 
 unsigned char *wgf_gfx_priv_texture_decoded_base(void *data, int *width, int *height)
@@ -476,8 +493,22 @@ bool wgf_gfx_priv_texture_decoded_build_mipmaps(void *data)
 
 void *wgf_gfx_priv_texture_decode(const unsigned char *bytes, int size, const char *what)
 {
-    decoded_t *decoded = (decoded_t *)wgf_gfx_priv_texture_decode_base(bytes, size, what);
-    if (decoded != NULL && !build_mipmaps(decoded)) {
+    return start_decode(bytes, size, what, false);
+}
+
+void *wgf_gfx_priv_texture_decode_now(const unsigned char *bytes, int size, const char *what)
+{
+    int comp;
+    decoded_t *decoded = (decoded_t *)calloc(1, sizeof(decoded_t));
+    if (decoded == NULL) return NULL;
+    decoded->levels[0] = stbi_load_from_memory(bytes, size, &decoded->width, &decoded->height, &comp, 4);
+    decoded->mip_count = 1;
+    if (decoded->levels[0] == NULL) {
+        wgf_log_warn("wgf_gfx_texture: %s: not an image it can read (%s)", what, stbi_failure_reason());
+        free(decoded);
+        return NULL;
+    }
+    if (!build_mipmaps(decoded)) {
         wgf_log_warn("wgf_gfx_texture: %s: out of memory", what);
         discard(decoded);
         return NULL;

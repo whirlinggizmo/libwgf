@@ -1103,7 +1103,7 @@ uintptr_t wgf_ui_priv_doc_texture_load(const char *path, int *width, int *height
             wgf_log_warn("wgf_document: %s: no such image", normalized);
             return 0;
         }
-        decoded = wgf_gfx_priv_texture_decode(data, size, normalized);
+        decoded = wgf_gfx_priv_texture_decode_now(data, size, normalized); /* RmlUi asks for it now */
         wgf_core_priv_fs_read_free(data);
         if (decoded == NULL) return 0;
         t.texture = wgf_gfx_priv_texture_create_decoded(decoded);

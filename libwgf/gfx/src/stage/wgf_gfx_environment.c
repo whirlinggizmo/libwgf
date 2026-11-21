@@ -581,12 +581,39 @@ static bool hdr_rows(hdr_reader_t *r, wgf_gfx_priv_env_image_t *image, int y0, i
 /* An image file's start: a .hdr's size and its pixels' memory, left to decode in rows from
  * `r`; a PNG or JPEG decoded whole (the texture loader's decoder, from sRGB). False when it
  * can't be read. `bytes` stays the caller's, to free once the rows are read. */
+/* A PNG's or JPEG's decode, done, as linear colors (sRGB undone), and freed. */
+static bool image_from_decoded(void *decoded, const char *path, wgf_gfx_priv_env_image_t *out)
+{
+    const unsigned char *pixels;
+    int w = 0, h = 0;
+    size_t i;
+    if (wgf_gfx_priv_texture_decoded_wait(decoded, path) != WGF_GFX_PRIV_DECODE_DONE) {
+        wgf_gfx_priv_texture_decoded_free(decoded);
+        return false;
+    }
+    pixels = wgf_gfx_priv_texture_decoded_pixels(decoded, &w, &h);
+    out->rgb = (float *)malloc((size_t)w * (size_t)h * 3 * sizeof(float));
+    for (i = 0; out->rgb != NULL && i < (size_t)w * (size_t)h; i++) {
+        out->rgb[i * 3] = wgf_gfx_priv_srgb_to_linear((float)pixels[i * 4] / 255.0f);
+        out->rgb[i * 3 + 1] = wgf_gfx_priv_srgb_to_linear((float)pixels[i * 4 + 1] / 255.0f);
+        out->rgb[i * 3 + 2] = wgf_gfx_priv_srgb_to_linear((float)pixels[i * 4 + 2] / 255.0f);
+    }
+    wgf_gfx_priv_texture_decoded_free(decoded);
+    if (out->rgb == NULL) return false;
+    out->width = w;
+    out->height = h;
+    return w > 0 && h > 0;
+}
+
+/* The image's start: a .hdr's header, its rows read by the steps; a PNG or JPEG decoded whole,
+ * or in a page, its decode started, given back in `pending` for a step to wait on. */
 static bool image_begin(const unsigned char *bytes, int size, const char *path, wgf_gfx_priv_env_image_t *out,
-                        hdr_reader_t *r)
+                        hdr_reader_t *r, void **pending)
 {
     int w = 0, h = 0, start = 0;
     memset(out, 0, sizeof(*out));
     memset(r, 0, sizeof(*r));
+    *pending = NULL;
     if (hdr_header(bytes, size, &w, &h, &start)) {
         out->rgb = (float *)malloc((size_t)w * (size_t)h * 3 * sizeof(float));
         r->scanline = (unsigned char *)malloc((size_t)w * 4);
@@ -603,18 +630,12 @@ static bool image_begin(const unsigned char *bytes, int size, const char *path, 
         r->rle = -1;
     } else {
         void *decoded = wgf_gfx_priv_texture_decode(bytes, size, path);
-        const unsigned char *pixels;
-        size_t i;
         if (decoded == NULL) return false;
-        pixels = wgf_gfx_priv_texture_decoded_pixels(decoded, &w, &h);
-        out->rgb = (float *)malloc((size_t)w * (size_t)h * 3 * sizeof(float));
-        for (i = 0; out->rgb != NULL && i < (size_t)w * (size_t)h; i++) {
-            out->rgb[i * 3] = wgf_gfx_priv_srgb_to_linear((float)pixels[i * 4] / 255.0f);
-            out->rgb[i * 3 + 1] = wgf_gfx_priv_srgb_to_linear((float)pixels[i * 4 + 1] / 255.0f);
-            out->rgb[i * 3 + 2] = wgf_gfx_priv_srgb_to_linear((float)pixels[i * 4 + 2] / 255.0f);
+        if (wgf_gfx_priv_texture_decoded_wait(decoded, path) == WGF_GFX_PRIV_DECODE_PENDING) { /* the browser's */
+            *pending = decoded;
+            return true;
         }
-        wgf_gfx_priv_texture_decoded_free(decoded);
-        if (out->rgb == NULL) return false;
+        return image_from_decoded(decoded, path, out);
     }
     out->width = w;
     out->height = h;
@@ -629,7 +650,14 @@ bool wgf_gfx_priv_environment_load_image(const char *path, wgf_gfx_priv_env_imag
     bool ok;
     memset(out, 0, sizeof(*out));
     if (!wgf_core_priv_fs_read(path, &bytes, &size)) return false;
-    ok = image_begin(bytes, size, path, out, &r) && (r.bytes == NULL || hdr_rows(&r, out, 0, out->height));
+    {
+        void *pending;
+        ok = image_begin(bytes, size, path, out, &r, &pending) && (r.bytes == NULL || hdr_rows(&r, out, 0, out->height));
+        if (pending != NULL) { /* the browser's: this reading is whole at once, so none */
+            wgf_gfx_priv_texture_decoded_free(pending);
+            ok = false;
+        }
+    }
     free(r.scanline);
     wgf_core_priv_fs_read_free(bytes);
     if (!ok) {
@@ -735,7 +763,7 @@ static bool make_cube_image(const wgf_gfx_priv_env_cube_t *cube, sg_image *image
  * thread prepares, it spreads over frames: the .hdr's rows decoded, the irradiance a band
  * of rows at a time, the source cube a band of a face at a time and its mips, then the
  * prefiltered cube a band of a face of a mip at a time. */
-typedef enum stage_t { STAGE_DECODE, STAGE_SH, STAGE_SOURCE, STAGE_PREFILTER, STAGE_DONE } stage_t;
+typedef enum stage_t { STAGE_DECODE, STAGE_PIXELS, STAGE_SH, STAGE_SOURCE, STAGE_PREFILTER, STAGE_DONE } stage_t;
 
 #define STEP_PIXELS 32768  /* the image's pixels a step: decoding, the irradiance */
 #define STEP_SAMPLES 16384 /* the equirect samples a step (4 a source texel), or prefilter samples a step */
@@ -749,6 +777,7 @@ typedef struct prepared_t {
     char path[WGF_CORE_PRIV_FS_PATH_MAX];
     unsigned char *bytes; /* the file, while its .hdr rows are read */
     hdr_reader_t reader;
+    void *pending; /* a PNG's or JPEG's decode, the browser's, until it is done (STAGE_PIXELS) */
     wgf_gfx_priv_env_image_t image;
     double sums[9][3];
     int face, mip, row;
@@ -761,6 +790,7 @@ static void discard(void *data)
     prepared_t *prepared = (prepared_t *)data;
     if (prepared == NULL) return;
     if (prepared->bytes != NULL) wgf_core_priv_fs_read_free(prepared->bytes);
+    wgf_gfx_priv_texture_decoded_free(prepared->pending);
     free(prepared->reader.scanline);
     free(prepared->image.rgb);
     wgf_gfx_priv_environment_cube_free(&prepared->source);
@@ -775,15 +805,15 @@ static void *prepare(const char *path)
     if (prepared == NULL) return NULL;
     snprintf(prepared->path, sizeof(prepared->path), "%s", path);
     if (!wgf_core_priv_fs_read(path, &prepared->bytes, &size) ||
-        !image_begin(prepared->bytes, size, path, &prepared->image, &prepared->reader)) {
+        !image_begin(prepared->bytes, size, path, &prepared->image, &prepared->reader, &prepared->pending)) {
         wgf_log_warn("wgf_gfx_environment: %s: not an image it can read", path);
         discard(prepared);
         return NULL;
     }
-    if (prepared->reader.bytes == NULL) { /* decoded whole */
+    if (prepared->reader.bytes == NULL) { /* decoded whole, or its decode the browser's, waited for by a step */
         wgf_core_priv_fs_read_free(prepared->bytes);
         prepared->bytes = NULL;
-        prepared->stage = STAGE_SH;
+        prepared->stage = prepared->pending != NULL ? STAGE_PIXELS : STAGE_SH;
     }
     return prepared;
 }
@@ -816,6 +846,19 @@ static wgf_core_priv_load_step_t prepare_step(void *data)
                 p->row = 0;
                 p->stage = STAGE_SH;
             }
+            return WGF_CORE_PRIV_LOAD_MORE;
+        }
+        case STAGE_PIXELS: { /* in a page: the browser's decode, waited for, then its colors made linear */
+            void *decoded = p->pending;
+            if (wgf_gfx_priv_texture_decoded_wait(decoded, p->path) == WGF_GFX_PRIV_DECODE_PENDING) {
+                return WGF_CORE_PRIV_LOAD_MORE;
+            }
+            p->pending = NULL;
+            if (!image_from_decoded(decoded, p->path, image)) {
+                wgf_log_warn("wgf_gfx_environment: %s: not an image it can read", p->path);
+                return WGF_CORE_PRIV_LOAD_FAILED;
+            }
+            p->stage = STAGE_SH;
             return WGF_CORE_PRIV_LOAD_MORE;
         }
         case STAGE_SH: {
