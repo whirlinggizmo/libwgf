@@ -4924,7 +4924,9 @@ export declare const FsTask: {
  * Gamepads, read inside a tick or a frame: what changed since the previous tick, or
  * the previous frame. Up to 4 at once, pads 0 to 3: a pad keeps its number while it
  * is connected, and a new one takes the lowest free number, so pad 0 stays player one
- * until it is unplugged. Pads are read once a frame, before its ticks.
+ * until it is unplugged. Pads are read once a frame, before its ticks, from the first call
+ * that reaches them (any here, a pad binding, the UI's): a program that never does links none
+ * of the pads' code.
  *
  * Linux: evdev, the kernel's input devices, checked for new pads every couple of
  * seconds. Windows: XInput. Web: the browser's Gamepad API, which lists a pad only
@@ -10630,7 +10632,8 @@ export declare const TilemapLayer: {
  * A page may need permission, asked at the player's next tap (iOS, and Chrome on Android),
  * so a game asks before the tap that starts play. Level is measured once the device is held
  * within 3 degrees for half a second (as the tilt starts, after the screen turns, and after
- * wgf_tilt_calibrate); the tilt reads 0 meanwhile. Readings are taken as each frame ends.
+ * wgf_tilt_calibrate); the tilt reads 0 meanwhile. Readings are taken as each frame ends, once
+ * asked for: a program that never asks links none of it.
  */
 export declare const Tilt: {
     /**

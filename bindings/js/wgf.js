@@ -566,7 +566,8 @@ export const WGF_MOUSE_CURSOR_NOT_ALLOWED = 10;
  * A page may need permission, asked at the player's next tap (iOS, and Chrome on Android),
  * so a game asks before the tap that starts play. Level is measured once the device is held
  * within 3 degrees for half a second (as the tilt starts, after the screen turns, and after
- * wgf_tilt_calibrate); the tilt reads 0 meanwhile. Readings are taken as each frame ends.
+ * wgf_tilt_calibrate); the tilt reads 0 meanwhile. Readings are taken as each frame ends, once
+ * asked for: a program that never asks links none of it.
  */
 export const WGF_TILT_STATUS_OFF = 0;
 export const WGF_TILT_STATUS_WAITING_FOR_TAP = 1;

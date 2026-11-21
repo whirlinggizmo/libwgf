@@ -59,6 +59,16 @@ static void send_rumble(int pad, float low, float high, float seconds)
     }
 }
 
+/* The pads joined to the loop (wgf_platform_input_priv.h), by whatever first reaches them:
+ * a program that never reads one links none of this. */
+static void install(void)
+{
+    static const wgf_platform_priv_pads_t hooks = {wgf_platform_priv_gamepad_open, wgf_platform_priv_gamepad_close,
+                                                   wgf_platform_priv_gamepad_begin_frame, wgf_platform_priv_gamepad_end_tick,
+                                                   wgf_platform_priv_gamepad_end_frame};
+    wgf_platform_priv_set_pads(&hooks);
+}
+
 int wgf_platform_priv_gamepad_get_test_rumble(int pad, float out[3])
 {
     if (pad < 0 || pad >= WGF_PLATFORM_PRIV_GAMEPADS) return 0;
@@ -101,10 +111,12 @@ void wgf_platform_priv_gamepad_set_test_pad(int pad, const wgf_platform_priv_gam
     } else {
         memset(&pads.test[pad], 0, sizeof(pads.test[pad]));
     }
+    install(); /* after: reached with the window open, it is read at once */
 }
 
 void wgf_platform_priv_gamepad_set_played(const wgf_platform_priv_gamepad_t *played)
 {
+    install();
     pads.played = played;
     pads.held_pressed = false;
 }
@@ -183,6 +195,7 @@ void wgf_platform_priv_gamepad_end_frame(void)
 
 const wgf_platform_priv_gamepad_t *wgf_platform_priv_gamepad_get(int pad)
 {
+    install();
     return pad >= 0 && pad < WGF_PLATFORM_PRIV_GAMEPADS ? &pads.pads[pad] : NULL;
 }
 
@@ -205,11 +218,13 @@ static const edges_t *edges_of(int pad)
 
 bool wgf_gamepad_is_connected(int pad)
 {
+    install();
     return connected(pad) != NULL;
 }
 
 const char *wgf_gamepad_get_name(int pad)
 {
+    install();
     const wgf_platform_priv_gamepad_t *pad_ptr = connected(pad);
     return pad_ptr != NULL ? pad_ptr->name : "";
 }
@@ -217,6 +232,7 @@ const char *wgf_gamepad_get_name(int pad)
 /* edges outlive a pad by a read (its releases), so they are read connected or not */
 wgf_input_state_t wgf_gamepad_get_button_state(int pad, wgf_gamepad_button_t button)
 {
+    install();
     const edges_t *edges;
     if (!valid_button(pad, button)) return WGF_INPUT_STATE_UP;
     edges = edges_of(pad);
@@ -227,22 +243,26 @@ wgf_input_state_t wgf_gamepad_get_button_state(int pad, wgf_gamepad_button_t but
 
 bool wgf_gamepad_is_down(int pad, wgf_gamepad_button_t button)
 {
+    install();
     const wgf_input_state_t state = wgf_gamepad_get_button_state(pad, button);
     return state == WGF_INPUT_STATE_PRESSED || state == WGF_INPUT_STATE_DOWN;
 }
 
 bool wgf_gamepad_is_pressed(int pad, wgf_gamepad_button_t button)
 {
+    install();
     return valid_button(pad, button) && edges_of(pad)->pressed[button];
 }
 
 bool wgf_gamepad_is_released(int pad, wgf_gamepad_button_t button)
 {
+    install();
     return valid_button(pad, button) && edges_of(pad)->released[button];
 }
 
 wgf_gamepad_button_t wgf_gamepad_get_last_pressed(int pad)
 {
+    install();
     int b;
     for (b = WGF_GAMEPAD_BUTTON_SOUTH; b <= WGF_GAMEPAD_BUTTON_DPAD_RIGHT; b++) {
         if (valid_button(pad, (wgf_gamepad_button_t)b) && edges_of(pad)->pressed[b]) return (wgf_gamepad_button_t)b;
@@ -252,6 +272,7 @@ wgf_gamepad_button_t wgf_gamepad_get_last_pressed(int pad)
 
 wgf_vec2_t wgf_gamepad_get_stick(int pad, wgf_gamepad_stick_t stick)
 {
+    install();
     const wgf_platform_priv_gamepad_t *pad_ptr = connected(pad);
     wgf_vec2_t value = {0.0f, 0.0f};
     float x, y, length, scale;
@@ -275,6 +296,7 @@ wgf_vec2_t wgf_gamepad_get_stick(int pad, wgf_gamepad_stick_t stick)
 
 float wgf_gamepad_get_trigger(int pad, wgf_gamepad_trigger_t trigger)
 {
+    install();
     const wgf_platform_priv_gamepad_t *pad_ptr = connected(pad);
     if (pad_ptr == NULL) return 0.0f;
     if (trigger == WGF_GAMEPAD_TRIGGER_LEFT) return pad_ptr->axes[WGF_PLATFORM_PRIV_GAMEPAD_LEFT_TRIGGER];
@@ -284,6 +306,7 @@ float wgf_gamepad_get_trigger(int pad, wgf_gamepad_trigger_t trigger)
 
 float wgf_gamepad_get_axis(int pad, wgf_gamepad_axis_t axis)
 {
+    install();
     switch (axis) {
         case WGF_GAMEPAD_AXIS_LEFT_X: return wgf_gamepad_get_stick(pad, WGF_GAMEPAD_STICK_LEFT).x;
         case WGF_GAMEPAD_AXIS_LEFT_Y: return wgf_gamepad_get_stick(pad, WGF_GAMEPAD_STICK_LEFT).y;
@@ -297,22 +320,26 @@ float wgf_gamepad_get_axis(int pad, wgf_gamepad_axis_t axis)
 
 void wgf_gamepad_set_deadzone(float radius)
 {
+    install();
     pads.deadzone = radius >= 0.0f ? (radius <= MAX_DEADZONE ? radius : MAX_DEADZONE) : 0.0f;
 }
 
 float wgf_gamepad_get_deadzone(void)
 {
+    install();
     return pads.deadzone;
 }
 
 /* Rumble goes to the pads as they really are (or a test's), never a replay's. */
 bool wgf_gamepad_can_rumble(int pad)
 {
+    install();
     return pad >= 0 && pad < WGF_PLATFORM_PRIV_GAMEPADS && pads.real[pad].connected && pads.real[pad].rumble;
 }
 
 bool wgf_gamepad_rumble(int pad, float low, float high, float seconds)
 {
+    install();
     if (!(seconds > 0.0f)) return false; /* NaN too */
     if (!wgf_gamepad_can_rumble(pad)) {
         if (!pads.rumble_warned && pad >= 0 && pad < WGF_PLATFORM_PRIV_GAMEPADS && pads.real[pad].connected) {
@@ -334,6 +361,7 @@ bool wgf_gamepad_rumble(int pad, float low, float high, float seconds)
 
 bool wgf_gamepad_stop_rumble(int pad)
 {
+    install();
     if (!wgf_gamepad_is_rumbling(pad)) return false;
     send_rumble(pad, 0.0f, 0.0f, 0.0f);
     pads.rumbling[pad] = false;
@@ -342,12 +370,14 @@ bool wgf_gamepad_stop_rumble(int pad)
 
 bool wgf_gamepad_is_rumbling(int pad)
 {
+    install();
     return wgf_gamepad_can_rumble(pad) && pads.rumbling[pad];
 }
 
 /* A pad's GUID and mapping are the real pad's: a replay plays inputs, not devices. */
 const char *wgf_gamepad_get_guid(int pad)
 {
+    install();
     static const unsigned char none[16] = {0};
     static char text[33];
     int i;
@@ -365,5 +395,6 @@ const char *wgf_gamepad_get_guid(int pad)
 
 bool wgf_gamepad_is_mapped(int pad)
 {
+    install();
     return pad >= 0 && pad < WGF_PLATFORM_PRIV_GAMEPADS && pads.real[pad].connected && pads.real[pad].mapped;
 }

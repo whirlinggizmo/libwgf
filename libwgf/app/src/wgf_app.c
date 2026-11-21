@@ -110,7 +110,7 @@ static void on_init(void)
     wgf_platform_priv_set_paced(!app.flown);  /* a headless run flown by an autopilot waits for no display */
     app.started = true;
     wgf_platform_priv_input_reset();
-    wgf_platform_priv_gamepad_open();
+    wgf_platform_priv_pads_open();
     wgf_platform_priv_window_set_open(true);
     wgf_platform_priv_mark("wgf:started");
     call(app.init);
@@ -188,7 +188,7 @@ static void run_ticks(double elapsed)
             wgf_core_priv_part_tick(wgf_loop_get_tick_delta());
         }
         wgf_platform_priv_input_end_tick(); /* nothing reads tick edges: don't let them pile up */
-        wgf_platform_priv_gamepad_end_tick();
+        wgf_platform_priv_pads_end_tick();
         return;
     }
     wgf_platform_priv_input_set_context(WGF_PLATFORM_PRIV_INPUT_TICK);
@@ -197,7 +197,7 @@ static void run_ticks(double elapsed)
         call(app.tick);
         wgf_core_priv_part_tick(wgf_loop_get_tick_delta()); /* the parts' systems, after the program's (ecs) */
         wgf_platform_priv_input_end_tick();
-        wgf_platform_priv_gamepad_end_tick();
+        wgf_platform_priv_pads_end_tick();
     }
     wgf_platform_priv_input_set_context(WGF_PLATFORM_PRIV_INPUT_FRAME);
 }
@@ -212,7 +212,7 @@ static void on_frame(void)
     started = wgf_time_get_seconds(); /* the frame's own work, from here to its drawing's end */
     if (app.autopilot != NULL) app.autopilot->begin_frame(app.frames); /* the frame's autopilot inputs, before its ticks */
     if (app.replay != NULL) app.replay->inputs();   /* and a replay's */
-    wgf_platform_priv_gamepad_begin_frame();     /* before the ticks: they read the pads too */
+    wgf_platform_priv_pads_begin_frame();     /* before the ticks: they read the pads too */
     if (app.recording) app.recorder->frame(app.frames);
     if (app.replay != NULL) app.replay->frame();
     wgf_core_priv_part_begin_frame();            /* the parts' reading of the frame's input (the pointer) */
@@ -234,9 +234,9 @@ static void on_frame(void)
         wgf_platform_priv_mark("wgf:first-frame");
     }
     wgf_platform_priv_input_end_frame();
-    wgf_platform_priv_gamepad_end_frame();
+    wgf_platform_priv_pads_end_frame();
     wgf_platform_priv_window_end_frame();
-    wgf_platform_priv_tilt_end_frame();
+    wgf_platform_priv_tilt_frame();
     if (app.autopilot != NULL) app.autopilot->end_frame(app.frames); /* its expectations, after it */
     app.frames++;
 }
@@ -252,7 +252,7 @@ static void on_shutdown(void)
     app.recording = false;
     if (app.replay != NULL) app.replay->stop();
     wgf_platform_priv_window_set_open(false);
-    wgf_platform_priv_gamepad_close();
+    wgf_platform_priv_pads_close();
     wgf_platform_priv_input_reset();
     wgf_gfx_priv_stop();
     wgf_core_priv_shutdown();

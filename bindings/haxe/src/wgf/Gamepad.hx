@@ -7,7 +7,9 @@ import wgf.impl.Raw;
     Gamepads, read inside a tick or a frame: what changed since the previous tick, or
     the previous frame. Up to 4 at once, pads 0 to 3: a pad keeps its number while it
     is connected, and a new one takes the lowest free number, so pad 0 stays player one
-    until it is unplugged. Pads are read once a frame, before its ticks.
+    until it is unplugged. Pads are read once a frame, before its ticks, from the first call
+    that reaches them (any here, a pad binding, the UI's): a program that never does links none
+    of the pads' code.
 
     Linux: evdev, the kernel's input devices, checked for new pads every couple of
     seconds. Windows: XInput. Web: the browser's Gamepad API, which lists a pad only

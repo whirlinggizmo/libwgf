@@ -3,11 +3,13 @@
 #include <math.h>
 #include <stddef.h>
 
+#include "wgf_platform_input_priv.h"
 #include "wgf_platform_tilt_priv.h"
 #include "wgf_time.h"
 
 /* The tilt, helix's Tilt service in C: the platform's readings (its web or none file) taken
- * as each frame ends, level measured once the device is held steady, and each reading taken
+ * as each frame ends once it is asked for (the loop's hook: a program that never asks links
+ * none of it), level measured once the device is held steady, and each reading taken
  * from level, turned with the screen, and scaled by the range. */
 
 #define STEADY_DEGREES 3.0
@@ -100,6 +102,7 @@ bool wgf_tilt_request(void)
     if (!tilt.requested) {
         tilt.requested = true;
         tilt.level = tilt.steady = false;
+        wgf_platform_priv_set_tilt_frame(wgf_platform_priv_tilt_end_frame); /* taken in each frame from now */
         wgf_platform_priv_tilt_feed(wgf_platform_priv_tilt_start(), false, NULL, 0.0);
     }
     return tilt.status != WGF_TILT_STATUS_UNAVAILABLE && tilt.status != WGF_TILT_STATUS_NEEDS_HTTPS;

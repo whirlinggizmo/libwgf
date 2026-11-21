@@ -40,6 +40,29 @@ void wgf_platform_priv_input_release_all(void);
  * program with no actions links none of them. */
 void wgf_platform_priv_input_set_edges_hook(void (*ended)(wgf_platform_priv_input_context_t context));
 
+/* The optional input parts the loop drives, each through hooks its first call sets, so a
+ * program that never reads a pad or asks for tilt links neither (wgf_platform_gamepad.c,
+ * wgf_platform_tilt.c): the pads opened with the window (at once, and read then, when it is
+ * open already: the call that reached them sees them),
+ * read at each frame's start, their edges ended with the tick's and the frame's, and closed;
+ * tilt taken in at each frame's end. The loop (app) calls the wrappers; one with no part set
+ * does nothing. */
+typedef struct wgf_platform_priv_pads_t {
+    void (*open)(void);
+    void (*close)(void);
+    void (*begin_frame)(void);
+    void (*end_tick)(void);
+    void (*end_frame)(void);
+} wgf_platform_priv_pads_t;
+void wgf_platform_priv_set_pads(const wgf_platform_priv_pads_t *pads);
+void wgf_platform_priv_set_tilt_frame(void (*end_frame)(void));
+void wgf_platform_priv_pads_open(void);
+void wgf_platform_priv_pads_close(void);
+void wgf_platform_priv_pads_begin_frame(void);
+void wgf_platform_priv_pads_end_tick(void);
+void wgf_platform_priv_pads_end_frame(void);
+void wgf_platform_priv_tilt_frame(void);
+
 /* The pointer's: a press that started on an interactive actor is held (or was let go
  * this frame), which captures the pointer along with the UI's own say. */
 void wgf_platform_priv_input_set_pointer_held(bool held);

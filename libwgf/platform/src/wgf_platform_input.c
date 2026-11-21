@@ -888,3 +888,58 @@ const char *wgf_input_get_clipboard(void)
 {
     return wgf_platform_priv_get_clipboard();
 }
+
+/* ---------------------------------------------------------- optional parts ---- */
+
+static struct {
+    const wgf_platform_priv_pads_t *pads; /* NULL until a pad is first reached */
+    bool pads_open;                       /* the loop opened them (the window is open) */
+    void (*tilt_frame)(void);             /* NULL until tilt is first asked for */
+} parts;
+
+void wgf_platform_priv_set_pads(const wgf_platform_priv_pads_t *pads)
+{
+    if (parts.pads == pads) return;
+    parts.pads = pads;
+    if (pads != NULL && parts.pads_open) { /* reached with the window open: read at once, as a frame's start reads them */
+        pads->open();
+        pads->begin_frame();
+    }
+}
+
+void wgf_platform_priv_set_tilt_frame(void (*end_frame)(void))
+{
+    parts.tilt_frame = end_frame;
+}
+
+void wgf_platform_priv_pads_open(void)
+{
+    parts.pads_open = true;
+    if (parts.pads != NULL) parts.pads->open();
+}
+
+void wgf_platform_priv_pads_close(void)
+{
+    if (parts.pads != NULL) parts.pads->close();
+    parts.pads_open = false;
+}
+
+void wgf_platform_priv_pads_begin_frame(void)
+{
+    if (parts.pads != NULL) parts.pads->begin_frame();
+}
+
+void wgf_platform_priv_pads_end_tick(void)
+{
+    if (parts.pads != NULL) parts.pads->end_tick();
+}
+
+void wgf_platform_priv_pads_end_frame(void)
+{
+    if (parts.pads != NULL) parts.pads->end_frame();
+}
+
+void wgf_platform_priv_tilt_frame(void)
+{
+    if (parts.tilt_frame != NULL) parts.tilt_frame();
+}
