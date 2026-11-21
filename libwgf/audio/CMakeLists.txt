@@ -123,6 +123,12 @@ if(WGF_TESTS AND EMSCRIPTEN)
         target_link_options(wgf_audio_stall_web_test PRIVATE
             "SHELL:--preload-file ${PROJECT_SOURCE_DIR}/examples/assets/music/a_hero_is_born.mp3@/wgf/music/a_hero_is_born.mp3")
     endif()
+    # a streamed voice played before the page's first tap: played inside the next one
+    wgf_web_test(audio wgf_audio_autoplay_web_test 1)
+    if(TARGET wgf_audio_autoplay_web_test)
+        target_link_options(wgf_audio_autoplay_web_test PRIVATE
+            "SHELL:--preload-file ${PROJECT_SOURCE_DIR}/examples/assets/music/a_hero_is_born.mp3@/wgf/music/a_hero_is_born.mp3")
+    endif()
     # MP3's encoder delay as the browser decodes it: the native marker test's files
     wgf_web_test(audio wgf_audio_markers_web_test 1)
     if(TARGET wgf_audio_markers_web_test)

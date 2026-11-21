@@ -116,7 +116,21 @@ EM_JS(void, wgf_audio_js_voice_apply,
             v.element = element;
             if (pitch > 0) {
                 element.playbackRate = pitch;
-                element.play();
+                /* refused before the page's first tap, click, or key (the browser's autoplay
+                   rule): played again inside the next one, if the voice still plays it then;
+                   another refusal (a pause before it started) is the voice's own doing */
+                element.play().catch(function(e) {
+                    if (!e || e.name !== "NotAllowedError") return;
+                    var retry = function() {
+                        ["pointerup", "touchend", "click", "keydown"].forEach(function(name) {
+                            window.removeEventListener(name, retry, {capture: true});
+                        });
+                        if (v.element === element && v.playing && element.paused) element.play().catch(function() {});
+                    };
+                    ["pointerup", "touchend", "click", "keydown"].forEach(function(name) {
+                        window.addEventListener(name, retry, {capture: true});
+                    });
+                });
             }
             return;
         }
