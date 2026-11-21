@@ -156,7 +156,10 @@ WGF_API wgf_actor_t wgf_actor_find(wgf_actor_t actor, const char *path);
  *             kept, so enabling it again brings each back as it was set
  *   visible   off: the actor's own output is off -- a sprite, shape, text, or
  *             emitter isn't drawn -- while it is still placed and its children are
- *             as they are
+ *             as they are. A glTF file's root (wgf_model.h), which draws nothing itself,
+ *             stands for its file: hidden, its file's nodes aren't drawn or picked either,
+ *             while the actors a game put under them are as they are; to hide a whole
+ *             tree, turn enabled off
  *   paused    on: it and everything under it are frozen, still drawn: its behaviors
  *             don't tick, its components' systems (motion, 2D bodies, bounds,
  *             lifetimes) and tweens leave it, and what moves by itself holds still --

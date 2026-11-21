@@ -64,4 +64,11 @@ void wgf_gfx_priv_model_set_animation_free(void (*free_animation)(struct wgf_gfx
  * false in a program without glTF, where no mesh fails. */
 bool wgf_gfx_priv_model_placeholder(wgf_mesh_t *mesh, wgf_material_t *material);
 
+struct wgf_gfx_priv_actor_t;
+
+/* A glTF file's node (`from_file`) as its file's root says: false while that root (the
+ * first file root above it) is hidden; else true, `tint` the node's own times the root's.
+ * Any other model: true, its tint as given. */
+bool wgf_gfx_priv_model_file_shown(const struct wgf_gfx_priv_actor_t *actor_ptr, wgf_color_t *tint);
+
 #endif

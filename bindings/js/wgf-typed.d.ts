@@ -400,7 +400,10 @@ export declare const Actor: {
      *             kept, so enabling it again brings each back as it was set
      *   visible   off: the actor's own output is off -- a sprite, shape, text, or
      *             emitter isn't drawn -- while it is still placed and its children are
-     *             as they are
+     *             as they are. A glTF file's root (wgf_model.h), which draws nothing itself,
+     *             stands for its file: hidden, its file's nodes aren't drawn or picked either,
+     *             while the actors a game put under them are as they are; to hide a whole
+     *             tree, turn enabled off
      *   paused    on: it and everything under it are frozen, still drawn: its behaviors
      *             don't tick, its components' systems (motion, 2D bodies, bounds,
      *             lifetimes) and tweens leave it, and what moves by itself holds still --
@@ -427,7 +430,10 @@ export declare const Actor: {
      *             kept, so enabling it again brings each back as it was set
      *   visible   off: the actor's own output is off -- a sprite, shape, text, or
      *             emitter isn't drawn -- while it is still placed and its children are
-     *             as they are
+     *             as they are. A glTF file's root (wgf_model.h), which draws nothing itself,
+     *             stands for its file: hidden, its file's nodes aren't drawn or picked either,
+     *             while the actors a game put under them are as they are; to hide a whole
+     *             tree, turn enabled off
      *   paused    on: it and everything under it are frozen, still drawn: its behaviors
      *             don't tick, its components' systems (motion, 2D bodies, bounds,
      *             lifetimes) and tweens leave it, and what moves by itself holds still --
@@ -454,7 +460,10 @@ export declare const Actor: {
      *             kept, so enabling it again brings each back as it was set
      *   visible   off: the actor's own output is off -- a sprite, shape, text, or
      *             emitter isn't drawn -- while it is still placed and its children are
-     *             as they are
+     *             as they are. A glTF file's root (wgf_model.h), which draws nothing itself,
+     *             stands for its file: hidden, its file's nodes aren't drawn or picked either,
+     *             while the actors a game put under them are as they are; to hide a whole
+     *             tree, turn enabled off
      *   paused    on: it and everything under it are frozen, still drawn: its behaviors
      *             don't tick, its components' systems (motion, 2D bodies, bounds,
      *             lifetimes) and tweens leave it, and what moves by itself holds still --
@@ -481,7 +490,10 @@ export declare const Actor: {
      *             kept, so enabling it again brings each back as it was set
      *   visible   off: the actor's own output is off -- a sprite, shape, text, or
      *             emitter isn't drawn -- while it is still placed and its children are
-     *             as they are
+     *             as they are. A glTF file's root (wgf_model.h), which draws nothing itself,
+     *             stands for its file: hidden, its file's nodes aren't drawn or picked either,
+     *             while the actors a game put under them are as they are; to hide a whole
+     *             tree, turn enabled off
      *   paused    on: it and everything under it are frozen, still drawn: its behaviors
      *             don't tick, its components' systems (motion, 2D bodies, bounds,
      *             lifetimes) and tweens leave it, and what moves by itself holds still --
@@ -508,7 +520,10 @@ export declare const Actor: {
      *             kept, so enabling it again brings each back as it was set
      *   visible   off: the actor's own output is off -- a sprite, shape, text, or
      *             emitter isn't drawn -- while it is still placed and its children are
-     *             as they are
+     *             as they are. A glTF file's root (wgf_model.h), which draws nothing itself,
+     *             stands for its file: hidden, its file's nodes aren't drawn or picked either,
+     *             while the actors a game put under them are as they are; to hide a whole
+     *             tree, turn enabled off
      *   paused    on: it and everything under it are frozen, still drawn: its behaviors
      *             don't tick, its components' systems (motion, 2D bodies, bounds,
      *             lifetimes) and tweens leave it, and what moves by itself holds still --
@@ -535,7 +550,10 @@ export declare const Actor: {
      *             kept, so enabling it again brings each back as it was set
      *   visible   off: the actor's own output is off -- a sprite, shape, text, or
      *             emitter isn't drawn -- while it is still placed and its children are
-     *             as they are
+     *             as they are. A glTF file's root (wgf_model.h), which draws nothing itself,
+     *             stands for its file: hidden, its file's nodes aren't drawn or picked either,
+     *             while the actors a game put under them are as they are; to hide a whole
+     *             tree, turn enabled off
      *   paused    on: it and everything under it are frozen, still drawn: its behaviors
      *             don't tick, its components' systems (motion, 2D bodies, bounds,
      *             lifetimes) and tweens leave it, and what moves by itself holds still --
@@ -562,7 +580,10 @@ export declare const Actor: {
      *             kept, so enabling it again brings each back as it was set
      *   visible   off: the actor's own output is off -- a sprite, shape, text, or
      *             emitter isn't drawn -- while it is still placed and its children are
-     *             as they are
+     *             as they are. A glTF file's root (wgf_model.h), which draws nothing itself,
+     *             stands for its file: hidden, its file's nodes aren't drawn or picked either,
+     *             while the actors a game put under them are as they are; to hide a whole
+     *             tree, turn enabled off
      *   paused    on: it and everything under it are frozen, still drawn: its behaviors
      *             don't tick, its components' systems (motion, 2D bodies, bounds,
      *             lifetimes) and tweens leave it, and what moves by itself holds still --
@@ -589,7 +610,10 @@ export declare const Actor: {
      *             kept, so enabling it again brings each back as it was set
      *   visible   off: the actor's own output is off -- a sprite, shape, text, or
      *             emitter isn't drawn -- while it is still placed and its children are
-     *             as they are
+     *             as they are. A glTF file's root (wgf_model.h), which draws nothing itself,
+     *             stands for its file: hidden, its file's nodes aren't drawn or picked either,
+     *             while the actors a game put under them are as they are; to hide a whole
+     *             tree, turn enabled off
      *   paused    on: it and everything under it are frozen, still drawn: its behaviors
      *             don't tick, its components' systems (motion, 2D bodies, bounds,
      *             lifetimes) and tweens leave it, and what moves by itself holds still --
@@ -616,7 +640,10 @@ export declare const Actor: {
      *             kept, so enabling it again brings each back as it was set
      *   visible   off: the actor's own output is off -- a sprite, shape, text, or
      *             emitter isn't drawn -- while it is still placed and its children are
-     *             as they are
+     *             as they are. A glTF file's root (wgf_model.h), which draws nothing itself,
+     *             stands for its file: hidden, its file's nodes aren't drawn or picked either,
+     *             while the actors a game put under them are as they are; to hide a whole
+     *             tree, turn enabled off
      *   paused    on: it and everything under it are frozen, still drawn: its behaviors
      *             don't tick, its components' systems (motion, 2D bodies, bounds,
      *             lifetimes) and tweens leave it, and what moves by itself holds still --
@@ -6166,12 +6193,16 @@ export declare const Model: {
     readonly getMesh: typeof raw.wgf_model_get_mesh;
     /**
      * A color its materials are multiplied by, as wgrender's tint (default white); alpha
-     * below 255 makes the model see-through, blended back to front.
+     * below 255 makes the model see-through, blended back to front. A glTF file's root draws
+     * nothing itself and stands for its file: its tint multiplies its nodes' own, so one call
+     * tints the whole file (an enemy in red, a hit's flash).
      */
     readonly setTint: typeof raw.wgf_model_set_tint;
     /**
      * A color its materials are multiplied by, as wgrender's tint (default white); alpha
-     * below 255 makes the model see-through, blended back to front.
+     * below 255 makes the model see-through, blended back to front. A glTF file's root draws
+     * nothing itself and stands for its file: its tint multiplies its nodes' own, so one call
+     * tints the whole file (an enemy in red, a hit's flash).
      */
     readonly getTint: typeof raw.wgf_model_get_tint;
     /**

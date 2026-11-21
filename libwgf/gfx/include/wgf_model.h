@@ -34,7 +34,9 @@ WGF_API bool wgf_model_set_mesh(wgf_actor_t model, wgf_mesh_t mesh);
 WGF_API wgf_mesh_t wgf_model_get_mesh(wgf_actor_t model);
 
 /* A color its materials are multiplied by, as wgrender's tint (default white); alpha
- * below 255 makes the model see-through, blended back to front. */
+ * below 255 makes the model see-through, blended back to front. A glTF file's root draws
+ * nothing itself and stands for its file: its tint multiplies its nodes' own, so one call
+ * tints the whole file (an enemy in red, a hit's flash). */
 WGF_API bool wgf_model_set_tint(wgf_actor_t model, wgf_color_t color);
 WGF_API wgf_color_t wgf_model_get_tint(wgf_actor_t model);
 

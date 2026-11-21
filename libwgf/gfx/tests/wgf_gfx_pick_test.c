@@ -256,6 +256,9 @@ static void picking_3d(void)
            "posed half a unit up: hit, as the file's root");
     expect(wgf_model_pick_ray(root, 10.1f, 1.2f, 5, 0, 0, -1, NULL, 0), "the root tested alone: its nodes");
     expect(wgf_stage3d_pick_ray(stage, 10.1f, 0.2f, 5, 0, 0, -1, NULL, 0) == 0, "where it was at rest: nothing now");
+    wgf_actor_set_visible(root, false);
+    expect(wgf_stage3d_pick_ray(stage, 10.1f, 1.2f, 5, 0, 0, -1, NULL, 0) == 0, "its root hidden: through");
+    wgf_actor_set_visible(root, true);
     wgf_actor_set_pickable(root, false);
     expect(wgf_stage3d_pick_ray(stage, 10.1f, 1.2f, 5, 0, 0, -1, NULL, 0) == 0, "its root not pickable: through");
     wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);

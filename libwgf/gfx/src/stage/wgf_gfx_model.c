@@ -227,6 +227,29 @@ bool wgf_model_set_tint(wgf_actor_t model, wgf_color_t color)
     return true;
 }
 
+bool wgf_gfx_priv_model_file_shown(const wgf_gfx_priv_actor_t *actor_ptr, wgf_color_t *tint)
+{
+    const wgf_gfx_priv_actor_t *up = actor_ptr;
+    int steps = 0;
+    if (!actor_ptr->from_file) return true;
+    while (up != NULL && up->parent != 0 && steps++ < 4096) {
+        up = wgf_gfx_priv_actor_of_silently(up->parent);
+        if (up != NULL && up->type == WGF_ACTOR_KIND_MODEL && up->as.model.file_root) {
+            const wgf_color_t a = *tint, b = up->as.model.tint;
+            wgf_color_t out = 0;
+            int shift;
+            if (!up->visible) return false;
+            for (shift = 0; shift < 32; shift += 8) {
+                const unsigned x = (a >> shift) & 0xFFu, y = (b >> shift) & 0xFFu;
+                out |= (wgf_color_t)((x * y + 127u) / 255u) << shift;
+            }
+            *tint = out;
+            return true;
+        }
+    }
+    return true;
+}
+
 wgf_color_t wgf_model_get_tint(wgf_actor_t model)
 {
     const wgf_gfx_priv_actor_t *actor_ptr = model_of(model);

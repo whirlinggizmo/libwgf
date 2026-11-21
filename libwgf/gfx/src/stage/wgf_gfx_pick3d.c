@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "actor/wgf_gfx_actor_priv.h"
+#include "stage/wgf_gfx_model_priv.h"
 #include "draw/wgf_gfx_draw3d_priv.h"
 #include "mesh/wgf_gfx_mesh_priv.h"
 #include "wgf_camera3d.h"
@@ -189,7 +190,9 @@ static void walk(wgf_actor_t top, const ray_t *ray, best_t *best, wgf_actor_t fi
             if (actor_ptr->type == WGF_ACTOR_KIND_MODEL && !actor_ptr->as.model.file_root &&
                 actor_ptr->as.model.mesh != 0) {
                 const wgf_actor_t root = actor_ptr->from_file ? file_root_of(actor_ptr) : 0;
-                if (file != 0 ? root == file : (root == 0 || wgf_actor_is_pickable(root))) {
+                wgf_color_t tint = 0;
+                if (file != 0 ? root == file
+                              : (root == 0 || (wgf_actor_is_pickable(root) && wgf_gfx_priv_model_file_shown(actor_ptr, &tint)))) {
                     test_model(next, actor_ptr, ray, best, root != 0 ? root : next);
                 }
                 actor_ptr = wgf_gfx_priv_actor_of_silently(next); /* nothing is made, but read it again all the same */

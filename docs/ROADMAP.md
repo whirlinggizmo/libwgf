@@ -8,7 +8,7 @@ Rob's (2026-11-19): libwgf is finished so that a pure C and wasm engine can be c
 
 The comparison is done (HISTORY.md, "The comparison"), and what it found missing from helix-raylib's floor is in (HISTORY.md's "Parity:" entries of 2026-11-20). What is left is what its entrants met, and the sizes:
 
-1. **What the Wardens entrants met.** A file root's tint and visibility reaching its nodes, or a call that says how they don't; a bar in the world facing the camera; the immediate UI skinned from a game's art, or the way to RmlUi's skinned controls shown where the immediate UI's docs are.
+1. **What the Wardens entrants met.** A bar in the world facing the camera; the immediate UI skinned from a game's art, or the way to RmlUi's skinned controls shown where the immediate UI's docs are.
 2. **Sizes re-baselined.** `measure_sizes.py --check` holds libwgf to 2026-10-12's sizes, which the features since have outgrown.
 
 Out of the parity work, as not libwgf's (the checklist's skips): desktop window chrome, the program owning the frame loop, warping the mouse, the monitor's refresh rate (no browser reports one; vsync, `wgf_loop_get_fps`, and the tick's fraction answer what a game asks it for); path, string, and codepoint helpers, compression, Base64, and hashes (the host language's); VR stereo; rlgl's immediate vertices, matrix stack, and global GL state; image editing on the CPU, pixel formats, and exporting images, meshes, and code; raygui's color picker, grid, built-in icons, style files, and draggable windows; OBJ, IQM, VOX, and M3D models.

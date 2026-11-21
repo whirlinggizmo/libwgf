@@ -640,9 +640,10 @@ static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
     wgf_vec3_t lo, hi, box_lo, box_hi;
     wgf_mat4_t skin_world = wgf_mat4_identity();
     float tint[4];
+    wgf_color_t tint_color = actor_ptr->as.model.tint;
     int count = 0, p, joint_base = -1;
     bool shadow_only = false, skinned = false, has_skin = false;
-    if (mesh == 0) return;
+    if (mesh == 0 || !wgf_gfx_priv_model_file_shown(actor_ptr, &tint_color)) return; /* its file's root hidden */
     if (wgf_resource_get_status(mesh) == WGF_RESOURCE_STATUS_FAILED) {
         if (!wgf_gfx_priv_model_placeholder(&mesh, &forced)) return; /* the file part's: only a file's mesh fails */
         count = 1;
@@ -678,7 +679,7 @@ static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
         }
         shadow_only = true; /* out of view, its shadow not: the shadow pass's alone */
     }
-    linear_color(actor_ptr->as.model.tint, tint);
+    linear_color(tint_color, tint);
     for (p = 0; p < count; p++) {
         wgf_gfx_priv_mesh_primitive_t primitive;
         const wgf_gfx_priv_material_t *material;

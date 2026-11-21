@@ -45,14 +45,18 @@ import wgf.impl.Raw;
 
 	/**
 	    A color its materials are multiplied by, as wgrender's tint (default white); alpha
-	    below 255 makes the model see-through, blended back to front.
+	    below 255 makes the model see-through, blended back to front. A glTF file's root draws
+	    nothing itself and stands for its file: its tint multiplies its nodes' own, so one call
+	    tints the whole file (an enemy in red, a hit's flash).
 	**/
 	public inline function setTint(color:Int):Bool
 		return Raw.wgf_model_set_tint(this, color);
 
 	/**
 	    A color its materials are multiplied by, as wgrender's tint (default white); alpha
-	    below 255 makes the model see-through, blended back to front.
+	    below 255 makes the model see-through, blended back to front. A glTF file's root draws
+	    nothing itself and stands for its file: its tint multiplies its nodes' own, so one call
+	    tints the whole file (an enemy in red, a hit's flash).
 	**/
 	public inline function getTint():Int
 		return Raw.wgf_model_get_tint(this);

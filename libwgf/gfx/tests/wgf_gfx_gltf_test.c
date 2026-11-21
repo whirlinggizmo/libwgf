@@ -2,9 +2,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "actor/wgf_gfx_actor_priv.h"
 #include "mesh/wgf_gfx_mesh_priv.h"
 #include "mesh/wgf_gfx_mesh_record_priv.h"
 #include "render/wgf_gfx_render_priv.h"
+#include "stage/wgf_gfx_model_priv.h"
 #include "stage/wgf_gfx_stage3d_priv.h"
 #include "texture/wgf_gfx_texture_priv.h"
 #include "wgf_camera3d.h"
@@ -257,6 +259,21 @@ int main(void)
     expect(wgf_resource_get_status(early) == WGF_RESOURCE_STATUS_READY, "then READY");
     expect_tree(early_root, early, "made while pending");
     expect(drawn(stage) == 2, "then its nodes' meshes draw, the root nothing of its own");
+    {
+        /* the root stands for its file: its visibility and tint reach its nodes */
+        const wgf_actor_t node = wgf_actor_find(early_root, "body");
+        wgf_color_t tint = 0x80FF40FFu;
+        expect(wgf_actor_set_visible(early_root, false) && drawn(stage) == 0, "its root hidden: none of its nodes drawn");
+        expect(wgf_actor_set_visible(early_root, true) && drawn(stage) == 2, "shown again: they draw");
+        expect(wgf_model_set_tint(node, 0x80FF40FFu) && wgf_model_set_tint(early_root, 0xFF808080u), "tints set");
+        expect(wgf_gfx_priv_model_file_shown(wgf_gfx_priv_actor_of(node), &tint) && tint == 0x80802080u,
+               "a node drawn in its own tint times its root's");
+        tint = 0x11223344u;
+        expect(wgf_gfx_priv_model_file_shown(wgf_gfx_priv_actor_of(early_root), &tint) && tint == 0x11223344u,
+               "a model of no file's: its own");
+        wgf_model_set_tint(node, WGF_COLOR_WHITE);
+        wgf_model_set_tint(early_root, WGF_COLOR_WHITE);
+    }
 
     mesh = wgf_mesh_create("./models/tri.gltf");
     expect(mesh == early, "the same path is the same mesh");
