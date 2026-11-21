@@ -286,9 +286,9 @@ static void on_frame(void *user)
                    wgf_ui_set_style_color(WGF_UI_COLOR_PANEL, 0x11223344u) &&
                    wgf_ui_get_style_color(WGF_UI_COLOR_PANEL) == 0x11223344u,
                "the game's");
-        expect(!wgf_ui_set_style_value(WGF_UI_VALUE_GAP, -1) && !wgf_ui_set_style_value((wgf_ui_value_t)9, 1) &&
-                   !wgf_ui_set_style_color((wgf_ui_color_t)-1, 0) && !wgf_ui_set_style_color((wgf_ui_color_t)9, 0) &&
-                   wgf_ui_get_style_value((wgf_ui_value_t)9) == 0 &&
+        expect(!wgf_ui_set_style_value(WGF_UI_VALUE_GAP, -1) && !wgf_ui_set_style_value((wgf_ui_value_t)14, 1) &&
+                   !wgf_ui_set_style_color((wgf_ui_color_t)-1, 0) && !wgf_ui_set_style_color((wgf_ui_color_t)11, 0) &&
+                   wgf_ui_get_style_value((wgf_ui_value_t)14) == 0 &&
                    !wgf_ui_set_style_font(12345),
                "what isn't one: refused");
         wgf_ui_reset_style();

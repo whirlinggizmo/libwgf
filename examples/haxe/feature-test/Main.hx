@@ -1232,6 +1232,17 @@ class Main {
 		expect(Ui.setStyleFont(font) && Ui.getStyleFont() == font, "the style's font");
 		expect(Ui.setStyleTexture(UiColor.BAR, tiles, 2, 2, 2, 2) && Ui.getStyleTexture(UiColor.BAR) == tiles
 			&& !Ui.setStyleTexture(UiColor.TEXT, tiles, 0, 0, 0, 0), "a part drawn from art");
+		expect(Ui.setSkin(UiWidget.SLIDER, UiPart.HANDLE, UiState.NORMAL, tiles, 0, 0, 16, 16)
+			&& Ui.getSkin(UiWidget.SLIDER, UiPart.HANDLE, UiState.NORMAL) == tiles
+			&& near(Ui.getSkinSource(UiWidget.SLIDER, UiPart.HANDLE, UiState.NORMAL).z, 16), "a skin, from a texture's region");
+		expect(Ui.setSkinBorders(UiWidget.SLIDER, UiPart.HANDLE, UiState.NORMAL, 4, 0, 4, 0)
+			&& near(Ui.getSkinBorders(UiWidget.SLIDER, UiPart.HANDLE, UiState.NORMAL).z, 4), "its borders: a bar with caps");
+		expect(Ui.setSkinTint(UiWidget.SLIDER, UiPart.HANDLE, UiState.NORMAL, Color.get(ColorStock.GOLD))
+			&& Ui.getSkinTint(UiWidget.SLIDER, UiPart.HANDLE, UiState.NORMAL) == Color.get(ColorStock.GOLD), "its tint");
+		expect(Ui.setTextOffset(UiWidget.BUTTON, UiState.PRESSED, 0, 2) && near(Ui.getTextOffset(UiWidget.BUTTON, UiState.PRESSED).y, 2),
+			"a pressed face's text offset");
+		expect(Ui.setFill(UiWidget.PROGRESS, UiFill.CLIPPED, UiFrom.RIGHT) && Ui.getFill(UiWidget.PROGRESS) == UiFill.CLIPPED
+			&& Ui.getFillFrom(UiWidget.PROGRESS) == UiFrom.RIGHT, "a fill clipped, from the right");
 		if (Ui.begin()) {
 			Ui.beginPanel("menu");
 			Ui.setPadding(10, 10);
@@ -1247,10 +1258,19 @@ class Main {
 			Ui.button("b", "B");
 			Ui.endBox();
 			expect(Ui.progress(0.5), "a progress bar");
+			expect(Ui.toggle("toggle", "Toggle", true) && !Ui.checkbox("check", "Check", false), "a toggle and a checkbox, untouched");
+			expect(near(Ui.slider("slider", 3, 0, 10), 3), "a slider, untouched");
+			expect(Ui.setDisabled(true) && Ui.isDisabled(), "disabled from here");
+			expect(!Ui.iconButton("icon", tiles, "Icon"), "a disabled icon button");
+			expect(!Ui.imageButton("picture", tiles, 0, picture), "a disabled image button, its mask an image");
+			Ui.setDisabled(false);
+			expect(Ui.beginGroup("group", "Group") && Ui.separator() && Ui.image(tiles, 16, 16) && Ui.custom("room", 20, 10)
+				&& Ui.endGroup(), "a group of a separator, an image, and a room of the program's");
 			Ui.endPanel();
 			expect(Ui.end(), "a UI");
 		}
 		expect(Ui.setFocus("a") && Ui.getFocus() == "a", "the focus");
+		expect(near(Ui.getBounds("room").z, 20), "where the room was laid out");
 	}
 
 	static function document():Void {

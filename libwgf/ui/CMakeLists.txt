@@ -30,6 +30,7 @@ wgf_layer(ui
     SOURCES
         src/wgf_ui.c
         src/wgf_ui_clay_impl.c
+        src/wgf_ui_skin.c
         src/wgf_ui_document.c
         src/wgf_ui_document_draw.c
     DEPS
@@ -42,5 +43,21 @@ set_source_files_properties(src/wgf_ui_clay_impl.c PROPERTIES COMPILE_OPTIONS
 
 if(WGF_TESTS AND WGF_HEADLESS)
     wgf_test(ui wgf_ui_test)
+    wgf_test(ui wgf_ui_widgets_test)
+    if(EMSCRIPTEN)
+        # a UI of the plain widgets links none of the skins or the other widgets: its link map
+        # read by tools/check_link_map.py (wasm-ld drops what nothing reaches in any build)
+        wgf_test(ui wgf_ui_unlinked_test)
+        target_link_options(wgf_ui_unlinked_test PRIVATE "-Wl,--Map=$<TARGET_FILE_DIR:wgf_ui_unlinked_test>/wgf_ui_unlinked_test.map")
+        find_package(Python3 COMPONENTS Interpreter)
+        if(Python3_FOUND)
+            add_test(NAME wgf_ui_unlinked_check
+                     COMMAND ${Python3_EXECUTABLE} "${PROJECT_SOURCE_DIR}/tools/check_link_map.py"
+                             "$<TARGET_FILE_DIR:wgf_ui_unlinked_test>/wgf_ui_unlinked_test.map" --absent
+                             wgf_ui_skin.c wgf_ui_toggle wgf_ui_checkbox wgf_ui_slider wgf_ui_image_button
+                             wgf_ui_icon_button wgf_ui_image wgf_ui_custom wgf_ui_begin_group wgf_ui_separator
+                             draw_slider draw_check draw_image draw_image_button draw_group)
+        endif()
+    endif()
     wgf_test(ui wgf_ui_document_test)
 endif()

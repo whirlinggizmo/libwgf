@@ -12,21 +12,29 @@ package wgf;
     button's answer comes from where things were in the frame before, as with every
     immediate-mode UI: a UI that moves under the pointer is answered where it was.
 
-    Focus: one button at a time has it, by its id. Arrow keys, Tab and Shift+Tab, and a
-    pad's D-pad move it through the frame's buttons in the order they were given (the
-    first press of one puts it on the first or the last); Enter, Space, or a pad's south
-    button activates it. The pointer activates the button it is pressed and released over,
-    and gives it the focus; a focus moved by keys or pads is drawn, one given by the
-    pointer isn't. A focused button that isn't given in a frame loses the focus.
+    Focus: one widget at a time has it, by its id: a button, a toggle, a checkbox, or a
+    slider. Arrow keys, Tab and Shift+Tab, and a pad's D-pad move it through the frame's
+    widgets in the order they were given (the first press of one puts it on the first or
+    the last), but for the arrows a focused slider uses (left and right across, up and down
+    for one that fills up or down); Enter, Space, or a pad's south button activates it. The
+    pointer activates the widget it is pressed and released over, and gives it the focus;
+    a focus moved by keys or pads is drawn, one given by the pointer isn't. A focused
+    widget that isn't given in a frame loses the focus. A disabled widget
+    (wgf_ui_set_disabled) is drawn so, answers nothing, and is never focused.
 
     The UI says when it has the pointer (wgf_input_set_pointer_captured): while the
     pointer is over a panel, a button, or a box with a color, or a press on a button is
     held; and the keyboard (wgf_input_set_keyboard_captured) while a button has the focus.
     A frame without wgf_ui_end lets both go.
 
-    Ids name boxes, panels, and buttons, and are unique in a frame (Clay refuses a
-    second, logged); a box or panel may have none (NULL or ""). Text is copied: it may
-    change or go after the call. Every call but the style's is false outside a begun UI.
+    Ids name boxes, panels, groups, and widgets, and are unique in a frame (Clay refuses a
+    second, logged); a box, panel, or group may have none (NULL or ""). Text is copied: it
+    may change or go after the call. Every call but the style's and the skins' is false
+    (a widget's: its value as given) outside a begun UI.
+
+    A widget with a value takes it and returns it as the user left it: the program keeps
+    the value, and the call shows it and answers what was done to it this frame
+    (`volume = wgf_ui_slider("volume", volume, 0, 10)`).
 **/
 enum abstract UiDirection(Int) from Int to Int {
 	var COLUMN = 0;

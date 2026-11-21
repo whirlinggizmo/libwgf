@@ -1111,21 +1111,29 @@ export type wgf_vehicle_drive_t = typeof WGF_VEHICLE_DRIVE_FRONT | typeof WGF_VE
  * button's answer comes from where things were in the frame before, as with every
  * immediate-mode UI: a UI that moves under the pointer is answered where it was.
  *
- * Focus: one button at a time has it, by its id. Arrow keys, Tab and Shift+Tab, and a
- * pad's D-pad move it through the frame's buttons in the order they were given (the
- * first press of one puts it on the first or the last); Enter, Space, or a pad's south
- * button activates it. The pointer activates the button it is pressed and released over,
- * and gives it the focus; a focus moved by keys or pads is drawn, one given by the
- * pointer isn't. A focused button that isn't given in a frame loses the focus.
+ * Focus: one widget at a time has it, by its id: a button, a toggle, a checkbox, or a
+ * slider. Arrow keys, Tab and Shift+Tab, and a pad's D-pad move it through the frame's
+ * widgets in the order they were given (the first press of one puts it on the first or
+ * the last), but for the arrows a focused slider uses (left and right across, up and down
+ * for one that fills up or down); Enter, Space, or a pad's south button activates it. The
+ * pointer activates the widget it is pressed and released over, and gives it the focus;
+ * a focus moved by keys or pads is drawn, one given by the pointer isn't. A focused
+ * widget that isn't given in a frame loses the focus. A disabled widget
+ * (wgf_ui_set_disabled) is drawn so, answers nothing, and is never focused.
  *
  * The UI says when it has the pointer (wgf_input_set_pointer_captured): while the
  * pointer is over a panel, a button, or a box with a color, or a press on a button is
  * held; and the keyboard (wgf_input_set_keyboard_captured) while a button has the focus.
  * A frame without wgf_ui_end lets both go.
  *
- * Ids name boxes, panels, and buttons, and are unique in a frame (Clay refuses a
- * second, logged); a box or panel may have none (NULL or ""). Text is copied: it may
- * change or go after the call. Every call but the style's is false outside a begun UI.
+ * Ids name boxes, panels, groups, and widgets, and are unique in a frame (Clay refuses a
+ * second, logged); a box, panel, or group may have none (NULL or ""). Text is copied: it
+ * may change or go after the call. Every call but the style's and the skins' is false
+ * (a widget's: its value as given) outside a begun UI.
+ *
+ * A widget with a value takes it and returns it as the user left it: the program keeps
+ * the value, and the call shows it and answers what was done to it this frame
+ * (`volume = wgf_ui_slider("volume", volume, 0, 10)`).
  */
 export declare const WGF_UI_DIRECTION_COLUMN: 0;
 export declare const WGF_UI_DIRECTION_ROW: 1;
@@ -1155,7 +1163,9 @@ export declare const WGF_UI_COLOR_BUTTON_TEXT: 5;
 export declare const WGF_UI_COLOR_FOCUS: 6;
 export declare const WGF_UI_COLOR_BAR: 7;
 export declare const WGF_UI_COLOR_BAR_FILL: 8;
-export type wgf_ui_color_t = typeof WGF_UI_COLOR_TEXT | typeof WGF_UI_COLOR_PANEL | typeof WGF_UI_COLOR_BUTTON | typeof WGF_UI_COLOR_BUTTON_HOVERED | typeof WGF_UI_COLOR_BUTTON_PRESSED | typeof WGF_UI_COLOR_BUTTON_TEXT | typeof WGF_UI_COLOR_FOCUS | typeof WGF_UI_COLOR_BAR | typeof WGF_UI_COLOR_BAR_FILL;
+export declare const WGF_UI_COLOR_SEPARATOR: 9;
+export declare const WGF_UI_COLOR_HANDLE: 10;
+export type wgf_ui_color_t = typeof WGF_UI_COLOR_TEXT | typeof WGF_UI_COLOR_PANEL | typeof WGF_UI_COLOR_BUTTON | typeof WGF_UI_COLOR_BUTTON_HOVERED | typeof WGF_UI_COLOR_BUTTON_PRESSED | typeof WGF_UI_COLOR_BUTTON_TEXT | typeof WGF_UI_COLOR_FOCUS | typeof WGF_UI_COLOR_BAR | typeof WGF_UI_COLOR_BAR_FILL | typeof WGF_UI_COLOR_SEPARATOR | typeof WGF_UI_COLOR_HANDLE;
 
 export declare const WGF_UI_VALUE_TEXT_SIZE: 0;
 export declare const WGF_UI_VALUE_PADDING: 1;
@@ -1166,7 +1176,69 @@ export declare const WGF_UI_VALUE_BUTTON_WIDTH: 5;
 export declare const WGF_UI_VALUE_FOCUS_WIDTH: 6;
 export declare const WGF_UI_VALUE_BAR_WIDTH: 7;
 export declare const WGF_UI_VALUE_BAR_HEIGHT: 8;
-export type wgf_ui_value_t = typeof WGF_UI_VALUE_TEXT_SIZE | typeof WGF_UI_VALUE_PADDING | typeof WGF_UI_VALUE_GAP | typeof WGF_UI_VALUE_CORNER_RADIUS | typeof WGF_UI_VALUE_BUTTON_PADDING | typeof WGF_UI_VALUE_BUTTON_WIDTH | typeof WGF_UI_VALUE_FOCUS_WIDTH | typeof WGF_UI_VALUE_BAR_WIDTH | typeof WGF_UI_VALUE_BAR_HEIGHT;
+export declare const WGF_UI_VALUE_CHECK_SIZE: 9;
+export declare const WGF_UI_VALUE_SLIDER_WIDTH: 10;
+export declare const WGF_UI_VALUE_SLIDER_HEIGHT: 11;
+export declare const WGF_UI_VALUE_HANDLE_SIZE: 12;
+export declare const WGF_UI_VALUE_LINE_WIDTH: 13;
+export type wgf_ui_value_t = typeof WGF_UI_VALUE_TEXT_SIZE | typeof WGF_UI_VALUE_PADDING | typeof WGF_UI_VALUE_GAP | typeof WGF_UI_VALUE_CORNER_RADIUS | typeof WGF_UI_VALUE_BUTTON_PADDING | typeof WGF_UI_VALUE_BUTTON_WIDTH | typeof WGF_UI_VALUE_FOCUS_WIDTH | typeof WGF_UI_VALUE_BAR_WIDTH | typeof WGF_UI_VALUE_BAR_HEIGHT | typeof WGF_UI_VALUE_CHECK_SIZE | typeof WGF_UI_VALUE_SLIDER_WIDTH | typeof WGF_UI_VALUE_SLIDER_HEIGHT | typeof WGF_UI_VALUE_HANDLE_SIZE | typeof WGF_UI_VALUE_LINE_WIDTH;
+
+/**
+ * Skins: a widget's parts drawn from the game's art in place of the style's colors, as
+ * helix-raylib's gui skins are. A skin is a widget's part in a state: a texture's region
+ * (a source width or height of 0 or less: the whole texture), nine-sliced by its borders
+ * (wgf_draw_texture_nine_slice: borders of 0 top and bottom make a bar with caps at its
+ * ends, of 0 left and right one up and down), multiplied by its tint (white until set).
+ * A state with no skin of its own draws the normal state's (a disabled one dimmed); a part
+ * from art has its art's corners, not the corner radius. The parts each widget draws:
+ *
+ *   PANEL      base: its body
+ *   BUTTON     base: the button (an icon button's too)
+ *   TOGGLE     base: the toggle, PRESSED while on
+ *   CHECKBOX   base: the box; fill: the check, over the box
+ *   SLIDER     base: the track; fill: behind the handle; handle: the handle
+ *   PROGRESS   base: the track; fill: the progress; edge: at the fill's front
+ *   GROUP      base: its outline, in place of the line
+ *
+ * A fill is stretched over the filled part, or clipped: drawn over the whole track and
+ * shown up to the value, so a bar with round ends shows its far end only when full
+ * (Godot's TextureProgressBar); from the left, right, top, or bottom (wgf_ui_set_fill). An
+ * edge is drawn at its art's size, centered on the fill's front. A widget's text (a
+ * button's, a toggle's) moves by its state's text offset: a face that sinks when pressed
+ * takes its text with it. The style holds a reference to each texture; reset lets them go.
+ * False for a widget, part, or state that isn't one, a handle that isn't a texture, or a
+ * value not finite (a border below 0).
+ */
+export declare const WGF_UI_WIDGET_PANEL: 0;
+export declare const WGF_UI_WIDGET_BUTTON: 1;
+export declare const WGF_UI_WIDGET_TOGGLE: 2;
+export declare const WGF_UI_WIDGET_CHECKBOX: 3;
+export declare const WGF_UI_WIDGET_SLIDER: 4;
+export declare const WGF_UI_WIDGET_PROGRESS: 5;
+export declare const WGF_UI_WIDGET_GROUP: 6;
+export type wgf_ui_widget_t = typeof WGF_UI_WIDGET_PANEL | typeof WGF_UI_WIDGET_BUTTON | typeof WGF_UI_WIDGET_TOGGLE | typeof WGF_UI_WIDGET_CHECKBOX | typeof WGF_UI_WIDGET_SLIDER | typeof WGF_UI_WIDGET_PROGRESS | typeof WGF_UI_WIDGET_GROUP;
+
+export declare const WGF_UI_PART_BASE: 0;
+export declare const WGF_UI_PART_FILL: 1;
+export declare const WGF_UI_PART_HANDLE: 2;
+export declare const WGF_UI_PART_EDGE: 3;
+export type wgf_ui_part_t = typeof WGF_UI_PART_BASE | typeof WGF_UI_PART_FILL | typeof WGF_UI_PART_HANDLE | typeof WGF_UI_PART_EDGE;
+
+export declare const WGF_UI_STATE_NORMAL: 0;
+export declare const WGF_UI_STATE_HOVERED: 1;
+export declare const WGF_UI_STATE_PRESSED: 2;
+export declare const WGF_UI_STATE_DISABLED: 3;
+export type wgf_ui_state_t = typeof WGF_UI_STATE_NORMAL | typeof WGF_UI_STATE_HOVERED | typeof WGF_UI_STATE_PRESSED | typeof WGF_UI_STATE_DISABLED;
+
+export declare const WGF_UI_FILL_STRETCHED: 0;
+export declare const WGF_UI_FILL_CLIPPED: 1;
+export type wgf_ui_fill_t = typeof WGF_UI_FILL_STRETCHED | typeof WGF_UI_FILL_CLIPPED;
+
+export declare const WGF_UI_FROM_LEFT: 0;
+export declare const WGF_UI_FROM_RIGHT: 1;
+export declare const WGF_UI_FROM_TOP: 2;
+export declare const WGF_UI_FROM_BOTTOM: 3;
+export type wgf_ui_from_t = typeof WGF_UI_FROM_LEFT | typeof WGF_UI_FROM_RIGHT | typeof WGF_UI_FROM_TOP | typeof WGF_UI_FROM_BOTTOM;
 
 /**
  * What happened to an element, as wgf_document_take_events gives it.
@@ -12607,34 +12679,62 @@ export declare function wgf_ui_end(): boolean;
 /**
  * A box, its children laid out in `direction`; closed by wgf_ui_end_box. A panel is a
  * column drawn with the style's panel color, corners, and padding, and gapped by the
- * style's gap; closed by wgf_ui_end_panel. False for an end with nothing of its kind
- * open.
+ * style's gap; closed by wgf_ui_end_panel. A group is a column drawn as an outline in the
+ * style's separator color and line width, with `title` (NULL or "": none) as its first
+ * line, padded and gapped as a panel; closed by wgf_ui_end_group. False for an end with
+ * nothing of its kind open.
  */
 export declare function wgf_ui_begin_box(id: string | null, direction: wgf_ui_direction_t): boolean;
 
 /**
  * A box, its children laid out in `direction`; closed by wgf_ui_end_box. A panel is a
  * column drawn with the style's panel color, corners, and padding, and gapped by the
- * style's gap; closed by wgf_ui_end_panel. False for an end with nothing of its kind
- * open.
+ * style's gap; closed by wgf_ui_end_panel. A group is a column drawn as an outline in the
+ * style's separator color and line width, with `title` (NULL or "": none) as its first
+ * line, padded and gapped as a panel; closed by wgf_ui_end_group. False for an end with
+ * nothing of its kind open.
  */
 export declare function wgf_ui_end_box(): boolean;
 
 /**
  * A box, its children laid out in `direction`; closed by wgf_ui_end_box. A panel is a
  * column drawn with the style's panel color, corners, and padding, and gapped by the
- * style's gap; closed by wgf_ui_end_panel. False for an end with nothing of its kind
- * open.
+ * style's gap; closed by wgf_ui_end_panel. A group is a column drawn as an outline in the
+ * style's separator color and line width, with `title` (NULL or "": none) as its first
+ * line, padded and gapped as a panel; closed by wgf_ui_end_group. False for an end with
+ * nothing of its kind open.
  */
 export declare function wgf_ui_begin_panel(id: string | null): boolean;
 
 /**
  * A box, its children laid out in `direction`; closed by wgf_ui_end_box. A panel is a
  * column drawn with the style's panel color, corners, and padding, and gapped by the
- * style's gap; closed by wgf_ui_end_panel. False for an end with nothing of its kind
- * open.
+ * style's gap; closed by wgf_ui_end_panel. A group is a column drawn as an outline in the
+ * style's separator color and line width, with `title` (NULL or "": none) as its first
+ * line, padded and gapped as a panel; closed by wgf_ui_end_group. False for an end with
+ * nothing of its kind open.
  */
 export declare function wgf_ui_end_panel(): boolean;
+
+/**
+ * A box, its children laid out in `direction`; closed by wgf_ui_end_box. A panel is a
+ * column drawn with the style's panel color, corners, and padding, and gapped by the
+ * style's gap; closed by wgf_ui_end_panel. A group is a column drawn as an outline in the
+ * style's separator color and line width, with `title` (NULL or "": none) as its first
+ * line, padded and gapped as a panel; closed by wgf_ui_end_group. False for an end with
+ * nothing of its kind open.
+ */
+export declare function wgf_ui_begin_group(id: string | null, title: string | null): boolean;
+
+/**
+ * A box, its children laid out in `direction`; closed by wgf_ui_end_box. A panel is a
+ * column drawn with the style's panel color, corners, and padding, and gapped by the
+ * style's gap; closed by wgf_ui_end_panel. A group is a column drawn as an outline in the
+ * style's separator color and line width, with `title` (NULL or "": none) as its first
+ * line, padded and gapped as a panel; closed by wgf_ui_end_group. False for an end with
+ * nothing of its kind open.
+ */
+export declare function wgf_ui_end_group(): boolean;
 
 /**
  * The open box's or panel's layout, before its first child; false after it, with none
@@ -12696,34 +12796,120 @@ export declare function wgf_ui_label(text: string | null, size: number): boolean
 export declare function wgf_ui_spacer(size: number): boolean;
 
 /**
- * A button showing `text`, true in the frame it is activated. False too for no id.
+ * A line across the open box (along a column's width, down a row's height), in the
+ * style's separator color and line width.
+ */
+export declare function wgf_ui_separator(): boolean;
+
+/**
+ * A texture placed by the layout, `width` by `height` logical pixels (0 or less: the
+ * texture's own, as it is when called: 0 by 0 until it is READY), stretched to fill them
+ * and untinted (dimmed when disabled). False too for a handle that isn't a texture.
+ */
+export declare function wgf_ui_image(texture: wgf_texture_t | 0, width: number, height: number): boolean;
+
+/**
+ * Room `width` by `height` logical pixels that the program draws in itself
+ * (wgf_draw.h), where wgf_ui_get_bounds says it was laid out: raygui's dummy rectangle,
+ * for what no widget draws. False too for no id, or a size below 0.
+ */
+export declare function wgf_ui_custom(id: string | null, width: number, height: number): boolean;
+
+/**
+ * Where the element `id` (a box, panel, group, widget, or custom room) was laid out, in
+ * the screen's logical pixels: x and y its top left, z and w its width and height; this
+ * frame's after wgf_ui_end, the frame before's until then. All 0 for an id not laid out.
+ */
+export declare function wgf_ui_get_bounds<T extends number[] | Float32Array | Float64Array>(id: string | null, into: T): T;
+export declare function wgf_ui_get_bounds(id: string | null, into?: wgf_vec4_t | null): wgf_vec4_t;
+
+/**
+ * A button showing `text`, true in the frame it is activated. False too for no id. An
+ * icon button shows `icon` (a texture: 0 for none), as tall as the text and as wide as
+ * its shape keeps, before its text (NULL or "": the icon alone).
  */
 export declare function wgf_ui_button(id: string | null, text: string | null): boolean;
 
 /**
- * A bar showing `value`, 0 (empty) to 1 (full), filled from the left: how far a
- * loading screen's files have come (wgf_asset_task_get_progress), say. The style's bar
- * width and height, its track and fill colors, and its corners; it shows a value, so
- * the pointer over it isn't the UI's. A value below 0 shows 0, above 1 shows 1, and NaN
- * shows 0.
+ * A button showing `text`, true in the frame it is activated. False too for no id. An
+ * icon button shows `icon` (a texture: 0 for none), as tall as the text and as wide as
+ * its shape keeps, before its text (NULL or "": the icon alone).
+ */
+export declare function wgf_ui_icon_button(id: string | null, icon: wgf_texture_t | 0, text: string | null): boolean;
+
+/**
+ * A button that is its art: `normal` at its size, `pressed` (0: `normal`) while held,
+ * and only where `mask` (a CPU image, 0 for none: the whole of it) is not clear does the
+ * pointer press it: a round button's corners are the screen's. The mask is read as
+ * stretched over the button. True in the frame it is activated. False too for no id, or
+ * a handle that isn't a texture or an image.
+ */
+export declare function wgf_ui_image_button(id: string | null, normal: wgf_texture_t | 0, pressed: wgf_texture_t | 0, mask: wgf_image_t | 0): boolean;
+
+/**
+ * A toggle (a button that stays down while on) and a checkbox (a box, checked while on,
+ * `text` beside it: NULL or "" for none), each turned by an activation: `on` as given,
+ * or flipped in the frame it is activated. `on` as given when refused (no id).
+ */
+export declare function wgf_ui_toggle(id: string | null, text: string | null, on: boolean): boolean;
+
+/**
+ * A toggle (a button that stays down while on) and a checkbox (a box, checked while on,
+ * `text` beside it: NULL or "" for none), each turned by an activation: `on` as given,
+ * or flipped in the frame it is activated. `on` as given when refused (no id).
+ */
+export declare function wgf_ui_checkbox(id: string | null, text: string | null, on: boolean): boolean;
+
+/**
+ * A slider: `value` between `min` and `max`, shown by its handle along its track and the
+ * fill behind it (the slider's fill direction, wgf_ui_set_fill: from the left by default;
+ * from the top or bottom, it stands up), the style's slider width and height and handle
+ * size. A press on it or a drag from one sets it where the pointer is; when focused, its
+ * arrows (and a pad's D-pad's) move it a twentieth of its range, held ones repeating.
+ * The value as given (clamped to the range) or as moved; as given when refused (no id,
+ * or `max` not above `min`, or either not finite).
+ */
+export declare function wgf_ui_slider(id: string | null, value_: number, min: number, max: number): number;
+
+/**
+ * Whether the widgets given after it, until it is changed, are disabled: drawn in their
+ * disabled state, answering nothing, never focused. Each UI begins with none disabled.
+ * False with no UI begun.
+ */
+export declare function wgf_ui_set_disabled(disabled: boolean): boolean;
+
+/**
+ * Whether the widgets given after it, until it is changed, are disabled: drawn in their
+ * disabled state, answering nothing, never focused. Each UI begins with none disabled.
+ * False with no UI begun.
+ */
+export declare function wgf_ui_is_disabled(): boolean;
+
+/**
+ * A bar showing `value`, 0 (empty) to 1 (full), filled from the left (the progress bar's
+ * fill direction, wgf_ui_set_fill; from the top or bottom, its bar width and height
+ * swap): how far a loading screen's files have come (wgf_asset_task_get_progress), say.
+ * The style's bar width and height, its track and fill colors, and its corners; it shows
+ * a value, so the pointer over it isn't the UI's. A value below 0 shows 0, above 1 shows
+ * 1, and NaN shows 0.
  */
 export declare function wgf_ui_progress(value_: number): boolean;
 
 /**
- * The focus given to the button `id` (NULL or "": none), drawn as a key or pad would
- * draw it; false for an id of 64 bytes or more. The focused button's id, "" for none,
+ * The focus given to the widget `id` (NULL or "": none), drawn as a key or pad would
+ * draw it; false for an id of 64 bytes or more. The focused widget's id, "" for none,
  * valid until the focus changes. These two work outside a begun UI too. Each frame a UI
  * ends, the focus is published as the text probe "ui.focus" (wgf_probe.h), so an
- * autopilot can expect on which button has it.
+ * autopilot can expect on which widget has it.
  */
 export declare function wgf_ui_set_focus(id: string | null): boolean;
 
 /**
- * The focus given to the button `id` (NULL or "": none), drawn as a key or pad would
- * draw it; false for an id of 64 bytes or more. The focused button's id, "" for none,
+ * The focus given to the widget `id` (NULL or "": none), drawn as a key or pad would
+ * draw it; false for an id of 64 bytes or more. The focused widget's id, "" for none,
  * valid until the focus changes. These two work outside a begun UI too. Each frame a UI
  * ends, the focus is published as the text probe "ui.focus" (wgf_probe.h), so an
- * autopilot can expect on which button has it.
+ * autopilot can expect on which widget has it.
  */
 export declare function wgf_ui_get_focus(): string;
 
@@ -12763,28 +12949,100 @@ export declare function wgf_ui_get_style_font(): wgf_font_t;
 export declare function wgf_ui_reset_style(): void;
 
 /**
- * A part drawn from the game's art in place of its color: `texture` whole, nine-sliced (its
- * borders `left`, `top`, `right`, `bottom` in its pixels kept at their size, the rest
- * stretched, as wgf_draw_texture_nine_slice), as it is, untinted; 0 draws the color again.
- * The parts are WGF_UI_COLOR_PANEL, _BUTTON, _BUTTON_HOVERED, _BUTTON_PRESSED (a state with
- * none of its own draws the button's), _BAR, and _BAR_FILL; a part from art has its art's
- * corners, not the corner radius. The style holds a reference; reset lets them go. For a menu
- * with more than these (sliders, toggles, every state's art), a document's decorators
- * (wgf_document.h). False for a part that isn't one of these, a handle that isn't a texture,
- * and a border below 0 or not finite.
+ * A skin set (texture 0: the part drawn in its colors again), its region, borders, and
+ * tint; and read back: its texture (0 for none), region (x, y, z width, w height), borders
+ * (x left, y top, z right, w bottom), and tint (white for none).
+ */
+export declare function wgf_ui_set_skin(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t, texture: wgf_texture_t | 0, source_x: number, source_y: number, source_width: number, source_height: number): boolean;
+
+/**
+ * A skin set (texture 0: the part drawn in its colors again), its region, borders, and
+ * tint; and read back: its texture (0 for none), region (x, y, z width, w height), borders
+ * (x left, y top, z right, w bottom), and tint (white for none).
+ */
+export declare function wgf_ui_get_skin(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t): wgf_texture_t;
+
+/**
+ * A skin set (texture 0: the part drawn in its colors again), its region, borders, and
+ * tint; and read back: its texture (0 for none), region (x, y, z width, w height), borders
+ * (x left, y top, z right, w bottom), and tint (white for none).
+ */
+export declare function wgf_ui_get_skin_source<T extends number[] | Float32Array | Float64Array>(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t, into: T): T;
+export declare function wgf_ui_get_skin_source(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t, into?: wgf_vec4_t | null): wgf_vec4_t;
+
+/**
+ * A skin set (texture 0: the part drawn in its colors again), its region, borders, and
+ * tint; and read back: its texture (0 for none), region (x, y, z width, w height), borders
+ * (x left, y top, z right, w bottom), and tint (white for none).
+ */
+export declare function wgf_ui_set_skin_borders(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t, left: number, top: number, right: number, bottom: number): boolean;
+
+/**
+ * A skin set (texture 0: the part drawn in its colors again), its region, borders, and
+ * tint; and read back: its texture (0 for none), region (x, y, z width, w height), borders
+ * (x left, y top, z right, w bottom), and tint (white for none).
+ */
+export declare function wgf_ui_get_skin_borders<T extends number[] | Float32Array | Float64Array>(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t, into: T): T;
+export declare function wgf_ui_get_skin_borders(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t, into?: wgf_vec4_t | null): wgf_vec4_t;
+
+/**
+ * A skin set (texture 0: the part drawn in its colors again), its region, borders, and
+ * tint; and read back: its texture (0 for none), region (x, y, z width, w height), borders
+ * (x left, y top, z right, w bottom), and tint (white for none).
+ */
+export declare function wgf_ui_set_skin_tint(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t, tint: wgf_color_t): boolean;
+
+/**
+ * A skin set (texture 0: the part drawn in its colors again), its region, borders, and
+ * tint; and read back: its texture (0 for none), region (x, y, z width, w height), borders
+ * (x left, y top, z right, w bottom), and tint (white for none).
+ */
+export declare function wgf_ui_get_skin_tint(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t): wgf_color_t;
+
+/**
+ * A widget's text offset in a state, in logical pixels (0, 0 until set).
+ */
+export declare function wgf_ui_set_text_offset(widget: wgf_ui_widget_t, state: wgf_ui_state_t, x: number, y: number): boolean;
+
+/**
+ * A widget's text offset in a state, in logical pixels (0, 0 until set).
+ */
+export declare function wgf_ui_get_text_offset<T extends number[] | Float32Array | Float64Array>(widget: wgf_ui_widget_t, state: wgf_ui_state_t, into: T): T;
+export declare function wgf_ui_get_text_offset(widget: wgf_ui_widget_t, state: wgf_ui_state_t, into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
+ * How a progress bar's or a slider's fill is drawn, and which end it fills from
+ * (stretched from the left until set). False for a widget other than those two.
+ */
+export declare function wgf_ui_set_fill(widget: wgf_ui_widget_t, fill: wgf_ui_fill_t, from: wgf_ui_from_t): boolean;
+
+/**
+ * How a progress bar's or a slider's fill is drawn, and which end it fills from
+ * (stretched from the left until set). False for a widget other than those two.
+ */
+export declare function wgf_ui_get_fill(widget: wgf_ui_widget_t): wgf_ui_fill_t;
+
+/**
+ * How a progress bar's or a slider's fill is drawn, and which end it fills from
+ * (stretched from the left until set). False for a widget other than those two.
+ */
+export declare function wgf_ui_get_fill_from(widget: wgf_ui_widget_t): wgf_ui_from_t;
+
+/**
+ * Before skins, a part from the game's art by its color: `texture` whole, nine-sliced by
+ * its borders, untinted; 0 draws the color again. The parts are WGF_UI_COLOR_PANEL (the
+ * panel's base), _BUTTON, _BUTTON_HOVERED, _BUTTON_PRESSED (the button's base in those
+ * states), _BAR, and _BAR_FILL (the progress bar's base and fill). False for a part that
+ * isn't one of these, a handle that isn't a texture, and a border below 0 or not finite.
  */
 export declare function wgf_ui_set_style_texture(which: wgf_ui_color_t, texture: wgf_texture_t | 0, left: number, top: number, right: number, bottom: number): boolean;
 
 /**
- * A part drawn from the game's art in place of its color: `texture` whole, nine-sliced (its
- * borders `left`, `top`, `right`, `bottom` in its pixels kept at their size, the rest
- * stretched, as wgf_draw_texture_nine_slice), as it is, untinted; 0 draws the color again.
- * The parts are WGF_UI_COLOR_PANEL, _BUTTON, _BUTTON_HOVERED, _BUTTON_PRESSED (a state with
- * none of its own draws the button's), _BAR, and _BAR_FILL; a part from art has its art's
- * corners, not the corner radius. The style holds a reference; reset lets them go. For a menu
- * with more than these (sliders, toggles, every state's art), a document's decorators
- * (wgf_document.h). False for a part that isn't one of these, a handle that isn't a texture,
- * and a border below 0 or not finite.
+ * Before skins, a part from the game's art by its color: `texture` whole, nine-sliced by
+ * its borders, untinted; 0 draws the color again. The parts are WGF_UI_COLOR_PANEL (the
+ * panel's base), _BUTTON, _BUTTON_HOVERED, _BUTTON_PRESSED (the button's base in those
+ * states), _BAR, and _BAR_FILL (the progress bar's base and fill). False for a part that
+ * isn't one of these, a handle that isn't a texture, and a border below 0 or not finite.
  */
 export declare function wgf_ui_get_style_texture(which: wgf_ui_color_t): wgf_texture_t;
 

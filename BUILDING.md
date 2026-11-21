@@ -406,6 +406,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `check_web.py` | runs every example in a headless browser, each in a context of its own, checking it once its loads are done, with screenshots |
 | `check_racer_stream.py` | the racer's web export on an emulated "Fast 4G" network, visited three times in one browser context, flying its `stream.autopilot`: first with nothing cached (no frame over 33 ms once its race starts, on the reference machine's settings), again with nothing downloaded, and with its files blocked, starting from the cache; skipped until the racer has the autopilot |
 | `check_asset_cache.py` | visits the asset cache's test page again and again in one browser context, judging each visit by its requests, log, and screen (ctest runs it on the web presets) |
+| `check_link_map.py` | reads a web program's link map (wasm-ld's) and fails when it holds an object file or function named as one it must not link: a part of libwgf a program reaches only by calling it (ctest runs it on the headless web preset, for the Clay UI's skins and widgets) |
 | `check_stream.py` | serves a streamed sound slowly to its test page and checks each case: played as it arrives, from the cache, after a 304, through a redirect (ctest runs it on the web presets) |
 | `update_scene.py` | updates scene files from `wgf-scene 1` to `wgf-scene 2`, in place, by the rule in "Scene files" (`--check`: fails naming a file still at version 1) |
 | `gen_manifest.py` | writes the asset manifests for a directory tree (`wgf_asset_set_manifest`) |

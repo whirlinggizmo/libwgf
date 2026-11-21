@@ -2846,6 +2846,10 @@ export const Ui = Object.freeze({
     beginPanel: raw.wgf_ui_begin_panel,
     // wgf: call wgf_ui_end_panel
     endPanel: raw.wgf_ui_end_panel,
+    // wgf: call wgf_ui_begin_group
+    beginGroup: raw.wgf_ui_begin_group,
+    // wgf: call wgf_ui_end_group
+    endGroup: raw.wgf_ui_end_group,
     // wgf: call wgf_ui_set_width
     setWidth: raw.wgf_ui_set_width,
     // wgf: call wgf_ui_set_height
@@ -2862,8 +2866,30 @@ export const Ui = Object.freeze({
     label: raw.wgf_ui_label,
     // wgf: call wgf_ui_spacer
     spacer: raw.wgf_ui_spacer,
+    // wgf: call wgf_ui_separator
+    separator: raw.wgf_ui_separator,
+    // wgf: call wgf_ui_image
+    image: raw.wgf_ui_image,
+    // wgf: call wgf_ui_custom
+    custom: raw.wgf_ui_custom,
+    // wgf: call wgf_ui_get_bounds
+    getBounds: raw.wgf_ui_get_bounds,
     // wgf: call wgf_ui_button
     button: raw.wgf_ui_button,
+    // wgf: call wgf_ui_icon_button
+    iconButton: raw.wgf_ui_icon_button,
+    // wgf: call wgf_ui_image_button
+    imageButton: raw.wgf_ui_image_button,
+    // wgf: call wgf_ui_toggle
+    toggle: raw.wgf_ui_toggle,
+    // wgf: call wgf_ui_checkbox
+    checkbox: raw.wgf_ui_checkbox,
+    // wgf: call wgf_ui_slider
+    slider: raw.wgf_ui_slider,
+    // wgf: call wgf_ui_set_disabled
+    setDisabled: raw.wgf_ui_set_disabled,
+    // wgf: call wgf_ui_is_disabled
+    isDisabled: raw.wgf_ui_is_disabled,
     // wgf: call wgf_ui_progress
     progress: raw.wgf_ui_progress,
     // wgf: call wgf_ui_set_focus
@@ -2884,6 +2910,30 @@ export const Ui = Object.freeze({
     getStyleFont: raw.wgf_ui_get_style_font,
     // wgf: call wgf_ui_reset_style
     resetStyle: raw.wgf_ui_reset_style,
+    // wgf: call wgf_ui_set_skin
+    setSkin: raw.wgf_ui_set_skin,
+    // wgf: call wgf_ui_get_skin
+    getSkin: raw.wgf_ui_get_skin,
+    // wgf: call wgf_ui_get_skin_source
+    getSkinSource: raw.wgf_ui_get_skin_source,
+    // wgf: call wgf_ui_set_skin_borders
+    setSkinBorders: raw.wgf_ui_set_skin_borders,
+    // wgf: call wgf_ui_get_skin_borders
+    getSkinBorders: raw.wgf_ui_get_skin_borders,
+    // wgf: call wgf_ui_set_skin_tint
+    setSkinTint: raw.wgf_ui_set_skin_tint,
+    // wgf: call wgf_ui_get_skin_tint
+    getSkinTint: raw.wgf_ui_get_skin_tint,
+    // wgf: call wgf_ui_set_text_offset
+    setTextOffset: raw.wgf_ui_set_text_offset,
+    // wgf: call wgf_ui_get_text_offset
+    getTextOffset: raw.wgf_ui_get_text_offset,
+    // wgf: call wgf_ui_set_fill
+    setFill: raw.wgf_ui_set_fill,
+    // wgf: call wgf_ui_get_fill
+    getFill: raw.wgf_ui_get_fill,
+    // wgf: call wgf_ui_get_fill_from
+    getFillFrom: raw.wgf_ui_get_fill_from,
     // wgf: call wgf_ui_set_style_texture
     setStyleTexture: raw.wgf_ui_set_style_texture,
     // wgf: call wgf_ui_get_style_texture
@@ -3265,13 +3315,23 @@ export const Transition = Object.freeze({ NONE: 0, FADE: 1, SLIDE_LEFT: 2, SLIDE
 // wgf: enum UiAlign
 export const UiAlign = Object.freeze({ START: 0, CENTER: 1, END: 2 });
 // wgf: enum UiColor
-export const UiColor = Object.freeze({ TEXT: 0, PANEL: 1, BUTTON: 2, BUTTON_HOVERED: 3, BUTTON_PRESSED: 4, BUTTON_TEXT: 5, FOCUS: 6, BAR: 7, BAR_FILL: 8 });
+export const UiColor = Object.freeze({ TEXT: 0, PANEL: 1, BUTTON: 2, BUTTON_HOVERED: 3, BUTTON_PRESSED: 4, BUTTON_TEXT: 5, FOCUS: 6, BAR: 7, BAR_FILL: 8, SEPARATOR: 9, HANDLE: 10 });
 // wgf: enum UiDirection
 export const UiDirection = Object.freeze({ COLUMN: 0, ROW: 1 });
+// wgf: enum UiFill
+export const UiFill = Object.freeze({ STRETCHED: 0, CLIPPED: 1 });
+// wgf: enum UiFrom
+export const UiFrom = Object.freeze({ LEFT: 0, RIGHT: 1, TOP: 2, BOTTOM: 3 });
+// wgf: enum UiPart
+export const UiPart = Object.freeze({ BASE: 0, FILL: 1, HANDLE: 2, EDGE: 3 });
 // wgf: enum UiSizing
 export const UiSizing = Object.freeze({ FIT: 0, GROW: 1, FIXED: 2, PERCENT: 3 });
+// wgf: enum UiState
+export const UiState = Object.freeze({ NORMAL: 0, HOVERED: 1, PRESSED: 2, DISABLED: 3 });
 // wgf: enum UiValue
-export const UiValue = Object.freeze({ TEXT_SIZE: 0, PADDING: 1, GAP: 2, CORNER_RADIUS: 3, BUTTON_PADDING: 4, BUTTON_WIDTH: 5, FOCUS_WIDTH: 6, BAR_WIDTH: 7, BAR_HEIGHT: 8 });
+export const UiValue = Object.freeze({ TEXT_SIZE: 0, PADDING: 1, GAP: 2, CORNER_RADIUS: 3, BUTTON_PADDING: 4, BUTTON_WIDTH: 5, FOCUS_WIDTH: 6, BAR_WIDTH: 7, BAR_HEIGHT: 8, CHECK_SIZE: 9, SLIDER_WIDTH: 10, SLIDER_HEIGHT: 11, HANDLE_SIZE: 12, LINE_WIDTH: 13 });
+// wgf: enum UiWidget
+export const UiWidget = Object.freeze({ PANEL: 0, BUTTON: 1, TOGGLE: 2, CHECKBOX: 3, SLIDER: 4, PROGRESS: 5, GROUP: 6 });
 // wgf: enum VehicleDrive
 export const VehicleDrive = Object.freeze({ FRONT: 0, REAR: 1, ALL: 2 });
 // wgf: enum WindowOrientation
