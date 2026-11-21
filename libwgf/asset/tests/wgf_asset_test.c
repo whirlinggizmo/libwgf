@@ -50,6 +50,10 @@ static void test_freshness(void)
     CHECK(wgf_asset_priv_fresh_until("max-age=soon", NULL, now) == 0.0);
     CHECK(wgf_asset_priv_fresh_until("max-age=-5", NULL, now) == 0.0);
     CHECK(wgf_asset_priv_fresh_until("max-age=\"600\"", NULL, now) == 0.0);
+    CHECK(wgf_asset_priv_fresh_until("max-age=6e2", NULL, now) == 0.0);  /* digits only, as RFC 9111's delta-seconds */
+    CHECK(wgf_asset_priv_fresh_until("max-age=60.5", NULL, now) == 0.0);
+    CHECK(wgf_asset_priv_fresh_until("max-age=99999999999", NULL, now) == now + 2147483648.0); /* past it: the most */
+    CHECK(wgf_asset_priv_fresh_until("max-age=600", "1e2", now) == now + 600.0);
 
     /* immutable: max-age still says how long; without one, a year */
     CHECK(wgf_asset_priv_fresh_until("public, max-age=31536000, immutable", NULL, now) == now + 31536000.0);

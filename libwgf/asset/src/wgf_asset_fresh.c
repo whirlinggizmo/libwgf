@@ -1,7 +1,6 @@
 #include "wgf_asset_priv.h"
 
 #include <ctype.h>
-#include <stdlib.h>
 #include <string.h>
 
 /* How long a cached copy stays fresh, from what its response said (wgf_asset.h,
@@ -9,6 +8,23 @@
 
 /* A year: how long an immutable response without a max-age stays fresh. */
 #define IMMUTABLE_SECONDS (365.0 * 24.0 * 3600.0)
+
+/* RFC 9111's delta-seconds: one or more digits, all of `text`, no sign, point, or exponent;
+ * one past the greatest a cache can represent is 2147483648 (its 1.2.2). False for
+ * anything else. Read by hand: strtod linked the C library's whole float parser into
+ * every page that loads files, for two headers of digits. */
+static bool delta_seconds(const char *text, double *out)
+{
+    double value = 0.0;
+    if (*text < '0' || *text > '9') return false;
+    for (; *text >= '0' && *text <= '9'; text++) {
+        value = value * 10.0 + (double)(*text - '0');
+        if (value > 2147483648.0) value = 2147483648.0;
+    }
+    if (*text != '\0') return false;
+    *out = value;
+    return true;
+}
 
 double wgf_asset_priv_fresh_until(const char *cache_control, const char *age, double now)
 {
@@ -34,16 +50,14 @@ double wgf_asset_priv_fresh_until(const char *cache_control, const char *age, do
         if (strcmp(token, "immutable") == 0) {
             immutable = true;
         } else if (strncmp(token, "max-age=", 8) == 0) {
-            char *end;
-            const double value = strtod(token + 8, &end);
-            if (end != token + 8 && *end == '\0' && value >= 0.0) max_age = value;
+            double value;
+            if (delta_seconds(token + 8, &value)) max_age = value;
         }
     }
     if (max_age < 0.0) return immutable ? now + IMMUTABLE_SECONDS : 0.0;
     if (age != NULL && age[0] != '\0') {
-        char *end;
-        const double value = strtod(age, &end);
-        if (end != age && value > 0.0) already = value; /* how long a shared cache held it */
+        double value;
+        if (delta_seconds(age, &value) && value > 0.0) already = value; /* how long a shared cache held it */
     }
     return max_age > already ? now + (max_age - already) : 0.0;
 }
