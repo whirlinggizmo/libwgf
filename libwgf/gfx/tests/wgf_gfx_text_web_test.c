@@ -5,6 +5,7 @@
 #include <emscripten.h>
 
 #include "render/wgf_gfx_render_priv.h"
+#include "text/wgf_gfx_glyph_priv.h"
 #include "wgf_app.h"
 #include "wgf_window.h"
 #include "wgf.h"
@@ -14,6 +15,7 @@
 #include "wgf_draw.h"
 #include "wgf_actor.h"
 #include "wgf_render.h"
+#include "wgf_font.h"
 #include "wgf_text.h"
 
 /* Text, in a browser (tools/run_in_browser.py), in the built-in font on a 64 by 64
@@ -142,9 +144,14 @@ static void run_test(void)
 
 static void on_frame(void *user)
 {
-    static int frames;
+    static int frames, ready;
     (void)user;
-    if (++frames == 2) run_test(); /* exits */
+    /* text is measured at once, and drawn once the browser has the built-in font's face, a few
+       updates in: the test runs a frame after, when the glyphs made blank are forgotten */
+    if (++frames < 2) return;
+    expect(wgf_font_measure(0, "A", 16.0f).x > 0.0f, "text measured before its face is in");
+    if (!wgf_gfx_priv_face_any_pending() || frames == 600) ready++;
+    if (ready == 2) run_test(); /* exits */
 }
 
 /* The page's stage, 64 by 64, through app's runtime: the test runs in a frame. */

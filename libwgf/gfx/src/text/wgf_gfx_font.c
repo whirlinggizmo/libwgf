@@ -23,6 +23,7 @@
 #include "wgf_draw.h"
 #include "wgf_log.h"
 #include "wgf_render.h"
+#include "text/wgf_gfx_glyph_priv.h"
 #include "wgf_asset_priv.h" /* a resource made from a path: the asset part locates it */
 
 /* Fonts: a resource loaded on create, its bytes read on a worker and handed to
@@ -187,6 +188,15 @@ static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
     if (font_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
     if (wgf_gfx_priv_render_is_lost()) return WGF_CORE_PRIV_LOAD_WAIT; /* the GPU's context lost: until it is back */
     if (!ensure()) return WGF_CORE_PRIV_LOAD_MORE; /* gfx isn't running yet: wait for it */
+    switch (wgf_gfx_priv_face_wait(loaded->bytes, loaded->size)) { /* in a page, the browser's face of it */
+        case WGF_GFX_PRIV_FACE_PENDING:
+            return WGF_CORE_PRIV_LOAD_WAIT;
+        case WGF_GFX_PRIV_FACE_FAILED:
+            wgf_log_warn("wgf_gfx_font: %s: not a font this browser reads", font_ptr->resource.path);
+            return WGF_CORE_PRIV_LOAD_FAILED;
+        default:
+            break;
+    }
     /* libwgf keeps the bytes (freeData 0): fontstash frees them on some failures
        and not others */
     id = fonsAddFontMem(fons, font_ptr->resource.path, loaded->bytes, loaded->size, 0);
@@ -204,6 +214,7 @@ static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
 static void discard(void *prepared)
 {
     loaded_t *loaded = (loaded_t *)prepared;
+    wgf_gfx_priv_face_close(loaded->bytes);
     wgf_core_priv_fs_read_free(loaded->bytes);
     free(loaded);
 }
@@ -454,6 +465,7 @@ static void free_font(wgf_handle_t font, void *record)
         return;
     }
     if (font_ptr->resource.status != WGF_RESOURCE_STATUS_READY || fons == NULL) {
+        wgf_gfx_priv_face_close(font_ptr->bytes);
         free(font_ptr->bytes);
         return;
     }
@@ -1196,6 +1208,12 @@ static void setup(void)
     builtin_id = fonsAddFontMem(fons, "builtin", (unsigned char *)jetbrains_mono_ascii_ttf,
                                 (int)sizeof(jetbrains_mono_ascii_ttf), 0);
     if (builtin_id == FONS_INVALID) wgf_log_error("wgf_gfx_font: the built-in font didn't load");
+    /* in a page, the browser's face of it, there a few updates on: measured and laid out from its
+       tables meanwhile, its glyphs blank until then (end_frame) */
+    if (wgf_gfx_priv_face_wait((const unsigned char *)jetbrains_mono_ascii_ttf, (int)sizeof(jetbrains_mono_ascii_ttf)) ==
+        WGF_GFX_PRIV_FACE_FAILED) {
+        wgf_log_error("wgf_gfx_font: this browser refused the built-in font; its text won't draw");
+    }
     grow_pending = false;
     full_warned = false;
     atlas_version++;
@@ -1209,6 +1227,11 @@ static void flush(void)
 static void end_frame(void)
 {
     int width = 0, height = 0;
+    if (fons != NULL && wgf_gfx_priv_face_take_missed()) { /* in a page: glyphs made blank before their face came */
+        fonsGetAtlasSize(fons, &width, &height);
+        fonsResetAtlas(fons, width, height);
+        atlas_version++;
+    }
     if (!grow_pending || fons == NULL) return;
     grow_pending = false;
     fonsGetAtlasSize(fons, &width, &height);
@@ -1239,6 +1262,7 @@ static void shutdown(void)
         sfons_destroy(fons);
         fons = NULL;
     }
+    wgf_gfx_priv_face_close_all();
     if (pool_ready) { /* fontstash is gone: their bytes are freed, not parked */
         wgf_core_priv_resource_unregister(&font_pool);
         wgf_core_priv_handle_pool_destroy(&font_pool);

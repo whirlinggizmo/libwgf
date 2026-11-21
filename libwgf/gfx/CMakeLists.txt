@@ -3,13 +3,16 @@
 # build runs under node, which has no image decoder).
 if(WGF_BROWSER)
     set(gfx_decode_source src/texture/wgf_gfx_decode_web.c)
+    set(gfx_glyph_source src/text/wgf_gfx_glyph_web.c)
 else()
     set(gfx_decode_source src/texture/wgf_gfx_decode_stb.c)
+    set(gfx_glyph_source src/text/wgf_gfx_glyph_stb.c)
 endif()
 
 wgf_layer(gfx
     SOURCES
         ${gfx_decode_source}
+        ${gfx_glyph_source}
         src/color/wgf_gfx_color.c
         src/draw/wgf_gfx_draw.c
         src/draw/wgf_gfx_draw_more.c
@@ -78,6 +81,11 @@ wgf_layer(gfx
 target_include_directories(wgf_gfx SYSTEM PRIVATE "${PROJECT_SOURCE_DIR}/deps/sokol" "${PROJECT_SOURCE_DIR}/deps/stb"
                            "${PROJECT_SOURCE_DIR}/deps/cgltf"
                            "${PROJECT_SOURCE_DIR}/deps/fontstash" "${PROJECT_SOURCE_DIR}/deps/jetbrains-mono")
+# a font's glyphs: the browser's in a page, where fontstash's stb_truetype.h is text/web's, which
+# includes deps/stb's and turns fontstash's drawing calls (text/wgf_gfx_glyph_priv.h)
+if(WGF_BROWSER)
+    target_include_directories(wgf_gfx BEFORE PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/text/web")
+endif()
 # vendored code is compiled as it comes: its warnings are not ours to fix
 set_source_files_properties(src/texture/wgf_gfx_stb_impl.c src/text/wgf_gfx_fontstash_impl.c src/mesh/wgf_gfx_cgltf_impl.c
                             PROPERTIES COMPILE_OPTIONS "$<IF:$<C_COMPILER_ID:MSVC>,/w,-w>")
