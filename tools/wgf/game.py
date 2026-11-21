@@ -118,7 +118,7 @@ def haxe(game, target_args, defines=(), extra=()):
     """Build the game with Haxe; (ok, its output)."""
     if binding.haxe() is None:
         raise GameError('no haxe on PATH: install Haxe 4.3.7 (BUILDING.md)')
-    command = [binding.haxe(), '-cp', binding.SOURCE.parent, '-cp', game.source, '--main', game.main,
+    command = [binding.haxe(), '-cp', binding.SOURCE.parent, '-cp', game.source, *binding.MACROS, '--main', game.main,
                *target_args, *extra]
     for define in [*defines, *game.defines]:  # the build's, then the game's own (wgf.json)
         command += ['-D', define]

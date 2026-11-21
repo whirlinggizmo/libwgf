@@ -140,7 +140,7 @@ class Server:
     def first_build(self):
         """The page, the full host, the hot program, and the assets."""
         games.build_web(self.game, hot=True, out=self.out)
-        self.args = [str(a) for a in ['-cp', games.binding.SOURCE.parent, '-cp', self.game.source, '--main',
+        self.args = [str(a) for a in ['-cp', games.binding.SOURCE.parent, '-cp', self.game.source, *games.binding.MACROS, '--main',
                                       self.game.main, '--js', self.program, '-D', 'js-es=6', '-D', 'hotreload',
                                       *games.hot_args()]]
 
