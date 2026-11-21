@@ -1,6 +1,15 @@
 # 2D drawing, on sokol_gfx and sokol_gl, whose implementations platform compiles.
+# An image file's decode: the browser's in a page, stb_image's everywhere else (a headless web
+# build runs under node, which has no image decoder).
+if(WGF_BROWSER)
+    set(gfx_decode_source src/texture/wgf_gfx_decode_web.c)
+else()
+    set(gfx_decode_source src/texture/wgf_gfx_decode_stb.c)
+endif()
+
 wgf_layer(gfx
     SOURCES
+        ${gfx_decode_source}
         src/color/wgf_gfx_color.c
         src/draw/wgf_gfx_draw.c
         src/draw/wgf_gfx_draw_more.c
@@ -145,6 +154,7 @@ if(WGF_TESTS)
         endif()
     endforeach()
     wgf_web_test(gfx wgf_gfx_texture_web_test 1)
+    wgf_web_test(gfx wgf_gfx_decode_web_test 1)
     wgf_web_test(gfx wgf_gfx_text_web_test 1)
     wgf_web_test(gfx wgf_gfx_stage2d_web_test 1)
     wgf_web_test(gfx wgf_gfx_draw3d_web_test 1)

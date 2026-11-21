@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "stb_image.h"
+#include "texture/wgf_gfx_decode_priv.h"
 #include "texture/wgf_gfx_image_priv.h"
 #include "texture/wgf_gfx_png_priv.h"
 #include "wgf_asset_priv.h" /* a resource made from a path: the asset part locates it */
@@ -16,7 +16,8 @@
 
 /* Images on the CPU, raylib's Image: a resource of a pool of its own ("gfx.image"),
  * pixels in memory and nothing on the GPU, so they load and are made headless too. One
- * from a file is decoded on a worker by stb_image (gfx's, as textures'), and moved into
+ * from a file is decoded as a texture's is (wgf_gfx_decode_priv.h: on a worker natively, by the
+ * browser in a page), and moved into
  * its record on the main thread; one made in code is READY as it is added. A part of its
  * own, installed by the first image, so a program that makes none links none of it; the
  * generators (wgf_gfx_image_gen.c) and the texture calls (wgf_gfx_image_texture.c) are
@@ -27,13 +28,13 @@ typedef struct image_t {
     int width;
     int height;
     unsigned char *pixels; /* width * height * 4, RGBA, the top row first; malloc'd, or stb_image's */
-    bool decoded;          /* stb_image's: freed by it */
 } image_t;
 
 typedef struct decoded_t {
     int width;
     int height;
-    unsigned char *pixels; /* stb_image's */
+    unsigned char *pixels; /* malloc'd */
+    wgf_gfx_priv_decode_t *pending; /* a file's decode under way (the browser's); NULL once its pixels are in */
 } decoded_t;
 
 static struct {
@@ -67,16 +68,34 @@ static void discard(void *prepared)
 {
     decoded_t *decoded = (decoded_t *)prepared;
     if (decoded == NULL) return;
-    stbi_image_free(decoded->pixels);
+    wgf_gfx_priv_decode_cancel(decoded->pending);
+    free(decoded->pixels);
     free(decoded);
 }
 
-/* The file decoded to RGBA, on a worker; NULL (logged) when it can't be read, isn't an
- * image stb_image reads, or is larger than an image may be. */
+/* A decode done: its pixels taken. False (logged) when it FAILED, or is larger than an image
+ * may be. */
+static bool complete(decoded_t *decoded, const char *what)
+{
+    wgf_gfx_priv_decode_t *pending = decoded->pending;
+    decoded->pending = NULL;
+    decoded->pixels = wgf_gfx_priv_decode_take(pending, &decoded->width, &decoded->height);
+    if (decoded->pixels == NULL) return false;
+    if (decoded->width > WGF_GFX_PRIV_IMAGE_MAX_SIDE || decoded->height > WGF_GFX_PRIV_IMAGE_MAX_SIDE) {
+        wgf_log_warn("wgf_image: %s: %d by %d, over %d a side", what, decoded->width, decoded->height,
+                     WGF_GFX_PRIV_IMAGE_MAX_SIDE);
+        return false;
+    }
+    return true;
+}
+
+/* The file decoded to RGBA: on a worker natively; in a page its decode started, the browser's,
+ * and waited for in finish. NULL (logged) when it can't be read, isn't an image the decoder
+ * reads, or is larger than an image may be. */
 static void *prepare(const char *path)
 {
     unsigned char *bytes;
-    int size, comp;
+    int size;
     decoded_t *decoded;
     if (!wgf_core_priv_fs_read(path, &bytes, &size)) {
         wgf_log_warn("wgf_image: %s: couldn't be read", path);
@@ -84,14 +103,9 @@ static void *prepare(const char *path)
     }
     decoded = (decoded_t *)calloc(1, sizeof(decoded_t));
     if (decoded != NULL) {
-        decoded->pixels = stbi_load_from_memory(bytes, size, &decoded->width, &decoded->height, &comp, 4);
-        if (decoded->pixels == NULL) {
-            wgf_log_warn("wgf_image: %s: not an image it can read (%s)", path, stbi_failure_reason());
-            free(decoded);
-            decoded = NULL;
-        } else if (decoded->width > WGF_GFX_PRIV_IMAGE_MAX_SIDE || decoded->height > WGF_GFX_PRIV_IMAGE_MAX_SIDE) {
-            wgf_log_warn("wgf_image: %s: %d by %d, over %d a side", path, decoded->width, decoded->height,
-                         WGF_GFX_PRIV_IMAGE_MAX_SIDE);
+        decoded->pending = wgf_gfx_priv_decode_start(bytes, size, path);
+        if (decoded->pending == NULL || (wgf_gfx_priv_decode_poll(decoded->pending) != WGF_GFX_PRIV_DECODE_PENDING &&
+                                         !complete(decoded, path))) {
             discard(decoded);
             decoded = NULL;
         }
@@ -100,16 +114,19 @@ static void *prepare(const char *path)
     return decoded;
 }
 
-/* The decoded pixels moved into the image, READY. */
+/* The decoded pixels moved into the image, READY: in a page once the browser's decode is done. */
 static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
 {
     decoded_t *decoded = (decoded_t *)prepared;
     image_t *image_ptr = image_of(resource);
     if (image_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
+    if (decoded->pending != NULL) {
+        if (wgf_gfx_priv_decode_poll(decoded->pending) == WGF_GFX_PRIV_DECODE_PENDING) return WGF_CORE_PRIV_LOAD_WAIT;
+        if (!complete(decoded, image_ptr->resource.path)) return WGF_CORE_PRIV_LOAD_FAILED;
+    }
     image_ptr->width = decoded->width;
     image_ptr->height = decoded->height;
     image_ptr->pixels = decoded->pixels;
-    image_ptr->decoded = true;
     decoded->pixels = NULL; /* the image's now: discard frees the rest */
     wgf_core_priv_resource_loaded(resource, NULL);
     return WGF_CORE_PRIV_LOAD_DONE;
@@ -132,11 +149,7 @@ static void free_image(wgf_handle_t image, void *record)
 {
     image_t *image_ptr = (image_t *)record;
     (void)image;
-    if (image_ptr->decoded) {
-        stbi_image_free(image_ptr->pixels);
-    } else {
-        free(image_ptr->pixels);
-    }
+    free(image_ptr->pixels); /* a file's, the decoder's malloc, or one made in code */
     image_ptr->pixels = NULL;
 }
 

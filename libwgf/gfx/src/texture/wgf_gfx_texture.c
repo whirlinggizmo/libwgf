@@ -7,6 +7,7 @@
 #include "render/wgf_gfx_render_priv.h"
 #include "stb_image.h"
 #include "texture/wgf_gfx_ktx_priv.h"
+#include "texture/wgf_gfx_decode_priv.h"
 #include "texture/wgf_gfx_texture_priv.h"
 #include "wgf_asset_priv.h" /* a resource made from a path: the asset part locates it */
 #include "wgf_core_fs_priv.h"
@@ -49,7 +50,8 @@ typedef struct decoded_t {
     int width;
     int height;
     int mip_count;
-    unsigned char *levels[SG_MAX_MIPMAPS]; /* level 0 is stb_image's, the rest malloc'd */
+    unsigned char *levels[SG_MAX_MIPMAPS]; /* malloc'd (stb_image's level 0 too) */
+    wgf_gfx_priv_decode_t *pending; /* a file's decode under way (the browser's); NULL once its pixels are in */
 } decoded_t;
 
 static bool pool_ready;
@@ -158,6 +160,7 @@ static void discard(void *prepared)
 {
     decoded_t *decoded = (decoded_t *)prepared;
     int level;
+    wgf_gfx_priv_decode_cancel(decoded->pending);
     stbi_image_free(decoded->levels[0]);
     for (level = 1; level < decoded->mip_count; level++) free(decoded->levels[level]);
     free(decoded);
@@ -195,12 +198,28 @@ static bool build_mipmaps(decoded_t *decoded)
     return true;
 }
 
-/* The file decoded to RGBA with its mipmaps, on a worker; NULL (logged) when it can't
- * be read or isn't an image stb_image reads. */
+/* A decode done: its pixels taken, its mipmaps made. False (logged) when it FAILED, or for
+ * memory; the decoded then discarded by its caller. */
+static bool complete(decoded_t *decoded, const char *what)
+{
+    wgf_gfx_priv_decode_t *pending = decoded->pending;
+    decoded->pending = NULL;
+    decoded->levels[0] = wgf_gfx_priv_decode_take(pending, &decoded->width, &decoded->height);
+    if (decoded->levels[0] == NULL) return false;
+    if (!build_mipmaps(decoded)) {
+        wgf_log_warn("wgf_gfx_texture: %s: out of memory", what);
+        return false;
+    }
+    return true;
+}
+
+/* The file decoded to RGBA with its mipmaps: on a worker natively; in a page its decode started,
+ * the browser's, and waited for in finish. NULL (logged) when it can't be read or isn't an
+ * image the decoder reads. */
 static void *prepare(const char *path)
 {
     unsigned char *bytes;
-    int size, comp;
+    int size;
     decoded_t *decoded;
     if (!wgf_core_priv_fs_read(path, &bytes, &size)) {
         wgf_log_warn("wgf_gfx_texture: %s: couldn't be read", path);
@@ -208,13 +227,9 @@ static void *prepare(const char *path)
     }
     decoded = (decoded_t *)calloc(1, sizeof(decoded_t));
     if (decoded != NULL) {
-        decoded->levels[0] = stbi_load_from_memory(bytes, size, &decoded->width, &decoded->height, &comp, 4);
-        if (decoded->levels[0] == NULL) {
-            wgf_log_warn("wgf_gfx_texture: %s: not an image it can read (%s)", path, stbi_failure_reason());
-            free(decoded);
-            decoded = NULL;
-        } else if (!build_mipmaps(decoded)) {
-            wgf_log_warn("wgf_gfx_texture: %s: out of memory", path);
+        decoded->pending = wgf_gfx_priv_decode_start(bytes, size, path);
+        if (decoded->pending == NULL || (wgf_gfx_priv_decode_poll(decoded->pending) != WGF_GFX_PRIV_DECODE_PENDING &&
+                                         !complete(decoded, path))) {
             discard(decoded);
             decoded = NULL;
         }
@@ -237,11 +252,15 @@ static void loaded(wgf_handle_t resource, texture_t *texture_ptr, sg_image image
 
 static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
 {
-    const decoded_t *decoded = (const decoded_t *)prepared;
+    decoded_t *decoded = (decoded_t *)prepared;
     texture_t *texture_ptr = texture_of(resource);
     sg_image image = {SG_INVALID_ID};
     sg_view view = {SG_INVALID_ID};
     if (texture_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
+    if (decoded->pending != NULL) { /* the browser's decode: waited for, then its pixels taken */
+        if (wgf_gfx_priv_decode_poll(decoded->pending) == WGF_GFX_PRIV_DECODE_PENDING) return WGF_CORE_PRIV_LOAD_WAIT;
+        if (!complete(decoded, texture_ptr->resource.found)) return WGF_CORE_PRIV_LOAD_FAILED;
+    }
     if (!wgf_gfx_priv_render_is_running()) return WGF_CORE_PRIV_LOAD_MORE; /* no GPU yet: wait for one */
     if (wgf_gfx_priv_render_is_lost()) return WGF_CORE_PRIV_LOAD_WAIT; /* the GPU's context lost: until it is back */
     if (!make_image(decoded->width, decoded->height, decoded->mip_count, decoded->levels, &image, &view)) {
