@@ -10,7 +10,19 @@
  * premultiplying and no color conversion, so its pixels are the file's; read back through a
  * WebGL2 context of the decoder's own (a 2D canvas would premultiply them, losing a level or so
  * at a partly transparent edge), never the program's, whose state stays as it was. Done in a
- * later update. helix's page decoder, read back exactly. */
+ * later update. helix's page decoder, read back exactly. Its context is let go of (lost on
+ * purpose) once no decode is under way, so a page holds it only while it decodes: a browser
+ * keeps few WebGL contexts at once, and past them it loses the oldest, which may be a page's
+ * own. Whatever throws reading one back is that decode FAILED, never one left pending. */
+
+/* The decoder's context let go of when nothing is decoding. */
+EM_JS(void, wgf_gfx_js_decode_idle, (void), {
+    const gl = Module.wgfDecodeGl;
+    if (!gl || (Module.wgfDecodes && Module.wgfDecodes.size > 0)) return;
+    Module.wgfDecodeGl = null;
+    const lose = gl.getExtension("WEBGL_lose_context");
+    if (lose) lose.loseContext();
+})
 
 EM_JS(void, wgf_gfx_js_decode_start, (int id, const unsigned char *bytes, int size), {
     const decodes = Module.wgfDecodes || (Module.wgfDecodes = new Map());
@@ -47,10 +59,14 @@ EM_JS(void, wgf_gfx_js_decode_start, (int id, const unsigned char *bytes, int si
                 bitmap.close();
                 return;
             }
-            entry.pixels = read(bitmap);
-            entry.width = bitmap.width;
-            entry.height = bitmap.height;
-            entry.state = entry.pixels ? 1 : 2;
+            try {
+                entry.pixels = read(bitmap);
+                entry.width = bitmap.width;
+                entry.height = bitmap.height;
+                entry.state = entry.pixels ? 1 : 2;
+            } catch (error) {
+                entry.state = 2;
+            }
             bitmap.close();
         },
         () => { entry.state = 2; });
@@ -112,6 +128,7 @@ unsigned char *wgf_gfx_priv_decode_take(wgf_gfx_priv_decode_t *decode, int *widt
     }
     wgf_gfx_js_decode_free(decode->id);
     free(decode);
+    wgf_gfx_js_decode_idle();
     return pixels;
 }
 
@@ -120,4 +137,5 @@ void wgf_gfx_priv_decode_cancel(wgf_gfx_priv_decode_t *decode)
     if (decode == NULL) return;
     wgf_gfx_js_decode_free(decode->id);
     free(decode);
+    wgf_gfx_js_decode_idle();
 }
