@@ -24,6 +24,11 @@ typedef enum wgf_mouse_button_t {
 /* Where the pointer is: where it last moved over the window. */
 WGF_API wgf_vec2_t wgf_mouse_get_position(void);
 
+/* Whether the pointer is over the window: a mouse from when it enters or moves over it until it
+ * leaves; a finger driving the pointer (wgf_touch_set_mouse_emulated) while it is down. False
+ * until the pointer has been seen. */
+WGF_API bool wgf_mouse_is_over_window(void);
+
 /* How far it moved since the previous tick or frame. While the mouse is locked,
  * the only way to read its movement. */
 WGF_API wgf_vec2_t wgf_mouse_get_delta(void);

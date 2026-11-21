@@ -1762,6 +1762,8 @@ export const Motion = Object.freeze({
 export const Mouse = Object.freeze({
     // wgf: call wgf_mouse_get_position
     getPosition: raw.wgf_mouse_get_position,
+    // wgf: call wgf_mouse_is_over_window
+    isOverWindow: raw.wgf_mouse_is_over_window,
     // wgf: call wgf_mouse_get_delta
     getDelta: raw.wgf_mouse_get_delta,
     // wgf: call wgf_mouse_get_wheel

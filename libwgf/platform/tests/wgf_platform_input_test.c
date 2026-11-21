@@ -113,6 +113,7 @@ static void on_frame(void *user)
             push(SAPP_EVENTTYPE_KEY_UP, SAPP_KEYCODE_SPACE);
             break;
         case 5:
+            expect(!wgf_mouse_is_over_window(), "the pointer not over the window until seen");
             expect(wgf_keyboard_get_state(WGF_KEY_A) == WGF_INPUT_STATE_UP, "then up");
             expect(wgf_keyboard_is_pressed(WGF_KEY_SPACE) && wgf_keyboard_is_released(WGF_KEY_SPACE),
                    "a tap within a frame is pressed and released");
@@ -126,6 +127,7 @@ static void on_frame(void *user)
             break;
         case 6:
             expect(near(wgf_mouse_get_position(), 12, 25), "the pointer where it last moved");
+            expect(wgf_mouse_is_over_window(), "and over the window");
             expect(near(wgf_mouse_get_delta(), 5, 9), "movement summed over the frame");
             expect(near(wgf_mouse_get_wheel(), 0.75f, -3.0f), "scrolling summed over the frame");
             expect(wgf_mouse_is_pressed(WGF_MOUSE_BUTTON_RIGHT) && !wgf_mouse_is_down(WGF_MOUSE_BUTTON_LEFT),
@@ -137,10 +139,17 @@ static void on_frame(void *user)
             expect(wgf_mouse_get_button_state(WGF_MOUSE_BUTTON_RIGHT) == WGF_INPUT_STATE_DOWN, "held");
             expect(wgf_keyboard_is_down(WGF_KEY_W), "W held");
             push(SAPP_EVENTTYPE_UNFOCUSED, SAPP_KEYCODE_INVALID);
+            push_mouse(SAPP_EVENTTYPE_MOUSE_LEAVE, SAPP_MOUSEBUTTON_INVALID, 0, 0, 0, 0);
             break;
         case 8:
             expect(wgf_keyboard_is_released(WGF_KEY_W) && !wgf_keyboard_is_down(WGF_KEY_W),
                    "losing the focus releases the keys held");
+            expect(!wgf_mouse_is_over_window() && near(wgf_mouse_get_position(), 12, 25),
+                   "the pointer left the window, its last place kept");
+            push_mouse(SAPP_EVENTTYPE_MOUSE_ENTER, SAPP_MOUSEBUTTON_INVALID, 0, 0, 0, 0);
+            break;
+        case 9:
+            expect(wgf_mouse_is_over_window(), "and came back");
             wgf_app_quit();
             break;
         default:
@@ -192,7 +201,7 @@ int main(void)
     int frame = 0;
     wgf_window_set_size(64, 64);
     expect(wgf_app_run(NULL, NULL, on_frame, NULL, &frame), "runs");
-    expect(frame == 8, "every frame ran");
+    expect(frame == 9, "every frame ran");
     tick_edges();
     return failures == 0 ? 0 : 1;
 }

@@ -795,6 +795,7 @@ class Reach {
 		"wgf_mouse_is_cursor_visible",
 		"wgf_mouse_is_down",
 		"wgf_mouse_is_locked",
+		"wgf_mouse_is_over_window",
 		"wgf_mouse_is_pressed",
 		"wgf_mouse_is_released",
 		"wgf_mouse_set_cursor",
@@ -1384,7 +1385,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1375) 0];
+	static final counts:Array<Int> = [for (_ in 0...1376) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

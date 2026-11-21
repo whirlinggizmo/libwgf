@@ -16,6 +16,14 @@ class Mouse {
 		return Raw.wgf_mouse_get_position(into);
 
 	/**
+	    Whether the pointer is over the window: a mouse from when it enters or moves over it until it
+	    leaves; a finger driving the pointer (wgf_touch_set_mouse_emulated) while it is down. False
+	    until the pointer has been seen.
+	**/
+	public static inline function isOverWindow():Bool
+		return Raw.wgf_mouse_is_over_window();
+
+	/**
 	    How far it moved since the previous tick or frame. While the mouse is locked,
 	    the only way to read its movement.
 	**/

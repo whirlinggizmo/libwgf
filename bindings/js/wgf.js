@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "a48e5677f219a096" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "6e2818990419bec3" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -3140,6 +3140,17 @@ export function wgf_mouse_get_position(into) {
     const ret = result(8);
     host["_wgf_mouse_get_position"](ret);
     return vector(ret, 2, into);
+}
+
+// wgf: call wgf_mouse_is_over_window
+/**
+ * Whether the pointer is over the window: a mouse from when it enters or moves over it until it
+ * leaves; a finger driving the pointer (wgf_touch_set_mouse_emulated) while it is down. False
+ * until the pointer has been seen.
+ */
+export function wgf_mouse_is_over_window() {
+    const value = host["_wgf_mouse_is_over_window"]();
+    return value !== 0;
 }
 
 // wgf: call wgf_mouse_get_delta

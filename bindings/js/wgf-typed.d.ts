@@ -7295,6 +7295,12 @@ export declare const Mouse: {
      */
     readonly getPosition: typeof raw.wgf_mouse_get_position;
     /**
+     * Whether the pointer is over the window: a mouse from when it enters or moves over it until it
+     * leaves; a finger driving the pointer (wgf_touch_set_mouse_emulated) while it is down. False
+     * until the pointer has been seen.
+     */
+    readonly isOverWindow: typeof raw.wgf_mouse_is_over_window;
+    /**
      * How far it moved since the previous tick or frame. While the mouse is locked,
      * the only way to read its movement.
      */

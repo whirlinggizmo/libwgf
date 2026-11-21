@@ -1307,6 +1307,7 @@ class Main {
 		Window.getOs();
 		Window.isWeb();
 		Mouse.getPosition();
+		Mouse.isOverWindow();
 		Mouse.getDelta();
 		Mouse.getWheel();
 		Mouse.getButtonState(MouseButton.LEFT);

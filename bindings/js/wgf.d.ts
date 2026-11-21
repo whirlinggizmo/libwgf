@@ -2265,6 +2265,13 @@ export declare function wgf_mouse_get_position<T extends number[] | Float32Array
 export declare function wgf_mouse_get_position(into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
+ * Whether the pointer is over the window: a mouse from when it enters or moves over it until it
+ * leaves; a finger driving the pointer (wgf_touch_set_mouse_emulated) while it is down. False
+ * until the pointer has been seen.
+ */
+export declare function wgf_mouse_is_over_window(): boolean;
+
+/**
  * How far it moved since the previous tick or frame. While the mouse is locked,
  * the only way to read its movement.
  */

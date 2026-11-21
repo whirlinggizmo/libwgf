@@ -75,6 +75,7 @@ static void fingers_and_mouse(void)
     expect(near(wgf_touch_get_position(first), 10, 20), "where it touched");
     expect(wgf_mouse_is_pressed(WGF_MOUSE_BUTTON_LEFT) && near(wgf_mouse_get_position(), 10, 20),
            "the mouse follows it, its left button pressed");
+    expect(wgf_mouse_is_over_window(), "the pointer over the window while the finger is down");
     next_frame();
 
     touches(SAPP_EVENTTYPE_TOUCHES_MOVED, 1, one_moved, 1.0f);
@@ -89,6 +90,7 @@ static void fingers_and_mouse(void)
     expect(second != first && wgf_touch_get_state(second) == WGF_INPUT_STATE_PRESSED, "the second pressed");
     expect(wgf_mouse_is_released(WGF_MOUSE_BUTTON_LEFT) && near(wgf_mouse_get_position(), -1, -1),
            "a second finger lets the mouse go off the window");
+    expect(!wgf_mouse_is_over_window(), "and the pointer is off it");
     next_frame();
 
     touches(SAPP_EVENTTYPE_TOUCHES_ENDED, 2, one_up, 1.0f);
@@ -106,6 +108,7 @@ static void fingers_and_mouse(void)
     touches(SAPP_EVENTTYPE_TOUCHES_BEGAN, 1, one_down, 1.0f);
     expect(wgf_mouse_is_pressed(WGF_MOUSE_BUTTON_LEFT), "once every finger lifted, the next drives the mouse again");
     touches(SAPP_EVENTTYPE_TOUCHES_ENDED, 1, one_down, 1.0f);
+    expect(!wgf_mouse_is_over_window(), "a finger driving the pointer lifted: the pointer is gone");
     expect(wgf_touch_get_state(wgf_touch_get_id(0)) == WGF_INPUT_STATE_PRESSED, "a tap within a frame is pressed");
     next_frame();
 

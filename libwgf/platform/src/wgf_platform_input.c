@@ -52,6 +52,7 @@ typedef struct finger_t {
 
 static struct {
     float x, y;
+    bool over; /* the pointer is over the window */
     bool down[MOUSE_BUTTONS];
     bool key_down[MAX_KEYS];
     edges_t frame;
@@ -559,12 +560,20 @@ void wgf_platform_priv_input_handle_event(const sapp_event *event, float dpi_sca
         case SAPP_EVENTTYPE_MOUSE_MOVE:
             input.x = (event->mouse_x - input.offset_x) / input.scale_x;
             input.y = (event->mouse_y - input.offset_y) / input.scale_y;
+            input.over = true;
             break;
         case SAPP_EVENTTYPE_MOUSE_DOWN:
             input.down[event->mouse_button] = true;
             break;
         case SAPP_EVENTTYPE_MOUSE_UP:
             input.down[event->mouse_button] = false;
+            if (input.emulating) input.over = false; /* a finger driving the pointer lifted */
+            break;
+        case SAPP_EVENTTYPE_MOUSE_ENTER:
+            input.over = true;
+            break;
+        case SAPP_EVENTTYPE_MOUSE_LEAVE:
+            input.over = false;
             break;
         case SAPP_EVENTTYPE_KEY_DOWN:
             input.key_down[event->key_code] = true;
@@ -657,6 +666,11 @@ bool wgf_mouse_is_pressed(wgf_mouse_button_t button)
 bool wgf_mouse_is_released(wgf_mouse_button_t button)
 {
     return (int)button >= 0 && (int)button < MOUSE_BUTTONS && current()->released[button];
+}
+
+bool wgf_mouse_is_over_window(void)
+{
+    return input.over;
 }
 
 void wgf_mouse_set_cursor_visible(bool visible)
