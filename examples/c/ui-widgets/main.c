@@ -7,6 +7,7 @@
 #include "wgf_image.h"
 #include "wgf_keyboard.h"
 #include "wgf_loop.h"
+#include "wgf_presentation.h"
 #include "wgf_render.h"
 #include "wgf_texture.h"
 #include "wgf_ui.h"
@@ -21,7 +22,9 @@
  * only when full; the star answers on its round face alone, its clear corners left to the
  * screen, and sets the volume full. Save is disabled. The theme row shows the same panel
  * in libwgf's own style and in a recolored one. The pointer, the arrow keys, Tab, Enter,
- * and a pad work it; Escape quits where quitting means anything. */
+ * and a pad work it; Escape quits where quitting means anything. Laid out for a design of
+ * 580 by 640, scaled to fit the window or a phone's screen (EXPAND: the blue past it); on a
+ * page the canvas fills the page, as the window size is left unset. */
 
 enum { PLAIN, RECOLORED, SKINNED };
 
@@ -201,7 +204,7 @@ static void frame(void *user)
 int main(void)
 {
     wgf_window_set_title("ui-widgets");
-    wgf_window_set_size(800, 600);
+    wgf_presentation_set(WGF_PRESENTATION_MODE_EXPAND, 580, 640); /* natively, the window opens at it */
     wgf_app_run(init, NULL, frame, NULL, NULL);
     return 0;
 }
