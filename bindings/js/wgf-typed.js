@@ -1341,6 +1341,12 @@ export const Gamepad = Object.freeze({
     isRumbling: raw.wgf_gamepad_is_rumbling,
     // wgf: call wgf_gamepad_can_rumble
     canRumble: raw.wgf_gamepad_can_rumble,
+    // wgf: call wgf_gamepad_add_mappings
+    addMappings: raw.wgf_gamepad_add_mappings,
+    // wgf: call wgf_gamepad_get_guid
+    getGuid: raw.wgf_gamepad_get_guid,
+    // wgf: call wgf_gamepad_is_mapped
+    isMapped: raw.wgf_gamepad_is_mapped,
 });
 // wgf: typed Generator
 export const Generator = Object.freeze({

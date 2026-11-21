@@ -9,13 +9,25 @@
 #include "wgf.h"
 #include "wgf_time.h"
 
+#if defined(__EMSCRIPTEN__)
+#define WGF_TEST_PLATFORM "Web"
+#elif defined(_WIN32)
+#define WGF_TEST_PLATFORM "Windows"
+#elif defined(__APPLE__)
+#define WGF_TEST_PLATFORM "Mac OS X"
+#else
+#define WGF_TEST_PLATFORM "Linux"
+#endif
+
 /* Gamepads with test pads in place of the platform's, read frame by frame as the loop
  * reads them: connecting, slots, edges per frame and per tick, the triggers as
  * buttons, a pad unplugged while a button is held, the round dead zone, and values
  * clamped; and rumble, what the test pads were asked recorded in place of the platform:
  * refused for a pad without motors, a bad length, or none connected; motors and length
  * clamped; stopped, by a call, once its time is up, and as the pads close; forgotten,
- * nothing sent, for a pad unplugged. */
+ * nothing sent, for a pad unplugged. And mappings, SDL's lines read and applied to a raw
+ * pad: this platform's kept, others' and comments left out, a broken line skipped, a GUID
+ * found without its name check or its version, and every kind of source and half. */
 
 static int failures;
 
@@ -228,6 +240,96 @@ static void rumble(void)
     wgf_platform_priv_gamepad_open();
 }
 
+static void mappings(void)
+{
+    /* bus 3, vendor 0x045e, product 0x028e, version 0x0114 */
+    static const unsigned char pad_guid[16] = {0x03, 0, 0xab, 0xcd, 0x5e, 0x04, 0, 0, 0x8e, 0x02, 0, 0, 0x14, 0x01, 0, 0};
+    static const unsigned char other_version[16] = {0x03, 0, 0, 0, 0x5e, 0x04, 0, 0, 0x8e, 0x02, 0, 0, 0x99, 0x00, 0, 0};
+    static const unsigned char unknown[16] = {0x05, 0, 0, 0, 0x11, 0x11, 0, 0, 0x22, 0x22, 0, 0, 0, 0, 0, 0};
+    const char *text =
+        "# a comment\n"
+        "\n"
+        "030000005e0400008e02000014010000,Test Pad,a:b0,b:b1,misc1:b9,dpup:h0.1,dpleft:h0.8,leftx:a0,lefty:a1~,"
+        "lefttrigger:a2,righttrigger:+a5,-rightx:b6,+rightx:b7,x:+a3,y:-a3,platform:" WGF_TEST_PLATFORM ",\r\n"
+        "030000005e0400008e02000000000000,Any Version,a:b5,platform:" WGF_TEST_PLATFORM ",\n"
+        "030000005e0400008e02000014010000,On Elsewhere,a:b3,platform:Nowhere,\n"
+        "not a guid,Broken,a:b0,\n"
+        "05000000111100002222000000000000,No Platform,a:b2\n";
+    const wgf_platform_priv_gamepad_mapping_t *map;
+    wgf_platform_priv_gamepad_raw_t raw;
+    wgf_platform_priv_gamepad_t pad;
+    const unsigned before = wgf_platform_priv_gamepad_mapping_generation();
+    expect(wgf_gamepad_add_mappings(text) == 3, "this platform's lines and those with none kept; the rest left out");
+    expect(wgf_platform_priv_gamepad_mapping_generation() != before, "the mappings changed");
+    expect(wgf_gamepad_add_mappings(NULL) == 0 && wgf_gamepad_add_mappings("") == 0, "nothing to add");
+    map = wgf_platform_priv_gamepad_find_mapping(pad_guid);
+    expect(map != NULL, "found by its GUID, its name check left out");
+    expect(wgf_platform_priv_gamepad_find_mapping(unknown) != NULL, "a line with no platform kept");
+    memset(&raw, 0, sizeof(raw));
+    raw.button_count = 10;
+    raw.axis_count = 6;
+    raw.hat_count = 1;
+    memset(&pad, 0, sizeof(pad));
+    wgf_platform_priv_gamepad_apply_mapping(wgf_platform_priv_gamepad_find_mapping(other_version), &raw, &pad);
+    raw.buttons[5] = true;
+    wgf_platform_priv_gamepad_apply_mapping(wgf_platform_priv_gamepad_find_mapping(other_version), &raw, &pad);
+    expect(pad.buttons[WGF_GAMEPAD_BUTTON_SOUTH], "another version: the line written without one");
+    raw.buttons[5] = false;
+    raw.axes[2] = -1.0f; /* a trigger at rest, as a whole axis */
+    wgf_platform_priv_gamepad_apply_mapping(map, &raw, &pad);
+    expect(!pad.buttons[WGF_GAMEPAD_BUTTON_SOUTH] && near(pad.axes[WGF_PLATFORM_PRIV_GAMEPAD_LEFT_TRIGGER], 0) &&
+               near(pad.axes[WGF_PLATFORM_PRIV_GAMEPAD_RIGHT_X], 0),
+           "at rest: nothing held, a whole-axis trigger released");
+    raw.buttons[0] = raw.buttons[9] = true;
+    raw.hats[0] = 1 | 8;
+    raw.axes[0] = 0.25f;
+    raw.axes[1] = 0.5f;
+    raw.axes[2] = 1.0f;
+    raw.axes[3] = 0.8f;
+    raw.axes[5] = 0.6f;
+    raw.buttons[6] = true;
+    wgf_platform_priv_gamepad_apply_mapping(map, &raw, &pad);
+    expect(pad.buttons[WGF_GAMEPAD_BUTTON_SOUTH] && !pad.buttons[WGF_GAMEPAD_BUTTON_EAST], "a button");
+    expect(pad.buttons[WGF_GAMEPAD_BUTTON_DPAD_UP] && pad.buttons[WGF_GAMEPAD_BUTTON_DPAD_LEFT] &&
+               !pad.buttons[WGF_GAMEPAD_BUTTON_DPAD_DOWN],
+           "a hat's directions");
+    expect(near(pad.axes[WGF_PLATFORM_PRIV_GAMEPAD_LEFT_X], 0.25f) && near(pad.axes[WGF_PLATFORM_PRIV_GAMEPAD_LEFT_Y], -0.5f),
+           "an axis, and one inverted");
+    expect(near(pad.axes[WGF_PLATFORM_PRIV_GAMEPAD_LEFT_TRIGGER], 1) && near(pad.axes[WGF_PLATFORM_PRIV_GAMEPAD_RIGHT_TRIGGER], 0.6f),
+           "a trigger from a whole axis, pulled, and from an axis's half");
+    expect(near(pad.axes[WGF_PLATFORM_PRIV_GAMEPAD_RIGHT_X], -1), "a stick's half from a button");
+    expect(pad.buttons[WGF_GAMEPAD_BUTTON_WEST] && !pad.buttons[WGF_GAMEPAD_BUTTON_NORTH], "a button from an axis's half");
+    raw.buttons[6] = false;
+    raw.buttons[7] = true;
+    raw.axes[3] = -0.8f;
+    wgf_platform_priv_gamepad_apply_mapping(map, &raw, &pad);
+    expect(near(pad.axes[WGF_PLATFORM_PRIV_GAMEPAD_RIGHT_X], 1) && pad.buttons[WGF_GAMEPAD_BUTTON_NORTH] &&
+               !pad.buttons[WGF_GAMEPAD_BUTTON_WEST],
+           "the other halves");
+    expect(wgf_gamepad_add_mappings("030000005e0400008e02000014010000,Again,b:b0,platform:" WGF_TEST_PLATFORM ",") == 1,
+           "a GUID given again");
+    raw.buttons[0] = true;
+    wgf_platform_priv_gamepad_apply_mapping(wgf_platform_priv_gamepad_find_mapping(pad_guid), &raw, &pad);
+    expect(pad.buttons[WGF_GAMEPAD_BUTTON_EAST] && !pad.buttons[WGF_GAMEPAD_BUTTON_SOUTH], "replaces its mapping");
+
+    /* a pad's GUID and mapping, as the platform reports them */
+    pad = pad_state("mapped");
+    memcpy(pad.guid, pad_guid, 16);
+    pad.mapped = true;
+    wgf_platform_priv_gamepad_set_test_pad(2, &pad);
+    next_frame();
+    expect(strcmp(wgf_gamepad_get_guid(2), "0300abcd5e0400008e02000014010000") == 0 && wgf_gamepad_is_mapped(2),
+           "its GUID, SDL's way, and mapped");
+    pad.guid[0] = 0;
+    memset(pad.guid, 0, 16);
+    pad.mapped = false;
+    wgf_platform_priv_gamepad_set_test_pad(2, &pad);
+    next_frame();
+    expect(strcmp(wgf_gamepad_get_guid(2), "") == 0 && !wgf_gamepad_is_mapped(2) && strcmp(wgf_gamepad_get_guid(9), "") == 0,
+           "none where the platform makes none, or no such pad");
+    wgf_platform_priv_gamepad_set_test_pad(2, NULL);
+}
+
 int main(void)
 {
     wgf_core_priv_init();
@@ -236,6 +338,7 @@ int main(void)
     buttons();
     sticks();
     rumble();
+    mappings();
     wgf_platform_priv_gamepad_close();
     wgf_core_priv_shutdown();
     return failures == 0 ? 0 : 1;

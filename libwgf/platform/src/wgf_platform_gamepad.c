@@ -344,3 +344,26 @@ bool wgf_gamepad_is_rumbling(int pad)
 {
     return wgf_gamepad_can_rumble(pad) && pads.rumbling[pad];
 }
+
+/* A pad's GUID and mapping are the real pad's: a replay plays inputs, not devices. */
+const char *wgf_gamepad_get_guid(int pad)
+{
+    static const unsigned char none[16];
+    static char text[33];
+    int i;
+    if (pad < 0 || pad >= WGF_PLATFORM_PRIV_GAMEPADS || !pads.real[pad].connected ||
+        memcmp(pads.real[pad].guid, none, 16) == 0) {
+        return "";
+    }
+    for (i = 0; i < 16; i++) {
+        text[i * 2] = "0123456789abcdef"[pads.real[pad].guid[i] >> 4];
+        text[i * 2 + 1] = "0123456789abcdef"[pads.real[pad].guid[i] & 15];
+    }
+    text[32] = '\0';
+    return text;
+}
+
+bool wgf_gamepad_is_mapped(int pad)
+{
+    return pad >= 0 && pad < WGF_PLATFORM_PRIV_GAMEPADS && pads.real[pad].connected && pads.real[pad].mapped;
+}

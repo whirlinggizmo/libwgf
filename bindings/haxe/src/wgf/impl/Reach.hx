@@ -592,16 +592,19 @@ class Reach {
 		"wgf_fs_task_get_status",
 		"wgf_fs_task_get_text",
 		"wgf_fs_write",
+		"wgf_gamepad_add_mappings",
 		"wgf_gamepad_can_rumble",
 		"wgf_gamepad_get_axis",
 		"wgf_gamepad_get_button_state",
 		"wgf_gamepad_get_deadzone",
+		"wgf_gamepad_get_guid",
 		"wgf_gamepad_get_last_pressed",
 		"wgf_gamepad_get_name",
 		"wgf_gamepad_get_stick",
 		"wgf_gamepad_get_trigger",
 		"wgf_gamepad_is_connected",
 		"wgf_gamepad_is_down",
+		"wgf_gamepad_is_mapped",
 		"wgf_gamepad_is_pressed",
 		"wgf_gamepad_is_released",
 		"wgf_gamepad_is_rumbling",
@@ -1392,7 +1395,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1383) 0];
+	static final counts:Array<Int> = [for (_ in 0...1386) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

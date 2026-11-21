@@ -33,6 +33,7 @@ wgf_layer(platform
     SOURCES
         src/wgf_platform_action.c
         src/wgf_platform_gamepad.c
+        src/wgf_platform_gamepad_mapping.c
         src/wgf_platform_input.c
         src/wgf_platform_sokol_impl.c
         src/wgf_platform_tilt.c

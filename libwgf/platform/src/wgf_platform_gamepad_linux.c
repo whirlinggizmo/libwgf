@@ -21,7 +21,9 @@
  * that, no pad is found. A device is opened for writing where it can be, else for
  * reading alone: rumble (force feedback's FF_RUMBLE, an effect uploaded once and played
  * again with each rumble's motors and length) needs writing, so a pad opened read-only
- * reads as one without motors. Cribbed from wgrender's wgr_gamepad. */
+ * reads as one without motors. A pad whose GUID (SDL's, from its bus, vendor, product, and
+ * version) a mapping has (wgf_gamepad_add_mappings) is read raw, in SDL's order, through it;
+ * the rest by the codes below. Cribbed from wgrender's wgr_gamepad. */
 
 #define RESCAN_SECONDS 2.0
 #define LONG_BITS (sizeof(long) * CHAR_BIT)
@@ -34,7 +36,15 @@ typedef struct device_t {
     bool right_on_z; /* no RX and RY: the right stick is on Z and RZ (generic HID pads) */
     bool rumble;     /* opened for writing, with FF_RUMBLE */
     int effect;      /* the rumble effect's id, once uploaded; -1 before */
-    struct input_absinfo abs[ABS_HAT0Y + 1];
+    struct input_absinfo abs[ABS_MAX + 1];
+    /* read raw, for a mapping: each code's place in SDL's order, -1 for none */
+    signed char key_index[KEY_MAX + 1];
+    signed char abs_index[ABS_MAX + 1];
+    signed char hat_index[ABS_HAT3Y + 1]; /* by its X code */
+    wgf_platform_priv_gamepad_raw_t raw;
+    const wgf_platform_priv_gamepad_mapping_t *mapping; /* NULL: read by the codes */
+    bool looked_up;
+    unsigned generation; /* the mappings' when it was looked up */
 } device_t;
 
 static device_t devices[WGF_PLATFORM_PRIV_GAMEPADS];
@@ -109,6 +119,61 @@ static void apply_abs(const device_t *dev, wgf_platform_priv_gamepad_t *pad, int
     }
 }
 
+/* The raw state's places, SDL's order (its linux joystick's): buttons from BTN_JOYSTICK up,
+ * then those below it; axes from ABS_X up, the hats left out; hats from ABS_HAT0X, a pair each. */
+static void raw_layout(device_t *dev, const unsigned long *key_bits, const unsigned long *abs_bits)
+{
+    wgf_platform_priv_gamepad_raw_t *raw = &dev->raw;
+    int code;
+    memset(dev->key_index, -1, sizeof(dev->key_index));
+    memset(dev->abs_index, -1, sizeof(dev->abs_index));
+    memset(dev->hat_index, -1, sizeof(dev->hat_index));
+    for (code = BTN_JOYSTICK; code < KEY_MAX && raw->button_count < WGF_PLATFORM_PRIV_GAMEPAD_RAW; code++) {
+        if (HAS_BIT(key_bits, code)) dev->key_index[code] = (signed char)raw->button_count++;
+    }
+    for (code = 0; code < BTN_JOYSTICK && raw->button_count < WGF_PLATFORM_PRIV_GAMEPAD_RAW; code++) {
+        if (HAS_BIT(key_bits, code)) dev->key_index[code] = (signed char)raw->button_count++;
+    }
+    for (code = 0; code < ABS_MAX && raw->axis_count < WGF_PLATFORM_PRIV_GAMEPAD_RAW; code++) {
+        if (code >= ABS_HAT0X && code <= ABS_HAT3Y) continue;
+        if (HAS_BIT(abs_bits, code)) dev->abs_index[code] = (signed char)raw->axis_count++;
+    }
+    for (code = ABS_HAT0X; code <= ABS_HAT3Y && raw->hat_count < WGF_PLATFORM_PRIV_GAMEPAD_HATS; code += 2) {
+        if (HAS_BIT(abs_bits, code) || HAS_BIT(abs_bits, code + 1)) dev->hat_index[code] = (signed char)raw->hat_count++;
+    }
+}
+
+/* A key or an axis into the raw state. */
+static void raw_key(device_t *dev, int code, int value)
+{
+    if (code >= 0 && code <= KEY_MAX && dev->key_index[code] >= 0) dev->raw.buttons[(int)dev->key_index[code]] = value != 0;
+}
+
+static void raw_abs(device_t *dev, int code, int value)
+{
+    if (code < 0 || code > ABS_MAX) return;
+    if (code >= ABS_HAT0X && code <= ABS_HAT3Y) {
+        const int x_code = code - ((code - ABS_HAT0X) & 1), hat = dev->hat_index[x_code];
+        int *bits;
+        if (hat < 0) return;
+        bits = &dev->raw.hats[hat];
+        if (code == x_code) *bits = (*bits & ~(2 | 8)) | (value > 0 ? 2 : 0) | (value < 0 ? 8 : 0);
+        else *bits = (*bits & ~(1 | 4)) | (value < 0 ? 1 : 0) | (value > 0 ? 4 : 0);
+    } else if (dev->abs_index[code] >= 0) {
+        dev->raw.axes[(int)dev->abs_index[code]] = abs_value(dev, code, value, false);
+    }
+}
+
+/* Its mapping looked up again where the mappings have changed. */
+static void look_up(device_t *dev, wgf_platform_priv_gamepad_t *pad)
+{
+    if (dev->looked_up && dev->generation == wgf_platform_priv_gamepad_mapping_generation()) return;
+    dev->looked_up = true;
+    dev->generation = wgf_platform_priv_gamepad_mapping_generation();
+    dev->mapping = wgf_platform_priv_gamepad_find_mapping(pad->guid);
+    pad->mapped = dev->mapping != NULL;
+}
+
 static bool is_open(const char *path)
 {
     int i;
@@ -141,6 +206,7 @@ static void try_open(const char *event_name, wgf_platform_priv_gamepad_t pads[WG
     unsigned long keys_down[(KEY_MAX + LONG_BITS) / LONG_BITS] = {0};
     unsigned long ff_bits[(FF_MAX + LONG_BITS) / LONG_BITS] = {0};
     bool writable = true;
+    unsigned char guid_bytes[16] = {0};
     char path[288];
     int slot = -1, fd, i, code;
     device_t *dev;
@@ -163,6 +229,17 @@ static void try_open(const char *event_name, wgf_platform_priv_gamepad_t pads[WG
         return;
     }
     ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(abs_bits)), abs_bits);
+    {
+        struct input_id id;
+        memset(&id, 0, sizeof(id));
+        if (ioctl(fd, EVIOCGID, &id) >= 0 && id.vendor != 0 && id.product != 0) { /* SDL's: bus, 0, vendor, 0, product, 0, version, 0 */
+            const unsigned short words[8] = {id.bustype, 0, id.vendor, 0, id.product, 0, id.version, 0};
+            for (i = 0; i < 8; i++) {
+                guid_bytes[i * 2] = (unsigned char)(words[i] & 0xFF);
+                guid_bytes[i * 2 + 1] = (unsigned char)(words[i] >> 8);
+            }
+        }
+    }
 
     dev = &devices[slot];
     pad = &pads[slot];
@@ -175,20 +252,27 @@ static void try_open(const char *event_name, wgf_platform_priv_gamepad_t pads[WG
     dev->rumble = writable && ioctl(fd, EVIOCGBIT(EV_FF, sizeof(ff_bits)), ff_bits) >= 0 && HAS_BIT(ff_bits, FF_RUMBLE);
     dev->effect = -1;
     pad->rumble = dev->rumble;
+    memcpy(pad->guid, guid_bytes, sizeof(pad->guid));
+    raw_layout(dev, key_bits, abs_bits);
     if (ioctl(fd, EVIOCGNAME(sizeof(pad->name)), pad->name) < 0) snprintf(pad->name, sizeof(pad->name), "gamepad");
     pad->name[WGF_PLATFORM_PRIV_GAMEPAD_NAME_SIZE - 1] = '\0';
-    for (code = 0; code <= ABS_HAT0Y; code++) {
+    for (code = 0; code <= ABS_MAX; code++) {
         if (HAS_BIT(abs_bits, code) && ioctl(fd, EVIOCGABS(code), &dev->abs[code]) == 0) {
-            apply_abs(dev, pad, code, dev->abs[code].value);
+            if (code <= ABS_HAT0Y) apply_abs(dev, pad, code, dev->abs[code].value);
+            raw_abs(dev, code, dev->abs[code].value);
         }
     }
     if (ioctl(fd, EVIOCGKEY(sizeof(keys_down)), keys_down) >= 0) {
-        for (code = BTN_MISC; code <= BTN_DPAD_RIGHT; code++) {
-            const int button = button_of(dev, code);
-            if (button >= 0 && HAS_BIT(keys_down, code)) pad->buttons[button] = true;
+        for (code = 0; code < KEY_MAX; code++) {
+            const int button = code >= BTN_MISC && code <= BTN_DPAD_RIGHT ? button_of(dev, code) : -1;
+            if (!HAS_BIT(keys_down, code)) continue;
+            if (button >= 0) pad->buttons[button] = true;
+            raw_key(dev, code, 1);
         }
     }
     pad->connected = true;
+    look_up(dev, pad);
+    if (dev->mapping != NULL) wgf_platform_priv_gamepad_apply_mapping(dev->mapping, &dev->raw, pad);
 }
 
 static void rescan(wgf_platform_priv_gamepad_t pads[WGF_PLATFORM_PRIV_GAMEPADS])
@@ -249,12 +333,17 @@ void wgf_platform_priv_gamepad_platform_poll(wgf_platform_priv_gamepad_t pads[WG
                 if (event->type == EV_KEY) {
                     const int button = button_of(dev, event->code);
                     if (button >= 0) pads[slot].buttons[button] = event->value != 0;
-                } else if (event->type == EV_ABS && event->code <= ABS_HAT0Y) {
-                    apply_abs(dev, &pads[slot], event->code, event->value);
+                    raw_key(dev, event->code, event->value);
+                } else if (event->type == EV_ABS) {
+                    if (event->code <= ABS_HAT0Y) apply_abs(dev, &pads[slot], event->code, event->value);
+                    raw_abs(dev, event->code, event->value);
                 }
             }
             if (n < (ssize_t)sizeof(events)) break;
         }
+        if (dev->fd < 0) continue; /* unplugged as it was read */
+        look_up(dev, &pads[slot]);
+        if (dev->mapping != NULL) wgf_platform_priv_gamepad_apply_mapping(dev->mapping, &dev->raw, &pads[slot]);
     }
 }
 

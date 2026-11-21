@@ -116,6 +116,24 @@ WGF_API bool wgf_gamepad_is_rumbling(int pad);
  * rumble setting. */
 WGF_API bool wgf_gamepad_can_rumble(int pad);
 
+/* Mappings for pads libwgf doesn't know, as SDL's game controller database writes them
+ * (raylib's SetGamepadMappings): one a line, `GUID,name,a:b0,b:b1,leftx:a0,...,platform:Linux,`,
+ * its buttons, axes (`+a2`, `-a2`, `a2~`), and hats (`h0.4`) in SDL's numbering, its targets'
+ * halves (`+leftx:b3`) too; a line for another platform, a comment (`#`), and a target libwgf
+ * has no place for (misc1, the paddles, the touchpad) are left out, a line that isn't one is
+ * skipped (warned with its number), and a GUID given again replaces its mapping. A pad whose
+ * GUID a mapping has is read through it from the next frame, in place of libwgf's own reading:
+ * so SDL's community database (gamecontrollerdb.txt, read with wgf_fs) maps the pads it knows.
+ * The mappings kept, of this platform's. Applied on Linux, where pads are read raw; Windows'
+ * pads are XInput's, and the web's the browser's standard mapping, already in libwgf's order,
+ * so there a mapping is kept and drives none. */
+WGF_API int wgf_gamepad_add_mappings(const char *text);
+/* Pad `pad`'s GUID as SDL writes it, 32 hex digits, for a line of its own; "" for none, and
+ * where the platform makes none (Windows, the web). */
+WGF_API const char *wgf_gamepad_get_guid(int pad);
+/* Whether a mapping drives pad `pad`. */
+WGF_API bool wgf_gamepad_is_mapped(int pad);
+
 #ifdef __cplusplus
 }
 #endif

@@ -30,7 +30,30 @@ typedef struct wgf_platform_priv_gamepad_t {
     bool buttons[WGF_PLATFORM_PRIV_GAMEPAD_BUTTONS];
     float axes[WGF_PLATFORM_PRIV_GAMEPAD_AXES];
     bool rumble; /* it has motors the platform can reach */
+    unsigned char guid[16]; /* SDL's for it, where the platform makes one; all 0 where not */
+    bool mapped;            /* a mapping (wgf_gamepad_add_mappings) drives it */
 } wgf_platform_priv_gamepad_t;
+
+/* A pad's raw state, in SDL's order for the platform (Linux: the buttons from BTN_JOYSTICK
+ * up then those below it, the axes but the hats from ABS_X up, the hats from ABS_HAT0X), for
+ * a mapping to read; a hat's bits 1 up, 2 right, 4 down, 8 left. */
+enum { WGF_PLATFORM_PRIV_GAMEPAD_RAW = 64, WGF_PLATFORM_PRIV_GAMEPAD_HATS = 4 };
+typedef struct wgf_platform_priv_gamepad_raw_t {
+    bool buttons[WGF_PLATFORM_PRIV_GAMEPAD_RAW];
+    float axes[WGF_PLATFORM_PRIV_GAMEPAD_RAW]; /* -1 to 1 */
+    int hats[WGF_PLATFORM_PRIV_GAMEPAD_HATS];
+    int button_count, axis_count, hat_count;
+} wgf_platform_priv_gamepad_raw_t;
+
+/* Mappings (wgf_platform_gamepad_mapping.c): the one for a pad's GUID, SDL's way (its name
+ * check left out, then a line written without the pad's version), or NULL; a counter that
+ * changes as mappings are added, for a platform to look its pads up again; and a mapping
+ * applied, the pad's buttons and axes set from its raw state. */
+typedef struct wgf_platform_priv_gamepad_mapping_t wgf_platform_priv_gamepad_mapping_t;
+const wgf_platform_priv_gamepad_mapping_t *wgf_platform_priv_gamepad_find_mapping(const unsigned char guid[16]);
+unsigned wgf_platform_priv_gamepad_mapping_generation(void);
+void wgf_platform_priv_gamepad_apply_mapping(const wgf_platform_priv_gamepad_mapping_t *mapping,
+                                             const wgf_platform_priv_gamepad_raw_t *raw, wgf_platform_priv_gamepad_t *pad);
 
 /* The platform's side (wgf_app_gamepad_<platform>.c): start, stop, and update the
  * pads in place, slot by slot -- a pad keeps its slot while connected. Polled on the

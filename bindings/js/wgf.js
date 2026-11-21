@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "2037ae3aba10ead2" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "9ba15398299b4ff9" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -2797,6 +2797,46 @@ export function wgf_gamepad_is_rumbling(pad) {
  */
 export function wgf_gamepad_can_rumble(pad) {
     const value = host["_wgf_gamepad_can_rumble"](pad);
+    return value !== 0;
+}
+
+// wgf: call wgf_gamepad_add_mappings
+/**
+ * Mappings for pads libwgf doesn't know, as SDL's game controller database writes them
+ * (raylib's SetGamepadMappings): one a line, `GUID,name,a:b0,b:b1,leftx:a0,...,platform:Linux,`,
+ * its buttons, axes (`+a2`, `-a2`, `a2~`), and hats (`h0.4`) in SDL's numbering, its targets'
+ * halves (`+leftx:b3`) too; a line for another platform, a comment (`#`), and a target libwgf
+ * has no place for (misc1, the paddles, the touchpad) are left out, a line that isn't one is
+ * skipped (warned with its number), and a GUID given again replaces its mapping. A pad whose
+ * GUID a mapping has is read through it from the next frame, in place of libwgf's own reading:
+ * so SDL's community database (gamecontrollerdb.txt, read with wgf_fs) maps the pads it knows.
+ * The mappings kept, of this platform's. Applied on Linux, where pads are read raw; Windows'
+ * pads are XInput's, and the web's the browser's standard mapping, already in libwgf's order,
+ * so there a mapping is kept and drives none.
+ */
+export function wgf_gamepad_add_mappings(text) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_gamepad_add_mappings"](cstr(text));
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_gamepad_get_guid
+/**
+ * Pad `pad`'s GUID as SDL writes it, 32 hex digits, for a line of its own; "" for none, and
+ * where the platform makes none (Windows, the web).
+ */
+export function wgf_gamepad_get_guid(pad) {
+    const value = host["_wgf_gamepad_get_guid"](pad);
+    return str(value);
+}
+
+// wgf: call wgf_gamepad_is_mapped
+/**
+ * Whether a mapping drives pad `pad`.
+ */
+export function wgf_gamepad_is_mapped(pad) {
+    const value = host["_wgf_gamepad_is_mapped"](pad);
     return value !== 0;
 }
 
