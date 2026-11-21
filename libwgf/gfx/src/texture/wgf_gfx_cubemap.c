@@ -335,8 +335,7 @@ static wgf_core_priv_load_step_t finish_with(const pixels_t *pixels, wgf_handle_
                      pixels->size);
         return WGF_CORE_PRIV_LOAD_FAILED;
     }
-    if (cubemap_ptr->view.id != SG_INVALID_ID) sg_destroy_view(cubemap_ptr->view); /* made again: the old */
-    if (cubemap_ptr->image.id != SG_INVALID_ID) sg_destroy_image(cubemap_ptr->image);
+    wgf_gfx_priv_destroy_later(cubemap_ptr->view, cubemap_ptr->image); /* made again: the old */
     cubemap_ptr->image = image;
     cubemap_ptr->view = view;
     cubemap_ptr->size = pixels->size;
@@ -556,8 +555,7 @@ static void free_cubemap(wgf_handle_t cubemap, void *record)
 {
     cubemap_t *cubemap_ptr = (cubemap_t *)record;
     (void)cubemap;
-    if (cubemap_ptr->view.id != SG_INVALID_ID) sg_destroy_view(cubemap_ptr->view);
-    if (cubemap_ptr->image.id != SG_INVALID_ID) sg_destroy_image(cubemap_ptr->image);
+    wgf_gfx_priv_destroy_later(cubemap_ptr->view, cubemap_ptr->image);
     free_faces(cubemap_ptr);
 }
 

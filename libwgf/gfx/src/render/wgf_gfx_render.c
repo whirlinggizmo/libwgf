@@ -487,6 +487,7 @@ void wgf_gfx_priv_end_frame(void)
     sg_end_pass();
     if (effects != NULL) effects(WGF_GFX_PRIV_RENDER_EFFECTS_END, &pass);
     sg_commit();
+    wgf_gfx_priv_texture_frame_drawn(); /* what the frame let go of, now it is drawn */
     stats.last_draws = stats.draws; /* the frame's stats kept, counted again from 0 */
     stats.last_triangles = stats.triangles;
     stats.draws = 0;

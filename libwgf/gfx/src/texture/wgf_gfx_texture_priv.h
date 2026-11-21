@@ -85,6 +85,12 @@ wgf_texture_t wgf_gfx_priv_texture_get_placeholder(void);
 void wgf_gfx_priv_texture_setup(void);
 void wgf_gfx_priv_texture_shutdown(void);
 
+/* A view and its image let go of (either may be invalid): destroyed at once outside a frame,
+ * and inside one once the frame is drawn (wgf_gfx_priv_texture_frame_drawn, after its
+ * commit), as the frame's immediate draws and its stages' layers may still sample them. */
+void wgf_gfx_priv_destroy_later(sg_view view, sg_image image);
+void wgf_gfx_priv_texture_frame_drawn(void);
+
 /* The GPU's context given back (wgf_gfx_priv_render_update_context): every texture's own
  * sent again, as wgf_render.h says (a file's read again, a blank texture's last write, a
  * target's or blank texture's objects made while lost). */

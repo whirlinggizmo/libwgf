@@ -227,8 +227,7 @@ static void *prepare(const char *path)
  * only now the new one is made. */
 static void loaded(wgf_handle_t resource, texture_t *texture_ptr, sg_image image, sg_view view, int width, int height)
 {
-    if (texture_ptr->view.id != SG_INVALID_ID) sg_destroy_view(texture_ptr->view);
-    if (texture_ptr->image.id != SG_INVALID_ID) sg_destroy_image(texture_ptr->image);
+    wgf_gfx_priv_destroy_later(texture_ptr->view, texture_ptr->image);
     texture_ptr->image = image;
     texture_ptr->view = view;
     texture_ptr->width = width;
@@ -520,8 +519,7 @@ wgf_texture_t wgf_gfx_priv_texture_create_ktx(const wgf_gfx_priv_ktx_t *ktx, con
  * given back): the old image and view go once the new are made. */
 static bool refill(texture_t *texture_ptr, sg_image image, sg_view view, int width, int height)
 {
-    if (texture_ptr->view.id != SG_INVALID_ID) sg_destroy_view(texture_ptr->view);
-    if (texture_ptr->image.id != SG_INVALID_ID) sg_destroy_image(texture_ptr->image);
+    wgf_gfx_priv_destroy_later(texture_ptr->view, texture_ptr->image);
     texture_ptr->image = image;
     texture_ptr->view = view;
     texture_ptr->width = width;
@@ -589,8 +587,7 @@ static void free_texture(wgf_handle_t texture, void *record)
 {
     texture_t *texture_ptr = (texture_t *)record;
     (void)texture;
-    if (texture_ptr->view.id != SG_INVALID_ID) sg_destroy_view(texture_ptr->view);
-    if (texture_ptr->image.id != SG_INVALID_ID) sg_destroy_image(texture_ptr->image);
+    wgf_gfx_priv_destroy_later(texture_ptr->view, texture_ptr->image);
     if (free_target != NULL) free_target(texture_ptr);
     free(texture_ptr->kept);
     texture_ptr->kept = NULL;
@@ -611,11 +608,56 @@ wgf_texture_t wgf_texture_create(const char *path)
     return ensure_pool() ? wgf_asset_priv_resource_create(WGF_CORE_PRIV_HANDLE_KIND_TEXTURE, path) : 0;
 }
 
+/* What a frame let go of, destroyed once it is drawn. */
+static struct {
+    sg_view *views;
+    sg_image *images;
+    int count, capacity;
+} late;
+
+void wgf_gfx_priv_destroy_later(sg_view view, sg_image image)
+{
+    if (view.id == SG_INVALID_ID && image.id == SG_INVALID_ID) return;
+    if (wgf_gfx_priv_is_in_frame()) {
+        if (late.count == late.capacity) {
+            const int capacity = late.capacity > 0 ? late.capacity * 2 : 16;
+            sg_view *views = realloc(late.views, sizeof(sg_view) * (size_t)capacity);
+            sg_image *images = views != NULL ? realloc(late.images, sizeof(sg_image) * (size_t)capacity) : NULL;
+            if (views != NULL) late.views = views;
+            if (images != NULL) {
+                late.images = images;
+                late.capacity = capacity;
+            }
+        }
+        if (late.count < late.capacity) {
+            late.views[late.count] = view;
+            late.images[late.count] = image;
+            late.count++;
+            return;
+        }
+        wgf_log_error("wgf_gfx_texture: no memory to keep a texture until its frame is drawn: freed now");
+    }
+    if (view.id != SG_INVALID_ID) sg_destroy_view(view);
+    if (image.id != SG_INVALID_ID) sg_destroy_image(image);
+}
+
+void wgf_gfx_priv_texture_frame_drawn(void)
+{
+    int i;
+    for (i = 0; i < late.count; i++) {
+        if (late.views[i].id != SG_INVALID_ID) sg_destroy_view(late.views[i]);
+        if (late.images[i].id != SG_INVALID_ID) sg_destroy_image(late.images[i]);
+    }
+    late.count = 0;
+}
+
 static void free_target_objects(texture_t *texture_ptr)
 {
     int i; /* invalid ids are ignored: a texture that isn't a target has none */
-    for (i = 0; i < 3; i++) sg_destroy_view(texture_ptr->attachments[i]);
-    for (i = 0; i < 2; i++) sg_destroy_image(texture_ptr->images[i]);
+    const sg_image none = {SG_INVALID_ID};
+    const sg_view nothing = {SG_INVALID_ID};
+    for (i = 0; i < 3; i++) wgf_gfx_priv_destroy_later(texture_ptr->attachments[i], none);
+    for (i = 0; i < 2; i++) wgf_gfx_priv_destroy_later(nothing, texture_ptr->images[i]);
 }
 
 /* A target's GPU objects, libwgt's: the screen's pixel format, samples, and a depth buffer,
@@ -975,6 +1017,10 @@ void wgf_gfx_priv_texture_setup(void)
 void wgf_gfx_priv_texture_shutdown(void)
 {
     int u, v, f, m;
+    wgf_gfx_priv_texture_frame_drawn(); /* outside a frame now: what one let go of goes */
+    free(late.views);
+    free(late.images);
+    memset(&late, 0, sizeof(late));
     placeholder = 0; /* freed with the rest */
     placeholder_view.id = SG_INVALID_ID;
     ktx_supported = -1; /* another GPU, perhaps, at the next start */

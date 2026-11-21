@@ -295,6 +295,20 @@ int main(void)
         expect(wgf_texture_create_blank(0, 4) == 0 && wgf_texture_create_blank(4, 20000) == 0, "a size of 0 or too large");
         wgf_resource_release(blank);
     }
+    { /* released in the frame that draws it: its GPU image kept until the frame is drawn */
+        const wgf_texture_t drawn = wgf_texture_create_blank(4, 4);
+        int i, errors = 0;
+        wgf_log_set_history(32);
+        wgf_log_clear_history();
+        begin_frame();
+        wgf_draw_texture(drawn, 0, 0, 4, 4, WGF_COLOR_WHITE);
+        expect(wgf_resource_release(drawn) && wgf_resource_get_status(drawn) == WGF_RESOURCE_STATUS_NONE,
+               "released while its draw waits in the frame: gone");
+        wgf_gfx_priv_end_frame();
+        for (i = 0; i < wgf_log_get_history_count(); i++) errors += wgf_log_get_history_level(i) >= WGF_LOG_LEVEL_ERROR;
+        expect(errors == 0, "the frame drawn with it, nothing failing (sokol's validation: the view still alive)");
+        wgf_log_set_history(0);
+    }
 
     wgf_resource_release(rock);
     wgf_resource_release(missing);
