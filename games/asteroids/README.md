@@ -7,7 +7,7 @@ Turn with Left and Right (or A and D, a pad's D-pad or left stick), thrust with 
 ```sh
 wgf serve                                  # in a browser, reloading as you save
 wgf autopilot autopilot/playthrough.autopilot  # the playthrough, headless (--web: in a browser)
-wgf export                                 # export/web (held to wgf.json's budget) and export/desktop
+wgf export                                 # export/web and export/desktop
 python3 tools/gen_sounds.py                # its sounds, generated (from libwgf's root)
 ```
 
