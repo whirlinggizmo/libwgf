@@ -121,6 +121,20 @@ static inline wgf_vec2_t wgf_vec2_max(wgf_vec2_t a, wgf_vec2_t b)
     return wgf_vec2_make(a.x > b.x ? a.x : b.x, a.y > b.y ? a.y : b.y);
 }
 
+/* Each part held within lo's and hi's. */
+static inline wgf_vec2_t wgf_vec2_clamp(wgf_vec2_t v, wgf_vec2_t lo, wgf_vec2_t hi)
+{
+    return wgf_vec2_max(wgf_vec2_min(v, hi), lo);
+}
+
+/* Its length held within lo..hi, its direction kept; a zero vector stays zero. */
+static inline wgf_vec2_t wgf_vec2_clamp_length(wgf_vec2_t v, float lo, float hi)
+{
+    const float len = wgf_vec2_length(v);
+    if (len == 0.0f) return v;
+    return len < lo ? wgf_vec2_scale(v, lo / len) : len > hi ? wgf_vec2_scale(v, hi / len) : v;
+}
+
 #ifdef __cplusplus
 }
 #endif

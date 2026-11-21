@@ -215,6 +215,12 @@ int main(void)
                near(wgf_vec2_rotate(wgf_vec2_make(1, 0), pi / 2).y, 1) && near(wgf_vec2_move_toward(wgf_vec2_make(0, 0), wgf_vec2_make(10, 0), 3).x, 3) &&
                near(wgf_vec2_reflect(wgf_vec2_make(1, -1), wgf_vec2_make(0, 1)).y, 1) && wgf_vec2_min(wgf_vec2_make(1, 5), wgf_vec2_make(3, 2)).y == 2,
            "vec2 distance, angle, rotate, move toward, reflect, min");
+    expect(wgf_vec2_clamp(wgf_vec2_make(-4, 9), wgf_vec2_make(0, 0), wgf_vec2_make(5, 5)).x == 0 &&
+               wgf_vec2_clamp(wgf_vec2_make(-4, 9), wgf_vec2_make(0, 0), wgf_vec2_make(5, 5)).y == 5 &&
+               near(wgf_vec2_clamp_length(wgf_vec2_make(30, 40), 0, 10).y, 8) &&
+               near(wgf_vec2_clamp_length(wgf_vec2_make(0.3f, 0.4f), 1, 10).x, 0.6f) &&
+               wgf_vec2_clamp_length(wgf_vec2_make(0, 0), 1, 10).x == 0 && wgf_vec2_clamp_length(wgf_vec2_make(3, 4), 1, 10).x == 3,
+           "vec2 clamp, clamp length (a zero vector stays zero)");
     expect(near(wgf_vec3_distance(wgf_vec3_make(1, 2, 3), wgf_vec3_make(1, 2, 5)), 2) &&
                near(wgf_vec3_angle(wgf_vec3_make(1, 0, 0), wgf_vec3_make(0, 3, 0)), pi / 2) &&
                near3(wgf_vec3_project(wgf_vec3_make(2, 3, 0), wgf_vec3_make(5, 0, 0)), 2, 0, 0) &&
@@ -222,6 +228,11 @@ int main(void)
                near3(wgf_vec3_move_toward(wgf_vec3_make(0, 0, 0), wgf_vec3_make(0, 0, 1), 3), 0, 0, 1) &&
                wgf_vec3_max(wgf_vec3_make(1, 5, 0), wgf_vec3_make(3, 2, 0)).y == 5,
            "vec3 distance, angle, project, reflect, move toward, max");
+    expect(near3(wgf_vec3_clamp(wgf_vec3_make(-4, 9, 2), wgf_vec3_make(0, 0, 0), wgf_vec3_make(5, 5, 5)), 0, 5, 2) &&
+               near3(wgf_vec3_clamp_length(wgf_vec3_make(0, 30, 40), 0, 10), 0, 6, 8) &&
+               near3(wgf_vec3_clamp_length(wgf_vec3_make(0, 0, 0.5f), 2, 10), 0, 0, 2) &&
+               near3(wgf_vec3_clamp_length(wgf_vec3_make(0, 0, 0), 2, 10), 0, 0, 0),
+           "vec3 clamp, clamp length");
     expect(near3(wgf_quat_rotate(wgf_quat_from_to(wgf_vec3_make(1, 0, 0), wgf_vec3_make(0, 2, 0)), wgf_vec3_make(1, 0, 0)), 0, 1, 0) &&
                near3(wgf_quat_rotate(wgf_quat_from_to(wgf_vec3_make(1, 0, 0), wgf_vec3_make(-1, 0, 0)), wgf_vec3_make(1, 0, 0)), -1, 0, 0) &&
                near(wgf_quat_nlerp(wgf_quat_identity(), wgf_quat_identity(), 0.5f).w, 1),

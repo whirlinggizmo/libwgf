@@ -141,6 +141,20 @@ static inline wgf_vec3_t wgf_vec3_max(wgf_vec3_t a, wgf_vec3_t b)
     return wgf_vec3_make(a.x > b.x ? a.x : b.x, a.y > b.y ? a.y : b.y, a.z > b.z ? a.z : b.z);
 }
 
+/* Each part held within lo's and hi's. */
+static inline wgf_vec3_t wgf_vec3_clamp(wgf_vec3_t v, wgf_vec3_t lo, wgf_vec3_t hi)
+{
+    return wgf_vec3_max(wgf_vec3_min(v, hi), lo);
+}
+
+/* Its length held within lo..hi, its direction kept; a zero vector stays zero. */
+static inline wgf_vec3_t wgf_vec3_clamp_length(wgf_vec3_t v, float lo, float hi)
+{
+    const float len = wgf_vec3_length(v);
+    if (len == 0.0f) return v;
+    return len < lo ? wgf_vec3_scale(v, lo / len) : len > hi ? wgf_vec3_scale(v, hi / len) : v;
+}
+
 #ifdef __cplusplus
 }
 #endif
