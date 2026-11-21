@@ -32,6 +32,18 @@
   #logbtn { position: fixed; right: 10px; top: 8px; z-index: 12; background: #0f1115aa; color: #cdd3de;
     border: 1px solid #3a4150; border-radius: 6px; padding: 4px 8px; font: inherit; cursor: pointer; }
   #logbtn.alert { border-color: #ff8080; color: #ff8080; }
+  /* Tap to start, on a page whose body says data-start="tap": one tap before play, over the
+     program loading and running behind it, which starts its sound and grants what waits
+     for a tap (fullscreen asked for at start, wgf_window_request_fullscreen), and lands on
+     this layer, never on the program's own buttons. */
+  #start { position: fixed; inset: 0; z-index: 20; display: none; flex-direction: column; align-items: center;
+    justify-content: center; gap: 14px; background: #101218e6; cursor: pointer; touch-action: none;
+    user-select: none; -webkit-user-select: none; }
+  body[data-start="tap"] #start { display: flex; }
+  #start.gone { display: none !important; }
+  #start h1 { margin: 0; font-size: 34px; font-weight: 600; letter-spacing: 0.04em; }
+  #start p { margin: 0; color: #7b8494; }
+  #start.ready p { color: #cdd3de; }
 </style>
 </head>
 <body>
@@ -39,6 +51,7 @@
   <span id="status">loading…</span>
   <button id="logbtn" type="button">console</button>
   <pre id="log"></pre>
+  <div id="start"><h1 id="starttitle"></h1><p id="starttext">loading…</p></div>
   <script type="module">
     const NAME = "@WGF_PROGRAM@";
     const statusEl = document.getElementById("status");
@@ -82,6 +95,25 @@
       logEl.classList.add("on");
     }
 
+    // ---- tap to start (body data-start="tap") ----------------------------------
+    // Not for an autopilot's run, which no one taps.
+    const startEl = document.getElementById("start");
+    const startText = document.getElementById("starttext");
+    document.getElementById("starttitle").textContent = document.title;
+    const tapToStart = document.body.dataset.start === "tap" && typeof globalThis.wgfAutopilot !== "string";
+    if (!tapToStart) startEl.classList.add("gone");
+    const startReady = () => {
+      if (!tapToStart) return;
+      startText.textContent = matchMedia("(pointer: coarse)").matches ? "Tap to start" : "Click to start";
+      startEl.classList.add("ready");
+    };
+    // the tap's release ends it, so the press under it doesn't reach the program; or a key
+    const start = () => {
+      if (startEl.classList.contains("ready")) startEl.classList.add("gone");
+    };
+    startEl.addEventListener("pointerup", start);
+    addEventListener("keydown", start);
+
     // ---- the host, then the program ------------------------------------------
     // Written in by the build: {"host": "<hash>", "wasm": "<hash>", "binding": "<hash>",
     // "js": "<hash>"}, so
@@ -99,6 +131,7 @@
     })();
     if (missing) {
       statusEl.textContent = "this browser has no " + missing + ", which this program needs";
+      startText.textContent = statusEl.textContent;
       throw new Error("missing " + missing);
     }
 
@@ -125,8 +158,10 @@
       globalThis.wgfJs = wgf;
       statusEl.textContent = "";
       await import(versioned("./" + NAME + ".js", VERSION.js));
+      startReady();
     } catch (err) {
       statusEl.textContent = "failed to start: " + (err && err.message ? err.message : err);
+      startText.textContent = statusEl.textContent;
       console.error("page:", err);
     }
   </script>
