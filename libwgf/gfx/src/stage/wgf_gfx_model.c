@@ -147,9 +147,9 @@ static bool set_path(wgf_actor_t model, const char *path)
 {
     wgf_mesh_t mesh;
     if (file_part == NULL) {
-        wgf_log_warn("wgf_scene: model path=%s: the program has no glTF loading (it links it by calling "
-                     "wgf_mesh_create; a game's export keeps it when a scene names a file)",
-                     path);
+        wgf_log_error("wgf_scene: model path=%s: the program has no glTF loading (a game: \"gltf\" in wgf.json's "
+                      "features; C: call wgf_mesh_create)",
+                      path);
         return false;
     }
     mesh = file_part->create(path);

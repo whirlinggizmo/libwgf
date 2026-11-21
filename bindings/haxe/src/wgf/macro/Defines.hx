@@ -38,11 +38,11 @@ class Defines {
 		},
 		{
 			define: "wgf_gltf",
-			doc: "Links glTF's loading into a native build that never calls it, for a scene's `model path=` lines (the wgf tool sets it when a scene names a file)."
+			doc: "Links glTF's loading into a native build that never calls it, for a scene's `model path=` lines: a game's \"gltf\" feature (wgf.json), which the wgf tool turns into it."
 		},
 		{
 			define: "wgf_emitters",
-			doc: "Links the particles into a native build that never makes one, for a scene's emitter lines (the wgf tool sets it when a scene has one)."
+			doc: "Links the particles into a native build that never makes one, for a scene's emitter lines: a game's \"emitters\" feature (wgf.json), which the wgf tool turns into it."
 		},
 		{
 			define: "wgf_reach",

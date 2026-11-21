@@ -1000,8 +1000,8 @@ static wgf_actor_t make_kind(const wgf_ecs_priv_scene_data_t *data, int thing)
         case WGF_ACTOR_KIND_EMITTER3D: { /* through the particles part's hooks: a program makes emitters to link them */
             const wgf_gfx_priv_emitter_scene_t *hooks = wgf_gfx_priv_get_emitter_scene();
             if (hooks != NULL) return hooks->create(kinds[kind].what == WGF_ACTOR_KIND_EMITTER2D);
-            wgf_log_warn("wgf_scene: an emitter is linked by a program that makes one (wgf_emitter2d_create): a plain "
-                         "actor made in its place");
+            wgf_log_error("wgf_scene: the program has no particles (a game: \"emitters\" in wgf.json's features; C: "
+                          "call wgf_emitter2d_create): a plain actor made in its place");
             return wgf_actor_create();
         }
         case WGF_ACTOR_KIND_MODEL: { /* through a stage's hooks: a program with no stage links no 3D */

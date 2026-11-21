@@ -4,5 +4,6 @@
 	"main": "Main",
 	"source": "src",
 	"assets": "assets",
-	"autopilot": "autopilot"
+	"autopilot": "autopilot",
+	"features": ["emitters"]
 }

@@ -5,6 +5,8 @@ A game's directory:
   wgf.json        its name, title (its page's), main class, where its sources, assets,
                   and autopilot are, its web size budget, gzipped (web_budget_kb), and
                   defines for every build of it (defines: names, or name=value, each a -D),
+                  the optional parts its data needs (features: features.py's, as "gltf"
+                  for a scene's model path=, "emitters" for its emitter lines),
                   and its playthrough (playthrough: the autopilot file, in its autopilot
                   folder, that libwgf's checks fly; playthrough.autopilot by default;
                   its frame times fly autopilot/bench.autopilot when it has one)
@@ -32,6 +34,7 @@ sys.path.insert(0, str(TOOLS))  # an embedded Python (Windows) doesn't add it
 import binding  # noqa: E402
 import browser  # noqa: E402
 import examples  # noqa: E402
+import features  # noqa: E402  (tools/wgf/'s own, beside this file)
 import server  # noqa: E402
 import variants  # noqa: E402
 import webhost  # noqa: E402
@@ -72,6 +75,10 @@ class Game:
         self.budget_kb = data.get('web_budget_kb')
         self.playthrough = self.autopilot / data.get('playthrough', 'playthrough.autopilot')
         self.defines = data.get('defines', [])
+        self.features = data.get('features', [])
+        wrong = features.check(self.features, path)
+        if wrong:
+            raise GameError(wrong)
         if not isinstance(self.defines, list) or not all(isinstance(d, str) and d for d in self.defines):
             raise GameError(f'{path}: "defines" is a list of names (or name=value), each given to Haxe as -D')
 
@@ -171,31 +178,6 @@ def build_web(game, release=False, hot=False, out=None, exports=None):
     return out
 
 
-def scene_lines(assets):
-    """The first words of the lines of every scene among `assets`, with whether a `model`
-    line names a file (path=)."""
-    firsts, file = set(), False
-    for scene in sorted(Path(assets).rglob('*.scene')) if assets and Path(assets).is_dir() else []:
-        for line in scene.read_text(encoding='utf-8', errors='replace').splitlines():
-            words = line.split()
-            if words:
-                firsts.add(words[0])
-                file = file or (words[0] == 'model' and any(w.startswith('path=') for w in words[1:]))
-    return firsts, file
-
-
-def names_a_file(assets):
-    """Whether a scene among `assets` has a model of a glTF file (a `model` line with a
-    path=): the host then keeps glTF's create, which the scene's line loads through."""
-    return scene_lines(assets)[1]
-
-
-def names_an_emitter(assets):
-    """Whether a scene among `assets` has an emitter (an `emitter2d` or `emitter3d` line):
-    the host then keeps an emitter's create, which links the scene's emitter lines."""
-    return bool(scene_lines(assets)[0] & {'emitter2d', 'emitter3d'})
-
-
 def build_native(game, target, release=False, out=None, record=False, autopilot=True):
     """The game built by hxcpp against libwgf's staged variant for `target` (desktop or
     headless), its executable in `out` (build/<target>) with its assets beside it; with
@@ -215,9 +197,7 @@ def build_native(game, target, release=False, out=None, record=False, autopilot=
     defines = ['HXCPP_M64', f'wgf_out={variants.out(variant).as_posix()}',
                f'wgf_binding={binding.BINDING.as_posix()}'] + (['wgf_headless'] if target == 'headless' else [])
     defines += ['wgf_record'] if record else []
-    defines += ['wgf_autopilot'] if autopilot else []
-    defines += ['wgf_gltf'] if names_a_file(game.assets) else []  # a scene's model path= loads through it
-    defines += ['wgf_emitters'] if names_an_emitter(game.assets) else []  # so do a scene's emitter lines
+    defines += features.defines(game.features + (['autopilot'] if autopilot else []))  # wgf.json's, and the build's
     ok, output = haxe(game, ['--cpp', work], defines, [] if release else ['-debug'])
     if not ok:
         raise GameError(f'the build failed:\n{output.strip()}')
