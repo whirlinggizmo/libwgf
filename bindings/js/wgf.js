@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "9ba15398299b4ff9" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "a081c0693fb59f78" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -6852,6 +6852,38 @@ export function wgf_sprite_get_facing(sprite) {
     return value;
 }
 
+// wgf: call wgf_sprite_set_depth_offset
+/**
+ * On a 3D stage, drawn `offset` stage units nearer the camera along its line of sight (0, the
+ * default: where it is), so it stays where it is on the screen and wins the depth test over
+ * what shares its place: a bar's fill over its back, a label over its sprite (a negative one
+ * drawn farther). A bar over a head, facing the camera, is two sprites of one white texture
+ * (wgf_texture_create_from_image of wgf_image_create_color) tinted: its back, and its fill
+ * pivoted at its left edge (wgf_sprite_set_pivot(fill, 0, 0.5), placed at the back's left),
+ * its width the share left, offset 0.01. False for a handle that isn't a sprite, or an offset
+ * that isn't finite.
+ */
+export function wgf_sprite_set_depth_offset(sprite, offset) {
+    const value = host["_wgf_sprite_set_depth_offset"](sprite, offset);
+    return value !== 0;
+}
+
+// wgf: call wgf_sprite_get_depth_offset
+/**
+ * On a 3D stage, drawn `offset` stage units nearer the camera along its line of sight (0, the
+ * default: where it is), so it stays where it is on the screen and wins the depth test over
+ * what shares its place: a bar's fill over its back, a label over its sprite (a negative one
+ * drawn farther). A bar over a head, facing the camera, is two sprites of one white texture
+ * (wgf_texture_create_from_image of wgf_image_create_color) tinted: its back, and its fill
+ * pivoted at its left edge (wgf_sprite_set_pivot(fill, 0, 0.5), placed at the back's left),
+ * its width the share left, offset 0.01. False for a handle that isn't a sprite, or an offset
+ * that isn't finite.
+ */
+export function wgf_sprite_get_depth_offset(sprite) {
+    const value = host["_wgf_sprite_get_depth_offset"](sprite);
+    return value;
+}
+
 // wgf: call wgf_sprite_set_sheet
 /**
  * A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
@@ -7228,6 +7260,28 @@ export function wgf_text_set_facing(text, facing) {
  */
 export function wgf_text_get_facing(text) {
     const value = host["_wgf_text_get_facing"](text);
+    return value;
+}
+
+// wgf: call wgf_text_set_depth_offset
+/**
+ * On a 3D stage, drawn `offset` stage units nearer the camera, as a sprite's
+ * (wgf_sprite_set_depth_offset): text over the sprite it labels, kept in front at a distance.
+ * False for a handle that isn't a text, or an offset that isn't finite.
+ */
+export function wgf_text_set_depth_offset(text, offset) {
+    const value = host["_wgf_text_set_depth_offset"](text, offset);
+    return value !== 0;
+}
+
+// wgf: call wgf_text_get_depth_offset
+/**
+ * On a 3D stage, drawn `offset` stage units nearer the camera, as a sprite's
+ * (wgf_sprite_set_depth_offset): text over the sprite it labels, kept in front at a distance.
+ * False for a handle that isn't a text, or an offset that isn't finite.
+ */
+export function wgf_text_get_depth_offset(text) {
+    const value = host["_wgf_text_get_depth_offset"](text);
     return value;
 }
 

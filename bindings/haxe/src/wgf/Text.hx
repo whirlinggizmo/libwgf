@@ -152,4 +152,20 @@ import wgf.impl.Raw;
 	**/
 	public inline function getFacing():SpriteFacing
 		return Raw.wgf_text_get_facing(this);
+
+	/**
+	    On a 3D stage, drawn `offset` stage units nearer the camera, as a sprite's
+	    (wgf_sprite_set_depth_offset): text over the sprite it labels, kept in front at a distance.
+	    False for a handle that isn't a text, or an offset that isn't finite.
+	**/
+	public inline function setDepthOffset(offset:Float):Bool
+		return Raw.wgf_text_set_depth_offset(this, offset);
+
+	/**
+	    On a 3D stage, drawn `offset` stage units nearer the camera, as a sprite's
+	    (wgf_sprite_set_depth_offset): text over the sprite it labels, kept in front at a distance.
+	    False for a handle that isn't a text, or an offset that isn't finite.
+	**/
+	public inline function getDepthOffset():Float
+		return Raw.wgf_text_get_depth_offset(this);
 }

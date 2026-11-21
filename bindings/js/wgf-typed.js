@@ -2296,6 +2296,10 @@ export const Sprite = Object.freeze({
     setFacing: raw.wgf_sprite_set_facing,
     // wgf: call wgf_sprite_get_facing
     getFacing: raw.wgf_sprite_get_facing,
+    // wgf: call wgf_sprite_set_depth_offset
+    setDepthOffset: raw.wgf_sprite_set_depth_offset,
+    // wgf: call wgf_sprite_get_depth_offset
+    getDepthOffset: raw.wgf_sprite_get_depth_offset,
     // wgf: call wgf_sprite_set_sheet
     setSheet: raw.wgf_sprite_set_sheet,
     // wgf: call wgf_sprite_get_sheet
@@ -2484,6 +2488,10 @@ export const Text = Object.freeze({
     setFacing: raw.wgf_text_set_facing,
     // wgf: call wgf_text_get_facing
     getFacing: raw.wgf_text_get_facing,
+    // wgf: call wgf_text_set_depth_offset
+    setDepthOffset: raw.wgf_text_set_depth_offset,
+    // wgf: call wgf_text_get_depth_offset
+    getDepthOffset: raw.wgf_text_get_depth_offset,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });

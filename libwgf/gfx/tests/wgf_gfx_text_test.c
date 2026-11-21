@@ -230,6 +230,10 @@ int main(void)
                    wgf_text_get_facing(sign) == WGF_SPRITE_FACING_CAMERA_FIXED_Y &&
                    !wgf_text_set_facing(sign, (wgf_sprite_facing_t)4) && !wgf_text_set_facing(camera, WGF_SPRITE_FACING_FREE),
                "a facing: the camera by default, one that isn't refused");
+        expect(wgf_text_get_depth_offset(sign) == 0 && wgf_text_set_depth_offset(sign, 0.05f) &&
+                   wgf_text_get_depth_offset(sign) == 0.05f && !wgf_text_set_depth_offset(sign, NAN) &&
+                   !wgf_text_set_depth_offset(camera, 1) && wgf_text_set_depth_offset(sign, 0),
+               "a depth offset: none by default, one that isn't finite refused");
         begin_frame(320, 240, 1.0f);
         wgf_stage3d_draw(world);
         expect(sgl_num_vertices() == 0, "no string: nothing");

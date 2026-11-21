@@ -82,6 +82,12 @@ WGF_API float wgf_text_get_line_spacing(wgf_actor_t text);
 WGF_API bool wgf_text_set_facing(wgf_actor_t text, wgf_sprite_facing_t facing);
 WGF_API wgf_sprite_facing_t wgf_text_get_facing(wgf_actor_t text);
 
+/* On a 3D stage, drawn `offset` stage units nearer the camera, as a sprite's
+ * (wgf_sprite_set_depth_offset): text over the sprite it labels, kept in front at a distance.
+ * False for a handle that isn't a text, or an offset that isn't finite. */
+WGF_API bool wgf_text_set_depth_offset(wgf_actor_t text, float offset);
+WGF_API float wgf_text_get_depth_offset(wgf_actor_t text);
+
 #ifdef __cplusplus
 }
 #endif

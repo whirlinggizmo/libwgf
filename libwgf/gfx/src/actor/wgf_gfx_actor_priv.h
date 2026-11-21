@@ -31,6 +31,7 @@ typedef struct wgf_gfx_priv_sprite_t {
     float trim[4];
     float nine[4]; /* a nine-slice's borders in texels (left, top, right, bottom); all 0: none */
     float pick_alpha; /* a pick passes through its texels with less alpha (0..1); 0: its whole quad */
+    float depth_offset; /* on a 3D stage: drawn this far nearer the camera, on its line of sight */
 } wgf_gfx_priv_sprite_t;
 
 /* A trimmed sprite's drawing: the region's size `region_w` by `region_h` within the whole
@@ -78,6 +79,7 @@ typedef struct wgf_gfx_priv_text_t {
     wgf_text_valign_t valign;
     int facing; /* on a stage3d: a wgf_sprite_facing_t (CAMERA by default) */
     float letter_spacing, line_spacing; /* logical pixels added */
+    float depth_offset; /* on a stage3d: drawn this far nearer the camera, on its line of sight */
 } wgf_gfx_priv_text_t;
 
 typedef struct wgf_gfx_priv_camera3d_t {

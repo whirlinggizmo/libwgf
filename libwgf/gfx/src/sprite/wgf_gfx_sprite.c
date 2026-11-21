@@ -332,3 +332,17 @@ wgf_sprite_facing_t wgf_sprite_get_facing(wgf_actor_t sprite)
     const wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
     return sprite_ptr != NULL ? (wgf_sprite_facing_t)sprite_ptr->facing : WGF_SPRITE_FACING_CAMERA;
 }
+
+bool wgf_sprite_set_depth_offset(wgf_actor_t sprite, float offset)
+{
+    wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
+    if (sprite_ptr == NULL || !isfinite(offset)) return false;
+    sprite_ptr->depth_offset = offset;
+    return true;
+}
+
+float wgf_sprite_get_depth_offset(wgf_actor_t sprite)
+{
+    const wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
+    return sprite_ptr != NULL ? sprite_ptr->depth_offset : 0.0f;
+}

@@ -506,7 +506,16 @@ typedef struct walk_models_t {
     wgf_vec3_t right, up; /* the camera's: a particle quad's before its spin */
     wgf_gfx_priv_sprite_view_t sprite_view; /* the billboards' axes */
     int sprite_camera;                      /* the batch's camera for this draw; -1 until a sprite */
+    bool orthographic;
 } walk_models_t;
+
+/* How a point drawn `offset` nearer the camera moves: along the line from it to the eye, so it
+ * stays where it is on the screen (an orthographic camera's lines are its forward's). */
+static wgf_vec3_t toward_camera(const walk_models_t *w, wgf_vec3_t at, float offset)
+{
+    const wgf_vec3_t way = w->orthographic ? wgf_vec3_scale(w->forward, -1.0f) : wgf_vec3_normalize(wgf_vec3_sub(w->eye, at));
+    return wgf_vec3_scale(way, offset);
+}
 
 static void visit_shape(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *world, void *user)
 {
@@ -782,6 +791,11 @@ static void visit_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_pt
         return;
     }
     at = wgf_mat4_get_translation(*world);
+    if (actor_ptr->as.sprite.depth_offset != 0.0f) { /* drawn nearer: over what is at its place */
+        const wgf_vec3_t shift = toward_camera(w, at, actor_ptr->as.sprite.depth_offset);
+        at = wgf_vec3_add(at, shift);
+        quad.position[0] += shift.x, quad.position[1] += shift.y, quad.position[2] += shift.z;
+    }
     r = wgf_gfx_priv_sprite_radius(actor_ptr, *world);
     reach = wgf_vec3_make(r, r, r);
     if (w->culling && outside((const float(*)[4])w->planes, wgf_vec3_sub(at, reach), wgf_vec3_add(at, reach))) return;
@@ -932,13 +946,20 @@ static void visit_text(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr,
     const wgf_gfx_priv_actor_kind_t *kind;
     stage_draw_t *draw = &frame.draws[frame.draw_count];
     wgf_mat4_t plane;
-    wgf_vec3_t corners[4], lo, hi;
+    wgf_vec3_t corners[4], lo, hi, at;
     item_t *item;
     int k;
     if (actor_ptr->type != WGF_ACTOR_KIND_TEXT) return;
     kind = wgf_gfx_priv_actor_get_kind(WGF_ACTOR_KIND_TEXT); /* set: there is text */
     if (kind == NULL || kind->place_3d == NULL || !kind->place_3d(actor_ptr, *world, &w->sprite_view, &plane, corners)) {
         return;
+    }
+    at = wgf_mat4_get_translation(*world);
+    if (actor_ptr->as.text.depth_offset != 0.0f) { /* drawn nearer: over the sprite it labels */
+        const wgf_vec3_t shift = toward_camera(w, at, actor_ptr->as.text.depth_offset);
+        at = wgf_vec3_add(at, shift);
+        plane.m[12] += shift.x, plane.m[13] += shift.y, plane.m[14] += shift.z;
+        for (k = 0; k < 4; k++) corners[k] = wgf_vec3_add(corners[k], shift);
     }
     lo = hi = corners[0];
     for (k = 1; k < 4; k++) {
@@ -953,7 +974,7 @@ static void visit_text(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr,
     frame.texts[frame.text_count].plane = plane;
     item->text = frame.text_count++;
     item->blended = true;
-    item->depth = wgf_vec3_dot(wgf_vec3_sub(wgf_mat4_get_translation(*world), w->eye), w->forward);
+    item->depth = wgf_vec3_dot(wgf_vec3_sub(at, w->eye), w->forward);
     item->order = frame.item_count - draw->first;
     item->group = (uint64_t)item->order; /* alone */
     frame.item_count++;
@@ -1026,6 +1047,7 @@ static void draw_through(wgf_actor_t stage, wgf_actor_t camera)
     frustum_planes(&draw->view_proj, w.planes);
     camera_world = wgf_gfx_priv_actor_get_world_matrix(camera);
     w.eye = draw->camera_position;
+    w.orthographic = wgf_gfx_priv_actor_of(camera)->as.camera3d.orthographic;
     w.forward = wgf_vec3_normalize(wgf_mat4_transform_direction(camera_world, wgf_vec3_make(0.0f, 0.0f, -1.0f)));
     w.right = wgf_vec3_normalize(wgf_mat4_transform_direction(camera_world, wgf_vec3_make(1.0f, 0.0f, 0.0f)));
     w.up = wgf_vec3_normalize(wgf_mat4_transform_direction(camera_world, wgf_vec3_make(0.0f, 1.0f, 0.0f)));

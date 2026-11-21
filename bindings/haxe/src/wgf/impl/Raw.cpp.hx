@@ -277,42 +277,42 @@ class Raw {
 	}
 	public static function wgf_trig_sin(radians:Float):Float {
 		#if wgf_reach
-		Reach.hit(1220);
+		Reach.hit(1224);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_trig_sin((float){0})", radians);
 		return value;
 	}
 	public static function wgf_trig_cos(radians:Float):Float {
 		#if wgf_reach
-		Reach.hit(1219);
+		Reach.hit(1223);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_trig_cos((float){0})", radians);
 		return value;
 	}
 	public static function wgf_trig_tan(radians:Float):Float {
 		#if wgf_reach
-		Reach.hit(1221);
+		Reach.hit(1225);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_trig_tan((float){0})", radians);
 		return value;
 	}
 	public static function wgf_trig_atan2(y:Float, x:Float):Float {
 		#if wgf_reach
-		Reach.hit(1218);
+		Reach.hit(1222);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_trig_atan2((float){0}, (float){1})", y, x);
 		return value;
 	}
 	public static function wgf_trig_asin(x:Float):Float {
 		#if wgf_reach
-		Reach.hit(1217);
+		Reach.hit(1221);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_trig_asin((float){0})", x);
 		return value;
 	}
 	public static function wgf_trig_acos(x:Float):Float {
 		#if wgf_reach
-		Reach.hit(1216);
+		Reach.hit(1220);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_trig_acos((float){0})", x);
 		return value;
@@ -340,28 +340,28 @@ class Raw {
 	}
 	public static function wgf_version_get():String {
 		#if wgf_reach
-		Reach.hit(1292);
+		Reach.hit(1296);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_version_get())");
 		return value;
 	}
 	public static function wgf_version_get_major():Int {
 		#if wgf_reach
-		Reach.hit(1293);
+		Reach.hit(1297);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_version_get_major()");
 		return value;
 	}
 	public static function wgf_version_get_minor():Int {
 		#if wgf_reach
-		Reach.hit(1294);
+		Reach.hit(1298);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_version_get_minor()");
 		return value;
 	}
 	public static function wgf_version_get_patch():Int {
 		#if wgf_reach
-		Reach.hit(1295);
+		Reach.hit(1299);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_version_get_patch()");
 		return value;
@@ -767,7 +767,7 @@ class Raw {
 	}
 	public static function wgf_time_get_seconds():Float {
 		#if wgf_reach
-		Reach.hit(1196);
+		Reach.hit(1200);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_time_get_seconds()");
 		return value;
@@ -1256,95 +1256,95 @@ class Raw {
 	}
 	public static function wgf_tilt_request():Bool {
 		#if wgf_reach
-		Reach.hit(1194);
+		Reach.hit(1198);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_tilt_request()");
 		return value;
 	}
 	public static function wgf_tilt_release():Void {
 		#if wgf_reach
-		Reach.hit(1193);
+		Reach.hit(1197);
 		#end
 		untyped __cpp__("::wgf_tilt_release()");
 	}
 	public static function wgf_tilt_get_status():Int {
 		#if wgf_reach
-		Reach.hit(1188);
+		Reach.hit(1192);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilt_get_status()");
 		return value;
 	}
 	public static function wgf_tilt_is_calibrating():Bool {
 		#if wgf_reach
-		Reach.hit(1191);
+		Reach.hit(1195);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_tilt_is_calibrating()");
 		return value;
 	}
 	public static function wgf_tilt_is_ready():Bool {
 		#if wgf_reach
-		Reach.hit(1192);
+		Reach.hit(1196);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_tilt_is_ready()");
 		return value;
 	}
 	public static function wgf_tilt_calibrate():Void {
 		#if wgf_reach
-		Reach.hit(1186);
+		Reach.hit(1190);
 		#end
 		untyped __cpp__("::wgf_tilt_calibrate()");
 	}
 	public static function wgf_tilt_get_x():Float {
 		#if wgf_reach
-		Reach.hit(1189);
+		Reach.hit(1193);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_tilt_get_x()");
 		return value;
 	}
 	public static function wgf_tilt_get_y():Float {
 		#if wgf_reach
-		Reach.hit(1190);
+		Reach.hit(1194);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_tilt_get_y()");
 		return value;
 	}
 	public static function wgf_tilt_set_range(degrees:Float):Void {
 		#if wgf_reach
-		Reach.hit(1195);
+		Reach.hit(1199);
 		#end
 		untyped __cpp__("::wgf_tilt_set_range((float){0})", degrees);
 	}
 	public static function wgf_tilt_get_range():Float {
 		#if wgf_reach
-		Reach.hit(1187);
+		Reach.hit(1191);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_tilt_get_range()");
 		return value;
 	}
 	public static function wgf_touch_get_count():Int {
 		#if wgf_reach
-		Reach.hit(1197);
+		Reach.hit(1201);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_touch_get_count()");
 		return value;
 	}
 	public static function wgf_touch_get_id(index:Int):Int {
 		#if wgf_reach
-		Reach.hit(1203);
+		Reach.hit(1207);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_touch_get_id((int){0})", index);
 		return value;
 	}
 	public static function wgf_touch_get_state(id:Int):Int {
 		#if wgf_reach
-		Reach.hit(1205);
+		Reach.hit(1209);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_touch_get_state((int){0})", id);
 		return value;
 	}
 	public static function wgf_touch_get_position(id:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(1204);
+		Reach.hit(1208);
 		#end
 		final value:CVec2 = untyped __cpp__("::wgf_touch_get_position((int){0})", id);
 		final out = into != null ? into : new wgf.Vec2();
@@ -1354,7 +1354,7 @@ class Raw {
 	}
 	public static function wgf_touch_get_delta(id:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(1198);
+		Reach.hit(1202);
 		#end
 		final value:CVec2 = untyped __cpp__("::wgf_touch_get_delta((int){0})", id);
 		final out = into != null ? into : new wgf.Vec2();
@@ -1364,40 +1364,40 @@ class Raw {
 	}
 	public static function wgf_touch_set_mouse_emulated(emulated:Bool):Void {
 		#if wgf_reach
-		Reach.hit(1215);
+		Reach.hit(1219);
 		#end
 		untyped __cpp__("::wgf_touch_set_mouse_emulated((bool){0})", emulated);
 	}
 	public static function wgf_touch_is_mouse_emulated():Bool {
 		#if wgf_reach
-		Reach.hit(1212);
+		Reach.hit(1216);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_touch_is_mouse_emulated()");
 		return value;
 	}
 	public static function wgf_touch_set_from_mouse(from_mouse:Bool):Void {
 		#if wgf_reach
-		Reach.hit(1214);
+		Reach.hit(1218);
 		#end
 		untyped __cpp__("::wgf_touch_set_from_mouse((bool){0})", from_mouse);
 	}
 	public static function wgf_touch_is_from_mouse():Bool {
 		#if wgf_reach
-		Reach.hit(1209);
+		Reach.hit(1213);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_touch_is_from_mouse()");
 		return value;
 	}
 	public static function wgf_touch_is_gesture():Bool {
 		#if wgf_reach
-		Reach.hit(1210);
+		Reach.hit(1214);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_touch_is_gesture()");
 		return value;
 	}
 	public static function wgf_touch_get_gesture_center(into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(1199);
+		Reach.hit(1203);
 		#end
 		final value:CVec2 = untyped __cpp__("::wgf_touch_get_gesture_center()");
 		final out = into != null ? into : new wgf.Vec2();
@@ -1407,7 +1407,7 @@ class Raw {
 	}
 	public static function wgf_touch_get_gesture_pan(into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(1200);
+		Reach.hit(1204);
 		#end
 		final value:CVec2 = untyped __cpp__("::wgf_touch_get_gesture_pan()");
 		final out = into != null ? into : new wgf.Vec2();
@@ -1417,35 +1417,35 @@ class Raw {
 	}
 	public static function wgf_touch_get_gesture_scale():Float {
 		#if wgf_reach
-		Reach.hit(1202);
+		Reach.hit(1206);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_touch_get_gesture_scale()");
 		return value;
 	}
 	public static function wgf_touch_get_gesture_rotation():Float {
 		#if wgf_reach
-		Reach.hit(1201);
+		Reach.hit(1205);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_touch_get_gesture_rotation()");
 		return value;
 	}
 	public static function wgf_touch_is_tapped():Bool {
 		#if wgf_reach
-		Reach.hit(1213);
+		Reach.hit(1217);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_touch_is_tapped()");
 		return value;
 	}
 	public static function wgf_touch_is_double_tapped():Bool {
 		#if wgf_reach
-		Reach.hit(1208);
+		Reach.hit(1212);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_touch_is_double_tapped()");
 		return value;
 	}
 	public static function wgf_touch_get_tap_position(into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(1207);
+		Reach.hit(1211);
 		#end
 		final value:CVec2 = untyped __cpp__("::wgf_touch_get_tap_position()");
 		final out = into != null ? into : new wgf.Vec2();
@@ -1455,7 +1455,7 @@ class Raw {
 	}
 	public static function wgf_touch_get_swipe(into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(1206);
+		Reach.hit(1210);
 		#end
 		final value:CVec2 = untyped __cpp__("::wgf_touch_get_swipe()");
 		final out = into != null ? into : new wgf.Vec2();
@@ -1465,199 +1465,199 @@ class Raw {
 	}
 	public static function wgf_touch_is_holding():Bool {
 		#if wgf_reach
-		Reach.hit(1211);
+		Reach.hit(1215);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_touch_is_holding()");
 		return value;
 	}
 	public static function wgf_window_set_title(title:String):Void {
 		#if wgf_reach
-		Reach.hit(1376);
+		Reach.hit(1380);
 		#end
 		untyped __cpp__("::wgf_window_set_title(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0))", title);
 	}
 	public static function wgf_window_get_title():String {
 		#if wgf_reach
-		Reach.hit(1348);
+		Reach.hit(1352);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_window_get_title())");
 		return value;
 	}
 	public static function wgf_window_set_size(width:Int, height:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1375);
+		Reach.hit(1379);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_set_size((int){0}, (int){1})", width, height);
 		return value;
 	}
 	public static function wgf_window_get_width():Int {
 		#if wgf_reach
-		Reach.hit(1349);
+		Reach.hit(1353);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_window_get_width()");
 		return value;
 	}
 	public static function wgf_window_get_height():Int {
 		#if wgf_reach
-		Reach.hit(1333);
+		Reach.hit(1337);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_window_get_height()");
 		return value;
 	}
 	public static function wgf_window_request_fullscreen(fullscreen:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(1366);
+		Reach.hit(1370);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_request_fullscreen((bool){0})", fullscreen);
 		return value;
 	}
 	public static function wgf_window_is_fullscreen():Bool {
 		#if wgf_reach
-		Reach.hit(1356);
+		Reach.hit(1360);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_is_fullscreen()");
 		return value;
 	}
 	public static function wgf_window_can_fullscreen():Bool {
 		#if wgf_reach
-		Reach.hit(1331);
+		Reach.hit(1335);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_can_fullscreen()");
 		return value;
 	}
 	public static function wgf_window_set_position(x:Int, y:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1373);
+		Reach.hit(1377);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_set_position((int){0}, (int){1})", x, y);
 		return value;
 	}
 	public static function wgf_window_get_x():Int {
 		#if wgf_reach
-		Reach.hit(1350);
+		Reach.hit(1354);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_window_get_x()");
 		return value;
 	}
 	public static function wgf_window_get_y():Int {
 		#if wgf_reach
-		Reach.hit(1351);
+		Reach.hit(1355);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_window_get_y()");
 		return value;
 	}
 	public static function wgf_window_get_monitor_count():Int {
 		#if wgf_reach
-		Reach.hit(1335);
+		Reach.hit(1339);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_window_get_monitor_count()");
 		return value;
 	}
 	public static function wgf_window_set_monitor(monitor:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1371);
+		Reach.hit(1375);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_set_monitor((int){0})", monitor);
 		return value;
 	}
 	public static function wgf_window_get_monitor():Int {
 		#if wgf_reach
-		Reach.hit(1334);
+		Reach.hit(1338);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_window_get_monitor()");
 		return value;
 	}
 	public static function wgf_window_get_monitor_width(monitor:Int):Int {
 		#if wgf_reach
-		Reach.hit(1338);
+		Reach.hit(1342);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_window_get_monitor_width((int){0})", monitor);
 		return value;
 	}
 	public static function wgf_window_get_monitor_height(monitor:Int):Int {
 		#if wgf_reach
-		Reach.hit(1336);
+		Reach.hit(1340);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_window_get_monitor_height((int){0})", monitor);
 		return value;
 	}
 	public static function wgf_window_get_monitor_x(monitor:Int):Int {
 		#if wgf_reach
-		Reach.hit(1339);
+		Reach.hit(1343);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_window_get_monitor_x((int){0})", monitor);
 		return value;
 	}
 	public static function wgf_window_get_monitor_y(monitor:Int):Int {
 		#if wgf_reach
-		Reach.hit(1340);
+		Reach.hit(1344);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_window_get_monitor_y((int){0})", monitor);
 		return value;
 	}
 	public static function wgf_window_get_monitor_name(monitor:Int):String {
 		#if wgf_reach
-		Reach.hit(1337);
+		Reach.hit(1341);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_window_get_monitor_name((int){0}))", monitor);
 		return value;
 	}
 	public static function wgf_window_set_visible(visible:Bool):Void {
 		#if wgf_reach
-		Reach.hit(1378);
+		Reach.hit(1382);
 		#end
 		untyped __cpp__("::wgf_window_set_visible((bool){0})", visible);
 	}
 	public static function wgf_window_is_visible():Bool {
 		#if wgf_reach
-		Reach.hit(1362);
+		Reach.hit(1366);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_is_visible()");
 		return value;
 	}
 	public static function wgf_window_set_resizable(resizable:Bool):Void {
 		#if wgf_reach
-		Reach.hit(1374);
+		Reach.hit(1378);
 		#end
 		untyped __cpp__("::wgf_window_set_resizable((bool){0})", resizable);
 	}
 	public static function wgf_window_is_resizable():Bool {
 		#if wgf_reach
-		Reach.hit(1359);
+		Reach.hit(1363);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_is_resizable()");
 		return value;
 	}
 	public static function wgf_window_set_decorated(decorated:Bool):Void {
 		#if wgf_reach
-		Reach.hit(1368);
+		Reach.hit(1372);
 		#end
 		untyped __cpp__("::wgf_window_set_decorated((bool){0})", decorated);
 	}
 	public static function wgf_window_is_decorated():Bool {
 		#if wgf_reach
-		Reach.hit(1354);
+		Reach.hit(1358);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_is_decorated()");
 		return value;
 	}
 	public static function wgf_window_is_focused():Bool {
 		#if wgf_reach
-		Reach.hit(1355);
+		Reach.hit(1359);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_is_focused()");
 		return value;
 	}
 	public static function wgf_window_is_resized():Bool {
 		#if wgf_reach
-		Reach.hit(1360);
+		Reach.hit(1364);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_is_resized()");
 		return value;
 	}
 	public static function wgf_window_set_icon(rgba:haxe.io.Bytes, width:Int, height:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1370);
+		Reach.hit(1374);
 		#end
 		final arg0 = rgba == null ? null : rgba.getData();
 		final arg1 = rgba == null ? 0 : rgba.length;
@@ -1666,147 +1666,147 @@ class Raw {
 	}
 	public static function wgf_window_set_transparent(transparent:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(1377);
+		Reach.hit(1381);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_set_transparent((bool){0})", transparent);
 		return value;
 	}
 	public static function wgf_window_is_transparent():Bool {
 		#if wgf_reach
-		Reach.hit(1361);
+		Reach.hit(1365);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_is_transparent()");
 		return value;
 	}
 	public static function wgf_window_set_high_dpi(high_dpi:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(1369);
+		Reach.hit(1373);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_set_high_dpi((bool){0})", high_dpi);
 		return value;
 	}
 	public static function wgf_window_is_high_dpi():Bool {
 		#if wgf_reach
-		Reach.hit(1357);
+		Reach.hit(1361);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_is_high_dpi()");
 		return value;
 	}
 	public static function wgf_window_set_vsync(vsync:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(1379);
+		Reach.hit(1383);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_set_vsync((bool){0})", vsync);
 		return value;
 	}
 	public static function wgf_window_is_vsync():Bool {
 		#if wgf_reach
-		Reach.hit(1363);
+		Reach.hit(1367);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_is_vsync()");
 		return value;
 	}
 	public static function wgf_window_set_msaa(msaa:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(1372);
+		Reach.hit(1376);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_set_msaa((bool){0})", msaa);
 		return value;
 	}
 	public static function wgf_window_is_msaa():Bool {
 		#if wgf_reach
-		Reach.hit(1358);
+		Reach.hit(1362);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_is_msaa()");
 		return value;
 	}
 	public static function wgf_window_open_url(url:String):Bool {
 		#if wgf_reach
-		Reach.hit(1365);
+		Reach.hit(1369);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_open_url(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0))", url);
 		return value;
 	}
 	public static function wgf_window_get_safe_inset_top():Int {
 		#if wgf_reach
-		Reach.hit(1347);
+		Reach.hit(1351);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_window_get_safe_inset_top()");
 		return value;
 	}
 	public static function wgf_window_get_safe_inset_right():Int {
 		#if wgf_reach
-		Reach.hit(1346);
+		Reach.hit(1350);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_window_get_safe_inset_right()");
 		return value;
 	}
 	public static function wgf_window_get_safe_inset_bottom():Int {
 		#if wgf_reach
-		Reach.hit(1344);
+		Reach.hit(1348);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_window_get_safe_inset_bottom()");
 		return value;
 	}
 	public static function wgf_window_get_safe_inset_left():Int {
 		#if wgf_reach
-		Reach.hit(1345);
+		Reach.hit(1349);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_window_get_safe_inset_left()");
 		return value;
 	}
 	public static function wgf_window_request_orientation(orientation:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1367);
+		Reach.hit(1371);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_request_orientation((wgf_window_orientation_t){0})", orientation);
 		return value;
 	}
 	public static function wgf_window_get_orientation_lock():Int {
 		#if wgf_reach
-		Reach.hit(1342);
+		Reach.hit(1346);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_window_get_orientation_lock()");
 		return value;
 	}
 	public static function wgf_window_can_lock_orientation():Bool {
 		#if wgf_reach
-		Reach.hit(1332);
+		Reach.hit(1336);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_can_lock_orientation()");
 		return value;
 	}
 	public static function wgf_window_get_orientation():Int {
 		#if wgf_reach
-		Reach.hit(1341);
+		Reach.hit(1345);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_window_get_orientation()");
 		return value;
 	}
 	public static function wgf_window_has_touch():Bool {
 		#if wgf_reach
-		Reach.hit(1353);
+		Reach.hit(1357);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_has_touch()");
 		return value;
 	}
 	public static function wgf_window_has_fine_pointer():Bool {
 		#if wgf_reach
-		Reach.hit(1352);
+		Reach.hit(1356);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_has_fine_pointer()");
 		return value;
 	}
 	public static function wgf_window_get_os():Int {
 		#if wgf_reach
-		Reach.hit(1343);
+		Reach.hit(1347);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_window_get_os()");
 		return value;
 	}
 	public static function wgf_window_is_web():Bool {
 		#if wgf_reach
-		Reach.hit(1364);
+		Reach.hit(1368);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_window_is_web()");
 		return value;
@@ -2571,28 +2571,28 @@ class Raw {
 	}
 	public static function wgf_texture_create(path:String):Int {
 		#if wgf_reach
-		Reach.hit(1094);
+		Reach.hit(1098);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_texture_create(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0))", path);
 		return value;
 	}
 	public static function wgf_texture_create_target(width:Int, height:Int):Int {
 		#if wgf_reach
-		Reach.hit(1097);
+		Reach.hit(1101);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_texture_create_target((int){0}, (int){1})", width, height);
 		return value;
 	}
 	public static function wgf_texture_create_blank(width:Int, height:Int):Int {
 		#if wgf_reach
-		Reach.hit(1095);
+		Reach.hit(1099);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_texture_create_blank((int){0}, (int){1})", width, height);
 		return value;
 	}
 	public static function wgf_texture_write(texture:Int, data:haxe.io.Bytes):Bool {
 		#if wgf_reach
-		Reach.hit(1112);
+		Reach.hit(1116);
 		#end
 		final arg1 = data == null ? null : data.getData();
 		final arg2 = data == null ? 0 : data.length;
@@ -2601,77 +2601,77 @@ class Raw {
 	}
 	public static function wgf_texture_get_width(texture:Int):Int {
 		#if wgf_reach
-		Reach.hit(1100);
+		Reach.hit(1104);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_texture_get_width((wgf_texture_t){0})", texture);
 		return value;
 	}
 	public static function wgf_texture_get_height(texture:Int):Int {
 		#if wgf_reach
-		Reach.hit(1099);
+		Reach.hit(1103);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_texture_get_height((wgf_texture_t){0})", texture);
 		return value;
 	}
 	public static function wgf_texture_set_sampling(texture:Int, wrap_u:Int, wrap_v:Int, filter:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1111);
+		Reach.hit(1115);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_texture_set_sampling((wgf_texture_t){0}, (wgf_texture_wrap_t){1}, (wgf_texture_wrap_t){2}, (wgf_texture_filter_t){3})", texture, wrap_u, wrap_v, filter);
 		return value;
 	}
 	public static function wgf_texture_get_wrap_u(texture:Int):Int {
 		#if wgf_reach
-		Reach.hit(1101);
+		Reach.hit(1105);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_texture_get_wrap_u((wgf_texture_t){0})", texture);
 		return value;
 	}
 	public static function wgf_texture_get_wrap_v(texture:Int):Int {
 		#if wgf_reach
-		Reach.hit(1102);
+		Reach.hit(1106);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_texture_get_wrap_v((wgf_texture_t){0})", texture);
 		return value;
 	}
 	public static function wgf_texture_get_filter(texture:Int):Int {
 		#if wgf_reach
-		Reach.hit(1098);
+		Reach.hit(1102);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_texture_get_filter((wgf_texture_t){0})", texture);
 		return value;
 	}
 	public static function wgf_texture_read(texture:Int):Int {
 		#if wgf_reach
-		Reach.hit(1103);
+		Reach.hit(1107);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_texture_read((wgf_texture_t){0})", texture);
 		return value;
 	}
 	public static function wgf_texture_read_get_status(read:Int):Int {
 		#if wgf_reach
-		Reach.hit(1108);
+		Reach.hit(1112);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_texture_read_get_status((wgf_texture_read_t){0})", read);
 		return value;
 	}
 	public static function wgf_texture_read_get_width(read:Int):Int {
 		#if wgf_reach
-		Reach.hit(1109);
+		Reach.hit(1113);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_texture_read_get_width((wgf_texture_read_t){0})", read);
 		return value;
 	}
 	public static function wgf_texture_read_get_height(read:Int):Int {
 		#if wgf_reach
-		Reach.hit(1106);
+		Reach.hit(1110);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_texture_read_get_height((wgf_texture_read_t){0})", read);
 		return value;
 	}
 	public static function wgf_texture_read_get_data(read:Int):haxe.io.Bytes {
 		#if wgf_reach
-		Reach.hit(1105);
+		Reach.hit(1109);
 		#end
 		final size:Int = untyped __cpp__("::wgf_texture_read_get_size({0})", read);
 		final bytes = haxe.io.Bytes.alloc(size < 0 ? 0 : size);
@@ -2680,21 +2680,21 @@ class Raw {
 	}
 	public static function wgf_texture_read_get_size(read:Int):Int {
 		#if wgf_reach
-		Reach.hit(1107);
+		Reach.hit(1111);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_texture_read_get_size((wgf_texture_read_t){0})", read);
 		return value;
 	}
 	public static function wgf_texture_read_save(read:Int, path:String):Int {
 		#if wgf_reach
-		Reach.hit(1110);
+		Reach.hit(1114);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_texture_read_save((wgf_texture_read_t){0}, ({1}.raw_ptr() ? {1}.utf8_str() : (const char *)0))", read, path);
 		return value;
 	}
 	public static function wgf_texture_read_destroy(read:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1104);
+		Reach.hit(1108);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_texture_read_destroy((wgf_texture_read_t){0})", read);
 		return value;
@@ -3085,28 +3085,28 @@ class Raw {
 	}
 	public static function wgf_sprite_set_texture(sprite:Int, texture:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1040);
+		Reach.hit(1042);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_sprite_set_texture((wgf_actor_t){0}, (wgf_texture_t){1})", sprite, texture);
 		return value;
 	}
 	public static function wgf_sprite_get_texture(sprite:Int):Int {
 		#if wgf_reach
-		Reach.hit(1025);
+		Reach.hit(1026);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_sprite_get_texture((wgf_actor_t){0})", sprite);
 		return value;
 	}
 	public static function wgf_sprite_set_source(sprite:Int, x:Float, y:Float, width:Float, height:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1039);
+		Reach.hit(1041);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_sprite_set_source((wgf_actor_t){0}, (float){1}, (float){2}, (float){3}, (float){4})", sprite, x, y, width, height);
 		return value;
 	}
 	public static function wgf_sprite_get_source(sprite:Int, into:Null<wgf.Vec4>):wgf.Vec4 {
 		#if wgf_reach
-		Reach.hit(1024);
+		Reach.hit(1025);
 		#end
 		final value:CVec4 = untyped __cpp__("::wgf_sprite_get_source((wgf_actor_t){0})", sprite);
 		final out = into != null ? into : new wgf.Vec4();
@@ -3118,14 +3118,14 @@ class Raw {
 	}
 	public static function wgf_sprite_set_size(sprite:Int, width:Float, height:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1038);
+		Reach.hit(1040);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_sprite_set_size((wgf_actor_t){0}, (float){1}, (float){2})", sprite, width, height);
 		return value;
 	}
 	public static function wgf_sprite_get_size(sprite:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(1023);
+		Reach.hit(1024);
 		#end
 		final value:CVec2 = untyped __cpp__("::wgf_sprite_get_size((wgf_actor_t){0})", sprite);
 		final out = into != null ? into : new wgf.Vec2();
@@ -3135,14 +3135,14 @@ class Raw {
 	}
 	public static function wgf_sprite_set_pivot(sprite:Int, x:Float, y:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1036);
+		Reach.hit(1038);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_sprite_set_pivot((wgf_actor_t){0}, (float){1}, (float){2})", sprite, x, y);
 		return value;
 	}
 	public static function wgf_sprite_get_pivot(sprite:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(1021);
+		Reach.hit(1022);
 		#end
 		final value:CVec2 = untyped __cpp__("::wgf_sprite_get_pivot((wgf_actor_t){0})", sprite);
 		final out = into != null ? into : new wgf.Vec2();
@@ -3152,14 +3152,14 @@ class Raw {
 	}
 	public static function wgf_sprite_set_nine_slice(sprite:Int, left:Float, top:Float, right:Float, bottom:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1034);
+		Reach.hit(1036);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_sprite_set_nine_slice((wgf_actor_t){0}, (float){1}, (float){2}, (float){3}, (float){4})", sprite, left, top, right, bottom);
 		return value;
 	}
 	public static function wgf_sprite_get_nine_slice(sprite:Int, into:Null<wgf.Vec4>):wgf.Vec4 {
 		#if wgf_reach
-		Reach.hit(1019);
+		Reach.hit(1020);
 		#end
 		final value:CVec4 = untyped __cpp__("::wgf_sprite_get_nine_slice((wgf_actor_t){0})", sprite);
 		final out = into != null ? into : new wgf.Vec4();
@@ -3171,21 +3171,21 @@ class Raw {
 	}
 	public static function wgf_sprite_set_tint(sprite:Int, tint:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1041);
+		Reach.hit(1043);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_sprite_set_tint((wgf_actor_t){0}, (wgf_color_t){1})", sprite, tint);
 		return value;
 	}
 	public static function wgf_sprite_get_tint(sprite:Int):Int {
 		#if wgf_reach
-		Reach.hit(1026);
+		Reach.hit(1027);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_sprite_get_tint((wgf_actor_t){0})", sprite);
 		return value;
 	}
 	public static function wgf_sprite_set_alpha_mode(sprite:Int, mode:Int, cutoff:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1030);
+		Reach.hit(1031);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_sprite_set_alpha_mode((wgf_actor_t){0}, (wgf_alpha_mode_t){1}, (float){2})", sprite, mode, cutoff);
 		return value;
@@ -3206,70 +3206,84 @@ class Raw {
 	}
 	public static function wgf_sprite_set_pick_alpha(sprite:Int, threshold:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1035);
+		Reach.hit(1037);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_sprite_set_pick_alpha((wgf_actor_t){0}, (float){1})", sprite, threshold);
 		return value;
 	}
 	public static function wgf_sprite_get_pick_alpha(sprite:Int):Float {
 		#if wgf_reach
-		Reach.hit(1020);
+		Reach.hit(1021);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_sprite_get_pick_alpha((wgf_actor_t){0})", sprite);
 		return value;
 	}
 	public static function wgf_sprite_set_facing(sprite:Int, facing:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1033);
+		Reach.hit(1035);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_sprite_set_facing((wgf_actor_t){0}, (wgf_sprite_facing_t){1})", sprite, facing);
 		return value;
 	}
 	public static function wgf_sprite_get_facing(sprite:Int):Int {
 		#if wgf_reach
-		Reach.hit(1018);
+		Reach.hit(1019);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_sprite_get_facing((wgf_actor_t){0})", sprite);
 		return value;
 	}
+	public static function wgf_sprite_set_depth_offset(sprite:Int, offset:Float):Bool {
+		#if wgf_reach
+		Reach.hit(1034);
+		#end
+		final value:Bool = untyped __cpp__("(bool)::wgf_sprite_set_depth_offset((wgf_actor_t){0}, (float){1})", sprite, offset);
+		return value;
+	}
+	public static function wgf_sprite_get_depth_offset(sprite:Int):Float {
+		#if wgf_reach
+		Reach.hit(1018);
+		#end
+		final value:Float = untyped __cpp__("(double)::wgf_sprite_get_depth_offset((wgf_actor_t){0})", sprite);
+		return value;
+	}
 	public static function wgf_sprite_set_sheet(sprite:Int, sheet:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1037);
+		Reach.hit(1039);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_sprite_set_sheet((wgf_actor_t){0}, (wgf_sheet_t){1})", sprite, sheet);
 		return value;
 	}
 	public static function wgf_sprite_get_sheet(sprite:Int):Int {
 		#if wgf_reach
-		Reach.hit(1022);
+		Reach.hit(1023);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_sprite_get_sheet((wgf_actor_t){0})", sprite);
 		return value;
 	}
 	public static function wgf_sprite_play_clip(sprite:Int, name:String, loop:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(1028);
+		Reach.hit(1029);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_sprite_play_clip((wgf_actor_t){0}, ({1}.raw_ptr() ? {1}.utf8_str() : (const char *)0), (bool){2})", sprite, name, loop);
 		return value;
 	}
 	public static function wgf_sprite_pause_clip(sprite:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1027);
+		Reach.hit(1028);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_sprite_pause_clip((wgf_actor_t){0})", sprite);
 		return value;
 	}
 	public static function wgf_sprite_resume_clip(sprite:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1029);
+		Reach.hit(1030);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_sprite_resume_clip((wgf_actor_t){0})", sprite);
 		return value;
 	}
 	public static function wgf_sprite_stop_clip(sprite:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1042);
+		Reach.hit(1044);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_sprite_stop_clip((wgf_actor_t){0})", sprite);
 		return value;
@@ -3297,7 +3311,7 @@ class Raw {
 	}
 	public static function wgf_sprite_set_clip_speed(sprite:Int, speed:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1032);
+		Reach.hit(1033);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_sprite_set_clip_speed((wgf_actor_t){0}, (float){1})", sprite, speed);
 		return value;
@@ -3311,7 +3325,7 @@ class Raw {
 	}
 	public static function wgf_sprite_take_clip_events(sprite:Int, out:Array<Int>):Int {
 		#if wgf_reach
-		Reach.hit(1043);
+		Reach.hit(1045);
 		#end
 		final arg2 = out == null ? 0 : out.length;
 		final value:Int = untyped __cpp__("(int)::wgf_sprite_take_clip_events((wgf_actor_t){0}, ({1}.mPtr ? (int *){1}->getBase() : (int *)0), (int){2})", sprite, out, arg2);
@@ -3319,7 +3333,7 @@ class Raw {
 	}
 	public static function wgf_sprite_set_clip_facing(sprite:Int, facing:String):Bool {
 		#if wgf_reach
-		Reach.hit(1031);
+		Reach.hit(1032);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_sprite_set_clip_facing((wgf_actor_t){0}, ({1}.raw_ptr() ? {1}.utf8_str() : (const char *)0))", sprite, facing);
 		return value;
@@ -3333,135 +3347,149 @@ class Raw {
 	}
 	public static function wgf_text_create(font:Int):Int {
 		#if wgf_reach
-		Reach.hit(1075);
+		Reach.hit(1077);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_text_create((wgf_font_t){0})", font);
 		return value;
 	}
 	public static function wgf_text_set_font(text:Int, font:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1089);
+		Reach.hit(1093);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_text_set_font((wgf_actor_t){0}, (wgf_font_t){1})", text, font);
 		return value;
 	}
 	public static function wgf_text_get_font(text:Int):Int {
 		#if wgf_reach
-		Reach.hit(1078);
+		Reach.hit(1081);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_text_get_font((wgf_actor_t){0})", text);
 		return value;
 	}
 	public static function wgf_text_set_string(text:Int, string:String):Bool {
 		#if wgf_reach
-		Reach.hit(1092);
+		Reach.hit(1096);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_text_set_string((wgf_actor_t){0}, ({1}.raw_ptr() ? {1}.utf8_str() : (const char *)0))", text, string);
 		return value;
 	}
 	public static function wgf_text_get_string(text:Int):String {
 		#if wgf_reach
-		Reach.hit(1083);
+		Reach.hit(1086);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_text_get_string((wgf_actor_t){0}))", text);
 		return value;
 	}
 	public static function wgf_text_set_font_size(text:Int, size:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1090);
+		Reach.hit(1094);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_text_set_font_size((wgf_actor_t){0}, (float){1})", text, size);
 		return value;
 	}
 	public static function wgf_text_get_font_size(text:Int):Float {
 		#if wgf_reach
-		Reach.hit(1079);
+		Reach.hit(1082);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_text_get_font_size((wgf_actor_t){0})", text);
 		return value;
 	}
 	public static function wgf_text_set_color(text:Int, color:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1087);
+		Reach.hit(1090);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_text_set_color((wgf_actor_t){0}, (wgf_color_t){1})", text, color);
 		return value;
 	}
 	public static function wgf_text_get_color(text:Int):Int {
 		#if wgf_reach
-		Reach.hit(1076);
+		Reach.hit(1078);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_text_get_color((wgf_actor_t){0})", text);
 		return value;
 	}
 	public static function wgf_text_set_wrap_width(text:Int, width:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1093);
+		Reach.hit(1097);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_text_set_wrap_width((wgf_actor_t){0}, (float){1})", text, width);
 		return value;
 	}
 	public static function wgf_text_get_wrap_width(text:Int):Float {
 		#if wgf_reach
-		Reach.hit(1085);
+		Reach.hit(1088);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_text_get_wrap_width((wgf_actor_t){0})", text);
 		return value;
 	}
 	public static function wgf_text_set_align(text:Int, horizontal:Int, vertical:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1086);
+		Reach.hit(1089);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_text_set_align((wgf_actor_t){0}, (wgf_text_halign_t){1}, (wgf_text_valign_t){2})", text, horizontal, vertical);
 		return value;
 	}
 	public static function wgf_text_get_halign(text:Int):Int {
 		#if wgf_reach
-		Reach.hit(1080);
+		Reach.hit(1083);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_text_get_halign((wgf_actor_t){0})", text);
 		return value;
 	}
 	public static function wgf_text_get_valign(text:Int):Int {
 		#if wgf_reach
-		Reach.hit(1084);
+		Reach.hit(1087);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_text_get_valign((wgf_actor_t){0})", text);
 		return value;
 	}
 	public static function wgf_text_set_spacing(text:Int, letter:Float, line:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1091);
+		Reach.hit(1095);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_text_set_spacing((wgf_actor_t){0}, (float){1}, (float){2})", text, letter, line);
 		return value;
 	}
 	public static function wgf_text_get_letter_spacing(text:Int):Float {
 		#if wgf_reach
-		Reach.hit(1081);
+		Reach.hit(1084);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_text_get_letter_spacing((wgf_actor_t){0})", text);
 		return value;
 	}
 	public static function wgf_text_get_line_spacing(text:Int):Float {
 		#if wgf_reach
-		Reach.hit(1082);
+		Reach.hit(1085);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_text_get_line_spacing((wgf_actor_t){0})", text);
 		return value;
 	}
 	public static function wgf_text_set_facing(text:Int, facing:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1088);
+		Reach.hit(1092);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_text_set_facing((wgf_actor_t){0}, (wgf_sprite_facing_t){1})", text, facing);
 		return value;
 	}
 	public static function wgf_text_get_facing(text:Int):Int {
 		#if wgf_reach
-		Reach.hit(1077);
+		Reach.hit(1080);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_text_get_facing((wgf_actor_t){0})", text);
+		return value;
+	}
+	public static function wgf_text_set_depth_offset(text:Int, offset:Float):Bool {
+		#if wgf_reach
+		Reach.hit(1091);
+		#end
+		final value:Bool = untyped __cpp__("(bool)::wgf_text_set_depth_offset((wgf_actor_t){0}, (float){1})", text, offset);
+		return value;
+	}
+	public static function wgf_text_get_depth_offset(text:Int):Float {
+		#if wgf_reach
+		Reach.hit(1079);
+		#end
+		final value:Float = untyped __cpp__("(double)::wgf_text_get_depth_offset((wgf_actor_t){0})", text);
 		return value;
 	}
 	public static function wgf_draw_rectangle(x:Float, y:Float, width:Float, height:Float, color:Int):Void {
@@ -5335,14 +5363,14 @@ class Raw {
 	}
 	public static function wgf_texture_create_from_image(image:Int):Int {
 		#if wgf_reach
-		Reach.hit(1096);
+		Reach.hit(1100);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_texture_create_from_image((wgf_image_t){0})", image);
 		return value;
 	}
 	public static function wgf_texture_write_image(texture:Int, image:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1113);
+		Reach.hit(1117);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_texture_write_image((wgf_texture_t){0}, (wgf_image_t){1})", texture, image);
 		return value;
@@ -6701,34 +6729,34 @@ class Raw {
 	}
 	public static function wgf_stage2d_create():Int {
 		#if wgf_reach
-		Reach.hit(1044);
+		Reach.hit(1046);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_stage2d_create()");
 		return value;
 	}
 	public static function wgf_stage2d_draw(stage:Int):Void {
 		#if wgf_reach
-		Reach.hit(1045);
+		Reach.hit(1047);
 		#end
 		untyped __cpp__("::wgf_stage2d_draw((wgf_actor_t){0})", stage);
 	}
 	public static function wgf_stage2d_set_camera(stage:Int, camera:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1050);
+		Reach.hit(1052);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_stage2d_set_camera((wgf_actor_t){0}, (wgf_actor_t){1})", stage, camera);
 		return value;
 	}
 	public static function wgf_stage2d_get_camera(stage:Int):Int {
 		#if wgf_reach
-		Reach.hit(1047);
+		Reach.hit(1049);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_stage2d_get_camera((wgf_actor_t){0})", stage);
 		return value;
 	}
 	public static function wgf_stage2d_world_to_screen(stage:Int, x:Float, y:Float, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(1051);
+		Reach.hit(1053);
 		#end
 		final value:CVec2 = untyped __cpp__("::wgf_stage2d_world_to_screen((wgf_actor_t){0}, (float){1}, (float){2})", stage, x, y);
 		final out = into != null ? into : new wgf.Vec2();
@@ -6738,7 +6766,7 @@ class Raw {
 	}
 	public static function wgf_stage2d_screen_to_world(stage:Int, x:Float, y:Float, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(1049);
+		Reach.hit(1051);
 		#end
 		final value:CVec2 = untyped __cpp__("::wgf_stage2d_screen_to_world((wgf_actor_t){0}, (float){1}, (float){2})", stage, x, y);
 		final out = into != null ? into : new wgf.Vec2();
@@ -6748,7 +6776,7 @@ class Raw {
 	}
 	public static function wgf_stage2d_pick(stage:Int, x:Float, y:Float, hit:Array<Float>):Int {
 		#if wgf_reach
-		Reach.hit(1048);
+		Reach.hit(1050);
 		#end
 		final hitFloats = Host.floats(hit, false);
 		final arg4 = hit == null ? 0 : hit.length;
@@ -6758,54 +6786,54 @@ class Raw {
 	}
 	public static function wgf_stage2d_find(stage:Int, name:String):Int {
 		#if wgf_reach
-		Reach.hit(1046);
+		Reach.hit(1048);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_stage2d_find((wgf_actor_t){0}, ({1}.raw_ptr() ? {1}.utf8_str() : (const char *)0))", stage, name);
 		return value;
 	}
 	public static function wgf_stage3d_create():Int {
 		#if wgf_reach
-		Reach.hit(1052);
+		Reach.hit(1054);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_stage3d_create()");
 		return value;
 	}
 	public static function wgf_stage3d_draw(stage:Int):Void {
 		#if wgf_reach
-		Reach.hit(1053);
+		Reach.hit(1055);
 		#end
 		untyped __cpp__("::wgf_stage3d_draw((wgf_actor_t){0})", stage);
 	}
 	public static function wgf_stage3d_draw_with(stage:Int, camera:Int):Void {
 		#if wgf_reach
-		Reach.hit(1054);
+		Reach.hit(1056);
 		#end
 		untyped __cpp__("::wgf_stage3d_draw_with((wgf_actor_t){0}, (wgf_actor_t){1})", stage, camera);
 	}
 	public static function wgf_stage3d_set_camera(stage:Int, camera:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1071);
+		Reach.hit(1073);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_stage3d_set_camera((wgf_actor_t){0}, (wgf_actor_t){1})", stage, camera);
 		return value;
 	}
 	public static function wgf_stage3d_get_camera(stage:Int):Int {
 		#if wgf_reach
-		Reach.hit(1060);
+		Reach.hit(1062);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_stage3d_get_camera((wgf_actor_t){0})", stage);
 		return value;
 	}
 	public static function wgf_stage3d_find(stage:Int, name:String):Int {
 		#if wgf_reach
-		Reach.hit(1055);
+		Reach.hit(1057);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_stage3d_find((wgf_actor_t){0}, ({1}.raw_ptr() ? {1}.utf8_str() : (const char *)0))", stage, name);
 		return value;
 	}
 	public static function wgf_stage3d_pick(stage:Int, x:Float, y:Float, hit:Array<Float>):Int {
 		#if wgf_reach
-		Reach.hit(1067);
+		Reach.hit(1069);
 		#end
 		final hitFloats = Host.floats(hit, false);
 		final arg4 = hit == null ? 0 : hit.length;
@@ -6815,7 +6843,7 @@ class Raw {
 	}
 	public static function wgf_stage3d_pick_ray(stage:Int, ox:Float, oy:Float, oz:Float, dx:Float, dy:Float, dz:Float, hit:Array<Float>):Int {
 		#if wgf_reach
-		Reach.hit(1068);
+		Reach.hit(1070);
 		#end
 		final hitFloats = Host.floats(hit, false);
 		final arg8 = hit == null ? 0 : hit.length;
@@ -6825,196 +6853,196 @@ class Raw {
 	}
 	public static function wgf_stage3d_set_ambient(stage:Int, color:Int, intensity:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1069);
+		Reach.hit(1071);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_stage3d_set_ambient((wgf_actor_t){0}, (wgf_color_t){1}, (float){2})", stage, color, intensity);
 		return value;
 	}
 	public static function wgf_stage3d_get_ambient_color(stage:Int):Int {
 		#if wgf_reach
-		Reach.hit(1056);
+		Reach.hit(1058);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_stage3d_get_ambient_color((wgf_actor_t){0})", stage);
 		return value;
 	}
 	public static function wgf_stage3d_get_ambient_intensity(stage:Int):Float {
 		#if wgf_reach
-		Reach.hit(1057);
+		Reach.hit(1059);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_stage3d_get_ambient_intensity((wgf_actor_t){0})", stage);
 		return value;
 	}
 	public static function wgf_stage3d_set_tonemap(stage:Int, tonemap:Int, exposure:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1074);
+		Reach.hit(1076);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_stage3d_set_tonemap((wgf_actor_t){0}, (wgf_stage3d_tonemap_t){1}, (float){2})", stage, tonemap, exposure);
 		return value;
 	}
 	public static function wgf_stage3d_get_tonemap(stage:Int):Int {
 		#if wgf_reach
-		Reach.hit(1065);
+		Reach.hit(1067);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_stage3d_get_tonemap((wgf_actor_t){0})", stage);
 		return value;
 	}
 	public static function wgf_stage3d_get_exposure(stage:Int):Float {
 		#if wgf_reach
-		Reach.hit(1064);
+		Reach.hit(1066);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_stage3d_get_exposure((wgf_actor_t){0})", stage);
 		return value;
 	}
 	public static function wgf_stage3d_set_environment(stage:Int, environment:Int, intensity:Float, rotation:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1073);
+		Reach.hit(1075);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_stage3d_set_environment((wgf_actor_t){0}, (wgf_environment_t){1}, (float){2}, (float){3})", stage, environment, intensity, rotation);
 		return value;
 	}
 	public static function wgf_stage3d_get_environment(stage:Int):Int {
 		#if wgf_reach
-		Reach.hit(1061);
+		Reach.hit(1063);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_stage3d_get_environment((wgf_actor_t){0})", stage);
 		return value;
 	}
 	public static function wgf_stage3d_get_environment_intensity(stage:Int):Float {
 		#if wgf_reach
-		Reach.hit(1062);
+		Reach.hit(1064);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_stage3d_get_environment_intensity((wgf_actor_t){0})", stage);
 		return value;
 	}
 	public static function wgf_stage3d_get_environment_rotation(stage:Int):Float {
 		#if wgf_reach
-		Reach.hit(1063);
+		Reach.hit(1065);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_stage3d_get_environment_rotation((wgf_actor_t){0})", stage);
 		return value;
 	}
 	public static function wgf_stage3d_set_background(stage:Int, environment:Int, blur:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1070);
+		Reach.hit(1072);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_stage3d_set_background((wgf_actor_t){0}, (wgf_environment_t){1}, (float){2})", stage, environment, blur);
 		return value;
 	}
 	public static function wgf_stage3d_get_background(stage:Int):Int {
 		#if wgf_reach
-		Reach.hit(1058);
+		Reach.hit(1060);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_stage3d_get_background((wgf_actor_t){0})", stage);
 		return value;
 	}
 	public static function wgf_stage3d_get_background_blur(stage:Int):Float {
 		#if wgf_reach
-		Reach.hit(1059);
+		Reach.hit(1061);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_stage3d_get_background_blur((wgf_actor_t){0})", stage);
 		return value;
 	}
 	public static function wgf_stage3d_set_culling(stage:Int, culling:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(1072);
+		Reach.hit(1074);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_stage3d_set_culling((wgf_actor_t){0}, (bool){1})", stage, culling);
 		return value;
 	}
 	public static function wgf_stage3d_is_culling(stage:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1066);
+		Reach.hit(1068);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_stage3d_is_culling((wgf_actor_t){0})", stage);
 		return value;
 	}
 	public static function wgf_tilemap_create(path:String):Int {
 		#if wgf_reach
-		Reach.hit(1114);
+		Reach.hit(1118);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_create(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0))", path);
 		return value;
 	}
 	public static function wgf_tilemap_get_columns(map:Int):Int {
 		#if wgf_reach
-		Reach.hit(1121);
+		Reach.hit(1125);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_columns((wgf_tilemap_t){0})", map);
 		return value;
 	}
 	public static function wgf_tilemap_get_rows(map:Int):Int {
 		#if wgf_reach
-		Reach.hit(1150);
+		Reach.hit(1154);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_rows((wgf_tilemap_t){0})", map);
 		return value;
 	}
 	public static function wgf_tilemap_get_tile_width(map:Int):Int {
 		#if wgf_reach
-		Reach.hit(1165);
+		Reach.hit(1169);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_tile_width((wgf_tilemap_t){0})", map);
 		return value;
 	}
 	public static function wgf_tilemap_get_tile_height(map:Int):Int {
 		#if wgf_reach
-		Reach.hit(1158);
+		Reach.hit(1162);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_tile_height((wgf_tilemap_t){0})", map);
 		return value;
 	}
 	public static function wgf_tilemap_get_background_color(map:Int):Int {
 		#if wgf_reach
-		Reach.hit(1118);
+		Reach.hit(1122);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_background_color((wgf_tilemap_t){0})", map);
 		return value;
 	}
 	public static function wgf_tilemap_get_orientation(map:Int):Int {
 		#if wgf_reach
-		Reach.hit(1139);
+		Reach.hit(1143);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_orientation((wgf_tilemap_t){0})", map);
 		return value;
 	}
 	public static function wgf_tilemap_is_infinite(map:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1172);
+		Reach.hit(1176);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_tilemap_is_infinite((wgf_tilemap_t){0})", map);
 		return value;
 	}
 	public static function wgf_tilemap_get_origin_column(map:Int):Int {
 		#if wgf_reach
-		Reach.hit(1140);
+		Reach.hit(1144);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_origin_column((wgf_tilemap_t){0})", map);
 		return value;
 	}
 	public static function wgf_tilemap_get_origin_row(map:Int):Int {
 		#if wgf_reach
-		Reach.hit(1141);
+		Reach.hit(1145);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_origin_row((wgf_tilemap_t){0})", map);
 		return value;
 	}
 	public static function wgf_tilemap_get_pixel_width(map:Int):Int {
 		#if wgf_reach
-		Reach.hit(1143);
+		Reach.hit(1147);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_pixel_width((wgf_tilemap_t){0})", map);
 		return value;
 	}
 	public static function wgf_tilemap_get_pixel_height(map:Int):Int {
 		#if wgf_reach
-		Reach.hit(1142);
+		Reach.hit(1146);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_pixel_height((wgf_tilemap_t){0})", map);
 		return value;
 	}
 	public static function wgf_tilemap_get_cell_middle(map:Int, column:Int, row:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(1119);
+		Reach.hit(1123);
 		#end
 		final value:CVec2 = untyped __cpp__("::wgf_tilemap_get_cell_middle((wgf_tilemap_t){0}, (int){1}, (int){2})", map, column, row);
 		final out = into != null ? into : new wgf.Vec2();
@@ -7024,126 +7052,126 @@ class Raw {
 	}
 	public static function wgf_tilemap_get_column_at(map:Int, x:Float, y:Float):Int {
 		#if wgf_reach
-		Reach.hit(1120);
+		Reach.hit(1124);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_column_at((wgf_tilemap_t){0}, (float){1}, (float){2})", map, x, y);
 		return value;
 	}
 	public static function wgf_tilemap_get_row_at(map:Int, x:Float, y:Float):Int {
 		#if wgf_reach
-		Reach.hit(1149);
+		Reach.hit(1153);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_row_at((wgf_tilemap_t){0}, (float){1}, (float){2})", map, x, y);
 		return value;
 	}
 	public static function wgf_tilemap_get_layer_count(map:Int):Int {
 		#if wgf_reach
-		Reach.hit(1122);
+		Reach.hit(1126);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_layer_count((wgf_tilemap_t){0})", map);
 		return value;
 	}
 	public static function wgf_tilemap_get_layer_name(map:Int, layer:Int):String {
 		#if wgf_reach
-		Reach.hit(1124);
+		Reach.hit(1128);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_tilemap_get_layer_name((wgf_tilemap_t){0}, (int){1}))", map, layer);
 		return value;
 	}
 	public static function wgf_tilemap_get_layer_kind(map:Int, layer:Int):Int {
 		#if wgf_reach
-		Reach.hit(1123);
+		Reach.hit(1127);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_layer_kind((wgf_tilemap_t){0}, (int){1})", map, layer);
 		return value;
 	}
 	public static function wgf_tilemap_find_layer(map:Int, name:String):Int {
 		#if wgf_reach
-		Reach.hit(1115);
+		Reach.hit(1119);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_find_layer((wgf_tilemap_t){0}, ({1}.raw_ptr() ? {1}.utf8_str() : (const char *)0))", map, name);
 		return value;
 	}
 	public static function wgf_tilemap_get_layer_texture(map:Int, layer:Int):Int {
 		#if wgf_reach
-		Reach.hit(1125);
+		Reach.hit(1129);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_layer_texture((wgf_tilemap_t){0}, (int){1})", map, layer);
 		return value;
 	}
 	public static function wgf_tilemap_get_tileset_count(map:Int):Int {
 		#if wgf_reach
-		Reach.hit(1166);
+		Reach.hit(1170);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_tileset_count((wgf_tilemap_t){0})", map);
 		return value;
 	}
 	public static function wgf_tilemap_get_tileset_name(map:Int, tileset:Int):String {
 		#if wgf_reach
-		Reach.hit(1168);
+		Reach.hit(1172);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_tilemap_get_tileset_name((wgf_tilemap_t){0}, (int){1}))", map, tileset);
 		return value;
 	}
 	public static function wgf_tilemap_get_tileset_first_gid(map:Int, tileset:Int):Int {
 		#if wgf_reach
-		Reach.hit(1167);
+		Reach.hit(1171);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_tileset_first_gid((wgf_tilemap_t){0}, (int){1})", map, tileset);
 		return value;
 	}
 	public static function wgf_tilemap_get_tileset_tile_count(map:Int, tileset:Int):Int {
 		#if wgf_reach
-		Reach.hit(1170);
+		Reach.hit(1174);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_tileset_tile_count((wgf_tilemap_t){0}, (int){1})", map, tileset);
 		return value;
 	}
 	public static function wgf_tilemap_get_tileset_texture(map:Int, tileset:Int):Int {
 		#if wgf_reach
-		Reach.hit(1169);
+		Reach.hit(1173);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_tileset_texture((wgf_tilemap_t){0}, (int){1})", map, tileset);
 		return value;
 	}
 	public static function wgf_tilemap_get_object_count(map:Int, layer:Int):Int {
 		#if wgf_reach
-		Reach.hit(1127);
+		Reach.hit(1131);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_object_count((wgf_tilemap_t){0}, (int){1})", map, layer);
 		return value;
 	}
 	public static function wgf_tilemap_get_object_id(map:Int, layer:Int, object:Int):Int {
 		#if wgf_reach
-		Reach.hit(1128);
+		Reach.hit(1132);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_object_id((wgf_tilemap_t){0}, (int){1}, (int){2})", map, layer, object);
 		return value;
 	}
 	public static function wgf_tilemap_get_object_name(map:Int, layer:Int, object:Int):String {
 		#if wgf_reach
-		Reach.hit(1130);
+		Reach.hit(1134);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_tilemap_get_object_name((wgf_tilemap_t){0}, (int){1}, (int){2}))", map, layer, object);
 		return value;
 	}
 	public static function wgf_tilemap_get_object_class(map:Int, layer:Int, object:Int):String {
 		#if wgf_reach
-		Reach.hit(1126);
+		Reach.hit(1130);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_tilemap_get_object_class((wgf_tilemap_t){0}, (int){1}, (int){2}))", map, layer, object);
 		return value;
 	}
 	public static function wgf_tilemap_get_object_shape(map:Int, layer:Int, object:Int):Int {
 		#if wgf_reach
-		Reach.hit(1135);
+		Reach.hit(1139);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_object_shape((wgf_tilemap_t){0}, (int){1}, (int){2})", map, layer, object);
 		return value;
 	}
 	public static function wgf_tilemap_get_object_position(map:Int, layer:Int, object:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(1133);
+		Reach.hit(1137);
 		#end
 		final value:CVec2 = untyped __cpp__("::wgf_tilemap_get_object_position((wgf_tilemap_t){0}, (int){1}, (int){2})", map, layer, object);
 		final out = into != null ? into : new wgf.Vec2();
@@ -7153,7 +7181,7 @@ class Raw {
 	}
 	public static function wgf_tilemap_get_object_size(map:Int, layer:Int, object:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(1136);
+		Reach.hit(1140);
 		#end
 		final value:CVec2 = untyped __cpp__("::wgf_tilemap_get_object_size((wgf_tilemap_t){0}, (int){1}, (int){2})", map, layer, object);
 		final out = into != null ? into : new wgf.Vec2();
@@ -7163,35 +7191,35 @@ class Raw {
 	}
 	public static function wgf_tilemap_get_object_rotation(map:Int, layer:Int, object:Int):Float {
 		#if wgf_reach
-		Reach.hit(1134);
+		Reach.hit(1138);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_tilemap_get_object_rotation((wgf_tilemap_t){0}, (int){1}, (int){2})", map, layer, object);
 		return value;
 	}
 	public static function wgf_tilemap_is_object_visible(map:Int, layer:Int, object:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1173);
+		Reach.hit(1177);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_tilemap_is_object_visible((wgf_tilemap_t){0}, (int){1}, (int){2})", map, layer, object);
 		return value;
 	}
 	public static function wgf_tilemap_get_object_tile(map:Int, layer:Int, object:Int):Int {
 		#if wgf_reach
-		Reach.hit(1137);
+		Reach.hit(1141);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_object_tile((wgf_tilemap_t){0}, (int){1}, (int){2})", map, layer, object);
 		return value;
 	}
 	public static function wgf_tilemap_get_object_tile_flips(map:Int, layer:Int, object:Int):Int {
 		#if wgf_reach
-		Reach.hit(1138);
+		Reach.hit(1142);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_object_tile_flips((wgf_tilemap_t){0}, (int){1}, (int){2})", map, layer, object);
 		return value;
 	}
 	public static function wgf_tilemap_get_object_middle(map:Int, layer:Int, object:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(1129);
+		Reach.hit(1133);
 		#end
 		final value:CVec2 = untyped __cpp__("::wgf_tilemap_get_object_middle((wgf_tilemap_t){0}, (int){1}, (int){2})", map, layer, object);
 		final out = into != null ? into : new wgf.Vec2();
@@ -7201,7 +7229,7 @@ class Raw {
 	}
 	public static function wgf_tilemap_get_object_points(map:Int, layer:Int, object:Int, out:Array<Float>):Int {
 		#if wgf_reach
-		Reach.hit(1132);
+		Reach.hit(1136);
 		#end
 		final outFloats = Host.floats(out, false);
 		final arg4 = out == null ? 0 : out.length;
@@ -7211,196 +7239,196 @@ class Raw {
 	}
 	public static function wgf_tilemap_get_object_point_count(map:Int, layer:Int, object:Int):Int {
 		#if wgf_reach
-		Reach.hit(1131);
+		Reach.hit(1135);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_object_point_count((wgf_tilemap_t){0}, (int){1}, (int){2})", map, layer, object);
 		return value;
 	}
 	public static function wgf_tilemap_get_property_count(map:Int, layer:Int, object:Int):Int {
 		#if wgf_reach
-		Reach.hit(1145);
+		Reach.hit(1149);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_property_count((wgf_tilemap_t){0}, (int){1}, (int){2})", map, layer, object);
 		return value;
 	}
 	public static function wgf_tilemap_get_property_name(map:Int, layer:Int, object:Int, index:Int):String {
 		#if wgf_reach
-		Reach.hit(1146);
+		Reach.hit(1150);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_tilemap_get_property_name((wgf_tilemap_t){0}, (int){1}, (int){2}, (int){3}))", map, layer, object, index);
 		return value;
 	}
 	public static function wgf_tilemap_get_property_type(map:Int, layer:Int, object:Int, name:String):Int {
 		#if wgf_reach
-		Reach.hit(1148);
+		Reach.hit(1152);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_property_type((wgf_tilemap_t){0}, (int){1}, (int){2}, ({3}.raw_ptr() ? {3}.utf8_str() : (const char *)0))", map, layer, object, name);
 		return value;
 	}
 	public static function wgf_tilemap_get_property(map:Int, layer:Int, object:Int, name:String):String {
 		#if wgf_reach
-		Reach.hit(1144);
+		Reach.hit(1148);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_tilemap_get_property((wgf_tilemap_t){0}, (int){1}, (int){2}, ({3}.raw_ptr() ? {3}.utf8_str() : (const char *)0)))", map, layer, object, name);
 		return value;
 	}
 	public static function wgf_tilemap_get_property_number(map:Int, layer:Int, object:Int, name:String):Float {
 		#if wgf_reach
-		Reach.hit(1147);
+		Reach.hit(1151);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_tilemap_get_property_number((wgf_tilemap_t){0}, (int){1}, (int){2}, ({3}.raw_ptr() ? {3}.utf8_str() : (const char *)0))", map, layer, object, name);
 		return value;
 	}
 	public static function wgf_tilemap_get_tile_class(map:Int, gid:Int):String {
 		#if wgf_reach
-		Reach.hit(1157);
+		Reach.hit(1161);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_tilemap_get_tile_class((wgf_tilemap_t){0}, (int){1}))", map, gid);
 		return value;
 	}
 	public static function wgf_tilemap_get_tile_property_count(map:Int, gid:Int):Int {
 		#if wgf_reach
-		Reach.hit(1160);
+		Reach.hit(1164);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_tile_property_count((wgf_tilemap_t){0}, (int){1})", map, gid);
 		return value;
 	}
 	public static function wgf_tilemap_get_tile_property_name(map:Int, gid:Int, index:Int):String {
 		#if wgf_reach
-		Reach.hit(1161);
+		Reach.hit(1165);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_tilemap_get_tile_property_name((wgf_tilemap_t){0}, (int){1}, (int){2}))", map, gid, index);
 		return value;
 	}
 	public static function wgf_tilemap_get_tile_property_type(map:Int, gid:Int, name:String):Int {
 		#if wgf_reach
-		Reach.hit(1163);
+		Reach.hit(1167);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_tile_property_type((wgf_tilemap_t){0}, (int){1}, ({2}.raw_ptr() ? {2}.utf8_str() : (const char *)0))", map, gid, name);
 		return value;
 	}
 	public static function wgf_tilemap_get_tile_property(map:Int, gid:Int, name:String):String {
 		#if wgf_reach
-		Reach.hit(1159);
+		Reach.hit(1163);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_tilemap_get_tile_property((wgf_tilemap_t){0}, (int){1}, ({2}.raw_ptr() ? {2}.utf8_str() : (const char *)0)))", map, gid, name);
 		return value;
 	}
 	public static function wgf_tilemap_get_tile_property_number(map:Int, gid:Int, name:String):Float {
 		#if wgf_reach
-		Reach.hit(1162);
+		Reach.hit(1166);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_tilemap_get_tile_property_number((wgf_tilemap_t){0}, (int){1}, ({2}.raw_ptr() ? {2}.utf8_str() : (const char *)0))", map, gid, name);
 		return value;
 	}
 	public static function wgf_tilemap_get_terrainset_count(map:Int):Int {
 		#if wgf_reach
-		Reach.hit(1153);
+		Reach.hit(1157);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_terrainset_count((wgf_tilemap_t){0})", map);
 		return value;
 	}
 	public static function wgf_tilemap_get_terrainset_name(map:Int, set:Int):String {
 		#if wgf_reach
-		Reach.hit(1155);
+		Reach.hit(1159);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_tilemap_get_terrainset_name((wgf_tilemap_t){0}, (int){1}))", map, set);
 		return value;
 	}
 	public static function wgf_tilemap_get_terrainset_kind(map:Int, set:Int):Int {
 		#if wgf_reach
-		Reach.hit(1154);
+		Reach.hit(1158);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_terrainset_kind((wgf_tilemap_t){0}, (int){1})", map, set);
 		return value;
 	}
 	public static function wgf_tilemap_get_terrainset_tileset(map:Int, set:Int):Int {
 		#if wgf_reach
-		Reach.hit(1156);
+		Reach.hit(1160);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_terrainset_tileset((wgf_tilemap_t){0}, (int){1})", map, set);
 		return value;
 	}
 	public static function wgf_tilemap_find_terrainset(map:Int, name:String):Int {
 		#if wgf_reach
-		Reach.hit(1117);
+		Reach.hit(1121);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_find_terrainset((wgf_tilemap_t){0}, ({1}.raw_ptr() ? {1}.utf8_str() : (const char *)0))", map, name);
 		return value;
 	}
 	public static function wgf_tilemap_get_terrain_count(map:Int, set:Int):Int {
 		#if wgf_reach
-		Reach.hit(1151);
+		Reach.hit(1155);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_terrain_count((wgf_tilemap_t){0}, (int){1})", map, set);
 		return value;
 	}
 	public static function wgf_tilemap_get_terrain_name(map:Int, set:Int, terrain:Int):String {
 		#if wgf_reach
-		Reach.hit(1152);
+		Reach.hit(1156);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_tilemap_get_terrain_name((wgf_tilemap_t){0}, (int){1}, (int){2}))", map, set, terrain);
 		return value;
 	}
 	public static function wgf_tilemap_find_terrain(map:Int, set:Int, name:String):Int {
 		#if wgf_reach
-		Reach.hit(1116);
+		Reach.hit(1120);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_find_terrain((wgf_tilemap_t){0}, (int){1}, ({2}.raw_ptr() ? {2}.utf8_str() : (const char *)0))", map, set, name);
 		return value;
 	}
 	public static function wgf_tilemap_get_tile_terrain(map:Int, set:Int, gid:Int, place:Int):Int {
 		#if wgf_reach
-		Reach.hit(1164);
+		Reach.hit(1168);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_get_tile_terrain((wgf_tilemap_t){0}, (int){1}, (int){2}, (int){3})", map, set, gid, place);
 		return value;
 	}
 	public static function wgf_tilemap_instantiate(map:Int, parent:Int):Int {
 		#if wgf_reach
-		Reach.hit(1171);
+		Reach.hit(1175);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_instantiate((wgf_tilemap_t){0}, (wgf_actor_t){1})", map, parent);
 		return value;
 	}
 	public static function wgf_tilemap_layer_get_map(layer:Int):Int {
 		#if wgf_reach
-		Reach.hit(1180);
+		Reach.hit(1184);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_layer_get_map((wgf_actor_t){0})", layer);
 		return value;
 	}
 	public static function wgf_tilemap_layer_get_index(layer:Int):Int {
 		#if wgf_reach
-		Reach.hit(1179);
+		Reach.hit(1183);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_layer_get_index((wgf_actor_t){0})", layer);
 		return value;
 	}
 	public static function wgf_tilemap_layer_get_cell(layer:Int, column:Int, row:Int):Int {
 		#if wgf_reach
-		Reach.hit(1174);
+		Reach.hit(1178);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_layer_get_cell((wgf_actor_t){0}, (int){1}, (int){2})", layer, column, row);
 		return value;
 	}
 	public static function wgf_tilemap_layer_get_cell_flips(layer:Int, column:Int, row:Int):Int {
 		#if wgf_reach
-		Reach.hit(1175);
+		Reach.hit(1179);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_layer_get_cell_flips((wgf_actor_t){0}, (int){1}, (int){2})", layer, column, row);
 		return value;
 	}
 	public static function wgf_tilemap_layer_set_cell(layer:Int, column:Int, row:Int, gid:Int, flips:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1184);
+		Reach.hit(1188);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_tilemap_layer_set_cell((wgf_actor_t){0}, (int){1}, (int){2}, (int){3}, (int){4})", layer, column, row, gid, flips);
 		return value;
 	}
 	public static function wgf_tilemap_layer_get_cells(layer:Int, out:Array<Int>):Int {
 		#if wgf_reach
-		Reach.hit(1177);
+		Reach.hit(1181);
 		#end
 		final arg2 = out == null ? 0 : out.length;
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_layer_get_cells((wgf_actor_t){0}, ({1}.mPtr ? (int *){1}->getBase() : (int *)0), (int){2})", layer, out, arg2);
@@ -7408,7 +7436,7 @@ class Raw {
 	}
 	public static function wgf_tilemap_layer_set_cells(layer:Int, cells:Array<Int>):Bool {
 		#if wgf_reach
-		Reach.hit(1185);
+		Reach.hit(1189);
 		#end
 		final arg2 = cells == null ? 0 : cells.length;
 		final value:Bool = untyped __cpp__("(bool)::wgf_tilemap_layer_set_cells((wgf_actor_t){0}, ({1}.mPtr ? (const int *){1}->getBase() : (const int *)0), (int){2})", layer, cells, arg2);
@@ -7416,21 +7444,21 @@ class Raw {
 	}
 	public static function wgf_tilemap_layer_get_column_at(layer:Int, x:Float, y:Float):Int {
 		#if wgf_reach
-		Reach.hit(1178);
+		Reach.hit(1182);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_layer_get_column_at((wgf_actor_t){0}, (float){1}, (float){2})", layer, x, y);
 		return value;
 	}
 	public static function wgf_tilemap_layer_get_row_at(layer:Int, x:Float, y:Float):Int {
 		#if wgf_reach
-		Reach.hit(1182);
+		Reach.hit(1186);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_layer_get_row_at((wgf_actor_t){0}, (float){1}, (float){2})", layer, x, y);
 		return value;
 	}
 	public static function wgf_tilemap_layer_get_cell_middle(layer:Int, column:Int, row:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(1176);
+		Reach.hit(1180);
 		#end
 		final value:CVec2 = untyped __cpp__("::wgf_tilemap_layer_get_cell_middle((wgf_actor_t){0}, (int){1}, (int){2})", layer, column, row);
 		final out = into != null ? into : new wgf.Vec2();
@@ -7440,14 +7468,14 @@ class Raw {
 	}
 	public static function wgf_tilemap_layer_paint_terrain(layer:Int, column:Int, row:Int, set:Int, terrain:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1183);
+		Reach.hit(1187);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_tilemap_layer_paint_terrain((wgf_actor_t){0}, (int){1}, (int){2}, (int){3}, (int){4})", layer, column, row, set, terrain);
 		return value;
 	}
 	public static function wgf_tilemap_layer_get_object_actor(layer:Int, object:Int):Int {
 		#if wgf_reach
-		Reach.hit(1181);
+		Reach.hit(1185);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tilemap_layer_get_object_actor((wgf_actor_t){0}, (int){1})", layer, object);
 		return value;
@@ -7679,160 +7707,160 @@ class Raw {
 	}
 	public static function wgf_voice_create(sound:Int):Int {
 		#if wgf_reach
-		Reach.hit(1296);
+		Reach.hit(1300);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_voice_create((wgf_sound_t){0})", sound);
 		return value;
 	}
 	public static function wgf_voice_destroy(voice:Int):Void {
 		#if wgf_reach
-		Reach.hit(1298);
+		Reach.hit(1302);
 		#end
 		untyped __cpp__("::wgf_voice_destroy((wgf_voice_t){0})", voice);
 	}
 	public static function wgf_voice_set_sound(voice:Int, sound:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1327);
+		Reach.hit(1331);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_voice_set_sound((wgf_voice_t){0}, (wgf_sound_t){1})", voice, sound);
 		return value;
 	}
 	public static function wgf_voice_get_sound(voice:Int):Int {
 		#if wgf_reach
-		Reach.hit(1308);
+		Reach.hit(1312);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_voice_get_sound((wgf_voice_t){0})", voice);
 		return value;
 	}
 	public static function wgf_voice_play(voice:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1315);
+		Reach.hit(1319);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_voice_play((wgf_voice_t){0})", voice);
 		return value;
 	}
 	public static function wgf_voice_pause(voice:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1314);
+		Reach.hit(1318);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_voice_pause((wgf_voice_t){0})", voice);
 		return value;
 	}
 	public static function wgf_voice_resume(voice:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1318);
+		Reach.hit(1322);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_voice_resume((wgf_voice_t){0})", voice);
 		return value;
 	}
 	public static function wgf_voice_stop(voice:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1330);
+		Reach.hit(1334);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_voice_stop((wgf_voice_t){0})", voice);
 		return value;
 	}
 	public static function wgf_voice_get_state(voice:Int):Int {
 		#if wgf_reach
-		Reach.hit(1309);
+		Reach.hit(1313);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_voice_get_state((wgf_voice_t){0})", voice);
 		return value;
 	}
 	public static function wgf_voice_set_loop(voice:Int, loop:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(1320);
+		Reach.hit(1324);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_voice_set_loop((wgf_voice_t){0}, (bool){1})", voice, loop);
 		return value;
 	}
 	public static function wgf_voice_is_loop(voice:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1312);
+		Reach.hit(1316);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_voice_is_loop((wgf_voice_t){0})", voice);
 		return value;
 	}
 	public static function wgf_voice_set_volume(voice:Int, volume:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1329);
+		Reach.hit(1333);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_voice_set_volume((wgf_voice_t){0}, (float){1})", voice, volume);
 		return value;
 	}
 	public static function wgf_voice_get_volume(voice:Int):Float {
 		#if wgf_reach
-		Reach.hit(1311);
+		Reach.hit(1315);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_voice_get_volume((wgf_voice_t){0})", voice);
 		return value;
 	}
 	public static function wgf_voice_set_pitch(voice:Int, pitch:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1322);
+		Reach.hit(1326);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_voice_set_pitch((wgf_voice_t){0}, (float){1})", voice, pitch);
 		return value;
 	}
 	public static function wgf_voice_get_pitch(voice:Int):Float {
 		#if wgf_reach
-		Reach.hit(1301);
+		Reach.hit(1305);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_voice_get_pitch((wgf_voice_t){0})", voice);
 		return value;
 	}
 	public static function wgf_voice_set_pan(voice:Int, pan:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1321);
+		Reach.hit(1325);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_voice_set_pan((wgf_voice_t){0}, (float){1})", voice, pan);
 		return value;
 	}
 	public static function wgf_voice_get_pan(voice:Int):Float {
 		#if wgf_reach
-		Reach.hit(1300);
+		Reach.hit(1304);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_voice_get_pan((wgf_voice_t){0})", voice);
 		return value;
 	}
 	public static function wgf_voice_set_bus(voice:Int, bus:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1319);
+		Reach.hit(1323);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_voice_set_bus((wgf_voice_t){0}, (wgf_bus_t){1})", voice, bus);
 		return value;
 	}
 	public static function wgf_voice_get_bus(voice:Int):Int {
 		#if wgf_reach
-		Reach.hit(1299);
+		Reach.hit(1303);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_voice_get_bus((wgf_voice_t){0})", voice);
 		return value;
 	}
 	public static function wgf_voice_set_spatial(voice:Int, spatial:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(1328);
+		Reach.hit(1332);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_voice_set_spatial((wgf_voice_t){0}, (bool){1})", voice, spatial);
 		return value;
 	}
 	public static function wgf_voice_is_spatial(voice:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1313);
+		Reach.hit(1317);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_voice_is_spatial((wgf_voice_t){0})", voice);
 		return value;
 	}
 	public static function wgf_voice_set_place(voice:Int, x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1323);
+		Reach.hit(1327);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_voice_set_place((wgf_voice_t){0}, (float){1}, (float){2}, (float){3})", voice, x, y, z);
 		return value;
 	}
 	public static function wgf_voice_get_place(voice:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
-		Reach.hit(1302);
+		Reach.hit(1306);
 		#end
 		final value:CVec3 = untyped __cpp__("::wgf_voice_get_place((wgf_voice_t){0})", voice);
 		final out = into != null ? into : new wgf.Vec3();
@@ -7843,14 +7871,14 @@ class Raw {
 	}
 	public static function wgf_voice_set_range(voice:Int, near_distance:Float, far_distance:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1325);
+		Reach.hit(1329);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_voice_set_range((wgf_voice_t){0}, (float){1}, (float){2})", voice, near_distance, far_distance);
 		return value;
 	}
 	public static function wgf_voice_get_range(voice:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(1305);
+		Reach.hit(1309);
 		#end
 		final value:CVec2 = untyped __cpp__("::wgf_voice_get_range((wgf_voice_t){0})", voice);
 		final out = into != null ? into : new wgf.Vec2();
@@ -7860,42 +7888,42 @@ class Raw {
 	}
 	public static function wgf_voice_set_position(voice:Int, seconds:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1324);
+		Reach.hit(1328);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_voice_set_position((wgf_voice_t){0}, (float){1})", voice, seconds);
 		return value;
 	}
 	public static function wgf_voice_get_position(voice:Int):Float {
 		#if wgf_reach
-		Reach.hit(1303);
+		Reach.hit(1307);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_voice_get_position((wgf_voice_t){0})", voice);
 		return value;
 	}
 	public static function wgf_voice_set_segment(voice:Int, name:String):Bool {
 		#if wgf_reach
-		Reach.hit(1326);
+		Reach.hit(1330);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_voice_set_segment((wgf_voice_t){0}, ({1}.raw_ptr() ? {1}.utf8_str() : (const char *)0))", voice, name);
 		return value;
 	}
 	public static function wgf_voice_get_segment(voice:Int):String {
 		#if wgf_reach
-		Reach.hit(1307);
+		Reach.hit(1311);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_voice_get_segment((wgf_voice_t){0}))", voice);
 		return value;
 	}
 	public static function wgf_voice_create_pushed(sample_rate:Int, channels:Int, capacity:Int):Int {
 		#if wgf_reach
-		Reach.hit(1297);
+		Reach.hit(1301);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_voice_create_pushed((int){0}, (int){1}, (int){2})", sample_rate, channels, capacity);
 		return value;
 	}
 	public static function wgf_voice_push(voice:Int, samples:Array<Float>):Int {
 		#if wgf_reach
-		Reach.hit(1316);
+		Reach.hit(1320);
 		#end
 		final samplesFloats = Host.floats(samples, true);
 		final arg2 = samples == null ? 0 : samples.length;
@@ -7904,7 +7932,7 @@ class Raw {
 	}
 	public static function wgf_voice_push_int16(voice:Int, samples:Array<Int>):Int {
 		#if wgf_reach
-		Reach.hit(1317);
+		Reach.hit(1321);
 		#end
 		final arg2 = samples == null ? 0 : samples.length;
 		final value:Int = untyped __cpp__("(int)::wgf_voice_push_int16((wgf_voice_t){0}, ({1}.mPtr ? (const int *){1}->getBase() : (const int *)0), (int){2})", voice, samples, arg2);
@@ -7912,21 +7940,21 @@ class Raw {
 	}
 	public static function wgf_voice_get_room(voice:Int):Int {
 		#if wgf_reach
-		Reach.hit(1306);
+		Reach.hit(1310);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_voice_get_room((wgf_voice_t){0})", voice);
 		return value;
 	}
 	public static function wgf_voice_get_queued(voice:Int):Int {
 		#if wgf_reach
-		Reach.hit(1304);
+		Reach.hit(1308);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_voice_get_queued((wgf_voice_t){0})", voice);
 		return value;
 	}
 	public static function wgf_voice_get_underruns(voice:Int):Int {
 		#if wgf_reach
-		Reach.hit(1310);
+		Reach.hit(1314);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_voice_get_underruns((wgf_voice_t){0})", voice);
 		return value;
@@ -8801,111 +8829,111 @@ class Raw {
 	}
 	public static function wgf_tween_create(from:Float, to:Float, seconds:Float, easing:Int):Int {
 		#if wgf_reach
-		Reach.hit(1222);
+		Reach.hit(1226);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tween_create((float){0}, (float){1}, (float){2}, (wgf_easing_t){3})", from, to, seconds, easing);
 		return value;
 	}
 	public static function wgf_tween_move(actor:Int, x:Float, y:Float, z:Float, seconds:Float, easing:Int):Int {
 		#if wgf_reach
-		Reach.hit(1229);
+		Reach.hit(1233);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tween_move((wgf_actor_t){0}, (float){1}, (float){2}, (float){3}, (float){4}, (wgf_easing_t){5})", actor, x, y, z, seconds, easing);
 		return value;
 	}
 	public static function wgf_tween_turn(actor:Int, x:Float, y:Float, z:Float, seconds:Float, easing:Int):Int {
 		#if wgf_reach
-		Reach.hit(1235);
+		Reach.hit(1239);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tween_turn((wgf_actor_t){0}, (float){1}, (float){2}, (float){3}, (float){4}, (wgf_easing_t){5})", actor, x, y, z, seconds, easing);
 		return value;
 	}
 	public static function wgf_tween_scale(actor:Int, x:Float, y:Float, z:Float, seconds:Float, easing:Int):Int {
 		#if wgf_reach
-		Reach.hit(1230);
+		Reach.hit(1234);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tween_scale((wgf_actor_t){0}, (float){1}, (float){2}, (float){3}, (float){4}, (wgf_easing_t){5})", actor, x, y, z, seconds, easing);
 		return value;
 	}
 	public static function wgf_tween_destroy(tween:Int):Void {
 		#if wgf_reach
-		Reach.hit(1223);
+		Reach.hit(1227);
 		#end
 		untyped __cpp__("::wgf_tween_destroy((wgf_tween_t){0})", tween);
 	}
 	public static function wgf_tween_get_value(tween:Int):Float {
 		#if wgf_reach
-		Reach.hit(1226);
+		Reach.hit(1230);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_tween_get_value((wgf_tween_t){0})", tween);
 		return value;
 	}
 	public static function wgf_tween_set_delay(tween:Int, seconds:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1231);
+		Reach.hit(1235);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_tween_set_delay((wgf_tween_t){0}, (float){1})", tween, seconds);
 		return value;
 	}
 	public static function wgf_tween_get_delay(tween:Int):Float {
 		#if wgf_reach
-		Reach.hit(1224);
+		Reach.hit(1228);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_tween_get_delay((wgf_tween_t){0})", tween);
 		return value;
 	}
 	public static function wgf_tween_set_repeat(tween:Int, count:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1233);
+		Reach.hit(1237);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_tween_set_repeat((wgf_tween_t){0}, (int){1})", tween, count);
 		return value;
 	}
 	public static function wgf_tween_get_repeat(tween:Int):Int {
 		#if wgf_reach
-		Reach.hit(1225);
+		Reach.hit(1229);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_tween_get_repeat((wgf_tween_t){0})", tween);
 		return value;
 	}
 	public static function wgf_tween_set_yoyo(tween:Int, yoyo:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(1234);
+		Reach.hit(1238);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_tween_set_yoyo((wgf_tween_t){0}, (bool){1})", tween, yoyo);
 		return value;
 	}
 	public static function wgf_tween_is_yoyo(tween:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1228);
+		Reach.hit(1232);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_tween_is_yoyo((wgf_tween_t){0})", tween);
 		return value;
 	}
 	public static function wgf_tween_set_paused(tween:Int, paused:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(1232);
+		Reach.hit(1236);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_tween_set_paused((wgf_tween_t){0}, (bool){1})", tween, paused);
 		return value;
 	}
 	public static function wgf_tween_is_paused(tween:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1227);
+		Reach.hit(1231);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_tween_is_paused((wgf_tween_t){0})", tween);
 		return value;
 	}
 	public static function wgf_world_get_event_count():Int {
 		#if wgf_reach
-		Reach.hit(1382);
+		Reach.hit(1386);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_world_get_event_count()");
 		return value;
 	}
 	public static function wgf_world_take_events(out:Array<Int>):Int {
 		#if wgf_reach
-		Reach.hit(1385);
+		Reach.hit(1389);
 		#end
 		final arg1 = out == null ? 0 : out.length;
 		final value:Int = untyped __cpp__("(int)::wgf_world_take_events(({0}.mPtr ? (int *){0}->getBase() : (int *)0), (int){1})", out, arg1);
@@ -8920,27 +8948,27 @@ class Raw {
 	}
 	public static function wgf_world_clear():Void {
 		#if wgf_reach
-		Reach.hit(1380);
+		Reach.hit(1384);
 		#end
 		untyped __cpp__("::wgf_world_clear()");
 	}
 	public static function wgf_world_set_listener(actor:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1384);
+		Reach.hit(1388);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_world_set_listener((wgf_actor_t){0})", actor);
 		return value;
 	}
 	public static function wgf_world_get_listener():Int {
 		#if wgf_reach
-		Reach.hit(1383);
+		Reach.hit(1387);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_world_get_listener()");
 		return value;
 	}
 	public static function wgf_world_dump():String {
 		#if wgf_reach
-		Reach.hit(1381);
+		Reach.hit(1385);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_world_dump())");
 		return value;
@@ -9260,7 +9288,7 @@ class Raw {
 	}
 	public static function wgf_vehicle_set_wheels(actor:Int, wheels:Array<Int>):Bool {
 		#if wgf_reach
-		Reach.hit(1291);
+		Reach.hit(1295);
 		#end
 		final arg2 = wheels == null ? 0 : wheels.length;
 		final value:Bool = untyped __cpp__("(bool)::wgf_vehicle_set_wheels((wgf_actor_t){0}, ({1}.mPtr ? (const wgf_actor_t *){1}->getBase() : (const wgf_actor_t *)0), (int){2})", actor, wheels, arg2);
@@ -9268,63 +9296,63 @@ class Raw {
 	}
 	public static function wgf_vehicle_get_wheel_count(actor:Int):Int {
 		#if wgf_reach
-		Reach.hit(1278);
+		Reach.hit(1282);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_vehicle_get_wheel_count((wgf_actor_t){0})", actor);
 		return value;
 	}
 	public static function wgf_vehicle_get_wheel(actor:Int, index:Int):Int {
 		#if wgf_reach
-		Reach.hit(1277);
+		Reach.hit(1281);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_vehicle_get_wheel((wgf_actor_t){0}, (int){1})", actor, index);
 		return value;
 	}
 	public static function wgf_vehicle_set_wheel_size(actor:Int, radius:Float, width:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1290);
+		Reach.hit(1294);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_vehicle_set_wheel_size((wgf_actor_t){0}, (float){1}, (float){2})", actor, radius, width);
 		return value;
 	}
 	public static function wgf_vehicle_set_suspension(actor:Int, travel:Float, stiffness:Float, damping:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1289);
+		Reach.hit(1293);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_vehicle_set_suspension((wgf_actor_t){0}, (float){1}, (float){2}, (float){3})", actor, travel, stiffness, damping);
 		return value;
 	}
 	public static function wgf_vehicle_set_steering(actor:Int, radians:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1288);
+		Reach.hit(1292);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_vehicle_set_steering((wgf_actor_t){0}, (float){1})", actor, radians);
 		return value;
 	}
 	public static function wgf_vehicle_set_grip(actor:Int, grip:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1286);
+		Reach.hit(1290);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_vehicle_set_grip((wgf_actor_t){0}, (float){1})", actor, grip);
 		return value;
 	}
 	public static function wgf_vehicle_set_anti_roll(actor:Int, stiffness:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1282);
+		Reach.hit(1286);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_vehicle_set_anti_roll((wgf_actor_t){0}, (float){1})", actor, stiffness);
 		return value;
 	}
 	public static function wgf_vehicle_get_anti_roll(actor:Int):Float {
 		#if wgf_reach
-		Reach.hit(1266);
+		Reach.hit(1270);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_vehicle_get_anti_roll((wgf_actor_t){0})", actor);
 		return value;
 	}
 	public static function wgf_vehicle_get_wheel_size(actor:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(1279);
+		Reach.hit(1283);
 		#end
 		final value:CVec2 = untyped __cpp__("::wgf_vehicle_get_wheel_size((wgf_actor_t){0})", actor);
 		final out = into != null ? into : new wgf.Vec2();
@@ -9334,7 +9362,7 @@ class Raw {
 	}
 	public static function wgf_vehicle_get_suspension(actor:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
-		Reach.hit(1276);
+		Reach.hit(1280);
 		#end
 		final value:CVec3 = untyped __cpp__("::wgf_vehicle_get_suspension((wgf_actor_t){0})", actor);
 		final out = into != null ? into : new wgf.Vec3();
@@ -9345,28 +9373,28 @@ class Raw {
 	}
 	public static function wgf_vehicle_get_steering(actor:Int):Float {
 		#if wgf_reach
-		Reach.hit(1275);
+		Reach.hit(1279);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_vehicle_get_steering((wgf_actor_t){0})", actor);
 		return value;
 	}
 	public static function wgf_vehicle_get_grip(actor:Int):Float {
 		#if wgf_reach
-		Reach.hit(1272);
+		Reach.hit(1276);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_vehicle_get_grip((wgf_actor_t){0})", actor);
 		return value;
 	}
 	public static function wgf_vehicle_set_engine(actor:Int, torque:Float, max_rpm:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1284);
+		Reach.hit(1288);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_vehicle_set_engine((wgf_actor_t){0}, (float){1}, (float){2})", actor, torque, max_rpm);
 		return value;
 	}
 	public static function wgf_vehicle_set_gears(actor:Int, ratios:Array<Float>):Bool {
 		#if wgf_reach
-		Reach.hit(1285);
+		Reach.hit(1289);
 		#end
 		final ratiosFloats = Host.floats(ratios, true);
 		final arg2 = ratios == null ? 0 : ratios.length;
@@ -9375,14 +9403,14 @@ class Raw {
 	}
 	public static function wgf_vehicle_set_drive(actor:Int, drive:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1283);
+		Reach.hit(1287);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_vehicle_set_drive((wgf_actor_t){0}, (wgf_vehicle_drive_t){1})", actor, drive);
 		return value;
 	}
 	public static function wgf_vehicle_get_engine(actor:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(1268);
+		Reach.hit(1272);
 		#end
 		final value:CVec2 = untyped __cpp__("::wgf_vehicle_get_engine((wgf_actor_t){0})", actor);
 		final out = into != null ? into : new wgf.Vec2();
@@ -9392,272 +9420,272 @@ class Raw {
 	}
 	public static function wgf_vehicle_get_gear_count(actor:Int):Int {
 		#if wgf_reach
-		Reach.hit(1270);
+		Reach.hit(1274);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_vehicle_get_gear_count((wgf_actor_t){0})", actor);
 		return value;
 	}
 	public static function wgf_vehicle_get_gear_ratio(actor:Int, index:Int):Float {
 		#if wgf_reach
-		Reach.hit(1271);
+		Reach.hit(1275);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_vehicle_get_gear_ratio((wgf_actor_t){0}, (int){1})", actor, index);
 		return value;
 	}
 	public static function wgf_vehicle_get_drive(actor:Int):Int {
 		#if wgf_reach
-		Reach.hit(1267);
+		Reach.hit(1271);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_vehicle_get_drive((wgf_actor_t){0})", actor);
 		return value;
 	}
 	public static function wgf_vehicle_set_input(actor:Int, throttle:Float, brake:Float, steer:Float, hand_brake:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(1287);
+		Reach.hit(1291);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_vehicle_set_input((wgf_actor_t){0}, (float){1}, (float){2}, (float){3}, (bool){4})", actor, throttle, brake, steer, hand_brake);
 		return value;
 	}
 	public static function wgf_vehicle_get_speed(actor:Int):Float {
 		#if wgf_reach
-		Reach.hit(1274);
+		Reach.hit(1278);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_vehicle_get_speed((wgf_actor_t){0})", actor);
 		return value;
 	}
 	public static function wgf_vehicle_get_rpm(actor:Int):Float {
 		#if wgf_reach
-		Reach.hit(1273);
+		Reach.hit(1277);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_vehicle_get_rpm((wgf_actor_t){0})", actor);
 		return value;
 	}
 	public static function wgf_vehicle_get_gear(actor:Int):Int {
 		#if wgf_reach
-		Reach.hit(1269);
+		Reach.hit(1273);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_vehicle_get_gear((wgf_actor_t){0})", actor);
 		return value;
 	}
 	public static function wgf_vehicle_get_wheel_slip(actor:Int, index:Int):Float {
 		#if wgf_reach
-		Reach.hit(1280);
+		Reach.hit(1284);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_vehicle_get_wheel_slip((wgf_actor_t){0}, (int){1})", actor, index);
 		return value;
 	}
 	public static function wgf_vehicle_reset(actor:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1281);
+		Reach.hit(1285);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_vehicle_reset((wgf_actor_t){0})", actor);
 		return value;
 	}
 	public static function wgf_ui_begin():Bool {
 		#if wgf_reach
-		Reach.hit(1236);
+		Reach.hit(1240);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_begin()");
 		return value;
 	}
 	public static function wgf_ui_end():Bool {
 		#if wgf_reach
-		Reach.hit(1241);
+		Reach.hit(1245);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_end()");
 		return value;
 	}
 	public static function wgf_ui_begin_box(id:String, direction:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1237);
+		Reach.hit(1241);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_begin_box(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0), (wgf_ui_direction_t){1})", id, direction);
 		return value;
 	}
 	public static function wgf_ui_end_box():Bool {
 		#if wgf_reach
-		Reach.hit(1242);
+		Reach.hit(1246);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_end_box()");
 		return value;
 	}
 	public static function wgf_ui_begin_panel(id:String):Bool {
 		#if wgf_reach
-		Reach.hit(1238);
+		Reach.hit(1242);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_begin_panel(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0))", id);
 		return value;
 	}
 	public static function wgf_ui_end_panel():Bool {
 		#if wgf_reach
-		Reach.hit(1243);
+		Reach.hit(1247);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_end_panel()");
 		return value;
 	}
 	public static function wgf_ui_set_width(sizing:Int, value:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1264);
+		Reach.hit(1268);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_set_width((wgf_ui_sizing_t){0}, (float){1})", sizing, value);
 		return value;
 	}
 	public static function wgf_ui_set_height(sizing:Int, value:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1259);
+		Reach.hit(1263);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_set_height((wgf_ui_sizing_t){0}, (float){1})", sizing, value);
 		return value;
 	}
 	public static function wgf_ui_set_padding(x:Float, y:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1260);
+		Reach.hit(1264);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_set_padding((float){0}, (float){1})", x, y);
 		return value;
 	}
 	public static function wgf_ui_set_gap(gap:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1258);
+		Reach.hit(1262);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_set_gap((float){0})", gap);
 		return value;
 	}
 	public static function wgf_ui_set_align(x:Int, y:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1253);
+		Reach.hit(1257);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_set_align((wgf_ui_align_t){0}, (wgf_ui_align_t){1})", x, y);
 		return value;
 	}
 	public static function wgf_ui_set_color(color:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1254);
+		Reach.hit(1258);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_set_color((wgf_color_t){0})", color);
 		return value;
 	}
 	public static function wgf_ui_label(text:String, size:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1250);
+		Reach.hit(1254);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_label(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0), (float){1})", text, size);
 		return value;
 	}
 	public static function wgf_ui_spacer(size:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1265);
+		Reach.hit(1269);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_spacer((float){0})", size);
 		return value;
 	}
 	public static function wgf_ui_button(id:String, text:String):Bool {
 		#if wgf_reach
-		Reach.hit(1239);
+		Reach.hit(1243);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_button(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0), ({1}.raw_ptr() ? {1}.utf8_str() : (const char *)0))", id, text);
 		return value;
 	}
 	public static function wgf_ui_progress(value:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1251);
+		Reach.hit(1255);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_progress((float){0})", value);
 		return value;
 	}
 	public static function wgf_ui_set_focus(id:String):Bool {
 		#if wgf_reach
-		Reach.hit(1257);
+		Reach.hit(1261);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_set_focus(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0))", id);
 		return value;
 	}
 	public static function wgf_ui_get_focus():String {
 		#if wgf_reach
-		Reach.hit(1246);
+		Reach.hit(1250);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_ui_get_focus())");
 		return value;
 	}
 	public static function wgf_ui_set_style_color(which:Int, color:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1261);
+		Reach.hit(1265);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_set_style_color((wgf_ui_color_t){0}, (wgf_color_t){1})", which, color);
 		return value;
 	}
 	public static function wgf_ui_get_style_color(which:Int):Int {
 		#if wgf_reach
-		Reach.hit(1247);
+		Reach.hit(1251);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_ui_get_style_color((wgf_ui_color_t){0})", which);
 		return value;
 	}
 	public static function wgf_ui_set_style_value(which:Int, value:Float):Bool {
 		#if wgf_reach
-		Reach.hit(1263);
+		Reach.hit(1267);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_set_style_value((wgf_ui_value_t){0}, (float){1})", which, value);
 		return value;
 	}
 	public static function wgf_ui_get_style_value(which:Int):Float {
 		#if wgf_reach
-		Reach.hit(1249);
+		Reach.hit(1253);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_ui_get_style_value((wgf_ui_value_t){0})", which);
 		return value;
 	}
 	public static function wgf_ui_set_style_font(font:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1262);
+		Reach.hit(1266);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_set_style_font((wgf_font_t){0})", font);
 		return value;
 	}
 	public static function wgf_ui_get_style_font():Int {
 		#if wgf_reach
-		Reach.hit(1248);
+		Reach.hit(1252);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_ui_get_style_font()");
 		return value;
 	}
 	public static function wgf_ui_reset_style():Void {
 		#if wgf_reach
-		Reach.hit(1252);
+		Reach.hit(1256);
 		#end
 		untyped __cpp__("::wgf_ui_reset_style()");
 	}
 	public static function wgf_ui_set_document_font(family:String, font:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1255);
+		Reach.hit(1259);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_set_document_font(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0), (wgf_font_t){1})", family, font);
 		return value;
 	}
 	public static function wgf_ui_get_document_font(family:String):Int {
 		#if wgf_reach
-		Reach.hit(1244);
+		Reach.hit(1248);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_ui_get_document_font(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0))", family);
 		return value;
 	}
 	public static function wgf_ui_set_document_font_face(family:String, weight:Int, italic:Bool, font:Int):Bool {
 		#if wgf_reach
-		Reach.hit(1256);
+		Reach.hit(1260);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_set_document_font_face(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0), (int){1}, (bool){2}, (wgf_font_t){3})", family, weight, italic, font);
 		return value;
 	}
 	public static function wgf_ui_get_document_font_face(family:String, weight:Int, italic:Bool):Int {
 		#if wgf_reach
-		Reach.hit(1245);
+		Reach.hit(1249);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_ui_get_document_font_face(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0), (int){1}, (bool){2})", family, weight, italic);
 		return value;
 	}
 	public static function wgf_ui_draw_documents():Bool {
 		#if wgf_reach
-		Reach.hit(1240);
+		Reach.hit(1244);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_ui_draw_documents()");
 		return value;

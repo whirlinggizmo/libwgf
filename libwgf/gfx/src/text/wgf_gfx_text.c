@@ -223,6 +223,20 @@ wgf_sprite_facing_t wgf_text_get_facing(wgf_actor_t text)
     return actor_ptr != NULL ? (wgf_sprite_facing_t)actor_ptr->as.text.facing : WGF_SPRITE_FACING_CAMERA;
 }
 
+bool wgf_text_set_depth_offset(wgf_actor_t text, float offset)
+{
+    wgf_gfx_priv_actor_t *actor_ptr = text_of(text);
+    if (actor_ptr == NULL || !isfinite(offset)) return false;
+    actor_ptr->as.text.depth_offset = offset;
+    return true;
+}
+
+float wgf_text_get_depth_offset(wgf_actor_t text)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = text_of(text);
+    return actor_ptr != NULL ? actor_ptr->as.text.depth_offset : 0.0f;
+}
+
 /* On a 3D stage, libwgt's (wgrender-c's text3d): the block's plane (x right, y down, world
  * units, about its position by its alignment) along its facing's axes, scaled by its actor,
  * and its corners (top-left, top-right, bottom-right, bottom-left). Drawn by the stage3d,

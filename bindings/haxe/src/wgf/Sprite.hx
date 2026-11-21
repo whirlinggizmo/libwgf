@@ -186,6 +186,32 @@ import wgf.impl.Raw;
 		return Raw.wgf_sprite_get_facing(this);
 
 	/**
+	    On a 3D stage, drawn `offset` stage units nearer the camera along its line of sight (0, the
+	    default: where it is), so it stays where it is on the screen and wins the depth test over
+	    what shares its place: a bar's fill over its back, a label over its sprite (a negative one
+	    drawn farther). A bar over a head, facing the camera, is two sprites of one white texture
+	    (wgf_texture_create_from_image of wgf_image_create_color) tinted: its back, and its fill
+	    pivoted at its left edge (wgf_sprite_set_pivot(fill, 0, 0.5), placed at the back's left),
+	    its width the share left, offset 0.01. False for a handle that isn't a sprite, or an offset
+	    that isn't finite.
+	**/
+	public inline function setDepthOffset(offset:Float):Bool
+		return Raw.wgf_sprite_set_depth_offset(this, offset);
+
+	/**
+	    On a 3D stage, drawn `offset` stage units nearer the camera along its line of sight (0, the
+	    default: where it is), so it stays where it is on the screen and wins the depth test over
+	    what shares its place: a bar's fill over its back, a label over its sprite (a negative one
+	    drawn farther). A bar over a head, facing the camera, is two sprites of one white texture
+	    (wgf_texture_create_from_image of wgf_image_create_color) tinted: its back, and its fill
+	    pivoted at its left edge (wgf_sprite_set_pivot(fill, 0, 0.5), placed at the back's left),
+	    its width the share left, offset 0.01. False for a handle that isn't a sprite, or an offset
+	    that isn't finite.
+	**/
+	public inline function getDepthOffset():Float
+		return Raw.wgf_sprite_get_depth_offset(this);
+
+	/**
 	    A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
 	    named `name` played from its start, looping or once (a clip already playing goes on);
 	    stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its

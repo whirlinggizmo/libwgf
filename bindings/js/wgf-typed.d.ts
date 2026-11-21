@@ -9163,6 +9163,28 @@ export declare const Sprite: {
      */
     readonly getFacing: typeof raw.wgf_sprite_get_facing;
     /**
+     * On a 3D stage, drawn `offset` stage units nearer the camera along its line of sight (0, the
+     * default: where it is), so it stays where it is on the screen and wins the depth test over
+     * what shares its place: a bar's fill over its back, a label over its sprite (a negative one
+     * drawn farther). A bar over a head, facing the camera, is two sprites of one white texture
+     * (wgf_texture_create_from_image of wgf_image_create_color) tinted: its back, and its fill
+     * pivoted at its left edge (wgf_sprite_set_pivot(fill, 0, 0.5), placed at the back's left),
+     * its width the share left, offset 0.01. False for a handle that isn't a sprite, or an offset
+     * that isn't finite.
+     */
+    readonly setDepthOffset: typeof raw.wgf_sprite_set_depth_offset;
+    /**
+     * On a 3D stage, drawn `offset` stage units nearer the camera along its line of sight (0, the
+     * default: where it is), so it stays where it is on the screen and wins the depth test over
+     * what shares its place: a bar's fill over its back, a label over its sprite (a negative one
+     * drawn farther). A bar over a head, facing the camera, is two sprites of one white texture
+     * (wgf_texture_create_from_image of wgf_image_create_color) tinted: its back, and its fill
+     * pivoted at its left edge (wgf_sprite_set_pivot(fill, 0, 0.5), placed at the back's left),
+     * its width the share left, offset 0.01. False for a handle that isn't a sprite, or an offset
+     * that isn't finite.
+     */
+    readonly getDepthOffset: typeof raw.wgf_sprite_get_depth_offset;
+    /**
      * A sprite showing a sprite sheet's frames (wgf_sheet.h): its texture the sheet's (set_sheet), and the clip
      * named `name` played from its start, looping or once (a clip already playing goes on);
      * stepped each frame by the frame's time times its speed (1 by default; 0 holds it). Its
@@ -9804,6 +9826,18 @@ export declare const Text: {
      * flat on the screen whatever this says. False when `facing` isn't one.
      */
     readonly getFacing: typeof raw.wgf_text_get_facing;
+    /**
+     * On a 3D stage, drawn `offset` stage units nearer the camera, as a sprite's
+     * (wgf_sprite_set_depth_offset): text over the sprite it labels, kept in front at a distance.
+     * False for a handle that isn't a text, or an offset that isn't finite.
+     */
+    readonly setDepthOffset: typeof raw.wgf_text_set_depth_offset;
+    /**
+     * On a 3D stage, drawn `offset` stage units nearer the camera, as a sprite's
+     * (wgf_sprite_set_depth_offset): text over the sprite it labels, kept in front at a distance.
+     * False for a handle that isn't a text, or an offset that isn't finite.
+     */
+    readonly getDepthOffset: typeof raw.wgf_text_get_depth_offset;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };

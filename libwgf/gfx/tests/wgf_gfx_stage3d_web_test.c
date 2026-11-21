@@ -9,6 +9,7 @@
 #include "wgf_camera3d.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
+#include "wgf_image.h"
 #include "wgf_light.h"
 #include "wgf_material.h"
 #include "wgf_mesh.h"
@@ -16,6 +17,7 @@
 #include "wgf_presentation.h"
 #include "wgf_render.h"
 #include "wgf_shape3d.h"
+#include "wgf_sprite.h"
 #include "wgf_stage3d.h"
 #include "wgf_window.h"
 
@@ -23,12 +25,14 @@
  * back: an unlit red cube in front of the camera, its color exact (no tone
  * mapping of an unlit color: NONE), with a green 3D shape (unlit) above it; a lit white
  * cube beside it, black with no light, then lit by a sun facing it; a see-through blue
- * plane in front of the red, blended over it; and 2D drawn before and after the stage,
+ * plane in front of the red, blended over it; two sprites facing the camera at one place, the
+ * one's depth offset putting it over the other (a bar's fill over its back), a negative one
+ * behind; and 2D drawn before and after the stage,
  * under and over it. Then under a presentation (FIT, 32 by 32 on 64 by 32): the stage
  * fills the design area, between the bars. */
 
 static int failures;
-static wgf_actor_t stage, camera, lit, glass, sun;
+static wgf_actor_t stage, camera, lit, glass, sun, bar_back, bar_fill;
 
 static void expect(int ok, const char *what)
 {
@@ -68,7 +72,12 @@ static int frames;
 static void on_frame(void *user)
 {
     (void)user;
-    if (++frames != 2) return;
+    if (++frames == 1) { /* a bar's white, made in code, seen from the next frame */
+        const wgf_texture_t white = wgf_texture_create_from_image(wgf_image_create_color(2, 2, WGF_COLOR_WHITE));
+        expect(white != 0 && wgf_sprite_set_texture(bar_back, white) && wgf_sprite_set_texture(bar_fill, white),
+               "a white texture made in code");
+    }
+    if (frames != 2) return;
     draw_frame();
     expect_pixel(24, 16, WGF_COLOR_RED, 0, "the unlit cube: its color as it is");
     expect_pixel(40, 16, WGF_COLOR_BLACK, 0, "the lit cube, with no light: black");
@@ -93,8 +102,18 @@ static void on_frame(void *user)
                                 (wgf_color_get_blue(WGF_COLOR_RED) + wgf_color_get_blue(WGF_COLOR_BLUE)) / 2, 255),
                  2, "the glass blended over the red, half and half");
 
-    wgf_presentation_set(WGF_PRESENTATION_MODE_FIT, 32, 32);
     wgf_actor_set_visible(glass, false);
+    wgf_actor_set_visible(bar_back, true);
+    wgf_actor_set_visible(bar_fill, true);
+    draw_frame();
+    expect_pixel(24, 15, WGF_COLOR_YELLOW, 0, "a sprite's depth offset: drawn over another at its place");
+    wgf_sprite_set_depth_offset(bar_fill, -0.01f);
+    draw_frame();
+    expect_pixel(24, 15, WGF_COLOR_MAGENTA, 0, "a negative one: drawn behind it");
+    wgf_actor_set_visible(bar_back, false);
+    wgf_actor_set_visible(bar_fill, false);
+
+    wgf_presentation_set(WGF_PRESENTATION_MODE_FIT, 32, 32);
     draw_frame();
     expect_pixel(4, 16, WGF_COLOR_BLUE, 0, "fit: the bar, nothing of the stage in it");
     expect_pixel(17, 1, WGF_COLOR_WHITE, 0, "fit: 2D at the design's corner");
@@ -138,6 +157,24 @@ int main(void)
     wgf_actor_set_rotation(glass, 1.5707963f, 0.0f, 0.0f); /* facing the camera */
     wgf_actor_set_position(glass, -1.5f, 0.0f, 1.5f);
     wgf_actor_set_visible(glass, false);
+    {
+        /* a bar's back and fill: one white texture, tinted, at one place in front of the red */
+        bar_back = wgf_sprite_create(0); /* its texture made once gfx runs: the first frame */
+        bar_fill = wgf_sprite_create(0);
+        wgf_sprite_set_tint(bar_back, WGF_COLOR_MAGENTA);
+        wgf_sprite_set_tint(bar_fill, WGF_COLOR_YELLOW);
+        wgf_sprite_set_alpha_mode(bar_back, WGF_ALPHA_MODE_OPAQUE, 0.0f);
+        wgf_sprite_set_alpha_mode(bar_fill, WGF_ALPHA_MODE_OPAQUE, 0.0f);
+        expect(wgf_sprite_set_depth_offset(bar_fill, 0.01f) && wgf_sprite_get_depth_offset(bar_fill) == 0.01f &&
+                   !wgf_sprite_set_depth_offset(bar_fill, 1.0f / 0.0f) && !wgf_sprite_set_depth_offset(stage, 1.0f),
+               "a depth offset set; one that isn't finite, or not a sprite's, refused");
+        wgf_actor_set_position(bar_back, -1.15f, 0.0f, 1.2f); /* over the red, nearer */
+        wgf_actor_set_position(bar_fill, -1.15f, 0.0f, 1.2f);
+        wgf_actor_set_parent(bar_back, stage);
+        wgf_actor_set_parent(bar_fill, stage);
+        wgf_actor_set_visible(bar_back, false);
+        wgf_actor_set_visible(bar_fill, false);
+    }
     wgf_actor_set_parent(glass, stage);
 
     {

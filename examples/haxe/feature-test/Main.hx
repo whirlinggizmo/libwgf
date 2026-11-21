@@ -430,6 +430,8 @@ class Main {
 		expect(banner.setString("START") && banner.getFontSize() == 1, "text on the 3D stage, a unit a line");
 		expect(banner.setFacing(SpriteFacing.CAMERA_FIXED_Y) && banner.getFacing() == SpriteFacing.CAMERA_FIXED_Y,
 			"its facing");
+		expect(sign.setDepthOffset(0.01) && near(sign.getDepthOffset(), 0.01) && banner.setDepthOffset(0.02)
+			&& near(banner.getDepthOffset(), 0.02), "drawn nearer the camera: depth offsets");
 		final sun:Light = Light.create(LightType.SPOT);
 		expect(sun.getType() == LightType.SPOT && sun.setColor(Color.get(ColorStock.GOLD))
 			&& sun.getColor() == Color.get(ColorStock.GOLD), "a light's color");
