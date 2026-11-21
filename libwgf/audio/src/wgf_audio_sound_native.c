@@ -525,6 +525,26 @@ void wgf_audio_priv_sound_discard(void *data)
     free(prepared);
 }
 
+bool wgf_audio_priv_sound_from_samples(wgf_handle_t sound, wgf_audio_priv_sound_t *record, const float *samples,
+                                       int frames, int channels, int sample_rate)
+{
+    const size_t count = (size_t)frames * (size_t)channels;
+    float *pcm = (float *)malloc(count * sizeof(float));
+    (void)sound;
+    if (pcm == NULL) return false;
+    memcpy(pcm, samples, count * sizeof(float));
+    wgf_audio_priv_lock();
+    record->format = WGF_AUDIO_PRIV_FORMAT_NONE; /* freed with free() */
+    record->channels = channels;
+    record->sample_rate = sample_rate;
+    record->frames = (uint64_t)frames;
+    record->duration = (float)((double)frames / (double)sample_rate);
+    record->length_known = true;
+    record->pcm = pcm;
+    wgf_audio_priv_unlock();
+    return true;
+}
+
 void wgf_audio_priv_sound_free(wgf_handle_t sound, wgf_audio_priv_sound_t *record)
 {
     (void)sound;

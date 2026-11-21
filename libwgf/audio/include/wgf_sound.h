@@ -64,6 +64,16 @@ WGF_API wgf_sound_t wgf_sound_create(const char *path);
  * segments and no negative pitch. */
 WGF_API wgf_sound_t wgf_sound_create_streamed(const char *path);
 
+/* A decoded sound made from `count` samples in -1 to 1, interleaved left then right for 2
+ * `channels`, at `sample_rate` frames a second (raylib's LoadSoundFromWave): a sound made in
+ * code (a tone, a sweep, a noise burst) that plays as a file's does, its plays and polyphony,
+ * segments, and voices the same. READY at once, copied, so the caller's samples can go; it has
+ * no path, so another call makes another sound. 0 for samples that are NULL, a count below 1
+ * or not a whole number of frames, channels other than 1 or 2, a rate outside 8,000 to 192,000
+ * (what every browser's buffers take), and no room for another. For samples made as they
+ * play, a pushed voice (wgf_voice_create_pushed). */
+WGF_API wgf_sound_t wgf_sound_create_from_samples(const float *samples, int count, int channels, int sample_rate);
+
 /* A named segment of a decoded sound, from `start` to `end` seconds, which a voice
  * selects by name (wgf_voice_set_segment) and plays as the whole sound: play from its
  * start, loop within it, COMPLETE at its end, position relative to it (CONVENTIONS.md, a

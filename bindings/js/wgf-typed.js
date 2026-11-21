@@ -2222,6 +2222,8 @@ export const Sound = Object.freeze({
     create: raw.wgf_sound_create,
     // wgf: call wgf_sound_create_streamed
     createStreamed: raw.wgf_sound_create_streamed,
+    // wgf: call wgf_sound_create_from_samples
+    createFromSamples: raw.wgf_sound_create_from_samples,
     // wgf: call wgf_sound_add_segment
     addSegment: raw.wgf_sound_add_segment,
     // wgf: call wgf_sound_play

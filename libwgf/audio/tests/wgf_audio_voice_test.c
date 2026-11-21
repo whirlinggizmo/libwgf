@@ -57,6 +57,47 @@ static void check_samples(void)
     wgf_voice_destroy(v);
 }
 
+/* A sound made from samples: READY at once, its length its frames', played as a file's is, the
+ * caller's samples free to change; stereo kept apart; what it refuses. */
+static void check_from_samples(void)
+{
+    static float samples[200], out[64 * 2];
+    bool exact = true;
+    wgf_handle_t made, stereo, v;
+    for (int i = 0; i < 200; i++) samples[i] = (float)i / 400.0f;
+    made = wgf_sound_create_from_samples(samples, 100, 1, 44100);
+    expect(made != 0 && wgf_resource_get_status(made) == WGF_RESOURCE_STATUS_READY, "made from samples: READY at once");
+    expect(fabsf(wgf_sound_get_duration(made) - 100.0f / 44100.0f) < 1e-6f && wgf_resource_get_path(made)[0] == '\0',
+           "its length its frames', no path");
+    samples[0] = 1.0f; /* copied: the caller's are its own again */
+    v = wgf_voice_create(made);
+    wgf_voice_play(v);
+    wgf_audio_priv_mix(out, 64, 44100);
+    for (int i = 0; i < 64; i++) {
+        const float want = (float)i / 400.0f;
+        exact = exact && fabsf(out[i * 2] - want) < 1e-6f && fabsf(out[i * 2 + 1] - want) < 1e-6f;
+    }
+    expect(exact, "played: the samples given, on both sides");
+    wgf_voice_destroy(v);
+    expect(wgf_sound_play(made, 1.0f, 1.0f, 0.0f) && wgf_sound_add_segment(made, "start", 0.0f, 0.001f),
+           "played and forgotten, a segment added: a decoded sound's");
+    for (int i = 0; i < 200; i++) samples[i] = i % 2 == 0 ? 0.5f : -0.25f;
+    stereo = wgf_sound_create_from_samples(samples, 200, 2, 44100);
+    v = wgf_voice_create(stereo);
+    wgf_voice_play(v);
+    wgf_audio_priv_mix(out, 64, 44100);
+    expect(stereo != 0 && fabsf(wgf_sound_get_duration(stereo) - 100.0f / 44100.0f) < 1e-6f &&
+               fabsf(out[0] - 0.5f) < 1e-6f && fabsf(out[1] + 0.25f) < 1e-6f,
+           "stereo: left then right, a frame each pair");
+    wgf_voice_destroy(v);
+    expect(wgf_sound_create_from_samples(NULL, 10, 1, 44100) == 0 && wgf_sound_create_from_samples(samples, 0, 1, 44100) == 0 &&
+               wgf_sound_create_from_samples(samples, 3, 2, 44100) == 0 && wgf_sound_create_from_samples(samples, 10, 3, 44100) == 0 &&
+               wgf_sound_create_from_samples(samples, 10, 1, 7999) == 0 &&
+               wgf_sound_create_from_samples(samples, 10, 1, 192001) == 0,
+           "refused: no samples, none, half a frame, three channels, a rate out of range");
+    expect(wgf_resource_release(made) && wgf_resource_release(stereo), "released");
+}
+
 int main(void)
 {
     static unsigned char wav[44 + 44100 * 2];
@@ -70,6 +111,7 @@ int main(void)
     settle();
     for (int i = 0; (wait = step(i)) >= 0.0; i++) advance(wait);
     check_samples();
+    check_from_samples();
     wgf_resource_release(sound);
     wgf_resource_release(streamed);
     wgf_core_priv_fs_rmdir("sounds");

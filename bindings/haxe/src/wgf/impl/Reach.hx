@@ -984,6 +984,7 @@ class Reach {
 		"wgf_sheet_set_clip_event",
 		"wgf_sound_add_segment",
 		"wgf_sound_create",
+		"wgf_sound_create_from_samples",
 		"wgf_sound_create_streamed",
 		"wgf_sound_get_bus",
 		"wgf_sound_get_duration",
@@ -1391,7 +1392,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1382) 0];
+	static final counts:Array<Int> = [for (_ in 0...1383) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

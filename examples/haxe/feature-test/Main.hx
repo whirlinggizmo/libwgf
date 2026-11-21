@@ -332,6 +332,10 @@ class Main {
 		voice.resume();
 		expect(click.setPolyphony(3) && click.getPolyphony() == 3, "a sound's polyphony");
 		expect(click.play(0.5, 1, 0) && !music.play(1, 1, 0), "a sound played once; a streamed one refused");
+		final tone = Sound.createFromSamples([for (i in 0...4410) 0.25 * Math.sin(i * 0.0627)], 1, 44100);
+		expect(Resource.getStatus(tone) == ResourceStatus.READY && near(tone.getDuration(), 0.1) && tone.play(0.2, 1, 0),
+			"a sound made from samples, READY at once and played");
+		Resource.release(tone);
 		final master = Bus.getMaster(), effects = Bus.getEffects();
 		expect(Bus.getMusic().getParent() == master && effects.getParent() == master, "the buses that always exist");
 		final ui = effects.create();

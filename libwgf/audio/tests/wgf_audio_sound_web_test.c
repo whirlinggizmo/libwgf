@@ -6,7 +6,9 @@
 #include <emscripten.h>
 
 #include "wgf_app.h"
+#include "wgf_play_state.h"
 #include "wgf_sound.h"
+#include "wgf_voice.h"
 #include "wgf_fs.h"
 #include "wgf_resource.h"
 #include "wgf_window.h"
@@ -16,7 +18,8 @@
  * music and click bundled at their paths and a WAV written here. The checks are
  * wgf_audio_sound_test's, natively: READY with the length the file has, a streamed
  * sound's length a decoded one's (within what the browser's MP3 decoder trims), a path
- * made both ways two sounds, a missing or undecodable file FAILED, a released sound gone.
+ * made both ways two sounds, a missing or undecodable file FAILED, a released sound gone;
+ * and a sound made from samples, an AudioBuffer holding them a channel apart, played.
  * A frame loop, since the browser decodes between frames. */
 
 static int failures, frames, step;
@@ -66,8 +69,37 @@ static bool any_pending(void)
     return pending;
 }
 
+/* A sample of a sound's AudioBuffer, its `channel`'s `frame`th. */
+EM_JS(double, buffer_sample, (int handle, int channel, int frame), {
+    var entry = Module.wgf_audio && Module.wgf_audio.sounds.get(handle);
+    return entry && entry.buffer ? entry.buffer.getChannelData(channel)[frame] : -9;
+})
+
+static void check_from_samples(void)
+{
+    static float samples[2 * 4800];
+    wgf_handle_t made, voice;
+    for (int i = 0; i < 4800; i++) {
+        samples[i * 2] = 0.5f * sinf((float)i * 0.0626f);
+        samples[i * 2 + 1] = -0.25f;
+    }
+    made = wgf_sound_create_from_samples(samples, 2 * 4800, 2, 48000);
+    expect(made != 0 && wgf_resource_get_status(made) == WGF_RESOURCE_STATUS_READY &&
+               fabsf(wgf_sound_get_duration(made) - 0.1f) < 1e-6f,
+           "made from samples: READY at once, a tenth of a second");
+    /* near, not exact: Chromium's buffer, read back, differed from what was given by about 2e-4 near its start */
+    expect(fabs(buffer_sample((int)made, 0, 1000) - samples[2000]) < 0.01 && fabs(buffer_sample((int)made, 1, 1000) + 0.25) < 0.01,
+           "its buffer holds them, a channel apart");
+    voice = wgf_voice_create(made);
+    expect(voice != 0 && wgf_voice_play(voice) && wgf_voice_get_state(voice) == WGF_PLAY_STATE_PLAYING, "and plays");
+    wgf_voice_destroy(voice);
+    expect(wgf_sound_create_from_samples(samples, 10, 1, 7999) == 0, "a rate out of range refused");
+    expect(wgf_resource_release(made), "released");
+}
+
 static void check(void)
 {
+    check_from_samples();
     /* the click is 10.02 ms natively (442 frames at 44.1 kHz); Chromium decodes it as
        8.7 ms and its <audio> reads 12.9 ms, each decoder treating a file's edges its own
        way: a few milliseconds, which the header says */

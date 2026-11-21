@@ -107,6 +107,11 @@ void wgf_audio_priv_sound_feed(void);
 wgf_core_priv_load_step_t wgf_audio_priv_sound_finish(void *prepared, wgf_handle_t sound, wgf_audio_priv_sound_t *record);
 void wgf_audio_priv_sound_discard(void *prepared);
 void wgf_audio_priv_sound_free(wgf_handle_t sound, wgf_audio_priv_sound_t *record);
+/* A sound made from samples (wgf_sound_create_from_samples), checked: `frames` frames of
+ * `channels`, interleaved, copied into `record` (natively its pcm, on the web an AudioBuffer)
+ * with its rate, channels, and length. False without the memory. On the main thread. */
+bool wgf_audio_priv_sound_from_samples(wgf_handle_t sound, wgf_audio_priv_sound_t *record, const float *samples,
+                                       int frames, int channels, int sample_rate);
 /* At audio's stop, after every sound is freed: what the platform holds for them all. */
 void wgf_audio_priv_sound_stop(void);
 

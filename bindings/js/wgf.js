@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "e0c62521f9120750" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "2037ae3aba10ead2" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -15170,6 +15170,23 @@ export function wgf_sound_create_streamed(path) {
     const mark = host["stackSave"]();
     const value = host["_wgf_sound_create_streamed"](cstr(path));
     host["stackRestore"](mark);
+    return value >>> 0;
+}
+
+// wgf: call wgf_sound_create_from_samples
+/**
+ * A decoded sound made from `count` samples in -1 to 1, interleaved left then right for 2
+ * `channels`, at `sample_rate` frames a second (raylib's LoadSoundFromWave): a sound made in
+ * code (a tone, a sweep, a noise burst) that plays as a file's does, its plays and polyphony,
+ * segments, and voices the same. READY at once, copied, so the caller's samples can go; it has
+ * no path, so another call makes another sound. 0 for samples that are NULL, a count below 1
+ * or not a whole number of frames, channels other than 1 or 2, a rate outside 8,000 to 192,000
+ * (what every browser's buffers take), and no room for another. For samples made as they
+ * play, a pushed voice (wgf_voice_create_pushed).
+ */
+export function wgf_sound_create_from_samples(samples, channels, sample_rate) {
+    const samplesPointer = arrayIn(samples, 0, "HEAPF32");
+    const value = host["_wgf_sound_create_from_samples"](samplesPointer, lengthOf(samples), channels, sample_rate);
     return value >>> 0;
 }
 

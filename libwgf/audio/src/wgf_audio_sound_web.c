@@ -73,6 +73,25 @@ EM_JS(void, wgf_audio_js_sound_stream, (int handle, const char *urls_c), {
     entry.element.src = urls[0];
 })
 
+/* A sound from samples: an AudioBuffer of `frames` frames of `channels`, interleaved at `samples`,
+ * READY at once. False where the browser makes no buffer of that rate. */
+EM_JS(int, wgf_audio_js_sound_from_samples, (int handle, const float *samples, int frames, int channels, int rate), {
+    var audio = Module.wgf_audio || (Module.wgf_audio = {context: null, sounds: new Map()});
+    var buffer, c, i, data;
+    if (!audio.context) audio.context = new (window.AudioContext || window.webkitAudioContext)();
+    try {
+        buffer = audio.context.createBuffer(channels, frames, rate);
+    } catch (e) {
+        return 0;
+    }
+    for (c = 0; c < channels; c++) {
+        data = buffer.getChannelData(c);
+        for (i = 0; i < frames; i++) data[i] = HEAPF32[(samples >> 2) + i * channels + c];
+    }
+    audio.sounds.set(handle, {state: 1, buffer: buffer, url: null, element: null, duration: buffer.duration});
+    return 1;
+})
+
 EM_JS(int, wgf_audio_js_sound_state, (int handle), {
     var entry = Module.wgf_audio && Module.wgf_audio.sounds.get(handle);
     return entry ? entry.state : 2;
@@ -251,6 +270,20 @@ void wgf_audio_priv_sound_discard(void *data)
     if (prepared == NULL) return;
     if (prepared->bytes != NULL) wgf_core_priv_fs_read_free(prepared->bytes);
     free(prepared);
+}
+
+bool wgf_audio_priv_sound_from_samples(wgf_handle_t sound, wgf_audio_priv_sound_t *record, const float *samples,
+                                       int frames, int channels, int sample_rate)
+{
+    if (!wgf_audio_js_sound_from_samples((int)sound, samples, frames, channels, sample_rate)) return false;
+    wgf_audio_priv_lock();
+    record->format = WGF_AUDIO_PRIV_FORMAT_NONE;
+    record->channels = channels;
+    record->sample_rate = sample_rate;
+    record->duration = (float)((double)frames / (double)sample_rate);
+    record->length_known = true;
+    wgf_audio_priv_unlock();
+    return true;
 }
 
 void wgf_audio_priv_sound_free(wgf_handle_t sound, wgf_audio_priv_sound_t *record)

@@ -10,6 +10,7 @@
 #include "wgf_core_load_priv.h"
 #include "wgf_core_resource_priv.h"
 #include "wgf_log.h"
+#include "wgf_resource.h"
 #include "wgf_asset_priv.h" /* a resource made from a path: the asset part locates it */
 
 /* Sounds: the resource half of audio, the same on both platforms; what loading one
@@ -194,6 +195,31 @@ wgf_handle_t wgf_sound_create(const char *path)
 wgf_handle_t wgf_sound_create_streamed(const char *path)
 {
     return install(1) ? wgf_asset_priv_resource_create(WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND_STREAMED, path) : 0;
+}
+
+wgf_handle_t wgf_sound_create_from_samples(const float *samples, int count, int channels, int sample_rate)
+{
+    wgf_handle_t sound;
+    wgf_audio_priv_sound_t *sound_ptr;
+    if (samples == NULL || count < 1 || (channels != 1 && channels != 2) || count % channels != 0 ||
+        sample_rate < 8000 || sample_rate > 192000) {
+        wgf_log_error("wgf_sound_create_from_samples: %d samples of %d channels at %d a second", count, channels,
+                      sample_rate);
+        return 0;
+    }
+    if (!install(0)) return 0;
+    sound = wgf_core_priv_resource_add(WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND);
+    sound_ptr = wgf_audio_priv_sound_of(sound);
+    if (sound_ptr == NULL) {
+        wgf_log_error("wgf_sound_create_from_samples: no room for another sound");
+        return 0;
+    }
+    if (!wgf_audio_priv_sound_from_samples(sound, sound_ptr, samples, count / channels, channels, sample_rate)) {
+        wgf_log_error("wgf_sound_create_from_samples: no memory for %d samples", count);
+        wgf_resource_release(sound);
+        return 0;
+    }
+    return sound;
 }
 
 bool wgf_sound_add_segment(wgf_handle_t sound, const char *name, float start, float end)
