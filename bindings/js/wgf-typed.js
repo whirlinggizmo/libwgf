@@ -2868,6 +2868,10 @@ export const Ui = Object.freeze({
     getStyleFont: raw.wgf_ui_get_style_font,
     // wgf: call wgf_ui_reset_style
     resetStyle: raw.wgf_ui_reset_style,
+    // wgf: call wgf_ui_set_style_texture
+    setStyleTexture: raw.wgf_ui_set_style_texture,
+    // wgf: call wgf_ui_get_style_texture
+    getStyleTexture: raw.wgf_ui_get_style_texture,
     // wgf: call wgf_ui_set_document_font
     setDocumentFont: raw.wgf_ui_set_document_font,
     // wgf: call wgf_ui_get_document_font

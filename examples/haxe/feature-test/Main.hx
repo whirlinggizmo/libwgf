@@ -1225,6 +1225,8 @@ class Main {
 			"a style color");
 		expect(Ui.setStyleValue(UiValue.GAP, 10) && near(Ui.getStyleValue(UiValue.GAP), 10), "a style value");
 		expect(Ui.setStyleFont(font) && Ui.getStyleFont() == font, "the style's font");
+		expect(Ui.setStyleTexture(UiColor.BAR, tiles, 2, 2, 2, 2) && Ui.getStyleTexture(UiColor.BAR) == tiles
+			&& !Ui.setStyleTexture(UiColor.TEXT, tiles, 0, 0, 0, 0), "a part drawn from art");
 		if (Ui.begin()) {
 			Ui.beginPanel("menu");
 			Ui.setPadding(10, 10);

@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "a081c0693fb59f78" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "51dccab68ccf47f6" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -18469,6 +18469,40 @@ export function wgf_ui_get_style_font() {
  */
 export function wgf_ui_reset_style() {
     host["_wgf_ui_reset_style"]();
+}
+
+// wgf: call wgf_ui_set_style_texture
+/**
+ * A part drawn from the game's art in place of its color: `texture` whole, nine-sliced (its
+ * borders `left`, `top`, `right`, `bottom` in its pixels kept at their size, the rest
+ * stretched, as wgf_draw_texture_nine_slice), as it is, untinted; 0 draws the color again.
+ * The parts are WGF_UI_COLOR_PANEL, _BUTTON, _BUTTON_HOVERED, _BUTTON_PRESSED (a state with
+ * none of its own draws the button's), _BAR, and _BAR_FILL; a part from art has its art's
+ * corners, not the corner radius. The style holds a reference; reset lets them go. For a menu
+ * with more than these (sliders, toggles, every state's art), a document's decorators
+ * (wgf_document.h). False for a part that isn't one of these, a handle that isn't a texture,
+ * and a border below 0 or not finite.
+ */
+export function wgf_ui_set_style_texture(which, texture, left, top, right, bottom) {
+    const value = host["_wgf_ui_set_style_texture"](which, texture, left, top, right, bottom);
+    return value !== 0;
+}
+
+// wgf: call wgf_ui_get_style_texture
+/**
+ * A part drawn from the game's art in place of its color: `texture` whole, nine-sliced (its
+ * borders `left`, `top`, `right`, `bottom` in its pixels kept at their size, the rest
+ * stretched, as wgf_draw_texture_nine_slice), as it is, untinted; 0 draws the color again.
+ * The parts are WGF_UI_COLOR_PANEL, _BUTTON, _BUTTON_HOVERED, _BUTTON_PRESSED (a state with
+ * none of its own draws the button's), _BAR, and _BAR_FILL; a part from art has its art's
+ * corners, not the corner radius. The style holds a reference; reset lets them go. For a menu
+ * with more than these (sliders, toggles, every state's art), a document's decorators
+ * (wgf_document.h). False for a part that isn't one of these, a handle that isn't a texture,
+ * and a border below 0 or not finite.
+ */
+export function wgf_ui_get_style_texture(which) {
+    const value = host["_wgf_ui_get_style_texture"](which);
+    return value >>> 0;
 }
 
 // wgf: call wgf_ui_set_document_font

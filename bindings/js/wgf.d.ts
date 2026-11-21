@@ -12714,6 +12714,32 @@ export declare function wgf_ui_get_style_font(): wgf_font_t;
 export declare function wgf_ui_reset_style(): void;
 
 /**
+ * A part drawn from the game's art in place of its color: `texture` whole, nine-sliced (its
+ * borders `left`, `top`, `right`, `bottom` in its pixels kept at their size, the rest
+ * stretched, as wgf_draw_texture_nine_slice), as it is, untinted; 0 draws the color again.
+ * The parts are WGF_UI_COLOR_PANEL, _BUTTON, _BUTTON_HOVERED, _BUTTON_PRESSED (a state with
+ * none of its own draws the button's), _BAR, and _BAR_FILL; a part from art has its art's
+ * corners, not the corner radius. The style holds a reference; reset lets them go. For a menu
+ * with more than these (sliders, toggles, every state's art), a document's decorators
+ * (wgf_document.h). False for a part that isn't one of these, a handle that isn't a texture,
+ * and a border below 0 or not finite.
+ */
+export declare function wgf_ui_set_style_texture(which: wgf_ui_color_t, texture: wgf_texture_t | 0, left: number, top: number, right: number, bottom: number): boolean;
+
+/**
+ * A part drawn from the game's art in place of its color: `texture` whole, nine-sliced (its
+ * borders `left`, `top`, `right`, `bottom` in its pixels kept at their size, the rest
+ * stretched, as wgf_draw_texture_nine_slice), as it is, untinted; 0 draws the color again.
+ * The parts are WGF_UI_COLOR_PANEL, _BUTTON, _BUTTON_HOVERED, _BUTTON_PRESSED (a state with
+ * none of its own draws the button's), _BAR, and _BAR_FILL; a part from art has its art's
+ * corners, not the corner radius. The style holds a reference; reset lets them go. For a menu
+ * with more than these (sliders, toggles, every state's art), a document's decorators
+ * (wgf_document.h). False for a part that isn't one of these, a handle that isn't a texture,
+ * and a border below 0 or not finite.
+ */
+export declare function wgf_ui_get_style_texture(which: wgf_ui_color_t): wgf_texture_t;
+
+/**
  * The font RCSS's `font-family: <family>` means in every document (its name matched
  * without case); 0 unsets it, so the family draws in the default font. It holds a
  * reference to `font`. False for no family, or a handle that isn't a font.

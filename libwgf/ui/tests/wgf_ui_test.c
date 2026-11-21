@@ -11,6 +11,8 @@
 #include "wgf_platform_gamepad_priv.h"
 #include "wgf_platform_priv.h"
 #include "wgf_probe.h"
+#include "wgf_resource.h"
+#include "wgf_texture.h"
 #include "wgf_ui.h"
 #include "wgf_ui_priv.h"
 #include "wgf_window.h"
@@ -96,6 +98,8 @@ static void menu(void)
 }
 
 static int frame_number;
+static wgf_texture_t art; /* a part's, from case 16 */
+static int plain;
 
 static void on_init(void *user)
 {
@@ -289,11 +293,45 @@ static void on_frame(void *user)
                "what isn't one: refused");
         wgf_ui_reset_style();
         expect(wgf_ui_get_style_value(WGF_UI_VALUE_TEXT_SIZE) == 20, "reset");
+
         expect(!wgf_ui_set_focus("0123456789012345678901234567890123456789012345678901234567890123") &&
                    wgf_ui_set_focus(NULL) && wgf_ui_get_focus()[0] == '\0',
                "a focus id of 64 bytes refused; none taken");
+
+        /* a game's art in place of a part's color: made here, seen from the next frame */
+        art = wgf_texture_create_blank(16, 16);
+        plain = sgl_num_vertices();
+        expect(wgf_ui_begin() && wgf_ui_begin_panel("skin") && wgf_ui_set_width(WGF_UI_SIZING_FIXED, 100) && wgf_ui_set_height(WGF_UI_SIZING_FIXED, 40) && wgf_ui_end_panel() && wgf_ui_end(), "a panel");
+        plain = sgl_num_vertices() - plain;
+        expect(wgf_ui_get_style_texture(WGF_UI_COLOR_PANEL) == 0 && wgf_ui_set_style_texture(WGF_UI_COLOR_PANEL, art, 4, 4, 4, 4) &&
+                   wgf_ui_get_style_texture(WGF_UI_COLOR_PANEL) == art,
+               "a panel's art set");
+        break;
+    case 17: {
+        int skinned = sgl_num_vertices();
+        expect(wgf_ui_begin() && wgf_ui_begin_panel("skin") && wgf_ui_set_width(WGF_UI_SIZING_FIXED, 100) && wgf_ui_set_height(WGF_UI_SIZING_FIXED, 40) && wgf_ui_end_panel() && wgf_ui_end(), "a panel of art");
+        skinned = sgl_num_vertices() - skinned;
+        expect(plain > 0 && skinned > 0 && skinned != plain, "drawn from its art, nine-sliced, not its color");
+        expect(!wgf_ui_set_style_texture(WGF_UI_COLOR_TEXT, art, 0, 0, 0, 0) &&
+                   !wgf_ui_set_style_texture(WGF_UI_COLOR_FOCUS, art, 0, 0, 0, 0) &&
+                   !wgf_ui_set_style_texture(WGF_UI_COLOR_BUTTON, 12345, 0, 0, 0, 0) &&
+                   !wgf_ui_set_style_texture(WGF_UI_COLOR_BUTTON, art, -1, 0, 0, 0) &&
+                   !wgf_ui_set_style_texture(WGF_UI_COLOR_BUTTON, art, 0, NAN, 0, 0) &&
+                   wgf_ui_get_style_texture(WGF_UI_COLOR_TEXT) == 0,
+               "text, the focus line, a handle that isn't a texture, a bad border: refused");
+        expect(wgf_ui_set_style_texture(WGF_UI_COLOR_BUTTON, art, 2, 2, 2, 2) && wgf_resource_release(art) &&
+                   wgf_resource_get_status(art) != WGF_RESOURCE_STATUS_NONE,
+               "the style holds its own reference");
+        break;
+    }
+    case 18: { /* the art let go in a frame that drew none of it */
+        wgf_ui_reset_style();
+        expect(wgf_ui_get_style_texture(WGF_UI_COLOR_PANEL) == 0 && wgf_ui_get_style_texture(WGF_UI_COLOR_BUTTON) == 0 &&
+                   wgf_resource_get_status(art) == WGF_RESOURCE_STATUS_NONE,
+               "reset: the art let go");
         wgf_app_quit();
         break;
+    }
     default: break;
     }
 }
@@ -302,6 +340,6 @@ int main(void)
 {
     wgf_window_set_size(800, 600);
     wgf_app_run(on_init, NULL, on_frame, NULL, NULL);
-    expect(frame_number >= 17, "every frame ran");
+    expect(frame_number >= 19, "every frame ran");
     return failures == 0 ? 0 : 1;
 }

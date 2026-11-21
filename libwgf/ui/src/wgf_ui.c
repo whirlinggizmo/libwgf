@@ -10,6 +10,7 @@
 #include "render/wgf_gfx_render_priv.h"
 #include "text/wgf_gfx_font_priv.h"
 #include "wgf_core_handle_priv.h"
+#include "wgf_core_resource_priv.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_draw.h"
 #include "wgf_gamepad.h"
@@ -85,6 +86,10 @@ static struct {
     wgf_color_t colors[STYLE_COLORS];
     float values[STYLE_VALUES];
     wgf_font_t font;
+    struct {
+        wgf_texture_t texture; /* 0: drawn in its color */
+        float borders[4];      /* left, top, right, bottom, in its pixels */
+    } skins[STYLE_COLORS];
 } ui;
 
 static const wgf_color_t default_colors[STYLE_COLORS] = {
@@ -162,11 +167,53 @@ wgf_font_t wgf_ui_get_style_font(void)
     return ui.font;
 }
 
+/* The parts a game's art can draw: panels, buttons in each state, and a progress bar's two. */
+static bool skinnable(wgf_ui_color_t which)
+{
+    return which == WGF_UI_COLOR_PANEL || which == WGF_UI_COLOR_BUTTON || which == WGF_UI_COLOR_BUTTON_HOVERED ||
+           which == WGF_UI_COLOR_BUTTON_PRESSED || which == WGF_UI_COLOR_BAR || which == WGF_UI_COLOR_BAR_FILL;
+}
+
+bool wgf_ui_set_style_texture(wgf_ui_color_t which, wgf_texture_t texture, float left, float top, float right,
+                              float bottom)
+{
+    const float borders[4] = {left, top, right, bottom};
+    int i;
+    if (!skinnable(which)) return false;
+    if (texture != 0 && (WGF_CORE_PRIV_HANDLE_KIND(texture) != WGF_CORE_PRIV_HANDLE_KIND_TEXTURE ||
+                         wgf_resource_get_status(texture) == WGF_RESOURCE_STATUS_NONE)) {
+        return false;
+    }
+    for (i = 0; i < 4; i++) {
+        if (!(borders[i] >= 0.0f) || !isfinite(borders[i])) return false;
+    }
+    if (texture != 0) wgf_core_priv_resource_retain(texture); /* before the release, in case it is the same */
+    if (ui.skins[which].texture != 0) wgf_resource_release(ui.skins[which].texture);
+    ui.skins[which].texture = texture;
+    memcpy(ui.skins[which].borders, borders, sizeof(borders));
+    return true;
+}
+
+wgf_texture_t wgf_ui_get_style_texture(wgf_ui_color_t which)
+{
+    return skinnable(which) ? ui.skins[which].texture : 0;
+}
+
 void wgf_ui_reset_style(void)
 {
+    int i;
     style_defaults();
     style_set = true;
     wgf_ui_set_style_font(0);
+    for (i = 0; i < STYLE_COLORS; i++) {
+        if (skinnable((wgf_ui_color_t)i)) wgf_ui_set_style_texture((wgf_ui_color_t)i, 0, 0, 0, 0, 0);
+    }
+}
+
+/* The part a box is drawn as, for its art (Clay's userData carries it, plus one: NULL is none). */
+static void *part_of(wgf_ui_color_t which)
+{
+    return (void *)(intptr_t)((int)which + 1);
 }
 
 /* ---- the focus ---------------------------------------------------------------------- */
@@ -435,6 +482,7 @@ static bool open_level(int kind, const char *id, wgf_ui_direction_t direction)
         level->declaration.layout.childGap = pixels(ui.values[WGF_UI_VALUE_GAP]);
         level->declaration.backgroundColor = clay_color(ui.colors[WGF_UI_COLOR_PANEL]);
         level->declaration.cornerRadius = corners(ui.values[WGF_UI_VALUE_CORNER_RADIUS]);
+        level->declaration.userData = part_of(WGF_UI_COLOR_PANEL);
         level->solid = true;
     }
     return true;
@@ -627,6 +675,7 @@ bool wgf_ui_button(const char *id, const char *text)
     declaration.backgroundColor = clay_color(ui.colors[held   ? WGF_UI_COLOR_BUTTON_PRESSED
                                                        : over ? WGF_UI_COLOR_BUTTON_HOVERED
                                                               : WGF_UI_COLOR_BUTTON]);
+    declaration.userData = part_of(held ? WGF_UI_COLOR_BUTTON_PRESSED : over ? WGF_UI_COLOR_BUTTON_HOVERED : WGF_UI_COLOR_BUTTON);
     declaration.cornerRadius = corners(ui.values[WGF_UI_VALUE_CORNER_RADIUS]);
     if (focused && ui.focus_visible) {
         const uint16_t width = pixels(ui.values[WGF_UI_VALUE_FOCUS_WIDTH]);
@@ -656,6 +705,7 @@ bool wgf_ui_progress(float value)
     sizing(&track.layout.sizing.height, WGF_UI_SIZING_FIXED, height);
     track.backgroundColor = clay_color(ui.colors[WGF_UI_COLOR_BAR]);
     track.cornerRadius = radius;
+    track.userData = part_of(WGF_UI_COLOR_BAR);
     Clay__OpenElement();
     Clay__ConfigureOpenElement(track);
     if (value > 0.0f) {
@@ -664,6 +714,7 @@ bool wgf_ui_progress(float value)
         sizing(&fill.layout.sizing.height, WGF_UI_SIZING_GROW, 0.0f);
         fill.backgroundColor = clay_color(ui.colors[WGF_UI_COLOR_BAR_FILL]);
         fill.cornerRadius = radius;
+        fill.userData = part_of(WGF_UI_COLOR_BAR_FILL);
         Clay__OpenElement();
         Clay__ConfigureOpenElement(fill);
         Clay__CloseElement();
@@ -812,7 +863,19 @@ static void draw(Clay_RenderCommandArray commands)
         switch (command->commandType) {
         case CLAY_RENDER_COMMAND_TYPE_RECTANGLE: {
             const Clay_RectangleRenderData *rect = &command->renderData.rectangle;
-            wgf_draw_polygon(points, rounded(box, rect->cornerRadius, 0.0f, points), from_clay(rect->backgroundColor));
+            const int part = (int)(intptr_t)command->userData - 1;
+            int skin = part >= 0 && ui.skins[part].texture != 0 ? part : -1;
+            if (skin < 0 && (part == WGF_UI_COLOR_BUTTON_HOVERED || part == WGF_UI_COLOR_BUTTON_PRESSED) &&
+                ui.skins[WGF_UI_COLOR_BUTTON].texture != 0) {
+                skin = WGF_UI_COLOR_BUTTON; /* a state without art of its own: the button's */
+            }
+            if (skin >= 0) { /* the game's art, nine-sliced, as it is */
+                const float *b = ui.skins[skin].borders;
+                wgf_draw_texture_nine_slice(ui.skins[skin].texture, 0, 0, 0, 0, b[0], b[1], b[2], b[3], box.x, box.y,
+                                            box.width, box.height, WGF_COLOR_WHITE);
+            } else {
+                wgf_draw_polygon(points, rounded(box, rect->cornerRadius, 0.0f, points), from_clay(rect->backgroundColor));
+            }
             break;
         }
         case CLAY_RENDER_COMMAND_TYPE_BORDER: {
