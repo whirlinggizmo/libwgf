@@ -24,6 +24,13 @@ extern "C" {
  * vehicle component (added, or a scene's line) is refused, and logged once. A game whose
  * scene has bodies sets the gravity before it loads the scene. */
 
+/* Characters (WGF_BODY_TYPE_CHARACTER, wgf_body.h: Jolt's CharacterVirtual), linked on purpose:
+ * this call links them (a game: "characters" in wgf.json's features), so a program with none
+ * carries none of them (about 42 KB of code). Without it, a character type is refused, logged,
+ * a scene's too. Any time before the first character. */
+WGF_API bool wgf_physics_enable_characters(void);
+WGF_API bool wgf_physics_is_characters_enabled(void);
+
 /* The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
  * starting physics. False only when physics couldn't start (logged). */
 WGF_API bool wgf_physics_set_gravity(float x, float y, float z);

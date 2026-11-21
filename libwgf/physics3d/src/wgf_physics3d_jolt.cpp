@@ -6,6 +6,7 @@
 // all (docs/HISTORY.md, "Milestone 2, step 5").
 
 #include "wgf_physics3d_jolt_priv.h"
+#include "wgf_physics3d_jolt_world_priv.h"
 
 #include <Jolt/Jolt.h>
 
@@ -14,7 +15,6 @@
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Core/UnorderedMap.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
-#include <Jolt/Physics/Character/CharacterVirtual.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/CollideShape.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
@@ -49,7 +49,6 @@ constexpr uint MAX_BODIES = 16384;
 constexpr uint MAX_PAIRS = 16384;
 constexpr uint MAX_CONTACTS = 8192;
 constexpr int MAX_VEHICLES = 64;
-constexpr int MAX_CHARACTERS = 256;
 constexpr uint32 STATIC_GROUP = 0x8000; // the group bit a static body has, so movers' masks reach statics
 constexpr uint32 USER_BITS = 0x7FFF;
 constexpr float PEAK_ALONG = 0.06f;                 // the tires' grip peaks: their curves' (below)
@@ -147,11 +146,10 @@ struct World {
     PhysicsSystem system;
     Overlaps overlaps;
     VehicleConstraint *vehicles[MAX_VEHICLES] = {};
-    CharacterVirtual *characters[MAX_CHARACTERS] = {};
-    ObjectLayer character_layers[MAX_CHARACTERS] = {};
 };
 
 World *world = nullptr;
+void (*on_stop)() = nullptr; // a part's own end (characters), set as it first makes something
 
 Vec3 V(const float v[3])
 {
@@ -297,6 +295,45 @@ RefConst<Shape> QueryShape(int shape, const float size[3])
 
 } // namespace
 
+namespace wgf_jolt {
+
+JPH::PhysicsSystem *System()
+{
+    return world != nullptr ? &world->system : nullptr;
+}
+
+JPH::TempAllocator *Temp()
+{
+    return world != nullptr ? &world->temp : nullptr;
+}
+
+JPH::RefConst<JPH::Shape> PlacedShape(const wgf_physics3d_priv_body_desc_t &d)
+{
+    return Placed(MakeShape(d), d);
+}
+
+JPH::ObjectLayer LayerOf(const wgf_physics3d_priv_body_desc_t &d)
+{
+    return ::LayerOf(d);
+}
+
+JPH::Vec3 V(const float v[3])
+{
+    return ::V(v);
+}
+
+JPH::Quat Q(const float q[4])
+{
+    return ::Q(q);
+}
+
+void SetOnStop(void (*stop)())
+{
+    on_stop = stop;
+}
+
+} // namespace wgf_jolt
+
 extern "C" {
 
 bool wgf_physics3d_priv_jolt_start(float gx, float gy, float gz)
@@ -329,7 +366,7 @@ void wgf_physics3d_priv_jolt_stop(void)
 {
     if (world == nullptr) return;
     BodyInterface &bodies = world->system.GetBodyInterface();
-    for (int i = 0; i < MAX_CHARACTERS; i++) wgf_physics3d_priv_jolt_character_destroy(i);
+    if (on_stop != nullptr) on_stop(); // a part's own (characters), before the world goes
     for (int i = 0; i < MAX_VEHICLES; i++) wgf_physics3d_priv_jolt_vehicle_destroy(i);
     BodyIDVector ids;
     world->system.GetBodies(ids);
@@ -713,75 +750,6 @@ int wgf_physics3d_priv_jolt_overlap(int shape, const float size[3], const float 
         out[n++] = user;
     }
     return n;
-}
-
-// ------------------------------------------------------------- characters ----
-
-int wgf_physics3d_priv_jolt_character_create(const wgf_physics3d_priv_body_desc_t *d, float max_slope)
-{
-    if (world == nullptr || d == nullptr) return -1;
-    int slot = 0;
-    while (slot < MAX_CHARACTERS && world->characters[slot] != nullptr) slot++;
-    if (slot == MAX_CHARACTERS) return -1;
-    RefConst<Shape> made = MakeShape(*d);
-    if (made == nullptr) return -1;
-    RefConst<Shape> shape = Placed(made, *d);
-    Ref<CharacterVirtualSettings> settings = new CharacterVirtualSettings();
-    settings->mShape = shape;
-    settings->mMaxSlopeAngle = max_slope;
-    settings->mInnerBodyShape = shape; // a body in the world too, so rays, sensors, and queries find it
-    settings->mInnerBodyLayer = LayerOf(*d);
-    CharacterVirtual *character = new CharacterVirtual(settings, RVec3(V(d->position)), Q(d->rotation), d->user, &world->system);
-    character->AddRef();
-    world->characters[slot] = character;
-    world->character_layers[slot] = LayerOf(*d);
-    return slot;
-}
-
-void wgf_physics3d_priv_jolt_character_destroy(int character)
-{
-    if (world == nullptr || character < 0 || character >= MAX_CHARACTERS || world->characters[character] == nullptr) return;
-    world->characters[character]->Release();
-    world->characters[character] = nullptr;
-}
-
-// One step of the character: moved by `velocity` (gravity added while it isn't supported),
-// sliding, climbing steps up to `step`, kept on the floor going down them.
-void wgf_physics3d_priv_jolt_character_update(int character, const float velocity[3], float step, float dt,
-                                              float position[3], float out_velocity[3])
-{
-    if (world == nullptr || character < 0 || character >= MAX_CHARACTERS || world->characters[character] == nullptr) return;
-    CharacterVirtual *c = world->characters[character];
-    Vec3 v = V(velocity);
-    if (!c->IsSupported()) v += world->system.GetGravity() * dt;
-    else if (v.GetY() < 0.0f) v.SetY(0.0f);
-    c->SetLinearVelocity(v);
-    CharacterVirtual::ExtendedUpdateSettings settings;
-    settings.mWalkStairsStepUp = Vec3(0.0f, std::max(step, 0.0f), 0.0f);
-    settings.mStickToFloorStepDown = Vec3(0.0f, -std::max(step, 0.05f), 0.0f);
-    const ObjectLayer layer = world->character_layers[character];
-    c->ExtendedUpdate(dt, world->system.GetGravity(), settings, world->system.GetDefaultBroadPhaseLayerFilter(layer),
-                      world->system.GetDefaultLayerFilter(layer), {}, {}, world->temp);
-    const RVec3 p = c->GetPosition();
-    position[0] = float(p.GetX()), position[1] = float(p.GetY()), position[2] = float(p.GetZ());
-    const Vec3 moved = c->GetLinearVelocity();
-    out_velocity[0] = moved.GetX(), out_velocity[1] = moved.GetY(), out_velocity[2] = moved.GetZ();
-}
-
-void wgf_physics3d_priv_jolt_character_set_pose(int character, const float position[3], const float rotation[4])
-{
-    if (world == nullptr || character < 0 || character >= MAX_CHARACTERS || world->characters[character] == nullptr) return;
-    world->characters[character]->SetPosition(RVec3(V(position)));
-    world->characters[character]->SetRotation(Q(rotation));
-}
-
-bool wgf_physics3d_priv_jolt_character_ground(int character, float normal[3])
-{
-    if (world == nullptr || character < 0 || character >= MAX_CHARACTERS || world->characters[character] == nullptr) return false;
-    const CharacterVirtual *c = world->characters[character];
-    const Vec3 n = c->GetGroundNormal();
-    normal[0] = n.GetX(), normal[1] = n.GetY(), normal[2] = n.GetZ();
-    return c->GetGroundState() == CharacterBase::EGroundState::OnGround;
 }
 
 } // extern "C"

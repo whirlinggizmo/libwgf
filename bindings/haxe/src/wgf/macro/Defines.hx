@@ -45,6 +45,10 @@ class Defines {
 			doc: "Links the particles into a native build that never makes one, for a scene's emitter lines: a game's \"emitters\" feature (wgf.json), which the wgf tool turns into it."
 		},
 		{
+			define: "wgf_characters",
+			doc: "Links characters (a body of type character: Jolt's CharacterVirtual) into a native build that never calls Physics.enableCharacters: a game's \"characters\" feature (wgf.json), which the wgf tool turns into it."
+		},
+		{
 			define: "wgf_reach",
 			doc: "Each of the binding's C calls counts itself (wgf.impl.Reach), for the feature test's coverage (tools/check_features.py)."
 		}

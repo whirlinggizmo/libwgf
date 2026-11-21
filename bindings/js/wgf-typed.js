@@ -1813,6 +1813,10 @@ export const Mouse = Object.freeze({
 });
 // wgf: typed Physics
 export const Physics = Object.freeze({
+    // wgf: call wgf_physics_enable_characters
+    enableCharacters: raw.wgf_physics_enable_characters,
+    // wgf: call wgf_physics_is_characters_enabled
+    isCharactersEnabled: raw.wgf_physics_is_characters_enabled,
     // wgf: call wgf_physics_set_gravity
     setGravity: raw.wgf_physics_set_gravity,
     // wgf: call wgf_physics_get_gravity

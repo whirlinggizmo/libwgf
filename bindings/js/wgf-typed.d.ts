@@ -7499,6 +7499,20 @@ export declare const Mouse: {
  */
 export declare const Physics: {
     /**
+     * Characters (WGF_BODY_TYPE_CHARACTER, wgf_body.h: Jolt's CharacterVirtual), linked on purpose:
+     * this call links them (a game: "characters" in wgf.json's features), so a program with none
+     * carries none of them (about 42 KB of code). Without it, a character type is refused, logged,
+     * a scene's too. Any time before the first character.
+     */
+    readonly enableCharacters: typeof raw.wgf_physics_enable_characters;
+    /**
+     * Characters (WGF_BODY_TYPE_CHARACTER, wgf_body.h: Jolt's CharacterVirtual), linked on purpose:
+     * this call links them (a game: "characters" in wgf.json's features), so a program with none
+     * carries none of them (about 42 KB of code). Without it, a character type is refused, logged,
+     * a scene's too. Any time before the first character.
+     */
+    readonly isCharactersEnabled: typeof raw.wgf_physics_is_characters_enabled;
+    /**
      * The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
      * starting physics. False only when physics couldn't start (logged).
      */

@@ -21,6 +21,11 @@
 			<flag value="/INCLUDE:wgf_mesh_create" if="MSVC_VER"/>
 			<flag value="-Wl,-u,wgf_mesh_create" unless="MSVC_VER"/>
 		</section>
+		<!-- -D wgf_characters: characters linked (its "characters" feature), as wgf_physics_enable_characters does -->
+		<section if="wgf_characters">
+			<flag value="/INCLUDE:wgf_physics_enable_characters" if="MSVC_VER"/>
+			<flag value="-Wl,-u,wgf_physics_enable_characters" unless="MSVC_VER"/>
+		</section>
 		<!-- -D wgf_emitters: the particles linked for a scene's emitter lines (its "emitters" feature) -->
 		<section if="wgf_emitters">
 			<flag value="/INCLUDE:wgf_emitter2d_create" if="MSVC_VER"/>

@@ -18,6 +18,7 @@
 #include "wgf_mat4.h"
 #include "wgf_model.h"
 #include "wgf_physics3d_jolt_priv.h"
+#include "wgf_physics3d_priv.h"
 #include "wgf_quat.h"
 #include "wgf_resource.h"
 
@@ -71,7 +72,18 @@ static struct {
     wgf_ecs_priv_id_t body_id, vehicle_id;
     wgf_ecs_priv_query_t *bodies, *vehicles;
     float dt; /* the last tick's, for a kinematic body's moves */
+    const wgf_physics3d_priv_characters_t *characters; /* NULL until linked (wgf_physics_enable_characters) */
 } physics;
+
+void wgf_physics3d_priv_set_characters(const wgf_physics3d_priv_characters_t *characters)
+{
+    physics.characters = characters;
+}
+
+bool wgf_physics_is_characters_enabled(void)
+{
+    return physics.characters != NULL;
+}
 
 static bool start(void);
 
@@ -254,7 +266,7 @@ static void unmake_body(wgf_actor_t actor, body_t *b)
     }
     if (b->id != WGF_PHYSICS3D_PRIV_NO_BODY) wgf_physics3d_priv_jolt_body_destroy(b->id);
     b->id = WGF_PHYSICS3D_PRIV_NO_BODY;
-    if (b->character > 0) wgf_physics3d_priv_jolt_character_destroy(b->character - 1);
+    if (b->character > 0 && physics.characters != NULL) physics.characters->destroy(b->character - 1);
     b->character = 0;
     b->grounded = false;
     forget_edges(b);
@@ -319,7 +331,7 @@ static void make_body(wgf_actor_t actor, body_t *b)
     d.mask = (uint32_t)b->mask;
     d.user = (uint64_t)actor;
     if (b->type == WGF_BODY_TYPE_CHARACTER) {
-        b->character = wgf_physics3d_priv_jolt_character_create(&d, b->max_slope) + 1;
+        b->character = physics.characters != NULL ? physics.characters->create(&d, b->max_slope) + 1 : 0;
         b->dirty = false;
         if (b->character == 0) wgf_log_warn("wgf_physics: a character couldn't be made (more than 256, or no shape)");
         free(soup.points);
@@ -552,7 +564,7 @@ static void body_set(wgf_actor_t actor, const char *key, const char *text)
     if (b == NULL || count < 0) return;
     if (strcmp(key, "type") == 0) {
         if ((w = word_of(text, types, 5)) >= 0) wgf_body_set_type(actor, (wgf_body_type_t)w);
-        else wgf_log_warn("wgf_physics: a body's type is static, dynamic, kinematic, or sensor (\"%s\")", text);
+        else wgf_log_warn("wgf_physics: a body's type is static, dynamic, kinematic, sensor, or character (\"%s\")", text);
     } else if (strcmp(key, "shape") == 0) {
         if ((w = word_of(text, shapes, 5)) >= 0) {
             b->shape = w;
@@ -716,17 +728,17 @@ static void step_character(wgf_actor_t actor, body_t *b, float dt)
     const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
     float p[3], q[4], v[3], out[3];
     const int c = b->character - 1;
-    if (actor_ptr == NULL || c < 0) return;
+    if (actor_ptr == NULL || c < 0 || physics.characters == NULL) return;
     if (!same_place(b, actor_ptr)) {
         world_pose(actor, p, q);
-        wgf_physics3d_priv_jolt_character_set_pose(c, p, q);
+        physics.characters->set_pose(c, p, q);
     }
     memcpy(v, b->velocity, sizeof(v));
     if (b->grounded && v[1] < 0.0f) v[1] = 0.0f;
     if (!b->grounded) v[1] += physics.gravity[1] * dt;
-    wgf_physics3d_priv_jolt_character_update(c, v, b->step, dt, p, out);
+    physics.characters->update(c, v, b->step, dt, p, out);
     b->velocity[1] = out[1];
-    b->grounded = wgf_physics3d_priv_jolt_character_ground(c, b->ground);
+    b->grounded = physics.characters->ground(c, b->ground);
     if (b->grounded && b->velocity[1] < 0.0f) b->velocity[1] = 0.0f;
     world_pose(actor, v, q);
     put_actor(actor, p, q);
@@ -886,6 +898,11 @@ bool wgf_body_set_type(wgf_actor_t actor, wgf_body_type_t type)
 {
     body_t *b;
     if ((int)type < WGF_BODY_TYPE_STATIC || type > WGF_BODY_TYPE_CHARACTER) return false;
+    if (type == WGF_BODY_TYPE_CHARACTER && physics.characters == NULL) {
+        wgf_log_error("wgf_body_set_type: characters aren't linked in this program (a game: \"characters\" in wgf.json's "
+                      "features; C: wgf_physics_enable_characters)");
+        return false;
+    }
     if ((b = changing(actor)) == NULL) return false;
     b->type = type;
     return true;

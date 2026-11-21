@@ -19,12 +19,14 @@ FEATURES = {
                     "glTF files: a scene's model path= lines"),
     'emitters': Feature('wgf_emitters', '_wgf_emitter2d_create', 'wgf_emitter2d_create',
                         "particles: a scene's emitter2d and emitter3d lines"),
+    'characters': Feature('wgf_characters', '_wgf_physics_enable_characters', 'wgf_physics_enable_characters',
+                          "characters: a body of type character (Jolt's CharacterVirtual), in code or a scene"),
     'autopilot': Feature('wgf_autopilot', '_wgf_app_enable_autopilot', 'wgf_app_enable_autopilot',
                          "the autopilot's runner: the build's, not the game's (--keep-autopilot)"),
 }
 
 # Features a game declares; the rest are a build's.
-DECLARED = ('gltf', 'emitters')
+DECLARED = ('gltf', 'emitters', 'characters')
 
 
 def check(names, where):

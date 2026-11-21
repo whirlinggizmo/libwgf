@@ -487,6 +487,8 @@ int main(void)
         expect(told(WGF_WORLD_EVENT_CONTACT_END, drop, floor_actor), "lifted off: the contact ended");
 
         wgf_actor_add_component(walker, WGF_COMPONENT_BODY);
+        expect(wgf_physics_enable_characters() && wgf_physics_is_characters_enabled(),
+               "characters linked (named here, so installed as the program loaded)");
         expect(wgf_body_set_type(walker, WGF_BODY_TYPE_CHARACTER) && wgf_body_get_type(walker) == WGF_BODY_TYPE_CHARACTER &&
                    wgf_body_set_shape(walker, WGF_BODY_SHAPE_CAPSULE, 0.4f, 1.8f, 0),
                "a character, a capsule");

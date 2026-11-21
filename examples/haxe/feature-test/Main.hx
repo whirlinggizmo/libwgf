@@ -981,6 +981,7 @@ class Main {
 		walker.setPosition(10, 3, 0);
 		walker.addComponent(Component.BODY);
 		final character:Body = walker;
+		expect(Physics.enableCharacters() && Physics.isCharactersEnabled(), "characters linked");
 		expect(character.setType(BodyType.CHARACTER) && character.setShape(BodyShape.CAPSULE, 0.4, 1.8, 0), "a character");
 		expect(character.setStepHeight(0.25) && near(character.getStepHeight(), 0.25) && character.setMaxSlope(0.7)
 			&& near(character.getMaxSlope(), 0.7), "its step and slope");
