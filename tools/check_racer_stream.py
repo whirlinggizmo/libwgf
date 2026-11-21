@@ -91,7 +91,7 @@ def why_not(game, browser_path):
 def export(game):
     """The game's web export, made fresh in build/racer_stream/: its site."""
     dest = ROOT / 'build' / 'racer_stream'
-    done = subprocess.run([sys.executable, str(ROOT / 'wgf'), 'export', '--web', '--out', str(dest)], cwd=game,
+    done = subprocess.run([sys.executable, str(ROOT / 'wgf'), 'export', '--web', '--keep-autopilot', '--out', str(dest)], cwd=game,
                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors='replace')
     if done.returncode != 0:
         raise RuntimeError('exporting failed:\n' + '\n'.join(done.stdout.strip().splitlines()[-15:]))

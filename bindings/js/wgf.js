@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "51dccab68ccf47f6" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "1d2d6c5fcb4b077b" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -232,6 +232,9 @@ export function wgf_app_run(init, tick, frame, shutdown) {
         trampolines = [0, 1, 2, 3].map((which) => host["addFunction"](() => dispatch(which), "vi"));
     }
     faulted = false;
+    // a host with the autopilot's runner lets an autopilot fly the run; a game's web export
+    // leaves it out (`wgf export`), so its host has none
+    if (typeof host["_wgf_app_enable_autopilot"] === "function") host["_wgf_app_enable_autopilot"]();
     return host["_wgf_app_run"](trampolines[0], trampolines[1], trampolines[2], trampolines[3], 0) !== 0;
 }
 
@@ -18959,6 +18962,34 @@ export function wgf_element_set_disabled(element, disabled) {
  */
 export function wgf_element_is_disabled(element) {
     const value = host["_wgf_element_is_disabled"](element);
+    return value !== 0;
+}
+
+// wgf: call wgf_app_enable_autopilot
+/**
+ * Let an autopilot fly this run (BUILDING.md, "Autopilot files": natively the file
+ * LIBWGF_AUTOPILOT names, on the web the one the page gives the module), as a build that is
+ * tested or checked does, before wgf_app_run. It is what links the autopilot's runner, so a
+ * program that never calls it (a game's web export, by default) carries none of it; given an
+ * autopilot all the same, it logs that it has none and quits. False once the program is
+ * running.
+ */
+export function wgf_app_enable_autopilot() {
+    const value = host["_wgf_app_enable_autopilot"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_app_is_autopilot_enabled
+/**
+ * Let an autopilot fly this run (BUILDING.md, "Autopilot files": natively the file
+ * LIBWGF_AUTOPILOT names, on the web the one the page gives the module), as a build that is
+ * tested or checked does, before wgf_app_run. It is what links the autopilot's runner, so a
+ * program that never calls it (a game's web export, by default) carries none of it; given an
+ * autopilot all the same, it logs that it has none and quits. False once the program is
+ * running.
+ */
+export function wgf_app_is_autopilot_enabled() {
+    const value = host["_wgf_app_is_autopilot_enabled"]();
     return value !== 0;
 }
 

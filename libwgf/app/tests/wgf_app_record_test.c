@@ -169,6 +169,7 @@ int main(void)
     FILE *f;
     char text[2048];
     size_t n;
+    expect(wgf_app_enable_autopilot() && wgf_app_is_autopilot_enabled(), "the runner enabled");
 
     set("LIBWGF_AUTOPILOT", NULL);
     set("LIBWGF_AUTOPILOT_RECORD", recording_path);

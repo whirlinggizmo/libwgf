@@ -241,5 +241,6 @@ int main(int argc, char **argv)
         return 2;
     }
     wgf_loop_set_tick_rate(60);
+    wgf_app_enable_autopilot(); /* flown a tick a frame (tools/bench/measure_actors.py) */
     return wgf_app_run(init, NULL, frame, NULL, NULL) ? 0 : 1;
 }

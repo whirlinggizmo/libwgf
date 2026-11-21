@@ -15,6 +15,16 @@
  * commands, its time, and how its result is logged are BUILDING.md's ("Autopilot
  * files"), a game developer's doc, stated only there; wgf_app_autopilot.c parses it. */
 
+/* The runner, as the runtime reaches it: through the hook wgf_app_enable_autopilot sets, so
+ * a program that never enables it links none of it (wgf_app.c). */
+typedef struct wgf_app_priv_autopilot_t {
+    bool (*start)(void);
+    void (*begin_frame)(long frame);
+    void (*end_frame)(long frame);
+    void (*stop)(long frames);
+} wgf_app_priv_autopilot_t;
+void wgf_app_priv_set_autopilot(const wgf_app_priv_autopilot_t *autopilot);
+
 /* Load the autopilot the environment names, if any, at the runtime's init; an autopilot that
  * can't be read is logged and ends the program. True when an autopilot is running. */
 bool wgf_app_priv_autopilot_start(void);

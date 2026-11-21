@@ -158,6 +158,10 @@ export const Actor = Object.freeze({
 export const App = Object.freeze({
     // wgf: call wgf_app_run
     run: raw.wgf_app_run,
+    // wgf: call wgf_app_enable_autopilot
+    enableAutopilot: raw.wgf_app_enable_autopilot,
+    // wgf: call wgf_app_is_autopilot_enabled
+    isAutopilotEnabled: raw.wgf_app_is_autopilot_enabled,
     // wgf: call wgf_app_quit
     quit: raw.wgf_app_quit,
     // wgf: call wgf_app_can_quit

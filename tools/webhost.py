@@ -112,7 +112,8 @@ def js_example_config(example):
 def build_js_example(example, variant, out, trimmed=False):
     """A JS example (examples/js/<name>/) as a site in `out`: its page and modules, the
     host and the JS binding beside them (with `trimmed`, both cut to the calls and enums
-    its modules name, as a release export is), and its assets copied in. The directory."""
+    its modules name, as a release export is, and the autopilot's runner, since a check
+    flies it), and its assets copied in. The directory."""
     example, out = Path(example), Path(out)
     if out.exists():
         shutil.rmtree(out)
@@ -128,6 +129,7 @@ def build_js_example(example, variant, out, trimmed=False):
             text, (jsbinding.BINDING / f'{jsbinding.TYPED}.js').read_text(encoding='utf-8'))
         calls |= typed_calls
         known = set(json.loads(FULL.read_text(encoding='utf-8'))['exports'])
+        calls.add('wgf_app_enable_autopilot')  # a check flies it: its host keeps the autopilot's runner
         listing = Path(variants.work(variant)) / 'host' / f'{example.name}-exports.json'
         listing.parent.mkdir(parents=True, exist_ok=True)
         listing.write_text(json.dumps({'exports': sorted({'_' + c for c in calls} & known)}, indent=1) + '\n',

@@ -3,6 +3,7 @@
 #include "wgf_app.h"
 
 #include <stddef.h>
+#include <stdlib.h>
 
 #include "wgf_platform_gamepad_priv.h"
 #include "wgf_platform_input_priv.h"
@@ -13,6 +14,7 @@
 #include "wgf_log.h"
 #include "wgf_app_priv.h"
 #include "wgf_app_autopilot_priv.h"
+#include "wgf_app_autopilot_source_priv.h"
 #include "wgf_app_tick_clock_priv.h"
 #include "wgf_time.h"
 #include "wgf_window.h"
@@ -50,8 +52,34 @@ static struct {
     bool recording;        /* played by hand and recorded as an autopilot: the autopilot's time, at 60 a second */
     const wgf_app_priv_recorder_t *recorder; /* set by a program built to record; NULL in every other */
     const wgf_app_priv_replay_t *replay;     /* set by a program's first replay call; NULL before */
+    const wgf_app_priv_autopilot_t *autopilot; /* set by wgf_app_enable_autopilot; NULL: none linked */
     long frames;           /* frames run since init */
 } app = {.tick_rate = DEFAULT_TICK_RATE, .time_scale = 1.0f};
+
+/* An autopilot given to a build without the runner: said, and the run ends, rather than a
+ * check waiting on a result that never comes. */
+static void refuse_autopilot(void)
+{
+    bool named = false;
+    char *text = wgf_app_priv_autopilot_read_source(&named);
+    if (text != NULL || named) {
+        /* in the autopilot's own words, so whatever waits on its result (a check) has one at once */
+        wgf_log_error("wgf_autopilot: FAIL (an autopilot was given, but this build has no autopilot runner: "
+                      "wgf_app_enable_autopilot; a game's export, wgf export --keep-autopilot); quitting");
+        wgf_platform_priv_request_quit();
+    }
+    free(text);
+}
+
+void wgf_app_priv_set_autopilot(const wgf_app_priv_autopilot_t *autopilot)
+{
+    app.autopilot = autopilot;
+}
+
+bool wgf_app_is_autopilot_enabled(void)
+{
+    return app.autopilot != NULL;
+}
 
 static void call(wgf_app_callback_t callback)
 {
@@ -75,7 +103,8 @@ static void on_init(void)
     app.frame_cost = 0.0f;
     app.frame_ended = 0.0;
     app.frames = 0;
-    app.flown = wgf_app_priv_autopilot_start(); /* before the program's init: it sets the seed */
+    app.flown = app.autopilot != NULL && app.autopilot->start(); /* before the program's init: it sets the seed */
+    if (app.autopilot == NULL) refuse_autopilot();
     app.recording = !app.flown && app.recorder != NULL && app.recorder->start();
     if (app.recording && app.target_fps <= 0) app.target_fps = 60; /* a sixtieth a frame, as it will be played */
     wgf_platform_priv_set_paced(!app.flown);  /* a headless run flown by an autopilot waits for no display */
@@ -181,7 +210,7 @@ static void on_frame(void)
     wgf_core_priv_update();
     if (!pace()) return;
     started = wgf_time_get_seconds(); /* the frame's own work, from here to its drawing's end */
-    wgf_app_priv_autopilot_begin_frame(app.frames); /* the frame's autopilot inputs, before its ticks */
+    if (app.autopilot != NULL) app.autopilot->begin_frame(app.frames); /* the frame's autopilot inputs, before its ticks */
     if (app.replay != NULL) app.replay->inputs();   /* and a replay's */
     wgf_platform_priv_gamepad_begin_frame();     /* before the ticks: they read the pads too */
     if (app.recording) app.recorder->frame(app.frames);
@@ -208,7 +237,7 @@ static void on_frame(void)
     wgf_platform_priv_gamepad_end_frame();
     wgf_platform_priv_window_end_frame();
     wgf_platform_priv_tilt_end_frame();
-    wgf_app_priv_autopilot_end_frame(app.frames); /* its expectations, after it */
+    if (app.autopilot != NULL) app.autopilot->end_frame(app.frames); /* its expectations, after it */
     app.frames++;
 }
 
@@ -218,7 +247,7 @@ static void on_shutdown(void)
         call(app.shutdown);
         app.started = false;
     }
-    wgf_app_priv_autopilot_stop(app.frames);
+    if (app.autopilot != NULL) app.autopilot->stop(app.frames);
     if (app.recording) app.recorder->stop(app.frames);
     app.recording = false;
     if (app.replay != NULL) app.replay->stop();

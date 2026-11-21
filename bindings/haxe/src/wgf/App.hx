@@ -10,6 +10,28 @@ import wgf.impl.Raw;
 **/
 class App {
 	/**
+	    Let an autopilot fly this run (BUILDING.md, "Autopilot files": natively the file
+	    LIBWGF_AUTOPILOT names, on the web the one the page gives the module), as a build that is
+	    tested or checked does, before wgf_app_run. It is what links the autopilot's runner, so a
+	    program that never calls it (a game's web export, by default) carries none of it; given an
+	    autopilot all the same, it logs that it has none and quits. False once the program is
+	    running.
+	**/
+	public static inline function enableAutopilot():Bool
+		return Raw.wgf_app_enable_autopilot();
+
+	/**
+	    Let an autopilot fly this run (BUILDING.md, "Autopilot files": natively the file
+	    LIBWGF_AUTOPILOT names, on the web the one the page gives the module), as a build that is
+	    tested or checked does, before wgf_app_run. It is what links the autopilot's runner, so a
+	    program that never calls it (a game's web export, by default) carries none of it; given an
+	    autopilot all the same, it logs that it has none and quits. False once the program is
+	    running.
+	**/
+	public static inline function isAutopilotEnabled():Bool
+		return Raw.wgf_app_is_autopilot_enabled();
+
+	/**
 	    Ask the program to quit: the frame under way finishes, then shutdown runs.
 	**/
 	public static inline function quit():Void

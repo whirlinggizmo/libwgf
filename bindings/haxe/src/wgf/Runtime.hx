@@ -73,6 +73,11 @@ class Runtime {
 		// a build made to record a run by hand (`wgf autopilot --record`): never a shipped one
 		untyped __cpp__("wgf_app_priv_record_install()");
 		#end
+		#if wgf_autopilot
+		// a build an autopilot may fly (`wgf build`, `run`, and the checks pass -D wgf_autopilot);
+		// a shipped one (`wgf export`) links none of the runner
+		App.enableAutopilot();
+		#end
 		return untyped __cpp__("::wgf_app_run(wgf_hx_init, wgf_hx_tick, wgf_hx_frame, wgf_hx_shutdown, (void *)0)");
 		#end
 	}

@@ -1,3 +1,4 @@
+#include "wgf_app.h"
 #include "wgf_app_autopilot_priv.h"
 
 #include <errno.h>
@@ -833,6 +834,15 @@ bool wgf_app_priv_autopilot_start_text(const char *text)
     autopilot.running = true;
     wgf_log_info("wgf_autopilot: %d commands%s", autopilot.script.count,
                  autopilot.script.end_frame >= 0 ? "" : ", no end");
+    return true;
+}
+
+bool wgf_app_enable_autopilot(void)
+{
+    static const wgf_app_priv_autopilot_t hooks = {wgf_app_priv_autopilot_start, wgf_app_priv_autopilot_begin_frame,
+                                                   wgf_app_priv_autopilot_end_frame, wgf_app_priv_autopilot_stop};
+    if (wgf_app_is_running()) return false;
+    wgf_app_priv_set_autopilot(&hooks);
     return true;
 }
 

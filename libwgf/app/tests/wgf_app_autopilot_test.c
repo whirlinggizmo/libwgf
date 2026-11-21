@@ -150,6 +150,7 @@ int main(void)
 {
     run_t run;
     float seeded_first;
+    expect(wgf_app_enable_autopilot() && wgf_app_is_autopilot_enabled(), "the runner enabled");
 
 #if defined(_WIN32)
     _putenv_s("LIBWGF_AUTOPILOT", autopilot_path);

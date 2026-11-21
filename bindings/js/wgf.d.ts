@@ -13021,6 +13021,26 @@ export declare function wgf_element_set_disabled(element: wgf_element_t | 0, dis
 export declare function wgf_element_is_disabled(element: wgf_element_t | 0): boolean;
 
 /**
+ * Let an autopilot fly this run (BUILDING.md, "Autopilot files": natively the file
+ * LIBWGF_AUTOPILOT names, on the web the one the page gives the module), as a build that is
+ * tested or checked does, before wgf_app_run. It is what links the autopilot's runner, so a
+ * program that never calls it (a game's web export, by default) carries none of it; given an
+ * autopilot all the same, it logs that it has none and quits. False once the program is
+ * running.
+ */
+export declare function wgf_app_enable_autopilot(): boolean;
+
+/**
+ * Let an autopilot fly this run (BUILDING.md, "Autopilot files": natively the file
+ * LIBWGF_AUTOPILOT names, on the web the one the page gives the module), as a build that is
+ * tested or checked does, before wgf_app_run. It is what links the autopilot's runner, so a
+ * program that never calls it (a game's web export, by default) carries none of it; given an
+ * autopilot all the same, it logs that it has none and quits. False once the program is
+ * running.
+ */
+export declare function wgf_app_is_autopilot_enabled(): boolean;
+
+/**
  * Ask the program to quit: the frame under way finishes, then shutdown runs.
  */
 export declare function wgf_app_quit(): void;

@@ -42,6 +42,15 @@ typedef void (*wgf_app_callback_t)(void *user);
 WGF_API bool wgf_app_run(wgf_app_callback_t init, wgf_app_callback_t tick, wgf_app_callback_t frame,
                            wgf_app_callback_t shutdown, void *user);
 
+/* Let an autopilot fly this run (BUILDING.md, "Autopilot files": natively the file
+ * LIBWGF_AUTOPILOT names, on the web the one the page gives the module), as a build that is
+ * tested or checked does, before wgf_app_run. It is what links the autopilot's runner, so a
+ * program that never calls it (a game's web export, by default) carries none of it; given an
+ * autopilot all the same, it logs that it has none and quits. False once the program is
+ * running. */
+WGF_API bool wgf_app_enable_autopilot(void);
+WGF_API bool wgf_app_is_autopilot_enabled(void);
+
 /* Ask the program to quit: the frame under way finishes, then shutdown runs. */
 WGF_API void wgf_app_quit(void);
 

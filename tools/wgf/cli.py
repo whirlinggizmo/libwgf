@@ -26,12 +26,14 @@
   to the frame, which is the file's end when --frame isn't given)
     wgf serve [--port N]                 the game in a browser, reloaded as its Haxe or
                                          an asset is saved, its state kept
-    wgf export [--web] [--desktop] [--out DIR] [--autopilot FILE]
+    wgf export [--web] [--desktop] [--out DIR] [--autopilot FILE] [--keep-autopilot]
                                          export/web (a static folder with a trimmed host,
                                          its assets' manifests written: gen_manifest.py)
                                          and export/desktop, each smoke-tested, the web
                                          held to the game's size budget (default both);
-                                         --autopilot flies each with FILE, not the smoke run
+                                         --autopilot flies each with FILE, not the smoke run;
+                                         each ships without the autopilot's runner
+                                         (smoke-tested with it) unless --keep-autopilot
 
 An autopilot FILE flown is a path, or a file in the game's autopilot folder by its name
 (`wgf autopilot lap.autopilot`), as wgf.json's "playthrough" names one.
@@ -286,7 +288,7 @@ def cmd_serve(args):
 
 # ---- export ----------------------------------------------------------------------------
 
-def trimmed_exports(program_js, out, assets=None):
+def trimmed_exports(program_js, out, assets=None, autopilot=False):
     """The host's exports a release program calls, written as a trimmed host's list: every
     call the program makes is the JS binding's by its quoted key (Raw.binding["wgf_..."]),
     wherever dead-code elimination and inlining left it, so the keys in the program's JS
@@ -301,6 +303,8 @@ def trimmed_exports(program_js, out, assets=None):
         calls.add('_wgf_mesh_create')
     if games.names_an_emitter(assets):
         calls.add('_wgf_emitter2d_create')
+    if autopilot:  # the autopilot's runner (wgf_app_enable_autopilot), which the JS binding's run turns on
+        calls.add('_wgf_app_enable_autopilot')
     exports = sorted(calls | set(jsbinding.RUN_CALLS))
     out.write_text(json.dumps({'exports': exports}, indent=1) + '\n', encoding='utf-8')
     return exports
@@ -311,20 +315,23 @@ def smoke_autopilot(game):
     return path.read_text(encoding='utf-8') if path.exists() else games.frames_autopilot(120)
 
 
-def export_web(game, out, autopilot=None):
+def export_web(game, out, autopilot=None, keep_autopilot=False):
     """The web export: a release build, then its host trimmed to what it calls, the
     assets copied in with their manifests (a game that sets the root one,
     wgf_asset_set_manifest("manifest.json"), fetches only what changed since a visit; one
     that doesn't, nothing more), smoke-tested in a browser, and measured against the
-    budget."""
+    budget. Its host has no autopilot runner unless `keep_autopilot`: it is smoke-tested
+    with one, then linked again without it (the program and assets the same)."""
     work = game.root / 'build' / 'export-web'
     games.build_web(game, release=True, out=work)  # the program first: what it calls makes the host
     listing = work / 'exports.json'
-    exports = trimmed_exports(work / f'{game.name}.js', listing, game.assets)
+    flown_listing = work / 'exports-flown.json'
+    exports = trimmed_exports(work / f'{game.name}.js', listing, game.assets, autopilot=keep_autopilot)
+    trimmed_exports(work / f'{game.name}.js', flown_listing, game.assets, autopilot=True)
     if out.exists():
         shutil.rmtree(out)
     out.mkdir(parents=True)
-    games.build_web(game, release=True, out=out, exports=listing)
+    games.build_web(game, release=True, out=out, exports=flown_listing)
     assets = out / 'assets'
     if assets.is_symlink():
         assets.unlink()
@@ -333,36 +340,49 @@ def export_web(game, out, autopilot=None):
                    check=True)  # over what is deployed, its last file in place
     for notice in ('LICENSE', 'THIRD_PARTY_NOTICES.md'):
         shutil.copyfile(ROOT / notice, out / f'libwgf-{notice}')
-    files = [out / 'wgf-host.wasm', out / 'wgf-host.js', out / 'wgf.js', out / f'{game.name}.js', out / 'index.html']
-    sizes = {f.name: games.gzip_size(f) for f in files}
-    total = sum(sizes.values())
-    say(f'web export: {len(exports)} calls in its host; '
-        + ', '.join(f'{name} {size / 1024:.1f} KB' for name, size in sizes.items())
-        + f'; {total / 1024:.1f} KB gzipped in all')
-    ok = True
-    if game.budget_kb is not None and total > game.budget_kb * 1024:
-        say(f'web export: FAIL: {total / 1024:.1f} KB is over the budget of {game.budget_kb} KB (wgf.json)')
-        ok = False
     flown = autopilot.read_text(encoding='utf-8') if autopilot else smoke_autopilot(game)
     lines = games.run_page(out, 'index.html', flown, echo=False, timeout=games.autopilot_seconds(flown))
     smoke = games.judged(lines)
     for line in lines:
         if '[ERROR]' in line or 'FAIL' in line:
             print(line)
+    if not keep_autopilot:  # what ships: the same program and assets, its host without the runner
+        try:
+            webhost.build(games.variant_for('web', True), listing, out, constants=False)
+        except RuntimeError as e:
+            raise games.GameError(str(e))
+    files = [out / 'wgf-host.wasm', out / 'wgf-host.js', out / 'wgf.js', out / f'{game.name}.js', out / 'index.html']
+    sizes = {f.name: games.gzip_size(f) for f in files}
+    total = sum(sizes.values())
+    say(f'web export: {len(exports)} calls in its host{"" if keep_autopilot else ", no autopilot runner"}; '
+        + ', '.join(f'{name} {size / 1024:.1f} KB' for name, size in sizes.items())
+        + f'; {total / 1024:.1f} KB gzipped in all')
+    ok = True
+    if game.budget_kb is not None and total > game.budget_kb * 1024:
+        say(f'web export: FAIL: {total / 1024:.1f} KB is over the budget of {game.budget_kb} KB (wgf.json)')
+        ok = False
     say(f'web export: {autopilot.name if autopilot else "smoke"} {"PASS" if smoke else "FAIL"} ({out})')
     return ok and bool(smoke)
 
 
-def export_desktop(game, out, autopilot=None):
-    """The desktop export: a release build with its assets copied beside it, run with the
-    smoke autopilot (in a window: on Linux with no display, on Xvfb's)."""
-    if out.exists():
-        shutil.rmtree(out)
-    exe = games.build_native(game, 'desktop', release=True, out=out)
+def copy_assets(game, out):
+    """The game's assets in `out` as a copy, where a build placed them as a link: an export
+    is copied elsewhere whole."""
     assets = out / 'assets'
     if assets.is_symlink():
         assets.unlink()
         shutil.copytree(game.assets, assets) if game.assets.is_dir() else assets.mkdir()
+
+
+def export_desktop(game, out, autopilot=None, keep_autopilot=False):
+    """The desktop export: a release build with its assets copied beside it, run with the
+    smoke autopilot (in a window: on Linux with no display, on Xvfb's). Its executable has
+    no autopilot runner unless `keep_autopilot`: the build smoke-tested has one, and the
+    one shipped is built again without it."""
+    if out.exists():
+        shutil.rmtree(out)
+    exe = games.build_native(game, 'desktop', release=True, out=out)
+    copy_assets(game, out)
     for notice in ('LICENSE', 'THIRD_PARTY_NOTICES.md'):
         shutil.copyfile(ROOT / notice, out / f'libwgf-{notice}')
     xvfb = None
@@ -386,7 +406,11 @@ def export_desktop(game, out, autopilot=None):
     smoke = code == 0 and games.judged(output)
     if not smoke:
         print('\n'.join(output.splitlines()[-20:]))
-    say(f'desktop export: {autopilot.name if autopilot else "smoke"} {"PASS" if smoke else "FAIL"} ({exe})')
+    if smoke and not keep_autopilot:  # what ships: built again without the runner
+        exe = games.build_native(game, 'desktop', release=True, out=out, autopilot=False)
+        copy_assets(game, out)  # the build placed them as a link again
+    say(f'desktop export: {autopilot.name if autopilot else "smoke"} {"PASS" if smoke else "FAIL"} ({exe}'
+        + (')' if keep_autopilot else ', no autopilot runner)'))
     return bool(smoke)
 
 
@@ -397,9 +421,9 @@ def cmd_export(args):
     ok = True
     autopilot = autopilot_file(game, args.autopilot)
     if args.web or both:
-        ok = export_web(game, out / 'web', autopilot) and ok
+        ok = export_web(game, out / 'web', autopilot, keep_autopilot=args.keep_autopilot) and ok
     if args.desktop or both:
-        ok = export_desktop(game, out / 'desktop', autopilot) and ok
+        ok = export_desktop(game, out / 'desktop', autopilot, keep_autopilot=args.keep_autopilot) and ok
     return 0 if ok else 1
 
 
@@ -457,6 +481,8 @@ def parser():
     p.add_argument('--desktop', action='store_true')
     p.add_argument('--autopilot', help='an autopilot to fly against each export in place of its smoke run '
                    '(its playthrough, say)')
+    p.add_argument('--keep-autopilot', action='store_true',
+                   help='keep the autopilot\'s runner in what is exported, so the page and executable can be flown')
     p.add_argument('--out')
     p.set_defaults(run=cmd_export)
     return ap

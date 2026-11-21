@@ -196,11 +196,12 @@ def names_an_emitter(assets):
     return bool(scene_lines(assets)[0] & {'emitter2d', 'emitter3d'})
 
 
-def build_native(game, target, release=False, out=None, record=False):
+def build_native(game, target, release=False, out=None, record=False, autopilot=True):
     """The game built by hxcpp against libwgf's staged variant for `target` (desktop or
     headless), its executable in `out` (build/<target>) with its assets beside it; with
     `record`, built to record a run by hand (-D wgf_record), in build/<target>-record, as
-    no other build is. The executable's path."""
+    no other build is; with `autopilot` (every build but a shipped one), able to be flown
+    (-D wgf_autopilot: the runner linked). The executable's path."""
     variant = variant_for(target, release)
     if not binding.has_hxcpp():
         raise GameError(f'no hxcpp: {binding.hxcpp.ensure()}')
@@ -214,6 +215,7 @@ def build_native(game, target, release=False, out=None, record=False):
     defines = ['HXCPP_M64', f'wgf_out={variants.out(variant).as_posix()}',
                f'wgf_binding={binding.BINDING.as_posix()}'] + (['wgf_headless'] if target == 'headless' else [])
     defines += ['wgf_record'] if record else []
+    defines += ['wgf_autopilot'] if autopilot else []
     defines += ['wgf_gltf'] if names_a_file(game.assets) else []  # a scene's model path= loads through it
     defines += ['wgf_emitters'] if names_an_emitter(game.assets) else []  # so do a scene's emitter lines
     ok, output = haxe(game, ['--cpp', work], defines, [] if release else ['-debug'])

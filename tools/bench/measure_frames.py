@@ -100,7 +100,7 @@ def export(name, game=None):
     `game`: its folder, when it isn't libwgf's games/<name>."""
     game = game or ROOT / 'games' / name
     dest = ROOT / 'build' / 'frames' / name
-    done = subprocess.run([sys.executable, str(ROOT / 'wgf'), 'export', '--web', '--out', str(dest)], cwd=game,
+    done = subprocess.run([sys.executable, str(ROOT / 'wgf'), 'export', '--web', '--keep-autopilot', '--out', str(dest)], cwd=game,
                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors='replace')
     if done.returncode != 0:
         raise RuntimeError(f'exporting {name} failed:\n' + '\n'.join(done.stdout.strip().splitlines()[-15:]))

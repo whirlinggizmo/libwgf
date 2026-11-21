@@ -69,7 +69,7 @@ python3 tools/check_web.py        # in a headless browser: fails one that doesn'
                                   # and saves a screenshot of each in build/<preset>/check_web/
 ```
 
-A program flies an autopilot -- a file of inputs and expectations ("Autopilot files", below) -- when `LIBWGF_AUTOPILOT` names one; on the web a page hands the module the file's text as `Module["wgfAutopilot"]`.
+A program flies an autopilot -- a file of inputs and expectations ("Autopilot files", below) -- when `LIBWGF_AUTOPILOT` names one; on the web a page hands the module the file's text as `Module["wgfAutopilot"]`. Only a program that opts in has the runner: a C program calls `wgf_app_enable_autopilot()` before `wgf_app_run`; one that doesn't links none of it, and given an autopilot says so (`wgf_autopilot: FAIL (... no autopilot runner ...)`) and quits.
 
 ## The web
 
@@ -129,7 +129,7 @@ wgf export [--autopilot FILE]       # export/web (a trimmed host) and export/des
 
 ### Autopilot files
 
-An autopilot flies a program with no one at it: inputs at frames, and expectations on probes (`wgf_probe.h`), the numbers a program publishes. `wgf autopilot`, `wgf run --autopilot`, and the checks run them; natively the file `LIBWGF_AUTOPILOT` names is flown, and on the web a page hands the module the file's text as `Module["wgfAutopilot"]`. A line each, `#` starting a comment:
+An autopilot flies a program with no one at it: inputs at frames, and expectations on probes (`wgf_probe.h`), the numbers a program publishes. `wgf autopilot`, `wgf run --autopilot`, and the checks run them; natively the file `LIBWGF_AUTOPILOT` names is flown, and on the web a page hands the module the file's text as `Module["wgfAutopilot"]`. The runner is opt in: the `wgf` tool's own builds have it (natively `-D wgf_autopilot`; on the web the full host, which the JS binding's run turns on), and what `wgf export` ships doesn't (each export is smoke-tested with it, then made again without it: 13 KB of gzip off Wardens' page), unless `--keep-autopilot`, so a deployed page can be flown. A line each, `#` starting a comment:
 
 ```
 wgf-autopilot 1                 the first line: the format and its version

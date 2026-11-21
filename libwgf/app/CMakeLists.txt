@@ -26,6 +26,7 @@ if(WGF_TESTS)
         wgf_test(app wgf_app_loop_test)
         wgf_test(app wgf_app_frame_stats_test)
         wgf_test(app wgf_app_autopilot_test)
+        wgf_test(app wgf_app_no_autopilot_test)
         wgf_test(app wgf_app_replay_test)
         # Recording writes a run's keystrokes to a file: Windows Defender quarantines a MinGW build
         # of that test as a keylogger (Trojan:Win64/XWorm.GHM!MTB, a false positive; MSVC's isn't

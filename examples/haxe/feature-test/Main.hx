@@ -1168,6 +1168,8 @@ class Main {
 			Loop.getTickFraction();
 			Loop.getFps();
 			expect(App.isRunning(), "running");
+			expect(!App.enableAutopilot(), "the autopilot enabled only before the run");
+			App.isAutopilotEnabled();
 			expect(!Debug.isFpsShown(), "the frame-rate overlay off by default");
 			Debug.showFps(0, 8, 8, 14, Color.get(ColorStock.LIME));
 			expect(Debug.isFpsShown(), "and shown");
