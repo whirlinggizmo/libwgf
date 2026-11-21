@@ -863,9 +863,9 @@ static void draw(Clay_RenderCommandArray commands)
         switch (command->commandType) {
         case CLAY_RENDER_COMMAND_TYPE_RECTANGLE: {
             const Clay_RectangleRenderData *rect = &command->renderData.rectangle;
-            const int part = (int)(intptr_t)command->userData - 1;
-            int skin = part >= 0 && ui.skins[part].texture != 0 ? part : -1;
-            if (skin < 0 && (part == WGF_UI_COLOR_BUTTON_HOVERED || part == WGF_UI_COLOR_BUTTON_PRESSED) &&
+            const int drawn = (int)(intptr_t)command->userData - 1; /* its part (part_of), -1 for none */
+            int skin = drawn >= 0 && ui.skins[drawn].texture != 0 ? drawn : -1;
+            if (skin < 0 && (drawn == WGF_UI_COLOR_BUTTON_HOVERED || drawn == WGF_UI_COLOR_BUTTON_PRESSED) &&
                 ui.skins[WGF_UI_COLOR_BUTTON].texture != 0) {
                 skin = WGF_UI_COLOR_BUTTON; /* a state without art of its own: the button's */
             }
