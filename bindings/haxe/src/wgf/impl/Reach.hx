@@ -1257,14 +1257,18 @@ class Reach {
 		"wgf_tween_turn",
 		"wgf_ui_begin",
 		"wgf_ui_begin_box",
+		"wgf_ui_begin_grid",
 		"wgf_ui_begin_group",
 		"wgf_ui_begin_panel",
 		"wgf_ui_button",
 		"wgf_ui_checkbox",
+		"wgf_ui_choice",
+		"wgf_ui_combo",
 		"wgf_ui_custom",
 		"wgf_ui_draw_documents",
 		"wgf_ui_end",
 		"wgf_ui_end_box",
+		"wgf_ui_end_grid",
 		"wgf_ui_end_group",
 		"wgf_ui_end_panel",
 		"wgf_ui_get_bounds",
@@ -1287,6 +1291,7 @@ class Reach {
 		"wgf_ui_image_button",
 		"wgf_ui_is_disabled",
 		"wgf_ui_label",
+		"wgf_ui_number",
 		"wgf_ui_progress",
 		"wgf_ui_reset_style",
 		"wgf_ui_separator",
@@ -1311,6 +1316,8 @@ class Reach {
 		"wgf_ui_set_width",
 		"wgf_ui_slider",
 		"wgf_ui_spacer",
+		"wgf_ui_tabs",
+		"wgf_ui_tile",
 		"wgf_ui_toggle",
 		"wgf_vehicle_get_anti_roll",
 		"wgf_vehicle_get_drive",
@@ -1434,7 +1441,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1425) 0];
+	static final counts:Array<Int> = [for (_ in 0...1432) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

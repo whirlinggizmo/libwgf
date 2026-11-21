@@ -16,4 +16,5 @@ enum abstract UiValue(Int) from Int to Int {
 	var SLIDER_HEIGHT = 11;
 	var HANDLE_SIZE = 12;
 	var LINE_WIDTH = 13;
+	var TILE_SIZE = 14;
 }

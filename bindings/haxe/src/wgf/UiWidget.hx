@@ -17,6 +17,12 @@ package wgf;
       SLIDER     base: the track; fill: behind the handle; handle: the handle
       PROGRESS   base: the track; fill: the progress; edge: at the fill's front
       GROUP      base: its outline, in place of the line
+      TAB        base: each tab, PRESSED while chosen
+      COMBO      base: the combo
+      NUMBER     base: the box its value is in (its minus and plus are BUTTON's)
+      TILE       base: the tile
+
+    A choice's toggles are TOGGLE's, each PRESSED while chosen.
 
     A fill is stretched over the filled part, or clipped: drawn over the whole track and
     shown up to the value, so a bar with round ends shows its far end only when full
@@ -35,4 +41,8 @@ enum abstract UiWidget(Int) from Int to Int {
 	var SLIDER = 4;
 	var PROGRESS = 5;
 	var GROUP = 6;
+	var TAB = 7;
+	var COMBO = 8;
+	var NUMBER = 9;
+	var TILE = 10;
 }

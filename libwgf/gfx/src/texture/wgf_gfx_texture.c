@@ -63,7 +63,7 @@ static texture_t *textures;
  * made at setup, never let go of before shutdown. */
 static wgf_texture_t placeholder;
 static sg_view placeholder_view;
-static sg_sampler samplers[3][3][2][2]; /* wrap u, wrap v, filter, mipmaps */
+static sg_sampler samplers[3][3][3][2]; /* wrap u, wrap v, filter, mipmaps */
 
 static texture_t *texture_of_at(wgf_texture_t texture, const char *caller)
 {
@@ -95,8 +95,14 @@ sg_sampler wgf_gfx_priv_texture_sampler(wgf_texture_wrap_t wrap_u, wgf_texture_w
         memset(&desc, 0, sizeof(desc));
         desc.min_filter = f;
         desc.mag_filter = f;
-        desc.mipmap_filter = f;
-        desc.max_lod = mipmaps ? 1000.0f : 0.0f; /* every level there is, or the base level only */
+        if (mipmaps && filter != WGF_TEXTURE_FILTER_LINEAR_NO_MIPMAPS) {
+            desc.mipmap_filter = f;
+            desc.max_lod = 1000.0f; /* every level there is */
+        } else { /* the base level only (none built, or LINEAR_NO_MIPMAPS): the nearest level, the
+                    LOD kept under a half. Not a max_lod of 0, which sokol reads as unset: every level */
+            desc.mipmap_filter = SG_FILTER_NEAREST;
+            desc.max_lod = 0.25f;
+        }
         desc.wrap_u = wraps[wrap_u];
         desc.wrap_v = wraps[wrap_v];
         *sampler = sg_make_sampler(&desc);
@@ -970,7 +976,7 @@ bool wgf_texture_set_sampling(wgf_texture_t texture, wgf_texture_wrap_t wrap_u, 
 {
     texture_t *texture_ptr = texture_of(texture);
     if (texture_ptr == NULL || (int)wrap_u < 0 || wrap_u > WGF_TEXTURE_WRAP_MIRROR || (int)wrap_v < 0 ||
-        wrap_v > WGF_TEXTURE_WRAP_MIRROR || (int)filter < 0 || filter > WGF_TEXTURE_FILTER_NEAREST) {
+        wrap_v > WGF_TEXTURE_WRAP_MIRROR || (int)filter < 0 || filter > WGF_TEXTURE_FILTER_LINEAR_NO_MIPMAPS) {
         return false;
     }
     texture_ptr->wrap_u = wrap_u;
@@ -1081,7 +1087,7 @@ void wgf_gfx_priv_texture_shutdown(void)
     }
     for (u = 0; u < 3; u++) {
         for (v = 0; v < 3; v++) {
-            for (f = 0; f < 2; f++) {
+            for (f = 0; f < 3; f++) {
                 for (m = 0; m < 2; m++) {
                     if (samplers[u][v][f][m].id != SG_INVALID_ID) sg_destroy_sampler(samplers[u][v][f][m]);
                     samplers[u][v][f][m].id = SG_INVALID_ID;

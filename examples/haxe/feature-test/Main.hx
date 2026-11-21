@@ -1266,6 +1266,10 @@ class Main {
 			Ui.setDisabled(false);
 			expect(Ui.beginGroup("group", "Group") && Ui.separator() && Ui.image(tiles, 16, 16) && Ui.custom("room", 20, 10)
 				&& Ui.endGroup(), "a group of a separator, an image, and a room of the program's");
+			expect(Ui.tabs("tabs", "One\nTwo", 1) == 1 && Ui.choice("choice", "A\nB\nC", 2) == 2 && Ui.combo("combo", "X\nY", 0) == 0,
+				"tabs, a choice, and a combo, untouched");
+			expect(near(Ui.number("number", 0.5, 0, 1, 0.1), 0.5), "a number, untouched");
+			expect(Ui.beginGrid("grid", 2) && !Ui.tile("tile", tiles, "Tile") && Ui.endGrid(), "a grid of a tile");
 			Ui.endPanel();
 			expect(Ui.end(), "a UI");
 		}

@@ -4,4 +4,5 @@ package wgf;
 enum abstract TextureFilter(Int) from Int to Int {
 	var LINEAR = 0;
 	var NEAREST = 1;
+	var LINEAR_NO_MIPMAPS = 2;
 }

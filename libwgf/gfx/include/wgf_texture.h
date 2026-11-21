@@ -30,8 +30,11 @@ typedef enum wgf_texture_wrap_t {
 } wgf_texture_wrap_t;
 
 typedef enum wgf_texture_filter_t {
-    WGF_TEXTURE_FILTER_LINEAR = 0, /* smooth */
-    WGF_TEXTURE_FILTER_NEAREST = 1 /* sharp texels, for pixel art */
+    WGF_TEXTURE_FILTER_LINEAR = 0,           /* smooth */
+    WGF_TEXTURE_FILTER_NEAREST = 1,          /* sharp texels, for pixel art */
+    WGF_TEXTURE_FILTER_LINEAR_NO_MIPMAPS = 2 /* smooth, from the full image alone, never its mipmaps: a sheet of
+                                                cells drawn smaller than it is (a UI skin's states, an atlas),
+                                                whose mipmaps would blend each cell's edge with the next's */
 } wgf_texture_filter_t;
 
 /* A texture from an image file: PNG, JPEG, BMP, TGA, or GIF (its first frame), or a

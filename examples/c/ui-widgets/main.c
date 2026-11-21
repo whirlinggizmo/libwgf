@@ -20,7 +20,9 @@
  * from one sheet, their faces on a lip their text sinks onto when pressed; the loading
  * bar's blue rail is clipped, shown up to its value over the grey one, its round far end
  * only when full; the star answers on its round face alone, its clear corners left to the
- * screen, and sets the volume full. Save is disabled. The theme row shows the same panel
+ * screen, and sets the volume full. Save is disabled. Its tabs show two more pages: a
+ * choice, a combo, and numbers; and a grid of level tiles, which the arrows move through in
+ * two dimensions. The theme row shows the same panel
  * in libwgf's own style and in a recolored one. The pointer, the arrow keys, Tab, Enter,
  * and a pad work it; Escape quits where quitting means anything. Laid out for a design of
  * 580 by 640, scaled to fit the window or a phone's screen (EXPAND: the blue past it); on a
@@ -29,8 +31,9 @@
 enum { PLAIN, RECOLORED, SKINNED };
 
 static int theme = -1, chosen = SKINNED;
-static float volume = 0.6f, loaded = 0.4f;
+static float volume = 0.6f, loaded = 0.4f, speed = 1.5f;
 static bool music = true, loading;
+static int page, difficulty = 1, color, lives = 3, level = -1;
 static wgf_texture_t tex[13];
 static wgf_image_t star_mask;
 static wgf_font_t font;
@@ -92,6 +95,11 @@ static void set_theme(int which)
         skin(WGF_UI_WIDGET_GROUP, WGF_UI_PART_BASE, PANEL, 16, false);
         faces(WGF_UI_WIDGET_BUTTON);
         faces(WGF_UI_WIDGET_TOGGLE);
+        faces(WGF_UI_WIDGET_TAB);
+        faces(WGF_UI_WIDGET_COMBO);
+        faces(WGF_UI_WIDGET_TILE);
+        skin(WGF_UI_WIDGET_NUMBER, WGF_UI_PART_BASE, CHECK_BOX, 8, false);
+        wgf_ui_set_style_value(WGF_UI_VALUE_TILE_SIZE, 120);
         skin(WGF_UI_WIDGET_SLIDER, WGF_UI_PART_BASE, RAIL_SLIDER, 16, true);
         skin(WGF_UI_WIDGET_SLIDER, WGF_UI_PART_HANDLE, HANDLE, 0, false);
         skin(WGF_UI_WIDGET_PROGRESS, WGF_UI_PART_BASE, RAIL, 16, true);
@@ -113,6 +121,10 @@ static void init(void *user)
         snprintf(path, sizeof(path), "ui/kenney/%s.png", names[i]);
         tex[i] = wgf_texture_create(path);
     }
+    /* the button sheet's cells drawn smaller than they are: from the full image, so no
+       mipmap blends a cell's edge with the next's */
+    wgf_texture_set_sampling(tex[BUTTON], WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP,
+                             WGF_TEXTURE_FILTER_LINEAR_NO_MIPMAPS);
     star_mask = wgf_image_create("ui/kenney/star_button.png");
     font = wgf_font_create("ui/kenney/font.ttf");
     set_theme(SKINNED);
@@ -134,11 +146,6 @@ static void row(const char *id, const char *label, float width)
 static void settings(void)
 {
     char percent[16];
-    wgf_ui_begin_panel("settings");
-    wgf_ui_set_width(WGF_UI_SIZING_FIXED, 460);
-    wgf_ui_set_padding(30, 20);
-    wgf_ui_set_gap(14);
-
     row("heading", "Settings", 100);
     wgf_ui_spacer(0);
     if (wgf_ui_image_button("star", tex[STAR], tex[STAR_PRESSED], star_mask)) volume = 1.0f; /* full */
@@ -172,6 +179,53 @@ static void settings(void)
         loading = false;
     }
     wgf_ui_set_style_value(WGF_UI_VALUE_BUTTON_WIDTH, theme == SKINNED ? 160 : 200);
+}
+
+/* The choices page: a segmented choice, a combo, and two numbers. */
+static void choices(void)
+{
+    row("difficulty-row", "Level", 100);
+    difficulty = wgf_ui_choice("difficulty", "Easy\nMid\nHard", difficulty);
+    wgf_ui_end_box();
+    row("color-row", "Color", 100);
+    color = wgf_ui_combo("color", "Red\nGreen\nBlue\nGold", color);
+    wgf_ui_end_box();
+    row("lives-row", "Lives", 100);
+    lives = (int)wgf_ui_number("lives", (float)lives, 1.0f, 9.0f, 1.0f);
+    wgf_ui_end_box();
+    row("speed-row", "Speed", 100);
+    speed = wgf_ui_number("speed", speed, 0.5f, 3.0f, 0.25f);
+    wgf_ui_end_box();
+}
+
+/* The levels page: a grid of tiles, the one chosen named below it. */
+static void levels(void)
+{
+    char text[32];
+    int i;
+    wgf_ui_begin_grid("levels", 3);
+    for (i = 0; i < 6; i++) {
+        char id[24], name[16];
+        snprintf(id, sizeof(id), "level%d", i + 1);
+        snprintf(name, sizeof(name), "%d", i + 1);
+        if (wgf_ui_tile(id, tex[STAR], name)) level = i + 1;
+    }
+    wgf_ui_end_grid();
+    if (level > 0) snprintf(text, sizeof(text), "Level %d chosen", level);
+    else snprintf(text, sizeof(text), "Choose a level");
+    wgf_ui_label(text, 0);
+}
+
+static void panel(void)
+{
+    wgf_ui_begin_panel("panel");
+    wgf_ui_set_width(WGF_UI_SIZING_FIXED, 460);
+    wgf_ui_set_padding(30, 20);
+    wgf_ui_set_gap(14);
+    page = wgf_ui_tabs("pages", "Main\nMore\nLevels", page);
+    if (page == 0) settings();
+    else if (page == 1) choices();
+    else levels();
     wgf_ui_end_panel();
 }
 
@@ -194,7 +248,7 @@ static void frame(void *user)
     (void)user;
     if (wgf_app_can_quit() && wgf_keyboard_is_pressed(WGF_KEY_ESCAPE)) wgf_app_quit();
     if (wgf_ui_begin()) {
-        settings();
+        panel();
         themes();
         wgf_ui_end();
     }

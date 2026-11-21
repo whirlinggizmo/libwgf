@@ -11025,11 +11025,15 @@ export declare const Tween: {
  * button's answer comes from where things were in the frame before, as with every
  * immediate-mode UI: a UI that moves under the pointer is answered where it was.
  *
- * Focus: one widget at a time has it, by its id: a button, a toggle, a checkbox, or a
- * slider. Arrow keys, Tab and Shift+Tab, and a pad's D-pad move it through the frame's
- * widgets in the order they were given (the first press of one puts it on the first or
- * the last), but for the arrows a focused slider uses (left and right across, up and down
- * for one that fills up or down); Enter, Space, or a pad's south button activates it. The
+ * Focus: one widget at a time has it, by its id: a button, a toggle, a checkbox, a slider,
+ * a number, tabs, a choice, a combo, or a tile. The arrow keys and a pad's D-pad move it to
+ * the nearest widget that way on the screen, as last laid out (a grid of tiles moves in
+ * two dimensions), or, with none that way, through the frame's widgets in the order they
+ * were given, Down and Right to the next and Up and Left to the one before, wrapping; Tab
+ * and Shift+Tab always go in that order. The first press of one puts it on the first or the
+ * last widget. A focused widget keeps the arrows it uses (a slider, a number, tabs, a
+ * choice, and a combo left and right; a slider that fills up or down, up and down).
+ * Enter, Space, or a pad's south button activates it. The
  * pointer activates the widget it is pressed and released over, and gives it the focus;
  * a focus moved by keys or pads is drawn, one given by the pointer isn't. A focused
  * widget that isn't given in a frame loses the focus. A disabled widget
@@ -11062,6 +11066,18 @@ export declare const Ui: {
      * (logged). False too with no UI begun.
      */
     readonly end: typeof raw.wgf_ui_end;
+    /**
+     * A grid: its children laid out in rows of `columns`, left to right, then top to bottom,
+     * gapped by the style's gap both ways (Clay wraps no row: the grid makes them); closed by
+     * wgf_ui_end_grid. False too for fewer than 1 column.
+     */
+    readonly beginGrid: typeof raw.wgf_ui_begin_grid;
+    /**
+     * A grid: its children laid out in rows of `columns`, left to right, then top to bottom,
+     * gapped by the style's gap both ways (Clay wraps no row: the grid makes them); closed by
+     * wgf_ui_end_grid. False too for fewer than 1 column.
+     */
+    readonly endGrid: typeof raw.wgf_ui_end_grid;
     /**
      * A box, its children laid out in `direction`; closed by wgf_ui_end_box. A panel is a
      * column drawn with the style's panel color, corners, and padding, and gapped by the
@@ -11232,6 +11248,48 @@ export declare const Ui: {
      * or `max` not above `min`, or either not finite).
      */
     readonly slider: typeof raw.wgf_ui_slider;
+    /**
+     * A number: `value` between `min` and `max` shown between a minus and a plus, which step it
+     * by `step`, as its arrows (and a pad's D-pad's) do when it is focused, held ones
+     * repeating: raygui's spinner. Shown with as many decimals as `step` has, up to 4. The value
+     * as given (clamped to the range) or as stepped; as given when refused (no id, `max` not
+     * above `min`, `step` not above 0, or any not finite).
+     */
+    readonly number: typeof raw.wgf_ui_number;
+    /**
+     * One of `labels`, one a line ("Easy\nNormal\nHard": up to 32), chosen: `selected` as given
+     * (clamped to them), or as the user chose this frame. Tabs are a row of them, the chosen
+     * one pressed, whose panel the program draws below; a choice is the same drawn as toggles
+     * (raygui's toggle group); a combo shows the chosen one alone, and steps to the next when
+     * activated (its arrows step either way, wrapping). A press chooses the tab or toggle it is
+     * on; when focused, the arrows step. `selected` as given when refused (no id, no labels).
+     */
+    readonly tabs: typeof raw.wgf_ui_tabs;
+    /**
+     * One of `labels`, one a line ("Easy\nNormal\nHard": up to 32), chosen: `selected` as given
+     * (clamped to them), or as the user chose this frame. Tabs are a row of them, the chosen
+     * one pressed, whose panel the program draws below; a choice is the same drawn as toggles
+     * (raygui's toggle group); a combo shows the chosen one alone, and steps to the next when
+     * activated (its arrows step either way, wrapping). A press chooses the tab or toggle it is
+     * on; when focused, the arrows step. `selected` as given when refused (no id, no labels).
+     */
+    readonly choice: typeof raw.wgf_ui_choice;
+    /**
+     * One of `labels`, one a line ("Easy\nNormal\nHard": up to 32), chosen: `selected` as given
+     * (clamped to them), or as the user chose this frame. Tabs are a row of them, the chosen
+     * one pressed, whose panel the program draws below; a choice is the same drawn as toggles
+     * (raygui's toggle group); a combo shows the chosen one alone, and steps to the next when
+     * activated (its arrows step either way, wrapping). A press chooses the tab or toggle it is
+     * on; when focused, the arrows step. `selected` as given when refused (no id, no labels).
+     */
+    readonly combo: typeof raw.wgf_ui_combo;
+    /**
+     * A tile: `picture` (a texture: 0 for none) above `text` (NULL or "": none), the style's
+     * tile size wide, its picture square in it: a level select's level, an inventory's item,
+     * in a grid. True in the frame it is activated. False too for no id, or a handle that
+     * isn't a texture.
+     */
+    readonly tile: typeof raw.wgf_ui_tile;
     /**
      * Whether the widgets given after it, until it is changed, are disabled: drawn in their
      * disabled state, answering nothing, never focused. Each UI begins with none disabled.
@@ -12427,7 +12485,7 @@ export declare const TextHalign: { readonly LEFT: TextHalign; readonly CENTER: T
 export type TextValign = raw.wgf_text_valign_t;
 export declare const TextValign: { readonly TOP: TextValign; readonly MIDDLE: TextValign; readonly BOTTOM: TextValign; };
 export type TextureFilter = raw.wgf_texture_filter_t;
-export declare const TextureFilter: { readonly LINEAR: TextureFilter; readonly NEAREST: TextureFilter; };
+export declare const TextureFilter: { readonly LINEAR: TextureFilter; readonly NEAREST: TextureFilter; readonly LINEAR_NO_MIPMAPS: TextureFilter; };
 export type TextureReadStatus = raw.wgf_texture_read_status_t;
 export declare const TextureReadStatus: { readonly NONE: TextureReadStatus; readonly PENDING: TextureReadStatus; readonly DONE: TextureReadStatus; readonly FAILED: TextureReadStatus; };
 export type TextureWrap = raw.wgf_texture_wrap_t;
@@ -12465,9 +12523,9 @@ export declare const UiSizing: { readonly FIT: UiSizing; readonly GROW: UiSizing
 export type UiState = raw.wgf_ui_state_t;
 export declare const UiState: { readonly NORMAL: UiState; readonly HOVERED: UiState; readonly PRESSED: UiState; readonly DISABLED: UiState; };
 export type UiValue = raw.wgf_ui_value_t;
-export declare const UiValue: { readonly TEXT_SIZE: UiValue; readonly PADDING: UiValue; readonly GAP: UiValue; readonly CORNER_RADIUS: UiValue; readonly BUTTON_PADDING: UiValue; readonly BUTTON_WIDTH: UiValue; readonly FOCUS_WIDTH: UiValue; readonly BAR_WIDTH: UiValue; readonly BAR_HEIGHT: UiValue; readonly CHECK_SIZE: UiValue; readonly SLIDER_WIDTH: UiValue; readonly SLIDER_HEIGHT: UiValue; readonly HANDLE_SIZE: UiValue; readonly LINE_WIDTH: UiValue; };
+export declare const UiValue: { readonly TEXT_SIZE: UiValue; readonly PADDING: UiValue; readonly GAP: UiValue; readonly CORNER_RADIUS: UiValue; readonly BUTTON_PADDING: UiValue; readonly BUTTON_WIDTH: UiValue; readonly FOCUS_WIDTH: UiValue; readonly BAR_WIDTH: UiValue; readonly BAR_HEIGHT: UiValue; readonly CHECK_SIZE: UiValue; readonly SLIDER_WIDTH: UiValue; readonly SLIDER_HEIGHT: UiValue; readonly HANDLE_SIZE: UiValue; readonly LINE_WIDTH: UiValue; readonly TILE_SIZE: UiValue; };
 export type UiWidget = raw.wgf_ui_widget_t;
-export declare const UiWidget: { readonly PANEL: UiWidget; readonly BUTTON: UiWidget; readonly TOGGLE: UiWidget; readonly CHECKBOX: UiWidget; readonly SLIDER: UiWidget; readonly PROGRESS: UiWidget; readonly GROUP: UiWidget; };
+export declare const UiWidget: { readonly PANEL: UiWidget; readonly BUTTON: UiWidget; readonly TOGGLE: UiWidget; readonly CHECKBOX: UiWidget; readonly SLIDER: UiWidget; readonly PROGRESS: UiWidget; readonly GROUP: UiWidget; readonly TAB: UiWidget; readonly COMBO: UiWidget; readonly NUMBER: UiWidget; readonly TILE: UiWidget; };
 export type VehicleDrive = raw.wgf_vehicle_drive_t;
 export declare const VehicleDrive: { readonly FRONT: VehicleDrive; readonly REAR: VehicleDrive; readonly ALL: VehicleDrive; };
 export type WindowOrientation = raw.wgf_window_orientation_t;

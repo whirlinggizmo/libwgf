@@ -14,11 +14,15 @@ import wgf.impl.Raw;
     button's answer comes from where things were in the frame before, as with every
     immediate-mode UI: a UI that moves under the pointer is answered where it was.
 
-    Focus: one widget at a time has it, by its id: a button, a toggle, a checkbox, or a
-    slider. Arrow keys, Tab and Shift+Tab, and a pad's D-pad move it through the frame's
-    widgets in the order they were given (the first press of one puts it on the first or
-    the last), but for the arrows a focused slider uses (left and right across, up and down
-    for one that fills up or down); Enter, Space, or a pad's south button activates it. The
+    Focus: one widget at a time has it, by its id: a button, a toggle, a checkbox, a slider,
+    a number, tabs, a choice, a combo, or a tile. The arrow keys and a pad's D-pad move it to
+    the nearest widget that way on the screen, as last laid out (a grid of tiles moves in
+    two dimensions), or, with none that way, through the frame's widgets in the order they
+    were given, Down and Right to the next and Up and Left to the one before, wrapping; Tab
+    and Shift+Tab always go in that order. The first press of one puts it on the first or the
+    last widget. A focused widget keeps the arrows it uses (a slider, a number, tabs, a
+    choice, and a combo left and right; a slider that fills up or down, up and down).
+    Enter, Space, or a pad's south button activates it. The
     pointer activates the widget it is pressed and released over, and gives it the focus;
     a focus moved by keys or pads is drawn, one given by the pointer isn't. A focused
     widget that isn't given in a frame loses the focus. A disabled widget
@@ -54,6 +58,22 @@ class Ui {
 	**/
 	public static inline function end():Bool
 		return Raw.wgf_ui_end();
+
+	/**
+	    A grid: its children laid out in rows of `columns`, left to right, then top to bottom,
+	    gapped by the style's gap both ways (Clay wraps no row: the grid makes them); closed by
+	    wgf_ui_end_grid. False too for fewer than 1 column.
+	**/
+	public static inline function beginGrid(id:String, columns:Int):Bool
+		return Raw.wgf_ui_begin_grid(id, columns);
+
+	/**
+	    A grid: its children laid out in rows of `columns`, left to right, then top to bottom,
+	    gapped by the style's gap both ways (Clay wraps no row: the grid makes them); closed by
+	    wgf_ui_end_grid. False too for fewer than 1 column.
+	**/
+	public static inline function endGrid():Bool
+		return Raw.wgf_ui_end_grid();
 
 	/**
 	    A box, its children laid out in `direction`; closed by wgf_ui_end_box. A panel is a
@@ -272,6 +292,58 @@ class Ui {
 	**/
 	public static inline function slider(id:String, value:Float, min:Float, max:Float):Float
 		return Raw.wgf_ui_slider(id, value, min, max);
+
+	/**
+	    A number: `value` between `min` and `max` shown between a minus and a plus, which step it
+	    by `step`, as its arrows (and a pad's D-pad's) do when it is focused, held ones
+	    repeating: raygui's spinner. Shown with as many decimals as `step` has, up to 4. The value
+	    as given (clamped to the range) or as stepped; as given when refused (no id, `max` not
+	    above `min`, `step` not above 0, or any not finite).
+	**/
+	public static inline function number(id:String, value:Float, min:Float, max:Float, step:Float):Float
+		return Raw.wgf_ui_number(id, value, min, max, step);
+
+	/**
+	    One of `labels`, one a line ("Easy\nNormal\nHard": up to 32), chosen: `selected` as given
+	    (clamped to them), or as the user chose this frame. Tabs are a row of them, the chosen
+	    one pressed, whose panel the program draws below; a choice is the same drawn as toggles
+	    (raygui's toggle group); a combo shows the chosen one alone, and steps to the next when
+	    activated (its arrows step either way, wrapping). A press chooses the tab or toggle it is
+	    on; when focused, the arrows step. `selected` as given when refused (no id, no labels).
+	**/
+	public static inline function tabs(id:String, labels:String, selected:Int):Int
+		return Raw.wgf_ui_tabs(id, labels, selected);
+
+	/**
+	    One of `labels`, one a line ("Easy\nNormal\nHard": up to 32), chosen: `selected` as given
+	    (clamped to them), or as the user chose this frame. Tabs are a row of them, the chosen
+	    one pressed, whose panel the program draws below; a choice is the same drawn as toggles
+	    (raygui's toggle group); a combo shows the chosen one alone, and steps to the next when
+	    activated (its arrows step either way, wrapping). A press chooses the tab or toggle it is
+	    on; when focused, the arrows step. `selected` as given when refused (no id, no labels).
+	**/
+	public static inline function choice(id:String, labels:String, selected:Int):Int
+		return Raw.wgf_ui_choice(id, labels, selected);
+
+	/**
+	    One of `labels`, one a line ("Easy\nNormal\nHard": up to 32), chosen: `selected` as given
+	    (clamped to them), or as the user chose this frame. Tabs are a row of them, the chosen
+	    one pressed, whose panel the program draws below; a choice is the same drawn as toggles
+	    (raygui's toggle group); a combo shows the chosen one alone, and steps to the next when
+	    activated (its arrows step either way, wrapping). A press chooses the tab or toggle it is
+	    on; when focused, the arrows step. `selected` as given when refused (no id, no labels).
+	**/
+	public static inline function combo(id:String, labels:String, selected:Int):Int
+		return Raw.wgf_ui_combo(id, labels, selected);
+
+	/**
+	    A tile: `picture` (a texture: 0 for none) above `text` (NULL or "": none), the style's
+	    tile size wide, its picture square in it: a level select's level, an inventory's item,
+	    in a grid. True in the frame it is activated. False too for no id, or a handle that
+	    isn't a texture.
+	**/
+	public static inline function tile(id:String, picture:Texture, text:String):Bool
+		return Raw.wgf_ui_tile(id, picture, text);
 
 	/**
 	    Whether the widgets given after it, until it is changed, are disabled: drawn in their

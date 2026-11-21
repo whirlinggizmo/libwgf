@@ -44,6 +44,7 @@ set_source_files_properties(src/wgf_ui_clay_impl.c PROPERTIES COMPILE_OPTIONS
 if(WGF_TESTS AND WGF_HEADLESS)
     wgf_test(ui wgf_ui_test)
     wgf_test(ui wgf_ui_widgets_test)
+    wgf_test(ui wgf_ui_choices_test)
     if(EMSCRIPTEN)
         # a UI of the plain widgets links none of the skins or the other widgets: its link map
         # read by tools/check_link_map.py (wasm-ld drops what nothing reaches in any build)
@@ -56,7 +57,9 @@ if(WGF_TESTS AND WGF_HEADLESS)
                              "$<TARGET_FILE_DIR:wgf_ui_unlinked_test>/wgf_ui_unlinked_test.map" --absent
                              wgf_ui_skin.c wgf_ui_toggle wgf_ui_checkbox wgf_ui_slider wgf_ui_image_button
                              wgf_ui_icon_button wgf_ui_image wgf_ui_custom wgf_ui_begin_group wgf_ui_separator
-                             draw_slider draw_check draw_image draw_image_button draw_group)
+                             draw_slider draw_check draw_image draw_image_button draw_group wgf_ui_tabs
+                             wgf_ui_choice wgf_ui_combo wgf_ui_number wgf_ui_tile wgf_ui_begin_grid grid_row
+                             draw_number_box)
         endif()
     endif()
     wgf_test(ui wgf_ui_document_test)

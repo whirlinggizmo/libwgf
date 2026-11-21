@@ -14,7 +14,7 @@
  * hooks its first call sets (wgf_ui_skin_priv.h): a UI drawn in its colors links none of
  * it. */
 
-#define WIDGETS 7 /* wgf_ui_widget_t's */
+#define WIDGETS 11 /* wgf_ui_widget_t's */
 #define PARTS 4   /* wgf_ui_part_t's */
 #define STATES 4  /* wgf_ui_state_t's */
 
@@ -56,10 +56,16 @@ static bool draw(int widget, int part, int state, float x, float y, float width,
 {
     bool dim;
     const skin_t *skin = skin_of(widget, part, state, &dim);
+    float inset;
     if (skin == NULL) return false;
-    wgf_draw_texture_nine_slice(skin->texture, skin->source[0], skin->source[1], skin->source[2], skin->source[3],
-                                skin->borders[0], skin->borders[1], skin->borders[2], skin->borders[3], x, y, width,
-                                height, tint_of(skin, dim));
+    /* a region of a sheet, its edges sampled half a texel in: filtered, its edge texels would
+       blend with the next cell's (a line above a button cut from a sheet of its states) */
+    inset = skin->source[2] > 1.0f && skin->source[3] > 1.0f ? 0.5f : 0.0f;
+    wgf_draw_texture_nine_slice(skin->texture, skin->source[0] + inset, skin->source[1] + inset,
+                                skin->source[2] - inset * 2.0f, skin->source[3] - inset * 2.0f,
+                                fmaxf(skin->borders[0] - inset, 0.0f), fmaxf(skin->borders[1] - inset, 0.0f),
+                                fmaxf(skin->borders[2] - inset, 0.0f), fmaxf(skin->borders[3] - inset, 0.0f), x, y,
+                                width, height, tint_of(skin, dim));
     return true;
 }
 

@@ -610,7 +610,8 @@ export type wgf_texture_wrap_t = typeof WGF_TEXTURE_WRAP_REPEAT | typeof WGF_TEX
 
 export declare const WGF_TEXTURE_FILTER_LINEAR: 0;
 export declare const WGF_TEXTURE_FILTER_NEAREST: 1;
-export type wgf_texture_filter_t = typeof WGF_TEXTURE_FILTER_LINEAR | typeof WGF_TEXTURE_FILTER_NEAREST;
+export declare const WGF_TEXTURE_FILTER_LINEAR_NO_MIPMAPS: 2;
+export type wgf_texture_filter_t = typeof WGF_TEXTURE_FILTER_LINEAR | typeof WGF_TEXTURE_FILTER_NEAREST | typeof WGF_TEXTURE_FILTER_LINEAR_NO_MIPMAPS;
 
 export declare const WGF_TEXTURE_READ_STATUS_NONE: 0;
 export declare const WGF_TEXTURE_READ_STATUS_PENDING: 1;
@@ -1111,11 +1112,15 @@ export type wgf_vehicle_drive_t = typeof WGF_VEHICLE_DRIVE_FRONT | typeof WGF_VE
  * button's answer comes from where things were in the frame before, as with every
  * immediate-mode UI: a UI that moves under the pointer is answered where it was.
  *
- * Focus: one widget at a time has it, by its id: a button, a toggle, a checkbox, or a
- * slider. Arrow keys, Tab and Shift+Tab, and a pad's D-pad move it through the frame's
- * widgets in the order they were given (the first press of one puts it on the first or
- * the last), but for the arrows a focused slider uses (left and right across, up and down
- * for one that fills up or down); Enter, Space, or a pad's south button activates it. The
+ * Focus: one widget at a time has it, by its id: a button, a toggle, a checkbox, a slider,
+ * a number, tabs, a choice, a combo, or a tile. The arrow keys and a pad's D-pad move it to
+ * the nearest widget that way on the screen, as last laid out (a grid of tiles moves in
+ * two dimensions), or, with none that way, through the frame's widgets in the order they
+ * were given, Down and Right to the next and Up and Left to the one before, wrapping; Tab
+ * and Shift+Tab always go in that order. The first press of one puts it on the first or the
+ * last widget. A focused widget keeps the arrows it uses (a slider, a number, tabs, a
+ * choice, and a combo left and right; a slider that fills up or down, up and down).
+ * Enter, Space, or a pad's south button activates it. The
  * pointer activates the widget it is pressed and released over, and gives it the focus;
  * a focus moved by keys or pads is drawn, one given by the pointer isn't. A focused
  * widget that isn't given in a frame loses the focus. A disabled widget
@@ -1181,7 +1186,8 @@ export declare const WGF_UI_VALUE_SLIDER_WIDTH: 10;
 export declare const WGF_UI_VALUE_SLIDER_HEIGHT: 11;
 export declare const WGF_UI_VALUE_HANDLE_SIZE: 12;
 export declare const WGF_UI_VALUE_LINE_WIDTH: 13;
-export type wgf_ui_value_t = typeof WGF_UI_VALUE_TEXT_SIZE | typeof WGF_UI_VALUE_PADDING | typeof WGF_UI_VALUE_GAP | typeof WGF_UI_VALUE_CORNER_RADIUS | typeof WGF_UI_VALUE_BUTTON_PADDING | typeof WGF_UI_VALUE_BUTTON_WIDTH | typeof WGF_UI_VALUE_FOCUS_WIDTH | typeof WGF_UI_VALUE_BAR_WIDTH | typeof WGF_UI_VALUE_BAR_HEIGHT | typeof WGF_UI_VALUE_CHECK_SIZE | typeof WGF_UI_VALUE_SLIDER_WIDTH | typeof WGF_UI_VALUE_SLIDER_HEIGHT | typeof WGF_UI_VALUE_HANDLE_SIZE | typeof WGF_UI_VALUE_LINE_WIDTH;
+export declare const WGF_UI_VALUE_TILE_SIZE: 14;
+export type wgf_ui_value_t = typeof WGF_UI_VALUE_TEXT_SIZE | typeof WGF_UI_VALUE_PADDING | typeof WGF_UI_VALUE_GAP | typeof WGF_UI_VALUE_CORNER_RADIUS | typeof WGF_UI_VALUE_BUTTON_PADDING | typeof WGF_UI_VALUE_BUTTON_WIDTH | typeof WGF_UI_VALUE_FOCUS_WIDTH | typeof WGF_UI_VALUE_BAR_WIDTH | typeof WGF_UI_VALUE_BAR_HEIGHT | typeof WGF_UI_VALUE_CHECK_SIZE | typeof WGF_UI_VALUE_SLIDER_WIDTH | typeof WGF_UI_VALUE_SLIDER_HEIGHT | typeof WGF_UI_VALUE_HANDLE_SIZE | typeof WGF_UI_VALUE_LINE_WIDTH | typeof WGF_UI_VALUE_TILE_SIZE;
 
 /**
  * Skins: a widget's parts drawn from the game's art in place of the style's colors, as
@@ -1199,6 +1205,12 @@ export type wgf_ui_value_t = typeof WGF_UI_VALUE_TEXT_SIZE | typeof WGF_UI_VALUE
  *   SLIDER     base: the track; fill: behind the handle; handle: the handle
  *   PROGRESS   base: the track; fill: the progress; edge: at the fill's front
  *   GROUP      base: its outline, in place of the line
+ *   TAB        base: each tab, PRESSED while chosen
+ *   COMBO      base: the combo
+ *   NUMBER     base: the box its value is in (its minus and plus are BUTTON's)
+ *   TILE       base: the tile
+ *
+ * A choice's toggles are TOGGLE's, each PRESSED while chosen.
  *
  * A fill is stretched over the filled part, or clipped: drawn over the whole track and
  * shown up to the value, so a bar with round ends shows its far end only when full
@@ -1216,7 +1228,11 @@ export declare const WGF_UI_WIDGET_CHECKBOX: 3;
 export declare const WGF_UI_WIDGET_SLIDER: 4;
 export declare const WGF_UI_WIDGET_PROGRESS: 5;
 export declare const WGF_UI_WIDGET_GROUP: 6;
-export type wgf_ui_widget_t = typeof WGF_UI_WIDGET_PANEL | typeof WGF_UI_WIDGET_BUTTON | typeof WGF_UI_WIDGET_TOGGLE | typeof WGF_UI_WIDGET_CHECKBOX | typeof WGF_UI_WIDGET_SLIDER | typeof WGF_UI_WIDGET_PROGRESS | typeof WGF_UI_WIDGET_GROUP;
+export declare const WGF_UI_WIDGET_TAB: 7;
+export declare const WGF_UI_WIDGET_COMBO: 8;
+export declare const WGF_UI_WIDGET_NUMBER: 9;
+export declare const WGF_UI_WIDGET_TILE: 10;
+export type wgf_ui_widget_t = typeof WGF_UI_WIDGET_PANEL | typeof WGF_UI_WIDGET_BUTTON | typeof WGF_UI_WIDGET_TOGGLE | typeof WGF_UI_WIDGET_CHECKBOX | typeof WGF_UI_WIDGET_SLIDER | typeof WGF_UI_WIDGET_PROGRESS | typeof WGF_UI_WIDGET_GROUP | typeof WGF_UI_WIDGET_TAB | typeof WGF_UI_WIDGET_COMBO | typeof WGF_UI_WIDGET_NUMBER | typeof WGF_UI_WIDGET_TILE;
 
 export declare const WGF_UI_PART_BASE: 0;
 export declare const WGF_UI_PART_FILL: 1;
@@ -12677,6 +12693,20 @@ export declare function wgf_ui_begin(): boolean;
 export declare function wgf_ui_end(): boolean;
 
 /**
+ * A grid: its children laid out in rows of `columns`, left to right, then top to bottom,
+ * gapped by the style's gap both ways (Clay wraps no row: the grid makes them); closed by
+ * wgf_ui_end_grid. False too for fewer than 1 column.
+ */
+export declare function wgf_ui_begin_grid(id: string | null, columns: number): boolean;
+
+/**
+ * A grid: its children laid out in rows of `columns`, left to right, then top to bottom,
+ * gapped by the style's gap both ways (Clay wraps no row: the grid makes them); closed by
+ * wgf_ui_end_grid. False too for fewer than 1 column.
+ */
+export declare function wgf_ui_end_grid(): boolean;
+
+/**
  * A box, its children laid out in `direction`; closed by wgf_ui_end_box. A panel is a
  * column drawn with the style's panel color, corners, and padding, and gapped by the
  * style's gap; closed by wgf_ui_end_panel. A group is a column drawn as an outline in the
@@ -12870,6 +12900,53 @@ export declare function wgf_ui_checkbox(id: string | null, text: string | null, 
  * or `max` not above `min`, or either not finite).
  */
 export declare function wgf_ui_slider(id: string | null, value_: number, min: number, max: number): number;
+
+/**
+ * A number: `value` between `min` and `max` shown between a minus and a plus, which step it
+ * by `step`, as its arrows (and a pad's D-pad's) do when it is focused, held ones
+ * repeating: raygui's spinner. Shown with as many decimals as `step` has, up to 4. The value
+ * as given (clamped to the range) or as stepped; as given when refused (no id, `max` not
+ * above `min`, `step` not above 0, or any not finite).
+ */
+export declare function wgf_ui_number(id: string | null, value_: number, min: number, max: number, step: number): number;
+
+/**
+ * One of `labels`, one a line ("Easy\nNormal\nHard": up to 32), chosen: `selected` as given
+ * (clamped to them), or as the user chose this frame. Tabs are a row of them, the chosen
+ * one pressed, whose panel the program draws below; a choice is the same drawn as toggles
+ * (raygui's toggle group); a combo shows the chosen one alone, and steps to the next when
+ * activated (its arrows step either way, wrapping). A press chooses the tab or toggle it is
+ * on; when focused, the arrows step. `selected` as given when refused (no id, no labels).
+ */
+export declare function wgf_ui_tabs(id: string | null, labels: string | null, selected: number): number;
+
+/**
+ * One of `labels`, one a line ("Easy\nNormal\nHard": up to 32), chosen: `selected` as given
+ * (clamped to them), or as the user chose this frame. Tabs are a row of them, the chosen
+ * one pressed, whose panel the program draws below; a choice is the same drawn as toggles
+ * (raygui's toggle group); a combo shows the chosen one alone, and steps to the next when
+ * activated (its arrows step either way, wrapping). A press chooses the tab or toggle it is
+ * on; when focused, the arrows step. `selected` as given when refused (no id, no labels).
+ */
+export declare function wgf_ui_choice(id: string | null, labels: string | null, selected: number): number;
+
+/**
+ * One of `labels`, one a line ("Easy\nNormal\nHard": up to 32), chosen: `selected` as given
+ * (clamped to them), or as the user chose this frame. Tabs are a row of them, the chosen
+ * one pressed, whose panel the program draws below; a choice is the same drawn as toggles
+ * (raygui's toggle group); a combo shows the chosen one alone, and steps to the next when
+ * activated (its arrows step either way, wrapping). A press chooses the tab or toggle it is
+ * on; when focused, the arrows step. `selected` as given when refused (no id, no labels).
+ */
+export declare function wgf_ui_combo(id: string | null, labels: string | null, selected: number): number;
+
+/**
+ * A tile: `picture` (a texture: 0 for none) above `text` (NULL or "": none), the style's
+ * tile size wide, its picture square in it: a level select's level, an inventory's item,
+ * in a grid. True in the frame it is activated. False too for no id, or a handle that
+ * isn't a texture.
+ */
+export declare function wgf_ui_tile(id: string | null, picture: wgf_texture_t | 0, text: string | null): boolean;
 
 /**
  * Whether the widgets given after it, until it is changed, are disabled: drawn in their

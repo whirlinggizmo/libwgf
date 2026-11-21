@@ -25,11 +25,15 @@ extern "C" {
  * button's answer comes from where things were in the frame before, as with every
  * immediate-mode UI: a UI that moves under the pointer is answered where it was.
  *
- * Focus: one widget at a time has it, by its id: a button, a toggle, a checkbox, or a
- * slider. Arrow keys, Tab and Shift+Tab, and a pad's D-pad move it through the frame's
- * widgets in the order they were given (the first press of one puts it on the first or
- * the last), but for the arrows a focused slider uses (left and right across, up and down
- * for one that fills up or down); Enter, Space, or a pad's south button activates it. The
+ * Focus: one widget at a time has it, by its id: a button, a toggle, a checkbox, a slider,
+ * a number, tabs, a choice, a combo, or a tile. The arrow keys and a pad's D-pad move it to
+ * the nearest widget that way on the screen, as last laid out (a grid of tiles moves in
+ * two dimensions), or, with none that way, through the frame's widgets in the order they
+ * were given, Down and Right to the next and Up and Left to the one before, wrapping; Tab
+ * and Shift+Tab always go in that order. The first press of one puts it on the first or the
+ * last widget. A focused widget keeps the arrows it uses (a slider, a number, tabs, a
+ * choice, and a combo left and right; a slider that fills up or down, up and down).
+ * Enter, Space, or a pad's south button activates it. The
  * pointer activates the widget it is pressed and released over, and gives it the focus;
  * a focus moved by keys or pads is drawn, one given by the pointer isn't. A focused
  * widget that isn't given in a frame loses the focus. A disabled widget
@@ -74,6 +78,12 @@ WGF_API bool wgf_ui_begin(void);
 /* Laid out, answered, and drawn; boxes left open are closed, and the call is false
  * (logged). False too with no UI begun. */
 WGF_API bool wgf_ui_end(void);
+
+/* A grid: its children laid out in rows of `columns`, left to right, then top to bottom,
+ * gapped by the style's gap both ways (Clay wraps no row: the grid makes them); closed by
+ * wgf_ui_end_grid. False too for fewer than 1 column. */
+WGF_API bool wgf_ui_begin_grid(const char *id, int columns);
+WGF_API bool wgf_ui_end_grid(void);
 
 /* A box, its children laid out in `direction`; closed by wgf_ui_end_box. A panel is a
  * column drawn with the style's panel color, corners, and padding, and gapped by the
@@ -153,6 +163,29 @@ WGF_API bool wgf_ui_checkbox(const char *id, const char *text, bool on);
  * or `max` not above `min`, or either not finite). */
 WGF_API float wgf_ui_slider(const char *id, float value, float min, float max);
 
+/* A number: `value` between `min` and `max` shown between a minus and a plus, which step it
+ * by `step`, as its arrows (and a pad's D-pad's) do when it is focused, held ones
+ * repeating: raygui's spinner. Shown with as many decimals as `step` has, up to 4. The value
+ * as given (clamped to the range) or as stepped; as given when refused (no id, `max` not
+ * above `min`, `step` not above 0, or any not finite). */
+WGF_API float wgf_ui_number(const char *id, float value, float min, float max, float step);
+
+/* One of `labels`, one a line ("Easy\nNormal\nHard": up to 32), chosen: `selected` as given
+ * (clamped to them), or as the user chose this frame. Tabs are a row of them, the chosen
+ * one pressed, whose panel the program draws below; a choice is the same drawn as toggles
+ * (raygui's toggle group); a combo shows the chosen one alone, and steps to the next when
+ * activated (its arrows step either way, wrapping). A press chooses the tab or toggle it is
+ * on; when focused, the arrows step. `selected` as given when refused (no id, no labels). */
+WGF_API int wgf_ui_tabs(const char *id, const char *labels, int selected);
+WGF_API int wgf_ui_choice(const char *id, const char *labels, int selected);
+WGF_API int wgf_ui_combo(const char *id, const char *labels, int selected);
+
+/* A tile: `picture` (a texture: 0 for none) above `text` (NULL or "": none), the style's
+ * tile size wide, its picture square in it: a level select's level, an inventory's item,
+ * in a grid. True in the frame it is activated. False too for no id, or a handle that
+ * isn't a texture. */
+WGF_API bool wgf_ui_tile(const char *id, wgf_texture_t picture, const char *text);
+
 /* Whether the widgets given after it, until it is changed, are disabled: drawn in their
  * disabled state, answering nothing, never focused. Each UI begins with none disabled.
  * False with no UI begun. */
@@ -205,7 +238,8 @@ typedef enum wgf_ui_value_t {
     WGF_UI_VALUE_SLIDER_WIDTH = 10,  /* a slider's length */
     WGF_UI_VALUE_SLIDER_HEIGHT = 11, /* its track's thickness */
     WGF_UI_VALUE_HANDLE_SIZE = 12,   /* its handle: across its track, and along it (as tall as the slider when skinned) */
-    WGF_UI_VALUE_LINE_WIDTH = 13     /* a separator's and a group's outline */
+    WGF_UI_VALUE_LINE_WIDTH = 13,    /* a separator's and a group's outline */
+    WGF_UI_VALUE_TILE_SIZE = 14      /* a tile's width, and its picture's side less its padding */
 } wgf_ui_value_t;
 
 /* False for a color or value that isn't one, or a value below 0. 0 for one that isn't. */
@@ -233,6 +267,12 @@ WGF_API void wgf_ui_reset_style(void);
  *   SLIDER     base: the track; fill: behind the handle; handle: the handle
  *   PROGRESS   base: the track; fill: the progress; edge: at the fill's front
  *   GROUP      base: its outline, in place of the line
+ *   TAB        base: each tab, PRESSED while chosen
+ *   COMBO      base: the combo
+ *   NUMBER     base: the box its value is in (its minus and plus are BUTTON's)
+ *   TILE       base: the tile
+ *
+ * A choice's toggles are TOGGLE's, each PRESSED while chosen.
  *
  * A fill is stretched over the filled part, or clipped: drawn over the whole track and
  * shown up to the value, so a bar with round ends shows its far end only when full
@@ -249,7 +289,11 @@ typedef enum wgf_ui_widget_t {
     WGF_UI_WIDGET_CHECKBOX = 3,
     WGF_UI_WIDGET_SLIDER = 4,
     WGF_UI_WIDGET_PROGRESS = 5,
-    WGF_UI_WIDGET_GROUP = 6
+    WGF_UI_WIDGET_GROUP = 6,
+    WGF_UI_WIDGET_TAB = 7,
+    WGF_UI_WIDGET_COMBO = 8,
+    WGF_UI_WIDGET_NUMBER = 9,
+    WGF_UI_WIDGET_TILE = 10
 } wgf_ui_widget_t;
 
 typedef enum wgf_ui_part_t {

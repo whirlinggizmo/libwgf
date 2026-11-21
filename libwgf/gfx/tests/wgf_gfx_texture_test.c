@@ -232,8 +232,12 @@ int main(void)
                wgf_texture_get_wrap_v(rock) == WGF_TEXTURE_WRAP_MIRROR &&
                wgf_texture_get_filter(rock) == WGF_TEXTURE_FILTER_NEAREST,
            "sampling reads back");
+    expect(wgf_texture_set_sampling(rock, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP,
+                                    WGF_TEXTURE_FILTER_LINEAR_NO_MIPMAPS) &&
+               wgf_texture_get_filter(rock) == WGF_TEXTURE_FILTER_LINEAR_NO_MIPMAPS,
+           "smooth from its full image alone");
     expect(!wgf_texture_set_sampling(rock, (wgf_texture_wrap_t)3, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_FILTER_LINEAR) &&
-               !wgf_texture_set_sampling(rock, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP, (wgf_texture_filter_t)2) &&
+               !wgf_texture_set_sampling(rock, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP, (wgf_texture_filter_t)3) &&
                !wgf_texture_set_sampling(12345, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_FILTER_LINEAR),
            "a wrap or filter that isn't one, or a handle that isn't a texture, is refused");
 

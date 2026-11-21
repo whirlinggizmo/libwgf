@@ -41,10 +41,11 @@
 #define WORDS_MAX 8192  /* Clay's cache of measured words */
 #define TEXT_BLOCK 16384
 #define STYLE_COLORS 11 /* wgf_ui_color_t's */
-#define STYLE_VALUES 14 /* wgf_ui_value_t's */
-#define WIDGETS 7       /* wgf_ui_widget_t's */
+#define STYLE_VALUES 15 /* wgf_ui_value_t's */
+#define WIDGETS 11      /* wgf_ui_widget_t's */
+#define CHOICES_MAX 32  /* a tab row's, a choice's, a combo's labels */
 
-enum { KIND_ROOT, KIND_BOX, KIND_PANEL, KIND_GROUP };
+enum { KIND_ROOT, KIND_BOX, KIND_PANEL, KIND_GROUP, KIND_GRID };
 
 /* The arrows a focused widget keeps for itself, not the focus's. */
 enum { ARROWS_NONE, ARROWS_ACROSS, ARROWS_DOWN };
@@ -63,15 +64,20 @@ struct piece_t {
 
 typedef struct focusable_t {
     char id[ID_MAX];
+    uint32_t element; /* its Clay id: where it was laid out, for the arrows */
     int arrows;
 } focusable_t;
 
-typedef struct level_t {
+typedef struct level_t level_t;
+struct level_t {
     int kind;
     bool configured; /* Clay told its declaration: no more changes to it */
     bool solid;      /* drawn: the pointer over it is the UI's */
     Clay_ElementDeclaration declaration;
-} level_t;
+    void (*before_child)(level_t *level); /* a grid's: the row its next child goes in */
+    int columns, count;                   /* a grid's columns, and its children so far */
+    bool row_open;                        /* a grid's row is open in Clay */
+};
 
 /* The frame's copies of the text and ids given, which Clay points at until it draws:
  * blocks that never move, kept for the next frame and reused. */
@@ -145,8 +151,8 @@ static const wgf_color_t default_colors[STYLE_COLORS] = {
     0x3F4860FFu, /* separator */
     0xF2F4F8FFu, /* handle */
 };
-static const float default_values[STYLE_VALUES] = {20.0f, 24.0f, 12.0f, 8.0f,  24.0f, 200.0f, 3.0f,
-                                                   300.0f, 12.0f, 24.0f, 200.0f, 8.0f, 20.0f, 2.0f};
+static const float default_values[STYLE_VALUES] = {20.0f, 24.0f, 12.0f, 8.0f,  24.0f, 200.0f, 3.0f, 300.0f,
+                                                   12.0f, 24.0f, 200.0f, 8.0f, 20.0f, 2.0f,  96.0f};
 
 /* ---- the style ---------------------------------------------------------------------- */
 
@@ -321,7 +327,7 @@ static const char *terminated(const char *chars, int32_t length)
     return ui.scratch;
 }
 
-static bool add_focusable(const char *id, int arrows)
+static bool add_focusable(const char *id, uint32_t element, int arrows)
 {
     if (ui.focusable_count == ui.focusable_capacity) {
         const int capacity = ui.focusable_capacity > 0 ? ui.focusable_capacity * 2 : 16;
@@ -331,6 +337,7 @@ static bool add_focusable(const char *id, int arrows)
         ui.focusable_capacity = capacity;
     }
     snprintf(ui.focusables[ui.focusable_count].id, ID_MAX, "%s", id);
+    ui.focusables[ui.focusable_count].element = element;
     ui.focusables[ui.focusable_count++].arrows = arrows;
     return true;
 }
@@ -512,15 +519,27 @@ static void configure(void)
     if (level->solid) add_solid(Clay_GetOpenElementId());
 }
 
-/* A child may go in the open level: false (logged) with no UI begun. */
+/* A child may go in the open level: false (logged) with no UI begun. A grid puts it in
+ * its row. */
 static bool child(const char *what)
 {
+    level_t *level;
     if (!ui.begun) {
         wgf_log_error("wgf_ui: %s outside wgf_ui_begin and wgf_ui_end", what);
         return false;
     }
     configure();
+    level = &ui.levels[ui.depth - 1];
+    if (level->before_child != NULL) level->before_child(level);
     return true;
+}
+
+/* A level's close in Clay: a grid's open row first. */
+static void close_element(level_t *level)
+{
+    if (level->row_open) Clay__CloseElement();
+    level->row_open = false;
+    Clay__CloseElement();
 }
 
 static bool sizing(Clay_SizingAxis *axis, wgf_ui_sizing_t how, float value)
@@ -557,8 +576,9 @@ static void draw_panel(const piece_t *piece, Clay_BoundingBox box);
 static bool open_level(int kind, const char *id, wgf_ui_direction_t direction, piece_draw_t look)
 {
     level_t *level;
-    if (!child(kind == KIND_PANEL ? "wgf_ui_begin_panel" : kind == KIND_GROUP ? "wgf_ui_begin_group" : "wgf_ui_begin_box"))
-        return false;
+    static const char *const names[] = {"", "wgf_ui_begin_box", "wgf_ui_begin_panel", "wgf_ui_begin_group",
+                                        "wgf_ui_begin_grid"};
+    if (!child(names[kind])) return false;
     if ((int)direction < 0 || (int)direction > 1) return false;
     if (ui.depth == DEPTH_MAX) {
         wgf_log_error("wgf_ui: more than %d boxes inside each other", DEPTH_MAX);
@@ -592,7 +612,7 @@ static bool close_level(int kind)
 {
     if (!ui.begun || ui.depth <= 1 || ui.levels[ui.depth - 1].kind != kind) return false;
     configure();
-    Clay__CloseElement();
+    close_element(&ui.levels[ui.depth - 1]);
     ui.depth--;
     return true;
 }
@@ -605,6 +625,41 @@ bool wgf_ui_begin_box(const char *id, wgf_ui_direction_t direction)
 bool wgf_ui_end_box(void)
 {
     return close_level(KIND_BOX);
+}
+
+/* A grid's next child: a row of `columns` begun when the last is full. */
+static void grid_row(level_t *grid)
+{
+    Clay_ElementDeclaration row;
+    if (grid->row_open && grid->count % grid->columns == 0) {
+        Clay__CloseElement();
+        grid->row_open = false;
+    }
+    if (!grid->row_open) {
+        memset(&row, 0, sizeof(row));
+        row.layout.layoutDirection = CLAY_LEFT_TO_RIGHT;
+        row.layout.childGap = grid->declaration.layout.childGap;
+        Clay__OpenElement();
+        Clay__ConfigureOpenElement(row);
+        grid->row_open = true;
+    }
+    grid->count++;
+}
+
+bool wgf_ui_begin_grid(const char *id, int columns)
+{
+    level_t *grid;
+    if (columns < 1 || !open_level(KIND_GRID, id, WGF_UI_DIRECTION_COLUMN, NULL)) return false;
+    grid = &ui.levels[ui.depth - 1];
+    grid->declaration.layout.childGap = pixels(ui.values[WGF_UI_VALUE_GAP]);
+    grid->columns = columns;
+    grid->before_child = grid_row;
+    return true;
+}
+
+bool wgf_ui_end_grid(void)
+{
+    return close_level(KIND_GRID);
 }
 
 bool wgf_ui_begin_panel(const char *id)
@@ -690,13 +745,20 @@ static uint16_t font_key(void)
     return (uint16_t)(((ui.font ^ (ui.font >> 15)) & 0x7FFFu) | (ready ? 0x8000u : 0u));
 }
 
-/* Text, `piece` (NULL for none) the widget whose text offset moves it. */
-static bool text_element(const char *text, float size, wgf_color_t color, Clay_TextElementConfigWrapMode wrap,
-                         void *piece)
+/* Text, the first `length` bytes of `text`, `piece` (NULL for none) the widget whose text
+ * offset moves it. */
+static bool text_slice(const char *text, size_t length, float size, wgf_color_t color,
+                       Clay_TextElementConfigWrapMode wrap, void *piece)
 {
     Clay_String string;
     Clay_TextElementConfig config;
-    if (!clay_string(text, &string)) return false;
+    string.isStaticallyAllocated = false;
+    string.length = (int32_t)length;
+    string.chars = keep(text, length);
+    if (string.chars == NULL) {
+        wgf_log_error("wgf_ui: out of memory for the frame's text");
+        return false;
+    }
     memset(&config, 0, sizeof(config));
     config.textColor = clay_color(color);
     config.fontSize = pixels(size > 0.0f ? size : ui.values[WGF_UI_VALUE_TEXT_SIZE]);
@@ -705,6 +767,12 @@ static bool text_element(const char *text, float size, wgf_color_t color, Clay_T
     config.fontId = font_key();
     Clay__OpenTextElement(string, config);
     return true;
+}
+
+static bool text_element(const char *text, float size, wgf_color_t color, Clay_TextElementConfigWrapMode wrap,
+                         void *piece)
+{
+    return text_slice(text, strlen(text), size, color, wrap, piece);
 }
 
 bool wgf_ui_label(const char *text, float size)
@@ -806,13 +874,19 @@ bool wgf_ui_image(wgf_texture_t texture, float width, float height)
 
 /* The element `id` names, for a widget: false (logged where it is the program's) for no
  * id, one of 64 bytes or more, or no UI begun. */
-static bool widget_id(const char *id, const char *what, Clay_ElementId *element)
+static bool widget_named(const char *id, const char *what, Clay_ElementId *element, Clay_String *named)
 {
     Clay_String name;
     if (id == NULL || id[0] == '\0' || strlen(id) >= ID_MAX || !child(what)) return false;
     if (!clay_string(id, &name)) return false;
     *element = Clay_GetElementId(name);
+    if (named != NULL) *named = name;
     return true;
+}
+
+static bool widget_id(const char *id, const char *what, Clay_ElementId *element)
+{
+    return widget_named(id, what, element, NULL);
 }
 
 bool wgf_ui_custom(const char *id, float width, float height)
@@ -859,7 +933,7 @@ typedef struct answer_t {
 /* A widget's answer, `over` whether the pointer is over it, `arrows` those it keeps when
  * focused, `drags` whether a press on it holds it wherever the pointer goes (a slider's).
  * A disabled widget answers nothing and isn't focusable. */
-static void answer(const char *id, bool over, int arrows, bool drags, answer_t *out)
+static void answer(const char *id, Clay_ElementId element, bool over, int arrows, bool drags, answer_t *out)
 {
     memset(out, 0, sizeof(*out));
     if (ui.disabled) {
@@ -884,7 +958,7 @@ static void answer(const char *id, bool over, int arrows, bool drags, answer_t *
     }
     out->held = ui.pointer_down && (over || drags) && strcmp(ui.pressed, id) == 0;
     out->state = out->held ? WGF_UI_STATE_PRESSED : over ? WGF_UI_STATE_HOVERED : WGF_UI_STATE_NORMAL;
-    if (!add_focusable(id, arrows)) wgf_log_error("wgf_ui: out of memory for the frame's widgets");
+    if (!add_focusable(id, element.id, arrows)) wgf_log_error("wgf_ui: out of memory for the frame's widgets");
 }
 
 /* The line around a focused widget, when keys or a pad moved the focus. */
@@ -926,7 +1000,7 @@ static bool face(const char *what, const char *id, int widget, wgf_texture_t ico
     *activated = false;
     if (icon != 0 && !is_kind(icon, WGF_CORE_PRIV_HANDLE_KIND_TEXTURE)) return false;
     if (!widget_id(id, what, &element)) return false;
-    answer(id, Clay_PointerOver(element), ARROWS_NONE, false, &answered); /* where it was in the frame before */
+    answer(id, element, Clay_PointerOver(element), ARROWS_NONE, false, &answered); /* where it was in the frame before */
     if (on && answered.state != WGF_UI_STATE_DISABLED) answered.state = WGF_UI_STATE_PRESSED;
     piece = add_piece(draw_face, widget, answered.state);
     memset(&declaration, 0, sizeof(declaration));
@@ -1001,7 +1075,7 @@ bool wgf_ui_image_button(const char *id, wgf_texture_t normal, wgf_texture_t pre
     }
     if (!widget_id(id, "wgf_ui_image_button", &element)) return false;
     over = Clay_PointerOver(element) && (mask == 0 || on_mask(element, mask));
-    answer(id, over, ARROWS_NONE, false, &answered);
+    answer(id, element, over, ARROWS_NONE, false, &answered);
     memset(&declaration, 0, sizeof(declaration));
     fixed(&declaration, (float)wgf_texture_get_width(normal), (float)wgf_texture_get_height(normal));
     declaration.cornerRadius = corners(ui.values[WGF_UI_VALUE_CORNER_RADIUS]);
@@ -1028,7 +1102,7 @@ bool wgf_ui_checkbox(const char *id, const char *text, bool on)
     piece_t *piece;
     const float size = ui.values[WGF_UI_VALUE_CHECK_SIZE];
     if (!widget_id(id, "wgf_ui_checkbox", &element)) return on;
-    answer(id, Clay_PointerOver(element), ARROWS_NONE, false, &answered);
+    answer(id, element, Clay_PointerOver(element), ARROWS_NONE, false, &answered);
     memset(&row, 0, sizeof(row));
     row.layout.layoutDirection = CLAY_LEFT_TO_RIGHT;
     row.layout.childGap = pixels(ui.values[WGF_UI_VALUE_BUTTON_PADDING] * 0.5f);
@@ -1082,7 +1156,7 @@ float wgf_ui_slider(const char *id, float value, float min, float max)
     if (!isfinite(min) || !isfinite(max) || !(max > min)) return value;
     if (!widget_id(id, "wgf_ui_slider", &element)) return value;
     value = value > min ? (value < max ? value : max) : min; /* NaN too: min */
-    answer(id, Clay_PointerOver(element), row ? ARROWS_ACROSS : ARROWS_DOWN, true, &answered);
+    answer(id, element, Clay_PointerOver(element), row ? ARROWS_ACROSS : ARROWS_DOWN, true, &answered);
     if (answered.held) {
         const Clay_ElementData data = Clay_GetElementData(element);
         if (data.found) value = min + slider_at(data.boundingBox) * (max - min);
@@ -1137,6 +1211,240 @@ bool wgf_ui_progress(float value)
     Clay__ConfigureOpenElement(declaration);
     Clay__CloseElement();
     return true;
+}
+
+/* `labels`' lines, their starts and lengths, up to CHOICES_MAX; how many. */
+static int lines_of(const char *labels, const char **starts, size_t *lengths)
+{
+    int count = 0;
+    while (labels != NULL && labels[0] != '\0' && count < CHOICES_MAX) {
+        const char *end = strchr(labels, '\n');
+        const size_t length = end != NULL ? (size_t)(end - labels) : strlen(labels);
+        starts[count] = labels;
+        lengths[count++] = length;
+        labels = end != NULL ? end + 1 : NULL;
+    }
+    return count;
+}
+
+static int clamp_index(int index, int count)
+{
+    return index < 0 ? 0 : index >= count ? count - 1 : index;
+}
+
+/* A face's declaration: a button's padding and least width, its content centered. */
+static void face_layout(Clay_ElementDeclaration *declaration, void *piece)
+{
+    const float padding = ui.values[WGF_UI_VALUE_BUTTON_PADDING];
+    memset(declaration, 0, sizeof(*declaration));
+    declaration->layout.padding.left = declaration->layout.padding.right = pixels(padding);
+    declaration->layout.padding.top = declaration->layout.padding.bottom = pixels(padding * 0.5f);
+    declaration->layout.childAlignment.x = CLAY_ALIGN_X_CENTER;
+    declaration->layout.childAlignment.y = CLAY_ALIGN_Y_CENTER;
+    declaration->layout.childGap = pixels(padding * 0.5f);
+    declaration->cornerRadius = corners(ui.values[WGF_UI_VALUE_CORNER_RADIUS]);
+    declaration->custom.customData = piece;
+}
+
+/* The state of a part `i` of a widget (a tab, a number's minus or plus): disabled with it,
+ * pressed while chosen or held, hovered under the pointer. */
+static int part_state(const answer_t *answered, bool chosen, bool over)
+{
+    if (answered->state == WGF_UI_STATE_DISABLED) return WGF_UI_STATE_DISABLED;
+    if (chosen || (over && ui.pointer_down && answered->held)) return WGF_UI_STATE_PRESSED;
+    return over ? WGF_UI_STATE_HOVERED : WGF_UI_STATE_NORMAL;
+}
+
+/* Tabs and a choice: a row of faces, one a label, the chosen one pressed; a press chooses
+ * the one it is on, and the arrows step when the row is focused. */
+static int faces_row(const char *what, const char *id, const char *labels, int selected, int widget, float gap)
+{
+    const char *starts[CHOICES_MAX];
+    size_t lengths[CHOICES_MAX];
+    const int count = lines_of(labels, starts, lengths);
+    Clay_ElementId element;
+    Clay_ElementDeclaration row;
+    Clay_String name;
+    answer_t answered;
+    int i, hovered = -1;
+    if (count == 0 || !widget_named(id, what, &element, &name)) return selected;
+    selected = clamp_index(selected, count);
+    for (i = 0; i < count && hovered < 0; i++) {
+        if (Clay_PointerOver(Clay_GetElementIdWithIndex(name, (uint32_t)i))) hovered = i;
+    }
+    answer(id, element, Clay_PointerOver(element), ARROWS_ACROSS, false, &answered);
+    if (answered.state != WGF_UI_STATE_DISABLED) {
+        if (ui.pointer_pressed && hovered >= 0) selected = hovered;
+        if (answered.focused && ui.keys.more_left != ui.keys.more_right) {
+            selected = clamp_index(selected + (ui.keys.more_right ? 1 : -1), count);
+            ui.focus_visible = true;
+        }
+    }
+    memset(&row, 0, sizeof(row));
+    row.layout.layoutDirection = CLAY_LEFT_TO_RIGHT;
+    row.layout.childGap = pixels(gap);
+    row.cornerRadius = corners(ui.values[WGF_UI_VALUE_CORNER_RADIUS]);
+    ring(&row, answered.focused);
+    Clay__OpenElementWithId(element);
+    Clay__ConfigureOpenElement(row);
+    add_solid(element.id);
+    for (i = 0; i < count; i++) {
+        Clay_ElementDeclaration tab;
+        const int state = part_state(&answered, i == selected, i == hovered);
+        void *piece = add_piece(draw_face, widget, state);
+        face_layout(&tab, piece);
+        tab.layout.padding.left = tab.layout.padding.right = pixels(ui.values[WGF_UI_VALUE_BUTTON_PADDING] * 0.5f);
+        Clay__OpenElementWithId(Clay_GetElementIdWithIndex(name, (uint32_t)i));
+        Clay__ConfigureOpenElement(tab);
+        text_slice(starts[i], lengths[i], 0.0f, dim(ui.colors[WGF_UI_COLOR_BUTTON_TEXT], state), CLAY_TEXT_WRAP_NONE,
+                   piece);
+        Clay__CloseElement();
+    }
+    Clay__CloseElement();
+    return selected;
+}
+
+int wgf_ui_tabs(const char *id, const char *labels, int selected)
+{
+    return faces_row("wgf_ui_tabs", id, labels, selected, WGF_UI_WIDGET_TAB, 2.0f);
+}
+
+int wgf_ui_choice(const char *id, const char *labels, int selected)
+{
+    return faces_row("wgf_ui_choice", id, labels, selected, WGF_UI_WIDGET_TOGGLE, ui.values[WGF_UI_VALUE_GAP] * 0.5f);
+}
+
+int wgf_ui_combo(const char *id, const char *labels, int selected)
+{
+    const char *starts[CHOICES_MAX];
+    size_t lengths[CHOICES_MAX];
+    const int count = lines_of(labels, starts, lengths);
+    Clay_ElementId element;
+    Clay_ElementDeclaration declaration;
+    answer_t answered;
+    void *piece;
+    wgf_color_t color;
+    if (count == 0 || !widget_id(id, "wgf_ui_combo", &element)) return selected;
+    selected = clamp_index(selected, count);
+    answer(id, element, Clay_PointerOver(element), ARROWS_ACROSS, false, &answered);
+    if (answered.activated) selected = (selected + 1) % count;
+    if (answered.focused && ui.keys.more_left != ui.keys.more_right) {
+        selected = (selected + (ui.keys.more_right ? 1 : count - 1)) % count;
+        ui.focus_visible = true;
+    }
+    piece = add_piece(draw_face, WGF_UI_WIDGET_COMBO, answered.state);
+    face_layout(&declaration, piece);
+    declaration.layout.sizing.width.type = CLAY__SIZING_TYPE_FIT;
+    declaration.layout.sizing.width.size.minMax.min = ui.values[WGF_UI_VALUE_BUTTON_WIDTH];
+    ring(&declaration, answered.focused);
+    Clay__OpenElementWithId(element);
+    Clay__ConfigureOpenElement(declaration);
+    add_solid(element.id);
+    color = dim(ui.colors[WGF_UI_COLOR_BUTTON_TEXT], answered.state);
+    text_element("<", 0.0f, color, CLAY_TEXT_WRAP_NONE, piece);
+    wgf_ui_spacer(0.0f);
+    text_slice(starts[selected], lengths[selected], 0.0f, color, CLAY_TEXT_WRAP_NONE, piece);
+    wgf_ui_spacer(0.0f);
+    text_element(">", 0.0f, color, CLAY_TEXT_WRAP_NONE, piece);
+    Clay__CloseElement();
+    return selected;
+}
+
+static void draw_number_box(const piece_t *piece, Clay_BoundingBox box);
+
+/* `value` stepped by `steps` of `step`, on the step's grid from `min`, within the range. */
+static float stepped(float value, float min, float max, float step, int steps)
+{
+    value = min + roundf((value - min) / step + (float)steps) * step;
+    return value > min ? (value < max ? value : max) : min;
+}
+
+float wgf_ui_number(const char *id, float value, float min, float max, float step)
+{
+    Clay_ElementId element, minus, plus;
+    Clay_ElementDeclaration row, box;
+    Clay_String name;
+    answer_t answered;
+    char text[48];
+    int decimals = 0, i;
+    if (!isfinite(min) || !isfinite(max) || !(max > min) || !(step > 0.0f) || !isfinite(step)) return value;
+    if (!widget_named(id, "wgf_ui_number", &element, &name)) return value;
+    value = value > min ? (value < max ? value : max) : min; /* NaN too: min */
+    minus = Clay_GetElementIdWithIndex(name, 0);
+    plus = Clay_GetElementIdWithIndex(name, 1);
+    answer(id, element, Clay_PointerOver(element), ARROWS_ACROSS, false, &answered);
+    if (answered.state != WGF_UI_STATE_DISABLED) {
+        if (ui.pointer_pressed && Clay_PointerOver(minus)) value = stepped(value, min, max, step, -1);
+        if (ui.pointer_pressed && Clay_PointerOver(plus)) value = stepped(value, min, max, step, 1);
+        if (answered.focused && ui.keys.more_left != ui.keys.more_right) {
+            value = stepped(value, min, max, step, ui.keys.more_right ? 1 : -1);
+            ui.focus_visible = true;
+        }
+    }
+    while (decimals < 4 && fabsf(step * powf(10.0f, (float)decimals) - roundf(step * powf(10.0f, (float)decimals))) > 1e-3f)
+        decimals++;
+    snprintf(text, sizeof(text), "%.*f", decimals, (double)value);
+    memset(&row, 0, sizeof(row));
+    row.layout.layoutDirection = CLAY_LEFT_TO_RIGHT;
+    row.layout.childGap = pixels(ui.values[WGF_UI_VALUE_GAP] * 0.5f);
+    row.layout.childAlignment.y = CLAY_ALIGN_Y_CENTER;
+    row.cornerRadius = corners(ui.values[WGF_UI_VALUE_CORNER_RADIUS]);
+    ring(&row, answered.focused);
+    Clay__OpenElementWithId(element);
+    Clay__ConfigureOpenElement(row);
+    add_solid(element.id);
+    for (i = 0; i < 3; i++) {
+        if (i == 1) { /* the value, in its box */
+            void *piece = add_piece(draw_number_box, WGF_UI_WIDGET_NUMBER, answered.state);
+            face_layout(&box, piece);
+            box.layout.sizing.width.type = CLAY__SIZING_TYPE_FIT;
+            box.layout.sizing.width.size.minMax.min = ui.values[WGF_UI_VALUE_BUTTON_WIDTH] * 0.5f;
+            Clay__OpenElement();
+            Clay__ConfigureOpenElement(box);
+            text_element(text, 0.0f, dim(ui.colors[WGF_UI_COLOR_TEXT], answered.state), CLAY_TEXT_WRAP_NONE, NULL);
+            Clay__CloseElement();
+        } else { /* the minus and the plus, buttons' faces */
+            const Clay_ElementId which = i == 0 ? minus : plus;
+            const int state = part_state(&answered, false, Clay_PointerOver(which));
+            void *piece = add_piece(draw_face, WGF_UI_WIDGET_BUTTON, state);
+            face_layout(&box, piece);
+            box.layout.padding.left = box.layout.padding.right = box.layout.padding.top;
+            Clay__OpenElementWithId(which);
+            Clay__ConfigureOpenElement(box);
+            text_element(i == 0 ? "-" : "+", 0.0f, dim(ui.colors[WGF_UI_COLOR_BUTTON_TEXT], state), CLAY_TEXT_WRAP_NONE,
+                         piece);
+            Clay__CloseElement();
+        }
+    }
+    Clay__CloseElement();
+    return value;
+}
+
+bool wgf_ui_tile(const char *id, wgf_texture_t picture, const char *text)
+{
+    Clay_ElementId element;
+    Clay_ElementDeclaration declaration;
+    answer_t answered;
+    void *piece;
+    const float size = ui.values[WGF_UI_VALUE_TILE_SIZE], padding = ui.values[WGF_UI_VALUE_BUTTON_PADDING] * 0.25f;
+    if (picture != 0 && !is_kind(picture, WGF_CORE_PRIV_HANDLE_KIND_TEXTURE)) return false;
+    if (!widget_id(id, "wgf_ui_tile", &element)) return false;
+    answer(id, element, Clay_PointerOver(element), ARROWS_NONE, false, &answered);
+    piece = add_piece(draw_face, WGF_UI_WIDGET_TILE, answered.state);
+    face_layout(&declaration, piece);
+    declaration.layout.layoutDirection = CLAY_TOP_TO_BOTTOM;
+    declaration.layout.padding.left = declaration.layout.padding.right = pixels(padding);
+    declaration.layout.padding.top = declaration.layout.padding.bottom = pixels(padding);
+    sizing(&declaration.layout.sizing.width, WGF_UI_SIZING_FIXED, size);
+    ring(&declaration, answered.focused);
+    Clay__OpenElementWithId(element);
+    Clay__ConfigureOpenElement(declaration);
+    add_solid(element.id);
+    if (picture != 0) image_element(picture, WGF_UI_WIDGET_TILE, answered.state, size - padding * 2.0f, size - padding * 2.0f);
+    if (text != NULL && text[0] != '\0')
+        text_element(text, 0.0f, dim(ui.colors[WGF_UI_COLOR_BUTTON_TEXT], answered.state), CLAY_TEXT_WRAP_NONE, piece);
+    Clay__CloseElement();
+    return answered.activated;
 }
 
 /* ---- the frame ---------------------------------------------------------------------- */
@@ -1218,11 +1526,47 @@ bool wgf_ui_begin(void)
     return true;
 }
 
-/* The focus moved through this frame's widgets, wrapping, by the arrows the focused one
- * doesn't keep; the first press puts it on the first or the last. */
+/* The focusable nearest the one at `from` the way (dx, dy) points (a unit along an axis), as
+ * this frame laid them out: of those whose centers are that way, the least distance along
+ * it plus twice the distance across (helix-legacy's); -1 for none. */
+static int nearest(int from, float dx, float dy)
+{
+    Clay_ElementId id;
+    Clay_ElementData a, b;
+    float best = 0.0f;
+    int i, found = -1;
+    memset(&id, 0, sizeof(id));
+    id.id = ui.focusables[from].element;
+    a = Clay_GetElementData(id);
+    if (!a.found) return -1;
+    for (i = 0; i < ui.focusable_count; i++) {
+        float x, y, along, across, score;
+        if (i == from) continue;
+        id.id = ui.focusables[i].element;
+        b = Clay_GetElementData(id);
+        if (!b.found) continue;
+        x = (b.boundingBox.x + b.boundingBox.width * 0.5f) - (a.boundingBox.x + a.boundingBox.width * 0.5f);
+        y = (b.boundingBox.y + b.boundingBox.height * 0.5f) - (a.boundingBox.y + a.boundingBox.height * 0.5f);
+        along = x * dx + y * dy;
+        across = fabsf(x * dy - y * dx);
+        if (along < 1.0f) continue;
+        score = along + 2.0f * across;
+        if (found < 0 || score < best) {
+            best = score;
+            found = i;
+        }
+    }
+    return found;
+}
+
+/* The focus moved: by an arrow the focused widget doesn't keep, to the nearest widget that
+ * way, else through the frame's widgets in order (Down and Right the next, Up and Left the
+ * one before), wrapping; by Tab and Shift+Tab, in order. The first press puts it on the
+ * first or the last. */
 static void navigate(void)
 {
-    int i, at = -1, arrows = ARROWS_NONE;
+    int i, at = -1, arrows = ARROWS_NONE, to;
+    float dx = 0.0f, dy = 0.0f;
     bool next, previous;
     if (!ui.focus_seen && !ui.focus_fresh) ui.focus[0] = '\0';
     ui.focus_fresh = false;
@@ -1232,14 +1576,18 @@ static void navigate(void)
             arrows = ui.focusables[i].arrows;
         }
     }
-    next = ui.keys.tab_next || (arrows != ARROWS_DOWN && ui.keys.down) || (arrows != ARROWS_ACROSS && ui.keys.right);
-    previous = ui.keys.tab_previous || (arrows != ARROWS_DOWN && ui.keys.up) || (arrows != ARROWS_ACROSS && ui.keys.left);
+    if (arrows != ARROWS_DOWN && ui.keys.down != ui.keys.up) dy = ui.keys.down ? 1.0f : -1.0f;
+    else if (arrows != ARROWS_ACROSS && ui.keys.right != ui.keys.left) dx = ui.keys.right ? 1.0f : -1.0f;
+    next = ui.keys.tab_next || dx > 0.0f || dy > 0.0f;
+    previous = ui.keys.tab_previous || dx < 0.0f || dy < 0.0f;
     if (next == previous || ui.focusable_count == 0) return;
-    if (at < 0)
-        at = next ? 0 : ui.focusable_count - 1;
-    else
-        at = (at + (next ? 1 : ui.focusable_count - 1)) % ui.focusable_count;
-    snprintf(ui.focus, sizeof(ui.focus), "%s", ui.focusables[at].id);
+    if (at < 0) {
+        to = next ? 0 : ui.focusable_count - 1;
+    } else {
+        to = ui.keys.tab_next || ui.keys.tab_previous ? -1 : nearest(at, dx, dy);
+        if (to < 0) to = (at + (next ? 1 : ui.focusable_count - 1)) % ui.focusable_count;
+    }
+    snprintf(ui.focus, sizeof(ui.focus), "%s", ui.focusables[to].id);
     ui.focus_visible = true;
 }
 
@@ -1336,6 +1684,12 @@ static void draw_face(const piece_t *piece, Clay_BoundingBox box)
 {
     paint(piece->widget, WGF_UI_PART_BASE, piece->state, box, face_color(piece->state),
          ui.values[WGF_UI_VALUE_CORNER_RADIUS]);
+}
+
+static void draw_number_box(const piece_t *piece, Clay_BoundingBox box)
+{
+    paint(piece->widget, WGF_UI_PART_BASE, piece->state, box, ui.colors[WGF_UI_COLOR_BAR],
+          ui.values[WGF_UI_VALUE_CORNER_RADIUS]);
 }
 
 /* A texture stretched over the box, dimmed when disabled. */
@@ -1517,7 +1871,7 @@ bool wgf_ui_end(void)
     if (!balanced) wgf_log_error("wgf_ui_end: %d box(es) or panel(s) left open, closed", ui.depth - 1);
     while (ui.depth > 0) {
         configure();
-        Clay__CloseElement();
+        close_element(&ui.levels[ui.depth - 1]);
         ui.depth--;
     }
     ui.begun = false;

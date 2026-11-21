@@ -2838,6 +2838,10 @@ export const Ui = Object.freeze({
     begin: raw.wgf_ui_begin,
     // wgf: call wgf_ui_end
     end: raw.wgf_ui_end,
+    // wgf: call wgf_ui_begin_grid
+    beginGrid: raw.wgf_ui_begin_grid,
+    // wgf: call wgf_ui_end_grid
+    endGrid: raw.wgf_ui_end_grid,
     // wgf: call wgf_ui_begin_box
     beginBox: raw.wgf_ui_begin_box,
     // wgf: call wgf_ui_end_box
@@ -2886,6 +2890,16 @@ export const Ui = Object.freeze({
     checkbox: raw.wgf_ui_checkbox,
     // wgf: call wgf_ui_slider
     slider: raw.wgf_ui_slider,
+    // wgf: call wgf_ui_number
+    number: raw.wgf_ui_number,
+    // wgf: call wgf_ui_tabs
+    tabs: raw.wgf_ui_tabs,
+    // wgf: call wgf_ui_choice
+    choice: raw.wgf_ui_choice,
+    // wgf: call wgf_ui_combo
+    combo: raw.wgf_ui_combo,
+    // wgf: call wgf_ui_tile
+    tile: raw.wgf_ui_tile,
     // wgf: call wgf_ui_set_disabled
     setDisabled: raw.wgf_ui_set_disabled,
     // wgf: call wgf_ui_is_disabled
@@ -3291,7 +3305,7 @@ export const TextHalign = Object.freeze({ LEFT: 0, CENTER: 1, RIGHT: 2 });
 // wgf: enum TextValign
 export const TextValign = Object.freeze({ TOP: 0, MIDDLE: 1, BOTTOM: 2 });
 // wgf: enum TextureFilter
-export const TextureFilter = Object.freeze({ LINEAR: 0, NEAREST: 1 });
+export const TextureFilter = Object.freeze({ LINEAR: 0, NEAREST: 1, LINEAR_NO_MIPMAPS: 2 });
 // wgf: enum TextureReadStatus
 export const TextureReadStatus = Object.freeze({ NONE: 0, PENDING: 1, DONE: 2, FAILED: 3 });
 // wgf: enum TextureWrap
@@ -3329,9 +3343,9 @@ export const UiSizing = Object.freeze({ FIT: 0, GROW: 1, FIXED: 2, PERCENT: 3 })
 // wgf: enum UiState
 export const UiState = Object.freeze({ NORMAL: 0, HOVERED: 1, PRESSED: 2, DISABLED: 3 });
 // wgf: enum UiValue
-export const UiValue = Object.freeze({ TEXT_SIZE: 0, PADDING: 1, GAP: 2, CORNER_RADIUS: 3, BUTTON_PADDING: 4, BUTTON_WIDTH: 5, FOCUS_WIDTH: 6, BAR_WIDTH: 7, BAR_HEIGHT: 8, CHECK_SIZE: 9, SLIDER_WIDTH: 10, SLIDER_HEIGHT: 11, HANDLE_SIZE: 12, LINE_WIDTH: 13 });
+export const UiValue = Object.freeze({ TEXT_SIZE: 0, PADDING: 1, GAP: 2, CORNER_RADIUS: 3, BUTTON_PADDING: 4, BUTTON_WIDTH: 5, FOCUS_WIDTH: 6, BAR_WIDTH: 7, BAR_HEIGHT: 8, CHECK_SIZE: 9, SLIDER_WIDTH: 10, SLIDER_HEIGHT: 11, HANDLE_SIZE: 12, LINE_WIDTH: 13, TILE_SIZE: 14 });
 // wgf: enum UiWidget
-export const UiWidget = Object.freeze({ PANEL: 0, BUTTON: 1, TOGGLE: 2, CHECKBOX: 3, SLIDER: 4, PROGRESS: 5, GROUP: 6 });
+export const UiWidget = Object.freeze({ PANEL: 0, BUTTON: 1, TOGGLE: 2, CHECKBOX: 3, SLIDER: 4, PROGRESS: 5, GROUP: 6, TAB: 7, COMBO: 8, NUMBER: 9, TILE: 10 });
 // wgf: enum VehicleDrive
 export const VehicleDrive = Object.freeze({ FRONT: 0, REAR: 1, ALL: 2 });
 // wgf: enum WindowOrientation

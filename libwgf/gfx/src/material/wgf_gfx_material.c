@@ -442,7 +442,7 @@ bool wgf_material_set_texture_sampling(wgf_material_t material, const char *name
     if (texture_ptr == NULL) return false;
     if ((int)wrap_u < WGF_TEXTURE_WRAP_REPEAT || wrap_u > WGF_TEXTURE_WRAP_MIRROR ||
         (int)wrap_v < WGF_TEXTURE_WRAP_REPEAT || wrap_v > WGF_TEXTURE_WRAP_MIRROR ||
-        (int)filter < WGF_TEXTURE_FILTER_LINEAR || filter > WGF_TEXTURE_FILTER_NEAREST) {
+        (int)filter < WGF_TEXTURE_FILTER_LINEAR || filter > WGF_TEXTURE_FILTER_LINEAR_NO_MIPMAPS) {
         return false;
     }
     texture_ptr->wrap_u = wrap_u;
