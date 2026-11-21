@@ -109,6 +109,7 @@ static void on_shutdown(void *user)
 
 int main(void)
 {
+    wgf_font_enable_bitmaps(); /* what reads a bitmap font's file: linked, as this example draws in one */
     wgf_window_set_title("libwgf bitmap font");
     wgf_window_set_size(900, 480);
     wgf_app_run(init, NULL, frame, on_shutdown, NULL);

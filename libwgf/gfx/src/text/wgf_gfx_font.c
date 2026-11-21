@@ -236,6 +236,20 @@ static void discard_bitmap(void *prepared)
 }
 
 /* An image of glyphs: its key made transparent before its mipmaps are built from it. */
+/* What reads a bitmap font's file: set as wgf_gfx_font_bitmap_read.c is linked (a program that
+ * enables bitmap fonts); NULL, a bitmap font FAILED. Set before any load, never changed after. */
+static const wgf_gfx_priv_bitmap_reader_t *reader;
+
+void wgf_gfx_priv_set_bitmap_reader(const wgf_gfx_priv_bitmap_reader_t *bitmap_reader)
+{
+    reader = bitmap_reader;
+}
+
+bool wgf_font_is_bitmaps_enabled(void)
+{
+    return reader != NULL;
+}
+
 static bool prepare_image(bitmap_loaded_t *loaded, const unsigned char *bytes, int size, const char *path)
 {
     void *decoded = wgf_gfx_priv_texture_decode_base(bytes, size, path);
@@ -244,7 +258,7 @@ static bool prepare_image(bitmap_loaded_t *loaded, const unsigned char *bytes, i
     if (decoded == NULL) return false;
     loaded->decoded[0] = decoded;
     rgba = wgf_gfx_priv_texture_decoded_base(decoded, &width, &height);
-    loaded->bitmap = wgf_gfx_priv_bitmap_from_image(rgba, width, height, IMAGE_KEY, IMAGE_FIRST, path);
+    loaded->bitmap = reader->from_image(rgba, width, height, IMAGE_KEY, IMAGE_FIRST, path);
     if (loaded->bitmap == NULL) return false;
     if (!wgf_gfx_priv_texture_decoded_build_mipmaps(decoded)) {
         wgf_log_warn("wgf_gfx_font: %s: out of memory", path);
@@ -257,7 +271,7 @@ static bool prepare_image(bitmap_loaded_t *loaded, const unsigned char *bytes, i
 static bool prepare_fnt(bitmap_loaded_t *loaded, const unsigned char *bytes, int size, const char *path)
 {
     int page;
-    loaded->bitmap = wgf_gfx_priv_bitmap_parse_fnt(bytes, size, path);
+    loaded->bitmap = reader->parse_fnt(bytes, size, path);
     if (loaded->bitmap == NULL) return false;
     for (page = 0; page < loaded->bitmap->page_count; page++) {
         char page_path[WGF_CORE_PRIV_FS_PATH_MAX];
@@ -288,6 +302,13 @@ static void *prepare_bitmap(const char *path)
     int size;
     bool ok;
     if (loaded == NULL) return NULL;
+    if (reader == NULL) {
+        wgf_log_error("wgf_font_create: %s: bitmap fonts aren't linked in this program (a game: \"bitmap_fonts\" in "
+                      "wgf.json's features; C: wgf_font_enable_bitmaps)",
+                      path);
+        free(loaded);
+        return NULL;
+    }
     if (!wgf_core_priv_fs_read(path, &bytes, &size)) {
         free(loaded);
         return NULL;

@@ -236,6 +236,7 @@ int main(void)
     wgf_font_t font, binary, image;
     wgf_vec2_t m;
     unsigned char bytes[512];
+    expect(wgf_font_enable_bitmaps() && wgf_font_is_bitmaps_enabled(), "bitmap fonts linked");
 
     wgf_core_priv_init();
     write_page("bitmap_test/page.png");

@@ -26,6 +26,11 @@
 			<flag value="/INCLUDE:wgf_physics_enable_characters" if="MSVC_VER"/>
 			<flag value="-Wl,-u,wgf_physics_enable_characters" unless="MSVC_VER"/>
 		</section>
+		<!-- -D wgf_bitmap_fonts: what reads a bitmap font's file linked (its "bitmap_fonts" feature) -->
+		<section if="wgf_bitmap_fonts">
+			<flag value="/INCLUDE:wgf_font_enable_bitmaps" if="MSVC_VER"/>
+			<flag value="-Wl,-u,wgf_font_enable_bitmaps" unless="MSVC_VER"/>
+		</section>
 		<!-- -D wgf_emitters: the particles linked for a scene's emitter lines (its "emitters" feature) -->
 		<section if="wgf_emitters">
 			<flag value="/INCLUDE:wgf_emitter2d_create" if="MSVC_VER"/>

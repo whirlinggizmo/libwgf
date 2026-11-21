@@ -573,9 +573,11 @@ class Reach {
 		"wgf_follow_shake",
 		"wgf_follow_snap",
 		"wgf_font_create",
+		"wgf_font_enable_bitmaps",
 		"wgf_font_get_default",
 		"wgf_font_get_filter",
 		"wgf_font_get_size",
+		"wgf_font_is_bitmaps_enabled",
 		"wgf_font_measure",
 		"wgf_font_set_default",
 		"wgf_font_set_filter",
@@ -1405,7 +1407,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1396) 0];
+	static final counts:Array<Int> = [for (_ in 0...1398) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

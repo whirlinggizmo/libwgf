@@ -133,6 +133,7 @@ static void on_frame(void *user)
 
 int main(void)
 {
+    wgf_font_enable_bitmaps(); /* what reads a bitmap font's file, linked */
     wgf_window_set_size(W, H);
     wgf_window_set_high_dpi(false); /* one pixel a logical pixel, whatever the display */
     wgf_app_run(NULL, NULL, on_frame, NULL, NULL);

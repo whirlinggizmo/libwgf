@@ -49,6 +49,10 @@ class Defines {
 			doc: "Links characters (a body of type character: Jolt's CharacterVirtual) into a native build that never calls Physics.enableCharacters: a game's \"characters\" feature (wgf.json), which the wgf tool turns into it."
 		},
 		{
+			define: "wgf_bitmap_fonts",
+			doc: "Links what reads a bitmap font's file (a .fnt, or an image of glyphs) into a native build that never calls Font.enableBitmaps: a game's \"bitmap_fonts\" feature (wgf.json), which the wgf tool turns into it."
+		},
+		{
 			define: "wgf_reach",
 			doc: "Each of the binding's C calls counts itself (wgf.impl.Reach), for the feature test's coverage (tools/check_features.py)."
 		}

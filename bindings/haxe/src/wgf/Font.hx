@@ -43,6 +43,24 @@ abstract Font(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_font_create(path);
 
 	/**
+	    Bitmap fonts (a .fnt, or an image of glyphs: wgf_font_create), linked on purpose: this call
+	    links what reads their files (a game: "bitmap_fonts" in wgf.json's features), so a program
+	    with TrueType fonts alone carries none of it. Without it, a bitmap font FAILED, logged.
+	    Before the first bitmap font is created.
+	**/
+	public static inline function enableBitmaps():Bool
+		return Raw.wgf_font_enable_bitmaps();
+
+	/**
+	    Bitmap fonts (a .fnt, or an image of glyphs: wgf_font_create), linked on purpose: this call
+	    links what reads their files (a game: "bitmap_fonts" in wgf.json's features), so a program
+	    with TrueType fonts alone carries none of it. Without it, a bitmap font FAILED, logged.
+	    Before the first bitmap font is created.
+	**/
+	public static inline function isBitmapsEnabled():Bool
+		return Raw.wgf_font_is_bitmaps_enabled();
+
+	/**
 	    A bitmap font's own size: the height of its line in its pixels (an image's: its
 	    glyphs' height), the size its text is drawn texel for texel at (times the frame's DPI
 	    scale); a whole multiple of it stays sharp under NEAREST. 0 for a TrueType font, one

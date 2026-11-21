@@ -631,6 +631,7 @@ static void on_frame(void *user)
 
 int main(void)
 {
+    wgf_font_enable_bitmaps(); /* the Pixel family's bitmap font */
     wgf_window_set_size(800, 600);
     wgf_app_run(on_init, NULL, on_frame, NULL, NULL);
     expect(ready_frame >= 0 && frame_number - ready_frame >= 22, "every frame ran");

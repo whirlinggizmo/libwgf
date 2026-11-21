@@ -629,6 +629,7 @@ class Main {
 		font = Font.create("fonts/JetBrainsMono/JetBrainsMono-Regular.ttf");
 		expect(Font.getDefault().isNone() && font.setDefault() && Font.getDefault() == font, "the default font");
 		expect(font.measure("feature", 16).x > 0, "text measured");
+		expect(Font.enableBitmaps() && Font.isBitmapsEnabled(), "bitmap fonts linked");
 		pixelFont = Font.create("fonts/gizmo5/gizmo5.fnt");
 		expect(pixelFont.getFilter() == TextureFilter.NEAREST && pixelFont.setFilter(TextureFilter.LINEAR)
 			&& pixelFont.getFilter() == TextureFilter.LINEAR && pixelFont.setFilter(TextureFilter.NEAREST)

@@ -49,6 +49,7 @@ wgf_layer(gfx
         src/stage/wgf_gfx_pick3d.c
         src/text/wgf_gfx_font.c
         src/text/wgf_gfx_font_bitmap.c
+        src/text/wgf_gfx_font_bitmap_read.c
         src/text/wgf_gfx_fontstash_impl.c
         src/text/wgf_gfx_text.c
         src/tilemap/wgf_gfx_tilemap.c
@@ -103,6 +104,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_shape3d_test)
         wgf_test(gfx wgf_gfx_text_test)
         wgf_test(gfx wgf_gfx_font_bitmap_test)
+        wgf_test(gfx wgf_gfx_font_no_bitmaps_test)
         wgf_test(gfx wgf_gfx_texture_test)
         wgf_test(gfx wgf_gfx_image_test)
         wgf_test(gfx wgf_gfx_draw_test)

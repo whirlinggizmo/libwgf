@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "020b6224885a2211" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "9af538f8ef3a000b" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -6017,6 +6017,30 @@ export function wgf_font_create(path) {
     const value = host["_wgf_font_create"](cstr(path));
     host["stackRestore"](mark);
     return value >>> 0;
+}
+
+// wgf: call wgf_font_enable_bitmaps
+/**
+ * Bitmap fonts (a .fnt, or an image of glyphs: wgf_font_create), linked on purpose: this call
+ * links what reads their files (a game: "bitmap_fonts" in wgf.json's features), so a program
+ * with TrueType fonts alone carries none of it. Without it, a bitmap font FAILED, logged.
+ * Before the first bitmap font is created.
+ */
+export function wgf_font_enable_bitmaps() {
+    const value = host["_wgf_font_enable_bitmaps"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_font_is_bitmaps_enabled
+/**
+ * Bitmap fonts (a .fnt, or an image of glyphs: wgf_font_create), linked on purpose: this call
+ * links what reads their files (a game: "bitmap_fonts" in wgf.json's features), so a program
+ * with TrueType fonts alone carries none of it. Without it, a bitmap font FAILED, logged.
+ * Before the first bitmap font is created.
+ */
+export function wgf_font_is_bitmaps_enabled() {
+    const value = host["_wgf_font_is_bitmaps_enabled"]();
+    return value !== 0;
 }
 
 // wgf: call wgf_font_get_size

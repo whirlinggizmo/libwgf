@@ -68,6 +68,16 @@ int wgf_gfx_priv_bitmap_kerning(const wgf_gfx_priv_bitmap_t *font, uint32_t firs
 
 void wgf_gfx_priv_bitmap_free(wgf_gfx_priv_bitmap_t *font);
 
+/* What reads a bitmap font's file (wgf_gfx_font_bitmap_read.c), reached by the font loader
+ * through the hook that file sets as it is linked (wgf_font_enable_bitmaps): NULL until then,
+ * a bitmap font then FAILED, its log naming the feature. */
+typedef struct wgf_gfx_priv_bitmap_reader_t {
+    wgf_gfx_priv_bitmap_t *(*parse_fnt)(const unsigned char *data, int size, const char *path);
+    wgf_gfx_priv_bitmap_t *(*from_image)(unsigned char *rgba, int width, int height, uint32_t key,
+                                         uint32_t first_codepoint, const char *path);
+} wgf_gfx_priv_bitmap_reader_t;
+void wgf_gfx_priv_set_bitmap_reader(const wgf_gfx_priv_bitmap_reader_t *reader);
+
 /* The next codepoint of UTF-8 text at *at, before `end`, moving *at past it: an
  * ill-formed sequence is U+FFFD, one byte at a time. */
 uint32_t wgf_gfx_priv_bitmap_next_codepoint(const char **at, const char *end);

@@ -1258,6 +1258,10 @@ export const Follow = Object.freeze({
 export const Font = Object.freeze({
     // wgf: call wgf_font_create
     create: raw.wgf_font_create,
+    // wgf: call wgf_font_enable_bitmaps
+    enableBitmaps: raw.wgf_font_enable_bitmaps,
+    // wgf: call wgf_font_is_bitmaps_enabled
+    isBitmapsEnabled: raw.wgf_font_is_bitmaps_enabled,
     // wgf: call wgf_font_get_size
     getSize: raw.wgf_font_get_size,
     // wgf: call wgf_font_set_filter
