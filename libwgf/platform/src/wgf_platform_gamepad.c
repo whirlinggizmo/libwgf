@@ -348,7 +348,7 @@ bool wgf_gamepad_is_rumbling(int pad)
 /* A pad's GUID and mapping are the real pad's: a replay plays inputs, not devices. */
 const char *wgf_gamepad_get_guid(int pad)
 {
-    static const unsigned char none[16];
+    static const unsigned char none[16] = {0};
     static char text[33];
     int i;
     if (pad < 0 || pad >= WGF_PLATFORM_PRIV_GAMEPADS || !pads.real[pad].connected ||
