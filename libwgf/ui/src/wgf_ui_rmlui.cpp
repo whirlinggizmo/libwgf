@@ -8,6 +8,7 @@
 #include <RmlUi/Core/DecorationTypes.h>
 #include <RmlUi/Core/Elements/ElementFormControl.h>
 #include <RmlUi/Core/Elements/ElementFormControlInput.h>
+#include <RmlUi/Core/Elements/ElementTabSet.h>
 #include <RmlUi/Core/ElementText.h>
 
 #include <cmath>
@@ -540,6 +541,7 @@ struct State {
     std::vector<int> free_slots;
     std::unordered_map<Rml::Element *, int> slot_of;
     std::string text; /* what a call returning text returns */
+    bool quiet = false; /* a program's own change (a tabset's tab set): it raises no event */
 };
 
 State *state = nullptr;
@@ -624,6 +626,10 @@ void Listener::ProcessEvent(Rml::Event &event)
     switch (event.GetId()) {
     case Rml::EventId::Click: kind = 1; break;
     case Rml::EventId::Change: kind = 2; break;
+    case Rml::EventId::Tabchange: /* a tabset's tab chosen: its change */
+        if (state->quiet) return;
+        kind = 2;
+        break;
     case Rml::EventId::Submit: kind = 3; break;
     case Rml::EventId::Focus: kind = 4; break;
     case Rml::EventId::Blur: kind = 5; break;
@@ -766,8 +772,8 @@ int wgf_ui_priv_rml_load(const char *rml, int size, const char *path, uint32_t o
     document->element = element;
     document->owner = owner;
     document->listener.reset(new Listener(document.get()));
-    const Rml::EventId kinds[5] = {Rml::EventId::Click, Rml::EventId::Change, Rml::EventId::Submit,
-                                   Rml::EventId::Focus, Rml::EventId::Blur};
+    const Rml::EventId kinds[6] = {Rml::EventId::Click, Rml::EventId::Change, Rml::EventId::Submit,
+                                   Rml::EventId::Focus, Rml::EventId::Blur, Rml::EventId::Tabchange};
     for (Rml::EventId id : kinds) element->AddEventListener(id, document->listener.get(), true);
     element->Hide();
     for (size_t i = 0; i < state->documents.size(); i++) {
@@ -785,8 +791,8 @@ void wgf_ui_priv_rml_unload(int number)
     Document *document = document_at(number);
     if (document == nullptr) return;
     sweep(number);
-    const Rml::EventId kinds[5] = {Rml::EventId::Click, Rml::EventId::Change, Rml::EventId::Submit,
-                                   Rml::EventId::Focus, Rml::EventId::Blur};
+    const Rml::EventId kinds[6] = {Rml::EventId::Click, Rml::EventId::Change, Rml::EventId::Submit,
+                                   Rml::EventId::Focus, Rml::EventId::Blur, Rml::EventId::Tabchange};
     for (Rml::EventId id : kinds) document->element->RemoveEventListener(id, document->listener.get(), true);
     document->element->Close(); /* gone at the context's next update */
     state->documents[(size_t)number - 1].reset();
@@ -991,7 +997,12 @@ bool wgf_ui_priv_rml_is_form_control(int slot)
 bool wgf_ui_priv_rml_get_number(int slot, float *value)
 {
     Rml::ElementFormControl *control = rmlui_dynamic_cast<Rml::ElementFormControl *>(element_at(slot));
+    Rml::ElementTabSet *tabset = rmlui_dynamic_cast<Rml::ElementTabSet *>(element_at(slot));
     *value = 0.0f;
+    if (tabset != nullptr) {
+        *value = (float)tabset->GetActiveTab();
+        return true;
+    }
     if (control == nullptr) return false;
     const Rml::String text = control->GetValue();
     char *end = nullptr;
@@ -1003,6 +1014,15 @@ bool wgf_ui_priv_rml_get_number(int slot, float *value)
 bool wgf_ui_priv_rml_set_number(int slot, float value)
 {
     Rml::ElementFormControl *control = rmlui_dynamic_cast<Rml::ElementFormControl *>(element_at(slot));
+    Rml::ElementTabSet *tabset = rmlui_dynamic_cast<Rml::ElementTabSet *>(element_at(slot));
+    if (tabset != nullptr) { /* its tab, by its place: a whole number among them */
+        const int tab = (int)value;
+        if ((float)tab != value || tab < 0 || tab >= tabset->GetNumTabs()) return false;
+        state->quiet = true;
+        tabset->SetActiveTab(tab);
+        state->quiet = false;
+        return true;
+    }
     if (control == nullptr || value != value) return false;
     char text[64];
     std::snprintf(text, sizeof(text), "%.9g", (double)value);

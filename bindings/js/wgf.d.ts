@@ -12840,32 +12840,40 @@ export declare function wgf_element_get_property(element: wgf_element_t | 0, nam
 /**
  * A form control's value: a text field's text, a slider's number, a choice's chosen value,
  * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
- * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
- * for a handle that isn't a form control.
+ * text read as one: 0 for text that isn't). A tabset's number is its chosen tab, from 0 in
+ * its `<tabs>`' order, set as a whole number among them, and a tab chosen by the player
+ * raises its CHANGE. Setting either raises no event. False (and "", 0) for a handle that
+ * isn't a form control or a tabset (set_value: a form control).
  */
 export declare function wgf_element_set_value(element: wgf_element_t | 0, value_: string | null): boolean;
 
 /**
  * A form control's value: a text field's text, a slider's number, a choice's chosen value,
  * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
- * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
- * for a handle that isn't a form control.
+ * text read as one: 0 for text that isn't). A tabset's number is its chosen tab, from 0 in
+ * its `<tabs>`' order, set as a whole number among them, and a tab chosen by the player
+ * raises its CHANGE. Setting either raises no event. False (and "", 0) for a handle that
+ * isn't a form control or a tabset (set_value: a form control).
  */
 export declare function wgf_element_get_value(element: wgf_element_t | 0): string;
 
 /**
  * A form control's value: a text field's text, a slider's number, a choice's chosen value,
  * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
- * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
- * for a handle that isn't a form control.
+ * text read as one: 0 for text that isn't). A tabset's number is its chosen tab, from 0 in
+ * its `<tabs>`' order, set as a whole number among them, and a tab chosen by the player
+ * raises its CHANGE. Setting either raises no event. False (and "", 0) for a handle that
+ * isn't a form control or a tabset (set_value: a form control).
  */
 export declare function wgf_element_set_number(element: wgf_element_t | 0, value_: number): boolean;
 
 /**
  * A form control's value: a text field's text, a slider's number, a choice's chosen value,
  * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
- * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
- * for a handle that isn't a form control.
+ * text read as one: 0 for text that isn't). A tabset's number is its chosen tab, from 0 in
+ * its `<tabs>`' order, set as a whole number among them, and a tab chosen by the player
+ * raises its CHANGE. Setting either raises no event. False (and "", 0) for a handle that
+ * isn't a form control or a tabset (set_value: a form control).
  */
 export declare function wgf_element_get_number(element: wgf_element_t | 0): number;
 

@@ -30,7 +30,7 @@
  * attributes, classes, properties, a form control's value, a checkbox, a slider, disabled);
  * the pointer clicking a button and a checkbox, typed text and keys in a text field, Tab
  * and a pad's D-pad moving the focus, each seen as the events taken; the captures; an
- * element gone with its RML; a document released, its elements with it; one that isn't
+ * element gone with its RML; a tabset's tab, set and clicked; a document released, its elements with it; one that isn't
  * there FAILED; and every refusal. And what RCSS does over time: a transition, an
  * animation, and a tooltip shown by `:hover` on its parent; a finger dragging a list,
  * which scrolls; a text field's on-screen keyboard; and a family's bold and italic faces.
@@ -63,6 +63,7 @@ static const char rml[] =
     "  <input id=\"volume\" type=\"range\" min=\"0\" max=\"10\" step=\"1\" value=\"5\"/>\n"
     "  <input id=\"name\" type=\"text\" value=\"Rob\"/>\n"
     "  <button id=\"quit\">Quit</button>\n"
+    "  <tabset id=\"tabs\"><tab id=\"tab-a\">A</tab><tab>B</tab><panel>a</panel><panel>b</panel></tabset>\n"
     "  <div id=\"list\"><p id=\"first\">one</p></div>\n"
     "  <img id=\"logo\" src=\"dot.png\"/>\n"
     "  <a href=\"https://example.com/elsewhere.png\">away</a>\n"
@@ -90,6 +91,8 @@ static const char rcss[] =
     "input.range sliderbar { width: 10px; height: 20px; }\n"
     "input.text { display: block; width: 200px; height: 24px; nav: auto; }\n"
     "img { display: block; }\n"
+    "tabset { display: block; } tabset tabs { display: flex; height: 20px; } tabset tab { width: 40px; }\n"
+    "tabset panels { display: block; height: 20px; }\n"
     ".hot { color: #ff0000; }\n"
     "#help { width: 40px; height: 20px; }\n"
     "#tip { display: none; }\n"
@@ -130,7 +133,7 @@ static const char fnt[] = "common lineHeight=10 base=8 pages=1\npage id=0 file=\
 static wgf_handle_t tasks[TASKS];
 static wgf_font_t font, bold, pixel;
 static wgf_document_t document, missing;
-static wgf_element_t play, sound, volume, name, quit, first, logo, help, tip, fade, pulse, row;
+static wgf_element_t play, sound, volume, name, quit, first, logo, help, tip, fade, pulse, row, tabs, tab_a;
 static double hold_until; /* the steps wait until then: what RCSS does over time */
 static double faded_at;
 static float pulse_width, row_x, row_y;
@@ -340,6 +343,8 @@ static void ready(void)
     fade = wgf_document_find(document, "fade");
     pulse = wgf_document_find(document, "pulse");
     row = wgf_document_find(document, "row-1");
+    tabs = wgf_document_find(document, "tabs");
+    tab_a = wgf_document_find(document, "tab-a");
     expect(play && sound && volume && name && quit && first && title && list && logo, "every element found");
     expect(help && tip && fade && pulse && row, "and those for what RCSS does over time");
     own_target = wgf_texture_create_target(200, 100);
@@ -397,6 +402,12 @@ static void ready(void)
                !wgf_element_set_checked(volume, true) && !wgf_element_is_checked(play) &&
                wgf_element_get_number(play) == 0 && !wgf_element_set_number(volume, NAN),
            "what isn't a form control, or a checkbox, or a number: refused");
+    expect(tabs && tab_a && wgf_element_get_number(tabs) == 0 && wgf_element_set_number(tabs, 1) &&
+               wgf_element_get_number(tabs) == 1,
+           "a tabset's number: its chosen tab, set");
+    expect(!wgf_element_set_number(tabs, 2) && !wgf_element_set_number(tabs, -1) && !wgf_element_set_number(tabs, 0.5f) &&
+               wgf_element_get_number(tabs) == 1 && !wgf_element_set_value(tabs, "0"),
+           "a tab it hasn't, or not a whole one, refused; and it has no value");
     expect(!wgf_element_set_text(0, "x") && !wgf_element_set_text(title, NULL) && strcmp(wgf_element_get_text(0), "") == 0 &&
                !wgf_element_set_class(title, "", true) && !wgf_element_set_attribute(title, NULL, "x") &&
                wgf_element_get_document(0) == 0 && !wgf_element_set_attribute(document, "a", "b"),
@@ -482,6 +493,7 @@ static void on_frame(void *user)
     case 3:
         take();
         expect(happened(WGF_DOCUMENT_EVENT_CLICK, play), "a click on the button's label is the button's");
+        expect(!happened(WGF_DOCUMENT_EVENT_CHANGE, tabs), "a tab set by the program raised no event");
         expect(happened(WGF_DOCUMENT_EVENT_FOCUS, play) && wgf_document_get_focus(document) == play,
                "pressed, it took the focus");
         expect(wgf_input_is_keyboard_captured(), "an element focused: the keyboard the document's");
@@ -576,7 +588,19 @@ static void on_frame(void *user)
                "a finger dragged up: the list scrolled with it");
         finger(SAPP_EVENTTYPE_TOUCHES_ENDED, row_x, row_y + 5.0f);
         break;
-    case 17: {
+    case 17:
+        click_at(tab_a, SAPP_EVENTTYPE_MOUSE_MOVE);
+        click_at(tab_a, SAPP_EVENTTYPE_MOUSE_DOWN);
+        break;
+    case 18:
+        click_at(tab_a, SAPP_EVENTTYPE_MOUSE_UP);
+        break;
+    case 19:
+        take();
+        expect(wgf_element_get_number(tabs) == 0 && happened(WGF_DOCUMENT_EVENT_CHANGE, tabs),
+               "a tab clicked: chosen, the tabset's CHANGE");
+        break;
+    case 20: {
         const wgf_element_t pixel_text = wgf_document_find(document, "pixel");
         expect(wgf_resource_get_status(pixel) == WGF_RESOURCE_STATUS_READY, "the bitmap font loaded");
         expect(wgf_ui_priv_document_element_bounds(pixel_text, &x, &y, &w, &h) && w == 20 && h > 0,
@@ -584,7 +608,7 @@ static void on_frame(void *user)
         expect(wgf_document_set_visible(document, false) && !wgf_document_is_visible(document), "hidden");
         break;
     }
-    case 18:
+    case 21:
         expect(!wgf_input_is_pointer_captured() && !wgf_input_is_keyboard_captured(),
                "hidden: neither the pointer nor the keyboard the document's");
         /* released: the document and its elements gone */
@@ -609,6 +633,6 @@ int main(void)
 {
     wgf_window_set_size(800, 600);
     wgf_app_run(on_init, NULL, on_frame, NULL, NULL);
-    expect(ready_frame >= 0 && frame_number - ready_frame >= 19, "every frame ran");
+    expect(ready_frame >= 0 && frame_number - ready_frame >= 22, "every frame ran");
     return failures == 0 ? 0 : 1;
 }

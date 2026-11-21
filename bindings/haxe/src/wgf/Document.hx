@@ -42,6 +42,12 @@ import wgf.impl.Raw;
     removed from its document (its parent's inner RML set again) or whose document is
     released is refused from then on.
 
+    Tabs are RmlUi's `<tabset>`: its `<tabs>`' `<tab>`s choose among its `<panels>`' `<panel>`s,
+    the chosen tab and panel `:selected` (wgf_element_get_number reads which). A tooltip is an
+    element shown by its parent's `:hover` (`.hint:hover .tip { display: block; }`), so it
+    shows while the pointer is over its parent:
+    examples/assets/ui/options.rml has both.
+
     RCSS's gradients (linear, radial, conic, repeating), `box-shadow`, `filter` (blur,
     drop-shadow, opacity, and the color filters), `backdrop-filter` (over what the documents
     drew), `mask-image`, and clipping to rounded corners are drawn. Inside a program's own

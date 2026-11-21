@@ -140,8 +140,10 @@ abstract Element(Int) from Int to Int to wgf.Handle {
 	/**
 	    A form control's value: a text field's text, a slider's number, a choice's chosen value,
 	    a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
-	    text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
-	    for a handle that isn't a form control.
+	    text read as one: 0 for text that isn't). A tabset's number is its chosen tab, from 0 in
+	    its `<tabs>`' order, set as a whole number among them, and a tab chosen by the player
+	    raises its CHANGE. Setting either raises no event. False (and "", 0) for a handle that
+	    isn't a form control or a tabset (set_value: a form control).
 	**/
 	public inline function setValue(value:String):Bool
 		return Raw.wgf_element_set_value(this, value);
@@ -149,8 +151,10 @@ abstract Element(Int) from Int to Int to wgf.Handle {
 	/**
 	    A form control's value: a text field's text, a slider's number, a choice's chosen value,
 	    a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
-	    text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
-	    for a handle that isn't a form control.
+	    text read as one: 0 for text that isn't). A tabset's number is its chosen tab, from 0 in
+	    its `<tabs>`' order, set as a whole number among them, and a tab chosen by the player
+	    raises its CHANGE. Setting either raises no event. False (and "", 0) for a handle that
+	    isn't a form control or a tabset (set_value: a form control).
 	**/
 	public inline function getValue():String
 		return Raw.wgf_element_get_value(this);
@@ -158,8 +162,10 @@ abstract Element(Int) from Int to Int to wgf.Handle {
 	/**
 	    A form control's value: a text field's text, a slider's number, a choice's chosen value,
 	    a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
-	    text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
-	    for a handle that isn't a form control.
+	    text read as one: 0 for text that isn't). A tabset's number is its chosen tab, from 0 in
+	    its `<tabs>`' order, set as a whole number among them, and a tab chosen by the player
+	    raises its CHANGE. Setting either raises no event. False (and "", 0) for a handle that
+	    isn't a form control or a tabset (set_value: a form control).
 	**/
 	public inline function setNumber(value:Float):Bool
 		return Raw.wgf_element_set_number(this, value);
@@ -167,8 +173,10 @@ abstract Element(Int) from Int to Int to wgf.Handle {
 	/**
 	    A form control's value: a text field's text, a slider's number, a choice's chosen value,
 	    a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
-	    text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
-	    for a handle that isn't a form control.
+	    text read as one: 0 for text that isn't). A tabset's number is its chosen tab, from 0 in
+	    its `<tabs>`' order, set as a whole number among them, and a tab chosen by the player
+	    raises its CHANGE. Setting either raises no event. False (and "", 0) for a handle that
+	    isn't a form control or a tabset (set_value: a form control).
 	**/
 	public inline function getNumber():Float
 		return Raw.wgf_element_get_number(this);

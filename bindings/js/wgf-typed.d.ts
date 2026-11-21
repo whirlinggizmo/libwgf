@@ -2454,6 +2454,12 @@ export type Document = raw.wgf_document_t;
  * removed from its document (its parent's inner RML set again) or whose document is
  * released is refused from then on.
  *
+ * Tabs are RmlUi's `<tabset>`: its `<tabs>`' `<tab>`s choose among its `<panels>`' `<panel>`s,
+ * the chosen tab and panel `:selected` (wgf_element_get_number reads which). A tooltip is an
+ * element shown by its parent's `:hover` (`.hint:hover .tip { display: block; }`), so it
+ * shows while the pointer is over its parent:
+ * examples/assets/ui/options.rml has both.
+ *
  * RCSS's gradients (linear, radial, conic, repeating), `box-shadow`, `filter` (blur,
  * drop-shadow, opacity, and the color filters), `backdrop-filter` (over what the documents
  * drew), `mask-image`, and clipping to rounded corners are drawn. Inside a program's own
@@ -2989,29 +2995,37 @@ export declare const Element: {
     /**
      * A form control's value: a text field's text, a slider's number, a choice's chosen value,
      * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
-     * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
-     * for a handle that isn't a form control.
+     * text read as one: 0 for text that isn't). A tabset's number is its chosen tab, from 0 in
+     * its `<tabs>`' order, set as a whole number among them, and a tab chosen by the player
+     * raises its CHANGE. Setting either raises no event. False (and "", 0) for a handle that
+     * isn't a form control or a tabset (set_value: a form control).
      */
     readonly setValue: typeof raw.wgf_element_set_value;
     /**
      * A form control's value: a text field's text, a slider's number, a choice's chosen value,
      * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
-     * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
-     * for a handle that isn't a form control.
+     * text read as one: 0 for text that isn't). A tabset's number is its chosen tab, from 0 in
+     * its `<tabs>`' order, set as a whole number among them, and a tab chosen by the player
+     * raises its CHANGE. Setting either raises no event. False (and "", 0) for a handle that
+     * isn't a form control or a tabset (set_value: a form control).
      */
     readonly getValue: typeof raw.wgf_element_get_value;
     /**
      * A form control's value: a text field's text, a slider's number, a choice's chosen value,
      * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
-     * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
-     * for a handle that isn't a form control.
+     * text read as one: 0 for text that isn't). A tabset's number is its chosen tab, from 0 in
+     * its `<tabs>`' order, set as a whole number among them, and a tab chosen by the player
+     * raises its CHANGE. Setting either raises no event. False (and "", 0) for a handle that
+     * isn't a form control or a tabset (set_value: a form control).
      */
     readonly setNumber: typeof raw.wgf_element_set_number;
     /**
      * A form control's value: a text field's text, a slider's number, a choice's chosen value,
      * a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
-     * text read as one: 0 for text that isn't). Setting it raises no event. False (and "", 0)
-     * for a handle that isn't a form control.
+     * text read as one: 0 for text that isn't). A tabset's number is its chosen tab, from 0 in
+     * its `<tabs>`' order, set as a whole number among them, and a tab chosen by the player
+     * raises its CHANGE. Setting either raises no event. False (and "", 0) for a handle that
+     * isn't a form control or a tabset (set_value: a form control).
      */
     readonly getNumber: typeof raw.wgf_element_get_number;
     /**
