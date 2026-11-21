@@ -1272,10 +1272,13 @@ class Main {
 			expect(Ui.beginGrid("grid", 2) && !Ui.tile("tile", tiles, "Tile") && Ui.endGrid(), "a grid of a tile");
 			expect(Ui.beginScroll("scroll", 120, 40) && Ui.label("A\nB\nC\nD", 0) && Ui.endScroll(), "a scroll area");
 			expect(Ui.list("list", "One\nTwo\nThree", 1, 2) == 1, "a list, untouched");
+			expect(Ui.dropdown("dropdown", "Low\nHigh", 1) == 1 && Ui.tooltip("Its quality"), "a dropdown, untouched, and a tooltip");
 			Ui.endPanel();
+			expect(Ui.beginModal("modal") && Ui.label("Sure?", 0) && Ui.endModal(), "a modal");
 			expect(Ui.end(), "a UI");
 		}
 		expect(Ui.setFocus("a") && Ui.getFocus() == "a", "the focus");
+		expect(Ui.setAlpha(0.5) && near(Ui.getAlpha(), 0.5) && !Ui.setAlpha(2) && Ui.setAlpha(1), "the whole UI's alpha");
 		expect(near(Ui.getBounds("room").z, 20), "where the room was laid out");
 		expect(Ui.setScroll("list", 0, 1000) && Ui.getScroll("list").y > 0 && !Ui.setScroll("nothing", 0, 0),
 			"a list scrolled, held to its content");

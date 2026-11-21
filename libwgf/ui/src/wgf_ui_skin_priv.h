@@ -10,10 +10,10 @@
 typedef struct wgf_ui_priv_skins_t {
     /* The widget's part in `state` drawn from its skin into the rectangle (a state with no
      * skin of its own: the normal state's, dimmed when disabled); false, drawing nothing,
-     * for a part with no skin. */
-    bool (*draw)(int widget, int part, int state, float x, float y, float width, float height);
+     * for a part with no skin; its tint's alpha times `alpha`, the whole UI's. */
+    bool (*draw)(int widget, int part, int state, float x, float y, float width, float height, float alpha);
     /* The same, at its art's size, centered on (x, y): a progress bar's edge. */
-    bool (*draw_at)(int widget, int part, int state, float x, float y);
+    bool (*draw_at)(int widget, int part, int state, float x, float y, float alpha);
     /* Whether the widget's part has a skin in any state: a widget whose base is drawn from
      * art draws its other parts from art alone, none in colors. */
     bool (*has)(int widget, int part);

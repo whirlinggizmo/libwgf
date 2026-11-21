@@ -2914,6 +2914,18 @@ export const Ui = Object.freeze({
     isDisabled: raw.wgf_ui_is_disabled,
     // wgf: call wgf_ui_list
     list: raw.wgf_ui_list,
+    // wgf: call wgf_ui_dropdown
+    dropdown: raw.wgf_ui_dropdown,
+    // wgf: call wgf_ui_begin_modal
+    beginModal: raw.wgf_ui_begin_modal,
+    // wgf: call wgf_ui_end_modal
+    endModal: raw.wgf_ui_end_modal,
+    // wgf: call wgf_ui_tooltip
+    tooltip: raw.wgf_ui_tooltip,
+    // wgf: call wgf_ui_set_alpha
+    setAlpha: raw.wgf_ui_set_alpha,
+    // wgf: call wgf_ui_get_alpha
+    getAlpha: raw.wgf_ui_get_alpha,
     // wgf: call wgf_ui_progress
     progress: raw.wgf_ui_progress,
     // wgf: call wgf_ui_set_focus
@@ -3339,7 +3351,7 @@ export const Transition = Object.freeze({ NONE: 0, FADE: 1, SLIDE_LEFT: 2, SLIDE
 // wgf: enum UiAlign
 export const UiAlign = Object.freeze({ START: 0, CENTER: 1, END: 2 });
 // wgf: enum UiColor
-export const UiColor = Object.freeze({ TEXT: 0, PANEL: 1, BUTTON: 2, BUTTON_HOVERED: 3, BUTTON_PRESSED: 4, BUTTON_TEXT: 5, FOCUS: 6, BAR: 7, BAR_FILL: 8, SEPARATOR: 9, HANDLE: 10 });
+export const UiColor = Object.freeze({ TEXT: 0, PANEL: 1, BUTTON: 2, BUTTON_HOVERED: 3, BUTTON_PRESSED: 4, BUTTON_TEXT: 5, FOCUS: 6, BAR: 7, BAR_FILL: 8, SEPARATOR: 9, HANDLE: 10, POPUP: 11, DIM: 12 });
 // wgf: enum UiDirection
 export const UiDirection = Object.freeze({ COLUMN: 0, ROW: 1 });
 // wgf: enum UiFill
@@ -3355,7 +3367,7 @@ export const UiState = Object.freeze({ NORMAL: 0, HOVERED: 1, PRESSED: 2, DISABL
 // wgf: enum UiValue
 export const UiValue = Object.freeze({ TEXT_SIZE: 0, PADDING: 1, GAP: 2, CORNER_RADIUS: 3, BUTTON_PADDING: 4, BUTTON_WIDTH: 5, FOCUS_WIDTH: 6, BAR_WIDTH: 7, BAR_HEIGHT: 8, CHECK_SIZE: 9, SLIDER_WIDTH: 10, SLIDER_HEIGHT: 11, HANDLE_SIZE: 12, LINE_WIDTH: 13, TILE_SIZE: 14, SCROLL_BAR: 15 });
 // wgf: enum UiWidget
-export const UiWidget = Object.freeze({ PANEL: 0, BUTTON: 1, TOGGLE: 2, CHECKBOX: 3, SLIDER: 4, PROGRESS: 5, GROUP: 6, TAB: 7, COMBO: 8, NUMBER: 9, TILE: 10, SCROLL: 11, LIST: 12 });
+export const UiWidget = Object.freeze({ PANEL: 0, BUTTON: 1, TOGGLE: 2, CHECKBOX: 3, SLIDER: 4, PROGRESS: 5, GROUP: 6, TAB: 7, COMBO: 8, NUMBER: 9, TILE: 10, SCROLL: 11, LIST: 12, DROPDOWN: 13, POPUP: 14 });
 // wgf: enum VehicleDrive
 export const VehicleDrive = Object.freeze({ FRONT: 0, REAR: 1, ALL: 2 });
 // wgf: enum WindowOrientation

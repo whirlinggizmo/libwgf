@@ -24,7 +24,10 @@
  * screen, and sets the volume full. Save is disabled. Its tabs show three more pages: a
  * choice, a combo, and numbers; a grid of level tiles in a scroll area, which the arrows
  * move through in two dimensions, scrolled to the one focused; and a list of tracks. The
- * wheel, a drag, or a scroll bar scrolls them. The theme row shows the same panel
+ * wheel, a drag, or a scroll bar scrolls them. The popups: a quality dropdown, whose list
+ * opens over the rows below it; tooltips on the main page's buttons, after a rest on one (or
+ * the focus on it, by keys or a pad); Reset asks first, in a modal; and the whole UI fades
+ * in as it starts. The theme row shows the same panel
  * in libwgf's own style and in a recolored one. The pointer, the arrow keys, Tab, Enter,
  * and a pad work it; Escape quits where quitting means anything. Laid out for a design of
  * 580 by 640, scaled to fit the window or a phone's screen (EXPAND: the blue past it); on a
@@ -34,8 +37,9 @@ enum { PLAIN, RECOLORED, SKINNED };
 
 static int theme = -1, chosen = SKINNED;
 static float volume = 0.6f, loaded = 0.4f, speed = 1.5f;
-static bool music = true, loading;
-static int page, difficulty = 1, color, lives = 3, level = -1, track;
+static bool music = true, loading, asking;
+static int page, difficulty = 1, color, lives = 3, level = -1, track, quality = 1;
+static float shown; /* seconds since it started: the fade in */
 static char tracks[1024];
 static wgf_texture_t tex[13];
 static wgf_image_t star_mask;
@@ -126,6 +130,10 @@ static void set_theme(int which)
         tinted(WGF_UI_WIDGET_LIST, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL, WGF_COLOR_WHITE);
         tinted(WGF_UI_WIDGET_LIST, WGF_UI_PART_ITEM, WGF_UI_STATE_HOVERED, wgf_color_make(226, 232, 242, 255));
         tinted(WGF_UI_WIDGET_LIST, WGF_UI_PART_ITEM, WGF_UI_STATE_PRESSED, wgf_color_make(160, 208, 240, 255));
+        faces(WGF_UI_WIDGET_DROPDOWN);
+        tinted(WGF_UI_WIDGET_DROPDOWN, WGF_UI_PART_ITEM, WGF_UI_STATE_HOVERED, wgf_color_make(226, 232, 242, 255));
+        tinted(WGF_UI_WIDGET_DROPDOWN, WGF_UI_PART_ITEM, WGF_UI_STATE_PRESSED, wgf_color_make(160, 208, 240, 255));
+        skin(WGF_UI_WIDGET_POPUP, WGF_UI_PART_BASE, PANEL, 16, false);
     }
 }
 
@@ -194,19 +202,36 @@ static void settings(void)
         loaded = 0.0f;
         loading = true;
     }
+    wgf_ui_tooltip("Fills the bar in four seconds");
     wgf_ui_set_disabled(true);
     wgf_ui_icon_button("save", tex[ICON_SAVE], "Save");
+    wgf_ui_tooltip("Nothing to save yet");
     wgf_ui_set_disabled(false);
     wgf_ui_end_box();
     wgf_ui_set_style_value(WGF_UI_VALUE_BUTTON_WIDTH, theme == SKINNED ? 340 : 200);
-    if (wgf_ui_icon_button("reset", tex[ICON_RESET], "Reset")) {
-        loaded = 0.0f;
-        loading = false;
-    }
+    if (wgf_ui_icon_button("reset", tex[ICON_RESET], "Reset")) asking = true;
+    wgf_ui_tooltip("Empties the bar, once asked");
     wgf_ui_set_style_value(WGF_UI_VALUE_BUTTON_WIDTH, theme == SKINNED ? 160 : 200);
 }
 
-/* The choices page: a segmented choice, a combo, and two numbers. */
+/* Reset's question, over the rest. */
+static void ask(void)
+{
+    wgf_ui_begin_modal("ask");
+    wgf_ui_set_align(WGF_UI_ALIGN_CENTER, WGF_UI_ALIGN_START);
+    wgf_ui_label("Empty the loading bar?", 0);
+    wgf_ui_begin_box("answers", WGF_UI_DIRECTION_ROW);
+    wgf_ui_set_gap(20);
+    if (wgf_ui_button("no", "No")) asking = false;
+    if (wgf_ui_button("yes", "Yes")) {
+        loaded = 0.0f;
+        loading = asking = false;
+    }
+    wgf_ui_end_box();
+    wgf_ui_end_modal();
+}
+
+/* The choices page: a segmented choice, a combo, a dropdown, and two numbers. */
 static void choices(void)
 {
     row("difficulty-row", "Level", 100);
@@ -214,6 +239,9 @@ static void choices(void)
     wgf_ui_end_box();
     row("color-row", "Color", 100);
     color = wgf_ui_combo("color", "Red\nGreen\nBlue\nGold", color);
+    wgf_ui_end_box();
+    row("quality-row", "Quality", 100);
+    quality = wgf_ui_dropdown("quality", "Low\nMedium\nHigh\nUltra", quality);
     wgf_ui_end_box();
     row("lives-row", "Lives", 100);
     lives = (int)wgf_ui_number("lives", (float)lives, 1.0f, 9.0f, 1.0f);
@@ -296,9 +324,12 @@ static void frame(void *user)
 {
     (void)user;
     if (wgf_app_can_quit() && wgf_keyboard_is_pressed(WGF_KEY_ESCAPE)) wgf_app_quit();
+    shown += wgf_loop_get_frame_delta();
+    wgf_ui_set_alpha(shown < 0.5f ? shown / 0.5f : 1.0f);
     if (wgf_ui_begin()) {
         panel();
         themes();
+        if (asking) ask();
         wgf_ui_end();
     }
     set_theme(chosen); /* after the frame's UI is drawn: the style changes for the next */

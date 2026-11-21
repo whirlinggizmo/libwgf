@@ -14,7 +14,7 @@
  * hooks its first call sets (wgf_ui_skin_priv.h): a UI drawn in its colors links none of
  * it. */
 
-#define WIDGETS 13 /* wgf_ui_widget_t's */
+#define WIDGETS 15 /* wgf_ui_widget_t's */
 #define PARTS 5   /* wgf_ui_part_t's */
 #define STATES 4  /* wgf_ui_state_t's */
 
@@ -46,13 +46,15 @@ static const skin_t *skin_of(int widget, int part, int state, bool *dim)
     return skin->texture != 0 ? skin : NULL;
 }
 
-static wgf_color_t tint_of(const skin_t *skin, bool dim)
+/* A skin's tint, halved in alpha when dimmed, times `alpha`. */
+static wgf_color_t tint_of(const skin_t *skin, bool dim, float alpha)
 {
     const wgf_color_t tint = skin->tint != 0 ? skin->tint : WGF_COLOR_WHITE;
-    return dim ? wgf_color_with_alpha(tint, wgf_color_get_alpha(tint) / 2) : tint;
+    const float most = (float)wgf_color_get_alpha(tint) * (dim ? 0.5f : 1.0f);
+    return wgf_color_with_alpha(tint, (int)(most * alpha + 0.5f));
 }
 
-static bool draw(int widget, int part, int state, float x, float y, float width, float height)
+static bool draw(int widget, int part, int state, float x, float y, float width, float height, float alpha)
 {
     bool dim;
     const skin_t *skin = skin_of(widget, part, state, &dim);
@@ -65,11 +67,11 @@ static bool draw(int widget, int part, int state, float x, float y, float width,
                                 skin->source[2] - inset * 2.0f, skin->source[3] - inset * 2.0f,
                                 fmaxf(skin->borders[0] - inset, 0.0f), fmaxf(skin->borders[1] - inset, 0.0f),
                                 fmaxf(skin->borders[2] - inset, 0.0f), fmaxf(skin->borders[3] - inset, 0.0f), x, y,
-                                width, height, tint_of(skin, dim));
+                                width, height, tint_of(skin, dim, alpha));
     return true;
 }
 
-static bool draw_at(int widget, int part, int state, float x, float y)
+static bool draw_at(int widget, int part, int state, float x, float y, float alpha)
 {
     bool dim;
     const skin_t *skin = skin_of(widget, part, state, &dim);
@@ -77,7 +79,7 @@ static bool draw_at(int widget, int part, int state, float x, float y)
     if (skin == NULL) return false;
     width = skin->source[2] > 0.0f && skin->source[3] > 0.0f ? skin->source[2] : (float)wgf_texture_get_width(skin->texture);
     height = skin->source[2] > 0.0f && skin->source[3] > 0.0f ? skin->source[3] : (float)wgf_texture_get_height(skin->texture);
-    return draw(widget, part, state, x - width * 0.5f, y - height * 0.5f, width, height);
+    return draw(widget, part, state, x - width * 0.5f, y - height * 0.5f, width, height, alpha);
 }
 
 static bool has(int widget, int part)

@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "321fb5a3f39734a7" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "1fa807f86acaf04c" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -1213,14 +1213,14 @@ export const WGF_VEHICLE_DRIVE_ALL = 2;
  * immediate-mode UI: a UI that moves under the pointer is answered where it was.
  *
  * Focus: one widget at a time has it, by its id: a button, a toggle, a checkbox, a slider,
- * a number, tabs, a choice, a combo, a tile, or a list. The arrow keys and a pad's D-pad move it to
+ * a number, tabs, a choice, a combo, a tile, a list, or a dropdown. The arrow keys and a pad's D-pad move it to
  * the nearest widget that way on the screen, as last laid out (a grid of tiles moves in
  * two dimensions), or, with none that way, through the frame's widgets in the order they
  * were given, Down and Right to the next and Up and Left to the one before, wrapping; Tab
  * and Shift+Tab always go in that order. The first press of one puts it on the first or the
  * last widget. A focused widget keeps the arrows it uses (a slider, a number, tabs, a
  * choice, and a combo left and right; a slider that fills up or down, and a list, up and
- * down).
+ * down; an open dropdown, all four).
  * Enter, Space, or a pad's south button activates it. The
  * pointer activates the widget it is pressed and released over, and gives it the focus;
  * a focus moved by keys or pads is drawn, one given by the pointer isn't. A focused
@@ -1268,6 +1268,8 @@ export const WGF_UI_COLOR_BAR = 7;
 export const WGF_UI_COLOR_BAR_FILL = 8;
 export const WGF_UI_COLOR_SEPARATOR = 9;
 export const WGF_UI_COLOR_HANDLE = 10;
+export const WGF_UI_COLOR_POPUP = 11;
+export const WGF_UI_COLOR_DIM = 12;
 
 export const WGF_UI_VALUE_TEXT_SIZE = 0;
 export const WGF_UI_VALUE_PADDING = 1;
@@ -1308,8 +1310,11 @@ export const WGF_UI_VALUE_SCROLL_BAR = 15;
  *   TILE       base: the tile
  *   SCROLL     base: a scroll bar's track; handle: its thumb (a scroll area's, a list's)
  *   LIST       base: its box; item: each item, PRESSED while chosen
+ *   DROPDOWN   base: the dropdown; item: each item of its open list, PRESSED while chosen,
+ *              HOVERED under the pointer or stepped to
+ *   POPUP      base: a dropdown's open list's box, a tooltip's box
  *
- * A choice's toggles are TOGGLE's, each PRESSED while chosen.
+ * A choice's toggles are TOGGLE's, each PRESSED while chosen; a modal's panel is PANEL's.
  *
  * A fill is stretched over the filled part, or clipped: drawn over the whole track and
  * shown up to the value, so a bar with round ends shows its far end only when full
@@ -1333,6 +1338,8 @@ export const WGF_UI_WIDGET_NUMBER = 9;
 export const WGF_UI_WIDGET_TILE = 10;
 export const WGF_UI_WIDGET_SCROLL = 11;
 export const WGF_UI_WIDGET_LIST = 12;
+export const WGF_UI_WIDGET_DROPDOWN = 13;
+export const WGF_UI_WIDGET_POPUP = 14;
 
 export const WGF_UI_PART_BASE = 0;
 export const WGF_UI_PART_FILL = 1;
@@ -18904,6 +18911,96 @@ export function wgf_ui_list(id, items, selected, rows) {
     const mark = host["stackSave"]();
     const value = host["_wgf_ui_list"](cstr(id), cstr(items), selected, rows);
     host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_ui_dropdown
+/**
+ * The popup layer: what is drawn over every widget, clipped by none, placed by the layer.
+ *
+ * A dropdown shows the chosen one of `labels`, one a line (up to 32), and opens a list of
+ * them when activated, over everything, hung below it (above when the screen has no room
+ * below and more above), moved in to stay on the screen: a press and release on one chooses
+ * it, and when focused, Up and Down (a pad's too) step through them and Enter, Space, or a
+ * pad's south button chooses the one stepped to. It keeps every arrow while open. A press
+ * anywhere off it closes it and does nothing else; Escape and a pad's east button close it,
+ * as the dropdown losing the focus, being disabled, or not given in a frame does. One is
+ * open at a time. `selected` as given (clamped to them), or as chosen this frame; as given
+ * when refused (no id, no labels).
+ */
+export function wgf_ui_dropdown(id, labels, selected) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_ui_dropdown"](cstr(id), cstr(labels), selected);
+    host["stackRestore"](mark);
+    return value;
+}
+
+// wgf: call wgf_ui_begin_modal
+/**
+ * A modal: a panel (its layout, its skin's, and its children a panel's) at the screen's
+ * center, over the screen dimmed in the style's dim color: nothing under it answers the
+ * pointer, and while it is given the focus moves among its own widgets alone, put on its
+ * first when it opens, and given back to the widget that had it when it closes (is no longer
+ * given): "Quit? Yes / No". A dropdown in it opens over it. One a frame; closed by
+ * wgf_ui_end_modal. False too for no id, or a modal already open.
+ */
+export function wgf_ui_begin_modal(id) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_ui_begin_modal"](cstr(id));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_ui_end_modal
+/**
+ * A modal: a panel (its layout, its skin's, and its children a panel's) at the screen's
+ * center, over the screen dimmed in the style's dim color: nothing under it answers the
+ * pointer, and while it is given the focus moves among its own widgets alone, put on its
+ * first when it opens, and given back to the widget that had it when it closes (is no longer
+ * given): "Quit? Yes / No". A dropdown in it opens over it. One a frame; closed by
+ * wgf_ui_end_modal. False too for no id, or a modal already open.
+ */
+export function wgf_ui_end_modal() {
+    const value = host["_wgf_ui_end_modal"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_ui_tooltip
+/**
+ * `text` shown for the widget given just before it (a disabled one too) once the pointer has
+ * rested on it half a second, or the focus moved by keys or a pad has: in a box in the
+ * style's popup color, below it (above when the screen has no room below and more above),
+ * moved in to stay on the screen; the pointer passes through it, and a press hides it. False
+ * too for no text, or no widget given before it in the frame.
+ */
+export function wgf_ui_tooltip(text) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_ui_tooltip"](cstr(text));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_ui_set_alpha
+/**
+ * The whole UI drawn at `alpha` of its own (0 unseen, 1 as drawn: the default), kept until
+ * changed: a menu faded in or out. It answers as ever: a UI faded to nothing is still there
+ * until it isn't given. False for a value outside 0 to 1, or not finite. These two work
+ * outside a begun UI too.
+ */
+export function wgf_ui_set_alpha(alpha) {
+    const value = host["_wgf_ui_set_alpha"](alpha);
+    return value !== 0;
+}
+
+// wgf: call wgf_ui_get_alpha
+/**
+ * The whole UI drawn at `alpha` of its own (0 unseen, 1 as drawn: the default), kept until
+ * changed: a menu faded in or out. It answers as ever: a UI faded to nothing is still there
+ * until it isn't given. False for a value outside 0 to 1, or not finite. These two work
+ * outside a begun UI too.
+ */
+export function wgf_ui_get_alpha() {
+    const value = host["_wgf_ui_get_alpha"]();
     return value;
 }
 

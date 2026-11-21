@@ -23,8 +23,11 @@ package wgf;
       TILE       base: the tile
       SCROLL     base: a scroll bar's track; handle: its thumb (a scroll area's, a list's)
       LIST       base: its box; item: each item, PRESSED while chosen
+      DROPDOWN   base: the dropdown; item: each item of its open list, PRESSED while chosen,
+                 HOVERED under the pointer or stepped to
+      POPUP      base: a dropdown's open list's box, a tooltip's box
 
-    A choice's toggles are TOGGLE's, each PRESSED while chosen.
+    A choice's toggles are TOGGLE's, each PRESSED while chosen; a modal's panel is PANEL's.
 
     A fill is stretched over the filled part, or clipped: drawn over the whole track and
     shown up to the value, so a bar with round ends shows its far end only when full
@@ -49,4 +52,6 @@ enum abstract UiWidget(Int) from Int to Int {
 	var TILE = 10;
 	var SCROLL = 11;
 	var LIST = 12;
+	var DROPDOWN = 13;
+	var POPUP = 14;
 }

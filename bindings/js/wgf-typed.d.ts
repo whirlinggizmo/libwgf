@@ -11026,14 +11026,14 @@ export declare const Tween: {
  * immediate-mode UI: a UI that moves under the pointer is answered where it was.
  *
  * Focus: one widget at a time has it, by its id: a button, a toggle, a checkbox, a slider,
- * a number, tabs, a choice, a combo, a tile, or a list. The arrow keys and a pad's D-pad move it to
+ * a number, tabs, a choice, a combo, a tile, a list, or a dropdown. The arrow keys and a pad's D-pad move it to
  * the nearest widget that way on the screen, as last laid out (a grid of tiles moves in
  * two dimensions), or, with none that way, through the frame's widgets in the order they
  * were given, Down and Right to the next and Up and Left to the one before, wrapping; Tab
  * and Shift+Tab always go in that order. The first press of one puts it on the first or the
  * last widget. A focused widget keeps the arrows it uses (a slider, a number, tabs, a
  * choice, and a combo left and right; a slider that fills up or down, and a list, up and
- * down).
+ * down; an open dropdown, all four).
  * Enter, Space, or a pad's south button activates it. The
  * pointer activates the widget it is pressed and released over, and gives it the focus;
  * a focus moved by keys or pads is drawn, one given by the pointer isn't. A focused
@@ -11360,6 +11360,60 @@ export declare const Ui: {
      * refused (no id, `rows` below 1).
      */
     readonly list: typeof raw.wgf_ui_list;
+    /**
+     * The popup layer: what is drawn over every widget, clipped by none, placed by the layer.
+     *
+     * A dropdown shows the chosen one of `labels`, one a line (up to 32), and opens a list of
+     * them when activated, over everything, hung below it (above when the screen has no room
+     * below and more above), moved in to stay on the screen: a press and release on one chooses
+     * it, and when focused, Up and Down (a pad's too) step through them and Enter, Space, or a
+     * pad's south button chooses the one stepped to. It keeps every arrow while open. A press
+     * anywhere off it closes it and does nothing else; Escape and a pad's east button close it,
+     * as the dropdown losing the focus, being disabled, or not given in a frame does. One is
+     * open at a time. `selected` as given (clamped to them), or as chosen this frame; as given
+     * when refused (no id, no labels).
+     */
+    readonly dropdown: typeof raw.wgf_ui_dropdown;
+    /**
+     * A modal: a panel (its layout, its skin's, and its children a panel's) at the screen's
+     * center, over the screen dimmed in the style's dim color: nothing under it answers the
+     * pointer, and while it is given the focus moves among its own widgets alone, put on its
+     * first when it opens, and given back to the widget that had it when it closes (is no longer
+     * given): "Quit? Yes / No". A dropdown in it opens over it. One a frame; closed by
+     * wgf_ui_end_modal. False too for no id, or a modal already open.
+     */
+    readonly beginModal: typeof raw.wgf_ui_begin_modal;
+    /**
+     * A modal: a panel (its layout, its skin's, and its children a panel's) at the screen's
+     * center, over the screen dimmed in the style's dim color: nothing under it answers the
+     * pointer, and while it is given the focus moves among its own widgets alone, put on its
+     * first when it opens, and given back to the widget that had it when it closes (is no longer
+     * given): "Quit? Yes / No". A dropdown in it opens over it. One a frame; closed by
+     * wgf_ui_end_modal. False too for no id, or a modal already open.
+     */
+    readonly endModal: typeof raw.wgf_ui_end_modal;
+    /**
+     * `text` shown for the widget given just before it (a disabled one too) once the pointer has
+     * rested on it half a second, or the focus moved by keys or a pad has: in a box in the
+     * style's popup color, below it (above when the screen has no room below and more above),
+     * moved in to stay on the screen; the pointer passes through it, and a press hides it. False
+     * too for no text, or no widget given before it in the frame.
+     */
+    readonly tooltip: typeof raw.wgf_ui_tooltip;
+    /**
+     * The whole UI drawn at `alpha` of its own (0 unseen, 1 as drawn: the default), kept until
+     * changed: a menu faded in or out. It answers as ever: a UI faded to nothing is still there
+     * until it isn't given. False for a value outside 0 to 1, or not finite. These two work
+     * outside a begun UI too.
+     */
+    readonly setAlpha: typeof raw.wgf_ui_set_alpha;
+    /**
+     * The whole UI drawn at `alpha` of its own (0 unseen, 1 as drawn: the default), kept until
+     * changed: a menu faded in or out. It answers as ever: a UI faded to nothing is still there
+     * until it isn't given. False for a value outside 0 to 1, or not finite. These two work
+     * outside a begun UI too.
+     */
+    readonly getAlpha: typeof raw.wgf_ui_get_alpha;
     /**
      * A bar showing `value`, 0 (empty) to 1 (full), filled from the left (the progress bar's
      * fill direction, wgf_ui_set_fill; from the top or bottom, its bar width and height
@@ -12567,7 +12621,7 @@ export declare const Transition: { readonly NONE: Transition; readonly FADE: Tra
 export type UiAlign = raw.wgf_ui_align_t;
 export declare const UiAlign: { readonly START: UiAlign; readonly CENTER: UiAlign; readonly END: UiAlign; };
 export type UiColor = raw.wgf_ui_color_t;
-export declare const UiColor: { readonly TEXT: UiColor; readonly PANEL: UiColor; readonly BUTTON: UiColor; readonly BUTTON_HOVERED: UiColor; readonly BUTTON_PRESSED: UiColor; readonly BUTTON_TEXT: UiColor; readonly FOCUS: UiColor; readonly BAR: UiColor; readonly BAR_FILL: UiColor; readonly SEPARATOR: UiColor; readonly HANDLE: UiColor; };
+export declare const UiColor: { readonly TEXT: UiColor; readonly PANEL: UiColor; readonly BUTTON: UiColor; readonly BUTTON_HOVERED: UiColor; readonly BUTTON_PRESSED: UiColor; readonly BUTTON_TEXT: UiColor; readonly FOCUS: UiColor; readonly BAR: UiColor; readonly BAR_FILL: UiColor; readonly SEPARATOR: UiColor; readonly HANDLE: UiColor; readonly POPUP: UiColor; readonly DIM: UiColor; };
 export type UiDirection = raw.wgf_ui_direction_t;
 export declare const UiDirection: { readonly COLUMN: UiDirection; readonly ROW: UiDirection; };
 export type UiFill = raw.wgf_ui_fill_t;
@@ -12583,7 +12637,7 @@ export declare const UiState: { readonly NORMAL: UiState; readonly HOVERED: UiSt
 export type UiValue = raw.wgf_ui_value_t;
 export declare const UiValue: { readonly TEXT_SIZE: UiValue; readonly PADDING: UiValue; readonly GAP: UiValue; readonly CORNER_RADIUS: UiValue; readonly BUTTON_PADDING: UiValue; readonly BUTTON_WIDTH: UiValue; readonly FOCUS_WIDTH: UiValue; readonly BAR_WIDTH: UiValue; readonly BAR_HEIGHT: UiValue; readonly CHECK_SIZE: UiValue; readonly SLIDER_WIDTH: UiValue; readonly SLIDER_HEIGHT: UiValue; readonly HANDLE_SIZE: UiValue; readonly LINE_WIDTH: UiValue; readonly TILE_SIZE: UiValue; readonly SCROLL_BAR: UiValue; };
 export type UiWidget = raw.wgf_ui_widget_t;
-export declare const UiWidget: { readonly PANEL: UiWidget; readonly BUTTON: UiWidget; readonly TOGGLE: UiWidget; readonly CHECKBOX: UiWidget; readonly SLIDER: UiWidget; readonly PROGRESS: UiWidget; readonly GROUP: UiWidget; readonly TAB: UiWidget; readonly COMBO: UiWidget; readonly NUMBER: UiWidget; readonly TILE: UiWidget; readonly SCROLL: UiWidget; readonly LIST: UiWidget; };
+export declare const UiWidget: { readonly PANEL: UiWidget; readonly BUTTON: UiWidget; readonly TOGGLE: UiWidget; readonly CHECKBOX: UiWidget; readonly SLIDER: UiWidget; readonly PROGRESS: UiWidget; readonly GROUP: UiWidget; readonly TAB: UiWidget; readonly COMBO: UiWidget; readonly NUMBER: UiWidget; readonly TILE: UiWidget; readonly SCROLL: UiWidget; readonly LIST: UiWidget; readonly DROPDOWN: UiWidget; readonly POPUP: UiWidget; };
 export type VehicleDrive = raw.wgf_vehicle_drive_t;
 export declare const VehicleDrive: { readonly FRONT: VehicleDrive; readonly REAR: VehicleDrive; readonly ALL: VehicleDrive; };
 export type WindowOrientation = raw.wgf_window_orientation_t;

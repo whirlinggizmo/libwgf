@@ -1113,14 +1113,14 @@ export type wgf_vehicle_drive_t = typeof WGF_VEHICLE_DRIVE_FRONT | typeof WGF_VE
  * immediate-mode UI: a UI that moves under the pointer is answered where it was.
  *
  * Focus: one widget at a time has it, by its id: a button, a toggle, a checkbox, a slider,
- * a number, tabs, a choice, a combo, a tile, or a list. The arrow keys and a pad's D-pad move it to
+ * a number, tabs, a choice, a combo, a tile, a list, or a dropdown. The arrow keys and a pad's D-pad move it to
  * the nearest widget that way on the screen, as last laid out (a grid of tiles moves in
  * two dimensions), or, with none that way, through the frame's widgets in the order they
  * were given, Down and Right to the next and Up and Left to the one before, wrapping; Tab
  * and Shift+Tab always go in that order. The first press of one puts it on the first or the
  * last widget. A focused widget keeps the arrows it uses (a slider, a number, tabs, a
  * choice, and a combo left and right; a slider that fills up or down, and a list, up and
- * down).
+ * down; an open dropdown, all four).
  * Enter, Space, or a pad's south button activates it. The
  * pointer activates the widget it is pressed and released over, and gives it the focus;
  * a focus moved by keys or pads is drawn, one given by the pointer isn't. A focused
@@ -1171,7 +1171,9 @@ export declare const WGF_UI_COLOR_BAR: 7;
 export declare const WGF_UI_COLOR_BAR_FILL: 8;
 export declare const WGF_UI_COLOR_SEPARATOR: 9;
 export declare const WGF_UI_COLOR_HANDLE: 10;
-export type wgf_ui_color_t = typeof WGF_UI_COLOR_TEXT | typeof WGF_UI_COLOR_PANEL | typeof WGF_UI_COLOR_BUTTON | typeof WGF_UI_COLOR_BUTTON_HOVERED | typeof WGF_UI_COLOR_BUTTON_PRESSED | typeof WGF_UI_COLOR_BUTTON_TEXT | typeof WGF_UI_COLOR_FOCUS | typeof WGF_UI_COLOR_BAR | typeof WGF_UI_COLOR_BAR_FILL | typeof WGF_UI_COLOR_SEPARATOR | typeof WGF_UI_COLOR_HANDLE;
+export declare const WGF_UI_COLOR_POPUP: 11;
+export declare const WGF_UI_COLOR_DIM: 12;
+export type wgf_ui_color_t = typeof WGF_UI_COLOR_TEXT | typeof WGF_UI_COLOR_PANEL | typeof WGF_UI_COLOR_BUTTON | typeof WGF_UI_COLOR_BUTTON_HOVERED | typeof WGF_UI_COLOR_BUTTON_PRESSED | typeof WGF_UI_COLOR_BUTTON_TEXT | typeof WGF_UI_COLOR_FOCUS | typeof WGF_UI_COLOR_BAR | typeof WGF_UI_COLOR_BAR_FILL | typeof WGF_UI_COLOR_SEPARATOR | typeof WGF_UI_COLOR_HANDLE | typeof WGF_UI_COLOR_POPUP | typeof WGF_UI_COLOR_DIM;
 
 export declare const WGF_UI_VALUE_TEXT_SIZE: 0;
 export declare const WGF_UI_VALUE_PADDING: 1;
@@ -1213,8 +1215,11 @@ export type wgf_ui_value_t = typeof WGF_UI_VALUE_TEXT_SIZE | typeof WGF_UI_VALUE
  *   TILE       base: the tile
  *   SCROLL     base: a scroll bar's track; handle: its thumb (a scroll area's, a list's)
  *   LIST       base: its box; item: each item, PRESSED while chosen
+ *   DROPDOWN   base: the dropdown; item: each item of its open list, PRESSED while chosen,
+ *              HOVERED under the pointer or stepped to
+ *   POPUP      base: a dropdown's open list's box, a tooltip's box
  *
- * A choice's toggles are TOGGLE's, each PRESSED while chosen.
+ * A choice's toggles are TOGGLE's, each PRESSED while chosen; a modal's panel is PANEL's.
  *
  * A fill is stretched over the filled part, or clipped: drawn over the whole track and
  * shown up to the value, so a bar with round ends shows its far end only when full
@@ -1238,7 +1243,9 @@ export declare const WGF_UI_WIDGET_NUMBER: 9;
 export declare const WGF_UI_WIDGET_TILE: 10;
 export declare const WGF_UI_WIDGET_SCROLL: 11;
 export declare const WGF_UI_WIDGET_LIST: 12;
-export type wgf_ui_widget_t = typeof WGF_UI_WIDGET_PANEL | typeof WGF_UI_WIDGET_BUTTON | typeof WGF_UI_WIDGET_TOGGLE | typeof WGF_UI_WIDGET_CHECKBOX | typeof WGF_UI_WIDGET_SLIDER | typeof WGF_UI_WIDGET_PROGRESS | typeof WGF_UI_WIDGET_GROUP | typeof WGF_UI_WIDGET_TAB | typeof WGF_UI_WIDGET_COMBO | typeof WGF_UI_WIDGET_NUMBER | typeof WGF_UI_WIDGET_TILE | typeof WGF_UI_WIDGET_SCROLL | typeof WGF_UI_WIDGET_LIST;
+export declare const WGF_UI_WIDGET_DROPDOWN: 13;
+export declare const WGF_UI_WIDGET_POPUP: 14;
+export type wgf_ui_widget_t = typeof WGF_UI_WIDGET_PANEL | typeof WGF_UI_WIDGET_BUTTON | typeof WGF_UI_WIDGET_TOGGLE | typeof WGF_UI_WIDGET_CHECKBOX | typeof WGF_UI_WIDGET_SLIDER | typeof WGF_UI_WIDGET_PROGRESS | typeof WGF_UI_WIDGET_GROUP | typeof WGF_UI_WIDGET_TAB | typeof WGF_UI_WIDGET_COMBO | typeof WGF_UI_WIDGET_NUMBER | typeof WGF_UI_WIDGET_TILE | typeof WGF_UI_WIDGET_SCROLL | typeof WGF_UI_WIDGET_LIST | typeof WGF_UI_WIDGET_DROPDOWN | typeof WGF_UI_WIDGET_POPUP;
 
 export declare const WGF_UI_PART_BASE: 0;
 export declare const WGF_UI_PART_FILL: 1;
@@ -13031,6 +13038,66 @@ export declare function wgf_ui_is_disabled(): boolean;
  * refused (no id, `rows` below 1).
  */
 export declare function wgf_ui_list(id: string | null, items: string | null, selected: number, rows: number): number;
+
+/**
+ * The popup layer: what is drawn over every widget, clipped by none, placed by the layer.
+ *
+ * A dropdown shows the chosen one of `labels`, one a line (up to 32), and opens a list of
+ * them when activated, over everything, hung below it (above when the screen has no room
+ * below and more above), moved in to stay on the screen: a press and release on one chooses
+ * it, and when focused, Up and Down (a pad's too) step through them and Enter, Space, or a
+ * pad's south button chooses the one stepped to. It keeps every arrow while open. A press
+ * anywhere off it closes it and does nothing else; Escape and a pad's east button close it,
+ * as the dropdown losing the focus, being disabled, or not given in a frame does. One is
+ * open at a time. `selected` as given (clamped to them), or as chosen this frame; as given
+ * when refused (no id, no labels).
+ */
+export declare function wgf_ui_dropdown(id: string | null, labels: string | null, selected: number): number;
+
+/**
+ * A modal: a panel (its layout, its skin's, and its children a panel's) at the screen's
+ * center, over the screen dimmed in the style's dim color: nothing under it answers the
+ * pointer, and while it is given the focus moves among its own widgets alone, put on its
+ * first when it opens, and given back to the widget that had it when it closes (is no longer
+ * given): "Quit? Yes / No". A dropdown in it opens over it. One a frame; closed by
+ * wgf_ui_end_modal. False too for no id, or a modal already open.
+ */
+export declare function wgf_ui_begin_modal(id: string | null): boolean;
+
+/**
+ * A modal: a panel (its layout, its skin's, and its children a panel's) at the screen's
+ * center, over the screen dimmed in the style's dim color: nothing under it answers the
+ * pointer, and while it is given the focus moves among its own widgets alone, put on its
+ * first when it opens, and given back to the widget that had it when it closes (is no longer
+ * given): "Quit? Yes / No". A dropdown in it opens over it. One a frame; closed by
+ * wgf_ui_end_modal. False too for no id, or a modal already open.
+ */
+export declare function wgf_ui_end_modal(): boolean;
+
+/**
+ * `text` shown for the widget given just before it (a disabled one too) once the pointer has
+ * rested on it half a second, or the focus moved by keys or a pad has: in a box in the
+ * style's popup color, below it (above when the screen has no room below and more above),
+ * moved in to stay on the screen; the pointer passes through it, and a press hides it. False
+ * too for no text, or no widget given before it in the frame.
+ */
+export declare function wgf_ui_tooltip(text: string | null): boolean;
+
+/**
+ * The whole UI drawn at `alpha` of its own (0 unseen, 1 as drawn: the default), kept until
+ * changed: a menu faded in or out. It answers as ever: a UI faded to nothing is still there
+ * until it isn't given. False for a value outside 0 to 1, or not finite. These two work
+ * outside a begun UI too.
+ */
+export declare function wgf_ui_set_alpha(alpha: number): boolean;
+
+/**
+ * The whole UI drawn at `alpha` of its own (0 unseen, 1 as drawn: the default), kept until
+ * changed: a menu faded in or out. It answers as ever: a UI faded to nothing is still there
+ * until it isn't given. False for a value outside 0 to 1, or not finite. These two work
+ * outside a begun UI too.
+ */
+export declare function wgf_ui_get_alpha(): number;
 
 /**
  * A bar showing `value`, 0 (empty) to 1 (full), filled from the left (the progress bar's
