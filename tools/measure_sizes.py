@@ -384,11 +384,13 @@ def markdown(baseline):
                   'Every program on the JS binding (`bindings/js/wgf.js`): a game\'s Haxe program reaches the host '
                   'through it, and a JS example is written on it. Its share is its trimmed copy\'s, the calls the program '
                   'makes; '
-                  'gzip. Beside the same program on C (app-hello) or Haxe (the game), it is what the layer costs.', '',
-                  '| program | total.gz | wgf.js.gz | share |', '|---|---:|---:|---:|']
+                  'gzip, brotli in brackets. Beside the same program on C (app-hello) or Haxe (the game), it is what '
+                  'the layer costs.', '',
+                  '| program | total | wgf.js | share |', '|---|---:|---:|---:|']
         for name in bound:
             s = lib[name]
-            lines.append(f'| {name} | {kb(total(s))} | {kb(s["binding"]["gz"])} | '
+            binding = kb(s["binding"]["gz"]) + (f' ({kb(s["binding"]["br"])})' if s["binding"].get("br") is not None else '')
+            lines.append(f'| {name} | {cell(s)} | {binding} | '
                          f'{100 * s["binding"]["gz"] / total(s):.1f}% |')
     frames = baseline.get('frames', {})
     if frames:
@@ -450,11 +452,12 @@ def markdown(baseline):
     for title, programs in (('libwgf', lib), ('libwgt', wgt), ('wgrender-c', wgr)):
         if not programs:
             continue
-        lines += ['', f'## Every {title} program', '', '| program | wasm | js | wasm.gz | js.gz | wasm.br | js.br | total.gz |',
-                  '|---|---:|---:|---:|---:|---:|---:|---:|']
+        lines += ['', f'## Every {title} program', '', '| program | wasm | js | wasm.gz | js.gz | wasm.br | js.br | total.gz | total.br |',
+                  '|---|---:|---:|---:|---:|---:|---:|---:|---:|']
         for name, s in sorted(programs.items(), key=lambda kv: total(kv[1]) or 0):
             lines.append(f'| {name} | {kb(s["wasm"]["raw"])} | {kb(s["js"]["raw"])} | {kb(s["wasm"]["gz"])} | '
-                         f'{kb(s["js"]["gz"])} | {kb(s["wasm"]["br"])} | {kb(s["js"]["br"])} | {kb(total(s))} |')
+                         f'{kb(s["js"]["gz"])} | {kb(s["wasm"]["br"])} | {kb(s["js"]["br"])} | {kb(total(s))} | '
+                         f'{kb(total(s, "br"))} |')
     return '\n'.join(lines) + '\n'
 
 
