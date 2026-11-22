@@ -5,7 +5,7 @@
 #include <string.h>
 
 /* Trigonometry the same to the bit on every target (wgf_trig.h): each worked in double, with
- * no library call but sqrt and floor (both exact everywhere), and rounded to float once: a
+ * no library call but sqrt and fmod (both exact everywhere), and rounded to float once: a
  * reduction to within pi/4 of a multiple of pi/2 (pi/2 in three parts, fdlibm's, so the
  * reduction is exact well past any angle a game turns through), then a polynomial fitted
  * to a float's precision (the C library's way: within an ulp, and nearly always the nearest
@@ -59,34 +59,33 @@ static double cos_reduced(double r)
 }
 
 /* x = k * pi/2 + r, |r| <= pi/4: r into `r`, and k's quadrant (k mod 4) returned. pi/2 in
- * three parts, each product exact for |k| < 2^20. k is x * 2/pi rounded to the nearest
- * integer by adding and taking away 1.5 * 2^52, where a double's last bit is 1 (exact in any
- * IEEE arithmetic, a tie to even), and k's low bits are then that sum's; no conversion to an
- * integer, which wasm checks, nor floor, a library call on some targets. Past 2^51 (an angle
- * past 3e15, long past meaning), by floor. */
+ * three parts, each product exact for |k| < 2^20 (an angle to 1.6e6). k is x * 2/pi rounded to
+ * the nearest integer by adding and taking away 1.5 * 2^52, where a double's last bit is 1
+ * (exact in any IEEE arithmetic, a tie to even), and k's low bits are then that sum's: no
+ * conversion to an integer, which wasm checks, nor floor, a library call on some targets.
+ * Past 1.6e6, x is first brought within a turn by fmod (exact): no longer the true angle's
+ * sine, as 2 pi isn't a double, but within -1..1 and alike everywhere, where an angle that far
+ * would otherwise come out as nonsense, or infinite. */
 static int reduce(double x, double *r)
 {
     const double pio2_1 = 1.57079632673412561417e+00, pio2_2 = 6.07710050630396597660e-11;
     const double pio2_3 = 2.02226624879595063154e-21;
     const double shift = 6755399441055744.0; /* 1.5 * 2^52 */
-    const double v = x * 0.63661977236758134308;
-    double k, rest;
-    int quadrant;
-    if (v > -2251799813685248.0 && v < 2251799813685248.0) { /* |v| < 2^51 */
-        const double shifted = v + shift;
-        uint64_t bits;
-        memcpy(&bits, &shifted, sizeof(bits));
-        k = shifted - shift;
-        quadrant = (int)(bits & 3u);
-    } else {
-        k = floor(v + 0.5);
-        quadrant = (int)(k - 4.0 * floor(k * 0.25));
+    double v = x * 0.63661977236758134308;
+    double shifted, k, rest;
+    uint64_t bits;
+    if (!(v > -1048576.0 && v < 1048576.0)) { /* |k| past 2^20 */
+        x = fmod(x, 6.28318530717958647693);
+        v = x * 0.63661977236758134308;
     }
+    shifted = v + shift;
+    memcpy(&bits, &shifted, sizeof(bits));
+    k = shifted - shift;
     rest = x - k * pio2_1;
     rest = rest - k * pio2_2;
     rest = rest - k * pio2_3;
     *r = rest;
-    return quadrant;
+    return (int)(bits & 3u);
 }
 
 /* sin and cos of `x`, in double, alike on every target. */

@@ -1749,10 +1749,14 @@ function localCosReduced(r) {
 // sin (cosine false) or cos of x, in double.
 function localSinOrCos(x, cosine) {
     if (x === 0) return cosine ? 1 : x; // a zero's sine keeps its sign, as C's
-    // x * 2/pi rounded to the nearest integer, a tie to even, as C's: by 1.5 * 2^52 below 2^51
-    const v = x * 0.63661977236758134308;
-    const k = v > -2251799813685248 && v < 2251799813685248 ? (v + 6755399441055744) - 6755399441055744
-        : Math.floor(v + 0.5);
+    // past 1.6e6, x brought within a turn first, as C's fmod (% is exact too)
+    let v = x * 0.63661977236758134308;
+    if (!(v > -1048576 && v < 1048576)) {
+        x = x % 6.28318530717958647693;
+        v = x * 0.63661977236758134308;
+    }
+    // x * 2/pi rounded to the nearest integer, a tie to even, as C's: by 1.5 * 2^52
+    const k = (v + 6755399441055744) - 6755399441055744;
     const quadrant = k - 4 * Math.floor(k * 0.25);
     let r = x - k * 1.57079632673412561417e+00;
     r = r - k * 6.07710050630396597660e-11;

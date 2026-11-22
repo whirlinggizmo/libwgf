@@ -216,6 +216,18 @@ int main(void)
                        wgf_trig_asin(1) == (float)(half_turn / 2) && wgf_trig_acos(-1) == (float)half_turn &&
                        isnan(wgf_trig_asin(2)) && isnan(wgf_trig_sin(INFINITY)),
                    "its edges");
+            {
+                /* an angle past 1.6e6 is brought within a turn first: within -1..1, never
+                   infinite, however far */
+                const float far[] = {1.7e6f, -1e9f, 1e12f, 1e20f, 3e38f, -3e38f};
+                bool bounded = true;
+                for (k = 0; k < (int)(sizeof(far) / sizeof(far[0])); k++) {
+                    const wgf_vec2_t both = wgf_trig_cos_sin(far[k]);
+                    bounded = bounded && both.x >= -1.0f && both.x <= 1.0f && both.y >= -1.0f && both.y <= 1.0f &&
+                              isfinite(wgf_trig_sin(far[k])) && isfinite(wgf_trig_cos(far[k]));
+                }
+                expect(bounded, "an angle however far: a sine and cosine within -1..1");
+            }
         }
     }
 

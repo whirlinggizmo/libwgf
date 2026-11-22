@@ -53,7 +53,7 @@ for (let i = -200000; i <= 200000; i += 7) {
     }
 }
 expect(hash === 0x16C3845C, `trigonometry worked in JS: C's hash (${hash.toString(16)})`);
-for (const x of [0, -0, 0.5, -3.75, 1e6, Infinity, NaN]) {
+for (const x of [0, -0, 0.5, -3.75, 1e6, 1.6e6, 1.7e6, -1e9, 1e20, 3e38, -3e38, Infinity, NaN]) {
     for (const name of ['wgf_trig_sin', 'wgf_trig_cos', 'wgf_trig_tan']) agree &&= Object.is(wgf[name](x), c(name, x));
 }
 for (const [y, x] of [[0, 0], [0, -0], [-0, -1], [1, 0], [-1, 0], [Infinity, Infinity], [-Infinity, 2], [3, -Infinity],
