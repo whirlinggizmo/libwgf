@@ -15,14 +15,12 @@ licenses, in a `CREDITS.md` beside them; they are not part of the library.
 
 ## Altered sources
 
-The zlib license asks that altered versions be marked as such. Five vendored files are
+The zlib license asks that altered versions be marked as such. Four vendored files are
 altered, each saying so at its top:
 
 - `deps/sokol/sokol_audio.h`, `deps/sokol/sokol_gfx.h`, and `deps/sokol/util/sokol_gl.h`,
   from the Whirling Gizmo fork of sokol (https://github.com/whirlinggizmo/sokol;
   `deps/sokol/VERSION` names the commit)
-- `deps/sokol_utils/sokol_app_utils.h`, changed in place, as wgrender changed it
-  (`deps/sokol_utils/VERSION` lists the changes)
 - `deps/clay/clay.h`, from the Whirling Gizmo fork of Clay
   (https://github.com/robknopf/clay; `deps/clay/VERSION` names the commit)
 
