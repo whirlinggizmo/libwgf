@@ -87,9 +87,8 @@ ROWS = [
     ('gfx-render-target', 'gfx-render-target', 'render_target', 'same', ''),
     ('gfx-postprocess', 'gfx-postprocess', 'postprocess', 'same', ''),
     ('gfx-shaders', 'gfx-shaders', 'shaders', 'differs',
-     'written before libwgf had skinning and animation, and it has no custom sprite materials yet: the '
-     "toon shading on the toy car in place of the walking character, and the logo's sprite effects left "
-     'out'),
+     "libwgf has no custom sprite materials yet: the logo's sprite effects, in the world and in the screen's "
+     "corner, are left out; the rest is libwgt's"),
     ('gfx-sprite3d', 'gfx-sprite3d', 'sprite3d', 'same', ''),
     ('gfx-text3d', 'gfx-text3d', 'text3d', 'same', ''),
     ('gfx-sprite2d', 'gfx-sprite2d', 'sprite2d', 'same', ''),

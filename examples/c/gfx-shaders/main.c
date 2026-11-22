@@ -26,7 +26,7 @@
 
 /* Materials drawn by shaders of your own (wgf_shader.h).
  *
- *   - left: toon shading (lights in flat bands, a rim light) on the toy car
+ *   - left: toon shading (lights in flat bands, a rim light) on a walking character's body
  *   - middle: a sphere dissolving and coming back through a noise texture, with a
  *     glowing edge (time, a texture, discard)
  *   - right: a sphere of water rippling in waves (a vertex hook moves the surface)
@@ -41,13 +41,13 @@
  *   1 / 2    the sun / the point light on and off
  *   Esc      quit, where quitting means anything
  *
- * libwgt's gfx-shaders (wgrender's shaders), which differs for the size table: libwgf
- * draws a custom material on a skinned part in its bind pose, so the toon shading is on the
- * toy car in place of the walking character; and no custom sprite materials yet (milestone 2.5), so the
- * logo outlined and flashing by its sprite effects shader, in the world and in the
- * screen's corner, is left out. */
+ * libwgt's gfx-shaders (wgrender's shaders), which differs for the size table: libwgf has
+ * no custom sprite materials yet (milestone 2.5), so the logo outlined and flashing by its
+ * sprite effects shader, in the world and in the screen's corner, is left out. The rest is
+ * libwgt's. */
 
-#define CAR_PATH "models/toy_car.glb"
+#define CHARACTER_PATH "models/woman_casual/woman_casual.glb"
+#define CHARACTER_BODY_SLOT 1
 #define NOISE_PATH "textures/noise.png"
 #define ENVIRONMENT_PATH "environments/venice_sunset_1k.hdr"
 #define FLOOR_Y -0.3f
@@ -55,9 +55,9 @@
 
 static struct {
     wgf_actor_t stage, camera;
-    wgf_actor_t car, dissolving, rippling; /* models */
+    wgf_actor_t character, dissolving, rippling; /* models */
     wgf_actor_t sun, lamp, lamp_marker;
-    wgf_material_t toon; /* the car's, once its file's tree is built */
+    wgf_material_t toon; /* the character's body's, once its file's tree is built */
     wgf_environment_t environment; /* held while it is prepared */
     float load_budget;             /* the default, given back once it is */
     bool sun_on, lamp_on;
@@ -73,15 +73,15 @@ static wgf_material_t custom(const char *path)
     return material;
 }
 
-/* `material` in every slot of every model under `actor`: a file's models are its tree's
- * actors, made once it has loaded, each with its own slots. */
-static void set_below(wgf_actor_t actor, wgf_material_t material)
+/* `material` in slot `slot` of every model under `actor`: a file's models are its tree's
+ * actors, each with its own slots, which take the file's materials by number. */
+static void set_slot_below(wgf_actor_t actor, int slot, wgf_material_t material)
 {
     int i;
     for (i = 0; i < wgf_actor_get_child_count(actor); i++) {
         const wgf_actor_t child = wgf_actor_get_child(actor, i);
-        if (wgf_actor_get_kind(child) == WGF_ACTOR_KIND_MODEL) wgf_model_set_material(child, -1, material);
-        set_below(child, material);
+        if (wgf_actor_get_kind(child) == WGF_ACTOR_KIND_MODEL) wgf_model_set_material(child, slot, material);
+        set_slot_below(child, slot, material);
     }
 }
 
@@ -136,15 +136,16 @@ static void init(void *user)
     wgf_model_set_material(place(wgf_mesh_create_plane(6.0f, 6.0f, 0), 0, FLOOR_Y, 0), -1, material);
     wgf_resource_release(material); /* the model holds its own reference */
 
-    /* toon shading on the car, every part of it */
-    g.car = place(wgf_mesh_create(CAR_PATH), -1.9f, FLOOR_Y, 0);
-    wgf_actor_set_rotation(g.car, 0, 0.4f, 0);
-    wgf_actor_set_scale(g.car, 0.5f, 0.5f, 0.5f); /* wheels on the floor at its origin */
+    /* toon shading on the character's body */
+    g.character = place(wgf_mesh_create(CHARACTER_PATH), -1.9f, FLOOR_Y, 0);
+    wgf_actor_set_rotation(g.character, 0, 0.4f, 0);
+    wgf_actor_set_scale(g.character, 0.5f, 0.5f, 0.5f); /* feet at its origin */
+    wgf_model_play_animation(g.character, 3, 0.0f); /* plays once the file is there */
     material = custom("shaders/toon.wgfshader");
     wgf_material_set_color(material, "color", wgf_color_make(255, 196, 120, 255));
     wgf_material_set_float(material, "bands", 3.0f);
     wgf_material_set_float(material, "rim", 0.35f);
-    g.toon = material; /* given to the car's models once the file has loaded and its tree is built */
+    g.toon = material; /* given to the body once the file has loaded and its tree is built */
 
     /* dissolving through a noise texture */
     g.dissolving = place(wgf_mesh_create_sphere(0.5f, 32, 64), 0.0f, SPHERE_Y, 0);
@@ -198,8 +199,8 @@ static void frame(void *user)
         wgf_resource_release(g.environment); /* the stage holds its own reference */
         g.environment = 0;
     }
-    if (g.toon != 0 && wgf_actor_get_child_count(g.car) > 0) {
-        set_below(g.car, g.toon);
+    if (g.toon != 0 && wgf_actor_get_child_count(g.character) > 0) {
+        set_slot_below(g.character, CHARACTER_BODY_SLOT, g.toon);
         wgf_resource_release(g.toon); /* its models hold their own references */
         g.toon = 0;
     }

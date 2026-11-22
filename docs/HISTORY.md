@@ -1048,6 +1048,8 @@ All six are "same" rows, each 37 to 48 KB of gzip under libwgt's: gfx-sprite2d 1
 
 Two rows stay "differs" and say why truly now: gfx-model and gfx-tilemap are programs of libwgf's own (the toy car under a flying camera; a Tiled map with prefabs, a body, and a painted trail), not ports waiting on a feature.
 
+gfx-shaders has the character too, its body toon shaded by slot as libwgt's is (its header said a custom material drew a skinned part in its bind pose, which hasn't been so since skinning's custom materials); it stays "differs" for the one thing libwgf lacks, custom sprite materials, so the logo's sprite effects are left out. gfx-materials, gfx-lights, and asset-loading, wgrender-c's programs, are as they were: each needs wgrender-c's sphere file beside the character, and gfx-lights lit sprites, which libwgf hasn't.
+
 ## Differing size rows brought to match: app-touch and gfx-text3d (2026-11-21)
 
 The size table's "differs" rows are programs written before libwgf had what libwgt's use; with picking in, two are libwgt's programs again. app-touch's coin is the pointer's (`wgf_pointer_set_interactive`, `wgf_pointer_get_held`, the logo made unpickable), not hit-tested by hand; gfx-text3d has libwgt's hover highlight, its P key (the cube pickable or not), and its readout. Both are "same" rows now, held to their targets: app-touch 125.6 to 136.6 KB of gzip (113.4 of brotli) against a target of 191.4, gfx-text3d 161.9 to 171.6 (140.9) against 180.2.
