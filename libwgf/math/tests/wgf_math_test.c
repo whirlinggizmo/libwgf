@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "wgf_ease.h"
 #include "wgf_mat4.h"
 #include "wgf_trig.h"
 #include "wgf_quat.h"
@@ -200,6 +201,35 @@ int main(void)
                        isnan(wgf_trig_asin(2)) && isnan(wgf_trig_sin(INFINITY)),
                    "its edges");
         }
+    }
+
+    {
+        /* the easing curves give the same bits on every target, as a tween moves what the
+           simulation reads: a hash of every curve over a sweep, held to one number as the
+           trigonometry's is; exact at their ends; and near the C library's sines and powers */
+        uint32_t hash = 2166136261u;
+        float worst = 0.0f;
+        int e, i;
+        for (e = 0; e <= (int)WGF_EASING_BOUNCE_IN_OUT; e++) {
+            for (i = 0; i <= 1000; i++) {
+                const float t = (float)i / 1000.0f;
+                const float v = wgf_ease_value((wgf_easing_t)e, t);
+                uint32_t u;
+                memcpy(&u, &v, sizeof(u));
+                hash = (hash ^ u) * 16777619u;
+            }
+            expect(wgf_ease_value((wgf_easing_t)e, 0.0f) == 0.0f && wgf_ease_value((wgf_easing_t)e, 1.0f) == 1.0f,
+                   "a curve's ends exact");
+        }
+        for (i = 0; i <= 1000; i++) {
+            const float t = (float)i / 1000.0f;
+            worst = fmaxf(worst, fabsf(wgf_ease_value(WGF_EASING_SINE_IN_OUT, t) - (1 - cosf(3.14159265358979f * t)) / 2));
+            if (i > 0 && i < 1000)
+                worst = fmaxf(worst, fabsf(wgf_ease_value(WGF_EASING_EXPO_OUT, t) - (1 - powf(2, -10 * t))));
+        }
+        if (getenv("WGF_TEST_SHOW")) printf("easing hash %08x, worst %g\n", (unsigned)hash, (double)worst);
+        expect(hash == 0xE68F650Cu, "the easing curves: the same bits on every target");
+        expect(worst < 1e-6f, "near the C library's");
     }
 
     /* single numbers */
