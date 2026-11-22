@@ -3,4 +3,4 @@
 # not a release tag: fixes for malformed files (bounds and overflow checks in dr_wav's
 # metadata and dr_mp3's Xing/Info tags) landed after the last tags (wav-0.14.5,
 # mp3-0.7.3). Update both files together from the commit wanted, and record it here.
-dr_libs https://github.com/mackron/dr_libs.git dfe8377631000664666519fdb83da193fd8037f4 2026-08-31
+dr_libs https://github.com/mackron/dr_libs.git e381981afa52800b9a3864df548353ff67252fbc 2026-11-19
