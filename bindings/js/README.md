@@ -12,6 +12,7 @@ libwgf from JavaScript and TypeScript in the browser: one ES module, `wgf.js`, a
 | `src/app.js` | `wgf_app_run` for JS, and the version check; put in `wgf.js` after the runtime |
 | `src/wgf.d.ts` | the declarations of what `src/` writes by hand; put in `wgf.d.ts` |
 | `tests/types.ts` | what TypeScript must accept, and the mistakes it must catch (`tools/check_js_binding.py`) |
+| `tests/input/` | a page of one UI text field, which the check's `input` step types into in a browser, as a person would |
 
 The examples are `examples/js/`: `hello` (the C `app-hello`, call for call, on the typed layer) and `asteroids` (the Haxe game ported, flying the game's own playthrough, on the raw one).
 

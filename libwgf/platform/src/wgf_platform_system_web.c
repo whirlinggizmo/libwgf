@@ -157,11 +157,13 @@ bool wgf_platform_priv_has_touch(void)
  * page doesn't scroll away from it. It keeps one space, so a phone's Backspace has
  * something to delete: what it is given past the space is typed, the space gone is a
  * Backspace, each queued for the next frame. A desktop's keys reach the window's handlers
- * as before, which keep them from the input; a paste isn't put in it, since the window's
- * paste (sokol_app's) is the clipboard a field's Ctrl+V reads, and would be typed twice.
- * Phones show a keyboard only for a focus given while the user touches the page, so a
- * keyboard asked for is focused again at every touch's end or click until it isn't
- * wanted. */
+ * as before, which keep them from the input. A paste goes into it as any text does, and is
+ * typed: a phone's, from its keyboard or a long press, arrives no other way; a desktop's
+ * Ctrl+V is also the window's paste (sokol_app's, the clipboard a field reads), and a text
+ * field takes the one or the other, never both (it types nothing in a frame Ctrl or Cmd is
+ * down, and pastes only in one). Phones show a keyboard only for a focus given while the
+ * user touches the page, so a keyboard asked for is focused again at every touch's end or
+ * click until it isn't wanted. */
 EM_JS(void, web_show_keyboard, (int shown, float x, float y, float height), {
     var k = Module.wgfKeyboard;
     if (!k) {
@@ -184,7 +186,6 @@ EM_JS(void, web_show_keyboard, (int shown, float x, float y, float height), {
             input.value = " ";
             input.setSelectionRange(1, 1);
         });
-        input.addEventListener("paste", function(event) { event.preventDefault(); });
         var refocus = function() {
             if (k.wanted && document.activeElement !== input) input.focus({preventScroll : true});
         };

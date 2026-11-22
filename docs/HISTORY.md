@@ -1040,6 +1040,15 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## The text field in a browser: the paste block undone, a click with no move (2026-11-21)
+
+The text field's entry said its paste fix was "not yet seen in a browser". Seen now, with the browser's own input events (its debugging protocol's mouse, keys, a real Ctrl+V of the clipboard, and text inserted into the focused input), on a page of one field:
+
+- **The paste block was wrong, and is undone.** Without it Ctrl+V already pasted once, never twice: the text the browser puts in the page's hidden input arrives as typed characters in the frame Ctrl (or Cmd) is down, where a field types nothing, and the field pastes from the clipboard only in such a frame; let go of in the same instant, the typed text is taken and the clipboard isn't. One path or the other by how `field_keys` reads the modifier, which the entry's reasoning missed. With the block, a paste that comes with no key (a phone's, from its keyboard or a long press, which arrives only as text in the input) was thrown away. The claim that documents' fields doubled a paste was never tested and is withdrawn.
+- **A click where the pointer never moved landed at 0, 0.** The input keeps the pointer's place from its moves alone; a page that loads under a still pointer and is clicked gets a press with no move before it, and the press was read where the pointer was last told to be (the corner). Found by the check's first press, which focused nothing. A window's button event is now told as a move to its own place first (`wgf_platform_system_sokol.c`), when it isn't where the pointer was last told to be; an autopilot's and a test's events, which carry no place on a button, are as they were.
+
+`tools/check_js_binding.py` has the check as a step, `input` (`bindings/js/tests/input/`): a press with no move focuses the field and the hidden input, keys type, inserted text is typed, Ctrl+V pastes once. A browser that refuses the clipboard skips the paste and says so.
+
 ## The Clay UI's widgets: what the steps left (2026-11-21)
 
 What steps 1, 3, and 4 recorded as not done, done.

@@ -47,8 +47,27 @@ static void on_shutdown(void)
     run_desc.shutdown();
 }
 
+/* A window's event. A button pressed or let go where the pointer wasn't last told to be (a
+ * click on a page that loaded under a still pointer, which never moved over it) is told as a
+ * move there first: the input keeps the pointer's place from its moves alone, and sokol_app's
+ * button events carry theirs. */
 static void on_event(const sapp_event *event)
 {
+    static float x, y;
+    static bool known;
+    const bool button = event->type == SAPP_EVENTTYPE_MOUSE_DOWN || event->type == SAPP_EVENTTYPE_MOUSE_UP;
+    if (button && !sapp_mouse_locked() && (!known || event->mouse_x != x || event->mouse_y != y)) {
+        sapp_event move = *event;
+        move.type = SAPP_EVENTTYPE_MOUSE_MOVE;
+        move.mouse_dx = known ? event->mouse_x - x : 0.0f;
+        move.mouse_dy = known ? event->mouse_y - y : 0.0f;
+        run_desc.event(&move);
+    }
+    if (button || event->type == SAPP_EVENTTYPE_MOUSE_MOVE) {
+        x = event->mouse_x;
+        y = event->mouse_y;
+        known = true;
+    }
     run_desc.event(event);
 }
 
