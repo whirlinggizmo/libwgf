@@ -29,6 +29,7 @@
 #define SOKOL_GLCORE
 #endif
 #include "shaders/wgf_gfx_model.glsl.h"
+#include "wgf_math_draw_trig_priv.h"
 
 /* Stages: libwgt's scene, without its picking. A draw walks the stage's tree as it is
  * now -- its lights (the first 4 that cast shadows each given a slot of the frame's shadow
@@ -1354,8 +1355,8 @@ static void draw_run(const stage_draw_t *draw, int first, int count, bool lit, c
     if (lit) {
         scene.u_env[0] = draw->environment_intensity;
         scene.u_env[1] = env->max_lod;
-        scene.u_env[2] = cosf(draw->environment_rotation);
-        scene.u_env[3] = sinf(draw->environment_rotation);
+        scene.u_env[2] = draw_cos(draw->environment_rotation);
+        scene.u_env[3] = draw_sin(draw->environment_rotation);
         for (i = 0; i < 9; i++) memcpy(scene.u_sh[i], env->sh.c[i], sizeof(env->sh.c[i]));
     }
     for (i = 0; shadow->valid && i < shadow->count; i++) {

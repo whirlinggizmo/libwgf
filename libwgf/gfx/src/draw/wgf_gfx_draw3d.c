@@ -9,6 +9,7 @@
 #include "sokol_gfx.h" /* sokol_gl needs it first */
 #include "text/wgf_gfx_font_priv.h"
 #include "util/sokol_gl.h"
+#include "wgf_math_draw_trig_priv.h"
 
 /* Immediate mode in 3D, libwgt's (wgrender's shape3d geometry): recorded into the
  * frame's sokol_gl recording through a 3D camera's view, depth tested; its geometry is
@@ -132,12 +133,12 @@ void wgf_gfx_priv_draw3d_sphere(float cx, float cy, float cz, float radius, wgf_
     for (r = 0; r < rings; r++) {
         const float phi0 = PI * (float)r / (float)rings - PI * 0.5f;
         const float phi1 = PI * (float)(r + 1) / (float)rings - PI * 0.5f;
-        const float y0 = cy + radius * sinf(phi0), y1 = cy + radius * sinf(phi1);
-        const float c0 = radius * cosf(phi0), c1 = radius * cosf(phi1);
+        const float y0 = cy + radius * draw_sin(phi0), y1 = cy + radius * draw_sin(phi1);
+        const float c0 = radius * draw_cos(phi0), c1 = radius * draw_cos(phi1);
         for (s = 0; s < sectors; s++) {
             const float th0 = 2.0f * PI * (float)s / (float)sectors;
             const float th1 = 2.0f * PI * (float)(s + 1) / (float)sectors;
-            const float ax = cosf(th0), az = sinf(th0), bx = cosf(th1), bz = sinf(th1);
+            const float ax = draw_cos(th0), az = draw_sin(th0), bx = draw_cos(th1), bz = draw_sin(th1);
             sgl_v3f(cx + c0 * ax, y0, cz + c0 * az);
             sgl_v3f(cx + c1 * ax, y1, cz + c1 * az);
             sgl_v3f(cx + c1 * bx, y1, cz + c1 * bz);
@@ -171,6 +172,20 @@ void wgf_draw_grid(int slices, float spacing, wgf_color_t color)
     sgl_end();
 }
 
+/* The matrix turned by `radians` from axis `a` toward axis `b` (0 x, 1 y, 2 z), about the
+ * third: sgl_rotate's turn about a main axis, by drawing's trigonometry (sokol_gl's own is
+ * the C library's). */
+static void turn_about(float radians, int a, int b)
+{
+    const wgf_vec2_t turn = draw_cos_sin(radians);
+    float m[16] = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+    m[a * 4 + a] = turn.x; /* column a: where axis a goes */
+    m[a * 4 + b] = turn.y;
+    m[b * 4 + a] = -turn.y;
+    m[b * 4 + b] = turn.x;
+    sgl_mult_matrix(m);
+}
+
 /* An immediate primitive's own transform: its center, then its angles (radians), as a
  * actor's rotation turns it (x, then y, then z). */
 static void push_placement(float cx, float cy, float cz, float rx, float ry, float rz)
@@ -178,9 +193,9 @@ static void push_placement(float cx, float cy, float cz, float rx, float ry, flo
     sgl_matrix_mode_modelview();
     sgl_push_matrix();
     sgl_translate(cx, cy, cz);
-    sgl_rotate(rz, 0.0f, 0.0f, 1.0f);
-    sgl_rotate(ry, 0.0f, 1.0f, 0.0f);
-    sgl_rotate(rx, 1.0f, 0.0f, 0.0f);
+    turn_about(rz, 0, 1);
+    turn_about(ry, 2, 0);
+    turn_about(rx, 1, 2);
 }
 
 void wgf_gfx_priv_draw3d_rectangle(float width, float height, wgf_color_t color)
@@ -202,7 +217,7 @@ void wgf_gfx_priv_draw3d_circle(float radius, wgf_color_t color)
     set_color(color);
     for (i = 0; i <= CIRCLE_SEGMENTS; i++) {
         const float a = 2.0f * PI * (float)i / CIRCLE_SEGMENTS;
-        sgl_v3f(cosf(a) * radius, sinf(a) * radius, 0.0f);
+        sgl_v3f(draw_cos(a) * radius, draw_sin(a) * radius, 0.0f);
     }
     sgl_end();
 }
@@ -263,9 +278,9 @@ void wgf_draw_triangle_3d(float x0, float y0, float z0, float x1, float y1, floa
 static void ring_point(float cx, float y, float cz, float radius, int i, float *out)
 {
     const float a = 2.0f * PI * (float)i / (float)CIRCLE_SEGMENTS;
-    out[0] = cx + cosf(a) * radius;
+    out[0] = cx + draw_cos(a) * radius;
     out[1] = y;
-    out[2] = cz + sinf(a) * radius;
+    out[2] = cz + draw_sin(a) * radius;
 }
 
 void wgf_draw_cylinder(float cx, float cy, float cz, float radius, float height, wgf_color_t color)
@@ -319,7 +334,7 @@ static void wire_circles(float cx, float cy, float cz, float radius, float lift_
             float p[2][3];
             int k;
             for (k = 0; k < 2; k++) {
-                const float a = k == 0 ? a0 : a1, u = cosf(a) * radius, v = sinf(a) * radius;
+                const float a = k == 0 ? a0 : a1, u = draw_cos(a) * radius, v = draw_sin(a) * radius;
                 p[k][0] = cx + (axis == 0 ? 0.0f : u);
                 p[k][1] = cy + (axis == 1 ? 0.0f : (axis == 0 ? u : v));
                 p[k][2] = cz + (axis == 0 ? v : (axis == 1 ? v : 0.0f));
@@ -349,7 +364,7 @@ void wgf_draw_capsule_wires(float cx, float cy, float cz, float radius, float he
     set_color(color);
     wire_circles(cx, cy, cz, radius, half, half);
     for (i = 0; i < 4; i++) { /* its sides */
-        const float a = PI * 0.5f * (float)i, x = cx + cosf(a) * radius, z = cz + sinf(a) * radius;
+        const float a = PI * 0.5f * (float)i, x = cx + draw_cos(a) * radius, z = cz + draw_sin(a) * radius;
         sgl_v3f(x, cy - half, z);
         sgl_v3f(x, cy + half, z);
     }

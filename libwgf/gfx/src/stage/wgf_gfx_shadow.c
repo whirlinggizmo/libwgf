@@ -16,6 +16,7 @@
 #define SOKOL_GLCORE
 #endif
 #include "shaders/wgf_gfx_depth.glsl.h"
+#include "wgf_math_draw_trig_priv.h"
 
 /* Shadow maps, libwgt's wgt_gfx_shadow.c and its scene's depth pass (wgrender's
  * wgr_shadow): the light and model calls that turn them on and tune them, which install
@@ -204,7 +205,7 @@ static void view_corners(const wgf_gfx_priv_shadow_camera_t *cam, float distance
     int p, c;
     for (p = 0; p < 2; p++) {
         const float z = planes[p];
-        const float half_height = cam->orthographic ? cam->ortho_height * 0.5f : tanf(cam->fov * 0.5f) * z;
+        const float half_height = cam->orthographic ? cam->ortho_height * 0.5f : draw_tan(cam->fov * 0.5f) * z;
         const float half_width = half_height * cam->aspect;
         const wgf_vec3_t centre = wgf_vec3_add(cam->position, wgf_vec3_scale(forward, z));
         for (c = 0; c < 4; c++) {
@@ -285,7 +286,7 @@ wgf_gfx_priv_shadow_fit_t wgf_gfx_priv_shadow_fit_spot(wgf_vec3_t position, wgf_
     if (map_size < 1) map_size = 1;
     /* the whole cone has to fit, with a little margin so its edge isn't on the very last
        texel; a cone at or past a right angle is clamped to something projectable */
-    fovy = 2.0f * acosf(cos_outer < -0.99f ? -0.99f : (cos_outer > 1.0f ? 1.0f : cos_outer)) * 1.1f;
+    fovy = 2.0f * draw_acos(cos_outer < -0.99f ? -0.99f : (cos_outer > 1.0f ? 1.0f : cos_outer)) * 1.1f;
     if (fovy > 2.8f) fovy = 2.8f; /* about 160 degrees */
     if (fovy < 0.02f) fovy = 0.02f;
     up = fabsf(dir.y) > 0.99f ? wgf_vec3_make(0.0f, 0.0f, 1.0f) : wgf_vec3_make(0.0f, 1.0f, 0.0f);
@@ -295,7 +296,7 @@ wgf_gfx_priv_shadow_fit_t wgf_gfx_priv_shadow_fit_spot(wgf_vec3_t position, wgf_
     fit.far_z = distance;
     /* a spot's texels grow with distance; this is the size at the far end, which is where
        its shadow usually lands */
-    fit.texel_world = 2.0f * tanf(fovy * 0.5f) * distance / (float)map_size;
+    fit.texel_world = 2.0f * draw_tan(fovy * 0.5f) * distance / (float)map_size;
     fit.view_proj = wgf_mat4_mul(wgf_mat4_perspective(fovy, 1.0f, near_plane, distance),
                                  wgf_mat4_look_at(position, wgf_vec3_add(position, dir), up));
     return fit;

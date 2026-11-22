@@ -9,6 +9,7 @@
 #include "sokol_gfx.h" /* sokol_gl needs it first */
 #include "util/sokol_gl.h"
 #include "wgf_render.h"
+#include "wgf_math_draw_trig_priv.h"
 
 /* More of immediate mode's 2D, raylib's that libwgf lacked (the parity checklist): rings,
  * sectors, and arcs, ellipses, gradients, a texture turned about a pivot, and a texture
@@ -45,7 +46,8 @@ void wgf_draw_ring(float center_x, float center_y, float inner_radius, float out
     set_color(color);
     for (i = 0; i < n; i++) {
         const float a0 = start + sweep * (float)i / (float)n, a1 = start + sweep * (float)(i + 1) / (float)n;
-        const float c0 = cosf(a0), s0 = sinf(a0), c1 = cosf(a1), s1 = sinf(a1);
+        const wgf_vec2_t t0 = draw_cos_sin(a0), t1 = draw_cos_sin(a1);
+        const float c0 = t0.x, s0 = t0.y, c1 = t1.x, s1 = t1.y;
         sgl_v2f(center_x + c0 * inner_radius, center_y + s0 * inner_radius);
         sgl_v2f(center_x + c0 * outer_radius, center_y + s0 * outer_radius);
         sgl_v2f(center_x + c1 * outer_radius, center_y + s1 * outer_radius);
@@ -75,8 +77,8 @@ void wgf_draw_ellipse(float center_x, float center_y, float radius_x, float radi
     for (i = 0; i < n; i++) {
         const float a0 = TAU * (float)i / (float)n, a1 = TAU * (float)(i + 1) / (float)n;
         sgl_v2f(center_x, center_y);
-        sgl_v2f(center_x + cosf(a0) * radius_x, center_y + sinf(a0) * radius_y);
-        sgl_v2f(center_x + cosf(a1) * radius_x, center_y + sinf(a1) * radius_y);
+        sgl_v2f(center_x + draw_cos(a0) * radius_x, center_y + draw_sin(a0) * radius_y);
+        sgl_v2f(center_x + draw_cos(a1) * radius_x, center_y + draw_sin(a1) * radius_y);
     }
     sgl_end();
 }
@@ -92,7 +94,8 @@ void wgf_draw_ellipse_lines(float center_x, float center_y, float radius_x, floa
     set_color(color);
     for (i = 0; i < n; i++) {
         const float a0 = TAU * (float)i / (float)n, a1 = TAU * (float)(i + 1) / (float)n;
-        const float c0 = cosf(a0), s0 = sinf(a0), c1 = cosf(a1), s1 = sinf(a1);
+        const wgf_vec2_t t0 = draw_cos_sin(a0), t1 = draw_cos_sin(a1);
+        const float c0 = t0.x, s0 = t0.y, c1 = t1.x, s1 = t1.y;
         const float ix0 = center_x + c0 * (radius_x - h), iy0 = center_y + s0 * (radius_y - h);
         const float ox0 = center_x + c0 * (radius_x + h), oy0 = center_y + s0 * (radius_y + h);
         const float ix1 = center_x + c1 * (radius_x - h), iy1 = center_y + s1 * (radius_y - h);
@@ -130,8 +133,8 @@ void wgf_draw_circle_gradient(float center_x, float center_y, float radius, wgf_
         set_color(inner);
         sgl_v2f(center_x, center_y);
         set_color(outer);
-        sgl_v2f(center_x + cosf(a0) * radius, center_y + sinf(a0) * radius);
-        sgl_v2f(center_x + cosf(a1) * radius, center_y + sinf(a1) * radius);
+        sgl_v2f(center_x + draw_cos(a0) * radius, center_y + draw_sin(a0) * radius);
+        sgl_v2f(center_x + draw_cos(a1) * radius, center_y + draw_sin(a1) * radius);
     }
     sgl_end();
 }
@@ -168,7 +171,10 @@ void wgf_draw_texture_rotated(wgf_texture_t texture, float source_x, float sourc
     int i;
     if (!region_of(texture, source, uv, &view, &sampler)) return;
     if (width <= 0.0f || height <= 0.0f) width = source[2], height = source[3];
-    c = cosf(radians), s = sinf(radians);
+    {
+        const wgf_vec2_t turn = draw_cos_sin(radians);
+        c = turn.x, s = turn.y;
+    }
     for (i = 0; i < 4; i++) { /* the corners about the pivot (a share of the size), turned, at x, y */
         const float lx = ((i == 1 || i == 2) ? 1.0f - pivot_x : -pivot_x) * width;
         const float ly = (i >= 2 ? 1.0f - pivot_y : -pivot_y) * height;
@@ -239,7 +245,7 @@ void wgf_draw_texture_fill(wgf_texture_t texture, float x, float y, float width,
             float p[2][2];
             int k;
             for (k = 0; k < 2; k++) { /* the ray at this angle, cut to the rectangle */
-                const float a = start + sweep * (float)(i + k) / (float)n, dx = cosf(a), dy = sinf(a);
+                const float a = start + sweep * (float)(i + k) / (float)n, dx = draw_cos(a), dy = draw_sin(a);
                 const float tx = dx != 0.0f ? (width * 0.5f) / fabsf(dx) : 1e9f, ty = dy != 0.0f ? (height * 0.5f) / fabsf(dy) : 1e9f;
                 const float t = tx < ty ? tx : ty;
                 p[k][0] = cx + dx * t;

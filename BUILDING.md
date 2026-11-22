@@ -58,6 +58,11 @@ python3 tools/stage_variant.py linux-x64-debug-headless
 
 The same four steps for any preset. A headless build runs frames at 60 a second until the program quits, or for `LIBWGF_HEADLESS_FRAMES` frames when that is set.
 
+Two options choose the trigonometry (docs/ARCHITECTURE.md, "Trigonometry"), given at configure (`cmake --preset <name> -DWGF_STANDARD_TRIG=ON`):
+
+- `WGF_STANDARD_TRIG` (off): `wgf_trig.h`'s calls, and so the rotations', the easing curves', and everything else's, are the C library's: faster natively, and no longer the same bits on every target (the tests that hold those bits to a hash skip that line).
+- `WGF_EXACT_DRAW_TRIG` (on for the web, off natively): drawing's trigonometry is libwgf's own rather than the C library's. On the web that is as fast and takes the C library's out of a page; natively it is a fifth as fast, and gives drawing the same bits as the web's.
+
 The C examples, in `examples/c/<layer>-<name>/`, are built against a staged variant, as a program outside libwgf would be. Three tools build, stage, and run them all, or the ones named:
 
 ```sh

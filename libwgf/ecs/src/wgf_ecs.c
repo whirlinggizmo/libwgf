@@ -19,6 +19,7 @@
 #include "wgf_log.h"
 #include "wgf_actor.h"
 #include "wgf_probe.h"
+#include "wgf_trig.h"
 #include "wgf_voice.h"
 #include "wgf_audio.h"
 #include "wgf_handle.h"
@@ -268,7 +269,9 @@ static bool make_body(const wgf_ecs_priv_collider_t *c, const wgf_gfx_priv_actor
                       body_t *body)
 {
     const wgf_quat_t q = actor_ptr->rotation;
-    const float angle = 2.0f * atan2f(q.z, q.w), cs = cosf(angle), sn = sinf(angle);
+    /* wgf_trig's: a body laid out the same on every target, as a tween's curve is */
+    const wgf_vec2_t turn = wgf_trig_cos_sin(2.0f * wgf_trig_atan2(q.z, q.w));
+    const float cs = turn.x, sn = turn.y;
     const float sx = actor_ptr->scale.x, sy = actor_ptr->scale.y;
     const float px = actor_ptr->position.x, py = actor_ptr->position.y;
     const bool turned = fabsf(sn) > 1e-6f || cs < 0.0f;

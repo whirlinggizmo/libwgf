@@ -9,9 +9,23 @@
  * whose next term is below a double's precision; atan reduced to |x| <= tan(pi/8) the same
  * way. Each step is its own statement, so no compiler fuses a multiply and an add into an
  * FMA, which a target without one would round differently; compiled here once, with
- * libwgf's flags, rather than inlined into every caller. */
+ * libwgf's flags, rather than inlined into every caller. No C library trigonometry is
+ * called, so a page whose own calls are these links none. */
 
 #define PI 3.14159265358979323846
+
+#ifdef WGF_PRIV_STANDARD_TRIG
+
+/* A build with WGF_STANDARD_TRIG: each the C library's, its last bit the target's. */
+float wgf_trig_sin(float x) { return sinf(x); }
+float wgf_trig_cos(float x) { return cosf(x); }
+wgf_vec2_t wgf_trig_cos_sin(float x) { return wgf_vec2_make(cosf(x), sinf(x)); }
+float wgf_trig_tan(float x) { return tanf(x); }
+float wgf_trig_atan2(float y, float x) { return atan2f(y, x); }
+float wgf_trig_asin(float x) { return asinf(x); }
+float wgf_trig_acos(float x) { return acosf(x); }
+
+#else
 
 /* sin and cos of |r| <= pi/4, each a polynomial to r^17 or r^18. */
 static double sin_reduced(double r)
@@ -99,6 +113,14 @@ float wgf_trig_cos(float x)
     return (float)c;
 }
 
+wgf_vec2_t wgf_trig_cos_sin(float x)
+{
+    double s, c;
+    if (!isfinite(x)) return wgf_vec2_make(x - x, x - x);
+    sin_cos((double)x, &s, &c);
+    return wgf_vec2_make((float)c, (float)s);
+}
+
 float wgf_trig_tan(float x)
 {
     double s, c;
@@ -143,7 +165,11 @@ float wgf_trig_atan2(float y, float x)
     const double dy = (double)y, dx = (double)x;
     if (isnan(y) || isnan(x)) return y + x;
     if (dx == 0.0 && dy == 0.0) return signbit(x) ? (signbit(y) ? (float)-PI : (float)PI) : y;
-    if (isinf(y) || isinf(x)) return atan2f(y, x); /* the infinities' fixed angles: exact everywhere */
+    if (isinf(y)) { /* the infinities' fixed angles */
+        const double a = isinf(x) ? (dx > 0.0 ? PI / 4.0 : 3.0 * PI / 4.0) : PI / 2.0;
+        return (float)(dy > 0.0 ? a : -a);
+    }
+    if (isinf(x)) return dx > 0.0 ? (signbit(y) ? -0.0f : 0.0f) : (signbit(y) ? (float)-PI : (float)PI);
     if (dx > 0.0) return (float)atan_double(dy / dx);
     if (dx < 0.0) return (float)(atan_double(dy / dx) + (signbit(y) ? -PI : PI));
     return dy > 0.0 ? (float)(PI / 2.0) : (float)(-PI / 2.0);
@@ -169,3 +195,4 @@ float wgf_trig_acos(float x)
     }
 }
 
+#endif

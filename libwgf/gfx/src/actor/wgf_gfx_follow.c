@@ -12,6 +12,7 @@
 #include "wgf_handle.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_presentation.h"
+#include "wgf_trig.h"
 
 #define MAX_FOLLOWS 64
 #define RECOVERY 1.5f    /* trauma lost a second */
@@ -69,7 +70,7 @@ static float chase(float point, float at, float dead, float share)
 /* Smooth noise in -1..1 from two sines, a seed apart for each axis. */
 static float noise(float t, float seed)
 {
-    return 0.6f * sinf(t * 6.2831853f + seed) + 0.4f * sinf(t * 2.3f * 6.2831853f + seed * 1.7f);
+    return 0.6f * wgf_trig_sin(t * 6.2831853f + seed) + 0.4f * wgf_trig_sin(t * 2.3f * 6.2831853f + seed * 1.7f);
 }
 
 /* The camera put at `world` (its tree's root's space) under whatever its parent is. */
@@ -113,21 +114,24 @@ static void step_3d(follow_t *f, wgf_vec3_t at, float dt, bool snap)
     f->point[1] = snap ? at.y : chase(f->point[1], at.y, f->dead[1], share);
     f->point[2] = snap ? at.z : chase(f->point[2], at.z, f->dead[0], share);
     if (f->mode == WGF_FOLLOW_MODE_ORBIT) {
-        const float cp = cosf(f->orbit[1]);
-        ox = f->orbit[2] * cp * sinf(f->orbit[0]);
-        oy = f->orbit[2] * sinf(f->orbit[1]);
-        oz = f->orbit[2] * cp * cosf(f->orbit[0]);
+        const wgf_vec2_t around = wgf_trig_cos_sin(f->orbit[0]), up = wgf_trig_cos_sin(f->orbit[1]);
+        ox = f->orbit[2] * up.x * around.y;
+        oy = f->orbit[2] * up.y;
+        oz = f->orbit[2] * up.x * around.x;
     } else if (f->mode == WGF_FOLLOW_MODE_CHASE) {
         const wgf_vec3_t forward = wgf_actor_get_drawn_direction(f->target, 0.0f, 0.0f, -1.0f);
         float heading = f->heading, diff;
-        if (forward.x * forward.x + forward.z * forward.z > 1e-8f) heading = atan2f(-forward.x, -forward.z);
+        if (forward.x * forward.x + forward.z * forward.z > 1e-8f) heading = wgf_trig_atan2(-forward.x, -forward.z);
         diff = heading - f->heading;
         while (diff > 3.14159265f) diff -= 6.2831853f;
         while (diff < -3.14159265f) diff += 6.2831853f;
         f->heading += diff * (snap ? 1.0f : damp(TURN, dt)); /* the shorter way round */
-        ox = f->offset[0] * cosf(f->heading) + f->offset[2] * sinf(f->heading);
-        oy = f->offset[1];
-        oz = -f->offset[0] * sinf(f->heading) + f->offset[2] * cosf(f->heading);
+        {
+            const wgf_vec2_t turn = wgf_trig_cos_sin(f->heading);
+            ox = f->offset[0] * turn.x + f->offset[2] * turn.y;
+            oy = f->offset[1];
+            oz = -f->offset[0] * turn.y + f->offset[2] * turn.x;
+        }
     } else {
         ox = f->offset[0], oy = f->offset[1], oz = f->offset[2];
     }

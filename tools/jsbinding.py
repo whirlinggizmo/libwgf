@@ -53,6 +53,7 @@ LOCAL = {
     'wgf_trig_sin': "a polynomial in double: C's bits on every target",
     'wgf_trig_cos': "a polynomial in double: C's bits on every target",
     'wgf_trig_tan': "a polynomial in double: C's bits on every target",
+    'wgf_trig_cos_sin': "a polynomial in double: C's bits on every target",
     'wgf_trig_atan2': "a polynomial in double: C's bits on every target",
     'wgf_trig_asin': "a polynomial in double: C's bits on every target",
     'wgf_trig_acos': "a polynomial in double: C's bits on every target",

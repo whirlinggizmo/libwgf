@@ -164,6 +164,22 @@ export function wgf_trig_cos(radians) {
     return Number.isFinite(x) ? Math.fround(localSinOrCos(x, true)) : NaN;
 }
 
+// wgf: call wgf_trig_cos_sin
+export function wgf_trig_cos_sin(radians, into) {
+    const x = Math.fround(radians);
+    const c = Number.isFinite(x) ? Math.fround(localSinOrCos(x, true)) : NaN;
+    const s = Number.isFinite(x) ? Math.fround(localSinOrCos(x, false)) : NaN;
+    if (into === null || into === undefined) return { "x": c, "y": s };
+    if (Array.isArray(into) || ArrayBuffer.isView(into)) {
+        into[0] = c;
+        into[1] = s;
+    } else {
+        into["x"] = c;
+        into["y"] = s;
+    }
+    return into;
+}
+
 // wgf: call wgf_trig_tan
 export function wgf_trig_tan(radians) {
     const x = Math.fround(radians);

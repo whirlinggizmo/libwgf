@@ -7,6 +7,7 @@
 #include "stage/wgf_gfx_stage3d_draw_priv.h"
 #include "texture/wgf_gfx_texture_priv.h"
 #include "wgf_time.h"
+#include "wgf_math_draw_trig_priv.h"
 
 /* A stage's items drawn by a custom material's shader (wgf_shader.h), libwgt's scene's
  * draw_custom (wgrender's): its model program (a skinned part: its skinned one) with libwgf's vertex shader, which reads the
@@ -126,8 +127,8 @@ static void fill_frame(const wgf_gfx_priv_stage3d_frame_t *frame, const wgf_gfx_
     if (env != NULL) {
         out->env[0] = draw->environment_intensity;
         out->env[1] = env->max_lod;
-        out->env[2] = cosf(draw->environment_rotation);
-        out->env[3] = sinf(draw->environment_rotation);
+        out->env[2] = draw_cos(draw->environment_rotation);
+        out->env[3] = draw_sin(draw->environment_rotation);
         for (i = 0; i < 9; i++) memcpy(out->sh[i], env->sh.c[i], sizeof(env->sh.c[i]));
     }
     for (i = 0; receiving && i < shadow->count; i++) {

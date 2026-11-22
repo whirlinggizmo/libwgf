@@ -409,7 +409,9 @@ int main(void)
             }
         }
         if (getenv("WGF_TEST_SHOW")) printf("pile hash %08x\n", (unsigned)hash);
+#ifndef WGF_PRIV_STANDARD_TRIG /* a build with WGF_STANDARD_TRIG turns its boxes by the C library's */
         expect(hash == 0x305B395Fu, "a settled pile of turned boxes: the same to the bit on every target");
+#endif
         for (b = 0; b < BOXES; b++) wgf_actor_destroy(pile[b], WGF_ACTOR_DESTROY_CHILDREN);
         wgf_actor_destroy(ground, WGF_ACTOR_DESTROY_CHILDREN);
     }

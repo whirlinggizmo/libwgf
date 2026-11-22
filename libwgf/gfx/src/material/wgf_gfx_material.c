@@ -10,6 +10,7 @@
 #include "wgf_core_resource_priv.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_log.h"
+#include "wgf_math_draw_trig_priv.h"
 
 /* Materials, libwgt's (wgrender's wgr_material): a resource made from numbers, its
  * parameters set by name from a table; a custom material's, by its shader's names, are the
@@ -158,7 +159,7 @@ float wgf_gfx_priv_srgb_to_linear(float c)
 
 void wgf_gfx_priv_material_uv_matrix(const wgf_gfx_priv_material_texture_t *texture, float m[6])
 {
-    const float c = cosf(texture->rotation), s = sinf(texture->rotation);
+    const float c = draw_cos(texture->rotation), s = draw_sin(texture->rotation);
     m[0] = c * texture->scale[0];
     m[1] = s * texture->scale[1];
     m[2] = texture->offset[0];

@@ -14,6 +14,7 @@
  * layer, holding still under a paused actor, and builds every placed copy of a map loaded
  * again in place. */
 #include "wgf_tilemap_layer.h"
+#include "wgf_trig.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -195,9 +196,9 @@ static void write_quad(const layer_t *l, const wgf_gfx_priv_tilemap_data_t *d, c
     size[0] = (float)t->tile_width;
     size[1] = (float)t->tile_height;
     if (a * dd - bb * c > 0) {
-        rotation = atan2f((float)c, (float)a);
+        rotation = wgf_trig_atan2((float)c, (float)a);
     } else { /* a mirror across, then the turn that is left */
-        rotation = atan2f((float)-c, (float)-a);
+        rotation = wgf_trig_atan2((float)-c, (float)-a);
         size[0] = -size[0];
     }
     position[0] = left + (float)t->tile_width * 0.5f;

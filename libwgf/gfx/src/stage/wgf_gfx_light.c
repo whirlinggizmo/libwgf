@@ -5,6 +5,7 @@
 
 #include "material/wgf_gfx_material_priv.h"
 #include "stage/wgf_gfx_stage3d_priv.h"
+#include "wgf_math_draw_trig_priv.h"
 
 /* Lights: actors that light their stage, and what a stage's draw makes of them. The
  * selection, attenuation, and cone are libwgt's (wgrender's wgr_light). */
@@ -125,8 +126,8 @@ void wgf_gfx_priv_light_resolve(const wgf_gfx_priv_actor_t *light_ptr, wgf_mat4_
     out->position = wgf_mat4_get_translation(world);
     out->direction = wgf_vec3_normalize(wgf_mat4_transform_direction(world, wgf_vec3_make(0.0f, 0.0f, -1.0f)));
     out->range = light_ptr->as.light.range;
-    out->cos_inner = cosf(light_ptr->as.light.inner_angle);
-    out->cos_outer = cosf(light_ptr->as.light.outer_angle);
+    out->cos_inner = draw_cos(light_ptr->as.light.inner_angle);
+    out->cos_outer = draw_cos(light_ptr->as.light.outer_angle);
     out->shadow_casting = light_ptr->as.light.shadow_casting && out->type != WGF_LIGHT_TYPE_POINT;
     out->shadow_slot = -1;
     out->shadow_distance = light_ptr->as.light.shadow_distance;

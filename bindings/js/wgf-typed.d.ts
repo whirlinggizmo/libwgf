@@ -10898,6 +10898,12 @@ export declare const Trig: {
      */
     readonly tan: typeof raw.wgf_trig_tan;
     /**
+     * The cosine (x) and the sine (y) of an angle together, each as wgf_trig_cos and _sin give
+     * it, for about what one of them costs: the point at the angle on a circle of radius 1, what
+     * a turn needs. NaN, NaN for an infinite or NaN angle.
+     */
+    readonly cosSin: typeof raw.wgf_trig_cos_sin;
+    /**
      * The angle of (x, y) from the x axis, -pi..pi, as atan2f(y, x).
      */
     readonly atan2: typeof raw.wgf_trig_atan2;

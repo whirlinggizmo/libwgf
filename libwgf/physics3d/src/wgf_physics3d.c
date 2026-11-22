@@ -20,6 +20,7 @@
 #include "wgf_physics3d_priv.h"
 #include "wgf_quat.h"
 #include "wgf_resource.h"
+#include "wgf_math_draw_trig_priv.h"
 
 /* physics3d (wgf_physics.h): the body and vehicle components, the ecs's through its hooks
  * for a part's components (wgf_ecs_priv.h), their data the store's; each tick, after the
@@ -993,7 +994,7 @@ static void ring(wgf_mat4_t m, float radius, int axis, float offset, wgf_color_t
     int i;
     for (i = 0; i < 24; i++) {
         const float a0 = 6.2831853f * (float)i / 24.0f, a1 = 6.2831853f * (float)(i + 1) / 24.0f;
-        const float c0 = radius * cosf(a0), s0 = radius * sinf(a0), c1 = radius * cosf(a1), s1 = radius * sinf(a1);
+        const float c0 = radius * draw_cos(a0), s0 = radius * draw_sin(a0), c1 = radius * draw_cos(a1), s1 = radius * draw_sin(a1);
         if (axis == 0) line(m, 0, c0 + offset, s0, 0, c1 + offset, s1, color);
         else if (axis == 1) line(m, c0, offset, s0, c1, offset, s1, color);
         else line(m, c0, s0 + offset, 0, c1, s1 + offset, 0, color);

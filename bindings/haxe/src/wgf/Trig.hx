@@ -44,6 +44,14 @@ class Trig {
 		return Raw.wgf_trig_tan(radians);
 
 	/**
+	    The cosine (x) and the sine (y) of an angle together, each as wgf_trig_cos and _sin give
+	    it, for about what one of them costs: the point at the angle on a circle of radius 1, what
+	    a turn needs. NaN, NaN for an infinite or NaN angle.
+	**/
+	public static inline function cosSin(radians:Float, ?into:wgf.Vec2):wgf.Vec2
+		return Raw.wgf_trig_cos_sin(radians, into);
+
+	/**
 	    The angle of (x, y) from the x axis, -pi..pi, as atan2f(y, x).
 	**/
 	public static inline function atan2(y:Float, x:Float):Float

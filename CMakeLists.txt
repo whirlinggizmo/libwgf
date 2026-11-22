@@ -48,6 +48,18 @@ option(WGF_TESTS "Build the tests" ${PROJECT_IS_TOP_LEVEL})
 option(WGF_WERROR "Warnings are errors" ${PROJECT_IS_TOP_LEVEL})
 set(WGF_SANITIZE "" CACHE STRING "thread, address, or undefined: the library and tests built with it")
 option(WGF_HEADLESS "No window or GPU: gfx on sokol's dummy backend, for tests and servers anywhere" OFF)
+# Trigonometry (wgf_trig.h, docs/ARCHITECTURE.md's "Trigonometry"). The simulation's is
+# libwgf's own, the same bits on every target, unless WGF_STANDARD_TRIG makes all of it the C
+# library's (helix's helix-math-standard-trig): faster natively, its last bit the target's.
+# Drawing's, which nothing reads back, is libwgf's own where WGF_EXACT_DRAW_TRIG is on: by
+# default on the web, where it is as fast and a page then carries no C library trigonometry
+# (4 KB of gzip), and not natively, where glibc's is five times as fast.
+option(WGF_STANDARD_TRIG "wgf_trig.h's calls are the C library's: faster natively, not the same bits on every target" OFF)
+if(EMSCRIPTEN)
+    option(WGF_EXACT_DRAW_TRIG "Drawing uses libwgf's own trigonometry, not the C library's" ON)
+else()
+    option(WGF_EXACT_DRAW_TRIG "Drawing uses libwgf's own trigonometry, not the C library's" OFF)
+endif()
 
 include(GNUInstallDirs)
 include(cmake/wgf_library.cmake)
@@ -62,6 +74,12 @@ endif()
 # Its trace hooks too: gfx counts the frame's draws and triangles, and the GPU's bytes, by them
 # (wgf_render_get_draw_calls).
 add_compile_definitions(SOKOL_TRACE_HOOKS)
+if(WGF_STANDARD_TRIG)
+    add_compile_definitions(WGF_PRIV_STANDARD_TRIG)
+endif()
+if(WGF_EXACT_DRAW_TRIG AND NOT WGF_STANDARD_TRIG)
+    add_compile_definitions(WGF_PRIV_EXACT_DRAW_TRIG)
+endif()
 if(WGF_HEADLESS)
     add_compile_definitions(SOKOL_DUMMY_BACKEND)
 elseif(EMSCRIPTEN)

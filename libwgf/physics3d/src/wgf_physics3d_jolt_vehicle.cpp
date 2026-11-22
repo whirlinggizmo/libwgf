@@ -194,7 +194,7 @@ float wgf_physics3d_priv_jolt_vehicle_get_slip(int vehicle, int wheel)
     const float rim = w->GetAngularVelocity() * w->GetSettings()->mRadius;
     const float speed = std::max(std::abs(ground), 1.0f);
     const float along = std::abs(rim - ground) / speed / PEAK_ALONG;
-    const float across = std::atan2(std::abs(side), speed) / PEAK_ACROSS;
+    const float across = ATan2(std::abs(side), speed) / PEAK_ACROSS; // Jolt's: the same on every target
     return std::min(std::max(along, across), 10.0f);
 }
 

@@ -1239,6 +1239,7 @@ class Reach {
 		"wgf_trig_asin",
 		"wgf_trig_atan2",
 		"wgf_trig_cos",
+		"wgf_trig_cos_sin",
 		"wgf_trig_sin",
 		"wgf_trig_tan",
 		"wgf_tween_create",
@@ -1458,7 +1459,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1449) 0];
+	static final counts:Array<Int> = [for (_ in 0...1450) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

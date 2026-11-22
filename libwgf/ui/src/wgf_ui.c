@@ -2690,15 +2690,21 @@ static int rounded(Clay_BoundingBox box, Clay_CornerRadius radius, float inset, 
     const float most = fminf(x1 - x0, y1 - y0) * 0.5f;
     const float r[4] = {radius.topLeft, radius.topRight, radius.bottomRight, radius.bottomLeft};
     const float cx[4] = {x0, x1, x1, x0}, cy[4] = {y0, y0, y1, y1};
-    const float start[4] = {3.14159265f, 4.71238898f, 0.0f, 1.57079633f};
+    /* a quarter turn's cosines at each fifteen degrees (its sines, the same from the end): no
+       trigonometry linked for corners */
+    static const float quarter[SEGMENTS + 1] = {1.0f,        0.96592583f, 0.86602540f, 0.70710678f,
+                                                0.5f,        0.25881905f, 0.0f};
     int corner, s, n = 0;
     for (corner = 0; corner < 4; corner++) {
         const float rr = fmaxf(0.0f, fminf(r[corner] - inset, most));
         const float ox = corner == 0 || corner == 3 ? rr : -rr, oy = corner < 2 ? rr : -rr;
         for (s = 0; s <= SEGMENTS; s++) {
-            const float a = start[corner] + 1.57079633f * (float)s / (float)SEGMENTS;
-            out[n++] = cx[corner] + ox + cosf(a) * rr;
-            out[n++] = cy[corner] + oy + sinf(a) * rr;
+            /* from the corner's start (the top left's at a half turn, then a quarter on each) */
+            const float c = quarter[s], t = quarter[SEGMENTS - s];
+            const float dx = corner == 0 ? -c : corner == 1 ? t : corner == 2 ? c : -t;
+            const float dy = corner == 0 ? -t : corner == 1 ? -c : corner == 2 ? t : c;
+            out[n++] = cx[corner] + ox + dx * rr;
+            out[n++] = cy[corner] + oy + dy * rr;
             if (rr == 0.0f) break;
         }
     }

@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "fef21b975790c0a3" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "008e798a044ad55e" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -1824,6 +1824,27 @@ export function wgf_trig_cos(radians) {
 export function wgf_trig_tan(radians) {
     const x = Math.fround(radians);
     return Number.isFinite(x) ? Math.fround(localSinOrCos(x, false) / localSinOrCos(x, true)) : NaN;
+}
+
+// wgf: call wgf_trig_cos_sin
+/**
+ * The cosine (x) and the sine (y) of an angle together, each as wgf_trig_cos and _sin give
+ * it, for about what one of them costs: the point at the angle on a circle of radius 1, what
+ * a turn needs. NaN, NaN for an infinite or NaN angle.
+ */
+export function wgf_trig_cos_sin(radians, into) {
+    const x = Math.fround(radians);
+    const c = Number.isFinite(x) ? Math.fround(localSinOrCos(x, true)) : NaN;
+    const s = Number.isFinite(x) ? Math.fround(localSinOrCos(x, false)) : NaN;
+    if (into === null || into === undefined) return { "x": c, "y": s };
+    if (Array.isArray(into) || ArrayBuffer.isView(into)) {
+        into[0] = c;
+        into[1] = s;
+    } else {
+        into["x"] = c;
+        into["y"] = s;
+    }
+    return into;
 }
 
 // wgf: call wgf_trig_atan2

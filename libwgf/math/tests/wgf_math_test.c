@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -175,8 +176,11 @@ int main(void)
            C library's */
         uint32_t hash = 2166136261u;
         int worst = 0, i, k;
+        bool together = true;
         for (i = -200000; i <= 200000; i += 7) {
             const float a = (float)i * 1e-4f; /* -20..20 */
+            const wgf_vec2_t both = wgf_trig_cos_sin(a);
+            together = together && both.x == wgf_trig_cos(a) && both.y == wgf_trig_sin(a);
             const float mine[5] = {wgf_trig_sin(a), wgf_trig_cos(a), wgf_trig_atan2(a, 0.7f), wgf_trig_asin(a / 20.0f),
                                    wgf_trig_acos(a / 20.0f)};
             const float theirs[5] = {sinf(a), cosf(a), atan2f(a, 0.7f), asinf(a / 20.0f), acosf(a / 20.0f)};
@@ -192,8 +196,12 @@ int main(void)
             }
         }
         if (getenv("WGF_TEST_SHOW")) printf("trig hash %08x, worst %d ulp\n", (unsigned)hash, worst);
+#ifndef WGF_PRIV_STANDARD_TRIG /* a build with WGF_STANDARD_TRIG: the C library's bits, the target's */
         expect(hash == 0xFDD87A04u, "the rotations' trigonometry: the same bits on every target");
+#endif
         expect(worst <= 1, "within an ulp of the C library's");
+        expect(together && isnan(wgf_trig_cos_sin(INFINITY).x) && isnan(wgf_trig_cos_sin(NAN).y),
+               "the cosine and sine together: the two calls' bits");
         {
             const double half_turn = 3.14159265358979323846;
             expect(wgf_trig_sin(0) == 0 && wgf_trig_cos(0) == 1 && wgf_trig_atan2(0, 0) == 0 &&
@@ -228,7 +236,9 @@ int main(void)
                 worst = fmaxf(worst, fabsf(wgf_ease_value(WGF_EASING_EXPO_OUT, t) - (1 - powf(2, -10 * t))));
         }
         if (getenv("WGF_TEST_SHOW")) printf("easing hash %08x, worst %g\n", (unsigned)hash, (double)worst);
+#ifndef WGF_PRIV_STANDARD_TRIG
         expect(hash == 0xE68F650Cu, "the easing curves: the same bits on every target");
+#endif
         expect(worst < 1e-6f, "near the C library's");
     }
 

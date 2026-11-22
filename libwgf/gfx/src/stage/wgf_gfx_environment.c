@@ -24,6 +24,7 @@
 #define SOKOL_GLCORE
 #endif
 #include "shaders/wgf_gfx_background.glsl.h"
+#include "wgf_math_draw_trig_priv.h"
 
 /* Environments, libwgt's wgt_gfx_environment.c (wgrender's wgr_environment): an
  * equirectangular image prepared on a worker -- spherical harmonics for diffuse light, a
@@ -52,14 +53,14 @@ wgf_vec3_t wgf_gfx_priv_environment_equirect_dir(float u, float v)
 {
     const float phi = (u - 0.5f) * 2.0f * PI_F;
     const float theta = v * PI_F;
-    return wgf_vec3_make(sinf(theta) * sinf(phi), cosf(theta), -sinf(theta) * cosf(phi));
+    return wgf_vec3_make(draw_sin(theta) * draw_sin(phi), draw_cos(theta), -draw_sin(theta) * draw_cos(phi));
 }
 
 void wgf_gfx_priv_environment_dir_equirect(wgf_vec3_t dir, float *u, float *v)
 {
     const wgf_vec3_t d = wgf_vec3_normalize(dir);
-    *u = 0.5f + atan2f(d.x, -d.z) / (2.0f * PI_F);
-    *v = acosf(d.y < -1.0f ? -1.0f : (d.y > 1.0f ? 1.0f : d.y)) / PI_F;
+    *u = 0.5f + draw_atan2(d.x, -d.z) / (2.0f * PI_F);
+    *v = draw_acos(d.y < -1.0f ? -1.0f : (d.y > 1.0f ? 1.0f : d.y)) / PI_F;
 }
 
 wgf_vec3_t wgf_gfx_priv_environment_cube_dir(int face, float s, float t)
@@ -204,7 +205,7 @@ static void project_sh_rows(const wgf_gfx_priv_env_image_t *image, int y0, int y
     int px, py, k, c;
     for (py = y0; py < y1; py++) {
         const float v = ((float)py + 0.5f) / (float)image->height;
-        const double solid_angle = pixel_area * sin(v * PI_D);
+        const double solid_angle = pixel_area * (double)draw_sin((float)(v * PI_D));
         for (px = 0; px < image->width; px++) {
             const wgf_vec3_t dir = wgf_gfx_priv_environment_equirect_dir(((float)px + 0.5f) / (float)image->width, v);
             const float *rgb = &image->rgb[((size_t)py * (size_t)image->width + (size_t)px) * 3];
@@ -369,7 +370,7 @@ static int prefilter_samples(const wgf_gfx_priv_env_cube_t *source, int mip, int
         const float phi = 2.0f * PI_F * (float)i / (float)n, xi = radical_inverse((uint32_t)i);
         const float cos_theta = sqrtf((1.0f - xi) / (1.0f + (a2 - 1.0f) * xi));
         const float sin_theta = sqrtf(1.0f - cos_theta * cos_theta);
-        const float hx = sin_theta * cosf(phi), hy = sin_theta * sinf(phi), hz = cos_theta;
+        const float hx = sin_theta * draw_cos(phi), hy = sin_theta * draw_sin(phi), hz = cos_theta;
         const float lz = 2.0f * hz * hz - 1.0f; /* n about h, n = +z */
         float dd, pdf;
         if (lz <= 0.0f) continue;
@@ -1024,8 +1025,8 @@ static void draw_background(wgf_handle_t environment, wgf_mat4_t view_projection
     memcpy(params.inv_view_proj, inverse.m, sizeof(params.inv_view_proj));
     params.bg_env[0] = intensity;
     params.bg_env[1] = clamp01(blur) * (float)(env_ptr->background_mip_count - 1);
-    params.bg_env[2] = cosf(rotation);
-    params.bg_env[3] = sinf(rotation);
+    params.bg_env[2] = draw_cos(rotation);
+    params.bg_env[3] = draw_sin(rotation);
     params.bg_tonemap[0] = (float)tonemap;
     params.bg_tonemap[1] = exp2f(exposure);
     params.bg_tonemap[2] = params.bg_tonemap[3] = 0.0f;

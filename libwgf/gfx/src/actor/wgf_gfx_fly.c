@@ -14,6 +14,7 @@
 #include "wgf_input.h"
 #include "wgf_keyboard.h"
 #include "wgf_mouse.h"
+#include "wgf_trig.h"
 
 #define MAX_FLIES 64
 #define PADS 4
@@ -51,17 +52,16 @@ static void facing(wgf_actor_t camera, float *yaw, float *pitch)
 {
     const wgf_vec3_t d = wgf_actor_get_world_direction(camera, 0.0f, 0.0f, -1.0f);
     const float y = d.y < -1.0f ? -1.0f : d.y > 1.0f ? 1.0f : d.y;
-    *yaw = d.x * d.x + d.z * d.z > 1e-12f ? atan2f(-d.x, -d.z) : 0.0f;
-    *pitch = clamp_pitch(asinf(y));
+    *yaw = d.x * d.x + d.z * d.z > 1e-12f ? wgf_trig_atan2(-d.x, -d.z) : 0.0f;
+    *pitch = clamp_pitch(wgf_trig_asin(y));
 }
 
 /* The camera turned to its yaw and pitch, from where it is. */
 static void turn(const fly_t *f)
 {
     const wgf_vec3_t at = wgf_actor_get_world_position(f->camera);
-    const float cp = cosf(f->pitch);
-    wgf_actor_look_at(f->camera, at.x - sinf(f->yaw) * cp, at.y + sinf(f->pitch), at.z - cosf(f->yaw) * cp, 0.0f, 1.0f,
-                      0.0f);
+    const wgf_vec2_t yaw = wgf_trig_cos_sin(f->yaw), pitch = wgf_trig_cos_sin(f->pitch);
+    wgf_actor_look_at(f->camera, at.x - yaw.y * pitch.x, at.y + pitch.y, at.z - yaw.x * pitch.x, 0.0f, 1.0f, 0.0f);
 }
 
 /* The camera put at `world` (its tree's root's space) under whatever its parent is. */
@@ -157,11 +157,11 @@ static void step(fly_t *f, const intent_t *in, bool locked, float dt)
     }
     f->yaw = wrap_yaw(f->yaw - in->look.x * f->turn_speed * dt);
     f->pitch = clamp_pitch(f->pitch - in->look.y * f->turn_speed * dt);
-    sy = sinf(f->yaw), cy = cosf(f->yaw);
+    sy = wgf_trig_sin(f->yaw), cy = wgf_trig_cos(f->yaw);
     /* forward along the ground (-sin yaw, 0, -cos yaw), right (cos yaw, 0, -sin yaw); FREE
        forward where it looks, and up the world's */
     if (f->mode == WGF_FLY_MODE_FREE) {
-        const float cp = cosf(f->pitch), sp = sinf(f->pitch);
+        const float cp = wgf_trig_cos(f->pitch), sp = wgf_trig_sin(f->pitch);
         mx = -sy * cp * in->forward + cy * in->right;
         my = sp * in->forward + in->up;
         mz = -cy * cp * in->forward - sy * in->right;

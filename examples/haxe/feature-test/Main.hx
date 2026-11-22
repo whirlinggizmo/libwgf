@@ -481,6 +481,8 @@ class Main {
 		expect(Trig.sin(0) == 0 && Trig.cos(0) == 1 && Math.abs(Trig.tan(0.5) - 0.5463025) < 1e-6
 			&& Math.abs(Trig.atan2(1, 1) - Math.PI / 4) < 1e-6 && Math.abs(Trig.asin(1) - Math.PI / 2) < 1e-6
 			&& Math.abs(Trig.acos(0) - Math.PI / 2) < 1e-6, "trigonometry alike on every target");
+		var turn = Trig.cosSin(0.5);
+		expect(turn.x == Trig.cos(0.5) && turn.y == Trig.sin(0.5), "a cosine and sine together: the two calls' bits");
 		final cube = Mesh.createCube(1, 2, 3);
 		expect(!cube.isNone() && Mesh.createCube(1, 2, 3) == cube && Resource.release(cube), "a cube, shared");
 		for (mesh in [Mesh.createPlane(2, 2, 1), Mesh.createSphere(1, 8, 16), Mesh.createCylinder(1, 2, 12),

@@ -9,6 +9,7 @@
 #include "sokol_gfx.h" /* sokol_gl needs it first */
 #include "util/sokol_gl.h"
 #include "wgf_render.h"
+#include "wgf_math_draw_trig_priv.h"
 
 /* Immediate mode 2D shapes, recorded into the frame's sokol_gl context as triangles:
  * libwgt's drew lines through GL's own lines, one pixel wide whatever was asked;
@@ -106,8 +107,8 @@ void wgf_draw_circle(float center_x, float center_y, float radius, wgf_color_t c
     for (i = 0; i < segments; i++) {
         const float a0 = TAU * (float)i / (float)segments, a1 = TAU * (float)(i + 1) / (float)segments;
         sgl_v2f(center_x, center_y);
-        sgl_v2f(center_x + cosf(a0) * radius, center_y + sinf(a0) * radius);
-        sgl_v2f(center_x + cosf(a1) * radius, center_y + sinf(a1) * radius);
+        sgl_v2f(center_x + draw_cos(a0) * radius, center_y + draw_sin(a0) * radius);
+        sgl_v2f(center_x + draw_cos(a1) * radius, center_y + draw_sin(a1) * radius);
     }
     sgl_end();
 }
@@ -123,7 +124,8 @@ void wgf_draw_circle_lines(float center_x, float center_y, float radius, float t
     set_color(color);
     for (i = 0; i < segments; i++) {
         const float a0 = TAU * (float)i / (float)segments, a1 = TAU * (float)(i + 1) / (float)segments;
-        const float c0 = cosf(a0), s0 = sinf(a0), c1 = cosf(a1), s1 = sinf(a1);
+        const wgf_vec2_t t0 = draw_cos_sin(a0), t1 = draw_cos_sin(a1);
+        const float c0 = t0.x, s0 = t0.y, c1 = t1.x, s1 = t1.y;
         quad(center_x + c0 * inner, center_y + s0 * inner, center_x + c0 * outer, center_y + s0 * outer,
              center_x + c1 * outer, center_y + s1 * outer, center_x + c1 * inner, center_y + s1 * inner);
     }

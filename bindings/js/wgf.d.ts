@@ -1506,6 +1506,14 @@ export declare function wgf_trig_cos(radians: number): number;
 export declare function wgf_trig_tan(radians: number): number;
 
 /**
+ * The cosine (x) and the sine (y) of an angle together, each as wgf_trig_cos and _sin give
+ * it, for about what one of them costs: the point at the angle on a circle of radius 1, what
+ * a turn needs. NaN, NaN for an infinite or NaN angle.
+ */
+export declare function wgf_trig_cos_sin<T extends number[] | Float32Array | Float64Array>(radians: number, into: T): T;
+export declare function wgf_trig_cos_sin(radians: number, into?: wgf_vec2_t | null): wgf_vec2_t;
+
+/**
  * The angle of (x, y) from the x axis, -pi..pi, as atan2f(y, x).
  */
 export declare function wgf_trig_atan2(y: number, x: number): number;

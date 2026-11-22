@@ -56,11 +56,17 @@ expect(hash === 0xFDD87A04, `trigonometry worked in JS: C's hash (${hash.toStrin
 for (const x of [0, -0, 0.5, -3.75, 1e6, Infinity, NaN]) {
     for (const name of ['wgf_trig_sin', 'wgf_trig_cos', 'wgf_trig_tan']) agree &&= Object.is(wgf[name](x), c(name, x));
 }
-for (const [y, x] of [[0, 0], [0, -0], [-0, -1], [1, 0], [-1, 0], [Infinity, Infinity], [-Infinity, 2], [3, -Infinity]]) {
+for (const [y, x] of [[0, 0], [0, -0], [-0, -1], [1, 0], [-1, 0], [Infinity, Infinity], [-Infinity, 2], [3, -Infinity],
+    [Infinity, -Infinity], [-Infinity, -Infinity], [-Infinity, Infinity], [-3, -Infinity], [2, Infinity], [-2, Infinity]]) {
     agree &&= Object.is(wgf.wgf_trig_atan2(y, x), c('wgf_trig_atan2', y, x));
 }
 for (const x of [-1, 1, 0, -0, 2, -2, 0.999]) {
     agree &&= Object.is(wgf.wgf_trig_asin(x), c('wgf_trig_asin', x)) && Object.is(wgf.wgf_trig_acos(x), c('wgf_trig_acos', x));
+}
+for (const x of [0, 0.5, -3.75, 1e6, 12345.678, Infinity, NaN]) {
+    const both = wgf.wgf_trig_cos_sin(x), into = wgf.wgf_trig_cos_sin(x, [0, 0]);
+    agree &&= Object.is(both.x, wgf.wgf_trig_cos(x)) && Object.is(both.y, wgf.wgf_trig_sin(x))
+        && Object.is(into[0], both.x) && Object.is(into[1], both.y);
 }
 expect(agree, "and C's call by call, its edges included");
 console.log(failures === 0 ? 'local: PASS' : `local: FAIL (${failures})`);

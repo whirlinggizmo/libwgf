@@ -2792,6 +2792,8 @@ export const Trig = Object.freeze({
     cos: raw.wgf_trig_cos,
     // wgf: call wgf_trig_tan
     tan: raw.wgf_trig_tan,
+    // wgf: call wgf_trig_cos_sin
+    cosSin: raw.wgf_trig_cos_sin,
     // wgf: call wgf_trig_atan2
     atan2: raw.wgf_trig_atan2,
     // wgf: call wgf_trig_asin

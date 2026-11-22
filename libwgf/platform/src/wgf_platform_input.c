@@ -8,6 +8,7 @@
 #include "wgf_keyboard.h"
 #include "wgf_mouse.h"
 #include "wgf_touch.h"
+#include "wgf_trig.h"
 #include "wgf_time.h"
 #include "wgf_platform_window_priv.h"
 
@@ -490,7 +491,7 @@ static void handle_touch(const sapp_event *event)
         const float nbx = input.fingers[b].x, nby = input.fingers[b].y;
         const float before = hypotf(bx - ax, by - ay), after = hypotf(nbx - nax, nby - nay);
         const float pan_x = (nax + nbx - ax - bx) * 0.5f, pan_y = (nay + nby - ay - by) * 0.5f;
-        float turn = atan2f(nby - nay, nbx - nax) - atan2f(by - ay, bx - ax);
+        float turn = wgf_trig_atan2(nby - nay, nbx - nax) - wgf_trig_atan2(by - ay, bx - ax);
         edges_t *sets[2];
         int set;
         if (turn > PI) turn -= 2.0f * PI;

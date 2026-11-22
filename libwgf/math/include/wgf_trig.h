@@ -2,6 +2,7 @@
 #define WGF_TRIG_H
 
 #include "wgf_api.h"
+#include "wgf_vec2.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,6 +19,11 @@ extern "C" {
 WGF_API float wgf_trig_sin(float radians);
 WGF_API float wgf_trig_cos(float radians);
 WGF_API float wgf_trig_tan(float radians);
+
+/* The cosine (x) and the sine (y) of an angle together, each as wgf_trig_cos and _sin give
+ * it, for about what one of them costs: the point at the angle on a circle of radius 1, what
+ * a turn needs. NaN, NaN for an infinite or NaN angle. */
+WGF_API wgf_vec2_t wgf_trig_cos_sin(float radians);
 
 /* The angle of (x, y) from the x axis, -pi..pi, as atan2f(y, x). */
 WGF_API float wgf_trig_atan2(float y, float x);

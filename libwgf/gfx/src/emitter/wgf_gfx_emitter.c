@@ -20,6 +20,7 @@
 #define SOKOL_GLCORE
 #endif
 #include "shaders/wgf_gfx_particle.glsl.h"
+#include "wgf_math_draw_trig_priv.h"
 
 /* Particle emitters, libwgt's (wgrender's wgr_emitter.c, its docs/PLAN-sprites.md, steps 4
  * and 5): stateless particles simulated on the GPU. A particle is written once, at birth,
@@ -155,20 +156,22 @@ static wgf_vec3_t birth_velocity(wgf_gfx_priv_emitter_t *e)
     if (length <= 0.0f) return wgf_vec3_make(0, 0, 0);
     speed = length * fmaxf(0.0f, 1.0f + e->speed_variance * signed_random(e));
     if (e->two_d) { /* turned up to `spread` either way */
-        const float angle = atan2f(v.y, v.x) + e->spread * signed_random(e);
-        dir = wgf_vec3_make(cosf(angle), sinf(angle), 0.0f);
+        const float angle = draw_atan2(v.y, v.x) + e->spread * signed_random(e);
+        const wgf_vec2_t turn = draw_cos_sin(angle);
+        dir = wgf_vec3_make(turn.x, turn.y, 0.0f);
     } else {
         dir = wgf_vec3_make(v.x / length, v.y / length, v.z / length);
         if (e->spread > 0.0f) { /* uniformly within a cone around the direction */
-            const float cos_theta = 1.0f - random01(e) * (1.0f - cosf(fminf(e->spread, 3.14159265f)));
+            const float cos_theta = 1.0f - random01(e) * (1.0f - draw_cos(fminf(e->spread, 3.14159265f)));
             const float sin_theta = sqrtf(fmaxf(0.0f, 1.0f - cos_theta * cos_theta));
             const float phi = TAU * random01(e);
             const wgf_vec3_t helper = fabsf(dir.y) < 0.99f ? wgf_vec3_make(0, 1, 0) : wgf_vec3_make(1, 0, 0);
             const wgf_vec3_t u = wgf_vec3_normalize(wgf_vec3_cross(helper, dir));
             const wgf_vec3_t w = wgf_vec3_cross(dir, u);
-            dir = wgf_vec3_make(dir.x * cos_theta + (u.x * cosf(phi) + w.x * sinf(phi)) * sin_theta,
-                                dir.y * cos_theta + (u.y * cosf(phi) + w.y * sinf(phi)) * sin_theta,
-                                dir.z * cos_theta + (u.z * cosf(phi) + w.z * sinf(phi)) * sin_theta);
+            const wgf_vec2_t around = draw_cos_sin(phi);
+            dir = wgf_vec3_make(dir.x * cos_theta + (u.x * around.x + w.x * around.y) * sin_theta,
+                                dir.y * cos_theta + (u.y * around.x + w.y * around.y) * sin_theta,
+                                dir.z * cos_theta + (u.z * around.x + w.z * around.y) * sin_theta);
         }
     }
     return wgf_vec3_scale(wgf_mat4_transform_direction(e->turn, dir), speed);
@@ -210,12 +213,14 @@ static wgf_vec3_t spawn_offset(wgf_gfx_priv_emitter_t *e)
         const float phi = TAU * random01(e);
         if (e->two_d) {
             const float r = e->shell ? e->sphere : e->sphere * sqrtf(random01(e));
-            return wgf_vec3_make(cosf(phi) * r, sinf(phi) * r, 0.0f);
+            const wgf_vec2_t around = draw_cos_sin(phi);
+            return wgf_vec3_make(around.x * r, around.y * r, 0.0f);
         }
         {
             const float z = signed_random(e), ring = sqrtf(fmaxf(0.0f, 1.0f - z * z));
             const float r = e->shell ? e->sphere : e->sphere * cbrtf(random01(e));
-            return wgf_vec3_make(cosf(phi) * ring * r, sinf(phi) * ring * r, z * r);
+            const wgf_vec2_t around = draw_cos_sin(phi);
+            return wgf_vec3_make(around.x * ring * r, around.y * ring * r, z * r);
         }
     }
     inside = wgf_vec3_make(box.x * signed_random(e), box.y * signed_random(e), box.z * signed_random(e));
@@ -822,7 +827,8 @@ bool wgf_gfx_priv_emitter_particle_now(wgf_actor_t actor, int index, wgf_vec3_t 
     if (p->origin[3] != 0.0f) {
         const wgf_vec3_t o = wgf_vec3_make(p->origin[0], p->origin[1], p->origin[2]);
         const wgf_vec3_t k = wgf_vec3_make(p->axis[0], p->axis[1], p->axis[2]);
-        const float c = cosf(p->origin[3] * age), s = sinf(p->origin[3] * age);
+        const wgf_vec2_t turn = draw_cos_sin(p->origin[3] * age);
+        const float c = turn.x, s = turn.y;
         const wgf_vec3_t turned = turned_about(wgf_vec3_sub(pos, o), k, c, s);
         vel = wgf_vec3_add(turned_about(vel, k, c, s), wgf_vec3_scale(wgf_vec3_cross(k, turned), p->origin[3]));
         pos = wgf_vec3_add(o, turned);
@@ -839,10 +845,10 @@ bool wgf_gfx_priv_emitter_particle_now(wgf_actor_t actor, int index, wgf_vec3_t 
             const float first = fraction(shape[3] * a[i]) * TAU, second = fraction(shape[3] * b[i]) * TAU;
             const float flat = i == 2 && e->two_d ? 0.0f : 1.0f;
             drift[i] = e->wander * flat *
-                       (0.6f * sinf(course + first) + 0.4f * sinf(2.3f * course + second) - 0.6f * sinf(first) -
-                        0.4f * sinf(second));
+                       (0.6f * draw_sin(course + first) + 0.4f * draw_sin(2.3f * course + second) - 0.6f * draw_sin(first) -
+                        0.4f * draw_sin(second));
             drifting[i] = e->wander * flat * TAU * e->wander_rate *
-                          (0.6f * cosf(course + first) + 0.92f * cosf(2.3f * course + second));
+                          (0.6f * draw_cos(course + first) + 0.92f * draw_cos(2.3f * course + second));
         }
         pos = wgf_vec3_add(pos, wgf_vec3_make(drift[0], drift[1], drift[2]));
         vel = wgf_vec3_add(vel, wgf_vec3_make(drifting[0], drifting[1], drifting[2]));
@@ -865,19 +871,22 @@ bool wgf_gfx_priv_emitter_particle_now(wgf_actor_t actor, int index, wgf_vec3_t 
         } else {
             angle += shape[2];
         }
-        c = cosf(angle);
-        s = sinf(angle);
+        {
+            const wgf_vec2_t turn = draw_cos_sin(angle);
+            c = turn.x;
+            s = turn.y;
+        }
         up = wgf_vec3_add(wgf_vec3_scale(base_x, s), wgf_vec3_scale(base_y, c));
     }
     pos = wgf_vec3_sub(pos, wgf_vec3_scale(up, along_shift));
     if (e->pulse_rate > 0.0f) {
-        pulse = 1.0f - e->pulse_depth * (0.5f + 0.5f * sinf(TAU * fraction(e->pulse_rate * age + p->axis[3])));
+        pulse = 1.0f - e->pulse_depth * (0.5f + 0.5f * draw_sin(TAU * fraction(e->pulse_rate * age + p->axis[3])));
     }
     out[0] = pos.x;
     out[1] = pos.y;
     out[2] = pos.z;
     out[3] = size;
-    out[4] = atan2f(wgf_vec3_dot(up, axis_x), wgf_vec3_dot(up, axis_y));
+    out[4] = draw_atan2(wgf_vec3_dot(up, axis_x), wgf_vec3_dot(up, axis_y));
     out[5] = pulse;
     return true;
 }

@@ -7,6 +7,7 @@
 #include "sokol_gfx.h" /* sokol_gl needs it first */
 #include "util/sokol_gl.h"
 #include "wgf_render.h"
+#include "wgf_math_draw_trig_priv.h"
 
 /* Rounded rectangles, raylib's DrawRectangleRounded and DrawRectangleRoundedLinesEx: the
  * rectangle's outline with its corners' arcs, filled as a fan from its middle (it is
@@ -51,8 +52,9 @@ int wgf_gfx_priv_rounded_points(float x, float y, float width, float height, flo
     for (corner = 0; corner < 4; corner++) {
         for (i = 0; i <= segments; i++) {
             const float a = start[corner] + HALF_PI * (float)i / (float)segments;
-            out[2 * n] = cx[corner] + cosf(a) * r;
-            out[2 * n + 1] = cy[corner] + sinf(a) * r;
+            const wgf_vec2_t turn = draw_cos_sin(a);
+            out[2 * n] = cx[corner] + turn.x * r;
+            out[2 * n + 1] = cy[corner] + turn.y * r;
             n++;
         }
     }

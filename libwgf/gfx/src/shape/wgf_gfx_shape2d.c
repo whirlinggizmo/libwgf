@@ -9,6 +9,7 @@
 #include "wgf_draw.h"
 #include "wgf_log.h"
 #include "wgf_render.h"
+#include "wgf_math_draw_trig_priv.h"
 
 /* 2D shapes: each its outline's points in its own units, placed through its actor into
  * the frame's logical pixels, then filled or outlined by immediate mode (wgf_draw.h),
@@ -84,13 +85,14 @@ static void draw_shape(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr,
         const float pixels = r * (sx > sy ? sx : sy) * wgf_render_get_dpi_scale();
         n = 8;
         if (pixels > CIRCLE_TOLERANCE) {
-            const float step = 2.0f * acosf(1.0f - CIRCLE_TOLERANCE / pixels);
+            const float step = 2.0f * draw_acos(1.0f - CIRCLE_TOLERANCE / pixels);
             n = step > 0.0f ? (int)ceilf(TAU / step) : MAX_POINTS;
         }
         n = n < 8 ? 8 : (n > 512 ? 512 : n);
         for (i = 0; i < n; i++) {
-            local[2 * i] = cosf(TAU * (float)i / (float)n) * r;
-            local[2 * i + 1] = sinf(TAU * (float)i / (float)n) * r;
+            const wgf_vec2_t turn = draw_cos_sin(TAU * (float)i / (float)n);
+            local[2 * i] = turn.x * r;
+            local[2 * i + 1] = turn.y * r;
         }
     } else if (shape->kind == WGF_SHAPE2D_KIND_POLYGON) {
         n = shape->point_floats / 2;
