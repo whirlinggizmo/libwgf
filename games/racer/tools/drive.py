@@ -185,15 +185,21 @@ def rebase(path, pressed_at, ready_at):
     frame when none were in flight as it started -- and the racer's start loads its files as
     asset ensures, which core's count doesn't hold -- so the grid comes at a frame that takes
     real time to reach, and only it is the same point on every run. Each input after it keeps
-    its distance from it; the lines at 0 (a pad's connection) stay. Returns the shift taken
-    off the recording's frames (and the telemetry's frame `ready_at` was, in the recording's)."""
-    lines = open(path, encoding='utf-8').read().splitlines()
+    its distance from it; the lines at 0 (a pad's connection) stay. The recorder's own wait
+    for the loads (`at 0 wait core.loading == 0`, written when some were in flight as it
+    started) goes: the grid's wait takes its place, and the two can't both hold the count --
+    the track streams as the car goes, so a replay's loads can end after its grid came, and
+    the inputs would then land that many frames late (two, on a car still settling on its
+    springs, were a lap that missed its checkpoints). Returns the shift taken off the
+    recording's frames (and the telemetry's frame `ready_at` was, in the recording's)."""
+    lines = [l for l in open(path, encoding='utf-8').read().splitlines()
+             if 'wait core.loading' not in l and not l.startswith("# its start's loads were in flight")]
     first_key = min(int(l.split()[1]) for l in lines if l.startswith('at ') and ' key ' in l)
     ready = ready_at + (first_key - pressed_at)  # the grid's first frame, in the recording's count
     shift = ready - 1
     out = []
     for line in lines:
-        if line.startswith('at ') and 'wait core.loading' not in line:
+        if line.startswith('at '):
             words = line.split(' ', 2)
             frame = int(words[1])
             if frame >= ready:
