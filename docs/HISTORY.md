@@ -1040,6 +1040,10 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## Differing size rows brought to match: app-touch and gfx-text3d (2026-11-21)
+
+The size table's "differs" rows are programs written before libwgf had what libwgt's use; with picking in, two are libwgt's programs again. app-touch's coin is the pointer's (`wgf_pointer_set_interactive`, `wgf_pointer_get_held`, the logo made unpickable), not hit-tested by hand; gfx-text3d has libwgt's hover highlight, its P key (the cube pickable or not), and its readout. Both are "same" rows now, held to their targets: app-touch 125.6 to 136.6 KB of gzip (113.4 of brotli) against a target of 191.4, gfx-text3d 161.9 to 171.6 (140.9) against 180.2.
+
 ## The text field in a browser: the paste block undone, a click with no move (2026-11-21)
 
 The text field's entry said its paste fix was "not yet seen in a browser". Seen now, with the browser's own input events (its debugging protocol's mouse, keys, a real Ctrl+V of the clipboard, and text inserted into the focused input), on a page of one field:

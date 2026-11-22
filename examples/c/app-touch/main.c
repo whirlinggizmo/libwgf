@@ -10,6 +10,7 @@
 #include "wgf_input.h"
 #include "wgf_keyboard.h"
 #include "wgf_mouse.h"
+#include "wgf_pointer.h"
 #include "wgf_actor.h"
 #include "wgf_render.h"
 #include "wgf_resource.h"
@@ -30,11 +31,6 @@
  *
  * libwgt's app-touch (wgrender's touch) done 1:1 for the size table. The differences:
  *   - the title says libwgf where libwgt's says libwgt;
- *   - libwgf has no pointer picking (libwgt's wgt_pointer_set_interactive and
- *     wgt_pointer_get_held, and wgt_node_set_pickable), so the coin is picked by hand
- *     as wgrender's touch picks it: a left press within its 96-pixel square starts the
- *     drag, and the button up ends it. The logo is then never picked, as libwgt's,
- *     made unpickable, isn't;
  *   - outlines take a thickness here, 1 logical pixel: libwgt's are GL lines of one
  *     pixel;
  *   - circles get enough segments for their size, where libwgt's have 36. */
@@ -47,7 +43,6 @@
 
 static struct {
     wgf_actor_t stage, logo, coin;
-    bool coin_held; /* a left press that started on the coin is held */
     float logo_x, logo_y, logo_scale, logo_rotation;
     float lifted[FINGERS][3]; /* x, y, fade (1 down to 0) where a finger lifted */
     wgf_color_t colors[FINGERS];
@@ -87,15 +82,9 @@ static void frame(void *user)
     wgf_actor_set_scale(g.logo, g.logo_scale, g.logo_scale, 1);
     wgf_actor_set_rotation(g.logo, 0, 0, g.logo_rotation);
 
-    /* the pointer (the mouse, or one finger) drags the coin: picked where it was before this frame moved it */
-    if (wgf_mouse_is_pressed(WGF_MOUSE_BUTTON_LEFT)) {
-        const wgf_vec3_t coin = wgf_actor_get_position(g.coin);
-        g.coin_held = fabsf(mouse.x - coin.x) < COIN * 0.5f && fabsf(mouse.y - coin.y) < COIN * 0.5f;
-    } else if (!wgf_mouse_is_down(WGF_MOUSE_BUTTON_LEFT)) {
-        g.coin_held = false;
-    }
-    if (g.coin_held) wgf_actor_set_position(g.coin, mouse.x, mouse.y, 0);
-    wgf_sprite_set_tint(g.coin, g.coin_held ? wgf_color_make(255, 230, 150, 255) : WGF_COLOR_WHITE);
+    /* the pointer (the mouse, or one finger) drags the coin */
+    if (wgf_pointer_get_held() == g.coin) wgf_actor_set_position(g.coin, mouse.x, mouse.y, 0);
+    wgf_sprite_set_tint(g.coin, wgf_pointer_get_held() == g.coin ? wgf_color_make(255, 230, 150, 255) : WGF_COLOR_WHITE);
 
     /* where fingers lifted: a ring that fades */
     for (i = 0; i < FINGERS; i++) g.lifted[i][2] = fmaxf(g.lifted[i][2] - 0.033f, 0.0f);
@@ -149,9 +138,11 @@ static void init(void *user)
     tiles = wgf_texture_create(TILES_PATH);
     wgf_render_set_clear_color(wgf_color_make(22, 25, 33, 255));
     g.stage = wgf_stage2d_create();
+    wgf_pointer_set_interactive(g.stage, true);
 
     g.logo = wgf_sprite_create(logo_texture);
     wgf_sprite_set_size(g.logo, 240, 240);
+    wgf_actor_set_pickable(g.logo, false); /* the pointer drags the coin, not the logo */
     wgf_actor_set_parent(g.logo, g.stage);
     g.logo_x = (float)wgf_window_get_width() * 0.5f;
     g.logo_y = (float)wgf_window_get_height() * 0.45f;

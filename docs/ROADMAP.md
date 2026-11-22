@@ -32,7 +32,7 @@ libwgf is a framework, not one game's library: a game jam must not have to stop 
 
 In order of what a jam game hits first:
 
-- **Picking and the pointer, the rest** (picking and the pointer over actors are in: HISTORY.md, "Parity: picking, the pointer over actors, rounded rectangles"): app-touch, gfx-pick, and gfx-tilemap become same rows.
+- **Picking and the pointer, the rest** (picking and the pointer over actors are in: HISTORY.md, "Parity: picking, the pointer over actors, rounded rectangles"): gfx-pick and gfx-tilemap become same rows (app-touch and gfx-text3d are: HISTORY.md, "Differing size rows brought to match").
 - **Shaders warmed before the first frame** (wgrender-c's open task: a first frame of about 220 ms on WebGL2 while its pipelines compile), so a game's first impression isn't a stall.
 - **2D drawing:** borders, text slices drawn and measured without copying, and clip actors (scrolling regions).
 - **Layered stages:** a stage drawn over another with the depth cleared (a weapon over the world).
