@@ -1042,7 +1042,7 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 
 ## cJSON 1.7.19, stb_truetype 1.28, stb_image 2.34, dr_libs at e381981 (2026-11-22)
 
-The small dependencies brought up to date, each copied unchanged as `deps/README.md` says. cJSON v1.7.19 (from v1.7.18: a NULL check in detaching an item, an overlap check in setting a string's value, a depth limit in duplicating, number parsing fixes). stb_truetype v1.28 and stb_image v2.34 (from v1.26 and v2.30: fixes, mostly for malformed files). dr_wav v0.14.7 and dr_mp3 v0.7.5 at dr_libs master e381981 (from dfe8377). No change of libwgf's was needed. The tests pass natively, in wasm, and under the address and undefined-behavior sanitizers; every size is within its baseline (the racer 0.2 KB of gzip more).
+The small dependencies brought up to date, each copied unchanged as `deps/README.md` says. cJSON v1.7.19 (from v1.7.18: a NULL check in detaching an item, an overlap check in setting a string's value, a depth limit in duplicating, number parsing fixes). stb_truetype v1.28 and stb_image v2.34 (from v1.26 and v2.30: bug fixes, as their change logs say, and in stb_truetype vertical layout, underlines, and a font's name, none of which libwgf calls). dr_wav v0.14.7 and dr_mp3 v0.7.5 at dr_libs master e381981 (from dfe8377). No change of libwgf's was needed. The tests pass natively, in wasm, and under the address and undefined-behavior sanitizers; every size is within its baseline (the racer 0.2 KB of gzip more).
 
 ## Jolt Physics 5.7.0 (2026-11-22)
 
