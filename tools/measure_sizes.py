@@ -67,49 +67,49 @@ ROWS = [
     ('app-tick', 'app-tick', 'tick', 'same', ''),
     ('app-gamepad', 'app-gamepad', 'gamepad', 'same', ''),
     ('app-touch', 'app-touch', 'touch', 'differs',
-     'libwgf has no pointer picking: the coin is hit-tested by hand, where libwgt links its pointer and picking'),
+     'written before libwgf had pointer picking: the coin is hit-tested by hand, where libwgt links its pointer and picking'),
     ('gfx-font', 'gfx-font', 'font', 'same', ''),
     ('gfx-hello3d', 'gfx-hello3d', 'hello3d', 'same', ''),
     ('gfx-meshes', None, 'meshes', 'same', ''),
     ('gfx-model', 'gfx-model', 'model', 'differs',
-     'libwgf has no skinning or animation yet: a toy car of its own (tools/gen_model.py) in place of the animated '
+     'written before libwgf had skinning and animation (gfx-skinning shows them): a toy car of its own (tools/gen_model.py) in place of the animated '
      'character'),
     ('gfx-materials', None, 'materials', 'differs',
-     'libwgf has no skinning yet: a gold torus in place of the animated character, and a generated sphere in place '
+     'written before libwgf had skinning: a gold torus in place of the animated character, and a generated sphere in place '
      'of the file\'s'),
     ('gfx-lights', None, 'lights', 'differs',
-     'libwgf has no skinning or lit sprites yet: generated capsules in place of the animated characters, and no lit '
+     'written before libwgf had skinning, and it has no lit sprites yet: generated capsules in place of the animated characters, and no lit '
      'billboards'),
     ('gfx-shadows', 'gfx-shadows', 'shadows', 'differs',
-     'libwgf has no skinning or animation yet: the toy car in place of the walking character, and its readout fixed '
+     'written before libwgf had skinning and animation: the toy car in place of the walking character, and its readout fixed '
      'labels with no formatting'),
     ('gfx-instancing', 'gfx-instancing', 'instancing', 'differs',
-     'libwgf has no skinning or animation yet: six of the toy car in place of the walking characters, and its readout '
+     'written before libwgf had skinning and animation: six of the toy car in place of the walking characters, and its readout '
      'fixed labels with no formatting'),
     ('gfx-environment', 'gfx-environment', 'environment', 'differs',
-     'libwgf has no skinning or animation yet: the toy car in place of the walking character, and its readout '
+     'written before libwgf had skinning and animation: the toy car in place of the walking character, and its readout '
      'fixed labels with no formatting'),
     ('gfx-textures', 'gfx-textures', 'textures', 'same', ''),
     ('gfx-render-target', 'gfx-render-target', 'render_target', 'differs',
-     'libwgf has no skinning or animation yet: the toy car drives the circle in place of the walking character'),
+     'written before libwgf had skinning and animation: the toy car drives the circle in place of the walking character'),
     ('gfx-postprocess', 'gfx-postprocess', 'postprocess', 'differs',
-     'libwgf has no skinning or animation yet: the toy car in place of the walking character'),
+     'written before libwgf had skinning and animation: the toy car in place of the walking character'),
     ('gfx-shaders', 'gfx-shaders', 'shaders', 'differs',
-     'libwgf has no skinning, animation, or custom sprite materials yet: the toon shading on the toy car in place of '
+     'written before libwgf had skinning and animation, and it has no custom sprite materials yet: the toon shading on the toy car in place of '
      'the walking character, and the logo\'s sprite effects left out'),
     ('gfx-sprite3d', 'gfx-sprite3d', 'sprite3d', 'same', ''),
     ('gfx-text3d', 'gfx-text3d', 'text3d', 'differs',
-     'libwgf has no picking yet: the hover highlight and the cube made pickable or not are left out'),
+     'written before libwgf had picking: the hover highlight and the cube made pickable or not are left out'),
     ('gfx-sprite2d', 'gfx-sprite2d', 'sprite2d', 'differs',
-     'libwgf has no 3D and no alpha picking: the animated model behind the sprites, its lights, and picking are left out'),
+     'written before libwgf had 3D and picking: the animated model behind the sprites, its lights, and picking are left out'),
     ('gfx-particles', 'gfx-particles', 'particles', 'same', ''),
     ('gfx-tilemap', 'gfx-tilemap', 'tilemap', 'differs',
-     'libwgf has no picking: a 2D stage and a 2D camera (written before its 3D sprites), coins hit-tested by hand'),
+     'written before libwgf had picking: a 2D stage and a 2D camera (written before its 3D sprites), coins hit-tested by hand'),
     ('audio-music', 'audio-music', 'audio', 'same', ''),
     ('asset-fetch', None, 'fetch', 'same', ''),
     ('asset-force-fetch', None, 'force_fetch', 'same', ''),
     ('asset-loading', None, 'loading', 'differs',
-     'libwgf has no 3D: textures and sounds of like weight in place of wgrender-c\'s models and environments'),
+     'written before libwgf had 3D: textures and sounds of like weight in place of wgrender-c\'s models and environments'),
 ]
 # A "same" row's target: libwgt's size, gzip, and the autopilot runner's cost, which
 # every libwgf program carries on purpose, so a shipped build can be played through
@@ -330,8 +330,8 @@ def markdown(baseline):
              'A **same** row is the same program in each library, and libwgf\'s is held to libwgt\'s size and the '
              f'autopilot runner\'s {RUNNER_COST / 1024:g} KB and the presentation\'s {PRESENTATION_COST / 1024:g} KB '
              '(the target); a **differs** row\'s libwgf program '
-             'leaves out what libwgf lacks, so its size is not a saving: its reason is linked, and it turns same as '
-             'the milestone that brings what it lacks does.', '',
+             'leaves out what libwgf lacked when the program was written (most of it built since: the programs are '
+             'brought to match in ROADMAP.md\'s milestone 2.5), so its size is not a saving: its reason is linked.', '',
              '| program | | libwgf | target | libwgt | wgrender-c |', '|---|---|---:|---:|---:|---:|']
 
     def cell(sizes):
