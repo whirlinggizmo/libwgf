@@ -141,7 +141,7 @@ class Main {
 				hash = (hash ^ haxe.io.FPHelper.floatToI32(v)) * 16777619;
 			i += 7;
 		}
-		expect(StringTools.hex(hash, 8) == "FDD87A04", 'trigonometry: C\'s hash on every target (${StringTools.hex(hash, 8)})');
+		expect(StringTools.hex(hash, 8) == "16C3845C", 'trigonometry: C\'s hash on every target (${StringTools.hex(hash, 8)})');
 	}
 
 	static function tick():Void {}

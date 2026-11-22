@@ -52,7 +52,7 @@ for (let i = -200000; i <= 200000; i += 7) {
             && mine[2] === c('wgf_trig_atan2', a, 0.7) && mine[4] === c('wgf_trig_acos', Math.fround(a / 20));
     }
 }
-expect(hash === 0xFDD87A04, `trigonometry worked in JS: C's hash (${hash.toString(16)})`);
+expect(hash === 0x16C3845C, `trigonometry worked in JS: C's hash (${hash.toString(16)})`);
 for (const x of [0, -0, 0.5, -3.75, 1e6, Infinity, NaN]) {
     for (const name of ['wgf_trig_sin', 'wgf_trig_cos', 'wgf_trig_tan']) agree &&= Object.is(wgf[name](x), c(name, x));
 }

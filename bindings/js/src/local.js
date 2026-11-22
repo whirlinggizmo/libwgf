@@ -84,48 +84,44 @@ export function wgf_color_lerp(from, to, t) {
 const LOCAL_PI = 3.14159265358979323846;
 
 function localSinReduced(r) {
-    const r2 = r * r;
-    let p = 2.8114572543455206e-15;
-    p = p * r2; p = p - 7.6471637318198164e-13;
-    p = p * r2; p = p + 1.6059043836821613e-10;
-    p = p * r2; p = p - 2.5052108385441720e-08;
-    p = p * r2; p = p + 2.7557319223985893e-06;
-    p = p * r2; p = p - 1.9841269841269841e-04;
-    p = p * r2; p = p + 8.3333333333333333e-03;
-    p = p * r2; p = p - 1.6666666666666667e-01;
-    p = p * r2; p = p * r;
+    const z = r * r, zz = z * z;
+    let low = z * 0.008333331873837089, high = z * 2.7249864655139585e-06;
+    low = low - 0.16666666663853044;
+    high = high - 0.00019840086263755443;
+    high = high * zz;
+    let p = low + high;
+    low = r * z;
+    p = p * low;
     return r + p;
 }
 
 function localCosReduced(r) {
-    const r2 = r * r;
-    let p = -1.5619206968586225e-16;
-    p = p * r2; p = p + 4.7794773323873853e-14;
-    p = p * r2; p = p - 1.1470745597729725e-11;
-    p = p * r2; p = p + 2.0876756987868099e-09;
-    p = p * r2; p = p - 2.7557319223985888e-07;
-    p = p * r2; p = p + 2.4801587301587302e-05;
-    p = p * r2; p = p - 1.3888888888888889e-03;
-    p = p * r2; p = p + 4.1666666666666667e-02;
-    p = p * r2; p = p - 0.5;
-    p = p * r2;
+    const z = r * r, zz = z * z;
+    let low = z * 0.041666666637372694, high = z * 2.479986150250612e-05;
+    const top = zz * -2.7237076731325097e-07;
+    low = low - 0.49999999999963857;
+    high = high - 0.0013888885089126252;
+    high = high + top;
+    high = high * zz;
+    let p = low + high;
+    p = p * z;
     return 1 + p;
 }
 
 // sin (cosine false) or cos of x, in double.
 function localSinOrCos(x, cosine) {
-    const k = Math.floor(x * 0.63661977236758134308 + 0.5);
+    if (x === 0) return cosine ? 1 : x; // a zero's sine keeps its sign, as C's
+    // x * 2/pi rounded to the nearest integer, a tie to even, as C's: by 1.5 * 2^52 below 2^51
+    const v = x * 0.63661977236758134308;
+    const k = v > -2251799813685248 && v < 2251799813685248 ? (v + 6755399441055744) - 6755399441055744
+        : Math.floor(v + 0.5);
     const quadrant = k - 4 * Math.floor(k * 0.25);
     let r = x - k * 1.57079632673412561417e+00;
     r = r - k * 6.07710050630396597660e-11;
     r = r - k * 2.02226624879595063154e-21;
-    const s = localSinReduced(r), c = localCosReduced(r);
-    switch ((quadrant + (cosine ? 1 : 0)) & 3) {
-        case 0: return s;
-        case 1: return c;
-        case 2: return -s;
-        default: return -c;
-    }
+    const q = (quadrant + (cosine ? 1 : 0)) & 3; // the one polynomial its quadrant needs
+    const value = (q & 1) ? localCosReduced(r) : localSinReduced(r);
+    return (q & 2) ? -value : value;
 }
 
 function localAtanReduced(x) {

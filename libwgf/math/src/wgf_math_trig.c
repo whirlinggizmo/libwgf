@@ -1,13 +1,15 @@
 #include "wgf_trig.h"
 
 #include <math.h>
+#include <stdint.h>
+#include <string.h>
 
 /* Trigonometry the same to the bit on every target (wgf_trig.h): each worked in double, with
  * no library call but sqrt and floor (both exact everywhere), and rounded to float once: a
  * reduction to within pi/4 of a multiple of pi/2 (pi/2 in three parts, fdlibm's, so the
- * reduction is exact well past any angle a game turns through), then a Taylor polynomial
- * whose next term is below a double's precision; atan reduced to |x| <= tan(pi/32) the same
- * way. Each step is its own statement, so no compiler fuses a multiply and an add into an
+ * reduction is exact well past any angle a game turns through), then a polynomial fitted
+ * to a float's precision (the C library's way: within an ulp, and nearly always the nearest
+ * float); atan reduced to |x| <= tan(pi/32), its polynomial to a double's precision. Each step is its own statement, so no compiler fuses a multiply and an add into an
  * FMA, which a target without one would round differently; compiled here once, with
  * libwgf's flags, rather than inlined into every caller. No C library trigonometry is
  * called, so a page whose own calls are these links none. */
@@ -27,90 +29,101 @@ float wgf_trig_acos(float x) { return acosf(x); }
 
 #else
 
-/* sin and cos of |r| <= pi/4, each a polynomial to r^17 or r^18. */
+/* sin and cos of |r| <= pi/4, as r + r^3 S(r^2) and 1 + r^2 C(r^2): polynomials fitted at
+ * Chebyshev nodes to a relative error of 2e-11 (sin) and 3e-13 (cos), far inside a float's
+ * 6e-8, each worked as two halves (Estrin's way) so the two run side by side. */
 static double sin_reduced(double r)
 {
-    const double r2 = r * r;
-    double p = 2.8114572543455206e-15; /*  1/17! */
-    p = p * r2;
-    p = p - 7.6471637318198164e-13; /* -1/15! */
-    p = p * r2;
-    p = p + 1.6059043836821613e-10; /*  1/13! */
-    p = p * r2;
-    p = p - 2.5052108385441720e-08; /* -1/11! */
-    p = p * r2;
-    p = p + 2.7557319223985893e-06; /*  1/9! */
-    p = p * r2;
-    p = p - 1.9841269841269841e-04; /* -1/7! */
-    p = p * r2;
-    p = p + 8.3333333333333333e-03; /*  1/5! */
-    p = p * r2;
-    p = p - 1.6666666666666667e-01; /* -1/3! */
-    p = p * r2;
-    p = p * r;
+    const double z = r * r, zz = z * z;
+    double low = z * 0.008333331873837089, high = z * 2.7249864655139585e-06, p;
+    low = low - 0.16666666663853044;
+    high = high - 0.00019840086263755443;
+    high = high * zz;
+    p = low + high;
+    low = r * z;
+    p = p * low;
     return r + p;
 }
 
 static double cos_reduced(double r)
 {
-    const double r2 = r * r;
-    double p = -1.5619206968586225e-16; /* -1/18! */
-    p = p * r2;
-    p = p + 4.7794773323873853e-14; /*  1/16! */
-    p = p * r2;
-    p = p - 1.1470745597729725e-11; /* -1/14! */
-    p = p * r2;
-    p = p + 2.0876756987868099e-09; /*  1/12! */
-    p = p * r2;
-    p = p - 2.7557319223985888e-07; /* -1/10! */
-    p = p * r2;
-    p = p + 2.4801587301587302e-05; /*  1/8! */
-    p = p * r2;
-    p = p - 1.3888888888888889e-03; /* -1/6! */
-    p = p * r2;
-    p = p + 4.1666666666666667e-02; /*  1/4! */
-    p = p * r2;
-    p = p - 0.5;
-    p = p * r2;
+    const double z = r * r, zz = z * z;
+    double low = z * 0.041666666637372694, high = z * 2.479986150250612e-05, top = zz * -2.7237076731325097e-07, p;
+    low = low - 0.49999999999963857;
+    high = high - 0.0013888885089126252;
+    high = high + top;
+    high = high * zz;
+    p = low + high;
+    p = p * z;
     return 1.0 + p;
+}
+
+/* x = k * pi/2 + r, |r| <= pi/4: r into `r`, and k's quadrant (k mod 4) returned. pi/2 in
+ * three parts, each product exact for |k| < 2^20. k is x * 2/pi rounded to the nearest
+ * integer by adding and taking away 1.5 * 2^52, where a double's last bit is 1 (exact in any
+ * IEEE arithmetic, a tie to even), and k's low bits are then that sum's; no conversion to an
+ * integer, which wasm checks, nor floor, a library call on some targets. Past 2^51 (an angle
+ * past 3e15, long past meaning), by floor. */
+static int reduce(double x, double *r)
+{
+    const double pio2_1 = 1.57079632673412561417e+00, pio2_2 = 6.07710050630396597660e-11;
+    const double pio2_3 = 2.02226624879595063154e-21;
+    const double shift = 6755399441055744.0; /* 1.5 * 2^52 */
+    const double v = x * 0.63661977236758134308;
+    double k, rest;
+    int quadrant;
+    if (v > -2251799813685248.0 && v < 2251799813685248.0) { /* |v| < 2^51 */
+        const double shifted = v + shift;
+        uint64_t bits;
+        memcpy(&bits, &shifted, sizeof(bits));
+        k = shifted - shift;
+        quadrant = (int)(bits & 3u);
+    } else {
+        k = floor(v + 0.5);
+        quadrant = (int)(k - 4.0 * floor(k * 0.25));
+    }
+    rest = x - k * pio2_1;
+    rest = rest - k * pio2_2;
+    rest = rest - k * pio2_3;
+    *r = rest;
+    return quadrant;
 }
 
 /* sin and cos of `x`, in double, alike on every target. */
 static void sin_cos(double x, double *sine, double *cosine)
 {
-    /* x = k * pi/2 + r: pi/2 in three parts, each product exact for |k| < 2^20 */
-    const double pio2_1 = 1.57079632673412561417e+00, pio2_2 = 6.07710050630396597660e-11;
-    const double pio2_3 = 2.02226624879595063154e-21;
-    const double k = floor(x * 0.63661977236758134308 + 0.5); /* the nearest multiple: x * 2/pi, rounded */
-    const double quadrant = k - 4.0 * floor(k * 0.25);    /* 0..3, exact */
-    double r = x - k * pio2_1;
-    double s, c;
-    r = r - k * pio2_2;
-    r = r - k * pio2_3;
-    s = sin_reduced(r);
-    c = cos_reduced(r);
-    switch ((int)quadrant) {
+    double r;
+    const int quadrant = reduce(x, &r);
+    const double s = sin_reduced(r), c = cos_reduced(r);
+    switch (quadrant) {
         case 0: *sine = s; *cosine = c; break;
         case 1: *sine = c; *cosine = -s; break;
         case 2: *sine = -s; *cosine = -c; break;
         default: *sine = -c; *cosine = s; break;
     }
+    if (x == 0.0) *sine = x; /* a zero's sine keeps its sign, as sinf's */
 }
 
+/* Each alone works the one polynomial its quadrant needs: the same bits as sin_cos's. */
 float wgf_trig_sin(float x)
 {
-    double s, c;
+    double r, v;
+    int quadrant;
     if (!isfinite(x)) return x - x; /* NaN, as sinf's */
-    sin_cos((double)x, &s, &c);
-    return (float)s;
+    if (x == 0.0f) return x;         /* a zero keeps its sign */
+    quadrant = reduce((double)x, &r);
+    v = (quadrant & 1) ? cos_reduced(r) : sin_reduced(r);
+    return (float)((quadrant & 2) ? -v : v);
 }
 
 float wgf_trig_cos(float x)
 {
-    double s, c;
+    double r, v;
+    int quadrant;
     if (!isfinite(x)) return x - x;
-    sin_cos((double)x, &s, &c);
-    return (float)c;
+    quadrant = reduce((double)x, &r);
+    v = (quadrant & 1) ? sin_reduced(r) : cos_reduced(r);
+    return (float)(((quadrant + 1) & 2) ? -v : v);
 }
 
 wgf_vec2_t wgf_trig_cos_sin(float x)

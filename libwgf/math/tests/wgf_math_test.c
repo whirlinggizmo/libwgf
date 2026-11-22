@@ -205,7 +205,7 @@ int main(void)
         }
         if (getenv("WGF_TEST_SHOW")) printf("trig hash %08x, worst %d ulp\n", (unsigned)hash, worst);
 #ifndef WGF_PRIV_STANDARD_TRIG /* a build with WGF_STANDARD_TRIG: the C library's bits, the target's */
-        expect(hash == 0xFDD87A04u, "the rotations' trigonometry: the same bits on every target");
+        expect(hash == 0x16C3845Cu, "the rotations' trigonometry: the same bits on every target");
 #endif
         expect(worst <= 1, "within an ulp of the C library's");
         expect(together && isnan(wgf_trig_cos_sin(INFINITY).x) && isnan(wgf_trig_cos_sin(NAN).y),
