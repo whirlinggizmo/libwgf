@@ -135,30 +135,30 @@ Each game's web export flown by its autopilot in a browser (`tools/bench/measure
 
 ## Actors
 
-What an actor costs (`tools/bench/measure_actors.py`, the program `tools/bench/actors/main.c`, whose header says what each row and number is): the heap's growth an actor, its pools' slack included, and the frames' own cost an actor a frame (a find's rows: a find, or an actor found), the median of 5 runs, on 13th Gen Intel(R) Core(TM) i9-13900HX, `linux-x64-release-headless`, 7dbb0fe 2026-11-15. A check fails a row past its bytes by 5%, or past its time by twice the run's own speed against these (the median of its rows' ratios), and on this machine past 1.5 times its time. Before: the same program on the nodes and entities actors replaced, 8f3a822 2026-10-07 (docs/HISTORY.md, "One kind of object, the actor"); a dash where there was no such call. The store- rows are the ecs's store on its own (`ecs/bench/wgf_ecs_store_bench.c`), each storage's worst case among them. The flecs columns: the same on the store step 3b replaced (docs/HISTORY.md, "flecs or sparse sets, measured"), recorded before it went.
+What an actor costs (`tools/bench/measure_actors.py`, the program `tools/bench/actors/main.c`, whose header says what each row and number is): the heap's growth an actor, its pools' slack included, and the frames' own cost an actor a frame (a find's rows: a find, or an actor found), the median of 5 runs, on 13th Gen Intel(R) Core(TM) i9-13900HX, `linux-x64-release-headless`, 334e9c2 2026-11-22. A check fails a row past its bytes by 5%, or past its time by twice the run's own speed against these (the median of its rows' ratios), and on this machine past 1.5 times its time. Before: the same program on the nodes and entities actors replaced, 8f3a822 2026-10-07 (docs/HISTORY.md, "One kind of object, the actor"); a dash where there was no such call. The store- rows are the ecs's store on its own (`ecs/bench/wgf_ecs_store_bench.c`), each storage's worst case among them. The flecs columns: the same on the store step 3b replaced (docs/HISTORY.md, "flecs or sparse sets, measured"), recorded before it went.
 
 | row | bytes | ns | flecs: bytes | flecs: ns | before: bytes | before: ns |
 |---|---:|---:|---:|---:|---:|---:|
-| 10k-churn | 933.6 | 59.81 | 929.1 | 73.78 | 988.7 | 565.17 |
-| 10k-lookup | 856.2 | 50.24 | 864.8 | 63.43 | 1020.6 | 82.39 |
-| 10k-lookup-component | - | 38.52 | - | 40.76 | - | - |
-| 10k-lookup-name | - | 33.30 | - | 34.90 | - | 218006.20 |
-| 10k-lookup-path | - | 18.90 | - | 24.70 | - | 74.60 |
-| 10k-moving-behaviors | 933.6 | 51.79 | 929.1 | 64.69 | 988.7 | 64.82 |
-| 10k-moving-deep | 817.1 | 59.90 | 825.7 | 70.33 | 1013.3 | 72.41 |
-| 10k-moving-flat | 792.6 | 48.89 | 801.1 | 59.23 | 988.7 | 64.91 |
-| 10k-static-flat | 499.0 | 4.15 | 500.2 | 4.32 | 474.0 | 4.18 |
-| 10k-toggle | 792.6 | 70.72 | 801.1 | 168.91 | - | - |
-| 50k-moving-behaviors | 781.8 | 57.31 | 777.8 | 69.04 | 787.4 | 68.77 |
-| 50k-moving-deep | 669.2 | 60.63 | 675.7 | 73.04 | 813.3 | 77.76 |
-| 50k-moving-flat | 643.3 | 49.73 | 649.8 | 61.70 | 787.4 | 69.16 |
-| 50k-static-flat | 399.8 | 4.59 | 399.8 | 5.09 | 378.8 | 4.42 |
-| store-get | - | 2.85 | - | 15.95 | - | - |
+| 10k-churn | 894.4 | 68.37 | 929.1 | 73.78 | 988.7 | 565.17 |
+| 10k-lookup | 817.0 | 54.79 | 864.8 | 63.43 | 1020.6 | 82.39 |
+| 10k-lookup-component | - | 41.60 | - | 40.76 | - | - |
+| 10k-lookup-name | - | 35.40 | - | 34.90 | - | 218006.20 |
+| 10k-lookup-path | - | 17.40 | - | 24.70 | - | 74.60 |
+| 10k-moving-behaviors | 894.4 | 58.68 | 929.1 | 64.69 | 988.7 | 64.82 |
+| 10k-moving-deep | 777.9 | 65.71 | 825.7 | 70.33 | 1013.3 | 72.41 |
+| 10k-moving-flat | 753.4 | 53.81 | 801.1 | 59.23 | 988.7 | 64.91 |
+| 10k-static-flat | 461.0 | 4.21 | 500.2 | 4.32 | 474.0 | 4.18 |
+| 10k-toggle | 753.4 | 80.66 | 801.1 | 168.91 | - | - |
+| 50k-moving-behaviors | 750.3 | 62.19 | 777.8 | 69.04 | 787.4 | 68.77 |
+| 50k-moving-deep | 637.8 | 67.41 | 675.7 | 73.04 | 813.3 | 77.76 |
+| 50k-moving-flat | 611.9 | 55.70 | 649.8 | 61.70 | 787.4 | 69.16 |
+| 50k-static-flat | 368.3 | 5.06 | 399.8 | 5.09 | 378.8 | 4.42 |
+| store-get | - | 2.87 | - | 15.95 | - | - |
 | store-intersect | - | 288.49 | - | 4.77 | - | - |
-| store-spawn | - | 24.29 | - | 141.28 | - | - |
-| store-toggle | - | 5.05 | - | 75.01 | - | - |
-| store-walk | - | 2.91 | - | 3.83 | - | - |
-| store-walk-mixed | - | 2.90 | - | 3.85 | - | - |
+| store-spawn | - | 25.12 | - | 141.28 | - | - |
+| store-toggle | - | 5.03 | - | 75.01 | - | - |
+| store-walk | - | 2.97 | - | 3.83 | - | - |
+| store-walk-mixed | - | 2.95 | - | 3.85 | - | - |
 
 ## Every libwgf program
 

@@ -55,7 +55,6 @@ wgf_actor_t wgf_gfx_priv_actor_create(wgf_actor_kind_t type)
     actor_ptr->type = type;
     actor_ptr->rotation = wgf_quat_identity();
     actor_ptr->scale = wgf_vec3_make(1.0f, 1.0f, 1.0f);
-    actor_ptr->local_dirty = true;
     actor_ptr->world_dirty = true;
     actor_ptr->enabled = true;
     actor_ptr->visible = true;
@@ -95,16 +94,13 @@ static wgf_mat4_t trs(wgf_vec3_t p, wgf_quat_t q, wgf_vec3_t k)
     return wgf_mat4_from_trs(p, q, k);
 }
 
-wgf_mat4_t wgf_gfx_priv_actor_get_local_matrix(wgf_gfx_priv_actor_t *actor_ptr)
+/* Worked each time, not kept: it is read as the world matrix is made again, which is kept. */
+wgf_mat4_t wgf_gfx_priv_actor_get_local_matrix(const wgf_gfx_priv_actor_t *actor_ptr)
 {
-    if (actor_ptr->local_dirty) {
-        wgf_vec3_t p, k;
-        wgf_quat_t q;
-        drawn_transform(actor_ptr, &p, &q, &k);
-        actor_ptr->local = trs(p, q, k);
-        actor_ptr->local_dirty = false;
-    }
-    return actor_ptr->local;
+    wgf_vec3_t p, k;
+    wgf_quat_t q;
+    drawn_transform(actor_ptr, &p, &q, &k);
+    return trs(p, q, k);
 }
 
 /* Its world matrix from the simulation's transforms, its own and every one above it: the
@@ -160,11 +156,10 @@ static void mark_world_dirty(wgf_actor_t actor)
     if (todo != stack) free(todo);
 }
 
-/* `actor_ptr` (`actor`'s record) moved: its local matrix out of date, and its world and
- * everything under it. An actor with no children, as most moved ones, is one flag. */
+/* `actor_ptr` (`actor`'s record) moved: its world matrix out of date, and everything
+ * under it. An actor with no children, as most moved ones, is one flag. */
 static void moved(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr)
 {
-    actor_ptr->local_dirty = true;
     if (actor_ptr->live_children == 0) {
         actor_ptr->world_dirty = true;
         return;

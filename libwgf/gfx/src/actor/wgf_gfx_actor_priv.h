@@ -174,12 +174,10 @@ typedef struct wgf_gfx_priv_actor_t {
     wgf_vec3_t position;
     wgf_quat_t rotation; /* a quaternion; the public calls give and take angles */
     wgf_vec3_t scale;
-    /* The transforms as matrices, kept until something changes them: the local one
-     * when the actor's own transform changes, the world one when it or anything above
-     * it does. An actor whose world is dirty has every actor under it dirty too. */
-    wgf_mat4_t local;
+    /* Its world transform as a matrix, kept until it or anything above it changes. An
+     * actor whose world is dirty has every actor under it dirty too. Its local one isn't
+     * kept: it is only read to make this one (64 bytes an actor). */
     wgf_mat4_t world;
-    bool local_dirty;
     bool world_dirty;
     bool enabled;
     bool visible;
@@ -250,9 +248,9 @@ wgf_gfx_priv_actor_t *wgf_gfx_priv_actor_of_silently(wgf_actor_t actor);
  * it holds still. */
 bool wgf_gfx_priv_actor_is_frozen(wgf_actor_t actor);
 
-/* The actor's own transform, and its world transform (every parent's, composed),
- * each rebuilt only when it is dirty. */
-wgf_mat4_t wgf_gfx_priv_actor_get_local_matrix(wgf_gfx_priv_actor_t *actor_ptr);
+/* The actor's own transform, worked each time, and its world transform (every parent's,
+ * composed), rebuilt only when it is dirty. */
+wgf_mat4_t wgf_gfx_priv_actor_get_local_matrix(const wgf_gfx_priv_actor_t *actor_ptr);
 wgf_mat4_t wgf_gfx_priv_actor_get_world_matrix(wgf_actor_t actor);
 
 /* For a walk of the tree that already holds `actor`'s record (its pointer, good while
@@ -262,8 +260,8 @@ wgf_mat4_t wgf_gfx_priv_actor_get_world_matrix(wgf_actor_t actor);
 wgf_mat4_t wgf_gfx_priv_actor_world_of(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr);
 const wgf_actor_t *wgf_gfx_priv_actor_children_of(wgf_gfx_priv_actor_t *actor_ptr, int *count);
 
-/* The actor's own transform changed: its local matrix, and its world matrix and
- * everything under it, are dirty. */
+/* The actor's own transform changed: its world matrix, and everything under it, are
+ * dirty. */
 void wgf_gfx_priv_actor_transform_changed(wgf_actor_t actor);
 
 /* The type of the tree `actor` is in: the type of its topmost ancestor, or its own

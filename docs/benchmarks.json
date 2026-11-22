@@ -54,7 +54,7 @@
    "runs": 3,
    "variant": "linux-x64-release-headless"
   },
-  "commit": "7dbb0fe 2026-11-15",
+  "commit": "334e9c2 2026-11-22",
   "cpu": "13th Gen Intel(R) Core(TM) i9-13900HX",
   "flecs": {
    "commit": "8f3a822 2026-10-07",
@@ -137,75 +137,75 @@
   },
   "rows": {
    "10k-churn": {
-    "bytes": 933.6,
-    "ns": 59.81
+    "bytes": 894.4,
+    "ns": 68.37
    },
    "10k-lookup": {
-    "bytes": 856.2,
-    "ns": 50.24
+    "bytes": 817.0,
+    "ns": 54.79
    },
    "10k-lookup-component": {
-    "ns": 38.52
+    "ns": 41.6
    },
    "10k-lookup-name": {
-    "ns": 33.3
+    "ns": 35.4
    },
    "10k-lookup-path": {
-    "ns": 18.9
+    "ns": 17.4
    },
    "10k-moving-behaviors": {
-    "bytes": 933.6,
-    "ns": 51.79
+    "bytes": 894.4,
+    "ns": 58.68
    },
    "10k-moving-deep": {
-    "bytes": 817.1,
-    "ns": 59.9
+    "bytes": 777.9,
+    "ns": 65.71
    },
    "10k-moving-flat": {
-    "bytes": 792.6,
-    "ns": 48.89
+    "bytes": 753.4,
+    "ns": 53.81
    },
    "10k-static-flat": {
-    "bytes": 499.0,
-    "ns": 4.15
+    "bytes": 461.0,
+    "ns": 4.21
    },
    "10k-toggle": {
-    "bytes": 792.6,
-    "ns": 70.72
+    "bytes": 753.4,
+    "ns": 80.66
    },
    "50k-moving-behaviors": {
-    "bytes": 781.8,
-    "ns": 57.31
+    "bytes": 750.3,
+    "ns": 62.19
    },
    "50k-moving-deep": {
-    "bytes": 669.2,
-    "ns": 60.63
+    "bytes": 637.8,
+    "ns": 67.41
    },
    "50k-moving-flat": {
-    "bytes": 643.3,
-    "ns": 49.73
+    "bytes": 611.9,
+    "ns": 55.7
    },
    "50k-static-flat": {
-    "bytes": 399.8,
-    "ns": 4.59
+    "bytes": 368.3,
+    "ns": 5.06
    },
    "store-get": {
-    "ns": 2.85
+    "ns": 2.87
    },
    "store-intersect": {
     "ns": 288.49
    },
    "store-spawn": {
-    "ns": 24.29
+    "ns": 25.12
    },
    "store-toggle": {
-    "ns": 5.05
+    "ns": 5.03
    },
    "store-walk": {
-    "ns": 2.91
+    "ns": 2.97
    },
    "store-walk-mixed": {
-    "ns": 2.9
+    "ns": 2.95
    }
   },
   "runs": 5,
