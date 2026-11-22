@@ -4,93 +4,109 @@ wgf-autopilot 1
 # stretches the start is within 15% of the busiest (the one at checkpoints 4 and 5, 1,300
 # frames in), which a software renderer can't reach within the frames step's time.
 # Cut again from lap.autopilot when the lap is re-recorded (tools/drive.py does, as it records).
-seed 1592614077
+seed 1592614023
 at 0 pad 0 connect
-at 0 pad 0 axis left_x 0.17
-at 0 pad 0 axis left_y -0.06
-at 0 pad 0 axis right_x 0.08
-at 0 pad 0 axis right_y -0.04
+at 0 pad 0 axis left_x 0.09
+at 0 pad 0 axis left_y -0.14
+at 0 pad 0 axis right_x -0.07
+at 0 pad 0 axis right_y -0.02
 at 1 wait racer.state >= 1
 at 1 expect racer.state == 1
+at 9 expect racer.mirror == 0
+at 9 expect racer.effect == 0
 at 10 key down up
 at 11 expect racer.state == 2
 at 210 expect racer.state == 3
-at 301 expect racer.passed == 0
-at 313 expect racer.passed == 1
-at 313 expect racer.checkpoint == 1
-at 319 key down left
-at 320 key up left
-at 355 key down left
-at 356 key up left
-at 386 key down left
-at 387 key up left
-at 400 key down left
-at 401 key up left
-at 402 key down right
-at 403 key up right
-at 404 key down left
-at 405 key up left
-at 463 key down left
-at 464 key up left
-at 465 key down right
-at 467 key down left
-at 468 key up right
-at 471 key up left
-at 472 key down right
-at 475 key up right
-at 476 key down left
-at 479 key up left
-at 480 key down right
-at 483 key down left
-at 484 key up right
-at 485 key up up
-at 486 key down down
-at 487 key up left
-at 488 key down right
-at 490 key up right
-at 491 key down left
-at 492 key up left
-at 493 key down right
-at 494 key down up
-at 495 key up down
-at 496 key up right
-at 497 key up up
-at 498 key down down
-at 499 key down left
-at 500 key down up
-at 501 key up down
-at 502 key up up
-at 503 key down down
+at 210 expect racer.gantry == "LAP 1 / 3"
+at 210 expect racer.mirror == 1
+at 300 expect racer.passed == 0
+at 310 expect racer.mirror_read >= 2
+at 310 expect racer.mirror_seen != 0
+at 312 expect racer.passed == 1
+at 312 expect racer.checkpoint == 1
+at 372 key down left
+at 373 key up left
+at 471 key down right
+at 472 key up right
+at 477 key up up
+at 477 key down down
+at 479 key down right
+at 479 key down up
+at 480 key up down
+at 481 key up right
+at 482 key down left
+at 483 key up up
+at 483 key down down
+at 485 key up left
+at 486 key down right
+at 486 key down up
+at 487 key up down
+at 488 key up right
+at 489 key down left
+at 489 key up up
+at 490 key down down
+at 491 key up left
+at 491 key down right
+at 493 key down up
+at 493 key up down
+at 494 key up up
+at 495 key down down
+at 495 key up right
+at 496 key down left
+at 498 key down up
+at 498 key up down
+at 499 key up left
+at 500 key down right
+at 500 key up up
+at 501 key down down
+at 503 key up right
+at 504 key down left
 at 504 key down up
 at 505 key up down
-at 506 key up left
-at 507 key down right
-at 512 key up up
+at 506 key up up
+at 506 key down down
+at 507 key up left
+at 508 key down right
+at 508 key down up
+at 509 key up down
+at 511 key down left
+at 511 key up right
+at 513 key up up
 at 513 key down down
-at 519 key down left
+at 514 key down up
+at 515 key up down
+at 516 key up left
+at 517 key down right
+at 519 key up up
+at 519 key down down
 at 520 key up right
+at 521 key down left
 at 521 key down up
 at 522 key up down
-at 524 key up up
-at 525 key down down
-at 526 key down up
-at 527 key up down
-at 528 key up left
-at 529 key down right
-at 533 key down left
-at 534 key up right
-at 539 key up left
-at 540 key down right
-at 544 key up right
-at 545 key down left
-at 550 key up left
-at 551 key down right
-at 555 key up right
-at 557 key down left
-at 562 key up left
-at 563 key down right
-at 567 key up right
-at 568 key down left
-at 596 key up left
-at 599 key up up
+at 524 key up left
+at 525 key down right
+at 528 key up right
+at 529 key down left
+at 533 key up left
+at 534 key down right
+at 538 key down left
+at 538 key up right
+at 544 key up left
+at 545 key down right
+at 550 key down left
+at 550 key up right
+at 557 key up left
+at 559 key down right
+at 563 key down left
+at 563 key up right
+at 573 key up left
+at 578 key down right
+at 582 key up right
+at 582 key up up
+at 583 key down down
+at 584 key down left
+at 588 key down up
+at 588 key up down
+at 595 key up left
+at 596 key down right
 at 600 end

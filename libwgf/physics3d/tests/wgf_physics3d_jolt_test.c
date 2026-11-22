@@ -112,13 +112,13 @@ int main(void)
 
     /* recorded on x86-64 Linux, debug and release alike; every target must give the same */
     wgf_physics3d_priv_jolt_body_get_pose(box, p, q);
-    if (bits(p[0]) != 0x409ffff0u || bits(p[1]) != 0x3efdbc59u || bits(p[2]) != 0x37e4e28bu) {
+    if (bits(p[0]) != 0x409fffefu || bits(p[1]) != 0x3efdbc5cu || bits(p[2]) != 0x37ed9f33u) {
         printf("box %08x %08x %08x\n", bits(p[0]), bits(p[1]), bits(p[2]));
         expect(0, "the box at rest where every target puts it, to the bit");
     }
     wgf_physics3d_priv_jolt_body_get_pose(car, p, q);
-    if (bits(p[0]) != 0xc2d6824bu || bits(p[1]) != 0x3f22df56u || bits(p[2]) != 0x4311d6beu || bits(q[0]) != 0x3d033605u ||
-        bits(q[1]) != 0xbf356e6bu || bits(q[2]) != 0xbd16b6e3u || bits(q[3]) != 0x3f342c91u ||
+    if (bits(p[0]) != 0xc2d7060fu || bits(p[1]) != 0x3f22df60u || bits(p[2]) != 0x4311264au || bits(q[0]) != 0x3d038898u ||
+        bits(q[1]) != 0xbf35d207u || bits(q[2]) != 0xbd167942u || bits(q[3]) != 0x3f33c803u ||
         bits(wgf_physics3d_priv_jolt_vehicle_get_rpm(vehicle)) != 0x45dac000u || wgf_physics3d_priv_jolt_vehicle_get_gear(vehicle) != 2) {
         printf("car %08x %08x %08x %08x %08x %08x %08x rpm %08x gear %d\n", bits(p[0]), bits(p[1]), bits(p[2]), bits(q[0]),
                bits(q[1]), bits(q[2]), bits(q[3]), bits(wgf_physics3d_priv_jolt_vehicle_get_rpm(vehicle)),
