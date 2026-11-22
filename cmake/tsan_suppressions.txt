@@ -1,0 +1,8 @@
+# ThreadSanitizer reports the linux-x64-debug-tsan preset's tests don't fail on
+# (cmake/wgf_library.cmake hands this file to each test). One line a report, with why.
+
+# Jolt's broad phase: a step holds every body's lock and then, for a vehicle's wheels, takes
+# the broad phase's query lock; a query (a ray, a character's move) takes the query lock and
+# then a body's. The two orders can only meet between a step on one thread and a query on
+# another, and libwgf steps and queries its world from one thread.
+deadlock:JPH::BroadPhaseQuadTree

@@ -157,6 +157,9 @@ function(wgf_test layer name)
     find_program(WGF_SETARCH setarch)
     if(WGF_SANITIZE STREQUAL "thread" AND CMAKE_SYSTEM_NAME STREQUAL "Linux" AND WGF_SETARCH)
         add_test(NAME ${name} COMMAND ${WGF_SETARCH} ${CMAKE_HOST_SYSTEM_PROCESSOR} -R $<TARGET_FILE:${name}>)
+        # the reports that aren't failures, each with its reason, in one file
+        set_tests_properties(${name} PROPERTIES ENVIRONMENT
+            "TSAN_OPTIONS=suppressions=${PROJECT_SOURCE_DIR}/cmake/tsan_suppressions.txt")
     else()
         add_test(NAME ${name} COMMAND ${name})
     endif()

@@ -130,6 +130,9 @@ int wgf_physics3d_priv_jolt_vehicle_create(uint32_t body, const wgf_physics3d_pr
 
     VehicleConstraint *vehicle = new VehicleConstraint(lock.GetBody(), settings);
     vehicle->SetVehicleCollisionTester(new VehicleCollisionTesterCastCylinder(lock.GetBody().GetObjectLayer()));
+    // the body's lock let go before the system's own are taken: a step takes them the other
+    // way round (its listeners' lock, then every body's)
+    lock.ReleaseLock();
     wgf_jolt::System()->AddConstraint(vehicle);
     wgf_jolt::System()->AddStepListener(vehicle);
     vehicles[slot] = vehicle;
