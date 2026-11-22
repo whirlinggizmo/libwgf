@@ -1,6 +1,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #include "wgf_actor.h"
 #include "wgf_app.h"
@@ -22,8 +23,8 @@
 
 /* Many models that share a mesh and a material. Nothing here asks for instancing: it is
  * what a stage does when models agree on everything but where they stand and their tint.
- * A field of cubes shares one mesh and one material, so it is one draw; six toy cars share
- * one file, so each of its parts is one draw for all six; a few cubes are see-through, and
+ * A field of cubes shares one mesh and one material, so it is one draw; six walkers share
+ * one file, each at its own point in the walk; a few cubes are see-through, and
  * those keep their back-to-front order. SPACE gives every cube its own material instead,
  * the same picture drawn a cube at a time. The sun casts, so the same batching happens
  * again into its shadow map, and every shadow lands under its own model.
@@ -31,19 +32,21 @@
  *   SPACE    a material each, or one shared
  *   Escape   quit, where quitting means anything
  *
- * libwgt's gfx-instancing (wgrender's), which differs for the size table: its six walkers
- * are a skinned, animated glTF (gfx-skinning's robots now, each robot's parts instanced);
- * six of the toy car (tools/gen_model.py) stand in their place, turning. And the readout is fixed labels,
- * no snprintf, so the program links no formatting, as gfx-shadows. */
+ * libwgt's gfx-instancing (wgrender's), the same program for the size table: "libwgt" reads
+ * "libwgf", its scene is a stage3d, a walker's clip is played held (a speed of 0) and its
+ * time set each frame, where libwgt's is set without playing, and the frame rate is libwgf's
+ * overlay. */
+
+#define CHARACTER_PATH "models/woman_casual/woman_casual.glb"
 
 #define FIELD_SIDE 20
 #define FIELD_COUNT (FIELD_SIDE * FIELD_SIDE)
-#define CARS 6
+#define WALKERS 6
 #define GLASS 5
 
 static wgf_actor_t stage, camera;
 static wgf_material_t shared_material;
-static wgf_actor_t cubes[FIELD_COUNT], cars[CARS];
+static wgf_actor_t cubes[FIELD_COUNT], walkers[WALKERS];
 static bool own_materials;
 
 static wgf_color_t field_tint(int i)
@@ -74,7 +77,7 @@ static void set_materials(bool own)
 static void init(void *user)
 {
     wgf_actor_t sun, floor;
-    wgf_mesh_t floor_mesh, cube, car;
+    wgf_mesh_t floor_mesh, cube, character;
     wgf_material_t floor_material;
     int i;
     (void)user;
@@ -126,19 +129,22 @@ static void init(void *user)
     }
     wgf_resource_release(cube);
 
-    /* six cars from one file: each of its parts one draw for all six */
-    car = wgf_mesh_create("models/toy_car.glb");
-    for (i = 0; i < CARS; i++) {
-        cars[i] = wgf_model_create(car);
-        wgf_actor_set_transform(cars[i], (float)i * 2.4f - 6.0f, -0.6f, -2.0f, 0, 3.14159f, 0, 1, 1, 1);
-        wgf_actor_set_parent(cars[i], stage);
+    /* six walkers from one file, each at its own point in the walk */
+    character = wgf_mesh_create(CHARACTER_PATH);
+    for (i = 0; i < WALKERS; i++) {
+        walkers[i] = wgf_model_create(character);
+        wgf_actor_set_transform(walkers[i], (float)i * 2.4f - 6.0f, 0.0f, -2.0f, 0, 3.14159f, 0, 1, 1, 1);
+        wgf_model_play_animation(walkers[i], 3, 0.0f); /* held: the frame sets its time */
+        wgf_model_set_animation_speed(walkers[i], 0.0f);
+        wgf_actor_set_parent(walkers[i], stage);
     }
-    wgf_resource_release(car);
+    wgf_resource_release(character);
 }
 
 static void frame(void *user)
 {
     const float t = (float)wgf_time_get_seconds();
+    char line[120];
     int i;
     (void)user;
 
@@ -153,17 +159,17 @@ static void frame(void *user)
         const float wave = sinf(t * 1.5f + x * 0.6f + z * 0.4f);
         wgf_actor_set_transform(cubes[i], x, 2.4f + wave * 0.5f, z, 0, t * 0.3f + (float)i, 0, 1, 1, 1);
     }
-    for (i = 0; i < CARS; i++) {
-        /* one file, each its own turn */
-        wgf_actor_set_rotation(cars[i], 0, 3.14159f + sinf(t + (float)i * 0.35f) * 0.6f, 0);
+    for (i = 0; i < WALKERS; i++) {
+        /* the same walk, out of step: a shared mesh, but each its own pose */
+        wgf_model_set_animation_time(walkers[i], t + (float)i * 0.35f);
     }
     wgf_stage3d_draw(stage);
 
     wgf_draw_text(0, "libwgf instancing: models that share a mesh and a material go up as one draw", 12, 36, 20,
                   WGF_COLOR_RAYWHITE);
-    wgf_draw_text(0, own_materials ? "400 cubes, a material each (a draw each)   SPACE toggles"
-                                   : "400 cubes, one material (one draw)   SPACE toggles",
-                  12, 64, 16, WGF_COLOR_LIGHTGRAY);
+    snprintf(line, sizeof(line), "%d cubes, %s   SPACE toggles", FIELD_COUNT,
+             own_materials ? "a material each (a draw each)" : "one material (one draw)");
+    wgf_draw_text(0, line, 12, 64, 16, WGF_COLOR_LIGHTGRAY);
 }
 
 static void on_shutdown(void *user)

@@ -1,13 +1,13 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #include "wgf_actor.h"
 #include "wgf_app.h"
 #include "wgf_asset.h"
 #include "wgf_camera3d.h"
 #include "wgf_color.h"
-#include "wgf_debug.h"
 #include "wgf_draw.h"
 #include "wgf_environment.h"
 #include "wgf_keyboard.h"
@@ -22,8 +22,8 @@
 #include "wgf_window.h"
 
 /* Image-based light, a background, and tone mapping: the material spheres (red plastic
- * above, gold below, roughness 0 to 1 left to right), a normal-mapped sphere, and the toy
- * car, lit by an environment alone -- no lights, no ambient light. Metals mirror the
+ * above, gold below, roughness 0 to 1 left to right), a normal-mapped sphere, and a walking
+ * character, lit by an environment alone -- no lights, no ambient light. Metals mirror the
  * world around them; rougher surfaces blur it. The environment is prepared on a worker
  * as it loads (on the web, a step at a time within the load budget, which this program
  * raises while one is loading, as a loading screen would); until it is READY the stage is
@@ -36,22 +36,23 @@
  *   LEFT / RIGHT turn the environment
  *   Escape       quit, where quitting means anything
  *
- * libwgt's gfx-environment (wgrender's environment), which differs for the size table:
- * its walking character is a skinned, animated glTF (gfx-skinning's robots now), and the
- * toy car (tools/gen_model.py) stands in its place. And the readout is
- * fixed labels, no snprintf, as gfx-shadows. */
+ * libwgt's gfx-environment (wgrender's environment), the same program for the size table:
+ * "libwgt" reads "libwgf", its scene is a stage3d, the animation is named in the call that
+ * plays it, and the load budget is raised while an environment loads (libwgt prepares one on
+ * threads on the web too; libwgf steps it within the budget there). */
+
+#define CHARACTER_PATH "models/woman_casual/woman_casual.glb"
 
 enum { COLUMNS = 5, ENVIRONMENT_COUNT = 2, BLUR_COUNT = 3 };
 
 static const char *ENVIRONMENT_PATHS[ENVIRONMENT_COUNT] = {"environments/venice_sunset_1k.hdr",
                                                            "environments/studio_small_09_1k.hdr"};
-static const char *ENVIRONMENT_LABELS[ENVIRONMENT_COUNT + 1] = {"[E] sunset", "[E] studio", "[E] none"};
+static const char *ENVIRONMENT_NAMES[ENVIRONMENT_COUNT + 1] = {"sunset", "studio", "none"};
+static const char *TONEMAP_NAMES[] = {"none", "Neutral", "ACES"};
 static const float BLURS[BLUR_COUNT] = {0.0f, 0.35f, 0.8f};
-static const char *BLUR_LABELS[BLUR_COUNT + 1] = {"[B] sharp", "[B] soft", "[B] blurred", "[B] off"};
-static const char *TONEMAP_LABELS[] = {"[T] no tone mapping", "[T] Neutral", "[T] ACES"};
 
 static struct {
-    wgf_actor_t stage, camera;
+    wgf_actor_t stage, camera, character;
     wgf_environment_t environments[ENVIRONMENT_COUNT];
     int environment; /* an index; ENVIRONMENT_COUNT: none */
     int blur;        /* an index into BLURS; BLUR_COUNT: no background */
@@ -89,8 +90,8 @@ static void init(void *user)
     const float spacing = 1.3f;
     const wgf_mesh_t sphere = wgf_mesh_create_sphere(0.5f, 32, 64);
     wgf_texture_t normal_map;
-    wgf_mesh_t car;
-    wgf_actor_t tiles, car_model;
+    wgf_mesh_t character;
+    wgf_actor_t tiles;
     int c, i;
     (void)user;
     wgf_asset_set_host("../assets"); /* the examples' files: one level above every program */
@@ -114,13 +115,12 @@ static void init(void *user)
     wgf_resource_release(normal_map);
     wgf_resource_release(sphere);
 
-    /* in the walking character's place */
-    car = wgf_mesh_create("models/toy_car.glb");
-    car_model = wgf_model_create(car);
-    wgf_resource_release(car);
-    wgf_actor_set_position(car_model, 1.3f, -1.2f, 0);
-    wgf_actor_set_rotation(car_model, 0, 0.6f, 0);
-    wgf_actor_set_parent(car_model, g.stage);
+    character = wgf_mesh_create(CHARACTER_PATH);
+    g.character = wgf_model_create(character);
+    wgf_resource_release(character);
+    wgf_actor_set_transform(g.character, 1.3f, -1.3f, 0, 0, 0.4f, 0, 0.3f, 0.3f, 0.3f);
+    wgf_model_play_animation(g.character, 3, 0.0f); /* plays once the file is there */
+    wgf_actor_set_parent(g.character, g.stage);
 
     /* the lighting is prepared on a worker: the stage shows it once it is READY */
     for (i = 0; i < ENVIRONMENT_COUNT; i++) g.environments[i] = wgf_environment_create(ENVIRONMENT_PATHS[i]);
@@ -130,6 +130,7 @@ static void init(void *user)
 static void frame(void *user)
 {
     const float dt = wgf_loop_get_frame_delta();
+    char line[160];
     bool changed = false;
     (void)user;
 
@@ -162,17 +163,18 @@ static void frame(void *user)
     wgf_actor_look_at(g.camera, 0, 0.3f, 0, 0, 1, 0);
     wgf_stage3d_draw(g.stage);
 
-    wgf_draw_rectangle(0, 0, 4000, 112, wgf_color_make(0, 0, 0, 150));
-    wgf_draw_text(0, "libwgf environment light: reflections, background and tone mapping", 12, 36, 20,
+    wgf_draw_rectangle(0, 0, 4000, 60, wgf_color_make(0, 0, 0, 150));
+    wgf_draw_text(0, "libwgf environment lighting: reflections, background and tone mapping", 12, 12, 16,
                   WGF_COLOR_RAYWHITE);
-    wgf_draw_text(0, ENVIRONMENT_LABELS[g.environment], 12, 64, 16, WGF_COLOR_LIGHTGRAY);
-    if (g.environment < ENVIRONMENT_COUNT &&
-        wgf_resource_get_status(g.environments[g.environment]) == WGF_RESOURCE_STATUS_PENDING) {
-        wgf_draw_text(0, "(loading)", 140, 64, 16, WGF_COLOR_GRAY);
-    }
-    wgf_draw_text(0, BLUR_LABELS[g.blur], 240, 64, 16, WGF_COLOR_LIGHTGRAY);
-    wgf_draw_text(0, TONEMAP_LABELS[g.tonemap], 380, 64, 16, WGF_COLOR_LIGHTGRAY);
-    wgf_draw_text(0, "UP/DOWN exposure   LEFT/RIGHT turn it", 12, 86, 16, WGF_COLOR_GRAY);
+    snprintf(line, sizeof(line), "[E] %s%s   [B] background %s   [T] tone mapping %s   [UP/DOWN] exposure %+.1f EV",
+             ENVIRONMENT_NAMES[g.environment],
+             g.environment < ENVIRONMENT_COUNT &&
+                     wgf_resource_get_status(g.environments[g.environment]) == WGF_RESOURCE_STATUS_PENDING
+                 ? " (loading)"
+                 : "",
+             g.blur < BLUR_COUNT ? (g.blur == 0 ? "sharp" : g.blur == 1 ? "soft" : "blurred") : "off",
+             TONEMAP_NAMES[g.tonemap], (double)g.exposure);
+    wgf_draw_text(0, line, 12, 36, 16, WGF_COLOR_LIGHTGRAY);
 }
 
 static void on_shutdown(void *user)
@@ -187,7 +189,6 @@ int main(void)
     wgf_window_set_title("libwgf environment");
     wgf_window_set_size(1100, 720);
     wgf_window_set_msaa(true);
-    wgf_debug_show_fps(0, 12, 10, 16.0f, wgf_color_make(0, 255, 0, 255)); /* libwgt's wgt_loop_draw_fps */
     wgf_app_run(init, NULL, frame, on_shutdown, NULL);
     return 0;
 }

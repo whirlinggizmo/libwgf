@@ -35,11 +35,12 @@
  * Each frame draws the label first, so the views that use it show this frame's label.
  * Escape quits, where quitting means anything.
  *
- * libwgt's render target example (wgrender's), but for the walker: libwgt's is a skinned
- * character, playing its animation (gfx-skinning's robots now), and the toy car drives
- * the circle in its place. */
+ * libwgt's gfx-render-target (wgrender's), the same program for the size table: "libwgt"
+ * reads "libwgf", its scene is a stage3d, the minimap's camera is given to the draw
+ * (wgf_stage3d_draw_with) where libwgt sets the scene's camera and back, and the frame rate
+ * is libwgf's overlay. */
 
-#define CAR_PATH "models/toy_car.glb"
+#define CHARACTER_PATH "models/woman_casual/woman_casual.glb"
 #define FONT_PATH "fonts/Komika/KOMIKAH_.ttf"
 
 enum { PIXEL_W = 160, PIXEL_H = 100, PIXEL_SCALE = 4, MINIMAP = 256, LABEL_W = 256, LABEL_H = 128 };
@@ -51,7 +52,7 @@ static struct {
     wgf_actor_t stage, camera, top_camera;
     wgf_texture_t pixel_view, minimap, label; /* render targets */
     wgf_font_t font;
-    wgf_actor_t car, globe;
+    wgf_actor_t character, globe;
     float time;
 } g;
 
@@ -111,10 +112,11 @@ static void init(void *user)
     wgf_material_set_float(material, "metallic", 0.0f);
     place(wgf_mesh_create_sphere(0.5f, 32, 64), 0, -0.05f, 0, 8.0f, 0.1f, material);
 
-    mesh = wgf_mesh_create(CAR_PATH);
-    g.car = wgf_model_create(mesh);
+    mesh = wgf_mesh_create(CHARACTER_PATH);
+    g.character = wgf_model_create(mesh);
     wgf_resource_release(mesh);
-    wgf_actor_set_parent(g.car, g.stage);
+    wgf_model_play_animation(g.character, 3, 0.0f); /* plays once the file is there */
+    wgf_actor_set_parent(g.character, g.stage);
 
     /* the globe wears the label: drawn into each frame, used as any texture */
     material = wgf_material_create(WGF_MATERIAL_SHADING_UNLIT);
@@ -144,9 +146,9 @@ static void frame(void *user)
 
     if (wgf_app_can_quit() && wgf_keyboard_is_pressed(WGF_KEY_ESCAPE)) wgf_app_quit();
     g.time += dt;
-    wgf_actor_set_position(g.car, gx, 0, gz); /* drives in a circle */
-    wgf_actor_set_rotation(g.car, 0, -g.time * 0.6f, 0);
-    wgf_actor_set_scale(g.car, 0.6f, 0.6f, 0.6f);
+    wgf_actor_set_position(g.character, gx, 0, gz); /* walks in a circle */
+    wgf_actor_set_rotation(g.character, 0, -g.time * 0.6f, 0);
+    wgf_actor_set_scale(g.character, 0.6f, 0.6f, 0.6f);
     wgf_actor_set_rotation(g.globe, 0, g.time * 0.8f, 0);
 
     /* 1. the label, first, so the views below use this frame's text */

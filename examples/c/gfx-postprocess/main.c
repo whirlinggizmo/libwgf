@@ -25,7 +25,7 @@
 
 /* Screen effects over the finished frame (wgf_render_add_effect).
  *
- * The frame is an ordinary lit stage: the toy car on a floor, generated shapes, a circling
+ * The frame is an ordinary lit stage: a walking character on a floor, generated shapes, a circling
  * point light. The effects are custom materials whose shaders are screen effects
  * (examples/shaders/vignette.glsl and scanlines.glsl, packed by tools/pack_shader.py;
  * tools/gen_shaders.py):
@@ -44,16 +44,15 @@
  *   O            stop the camera
  *   Esc          quit, where quitting means anything
  *
- * libwgt's postprocess example (wgrender's), but for the walker: libwgt's is a skinned
- * character, playing its animation (gfx-skinning's robots now), and the toy car stands in
- * its place. */
+ * libwgt's gfx-postprocess (wgrender's), the same program for the size table: "libwgt" reads
+ * "libwgf", its scene is a stage3d, and the frame rate is libwgf's overlay. */
 
-#define CAR_PATH "models/toy_car.glb"
+#define CHARACTER_PATH "models/woman_casual/woman_casual.glb"
 
 enum { SHAPE_COUNT = 3 };
 
 static struct {
-    wgf_actor_t stage, camera, car, lamp, lamp_marker;
+    wgf_actor_t stage, camera, character, lamp, lamp_marker;
     wgf_actor_t shapes[SHAPE_COUNT];
     wgf_material_t vignette, scanlines; /* the effects' materials, their shaders loading */
     bool vignette_on, scanlines_on, breathing, orbit;
@@ -83,7 +82,7 @@ static wgf_material_t custom(const char *path)
 
 static void init(void *user)
 {
-    /* the shapes beside the car, and their colors */
+    /* the shapes beside the character, and their colors */
     const struct {
         wgf_mesh_t mesh;
         float x, y;
@@ -144,11 +143,11 @@ static void init(void *user)
         wgf_actor_set_parent(g.shapes[i], g.stage);
     }
 
-    mesh = wgf_mesh_create(CAR_PATH);
-    g.car = wgf_model_create(mesh);
+    mesh = wgf_mesh_create(CHARACTER_PATH);
+    g.character = wgf_model_create(mesh);
     wgf_resource_release(mesh);
-    wgf_actor_set_rotation(g.car, 0, 0.5f, 0);
-    wgf_actor_set_parent(g.car, g.stage);
+    wgf_model_play_animation(g.character, 3, 0.0f); /* plays once the file is there */
+    wgf_actor_set_parent(g.character, g.stage);
 
     g.vignette = custom("shaders/vignette.wgfshader");
     wgf_material_set_float(g.vignette, "strength", g.strength);

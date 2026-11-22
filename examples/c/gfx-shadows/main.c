@@ -1,6 +1,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #include "wgf_actor.h"
 #include "wgf_app.h"
@@ -23,8 +24,8 @@
 
 /* A casting light and what it does to a stage. The sun casts (wgf_light_set_shadow_casting):
  * once a frame it draws everything that casts into a depth map, and the lit shading darkens
- * what is behind something. The stage is a floor, a wall, some generated shapes, and the toy
- * car, so the shadows fall across each other and across themselves. A spot light circling
+ * what is behind something. The stage is a floor, a wall, some generated shapes, and a
+ * walking character, so the shadows fall across each other and across themselves. A spot light circling
  * overhead casts through its own cone: two lights casting at once, a layer of the map each.
  * The ball on the left casts nothing (wgf_model_set_shadow_casting), so it floats as
  * everything did before shadows; the one on the right receives nothing
@@ -41,18 +42,20 @@
  *   O            orbit the camera, or hold it
  *   Escape       quit, where quitting means anything
  *
- * libwgt's gfx-shadows (wgrender's shadows), which differs for the size table: its walking
- * character is a skinned, animated glTF (gfx-skinning's robots now, shadows posed); the
- * toy car (tools/gen_model.py) stands in its place. And the readout is libwgf's overlay and
- * fixed labels, no snprintf, so the program links no formatting, as gfx-lights. */
+ * libwgt's gfx-shadows (wgrender's shadows), the same program for the size table: "libwgt"
+ * reads "libwgf", its scene is a stage3d, the animation is named in the call that plays it,
+ * and the frame rate is libwgf's overlay. */
+
+#define CHARACTER_PATH "models/woman_casual/woman_casual.glb"
 
 enum { SIZE_COUNT = 4, TINT_COUNT = 3 };
 static const int MAP_SIZES[SIZE_COUNT] = {512, 1024, 2048, 4096};
 /* what a shadow keeps of the light: nothing (physical), then two stylized tints */
 static const wgf_color_t TINTS[TINT_COUNT] = {0x000000FFu, 0x1E3C64FFu, 0x64321EFFu};
+static const char *TINT_NAMES[TINT_COUNT] = {"none", "cool", "warm"};
 
 static struct {
-    wgf_actor_t stage, camera, sun, spot, spot_marker;
+    wgf_actor_t stage, camera, sun, spot, spot_marker, character;
     bool shadows, spot_shadows, orbit;
     float distance, bias, strength;
     int size_index, tint_index;
@@ -78,8 +81,7 @@ static wgf_actor_t place(wgf_mesh_t mesh, float x, float y, float z, float r, fl
 
 static void init(void *user)
 {
-    wgf_mesh_t car;
-    wgf_actor_t car_model;
+    wgf_mesh_t mesh;
     (void)user;
     wgf_asset_set_host("../assets"); /* the examples' files: one level above every program */
     wgf_render_set_clear_color(wgf_color_make(120, 150, 200, 255));
@@ -129,17 +131,17 @@ static void init(void *user)
     wgf_model_set_shadow_receiving(
         place(wgf_mesh_create_sphere(0.6f, 24, 48), -2.6f, 0.6f, -1.2f, 0.9f, 0.3f, 0.5f, 0.35f), false);
 
-    /* in the walking character's place */
-    car = wgf_mesh_create("models/toy_car.glb");
-    car_model = wgf_model_create(car);
-    wgf_resource_release(car);
-    wgf_actor_set_position(car_model, 0, 0, 0);
-    wgf_actor_set_parent(car_model, g.stage);
+    mesh = wgf_mesh_create(CHARACTER_PATH);
+    g.character = wgf_model_create(mesh);
+    wgf_resource_release(mesh);
+    wgf_model_play_animation(g.character, 3, 0.0f); /* plays once the file is there */
+    wgf_actor_set_parent(g.character, g.stage);
 }
 
 static void frame(void *user)
 {
     const float dt = wgf_loop_get_frame_delta();
+    char line[128];
     float sx, sz;
     (void)user;
 
@@ -184,10 +186,13 @@ static void frame(void *user)
     wgf_stage3d_draw(g.stage);
 
     wgf_draw_text(0, "libwgf shadows: lights casting into a depth map", 12, 36, 20, WGF_COLOR_RAYWHITE);
-    wgf_draw_text(0, g.shadows ? "[1] sun on" : "[1] sun off", 12, 64, 16, WGF_COLOR_LIGHTGRAY);
-    wgf_draw_text(0, g.spot_shadows ? "[2] spot on" : "[2] spot off", 132, 64, 16, WGF_COLOR_LIGHTGRAY);
-    wgf_draw_text(0, "[S] strength   [T] tint   M map size", 12, 86, 16, WGF_COLOR_LIGHTGRAY);
-    wgf_draw_text(0, "UP/DOWN distance   [ ] bias   O camera", 12, 108, 16, WGF_COLOR_GRAY);
+    snprintf(line, sizeof(line), "[1] sun %s   [2] spot %s   map %d   distance %.0f   bias %.1f texels",
+             g.shadows ? "on" : "off", g.spot_shadows ? "on" : "off", MAP_SIZES[g.size_index], (double)g.distance,
+             (double)g.bias);
+    wgf_draw_text(0, line, 12, 64, 16, WGF_COLOR_LIGHTGRAY);
+    snprintf(line, sizeof(line), "[S] strength %.2f   [T] tint %s", (double)g.strength, TINT_NAMES[g.tint_index]);
+    wgf_draw_text(0, line, 12, 86, 16, WGF_COLOR_LIGHTGRAY);
+    wgf_draw_text(0, "UP/DOWN distance   [ ] bias   M map size   O camera", 12, 108, 16, WGF_COLOR_GRAY);
     wgf_draw_text(0, "left ball casts nothing; right ball receives nothing", 12, 130, 16, WGF_COLOR_GRAY);
 }
 

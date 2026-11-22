@@ -71,43 +71,39 @@ ROWS = [
     ('gfx-hello3d', 'gfx-hello3d', 'hello3d', 'same', ''),
     ('gfx-meshes', None, 'meshes', 'same', ''),
     ('gfx-model', 'gfx-model', 'model', 'differs',
-     'written before libwgf had skinning and animation (gfx-skinning shows them): a toy car of its own (tools/gen_model.py) in place of the animated '
-     'character'),
+     "a program of libwgf's own, not libwgt's: the toy car (tools/gen_model.py), its parts found by name, "
+     "under a camera that circles or flies, where libwgt's is the animated character (gfx-skinning is "
+     "libwgf's)"),
     ('gfx-materials', None, 'materials', 'differs',
-     'written before libwgf had skinning: a gold torus in place of the animated character, and a generated sphere in place '
-     'of the file\'s'),
+     'written before libwgf had skinning: a gold torus in place of the animated character, and a generated '
+     "sphere in place of the file's"),
     ('gfx-lights', None, 'lights', 'differs',
-     'written before libwgf had skinning, and it has no lit sprites yet: generated capsules in place of the animated characters, and no lit '
-     'billboards'),
-    ('gfx-shadows', 'gfx-shadows', 'shadows', 'differs',
-     'written before libwgf had skinning and animation: the toy car in place of the walking character, and its readout fixed '
-     'labels with no formatting'),
-    ('gfx-instancing', 'gfx-instancing', 'instancing', 'differs',
-     'written before libwgf had skinning and animation: six of the toy car in place of the walking characters, and its readout '
-     'fixed labels with no formatting'),
-    ('gfx-environment', 'gfx-environment', 'environment', 'differs',
-     'written before libwgf had skinning and animation: the toy car in place of the walking character, and its readout '
-     'fixed labels with no formatting'),
+     'written before libwgf had skinning, and it has no lit sprites yet: generated capsules in place of '
+     'the animated characters, and no lit billboards'),
+    ('gfx-shadows', 'gfx-shadows', 'shadows', 'same', ''),
+    ('gfx-instancing', 'gfx-instancing', 'instancing', 'same', ''),
+    ('gfx-environment', 'gfx-environment', 'environment', 'same', ''),
     ('gfx-textures', 'gfx-textures', 'textures', 'same', ''),
-    ('gfx-render-target', 'gfx-render-target', 'render_target', 'differs',
-     'written before libwgf had skinning and animation: the toy car drives the circle in place of the walking character'),
-    ('gfx-postprocess', 'gfx-postprocess', 'postprocess', 'differs',
-     'written before libwgf had skinning and animation: the toy car in place of the walking character'),
+    ('gfx-render-target', 'gfx-render-target', 'render_target', 'same', ''),
+    ('gfx-postprocess', 'gfx-postprocess', 'postprocess', 'same', ''),
     ('gfx-shaders', 'gfx-shaders', 'shaders', 'differs',
-     'written before libwgf had skinning and animation, and it has no custom sprite materials yet: the toon shading on the toy car in place of '
-     'the walking character, and the logo\'s sprite effects left out'),
+     'written before libwgf had skinning and animation, and it has no custom sprite materials yet: the '
+     "toon shading on the toy car in place of the walking character, and the logo's sprite effects left "
+     'out'),
     ('gfx-sprite3d', 'gfx-sprite3d', 'sprite3d', 'same', ''),
     ('gfx-text3d', 'gfx-text3d', 'text3d', 'same', ''),
-    ('gfx-sprite2d', 'gfx-sprite2d', 'sprite2d', 'differs',
-     'written before libwgf had 3D and picking: the animated model behind the sprites, its lights, and picking are left out'),
+    ('gfx-sprite2d', 'gfx-sprite2d', 'sprite2d', 'same', ''),
     ('gfx-particles', 'gfx-particles', 'particles', 'same', ''),
     ('gfx-tilemap', 'gfx-tilemap', 'tilemap', 'differs',
-     'written before libwgf had picking: a 2D stage and a 2D camera (written before its 3D sprites), coins hit-tested by hand'),
+     "a program of libwgf's own, not libwgt's: a Tiled map, its objects made actors from a scene's "
+     "prefabs, a body sliding on its cells, and a painted trail, where libwgt's is a map of sprites with "
+     'coins the pointer picks'),
     ('audio-music', 'audio-music', 'audio', 'same', ''),
     ('asset-fetch', None, 'fetch', 'same', ''),
     ('asset-force-fetch', None, 'force_fetch', 'same', ''),
     ('asset-loading', None, 'loading', 'differs',
-     'written before libwgf had 3D: textures and sounds of like weight in place of wgrender-c\'s models and environments'),
+     "written before libwgf had 3D: textures and sounds of like weight in place of wgrender-c's models and "
+     'environments'),
 ]
 # A "same" row's target: libwgt's size, gzip, and the autopilot runner's cost, which
 # every libwgf program carries on purpose, so a shipped build can be played through
