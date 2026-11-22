@@ -411,6 +411,8 @@ void wgf_gfx_priv_actor_set_simulated(wgf_gfx_priv_actor_t *actor_ptr, bool simu
 static void unindex(wgf_actor_t actor, const char *name); /* names, below */
 static void names_shutdown(void);
 
+static int paused_count; /* the actors paused: none, and nothing is frozen, asked without a walk up */
+
 static void free_actor(wgf_actor_t actor)
 {
     wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
@@ -423,6 +425,7 @@ static void free_actor(wgf_actor_t actor)
     kind = wgf_gfx_priv_actor_get_kind(actor_ptr->type);
     if (kind != NULL && kind->free != NULL) kind->free(actor, actor_ptr);
     unindex(actor, actor_ptr->name);
+    if (actor_ptr->paused) paused_count--;
     free(actor_ptr->name);
     free(actor_ptr->children);
     free(actor_ptr->previous);
@@ -926,6 +929,7 @@ bool wgf_actor_set_paused(wgf_actor_t actor, bool paused)
 {
     wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
     if (actor_ptr == NULL) return false;
+    if (actor_ptr->paused != paused) paused_count += paused ? 1 : -1;
     actor_ptr->paused = paused;
     return true;
 }
@@ -936,9 +940,13 @@ bool wgf_actor_is_paused(wgf_actor_t actor)
     return actor_ptr != NULL && actor_ptr->paused;
 }
 
+/* Asked of every actor a system moves, every tick: with nothing paused anywhere, which is
+ * most frames, answered at once; the walk up its parents cost a chain of 32 twice its tick. */
 bool wgf_gfx_priv_actor_is_frozen(wgf_actor_t actor)
 {
-    const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
+    const wgf_gfx_priv_actor_t *actor_ptr;
+    if (paused_count == 0) return false;
+    actor_ptr = wgf_gfx_priv_actor_of(actor);
     while (actor_ptr != NULL) {
         if (actor_ptr->paused) return true;
         actor_ptr = actor_ptr->parent != 0 ? wgf_gfx_priv_actor_of(actor_ptr->parent) : NULL;

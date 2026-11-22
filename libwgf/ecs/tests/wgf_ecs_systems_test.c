@@ -363,6 +363,22 @@ int main(void)
                    wgf_actor_get_position(faller).y > 1,
                "resumed: moved, counted down, fallen");
         expect(!wgf_actor_set_paused(0, true) && !wgf_actor_is_paused(0) && !wgf_actor_is_frozen(0), "no actor: false");
+        { /* the paused are counted, so that nothing paused is answered without a walk: the count
+             kept through a pause set twice and a paused actor destroyed */
+            const wgf_actor_t other = make(stage), under = make(other), gone = make(stage);
+            wgf_actor_set_paused(other, true);
+            wgf_actor_set_paused(other, true);
+            wgf_actor_set_paused(gone, true);
+            wgf_actor_destroy(gone, WGF_ACTOR_DESTROY_CHILDREN);
+            step(0.0f);
+            expect(wgf_actor_is_frozen(under) && !wgf_actor_is_frozen(mover), "one still paused: frozen under it alone");
+            wgf_actor_set_paused(other, false);
+            expect(!wgf_actor_is_frozen(under), "none paused: nothing frozen");
+            wgf_actor_set_paused(level, true);
+            expect(wgf_actor_is_frozen(mover), "paused again: frozen under it");
+            wgf_actor_set_paused(level, false);
+            wgf_actor_destroy(other, WGF_ACTOR_DESTROY_CHILDREN);
+        }
         wgf_actor_destroy(level, WGF_ACTOR_DESTROY_CHILDREN);
         step(0.0f);
         count_events(0, 0, 0);
