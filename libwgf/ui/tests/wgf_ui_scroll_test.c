@@ -14,7 +14,9 @@
  * track pressed, by Page Down with the focus in it, and to the widget the focus moves to;
  * set and read back, held to its content; and a list chosen by a press and release, stepped
  * by Down and Page Down with the chosen item scrolled into view, a drag choosing none, laid
- * out only where in view. */
+ * out only where in view, its chosen item activated by a press on it again and by Enter; an
+ * area of text alone focused itself and scrolled by its arrows and the page keys; and a bar
+ * shown always. */
 
 static int failures;
 
@@ -76,7 +78,8 @@ static float scrolled(const char *id)
     return wgf_ui_get_scroll(id).y;
 }
 
-static int activated = -1, chosen = -1;
+static int activated = -1, chosen = -1, list_activations;
+static bool extras;
 static float level = 0.5f;
 static char items[1000 * 8];
 
@@ -99,10 +102,27 @@ static void form(void)
     level = wgf_ui_slider("s", level, 0, 1);
     for (i = 0; i < 12; i++) {
         snprintf(id, sizeof(id), "b%d", i);
-        if (wgf_ui_button(id, id)) activated = i;
+        if (wgf_ui_button(id, id)) {
+            activated = i;
+            expect(wgf_ui_is_activated(), "a button activated: said after it too");
+        } else {
+            expect(!wgf_ui_is_activated(), "a button not activated");
+        }
     }
     expect(wgf_ui_end_scroll(), "the area ended");
     chosen = wgf_ui_list("list", items, chosen, 4);
+    if (wgf_ui_is_activated()) list_activations++;
+    if (extras) { /* a page of text alone, taller than its area; and a short one, all in view */
+        expect(wgf_ui_begin_scroll("page", 120, 60), "an area of text");
+        wgf_ui_label("1\n2\n3\n4\n5\n6\n7\n8", 0);
+        wgf_ui_end_scroll();
+        expect(wgf_ui_begin_scroll("short", 120, 60), "an area with all in view");
+        wgf_ui_begin_box("inside", WGF_UI_DIRECTION_COLUMN);
+        wgf_ui_set_width(WGF_UI_SIZING_GROW, 0);
+        wgf_ui_label("1", 0);
+        wgf_ui_end_box();
+        wgf_ui_end_scroll();
+    }
     expect(wgf_ui_end(), "ended");
 }
 
@@ -290,11 +310,65 @@ static void on_frame(void *user)
     case 32:
         form();
         expect(chosen == 999, "the last item, laid out where scrolled to");
+        expect(list_activations == 0 && !wgf_ui_is_activated(), "choosing an item doesn't activate it; outside a UI: false");
+        box = bounds("list"); /* the chosen item again */
+        mouse(SAPP_EVENTTYPE_MOUSE_MOVE, box.x + 20, box.y + 4 + row * 3.5f);
+        mouse(SAPP_EVENTTYPE_MOUSE_DOWN, box.x + 20, box.y + 4 + row * 3.5f);
+        mouse(SAPP_EVENTTYPE_MOUSE_UP, box.x + 20, box.y + 4 + row * 3.5f);
+        break;
+    case 33:
+        form();
+        expect(list_activations == 1 && chosen == 999, "a press and release on the chosen item: activated");
+        tap(SAPP_KEYCODE_ENTER);
+        break;
+    case 34:
+        form();
+        expect(list_activations == 2, "Enter with the list focused: activated");
+        extras = true;
+        break;
+    case 35: form(); break; /* laid out: the page has nothing to focus, and more than it shows */
+    case 36:
+        form();
+        expect(bounds("inside").z == 120, "all in view: no bar");
+        expect(wgf_ui_set_focus("page"), "the page focused");
+        break;
+    case 37:
+        form();
+        expect(strcmp(wgf_ui_get_focus(), "page") == 0, "an area of text alone keeps the focus");
+        tap(SAPP_KEYCODE_DOWN);
+        break;
+    case 38:
+        form();
+        expect(scrolled("page") == row && strcmp(wgf_ui_get_focus(), "page") == 0, "Down scrolls it a row");
+        tap(SAPP_KEYCODE_PAGE_DOWN);
+        break;
+    case 39:
+        form();
+        expect(scrolled("page") == row + 60, "Page Down, a page");
+        tap(SAPP_KEYCODE_UP);
+        expect(wgf_ui_set_focus("short") && wgf_ui_set_focus("page"), "the focus set");
+        expect(wgf_ui_set_style_value(WGF_UI_VALUE_SCROLL_BAR_ALWAYS, 1), "bars always");
+        break;
+    case 40:
+        form();
+        expect(scrolled("page") == 60, "Up, a row back");
+        break;
+    case 41:
+        form();
+        expect(bounds("inside").z == 110, "a bar shown always: its room taken with all in view");
+        wgf_ui_set_focus("short");
+        break;
+    case 42: form(); break;
+    case 43:
+        form();
+        expect(wgf_ui_get_focus()[0] == '\0', "an area with all in view isn't focused");
+        wgf_ui_set_style_value(WGF_UI_VALUE_SCROLL_BAR_ALWAYS, 0);
         expect(wgf_ui_begin(), "begun");
         expect(!wgf_ui_begin_scroll(NULL, 10, 10) && !wgf_ui_begin_scroll("y", -1, 10) &&
                    !wgf_ui_begin_scroll("y", 10, INFINITY) && !wgf_ui_end_scroll(),
                "no id, a size below 0 or not finite, nothing open: refused");
         expect(wgf_ui_list("empty", "", 3, 2) == -1, "an empty list: none chosen");
+        expect(!wgf_ui_is_activated(), "nothing activated");
         expect(wgf_ui_end(), "ended");
         wgf_app_quit();
         break;
@@ -314,6 +388,6 @@ int main(void)
 {
     wgf_window_set_size(800, 800);
     wgf_app_run(on_init, NULL, on_frame, NULL, NULL);
-    expect(frame_number >= 33, "every frame ran");
+    expect(frame_number >= 44, "every frame ran");
     return failures == 0 ? 0 : 1;
 }

@@ -2914,6 +2914,8 @@ export const Ui = Object.freeze({
     setDisabled: raw.wgf_ui_set_disabled,
     // wgf: call wgf_ui_is_disabled
     isDisabled: raw.wgf_ui_is_disabled,
+    // wgf: call wgf_ui_is_activated
+    isActivated: raw.wgf_ui_is_activated,
     // wgf: call wgf_ui_list
     list: raw.wgf_ui_list,
     // wgf: call wgf_ui_text_field
@@ -2974,6 +2976,10 @@ export const Ui = Object.freeze({
     setSkinTint: raw.wgf_ui_set_skin_tint,
     // wgf: call wgf_ui_get_skin_tint
     getSkinTint: raw.wgf_ui_get_skin_tint,
+    // wgf: call wgf_ui_set_skin_patch
+    setSkinPatch: raw.wgf_ui_set_skin_patch,
+    // wgf: call wgf_ui_get_skin_patch
+    getSkinPatch: raw.wgf_ui_get_skin_patch,
     // wgf: call wgf_ui_set_text_offset
     setTextOffset: raw.wgf_ui_set_text_offset,
     // wgf: call wgf_ui_get_text_offset
@@ -3374,12 +3380,14 @@ export const UiFill = Object.freeze({ STRETCHED: 0, CLIPPED: 1 });
 export const UiFrom = Object.freeze({ LEFT: 0, RIGHT: 1, TOP: 2, BOTTOM: 3 });
 // wgf: enum UiPart
 export const UiPart = Object.freeze({ BASE: 0, FILL: 1, HANDLE: 2, EDGE: 3, ITEM: 4 });
+// wgf: enum UiPatch
+export const UiPatch = Object.freeze({ STRETCHED: 0, TILED: 1, TILED_FIT: 2 });
 // wgf: enum UiSizing
 export const UiSizing = Object.freeze({ FIT: 0, GROW: 1, FIXED: 2, PERCENT: 3 });
 // wgf: enum UiState
 export const UiState = Object.freeze({ NORMAL: 0, HOVERED: 1, PRESSED: 2, DISABLED: 3 });
 // wgf: enum UiValue
-export const UiValue = Object.freeze({ TEXT_SIZE: 0, PADDING: 1, GAP: 2, CORNER_RADIUS: 3, BUTTON_PADDING: 4, BUTTON_WIDTH: 5, FOCUS_WIDTH: 6, BAR_WIDTH: 7, BAR_HEIGHT: 8, CHECK_SIZE: 9, SLIDER_WIDTH: 10, SLIDER_HEIGHT: 11, HANDLE_SIZE: 12, LINE_WIDTH: 13, TILE_SIZE: 14, SCROLL_BAR: 15 });
+export const UiValue = Object.freeze({ TEXT_SIZE: 0, PADDING: 1, GAP: 2, CORNER_RADIUS: 3, BUTTON_PADDING: 4, BUTTON_WIDTH: 5, FOCUS_WIDTH: 6, BAR_WIDTH: 7, BAR_HEIGHT: 8, CHECK_SIZE: 9, SLIDER_WIDTH: 10, SLIDER_HEIGHT: 11, HANDLE_SIZE: 12, LINE_WIDTH: 13, TILE_SIZE: 14, SCROLL_BAR: 15, SCROLL_BAR_ALWAYS: 16 });
 // wgf: enum UiWidget
 export const UiWidget = Object.freeze({ PANEL: 0, BUTTON: 1, TOGGLE: 2, CHECKBOX: 3, SLIDER: 4, PROGRESS: 5, GROUP: 6, TAB: 7, COMBO: 8, NUMBER: 9, TILE: 10, SCROLL: 11, LIST: 12, DROPDOWN: 13, POPUP: 14, TEXT: 15 });
 // wgf: enum VehicleDrive

@@ -23,6 +23,7 @@ typedef struct skin_t {
     float source[4];       /* x, y, width, height: 0 wide or high, the whole texture */
     float borders[4];      /* left, top, right, bottom, in its texels */
     wgf_color_t tint;      /* 0: white, not set */
+    unsigned char patch;   /* wgf_ui_patch_t: how its edges and middle fill */
 } skin_t;
 
 static skin_t skins[WIDGETS][PARTS][STATES];
@@ -54,6 +55,21 @@ static wgf_color_t tint_of(const skin_t *skin, bool dim, float alpha)
     return wgf_color_with_alpha(tint, (int)(most * alpha + 0.5f));
 }
 
+/* Tiled patches' drawing (wgf_ui_skin_patch.c), set by the first skin given a tiled fill:
+ * stretched skins link none of it. */
+static wgf_ui_priv_patch_draw_t patch_draw;
+
+void wgf_ui_priv_set_patch_draw(wgf_ui_priv_patch_draw_t draw_patches)
+{
+    patch_draw = draw_patches;
+}
+
+unsigned char *wgf_ui_priv_skin_patch(int widget, int part, int state)
+{
+    return valid((wgf_ui_widget_t)widget, (wgf_ui_part_t)part, (wgf_ui_state_t)state) ? &skins[widget][part][state].patch
+                                                                                    : NULL;
+}
+
 static bool draw(int widget, int part, int state, float x, float y, float width, float height, float alpha)
 {
     bool dim;
@@ -63,6 +79,15 @@ static bool draw(int widget, int part, int state, float x, float y, float width,
     /* a region of a sheet, its edges sampled half a texel in: filtered, its edge texels would
        blend with the next cell's (a line above a button cut from a sheet of its states) */
     inset = skin->source[2] > 1.0f && skin->source[3] > 1.0f ? 0.5f : 0.0f;
+    if (skin->patch != WGF_UI_PATCH_STRETCHED && patch_draw != NULL) {
+        const float source[4] = {skin->source[0] + inset, skin->source[1] + inset, skin->source[2] - inset * 2.0f,
+                                 skin->source[3] - inset * 2.0f};
+        const float borders[4] = {fmaxf(skin->borders[0] - inset, 0.0f), fmaxf(skin->borders[1] - inset, 0.0f),
+                                  fmaxf(skin->borders[2] - inset, 0.0f), fmaxf(skin->borders[3] - inset, 0.0f)};
+        if (patch_draw(skin->texture, source, borders, x, y, width, height, skin->patch == WGF_UI_PATCH_TILED_FIT,
+                       tint_of(skin, dim, alpha)))
+            return true;
+    }
     wgf_draw_texture_nine_slice(skin->texture, skin->source[0] + inset, skin->source[1] + inset,
                                 skin->source[2] - inset * 2.0f, skin->source[3] - inset * 2.0f,
                                 fmaxf(skin->borders[0] - inset, 0.0f), fmaxf(skin->borders[1] - inset, 0.0f),
@@ -187,6 +212,11 @@ wgf_color_t wgf_ui_get_skin_tint(wgf_ui_widget_t widget, wgf_ui_part_t part, wgf
     return skins[widget][part][state].tint != 0 ? skins[widget][part][state].tint : WGF_COLOR_WHITE;
 }
 
+wgf_ui_patch_t wgf_ui_get_skin_patch(wgf_ui_widget_t widget, wgf_ui_part_t part, wgf_ui_state_t state)
+{
+    return valid(widget, part, state) ? (wgf_ui_patch_t)skins[widget][part][state].patch : WGF_UI_PATCH_STRETCHED;
+}
+
 bool wgf_ui_set_text_offset(wgf_ui_widget_t widget, wgf_ui_state_t state, float x, float y)
 {
     if (!valid(widget, WGF_UI_PART_BASE, state) || !isfinite(x) || !isfinite(y)) return false;
@@ -238,9 +268,13 @@ bool wgf_ui_set_style_texture(wgf_ui_color_t which, wgf_texture_t texture, float
     wgf_ui_part_t part;
     wgf_ui_state_t state;
     if (!skin_by_color(which, &widget, &part, &state) || !finite_all(borders, 4, true)) return false;
-    return wgf_ui_set_skin(widget, part, state, texture, 0.0f, 0.0f, 0.0f, 0.0f) &&
-           wgf_ui_set_skin_borders(widget, part, state, left, top, right, bottom) &&
-           wgf_ui_set_skin_tint(widget, part, state, 0);
+    if (!wgf_ui_set_skin(widget, part, state, texture, 0.0f, 0.0f, 0.0f, 0.0f) ||
+        !wgf_ui_set_skin_borders(widget, part, state, left, top, right, bottom) ||
+        !wgf_ui_set_skin_tint(widget, part, state, 0)) {
+        return false;
+    }
+    skins[widget][part][state].patch = WGF_UI_PATCH_STRETCHED;
+    return true;
 }
 
 wgf_texture_t wgf_ui_get_style_texture(wgf_ui_color_t which)

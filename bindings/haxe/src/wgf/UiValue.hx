@@ -18,4 +18,5 @@ enum abstract UiValue(Int) from Int to Int {
 	var LINE_WIDTH = 13;
 	var TILE_SIZE = 14;
 	var SCROLL_BAR = 15;
+	var SCROLL_BAR_ALWAYS = 16;
 }

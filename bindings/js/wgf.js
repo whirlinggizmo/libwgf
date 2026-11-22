@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "008e798a044ad55e" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "a24ae1de46b8910d" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -1289,6 +1289,7 @@ export const WGF_UI_VALUE_HANDLE_SIZE = 12;
 export const WGF_UI_VALUE_LINE_WIDTH = 13;
 export const WGF_UI_VALUE_TILE_SIZE = 14;
 export const WGF_UI_VALUE_SCROLL_BAR = 15;
+export const WGF_UI_VALUE_SCROLL_BAR_ALWAYS = 16;
 
 /**
  * Skins: a widget's parts drawn from the game's art in place of the style's colors, as
@@ -1363,6 +1364,17 @@ export const WGF_UI_FROM_LEFT = 0;
 export const WGF_UI_FROM_RIGHT = 1;
 export const WGF_UI_FROM_TOP = 2;
 export const WGF_UI_FROM_BOTTOM = 3;
+
+/**
+ * How a skin's edges and middle fill what is between its corners: stretched; or tiled, its
+ * art repeated at its own size, an edge along it and the middle both ways, the last one cut
+ * where the room ends (a rope border, a brick panel: art that can't stretch); or tiled to
+ * fit, repeated a whole number of times, each stretched the little it takes to end on a
+ * whole one. A part drawn smaller than its borders is stretched whichever.
+ */
+export const WGF_UI_PATCH_STRETCHED = 0;
+export const WGF_UI_PATCH_TILED = 1;
+export const WGF_UI_PATCH_TILED_FIT = 2;
 
 /**
  * What happened to an element, as wgf_document_take_events gives it.
@@ -18531,10 +18543,13 @@ export function wgf_ui_end_group() {
  * longer or wider than it: by the wheel over it (the innermost area under the pointer; a
  * wheel across, or Shift with it, sideways), a drag (a press that moves a few pixels is the
  * area's, and the widget it began on, but a slider, isn't pressed), with a fling when let
- * go moving, and its scroll bars, each shown while there is more to scroll to that way: the
- * thumb dragged, the track pressed for a page. The focus moved by keys, a pad, or
+ * go moving, and its scroll bars, each shown while there is more to scroll to that way (always,
+ * with the style's WGF_UI_VALUE_SCROLL_BAR_ALWAYS: disabled, its thumb the whole track, with
+ * no more): the thumb dragged, the track pressed for a page. The focus moved by keys, a pad, or
  * wgf_ui_set_focus to a widget in it scrolls the widget into view, and Page Up and Page
- * Down page while the focus is in it. The layout calls (padding, gap, alignment, color) are
+ * Down page while the focus is in it. An area with no widget in it to focus (a page of text)
+ * and more than it shows is focused itself, by its id, from the frame after it was first laid
+ * out so: focused, its arrows scroll it a row at a time and the page keys a page. The layout calls (padding, gap, alignment, color) are
  * its content's; its size is the call's, so wgf_ui_set_width and _height refuse it. Its
  * scroll is kept while it is given each frame; what it scrolls to shows from the next
  * frame. Closed by wgf_ui_end_scroll. False too for no id, or a size below 0.
@@ -18553,10 +18568,13 @@ export function wgf_ui_begin_scroll(id, width, height) {
  * longer or wider than it: by the wheel over it (the innermost area under the pointer; a
  * wheel across, or Shift with it, sideways), a drag (a press that moves a few pixels is the
  * area's, and the widget it began on, but a slider, isn't pressed), with a fling when let
- * go moving, and its scroll bars, each shown while there is more to scroll to that way: the
- * thumb dragged, the track pressed for a page. The focus moved by keys, a pad, or
+ * go moving, and its scroll bars, each shown while there is more to scroll to that way (always,
+ * with the style's WGF_UI_VALUE_SCROLL_BAR_ALWAYS: disabled, its thumb the whole track, with
+ * no more): the thumb dragged, the track pressed for a page. The focus moved by keys, a pad, or
  * wgf_ui_set_focus to a widget in it scrolls the widget into view, and Page Up and Page
- * Down page while the focus is in it. The layout calls (padding, gap, alignment, color) are
+ * Down page while the focus is in it. An area with no widget in it to focus (a page of text)
+ * and more than it shows is focused itself, by its id, from the frame after it was first laid
+ * out so: focused, its arrows scroll it a row at a time and the page keys a page. The layout calls (padding, gap, alignment, color) are
  * its content's; its size is the call's, so wgf_ui_set_width and _height refuse it. Its
  * scroll is kept while it is given each frame; what it scrolls to shows from the next
  * frame. Closed by wgf_ui_end_scroll. False too for no id, or a size below 0.
@@ -18921,6 +18939,18 @@ export function wgf_ui_is_disabled() {
     return value !== 0;
 }
 
+// wgf: call wgf_ui_is_activated
+/**
+ * Whether the widget given just before it was activated this frame: a button, an icon or
+ * image button, a toggle, a checkbox, or a tile, as its own call answered; a list, its chosen
+ * item (see wgf_ui_list). False for any other widget, with none before it in the frame, and
+ * outside a begun UI.
+ */
+export function wgf_ui_is_activated() {
+    const value = host["_wgf_ui_is_activated"]();
+    return value !== 0;
+}
+
 // wgf: call wgf_ui_list
 /**
  * A list of `items`, one a line (any number: "" or NULL, none), `rows` of them tall and as
@@ -18929,8 +18959,10 @@ export function wgf_ui_is_disabled() {
  * and release on an item chooses it (a drag scrolls, choosing none); when focused, Up and
  * Down (a pad's too) step, held ones repeating, and Page Up and Page Down step a page, the
  * chosen one scrolled into view. It scrolls as a scroll area does, down only. Only the
- * items in view are laid out, so a long list costs its rows. `selected` as given when
- * refused (no id, `rows` below 1).
+ * items in view are laid out, so a long list costs its rows. Its chosen item is activated
+ * (wgf_ui_is_activated, asked after the call) by Enter, Space, or a pad's south button while
+ * the list is focused, or a press and release on the item already chosen: a double press on
+ * one not yet. `selected` as given when refused (no id, `rows` below 1).
  */
 export function wgf_ui_list(id, items, selected, rows) {
     const mark = host["stackSave"]();
@@ -19328,6 +19360,24 @@ export function wgf_ui_set_skin_tint(widget, part, state, tint) {
 export function wgf_ui_get_skin_tint(widget, part, state) {
     const value = host["_wgf_ui_get_skin_tint"](widget, part, state);
     return value >>> 0;
+}
+
+// wgf: call wgf_ui_set_skin_patch
+/**
+ * Its patches' fill (stretched until set); false too for a fill that isn't one.
+ */
+export function wgf_ui_set_skin_patch(widget, part, state, patch) {
+    const value = host["_wgf_ui_set_skin_patch"](widget, part, state, patch);
+    return value !== 0;
+}
+
+// wgf: call wgf_ui_get_skin_patch
+/**
+ * Its patches' fill (stretched until set); false too for a fill that isn't one.
+ */
+export function wgf_ui_get_skin_patch(widget, part, state) {
+    const value = host["_wgf_ui_get_skin_patch"](widget, part, state);
+    return value;
 }
 
 // wgf: call wgf_ui_set_text_offset

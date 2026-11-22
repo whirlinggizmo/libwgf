@@ -22,6 +22,7 @@
 #include "wgf_platform_priv.h"
 #include "wgf_render.h"
 #include "wgf_resource.h"
+#include "wgf_ui_popup_priv.h"
 #include "wgf_ui_priv.h"
 #include "wgf_ui_scroll_priv.h"
 #include "wgf_ui_skin_priv.h"
@@ -44,7 +45,7 @@
 #define WORDS_MAX 8192  /* Clay's cache of measured words */
 #define TEXT_BLOCK 16384
 #define STYLE_COLORS 15 /* wgf_ui_color_t's */
-#define STYLE_VALUES 16 /* wgf_ui_value_t's */
+#define STYLE_VALUES 17 /* wgf_ui_value_t's */
 #define WIDGETS 16      /* wgf_ui_widget_t's */
 #define CHOICES_MAX 32  /* a tab row's, a choice's, a combo's labels */
 
@@ -87,6 +88,7 @@ struct level_t {
     void (*close)(level_t *level);        /* a scroll area's or a modal's own close */
     Clay_ElementId window, bars[2];       /* a scroll area's window, and its bars across and down */
     int first_focusable;                  /* a scroll area's: the frame's first widget in it */
+    int area;                             /* its record among the frame's areas, -1 none */
     bool shown[2];                        /* its bars shown */
     int bar_states[2];
     float thumbs[2][2]; /* each bar's share in view and how far its thumb is along, 0 to 1 */
@@ -117,7 +119,6 @@ static struct {
     float width, height;      /* the visible area's size: the layout's */
     float clock;              /* seconds of the frames the UI was begun in: a tooltip's wait */
     bool pointer_down, pointer_pressed, pointer_released;
-    bool eaten; /* a press off an open dropdown, which closed it: no widget's, until let go */
     struct {
         bool activate, cancel, tab_next, tab_previous;
         bool up, down, left, right;                 /* pressed: the focus's */
@@ -134,29 +135,13 @@ static struct {
         char id[ID_MAX];
         uint32_t element;
         bool over;
+        bool activated; /* this frame: wgf_ui_is_activated's */
     } last;
-    struct { /* the open dropdown's list */
-        char owner[ID_MAX];   /* the dropdown's id; "" none open */
-        uint32_t list, face;  /* its list's Clay id and its face's, as last laid out */
-        int hot, item;        /* the item stepped to, and the one a press began on (-1 none) */
-        float pointer[2];     /* where the pointer was: one that moves over an item steps to it */
-        bool seen;            /* given this frame */
-    } popup;
-    struct {
-        bool seen, was;        /* given this frame, and the frame before */
-        int first, last;       /* this frame's widgets in it */
-        char before[ID_MAX];   /* the focus as it opened, given back as it closes */
-    } modal;
+    wgf_ui_priv_popups_t popups; /* the popup layer's: an open dropdown, a modal, a tooltip's wait */
     struct { /* a focused text field's: the on-screen keyboard wanted, its caret there */
         bool wanted;
         float x, y, height;
     } typing;
-    struct {
-        char id[ID_MAX];   /* the widget whose tooltip waits or shows */
-        char next[ID_MAX]; /* the first other one pointed at this frame */
-        float since;       /* the clock as it was first pointed at */
-        bool seen;         /* pointed at this frame */
-    } tip;
 
     char focus[ID_MAX];
     bool focus_visible; /* moved by keys or pads: drawn */
@@ -187,6 +172,15 @@ void wgf_ui_priv_set_skins(const wgf_ui_priv_skins_t *hooks)
     skins = hooks;
 }
 
+/* The popup layer's hooks, set by the first dropdown, modal, or tooltip (wgf_ui_popup_priv.h);
+ * NULL with none. */
+static const wgf_ui_priv_popup_hooks_t *popup_hooks;
+
+void wgf_ui_priv_set_popup_hooks(const wgf_ui_priv_popup_hooks_t *hooks)
+{
+    popup_hooks = hooks;
+}
+
 /* The text fields' hooks, set by the first (wgf_ui_text_priv.h); NULL with none. */
 static const wgf_ui_priv_text_hooks_t *text_hooks;
 
@@ -213,7 +207,8 @@ static const wgf_color_t default_colors[STYLE_COLORS] = {
     0x5AA0E666u, /* selection: the bar fill's, see-through */
 };
 static const float default_values[STYLE_VALUES] = {20.0f, 24.0f, 12.0f, 8.0f, 24.0f, 200.0f, 3.0f,  300.0f,
-                                                   12.0f, 24.0f, 200.0f, 8.0f, 20.0f, 2.0f, 96.0f,  10.0f};
+                                                   12.0f, 24.0f, 200.0f, 8.0f, 20.0f, 2.0f, 96.0f,  10.0f,
+                                                   0.0f};
 
 /* ---- the style ---------------------------------------------------------------------- */
 
@@ -1024,6 +1019,11 @@ bool wgf_ui_is_disabled(void)
     return ui.begun && ui.disabled;
 }
 
+bool wgf_ui_is_activated(void)
+{
+    return ui.begun && ui.last.activated;
+}
+
 /* ---- answering ---------------------------------------------------------------------- */
 
 /* What this frame's input did to a widget. */
@@ -1041,6 +1041,7 @@ static void answer(const char *id, Clay_ElementId element, bool over, int arrows
     snprintf(ui.last.id, sizeof(ui.last.id), "%s", id);
     ui.last.element = element.id;
     ui.last.over = over;
+    ui.last.activated = false;
     if (ui.disabled) {
         out->state = WGF_UI_STATE_DISABLED;
         return;
@@ -1127,7 +1128,7 @@ static bool face(const char *what, const char *id, int widget, wgf_texture_t ico
     if (text != NULL && text[0] != '\0')
         text_element(text, 0.0f, dim(ui.colors[WGF_UI_COLOR_BUTTON_TEXT], answered.state), CLAY_TEXT_WRAP_NONE, piece);
     Clay__CloseElement();
-    *activated = answered.activated;
+    *activated = ui.last.activated = answered.activated;
     return true;
 }
 
@@ -1195,7 +1196,7 @@ bool wgf_ui_image_button(const char *id, wgf_texture_t normal, wgf_texture_t pre
     Clay__OpenElementWithId(element);
     Clay__ConfigureOpenElement(declaration);
     Clay__CloseElement();
-    return answered.activated;
+    return ui.last.activated = answered.activated;
 }
 
 static void draw_check(const piece_t *piece, Clay_BoundingBox box);
@@ -1229,6 +1230,7 @@ bool wgf_ui_checkbox(const char *id, const char *text, bool on)
     if (text != NULL && text[0] != '\0')
         text_element(text, 0.0f, dim(ui.colors[WGF_UI_COLOR_TEXT], answered.state), CLAY_TEXT_WRAP_NONE, NULL);
     Clay__CloseElement();
+    ui.last.activated = answered.activated;
     return answered.activated ? !on : on;
 }
 
@@ -1550,7 +1552,7 @@ bool wgf_ui_tile(const char *id, wgf_texture_t picture, const char *text)
     if (text != NULL && text[0] != '\0')
         text_element(text, 0.0f, dim(ui.colors[WGF_UI_COLOR_BUTTON_TEXT], answered.state), CLAY_TEXT_WRAP_NONE, piece);
     Clay__CloseElement();
-    return answered.activated;
+    return ui.last.activated = answered.activated;
 }
 
 /* ---- scrolling ---------------------------------------------------------------------- */
@@ -1715,8 +1717,11 @@ static bool open_scroll(Clay_ElementId element, Clay_String name, float width, f
         data.scrollPosition->x = -offset[0];
         data.scrollPosition->y = -offset[1];
     }
+    level->area = -1;
     if (ui.scroll.area_count < ui.scroll.area_capacity) { /* for the next frame: under the pointer, laid out */
         wgf_ui_priv_area_t *area = &ui.scroll.areas[ui.scroll.area_count++];
+        level->area = ui.scroll.area_count - 1;
+        area->bare = false;
         area->element = element.id;
         area->window = window.id;
         area->offset[0] = offset[0];
@@ -1757,12 +1762,13 @@ static bool open_scroll(Clay_ElementId element, Clay_String name, float width, f
     level->first_focusable = ui.focusable_count;
     for (a = 0; a < 2; a++) {
         const float most = content[a] - view[a];
+        const bool more = most > 0.5f;
         level->offset[a] = offset[a];
-        level->shown[a] = ways[a] && most > 0.5f;
+        level->shown[a] = ways[a] && (more || ui.values[WGF_UI_VALUE_SCROLL_BAR_ALWAYS] > 0.0f);
         if (!level->shown[a]) continue;
-        level->thumbs[a][0] = view[a] / content[a];
-        level->thumbs[a][1] = offset[a] / most;
-        level->bar_states[a] = !live                                                  ? WGF_UI_STATE_DISABLED
+        level->thumbs[a][0] = more ? view[a] / content[a] : 1.0f; /* all in view: the thumb the whole track */
+        level->thumbs[a][1] = more ? offset[a] / most : 0.0f;
+        level->bar_states[a] = !live || !more                                         ? WGF_UI_STATE_DISABLED
                                : ui.scroll.held == window.id && ui.scroll.bar == a   ? WGF_UI_STATE_PRESSED
                                : Clay_PointerOver(level->bars[a])                    ? WGF_UI_STATE_HOVERED
                                                                                      : WGF_UI_STATE_NORMAL;
@@ -1801,6 +1807,7 @@ static void close_scroll(level_t *level)
 {
     const Clay_ScrollContainerData data = Clay_GetScrollContainerData(level->window);
     int i, at = -1;
+    if (level->area >= 0) ui.scroll.areas[level->area].bare = ui.focusable_count == level->first_focusable;
     for (i = level->first_focusable; i < ui.focusable_count && at < 0; i++) {
         if (strcmp(ui.focusables[i].id, ui.focus) == 0) at = i;
     }
@@ -1834,7 +1841,9 @@ static void close_scroll(level_t *level)
         if (ui.keys.page_down != ui.keys.page_up && ui.focusables[at].arrows != ARROWS_DOWN &&
             ui.focusables[at].arrows != ARROWS_ALL)
             offset[1] += ui.keys.page_down ? view[1] : -view[1];
-        for (a = 0; a < 2; a++) offset[a] = level->shown[a] ? clamped(offset[a], content[a] - view[a]) : level->offset[a];
+        for (a = 0; a < 2; a++) {
+            offset[a] = level->shown[a] ? clamped(offset[a], fmaxf(content[a] - view[a], 0.0f)) : level->offset[a];
+        }
         data.scrollPosition->x = -offset[0];
         data.scrollPosition->y = -offset[1];
     }
@@ -1862,6 +1871,37 @@ static void close_scroll(level_t *level)
     Clay__CloseElement(); /* the area */
 }
 
+/* An area that had nothing in it to focus, and more than it shows (both as the frame before
+ * laid it out), takes the focus itself: focused, its arrows scroll it a row and the page
+ * keys a page (helix-legacy's). Whether it is focused. */
+static bool bare_area(const char *id, Clay_ElementId element, Clay_ElementId window)
+{
+    const Clay_ScrollContainerData data = Clay_GetScrollContainerData(window);
+    answer_t answered;
+    float most[2], by[2] = {0.0f, 0.0f};
+    bool bare = false;
+    int i;
+    for (i = 0; i < ui.scroll.before_count; i++) {
+        if (ui.scroll.before[i].window == window.id) bare = ui.scroll.before[i].bare;
+    }
+    if (!bare || !data.found || data.scrollPosition == NULL) return false;
+    most[0] = data.contentDimensions.width - data.scrollContainerDimensions.width;
+    most[1] = data.contentDimensions.height - data.scrollContainerDimensions.height;
+    if (most[0] <= 0.5f && most[1] <= 0.5f) return false;
+    answer(id, element, false, most[1] <= 0.5f ? ARROWS_ACROSS : most[0] <= 0.5f ? ARROWS_DOWN : ARROWS_ALL, false,
+           &answered);
+    if (!answered.focused) return false;
+    if (ui.keys.more_right != ui.keys.more_left) by[0] = ui.keys.more_right ? row_height() : -row_height();
+    if (ui.keys.more_down != ui.keys.more_up) by[1] = ui.keys.more_down ? row_height() : -row_height();
+    if (ui.keys.page_down != ui.keys.page_up) {
+        by[1] = ui.keys.page_down ? data.scrollContainerDimensions.height : -data.scrollContainerDimensions.height;
+    }
+    if (by[0] != 0.0f || by[1] != 0.0f) ui.focus_visible = true;
+    data.scrollPosition->x -= by[0]; /* held to its content as it opens */
+    data.scrollPosition->y -= by[1];
+    return true;
+}
+
 bool wgf_ui_begin_scroll(const char *id, float width, float height)
 {
     static const bool both[2] = {true, true};
@@ -1869,7 +1909,8 @@ bool wgf_ui_begin_scroll(const char *id, float width, float height)
     Clay_String name;
     if (!(width >= 0.0f) || !(height >= 0.0f) || !isfinite(width) || !isfinite(height)) return false;
     if (!widget_named(id, "wgf_ui_begin_scroll", &element, &name)) return false;
-    return open_scroll(element, name, width, height, 0.0f, 0.0f, NULL, false, both, true);
+    return open_scroll(element, name, width, height, 0.0f, 0.0f, NULL,
+                       bare_area(id, element, Clay_GetElementIdWithIndex(name, 0)), both, true);
 }
 
 bool wgf_ui_end_scroll(void)
@@ -1967,8 +2008,15 @@ int wgf_ui_list(const char *id, const char *items, int selected, int rows)
             over = (int)floorf((ui.pointer_y - box.boundingBox.y + laid[1]) / row);
             if (over >= count) over = -1;
         }
-        if (ui.pointer_pressed && answered.over) ui.scroll.item = over;
-        if (ui.pointer_released && answered.activated && over >= 0 && over == ui.scroll.item) selected = over;
+        if (ui.pointer_pressed && answered.over) {
+            ui.scroll.item = over;
+            ui.scroll.item_chosen = over >= 0 && over == selected;
+        }
+        if (ui.pointer_released && answered.activated && over >= 0 && over == ui.scroll.item) {
+            ui.last.activated = ui.scroll.item_chosen; /* a press and release on the chosen one again */
+            selected = over;
+        }
+        if (answered.focused && ui.keys.activate && selected >= 0) ui.last.activated = true;
         if (answered.focused && ui.keys.more_down != ui.keys.more_up) step = ui.keys.more_down ? 1 : -1;
         if (answered.focused && ui.keys.page_down != ui.keys.page_up) step = ui.keys.page_down ? rows : -rows;
         if (step != 0 && count > 0) {
@@ -2075,12 +2123,12 @@ static void dropdown_list(Clay_ElementId face, Clay_String name, const char *con
     add_solid(list.id);
     for (i = 0; i < count; i++) {
         const Clay_ElementId item = Clay_GetElementIdWithIndex(name, (uint32_t)i);
-        const int state = i == selected ? WGF_UI_STATE_PRESSED : i == ui.popup.hot ? WGF_UI_STATE_HOVERED : WGF_UI_STATE_NORMAL;
+        const int state = i == selected ? WGF_UI_STATE_PRESSED : i == ui.popups.dropdown.hot ? WGF_UI_STATE_HOVERED : WGF_UI_STATE_NORMAL;
         list_item(starts[i], lengths[i], WGF_UI_WIDGET_DROPDOWN, state, i == selected, &item);
     }
     Clay__CloseElement();
-    ui.popup.list = list.id;
-    ui.popup.face = face.id;
+    ui.popups.dropdown.list = list.id;
+    ui.popups.dropdown.face = face.id;
 }
 
 int wgf_ui_dropdown(const char *id, const char *labels, int selected)
@@ -2098,27 +2146,28 @@ int wgf_ui_dropdown(const char *id, const char *labels, int selected)
     bool was_open, open;
     int i, over = -1;
     if (count == 0 || !widget_named(id, "wgf_ui_dropdown", &element, &name)) return selected;
+    wgf_ui_priv_install_popups();
     selected = clamp_index(selected, count);
-    was_open = open = strcmp(ui.popup.owner, id) == 0;
+    was_open = open = strcmp(ui.popups.dropdown.owner, id) == 0;
     for (i = 0; open && i < count && over < 0; i++) {
         if (Clay_PointerOver(Clay_GetElementIdWithIndex(name, (uint32_t)i))) over = i;
     }
     answer(id, element, Clay_PointerOver(element), open ? ARROWS_ALL : ARROWS_NONE, false, &answered);
     if (answered.state == WGF_UI_STATE_DISABLED || !answered.focused) open = false;
     if (open) {
-        const bool moved = ui.pointer_x != ui.popup.pointer[0] || ui.pointer_y != ui.popup.pointer[1];
-        if (over >= 0 && (moved || ui.pointer_pressed)) ui.popup.hot = over;
+        const bool moved = ui.pointer_x != ui.popups.dropdown.pointer[0] || ui.pointer_y != ui.popups.dropdown.pointer[1];
+        if (over >= 0 && (moved || ui.pointer_pressed)) ui.popups.dropdown.hot = over;
         if (ui.keys.more_down != ui.keys.more_up) {
-            ui.popup.hot = clamp_index(ui.popup.hot + (ui.keys.more_down ? 1 : -1), count);
+            ui.popups.dropdown.hot = clamp_index(ui.popups.dropdown.hot + (ui.keys.more_down ? 1 : -1), count);
             ui.focus_visible = true;
         }
-        if (ui.pointer_pressed) ui.popup.item = over;
+        if (ui.pointer_pressed) ui.popups.dropdown.item = over;
         if (ui.keys.cancel) {
             open = false;
         } else if (ui.keys.activate) { /* the item stepped to */
-            selected = ui.popup.hot;
+            selected = ui.popups.dropdown.hot;
             open = false;
-        } else if (ui.pointer_released && over >= 0 && over == ui.popup.item) {
+        } else if (ui.pointer_released && over >= 0 && over == ui.popups.dropdown.item) {
             selected = over;
             open = false;
         } else if (answered.activated) { /* its face pressed and released again */
@@ -2126,16 +2175,16 @@ int wgf_ui_dropdown(const char *id, const char *labels, int selected)
         }
     } else if (answered.activated && !was_open) {
         open = true;
-        ui.popup.hot = selected;
-        ui.popup.item = -1;
+        ui.popups.dropdown.hot = selected;
+        ui.popups.dropdown.item = -1;
     }
-    ui.popup.pointer[0] = ui.pointer_x;
-    ui.popup.pointer[1] = ui.pointer_y;
+    ui.popups.dropdown.pointer[0] = ui.pointer_x;
+    ui.popups.dropdown.pointer[1] = ui.pointer_y;
     if (open) {
-        snprintf(ui.popup.owner, sizeof(ui.popup.owner), "%s", id);
-        ui.popup.seen = true;
+        snprintf(ui.popups.dropdown.owner, sizeof(ui.popups.dropdown.owner), "%s", id);
+        ui.popups.dropdown.seen = true;
     } else if (was_open) {
-        ui.popup.owner[0] = '\0';
+        ui.popups.dropdown.owner[0] = '\0';
     }
     look = add_piece(draw_face, WGF_UI_WIDGET_DROPDOWN, answered.state);
     face_layout(&declaration, look);
@@ -2167,7 +2216,7 @@ static void close_modal(level_t *level)
     (void)level;
     Clay__CloseElement();
     Clay__CloseElement();
-    ui.modal.last = ui.focusable_count;
+    ui.popups.modal.last = ui.focusable_count;
 }
 
 bool wgf_ui_begin_modal(const char *id)
@@ -2176,11 +2225,12 @@ bool wgf_ui_begin_modal(const char *id)
     Clay_ElementDeclaration dim_screen;
     Clay_String name;
     level_t *level;
-    if (ui.modal.seen || !widget_named(id, "wgf_ui_begin_modal", &element, &name)) return false;
+    if (ui.popups.modal.seen || !widget_named(id, "wgf_ui_begin_modal", &element, &name)) return false;
     if (ui.depth == DEPTH_MAX) {
         wgf_log_error("wgf_ui: more than %d boxes inside each other", DEPTH_MAX);
         return false;
     }
+    wgf_ui_priv_install_popups();
     screen = Clay_GetElementIdWithIndex(name, 0);
     memset(&dim_screen, 0, sizeof(dim_screen));
     dim_screen.layout.sizing.width.type = dim_screen.layout.sizing.height.type = CLAY__SIZING_TYPE_GROW;
@@ -2199,8 +2249,8 @@ bool wgf_ui_begin_modal(const char *id)
     level->declaration.layout.layoutDirection = CLAY_TOP_TO_BOTTOM;
     panel_layout(level, WGF_UI_WIDGET_PANEL, draw_panel);
     level->close = close_modal;
-    ui.modal.seen = true;
-    ui.modal.first = ui.modal.last = ui.focusable_count;
+    ui.popups.modal.seen = true;
+    ui.popups.modal.first = ui.popups.modal.last = ui.focusable_count;
     return true;
 }
 
@@ -2222,14 +2272,15 @@ bool wgf_ui_tooltip(const char *text)
         return false;
     }
     if (ui.last.id[0] == '\0') return false;
+    wgf_ui_priv_install_popups();
     pointed = (ui.last.over && !ui.pointer_down) || (ui.focus_visible && strcmp(ui.focus, ui.last.id) == 0);
     if (!pointed) return true;
-    if (strcmp(ui.tip.id, ui.last.id) != 0) { /* waits from the next frame, unless another is already */
-        if (ui.tip.next[0] == '\0') snprintf(ui.tip.next, sizeof(ui.tip.next), "%s", ui.last.id);
+    if (strcmp(ui.popups.tip.id, ui.last.id) != 0) { /* waits from the next frame, unless another is already */
+        if (ui.popups.tip.next[0] == '\0') snprintf(ui.popups.tip.next, sizeof(ui.popups.tip.next), "%s", ui.last.id);
         return true;
     }
-    ui.tip.seen = true;
-    if (ui.clock - ui.tip.since < TOOLTIP_WAIT) return true;
+    ui.popups.tip.seen = true;
+    if (ui.clock - ui.popups.tip.since < TOOLTIP_WAIT) return true;
     size = wgf_font_measure(ui.font, text, ui.values[WGF_UI_VALUE_TEXT_SIZE]);
     across_pad = ui.values[WGF_UI_VALUE_BUTTON_PADDING] * 0.5f;
     down_pad = ui.values[WGF_UI_VALUE_BUTTON_PADDING] * 0.25f;
@@ -2528,7 +2579,6 @@ bool wgf_ui_begin(void)
     ui.typing.wanted = false;
     ui.hovering = false;
     ui.last.id[0] = '\0';
-    ui.popup.seen = ui.modal.seen = false;
     ui.clock += (float)wgf_platform_priv_get_frame_duration();
     wgf_gfx_priv_render_get_visible(&ui.origin_x, &ui.origin_y, &dimensions.width, &dimensions.height);
     ui.width = dimensions.width;
@@ -2538,21 +2588,7 @@ bool wgf_ui_begin(void)
     pointer.x = ui.pointer_x;
     pointer.y = ui.pointer_y;
     Clay_SetPointerState(pointer, ui.pointer_down);
-    if (ui.popup.owner[0] != '\0' && ui.pointer_pressed) { /* a press off an open dropdown closes it, and is eaten */
-        Clay_ElementId list, face;
-        memset(&list, 0, sizeof(list));
-        memset(&face, 0, sizeof(face));
-        list.id = ui.popup.list;
-        face.id = ui.popup.face;
-        if (!Clay_PointerOver(list) && !Clay_PointerOver(face)) {
-            ui.popup.owner[0] = '\0';
-            ui.eaten = true;
-        }
-    }
-    if (ui.eaten) {
-        if (ui.pointer_released) ui.eaten = false;
-        ui.pointer_pressed = ui.pointer_down = ui.pointer_released = false;
-    }
+    if (popup_hooks != NULL) popup_hooks->begin(&ui.popups, &ui.pointer_pressed, &ui.pointer_down, &ui.pointer_released);
     ui.scroll.reveal = ui.scroll.reveal_next;
     ui.scroll.reveal_next = false;
     if (scroll_frame != NULL) scroll_frame(&ui.scroll, ui.pointer_pressed, ui.pointer_down);
@@ -2605,8 +2641,13 @@ static int nearest(int from, float dx, float dy, int lo, int hi)
     return found;
 }
 
+const char *wgf_ui_priv_focusable_id(int index)
+{
+    return index >= 0 && index < ui.focusable_count ? ui.focusables[index].id : "";
+}
+
 /* The frame's widget named `id`; -1 for none. */
-static int focusable_named(const char *id)
+int wgf_ui_priv_focusable_named(const char *id)
 {
     int i;
     for (i = 0; i < ui.focusable_count; i++) {
@@ -2627,24 +2668,8 @@ static void navigate(void)
     bool next, previous;
     if (!ui.focus_seen && !ui.focus_fresh) ui.focus[0] = '\0';
     ui.focus_fresh = false;
-    at = ui.focus[0] != '\0' ? focusable_named(ui.focus) : -1;
-    if (ui.modal.seen) {
-        lo = ui.modal.first;
-        hi = ui.modal.last;
-        if (!ui.modal.was) snprintf(ui.modal.before, sizeof(ui.modal.before), "%s", ui.focus);
-        if (at < lo || at >= hi) {
-            at = lo < hi ? lo : -1;
-            snprintf(ui.focus, sizeof(ui.focus), "%s", at >= 0 ? ui.focusables[at].id : "");
-            ui.scroll.reveal_next = true;
-        }
-    } else if (ui.modal.was && ui.modal.before[0] != '\0') {
-        to = focusable_named(ui.modal.before);
-        if (to >= 0) {
-            snprintf(ui.focus, sizeof(ui.focus), "%s", ui.modal.before);
-            at = to;
-        }
-    }
-    ui.modal.was = ui.modal.seen;
+    at = ui.focus[0] != '\0' ? wgf_ui_priv_focusable_named(ui.focus) : -1;
+    if (popup_hooks != NULL && popup_hooks->focus(&ui.popups, ui.focus, &at, &lo, &hi)) ui.scroll.reveal_next = true;
     arrows = at >= 0 ? ui.focusables[at].arrows : ARROWS_NONE;
     if (arrows != ARROWS_DOWN && arrows != ARROWS_ALL && ui.keys.down != ui.keys.up) dy = ui.keys.down ? 1.0f : -1.0f;
     else if (arrows != ARROWS_ACROSS && arrows != ARROWS_ALL && ui.keys.right != ui.keys.left)
@@ -3072,13 +3097,7 @@ bool wgf_ui_end(void)
     ui.ended = true;
     commands = Clay_EndLayout((float)wgf_platform_priv_get_frame_duration());
     if (ui.fade < 1.0f) draw(commands);
-    if (!ui.popup.seen) ui.popup.owner[0] = '\0'; /* its dropdown not given */
-    if (!ui.tip.seen) { /* the tooltip pointed at is let go of: the next one waits */
-        snprintf(ui.tip.id, sizeof(ui.tip.id), "%s", ui.tip.next);
-        ui.tip.since = ui.clock;
-    }
-    ui.tip.seen = false;
-    ui.tip.next[0] = '\0';
+    if (popup_hooks != NULL) popup_hooks->end(&ui.popups, ui.clock);
     navigate();
     capture();
     if (text_hooks != NULL) text_hooks->end(ui.typing.wanted, ui.typing.x, ui.typing.y, ui.typing.height);

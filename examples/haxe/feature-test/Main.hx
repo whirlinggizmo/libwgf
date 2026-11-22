@@ -1241,6 +1241,8 @@ class Main {
 			&& near(Ui.getSkinBorders(UiWidget.SLIDER, UiPart.HANDLE, UiState.NORMAL).z, 4), "its borders: a bar with caps");
 		expect(Ui.setSkinTint(UiWidget.SLIDER, UiPart.HANDLE, UiState.NORMAL, Color.get(ColorStock.GOLD))
 			&& Ui.getSkinTint(UiWidget.SLIDER, UiPart.HANDLE, UiState.NORMAL) == Color.get(ColorStock.GOLD), "its tint");
+		expect(Ui.setSkinPatch(UiWidget.SLIDER, UiPart.HANDLE, UiState.NORMAL, UiPatch.TILED)
+			&& Ui.getSkinPatch(UiWidget.SLIDER, UiPart.HANDLE, UiState.NORMAL) == UiPatch.TILED, "its patches tiled");
 		expect(Ui.setTextOffset(UiWidget.BUTTON, UiState.PRESSED, 0, 2) && near(Ui.getTextOffset(UiWidget.BUTTON, UiState.PRESSED).y, 2),
 			"a pressed face's text offset");
 		expect(Ui.setFill(UiWidget.PROGRESS, UiFill.CLIPPED, UiFrom.RIGHT) && Ui.getFill(UiWidget.PROGRESS) == UiFill.CLIPPED
@@ -1273,7 +1275,7 @@ class Main {
 			expect(near(Ui.number("number", 0.5, 0, 1, 0.1), 0.5), "a number, untouched");
 			expect(Ui.beginGrid("grid", 2) && !Ui.tile("tile", tiles, "Tile") && Ui.endGrid(), "a grid of a tile");
 			expect(Ui.beginScroll("scroll", 120, 40) && Ui.label("A\nB\nC\nD", 0) && Ui.endScroll(), "a scroll area");
-			expect(Ui.list("list", "One\nTwo\nThree", 1, 2) == 1, "a list, untouched");
+			expect(Ui.list("list", "One\nTwo\nThree", 1, 2) == 1 && !Ui.isActivated(), "a list, untouched, its item not activated");
 			expect(Ui.dropdown("dropdown", "Low\nHigh", 1) == 1 && Ui.tooltip("Its quality"), "a dropdown, untouched, and a tooltip");
 			expect(Ui.setText("field", "typed") && !Ui.textField("field", "Name", 8) && Ui.getText("field") == "typed",
 				"a text field, untouched, its text set");

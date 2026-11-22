@@ -23,7 +23,8 @@
  * only when full; the star answers on its round face alone, its clear corners left to the
  * screen, and sets the volume full. Save is disabled. Its tabs show four more pages: a
  * choice, a combo, and numbers; a grid of level tiles in a scroll area, which the arrows
- * move through in two dimensions, scrolled to the one focused; a list of tracks; and a name
+ * move through in two dimensions, scrolled to the one focused; a list of tracks, one played
+ * when activated; and a name
  * and a password typed in (a press places the caret, a drag or Shift selects, a double press
  * a word; Ctrl's keys copy, paste, and undo), the name shown refused while it is taken. The
  * wheel, a drag, or a scroll bar scrolls them. The popups: a quality dropdown, whose list
@@ -43,6 +44,7 @@ static bool music = true, loading, asking;
 static int page, difficulty = 1, color, lives = 3, level = -1, track, quality = 1;
 static float shown; /* seconds since it started: the fade in */
 static char greeting[64];
+static int playing = -1;
 static char tracks[1024];
 static wgf_texture_t tex[13];
 static wgf_image_t star_mask;
@@ -277,20 +279,23 @@ static void levels(void)
     wgf_ui_label(text, 0);
 }
 
-/* The list page: thirty tracks, the one chosen named below them. */
+/* The list page: thirty tracks, the one chosen named below them, playing once it is activated
+ * (Enter, or a press on it again). */
 static void list(void)
 {
     char text[48];
     const char *at = tracks;
     int i;
     track = wgf_ui_list("tracks", tracks, track, 7);
+    if (wgf_ui_is_activated()) playing = track;
     for (i = 0; i < track && at != NULL; i++) {
         at = strchr(at, '\n');
         if (at != NULL) at++;
     }
     if (at != NULL && track >= 0) {
         const char *end = strchr(at, '\n');
-        snprintf(text, sizeof(text), "Playing %.*s", end != NULL ? (int)(end - at) : (int)strlen(at), at);
+        snprintf(text, sizeof(text), "%s %.*s", playing == track ? "Playing" : "Chosen",
+                 end != NULL ? (int)(end - at) : (int)strlen(at), at);
     } else {
         snprintf(text, sizeof(text), "Nothing playing");
     }

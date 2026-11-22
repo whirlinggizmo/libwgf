@@ -1193,7 +1193,8 @@ export declare const WGF_UI_VALUE_HANDLE_SIZE: 12;
 export declare const WGF_UI_VALUE_LINE_WIDTH: 13;
 export declare const WGF_UI_VALUE_TILE_SIZE: 14;
 export declare const WGF_UI_VALUE_SCROLL_BAR: 15;
-export type wgf_ui_value_t = typeof WGF_UI_VALUE_TEXT_SIZE | typeof WGF_UI_VALUE_PADDING | typeof WGF_UI_VALUE_GAP | typeof WGF_UI_VALUE_CORNER_RADIUS | typeof WGF_UI_VALUE_BUTTON_PADDING | typeof WGF_UI_VALUE_BUTTON_WIDTH | typeof WGF_UI_VALUE_FOCUS_WIDTH | typeof WGF_UI_VALUE_BAR_WIDTH | typeof WGF_UI_VALUE_BAR_HEIGHT | typeof WGF_UI_VALUE_CHECK_SIZE | typeof WGF_UI_VALUE_SLIDER_WIDTH | typeof WGF_UI_VALUE_SLIDER_HEIGHT | typeof WGF_UI_VALUE_HANDLE_SIZE | typeof WGF_UI_VALUE_LINE_WIDTH | typeof WGF_UI_VALUE_TILE_SIZE | typeof WGF_UI_VALUE_SCROLL_BAR;
+export declare const WGF_UI_VALUE_SCROLL_BAR_ALWAYS: 16;
+export type wgf_ui_value_t = typeof WGF_UI_VALUE_TEXT_SIZE | typeof WGF_UI_VALUE_PADDING | typeof WGF_UI_VALUE_GAP | typeof WGF_UI_VALUE_CORNER_RADIUS | typeof WGF_UI_VALUE_BUTTON_PADDING | typeof WGF_UI_VALUE_BUTTON_WIDTH | typeof WGF_UI_VALUE_FOCUS_WIDTH | typeof WGF_UI_VALUE_BAR_WIDTH | typeof WGF_UI_VALUE_BAR_HEIGHT | typeof WGF_UI_VALUE_CHECK_SIZE | typeof WGF_UI_VALUE_SLIDER_WIDTH | typeof WGF_UI_VALUE_SLIDER_HEIGHT | typeof WGF_UI_VALUE_HANDLE_SIZE | typeof WGF_UI_VALUE_LINE_WIDTH | typeof WGF_UI_VALUE_TILE_SIZE | typeof WGF_UI_VALUE_SCROLL_BAR | typeof WGF_UI_VALUE_SCROLL_BAR_ALWAYS;
 
 /**
  * Skins: a widget's parts drawn from the game's art in place of the style's colors, as
@@ -1273,6 +1274,18 @@ export declare const WGF_UI_FROM_RIGHT: 1;
 export declare const WGF_UI_FROM_TOP: 2;
 export declare const WGF_UI_FROM_BOTTOM: 3;
 export type wgf_ui_from_t = typeof WGF_UI_FROM_LEFT | typeof WGF_UI_FROM_RIGHT | typeof WGF_UI_FROM_TOP | typeof WGF_UI_FROM_BOTTOM;
+
+/**
+ * How a skin's edges and middle fill what is between its corners: stretched; or tiled, its
+ * art repeated at its own size, an edge along it and the middle both ways, the last one cut
+ * where the room ends (a rope border, a brick panel: art that can't stretch); or tiled to
+ * fit, repeated a whole number of times, each stretched the little it takes to end on a
+ * whole one. A part drawn smaller than its borders is stretched whichever.
+ */
+export declare const WGF_UI_PATCH_STRETCHED: 0;
+export declare const WGF_UI_PATCH_TILED: 1;
+export declare const WGF_UI_PATCH_TILED_FIT: 2;
+export type wgf_ui_patch_t = typeof WGF_UI_PATCH_STRETCHED | typeof WGF_UI_PATCH_TILED | typeof WGF_UI_PATCH_TILED_FIT;
 
 /**
  * What happened to an element, as wgf_document_take_events gives it.
@@ -12798,10 +12811,13 @@ export declare function wgf_ui_end_group(): boolean;
  * longer or wider than it: by the wheel over it (the innermost area under the pointer; a
  * wheel across, or Shift with it, sideways), a drag (a press that moves a few pixels is the
  * area's, and the widget it began on, but a slider, isn't pressed), with a fling when let
- * go moving, and its scroll bars, each shown while there is more to scroll to that way: the
- * thumb dragged, the track pressed for a page. The focus moved by keys, a pad, or
+ * go moving, and its scroll bars, each shown while there is more to scroll to that way (always,
+ * with the style's WGF_UI_VALUE_SCROLL_BAR_ALWAYS: disabled, its thumb the whole track, with
+ * no more): the thumb dragged, the track pressed for a page. The focus moved by keys, a pad, or
  * wgf_ui_set_focus to a widget in it scrolls the widget into view, and Page Up and Page
- * Down page while the focus is in it. The layout calls (padding, gap, alignment, color) are
+ * Down page while the focus is in it. An area with no widget in it to focus (a page of text)
+ * and more than it shows is focused itself, by its id, from the frame after it was first laid
+ * out so: focused, its arrows scroll it a row at a time and the page keys a page. The layout calls (padding, gap, alignment, color) are
  * its content's; its size is the call's, so wgf_ui_set_width and _height refuse it. Its
  * scroll is kept while it is given each frame; what it scrolls to shows from the next
  * frame. Closed by wgf_ui_end_scroll. False too for no id, or a size below 0.
@@ -12814,10 +12830,13 @@ export declare function wgf_ui_begin_scroll(id: string | null, width: number, he
  * longer or wider than it: by the wheel over it (the innermost area under the pointer; a
  * wheel across, or Shift with it, sideways), a drag (a press that moves a few pixels is the
  * area's, and the widget it began on, but a slider, isn't pressed), with a fling when let
- * go moving, and its scroll bars, each shown while there is more to scroll to that way: the
- * thumb dragged, the track pressed for a page. The focus moved by keys, a pad, or
+ * go moving, and its scroll bars, each shown while there is more to scroll to that way (always,
+ * with the style's WGF_UI_VALUE_SCROLL_BAR_ALWAYS: disabled, its thumb the whole track, with
+ * no more): the thumb dragged, the track pressed for a page. The focus moved by keys, a pad, or
  * wgf_ui_set_focus to a widget in it scrolls the widget into view, and Page Up and Page
- * Down page while the focus is in it. The layout calls (padding, gap, alignment, color) are
+ * Down page while the focus is in it. An area with no widget in it to focus (a page of text)
+ * and more than it shows is focused itself, by its id, from the frame after it was first laid
+ * out so: focused, its arrows scroll it a row at a time and the page keys a page. The layout calls (padding, gap, alignment, color) are
  * its content's; its size is the call's, so wgf_ui_set_width and _height refuse it. Its
  * scroll is kept while it is given each frame; what it scrolls to shows from the next
  * frame. Closed by wgf_ui_end_scroll. False too for no id, or a size below 0.
@@ -13040,14 +13059,24 @@ export declare function wgf_ui_set_disabled(disabled: boolean): boolean;
 export declare function wgf_ui_is_disabled(): boolean;
 
 /**
+ * Whether the widget given just before it was activated this frame: a button, an icon or
+ * image button, a toggle, a checkbox, or a tile, as its own call answered; a list, its chosen
+ * item (see wgf_ui_list). False for any other widget, with none before it in the frame, and
+ * outside a begun UI.
+ */
+export declare function wgf_ui_is_activated(): boolean;
+
+/**
  * A list of `items`, one a line (any number: "" or NULL, none), `rows` of them tall and as
  * wide as its parent's room (at least the style's button width), one of them chosen:
  * `selected` (-1: none) as given (clamped to them), or as the user chose this frame. A press
  * and release on an item chooses it (a drag scrolls, choosing none); when focused, Up and
  * Down (a pad's too) step, held ones repeating, and Page Up and Page Down step a page, the
  * chosen one scrolled into view. It scrolls as a scroll area does, down only. Only the
- * items in view are laid out, so a long list costs its rows. `selected` as given when
- * refused (no id, `rows` below 1).
+ * items in view are laid out, so a long list costs its rows. Its chosen item is activated
+ * (wgf_ui_is_activated, asked after the call) by Enter, Space, or a pad's south button while
+ * the list is focused, or a press and release on the item already chosen: a double press on
+ * one not yet. `selected` as given when refused (no id, `rows` below 1).
  */
 export declare function wgf_ui_list(id: string | null, items: string | null, selected: number, rows: number): number;
 
@@ -13310,6 +13339,16 @@ export declare function wgf_ui_set_skin_tint(widget: wgf_ui_widget_t, part: wgf_
  * (x left, y top, z right, w bottom), and tint (white for none).
  */
 export declare function wgf_ui_get_skin_tint(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t): wgf_color_t;
+
+/**
+ * Its patches' fill (stretched until set); false too for a fill that isn't one.
+ */
+export declare function wgf_ui_set_skin_patch(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t, patch: wgf_ui_patch_t): boolean;
+
+/**
+ * Its patches' fill (stretched until set); false too for a fill that isn't one.
+ */
+export declare function wgf_ui_get_skin_patch(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t): wgf_ui_patch_t;
 
 /**
  * A widget's text offset in a state, in logical pixels (0, 0 until set).

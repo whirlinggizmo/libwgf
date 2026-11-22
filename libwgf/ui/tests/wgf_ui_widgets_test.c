@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "sokol_gfx.h" /* sokol_gl needs it first */
@@ -304,6 +305,8 @@ static void on_frame(void *user)
                    !wgf_ui_set_skin(WGF_UI_WIDGET_BUTTON, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL, 12345, 0, 0, 0, 0) &&
                    !wgf_ui_set_skin(WGF_UI_WIDGET_BUTTON, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL, art, NAN, 0, 0, 0) &&
                    !wgf_ui_set_skin_borders(WGF_UI_WIDGET_BUTTON, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL, -1, 0, 0, 0) &&
+                   !wgf_ui_set_skin_patch(WGF_UI_WIDGET_BUTTON, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL, (wgf_ui_patch_t)3) &&
+                   !wgf_ui_set_skin_patch((wgf_ui_widget_t)16, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL, WGF_UI_PATCH_TILED) &&
                    !wgf_ui_set_text_offset(WGF_UI_WIDGET_BUTTON, WGF_UI_STATE_NORMAL, INFINITY, 0) &&
                    wgf_ui_get_skin((wgf_ui_widget_t)16, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL) == 0,
                "a widget, part, or state that isn't one, a handle that isn't a texture, a value not finite: refused");
@@ -312,6 +315,23 @@ static void on_frame(void *user)
         plain = drawn(one_bar);
         disabled = drawn(one_disabled_button);
         expect(disabled > 0 && disabled == drawn(one_button), "a disabled button drawn from the normal state's art");
+        { /* its patches tiled: more of them than the nine stretched */
+            const int stretched = drawn(one_button);
+            int tiled, fit;
+            expect(wgf_ui_get_skin_patch(WGF_UI_WIDGET_BUTTON, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL) == WGF_UI_PATCH_STRETCHED &&
+                       wgf_ui_set_skin_patch(WGF_UI_WIDGET_BUTTON, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL, WGF_UI_PATCH_TILED) &&
+                       wgf_ui_get_skin_patch(WGF_UI_WIDGET_BUTTON, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL) == WGF_UI_PATCH_TILED,
+                   "a skin's patches tiled, read back");
+            tiled = drawn(one_button);
+            expect(wgf_ui_set_skin_patch(WGF_UI_WIDGET_BUTTON, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL, WGF_UI_PATCH_TILED_FIT),
+                   "tiled to fit");
+            fit = drawn(one_button);
+            if (getenv("WGF_TEST_SHOW")) printf("patches: stretched %d, tiled %d, fit %d\n", stretched, tiled, fit);
+            expect(tiled > stretched && fit > stretched, "tiled: its art repeated");
+            expect(wgf_ui_set_skin_patch(WGF_UI_WIDGET_BUTTON, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL, WGF_UI_PATCH_STRETCHED) &&
+                       drawn(one_button) == stretched,
+                   "stretched again");
+        }
         expect(wgf_ui_set_skin(WGF_UI_WIDGET_PROGRESS, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL, art, 0, 0, 0, 0) &&
                    wgf_ui_set_skin(WGF_UI_WIDGET_PROGRESS, WGF_UI_PART_FILL, WGF_UI_STATE_NORMAL, art, 0, 0, 0, 0),
                "a progress bar's skins");

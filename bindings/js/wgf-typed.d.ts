@@ -11145,10 +11145,13 @@ export declare const Ui: {
      * longer or wider than it: by the wheel over it (the innermost area under the pointer; a
      * wheel across, or Shift with it, sideways), a drag (a press that moves a few pixels is the
      * area's, and the widget it began on, but a slider, isn't pressed), with a fling when let
-     * go moving, and its scroll bars, each shown while there is more to scroll to that way: the
-     * thumb dragged, the track pressed for a page. The focus moved by keys, a pad, or
+     * go moving, and its scroll bars, each shown while there is more to scroll to that way (always,
+     * with the style's WGF_UI_VALUE_SCROLL_BAR_ALWAYS: disabled, its thumb the whole track, with
+     * no more): the thumb dragged, the track pressed for a page. The focus moved by keys, a pad, or
      * wgf_ui_set_focus to a widget in it scrolls the widget into view, and Page Up and Page
-     * Down page while the focus is in it. The layout calls (padding, gap, alignment, color) are
+     * Down page while the focus is in it. An area with no widget in it to focus (a page of text)
+     * and more than it shows is focused itself, by its id, from the frame after it was first laid
+     * out so: focused, its arrows scroll it a row at a time and the page keys a page. The layout calls (padding, gap, alignment, color) are
      * its content's; its size is the call's, so wgf_ui_set_width and _height refuse it. Its
      * scroll is kept while it is given each frame; what it scrolls to shows from the next
      * frame. Closed by wgf_ui_end_scroll. False too for no id, or a size below 0.
@@ -11160,10 +11163,13 @@ export declare const Ui: {
      * longer or wider than it: by the wheel over it (the innermost area under the pointer; a
      * wheel across, or Shift with it, sideways), a drag (a press that moves a few pixels is the
      * area's, and the widget it began on, but a slider, isn't pressed), with a fling when let
-     * go moving, and its scroll bars, each shown while there is more to scroll to that way: the
-     * thumb dragged, the track pressed for a page. The focus moved by keys, a pad, or
+     * go moving, and its scroll bars, each shown while there is more to scroll to that way (always,
+     * with the style's WGF_UI_VALUE_SCROLL_BAR_ALWAYS: disabled, its thumb the whole track, with
+     * no more): the thumb dragged, the track pressed for a page. The focus moved by keys, a pad, or
      * wgf_ui_set_focus to a widget in it scrolls the widget into view, and Page Up and Page
-     * Down page while the focus is in it. The layout calls (padding, gap, alignment, color) are
+     * Down page while the focus is in it. An area with no widget in it to focus (a page of text)
+     * and more than it shows is focused itself, by its id, from the frame after it was first laid
+     * out so: focused, its arrows scroll it a row at a time and the page keys a page. The layout calls (padding, gap, alignment, color) are
      * its content's; its size is the call's, so wgf_ui_set_width and _height refuse it. Its
      * scroll is kept while it is given each frame; what it scrolls to shows from the next
      * frame. Closed by wgf_ui_end_scroll. False too for no id, or a size below 0.
@@ -11356,14 +11362,23 @@ export declare const Ui: {
      */
     readonly isDisabled: typeof raw.wgf_ui_is_disabled;
     /**
+     * Whether the widget given just before it was activated this frame: a button, an icon or
+     * image button, a toggle, a checkbox, or a tile, as its own call answered; a list, its chosen
+     * item (see wgf_ui_list). False for any other widget, with none before it in the frame, and
+     * outside a begun UI.
+     */
+    readonly isActivated: typeof raw.wgf_ui_is_activated;
+    /**
      * A list of `items`, one a line (any number: "" or NULL, none), `rows` of them tall and as
      * wide as its parent's room (at least the style's button width), one of them chosen:
      * `selected` (-1: none) as given (clamped to them), or as the user chose this frame. A press
      * and release on an item chooses it (a drag scrolls, choosing none); when focused, Up and
      * Down (a pad's too) step, held ones repeating, and Page Up and Page Down step a page, the
      * chosen one scrolled into view. It scrolls as a scroll area does, down only. Only the
-     * items in view are laid out, so a long list costs its rows. `selected` as given when
-     * refused (no id, `rows` below 1).
+     * items in view are laid out, so a long list costs its rows. Its chosen item is activated
+     * (wgf_ui_is_activated, asked after the call) by Enter, Space, or a pad's south button while
+     * the list is focused, or a press and release on the item already chosen: a double press on
+     * one not yet. `selected` as given when refused (no id, `rows` below 1).
      */
     readonly list: typeof raw.wgf_ui_list;
     /**
@@ -11595,6 +11610,14 @@ export declare const Ui: {
      * (x left, y top, z right, w bottom), and tint (white for none).
      */
     readonly getSkinTint: typeof raw.wgf_ui_get_skin_tint;
+    /**
+     * Its patches' fill (stretched until set); false too for a fill that isn't one.
+     */
+    readonly setSkinPatch: typeof raw.wgf_ui_set_skin_patch;
+    /**
+     * Its patches' fill (stretched until set); false too for a fill that isn't one.
+     */
+    readonly getSkinPatch: typeof raw.wgf_ui_get_skin_patch;
     /**
      * A widget's text offset in a state, in logical pixels (0, 0 until set).
      */
@@ -12716,12 +12739,14 @@ export type UiFrom = raw.wgf_ui_from_t;
 export declare const UiFrom: { readonly LEFT: UiFrom; readonly RIGHT: UiFrom; readonly TOP: UiFrom; readonly BOTTOM: UiFrom; };
 export type UiPart = raw.wgf_ui_part_t;
 export declare const UiPart: { readonly BASE: UiPart; readonly FILL: UiPart; readonly HANDLE: UiPart; readonly EDGE: UiPart; readonly ITEM: UiPart; };
+export type UiPatch = raw.wgf_ui_patch_t;
+export declare const UiPatch: { readonly STRETCHED: UiPatch; readonly TILED: UiPatch; readonly TILED_FIT: UiPatch; };
 export type UiSizing = raw.wgf_ui_sizing_t;
 export declare const UiSizing: { readonly FIT: UiSizing; readonly GROW: UiSizing; readonly FIXED: UiSizing; readonly PERCENT: UiSizing; };
 export type UiState = raw.wgf_ui_state_t;
 export declare const UiState: { readonly NORMAL: UiState; readonly HOVERED: UiState; readonly PRESSED: UiState; readonly DISABLED: UiState; };
 export type UiValue = raw.wgf_ui_value_t;
-export declare const UiValue: { readonly TEXT_SIZE: UiValue; readonly PADDING: UiValue; readonly GAP: UiValue; readonly CORNER_RADIUS: UiValue; readonly BUTTON_PADDING: UiValue; readonly BUTTON_WIDTH: UiValue; readonly FOCUS_WIDTH: UiValue; readonly BAR_WIDTH: UiValue; readonly BAR_HEIGHT: UiValue; readonly CHECK_SIZE: UiValue; readonly SLIDER_WIDTH: UiValue; readonly SLIDER_HEIGHT: UiValue; readonly HANDLE_SIZE: UiValue; readonly LINE_WIDTH: UiValue; readonly TILE_SIZE: UiValue; readonly SCROLL_BAR: UiValue; };
+export declare const UiValue: { readonly TEXT_SIZE: UiValue; readonly PADDING: UiValue; readonly GAP: UiValue; readonly CORNER_RADIUS: UiValue; readonly BUTTON_PADDING: UiValue; readonly BUTTON_WIDTH: UiValue; readonly FOCUS_WIDTH: UiValue; readonly BAR_WIDTH: UiValue; readonly BAR_HEIGHT: UiValue; readonly CHECK_SIZE: UiValue; readonly SLIDER_WIDTH: UiValue; readonly SLIDER_HEIGHT: UiValue; readonly HANDLE_SIZE: UiValue; readonly LINE_WIDTH: UiValue; readonly TILE_SIZE: UiValue; readonly SCROLL_BAR: UiValue; readonly SCROLL_BAR_ALWAYS: UiValue; };
 export type UiWidget = raw.wgf_ui_widget_t;
 export declare const UiWidget: { readonly PANEL: UiWidget; readonly BUTTON: UiWidget; readonly TOGGLE: UiWidget; readonly CHECKBOX: UiWidget; readonly SLIDER: UiWidget; readonly PROGRESS: UiWidget; readonly GROUP: UiWidget; readonly TAB: UiWidget; readonly COMBO: UiWidget; readonly NUMBER: UiWidget; readonly TILE: UiWidget; readonly SCROLL: UiWidget; readonly LIST: UiWidget; readonly DROPDOWN: UiWidget; readonly POPUP: UiWidget; readonly TEXT: UiWidget; };
 export type VehicleDrive = raw.wgf_vehicle_drive_t;

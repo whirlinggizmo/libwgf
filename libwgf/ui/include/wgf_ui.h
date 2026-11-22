@@ -104,10 +104,13 @@ WGF_API bool wgf_ui_end_group(void);
  * longer or wider than it: by the wheel over it (the innermost area under the pointer; a
  * wheel across, or Shift with it, sideways), a drag (a press that moves a few pixels is the
  * area's, and the widget it began on, but a slider, isn't pressed), with a fling when let
- * go moving, and its scroll bars, each shown while there is more to scroll to that way: the
- * thumb dragged, the track pressed for a page. The focus moved by keys, a pad, or
+ * go moving, and its scroll bars, each shown while there is more to scroll to that way (always,
+ * with the style's WGF_UI_VALUE_SCROLL_BAR_ALWAYS: disabled, its thumb the whole track, with
+ * no more): the thumb dragged, the track pressed for a page. The focus moved by keys, a pad, or
  * wgf_ui_set_focus to a widget in it scrolls the widget into view, and Page Up and Page
- * Down page while the focus is in it. The layout calls (padding, gap, alignment, color) are
+ * Down page while the focus is in it. An area with no widget in it to focus (a page of text)
+ * and more than it shows is focused itself, by its id, from the frame after it was first laid
+ * out so: focused, its arrows scroll it a row at a time and the page keys a page. The layout calls (padding, gap, alignment, color) are
  * its content's; its size is the call's, so wgf_ui_set_width and _height refuse it. Its
  * scroll is kept while it is given each frame; what it scrolls to shows from the next
  * frame. Closed by wgf_ui_end_scroll. False too for no id, or a size below 0. */
@@ -216,14 +219,22 @@ WGF_API bool wgf_ui_tile(const char *id, wgf_texture_t picture, const char *text
 WGF_API bool wgf_ui_set_disabled(bool disabled);
 WGF_API bool wgf_ui_is_disabled(void);
 
+/* Whether the widget given just before it was activated this frame: a button, an icon or
+ * image button, a toggle, a checkbox, or a tile, as its own call answered; a list, its chosen
+ * item (see wgf_ui_list). False for any other widget, with none before it in the frame, and
+ * outside a begun UI. */
+WGF_API bool wgf_ui_is_activated(void);
+
 /* A list of `items`, one a line (any number: "" or NULL, none), `rows` of them tall and as
  * wide as its parent's room (at least the style's button width), one of them chosen:
  * `selected` (-1: none) as given (clamped to them), or as the user chose this frame. A press
  * and release on an item chooses it (a drag scrolls, choosing none); when focused, Up and
  * Down (a pad's too) step, held ones repeating, and Page Up and Page Down step a page, the
  * chosen one scrolled into view. It scrolls as a scroll area does, down only. Only the
- * items in view are laid out, so a long list costs its rows. `selected` as given when
- * refused (no id, `rows` below 1). */
+ * items in view are laid out, so a long list costs its rows. Its chosen item is activated
+ * (wgf_ui_is_activated, asked after the call) by Enter, Space, or a pad's south button while
+ * the list is focused, or a press and release on the item already chosen: a double press on
+ * one not yet. `selected` as given when refused (no id, `rows` below 1). */
 WGF_API int wgf_ui_list(const char *id, const char *items, int selected, int rows);
 
 /* A text field: a line of text typed in, as wide as its parent's room (at least the style's
@@ -354,7 +365,8 @@ typedef enum wgf_ui_value_t {
     WGF_UI_VALUE_HANDLE_SIZE = 12,   /* its handle: across its track, and along it (as tall as the slider when skinned) */
     WGF_UI_VALUE_LINE_WIDTH = 13,    /* a separator's and a group's outline */
     WGF_UI_VALUE_TILE_SIZE = 14,     /* a tile's width, and its picture's side less its padding */
-    WGF_UI_VALUE_SCROLL_BAR = 15     /* a scroll bar's thickness */
+    WGF_UI_VALUE_SCROLL_BAR = 15,    /* a scroll bar's thickness */
+    WGF_UI_VALUE_SCROLL_BAR_ALWAYS = 16 /* above 0: a scroll bar is shown with nothing to scroll to, too (0: only with more) */
 } wgf_ui_value_t;
 
 /* False for a color or value that isn't one, or a value below 0. 0 for one that isn't. */
@@ -449,6 +461,17 @@ typedef enum wgf_ui_from_t {
     WGF_UI_FROM_BOTTOM = 3
 } wgf_ui_from_t;
 
+/* How a skin's edges and middle fill what is between its corners: stretched; or tiled, its
+ * art repeated at its own size, an edge along it and the middle both ways, the last one cut
+ * where the room ends (a rope border, a brick panel: art that can't stretch); or tiled to
+ * fit, repeated a whole number of times, each stretched the little it takes to end on a
+ * whole one. A part drawn smaller than its borders is stretched whichever. */
+typedef enum wgf_ui_patch_t {
+    WGF_UI_PATCH_STRETCHED = 0,
+    WGF_UI_PATCH_TILED = 1,
+    WGF_UI_PATCH_TILED_FIT = 2
+} wgf_ui_patch_t;
+
 /* A skin set (texture 0: the part drawn in its colors again), its region, borders, and
  * tint; and read back: its texture (0 for none), region (x, y, z width, w height), borders
  * (x left, y top, z right, w bottom), and tint (white for none). */
@@ -461,6 +484,10 @@ WGF_API bool wgf_ui_set_skin_borders(wgf_ui_widget_t widget, wgf_ui_part_t part,
 WGF_API wgf_vec4_t wgf_ui_get_skin_borders(wgf_ui_widget_t widget, wgf_ui_part_t part, wgf_ui_state_t state);
 WGF_API bool wgf_ui_set_skin_tint(wgf_ui_widget_t widget, wgf_ui_part_t part, wgf_ui_state_t state, wgf_color_t tint);
 WGF_API wgf_color_t wgf_ui_get_skin_tint(wgf_ui_widget_t widget, wgf_ui_part_t part, wgf_ui_state_t state);
+/* Its patches' fill (stretched until set); false too for a fill that isn't one. */
+WGF_API bool wgf_ui_set_skin_patch(wgf_ui_widget_t widget, wgf_ui_part_t part, wgf_ui_state_t state,
+                                   wgf_ui_patch_t patch);
+WGF_API wgf_ui_patch_t wgf_ui_get_skin_patch(wgf_ui_widget_t widget, wgf_ui_part_t part, wgf_ui_state_t state);
 
 /* A widget's text offset in a state, in logical pixels (0, 0 until set). */
 WGF_API bool wgf_ui_set_text_offset(wgf_ui_widget_t widget, wgf_ui_state_t state, float x, float y);

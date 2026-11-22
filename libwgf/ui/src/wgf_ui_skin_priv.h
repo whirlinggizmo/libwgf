@@ -3,6 +3,9 @@
 
 #include <stdbool.h>
 
+#include "wgf_color.h"
+#include "wgf_texture.h"
+
 /* The Clay UI's skins (wgf_ui.h), a file of their own (wgf_ui_skin.c) that the frame's
  * drawing reaches through these hooks, set by the first skin call: a UI drawn in its
  * colors alone links none of it. */
@@ -24,5 +27,15 @@ typedef struct wgf_ui_priv_skins_t {
 } wgf_ui_priv_skins_t;
 
 void wgf_ui_priv_set_skins(const wgf_ui_priv_skins_t *skins);
+
+/* A skin's nine patches drawn with its edges and middle tiled (`fit`: a whole number of
+ * times), from `texture`'s region `source` by its `borders`; false, drawing nothing, for a
+ * rectangle smaller than its borders. wgf_ui_skin_patch.c's, set as a skin is first given a
+ * tiled fill. */
+typedef bool (*wgf_ui_priv_patch_draw_t)(wgf_texture_t texture, const float source[4], const float borders[4], float x,
+                                         float y, float width, float height, bool fit, wgf_color_t tint);
+void wgf_ui_priv_set_patch_draw(wgf_ui_priv_patch_draw_t draw_patches); /* wgf_ui_skin.c's */
+/* Where a skin keeps its fill (a wgf_ui_patch_t); NULL for a widget, part, or state that isn't one. */
+unsigned char *wgf_ui_priv_skin_patch(int widget, int part, int state);
 
 #endif

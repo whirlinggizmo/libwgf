@@ -14,6 +14,7 @@
 typedef struct wgf_ui_priv_area_t {
     uint32_t element, window;
     float offset[2];
+    bool bare; /* nothing in it could be focused: a scroll area takes the focus itself */
 } wgf_ui_priv_area_t;
 
 /* The scrolling's state, the ui's. */
@@ -27,6 +28,7 @@ typedef struct wgf_ui_priv_scroll_t {
     bool press_drags;  /* it began on a widget that drags (a slider): never the area's */
     int bar;           /* it began on a thumb, across (0) or down (1); 2 a track; -1 neither */
     int item;          /* the list's item it began on, -1 none */
+    bool item_chosen;  /* that item was the chosen one already: a release on it activates it */
     float from[2], offset_from[2], grab; /* the pointer and the scroll as it began; where on the thumb */
     uint32_t flung;    /* the area let go of moving */
     float velocity[2]; /* its scroll's, in logical pixels a second */

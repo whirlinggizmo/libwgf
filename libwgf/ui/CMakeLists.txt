@@ -31,7 +31,9 @@ wgf_layer(ui
         src/wgf_ui.c
         src/wgf_ui_clay_impl.c
         src/wgf_ui_skin.c
+        src/wgf_ui_skin_patch.c
         src/wgf_ui_scroll.c
+        src/wgf_ui_popup.c
         src/wgf_ui_text.c
         src/wgf_ui_document.c
         src/wgf_ui_document_draw.c
@@ -60,14 +62,14 @@ if(WGF_TESTS AND WGF_HEADLESS)
             add_test(NAME wgf_ui_unlinked_check
                      COMMAND ${Python3_EXECUTABLE} "${PROJECT_SOURCE_DIR}/tools/check_link_map.py"
                              "$<TARGET_FILE_DIR:wgf_ui_unlinked_test>/wgf_ui_unlinked_test.map" --absent
-                             wgf_ui_skin.c wgf_ui_toggle wgf_ui_checkbox wgf_ui_slider wgf_ui_image_button
+                             wgf_ui_skin.c wgf_ui_skin_patch.c draw_tiled wgf_ui_set_skin_patch wgf_ui_toggle wgf_ui_checkbox wgf_ui_slider wgf_ui_image_button
                              wgf_ui_icon_button wgf_ui_image wgf_ui_custom wgf_ui_begin_group wgf_ui_separator
                              draw_slider draw_check draw_image draw_image_button draw_group wgf_ui_tabs
                              wgf_ui_choice wgf_ui_combo wgf_ui_number wgf_ui_tile wgf_ui_begin_grid grid_row
                              draw_number_box
-                             wgf_ui_scroll.c wgf_ui_begin_scroll wgf_ui_list open_scroll scroll_input close_scroll
+                             wgf_ui_scroll.c wgf_ui_begin_scroll wgf_ui_list open_scroll scroll_input close_scroll bare_area
                              draw_scroll_bar draw_list_box draw_list_item Clay_UpdateScrollContainers
-                             wgf_ui_dropdown dropdown_list draw_chevron draw_popup hang wgf_ui_begin_modal
+                             wgf_ui_popup.c wgf_ui_dropdown dropdown_list draw_chevron draw_popup hang wgf_ui_begin_modal
                              close_modal wgf_ui_tooltip
                              wgf_ui_text.c wgf_ui_text_field wgf_ui_password_field text_field draw_field
                              field_keys field_press field_at wgf_ui_set_invalid)
