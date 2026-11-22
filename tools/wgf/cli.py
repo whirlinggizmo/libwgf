@@ -24,8 +24,13 @@
                                          from a headless run
   (screenshot's and dump's --autopilot flies the game there first: the file's inputs up
   to the frame, which is the file's end when --frame isn't given)
-    wgf serve [--port N]                 the game in a browser, reloaded as its Haxe or
-                                         an asset is saved, its state kept
+    wgf serve [--port N] [--hot | --no-reload]
+                                         the game in a browser, rebuilt as its Haxe, a
+                                         shader, or an asset is saved, and the page loaded
+                                         again; --no-reload: rebuilt only, the page left;
+                                         --hot: the new code and assets taken on by the
+                                         running page, its state kept (needs hotreload-hx,
+                                         a haxelib: wgf serve --hot says how to get it)
     wgf export [--web] [--desktop] [--out DIR] [--autopilot FILE] [--keep-autopilot]
                                          export/web (a static folder with a trimmed host,
                                          its assets' manifests written: gen_manifest.py)
@@ -284,7 +289,10 @@ def cmd_dump(args):
 
 def cmd_serve(args):
     game = games.find()
-    return devserver.Server(game, args.port).run()
+    if args.hot and not games.has_hot():
+        raise games.GameError(f'--hot needs hotreload-hx, a haxelib this machine hasn\'t: {games.HOT_INSTALL} '
+                              '(without --hot, the page loads again on a save)')
+    return devserver.Server(game, args.port, 'hot' if args.hot else 'none' if args.no_reload else 'reload').run()
 
 
 # ---- export ----------------------------------------------------------------------------
@@ -468,8 +476,12 @@ def parser():
     p.add_argument('--autopilot', help='an autopilot file to fly it there first')
     p.add_argument('--no-build', action='store_true')
     p.set_defaults(run=cmd_dump)
-    p = sub.add_parser('serve', help='in a browser, reloaded as its Haxe or an asset is saved')
+    p = sub.add_parser('serve', help='in a browser, rebuilt as its Haxe, a shader, or an asset is saved')
     p.add_argument('--port', type=int, default=8080)
+    mode = p.add_mutually_exclusive_group()
+    mode.add_argument('--hot', action='store_true',
+                      help='reload in the running page, its state kept (hotreload-hx, a haxelib)')
+    mode.add_argument('--no-reload', action='store_true', help='rebuild only: the page is left as it is')
     p.set_defaults(run=cmd_serve)
     p = sub.add_parser('export', help='export/web and export/desktop, smoke-tested')
     p.add_argument('--web', action='store_true')

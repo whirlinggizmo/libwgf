@@ -67,8 +67,6 @@ freely, subject to the following restrictions:
 - **jsmn** (inside `deps/cgltf/cgltf.h`): Copyright (c) 2010 Serge Zaitsev; with cgltf
 - **cJSON** (`deps/cjson/`): Copyright (c) 2009-2017 Dave Gamble and cJSON contributors; in a
   program that reads a sprite sheet's atlas or a Tiled map, and in the web host that has every call
-- **hotreload-hx** (`deps/hotreload-hx/`): Copyright (c) 2026 Whirling Gizmo, LLC; only in a
-  program `wgf serve` builds for hot reload, never in one `wgf export` ships
 - **The UTF-8 decoder in fontstash** (`deps/fontstash/fontstash.h`): Copyright (c)
   2008-2010 Bjoern Hoehrmann
 

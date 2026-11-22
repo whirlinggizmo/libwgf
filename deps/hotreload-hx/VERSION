@@ -1,7 +1,0 @@
-# Vendored from Whirling Gizmo's hotreload-hx (MIT, LICENSE in this directory): its src/
-# at this commit, unchanged. libwgf's `wgf serve` builds a game's web program with it
-# (-cp deps/hotreload-hx/src, its Builder macro, -D hotreload) and serves the builds itself
-# (tools/wgf/devserver.py), speaking its JsSwap's protocol (a build newer than the page's,
-# and the served files saved since); the Haxe runtime's hot build takes its Reloader's
-# assetsChanged. Its own DevServer isn't used. Nothing else uses it.
-hotreload-hx https://github.com/whirlinggizmo/hotreload-hx.git 83a50c0

@@ -1,21 +1,34 @@
-"""`wgf serve`: the game in a browser, rebuilt as its Haxe is saved, and reloaded in the
-running page with its state kept, for the wgf tool (tools/wgf/cli.py).
+"""`wgf serve`: the game in a browser, rebuilt as its Haxe, a shader, or an asset is saved,
+for the wgf tool (tools/wgf/cli.py). What the page then does is the mode's:
 
-The first build is a hot one (hotreload-hx's macro, -D hotreload: deps/hotreload-hx) on
-the full web host, which a reload never relinks, since the page has it. The page's
-program asks /__hotreload?since=<n> for a build newer than its own (a long poll); each
-rebuild, through a compilation server (haxe --wait), is stamped with its number on its
-first line, and the page loads it beside itself and takes on its classes between two
-frames (hotreload-hx's JsSwap): every static keeps its value, every object its fields,
-the C side -- entities, nodes, textures, the window -- is untouched. A failed build is
-reported here, and the page keeps what it has.
+  reload   (the default) the page loads again: the game starts over with the new build
+  none     (--no-reload) nothing: the new build is there for when the page is loaded again
+  hot      (--hot) the new code is taken on by the running page, its state kept, and a
+           texture or a glTF saved is loaded again in place; what can't be (a shader, a
+           sound, a scene) loads the page again, as in reload
 
-The game's assets are watched too: a file saved under them is told to the page, whose
-reloader (hotreload-hx's JsSwap) asks /__hotreload_assets?since=<n> (a long poll of its own,
-so an asset never re-imports the program) and is answered with the saved files' URLs
-(/assets/<path>); the Haxe runtime's hot build, told by it (Reloader.assetsChanged), loads
-each one again in place (wgf_asset_reload): a texture or a glTF, its handle kept, the game's state with it; a file that
-doesn't load keeps what it had, with one error logged in the page. Standard library only.
+The first build is on the full web host, which a rebuild never relinks. Each rebuild goes
+through a compilation server (haxe --wait). A failed build is reported here, and the page
+keeps what it has.
+
+A page that loads again is told to by a script this adds to the served page (not the
+game's own web/index.html), which asks /__wgf_reload?since=<n> (a long poll).
+
+Hot is hotreload-hx's (https://github.com/whirlinggizmo/hotreload-hx), a haxelib the
+machine has installed (`-lib hotreload-hx`, -D hotreload): none of it is libwgf's, and
+without it --hot says how to get it. The page's program asks /__hotreload?since=<n> for a
+build newer than its own; each rebuild is stamped with its number on its first line, and the
+page loads it beside itself and takes on its classes between two frames (its JsSwap):
+every static keeps its value, every object its fields, the C side -- entities, nodes,
+textures, the window -- is untouched. Its reloader asks /__hotreload_assets?since=<n> too,
+answered with the saved files' URLs (/assets/<path>); the Haxe runtime's hot build, told by
+it (Reloader.assetsChanged), loads each again in place (wgf_asset_reload), its handle kept;
+a file that doesn't load keeps what it had, with one error logged in the page.
+
+The game's shaders/*.glsl are watched as well: one saved is packed again
+(tools/pack_shader.py, which needs sokol-shdc: tools/setup_shdc.py) into
+assets/shaders/<name>.wgfshader, which is then an asset saved; one that doesn't compile
+says why here, and the packed file stays as it was. Standard library only.
 """
 import json
 import shutil
@@ -34,6 +47,13 @@ import game as games  # noqa: E402
 import server  # noqa: E402
 
 POLL_SECONDS = 20  # a long poll's longest wait: then the page asks again
+MODES = ('reload', 'none', 'hot')
+# what wgf_asset_reload loads again in place (textures, glTF and what a glTF names): a hot
+# page is told of these, and loads again whole for anything else
+IN_PLACE = ('.png', '.jpg', '.jpeg', '.bmp', '.tga', '.gif', '.ktx', '.gltf', '.glb', '.bin')
+RELOAD_SCRIPT = ('<script>(function ask(n){fetch("/__wgf_reload?since="+n,{cache:"no-store"}).then(function(r){'
+                 'return r.json()}).then(function(a){if(n>=0&&a.version>n)location.reload();else ask(a.version)},'
+                 'function(){setTimeout(function(){ask(n)},1000)})})(-1)</script>')
 CHECK_SECONDS = 0.1
 
 
@@ -105,12 +125,14 @@ def sources(directory, pattern='*.hx'):
 
 
 class Server:
-    def __init__(self, game, port, echo=lambda text: print(text, flush=True)):
+    def __init__(self, game, port, mode='reload', echo=lambda text: print(text, flush=True)):
         self.game = game
         self.port = port
+        self.mode = mode
         self.echo = echo
         self.out = game.build_dir('web')
         self.builds = Builds()
+        self.reloads = Builds()  # the times the page was told to load again
         self.saved = Saved()
         self.program = self.out / f'{game.name}.js'
         self.compile_port = None
@@ -140,38 +162,76 @@ class Server:
             return False
 
     def first_build(self):
-        """The page, the full host, the hot program, and the assets."""
-        games.build_web(self.game, hot=True, out=self.out)
+        """The page, the full host, the program (a hot one, in that mode), and the assets;
+        the served page given the script that loads it again, unless it never is."""
+        hot = self.mode == 'hot'
+        games.build_web(self.game, hot=hot, out=self.out)
         self.args = [str(a) for a in ['-cp', games.binding.SOURCE.parent, '-cp', self.game.source, *games.binding.MACROS, '--main',
-                                      self.game.main, '--js', self.program, '-D', 'js-es=6', '-D', 'hotreload',
-                                      *games.hot_args()]]
+                                      self.game.main, '--js', self.program, '-D', 'js-es=6',
+                                      *(['-D', 'hotreload', *games.hot_args()] if hot else [])]]
+        for define in self.game.defines:
+            self.args += ['-D', define]
+        if self.mode != 'none':
+            page = self.out / 'index.html'
+            text = page.read_text(encoding='utf-8')
+            at = text.rfind('</body>')
+            page.write_text(text[:at] + RELOAD_SCRIPT + '\n' + text[at:] if at >= 0 else text + RELOAD_SCRIPT,
+                            encoding='utf-8')
 
     def rebuild(self, changed):
         names = ', '.join(Path(p).name for p in changed)
         self.echo(f'wgf serve: building ({names} changed)')
         started = time.monotonic()
-        listing = self.out / '.hotreload-changed'
-        listing.write_text('\n'.join(changed), encoding='utf-8')
+        hot = self.mode == 'hot'
         command = [games.binding.haxe()]
         if self.compile_port is not None:
             command += ['--connect', str(self.compile_port)]
-        command += self.args + ['-D', 'hotreload_reload', '-D', f'hotreload_invalidate={listing}']
+        command += self.args
+        if hot:
+            listing = self.out / '.hotreload-changed'
+            listing.write_text('\n'.join(changed), encoding='utf-8')
+            command += ['-D', 'hotreload_reload', '-D', f'hotreload_invalidate={listing}']
         done = subprocess.run(command, cwd=self.game.root, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                               text=True, errors='replace')
         if done.returncode != 0:
             self.echo(done.stdout.strip())
             self.echo('wgf serve: the build failed; the page keeps what it has')
             return False
-        number = self.builds.version + 1
-        text = self.program.read_text(encoding='utf-8')
-        self.program.write_text(f'globalThis.__hotreload_built = {number}; ' + text, encoding='utf-8')
-        self.builds.bump()
-        self.echo(f'wgf serve: built in {round((time.monotonic() - started) * 1000)} ms; the page loads it next')
+        took = round((time.monotonic() - started) * 1000)
+        if hot:
+            number = self.builds.version + 1
+            text = self.program.read_text(encoding='utf-8')
+            self.program.write_text(f'globalThis.__hotreload_built = {number}; ' + text, encoding='utf-8')
+            self.builds.bump()
+            self.echo(f'wgf serve: built in {took} ms; the page takes it on next')
+        elif self.mode == 'reload':
+            self.reloads.bump()
+            self.echo(f'wgf serve: built in {took} ms; the page loads again')
+        else:
+            self.echo(f'wgf serve: built in {took} ms; load the page again for it')
         return True
 
+    def shaders_saved(self, changed):
+        """Shader sources saved: each packed again into the assets, where the assets' watch
+        finds it; one that doesn't compile said, its packed file left; one gone, left too."""
+        for path in changed:
+            source = Path(path)
+            if not source.is_file():
+                continue
+            packed = self.game.assets / 'shaders' / (source.stem + '.wgfshader')
+            packed.parent.mkdir(parents=True, exist_ok=True)
+            done = subprocess.run([sys.executable, str(games.TOOLS / 'pack_shader.py'), str(source), '-o', str(packed)],
+                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors='replace')
+            if done.returncode != 0:
+                self.echo(done.stdout.strip())
+                self.echo(f'wgf serve: {source.name} didn\'t pack; the page keeps the shader it has')
+            else:
+                self.echo(f'wgf serve: {source.name} packed')
+
     def assets_saved(self, changed):
-        """Asset files saved (or gone): told to the page, which loads each again; copied
-        first where the build has a copy of the assets rather than a link to them."""
+        """Asset files saved (or gone): copied first where the build has a copy of the
+        assets rather than a link to them; then, by the mode, the page loads again, or
+        (hot) is told the ones it can load again in place, and loads again for any other."""
         served = self.out / 'assets'
         names = []
         for path in changed:
@@ -180,11 +240,18 @@ class Server:
             if not served.is_symlink() and Path(path).is_file():
                 (served / name).parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(path, served / name)
-        self.echo(f'wgf serve: {", ".join(names)} saved; the page loads it again')
-        self.saved.bump(names)
+        said = ', '.join(names)
+        if self.mode == 'none':
+            self.echo(f'wgf serve: {said} saved; load the page again for it')
+        elif self.mode == 'hot' and all(name.lower().endswith(IN_PLACE) for name in names):
+            self.echo(f'wgf serve: {said} saved; the page loads it again in place')
+            self.saved.bump(names)
+        else:
+            self.echo(f'wgf serve: {said} saved; the page loads again')
+            self.reloads.bump()
 
     def handler(self):
-        builds, saved, program, name = self.builds, self.saved, self.program, self.game.name
+        builds, saved, reloads, program, name = self.builds, self.saved, self.reloads, self.program, self.game.name
 
         class Handler(server.handler_class(self.out, assets=None)):
             def end_headers(self):
@@ -193,13 +260,16 @@ class Server:
 
             def do_GET(self):
                 parts = urllib.parse.urlsplit(self.path)
-                if parts.path not in ('/__hotreload', '/__hotreload_assets'):
+                if parts.path not in ('/__hotreload', '/__hotreload_assets', '/__wgf_reload'):
                     return super().do_GET()
                 try:
                     since = int(urllib.parse.parse_qs(parts.query).get('since', ['0'])[0] or 0)
                 except ValueError:
                     since = 0
-                if parts.path == '/__hotreload_assets':
+                if parts.path == '/__wgf_reload':  # a page with no number yet is told the latest at once
+                    version = reloads.version if since < 0 else reloads.wait_newer(since, POLL_SECONDS)
+                    body = json.dumps({'version': version}).encode()
+                elif parts.path == '/__hotreload_assets':
                     version, files = saved.wait_newer(since, POLL_SECONDS)
                     body = json.dumps({'version': version, 'urls': [f'/assets/{f}' for f in files]}).encode()
                 else:
@@ -224,14 +294,18 @@ class Server:
         self.first_build()
         self.compile_port = self.start_compilation_server()
         base, httpd = server.serve(self.out, port=self.port, handler=self.handler())
-        self.echo(f'wgf serve: {self.game.name} at {base}/ (saving its Haxe or an asset reloads it, its state '
-                  f'kept; Ctrl-C stops)')
+        does = {'reload': 'loads the page again', 'none': 'rebuilds it: load the page again for it',
+                'hot': 'reloads it in the running page, its state kept'}[self.mode]
+        self.echo(f'wgf serve: {self.game.name} at {base}/ (saving its Haxe, a shader, or an asset {does}; '
+                  f'Ctrl-C stops)')
         code = Watch(lambda: sources(self.game.source), self.rebuild)
+        shaders = Watch(lambda: sources(self.game.root / 'shaders', '*.glsl'), self.shaders_saved)
         assets = Watch(lambda: sources(self.game.assets, '*'), self.assets_saved)
         try:
             while stop is None or not stop.is_set():
                 time.sleep(CHECK_SECONDS)
                 code.check()
+                shaders.check()
                 assets.check()
         except KeyboardInterrupt:
             pass

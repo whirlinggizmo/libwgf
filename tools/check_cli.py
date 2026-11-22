@@ -291,10 +291,13 @@ def car_gltf(x):
 
 def step_serve(game):
     """The page in a browser, its program with an initialized instance final, a texture, and
-    a glTF; Main.hx edited while it runs: the new code's line, with the frame count going on
-    from where it was; then the texture and the glTF saved changed: their new size and place
-    in its log, the count going on; then the texture saved broken: the old one kept, and one
-    error logged."""
+    a glTF, served twice. As `wgf serve` alone: Main.hx edited while it runs, and the page
+    loads again with the new code's line, its frame count from the start; then the texture
+    and the glTF saved changed, and it loads again with their new size and place. Then as
+    `wgf serve --hot`, where the machine has hotreload-hx (said as skipped where it hasn't):
+    Main.hx edited, the new code's line with the frame count going on from where it was; the
+    texture and the glTF saved, their new size and place in its log, the count going on;
+    the texture saved broken, the old one kept, and one error logged."""
     why = needs(web=True, browser_too=True)
     if why:
         return why
@@ -315,16 +318,31 @@ def step_serve(game):
     if 'held.count' not in main.read_text() or 'rock.getWidth' not in main.read_text():
         return problem('wgf serve: the template\'s Main.hx changed; give the check its instance final and assets '
                        'again', '')
+    sys.path.insert(0, str(ROOT / 'tools' / 'wgf'))
+    import game as games  # the tool's own module: its page runner, and whether the machine has hotreload-hx
+    served = serve_once(game, main, games, hot=False)
+    if served is not True:
+        return served
+    if not games.has_hot():
+        print(f'check_cli: serve: --hot SKIPPED: no hotreload-hx among this machine\'s haxelibs ({games.HOT_INSTALL})')
+        return True
+    # as it was before the first serve changed them
+    main.write_text(main.read_text().replace("'reloaded, frame $frames", "'hello, frame $frames"))
+    (game / 'assets' / 'rock.png').write_bytes(png(2))
+    (game / 'assets' / 'car.gltf').write_text(car_gltf(1))
+    return serve_once(game, main, games, hot=True)
+
+
+def serve_once(game, main, games, hot):
+    """One `wgf serve` of the game (step_serve), hot or not; True, or the problem."""
     port = browser.free_port()
-    process = subprocess.Popen([sys.executable, str(WGF), 'serve', '--port', str(port)], cwd=game,
-                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors='replace')
+    process = subprocess.Popen([sys.executable, str(WGF), 'serve', '--port', str(port)] + (['--hot'] if hot else []),
+                               cwd=game, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors='replace')
     served = []
     threading.Thread(target=lambda: served.extend(process.stdout), daemon=True).start()
     try:
         if not wait(lambda: any(' at http://' in line for line in served), 600):
             return problem('wgf serve: never said where it serves', ''.join(served))
-        sys.path.insert(0, str(ROOT / 'tools' / 'wgf'))
-        import game as games  # the tool's own module, for its page runner
         # the steps, each begun by a line of the page's: code edited, assets saved, a broken one saved
         state = {'step': 'code', 'before': 0, 'assets_at': 0, 'broken_at': 0, 'errors': 0, 'done': False}
         said = re.compile(r'(hello|reloaded), frame (\d+); rock (\d+), body at (-?\d+)')
@@ -349,6 +367,10 @@ def step_serve(game):
                 (game / 'assets' / 'car.gltf').write_text(car_gltf(3))
             elif state['step'] == 'assets' and width == 4 and x == 3:
                 state['shown_at'] = frame
+                if not hot:  # loaded again with them: all a page that isn't hot is asked
+                    state['step'] = 'shown'
+                    state['done'] = True
+                    return True
                 state['step'] = 'broken'
                 (game / 'assets' / 'rock.png').write_bytes(b'not an image any more')
             elif state['step'] == 'broken' and state['errors'] > 0:
@@ -367,18 +389,25 @@ def step_serve(game):
             return problem('wgf serve: the page never said hello with its first texture and glTF', log)
         if state['step'] == 'reloaded':
             return problem('wgf serve: the edit never reached the page', log)
-        if state['after'] <= state['before']:
-            return problem(f'wgf serve: the reloaded page counted from {state["after"]}, not on from '
+        if hot and state['after'] <= state['before']:
+            return problem(f'wgf serve --hot: the reloaded page counted from {state["after"]}, not on from '
                            f'{state["before"]}: its state was lost', log)
+        if not hot and state['after'] >= state['before']:
+            return problem(f'wgf serve: the page went on counting, to {state["after"]} from {state["before"]}, with '
+                           'the new code: it took it on without loading again', log)
         if state['step'] == 'assets':
             return problem('wgf serve: the saved texture and glTF never showed in the page (a rock 4 wide, the '
                            'body at 3)', log)
+        if not hot:
+            print(f'check_cli: serve: edited at frame {state["before"]}; the page loaded again and the new code said '
+                  f'so at frame {state["after"]}; a texture and a glTF saved, and it loaded again with them')
+            return True
         if not state['done']:
             return problem('wgf serve: a broken texture saved: no error logged, or no line after it', log)
         if not state['kept'] or state['errors'] != 1 or state['shown_at'] <= state['assets_at']:
             return problem(f'wgf serve: a broken texture saved: kept {state["kept"]}, {state["errors"]} error(s) '
                            'logged (one wanted)', log)
-        print(f'check_cli: serve: edited at frame {state["before"]}; the new code said so at frame {state["after"]}, '
+        print(f'check_cli: serve --hot: edited at frame {state["before"]}; the new code said so at frame {state["after"]}, '
               f'its state kept; a texture and a glTF saved, shown by frame {state["shown_at"]}; a broken texture '
               'saved, the old one kept and one error logged')
         return True

@@ -41,7 +41,6 @@ import webhost  # noqa: E402
 
 ROOT = TOOLS.parent
 PAGE = ROOT / 'hosts' / 'web' / 'page.html'
-HOTRELOAD = ROOT / 'deps' / 'hotreload-hx' / 'src'
 TARGETS = ('web', 'desktop', 'headless')
 AUTOPILOT_PASS = 'wgf_autopilot: PASS'
 AUTOPILOT_FAIL = 'wgf_autopilot: FAIL'
@@ -121,15 +120,18 @@ def place_assets(game, beside):
     return dest
 
 
-def haxe(game, target_args, defines=(), extra=()):
-    """Build the game with Haxe; (ok, its output)."""
+def haxe(game, target_args, defines=(), extra=(), env=None):
+    """Build the game with Haxe; (ok, its output). `env` is the environment it runs in:
+    hxcpp's pinned one when not given, which a build with a haxelib of the machine's own (a
+    hot one's hotreload-hx) can't use."""
     if binding.haxe() is None:
         raise GameError('no haxe on PATH: install Haxe 4.3.7 (BUILDING.md)')
     command = [binding.haxe(), '-cp', binding.SOURCE.parent, '-cp', game.source, *binding.MACROS, '--main', game.main,
                *target_args, *extra]
     for define in [*defines, *game.defines]:  # the build's, then the game's own (wgf.json)
         command += ['-D', define]
-    done = subprocess.run([str(c) for c in command], cwd=game.root, env=binding.hxcpp.env(), stdout=subprocess.PIPE,
+    done = subprocess.run([str(c) for c in command], cwd=game.root,
+                          env=binding.hxcpp.env() if env is None else env, stdout=subprocess.PIPE,
                           stderr=subprocess.STDOUT, text=True, errors='replace')  # hxcpp, pinned
     return done.returncode == 0, done.stdout
 
@@ -154,9 +156,26 @@ def titled(text, title):
     return text[:start + len('<title>')] + escaped + text[end:]
 
 
+HOT_LIBRARY = 'hotreload-hx'
+HOT_INSTALL = 'haxelib git hotreload-hx https://github.com/whirlinggizmo/hotreload-hx.git'
+
+
 def hot_args():
-    """A hot build's additions (wgf serve): hotreload-hx's macro and its define."""
-    return ['-cp', HOTRELOAD, '--macro', 'hotreload.Builder.init()']
+    """A hot build's additions (wgf serve --hot): hotreload-hx, the machine's haxelib, whose
+    own extraParams.hxml starts its macro."""
+    return ['-lib', HOT_LIBRARY]
+
+
+def has_hot():
+    """Whether the machine's haxelib has hotreload-hx."""
+    haxelib = shutil.which('haxelib')
+    if haxelib is None:
+        return False
+    try:
+        return subprocess.run([haxelib, 'path', HOT_LIBRARY], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                              timeout=60).returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
 
 
 def build_web(game, release=False, hot=False, out=None, exports=None):
@@ -171,7 +190,7 @@ def build_web(game, release=False, hot=False, out=None, exports=None):
     (out / 'index.html').write_text(titled(page(game).read_text(encoding='utf-8'), game.title), encoding='utf-8')
     defines = ['js-es=6'] + (['analyzer-optimize'] if release else []) + (['hotreload'] if hot else [])
     extra = (['-dce', 'full'] if release else []) + (hot_args() if hot else [])
-    ok, output = haxe(game, ['--js', out / f'{game.name}.js'], defines, extra)
+    ok, output = haxe(game, ['--js', out / f'{game.name}.js'], defines, extra, env=dict(os.environ) if hot else None)
     if not ok:
         raise GameError(f'the build failed:\n{output.strip()}')
     place_assets(game, out)
