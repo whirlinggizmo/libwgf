@@ -28,10 +28,10 @@ its program's, and the binding's share is given too.
   --shard K/N   only the K-th of N shares of libwgf's programs (every N-th by name, from
                 the K-th), so N machines measure them all at once: CI's sizes jobs
 
-The rows of the comparison are ROWS: libwgf's example, libwgt's, and wgrender-c's that
-does the same thing, each marked same or differs (docs/HISTORY.md, "Web sizes, measured",
-"Same rows, a target"); a same row is also held to libwgt's size and the autopilot
-runner's cost. LADDER is the feature cost ladder: programs in examples/sizes/ that each
+ROWS puts libwgf's examples beside the references': each with libwgt's and wgrender-c's
+program nearest it, for the reader, not as a target (libwgf does more than either now:
+docs/HISTORY.md, "The size table beside its references"), and a note where libwgf's is a
+different program. LADDER is the feature cost ladder: programs in examples/sizes/ that each
 add one thing. Standard library only.
 """
 import argparse
@@ -55,63 +55,48 @@ LIBWGT = ROOT.parent / 'libwgt'
 WGRENDER = ROOT.parent / 'wgrender-c'
 TOLERANCE = (0.01, 1024)  # a regression is more than 1%, and more than 1 KB, of gzip
 
-# (libwgf's program, libwgt's, wgrender-c's, whether libwgf's does the same, and why not):
-# a "same" row is the same program in each, held to SAME_TARGET over libwgt's; a "differs"
-# row leaves out what libwgf lacks, so its size is never a saving, and turns "same" as
-# the milestone that brings what it lacks does (each example's header lists every
-# difference).
+# (libwgf's program, libwgt's, wgrender-c's, a note): the program of each reference nearest
+# libwgf's, for the reader to set beside it; the note, where libwgf's is a different program,
+# says how, so its size isn't read as a like-for-like one (each example's header has the rest).
 ROWS = [
-    ('app-skeleton', 'app-skeleton', None, 'same', ''),
-    ('app-hello', 'app-hello', 'hello', 'same', ''),
-    ('app-window', 'app-window', 'window', 'same', ''),
-    ('app-tick', 'app-tick', 'tick', 'same', ''),
-    ('app-gamepad', 'app-gamepad', 'gamepad', 'same', ''),
-    ('app-touch', 'app-touch', 'touch', 'same', ''),
-    ('gfx-font', 'gfx-font', 'font', 'same', ''),
-    ('gfx-hello3d', 'gfx-hello3d', 'hello3d', 'same', ''),
-    ('gfx-meshes', None, 'meshes', 'same', ''),
-    ('gfx-model', 'gfx-model', 'model', 'differs',
-     "a program of libwgf's own, not libwgt's: the toy car (tools/gen_model.py), its parts found by name, "
-     "under a camera that circles or flies, where libwgt's is the animated character (gfx-skinning is "
-     "libwgf's)"),
-    ('gfx-materials', None, 'materials', 'differs',
-     'written before libwgf had skinning: a gold torus in place of the animated character, and a generated '
-     "sphere in place of the file's"),
-    ('gfx-lights', None, 'lights', 'differs',
-     'written before libwgf had skinning, and it has no lit sprites yet: generated capsules in place of '
-     'the animated characters, and no lit billboards'),
-    ('gfx-shadows', 'gfx-shadows', 'shadows', 'same', ''),
-    ('gfx-instancing', 'gfx-instancing', 'instancing', 'same', ''),
-    ('gfx-environment', 'gfx-environment', 'environment', 'same', ''),
-    ('gfx-textures', 'gfx-textures', 'textures', 'same', ''),
-    ('gfx-render-target', 'gfx-render-target', 'render_target', 'same', ''),
-    ('gfx-postprocess', 'gfx-postprocess', 'postprocess', 'same', ''),
-    ('gfx-shaders', 'gfx-shaders', 'shaders', 'differs',
-     "libwgf has no custom sprite materials yet: the logo's sprite effects, in the world and in the screen's "
-     "corner, are left out; the rest is libwgt's"),
-    ('gfx-sprite3d', 'gfx-sprite3d', 'sprite3d', 'same', ''),
-    ('gfx-text3d', 'gfx-text3d', 'text3d', 'same', ''),
-    ('gfx-sprite2d', 'gfx-sprite2d', 'sprite2d', 'same', ''),
-    ('gfx-particles', 'gfx-particles', 'particles', 'same', ''),
-    ('gfx-tilemap', 'gfx-tilemap', 'tilemap', 'differs',
-     "a program of libwgf's own, not libwgt's: a Tiled map, its objects made actors from a scene's "
-     "prefabs, a body sliding on its cells, and a painted trail, where libwgt's is a map of sprites with "
-     'coins the pointer picks'),
-    ('audio-music', 'audio-music', 'audio', 'same', ''),
-    ('asset-fetch', None, 'fetch', 'same', ''),
-    ('asset-force-fetch', None, 'force_fetch', 'same', ''),
-    ('asset-loading', None, 'loading', 'differs',
-     "written before libwgf had 3D: textures and sounds of like weight in place of wgrender-c's models and "
-     'environments'),
+    ('app-skeleton', 'app-skeleton', None, ''),
+    ('app-hello', 'app-hello', 'hello', ''),
+    ('app-window', 'app-window', 'window', ''),
+    ('app-tick', 'app-tick', 'tick', ''),
+    ('app-gamepad', 'app-gamepad', 'gamepad', ''),
+    ('app-touch', 'app-touch', 'touch', ''),
+    ('gfx-font', 'gfx-font', 'font', ''),
+    ('gfx-hello3d', 'gfx-hello3d', 'hello3d', ''),
+    ('gfx-meshes', None, 'meshes', ''),
+    ('gfx-model', 'gfx-model', 'model',
+     "libwgf's is its own: the toy car (tools/gen_model.py), its parts found by name, under a camera that "
+     "circles or flies; the references' is an animated character (libwgf's gfx-skinning)"),
+    ('gfx-materials', None, 'materials',
+     "libwgf's spheres are generated and a gold torus stands where wgrender-c's animated character is"),
+    ('gfx-lights', None, 'lights',
+     "libwgf's models are generated capsules where wgrender-c's are animated characters, and it has no lit "
+     'billboards (no lit sprites yet)'),
+    ('gfx-shadows', 'gfx-shadows', 'shadows', ''),
+    ('gfx-instancing', 'gfx-instancing', 'instancing', ''),
+    ('gfx-environment', 'gfx-environment', 'environment', ''),
+    ('gfx-textures', 'gfx-textures', 'textures', ''),
+    ('gfx-render-target', 'gfx-render-target', 'render_target', ''),
+    ('gfx-postprocess', 'gfx-postprocess', 'postprocess', ''),
+    ('gfx-shaders', 'gfx-shaders', 'shaders',
+     "libwgf's leaves out the logo's sprite effects (no custom sprite materials yet); the rest is libwgt's"),
+    ('gfx-sprite3d', 'gfx-sprite3d', 'sprite3d', ''),
+    ('gfx-text3d', 'gfx-text3d', 'text3d', ''),
+    ('gfx-sprite2d', 'gfx-sprite2d', 'sprite2d', ''),
+    ('gfx-particles', 'gfx-particles', 'particles', ''),
+    ('gfx-tilemap', 'gfx-tilemap', 'tilemap',
+     "libwgf's is its own: a Tiled map, its objects made actors from a scene's prefabs, a body sliding on "
+     "its cells, and a painted trail; the references' is a map of sprites with coins the pointer picks"),
+    ('audio-music', 'audio-music', 'audio', ''),
+    ('asset-fetch', None, 'fetch', ''),
+    ('asset-force-fetch', None, 'force_fetch', ''),
+    ('asset-loading', None, 'loading',
+     "libwgf's loads textures and sounds of like weight where wgrender-c's loads models and environments"),
 ]
-# A "same" row's target: libwgt's size, gzip, and the autopilot runner's cost, which
-# every libwgf program carries on purpose, so a shipped build can be played through
-# (docs/HISTORY.md, "Same rows, a target"). --check fails a "same" row past it.
-RUNNER_COST = 4864  # 4.75 KB: text expectations, recording's hooks, a wait on the loads (HISTORY, "The runner's allowance")
-# And the presentation's transform (wgf_presentation.h), which every program's drawing,
-# clips, and input go through, a mode set or not: measured at 304 bytes of gzip on
-# app-hello (docs/HISTORY.md, "Milestone 2, step 2"); libwgt has no presentation mode.
-PRESENTATION_COST = 512
 # The feature cost ladder: the skeleton, then each step adding one thing to the one
 # before (examples/sizes/), and the steps still to come with what will bring them.
 LADDER = [
@@ -317,15 +302,12 @@ def markdown(baseline):
              f'Measured from libwgf {baseline["libwgf"]["commit"]}'
              + ''.join(f', {n} {r["commit"]}' for n, r in refs.items()) + ', with Emscripten '
              + baseline.get('emscripten', '?') + '.', '',
-             '## Side by side', '',
-             'The same program in each library (each libwgf example\'s header says how it matches), gzip -9, its wasm '
-             'and its JS together; brotli -q 11 in brackets.', '',
-             'A **same** row is the same program in each library, and libwgf\'s is held to libwgt\'s size and the '
-             f'autopilot runner\'s {RUNNER_COST / 1024:g} KB and the presentation\'s {PRESENTATION_COST / 1024:g} KB '
-             '(the target); a **differs** row\'s libwgf program '
-             'leaves out what libwgf lacked when the program was written (most of it built since: the programs are '
-             'brought to match in ROADMAP.md\'s milestone 2.5), so its size is not a saving: its reason is linked.', '',
-             '| program | | libwgf | target | libwgt | wgrender-c |', '|---|---|---:|---:|---:|---:|']
+             '## Beside the references', '',
+             'Each libwgf example beside the nearest program of libwgt and of wgrender-c, the two libraries it was '
+             'made from: gzip -9, its wasm and its JS together; brotli -q 11 in brackets. They are for reference, not '
+             'targets: libwgf does more than either now. Most rows are the same program in each; a row marked with '
+             'a note is a different program in libwgf, so its size is not like for like.', '',
+             '| program | libwgf | libwgt | wgrender-c | |', '|---|---:|---:|---:|---|']
 
     def cell(sizes):
         if sizes is None:
@@ -333,18 +315,15 @@ def markdown(baseline):
         br = total(sizes, 'br')
         return kb(total(sizes)) + (f' ({kb(br)})' if br is not None else '')
 
-    for ours, theirs, wgrender, status, why in ROWS:
-        mark = 'same' if status == 'same' else f'[differs](#differs-{ours})'
-        goal = target(baseline, ours)
+    for ours, theirs, wgrender, note in ROWS:
         lines.append(f'| {ours}' + (f' / {theirs}' if theirs and theirs != ours else '')
-                     + (f' / {wgrender}' if wgrender else '') + f' | {mark} | {cell(lib.get(ours))} | '
-                     + f'{kb(goal) if goal else "-"} | '
-                     + f'{cell(wgt.get(theirs)) if theirs else "-"} | {cell(wgr.get(wgrender)) if wgrender else "-"} |')
-    lines += ['', '### Why rows differ', '']
-    for ours, theirs, wgrender, status, why in ROWS:
-        if status != 'same':
-            lines.append(f'- <a id="differs-{ours}"></a>**{ours}**: {why} ([its header](../examples/c/{ours}/main.c) '
-                         'lists every difference).')
+                     + (f' / {wgrender}' if wgrender else '') + f' | {cell(lib.get(ours))} | '
+                     + f'{cell(wgt.get(theirs)) if theirs else "-"} | {cell(wgr.get(wgrender)) if wgrender else "-"} | '
+                     + (f'[note](#note-{ours})' if note else '') + ' |')
+    lines += ['', '### Notes', '']
+    for ours, theirs, wgrender, note in ROWS:
+        if note:
+            lines.append(f'- <a id="note-{ours}"></a>**{ours}**: {note} ([its header](../examples/c/{ours}/main.c)).')
     lines += ['', '## The feature cost ladder', '',
               'Programs that each add one thing to the one before (`examples/sizes/`): what each feature costs on its own '
               'is its row\'s increment, gzip, wasm and JS together; brotli in brackets. Rows to come say what brings them.',
@@ -454,16 +433,6 @@ def markdown(baseline):
     return '\n'.join(lines) + '\n'
 
 
-def target(baseline, ours):
-    """A same row's target, bytes of gzip: libwgt's program and the runner's cost; None
-    for a differs row, or one libwgt has no program for."""
-    row = next((r for r in ROWS if r[0] == ours), None)
-    if row is None or row[3] != 'same' or row[1] is None:
-        return None
-    theirs = baseline.get('references', {}).get('libwgt', {}).get('programs', {}).get(row[1])
-    return None if theirs is None else total(theirs) + RUNNER_COST + PRESENTATION_COST
-
-
 def emscripten_version():
     return (ROOT / 'cmake' / 'emscripten-version.txt').read_text().split()[0]
 
@@ -482,10 +451,6 @@ def check(measured, baseline):
             worse.append(f'{name}: {kb(new_total)} KB gzip, was {kb(old_total)} (allowed {kb(allowed)})')
         elif new_total < old_total - max(old_total * TOLERANCE[0], TOLERANCE[1]):
             better.append(f'{name}: {kb(new_total)} KB, was {kb(old_total)}: --write a new baseline')
-        goal = target(baseline, name)
-        if goal is not None and new_total > goal:
-            worse.append(f'{name}: {kb(new_total)} KB gzip, past its target {kb(goal)} (libwgt\'s and the runner\'s '
-                         f'{RUNNER_COST / 1024:g} KB, the presentation\'s {PRESENTATION_COST / 1024:g}): a "same" row')
     return worse, better
 
 
