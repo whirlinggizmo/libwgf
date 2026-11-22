@@ -26,6 +26,7 @@ package wgf;
       DROPDOWN   base: the dropdown; item: each item of its open list, PRESSED while chosen,
                  HOVERED under the pointer or stepped to
       POPUP      base: a dropdown's open list's box, a tooltip's box
+      TEXT       base: a text field's box, PRESSED while it is focused
 
     A choice's toggles are TOGGLE's, each PRESSED while chosen; a modal's panel is PANEL's.
 
@@ -54,4 +55,5 @@ enum abstract UiWidget(Int) from Int to Int {
 	var LIST = 12;
 	var DROPDOWN = 13;
 	var POPUP = 14;
+	var TEXT = 15;
 }

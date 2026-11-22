@@ -21,9 +21,11 @@
  * from one sheet, their faces on a lip their text sinks onto when pressed; the loading
  * bar's blue rail is clipped, shown up to its value over the grey one, its round far end
  * only when full; the star answers on its round face alone, its clear corners left to the
- * screen, and sets the volume full. Save is disabled. Its tabs show three more pages: a
+ * screen, and sets the volume full. Save is disabled. Its tabs show four more pages: a
  * choice, a combo, and numbers; a grid of level tiles in a scroll area, which the arrows
- * move through in two dimensions, scrolled to the one focused; and a list of tracks. The
+ * move through in two dimensions, scrolled to the one focused; a list of tracks; and a name
+ * and a password typed in (a press places the caret, a drag or Shift selects, a double press
+ * a word; Ctrl's keys copy, paste, and undo), the name shown refused while it is taken. The
  * wheel, a drag, or a scroll bar scrolls them. The popups: a quality dropdown, whose list
  * opens over the rows below it; tooltips on the main page's buttons, after a rest on one (or
  * the focus on it, by keys or a pad); Reset asks first, in a modal; and the whole UI fades
@@ -40,6 +42,7 @@ static float volume = 0.6f, loaded = 0.4f, speed = 1.5f;
 static bool music = true, loading, asking;
 static int page, difficulty = 1, color, lives = 3, level = -1, track, quality = 1;
 static float shown; /* seconds since it started: the fade in */
+static char greeting[64];
 static char tracks[1024];
 static wgf_texture_t tex[13];
 static wgf_image_t star_mask;
@@ -134,6 +137,8 @@ static void set_theme(int which)
         tinted(WGF_UI_WIDGET_DROPDOWN, WGF_UI_PART_ITEM, WGF_UI_STATE_HOVERED, wgf_color_make(226, 232, 242, 255));
         tinted(WGF_UI_WIDGET_DROPDOWN, WGF_UI_PART_ITEM, WGF_UI_STATE_PRESSED, wgf_color_make(160, 208, 240, 255));
         skin(WGF_UI_WIDGET_POPUP, WGF_UI_PART_BASE, PANEL, 16, false);
+        tinted(WGF_UI_WIDGET_TEXT, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL, WGF_COLOR_WHITE);
+        tinted(WGF_UI_WIDGET_TEXT, WGF_UI_PART_BASE, WGF_UI_STATE_PRESSED, wgf_color_make(232, 244, 252, 255));
     }
 }
 
@@ -292,17 +297,34 @@ static void list(void)
     wgf_ui_label(text, 0);
 }
 
+/* The name page: a name, refused while it is taken, and a password; Enter in the name greets. */
+static void name(void)
+{
+    const bool taken = strcmp(wgf_ui_get_text("name"), "admin") == 0;
+    row("name-row", "Name", 130);
+    wgf_ui_set_invalid(taken);
+    if (wgf_ui_text_field("name", "Your name", 16) && !taken && wgf_ui_get_text("name")[0] != '\0')
+        snprintf(greeting, sizeof(greeting), "Hello, %s", wgf_ui_get_text("name"));
+    wgf_ui_set_invalid(false);
+    wgf_ui_end_box();
+    row("password-row", "Password", 130);
+    wgf_ui_password_field("password", "At least 8", 32);
+    wgf_ui_end_box();
+    wgf_ui_label(taken ? "That name is taken" : greeting[0] != '\0' ? greeting : "Enter your name", 0);
+}
+
 static void panel(void)
 {
     wgf_ui_begin_panel("panel");
-    wgf_ui_set_width(WGF_UI_SIZING_FIXED, 460);
+    wgf_ui_set_width(WGF_UI_SIZING_FIXED, theme == SKINNED ? 560 : 460); /* the skin's tabs are wider */
     wgf_ui_set_padding(30, 20);
     wgf_ui_set_gap(14);
-    page = wgf_ui_tabs("pages", "Main\nMore\nLevels\nList", page);
+    page = wgf_ui_tabs("pages", "Main\nMore\nLevels\nList\nName", page);
     if (page == 0) settings();
     else if (page == 1) choices();
     else if (page == 2) levels();
-    else list();
+    else if (page == 3) list();
+    else name();
     wgf_ui_end_panel();
 }
 

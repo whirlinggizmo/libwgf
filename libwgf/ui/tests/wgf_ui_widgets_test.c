@@ -298,14 +298,14 @@ static void on_frame(void *user)
                        offset.x == 0 && offset.y == 2,
                    "and read back");
         }
-        expect(!wgf_ui_set_skin((wgf_ui_widget_t)15, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL, art, 0, 0, 0, 0) &&
+        expect(!wgf_ui_set_skin((wgf_ui_widget_t)16, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL, art, 0, 0, 0, 0) &&
                    !wgf_ui_set_skin(WGF_UI_WIDGET_BUTTON, (wgf_ui_part_t)5, WGF_UI_STATE_NORMAL, art, 0, 0, 0, 0) &&
                    !wgf_ui_set_skin(WGF_UI_WIDGET_BUTTON, WGF_UI_PART_BASE, (wgf_ui_state_t)4, art, 0, 0, 0, 0) &&
                    !wgf_ui_set_skin(WGF_UI_WIDGET_BUTTON, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL, 12345, 0, 0, 0, 0) &&
                    !wgf_ui_set_skin(WGF_UI_WIDGET_BUTTON, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL, art, NAN, 0, 0, 0) &&
                    !wgf_ui_set_skin_borders(WGF_UI_WIDGET_BUTTON, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL, -1, 0, 0, 0) &&
                    !wgf_ui_set_text_offset(WGF_UI_WIDGET_BUTTON, WGF_UI_STATE_NORMAL, INFINITY, 0) &&
-                   wgf_ui_get_skin((wgf_ui_widget_t)15, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL) == 0,
+                   wgf_ui_get_skin((wgf_ui_widget_t)16, WGF_UI_PART_BASE, WGF_UI_STATE_NORMAL) == 0,
                "a widget, part, or state that isn't one, a handle that isn't a texture, a value not finite: refused");
 
         /* drawn from it: the button's art, the disabled state the normal one's, dimmed */

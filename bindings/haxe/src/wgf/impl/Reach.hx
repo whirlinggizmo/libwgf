@@ -1292,14 +1292,17 @@ class Reach {
 		"wgf_ui_get_style_font",
 		"wgf_ui_get_style_texture",
 		"wgf_ui_get_style_value",
+		"wgf_ui_get_text",
 		"wgf_ui_get_text_offset",
 		"wgf_ui_icon_button",
 		"wgf_ui_image",
 		"wgf_ui_image_button",
 		"wgf_ui_is_disabled",
+		"wgf_ui_is_invalid",
 		"wgf_ui_label",
 		"wgf_ui_list",
 		"wgf_ui_number",
+		"wgf_ui_password_field",
 		"wgf_ui_progress",
 		"wgf_ui_reset_style",
 		"wgf_ui_separator",
@@ -1313,6 +1316,7 @@ class Reach {
 		"wgf_ui_set_focus",
 		"wgf_ui_set_gap",
 		"wgf_ui_set_height",
+		"wgf_ui_set_invalid",
 		"wgf_ui_set_padding",
 		"wgf_ui_set_scroll",
 		"wgf_ui_set_skin",
@@ -1322,11 +1326,13 @@ class Reach {
 		"wgf_ui_set_style_font",
 		"wgf_ui_set_style_texture",
 		"wgf_ui_set_style_value",
+		"wgf_ui_set_text",
 		"wgf_ui_set_text_offset",
 		"wgf_ui_set_width",
 		"wgf_ui_slider",
 		"wgf_ui_spacer",
 		"wgf_ui_tabs",
+		"wgf_ui_text_field",
 		"wgf_ui_tile",
 		"wgf_ui_toggle",
 		"wgf_ui_tooltip",
@@ -1452,7 +1458,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1443) 0];
+	static final counts:Array<Int> = [for (_ in 0...1449) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

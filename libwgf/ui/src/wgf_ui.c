@@ -25,6 +25,8 @@
 #include "wgf_ui_priv.h"
 #include "wgf_ui_scroll_priv.h"
 #include "wgf_ui_skin_priv.h"
+#include "wgf_ui_text_priv.h"
+#include "wgf_window.h"
 
 /* The ui module: Clay lays out and hit-tests, this file describes each frame's UI to it,
  * answers widgets from the input, moves the focus, and draws Clay's commands through
@@ -41,9 +43,9 @@
 #define ELEMENTS_MAX 2048
 #define WORDS_MAX 8192  /* Clay's cache of measured words */
 #define TEXT_BLOCK 16384
-#define STYLE_COLORS 13 /* wgf_ui_color_t's */
+#define STYLE_COLORS 15 /* wgf_ui_color_t's */
 #define STYLE_VALUES 16 /* wgf_ui_value_t's */
-#define WIDGETS 15      /* wgf_ui_widget_t's */
+#define WIDGETS 16      /* wgf_ui_widget_t's */
 #define CHOICES_MAX 32  /* a tab row's, a choice's, a combo's labels */
 
 enum { KIND_ROOT, KIND_BOX, KIND_PANEL, KIND_GROUP, KIND_GRID, KIND_SCROLL, KIND_MODAL };
@@ -62,6 +64,9 @@ struct piece_t {
     float value; /* a progress bar's or slider's, 0 to 1; how far a scroll bar's thumb is along */
     float size;  /* a scroll bar's share in view, 0 to 1 */
     wgf_texture_t texture, pressed;
+    const wgf_ui_priv_field_t *field; /* a text field's: drawn as it is at the frame's end */
+    const char *placeholder;          /* the frame's copy; NULL for none */
+    bool masked, invalid, focused;
 };
 
 typedef struct focusable_t {
@@ -120,6 +125,7 @@ static struct {
         bool page_up, page_down;                        /* pressed or repeating */
     } keys;
     bool disabled; /* the widgets given now are */
+    bool invalid;  /* the text fields given now are */
     bool hovering; /* the pointer is over a widget that answers it (an image button's art) */
     wgf_ui_priv_scroll_t scroll;
     float fade; /* 1 less the whole UI's alpha (wgf_ui_set_alpha): 0, drawn as given, until set */
@@ -141,6 +147,10 @@ static struct {
         int first, last;       /* this frame's widgets in it */
         char before[ID_MAX];   /* the focus as it opened, given back as it closes */
     } modal;
+    struct { /* a focused text field's: the on-screen keyboard wanted, its caret there */
+        bool wanted;
+        float x, y, height;
+    } typing;
     struct {
         char id[ID_MAX];   /* the widget whose tooltip waits or shows */
         char next[ID_MAX]; /* the first other one pointed at this frame */
@@ -177,6 +187,14 @@ void wgf_ui_priv_set_skins(const wgf_ui_priv_skins_t *hooks)
     skins = hooks;
 }
 
+/* The text fields' hooks, set by the first (wgf_ui_text_priv.h); NULL with none. */
+static const wgf_ui_priv_text_hooks_t *text_hooks;
+
+void wgf_ui_priv_set_text_hooks(const wgf_ui_priv_text_hooks_t *hooks)
+{
+    text_hooks = hooks;
+}
+
 static const wgf_color_t default_colors[STYLE_COLORS] = {
     0xE6E9F0FFu, /* text */
     0x1A1E28E6u, /* panel */
@@ -191,6 +209,8 @@ static const wgf_color_t default_colors[STYLE_COLORS] = {
     0xF2F4F8FFu, /* handle */
     0x2A3040FAu, /* popup */
     0x00000099u, /* dim */
+    0xE65A5AFFu, /* invalid */
+    0x5AA0E666u, /* selection: the bar fill's, see-through */
 };
 static const float default_values[STYLE_VALUES] = {20.0f, 24.0f, 12.0f, 8.0f, 24.0f, 200.0f, 3.0f,  300.0f,
                                                    12.0f, 24.0f, 200.0f, 8.0f, 20.0f, 2.0f, 96.0f,  10.0f};
@@ -462,7 +482,10 @@ static void end_frame(void)
         ui.begun = false;
         ui.depth = 0;
     }
-    if (!ui.ended) let_go();
+    if (!ui.ended) {
+        let_go();
+        if (text_hooks != NULL) text_hooks->end(false, 0.0f, 0.0f, 0.0f);
+    }
     ui.ended = false;
 }
 
@@ -477,6 +500,7 @@ static void stop(void)
     }
     if (ui.font != 0) wgf_resource_release(ui.font);
     if (skins != NULL) skins->reset();
+    if (text_hooks != NULL) text_hooks->stop();
     free(ui.memory);
     free(ui.focusables);
     free(ui.pieces);
@@ -2227,6 +2251,221 @@ bool wgf_ui_tooltip(const char *text)
     return true;
 }
 
+/* ---- text fields -------------------------------------------------------------------- */
+
+#define CLICK_TIME 0.4f /* seconds from a press to the next of a double or triple press */
+#define DOT 0.6f        /* a password's dot's advance, of the text size */
+
+/* A line of text's height at `size`. */
+static float line_height(float size)
+{
+    const float height = wgf_font_measure(ui.font, "A", size).y;
+    return height > 0.0f ? height : size;
+}
+
+/* The caret's width at `size`. */
+static float caret_width(float size)
+{
+    return fmaxf(1.0f, roundf(size / 16.0f));
+}
+
+/* How wide `field`'s first `bytes` are drawn at `size`: a password's as dots. */
+static float field_width(const wgf_ui_priv_field_t *field, int bytes, bool masked, float size)
+{
+    const char *line;
+    if (bytes <= 0) return 0.0f;
+    if (masked) return (float)wgf_ui_priv_field_count(field->text, bytes) * size * DOT;
+    line = terminated(field->text, bytes);
+    return line != NULL ? wgf_font_measure(ui.font, line, size).x : 0.0f;
+}
+
+/* The byte between characters nearest `x` along the field's text, from its start. */
+static int field_at(const wgf_ui_priv_field_t *field, float x, bool masked, float size)
+{
+    float before = 0.0f;
+    int at = 0;
+    while (at < field->length) {
+        const int next = wgf_ui_priv_field_step(field->text, field->length, at, 1);
+        const float width = field_width(field, next, masked, size);
+        if (width >= x) return x - before < width - x ? at : next;
+        before = width;
+        at = next;
+    }
+    return field->length;
+}
+
+static bool held_either(wgf_keyboard_key_t a, wgf_keyboard_key_t b)
+{
+    return wgf_keyboard_is_down(a) || wgf_keyboard_is_down(b);
+}
+
+/* What this frame's keys do to a focused field: Ctrl's shortcuts and words, Cmd's and Alt's
+ * on macOS. Ctrl with Alt is AltGr, whose characters are typed. */
+static void field_keys(wgf_ui_priv_edit_t *edit, int most, bool masked)
+{
+    const wgf_window_os_t os = wgf_window_get_os();
+    const bool mac = os == WGF_WINDOW_OS_MACOS || os == WGF_WINDOW_OS_IOS;
+    const bool ctrl = held_either(WGF_KEY_LEFT_CONTROL, WGF_KEY_RIGHT_CONTROL);
+    const bool alt = held_either(WGF_KEY_LEFT_ALT, WGF_KEY_RIGHT_ALT);
+    const bool super = held_either(WGF_KEY_LEFT_SUPER, WGF_KEY_RIGHT_SUPER);
+    const bool command = mac ? super : ctrl && !alt;
+    const bool shift = held_either(WGF_KEY_LEFT_SHIFT, WGF_KEY_RIGHT_SHIFT);
+    const bool z = command && wgf_keyboard_is_pressed(WGF_KEY_Z);
+    memset(edit, 0, sizeof(*edit));
+    edit->typed = command ? "" : wgf_input_get_chars();
+    edit->left = ui.keys.more_left;
+    edit->right = ui.keys.more_right;
+    edit->home = wgf_keyboard_is_repeated(WGF_KEY_HOME) || (mac && super && edit->left);
+    edit->end = wgf_keyboard_is_repeated(WGF_KEY_END) || (mac && super && edit->right);
+    if (mac && super) edit->left = edit->right = false;
+    edit->back = wgf_keyboard_is_repeated(WGF_KEY_BACKSPACE);
+    edit->forward = wgf_keyboard_is_repeated(WGF_KEY_DELETE);
+    edit->word = mac ? alt : ctrl;
+    edit->shift = shift;
+    edit->all = command && wgf_keyboard_is_pressed(WGF_KEY_A);
+    edit->copy = command && wgf_keyboard_is_pressed(WGF_KEY_C);
+    edit->cut = command && wgf_keyboard_is_pressed(WGF_KEY_X);
+    edit->paste = command && wgf_keyboard_is_pressed(WGF_KEY_V);
+    edit->undo = z && !shift;
+    edit->redo = (z && shift) || (command && wgf_keyboard_is_pressed(WGF_KEY_Y));
+    edit->most = most;
+    edit->masked = masked;
+}
+
+/* A press on a field: the caret placed where it is (Shift: the selection extended to it); a
+ * second soon after selects the word, a third the whole. */
+static void field_press(wgf_ui_priv_field_t *field, float x, bool masked, float size)
+{
+    const int at = field_at(field, x, masked, size);
+    const bool again = ui.clock - field->click_at <= CLICK_TIME && fabsf(ui.pointer_x - field->click_x) <= DRAG_SLOP * 2.0f &&
+                       fabsf(ui.pointer_y - field->click_y) <= DRAG_SLOP * 2.0f;
+    field->clicks = again ? field->clicks % 3 + 1 : 1;
+    field->click_at = ui.clock;
+    field->click_x = ui.pointer_x;
+    field->click_y = ui.pointer_y;
+    if (field->clicks == 1) {
+        const bool shift = held_either(WGF_KEY_LEFT_SHIFT, WGF_KEY_RIGHT_SHIFT);
+        wgf_ui_priv_field_place(field, at, shift ? field->anchor : at, ui.clock);
+    } else if (field->clicks == 2 && !masked) {
+        int start, end;
+        wgf_ui_priv_field_word(field, at, &start, &end);
+        wgf_ui_priv_field_place(field, end, start, ui.clock);
+    } else {
+        wgf_ui_priv_field_place(field, field->length, 0, ui.clock);
+    }
+}
+
+static void draw_field(const piece_t *piece, Clay_BoundingBox box);
+
+static bool text_field(const char *what, const char *id, const char *placeholder, int max_length, bool masked)
+{
+    Clay_ElementId element;
+    Clay_ElementDeclaration declaration;
+    Clay_ElementData laid;
+    answer_t answered;
+    wgf_ui_priv_field_t *field;
+    piece_t *piece;
+    const float size = ui.values[WGF_UI_VALUE_TEXT_SIZE], padding = ui.values[WGF_UI_VALUE_BUTTON_PADDING] * 0.5f;
+    const bool visible = ui.focus_visible;
+    float left = 0.0f, inside = 0.0f, caret;
+    bool submitted = false;
+    int state;
+    if (!widget_id(id, what, &element)) return false;
+    field = wgf_ui_priv_field(id, true);
+    if (field == NULL) {
+        wgf_log_error("wgf_ui: out of memory for a text field");
+        return false;
+    }
+    wgf_ui_priv_field_limit(field, max_length);
+    answer(id, element, Clay_PointerOver(element), ARROWS_ACROSS, true, &answered);
+    laid = Clay_GetElementData(element);
+    if (laid.found) {
+        left = laid.boundingBox.x + padding;
+        inside = fmaxf(laid.boundingBox.width - padding * 2.0f, 0.0f);
+    }
+    if (answered.focused) {
+        ui.focus_visible = visible; /* Space and Enter type in it, moving no focus */
+        if (ui.pointer_pressed && !answered.over) { /* a press off it lets the focus go */
+            ui.focus[0] = '\0';
+            answered.focused = false;
+        }
+    }
+    if (answered.state != WGF_UI_STATE_DISABLED) {
+        if (ui.pointer_pressed && answered.over) {
+            field_press(field, ui.pointer_x - left + field->scroll, masked, size);
+        } else if (answered.held && field->clicks == 1) { /* a drag selects */
+            wgf_ui_priv_field_place(field, field_at(field, ui.pointer_x - left + field->scroll, masked, size),
+                                    field->anchor, ui.clock);
+        }
+        if (answered.focused) {
+            wgf_ui_priv_edit_t edit;
+            if (!field->was_focused && ui.focus_visible) wgf_ui_priv_field_place(field, field->length, 0, ui.clock);
+            field_keys(&edit, max_length, masked);
+            wgf_ui_priv_field_edit(field, &edit, ui.clock);
+            submitted = wgf_keyboard_is_pressed(WGF_KEY_ENTER) || wgf_keyboard_is_pressed(WGF_KEY_KP_ENTER);
+        }
+    }
+    field->was_focused = answered.focused;
+    caret = field_width(field, field->caret, masked, size);
+    if (inside > 0.0f) { /* the caret kept in view */
+        const float total = field_width(field, field->length, masked, size), bar = caret_width(size);
+        if (caret + bar - field->scroll > inside) field->scroll = caret + bar - inside;
+        if (caret < field->scroll) field->scroll = caret;
+        field->scroll = clamped(field->scroll, fmaxf(total + bar - inside, 0.0f));
+    }
+    state = answered.state == WGF_UI_STATE_DISABLED ? WGF_UI_STATE_DISABLED
+            : answered.focused                       ? WGF_UI_STATE_PRESSED
+                                                     : answered.state;
+    if (state == WGF_UI_STATE_PRESSED && laid.found) {
+        ui.typing.wanted = true;
+        ui.typing.x = ui.origin_x + left + caret - field->scroll;
+        ui.typing.y = ui.origin_y + laid.boundingBox.y;
+        ui.typing.height = laid.boundingBox.height;
+    }
+    memset(&declaration, 0, sizeof(declaration));
+    declaration.layout.sizing.width.type = CLAY__SIZING_TYPE_GROW;
+    declaration.layout.sizing.width.size.minMax.min = ui.values[WGF_UI_VALUE_BUTTON_WIDTH];
+    sizing(&declaration.layout.sizing.height, WGF_UI_SIZING_FIXED, line_height(size) + padding * 2.0f);
+    declaration.cornerRadius = corners(ui.values[WGF_UI_VALUE_CORNER_RADIUS]);
+    declaration.custom.customData = add_piece(draw_field, WGF_UI_WIDGET_TEXT, state);
+    piece = piece_at(declaration.custom.customData);
+    if (piece != NULL) {
+        piece->field = field;
+        piece->masked = masked;
+        piece->invalid = ui.invalid;
+        piece->focused = state == WGF_UI_STATE_PRESSED;
+        piece->placeholder = placeholder != NULL && placeholder[0] != '\0' ? keep(placeholder, strlen(placeholder)) : NULL;
+    }
+    ring(&declaration, answered.focused);
+    Clay__OpenElementWithId(element);
+    Clay__ConfigureOpenElement(declaration);
+    add_solid(element.id);
+    Clay__CloseElement();
+    return submitted;
+}
+
+bool wgf_ui_text_field(const char *id, const char *placeholder, int max_length)
+{
+    return text_field("wgf_ui_text_field", id, placeholder, max_length, false);
+}
+
+bool wgf_ui_password_field(const char *id, const char *placeholder, int max_length)
+{
+    return text_field("wgf_ui_password_field", id, placeholder, max_length, true);
+}
+
+bool wgf_ui_set_invalid(bool invalid)
+{
+    if (!ui.begun) return false;
+    ui.invalid = invalid;
+    return true;
+}
+
+bool wgf_ui_is_invalid(void)
+{
+    return ui.begun && ui.invalid;
+}
+
 /* ---- the frame ---------------------------------------------------------------------- */
 
 static bool any_pad(wgf_gamepad_button_t button)
@@ -2285,7 +2524,8 @@ bool wgf_ui_begin(void)
     ui.block = ui.blocks;
     ui.focusable_count = ui.solid_count = ui.piece_count = 0;
     ui.focus_seen = false;
-    ui.disabled = false;
+    ui.disabled = ui.invalid = false;
+    ui.typing.wanted = false;
     ui.hovering = false;
     ui.last.id[0] = '\0';
     ui.popup.seen = ui.modal.seen = false;
@@ -2698,6 +2938,65 @@ static void draw_chevron(const piece_t *piece, Clay_BoundingBox box)
     wgf_draw_polygon(points, 6, faded(dim(ui.colors[WGF_UI_COLOR_BUTTON_TEXT], piece->state)));
 }
 
+/* A text field: its box, the selection behind its text (while it is focused), its text or
+ * a password's dots scrolled and clipped to its inside (its placeholder, dimmed, while
+ * empty), the caret blinking, and an invalid one's outline. */
+static void draw_field(const piece_t *piece, Clay_BoundingBox box)
+{
+    const wgf_ui_priv_field_t *field = piece->field;
+    const float size = ui.values[WGF_UI_VALUE_TEXT_SIZE], padding = ui.values[WGF_UI_VALUE_BUTTON_PADDING] * 0.5f;
+    const float line = line_height(size), top = box.y + (box.height - line) * 0.5f, x = box.x + padding - field->scroll;
+    const int caret = field->caret < field->length ? field->caret : field->length;
+    const int anchor = field->anchor < field->length ? field->anchor : field->length;
+    const wgf_color_t text = dim(ui.colors[piece->invalid ? WGF_UI_COLOR_INVALID : WGF_UI_COLOR_TEXT], piece->state);
+    const float width = ui.values[WGF_UI_VALUE_LINE_WIDTH];
+    paint(piece->widget, WGF_UI_PART_BASE, piece->state, box,
+          ui.colors[piece->state == WGF_UI_STATE_HOVERED ? WGF_UI_COLOR_BUTTON_HOVERED : WGF_UI_COLOR_BAR],
+          ui.values[WGF_UI_VALUE_CORNER_RADIUS]);
+    wgf_render_push_clip(box.x + padding, box.y, fmaxf(box.width - padding * 2.0f, 0.0f), box.height);
+    if (piece->focused && caret != anchor) {
+        const int lo = caret < anchor ? caret : anchor, hi = caret < anchor ? anchor : caret;
+        Clay_BoundingBox selected;
+        selected.x = x + field_width(field, lo, piece->masked, size);
+        selected.width = x + field_width(field, hi, piece->masked, size) - selected.x;
+        selected.y = top;
+        selected.height = line;
+        flat(selected, 0.0f, ui.colors[WGF_UI_COLOR_SELECTION]);
+    }
+    if (field->length > 0 && piece->masked) {
+        const int count = wgf_ui_priv_field_count(field->text, field->length);
+        const float dot = size * DOT;
+        int i;
+        for (i = 0; i < count; i++) {
+            const float center = x + dot * ((float)i + 0.5f);
+            Clay_BoundingBox spot; /* a box rounded to a circle: no trigonometry of its own */
+            spot.width = spot.height = size * 0.36f;
+            spot.x = center - spot.width * 0.5f;
+            spot.y = top + (line - spot.height) * 0.5f;
+            if (center + dot >= box.x && center - dot <= box.x + box.width) flat(spot, spot.width * 0.5f, text);
+        }
+    } else if (field->length > 0) {
+        wgf_draw_text(ui.font, field->text, x, top, size, faded(text));
+    } else if (piece->placeholder != NULL) {
+        wgf_draw_text(ui.font, piece->placeholder, box.x + padding, top, size,
+                      faded(wgf_color_with_alpha(text, wgf_color_get_alpha(text) / 2)));
+    }
+    if (piece->focused && fmodf(ui.clock - field->since, 1.0f) < 0.5f) {
+        Clay_BoundingBox bar;
+        bar.x = x + field_width(field, caret, piece->masked, size);
+        bar.y = top;
+        bar.width = caret_width(size);
+        bar.height = line;
+        flat(bar, 0.0f, dim(ui.colors[WGF_UI_COLOR_TEXT], piece->state));
+    }
+    wgf_render_pop_clip();
+    if (piece->invalid && width > 0.0f) {
+        float points[8 * (SEGMENTS + 1)];
+        wgf_draw_polyline(points, rounded(box, corners(ui.values[WGF_UI_VALUE_CORNER_RADIUS]), width * 0.5f, points), true,
+                          width, faded(dim(ui.colors[WGF_UI_COLOR_INVALID], piece->state)));
+    }
+}
+
 static void draw(Clay_RenderCommandArray commands)
 {
     float points[8 * (SEGMENTS + 1)];
@@ -2776,6 +3075,7 @@ bool wgf_ui_end(void)
     ui.tip.next[0] = '\0';
     navigate();
     capture();
+    if (text_hooks != NULL) text_hooks->end(ui.typing.wanted, ui.typing.x, ui.typing.y, ui.typing.height);
     wgf_probe_set_text("ui.focus", ui.focus); /* what an autopilot can expect on: the focused widget's id */
     return balanced;
 }

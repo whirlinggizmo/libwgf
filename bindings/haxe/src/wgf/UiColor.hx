@@ -19,4 +19,6 @@ enum abstract UiColor(Int) from Int to Int {
 	var HANDLE = 10;
 	var POPUP = 11;
 	var DIM = 12;
+	var INVALID = 13;
+	var SELECTION = 14;
 }

@@ -1113,14 +1113,14 @@ export type wgf_vehicle_drive_t = typeof WGF_VEHICLE_DRIVE_FRONT | typeof WGF_VE
  * immediate-mode UI: a UI that moves under the pointer is answered where it was.
  *
  * Focus: one widget at a time has it, by its id: a button, a toggle, a checkbox, a slider,
- * a number, tabs, a choice, a combo, a tile, a list, or a dropdown. The arrow keys and a pad's D-pad move it to
+ * a number, tabs, a choice, a combo, a tile, a list, a dropdown, or a text field. The arrow keys and a pad's D-pad move it to
  * the nearest widget that way on the screen, as last laid out (a grid of tiles moves in
  * two dimensions), or, with none that way, through the frame's widgets in the order they
  * were given, Down and Right to the next and Up and Left to the one before, wrapping; Tab
  * and Shift+Tab always go in that order. The first press of one puts it on the first or the
  * last widget. A focused widget keeps the arrows it uses (a slider, a number, tabs, a
- * choice, and a combo left and right; a slider that fills up or down, and a list, up and
- * down; an open dropdown, all four).
+ * choice, a combo, and a text field left and right; a slider that fills up or down, and a
+ * list, up and down; an open dropdown, all four).
  * Enter, Space, or a pad's south button activates it. The
  * pointer activates the widget it is pressed and released over, and gives it the focus;
  * a focus moved by keys or pads is drawn, one given by the pointer isn't. A focused
@@ -1173,7 +1173,9 @@ export declare const WGF_UI_COLOR_SEPARATOR: 9;
 export declare const WGF_UI_COLOR_HANDLE: 10;
 export declare const WGF_UI_COLOR_POPUP: 11;
 export declare const WGF_UI_COLOR_DIM: 12;
-export type wgf_ui_color_t = typeof WGF_UI_COLOR_TEXT | typeof WGF_UI_COLOR_PANEL | typeof WGF_UI_COLOR_BUTTON | typeof WGF_UI_COLOR_BUTTON_HOVERED | typeof WGF_UI_COLOR_BUTTON_PRESSED | typeof WGF_UI_COLOR_BUTTON_TEXT | typeof WGF_UI_COLOR_FOCUS | typeof WGF_UI_COLOR_BAR | typeof WGF_UI_COLOR_BAR_FILL | typeof WGF_UI_COLOR_SEPARATOR | typeof WGF_UI_COLOR_HANDLE | typeof WGF_UI_COLOR_POPUP | typeof WGF_UI_COLOR_DIM;
+export declare const WGF_UI_COLOR_INVALID: 13;
+export declare const WGF_UI_COLOR_SELECTION: 14;
+export type wgf_ui_color_t = typeof WGF_UI_COLOR_TEXT | typeof WGF_UI_COLOR_PANEL | typeof WGF_UI_COLOR_BUTTON | typeof WGF_UI_COLOR_BUTTON_HOVERED | typeof WGF_UI_COLOR_BUTTON_PRESSED | typeof WGF_UI_COLOR_BUTTON_TEXT | typeof WGF_UI_COLOR_FOCUS | typeof WGF_UI_COLOR_BAR | typeof WGF_UI_COLOR_BAR_FILL | typeof WGF_UI_COLOR_SEPARATOR | typeof WGF_UI_COLOR_HANDLE | typeof WGF_UI_COLOR_POPUP | typeof WGF_UI_COLOR_DIM | typeof WGF_UI_COLOR_INVALID | typeof WGF_UI_COLOR_SELECTION;
 
 export declare const WGF_UI_VALUE_TEXT_SIZE: 0;
 export declare const WGF_UI_VALUE_PADDING: 1;
@@ -1218,6 +1220,7 @@ export type wgf_ui_value_t = typeof WGF_UI_VALUE_TEXT_SIZE | typeof WGF_UI_VALUE
  *   DROPDOWN   base: the dropdown; item: each item of its open list, PRESSED while chosen,
  *              HOVERED under the pointer or stepped to
  *   POPUP      base: a dropdown's open list's box, a tooltip's box
+ *   TEXT       base: a text field's box, PRESSED while it is focused
  *
  * A choice's toggles are TOGGLE's, each PRESSED while chosen; a modal's panel is PANEL's.
  *
@@ -1245,7 +1248,8 @@ export declare const WGF_UI_WIDGET_SCROLL: 11;
 export declare const WGF_UI_WIDGET_LIST: 12;
 export declare const WGF_UI_WIDGET_DROPDOWN: 13;
 export declare const WGF_UI_WIDGET_POPUP: 14;
-export type wgf_ui_widget_t = typeof WGF_UI_WIDGET_PANEL | typeof WGF_UI_WIDGET_BUTTON | typeof WGF_UI_WIDGET_TOGGLE | typeof WGF_UI_WIDGET_CHECKBOX | typeof WGF_UI_WIDGET_SLIDER | typeof WGF_UI_WIDGET_PROGRESS | typeof WGF_UI_WIDGET_GROUP | typeof WGF_UI_WIDGET_TAB | typeof WGF_UI_WIDGET_COMBO | typeof WGF_UI_WIDGET_NUMBER | typeof WGF_UI_WIDGET_TILE | typeof WGF_UI_WIDGET_SCROLL | typeof WGF_UI_WIDGET_LIST | typeof WGF_UI_WIDGET_DROPDOWN | typeof WGF_UI_WIDGET_POPUP;
+export declare const WGF_UI_WIDGET_TEXT: 15;
+export type wgf_ui_widget_t = typeof WGF_UI_WIDGET_PANEL | typeof WGF_UI_WIDGET_BUTTON | typeof WGF_UI_WIDGET_TOGGLE | typeof WGF_UI_WIDGET_CHECKBOX | typeof WGF_UI_WIDGET_SLIDER | typeof WGF_UI_WIDGET_PROGRESS | typeof WGF_UI_WIDGET_GROUP | typeof WGF_UI_WIDGET_TAB | typeof WGF_UI_WIDGET_COMBO | typeof WGF_UI_WIDGET_NUMBER | typeof WGF_UI_WIDGET_TILE | typeof WGF_UI_WIDGET_SCROLL | typeof WGF_UI_WIDGET_LIST | typeof WGF_UI_WIDGET_DROPDOWN | typeof WGF_UI_WIDGET_POPUP | typeof WGF_UI_WIDGET_TEXT;
 
 export declare const WGF_UI_PART_BASE: 0;
 export declare const WGF_UI_PART_FILL: 1;
@@ -13038,6 +13042,92 @@ export declare function wgf_ui_is_disabled(): boolean;
  * refused (no id, `rows` below 1).
  */
 export declare function wgf_ui_list(id: string | null, items: string | null, selected: number, rows: number): number;
+
+/**
+ * A text field: a line of text typed in, as wide as its parent's room (at least the style's
+ * button width), its text kept by the UI by its id (wgf_ui_get_text) from the first call or
+ * wgf_ui_set_text on, until the UI stops. Focused, it takes what is typed (wgf_input_get_chars)
+ * in place of the selection, and the keys:
+ *
+ *   Left, Right         the caret a character; with Ctrl (Alt on macOS) a word
+ *   Home, End           to the start, the end (Cmd+Left and +Right on macOS too)
+ *   Shift with a move   the selection extended
+ *   Backspace, Delete   the selection, else the character before or after (a word with Ctrl
+ *                       or Alt), held ones repeating
+ *   Ctrl+A (Cmd on macOS)        all selected
+ *   Ctrl+C, +X, +V               copy, cut, and paste, through the system's clipboard
+ *                                (wgf_input_set_clipboard); newlines pasted are stripped
+ *   Ctrl+Z; Ctrl+Y, Ctrl+Shift+Z undo and redo, a run of typing or of deleting one step
+ *
+ * A press places the caret (with Shift, extends the selection to it), a drag selects, a
+ * double press selects the word under it and a triple the whole; by touch, the same taps.
+ * Its caret blinks, and the text scrolls to keep it in view. Focus moved to it by keys or a
+ * pad selects the whole; a press off it lets the focus go. While it is focused the platform's
+ * on-screen keyboard is shown (a phone's; on the web, the page's hidden input that a phone's
+ * keyboard types into). `placeholder` (NULL or "": none) is shown, dimmed, while it is empty;
+ * it holds at most `max_length` characters (0 or less: 4095 bytes' worth), a longer text cut
+ * to it. A password field is the same drawn as dots, its words the whole of it, and never
+ * copied or cut. True in the frame Enter is pressed in it; false too when refused (no id).
+ */
+export declare function wgf_ui_text_field(id: string | null, placeholder: string | null, max_length: number): boolean;
+
+/**
+ * A text field: a line of text typed in, as wide as its parent's room (at least the style's
+ * button width), its text kept by the UI by its id (wgf_ui_get_text) from the first call or
+ * wgf_ui_set_text on, until the UI stops. Focused, it takes what is typed (wgf_input_get_chars)
+ * in place of the selection, and the keys:
+ *
+ *   Left, Right         the caret a character; with Ctrl (Alt on macOS) a word
+ *   Home, End           to the start, the end (Cmd+Left and +Right on macOS too)
+ *   Shift with a move   the selection extended
+ *   Backspace, Delete   the selection, else the character before or after (a word with Ctrl
+ *                       or Alt), held ones repeating
+ *   Ctrl+A (Cmd on macOS)        all selected
+ *   Ctrl+C, +X, +V               copy, cut, and paste, through the system's clipboard
+ *                                (wgf_input_set_clipboard); newlines pasted are stripped
+ *   Ctrl+Z; Ctrl+Y, Ctrl+Shift+Z undo and redo, a run of typing or of deleting one step
+ *
+ * A press places the caret (with Shift, extends the selection to it), a drag selects, a
+ * double press selects the word under it and a triple the whole; by touch, the same taps.
+ * Its caret blinks, and the text scrolls to keep it in view. Focus moved to it by keys or a
+ * pad selects the whole; a press off it lets the focus go. While it is focused the platform's
+ * on-screen keyboard is shown (a phone's; on the web, the page's hidden input that a phone's
+ * keyboard types into). `placeholder` (NULL or "": none) is shown, dimmed, while it is empty;
+ * it holds at most `max_length` characters (0 or less: 4095 bytes' worth), a longer text cut
+ * to it. A password field is the same drawn as dots, its words the whole of it, and never
+ * copied or cut. True in the frame Enter is pressed in it; false too when refused (no id).
+ */
+export declare function wgf_ui_password_field(id: string | null, placeholder: string | null, max_length: number): boolean;
+
+/**
+ * The text field `id`'s text, its caret put at the end and its undo forgotten; cut to 4095
+ * bytes. A field not given yet keeps it for its first call. False for no id, one of 64 bytes
+ * or more, or no text. Its text: "" for a field never given or set, valid until the field
+ * changes. These two work outside a begun UI too.
+ */
+export declare function wgf_ui_set_text(id: string | null, text: string | null): boolean;
+
+/**
+ * The text field `id`'s text, its caret put at the end and its undo forgotten; cut to 4095
+ * bytes. A field not given yet keeps it for its first call. False for no id, one of 64 bytes
+ * or more, or no text. Its text: "" for a field never given or set, valid until the field
+ * changes. These two work outside a begun UI too.
+ */
+export declare function wgf_ui_get_text(id: string | null): string;
+
+/**
+ * Whether the text fields given after it, until it is changed, show their text as refused
+ * (what reads it decides: a name already taken), in the style's invalid color, outlined in
+ * it. Each UI begins with none invalid. False with no UI begun.
+ */
+export declare function wgf_ui_set_invalid(invalid: boolean): boolean;
+
+/**
+ * Whether the text fields given after it, until it is changed, show their text as refused
+ * (what reads it decides: a name already taken), in the style's invalid color, outlined in
+ * it. Each UI begins with none invalid. False with no UI begun.
+ */
+export declare function wgf_ui_is_invalid(): boolean;
 
 /**
  * The popup layer: what is drawn over every widget, clipped by none, placed by the layer.

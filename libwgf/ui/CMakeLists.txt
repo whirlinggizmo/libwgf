@@ -32,6 +32,7 @@ wgf_layer(ui
         src/wgf_ui_clay_impl.c
         src/wgf_ui_skin.c
         src/wgf_ui_scroll.c
+        src/wgf_ui_text.c
         src/wgf_ui_document.c
         src/wgf_ui_document_draw.c
     DEPS
@@ -48,6 +49,7 @@ if(WGF_TESTS AND WGF_HEADLESS)
     wgf_test(ui wgf_ui_choices_test)
     wgf_test(ui wgf_ui_scroll_test)
     wgf_test(ui wgf_ui_popup_test)
+    wgf_test(ui wgf_ui_text_test)
     if(EMSCRIPTEN)
         # a UI of the plain widgets links none of the skins or the other widgets: its link map
         # read by tools/check_link_map.py (wasm-ld drops what nothing reaches in any build)
@@ -66,7 +68,9 @@ if(WGF_TESTS AND WGF_HEADLESS)
                              wgf_ui_scroll.c wgf_ui_begin_scroll wgf_ui_list open_scroll scroll_input close_scroll
                              draw_scroll_bar draw_list_box draw_list_item Clay_UpdateScrollContainers
                              wgf_ui_dropdown dropdown_list draw_chevron draw_popup hang wgf_ui_begin_modal
-                             close_modal wgf_ui_tooltip)
+                             close_modal wgf_ui_tooltip
+                             wgf_ui_text.c wgf_ui_text_field wgf_ui_password_field text_field draw_field
+                             field_keys field_press field_at wgf_ui_set_invalid)
         endif()
     endif()
     wgf_test(ui wgf_ui_document_test)

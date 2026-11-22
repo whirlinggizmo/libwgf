@@ -1273,6 +1273,10 @@ class Main {
 			expect(Ui.beginScroll("scroll", 120, 40) && Ui.label("A\nB\nC\nD", 0) && Ui.endScroll(), "a scroll area");
 			expect(Ui.list("list", "One\nTwo\nThree", 1, 2) == 1, "a list, untouched");
 			expect(Ui.dropdown("dropdown", "Low\nHigh", 1) == 1 && Ui.tooltip("Its quality"), "a dropdown, untouched, and a tooltip");
+			expect(Ui.setText("field", "typed") && !Ui.textField("field", "Name", 8) && Ui.getText("field") == "typed",
+				"a text field, untouched, its text set");
+			expect(Ui.setInvalid(true) && Ui.isInvalid() && !Ui.passwordField("secret", null, 0) && Ui.setInvalid(false)
+				&& Ui.getText("secret") == "", "an invalid password field, empty");
 			Ui.endPanel();
 			expect(Ui.beginModal("modal") && Ui.label("Sure?", 0) && Ui.endModal(), "a modal");
 			expect(Ui.end(), "a UI");

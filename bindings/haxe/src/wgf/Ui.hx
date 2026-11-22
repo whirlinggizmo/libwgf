@@ -15,14 +15,14 @@ import wgf.impl.Raw;
     immediate-mode UI: a UI that moves under the pointer is answered where it was.
 
     Focus: one widget at a time has it, by its id: a button, a toggle, a checkbox, a slider,
-    a number, tabs, a choice, a combo, a tile, a list, or a dropdown. The arrow keys and a pad's D-pad move it to
+    a number, tabs, a choice, a combo, a tile, a list, a dropdown, or a text field. The arrow keys and a pad's D-pad move it to
     the nearest widget that way on the screen, as last laid out (a grid of tiles moves in
     two dimensions), or, with none that way, through the frame's widgets in the order they
     were given, Down and Right to the next and Up and Left to the one before, wrapping; Tab
     and Shift+Tab always go in that order. The first press of one puts it on the first or the
     last widget. A focused widget keeps the arrows it uses (a slider, a number, tabs, a
-    choice, and a combo left and right; a slider that fills up or down, and a list, up and
-    down; an open dropdown, all four).
+    choice, a combo, and a text field left and right; a slider that fills up or down, and a
+    list, up and down; an open dropdown, all four).
     Enter, Space, or a pad's south button activates it. The
     pointer activates the widget it is pressed and released over, and gives it the focus;
     a focus moved by keys or pads is drawn, one given by the pointer isn't. A focused
@@ -428,6 +428,98 @@ class Ui {
 	**/
 	public static inline function list(id:String, items:String, selected:Int, rows:Int):Int
 		return Raw.wgf_ui_list(id, items, selected, rows);
+
+	/**
+	    A text field: a line of text typed in, as wide as its parent's room (at least the style's
+	    button width), its text kept by the UI by its id (wgf_ui_get_text) from the first call or
+	    wgf_ui_set_text on, until the UI stops. Focused, it takes what is typed (wgf_input_get_chars)
+	    in place of the selection, and the keys:
+
+	      Left, Right         the caret a character; with Ctrl (Alt on macOS) a word
+	      Home, End           to the start, the end (Cmd+Left and +Right on macOS too)
+	      Shift with a move   the selection extended
+	      Backspace, Delete   the selection, else the character before or after (a word with Ctrl
+	                          or Alt), held ones repeating
+	      Ctrl+A (Cmd on macOS)        all selected
+	      Ctrl+C, +X, +V               copy, cut, and paste, through the system's clipboard
+	                                   (wgf_input_set_clipboard); newlines pasted are stripped
+	      Ctrl+Z; Ctrl+Y, Ctrl+Shift+Z undo and redo, a run of typing or of deleting one step
+
+	    A press places the caret (with Shift, extends the selection to it), a drag selects, a
+	    double press selects the word under it and a triple the whole; by touch, the same taps.
+	    Its caret blinks, and the text scrolls to keep it in view. Focus moved to it by keys or a
+	    pad selects the whole; a press off it lets the focus go. While it is focused the platform's
+	    on-screen keyboard is shown (a phone's; on the web, the page's hidden input that a phone's
+	    keyboard types into). `placeholder` (NULL or "": none) is shown, dimmed, while it is empty;
+	    it holds at most `max_length` characters (0 or less: 4095 bytes' worth), a longer text cut
+	    to it. A password field is the same drawn as dots, its words the whole of it, and never
+	    copied or cut. True in the frame Enter is pressed in it; false too when refused (no id).
+	**/
+	public static inline function textField(id:String, placeholder:String, max_length:Int):Bool
+		return Raw.wgf_ui_text_field(id, placeholder, max_length);
+
+	/**
+	    A text field: a line of text typed in, as wide as its parent's room (at least the style's
+	    button width), its text kept by the UI by its id (wgf_ui_get_text) from the first call or
+	    wgf_ui_set_text on, until the UI stops. Focused, it takes what is typed (wgf_input_get_chars)
+	    in place of the selection, and the keys:
+
+	      Left, Right         the caret a character; with Ctrl (Alt on macOS) a word
+	      Home, End           to the start, the end (Cmd+Left and +Right on macOS too)
+	      Shift with a move   the selection extended
+	      Backspace, Delete   the selection, else the character before or after (a word with Ctrl
+	                          or Alt), held ones repeating
+	      Ctrl+A (Cmd on macOS)        all selected
+	      Ctrl+C, +X, +V               copy, cut, and paste, through the system's clipboard
+	                                   (wgf_input_set_clipboard); newlines pasted are stripped
+	      Ctrl+Z; Ctrl+Y, Ctrl+Shift+Z undo and redo, a run of typing or of deleting one step
+
+	    A press places the caret (with Shift, extends the selection to it), a drag selects, a
+	    double press selects the word under it and a triple the whole; by touch, the same taps.
+	    Its caret blinks, and the text scrolls to keep it in view. Focus moved to it by keys or a
+	    pad selects the whole; a press off it lets the focus go. While it is focused the platform's
+	    on-screen keyboard is shown (a phone's; on the web, the page's hidden input that a phone's
+	    keyboard types into). `placeholder` (NULL or "": none) is shown, dimmed, while it is empty;
+	    it holds at most `max_length` characters (0 or less: 4095 bytes' worth), a longer text cut
+	    to it. A password field is the same drawn as dots, its words the whole of it, and never
+	    copied or cut. True in the frame Enter is pressed in it; false too when refused (no id).
+	**/
+	public static inline function passwordField(id:String, placeholder:String, max_length:Int):Bool
+		return Raw.wgf_ui_password_field(id, placeholder, max_length);
+
+	/**
+	    The text field `id`'s text, its caret put at the end and its undo forgotten; cut to 4095
+	    bytes. A field not given yet keeps it for its first call. False for no id, one of 64 bytes
+	    or more, or no text. Its text: "" for a field never given or set, valid until the field
+	    changes. These two work outside a begun UI too.
+	**/
+	public static inline function setText(id:String, text:String):Bool
+		return Raw.wgf_ui_set_text(id, text);
+
+	/**
+	    The text field `id`'s text, its caret put at the end and its undo forgotten; cut to 4095
+	    bytes. A field not given yet keeps it for its first call. False for no id, one of 64 bytes
+	    or more, or no text. Its text: "" for a field never given or set, valid until the field
+	    changes. These two work outside a begun UI too.
+	**/
+	public static inline function getText(id:String):String
+		return Raw.wgf_ui_get_text(id);
+
+	/**
+	    Whether the text fields given after it, until it is changed, show their text as refused
+	    (what reads it decides: a name already taken), in the style's invalid color, outlined in
+	    it. Each UI begins with none invalid. False with no UI begun.
+	**/
+	public static inline function setInvalid(invalid:Bool):Bool
+		return Raw.wgf_ui_set_invalid(invalid);
+
+	/**
+	    Whether the text fields given after it, until it is changed, show their text as refused
+	    (what reads it decides: a name already taken), in the style's invalid color, outlined in
+	    it. Each UI begins with none invalid. False with no UI begun.
+	**/
+	public static inline function isInvalid():Bool
+		return Raw.wgf_ui_is_invalid();
 
 	/**
 	    The popup layer: what is drawn over every widget, clipped by none, placed by the layer.

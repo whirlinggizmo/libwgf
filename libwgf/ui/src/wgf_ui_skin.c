@@ -14,7 +14,7 @@
  * hooks its first call sets (wgf_ui_skin_priv.h): a UI drawn in its colors links none of
  * it. */
 
-#define WIDGETS 15 /* wgf_ui_widget_t's */
+#define WIDGETS 16 /* wgf_ui_widget_t's */
 #define PARTS 5   /* wgf_ui_part_t's */
 #define STATES 4  /* wgf_ui_state_t's */
 
