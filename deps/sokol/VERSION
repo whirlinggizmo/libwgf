@@ -5,7 +5,4 @@ sokol-fork https://github.com/whirlinggizmo/sokol.git 59b5c0b215ff4f2ee36b089d73
 sokol-upstream https://github.com/floooh/sokol.git 09558a10085705e664eed01bdaf0a6cdadd960dd
 # Shaders in src/shaders/*.glsl.h are generated with sokol-shdc from
 # https://github.com/floooh/sokol-tools-bin, at this commit:
-sokol-tools-bin 11d0cf678105d614d675e6d9bd2aaf3eeff12f8c
-# (unchanged since the headers were last updated: the shaders made with it compile and run
-# against these headers. A newer one is needed only for what they add past it: 14 samplers
-# in a draw's bindings, a fragment shader writing a storage buffer.)
+sokol-tools-bin b893e838089db3d36ae1090655ccf0b25d788c87

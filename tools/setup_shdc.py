@@ -31,13 +31,13 @@ from usercache import cache_dir  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = ('floooh/sokol-tools-bin', 'whirlinggizmo/sokol-tools-bin')  # tried in order
-HASHES_PIN = '11d0cf678105d614d675e6d9bd2aaf3eeff12f8c'  # the sokol-tools-bin commit the hashes are for
+HASHES_PIN = 'b893e838089db3d36ae1090655ccf0b25d788c87'  # the sokol-tools-bin commit the hashes are for
 BINARIES = {  # (system, machine): (path in the repository, SHA-256)
-    ('Linux', 'x86_64'): ('linux/sokol-shdc', 'ed35e89ef381d521a499096ed4ada85e4d135d8011e151cca6b7d893c43b21df'),
-    ('Linux', 'aarch64'): ('linux_arm64/sokol-shdc', '446b4bcea0c81d3ae529bc0d93533ea661b017f5b9ec2b2293a4c85f5fdcb639'),
-    ('Darwin', 'x86_64'): ('osx/sokol-shdc', '8b4a6ac1172ec0d90dd41d611067d5e87a51e78dc28acb216cfc341d880b1d78'),
-    ('Darwin', 'arm64'): ('osx_arm64/sokol-shdc', '92db37975ad7ff3c3c9bc27cba1503287377cb287ebabf60d1c6b597abfa3244'),
-    ('Windows', 'AMD64'): ('win32/sokol-shdc.exe', 'bd616287f9ea689d53c6d260e443ee733e61ae1b73a9b37adc482ead0364d561'),
+    ('Linux', 'x86_64'): ('linux/sokol-shdc', 'f1a5b91e55696d4e4f615b5d1cf524ac2636fc9a052dac6d568d448e2af86b39'),
+    ('Linux', 'aarch64'): ('linux_arm64/sokol-shdc', 'df5241ba3140afc30e816e0bff1309eaa25b6e3e022166d3297d056770f6f686'),
+    ('Darwin', 'x86_64'): ('osx/sokol-shdc', 'b27a6cf91b95774829e72896bd824307efd1ad7c7ea92fd1a347f30c0f176d2e'),
+    ('Darwin', 'arm64'): ('osx_arm64/sokol-shdc', 'fb4491a0386db41944544075061e35f5dfdd960155f10ebd0a84059803ddb770'),
+    ('Windows', 'AMD64'): ('win32/sokol-shdc.exe', '5faecfe8dd5efcc6e8453d2ae631aeb389e37fb0c4dcb70e5dc9178b8e20f5d9'),
 }
 
 
