@@ -69,12 +69,15 @@ out vec3 v_world_pos;
 void main() {
     int record = int(instance_base.x) + gl_InstanceIndex;
     mat4 model = instance_model(record);
+    vec4 n0 = instance_texel(record, 3), n1 = instance_texel(record, 4), n2 = instance_texel(record, 5);
+    vec4 extra = instance_extra(record);
     vec4 world = model * vec4(position, 1.0);
     gl_Position = view_proj * world;
-    v_normal = instance_normal(record) * normal;
-    v_tangent = vec4(mat3(model) * tangent.xyz, tangent.w * instance_extra(record).y);
-    v_uv0 = texcoord0;
-    v_uv1 = texcoord1;
+    v_normal = mat3(vec3(n0.x, n1.x, n2.x), vec3(n0.y, n1.y, n2.y), vec3(n0.z, n1.z, n2.z)) * normal;
+    v_tangent = vec4(mat3(model) * tangent.xyz, tangent.w * extra.y);
+    /* the record's part of the textures: the whole (1, 1, 0, 0) but for a sprite's region */
+    v_uv0 = texcoord0 * vec2(n0.w, n1.w) + extra.zw;
+    v_uv1 = texcoord1 * vec2(n0.w, n1.w) + extra.zw;
     v_color = color0 * instance_tint(record); /* the placement's tint, already linear */
     v_world_pos = world.xyz;
 }

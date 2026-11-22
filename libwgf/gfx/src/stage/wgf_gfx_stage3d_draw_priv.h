@@ -41,6 +41,13 @@ typedef struct wgf_gfx_priv_stage3d_item_t {
     bool casting, receiving; /* shadows: its model's */
     bool shadow_only;        /* out of view, kept for its shadow: drawn into the shadow map alone */
     wgf_vec3_t box_lo, box_hi; /* its model's box in the stage */
+    /* a sprite drawn with a material: a quad shaded as a model's part is, seen from both sides,
+       its texture the material's base color texture, over its region of it */
+    bool material_sprite;
+    sg_view base_view;
+    sg_sampler base_sampler;
+    float uv[4];  /* its region: its texture coordinates' scale (x, y) and offset (z, w) */
+    float cutoff; /* its alpha cutoff (MASK); 0 none */
 } wgf_gfx_priv_stage3d_item_t;
 
 typedef struct wgf_gfx_priv_stage3d_draw_t {

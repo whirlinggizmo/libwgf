@@ -104,7 +104,9 @@ static void fill_frame(const wgf_gfx_priv_stage3d_frame_t *frame, const wgf_gfx_
     out->camera_time[3] = (float)wgf_time_get_seconds();
     memcpy(out->ambient_count, draw->ambient, sizeof(draw->ambient));
     out->ambient_count[3] = (float)item->light_count;
-    out->output[0] = material->alpha_mode == WGF_ALPHA_MODE_MASK ? material->alpha_cutoff : 0.0f;
+    out->output[0] = item->material_sprite                          ? item->cutoff /* a sprite's own alpha mode */
+                     : material->alpha_mode == WGF_ALPHA_MODE_MASK ? material->alpha_cutoff
+                                                                   : 0.0f;
     out->output[1] = (float)draw->tonemap;
     out->output[2] = exp2f(draw->exposure);
     for (i = 0; i < item->light_count; i++) {
@@ -178,7 +180,8 @@ void wgf_gfx_priv_stage3d_draw_custom(wgf_gfx_priv_stage3d_frame_t *frame, const
     if (item->skinned && (!frame->joints_written || primitive.skin.id == SG_INVALID_ID)) return; /* no room */
     program = &shader->programs[item->skinned ? WGF_GFX_PRIV_SHADER_PROGRAM_MODEL_SKINNED : WGF_GFX_PRIV_SHADER_PROGRAM_MODEL];
     sg_apply_pipeline(
-        pipeline_of(shader, item->blended, material->double_sided, item->mirrored != draw->flipped, item->skinned));
+        pipeline_of(shader, item->blended, material->double_sided || item->material_sprite,
+                    item->mirrored != draw->flipped, item->skinned));
 
     memset(&bindings, 0, sizeof(bindings));
     bindings.vertex_buffers[0] = primitive.vertices;

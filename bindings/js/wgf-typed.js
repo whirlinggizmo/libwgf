@@ -2304,6 +2304,10 @@ export const Sprite = Object.freeze({
     getAlphaMode: raw.wgf_sprite_get_alpha_mode,
     // wgf: call wgf_sprite_get_alpha_cutoff
     getAlphaCutoff: raw.wgf_sprite_get_alpha_cutoff,
+    // wgf: call wgf_sprite_set_material
+    setMaterial: raw.wgf_sprite_set_material,
+    // wgf: call wgf_sprite_get_material
+    getMaterial: raw.wgf_sprite_get_material,
     // wgf: call wgf_sprite_set_pick_alpha
     setPickAlpha: raw.wgf_sprite_set_pick_alpha,
     // wgf: call wgf_sprite_get_pick_alpha

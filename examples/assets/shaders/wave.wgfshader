@@ -26,7 +26,7 @@ sampler 8 fragment wgf_env_smp filtering
 pair 0 vertex 11 10 wgf_instance_tex_wgf_data_smp
 pair 1 fragment 9 8 wgf_brdf_tex_wgf_env_smp
 pair 2 fragment 8 8 wgf_env_tex_wgf_env_smp
-source vs 2754
+source vs 2871
 #version 410
 
 uniform vec4 wgf_object[5];
@@ -99,9 +99,12 @@ void main()
     wgf_normal = mat3(vec3(_185.x, _191.x, _197.x), vec3(_185.y, _191.y, _197.y), vec3(_185.z, _191.z, _197.z)) * param_13;
     int param_14 = _109;
     int param_15 = 7;
-    wgf_tangent = vec4(mat3(_175.xyz, _176.xyz, _177.xyz) * tangent.xyz, tangent.w * wgf_instance_texel(param_14, param_15).y);
-    wgf_uv0 = texcoord0;
-    wgf_uv1 = texcoord1;
+    vec4 _274 = wgf_instance_texel(param_14, param_15);
+    wgf_tangent = vec4(mat3(_175.xyz, _176.xyz, _177.xyz) * tangent.xyz, tangent.w * _274.y);
+    vec2 _309 = vec2(_185.w, _191.w);
+    vec2 _312 = _274.zw;
+    wgf_uv0 = (texcoord0 * _309) + _312;
+    wgf_uv1 = (texcoord1 * _309) + _312;
     wgf_color = color0;
     int param_16 = _109;
     int param_17 = 6;
@@ -664,7 +667,7 @@ sampler 8 fragment wgf_env_smp filtering
 pair 0 vertex 11 10 wgf_instance_tex_wgf_data_smp
 pair 1 fragment 9 8 wgf_brdf_tex_wgf_env_smp
 pair 2 fragment 8 8 wgf_env_tex_wgf_env_smp
-source vs 2616
+source vs 2733
 #version 300 es
 
 uniform vec4 wgf_object[5];
@@ -737,9 +740,12 @@ void main()
     wgf_normal = mat3(vec3(_185.x, _191.x, _197.x), vec3(_185.y, _191.y, _197.y), vec3(_185.z, _191.z, _197.z)) * param_13;
     int param_14 = _109;
     int param_15 = 7;
-    wgf_tangent = vec4(mat3(_175.xyz, _176.xyz, _177.xyz) * tangent.xyz, tangent.w * wgf_instance_texel(param_14, param_15).y);
-    wgf_uv0 = texcoord0;
-    wgf_uv1 = texcoord1;
+    vec4 _274 = wgf_instance_texel(param_14, param_15);
+    wgf_tangent = vec4(mat3(_175.xyz, _176.xyz, _177.xyz) * tangent.xyz, tangent.w * _274.y);
+    vec2 _309 = vec2(_185.w, _191.w);
+    vec2 _312 = _274.zw;
+    wgf_uv0 = (texcoord0 * _309) + _312;
+    wgf_uv1 = (texcoord1 * _309) + _312;
     wgf_color = color0;
     int param_16 = _109;
     int param_17 = 6;

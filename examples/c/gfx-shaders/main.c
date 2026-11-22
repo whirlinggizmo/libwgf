@@ -41,10 +41,10 @@
  *   1 / 2    the sun / the point light on and off
  *   Esc      quit, where quitting means anything
  *
- * libwgt's gfx-shaders (wgrender's shaders), which differs for the size table: libwgf has
- * no custom sprite materials yet (milestone 2.5), so the logo outlined and flashing by its
- * sprite effects shader, in the world and in the screen's corner, is left out. The rest is
- * libwgt's. */
+ * libwgt's gfx-shaders (wgrender's shaders), but for its logo, outlined and flashing by its
+ * sprite effects shader in the world and in the screen's corner: that shader reads the
+ * sprite's own texture, which libwgf doesn't hand a custom shader, and a 2D stage's sprite
+ * doesn't use a material (milestone 2.5). The rest is libwgt's. */
 
 #define CHARACTER_PATH "models/woman_casual/woman_casual.glb"
 #define CHARACTER_BODY_SLOT 1

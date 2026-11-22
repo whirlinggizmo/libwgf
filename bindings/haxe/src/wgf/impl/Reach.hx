@@ -1035,6 +1035,7 @@ class Reach {
 		"wgf_sprite_get_clip_state",
 		"wgf_sprite_get_depth_offset",
 		"wgf_sprite_get_facing",
+		"wgf_sprite_get_material",
 		"wgf_sprite_get_nine_slice",
 		"wgf_sprite_get_pick_alpha",
 		"wgf_sprite_get_pivot",
@@ -1051,6 +1052,7 @@ class Reach {
 		"wgf_sprite_set_clip_speed",
 		"wgf_sprite_set_depth_offset",
 		"wgf_sprite_set_facing",
+		"wgf_sprite_set_material",
 		"wgf_sprite_set_nine_slice",
 		"wgf_sprite_set_pick_alpha",
 		"wgf_sprite_set_pivot",
@@ -1462,7 +1464,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1453) 0];
+	static final counts:Array<Int> = [for (_ in 0...1455) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

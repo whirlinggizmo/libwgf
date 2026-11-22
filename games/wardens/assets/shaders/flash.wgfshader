@@ -18,7 +18,7 @@ sampler 10 vertex wgf_data_smp nonfiltering
 sampler 9 fragment wgf_shadow_smp comparison
 pair 0 vertex 11 10 wgf_instance_tex_wgf_data_smp
 pair 1 fragment 10 9 wgf_shadow_tex_wgf_shadow_smp
-source vs 2474
+source vs 2591
 #version 410
 
 uniform vec4 wgf_object[5];
@@ -84,9 +84,12 @@ void main()
     wgf_normal = mat3(vec3(_150.x, _156.x, _162.x), vec3(_150.y, _156.y, _162.y), vec3(_150.z, _156.z, _162.z)) * param_13;
     int param_14 = _70;
     int param_15 = 7;
-    wgf_tangent = vec4(mat3(_140.xyz, _141.xyz, _142.xyz) * tangent.xyz, tangent.w * wgf_instance_texel(param_14, param_15).y);
-    wgf_uv0 = texcoord0;
-    wgf_uv1 = texcoord1;
+    vec4 _239 = wgf_instance_texel(param_14, param_15);
+    wgf_tangent = vec4(mat3(_140.xyz, _141.xyz, _142.xyz) * tangent.xyz, tangent.w * _239.y);
+    vec2 _274 = vec2(_150.w, _156.w);
+    vec2 _277 = _239.zw;
+    wgf_uv0 = (texcoord0 * _274) + _277;
+    wgf_uv1 = (texcoord1 * _274) + _277;
     wgf_color = color0;
     int param_16 = _70;
     int param_17 = 6;
@@ -646,7 +649,7 @@ sampler 10 vertex wgf_data_smp nonfiltering
 sampler 9 fragment wgf_shadow_smp comparison
 pair 0 vertex 11 10 wgf_instance_tex_wgf_data_smp
 pair 1 fragment 10 9 wgf_shadow_tex_wgf_shadow_smp
-source vs 2336
+source vs 2453
 #version 300 es
 
 uniform vec4 wgf_object[5];
@@ -712,9 +715,12 @@ void main()
     wgf_normal = mat3(vec3(_150.x, _156.x, _162.x), vec3(_150.y, _156.y, _162.y), vec3(_150.z, _156.z, _162.z)) * param_13;
     int param_14 = _70;
     int param_15 = 7;
-    wgf_tangent = vec4(mat3(_140.xyz, _141.xyz, _142.xyz) * tangent.xyz, tangent.w * wgf_instance_texel(param_14, param_15).y);
-    wgf_uv0 = texcoord0;
-    wgf_uv1 = texcoord1;
+    vec4 _239 = wgf_instance_texel(param_14, param_15);
+    wgf_tangent = vec4(mat3(_140.xyz, _141.xyz, _142.xyz) * tangent.xyz, tangent.w * _239.y);
+    vec2 _274 = vec2(_150.w, _156.w);
+    vec2 _277 = _239.zw;
+    wgf_uv0 = (texcoord0 * _274) + _277;
+    wgf_uv1 = (texcoord1 * _274) + _277;
     wgf_color = color0;
     int param_16 = _70;
     int param_17 = 6;

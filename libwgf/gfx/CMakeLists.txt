@@ -47,6 +47,7 @@ wgf_layer(gfx
         src/shape/wgf_gfx_shape3d.c
         src/sprite/wgf_gfx_sprite.c
         src/sprite/wgf_gfx_sprite3d.c
+        src/sprite/wgf_gfx_sprite_material.c
         src/sprite/wgf_gfx_sprite_batch.c
         src/sprite/wgf_gfx_sprite_batch2d.c
         src/sprite/wgf_gfx_sheet.c
@@ -130,6 +131,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_shape_test)
         wgf_test(gfx wgf_gfx_sprite_test)
         wgf_test(gfx wgf_gfx_sprite_batch_test)
+        wgf_test(gfx wgf_gfx_sprite_material_test)
         wgf_test(gfx wgf_gfx_follow_test)
         wgf_test(gfx wgf_gfx_fly_test)
         wgf_test(gfx wgf_gfx_sheet_test)

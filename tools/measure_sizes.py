@@ -74,8 +74,8 @@ ROWS = [
     ('gfx-materials', None, 'materials',
      "libwgf's spheres are generated and a gold torus stands where wgrender-c's animated character is"),
     ('gfx-lights', None, 'lights',
-     "libwgf's models are generated capsules where wgrender-c's are animated characters, and it has no lit "
-     'billboards (no lit sprites yet)'),
+     "libwgf's models are generated capsules where wgrender-c's are animated characters, and its lit "
+     "billboards have no normal map"),
     ('gfx-shadows', 'gfx-shadows', 'shadows', ''),
     ('gfx-instancing', 'gfx-instancing', 'instancing', ''),
     ('gfx-environment', 'gfx-environment', 'environment', ''),
@@ -83,7 +83,8 @@ ROWS = [
     ('gfx-render-target', 'gfx-render-target', 'render_target', ''),
     ('gfx-postprocess', 'gfx-postprocess', 'postprocess', ''),
     ('gfx-shaders', 'gfx-shaders', 'shaders',
-     "libwgf's leaves out the logo's sprite effects (no custom sprite materials yet); the rest is libwgt's"),
+     "libwgf's leaves out the logo's sprite effects (libwgt's sprite effects shader isn't ported, and a 2D "
+     "stage's sprite doesn't use a material); the rest is libwgt's"),
     ('gfx-sprite3d', 'gfx-sprite3d', 'sprite3d', ''),
     ('gfx-text3d', 'gfx-text3d', 'text3d', ''),
     ('gfx-sprite2d', 'gfx-sprite2d', 'sprite2d', ''),

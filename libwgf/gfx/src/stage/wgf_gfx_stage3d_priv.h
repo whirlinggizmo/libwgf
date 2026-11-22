@@ -45,6 +45,20 @@ int wgf_gfx_priv_light_select(const wgf_gfx_priv_stage3d_light_t *lights, int co
  * names no part: `record` records a 3D emitter's particles for the frame through
  * `view_proj` with the camera's right and up, giving its alpha mode (wgf_alpha_mode_t),
  * and returns the draw's number (-1: nothing to draw); `draw` draws it in the open pass. */
+/* A sprite drawn with a material, made a stage's item (wgf_gfx_sprite_material.c): `item`
+ * (zeroed) given its quad as its mesh (one unit across in x and y, facing +z, its texture
+ * coordinates 0, 0 at its top left), placed where `quad` would be drawn seen through `view`,
+ * its material, its region of its texture, and how its alpha draws; false for a quad with
+ * no face. Set by the first sprite given a material, so a stage whose sprites have none
+ * links none of it. */
+struct wgf_gfx_priv_stage3d_item_t;
+struct wgf_gfx_priv_sprite_quad_t;
+typedef bool (*wgf_gfx_priv_sprite_item_t)(const wgf_gfx_priv_actor_t *sprite,
+                                           const struct wgf_gfx_priv_sprite_quad_t *quad,
+                                           const wgf_gfx_priv_sprite_view_t *view,
+                                           struct wgf_gfx_priv_stage3d_item_t *item);
+void wgf_gfx_priv_set_sprite_item(wgf_gfx_priv_sprite_item_t fill);
+
 typedef struct wgf_gfx_priv_particle_hooks_t {
     int (*record)(wgf_actor_t emitter, const float view_proj[16], wgf_vec3_t axis_x, wgf_vec3_t axis_y, int *mode);
     void (*draw)(int index);

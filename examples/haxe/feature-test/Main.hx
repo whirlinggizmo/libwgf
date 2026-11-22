@@ -716,6 +716,9 @@ class Main {
 		expect(sprite.setPickAlpha(0.5) && near(sprite.getPickAlpha(), 0.5) && !sprite.setPickAlpha(2) && sprite.setPickAlpha(0),
 			"its pick alpha");
 		expect(sprite.setPickable(false) && !sprite.isPickable() && sprite.setPickable(true) && sprite.isPickable(), "pickable");
+		final spriteMaterial = Material.create(MaterialShading.PBR);
+		expect(sprite.getMaterial() == 0 && sprite.setMaterial(spriteMaterial) && sprite.getMaterial() == spriteMaterial
+			&& sprite.setMaterial(0) && Resource.release(spriteMaterial), "a material of its own, and none again");
 		expect(sprite.setNineSlice(4, 4, 4, 4) && sprite.getNineSlice().x == 4 && sprite.setNineSlice(0, 0, 0, 0), "a nine-slice");
 		expect(sprite.setFacing(SpriteFacing.CAMERA_FIXED_Y) && sprite.getFacing() == SpriteFacing.CAMERA_FIXED_Y
 			&& sprite.setFacing(SpriteFacing.CAMERA), "its facing on a 3D stage");

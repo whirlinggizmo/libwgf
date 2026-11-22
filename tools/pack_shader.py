@@ -20,7 +20,8 @@ A fragment shader that includes wgf_screen instead of wgf_surface is a screen ef
 (wgf_render_add_effect): it gets one program, drawn over the finished frame.
 
 libwgt's tools/pack_shader.py (wgrender's): a surface shader's static and skinned model
-programs, where libwgt has two sprite ones too (custom sprites are milestone 2.5's). Standard library only.
+programs, where libwgt has two sprite ones too (libwgf draws a sprite with a custom material as a
+model's quad, by these). Standard library only.
 """
 import argparse
 import subprocess

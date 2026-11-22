@@ -1,7 +1,8 @@
 /* libwgf's custom shaders: what libwgf gives a material's shader (wgf_shader.h), libwgt's
  * wgt.glsl (wgrender's wgr.glsl) with libwgt's names wgf_ for wgt_, trimmed to what libwgf
  * draws: models, skinned ones too (a skinned part is posed by its joints after the vertex
- * hook), and no sprites (custom sprites are milestone 2.5's). tools/pack_shader.py puts
+ * hook). A sprite given a custom material is drawn as a model's quad is, by the same
+ * programs, over its region of its texture (wgf_sprite.h). tools/pack_shader.py puts
  * this file in front of yours, adds libwgf's vertex shader, and compiles the result for
  * every backend libwgf runs on into a .wgfshader file (wgf_shader_create).
  *
@@ -174,10 +175,12 @@ void main() {
     gl_Position = wgf_view_proj * world;
     wgf_world_pos = world.xyz;
     wgf_normal = normal_mat * n;
-    /* the record's last texel: y the tangents' handedness, -1 where the placement mirrors */
-    wgf_tangent = vec4(mat3(model) * tangent.xyz, tangent.w * wgf_instance_texel(record, 7).y);
-    wgf_uv0 = texcoord0;
-    wgf_uv1 = texcoord1;
+    /* the record's last texel: y the tangents' handedness, -1 where the placement mirrors;
+       zw, with texels 3 and 4's w, the part of the textures it shows (a sprite's region) */
+    vec4 extra = wgf_instance_texel(record, 7);
+    wgf_tangent = vec4(mat3(model) * tangent.xyz, tangent.w * extra.y);
+    wgf_uv0 = texcoord0 * vec2(n0.w, n1.w) + extra.zw;
+    wgf_uv1 = texcoord1 * vec2(n0.w, n1.w) + extra.zw;
     wgf_color = color0;
     wgf_tint = wgf_instance_texel(record, 6);
 }

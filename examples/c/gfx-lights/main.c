@@ -2,6 +2,7 @@
 #include <stddef.h>
 
 #include "wgf_app.h"
+#include "wgf_asset.h"
 #include "wgf_camera3d.h"
 #include "wgf_color.h"
 #include "wgf_debug.h"
@@ -16,10 +17,14 @@
 #include "wgf_render.h"
 #include "wgf_resource.h"
 #include "wgf_shape3d.h"
+#include "wgf_sprite.h"
 #include "wgf_stage3d.h"
+#include "wgf_texture.h"
 #include "wgf_window.h"
 
-/* Directional, point, and spot lights on a stage. Five models on a grid:
+/* Directional, point, and spot lights on a stage. Five models on a grid, and behind them
+ * four billboards (trees and flags cut from a sheet of pixel art), sprites drawn with a
+ * material, so the same lights fall on them:
  *   - a dim warm sun (directional)
  *   - a cyan point light orbiting through them, falling off with its range (a small
  *     sphere marks it; shapes are unlit, so it shows the light's color)
@@ -30,9 +35,8 @@
  *
  * wgrender-c's lights example, which differs for the size table: its models are a
  * glTF character, animated, and behind them stand lit billboard sprites with a normal
- * map, which libwgf had none of until glTF (milestone 2, step 6), skinning (gfx-skinning's
- * now), and sprites in 3D (step 11). Here the models are generated capsules, white, at
- * the characters' places, and there are no billboards. And:
+ * map. Here the models are generated capsules, white, at the characters' places, and the
+ * billboards are lit by a material with no normal map (the sheet has none). And:
  *   - a light is switched with wgf_actor_set_visible, and aimed with wgf_actor_look_at
  *     where wgrender's is given a direction;
  *   - the grid is immediate mode in 3D, as wgrender's is;
@@ -51,6 +55,7 @@ static void init(void *user)
     const wgf_mesh_t capsule = wgf_mesh_create_capsule(0.4f, 1.8f, 16, 32);
     int i;
     (void)user;
+    wgf_asset_set_host("../assets"); /* the examples' files: one level above every program */
     wgf_render_set_clear_color(wgf_color_make(12, 13, 18, 255));
     g.camera = wgf_camera3d_create();
     wgf_actor_set_position(g.camera, 0, 4.5f, 10);
@@ -65,6 +70,27 @@ static void init(void *user)
         wgf_actor_set_parent(model, g.stage);
     }
     wgf_resource_release(capsule); /* the models hold their own references */
+
+    { /* lit billboards: sprites with a material, upright, cut out by their alpha */
+        static const float cells[2][4] = {{2, 22, 16, 32}, {22, 22, 16, 32}}; /* a tree, a flag */
+        const wgf_texture_t sheet = wgf_texture_create("textures/tiles.png");
+        const wgf_material_t lit = wgf_material_create(WGF_MATERIAL_SHADING_PBR);
+        wgf_texture_set_sampling(sheet, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_FILTER_NEAREST);
+        wgf_material_set_float(lit, "roughness", 0.9f);
+        for (i = 0; i < 4; i++) {
+            const wgf_actor_t billboard = wgf_sprite_create(sheet);
+            wgf_sprite_set_source(billboard, cells[i % 2][0], cells[i % 2][1], cells[i % 2][2], cells[i % 2][3]);
+            wgf_sprite_set_size(billboard, 1.0f, 2.0f);
+            wgf_sprite_set_pivot(billboard, 0.5f, 1.0f); /* standing on its place */
+            wgf_sprite_set_facing(billboard, WGF_SPRITE_FACING_CAMERA_FIXED_Y);
+            wgf_sprite_set_alpha_mode(billboard, WGF_ALPHA_MODE_MASK, 0.5f);
+            wgf_sprite_set_material(billboard, lit);
+            wgf_actor_set_position(billboard, -3.0f + 2.0f * (float)i, 0.0f, -2.5f);
+            wgf_actor_set_parent(billboard, g.stage);
+        }
+        wgf_resource_release(lit); /* the sprites hold their own references */
+        wgf_resource_release(sheet);
+    }
 
     g.sun = wgf_light_create(WGF_LIGHT_TYPE_DIRECTIONAL);
     wgf_actor_look_at(g.sun, -0.4f, -1.0f, -0.6f, 0, 1, 0);

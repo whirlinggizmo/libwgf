@@ -20,7 +20,7 @@ sampler 10 vertex wgf_data_smp nonfiltering
 sampler 0 fragment smp filtering
 pair 0 vertex 11 10 wgf_instance_tex_wgf_data_smp
 pair 1 fragment 0 0 tex_smp
-source vs 2533
+source vs 2650
 #version 410
 
 uniform vec4 hook[1];
@@ -88,9 +88,12 @@ void main()
     wgf_normal = mat3(vec3(_159.x, _165.x, _171.x), vec3(_159.y, _165.y, _171.y), vec3(_159.z, _165.z, _171.z)) * param_13;
     int param_14 = _81;
     int param_15 = 7;
-    wgf_tangent = vec4(mat3(_149.xyz, _150.xyz, _151.xyz) * tangent.xyz, tangent.w * wgf_instance_texel(param_14, param_15).y);
-    wgf_uv0 = texcoord0;
-    wgf_uv1 = texcoord1;
+    vec4 _248 = wgf_instance_texel(param_14, param_15);
+    wgf_tangent = vec4(mat3(_149.xyz, _150.xyz, _151.xyz) * tangent.xyz, tangent.w * _248.y);
+    vec2 _283 = vec2(_159.w, _165.w);
+    vec2 _286 = _248.zw;
+    wgf_uv0 = (texcoord0 * _283) + _286;
+    wgf_uv1 = (texcoord1 * _283) + _286;
     wgf_color = color0;
     int param_16 = _81;
     int param_17 = 6;
@@ -438,7 +441,7 @@ sampler 10 vertex wgf_data_smp nonfiltering
 sampler 0 fragment smp filtering
 pair 0 vertex 11 10 wgf_instance_tex_wgf_data_smp
 pair 1 fragment 0 0 tex_smp
-source vs 2395
+source vs 2512
 #version 300 es
 
 uniform vec4 hook[1];
@@ -506,9 +509,12 @@ void main()
     wgf_normal = mat3(vec3(_159.x, _165.x, _171.x), vec3(_159.y, _165.y, _171.y), vec3(_159.z, _165.z, _171.z)) * param_13;
     int param_14 = _81;
     int param_15 = 7;
-    wgf_tangent = vec4(mat3(_149.xyz, _150.xyz, _151.xyz) * tangent.xyz, tangent.w * wgf_instance_texel(param_14, param_15).y);
-    wgf_uv0 = texcoord0;
-    wgf_uv1 = texcoord1;
+    vec4 _248 = wgf_instance_texel(param_14, param_15);
+    wgf_tangent = vec4(mat3(_149.xyz, _150.xyz, _151.xyz) * tangent.xyz, tangent.w * _248.y);
+    vec2 _283 = vec2(_159.w, _165.w);
+    vec2 _286 = _248.zw;
+    wgf_uv0 = (texcoord0 * _283) + _286;
+    wgf_uv1 = (texcoord1 * _283) + _286;
     wgf_color = color0;
     int param_16 = _81;
     int param_17 = 6;

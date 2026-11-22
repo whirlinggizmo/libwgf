@@ -168,6 +168,8 @@ static void free_sprite(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr)
     (void)actor;
     if (actor_ptr->as.sprite.texture != 0) wgf_resource_release(actor_ptr->as.sprite.texture);
     actor_ptr->as.sprite.texture = 0;
+    if (actor_ptr->as.sprite.material != 0) wgf_resource_release(actor_ptr->as.sprite.material);
+    actor_ptr->as.sprite.material = 0;
 }
 
 static const wgf_gfx_priv_actor_kind_t kind = {free_sprite, draw_sprite, NULL, NULL};

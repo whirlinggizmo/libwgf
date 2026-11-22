@@ -152,6 +152,46 @@ import wgf.impl.Raw;
 		return Raw.wgf_sprite_get_alpha_cutoff(this);
 
 	/**
+	    Drawn with a material (wgf_material.h) on a 3D stage, as a model's part is: a PBR one lit
+	    by the stage's lights (the up to 8 reaching it most) and its environment, shadows falling
+	    on it; an UNLIT one its base color; a custom one (wgf_material_create_custom) by its
+	    shader, with the same lights. The sprite's texture is the material's base color texture
+	    (the material's own isn't used; a custom shader samples what its material was given), its
+	    tint the placement's, and its region of the texture what every map of the material is
+	    read over, so a normal map laid out as the sprite's sheet lights each frame of it. The
+	    quad is lit from the side it is seen from, so normal maps work on billboards. The
+	    sprite's own alpha mode still says how it draws (ADD as BLEND, and a MASK's cutoff its
+	    own), and its facing, size, pivot, and depth offset where. It casts no shadow, and is
+	    drawn whole (no nine-slice). Sprites alike in texture, material, and lights go up as one
+	    draw. On a 2D stage, which has no lights, the material isn't used: the sprite draws as
+	    without one. The sprite holds a reference to the material; 0 (the default) goes back to
+	    its texture times its tint. False for a handle that isn't a sprite, or one that isn't a
+	    material.
+	**/
+	public inline function setMaterial(material:Material):Bool
+		return Raw.wgf_sprite_set_material(this, material);
+
+	/**
+	    Drawn with a material (wgf_material.h) on a 3D stage, as a model's part is: a PBR one lit
+	    by the stage's lights (the up to 8 reaching it most) and its environment, shadows falling
+	    on it; an UNLIT one its base color; a custom one (wgf_material_create_custom) by its
+	    shader, with the same lights. The sprite's texture is the material's base color texture
+	    (the material's own isn't used; a custom shader samples what its material was given), its
+	    tint the placement's, and its region of the texture what every map of the material is
+	    read over, so a normal map laid out as the sprite's sheet lights each frame of it. The
+	    quad is lit from the side it is seen from, so normal maps work on billboards. The
+	    sprite's own alpha mode still says how it draws (ADD as BLEND, and a MASK's cutoff its
+	    own), and its facing, size, pivot, and depth offset where. It casts no shadow, and is
+	    drawn whole (no nine-slice). Sprites alike in texture, material, and lights go up as one
+	    draw. On a 2D stage, which has no lights, the material isn't used: the sprite draws as
+	    without one. The sprite holds a reference to the material; 0 (the default) goes back to
+	    its texture times its tint. False for a handle that isn't a sprite, or one that isn't a
+	    material.
+	**/
+	public inline function getMaterial():Material
+		return Raw.wgf_sprite_get_material(this);
+
+	/**
 	    A pick on a 2D stage (wgf_stage2d_pick, and the pointer, wgf_pointer.h) passes through
 	    its texels whose alpha is below `threshold` (0..1; 0, the default, hits its whole quad),
 	    so a round button or a character is hit where it shows. Its texture's texels are read

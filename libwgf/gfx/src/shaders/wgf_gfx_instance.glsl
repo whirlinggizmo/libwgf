@@ -24,14 +24,16 @@ mat4 instance_model(int r) {
                 vec4(r0.z, r1.z, r2.z, 0.0),
                 vec4(r0.w, r1.w, r2.w, 1.0));
 }
-/* rows 3..5: its inverse transpose, for normals */
+/* rows 3..5: its inverse transpose, for normals; texels 3 and 4's w, how its texture
+   coordinates scale (1, 1 but for a sprite drawn with a material, which shows a region) */
 mat3 instance_normal(int r) {
     vec4 n0 = instance_texel(r, 3), n1 = instance_texel(r, 4), n2 = instance_texel(r, 5);
     return mat3(vec3(n0.x, n1.x, n2.x), vec3(n0.y, n1.y, n2.y), vec3(n0.z, n1.z, n2.z));
 }
 vec4 instance_tint(int r) { return instance_texel(r, 6); } /* linear, alpha as it is */
 /* x: a skinned part's first joint matrix in the frame's joint texture (below); y: the
-   tangents' handedness, -1 where the placement mirrors them */
+   tangents' handedness, -1 where the placement mirrors them; zw: its texture coordinates'
+   offset (0, 0 but for a sprite's region) */
 vec4 instance_extra(int r) { return instance_texel(r, 7); }
 @end
 

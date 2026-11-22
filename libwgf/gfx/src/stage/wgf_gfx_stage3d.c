@@ -108,7 +108,15 @@ static struct {
 #define JOINT_FLOATS (JOINT_TEXELS * 4)
 
 static wgf_gfx_priv_environment_hooks_t environment_hooks; /* the environment part's, once installed */
+/* What makes a sprite with a material an item, wgf_gfx_sprite_material.c's once a sprite is
+ * given one: a stage whose sprites have none links none of it. */
+static wgf_gfx_priv_sprite_item_t material_sprite_item;
 static wgf_gfx_priv_particle_hooks_t particle_hooks;       /* the particles part's, once installed */
+
+void wgf_gfx_priv_set_sprite_item(wgf_gfx_priv_sprite_item_t fill)
+{
+    material_sprite_item = fill;
+}
 
 void wgf_gfx_priv_set_particle_hooks(const wgf_gfx_priv_particle_hooks_t *hooks)
 {
@@ -539,6 +547,9 @@ typedef struct group_key_t {
     int primitive;
     bool blended, double_sided, mirrored, skinned, receiving, shadow_only;
     int light_count, lights[WGF_GFX_PRIV_MAX_DRAW_LIGHTS];
+    bool material_sprite; /* and what a sprite's draw sets: its texture and its alpha cutoff */
+    uint32_t base_view, base_sampler;
+    float cutoff;
 } group_key_t;
 
 static void item_key(const item_t *item, group_key_t *key)
@@ -550,8 +561,14 @@ static void item_key(const item_t *item, group_key_t *key)
     key->mesh = item->mesh;
     key->primitive = item->primitive;
     key->blended = item->blended;
-    key->double_sided = material != NULL && material->double_sided;
+    key->double_sided = item->material_sprite || (material != NULL && material->double_sided);
     key->mirrored = item->mirrored;
+    key->material_sprite = item->material_sprite;
+    if (item->material_sprite) {
+        key->base_view = item->base_view.id;
+        key->base_sampler = item->base_sampler.id;
+        key->cutoff = item->cutoff;
+    }
     key->skinned = item->skinned;
     key->receiving = item->receiving;
     key->shadow_only = item->shadow_only;
@@ -710,6 +727,7 @@ static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
         item->sprite = item->sprite_batch = item->text = -1;
         item->sprite_batches = 0;
         item->additive = false;
+        item->material_sprite = false;
         item->mirrored = wgf_mat4_determinant(item->world) < 0.0f;
         item->mesh = mesh;
         item->primitive = p;
@@ -773,6 +791,36 @@ static item_t *new_item(void)
     return item;
 }
 
+/* A sprite with a material (wgf_sprite_set_material): an item as a model's part is, which
+ * the sprites' material file fills (its quad, placed where the sprite's own drawing would
+ * put it, its region and its alpha), lit by the lights that reach it; a see-through one
+ * drawn among the see-through parts. It casts no shadow. */
+static void material_sprite(const walk_models_t *w, const wgf_gfx_priv_actor_t *actor_ptr,
+                            const wgf_gfx_priv_sprite_quad_t *quad, sg_view view, sg_sampler sampler, wgf_vec3_t at,
+                            wgf_vec3_t reach)
+{
+    stage_draw_t *draw = &frame.draws[frame.draw_count];
+    const wgf_gfx_priv_material_t *material = wgf_gfx_priv_material_get(actor_ptr->as.sprite.material);
+    item_t *item = material != NULL ? new_item() : NULL;
+    group_key_t key;
+    if (item == NULL || !material_sprite_item(actor_ptr, quad, &w->sprite_view, item)) return;
+    item->base_view = view;
+    item->base_sampler = sampler;
+    linear_color(wgf_color_make(quad->color[0], quad->color[1], quad->color[2], quad->color[3]), item->tint);
+    item->depth = wgf_vec3_dot(wgf_vec3_sub(at, w->eye), w->forward);
+    item->order = frame.item_count - draw->first;
+    item->receiving = true;
+    item->box_lo = wgf_vec3_sub(at, reach);
+    item->box_hi = wgf_vec3_add(at, reach);
+    item->light_count = material->shading == WGF_MATERIAL_SHADING_PBR
+                            ? wgf_gfx_priv_light_select(&frame.lights[draw->first_light], draw->light_count, item->box_lo,
+                                                        item->box_hi, item->lights, WGF_GFX_PRIV_MAX_DRAW_LIGHTS)
+                            : 0;
+    item_key(item, &key);
+    item->group = key_hash(&key);
+    frame.item_count++;
+}
+
 /* A sprite on the stage (wgf_gfx_sprite3d.c), culled by the box its quad can reach, kept:
  * an OPAQUE, MASK, or ADD one for its pass, grouped by texture once the walk is over; a
  * BLEND one an item of its own too, sorted among the see-through parts and recorded after
@@ -800,6 +848,10 @@ static void visit_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_pt
     r = wgf_gfx_priv_sprite_radius(actor_ptr, *world);
     reach = wgf_vec3_make(r, r, r);
     if (w->culling && outside((const float(*)[4])w->planes, wgf_vec3_sub(at, reach), wgf_vec3_add(at, reach))) return;
+    if (actor_ptr->as.sprite.material != 0 && material_sprite_item != NULL) { /* shaded as a model's part is */
+        material_sprite(w, actor_ptr, &quad, view, sampler, at, reach);
+        return;
+    }
     if (w->sprite_camera < 0) {
         w->sprite_camera = wgf_gfx_priv_sprite_batch_add_camera(draw->clip_proj.m, w->sprite_view.right,
                                                                 w->sprite_view.up, w->sprite_view.upright);
@@ -1289,7 +1341,8 @@ static void draw_run(const stage_draw_t *draw, int first, int count, bool lit, c
     }
     if (material == NULL || !wgf_gfx_priv_mesh_get_primitive(item->mesh, item->primitive, &primitive)) return;
     if (item->skinned && (!frame.joints_written || primitive.skin.id == SG_INVALID_ID)) return; /* no room */
-    sg_apply_pipeline(pipeline(item->blended, material->double_sided, item->mirrored != draw->flipped, item->skinned));
+    sg_apply_pipeline(pipeline(item->blended, material->double_sided || item->material_sprite,
+                               item->mirrored != draw->flipped, item->skinned));
     memset(&bindings, 0, sizeof(bindings));
     bindings.vertex_buffers[0] = primitive.vertices;
     bindings.index_buffer = primitive.indices;
@@ -1303,6 +1356,10 @@ static void draw_run(const stage_draw_t *draw, int first, int count, bool lit, c
                                          t == WGF_GFX_PRIV_MATERIAL_TEXTURE_NORMAL ? frame.flat_normal_view
                                                                                    : frame.white_view,
                                          &bindings.samplers[t]);
+    }
+    if (item->material_sprite) { /* its own texture, the base color's */
+        bindings.views[WGF_GFX_PRIV_MATERIAL_TEXTURE_BASE_COLOR] = item->base_view;
+        bindings.samplers[WGF_GFX_PRIV_MATERIAL_TEXTURE_BASE_COLOR] = item->base_sampler;
     }
     bindings.views[VIEW_shadow_tex] = shadow->valid ? shadow->map : frame.no_shadow_view;
     bindings.samplers[SMP_shadow_smp] = shadow->valid ? shadow->sampler : frame.no_shadow_sampler;
@@ -1329,7 +1386,9 @@ static void draw_run(const stage_draw_t *draw, int first, int count, bool lit, c
     fs.u_pbr[1] = material->roughness;
     fs.u_pbr[2] = material->occlusion_strength;
     fs.u_pbr[3] = material->shading == WGF_MATERIAL_SHADING_PBR ? 1.0f : 0.0f;
-    fs.u_material[0] = material->alpha_mode == WGF_ALPHA_MODE_MASK ? material->alpha_cutoff : 0.0f;
+    fs.u_material[0] = item->material_sprite                          ? item->cutoff
+                       : material->alpha_mode == WGF_ALPHA_MODE_MASK ? material->alpha_cutoff
+                                                                     : 0.0f;
     fs.u_material[1] = (float)item->light_count;
     fs.u_material[2] = item->receiving ? 1.0f : 0.0f;
     for (t = 0; t < WGF_GFX_PRIV_MATERIAL_TEXTURE_COUNT; t++) {
@@ -1478,7 +1537,12 @@ static void write_instance(float *r, const item_t *item)
     memcpy(&r[24], item->tint, sizeof(item->tint)); /* linear already */
     r[28] = item->skinned ? (float)item->joint_base : 0.0f; /* its skin's first joint matrix */
     r[29] = item->mirrored ? -1.0f : 1.0f;
-    r[30] = r[31] = 0.0f;
+    /* its part of the textures: the whole, but for a sprite's region (the scale where the
+       normals' matrix, an affine one's, has zeros) */
+    r[15] = item->material_sprite ? item->uv[0] : 1.0f;
+    r[19] = item->material_sprite ? item->uv[1] : 1.0f;
+    r[30] = item->material_sprite ? item->uv[2] : 0.0f;
+    r[31] = item->material_sprite ? item->uv[3] : 0.0f;
 }
 
 /* The texture to hold `rows` rows of records, grown by doubling up to the GPU's limit;

@@ -7,6 +7,7 @@
 #include "wgf_color.h"
 #include "wgf_font.h"
 #include "wgf_mat4.h"
+#include "wgf_material.h"
 #include "wgf_actor.h"
 #include "wgf_quat.h"
 #include "wgf_text.h"
@@ -32,6 +33,7 @@ typedef struct wgf_gfx_priv_sprite_t {
     float nine[4]; /* a nine-slice's borders in texels (left, top, right, bottom); all 0: none */
     float pick_alpha; /* a pick passes through its texels with less alpha (0..1); 0: its whole quad */
     float depth_offset; /* on a 3D stage: drawn this far nearer the camera, on its line of sight */
+    wgf_material_t material; /* on a 3D stage: drawn with it, as a model is (wgf_sprite_set_material); 0 none */
 } wgf_gfx_priv_sprite_t;
 
 /* A trimmed sprite's drawing: the region's size `region_w` by `region_h` within the whole
