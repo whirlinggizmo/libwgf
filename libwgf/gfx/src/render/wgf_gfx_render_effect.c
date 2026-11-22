@@ -258,8 +258,8 @@ bool wgf_render_add_effect(wgf_material_t material)
         sg_view_desc view;
         memset(&image, 0, sizeof(image));
         image.width = image.height = 1;
-        image.data.mip_levels[0].ptr = &white;
-        image.data.mip_levels[0].size = sizeof(white);
+        image.data.ptr = &white;
+        image.data.size = sizeof(white);
         image.label = "wgf-effect-white";
         effects.white = sg_make_image(&image);
         memset(&view, 0, sizeof(view));

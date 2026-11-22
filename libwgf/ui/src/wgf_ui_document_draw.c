@@ -1250,14 +1250,12 @@ static const mesh_t *mesh_of(uintptr_t geometry, const wgf_ui_priv_vertex_t *ver
     m->count = index_count;
     memset(&desc, 0, sizeof(desc));
     desc.usage.vertex_buffer = true;
-    desc.usage.immutable = true;
     desc.data.ptr = vertices;
     desc.data.size = sizeof(wgf_ui_priv_vertex_t) * (size_t)vertex_count;
     desc.label = "wgf-document-gradient";
     m->vertices = sg_make_buffer(&desc);
     memset(&desc, 0, sizeof(desc));
     desc.usage.index_buffer = true;
-    desc.usage.immutable = true;
     desc.data.ptr = indices;
     desc.data.size = sizeof(int) * (size_t)index_count;
     desc.label = "wgf-document-gradient";

@@ -166,6 +166,32 @@ int wgf_gfx_priv_render_get_command_capacity(void);
 unsigned wgf_gfx_priv_render_get_frame(void);
 unsigned wgf_gfx_priv_render_get_last_frame(void);
 
+/* The most mipmap levels an image is made with: a 32768 wide one's, and sokol's own limit
+ * while it had one. */
+#define WGF_GFX_PRIV_MAX_MIPMAPS 16
+
+/* An image made of `desc` (its data unset) with its levels' bytes, `desc->num_mipmaps` of
+ * them (1 for 0), each whole and tightly packed (a cube's six faces one after another):
+ * made unsealed, each level written, then sealed, as sokol takes levels that aren't one
+ * block. The image, to ask its state of. */
+sg_image wgf_gfx_priv_render_make_image(const sg_image_desc *desc, const void *const *levels, const size_t *sizes);
+
+/* Bytes sent to a buffer or an image that keeps them (one made with usage.copy_dst), the
+ * way sokol takes a write that outlasts its frame: written to a staging buffer and copied
+ * from it (wgf_gfx_render_send.c, linked by what sends). The staging buffer is this file's,
+ * one for each thing sent to, made at its first send and let go of once nothing has been
+ * sent to it for half a second of frames: what is written once doesn't keep one, and what
+ * is written every frame doesn't make one every frame. `size` is the same every time for
+ * the same buffer or image. One send a frame for each, and none while a pass is open,
+ * where sokol can't copy: false then, with nothing sent. A buffer takes `size` bytes at its
+ * start; an image, its whole first level. */
+bool wgf_gfx_priv_render_send_buffer(sg_buffer buffer, const void *data, size_t size);
+bool wgf_gfx_priv_render_send_image(sg_image image, const void *data, size_t size);
+/* The staging buffers' hook, set by the first send: called as each frame ends (false) and
+ * as gfx stops (true). */
+void wgf_gfx_priv_render_set_staging(void (*hook)(bool stop));
+int wgf_gfx_priv_render_get_staging_count(void); /* the staging buffers held now, for tests */
+
 /* A stage drawn on the screen: the frame it was drawn in and its place among the stages
  * drawn in it (1 first), into `frame` and `order`, the stage's own; nothing outside a frame,
  * or into a render target. The pointer (wgf_gfx_pointer.c) picks the stages drawn in the

@@ -41,6 +41,7 @@ wgf_layer(gfx
         src/render/wgf_gfx_presentation.c
         src/render/wgf_gfx_render.c
         src/render/wgf_gfx_render_commands.c
+        src/render/wgf_gfx_render_send.c
         src/render/wgf_gfx_render_effect.c
         src/render/wgf_gfx_render_target.c
         src/shape/wgf_gfx_shape2d.c

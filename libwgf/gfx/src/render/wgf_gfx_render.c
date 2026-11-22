@@ -46,6 +46,7 @@ static int screen_width, screen_height;
 static float screen_dpi_scale;
 static wgf_platform_priv_presentation_t screen_present;
 static void (*targets)(bool draw); /* the targets' (wgf_gfx_render_target.c); NULL before any is begun */
+static void (*staging)(bool stop); /* the staging buffers' (wgf_gfx_render_send.c); NULL before anything is sent */
 static bool (*effects)(wgf_gfx_priv_render_effects_t when, sg_pass *pass); /* wgf_gfx_render_effect.c's */
 
 /* The GPU's context (wgf_render.h): lost now, given back in this frame, and the platform's
@@ -248,6 +249,8 @@ void wgf_gfx_priv_stop(void)
     sgl_shutdown(); /* and the 3D pipeline with it */
     draw_pipeline_3d.id = SG_INVALID_ID;
     drawing = NULL; /* the targets' hooks are set again by every target begun */
+    if (staging != NULL) staging(true);
+    staging = NULL; /* set again by the first thing sent */
     wgf_platform_priv_gpu_keep(false);
     sg_shutdown();
     context_lost = context_restored = false;
@@ -323,8 +326,8 @@ sg_image wgf_gfx_priv_render_white_cube(sg_view *view)
     image_desc.type = SG_IMAGETYPE_CUBE;
     image_desc.width = image_desc.height = 1;
     image_desc.pixel_format = SG_PIXELFORMAT_RGBA8;
-    image_desc.data.mip_levels[0].ptr = white;
-    image_desc.data.mip_levels[0].size = sizeof(white);
+    image_desc.data.ptr = white;
+    image_desc.data.size = sizeof(white);
     image_desc.label = "wgf-white-cube";
     image = sg_make_image(&image_desc);
     memset(&view_desc, 0, sizeof(view_desc));
@@ -494,6 +497,7 @@ void wgf_gfx_priv_end_frame(void)
     stats.triangles = 0;
     in_frame = false;
     last_frame = frame_number;
+    if (staging != NULL) staging(false); /* the staging buffers nothing was sent through lately go */
     grow_draw_context(error);
     for (part = wgf_core_priv_part_list(); part != NULL; part = part->next) {
         if (part->end_frame != NULL) part->end_frame();
@@ -750,6 +754,11 @@ void wgf_gfx_priv_render_enter_pass(int pass, wgf_handle_t texture, int width, i
     apply_clip();
 }
 
+void wgf_gfx_priv_render_set_staging(void (*hook)(bool stop))
+{
+    staging = hook;
+}
+
 void wgf_gfx_priv_render_set_targets(void (*hook)(bool draw))
 {
     targets = hook;
@@ -807,6 +816,28 @@ unsigned wgf_gfx_priv_render_get_frame(void)
 unsigned wgf_gfx_priv_render_get_last_frame(void)
 {
     return last_frame;
+}
+
+sg_image wgf_gfx_priv_render_make_image(const sg_image_desc *desc, const void *const *levels, const size_t *sizes)
+{
+    sg_image_desc unsealed = *desc;
+    const int count = desc->num_mipmaps > 0 ? desc->num_mipmaps : 1;
+    sg_image image;
+    int level;
+    unsealed.usage.write_unsealed = true;
+    image = sg_make_image(&unsealed);
+    if (sg_query_image_state(image) != SG_RESOURCESTATE_UNSEALED) return image; /* refused: its state says so */
+    for (level = 0; level < count; level++) {
+        sg_write_image_desc write;
+        memset(&write, 0, sizeof(write));
+        write.src.data.ptr = levels[level];
+        write.src.data.size = sizes[level];
+        write.dst.image = image;
+        write.dst.mip_level = level;
+        sg_write_image_unsealed(&write);
+    }
+    sg_seal_image(image);
+    return image;
 }
 
 void wgf_gfx_priv_render_note_drawn(unsigned *frame, int *order)

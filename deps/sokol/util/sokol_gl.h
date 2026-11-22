@@ -8,7 +8,7 @@
     Project URL: https://github.com/floooh/sokol
 
     Altered source: this is the Whirling Gizmo fork's version
-    (https://github.com/robknopf/sokol), not the original. Changed from
+    (https://github.com/whirlinggizmo/sokol), not the original. Changed from
     floooh/sokol: sgl_draw_layer_range() and sgl_context_draw_layer_range()
     are added. The fork's git history has each change.
 
@@ -581,7 +581,7 @@
 
         sgl_draw() (and variants)
             - copy all recorded vertex data into the dynamic sokol-gfx buffer
-              via a call to sg_update_buffer()
+              via a call to sg_write_buffer_transient()
             - for each recorded command:
                 - if the layer number stored in the command doesn't match
                   the layer that's to be rendered, skip to the next
@@ -3016,6 +3016,10 @@ static sgl_context_desc_t _sgl_context_desc_defaults(const sgl_context_desc_t* d
     sgl_context_desc_t res = *desc;
     res.max_vertices = _sgl_def(desc->max_vertices, _SGL_DEFAULT_MAX_VERTICES);
     res.max_commands = _sgl_def(desc->max_commands, _SGL_DEFAULT_MAX_COMMANDS);
+    const sg_desc sgdesc = sg_query_desc();
+    res.color_format = _sgl_def(desc->color_format, sgdesc.environment.defaults.color_format);
+    res.depth_format = _sgl_def(desc->depth_format, sgdesc.environment.defaults.depth_format);
+    res.sample_count = _sgl_def(desc->sample_count, sgdesc.environment.defaults.sample_count);
     return res;
 }
 
@@ -3474,7 +3478,7 @@ static void _sgl_setup_common(void) {
     img_desc.height = 8;
     img_desc.num_mipmaps = 1;
     img_desc.pixel_format = SG_PIXELFORMAT_RGBA8;
-    img_desc.data.mip_levels[0] = SG_RANGE(pixels);
+    img_desc.data = SG_RANGE(pixels);
     img_desc.label = "sgl-default-texture";
     _sgl.def_img = sg_make_image(&img_desc);
     SOKOL_ASSERT(SG_INVALID_ID != _sgl.def_img.id);

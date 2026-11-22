@@ -963,8 +963,8 @@ static void ensure_gpu(void)
     memset(&image, 0, sizeof(image));
     image.width = image.height = 1;
     image.pixel_format = SG_PIXELFORMAT_RGBA8;
-    image.data.mip_levels[0].ptr = white;
-    image.data.mip_levels[0].size = sizeof(white);
+    image.data.ptr = white;
+    image.data.size = sizeof(white);
     px.white_image = sg_make_image(&image);
     memset(&view, 0, sizeof(view));
     view.texture.image = px.white_image;

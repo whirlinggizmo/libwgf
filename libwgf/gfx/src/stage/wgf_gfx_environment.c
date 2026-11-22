@@ -720,7 +720,8 @@ static bool make_cube_image(const wgf_gfx_priv_env_cube_t *cube, sg_image *image
 {
     sg_image_desc desc;
     sg_view_desc view_desc;
-    uint16_t *levels[16] = {NULL};
+    uint16_t *levels[WGF_GFX_PRIV_MAX_MIPMAPS] = {NULL};
+    size_t sizes[WGF_GFX_PRIV_MAX_MIPMAPS];
     bool ok;
     int m;
     memset(&desc, 0, sizeof(desc));
@@ -743,10 +744,9 @@ static bool make_cube_image(const wgf_gfx_priv_env_cube_t *cube, sg_image *image
             for (c = 0; c < 3; c++) levels[m][i * 4 + c] = wgf_gfx_priv_environment_half_from_float(cube->mips[m][i * 3 + c]);
             levels[m][i * 4 + 3] = wgf_gfx_priv_environment_half_from_float(1.0f);
         }
-        desc.data.mip_levels[m].ptr = levels[m];
-        desc.data.mip_levels[m].size = texels * 4 * sizeof(uint16_t);
+        sizes[m] = texels * 4 * sizeof(uint16_t);
     }
-    *image = sg_make_image(&desc);
+    *image = wgf_gfx_priv_render_make_image(&desc, (const void *const *)levels, sizes);
     for (m = 0; m < cube->mip_count; m++) free(levels[m]);
     ok = sg_query_image_state(*image) == SG_RESOURCESTATE_VALID;
     if (ok) {
@@ -1079,8 +1079,8 @@ static void setup(void)
     memset(&image, 0, sizeof(image));
     image.width = image.height = WGF_GFX_BRDF_LUT_SIZE;
     image.pixel_format = SG_PIXELFORMAT_RG8;
-    image.data.mip_levels[0].ptr = wgf_gfx_brdf_lut;
-    image.data.mip_levels[0].size = sizeof(wgf_gfx_brdf_lut);
+    image.data.ptr = wgf_gfx_brdf_lut;
+    image.data.size = sizeof(wgf_gfx_brdf_lut);
     env.lut = sg_make_image(&image);
     memset(&view, 0, sizeof(view));
     view.texture.image = env.lut;

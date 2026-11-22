@@ -323,6 +323,24 @@ int main(void)
         wgf_gfx_priv_end_frame();
         expect(wgf_gfx_priv_mesh_get_primitive(land, 0, &primitive) && !record->primitives[0].changed,
                "and written then");
+        { /* what its writes go through is held while it changes, and let go of once it has stopped */
+            int i;
+            expect(wgf_gfx_priv_render_get_staging_count() == 1, "one staging buffer, for the one mesh changed");
+            for (i = 0; i < 28; i++) {
+                wgf_gfx_priv_begin_frame();
+                wgf_gfx_priv_end_frame();
+            }
+            expect(wgf_gfx_priv_render_get_staging_count() == 1, "kept while its last write is recent");
+            for (i = 0; i < 4; i++) {
+                wgf_gfx_priv_begin_frame();
+                wgf_gfx_priv_end_frame();
+            }
+            expect(wgf_gfx_priv_render_get_staging_count() == 0, "let go of half a second of frames after it");
+            expect(wgf_mesh_set_colors(land, NULL, 0) && wgf_gfx_priv_mesh_get_primitive(land, 0, &primitive) &&
+                       primitive.vertices.id == first && !record->primitives[0].changed &&
+                       wgf_gfx_priv_render_get_staging_count() == 1,
+                   "changed again later: written into the same buffer, through a new one");
+        }
     }
     { /* bounds: the mesh's own, and a tree of models' placed */
         const wgf_actor_t root = wgf_actor_create(), model = wgf_model_create(cube);

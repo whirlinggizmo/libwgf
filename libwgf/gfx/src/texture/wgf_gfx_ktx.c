@@ -71,7 +71,7 @@ bool wgf_gfx_priv_ktx_parse(const unsigned char *bytes, size_t size, wgf_gfx_pri
         return fail(error, "only 2D textures (not 3D, arrays or cubemaps)");
     }
     mips = field(bytes, 11) == 0 ? 1 : field(bytes, 11);
-    if (mips > SG_MAX_MIPMAPS) return fail(error, "too many mipmap levels");
+    if (mips > WGF_GFX_PRIV_MAX_MIPMAPS) return fail(error, "too many mipmap levels");
     key_value_bytes = field(bytes, 12);
     if (key_value_bytes > size - HEADER_SIZE) return fail(error, "truncated (key/value data)");
     at = HEADER_SIZE + key_value_bytes;

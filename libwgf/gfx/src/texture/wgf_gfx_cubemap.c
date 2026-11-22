@@ -35,7 +35,7 @@ typedef struct pixels_t {
     int size;
     int faces;
     int mip_count;
-    unsigned char *levels[SG_MAX_MIPMAPS];
+    unsigned char *levels[WGF_GFX_PRIV_MAX_MIPMAPS];
     wgf_cubemap_layout_t layout; /* what an image was read as */
 } pixels_t;
 
@@ -148,7 +148,7 @@ static size_t level_bytes(const pixels_t *pixels, int level)
  * texture's mipmaps are. False for no memory. */
 static bool build_mipmaps(pixels_t *pixels)
 {
-    while (pixels->size >> (pixels->mip_count - 1) > 1 && pixels->mip_count < SG_MAX_MIPMAPS) {
+    while (pixels->size >> (pixels->mip_count - 1) > 1 && pixels->mip_count < WGF_GFX_PRIV_MAX_MIPMAPS) {
         const int src = pixels->size >> (pixels->mip_count - 1), dst = src / 2;
         const unsigned char *from = pixels->levels[pixels->mip_count - 1];
         unsigned char *to = (unsigned char *)malloc((size_t)pixels->faces * (size_t)dst * (size_t)dst * 4);
@@ -267,6 +267,7 @@ static bool make_image(const pixels_t *pixels, const char *label, sg_image *imag
 {
     sg_image_desc desc;
     sg_view_desc view_desc;
+    size_t sizes[WGF_GFX_PRIV_MAX_MIPMAPS];
     int m;
     memset(&desc, 0, sizeof(desc));
     desc.type = SG_IMAGETYPE_CUBE;
@@ -274,11 +275,8 @@ static bool make_image(const pixels_t *pixels, const char *label, sg_image *imag
     desc.num_mipmaps = pixels->mip_count;
     desc.pixel_format = SG_PIXELFORMAT_RGBA8;
     desc.label = label;
-    for (m = 0; m < pixels->mip_count; m++) {
-        desc.data.mip_levels[m].ptr = pixels->levels[m];
-        desc.data.mip_levels[m].size = level_bytes(pixels, m);
-    }
-    *image = sg_make_image(&desc);
+    for (m = 0; m < pixels->mip_count; m++) sizes[m] = level_bytes(pixels, m);
+    *image = wgf_gfx_priv_render_make_image(&desc, (const void *const *)pixels->levels, sizes);
     if (sg_query_image_state(*image) != SG_RESOURCESTATE_VALID) {
         sg_destroy_image(*image);
         return false;

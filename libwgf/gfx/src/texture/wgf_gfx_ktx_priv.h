@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "render/wgf_gfx_render_priv.h" /* WGF_GFX_PRIV_MAX_MIPMAPS */
 #include "sokol_gfx.h"
 
 /* KTX (version 1) files holding GPU-compressed textures: BC7, ASTC 4x4, or ETC2 RGBA,
@@ -13,8 +14,8 @@ typedef struct wgf_gfx_priv_ktx_t {
     sg_pixel_format format;
     int width, height;
     int mip_count;
-    const unsigned char *levels[SG_MAX_MIPMAPS];
-    size_t sizes[SG_MAX_MIPMAPS];
+    const unsigned char *levels[WGF_GFX_PRIV_MAX_MIPMAPS];
+    size_t sizes[WGF_GFX_PRIV_MAX_MIPMAPS];
 } wgf_gfx_priv_ktx_t;
 
 /* False (with *error saying why) when the bytes aren't a KTX file gfx can use. */

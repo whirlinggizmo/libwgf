@@ -1144,8 +1144,8 @@ uintptr_t wgf_ui_priv_doc_texture_generate(const unsigned char *rgba, int width,
     image_desc.width = width;
     image_desc.height = height;
     image_desc.pixel_format = SG_PIXELFORMAT_RGBA8;
-    image_desc.data.mip_levels[0].ptr = straight;
-    image_desc.data.mip_levels[0].size = size;
+    image_desc.data.ptr = straight;
+    image_desc.data.size = size;
     image_desc.label = "wgf_document";
     t.image = sg_make_image(&image_desc);
     free(straight);

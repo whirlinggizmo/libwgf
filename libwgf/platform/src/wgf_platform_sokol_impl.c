@@ -87,7 +87,7 @@ void wgf_platform_priv_gpu_reset(void); /* wgf_platform_system_web.c: Emscripten
 #define KEPT_MAX 16384 /* bytes: the placeholder checker's 64 by 64 texels, and anything smaller */
 
 typedef struct kept_bytes_t {
-    sg_image_data image; /* an image's levels, or a buffer's bytes as level 0, pointing below */
+    sg_range data; /* an image's levels, one after another as it was made with them, or a buffer's bytes: below */
     unsigned char bytes[];
 } kept_bytes_t;
 
@@ -113,24 +113,16 @@ static void forget(void **table, int count, uint32_t id)
     table[slot] = NULL;
 }
 
-/* `levels` (up to SG_MAX_MIPMAPS ranges) copied into one block, or NULL when there is no
- * data or more than KEPT_MAX bytes of it. */
-static kept_bytes_t *copy_levels(const sg_range *levels, int count)
+/* `data` copied, or NULL when there is none or more than KEPT_MAX bytes of it. */
+static kept_bytes_t *copy_data(const sg_range *data)
 {
-    size_t total = 0, at = 0;
     kept_bytes_t *copy;
-    int i;
-    for (i = 0; i < count; i++) total += levels[i].ptr != NULL ? levels[i].size : 0;
-    if (total == 0 || total > KEPT_MAX) return NULL;
-    copy = (kept_bytes_t *)calloc(1, sizeof(kept_bytes_t) + total);
+    if (data->ptr == NULL || data->size == 0 || data->size > KEPT_MAX) return NULL;
+    copy = (kept_bytes_t *)calloc(1, sizeof(kept_bytes_t) + data->size);
     if (copy == NULL) return NULL;
-    for (i = 0; i < count; i++) {
-        if (levels[i].ptr == NULL || levels[i].size == 0) continue;
-        memcpy(copy->bytes + at, levels[i].ptr, levels[i].size);
-        copy->image.mip_levels[i].ptr = copy->bytes + at;
-        copy->image.mip_levels[i].size = levels[i].size;
-        at += levels[i].size;
-    }
+    memcpy(copy->bytes, data->ptr, data->size);
+    copy->data.ptr = copy->bytes;
+    copy->data.size = data->size;
     return copy;
 }
 
@@ -140,7 +132,7 @@ static void keep_buffer(const sg_buffer_desc *desc, sg_buffer result, void *user
     if (kept.before.make_buffer != NULL) kept.before.make_buffer(desc, result, user);
     if (!kept.on || slot == 0) return;
     free(kept.buffers[slot]);
-    kept.buffers[slot] = sg_query_buffer_state(result) == SG_RESOURCESTATE_VALID ? copy_levels(&desc->data, 1) : NULL;
+    kept.buffers[slot] = sg_query_buffer_state(result) == SG_RESOURCESTATE_VALID ? copy_data(&desc->data) : NULL;
 }
 
 static void keep_image(const sg_image_desc *desc, sg_image result, void *user)
@@ -149,9 +141,7 @@ static void keep_image(const sg_image_desc *desc, sg_image result, void *user)
     if (kept.before.make_image != NULL) kept.before.make_image(desc, result, user);
     if (!kept.on || slot == 0) return;
     free(kept.images[slot]);
-    kept.images[slot] = sg_query_image_state(result) == SG_RESOURCESTATE_VALID
-                            ? copy_levels(desc->data.mip_levels, SG_MAX_MIPMAPS)
-                            : NULL;
+    kept.images[slot] = sg_query_image_state(result) == SG_RESOURCESTATE_VALID ? copy_data(&desc->data) : NULL;
 }
 
 /* A string's room in a copy, and the copy made there. */
@@ -297,10 +287,12 @@ bool wgf_platform_priv_gpu_restore(void)
     wgf_platform_priv_gpu_reset();
     for (i = 0; i < 16 && glGetError() != GL_NO_ERROR; i++) {
     }
-    /* sokol's own: its vertex array and framebuffer, and its state as setup leaves it */
+    /* sokol's own: its vertex array and framebuffers, and its state as setup leaves it */
     glGenVertexArrays(1, &_sg.gl.vao);
     glBindVertexArray(_sg.gl.vao);
     glGenFramebuffers(1, &_sg.gl.fb);
+    glGenFramebuffers(1, &_sg.gl.copy_src_fb);
+    glGenFramebuffers(1, &_sg.gl.copy_dst_fb);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     _sg_gl_reset_state_cache();
     for (i = 1; i < _sg.pools.buffer_pool.size; i++) {
@@ -309,7 +301,7 @@ bool wgf_platform_priv_gpu_restore(void)
         sg_buffer_desc desc;
         if (buf->slot.state != SG_RESOURCESTATE_VALID || buf->gl.injected) continue;
         memset(&desc, 0, sizeof(desc));
-        if (data != NULL) desc.data = data->image.mip_levels[0];
+        if (data != NULL) desc.data = data->data;
         memset(buf->gl.buf, 0, sizeof(buf->gl.buf));
         if (_sg_gl_create_buffer(buf, &desc) != SG_RESOURCESTATE_VALID) ok = false;
     }
@@ -319,7 +311,7 @@ bool wgf_platform_priv_gpu_restore(void)
         sg_image_desc desc;
         if (img->slot.state != SG_RESOURCESTATE_VALID || img->gl.injected) continue;
         memset(&desc, 0, sizeof(desc));
-        if (data != NULL) desc.data = data->image;
+        if (data != NULL) desc.data = data->data;
         memset(img->gl.tex, 0, sizeof(img->gl.tex));
         if (_sg_gl_create_image(img, &desc) != SG_RESOURCESTATE_VALID) ok = false;
     }

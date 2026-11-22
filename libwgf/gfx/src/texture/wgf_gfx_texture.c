@@ -50,7 +50,7 @@ typedef struct decoded_t {
     int width;
     int height;
     int mip_count;
-    unsigned char *levels[SG_MAX_MIPMAPS]; /* malloc'd (stb_image's level 0 too) */
+    unsigned char *levels[WGF_GFX_PRIV_MAX_MIPMAPS]; /* malloc'd (stb_image's level 0 too) */
     wgf_gfx_priv_decode_t *pending; /* a file's decode under way (the browser's); NULL once its pixels are in */
     bool base;                      /* its first level alone, its mipmaps built by its caller (decode_base) */
 } decoded_t;
@@ -118,18 +118,13 @@ static bool make_image_of(int width, int height, sg_pixel_format format, int mip
 {
     sg_image_desc image_desc;
     sg_view_desc view_desc;
-    int level;
     memset(&image_desc, 0, sizeof(image_desc));
     image_desc.width = width;
     image_desc.height = height;
     image_desc.num_mipmaps = mip_count;
     image_desc.pixel_format = format;
     image_desc.label = label;
-    for (level = 0; level < mip_count; level++) {
-        image_desc.data.mip_levels[level].ptr = levels[level];
-        image_desc.data.mip_levels[level].size = sizes[level];
-    }
-    *image = sg_make_image(&image_desc);
+    *image = wgf_gfx_priv_render_make_image(&image_desc, (const void *const *)levels, sizes);
     if (sg_query_image_state(*image) != SG_RESOURCESTATE_VALID) {
         sg_destroy_image(*image);
         return false;
@@ -149,8 +144,8 @@ static bool make_image_of(int width, int height, sg_pixel_format format, int mip
 static bool make_image(int width, int height, int mip_count, unsigned char *const *levels, sg_image *image,
                        sg_view *view)
 {
-    const unsigned char *pointers[SG_MAX_MIPMAPS];
-    size_t sizes[SG_MAX_MIPMAPS];
+    const unsigned char *pointers[WGF_GFX_PRIV_MAX_MIPMAPS];
+    size_t sizes[WGF_GFX_PRIV_MAX_MIPMAPS];
     int level, w = width, h = height;
     for (level = 0; level < mip_count; level++) {
         pointers[level] = levels[level];
@@ -180,7 +175,7 @@ static bool build_mipmaps(decoded_t *decoded)
     int lw = decoded->width, lh = decoded->height;
 
     decoded->mip_count = 1;
-    while ((lw > 1 || lh > 1) && decoded->mip_count < SG_MAX_MIPMAPS) {
+    while ((lw > 1 || lh > 1) && decoded->mip_count < WGF_GFX_PRIV_MAX_MIPMAPS) {
         const unsigned char *src = decoded->levels[decoded->mip_count - 1];
         const int sw = lw, sh = lh;
         unsigned char *dst;
@@ -806,7 +801,7 @@ static bool make_blank_objects(texture_t *t)
     sg_image_desc image;
     sg_view_desc view;
     memset(&image, 0, sizeof(image));
-    image.usage.dynamic_update = true;
+    image.usage.copy_dst = true;
     image.width = t->width;
     image.height = t->height;
     image.pixel_format = SG_PIXELFORMAT_RGBA8;
@@ -857,7 +852,6 @@ bool wgf_texture_write(wgf_texture_t texture, const unsigned char *data, int siz
 {
     texture_t *t = texture_of(texture);
     uint32_t frame;
-    sg_image_data pixels;
     if (t == NULL || !t->blank || data == NULL || (int64_t)size != (int64_t)t->width * t->height * 4) return false;
     if (wgf_gfx_priv_render_is_lost()) { /* kept, and sent when the context is back */
         keep_write(t, data, size);
@@ -865,10 +859,7 @@ bool wgf_texture_write(wgf_texture_t texture, const unsigned char *data, int siz
     }
     frame = wgf_gfx_priv_render_get_last_frame() + 1; /* the frames ended: one write between two */
     if (t->written == frame) return false; /* the GPU takes one write a frame */
-    memset(&pixels, 0, sizeof(pixels));
-    pixels.mip_levels[0].ptr = data;
-    pixels.mip_levels[0].size = (size_t)size;
-    sg_update_image(t->image, &pixels);
+    if (!wgf_gfx_priv_render_send_image(t->image, data, (size_t)size)) return false;
     t->written = frame;
     keep_write(t, data, size);
     return true;
@@ -892,11 +883,7 @@ void wgf_gfx_priv_texture_restore(void)
                 if (!made) wgf_log_warn("wgf_gfx_texture: the GPU didn't take a %dx%d texture", t->width, t->height);
             }
             if (t->blank && t->kept != NULL) {
-                sg_image_data pixels;
-                memset(&pixels, 0, sizeof(pixels));
-                pixels.mip_levels[0].ptr = t->kept;
-                pixels.mip_levels[0].size = (size_t)t->width * (size_t)t->height * 4;
-                sg_update_image(t->image, &pixels);
+                wgf_gfx_priv_render_send_image(t->image, t->kept, (size_t)t->width * (size_t)t->height * 4);
                 t->written = wgf_gfx_priv_render_get_last_frame() + 1;
             }
             continue;

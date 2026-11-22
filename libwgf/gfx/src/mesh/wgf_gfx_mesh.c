@@ -863,34 +863,31 @@ bool wgf_gfx_priv_mesh_upload(primitive_t *primitive)
         primitive->dynamic = true;
     }
     if (primitive->vertex_buffer.id != SG_INVALID_ID) { /* changed, and changing */
-        if (primitive->written != frame) {
-            sg_range range;
-            range.ptr = primitive->vertices;
-            range.size = vertex_size;
-            sg_update_buffer(primitive->vertex_buffer, &range);
+        if (primitive->written != frame &&
+            wgf_gfx_priv_render_send_buffer(primitive->vertex_buffer, primitive->vertices, vertex_size)) {
             primitive->written = frame;
             primitive->changed = false;
         }
-        return true; /* written already this frame: the change goes the next */
+        return true; /* written already this frame, or asked for in a pass: the change goes the next */
     }
     memset(&desc, 0, sizeof(desc));
     desc.usage.vertex_buffer = true;
     if (primitive->dynamic) {
-        desc.usage.dynamic_update = true;
+        desc.usage.copy_dst = true;
         desc.size = vertex_size;
     } else {
         desc.data.ptr = primitive->vertices;
         desc.data.size = vertex_size;
     }
     primitive->vertex_buffer = sg_make_buffer(&desc);
-    if (primitive->dynamic && sg_query_buffer_state(primitive->vertex_buffer) == SG_RESOURCESTATE_VALID) {
-        sg_range range;
-        range.ptr = primitive->vertices;
-        range.size = vertex_size;
-        sg_update_buffer(primitive->vertex_buffer, &range);
-        primitive->written = frame;
-    }
     primitive->changed = false;
+    if (primitive->dynamic && sg_query_buffer_state(primitive->vertex_buffer) == SG_RESOURCESTATE_VALID) {
+        if (wgf_gfx_priv_render_send_buffer(primitive->vertex_buffer, primitive->vertices, vertex_size)) {
+            primitive->written = frame;
+        } else {
+            primitive->changed = true; /* made in a pass: its vertices go the next frame */
+        }
+    }
     if (primitive->index_buffer.id == SG_INVALID_ID) {
         memset(&desc, 0, sizeof(desc));
         desc.usage.index_buffer = true;

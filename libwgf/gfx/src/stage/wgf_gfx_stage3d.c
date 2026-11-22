@@ -1175,8 +1175,8 @@ static sg_image one_pixel(uint8_t r, uint8_t g, uint8_t b, uint8_t a, sg_view *v
     memset(&desc, 0, sizeof(desc));
     desc.width = desc.height = 1;
     desc.pixel_format = SG_PIXELFORMAT_RGBA8;
-    desc.data.mip_levels[0].ptr = pixel;
-    desc.data.mip_levels[0].size = sizeof(pixel);
+    desc.data.ptr = pixel;
+    desc.data.size = sizeof(pixel);
     image = sg_make_image(&desc);
     memset(&view_desc, 0, sizeof(view_desc));
     view_desc.texture.image = image;
@@ -1227,8 +1227,8 @@ static void ensure_ready(void)
         image.type = SG_IMAGETYPE_CUBE;
         image.width = image.height = 1;
         image.pixel_format = SG_PIXELFORMAT_RGBA8;
-        image.data.mip_levels[0].ptr = black;
-        image.data.mip_levels[0].size = sizeof(black);
+        image.data.ptr = black;
+        image.data.size = sizeof(black);
         frame.no_environment_image = sg_make_image(&image);
         memset(&view, 0, sizeof(view));
         view.texture.image = frame.no_environment_image;

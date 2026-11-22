@@ -8,7 +8,7 @@
     Project URL: https://github.com/floooh/sokol
 
     Altered source: this is the Whirling Gizmo fork's version
-    (https://github.com/robknopf/sokol), not the original. Changed from
+    (https://github.com/whirlinggizmo/sokol), not the original. Changed from
     floooh/sokol: on emscripten, shutdown clears the ScriptProcessorNode's
     onaudioprocess, so audio events queued before shutdown no longer run.
     The fork's git history has each change.
@@ -27,7 +27,9 @@
     SOKOL_API_DECL      - same as SOKOL_AUDIO_API_DECL
     SOKOL_API_IMPL      - public function implementation prefix (default: -)
 
-    SAUDIO_RING_MAX_SLOTS           - max number of slots in the push-audio ring buffer (default 1024)
+    SAUDIO_RING_MAX_SLOTS - max number of slots in the push-audio ring buffer (default 1024)
+    SAUDIO_USE_ALSA     - force the ALSA backend on Linux
+                          (otherwise the PulseAudio backend is used)
 
     If sokol_audio.h is compiled as a DLL, define the following before
     including the declaration or implementation:
@@ -41,8 +43,8 @@
 
     - on macOS: AudioToolbox
     - on iOS: AudioToolbox, AVFoundation
-    - on FreeBSD: asound
-    - on Linux: asound
+    - on Linux/FreeBSD with ALSA: asound
+    - on Linux/FreeBSD with PulseAudio: pulse-simple, pulse
     - on Android: aaudio
     - on Windows with MSVC or Clang toolchain: no action needed, libs are defined in-source via pragma-comment-lib
     - on Windows with MINGW/MSYS2 gcc: compile with '-mwin32' and link with -lole32
@@ -55,8 +57,7 @@
     Sokol Audio feeds into platform-specific audio backends:
 
     - Windows: WASAPI
-    - Linux: ALSA
-    - FreeBSD: ALSA
+    - Linux/FreeBSD: PulseAudio (default) or ALSA
     - macOS: CoreAudio
     - iOS: CoreAudio+AVAudioSession
     - emscripten: WebAudio with ScriptProcessorNode
@@ -381,19 +382,25 @@
     so you shouldn't need to add additional linker libs in the build process
     (otherwise this is a bug which should be fixed in sokol_audio.h).
 
+    THE PULSEAUDIO BACKEND
+    ======================
+    The PulseAudio backend is automatically selected when compiling
+    on Linux or FreeBSD.
+
+    You need to link with the 'pulse-simple' and 'pulse' libraries,
+    and the header <pulse/simple.h> must be present (on Ubuntu, those
+    are installed via the libpulse-dev package).
+
     THE ALSA BACKEND
     ================
-    The ALSA backend is automatically selected when compiling on Linux
-    ('linux' is defined).
+    NOTE: the ALSA backend is deprecated.
 
-    For thread synchronisation, the pthread_mutex_* functions are used.
-
-    Samples are directly forwarded to ALSA in 32-bit float format, no
-    further conversion is taking place.
+    To build the ALSA backend on Linux/FreeBSD, define SAUDIO_USE_ALSA before
+    including the sokol_audio.h implementation.
 
     You need to link with the 'asound' library, and the <alsa/asoundlib.h>
-    header must be present (usually both are installed with some sort
-    of ALSA development package).
+    header must be present (on Ubuntu, those are installed via the
+    `libasound2-dev` package).
 
     THE VITA BACKEND
     ================
@@ -581,6 +588,10 @@ extern "C" {
     _SAUDIO_LOGITEM_XMACRO(ALSA_SND_PCM_HW_PARAMS_SET_RATE_NEAR_FAILED, "snd_pcm_hw_params_set_rate_near() failed") \
     _SAUDIO_LOGITEM_XMACRO(ALSA_SND_PCM_HW_PARAMS_FAILED, "snd_pcm_hw_params() failed") \
     _SAUDIO_LOGITEM_XMACRO(ALSA_PTHREAD_CREATE_FAILED, "pthread_create() failed") \
+    _SAUDIO_LOGITEM_XMACRO(PULSEAUDIO_INVALID_SAMPLE_SPEC, "requested sample rate or channel count not supported") \
+    _SAUDIO_LOGITEM_XMACRO(PULSEAUDIO_SIMPLE_NEW_FAILED, "pa_simple_new() failed") \
+    _SAUDIO_LOGITEM_XMACRO(PULSEAUDIO_SIMPLE_WRITE_FAILED, "pa_simple_write() failed (connection to server lost)") \
+    _SAUDIO_LOGITEM_XMACRO(PULSEAUDIO_PTHREAD_CREATE_FAILED, "pthread_create() failed") \
     _SAUDIO_LOGITEM_XMACRO(WASAPI_CREATE_EVENT_FAILED, "CreateEvent() failed") \
     _SAUDIO_LOGITEM_XMACRO(WASAPI_CREATE_DEVICE_ENUMERATOR_FAILED, "CoCreateInstance() for IMMDeviceEnumerator failed") \
     _SAUDIO_LOGITEM_XMACRO(WASAPI_GET_DEFAULT_AUDIO_ENDPOINT_FAILED, "IMMDeviceEnumerator.GetDefaultAudioEndpoint() failed") \
@@ -717,12 +728,6 @@ inline void saudio_setup(const saudio_desc& desc) { return saudio_setup(&desc); 
 #endif
 #endif // SOKOL_AUDIO_INCLUDED
 
-// ██ ███    ███ ██████  ██      ███████ ███    ███ ███████ ███    ██ ████████  █████  ████████ ██  ██████  ███    ██
-// ██ ████  ████ ██   ██ ██      ██      ████  ████ ██      ████   ██    ██    ██   ██    ██    ██ ██    ██ ████   ██
-// ██ ██ ████ ██ ██████  ██      █████   ██ ████ ██ █████   ██ ██  ██    ██    ███████    ██    ██ ██    ██ ██ ██  ██
-// ██ ██  ██  ██ ██      ██      ██      ██  ██  ██ ██      ██  ██ ██    ██    ██   ██    ██    ██ ██    ██ ██  ██ ██
-// ██ ██      ██ ██      ███████ ███████ ██      ██ ███████ ██   ████    ██    ██   ██    ██    ██  ██████  ██   ████
-//
 // >>implementation
 #ifdef SOKOL_AUDIO_IMPL
 #define SOKOL_AUDIO_IMPL_INCLUDED (1)
@@ -783,6 +788,11 @@ inline void saudio_setup(const saudio_desc& desc) { return saudio_setup(&desc); 
     #define _SAUDIO_ANDROID (1)
 #elif defined(__linux__) || defined(__unix__)
     #define _SAUDIO_LINUX (1)
+    #if defined(SAUDIO_USE_ALSA)
+        #define _SAUDIO_ALSA (1)
+    #else
+        #define _SAUDIO_PULSEAUDIO (1)
+    #endif
 #elif defined(PSP2_SDK_VERSION)
     #define _SAUDIO_VITA (1)
     #include <psp2/audioout.h>
@@ -868,13 +878,17 @@ inline void saudio_setup(const saudio_desc& desc) { return saudio_setup(&desc); 
     #include <pthread.h>
     #include "aaudio/AAudio.h"
 #elif defined(_SAUDIO_LINUX)
-    #if !defined(__FreeBSD__)
-        #include <alloca.h>
-    #endif
     #define _SAUDIO_PTHREADS (1)
     #include <pthread.h>
-    #define ALSA_PCM_NEW_HW_PARAMS_API
-    #include <alsa/asoundlib.h>
+    #if defined(_SAUDIO_PULSEAUDIO)
+        #include <pulse/simple.h>
+    #else
+        #if !defined(__FreeBSD__)
+            #include <alloca.h>
+        #endif
+        #define ALSA_PCM_NEW_HW_PARAMS_API
+        #include <alsa/asoundlib.h>
+    #endif
 #elif defined(__EMSCRIPTEN__)
     #define _SAUDIO_NOTHREADS (1)
     #include <emscripten/emscripten.h>
@@ -897,12 +911,6 @@ inline void saudio_setup(const saudio_desc& desc) { return saudio_setup(&desc); 
 #define SAUDIO_RING_MAX_SLOTS (1024)
 #endif
 
-// ███████ ████████ ██████  ██    ██  ██████ ████████ ███████
-// ██         ██    ██   ██ ██    ██ ██         ██    ██
-// ███████    ██    ██████  ██    ██ ██         ██    ███████
-//      ██    ██    ██   ██ ██    ██ ██         ██         ██
-// ███████    ██    ██   ██  ██████   ██████    ██    ███████
-//
 // >>structs
 #if defined(_SAUDIO_PTHREADS)
 
@@ -939,7 +947,18 @@ typedef struct {
     #endif
 } _saudio_apple_backend_t;
 
-#elif defined(_SAUDIO_LINUX)
+#elif defined(_SAUDIO_PULSEAUDIO)
+
+typedef struct {
+    pa_simple* device;
+    float* buffer;
+    int buffer_byte_size;
+    int buffer_frames;
+    pthread_t thread;
+    bool thread_stop;
+} _saudio_pulseaudio_backend_t;
+
+#elif defined(_SAUDIO_ALSA)
 
 typedef struct {
     snd_pcm_t* device;
@@ -1024,7 +1043,9 @@ typedef _saudio_web_backend_t _saudio_backend_t;
 typedef _saudio_wasapi_backend_t _saudio_backend_t;
 #elif defined(_SAUDIO_ANDROID)
 typedef _saudio_aaudio_backend_t _saudio_backend_t;
-#elif defined(_SAUDIO_LINUX)
+#elif defined(_SAUDIO_PULSEAUDIO)
+typedef _saudio_pulseaudio_backend_t _saudio_backend_t;
+#elif defined(_SAUDIO_ALSA)
 typedef _saudio_alsa_backend_t _saudio_backend_t;
 #elif defined(_SAUDIO_VITA)
 typedef _saudio_vita_backend_t _saudio_backend_t;
@@ -1086,12 +1107,6 @@ _SOKOL_PRIVATE void _saudio_stream_callback(float* buffer, int num_frames, int n
     }
 }
 
-// ██       ██████   ██████   ██████  ██ ███    ██  ██████
-// ██      ██    ██ ██       ██       ██ ████   ██ ██
-// ██      ██    ██ ██   ███ ██   ███ ██ ██ ██  ██ ██   ███
-// ██      ██    ██ ██    ██ ██    ██ ██ ██  ██ ██ ██    ██
-// ███████  ██████   ██████   ██████  ██ ██   ████  ██████
-//
 // >>logging
 #if defined(SOKOL_DEBUG)
 #define _SAUDIO_LOGITEM_XMACRO(item,msg) #item ": " msg,
@@ -1125,12 +1140,6 @@ static void _saudio_log(saudio_log_item log_item, uint32_t log_level, uint32_t l
     }
 }
 
-// ███    ███ ███████ ███    ███  ██████  ██████  ██    ██
-// ████  ████ ██      ████  ████ ██    ██ ██   ██  ██  ██
-// ██ ████ ██ █████   ██ ████ ██ ██    ██ ██████    ████
-// ██  ██  ██ ██      ██  ██  ██ ██    ██ ██   ██    ██
-// ██      ██ ███████ ██      ██  ██████  ██   ██    ██
-//
 // >>memory
 _SOKOL_PRIVATE void _saudio_clear(void* ptr, size_t size) {
     SOKOL_ASSERT(ptr && (size > 0));
@@ -1165,12 +1174,6 @@ _SOKOL_PRIVATE void _saudio_free(void* ptr) {
     }
 }
 
-// ███    ███ ██    ██ ████████ ███████ ██   ██
-// ████  ████ ██    ██    ██    ██       ██ ██
-// ██ ████ ██ ██    ██    ██    █████     ███
-// ██  ██  ██ ██    ██    ██    ██       ██ ██
-// ██      ██  ██████     ██    ███████ ██   ██
-//
 // >>mutex
 #if defined(_SAUDIO_NOTHREADS)
 
@@ -1240,12 +1243,6 @@ _SOKOL_PRIVATE void _saudio_mutex_unlock(_saudio_mutex_t* m) {
 #error "sokol_audio.h: unknown platform!"
 #endif
 
-// ██████  ██ ███    ██  ██████  ██████  ██    ██ ███████ ███████ ███████ ██████
-// ██   ██ ██ ████   ██ ██       ██   ██ ██    ██ ██      ██      ██      ██   ██
-// ██████  ██ ██ ██  ██ ██   ███ ██████  ██    ██ █████   █████   █████   ██████
-// ██   ██ ██ ██  ██ ██ ██    ██ ██   ██ ██    ██ ██      ██      ██      ██   ██
-// ██   ██ ██ ██   ████  ██████  ██████   ██████  ██      ██      ███████ ██   ██
-//
 // >>ringbuffer
 _SOKOL_PRIVATE int _saudio_ring_idx(_saudio_ring_t* ring, int i) {
     return (i % ring->num);
@@ -1292,12 +1289,6 @@ _SOKOL_PRIVATE int _saudio_ring_dequeue(_saudio_ring_t* ring) {
     return val;
 }
 
-// ███████ ██ ███████  ██████
-// ██      ██ ██      ██    ██
-// █████   ██ █████   ██    ██
-// ██      ██ ██      ██    ██
-// ██      ██ ██       ██████
-//
 // >>fifo
 _SOKOL_PRIVATE void _saudio_fifo_init_mutex(_saudio_fifo_t* fifo) {
     /* this must be called before initializing both the backend and the fifo itself! */
@@ -1428,12 +1419,6 @@ _SOKOL_PRIVATE int _saudio_fifo_read(_saudio_fifo_t* fifo, uint8_t* ptr, int num
     return num_bytes_copied;
 }
 
-// ██████  ██    ██ ███    ███ ███    ███ ██    ██
-// ██   ██ ██    ██ ████  ████ ████  ████  ██  ██
-// ██   ██ ██    ██ ██ ████ ██ ██ ████ ██   ████
-// ██   ██ ██    ██ ██  ██  ██ ██  ██  ██    ██
-// ██████   ██████  ██      ██ ██      ██    ██
-//
 // >>dummy
 #if defined(SOKOL_DUMMY_BACKEND)
 _SOKOL_PRIVATE bool _saudio_dummy_backend_init(void) {
@@ -1442,14 +1427,96 @@ _SOKOL_PRIVATE bool _saudio_dummy_backend_init(void) {
 }
 _SOKOL_PRIVATE void _saudio_dummy_backend_shutdown(void) { }
 
-//  █████  ██      ███████  █████
-// ██   ██ ██      ██      ██   ██
-// ███████ ██      ███████ ███████
-// ██   ██ ██           ██ ██   ██
-// ██   ██ ███████ ███████ ██   ██
-//
+// >>pulseaudio
+#elif defined(_SAUDIO_PULSEAUDIO)
+
+// pulseaudio streaming callback running in thread
+_SOKOL_PRIVATE void* _saudio_pulseaudio_cb(void* param) {
+    _SOKOL_UNUSED(param);
+    float* buf_ptr = _saudio.backend.buffer;
+    const int buf_size = _saudio.backend.buffer_byte_size;
+    while (!_saudio.backend.thread_stop) {
+        // fill streaming buffer with new data
+        if (_saudio_has_callback()) {
+            _saudio_stream_callback(buf_ptr, _saudio.backend.buffer_frames, _saudio.num_channels);
+        } else {
+            if (0 == _saudio_fifo_read(&_saudio.fifo, (uint8_t*)buf_ptr, buf_size)) {
+                // not enough read data available, fill the entire buffer with silence
+                _saudio_clear(buf_ptr, (size_t)buf_size);
+            }
+        }
+        // pa_simple_write blocks until the server has space for the data,
+        // underruns are handled by the server and an error means that the
+        // connection to the server is lost
+        int res = pa_simple_write(_saudio.backend.device, buf_ptr, (size_t)buf_size, 0);
+        if (res < 0) {
+            _SAUDIO_ERROR(PULSEAUDIO_SIMPLE_WRITE_FAILED);
+            break;
+        }
+    }
+    return 0;
+}
+
+_SOKOL_PRIVATE bool _saudio_pulseaudio_backend_init(void) {
+    if ((_saudio.num_channels < 1) || (_saudio.num_channels > (int)PA_CHANNELS_MAX)) {
+        _SAUDIO_ERROR(PULSEAUDIO_INVALID_SAMPLE_SPEC);
+        return false;
+    }
+    pa_sample_spec spec;
+    _saudio_clear(&spec, sizeof(spec));
+    spec.format = PA_SAMPLE_FLOAT32NE;
+    spec.rate = (uint32_t)_saudio.sample_rate;
+    spec.channels = (uint8_t)_saudio.num_channels;
+    if (!pa_sample_spec_valid(&spec)) {
+        _SAUDIO_ERROR(PULSEAUDIO_INVALID_SAMPLE_SPEC);
+        return false;
+    }
+    _saudio.bytes_per_frame = _saudio.num_channels * (int)sizeof(float);
+
+    // tlength is the target latency in bytes, use the server defaults for the rest
+    pa_buffer_attr attr;
+    _saudio_clear(&attr, sizeof(attr));
+    attr.maxlength = (uint32_t)-1;
+    attr.tlength = (uint32_t)(_saudio.buffer_frames * _saudio.bytes_per_frame);
+    attr.prebuf = (uint32_t)-1;
+    attr.minreq = (uint32_t)-1;
+    attr.fragsize = (uint32_t)-1;
+
+    _saudio.backend.device = pa_simple_new(0, "sokol-audio", PA_STREAM_PLAYBACK, 0, "playback", &spec, 0, &attr, 0);
+    if (0 == _saudio.backend.device) {
+        _SAUDIO_ERROR(PULSEAUDIO_SIMPLE_NEW_FAILED);
+        return false;
+    }
+
+    _saudio.backend.buffer_byte_size = _saudio.buffer_frames * _saudio.bytes_per_frame;
+    _saudio.backend.buffer_frames = _saudio.buffer_frames;
+    _saudio.backend.buffer = (float*)_saudio_malloc_clear((size_t)_saudio.backend.buffer_byte_size);
+
+    if (0 != pthread_create(&_saudio.backend.thread, 0, _saudio_pulseaudio_cb, 0)) {
+        _SAUDIO_ERROR(PULSEAUDIO_PTHREAD_CREATE_FAILED);
+        _saudio_free(_saudio.backend.buffer);
+        _saudio.backend.buffer = 0;
+        pa_simple_free(_saudio.backend.device);
+        _saudio.backend.device = 0;
+        return false;
+    }
+    return true;
+}
+
+_SOKOL_PRIVATE void _saudio_pulseaudio_backend_shutdown(void) {
+    SOKOL_ASSERT(_saudio.backend.device);
+    SOKOL_ASSERT(_saudio.backend.buffer);
+    _saudio.backend.thread_stop = true;
+    pthread_join(_saudio.backend.thread, 0);
+    pa_simple_drain(_saudio.backend.device, 0);
+    pa_simple_free(_saudio.backend.device);
+    _saudio.backend.device = 0;
+    _saudio_free(_saudio.backend.buffer);
+    _saudio.backend.buffer = 0;
+}
+
 // >>alsa
-#elif defined(_SAUDIO_LINUX)
+#elif defined(_SAUDIO_ALSA)
 
 /* the streaming callback runs in a separate thread */
 _SOKOL_PRIVATE void* _saudio_alsa_cb(void* param) {
@@ -1550,12 +1617,6 @@ _SOKOL_PRIVATE void _saudio_alsa_backend_shutdown(void) {
     _saudio_free(_saudio.backend.buffer);
 }
 
-// ██     ██  █████  ███████  █████  ██████  ██
-// ██     ██ ██   ██ ██      ██   ██ ██   ██ ██
-// ██  █  ██ ███████ ███████ ███████ ██████  ██
-// ██ ███ ██ ██   ██      ██ ██   ██ ██      ██
-//  ███ ███  ██   ██ ███████ ██   ██ ██      ██
-//
 // >>wasapi
 #elif defined(_SAUDIO_WINDOWS)
 
@@ -1778,12 +1839,6 @@ _SOKOL_PRIVATE void _saudio_wasapi_backend_shutdown(void) {
     }
 }
 
-// ██     ██ ███████ ██████   █████  ██    ██ ██████  ██  ██████
-// ██     ██ ██      ██   ██ ██   ██ ██    ██ ██   ██ ██ ██    ██
-// ██  █  ██ █████   ██████  ███████ ██    ██ ██   ██ ██ ██    ██
-// ██ ███ ██ ██      ██   ██ ██   ██ ██    ██ ██   ██ ██ ██    ██
-//  ███ ███  ███████ ██████  ██   ██  ██████  ██████  ██  ██████
-//
 // >>webaudio
 #elif defined(_SAUDIO_EMSCRIPTEN)
 
@@ -1953,12 +2008,6 @@ _SOKOL_PRIVATE void _saudio_webaudio_backend_shutdown(void) {
     }
 }
 
-//  █████   █████  ██    ██ ██████  ██  ██████
-// ██   ██ ██   ██ ██    ██ ██   ██ ██ ██    ██
-// ███████ ███████ ██    ██ ██   ██ ██ ██    ██
-// ██   ██ ██   ██ ██    ██ ██   ██ ██ ██    ██
-// ██   ██ ██   ██  ██████  ██████  ██  ██████
-//
 // >>aaudio
 #elif defined(_SAUDIO_ANDROID)
 
@@ -2058,12 +2107,6 @@ _SOKOL_PRIVATE bool _saudio_aaudio_backend_init(void) {
     return true;
 }
 
-//  ██████  ██████  ██████  ███████  █████  ██    ██ ██████  ██  ██████
-// ██      ██    ██ ██   ██ ██      ██   ██ ██    ██ ██   ██ ██ ██    ██
-// ██      ██    ██ ██████  █████   ███████ ██    ██ ██   ██ ██ ██    ██
-// ██      ██    ██ ██   ██ ██      ██   ██ ██    ██ ██   ██ ██ ██    ██
-//  ██████  ██████  ██   ██ ███████ ██   ██  ██████  ██████  ██  ██████
-//
 // >>coreaudio
 #elif defined(_SAUDIO_APPLE)
 
@@ -2224,12 +2267,6 @@ _SOKOL_PRIVATE bool _saudio_coreaudio_backend_init(void) {
     return true;
 }
 
-// ██   ██ ██ ████████  █████
-// ██   ██ ██    ██    ██   ██
-// ██   ██ ██    ██    ███████
-// ██   ██ ██    ██    ██   ██
-//  █████  ██    ██    ██   ██
-//
 // >>vita
 #elif defined(_SAUDIO_VITA)
 
@@ -2300,12 +2337,6 @@ _SOKOL_PRIVATE void _saudio_vita_backend_shutdown(void) {
     _saudio_free(_saudio.backend.buffer);
 }
 
-// ███████ ██████  ███████
-//      ██ ██   ██ ██
-//  ██████ ██   ██ ███████
-//      ██ ██   ██      ██
-// ███████ ██████  ███████
-//
 // >>3ds
 #elif defined(_SAUDIO_N3DS)
 
@@ -2431,7 +2462,9 @@ _SOKOL_PRIVATE void _saudio_n3ds_backend_shutdown(void) {
 bool _saudio_backend_init(void) {
     #if defined(SOKOL_DUMMY_BACKEND)
         return _saudio_dummy_backend_init();
-    #elif defined(_SAUDIO_LINUX)
+    #elif defined(_SAUDIO_PULSEAUDIO)
+        return _saudio_pulseaudio_backend_init();
+    #elif defined(_SAUDIO_ALSA)
         return _saudio_alsa_backend_init();
     #elif defined(_SAUDIO_WINDOWS)
         return _saudio_wasapi_backend_init();
@@ -2453,7 +2486,9 @@ bool _saudio_backend_init(void) {
 void _saudio_backend_shutdown(void) {
     #if defined(SOKOL_DUMMY_BACKEND)
         _saudio_dummy_backend_shutdown();
-    #elif defined(_SAUDIO_LINUX)
+    #elif defined(_SAUDIO_PULSEAUDIO)
+        _saudio_pulseaudio_backend_shutdown();
+    #elif defined(_SAUDIO_ALSA)
         _saudio_alsa_backend_shutdown();
     #elif defined(_SAUDIO_WINDOWS)
         _saudio_wasapi_backend_shutdown();
@@ -2472,12 +2507,6 @@ void _saudio_backend_shutdown(void) {
     #endif
 }
 
-// ██████  ██    ██ ██████  ██      ██  ██████
-// ██   ██ ██    ██ ██   ██ ██      ██ ██
-// ██████  ██    ██ ██████  ██      ██ ██
-// ██      ██    ██ ██   ██ ██      ██ ██
-// ██       ██████  ██████  ███████ ██  ██████
-//
 // >>public
 SOKOL_API_IMPL void saudio_setup(const saudio_desc* desc) {
     SOKOL_ASSERT(!_saudio.valid);

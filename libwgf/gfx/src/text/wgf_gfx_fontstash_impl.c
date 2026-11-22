@@ -46,5 +46,9 @@ bool wgf_gfx_priv_fontstash_pipeline(struct FONScontext *context, sgl_pipeline *
 void wgf_gfx_priv_fontstash_restore(struct FONScontext *context)
 {
     _sfons_t *sfons = context != NULL ? (_sfons_t *)context->params.userPtr : NULL;
-    if (sfons != NULL) sfons->img_dirty = true;
+    if (sfons == NULL) return;
+    sfons->img_dirty = true; /* the whole atlas, sent again at the next flush: it sends its dirty rows */
+    sfons->img_dirty_rect.x0 = sfons->img_dirty_rect.y0 = 0;
+    sfons->img_dirty_rect.x1 = sfons->cur_width;
+    sfons->img_dirty_rect.y1 = sfons->cur_height;
 }
