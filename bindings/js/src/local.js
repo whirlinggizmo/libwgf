@@ -130,21 +130,44 @@ function localSinOrCos(x, cosine) {
 
 function localAtanReduced(x) {
     const x2 = x * x;
-    let p = 0;
-    for (let n = 43; n >= 3; n -= 2) {
-        p = p * x2;
-        p = p + ((((n - 1) >> 1) % 2 === 0) ? 1 : -1) / n;
-    }
+    let p = -6.6666666666666667e-02;
+    p = p * x2;
+    p = p + 7.6923076923076927e-02;
+    p = p * x2;
+    p = p - 9.0909090909090912e-02;
+    p = p * x2;
+    p = p + 1.1111111111111111e-01;
+    p = p * x2;
+    p = p - 1.4285714285714285e-01;
+    p = p * x2;
+    p = p + 2.0000000000000001e-01;
+    p = p * x2;
+    p = p - 3.3333333333333331e-01;
     p = p * x2;
     p = p * x;
     return x + p;
 }
 
+// each multiple of pi/16's tangent, its angle, and the tangent halfway to the next
+const LOCAL_ATAN_TANGENT = [0.0, 0.198912367379658, 0.41421356237309503, 0.6681786379192989,
+    1.0, 1.496605762665489, 2.414213562373095, 5.027339492125848];
+const LOCAL_ATAN_ANGLE = [0.0, 0.19634954084936207, 0.39269908169872414, 0.5890486225480862,
+    0.7853981633974483, 0.9817477042468103, 1.1780972450961724, 1.3744467859455345];
+const LOCAL_ATAN_UPTO = [0.09849140335716425, 0.3033466836073424, 0.5345111359507917, 0.8206787908286604,
+    1.2185035255879764, 1.8708684117893895, 3.2965582089383205, 10.15317038760886];
+
 function localAtan(x) {
     const t = x < 0 ? -x : x;
-    const a = t <= 0.41421356237309504880 ? localAtanReduced(t)
-        : t <= 2.41421356237309504880 ? LOCAL_PI / 4 + localAtanReduced((t - 1) / (t + 1))
-            : LOCAL_PI / 2 - localAtanReduced(1 / t);
+    let a;
+    if (t <= LOCAL_ATAN_UPTO[0]) {
+        a = localAtanReduced(t);
+    } else if (t > LOCAL_ATAN_UPTO[7]) {
+        a = LOCAL_PI / 2 - localAtanReduced(1 / t);
+    } else {
+        let i = 1;
+        while (t > LOCAL_ATAN_UPTO[i]) i++;
+        a = LOCAL_ATAN_ANGLE[i] + localAtanReduced((t - LOCAL_ATAN_TANGENT[i]) / (t * LOCAL_ATAN_TANGENT[i] + 1));
+    }
     return x < 0 ? -a : a;
 }
 

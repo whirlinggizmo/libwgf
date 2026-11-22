@@ -73,6 +73,14 @@ int main(void)
     half = wgf_quat_slerp(wgf_quat_identity(), quarter, 0.5f);
     expect(near3(wgf_quat_rotate(half, wgf_vec3_make(1, 0, 0)), 0.70710678f, 0.70710678f, 0),
            "slerp halfway through a quarter turn");
+    expect(near3(wgf_quat_rotate(wgf_quat_slerp(wgf_quat_identity(), quarter, 0.75f), wgf_vec3_make(1, 0, 0)),
+                 0.38268343f, 0.92387953f, 0) &&
+               near3(wgf_quat_rotate(wgf_quat_slerp(wgf_quat_identity(), quarter, 0.25f), wgf_vec3_make(1, 0, 0)),
+                     0.92387953f, 0.38268343f, 0),
+           "slerp a quarter and three quarters of the way, each worked from its nearer end");
+    expect(wgf_quat_dot(wgf_quat_slerp(wgf_quat_identity(), quarter, 0.0f), wgf_quat_identity()) == 1.0f &&
+               wgf_quat_dot(wgf_quat_slerp(wgf_quat_identity(), quarter, 1.0f), quarter) >= 0.9999999f,
+           "slerp's ends are the two rotations");
     expect(near(wgf_quat_dot(wgf_quat_normalize(wgf_quat_make(0, 0, 0, 0)), wgf_quat_identity()), 1),
            "a zero quaternion normalizes to the identity");
     expect(near(wgf_quat_from_axis_angle(wgf_vec3_make(0, 0, 0), 1).w, 1), "a zero axis gives the identity");

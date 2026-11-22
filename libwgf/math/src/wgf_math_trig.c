@@ -6,7 +6,7 @@
  * no library call but sqrt and floor (both exact everywhere), and rounded to float once: a
  * reduction to within pi/4 of a multiple of pi/2 (pi/2 in three parts, fdlibm's, so the
  * reduction is exact well past any angle a game turns through), then a Taylor polynomial
- * whose next term is below a double's precision; atan reduced to |x| <= tan(pi/8) the same
+ * whose next term is below a double's precision; atan reduced to |x| <= tan(pi/32) the same
  * way. Each step is its own statement, so no compiler fuses a multiply and an add into an
  * FMA, which a target without one would round differently; compiled here once, with
  * libwgf's flags, rather than inlined into every caller. No C library trigonometry is
@@ -129,33 +129,53 @@ float wgf_trig_tan(float x)
     return (float)(s / c);
 }
 
-/* atan of |x| <= tan(pi/8), a polynomial to x^43 (the next term below 1e-18). */
+/* atan of |x| <= tan(pi/32), a polynomial to x^15 (the next term below a double's precision). */
 static double atan_reduced(double x)
 {
     const double x2 = x * x;
-    double p = 0.0;
-    int n;
-    for (n = 43; n >= 3; n -= 2) { /* x - x^3/3 + x^5/5 - ...: the terms' signs alternate */
-        p = p * x2;
-        p = p + (((n - 1) / 2) % 2 == 0 ? 1.0 : -1.0) / (double)n;
-    }
+    double p = -6.6666666666666667e-02; /* -1/15 */
+    p = p * x2;
+    p = p + 7.6923076923076927e-02; /*  1/13 */
+    p = p * x2;
+    p = p - 9.0909090909090912e-02; /* -1/11 */
+    p = p * x2;
+    p = p + 1.1111111111111111e-01; /*  1/9 */
+    p = p * x2;
+    p = p - 1.4285714285714285e-01; /* -1/7 */
+    p = p * x2;
+    p = p + 2.0000000000000001e-01; /*  1/5 */
+    p = p * x2;
+    p = p - 3.3333333333333331e-01; /* -1/3 */
     p = p * x2;
     p = p * x;
     return x + p;
 }
 
-/* atan of any finite x, in double: reduced by atan(x) = pi/4 + atan((x - 1) / (x + 1)) and
- * atan(x) = pi/2 - atan(1 / x). */
+/* atan of any finite x, in double: reduced about the nearest multiple of pi/16, whose tangent
+ * is c, by atan(x) = atan(c) + atan((x - c) / (1 + x c)), and past the last of them by
+ * atan(x) = pi/2 - atan(1 / x): one division, and a short polynomial. */
 static double atan_double(double x)
 {
+    /* each multiple's tangent, its angle, and the tangent halfway to the next */
+    static const double tangent[8] = {0.0, 0.198912367379658, 0.41421356237309503, 0.6681786379192989,
+                                      1.0, 1.496605762665489, 2.414213562373095,   5.027339492125848};
+    static const double angle[8] = {0.0, 0.19634954084936207, 0.39269908169872414, 0.5890486225480862,
+                                    0.7853981633974483, 0.9817477042468103, 1.1780972450961724, 1.3744467859455345};
+    static const double upto[8] = {0.09849140335716425, 0.3033466836073424, 0.5345111359507917, 0.8206787908286604,
+                                   1.2185035255879764,  1.8708684117893895, 3.2965582089383205, 10.15317038760886};
     const double t = x < 0.0 ? -x : x;
     double a;
-    if (t <= 0.41421356237309504880) {
+    if (t <= upto[0]) {
         a = atan_reduced(t);
-    } else if (t <= 2.41421356237309504880) {
-        a = PI / 4.0 + atan_reduced((t - 1.0) / (t + 1.0));
-    } else {
+    } else if (t > upto[7]) {
         a = PI / 2.0 - atan_reduced(1.0 / t);
+    } else {
+        int i = 1;
+        double over;
+        while (t > upto[i]) i++;
+        over = t * tangent[i];
+        over = over + 1.0;
+        a = angle[i] + atan_reduced((t - tangent[i]) / over);
     }
     return x < 0.0 ? -a : a;
 }

@@ -43,18 +43,18 @@ static inline wgf_quat_t wgf_quat_identity(void)
 static inline wgf_quat_t wgf_quat_from_axis_angle(wgf_vec3_t axis, float radians)
 {
     const wgf_vec3_t unit = wgf_vec3_normalize(axis);
-    const float s = wgf_trig_sin(radians * 0.5f);
+    const wgf_vec2_t half = wgf_trig_cos_sin(radians * 0.5f); /* the cosine and the sine for one call's cost */
     if (wgf_vec3_dot(unit, unit) == 0.0f) return wgf_quat_identity();
-    return wgf_quat_make(unit.x * s, unit.y * s, unit.z * s, wgf_trig_cos(radians * 0.5f));
+    return wgf_quat_make(unit.x * half.y, unit.y * half.y, unit.z * half.y, half.x);
 }
 
 /* A rotation from three angles in radians, about x, then y, then z, each about the
  * fixed axes: roll, pitch, then yaw. (As a product, z times y times x.) */
 static inline wgf_quat_t wgf_quat_from_euler(wgf_vec3_t radians)
 {
-    const float cx = wgf_trig_cos(radians.x * 0.5f), sx = wgf_trig_sin(radians.x * 0.5f);
-    const float cy = wgf_trig_cos(radians.y * 0.5f), sy = wgf_trig_sin(radians.y * 0.5f);
-    const float cz = wgf_trig_cos(radians.z * 0.5f), sz = wgf_trig_sin(radians.z * 0.5f);
+    const wgf_vec2_t x = wgf_trig_cos_sin(radians.x * 0.5f), y = wgf_trig_cos_sin(radians.y * 0.5f);
+    const wgf_vec2_t z = wgf_trig_cos_sin(radians.z * 0.5f); /* each a cosine and a sine for one call's cost */
+    const float cx = x.x, sx = x.y, cy = y.x, sy = y.y, cz = z.x, sz = z.y;
     return wgf_quat_make(sx * cy * cz - cx * sy * sz, cx * sy * cz + sx * cy * sz, cx * cy * sz - sx * sy * cz,
                              cx * cy * cz + sx * sy * sz);
 }
@@ -124,10 +124,19 @@ static inline wgf_quat_t wgf_quat_slerp(wgf_quat_t a, wgf_quat_t b, float t)
         wa = 1.0f - t;
         wb = t;
     } else {
+        /* The angle between them, its cosine d and its sine s. The nearer end's part of it, u,
+           is the one turned through: sin(u angle) / s is the far end's weight, and the near
+           end's, sin((1 - u) angle) / s, is cos(u angle) - d sin(u angle) / s, so one cosine
+           and sine do for the three sines, and t of 0 and of 1 still give a and b themselves. */
         const float angle = wgf_trig_acos(d);
-        const float s = wgf_trig_sin(angle);
-        wa = wgf_trig_sin((1.0f - t) * angle) / s;
-        wb = wgf_trig_sin(t * angle) / s;
+        const float s = sqrtf((1.0f - d) * (1.0f + d));
+        const int near_a = t <= 0.5f;
+        const wgf_vec2_t part = wgf_trig_cos_sin((near_a ? t : 1.0f - t) * angle);
+        const float far_weight = part.y / s;
+        const float scaled = d * far_weight;
+        const float near_weight = part.x - scaled;
+        wa = near_a ? near_weight : far_weight;
+        wb = near_a ? far_weight : near_weight;
     }
     return wgf_quat_normalize(wgf_quat_make(wa * a.x + wb * b.x, wa * a.y + wb * b.y,
                                                     wa * a.z + wb * b.z, wa * a.w + wb * b.w));
