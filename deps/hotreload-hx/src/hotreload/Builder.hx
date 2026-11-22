@@ -12,130 +12,139 @@ using Lambda;
 using StringTools;
 using haxe.macro.Tools;
 
+/** One static function passed as a value: the class and name it belongs to, and where it was passed. **/
+typedef StaticUse = {target:String, cls:String, name:String, file:String, min:Int, max:Int};
+
+/** A file's size and modification time, which tell whether it changed since a build. **/
+typedef Stamp = {file:String, mtime:Float, size:Int};
+
+/**
+	A source file's finds (Builder.findStaticValues), with the stamps of the file and of the files
+	its typed code depends on.
+**/
+typedef FileUses = {mtime:Float, size:Int, uses:Array<StaticUse>, deps:Array<Stamp>};
+
 private enum Mode {
 	Off;
-	Host;    // the executable's build: -D hotreload
-	Library; // a reload's build, which the reloader starts: -D hotreload_library
-	Js;       // a JS build: -D hotreload, which hotreload.DevServer serves and rebuilds
-	JsReload; // a JS reload's build, which the DevServer starts: -D hotreload_reload
+	Js;       // A hot build (-D hotreload), which hotreload.DevServer serves and rebuilds.
+	JsReload; // A reload's build (-D hotreload_reload), which the DevServer starts.
 }
 #end
 
 /**
-	What makes a build hot: `--macro hotreload.Builder.init()` (which `-lib hotreload-hx` adds)
-	and `-D hotreload`. Without the define it does nothing, and the same sources build one
-	ordinary program: `@:hot` and the reload hooks are ignored.
+	Provides the build macro that makes a JS build hot.
 
-	In the executable's build (the host), it turns on what cppia needs (`-D scriptable`,
-	`-dce no`, `-D dll_export`), finds the reloaded code, and writes down how to build it
-	again (a resource the Reloader reads). The reloaded code is the classes in the
-	directories of the classes with something hot in them, and below, but the main class.
-	Their compiled copies in the executable are renamed (`_hot.Hello`), so that the cppia
-	module's classes, under their own names, don't collide with them.
+	A build is hot with `--macro hotreload.Builder.init()` (which `-lib hotreload-hx` adds) and
+	`-D hotreload`, on a JS target. Without the define the macro does nothing. The same sources
+	then build one ordinary program, and the reload metadata is ignored.
 
-	In a reload's build (the library), the reloaded code is compiled to one cppia module,
-	against the executable's classes (`-D dll_import`).
+	A hot build reloads whole. The page loads the new bundle beside the old one, and the
+	reloader (Reloader, JsSwap) makes the new bundle's classes the current ones, objects
+	included. Every static keeps its value, except one whose first value was edited (it starts
+	over from the new value) and one marked `@:resetOnHotReload`.
 
-	A JS build reloads whole: the page loads the new bundle beside the old one, and the
-	reloader (Reloader.js.hx) makes its classes the current ones, statics, objects and all.
-	So `@:hot` means nothing there: every static and function reloads. What it takes from
-	here: a guard that keeps a reloaded bundle's `main` from running again, each class's
-	field initializers, for the objects a reload carries over (their new fields start
-	from them), the reload hooks, and, for the DevServer, how to build it again.
+	The macro adds each class's statics' types and first values, as written
+	(`__hot_statics__`). It adds a guard that keeps a reloaded bundle's `main` from running
+	again. It adds each class's field initializers, from which the new fields of an object a
+	reload carries over start. It registers the reload hooks. It replaces `$bind` with one that
+	follows a bound method to its new code, and does the same for a static function passed as a
+	value. It also records, for the DevServer, how to build the bundle again.
 **/
 class Builder {
-	/** what the executable's copy of a reloaded class is renamed to: `_hot.` and its path. A reload strips it again **/
-	public static inline var HOST_PREFIX = "_hot.";
-
 	#if macro
 	static var mode = Off;
 	static var mainClass:String;
-	static var hotClasses:Array<{module:String, file:String}> = [];
-	static var libraryDirs:Array<String> = [];
-	static var libraryMain:String;
+	/** The project's own class paths, which hold its code and are watched. **/
+	static var projectDirs:Array<String> = [];
+
+	/** The class paths inside the project's directory excluded from it (its local repository's libraries). **/
+	static var excludedDirs:Array<String> = [];
+
+	/** The main class's file, found from the class paths. **/
+	static var mainFile:String;
+
 	static var configured = false;
 
 	public static function init() {
-		// once per build, however many times the build names the library
+		// Once per build, however many times the build names the library.
 		if (Context.defined("hotreload_initialized"))
 			return;
 		Compiler.define("hotreload_initialized");
-		// a compilation server keeps a macro's statics from one build to the next
+		registerDocs();
+		// A compilation server keeps a macro's statics from one build to the next.
 		mode = Off;
 		mainClass = null;
-		hotClasses = [];
-		libraryDirs = [];
-		libraryMain = null;
+		projectDirs = [];
+		mainFile = null;
 		configured = false;
+		staticValues = null;
 		std = null;
-		if (Context.defined("hotreload_library")) {
-			mode = Library;
-			libraryDirs = Context.definedValue("hotreload_dirs").split("|");
-			libraryMain = Context.definedValue("hotreload_main");
-			Compiler.define("dce", "no");
-			invalidate();
-		} else if (Context.defined("hotreload") && Context.defined("js")) {
-			mode = Context.defined("hotreload_reload") ? JsReload : Js;
-			invalidate();
-			initJs();
-		} else if (Context.defined("hotreload")) {
-			if (!Context.defined("cpp") || Context.defined("cppia")) {
-				// (an init macro's warning isn't shown)
-				Sys.stderr().writeString("hotreload: only a cpp or a JS build reloads; this one builds without it\n");
-				Sys.stderr().flush();
-				return;
-			}
-			mode = Host;
-			initHost();
-		} else {
+		own = null;
+		if (!Context.defined("hotreload"))
+			return;
+		if (!Context.defined("js")) {
+			// (An init macro's warning is not shown.)
+			Sys.stderr().writeString("hotreload: build: not hot (only a JS build reloads)\n");
+			Sys.stderr().flush();
 			return;
 		}
+		mode = Context.defined("hotreload_reload") ? JsReload : Js;
+		invalidate();
+		initJs();
 		Compiler.addGlobalMetadata("", "@:build(hotreload.Builder.build())", true, true, false);
 	}
 
-	static function initHost() {
-		var args = Sys.args();
-		if (args.contains("--next") || args.contains("--each"))
-			Context.fatalError("hotreload: a hot build is one build: take --next and --each out of its hxml", Context.currentPos());
-		var cppDir = null;
-		var i = 0;
-		while (i < args.length) {
-			switch (args[i]) {
-				case "-main" | "--main" | "-m":
-					mainClass = args[i + 1];
-				case "-cpp" | "--cpp":
-					cppDir = args[i + 1];
-			}
-			i++;
-		}
-		if (mainClass == null)
-			Context.fatalError("hotreload: a hot build needs a main class (--main)", Context.currentPos());
-		var cwd = Path.addTrailingSlash(Sys.getCwd());
-		var buildDir = Path.normalize(Path.join([absolute(cwd, cppDir), "hotreload"]));
-		if (!FileSystem.exists(buildDir))
-			FileSystem.createDirectory(buildDir);
+	/**
+		Registers the library's defines and metadata with the compiler.
 
-		// what cppia needs: the executable's classes whole (a reload may call what it never
-		// did), reflection for them, and the list of them to compile against
-		Compiler.define("scriptable");
-		Compiler.define("dce", "no");
-		Compiler.define("dll_export", buildDir + "/host.info");
-
-		Context.onAfterTyping(types -> {
-			if (configured)
-				return;
-			configured = true;
-			configure(types, cwd, buildDir, libraryArgs(args));
-		});
+		The registration is for documentation only. `haxe --help-user-defines` and
+		`--help-user-metas` list them, and an editor shows their docs. The defines the dev server
+		passes to its own builds are not registered.
+	**/
+	static function registerDocs() {
+		var source = "hotreload-hx";
+		Compiler.registerCustomDefine({
+			define: "hotreload",
+			doc: "Builds the program hot, so that it reloads as its sources change. The dev server adds it.",
+			platforms: [Js]
+		}, source);
+		Compiler.registerCustomDefine({
+			define: "hotreload-port",
+			doc: "The port that DevServer.serve and DevServer.stop use when none is given. Defaults to 8080.",
+			params: ["port"]
+		}, source);
+		Compiler.registerCustomDefine({
+			define: "hotreload-url",
+			doc: "The URL where a hot build requests new builds. Defaults to HOTRELOAD_URL in node, and to the page's own server in a browser.",
+			params: ["url"],
+			platforms: [Js]
+		}, source);
+		Compiler.registerCustomMetadata({
+			metadata: ":resetOnHotReload",
+			doc: "Resets a static var to its initial value on every reload.",
+			targets: [ClassField],
+			platforms: [Js]
+		}, source);
+		Compiler.registerCustomMetadata({
+			metadata: ":beforeHotReload",
+			doc: "Runs a static function with no parameters just before each reload, on the old code.",
+			targets: [ClassField],
+			platforms: [Js]
+		}, source);
+		Compiler.registerCustomMetadata({
+			metadata: ":afterHotReload",
+			doc: "Runs a static function with no parameters just after each reload, on the new code.",
+			targets: [ClassField],
+			platforms: [Js]
+		}, source);
+		Compiler.registerCustomMetadata({
+			metadata: ":hot",
+			doc: "Deprecated. Has no effect, since every static keeps its value across a reload.",
+			targets: [ClassField],
+			platforms: [Js]
+		}, source);
 	}
 
-	/**
-		A compilation server notices a changed file by its time, in whole seconds, so it would
-		miss a save in the same second as the last build's: the reloader writes the files
-		that changed since the last build started to a file, which this names to the server.
-		A file, not a define, since a define whose value changed each build would give the
-		server a new context each time, and nothing cached
-	**/
 	static function invalidate() {
 		if (!Context.defined("hotreload_invalidate"))
 			return;
@@ -146,6 +155,13 @@ class Builder {
 	}
 
 	static function initJs() {
+		// A reload's swap fails on ES5 output ("newHooks.runAfter is not a function"). js-es
+		// cannot be set from here, because the compiler has already read it (an ES5
+		// constructor's `this` before `super()` would stay). The library's extraParams.hxml
+		// sets it on the command line instead.
+		var es = Context.definedValue("js-es");
+		if (es == null || Std.parseInt(es) == null || Std.parseInt(es) < 6)
+			Context.fatalError("hotreload: a hot JS build needs -D js-es=6 (-lib hotreload-hx sets it; something set it lower)", Context.currentPos());
 		var args = Sys.args();
 		var js = null;
 		var i = 0;
@@ -158,367 +174,418 @@ class Builder {
 			}
 			i++;
 		}
-		if (mode == JsReload)
-			return;
-		if (args.contains("--next") || args.contains("--each"))
+		if (mode == Js && (args.contains("--next") || args.contains("--each")))
 			Context.fatalError("hotreload: a hot build is one build: take --next and --each out of its hxml", Context.currentPos());
 		var cwd = Path.addTrailingSlash(Sys.getCwd());
+		findProject(args, cwd);
 		var path = Context.defined("hotreload_config") ? Context.definedValue("hotreload_config") : absolute(cwd, js) + ".hotreload.json";
+		var output = absolute(cwd, js);
+		usesCache = Path.join([Path.directory(output), ".hotreload-statics.json"]);
+		Context.onAfterGenerate(() -> {
+			lateBind(output);
+			lateStatics(output);
+		});
 		Context.onAfterTyping(types -> {
+			findStaticValues(types);
 			if (configured)
 				return;
 			configured = true;
-			var mainFile = null;
-			for (t in types)
-				switch (t) {
-					case TClassDecl(_.get() => c) if (fullName(c.pack, c.name) == mainClass):
-						mainFile = fileOf(c.pos);
-					default:
-				}
-			// the project's own class paths (inside its directory; not the standard library's or
-			// a haxelib's), or else the main class's directory: watched, and below
-			var dirs = [];
-			var j = 0;
-			while (j < args.length) {
-				if ((args[j] == "-cp" || args[j] == "-p" || args[j] == "--class-path") && j + 1 < args.length) {
-					var dir = Path.removeTrailingSlashes(Path.normalize(absolute(cwd, args[j + 1])));
-					if (dir.startsWith(Path.removeTrailingSlashes(cwd)) && FileSystem.exists(dir) && !dirs.contains(dir))
-						dirs.push(dir);
-				}
-				j++;
-			}
-			if (dirs.length == 0 && mainFile != null)
-				dirs.push(Path.directory(mainFile));
+			// (A reload's build writes the config too when asked. The DevServer watches its class
+			// paths, which an edited hxml changes.)
+			if (mode == JsReload && !Context.defined("hotreload_config"))
+				return;
+
 			var config:JsConfig = {
 				cwd: cwd,
 				args: [for (a in args) a],
-				dirs: dirs,
+				dirs: projectDirs,
+				excluded: excludedDirs,
 				js: Path.normalize(absolute(cwd, js)),
 				mainClass: mainClass,
 			};
+			// (The output's directory may not exist yet. The compiler creates it later.)
+			if (!sys.FileSystem.exists(Path.directory(path)))
+				sys.FileSystem.createDirectory(Path.directory(path));
 			sys.io.File.saveContent(path, haxe.Json.stringify(config, "\t"));
 		});
 	}
 
-	/** the executable's command line, for a reload's build: what it compiles and how, but not where to or what runs **/
-	static function libraryArgs(args:Array<String>):Array<String> {
-		var withValue = [
-			"-main", "--main", "-m", "-cpp", "--cpp", "-js", "--js", "-hl", "--hl", "-neko", "--neko", "-lua", "--lua", "-python", "--python",
-			"-php", "--php", "-jvm", "--jvm", "-java", "--java", "-cs", "--cs", "-swf", "--swf", "--cppia", "-x", "-cmd", "--cmd", "-dce", "--dce"
-		];
-		var result = [];
-		var i = 0;
-		while (i < args.length) {
-			var arg = args[i];
-			if (withValue.contains(arg)) {
-				i += 2;
-				continue;
-			}
-			if (arg == "--interp") {
-				i++;
-				continue;
-			}
-			if ((arg == "-D" || arg == "--define") && i + 1 < args.length && args[i + 1].startsWith("dll_export")) {
-				i += 2;
-				continue;
-			}
-			result.push(arg);
-			i++;
-		}
-		return result;
-	}
+	/**
+		The `$bind` function of a hot JS build.
 
-	static function configure(types:Array<ModuleType>, cwd:String, buildDir:String, args:Array<String>) {
-		var mainFile = null;
-		for (t in types)
-			switch (t) {
-				case TClassDecl(_.get() => c) if (fullName(c.pack, c.name) == mainClass):
-					mainFile = fileOf(c.pos);
-				default:
-			}
+		It looks up the method each time it is called, so a bound method made before a reload
+		runs the new code.
+	**/
+	static inline var LATE_BIND = "function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $global.$haxeUID++; var f; "
+		+ "if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { "
+		+ "f = function() { var g = f.method; while( g.__hot_next__ != null ) g = f.method = g.__hot_next__; return g.apply(o,arguments); }; "
+		+ "f.method = m; o.hx__closures__[m.__id__] = f; } return f; }";
 
-		// the directories of the classes with something hot in them, each once, and none
-		// inside another
-		var dirs = [];
-		for (h in hotClasses) {
-			var dir = Path.directory(h.file);
-			if (!dirs.contains(dir))
-				dirs.push(dir);
-		}
-		dirs = dirs.filter(d -> !dirs.exists(other -> other != d && d.startsWith(other + "/")));
+	/**
+		Replaces the output's `$bind` with one that follows a bound method to its newest code.
 
-		// the executable's copies of the reloaded classes, renamed out of the modules' way
-		for (t in types) {
-			var base:BaseType = switch (t) {
-				case TClassDecl(c): c.get();
-				case TEnumDecl(e): e.get();
-				default: null;
-			}
-			if (base == null || base.isExtern)
-				continue;
-			var file = fileOf(base.pos);
-			if (file == mainFile || !inside(file, dirs))
-				continue;
-			if (base.meta.has(":native")) {
-				Context.warning('hotreload: ${fullName(base.pack, base.name)} has @:native, so it can\'t be reloaded', base.pos);
-				continue;
-			}
-			base.meta.add(":native", [macro $v{HOST_PREFIX + fullName(base.pack, base.name)}], base.pos);
-		}
-
-		var roots = [];
-		for (h in hotClasses)
-			if (!roots.contains(h.module))
-				roots.push(h.module);
-
-		var config:Config = {
-			cwd: cwd,
-			args: args,
-			roots: roots,
-			dirs: dirs,
-			mainFile: mainFile,
-			mainClass: mainClass,
-			buildDir: buildDir,
-			debug: Context.defined("debug"),
-			compilationServer: Context.defined("hotreload_no_compilation_server") ? "off" : Context.defined("hotreload_compilation_server") ? Context.definedValue("hotreload_compilation_server") : null,
-		};
-		Context.addResource("hotreload.config", haxe.io.Bytes.ofString(haxe.Json.stringify(config)));
+		A bound method (`addEventListener(CLICK, onClick)`) is Haxe's `$bind`, which binds the
+		method as it is (`m.bind(o)`). One made before a reload would run the old code. The
+		replacement follows the method through `__hot_next__`, which a swap sets (JsSwap). It
+		stays on the original's single line, so no line moves for the source map. A bundle with
+		no bound method has no `$bind`, and is left unchanged.
+	**/
+	static function lateBind(output:String) {
+		if (!FileSystem.exists(output))
+			return;
+		var text = sys.io.File.getContent(output);
+		var start = text.indexOf("\nfunction $bind(o,m) {");
+		if (start < 0)
+			return;
+		var end = text.indexOf("\n", start + 1);
+		if (end < 0)
+			end = text.length;
+		if (text.substring(start + 1, end) != LATE_BIND)
+			sys.io.File.saveContent(output, text.substring(0, start + 1) + LATE_BIND + text.substring(end));
 	}
 
 	/**
-		`@:build` on every class of a hot build: `@:hot` statics and functions, and the
-		reload hooks, and in a reload's build, what a migrated object needs
+		Makes each static function passed as a value late-bound in the output.
+
+		A static function passed as a value (`addEventListener("keydown", Game.onKey)`) is the
+		function itself. One passed before a reload would run the old code. The new code's
+		`Game.onKey` is another function, so removing it removes nothing. Each one that
+		findStaticValues finds is replaced by a function that calls it (`__hot_impl__`). The
+		replacement is added on its class's closing line, so no line moves for the source map.
+		A swap keeps that function and points it to the new code (JsSwap). A function whose
+		class is not in the output as Haxe writes it is reported as a warning.
+	**/
+	static function lateStatics(output:String) {
+		if (staticValues == null || !staticValues.keys().hasNext() || !FileSystem.exists(output))
+			return;
+		var text = sys.io.File.getContent(output);
+		var changed = false;
+		for (name => entry in staticValues) {
+			var start = text.indexOf('\nclass $name ');
+			var end = start < 0 ? -1 : text.indexOf("\n}", start + 1);
+			var names = [for (n in entry.names.keys()) n];
+			names.sort(Reflect.compare);
+			if (end < 0) {
+				for (n in names)
+					Context.warning('hotreload: ${entry.cls}.$n passed as a value keeps its old code after a reload ($name not found in the output); call it from a lambda, x -> $n(x)', entry.names.get(n));
+				continue;
+			}
+			end += 2;
+			var line = ' for (const k of ${haxe.Json.stringify(names)}) { const f = $name[k], w = function() { return w.__hot_impl__.apply(this,arguments); }; w.__hot_impl__ = f; $name[k] = w; }';
+			if (text.substr(end, line.length) == line)
+				continue;
+			text = text.substring(0, end) + line + text.substring(end);
+			changed = true;
+		}
+		if (changed)
+			sys.io.File.saveContent(output, text);
+	}
+
+	/**
+		Finds the project's own class paths and the main class's file.
+
+		The project's own class paths are those inside its directory. The standard library's
+		and a haxelib's are not, and neither is a local repository's (`.haxelib/`), even though
+		it is inside the directory. Without any, the main class's directory is used. The
+		project's sources are watched.
+	**/
+	static function findProject(args:Array<String>, cwd:String) {
+		mainFile = try Path.normalize(FileSystem.absolutePath(Context.resolvePath(mainClass.replace(".", "/") + ".hx"))) catch (_) null;
+		var dirs = [];
+		var excluded = [];
+		var j = 0;
+		while (j < args.length) {
+			if ((args[j] == "-cp" || args[j] == "-p" || args[j] == "--class-path") && j + 1 < args.length) {
+				var dir = Path.removeTrailingSlashes(Path.normalize(absolute(cwd, args[j + 1])));
+				var library = (dir + "/").contains("/.haxelib/");
+				if (dir.startsWith(Path.removeTrailingSlashes(cwd)) && FileSystem.exists(dir) && !dirs.contains(dir) && !excluded.contains(dir))
+					(library ? excluded : dirs).push(dir);
+			}
+			j++;
+		}
+		if (dirs.length == 0 && mainFile != null)
+			dirs.push(Path.directory(mainFile));
+		projectDirs = dirs;
+		excludedDirs = excluded;
+	}
+
+	/**
+		The static functions passed as values (`addEventListener("keydown", Game.onKey)`), by
+		their classes' JS names.
+
+		Each holds the position of its first use, reported when its class is not found in the
+		output. findStaticValues fills it, and lateStatics makes each function late-bound.
+	**/
+	static var staticValues:Map<String, {cls:String, names:Map<String, Position>}>;
+
+	/** The file the finds are kept in between builds, beside the output. **/
+	static var usesCache:String;
+
+	/** The finds of the file being walked. **/
+	static var currentUses:Array<StaticUse>;
+
+	/** The files of the classes that the file being walked refers to statically. **/
+	static var currentDeps:Map<String, Bool>;
+
+	/**
+		Finds the static functions the code passes as values, anywhere but in the standard
+		library and this one.
+
+		lateStatics makes them late-bound. A method of an object passed as a value is Haxe's
+		`$bind`, which lateBind makes late-bound.
+
+		The walk is interpreted and grows with the program, so its finds are kept between builds
+		(usesCache, beside the output). A file's finds depend on its own text and on the classes
+		its code refers to statically. Whether `Other.cb` counts depends on whether Other declares
+		it as a function. Each file's entry therefore records the stamps of the file and of the
+		files of those classes. A file is walked again when any of them changed, or when the
+		reload's changed-files list names any of them. A file added to the program can change
+		how names elsewhere resolve, so it makes every file walk again.
+	**/
+	static function findStaticValues(types:Array<ModuleType>) {
+		staticValues = [];
+		var cache:Map<String, FileUses> = [];
+		if (usesCache != null && FileSystem.exists(usesCache)) {
+			try {
+				var data:haxe.DynamicAccess<FileUses> = haxe.Json.parse(sys.io.File.getContent(usesCache));
+				for (file => entry in data)
+					cache.set(file, entry);
+			} catch (_) {}
+		}
+		var changed = new Map<String, Bool>();
+		if (Context.defined("hotreload_invalidate")) {
+			var list = try sys.io.File.getContent(Context.definedValue("hotreload_invalidate")) catch (_) "";
+			for (f in list.split("\n"))
+				if (f != "")
+					changed.set(Path.normalize(FileSystem.absolutePath(f)), true);
+		}
+		// The classes of each file, in the order the types come.
+		var byFile = new Map<String, Array<ClassType>>();
+		var files = [];
+		for (t in types)
+			switch (t) {
+				case TClassDecl(_.get() => c) if (!c.isExtern && !isLibraryOwn(c)):
+					var file = fileOf(c.pos);
+					if (file == null)
+						continue;
+					var list = byFile.get(file);
+					if (list == null) {
+						byFile.set(file, list = []);
+						files.push(file);
+					}
+					list.push(c);
+				default:
+			}
+		var stamps = new Map<String, Stamp>();
+		function stamp(file:String):Stamp {
+			var s = stamps.get(file);
+			if (s == null) {
+				var stat = try FileSystem.stat(file) catch (_) null;
+				stamps.set(file, s = {file: file, mtime: stat == null ? -1. : stat.mtime.getTime(), size: stat == null ? -1 : stat.size});
+			}
+			return s;
+		}
+		function unchanged(s:Stamp):Bool {
+			var now = stamp(s.file);
+			return now.size >= 0 && !changed.exists(s.file) && now.mtime == s.mtime && now.size == s.size;
+		}
+		var added = files.exists(f -> !cache.exists(f));
+		var fresh = new haxe.DynamicAccess<FileUses>();
+		var dirty = false;
+		var walked = 0;
+		for (file in files) {
+			var own = stamp(file);
+			var cached = added ? null : cache.get(file);
+			var entry:FileUses;
+			if (cached != null && cached.deps != null && unchanged({file: file, mtime: cached.mtime, size: cached.size})
+				&& cached.deps.foreach(unchanged)) {
+				entry = cached;
+			} else {
+				currentUses = [];
+				currentDeps = [];
+				for (c in byFile.get(file)) {
+					var fields = c.statics.get().concat(c.fields.get());
+					if (c.constructor != null)
+						fields.push(c.constructor.get());
+					for (f in fields) {
+						var e = f.expr();
+						if (e != null)
+							valuesIn(e, false);
+					}
+				}
+				currentDeps.remove(file);
+				entry = {mtime: own.mtime, size: own.size, uses: currentUses, deps: [for (d in currentDeps.keys()) stamp(d)]};
+				currentUses = null;
+				currentDeps = null;
+				walked++;
+				dirty = true;
+			}
+			fresh.set(file, entry);
+			for (u in entry.uses) {
+				var found = staticValues.get(u.target);
+				if (found == null)
+					staticValues.set(u.target, found = {cls: u.cls, names: []});
+				if (!found.names.exists(u.name))
+					found.names.set(u.name, Context.makePosition({file: u.file, min: u.min, max: u.max}));
+			}
+		}
+		if (!dirty)
+			for (file in cache.keys())
+				if (!fresh.exists(file))
+					dirty = true;
+		if (dirty && usesCache != null)
+			try {
+				// (The output's directory may not exist yet on the first build.)
+				if (!FileSystem.exists(Path.directory(usesCache)))
+					FileSystem.createDirectory(Path.directory(usesCache));
+				sys.io.File.saveContent(usesCache, haxe.Json.stringify(fresh));
+			} catch (_) {}
+		if (Context.defined("hotreload_times"))
+			Sys.println('hotreload: static values: ${files.length} files, $walked walked');
+	}
+
+	static function valuesIn(e:TypedExpr, called:Bool) {
+		switch (e.expr) {
+			case TField(_, FStatic(_.get() => c, _)) if (!isLibraryOwn(c)):
+				currentDeps.set(fileOf(c.pos), true);
+			default:
+		}
+		switch (e.expr) {
+			case TCall(callee, args):
+				valuesIn(callee, true);
+				for (a in args)
+					valuesIn(a, false);
+			case TParenthesis(x) | TMeta(_, x):
+				valuesIn(x, called);
+			case TField(sub, FStatic(_.get() => c, _.get() => cf)) if (!called && cf.kind.match(FMethod(MethNormal)) && !c.isExtern && !isLibraryOwn(c)):
+				var p = Context.getPosInfos(e.pos);
+				currentUses.push({target: jsName(c), cls: fullName(c.pack, c.name), name: cf.name, file: p.file, min: p.min, max: p.max});
+				valuesIn(sub, false);
+			default:
+				e.iter(x -> valuesIn(x, false));
+		}
+	}
+
+	/** Returns whether a class belongs to the standard library or to this one, which are never reloaded. **/
+	static function isLibraryOwn(c:ClassType):Bool {
+		var file = fileOf(c.pos);
+		return file == null || file.startsWith(stdDir()) || file.startsWith(ownDir());
+	}
+
+	/**
+		Returns a class's name in the JS output, as Haxe's genjs writes it.
+
+		The name is the class's flat path. An abstract's implementation takes the abstract's.
+	**/
+	static function jsName(c:ClassType):String {
+		var native = c.meta.extract(":native");
+		if (native.length > 0 && native[0].params.length > 0)
+			switch (native[0].params[0].expr) {
+				case EConst(CString(s)):
+					return flatPath(s.split("."));
+				default:
+			}
+		var path = switch (c.kind) {
+			case KAbstractImpl(_.get() => a): a.pack.concat([a.name]);
+			default: c.pack.concat([c.name]);
+		}
+		return flatPath(path);
+	}
+
+	static function flatPath(path:Array<String>):String
+		return [for (part in path) part.split("_").join("_$")].join("_");
+
+	/**
+		Builds every class of a hot build (`@:build`).
+
+		It adds the class's statics' types and first values, the reload hooks, and what an
+		object carried across a reload needs.
 	**/
 	public static function build():Array<Field> {
 		var ref = Context.getLocalClass();
 		if (ref == null)
 			return null;
 		var cls = ref.get();
-		var fields = Context.getBuildFields();
-		var className = fullName(cls.pack, cls.name);
-		if (mode == Js || mode == JsReload)
-			return buildJs(cls, fields, className);
-		var changed = false;
-		var hasHot = false;
-		var result = [];
-		var extra = [];
-
-		for (field in fields) {
-			var hot = field.meta.exists(m -> m.name == ":hot");
-			var hook = field.meta.find(m -> m.name == ":beforeHotReload" || m.name == ":afterHotReload");
-			if (!hot && hook == null) {
-				result.push(field);
-				continue;
-			}
-			if (mode == Host && isMain(cls))
-				Context.error("@:hot and the reload hooks can't be used in the main class because the main class is never reloaded. "
-					+ "Use them in the reloaded classes (for the main class's own, set reloader.beforeReload and reloader.afterReload)", field.pos);
-			if (!field.access.contains(AStatic))
-				Context.error("@:hot and the reload hooks are for statics: an instance is carried across a reload with its fields", field.pos);
-			changed = true;
-			hasHot = true;
-			if (hook != null) {
-				var fn = switch (field.kind) {
-					case FFun(f): f;
-					default: Context.error('@${hook.name}: a static function', field.pos);
-				}
-				if (fn.args.length > 0)
-					Context.error('@${hook.name}: a function with no parameters', field.pos);
-				result.push(field);
-				var after = hook.name == ":afterHotReload";
-				var name = field.name;
-				extra.push(staticVar('__hot_hook_$name', macro:Bool, macro hotreload.Hooks.add($v{after}, $i{name}), field.pos));
-				continue;
-			}
-			switch (field.kind) {
-				case FVar(t, e):
-					hotVar(className, field, t, e, result, extra);
-				case FFun(f):
-					hotFunction(className, field, f, result, extra);
-				case FProp(_, _, _, _):
-					Context.error("@:hot: a static var or function, not a property", field.pos);
-			}
-		}
-
-		if (mode == Host && !cls.isExtern) {
-			for (field in result)
-				if (externNative(field))
-					changed = true;
-		}
-
-		if (mode == Library && !cls.isInterface && !cls.isExtern && fileOf(cls.pos) != null) {
-			var file = fileOf(cls.pos);
-			// (an abstract's fields aren't an object's: no initializers for them)
-			if (inside(file, libraryDirs) && className != libraryMain && !cls.kind.match(KAbstractImpl(_))) {
-				var init = fieldInitializer(className, fields);
-				if (init != null) {
-					extra.push(init);
-					changed = true;
-				}
-			} else if (!inside(file, libraryDirs) && !file.startsWith(stdDir())) {
-				for (field in result)
-					if (callHost(cls, field))
-						changed = true;
-			}
-		}
-
-		if (!changed)
-			return null;
-		if (mode == Host && hasHot && !hotClasses.exists(h -> h.module == Context.getLocalModule()))
-			hotClasses.push({module: Context.getLocalModule(), file: fileOf(cls.pos)});
-		return result.concat(extra);
+		return buildJs(cls, Context.getBuildFields(), fullName(cls.pack, cls.name));
 	}
 
 	/**
-		`@:hot static var x:T = first`: a property whose storage is a Slot the executable
-		keeps, by the class and name, which every module that loads is handed. Its first
-		value is used once, when the slot is made
+		Checks that the reload metadata is on a field it applies to.
+
+		A hook (`@:beforeHotReload`, `@:afterHotReload`) must be a static function with no
+		parameters. `@:resetOnHotReload` must be on a static var that holds a value. `@:hot`,
+		which kept a static on the hxcpp branch, does nothing, since every static is kept. It is
+		warned about where it is written.
 	**/
-	static function hotVar(className:String, field:Field, t:ComplexType, e:Expr, result:Array<Field>, extra:Array<Field>) {
-		var sig = null;
-		if (t == null) {
-			if (e == null)
-				Context.error("@:hot: give it a type, or a first value", field.pos);
-			var type = try Context.typeof(e) catch (_) null;
-			if (type == null)
-				Context.error("@:hot: give it a type (its first value's can't be found here)", field.pos);
-			t = Context.toComplexType(type);
-			sig = type.toString();
-		} else {
-			sig = try Context.resolveType(t, field.pos).toString() catch (_) t.toString();
+	static function checkMeta(field:Field, hook:MetadataEntry, reset:Bool) {
+		if (!field.access.contains(AStatic))
+			Context.error("the reload hooks and @:resetOnHotReload are for statics: an instance is carried across a reload with its fields",
+				field.pos);
+		if (hook != null) {
+			var fn = switch (field.kind) {
+				case FFun(f): f;
+				default: Context.error('@${hook.name}: a static function', field.pos);
+			}
+			if (fn.args.length > 0)
+				Context.error('@${hook.name}: a function with no parameters', field.pos);
 		}
-		var name = field.name;
-		var slot = '__hot_$name';
-		var key = className + "." + name;
-		var first = e == null ? macro null : macro(($e : $t) : Dynamic);
-		result.push({
-			name: name,
-			access: field.access.filter(a -> a != AFinal),
-			kind: FProp("get", "set", t, null),
-			pos: field.pos,
-			doc: field.doc,
-			meta: field.meta.filter(m -> m.name != ":hot"),
-		});
-		result.push(staticVar(slot, macro:hotreload.Slot, macro hotreload.Slots.get($v{key}, $v{sig}, () -> $first), field.pos));
-		extra.push({
-			name: 'get_$name',
-			access: [AStatic, AInline, APrivate],
-			meta: [{name: ":noCompletion", pos: field.pos}],
-			kind: FFun({args: [], ret: t, expr: macro return $i{slot}.value}),
-			pos: field.pos,
-		});
-		extra.push({
-			name: 'set_$name',
-			access: [AStatic, AInline, APrivate],
-			meta: [{name: ":noCompletion", pos: field.pos}],
-			kind: FFun({args: [{name: "v", type: t}], ret: t, expr: macro {
-				$i{slot}.value = v;
-				return v;
-			}}),
-			pos: field.pos,
-		});
+		if (reset && (field.kind.match(FFun(_)) || field.access.contains(AInline) || !hasStorage(field)))
+			Context.error("@:resetOnHotReload: a static var that holds a value", field.pos);
 	}
 
-	/**
-		`@:hot static function f()`: a function the main class calls. In the executable, `f`
-		calls through a variable that each reload points at the new module's `f`; the module
-		has `f` as it is, and its signature, which the reloader checks first
-	**/
-	static function hotFunction(className:String, field:Field, f:Function, result:Array<Field>, extra:Array<Field>) {
-		var name = field.name;
-		if (f.params != null && f.params.length > 0)
-			Context.error("@:hot: not a generic function", field.pos);
-		var argTypes = [];
-		for (a in f.args) {
-			var t = a.type;
-			if (t == null && a.value != null)
-				t = try Context.toComplexType(Context.typeof(a.value)) catch (_) null;
-			if (t == null)
-				Context.error('@:hot: give ${a.name} a type: a reload checks it hasn\'t changed', field.pos);
-			if (t.match(TPath({name: "Rest", pack: ["haxe"] | []})))
-				Context.error("@:hot: not a function with rest arguments", field.pos);
-			argTypes.push((a.opt ? "?" : "") + t.toString());
-		}
-		var ret = f.ret;
-		if (ret == null) {
-			if (returnsValue(f.expr))
-				Context.error("@:hot: give it a return type: a reload checks it hasn't changed", field.pos);
-			ret = macro:Void;
-		}
-		var sig = "(" + argTypes.join(", ") + ") -> " + ret.toString();
-		extra.push({
-			name: '__hot_sig_$name',
-			access: [AStatic, APublic],
-			meta: [{name: ":keep", pos: field.pos}, {name: ":noCompletion", pos: field.pos}],
-			kind: FFun({args: [], ret: macro:String, expr: macro return $v{sig}}),
-			pos: field.pos,
-		});
-
-		if (mode == Library) {
-			result.push(field);
-			return;
-		}
-
-		// the executable: the stub, by the function's name, the code it starts with, and
-		// the variable between them
-		var impl = '__hot_impl_$name';
-		var target = '__hot_fn_$name';
-		result.push({
-			name: impl,
-			access: [AStatic, APrivate],
-			kind: FFun({args: f.args, ret: ret, expr: f.expr}),
-			pos: field.pos,
-		});
-		result.push(staticVar(target, macro:Dynamic, macro $i{impl}, field.pos));
-		var callArgs = [for (a in f.args) macro $i{a.name}];
-		var call = macro $i{target}($a{callArgs});
-		var body = ret.match(TPath({name: "Void", pack: []})) ? macro $call : macro return $call;
-		result.push({
-			name: name,
-			access: field.access,
-			doc: field.doc,
-			meta: field.meta.filter(m -> m.name != ":hot"),
-			kind: FFun({args: [for (a in f.args) {name: a.name, opt: a.opt, type: a.type, value: a.value}], ret: ret, expr: body}),
-			pos: field.pos,
-		});
-		extra.push(staticVar('__hot_reg_$name', macro:Bool, macro hotreload.Hooks.proc($v{className}, $v{name}, $v{sig}, fn -> $i{target} = fn),
-			field.pos));
+	/** Returns a first value as written, shortened for a message (`3.0`, `"seven"`, `new Map()`). **/
+	static function shortText(e:Expr):String {
+		var text = ~/\s+/g.replace(e.toString(), " ");
+		return text.length > 40 ? text.substr(0, 37) + "..." : text;
 	}
 
-	/** a JS build's class: its hooks, its main's guard, its field initializers, and its statics' types **/
+	/** Adds a class's hooks, its main's guard, its field initializers, and its statics' types and first values. **/
 	static function buildJs(cls:ClassType, fields:Array<Field>, className:String):Array<Field> {
 		var changed = false;
 		var result = [];
 		var extra = [];
-		var types = [];
+		var statics = [];
+		var code = new CodeInfo();
 		for (field in fields) {
-			// a static's type, as written (or its first value's): a reload that changes it
-			// starts the static over, rather than carry a value of the old type into it
-			if (field.access.contains(AStatic))
+			code.add(field, isMain(cls));
+			var hook = field.meta.find(m -> m.name == ":beforeHotReload" || m.name == ":afterHotReload");
+			var reset = field.meta.exists(m -> m.name == ":resetOnHotReload");
+			if (hook != null || reset)
+				checkMeta(field, hook, reset);
+			var hot = field.meta.find(m -> m.name == ":hot");
+			if (hot != null && mode == Js)
+				Context.warning("hotreload: @:hot is deprecated: every static is kept now. "
+					+ "Remove it, or use @:resetOnHotReload to reset a static on every reload.", hot.pos);
+			// A static's type and first value, as written, which a reload compares (JsSwap). A
+			// static whose first value was edited starts over from the new one. A static whose
+			// type changed keeps its value when the value is still the same kind. (A property
+			// with no storage, `(get, never)`, holds no value, so there is nothing to keep.)
+			if (field.access.contains(AStatic) && !field.access.contains(AInline))
 				switch (field.kind) {
-					case FVar(t, e) | FProp(_, _, t, e):
-						var sig = if (t != null) t.toString() else if (e != null) try Context.typeof(e).toString() catch (_) null else null;
-						if (sig != null)
-							types.push({field: field.name, expr: macro $v{sig}});
+					case FVar(t, e) | FProp(_, _, t, e) if (hasStorage(field)):
+						var info:Array<ObjectField> = [];
+						if (t != null)
+							info.push({field: "type", expr: macro $v{t.toString()}});
+						if (e != null) {
+							info.push({field: "init", expr: macro $v{haxe.crypto.Md5.encode(e.toString())}});
+							info.push({field: "text", expr: macro $v{shortText(e)}});
+						}
+						if (reset)
+							info.push({field: "reset", expr: macro true});
+						if (info.length > 0)
+							statics.push({field: field.name, expr: {expr: EObjectDecl(info), pos: field.pos}});
 					default:
 				}
-			var hook = field.meta.find(m -> m.name == ":beforeHotReload" || m.name == ":afterHotReload");
 			if (hook != null) {
-				var fn = switch (field.kind) {
-					case FFun(f) if (field.access.contains(AStatic)): f;
-					default: Context.error('@${hook.name}: a static function', field.pos);
-				}
-				if (fn.args.length > 0)
-					Context.error('@${hook.name}: a function with no parameters', field.pos);
 				var after = hook.name == ":afterHotReload";
 				var name = field.name;
-				extra.push(staticVar('__hot_hook_$name', macro:Bool, macro hotreload.Hooks.add($v{after}, $i{name}), field.pos));
+				extra.push(staticVar('__hot_hook_$name', macro:Bool, macro hotreload.Hooks.add($v{after}, $v{className + "." + name}, $i{name}), field.pos));
 				changed = true;
 			} else if (field.name == "main" && field.access.contains(AStatic) && isMain(cls)) {
 				switch (field.kind) {
 					case FFun(f):
-						// a reloaded bundle's classes replace the running ones: its main mustn't
-						// start the program a second time
+						// A reloaded bundle's classes replace the running ones. Its main must not
+						// start the program a second time.
 						f.expr = macro {
 							if (hotreload.Reloader.isReload())
 								return;
@@ -532,11 +599,28 @@ class Builder {
 		}
 		var file = fileOf(cls.pos);
 		var abstractImpl = cls.kind.match(KAbstractImpl(_)) || Context.getLocalType().match(TAbstract(_, _));
-		if (types.length > 0 && !cls.isInterface && !cls.isExtern && !abstractImpl && file != null && !file.startsWith(stdDir())) {
-			extra.push(staticVar("__hot_types__", macro:Dynamic, {expr: EObjectDecl(types), pos: cls.pos}, cls.pos));
+		var ours = !cls.isInterface && !cls.isExtern && file != null && !file.startsWith(stdDir());
+		if (statics.length > 0 && ours) {
+			extra.push(staticVar("__hot_statics__", macro:Dynamic, {expr: EObjectDecl(statics), pos: cls.pos}, cls.pos));
 			changed = true;
 		}
-		if (!cls.isInterface && !cls.isExtern && !abstractImpl && file != null && !file.startsWith(stdDir())) {
+		// Haxe leaves an abstract's implementation out of $hxClasses, where a swap finds a
+		// bundle's classes. It is added under the abstract's name, so its statics are kept.
+		if (abstractImpl && ours && cls.kind.match(KAbstractImpl(_)) && !file.startsWith(ownDir())) {
+			var a = switch (cls.kind) {
+				case KAbstractImpl(a): a.get();
+				default: null;
+			}
+			var register = "$hxClasses[" + haxe.Json.stringify(fullName(a.pack, a.name)) + "] = " + jsName(cls);
+			extra.push(staticVar("__hot_class__", macro:Dynamic, macro js.Syntax.code($v{register}), cls.pos));
+			changed = true;
+		}
+		if (ours && !abstractImpl) {
+			var info = code.expr(cls.pos);
+			if (info != null && !file.startsWith(ownDir())) {
+				extra.push(staticVar("__hot_code__", macro:Dynamic, info, cls.pos));
+				changed = true;
+			}
 			var init = jsFieldInitializer(className, fields);
 			if (init != null) {
 				extra.push(init);
@@ -547,8 +631,11 @@ class Builder {
 	}
 
 	/**
-		A JS class's field initializers, for an object a reload carries over: each of its
-		fields that the object doesn't have (a new one) starts from its initializer
+		Returns a JS class's field initializer function, for an object a reload carries over.
+
+		Each field the object does not have (a new one) starts from its initializer.
+
+		@return  The function, or null if no field has an initializer.
 	**/
 	static function jsFieldInitializer(className:String, fields:Array<Field>):Field {
 		var inits = [];
@@ -562,7 +649,7 @@ class Builder {
 			}
 			if (e != null) {
 				var name = f.name;
-				// a final field can't be assigned past its constructor, but can be set
+				// A final field cannot be assigned outside its constructor, but it can be set.
 				var set = f.access.contains(AFinal) ? macro std.Reflect.setField(this, $v{name}, $e) : macro this.$name = $e;
 				inits.push(macro if (!std.Reflect.hasField(this, $v{name})) $set);
 			}
@@ -579,35 +666,19 @@ class Builder {
 	}
 
 	/**
-		A reloaded class's field initializers, for an object a reload carries over: its new
-		fields start from their initializers, as a new object's would
+		Returns whether a var or property holds a value.
+
+		A var holds one. A property holds one when either side is `default` or `null`, or when
+		it has `@:isVar`. A property such as `(get, never)` or `(get, set)` holds none. Its value
+		comes from its accessors.
 	**/
-	static function fieldInitializer(className:String, fields:Array<Field>):Field {
-		var inits = [];
-		for (f in fields) {
-			if (f.access.contains(AStatic))
-				continue;
-			var e = switch (f.kind) {
-				case FVar(_, e) if (e != null): e;
-				case FProp("default" | "null", "default" | "null" | "never", _, e) if (e != null): e;
-				default: null;
-			}
-			if (e != null) {
-				var name = f.name;
-				// a final field can't be assigned past its constructor, but can be set
-				var set = f.access.contains(AFinal) ? macro std.Reflect.setField(this, $v{name}, $e) : macro this.$name = $e;
-				inits.push(macro if (!copied.contains($v{name})) $set);
-			}
+	public static function hasStorage(field:Field):Bool {
+		return switch (field.kind) {
+			case FVar(_, _): true;
+			case FProp(get, set, _, _):
+				get == "default" || get == "null" || set == "default" || set == "null" || field.meta.exists(m -> m.name == ":isVar");
+			default: false;
 		}
-		if (inits.length == 0)
-			return null;
-		return {
-			name: "__hot_init_" + className.replace(".", "_"),
-			access: [APublic],
-			meta: [{name: ":keep", pos: Context.currentPos()}, {name: ":noCompletion", pos: Context.currentPos()}],
-			kind: FFun({args: [{name: "copied", type: macro:Array<String>}], ret: macro:Void, expr: macro $b{inits}}),
-			pos: Context.currentPos(),
-		};
 	}
 
 	static function staticVar(name:String, t:ComplexType, e:Expr, pos:Position):Field {
@@ -620,136 +691,29 @@ class Builder {
 		};
 	}
 
-	/** whether a function's body returns a value (not counting the functions inside it) **/
-	static function returnsValue(e:Expr):Bool {
-		var found = false;
-		function visit(e:Expr) {
-			if (found || e == null)
-				return;
-			switch (e.expr) {
-				case EReturn(v) if (v != null):
-					found = true;
-				case EFunction(_, _):
-				default:
-					e.iter(visit);
-			}
-		}
-		visit(e);
-		return found;
-	}
-
-	/**
-		`-D scriptable` gives every function of the executable a wrapper cppia calls it
-		through, with its arguments and result as Dynamic, which a C pointer, struct, enum
-		or function pointer can't be: the C++ doesn't compile (and Haxe ignores
-		`@:unreflective` on a static for this). Such a function is a native binding's
-		plumbing, which cppia could never call: an inline one is made `extern inline`,
-		which has no compiled body, and so no wrapper. A non-inline one has to be in a
-		private class, which gets no wrappers; that's the library's to do
-	**/
-	static function externNative(field:Field):Bool {
-		if (!field.access.contains(AInline) || field.access.contains(AExtern) || field.access.contains(AMacro))
-			return false;
-		var f = switch (field.kind) {
-			case FFun(f): f;
-			default: return false;
-		}
-		if (!hasNativeType(f, field.pos))
-			return false;
-		field.access.push(AExtern);
-		return true;
-	}
-
-	/** whether a function's parameters or result have a type that can't be Dynamic, as far as they're written out **/
-	static function hasNativeType(f:Function, pos:Position):Bool {
-		var types = f.args.map(a -> a.type);
-		types.push(f.ret);
-		for (t in types) {
-			if (t == null)
-				continue;
-			var type = try Context.resolveType(t, pos) catch (_) null;
-			if (type != null && isNative(type))
-				return true;
-		}
-		return false;
-	}
-
-	/** whether a type can't be Dynamic: a C pointer, struct, enum or function pointer **/
-	static function isNative(t:Type):Bool {
-		var followed = Context.follow(t);
-		return switch (followed) {
-			case TInst(_.get() => c, _): c.isExtern && (c.meta.has(":unreflective") || c.meta.has(":structAccess"));
-			case TAbstract(_.get() => a, _):
-				if (a.meta.has(":callable"))
-					true;
-				else if (a.meta.has(":coreType"))
-					false;
-				else
-					switch (Context.followWithAbstracts(followed, true)) {
-						case TAbstract(_.get() => b, _) if (b.name == a.name && b.pack.join(".") == a.pack.join(".")): false;
-						case underlying: isNative(underlying);
-					}
-			default: false;
-		}
-	}
-
-	/**
-		In a reload's build, a library's inline function is made a call to the executable's
-		compiled copy instead, since its body, inlined into the module, may be what cppia
-		can't run: a call to an extern, or C++ (a native binding's wrappers are all of
-		that). What has to stay inline stays: an `extern inline` function (an overload,
-		say; it has no compiled copy, so its body is inlined, and if cppia can't run it,
-		the reload fails to load), a native one (the same), an abstract's constructor (an
-		`inline var` may be made with it), and a function that assigns the abstract's `this`
-	**/
-	static function callHost(cls:ClassType, field:Field):Bool {
-		if (!field.access.contains(AInline) || field.access.contains(AExtern) || field.access.contains(AMacro))
-			return false;
-		var f = switch (field.kind) {
-			case FFun(f): f;
-			default: return false;
-		}
-		if (f.expr == null)
-			return false;
-		var isAbstract = cls.kind.match(KAbstractImpl(_));
-		if (isAbstract && (field.name == "new" || assignsThis(f.expr)))
-			return false;
-		// a native one has no compiled copy in the executable (see externNative), and
-		// its body can't be compiled here either
-		if (hasNativeType(f, field.pos)) {
-			field.access.push(AExtern);
-			return true;
-		}
-		field.access.remove(AInline);
-		return true;
-	}
-
-	static function assignsThis(e:Expr):Bool {
-		var found = false;
-		function walk(e:Expr) {
-			if (found || e == null)
-				return;
-			switch (e.expr) {
-				case EBinop(OpAssign | OpAssignOp(_), {expr: EConst(CIdent("this"))}, _):
-					found = true;
-				case EUnop(OpIncrement | OpDecrement, _, {expr: EConst(CIdent("this"))}):
-					found = true;
-				default:
-					haxe.macro.ExprTools.iter(e, walk);
-			}
-		}
-		walk(e);
-		return found;
-	}
-
 	static var std:String;
 
-	/** the standard library's directory, whose inline functions are left alone **/
+	/** Returns the standard library's directory, which is never the project's. **/
 	static function stdDir():String {
 		if (std == null)
-			// StdTypes.hx is only at the standard library's root (Std.hx is overridden per target, in cpp/_std/, js/_std/)
+			// StdTypes.hx is only at the standard library's root. (Std.hx is overridden per target,
+			// in cpp/_std/ and js/_std/.)
 			std = Path.addTrailingSlash(Path.directory(Path.normalize(FileSystem.absolutePath(Context.resolvePath("StdTypes.hx")))));
 		return std;
+	}
+
+	static var own:String;
+
+	/**
+		Returns this library's own class path (its src/), which is never the project's.
+
+		Wherever the library is, the reloader's statics are not started over, and its code is
+		not warned about.
+	**/
+	static function ownDir():String {
+		if (own == null)
+			own = Path.addTrailingSlash(Path.directory(Path.directory(Path.normalize(FileSystem.absolutePath(Context.resolvePath("hotreload/Builder.hx"))))));
+		return own;
 	}
 
 	static function isMain(cls:ClassType):Bool {
@@ -770,59 +734,131 @@ class Builder {
 	static function absolute(cwd:String, path:String):String {
 		return Path.isAbsolute(path) ? path : Path.join([cwd, path]);
 	}
-
-	static function inside(file:String, dirs:Array<String>):Bool {
-		return file != null && dirs.exists(d -> file.startsWith(d + "/"));
-	}
 	#end
 }
 
-/** how a JS hot build was made, for the DevServer to build it again **/
+#if macro
+/**
+	Represents a class's code as written, for a reload to compare (`JsSwap.compareCode`).
+
+	Holds hashes of the main function, the constructor, each instance field's initializer and
+	each method's closures, and each instance field's declared type. The hash of a closure, a main or a constructor leaves out the
+	closures inside it. An edit is therefore reported once, at the closure where it was made.
+**/
+private class CodeInfo {
+	var main:String;
+	var ctor:String;
+	var fields:Array<ObjectField> = [];
+	var closures:Array<ObjectField> = [];
+
+	public function new() {}
+
+	/**
+		Records a field's code.
+
+		@param field  The field, before the build changes it.
+		@param mainClass  True when the field's class is the main class.
+	**/
+	public function add(field:Field, mainClass:Bool) {
+		var isStatic = field.access.contains(AStatic);
+		switch (field.kind) {
+			case FFun(f) if (f.expr != null):
+				if (field.name == "new")
+					ctor = hash(f.expr);
+				else if (field.name == "main" && isStatic && mainClass)
+					main = hash(f.expr);
+				var found = [];
+				closuresIn(f.expr, found);
+				if (found.length > 0)
+					closures.push({field: field.name, expr: macro $a{found}});
+			case FVar(t, e) | FProp(_, _, t, e) if (!isStatic && Builder.hasStorage(field)):
+				var info = macro {init: $v{e == null ? "" : hash(e)}, type: $v{t == null ? "" : t.toString()}};
+				fields.push({field: field.name, expr: info});
+			default:
+		}
+	}
+
+	/**
+		Returns the class's `__hot_code__` value.
+
+		@param pos  The class's position.
+		@return  The value, or null when the class has nothing to compare.
+	**/
+	public function expr(pos:Position):Expr {
+		if (main == null && ctor == null && fields.length == 0 && closures.length == 0)
+			return null;
+		var info:Array<ObjectField> = [];
+		if (main != null)
+			info.push({field: "main", expr: macro $v{main}});
+		if (ctor != null)
+			info.push({field: "ctor", expr: macro $v{ctor}});
+		info.push({field: "fields", expr: {expr: EObjectDecl(fields), pos: pos}});
+		info.push({field: "closures", expr: {expr: EObjectDecl(closures), pos: pos}});
+		return {expr: EObjectDecl(info), pos: pos};
+	}
+
+	/** Adds each closure in an expression, with its hash and its position, to a list. **/
+	static function closuresIn(e:Expr, found:Array<Expr>) {
+		switch (e.expr) {
+			case EFunction(kind, f) if (f.expr != null):
+				var whole = {expr: EFunction(kind, {args: f.args, ret: f.ret, params: f.params, expr: f.expr}), pos: e.pos};
+				var loc = haxe.macro.PositionTools.toLocation(e.pos);
+				found.push(macro {hash: $v{hash(whole, true)}, at: $v{loc.file.toString() + ":" + loc.range.start.line}});
+				closuresIn(f.expr, found);
+			default:
+				e.iter(x -> closuresIn(x, found));
+		}
+	}
+
+	/**
+		Returns an expression's hash, as written, with the closures inside it left out.
+
+		@param e  The expression.
+		@param self  Optional. True when `e` is the closure being hashed, whose own body is kept.
+	**/
+	static function hash(e:Expr, self = false):String {
+		function strip(x:Expr):Expr
+			return switch (x.expr) {
+				case EFunction(_, _): macro __closure__;
+				default: x.map(strip);
+			}
+		var stripped = switch (e.expr) {
+			case EFunction(kind, f) if (self): {expr: EFunction(kind, {args: f.args, ret: f.ret, params: f.params, expr: strip(f.expr)}), pos: e.pos};
+			default: strip(e);
+		}
+		return haxe.crypto.Md5.encode(stripped.toString());
+	}
+}
+#end
+
+/** Represents how a JS hot build was made, for the DevServer to build it again. **/
 typedef JsConfig = {
-	/** the build's directory, which its paths are from **/
+	/** Gets or sets the build's directory, which its paths are relative to. **/
 	var cwd:String;
 
-	/** its command line, whole: a reload's build writes the same bundle **/
+	/**
+		Gets or sets the build's whole command line.
+
+		A reload's build uses it, so it writes the same bundle.
+	**/
 	var args:Array<String>;
 
-	/** where the sources are: the project's own class paths, watched, and below **/
+	/**
+		Gets or sets the project's own class paths, which hold the sources.
+
+		The DevServer watches them and everything below them.
+	**/
 	var dirs:Array<String>;
 
-	/** the bundle **/
+	/**
+		Gets or sets the class paths inside the project's directory that are not its own (its
+		local repository's libraries, in .haxelib/).
+	**/
+	var ?excluded:Array<String>;
+
+	/** Gets or sets the path of the bundle. **/
 	var js:String;
 
 	var mainClass:String;
 }
 
-/** how the executable's build was made, for the Reloader to build the reloaded code again **/
-typedef Config = {
-	/** the build's directory, which its paths are from **/
-	var cwd:String;
-
-	/** its command line, but its target and main class **/
-	var args:Array<String>;
-
-	/** the modules with something hot in them: a reload's build compiles them, and what they use **/
-	var roots:Array<String>;
-
-	/** where the reloaded code is: watched, and below **/
-	var dirs:Array<String>;
-
-	/** the main class's file, which isn't watched **/
-	var mainFile:String;
-
-	var mainClass:String;
-
-	/** where the modules go **/
-	var buildDir:String;
-
-	var debug:Bool;
-
-	/**
-		the compilation server the builds connect to: null to start one
-		(`haxe --wait`), a port (or host:port) to use one that's running
-		(-D hotreload_compilation_server=<port>), or "off" for none
-		(-D hotreload_no_compilation_server)
-	**/
-	var compilationServer:Null<String>;
-}

@@ -1,52 +1,52 @@
 package hotreload;
 
 /**
-	What a reload calls: the running code's `@:beforeHotReload` and `@:afterHotReload`
-	hooks, which their classes' static initializers add (as the macro makes them), and the
-	executable's `@:hot` functions, whose calls a reload points at the new code
+	Provides the reload hooks that a reload calls.
+
+	The hooks are the running code's `@:beforeHotReload` and `@:afterHotReload` functions.
+	Their classes' static initializers add them, as the build macro generates them. A hook
+	that throws does not stop the others or the reload. Its failure is passed on.
 **/
 @:keep
 class Hooks {
-	static var before = new Array<() -> Void>();
-	static var after = new Array<() -> Void>();
+	static var before = new Array<{name:String, hook:() -> Void}>();
+	static var after = new Array<{name:String, hook:() -> Void}>();
 
-	/** the executable's `@:hot` functions **/
-	public static var procs(default, null) = new Array<HotProc>();
+	/**
+		Adds a hook.
 
-	public static function add(isAfter:Bool, hook:() -> Void):Bool {
-		(isAfter ? after : before).push(hook);
+		@param isAfter  True for an `@:afterHotReload` hook, false for a `@:beforeHotReload` one.
+		@param name  The hook's class and function, for a failure's message.
+		@param hook  The hook.
+		@return  True, for the static var the build macro initializes with it.
+	**/
+	public static function add(isAfter:Bool, name:String, hook:() -> Void):Bool {
+		(isAfter ? after : before).push({name: name, hook: hook});
 		return true;
 	}
 
-	public static function proc(className:String, name:String, sig:String, point:Dynamic->Void):Bool {
-		procs.push({className: className, name: name, sig: sig, point: point});
-		return true;
+	/**
+		Runs the `@:beforeHotReload` hooks.
+
+		@param failed  Receives the name and the error of each hook that throws.
+	**/
+	public static function runBefore(failed:(String, Dynamic) -> Void)
+		run(before, failed);
+
+	/**
+		Runs the `@:afterHotReload` hooks.
+
+		@param failed  Receives the name and the error of each hook that throws.
+	**/
+	public static function runAfter(failed:(String, Dynamic) -> Void)
+		run(after, failed);
+
+	static function run(hooks:Array<{name:String, hook:() -> Void}>, failed:(String, Dynamic) -> Void) {
+		for (h in hooks)
+			try {
+				h.hook();
+			} catch (e:Dynamic) {
+				failed(h.name, e);
+			}
 	}
-
-	public static function runBefore() {
-		for (hook in before)
-			hook();
-	}
-
-	public static function runAfter() {
-		for (hook in after)
-			hook();
-	}
-
-	/** before a module boots, which adds its own **/
-	public static function forget() {
-		before = [];
-		after = [];
-	}
-}
-
-typedef HotProc = {
-	/** the class, by its own name (not the executable's copy's) **/
-	var className:String;
-
-	var name:String;
-	var sig:String;
-
-	/** points the executable's calls at a module's function **/
-	var point:Dynamic->Void;
 }

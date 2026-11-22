@@ -10,14 +10,16 @@ frames (hotreload-hx's JsSwap): every static keeps its value, every object its f
 the C side -- entities, nodes, textures, the window -- is untouched. A failed build is
 reported here, and the page keeps what it has.
 
-The game's assets are watched too: a file saved under them is told to the page, which
-asks /__hotreload_assets?since=<n> (a long poll of its own, so an asset never re-imports the
-program) and loads each one again in place (wgf_asset_reload, from the Haxe runtime's
-hot build): a texture or a glTF, its handle kept, the game's state with it; a file that
+The game's assets are watched too: a file saved under them is told to the page, whose
+reloader (hotreload-hx's JsSwap) asks /__hotreload_assets?since=<n> (a long poll of its own,
+so an asset never re-imports the program) and is answered with the saved files' URLs
+(/assets/<path>); the Haxe runtime's hot build, told by it (Reloader.assetsChanged), loads
+each one again in place (wgf_asset_reload): a texture or a glTF, its handle kept, the game's state with it; a file that
 doesn't load keeps what it had, with one error logged in the page. Standard library only.
 """
 import json
 import shutil
+import signal
 import socket
 import subprocess
 import sys
@@ -199,7 +201,7 @@ class Server:
                     since = 0
                 if parts.path == '/__hotreload_assets':
                     version, files = saved.wait_newer(since, POLL_SECONDS)
-                    body = json.dumps({'version': version, 'files': files}).encode()
+                    body = json.dumps({'version': version, 'urls': [f'/assets/{f}' for f in files]}).encode()
                 else:
                     version = builds.wait_newer(since, POLL_SECONDS)
                     body = json.dumps({'version': version, 'url': f'/{name}.js', 'file': str(program)}).encode()
@@ -212,7 +214,13 @@ class Server:
         return Handler
 
     def run(self, stop=None):
-        """Build, serve, and rebuild on each save until `stop` is set (or forever)."""
+        """Build, serve, and rebuild on each save until `stop` is set (or forever). Ended by
+        a terminate as by Ctrl-C, so the compilation server it started stops with it: a
+        check that ends it (tools/check_cli.py) left one running each time."""
+        if threading.current_thread() is threading.main_thread():
+            def ended(_signal, _frame):
+                raise KeyboardInterrupt
+            signal.signal(signal.SIGTERM, ended)
         self.first_build()
         self.compile_port = self.start_compilation_server()
         base, httpd = server.serve(self.out, port=self.port, handler=self.handler())

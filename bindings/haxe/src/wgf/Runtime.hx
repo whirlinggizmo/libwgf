@@ -63,7 +63,7 @@ class Runtime {
 		#end
 		#if js
 		#if hotreload
-		pollAssets(-1);
+		watchAssets();
 		#end
 		// the JS binding's run: its trampolines, installed once, call these, which read the
 		// handlers when they fire; it restores the wasm stack after each
@@ -84,21 +84,18 @@ class Runtime {
 
 	#if (js && hotreload)
 	/**
-		`wgf serve`'s assets: asks the server for the files saved after save `since` (a long
-		poll; -1 first, for the latest number alone) and loads each again in place
-		(Asset.reload), then asks again; a server gone is asked again a second later.
+		`wgf serve`'s assets: hotreload-hx's reloader asks the server for the files saved (a long
+		poll of its own) and tells this, which loads each again in place (Asset.reload). The
+		server names each by its URL in the page, `/assets/<path>`; Asset.reload takes the path.
 	**/
-	static function pollAssets(since:Int):Void {
-		js.Browser.window.fetch('/__hotreload_assets?since=$since', {cache: js.html.RequestCache.NO_STORE})
-			.then(response -> response.json())
-			.then(function(answer:Dynamic) {
-				final files:Array<String> = answer.files;
-				for (file in files)
-					Asset.reload(file);
-				pollAssets(answer.version);
-			}, function(_) {
-				haxe.Timer.delay(() -> pollAssets(since), 1000);
-			});
+	static var reloader:hotreload.Reloader;
+
+	static function watchAssets():Void {
+		reloader = new hotreload.Reloader();
+		reloader.assetsChanged = function(urls:Array<String>) {
+			for (url in urls)
+				Asset.reload(StringTools.startsWith(url, "/assets/") ? url.substr(8) : url);
+		};
 	}
 	#end
 
