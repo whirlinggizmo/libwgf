@@ -222,6 +222,77 @@ class Binding:
         return out
 
 
+def haxe_params(binding, f, raw):
+    """The Haxe parameter list: (name, type) each, `into` last for a vector result."""
+    out = []
+    for kind, name, ctype, extra in binding.params_of(f):
+        safe = name + '_' if name in ('in', 'default', 'function', 'var', 'class', 'new', 'this', 'cast') else name
+        if kind == 'scalar':
+            out.append((safe, 'Int' if raw and extra[2] == 'int' else extra[0]))
+        elif kind == 'string':
+            out.append((safe, 'String'))
+        elif kind == 'bytes':
+            out.append((safe, 'haxe.io.Bytes'))
+        elif extra == 'float':
+            out.append((safe, 'Array<Float>'))
+        elif extra == 'int' or raw:
+            out.append((safe, 'Array<Int>'))
+        else:
+            out.append((safe, f'Array<{extra}>'))
+    result, detail = binding.result_of(f)
+    if result == 'vector':
+        out.append(('into', f'Null<wgf.{detail[0]}>'))
+    return out
+
+
+def haxe_result(binding, f, raw):
+    result, detail = binding.result_of(f)
+    if result == 'void':
+        return 'Void'
+    if result == 'string':
+        return 'String'
+    if result == 'bytes':
+        return 'haxe.io.Bytes'
+    if result == 'vector':
+        return f'wgf.{detail[0]}'
+    return 'Int' if raw and detail[2] == 'int' else detail[0]
+
+
+def enum_members(binding, cname):
+    """An enum's values as the typed APIs name them: (short name, value, C name), their
+    shared prefix off (WGF_KEY_0 -> KEY_0: a name can't start with a digit)."""
+    enum = binding.api.enums[cname]
+    names = list(enum.values)
+    prefix = names[0]
+    for n in names[1:]:
+        while not n.startswith(prefix):
+            prefix = prefix[:-1]
+    prefix = prefix[:prefix.rfind('_') + 1] if '_' in prefix else ''
+    out = []
+    for n, v in enum.values.items():
+        short = n[len(prefix):]
+        if not short or short[0].isdigit():
+            short = prefix.rstrip('_').split('_')[-1] + '_' + short
+        out.append((short, v, n))
+    return out
+
+
+def haxe_signature(binding, f, haxe, member, instance, over_kind=None):
+    """A typed member's Haxe signature, as the binding writes it: (its parameters as Haxe
+    text, its result type), the handle off an instance method's, a vector result's `?into`
+    last, and a section's create making one of the section (Shape2d.create() is a Shape2d)."""
+    params = haxe_params(binding, f, raw=False)
+    if instance:
+        params = params[1:]
+    result, _ = binding.result_of(f)
+    if result == 'vector':
+        params = params[:-1] + [('?into', params[-1][1].replace('Null<', '').rstrip('>'))]
+    ret = haxe_result(binding, f, raw=False)
+    if over_kind is not None and ret == over_kind and member.startswith('create'):
+        ret = haxe
+    return ', '.join(f'{n}:{t}' for n, t in params), ret
+
+
 if __name__ == '__main__':
     import argparse
     argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,

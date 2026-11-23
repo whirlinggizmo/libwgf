@@ -32,8 +32,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))  # an embedded Python (
 import binding as places  # noqa: E402
 import headers  # noqa: E402
 import jsbinding  # noqa: E402
-from mapping import (MEMBER_NAMES, SKIPPED, TYPE_NAMES, VECTORS, Binding, MapError, camel,  # noqa: E402,F401
-                     pascal, spelled)
+from mapping import (MEMBER_NAMES, SKIPPED, TYPE_NAMES, VECTORS, Binding, MapError, camel, enum_members,  # noqa: E402,F401
+                     haxe_params, haxe_result, haxe_signature, pascal, spelled)
 
 ROOT = places.ROOT
 OUT = places.SOURCE
@@ -76,42 +76,6 @@ def doc_block(text, indent):
         return ''
     lines = text.replace('*/', '* /').split('\n')
     return indent + '/**\n' + ''.join(f'{indent}    {line}'.rstrip() + '\n' for line in lines) + indent + '**/\n'
-
-
-def haxe_params(binding, f, raw):
-    """The Haxe parameter list: (name, type) each, `into` last for a vector result."""
-    out = []
-    for kind, name, ctype, extra in binding.params_of(f):
-        safe = name + '_' if name in ('in', 'default', 'function', 'var', 'class', 'new', 'this', 'cast') else name
-        if kind == 'scalar':
-            out.append((safe, 'Int' if raw and extra[2] == 'int' else extra[0]))
-        elif kind == 'string':
-            out.append((safe, 'String'))
-        elif kind == 'bytes':
-            out.append((safe, 'haxe.io.Bytes'))
-        elif extra == 'float':
-            out.append((safe, 'Array<Float>'))
-        elif extra == 'int' or raw:
-            out.append((safe, 'Array<Int>'))
-        else:
-            out.append((safe, f'Array<{extra}>'))
-    result, detail = binding.result_of(f)
-    if result == 'vector':
-        out.append(('into', f'Null<wgf.{detail[0]}>'))
-    return out
-
-
-def haxe_result(binding, f, raw):
-    result, detail = binding.result_of(f)
-    if result == 'void':
-        return 'Void'
-    if result == 'string':
-        return 'String'
-    if result == 'bytes':
-        return 'haxe.io.Bytes'
-    if result == 'vector':
-        return f'wgf.{detail[0]}'
-    return 'Int' if raw and detail[2] == 'int' else detail[0]
 
 
 def js_raw(binding, f, emitter):
@@ -238,15 +202,8 @@ def typed_member(binding, f, haxe, member, instance, docs, over_kind=None):
     params = haxe_params(binding, f, raw=False)
     args = [n for n, _ in params]
     if instance:
-        params = params[1:]
         args = ['this'] + args[1:]
-    result, detail = binding.result_of(f)
-    if result == 'vector':
-        params = params[:-1] + [('?into', params[-1][1].replace('Null<', '').rstrip('>'))]
-    sig = ', '.join(f'{n}:{t}' for n, t in params)
-    ret = haxe_result(binding, f, raw=False)
-    if over_kind is not None and ret == over_kind and member.startswith('create'):
-        ret = haxe  # a section's create makes one of the section: Shape2d.create() is a Shape2d
+    sig, ret = haxe_signature(binding, f, haxe, member, instance, over_kind)
     # a kind or an enum crosses Raw as its Int, through its from/to; an array of a kind
     # is the same array of Ints, but Haxe's arrays don't convert, so it is cast
     kinds = {safe for (kind, _, _, extra), (safe, _) in zip(binding.params_of(f), haxe_params(binding, f, raw=False))
@@ -259,25 +216,6 @@ def typed_member(binding, f, haxe, member, instance, docs, over_kind=None):
     body = call if ret == 'Void' else f'return {call}'
     return (doc_block(docs.get(f.name, ''), '\t') +
             f'\tpublic {static}inline function {member}({sig}):{ret}\n\t\t{body};\n')
-
-
-def enum_members(binding, cname):
-    """An enum's values as the typed APIs name them: (short name, value, C name), their
-    shared prefix off (WGF_KEY_0 -> KEY_0: a name can't start with a digit)."""
-    enum = binding.api.enums[cname]
-    names = list(enum.values)
-    prefix = names[0]
-    for n in names[1:]:
-        while not n.startswith(prefix):
-            prefix = prefix[:-1]
-    prefix = prefix[:prefix.rfind('_') + 1] if '_' in prefix else ''
-    out = []
-    for n, v in enum.values.items():
-        short = n[len(prefix):]
-        if not short or short[0].isdigit():
-            short = prefix.rstrip('_').split('_')[-1] + '_' + short
-        out.append((short, v, n))
-    return out
 
 
 def typed_layout(binding, with_skipped=False):
