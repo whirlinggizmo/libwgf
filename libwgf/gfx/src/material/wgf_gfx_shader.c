@@ -253,7 +253,8 @@ static bool parse(const unsigned char *bytes, size_t size, const char *slang, wg
                 return false;
             }
             memcpy(param->name, a, strlen(a) + 1);
-            param->block = strcmp(c, "vs") == 0 ? WGF_GFX_PRIV_SHADER_BLOCK_VS_PARAMS : WGF_GFX_PRIV_SHADER_BLOCK_FS_PARAMS;
+            param->block = strcmp(c, "vs") == 0 ? WGF_GFX_PRIV_SHADER_BLOCK_VS_PARAMS
+                                                : WGF_GFX_PRIV_SHADER_BLOCK_FS_PARAMS;
             param->offset = n;
             end = (n + param_size(param->type) + 15) / 16 * 16;
             if (end > out->block_size[param->block]) out->block_size[param->block] = end;

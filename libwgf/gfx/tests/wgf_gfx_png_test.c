@@ -53,7 +53,8 @@ int main(void)
     for (y = 0; y < H; y++) {
         for (x = 0; x < W; x++) {
             unsigned char *p = rgba + ((size_t)y * W + (size_t)x) * 4;
-            p[0] = (unsigned char)x, p[1] = (unsigned char)y, p[2] = (unsigned char)(x + y), p[3] = (unsigned char)(255 - y);
+            p[0] = (unsigned char)x, p[1] = (unsigned char)y,
+                p[2] = (unsigned char)(x + y), p[3] = (unsigned char)(255 - y);
         }
     }
     expect(round_trip(rgba, W, H, &size), "a gradient, with alpha, back exactly");

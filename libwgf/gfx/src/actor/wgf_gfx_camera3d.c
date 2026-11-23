@@ -165,5 +165,6 @@ wgf_vec3_t wgf_camera3d_screen_to_direction(wgf_actor_t camera, float x, float y
     float area[4];
     if (!seen(camera, &m, area)) return wgf_vec3_make(0.0f, 0.0f, 0.0f);
     inverse = wgf_mat4_invert(m);
-    return wgf_vec3_normalize(wgf_vec3_sub(unproject(inverse, area, x, y, 1.0f), unproject(inverse, area, x, y, -1.0f)));
+    return wgf_vec3_normalize(wgf_vec3_sub(unproject(inverse, area, x, y, 1.0f),
+                                           unproject(inverse, area, x, y, -1.0f)));
 }

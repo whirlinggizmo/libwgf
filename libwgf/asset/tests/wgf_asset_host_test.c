@@ -44,9 +44,12 @@ int main(void)
     }
     wgf_core_priv_init(); /* fs's root: the executable's directory */
     expect(strcmp(wgf_core_priv_fs_root(), exe_dir) == 0, "fs's default root is the executable's directory");
-    expect(wgf_core_priv_fs_write("host_test_assets/sub/note.txt", (const unsigned char *)"note", 4), "a file under a host");
-    expect(wgf_core_priv_fs_write("host_test_assets/beside.txt", (const unsigned char *)"beside", 6), "a file beside it");
-    expect(wgf_core_priv_fs_write("beside_the_program.txt", (const unsigned char *)"here", 4), "a file beside the executable");
+    expect(wgf_core_priv_fs_write("host_test_assets/sub/note.txt", (const unsigned char *)"note", 4),
+           "a file under a host");
+    expect(wgf_core_priv_fs_write("host_test_assets/beside.txt", (const unsigned char *)"beside", 6),
+           "a file beside it");
+    expect(wgf_core_priv_fs_write("beside_the_program.txt", (const unsigned char *)"here", 4),
+           "a file beside the executable");
 
     /* the working directory somewhere else: nothing below may depend on it */
     snprintf(elsewhere, sizeof(elsewhere), "%s/host_test_assets/sub", exe_dir);
@@ -68,7 +71,8 @@ int main(void)
     expect(strcmp(wgf_asset_get_host(), exe_dir) == 0, "the default host again");
     expect(ensured("beside_the_program.txt"), "and the executable's files again");
 
-    wgf_core_priv_os_chdir(exe_dir); /* out of the directory first: Windows won't remove a process's working directory */
+    /* out of the directory first: Windows won't remove a process's working directory */
+    wgf_core_priv_os_chdir(exe_dir);
     expect(wgf_core_priv_fs_rmdir("host_test_assets") && wgf_core_priv_fs_remove("beside_the_program.txt"), "tidy");
     wgf_core_priv_shutdown();
     return failures == 0 ? 0 : 1;

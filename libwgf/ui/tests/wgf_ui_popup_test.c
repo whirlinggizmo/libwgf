@@ -212,7 +212,8 @@ static void on_frame(void *user)
         form();
         expect(opened == 1, "nothing under a modal answers the pointer");
         box = bounds("modal");
-        expect(fabsf(box.x + box.z * 0.5f - 400) < 1 && fabsf(box.y + box.w * 0.5f - 400) < 1, "at the screen's center");
+        expect(fabsf(box.x + box.z * 0.5f - 400) < 1 && fabsf(box.y + box.w * 0.5f - 400) < 1,
+               "at the screen's center");
         click_on("no");
         break;
     case 23:

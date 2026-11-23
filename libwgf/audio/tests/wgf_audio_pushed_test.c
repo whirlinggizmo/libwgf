@@ -77,10 +77,12 @@ static void refusals(void)
            "a voice of a sound isn't a pushed one: 0");
     expect(wgf_voice_push(voice, three, 3) == 0 && wgf_voice_get_queued(voice) == 0,
            "a count that isn't a whole number of frames refused");
-    expect(wgf_voice_push(voice, three, -2) == 0 && wgf_voice_push(voice, NULL, 2) == 0, "a count below 0, or NULL, refused");
+    expect(wgf_voice_push(voice, three, -2) == 0 && wgf_voice_push(voice, NULL, 2) == 0,
+           "a count below 0, or NULL, refused");
     expect(wgf_voice_push(voice, three, 0) == 0, "nothing pushed: 0 taken");
-    expect(!wgf_voice_set_sound(voice, 0) && !wgf_voice_set_position(voice, 0.0f) && !wgf_voice_set_segment(voice, "") &&
-               !wgf_voice_set_pitch(voice, -1.0f) && near(wgf_voice_get_pitch(voice), 1.0f, 0.0f),
+    expect(!wgf_voice_set_sound(voice, 0) && !wgf_voice_set_position(voice, 0.0f) &&
+               !wgf_voice_set_segment(voice, "") && !wgf_voice_set_pitch(voice, -1.0f) &&
+               near(wgf_voice_get_pitch(voice), 1.0f, 0.0f),
            "no sound, position, segment, or negative pitch for a pushed voice");
     expect(wgf_voice_set_pitch(voice, 0.5f) && wgf_voice_set_pitch(voice, 1.0f), "a positive pitch is a pitch");
     wgf_voice_destroy(voice);
@@ -192,7 +194,8 @@ static void underruns(void)
     const wgf_voice_t voice = wgf_voice_create_pushed(44100, 1, 4096);
     wgf_voice_play(voice);
     pull(256, 44100);
-    expect(wgf_voice_get_underruns(voice) == 0 && silent(0, 256) && wgf_voice_get_state(voice) == WGF_PLAY_STATE_PLAYING,
+    expect(wgf_voice_get_underruns(voice) == 0 && silent(0, 256) &&
+               wgf_voice_get_state(voice) == WGF_PLAY_STATE_PLAYING,
            "played with nothing pushed yet: silent, PLAYING, not an underrun");
     push_constant(voice, 1, 100, 0.4f, 0.0f);
     pull(256, 44100);
@@ -223,7 +226,8 @@ static void heard_and_paused(void)
     pull(16, 44100);
     expect(near(out[0], 0.8f, 1e-6f), "heard as pushed");
     expect(wgf_voice_set_volume(voice, 0.5f) && (pull(16, 44100), near(out[0], 0.4f, 1e-6f)), "its volume heard");
-    expect(wgf_voice_set_bus(voice, bus) && wgf_bus_set_volume(bus, 0.5f) && (pull(16, 44100), near(out[0], 0.2f, 1e-6f)),
+    expect(wgf_voice_set_bus(voice, bus) && wgf_bus_set_volume(bus, 0.5f) &&
+               (pull(16, 44100), near(out[0], 0.2f, 1e-6f)),
            "its bus's volume heard");
     wgf_bus_set_muted(wgf_bus_get_master(), true);
     pull(16, 44100);

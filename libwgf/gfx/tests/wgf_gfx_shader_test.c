@@ -52,7 +52,8 @@ static int surface_file(char *out, size_t size, int version, const char *slang)
                     "param amplitude float vs 0\n"
                     "texture noise_tex\n"
                     "program model %s\n"
-                    "attr 0 position\nattr 1 normal\nattr 2 texcoord0\nattr 3 texcoord1\nattr 4 tangent\nattr 5 color0\n"
+                    "attr 0 position\nattr 1 normal\nattr 2 texcoord0\nattr 3 texcoord1\n"
+                    "attr 4 tangent\nattr 5 color0\n"
                     "ub 0 vertex 80 wgf_object 5\n"
                     "ub 1 fragment 1184 wgf_frame 74\n"
                     "ub 2 fragment 32 params 2\n"
@@ -66,7 +67,8 @@ static int surface_file(char *out, size_t size, int version, const char *slang)
                     "source vs 4\nmain\n"
                     "source fs 4\nmain\n"
                     "program model_skinned %s\n"
-                    "attr 0 position\nattr 1 normal\nattr 2 texcoord0\nattr 3 texcoord1\nattr 4 tangent\nattr 5 color0\n"
+                    "attr 0 position\nattr 1 normal\nattr 2 texcoord0\nattr 3 texcoord1\n"
+                    "attr 4 tangent\nattr 5 color0\n"
                     "attr 6 wgf_joints\nattr 7 wgf_weights\n"
                     "ub 0 vertex 80 wgf_object 5\n"
                     "ub 1 fragment 1184 wgf_frame 74\n"
@@ -128,7 +130,9 @@ static void test_files(void)
         const wgf_gfx_priv_shader_t *made = wgf_gfx_priv_shader_get(shader);
         CHECK(made != NULL && made->programs[WGF_GFX_PRIV_SHADER_PROGRAM_MODEL].shader.id != SG_INVALID_ID &&
               made->programs[WGF_GFX_PRIV_SHADER_PROGRAM_MODEL_SKINNED].shader.id != SG_INVALID_ID);
-        CHECK(made != NULL && made->programs[WGF_GFX_PRIV_SHADER_PROGRAM_MODEL_SKINNED].library_view[WGF_GFX_PRIV_SHADER_VIEW_JOINT] == 12 &&
+        CHECK(made != NULL &&
+              made->programs[WGF_GFX_PRIV_SHADER_PROGRAM_MODEL_SKINNED].library_view[WGF_GFX_PRIV_SHADER_VIEW_JOINT] ==
+                  12 &&
               made->programs[WGF_GFX_PRIV_SHADER_PROGRAM_MODEL].library_view[WGF_GFX_PRIV_SHADER_VIEW_JOINT] == -1);
     }
 

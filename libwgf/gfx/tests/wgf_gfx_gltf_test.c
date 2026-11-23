@@ -199,7 +199,8 @@ static void expect_tree(wgf_actor_t root, wgf_mesh_t mesh, const char *what)
     expect(wgf_actor_get_child_count(root) == 1 && body != 0 && wheel != 0 && lamp != 0, line);
     snprintf(line, sizeof(line), "%s: each placed as in the file", what);
     expect(near(wgf_actor_get_position(body).x, 1.0f) && near(wgf_actor_get_position(wheel).y, 1.0f), line);
-    snprintf(line, sizeof(line), "%s: a node with triangles a model of its mesh, one both nodes share; one without a plain actor",
+    snprintf(line, sizeof(line), "%s: a node with triangles a model of its mesh, one both nodes share;"
+                                 " one without a plain actor",
              what);
     expect(wgf_actor_get_kind(body) == WGF_ACTOR_KIND_MODEL && wgf_model_get_mesh(body) != 0 &&
                wgf_model_get_mesh(body) == wgf_model_get_mesh(wheel) && wgf_model_get_mesh(wheel) != mesh &&
@@ -263,7 +264,8 @@ int main(void)
         /* the root stands for its file: its visibility and tint reach its nodes */
         const wgf_actor_t node = wgf_actor_find(early_root, "body");
         wgf_color_t tint = 0x80FF40FFu;
-        expect(wgf_actor_set_visible(early_root, false) && drawn(stage) == 0, "its root hidden: none of its nodes drawn");
+        expect(wgf_actor_set_visible(early_root, false) && drawn(stage) == 0,
+               "its root hidden: none of its nodes drawn");
         expect(wgf_actor_set_visible(early_root, true) && drawn(stage) == 2, "shown again: they draw");
         expect(wgf_model_set_tint(node, 0x80FF40FFu) && wgf_model_set_tint(early_root, 0xFF808080u), "tints set");
         expect(wgf_gfx_priv_model_file_shown(wgf_gfx_priv_actor_of(node), &tint) && tint == 0x80802080u,
@@ -373,7 +375,8 @@ int main(void)
 
         write_file("models/car.gltf", car_changed, (int)sizeof(car_changed) - 1);
         expect(wgf_asset_reload("models/car.gltf") == 1, "one resource made from it, loading again");
-        expect(wgf_resource_get_status(file) == WGF_RESOURCE_STATUS_READY && wgf_actor_find(root, "body/wheel") == wheel,
+        expect(wgf_resource_get_status(file) == WGF_RESOURCE_STATUS_READY &&
+                   wgf_actor_find(root, "body/wheel") == wheel,
                "READY all the while, what it had kept until the new file is in");
         settle_reload(file);
         expect(wgf_actor_find(root, "body") == body && near(wgf_actor_get_position(body).x, 3.0f) &&

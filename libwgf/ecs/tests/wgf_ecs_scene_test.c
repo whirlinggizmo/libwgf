@@ -150,7 +150,8 @@ int main(void)
     /* loaded */
     field = load("scenes/field.scene", field_scene);
     expect(wgf_resource_get_status(field) == WGF_RESOURCE_STATUS_READY, "READY");
-    expect(wgf_scene_get_actor_count(field) == 2 && wgf_scene_get_prefab_count(field) == 2, "two top actors, two prefabs");
+    expect(wgf_scene_get_actor_count(field) == 2 && wgf_scene_get_prefab_count(field) == 2,
+           "two top actors, two prefabs");
     expect(strcmp(wgf_scene_get_prefab_name(field, 0), "rock") == 0 &&
                strcmp(wgf_scene_get_prefab_name(field, 1), "small_rock") == 0 &&
                strcmp(wgf_scene_get_prefab_name(field, 2), "") == 0,
@@ -178,7 +179,8 @@ int main(void)
     }
     {
         wgf_actor_t rocks[4];
-        expect(wgf_actor_find_with_behavior("Rock", rocks, 4) == 1 && wgf_actor_count_with_behavior("Rock") == 1, "one rock");
+        expect(wgf_actor_find_with_behavior("Rock", rocks, 4) == 1 && wgf_actor_count_with_behavior("Rock") == 1,
+               "one rock");
         rock = rocks[0];
     }
     expect(near(wgf_motion_get_velocity(rock).y, -20) && wgf_bounds_get_margin(rock) == 30 &&
@@ -193,10 +195,12 @@ int main(void)
                wgf_shape2d_get_point_count(rock) == 3 && wgf_shape2d_get_outline(rock) == 2 &&
                wgf_color_get_green(wgf_shape2d_get_color(rock)) == 0xFF,
            "its shape: the kind of its prefab");
-    expect(wgf_actor_get_kind(wgf_actor_find(rock, "dust")) == WGF_ACTOR_KIND_EMITTER2D, "the prefab's actor inside it");
+    expect(wgf_actor_get_kind(wgf_actor_find(rock, "dust")) == WGF_ACTOR_KIND_EMITTER2D,
+           "the prefab's actor inside it");
     {
         int out[4 * 8];
-        expect(wgf_world_take_events(out, 4 * 8) == 8 && out[0] == WGF_WORLD_EVENT_CREATED && (wgf_actor_t)out[1] == rock &&
+        expect(wgf_world_take_events(out, 4 * 8) == 8 && out[0] == WGF_WORLD_EVENT_CREATED &&
+                   (wgf_actor_t)out[1] == rock &&
                    out[6] == 2,
                "CREATED raised for each behavior");
     }
@@ -218,7 +222,8 @@ int main(void)
         expect(near(wgf_actor_get_position(placed).x, 30) && near(wgf_actor_get_position(placed).y, 40) &&
                    near(wgf_actor_get_rotation(placed).z, 1.25f) && wgf_actor_count_with_behavior("Rock") == 3,
                "spawned at a place, turned about z on a 2D stage");
-        expect(wgf_prefab_spawn_at(0, stage, 0, 0, 0, 0) == 0 && wgf_prefab_spawn_at(rock_prefab, 12345, 0, 0, 0, 0) == 0,
+        expect(wgf_prefab_spawn_at(0, stage, 0, 0, 0, 0) == 0 &&
+                   wgf_prefab_spawn_at(rock_prefab, 12345, 0, 0, 0, 0) == 0,
                "and refused as a spawn is");
         expect(rock_prefab != 0 && wgf_scene_find_prefab(field, "rock") == rock_prefab &&
                    strcmp(wgf_handle_get_kind_name(rock_prefab), "ecs.prefab") == 0,
@@ -267,19 +272,23 @@ int main(void)
             const wgf_actor_t crate = wgf_actor_find(stage, "crate"), ramp = wgf_actor_find(stage, "ramp"),
                               wall = wgf_actor_find(stage, "wall");
             float points[8];
-            expect(wgf_collider_get_shape(crate) == WGF_COLLIDER_SHAPE_RECTANGLE && near(wgf_collider_get_size(crate).y, 8) &&
+            expect(wgf_collider_get_shape(crate) == WGF_COLLIDER_SHAPE_RECTANGLE &&
+                       near(wgf_collider_get_size(crate).y, 8) &&
                        near(wgf_collider_get_offset(crate).y, -4) && wgf_collider_get_layer(crate) == 4,
                    "a rectangle collider, offset");
-            expect(wgf_collider_get_shape(ramp) == WGF_COLLIDER_SHAPE_POLYGON && wgf_collider_get_points(ramp, points, 8) == 6 &&
+            expect(wgf_collider_get_shape(ramp) == WGF_COLLIDER_SHAPE_POLYGON &&
+                       wgf_collider_get_points(ramp, points, 8) == 6 &&
                        near(points[5], -16),
                    "a polygon collider");
-            expect(wgf_collider_get_shape(wall) == WGF_COLLIDER_SHAPE_SEGMENT && wgf_collider_get_points(wall, points, 8) == 4 &&
+            expect(wgf_collider_get_shape(wall) == WGF_COLLIDER_SHAPE_SEGMENT &&
+                       wgf_collider_get_points(wall, points, 8) == 4 &&
                        near(points[3], 64),
                    "a segment collider");
         }
         snprintf(dumped, sizeof(dumped), "%s", wgf_world_dump());
         expect(strstr(dumped, "collider rectangle=16,8 offset=0,-4 layer=4") != NULL &&
-                   strstr(dumped, "collider polygon=0,0,32,0,32,-16") != NULL && strstr(dumped, "collider segment=0,0,0,64") != NULL,
+                   strstr(dumped, "collider polygon=0,0,32,0,32,-16") != NULL &&
+                   strstr(dumped, "collider segment=0,0,0,64") != NULL,
                "dumped as written");
         wgf_world_clear();
         again = load("scenes/shapes_dumped.scene", dumped);
@@ -429,7 +438,8 @@ int main(void)
                        wgf_emitter3d_get_palette_count(smoke) == 2 &&
                        wgf_emitter3d_get_palette_color(smoke, 1) == 0x00FF00FFu,
                    "its keys");
-            expect(wgf_emitter3d_get_size_key_count(smoke) == 3 && near(wgf_emitter3d_get_size_key_time(smoke, 1), 0.2f) &&
+            expect(wgf_emitter3d_get_size_key_count(smoke) == 3 &&
+                       near(wgf_emitter3d_get_size_key_time(smoke, 1), 0.2f) &&
                        wgf_emitter3d_get_size_key_value(smoke, 2) == 3.0f &&
                        wgf_emitter3d_get_color_key_count(smoke) == 3 &&
                        wgf_emitter3d_get_color_key_value(smoke, 1) == 0xE0E0E080u,
@@ -519,7 +529,8 @@ int main(void)
             wgf_core_priv_update();
         expect(wgf_resource_get_status(file) == WGF_RESOURCE_STATUS_READY && wgf_actor_find(car, "body") != 0,
                "its file loaded, its node under it");
-        expect(wgf_mesh_create("models/tri.gltf") == file && wgf_resource_release(file), "the file's mesh, by its path");
+        expect(wgf_mesh_create("models/tri.gltf") == file && wgf_resource_release(file),
+               "the file's mesh, by its path");
         expect(strstr(wgf_world_dump(), "model path=\"models/tri.gltf\"") != NULL &&
                    strstr(wgf_world_dump(), "car/body") == NULL,
                "dumped as its path, its file's nodes left to it");
@@ -611,8 +622,8 @@ int main(void)
         dump = copy_of(wgf_world_dump());
         if (getenv("WGF_TEST_SHOW")) printf("%s", dump);
         expect(dump != NULL && strstr(dump, "actor \"track\"\n    model path=\"models/track.gltf\"") != NULL &&
-                   strstr(dump, "actor \"track/road\"\n    model cast_shadows=false receive_shadows=true visible=false\n"
-                                       "    transform") != NULL &&
+                   strstr(dump, "actor \"track/road\"\n    model cast_shadows=false receive_shadows=true "
+                                "visible=false\n    transform") != NULL &&
                    strstr(dump, "actor \"track/gates\"\n    transform") != NULL &&
                    strstr(dump, "actor \"track/gates/gate_0/gate\"\n") != NULL &&
                    strstr(dump, "actor \"road\"") == NULL,
@@ -706,7 +717,8 @@ int main(void)
         expect(wgf_resource_get_status(missing) == WGF_RESOURCE_STATUS_FAILED, "a missing file: FAILED");
         wgf_resource_release(missing);
     }
-    expect(refused("comment", "wgf-scene 2 # a comment\nactor # here too\n  motion velocity=1,0,0 # and here\nend\n") == false,
+    expect(refused("comment",
+                   "wgf-scene 2 # a comment\nactor # here too\n  motion velocity=1,0,0 # and here\nend\n") == false,
            "comments anywhere: not refused");
 
     wgf_world_clear();

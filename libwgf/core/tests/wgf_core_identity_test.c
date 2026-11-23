@@ -34,10 +34,12 @@ int main(void)
     longest[sizeof(longest) - 1] = '\0';
 
     expect(strcmp(wgf_identity_get_company(), "DefaultCompany") == 0, "the company defaults to DefaultCompany");
-    expect(strcmp(wgf_identity_get_product(), default_app) == 0, "the app defaults to the executable's name, or DefaultApp");
+    expect(strcmp(wgf_identity_get_product(), default_app) == 0,
+           "the app defaults to the executable's name, or DefaultApp");
 
     expect(cleans_to("My Game", "My Game"), "a plain name is kept");
-    expect(cleans_to("a/b:c*d?e\"f<g>h|i\\j", "a_b_c_d_e_f_g_h_i_j"), "separators and Windows' refused characters become _");
+    expect(cleans_to("a/b:c*d?e\"f<g>h|i\\j", "a_b_c_d_e_f_g_h_i_j"),
+           "separators and Windows' refused characters become _");
     expect(cleans_to(" ..name.. ", "name"), "leading and trailing dots and spaces go");
     expect(cleans_to("CON", "_CON") && cleans_to("con.txt", "_con.txt") && cleans_to("Nul", "_Nul"),
            "a Windows device name gets a _ in front, whatever follows a dot");
@@ -52,8 +54,10 @@ int main(void)
         expect(!wgf_core_priv_app_clean_name(NULL, out, sizeof(out)), "NULL: refused");
     }
 
-    expect(wgf_identity_set_company("Whirling Gizmo") && strcmp(wgf_identity_get_company(), "Whirling Gizmo") == 0, "a company set");
-    expect(wgf_identity_set_product("Hero: Reborn") && strcmp(wgf_identity_get_product(), "Hero_ Reborn") == 0, "an app set, made safe");
+    expect(wgf_identity_set_company("Whirling Gizmo") && strcmp(wgf_identity_get_company(), "Whirling Gizmo") == 0,
+           "a company set");
+    expect(wgf_identity_set_product("Hero: Reborn") && strcmp(wgf_identity_get_product(), "Hero_ Reborn") == 0,
+           "an app set, made safe");
     expect(!wgf_identity_set_company("...") && strcmp(wgf_identity_get_company(), "Whirling Gizmo") == 0,
            "a company with nothing left is refused and the last stays");
     expect(!wgf_identity_set_product(longest) && strcmp(wgf_identity_get_product(), "Hero_ Reborn") == 0,
@@ -64,7 +68,9 @@ int main(void)
     } else {
         printf("no user cache directory here: its path not checked\n");
     }
-    expect(wgf_identity_set_company(NULL) && strcmp(wgf_identity_get_company(), "DefaultCompany") == 0, "NULL: the default again");
-    expect(wgf_identity_set_product("") && strcmp(wgf_identity_get_product(), default_app) == 0, "\"\": the default again");
+    expect(wgf_identity_set_company(NULL) && strcmp(wgf_identity_get_company(), "DefaultCompany") == 0,
+           "NULL: the default again");
+    expect(wgf_identity_set_product("") && strcmp(wgf_identity_get_product(), default_app) == 0,
+           "\"\": the default again");
     return failures == 0 ? 0 : 1;
 }

@@ -69,7 +69,9 @@ bool wgf_actor_add_component(wgf_actor_t actor, wgf_component_t component)
             return false;
         }
         if (parts[component] == NULL) {
-            if (!told) wgf_log_warn("wgf_ecs: a body or a vehicle before physics has started (wgf_physics3d_set_gravity); refused");
+            if (!told)
+                wgf_log_warn("wgf_ecs: a body or a vehicle before physics has started "
+                             "(wgf_physics3d_set_gravity); refused");
             told = true;
             return false;
         }

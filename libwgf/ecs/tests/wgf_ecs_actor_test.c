@@ -59,7 +59,8 @@ int main(void)
     /* components, with their defaults, on a plain actor */
     ship = wgf_actor_create();
     wgf_actor_set_parent(ship, stage);
-    expect(!wgf_actor_has_component(ship, WGF_COMPONENT_MOTION) && wgf_actor_add_component(ship, WGF_COMPONENT_MOTION) &&
+    expect(!wgf_actor_has_component(ship, WGF_COMPONENT_MOTION) &&
+               wgf_actor_add_component(ship, WGF_COMPONENT_MOTION) &&
                wgf_actor_has_component(ship, WGF_COMPONENT_MOTION) && wgf_actor_get_count() == 1,
            "motion added: the actor counted");
     expect(near3(wgf_motion_get_velocity(ship), 0, 0, 0) && wgf_motion_get_damping(ship) == 0 &&
@@ -76,9 +77,11 @@ int main(void)
     expect(wgf_actor_add_component(ship, WGF_COMPONENT_COLLIDER) && wgf_collider_get_radius(ship) == 1 &&
                wgf_collider_get_layer(ship) == 1 && wgf_collider_get_mask(ship) == -1,
            "a collider of radius 1, layer 1, meeting everything");
-    expect(wgf_actor_add_component(ship, WGF_COMPONENT_ARCADE2D) && wgf_actor_has_component(ship, WGF_COMPONENT_ARCADE2D) &&
+    expect(wgf_actor_add_component(ship, WGF_COMPONENT_ARCADE2D) &&
+               wgf_actor_has_component(ship, WGF_COMPONENT_ARCADE2D) &&
                wgf_arcade2d_get_solid_mask(ship) == -1 && wgf_actor_remove_component(ship, WGF_COMPONENT_ARCADE2D) &&
-               !wgf_actor_has_component(ship, WGF_COMPONENT_ARCADE2D) && !wgf_actor_add_component(ship, (wgf_component_t)9),
+               !wgf_actor_has_component(ship, WGF_COMPONENT_ARCADE2D) &&
+               !wgf_actor_add_component(ship, (wgf_component_t)9),
            "a 2D body added and removed; a component that isn't one refused");
     expect(wgf_actor_add_component(ship, WGF_COMPONENT_VOICE) && wgf_actor_get_voice(ship) != 0 &&
                wgf_voice_get_sound(wgf_actor_get_voice(ship)) == 0,
@@ -124,7 +127,8 @@ int main(void)
         wgf_core_priv_part_update(0.0f);
         world = wgf_gfx_priv_actor_get_world_matrix(shape);
         expect(fabsf(world.m[13] - 2.5f) < 1e-4f, "drawn halfway between the two ticks");
-        expect(near3(wgf_actor_get_world_position(shape), 0, 5, 0) && near3(wgf_actor_get_drawn_position(shape), 0, 2.5f, 0),
+        expect(near3(wgf_actor_get_world_position(shape), 0, 5, 0) &&
+                   near3(wgf_actor_get_drawn_position(shape), 0, 2.5f, 0),
                "its world position the simulation's, its drawn one between the ticks");
         wgf_core_priv_part_tick_begin(); /* a tick's read, the drawn matrix kept from the frame before */
         expect(near3(wgf_actor_get_world_position(shape), 0, 5, 0), "in a tick too, the simulation's");
@@ -181,7 +185,8 @@ int main(void)
     expect(take(events, 64) == 1 && events[0] == WGF_WORLD_EVENT_DESTROYED && events[2] == shield,
            "DESTROYED for it");
     expect(wgf_actor_add_behavior(ship, "Shield") == 4, "an id is never given again on the actor");
-    expect(wgf_actor_count_with_behavior("Shield") == 1 && wgf_actor_count_with_behavior("Ship") == 1, "actors counted by behavior");
+    expect(wgf_actor_count_with_behavior("Shield") == 1 && wgf_actor_count_with_behavior("Ship") == 1,
+           "actors counted by behavior");
     {
         wgf_actor_t found[4];
         expect(wgf_actor_find_with_behavior("Shield", found, 4) == 1 && found[0] == ship, "and found");
@@ -191,7 +196,8 @@ int main(void)
                "oldest first, as many as fit");
         wgf_actor_remove_behavior(shape, wgf_actor_find_behavior(shape, "Shield"));
         expect(wgf_actor_count_with_behavior("Shield") == 1 && wgf_actor_count_with_behavior("Nobody") == 0 &&
-                   wgf_actor_find_with_behavior("Nobody", found, 4) == 0 && wgf_actor_find_with_behavior(NULL, found, 4) == 0,
+                   wgf_actor_find_with_behavior("Nobody", found, 4) == 0 &&
+                   wgf_actor_find_with_behavior(NULL, found, 4) == 0,
                "the last of a name removed: not found; a name never had: none");
         expect(wgf_actor_count_with_component(WGF_COMPONENT_MOTION) == 2 &&
                    wgf_actor_find_with_component(WGF_COMPONENT_MOTION, found, 4) == 2 && found[0] == ship &&
@@ -221,12 +227,14 @@ int main(void)
     expect(take(events, 64) == 4 && events[0] == WGF_WORLD_EVENT_DESTROYED && events[1] == (int)ship &&
                events[12] == WGF_WORLD_EVENT_DESTROYED && events[13] == (int)child,
            "DESTROYED for each of their behaviors, the handles stale");
-    expect(!wgf_motion_set_velocity(ship, 1, 0, 0) && wgf_actor_get_behavior_count(ship) == 0, "a stale handle: refused");
+    expect(!wgf_motion_set_velocity(ship, 1, 0, 0) && wgf_actor_get_behavior_count(ship) == 0,
+           "a stale handle: refused");
 
     /* clearing */
     wgf_actor_add_component(wgf_actor_create(), WGF_COMPONENT_LIFETIME);
     wgf_world_clear();
-    expect(wgf_actor_get_count() == 0 && wgf_actor_get_kind(shape) == WGF_ACTOR_KIND_NONE, "cleared: the actors destroyed");
+    expect(wgf_actor_get_count() == 0 && wgf_actor_get_kind(shape) == WGF_ACTOR_KIND_NONE,
+           "cleared: the actors destroyed");
 
     wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
     wgf_gfx_priv_stop();

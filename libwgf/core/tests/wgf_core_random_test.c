@@ -90,7 +90,8 @@ int main(void)
         {
             const float first = wgf_random_next_float(gen_a);
             const int program = wgf_random_get_int(0, 1000000);
-            expect(wgf_random_next_float(gen_b) == first && first >= 0.0f && first < 1.0f, "the same numbers from the same seed");
+            expect(wgf_random_next_float(gen_b) == first && first >= 0.0f && first < 1.0f,
+                   "the same numbers from the same seed");
             wgf_random_set_seed(99);
             expect(wgf_random_get_int(0, 1000000) == program, "the program's sequence untouched by them");
         }

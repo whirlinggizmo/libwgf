@@ -90,7 +90,8 @@ int main(void)
     expect(!wgf_sprite_set_material(sprites[0], sheet) && !wgf_sprite_set_material(stage, lit) &&
                !wgf_sprite_set_material(0, lit) && wgf_sprite_get_material(stage) == 0,
            "a handle that isn't a material, or isn't a sprite: refused");
-    expect(wgf_sprite_set_material(sprites[0], lit) && wgf_sprite_get_material(sprites[0]) == lit, "a material set, read back");
+    expect(wgf_sprite_set_material(sprites[0], lit) && wgf_sprite_get_material(sprites[0]) == lit,
+           "a material set, read back");
     expect(drawn(stage, &draws, &batched) == 1 && draws == 1 && batched == 2,
            "with one: a part the stage shades, out of the batch");
     expect(most_lights == 2, "lit by the sun and the lamp beside it");

@@ -25,7 +25,8 @@
  * masks. Merged onto a.glb's skeleton: one mesh of a file's tree (the skeleton's nodes, and a
  * node showing the merged part), the two bodies one primitive (their materials alike but for
  * color, the colors in the vertices, a white copy drawing them) and the hat another (its
- * material masks, and kept, alone in its group); the hand's triangle bound to the arm, moved from b's bind to a's; the hat
+ * material masks, and kept, alone in its group); the hand's triangle bound to the arm,
+ * moved from b's bind to a's; the hat
  * following the arm where b placed it; the merged skin's reach measured again; a model of it
  * the file's root. Merged with no skeleton: a plain mesh, every piece at rest. Waiting while a
  * piece loads; FAILED when one fails; and the refusals. */
@@ -174,7 +175,8 @@ static int vertex_is(wgf_mesh_t mesh, int p, int v, float x, float y, const floa
     if (v >= prim->vertex_count) return 0;
     at = &prim->vertices[(size_t)v * WGF_GFX_PRIV_MESH_VERTEX_FLOATS];
     if (!near(at[0], x) || !near(at[1], y) || !near(at[2], 0.0f)) return 0;
-    if (!near(at[14], color[0]) || !near(at[15], color[1]) || !near(at[16], color[2]) || !near(at[17], color[3])) return 0;
+    if (!near(at[14], color[0]) || !near(at[15], color[1]) || !near(at[16], color[2]) || !near(at[17], color[3]))
+        return 0;
     if (joint < 0) return prim->skin == NULL;
     return prim->skin != NULL && near(prim->skin[(size_t)v * WGF_GFX_PRIV_MESH_SKIN_FLOATS], (float)joint) &&
            near(prim->skin[(size_t)v * WGF_GFX_PRIV_MESH_SKIN_FLOATS + 4], 1.0f);

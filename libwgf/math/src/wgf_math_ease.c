@@ -127,7 +127,8 @@ float wgf_ease_value(wgf_easing_t easing, float t)
                             : exp2_of(-20 * t + 10) * wgf_trig_sin((20 * t - 11.125f) * s) / 2 + 1;
         case WGF_EASING_BOUNCE_IN: return 1 - bounce_out(1 - t);
         case WGF_EASING_BOUNCE_OUT: return bounce_out(t);
-        case WGF_EASING_BOUNCE_IN_OUT: return t < 0.5f ? (1 - bounce_out(1 - 2 * t)) / 2 : (1 + bounce_out(2 * t - 1)) / 2;
+        case WGF_EASING_BOUNCE_IN_OUT: return t < 0.5f ? (1 - bounce_out(1 - 2 * t)) / 2
+                                                       : (1 + bounce_out(2 * t - 1)) / 2;
         default: return t;
     }
 }

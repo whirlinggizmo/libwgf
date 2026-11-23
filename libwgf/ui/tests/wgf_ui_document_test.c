@@ -70,7 +70,8 @@ static const char rml[] =
     "  <div id=\"help\">?<div id=\"tip\">A tooltip</div></div>\n"
     "  <div id=\"fade\"></div>\n"
     "  <div id=\"pulse\"></div>\n"
-    "  <div id=\"scroller\"><div id=\"row-1\">1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div></div>\n"
+    "  <div id=\"scroller\"><div id=\"row-1\">1</div><div>2</div><div>3</div>"
+    "<div>4</div><div>5</div><div>6</div></div>\n"
     "  <p><b>bold</b> <i>italic</i></p>\n"
     "  <div id=\"fx\"><div id=\"shadowed\">s</div><div id=\"linear\"></div><div id=\"radial\"></div>"
     "<div id=\"conic\"></div><div id=\"rounded\"><p>clipped</p></div><div id=\"filtered\">f</div>"
@@ -365,7 +366,8 @@ static void ready(void)
     expect(wgf_element_set_rml(title, "Sound <b>on</b>") && strcmp(wgf_element_get_text(title), "Sound on") == 0 &&
                strstr(wgf_element_get_rml(title), "<b>on</b>") != NULL,
            "RML set is parsed");
-    expect(wgf_element_set_attribute(title, "data-x", "7") && strcmp(wgf_element_get_attribute(title, "data-x"), "7") == 0 &&
+    expect(wgf_element_set_attribute(title, "data-x", "7") &&
+               strcmp(wgf_element_get_attribute(title, "data-x"), "7") == 0 &&
                wgf_element_has_attribute(title, "data-x") && wgf_element_remove_attribute(title, "data-x") &&
                !wgf_element_has_attribute(title, "data-x") && !wgf_element_remove_attribute(title, "data-x") &&
                strcmp(wgf_element_get_attribute(title, "data-x"), "") == 0,
@@ -381,7 +383,8 @@ static void ready(void)
                strcmp(wgf_element_get_property(title, "nonsense"), "") == 0,
            "no such property, or no such value: refused");
     wgf_log_set_level(WGF_LOG_LEVEL_INFO);
-    expect(wgf_element_set_property(title, "width", "") && strcmp(wgf_element_get_property(title, "width"), "auto") == 0,
+    expect(wgf_element_set_property(title, "width", "") &&
+               strcmp(wgf_element_get_property(title, "width"), "auto") == 0,
            "the element's own taken off");
 
     /* form controls */
@@ -405,17 +408,20 @@ static void ready(void)
     expect(tabs && tab_a && wgf_element_get_number(tabs) == 0 && wgf_element_set_number(tabs, 1) &&
                wgf_element_get_number(tabs) == 1,
            "a tabset's number: its chosen tab, set");
-    expect(!wgf_element_set_number(tabs, 2) && !wgf_element_set_number(tabs, -1) && !wgf_element_set_number(tabs, 0.5f) &&
+    expect(!wgf_element_set_number(tabs, 2) && !wgf_element_set_number(tabs, -1) &&
+               !wgf_element_set_number(tabs, 0.5f) &&
                wgf_element_get_number(tabs) == 1 && !wgf_element_set_value(tabs, "0"),
            "a tab it hasn't, or not a whole one, refused; and it has no value");
-    expect(!wgf_element_set_text(0, "x") && !wgf_element_set_text(title, NULL) && strcmp(wgf_element_get_text(0), "") == 0 &&
+    expect(!wgf_element_set_text(0, "x") && !wgf_element_set_text(title, NULL) &&
+               strcmp(wgf_element_get_text(0), "") == 0 &&
                !wgf_element_set_class(title, "", true) && !wgf_element_set_attribute(title, NULL, "x") &&
                wgf_element_get_document(0) == 0 && !wgf_element_set_attribute(document, "a", "b"),
            "no element, no text, no name, or a handle of another kind: refused");
 
     /* an element gone with the RML that held it (refused, warned: quieted) */
     wgf_log_set_level(WGF_LOG_LEVEL_ERROR);
-    expect(wgf_element_set_rml(list, "<p>two</p>") && !wgf_handle_is_alive(first) && !wgf_element_set_text(first, "x") &&
+    expect(wgf_element_set_rml(list, "<p>two</p>") && !wgf_handle_is_alive(first) &&
+               !wgf_element_set_text(first, "x") &&
                strcmp(wgf_element_get_id(first), "") == 0,
            "an element replaced: its handle refused");
     wgf_log_set_level(WGF_LOG_LEVEL_INFO);
@@ -475,9 +481,11 @@ static void on_frame(void *user)
                "an image the document names, its size its file's");
         /* an image named at run time that isn't local: the change held until its load settles
            (here it fails: there is no such file), and a later change to the same name drops it */
-        expect(wgf_element_set_attribute(logo, "src", "late.png") && strcmp(wgf_element_get_attribute(logo, "src"), "dot.png") == 0,
+        expect(wgf_element_set_attribute(logo, "src", "late.png") &&
+                   strcmp(wgf_element_get_attribute(logo, "src"), "dot.png") == 0,
                "an image not local: the change held, the element as it was");
-        expect(wgf_element_set_attribute(logo, "data-a", "late2.png") && wgf_element_set_attribute(logo, "data-a", "x") &&
+        expect(wgf_element_set_attribute(logo, "data-a", "late2.png") &&
+                   wgf_element_set_attribute(logo, "data-a", "x") &&
                    strcmp(wgf_element_get_attribute(logo, "data-a"), "x") == 0,
                "a change to the same name: made at once, the held one dropped");
         click_at(play, SAPP_EVENTTYPE_MOUSE_MOVE);
@@ -505,7 +513,8 @@ static void on_frame(void *user)
         break;
     case 5:
         take();
-        expect(happened(WGF_DOCUMENT_EVENT_CHANGE, sound) && wgf_element_is_checked(sound), "a checkbox clicked: checked");
+        expect(happened(WGF_DOCUMENT_EVENT_CHANGE, sound) && wgf_element_is_checked(sound),
+               "a checkbox clicked: checked");
         expect(strcmp(wgf_element_get_attribute(logo, "src"), "late.png") == 0 &&
                    strcmp(wgf_element_get_attribute(logo, "data-a"), "x") == 0,
                "the held change made once its image settled; the dropped one never");
@@ -614,7 +623,8 @@ static void on_frame(void *user)
         /* released: the document and its elements gone */
         expect(wgf_resource_release(document), "released");
         wgf_log_set_level(WGF_LOG_LEVEL_ERROR); /* refused, warned: quieted */
-        expect(!wgf_handle_is_alive(document) && !wgf_handle_is_alive(play) && wgf_document_find(document, "play") == 0 &&
+        expect(!wgf_handle_is_alive(document) && !wgf_handle_is_alive(play) &&
+                   wgf_document_find(document, "play") == 0 &&
                    strcmp(wgf_element_get_text(play), "") == 0,
                "released: the document and its elements refused");
         wgf_log_set_level(WGF_LOG_LEVEL_INFO);

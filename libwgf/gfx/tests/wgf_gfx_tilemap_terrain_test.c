@@ -48,10 +48,12 @@ static void write_tilesets(void)
     int n = 0, i;
     n += snprintf(tilesets + n, sizeof(tilesets) - (size_t)n,
                   "{\"name\": \"ground\", \"image\": \"two.png\", \"tilewidth\": 1, \"tileheight\": 1,"
-                  " \"tilecount\": 16, \"columns\": 2, \"objectalignment\": \"center\", \"wangsets\": [{\"name\": \"land\", "
+                  " \"tilecount\": 16, \"columns\": 2, \"objectalignment\": \"center\","
+                  " \"wangsets\": [{\"name\": \"land\", "
                   "\"type\": \"corner\", \"colors\": [{\"name\": \"dirt\"}, {\"name\": \"grass\"}], \"wangtiles\": [");
     for (i = 0; i < 16; i++) {
-        n += snprintf(tilesets + n, sizeof(tilesets) - (size_t)n, "%s{\"tileid\": %d, \"wangid\": [0,%d,0,%d,0,%d,0,%d]}",
+        n += snprintf(tilesets + n, sizeof(tilesets) - (size_t)n,
+                      "%s{\"tileid\": %d, \"wangid\": [0,%d,0,%d,0,%d,0,%d]}",
                       i > 0 ? ", " : "", i, (i & 2) ? 2 : 1, (i & 4) ? 2 : 1, (i & 8) ? 2 : 1, (i & 1) ? 2 : 1);
     }
     n += snprintf(tilesets + n, sizeof(tilesets) - (size_t)n,
@@ -94,7 +96,8 @@ static const char staggered[] =
     "{\"type\": \"map\", \"orientation\": \"staggered\", \"staggeraxis\": \"y\", \"staggerindex\": \"odd\","
     " \"width\": 2, \"height\": 2, \"tilewidth\": 2, \"tileheight\": 2,"
     " \"tilesets\": [{\"firstgid\": 1, \"source\": \"ground.tsj\"}],"
-    " \"layers\": [{\"type\": \"tilelayer\", \"name\": \"ground\", \"width\": 2, \"height\": 2, \"data\": [1, 1, 1, 1]}]}";
+    " \"layers\": [{\"type\": \"tilelayer\", \"name\": \"ground\", \"width\": 2, \"height\": 2,"
+    " \"data\": [1, 1, 1, 1]}]}";
 
 static void write_file(const char *path, const void *data, int size)
 {
@@ -231,7 +234,8 @@ int main(void)
     s = wgf_tilemap_create("terrain_test/staggered.tmj");
     wait_for(m);
     wait_for(s);
-    expect(wgf_resource_get_status(m) == WGF_RESOURCE_STATUS_READY && wgf_resource_get_status(s) == WGF_RESOURCE_STATUS_READY,
+    expect(wgf_resource_get_status(m) == WGF_RESOURCE_STATUS_READY &&
+               wgf_resource_get_status(s) == WGF_RESOURCE_STATUS_READY,
            "READY");
     expect(wgf_tilemap_get_terrainset_count(0) == 0 && wgf_tilemap_find_terrainset(0, "land") == -1,
            "no map: no terrain sets");
@@ -243,7 +247,8 @@ int main(void)
         const wgf_actor_t other = wgf_actor_find(wgf_tilemap_instantiate(s, stage), "ground");
         test_corners(ground);
         test_edges(roads);
-        expect(!wgf_tilemap_layer_paint_terrain(ground, 5, 0, 0, 2) && !wgf_tilemap_layer_paint_terrain(ground, 0, -1, 0, 2) &&
+        expect(!wgf_tilemap_layer_paint_terrain(ground, 5, 0, 0, 2) &&
+                   !wgf_tilemap_layer_paint_terrain(ground, 0, -1, 0, 2) &&
                    !wgf_tilemap_layer_paint_terrain(ground, 0, 0, 0, 3) &&
                    !wgf_tilemap_layer_paint_terrain(ground, 0, 0, 0, -1) &&
                    !wgf_tilemap_layer_paint_terrain(ground, 0, 0, 4, 1) &&
@@ -259,7 +264,8 @@ int main(void)
     {
         const wgf_fs_task_t remove = wgf_fs_rmdir("terrain_test");
         int i;
-        for (i = 0; i < 1000 && wgf_fs_task_get_status(remove) == WGF_FS_TASK_STATUS_PENDING; i++) wgf_core_priv_update();
+        for (i = 0; i < 1000 && wgf_fs_task_get_status(remove) == WGF_FS_TASK_STATUS_PENDING; i++)
+            wgf_core_priv_update();
         wgf_fs_task_destroy(remove);
     }
     wgf_gfx_priv_stop();

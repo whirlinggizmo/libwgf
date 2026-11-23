@@ -149,8 +149,8 @@ wgf_generator_t wgf_random_create(int seed)
     wgf_generator_t generator;
     pcg_t *g;
     if (!gp.ready) {
-        gp.ready = wgf_core_priv_handle_pool_init(&gp.pool, WGF_CORE_PRIV_HANDLE_KIND_GENERATOR, (void **)&gp.generators,
-                                                  sizeof(pcg_t), 16, 4096);
+        gp.ready = wgf_core_priv_handle_pool_init(&gp.pool, WGF_CORE_PRIV_HANDLE_KIND_GENERATOR,
+                                                  (void **)&gp.generators, sizeof(pcg_t), 16, 4096);
         if (!gp.ready) return 0;
     }
     generator = wgf_core_priv_handle_pool_alloc(&gp.pool);

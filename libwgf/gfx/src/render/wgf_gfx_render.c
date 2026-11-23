@@ -565,7 +565,8 @@ static void count_make_buffer(const sg_buffer_desc *desc, sg_buffer result, void
 static void count_destroy_buffer(sg_buffer buffer, void *user)
 {
     (void)user;
-    if (sg_query_buffer_state(buffer) == SG_RESOURCESTATE_VALID) stats.gpu_bytes -= (double)sg_query_buffer_size(buffer);
+    if (sg_query_buffer_state(buffer) == SG_RESOURCESTATE_VALID)
+        stats.gpu_bytes -= (double)sg_query_buffer_size(buffer);
 }
 
 static void count_make_image(const sg_image_desc *desc, sg_image result, void *user)

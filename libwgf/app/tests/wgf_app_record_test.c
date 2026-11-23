@@ -116,7 +116,8 @@ static void load_fail(wgf_handle_t resource)
     (void)resource;
 }
 
-static const wgf_core_priv_loader_t loader = {"test", load_prepare, load_finish, load_discard, load_fail, NULL, false, NULL};
+static const wgf_core_priv_loader_t loader = {"test", load_prepare, load_finish, load_discard, load_fail, NULL, false,
+                                              NULL};
 
 typedef struct loading_run_t {
     int frames, held_after; /* frames, and ticks with space down once the load ended */
@@ -215,7 +216,8 @@ int main(void)
         n = f != NULL ? fread(text, 1, sizeof(text) - 1, f) : 0;
         if (f != NULL) fclose(f);
         text[n] = '\0';
-        expect(strstr(text, "\nat 0 wait core.loading == 0\n") != NULL && strstr(text, "\nat 0 key down space\n") != NULL &&
+        expect(strstr(text, "\nat 0 wait core.loading == 0\n") != NULL &&
+                   strstr(text, "\nat 0 key down space\n") != NULL &&
                    strstr(text, " key up space\n") != NULL && strstr(text, "\nat 0 key up space\n") == NULL,
                "recorded while loading: a wait for the load, what came during it at 0");
 

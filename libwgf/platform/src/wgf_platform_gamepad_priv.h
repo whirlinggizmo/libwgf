@@ -53,7 +53,8 @@ typedef struct wgf_platform_priv_gamepad_mapping_t wgf_platform_priv_gamepad_map
 const wgf_platform_priv_gamepad_mapping_t *wgf_platform_priv_gamepad_find_mapping(const unsigned char guid[16]);
 unsigned wgf_platform_priv_gamepad_mapping_generation(void);
 void wgf_platform_priv_gamepad_apply_mapping(const wgf_platform_priv_gamepad_mapping_t *mapping,
-                                             const wgf_platform_priv_gamepad_raw_t *raw, wgf_platform_priv_gamepad_t *pad);
+                                             const wgf_platform_priv_gamepad_raw_t *raw,
+                                             wgf_platform_priv_gamepad_t *pad);
 
 /* The platform's side (wgf_app_gamepad_<platform>.c): start, stop, and update the
  * pads in place, slot by slot -- a pad keeps its slot while connected. Polled on the

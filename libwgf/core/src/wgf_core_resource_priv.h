@@ -22,7 +22,8 @@ typedef struct wgf_core_priv_resource_t {
     int refs;
     wgf_resource_status_t status;
     bool permanent;                         /* a built-in: never freed, and release does nothing */
-    bool reloading;                         /* its file loading again (wgf_core_priv_resource_reload): its status kept */
+    bool reloading;                         /* its file loading again (wgf_core_priv_resource_reload): its status
+                                               kept */
     char path[WGF_CORE_PRIV_FS_PATH_MAX];  /* the path it was created from, normalized, which finds it again; "" none */
     char found[WGF_CORE_PRIV_FS_PATH_MAX]; /* the file it is read from (shown once READY) */
 } wgf_core_priv_resource_t;

@@ -147,7 +147,8 @@ static void frame(void *user)
     wgf_draw_text(0, "point at a cell (left alone, a ring walks each map's cells)", 20, 42, 15, g.dim);
     for (i = 0; g.placed && i < MAPS; i++) {
         const wgf_vec2_t at = wgf_stage2d_world_to_screen(g.stage, g.left[i], g.top[i]);
-        snprintf(line, sizeof(line), "%s %d by %d: cell %d, %d", names[i], g.columns[i], g.rows[i], columns[i], rows[i]);
+        snprintf(line, sizeof(line), "%s %d by %d: cell %d, %d", names[i], g.columns[i], g.rows[i], columns[i],
+                 rows[i]);
         wgf_draw_text(0, line, at.x, at.y - 18.0f, 14, g.text);
     }
 }

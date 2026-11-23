@@ -139,7 +139,8 @@ static int group_for(group_t **groups, int *count, int *capacity, wgf_material_t
 /* Each node's place in its file at rest, from the top: parents come before their children. */
 static wgf_mat4_t *rest_worlds(const mesh_t *file)
 {
-    wgf_mat4_t *worlds = (wgf_mat4_t *)malloc(sizeof(wgf_mat4_t) * (size_t)(file->node_count > 0 ? file->node_count : 1));
+    wgf_mat4_t *worlds =
+        (wgf_mat4_t *)malloc(sizeof(wgf_mat4_t) * (size_t)(file->node_count > 0 ? file->node_count : 1));
     int n;
     if (worlds == NULL) return NULL;
     for (n = 0; n < file->node_count; n++) {
@@ -358,7 +359,8 @@ static bool copy_skeleton(const mesh_t *skeleton, int extra, mesh_t *out)
     skin->inverse_bind = (wgf_mat4_t *)calloc((size_t)count + 1, sizeof(wgf_mat4_t));
     skin->centers = (wgf_vec3_t *)calloc((size_t)count + 1, sizeof(wgf_vec3_t));
     skin->radii = (float *)calloc((size_t)count + 1, sizeof(float));
-    if (skin->joints == NULL || skin->inverse_bind == NULL || skin->centers == NULL || skin->radii == NULL) return false;
+    if (skin->joints == NULL || skin->inverse_bind == NULL || skin->centers == NULL || skin->radii == NULL)
+        return false;
     skin->joint_count = count;
     memcpy(skin->joints, from->joints, sizeof(int) * (size_t)count);
     memcpy(skin->inverse_bind, from->inverse_bind, sizeof(wgf_mat4_t) * (size_t)count);
@@ -374,8 +376,8 @@ static bool copy_skeleton(const mesh_t *skeleton, int extra, mesh_t *out)
             out->animation_count = a + 1;
             dst->duration = src->duration;
             dst->name = copy_text(src->name);
-            dst->channels = (wgf_gfx_priv_mesh_channel_t *)calloc((size_t)(src->channel_count > 0 ? src->channel_count : 1),
-                                                                   sizeof(*dst->channels));
+            dst->channels = (wgf_gfx_priv_mesh_channel_t *)calloc(
+                (size_t)(src->channel_count > 0 ? src->channel_count : 1), sizeof(*dst->channels));
             if (dst->name == NULL || dst->channels == NULL) return false;
             for (c = 0; c < src->channel_count; c++) {
                 const wgf_gfx_priv_mesh_channel_t *sc = &src->channels[c];
@@ -545,7 +547,8 @@ static bool plan_piece(wgf_mesh_t piece, const mesh_t *skeleton, group_t **group
                 if (to < 0) continue;
                 { /* from this piece's bind of the node matched to the skeleton's of its joint */
                     const int own = joint_of(skin, matched);
-                    const wgf_mat4_t bind_inverse = own >= 0 ? skin->inverse_bind[own] : wgf_mat4_invert(worlds[matched]);
+                    const wgf_mat4_t bind_inverse =
+                        own >= 0 ? skin->inverse_bind[own] : wgf_mat4_invert(worlds[matched]);
                     rebinds[s][j] = wgf_mat4_mul(wgf_mat4_invert(merged_skin->inverse_bind[to]), bind_inverse);
                     if (!near_identity(rebinds[s][j])) any = true;
                 }
@@ -558,8 +561,9 @@ static bool plan_piece(wgf_mesh_t piece, const mesh_t *skeleton, group_t **group
     }
     for (n = 0; n < file->node_count; n++) {
         const wgf_gfx_priv_mesh_node_t *node = &file->nodes[n];
-        const mesh_t *part = node->mesh >= 0 && node->mesh < file->part_count ? wgf_gfx_priv_mesh_record(file->parts[node->mesh])
-                                                                              : NULL;
+        const mesh_t *part = node->mesh >= 0 && node->mesh < file->part_count
+                                 ? wgf_gfx_priv_mesh_record(file->parts[node->mesh])
+                                 : NULL;
         const bool skinned = skeleton != NULL && maps != NULL && node->skin >= 0 && node->skin < file->skin_count;
         int matched = -1, rigid_joint = -1;
         wgf_mat4_t rigid_place = worlds[n];
@@ -681,7 +685,8 @@ static bool make(const pending_t *job)
         built.parts = (wgf_mesh_t *)calloc(2, sizeof(wgf_mesh_t));
         if (built.parts == NULL) goto done;
         if (skinned_count > 0) {
-            built.parts[built.part_count] = wgf_gfx_priv_mesh_create_from(skinned, skinned_count, materials, group_count);
+            built.parts[built.part_count] =
+                wgf_gfx_priv_mesh_create_from(skinned, skinned_count, materials, group_count);
             skinned = NULL; /* taken, and freed by it on a refusal */
             if (built.parts[built.part_count] == 0) goto done;
             if (!add_top_node(&built, "merged", built.part_count++, 0)) goto done;
@@ -863,7 +868,8 @@ wgf_mesh_t wgf_mesh_create_merged(const wgf_mesh_t *meshes, int count, wgf_mesh_
             return 0;
         }
     }
-    if (skeleton != 0 && (wgf_gfx_priv_mesh_record(skeleton) == NULL || !wgf_gfx_priv_mesh_record(skeleton)->from_file)) {
+    if (skeleton != 0 &&
+        (wgf_gfx_priv_mesh_record(skeleton) == NULL || !wgf_gfx_priv_mesh_record(skeleton)->from_file)) {
         wgf_log_error("wgf_mesh_create_merged: its skeleton isn't a glTF file's mesh");
         return 0;
     }

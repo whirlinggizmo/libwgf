@@ -85,7 +85,8 @@ static void read_screen(read_t *read_ptr)
     unsigned char *swap = data != NULL ? malloc(row) : NULL;
     int y;
     if (swap == NULL || !wgf_platform_priv_read_screen(width, height, data)) {
-        if (swap != NULL && !warned) wgf_log_warn("wgf_render_read_screen: there is no GPU to read here (a headless build)");
+        if (swap != NULL && !warned)
+            wgf_log_warn("wgf_render_read_screen: there is no GPU to read here (a headless build)");
         if (swap != NULL) warned = true;
         free(data);
         free(swap);

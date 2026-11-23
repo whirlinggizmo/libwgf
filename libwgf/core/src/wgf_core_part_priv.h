@@ -9,8 +9,8 @@
  * the first time the program creates one of it, and they run it through this list, so
  * a program that never creates one doesn't link it. wgrender's registered modules
  * (wgri_module_t, its src/wgr_module.c) without the constructors: nothing runs before
- * main but a static table's filling (WGF_CORE_PRIV_ON_LINK). A layer's other hooks (gfx's draw and pick hooks, its actor kinds)
- * stay its own. */
+ * main but a static table's filling (WGF_CORE_PRIV_ON_LINK). A layer's other hooks
+ * (gfx's draw and pick hooks, its actor kinds) stay its own. */
 
 /* The layer a part belongs to: its stop runs when that layer stops (gfx's while the GPU
  * is there), every other's at core's shutdown. */
@@ -25,30 +25,38 @@ typedef enum wgf_core_priv_part_layer_t {
 typedef enum wgf_core_priv_part_order_t {
     WGF_CORE_PRIV_PART_ECS,       /* actors' components and their systems (ecs/), whose actors the rest draw */
     WGF_CORE_PRIV_PART_PHYSICS3D, /* bodies and vehicles (physics3d/): ticked after the ecs's systems */
-    WGF_CORE_PRIV_PART_TWEENS,    /* tweens (libwgf/ecs/src/wgf_ecs_tween.c): ticked after the ecs's systems and physics */
+    WGF_CORE_PRIV_PART_TWEENS,    /* tweens (libwgf/ecs/src/wgf_ecs_tween.c): ticked after the ecs's systems and
+                                     physics */
     WGF_CORE_PRIV_PART_SCREENS,   /* the screen stack's changes (libwgf/ecs/src/wgf_ecs_screen.c), on real time */
     WGF_CORE_PRIV_PART_ANIMATION, /* models' animations (libwgf/gfx/src/stage/wgf_gfx_animation.c): before follow */
-    WGF_CORE_PRIV_PART_FOLLOW,    /* cameras that follow (libwgf/gfx/src/actor/wgf_gfx_follow.c): after what moves their targets */
+    WGF_CORE_PRIV_PART_FOLLOW,    /* cameras that follow (libwgf/gfx/src/actor/wgf_gfx_follow.c): after what moves
+                                     their targets */
     WGF_CORE_PRIV_PART_FLY,       /* cameras flown by input (libwgf/gfx/src/actor/wgf_gfx_fly.c) */
     WGF_CORE_PRIV_PART_POINTER,   /* the pointer over actors (libwgf/gfx/src/actor/wgf_gfx_pointer.c) */
-    WGF_CORE_PRIV_PART_PICKS,     /* sprites' texels for picking (libwgf/gfx/src/actor/wgf_gfx_pick2d.c): before the images */
+    WGF_CORE_PRIV_PART_PICKS,     /* sprites' texels for picking (libwgf/gfx/src/actor/wgf_gfx_pick2d.c): before the
+                                     images */
     WGF_CORE_PRIV_PART_TEXT,      /* fonts and fontstash (libwgf/gfx/src/text/wgf_gfx_font.c) */
     WGF_CORE_PRIV_PART_STAGE3D,   /* 3D stages' frames and their GPU objects (libwgf/gfx/src/stage/) */
     WGF_CORE_PRIV_PART_SHADOWS,   /* shadow maps (libwgf/gfx/src/stage/wgf_gfx_shadow.c): drawn as the frame flushes */
     WGF_CORE_PRIV_PART_ENVIRONMENT, /* environments (libwgf/gfx/src/stage/wgf_gfx_environment.c) */
     WGF_CORE_PRIV_PART_TEXTURE_READS, /* textures read back (libwgf/gfx/src/texture/wgf_gfx_texture_read.c) */
     WGF_CORE_PRIV_PART_IMAGES,    /* images on the CPU (libwgf/gfx/src/texture/wgf_gfx_image.c) */
-    WGF_CORE_PRIV_PART_EFFECTS,   /* screen effects (libwgf/gfx/src/render/wgf_gfx_render_effect.c), before the materials they hold */
-    WGF_CORE_PRIV_PART_MESH_MERGES, /* meshes merged (libwgf/gfx/src/mesh/wgf_gfx_mesh_merge.c), before the meshes they wait for */
+    WGF_CORE_PRIV_PART_EFFECTS,   /* screen effects (libwgf/gfx/src/render/wgf_gfx_render_effect.c), before the
+                                     materials they hold */
+    WGF_CORE_PRIV_PART_MESH_MERGES, /* meshes merged (libwgf/gfx/src/mesh/wgf_gfx_mesh_merge.c), before the meshes
+                                       they wait for */
     WGF_CORE_PRIV_PART_MESHES,    /* meshes (libwgf/gfx/src/mesh/), stopped before the materials they hold */
     WGF_CORE_PRIV_PART_MATERIALS, /* materials (libwgf/gfx/src/material/) */
-    WGF_CORE_PRIV_PART_SHADERS,   /* custom shaders (libwgf/gfx/src/material/wgf_gfx_shader.c), after the materials holding them */
+    WGF_CORE_PRIV_PART_SHADERS,   /* custom shaders (libwgf/gfx/src/material/wgf_gfx_shader.c), after the materials
+                                     holding them */
     WGF_CORE_PRIV_PART_CUBEMAPS,  /* cubemaps (libwgf/gfx/src/texture/wgf_gfx_cubemap.c), after the materials */
     WGF_CORE_PRIV_PART_SPRITES,   /* a 3D stage's instanced sprites (libwgf/gfx/src/sprite/wgf_gfx_sprite_batch.c) */
     WGF_CORE_PRIV_PART_SHEETS,    /* sprites playing sheets' clips (libwgf/gfx/src/sprite/wgf_gfx_sheet.c) */
     WGF_CORE_PRIV_PART_TILEMAPS,  /* Tiled maps and their placed layers' animated tiles (libwgf/gfx/src/tilemap/) */
-    WGF_CORE_PRIV_PART_SPRITE_BATCHES, /* 2D sprite batches' GPU buffers (libwgf/gfx/src/sprite/wgf_gfx_sprite_batch2d.c) */
-    WGF_CORE_PRIV_PART_PARTICLES, /* emitters (libwgf/gfx/src/emitter/wgf_gfx_emitter.c): after the ecs, which may end one */
+    WGF_CORE_PRIV_PART_SPRITE_BATCHES, /* 2D sprite batches' GPU buffers
+                                          (libwgf/gfx/src/sprite/wgf_gfx_sprite_batch2d.c) */
+    WGF_CORE_PRIV_PART_PARTICLES, /* emitters (libwgf/gfx/src/emitter/wgf_gfx_emitter.c): after the ecs, which may
+                                     end one */
     WGF_CORE_PRIV_PART_UI,        /* layout and widgets (ui/) */
     WGF_CORE_PRIV_PART_AUDIO,     /* sounds, voices, the mixer (audio/) */
     WGF_CORE_PRIV_PART_ASSET,     /* where files come from: fetching, the cache (asset/) */

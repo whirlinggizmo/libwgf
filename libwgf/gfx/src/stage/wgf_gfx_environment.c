@@ -406,7 +406,8 @@ static void prefilter_rows(const wgf_gfx_priv_env_cube_t *source, wgf_gfx_priv_e
                 p[2] = col.z;
                 continue;
             }
-            tx = wgf_vec3_normalize(wgf_vec3_cross(fabsf(n.z) < 0.999f ? wgf_vec3_make(0, 0, 1) : wgf_vec3_make(1, 0, 0), n));
+            tx = wgf_vec3_normalize(
+                wgf_vec3_cross(fabsf(n.z) < 0.999f ? wgf_vec3_make(0, 0, 1) : wgf_vec3_make(1, 0, 0), n));
             ty = wgf_vec3_cross(n, tx);
             for (i = 0; i < count; i++) {
                 const prefilter_sample_t *k = &samples[i];
@@ -429,7 +430,8 @@ static void prefilter_rows(const wgf_gfx_priv_env_cube_t *source, wgf_gfx_priv_e
 bool wgf_gfx_priv_environment_prefilter(const wgf_gfx_priv_env_cube_t *source, int size, int mip_count, int samples,
                                         wgf_gfx_priv_env_cube_t *out)
 {
-    prefilter_sample_t *table = (prefilter_sample_t *)malloc(sizeof(prefilter_sample_t) * (size_t)(samples > 0 ? samples : 1));
+    prefilter_sample_t *table =
+        (prefilter_sample_t *)malloc(sizeof(prefilter_sample_t) * (size_t)(samples > 0 ? samples : 1));
     int m, face;
     if (table == NULL || !cube_alloc(out, size, mip_count)) {
         free(table);
@@ -653,7 +655,8 @@ bool wgf_gfx_priv_environment_load_image(const char *path, wgf_gfx_priv_env_imag
     if (!wgf_core_priv_fs_read(path, &bytes, &size)) return false;
     {
         void *pending;
-        ok = image_begin(bytes, size, path, out, &r, &pending) && (r.bytes == NULL || hdr_rows(&r, out, 0, out->height));
+        ok = image_begin(bytes, size, path, out, &r, &pending) &&
+             (r.bytes == NULL || hdr_rows(&r, out, 0, out->height));
         if (pending != NULL) { /* the browser's: this reading is whole at once, so none */
             wgf_gfx_priv_texture_decoded_free(pending);
             ok = false;
@@ -708,8 +711,8 @@ static bool ensure(void);
 static bool ensure_pool(void)
 {
     if (!pool_ready) {
-        pool_ready = wgf_core_priv_handle_pool_init(&pool, WGF_CORE_PRIV_HANDLE_KIND_ENVIRONMENT, (void **)&environments,
-                                                    sizeof(environment_t), 8, 4096);
+        pool_ready = wgf_core_priv_handle_pool_init(&pool, WGF_CORE_PRIV_HANDLE_KIND_ENVIRONMENT,
+                                                    (void **)&environments, sizeof(environment_t), 8, 4096);
         if (pool_ready) wgf_core_priv_resource_register(&pool, &resource_kind);
     }
     return pool_ready;
@@ -741,7 +744,8 @@ static bool make_cube_image(const wgf_gfx_priv_env_cube_t *cube, sg_image *image
             return false;
         }
         for (i = 0; i < texels; i++) {
-            for (c = 0; c < 3; c++) levels[m][i * 4 + c] = wgf_gfx_priv_environment_half_from_float(cube->mips[m][i * 3 + c]);
+            for (c = 0; c < 3; c++)
+                levels[m][i * 4 + c] = wgf_gfx_priv_environment_half_from_float(cube->mips[m][i * 3 + c]);
             levels[m][i * 4 + 3] = wgf_gfx_priv_environment_half_from_float(1.0f);
         }
         sizes[m] = texels * 4 * sizeof(uint16_t);
@@ -887,7 +891,8 @@ static wgf_core_priv_load_step_t prepare_step(void *data)
                 box_mips(&p->source);
                 free(image->rgb);
                 image->rgb = NULL;
-                if (!cube_alloc(&p->prefiltered, WGF_GFX_PRIV_ENVIRONMENT_CUBE_SIZE, WGF_GFX_PRIV_ENVIRONMENT_MIP_COUNT)) {
+                if (!cube_alloc(&p->prefiltered, WGF_GFX_PRIV_ENVIRONMENT_CUBE_SIZE,
+                                WGF_GFX_PRIV_ENVIRONMENT_MIP_COUNT)) {
                     break;
                 }
                 p->row = p->face = p->mip = 0;

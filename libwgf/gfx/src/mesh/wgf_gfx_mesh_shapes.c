@@ -232,12 +232,14 @@ bool wgf_gfx_priv_mesh_shape_cone(float radius, float height, int segments, wgf_
     for (int c = 0; c < segments; c++) {
         const float a0 = 2.0f * PI * (float)c / (float)segments, a1 = 2.0f * PI * (float)(c + 1) / (float)segments;
         const float am = 0.5f * (a0 + a1);
-        const int tip = vertex(&b, 0.0f, height * 0.5f, 0.0f, wgf_trig_cos(am) * height, radius, -wgf_trig_sin(am) * height,
-                               ((float)c + 0.5f) / (float)segments, 0.0f);
-        const int base0 = vertex(&b, radius * wgf_trig_cos(a0), -height * 0.5f, -radius * wgf_trig_sin(a0), wgf_trig_cos(a0) * height,
-                                 radius, -wgf_trig_sin(a0) * height, (float)c / (float)segments, 1.0f);
-        const int base1 = vertex(&b, radius * wgf_trig_cos(a1), -height * 0.5f, -radius * wgf_trig_sin(a1), wgf_trig_cos(a1) * height,
-                                 radius, -wgf_trig_sin(a1) * height, (float)(c + 1) / (float)segments, 1.0f);
+        const int tip = vertex(&b, 0.0f, height * 0.5f, 0.0f, wgf_trig_cos(am) * height, radius,
+                               -wgf_trig_sin(am) * height, ((float)c + 0.5f) / (float)segments, 0.0f);
+        const int base0 = vertex(&b, radius * wgf_trig_cos(a0), -height * 0.5f, -radius * wgf_trig_sin(a0),
+                                 wgf_trig_cos(a0) * height, radius, -wgf_trig_sin(a0) * height,
+                                 (float)c / (float)segments, 1.0f);
+        const int base1 = vertex(&b, radius * wgf_trig_cos(a1), -height * 0.5f, -radius * wgf_trig_sin(a1),
+                                 wgf_trig_cos(a1) * height, radius, -wgf_trig_sin(a1) * height,
+                                 (float)(c + 1) / (float)segments, 1.0f);
         triangle(&b, tip, base0, base1);
     }
     disc(&b, radius, -height * 0.5f, -1.0f, segments);

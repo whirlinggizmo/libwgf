@@ -208,7 +208,8 @@ static double step(int index)
         expect(wgf_sound_add_segment(sound, "mid", 0.25f, 0.75f) && wgf_sound_add_segment(sound, "tail", 0.9f, 5.0f),
                "segments added, one ending past the sound");
         voice = wgf_voice_create(sound);
-        expect(!wgf_voice_set_segment(voice, "nope") && !wgf_voice_set_segment(voice, NULL), "an unknown segment refused");
+        expect(!wgf_voice_set_segment(voice, "nope") && !wgf_voice_set_segment(voice, NULL),
+               "an unknown segment refused");
         expect(wgf_voice_set_segment(voice, "mid") && strcmp(wgf_voice_get_segment(voice), "mid") == 0 &&
                    wgf_voice_get_state(voice) == WGF_PLAY_STATE_STOPPED && wgf_voice_get_position(voice) == 0.0f,
                "a segment selected while STOPPED: STOPPED at its start");

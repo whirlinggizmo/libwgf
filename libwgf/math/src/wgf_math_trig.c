@@ -9,7 +9,8 @@
  * reduction to within pi/4 of a multiple of pi/2 (pi/2 in three parts, fdlibm's, so the
  * reduction is exact well past any angle a game turns through), then a polynomial fitted
  * to a float's precision (the C library's way: within an ulp, and nearly always the nearest
- * float); atan reduced to |x| <= tan(pi/32), its polynomial to a double's precision. Each step is its own statement, so no compiler fuses a multiply and an add into an
+ * float); atan reduced to |x| <= tan(pi/32), its polynomial to a double's precision.
+ * Each step is its own statement, so no compiler fuses a multiply and an add into an
  * FMA, which a target without one would round differently; compiled here once, with
  * libwgf's flags, rather than inlined into every caller. No C library trigonometry is
  * called, so a page whose own calls are these links none. */

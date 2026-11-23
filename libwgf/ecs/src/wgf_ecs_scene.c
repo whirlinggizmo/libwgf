@@ -90,7 +90,8 @@ typedef struct kind_t {
     {"texture", V_TEXT}, {"source", V_NUM4}, {"frames", V_NUM4}, {"rate", V_NUM}, {"emitting", V_BOOL},                \
         {"max", V_INT}, {"life", V_NUM2}, {"burst", V_INT}, {"prewarm", V_NUM}, {"drag", V_NUM}, {"inherit", V_NUM},   \
         {"stretch", V_NUM}, {"size", V_NUM23}, {"color", V_COLOR2}, {"palette", V_COLORS}, {"spin", V_NUM2},           \
-        {"size_keys", V_SIZE_KEYS}, {"color_keys", V_COLOR_KEYS}, {"alpha", V_ALPHA}, {"cutoff", V_NUM}, {"seed", V_INT}, {"ending", V_BOOL}, {"lingering", V_BOOL},            \
+        {"size_keys", V_SIZE_KEYS}, {"color_keys", V_COLOR_KEYS}, {"alpha", V_ALPHA}, {"cutoff", V_NUM},               \
+        {"seed", V_INT}, {"ending", V_BOOL}, {"lingering", V_BOOL},                                                    \
         {"spawn_shell", V_BOOL}, {"aligned", V_BOOL}, {"wander", V_NUM2}, {"orbit", V_NUM2}, {"pulse", V_NUM2},       \
         {"local_space", V_BOOL}, {"visible", V_BOOL}, {"pickable", V_BOOL}
 
@@ -350,12 +351,15 @@ static bool parse_value(int type, const char *text, value_t *v)
                                                                                       : -1));
             return v->n[0] >= 0;
         case V_ALIGN: {
-            static const char *const across[] = {"left", "center", "right"}, *const down[] = {"top", "middle", "bottom"};
+            static const char *const across[] = {"left", "center", "right"},
+                              *const down[] = {"top", "middle", "bottom"};
             const char *comma = strchr(text, ',');
             int i, a = -1, d = -1;
             if (comma == NULL) return false;
             for (i = 0; i < 3; i++) {
-                if (strlen(across[i]) == (size_t)(comma - text) && strncmp(text, across[i], (size_t)(comma - text)) == 0) a = i;
+                if (strlen(across[i]) == (size_t)(comma - text) &&
+                    strncmp(text, across[i], (size_t)(comma - text)) == 0)
+                    a = i;
                 if (strcmp(comma + 1, down[i]) == 0) d = i;
             }
             v->n[0] = a;
@@ -727,7 +731,8 @@ wgf_ecs_priv_scene_data_t *wgf_ecs_priv_scene_parse(const char *text, size_t siz
             if (kinds[kind].role == ROLE_KIND) { /* one kind, its own or its prefab's */
                 const int inherited = thing->from >= 0 ? kind_of(data, thing->from) : -1;
                 if ((thing->kind >= 0 && thing->kind != kind) || (inherited >= 0 && inherited != kind)) {
-                    fail(&parser, "an actor is one kind: put the other in a part of it (a block at its path/<name>)", words[0]);
+                    fail(&parser, "an actor is one kind: put the other in a part of it (a block at its path/<name>)",
+                         words[0]);
                     break;
                 }
                 thing->kind = kind;
@@ -739,7 +744,8 @@ wgf_ecs_priv_scene_data_t *wgf_ecs_priv_scene_parse(const char *text, size_t siz
         }
     }
     if (!parser.failed && !header) fail(&parser, "empty: the first line is `wgf-scene 2`", NULL);
-    if (!parser.failed && open >= 0) fail(&parser, "the file ended inside an actor or prefab: its `end` is missing", NULL);
+    if (!parser.failed && open >= 0)
+        fail(&parser, "the file ended inside an actor or prefab: its `end` is missing", NULL);
     free(parser.scratch);
     if (parser.failed) {
         wgf_ecs_priv_scene_data_free(data);
@@ -953,7 +959,8 @@ static void apply_sound(wgf_actor_t e, const line_t *line, value_t *v)
         }
     }
     if (path != NULL) {
-        const wgf_sound_t sound = path[0] != '\0' ? (streamed ? wgf_sound_create_streamed(path) : wgf_sound_create(path)) : 0;
+        const wgf_sound_t sound =
+            path[0] != '\0' ? (streamed ? wgf_sound_create_streamed(path) : wgf_sound_create(path)) : 0;
         wgf_voice_set_sound(wgf_actor_get_voice(e), sound);
         if (sound != 0) wgf_resource_release(sound);
     }
@@ -970,10 +977,12 @@ static void apply_thing(const wgf_ecs_priv_scene_data_t *data, const thing_t *th
     }
     for (i = 0; i < thing->count; i++) {
         const line_t *line = &thing->lines[i];
-        if (kinds[line->kind].role == ROLE_COMPONENT) wgf_actor_add_component(actor, (wgf_component_t)kinds[line->kind].what);
+        if (kinds[line->kind].role == ROLE_COMPONENT)
+            wgf_actor_add_component(actor, (wgf_component_t)kinds[line->kind].what);
         if (kinds[line->kind].role == ROLE_BEHAVIOR) {
             for (j = 0; j < line->count; j++) { /* name= adds one; without it, the last one's parameters */
-                if (strcmp(line->settings[j].key, "name") == 0) *behavior = wgf_actor_add_behavior(actor, line->settings[j].value);
+                if (strcmp(line->settings[j].key, "name") == 0)
+                    *behavior = wgf_actor_add_behavior(actor, line->settings[j].value);
             }
             if (*behavior == 0) {
                 wgf_log_warn("wgf_scene: line %d: parameters for a behavior, but the actor has none yet", line->number);

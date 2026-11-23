@@ -313,7 +313,8 @@ static bool grow_bounds(wgf_actor_t actor, wgf_vec3_t *lo, wgf_vec3_t *hi, bool 
     int i, n;
     wgf_vec3_t a, b;
     if (depth > 256) return any;
-    if (wgf_actor_get_kind(actor) == WGF_ACTOR_KIND_MODEL && wgf_gfx_priv_mesh_get_bounds(wgf_model_get_mesh(actor), &a, &b)) {
+    if (wgf_actor_get_kind(actor) == WGF_ACTOR_KIND_MODEL &&
+        wgf_gfx_priv_mesh_get_bounds(wgf_model_get_mesh(actor), &a, &b)) {
         const wgf_mat4_t world = wgf_gfx_priv_actor_get_world_matrix(actor);
         int c;
         for (c = 0; c < 8; c++) {

@@ -128,10 +128,12 @@ void wgf_audio_priv_spatial(const wgf_audio_priv_voice_t *voice_ptr, float *gain
     *gain = 1.0f;
     *pan = voice_ptr->pan;
     if (!voice_ptr->spatial) return;
-    dx = voice_ptr->place[0] - listener[0], dy = voice_ptr->place[1] - listener[1], dz = voice_ptr->place[2] - listener[2];
+    dx = voice_ptr->place[0] - listener[0], dy = voice_ptr->place[1] - listener[1],
+    dz = voice_ptr->place[2] - listener[2];
     d = sqrtf(dx * dx + dy * dy + dz * dz);
     if (d >= voice_ptr->range[1]) *gain = 0.0f;
-    else if (d > voice_ptr->range[0]) *gain = 1.0f - (d - voice_ptr->range[0]) / (voice_ptr->range[1] - voice_ptr->range[0]);
+    else if (d > voice_ptr->range[0])
+        *gain = 1.0f - (d - voice_ptr->range[0]) / (voice_ptr->range[1] - voice_ptr->range[0]);
     /* its side: along the listener's right, facing x up (y) */
     rx = -facing[2], rz = facing[0];
     len = sqrtf(rx * rx + rz * rz);

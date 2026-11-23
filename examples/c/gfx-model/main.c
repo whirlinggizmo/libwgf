@@ -126,7 +126,8 @@ static void frame(void *user)
                                         : "O: the camera   C: fly it   H: the headlights",
                   12, 64, 16, WGF_COLOR_LIGHTGRAY);
     if (g.fly != WGF_FLY_MODE_NONE) {
-        wgf_draw_text(0, g.fly == WGF_FLY_MODE_FREE ? "free: mouse looks, WASD moves, Space / Ctrl up and down, ESC lands"
+        wgf_draw_text(0, g.fly == WGF_FLY_MODE_FREE ? "free: mouse looks, WASD moves, Space / Ctrl up and down, "
+                                                      "ESC lands"
                                                     : "first person: mouse looks, WASD walks, ESC lands",
                       12, 86, 16, WGF_COLOR_GRAY);
     }

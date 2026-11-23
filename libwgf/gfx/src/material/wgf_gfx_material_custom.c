@@ -101,7 +101,8 @@ static const wgf_gfx_priv_shader_t *bind(wgf_gfx_priv_material_t *material_ptr)
         return NULL;
     }
     if (custom->bound) return shader;
-    if (shader->block_size[WGF_GFX_PRIV_SHADER_BLOCK_FS_PARAMS] + shader->block_size[WGF_GFX_PRIV_SHADER_BLOCK_VS_PARAMS] >
+    if (shader->block_size[WGF_GFX_PRIV_SHADER_BLOCK_FS_PARAMS] +
+            shader->block_size[WGF_GFX_PRIV_SHADER_BLOCK_VS_PARAMS] >
         BLOCK_MAX) {
         if (!custom->told) wgf_log_warn("wgf_gfx_material: its shader's parameters take more than %d bytes", BLOCK_MAX);
         custom->told = true;

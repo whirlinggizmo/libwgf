@@ -406,7 +406,8 @@ static void smooth_normals(const float *positions, int vertex_count, const uint3
 {
     int i;
     for (i = 0; i + 2 < index_count; i += 3) {
-        const float *a = &positions[indices[i] * 3], *b = &positions[indices[i + 1] * 3], *c = &positions[indices[i + 2] * 3];
+        const float *a = &positions[indices[i] * 3], *b = &positions[indices[i + 1] * 3],
+                    *c = &positions[indices[i + 2] * 3];
         const wgf_vec3_t n = wgf_vec3_cross(wgf_vec3_make(b[0] - a[0], b[1] - a[1], b[2] - a[2]),
                                             wgf_vec3_make(c[0] - a[0], c[1] - a[1], c[2] - a[2]));
         int k;

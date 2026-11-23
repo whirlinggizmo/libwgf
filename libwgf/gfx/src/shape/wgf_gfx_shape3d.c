@@ -153,7 +153,8 @@ float wgf_shape3d_get_radius(wgf_actor_t shape)
 {
     const wgf_gfx_priv_actor_t *actor_ptr = shape_of(shape);
     if (actor_ptr == NULL) return 0.0f;
-    return actor_ptr->as.shape3d.kind == WGF_SHAPE3D_KIND_SPHERE || actor_ptr->as.shape3d.kind == WGF_SHAPE3D_KIND_CIRCLE
+    return actor_ptr->as.shape3d.kind == WGF_SHAPE3D_KIND_SPHERE ||
+                   actor_ptr->as.shape3d.kind == WGF_SHAPE3D_KIND_CIRCLE
                ? actor_ptr->as.shape3d.dim[0]
                : 0.0f;
 }
@@ -161,14 +162,16 @@ float wgf_shape3d_get_radius(wgf_actor_t shape)
 wgf_vec3_t wgf_shape3d_get_line_start(wgf_actor_t shape)
 {
     const wgf_gfx_priv_actor_t *actor_ptr = shape_of(shape);
-    if (actor_ptr == NULL || actor_ptr->as.shape3d.kind != WGF_SHAPE3D_KIND_LINE) return wgf_vec3_make(0.0f, 0.0f, 0.0f);
+    if (actor_ptr == NULL || actor_ptr->as.shape3d.kind != WGF_SHAPE3D_KIND_LINE)
+        return wgf_vec3_make(0.0f, 0.0f, 0.0f);
     return wgf_vec3_make(actor_ptr->as.shape3d.dim[0], actor_ptr->as.shape3d.dim[1], actor_ptr->as.shape3d.dim[2]);
 }
 
 wgf_vec3_t wgf_shape3d_get_line_end(wgf_actor_t shape)
 {
     const wgf_gfx_priv_actor_t *actor_ptr = shape_of(shape);
-    if (actor_ptr == NULL || actor_ptr->as.shape3d.kind != WGF_SHAPE3D_KIND_LINE) return wgf_vec3_make(0.0f, 0.0f, 0.0f);
+    if (actor_ptr == NULL || actor_ptr->as.shape3d.kind != WGF_SHAPE3D_KIND_LINE)
+        return wgf_vec3_make(0.0f, 0.0f, 0.0f);
     return wgf_vec3_make(actor_ptr->as.shape3d.dim[3], actor_ptr->as.shape3d.dim[4], actor_ptr->as.shape3d.dim[5]);
 }
 

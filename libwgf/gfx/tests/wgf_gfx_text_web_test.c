@@ -99,7 +99,8 @@ static void run_test(void)
         const int left = lit(0, 20, 32, 44), right_half = lit(32, 20, 64, 44);
         expect(left > 20 && right_half > 20, "centered: ink on both sides of its position");
         expect(left * 2 > right_half && right_half * 2 > left, "and about evenly");
-        expect(lit(0, 0, 64, 18) == 0 && lit(0, 46, 64, 64) == 0, "middle: about its position, nothing far above or below");
+        expect(lit(0, 0, 64, 18) == 0 && lit(0, 46, 64, 64) == 0,
+               "middle: about its position, nothing far above or below");
     }
     wgf_actor_set_visible(centered, false);
     right = wgf_text_create(0);

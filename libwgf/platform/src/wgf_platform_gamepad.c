@@ -64,7 +64,8 @@ static void send_rumble(int pad, float low, float high, float seconds)
 static void install(void)
 {
     static const wgf_platform_priv_pads_t hooks = {wgf_platform_priv_gamepad_open, wgf_platform_priv_gamepad_close,
-                                                   wgf_platform_priv_gamepad_begin_frame, wgf_platform_priv_gamepad_end_tick,
+                                                   wgf_platform_priv_gamepad_begin_frame,
+                                                   wgf_platform_priv_gamepad_end_tick,
                                                    wgf_platform_priv_gamepad_end_frame};
     wgf_platform_priv_set_pads(&hooks);
 }
@@ -208,7 +209,8 @@ static const wgf_platform_priv_gamepad_t *connected(int pad)
 
 static bool valid_button(int pad, wgf_gamepad_button_t button)
 {
-    return pad >= 0 && pad < WGF_PLATFORM_PRIV_GAMEPADS && (int)button >= 0 && (int)button < WGF_PLATFORM_PRIV_GAMEPAD_BUTTONS;
+    return pad >= 0 && pad < WGF_PLATFORM_PRIV_GAMEPADS && (int)button >= 0 &&
+           (int)button < WGF_PLATFORM_PRIV_GAMEPAD_BUTTONS;
 }
 
 static const edges_t *edges_of(int pad)

@@ -192,7 +192,8 @@ RefConst<Shape> MakeShape(const wgf_physics3d_priv_body_desc_t &d)
             if (d.points == nullptr || d.point_count < 4) return nullptr;
             Array<Vec3> points;
             points.reserve(d.point_count);
-            for (int i = 0; i < d.point_count; i++) points.push_back(Vec3(d.points[3 * i], d.points[3 * i + 1], d.points[3 * i + 2]));
+            for (int i = 0; i < d.point_count; i++)
+                points.push_back(Vec3(d.points[3 * i], d.points[3 * i + 1], d.points[3 * i + 2]));
             ConvexHullShapeSettings settings(points);
             Shape::ShapeResult result = settings.Create();
             return result.IsValid() ? result.Get() : nullptr;
@@ -202,7 +203,8 @@ RefConst<Shape> MakeShape(const wgf_physics3d_priv_body_desc_t &d)
             VertexList vertices;
             IndexedTriangleList triangles;
             vertices.reserve(d.point_count);
-            for (int i = 0; i < d.point_count; i++) vertices.push_back(Float3(d.points[3 * i], d.points[3 * i + 1], d.points[3 * i + 2]));
+            for (int i = 0; i < d.point_count; i++)
+                vertices.push_back(Float3(d.points[3 * i], d.points[3 * i + 1], d.points[3 * i + 2]));
             for (int i = 0; i + 2 < d.index_count; i += 3) {
                 if (d.indices[i] >= uint32(d.point_count) || d.indices[i + 1] >= uint32(d.point_count) ||
                     d.indices[i + 2] >= uint32(d.point_count)) {
@@ -417,7 +419,8 @@ uint32_t wgf_physics3d_priv_jolt_body_create(const wgf_physics3d_priv_body_desc_
         settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
         settings.mMassPropertiesOverride.mMass = d->mass;
     }
-    if (motion == EMotionType::Static && d->sensor) settings.mMotionType = EMotionType::Kinematic; // a sensor moves with its actor
+    // a sensor moves with its actor
+    if (motion == EMotionType::Static && d->sensor) settings.mMotionType = EMotionType::Kinematic;
     BodyInterface &bodies = world->system.GetBodyInterface();
     Body *body = bodies.CreateBody(settings);
     if (body == nullptr) return WGF_PHYSICS3D_PRIV_NO_BODY; // out of bodies
@@ -561,7 +564,8 @@ int wgf_physics3d_priv_jolt_cast_shape(int shape, const float size[3], const flo
     if (dir.LengthSq() < 1e-12f) return 0;
     RefConst<Shape> cast = QueryShape(shape, size);
     const RShapeCast sweep =
-        RShapeCast::sFromWorldTransform(cast, Vec3::sOne(), RMat44::sTranslation(V(origin)), dir.Normalized() * distance);
+        RShapeCast::sFromWorldTransform(cast, Vec3::sOne(), RMat44::sTranslation(V(origin)),
+                                        dir.Normalized() * distance);
     ShapeCastSettings settings;
     settings.mBackFaceModeTriangles = EBackFaceMode::IgnoreBackFaces;
     AllHitCollisionCollector<CastShapeCollector> collector;
@@ -575,7 +579,8 @@ int wgf_physics3d_priv_jolt_cast_shape(int shape, const float size[3], const flo
         if (!lock.Succeeded()) continue;
         const Vec3 axis = r.mPenetrationAxis.LengthSq() > 1e-12f ? -r.mPenetrationAxis.Normalized() : -dir.Normalized();
         hits.push_back({lock.GetBody().GetUserData(),
-                        {float(r.mContactPointOn2.GetX()), float(r.mContactPointOn2.GetY()), float(r.mContactPointOn2.GetZ())},
+                        {float(r.mContactPointOn2.GetX()), float(r.mContactPointOn2.GetY()),
+                         float(r.mContactPointOn2.GetZ())},
                         {axis.GetX(), axis.GetY(), axis.GetZ()},
                         r.mFraction * distance});
     }

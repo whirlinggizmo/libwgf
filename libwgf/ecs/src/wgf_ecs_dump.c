@@ -161,8 +161,10 @@ static void dump_sprite(out_t *out, wgf_actor_t actor)
     if (wgf_sprite_get_alpha_mode(actor) != WGF_ALPHA_MODE_BLEND) {
         put(out, " alpha=%s", alpha_modes[wgf_sprite_get_alpha_mode(actor)]);
     }
-    if (wgf_sprite_get_alpha_mode(actor) == WGF_ALPHA_MODE_MASK) put(out, " cutoff=%.9g", wgf_sprite_get_alpha_cutoff(actor));
-    if (wgf_sprite_get_facing(actor) != WGF_SPRITE_FACING_CAMERA) put(out, " facing=%s", facings[wgf_sprite_get_facing(actor)]);
+    if (wgf_sprite_get_alpha_mode(actor) == WGF_ALPHA_MODE_MASK)
+        put(out, " cutoff=%.9g", wgf_sprite_get_alpha_cutoff(actor));
+    if (wgf_sprite_get_facing(actor) != WGF_SPRITE_FACING_CAMERA)
+        put(out, " facing=%s", facings[wgf_sprite_get_facing(actor)]);
     if (wgf_sprite_get_pick_alpha(actor) > 0.0f) put(out, " pick_alpha=%.9g", wgf_sprite_get_pick_alpha(actor));
     end_kind(out, actor);
 }
@@ -177,7 +179,8 @@ static void dump_text(out_t *out, wgf_actor_t actor)
     put_color(out, "color", wgf_text_get_color(actor));
     put(out, " wrap=%.9g align=%s,%s", wgf_text_get_wrap_width(actor), across[wgf_text_get_halign(actor)],
         down[wgf_text_get_valign(actor)]);
-    if (wgf_text_get_facing(actor) != WGF_SPRITE_FACING_CAMERA) put(out, " facing=%s", facings[wgf_text_get_facing(actor)]);
+    if (wgf_text_get_facing(actor) != WGF_SPRITE_FACING_CAMERA)
+        put(out, " facing=%s", facings[wgf_text_get_facing(actor)]);
     end_kind(out, actor);
 }
 
@@ -314,9 +317,9 @@ static void dump_lines(out_t *out, wgf_actor_t e, const char *pad)
     }
     if (wgf_actor_has_component(e, WGF_COMPONENT_ARCADE2D)) {
         const wgf_vec2_t size = wgf_arcade2d_get_size(e), velocity = wgf_arcade2d_get_velocity(e);
-        put(out, "%s    arcade2d size=%.9g,%.9g velocity=%.9g,%.9g gravity=%.9g max_fall=%.9g solid_mask=%d\n", pad, size.x,
-            size.y, velocity.x, velocity.y, wgf_arcade2d_get_gravity(e), wgf_arcade2d_get_max_fall_speed(e),
-            wgf_arcade2d_get_solid_mask(e));
+        put(out, "%s    arcade2d size=%.9g,%.9g velocity=%.9g,%.9g gravity=%.9g max_fall=%.9g solid_mask=%d\n",
+            pad, size.x, size.y, velocity.x, velocity.y, wgf_arcade2d_get_gravity(e),
+            wgf_arcade2d_get_max_fall_speed(e), wgf_arcade2d_get_solid_mask(e));
     }
     if (wgf_actor_has_component(e, WGF_COMPONENT_VOICE)) {
         put(out, "%s", pad);

@@ -64,7 +64,8 @@ static bool any_pending(void)
                    wgf_resource_get_status(garbage[0]) == WGF_RESOURCE_STATUS_PENDING ||
                    wgf_resource_get_status(garbage[1]) == WGF_RESOURCE_STATUS_PENDING;
     for (int f = 0; f < 3; f++) {
-        for (int s = 0; s < 2; s++) pending = pending || wgf_resource_get_status(sounds[f][s]) == WGF_RESOURCE_STATUS_PENDING;
+        for (int s = 0; s < 2; s++)
+            pending = pending || wgf_resource_get_status(sounds[f][s]) == WGF_RESOURCE_STATUS_PENDING;
     }
     return pending;
 }
@@ -88,7 +89,8 @@ static void check_from_samples(void)
                fabsf(wgf_sound_get_duration(made) - 0.1f) < 1e-6f,
            "made from samples: READY at once, a tenth of a second");
     /* near, not exact: Chromium's buffer, read back, differed from what was given by about 2e-4 near its start */
-    expect(fabs(buffer_sample((int)made, 0, 1000) - samples[2000]) < 0.01 && fabs(buffer_sample((int)made, 1, 1000) + 0.25) < 0.01,
+    expect(fabs(buffer_sample((int)made, 0, 1000) - samples[2000]) < 0.01 &&
+               fabs(buffer_sample((int)made, 1, 1000) + 0.25) < 0.01,
            "its buffer holds them, a channel apart");
     voice = wgf_voice_create(made);
     expect(voice != 0 && wgf_voice_play(voice) && wgf_voice_get_state(voice) == WGF_PLAY_STATE_PLAYING, "and plays");
@@ -124,7 +126,8 @@ static void check(void)
     for (int f = 0; f < 3; f++) {
         for (int s = 0; s < 2; s++) wgf_resource_release(sounds[f][s]);
     }
-    expect(wgf_resource_get_status(sounds[1][0]) == WGF_RESOURCE_STATUS_NONE && wgf_sound_get_duration(sounds[1][0]) == 0.0f,
+    expect(wgf_resource_get_status(sounds[1][0]) == WGF_RESOURCE_STATUS_NONE &&
+               wgf_sound_get_duration(sounds[1][0]) == 0.0f,
            "released: gone");
 }
 

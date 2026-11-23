@@ -224,7 +224,8 @@ static void frame(void *user)
             for (i = 0; i < TIMED; i++) sum += sorted[i];
             qsort(sorted, TIMED, sizeof(double), compare);
             mean = sum / TIMED;
-            printf("{\"contender\":\"libwgf\",\"draw\":\"%s\",\"target\":\"" TARGET "\",\"mode\":\"count\",\"count\":%d,\"asked\":%d,"
+            printf("{\"contender\":\"libwgf\",\"draw\":\"%s\",\"target\":\"" TARGET "\",\"mode\":\"count\","
+                   "\"count\":%d,\"asked\":%d,"
                    "\"limit\":%s,\"mean_ms\":%.6f,\"median_ms\":%.6f,\"p95_ms\":%.6f,"
                    "\"fps\":%.3f}\n",
                    b.batched ? "batch" : "actors", b.count, b.asked, b.limit ? "true" : "false", mean,
@@ -239,7 +240,8 @@ static void frame(void *user)
                 b.max_count = b.count;
                 spawn(b.increment);
             } else {
-                printf("{\"contender\":\"libwgf\",\"draw\":\"%s\",\"target\":\"" TARGET "\",\"mode\":\"ramp\",\"max_count\":%d,"
+                printf("{\"contender\":\"libwgf\",\"draw\":\"%s\",\"target\":\"" TARGET "\",\"mode\":\"ramp\","
+                       "\"max_count\":%d,"
                        "\"limit\":%s,\"last_fps\":%.3f}\n",
                        b.batched ? "batch" : "actors", b.max_count, b.limit ? "true" : "false", fps);
                 fflush(stdout);

@@ -217,7 +217,8 @@ static int decoder_fill(wgf_audio_priv_decoder_t *dec)
             if (read == 0) break;
             if (read < 0) continue; /* a hole in the data: skipped */
             for (long f = 0; f < read; f++) {
-                for (int c = 0; c < dec->channels; c++) dec->buffer[(got + (uint64_t)f) * (uint64_t)dec->channels + (uint64_t)c] = planes[c][f];
+                for (int c = 0; c < dec->channels; c++)
+                    dec->buffer[(got + (uint64_t)f) * (uint64_t)dec->channels + (uint64_t)c] = planes[c][f];
             }
             got += (uint64_t)read;
         }
@@ -330,7 +331,8 @@ bool wgf_audio_priv_platform_pushed_start(wgf_handle_t voice, wgf_audio_priv_voi
     wgf_audio_priv_pushed_t *pushed = (wgf_audio_priv_pushed_t *)calloc(1, sizeof(*pushed));
     (void)voice;
     if (pushed == NULL) return false;
-    pushed->ring = (float *)malloc(sizeof(float) * (size_t)voice_ptr->pushed_capacity * (size_t)voice_ptr->pushed_channels);
+    pushed->ring =
+        (float *)malloc(sizeof(float) * (size_t)voice_ptr->pushed_capacity * (size_t)voice_ptr->pushed_channels);
     if (pushed->ring == NULL) {
         free(pushed);
         return false;

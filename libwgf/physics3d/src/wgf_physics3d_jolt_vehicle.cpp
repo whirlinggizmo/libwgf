@@ -32,7 +32,8 @@ bool ready = false; // this world's: its wheels' shape registered, its hooks set
 
 WheeledVehicleController *ControllerOf(int vehicle)
 {
-    if (wgf_jolt::System() == nullptr || vehicle < 0 || vehicle >= MAX_VEHICLES || vehicles[vehicle] == nullptr) return nullptr;
+    if (wgf_jolt::System() == nullptr || vehicle < 0 || vehicle >= MAX_VEHICLES || vehicles[vehicle] == nullptr)
+        return nullptr;
     return static_cast<WheeledVehicleController *>(vehicles[vehicle]->GetController());
 }
 
@@ -125,7 +126,8 @@ int wgf_physics3d_priv_jolt_vehicle_create(uint32_t body, const wgf_physics3d_pr
         settings.mAntiRollBars.push_back(bar);
     }
     const float share = controller->mDifferentials.empty() ? 1.0f : 1.0f / float(controller->mDifferentials.size());
-    for (VehicleDifferentialSettings &differential : controller->mDifferentials) differential.mEngineTorqueRatio = share;
+    for (VehicleDifferentialSettings &differential : controller->mDifferentials)
+        differential.mEngineTorqueRatio = share;
     settings.mController = controller;
 
     VehicleConstraint *vehicle = new VehicleConstraint(lock.GetBody(), settings);
@@ -182,7 +184,8 @@ void wgf_physics3d_priv_jolt_vehicle_set_anti_roll(int vehicle, float stiffness)
 
 float wgf_physics3d_priv_jolt_vehicle_get_slip(int vehicle, int wheel)
 {
-    if (ControllerOf(vehicle) == nullptr || wheel < 0 || wheel >= int(vehicles[vehicle]->GetWheels().size())) return 0.0f;
+    if (ControllerOf(vehicle) == nullptr || wheel < 0 || wheel >= int(vehicles[vehicle]->GetWheels().size()))
+        return 0.0f;
     const WheelWV *w = static_cast<const WheelWV *>(vehicles[vehicle]->GetWheel(wheel));
     if (!w->HasContact()) return 0.0f;
     // as Jolt's tire model measures it (the ground's speed at the contact against the

@@ -126,7 +126,8 @@ int main(void)
     stage = wgf_stage3d_create();
     expect(wgf_actor_get_kind(stage) == WGF_ACTOR_KIND_STAGE3D, "a stage is an actor of its type");
     expect(wgf_stage3d_get_camera(stage) == 0 && wgf_stage3d_get_ambient_intensity(stage) == 0.0f &&
-               wgf_stage3d_get_tonemap(stage) == WGF_STAGE3D_TONEMAP_NEUTRAL && wgf_stage3d_get_exposure(stage) == 0.0f &&
+               wgf_stage3d_get_tonemap(stage) == WGF_STAGE3D_TONEMAP_NEUTRAL &&
+               wgf_stage3d_get_exposure(stage) == 0.0f &&
                wgf_stage3d_is_culling(stage),
            "its defaults: no camera, no ambient, neutral, culling");
     expect(wgf_stage3d_set_ambient(stage, WGF_COLOR_WHITE, -2.0f) && wgf_stage3d_get_ambient_intensity(stage) == 0.0f &&
@@ -134,7 +135,8 @@ int main(void)
                wgf_stage3d_get_ambient_color(stage) == WGF_COLOR_BLUE,
            "ambient: its intensity clamped");
     expect(!wgf_stage3d_set_tonemap(stage, (wgf_stage3d_tonemap_t)5, 0.0f) &&
-               wgf_stage3d_set_tonemap(stage, WGF_STAGE3D_TONEMAP_ACES, 1.5f) && near(wgf_stage3d_get_exposure(stage), 1.5f),
+               wgf_stage3d_set_tonemap(stage, WGF_STAGE3D_TONEMAP_ACES, 1.5f) &&
+               near(wgf_stage3d_get_exposure(stage), 1.5f),
            "tone mapping, and one that isn't refused");
     group = wgf_actor_create();
     expect(!wgf_actor_set_parent(stage, group), "a stage is always a root");

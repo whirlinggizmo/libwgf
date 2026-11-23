@@ -143,7 +143,8 @@ class Draw {
 	    Sets or gets how immediate mode drawing after this call blends with what is under it.
 
 	    The modes are wgf_material.h's alpha modes: BLEND (the default), OPAQUE, ADD, MULTIPLY,
-	    and PREMULTIPLIED. MASK draws as BLEND, because immediate mode cuts nothing out.
+	    and PREMULTIPLIED. MASK draws as BLEND, because immediate mode cuts nothing out. The mode
+	    stays as set from frame to frame, until it is set again.
 
 	    The setter returns false for a `mode` that isn't an alpha mode.
 	**/
@@ -154,7 +155,8 @@ class Draw {
 	    Sets or gets how immediate mode drawing after this call blends with what is under it.
 
 	    The modes are wgf_material.h's alpha modes: BLEND (the default), OPAQUE, ADD, MULTIPLY,
-	    and PREMULTIPLIED. MASK draws as BLEND, because immediate mode cuts nothing out.
+	    and PREMULTIPLIED. MASK draws as BLEND, because immediate mode cuts nothing out. The mode
+	    stays as set from frame to frame, until it is set again.
 
 	    The setter returns false for a `mode` that isn't an alpha mode.
 	**/

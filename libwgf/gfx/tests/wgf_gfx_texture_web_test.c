@@ -136,7 +136,8 @@ static void on_frame(void *user)
         wgf_fs_task_destroy(task);
         image = wgf_texture_create("images/rgbw.png");
         missing = wgf_texture_create("images/missing.png");
-        expect(wgf_texture_set_sampling(image, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_FILTER_NEAREST),
+        expect(wgf_texture_set_sampling(image, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP,
+                                        WGF_TEXTURE_FILTER_NEAREST),
                "nearest sampling");
         step++;
     } else if (step == 2 && wgf_resource_get_status(image) != WGF_RESOURCE_STATUS_PENDING &&

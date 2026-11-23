@@ -215,7 +215,8 @@ static bool set_glyph(reading_t *r, long id, long x, long y, long width, long he
 
 static bool set_kerning(reading_t *r, long first, long second, long amount)
 {
-    if (!check_range(r, "kerning first", first, 0, 0x10FFFF) || !check_range(r, "kerning second", second, 0, 0x10FFFF) ||
+    if (!check_range(r, "kerning first", first, 0, 0x10FFFF) ||
+        !check_range(r, "kerning second", second, 0, 0x10FFFF) ||
         !check_range(r, "kerning amount", amount, -OFFSET_MOST, OFFSET_MOST))
         return false;
     if (!add_kerning(r, (uint32_t)first, (uint32_t)second, (int)amount)) {

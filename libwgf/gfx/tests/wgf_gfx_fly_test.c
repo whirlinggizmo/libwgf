@@ -127,7 +127,8 @@ int main(void)
     push_key(SAPP_EVENTTYPE_KEY_UP, SAPP_KEYCODE_D);
     frames(1);
     d = wgf_vec3_sub(wgf_actor_get_position(eye), at);
-    expect(near(wgf_vec3_length(d), 5.4f, 1e-2f) && near(d.x, -d.z, 1e-3f) && d.x > 0, "W and D: forward right, no faster");
+    expect(near(wgf_vec3_length(d), 5.4f, 1e-2f) && near(d.x, -d.z, 1e-3f) && d.x > 0,
+           "W and D: forward right, no faster");
 
     /* the mouse looks: right turns right, up looks up, the pitch clamped */
     wgf_fly_set_look(eye, 0, 0);
@@ -152,14 +153,16 @@ int main(void)
     at = wgf_actor_get_position(eye);
     hold(SAPP_KEYCODE_UP, 60);
     d = wgf_vec3_sub(wgf_actor_get_position(eye), at);
-    expect(near(d.y, 5.4f * sinf(0.5f), 1e-2f) && near(d.z, -5.4f * cosf(0.5f), 1e-2f), "Up: forward where it looks, rising");
+    expect(near(d.y, 5.4f * sinf(0.5f), 1e-2f) && near(d.z, -5.4f * cosf(0.5f), 1e-2f),
+           "Up: forward where it looks, rising");
     expect(wgf_fly_set_look(eye, 7.0f, 4.0f) && near(wgf_fly_get_look(eye).x, 7.0f - 6.2831853f, 1e-4f) &&
                near(wgf_fly_get_look(eye).y, 1.5533430f, 1e-5f),
            "a look set: the yaw wrapped, the pitch clamped");
 
     /* first person: on its plane, its height kept */
     wgf_actor_set_position(eye, 0, 1.7f, 0);
-    expect(wgf_fly_set_mode(eye, WGF_FLY_MODE_FIRST_PERSON) && wgf_fly_set_look(eye, 0, -0.8f), "first person, looking down");
+    expect(wgf_fly_set_mode(eye, WGF_FLY_MODE_FIRST_PERSON) && wgf_fly_set_look(eye, 0, -0.8f),
+           "first person, looking down");
     hold(SAPP_KEYCODE_W, 60);
     at = wgf_actor_get_position(eye);
     expect(at.y == 1.7f && near(at.z, -5.4f, 1e-2f), "W: 5.4 along the ground, at its height");
@@ -198,7 +201,8 @@ int main(void)
     wgf_input_set_pointer_captured(true);
     push_mouse(SAPP_EVENTTYPE_MOUSE_MOVE, SAPP_MOUSEBUTTON_INVALID, 100, 0);
     frames(1);
-    expect(near(wgf_fly_get_look(eye).x, 0, 1e-6f) && !wgf_mouse_is_locked(), "the pointer captured: not looking, let go");
+    expect(near(wgf_fly_get_look(eye).x, 0, 1e-6f) && !wgf_mouse_is_locked(),
+           "the pointer captured: not looking, let go");
     wgf_input_set_pointer_captured(false);
     frames(1);
     expect(wgf_mouse_is_locked(), "and locked again");
@@ -207,7 +211,8 @@ int main(void)
     expect(wgf_fly_set_look_held(eye, true) && wgf_fly_is_look_held(eye), "looking while held");
     push_mouse(SAPP_EVENTTYPE_MOUSE_MOVE, SAPP_MOUSEBUTTON_INVALID, 100, 0);
     frames(1);
-    expect(near(wgf_fly_get_look(eye).x, 0, 1e-6f) && !wgf_mouse_is_locked(), "not held: not looking, the pointer free");
+    expect(near(wgf_fly_get_look(eye).x, 0, 1e-6f) && !wgf_mouse_is_locked(),
+           "not held: not looking, the pointer free");
     push_mouse(SAPP_EVENTTYPE_MOUSE_DOWN, SAPP_MOUSEBUTTON_RIGHT, 0, 0);
     frames(1);
     expect(wgf_mouse_is_locked(), "held: locked");
@@ -259,14 +264,17 @@ int main(void)
     flat = wgf_camera2d_create();
     plain = wgf_actor_create();
     expect(!wgf_fly_set_mode(flat, WGF_FLY_MODE_FREE) && !wgf_fly_set_mode(plain, WGF_FLY_MODE_FREE) &&
-               !wgf_fly_set_mode(0, WGF_FLY_MODE_FREE) && !wgf_fly_set_speed(flat, 1) && !wgf_fly_set_look_held(plain, true),
+               !wgf_fly_set_mode(0, WGF_FLY_MODE_FREE) && !wgf_fly_set_speed(flat, 1) &&
+               !wgf_fly_set_look_held(plain, true),
            "only a 3D camera flies");
-    expect(!wgf_fly_set_mode(eye, (wgf_fly_mode_t)3) && !wgf_fly_set_mode(eye, (wgf_fly_mode_t)-1), "a mode that isn't one");
+    expect(!wgf_fly_set_mode(eye, (wgf_fly_mode_t)3) && !wgf_fly_set_mode(eye, (wgf_fly_mode_t)-1),
+           "a mode that isn't one");
     expect(!wgf_fly_set_speed(eye, -1) && !wgf_fly_set_speed(eye, NAN) && !wgf_fly_set_sensitivity(eye, -0.1f) &&
                !wgf_fly_set_turn_speed(eye, INFINITY) && !wgf_fly_set_look(eye, NAN, 0) &&
                !wgf_fly_set_look(eye, 0, INFINITY) && near(wgf_fly_get_speed(eye), 2, 1e-6f),
            "a negative or not finite setting, the one before kept");
-    expect(wgf_fly_get_speed(flat) == 0.0f && wgf_fly_get_mode(plain) == WGF_FLY_MODE_NONE && wgf_fly_get_look(0).x == 0.0f,
+    expect(wgf_fly_get_speed(flat) == 0.0f && wgf_fly_get_mode(plain) == WGF_FLY_MODE_NONE &&
+               wgf_fly_get_look(0).x == 0.0f,
            "getters of what isn't a 3D camera: 0");
     made = 0;
     {
@@ -283,7 +291,8 @@ int main(void)
         for (i = 1; i < 64; i++) wgf_actor_destroy(cameras[i], WGF_ACTOR_DESTROY_CHILDREN);
     }
     wgf_actor_destroy(eye, WGF_ACTOR_DESTROY_CHILDREN);
-    expect(!wgf_fly_set_mode(eye, WGF_FLY_MODE_FREE) && wgf_fly_get_speed(eye) == 0.0f, "a destroyed camera: refused, 0");
+    expect(!wgf_fly_set_mode(eye, WGF_FLY_MODE_FREE) && wgf_fly_get_speed(eye) == 0.0f,
+           "a destroyed camera: refused, 0");
     frames(1);
 
     wgf_actor_destroy(flat, WGF_ACTOR_DESTROY_CHILDREN);

@@ -310,7 +310,8 @@ static void on_frame(void *user)
     case 32:
         form();
         expect(chosen == 999, "the last item, laid out where scrolled to");
-        expect(list_activations == 0 && !wgf_ui_is_activated(), "choosing an item doesn't activate it; outside a UI: false");
+        expect(list_activations == 0 && !wgf_ui_is_activated(),
+               "choosing an item doesn't activate it; outside a UI: false");
         box = bounds("list"); /* the chosen item again */
         mouse(SAPP_EVENTTYPE_MOUSE_MOVE, box.x + 20, box.y + 4 + row * 3.5f);
         mouse(SAPP_EVENTTYPE_MOUSE_DOWN, box.x + 20, box.y + 4 + row * 3.5f);

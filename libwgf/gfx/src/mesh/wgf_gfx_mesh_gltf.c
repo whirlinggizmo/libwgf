@@ -288,8 +288,12 @@ static wgf_material_t create_gltf_material(prepared_t *prepared, const cgltf_mat
 
     if (material == 0 || src == NULL) return material;
     switch (src->alpha_mode) {
-        case cgltf_alpha_mode_mask: wgf_material_set_alpha_mode(material, WGF_ALPHA_MODE_MASK, src->alpha_cutoff); break;
-        case cgltf_alpha_mode_blend: wgf_material_set_alpha_mode(material, WGF_ALPHA_MODE_BLEND, src->alpha_cutoff); break;
+        case cgltf_alpha_mode_mask:
+            wgf_material_set_alpha_mode(material, WGF_ALPHA_MODE_MASK, src->alpha_cutoff);
+            break;
+        case cgltf_alpha_mode_blend:
+            wgf_material_set_alpha_mode(material, WGF_ALPHA_MODE_BLEND, src->alpha_cutoff);
+            break;
         default: break;
     }
     wgf_material_set_double_sided(material, src->double_sided);
@@ -385,8 +389,8 @@ static bool build_primitive(const cgltf_data *g, const cgltf_primitive *prim, in
     verts = (float *)calloc(vcount * stride, sizeof(float));
     icount = prim->indices != NULL ? prim->indices->count : vcount;
     indices = (uint32_t *)calloc(icount > 0 ? icount : 1, sizeof(uint32_t));
-    if (positions == NULL || normals == NULL || uvs[0] == NULL || uvs[1] == NULL || colors == NULL || tangents == NULL ||
-        verts == NULL || indices == NULL) {
+    if (positions == NULL || normals == NULL || uvs[0] == NULL || uvs[1] == NULL || colors == NULL ||
+        tangents == NULL || verts == NULL || indices == NULL) {
         goto done;
     }
 
@@ -780,8 +784,8 @@ static bool parse_model(prepared_t *prepared, int size)
     prepared->mesh_first = (int *)calloc(g->meshes_count + 1, sizeof(int));
     prepared->mesh_count = (int *)calloc(g->meshes_count + 1, sizeof(int));
     built = (int *)malloc((g->nodes_count + 1) * sizeof(int));
-    if (mesh->primitives == NULL || mesh->nodes == NULL || prepared->mesh_first == NULL || prepared->mesh_count == NULL ||
-        built == NULL || !parse_lights(mesh, g)) {
+    if (mesh->primitives == NULL || mesh->nodes == NULL || prepared->mesh_first == NULL ||
+        prepared->mesh_count == NULL || built == NULL || !parse_lights(mesh, g)) {
         free(built);
         return false;
     }
@@ -848,7 +852,8 @@ static void discard(void *data)
         for (i = 0; i < prepared->gltf->images_count; i++) {
             wgf_gfx_priv_texture_decoded_free(prepared->images[i].decoded);
             wgf_gfx_priv_texture_ktx_free(prepared->images[i].ktx_file);
-            if (prepared->images[i].texture != 0) wgf_resource_release(prepared->images[i].texture); /* materials hold theirs */
+            /* materials hold theirs */
+            if (prepared->images[i].texture != 0) wgf_resource_release(prepared->images[i].texture);
         }
     }
     free(prepared->images);

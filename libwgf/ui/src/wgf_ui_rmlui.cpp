@@ -141,7 +141,8 @@ public:
         return (Rml::CompiledGeometryHandle)geometry;
     }
 
-    void RenderGeometry(Rml::CompiledGeometryHandle handle, Rml::Vector2f translation, Rml::TextureHandle texture) override
+    void RenderGeometry(Rml::CompiledGeometryHandle handle, Rml::Vector2f translation,
+                        Rml::TextureHandle texture) override
     {
         const Geometry *geometry = (const Geometry *)handle;
         wgf_ui_priv_doc_draw(geometry->vertices.data(), (int)geometry->vertices.size(), geometry->indices.data(),
@@ -355,7 +356,10 @@ public:
                                       (int)geometry->indices.size(), translation.x, translation.y);
     }
 
-    void ReleaseShader(Rml::CompiledShaderHandle shader) override { wgf_ui_priv_doc_gradient_release((uintptr_t)shader); }
+    void ReleaseShader(Rml::CompiledShaderHandle shader) override
+    {
+        wgf_ui_priv_doc_gradient_release((uintptr_t)shader);
+    }
 
     /* the frame's drawing starts with no scissor */
     void Begin()
@@ -871,7 +875,8 @@ int wgf_ui_priv_rml_take_events(int number, int *out, int count)
 bool wgf_ui_priv_rml_element_alive(int slot)
 {
     if (element_at(slot) != nullptr) return true;
-    if (state != nullptr && slot > 0 && (size_t)slot <= state->slots.size() && state->slots[(size_t)slot - 1].handle != 0)
+    if (state != nullptr && slot > 0 && (size_t)slot <= state->slots.size() &&
+        state->slots[(size_t)slot - 1].handle != 0)
         free_slot(slot); /* gone since: its handle let go of now */
     return false;
 }

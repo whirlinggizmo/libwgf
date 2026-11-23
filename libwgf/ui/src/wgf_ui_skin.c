@@ -66,8 +66,9 @@ void wgf_ui_priv_set_patch_draw(wgf_ui_priv_patch_draw_t draw_patches)
 
 unsigned char *wgf_ui_priv_skin_patch(int widget, int part, int state)
 {
-    return valid((wgf_ui_widget_t)widget, (wgf_ui_part_t)part, (wgf_ui_state_t)state) ? &skins[widget][part][state].patch
-                                                                                    : NULL;
+    return valid((wgf_ui_widget_t)widget, (wgf_ui_part_t)part, (wgf_ui_state_t)state)
+               ? &skins[widget][part][state].patch
+               : NULL;
 }
 
 static bool draw(int widget, int part, int state, float x, float y, float width, float height, float alpha)
@@ -102,8 +103,10 @@ static bool draw_at(int widget, int part, int state, float x, float y, float alp
     const skin_t *skin = skin_of(widget, part, state, &dim);
     float width, height;
     if (skin == NULL) return false;
-    width = skin->source[2] > 0.0f && skin->source[3] > 0.0f ? skin->source[2] : (float)wgf_texture_get_width(skin->texture);
-    height = skin->source[2] > 0.0f && skin->source[3] > 0.0f ? skin->source[3] : (float)wgf_texture_get_height(skin->texture);
+    width = skin->source[2] > 0.0f && skin->source[3] > 0.0f ? skin->source[2]
+                                                             : (float)wgf_texture_get_width(skin->texture);
+    height = skin->source[2] > 0.0f && skin->source[3] > 0.0f ? skin->source[3]
+                                                              : (float)wgf_texture_get_height(skin->texture);
     return draw(widget, part, state, x - width * 0.5f, y - height * 0.5f, width, height, alpha);
 }
 

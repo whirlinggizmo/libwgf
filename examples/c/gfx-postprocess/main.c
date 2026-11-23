@@ -189,7 +189,8 @@ static void frame(void *user)
     lamp_x = 3.0f * sinf(g.time * 0.9f);
     lamp_z = 2.2f + 1.2f * cosf(g.time * 0.9f);
     wgf_actor_set_position(g.lamp, lamp_x, 1.4f, lamp_z);
-    wgf_actor_set_rotation(g.shapes[1], 0, g.time * 40.0f * 3.14159265f / 180.0f, g.time * 25.0f * 3.14159265f / 180.0f);
+    wgf_actor_set_rotation(g.shapes[1], 0, g.time * 40.0f * 3.14159265f / 180.0f,
+                           g.time * 25.0f * 3.14159265f / 180.0f);
 
     /* the effect's parameters are the material's: change them any frame */
     strength = g.breathing ? g.strength * (0.55f + 0.45f * sinf(g.time * 0.8f)) : g.strength;

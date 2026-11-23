@@ -58,8 +58,9 @@
  * and only neighbours alike share a draw. Before the frame's pass the shadow part, when a
  * light casts, draws the first such draw's casters into its map from the same records
  * (wgf_gfx_shadow.c); then the command draws the items with sokol_gfx, between the
- * immediate mode drawn before and after the stage, its background first. An environment's lighting and background are the
- * environment part's (wgf_gfx_environment.c), reached through its hooks: a program with
+ * immediate mode drawn before and after the stage, its background first. An environment's
+ * lighting and background are the environment part's (wgf_gfx_environment.c), reached
+ * through its hooks: a program with
  * none links none of it. A part, installed by the first stage made: its end of frame
  * forgets the frame's items, and its stop frees its pipelines and default textures. */
 
@@ -296,7 +297,8 @@ float wgf_stage3d_get_ambient_intensity(wgf_actor_t stage)
 bool wgf_stage3d_set_tonemap(wgf_actor_t stage, wgf_stage3d_tonemap_t tonemap, float exposure)
 {
     wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
-    if (actor_ptr == NULL || (int)tonemap < WGF_STAGE3D_TONEMAP_NONE || tonemap > WGF_STAGE3D_TONEMAP_ACES) return false;
+    if (actor_ptr == NULL || (int)tonemap < WGF_STAGE3D_TONEMAP_NONE || tonemap > WGF_STAGE3D_TONEMAP_ACES)
+        return false;
     actor_ptr->as.stage3d.tonemap = tonemap;
     actor_ptr->as.stage3d.exposure = exposure;
     return true;
@@ -363,7 +365,8 @@ bool wgf_stage3d_set_background(wgf_actor_t stage, wgf_environment_t environment
     wgf_gfx_priv_actor_t *actor_ptr = stage_of(stage);
     if (actor_ptr == NULL || (environment != 0 && !is_environment(environment))) return false;
     hold(&actor_ptr->as.stage3d.background, environment);
-    actor_ptr->as.stage3d.background_blur = environment != 0 ? (blur < 0.0f ? 0.0f : (blur > 1.0f ? 1.0f : blur)) : 0.0f;
+    actor_ptr->as.stage3d.background_blur =
+        environment != 0 ? (blur < 0.0f ? 0.0f : (blur > 1.0f ? 1.0f : blur)) : 0.0f;
     return true;
 }
 
@@ -522,7 +525,8 @@ typedef struct walk_models_t {
  * stays where it is on the screen (an orthographic camera's lines are its forward's). */
 static wgf_vec3_t toward_camera(const walk_models_t *w, wgf_vec3_t at, float offset)
 {
-    const wgf_vec3_t way = w->orthographic ? wgf_vec3_scale(w->forward, -1.0f) : wgf_vec3_normalize(wgf_vec3_sub(w->eye, at));
+    const wgf_vec3_t way = w->orthographic ? wgf_vec3_scale(w->forward, -1.0f)
+                                           : wgf_vec3_normalize(wgf_vec3_sub(w->eye, at));
     return wgf_vec3_scale(way, offset);
 }
 
@@ -813,8 +817,9 @@ static void material_sprite(const walk_models_t *w, const wgf_gfx_priv_actor_t *
     item->box_lo = wgf_vec3_sub(at, reach);
     item->box_hi = wgf_vec3_add(at, reach);
     item->light_count = material->shading == WGF_MATERIAL_SHADING_PBR
-                            ? wgf_gfx_priv_light_select(&frame.lights[draw->first_light], draw->light_count, item->box_lo,
-                                                        item->box_hi, item->lights, WGF_GFX_PRIV_MAX_DRAW_LIGHTS)
+                            ? wgf_gfx_priv_light_select(&frame.lights[draw->first_light], draw->light_count,
+                                                        item->box_lo, item->box_hi, item->lights,
+                                                        WGF_GFX_PRIV_MAX_DRAW_LIGHTS)
                             : 0;
     item_key(item, &key);
     item->group = key_hash(&key);
@@ -836,7 +841,8 @@ static void visit_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_pt
     float r;
     int mode;
     (void)actor;
-    if (actor_ptr->type != WGF_ACTOR_KIND_SPRITE || !wgf_gfx_priv_sprite_quad(actor_ptr, *world, &quad, &view, &sampler)) {
+    if (actor_ptr->type != WGF_ACTOR_KIND_SPRITE ||
+        !wgf_gfx_priv_sprite_quad(actor_ptr, *world, &quad, &view, &sampler)) {
         return;
     }
     at = wgf_mat4_get_translation(*world);
@@ -1004,7 +1010,8 @@ static void visit_text(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr,
     int k;
     if (actor_ptr->type != WGF_ACTOR_KIND_TEXT) return;
     kind = wgf_gfx_priv_actor_get_kind(WGF_ACTOR_KIND_TEXT); /* set: there is text */
-    if (kind == NULL || kind->place_3d == NULL || !kind->place_3d(actor_ptr, *world, &w->sprite_view, &plane, corners)) {
+    if (kind == NULL || kind->place_3d == NULL ||
+        !kind->place_3d(actor_ptr, *world, &w->sprite_view, &plane, corners)) {
         return;
     }
     at = wgf_mat4_get_translation(*world);

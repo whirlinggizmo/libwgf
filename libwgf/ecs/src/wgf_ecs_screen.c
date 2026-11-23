@@ -303,7 +303,8 @@ bool wgf_screen_add_stage(wgf_actor_t screen, wgf_actor_t stage)
     known_t *k = known_of(screen);
     const wgf_actor_kind_t kind = wgf_actor_get_kind(stage);
     int i;
-    if (k == NULL || (kind != WGF_ACTOR_KIND_STAGE2D && kind != WGF_ACTOR_KIND_STAGE3D) || k->stage_count == STAGES_MAX) {
+    if (k == NULL || (kind != WGF_ACTOR_KIND_STAGE2D && kind != WGF_ACTOR_KIND_STAGE3D) ||
+        k->stage_count == STAGES_MAX) {
         return false;
     }
     for (i = 0; i < k->stage_count; i++) {

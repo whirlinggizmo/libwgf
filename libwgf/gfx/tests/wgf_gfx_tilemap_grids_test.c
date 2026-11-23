@@ -44,38 +44,50 @@ static const unsigned char png_2x2[] = {
 
 /* Tileset A (gids 1 to 4) is the cells' size; tileset B (5 to 8) twice as tall. */
 #define TWO_TILESETS                                                                                                   \
-    " \"tilesets\": [{\"firstgid\": 1, \"name\": \"a\", \"image\": \"a.png\", \"tilewidth\": 16, \"tileheight\": 16,"   \
-    "  \"tilecount\": 4, \"columns\": 2}, {\"firstgid\": 5, \"name\": \"b\", \"image\": \"b.png\", \"tilewidth\": 16,"   \
+    " \"tilesets\": [{\"firstgid\": 1, \"name\": \"a\", \"image\": \"a.png\", \"tilewidth\": 16,"                      \
+    " \"tileheight\": 16,"                                                                                             \
+    "  \"tilecount\": 4, \"columns\": 2}, {\"firstgid\": 5, \"name\": \"b\", \"image\": \"b.png\","                    \
+    " \"tilewidth\": 16,"                                                                                              \
     "  \"tileheight\": 32, \"tilecount\": 4, \"columns\": 2}],"
 
-static const char tall[] = "{\"type\": \"map\", \"width\": 3, \"height\": 2, \"tilewidth\": 16, \"tileheight\": 16," TWO_TILESETS
+static const char tall[] = "{\"type\": \"map\", \"width\": 3, \"height\": 2,"
+                           " \"tilewidth\": 16, \"tileheight\": 16," TWO_TILESETS
                            " \"layers\": ["
-                           "  {\"type\": \"tilelayer\", \"name\": \"ground\", \"width\": 3, \"height\": 2, \"data\": [1, 5, 1, 5, 1, 1]},"
-                           "  {\"type\": \"tilelayer\", \"name\": \"flat\", \"width\": 3, \"height\": 2, \"data\": [1, 1, 1, 1, 2, 1]}]}";
+                           "  {\"type\": \"tilelayer\", \"name\": \"ground\", \"width\": 3, \"height\": 2,"
+                           " \"data\": [1, 5, 1, 5, 1, 1]},"
+                           "  {\"type\": \"tilelayer\", \"name\": \"flat\", \"width\": 3, \"height\": 2,"
+                           " \"data\": [1, 1, 1, 1, 2, 1]}]}";
 
-static const char left_up[] = "{\"type\": \"map\", \"renderorder\": \"left-up\", \"width\": 2, \"height\": 2, \"tilewidth\": 16,"
+static const char left_up[] = "{\"type\": \"map\", \"renderorder\": \"left-up\", \"width\": 2, \"height\": 2,"
+                              " \"tilewidth\": 16,"
                               " \"tileheight\": 16," TWO_TILESETS
-                              " \"layers\": [{\"type\": \"tilelayer\", \"name\": \"ground\", \"width\": 2, \"height\": 2,"
+                              " \"layers\": [{\"type\": \"tilelayer\", \"name\": \"ground\","
+                              " \"width\": 2, \"height\": 2,"
                               " \"data\": [5, 6, 7, 8]}]}";
 
 /* 32 by 32 tiles on 32 by 16 diamonds; tile 0 (gid 1) animated to tile 1 and back, a tenth of
  * a second each. */
 #define BLOCKS                                                                                                         \
-    " \"tilesets\": [{\"firstgid\": 1, \"name\": \"blocks\", \"image\": \"a.png\", \"tilewidth\": 32,"                  \
-    "  \"tileheight\": 32, \"tilecount\": 4, \"columns\": 2, \"tiles\": [{\"id\": 0, \"animation\": ["                  \
+    " \"tilesets\": [{\"firstgid\": 1, \"name\": \"blocks\","                                                          \
+    " \"image\": \"a.png\", \"tilewidth\": 32,"                                                                        \
+    "  \"tileheight\": 32, \"tilecount\": 4, \"columns\": 2,"                                                          \
+    " \"tiles\": [{\"id\": 0, \"animation\": ["                                                                        \
     "  {\"tileid\": 0, \"duration\": 100}, {\"tileid\": 1, \"duration\": 100}]}]}],"
 
-static const char iso[] = "{\"type\": \"map\", \"orientation\": \"isometric\", \"width\": 3, \"height\": 3, \"tilewidth\": 32,"
+static const char iso[] = "{\"type\": \"map\", \"orientation\": \"isometric\","
+                          " \"width\": 3, \"height\": 3, \"tilewidth\": 32,"
                           " \"tileheight\": 16," BLOCKS
                           " \"layers\": ["
                           "  {\"type\": \"tilelayer\", \"name\": \"ground\", \"width\": 3, \"height\": 3,"
                           "   \"data\": [2, 2, 2, 2, 1, 2, 2, 2, 2]},"
                           "  {\"type\": \"objectgroup\", \"name\": \"things\", \"objects\": ["
                           "   {\"id\": 1, \"name\": \"spot\", \"x\": 16, \"y\": 16, \"point\": true},"
-                          "   {\"id\": 2, \"name\": \"crate\", \"gid\": 3, \"x\": 16, \"y\": 16, \"width\": 32, \"height\": 32}]}]}";
+                          "   {\"id\": 2, \"name\": \"crate\", \"gid\": 3, \"x\": 16, \"y\": 16,"
+                          " \"width\": 32, \"height\": 32}]}]}";
 
 static const char staggered[] =
-    "{\"type\": \"map\", \"orientation\": \"staggered\", \"staggeraxis\": \"y\", \"staggerindex\": \"odd\", \"width\": 3,"
+    "{\"type\": \"map\", \"orientation\": \"staggered\", \"staggeraxis\": \"y\","
+    " \"staggerindex\": \"odd\", \"width\": 3,"
     " \"height\": 4, \"tilewidth\": 32, \"tileheight\": 16," BLOCKS
     " \"layers\": [{\"type\": \"tilelayer\", \"name\": \"ground\", \"width\": 3, \"height\": 4,"
     "  \"data\": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]}]}";
@@ -83,12 +95,15 @@ static const char staggered[] =
 static const char hexagonal[] =
     "{\"type\": \"map\", \"orientation\": \"hexagonal\", \"staggeraxis\": \"x\", \"staggerindex\": \"even\","
     " \"hexsidelength\": 16, \"width\": 3, \"height\": 2, \"tilewidth\": 32, \"tileheight\": 28,"
-    " \"tilesets\": [{\"firstgid\": 1, \"name\": \"hexes\", \"image\": \"a.png\", \"tilewidth\": 32, \"tileheight\": 28,"
+    " \"tilesets\": [{\"firstgid\": 1, \"name\": \"hexes\", \"image\": \"a.png\","
+    " \"tilewidth\": 32, \"tileheight\": 28,"
     "  \"tilecount\": 2, \"columns\": 2}],"
-    " \"layers\": [{\"type\": \"tilelayer\", \"name\": \"ground\", \"width\": 3, \"height\": 2, \"data\": [1, 1, 1, 1, 1, 1]}]}";
+    " \"layers\": [{\"type\": \"tilelayer\", \"name\": \"ground\", \"width\": 3, \"height\": 2,"
+    " \"data\": [1, 1, 1, 1, 1, 1]}]}";
 
 static const char infinite[] =
-    "{\"type\": \"map\", \"infinite\": true, \"width\": 10, \"height\": 10, \"tilewidth\": 16, \"tileheight\": 16," TWO_TILESETS
+    "{\"type\": \"map\", \"infinite\": true, \"width\": 10, \"height\": 10,"
+    " \"tilewidth\": 16, \"tileheight\": 16," TWO_TILESETS
     " \"layers\": ["
     "  {\"type\": \"tilelayer\", \"name\": \"ground\", \"startx\": -4, \"starty\": -2, \"width\": 8, \"height\": 4,"
     "   \"chunks\": [{\"x\": -4, \"y\": -2, \"width\": 4, \"height\": 2, \"data\": [1, 2, 3, 4, 4, 3, 2, 1]},"
@@ -187,7 +202,8 @@ static void test_overlap(wgf_actor_t stage)
     {
         const int cells[6] = {5, 5, 5, 1, 1, 1};
         const int sets[] = {1, 0, -1}, counts[] = {3, 3};
-        expect(wgf_tilemap_layer_set_cells(flat, cells, 6) && batches_are(m, flat, sets, counts), "every cell set at once");
+        expect(wgf_tilemap_layer_set_cells(flat, cells, 6) && batches_are(m, flat, sets, counts),
+               "every cell set at once");
     }
     wgf_resource_release(m);
     {
@@ -211,7 +227,8 @@ static void test_isometric(wgf_actor_t stage)
     const wgf_actor_t crate = wgf_tilemap_layer_get_object_actor(things, 1);
     float x, y, rx;
     int i;
-    expect(wgf_tilemap_get_orientation(m) == WGF_TILEMAP_ORIENTATION_ISOMETRIC && wgf_tilemap_get_pixel_width(m) == 96 &&
+    expect(wgf_tilemap_get_orientation(m) == WGF_TILEMAP_ORIENTATION_ISOMETRIC &&
+               wgf_tilemap_get_pixel_width(m) == 96 &&
                wgf_tilemap_get_pixel_height(m) == 48,
            "isometric: its diamond's box");
     expect(middle.x == 64.0f && middle.y == 16.0f && wgf_tilemap_get_cell_middle(m, 0, 0).x == 48.0f &&
@@ -247,7 +264,8 @@ static void test_staggered(wgf_actor_t stage)
     const wgf_tilemap_t m = load("grids_test/stag.tmj", staggered);
     const wgf_actor_t ground = wgf_actor_find(wgf_tilemap_instantiate(m, stage), "ground");
     float x, y, rx;
-    expect(wgf_tilemap_get_orientation(m) == WGF_TILEMAP_ORIENTATION_STAGGERED && wgf_tilemap_get_pixel_width(m) == 112 &&
+    expect(wgf_tilemap_get_orientation(m) == WGF_TILEMAP_ORIENTATION_STAGGERED &&
+               wgf_tilemap_get_pixel_width(m) == 112 &&
                wgf_tilemap_get_pixel_height(m) == 40,
            "staggered: its size, its odd rows moved half a tile");
     expect(wgf_tilemap_get_cell_middle(m, 0, 0).x == 16.0f && wgf_tilemap_get_cell_middle(m, 0, 0).y == 8.0f &&
@@ -270,7 +288,8 @@ static void test_hexagonal(wgf_actor_t stage)
     const wgf_tilemap_t m = load("grids_test/hex.tmj", hexagonal);
     const wgf_actor_t ground = wgf_actor_find(wgf_tilemap_instantiate(m, stage), "ground");
     float x, y, rx;
-    expect(wgf_tilemap_get_orientation(m) == WGF_TILEMAP_ORIENTATION_HEXAGONAL && wgf_tilemap_get_pixel_width(m) == 80 &&
+    expect(wgf_tilemap_get_orientation(m) == WGF_TILEMAP_ORIENTATION_HEXAGONAL &&
+               wgf_tilemap_get_pixel_width(m) == 80 &&
                wgf_tilemap_get_pixel_height(m) == 70,
            "hexagonal: its size");
     expect(wgf_tilemap_get_cell_middle(m, 0, 0).x == 16.0f && wgf_tilemap_get_cell_middle(m, 0, 0).y == 28.0f &&
@@ -354,7 +373,8 @@ int main(void)
     {
         const wgf_fs_task_t remove = wgf_fs_rmdir("grids_test");
         int i;
-        for (i = 0; i < 1000 && wgf_fs_task_get_status(remove) == WGF_FS_TASK_STATUS_PENDING; i++) wgf_core_priv_update();
+        for (i = 0; i < 1000 && wgf_fs_task_get_status(remove) == WGF_FS_TASK_STATUS_PENDING; i++)
+            wgf_core_priv_update();
         wgf_fs_task_destroy(remove);
     }
     wgf_gfx_priv_stop();

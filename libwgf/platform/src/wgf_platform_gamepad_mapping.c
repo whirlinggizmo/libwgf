@@ -296,7 +296,8 @@ static float source_value(const binding_t *b, const wgf_platform_priv_gamepad_ra
 }
 
 void wgf_platform_priv_gamepad_apply_mapping(const wgf_platform_priv_gamepad_mapping_t *map,
-                                             const wgf_platform_priv_gamepad_raw_t *raw, wgf_platform_priv_gamepad_t *pad)
+                                             const wgf_platform_priv_gamepad_raw_t *raw,
+                                             wgf_platform_priv_gamepad_t *pad)
 {
     const mapping_t *mapping = (const mapping_t *)map;
     int i;

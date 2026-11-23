@@ -109,8 +109,9 @@ static void directory_fetcher(wgf_handle_t request, const char *url, const char 
         wgf_asset_fetch_done(request, true);
         return;
     }
-    if (path != NULL && snprintf(source, sizeof(source), "%s/%s", (const char *)user, path + strlen("example.com/game/")) <
-                            (int)sizeof(source) &&
+    if (path != NULL &&
+        snprintf(source, sizeof(source), "%s/%s", (const char *)user, path + strlen("example.com/game/")) <
+            (int)sizeof(source) &&
         (in = fopen(source, "rb")) != NULL) {
         if ((out = fopen(dest, "wb")) != NULL) {
             char buffer[4096];
@@ -262,8 +263,9 @@ static void broken_fetcher(wgf_handle_t request, const char *url, const char *de
     fetch_calls++;
     snprintf(broken_dest, sizeof(broken_dest), "%s", dest);
     if (broken_mode != SUCCEED_WITHOUT_WRITING) {
-        write_text(dest, broken_mode == WRITE_AND_SUCCEED ? "fetched" : broken_mode == WRITE_NEWER_AND_SUCCEED ? "newer"
-                                                                                                                : "hal");
+        write_text(dest, broken_mode == WRITE_AND_SUCCEED ? "fetched"
+                         : broken_mode == WRITE_NEWER_AND_SUCCEED ? "newer"
+                         : "hal");
     }
     wgf_asset_fetch_done(request, broken_mode != WRITE_HALF_AND_FAIL);
 }
@@ -425,7 +427,8 @@ static void test_ping(void)
     ping = wgf_asset_ping_host(NULL, 0);
     for (int i = 0; i < 4 && wgf_asset_task_get_status(ping) == WGF_ASSET_TASK_STATUS_PENDING; i++) tick();
     CHECK(fetch_calls == 1 && strcmp(fetched_url, "https://assets.example.com/game/") == 0);
-    CHECK(wgf_asset_task_get_status(ping) == WGF_ASSET_TASK_STATUS_DONE && wgf_asset_ping_get_milliseconds(ping) >= 0.0f);
+    CHECK(wgf_asset_task_get_status(ping) == WGF_ASSET_TASK_STATUS_DONE &&
+          wgf_asset_ping_get_milliseconds(ping) >= 0.0f);
     wgf_asset_task_destroy(ping);
     CHECK(wgf_asset_set_fetching(false));
     ping = wgf_asset_ping_host(NULL, 0);

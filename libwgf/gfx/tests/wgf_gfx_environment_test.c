@@ -369,7 +369,8 @@ static void test_api(void)
 
     /* loaded again, in place: READY all the while, the new file's light once it is in */
     write_file("environment_test/two.hdr", hdr, make_hdr(hdr, 131)); /* 4 */
-    CHECK(wgf_asset_reload("environment_test/two.hdr") == 1 && wgf_resource_get_status(env) == WGF_RESOURCE_STATUS_READY);
+    CHECK(wgf_asset_reload("environment_test/two.hdr") == 1 &&
+              wgf_resource_get_status(env) == WGF_RESOURCE_STATUS_READY);
     settle(env);
     CHECK(wgf_gfx_priv_environment_get_lighting(env, &lighting));
     CHECK_VEC3_NEAR(wgf_gfx_priv_environment_eval_sh(&lighting.sh, wgf_vec3_make(0, 1, 0)), 4, 4, 4, 0.04f);

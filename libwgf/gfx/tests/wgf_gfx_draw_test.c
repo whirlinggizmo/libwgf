@@ -90,7 +90,8 @@ int main(void)
         before = sgl_num_vertices();
         expect(wgf_draw_polyline(same, 6, false, 1, WGF_COLOR_RED) && sgl_num_vertices() == before,
                "every point the same: nothing to see");
-        expect(!wgf_draw_polyline(square, 7, true, 1, WGF_COLOR_RED) && !wgf_draw_polyline(square, 2, true, 1, WGF_COLOR_RED) &&
+        expect(!wgf_draw_polyline(square, 7, true, 1, WGF_COLOR_RED) &&
+                   !wgf_draw_polyline(square, 2, true, 1, WGF_COLOR_RED) &&
                    !wgf_draw_polyline(NULL, 8, true, 1, WGF_COLOR_RED),
                "a polyline refuses an odd count, one point, and NULL");
         expect(!wgf_draw_polygon(square, 4, WGF_COLOR_RED) && !wgf_draw_polygon(square, 7, WGF_COLOR_RED) &&
@@ -110,7 +111,8 @@ int main(void)
             hi_y = points[2 * i + 1] > hi_y ? points[2 * i + 1] : hi_y;
         }
         expect(n == 4 * 5, "four corners of five points each, at four segments a corner");
-        expect(near(lo_x, 10) && near(hi_x, 110) && near(lo_y, 20) && near(hi_y, 60), "within its rectangle, touching each side");
+        expect(near(lo_x, 10) && near(hi_x, 110) && near(lo_y, 20) && near(hi_y, 60),
+               "within its rectangle, touching each side");
         expect(near(wgf_gfx_priv_rounded_radius(100, 40, 1000), 20) && near(points[0], 10) && near(points[1], 40) &&
                    near(points[8], 30) && near(points[9], 20) && near(points[10], 90) && near(points[11], 20),
                "a radius of 1000 clamped to half the shorter side: the left edge's middle to the top's, 20 in");
@@ -124,7 +126,8 @@ int main(void)
         expect(sgl_num_vertices() - before == 3 * 4 * 5, "filled: a fan of a triangle a point");
         before = sgl_num_vertices();
         wgf_draw_rectangle_rounded_lines(10, 20, 100, 40, 10, 4, 2, WGF_COLOR_RED);
-        expect(sgl_num_vertices() - before == 6 * 4 * 5, "outlined: a quad a point, between the outline grown and shrunk");
+        expect(sgl_num_vertices() - before == 6 * 4 * 5,
+               "outlined: a quad a point, between the outline grown and shrunk");
         before = sgl_num_vertices();
         wgf_draw_rectangle_rounded(10, 20, 100, 40, 0, 4, WGF_COLOR_RED);
         expect(sgl_num_vertices() - before == 6, "no radius: the plain rectangle");
@@ -158,11 +161,13 @@ int main(void)
         expect(wgf_render_get_gpu_bytes() >= before + 64 * 64 * 4, "a texture made: the GPU's bytes up by its size");
         begin_frame(640, 480, 1.0f);
         expect(wgf_draw_get_blend_mode() == WGF_ALPHA_MODE_BLEND && wgf_draw_set_blend_mode(WGF_ALPHA_MODE_MULTIPLY) &&
-                   wgf_draw_get_blend_mode() == WGF_ALPHA_MODE_MULTIPLY && wgf_draw_set_blend_mode(WGF_ALPHA_MODE_MASK) &&
+                   wgf_draw_get_blend_mode() == WGF_ALPHA_MODE_MULTIPLY &&
+                   wgf_draw_set_blend_mode(WGF_ALPHA_MODE_MASK) &&
                    wgf_draw_get_blend_mode() == WGF_ALPHA_MODE_BLEND && !wgf_draw_set_blend_mode((wgf_alpha_mode_t)9),
                "immediate mode's blend mode (MASK drawn as BLEND); one that isn't refused");
         vertices = sgl_num_vertices();
-        expect(wgf_draw_texture_polygon(blank, points, 6, uvs, 6, WGF_COLOR_WHITE) && sgl_num_vertices() == vertices + 3,
+        expect(wgf_draw_texture_polygon(blank, points, 6, uvs, 6, WGF_COLOR_WHITE) &&
+                   sgl_num_vertices() == vertices + 3,
                "a textured triangle");
         expect(!wgf_draw_texture_polygon(blank, points, 4, uvs, 4, WGF_COLOR_WHITE) &&
                    !wgf_draw_texture_polygon(blank, points, 6, uvs, 4, WGF_COLOR_WHITE),

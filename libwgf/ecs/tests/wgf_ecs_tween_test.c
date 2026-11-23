@@ -52,7 +52,8 @@ int main(void)
         ends = ends && near(wgf_ease_value((wgf_easing_t)e, 0), 0) && near(wgf_ease_value((wgf_easing_t)e, 1), 1);
     }
     expect(ends, "every ease 0 at 0 and 1 at 1");
-    expect(near(wgf_ease_value(WGF_EASING_QUAD_IN, 0.5f), 0.25f) && near(wgf_ease_value(WGF_EASING_QUAD_OUT, 0.5f), 0.75f) &&
+    expect(near(wgf_ease_value(WGF_EASING_QUAD_IN, 0.5f), 0.25f) &&
+               near(wgf_ease_value(WGF_EASING_QUAD_OUT, 0.5f), 0.75f) &&
                wgf_ease_value(WGF_EASING_BACK_IN, 0.2f) < 0.0f && near(wgf_ease_value(WGF_EASING_LINEAR, 2), 1),
            "their shapes: quad in slow, out fast, back going past; t clamped");
 
@@ -78,7 +79,8 @@ int main(void)
     expect(!wgf_handle_is_alive(t), "destroyed");
 
     t = wgf_tween_create(0, 1, 1, WGF_EASING_LINEAR);
-    expect(wgf_tween_set_repeat(t, 1) && wgf_tween_get_repeat(t) == 1 && wgf_tween_set_yoyo(t, true) && wgf_tween_is_yoyo(t) &&
+    expect(wgf_tween_set_repeat(t, 1) && wgf_tween_get_repeat(t) == 1 && wgf_tween_set_yoyo(t, true) &&
+               wgf_tween_is_yoyo(t) &&
                !wgf_tween_set_repeat(t, -2),
            "a repeat and a yoyo; a count below -1 refused");
     ticks(13);
@@ -97,7 +99,8 @@ int main(void)
     wgf_actor_set_position(box, 100, 0, 0);
     t = wgf_tween_move(box, 200, 50, 0, 1, WGF_EASING_LINEAR);
     ticks(5);
-    expect(near(wgf_actor_get_position(box).x, 150) && near(wgf_actor_get_position(box).y, 25) && near(wgf_tween_get_value(t), 0.5f),
+    expect(near(wgf_actor_get_position(box).x, 150) && near(wgf_actor_get_position(box).y, 25) &&
+               near(wgf_tween_get_value(t), 0.5f),
            "an actor moved from where it was, halfway; its value its progress");
     ticks(5);
     expect(near(wgf_actor_get_position(box).x, 200) && !wgf_handle_is_alive(t), "there, and ended");
@@ -113,7 +116,8 @@ int main(void)
     ticks(1);
     expect(!wgf_handle_is_alive(t), "its actor gone: let go of");
 
-    expect(wgf_tween_create(0, 1, 0, WGF_EASING_LINEAR) == 0 && wgf_tween_move(stage + 1, 0, 0, 0, 1, WGF_EASING_LINEAR) == 0 &&
+    expect(wgf_tween_create(0, 1, 0, WGF_EASING_LINEAR) == 0 &&
+               wgf_tween_move(stage + 1, 0, 0, 0, 1, WGF_EASING_LINEAR) == 0 &&
                !wgf_tween_set_paused(12345, true),
            "no time, an actor that isn't one, a handle that isn't a tween: refused");
 

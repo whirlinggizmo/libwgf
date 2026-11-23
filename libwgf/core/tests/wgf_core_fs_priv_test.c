@@ -107,7 +107,8 @@ int main(void)
     expect(wgf_core_priv_fs_rmdir("cache:d") && !wgf_core_priv_fs_is_dir("cache:d"), "rmdir under the cache root");
     expect(!wgf_core_priv_fs_rmdir("cache:d"), "rmdir again fails");
 
-    expect(wgf_core_priv_fs_mkdir("m/n") && wgf_core_priv_fs_is_dir("m/n") && wgf_core_priv_fs_rmdir("m"), "mkdir, rmdir");
+    expect(wgf_core_priv_fs_mkdir("m/n") && wgf_core_priv_fs_is_dir("m/n") && wgf_core_priv_fs_rmdir("m"),
+           "mkdir, rmdir");
 
     wgf_core_priv_fs_deinit();
     return failures == 0 ? 0 : 1;

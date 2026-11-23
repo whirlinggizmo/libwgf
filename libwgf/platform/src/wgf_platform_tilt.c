@@ -45,7 +45,8 @@ static void reading(double beta, double gamma, double angle, double now)
         tilt.level_quarter = quarter;
     }
     if (!tilt.level) {
-        if (!tilt.steady || fabs(beta - tilt.steady_beta) > STEADY_DEGREES || fabs(gamma - tilt.steady_gamma) > STEADY_DEGREES) {
+        if (!tilt.steady || fabs(beta - tilt.steady_beta) > STEADY_DEGREES ||
+            fabs(gamma - tilt.steady_gamma) > STEADY_DEGREES) {
             tilt.steady = true;
             tilt.steady_beta = beta;
             tilt.steady_gamma = gamma;

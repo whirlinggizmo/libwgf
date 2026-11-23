@@ -13,7 +13,8 @@
  * refuses one, a target's own size and scale while it is drawn into and the screen's
  * after, the clips of each pass, a target's clear color, the passes a frame allows, and a
  * read of one (wgf_texture_read, of any texture): PENDING until the update after its frame is drawn,
- * FAILED then, and holding its target till then; the screen's, FAILED as its frame ends. No GPU, so no pixels: those are
+ * FAILED then, and holding its target till then; the screen's, FAILED as its frame ends.
+ * No GPU, so no pixels: those are
  * wgf_gfx_target_window_test's, and wgf_gfx_texture_read_window_test's. */
 
 static int failures;
@@ -117,11 +118,13 @@ int main(void)
                wgf_texture_read_get_status(read) == WGF_TEXTURE_READ_STATUS_NONE,
            "destroyed once");
     read = wgf_render_read_screen();
-    expect(read != 0 && wgf_texture_read_get_status(read) == WGF_TEXTURE_READ_STATUS_PENDING, "the screen's read, PENDING");
+    expect(read != 0 && wgf_texture_read_get_status(read) == WGF_TEXTURE_READ_STATUS_PENDING,
+           "the screen's read, PENDING");
     expect(wgf_texture_read_save(read, "shot.png") == 0, "nothing to save while PENDING");
     wgf_gfx_priv_begin_frame();
     wgf_gfx_priv_end_frame();
-    expect(wgf_texture_read_get_status(read) == WGF_TEXTURE_READ_STATUS_FAILED && wgf_texture_read_save(read, "shot.png") == 0,
+    expect(wgf_texture_read_get_status(read) == WGF_TEXTURE_READ_STATUS_FAILED &&
+               wgf_texture_read_save(read, "shot.png") == 0,
            "FAILED as the frame ends: no GPU; nothing to save");
     wgf_texture_read_destroy(read);
 

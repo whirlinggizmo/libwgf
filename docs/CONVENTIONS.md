@@ -122,7 +122,7 @@ No other pointer, no struct, no function pointer, no `void *`, no variadic call.
 ## Code
 
 - C11, compiled with `-Wall -Wextra -Wpedantic` (`/W4` with MSVC), warnings as errors. C++ is two files, each a module's way into a C++ dependency, its interface C: physics3d's into Jolt (`libwgf/physics3d/src/wgf_physics3d_jolt.cpp`) and ui's into RmlUi (`libwgf/ui/src/wgf_ui_rmlui.cpp`), C++17 without exceptions or RTTI; C++ is in no other file, and in no header.
-- Four spaces, no tabs; lines up to 120 columns; a function's opening brace on its own line, a block's on the line of its statement. Comments are `/* */`, sentences, saying what and why, not how, written as "Writing" says.
+- Four spaces, no tabs; lines up to 120 columns (`tools/check_lines.py` checks both, in the tests); a function's opening brace on its own line, a block's on the line of its statement. Comments are `/* */`, sentences, saying what and why, not how, written as "Writing" says.
 - A public header comment says what the call does now, and is changed in the commit that changes the behavior. When a header and the code disagree, the header is the bug.
 - What a simulation starts from or steps with is the same to the bit on every target: trigonometry there is `wgf_trig.h`'s (Haxe's `Trig`), never the C library's or a binding's own, whose results differ by target (glibc's and Emscripten's `sinf` disagree in a last bit), and a check holds a pile of physics bodies to one hash on every target (`wgf_physics3d_test`).
 - Untrusted input (files, autopilot files, scene text) is checked before it is read: sizes and offsets bounded, numbers parsed with their range checked. A parser refuses rather than guessing.

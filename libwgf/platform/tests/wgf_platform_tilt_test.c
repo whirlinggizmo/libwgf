@@ -54,7 +54,8 @@ int main(void)
     expect(!wgf_tilt_is_calibrating() && wgf_tilt_is_ready() && wgf_tilt_get_x() == 0.0f && wgf_tilt_get_y() == 0.0f,
            "held half a second: that's level, reading 0");
     feed(21 + 15, 6 + 6, 0, 2.0);
-    expect(near(wgf_tilt_get_x(), 0.2f) && near(wgf_tilt_get_y(), 0.5f), "from level: across 6 of 30, forward 15 of 30");
+    expect(near(wgf_tilt_get_x(), 0.2f) && near(wgf_tilt_get_y(), 0.5f),
+           "from level: across 6 of 30, forward 15 of 30");
     feed(21 - 90, 6 + 45, 0, 2.1);
     expect(near(wgf_tilt_get_x(), 1.0f) && near(wgf_tilt_get_y(), -1.0f), "past the range: clamped");
     wgf_tilt_set_range(60.0f);

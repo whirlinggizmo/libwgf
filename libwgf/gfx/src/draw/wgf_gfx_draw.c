@@ -145,7 +145,8 @@ void wgf_draw_triangle(float x0, float y0, float x1, float y1, float x2, float y
 
 static float cross(const float *p, int a, int b, int c)
 {
-    return (p[2 * b] - p[2 * a]) * (p[2 * c + 1] - p[2 * a + 1]) - (p[2 * b + 1] - p[2 * a + 1]) * (p[2 * c] - p[2 * a]);
+    return (p[2 * b] - p[2 * a]) * (p[2 * c + 1] - p[2 * a + 1]) -
+           (p[2 * b + 1] - p[2 * a + 1]) * (p[2 * c] - p[2 * a]);
 }
 
 /* Whether point `p` is inside triangle a, b, c (wound as `sign` says), or on its edge. */

@@ -21,7 +21,8 @@
 /* Render targets read back (wgf_texture_read) over the runtime's own frames, in a window
  * (tools/run_in_xvfb.py, OpenGL on a virtual display) with MSAA, so what is read is the
  * image the samples resolve into; wgf_gfx_texture_read_web_test is this file on WebGL2,
- * without MSAA, so a target drawn into directly. A 32 by 24 target, dark gray, with a yellow square at its top-left and a green
+ * without MSAA, so a target drawn into directly. A 32 by 24 target, dark gray, with a
+ * yellow square at its top-left and a green
  * one at its bottom-right: a read is PENDING in its frame and DONE in the next, its rows
  * the top first; a read of another target released in its frame still reads it, the read
  * holding it; and one destroyed while PENDING is gone. The screen read (wgf_render_read_screen)
@@ -78,7 +79,8 @@ static void step_file(void)
 /* The pixel at (x, y) from the top-left of a read, exactly the color's. */
 static void expect_pixel(wgf_texture_read_t r, int x, int y, wgf_color_t color, const char *what)
 {
-    const unsigned char *rgba = wgf_texture_read_get_data(r) + ((size_t)y * (size_t)wgf_texture_read_get_width(r) + (size_t)x) * 4u;
+    const unsigned char *rgba = wgf_texture_read_get_data(r) +
+        ((size_t)y * (size_t)wgf_texture_read_get_width(r) + (size_t)x) * 4u;
     if (rgba[0] != wgf_color_get_red(color) || rgba[1] != wgf_color_get_green(color) ||
         rgba[2] != wgf_color_get_blue(color) || rgba[3] != wgf_color_get_alpha(color)) {
         printf("FAIL: %s: at %d, %d read %d %d %d %d, expected %d %d %d %d\n", what, x, y, rgba[0], rgba[1], rgba[2],
@@ -129,7 +131,8 @@ static void on_frame(void *user)
         }
         expect(!wgf_handle_is_alive(blue), "and let go of once read");
         expect(wgf_texture_read_destroy(read) && wgf_texture_read_destroy(blue_read), "destroyed");
-        expect(wgf_texture_read_get_status(screen) == WGF_TEXTURE_READ_STATUS_DONE && wgf_texture_read_get_width(screen) == 64 &&
+        expect(wgf_texture_read_get_status(screen) == WGF_TEXTURE_READ_STATUS_DONE &&
+                   wgf_texture_read_get_width(screen) == 64 &&
                    wgf_texture_read_get_height(screen) == 32,
                "the screen read as its frame ended, the window's size");
         if (wgf_texture_read_get_data(screen) != NULL) {
@@ -139,8 +142,10 @@ static void on_frame(void *user)
         expect(read_is_image(image_read), "a texture made from an image reads back as its pixels");
         {
             const wgf_image_t copy = wgf_image_create_from_read(image_read);
-            expect(copy != 0 && wgf_image_get_width(copy) == 16 && wgf_image_get_size(copy) == wgf_image_get_size(image) &&
-                       memcmp(wgf_image_get_data(copy), wgf_image_get_data(image), (size_t)wgf_image_get_size(image)) == 0,
+            expect(copy != 0 && wgf_image_get_width(copy) == 16 &&
+                       wgf_image_get_size(copy) == wgf_image_get_size(image) &&
+                       memcmp(wgf_image_get_data(copy), wgf_image_get_data(image),
+                              (size_t)wgf_image_get_size(image)) == 0,
                    "and an image made from the read is them again");
             wgf_resource_release(copy);
         }
@@ -148,7 +153,8 @@ static void on_frame(void *user)
         saved = wgf_texture_read_save(screen, "read-test/shot.png");
         expect(saved != 0, "saved");
         wgf_texture_read_destroy(screen);
-    } else if (frames > 3 && wgf_fs_task_get_status(saved) != WGF_FS_TASK_STATUS_PENDING && (file_checked || frames > 600)) {
+    } else if (frames > 3 && wgf_fs_task_get_status(saved) != WGF_FS_TASK_STATUS_PENDING &&
+               (file_checked || frames > 600)) {
         expect(wgf_fs_task_get_status(saved) == WGF_FS_TASK_STATUS_DONE, "and written");
         expect(file_checked, "the image's PNG loaded and read in 600 frames");
         wgf_fs_task_destroy(image_saved);

@@ -80,7 +80,8 @@ int main(void)
     expect(wgf_actor_get_kind(batch) == WGF_ACTOR_KIND_SPRITE_BATCH && wgf_sprite_batch_get_texture(batch) == texture &&
                wgf_sprite_batch_get_count(batch) == 0,
            "a batch, with no quads");
-    expect(wgf_sprite_batch_get_pivot(batch).x == 0.5f && wgf_sprite_batch_get_alpha_mode(batch) == WGF_ALPHA_MODE_BLEND &&
+    expect(wgf_sprite_batch_get_pivot(batch).x == 0.5f &&
+               wgf_sprite_batch_get_alpha_mode(batch) == WGF_ALPHA_MODE_BLEND &&
                wgf_sprite_batch_get_alpha_cutoff(batch) == 0.5f,
            "defaults: centered, blended");
 
@@ -93,19 +94,24 @@ int main(void)
     expect(drawn(stage, 0, &draws) == 4 && draws == 1, "READY: every quad, one draw");
     expect(drawn(stage, stage, &draws) == 8 && draws == 2, "drawn twice in a frame: two draws, one upload");
 
-    expect(wgf_sprite_batch_set_positions(batch, 0, xy, 8) == 4 && wgf_sprite_batch_get_positions(batch, 1, out, 6) == 6 &&
+    expect(wgf_sprite_batch_set_positions(batch, 0, xy, 8) == 4 &&
+               wgf_sprite_batch_get_positions(batch, 1, out, 6) == 6 &&
                out[0] == 3.0f && out[5] == 8.0f,
            "positions written and read back from the second");
-    expect(wgf_sprite_batch_set_positions(batch, 3, xy, 8) == 1 && wgf_sprite_batch_get_positions(batch, 3, out, 2) == 2 &&
+    expect(wgf_sprite_batch_set_positions(batch, 3, xy, 8) == 1 &&
+               wgf_sprite_batch_get_positions(batch, 3, out, 2) == 2 &&
                out[0] == 1.0f,
            "a write past the count clipped to it");
-    expect(wgf_sprite_batch_set_positions(batch, 0, xy, 3) == 0 && wgf_sprite_batch_set_positions(batch, 4, xy, 2) == 0 &&
-               wgf_sprite_batch_set_positions(batch, -1, xy, 2) == 0 && wgf_sprite_batch_set_positions(batch, 0, NULL, 2) == 0,
+    expect(wgf_sprite_batch_set_positions(batch, 0, xy, 3) == 0 &&
+               wgf_sprite_batch_set_positions(batch, 4, xy, 2) == 0 &&
+               wgf_sprite_batch_set_positions(batch, -1, xy, 2) == 0 &&
+               wgf_sprite_batch_set_positions(batch, 0, NULL, 2) == 0,
            "an odd count, a first outside, and NULL write none");
     expect(wgf_sprite_batch_set_sizes(batch, 0, xy, 4) == 2 && wgf_sprite_batch_get_sizes(batch, 0, out, 4) == 4 &&
                out[3] == 4.0f,
            "sizes");
-    expect(wgf_sprite_batch_set_rotations(batch, 2, xy, 2) == 2 && wgf_sprite_batch_get_rotations(batch, 2, out, 9) == 2 &&
+    expect(wgf_sprite_batch_set_rotations(batch, 2, xy, 2) == 2 &&
+               wgf_sprite_batch_get_rotations(batch, 2, out, 9) == 2 &&
                out[1] == 2.0f,
            "rotations, a read as many as there are");
     {
@@ -115,7 +121,8 @@ int main(void)
                    out[3] == 32767.0f && wgf_sprite_batch_set_regions(batch, 0, regions, 3) == 0,
                "regions rounded and clamped, four a quad");
     }
-    expect(wgf_sprite_batch_set_tints(batch, 0, tints, 2) == 2 && wgf_sprite_batch_get_tints(batch, 0, tints_out, 2) == 2 &&
+    expect(wgf_sprite_batch_set_tints(batch, 0, tints, 2) == 2 &&
+               wgf_sprite_batch_get_tints(batch, 0, tints_out, 2) == 2 &&
                tints_out[0] == (int)0xFF0000FFu && tints_out[1] == (int)0x00FF00FFu,
            "tints, as packed colors");
     expect(wgf_sprite_batch_set_pivot(batch, 0, 1) && wgf_sprite_batch_get_pivot(batch).y == 1.0f, "a pivot");

@@ -197,7 +197,8 @@ static void settings(void)
 
     music = wgf_ui_checkbox("music", "Music", music);
 
-    if (loading) loaded = loaded + wgf_loop_get_frame_delta() / 4.0f < 1.0f ? loaded + wgf_loop_get_frame_delta() / 4.0f : 1.0f;
+    if (loading)
+        loaded = loaded + wgf_loop_get_frame_delta() / 4.0f < 1.0f ? loaded + wgf_loop_get_frame_delta() / 4.0f : 1.0f;
     snprintf(percent, sizeof(percent), "%d%%", (int)(loaded * 100.0f + 0.5f));
     row("loading-row", percent, 100);
     wgf_ui_progress(loaded);

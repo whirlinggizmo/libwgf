@@ -854,7 +854,8 @@ void wgf_ui_priv_doc_clip_mask_draw(int operation, const wgf_ui_priv_vertex_t *v
     m.ty = ty;
     m.transformed = dr.transformed;
     memcpy(m.matrix, dr.matrix, sizeof(m.matrix));
-    m.vertices = (wgf_ui_priv_vertex_t *)malloc(sizeof(wgf_ui_priv_vertex_t) * (size_t)(vertex_count > 0 ? vertex_count : 1));
+    m.vertices =
+        (wgf_ui_priv_vertex_t *)malloc(sizeof(wgf_ui_priv_vertex_t) * (size_t)(vertex_count > 0 ? vertex_count : 1));
     m.indices = (int *)malloc(sizeof(int) * (size_t)(index_count > 0 ? index_count : 1));
     if (m.vertices == NULL || m.indices == NULL) {
         free(m.vertices);
@@ -1190,7 +1191,8 @@ uintptr_t wgf_ui_priv_doc_filter_make(wgf_ui_priv_filter_t kind, const float *va
         return 0;
     }
     f->kind = kind;
-    memcpy(f->values, values, sizeof(float) * (kind == WGF_UI_PRIV_FILTER_MATRIX ? 16 : kind == WGF_UI_PRIV_FILTER_SHADOW ? 7 : 1));
+    memcpy(f->values, values,
+           sizeof(float) * (kind == WGF_UI_PRIV_FILTER_MATRIX ? 16 : kind == WGF_UI_PRIV_FILTER_SHADOW ? 7 : 1));
     return (uintptr_t)f;
 }
 

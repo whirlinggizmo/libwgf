@@ -80,7 +80,8 @@ static void test_tree(void)
     const wgf_handle_t stage = wgf_stage2d_create();
     const wgf_handle_t a = wgf_actor_create(), b = wgf_actor_create(), c = wgf_actor_create(), d = wgf_actor_create();
 
-    expect(wgf_actor_get_kind(stage) == WGF_ACTOR_KIND_STAGE2D && wgf_actor_get_kind(a) == WGF_ACTOR_KIND_PLAIN, "types");
+    expect(wgf_actor_get_kind(stage) == WGF_ACTOR_KIND_STAGE2D && wgf_actor_get_kind(a) == WGF_ACTOR_KIND_PLAIN,
+           "types");
     expect(wgf_actor_get_kind(0) == WGF_ACTOR_KIND_NONE, "0 is not an actor");
     expect(wgf_actor_set_parent(a, stage) && wgf_actor_set_parent(b, stage) && wgf_actor_set_parent(c, stage),
            "three children");
@@ -123,7 +124,8 @@ static void test_transforms(void)
     wgf_actor_set_scale(parent, 2, 2, 1);
     expect(near3(wgf_actor_get_world_position(child), 100, 70, 0), "and a scaled one scales its distance");
     expect(wgf_actor_set_transform(child, 1, 2, 3, 0.1f, 0.2f, 0.3f, 4, 5, 6) &&
-               near3(wgf_actor_get_position(child), 1, 2, 3) && near3(wgf_actor_get_rotation(child), 0.1f, 0.2f, 0.3f) &&
+               near3(wgf_actor_get_position(child), 1, 2, 3) &&
+               near3(wgf_actor_get_rotation(child), 0.1f, 0.2f, 0.3f) &&
                near3(wgf_actor_get_scale(child), 4, 5, 6),
            "set_transform sets all three");
     {
@@ -135,8 +137,10 @@ static void test_transforms(void)
         read = wgf_quat_from_euler(wgf_actor_get_rotation(child));
         expect(fabsf(fabsf(wgf_quat_dot(given, read)) - 1.0f) < 1e-5f, "angles read back as the same rotation");
     }
-    expect(wgf_actor_is_visible(child) && wgf_actor_set_visible(child, false) && !wgf_actor_is_visible(child), "visible");
-    expect(wgf_actor_is_enabled(child) && wgf_actor_set_enabled(child, false) && !wgf_actor_is_enabled(child), "enabled");
+    expect(wgf_actor_is_visible(child) && wgf_actor_set_visible(child, false) && !wgf_actor_is_visible(child),
+           "visible");
+    expect(wgf_actor_is_enabled(child) && wgf_actor_set_enabled(child, false) && !wgf_actor_is_enabled(child),
+           "enabled");
     expect(!wgf_actor_is_enabled(12345) && !wgf_actor_set_enabled(12345, true), "a non-actor isn't enabled");
     wgf_actor_set_enabled(child, true);
     expect(near3(wgf_actor_get_world_position(12345), 0, 0, 0) && !wgf_actor_is_visible(12345), "a non-actor reads 0");
@@ -148,13 +152,15 @@ static void test_transforms(void)
 static void test_cached_transforms(void)
 {
     const float quarter = 1.57079632679f;
-    const wgf_handle_t a = wgf_actor_create(), b = wgf_actor_create(), c = wgf_actor_create(), other = wgf_actor_create();
+    const wgf_handle_t a = wgf_actor_create(), b = wgf_actor_create(), c = wgf_actor_create(),
+                       other = wgf_actor_create();
     wgf_actor_set_parent(b, a);
     wgf_actor_set_parent(c, b);
     wgf_actor_set_position(c, 1, 0, 0);
     expect(near3(wgf_actor_get_world_position(c), 1, 0, 0), "read once: now kept");
     wgf_actor_set_position(a, 10, 0, 0);
-    expect(near3(wgf_actor_get_world_position(c), 11, 0, 0), "a grandparent moved after a read: the grandchild follows");
+    expect(near3(wgf_actor_get_world_position(c), 11, 0, 0),
+           "a grandparent moved after a read: the grandchild follows");
     expect(near3(wgf_actor_get_world_position(c), 11, 0, 0), "and again, from what is kept");
     wgf_actor_set_rotation(b, 0, 0, quarter);
     expect(near3(wgf_actor_get_world_position(c), 10, 1, 0), "a parent turned");
@@ -191,7 +197,8 @@ static void test_keep_children(void)
         const wgf_vec3_t x_before = wgf_actor_get_world_position(x), y_before = wgf_actor_get_world_position(y);
         wgf_actor_destroy(group, WGF_ACTOR_KEEP_CHILDREN);
         expect(wgf_actor_get_kind(group) == WGF_ACTOR_KIND_NONE, "the actor itself goes");
-        expect(wgf_actor_get_parent(x) == root && wgf_actor_get_parent(y) == root, "its children move up to its parent");
+        expect(wgf_actor_get_parent(x) == root && wgf_actor_get_parent(y) == root,
+               "its children move up to its parent");
         expect(wgf_actor_get_child_count(root) == 4 && wgf_actor_get_child(root, 0) == first &&
                    wgf_actor_get_child(root, 1) == x && wgf_actor_get_child(root, 2) == y &&
                    wgf_actor_get_child(root, 3) == last,
@@ -238,7 +245,8 @@ static void test_sprites_and_references(void)
     expect(wgf_sprite_set_texture(twin, texture), "and took it back");
     wgf_resource_release(other);
     wgf_actor_destroy(twin, WGF_ACTOR_DESTROY_CHILDREN);
-    expect(wgf_resource_get_status(texture) == WGF_RESOURCE_STATUS_NONE, "the last reference gone: the texture is freed");
+    expect(wgf_resource_get_status(texture) == WGF_RESOURCE_STATUS_NONE,
+           "the last reference gone: the texture is freed");
 
     /* the sprite's own fields */
     texture = wgf_texture_create("node_test/rgbw.png");
@@ -266,7 +274,8 @@ static void test_sprites_and_references(void)
     /* a camera, and what happens when it goes */
     stage = wgf_stage2d_create();
     camera = wgf_camera2d_create();
-    expect(wgf_camera2d_get_zoom(camera) == 1.0f && wgf_camera2d_set_zoom(camera, 2) && wgf_camera2d_get_zoom(camera) == 2,
+    expect(wgf_camera2d_get_zoom(camera) == 1.0f && wgf_camera2d_set_zoom(camera, 2) &&
+               wgf_camera2d_get_zoom(camera) == 2,
            "zoom");
     expect(!wgf_camera2d_set_zoom(camera, 0) && !wgf_camera2d_set_zoom(camera, -1), "a zoom of 0 or less is refused");
     expect(wgf_stage2d_set_camera(stage, camera) && wgf_stage2d_get_camera(stage) == camera, "a 2D stage's camera");

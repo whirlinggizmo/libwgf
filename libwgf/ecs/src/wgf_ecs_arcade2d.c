@@ -330,7 +330,8 @@ void wgf_ecs_priv_arcade2d_step(float dt, wgf_ecs_priv_query_t *query, wgf_ecs_p
             const float lo_y = fminf(y, y + dy) - 1.0f, hi_y = fmaxf(y + h, y + h + dy) + 1.0f;
             for (i = 0; i < solid_count; i++) {
                 const solid_t *s = &bodies.solids[i];
-                if (s->parent != actor_ptr->parent || s->actor == ref->actor || (s->layer & b->solid_mask) == 0) continue;
+                if (s->parent != actor_ptr->parent || s->actor == ref->actor || (s->layer & b->solid_mask) == 0)
+                    continue;
                 if (s->hi_x < lo_x || s->lo_x > hi_x || s->hi_y < lo_y || s->lo_y > hi_y) continue;
                 if (!add_rect(&rect_count, s->lo_x, s->lo_y, s->hi_x - s->lo_x, s->hi_y - s->lo_y)) break;
             }

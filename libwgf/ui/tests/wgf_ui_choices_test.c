@@ -165,7 +165,8 @@ static void on_frame(void *user)
         expect(wgf_ui_begin(), "begun");
         expect(wgf_ui_number("n", 0.33f, 0.0f, 1.0f, 0.5f) == 0.33f, "untouched: the value as given");
         expect(wgf_ui_number("n2", 3.0f, 0.0f, 1.0f, 0.1f) == 1.0f, "outside its range: clamped");
-        expect(wgf_ui_number("n3", 3.0f, 0.0f, 1.0f, 0.0f) == 3.0f && wgf_ui_number("n4", 3.0f, 1.0f, 1.0f, 0.1f) == 3.0f &&
+        expect(wgf_ui_number("n3", 3.0f, 0.0f, 1.0f, 0.0f) == 3.0f &&
+                   wgf_ui_number("n4", 3.0f, 1.0f, 1.0f, 0.1f) == 3.0f &&
                    wgf_ui_number(NULL, 3.0f, 0.0f, 9.0f, 1.0f) == 3.0f,
                "no step, no range, or no id: as given");
         expect(wgf_ui_tabs("x", "", 4) == 4 && wgf_ui_tabs("y", NULL, 4) == 4 && wgf_ui_combo(NULL, "A\nB", 1) == 1 &&

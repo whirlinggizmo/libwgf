@@ -54,7 +54,8 @@ static void on_frame(void *user)
     switch (phase) {
         case 0:
             expect(wgf_tilt_request(), "asked");
-            expect(wgf_tilt_get_status() == WGF_TILT_STATUS_WAITING_FOR_TAP || wgf_tilt_get_status() == WGF_TILT_STATUS_STARTING,
+            expect(wgf_tilt_get_status() == WGF_TILT_STATUS_WAITING_FOR_TAP ||
+                       wgf_tilt_get_status() == WGF_TILT_STATUS_STARTING,
                    "WAITING_FOR_TAP where the browser asks, else STARTING");
             if (wgf_tilt_get_status() == WGF_TILT_STATUS_WAITING_FOR_TAP) tap_granting();
             phase = 1;
@@ -88,7 +89,8 @@ static void on_frame(void *user)
                    "a tilt from level: across 15 of 30, forward 6 of 30");
             wgf_tilt_release();
             orient(30.0, 30.0);
-            expect(wgf_tilt_get_status() == WGF_TILT_STATUS_OFF && wgf_tilt_get_x() == 0.0f, "released: OFF, reading 0");
+            expect(wgf_tilt_get_status() == WGF_TILT_STATUS_OFF && wgf_tilt_get_x() == 0.0f,
+                   "released: OFF, reading 0");
             done();
             break;
     }

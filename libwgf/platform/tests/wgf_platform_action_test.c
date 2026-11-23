@@ -194,10 +194,12 @@ static void stick(void)
 {
     wgf_vec2_t at;
     expect(wgf_action_bind_touch_stick("walk_x", "walk_y", 0, 300, 400, 300, 50), "a stick on the left half's bottom");
-    expect(!wgf_action_bind_touch_stick("a", "a", 0, 0, 10, 10, 5) && !wgf_action_bind_touch_stick("b", "c", 0, 0, 10, 10, 0),
+    expect(!wgf_action_bind_touch_stick("a", "a", 0, 0, 10, 10, 5) &&
+               !wgf_action_bind_touch_stick("b", "c", 0, 0, 10, 10, 0),
            "two actions alike, or no radius: refused");
     finger(SAPP_EVENTTYPE_TOUCHES_BEGAN, 100, 400);
-    expect(wgf_action_is_stick_held("walk_x") && wgf_action_get_axis("walk_x") == 0.0f, "a finger lands: a stick, at rest");
+    expect(wgf_action_is_stick_held("walk_x") && wgf_action_get_axis("walk_x") == 0.0f,
+           "a finger lands: a stick, at rest");
     at = wgf_action_get_stick_origin("walk_x");
     expect(at.x == 100.0f && at.y == 400.0f, "where it landed");
     finger(SAPP_EVENTTYPE_TOUCHES_MOVED, 125, 400);
@@ -246,7 +248,8 @@ static void stick_rebound(void)
     next_frame();
     wgf_action_clear("run_x");
     wgf_action_clear("run_y");
-    expect(wgf_action_bind_touch_stick("s1x", "s1y", 0, 0, 10, 10, 5) && wgf_action_bind_touch_stick("s2x", "s2y", 0, 0, 10, 10, 5) &&
+    expect(wgf_action_bind_touch_stick("s1x", "s1y", 0, 0, 10, 10, 5) &&
+               wgf_action_bind_touch_stick("s2x", "s2y", 0, 0, 10, 10, 5) &&
                wgf_action_bind_touch_stick("s3x", "s3y", 0, 0, 10, 10, 5) &&
                !wgf_action_bind_touch_stick("s4x", "s4y", 0, 0, 10, 10, 5),
            "with walk's still bound, three more and no fifth");

@@ -44,7 +44,8 @@ static void check(int which, double late, double within, const char *name)
         const double at = onset((int)sounds[which], 0.5 * k - 0.2), want = 0.5 * k + late;
         char what[160];
         printf("%s: marker %d at %.4f s (%+.1f ms)\n", name, k, at, (at - 0.5 * k) * 1000.0);
-        snprintf(what, sizeof(what), "%s: marker %d %.1f ms from %.1f ms late", name, k, (at - want) * 1000.0, late * 1000.0);
+        snprintf(what, sizeof(what), "%s: marker %d %.1f ms from %.1f ms late", name, k, (at - want) * 1000.0,
+                 late * 1000.0);
         expect(fabs(at - want) < within, what);
     }
 }

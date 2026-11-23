@@ -54,7 +54,8 @@ static void frame(void *user)
                                 wgf_color_make(60, 60, 255, 255), wgf_color_make(255, 255, 60, 255));
     wgf_draw_circle_gradient(320, 230, 55, wgf_color_make(255, 255, 255, 255), wgf_color_make(255, 80, 0, 0));
     wgf_draw_texture_rotated(tiles, 0, 0, 16, 16, 460, 230, 80, 80, 0.5f, 0.5f, t, wgf_color_make(255, 255, 255, 255));
-    wgf_draw_texture_fill(tiles, 560, 190, 160, 24, sweep, WGF_DRAW_FILL_LEFT_TO_RIGHT, wgf_color_make(255, 255, 255, 255));
+    wgf_draw_texture_fill(tiles, 560, 190, 160, 24, sweep, WGF_DRAW_FILL_LEFT_TO_RIGHT,
+                          wgf_color_make(255, 255, 255, 255));
     wgf_draw_texture_fill(tiles, 620, 220, 70, 70, sweep, WGF_DRAW_FILL_CLOCKWISE, wgf_color_make(255, 255, 255, 255));
     {
         const float wave[12] = {20, 330, 60, 320, 140, 300 + 30 * sinf(t), 220, 340, 300, 310, 340, 320};
@@ -74,7 +75,8 @@ static void frame(void *user)
         for (k = 0; k < 6; k++) {
             const float a = t * 0.5f + (float)k * 1.0471976f;
             hex[2 * k] = 700 + 40 * cosf(a), hex[2 * k + 1] = 470 + 40 * sinf(a);
-            uvs[2 * k] = 0.5f + 0.5f * cosf((float)k * 1.0471976f), uvs[2 * k + 1] = 0.5f + 0.5f * sinf((float)k * 1.0471976f);
+            uvs[2 * k] = 0.5f + 0.5f * cosf((float)k * 1.0471976f),
+            uvs[2 * k + 1] = 0.5f + 0.5f * sinf((float)k * 1.0471976f);
         }
         wgf_draw_texture_tiled(tiles, 0, 0, 16, 16, 230, 420, 150, 70, 2.0f, wgf_color_make(255, 255, 255, 255));
         wgf_draw_texture_polygon(tiles, hex, 12, uvs, 12, wgf_color_make(255, 255, 255, 255));

@@ -280,9 +280,11 @@ static void keys(void)
     wgf_platform_priv_input_handle_event(&event, 1.0f);
     event.key_code = SAPP_KEYCODE_A;
     wgf_platform_priv_input_handle_event(&event, 1.0f);
-    expect(wgf_keyboard_is_repeated(WGF_KEY_LEFT) && wgf_keyboard_get_last_pressed() == WGF_KEY_A, "pressed: repeated, the last");
+    expect(wgf_keyboard_is_repeated(WGF_KEY_LEFT) && wgf_keyboard_get_last_pressed() == WGF_KEY_A,
+           "pressed: repeated, the last");
     next_frame();
-    expect(!wgf_keyboard_is_repeated(WGF_KEY_LEFT) && wgf_keyboard_get_last_pressed() == WGF_KEY_NONE, "held, no repeat yet: none");
+    expect(!wgf_keyboard_is_repeated(WGF_KEY_LEFT) && wgf_keyboard_get_last_pressed() == WGF_KEY_NONE,
+           "held, no repeat yet: none");
     event.key_code = SAPP_KEYCODE_LEFT;
     event.key_repeat = true;
     wgf_platform_priv_input_handle_event(&event, 1.0f);
@@ -298,9 +300,11 @@ static void system_calls(void)
     expect(wgf_mouse_get_cursor() == WGF_MOUSE_CURSOR_DEFAULT && wgf_mouse_set_cursor(WGF_MOUSE_CURSOR_HAND) &&
                wgf_mouse_get_cursor() == WGF_MOUSE_CURSOR_HAND && !wgf_mouse_set_cursor((wgf_mouse_cursor_t)11),
            "a cursor's shape; one that isn't refused");
-    expect(wgf_input_set_clipboard("copied") && strcmp(wgf_input_get_clipboard(), "copied") == 0 && !wgf_input_set_clipboard(NULL),
+    expect(wgf_input_set_clipboard("copied") && strcmp(wgf_input_get_clipboard(), "copied") == 0 &&
+               !wgf_input_set_clipboard(NULL),
            "the clipboard's text");
-    expect(wgf_window_open_url("https://example.com") && !wgf_window_open_url("") && !wgf_window_open_url(NULL), "a URL");
+    expect(wgf_window_open_url("https://example.com") && !wgf_window_open_url("") && !wgf_window_open_url(NULL),
+           "a URL");
 #if defined(__EMSCRIPTEN__)
     expect(wgf_window_is_web(), "in a page: the web");
 #else

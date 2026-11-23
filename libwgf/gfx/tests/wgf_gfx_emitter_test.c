@@ -108,7 +108,8 @@ static void test_particles(void)
         expect(wgf_emitter3d_set_seed(e, 42) && wgf_emitter3d_get_seed(e) == 42, "a seed");
         wgf_actor_set_position(e, 1, 2, 3);
         expect(wgf_emitter3d_set_spawn_box(e, 0.5f, 0, 0), "a spawn box");
-        expect(wgf_emitter3d_set_velocity(e, 0, 10, 0, 0.3f, 0.2f) && wgf_emitter3d_get_spread(e) == 0.3f, "a velocity");
+        expect(wgf_emitter3d_set_velocity(e, 0, 10, 0, 0.3f, 0.2f) && wgf_emitter3d_get_spread(e) == 0.3f,
+               "a velocity");
         expect(wgf_emitter3d_set_life(e, 1, 2), "a life");
         expect(wgf_emitter3d_burst(e, 200), "a burst, where the node is");
     }
@@ -129,7 +130,8 @@ static void test_particles(void)
     expect(!wgf_gfx_priv_emitter_particle(a, 200, born_a, motion_a, shape), "no more than were born");
 
     /* 2D: turned up to `spread` either way, in the screen's plane */
-    expect(wgf_emitter2d_set_velocity(flat, 100, 0, 0.5f, 0) && wgf_emitter2d_get_velocity(flat).x == 100, "2D velocity");
+    expect(wgf_emitter2d_set_velocity(flat, 100, 0, 0.5f, 0) && wgf_emitter2d_get_velocity(flat).x == 100,
+           "2D velocity");
     expect(wgf_emitter2d_burst(flat, 100), "a 2D burst");
     for (int i = 0; i < 100; i++) {
         wgf_gfx_priv_emitter_particle(flat, i, born_a, motion_a, shape);
@@ -236,7 +238,8 @@ static void test_curves(void)
     expect(!wgf_emitter3d_add_size_key(e, 0.5f, -1), "no negative size");
     wgf_log_set_level(WGF_LOG_LEVEL_INFO);
     expect(wgf_emitter3d_clear_color_keys(e) && wgf_emitter3d_add_color_key(e, 0.3f, WGF_COLOR_RED) &&
-               wgf_emitter3d_get_color_key_value(e, 0) == WGF_COLOR_RED && wgf_emitter3d_get_color_key_time(e, 0) == 0.3f,
+               wgf_emitter3d_get_color_key_value(e, 0) == WGF_COLOR_RED &&
+               wgf_emitter3d_get_color_key_time(e, 0) == 0.3f,
            "a color key");
 
     /* the palette: 8 at most; particles carry a random pick, spread over it */

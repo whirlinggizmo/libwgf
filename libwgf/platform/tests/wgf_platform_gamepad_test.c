@@ -80,7 +80,8 @@ static void buttons(void)
     /* a tick reads its own edges: one tick sees the press, the next doesn't */
     wgf_platform_priv_input_set_context(WGF_PLATFORM_PRIV_INPUT_TICK);
     expect(wgf_gamepad_is_pressed(1, WGF_GAMEPAD_BUTTON_SOUTH), "the tick sees the press");
-    expect(wgf_gamepad_get_last_pressed(1) == WGF_GAMEPAD_BUTTON_SOUTH && wgf_gamepad_get_last_pressed(0) == WGF_GAMEPAD_BUTTON_NONE &&
+    expect(wgf_gamepad_get_last_pressed(1) == WGF_GAMEPAD_BUTTON_SOUTH &&
+               wgf_gamepad_get_last_pressed(0) == WGF_GAMEPAD_BUTTON_NONE &&
                wgf_gamepad_get_last_pressed(99) == WGF_GAMEPAD_BUTTON_NONE,
            "the last pressed: its button; none on another pad, or one out of range");
     wgf_platform_priv_gamepad_end_tick();
@@ -243,8 +244,10 @@ static void rumble(void)
 static void mappings(void)
 {
     /* bus 3, vendor 0x045e, product 0x028e, version 0x0114 */
-    static const unsigned char pad_guid[16] = {0x03, 0, 0xab, 0xcd, 0x5e, 0x04, 0, 0, 0x8e, 0x02, 0, 0, 0x14, 0x01, 0, 0};
-    static const unsigned char other_version[16] = {0x03, 0, 0, 0, 0x5e, 0x04, 0, 0, 0x8e, 0x02, 0, 0, 0x99, 0x00, 0, 0};
+    static const unsigned char pad_guid[16] = {0x03, 0, 0xab, 0xcd, 0x5e, 0x04, 0, 0, 0x8e, 0x02, 0, 0, 0x14, 0x01,
+                                               0, 0};
+    static const unsigned char other_version[16] = {0x03, 0, 0, 0, 0x5e, 0x04, 0, 0, 0x8e, 0x02, 0, 0, 0x99, 0x00,
+                                                    0, 0};
     static const unsigned char unknown[16] = {0x05, 0, 0, 0, 0x11, 0x11, 0, 0, 0x22, 0x22, 0, 0, 0, 0, 0, 0};
     const char *text =
         "# a comment\n"
@@ -293,12 +296,15 @@ static void mappings(void)
     expect(pad.buttons[WGF_GAMEPAD_BUTTON_DPAD_UP] && pad.buttons[WGF_GAMEPAD_BUTTON_DPAD_LEFT] &&
                !pad.buttons[WGF_GAMEPAD_BUTTON_DPAD_DOWN],
            "a hat's directions");
-    expect(near(pad.axes[WGF_PLATFORM_PRIV_GAMEPAD_LEFT_X], 0.25f) && near(pad.axes[WGF_PLATFORM_PRIV_GAMEPAD_LEFT_Y], -0.5f),
+    expect(near(pad.axes[WGF_PLATFORM_PRIV_GAMEPAD_LEFT_X], 0.25f) &&
+               near(pad.axes[WGF_PLATFORM_PRIV_GAMEPAD_LEFT_Y], -0.5f),
            "an axis, and one inverted");
-    expect(near(pad.axes[WGF_PLATFORM_PRIV_GAMEPAD_LEFT_TRIGGER], 1) && near(pad.axes[WGF_PLATFORM_PRIV_GAMEPAD_RIGHT_TRIGGER], 0.6f),
+    expect(near(pad.axes[WGF_PLATFORM_PRIV_GAMEPAD_LEFT_TRIGGER], 1) &&
+               near(pad.axes[WGF_PLATFORM_PRIV_GAMEPAD_RIGHT_TRIGGER], 0.6f),
            "a trigger from a whole axis, pulled, and from an axis's half");
     expect(near(pad.axes[WGF_PLATFORM_PRIV_GAMEPAD_RIGHT_X], -1), "a stick's half from a button");
-    expect(pad.buttons[WGF_GAMEPAD_BUTTON_WEST] && !pad.buttons[WGF_GAMEPAD_BUTTON_NORTH], "a button from an axis's half");
+    expect(pad.buttons[WGF_GAMEPAD_BUTTON_WEST] && !pad.buttons[WGF_GAMEPAD_BUTTON_NORTH],
+           "a button from an axis's half");
     raw.buttons[6] = false;
     raw.buttons[7] = true;
     raw.axes[3] = -0.8f;
@@ -325,7 +331,8 @@ static void mappings(void)
     pad.mapped = false;
     wgf_platform_priv_gamepad_set_test_pad(2, &pad);
     next_frame();
-    expect(strcmp(wgf_gamepad_get_guid(2), "") == 0 && !wgf_gamepad_is_mapped(2) && strcmp(wgf_gamepad_get_guid(9), "") == 0,
+    expect(strcmp(wgf_gamepad_get_guid(2), "") == 0 && !wgf_gamepad_is_mapped(2) &&
+               strcmp(wgf_gamepad_get_guid(9), "") == 0,
            "none where the platform makes none, or no such pad");
     wgf_platform_priv_gamepad_set_test_pad(2, NULL);
 }

@@ -148,7 +148,8 @@ int main(void)
     wgf_resource_set_load_budget(4.0f);
     wgf_core_priv_fs_write("notes/a.txt", (const unsigned char *)"alpha", 5);
     wgf_core_priv_fs_write("notes/bad.txt", (const unsigned char *)"bad", 3);
-    wgf_core_priv_handle_pool_init(&note_pool, WGF_CORE_PRIV_HANDLE_KIND_TEST_A, (void **)&notes, sizeof(note_t), 4, 256);
+    wgf_core_priv_handle_pool_init(&note_pool, WGF_CORE_PRIV_HANDLE_KIND_TEST_A, (void **)&notes, sizeof(note_t),
+                                   4, 256);
     expect(wgf_core_priv_resource_create(WGF_CORE_PRIV_HANDLE_KIND_TEST_A, "notes/a.txt") == 0,
            "a kind not registered: none");
     wgf_core_priv_resource_register(&note_pool, &kind);

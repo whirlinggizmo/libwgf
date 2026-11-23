@@ -115,7 +115,8 @@ static void test_background(void)
             want[c] = to_srgb8(0.5f + 0.5f * looks[i][c]);
             near = near && abs(rgb[c] - want[c]) <= 6;
         }
-        if (!near) printf("  %s: %d %d %d, not %d %d %d\n", names[i], rgb[0], rgb[1], rgb[2], want[0], want[1], want[2]);
+        if (!near) printf("  %s: %d %d %d, not %d %d %d\n", names[i],
+                          rgb[0], rgb[1], rgb[2], want[0], want[1], want[2]);
         expect(near, names[i]);
     }
     /* fully blurred: looking up, toward the average (0.5 a channel) */
@@ -185,7 +186,8 @@ static void test_lighting(void)
     draw(stage);
     pixel_at(SIZE / 2, SIZE / 2, middle);
     printf("mirror: middle %d %d %d\n", middle[0], middle[1], middle[2]);
-    expect(middle[2] > middle[0] + 30 && middle[2] > middle[1] + 30, "a smooth metal mirrors what is behind the camera");
+    expect(middle[2] > middle[0] + 30 && middle[2] > middle[1] + 30,
+           "a smooth metal mirrors what is behind the camera");
     wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
 }
 

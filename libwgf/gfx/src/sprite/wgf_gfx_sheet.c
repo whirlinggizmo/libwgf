@@ -292,7 +292,8 @@ static bool numbered(const char *name, char *stem, size_t stem_size, long *numbe
 {
     size_t end = strlen(name), digits;
     const char *dot = strrchr(name, '.'), *slash = strrchr(name, '/');
-    if (dot != NULL && (slash == NULL || dot > slash) && dot != name) end = (size_t)(dot - name); /* its extension off */
+    /* its extension off */
+    if (dot != NULL && (slash == NULL || dot > slash) && dot != name) end = (size_t)(dot - name);
     digits = end;
     while (digits > 0 && isdigit((unsigned char)name[digits - 1])) digits--;
     if (digits == end) return false;

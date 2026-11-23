@@ -24,7 +24,8 @@ void wgf_gfx_priv_model_mesh_done(wgf_mesh_t mesh);
  * program that never calls wgf_mesh_create links none of glTF (27.8 KB of gzip on
  * gfx-meshes, and the placeholder's 1 KB). */
 typedef struct wgf_gfx_priv_model_file_t {
-    bool (*add)(wgf_actor_t root);                   /* a root kept: its tree made as its mesh loads; false out of memory */
+    /* a root kept: its tree made as its mesh loads; false out of memory */
+    bool (*add)(wgf_actor_t root);
     void (*forget)(wgf_actor_t root);                /* as it goes */
     void (*build)(wgf_actor_t root, wgf_mesh_t mesh); /* its tree, its mesh READY: made, or made again in place */
     wgf_mesh_t (*create)(const char *path);

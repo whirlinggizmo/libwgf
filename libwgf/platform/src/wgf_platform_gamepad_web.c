@@ -85,7 +85,8 @@ void wgf_platform_priv_gamepad_platform_poll(wgf_platform_priv_gamepad_t pads[WG
         for (b = 0; b < WGF_PLATFORM_PRIV_GAMEPAD_BUTTONS; b++) {
             pads[i].buttons[b] = buttons[i * WGF_PLATFORM_PRIV_GAMEPAD_BUTTONS + b] != 0;
         }
-        for (a = 0; a < WGF_PLATFORM_PRIV_GAMEPAD_AXES; a++) pads[i].axes[a] = axes[i * WGF_PLATFORM_PRIV_GAMEPAD_AXES + a];
+        for (a = 0; a < WGF_PLATFORM_PRIV_GAMEPAD_AXES; a++)
+            pads[i].axes[a] = axes[i * WGF_PLATFORM_PRIV_GAMEPAD_AXES + a];
         memcpy(pads[i].name, &names[i * WGF_PLATFORM_PRIV_GAMEPAD_NAME_SIZE], WGF_PLATFORM_PRIV_GAMEPAD_NAME_SIZE);
     }
 }

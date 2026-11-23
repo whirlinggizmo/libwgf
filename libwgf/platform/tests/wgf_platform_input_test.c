@@ -118,7 +118,8 @@ static void on_frame(void *user)
             expect(wgf_keyboard_is_pressed(WGF_KEY_SPACE) && wgf_keyboard_is_released(WGF_KEY_SPACE),
                    "a tap within a frame is pressed and released");
             expect(wgf_keyboard_get_state(WGF_KEY_SPACE) == WGF_INPUT_STATE_PRESSED, "and reads as pressed");
-            expect(wgf_keyboard_get_state((wgf_keyboard_key_t)9999) == WGF_INPUT_STATE_UP, "a key that isn't one is up");
+            expect(wgf_keyboard_get_state((wgf_keyboard_key_t)9999) == WGF_INPUT_STATE_UP,
+                   "a key that isn't one is up");
             push_mouse(SAPP_EVENTTYPE_MOUSE_MOVE, SAPP_MOUSEBUTTON_INVALID, 10, 20, 3, 4);
             push_mouse(SAPP_EVENTTYPE_MOUSE_MOVE, SAPP_MOUSEBUTTON_INVALID, 12, 25, 2, 5);
             push_mouse(SAPP_EVENTTYPE_MOUSE_DOWN, SAPP_MOUSEBUTTON_RIGHT, 12, 25, 0, 0);

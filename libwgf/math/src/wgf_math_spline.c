@@ -38,7 +38,8 @@ wgf_vec2_t wgf_spline_get_point(wgf_spline_kind_t kind, const float *points, int
         const float b0 = (1 - u) * (1 - u) * (1 - u) / 6.0f, b1 = (3 * u3 - 6 * u2 + 4) / 6.0f;
         const float b2 = (-3 * u3 + 3 * u2 + 3 * u + 1) / 6.0f, b3 = u3 / 6.0f;
         p = points + 2 * s;
-        return wgf_vec2_make(b0 * p[0] + b1 * p[2] + b2 * p[4] + b3 * p[6], b0 * p[1] + b1 * p[3] + b2 * p[5] + b3 * p[7]);
+        return wgf_vec2_make(b0 * p[0] + b1 * p[2] + b2 * p[4] + b3 * p[6],
+                             b0 * p[1] + b1 * p[3] + b2 * p[5] + b3 * p[7]);
     }
     case WGF_SPLINE_KIND_CATMULL_ROM: {
         const float u2 = u * u, u3 = u2 * u;

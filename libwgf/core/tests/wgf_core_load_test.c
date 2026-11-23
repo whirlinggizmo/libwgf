@@ -208,7 +208,8 @@ static void run(const char *label, int workers)
         stepped = make_with(&stepped_loader, "things/a.txt");
         unpreparable = make_with(&stepped_loader, "things/unpreparable.txt");
         updates = settle();
-        expect(thing(stepped)->status == 1 && strcmp(thing(stepped)->text, "1 alpha") == 0, "prepared in steps, loaded");
+        expect(thing(stepped)->status == 1 && strcmp(thing(stepped)->text, "1 alpha") == 0,
+               "prepared in steps, loaded");
         expect(thing(unpreparable)->status == 2, "a step that fails fails the load");
         expect(prepare_steps_run == PREPARE_STEPS + 3, "every step run, and none after a failure");
         expect(workers != 0 || updates >= PREPARE_STEPS, "with no workers and a budget of 0, a step an update");
@@ -232,11 +233,13 @@ static void run(const char *label, int workers)
             stepped = make_with(&stepped_loader, "things/a.txt");
             wgf_core_priv_update();
             wgf_core_priv_update();
-            expect(prepare_steps_run > before && prepare_steps_run < before + PREPARE_STEPS, "partway through its steps");
+            expect(prepare_steps_run > before && prepare_steps_run < before + PREPARE_STEPS,
+                   "partway through its steps");
             expect(wgf_core_priv_load_cancel(stepped), "cancel it partway");
             after = make_with(&stepped_loader, "things/b.txt");
             settle();
-            expect(thing(stepped)->status == 0 && thing(after)->status == 1, "the cancelled one never loads; the next does");
+            expect(thing(stepped)->status == 0 && thing(after)->status == 1,
+                   "the cancelled one never loads; the next does");
             expect(live_prepared == 0, "the cancelled one's data discarded");
             wgf_core_priv_handle_pool_free(&thing_pool, stepped);
             wgf_core_priv_handle_pool_free(&thing_pool, after);
@@ -257,7 +260,8 @@ int main(void)
     wgf_core_priv_fs_write("things/cancelled.txt", (const unsigned char *)"1 cancelled", 11);
     wgf_core_priv_fs_write("things/waits.txt", (const unsigned char *)"1 waits", 7);
     wgf_core_priv_fs_write("things/unpreparable.txt", (const unsigned char *)"1 unpreparable", 14);
-    wgf_core_priv_handle_pool_init(&thing_pool, WGF_CORE_PRIV_HANDLE_KIND_TEST_A, (void **)&things, sizeof(thing_t), 16, 256);
+    wgf_core_priv_handle_pool_init(&thing_pool, WGF_CORE_PRIV_HANDLE_KIND_TEST_A, (void **)&things, sizeof(thing_t),
+                                   16, 256);
 
 #ifndef NDEBUG
     { /* a debug build refuses a loader in steps until the steps are enabled (an error logged, on purpose) */

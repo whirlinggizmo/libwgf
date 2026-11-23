@@ -76,7 +76,8 @@ bool wgf_gfx_priv_sprite_quad(const wgf_gfx_priv_actor_t *actor_ptr, wgf_mat4_t 
     int tw, th;
     bool placeholder;
 
-    if (sprite->texture == 0 || !wgf_gfx_priv_texture_get_binding(sprite->texture, view, sampler, &tw, &th, &placeholder)) {
+    if (sprite->texture == 0 ||
+        !wgf_gfx_priv_texture_get_binding(sprite->texture, view, sampler, &tw, &th, &placeholder)) {
         return false;
     }
     memset(quad, 0, sizeof(*quad));

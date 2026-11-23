@@ -171,7 +171,8 @@ WGF_API float wgf_model_get_animation_time(wgf_actor_t model);
  *   once).
  * - With `loop`, it loops. Without, it plays once, then fades out over the same `fade` as it
  *   ends (COMPLETE), and is gone.
- * - Its time runs at the model's speed while the animation below plays.
+ * - Its time runs at the model's speed while the animation below plays. It always runs
+ *   forward, even when that speed is negative.
  * - stop_layer_animation fades it out over `fade`.
  * - The getters return its animation (-1 for none), its state, and its weight now (0 to 1).
  *

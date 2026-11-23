@@ -179,8 +179,9 @@ wgf_mat4_t wgf_gfx_priv_actor_world_of(wgf_actor_t actor, wgf_gfx_priv_actor_t *
     if (!actor_ptr->world_dirty) return actor_ptr->world;
     parent_ptr = actor_ptr->parent != 0 ? wgf_gfx_priv_actor_of(actor_ptr->parent) : NULL;
     if (parent_ptr != NULL && parent_ptr->world_dirty) return wgf_gfx_priv_actor_get_world_matrix(actor);
-    actor_ptr->world = parent_ptr != NULL ? wgf_mat4_mul(parent_ptr->world, wgf_gfx_priv_actor_get_local_matrix(actor_ptr))
-                                         : wgf_gfx_priv_actor_get_local_matrix(actor_ptr);
+    actor_ptr->world = parent_ptr != NULL
+                           ? wgf_mat4_mul(parent_ptr->world, wgf_gfx_priv_actor_get_local_matrix(actor_ptr))
+                           : wgf_gfx_priv_actor_get_local_matrix(actor_ptr);
     actor_ptr->world_dirty = false;
     return actor_ptr->world;
 }
@@ -630,7 +631,8 @@ bool wgf_actor_look_at(wgf_actor_t actor, float x, float y, float z, float up_x,
     wgf_vec3_t forward;
     wgf_quat_t parent_rotation;
     if (actor_ptr == NULL) return false;
-    forward = wgf_vec3_sub(wgf_vec3_make(x, y, z), wgf_mat4_get_translation(wgf_gfx_priv_actor_get_world_matrix(actor)));
+    forward = wgf_vec3_sub(wgf_vec3_make(x, y, z),
+                           wgf_mat4_get_translation(wgf_gfx_priv_actor_get_world_matrix(actor)));
     if (wgf_vec3_length(forward) < 1e-6f ||
         wgf_vec3_length(wgf_vec3_cross(up, forward)) < 1e-6f * wgf_vec3_length(forward)) {
         return false;
@@ -894,7 +896,8 @@ wgf_actor_t wgf_gfx_priv_actor_find_on_stage(wgf_actor_t stage, const char *name
     for (i = 0; i < names.counts[b]; i++) {
         const wgf_actor_t actor = names.buckets[b][i];
         const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
-        if (actor_ptr == NULL || strcmp(actor_ptr->name, name) != 0 || actor == stage || wgf_gfx_priv_actor_get_root(actor) != stage) {
+        if (actor_ptr == NULL || strcmp(actor_ptr->name, name) != 0 || actor == stage ||
+            wgf_gfx_priv_actor_get_root(actor) != stage) {
             continue;
         }
         if (found != 0) {

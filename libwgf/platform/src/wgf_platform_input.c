@@ -81,7 +81,8 @@ static struct {
 
 void wgf_platform_priv_input_reset(void)
 {
-    const bool cursor_visible = input.cursor_visible, mouse_emulated = input.mouse_emulated, from_mouse = input.from_mouse;
+    const bool cursor_visible = input.cursor_visible, mouse_emulated = input.mouse_emulated,
+               from_mouse = input.from_mouse;
     memset(&input, 0, sizeof(input));
     input.cursor_visible = cursor_visible;
     input.mouse_emulated = mouse_emulated;
@@ -395,12 +396,14 @@ static void mouse_touch(const sapp_event *event)
 {
     sapp_event touch;
     sapp_event_type type = SAPP_EVENTTYPE_INVALID;
-    if (event->type == SAPP_EVENTTYPE_MOUSE_DOWN && event->mouse_button == SAPP_MOUSEBUTTON_LEFT && !input.mouse_finger) {
+    if (event->type == SAPP_EVENTTYPE_MOUSE_DOWN && event->mouse_button == SAPP_MOUSEBUTTON_LEFT &&
+        !input.mouse_finger) {
         type = SAPP_EVENTTYPE_TOUCHES_BEGAN;
         input.mouse_finger = true;
     } else if (event->type == SAPP_EVENTTYPE_MOUSE_MOVE && input.mouse_finger) {
         type = SAPP_EVENTTYPE_TOUCHES_MOVED;
-    } else if (event->type == SAPP_EVENTTYPE_MOUSE_UP && event->mouse_button == SAPP_MOUSEBUTTON_LEFT && input.mouse_finger) {
+    } else if (event->type == SAPP_EVENTTYPE_MOUSE_UP && event->mouse_button == SAPP_MOUSEBUTTON_LEFT &&
+               input.mouse_finger) {
         type = SAPP_EVENTTYPE_TOUCHES_ENDED;
         input.mouse_finger = false;
     } else {
@@ -902,7 +905,8 @@ void wgf_platform_priv_set_pads(const wgf_platform_priv_pads_t *pads)
 {
     if (parts.pads == pads) return;
     parts.pads = pads;
-    if (pads != NULL && parts.pads_open) { /* reached with the window open: read at once, as a frame's start reads them */
+    /* reached with the window open: read at once, as a frame's start reads them */
+    if (pads != NULL && parts.pads_open) {
         pads->open();
         pads->begin_frame();
     }

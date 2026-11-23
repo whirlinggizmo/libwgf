@@ -135,7 +135,8 @@ static void frame(void *user)
     (void)user;
 
     if (wgf_app_can_quit() && wgf_keyboard_is_pressed(WGF_KEY_ESCAPE)) wgf_app_quit();
-    if (wgf_keyboard_is_pressed(WGF_KEY_E)) g.environment = (g.environment + 1) % (ENVIRONMENT_COUNT + 1), changed = true;
+    if (wgf_keyboard_is_pressed(WGF_KEY_E))
+        g.environment = (g.environment + 1) % (ENVIRONMENT_COUNT + 1), changed = true;
     if (wgf_keyboard_is_pressed(WGF_KEY_B)) g.blur = (g.blur + 1) % (BLUR_COUNT + 1), changed = true;
     if (wgf_keyboard_is_pressed(WGF_KEY_T)) {
         g.tonemap = g.tonemap == WGF_STAGE3D_TONEMAP_NEUTRAL ? WGF_STAGE3D_TONEMAP_ACES

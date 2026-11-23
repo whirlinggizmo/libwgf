@@ -70,7 +70,8 @@ int main(void)
     expect(strstr(text, ": utf8: h\xC3\xA9llo \xE2\x9C\x93 \xE6\x97\xA5\xE6\x9C\xAC \xF0\x9F\x8E\xAE\n") != NULL,
            "UTF-8 passes through unchanged");
     snprintf(expected, sizeof(expected), ": %s\n", long_text);
-    expect(strstr(text, expected) != NULL && strstr(text, "a\xC3") == NULL && strstr(text, "atail") == NULL, "long message cut before a split character");
+    expect(strstr(text, expected) != NULL && strstr(text, "a\xC3") == NULL && strstr(text, "atail") == NULL,
+           "long message cut before a split character");
     expect(strstr(text, "[WARN ] broken tail \n") != NULL, "a cut-off character at the end is dropped");
 
     { /* the last lines kept for the program */
@@ -89,7 +90,8 @@ int main(void)
         wgf_log_message_source(WGF_LOG_LEVEL_ERROR, "src/game.c", 9, "with its source");
         expect(wgf_log_get_history_count() == 3 && strcmp(wgf_log_get_history_line(0), "kept 2") == 0 &&
                    strcmp(wgf_log_get_history_line(2), "game.c:9: with its source") == 0 &&
-                   wgf_log_get_history_level(2) == WGF_LOG_LEVEL_ERROR && wgf_log_get_history_level(0) == WGF_LOG_LEVEL_WARN,
+                   wgf_log_get_history_level(2) == WGF_LOG_LEVEL_ERROR &&
+                   wgf_log_get_history_level(0) == WGF_LOG_LEVEL_WARN,
                "the last three, oldest first, a line as the console has it, its level; below the level not kept");
         expect(strcmp(wgf_log_get_history_line(3), "") == 0 && wgf_log_get_history_level(-1) == WGF_LOG_LEVEL_TRACE,
                "an index outside them: \"\", TRACE");

@@ -94,7 +94,8 @@ int main(void)
     texture = wgf_texture_create("sprite_test/rgbw.png");
     sprite = wgf_sprite_create(texture);
     wgf_actor_set_parent(sprite, stage);
-    expect(wgf_actor_get_kind(sprite) == WGF_ACTOR_KIND_SPRITE && wgf_sprite_get_texture(sprite) == texture, "a sprite");
+    expect(wgf_actor_get_kind(sprite) == WGF_ACTOR_KIND_SPRITE && wgf_sprite_get_texture(sprite) == texture,
+           "a sprite");
     expect(wgf_sprite_get_pivot(sprite).x == 0.5f && wgf_sprite_get_pivot(sprite).y == 0.5f &&
                wgf_sprite_get_tint(sprite) == WGF_COLOR_WHITE && wgf_sprite_get_source(sprite).z == 0.0f,
            "defaults: centered, white, the whole texture");
@@ -125,7 +126,8 @@ int main(void)
     expect(wgf_sprite_set_tint(sprite, WGF_COLOR_RED) && wgf_sprite_get_tint(sprite) == WGF_COLOR_RED, "a tint");
     expect(wgf_sprite_get_alpha_mode(sprite) == WGF_ALPHA_MODE_BLEND && wgf_sprite_get_alpha_cutoff(sprite) == 0.5f &&
                wgf_sprite_set_alpha_mode(sprite, WGF_ALPHA_MODE_MASK, 2.0f) &&
-               wgf_sprite_get_alpha_mode(sprite) == WGF_ALPHA_MODE_MASK && wgf_sprite_get_alpha_cutoff(sprite) == 1.0f &&
+               wgf_sprite_get_alpha_mode(sprite) == WGF_ALPHA_MODE_MASK &&
+               wgf_sprite_get_alpha_cutoff(sprite) == 1.0f &&
                !wgf_sprite_set_alpha_mode(sprite, (wgf_alpha_mode_t)7, 0.5f),
            "an alpha mode: blended by default, its cutoff clamped, one that isn't refused");
     expect(wgf_sprite_get_facing(sprite) == WGF_SPRITE_FACING_CAMERA &&

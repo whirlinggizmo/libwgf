@@ -79,7 +79,8 @@ int main(void)
     expect(master != 0 && music != 0 && effects != 0 && wgf_bus_get_parent(master) == 0 &&
                wgf_bus_get_parent(music) == master && wgf_bus_get_parent(effects) == master,
            "master, music, and effects, before audio starts, music and effects under the master");
-    expect(near(wgf_bus_get_volume(music), 1.0f) && !wgf_bus_is_muted(music) && near(wgf_bus_get_heard_volume(music), 1.0f),
+    expect(near(wgf_bus_get_volume(music), 1.0f) && !wgf_bus_is_muted(music) &&
+               near(wgf_bus_get_heard_volume(music), 1.0f),
            "at volume 1, unmuted");
 
     expect(wgf_core_priv_fs_write("sounds/half.wav", wav, size), "the WAV written");
@@ -134,7 +135,8 @@ int main(void)
         const wgf_bus_t quiet = wgf_bus_create(master);
         wgf_voice_stop(voice);
         wgf_bus_set_volume(quiet, 0.5f);
-        expect(wgf_sound_get_bus(sound) == effects && wgf_sound_set_bus(sound, quiet) && wgf_sound_get_bus(sound) == quiet,
+        expect(wgf_sound_get_bus(sound) == effects && wgf_sound_set_bus(sound, quiet) &&
+                   wgf_sound_get_bus(sound) == quiet,
                "a sound's plays on effects until set");
         expect(wgf_sound_play(sound, 1.0f, 1.0f, 0.0f) && near(level(), 0.25f), "a play heard through its sound's bus");
         wgf_bus_destroy(quiet);
@@ -161,8 +163,9 @@ int main(void)
         wgf_sound_set_polyphony(sound, 1); /* the play from before, still sounding: played again, silent */
         wgf_sound_play(sound, 0.0f, 1.0f, 0.0f);
         wgf_voice_play(placed);
-        expect(!wgf_voice_is_spatial(placed) && wgf_voice_get_range(placed).y == 50.0f && wgf_voice_set_spatial(placed, true) &&
-                   wgf_voice_is_spatial(placed) && wgf_voice_set_range(placed, 1, 11) && !wgf_voice_set_range(placed, 5, 2),
+        expect(!wgf_voice_is_spatial(placed) && wgf_voice_get_range(placed).y == 50.0f &&
+                   wgf_voice_set_spatial(placed, true) && wgf_voice_is_spatial(placed) &&
+                   wgf_voice_set_range(placed, 1, 11) && !wgf_voice_set_range(placed, 5, 2),
                "a spatial voice, its range; a far below its near refused");
         expect(wgf_audio_set_listener_position(0, 0, 0) && wgf_audio_set_listener_facing(0, 0, -2) &&
                    wgf_audio_get_listener_facing().z == -1.0f && !wgf_audio_set_listener_facing(0, 1, 0),
@@ -182,7 +185,8 @@ int main(void)
         wgf_audio_set_listener_facing(0, 0, 1);
         wgf_audio_priv_mix(out, 64, 44100);
         expect(near(out[0], 0.5f) && out[1] == 0.0f, "the listener turned round: on its left");
-        expect(near(wgf_voice_get_place(placed).x, 1.0f) && !wgf_voice_set_place(placed, NAN, 0, 0), "its place read back");
+        expect(near(wgf_voice_get_place(placed).x, 1.0f) && !wgf_voice_set_place(placed, NAN, 0, 0),
+               "its place read back");
         wgf_voice_destroy(placed);
     }
     wgf_voice_destroy(voice);

@@ -79,7 +79,8 @@ static void init(void *user)
 
     block(60, 1, 60, 0, -0.5f, 0, wgf_color_make(90, 120, 80, 255), WGF_BODY3D_TYPE_STATIC); /* the floor */
     {
-        const wgf_actor_t ramp = block(6, 0.4f, 8, -8, 0.6f, 6, wgf_color_make(170, 150, 120, 255), WGF_BODY3D_TYPE_STATIC);
+        const wgf_actor_t ramp =
+            block(6, 0.4f, 8, -8, 0.6f, 6, wgf_color_make(170, 150, 120, 255), WGF_BODY3D_TYPE_STATIC);
         wgf_actor_set_rotation(ramp, -0.25f, 0, 0);
     }
     for (i = 0; i < BOXES; i++) { /* a pyramid of crates */
@@ -148,7 +149,8 @@ static void tick(void *user)
     for (i = 0; i < n; i++) {
         if (events[4 * i + 1] != (int)g.gate || events[4 * i + 2] != (int)g.car) continue;
         g.in_gate = events[4 * i] == WGF_WORLD_EVENT_TRIGGER_ENTER;
-        wgf_model_set_tint(g.gate_model, g.in_gate ? wgf_color_make(60, 220, 90, 255) : wgf_color_make(240, 240, 240, 255));
+        wgf_model_set_tint(g.gate_model,
+                           g.in_gate ? wgf_color_make(60, 220, 90, 255) : wgf_color_make(240, 240, 240, 255));
     }
 }
 
@@ -170,7 +172,8 @@ static void frame(void *user)
         wgf_physics3d_draw_bodies(wgf_color_make(255, 255, 0, 255));
         wgf_draw_end_3d();
     }
-    wgf_draw_text(0, "libwgf physics3d: arrows drive, space hand brake, R back, B bodies", 12, 12, 20, WGF_COLOR_RAYWHITE);
+    wgf_draw_text(0, "libwgf physics3d: arrows drive, space hand brake, R back, B bodies", 12, 12, 20,
+                  WGF_COLOR_RAYWHITE);
     wgf_draw_text(0, g.in_gate ? "in the gate" : "", 12, 40, 18, WGF_COLOR_LIME);
 }
 

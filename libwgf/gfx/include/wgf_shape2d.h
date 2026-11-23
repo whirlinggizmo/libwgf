@@ -70,7 +70,8 @@ WGF_API bool wgf_shape2d_set_polygon(wgf_actor_t shape, const float *points, int
  *
  * - get_size returns a rectangle's width and height, or 0, 0 for another kind.
  * - get_radius returns a circle's radius, or 0 for another kind.
- * - get_line_start and get_line_end return a line's ends.
+ * - get_line_start and get_line_end return a line's ends, or 0, 0 for another kind.
+ * - get_point_count returns how many points a polygon has, or 0 for another kind.
  * - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
  *   `count` floats. It returns how many floats it filled, or 0 for anything but a polygon. */
 WGF_API wgf_vec2_t wgf_shape2d_get_size(wgf_actor_t shape);

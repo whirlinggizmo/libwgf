@@ -126,8 +126,8 @@ static void init(void *user)
     place(wgf_mesh_create_cube(1.0f, 1.0f, 1.0f), 3.8f, 0.5f, 1.4f, 0.3f, 0.5f, 0.85f, 0.6f);
 
     /* one that casts nothing, and one that nothing shadows */
-    wgf_model_set_shadow_casting(place(wgf_mesh_create_sphere(0.6f, 24, 48), -2.0f, 0.6f, 2.4f, 0.95f, 0.85f, 0.3f, 0.35f),
-                                 false);
+    wgf_model_set_shadow_casting(
+        place(wgf_mesh_create_sphere(0.6f, 24, 48), -2.0f, 0.6f, 2.4f, 0.95f, 0.85f, 0.3f, 0.35f), false);
     wgf_model_set_shadow_receiving(
         place(wgf_mesh_create_sphere(0.6f, 24, 48), -2.6f, 0.6f, -1.2f, 0.9f, 0.3f, 0.5f, 0.35f), false);
 

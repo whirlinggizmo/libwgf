@@ -90,8 +90,10 @@ static void check_from_samples(void)
                fabsf(out[0] - 0.5f) < 1e-6f && fabsf(out[1] + 0.25f) < 1e-6f,
            "stereo: left then right, a frame each pair");
     wgf_voice_destroy(v);
-    expect(wgf_sound_create_from_samples(NULL, 10, 1, 44100) == 0 && wgf_sound_create_from_samples(samples, 0, 1, 44100) == 0 &&
-               wgf_sound_create_from_samples(samples, 3, 2, 44100) == 0 && wgf_sound_create_from_samples(samples, 10, 3, 44100) == 0 &&
+    expect(wgf_sound_create_from_samples(NULL, 10, 1, 44100) == 0 &&
+               wgf_sound_create_from_samples(samples, 0, 1, 44100) == 0 &&
+               wgf_sound_create_from_samples(samples, 3, 2, 44100) == 0 &&
+               wgf_sound_create_from_samples(samples, 10, 3, 44100) == 0 &&
                wgf_sound_create_from_samples(samples, 10, 1, 7999) == 0 &&
                wgf_sound_create_from_samples(samples, 10, 1, 192001) == 0,
            "refused: no samples, none, half a frame, three channels, a rate out of range");

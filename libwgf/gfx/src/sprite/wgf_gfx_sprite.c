@@ -34,8 +34,10 @@ static void region_of(const wgf_gfx_priv_sprite_t *sprite, float region[4], floa
     region[3] = whole ? th : sprite->source[3];
     { /* a trimmed frame's default size: the whole picture's */
         const bool trimmed = sprite->trim[2] > 0.0f && sprite->trim[3] > 0.0f;
-        size[0] = sprite->size[0] > 0.0f && sprite->size[1] > 0.0f ? sprite->size[0] : (trimmed ? sprite->trim[2] : region[2]);
-        size[1] = sprite->size[0] > 0.0f && sprite->size[1] > 0.0f ? sprite->size[1] : (trimmed ? sprite->trim[3] : region[3]);
+        size[0] = sprite->size[0] > 0.0f && sprite->size[1] > 0.0f ? sprite->size[0]
+                                                                   : (trimmed ? sprite->trim[2] : region[2]);
+        size[1] = sprite->size[0] > 0.0f && sprite->size[1] > 0.0f ? sprite->size[1]
+                                                                   : (trimmed ? sprite->trim[3] : region[3]);
     }
 }
 
@@ -282,7 +284,8 @@ bool wgf_sprite_set_nine_slice(wgf_actor_t sprite, float left, float top, float 
 wgf_vec4_t wgf_sprite_get_nine_slice(wgf_actor_t sprite)
 {
     const wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
-    return sprite_ptr != NULL ? wgf_vec4_make(sprite_ptr->nine[0], sprite_ptr->nine[1], sprite_ptr->nine[2], sprite_ptr->nine[3])
+    return sprite_ptr != NULL ? wgf_vec4_make(sprite_ptr->nine[0], sprite_ptr->nine[1], sprite_ptr->nine[2],
+                                              sprite_ptr->nine[3])
                               : wgf_vec4_make(0.0f, 0.0f, 0.0f, 0.0f);
 }
 

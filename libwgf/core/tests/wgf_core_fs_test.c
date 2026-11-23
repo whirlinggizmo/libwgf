@@ -157,7 +157,8 @@ int main(void)
     settle(t);
     wgf_fs_task_destroy(t);
     t = wgf_fs_list("dirs/empty");
-    expect(settle(t) == WGF_FS_TASK_STATUS_DONE && strcmp(wgf_fs_task_get_text(t), "") == 0 && wgf_fs_task_get_size(t) == 0,
+    expect(settle(t) == WGF_FS_TASK_STATUS_DONE && strcmp(wgf_fs_task_get_text(t), "") == 0 &&
+               wgf_fs_task_get_size(t) == 0,
            "an empty one: \"\"");
     wgf_fs_task_destroy(t);
     t = wgf_fs_list("dirs/nothing");

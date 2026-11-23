@@ -119,7 +119,8 @@ int main(void)
                "its corners as given, a smooth normal where the strip bends, its texture coordinates");
         expect(wgf_gfx_priv_mesh_get_bounds(road, &lo, &hi) && near(hi.x, 2.0f) && near(hi.y, 0.5f),
                "its box from its corners");
-        expect(wgf_mesh_create_triangles(strip, 9, NULL, 0, NULL, 0, NULL, 0) != 0, "three corners in threes: one triangle");
+        expect(wgf_mesh_create_triangles(strip, 9, NULL, 0, NULL, 0, NULL, 0) != 0,
+               "three corners in threes: one triangle");
         expect(wgf_mesh_create_triangles(strip, 18, NULL, 0, NULL, 0, past, 3) == 0 &&
                    wgf_mesh_create_triangles(strip, 17, NULL, 0, NULL, 0, NULL, 0) == 0 &&
                    wgf_mesh_create_triangles(strip, 18, NULL, 0, uvs, 10, indices, 12) == 0,
@@ -345,12 +346,14 @@ int main(void)
     { /* bounds: the mesh's own, and a tree of models' placed */
         const wgf_actor_t root = wgf_actor_create(), model = wgf_model_create(cube);
         wgf_vec3_t low = wgf_mesh_get_bounds_min(cube), high = wgf_mesh_get_bounds_max(cube);
-        expect(fabsf(low.x + 1) < 1e-4f && fabsf(high.y - 0.5f) < 1e-4f && fabsf(high.z - 2) < 1e-4f, "a mesh's box, its own space");
+        expect(fabsf(low.x + 1) < 1e-4f && fabsf(high.y - 0.5f) < 1e-4f && fabsf(high.z - 2) < 1e-4f,
+               "a mesh's box, its own space");
         wgf_actor_set_parent(model, root);
         wgf_actor_set_position(root, 10, 0, 0);
         wgf_actor_set_scale(model, 2, 2, 2);
         low = wgf_model_get_bounds_min(root), high = wgf_model_get_bounds_max(root);
-        expect(fabsf(low.x - 8) < 1e-4f && fabsf(high.x - 12) < 1e-4f && fabsf(high.y - 1) < 1e-4f, "a tree's models placed and scaled");
+        expect(fabsf(low.x - 8) < 1e-4f && fabsf(high.x - 12) < 1e-4f && fabsf(high.y - 1) < 1e-4f,
+               "a tree's models placed and scaled");
         expect(wgf_model_get_bounds_max(wgf_actor_create()).x == 0 && wgf_mesh_get_bounds_max(12345).x == 0, "none: 0");
         wgf_actor_destroy(root, WGF_ACTOR_DESTROY_CHILDREN);
     }

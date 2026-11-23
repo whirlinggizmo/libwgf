@@ -147,7 +147,8 @@ static unsigned char *read_file(const char *path, size_t *size)
     long length = 0;
     if (file == NULL) return NULL;
     if (fseek(file, 0, SEEK_END) == 0 && (length = ftell(file)) > 0 && fseek(file, 0, SEEK_SET) == 0 &&
-        (data = (unsigned char *)malloc((size_t)length)) != NULL && fread(data, 1, (size_t)length, file) != (size_t)length) {
+        (data = (unsigned char *)malloc((size_t)length)) != NULL &&
+        fread(data, 1, (size_t)length, file) != (size_t)length) {
         free(data);
         data = NULL;
     }

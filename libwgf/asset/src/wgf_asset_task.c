@@ -258,7 +258,8 @@ static void add_dependency(const char *uri, const char *fallback_uri, bool requi
     uint16_t child;
     if (parent_ptr == NULL || !wgf_asset_priv_is_relative_uri(uri)) return; /* data:, a URL: the file's own business */
     if (!wgf_asset_priv_join_relative(parent_ptr->path, uri, path, sizeof(path))) {
-        wgf_log_warn("wgf_asset: %s: can't use what it names, %s (outside the host, or too long)", parent_ptr->path, uri);
+        wgf_log_warn("wgf_asset: %s: can't use what it names, %s (outside the host, or too long)", parent_ptr->path,
+                     uri);
         parent_ptr->dependency_failed = parent_ptr->dependency_failed || required;
         return;
     }
@@ -482,7 +483,8 @@ static float task_progress(const wgf_asset_priv_task_t *task_ptr)
     if (is_finished(task_ptr)) return 1.0f;
     if (task_ptr->state != WGF_ASSET_PRIV_WAITING || task_ptr->is_ping) return 0.0f;
     return 0.5f + 0.5f * (task_ptr->dependency_count > 0
-                              ? (float)(task_ptr->dependency_count - task_ptr->pending) / (float)task_ptr->dependency_count
+                              ? (float)(task_ptr->dependency_count - task_ptr->pending) /
+                                    (float)task_ptr->dependency_count
                               : 1.0f);
 }
 

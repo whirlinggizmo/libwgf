@@ -79,7 +79,8 @@ static void frame(void *user)
         while (ship != 0 && spawn_clock > 0.05f) {
             const wgf_vec3_t at = wgf_actor_get_position(ship);
             const float angle = wgf_random_get_range(0.0f, 6.2831853f), speed = wgf_random_get_range(80, 220);
-            const wgf_actor_t spark = wgf_prefab_spawn_at(spark_prefab, world, at.x, at.y, 0, 0); /* drawn here at once */
+            /* drawn here at once */
+            const wgf_actor_t spark = wgf_prefab_spawn_at(spark_prefab, world, at.x, at.y, 0, 0);
             spawn_clock -= 0.05f;
             wgf_motion_set_velocity(spark, cosf(angle) * speed, sinf(angle) * speed, 0);
         }

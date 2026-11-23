@@ -104,8 +104,8 @@ static void test_pair(const char *path, float least, float most)
     s = wgf_audio_priv_sound_of(streamed);
     expect(d != NULL && d->pcm != NULL && !d->streamed && d->channels >= 1 && d->channels <= 2,
            "decoded: its samples");
-    expect(s != NULL && s->pcm == NULL && s->streamed && s->reader.bytes != NULL && s->reader.available == s->reader.size &&
-               s->frames == d->frames,
+    expect(s != NULL && s->pcm == NULL && s->streamed && s->reader.bytes != NULL &&
+               s->reader.available == s->reader.size && s->frames == d->frames,
            "streamed: its file, all of it there, the same frames");
     wgf_resource_release(decoded);
     wgf_resource_release(streamed);

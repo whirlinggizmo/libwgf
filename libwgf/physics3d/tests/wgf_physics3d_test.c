@@ -116,18 +116,22 @@ int main(void)
            "vehicles linked (named here, so installed as the program loaded)");
 
     /* started; a ball onto a floor */
-    expect(wgf_physics3d_set_gravity(0, -9.81f, 0) && wgf_physics3d_get_gravity().y == -9.81f, "started, by its gravity");
+    expect(wgf_physics3d_set_gravity(0, -9.81f, 0) && wgf_physics3d_get_gravity().y == -9.81f,
+           "started, by its gravity");
     floor_actor = put(stage, 0, -0.5f, 0);
     expect(wgf_actor_add_component(floor_actor, WGF_COMPONENT_BODY3D) &&
                wgf_body3d_set_type(floor_actor, WGF_BODY3D_TYPE_STATIC) &&
                wgf_body3d_set_shape(floor_actor, WGF_BODY3D_SHAPE_BOX, 200, 1, 200),
            "a static floor");
-    expect(wgf_actor_add_component(ball, WGF_COMPONENT_BODY3D) && wgf_body3d_set_shape(ball, WGF_BODY3D_SHAPE_SPHERE, 0.5f, 0, 0),
+    expect(wgf_actor_add_component(ball, WGF_COMPONENT_BODY3D) &&
+               wgf_body3d_set_shape(ball, WGF_BODY3D_SHAPE_SPHERE, 0.5f, 0, 0),
            "a dynamic ball");
-    expect(wgf_body3d_get_type(ball) == WGF_BODY3D_TYPE_DYNAMIC && wgf_body3d_get_shape(ball) == WGF_BODY3D_SHAPE_SPHERE &&
-               wgf_body3d_get_size(ball).x == 0.5f && wgf_body3d_get_friction(ball) == 0.5f && wgf_body3d_get_mask(ball) == 0x7FFF,
+    expect(wgf_body3d_get_type(ball) == WGF_BODY3D_TYPE_DYNAMIC &&
+               wgf_body3d_get_shape(ball) == WGF_BODY3D_SHAPE_SPHERE && wgf_body3d_get_size(ball).x == 0.5f &&
+               wgf_body3d_get_friction(ball) == 0.5f && wgf_body3d_get_mask(ball) == 0x7FFF,
            "its settings, its defaults");
-    expect(!wgf_body3d_set_layer(ball, 0) && !wgf_body3d_set_mask(ball, 0x8000) && !wgf_body3d_set_type(ball, (wgf_body3d_type_t)9),
+    expect(!wgf_body3d_set_layer(ball, 0) && !wgf_body3d_set_mask(ball, 0x8000) &&
+               !wgf_body3d_set_type(ball, (wgf_body3d_type_t)9),
            "a layer, a mask, a type that isn't one: refused");
     step(1);
     expect(wgf_actor_get_position(ball).y < 5.0f, "falling at the first tick");
@@ -166,7 +170,8 @@ int main(void)
     expect(told(WGF_WORLD_EVENT_TRIGGER_ENTER, gate, ball) && told(WGF_WORLD_EVENT_TRIGGER_ENTER, ball, gate),
            "a ball falling into a sensor: both told");
     for (i = 0; i < 4 * event_count; i += 4) {
-        if (events[i + 1] == (int)gate && events[i] == WGF_WORLD_EVENT_TRIGGER_ENTER) expect(events[i + 3] == 2, "the gate told the ball's layer");
+        if (events[i + 1] == (int)gate && events[i] == WGF_WORLD_EVENT_TRIGGER_ENTER)
+            expect(events[i + 3] == 2, "the gate told the ball's layer");
     }
     for (i = 0; i < 120; i++) {
         step(1);
@@ -256,7 +261,8 @@ int main(void)
         expect(wgf_actor_get_position(car).x < x - 0.5f, "steered right: toward its -x, facing +z");
     }
     expect(wgf_vehicle_get_wheel_slip(car, 0) >= 0.0f && wgf_vehicle_get_wheel_slip(car, 7) == 0.0f, "a wheel's slip");
-    expect(wgf_vehicle_set_anti_roll(car, 5000) && wgf_vehicle_get_anti_roll(car) == 5000.0f, "anti-roll, taken at once");
+    expect(wgf_vehicle_set_anti_roll(car, 5000) && wgf_vehicle_get_anti_roll(car) == 5000.0f,
+           "anti-roll, taken at once");
     {
         float front = 0.0f, rear = 0.0f;
         wgf_actor_set_transform(car, 30, 1, 60, 0, 0, 0, 1, 1, 1); /* back on its wheels, somewhere clear */
@@ -269,7 +275,8 @@ int main(void)
             rear = wgf_vehicle_get_wheel_slip(car, 2) > rear ? wgf_vehicle_get_wheel_slip(car, 2) : rear;
         }
         if (getenv("WGF_TEST_SHOW")) printf("slip at launch: front %g, rear %g\n", front, rear);
-        expect(front < 2.0f && rear > 5.0f, "at full throttle from rest the rolling front tire is near its grip, the driven rear spins");
+        expect(front < 2.0f && rear > 5.0f,
+               "at full throttle from rest the rolling front tire is near its grip, the driven rear spins");
     }
     expect(wgf_vehicle_reset(car) && fabsf(wgf_vehicle_get_speed(car)) < 1e-3f, "reset: at rest");
 
@@ -291,11 +298,13 @@ int main(void)
                    wgf_body3d_get_layer(made) == 2 && wgf_body3d_get_damping(made).y == 0.2f,
                "its body as the line says");
         step(2);
-        expect(wgf_vehicle_get_wheel_count(made) == 4 && wgf_vehicle_get_wheel(made, 3) == wgf_actor_find(made, "wheel_rr"),
+        expect(wgf_vehicle_get_wheel_count(made) == 4 &&
+                   wgf_vehicle_get_wheel(made, 3) == wgf_actor_find(made, "wheel_rr"),
                "its vehicle's wheels found by name as it was made");
         dump = wgf_world_dump();
         if (getenv("WGF_TEST_SHOW")) printf("%s", dump);
-        expect(strstr(dump, "body3d type=dynamic shape=box size=1.79999995,0.600000024,4 mass=1200 friction=0.899999976") != NULL &&
+        expect(strstr(dump, "body3d type=dynamic shape=box size=1.79999995,0.600000024,4 mass=1200 "
+                            "friction=0.899999976") != NULL &&
                    strstr(dump, "vehicle wheels=_0,_1,_2,_3 ") != NULL &&
                    strstr(dump, "vehicle wheels=wheel_fl,wheel_fr,wheel_rl,wheel_rr radius=0.340000004") != NULL &&
                    strstr(dump, "gears=3.20000005,2.0999999,1.5 drive=rear") != NULL,
@@ -306,7 +315,8 @@ int main(void)
     /* gone */
     wgf_actor_destroy(car, WGF_ACTOR_DESTROY_CHILDREN);
     step(1);
-    expect(wgf_actor_count_with_component(WGF_COMPONENT_VEHICLE) == 1 && wgf_actor_count_with_component(WGF_COMPONENT_BODY3D) == 7,
+    expect(wgf_actor_count_with_component(WGF_COMPONENT_VEHICLE) == 1 &&
+               wgf_actor_count_with_component(WGF_COMPONENT_BODY3D) == 7,
            "a car destroyed: its body and vehicle with it");
 
     /* a mesh body of a glTF file's nodes, made while the file loads: it waits for the file,
@@ -331,7 +341,8 @@ int main(void)
         wgf_resource_release(file);
         wgf_actor_set_parent(deck, stage);
         wgf_actor_set_position(deck, -60, 3, -60); /* clear of the rest */
-        expect(wgf_actor_add_component(deck, WGF_COMPONENT_BODY3D) && wgf_body3d_set_type(deck, WGF_BODY3D_TYPE_STATIC) &&
+        expect(wgf_actor_add_component(deck, WGF_COMPONENT_BODY3D) &&
+                   wgf_body3d_set_type(deck, WGF_BODY3D_TYPE_STATIC) &&
                    wgf_body3d_set_shape(deck, WGF_BODY3D_SHAPE_MESH, 0, 0, 0),
                "a mesh body on a file's root, the file loading");
         step(1);
@@ -347,8 +358,10 @@ int main(void)
         wgf_body3d_set_shape(beside, WGF_BODY3D_SHAPE_SPHERE, 0.5f, 0, 0);
         step(180);
         expect(fabsf(wgf_actor_get_position(on_deck).y - 3.5f) < 0.05f, "a ball rests on the file's node, where it is");
-        if (getenv("WGF_TEST_SHOW")) printf("on the deck %g, beside %g\n", wgf_actor_get_position(on_deck).y, wgf_actor_get_position(beside).y);
-        expect(fabsf(wgf_actor_get_position(beside).y - 0.5f) < 0.05f, "and none of it is anywhere else: one beside falls past");
+        if (getenv("WGF_TEST_SHOW"))
+            printf("on the deck %g, beside %g\n", wgf_actor_get_position(on_deck).y, wgf_actor_get_position(beside).y);
+        expect(fabsf(wgf_actor_get_position(beside).y - 0.5f) < 0.05f,
+               "and none of it is anywhere else: one beside falls past");
         /* the file saved again, its node 2 lower, and loaded again: the body made again from it */
         write_file("models/deck.gltf",
                    "{\"asset\":{\"version\":\"2.0\"},\"scene\":0,\"scenes\":[{\"nodes\":[0]}],"
@@ -363,7 +376,8 @@ int main(void)
                    "{\"bufferView\":1,\"componentType\":5123,\"count\":6,\"type\":\"SCALAR\"}]}");
         expect(wgf_asset_reload("models/deck.gltf") == 1, "the file loading again");
         start = wgf_time_get_seconds();
-        while (wgf_core_priv_resource_is_reloading(file) && wgf_time_get_seconds() - start < 30.0) wgf_core_priv_update();
+        while (wgf_core_priv_resource_is_reloading(file) && wgf_time_get_seconds() - start < 30.0)
+            wgf_core_priv_update();
         step(180);
         if (getenv("WGF_TEST_SHOW")) printf("on the lowered deck %g\n", wgf_actor_get_position(on_deck).y);
         expect(fabsf(wgf_actor_get_position(on_deck).y - 1.5f) < 0.05f,
@@ -456,7 +470,8 @@ int main(void)
         expect(n == 1 && found[0] == floor_actor && fabsf(hits[1]) < 0.01f && fabsf(hits[4] - 1.0f) < 0.01f &&
                    fabsf(hits[6] - 10.0f) < 0.01f,
                "a ray down: the floor, its point, its normal up, its distance");
-        expect(wgf_physics3d_cast_ray(60, 10, 0, 0, -1, 0, 20, 4, found, 8, NULL, 0) == 0, "a mask without the floor's layer: none");
+        expect(wgf_physics3d_cast_ray(60, 10, 0, 0, -1, 0, 20, 4, found, 8, NULL, 0) == 0,
+               "a mask without the floor's layer: none");
         expect(wgf_physics3d_cast_ray(60, 10, 0, 0, -1, 0, 5, 0x7FFF, found, 8, NULL, 0) == 0, "too short: none");
         n = wgf_physics3d_cast_ray(60, 1, 0, 0, 0, 1, 20, 0x7FFF, found, 8, hits, 7 * 8);
         expect(n == 1 && found[0] == pillar && fabsf(hits[2] - 4.5f) < 0.01f && fabsf(hits[5] + 1.0f) < 0.01f,
@@ -480,7 +495,8 @@ int main(void)
             take();
             if (told(WGF_WORLD_EVENT_CONTACT_BEGIN, drop, floor_actor)) break;
         }
-        expect(told(WGF_WORLD_EVENT_CONTACT_BEGIN, drop, floor_actor) && told(WGF_WORLD_EVENT_CONTACT_BEGIN, floor_actor, drop),
+        expect(told(WGF_WORLD_EVENT_CONTACT_BEGIN, drop, floor_actor) &&
+                   told(WGF_WORLD_EVENT_CONTACT_BEGIN, floor_actor, drop),
                "a ball landing on the floor: a contact, told to both");
         wgf_actor_set_position(drop, 64, 6, 0);
         for (i = 0; i < 30; i++) {
@@ -493,7 +509,8 @@ int main(void)
         wgf_actor_add_component(walker, WGF_COMPONENT_BODY3D);
         expect(wgf_physics3d_enable_characters() && wgf_physics3d_is_characters_enabled(),
                "characters linked (named here, so installed as the program loaded)");
-        expect(wgf_body3d_set_type(walker, WGF_BODY3D_TYPE_CHARACTER) && wgf_body3d_get_type(walker) == WGF_BODY3D_TYPE_CHARACTER &&
+        expect(wgf_body3d_set_type(walker, WGF_BODY3D_TYPE_CHARACTER) &&
+                   wgf_body3d_get_type(walker) == WGF_BODY3D_TYPE_CHARACTER &&
                    wgf_body3d_set_shape(walker, WGF_BODY3D_SHAPE_CAPSULE, 0.4f, 1.8f, 0),
                "a character, a capsule");
         expect(fabsf(wgf_body3d_get_step_height(walker) - 0.3f) < 1e-6f && wgf_body3d_set_step_height(walker, 0.25f) &&
@@ -502,7 +519,8 @@ int main(void)
                "its step and slope, set and refused");
         step(120);
         at = wgf_actor_get_position(walker);
-        expect(wgf_body3d_is_grounded(walker) && fabsf(at.y - 0.9f) < 0.05f && wgf_body3d_get_ground_normal(walker).y > 0.99f,
+        expect(wgf_body3d_is_grounded(walker) && fabsf(at.y - 0.9f) < 0.05f &&
+                   wgf_body3d_get_ground_normal(walker).y > 0.99f,
                "fallen to the floor, standing on it");
         wgf_body3d_set_velocity(walker, 2, 0, 0);
         step(60);
@@ -519,7 +537,8 @@ int main(void)
         expect(fabsf(wgf_actor_get_position(walker).z - 3.0f) < 0.05f, "put somewhere new by the program");
         wgf_body3d_set_velocity(walker, 0, 5, 0);
         step(10);
-        expect(!wgf_body3d_is_grounded(walker) && wgf_actor_get_position(walker).y > 1.3f, "a jump, away from the wall: in the air");
+        expect(!wgf_body3d_is_grounded(walker) && wgf_actor_get_position(walker).y > 1.3f,
+               "a jump, away from the wall: in the air");
         step(90);
         expect(wgf_body3d_is_grounded(walker) && fabsf(wgf_actor_get_position(walker).y - 0.9f) < 0.05f &&
                    fabsf(wgf_body3d_get_velocity(walker).y) < 1e-4f,

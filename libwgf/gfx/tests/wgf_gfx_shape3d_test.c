@@ -51,7 +51,8 @@ int main(void)
     expect(wgf_gfx_priv_start(), "setup");
     wgf_platform_priv_set_size(320, 240);
     shape = wgf_shape3d_create();
-    expect(wgf_actor_get_kind(shape) == WGF_ACTOR_KIND_SHAPE3D && wgf_shape3d_get_kind(shape) == WGF_SHAPE3D_KIND_NONE &&
+    expect(wgf_actor_get_kind(shape) == WGF_ACTOR_KIND_SHAPE3D &&
+               wgf_shape3d_get_kind(shape) == WGF_SHAPE3D_KIND_NONE &&
                wgf_shape3d_get_color(shape) == WGF_COLOR_WHITE,
            "a shape: nothing yet, white");
     expect(wgf_shape3d_set_cube(shape, 1, 2, 3) && wgf_shape3d_get_kind(shape) == WGF_SHAPE3D_KIND_CUBE &&

@@ -845,8 +845,8 @@ bool wgf_gfx_priv_emitter_particle_now(wgf_actor_t actor, int index, wgf_vec3_t 
             const float first = fraction(shape[3] * a[i]) * TAU, second = fraction(shape[3] * b[i]) * TAU;
             const float flat = i == 2 && e->two_d ? 0.0f : 1.0f;
             drift[i] = e->wander * flat *
-                       (0.6f * draw_sin(course + first) + 0.4f * draw_sin(2.3f * course + second) - 0.6f * draw_sin(first) -
-                        0.4f * draw_sin(second));
+                       (0.6f * draw_sin(course + first) + 0.4f * draw_sin(2.3f * course + second) -
+                        0.6f * draw_sin(first) - 0.4f * draw_sin(second));
             drifting[i] = e->wander * flat * TAU * e->wander_rate *
                           (0.6f * draw_cos(course + first) + 0.92f * draw_cos(2.3f * course + second));
         }

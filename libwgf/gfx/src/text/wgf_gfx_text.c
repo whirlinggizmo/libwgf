@@ -31,8 +31,8 @@ static bool is_font(wgf_font_t font)
 static void text_free(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr);
 static void text_draw(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *placed,
                       const wgf_mat4_t *view);
-static bool text_place_3d(const wgf_gfx_priv_actor_t *actor_ptr, wgf_mat4_t world, const wgf_gfx_priv_sprite_view_t *view,
-                          wgf_mat4_t *plane, wgf_vec3_t corners[4]);
+static bool text_place_3d(const wgf_gfx_priv_actor_t *actor_ptr, wgf_mat4_t world,
+                          const wgf_gfx_priv_sprite_view_t *view, wgf_mat4_t *plane, wgf_vec3_t corners[4]);
 static void text_draw_3d(const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *plane);
 static const wgf_gfx_priv_actor_kind_t kind = {text_free, text_draw, text_place_3d, text_draw_3d};
 
@@ -241,8 +241,8 @@ float wgf_text_get_depth_offset(wgf_actor_t text)
  * units, about its position by its alignment) along its facing's axes, scaled by its actor,
  * and its corners (top-left, top-right, bottom-right, bottom-left). Drawn by the stage3d,
  * which reaches these through the kind, so a 3D program that makes no text links no font. */
-static bool text_place_3d(const wgf_gfx_priv_actor_t *actor_ptr, wgf_mat4_t world, const wgf_gfx_priv_sprite_view_t *view,
-                          wgf_mat4_t *plane, wgf_vec3_t corners[4])
+static bool text_place_3d(const wgf_gfx_priv_actor_t *actor_ptr, wgf_mat4_t world,
+                          const wgf_gfx_priv_sprite_view_t *view, wgf_mat4_t *plane, wgf_vec3_t corners[4])
 {
     const wgf_gfx_priv_text_t *text = &actor_ptr->as.text;
     const wgf_vec3_t scale = wgf_mat4_get_scale(world), position = wgf_mat4_get_translation(world);

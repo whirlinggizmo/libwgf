@@ -9228,7 +9228,8 @@ export function wgf_draw_text(font, text, x, y, size, color) {
  * Sets or gets how immediate mode drawing after this call blends with what is under it.
  *
  * The modes are wgf_material.h's alpha modes: BLEND (the default), OPAQUE, ADD, MULTIPLY,
- * and PREMULTIPLIED. MASK draws as BLEND, because immediate mode cuts nothing out.
+ * and PREMULTIPLIED. MASK draws as BLEND, because immediate mode cuts nothing out. The mode
+ * stays as set from frame to frame, until it is set again.
  *
  * The setter returns false for a `mode` that isn't an alpha mode.
  */
@@ -9242,7 +9243,8 @@ export function wgf_draw_set_blend_mode(mode) {
  * Sets or gets how immediate mode drawing after this call blends with what is under it.
  *
  * The modes are wgf_material.h's alpha modes: BLEND (the default), OPAQUE, ADD, MULTIPLY,
- * and PREMULTIPLIED. MASK draws as BLEND, because immediate mode cuts nothing out.
+ * and PREMULTIPLIED. MASK draws as BLEND, because immediate mode cuts nothing out. The mode
+ * stays as set from frame to frame, until it is set again.
  *
  * The setter returns false for a `mode` that isn't an alpha mode.
  */
@@ -16482,7 +16484,8 @@ export function wgf_shape2d_set_polygon(shape, points) {
  *
  * - get_size returns a rectangle's width and height, or 0, 0 for another kind.
  * - get_radius returns a circle's radius, or 0 for another kind.
- * - get_line_start and get_line_end return a line's ends.
+ * - get_line_start and get_line_end return a line's ends, or 0, 0 for another kind.
+ * - get_point_count returns how many points a polygon has, or 0 for another kind.
  * - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
  *   `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
  */
@@ -16498,7 +16501,8 @@ export function wgf_shape2d_get_size(shape, into) {
  *
  * - get_size returns a rectangle's width and height, or 0, 0 for another kind.
  * - get_radius returns a circle's radius, or 0 for another kind.
- * - get_line_start and get_line_end return a line's ends.
+ * - get_line_start and get_line_end return a line's ends, or 0, 0 for another kind.
+ * - get_point_count returns how many points a polygon has, or 0 for another kind.
  * - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
  *   `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
  */
@@ -16513,7 +16517,8 @@ export function wgf_shape2d_get_radius(shape) {
  *
  * - get_size returns a rectangle's width and height, or 0, 0 for another kind.
  * - get_radius returns a circle's radius, or 0 for another kind.
- * - get_line_start and get_line_end return a line's ends.
+ * - get_line_start and get_line_end return a line's ends, or 0, 0 for another kind.
+ * - get_point_count returns how many points a polygon has, or 0 for another kind.
  * - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
  *   `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
  */
@@ -16529,7 +16534,8 @@ export function wgf_shape2d_get_line_start(shape, into) {
  *
  * - get_size returns a rectangle's width and height, or 0, 0 for another kind.
  * - get_radius returns a circle's radius, or 0 for another kind.
- * - get_line_start and get_line_end return a line's ends.
+ * - get_line_start and get_line_end return a line's ends, or 0, 0 for another kind.
+ * - get_point_count returns how many points a polygon has, or 0 for another kind.
  * - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
  *   `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
  */
@@ -16545,7 +16551,8 @@ export function wgf_shape2d_get_line_end(shape, into) {
  *
  * - get_size returns a rectangle's width and height, or 0, 0 for another kind.
  * - get_radius returns a circle's radius, or 0 for another kind.
- * - get_line_start and get_line_end return a line's ends.
+ * - get_line_start and get_line_end return a line's ends, or 0, 0 for another kind.
+ * - get_point_count returns how many points a polygon has, or 0 for another kind.
  * - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
  *   `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
  */
@@ -16560,7 +16567,8 @@ export function wgf_shape2d_get_point_count(shape) {
  *
  * - get_size returns a rectangle's width and height, or 0, 0 for another kind.
  * - get_radius returns a circle's radius, or 0 for another kind.
- * - get_line_start and get_line_end return a line's ends.
+ * - get_line_start and get_line_end return a line's ends, or 0, 0 for another kind.
+ * - get_point_count returns how many points a polygon has, or 0 for another kind.
  * - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
  *   `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
  */

@@ -307,7 +307,8 @@ static bool read_tileset(reading_t *r, const wgf_core_priv_json_t *json, const c
     const char *map_path = r->path;
     const wgf_core_priv_json_t *tiles = wgf_core_priv_json_get(json, "tiles");
     const wgf_core_priv_json_t *offset = wgf_core_priv_json_get(json, "tileoffset");
-    const double tw = wgf_core_priv_json_get_number(json, "tilewidth", 0), th = wgf_core_priv_json_get_number(json, "tileheight", 0);
+    const double tw = wgf_core_priv_json_get_number(json, "tilewidth", 0),
+                 th = wgf_core_priv_json_get_number(json, "tileheight", 0);
     const double count = wgf_core_priv_json_get_number(json, "tilecount", 0);
     const double columns = wgf_core_priv_json_get_number(json, "columns", 0);
     const double margin = wgf_core_priv_json_get_number(json, "margin", 0);
@@ -484,8 +485,8 @@ static uint32_t *read_cells(const wgf_core_priv_json_t *json, const wgf_core_pri
                 inflated = stbi_zlib_decode_noheader_buffer((char *)out, count * 4, (const char *)bytes + start,
                                                             size - start);
             } else {
-                wgf_log_warn("wgf_tilemap: %s: layer %s is compressed with %s, which isn't read: CSV, base64, or base64 "
-                             "with zlib or gzip",
+                wgf_log_warn("wgf_tilemap: %s: layer %s is compressed with %s, which isn't read: CSV, base64, "
+                             "or base64 with zlib or gzip",
                              map_path, name, compression);
                 inflated = -2;
             }
@@ -525,7 +526,8 @@ static bool read_object(const wgf_core_priv_json_t *json, wgf_gfx_priv_tilemap_o
     o->width = (float)wgf_core_priv_json_get_number(json, "width", 0);
     o->height = (float)wgf_core_priv_json_get_number(json, "height", 0);
     o->rotation = (float)wgf_core_priv_json_get_number(json, "rotation", 0) * PI_F / 180.0f;
-    o->visible = wgf_core_priv_json_get(json, "visible") == NULL || wgf_core_priv_json_truth(wgf_core_priv_json_get(json, "visible"));
+    o->visible = wgf_core_priv_json_get(json, "visible") == NULL ||
+                 wgf_core_priv_json_truth(wgf_core_priv_json_get(json, "visible"));
     if (o->name == NULL || o->class_name == NULL) return false;
     if (!read_properties(wgf_core_priv_json_get(json, "properties"), &o->properties)) return false;
     o->shape = WGF_TILEMAP_SHAPE_RECTANGLE;
@@ -575,7 +577,8 @@ static bool read_chunks(reading_t *r, const wgf_core_priv_json_t *json, wgf_gfx_
         const int h = (int)wgf_core_priv_json_get_number(chunk, "height", 0);
         uint32_t *cells = read_cells(json, wgf_core_priv_json_get(chunk, "data"), w * h, r->path, l->name);
         if (cells == NULL) return false; /* its bounds were checked as the map's were found */
-        for (k = 0; k < h; k++) memcpy(&l->cells[(y + k) * l->columns + x], &cells[k * w], sizeof(uint32_t) * (size_t)w);
+        for (k = 0; k < h; k++)
+            memcpy(&l->cells[(y + k) * l->columns + x], &cells[k * w], sizeof(uint32_t) * (size_t)w);
         free(cells);
     }
     return true;
@@ -657,7 +660,8 @@ static bool read_layers(reading_t *r, const wgf_core_priv_json_t *list, float of
         l->visible = shown;
         l->opacity = alpha < 0.0f ? 0.0f : alpha > 1.0f ? 1.0f : alpha;
         l->offset_x = x, l->offset_y = y;
-        if (l->name == NULL || !read_properties(wgf_core_priv_json_get(json, "properties"), &l->properties)) return false;
+        if (l->name == NULL || !read_properties(wgf_core_priv_json_get(json, "properties"), &l->properties))
+            return false;
         if (strcmp(type, "tilelayer") == 0) {
             l->kind = WGF_TILEMAP_LAYER_KIND_TILES;
             l->columns = r->data->columns, l->rows = r->data->rows;
@@ -723,7 +727,8 @@ static char *file_name(const char *path)
 
 static int by_first_gid(const void *a, const void *b)
 {
-    return ((const wgf_gfx_priv_tilemap_tileset_t *)a)->first_gid - ((const wgf_gfx_priv_tilemap_tileset_t *)b)->first_gid;
+    return ((const wgf_gfx_priv_tilemap_tileset_t *)a)->first_gid -
+           ((const wgf_gfx_priv_tilemap_tileset_t *)b)->first_gid;
 }
 
 /* Its orientation, render order, and stagger, as Tiled names them. False (logged) for one
@@ -735,11 +740,12 @@ static bool read_shape(const wgf_core_priv_json_t *json, const char *path, wgf_g
     const char *order = wgf_core_priv_json_get_string(json, "renderorder");
     const double side = wgf_core_priv_json_get_number(json, "hexsidelength", 0);
     int i;
-    d->orientation = orientation[0] == '\0' || strcmp(orientation, "orthogonal") == 0 ? WGF_TILEMAP_ORIENTATION_ORTHOGONAL
-                     : strcmp(orientation, "isometric") == 0                         ? WGF_TILEMAP_ORIENTATION_ISOMETRIC
-                     : strcmp(orientation, "staggered") == 0                         ? WGF_TILEMAP_ORIENTATION_STAGGERED
-                     : strcmp(orientation, "hexagonal") == 0                         ? WGF_TILEMAP_ORIENTATION_HEXAGONAL
-                                                                                     : WGF_TILEMAP_ORIENTATION_NONE;
+    d->orientation = orientation[0] == '\0' || strcmp(orientation, "orthogonal") == 0
+                         ? WGF_TILEMAP_ORIENTATION_ORTHOGONAL
+                     : strcmp(orientation, "isometric") == 0 ? WGF_TILEMAP_ORIENTATION_ISOMETRIC
+                     : strcmp(orientation, "staggered") == 0 ? WGF_TILEMAP_ORIENTATION_STAGGERED
+                     : strcmp(orientation, "hexagonal") == 0 ? WGF_TILEMAP_ORIENTATION_HEXAGONAL
+                                                             : WGF_TILEMAP_ORIENTATION_NONE;
     if (d->orientation == WGF_TILEMAP_ORIENTATION_NONE) {
         wgf_log_warn("wgf_tilemap: %s is %s, which isn't one of Tiled's orientations", path, orientation);
         return false;
@@ -847,7 +853,8 @@ static bool read_map(const wgf_core_priv_json_t *json, const char *path, wgf_gfx
     }
     for (i = 1; i < d->terrain_set_count; i++) { /* stable: a tileset's sets stay in the file's order */
         const wgf_gfx_priv_tilemap_terrain_set_t moved = d->terrain_sets[i];
-        for (k = i; k > 0 && d->terrain_sets[k - 1].tileset > moved.tileset; k--) d->terrain_sets[k] = d->terrain_sets[k - 1];
+        for (k = i; k > 0 && d->terrain_sets[k - 1].tileset > moved.tileset; k--)
+            d->terrain_sets[k] = d->terrain_sets[k - 1];
         d->terrain_sets[k] = moved;
     }
     return read_layers(&r, wgf_core_priv_json_get(json, "layers"), 0.0f, 0.0f, 1.0f, true, 0);
@@ -907,7 +914,8 @@ static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
         wgf_gfx_priv_tilemap_layer_data_t *l = &d->layers[i];
         if (l->image == NULL) continue;
         l->texture = wgf_texture_create(l->image);
-        wgf_texture_set_sampling(l->texture, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_FILTER_NEAREST);
+        wgf_texture_set_sampling(l->texture, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP,
+                                 WGF_TEXTURE_FILTER_NEAREST);
     }
     m = map_of(resource); /* maps don't move as textures are made, but be sure */
     if (m == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
@@ -1228,8 +1236,9 @@ void wgf_gfx_priv_tilemap_object_middle(const wgf_gfx_priv_tilemap_data_t *d, co
                                               {1.0f, 0.5f}, {0.0f, 0.0f}, {0.5f, 0.0f}, {1.0f, 0.0f}};
         const int tileset = wgf_gfx_priv_tilemap_find_tileset(d, (uint32_t)o->gid, NULL);
         const int align = tileset >= 0 ? d->tilesets[tileset].alignment
-                          : d->orientation == WGF_TILEMAP_ORIENTATION_ISOMETRIC ? WGF_GFX_PRIV_TILEMAP_ALIGN_BOTTOM
-                                                                                : WGF_GFX_PRIV_TILEMAP_ALIGN_BOTTOM_LEFT;
+                          : d->orientation == WGF_TILEMAP_ORIENTATION_ISOMETRIC
+                              ? WGF_GFX_PRIV_TILEMAP_ALIGN_BOTTOM
+                              : WGF_GFX_PRIV_TILEMAP_ALIGN_BOTTOM_LEFT;
         across = (0.5f - fractions[align][0]) * o->width;
         down = (0.5f - fractions[align][1]) * o->height;
         wgf_gfx_priv_tilemap_project(d, o->x, o->y, x, y);

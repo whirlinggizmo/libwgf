@@ -337,7 +337,8 @@ int wgf_core_priv_load_get_pending_count(void)
     int count = 0;
     if (!running) return 0;
     for (i = 1; i < request_pool.capacity; i++) {
-        if (wgf_core_priv_handle_pool_handle_from_index(&request_pool, i) != 0 && requests[i].state != STATE_CANCELLED) {
+        if (wgf_core_priv_handle_pool_handle_from_index(&request_pool, i) != 0 &&
+            requests[i].state != STATE_CANCELLED) {
             count++;
         }
     }
@@ -346,12 +347,13 @@ int wgf_core_priv_load_get_pending_count(void)
 
 int wgf_core_priv_load_log_pending(void)
 {
-    static const char *const stages[] = {"a bad path", "locating its file", "reading the cache", "waiting to be prepared",
-                                         "finishing", "cancelled"};
+    static const char *const stages[] = {"a bad path", "locating its file", "reading the cache",
+                                         "waiting to be prepared", "finishing", "cancelled"};
     uint16_t i;
     int count = 0;
     for (i = 1; running && i < request_pool.capacity; i++) {
-        if (wgf_core_priv_handle_pool_handle_from_index(&request_pool, i) == 0 || requests[i].state == STATE_CANCELLED) {
+        if (wgf_core_priv_handle_pool_handle_from_index(&request_pool, i) == 0 ||
+            requests[i].state == STATE_CANCELLED) {
             continue;
         }
         wgf_log_warn("wgf_core_load: pending: %s (%s)", requests[i].path, stages[requests[i].state]);
@@ -603,7 +605,8 @@ static void finish(void)
     while ((i = next_finishing()) != 0) {
         const wgf_handle_t handle = wgf_core_priv_handle_pool_handle_from_index(&request_pool, i);
         request_t *request_ptr = &requests[i];
-        const wgf_core_priv_load_step_t step = request_ptr->loader->finish(request_ptr->prepared, request_ptr->resource);
+        const wgf_core_priv_load_step_t step =
+            request_ptr->loader->finish(request_ptr->prepared, request_ptr->resource);
         request_ptr = &requests[i]; /* finish may have requested a load, and grown the table */
         request_ptr->finish_started = true;
         request_ptr->waiting = step == WGF_CORE_PRIV_LOAD_WAIT ? updates : 0;
@@ -632,8 +635,8 @@ void wgf_core_priv_load_update(void)
 void wgf_core_priv_load_init(void)
 {
     if (running) return;
-    if (!wgf_core_priv_handle_pool_init(&request_pool, WGF_CORE_PRIV_HANDLE_KIND_LOAD_REQUEST, (void **)&requests, sizeof(request_t), 16,
-                                       4096)) {
+    if (!wgf_core_priv_handle_pool_init(&request_pool, WGF_CORE_PRIV_HANDLE_KIND_LOAD_REQUEST, (void **)&requests,
+                                        sizeof(request_t), 16, 4096)) {
         wgf_log_error("wgf_core_load: no request pool; resources won't load");
         return;
     }

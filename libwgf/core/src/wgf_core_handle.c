@@ -127,7 +127,8 @@ static bool grow(wgf_core_priv_handle_pool_t *pool, uint16_t capacity)
     if (items == NULL) return false;
     *pool->items = items;
 
-    for (size_t i = old_capacity; i < capacity; i++) generations[i] = WGF_CORE_PRIV_HANDLE_FREE_BIT; /* free, never used */
+    /* free, never used */
+    for (size_t i = old_capacity; i < capacity; i++) generations[i] = WGF_CORE_PRIV_HANDLE_FREE_BIT;
     memset(occupied + old_capacity, 0, capacity - old_capacity);
     memset(items + pool->item_size * old_capacity, 0, pool->item_size * (capacity - old_capacity));
     pool->free_head = 0;
@@ -251,7 +252,8 @@ bool wgf_core_priv_handle_pool_free(wgf_core_priv_handle_pool_t *pool, wgf_handl
 
     pool->occupied[index] = 0;
     /* the next handle's generation, and free until then: no handle matches it */
-    pool->generations[index] = (uint16_t)(bump_slot_generation(pool->generations[index]) | WGF_CORE_PRIV_HANDLE_FREE_BIT);
+    pool->generations[index] =
+        (uint16_t)(bump_slot_generation(pool->generations[index]) | WGF_CORE_PRIV_HANDLE_FREE_BIT);
     pool->free_indices[(pool->free_head + pool->free_count) % pool->capacity] = index;
     pool->free_count++;
     return true;

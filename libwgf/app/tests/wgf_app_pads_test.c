@@ -42,7 +42,8 @@ static void on_frame(void *user)
             expect(wgf_gamepad_is_pressed(0, WGF_GAMEPAD_BUTTON_SOUTH), "a press, the frame after");
             break;
         case 6:
-            expect(!wgf_gamepad_is_pressed(0, WGF_GAMEPAD_BUTTON_SOUTH) && wgf_gamepad_is_down(0, WGF_GAMEPAD_BUTTON_SOUTH),
+            expect(!wgf_gamepad_is_pressed(0, WGF_GAMEPAD_BUTTON_SOUTH) &&
+                       wgf_gamepad_is_down(0, WGF_GAMEPAD_BUTTON_SOUTH),
                    "then held: its edges ended with the frame");
             wgf_app_quit();
             break;

@@ -36,7 +36,8 @@ int wgf_gfx_priv_rounded_segments(float pixels)
         const float step = 2.0f * sqrtf(2.0f * CIRCLE_TOLERANCE / pixels);
         segments = step > 0.0f ? (int)ceilf(HALF_PI / step) : WGF_GFX_PRIV_ROUNDED_MAX_SEGMENTS;
     }
-    return segments < 1 ? 1 : (segments > WGF_GFX_PRIV_ROUNDED_MAX_SEGMENTS ? WGF_GFX_PRIV_ROUNDED_MAX_SEGMENTS : segments);
+    return segments < 1 ? 1
+                        : (segments > WGF_GFX_PRIV_ROUNDED_MAX_SEGMENTS ? WGF_GFX_PRIV_ROUNDED_MAX_SEGMENTS : segments);
 }
 
 int wgf_gfx_priv_rounded_points(float x, float y, float width, float height, float radius, int segments, float *out)
@@ -70,7 +71,8 @@ static void set_color(wgf_color_t color)
 /* A corner's segments: as asked, or (0 or less) enough for its size on the frame. */
 static int segments_for(float radius, int segments)
 {
-    if (segments > 0) return segments > WGF_GFX_PRIV_ROUNDED_MAX_SEGMENTS ? WGF_GFX_PRIV_ROUNDED_MAX_SEGMENTS : segments;
+    if (segments > 0)
+        return segments > WGF_GFX_PRIV_ROUNDED_MAX_SEGMENTS ? WGF_GFX_PRIV_ROUNDED_MAX_SEGMENTS : segments;
     return wgf_gfx_priv_rounded_segments(radius * wgf_render_get_dpi_scale());
 }
 

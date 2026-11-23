@@ -102,8 +102,8 @@ static void test_paths(void)
 
 }
 
-static void check_source(const char *host, wgf_asset_priv_host_kind_t kind, const char *ref, wgf_asset_priv_source_t want,
-                         const char *expected)
+static void check_source(const char *host, wgf_asset_priv_host_kind_t kind, const char *ref,
+                         wgf_asset_priv_source_t want, const char *expected)
 {
     char out[512];
     const wgf_asset_priv_source_t got = wgf_asset_priv_resolve_source(host, kind, ref, out, sizeof(out));
@@ -120,7 +120,8 @@ static void check_source(const char *host, wgf_asset_priv_host_kind_t kind, cons
 static void test_resolve_source(void)
 {
     const char *cdn = "https://cdn.example.com/game";
-    const wgf_asset_priv_source_t url = WGF_ASSET_PRIV_SOURCE_URL, local = WGF_ASSET_PRIV_SOURCE_LOCAL, refused = WGF_ASSET_PRIV_SOURCE_REFUSED;
+    const wgf_asset_priv_source_t url = WGF_ASSET_PRIV_SOURCE_URL, local = WGF_ASSET_PRIV_SOURCE_LOCAL,
+                                  refused = WGF_ASSET_PRIV_SOURCE_REFUSED;
 
     /* a URL host, as the browser resolves against it */
     check_source(cdn, WGF_ASSET_PRIV_HOST_URL, "music/a.mp3", url, "https://cdn.example.com/game/music/a.mp3");
@@ -128,19 +129,24 @@ static void test_resolve_source(void)
     check_source(cdn, WGF_ASSET_PRIV_HOST_URL, "../../../a.mp3", url, "https://cdn.example.com/a.mp3");
     check_source(cdn, WGF_ASSET_PRIV_HOST_URL, "/other/a.mp3", url, "https://cdn.example.com/other/a.mp3");
     check_source(cdn, WGF_ASSET_PRIV_HOST_URL, "//mirror.example.net/a.mp3", url, "https://mirror.example.net/a.mp3");
-    check_source(cdn, WGF_ASSET_PRIV_HOST_URL, "music/a.mp3?sig=1#t", url, "https://cdn.example.com/game/music/a.mp3?sig=1#t");
+    check_source(cdn, WGF_ASSET_PRIV_HOST_URL, "music/a.mp3?sig=1#t", url,
+                 "https://cdn.example.com/game/music/a.mp3?sig=1#t");
     check_source(cdn, WGF_ASSET_PRIV_HOST_URL, "?v=2", url, "https://cdn.example.com/game/?v=2");
     check_source(cdn, WGF_ASSET_PRIV_HOST_URL, "./music/./x/../a.mp3", url, "https://cdn.example.com/game/music/a.mp3");
     check_source(cdn, WGF_ASSET_PRIV_HOST_URL, "music\\a.mp3", url, "https://cdn.example.com/game/music/a.mp3");
     check_source(cdn, WGF_ASSET_PRIV_HOST_URL, "..\\shared\\a.mp3", url, "https://cdn.example.com/shared/a.mp3");
     check_source(cdn, WGF_ASSET_PRIV_HOST_URL, "music/", url, "https://cdn.example.com/game/music/");
     check_source(cdn, WGF_ASSET_PRIV_HOST_URL, "music/..", url, "https://cdn.example.com/game/");
-    check_source("https://cdn.example.com", WGF_ASSET_PRIV_HOST_URL, "music/a.mp3", url, "https://cdn.example.com/music/a.mp3");
+    check_source("https://cdn.example.com", WGF_ASSET_PRIV_HOST_URL, "music/a.mp3", url,
+                 "https://cdn.example.com/music/a.mp3");
     check_source("http://localhost:8000/assets", WGF_ASSET_PRIV_HOST_URL, "music/a.mp3", url,
                  "http://localhost:8000/assets/music/a.mp3"); /* a port is part of the origin */
-    check_source("http://localhost:8000/assets", WGF_ASSET_PRIV_HOST_URL, "../x/a.mp3", url, "http://localhost:8000/x/a.mp3");
-    check_source(cdn, WGF_ASSET_PRIV_HOST_URL, "https://other.example.org/a.mp3", url, "https://other.example.org/a.mp3");
-    check_source(cdn, WGF_ASSET_PRIV_HOST_URL, "HTTPS://other.example.org/a.mp3", url, "HTTPS://other.example.org/a.mp3");
+    check_source("http://localhost:8000/assets", WGF_ASSET_PRIV_HOST_URL, "../x/a.mp3", url,
+                 "http://localhost:8000/x/a.mp3");
+    check_source(cdn, WGF_ASSET_PRIV_HOST_URL, "https://other.example.org/a.mp3", url,
+                 "https://other.example.org/a.mp3");
+    check_source(cdn, WGF_ASSET_PRIV_HOST_URL, "HTTPS://other.example.org/a.mp3", url,
+                 "HTTPS://other.example.org/a.mp3");
 
     /* on desktop an absolute source is http or https: nothing handed over names a local file */
     check_source(cdn, WGF_ASSET_PRIV_HOST_URL, "file:///etc/passwd", refused, NULL);
@@ -182,11 +188,13 @@ static void test_resolve_source(void)
     check_source(cdn, WGF_ASSET_PRIV_HOST_URL, NULL, refused, NULL);
 
     char dir[256];
-    CHECK(wgf_asset_priv_file_url_path("file:///opt/game/assets", dir, sizeof(dir)) && strcmp(dir, "/opt/game/assets") == 0);
+    CHECK(wgf_asset_priv_file_url_path("file:///opt/game/assets", dir, sizeof(dir)) &&
+          strcmp(dir, "/opt/game/assets") == 0);
     CHECK(wgf_asset_priv_file_url_path("file://localhost/opt/game", dir, sizeof(dir)) && strcmp(dir, "/opt/game") == 0);
     CHECK(wgf_asset_priv_file_url_path("FILE:///opt/my%20game", dir, sizeof(dir)) && strcmp(dir, "/opt/my game") == 0);
 #if defined(_WIN32)
-    CHECK(wgf_asset_priv_file_url_path("file:///C:/games/assets", dir, sizeof(dir)) && strcmp(dir, "C:/games/assets") == 0);
+    CHECK(wgf_asset_priv_file_url_path("file:///C:/games/assets", dir, sizeof(dir)) &&
+          strcmp(dir, "C:/games/assets") == 0);
 #endif
     CHECK(!wgf_asset_priv_file_url_path("file://server/share", dir, sizeof(dir))); /* another machine's */
     CHECK(!wgf_asset_priv_file_url_path("https://cdn.example.com/game", dir, sizeof(dir)));
@@ -208,7 +216,8 @@ static void test_sha256(void)
     CHECK(hash_is("abc", 3, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"));
     CHECK(hash_is("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", 56,
                   "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1"));
-    CHECK(hash_is("abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
+    CHECK(hash_is("abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmn"
+                  "hijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
                   112, "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1"));
     CHECK(hash_is("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 55,
                   "9f4390f8d30c2dd92ec9f095b65e2b9ae9b0a925a5258e241c9f1e910f734318"));
@@ -292,8 +301,10 @@ static void test_manifest_parse(void)
     CHECK(!parses("{\"wgf_manifest\":1}{}"));                    /* something after it */
     CHECK(!parses("{\"wgf_manifest\":1,}"));                     /* a trailing comma */
     CHECK(!parses("{\"wgf_manifest\":1,\"files\":{\"a\":\"sha256:abc\"}}"));   /* a short hash */
-    CHECK(!parses("{\"wgf_manifest\":1,\"files\":{\"a\":\"" "SHA256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08" "\"}}"));
-    CHECK(!parses("{\"wgf_manifest\":1,\"files\":{\"a\":\"sha256:9F86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\"}}"));
+    CHECK(!parses("{\"wgf_manifest\":1,\"files\":{\"a\":\""
+                  "SHA256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08" "\"}}"));
+    CHECK(!parses("{\"wgf_manifest\":1,\"files\":{\"a\":\""
+                  "sha256:9F86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\"}}"));
     CHECK(!parses("{\"wgf_manifest\":1,\"files\":{\"a/b\":\"" HA "\"}}"));     /* not a name */
     CHECK(!parses("{\"wgf_manifest\":1,\"files\":{\"..\":\"" HA "\"}}"));
     CHECK(!parses("{\"wgf_manifest\":1,\"files\":{\"\":\"" HA "\"}}"));
@@ -367,7 +378,8 @@ static void free_note(wgf_handle_t resource, void *record)
     free(((note_t *)record)->text);
 }
 
-static const wgf_core_priv_resource_kind_t note_kind = {.create = "note_create", .loader = loader_of, .free = free_note};
+static const wgf_core_priv_resource_kind_t note_kind = {.create = "note_create", .loader = loader_of,
+                                                        .free = free_note};
 
 static void write_text(const char *path, const char *text)
 {
@@ -467,7 +479,8 @@ static void test_ensure(void)
     /* groups */
     group = wgf_asset_group_create();
     member = wgf_asset_ensure("textures/rock.png", NULL, WGF_ASSET_ENSURE_NONE);
-    CHECK(wgf_asset_group_add(group, member) && !wgf_asset_group_add(group, member) && !wgf_asset_group_add(group, group));
+    CHECK(wgf_asset_group_add(group, member) && !wgf_asset_group_add(group, member) &&
+          !wgf_asset_group_add(group, group));
     CHECK(wgf_asset_group_add(group, wgf_asset_ensure("elsewhere/rock.png", NULL, WGF_ASSET_ENSURE_NONE)));
     CHECK(wgf_asset_task_get_status(group) == WGF_ASSET_TASK_STATUS_PENDING &&
           wgf_asset_task_get_progress(group) == 0.0f && strcmp(wgf_asset_task_get_path(group), "") == 0);
@@ -492,7 +505,8 @@ static void test_ensure(void)
     ping = wgf_asset_ping_host(NULL, 0);
     CHECK(wgf_asset_task_get_status(ping) == WGF_ASSET_TASK_STATUS_PENDING);
     updates(1);
-    CHECK(wgf_asset_task_get_status(ping) == WGF_ASSET_TASK_STATUS_DONE && wgf_asset_ping_get_milliseconds(ping) == 0.0f);
+    CHECK(wgf_asset_task_get_status(ping) == WGF_ASSET_TASK_STATUS_DONE &&
+          wgf_asset_ping_get_milliseconds(ping) == 0.0f);
     wgf_asset_task_destroy(ping);
     ping = wgf_asset_ping_host("no/such/dir", 0);
     updates(1);
@@ -601,7 +615,8 @@ static void test_dependencies(void)
     {
         /* a load whose file names others: located once they all are */
         const wgf_handle_t note = wgf_asset_priv_resource_create(WGF_CORE_PRIV_HANDLE_KIND_TEST_A, "pack/pack.list");
-        const wgf_handle_t broken = wgf_asset_priv_resource_create(WGF_CORE_PRIV_HANDLE_KIND_TEST_A, "pack/broken.list");
+        const wgf_handle_t broken =
+            wgf_asset_priv_resource_create(WGF_CORE_PRIV_HANDLE_KIND_TEST_A, "pack/broken.list");
         settle();
         CHECK(wgf_resource_get_status(note) == WGF_RESOURCE_STATUS_READY);
         CHECK(wgf_resource_get_status(broken) == WGF_RESOURCE_STATUS_FAILED);
@@ -613,8 +628,10 @@ static void test_dependencies(void)
 static void test_settings(void)
 {
     CHECK(wgf_asset_get_cache_mode() == WGF_ASSET_CACHE_MODE_REVALIDATE);
-    CHECK(wgf_asset_set_cache_mode(WGF_ASSET_CACHE_MODE_TRUST) && wgf_asset_get_cache_mode() == WGF_ASSET_CACHE_MODE_TRUST);
-    CHECK(!wgf_asset_set_cache_mode((wgf_asset_cache_mode_t)3) && !wgf_asset_set_cache_mode((wgf_asset_cache_mode_t)-1));
+    CHECK(wgf_asset_set_cache_mode(WGF_ASSET_CACHE_MODE_TRUST) &&
+          wgf_asset_get_cache_mode() == WGF_ASSET_CACHE_MODE_TRUST);
+    CHECK(!wgf_asset_set_cache_mode((wgf_asset_cache_mode_t)3) &&
+          !wgf_asset_set_cache_mode((wgf_asset_cache_mode_t)-1));
     CHECK(wgf_asset_get_cache_mode() == WGF_ASSET_CACHE_MODE_TRUST);
     CHECK(wgf_asset_set_cache_mode(WGF_ASSET_CACHE_MODE_REVALIDATE));
     CHECK(strcmp(wgf_asset_get_host(), wgf_core_priv_fs_root()) == 0); /* the default: the storage's root */
@@ -635,7 +652,8 @@ int main(void)
 {
     wgf_core_priv_init();
     wgf_core_priv_fs_set_root("asset_test_root");
-    wgf_core_priv_handle_pool_init(&note_pool, WGF_CORE_PRIV_HANDLE_KIND_TEST_A, (void **)&notes, sizeof(note_t), 4, 64);
+    wgf_core_priv_handle_pool_init(&note_pool, WGF_CORE_PRIV_HANDLE_KIND_TEST_A, (void **)&notes, sizeof(note_t), 4,
+                                   64);
     wgf_core_priv_resource_register(&note_pool, &note_kind);
     test_sha256();
     test_sha256_pieces();

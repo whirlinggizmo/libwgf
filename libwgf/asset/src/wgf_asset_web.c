@@ -104,7 +104,7 @@ EM_JS(void, wgf_asset_js_fetch, (int id, const char *url_c, int mode, const char
                     .then((digest) => {
                         if (digest) {
                             entry["headers"][4] = "sha256:" + Array.from(new Uint8Array(digest),
-                                                                        (b) => b.toString(16).padStart(2, "0")).join("");
+                                (b) => b.toString(16).padStart(2, "0")).join("");
                         }
                         entry["bytes"] = new Uint8Array(buffer);
                         entry["done"] = true;

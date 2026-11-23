@@ -104,7 +104,8 @@ void *wgf_audio_priv_sound_prepare(const char *path, bool streamed);
 void wgf_audio_priv_sound_arrive(wgf_handle_t sound, wgf_audio_priv_sound_t *record, const char *path,
                                  wgf_handle_t arrival);
 void wgf_audio_priv_sound_feed(void);
-wgf_core_priv_load_step_t wgf_audio_priv_sound_finish(void *prepared, wgf_handle_t sound, wgf_audio_priv_sound_t *record);
+wgf_core_priv_load_step_t wgf_audio_priv_sound_finish(void *prepared, wgf_handle_t sound,
+                                                      wgf_audio_priv_sound_t *record);
 void wgf_audio_priv_sound_discard(void *prepared);
 void wgf_audio_priv_sound_free(wgf_handle_t sound, wgf_audio_priv_sound_t *record);
 /* A sound made from samples (wgf_sound_create_from_samples), checked: `frames` frames of

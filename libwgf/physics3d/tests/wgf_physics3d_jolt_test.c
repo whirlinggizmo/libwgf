@@ -68,7 +68,8 @@ int main(void)
     d = desc(WGF_PHYSICS3D_PRIV_DYNAMIC, WGF_PHYSICS3D_PRIV_BOX, 0, 1.2f, 0, 0.9f, 0.3f, 2.0f, 4);
     d.mass = 1200.0f;
     car = wgf_physics3d_priv_jolt_body_create(&d);
-    expect(box != WGF_PHYSICS3D_PRIV_NO_BODY && sensor != WGF_PHYSICS3D_PRIV_NO_BODY && car != WGF_PHYSICS3D_PRIV_NO_BODY,
+    expect(box != WGF_PHYSICS3D_PRIV_NO_BODY && sensor != WGF_PHYSICS3D_PRIV_NO_BODY &&
+               car != WGF_PHYSICS3D_PRIV_NO_BODY,
            "a box, a sensor, a car's body");
 
     memset(&v, 0, sizeof(v));
@@ -117,17 +118,19 @@ int main(void)
         expect(0, "the box at rest where every target puts it, to the bit");
     }
     wgf_physics3d_priv_jolt_body_get_pose(car, p, q);
-    if (bits(p[0]) != 0xc2d7060fu || bits(p[1]) != 0x3f22df60u || bits(p[2]) != 0x4311264au || bits(q[0]) != 0x3d038898u ||
-        bits(q[1]) != 0xbf35d207u || bits(q[2]) != 0xbd167942u || bits(q[3]) != 0x3f33c803u ||
-        bits(wgf_physics3d_priv_jolt_vehicle_get_rpm(vehicle)) != 0x45dac000u || wgf_physics3d_priv_jolt_vehicle_get_gear(vehicle) != 2) {
-        printf("car %08x %08x %08x %08x %08x %08x %08x rpm %08x gear %d\n", bits(p[0]), bits(p[1]), bits(p[2]), bits(q[0]),
-               bits(q[1]), bits(q[2]), bits(q[3]), bits(wgf_physics3d_priv_jolt_vehicle_get_rpm(vehicle)),
+    if (bits(p[0]) != 0xc2d7060fu || bits(p[1]) != 0x3f22df60u || bits(p[2]) != 0x4311264au ||
+        bits(q[0]) != 0x3d038898u || bits(q[1]) != 0xbf35d207u || bits(q[2]) != 0xbd167942u ||
+        bits(q[3]) != 0x3f33c803u || bits(wgf_physics3d_priv_jolt_vehicle_get_rpm(vehicle)) != 0x45dac000u ||
+        wgf_physics3d_priv_jolt_vehicle_get_gear(vehicle) != 2) {
+        printf("car %08x %08x %08x %08x %08x %08x %08x rpm %08x gear %d\n", bits(p[0]), bits(p[1]), bits(p[2]),
+               bits(q[0]), bits(q[1]), bits(q[2]), bits(q[3]), bits(wgf_physics3d_priv_jolt_vehicle_get_rpm(vehicle)),
                wgf_physics3d_priv_jolt_vehicle_get_gear(vehicle));
         expect(0, "the car driven and turned to where every target puts it, its engine and gear, to the bit");
     }
     wgf_physics3d_priv_jolt_vehicle_get_wheel(vehicle, 0, p, q);
     expect(p[0] < -0.7f && p[0] > -0.9f && p[2] > 1.3f && p[2] < 1.5f, "the front left wheel where it was put");
-    expect(wgf_physics3d_priv_jolt_vehicle_get_slip(vehicle, 2) >= 0.0f && wgf_physics3d_priv_jolt_vehicle_get_slip(vehicle, 9) == 0.0f,
+    expect(wgf_physics3d_priv_jolt_vehicle_get_slip(vehicle, 2) >= 0.0f &&
+               wgf_physics3d_priv_jolt_vehicle_get_slip(vehicle, 9) == 0.0f,
            "a wheel's slip, and none for a wheel it hasn't");
 
     /* a body gone while in a sensor: the sensor told it left */

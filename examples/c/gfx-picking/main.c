@@ -158,7 +158,8 @@ static void frame(void *user)
     g.time += wgf_loop_get_frame_delta();
 
     /* the robot plays once its file is in */
-    if (!g.robot_playing && wgf_resource_get_status(wgf_model_get_mesh(g.models[SHAPES])) == WGF_RESOURCE_STATUS_READY) {
+    if (!g.robot_playing &&
+        wgf_resource_get_status(wgf_model_get_mesh(g.models[SHAPES])) == WGF_RESOURCE_STATUS_READY) {
         const int clip = wgf_model_find_animation(g.models[SHAPES], "Robot_Dance");
         wgf_model_play_animation(g.models[SHAPES], clip >= 0 ? clip : 0, 0.0f);
         g.robot_playing = true;
@@ -197,8 +198,8 @@ static void frame(void *user)
     } else if (!wgf_mouse_is_down(WGF_MOUSE_BUTTON_LEFT)) {
         g.yaw += wgf_loop_get_frame_delta() * 0.1f;
     }
-    wgf_actor_set_position(g.camera, 11.0f * wgf_trig_sin(g.yaw) * wgf_trig_cos(g.pitch), 1.0f + 11.0f * wgf_trig_sin(g.pitch),
-                           11.0f * wgf_trig_cos(g.yaw) * wgf_trig_cos(g.pitch));
+    wgf_actor_set_position(g.camera, 11.0f * wgf_trig_sin(g.yaw) * wgf_trig_cos(g.pitch),
+                           1.0f + 11.0f * wgf_trig_sin(g.pitch), 11.0f * wgf_trig_cos(g.yaw) * wgf_trig_cos(g.pitch));
     wgf_actor_look_at(g.camera, 0, 0.8f, 0, 0, 1, 0);
 
     place_hud(vw, vh);

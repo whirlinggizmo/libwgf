@@ -132,7 +132,8 @@ static void test_fit(void)
     { /* a bigger map over the same ground means smaller texels */
         const wgf_gfx_priv_shadow_fit_t coarse =
             wgf_gfx_priv_shadow_fit_directional(&cam, straight_down, 30.0f, 512, 50.0f);
-        const wgf_gfx_priv_shadow_fit_t fine = wgf_gfx_priv_shadow_fit_directional(&cam, straight_down, 30.0f, 4096, 50.0f);
+        const wgf_gfx_priv_shadow_fit_t fine = wgf_gfx_priv_shadow_fit_directional(&cam, straight_down,
+                                                                                   30.0f, 4096, 50.0f);
         CHECK(fine.texel_world < coarse.texel_world);
         CHECK_NEAR(coarse.texel_world / fine.texel_world, 8.0f, 0.001f);
     }

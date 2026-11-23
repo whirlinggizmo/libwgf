@@ -56,7 +56,8 @@ int main(void)
     wgf_actor_set_parent(camera, stage);
     wgf_actor_set_parent(hero, stage);
     expect(!wgf_follow_set_target(hero, camera) && !wgf_follow_set_smoothing(camera, 2), "only a camera follows");
-    expect(wgf_follow_set_target(camera, hero) && wgf_follow_get_target(camera) == hero && near(wgf_follow_get_smoothing(camera), 8, 1e-6f),
+    expect(wgf_follow_set_target(camera, hero) && wgf_follow_get_target(camera) == hero &&
+               near(wgf_follow_get_smoothing(camera), 8, 1e-6f),
            "a 2D camera following, its smoothing 8");
     wgf_actor_set_position(hero, 100, 50, 0);
     frames(1);
@@ -83,12 +84,14 @@ int main(void)
     frames(240);
     at = wgf_actor_get_position(camera);
     expect(near(at.x, 600, 0.05f) && near(at.y, 400, 0.05f), "the view kept inside its bounds");
-    expect(wgf_follow_shake(camera, 0.5f) && wgf_follow_shake(camera, 0.8f) && near(wgf_follow_get_trauma(camera), 1, 1e-6f) &&
+    expect(wgf_follow_shake(camera, 0.5f) && wgf_follow_shake(camera, 0.8f) &&
+               near(wgf_follow_get_trauma(camera), 1, 1e-6f) &&
                !wgf_follow_shake(camera, -1),
            "shaken, trauma held to 1");
     frames(6);
     at = wgf_actor_get_position(camera);
-    expect(!(near(at.x, 600, 1e-3f) && near(at.y, 400, 1e-3f)) && wgf_follow_get_trauma(camera) < 1.0f, "thrown, settling");
+    expect(!(near(at.x, 600, 1e-3f) && near(at.y, 400, 1e-3f)) && wgf_follow_get_trauma(camera) < 1.0f,
+           "thrown, settling");
     frames(60);
     at = wgf_actor_get_position(camera);
     expect(wgf_follow_get_trauma(camera) == 0.0f && near(at.x, 600, 1e-3f), "settled");
@@ -108,7 +111,8 @@ int main(void)
     frames(240);
     at = wgf_actor_get_position(eye);
     expect(near(at.x, 6, 0.02f) && near(at.z, 0, 0.02f), "swung round behind it as it turned");
-    expect(wgf_follow_set_mode(eye, WGF_FOLLOW_MODE_FIXED) && wgf_follow_set_offset(eye, 0, 10, 0.01f), "fixed, overhead");
+    expect(wgf_follow_set_mode(eye, WGF_FOLLOW_MODE_FIXED) && wgf_follow_set_offset(eye, 0, 10, 0.01f),
+           "fixed, overhead");
     frames(1);
     expect(near(wgf_actor_get_position(eye).y, 10, 1e-3f), "fixed: the offset as it is");
     expect(wgf_follow_set_mode(eye, WGF_FOLLOW_MODE_ORBIT) && wgf_follow_set_orbit(eye, 1.5707963f, 0, 4) &&
@@ -117,7 +121,8 @@ int main(void)
     frames(1);
     at = wgf_actor_get_position(eye);
     expect(near(at.x, 4, 1e-3f) && near(at.y, 0, 1e-3f) && near(at.z, 0, 1e-3f), "on the target's +x side");
-    expect(wgf_follow_set_orbit(eye, 0, 3, 4) && near(wgf_follow_get_orbit(eye).y, 1.5533430f, 1e-5f), "its pitch clamped");
+    expect(wgf_follow_set_orbit(eye, 0, 3, 4) && near(wgf_follow_get_orbit(eye).y, 1.5533430f, 1e-5f),
+           "its pitch clamped");
     wgf_follow_set_mode(eye, WGF_FOLLOW_MODE_FIXED);
     wgf_follow_set_offset(eye, 0, 3, 6);
     wgf_follow_set_smoothing(eye, 1);
@@ -145,7 +150,8 @@ int main(void)
         wgf_actor_set_parent(lens, space);
         wgf_actor_set_position(lens, 0, 0, 10);
         q = wgf_camera3d_world_to_screen(lens, 0, 0, 0);
-        expect(near(q.x, 400, 1e-2f) && near(q.y, 300, 1e-2f) && q.z > 0 && q.z < 1, "3D: in front, at the screen's center");
+        expect(near(q.x, 400, 1e-2f) && near(q.y, 300, 1e-2f) && q.z > 0 && q.z < 1,
+               "3D: in front, at the screen's center");
         q = wgf_camera3d_world_to_screen(lens, 1, 1, 0);
         expect(q.x > 400 && q.y < 300, "up and right of it: up and right on the screen");
         expect(wgf_camera3d_world_to_screen(lens, 0, 0, 20).z < 0, "behind the camera: below 0");
@@ -155,9 +161,11 @@ int main(void)
         expect(near(q.x, 0, 1e-3f) && q.z < 10 && q.z > 9, "from the near plane");
         q = wgf_camera3d_world_to_screen(lens, 2, -1, 3);
         {
-            const wgf_vec3_t o = wgf_camera3d_screen_to_origin(lens, q.x, q.y), d = wgf_camera3d_screen_to_direction(lens, q.x, q.y);
+            const wgf_vec3_t o = wgf_camera3d_screen_to_origin(lens, q.x, q.y),
+                             d = wgf_camera3d_screen_to_direction(lens, q.x, q.y);
             const float t = (3 - o.z) / d.z;
-            expect(near(o.x + d.x * t, 2, 1e-2f) && near(o.y + d.y * t, -1, 1e-2f), "a point's place on the screen, cast back, meets it");
+            expect(near(o.x + d.x * t, 2, 1e-2f) && near(o.y + d.y * t, -1, 1e-2f),
+                   "a point's place on the screen, cast back, meets it");
         }
         expect(wgf_camera3d_world_to_screen(flat, 0, 0, 0).x == 0 && wgf_stage2d_world_to_screen(space, 1, 1).x == 0,
                "the wrong kind: 0");

@@ -134,7 +134,8 @@ static float *decode_ogg(const unsigned char *data, size_t size, uint64_t frames
         if (got < 0) continue; /* a hole in the data: skipped, as a voice would */
         if ((uint64_t)got > frames - done) got = (long)(frames - done);
         for (long f = 0; f < got; f++) {
-            for (int c = 0; c < channels; c++) pcm[(done + (uint64_t)f) * (uint64_t)channels + (uint64_t)c] = planes[c][f];
+            for (int c = 0; c < channels; c++)
+                pcm[(done + (uint64_t)f) * (uint64_t)channels + (uint64_t)c] = planes[c][f];
         }
         done += (uint64_t)got;
     }
@@ -551,11 +552,13 @@ void wgf_audio_priv_sound_free(wgf_handle_t sound, wgf_audio_priv_sound_t *recor
     if (record->pcm != NULL) free_pcm(record->format, record->pcm);
     if (record->reader.bytes != NULL) wgf_core_priv_fs_read_free(record->reader.bytes);
     if (record->reader.blocks != NULL) {
-        for (int i = 0; i < WGF_AUDIO_PRIV_BLOCKS && record->reader.blocks[i] != NULL; i++) free(record->reader.blocks[i]);
+        for (int i = 0; i < WGF_AUDIO_PRIV_BLOCKS && record->reader.blocks[i] != NULL; i++)
+            free(record->reader.blocks[i]);
         free(record->reader.blocks);
     }
     if (record->arriving != NULL) { /* freed while its file arrived */
-        if (wgf_core_priv_load_hooks.arrival_end != NULL) wgf_core_priv_load_hooks.arrival_end(record->arriving->arrival);
+        if (wgf_core_priv_load_hooks.arrival_end != NULL)
+            wgf_core_priv_load_hooks.arrival_end(record->arriving->arrival);
         free(record->arriving);
     }
     record->pcm = NULL;

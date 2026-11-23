@@ -139,14 +139,16 @@ static void raw_layout(device_t *dev, const unsigned long *key_bits, const unsig
         if (HAS_BIT(abs_bits, code)) dev->abs_index[code] = (signed char)raw->axis_count++;
     }
     for (code = ABS_HAT0X; code <= ABS_HAT3Y && raw->hat_count < WGF_PLATFORM_PRIV_GAMEPAD_HATS; code += 2) {
-        if (HAS_BIT(abs_bits, code) || HAS_BIT(abs_bits, code + 1)) dev->hat_index[code] = (signed char)raw->hat_count++;
+        if (HAS_BIT(abs_bits, code) || HAS_BIT(abs_bits, code + 1))
+            dev->hat_index[code] = (signed char)raw->hat_count++;
     }
 }
 
 /* A key or an axis into the raw state. */
 static void raw_key(device_t *dev, int code, int value)
 {
-    if (code >= 0 && code <= KEY_MAX && dev->key_index[code] >= 0) dev->raw.buttons[(int)dev->key_index[code]] = value != 0;
+    if (code >= 0 && code <= KEY_MAX && dev->key_index[code] >= 0)
+        dev->raw.buttons[(int)dev->key_index[code]] = value != 0;
 }
 
 static void raw_abs(device_t *dev, int code, int value)
@@ -232,7 +234,8 @@ static void try_open(const char *event_name, wgf_platform_priv_gamepad_t pads[WG
     {
         struct input_id id;
         memset(&id, 0, sizeof(id));
-        if (ioctl(fd, EVIOCGID, &id) >= 0 && id.vendor != 0 && id.product != 0) { /* SDL's: bus, 0, vendor, 0, product, 0, version, 0 */
+        /* SDL's: bus, 0, vendor, 0, product, 0, version, 0 */
+        if (ioctl(fd, EVIOCGID, &id) >= 0 && id.vendor != 0 && id.product != 0) {
             const unsigned short words[8] = {id.bustype, 0, id.vendor, 0, id.product, 0, id.version, 0};
             for (i = 0; i < 8; i++) {
                 guid_bytes[i * 2] = (unsigned char)(words[i] & 0xFF);

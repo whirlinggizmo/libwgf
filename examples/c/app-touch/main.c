@@ -84,7 +84,8 @@ static void frame(void *user)
 
     /* the pointer (the mouse, or one finger) drags the coin */
     if (wgf_pointer_get_held() == g.coin) wgf_actor_set_position(g.coin, mouse.x, mouse.y, 0);
-    wgf_sprite_set_tint(g.coin, wgf_pointer_get_held() == g.coin ? wgf_color_make(255, 230, 150, 255) : WGF_COLOR_WHITE);
+    wgf_sprite_set_tint(g.coin,
+                        wgf_pointer_get_held() == g.coin ? wgf_color_make(255, 230, 150, 255) : WGF_COLOR_WHITE);
 
     /* where fingers lifted: a ring that fades */
     for (i = 0; i < FINGERS; i++) g.lifted[i][2] = fmaxf(g.lifted[i][2] - 0.033f, 0.0f);

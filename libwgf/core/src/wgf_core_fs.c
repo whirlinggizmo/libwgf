@@ -549,7 +549,8 @@ void wgf_core_priv_fs_init(const char *root_dir)
     if (fs_running) return;
     set_trimmed(fs_root, sizeof(fs_root), root_dir != NULL ? root_dir : wgf_core_priv_fs_platform_default_root());
     wgf_core_priv_fs_platform_init(fs_root);
-    if (!wgf_core_priv_handle_pool_init(&task_pool, WGF_CORE_PRIV_HANDLE_KIND_FS_TASK, (void **)&tasks, sizeof(task_t), 8, 4096)) {
+    if (!wgf_core_priv_handle_pool_init(&task_pool, WGF_CORE_PRIV_HANDLE_KIND_FS_TASK, (void **)&tasks, sizeof(task_t),
+                                        8, 4096)) {
         wgf_log_error("wgf_core_fs: no task pool; requests will be refused");
         return;
     }

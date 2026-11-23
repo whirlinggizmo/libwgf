@@ -17,8 +17,9 @@
 /* The actor benchmark (SPEC.md, "An actor benchmark"; tools/bench/measure_actors.py runs
  * it): what an actor costs, in bytes and in time, at 10k and 50k, static and moving, in
  * flat and deep trees, with and without behaviors, with churn, every actor gaining and
- * losing a component each frame (toggle), and found by name, path, and component. One row a run, named by its argument (`--list` prints them), so each
- * starts from a fresh heap:
+ * losing a component each frame (toggle), and found by name, path, and component. One
+ * row a run, named by its argument (`--list` prints them), so each starts from a fresh
+ * heap:
  *
  *   bytes   the heap's growth (glibc's mallinfo2, mapped chunks too) from making the
  *           actors, over their count: everything an actor brings, its pools' slack
@@ -216,8 +217,10 @@ static void frame(void *user)
         printf("bench_actors: %s actors=%d bytes=%.1f ns=%.2f\n", row->name, row->count,
                (double)bench.heap_made / row->count, (bench.cost - bench.finding) / frames / row->count * 1e9);
         if (row->lookup) {
-            printf("bench_actors: %s-name finds=1000 ns=%.1f\n", row->name, bench.find_name / (frames + 1) / 1000 * 1e9);
-            printf("bench_actors: %s-path finds=1000 ns=%.1f\n", row->name, bench.find_path / (frames + 1) / 1000 * 1e9);
+            printf("bench_actors: %s-name finds=1000 ns=%.1f\n", row->name,
+                   bench.find_name / (frames + 1) / 1000 * 1e9);
+            printf("bench_actors: %s-path finds=1000 ns=%.1f\n", row->name,
+                   bench.find_path / (frames + 1) / 1000 * 1e9);
             printf("bench_actors: %s-component found=%d ns=%.2f\n", row->name, row->count,
                    bench.find_component / (frames + 1) / row->count * 1e9);
         }

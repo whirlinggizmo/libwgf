@@ -40,7 +40,8 @@ EM_JS(void, stub_autoplay, (void), {
     HTMLMediaElement.prototype.play = function() {
         if (!tapped) {
             log.refused++;
-            return Promise.reject(new DOMException("play() failed because the user didn't interact", "NotAllowedError"));
+            return Promise.reject(new DOMException("play() failed because the user didn't interact",
+                                                   "NotAllowedError"));
         }
         log.played++;
         return play.call(this);

@@ -88,7 +88,8 @@ int main(void)
     /* three angles: x, then y, then z, about the fixed axes */
     expect(near3(wgf_quat_rotate(wgf_quat_from_euler(wgf_vec3_make(0, 0, pi / 2)), wgf_vec3_make(1, 0, 0)), 0, 1, 0),
            "euler z: a quarter turn takes x to y");
-    expect(near3(wgf_quat_rotate(wgf_quat_from_euler(wgf_vec3_make(pi / 2, 0, pi / 2)), wgf_vec3_make(0, 1, 0)), 0, 0, 1),
+    expect(near3(wgf_quat_rotate(wgf_quat_from_euler(wgf_vec3_make(pi / 2, 0, pi / 2)), wgf_vec3_make(0, 1, 0)),
+                 0, 0, 1),
            "euler x first, then z: y goes to z, and z stays");
     {
         const wgf_vec3_t angles = wgf_vec3_make(0.3f, -0.7f, 2.1f);
@@ -121,7 +122,8 @@ int main(void)
             expect(near(t.m[1], m.m[4]) && near(t.m[12], m.m[3]), "transpose");
         }
         for (i = 0; i < 16; i++) {
-            const wgf_mat4_t flat = wgf_mat4_from_trs(wgf_vec3_make(0, 0, 0), wgf_quat_identity(), wgf_vec3_make(1, 0, 1));
+            const wgf_mat4_t flat =
+                wgf_mat4_from_trs(wgf_vec3_make(0, 0, 0), wgf_quat_identity(), wgf_vec3_make(1, 0, 1));
             const wgf_mat4_t none = wgf_mat4_invert(flat);
             const wgf_mat4_t identity_matrix = wgf_mat4_identity();
             if (none.m[i] != identity_matrix.m[i]) fallback = 0;
@@ -133,9 +135,12 @@ int main(void)
                        near(wgf_mat4_transform_point(p, wgf_vec3_make(0, 0, -10)).z, 1),
                    "a projection divides by w: near and far land on -1 and 1");
         }
-        expect(near3(wgf_mat4_transform_point(wgf_mat4_mul(wgf_mat4_from_trs(wgf_vec3_make(5, 0, 0), wgf_quat_identity(), wgf_vec3_make(1, 1, 1)),
-                                                           wgf_mat4_from_trs(wgf_vec3_make(0, 0, 0), wgf_quat_identity(), wgf_vec3_make(2, 2, 2))),
-                                              wgf_vec3_make(1, 0, 0)), 7, 0, 0),
+        expect(near3(wgf_mat4_transform_point(
+                         wgf_mat4_mul(
+                             wgf_mat4_from_trs(wgf_vec3_make(5, 0, 0), wgf_quat_identity(), wgf_vec3_make(1, 1, 1)),
+                             wgf_mat4_from_trs(wgf_vec3_make(0, 0, 0), wgf_quat_identity(), wgf_vec3_make(2, 2, 2))),
+                         wgf_vec3_make(1, 0, 0)),
+                     7, 0, 0),
                "mul(a, b) applies b first: scaled, then moved");
     }
     {
@@ -157,13 +162,16 @@ int main(void)
     }
     {
         /* a camera at (0, 0, 5) looking at the origin: the origin is 5 in front, down -z */
-        const wgf_mat4_t view = wgf_mat4_look_at(wgf_vec3_make(0, 0, 5), wgf_vec3_make(0, 0, 0), wgf_vec3_make(0, 1, 0));
-        const wgf_mat4_t side = wgf_mat4_look_at(wgf_vec3_make(5, 0, 0), wgf_vec3_make(0, 0, 0), wgf_vec3_make(0, 1, 0));
+        const wgf_mat4_t view =
+            wgf_mat4_look_at(wgf_vec3_make(0, 0, 5), wgf_vec3_make(0, 0, 0), wgf_vec3_make(0, 1, 0));
+        const wgf_mat4_t side =
+            wgf_mat4_look_at(wgf_vec3_make(5, 0, 0), wgf_vec3_make(0, 0, 0), wgf_vec3_make(0, 1, 0));
         expect(near3(wgf_mat4_transform_point(view, wgf_vec3_make(0, 0, 0)), 0, 0, -5), "look_at: the target ahead");
         expect(near3(wgf_mat4_transform_point(side, wgf_vec3_make(0, 0, 0)), 0, 0, -5) &&
                    near3(wgf_mat4_transform_point(side, wgf_vec3_make(0, 1, 0)), 0, 1, -5),
                "from the side too, up kept up");
-        const wgf_mat4_t same = wgf_mat4_look_at(wgf_vec3_make(1, 1, 1), wgf_vec3_make(1, 1, 1), wgf_vec3_make(0, 1, 0));
+        const wgf_mat4_t same =
+            wgf_mat4_look_at(wgf_vec3_make(1, 1, 1), wgf_vec3_make(1, 1, 1), wgf_vec3_make(0, 1, 0));
         expect(near(same.m[0], 1), "the eye on the target: the identity");
     }
     {
@@ -172,7 +180,8 @@ int main(void)
         const wgf_quat_t down = wgf_quat_look_rotation(wgf_vec3_make(0, -1, -1), wgf_vec3_make(0, 1, 0));
         expect(near3(wgf_quat_rotate(q, wgf_vec3_make(0, 0, -1)), 1, 0, 0), "look_rotation: -z to forward");
         expect(near3(wgf_quat_rotate(q, wgf_vec3_make(0, 1, 0)), 0, 1, 0), "with y still up");
-        expect(near3(wgf_quat_rotate(down, wgf_vec3_make(0, 0, -1)), 0, -0.70710678f, -0.70710678f), "looking down and ahead");
+        expect(near3(wgf_quat_rotate(down, wgf_vec3_make(0, 0, -1)), 0, -0.70710678f, -0.70710678f),
+               "looking down and ahead");
         expect(near(wgf_quat_look_rotation(wgf_vec3_make(0, 1, 0), wgf_vec3_make(0, 1, 0)).w, 1),
                "forward along up: the identity");
     }
@@ -251,7 +260,8 @@ int main(void)
         }
         for (i = 0; i <= 1000; i++) {
             const float t = (float)i / 1000.0f;
-            worst = fmaxf(worst, fabsf(wgf_ease_value(WGF_EASING_SINE_IN_OUT, t) - (1 - cosf(3.14159265358979f * t)) / 2));
+            worst = fmaxf(worst,
+                          fabsf(wgf_ease_value(WGF_EASING_SINE_IN_OUT, t) - (1 - cosf(3.14159265358979f * t)) / 2));
             if (i > 0 && i < 1000)
                 worst = fmaxf(worst, fabsf(wgf_ease_value(WGF_EASING_EXPO_OUT, t) - (1 - powf(2, -10 * t))));
         }
@@ -263,23 +273,37 @@ int main(void)
     }
 
     /* single numbers */
-    expect(wgf_scalar_clamp(5, 0, 2) == 2 && wgf_scalar_lerp(0, 10, 0.25f) == 2.5f && wgf_scalar_remap(5, 0, 10, 100, 200) == 150, "clamp, lerp, remap");
-    expect(fabsf(wgf_scalar_wrap(370, 0, 360) - 10) < 1e-3f && fabsf(wgf_scalar_wrap(-10, 0, 360) - 350) < 1e-3f, "wrap");
-    expect(wgf_scalar_smooth_step(0, 1, -1) == 0 && wgf_scalar_smooth_step(0, 1, 0.5f) == 0.5f && wgf_scalar_smooth_step(0, 1, 2) == 1, "smooth step");
-    expect(fabsf(wgf_scalar_damp(0, 10, 1, 1) - 10 * (1 - expf(-1))) < 1e-3f && wgf_scalar_damp(0, 10, 0, 1) == 10, "damp");
-    expect(wgf_scalar_move_toward(0, 10, 3) == 3 && wgf_scalar_move_toward(9, 10, 3) == 10 && wgf_scalar_move_toward(0, -10, 3) == -3, "move toward");
-    expect(fabsf(wgf_scalar_angle_delta(0.1f, 2 * pi - 0.1f) + 0.2f) < 1e-3f && fabsf(wgf_scalar_angle_delta(0, pi / 2) - pi / 2) < 1e-4f, "the short way round");
+    expect(wgf_scalar_clamp(5, 0, 2) == 2 && wgf_scalar_lerp(0, 10, 0.25f) == 2.5f &&
+               wgf_scalar_remap(5, 0, 10, 100, 200) == 150,
+           "clamp, lerp, remap");
+    expect(fabsf(wgf_scalar_wrap(370, 0, 360) - 10) < 1e-3f && fabsf(wgf_scalar_wrap(-10, 0, 360) - 350) < 1e-3f,
+           "wrap");
+    expect(wgf_scalar_smooth_step(0, 1, -1) == 0 && wgf_scalar_smooth_step(0, 1, 0.5f) == 0.5f &&
+               wgf_scalar_smooth_step(0, 1, 2) == 1,
+           "smooth step");
+    expect(fabsf(wgf_scalar_damp(0, 10, 1, 1) - 10 * (1 - expf(-1))) < 1e-3f && wgf_scalar_damp(0, 10, 0, 1) == 10,
+           "damp");
+    expect(wgf_scalar_move_toward(0, 10, 3) == 3 && wgf_scalar_move_toward(9, 10, 3) == 10 &&
+               wgf_scalar_move_toward(0, -10, 3) == -3,
+           "move toward");
+    expect(fabsf(wgf_scalar_angle_delta(0.1f, 2 * pi - 0.1f) + 0.2f) < 1e-3f &&
+               fabsf(wgf_scalar_angle_delta(0, pi / 2) - pi / 2) < 1e-4f,
+           "the short way round");
 
     /* vectors' and turns' helpers */
-    expect(near(wgf_vec2_distance(wgf_vec2_make(0, 0), wgf_vec2_make(3, 4)), 5) && near(wgf_vec2_angle(wgf_vec2_make(0, 1)), pi / 2) &&
-               near(wgf_vec2_rotate(wgf_vec2_make(1, 0), pi / 2).y, 1) && near(wgf_vec2_move_toward(wgf_vec2_make(0, 0), wgf_vec2_make(10, 0), 3).x, 3) &&
-               near(wgf_vec2_reflect(wgf_vec2_make(1, -1), wgf_vec2_make(0, 1)).y, 1) && wgf_vec2_min(wgf_vec2_make(1, 5), wgf_vec2_make(3, 2)).y == 2,
+    expect(near(wgf_vec2_distance(wgf_vec2_make(0, 0), wgf_vec2_make(3, 4)), 5) &&
+               near(wgf_vec2_angle(wgf_vec2_make(0, 1)), pi / 2) &&
+               near(wgf_vec2_rotate(wgf_vec2_make(1, 0), pi / 2).y, 1) &&
+               near(wgf_vec2_move_toward(wgf_vec2_make(0, 0), wgf_vec2_make(10, 0), 3).x, 3) &&
+               near(wgf_vec2_reflect(wgf_vec2_make(1, -1), wgf_vec2_make(0, 1)).y, 1) &&
+               wgf_vec2_min(wgf_vec2_make(1, 5), wgf_vec2_make(3, 2)).y == 2,
            "vec2 distance, angle, rotate, move toward, reflect, min");
     expect(wgf_vec2_clamp(wgf_vec2_make(-4, 9), wgf_vec2_make(0, 0), wgf_vec2_make(5, 5)).x == 0 &&
                wgf_vec2_clamp(wgf_vec2_make(-4, 9), wgf_vec2_make(0, 0), wgf_vec2_make(5, 5)).y == 5 &&
                near(wgf_vec2_clamp_length(wgf_vec2_make(30, 40), 0, 10).y, 8) &&
                near(wgf_vec2_clamp_length(wgf_vec2_make(0.3f, 0.4f), 1, 10).x, 0.6f) &&
-               wgf_vec2_clamp_length(wgf_vec2_make(0, 0), 1, 10).x == 0 && wgf_vec2_clamp_length(wgf_vec2_make(3, 4), 1, 10).x == 3,
+               wgf_vec2_clamp_length(wgf_vec2_make(0, 0), 1, 10).x == 0 &&
+               wgf_vec2_clamp_length(wgf_vec2_make(3, 4), 1, 10).x == 3,
            "vec2 clamp, clamp length (a zero vector stays zero)");
     expect(near(wgf_vec3_distance(wgf_vec3_make(1, 2, 3), wgf_vec3_make(1, 2, 5)), 2) &&
                near(wgf_vec3_angle(wgf_vec3_make(1, 0, 0), wgf_vec3_make(0, 3, 0)), pi / 2) &&
@@ -293,8 +317,10 @@ int main(void)
                near3(wgf_vec3_clamp_length(wgf_vec3_make(0, 0, 0.5f), 2, 10), 0, 0, 2) &&
                near3(wgf_vec3_clamp_length(wgf_vec3_make(0, 0, 0), 2, 10), 0, 0, 0),
            "vec3 clamp, clamp length");
-    expect(near3(wgf_quat_rotate(wgf_quat_from_to(wgf_vec3_make(1, 0, 0), wgf_vec3_make(0, 2, 0)), wgf_vec3_make(1, 0, 0)), 0, 1, 0) &&
-               near3(wgf_quat_rotate(wgf_quat_from_to(wgf_vec3_make(1, 0, 0), wgf_vec3_make(-1, 0, 0)), wgf_vec3_make(1, 0, 0)), -1, 0, 0) &&
+    expect(near3(wgf_quat_rotate(wgf_quat_from_to(wgf_vec3_make(1, 0, 0), wgf_vec3_make(0, 2, 0)),
+                                 wgf_vec3_make(1, 0, 0)), 0, 1, 0) &&
+               near3(wgf_quat_rotate(wgf_quat_from_to(wgf_vec3_make(1, 0, 0), wgf_vec3_make(-1, 0, 0)),
+                                     wgf_vec3_make(1, 0, 0)), -1, 0, 0) &&
                near(wgf_quat_nlerp(wgf_quat_identity(), wgf_quat_identity(), 0.5f).w, 1),
            "a turn from one direction to another, and nlerp");
 

@@ -46,9 +46,12 @@ static const char packer[] = "{\"frames\": {"
 
 /* Aseprite's array: durations, and tags (a ping-pong, a reverse). */
 static const char aseprite[] = "{\"frames\": ["
-                               "{\"filename\": \"a 0\", \"frame\": {\"x\": 0, \"y\": 0, \"w\": 1, \"h\": 1}, \"duration\": 100},"
-                               "{\"filename\": \"a 1\", \"frame\": {\"x\": 1, \"y\": 0, \"w\": 1, \"h\": 1}, \"duration\": 300},"
-                               "{\"filename\": \"a 2\", \"frame\": {\"x\": 0, \"y\": 1, \"w\": 1, \"h\": 1}, \"duration\": 100}],"
+                               "{\"filename\": \"a 0\", \"frame\": {\"x\": 0, \"y\": 0, \"w\": 1, \"h\": 1},"
+                               " \"duration\": 100},"
+                               "{\"filename\": \"a 1\", \"frame\": {\"x\": 1, \"y\": 0, \"w\": 1, \"h\": 1},"
+                               " \"duration\": 300},"
+                               "{\"filename\": \"a 2\", \"frame\": {\"x\": 0, \"y\": 1, \"w\": 1, \"h\": 1},"
+                               " \"duration\": 100}],"
                                " \"meta\": {\"image\": \"four.png\", \"frameTags\": ["
                                "{\"name\": \"walk_left\", \"from\": 0, \"to\": 2, \"direction\": \"forward\"},"
                                "{\"name\": \"walk\", \"from\": 1, \"to\": 2, \"direction\": \"pingpong\"},"
@@ -98,13 +101,15 @@ int main(void)
            "no name, no frames, time below 0, a direction that isn't one: refused");
 
     sprite = wgf_sprite_create(0);
-    expect(wgf_sprite_set_sheet(sprite, sheet) && wgf_sprite_get_sheet(sprite) == sheet && wgf_sprite_get_texture(sprite) == texture,
+    expect(wgf_sprite_set_sheet(sprite, sheet) && wgf_sprite_get_sheet(sprite) == sheet &&
+               wgf_sprite_get_texture(sprite) == texture,
            "a sprite on the sheet: its texture");
     expect(wgf_sprite_play_clip(sprite, "walk", true) && wgf_sprite_get_clip_state(sprite) == WGF_PLAY_STATE_PLAYING &&
                strcmp(wgf_sprite_get_clip(sprite), "walk") == 0 && wgf_sprite_get_clip_frame(sprite) == 0,
            "playing from its first frame");
     frames(3, 0.05f);
-    expect(wgf_sprite_get_clip_frame(sprite) == 1 && wgf_sprite_get_source(sprite).x == 1.0f, "a tenth of a second on: the second frame, its region");
+    expect(wgf_sprite_get_clip_frame(sprite) == 1 && wgf_sprite_get_source(sprite).x == 1.0f,
+           "a tenth of a second on: the second frame, its region");
     frames(6, 0.05f);
     expect(wgf_sprite_get_clip_frame(sprite) == 0 && wgf_sprite_get_clip_state(sprite) == WGF_PLAY_STATE_PLAYING,
            "looping round to its first");
@@ -114,7 +119,8 @@ int main(void)
         wgf_actor_set_parent(sprite, level);
         wgf_actor_set_paused(level, true);
         frames(4, 0.05f);
-        expect(wgf_sprite_get_clip_frame(sprite) == frame && wgf_sprite_get_clip_state(sprite) == WGF_PLAY_STATE_PLAYING,
+        expect(wgf_sprite_get_clip_frame(sprite) == frame &&
+                   wgf_sprite_get_clip_state(sprite) == WGF_PLAY_STATE_PLAYING,
                "under a paused actor: its clip held, still playing");
         wgf_actor_set_parent(sprite, 0);
         wgf_actor_destroy(level, WGF_ACTOR_DESTROY_CHILDREN);
@@ -122,7 +128,8 @@ int main(void)
     expect(wgf_sprite_pause_clip(sprite) && wgf_sprite_get_clip_state(sprite) == WGF_PLAY_STATE_PAUSED, "paused");
     frames(10, 0.05f);
     expect(wgf_sprite_get_clip_frame(sprite) == 0 && wgf_sprite_resume_clip(sprite), "held, and on again");
-    expect(wgf_sprite_play_clip(sprite, "back", false) && wgf_sprite_get_clip_frame(sprite) == 3, "backward, from its last");
+    expect(wgf_sprite_play_clip(sprite, "back", false) && wgf_sprite_get_clip_frame(sprite) == 3,
+           "backward, from its last");
     frames(10, 0.05f);
     expect(wgf_sprite_get_clip_state(sprite) == WGF_PLAY_STATE_COMPLETE && wgf_sprite_get_clip_frame(sprite) == 0,
            "once: COMPLETE, holding its end");
@@ -151,10 +158,12 @@ int main(void)
         wgf_sheet_t hash, array;
         int events[4];
         write = wgf_fs_write("sheet_test/packer.json", (const unsigned char *)packer, (int)sizeof(packer) - 1);
-        for (i = 0; i < 1000 && wgf_fs_task_get_status(write) == WGF_FS_TASK_STATUS_PENDING; i++) wgf_core_priv_update();
+        for (i = 0; i < 1000 && wgf_fs_task_get_status(write) == WGF_FS_TASK_STATUS_PENDING; i++)
+            wgf_core_priv_update();
         wgf_fs_task_destroy(write);
         write = wgf_fs_write("sheet_test/ase.json", (const unsigned char *)aseprite, (int)sizeof(aseprite) - 1);
-        for (i = 0; i < 1000 && wgf_fs_task_get_status(write) == WGF_FS_TASK_STATUS_PENDING; i++) wgf_core_priv_update();
+        for (i = 0; i < 1000 && wgf_fs_task_get_status(write) == WGF_FS_TASK_STATUS_PENDING; i++)
+            wgf_core_priv_update();
         wgf_fs_task_destroy(write);
         hash = wgf_sheet_create("sheet_test/packer.json");
         array = wgf_sheet_create("sheet_test/ase.json");
@@ -173,7 +182,8 @@ int main(void)
         expect(wgf_resource_get_status(wgf_sheet_get_texture(hash)) == WGF_RESOURCE_STATUS_READY &&
                    wgf_sheet_get_texture(hash) == texture,
                "its image, beside it, the texture made from that path");
-        expect(wgf_sheet_find_clip(hash, "run") == 0 && wgf_sheet_get_clip_count(hash) == 1, "a clip of its numbered run");
+        expect(wgf_sheet_find_clip(hash, "run") == 0 && wgf_sheet_get_clip_count(hash) == 1,
+               "a clip of its numbered run");
         sprite = wgf_sprite_create(0);
         wgf_sprite_set_sheet(sprite, hash);
         expect(wgf_sprite_play_clip(sprite, "run", true) && wgf_sprite_get_source(sprite).x == 0.0f &&
@@ -189,7 +199,8 @@ int main(void)
         expect(wgf_sheet_set_clip_event(array, "walk", 1, 7) && wgf_sheet_get_clip_event(array, "walk", 1) == 7 &&
                    !wgf_sheet_set_clip_event(array, "walk", 5, 7) && !wgf_sheet_set_clip_event(array, "nope", 0, 7),
                "an event on a clip's second frame; outside it, or a clip it hasn't: refused");
-        expect(wgf_sprite_play_clip(sprite, "walk", true) && wgf_sprite_get_source(sprite).x == 1.0f, "walk: frame a 1");
+        expect(wgf_sprite_play_clip(sprite, "walk", true) && wgf_sprite_get_source(sprite).x == 1.0f,
+               "walk: frame a 1");
         frames(2, 0.1f);
         expect(wgf_sprite_get_source(sprite).x == 1.0f, "a 1 shows for its 0.3 s");
         frames(1, 0.1f);
@@ -213,7 +224,8 @@ int main(void)
     {
         const wgf_sheet_t broken = wgf_sheet_create("sheet_test/broken.json");
         start = wgf_time_get_seconds();
-        while (wgf_resource_get_status(broken) == WGF_RESOURCE_STATUS_PENDING && wgf_time_get_seconds() - start < 30.0) {
+        while (wgf_resource_get_status(broken) == WGF_RESOURCE_STATUS_PENDING &&
+               wgf_time_get_seconds() - start < 30.0) {
             wgf_core_priv_update();
         }
         expect(wgf_resource_get_status(broken) == WGF_RESOURCE_STATUS_FAILED, "not an atlas: FAILED");

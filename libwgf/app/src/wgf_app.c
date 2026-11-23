@@ -210,7 +210,8 @@ static void on_frame(void)
     wgf_core_priv_update();
     if (!pace()) return;
     started = wgf_time_get_seconds(); /* the frame's own work, from here to its drawing's end */
-    if (app.autopilot != NULL) app.autopilot->begin_frame(app.frames); /* the frame's autopilot inputs, before its ticks */
+    /* the frame's autopilot inputs, before its ticks */
+    if (app.autopilot != NULL) app.autopilot->begin_frame(app.frames);
     if (app.replay != NULL) app.replay->inputs();   /* and a replay's */
     wgf_platform_priv_pads_begin_frame();     /* before the ticks: they read the pads too */
     if (app.recording) app.recorder->frame(app.frames);
@@ -218,7 +219,8 @@ static void on_frame(void)
     wgf_core_priv_part_begin_frame();            /* the parts' reading of the frame's input (the pointer) */
     run_ticks(time_frame());
     wgf_core_priv_part_set_fraction(wgf_loop_get_tick_fraction()); /* for those drawing ticked state */
-    wgf_core_priv_part_update(app.frame_delta); /* the parts' (ecs actors, particles): after the ticks, before the frame */
+    /* the parts' (ecs actors, particles): after the ticks, before the frame */
+    wgf_core_priv_part_update(app.frame_delta);
     wgf_gfx_priv_begin_frame();
     call(app.frame);
     if (app.overlay != NULL) app.overlay();
@@ -226,7 +228,8 @@ static void on_frame(void)
     {
         const double ended = wgf_time_get_seconds();
         app.frame_cost = (float)(ended - started);
-        if (app.frame_counted != NULL) app.frame_counted(app.frame_ended > 0.0 ? ended - app.frame_ended : 0.0, app.frame_cost);
+        if (app.frame_counted != NULL)
+            app.frame_counted(app.frame_ended > 0.0 ? ended - app.frame_ended : 0.0, app.frame_cost);
         app.frame_ended = ended;
     }
     if (!app.first_frame_done) {
@@ -259,8 +262,8 @@ static void on_shutdown(void)
     app.running = false;
 }
 
-bool wgf_app_run(wgf_app_callback_t init, wgf_app_callback_t tick, wgf_app_callback_t frame, wgf_app_callback_t shutdown,
-                void *user)
+bool wgf_app_run(wgf_app_callback_t init, wgf_app_callback_t tick, wgf_app_callback_t frame,
+                 wgf_app_callback_t shutdown, void *user)
 {
     wgf_platform_priv_desc_t desc = {0};
     if (app.running) return false;

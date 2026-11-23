@@ -95,7 +95,8 @@ static bool all_gray(wgf_image_t image, int *low, int *high)
         for (x = 0; x < w; x++) {
             const wgf_color_t c = wgf_image_get_pixel(image, x, y);
             const int r = wgf_color_get_red(c);
-            if (r != wgf_color_get_green(c) || r != wgf_color_get_blue(c) || wgf_color_get_alpha(c) != 255) return false;
+            if (r != wgf_color_get_green(c) || r != wgf_color_get_blue(c) || wgf_color_get_alpha(c) != 255)
+                return false;
             if (r < *low) *low = r;
             if (r > *high) *high = r;
         }
@@ -174,7 +175,8 @@ static void generated(void)
     wgf_resource_release(image);
     image = wgf_image_create_gradient_square(9, 7, 0.0f, white, black);
     expect(wgf_image_get_pixel(image, 4, 3) == white, "square: the middle inner");
-    expect(row_is(image, 0, black) && row_is(image, 6, black) && column_is(image, 0, black) && column_is(image, 8, black),
+    expect(row_is(image, 0, black) && row_is(image, 6, black) && column_is(image, 0, black) &&
+               column_is(image, 8, black),
            "every edge pixel outer");
     wgf_resource_release(image);
 
@@ -188,7 +190,8 @@ static void generated(void)
 
     /* noise: the same for a seed, on every platform */
     {
-        const wgf_image_t a = wgf_image_create_white_noise(64, 64, 0.5f, 7), b = wgf_image_create_white_noise(64, 64, 0.5f, 7);
+        const wgf_image_t a = wgf_image_create_white_noise(64, 64, 0.5f, 7),
+                          b = wgf_image_create_white_noise(64, 64, 0.5f, 7);
         const wgf_image_t c = wgf_image_create_white_noise(64, 64, 0.5f, 8);
         int whites = 0;
         expect(memcmp(wgf_image_get_data(a), wgf_image_get_data(b), 64 * 64 * 4) == 0 &&
@@ -219,7 +222,8 @@ static void generated(void)
         const wgf_image_t c = wgf_image_create_perlin_noise(64, 48, 0, 0, 4.0f, 4);
         const wgf_image_t shifted = wgf_image_create_perlin_noise(64, 48, 32, -16, 4.0f, 3);
         bool tiles = true;
-        expect(hash_of(a) == hash_of(b) && hash_of(a) != hash_of(c), "Perlin noise: the same for a seed, another for another");
+        expect(hash_of(a) == hash_of(b) && hash_of(a) != hash_of(c),
+               "Perlin noise: the same for a seed, another for another");
         expect(all_gray(a, &low, &high) && low < 96 && high > 160, "opaque gray, spread over the range");
         for (y = 16; y < 48; y++) {
             for (x = 0; x < 32; x++) {
@@ -246,14 +250,17 @@ static void generated(void)
 
     /* refused */
     expect(wgf_image_create_color(0, 4, red) == 0 && wgf_image_create_color(4, -1, red) == 0 &&
-               wgf_image_create_color(16385, 1, red) == 0 && wgf_image_create_gradient_linear(0, 1, 0.0f, red, blue) == 0 &&
+               wgf_image_create_color(16385, 1, red) == 0 &&
+               wgf_image_create_gradient_linear(0, 1, 0.0f, red, blue) == 0 &&
                wgf_image_create_gradient_radial(1, 0, 0.0f, red, blue) == 0 &&
                wgf_image_create_gradient_square(-3, 3, 0.0f, red, blue) == 0 &&
                wgf_image_create_white_noise(0, 0, 0.5f, 1) == 0 && wgf_image_create_cellular(4, 0, 2, 1) == 0,
            "a side of 0 or less, or over 16384: refused");
-    expect(wgf_image_create_checked(4, 4, 0, 1, red, blue) == 0 && wgf_image_create_checked(4, 4, 1, -1, red, blue) == 0,
+    expect(wgf_image_create_checked(4, 4, 0, 1, red, blue) == 0 &&
+               wgf_image_create_checked(4, 4, 1, -1, red, blue) == 0,
            "checks of 0 or less: refused");
-    expect(wgf_image_create_perlin_noise(4, 4, 0, 0, 0.0f, 1) == 0 && wgf_image_create_perlin_noise(4, 4, 0, 0, NAN, 1) == 0 &&
+    expect(wgf_image_create_perlin_noise(4, 4, 0, 0, 0.0f, 1) == 0 &&
+               wgf_image_create_perlin_noise(4, 4, 0, 0, NAN, 1) == 0 &&
                wgf_image_create_perlin_noise(4, 4, 0, 0, 5000.0f, 1) == 0,
            "a scale of 0, NaN, or over 4096: refused");
     expect(wgf_image_create_cellular(4, 4, 0, 1) == 0, "a tile of 0: refused");
@@ -272,7 +279,8 @@ static void pixels(void)
                !wgf_image_set_pixel(image, 0, 3, green) && !wgf_image_set_pixel(0, 0, 0, green) &&
                !wgf_image_set_pixel(12345, 0, 0, green),
            "outside it, or not an image: refused");
-    expect(wgf_image_get_pixel(image, 4, 0) == 0 && wgf_image_get_pixel(image, 0, -1) == 0 && wgf_image_get_pixel(0, 0, 0) == 0,
+    expect(wgf_image_get_pixel(image, 4, 0) == 0 && wgf_image_get_pixel(image, 0, -1) == 0 &&
+               wgf_image_get_pixel(0, 0, 0) == 0,
            "read outside it: 0");
     expect(wgf_image_get_width(0) == 0 && wgf_image_get_size(12345) == 0 && wgf_image_get_data(0) == NULL,
            "getters of what isn't an image: 0");
@@ -302,7 +310,8 @@ static void files(void)
     expect(wgf_resource_get_status(rock) == WGF_RESOURCE_STATUS_READY && wgf_image_get_width(rock) == 2 &&
                wgf_image_get_height(rock) == 2,
            "then READY, at its size");
-    expect(wgf_image_get_pixel(rock, 0, 0) == 0xFF0000FFu && wgf_color_get_alpha(wgf_image_get_pixel(rock, 1, 0)) == 0 &&
+    expect(wgf_image_get_pixel(rock, 0, 0) == 0xFF0000FFu &&
+               wgf_color_get_alpha(wgf_image_get_pixel(rock, 1, 0)) == 0 &&
                wgf_image_get_pixel(rock, 0, 1) == 0x0000FFFFu && wgf_image_get_pixel(rock, 1, 1) == 0xFFFFFFFFu,
            "its pixels, rows from the top, one see-through");
     expect(strcmp(wgf_resource_get_path(rock), "image-test/rock.png") == 0, "the file it read");
@@ -337,7 +346,8 @@ static void files(void)
     wgf_fs_task_destroy(task);
     saved = wgf_image_create("image-test/made.png");
     settle(&saved, 1);
-    expect(wgf_image_get_size(saved) == 5 * 3 * 4 && memcmp(wgf_image_get_data(saved), wgf_image_get_data(made), 60) == 0,
+    expect(wgf_image_get_size(saved) == 5 * 3 * 4 &&
+               memcmp(wgf_image_get_data(saved), wgf_image_get_data(made), 60) == 0,
            "and an image loaded from it the same");
 
     wgf_resource_release(saved);

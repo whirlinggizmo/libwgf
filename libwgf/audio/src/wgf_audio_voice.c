@@ -296,7 +296,8 @@ bool wgf_voice_pause(wgf_handle_t voice)
     wgf_audio_priv_lock();
     voice_ptr = in_state(voice, WGF_PLAY_STATE_PLAYING);
     if (voice_ptr != NULL) {
-        voice_ptr->position = voice_ptr->fresh ? start_of(voice_ptr) : wgf_audio_priv_platform_position(voice, voice_ptr);
+        voice_ptr->position =
+            voice_ptr->fresh ? start_of(voice_ptr) : wgf_audio_priv_platform_position(voice, voice_ptr);
         voice_ptr->state = WGF_PLAY_STATE_PAUSED;
         voice_ptr->generation++;
         wgf_audio_priv_platform_apply(voice, voice_ptr);
@@ -543,7 +544,8 @@ bool wgf_voice_set_segment(wgf_handle_t voice, const char *name)
     wgf_audio_priv_lock();
     voice_ptr = wgf_audio_priv_voice_of(voice);
     if (voice_ptr != NULL && !voice_ptr->dying && voice_ptr->pushed_rate == 0) {
-        segment = name[0] != '\0' ? wgf_audio_priv_sound_segment(wgf_audio_priv_sound_of(voice_ptr->sound), name) : NULL;
+        segment =
+            name[0] != '\0' ? wgf_audio_priv_sound_segment(wgf_audio_priv_sound_of(voice_ptr->sound), name) : NULL;
         if (name[0] == '\0' || segment != NULL) {
             voice_ptr->segment = segment;
             keep_state(voice, voice_ptr);

@@ -123,7 +123,8 @@ bool wgf_collide2d_circle_segment(float cx, float cy, float r, float x0, float y
     return true;
 }
 
-bool wgf_collide2d_circle_polygon(float cx, float cy, float r, const float *points, int count, float *hit, int hit_count)
+bool wgf_collide2d_circle_polygon(float cx, float cy, float r, const float *points, int count, float *hit,
+                                  int hit_count)
 {
     const int n = count / 2;
     bool inside;
@@ -198,8 +199,8 @@ bool wgf_collide2d_polygon_polygon(const float *points, int count, const float *
     return true;
 }
 
-bool wgf_collide2d_segment_segment(float ax0, float ay0, float ax1, float ay1, float bx0, float by0, float bx1, float by1,
-                                   float *hit, int hit_count)
+bool wgf_collide2d_segment_segment(float ax0, float ay0, float ax1, float ay1, float bx0, float by0, float bx1,
+                                   float by1, float *hit, int hit_count)
 {
     const float rx = ax1 - ax0, ry = ay1 - ay0, sx = bx1 - bx0, sy = by1 - by0, cross = rx * sy - ry * sx;
     float qx, qy, t, u, len, nx, ny;

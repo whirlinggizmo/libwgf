@@ -23,7 +23,8 @@ static float clampf(float v, float lo, float hi)
     return v < lo ? lo : v > hi ? hi : v;
 }
 
-bool wgf_collide3d_point_in_box(float px, float py, float pz, float x0, float y0, float z0, float x1, float y1, float z1)
+bool wgf_collide3d_point_in_box(float px, float py, float pz, float x0, float y0, float z0, float x1, float y1,
+                                float z1)
 {
     return px >= x0 && px <= x1 && py >= y0 && py <= y1 && pz >= z0 && pz <= z1;
 }
@@ -100,7 +101,8 @@ bool wgf_collide3d_ray_sphere(float ox, float oy, float oz, float dx, float dy, 
                               float r, float *hit, int hit_count)
 {
     const float lx = ox - cx, ly = oy - cy, lz = oz - cz;
-    const float a = dx * dx + dy * dy + dz * dz, b = 2 * (lx * dx + ly * dy + lz * dz), c = lx * lx + ly * ly + lz * lz - r * r;
+    const float a = dx * dx + dy * dy + dz * dz, b = 2 * (lx * dx + ly * dy + lz * dz),
+                c = lx * lx + ly * ly + lz * lz - r * r;
     const float zero[3] = {0, 0, 0};
     float disc, t, point[3], normal[3];
     if (a <= 0) return false;

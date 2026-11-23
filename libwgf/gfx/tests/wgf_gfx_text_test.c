@@ -93,7 +93,8 @@ int main(void)
                    "spaced: two pixels wider a gap between letters (four in Hello), ten deeper a line");
             expect(wgf_draw_get_text_spacing().x == 2 && wgf_draw_get_text_spacing().y == 10, "the spacing read back");
             wgf_draw_set_text_spacing(NAN, 0);
-            expect(wgf_draw_get_text_spacing().x == 0 && fabsf(wgf_font_measure(0, "Hello\nWorld", 16).x - plain.x) < 0.01f,
+            expect(wgf_draw_get_text_spacing().x == 0 &&
+                       fabsf(wgf_font_measure(0, "Hello\nWorld", 16).x - plain.x) < 0.01f,
                    "back to none (a number that isn't: 0)");
         }
         expect(wgf_font_measure(0, "Hello", 0).x == one.x && wgf_font_measure(0, "Hello", -2).x == one.x,
@@ -118,7 +119,8 @@ int main(void)
         {
             const wgf_vec2_t twice = wgf_font_measure(0, "Hello", 32);
             begin_frame(64, 64, 2.0f);
-            expect(wgf_font_measure(0, "Hello", 16).x == twice.x / 2 && wgf_font_measure(0, "Hello", 16).y == twice.y / 2,
+            expect(wgf_font_measure(0, "Hello", 16).x == twice.x / 2 &&
+                       wgf_font_measure(0, "Hello", 16).y == twice.y / 2,
                    "measured at the density it is drawn, in logical pixels");
         }
         wgf_gfx_priv_end_frame();
@@ -137,13 +139,15 @@ int main(void)
     settle_font(broken);
     expect(wgf_resource_get_status(font) == WGF_RESOURCE_STATUS_READY, "loaded");
     expect(wgf_resource_get_status(broken) == WGF_RESOURCE_STATUS_FAILED, "a file that isn't a font fails");
-    expect(strcmp(wgf_resource_get_path(font), "text_test/mono.ttf") == 0 && strcmp(wgf_resource_get_path(0), "") == 0 &&
+    expect(strcmp(wgf_resource_get_path(font), "text_test/mono.ttf") == 0 &&
+               strcmp(wgf_resource_get_path(0), "") == 0 &&
                strcmp(wgf_resource_get_path(12345), "") == 0,
            "its path; none for the default font, or what isn't a font");
     {
         const wgf_handle_t cut = wgf_font_create("text_test/cut.ttf");
         settle_font(cut);
-        expect(wgf_resource_get_status(cut) == WGF_RESOURCE_STATUS_FAILED, "a font cut short fails, without being read past");
+        expect(wgf_resource_get_status(cut) == WGF_RESOURCE_STATUS_FAILED,
+               "a font cut short fails, without being read past");
         wgf_resource_release(cut);
     }
     loaded = wgf_font_measure(font, "Hello", 16);
@@ -160,7 +164,8 @@ int main(void)
     expect(wgf_font_set_default(0) && wgf_resource_get_status(font) == WGF_RESOURCE_STATUS_NONE,
            "back to the built-in font: the last reference gone");
     again = wgf_font_create("text_test/mono.ttf");
-    expect(wgf_resource_get_status(again) == WGF_RESOURCE_STATUS_READY, "a font released earlier comes back ready at once");
+    expect(wgf_resource_get_status(again) == WGF_RESOURCE_STATUS_READY,
+           "a font released earlier comes back ready at once");
 
     /* the text actor */
     text = wgf_text_create(again);
@@ -184,7 +189,8 @@ int main(void)
            "a text actor's own spacing; numbers that aren't, or not a text: refused");
     expect(!wgf_text_set_wrap_width(text, -1), "a negative wrap width is refused");
     expect(wgf_text_set_align(text, WGF_TEXT_HALIGN_CENTER, WGF_TEXT_VALIGN_BOTTOM) &&
-               wgf_text_get_halign(text) == WGF_TEXT_HALIGN_CENTER && wgf_text_get_valign(text) == WGF_TEXT_VALIGN_BOTTOM,
+               wgf_text_get_halign(text) == WGF_TEXT_HALIGN_CENTER &&
+               wgf_text_get_valign(text) == WGF_TEXT_VALIGN_BOTTOM,
            "an alignment");
     expect(!wgf_text_set_align(text, (wgf_text_halign_t)7, WGF_TEXT_VALIGN_TOP), "an alignment that isn't one");
     expect(!wgf_text_set_font(text, 12345) && wgf_text_set_font(text, 0) && wgf_text_get_font(text) == 0,
@@ -228,7 +234,8 @@ int main(void)
         expect(wgf_text_get_facing(sign) == WGF_SPRITE_FACING_CAMERA &&
                    wgf_text_set_facing(sign, WGF_SPRITE_FACING_CAMERA_FIXED_Y) &&
                    wgf_text_get_facing(sign) == WGF_SPRITE_FACING_CAMERA_FIXED_Y &&
-                   !wgf_text_set_facing(sign, (wgf_sprite_facing_t)4) && !wgf_text_set_facing(camera, WGF_SPRITE_FACING_FREE),
+                   !wgf_text_set_facing(sign, (wgf_sprite_facing_t)4) &&
+                   !wgf_text_set_facing(camera, WGF_SPRITE_FACING_FREE),
                "a facing: the camera by default, one that isn't refused");
         expect(wgf_text_get_depth_offset(sign) == 0 && wgf_text_set_depth_offset(sign, 0.05f) &&
                    wgf_text_get_depth_offset(sign) == 0.05f && !wgf_text_set_depth_offset(sign, NAN) &&

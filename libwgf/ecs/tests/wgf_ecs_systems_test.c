@@ -119,7 +119,8 @@ int main(void)
         wgf_motion_set_spin(e, 0, 1, 0);
         for (i = 0; i < 6; i++) step(0.5f); /* 3 radians */
         heading = wgf_actor_get_world_direction(e, 0, 0, 1);
-        expect(near(heading.x, sinf(3.0f)) && near(heading.z, cosf(3.0f)), "a y spin turns steadily past a quarter turn");
+        expect(near(heading.x, sinf(3.0f)) && near(heading.z, cosf(3.0f)),
+               "a y spin turns steadily past a quarter turn");
     }
     wgf_world_clear();
 
@@ -211,10 +212,12 @@ int main(void)
         int out[8];
         expect(wgf_world_take_events(out, 8) == 8 &&
                    ((out[0] == WGF_WORLD_EVENT_TRIGGER_ENTER && (wgf_actor_t)out[1] == a && (wgf_actor_t)out[2] == b) ||
-                    (out[0] == WGF_WORLD_EVENT_TRIGGER_ENTER && (wgf_actor_t)out[1] == b && (wgf_actor_t)out[2] == a)) &&
+                    (out[0] == WGF_WORLD_EVENT_TRIGGER_ENTER && (wgf_actor_t)out[1] == b &&
+                     (wgf_actor_t)out[2] == a)) &&
                    out[4] == WGF_WORLD_EVENT_TRIGGER_ENTER && (wgf_actor_t)out[5] == (wgf_actor_t)out[2],
                "overlapping: entered, told to each");
-        expect(out[3] == wgf_collider_get_layer((wgf_actor_t)out[2]) && out[7] == wgf_collider_get_layer((wgf_actor_t)out[6]),
+        expect(out[3] == wgf_collider_get_layer((wgf_actor_t)out[2]) &&
+                   out[7] == wgf_collider_get_layer((wgf_actor_t)out[6]),
                "each told the other's layer");
     }
     wgf_actor_set_position(b, 9, 0, 20); /* the same x and y, far in z: spheres, not circles */
@@ -371,7 +374,8 @@ int main(void)
             wgf_actor_set_paused(gone, true);
             wgf_actor_destroy(gone, WGF_ACTOR_DESTROY_CHILDREN);
             step(0.0f);
-            expect(wgf_actor_is_frozen(under) && !wgf_actor_is_frozen(mover), "one still paused: frozen under it alone");
+            expect(wgf_actor_is_frozen(under) && !wgf_actor_is_frozen(mover),
+                   "one still paused: frozen under it alone");
             wgf_actor_set_paused(other, false);
             expect(!wgf_actor_is_frozen(under), "none paused: nothing frozen");
             wgf_actor_set_paused(level, true);
@@ -436,11 +440,14 @@ int main(void)
         wgf_actor_set_parent(hero, other_stage);
         wgf_actor_set_position(hero, 20, 0, 0);
         wgf_arcade2d_set_gravity(hero, 1000);
-        expect(wgf_arcade2d_set_grid(other_stage, cells, 8, 4, 16, 0, 0) && wgf_arcade2d_get_grid_cell(other_stage, 1, 1) == 1 &&
-                   wgf_arcade2d_get_grid_cell(other_stage, 1, 0) == 0 && wgf_arcade2d_get_grid_cell(other_stage, 9, 9) == 0,
+        expect(wgf_arcade2d_set_grid(other_stage, cells, 8, 4, 16, 0, 0) &&
+                   wgf_arcade2d_get_grid_cell(other_stage, 1, 1) == 1 &&
+                   wgf_arcade2d_get_grid_cell(other_stage, 1, 0) == 0 &&
+                   wgf_arcade2d_get_grid_cell(other_stage, 9, 9) == 0,
                "a grid, its cells read");
         for (i = 0; i < 60; i++) step(1.0f / 60.0f);
-        expect(near(wgf_actor_get_position(hero).y, 11) && wgf_arcade2d_is_grounded(hero), "standing on the grid's solid row");
+        expect(near(wgf_actor_get_position(hero).y, 11) && wgf_arcade2d_is_grounded(hero),
+               "standing on the grid's solid row");
         expect(wgf_arcade2d_set_grid_cell(other_stage, 1, 1, 0) && wgf_arcade2d_set_grid_cell(other_stage, 0, 1, 0) &&
                    !wgf_arcade2d_set_grid_cell(other_stage, 4, 0, 1),
                "cells under it opened; one outside refused");
@@ -450,9 +457,11 @@ int main(void)
                    !wgf_arcade2d_clear_grid(other_stage),
                "the grid cleared");
         expect(!wgf_arcade2d_set_size(hero, -1, 1) && !wgf_arcade2d_set_velocity(hero, NAN, 0) &&
-                   !wgf_arcade2d_set_gravity(hero, INFINITY) && !wgf_arcade2d_set_grid(other_stage, cells, 8, 0, 16, 0, 0) &&
+                   !wgf_arcade2d_set_gravity(hero, INFINITY) &&
+                   !wgf_arcade2d_set_grid(other_stage, cells, 8, 0, 16, 0, 0) &&
                    !wgf_arcade2d_set_grid(other_stage, NULL, 8, 4, 16, 0, 0) &&
-                   !wgf_arcade2d_set_grid(12345, cells, 8, 4, 16, 0, 0) && !wgf_arcade2d_set_grid(other_stage, cells, 8, 4, 0, 0, 0),
+                   !wgf_arcade2d_set_grid(12345, cells, 8, 4, 16, 0, 0) &&
+                   !wgf_arcade2d_set_grid(other_stage, cells, 8, 4, 0, 0, 0),
                "refusals");
         expect(!wgf_arcade2d_set_size(floor, 1, 1) && !wgf_arcade2d_is_grounded(floor), "no body: false");
         wgf_actor_destroy(floor, WGF_ACTOR_DESTROY_CHILDREN);

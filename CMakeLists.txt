@@ -133,6 +133,8 @@ if(WGF_TESTS)
         add_test(NAME check_tools COMMAND ${Python3_EXECUTABLE} "${PROJECT_SOURCE_DIR}/tools/check_tools.py")
         set_tests_properties(check_tools PROPERTIES TIMEOUT 600)
         add_test(NAME check_docs COMMAND ${Python3_EXECUTABLE} "${PROJECT_SOURCE_DIR}/tools/check_docs.py")
+        # no line of libwgf's C over 120 columns, and no tabs (CONVENTIONS.md, "Code")
+        add_test(NAME check_lines COMMAND ${Python3_EXECUTABLE} "${PROJECT_SOURCE_DIR}/tools/check_lines.py")
         # the examples' model is what its generator makes
         add_test(NAME check_model COMMAND ${Python3_EXECUTABLE} "${PROJECT_SOURCE_DIR}/tools/gen_model.py" --check)
     endif()

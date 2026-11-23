@@ -181,9 +181,11 @@ static const char *line(wgf_actor_t actor)
         "pulse=%.9g,%.9g local_space=%s",
         e->shell ? "true" : "false", e->drag, e->inherit, e->stretch, e->aligned ? "true" : "false", e->wander,
         e->wander_rate, e->orbit_min, e->orbit_max, e->pulse_rate, e->pulse_depth, e->local ? "true" : "false");
-    if (e->size_keys > 0) put(" size=%.9g,%.9g,%.9g", e->size_values[0], e->size_values[e->size_keys - 1], e->size_variance);
+    if (e->size_keys > 0)
+        put(" size=%.9g,%.9g,%.9g", e->size_values[0], e->size_values[e->size_keys - 1], e->size_variance);
     if (e->size_keys > 0 && !two_ends(e->size_times, e->size_keys)) {
-        for (i = 0; i < e->size_keys; i++) put(i == 0 ? " size_keys=%.9g:%.9g" : ",%.9g:%.9g", e->size_times[i], e->size_values[i]);
+        for (i = 0; i < e->size_keys; i++)
+            put(i == 0 ? " size_keys=%.9g:%.9g" : ",%.9g:%.9g", e->size_times[i], e->size_values[i]);
     }
     if (e->color_keys > 0) {
         put(" color=#%08X,#%08X", (unsigned)e->color_values[0], (unsigned)e->color_values[e->color_keys - 1]);

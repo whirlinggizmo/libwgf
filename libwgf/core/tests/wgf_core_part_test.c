@@ -42,8 +42,8 @@ static void begin_particles(void) { note('b'); }
 static wgf_core_priv_part_t text = {.name = "text", .layer = WGF_CORE_PRIV_PART_LAYER_GFX,
                                     .order = WGF_CORE_PRIV_PART_TEXT, .update = update_text, .stop = stop_text};
 static wgf_core_priv_part_t particles = {.name = "particles", .layer = WGF_CORE_PRIV_PART_LAYER_GFX,
-                                       .order = WGF_CORE_PRIV_PART_PARTICLES, .tick_begin = begin_particles, .tick = tick_particles,
-                                         .stop = stop_particles};
+                                         .order = WGF_CORE_PRIV_PART_PARTICLES, .tick_begin = begin_particles,
+                                         .tick = tick_particles, .stop = stop_particles};
 static wgf_core_priv_part_t audio = {.name = "audio", .layer = WGF_CORE_PRIV_PART_LAYER_AUDIO,
                                      .order = WGF_CORE_PRIV_PART_AUDIO, .update = update_audio, .stop = stop_audio};
 

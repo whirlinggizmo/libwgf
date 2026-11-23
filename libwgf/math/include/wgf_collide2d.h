@@ -83,8 +83,8 @@ WGF_API bool wgf_collide2d_ray_circle(float ox, float oy, float dx, float dy, fl
  *
  * The hit holds the time, the moving shape's top-left (for a circle, its center) at that
  * time, and the normal. If they already overlap, the time is 0 and there is no normal. */
-WGF_API bool wgf_collide2d_sweep_rect_rect(float ax, float ay, float aw, float ah, float dx, float dy, float bx, float by,
-                                           float bw, float bh, float *hit, int hit_count);
+WGF_API bool wgf_collide2d_sweep_rect_rect(float ax, float ay, float aw, float ah, float dx, float dy, float bx,
+                                           float by, float bw, float bh, float *hit, int hit_count);
 WGF_API bool wgf_collide2d_sweep_circle_circle(float ax, float ay, float ar, float dx, float dy, float bx, float by,
                                                float br, float *hit, int hit_count);
 

@@ -96,9 +96,16 @@ static void step_2d(follow_t *f, wgf_vec3_t at, float dt, bool snap)
     f->point[0] = snap ? at.x : chase(f->point[0], at.x, f->dead[0], share);
     f->point[1] = snap ? at.y : chase(f->point[1], at.y, f->dead[1], share);
     if (f->bounds[2] > f->bounds[0] && f->bounds[3] > f->bounds[1]) { /* the view kept inside */
-        const float l = f->bounds[0] + half_w, r = f->bounds[2] - half_w, t = f->bounds[1] + half_h, b = f->bounds[3] - half_h;
-        f->point[0] = l > r ? (f->bounds[0] + f->bounds[2]) * 0.5f : f->point[0] < l ? l : f->point[0] > r ? r : f->point[0];
-        f->point[1] = t > b ? (f->bounds[1] + f->bounds[3]) * 0.5f : f->point[1] < t ? t : f->point[1] > b ? b : f->point[1];
+        const float l = f->bounds[0] + half_w, r = f->bounds[2] - half_w,
+                    t = f->bounds[1] + half_h, b = f->bounds[3] - half_h;
+        f->point[0] = l > r ? (f->bounds[0] + f->bounds[2]) * 0.5f
+                      : f->point[0] < l ? l
+                      : f->point[0] > r ? r
+                                        : f->point[0];
+        f->point[1] = t > b ? (f->bounds[1] + f->bounds[3]) * 0.5f
+                      : f->point[1] < t ? t
+                      : f->point[1] > b ? b
+                                        : f->point[1];
     }
     amount = f->trauma * f->trauma * THROW * half_h * 2.0f;
     x = f->point[0] + amount * noise(f->time * FREQUENCY * 0.1f, 0.0f);

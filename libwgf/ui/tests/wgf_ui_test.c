@@ -230,7 +230,8 @@ static void on_frame(void *user)
         expect(!wgf_ui_set_width(WGF_UI_SIZING_PERCENT, 2) && !wgf_ui_set_height((wgf_ui_sizing_t)9, 1) &&
                    !wgf_ui_set_padding(-1, 0) && !wgf_ui_set_align((wgf_ui_align_t)3, WGF_UI_ALIGN_START),
                "a sizing, value, or alignment that isn't one: refused");
-        expect(wgf_ui_spacer(10) && wgf_ui_label("left", 0) && wgf_ui_spacer(0) && wgf_ui_label("right", 0), "a row's children");
+        expect(wgf_ui_spacer(10) && wgf_ui_label("left", 0) && wgf_ui_spacer(0) && wgf_ui_label("right", 0),
+               "a row's children");
         expect(!wgf_ui_set_gap(2), "after a child: refused");
         expect(!wgf_ui_label("", 0) && !wgf_ui_label(NULL, 0) && !wgf_ui_button("", "x") && !wgf_ui_spacer(-1),
                "no text, no id, or less than no room: refused");
@@ -282,7 +283,8 @@ static void on_frame(void *user)
         expect(wgf_ui_get_style_value(WGF_UI_VALUE_TEXT_SIZE) == 20 &&
                    wgf_ui_get_style_color(WGF_UI_COLOR_FOCUS) == 0xFFD040FFu && wgf_ui_get_style_font() == 0,
                "libwgf's style");
-        expect(wgf_ui_set_style_value(WGF_UI_VALUE_TEXT_SIZE, 30) && wgf_ui_get_style_value(WGF_UI_VALUE_TEXT_SIZE) == 30 &&
+        expect(wgf_ui_set_style_value(WGF_UI_VALUE_TEXT_SIZE, 30) &&
+                   wgf_ui_get_style_value(WGF_UI_VALUE_TEXT_SIZE) == 30 &&
                    wgf_ui_set_style_color(WGF_UI_COLOR_PANEL, 0x11223344u) &&
                    wgf_ui_get_style_color(WGF_UI_COLOR_PANEL) == 0x11223344u,
                "the game's");
@@ -301,15 +303,20 @@ static void on_frame(void *user)
         /* a game's art in place of a part's color: made here, seen from the next frame */
         art = wgf_texture_create_blank(16, 16);
         plain = sgl_num_vertices();
-        expect(wgf_ui_begin() && wgf_ui_begin_panel("skin") && wgf_ui_set_width(WGF_UI_SIZING_FIXED, 100) && wgf_ui_set_height(WGF_UI_SIZING_FIXED, 40) && wgf_ui_end_panel() && wgf_ui_end(), "a panel");
+        expect(wgf_ui_begin() && wgf_ui_begin_panel("skin") && wgf_ui_set_width(WGF_UI_SIZING_FIXED, 100) &&
+                   wgf_ui_set_height(WGF_UI_SIZING_FIXED, 40) && wgf_ui_end_panel() && wgf_ui_end(),
+               "a panel");
         plain = sgl_num_vertices() - plain;
-        expect(wgf_ui_get_style_texture(WGF_UI_COLOR_PANEL) == 0 && wgf_ui_set_style_texture(WGF_UI_COLOR_PANEL, art, 4, 4, 4, 4) &&
+        expect(wgf_ui_get_style_texture(WGF_UI_COLOR_PANEL) == 0 &&
+                   wgf_ui_set_style_texture(WGF_UI_COLOR_PANEL, art, 4, 4, 4, 4) &&
                    wgf_ui_get_style_texture(WGF_UI_COLOR_PANEL) == art,
                "a panel's art set");
         break;
     case 17: {
         int skinned = sgl_num_vertices();
-        expect(wgf_ui_begin() && wgf_ui_begin_panel("skin") && wgf_ui_set_width(WGF_UI_SIZING_FIXED, 100) && wgf_ui_set_height(WGF_UI_SIZING_FIXED, 40) && wgf_ui_end_panel() && wgf_ui_end(), "a panel of art");
+        expect(wgf_ui_begin() && wgf_ui_begin_panel("skin") && wgf_ui_set_width(WGF_UI_SIZING_FIXED, 100) &&
+                   wgf_ui_set_height(WGF_UI_SIZING_FIXED, 40) && wgf_ui_end_panel() && wgf_ui_end(),
+               "a panel of art");
         skinned = sgl_num_vertices() - skinned;
         expect(plain > 0 && skinned > 0 && skinned != plain, "drawn from its art, nine-sliced, not its color");
         expect(!wgf_ui_set_style_texture(WGF_UI_COLOR_TEXT, art, 0, 0, 0, 0) &&
@@ -326,7 +333,8 @@ static void on_frame(void *user)
     }
     case 18: { /* the art let go in a frame that drew none of it */
         wgf_ui_reset_style();
-        expect(wgf_ui_get_style_texture(WGF_UI_COLOR_PANEL) == 0 && wgf_ui_get_style_texture(WGF_UI_COLOR_BUTTON) == 0 &&
+        expect(wgf_ui_get_style_texture(WGF_UI_COLOR_PANEL) == 0 &&
+                   wgf_ui_get_style_texture(WGF_UI_COLOR_BUTTON) == 0 &&
                    wgf_resource_get_status(art) == WGF_RESOURCE_STATUS_NONE,
                "reset: the art let go");
         wgf_app_quit();

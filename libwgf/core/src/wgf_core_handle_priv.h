@@ -15,9 +15,9 @@
  *
  * A pool stores each slot's generation in 16 bits (`generations` below): the low 10
  * are the generation, bit 15 (WGF_CORE_PRIV_HANDLE_FREE_BIT) is set while the slot is
- * free -- a slot never used included, its generation 0 -- and bits 10..14 are always 0. The free bit is the pool's, never a handle's, so
- * the handle's layout and counts are as they were: 63 kinds, 1023 generations, 65535
- * slots a pool. */
+ * free -- a slot never used included, its generation 0 -- and bits 10..14 are always 0.
+ * The free bit is the pool's, never a handle's, so the handle's layout and counts are as
+ * they were: 63 kinds, 1023 generations, 65535 slots a pool. */
 #define WGF_CORE_PRIV_HANDLE_KIND_BITS 6u
 #define WGF_CORE_PRIV_HANDLE_GENERATION_BITS 10u
 #define WGF_CORE_PRIV_HANDLE_INDEX_BITS 16u
@@ -105,7 +105,8 @@ typedef struct wgf_core_priv_handle_pool_t {
     uint16_t free_head;
     uint16_t free_count;
 
-    uint16_t *generations;  /* per slot: its generation (low 10 bits), | FREE_BIT while free (never used: FREE_BIT alone) */
+    /* per slot: its generation (low 10 bits), | FREE_BIT while free (never used: FREE_BIT alone) */
+    uint16_t *generations;
     unsigned char *occupied; /* per slot: in use. Walks read it; resolving doesn't need it */
 
     /* the owner's item array, grown and zeroed with the slots */

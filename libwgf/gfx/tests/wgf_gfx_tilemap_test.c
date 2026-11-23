@@ -86,12 +86,14 @@ static const char map[] =
     "  {\"type\": \"objectgroup\", \"name\": \"things\", \"offsety\": 2, \"objects\": ["
     "   {\"id\": 1, \"name\": \"coin1\", \"type\": \"coin\", \"x\": 3, \"y\": 4, \"width\": 2, \"height\": 2,"
     "    \"rotation\": 90, \"visible\": true, \"properties\": ["
-    "     {\"name\": \"value\", \"type\": \"int\", \"value\": 5}, {\"name\": \"label\", \"type\": \"string\", \"value\": \"gold\"},"
+    "     {\"name\": \"value\", \"type\": \"int\", \"value\": 5},"
+    " {\"name\": \"label\", \"type\": \"string\", \"value\": \"gold\"},"
     "     {\"name\": \"heavy\", \"type\": \"bool\", \"value\": true},"
     "     {\"name\": \"tint\", \"type\": \"color\", \"value\": \"#ff00ff00\"},"
     "     {\"name\": \"shape\", \"type\": \"class\", \"propertytype\": \"S\", \"value\": {\"r\": 2}}]},"
     "   {\"id\": 2, \"name\": \"start\", \"class\": \"spawn\", \"x\": 1, \"y\": 1, \"point\": true},"
-    "   {\"id\": 3, \"x\": 0, \"y\": 0, \"polygon\": [{\"x\": 0, \"y\": 0}, {\"x\": 2, \"y\": 0}, {\"x\": 1, \"y\": 2}]},"
+    "   {\"id\": 3, \"x\": 0, \"y\": 0,"
+    " \"polygon\": [{\"x\": 0, \"y\": 0}, {\"x\": 2, \"y\": 0}, {\"x\": 1, \"y\": 2}]},"
     "   {\"id\": 4, \"gid\": 2147483654, \"x\": 1, \"y\": 2, \"width\": 1, \"height\": 1, \"visible\": false}]},"
     "  {\"type\": \"imagelayer\", \"name\": \"sky\", \"image\": \"sky.png\", \"opacity\": 0.5}]}";
 
@@ -159,7 +161,8 @@ static void test_reload(wgf_tilemap_t m)
     wgf_actor_set_parent(mine, things);
     wgf_tilemap_layer_set_cell(ground, 1, 1, 3, 0);
     write_file("tilemap_test/maps/map.tmj", map_saved, (int)sizeof(map_saved) - 1);
-    expect(wgf_asset_reload("tilemap_test/maps/map.tmj") == 1 && wgf_resource_get_status(m) == WGF_RESOURCE_STATUS_READY &&
+    expect(wgf_asset_reload("tilemap_test/maps/map.tmj") == 1 &&
+               wgf_resource_get_status(m) == WGF_RESOURCE_STATUS_READY &&
                wgf_tilemap_get_layer_count(m) == 5,
            "loading again: READY all the while, its old contents read until the new are in");
     settle_reload(m);
@@ -179,7 +182,8 @@ static void test_reload(wgf_tilemap_t m)
            "a kept layer shows the new file's cells and place (a cell set at run time gone), its tile objects anew");
     /* The tileset file saved: tile 3 now of class "lava", read through the map that names it. */
     write_file("tilemap_test/maps/tiles.tsj", tileset_saved, (int)sizeof(tileset_saved) - 1);
-    expect(wgf_asset_reload("tilemap_test/maps/tiles.tsj") == 1, "a tileset file saved: the map naming it, loading again");
+    expect(wgf_asset_reload("tilemap_test/maps/tiles.tsj") == 1,
+           "a tileset file saved: the map naming it, loading again");
     settle_reload(m);
     expect(strcmp(wgf_tilemap_get_tile_class(m, 3), "lava") == 0 && wgf_actor_find(root, "ground") == ground,
            "its new tileset read, the layers kept");
@@ -213,7 +217,8 @@ static void test_read(wgf_tilemap_t m)
                wgf_tilemap_get_tileset_texture(m, 0) != 0 &&
                wgf_tilemap_get_tileset_texture(m, 0) == wgf_tilemap_get_tileset_texture(m, 1),
            "its tilesets by first gid, one image shared");
-    expect(strcmp(wgf_tilemap_get_tile_class(m, 2), "water") == 0 && strcmp(wgf_tilemap_get_tile_class(m, 1), "") == 0 &&
+    expect(strcmp(wgf_tilemap_get_tile_class(m, 2), "water") == 0 &&
+               strcmp(wgf_tilemap_get_tile_class(m, 1), "") == 0 &&
                wgf_tilemap_get_tile_property_count(m, 2) == 1 &&
                strcmp(wgf_tilemap_get_tile_property_name(m, 2, 0), "speed") == 0 &&
                wgf_tilemap_get_tile_property_type(m, 2, "speed") == WGF_TILEMAP_PROPERTY_TYPE_FLOAT &&
@@ -245,7 +250,8 @@ static void test_read(wgf_tilemap_t m)
                wgf_tilemap_get_object_shape(m, 3, 4) == WGF_TILEMAP_SHAPE_NONE,
            "the objects' shapes");
     expect(wgf_tilemap_get_object_position(m, 3, 0).x == 3.0f && wgf_tilemap_get_object_position(m, 3, 0).y == 4.0f &&
-               wgf_tilemap_get_object_size(m, 3, 0).x == 2.0f && near(wgf_tilemap_get_object_rotation(m, 3, 0), 1.5707963f) &&
+               wgf_tilemap_get_object_size(m, 3, 0).x == 2.0f &&
+               near(wgf_tilemap_get_object_rotation(m, 3, 0), 1.5707963f) &&
                wgf_tilemap_is_object_visible(m, 3, 0) && !wgf_tilemap_is_object_visible(m, 3, 3) &&
                wgf_tilemap_get_object_tile(m, 3, 3) == 6 && wgf_tilemap_get_object_tile(m, 3, 0) == 0,
            "an object's place, size, turn in radians, visibility, and a tile object's gid, its flips apart");
@@ -313,7 +319,8 @@ static void test_placed(wgf_tilemap_t m)
     expect(q[0] == 2.5f && q[2] == -1.0f && q[3] == 1.0f && near(q[4], 0.0f) && q[5] == 1.0f && q[6] == 0.0f,
            "flipped across: mirrored, unturned");
     quad(small, 1, q, &tint);
-    expect(q[0] == 2.5f && q[1] == 1.5f && q[5] == 1.0f && q[6] == 0.0f, "an embedded tileset's tile, by its first gid");
+    expect(q[0] == 2.5f && q[1] == 1.5f && q[5] == 1.0f && q[6] == 0.0f,
+           "an embedded tileset's tile, by its first gid");
     quad(wgf_actor_get_child(walls, 0), 1, q, &tint);
     expect(q[0] == 0.5f && q[1] == 1.5f && q[2] == -1.0f && near(q[4], -1.5707963f) && (unsigned)tint == 0xffffffffu,
            "flipped across its diagonal: mirrored and turned a quarter");
@@ -341,7 +348,8 @@ static void test_placed(wgf_tilemap_t m)
                wgf_tilemap_layer_get_cell(ground, 1, 1) == 0 && wgf_tilemap_layer_get_cell(ground, 3, 0) == 0 &&
                wgf_tilemap_layer_get_cell(things, 0, 0) == 0,
            "a cell's tile and flips; 0 empty, outside, or in a layer of objects");
-    expect(wgf_tilemap_layer_set_cell(ground, 1, 1, 7, WGF_TILEMAP_FLIP_Y) && wgf_tilemap_layer_get_cell(ground, 1, 1) == 7 &&
+    expect(wgf_tilemap_layer_set_cell(ground, 1, 1, 7, WGF_TILEMAP_FLIP_Y) &&
+               wgf_tilemap_layer_get_cell(ground, 1, 1) == 7 &&
                wgf_sprite_batch_get_count(small) == 3,
            "an empty cell set: a quad more in its tileset's batch");
     expect(wgf_tilemap_layer_set_cell(ground, 0, 0, 6, 0) && wgf_sprite_batch_get_count(tiles) == 2 &&
@@ -389,7 +397,8 @@ static void test_placed(wgf_tilemap_t m)
                    !wgf_actor_is_visible(tile) && wgf_tilemap_get_object_tile_flips(m, 3, 3) == WGF_TILEMAP_FLIP_X &&
                    wgf_tilemap_get_object_middle(m, 3, 3).x == 1.5f && wgf_tilemap_get_object_middle(m, 3, 3).y == 1.5f,
                "its tile's region, its size, its middle up from its bottom-left place, mirrored, hidden");
-        expect(wgf_tilemap_get_object_middle(m, 3, 1).x == 1.0f && near(wgf_tilemap_get_object_middle(m, 3, 0).x, 2.0f) &&
+        expect(wgf_tilemap_get_object_middle(m, 3, 1).x == 1.0f &&
+                   near(wgf_tilemap_get_object_middle(m, 3, 0).x, 2.0f) &&
                    near(wgf_tilemap_get_object_middle(m, 3, 0).y, 5.0f),
                "other objects' middles: a point's point, a turned rectangle's");
         wgf_actor_destroy(tile, WGF_ACTOR_DESTROY_CHILDREN);
@@ -397,11 +406,14 @@ static void test_placed(wgf_tilemap_t m)
     }
 
     /* Columns and rows from points in the map's units, through the layer's offset. */
-    expect(wgf_tilemap_layer_get_column_at(ground, 11.5f, 0.2f) == 1 && wgf_tilemap_layer_get_row_at(ground, 11.5f, 1.2f) == 1 &&
+    expect(wgf_tilemap_layer_get_column_at(ground, 11.5f, 0.2f) == 1 &&
+               wgf_tilemap_layer_get_row_at(ground, 11.5f, 1.2f) == 1 &&
                wgf_tilemap_layer_get_column_at(ground, 9.5f, 0.0f) == -1 &&
-               wgf_tilemap_layer_get_column_at(walls, 1.5f, 0.0f) == 1 && wgf_tilemap_layer_get_column_at(root, 1.0f, 0.0f) == 0,
+               wgf_tilemap_layer_get_column_at(walls, 1.5f, 0.0f) == 1 &&
+               wgf_tilemap_layer_get_column_at(root, 1.0f, 0.0f) == 0,
            "a column and a row from a point, outside too");
-    expect(wgf_tilemap_layer_get_cell_middle(ground, 1, 1).x == 11.5f && wgf_tilemap_layer_get_cell_middle(ground, 1, 1).y == 1.5f &&
+    expect(wgf_tilemap_layer_get_cell_middle(ground, 1, 1).x == 11.5f &&
+               wgf_tilemap_layer_get_cell_middle(ground, 1, 1).y == 1.5f &&
                wgf_tilemap_get_cell_middle(m, 1, 1).x == 1.5f && wgf_tilemap_get_column_at(m, 2.5f, 1.5f) == 2 &&
                wgf_tilemap_get_row_at(m, 2.5f, 1.5f) == 1 && wgf_tilemap_layer_get_cell_middle(root, 0, 0).x == 0.0f,
            "a cell's middle, through the layer's offset and in the map's pixels");
@@ -449,12 +461,14 @@ int main(void)
                                                " \"tilewidth\": 1, \"tileheight\": 1}") == WGF_RESOURCE_STATUS_FAILED,
            "an orientation not Tiled's: FAILED");
     expect(load_status("tilemap_test/inf.tmj", "{\"infinite\": true, \"width\": 1, \"height\": 1, \"tilewidth\": 1,"
-                                               " \"tileheight\": 1, \"layers\": [{\"type\": \"tilelayer\", \"name\": \"a\","
+                                               " \"tileheight\": 1,"
+                                               " \"layers\": [{\"type\": \"tilelayer\", \"name\": \"a\","
                                                " \"chunks\": [{\"x\": 0, \"y\": 0, \"width\": 0, \"height\": 1,"
                                                " \"data\": []}]}]}") == WGF_RESOURCE_STATUS_FAILED,
            "an infinite map's chunk out of range: FAILED");
     expect(load_status("tilemap_test/chunks.tmj", "{\"width\": 1, \"height\": 1, \"tilewidth\": 1, \"tileheight\": 1,"
-                                                  " \"layers\": [{\"type\": \"tilelayer\", \"name\": \"a\", \"width\": 1,"
+                                                  " \"layers\": [{\"type\": \"tilelayer\","
+                                                  " \"name\": \"a\", \"width\": 1,"
                                                   " \"height\": 1, \"chunks\": []}]}") == WGF_RESOURCE_STATUS_FAILED,
            "chunks in a finite map: FAILED");
     expect(load_status("tilemap_test/tsx.tmj", "{\"width\": 1, \"height\": 1, \"tilewidth\": 1, \"tileheight\": 1,"
@@ -462,17 +476,20 @@ int main(void)
                WGF_RESOURCE_STATUS_FAILED,
            "a tileset as XML: FAILED");
     expect(load_status("tilemap_test/short.tmj", "{\"width\": 2, \"height\": 1, \"tilewidth\": 1, \"tileheight\": 1,"
-                                                 " \"layers\": [{\"type\": \"tilelayer\", \"name\": \"a\", \"width\": 2,"
+                                                 " \"layers\": [{\"type\": \"tilelayer\","
+                                                 " \"name\": \"a\", \"width\": 2,"
                                                  " \"height\": 1, \"data\": [1]}]}") == WGF_RESOURCE_STATUS_FAILED,
            "a layer with too few cells: FAILED");
-    expect(load_status("tilemap_test/empty.tmj", "{\"width\": 2, \"height\": 1, \"tilewidth\": 4, \"tileheight\": 4}") ==
+    expect(load_status("tilemap_test/empty.tmj", "{\"width\": 2, \"height\": 1,"
+                                                 " \"tilewidth\": 4, \"tileheight\": 4}") ==
                WGF_RESOURCE_STATUS_READY,
            "a map with nothing in it: READY");
 
     {
         const wgf_fs_task_t remove = wgf_fs_rmdir("tilemap_test");
         int i;
-        for (i = 0; i < 1000 && wgf_fs_task_get_status(remove) == WGF_FS_TASK_STATUS_PENDING; i++) wgf_core_priv_update();
+        for (i = 0; i < 1000 && wgf_fs_task_get_status(remove) == WGF_FS_TASK_STATUS_PENDING; i++)
+            wgf_core_priv_update();
         wgf_fs_task_destroy(remove);
     }
     wgf_gfx_priv_stop();

@@ -330,7 +330,8 @@ static void wire_circles(float cx, float cy, float cz, float radius, float lift_
     int i, axis;
     for (axis = 0; axis < 3; axis++) {
         for (i = 0; i < CIRCLE_SEGMENTS; i++) {
-            const float a0 = 2.0f * PI * (float)i / (float)CIRCLE_SEGMENTS, a1 = 2.0f * PI * (float)(i + 1) / (float)CIRCLE_SEGMENTS;
+            const float a0 = 2.0f * PI * (float)i / (float)CIRCLE_SEGMENTS,
+                        a1 = 2.0f * PI * (float)(i + 1) / (float)CIRCLE_SEGMENTS;
             float p[2][3];
             int k;
             for (k = 0; k < 2; k++) {
@@ -357,7 +358,8 @@ void wgf_draw_sphere_wires(float cx, float cy, float cz, float radius, wgf_color
 
 void wgf_draw_capsule_wires(float cx, float cy, float cz, float radius, float height, wgf_color_t color)
 {
-    const float half = height * 0.5f - radius > 0.0f ? height * 0.5f - radius : 0.0f; /* the cylinder between its ends */
+    /* the cylinder between its ends */
+    const float half = height * 0.5f - radius > 0.0f ? height * 0.5f - radius : 0.0f;
     int i;
     if (!in_3d() || radius <= 0.0f) return;
     sgl_begin_lines();

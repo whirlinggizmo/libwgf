@@ -144,7 +144,8 @@ static void ensure_started(void);
 static document_t *document_of_at(wgf_document_t document, const char *caller)
 {
     uint16_t index;
-    if (!doc.started || !wgf_core_priv_handle_pool_resolve_at(&doc.document_pool, document, &index, caller)) return NULL;
+    if (!doc.started || !wgf_core_priv_handle_pool_resolve_at(&doc.document_pool, document, &index, caller))
+        return NULL;
     return &doc.documents[index];
 }
 #define document_of(document) document_of_at((document), WGF_CORE_PRIV_CALLER)
@@ -232,7 +233,8 @@ static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
         if (!doc.rml) return WGF_CORE_PRIV_LOAD_FAILED;
     }
     number = wgf_ui_priv_rml_load((const char *)loaded->bytes, loaded->size, loaded->path, resource);
-    document_ptr = document_of(resource); /* loading may have made element handles: nothing moves documents, but be sure */
+    /* loading may have made element handles: nothing moves documents, but be sure */
+    document_ptr = document_of(resource);
     if (number == 0 || document_ptr == NULL) {
         wgf_log_warn("wgf_document: %s: not a document RmlUi can read", loaded->path);
         return WGF_CORE_PRIV_LOAD_FAILED;
@@ -701,7 +703,8 @@ bool wgf_element_has_attribute(wgf_element_t element, const char *name)
 bool wgf_element_remove_attribute(wgf_element_t element, const char *name)
 {
     const int slot = slot_of(element);
-    return slot != 0 && name != NULL && change(element, slot, HELD_ATTRIBUTE, name, NULL); /* a change held for it dropped */
+    /* a change held for it dropped */
+    return slot != 0 && name != NULL && change(element, slot, HELD_ATTRIBUTE, name, NULL);
 }
 
 bool wgf_element_set_class(wgf_element_t element, const char *name, bool on)
@@ -1212,7 +1215,8 @@ bool wgf_ui_priv_doc_texture_binding(uintptr_t texture, sg_view *view, sg_sample
     *premultiplied = false;
     if (t == NULL) return false;
     *premultiplied = t->premultiplied;
-    if (t->texture != 0) return wgf_gfx_priv_texture_get_binding(t->texture, view, sampler, &width, &height, &placeholder);
+    if (t->texture != 0)
+        return wgf_gfx_priv_texture_get_binding(t->texture, view, sampler, &width, &height, &placeholder);
     *view = t->view;
     *sampler = wgf_gfx_priv_texture_sampler(WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_FILTER_LINEAR,
                                            false);

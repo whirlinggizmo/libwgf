@@ -48,10 +48,11 @@ static struct {
 
 static const char *const drives_words[] = {"front", "rear", "all"};
 
-static const wgf_physics3d_priv_line_key_t vehicle_keys[] = {{"wheels", 0},    {"drive", 0},         {"radius", 1},  {"width", 1},
-                                          {"suspension", 1}, {"stiffness", 1},    {"damping", 1}, {"steering", 1},
-                                          {"grip", 1},       {"engine_torque", 1}, {"max_rpm", 1}, {"gears", -1},
-                                          {"anti_roll", 1}};
+static const wgf_physics3d_priv_line_key_t vehicle_keys[] = {
+    {"wheels", 0},     {"drive", 0},         {"radius", 1},  {"width", 1},
+    {"suspension", 1}, {"stiffness", 1},     {"damping", 1}, {"steering", 1},
+    {"grip", 1},       {"engine_torque", 1}, {"max_rpm", 1}, {"gears", -1},
+    {"anti_roll", 1}};
 
 static float at_least(float value, float least)
 {
@@ -198,7 +199,9 @@ static void vehicle_set(wgf_actor_t actor, const char *key, const char *text)
 {
     vehicle_t *v = vehicle_of(actor);
     double n[8];
-    const int count = wgf_physics3d_priv_read_value("vehicle", vehicle_keys, (int)(sizeof(vehicle_keys) / sizeof(vehicle_keys[0])), key, text, n);
+    const int count = wgf_physics3d_priv_read_value("vehicle", vehicle_keys,
+                                                    (int)(sizeof(vehicle_keys) / sizeof(vehicle_keys[0])), key, text,
+                                                    n);
     const float x = count > 0 ? (float)n[0] : 0.0f;
     int i;
     if (v == NULL || count < 0) return;
@@ -284,7 +287,8 @@ static void before_step(void)
         const wgf_actor_t actor = ((const wgf_ecs_priv_ref_t *)fields[1])->actor;
         if (v->dirty) make_vehicle(actor, v);
         if (v->index >= 0) {
-            wgf_physics3d_priv_jolt_vehicle_set_input(v->index, v->throttle, v->steer, v->brake, v->hand_brake ? 1.0f : 0.0f);
+            wgf_physics3d_priv_jolt_vehicle_set_input(v->index, v->throttle, v->steer, v->brake,
+                                                      v->hand_brake ? 1.0f : 0.0f);
         }
     }
 }

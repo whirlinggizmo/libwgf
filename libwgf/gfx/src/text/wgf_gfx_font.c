@@ -299,7 +299,8 @@ static wgf_core_priv_load_step_t pages_decoded(bitmap_loaded_t *loaded)
     const int pages = loaded->bitmap != NULL ? loaded->bitmap->page_count : 1;
     int page;
     for (page = 0; page < pages; page++) {
-        const wgf_gfx_priv_decode_state_t state = wgf_gfx_priv_texture_decoded_wait(loaded->decoded[page], loaded->path);
+        const wgf_gfx_priv_decode_state_t state =
+            wgf_gfx_priv_texture_decoded_wait(loaded->decoded[page], loaded->path);
         if (state == WGF_GFX_PRIV_DECODE_PENDING) return WGF_CORE_PRIV_LOAD_WAIT;
         if (state == WGF_GFX_PRIV_DECODE_FAILED) return WGF_CORE_PRIV_LOAD_FAILED;
     }
@@ -501,8 +502,8 @@ wgf_handle_t wgf_font_create(const char *path)
     pages_again = &pages_loader;
     ensure();
     if (!pool_ready) {
-        pool_ready =
-            wgf_core_priv_handle_pool_init(&font_pool, WGF_CORE_PRIV_HANDLE_KIND_FONT, (void **)&fonts, sizeof(font_t), 8, 4096);
+        pool_ready = wgf_core_priv_handle_pool_init(&font_pool, WGF_CORE_PRIV_HANDLE_KIND_FONT, (void **)&fonts,
+                                                    sizeof(font_t), 8, 4096);
         if (!pool_ready) return 0;
         wgf_core_priv_resource_register(&font_pool, &resource_kind);
     }
@@ -806,7 +807,8 @@ static int walk_lines(const char *text, const char *end, float max_width, float 
     }
     for (;;) { /* wrapping: spaces at a break belong to neither line's width */
         const char *word_start, *word_end;
-        while (cursor < end && (*cursor == ' ' || *cursor == '\t')) cursor++; /* spaces stay with the line before them */
+        /* spaces stay with the line before them */
+        while (cursor < end && (*cursor == ' ' || *cursor == '\t')) cursor++;
         word_start = cursor;
         while (cursor < end && *cursor != '\n' && *cursor != ' ' && *cursor != '\t') cursor++;
         word_end = cursor;
@@ -1210,8 +1212,8 @@ static void setup(void)
     if (builtin_id == FONS_INVALID) wgf_log_error("wgf_gfx_font: the built-in font didn't load");
     /* in a page, the browser's face of it, there a few updates on: measured and laid out from its
        tables meanwhile, its glyphs blank until then (end_frame) */
-    if (wgf_gfx_priv_face_wait((const unsigned char *)jetbrains_mono_ascii_ttf, (int)sizeof(jetbrains_mono_ascii_ttf)) ==
-        WGF_GFX_PRIV_FACE_FAILED) {
+    if (wgf_gfx_priv_face_wait((const unsigned char *)jetbrains_mono_ascii_ttf,
+                               (int)sizeof(jetbrains_mono_ascii_ttf)) == WGF_GFX_PRIV_FACE_FAILED) {
         wgf_log_error("wgf_gfx_font: this browser refused the built-in font; its text won't draw");
     }
     grow_pending = false;

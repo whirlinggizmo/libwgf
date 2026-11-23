@@ -105,7 +105,8 @@ static void keep(wgf_log_level_t level, const char *file, int line, const char *
         if (history.count == history.capacity) history.first = (history.first + 1) % history.capacity;
         else history.count++;
         if (file != NULL && file[0] != '\0') {
-            snprintf(history.lines[at], LINE_MAX_BYTES, "%s:%d: %.*s", basename_of(file), line, (int)utf8_whole_length(text), text);
+            snprintf(history.lines[at], LINE_MAX_BYTES, "%s:%d: %.*s", basename_of(file), line,
+                     (int)utf8_whole_length(text), text);
         } else {
             snprintf(history.lines[at], LINE_MAX_BYTES, "%.*s", (int)utf8_whole_length(text), text);
         }

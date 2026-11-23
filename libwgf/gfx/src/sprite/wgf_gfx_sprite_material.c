@@ -68,7 +68,8 @@ static bool fill_item(const wgf_gfx_priv_actor_t *sprite, const wgf_gfx_priv_spr
     item->uv[2] = q->uv[0];
     item->uv[3] = q->uv[1];
     item->cutoff = mode == WGF_ALPHA_MODE_MASK ? sprite->as.sprite.alpha_cutoff : 0.0f;
-    item->blended = mode == WGF_ALPHA_MODE_BLEND || mode == WGF_ALPHA_MODE_ADD; /* MASK and OPAQUE: with the opaque parts */
+    /* MASK and OPAQUE: with the opaque parts */
+    item->blended = mode == WGF_ALPHA_MODE_BLEND || mode == WGF_ALPHA_MODE_ADD;
     return item->mesh != 0;
 }
 

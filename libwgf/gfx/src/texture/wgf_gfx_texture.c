@@ -1005,8 +1005,9 @@ bool wgf_gfx_priv_texture_get_binding(wgf_texture_t texture, sg_view *view, sg_s
     }
     if (texture_ptr->resource.status == WGF_RESOURCE_STATUS_READY) {
         *view = texture_ptr->view;
+        /* a target or a blank has no mipmaps */
         *sampler = wgf_gfx_priv_texture_sampler(texture_ptr->wrap_u, texture_ptr->wrap_v, texture_ptr->filter,
-                                                !texture_ptr->target && !texture_ptr->blank); /* a target or a blank has no mipmaps */
+                                                !texture_ptr->target && !texture_ptr->blank);
         *width = texture_ptr->width;
         *height = texture_ptr->height;
         *is_placeholder = false;

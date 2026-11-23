@@ -50,7 +50,8 @@ static const char map_text[] =
     "   {\"id\": 1, \"name\": \"gold\", \"type\": \"coin\", \"x\": 16, \"y\": 16, \"width\": 16, \"height\": 16,"
     "    \"properties\": [{\"name\": \"value\", \"type\": \"int\", \"value\": 5},"
     "     {\"name\": \"label\", \"type\": \"string\", \"value\": \"big\"}]},"
-    "   {\"id\": 2, \"class\": \"coin\", \"gid\": 1, \"x\": 32, \"y\": 32, \"width\": 16, \"height\": 16, \"visible\": false},"
+    "   {\"id\": 2, \"class\": \"coin\", \"gid\": 1, \"x\": 32, \"y\": 32, \"width\": 16, \"height\": 16,"
+    " \"visible\": false},"
     "   {\"id\": 3, \"name\": \"start\", \"type\": \"spawn\", \"point\": true, \"x\": 8, \"y\": 8},"
     "   {\"id\": 4, \"type\": \"coin\", \"x\": 0, \"y\": 0, \"width\": 16, \"height\": 16, \"rotation\": 90}]}]}";
 
@@ -142,7 +143,8 @@ int main(void)
                wgf_arcade2d_get_grid_cell(root, 3, 2) == 1 && wgf_arcade2d_get_grid_cell(root, 0, 1) == 0,
            "a tile layer's filled cells the solid grid");
     for (i = 0; i < 60; i++) step(1.0f / 60.0f);
-    expect(near(wgf_actor_get_position(hero).y, 27) && wgf_arcade2d_is_grounded(hero), "a body standing on the layer's cells");
+    expect(near(wgf_actor_get_position(hero).y, 27) && wgf_arcade2d_is_grounded(hero),
+           "a body standing on the layer's cells");
     expect(!wgf_arcade2d_set_grid_from_layer(root, things) && !wgf_arcade2d_set_grid_from_layer(root, root) &&
                !wgf_arcade2d_set_grid_from_layer(0, walls),
            "a layer without cells, an actor that isn't a layer, no parent: refused");
@@ -157,7 +159,8 @@ int main(void)
     wgf_resource_release(scene);
     {
         const wgf_fs_task_t remove = wgf_fs_rmdir("tilemap_ecs");
-        for (i = 0; i < 1000 && wgf_fs_task_get_status(remove) == WGF_FS_TASK_STATUS_PENDING; i++) wgf_core_priv_update();
+        for (i = 0; i < 1000 && wgf_fs_task_get_status(remove) == WGF_FS_TASK_STATUS_PENDING; i++)
+            wgf_core_priv_update();
         wgf_fs_task_destroy(remove);
     }
     wgf_gfx_priv_stop();

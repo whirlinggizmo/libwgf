@@ -34,7 +34,8 @@ static void on_frame(void *user)
     if (++frames == 1) {
         static const unsigned char pixels[W * H * 4] = {
             255, 0,   0, 255, 0,   255, 0,   128, 200, 100, 50, 64, /* top: opaque red, half green, a quarter orange */
-            0,   0, 255, 255, 10,  20,  30,  0,   255, 255, 255, 1}; /* bottom: blue, clear (its color kept), nearly clear */
+            /* bottom: blue, clear (its color kept), nearly clear */
+            0,   0, 255, 255, 10,  20,  30,  0,   255, 255, 255, 1};
         int size = 0;
         unsigned char *png = wgf_gfx_priv_png_encode(pixels, W, H, &size);
         memcpy(rgba, pixels, sizeof(rgba));

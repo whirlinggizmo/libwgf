@@ -42,7 +42,8 @@ static void on_frame(void *user)
     } else if (frame == 10) {
         const float n = wgf_debug_get_frame_stat(WGF_FRAME_STAT_FRAMES);
         expect(n >= 1.0f && n <= 9.0f, "the frames since the first ask");
-        expect(wgf_debug_get_frame_stat(WGF_FRAME_STAT_FPS) > 0.0f && wgf_debug_get_frame_stat(WGF_FRAME_STAT_TIME_MEAN) > 0.0f,
+        expect(wgf_debug_get_frame_stat(WGF_FRAME_STAT_FPS) > 0.0f &&
+                   wgf_debug_get_frame_stat(WGF_FRAME_STAT_TIME_MEAN) > 0.0f,
                "a rate and a mean");
         expect(wgf_debug_get_frame_stat((wgf_frame_stat_t)99) == 0.0f, "a stat that isn't one is 0");
         wgf_debug_start_frame_recording();

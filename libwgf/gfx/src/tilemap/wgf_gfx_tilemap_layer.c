@@ -519,7 +519,8 @@ static int by_y(const void *a, const void *b)
 
 /* An object layer's tile objects, each a sprite of its tile under the layer, in the layer's
  * draw order. */
-static void draw_objects(layer_t *l, const wgf_gfx_priv_tilemap_data_t *d, const wgf_gfx_priv_tilemap_layer_data_t *data)
+static void draw_objects(layer_t *l, const wgf_gfx_priv_tilemap_data_t *d,
+                         const wgf_gfx_priv_tilemap_layer_data_t *data)
 {
     by_y_t *order;
     int i;
@@ -628,7 +629,8 @@ static void update(float dt)
             const batch_t *b = batch_at(l, a->cell);
             int tile = 0, shown;
             const int tileset = wgf_gfx_priv_tilemap_find_tileset(d, l->cells[a->cell], &tile);
-            const wgf_gfx_priv_tilemap_tile_t *animation = tileset >= 0 ? animation_of(&d->tilesets[tileset], tile) : NULL;
+            const wgf_gfx_priv_tilemap_tile_t *animation =
+                tileset >= 0 ? animation_of(&d->tilesets[tileset], tile) : NULL;
             if (animation == NULL || b == NULL) continue;
             shown = frame_at(animation, l->clock);
             if (shown == a->shown) continue;

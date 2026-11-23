@@ -36,8 +36,8 @@ WGF_API bool wgf_collide3d_point_in_sphere(float px, float py, float pz, float c
 /* Overlap tests: two boxes, two spheres, or a sphere and a box.
  *
  * Touching doesn't count as overlapping. */
-WGF_API bool wgf_collide3d_box_box(float ax0, float ay0, float az0, float ax1, float ay1, float az1, float bx0, float by0,
-                                   float bz0, float bx1, float by1, float bz1, float *hit, int hit_count);
+WGF_API bool wgf_collide3d_box_box(float ax0, float ay0, float az0, float ax1, float ay1, float az1, float bx0,
+                                   float by0, float bz0, float bx1, float by1, float bz1, float *hit, int hit_count);
 WGF_API bool wgf_collide3d_sphere_sphere(float ax, float ay, float az, float ar, float bx, float by, float bz, float br,
                                          float *hit, int hit_count);
 WGF_API bool wgf_collide3d_sphere_box(float cx, float cy, float cz, float r, float x0, float y0, float z0, float x1,

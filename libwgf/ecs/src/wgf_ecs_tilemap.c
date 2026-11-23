@@ -77,7 +77,8 @@ bool wgf_arcade2d_set_grid_from_layer(wgf_actor_t parent, wgf_actor_t layer)
     int *cells, count, i;
     bool set;
     if (map == 0 || wgf_gfx_priv_actor_of(parent) == NULL || columns <= 0 || rows <= 0 ||
-        size != wgf_tilemap_get_tile_height(map) || wgf_tilemap_get_orientation(map) != WGF_TILEMAP_ORIENTATION_ORTHOGONAL) {
+        size != wgf_tilemap_get_tile_height(map) ||
+        wgf_tilemap_get_orientation(map) != WGF_TILEMAP_ORIENTATION_ORTHOGONAL) {
         return false;
     }
     cells = (int *)malloc(sizeof(int) * (size_t)columns * (size_t)rows);
@@ -89,7 +90,8 @@ bool wgf_arcade2d_set_grid_from_layer(wgf_actor_t parent, wgf_actor_t layer)
                                                    wgf_gfx_priv_actor_get_world_matrix(layer)),
                                       wgf_vec3_make((float)(wgf_tilemap_get_origin_column(map) * size),
                                                     (float)(wgf_tilemap_get_origin_row(map) * size), 0.0f));
-    set = count == columns * rows && wgf_arcade2d_set_grid(parent, cells, count, columns, (float)size, corner.x, corner.y);
+    set = count == columns * rows &&
+          wgf_arcade2d_set_grid(parent, cells, count, columns, (float)size, corner.x, corner.y);
     free(cells);
     return set;
 }

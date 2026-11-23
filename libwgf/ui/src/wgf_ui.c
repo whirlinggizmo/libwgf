@@ -693,7 +693,8 @@ static bool open_level(int kind, const char *id, wgf_ui_direction_t direction, p
     level = &ui.levels[ui.depth++];
     memset(level, 0, sizeof(*level));
     level->kind = kind;
-    level->declaration.layout.layoutDirection = direction == WGF_UI_DIRECTION_ROW ? CLAY_LEFT_TO_RIGHT : CLAY_TOP_TO_BOTTOM;
+    level->declaration.layout.layoutDirection =
+        direction == WGF_UI_DIRECTION_ROW ? CLAY_LEFT_TO_RIGHT : CLAY_TOP_TO_BOTTOM;
     if (kind == KIND_PANEL || kind == KIND_GROUP)
         panel_layout(level, kind == KIND_PANEL ? WGF_UI_WIDGET_PANEL : WGF_UI_WIDGET_GROUP, look);
     return true;
@@ -1107,7 +1108,8 @@ static bool face(const char *what, const char *id, int widget, wgf_texture_t ico
     *activated = false;
     if (icon != 0 && !is_kind(icon, WGF_CORE_PRIV_HANDLE_KIND_TEXTURE)) return false;
     if (!widget_id(id, what, &element)) return false;
-    answer(id, element, Clay_PointerOver(element), ARROWS_NONE, false, &answered); /* where it was in the frame before */
+    /* where it was in the frame before */
+    answer(id, element, Clay_PointerOver(element), ARROWS_NONE, false, &answered);
     if (on && answered.state != WGF_UI_STATE_DISABLED) answered.state = WGF_UI_STATE_PRESSED;
     piece = add_piece(draw_face, widget, answered.state);
     memset(&declaration, 0, sizeof(declaration));
@@ -1489,7 +1491,8 @@ float wgf_ui_number(const char *id, float value, float min, float max, float ste
             ui.focus_visible = true;
         }
     }
-    while (decimals < 4 && fabsf(step * powf(10.0f, (float)decimals) - roundf(step * powf(10.0f, (float)decimals))) > 1e-3f)
+    while (decimals < 4 &&
+           fabsf(step * powf(10.0f, (float)decimals) - roundf(step * powf(10.0f, (float)decimals))) > 1e-3f)
         decimals++;
     snprintf(text, sizeof(text), "%.*f", decimals, (double)value);
     memset(&row, 0, sizeof(row));
@@ -1548,7 +1551,8 @@ bool wgf_ui_tile(const char *id, wgf_texture_t picture, const char *text)
     Clay__OpenElementWithId(element);
     Clay__ConfigureOpenElement(declaration);
     add_solid(element.id);
-    if (picture != 0) image_element(picture, WGF_UI_WIDGET_TILE, answered.state, size - padding * 2.0f, size - padding * 2.0f);
+    if (picture != 0)
+        image_element(picture, WGF_UI_WIDGET_TILE, answered.state, size - padding * 2.0f, size - padding * 2.0f);
     if (text != NULL && text[0] != '\0')
         text_element(text, 0.0f, dim(ui.colors[WGF_UI_COLOR_BUTTON_TEXT], answered.state), CLAY_TEXT_WRAP_NONE, piece);
     Clay__CloseElement();
@@ -2046,7 +2050,8 @@ int wgf_ui_list(const char *id, const char *items, int selected, int rows)
                               : i == selected                          ? WGF_UI_STATE_PRESSED
                               : i == over                              ? WGF_UI_STATE_HOVERED
                                                                        : WGF_UI_STATE_NORMAL;
-            list_item(at, end != NULL ? (size_t)(end - at) : strlen(at), WGF_UI_WIDGET_LIST, state, i == selected, NULL);
+            list_item(at, end != NULL ? (size_t)(end - at) : strlen(at), WGF_UI_WIDGET_LIST, state, i == selected,
+                      NULL);
         }
         at = end != NULL ? end + 1 : NULL;
     }
@@ -2082,10 +2087,12 @@ static void hang(Clay_ElementId anchor, float width, float height, bool centered
         if (x + width > ui.width) shift = ui.width - width - x;
         if (x + shift < 0.0f) shift = -x;
     }
-    floating->attachPoints.parent = above ? (centered ? CLAY_ATTACH_POINT_CENTER_TOP : CLAY_ATTACH_POINT_LEFT_TOP)
-                                          : (centered ? CLAY_ATTACH_POINT_CENTER_BOTTOM : CLAY_ATTACH_POINT_LEFT_BOTTOM);
-    floating->attachPoints.element = above ? (centered ? CLAY_ATTACH_POINT_CENTER_BOTTOM : CLAY_ATTACH_POINT_LEFT_BOTTOM)
-                                           : (centered ? CLAY_ATTACH_POINT_CENTER_TOP : CLAY_ATTACH_POINT_LEFT_TOP);
+    floating->attachPoints.parent =
+        above ? (centered ? CLAY_ATTACH_POINT_CENTER_TOP : CLAY_ATTACH_POINT_LEFT_TOP)
+              : (centered ? CLAY_ATTACH_POINT_CENTER_BOTTOM : CLAY_ATTACH_POINT_LEFT_BOTTOM);
+    floating->attachPoints.element =
+        above ? (centered ? CLAY_ATTACH_POINT_CENTER_BOTTOM : CLAY_ATTACH_POINT_LEFT_BOTTOM)
+              : (centered ? CLAY_ATTACH_POINT_CENTER_TOP : CLAY_ATTACH_POINT_LEFT_TOP);
     floating->offset.x = shift;
     floating->offset.y = above ? -gap : gap;
 }
@@ -2112,7 +2119,8 @@ static void dropdown_list(Clay_ElementId face, Clay_String name, const char *con
     height = row_height() * (float)count + inset * 2.0f;
     memset(&box, 0, sizeof(box));
     box.layout.layoutDirection = CLAY_TOP_TO_BOTTOM;
-    box.layout.padding.left = box.layout.padding.right = box.layout.padding.top = box.layout.padding.bottom = pixels(inset);
+    box.layout.padding.left = box.layout.padding.right = box.layout.padding.top = box.layout.padding.bottom =
+        pixels(inset);
     fixed(&box, width, height);
     hang(face, width, height, false, &box.floating);
     box.floating.zIndex = POPUP_Z;
@@ -2123,7 +2131,9 @@ static void dropdown_list(Clay_ElementId face, Clay_String name, const char *con
     add_solid(list.id);
     for (i = 0; i < count; i++) {
         const Clay_ElementId item = Clay_GetElementIdWithIndex(name, (uint32_t)i);
-        const int state = i == selected ? WGF_UI_STATE_PRESSED : i == ui.popups.dropdown.hot ? WGF_UI_STATE_HOVERED : WGF_UI_STATE_NORMAL;
+        const int state = i == selected                 ? WGF_UI_STATE_PRESSED
+                          : i == ui.popups.dropdown.hot ? WGF_UI_STATE_HOVERED
+                                                        : WGF_UI_STATE_NORMAL;
         list_item(starts[i], lengths[i], WGF_UI_WIDGET_DROPDOWN, state, i == selected, &item);
     }
     Clay__CloseElement();
@@ -2155,7 +2165,8 @@ int wgf_ui_dropdown(const char *id, const char *labels, int selected)
     answer(id, element, Clay_PointerOver(element), open ? ARROWS_ALL : ARROWS_NONE, false, &answered);
     if (answered.state == WGF_UI_STATE_DISABLED || !answered.focused) open = false;
     if (open) {
-        const bool moved = ui.pointer_x != ui.popups.dropdown.pointer[0] || ui.pointer_y != ui.popups.dropdown.pointer[1];
+        const bool moved =
+            ui.pointer_x != ui.popups.dropdown.pointer[0] || ui.pointer_y != ui.popups.dropdown.pointer[1];
         if (over >= 0 && (moved || ui.pointer_pressed)) ui.popups.dropdown.hot = over;
         if (ui.keys.more_down != ui.keys.more_up) {
             ui.popups.dropdown.hot = clamp_index(ui.popups.dropdown.hot + (ui.keys.more_down ? 1 : -1), count);
@@ -2388,7 +2399,8 @@ static void field_keys(wgf_ui_priv_edit_t *edit, int most, bool masked)
 static void field_press(wgf_ui_priv_field_t *field, float x, bool masked, float size)
 {
     const int at = field_at(field, x, masked, size);
-    const bool again = ui.clock - field->click_at <= CLICK_TIME && fabsf(ui.pointer_x - field->click_x) <= DRAG_SLOP * 2.0f &&
+    const bool again = ui.clock - field->click_at <= CLICK_TIME &&
+                       fabsf(ui.pointer_x - field->click_x) <= DRAG_SLOP * 2.0f &&
                        fabsf(ui.pointer_y - field->click_y) <= DRAG_SLOP * 2.0f;
     field->clicks = again ? field->clicks % 3 + 1 : 1;
     field->click_at = ui.clock;
@@ -2485,7 +2497,8 @@ static bool text_field(const char *what, const char *id, const char *placeholder
         piece->masked = masked;
         piece->invalid = ui.invalid;
         piece->focused = state == WGF_UI_STATE_PRESSED;
-        piece->placeholder = placeholder != NULL && placeholder[0] != '\0' ? keep(placeholder, strlen(placeholder)) : NULL;
+        piece->placeholder =
+            placeholder != NULL && placeholder[0] != '\0' ? keep(placeholder, strlen(placeholder)) : NULL;
     }
     ring(&declaration, answered.focused);
     Clay__OpenElementWithId(element);
@@ -2588,7 +2601,8 @@ bool wgf_ui_begin(void)
     pointer.x = ui.pointer_x;
     pointer.y = ui.pointer_y;
     Clay_SetPointerState(pointer, ui.pointer_down);
-    if (popup_hooks != NULL) popup_hooks->begin(&ui.popups, &ui.pointer_pressed, &ui.pointer_down, &ui.pointer_released);
+    if (popup_hooks != NULL)
+        popup_hooks->begin(&ui.popups, &ui.pointer_pressed, &ui.pointer_down, &ui.pointer_released);
     ui.scroll.reveal = ui.scroll.reveal_next;
     ui.scroll.reveal_next = false;
     if (scroll_frame != NULL) scroll_frame(&ui.scroll, ui.pointer_pressed, ui.pointer_down);
@@ -2893,7 +2907,8 @@ static void draw_slider(const piece_t *piece, Clay_BoundingBox box)
     const bool row = across(piece->widget);
     const float handle = ui.values[WGF_UI_VALUE_HANDLE_SIZE];
     const float length = row ? box.width : box.height;
-    const float at = handle * 0.5f + piece->value * fmaxf(0.0f, length - handle); /* the handle's center, from the start */
+    /* the handle's center, from the start */
+    const float at = handle * 0.5f + piece->value * fmaxf(0.0f, length - handle);
     Clay_BoundingBox track = box, knob = box;
     float radius;
     if (row) {
@@ -3023,8 +3038,8 @@ static void draw_field(const piece_t *piece, Clay_BoundingBox box)
     wgf_render_pop_clip();
     if (piece->invalid && width > 0.0f) {
         float points[8 * (SEGMENTS + 1)];
-        wgf_draw_polyline(points, rounded(box, corners(ui.values[WGF_UI_VALUE_CORNER_RADIUS]), width * 0.5f, points), true,
-                          width, faded(dim(ui.colors[WGF_UI_COLOR_INVALID], piece->state)));
+        wgf_draw_polyline(points, rounded(box, corners(ui.values[WGF_UI_VALUE_CORNER_RADIUS]), width * 0.5f, points),
+                          true, width, faded(dim(ui.colors[WGF_UI_COLOR_INVALID], piece->state)));
     }
 }
 
@@ -3040,7 +3055,8 @@ static void draw(Clay_RenderCommandArray commands)
         switch (command->commandType) {
         case CLAY_RENDER_COMMAND_TYPE_RECTANGLE: {
             const Clay_RectangleRenderData *rect = &command->renderData.rectangle;
-            wgf_draw_polygon(points, rounded(box, rect->cornerRadius, 0.0f, points), faded(from_clay(rect->backgroundColor)));
+            wgf_draw_polygon(points, rounded(box, rect->cornerRadius, 0.0f, points),
+                             faded(from_clay(rect->backgroundColor)));
             break;
         }
         case CLAY_RENDER_COMMAND_TYPE_CUSTOM: {

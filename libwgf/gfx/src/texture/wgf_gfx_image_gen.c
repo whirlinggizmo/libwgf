@@ -209,7 +209,8 @@ static int64_t perlin(uint64_t x, uint64_t y, uint32_t seed)
     const int64_t fx = (int64_t)(x & 0xFFFFu), fy = (int64_t)(y & 0xFFFFu);
     const int64_t u = fade(fx), v = fade(fy);
     const int64_t n00 = corner(cx, cy, seed, fx, fy), n10 = corner(cx + 1u, cy, seed, fx - ONE, fy);
-    const int64_t n01 = corner(cx, cy + 1u, seed, fx, fy - ONE), n11 = corner(cx + 1u, cy + 1u, seed, fx - ONE, fy - ONE);
+    const int64_t n01 = corner(cx, cy + 1u, seed, fx, fy - ONE),
+                  n11 = corner(cx + 1u, cy + 1u, seed, fx - ONE, fy - ONE);
     const int64_t top = n00 + mul(n10 - n00, u), bottom = n01 + mul(n11 - n01, u);
     return top + mul(bottom - top, v);
 }

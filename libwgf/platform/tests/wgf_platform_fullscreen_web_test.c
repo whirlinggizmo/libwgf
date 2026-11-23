@@ -133,7 +133,8 @@ static void on_frame(void *user)
             break;
         case 3: /* out, and a tap now asks for nothing: let go of, it isn't held */
             if (!wgf_window_is_fullscreen()) {
-                expect(wgf_window_get_orientation_lock() == WGF_WINDOW_ORIENTATION_ANY, "the lock gone with fullscreen");
+                expect(wgf_window_get_orientation_lock() == WGF_WINDOW_ORIENTATION_ANY,
+                       "the lock gone with fullscreen");
                 js("Module.before = Module.fullLog.asked; Module.tap()");
                 expect(js("Module.fullLog.asked === Module.before"), "a tap asks for nothing let go of");
                 expect(wgf_window_request_fullscreen(true), "asked again, at once");

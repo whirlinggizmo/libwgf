@@ -178,7 +178,8 @@ static void picking_3d(void)
     wgf_actor_set_parent(cube, stage);
     memset(hit, 0x7f, sizeof(hit));
     expect(wgf_stage3d_pick(stage, 400, 300, hit, 8) == cube, "the middle hits the cube");
-    expect(near(hit[0], 0) && near(hit[1], 0) && near(hit[2], 1) && near(hit[3], 0), "its normal: +z, toward the camera");
+    expect(near(hit[0], 0) && near(hit[1], 0) && near(hit[2], 1) && near(hit[3], 0),
+           "its normal: +z, toward the camera");
     expect(near(hit[4], 0) && near(hit[5], 0) && near(hit[6], 1), "its point: the front face's middle");
     expect(near(hit[7], 3.9f), "its distance: 3.9 from the near plane");
     expect(wgf_stage3d_pick_ray(stage, 5, 0.5f, 0, -2, 0, 0, hit, 8) == cube && near(hit[0], 1) && near(hit[4], 1) &&
@@ -236,7 +237,8 @@ static void picking_3d(void)
     expect(wgf_stage3d_pick(stage, 10, 10, NULL, 0) == 0, "a corner of the screen: nothing");
     expect(wgf_stage3d_pick_ray(stage, 0, 0, 5, 0, 0, 0, NULL, 0) == 0 &&
                wgf_stage3d_pick_ray(stage, 0, 0, NAN, 0, 0, -1, NULL, 0) == 0 &&
-               wgf_stage3d_pick(camera, 400, 300, NULL, 0) == 0 && !wgf_model_pick_ray(camera, 0, 0, 5, 0, 0, -1, NULL, 0),
+               wgf_stage3d_pick(camera, 400, 300, NULL, 0) == 0 &&
+               !wgf_model_pick_ray(camera, 0, 0, 5, 0, 0, -1, NULL, 0),
            "refused: no direction, not finite, not a stage, not a model");
     wgf_actor_set_enabled(cube, false);
     wgf_actor_set_enabled(far_cube, false);
@@ -249,7 +251,8 @@ static void picking_3d(void)
     expect(wgf_resource_get_status(file_mesh) == WGF_RESOURCE_STATUS_READY, "the skinned file READY");
     wgf_actor_set_parent(root, stage);
     wgf_actor_set_position(root, 10, 0, 0);
-    expect(wgf_stage3d_pick_ray(stage, 10.1f, 1.2f, 5, 0, 0, -1, NULL, 0) == 0, "at rest, the triangle is below the ray");
+    expect(wgf_stage3d_pick_ray(stage, 10.1f, 1.2f, 5, 0, 0, -1, NULL, 0) == 0,
+           "at rest, the triangle is below the ray");
     expect(wgf_model_play_animation(root, 0, 0.0f) && wgf_model_set_animation_time(root, 0.5f), "played at 0.5 s");
     expect(wgf_stage3d_pick_ray(stage, 10.1f, 1.2f, 5, 0, 0, -1, hit, 8) == root && near(hit[4], 10.1f) &&
                near(hit[5], 1.2f) && near(hit[6], 0) && near(hit[2], 1) && near(hit[7], 5),

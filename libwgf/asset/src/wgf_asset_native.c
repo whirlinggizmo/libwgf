@@ -517,7 +517,8 @@ void wgf_asset_priv_platform_ping(wgf_asset_priv_task_t *task_ptr, const char *h
             task_ptr->ping_ms = -1.0f;
             return;
         }
-        snprintf(task_ptr->fetch_url, sizeof(task_ptr->fetch_url), "%s/", host); /* the host's root; any answer counts */
+        /* the host's root; any answer counts */
+        snprintf(task_ptr->fetch_url, sizeof(task_ptr->fetch_url), "%s/", host);
         task_ptr->state = WGF_ASSET_PRIV_FETCHING; /* a ping request, for wgf_asset_fetch_next */
         task_ptr->fetch_taken = false;
         task_ptr->fetch_order = ++native.order;
@@ -622,7 +623,8 @@ const char *wgf_asset_fetch_get_dest(wgf_asset_task_t request)
     static char dest[1024];
     char partial[600];
     const wgf_asset_priv_task_t *task_ptr = request_of(request);
-    if (task_ptr == NULL || task_ptr->is_ping || !wgf_core_priv_fs_partial_path(task_ptr->path, partial, sizeof(partial))) {
+    if (task_ptr == NULL || task_ptr->is_ping ||
+        !wgf_core_priv_fs_partial_path(task_ptr->path, partial, sizeof(partial))) {
         return "";
     }
     wgf_core_priv_fs_resolve(partial, dest, sizeof(dest));

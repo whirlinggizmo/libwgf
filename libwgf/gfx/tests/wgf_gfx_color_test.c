@@ -35,10 +35,12 @@ int main(void)
     expect(wgf_color_make_hsv(0, 1, 1, 255) == 0xFF0000FFu && wgf_color_make_hsv(120, 1, 1, 255) == 0x00FF00FFu &&
                wgf_color_make_hsv(600, 1, 1, 128) == 0x0000FF80u && wgf_color_make_hsv(30, 0, 0.5f, 255) == 0x808080FFu,
            "colors from hue, saturation, and value, the hue wrapped");
-    expect(fabsf(wgf_color_get_hue(0x00FF00FFu) - 120.0f) < 0.01f && fabsf(wgf_color_get_saturation(0x808080FFu)) < 1e-6f &&
+    expect(fabsf(wgf_color_get_hue(0x00FF00FFu) - 120.0f) < 0.01f &&
+               fabsf(wgf_color_get_saturation(0x808080FFu)) < 1e-6f &&
                fabsf(wgf_color_get_value(0x804020FFu) - 128.0f / 255.0f) < 1e-4f,
            "and read back");
-    expect(wgf_color_brighten(0x000000FFu, 1.0f) == 0xFFFFFFFFu && wgf_color_brighten(0xFFFFFF80u, -1.0f) == 0x00000080u &&
+    expect(wgf_color_brighten(0x000000FFu, 1.0f) == 0xFFFFFFFFu &&
+               wgf_color_brighten(0xFFFFFF80u, -1.0f) == 0x00000080u &&
                wgf_color_brighten(0x804020FFu, 0.0f) == 0x804020FFu,
            "brightened and darkened, its alpha kept");
     expect(wgf_color_multiply(0xFF8000FFu, 0x80FFFF80u) == 0x80800080u, "two colors multiplied");

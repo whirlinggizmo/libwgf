@@ -119,7 +119,8 @@ wgf_color_t wgf_color_make_hsv(float hue, float saturation, float value, int a)
     else if (h < 240.0f) r = 0, g = x, b = c;
     else if (h < 300.0f) r = x, g = 0, b = c;
     else r = c, g = 0, b = x;
-    return wgf_color_make((int)((r + m) * 255.0f + 0.5f), (int)((g + m) * 255.0f + 0.5f), (int)((b + m) * 255.0f + 0.5f), a);
+    return wgf_color_make((int)((r + m) * 255.0f + 0.5f), (int)((g + m) * 255.0f + 0.5f),
+                          (int)((b + m) * 255.0f + 0.5f), a);
 }
 
 static void hsv_of(wgf_color_t color, float *hue, float *saturation, float *value)

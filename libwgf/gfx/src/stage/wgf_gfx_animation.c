@@ -107,8 +107,9 @@ static const wgf_gfx_priv_mesh_record_t *clips_of(const wgf_gfx_priv_actor_t *ro
 {
     const animation_t *anim = root_ptr->as.model.animation;
     if (anim != NULL && anim->source != 0) {
-        return wgf_resource_get_status(anim->source) == WGF_RESOURCE_STATUS_READY ? wgf_gfx_priv_mesh_record(anim->source)
-                                                                                  : NULL;
+        return wgf_resource_get_status(anim->source) == WGF_RESOURCE_STATUS_READY
+                   ? wgf_gfx_priv_mesh_record(anim->source)
+                   : NULL;
     }
     return file_of(root_ptr);
 }

@@ -145,7 +145,8 @@ static bool region_of(wgf_texture_t texture, float source[4], float uv[4], sg_vi
 {
     int tw, th;
     bool placeholder;
-    if (!wgf_gfx_priv_is_in_frame() || !wgf_gfx_priv_texture_get_binding(texture, view, sampler, &tw, &th, &placeholder)) {
+    if (!wgf_gfx_priv_is_in_frame() ||
+        !wgf_gfx_priv_texture_get_binding(texture, view, sampler, &tw, &th, &placeholder)) {
         return false;
     }
     if (placeholder || source[2] <= 0.0f || source[3] <= 0.0f) {
@@ -246,7 +247,8 @@ void wgf_draw_texture_fill(wgf_texture_t texture, float x, float y, float width,
             int k;
             for (k = 0; k < 2; k++) { /* the ray at this angle, cut to the rectangle */
                 const float a = start + sweep * (float)(i + k) / (float)n, dx = draw_cos(a), dy = draw_sin(a);
-                const float tx = dx != 0.0f ? (width * 0.5f) / fabsf(dx) : 1e9f, ty = dy != 0.0f ? (height * 0.5f) / fabsf(dy) : 1e9f;
+                const float tx = dx != 0.0f ? (width * 0.5f) / fabsf(dx) : 1e9f,
+                            ty = dy != 0.0f ? (height * 0.5f) / fabsf(dy) : 1e9f;
                 const float t = tx < ty ? tx : ty;
                 p[k][0] = cx + dx * t;
                 p[k][1] = cy + dy * t;
@@ -275,7 +277,8 @@ void wgf_draw_texture_fill(wgf_texture_t texture, float x, float y, float width,
     sgl_disable_texture();
 }
 
-bool wgf_draw_spline(wgf_spline_kind_t kind, const float *points, int count, int steps, float thickness, wgf_color_t color)
+bool wgf_draw_spline(wgf_spline_kind_t kind, const float *points, int count, int steps, float thickness,
+                     wgf_color_t color)
 {
     const int segments = wgf_spline_get_segment_count(kind, points, count);
     float *line;

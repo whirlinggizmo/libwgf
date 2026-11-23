@@ -70,7 +70,8 @@ enum {
 
 typedef struct wgf_gfx_priv_shader_t {
     wgf_gfx_priv_shader_program_t programs[WGF_GFX_PRIV_SHADER_PROGRAM_COUNT];
-    sg_pipeline pipelines[16];        /* a surface's models': by blended, double sided, mirrored, skinned; made on first use */
+    /* a surface's models': by blended, double sided, mirrored, skinned; made on first use */
+    sg_pipeline pipelines[16];
     sg_pipeline screen_pipelines[2];  /* a screen effect's: by whether its pass is multisampled */
     bool screen;                      /* a screen effect, not a surface shader */
     wgf_gfx_priv_shader_param_t params[WGF_GFX_PRIV_SHADER_MAX_PARAMS];

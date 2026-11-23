@@ -31,7 +31,8 @@ EM_JS(void, wgf_gfx_js_decode_start, (int id, const unsigned char *bytes, int si
     const read = (bitmap) => {
         let gl = Module.wgfDecodeGl;
         if (!gl || gl.isContextLost()) {
-            gl = Module.wgfDecodeGl = document.createElement("canvas").getContext("webgl2", {premultipliedAlpha : false});
+            gl = Module.wgfDecodeGl =
+                document.createElement("canvas").getContext("webgl2", {premultipliedAlpha : false});
         }
         if (!gl) return null;
         const texture = gl.createTexture(), framebuffer = gl.createFramebuffer();
@@ -110,7 +111,8 @@ wgf_gfx_priv_decode_t *wgf_gfx_priv_decode_start(const unsigned char *bytes, int
 
 wgf_gfx_priv_decode_state_t wgf_gfx_priv_decode_poll(wgf_gfx_priv_decode_t *decode)
 {
-    return decode != NULL ? (wgf_gfx_priv_decode_state_t)wgf_gfx_js_decode_state(decode->id) : WGF_GFX_PRIV_DECODE_FAILED;
+    return decode != NULL ? (wgf_gfx_priv_decode_state_t)wgf_gfx_js_decode_state(decode->id)
+                          : WGF_GFX_PRIV_DECODE_FAILED;
 }
 
 unsigned char *wgf_gfx_priv_decode_take(wgf_gfx_priv_decode_t *decode, int *width, int *height)

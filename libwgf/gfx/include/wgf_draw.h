@@ -77,7 +77,8 @@ WGF_API void wgf_draw_text(wgf_font_t font, const char *text, float x, float y, 
 /* Sets or gets how immediate mode drawing after this call blends with what is under it.
  *
  * The modes are wgf_material.h's alpha modes: BLEND (the default), OPAQUE, ADD, MULTIPLY,
- * and PREMULTIPLIED. MASK draws as BLEND, because immediate mode cuts nothing out.
+ * and PREMULTIPLIED. MASK draws as BLEND, because immediate mode cuts nothing out. The mode
+ * stays as set from frame to frame, until it is set again.
  *
  * The setter returns false for a `mode` that isn't an alpha mode. */
 WGF_API bool wgf_draw_set_blend_mode(wgf_alpha_mode_t mode);

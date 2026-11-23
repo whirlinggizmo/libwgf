@@ -53,8 +53,10 @@ static const char *const clips[ROBOTS] = {"Robot_Idle", "Robot_Dance", "Robot_Wa
  * animations alone and played alike, so they move as one; and the same four merged. */
 #define CLIPS_PATH "models/characters/Animations.glb"
 #define PARTS 4
-static const char *const part_paths[PARTS] = {"models/characters/Adventurer_Body.glb", "models/characters/Adventurer_Legs.glb",
-                                              "models/characters/Adventurer_Head.glb", "models/characters/Adventurer_Feet.glb"};
+static const char *const part_paths[PARTS] = {"models/characters/Adventurer_Body.glb",
+                                              "models/characters/Adventurer_Legs.glb",
+                                              "models/characters/Adventurer_Head.glb",
+                                              "models/characters/Adventurer_Feet.glb"};
 
 static struct {
     wgf_actor_t stage, camera, robots[ROBOTS], character, parts[PARTS], merged;

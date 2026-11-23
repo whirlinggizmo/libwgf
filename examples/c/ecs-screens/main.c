@@ -81,7 +81,8 @@ static void init(void *user)
 static void next_kind(void)
 {
     static const wgf_transition_t kinds[] = {WGF_TRANSITION_FADE,       WGF_TRANSITION_SLIDE_LEFT, WGF_TRANSITION_IRIS,
-                                             WGF_TRANSITION_SLIDE_DOWN, WGF_TRANSITION_WIPE,       WGF_TRANSITION_SLIDE_UP,
+                                             WGF_TRANSITION_SLIDE_DOWN, WGF_TRANSITION_WIPE,
+                                             WGF_TRANSITION_SLIDE_UP,
                                              WGF_TRANSITION_SLIDE_RIGHT};
     wgf_screen_set_transition(kinds[next_transition], 0.8f);
     next_transition = (next_transition + 1) % (int)(sizeof(kinds) / sizeof(kinds[0]));

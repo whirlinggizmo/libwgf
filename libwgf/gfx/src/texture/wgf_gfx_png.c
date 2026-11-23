@@ -55,8 +55,9 @@ static const uint16_t length_base[29] = {3,  4,  5,  6,  7,  8,  9,  10, 11,  13
                                          31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258};
 static const uint8_t length_extra[29] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2,
                                          2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0};
-static const uint16_t distance_base[30] = {1,   2,   3,   4,   5,   7,    9,    13,   17,   25,   33,   49,   65,    97,    129,
-                                           193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577};
+static const uint16_t distance_base[30] = {1,    2,    3,    4,    5,    7,    9,    13,    17,    25,
+                                           33,   49,   65,   97,   129,  193,  257,  385,   513,   769,
+                                           1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577};
 static const uint8_t distance_extra[30] = {0, 0, 0, 0, 1, 1, 2, 2,  3,  3,  4,  4,  5,  5,  6,
                                            6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13};
 
@@ -205,7 +206,8 @@ unsigned char *wgf_gfx_priv_png_encode(const unsigned char *rgba, int width, int
     length = 8;
     put_u32(out + length + 8, (uint32_t)width);
     put_u32(out + length + 12, (uint32_t)height);
-    memcpy(out + length + 16, "\x08\x06\x00\x00\x00", 5); /* 8 bits a channel, RGBA, deflate, adaptive filters, no interlace */
+    /* 8 bits a channel, RGBA, deflate, adaptive filters, no interlace */
+    memcpy(out + length + 16, "\x08\x06\x00\x00\x00", 5);
     length += finish_chunk(out + length, "IHDR", 13);
     bits.out = out + length + 8;
     bits.out[0] = 0x78; /* zlib: deflate with a 32K window, no dictionary */

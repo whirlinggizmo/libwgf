@@ -192,7 +192,8 @@ static void walk(wgf_actor_t top, const ray_t *ray, best_t *best, wgf_actor_t fi
                 const wgf_actor_t root = actor_ptr->from_file ? file_root_of(actor_ptr) : 0;
                 wgf_color_t tint = 0;
                 if (file != 0 ? root == file
-                              : (root == 0 || (wgf_actor_is_pickable(root) && wgf_gfx_priv_model_file_shown(actor_ptr, &tint)))) {
+                              : (root == 0 ||
+                                 (wgf_actor_is_pickable(root) && wgf_gfx_priv_model_file_shown(actor_ptr, &tint)))) {
                     test_model(next, actor_ptr, ray, best, root != 0 ? root : next);
                 }
                 actor_ptr = wgf_gfx_priv_actor_of_silently(next); /* nothing is made, but read it again all the same */

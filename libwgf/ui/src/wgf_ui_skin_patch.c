@@ -13,8 +13,8 @@
 /* A patch's piece, the source rectangle repeated over the destination: at its own size, the
  * last cut where the room ends, or (`fit`) a whole number of times, each stretched a little
  * to fill it exactly. */
-static void tile(wgf_texture_t texture, float sx, float sy, float sw, float sh, float x, float y, float width, float height,
-                 bool fit, wgf_color_t tint)
+static void tile(wgf_texture_t texture, float sx, float sy, float sw, float sh, float x, float y, float width,
+                 float height, bool fit, wgf_color_t tint)
 {
     int nx, ny, i, j;
     if (sw <= 0.0f || sh <= 0.0f || width <= 0.0f || height <= 0.0f) return;
@@ -56,8 +56,8 @@ static bool draw_tiled(wgf_texture_t texture, const float source[4], const float
                                             dy[row], dws[column], dhs[row], tint);
                 }
             } else {
-                tile(texture, sx[column], sy[row], sws[column], shs[row], dx[column], dy[row], dws[column], dhs[row], fit,
-                     tint);
+                tile(texture, sx[column], sy[row], sws[column], shs[row], dx[column], dy[row], dws[column], dhs[row],
+                     fit, tint);
             }
         }
     }

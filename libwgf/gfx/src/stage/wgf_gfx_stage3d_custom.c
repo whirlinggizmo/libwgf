@@ -10,8 +10,9 @@
 #include "wgf_math_draw_trig_priv.h"
 
 /* A stage's items drawn by a custom material's shader (wgf_shader.h), libwgt's scene's
- * draw_custom (wgrender's): its model program (a skinned part: its skinned one) with libwgf's vertex shader, which reads the
- * placements from the frame's instance records as the built-in shading does, and the
+ * draw_custom (wgrender's): its model program (a skinned part: its skinned one) with
+ * libwgf's vertex shader, which reads the placements from the frame's instance records as
+ * the built-in shading does, and the
  * blocks wgf.glsl declares -- the camera and time, the frame's lights, environment, and
  * shadows as the built-in shading gets them, and the material's parameters -- with its
  * textures and libwgf's bound by the slots its program has them at. The custom material's
@@ -56,8 +57,9 @@ static sg_pipeline pipeline_of(wgf_gfx_priv_shader_t *shader, bool blended, bool
     int a;
     if (shader->pipelines[key].id != SG_INVALID_ID) return shader->pipelines[key];
     memset(&desc, 0, sizeof(desc));
-    desc.shader = shader->programs[skinned ? WGF_GFX_PRIV_SHADER_PROGRAM_MODEL_SKINNED : WGF_GFX_PRIV_SHADER_PROGRAM_MODEL]
-                      .shader;
+    desc.shader =
+        shader->programs[skinned ? WGF_GFX_PRIV_SHADER_PROGRAM_MODEL_SKINNED : WGF_GFX_PRIV_SHADER_PROGRAM_MODEL]
+            .shader;
     if (skinned) {
         desc.layout.buffers[1].stride = (int)(sizeof(float) * WGF_GFX_PRIV_MESH_SKIN_FLOATS);
         for (a = 6; a < 8; a++) {
@@ -178,7 +180,8 @@ void wgf_gfx_priv_stage3d_draw_custom(wgf_gfx_priv_stage3d_frame_t *frame, const
     if (shader == NULL || shader->screen || material == NULL) return; /* still loading, failed, or an effect's */
     if (!wgf_gfx_priv_mesh_get_primitive(item->mesh, item->primitive, &primitive)) return;
     if (item->skinned && (!frame->joints_written || primitive.skin.id == SG_INVALID_ID)) return; /* no room */
-    program = &shader->programs[item->skinned ? WGF_GFX_PRIV_SHADER_PROGRAM_MODEL_SKINNED : WGF_GFX_PRIV_SHADER_PROGRAM_MODEL];
+    program = &shader->programs[item->skinned ? WGF_GFX_PRIV_SHADER_PROGRAM_MODEL_SKINNED
+                                              : WGF_GFX_PRIV_SHADER_PROGRAM_MODEL];
     sg_apply_pipeline(
         pipeline_of(shader, item->blended, material->double_sided || item->material_sprite,
                     item->mirrored != draw->flipped, item->skinned));

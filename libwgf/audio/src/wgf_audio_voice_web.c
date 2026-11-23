@@ -89,7 +89,9 @@ EM_JS(void, wgf_audio_js_voice_apply,
         if (p) { /* a pushed voice: its processor takes from the queue while PLAYING */
             if (!p.node) {
                 p.node = context.createScriptProcessor(2048, 1, 2);
-                p.node.onaudioprocess = function(e) { Module.wgf_audio_pushed_pull(p, e.outputBuffer, context.sampleRate); };
+                p.node.onaudioprocess = function(e) {
+                    Module.wgf_audio_pushed_pull(p, e.outputBuffer, context.sampleRate);
+                };
                 p.node.connect(v.gain);
             }
             p.active = state === 1;
@@ -341,7 +343,8 @@ void wgf_audio_priv_platform_apply(wgf_handle_t voice, wgf_audio_priv_voice_t *v
     wgf_audio_priv_voice_range(voice_ptr, &low, &high);
     wgf_audio_priv_spatial(voice_ptr, &gain, &pan);
     wgf_audio_js_voice_apply((int)voice, (int)voice_ptr->sound, voice_ptr->fresh ? 0 : (int)voice_ptr->state,
-                             voice_ptr->position, voice_ptr->loop, voice_ptr->volume * gain * wgf_audio_priv_bus_heard(voice_ptr->bus),
+                             voice_ptr->position, voice_ptr->loop,
+                             voice_ptr->volume * gain * wgf_audio_priv_bus_heard(voice_ptr->bus),
                              voice_ptr->pitch, pan,
                              (int)voice_ptr->generation, low, high, sound_ptr != NULL && sound_ptr->streamed);
 }
@@ -381,7 +384,8 @@ void wgf_audio_priv_platform_master(float volume, bool paused)
 
 bool wgf_audio_priv_platform_pushed_start(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr)
 {
-    wgf_audio_js_pushed_start((int)voice, voice_ptr->pushed_rate, voice_ptr->pushed_channels, voice_ptr->pushed_capacity);
+    wgf_audio_js_pushed_start((int)voice, voice_ptr->pushed_rate, voice_ptr->pushed_channels,
+                              voice_ptr->pushed_capacity);
     return true;
 }
 

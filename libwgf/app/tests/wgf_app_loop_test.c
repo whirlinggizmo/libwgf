@@ -86,7 +86,8 @@ static void on_frame(void *user)
     run_t *run = user;
     run->frames++;
     run->frames_in_frame &= wgf_gfx_priv_is_in_frame();
-    if (run->frames == 5 && !run->no_readout) wgf_debug_show_fps(0, 8, 8, 16, wgf_color_make(0, 255, 0, 255)); /* drawn over the rest */
+    /* drawn over the rest */
+    if (run->frames == 5 && !run->no_readout) wgf_debug_show_fps(0, 8, 8, 16, wgf_color_make(0, 255, 0, 255));
     if (run->frames < 48) run->frame_sizes_ok &= wgf_render_get_width() == 320 && wgf_render_get_height() == 200;
     if (run->frames == 47) run->resized_ok = !wgf_window_is_resized();
     if (run->frames == 48) { /* the window made larger: resized this frame */

@@ -120,7 +120,8 @@ void wgf_ecs_priv_raise(wgf_world_event_t event, int a, int b, int c)
     int at;
     if (ecs.events == NULL) return;
     if (ecs.event_count == EVENTS_MAX) { /* the oldest dropped */
-        if (!ecs.events_dropped) wgf_log_warn("wgf_ecs: more than %d events waiting; the oldest are dropped", EVENTS_MAX);
+        if (!ecs.events_dropped)
+            wgf_log_warn("wgf_ecs: more than %d events waiting; the oldest are dropped", EVENTS_MAX);
         ecs.events_dropped = true;
         ecs.event_head = (ecs.event_head + 1) % EVENTS_MAX;
         ecs.event_count--;
@@ -449,8 +450,10 @@ static void collide(void)
             wgf_ecs_priv_raise(WGF_WORLD_EVENT_TRIGGER_ENTER, (int)found[i].b, (int)found[i].a, found[i].a_layer);
             i++;
         } else if (order > 0) {
-            wgf_ecs_priv_raise(WGF_WORLD_EVENT_TRIGGER_EXIT, (int)ecs.pairs[j].a, (int)ecs.pairs[j].b, ecs.pairs[j].b_layer);
-            wgf_ecs_priv_raise(WGF_WORLD_EVENT_TRIGGER_EXIT, (int)ecs.pairs[j].b, (int)ecs.pairs[j].a, ecs.pairs[j].a_layer);
+            wgf_ecs_priv_raise(WGF_WORLD_EVENT_TRIGGER_EXIT, (int)ecs.pairs[j].a, (int)ecs.pairs[j].b,
+                               ecs.pairs[j].b_layer);
+            wgf_ecs_priv_raise(WGF_WORLD_EVENT_TRIGGER_EXIT, (int)ecs.pairs[j].b, (int)ecs.pairs[j].a,
+                               ecs.pairs[j].a_layer);
             j++;
         } else {
             i++;
@@ -986,6 +989,7 @@ void wgf_world_clear(void)
 {
     int count = 0, i;
     wgf_actor_t *all = wgf_ecs_priv_actors(&count);
-    for (i = 0; i < count; i++) wgf_actor_destroy(all[i], WGF_ACTOR_DESTROY_CHILDREN); /* one may be gone with another */
+    /* one may be gone with another */
+    for (i = 0; i < count; i++) wgf_actor_destroy(all[i], WGF_ACTOR_DESTROY_CHILDREN);
     free(all);
 }

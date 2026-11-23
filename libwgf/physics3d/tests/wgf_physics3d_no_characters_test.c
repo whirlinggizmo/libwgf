@@ -35,7 +35,8 @@ int main(void)
     wgf_actor_set_parent(walker, stage);
     expect(wgf_actor_add_component(walker, WGF_COMPONENT_BODY3D), "a body");
     expect(!wgf_physics3d_is_characters_enabled(), "characters not linked");
-    expect(!wgf_body3d_set_type(walker, WGF_BODY3D_TYPE_CHARACTER) && wgf_body3d_get_type(walker) != WGF_BODY3D_TYPE_CHARACTER,
+    expect(!wgf_body3d_set_type(walker, WGF_BODY3D_TYPE_CHARACTER) &&
+               wgf_body3d_get_type(walker) != WGF_BODY3D_TYPE_CHARACTER,
            "the character type refused");
     expect(wgf_body3d_set_type(walker, WGF_BODY3D_TYPE_KINEMATIC), "another type still taken");
     expect(!wgf_physics3d_is_vehicles_enabled() && !wgf_actor_add_component(walker, WGF_COMPONENT_VEHICLE) &&

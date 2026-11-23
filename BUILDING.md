@@ -52,7 +52,7 @@ Every preset treats warnings as errors. A project that builds libwgf as part of 
 ```sh
 cmake --preset linux-x64-debug-headless
 cmake --build --preset linux-x64-debug-headless
-ctest --preset linux-x64-debug-headless          # unit tests, header checks, check_api, check_tools
+ctest --preset linux-x64-debug-headless          # unit tests, header checks, check_api, check_tools, check_lines
 python3 tools/stage_variant.py linux-x64-debug-headless
 ```
 
@@ -403,6 +403,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `measure_actors.py` | (in `tools/bench/`) measures what an actor costs, bytes and nanoseconds, at 10k and 50k, static and moving, flat and deep, with behaviors, with churn, and finding by name, path, and component (`tools/bench/actors/main.c`), on `linux-x64-release-headless`; `--write` records them in `docs/benchmarks.md`, `--check` fails a row past its baseline |
 | `measure_calls.py` | (in `tools/bench/`) times a call into the host from Haxe and from JS, both through the JS binding, in a browser on the release host (not a check: timing) |
 | `check_docs.py` | checks the docs against the code: every link resolves, ARCHITECTURE names every public header, this file every tool and preset, README every doc, deps/README every vendored directory (ctest runs it) |
+| `check_lines.py` | checks no line of libwgf's C and C++ is over 120 columns and none has a tab (not `deps/`, nor the generated shader headers) |
 | `check_tools.py` | checks every tool is named for what it does, imports no command, answers `--help` and does nothing else, and refuses an argument it doesn't take |
 | `stage_variant.py` | stages a built preset into `out/`, fresh |
 | `verify_builds.py` | every build and check this machine can run, in one command (the full tier with `--web --windows HOST`), or the quick tier's (`--quick`) |

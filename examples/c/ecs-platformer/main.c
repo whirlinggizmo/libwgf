@@ -89,7 +89,8 @@ static void init(void *user)
         for (c = 0; c < COLUMNS; c++) {
             cells[r * COLUMNS + c] = level[r][c] == '#';
             if (cells[r * COLUMNS + c]) {
-                block(LEFT + (float)c * CELL, TOP + (float)r * CELL, CELL - 1, CELL - 1, wgf_color_make(70, 80, 110, 255));
+                block(LEFT + (float)c * CELL, TOP + (float)r * CELL, CELL - 1, CELL - 1,
+                      wgf_color_make(70, 80, 110, 255));
             }
         }
     }
