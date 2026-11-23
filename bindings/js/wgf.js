@@ -18842,6 +18842,14 @@ export function wgf_ui_end() {
  * Its children are laid out in rows of `columns`, left to right, then top to bottom. They are
  * gapped by the style's gap both ways. Nothing else wraps a row: the grid makes them. Also
  * returns false for fewer than 1 column.
+ *
+ * - The columns line up. Each is as wide as its widest child, and each row as tall as its
+ *   tallest. A form of labels and widgets is a grid of 2 columns.
+ * - wgf_ui_set_align on the grid places each child in its cell. By default it is at the top left.
+ * - A column's width comes from the last frame's layout, so a grid's first frame, or the frame
+ *   after a child changes size, is laid out with each child at its own width.
+ * - A child sized to grow doesn't grow in a grid: it takes its smallest size.
+ * - Columns past the 8th, and grids past the 16th in a frame, don't line up.
  */
 export function wgf_ui_begin_grid(id, columns) {
     const mark = host["stackSave"]();

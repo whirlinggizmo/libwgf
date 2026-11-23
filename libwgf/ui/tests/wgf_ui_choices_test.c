@@ -92,6 +92,24 @@ static void form(void)
     expect(wgf_ui_end(), "ended");
 }
 
+/* A form: a grid of two columns, each row a name and its button. The names differ in length,
+ * and the second row's button is the taller. */
+static void rows(void)
+{
+    expect(wgf_ui_begin(), "begun");
+    expect(wgf_ui_begin_grid("rows", 2) && wgf_ui_set_align(WGF_UI_ALIGN_START, WGF_UI_ALIGN_CENTER), "a form");
+    wgf_ui_label("A", 16.0f);
+    wgf_ui_button("b0", "one");
+    wgf_ui_label("A much longer name", 16.0f);
+    wgf_ui_begin_box("tall", WGF_UI_DIRECTION_COLUMN);
+    wgf_ui_set_width(WGF_UI_SIZING_FIXED, 120.0f);
+    wgf_ui_set_height(WGF_UI_SIZING_FIXED, 90.0f);
+    wgf_ui_end_box();
+    wgf_ui_label("B", 16.0f);
+    wgf_ui_button("b2", "three");
+    expect(wgf_ui_end_grid() && wgf_ui_end(), "ended");
+}
+
 static int frame_number;
 
 static void on_init(void *user)
@@ -224,8 +242,17 @@ static void on_frame(void *user)
     case 19:
         form();
         expect(activated == 5, "a tile clicked: activated");
+        rows();
+        break;
+    case 20: rows(); break; /* laid out with the columns the first layout measured */
+    case 21: {
+        const wgf_vec4_t b0 = wgf_ui_get_bounds("b0"), tall = wgf_ui_get_bounds("tall"), b2 = wgf_ui_get_bounds("b2");
+        expect(b0.z > 0 && b0.x == tall.x && b0.x == b2.x, "a grid's columns line up: each row's second child");
+        expect(tall.y > b0.y + b0.w && b2.y > tall.y + tall.w, "its rows are below each other");
+        rows();
         wgf_app_quit();
         break;
+    }
     default: break;
     }
 }
@@ -234,6 +261,6 @@ int main(void)
 {
     wgf_window_set_size(800, 800);
     wgf_app_run(on_init, NULL, on_frame, NULL, NULL);
-    expect(frame_number >= 20, "every frame ran");
+    expect(frame_number >= 22, "every frame ran");
     return failures == 0 ? 0 : 1;
 }

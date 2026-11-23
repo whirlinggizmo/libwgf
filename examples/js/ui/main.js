@@ -20,7 +20,7 @@
 // is the same menu.
 import createWgfHost from "./wgf-host.js";
 import {
-    App, Color, Keyboard, KeyboardKey, Probe, Render, Ui, UiAlign, UiDirection, UiSizing, Window, attach,
+    App, Color, Keyboard, KeyboardKey, Probe, Render, Ui, UiAlign, UiDirection, Window, attach,
 } from "./wgf-typed.js";
 import { Presentation, PresentationMode } from "./wgf-typed.js";
 
@@ -52,43 +52,28 @@ function reset() {
     Ui.setText("name", "Ada");
 }
 
-// Begins a row: the setting's name in a column of fixed width, its widget beside it.
-// The caller adds the widget, then closes the row with Ui.endBox.
-function row(name) {
-    Ui.beginBox("", UiDirection.ROW);
-    Ui.setWidth(UiSizing.GROW, 0);
-    Ui.setGap(16);
-    Ui.setAlign(UiAlign.START, UiAlign.CENTER);
-    Ui.beginBox("", UiDirection.COLUMN);
-    Ui.setWidth(UiSizing.FIXED, 100);
-    Ui.label(name, 0);
-    Ui.endBox();
-}
-
-// The panel: a title, a row a setting, then the buttons.
+// The panel: a title, a grid of the settings, then the buttons.
 function settingsPanel() {
     Ui.beginPanel("settings");
     Ui.setAlign(UiAlign.CENTER, UiAlign.START);
     Ui.label("Settings", 32);
 
-    row("Volume");
+    // A grid of two columns: each setting's name, then its widget. The columns line up.
+    Ui.beginGrid("form", 2);
+    Ui.setAlign(UiAlign.START, UiAlign.CENTER);
+    Ui.label("Volume", 0);
     settings.volume = Ui.slider("volume", settings.volume, 0, 100);
-    Ui.endBox();
-    row("Level");
+    Ui.label("Level", 0);
     Ui.progress(settings.volume / 100); // driven by the slider
-    Ui.endBox();
-    row("Sound");
+    Ui.label("Sound", 0);
     settings.sound = Ui.toggle("sound", settings.sound ? "On" : "Off", settings.sound);
-    Ui.endBox();
-    row("Difficulty");
+    Ui.label("Difficulty", 0);
     settings.difficulty = Ui.choice("difficulty", DIFFICULTIES, settings.difficulty);
-    Ui.endBox();
-    row("Lives");
+    Ui.label("Lives", 0);
     settings.lives = Ui.number("lives", settings.lives, 1, 9, 1);
-    Ui.endBox();
-    row("Name");
+    Ui.label("Name", 0);
     Ui.textField("name", "your name", 16); // its text is the UI's, by its id
-    Ui.endBox();
+    Ui.endGrid();
 
     Ui.spacer(8);
     Ui.beginBox("buttons", UiDirection.ROW);

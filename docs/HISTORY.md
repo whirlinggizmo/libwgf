@@ -1040,6 +1040,15 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## A grid's columns line up (2026-11-23)
+
+`wgf_ui_begin_grid` only wrapped its children into rows, so a form of names and widgets came out ragged, and the UI example built its rows by hand. From the examples' friction list.
+
+- **Each column is as wide as its widest child, and each row as tall as its tallest.** `wgf_ui_set_align` on the grid places each child in its cell.
+- **How:** the UI is laid out in one pass, so a column's width can't be known as its first child is given. Each child goes in a cell that hugs it, the layout says how wide each came out, and the next frame's cells are fixed at their column's widest. A grid's first frame is laid out unaligned.
+- **Limits, said in the header:** a child sized to grow takes its smallest size in a grid, and columns past the 8th or grids past the 16th in a frame don't line up.
+- **The UI example's form is now a grid of two columns**, in Haxe and JS, 15 lines shorter in each.
+
 ## A group's doc is written once in the bindings (2026-11-23)
 
 One header comment often documents a group of calls, and the bindings copied it onto every one: `Model.hx` carried a 60-line block on each animation call. Now the group's first call keeps the whole doc. Each other call gets its first paragraph and "See `Model.getAnimationCount` for the rest.", so a hover still says what the call does. The generated Haxe, `.js`, and `.d.ts` files are 20,000 lines shorter. The API site already linked these, and is unchanged. From the examples' friction list.

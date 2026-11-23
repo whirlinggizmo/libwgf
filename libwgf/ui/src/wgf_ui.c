@@ -76,6 +76,17 @@ typedef struct focusable_t {
     int arrows;
 } focusable_t;
 
+/* A grid's columns, kept from one frame's layout for the next frame's cells. */
+enum { GRIDS_MAX = 16, GRID_COLUMNS_MAX = 8 };
+typedef struct grid_t {
+    uint32_t id;      /* the grid's element */
+    int columns;
+    int count;        /* its children this frame */
+    bool seen;        /* begun this frame */
+    bool measured;    /* widths holds the last layout's */
+    float widths[GRID_COLUMNS_MAX]; /* each column's widest child */
+} grid_t;
+
 typedef struct level_t level_t;
 struct level_t {
     int kind;
@@ -85,6 +96,9 @@ struct level_t {
     void (*before_child)(level_t *level); /* a grid's: the row its next child goes in */
     int columns, count;                   /* a grid's columns, and its children so far */
     bool row_open;                        /* a grid's row is open in Clay */
+    bool cell_open;                       /* a grid's cell is open in Clay: two elements */
+    uint32_t grid_id;                     /* a grid's own element, which its cells' ids are made from */
+    int grid;                             /* a grid's record among ui.grids, -1 when it has none */
     void (*close)(level_t *level);        /* a scroll area's or a modal's own close */
     Clay_ElementId window, bars[2];       /* a scroll area's window, and its bars across and down */
     int first_focusable;                  /* a scroll area's: the frame's first widget in it */
@@ -111,6 +125,8 @@ static struct {
     bool captured; /* the UI set the captures, to let go of */
     level_t levels[DEPTH_MAX];
     int depth;
+    grid_t grids[GRIDS_MAX];
+    void (*measure_grids)(void); /* set by the first grid, so only a program with a grid links it */
     text_block_t *blocks, *block;
 
     /* this frame's answers, from the input as the UI began */
@@ -616,15 +632,16 @@ static bool child(const char *what)
     return true;
 }
 
-/* A level's close in Clay: a grid's open row first; a scroll area's its own. */
+static void grid_close(level_t *grid, bool row);
+
+/* A level's close in Clay: a grid's open cell and row first; a scroll area's its own. */
 static void close_element(level_t *level)
 {
     if (level->close != NULL) {
         level->close(level);
         return;
     }
-    if (level->row_open) Clay__CloseElement();
-    level->row_open = false;
+    if (level->kind == KIND_GRID) grid_close(level, true);
     Clay__CloseElement();
 }
 
@@ -719,14 +736,37 @@ bool wgf_ui_end_box(void)
     return close_level(KIND_BOX);
 }
 
-/* A grid's next child: a row of `columns` begun when the last is full. */
-static void grid_row(level_t *grid)
+/* The element that hugs a grid's child `index`, whose size after the layout is the child's own. */
+static Clay_ElementId grid_cell_id(uint32_t grid_id, int index)
 {
-    Clay_ElementDeclaration row;
-    if (grid->row_open && grid->count % grid->columns == 0) {
+    static const Clay_String name = {.isStaticallyAllocated = true, .length = 4, .chars = "cell"};
+    return Clay__HashStringWithOffset(name, (uint32_t)index, grid_id);
+}
+
+/* A grid's open cell and, with `row`, its open row, closed in Clay. */
+static void grid_close(level_t *grid, bool row)
+{
+    if (grid->cell_open) {
+        Clay__CloseElement();
+        Clay__CloseElement();
+        grid->cell_open = false;
+    }
+    if (row && grid->row_open) {
         Clay__CloseElement();
         grid->row_open = false;
     }
+}
+
+/* A grid's next child: a row of `columns` begun when the last is full, and a cell in it.
+ *
+ * A cell is two elements. The outer one is as wide as its column was in the last layout, and
+ * as tall as its row, and places the child by the grid's alignment. The inner one hugs the
+ * child, so the layout says how wide the child is by itself (grids_measure). */
+static void grid_cell(level_t *grid)
+{
+    Clay_ElementDeclaration row, cell;
+    const int column = grid->count % grid->columns;
+    grid_close(grid, column == 0);
     if (!grid->row_open) {
         memset(&row, 0, sizeof(row));
         row.layout.layoutDirection = CLAY_LEFT_TO_RIGHT;
@@ -735,7 +775,65 @@ static void grid_row(level_t *grid)
         Clay__ConfigureOpenElement(row);
         grid->row_open = true;
     }
+    memset(&cell, 0, sizeof(cell));
+    cell.layout.childAlignment = grid->declaration.layout.childAlignment;
+    cell.layout.sizing.height.type = CLAY__SIZING_TYPE_GROW;
+    if (grid->grid >= 0 && ui.grids[grid->grid].measured && column < GRID_COLUMNS_MAX) {
+        const float width = ui.grids[grid->grid].widths[column];
+        cell.layout.sizing.width.type = CLAY__SIZING_TYPE_FIXED;
+        cell.layout.sizing.width.size.minMax.min = cell.layout.sizing.width.size.minMax.max = width;
+    }
+    Clay__OpenElement();
+    Clay__ConfigureOpenElement(cell);
+    memset(&cell, 0, sizeof(cell));
+    Clay__OpenElementWithId(grid_cell_id(grid->grid_id, grid->count));
+    Clay__ConfigureOpenElement(cell);
+    grid->cell_open = true;
     grid->count++;
+    if (grid->grid >= 0) ui.grids[grid->grid].count = grid->count;
+}
+
+/* The record of the grid whose element is `id`: last frame's, or a new one. -1 when the
+ * frame has more grids than GRIDS_MAX, whose columns then don't line up. */
+static int grid_record(uint32_t id, int columns)
+{
+    int i, free_at = -1;
+    for (i = 0; i < GRIDS_MAX; i++) {
+        if (ui.grids[i].id == id && ui.grids[i].columns == columns && (ui.grids[i].seen || ui.grids[i].measured)) {
+            ui.grids[i].seen = true;
+            return i;
+        }
+        if (free_at < 0 && !ui.grids[i].seen && !ui.grids[i].measured) free_at = i;
+    }
+    if (free_at < 0) return -1;
+    memset(&ui.grids[free_at], 0, sizeof(ui.grids[free_at]));
+    ui.grids[free_at].id = id;
+    ui.grids[free_at].columns = columns;
+    ui.grids[free_at].seen = true;
+    return free_at;
+}
+
+/* After the layout: each of the frame's grids' columns measured, the widest child of each,
+ * for the next frame's cells. A grid not in this frame is forgotten. */
+static void grids_measure(void)
+{
+    int i, child, column;
+    for (i = 0; i < GRIDS_MAX; i++) {
+        grid_t *grid = &ui.grids[i];
+        if (!grid->seen) {
+            grid->measured = false;
+            continue;
+        }
+        for (column = 0; column < GRID_COLUMNS_MAX; column++) grid->widths[column] = 0.0f;
+        for (child = 0; child < grid->count; child++) {
+            const Clay_ElementData data = Clay_GetElementData(grid_cell_id(grid->id, child));
+            column = child % grid->columns;
+            if (data.found && column < GRID_COLUMNS_MAX && data.boundingBox.width > grid->widths[column])
+                grid->widths[column] = data.boundingBox.width;
+        }
+        grid->measured = true;
+        grid->seen = false;
+    }
 }
 
 bool wgf_ui_begin_grid(const char *id, int columns)
@@ -745,7 +843,10 @@ bool wgf_ui_begin_grid(const char *id, int columns)
     grid = &ui.levels[ui.depth - 1];
     grid->declaration.layout.childGap = pixels(ui.values[WGF_UI_VALUE_GAP]);
     grid->columns = columns;
-    grid->before_child = grid_row;
+    grid->grid_id = Clay_GetOpenElementId();
+    grid->grid = grid_record(grid->grid_id, columns);
+    grid->before_child = grid_cell;
+    ui.measure_grids = grids_measure;
     return true;
 }
 
@@ -3112,6 +3213,7 @@ bool wgf_ui_end(void)
     ui.begun = false;
     ui.ended = true;
     commands = Clay_EndLayout((float)wgf_platform_priv_get_frame_duration());
+    if (ui.measure_grids != NULL) ui.measure_grids();
     if (ui.fade < 1.0f) draw(commands);
     if (popup_hooks != NULL) popup_hooks->end(&ui.popups, ui.clock);
     navigate();

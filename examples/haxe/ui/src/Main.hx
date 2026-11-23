@@ -76,30 +76,28 @@ class Main {
 		Probe.setValue("ui.modal", confirming ? 1 : 0);
 	}
 
-	// The panel: a title, a row a setting, then the buttons.
+	// The panel: a title, a grid of the settings, then the buttons.
 	static function settings() {
 		Ui.beginPanel("settings");
 		Ui.setAlign(UiAlign.CENTER, UiAlign.START);
 		Ui.label("Settings", 32);
 
-		row("Volume");
+		// A grid of two columns: each setting's name, then its widget. The columns line up.
+		Ui.beginGrid("form", 2);
+		Ui.setAlign(UiAlign.START, UiAlign.CENTER);
+		Ui.label("Volume", 0);
 		volume = Ui.slider("volume", volume, 0, 100);
-		Ui.endBox();
-		row("Level");
+		Ui.label("Level", 0);
 		Ui.progress(volume / 100); // driven by the slider
-		Ui.endBox();
-		row("Sound");
+		Ui.label("Sound", 0);
 		sound = Ui.toggle("sound", sound ? "On" : "Off", sound);
-		Ui.endBox();
-		row("Difficulty");
+		Ui.label("Difficulty", 0);
 		difficulty = Ui.choice("difficulty", DIFFICULTIES, difficulty);
-		Ui.endBox();
-		row("Lives");
+		Ui.label("Lives", 0);
 		lives = Std.int(Ui.number("lives", lives, 1, 9, 1)); // a number is a Float
-		Ui.endBox();
-		row("Name");
+		Ui.label("Name", 0);
 		Ui.textField("name", "your name", 16); // its text is the UI's, by its id
-		Ui.endBox();
+		Ui.endGrid();
 
 		Ui.spacer(8);
 		Ui.beginBox("buttons", UiDirection.ROW);
@@ -116,19 +114,6 @@ class Main {
 		Ui.label('volume ${Math.round(volume)}   sound ${sound ? "on" : "off"}   '
 			+ '${difficultyNames[difficulty]}   lives $lives   name "${Ui.getText("name")}"   '
 			+ 'applied $clicks   focus: ${focus == "" ? "none" : focus}', 14);
-	}
-
-	// Begins a row: the setting's name in a column of fixed width, its widget beside it.
-	// The caller adds the widget, then closes the row with Ui.endBox.
-	static function row(name:String) {
-		Ui.beginBox("", UiDirection.ROW);
-		Ui.setWidth(UiSizing.GROW, 0);
-		Ui.setGap(16);
-		Ui.setAlign(UiAlign.START, UiAlign.CENTER);
-		Ui.beginBox("", UiDirection.COLUMN);
-		Ui.setWidth(UiSizing.FIXED, 100);
-		Ui.label(name, 0);
-		Ui.endBox();
 	}
 
 	// A modal: drawn over the dimmed screen, and the only thing that answers while it is given.

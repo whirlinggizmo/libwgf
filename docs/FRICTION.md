@@ -911,7 +911,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** The example builds each row itself: a row box, with the label in a fixed-width column box.
 - **Cost:** A settings form is the first UI most games build.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** fine: HISTORY.md, "A grid's columns line up".
 
 ### examples: the text field doesn't take and return its value
 
