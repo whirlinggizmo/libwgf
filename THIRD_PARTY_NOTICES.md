@@ -59,6 +59,7 @@ freely, subject to the following restrictions:
 
 - **Jolt Physics** (`deps/jolt/`): Copyright 2021 Jorrit Rouwe; in a program that makes a
   physics body (physics3d), and in the web host that has every call
+- **Box2D** (`deps/box2d/`): Copyright (c) 2022 Erin Catto; in no program yet (physics2d, to come)
 - **RmlUi** (`deps/rmlui/`): Copyright (c) 2008-2014 CodePoint Ltd, Shift Technology Ltd,
   and contributors; Copyright (c) 2019-2026 The RmlUi Team, and contributors; in a program
   that makes a document (wgf_document_create), and in the web host that has every call

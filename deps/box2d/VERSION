@@ -1,0 +1,6 @@
+# Vendored from Erin Catto's Box2D (MIT, LICENSE in this directory): its src/ (the .c, .h, and
+# .inl files; not its CMakeLists.txt, box2d.natvis, or box2d.pc.in) and include/box2d/, at the
+# release tag, unchanged. For libwgf's physics2d module (docs/ROADMAP.md, "Parity: 2D physics on
+# Box2D"); nothing compiles it yet. helix-box2d vendors the same release.
+box2d https://github.com/erincatto/box2d.git v3.2.0
+archive https://github.com/erincatto/box2d/archive/refs/tags/v3.2.0.tar.gz sha256 ffec747b27a2267016f8d0240d658c82d187fb2271fa0f69fcbe53fbc067180d
