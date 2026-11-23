@@ -50,21 +50,21 @@ Each libwgf example beside the nearest program of libwgt and of wgrender-c, the 
 
 ## The feature cost ladder
 
-Programs that each add one thing to the one before (`examples/sizes/`): what each feature costs on its own is its row's increment, gzip, wasm and JS together; brotli in brackets. Rows to come say what brings them.
+Programs that each add one thing to the one before (`examples/sizes/`): what each feature costs on its own is its row's increment, wasm and JS together, in gzip and in brotli. Rows to come say what brings them.
 
-| program | adds | total | increment |
-|---|---|---:|---:|
-| app-skeleton | skeleton: a window cleared each frame | 77.6 (65.0) |  |
-| ladder-1-text | + text | 98.1 (82.7) | +20.5 |
-| ladder-2-textures | + textures | 112.9 (94.9) | +14.8 |
-| ladder-3-sprites | + 2D sprites | 119.1 (99.6) | +6.3 |
-| ladder-4-ecs | + ecs | 140.8 (117.3) | +21.7 |
-| ladder-5-ui | + ui | 162.7 (135.1) | +21.9 |
-| ladder-6-model | + 3D model | 238.0 (193.7) | +75.3 |
-| ladder-7-physics3d | + physics3d | 444.8 (347.5) | +206.8 |
-| ladder-8-shadows | + lights and shadows | 449.7 (351.5) | +4.9 |
-| ladder-9-environment | + environment | 466.5 (364.1) | +16.8 |
-| - | + skinning (milestone 2) | - | - |
+| program | adds | total.gz | total.br | increment.gz | increment.br |
+|---|---|---:|---:|---:|---:|
+| app-skeleton | skeleton: a window cleared each frame | 77.6 | 65.0 |  |  |
+| ladder-1-text | + text | 98.1 | 82.7 | +20.5 | +17.7 |
+| ladder-2-textures | + textures | 112.9 | 94.9 | +14.8 | +12.2 |
+| ladder-3-sprites | + 2D sprites | 119.1 | 99.6 | +6.3 | +4.7 |
+| ladder-4-ecs | + ecs | 140.8 | 117.3 | +21.7 | +17.6 |
+| ladder-5-ui | + ui | 162.7 | 135.1 | +21.9 | +17.8 |
+| ladder-6-model | + 3D model | 238.0 | 193.7 | +75.3 | +58.6 |
+| ladder-7-physics3d | + physics3d | 444.8 | 347.5 | +206.8 | +153.9 |
+| ladder-8-shadows | + lights and shadows | 449.7 | 351.5 | +4.9 | +4.0 |
+| ladder-9-environment | + environment | 466.5 | 364.1 | +16.8 | +12.5 |
+| - | + skinning (milestone 2) | - | - | - | - |
 
 ## Games
 

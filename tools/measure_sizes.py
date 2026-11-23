@@ -327,19 +327,20 @@ def markdown(baseline):
             lines.append(f'- <a id="note-{ours}"></a>**{ours}**: {note} ([its header](../examples/c/{ours}/main.c)).')
     lines += ['', '## The feature cost ladder', '',
               'Programs that each add one thing to the one before (`examples/sizes/`): what each feature costs on its own '
-              'is its row\'s increment, gzip, wasm and JS together; brotli in brackets. Rows to come say what brings them.',
-              '', '| program | adds | total | increment |', '|---|---|---:|---:|']
-    before = None
+              'is its row\'s increment, wasm and JS together, in gzip and in brotli. Rows to come say what brings them.',
+              '', '| program | adds | total.gz | total.br | increment.gz | increment.br |', '|---|---|---:|---:|---:|---:|']
+    before = before_br = None
     for name, adds in LADDER:
         sizes = lib.get(name) if name else None
         if sizes is None:
-            lines.append(f'| {name or "-"} | {adds} | - | - |')
+            lines.append(f'| {name or "-"} | {adds} | - | - | - | - |')
             continue
         now = total(sizes)
-        inc = '' if before is None else f'+{kb(now - before)}'
         br = total(sizes, 'br')
-        lines.append(f'| {name} | {adds} | {kb(now)}' + (f' ({kb(br)})' if br is not None else '') + f' | {inc} |')
-        before = now
+        inc = '' if before is None else f'+{kb(now - before)}'
+        inc_br = '' if before_br is None or br is None else f'+{kb(br - before_br)}'
+        lines.append(f'| {name} | {adds} | {kb(now)} | {kb(br) if br is not None else ""} | {inc} | {inc_br} |')
+        before, before_br = now, br
     games = sorted(n for n in lib if n.startswith('game:'))
     if games:
         lines += ['', '## Games', '', 'Each game\'s web export: its host trimmed to the calls it makes, and its program '
