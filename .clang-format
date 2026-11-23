@@ -1,0 +1,34 @@
+# libwgf's C and C++ layout (docs/CONVENTIONS.md, "Code"), tuned to the code as it is.
+# Format the lines you change, not whole files: see BUILDING.md, "Formatting".
+BasedOnStyle: LLVM
+IndentWidth: 4
+ContinuationIndentWidth: 4
+ColumnLimit: 120
+UseTab: Never
+PointerAlignment: Right
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: true
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortLoopsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: None
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Never
+AllowShortEnumsOnASingleLine: true
+IndentCaseLabels: false
+SortIncludes: Never
+ReflowComments: Never
+AlignTrailingComments:
+  Kind: Leave
+AlignEscapedNewlines: Right
+AlignAfterOpenBracket: Align
+AlignOperands: Align
+BreakBeforeBinaryOperators: None
+BinPackArguments: true
+BinPackParameters: BinPack
+SpaceAfterCStyleCast: false
+IndentExternBlock: NoIndent
+PenaltyReturnTypeOnItsOwnLine: 1000
+KeepEmptyLines:
+  AtStartOfBlock: true
+MaxEmptyLinesToKeep: 2

@@ -354,6 +354,14 @@ python3 tools/run_remote_windows.py HOST --msvc --then "tools/run_smoke.py --var
 
 It copies the working tree, committed or not, builds and tests there, runs what `--then` names, and deletes its copy afterwards (`--keep` leaves it).
 
+## Formatting
+
+`.clang-format` holds libwgf's C and C++ layout, tuned to the code as it is. It is optional: nothing requires clang-format, and the tests check only line length and tabs (`tools/check_lines.py`).
+
+- **Format the lines you change, not whole files.** `git clang-format` formats what you have staged. In an editor, use "format selection" or "format modified lines", not format on save. Formatting a whole file re-lays about 2% of its lines, mostly hand-packed tables.
+- **`.clang-format-ignore`** lists what clang-format must not touch: `deps/`, generated headers, and every file with JavaScript in `EM_JS` or `EM_ASM`. clang-format reads that JavaScript as C and breaks it (`===` becomes `== =`). `tools/check_lines.py` fails if such a file is missing from the list.
+- It was tuned with clang-format 23. An older one may not know every option.
+
 ## Before calling a change done
 
 ```sh
@@ -403,7 +411,7 @@ Every tool answers `--help` with what it does; `tools/check_tools.py` checks tha
 | `measure_actors.py` | (in `tools/bench/`) measures what an actor costs, bytes and nanoseconds, at 10k and 50k, static and moving, flat and deep, with behaviors, with churn, and finding by name, path, and component (`tools/bench/actors/main.c`), on `linux-x64-release-headless`; `--write` records them in `docs/benchmarks.md`, `--check` fails a row past its baseline |
 | `measure_calls.py` | (in `tools/bench/`) times a call into the host from Haxe and from JS, both through the JS binding, in a browser on the release host (not a check: timing) |
 | `check_docs.py` | checks the docs against the code: every link resolves, ARCHITECTURE names every public header, this file every tool and preset, README every doc, deps/README every vendored directory (ctest runs it) |
-| `check_lines.py` | checks no line of libwgf's C and C++ is over 120 columns and none has a tab (not `deps/`, nor the generated shader headers) |
+| `check_lines.py` | checks no line of libwgf's C and C++ is over 120 columns and none has a tab (not `deps/`, nor the generated shader headers), and that every file embedding JavaScript is in `.clang-format-ignore` |
 | `check_tools.py` | checks every tool is named for what it does, imports no command, answers `--help` and does nothing else, and refuses an argument it doesn't take |
 | `stage_variant.py` | stages a built preset into `out/`, fresh |
 | `verify_builds.py` | every build and check this machine can run, in one command (the full tier with `--web --windows HOST`), or the quick tier's (`--quick`) |

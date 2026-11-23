@@ -1,0 +1,27 @@
+# Third-party code, kept as it comes.
+deps/**
+# Generated: sokol-shdc's shader headers, and a table of numbers.
+**/*.glsl.h
+libwgf/gfx/src/data/wgf_gfx_brdf_lut.h
+# Files with JavaScript in EM_JS or EM_ASM: clang-format reads it as C and breaks it
+# (=== becomes == =). tools/check_lines.py checks every such file is listed here.
+libwgf/app/src/wgf_app_autopilot_web.c
+libwgf/app/src/wgf_app_options.c
+libwgf/asset/src/wgf_asset_web.c
+libwgf/audio/src/wgf_audio_sound_web.c
+libwgf/audio/src/wgf_audio_voice_web.c
+libwgf/audio/tests/wgf_audio_autoplay_web_test.c
+libwgf/audio/tests/wgf_audio_markers_web_test.c
+libwgf/audio/tests/wgf_audio_sound_web_test.c
+libwgf/core/src/wgf_core_fs_web.c
+libwgf/gfx/src/texture/wgf_gfx_decode_web.c
+libwgf/gfx/src/text/wgf_gfx_glyph_web.c
+libwgf/gfx/tests/wgf_gfx_context_web_test.c
+libwgf/platform/src/wgf_platform_gamepad_web.c
+libwgf/platform/src/wgf_platform_system_web.c
+libwgf/platform/src/wgf_platform_tilt_web.c
+libwgf/platform/tests/wgf_platform_device_web_test.c
+libwgf/platform/tests/wgf_platform_fullscreen_web_test.c
+libwgf/platform/tests/wgf_platform_tilt_web_test.c
+tools/bench/shadowbench/main.c
+tools/bench/spritebench/main.c

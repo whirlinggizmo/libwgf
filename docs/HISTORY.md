@@ -1040,6 +1040,14 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## A `.clang-format`, tuned to the code (2026-11-22)
+
+Rob asked whether the line-length work had added one. It hadn't: no formatter was installed. This adds one, with his go-ahead.
+
+- **Tuned, not chosen.** clang-format 23 was installed outside the repository, and its options were set by measuring how many lines each choice would change across the tree. A first guess changed 6.7% of lines. The one committed changes 2.2% (2,754 lines in 213 files), mostly hand-packed tables. The big steps were short blocks and short functions kept broken, case labels not indented, and operands aligned.
+- **Not applied.** The tree isn't reformatted, so the advice is to format the lines you change (`git clang-format`, or an editor's format-selection), not whole files.
+- **A trap found on the way.** clang-format reads the JavaScript inside `EM_JS` as C and breaks it: `===` becomes `== =`. `.clang-format-ignore` lists those 20 files, with `deps/` and the generated headers, and `tools/check_lines.py` fails if a file with embedded JavaScript isn't listed.
+
 ## Bodies meet as colliders do: either one's mask (2026-11-22)
 
 The comment rewrite showed that layers and masks worked two ways. Two colliders met when either one's mask had the other's layer. Two physics bodies met only when each had the other's, because physics3d used Jolt's stock mask filter. Rob: make them consistent, on "either", as Godot does.
