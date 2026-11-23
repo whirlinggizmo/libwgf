@@ -1,5 +1,5 @@
-"""The JS binding's text, from the binding's model of the headers (tools/gen_binding.py's
-Binding), and its trimming for a release export. Standard library only.
+"""The JS binding's text, from the binding's model of the headers (tools/mapping.py's
+Binding, which tools/gen_binding.py passes it), and its trimming for a release export. Standard library only.
 
 wgf.js is one ES module: the version it was made from, the runtime and the run written
 by hand (bindings/js/src/runtime.js and app.js, put in whole), the enums, and every call

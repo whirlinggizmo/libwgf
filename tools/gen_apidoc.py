@@ -6,7 +6,7 @@ comments, each call beside its names in the bindings.
 
 The headers are read as every tool reads them (tools/headers.py: clang's parse, never their
 text), and each exported call is placed in the bindings as the generator places it
-(tools/gen_binding.py's Binding: its Haxe and typed JS type and member; the raw JS call is the
+(tools/mapping.py's Binding, which tools/gen_binding.py writes them by: its Haxe and typed JS type and member; the raw JS call is the
 C name). A page a header, grouped by layer: the header's overview (its comments no
 declaration owns), its enums with their values, its structs with their fields, and its calls
 in header order, each its C signature, its names in the bindings (or that it is C's alone: a
@@ -24,8 +24,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # an embedded Python (Windows) doesn't add it
-import gen_binding  # noqa: E402
 import headers  # noqa: E402
+import mapping  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = 'https://github.com/whirlinggizmo/libwgf'
@@ -169,7 +169,7 @@ def main():
     if api is None:
         print('gen_apidoc: no clang (Emscripten brings one); nothing written', file=sys.stderr)
         return 1
-    binding = gen_binding.Binding(api)
+    binding = mapping.Binding(api)
     docs = binding.docs()
     out = args.out.resolve()
     if out.exists():
@@ -222,14 +222,14 @@ def main():
                 owner = {}  # a doc's text -> the call above that has it as its own
                 for f in d['functions']:
                     names, bound = '', ''
-                    if f.exported and f.name not in gen_binding.SKIPPED:
+                    if f.exported and f.name not in mapping.SKIPPED:
                         try:
                             haxe, member, instance = binding.place(f)
                             bound = f'{haxe}.{member}'
                             how = 'a method of' if instance else 'a static of'
                             names = (f'<p class="names">Haxe and typed JS: <code>{html.escape(bound)}</code> ({how} '
                                      f'<code>{html.escape(haxe)}</code>); raw JS: <code>wgf.{html.escape(f.name)}</code></p>')
-                        except gen_binding.MapError:
+                        except mapping.MapError:
                             names = '<p class="names">not in the bindings</p>'
                     elif f.exported:
                         names = '<p class="names">not in the bindings (reached by their runtime by hand)</p>'

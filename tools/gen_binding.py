@@ -16,7 +16,8 @@ bindings/haxe/src/wgf/:
                      the other calls as statics of their header's class
 bindings/js/wgf.js and wgf.d.ts, the JS binding (tools/jsbinding.py), and
 hosts/web/exports.json, the full host's exports. One name per C call: every exported
-call is exactly one member of the typed API, or listed in SKIPPED with its reason
+call is exactly one member of the typed API, or listed in SKIPPED (tools/mapping.py, the model the
+generator writes from) with its reason
 (docs/BINDINGS.md). Every generated file says so at its top; --check writes nothing and
 fails when one is stale or missing. A call it can't map stops it, named. Standard library
 only.
@@ -31,31 +32,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))  # an embedded Python (
 import binding as places  # noqa: E402
 import headers  # noqa: E402
 import jsbinding  # noqa: E402
+from mapping import (MEMBER_NAMES, SKIPPED, TYPE_NAMES, VECTORS, Binding, MapError, camel,  # noqa: E402,F401
+                     pascal, spelled)
 
 ROOT = places.ROOT
 OUT = places.SOURCE
 EXPORTS = places.EXPORTS
 MARK = places.MARK
 
-# Exported calls the typed API doesn't make one member of, and why. The runtime's own
-# (hand-written in bindings/haxe/src/wgf/) still reach C exactly once.
-SKIPPED = {
-    'wgf_app_run': 'the runtime: wgf.App.run installs its trampolines once (callbacks are C function pointers)',
-}
-
 # The JS binding's calls into the host besides the API's: kept by every host.
 HOST_EXTRA = jsbinding.LIBRARY
 
-VECTORS = {'wgf_vec2_t': ('Vec2', 2), 'wgf_vec3_t': ('Vec3', 3), 'wgf_vec4_t': ('Vec4', 4)}
-
-# A section whose Haxe type can't be its own name, and why. `Behavior` is the runtime's
-# base class for a game's behaviors (bindings/haxe/src/wgf/Behavior.hx, SPEC's name);
-# wgf_behavior_*'s calls, on an entity's behavior component, are BehaviorComponent's.
-TYPE_NAMES = {'behavior': 'BehaviorComponent'}
-# A call whose member takes another name than its C name gives, with why.
-MEMBER_NAMES = {
-    'wgf_scene_find_prefab': 'prefab',  # scene.prefab("bullet"), then bullet.spawnAt(...): read as what it gives
-}
 # Members written here rather than generated, a typed type's sugar over its calls: the
 # same in Haxe (HAXE_EXTRAS) and in the typed JS layer (jsbinding's, from JS_EXTRAS).
 SPAWN_PREFAB_DOC = (
@@ -80,206 +67,6 @@ JS_EXTRAS = {
               '(scene: raw.wgf_scene_t | 0, name: string | null, parent: raw.wgf_actor_t | 0, x?: number, y?: number, '
               'z?: number, angle?: number) => raw.wgf_actor_t'),
 }
-
-
-def spelled(ctype):
-    """A type as one spelling on every machine: clang spells C's boolean `_Bool` or, newer
-    and on some systems, `bool` (Windows' runner's), the same type."""
-    return '_Bool' if ctype == 'bool' else ctype
-
-
-def pascal(snake):
-    return ''.join(part[:1].upper() + part[1:] for part in snake.split('_') if part)
-
-
-def camel(snake):
-    name = pascal(snake)
-    return name[:1].lower() + name[1:]
-
-
-class MapError(RuntimeError):
-    pass
-
-
-class Binding:
-    """What the headers say, sorted into the binding's types."""
-
-    def __init__(self, api):
-        self.api = api
-        self.kinds = {}  # handle typedef -> Haxe type
-        for name, (target, header) in api.typedefs.items():
-            if name == 'wgf_handle_t' or target == 'wgf_handle_t':
-                self.kinds[name] = pascal(name[len('wgf_'):-len('_t')])
-        self.enums = {name: pascal(name[len('wgf_'):-len('_t')]) for name in api.enums}
-        self.ints = {name for name, (target, _) in api.typedefs.items()
-                     if name not in self.kinds and target in ('uint32_t', 'int32_t', 'int', 'unsigned int')}
-        self.functions = [f for f in api.functions.values() if f.exported]
-
-    # ---- types ---------------------------------------------------------------------
-
-    def scalar(self, ctype):
-        """A parameter or result type that crosses as one value: its Haxe type, its C cast
-        (for hxcpp), and how JS passes it ('int', 'float', 'bool')."""
-        ctype = spelled(ctype.replace('const ', '').strip() if not ctype.endswith('*') else ctype)
-        if ctype in self.kinds:
-            return self.kinds[ctype], ctype, 'int'
-        if ctype in self.enums:
-            return self.enums[ctype], ctype, 'int'
-        if ctype in self.ints or ctype in ('int', 'unsigned int', 'uint32_t', 'int32_t'):
-            return 'Int', ctype, 'int'
-        if ctype in ('float', 'double'):
-            return 'Float', ctype, 'float'
-        if ctype == '_Bool':
-            return 'Bool', 'bool', 'bool'
-        return None
-
-    def element(self, ctype):
-        """An array's element: 'float', 'int', or a handle kind's Haxe type; None if not one."""
-        base = ctype.replace('const ', '').replace('*', '').strip()
-        if base == 'float':
-            return 'float'
-        if base == 'int':
-            return 'int'
-        if base in self.kinds:
-            return self.kinds[base]
-        return None
-
-    def params_of(self, f):
-        """The call's parameters as the binding takes them: (kind, name, ctype, extra) for
-        each, a pointer and its count folded into one array, a data span into Bytes."""
-        out, params, i = [], f.params, 0
-        while i < len(params):
-            p = params[i]
-            nxt = params[i + 1] if i + 1 < len(params) else None
-            if p.type == 'const unsigned char *' and nxt is not None and nxt.type == 'int' and nxt.name == 'size':
-                out.append(('bytes', p.name, p.type, None))
-                i += 2
-                continue
-            if p.type.endswith('*') and p.type != 'const char *':
-                element = self.element(p.type)
-                if element is None or nxt is None or nxt.type != 'int' or not (
-                        nxt.name == 'count' or nxt.name.endswith('_count')):
-                    raise MapError(f'{f.name}: parameter {p.name} ({p.type}) is neither text, a byte span, '
-                                   f'nor an array of numbers or handles with its count')
-                out.append(('array_in' if p.type.startswith('const ') else 'array_out', p.name, p.type, element))
-                i += 2
-                continue
-            if p.type == 'const char *':
-                out.append(('string', p.name, p.type, None))
-            else:
-                s = self.scalar(p.type)
-                if s is None:
-                    raise MapError(f'{f.name}: parameter {p.name} has a type the binding can\'t pass: {p.type}')
-                out.append(('scalar', p.name, p.type, s))
-            i += 1
-        return out
-
-    def result_of(self, f):
-        """('void'|'string'|'bytes'|'vector'|'scalar', detail)."""
-        r = f.returns
-        if r == 'void':
-            return 'void', None
-        if r == 'const char *':
-            return 'string', None
-        if r == 'const unsigned char *':
-            if not f.name.endswith('_get_data') or f.name[:-len('data')] + 'size' not in self.api.functions:
-                raise MapError(f'{f.name}: a byte span out needs a _get_data beside a _get_size')
-            return 'bytes', f.name[:-len('data')] + 'size'
-        if r in VECTORS:
-            return 'vector', VECTORS[r]
-        s = self.scalar(r)
-        if s is None:
-            raise MapError(f'{f.name}: returns a type the binding can\'t carry: {r}')
-        return 'scalar', s
-
-    # ---- where each call goes ------------------------------------------------------
-
-    def section_of(self, f):
-        """The header's section: wgf_actor.h -> 'node'; wgf.h -> 'version'."""
-        stem = Path(f.header).stem
-        return 'version' if stem == 'wgf' else stem[len('wgf_'):]
-
-    def place(self, f):
-        """(Haxe type, member name, instance?) for a call. A call named for a handle kind
-        goes on that kind's abstract, a method when it takes that kind first, unless its
-        header's section is longer than the kind's name and the call is named for it (the
-        tilemap_layer section's, on a placed map's actors); any other on its section's type,
-        a method when its section is over a kind it takes first."""
-        first = f.params[0].type if f.params else None
-        for ctype, haxe in sorted(self.kinds.items(), key=lambda kv: -len(kv[0])):
-            stem = ctype[len('wgf_'):-len('_t')]
-            if f.name.startswith(f'wgf_{stem}_'):
-                if stem == 'handle' and self.section_of(f) != 'handle':
-                    continue  # wgf_handle_* is the handle section's own, nothing else's
-                section = self.section_of(f)
-                if section.startswith(f'{stem}_') and f.name.startswith(f'wgf_{section}_'):
-                    break  # a section named longer than the kind (wgf_tilemap_layer_*): its own type
-                return haxe, MEMBER_NAMES.get(f.name, camel(f.name[len(f'wgf_{stem}_'):])), first == ctype
-        section = self.section_of(f)
-        prefix = f'wgf_{section}_'
-        if not f.name.startswith(prefix):
-            raise MapError(f'{f.name}: not named for its header\'s section ({section}) or a handle kind')
-        return TYPE_NAMES.get(section, pascal(section)), MEMBER_NAMES.get(f.name, camel(f.name[len(prefix):])), False
-
-    def over(self):
-        """The sections that are over a handle kind: Haxe type -> the kind's Haxe type. A
-        section is over a kind when every call of it takes that kind first or makes one (a
-        shape's create), and isn't the kind's own; any handle (wgf_handle_t) has none."""
-        calls = {}
-        for f in self.functions:
-            if f.name in SKIPPED:
-                continue
-            haxe, _, _ = self.place(f)
-            if haxe not in self.kinds.values():
-                calls.setdefault(haxe, []).append(f)
-        found = {}
-        for haxe, fs in calls.items():
-            firsts = {f.params[0].type for f in fs if f.params and f.params[0].type in self.kinds} - {'wgf_handle_t'}
-            fits = [kind for kind in sorted(firsts)
-                    if all((f.params and f.params[0].type == kind) or f.returns == kind for f in fs)]
-            if len(fits) == 1:  # a sprite's create takes a texture first, and makes a node
-                found[haxe] = self.kinds[fits[0]]
-        return found
-
-    def class_docs(self):
-        """Each type's own doc: a handle kind's typedef's comment, then the overview of the
-        header whose first call it holds (headers.py's: the comments no declaration owns),
-        so a program reading the binding reads what the header says of the whole."""
-        out, placed = {}, set()
-        for ctype, haxe in self.kinds.items():
-            if self.api.type_docs.get(ctype):
-                out[haxe] = self.api.type_docs[ctype]
-        for f in self.functions:
-            if f.header in placed or f.name in SKIPPED:
-                continue
-            placed.add(f.header)
-            overview = self.api.overviews.get(f.header)
-            if overview:
-                haxe = self.place(f)[0]
-                out[haxe] = out[haxe] + '\n\n' + overview if haxe in out and overview not in out[haxe] else overview
-        return out
-
-    def docs(self):
-        """Each call's doc: its own comment, or the comment of the group it is in: the
-        nearest comment above it in its header, a call's or an enum's (an enum's comment
-        written for the call right after it, as wgf_draw_texture_fill's)."""
-        enums = {}
-        for e in self.api.enums.values():
-            if e.doc and e.offset >= 0:
-                enums.setdefault(e.header, []).append(e)
-        out, last_doc, last = {}, '', None
-        for f in self.api.functions.values():
-            if last is None or f.header != last.header:
-                last_doc = ''
-            start = last.offset if last is not None and f.header == last.header else -1
-            between = [e for e in enums.get(f.header, ()) if start < e.offset < f.offset]
-            if between:
-                last_doc = max(between, key=lambda e: e.offset).doc
-            if f.doc:
-                last_doc = f.doc
-            out[f.name] = f.doc or last_doc
-            last = f
-        return out
 
 
 # ---- Haxe text ---------------------------------------------------------------------------

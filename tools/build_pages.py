@@ -26,7 +26,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # an embedded Python (Windows) doesn't add it
 import examples  # noqa: E402
-import finish_site  # noqa: E402
 import variants  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -112,7 +111,7 @@ def build_examples(out):
                 shutil.copy2(file, site / name / file.name)
         names.append(name)
     shutil.copytree(ROOT / 'examples' / 'assets', site / 'assets')
-    finish_site.finish(site)
+    subprocess.run([sys.executable, str(ROOT / 'tools' / 'finish_site.py'), '--site', str(site)], check=True)
     print(f'build_pages: {len(names)} example(s)', flush=True)
     return names, failed
 
