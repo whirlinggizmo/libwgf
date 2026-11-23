@@ -1040,6 +1040,18 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## The full host's size beside helix-raylib's "everything" (2026-11-22)
+
+Rob: libwgf's all-in-one, without Jolt (helix-raylib's Jolt and Box2D are wasm modules of their own, fetched when used) and without RmlUi (helix-raylib has none), against helix-raylib's everything rung (371.9 KB gzip, 279.4 brotli: every call of Raylib, Raymath, Rlgl, Raygui, Raylib6, and its extras). The full host is what `wgf build` and `wgf serve` link (every call, so a dev build never links again); measured with `tools/build_host.py`, wasm32-release, its export list less `wgf_body.h`'s, `wgf_physics.h`'s, `wgf_vehicle.h`'s, and `wgf_document.h`'s 99 calls:
+
+| host | wasm gzip | wasm brotli | with its JS and the JS binding, gzip | brotli |
+|---|---:|---:|---:|---:|
+| full | 996.7 | 778.6 | 1,170.4 | 915.4 |
+| less RmlUi | 837.6 | 658.3 | | |
+| less RmlUi and Jolt | 573.7 | 462.4 | 641.1 | 519.2 |
+
+So in the full host RmlUi is 159 KB of gzip and Jolt 264, against helix's `jolt.wasm` 267.8 (199.9 brotli) and `box2d.wasm` 120.7 (99.7). libwgf's everything without them is 1.7 times helix-raylib's (641 against 372 gzip, 519 against 279 brotli): at full scale the sizes haven't met, where at Wardens' they nearly have (5% in gzip). The two everythings aren't the same set (libwgf's carries actors, the ecs, scenes, Tiled, the Clay widgets, audio buses, the asset host, autopilots), and no game ships the full host: an export is trimmed to its calls.
+
 ## The comparison measured again (2026-11-22)
 
 Rob, after the day's changes (sokol at upstream's, an actor 64 bytes smaller, the paused actors counted, the trigonometry): the comparison's speed and size rows (HISTORY.md, "The comparison") taken again the same way, on coinspinner, at 3cfe5cf's parent: pages by helix's `tools/speed/run_page.cjs` (read-only) with helix-raylib's built programs as the control, natively by `measure_frames.py --native`; each cell the median of three runs. The control came within a few percent of its rows again (page bunnymark 0.28 and 4.60 ms, robots 2.07 and 15.78). Frame time in ms, 2026-11-20's in brackets:

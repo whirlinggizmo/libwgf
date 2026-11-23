@@ -24,6 +24,10 @@ Calls take a widget's value and return the new one (`value = wgf_ui_slider("volu
 
 Skipped, as raygui's in the parity skips: the color picker and the grid; the status bar (a label in a box); a fullscreen button (a game's line); the touch stick (the virtual gamepad).
 
+## Parity: 2D physics on Box2D
+
+Rob's (2026-11-22): helix-raylib has Box2D (helix-box2d: Box2D 3.2 under its own C names, its own wasm module in a page) and libwgf didn't, so by the parity floor it comes now, not when a game needs it ("Later" had it so). Box2D 3.2 vendored in `deps/`, compiled into libwgf as Jolt is, linked only by a program that calls it. In libwgf's way, as physics3d is on Jolt: a body a component of an actor (`WGF_COMPONENT_BODY2D` is the ecs's kinematic box today; a Box2D body a type beside it, or the ecs's moved onto Box2D, decided first), its shapes (circle, box, polygon, capsule, segment, chain) from a 2D stage's units, joints, queries (rays, shape casts, overlaps), contact and sensor events through the actors' events as physics3d's, its scene file keys, and deterministic on every target as Box2D's cross-platform determinism allows (a hash test, as the pile of boxes). Its look first: helix-box2d's README and tests, and what helix-legacy's 2D collision did. An example (`physics2d-*`), its size row, both bindings, the feature test.
+
 ## Milestone 2.5: jam-ready
 
 After the comparison.
@@ -105,7 +109,6 @@ Rob's: deployment work is premature while the API is still moving, since a publi
 
 Each starts when something anyone can check is true.
 
-- **physics2d (Box2D v3)**: when a game or example on the ROADMAP needs 2D rigid bodies, joints, or contact resolution; no game in milestones 1 to 3 does, and Asteroids' overlaps are the ecs collider's.
 - **Dear ImGui (cimgui), the developer UI**: when a milestone's game needs an in-game inspector (SPEC.md, "Not in v1").
 - **WebGPU behind a build option**, then as the default: libwgt's condition (its ROADMAP, "Later"): Firefox ships WebGPU on Linux, Chrome on Linux covers the common GPUs, and every example passes on WebGPU in CI, with an automatic fall back to WebGL2 and a persisted switch.
 - **Native hot reload** (hxcpp or C): when a game's desktop-only bug needs the reload loop to find; the browser is the everyday loop. Not through cppia as it measures now (HISTORY.md, "Native hot reload stays deferred").
