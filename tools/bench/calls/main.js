@@ -6,6 +6,10 @@ import createWgfHost from "./wgf-host.js";
 import * as wgf from "./wgf.js";
 
 const N = 200000, REPS = 7, BULK = 1000;
+// The chat: a scroll area of LINES lines of 80 characters, as a chat or a log shows them,
+// given again each frame, timed over FRAMES frames after WARM.
+const LINES = 200, WARM = 30, FRAMES = 31;
+const LINE = "player_42: has anyone found the key to the north gate? I looked behind the inn.!";
 const host = await createWgfHost({
     canvas: document.getElementById("canvas"),
     printErr: (text) => (/^\[(ERROR|FATAL)/.test(text) ? console.error : console.log)(text),
@@ -51,13 +55,33 @@ function init() {
     report("string", N, () => {
         for (let k = 0; k < N; k++) if (wgf.wgf_actor_set_name(first, "first")) Main.sink += 1;
     });
+    report("string-80", N, () => {
+        for (let k = 0; k < N; k++) if (wgf.wgf_actor_set_name(first, LINE)) Main.sink += 1;
+    });
     const calls = Math.trunc(N / BULK) * 10;
     report("bulk", calls, () => {
         for (let k = 0; k < calls; k++) Main.sink += wgf.wgf_actor_get_positions(actors, out);
     });
     console.log(`calls: bulk-actor ${Math.round(best / BULK * 1000) / 1000}`);
+}
+
+const frames = [];
+
+// One UI frame a frame: the chat's lines given, laid out, and drawn at wgf_ui_end.
+function frame() {
+    const start = performance.now();
+    if (wgf.wgf_ui_begin()) {
+        wgf.wgf_ui_begin_scroll("chat", 600, 400);
+        for (let i = 0; i < LINES; i++) if (wgf.wgf_ui_label(LINE, 0)) Main.sink += 1;
+        wgf.wgf_ui_end_scroll();
+        wgf.wgf_ui_end();
+    }
+    frames.push((performance.now() - start) * 1e6);
+    if (frames.length < WARM + FRAMES) return;
+    const timed = frames.slice(WARM).sort((a, b) => a - b);
+    console.log(`calls: chat ${Math.round(timed[FRAMES >> 1])}`);
     console.log(Main.sink !== 0 ? "calls done: PASS" : "calls done: FAIL (nothing was called)");
     wgf.wgf_app_quit();
 }
 
-wgf.wgf_app_run(init, null, null, null);
+wgf.wgf_app_run(init, null, frame, null);
