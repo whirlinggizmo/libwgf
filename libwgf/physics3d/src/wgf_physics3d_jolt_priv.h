@@ -45,7 +45,7 @@ typedef struct wgf_physics3d_priv_body_desc_t {
     float mass_offset[3]; /* its center of mass from the shape's own */
     float mass;        /* kg; 0 for the shape's own from a density of 1000 */
     float friction, restitution, linear_damping, angular_damping;
-    uint32_t layer, mask; /* 15 bits each: a pair meets when each one's layer is in the other's mask */
+    uint32_t layer, mask; /* 15 bits each: a pair meets when either one's layer is in the other's mask */
     uint64_t user;        /* the actor */
 } wgf_physics3d_priv_body_desc_t;
 

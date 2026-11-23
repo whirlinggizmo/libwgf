@@ -1040,6 +1040,17 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## Bodies meet as colliders do: either one's mask (2026-11-22)
+
+The comment rewrite showed that layers and masks worked two ways. Two colliders met when either one's mask had the other's layer. Two physics bodies met only when each had the other's, because physics3d used Jolt's stock mask filter. Rob: make them consistent, on "either", as Godot does.
+
+- **Why either.** The mask goes on the body that cares: a bullet masks the enemies, and the enemies needn't list bullets. Asking it of both sides makes a forgotten mask a silent miss. Box2D, Jolt, and Bullet ask both, and Unity has a symmetric matrix of layer pairs.
+- **The change.** physics3d has its own pair filter (`EitherMask`), and a broadphase filter that looks in both trees, since a body whose own mask is empty may still be in another's. The static group bit now only picks a static body's broadphase tree. A moving body's mask no longer gets it added, so a moving body and a static one follow the same rule as any pair, and two statics never meet.
+- **What it changes for a game.** Every pair that met still meets. A pair where only one side had the other's layer now meets too. To make two bodies pass through each other, each must leave the other's layer out.
+- **Checked.** `wgf_physics3d_test` drops a ball through a sensor three ways: only the sensor's mask has the ball, only the ball's has the sensor, and neither. The first two meet and the third doesn't. The pile-of-boxes hash is unchanged, and the games' recordings replay.
+
+physics2d will do the same through Box2D's custom filter, since Box2D's own asks both sides.
+
 ## Lines held to 120 columns (2026-11-22)
 
 CONVENTIONS.md has always said lines run to 120 columns, but nothing checked it. Rob noticed when the comment rewrite's checker flagged two declarations. 661 lines in 194 files were over, most of them in tests.

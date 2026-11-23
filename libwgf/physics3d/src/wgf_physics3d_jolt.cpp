@@ -21,7 +21,6 @@
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/ShapeCast.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayerInterfaceMask.h>
-#include <Jolt/Physics/Collision/BroadPhase/ObjectVsBroadPhaseLayerFilterMask.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
 #include <Jolt/Physics/Collision/ContactListener.h>
 #include <Jolt/Physics/Collision/ObjectLayerPairFilterMask.h>
@@ -46,7 +45,7 @@ namespace {
 constexpr uint MAX_BODIES = 16384;
 constexpr uint MAX_PAIRS = 16384;
 constexpr uint MAX_CONTACTS = 8192;
-constexpr uint32 STATIC_GROUP = 0x8000; // the group bit a static body has, so movers' masks reach statics
+constexpr uint32 STATIC_GROUP = 0x8000; // the group bit a static body has: its broadphase tree's
 constexpr uint32 USER_BITS = 0x7FFF;
 
 // Two broadphase trees, the static bodies' and the moving ones', as Jolt advises.
@@ -132,12 +131,37 @@ private:
     Array<uint64> mGone;
 };
 
+// Which bodies meet: two meet when either one's mask has the other's layer, as two colliders
+// do (wgf_collider.h), where Jolt's own mask filter asks it of both. Two statics never meet.
+class EitherMask final : public ObjectLayerPairFilter {
+public:
+    bool ShouldCollide(ObjectLayer a, ObjectLayer b) const override
+    {
+        const uint32 group_a = ObjectLayerPairFilterMask::sGetGroup(a);
+        const uint32 group_b = ObjectLayerPairFilterMask::sGetGroup(b);
+        const uint32 a_in_b = group_a & ObjectLayerPairFilterMask::sGetMask(b);
+        const uint32 b_in_a = group_b & ObjectLayerPairFilterMask::sGetMask(a);
+        if ((group_a & group_b & STATIC_GROUP) != 0) return false;
+        return ((a_in_b | b_in_a) & USER_BITS) != 0;
+    }
+};
+
+// Which broadphase tree a body looks in: both, since a body whose own mask has nothing may be
+// in another's; but a static never looks among the statics.
+class EitherTree final : public ObjectVsBroadPhaseLayerFilter {
+public:
+    bool ShouldCollide(ObjectLayer layer, BroadPhaseLayer tree) const override
+    {
+        return (ObjectLayerPairFilterMask::sGetGroup(layer) & STATIC_GROUP) == 0 || tree != NON_MOVING;
+    }
+};
+
 struct World {
     TempAllocatorImpl temp{8 * 1024 * 1024};
     JobSystemSingleThreaded jobs{cMaxPhysicsJobs};
     BroadPhaseLayerInterfaceMask broad{2};
-    ObjectVsBroadPhaseLayerFilterMask object_vs_broad{broad};
-    ObjectLayerPairFilterMask pairs;
+    EitherTree object_vs_broad;
+    EitherMask pairs;
     PhysicsSystem system;
     Overlaps overlaps;
 };
@@ -232,12 +256,9 @@ RefConst<Shape> Placed(RefConst<Shape> shape, const wgf_physics3d_priv_body_desc
 
 ObjectLayer LayerOf(const wgf_physics3d_priv_body_desc_t &d)
 {
-    uint32 group = d.layer & USER_BITS, mask = d.mask & USER_BITS;
-    if (d.motion == WGF_PHYSICS3D_PRIV_STATIC && !d.sensor) {
-        group |= STATIC_GROUP;
-    } else if (!d.sensor) {
-        mask |= STATIC_GROUP; // a moving body meets the static world whatever its mask
-    }
+    uint32 group = d.layer & USER_BITS;
+    const uint32 mask = d.mask & USER_BITS;
+    if (d.motion == WGF_PHYSICS3D_PRIV_STATIC && !d.sensor) group |= STATIC_GROUP;
     return ObjectLayerPairFilterMask::sGetObjectLayer(group, mask);
 }
 

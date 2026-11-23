@@ -241,12 +241,15 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the body's layer and mask: what it meets (defaults: layer 1, mask every layer).
 
-	    Two bodies meet when each one's layer has a bit in the other's mask. Meeting means they
-	    collide, or a sensor tells of the other.
+	    Two bodies meet when either one's mask has a bit of the other's layer, as two colliders do
+	    (wgf_collider.h). Meeting means they collide, or a sensor tells of the other.
 
 	    - Each is 15 bits (1 to 0x7FFF).
-	    - A static body meets every moving body its mask lets it.
-	    - Every moving body meets the static world.
+	    - Put the mask on the body that cares: a bullet whose mask has the enemies' layer meets
+	      them, whatever their masks are.
+	    - To make two bodies pass through each other, leave each one's layer out of the other's
+	      mask. That goes for a moving body and a static one too.
+	    - Two static bodies never meet.
 	**/
 	public inline function setLayer(layer:Int):Bool
 		return Raw.wgf_body3d_set_layer(this, layer);
@@ -254,12 +257,15 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the body's layer and mask: what it meets (defaults: layer 1, mask every layer).
 
-	    Two bodies meet when each one's layer has a bit in the other's mask. Meeting means they
-	    collide, or a sensor tells of the other.
+	    Two bodies meet when either one's mask has a bit of the other's layer, as two colliders do
+	    (wgf_collider.h). Meeting means they collide, or a sensor tells of the other.
 
 	    - Each is 15 bits (1 to 0x7FFF).
-	    - A static body meets every moving body its mask lets it.
-	    - Every moving body meets the static world.
+	    - Put the mask on the body that cares: a bullet whose mask has the enemies' layer meets
+	      them, whatever their masks are.
+	    - To make two bodies pass through each other, leave each one's layer out of the other's
+	      mask. That goes for a moving body and a static one too.
+	    - Two static bodies never meet.
 	**/
 	public inline function getLayer():Int
 		return Raw.wgf_body3d_get_layer(this);
@@ -267,12 +273,15 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the body's layer and mask: what it meets (defaults: layer 1, mask every layer).
 
-	    Two bodies meet when each one's layer has a bit in the other's mask. Meeting means they
-	    collide, or a sensor tells of the other.
+	    Two bodies meet when either one's mask has a bit of the other's layer, as two colliders do
+	    (wgf_collider.h). Meeting means they collide, or a sensor tells of the other.
 
 	    - Each is 15 bits (1 to 0x7FFF).
-	    - A static body meets every moving body its mask lets it.
-	    - Every moving body meets the static world.
+	    - Put the mask on the body that cares: a bullet whose mask has the enemies' layer meets
+	      them, whatever their masks are.
+	    - To make two bodies pass through each other, leave each one's layer out of the other's
+	      mask. That goes for a moving body and a static one too.
+	    - Two static bodies never meet.
 	**/
 	public inline function setMask(mask:Int):Bool
 		return Raw.wgf_body3d_set_mask(this, mask);
@@ -280,12 +289,15 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the body's layer and mask: what it meets (defaults: layer 1, mask every layer).
 
-	    Two bodies meet when each one's layer has a bit in the other's mask. Meeting means they
-	    collide, or a sensor tells of the other.
+	    Two bodies meet when either one's mask has a bit of the other's layer, as two colliders do
+	    (wgf_collider.h). Meeting means they collide, or a sensor tells of the other.
 
 	    - Each is 15 bits (1 to 0x7FFF).
-	    - A static body meets every moving body its mask lets it.
-	    - Every moving body meets the static world.
+	    - Put the mask on the body that cares: a bullet whose mask has the enemies' layer meets
+	      them, whatever their masks are.
+	    - To make two bodies pass through each other, leave each one's layer out of the other's
+	      mask. That goes for a moving body and a static one too.
+	    - Two static bodies never meet.
 	**/
 	public inline function getMask():Int
 		return Raw.wgf_body3d_get_mask(this);

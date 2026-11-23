@@ -180,6 +180,31 @@ int main(void)
     }
     expect(told(WGF_WORLD_EVENT_TRIGGER_EXIT, gate, ball), "and left");
 
+    /* layers and masks: two bodies meet when either one's mask has the other's layer */
+    {
+        int pass;
+        for (pass = 0; pass < 3; pass++) { /* the gate's mask alone, the ball's alone, neither */
+            wgf_body3d_set_mask(gate, pass == 0 ? 2 : 1);
+            wgf_body3d_set_mask(ball, pass == 1 ? 8 : 1);
+            wgf_actor_set_position(ball, -6, 4, 0);
+            wgf_body3d_set_velocity(ball, 0, 0, 0);
+            wgf_world_take_events(NULL, 0);
+            for (i = 0; i < 90; i++) {
+                step(1);
+                take();
+                if (told(WGF_WORLD_EVENT_TRIGGER_ENTER, gate, ball)) break;
+            }
+            expect(told(WGF_WORLD_EVENT_TRIGGER_ENTER, gate, ball) == (pass < 2),
+                   pass == 0 ? "the gate's mask alone has the ball's layer: they meet"
+                             : pass == 1 ? "the ball's mask alone has the gate's layer: they meet"
+                                         : "neither mask has the other's layer: they don't");
+            for (i = 0; i < 120; i++) step(1); /* through, and settled on the floor */
+            take();
+        }
+        wgf_body3d_set_mask(gate, 0x7FFF);
+        wgf_body3d_set_mask(ball, 0x7FFF);
+    }
+
     /* a shape off its actor, a center of mass off its shape, a setting taken at once */
     {
         const wgf_actor_t tipper = put(stage, -20, 0.5f, 0), slider = put(stage, -30, 0.5f, 0);

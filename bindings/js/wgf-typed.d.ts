@@ -2288,45 +2288,57 @@ export declare const Body3d: {
     /**
      * Sets or gets the body's layer and mask: what it meets (defaults: layer 1, mask every layer).
      *
-     * Two bodies meet when each one's layer has a bit in the other's mask. Meeting means they
-     * collide, or a sensor tells of the other.
+     * Two bodies meet when either one's mask has a bit of the other's layer, as two colliders do
+     * (wgf_collider.h). Meeting means they collide, or a sensor tells of the other.
      *
      * - Each is 15 bits (1 to 0x7FFF).
-     * - A static body meets every moving body its mask lets it.
-     * - Every moving body meets the static world.
+     * - Put the mask on the body that cares: a bullet whose mask has the enemies' layer meets
+     *   them, whatever their masks are.
+     * - To make two bodies pass through each other, leave each one's layer out of the other's
+     *   mask. That goes for a moving body and a static one too.
+     * - Two static bodies never meet.
      */
     readonly setLayer: typeof raw.wgf_body3d_set_layer;
     /**
      * Sets or gets the body's layer and mask: what it meets (defaults: layer 1, mask every layer).
      *
-     * Two bodies meet when each one's layer has a bit in the other's mask. Meeting means they
-     * collide, or a sensor tells of the other.
+     * Two bodies meet when either one's mask has a bit of the other's layer, as two colliders do
+     * (wgf_collider.h). Meeting means they collide, or a sensor tells of the other.
      *
      * - Each is 15 bits (1 to 0x7FFF).
-     * - A static body meets every moving body its mask lets it.
-     * - Every moving body meets the static world.
+     * - Put the mask on the body that cares: a bullet whose mask has the enemies' layer meets
+     *   them, whatever their masks are.
+     * - To make two bodies pass through each other, leave each one's layer out of the other's
+     *   mask. That goes for a moving body and a static one too.
+     * - Two static bodies never meet.
      */
     readonly getLayer: typeof raw.wgf_body3d_get_layer;
     /**
      * Sets or gets the body's layer and mask: what it meets (defaults: layer 1, mask every layer).
      *
-     * Two bodies meet when each one's layer has a bit in the other's mask. Meeting means they
-     * collide, or a sensor tells of the other.
+     * Two bodies meet when either one's mask has a bit of the other's layer, as two colliders do
+     * (wgf_collider.h). Meeting means they collide, or a sensor tells of the other.
      *
      * - Each is 15 bits (1 to 0x7FFF).
-     * - A static body meets every moving body its mask lets it.
-     * - Every moving body meets the static world.
+     * - Put the mask on the body that cares: a bullet whose mask has the enemies' layer meets
+     *   them, whatever their masks are.
+     * - To make two bodies pass through each other, leave each one's layer out of the other's
+     *   mask. That goes for a moving body and a static one too.
+     * - Two static bodies never meet.
      */
     readonly setMask: typeof raw.wgf_body3d_set_mask;
     /**
      * Sets or gets the body's layer and mask: what it meets (defaults: layer 1, mask every layer).
      *
-     * Two bodies meet when each one's layer has a bit in the other's mask. Meeting means they
-     * collide, or a sensor tells of the other.
+     * Two bodies meet when either one's mask has a bit of the other's layer, as two colliders do
+     * (wgf_collider.h). Meeting means they collide, or a sensor tells of the other.
      *
      * - Each is 15 bits (1 to 0x7FFF).
-     * - A static body meets every moving body its mask lets it.
-     * - Every moving body meets the static world.
+     * - Put the mask on the body that cares: a bullet whose mask has the enemies' layer meets
+     *   them, whatever their masks are.
+     * - To make two bodies pass through each other, leave each one's layer out of the other's
+     *   mask. That goes for a moving body and a static one too.
+     * - Two static bodies never meet.
      */
     readonly getMask: typeof raw.wgf_body3d_get_mask;
     /**
