@@ -10,11 +10,12 @@ libwgf from JavaScript and TypeScript in the browser: one ES module, `wgf.js`, a
 | `wgf-typed.js`, `wgf-typed.d.ts` | the typed layer: the same calls in the typed Haxe API's names (`Actor.setPosition(actor, ...)`, `Prefab.spawnAt(prefab, ...)`, `World.takeEvents(...)`), each type a frozen namespace of `wgf.js`'s own functions -- no wrappers, so nothing allocates -- each handle kind its branded type (`Actor`, `Prefab`), each enum an object of its values (`KeyboardKey.SPACE`), and `Scene.spawnPrefab`; generated |
 | `src/runtime.js` | how a call crosses into the host and back; put at the top of `wgf.js` |
 | `src/app.js` | `wgf_app_run` for JS, and the version check; put in `wgf.js` after the runtime |
+| `src/behavior.js` | the `Behavior` class, and its run; put in `wgf.js` after `app.js`, and kept by a release copy only for a program that names `Behavior` |
 | `src/wgf.d.ts` | the declarations of what `src/` writes by hand; put in `wgf.d.ts` |
 | `tests/types.ts` | what TypeScript must accept, and the mistakes it must catch (`tools/check_js_binding.py`) |
 | `tests/input/` | a page of one UI text field, which the check's `input` step types into in a browser, as a person would |
 
-The examples are `examples/js/`: `hello` (the C `app-hello`, call for call, on the typed layer) and `asteroids` (the Haxe game ported, flying the game's own playthrough, on the raw one).
+The examples are `examples/js/`: `hello` (the C `app-hello`, call for call, on the typed layer), `asteroids` (the Haxe game ported, flying the game's own playthrough, on the raw one), and eight topics, each also written in Haxe (`examples/haxe/`).
 
 ## Use
 
@@ -59,6 +60,28 @@ App.run(init, null, frame, null);
 ```
 
 Each member is the raw call itself, so it takes what the raw call takes, its handle first (`Actor.setPosition(actor, 1, 2, 3)`), and costs what it costs. In TypeScript an `Actor` can't go where a `Prefab` does. `Scene.spawnPrefab(scene, name, parent, x?, y?, z?, angle?)` finds the prefab and spawns it, placed when a place is given: it looks the prefab up on every call, so a hot path finds it once (`Scene.prefab`) and keeps the handle. A trimmed export keeps the members a program names (`Type.member`), and the calls they reach.
+
+## Behaviors
+
+A behavior is the program's code on an actor: a class extending `Behavior`, registered by the name an actor's behavior has (`Actor.addBehavior`, or a scene file's `behavior name=...` line). It is the Haxe binding's `wgf.Behavior`, and `wgf.js` and `wgf-typed.js` both export it.
+
+```js
+import { Actor, Behavior, Motion } from "./wgf-typed.js";
+
+class Patrol extends Behavior {
+    onCreate() { this.right = this.getParamNumber("right"); }
+    onTick(dt) { if (Actor.getPosition(this.actor).x > this.right) Motion.setVelocity(this.actor, -100, 0, 0); }
+    onTriggerEnter(other, layer) { Actor.destroy(other); }
+}
+Behavior.register("Patrol", Patrol);
+```
+
+- **The run makes one object for each behavior**, before the next tick or frame, and calls `onCreate`. It is never made inside the call that added it, so `Behavior.of(actor, "Patrol")` is null until then.
+- **Each tick and frame** it calls `onTick(dt)` and `onFrame(dt)` before the program's own, skipping a behavior whose actor is frozen (a screen under the top one).
+- **Events reach the actor's behaviors:** `onTriggerEnter` and `onTriggerExit` (colliders), `onContactBegin` and `onContactEnd` (bodies), `onScreenEnter` and `onScreenExit` (screens).
+- **`onDestroy`** is called when the behavior is removed, its actor is destroyed, or the run ends.
+- **A tag** is a behavior name with no class (`Behavior.tag("Bullet")`): no object is made and no warning logged. A name neither registered nor tagged is logged once.
+- **The run takes the world's events** (`wgf_world_take_events`) from the first `register` or `tag` on. A program with behaviors doesn't take them itself. A program with none still can.
 
 ## Minifying
 

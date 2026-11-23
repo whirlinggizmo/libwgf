@@ -3270,6 +3270,8 @@ export const World = Object.freeze({
     // wgf: call wgf_world_dump
     dump: raw.wgf_world_dump,
 });
+// wgf: class Behavior
+export { Behavior } from "./wgf.js";
 // wgf: enum ActorDestroy
 export const ActorDestroy = Object.freeze({ DESTROY_CHILDREN: 0, KEEP_CHILDREN: 1 });
 // wgf: enum ActorKind

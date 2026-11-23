@@ -4,7 +4,7 @@
 // The world is the game's scene file: the ship, three sizes of rock, the bullet, and the
 // explosion, each a prefab with its components. The ecs moves everything, wraps it, ages
 // the bullets and explosions out, and finds the overlaps; the behaviors' objects only set
-// intent (behaviors.js does what the Haxe binding's wgf.Behavior does). The title and
+// intent (the binding's Behavior, as the Haxe binding's wgf.Behavior). The title and
 // game-over screens are libwgf's UI; the HUD is drawn text. Its probes are the Haxe
 // game's: asteroids.state (0 title, 1 playing, 2 game over), score, lives, and wave.
 //
@@ -12,7 +12,7 @@
 // the getters fill, and a rock's size a number.
 import createWgfHost from "./wgf-host.js";
 import * as wgf from "./wgf.js";
-import { Behavior, register, tag, of, tickAll, frameAll, endAll } from "./behaviors.js";
+const { Behavior } = wgf;
 import { Sounds } from "./sounds.js";
 
 const host = await createWgfHost({
@@ -156,7 +156,7 @@ class Rock extends Behavior {
             wgf.wgf_actor_destroy(other, wgf.WGF_ACTOR_DESTROY_CHILDREN);
             this.split();
         } else if (layer === SHIP_LAYER) {
-            of(other, "Ship").explode();
+            Behavior.of(other, "Ship").explode();
             this.split();
         }
     }
@@ -257,9 +257,9 @@ function init() {
     world = wgf.wgf_stage2d_create();
     scene = wgf.wgf_scene_create("scenes/asteroids.scene");
     sounds = new Sounds();
-    register("Ship", (e) => new Ship(e));
-    register("Rock", (e) => new Rock(e));
-    tag("Bullet"); // no code: found by name, to count them
+    Behavior.register("Ship", Ship);
+    Behavior.register("Rock", Rock);
+    Behavior.tag("Bullet"); // no code: found by name, to count them
     wgf.wgf_ui_set_style_color(wgf.WGF_UI_COLOR_PANEL, wgf.wgf_color_make(14, 18, 30, 230));
     wgf.wgf_ui_set_style_color(wgf.WGF_UI_COLOR_BUTTON, wgf.wgf_color_make(32, 40, 62, 255));
     wgf.wgf_ui_set_style_color(wgf.WGF_UI_COLOR_BUTTON_HOVERED, wgf.wgf_color_make(48, 60, 92, 255));
@@ -270,7 +270,6 @@ function init() {
 
 function tick() {
     const dt = wgf.wgf_loop_get_tick_delta();
-    tickAll(dt);
     if (state === PLAYING) {
         if (ship === 0 && respawnDelay > 0) {
             respawnDelay -= dt;
@@ -296,7 +295,6 @@ function publish() {
 }
 
 function frame() {
-    frameAll(wgf.wgf_loop_get_frame_delta());
     if (!ready && wgf.wgf_resource_get_status(scene) === wgf.WGF_RESOURCE_STATUS_READY) {
         ready = true;
         rockPrefabs = PREFABS.map((name) => wgf.wgf_scene_find_prefab(scene, name));
@@ -358,4 +356,4 @@ wgf.wgf_window_set_title("Asteroids (JS)");
 // the design the game is written in, fitted to any window or screen, bars around it
 wgf.wgf_presentation_set(wgf.WGF_PRESENTATION_MODE_FIT, WIDTH, HEIGHT);
 wgf.wgf_presentation_set_bar_color(wgf.wgf_color_make(2, 3, 6, 255));
-wgf.wgf_app_run(init, tick, frame, endAll);
+wgf.wgf_app_run(init, tick, frame, null);

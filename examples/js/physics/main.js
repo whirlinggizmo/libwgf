@@ -4,8 +4,8 @@
 // - A static floor, and dynamic boxes and spheres with their own mass, friction, and bounce.
 // - Layers and masks: two bodies meet when either one's mask has the other's layer.
 // - A ray cast from the camera through the pointer (Physics3d.castRay). The body it hits is tinted.
-// - A sensor (the green outline) that counts each body falling through it, from the world's
-//   trigger events (World.takeEvents).
+// - A sensor (the green outline) that counts each body falling through it, in a behavior's
+//   onTriggerEnter.
 //
 // Controls:
 // - Point at a body to highlight it.
@@ -13,14 +13,13 @@
 // - R puts the pile back where it started.
 // - Escape quits, where quitting means anything (not in a browser).
 //
-// This is the Haxe example `physics`, written the JS way, on the typed layer (wgf-typed.js).
+// This is the Haxe example `physics`, on the typed layer (wgf-typed.js).
 import createWgfHost from "./wgf-host.js";
 import {
-    Actor, App, Body3d, Body3dShape, Body3dType, Camera3d, Color, ColorStock, Component, Draw, Keyboard,
-    KeyboardKey, Light, LightType, Loop, Mesh, Model, Mouse, Physics3d, Probe, Render, Resource, Stage3d,
-    Window, World, WorldEvent, attach,
+    Actor, App, Behavior, Body3d, Body3dShape, Body3dType, Camera3d, Color, ColorStock, Component, Draw, Keyboard,
+    KeyboardKey, Light, LightType, Loop, Mesh, Model, Mouse, Physics3d, Presentation, PresentationMode, Probe,
+    Render, Resource, Stage3d, Window, attach,
 } from "./wgf-typed.js";
-import { Presentation, PresentationMode } from "./wgf-typed.js";
 
 const host = await createWgfHost({
     canvas: document.getElementById("canvas"),
@@ -37,12 +36,11 @@ const PILE = 1, FLOOR = 2, SENSE = 4;
 let stage = 0, camera = 0, sensor = 0, yellow = 0;
 const pieces = []; // { actor, tint, x, y, z, turn }: each body of the pile, and where it starts
 let hovered = null;
-let sensed = 0, sinceSensed = 99, kicks = 0, nextKick = 0;
+let kicks = 0, nextKick = 0;
 
 const mouse = { x: 0, y: 0 };
 const origin = { x: 0, y: 0, z: 0 }, direction = { x: 0, y: 0, z: 0 }, velocity = { x: 0, y: 0, z: 0 };
 const hit = new Uint32Array(1);
-const events = new Int32Array(4 * 64);
 
 // A model of `mesh` on the stage at (x, y, z), tinted, with a body (a dynamic box until set).
 function body(mesh, tint, x, y, z) {
@@ -54,7 +52,27 @@ function body(mesh, tint, x, y, z) {
     return model;
 }
 
+// The sensor's behavior: it counts the bodies that enter it. A sensor body meets no body, so
+// the pile falls straight through it.
+class Sensor extends Behavior {
+    count = 0; // how many bodies have entered, since the last reset
+    sinceLast = 99; // seconds since the last one, to flash the sensor's outline
+
+    onTick(dt) {
+        this.sinceLast += dt;
+    }
+
+    onTriggerEnter(other, layer) {
+        this.count++;
+        this.sinceLast = 0;
+    }
+}
+
+// The sensor's behavior, or null before it is made (at the first tick or frame after init).
+const counter = () => Behavior.of(sensor, "Sensor");
+
 function init() {
+    Behavior.register("Sensor", Sensor);
     Render.setClearColor(Color.make(150, 180, 210, 255));
     Physics3d.setGravity(0, -9.81, 0); // physics starts here, before the first body
     yellow = Color.get(ColorStock.YELLOW);
@@ -114,6 +132,7 @@ function init() {
     Body3d.setShape(sensor, Body3dShape.BOX, 5, 0.8, 5);
     Body3d.setLayer(sensor, SENSE);
     Body3d.setMask(sensor, PILE);
+    Actor.addBehavior(sensor, "Sensor");
     reset();
 }
 
@@ -124,23 +143,12 @@ function reset() {
         Body3d.setVelocity(piece.actor, 0, 0, 0);
         Body3d.setSpin(piece.actor, 0, 0, 0);
     }
-    sensed = 0;
+    if (counter()) counter().count = 0;
     kicks = 0;
     nextKick = 0;
 }
 
 function tick() {
-    // The world's events: each is four ints, the event, the actor told, the other, and its layer.
-    // Each overlap is told to both actors, so count only the sensor's.
-    for (let n = World.takeEvents(events); n > 0; n = World.takeEvents(events)) {
-        for (let i = 0; i < n; i += 4) {
-            if (events[i] === WorldEvent.TRIGGER_ENTER && events[i + 1] === sensor) {
-                sensed++;
-                sinceSensed = 0;
-            }
-        }
-    }
-    sinceSensed += Loop.getTickDelta();
     if (Keyboard.isPressed(KeyboardKey.R)) reset();
 
     // The ray under the pointer: from the camera, into the scene. Its mask sees only the pile.
@@ -170,7 +178,7 @@ function tick() {
         return velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z <= 0.1 * 0.1;
     });
     Probe.setValue("physics.bodies", pieces.length);
-    Probe.setValue("physics.sensed", sensed);
+    Probe.setValue("physics.sensed", counter() ? counter().count : 0);
     Probe.setValue("physics.settled", settled ? 1 : 0);
     Probe.setValue("physics.hovered", hovered ? 1 : 0);
     Probe.setValue("physics.kicks", kicks);
@@ -182,13 +190,14 @@ function frame() {
 
     // The sensor has no model: its outline is drawn, bright for a moment after each entry.
     if (Draw.begin3d(camera)) {
-        Draw.cubeWires(0, 2.6, 0, 5, 0.8, 5, Color.get(sinceSensed < 0.2 ? ColorStock.LIME : ColorStock.DARKGREEN));
+        const lit = counter() && counter().sinceLast < 0.2;
+        Draw.cubeWires(0, 2.6, 0, 5, 0.8, 5, Color.get(lit ? ColorStock.LIME : ColorStock.DARKGREEN));
         Draw.end3d();
     }
 
     const dark = Color.get(ColorStock.DARKGRAY);
     Draw.text(0, "libwgf physics: point at a body, Space kicks it, R resets", 12, 12, 20, dark);
-    Draw.text(0, `through the sensor: ${sensed}`, 12, 40, 20, dark);
+    Draw.text(0, `through the sensor: ${counter() ? counter().count : 0}`, 12, 40, 20, dark);
     Draw.text(0, `kicks: ${kicks}`, 12, 64, 20, dark);
     Draw.text(0, `${Math.round(Loop.getFps())} FPS`, 12, 576, 16, Color.make(0, 120, 0, 255));
 }

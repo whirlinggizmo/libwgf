@@ -18102,6 +18102,7 @@ export declare const World: {
      */
     readonly dump: typeof raw.wgf_world_dump;
 };
+export { Behavior } from "./wgf.js";
 export type ActorDestroy = raw.wgf_actor_destroy_t;
 export declare const ActorDestroy: { readonly DESTROY_CHILDREN: ActorDestroy; readonly KEEP_CHILDREN: ActorDestroy; };
 export type ActorKind = raw.wgf_actor_kind_t;

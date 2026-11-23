@@ -875,7 +875,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** Each example carries its own module (109 lines in behaviors, on top of Asteroids' 127). They already differ from each other and from Haxe's: no skip of frozen actors, no contact or screen events in some.
 - **Cost:** The JS behaviors example is about 330 lines where Haxe's is 240, and four of eight topics read differently in the two languages. Reported by four agents independently.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** fine: HISTORY.md, "A Behavior class in the JS binding".
 
 ### examples: Window.setSize with a presentation fixes the canvas on the web
 

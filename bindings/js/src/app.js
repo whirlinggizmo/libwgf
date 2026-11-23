@@ -10,6 +10,8 @@
 // - it catches: a throw unwinding into the host's frames freezes the page on an opaque
 //   "Uncaught [object WebAssembly.Exception]". It is logged and ends the run (as the
 //   Haxe binding's does), so it is seen rather than repeated every frame;
+// - it runs the behaviors (behavior.js) before the program's tick, frame, and shutdown, once
+//   the program has registered one;
 // - it restores the wasm stack when the callback ends, fault or not, so a call that
 //   threw between saving and restoring the stack can't leave it moved.
 
@@ -17,11 +19,18 @@ const handlers = [null, null, null, null];
 const NAMES = ["init", "tick", "frame", "shutdown"];
 let trampolines = null;
 let faulted = false;
+// The behaviors' runner (behavior.js), set at the first Behavior.register or Behavior.tag.
+let behaviors = null;
 
 function dispatch(which) {
     if (faulted && which !== 3) return;
     const mark = host["stackSave"]();
     try {
+        if (behaviors !== null) {
+            if (which === 1) behaviors.tick();
+            else if (which === 2) behaviors.frame();
+            else if (which === 3) behaviors.end();
+        }
         const handler = handlers[which];
         if (handler) handler();
     } catch (e) {

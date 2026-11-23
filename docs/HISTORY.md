@@ -1040,6 +1040,16 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## A Behavior class in the JS binding (2026-11-23)
+
+The first fix from the examples' friction list, and the one four agents reported. The JS binding had no behavior class, so every JS program with behaviors carried its own event loop, and four of the eight examples read differently in JS than in Haxe.
+
+- **`Behavior` is now the binding's**, exported from `wgf.js` and `wgf-typed.js`, written by hand in `bindings/js/src/behavior.js`. It matches Haxe's `wgf.Behavior`: `register` (a class), `tag`, `of`, `all`, `count`, the parameters, and the same callbacks, the contact and screen ones included. A behavior on a frozen actor is skipped, as in Haxe.
+- **The run drives it.** `wgf_app_run`'s trampolines take the world's events and run the behaviors before the program's tick, frame, and shutdown.
+- **Only once a program registers one.** Until the first `register` or `tag` the run takes no events, so a program that takes them itself still works.
+- **A release copy pays for it only if it names `Behavior`.** `wgf.js` keeps the class, and the host the six calls of its run, for a program that does. Each parameter method's call is kept only if the program names the method: keeping all four cost the behaviors example 6.5 KB gzip. A Haxe game's export leaves the class out. The JS behaviors example is now 147.5 KB gzip (it was 148.2 with its own module), and Asteroids 221.5 (221.8).
+- **Five examples lost their own loops:** `behaviors`, `scene`, `physics`, `screens`, and `asteroids`, 236 lines of copied module among them. Each now mirrors its Haxe version.
+
 ## The curated examples, in Haxe and JS (2026-11-22)
 
 Eight topics, each written twice so a reader can compare the languages: sprites with input actions, behaviors and components, tweens and screens, a 3D model with its animation, 3D physics, the UI's widgets, audio, and a scene file. With `hello` and Asteroids that is the set of ten. Eight agents wrote them in parallel, one topic each, from the docs, the headers, and the bindings alone.

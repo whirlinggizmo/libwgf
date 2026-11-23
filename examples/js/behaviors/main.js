@@ -2,8 +2,8 @@
 //
 // Components are data the ecs runs in C: motion moves an actor, bounds wrap it around the
 // screen, a lifetime ends it, and a collider finds what it overlaps. Behaviors are this
-// program's classes, one per kind of actor, extending Behavior from behaviors.js, a module
-// the program keeps. They only set intent. The scene is the Haxe example `behaviors`'s.
+// program's classes, one per kind of actor, extending the binding's Behavior. They only set
+// intent. The scene is the Haxe example `behaviors`'s.
 //
 // - A spinning square in the middle (Spawner) launches a ball every 0.4 seconds, from its tick.
 // - A ball (Ball) flies by its motion, wraps at the edges, and lives 6 seconds. It bounces off
@@ -16,10 +16,9 @@
 // Its probes, for smoke.autopilot: behaviors.hits, behaviors.balls, and behaviors.actors.
 import createWgfHost from "./wgf-host.js";
 import {
-    Actor, App, Bounds, Collider, Color, ColorStock, Component, Draw, Keyboard, KeyboardKey, Lifetime, Loop, Motion,
+    Actor, App, Behavior, Bounds, Collider, Color, ColorStock, Component, Draw, Keyboard, KeyboardKey, Lifetime, Motion,
     Presentation, PresentationMode, Probe, Random, Render, Shape2d, Stage2d, TextHalign, TextValign, Window, attach,
 } from "./wgf-typed.js";
-import { Behavior, register, of, tickAll, frameAll, endAll } from "./behaviors.js";
 
 const host = await createWgfHost({
     canvas: document.getElementById("canvas"),
@@ -102,7 +101,7 @@ class Ball extends Behavior {
             const at = Actor.getPosition(this.actor, this.position);
             Actor.setPosition(this.actor, at.x + p.x, at.y + p.y, 0);
         }
-        Shape2d.setColor(this.actor, of(other, "Bumper").color);
+        Shape2d.setColor(this.actor, Behavior.of(other, "Bumper").color);
     }
 }
 
@@ -181,11 +180,11 @@ function init() {
     Random.setSeed(7);
     world = Stage2d.create();
 
-    // Each name an actor's behavior has is made as this class, at the next tick or frame.
-    register("Spawner", (actor) => new Spawner(actor));
-    register("Ball", (actor) => new Ball(actor));
-    register("Bumper", (actor) => new Bumper(actor));
-    register("Spark", (actor) => new Spark(actor));
+    // Each behavior of this name is made as this class, before the next tick or frame.
+    Behavior.register("Spawner", Spawner);
+    Behavior.register("Ball", Ball);
+    Behavior.register("Bumper", Bumper);
+    Behavior.register("Spark", Spark);
 
     bumper(220, 170, 0.7, ColorStock.ORANGE);
     bumper(580, 170, -0.5, ColorStock.SKYBLUE);
@@ -201,14 +200,12 @@ function init() {
 }
 
 function tick() {
-    tickAll(Loop.getTickDelta()); // the behaviors first, as the Haxe binding's run does
     Probe.setValue("behaviors.hits", hits);
     Probe.setValue("behaviors.balls", Actor.countWithBehavior("Ball"));
     Probe.setValue("behaviors.actors", Actor.getCount());
 }
 
 function frame() {
-    frameAll(Loop.getFrameDelta());
     if (App.canQuit() && Keyboard.isPressed(KeyboardKey.ESCAPE)) App.quit();
     Stage2d.draw(world);
     Draw.text(0, `hits: ${hits}`, 16, 14, 28, Color.get(ColorStock.RAYWHITE));
@@ -221,4 +218,4 @@ Window.setTitle("libwgf behaviors (JS)");
 Window.setMsaa(true);
 // the scene's 800 by 600, fitted to any window, so the balls wrap at its edges
 Presentation.set(PresentationMode.FIT, WIDTH, HEIGHT);
-App.run(init, tick, frame, endAll);
+App.run(init, tick, frame, null);

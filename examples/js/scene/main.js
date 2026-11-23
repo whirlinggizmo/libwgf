@@ -8,19 +8,18 @@
 // - It instantiates the scene under a 2D stage.
 // - It finds the dropper by name on the stage, and the dropper's label by its path.
 // - It spawns the crate prefab under the dropper, on a key press and every second.
-// - It runs Patrol, the behavior the file names on the dropper, on the actors that have it.
+// - It registers Patrol, the behavior the file names on the dropper.
 //
 // The controls:
 // - Space drops a crate.
 // - Escape quits, where quitting means anything (not in a browser).
 //
-// The Haxe example `scene` is the same program, with Patrol a wgf.Behavior class.
+// The Haxe example `scene` is the same program.
 import createWgfHost from "./wgf-host.js";
 import {
-    Actor, App, Asset, BehaviorComponent, Color, ColorStock, Draw, Keyboard, KeyboardKey, Loop, Motion, Prefab,
-    Probe, Render, Resource, ResourceStatus, Scene, Stage2d, Text, Window, attach,
+    Actor, App, Asset, Behavior, Color, ColorStock, Draw, Keyboard, KeyboardKey, Loop, Motion, Prefab, Presentation,
+    PresentationMode, Probe, Render, Resource, ResourceStatus, Scene, Stage2d, Text, Window, attach,
 } from "./wgf-typed.js";
-import { Presentation, PresentationMode } from "./wgf-typed.js";
 
 const host = await createWgfHost({
     canvas: document.getElementById("canvas"),
@@ -41,14 +40,32 @@ let dropper = 0;
 let label = 0;
 let spawned = 0;
 let clock = 0;
-let patrols = []; // { actor, left, right }: the actors with a Patrol behavior, and its parameters
 const at = { x: 0, y: 0, z: 0 };
-const velocity = { x: 0, y: 0, z: 0 };
+
+// Patrol: its actor turns back at `left` and `right`, the parameters the scene file gives it.
+// Its speed is its motion, set in the file too.
+class Patrol extends Behavior {
+    at = { x: 0, y: 0, z: 0 };
+    velocity = { x: 0, y: 0, z: 0 };
+
+    onCreate() {
+        this.left = this.getParamNumber("left");
+        this.right = this.getParamNumber("right");
+    }
+
+    onTick(dt) {
+        const at = Actor.getPosition(this.actor, this.at), velocity = Motion.getVelocity(this.actor, this.velocity);
+        if ((at.x > this.right && velocity.x > 0) || (at.x < this.left && velocity.x < 0)) {
+            Motion.setVelocity(this.actor, -velocity.x, velocity.y, 0);
+        }
+    }
+}
 
 function init() {
     Asset.setHost("assets");
     Render.setClearColor(Color.make(150, 196, 230, 255));
     stage = Stage2d.create();
+    Behavior.register("Patrol", Patrol);
     scene = Scene.create("level.scene"); // PENDING now: it loads while the frames go on
     publish();
 }
@@ -60,24 +77,6 @@ function start() {
     dropper = Stage2d.find(stage, "dropper"); // by name, anywhere on the stage
     label = Actor.find(dropper, "label"); // by path, from the dropper
     crate = Scene.prefab(scene, "crate");
-    const found = new Array(Actor.countWithBehavior("Patrol")).fill(0);
-    Actor.findWithBehavior("Patrol", found);
-    patrols = found.map((actor) => {
-        const id = Actor.findBehavior(actor, "Patrol");
-        const param = (key) => BehaviorComponent.getParamNumber(actor, id, key);
-        return { actor, left: param("left"), right: param("right") };
-    });
-}
-
-// Patrol: each actor turns back at its `left` and `right`. Its speed is its motion, set in the file.
-function tick() {
-    for (const { actor, left, right } of patrols) {
-        Actor.getPosition(actor, at);
-        Motion.getVelocity(actor, velocity);
-        if ((at.x > right && velocity.x > 0) || (at.x < left && velocity.x < 0)) {
-            Motion.setVelocity(actor, -velocity.x, velocity.y, 0);
-        }
-    }
 }
 
 function frame() {
@@ -129,4 +128,4 @@ Window.setTitle("libwgf scene (JS)");
 // size on the web, unscaled, so it is left to the presentation.
 Presentation.set(PresentationMode.FIT, 800, 450);
 Window.setMsaa(true);
-App.run(init, tick, frame, null);
+App.run(init, null, frame, null);

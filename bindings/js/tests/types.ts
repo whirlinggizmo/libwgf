@@ -2,7 +2,8 @@
 // check_js_binding.py): what a program should be able to write compiles, and each line
 // marked as an expected error is a mistake the types must catch. Checked, never run.
 import * as wgf from '../wgf.js';
-import { Actor, Prefab, Scene, Texture, Sprite, World, Presentation, KeyboardKey, Keyboard } from '../wgf-typed.js';
+import { Actor, Behavior, Prefab, Scene, Texture, Sprite, World, Presentation, KeyboardKey, Keyboard }
+    from '../wgf-typed.js';
 
 export function frame(): void {
     // handles are typed by kind: a texture is not an actor, and 0 is none of any kind
@@ -74,4 +75,23 @@ export function typed(): void {
     // @ts-expect-error a prefab is not an actor
     Actor.setPosition(rock, 1, 2, 3);
     void moved; void alive; void found; void events; void pressed;
+}
+
+// a behavior: a class the run makes for each behavior of its name, and tells of its actor's events
+class Rock extends Behavior {
+    hits = 0;
+    onTick(dt: number): void { this.hits += dt; }
+    onTriggerEnter(other: Actor, layer: number): void { this.hits += layer; }
+}
+export function behaviors(actor: Actor): void {
+    Behavior.register('Rock', Rock);
+    Behavior.tag('Bullet');
+    const rock: Rock | null = Behavior.of<Rock>(actor, 'Rock');
+    const size: number = rock ? rock.getParamNumber('size') : 0;
+    const on: Actor | undefined = rock?.actor;
+    const live: number = Behavior.count() + Behavior.all(actor).length;
+    // @ts-expect-error a class that is no behavior
+    Behavior.register('Date', Date);
+    // @ts-expect-error a behavior's actor is read only
+    if (rock) rock.actor = actor;
 }
