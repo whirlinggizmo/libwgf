@@ -2,13 +2,18 @@
 package wgf;
 
 /**
-    Skins: a widget's parts drawn from the game's art in place of the style's colors, as
-    helix-raylib's gui skins are. A skin is a widget's part in a state: a texture's region
-    (a source width or height of 0 or less: the whole texture), nine-sliced by its borders
-    (wgf_draw_texture_nine_slice: borders of 0 top and bottom make a bar with caps at its
-    ends, of 0 left and right one up and down), multiplied by its tint (white until set).
-    A state with no skin of its own draws the normal state's (a disabled one dimmed); a part
-    from art has its art's corners, not the corner radius. The parts each widget draws:
+    Skins: a widget's parts drawn from your game's art, in place of the style's colors.
+
+    A skin is a widget's part in a state:
+    - A texture's region. A source width or height of 0 or less takes the whole texture.
+    - Nine-sliced by its borders (wgf_draw_texture_nine_slice). Borders of 0 top and bottom
+      make a bar with caps at its ends. Borders of 0 left and right make one up and down.
+    - Multiplied by its tint (white until set).
+
+    A state with no skin of its own draws the normal state's skin, dimmed if disabled. A part
+    drawn from art has its art's corners, not the corner radius.
+
+    The parts each widget draws:
 
       PANEL      base: its body
       BUTTON     base: the button (an icon button's too)
@@ -28,16 +33,21 @@ package wgf;
       POPUP      base: a dropdown's open list's box, a tooltip's box
       TEXT       base: a text field's box, PRESSED while it is focused
 
-    A choice's toggles are TOGGLE's, each PRESSED while chosen; a modal's panel is PANEL's.
+    A choice's toggles are TOGGLE's, each PRESSED while chosen. A modal's panel is PANEL's.
 
-    A fill is stretched over the filled part, or clipped: drawn over the whole track and
-    shown up to the value, so a bar with round ends shows its far end only when full
-    (Godot's TextureProgressBar); from the left, right, top, or bottom (wgf_ui_set_fill). An
-    edge is drawn at its art's size, centered on the fill's front. A widget's text (a
-    button's, a toggle's) moves by its state's text offset: a face that sinks when pressed
-    takes its text with it. The style holds a reference to each texture; reset lets them go.
-    False for a widget, part, or state that isn't one, a handle that isn't a texture, or a
-    value not finite (a border below 0).
+    A fill is drawn one of two ways, from the left, right, top, or bottom (see wgf_ui_set_fill):
+    - Stretched over the filled part.
+    - Clipped: drawn over the whole track, and shown up to the value. A bar with round ends then
+      shows its far end only when full, like Godot's TextureProgressBar.
+
+    An edge is drawn at its art's size, centered on the fill's front. A widget's text (a
+    button's, a toggle's) moves by its state's text offset, so a face that sinks when pressed
+    takes its text with it.
+
+    The style holds a reference to each texture, and wgf_ui_reset_style lets them go.
+
+    The skin calls return false for a widget, part, or state that isn't one, a handle that isn't
+    a texture, or a value that isn't finite (or a border below 0).
 **/
 enum abstract UiWidget(Int) from Int to Int {
 	var PANEL = 0;

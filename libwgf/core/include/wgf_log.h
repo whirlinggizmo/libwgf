@@ -10,12 +10,13 @@
 extern "C" {
 #endif
 
-/* Logging to stderr (the browser console on the web). A message below the
- * current level is dropped; the level starts at INFO. Text is UTF-8.
+/* Logging to stderr, or to the browser console on the web.
  *
- * The exported calls take finished text, so a binding formats in its own
- * language and passes one string. C code formats with the wgf_log_<level> macros,
- * or with wgf_log_debug and the rest from wgf_log.h. */
+ * A message below the current level is dropped. The level starts at INFO. Text is UTF-8.
+ *
+ * The exported calls take finished text, so a binding formats in its own language and
+ * passes one string. C code formats with the wgf_log_<level> macros, such as wgf_log_debug,
+ * from wgf_log.h. */
 
 typedef enum wgf_log_level_t {
     WGF_LOG_LEVEL_TRACE = 0,
@@ -29,12 +30,18 @@ typedef enum wgf_log_level_t {
 WGF_API void wgf_log_set_level(wgf_log_level_t level);
 WGF_API wgf_log_level_t wgf_log_get_level(void);
 
-/* The last lines logged kept for the program to read, a game's console or a bug report:
- * raylib's log callback, without the callback. set_history keeps the last `count` (0, the
- * default, none; at most 1024), forgetting those kept; false for a count outside that.
- * Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
- * its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
- * valid until the next read. Lines below the level aren't kept, as they aren't shown. */
+/* Keeps the last lines logged for the program to read, such as for a game's console or a
+ * bug report.
+ *
+ * - set_history keeps the last `count` lines, at most 1024 (default: 0, none). It forgets
+ *   the lines already kept. It returns false for a count outside 0 to 1024.
+ * - get_history_line returns a line as the console shows it, without its level, such as
+ *   "file.c:12: text" (255 bytes at most). Index 0 is the oldest.
+ * - get_history_level returns that line's level.
+ * - For an index outside the lines kept, they return "" and TRACE.
+ *
+ * A line read is a copy, valid until the next read. Lines below the level aren't kept,
+ * just as they aren't shown. */
 WGF_API bool wgf_log_set_history(int count);
 WGF_API int wgf_log_get_history(void);
 WGF_API int wgf_log_get_history_count(void);
@@ -42,15 +49,15 @@ WGF_API const char *wgf_log_get_history_line(int index);
 WGF_API wgf_log_level_t wgf_log_get_history_level(int index);
 WGF_API void wgf_log_clear_history(void);
 
-/* Log one message. */
+/* Logs one message. */
 WGF_API void wgf_log_message(wgf_log_level_t level, const char *text);
 
-/* Log one message with the file and line it came from. */
+/* Logs one message with the file and line it came from. */
 WGF_API void wgf_log_message_source(wgf_log_level_t level, const char *file, int line,
                                             const char *text);
 
-/* C only: format like printf, then log with the source. A message longer than
- * the buffer is cut, and the cut never splits a UTF-8 character. */
+/* C only: formats a message like printf, then logs it with its source. A message longer
+ * than the buffer is cut, and the cut never splits a UTF-8 character. */
 #define WGF_LOG_FORMAT_MAX 2048
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -68,9 +75,11 @@ static inline void wgf_log_format(wgf_log_level_t level, const char *file, int l
     wgf_log_message_source(level, file, line, text);
 }
 
-/* The file a line is logged from: its base name where the compiler gives one alone
- * (__FILE_NAME__: clang, GCC 12 and later), which is all the log prints, so a build
- * carries no source paths, and is the same bytes wherever it is made; else __FILE__. */
+/* The file a line is logged from.
+ *
+ * Where the compiler gives the base name alone (__FILE_NAME__, in clang and GCC 12 and
+ * later), that is used. It is all the log prints, so a build carries no source paths and is
+ * the same bytes wherever it is made. Other compilers use __FILE__. */
 #ifdef __FILE_NAME__
 #define WGF_LOG_FILE __FILE_NAME__
 #else

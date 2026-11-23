@@ -2,9 +2,14 @@
 package wgf;
 
 /**
-    Every axis of a pad, one number each: the sticks' as get_stick gives them (-1 to 1, y
-    down, past the dead zone) and the triggers' (0 to 1). What input actions bind
-    (wgf_action.h), and the names an autopilot's `pad axis` lines use.
+    Every axis of a pad, each read as one number.
+
+    - A stick's axes read as wgf_gamepad_get_stick gives them: -1 to 1, y down, past the dead
+      zone.
+    - A trigger reads 0 to 1.
+
+    Input actions bind these (wgf_action.h), and an autopilot's `pad axis` lines use their
+    names.
 **/
 enum abstract GamepadAxis(Int) from Int to Int {
 	var LEFT_X = 0;

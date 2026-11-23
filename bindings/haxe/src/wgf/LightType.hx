@@ -2,26 +2,27 @@
 package wgf;
 
 /**
-    A light: an actor that lights the stage it is on (wgf_stage3d.h), placed and aimed with
-    the actor calls (wgf_actor_look_at): a light shines down its -z. Lights work as
-    libwgt's (wgrender's):
+    A light: an actor that lights the stage it is on (wgf_stage3d.h).
 
-    - Nothing is lit implicitly: a stage with no lights and no ambient is black.
-    - Each model is lit by the up to 8 lights reaching it most (their brightness, and
-      their falloff at its box); point and spot lights whose range doesn't reach a model
-      are skipped for it.
-    - A light shines while it is enabled (with everything above it) and visible
-      (wgf_actor.h): hiding it turns it off and leaves its children as they are, a lamp's
-      bulb model under it, say.
-    - Parameters follow glTF's KHR_lights_punctual, and shading glTF's materials
-      (wgf_material.h), so lights from glTF tools look the same here. Light colors are
-      sRGB; lighting happens in linear space. A white directional light of intensity pi
-      (about 3) lights a white, rough, non-metal surface facing it fully. Point and spot
-      lights fall off with the inverse square of distance and fade smoothly to nothing at
-      their range (0: no limit).
-    - Setters store values even where they don't apply to the light's type (a range on a
-      directional light).
-    - Shadows (below) are a directional or spot light's, set on per light.
+    Place and aim it with the actor calls (wgf_actor_look_at). A light shines down its -z.
+
+    - Nothing is lit implicitly. A stage with no lights and no ambient light is black.
+    - Each model is lit by the up to 8 lights that reach it most, by their brightness and their
+      falloff at its box. Point and spot lights whose range doesn't reach a model are skipped
+      for it.
+    - A light shines while it is enabled (with every actor above it) and visible (wgf_actor.h).
+      Hiding it turns it off, and leaves its children as they are, such as a lamp's bulb model
+      under it.
+    - Parameters follow glTF's KHR_lights_punctual, and shading follows glTF's materials
+      (wgf_material.h). So lights from glTF tools look the same here.
+    - Light colors are sRGB. Lighting happens in linear space.
+    - A white directional light of intensity pi (about 3) fully lights a white, rough,
+      non-metal surface facing it.
+    - Point and spot lights fall off with the inverse square of distance. They fade smoothly to
+      nothing at their range (0: no limit).
+    - Setters store values even where they don't apply to the light's type, such as a range on
+      a directional light.
+    - Directional and spot lights can cast shadows (below), turned on for each light.
 **/
 enum abstract LightType(Int) from Int to Int {
 	var DIRECTIONAL = 0;

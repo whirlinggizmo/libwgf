@@ -4,24 +4,37 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    An image on the CPU: RGBA pixels, 8 bits a channel, rows from the top, in memory, never
-    on the GPU -- raylib's Image. Loaded from a file, generated (a color, gradients, checks,
-    noise), made from a texture's pixels read back, read and written a pixel at a time, made
-    a texture, or saved as a PNG. Pixel formats and editing beyond a pixel (drawing,
-    resizing, cropping) are not libwgf's.
+    An image on the CPU: RGBA pixels in memory, never on the GPU.
 
-    An image is a resource (wgf_resource.h): one loaded from a path is shared, reference
-    counted, and loaded on create (PENDING at once, the file found -- fetched on the web --
-    and decoded on a worker, then READY or FAILED in a later update; creating the same path
-    again gives the same image, so a pixel set on it is seen through every handle of it). One
-    made in code is the program's own, READY at once. Released with wgf_resource_release. A
-    getter answers 0 or NULL for an image that isn't READY. A handle of kind "gfx.image".
+    Pixels are 8 bits a channel, in rows from the top. You can:
+    - load an image from a file;
+    - generate one: a color, gradients, checks, or noise;
+    - make one from a texture's pixels read back;
+    - read and write it a pixel at a time;
+    - make a texture from it, or save it as a PNG.
 
-    Images made in code, `width` by `height` pixels, READY at once. Each is 0 for a size of
-    0 or less or over 16384, or no memory for it, each logged.
+    libwgf has no other pixel formats, and no editing beyond a pixel (drawing, resizing,
+    cropping).
 
-    Noise, the same pixels for the same numbers on every platform (integer arithmetic,
-    hashed from `seed`; never the C library's rand), opaque gray.
+    An image is a resource (wgf_resource.h), a handle of kind "gfx.image".
+    - One loaded from a path is shared, reference counted, and loaded on create. It is
+      PENDING at once. The file is found (fetched on the web) and decoded on a worker, and the
+      image becomes READY or FAILED in a later update.
+    - Creating the same path again gives the same image. A pixel set on it is seen through
+      every handle of it.
+    - One made in code is the program's own, and READY at once.
+    - Release it with wgf_resource_release.
+    - A getter returns 0 or NULL for an image that isn't READY.
+
+    Creates images in code, `width` by `height` pixels, READY at once.
+
+    Each returns 0 for a size of 0 or less or over 16384, or if there is no memory for it
+    (logged).
+
+    Creates noise images, in opaque gray.
+
+    The same numbers give the same pixels on every platform. The noise uses integer arithmetic,
+    hashed from `seed`, and never the C library's rand.
 
     A handle of kind wgf_image_t (libwgf/gfx/include/wgf_image.h): 0 is none.
 **/
@@ -35,129 +48,157 @@ abstract Image(Int) from Int to Int to wgf.Handle {
 		return (this : Handle).isAlive();
 
 	/**
-	    An image from a file: PNG, JPEG, BMP, TGA, or GIF (its first frame), decoded with
-	    stb_image on a worker. 0 only when there is no room for another image; a path or file
-	    that can't be loaded gives an image that FAILED (logged once, naming the file). Not
-	    loaded again in place (wgf_asset_reload leaves it).
+	    Creates an image from a file: PNG, JPEG, BMP, TGA, or GIF (its first frame).
+
+	    The file is decoded on a worker. It isn't loaded again in place:
+	    wgf_asset_reload leaves it as it is.
+
+	    Returns 0 only if there is no room for another image. A path or file that can't be loaded
+	    gives an image that FAILED (logged once, naming the file).
 	**/
 	public static inline function create(path:String):Image
 		return Raw.wgf_image_create(path);
 
 	/**
-	    Every pixel `color` (raylib's GenImageColor).
+	    Creates an image with every pixel `color`.
 	**/
 	public static inline function createColor(width:Int, height:Int, color:Int):Image
 		return Raw.wgf_image_create_color(width, height, color);
 
 	/**
-	    A gradient from `start` to `end` along a direction `angle` degrees clockwise from
-	    rightward (0 runs left to right, 90 top to bottom): the corner furthest back along it is
-	    `start` exactly, the one furthest along it `end` (raylib's GenImageGradientLinear, its
-	    angle measured from rightward).
+	    Creates a gradient from `start` to `end` along a direction.
+
+	    - `angle` is in degrees, clockwise from rightward. 0 runs left to right, and 90 top to
+	      bottom.
+	    - The corner furthest back along the direction is exactly `start`.
+	    - The corner furthest along it is exactly `end`.
 	**/
 	public static inline function createGradientLinear(width:Int, height:Int, angle:Float, start:Int, end:Int):Image
 		return Raw.wgf_image_create_gradient_linear(width, height, angle, start, end);
 
 	/**
-	    A gradient out from the middle, `inner` within `density` (0 to 1, clamped) of the
-	    radius -- from the middle to the nearer sides' pixels -- then toward `outer` at the
-	    radius and beyond: the middle `inner`, the corners `outer` (raylib's
-	    GenImageGradientRadial).
+	    Creates a gradient out from the middle, in circles.
+
+	    - The radius runs from the middle to the pixels of the nearer sides.
+	    - The image is `inner` within `density` of the radius (0 to 1, clamped).
+	    - It then blends toward `outer`, reaching it at the radius, and stays `outer` beyond.
+	    - So the middle is `inner`, and the corners are `outer`.
 	**/
 	public static inline function createGradientRadial(width:Int, height:Int, density:Float, inner:Int, outer:Int):Image
 		return Raw.wgf_image_create_gradient_radial(width, height, density, inner, outer);
 
 	/**
-	    As radial, in squares rather than circles: `inner` within `density` of the way from the
-	    middle to the edges, then toward `outer`, every edge pixel `outer` (raylib's
-	    GenImageGradientSquare).
+	    Creates a gradient as wgf_image_create_gradient_radial does, in squares rather than circles.
+
+	    The image is `inner` within `density` of the way from the middle to the edges. It then
+	    blends toward `outer`, and every edge pixel is `outer`.
 	**/
 	public static inline function createGradientSquare(width:Int, height:Int, density:Float, inner:Int, outer:Int):Image
 		return Raw.wgf_image_create_gradient_square(width, height, density, inner, outer);
 
 	/**
-	    A checkerboard of `check_width` by `check_height` pixel squares, `a` at the top-left (raylib's
-	    GenImageChecked). 0 too for a check's side of 0 or less.
+	    Creates a checkerboard of `check_width` by `check_height` pixel squares, with `a` at the
+	    top-left. Also returns 0 for a check's side of 0 or less.
 	**/
 	public static inline function createChecked(width:Int, height:Int, check_width:Int, check_height:Int, a:Int, b:Int):Image
 		return Raw.wgf_image_create_checked(width, height, check_width, check_height, a, b);
 
 	/**
-	    Each pixel white with the chance `factor` (0 to 1, clamped), else black (raylib's
-	    GenImageWhiteNoise).
+	    Creates white noise: each pixel is white with the chance `factor` (0 to 1, clamped), and
+	    black otherwise.
 	**/
 	public static inline function createWhiteNoise(width:Int, height:Int, factor:Float, seed:Int):Image
 		return Raw.wgf_image_create_white_noise(width, height, factor, seed);
 
 	/**
-	    Perlin noise in six octaves (each twice the last's frequency and half its weight),
-	    `scale` cells of the first octave across the image (raylib's GenImagePerlinNoise),
-	    shifted by `offset_x` and `offset_y` pixels so neighboring images tile; 0 too for a scale
-	    of 0 or less, over 4096, or not finite.
+	    Creates Perlin noise in six octaves. Each octave has twice the last one's frequency and half
+	    its weight.
+
+	    - `scale` is the number of cells of the first octave across the image.
+	    - `offset_x` and `offset_y` shift the noise, in pixels, so neighboring images tile.
+
+	    Also returns 0 for a `scale` of 0 or less, over 4096, or not finite.
 	**/
 	public static inline function createPerlinNoise(width:Int, height:Int, offset_x:Int, offset_y:Int, scale:Float, seed:Int):Image
 		return Raw.wgf_image_create_perlin_noise(width, height, offset_x, offset_y, scale, seed);
 
 	/**
-	    Cells (Worley noise): a point at random in each `tile_size` square, each pixel as bright
-	    as it is far from the nearest point, white a tile's side away (raylib's
-	    GenImageCellular). 0 too for a tile's side of 0 or less.
+	    Creates cells (Worley noise).
+
+	    Each `tile_size` square has a point at random. Each pixel is as bright as it is far from
+	    the nearest point, and white a tile's side away.
+
+	    Also returns 0 for a `tile_size` of 0 or less.
 	**/
 	public static inline function createCellular(width:Int, height:Int, tile_size:Int, seed:Int):Image
 		return Raw.wgf_image_create_cellular(width, height, tile_size, seed);
 
 	/**
-	    A copy of a texture's pixels read back (wgf_texture_read, DONE): raylib's
-	    LoadImageFromTexture. READY at once; 0 for a read that isn't DONE (logged).
+	    Creates an image from a copy of a texture's pixels read back (wgf_texture_read, DONE).
+
+	    The image is READY at once. Returns 0 for a read that isn't DONE (logged).
 	**/
 	public static inline function createFromRead(read:TextureRead):Image
 		return Raw.wgf_image_create_from_read(read);
 
 	/**
-	    Its size in pixels; 0 until it is READY.
+	    Returns the image's size in pixels, or 0 until it is READY.
 	**/
 	public inline function getWidth():Int
 		return Raw.wgf_image_get_width(this);
 
 	/**
-	    Its size in pixels; 0 until it is READY.
+	    Returns the image's size in pixels, or 0 until it is READY.
 	**/
 	public inline function getHeight():Int
 		return Raw.wgf_image_get_height(this);
 
 	/**
-	    The pixel at column `x`, row `y` from the top-left (raylib's GetImageColor); 0 (transparent
-	    black) outside it or for an image that isn't READY.
+	    Returns the pixel at column `x`, row `y`, counted from the top-left.
+
+	    Returns 0 (transparent black) outside the image, or for an image that isn't READY.
 	**/
 	public inline function getPixel(x:Int, y:Int):Int
 		return Raw.wgf_image_get_pixel(this, x, y);
 
 	/**
-	    That pixel set to `color` (raylib's ImageDrawPixel). Refused, false, outside it or for an
-	    image that isn't READY.
+	    Sets the pixel at column `x`, row `y` to `color`.
+
+	    Returns false outside the image, or for an image that isn't READY.
 	**/
 	public inline function setPixel(x:Int, y:Int, color:Int):Bool
 		return Raw.wgf_image_set_pixel(this, x, y, color);
 
 	/**
-	    Its pixels: RGBA, 8 bits a channel, width * 4 bytes a row, the top row first; valid until
-	    it is released. NULL and 0 for an image that isn't READY.
+	    Returns the image's pixels, and their size in bytes.
+
+	    Pixels are RGBA, 8 bits a channel, width * 4 bytes a row, with the top row first. They are
+	    valid until the image is released.
+
+	    Returns NULL and 0 for an image that isn't READY.
 	**/
 	public inline function getData():haxe.io.Bytes
 		return Raw.wgf_image_get_data(this);
 
 	/**
-	    Its pixels: RGBA, 8 bits a channel, width * 4 bytes a row, the top row first; valid until
-	    it is released. NULL and 0 for an image that isn't READY.
+	    Returns the image's pixels, and their size in bytes.
+
+	    Pixels are RGBA, 8 bits a channel, width * 4 bytes a row, with the top row first. They are
+	    valid until the image is released.
+
+	    Returns NULL and 0 for an image that isn't READY.
 	**/
 	public inline function getSize():Int
 		return Raw.wgf_image_get_size(this);
 
 	/**
-	    Saved as a PNG file at `path` (as wgf_fs_write: under the root, its directories made; on
-	    the web, kept in the browser's store), libwgf's own writer. The write's task, or 0 for an
-	    image that isn't READY, a NULL or refused path, or no memory to encode it. Encoded on the
-	    calling thread.
+	    Saves the image as a PNG file at `path`, with libwgf's own writer.
+
+	    The path works as for wgf_fs_write: under the root, with its directories made. On the web,
+	    the file is kept in the browser's store. The image is encoded on the calling thread.
+
+	    Returns the write's task. Returns 0 for an image that isn't READY, a NULL or refused
+	    `path`, or if there is no memory to encode it.
 	**/
 	public inline function save(path:String):FsTask
 		return Raw.wgf_image_save(this, path);

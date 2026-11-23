@@ -4,48 +4,54 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    The keyboard, read inside a tick or a frame: what changed since the previous
-    tick, or the previous frame. Keys are named by where they are on a US layout:
-    WGF_KEY_Z is the key left of X, whatever the layout prints on it. For the
-    characters the user typed, read wgf_input_get_chars.
+    The keyboard, read inside a tick or a frame.
+
+    A read reports what changed since the previous tick, or the previous frame. Keys are named
+    by where they are on a US layout: WGF_KEY_Z is the key left of X, whatever the layout prints
+    on it. For the characters the user typed, read wgf_input_get_chars.
 **/
 class Keyboard {
 	/**
-	    Where `key` is: UP, PRESSED (went down since the previous tick or frame), DOWN,
-	    or RELEASED. A key the keyboard doesn't have is UP. A key pressed and released
-	    between two reads is PRESSED for one, so no tap is missed.
+	    Returns the state of `key`: UP, PRESSED (went down since the previous tick or frame), DOWN,
+	    or RELEASED.
+
+	    A key the keyboard doesn't have is UP. A key pressed and released between two reads is
+	    PRESSED for one read, so no tap is missed.
 	**/
 	public static inline function getState(key:KeyboardKey):InputState
 		return Raw.wgf_keyboard_get_state(key);
 
 	/**
-	    PRESSED or DOWN.
+	    Returns whether `key` is PRESSED or DOWN.
 	**/
 	public static inline function isDown(key:KeyboardKey):Bool
 		return Raw.wgf_keyboard_is_down(key);
 
 	/**
-	    Went down since the previous tick or frame; held keys repeating don't count.
+	    Returns whether `key` went down since the previous tick or frame. A held key repeating
+	    doesn't count.
 	**/
 	public static inline function isPressed(key:KeyboardKey):Bool
 		return Raw.wgf_keyboard_is_pressed(key);
 
 	/**
-	    Went up since the previous tick or frame.
+	    Returns whether `key` went up since the previous tick or frame.
 	**/
 	public static inline function isReleased(key:KeyboardKey):Bool
 		return Raw.wgf_keyboard_is_released(key);
 
 	/**
-	    Pressed, or repeated by the key held (the system's key repeat): a menu's cursor moving
-	    while an arrow is held, a text field's backspace.
+	    Returns whether `key` was pressed, or repeated by being held (the system's key repeat).
+
+	    Use it for a menu's cursor moving while an arrow is held, or a text field's backspace.
 	**/
 	public static inline function isRepeated(key:KeyboardKey):Bool
 		return Raw.wgf_keyboard_is_repeated(key);
 
 	/**
-	    The last key pressed in this frame (in a tick, the tick), not repeated; WGF_KEY_NONE for
-	    none: a rebinding screen's "press a key".
+	    Returns the last key pressed in this frame (in a tick, in that tick), not counting repeats.
+
+	    Returns WGF_KEY_NONE if none was. A rebinding screen's "press a key" uses it.
 	**/
 	public static inline function getLastPressed():KeyboardKey
 		return Raw.wgf_keyboard_get_last_pressed();

@@ -4,44 +4,54 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    A voice, an object: a handle of kind "audio.voice".
+    A voice is an object: a handle of kind "audio.voice".
 
-    Voices: one playing of a sound (wgf_sound.h), an object, as wgrender's Sound: as a
-    sprite shows a texture, a voice plays a sound. Many voices may play one decoded sound
-    at once. Music is a looping voice. The same on both platforms: natively libwgf's
-    mixer plays it, on its own thread; on the web the browser does (Web Audio), on its
-    audio thread, so on neither does a slow frame stop the sound.
+    Voices: a voice is one playing of a sound (wgf_sound.h).
 
-    Its state is wgf_play_state_t (wgf_play_state.h), with play, pause, resume, and stop
-    as that header says. COMPLETE: a non-looping voice ran to its end and holds there.
-    A voice told to play a sound still loading is PLAYING, and starts from the start when
-    the sound is READY; if the sound fails, it is COMPLETE. On the web the browser keeps
-    sound off until the page's first input: until then a PLAYING voice is silent and its
-    position doesn't move, so a one-shot played before the first click doesn't become
-    COMPLETE until after it.
+    As a sprite shows a texture, a voice plays a sound. Many voices may play one decoded sound
+    at once. Music is a looping voice.
 
-    A pushed voice: samples the game makes as it goes (a synth, a tracker, an emulator,
-    procedural sound, a voice chat), pushed into the voice's queue and played from it, as
-    raylib's AudioStream. raylib's stream callback, which its mixer calls for more, is the
-    push here: nothing calls back, so each frame the game asks how much room the queue has
-    (wgf_voice_get_room, raylib's IsAudioStreamProcessed) and fills it. Samples are at
-    the voice's own rate, any rate, played at the mixer's (resampled, linearly
-    interpolated, by pitch too); mono or stereo; interleaved, left first.
+    Voices work the same on both platforms. Natively libwgf's mixer plays them, on its own
+    thread. On the web the browser does (Web Audio), on its audio thread. So on neither does a
+    slow frame stop the sound.
 
-    It is a voice: play, pause, resume, and stop; volume, pitch (0 to 16: a negative one is
-    refused, a queue runs forwards only), pan, its bus, and spatial, as any voice's. It has
-    no sound (set_sound refuses), no segments, and no position to set; its position is the
-    seconds it has played since its last play or stop. Loop means nothing to it. PLAYING, it
-    takes what is queued as the mixer needs it; when the queue runs out it plays silence,
-    still PLAYING, and goes on once more is pushed: each time it ran out, after having had
-    something to play, is an underrun (wgf_voice_get_underruns). Paused, or audio paused, it
-    takes nothing and the queue waits. Stop empties the queue; play from STOPPED plays what
-    was pushed meanwhile, so a queue filled before play starts without a gap.
+    A voice's state is wgf_play_state_t (wgf_play_state.h), with play, pause, resume, and stop
+    as that header says.
+    - COMPLETE: a non-looping voice ran to its end and holds there.
+    - A voice told to play a sound still loading is PLAYING. It starts from the start when the
+      sound is READY. If the sound fails, the voice is COMPLETE.
+    - On the web the browser keeps sound off until the page's first input. Until then a PLAYING
+      voice is silent and its position doesn't move. So a one-shot played before the first
+      click doesn't become COMPLETE until after it.
 
-    Natively libwgf's mixer takes from the queue on its own thread; on the web a
-    ScriptProcessorNode on the page's own thread does, so a long frame there can starve it:
-    keep a tenth of a second or more queued. On the web, too, nothing is taken before the
-    page's first input (the top of this header).
+    Pushed voices: a pushed voice plays samples the game makes as it goes.
+
+    Use one for a synth, a tracker, an emulator, procedural sound, or a voice chat. The game
+    pushes samples into the voice's queue, and the voice plays from it. Nothing calls back for
+    more: each frame the game asks how much room the queue has (wgf_voice_get_room) and fills it.
+
+    - Samples are at the voice's own rate, any rate, played at the mixer's rate. They are
+      resampled with linear interpolation, by pitch too.
+    - Samples are mono or stereo, interleaved, left first.
+
+    A pushed voice is a voice: play, pause, resume, stop, volume, pan, its bus, and spatial work
+    as any voice's do. Its pitch is 0 to 16: a negative one is refused, since a queue runs
+    forwards only.
+    - It has no sound (set_sound refuses), no segments, and no position to set.
+    - Its position is the seconds it has played since its last play or stop.
+    - Looping means nothing to it.
+    - PLAYING, it takes what is queued as the mixer needs it. When the queue runs out it plays
+      silence, still PLAYING, and goes on once more is pushed.
+    - Each time the queue ran out, after having had samples to play, is an underrun
+      (wgf_voice_get_underruns).
+    - Paused, or with audio paused, it takes nothing and the queue waits.
+    - Stop empties the queue. Play from STOPPED plays what was pushed meanwhile, so a queue
+      filled before play starts without a gap.
+
+    Natively libwgf's mixer takes from the queue on its own thread. On the web a
+    ScriptProcessorNode on the page's own thread does, so a long frame there can starve it. Keep
+    a tenth of a second or more queued. On the web, too, nothing is taken before the page's
+    first input (see the top of this header).
 
     A handle of kind wgf_voice_t (libwgf/audio/include/wgf_voice.h): 0 is none.
 **/
@@ -55,302 +65,428 @@ abstract Voice(Int) from Int to Int to wgf.Handle {
 		return (this : Handle).isAlive();
 
 	/**
-	    A voice of `sound` (0 for none yet: set_sound later), STOPPED, at volume 1, pitch 1,
-	    pan 0, not looping; it holds a reference to the sound. 0 for a handle that isn't a
-	    sound, or when there's no room for another.
+	    Creates a voice of `sound`, STOPPED, at volume 1, pitch 1, and pan 0, not looping.
+
+	    Pass 0 for no sound yet, and set one later with wgf_voice_set_sound. The voice holds a
+	    reference to the sound.
+
+	    Returns 0 for a handle that isn't a sound, or if there is no room for another voice.
 	**/
 	public static inline function create(sound:Sound):Voice
 		return Raw.wgf_voice_create(sound);
 
 	/**
-	    The voice ended at once, its sound let go of. Nothing for a handle that isn't one.
+	    Destroys `voice` at once, letting go of its sound. Does nothing for a handle that isn't a
+	    voice.
 	**/
 	public inline function destroy():Void
 		Raw.wgf_voice_destroy(this);
 
 	/**
-	    Play `sound` (0 for none) instead, its state kept (CONVENTIONS.md, choosing what to
-	    play keeps the state): PLAYING, it plays the new sound from its start (its end, with a
-	    negative pitch); PAUSED, it waits there; STOPPED or COMPLETE, it is STOPPED there. With
-	    nothing it can play (0, a sound that FAILED, a streamed sound another voice holds), it
-	    is STOPPED. Any segment is cleared. False for a handle that isn't a voice, one that
-	    isn't a sound, and a pushed voice (below).
+	    Sets the sound the voice plays instead (0 for none), keeping its state (see CONVENTIONS.md,
+	    "choosing what to play keeps the state").
+
+	    - PLAYING: it plays the new sound from its start (from its end, with a negative pitch).
+	    - PAUSED: it waits there.
+	    - STOPPED or COMPLETE: it is STOPPED there.
+	    - With nothing it can play (0, a sound that FAILED, or a streamed sound another voice
+	      holds), it is STOPPED.
+	    - Any segment is cleared.
+
+	    Returns false for a handle that isn't a voice, a `sound` that isn't a sound, or a pushed
+	    voice (see wgf_voice_create_pushed).
 	**/
 	public inline function setSound(sound:Sound):Bool
 		return Raw.wgf_voice_set_sound(this, sound);
 
 	/**
-	    Its sound (the voice holds the reference); 0 for none, and for a handle that isn't a
-	    voice.
+	    Returns the voice's sound. The voice holds the reference. Returns 0 for none, and for a
+	    handle that isn't a voice.
 	**/
 	public inline function getSound():Sound
 		return Raw.wgf_voice_get_sound(this);
 
 	/**
-	    To PLAYING from the start (the end, with a negative pitch), from any state. False for
-	    a voice with no sound (but a pushed one), one whose sound FAILED, and a streamed sound another voice is
-	    playing or holding paused (one voice at a time).
+	    Plays the voice from the start (the end, with a negative pitch), from any state: PLAYING.
+
+	    Returns false for any of these:
+	    - a voice with no sound, unless it is a pushed voice
+	    - a voice whose sound FAILED
+	    - a streamed sound that another voice is playing or holding paused (one voice at a time)
 	**/
 	public inline function play():Bool
 		return Raw.wgf_voice_play(this);
 
 	/**
-	    PLAYING to PAUSED, held where it is. False in any other state.
+	    Pauses a PLAYING voice, holding it where it is: PAUSED. Returns false in any other state.
 	**/
 	public inline function pause():Bool
 		return Raw.wgf_voice_pause(this);
 
 	/**
-	    PAUSED back to PLAYING. False in any other state.
+	    Resumes a PAUSED voice: PLAYING. Returns false in any other state.
 	**/
 	public inline function resume():Bool
 		return Raw.wgf_voice_resume(this);
 
 	/**
-	    To STOPPED, rewound to the start, from any state. False only for a handle that isn't
-	    a voice.
+	    Stops the voice from any state, rewound to the start: STOPPED. Returns false only for a
+	    handle that isn't a voice.
 	**/
 	public inline function stop():Bool
 		return Raw.wgf_voice_stop(this);
 
 	/**
-	    STOPPED, PLAYING, PAUSED, or COMPLETE; STOPPED for a handle that isn't a voice.
+	    Returns the voice's state: STOPPED, PLAYING, PAUSED, or COMPLETE. Returns STOPPED for a
+	    handle that isn't a voice.
 	**/
 	public inline function getState():PlayState
 		return Raw.wgf_voice_get_state(this);
 
 	/**
-	    Loop: at the end, on from the start (with a negative pitch, from the start back to
-	    the end), never COMPLETE. Turning it on while COMPLETE leaves it COMPLETE until the
-	    next play. False only for a handle that isn't a voice.
+	    Sets or gets whether the voice loops.
+
+	    A looping voice goes on from the start at its end, and is never COMPLETE. With a negative
+	    pitch, it goes from the start back to the end. Turning looping on while COMPLETE leaves the
+	    voice COMPLETE until the next play. Returns false only for a handle that isn't a voice.
 	**/
 	public inline function setLoop(loop:Bool):Bool
 		return Raw.wgf_voice_set_loop(this, loop);
 
 	/**
-	    Loop: at the end, on from the start (with a negative pitch, from the start back to
-	    the end), never COMPLETE. Turning it on while COMPLETE leaves it COMPLETE until the
-	    next play. False only for a handle that isn't a voice.
+	    Sets or gets whether the voice loops.
+
+	    A looping voice goes on from the start at its end, and is never COMPLETE. With a negative
+	    pitch, it goes from the start back to the end. Turning looping on while COMPLETE leaves the
+	    voice COMPLETE until the next play. Returns false only for a handle that isn't a voice.
 	**/
 	public inline function isLoop():Bool
 		return Raw.wgf_voice_is_loop(this);
 
 	/**
-	    Loudness: 1 as the file is, 0 silent, above 1 louder (and may clip). Refuses a
-	    negative or non-finite one.
+	    Sets or gets the voice's volume.
+
+	    - 1 plays the sound as the file is.
+	    - 0 is silent.
+	    - Above 1 is louder, and may clip.
+
+	    Returns false for a negative or non-finite volume.
 	**/
 	public inline function setVolume(volume:Float):Bool
 		return Raw.wgf_voice_set_volume(this, volume);
 
 	/**
-	    Loudness: 1 as the file is, 0 silent, above 1 louder (and may clip). Refuses a
-	    negative or non-finite one.
+	    Sets or gets the voice's volume.
+
+	    - 1 plays the sound as the file is.
+	    - 0 is silent.
+	    - Above 1 is louder, and may clip.
+
+	    Returns false for a negative or non-finite volume.
 	**/
 	public inline function getVolume():Float
 		return Raw.wgf_voice_get_volume(this);
 
 	/**
-	    Speed and tone together: 1 as recorded, 2 an octave up at twice the speed, 0 held
-	    where it is (still PLAYING: that is not pause), negative backwards. Clamped to
-	    [-16, 16]. Refuses a non-finite one, and a negative one on a streamed sound (its
-	    decoders run forwards only) or a pushed voice.
+	    Sets or gets the voice's pitch: its speed and tone together, clamped to [-16, 16].
+
+	    - 1 plays as recorded.
+	    - 2 plays an octave up, at twice the speed.
+	    - 0 holds it where it is. It is still PLAYING: that is not a pause.
+	    - A negative pitch plays backwards.
+
+	    Returns false for a non-finite pitch. Also returns false for a negative pitch on a streamed
+	    sound (its decoders run forwards only) or on a pushed voice.
 	**/
 	public inline function setPitch(pitch:Float):Bool
 		return Raw.wgf_voice_set_pitch(this, pitch);
 
 	/**
-	    Speed and tone together: 1 as recorded, 2 an octave up at twice the speed, 0 held
-	    where it is (still PLAYING: that is not pause), negative backwards. Clamped to
-	    [-16, 16]. Refuses a non-finite one, and a negative one on a streamed sound (its
-	    decoders run forwards only) or a pushed voice.
+	    Sets or gets the voice's pitch: its speed and tone together, clamped to [-16, 16].
+
+	    - 1 plays as recorded.
+	    - 2 plays an octave up, at twice the speed.
+	    - 0 holds it where it is. It is still PLAYING: that is not a pause.
+	    - A negative pitch plays backwards.
+
+	    Returns false for a non-finite pitch. Also returns false for a negative pitch on a streamed
+	    sound (its decoders run forwards only) or on a pushed voice.
 	**/
 	public inline function getPitch():Float
 		return Raw.wgf_voice_get_pitch(this);
 
 	/**
-	    Balance: -1 the left only, 0 both (the default), 1 the right only, the other side
-	    fading. Clamped to [-1, 1]; refuses a non-finite one.
+	    Sets or gets the voice's pan, its balance, clamped to [-1, 1] (default: 0).
+
+	    - -1 plays the left only.
+	    - 0 plays both.
+	    - 1 plays the right only.
+	    - Between, the other side fades.
+
+	    Returns false for a non-finite pan.
 	**/
 	public inline function setPan(pan:Float):Bool
 		return Raw.wgf_voice_set_pan(this, pan);
 
 	/**
-	    Balance: -1 the left only, 0 both (the default), 1 the right only, the other side
-	    fading. Clamped to [-1, 1]; refuses a non-finite one.
+	    Sets or gets the voice's pan, its balance, clamped to [-1, 1] (default: 0).
+
+	    - -1 plays the left only.
+	    - 0 plays both.
+	    - 1 plays the right only.
+	    - Between, the other side fades.
+
+	    Returns false for a non-finite pan.
 	**/
 	public inline function getPan():Float
 		return Raw.wgf_voice_get_pan(this);
 
 	/**
-	    The bus it is heard through (wgf_bus.h): effects until set, its parent's once the one
-	    set is destroyed. A play (wgf_sound_play) is on its sound's. False for a handle that
-	    isn't a voice, or a bus that isn't one.
+	    Sets or gets the bus the voice is heard through (wgf_bus.h).
+
+	    It is the effects bus until set. Once the bus set is destroyed, it is that bus's parent. A
+	    play (wgf_sound_play) is on its sound's bus instead. Returns false for a handle that isn't a
+	    voice, or a bus that isn't one.
 	**/
 	public inline function setBus(bus:Bus):Bool
 		return Raw.wgf_voice_set_bus(this, bus);
 
 	/**
-	    The bus it is heard through (wgf_bus.h): effects until set, its parent's once the one
-	    set is destroyed. A play (wgf_sound_play) is on its sound's. False for a handle that
-	    isn't a voice, or a bus that isn't one.
+	    Sets or gets the bus the voice is heard through (wgf_bus.h).
+
+	    It is the effects bus until set. Once the bus set is destroyed, it is that bus's parent. A
+	    play (wgf_sound_play) is on its sound's bus instead. Returns false for a handle that isn't a
+	    voice, or a bus that isn't one.
 	**/
 	public inline function getBus():Bus
 		return Raw.wgf_voice_get_bus(this);
 
 	/**
-	    Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
-	    distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
-	    by its side of the listener, on top of its own volume and pan. An actor's voice component
-	    that is spatial is placed at its actor each frame. False only for a handle that isn't a
-	    voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
-	    it. Read back as x, y, z and as near, far.
+	    Sets or gets whether the voice is spatial, and its place and range.
+
+	    A spatial voice is heard from its place by the listener (wgf_audio.h), on top of its own
+	    volume and pan.
+	    - It is at full volume within its range's near distance (default: 1).
+	    - It falls off evenly to silent at its far distance (default: 50).
+	    - It is panned by which side of the listener it is on.
+	    - An actor's voice component that is spatial is placed at its actor each frame.
+
+	    The place reads back as x, y, z, and the range as near, far.
+
+	    Returns false only for a handle that isn't a voice. Also, set_place returns false for a
+	    non-finite place, and set_range for a near below 0 or a far not above the near.
 	**/
 	public inline function setSpatial(spatial:Bool):Bool
 		return Raw.wgf_voice_set_spatial(this, spatial);
 
 	/**
-	    Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
-	    distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
-	    by its side of the listener, on top of its own volume and pan. An actor's voice component
-	    that is spatial is placed at its actor each frame. False only for a handle that isn't a
-	    voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
-	    it. Read back as x, y, z and as near, far.
+	    Sets or gets whether the voice is spatial, and its place and range.
+
+	    A spatial voice is heard from its place by the listener (wgf_audio.h), on top of its own
+	    volume and pan.
+	    - It is at full volume within its range's near distance (default: 1).
+	    - It falls off evenly to silent at its far distance (default: 50).
+	    - It is panned by which side of the listener it is on.
+	    - An actor's voice component that is spatial is placed at its actor each frame.
+
+	    The place reads back as x, y, z, and the range as near, far.
+
+	    Returns false only for a handle that isn't a voice. Also, set_place returns false for a
+	    non-finite place, and set_range for a near below 0 or a far not above the near.
 	**/
 	public inline function isSpatial():Bool
 		return Raw.wgf_voice_is_spatial(this);
 
 	/**
-	    Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
-	    distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
-	    by its side of the listener, on top of its own volume and pan. An actor's voice component
-	    that is spatial is placed at its actor each frame. False only for a handle that isn't a
-	    voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
-	    it. Read back as x, y, z and as near, far.
+	    Sets or gets whether the voice is spatial, and its place and range.
+
+	    A spatial voice is heard from its place by the listener (wgf_audio.h), on top of its own
+	    volume and pan.
+	    - It is at full volume within its range's near distance (default: 1).
+	    - It falls off evenly to silent at its far distance (default: 50).
+	    - It is panned by which side of the listener it is on.
+	    - An actor's voice component that is spatial is placed at its actor each frame.
+
+	    The place reads back as x, y, z, and the range as near, far.
+
+	    Returns false only for a handle that isn't a voice. Also, set_place returns false for a
+	    non-finite place, and set_range for a near below 0 or a far not above the near.
 	**/
 	public inline function setPlace(x:Float, y:Float, z:Float):Bool
 		return Raw.wgf_voice_set_place(this, x, y, z);
 
 	/**
-	    Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
-	    distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
-	    by its side of the listener, on top of its own volume and pan. An actor's voice component
-	    that is spatial is placed at its actor each frame. False only for a handle that isn't a
-	    voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
-	    it. Read back as x, y, z and as near, far.
+	    Sets or gets whether the voice is spatial, and its place and range.
+
+	    A spatial voice is heard from its place by the listener (wgf_audio.h), on top of its own
+	    volume and pan.
+	    - It is at full volume within its range's near distance (default: 1).
+	    - It falls off evenly to silent at its far distance (default: 50).
+	    - It is panned by which side of the listener it is on.
+	    - An actor's voice component that is spatial is placed at its actor each frame.
+
+	    The place reads back as x, y, z, and the range as near, far.
+
+	    Returns false only for a handle that isn't a voice. Also, set_place returns false for a
+	    non-finite place, and set_range for a near below 0 or a far not above the near.
 	**/
 	public inline function getPlace(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_voice_get_place(this, into);
 
 	/**
-	    Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
-	    distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
-	    by its side of the listener, on top of its own volume and pan. An actor's voice component
-	    that is spatial is placed at its actor each frame. False only for a handle that isn't a
-	    voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
-	    it. Read back as x, y, z and as near, far.
+	    Sets or gets whether the voice is spatial, and its place and range.
+
+	    A spatial voice is heard from its place by the listener (wgf_audio.h), on top of its own
+	    volume and pan.
+	    - It is at full volume within its range's near distance (default: 1).
+	    - It falls off evenly to silent at its far distance (default: 50).
+	    - It is panned by which side of the listener it is on.
+	    - An actor's voice component that is spatial is placed at its actor each frame.
+
+	    The place reads back as x, y, z, and the range as near, far.
+
+	    Returns false only for a handle that isn't a voice. Also, set_place returns false for a
+	    non-finite place, and set_range for a near below 0 or a far not above the near.
 	**/
 	public inline function setRange(near_distance:Float, far_distance:Float):Bool
 		return Raw.wgf_voice_set_range(this, near_distance, far_distance);
 
 	/**
-	    Spatial: heard from its place by the listener (wgf_audio.h): full within its range's near
-	    distance, falling off evenly to silent at its far one (1 and 50 by default), and panned
-	    by its side of the listener, on top of its own volume and pan. An actor's voice component
-	    that is spatial is placed at its actor each frame. False only for a handle that isn't a
-	    voice; set_place refuses a non-finite place, set_range a near below 0 or a far not above
-	    it. Read back as x, y, z and as near, far.
+	    Sets or gets whether the voice is spatial, and its place and range.
+
+	    A spatial voice is heard from its place by the listener (wgf_audio.h), on top of its own
+	    volume and pan.
+	    - It is at full volume within its range's near distance (default: 1).
+	    - It falls off evenly to silent at its far distance (default: 50).
+	    - It is panned by which side of the listener it is on.
+	    - An actor's voice component that is spatial is placed at its actor each frame.
+
+	    The place reads back as x, y, z, and the range as near, far.
+
+	    Returns false only for a handle that isn't a voice. Also, set_place returns false for a
+	    non-finite place, and set_range for a near below 0 or a far not above the near.
 	**/
 	public inline function getRange(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_voice_get_range(this, into);
 
 	/**
-	    Where it is, in seconds from the sound's start (its segment's, when it plays one), in
-	    any state: it wraps into the sound (the segment) when looping and is clamped to [0, its
-	    length] otherwise. Setting it while PLAYING plays on from there (a non-looping voice
-	    set to its end is COMPLETE at the next step); while STOPPED, PAUSED, or COMPLETE it
-	    moves and the state stays. Refuses a non-finite one, and any while the sound isn't
-	    READY. A streamed sound whose file is still arriving and doesn't say its length
-	    (wgf_sound_get_duration 0) bounds it only below, by 0: set past what has arrived, the
-	    voice waits there for it. Refuses any on a pushed voice. 0 for a handle that isn't a
-	    voice.
+	    Sets or gets where the voice is, in seconds from the sound's start, in any state.
+
+	    When it plays a segment, the position is from the segment's start.
+	    - On a looping voice, the position wraps into the sound (or the segment).
+	    - On a voice that isn't looping, it is clamped to [0, its length].
+	    - Set while PLAYING, the voice plays on from there. A non-looping voice set to its end is
+	      COMPLETE at the next step.
+	    - Set while STOPPED, PAUSED, or COMPLETE, it moves and the state stays.
+	    - A streamed sound whose file is still arriving, and doesn't state its length
+	      (wgf_sound_get_duration returns 0), bounds the position only below, by 0. Set past what
+	      has arrived, the voice waits there for it.
+
+	    Setting returns false for a non-finite position, for any position while the sound isn't
+	    READY, and for any on a pushed voice. Getting returns 0 for a handle that isn't a voice.
 	**/
 	public inline function setPosition(seconds:Float):Bool
 		return Raw.wgf_voice_set_position(this, seconds);
 
 	/**
-	    Where it is, in seconds from the sound's start (its segment's, when it plays one), in
-	    any state: it wraps into the sound (the segment) when looping and is clamped to [0, its
-	    length] otherwise. Setting it while PLAYING plays on from there (a non-looping voice
-	    set to its end is COMPLETE at the next step); while STOPPED, PAUSED, or COMPLETE it
-	    moves and the state stays. Refuses a non-finite one, and any while the sound isn't
-	    READY. A streamed sound whose file is still arriving and doesn't say its length
-	    (wgf_sound_get_duration 0) bounds it only below, by 0: set past what has arrived, the
-	    voice waits there for it. Refuses any on a pushed voice. 0 for a handle that isn't a
-	    voice.
+	    Sets or gets where the voice is, in seconds from the sound's start, in any state.
+
+	    When it plays a segment, the position is from the segment's start.
+	    - On a looping voice, the position wraps into the sound (or the segment).
+	    - On a voice that isn't looping, it is clamped to [0, its length].
+	    - Set while PLAYING, the voice plays on from there. A non-looping voice set to its end is
+	      COMPLETE at the next step.
+	    - Set while STOPPED, PAUSED, or COMPLETE, it moves and the state stays.
+	    - A streamed sound whose file is still arriving, and doesn't state its length
+	      (wgf_sound_get_duration returns 0), bounds the position only below, by 0. Set past what
+	      has arrived, the voice waits there for it.
+
+	    Setting returns false for a non-finite position, for any position while the sound isn't
+	    READY, and for any on a pushed voice. Getting returns 0 for a handle that isn't a voice.
 	**/
 	public inline function getPosition():Float
 		return Raw.wgf_voice_get_position(this);
 
 	/**
-	    Play the named segment of its sound (wgf_sound_add_segment) as the whole sound: from
-	    its start (its end, with a negative pitch), looping within it, COMPLETE at its end, its
-	    position relative to it (CONVENTIONS.md, a named segment); "" for the whole sound
-	    again. Its state is kept, as set_sound keeps it: PLAYING plays the segment from its
-	    start, PAUSED waits there, STOPPED or COMPLETE is STOPPED there. Refuses a name its
-	    sound has no segment of (a streamed sound has none), NULL, a pushed voice, and a handle
-	    that isn't a voice.
+	    Sets the named segment of the voice's sound (wgf_sound_add_segment) to play as the whole
+	    sound. Pass "" for the whole sound again.
+
+	    The segment plays from its start (its end, with a negative pitch), loops within it, is
+	    COMPLETE at its end, and has its position relative to it (see CONVENTIONS.md, "a named
+	    segment").
+
+	    The voice's state is kept, as wgf_voice_set_sound keeps it:
+	    - PLAYING plays the segment from its start.
+	    - PAUSED waits there.
+	    - STOPPED or COMPLETE is STOPPED there.
+
+	    Returns false for a name the sound has no segment of (a streamed sound has none), NULL, a
+	    pushed voice, or a handle that isn't a voice.
 	**/
 	public inline function setSegment(name:String):Bool
 		return Raw.wgf_voice_set_segment(this, name);
 
 	/**
-	    Its segment's name; "" for none, and for a handle that isn't a voice. Valid while the
-	    voice plays that segment of that sound.
+	    Returns the name of the voice's segment. Returns "" for none, and for a handle that isn't a
+	    voice. The string is valid while the voice plays that segment of that sound.
 	**/
 	public inline function getSegment():String
 		return Raw.wgf_voice_get_segment(this);
 
 	/**
-	    A pushed voice with room for `capacity` frames (a frame is a sample of each channel) of
-	    `channels` (1 or 2) at `sample_rate` frames a second, STOPPED, its queue empty, at
-	    volume 1, pitch 1, pan 0. 0 for a rate outside 1000 to 384000, channels other than 1 or
-	    2, a capacity outside 1 to 1048576, or when there's no room for another voice.
+	    Creates a pushed voice, STOPPED, with its queue empty, at volume 1, pitch 1, and pan 0.
+
+	    - `capacity` is the queue's room, in frames. A frame is a sample of each channel.
+	    - `channels` is 1 or 2.
+	    - `sample_rate` is in frames a second.
+
+	    Returns 0 for any of these:
+	    - a rate outside 1000 to 384000
+	    - channels other than 1 or 2
+	    - a capacity outside 1 to 1048576
+	    - no room for another voice
 	**/
 	public static inline function createPushed(sample_rate:Int, channels:Int, capacity:Int):Voice
 		return Raw.wgf_voice_create_pushed(sample_rate, channels, capacity);
 
 	/**
-	    `samples` (interleaved, `count` of them: a whole number of frames) queued, -1 to 1 full
-	    scale, as many frames as there is room for: how many frames it took. 0 for a voice that
-	    isn't a pushed one, and a count below 0 or not a whole number of frames.
+	    Queues `count` samples from `samples`, as many frames as there is room for.
+
+	    Samples are interleaved, -1 to 1 full scale, and `count` is a whole number of frames.
+
+	    Returns how many frames it took. Returns 0 for a voice that isn't a pushed one, or a count
+	    below 0 or not a whole number of frames.
 	**/
 	public inline function push(samples:Array<Float>):Int
 		return Raw.wgf_voice_push(this, samples);
 
 	/**
-	    The same with 16-bit samples, -32768 to 32767 (clamped), one to an int: how many frames
-	    it took.
+	    Queues 16-bit samples, as wgf_voice_push does: -32768 to 32767 (clamped), one to an int.
+
+	    Returns how many frames it took.
 	**/
 	public inline function pushInt16(samples:Array<Int>):Int
 		return Raw.wgf_voice_push_int16(this, samples);
 
 	/**
-	    Frames the queue has room for now, and frames queued and not yet played; 0 for a voice
-	    that isn't a pushed one.
+	    Returns the frames the queue has room for now (get_room), and the frames queued and not yet
+	    played (get_queued). Each returns 0 for a voice that isn't a pushed one.
 	**/
 	public inline function getRoom():Int
 		return Raw.wgf_voice_get_room(this);
 
 	/**
-	    Frames the queue has room for now, and frames queued and not yet played; 0 for a voice
-	    that isn't a pushed one.
+	    Returns the frames the queue has room for now (get_room), and the frames queued and not yet
+	    played (get_queued). Each returns 0 for a voice that isn't a pushed one.
 	**/
 	public inline function getQueued():Int
 		return Raw.wgf_voice_get_queued(this);
 
 	/**
-	    How many times its queue ran out while it played, after having had samples: each a gap
-	    in the sound. 0 for a voice that isn't a pushed one.
+	    Returns how many times the queue ran out while the voice played, after having had samples.
+	    Each is a gap in the sound.
+
+	    Returns 0 for a voice that isn't a pushed one.
 	**/
 	public inline function getUnderruns():Int
 		return Raw.wgf_voice_get_underruns(this);

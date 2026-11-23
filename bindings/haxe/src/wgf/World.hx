@@ -5,54 +5,65 @@ import wgf.impl.Raw;
 
 class World {
 	/**
-	    Events waiting, and the oldest taken off the queue into `out`, four ints each (the
-	    event, then the three above), as many whole events as fit in `count` ints, returning how
-	    many ints it filled.
+	    Returns how many events wait, or takes the oldest off the queue.
+
+	    take_events fills `out` with four ints an event (the event, then the three above). It takes
+	    as many whole events as fit in `count` ints, and returns how many ints it filled.
 	**/
 	public static inline function getEventCount():Int
 		return Raw.wgf_world_get_event_count();
 
 	/**
-	    Events waiting, and the oldest taken off the queue into `out`, four ints each (the
-	    event, then the three above), as many whole events as fit in `count` ints, returning how
-	    many ints it filled.
+	    Returns how many events wait, or takes the oldest off the queue.
+
+	    take_events fills `out` with four ints an event (the event, then the three above). It takes
+	    as many whole events as fit in `count` ints, and returns how many ints it filled.
 	**/
 	public static inline function takeEvents(out:Array<Int>):Int
 		return Raw.wgf_world_take_events(out);
 
 	/**
-	    Every actor with a component or a behavior destroyed, with everything under it, oldest
+	    Destroys every actor with a component or a behavior, with every actor under it, oldest
 	    first.
 	**/
 	public static inline function clear():Void
 		Raw.wgf_world_clear();
 
 	/**
-	    The actor spatial audio is heard from (wgf_audio.h's listener): each frame the listener
-	    is put where the actor is drawn, facing its -z (a camera's view). 0 for none (the
-	    listener stays as last set). False for a handle that isn't an actor.
+	    Sets or gets the actor that spatial audio is heard from (wgf_audio.h's listener).
+
+	    Each frame the listener is put where the actor is drawn, facing its -z, as a camera views.
+	    0 sets none, and the listener stays as last set. Returns false for a handle that isn't an
+	    actor.
 	**/
 	public static inline function setListener(actor:Actor):Bool
 		return Raw.wgf_world_set_listener(actor);
 
 	/**
-	    The actor spatial audio is heard from (wgf_audio.h's listener): each frame the listener
-	    is put where the actor is drawn, facing its -z (a camera's view). 0 for none (the
-	    listener stays as last set). False for a handle that isn't an actor.
+	    Sets or gets the actor that spatial audio is heard from (wgf_audio.h's listener).
+
+	    Each frame the listener is put where the actor is drawn, facing its -z, as a camera views.
+	    0 sets none, and the listener stays as last set. Returns false for a handle that isn't an
+	    actor.
 	**/
 	public static inline function getListener():Actor
 		return Raw.wgf_world_get_listener();
 
 	/**
-	    The simulated actors as a scene's text (wgf_scene.h's format): each top one -- an actor
-	    with a component or a behavior whose parent has none -- oldest first, as a `actor`
-	    block, with its kind, its transform, its components, its behaviors, and the actors under
-	    it, as they are now, so loading it as a scene and instantiating it makes the same actors
-	    again. One under a glTF file's model is written with the file's root, as its `model path=`
-	    block, and a node of the file only with what it has more than the file gives it (its
-	    transform, components, behaviors, and the actors under it), its kind left to the file.
-	    libwgf's to keep: valid until the next dump. "" when no actor ever had a component or a
-	    behavior.
+	    Returns the simulated actors as a scene's text, in wgf_scene.h's format.
+
+	    - Each top actor is written, oldest first, as an `actor` block. A top actor has a component
+	      or a behavior, and its parent has none.
+	    - Each block holds the actor's kind, its transform, its components, its behaviors, and the
+	      actors under it, as they are now. Loading the text as a scene and instantiating it makes
+	      the same actors again.
+	    - An actor under a glTF file's model is written with the file's root, as its `model path=`
+	      block.
+	    - A node of the file is written only with what it has beyond what the file gives it: its
+	      transform, components, behaviors, and the actors under it. Its kind is left to the file.
+
+	    libwgf owns the string, valid until the next dump. Returns "" when no actor ever had a
+	    component or a behavior.
 	**/
 	public static inline function dump():String
 		return Raw.wgf_world_dump();

@@ -4,275 +4,396 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    Screens and scene flow: a game as a stack of screens (a title, play, a pause menu, game
-    over), helix-legacy's scene flow (Flow, Transition, Loader, LoadingScreen) without its
-    callbacks. A screen is an actor (a game's behaviors for it go on it) with its stages, 2D
-    and 3D, added to it in the order they draw (stages are always roots: they belong to it
-    without being its children); everything else of its hangs under them.
+    Screens and scene flow: a game as a stack of screens, such as a title, play, a pause menu,
+    and game over. Nothing is called back.
 
-    The stack: push puts a screen on top, pop takes the top off, replace swaps the top for
-    another. The top runs. A screen under one that pauses (the default) is paused
-    (wgf_actor_set_paused: drawn, frozen), it and its stages; one under one that doesn't (a
-    HUD laid over play) runs on. A screen off the stack is switched off and paused, it and its
-    stages (wgf_actor_set_enabled: not drawn, nothing under them moving), kept for the program
-    to push again or destroy. draw
-    draws what is shown: from the bottom up, each screen's stages in their order, but none
-    under an opaque one (the default), then the transition's cover.
+    A screen is an actor, and your game's behaviors for it go on it. Its stages, 2D and 3D, are
+    added to it in the order they draw. Stages are always roots: they belong to the screen
+    without being its children. Every other actor of the screen hangs under its stages.
 
-    A change runs through the transition set (none to start: at once). It covers the frame
-    over half its seconds, makes the change at the middle, and uncovers over the other half,
-    each half on the ease. A screen given assets to wait for (set_assets: a group,
-    wgf_asset.h), or set to wait for every load pending (set_wait_loads: the textures and
-    meshes made as it was built), is changed to only once they have settled: the stack held
-    covered meanwhile, with the loading screen (set_loading_screen) drawn over the cover and
-    its progress readable. While one runs, another change is refused (false).
+    The stack:
+    - push puts a screen on top.
+    - pop takes the top screen off.
+    - replace swaps the top screen for another.
 
-    Each change is told as world events (wgf_world.h): SCREEN_ENTER for the screen that
-    comes to the top, SCREEN_EXIT for the one that leaves it (pushed under, popped, or
-    replaced), each with the other screen (0 for none) as its second; a binding's behaviors
+    The top screen runs. The screens under it run or pause:
+    - A screen under one that pauses (the default) is paused, with its stages
+      (wgf_actor_set_paused: drawn, but frozen).
+    - A screen under one that doesn't pause, such as a HUD laid over play, runs on.
+    - A screen off the stack is switched off and paused, with its stages (wgf_actor_set_enabled:
+      not drawn, and nothing under them moving). It is kept for your game to push again or
+      destroy.
+
+    wgf_screen_draw draws what is shown. It draws from the bottom up, each screen's stages in
+    their order, but no screen under an opaque one (the default). It then draws the
+    transition's cover.
+
+    A change runs through the transition that is set (none to start, so changes happen at once).
+    - It covers the frame over half its seconds, makes the change at the middle, and uncovers
+      over the other half. Each half runs on the ease.
+    - A screen can wait for assets: a group (set_assets, wgf_asset.h), or every load pending
+      (set_wait_loads: the textures and meshes made as it was built). The change to it happens
+      only once they have settled.
+    - Meanwhile the stack is held covered. The loading screen (set_loading_screen) is drawn over
+      the cover, and its progress can be read.
+    - While a change runs, another change is refused (false).
+
+    Each change is told as world events (wgf_world.h):
+    - SCREEN_ENTER for the screen that comes to the top.
+    - SCREEN_EXIT for the one that leaves the top: pushed under, popped, or replaced.
+
+    Each event carries the other screen (0 for none) as its second value. A binding's behaviors
     on a screen hear them.
 **/
 class Screen {
 	/**
-	    A screen: an actor at the top of its own tree, off the stack (switched off). 0 when there is
-	    no room for another actor.
+	    Creates a screen: an actor at the top of its own tree, off the stack and switched off.
+	    Returns 0 when there is no room for another actor.
 	**/
 	public static inline function create():Actor
 		return Raw.wgf_screen_create();
 
 	/**
-	    Its stages, drawn in the order added (at most 8): add is false for an actor that isn't a
-	    screen, one that isn't a stage, or one it has; remove, for one it hasn't. A stage destroyed
-	    leaves it.
+	    Adds, removes, or lists a screen's stages, drawn in the order added (at most 8).
+
+	    - add_stage returns false for an actor that isn't a screen, one that isn't a stage, or a
+	      stage the screen already has.
+	    - remove_stage returns false for a stage the screen doesn't have.
+
+	    A stage that is destroyed leaves its screen.
 	**/
 	public static inline function addStage(screen:Actor, stage:Actor):Bool
 		return Raw.wgf_screen_add_stage(screen, stage);
 
 	/**
-	    Its stages, drawn in the order added (at most 8): add is false for an actor that isn't a
-	    screen, one that isn't a stage, or one it has; remove, for one it hasn't. A stage destroyed
-	    leaves it.
+	    Adds, removes, or lists a screen's stages, drawn in the order added (at most 8).
+
+	    - add_stage returns false for an actor that isn't a screen, one that isn't a stage, or a
+	      stage the screen already has.
+	    - remove_stage returns false for a stage the screen doesn't have.
+
+	    A stage that is destroyed leaves its screen.
 	**/
 	public static inline function removeStage(screen:Actor, stage:Actor):Bool
 		return Raw.wgf_screen_remove_stage(screen, stage);
 
 	/**
-	    Its stages, drawn in the order added (at most 8): add is false for an actor that isn't a
-	    screen, one that isn't a stage, or one it has; remove, for one it hasn't. A stage destroyed
-	    leaves it.
+	    Adds, removes, or lists a screen's stages, drawn in the order added (at most 8).
+
+	    - add_stage returns false for an actor that isn't a screen, one that isn't a stage, or a
+	      stage the screen already has.
+	    - remove_stage returns false for a stage the screen doesn't have.
+
+	    A stage that is destroyed leaves its screen.
 	**/
 	public static inline function getStageCount(screen:Actor):Int
 		return Raw.wgf_screen_get_stage_count(screen);
 
 	/**
-	    Its stages, drawn in the order added (at most 8): add is false for an actor that isn't a
-	    screen, one that isn't a stage, or one it has; remove, for one it hasn't. A stage destroyed
-	    leaves it.
+	    Adds, removes, or lists a screen's stages, drawn in the order added (at most 8).
+
+	    - add_stage returns false for an actor that isn't a screen, one that isn't a stage, or a
+	      stage the screen already has.
+	    - remove_stage returns false for a stage the screen doesn't have.
+
+	    A stage that is destroyed leaves its screen.
 	**/
 	public static inline function getStage(screen:Actor, index:Int):Actor
 		return Raw.wgf_screen_get_stage(screen, index);
 
 	/**
-	    The stack's changes, run through the transition. push: false for an actor that isn't one,
-	    or one already on the stack; pop: false with none, or the bottom one alone; replace: false
-	    as push, or with none to replace. All false while a change runs.
+	    Changes the stack, through the transition.
+
+	    - push returns false for an actor that isn't a screen, or one already on the stack.
+	    - pop returns false with no screen, or with the bottom screen alone.
+	    - replace returns false as push does, or with no screen to replace.
+
+	    All of them return false while a change runs.
 	**/
 	public static inline function push(screen:Actor):Bool
 		return Raw.wgf_screen_push(screen);
 
 	/**
-	    The stack's changes, run through the transition. push: false for an actor that isn't one,
-	    or one already on the stack; pop: false with none, or the bottom one alone; replace: false
-	    as push, or with none to replace. All false while a change runs.
+	    Changes the stack, through the transition.
+
+	    - push returns false for an actor that isn't a screen, or one already on the stack.
+	    - pop returns false with no screen, or with the bottom screen alone.
+	    - replace returns false as push does, or with no screen to replace.
+
+	    All of them return false while a change runs.
 	**/
 	public static inline function pop():Bool
 		return Raw.wgf_screen_pop();
 
 	/**
-	    The stack's changes, run through the transition. push: false for an actor that isn't one,
-	    or one already on the stack; pop: false with none, or the bottom one alone; replace: false
-	    as push, or with none to replace. All false while a change runs.
+	    Changes the stack, through the transition.
+
+	    - push returns false for an actor that isn't a screen, or one already on the stack.
+	    - pop returns false with no screen, or with the bottom screen alone.
+	    - replace returns false as push does, or with no screen to replace.
+
+	    All of them return false while a change runs.
 	**/
 	public static inline function replace(screen:Actor):Bool
 		return Raw.wgf_screen_replace(screen);
 
 	/**
-	    The top (0 with none), how many are on the stack, and the one `index` up from the bottom (0
-	    for an index off it). Each as of the last change made, a change running not yet counted.
+	    Returns the stack's screens.
+
+	    - get_top returns the top screen, or 0 with none.
+	    - get_count returns how many are on the stack.
+	    - get returns the one `index` up from the bottom, or 0 for an index off the stack.
+
+	    Each is as of the last change made. A change still running isn't counted yet.
 	**/
 	public static inline function getTop():Actor
 		return Raw.wgf_screen_get_top();
 
 	/**
-	    The top (0 with none), how many are on the stack, and the one `index` up from the bottom (0
-	    for an index off it). Each as of the last change made, a change running not yet counted.
+	    Returns the stack's screens.
+
+	    - get_top returns the top screen, or 0 with none.
+	    - get_count returns how many are on the stack.
+	    - get returns the one `index` up from the bottom, or 0 for an index off the stack.
+
+	    Each is as of the last change made. A change still running isn't counted yet.
 	**/
 	public static inline function getCount():Int
 		return Raw.wgf_screen_get_count();
 
 	/**
-	    The top (0 with none), how many are on the stack, and the one `index` up from the bottom (0
-	    for an index off it). Each as of the last change made, a change running not yet counted.
+	    Returns the stack's screens.
+
+	    - get_top returns the top screen, or 0 with none.
+	    - get_count returns how many are on the stack.
+	    - get returns the one `index` up from the bottom, or 0 for an index off the stack.
+
+	    Each is as of the last change made. A change still running isn't counted yet.
 	**/
 	public static inline function get(index:Int):Actor
 		return Raw.wgf_screen_get(index);
 
 	/**
-	    opaque: none under it is drawn (on to start; off for a pause menu over the game). pausing:
-	    those under it are paused (on to start; off for a HUD over play). False for an actor that
-	    isn't one.
+	    Sets or gets whether a screen is opaque, and whether it is pausing.
+
+	    - opaque: no screen under it is drawn (default: on). Turn it off for a pause menu over the
+	      game.
+	    - pausing: the screens under it are paused (default: on). Turn it off for a HUD over play.
+
+	    Returns false for an actor that isn't a screen.
 	**/
 	public static inline function setOpaque(screen:Actor, opaque:Bool):Bool
 		return Raw.wgf_screen_set_opaque(screen, opaque);
 
 	/**
-	    opaque: none under it is drawn (on to start; off for a pause menu over the game). pausing:
-	    those under it are paused (on to start; off for a HUD over play). False for an actor that
-	    isn't one.
+	    Sets or gets whether a screen is opaque, and whether it is pausing.
+
+	    - opaque: no screen under it is drawn (default: on). Turn it off for a pause menu over the
+	      game.
+	    - pausing: the screens under it are paused (default: on). Turn it off for a HUD over play.
+
+	    Returns false for an actor that isn't a screen.
 	**/
 	public static inline function isOpaque(screen:Actor):Bool
 		return Raw.wgf_screen_is_opaque(screen);
 
 	/**
-	    opaque: none under it is drawn (on to start; off for a pause menu over the game). pausing:
-	    those under it are paused (on to start; off for a HUD over play). False for an actor that
-	    isn't one.
+	    Sets or gets whether a screen is opaque, and whether it is pausing.
+
+	    - opaque: no screen under it is drawn (default: on). Turn it off for a pause menu over the
+	      game.
+	    - pausing: the screens under it are paused (default: on). Turn it off for a HUD over play.
+
+	    Returns false for an actor that isn't a screen.
 	**/
 	public static inline function setPausing(screen:Actor, pausing:Bool):Bool
 		return Raw.wgf_screen_set_pausing(screen, pausing);
 
 	/**
-	    opaque: none under it is drawn (on to start; off for a pause menu over the game). pausing:
-	    those under it are paused (on to start; off for a HUD over play). False for an actor that
-	    isn't one.
+	    Sets or gets whether a screen is opaque, and whether it is pausing.
+
+	    - opaque: no screen under it is drawn (default: on). Turn it off for a pause menu over the
+	      game.
+	    - pausing: the screens under it are paused (default: on). Turn it off for a HUD over play.
+
+	    Returns false for an actor that isn't a screen.
 	**/
 	public static inline function isPausing(screen:Actor):Bool
 		return Raw.wgf_screen_is_pausing(screen);
 
 	/**
-	    Draw what is shown, into this frame: each shown screen's stages, then the cover.
+	    Draws what is shown, into this frame: each shown screen's stages, then the cover.
 	**/
 	public static inline function draw():Void
 		Raw.wgf_screen_draw();
 
 	/**
-	    The transition the changes run through: its kind and seconds (0 or less: at once), its
-	    color (black to start), and each half's ease (linear to start). False for a kind that isn't
-	    one, or seconds that aren't finite.
+	    Sets or gets the transition the changes run through.
+
+	    - Its kind, and its length in seconds. 0 or less means at once.
+	    - Its color (default: black).
+	    - Each half's ease (default: linear).
+
+	    Returns false for a kind that isn't one, or seconds that aren't finite.
 	**/
 	public static inline function setTransition(kind:Transition, seconds:Float):Bool
 		return Raw.wgf_screen_set_transition(kind, seconds);
 
 	/**
-	    The transition the changes run through: its kind and seconds (0 or less: at once), its
-	    color (black to start), and each half's ease (linear to start). False for a kind that isn't
-	    one, or seconds that aren't finite.
+	    Sets or gets the transition the changes run through.
+
+	    - Its kind, and its length in seconds. 0 or less means at once.
+	    - Its color (default: black).
+	    - Each half's ease (default: linear).
+
+	    Returns false for a kind that isn't one, or seconds that aren't finite.
 	**/
 	public static inline function getTransition():Transition
 		return Raw.wgf_screen_get_transition();
 
 	/**
-	    The transition the changes run through: its kind and seconds (0 or less: at once), its
-	    color (black to start), and each half's ease (linear to start). False for a kind that isn't
-	    one, or seconds that aren't finite.
+	    Sets or gets the transition the changes run through.
+
+	    - Its kind, and its length in seconds. 0 or less means at once.
+	    - Its color (default: black).
+	    - Each half's ease (default: linear).
+
+	    Returns false for a kind that isn't one, or seconds that aren't finite.
 	**/
 	public static inline function getTransitionSeconds():Float
 		return Raw.wgf_screen_get_transition_seconds();
 
 	/**
-	    The transition the changes run through: its kind and seconds (0 or less: at once), its
-	    color (black to start), and each half's ease (linear to start). False for a kind that isn't
-	    one, or seconds that aren't finite.
+	    Sets or gets the transition the changes run through.
+
+	    - Its kind, and its length in seconds. 0 or less means at once.
+	    - Its color (default: black).
+	    - Each half's ease (default: linear).
+
+	    Returns false for a kind that isn't one, or seconds that aren't finite.
 	**/
 	public static inline function setTransitionColor(color:Int):Void
 		Raw.wgf_screen_set_transition_color(color);
 
 	/**
-	    The transition the changes run through: its kind and seconds (0 or less: at once), its
-	    color (black to start), and each half's ease (linear to start). False for a kind that isn't
-	    one, or seconds that aren't finite.
+	    Sets or gets the transition the changes run through.
+
+	    - Its kind, and its length in seconds. 0 or less means at once.
+	    - Its color (default: black).
+	    - Each half's ease (default: linear).
+
+	    Returns false for a kind that isn't one, or seconds that aren't finite.
 	**/
 	public static inline function getTransitionColor():Int
 		return Raw.wgf_screen_get_transition_color();
 
 	/**
-	    The transition the changes run through: its kind and seconds (0 or less: at once), its
-	    color (black to start), and each half's ease (linear to start). False for a kind that isn't
-	    one, or seconds that aren't finite.
+	    Sets or gets the transition the changes run through.
+
+	    - Its kind, and its length in seconds. 0 or less means at once.
+	    - Its color (default: black).
+	    - Each half's ease (default: linear).
+
+	    Returns false for a kind that isn't one, or seconds that aren't finite.
 	**/
 	public static inline function setTransitionEase(ease:Easing):Bool
 		return Raw.wgf_screen_set_transition_ease(ease);
 
 	/**
-	    The transition the changes run through: its kind and seconds (0 or less: at once), its
-	    color (black to start), and each half's ease (linear to start). False for a kind that isn't
-	    one, or seconds that aren't finite.
+	    Sets or gets the transition the changes run through.
+
+	    - Its kind, and its length in seconds. 0 or less means at once.
+	    - Its color (default: black).
+	    - Each half's ease (default: linear).
+
+	    Returns false for a kind that isn't one, or seconds that aren't finite.
 	**/
 	public static inline function getTransitionEase():Easing
 		return Raw.wgf_screen_get_transition_ease();
 
 	/**
-	    Whether a change is running, and how far: 0 to 0.5 covering, 0.5 covered (the change made
-	    there, or waiting on a load), 0.5 to 1 uncovering; 0 with none.
+	    Returns whether a change is running, and how far it has come.
+
+	    - 0 to 0.5: covering.
+	    - 0.5: covered. The change is made there, or it is waiting on a load.
+	    - 0.5 to 1: uncovering.
+
+	    The progress is 0 with no change running.
 	**/
 	public static inline function isChanging():Bool
 		return Raw.wgf_screen_is_changing();
 
 	/**
-	    Whether a change is running, and how far: 0 to 0.5 covering, 0.5 covered (the change made
-	    there, or waiting on a load), 0.5 to 1 uncovering; 0 with none.
+	    Returns whether a change is running, and how far it has come.
+
+	    - 0 to 0.5: covering.
+	    - 0.5: covered. The change is made there, or it is waiting on a load.
+	    - 0.5 to 1: uncovering.
+
+	    The progress is 0 with no change running.
 	**/
 	public static inline function getChangeProgress():Float
 		return Raw.wgf_screen_get_change_progress();
 
 	/**
-	    What `screen` waits for before it is changed to: an asset task (a group of its files, made
-	    local), 0 for none. False for an actor that isn't one, or a handle that isn't a task.
+	    Sets or gets what `screen` waits for before it is changed to: an asset task (a group of its
+	    files, made local), or 0 for none. Returns false for an actor that isn't a screen, or a
+	    handle that isn't a task.
 	**/
 	public static inline function setAssets(screen:Actor, task:AssetTask):Bool
 		return Raw.wgf_screen_set_assets(screen, task);
 
 	/**
-	    What `screen` waits for before it is changed to: an asset task (a group of its files, made
-	    local), 0 for none. False for an actor that isn't one, or a handle that isn't a task.
+	    Sets or gets what `screen` waits for before it is changed to: an asset task (a group of its
+	    files, made local), or 0 for none. Returns false for an actor that isn't a screen, or a
+	    handle that isn't a task.
 	**/
 	public static inline function getAssets(screen:Actor):AssetTask
 		return Raw.wgf_screen_get_assets(screen);
 
 	/**
-	    Whether a change to `screen` waits for every load pending in the program too (off to
-	    start). False for an actor that isn't one.
+	    Sets or gets whether a change to `screen` also waits for every load pending in your game
+	    (default: off). Returns false for an actor that isn't a screen.
 	**/
 	public static inline function setWaitLoads(screen:Actor, wait:Bool):Bool
 		return Raw.wgf_screen_set_wait_loads(screen, wait);
 
 	/**
-	    Whether a change to `screen` waits for every load pending in the program too (off to
-	    start). False for an actor that isn't one.
+	    Sets or gets whether a change to `screen` also waits for every load pending in your game
+	    (default: off). Returns false for an actor that isn't a screen.
 	**/
 	public static inline function isWaitLoads(screen:Actor):Bool
 		return Raw.wgf_screen_is_wait_loads(screen);
 
 	/**
-	    The screen drawn over the cover while a change waits on loads (0 for none), and how far the
-	    loads have come, 0 to 1: its assets' progress, else the share of the loads pending as the
-	    wait began that have settled; 1 with none waiting.
+	    Sets or gets the loading screen, drawn over the cover while a change waits on loads (0 for
+	    none). get_load_progress returns how far the loads have come, 0 to 1.
+
+	    - With assets to wait for, it is their progress.
+	    - Otherwise it is the share of the loads pending when the wait began that have settled.
+	    - It is 1 with nothing waiting.
 	**/
 	public static inline function setLoadingScreen(screen:Actor):Bool
 		return Raw.wgf_screen_set_loading_screen(screen);
 
 	/**
-	    The screen drawn over the cover while a change waits on loads (0 for none), and how far the
-	    loads have come, 0 to 1: its assets' progress, else the share of the loads pending as the
-	    wait began that have settled; 1 with none waiting.
+	    Sets or gets the loading screen, drawn over the cover while a change waits on loads (0 for
+	    none). get_load_progress returns how far the loads have come, 0 to 1.
+
+	    - With assets to wait for, it is their progress.
+	    - Otherwise it is the share of the loads pending when the wait began that have settled.
+	    - It is 1 with nothing waiting.
 	**/
 	public static inline function getLoadingScreen():Actor
 		return Raw.wgf_screen_get_loading_screen();
 
 	/**
-	    The screen drawn over the cover while a change waits on loads (0 for none), and how far the
-	    loads have come, 0 to 1: its assets' progress, else the share of the loads pending as the
-	    wait began that have settled; 1 with none waiting.
+	    Sets or gets the loading screen, drawn over the cover while a change waits on loads (0 for
+	    none). get_load_progress returns how far the loads have come, 0 to 1.
+
+	    - With assets to wait for, it is their progress.
+	    - Otherwise it is the share of the loads pending when the wait began that have settled.
+	    - It is 1 with nothing waiting.
 	**/
 	public static inline function getLoadProgress():Float
 		return Raw.wgf_screen_get_load_progress();

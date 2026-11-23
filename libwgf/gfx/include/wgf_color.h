@@ -9,16 +9,17 @@
 extern "C" {
 #endif
 
-/* A color is a value, not a handle: 8-bit RGBA packed as 0xRRGGBBAA, so
- * 0xFF0000FF is opaque red and 0 is fully transparent. There is nothing to
- * create or destroy: write a literal, take a stock color, or build one.
+/* A color: 8-bit RGBA packed as 0xRRGGBBAA. It is a value, not a handle.
  *
- * 0 is transparent black, not "unset": a tint that changes nothing is white. */
+ * 0xFF0000FF is opaque red, and 0 is fully transparent. There is nothing to create or
+ * destroy: write a literal, take a stock color, or build one.
+ *
+ * 0 is transparent black, not "unset". A tint that changes nothing is white. */
 typedef uint32_t wgf_color_t;
 
-/* The stock colors. These name a color; they aren't one: wgf_color_get turns
- * a name into its color. (A packed color doesn't fit in an enum, so names are what
- * a binding can see.) */
+/* The stock colors' names. A name isn't a color: wgf_color_get turns a name into its color.
+ *
+ * A packed color doesn't fit in an enum, so names are what a binding can see. */
 typedef enum wgf_color_stock_t {
     WGF_COLOR_STOCK_BLANK = 0,      /* 0x00000000, transparent */
     WGF_COLOR_STOCK_WHITE = 1,      /* 0xFFFFFFFF */
@@ -48,11 +49,11 @@ typedef enum wgf_color_stock_t {
     WGF_COLOR_STOCK_RAYWHITE = 25   /* 0xF5F5F5FF */
 } wgf_color_stock_t;
 
-/* The stock color `stock` names; 0 (transparent) for a value that names none. */
+/* Returns the stock color `stock` names, or 0 (transparent) for a value that names none. */
 WGF_API wgf_color_t wgf_color_get(wgf_color_stock_t stock);
 
-/* Each stock color as a value, for C: WGF_COLOR_SKYBLUE. A binding calls
- * wgf_color_get with the enum. */
+/* Each stock color as a value, for C, such as WGF_COLOR_SKYBLUE. A binding calls
+ * wgf_color_get with the enum instead. */
 #define WGF_COLOR_BEIGE wgf_color_get(WGF_COLOR_STOCK_BEIGE)
 #define WGF_COLOR_BLACK wgf_color_get(WGF_COLOR_STOCK_BLACK)
 #define WGF_COLOR_BLANK wgf_color_get(WGF_COLOR_STOCK_BLANK)
@@ -80,33 +81,42 @@ WGF_API wgf_color_t wgf_color_get(wgf_color_stock_t stock);
 #define WGF_COLOR_WHITE wgf_color_get(WGF_COLOR_STOCK_WHITE)
 #define WGF_COLOR_YELLOW wgf_color_get(WGF_COLOR_STOCK_YELLOW)
 
-/* A color from components, clamped: 0..255 for make, 0..1 for make_float, which
- * rounds to the nearest 8-bit step. Out-of-range components saturate; they never
- * spill into the next channel. */
+/* Makes a color from components, clamped.
+ *
+ * - make takes components from 0 to 255.
+ * - make_float takes components from 0 to 1, and rounds to the nearest 8-bit step.
+ * - Out-of-range components saturate. They never spill into the next channel. */
 WGF_API wgf_color_t wgf_color_make(int r, int g, int b, int a);
 WGF_API wgf_color_t wgf_color_make_float(float r, float g, float b, float a);
-/* `color` with its alpha replaced, clamped to 0..255. */
+/* Returns `color` with its alpha replaced by `a`, clamped to 0..255. */
 WGF_API wgf_color_t wgf_color_with_alpha(wgf_color_t color, int a);
 
-/* Components back out, 0..255. */
+/* Returns a color's components, each 0..255. */
 WGF_API int wgf_color_get_red(wgf_color_t color);
 WGF_API int wgf_color_get_green(wgf_color_t color);
 WGF_API int wgf_color_get_blue(wgf_color_t color);
 WGF_API int wgf_color_get_alpha(wgf_color_t color);
 
-/* A straight blend, component by component, from `from` (t = 0) to `to` (t = 1);
- * t is clamped to 0..1. */
+/* Blends straight from `from` (t = 0) to `to` (t = 1), component by component.
+ * `t` is clamped to 0..1. */
 WGF_API wgf_color_t wgf_color_lerp(wgf_color_t from, wgf_color_t to, float t);
 
-/* A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
- * alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
- * ColorToHSV): a palette walked round the wheel, a hit flash. */
+/* Makes a color from hue, saturation, and value, or gets a color's hue, saturation, and value.
+ *
+ * - `hue` is in degrees, wrapped into 0..360.
+ * - `saturation` and `value` are 0..1, clamped.
+ * - `a`, the alpha, is 0..255.
+ *
+ * Use it to walk a palette round the color wheel, or for a hit flash. */
 WGF_API wgf_color_t wgf_color_make_hsv(float hue, float saturation, float value, int a);
 WGF_API float wgf_color_get_hue(wgf_color_t color);
 WGF_API float wgf_color_get_saturation(wgf_color_t color);
 WGF_API float wgf_color_get_value(wgf_color_t color);
-/* Lighter toward white by `amount` (0..1), or darker toward black by a negative one, its
- * alpha kept; and two colors multiplied, channel by channel (a tint applied). */
+/* Brightens or multiplies a color.
+ *
+ * - brighten makes `color` lighter toward white by `amount` (0..1), or darker toward black
+ *   by a negative `amount`. Its alpha is kept.
+ * - multiply multiplies two colors channel by channel, as a tint is applied. */
 WGF_API wgf_color_t wgf_color_brighten(wgf_color_t color, float amount);
 WGF_API wgf_color_t wgf_color_multiply(wgf_color_t color, wgf_color_t by);
 

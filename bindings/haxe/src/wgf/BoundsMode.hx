@@ -2,10 +2,15 @@
 package wgf;
 
 /**
-    Bounds (WGF_COMPONENT_BOUNDS): a rectangle in the actor's parent's space, x and y,
-    and what happens to an actor whose position leaves it, by more than its margin, each
-    tick after motion. Defaults: 0, 0, 800 by 600, WRAP, a margin of 0. Every call is false
-    (or 0) for an actor without bounds.
+    Bounds (WGF_COMPONENT_BOUNDS): a rectangle that an actor's position is kept within.
+
+    The rectangle is in the actor's parent's space, at x and y. Each tick, after motion, an
+    actor whose position leaves it by more than its margin is wrapped, clamped, or destroyed,
+    as its mode says.
+
+    Defaults: a rectangle at 0, 0, 800 by 600, WRAP, and a margin of 0.
+
+    Every call returns false (or 0) for an actor without bounds.
 **/
 enum abstract BoundsMode(Int) from Int to Int {
 	var WRAP = 0;

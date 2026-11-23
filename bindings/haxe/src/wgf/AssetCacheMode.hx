@@ -2,27 +2,33 @@
 package wgf;
 
 /**
-    How a cached file is treated on a later run (ROADMAP phase 3, Rob's):
+    How a cached file is treated on a later run.
 
       REVALIDATE  the default. A copy still fresh by its Cache-Control (max-age not
-                  passed, or immutable) is used without a request; any other is checked
-                  with the server first: 304, the copy is used (and fresh again); 200,
-                  the new file replaces it; 4xx, the copy is deleted and the load fails;
-                  no answer (offline, a timeout) or 5xx, the copy is used. no-cache and
-                  no-store make a copy never fresh, but it is kept, for the next check
-                  and for starting offline. On the page's own origin the check is a
-                  conditional GET; on another, a GET the browser revalidates from its
-                  own cache (a conditional header there needs CORS consent), so a
-                  changed file is always noticed and an unchanged one stored again.
-      TRUST       a cached copy is used without asking, however old: offline-first play,
-                  a deploy whose files never change, or a program that evicts by itself.
+                  passed, or immutable) is used without a request. Any other copy is
+                  checked with the server first:
+                  - 304: the copy is used, and is fresh again.
+                  - 200: the new file replaces it.
+                  - 4xx: the copy is deleted and the load fails.
+                  - 5xx, or no answer (offline, a timeout): the copy is used.
+                  no-cache and no-store make a copy never fresh, but it is kept, for the
+                  next check and for starting offline. On the page's own origin the
+                  check is a conditional GET. On another origin it is a GET the browser
+                  revalidates from its own cache, since a conditional header there needs
+                  CORS consent. So a changed file is always noticed, and an unchanged one
+                  is stored again.
+      TRUST       a cached copy is used without asking, however old. For offline-first
+                  play, a deploy whose files never change, or a program that evicts by
+                  itself.
       OFF         nothing is kept between runs, and what earlier runs kept is neither
-                  used nor deleted (development).
+                  used nor deleted. For development.
 
-    Natively, downloads in the cache directory are used as they are in every mode, as
-    wgrender's: asking the server needs headers the program's fetcher doesn't carry
-    (manifests work natively, below). FORCE_FETCH is a plain GET in every mode, and fails
-    without an answer. A mode applies to every file checked after it is set.
+    Natively, downloads in the cache directory are used as they are, in every mode. Asking
+    the server needs headers the program's fetcher doesn't carry. (Manifests do work
+    natively; see below.)
+
+    FORCE_FETCH is a plain GET in every mode, and fails without an answer. A mode applies to
+    every file checked after it is set.
 **/
 enum abstract AssetCacheMode(Int) from Int to Int {
 	var REVALIDATE = 0;

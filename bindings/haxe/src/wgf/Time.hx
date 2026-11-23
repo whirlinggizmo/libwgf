@@ -5,8 +5,10 @@ import wgf.impl.Raw;
 
 class Time {
 	/**
-	    Seconds since the runtime started, from a monotonic clock: it never goes back, and
-	    isn't moved by changes to the wall clock. 0 when core isn't running.
+	    Returns the seconds since the runtime started.
+
+	    The clock is monotonic: it never goes back, and changes to the wall clock don't move it.
+	    Returns 0 if core isn't running.
 	**/
 	public static inline function getSeconds():Float
 		return Raw.wgf_time_get_seconds();

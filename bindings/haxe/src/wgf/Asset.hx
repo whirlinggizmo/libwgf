@@ -4,46 +4,57 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    Assets: where a resource's file comes from. A path is an asset: creating a resource
-    from a path (wgf_texture_create, wgf_font_create, wgf_sound_create, a scene's) goes
-    through here, as does any call below, and that is what links it -- a program that
-    only makes generated content links none of it. A relative path is looked for under
-    the asset host, which needs no setting:
+    Assets: where a resource's file comes from.
+
+    A path is an asset. Creating a resource from a path goes through here, as does every
+    call below. That includes wgf_texture_create, wgf_font_create, wgf_sound_create, and a
+    scene's files. Those calls are what link this layer, so a program that only makes
+    generated content links none of it.
+
+    A relative path is looked for under the asset host, which needs no setting:
 
       natively  the host is the program's own directory (where its executable is,
-                wherever it was started from), the file storage's root (wgf_fs.h):
-                files are read where they are, as without this layer
-      web       the host is the page's own directory (its document's base URL, so a
-                <base href> moves it): a file not bundled into the page and not cached
-                is fetched from beside the page, cached in the browser's storage, and
-                checked again on later visits as the cache mode says. A file asked
-                for before that storage has opened (the first frames) waits for it,
-                so nothing kept is lost to it, and a game needs no wait of its own
+                wherever it was started from), which is the file storage's root
+                (wgf_fs.h). Files are read where they are, as without this layer
+      web       the host is the page's own directory: its document's base URL, so a
+                <base href> moves it. A file that isn't bundled into the page and isn't
+                cached is fetched from beside the page and cached in the browser's
+                storage. On later visits it is checked again as the cache mode says. A
+                file asked for before that storage has opened (the first frames) waits
+                for it. So no kept file is lost, and a game needs no wait of its own
 
-    so a web page loads its files with no call here at all, and one that should never
-    fetch bundles what it loads. Set another host to fetch from elsewhere (a CDN), or
-    natively to download (fetching, below). A path that is a URL ("https://...") is
-    fetched from there, cached under its own name; natively that needs fetching turned
-    on, and without it the load fails, logged with the URL.
+    So a web page loads its files with no call here at all. A page that should never fetch
+    bundles what it loads.
 
-    A resource makes its own file local as it loads (wgf_resource.h), so a program only
-    ENSURES a file to have it local without loading it: to fetch ahead (a level's files
-    during a menu), from an explicit source (a fetch_url), or to read it itself. An
-    ensure is a task: a handle whose status, local path and progress the program reads,
-    nothing called back, destroyed when done with. A path ensured from an explicit
-    source is what a later create of that path loads, wherever it was found.
+    - Set another host to fetch from elsewhere, such as a CDN, or natively to download (see
+      fetching, below).
+    - A path that is a URL ("https://...") is fetched from there, and cached under its own
+      name. Natively that needs fetching turned on. Without it the load fails, logged with
+      the URL.
 
-    A format whose files name other files is ensured with them, when the layer that
-    reads it registers how to list them (core's lister, wgf_core_load_priv.h): the task
-    is DONE once all are local. A glTF file's are listed (its buffers and images), in a
-    program with glTF (one that calls wgf_mesh_create); a scene's aren't yet, so a scene
-    ensured ahead is ensured beside the files its lines name.
+    A resource makes its own file local as it loads (wgf_resource.h). So a program only
+    ENSURES a file to have it local without loading it:
+    - to fetch ahead, such as a level's files during a menu
+    - to fetch from an explicit source (a fetch_url)
+    - to read the file itself
 
-    libwgt's asset layer, carried whole (docs/HISTORY.md).
+    An ensure is a task: a handle whose status, local path, and progress the program reads.
+    Nothing is called back. Destroy the task when you are done with it. A path ensured from
+    an explicit source is what a later create of that path loads, wherever it was found.
 
-    Downloads, natively, by the program: libwgf has no HTTP client there, so a program
-    that turns fetching on is asked for each download -- a file missing under a URL
-    host, a URL path, a fetch_url, a "://" redirect. Without it, such a load fails.
+    A file in a format that names other files is ensured with them, when the layer that
+    reads the format registers how to list them (core's lister, wgf_core_load_priv.h). The
+    task is DONE once all of them are local.
+    - A glTF file's buffers and images are listed, in a program with glTF (one that calls
+      wgf_mesh_create).
+    - A scene's files aren't listed yet. To ensure a scene ahead, also ensure the files its
+      lines name.
+
+    Downloads, natively, done by the program.
+
+    libwgf has no HTTP client on native platforms. So a program that turns fetching on is
+    asked for each download: a file missing under a URL host, a URL path, a fetch_url, or a
+    "://" redirect. Without fetching, such a load fails.
 
     Poll for work once a frame, on the main thread:
 
@@ -53,328 +64,410 @@ import wgf.impl.Raw;
                            wgf_asset_fetch_get_dest(request), request);
         }
 
-    and report each one with wgf_asset_fetch_done, from any thread: start it and return,
-    do the work on a thread of your own, and answer from there; the answer is taken at
-    the next update, on the main thread. At most 6 are out at once, a browser's limit per
-    server; the rest wait their turn. A request nobody takes waits, and so does every
-    task behind it; one taken and not answered within the fetch timeout fails.
+    Then answer each one with wgf_asset_fetch_done, from any thread. Start the download and
+    return, do the work on a thread of your own, and answer from there. The answer is taken
+    at the next update, on the main thread.
 
-    Bytes never cross this boundary: a downloader deals in files, as curl, WinHTTP and
-    NSURLSession do. The destination's directories exist. It is where the download is
-    written until it is whole: libwgf moves it into place when told it succeeded and
-    deletes it when not, so a failed or broken-off download never leaves half a file to
-    be read and never costs the copy that was there. Success with nothing written is a
-    failure, except for a ping (wgf_asset_fetch_is_ping): a request for which only
-    whether the host answered is wanted, with no destination (wgf_asset_ping_host;
-    wgrender had no native ping of a URL host).
+    - At most 6 requests are out at once, a browser's limit per server. The rest wait their
+      turn.
+    - A request nobody takes waits, and so does every task behind it.
+    - A request taken and not answered within the fetch timeout fails.
+
+    Bytes never cross this boundary: a downloader deals in files, as curl, WinHTTP, and
+    NSURLSession do.
+    - The destination's directories exist.
+    - The destination is where the download is written until it is whole. libwgf moves it
+      into place when told it succeeded, and deletes it when not. So a failed or broken-off
+      download never leaves half a file to be read, and never costs the copy that was there.
+    - Success with nothing written is a failure, except for a ping (wgf_asset_fetch_is_ping).
+      A ping asks only whether the host answered, and has no destination (see
+      wgf_asset_ping_host).
 **/
 class Asset {
 	/**
-	    The asset host relative paths resolve against. A URL ("https://host/assets") is a
-	    fetch origin on both platforms: a missing file is downloaded from it and cached, on
-	    the web in the browser's storage and natively in the cache directory, by the program
-	    (fetching, below). Anything else is a local directory: an absolute path as it is, a
-	    relative one ("../assets") against the program's own directory on both platforms,
-	    the executable's natively and the page's on the web, never the working directory,
-	    so the same line in a program means the same thing everywhere and a double-clicked
-	    program finds its files (Rob, 2026-10-04); a file: URL ("file:///opt/game/assets")
-	    names one too, natively only (a browser reads no file: URLs). A local host is only
-	    ever read: what is downloaded under one (a fetch_url's file, a "://" redirect's) goes
-	    in the cache directory, so a shipped file is never overwritten. The same paths
-	    everywhere; only the host differs. NULL or "" puts back the default above, the
-	    program's directory, as "." does. False for a host of 512 bytes or more, or a
-	    relative one too long a path under the program's directory.
+	    Sets the asset host that relative paths resolve against.
+
+	    - A URL ("https://host/assets") is a fetch origin on both platforms. A missing file is
+	      downloaded from it and cached: on the web in the browser's storage, and natively in
+	      the cache directory, by the program (see fetching, below).
+	    - Anything else is a local directory. An absolute path is used as it is.
+	    - A relative path ("../assets") is read against the program's own directory on both
+	      platforms: the executable's natively, and the page's on the web. It is never read
+	      against the working directory. So the same line in a program means the same
+	      everywhere, and a double-clicked program finds its files.
+	    - A file: URL ("file:///opt/game/assets") names a local directory too, natively only. A
+	      browser reads no file: URLs.
+	    - NULL or "" puts back the default above, the program's directory, as "." does.
+
+	    A local host is only ever read. A file downloaded under one, such as a fetch_url's file
+	    or a "://" redirect's, goes in the cache directory, so a shipped file is never
+	    overwritten. The paths are the same everywhere, and only the host differs.
+
+	    Returns false for a host of 512 bytes or more, or for a relative one that makes too long
+	    a path under the program's directory.
 	**/
 	public static inline function setHost(host:String):Bool
 		return Raw.wgf_asset_set_host(host);
 
 	/**
-	    The host, set or the default (without a trailing slash): natively the storage root,
-	    the program's directory or the directory set, as a path (a relative one joined to
-	    the program's directory); on the web the directory of the document's base URL.
+	    Returns the host, as set or the default, without a trailing slash.
+
+	    - Natively it is the storage root: the program's directory or the directory set, as a
+	      path. A relative one is joined to the program's directory.
+	    - On the web it is the directory of the document's base URL.
 	**/
 	public static inline function getHost():String
 		return Raw.wgf_asset_get_host();
 
 	/**
-	    Natively, where downloads land and later runs find them: a local directory, made as
-	    needed. By default the program's own under the user's cache directory, <user
-	    cache>/<company>/<app> by the program's identity (wgf_set_app_company and
-	    wgf_set_app_name in wgf.h; set them for anything shipped): $XDG_CACHE_HOME or
-	    ~/.cache on Linux, ~/Library/Caches on macOS, %LOCALAPPDATA%'s <company>/<app>/cache
-	    on Windows; ".wgf-cache" in the storage root where there is none. Set it before the
-	    first download. False on the web, which caches in the browser, and for a path of 512
-	    bytes or more.
+	    Sets the cache directory, natively: where downloads land and later runs find them.
+
+	    It is a local directory, made as needed. By default it is the program's own directory
+	    under the user's cache directory: <user cache>/<company>/<product>, by the program's
+	    identity (see wgf_identity.h: set it for anything you ship).
+	    - On Linux, <user cache> is $XDG_CACHE_HOME or ~/.cache.
+	    - On macOS it is ~/Library/Caches.
+	    - On Windows the directory is %LOCALAPPDATA%'s <company>/<product>/cache.
+	    - Where there is no user cache directory, it is ".wgf-cache" in the storage root.
+
+	    Set it before the first download. Returns false on the web, which caches in the
+	    browser, and for a path of 512 bytes or more.
 	**/
 	public static inline function setCacheDir(dir:String):Bool
 		return Raw.wgf_asset_set_cache_dir(dir);
 
 	/**
-	    The directory downloads go in: set, or the default above. "" on the web.
+	    Returns the directory downloads go in, as set or the default above. Returns "" on the
+	    web.
 	**/
 	public static inline function getCacheDir():String
 		return Raw.wgf_asset_get_cache_dir();
 
 	/**
-	    Turn the program's downloading on or off (off by default). Off fails the requests
-	    not yet taken, at the next update; ones taken are still answered. False on the web,
-	    where the browser downloads.
+	    Sets or gets whether the program does downloads (default: off).
+
+	    Turning it off fails the requests not yet taken, at the next update. Requests already
+	    taken are still answered. The setter returns false on the web, where the browser
+	    downloads.
 	**/
 	public static inline function setFetching(enabled:Bool):Bool
 		return Raw.wgf_asset_set_fetching(enabled);
 
 	/**
-	    Turn the program's downloading on or off (off by default). Off fails the requests
-	    not yet taken, at the next update; ones taken are still answered. False on the web,
-	    where the browser downloads.
+	    Sets or gets whether the program does downloads (default: off).
+
+	    Turning it off fails the requests not yet taken, at the next update. Requests already
+	    taken are still answered. The setter returns false on the web, where the browser
+	    downloads.
 	**/
 	public static inline function isFetching():Bool
 		return Raw.wgf_asset_is_fetching();
 
 	/**
-	    The next download to do, oldest first, or 0 for none. Each is handed out once.
+	    Returns the next download to do, oldest first, or 0 if there is none. Each one is handed
+	    out once.
 	**/
 	public static inline function fetchNext():AssetTask
 		return Raw.wgf_asset_fetch_next();
 
 	/**
-	    What a request downloads, and where to write it. "" for anything that isn't a request
-	    waiting on its answer, and a ping's destination. Borrowed: valid until the next
-	    call.
+	    Returns the URL a request downloads, and the destination to write it to.
+
+	    Each string is borrowed, valid until the next call. Returns "" for a handle that isn't a
+	    request waiting on its answer, and for a ping's destination.
 	**/
 	public static inline function fetchGetUrl(request:AssetTask):String
 		return Raw.wgf_asset_fetch_get_url(request);
 
 	/**
-	    What a request downloads, and where to write it. "" for anything that isn't a request
-	    waiting on its answer, and a ping's destination. Borrowed: valid until the next
-	    call.
+	    Returns the URL a request downloads, and the destination to write it to.
+
+	    Each string is borrowed, valid until the next call. Returns "" for a handle that isn't a
+	    request waiting on its answer, and for a ping's destination.
 	**/
 	public static inline function fetchGetDest(request:AssetTask):String
 		return Raw.wgf_asset_fetch_get_dest(request);
 
 	/**
-	    Whether a request is a ping: ask the URL (a HEAD request does) and answer
-	    wgf_asset_fetch_done with whether the host replied at all, any status counting, and
-	    write nothing. False for anything that isn't a request waiting on its answer.
+	    Returns whether a request is a ping.
+
+	    For a ping, ask the URL, as a HEAD request does, and write nothing. Answer
+	    wgf_asset_fetch_done with whether the host replied at all, with any status counting.
+
+	    Returns false for a handle that isn't a request waiting on its answer.
 	**/
 	public static inline function fetchIsPing(request:AssetTask):Bool
 		return Raw.wgf_asset_fetch_is_ping(request);
 
 	/**
-	    What became of a download (for a ping, whether the host answered); any thread. False
-	    when it can't be taken: not a request waiting on its answer, or libwgf stopped
-	    meanwhile.
+	    Answers a request with whether its download succeeded, or for a ping, whether the host
+	    answered. Call it from any thread.
+
+	    Returns false if the answer can't be taken: `request` isn't a request waiting on its
+	    answer, or libwgf stopped meanwhile.
 	**/
 	public static inline function fetchDone(request:AssetTask, ok:Bool):Bool
 		return Raw.wgf_asset_fetch_done(request, ok);
 
 	/**
-	    Natively, seconds a request may go unanswered once the downloader has taken it before
-	    it fails; 0, the default, waits for ever, as wgrender's did. Only a downloader can
-	    tell a slow download from a stalled one (curl's low-speed limit does), so the default
-	    hides nothing: a downloader that drops requests is a bug that shows as tasks staying
-	    PENDING. False for a negative or non-finite one, and on the web, where the browser
-	    fetches and the fetch has no timeout of its own: the call stores nothing there.
+	    Sets or gets the fetch timeout, natively: the seconds a request may go unanswered, once
+	    the downloader has taken it, before it fails (default: 0, which waits for ever).
+
+	    Only a downloader can tell a slow download from a stalled one, as curl's low-speed limit
+	    does. So the default hides nothing: a downloader that drops requests is a bug that shows
+	    as tasks staying PENDING.
+
+	    The setter returns false for a negative or non-finite value. It also returns false on
+	    the web, where the browser fetches and the fetch has no timeout of its own, and stores
+	    nothing there.
 	**/
 	public static inline function setFetchTimeout(seconds:Float):Bool
 		return Raw.wgf_asset_set_fetch_timeout(seconds);
 
 	/**
-	    Natively, seconds a request may go unanswered once the downloader has taken it before
-	    it fails; 0, the default, waits for ever, as wgrender's did. Only a downloader can
-	    tell a slow download from a stalled one (curl's low-speed limit does), so the default
-	    hides nothing: a downloader that drops requests is a bug that shows as tasks staying
-	    PENDING. False for a negative or non-finite one, and on the web, where the browser
-	    fetches and the fetch has no timeout of its own: the call stores nothing there.
+	    Sets or gets the fetch timeout, natively: the seconds a request may go unanswered, once
+	    the downloader has taken it, before it fails (default: 0, which waits for ever).
+
+	    Only a downloader can tell a slow download from a stalled one, as curl's low-speed limit
+	    does. So the default hides nothing: a downloader that drops requests is a bug that shows
+	    as tasks staying PENDING.
+
+	    The setter returns false for a negative or non-finite value. It also returns false on
+	    the web, where the browser fetches and the fetch has no timeout of its own, and stores
+	    nothing there.
 	**/
 	public static inline function getFetchTimeout():Float
 		return Raw.wgf_asset_get_fetch_timeout();
 
 	/**
-	    Forget a cached file, so the next load or ensure fetches it again: the file and what
-	    was kept about it, from the browser's storage or the cache directory -- never a local
-	    host's own file. False when there was none, or for a path that isn't under the host
-	    (as wgf_asset_ensure reads one). A cache can hold a file that is wrong rather than
-	    old (a host that once served gzip bytes under its name), which revalidation keeps;
-	    this drops it. libwgf also drops one itself when a loader rejects a cached file, and
-	    fetches it once more.
+	    Forgets a cached file, so the next load or ensure fetches it again.
+
+	    It removes the file, and what was kept about it, from the browser's storage or the cache
+	    directory. It never removes a local host's own file.
+
+	    A cache can hold a file that is wrong rather than old, such as from a host that once
+	    served gzip bytes under its name. Revalidation keeps such a file, and this drops it.
+	    libwgf also drops a cached file itself when a loader rejects it, and fetches it once
+	    more.
+
+	    Returns false if there was no cached file, or for a path that isn't under the host (as
+	    wgf_asset_ensure reads a path).
 	**/
 	public static inline function evict(path:String):Bool
 		return Raw.wgf_asset_evict(path);
 
 	/**
-	    Load again, in place, every resource made from `path`, and every file that names it (a
-	    glTF whose buffer or image it is): what `wgf serve` does with an asset saved while the
-	    game runs. Each is fetched anew (never from the cache or this run's store), its handle
-	    kept, and READY all the while: what uses it draws what it had until the new file is in,
-	    then the new one, as of the frame it is. A glTF's tree is kept too: each of its nodes'
-	    actors stays, moved and given its new mesh, a node the file no longer has gone with its
-	    actor, a new one made (wgf_model.h). A file that doesn't load keeps what was loaded, with
-	    one error logged; a FAILED resource that now loads is READY. Textures and glTF meshes
-	    load again (a resource of another kind is warned of and left), and a resource still
-	    loading is left. The number set loading; 0 when nothing was made from `path`, or for a
-	    path that isn't under the host.
+	    Loads again, in place, every resource made from `path`, and every file that names it,
+	    such as a glTF whose buffer or image it is. `wgf serve` does this with an asset saved
+	    while the game runs.
+
+	    - Each file is fetched anew, never from the cache or this run's store.
+	    - Each resource keeps its handle, and stays READY all the while. Whatever uses it draws
+	      the old data until the new file is in, then the new data, from that frame on.
+	    - A glTF's tree is kept too (wgf_model.h). Each node's actor stays, moved and given its
+	      new mesh. A node the file no longer has is removed with its actor, and a new node gets
+	      a new actor.
+	    - A file that doesn't load keeps what was loaded, with one error logged.
+	    - A FAILED resource that now loads becomes READY.
+	    - Only textures and glTF meshes load again. A resource of another kind is left as it
+	      is, with a warning.
+	    - A resource still loading is left as it is.
+
+	    Returns the number of resources set loading. Returns 0 if nothing was made from `path`,
+	    or for a path that isn't under the host.
 	**/
 	public static inline function reload(path:String):Int
 		return Raw.wgf_asset_reload(path);
 
 	/**
-	    Forget every cached file, so the next ensure of any fetches it again, and what was
-	    read of the manifests, so the root is asked about again. Natively, every file libwgf
-	    downloaded into the cache directory is deleted, with its metadata and the directories
-	    that leaves empty: it keeps a list of its downloads there (".wgf-downloads") and
-	    never deletes a file it didn't download. Resources already made stay as they are.
-	    Call it while nothing is loading: a load in flight may fail.
+	    Forgets every cached file, so the next ensure of any file fetches it again. It also
+	    forgets what was read of the manifests, so the root manifest is asked about again.
+
+	    Natively, every file libwgf downloaded into the cache directory is deleted, with its
+	    metadata and the directories that leaves empty. libwgf keeps a list of its downloads
+	    there (".wgf-downloads"), and never deletes a file it didn't download.
+
+	    Resources already made stay as they are. Call it while nothing is loading, since a load
+	    in flight may fail.
 	**/
 	public static inline function clearCache():Void
 		Raw.wgf_asset_clear_cache();
 
 	/**
-	    False for a value that isn't a mode.
+	    Sets or gets the cache mode (default: REVALIDATE). The setter returns false for a value
+	    that isn't a mode.
 	**/
 	public static inline function setCacheMode(mode:AssetCacheMode):Bool
 		return Raw.wgf_asset_set_cache_mode(mode);
 
 	/**
-	    False for a value that isn't a mode.
+	    Sets or gets the cache mode (default: REVALIDATE). The setter returns false for a value
+	    that isn't a mode.
 	**/
 	public static inline function getCacheMode():AssetCacheMode
 		return Raw.wgf_asset_get_cache_mode();
 
 	/**
-	    An asset manifest: each file's contents hashed, so a cached copy whose hash still
-	    matches is used with no request, and one that changed is fetched once
-	    (tools/gen_manifest.py writes them, and `wgf export` into a game's web export).
-	    `path` is the root manifest's, under the host ("manifest.json"). A manifest lists
-	    the files beside it and, for each directory, the hash of its own manifest.json,
-	    fetched only when a file under it is first needed, and only if its hash changed.
+	    Sets the asset manifest, which holds a hash of each file's contents.
 
-	    The root is asked about once a run, as REVALIDATE asks, whatever the mode; without
-	    an answer the cached root is used, and without either nothing is listed. A listed
-	    file is fetched past the browser's cache and hashed before it is kept: bytes that
-	    don't match (a host still serving the old file, a deploy half done) are not kept,
-	    and the load fails, logged. A file no manifest lists, one ensured with a fetch_url,
-	    and every file under a manifest that couldn't be read or didn't match its hash are
-	    cached as the cache mode says. Natively a manifest needs a URL host and fetching.
+	    With a manifest, a cached copy whose hash still matches is used with no request, and a
+	    file that changed is fetched once. tools/gen_manifest.py writes manifests, and `wgf
+	    export` writes them into a game's web export.
 
-	    NULL or "" for none (the default). False for a path that isn't relative (starting
-	    with "/" or holding "://"), or of 512 bytes or more. Set it before the loads it
-	    should cover; setting it again forgets what was read of the last one.
+	    - `path` is the root manifest's path, under the host ("manifest.json").
+	    - A manifest lists the files beside it. For each directory it lists the hash of that
+	      directory's own manifest.json. That manifest is fetched only when a file under it is
+	      first needed, and only if its hash changed.
+	    - The root is asked about once a run, as REVALIDATE asks, whatever the mode. Without an
+	      answer the cached root is used. Without either, nothing is listed.
+	    - A listed file is fetched past the browser's cache, and hashed before it is kept.
+	      Bytes that don't match, such as from a host still serving the old file or a deploy
+	      half done, are not kept, and the load fails (logged).
+	    - These files are cached as the cache mode says: a file no manifest lists, a file
+	      ensured with a fetch_url, and every file under a manifest that couldn't be read or
+	      didn't match its hash.
+	    - Natively a manifest needs a URL host and fetching.
+
+	    NULL or "" sets no manifest (the default). Set it before the loads it should cover.
+	    Setting it again forgets what was read of the last one.
+
+	    Returns false for a path that isn't relative (one starting with "/" or holding "://"),
+	    or for one of 512 bytes or more.
 	**/
 	public static inline function setManifest(path:String):Bool
 		return Raw.wgf_asset_set_manifest(path);
 
 	/**
-	    The root manifest's path, as set; "" for none.
+	    Returns the root manifest's path, as set, or "" if there is none.
 	**/
 	public static inline function getManifest():String
 		return Raw.wgf_asset_get_manifest();
 
 	/**
-	    Make a file local: a task PENDING, then DONE or FAILED in a later update (never in
-	    this call), with a local path that opens directly.
+	    Makes a file local. Returns a task that is PENDING, then DONE or FAILED in a later
+	    update, never in this call. A DONE task has a local path that opens directly.
 
-	      path       the file, under the host, as a resource's create names it: "\" is read
-	                 as "/", "." and ".." resolved; one that is absolute, names a drive (any
-	                 ":"), or climbs above the host is refused (0)
-	      fetch_url  NULL, or the SOURCE only, for this call: a mirror, a signed link, a
-	                 versioned name; the bytes are still cached and found under `path`. Read
-	                 against the host as a browser reads a URL against a directory:
+	      path       the file, under the host, as a resource's create names it. "\" is read
+	                 as "/", and "." and ".." are resolved. A path that is absolute, names a
+	                 drive (any ":"), or climbs above the host is refused (0)
+	      fetch_url  NULL, or the SOURCE only, for this call: a mirror, a signed link, or a
+	                 versioned name. The bytes are still cached and found under `path`. It
+	                 is read against the host as a browser reads a URL against a directory:
 	                 "music/v2/a.mp3" under it, "../x" beside it, "/x" at its origin's root,
-	                 an absolute URL as it is. Natively an absolute one must be http or
-	                 https and needs fetching, not a URL host. Under a local host a relative
+	                 and an absolute URL as it is. Natively an absolute one must be http or
+	                 https, and needs fetching, not a URL host. Under a local host a relative
 	                 one is a file under it, read where it is, held to `path`'s rules.
-	                 Anything else (a file: URL, one leaving a local host) is refused (0)
-	      flags      WGF_ASSET_ENSURE_*
+	                 Anything else, such as a file: URL or one leaving a local host, is
+	                 refused (0)
+	      flags      WGF_ASSET_ENSURE_* flags
 
-	    The task, kept until wgf_asset_task_destroy, or 0 (refused as above, or no room).
+	    The task is kept until wgf_asset_task_destroy. Returns 0 if a path is refused as above,
+	    or if there is no room for another task.
 	**/
 	public static inline function ensure(path:String, fetch_url:String, flags:Int):AssetTask
 		return Raw.wgf_asset_ensure(path, fetch_url, flags);
 
 	/**
-	    Groups: one task for many files (a level's, fetched ahead). DONE once every member
-	    is; FAILED once every member has finished and any failed; an empty one is DONE at
-	    the next update. Members keep their own statuses and paths.
+	    Creates a group: one task for many files, such as a level's files fetched ahead.
+
+	    - A group is DONE once every member is.
+	    - It is FAILED once every member has finished and any of them failed.
+	    - An empty group is DONE at the next update.
+	    - Members keep their own statuses and paths.
 	**/
 	public static inline function groupCreate():AssetTask
 		return Raw.wgf_asset_group_create();
 
 	/**
-	    Add a file task (wgf_asset_ensure) to a group, finished or not. False for anything
-	    else, a task already in a group, or a group that has finished.
+	    Adds a file task (from wgf_asset_ensure) to a group, whether or not it has finished.
+	    Returns false for a handle that isn't a file task, for a task already in a group, or for
+	    a group that has finished.
 	**/
 	public static inline function groupAdd(group:AssetTask, task:AssetTask):Bool
 		return Raw.wgf_asset_group_add(group, task);
 
 	/**
-	    Redirects: files from somewhere else, for mods, translations, or a CDN. Files whose
-	    path starts with `prefix` are looked for under `target` instead:
+	    Adds a redirect, or clears them all. A redirect takes files from somewhere else, for
+	    mods, translations, or a CDN. Files whose path starts with `prefix` are looked for under
+	    `target` instead:
 
 	      wgf_asset_add_redirect("textures/", "mods/hd/textures/");
 	          textures/rock.png loads mods/hd/textures/rock.png if it exists, else its own
 	      wgf_asset_add_redirect("models/", "https://cdn.example.com/game/models/");
-	          a target with "://" is where the file downloads from (the browser, or natively
-	          the program's fetcher); it is still cached and loaded as models/...
+	          a target with "://" is where the file downloads from (by the browser, or
+	          natively by the program's fetcher). It is still cached and loaded as models/...
 
-	    Path rules stack: every one matching is tried, the last added first, then the file's
-	    own path, so later rules sit on top (a mod over a mod, fr-CA over fr). A file missing
-	    under a path rule isn't an error; the next is tried (on the web, a request each). A
-	    download rule doesn't stack: the newest matching is where it downloads from.
-	    Prefixes are plain text, matched at the start ("textures/", not "*.png").
+	    - Path rules stack. Every matching rule is tried, the last added first, then the file's
+	      own path. So later rules sit on top: a mod over a mod, or fr-CA over fr.
+	    - A file missing under a path rule isn't an error. The next rule is tried (on the web,
+	      with a request each).
+	    - A download rule doesn't stack. The newest matching one is where the file downloads
+	      from.
+	    - Prefixes are plain text, matched at the start: "textures/", not "*.png".
 
-	    They apply to every file a create loads or an ensure makes local (unless it gave a
-	    fetch_url), and to the files those name (a model's buffers and images, beside
-	    wherever the model came from); wgf_resource_get_path and wgf_asset_task_get_path say
-	    which was found. Up to 32 rules; false when full, for an empty prefix or target, or
-	    for a prefix or path target not under the host (as wgf_asset_ensure reads a path; a
-	    trailing "/" is kept).
+	    Redirects apply to every file a create loads, or an ensure makes local unless it gave a
+	    fetch_url. They also apply to the files those name, such as a model's buffers and images,
+	    beside wherever the model came from. wgf_resource_get_path and wgf_asset_task_get_path
+	    say which file was found.
+
+	    There can be up to 32 rules. add_redirect returns false when they are full, for an empty
+	    prefix or target, or for a prefix or path target not under the host (as
+	    wgf_asset_ensure reads a path). A trailing "/" is kept.
 	**/
 	public static inline function addRedirect(prefix:String, target:String):Bool
 		return Raw.wgf_asset_add_redirect(prefix, target);
 
 	/**
-	    Redirects: files from somewhere else, for mods, translations, or a CDN. Files whose
-	    path starts with `prefix` are looked for under `target` instead:
+	    Adds a redirect, or clears them all. A redirect takes files from somewhere else, for
+	    mods, translations, or a CDN. Files whose path starts with `prefix` are looked for under
+	    `target` instead:
 
 	      wgf_asset_add_redirect("textures/", "mods/hd/textures/");
 	          textures/rock.png loads mods/hd/textures/rock.png if it exists, else its own
 	      wgf_asset_add_redirect("models/", "https://cdn.example.com/game/models/");
-	          a target with "://" is where the file downloads from (the browser, or natively
-	          the program's fetcher); it is still cached and loaded as models/...
+	          a target with "://" is where the file downloads from (by the browser, or
+	          natively by the program's fetcher). It is still cached and loaded as models/...
 
-	    Path rules stack: every one matching is tried, the last added first, then the file's
-	    own path, so later rules sit on top (a mod over a mod, fr-CA over fr). A file missing
-	    under a path rule isn't an error; the next is tried (on the web, a request each). A
-	    download rule doesn't stack: the newest matching is where it downloads from.
-	    Prefixes are plain text, matched at the start ("textures/", not "*.png").
+	    - Path rules stack. Every matching rule is tried, the last added first, then the file's
+	      own path. So later rules sit on top: a mod over a mod, or fr-CA over fr.
+	    - A file missing under a path rule isn't an error. The next rule is tried (on the web,
+	      with a request each).
+	    - A download rule doesn't stack. The newest matching one is where the file downloads
+	      from.
+	    - Prefixes are plain text, matched at the start: "textures/", not "*.png".
 
-	    They apply to every file a create loads or an ensure makes local (unless it gave a
-	    fetch_url), and to the files those name (a model's buffers and images, beside
-	    wherever the model came from); wgf_resource_get_path and wgf_asset_task_get_path say
-	    which was found. Up to 32 rules; false when full, for an empty prefix or target, or
-	    for a prefix or path target not under the host (as wgf_asset_ensure reads a path; a
-	    trailing "/" is kept).
+	    Redirects apply to every file a create loads, or an ensure makes local unless it gave a
+	    fetch_url. They also apply to the files those name, such as a model's buffers and images,
+	    beside wherever the model came from. wgf_resource_get_path and wgf_asset_task_get_path
+	    say which file was found.
+
+	    There can be up to 32 rules. add_redirect returns false when they are full, for an empty
+	    prefix or target, or for a prefix or path target not under the host (as
+	    wgf_asset_ensure reads a path). A trailing "/" is kept.
 	**/
 	public static inline function clearRedirects():Void
 		Raw.wgf_asset_clear_redirects();
 
 	/**
-	    Ping an asset host: a task DONE in a later update when it answered within
-	    `timeout_ms` (0 or less: 5000), FAILED when it didn't. NULL pings the current host.
-	    On the web, a HEAD request (any response counts, even a 404; another origin needs no
-	    CORS headers). Natively, a local host is DONE when its directory exists, and a URL
-	    host is asked through the program's fetcher, as a ping request
-	    (wgf_asset_fetch_is_ping; wgrender's had none); without fetching, FAILED. 0 when
-	    there's no room.
+	    Pings an asset host. Returns a task that, in a later update, is DONE if the host answered
+	    within `timeout_ms` milliseconds, or FAILED if it didn't.
+
+	    - A `timeout_ms` of 0 or less means 5000.
+	    - NULL pings the current host.
+	    - On the web it is a HEAD request. Any response counts, even a 404, and another origin
+	      needs no CORS headers.
+	    - Natively, a local host is DONE if its directory exists. A URL host is asked through
+	      the program's fetcher, as a ping request (wgf_asset_fetch_is_ping). Without fetching,
+	      the task is FAILED.
+
+	    Returns 0 if there is no room for another task.
 	**/
 	public static inline function pingHost(host:String, timeout_ms:Int):AssetTask
 		return Raw.wgf_asset_ping_host(host, timeout_ms);
 
 	/**
-	    A DONE ping's round trip in milliseconds; 0 for one that isn't DONE, and for
-	    anything that isn't a ping.
+	    Returns a DONE ping's round trip, in milliseconds. Returns 0 for a ping that isn't DONE,
+	    and for a handle that isn't a ping.
 	**/
 	public static inline function pingGetMilliseconds(ping:AssetTask):Float
 		return Raw.wgf_asset_ping_get_milliseconds(ping);

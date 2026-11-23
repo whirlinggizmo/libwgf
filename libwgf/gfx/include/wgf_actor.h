@@ -11,15 +11,19 @@
 extern "C" {
 #endif
 
-/* Everything placed is an actor, in a tree. A plain actor is only a transform: a group,
- * or a pivot. The other kinds -- 2D stages, sprites, shapes, text, particle emitters,
- * cameras -- are actors with content, made by their own create, and every actor call
- * below works on any of them. An actor's transform is relative to its parent, so moving a parent moves
- * everything under it. On a 2D stage, an actor uses x and y, and rotates about z.
+/* Actors: everything placed in a scene tree.
  *
- * An actor is an object: owned by whoever created it, and ended with
- * wgf_actor_destroy (docs/ARCHITECTURE.md, "Resources and objects"). Every call
- * on a handle that isn't an actor does nothing, returning false or 0. */
+ * A plain actor is only a transform, used as a group or a pivot. The other kinds are actors
+ * with content: 2D stages, sprites, shapes, text, particle emitters, and cameras. Each is made
+ * by its own create call, and every actor call below works on any of them.
+ *
+ * - An actor's transform is relative to its parent, so moving a parent moves every actor
+ *   under it.
+ * - On a 2D stage, an actor uses x and y, and rotates about z.
+ *
+ * An actor is an object. Whoever created it owns it, and ends it with wgf_actor_destroy (see
+ * docs/ARCHITECTURE.md, "Resources and objects"). Every call on a handle that isn't an actor
+ * does nothing, and returns false or 0. */
 
 /* An actor of any type: a handle of kind "gfx.actor". */
 typedef wgf_handle_t wgf_actor_t;
@@ -40,138 +44,181 @@ typedef enum wgf_actor_kind_t {
     WGF_ACTOR_KIND_SHAPE3D = 12,
     WGF_ACTOR_KIND_EMITTER3D = 13,
     WGF_ACTOR_KIND_SPRITE_BATCH = 14,
-    WGF_ACTOR_KIND_TILEMAP_LAYER = 15 /* a placed Tiled map's layer (wgf_tilemap_layer.h) */
+    WGF_ACTOR_KIND_TILEMAP_LAYER = 15 /* a layer of a placed Tiled map (wgf_tilemap_layer.h) */
 } wgf_actor_kind_t;
 
 /* What wgf_actor_destroy does with the actor's children. */
 typedef enum wgf_actor_destroy_t {
-    WGF_ACTOR_DESTROY_CHILDREN = 0, /* the actor and everything under it */
-    WGF_ACTOR_KEEP_CHILDREN = 1     /* the actor alone: its children move up to its parent, in its place,
-                                         keeping where they are (their world transform). Under an actor with
-                                         no parent, they are left with none. */
+    WGF_ACTOR_DESTROY_CHILDREN = 0, /* destroys the actor and every actor under it */
+    WGF_ACTOR_KEEP_CHILDREN = 1     /* destroys the actor alone. Its children move up to its parent, in its
+                                         place, and keep their world transform. If it has no parent, they are
+                                         left with none. */
 } wgf_actor_destroy_t;
 
-/* A plain actor: a transform, with no parent. 0 when there is no room for another. */
+/* Creates a plain actor: a transform, with no parent.
+ *
+ * Returns 0 if there is no room for another actor. */
 WGF_API wgf_actor_t wgf_actor_create(void);
 
-/* End an actor of any kind, at once. What it held is released, never destroyed: a
- * sprite drops its reference to its texture. */
+/* Destroys an actor of any kind, at once.
+ *
+ * The resources it held are released, never destroyed. For example, a sprite drops its
+ * reference to its texture. */
 WGF_API void wgf_actor_destroy(wgf_actor_t actor, wgf_actor_destroy_t children);
 
-/* What kind of actor it is (a sprite, a model, a stage), which says which calls it takes;
- * NONE when it isn't an actor, or is gone. */
+/* Returns the actor's kind (a sprite, a model, a stage), which says which calls it takes.
+ *
+ * Returns NONE if `actor` isn't an actor, or is gone. */
 WGF_API wgf_actor_kind_t wgf_actor_get_kind(wgf_actor_t actor);
 
-/* Put `actor` under `parent`, last among its children, keeping its own transform
- * (so it moves to where it sits relative to the new parent); 0 detaches it, and a
- * detached actor is drawn by nothing. False when `parent` isn't an actor, or is
- * `actor` or under it, or when `actor` is a 2D or 3D stage, which are always roots. */
+/* Sets or gets the actor's parent, and reads its children.
+ *
+ * set_parent puts `actor` under `parent`, last among its children. The actor keeps its own
+ * transform, so it moves to where that transform places it relative to the new parent.
+ * A `parent` of 0 detaches it, and a detached actor is not drawn.
+ *
+ * set_parent returns false if:
+ * - `parent` isn't an actor.
+ * - `parent` is `actor`, or is under it.
+ * - `actor` is a 2D or 3D stage. Stages are always roots. */
 WGF_API bool wgf_actor_set_parent(wgf_actor_t actor, wgf_actor_t parent);
 WGF_API wgf_actor_t wgf_actor_get_parent(wgf_actor_t actor);
 WGF_API int wgf_actor_get_child_count(wgf_actor_t actor);
-/* The child at `index`, 0 first; 0 when there is none. */
+/* Returns the child at `index`, 0 first. Returns 0 if there is none. */
 WGF_API wgf_actor_t wgf_actor_get_child(wgf_actor_t actor, int index);
 
-/* Where `actor` is among its parent's children, which is its drawing order in a
- * 2D stage: later children draw over earlier ones. An index past either end is
- * clamped to it, so a large one moves it to the front. False when it has no
- * parent. */
+/* Sets or gets where `actor` is among its parent's children.
+ *
+ * On a 2D stage this is the drawing order: later children draw over earlier ones. An index
+ * past either end is clamped to that end, so a large index moves the actor to the front.
+ *
+ * set_index returns false if the actor has no parent. */
 WGF_API bool wgf_actor_set_index(wgf_actor_t actor, int index);
 WGF_API int wgf_actor_get_index(wgf_actor_t actor);
 
-/* The transform, relative to the parent. Rotation is three angles in radians,
- * about x, then y, then z (wgf_quat_from_euler), kept as the rotation they make:
- * get_rotation gives angles for the same rotation, which may not be the ones given
- * (past a half turn, say). Scale 1 is its own size. */
+/* Sets or gets the actor's transform, relative to its parent.
+ *
+ * - Rotation is three angles in radians, about x, then y, then z (see wgf_quat_from_euler).
+ *   It is kept as the rotation those angles make. get_rotation returns angles for the same
+ *   rotation, which may not be the ones given (past a half turn, for example).
+ * - Scale 1 is the actor's own size. */
 WGF_API bool wgf_actor_set_position(wgf_actor_t actor, float x, float y, float z);
 WGF_API wgf_vec3_t wgf_actor_get_position(wgf_actor_t actor);
 WGF_API bool wgf_actor_set_rotation(wgf_actor_t actor, float x, float y, float z);
 WGF_API wgf_vec3_t wgf_actor_get_rotation(wgf_actor_t actor);
 WGF_API bool wgf_actor_set_scale(wgf_actor_t actor, float x, float y, float z);
 WGF_API wgf_vec3_t wgf_actor_get_scale(wgf_actor_t actor);
-/* All three at once: the cheapest way to move something each frame. */
+/* Sets position, rotation, and scale at once. It is the cheapest way to move an actor each frame. */
 WGF_API bool wgf_actor_set_transform(wgf_actor_t actor, float position_x, float position_y,
                                           float position_z, float rotation_x, float rotation_y, float rotation_z,
                                           float scale_x, float scale_y, float scale_z);
 
-/* An actor with a simulated component (motion, bounds, lifetime, a collider: wgf_component.h)
- * moves at the tick rate: its transform is the simulation's, and it is drawn between its
- * last two ticks' at each frame's tick fraction, so it moves smoothly at any frame rate.
- * A change in a tick is so smoothed into the frames after it; snap ends the smoothing, so
- * the actor is drawn where it is now (put somewhere new, it isn't seen sweeping there).
- * False for an actor that isn't one; true and nothing to do for one not simulated. */
+/* Ends the smoothing of a simulated actor, so it is drawn where it is now.
+ *
+ * An actor with a simulated component (motion, bounds, lifetime, or a collider: see
+ * wgf_component.h) moves at the tick rate. Its transform is the simulation's. Each frame it is
+ * drawn between its last two ticks' transforms, at the frame's tick fraction, so it moves
+ * smoothly at any frame rate. A change made in a tick is smoothed into the frames after it.
+ * Snap ends that smoothing: an actor put somewhere new isn't seen sweeping there.
+ *
+ * Returns false if `actor` isn't an actor. Returns true, and does nothing, for an actor that
+ * isn't simulated. */
 WGF_API bool wgf_actor_snap(wgf_actor_t actor);
 
-/* Many positions at once: each of `actors` (count of them) read into `out` as x, y, z in
- * turn, as many as fit in `out_count` floats, returning how many floats it filled (a
- * handle that isn't an actor reads 0, 0, 0); and each set from `positions` (x, y, z in
- * turn, positions_count floats), false when there aren't three floats for each, skipping
- * a handle that isn't an actor. */
+/* Gets or sets the positions of many actors at once.
+ *
+ * get_positions reads each of `actors` (`count` of them) into `out`, as x, y, z in turn. It
+ * reads as many as fit in `out_count` floats, and returns how many floats it filled. A handle
+ * that isn't an actor reads as 0, 0, 0.
+ *
+ * set_positions sets each from `positions`: x, y, z in turn, `positions_count` floats. It
+ * skips a handle that isn't an actor. It returns false if there aren't three floats for each
+ * actor. */
 WGF_API int wgf_actor_get_positions(const wgf_actor_t *actors, int count, float *out, int out_count);
 WGF_API bool wgf_actor_set_positions(const wgf_actor_t *actors, int count, const float *positions,
                                     int positions_count);
 
-/* Where the actor is in its tree's root's space: on a 2D stage, stage units. The world
- * position is the simulation's, as its transform is (above), in a tick and in a frame
- * alike; the drawn position is where it is drawn this frame, a simulated actor (or one
- * under one) between its last two ticks: what a camera following it in the frame reads,
- * so the camera moves as smoothly as the actor does. They are the same for an actor with
- * nothing simulated at or above it. */
+/* Returns where the actor is in its tree's root's space. On a 2D stage, that is stage units.
+ *
+ * - The world position is the simulation's, as the transform is (see wgf_actor_snap). It is
+ *   the same in a tick and in a frame.
+ * - The drawn position is where the actor is drawn this frame. A simulated actor, or one under
+ *   a simulated actor, is drawn between its last two ticks. A camera that follows the actor in
+ *   the frame reads this, so the camera moves as smoothly as the actor does.
+ *
+ * The two are the same for an actor with nothing simulated at or above it. */
 WGF_API wgf_vec3_t wgf_actor_get_world_position(wgf_actor_t actor);
 WGF_API wgf_vec3_t wgf_actor_get_drawn_position(wgf_actor_t actor);
 
-/* The direction (x, y, z), in the actor's own space, turned into its tree's root's space
- * and made unit length: its heading in the world, say, from (0, 0, -1), with no angles to
- * read back (get_rotation's may not be the ones set). The world direction is the
- * simulation's and the drawn one this frame's, as the positions above. 0, 0, 0 for (0, 0,
- * 0), or a handle that isn't an actor. */
+/* Turns a direction in the actor's own space into its tree's root's space, at unit length.
+ *
+ * For example, (0, 0, -1) gives the actor's heading in the world, with no angles to read back
+ * (get_rotation's angles may not be the ones set). The world direction is the simulation's,
+ * and the drawn direction is this frame's, as with the positions above.
+ *
+ * Returns 0, 0, 0 for a direction of (0, 0, 0), or if `actor` isn't an actor. */
 WGF_API wgf_vec3_t wgf_actor_get_world_direction(wgf_actor_t actor, float x, float y, float z);
 WGF_API wgf_vec3_t wgf_actor_get_drawn_direction(wgf_actor_t actor, float x, float y, float z);
 
-/* Turn the actor so its -z points at the target (x, y, z) and its +y is as near to the
- * up direction (up_x, up_y, up_z) as can be, both in its tree's root's space: how a
- * camera is aimed, since it looks down its -z. Its rotation is set relative to its
- * parent, so it points there as it is placed now. False when the target is where the
- * actor is, or the up direction is along the line to it. */
+/* Turns the actor so its -z points at the target (x, y, z).
+ *
+ * Its +y is turned as near to the up direction (up_x, up_y, up_z) as it can be. The target
+ * and up direction are both in its tree's root's space. This is how you aim a camera, since a
+ * camera looks down its -z. The rotation is set relative to the parent, so the actor points at
+ * the target from where it is placed now.
+ *
+ * Returns false if the target is where the actor is, or if the up direction lies along the
+ * line to the target. */
 WGF_API bool wgf_actor_look_at(wgf_actor_t actor, float x, float y, float z, float up_x, float up_y, float up_z);
 
-/* A name to find the actor by; NULL or "" for none, the default. get_name is "" for none: borrowed, valid until the
- * name changes or the actor goes. A name is found by its stage (wgf_stage2d_find, wgf_stage3d_find) when it is the
- * only one so named there, and by a path from any actor (wgf_actor_find) when it is unique among its siblings. */
+/* Sets or gets a name to find the actor by.
+ *
+ * - NULL or "" means no name (default: no name).
+ * - get_name returns "" for no name. The string is borrowed, and valid until the name changes
+ *   or the actor is gone.
+ * - Its stage finds the actor by name (wgf_stage2d_find, wgf_stage3d_find) when it is the only
+ *   actor so named there.
+ * - A path from any actor finds it (wgf_actor_find) when its name is unique among its
+ *   siblings. */
 WGF_API bool wgf_actor_set_name(wgf_actor_t actor, const char *name);
 WGF_API const char *wgf_actor_get_name(wgf_actor_t actor);
 
-/* The actor at `path` from `actor`: child names joined by '/', so "wheel_rl/smoke" is the
- * child "smoke" of the child "wheel_rl". Each step looks only among one actor's children
- * (the first so named, in order), never through the tree. 0 for none, an empty step
- * ("a//b"), or an empty or NULL path. */
+/* Returns the actor at `path` from `actor`.
+ *
+ * A path is child names joined by '/'. So "wheel_rl/smoke" is the child "smoke" of the child
+ * "wheel_rl". Each step looks only among one actor's children, never through the tree, and
+ * takes the first child so named, in order.
+ *
+ * Returns 0 if no actor is found, if a step is empty ("a//b"), or if `path` is empty or
+ * NULL. */
 WGF_API wgf_actor_t wgf_actor_find(wgf_actor_t actor, const char *path);
 
-/* Four flags say what an actor takes part in, each the actor's own, read back as set:
+/* Sets or gets the four flags that say what an actor takes part in.
  *
- *   enabled   off: the actor is skipped altogether, with everything under it, as if
- *             it weren't in the tree, by drawing and by every update (an emitter
- *             under it isn't moved on): the switch on a part of the game that is off
- *             for now. The only one that reaches the children; their own flags are
- *             kept, so enabling it again brings each back as it was set
- *   visible   off: the actor's own output is off -- a sprite, shape, text, or
- *             emitter isn't drawn -- while it is still placed and its children are
- *             as they are. A glTF file's root (wgf_model.h), which draws nothing itself,
- *             stands for its file: hidden, its file's nodes aren't drawn or picked either,
- *             while the actors a game put under them are as they are; to hide a whole
- *             tree, turn enabled off
- *   paused    on: it and everything under it are frozen, still drawn: its behaviors
- *             don't tick, its components' systems (motion, 2D bodies, bounds,
- *             lifetimes) and tweens leave it, and what moves by itself holds still --
- *             an emitter's particles, a sprite's clip, a model's animation. A level held
- *             under a pause menu (wgf_screen.h pauses the screens under the top one).
- *             Its colliders still meet as triggers. is_frozen: it or one above it
- *             paused
+ * Each flag is the actor's own, and reads back as it was set.
+ *
+ *   enabled   off: the actor and every actor under it are skipped altogether, by drawing and
+ *             by every update, as if they weren't in the tree. An emitter under it isn't
+ *             moved on. Use it to switch off a part of the game for now. It is the only flag
+ *             that reaches the children. Their own flags are kept, so enabling the actor
+ *             again brings each back as it was set.
+ *   visible   off: the actor's own output is off. A sprite, shape, text, or emitter isn't
+ *             drawn. The actor is still placed, and its children are as they are. A glTF
+ *             file's root (wgf_model.h) draws nothing itself, and stands for its file:
+ *             hidden, its file's nodes aren't drawn or picked either. Actors a game put under
+ *             those nodes are as they are. To hide a whole tree, turn enabled off.
+ *   paused    on: the actor and every actor under it are frozen, but still drawn. Their
+ *             behaviors don't tick. Their components' systems (motion, arcade bodies, bounds,
+ *             lifetimes) and tweens leave them. What moves by itself holds still: an
+ *             emitter's particles, a sprite's clip, a model's animation. Use it to hold a
+ *             level under a pause menu (wgf_screen.h pauses the screens under the top one).
+ *             Its colliders still meet as triggers. is_frozen returns true if the actor or
+ *             any actor above it is paused.
  *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
- *             (wgf_pointer.h) pass through it to what is under it, while its children
- *             can still be hit: a panel that isn't clickable holding buttons that are.
- *             Only what has something to hit (a sprite, a 2D shape, a text, a model, a
- *             3D shape) is ever picked; for any other kind it changes nothing
+ *             (wgf_pointer.h) pass through the actor to what is under it. Its children can
+ *             still be hit, as a panel that isn't clickable can hold buttons that are. Only
+ *             actors with a surface to hit are ever picked: a sprite, a 2D shape, a text, a
+ *             model, or a 3D shape. For any other kind this flag changes nothing.
  *
  * Defaults: enabled, visible, not paused, pickable. */
 WGF_API bool wgf_actor_set_enabled(wgf_actor_t actor, bool enabled);

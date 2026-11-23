@@ -2,7 +2,7 @@
 package wgf;
 
 /**
-    How its cells are laid out: Tiled's orientations.
+    How a map's cells are laid out: Tiled's orientations.
 **/
 enum abstract TilemapOrientation(Int) from Int to Int {
 	var NONE = 0;

@@ -12,14 +12,20 @@
 extern "C" {
 #endif
 
-/* A 3D shape: an actor drawing a cube, a sphere, a filled rectangle or a circle's outline
- * in its local x-y plane, a line, or a line strip, in one color, unlit, on a stage
- * (wgf_stage3d.h), as libwgt's (wgrender's shape3d): what debug views and markers are
- * drawn with. On a 2D stage it draws nothing: 2D shapes are wgf_shape2d.h. Place, turn,
- * scale, and parent it with the actor calls. On a stage, shapes are drawn after its
- * opaque models and before its see-through ones, depth tested; a see-through color
- * blends over what is behind it in the order the shapes are found; lines are a pixel
- * wide. */
+/* A 3D shape: an actor that draws a simple shape on a 3D stage (wgf_stage3d.h), in one
+ * color, unlit.
+ *
+ * Use shapes to draw debug views and markers. A shape is one of:
+ * - a cube or a sphere;
+ * - a filled rectangle, or a circle's outline, in its local x-y plane;
+ * - a line, or a line strip.
+ *
+ * On a 2D stage it draws nothing. For 2D shapes, see wgf_shape2d.h. Place, turn, scale, and
+ * parent it with the actor calls.
+ *
+ * On a stage, shapes are drawn after its opaque models and before its see-through ones,
+ * depth tested. A see-through color blends over what is behind it, in the order the shapes
+ * are found. Lines are a pixel wide. */
 typedef enum wgf_shape3d_kind_t {
     WGF_SHAPE3D_KIND_NONE = 0, /* nothing yet: draws nothing */
     WGF_SHAPE3D_KIND_CUBE = 1,
@@ -30,39 +36,56 @@ typedef enum wgf_shape3d_kind_t {
     WGF_SHAPE3D_KIND_LINE_STRIP = 6
 } wgf_shape3d_kind_t;
 
-/* A shape with nothing to draw yet, white. 0 when there is no room for another actor. */
+/* Creates a shape with nothing to draw yet, white. Returns 0 if there is no room for another
+ * actor. */
 WGF_API wgf_actor_t wgf_shape3d_create(void);
 
-/* What it is, set by the calls below; NONE for an actor that isn't a 3D shape. */
+/* Returns the shape's kind, set by the calls below, or NONE for an actor that isn't a 3D
+ * shape. */
 WGF_API wgf_shape3d_kind_t wgf_shape3d_get_kind(wgf_actor_t shape);
 
-/* About its actor's origin: a cube `width` by `height` by `length`; a sphere of
- * `radius`; a filled rectangle `width` by `height`, and a circle's outline of `radius`,
- * in its local x-y plane. False for a size below 0. */
+/* Makes the shape a cube, a sphere, a rectangle, or a circle, about its actor's origin.
+ *
+ * - set_cube makes a cube `width` by `height` by `length`.
+ * - set_sphere makes a sphere of `radius`.
+ * - set_rectangle makes a filled rectangle `width` by `height`, in its local x-y plane.
+ * - set_circle makes a circle's outline of `radius`, in its local x-y plane.
+ *
+ * Returns false for a size below 0. */
 WGF_API bool wgf_shape3d_set_cube(wgf_actor_t shape, float width, float height, float length);
 WGF_API bool wgf_shape3d_set_sphere(wgf_actor_t shape, float radius);
 WGF_API bool wgf_shape3d_set_rectangle(wgf_actor_t shape, float width, float height);
 WGF_API bool wgf_shape3d_set_circle(wgf_actor_t shape, float radius);
 
-/* A line from (x0, y0, z0) to (x1, y1, z1), in its own space. */
+/* Makes the shape a line from (x0, y0, z0) to (x1, y1, z1), in its own space. */
 WGF_API bool wgf_shape3d_set_line(wgf_actor_t shape, float x0, float y0, float z0, float x1, float y1, float z1);
 
-/* A line strip, from a caller-owned array of points, x, y, and z in turn (`float_count`
- * floats: three a point), copied: drawn once it has two. False for a count that isn't a
- * multiple of 3, or past 65536 points. get_points fills the caller's array with up to
- * `float_count` floats of them and returns how many it filled. */
+/* Makes the shape a line strip, or gets its points.
+ *
+ * - `points` is your array, holding x, y, and z in turn: `float_count` floats, three for
+ *   each point. It is copied.
+ * - The strip is drawn once it has two points.
+ * - get_points fills your array with up to `float_count` floats of the points, and returns
+ *   how many it filled.
+ *
+ * set_line_strip returns false for a `float_count` that isn't a multiple of 3, or past 65536
+ * points. */
 WGF_API bool wgf_shape3d_set_line_strip(wgf_actor_t shape, const float *points, int float_count);
 WGF_API int wgf_shape3d_get_point_count(wgf_actor_t shape);
 WGF_API int wgf_shape3d_get_points(wgf_actor_t shape, float *points, int float_count);
 
-/* What was set: a cube's or rectangle's size (a rectangle's z 0; 0, 0, 0 otherwise), a
- * sphere's or circle's radius (0 otherwise), and a line's ends. */
+/* Returns what was set.
+ *
+ * - get_size returns a cube's or rectangle's size, with a rectangle's z 0. It returns 0, 0, 0
+ *   for another kind.
+ * - get_radius returns a sphere's or circle's radius, or 0 for another kind.
+ * - get_line_start and get_line_end return a line's ends. */
 WGF_API wgf_vec3_t wgf_shape3d_get_size(wgf_actor_t shape);
 WGF_API float wgf_shape3d_get_radius(wgf_actor_t shape);
 WGF_API wgf_vec3_t wgf_shape3d_get_line_start(wgf_actor_t shape);
 WGF_API wgf_vec3_t wgf_shape3d_get_line_end(wgf_actor_t shape);
 
-/* Default: white. Alpha below 255 makes it see-through. */
+/* Sets or gets the shape's color (default: white). Alpha below 255 makes it see-through. */
 WGF_API bool wgf_shape3d_set_color(wgf_actor_t shape, wgf_color_t color);
 WGF_API wgf_color_t wgf_shape3d_get_color(wgf_actor_t shape);
 

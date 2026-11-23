@@ -4,79 +4,96 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    The device's tilt, from level and turned with the screen, for a game steered by tilting a
-    phone or a tablet: on the web, the page's device orientation; natively, UNAVAILABLE (as
-    helix's Tilt service, whose behavior this is). Ask with wgf_tilt_request, then read each
-    frame:
+    The device's tilt, for a game steered by tilting a phone or a tablet.
+
+    The tilt is measured from level, and turns with the screen. On the web it comes from the
+    page's device orientation. Natively it is UNAVAILABLE. Ask for it with wgf_tilt_request,
+    then read it each frame:
 
       x += speed * wgf_tilt_get_x() * dt;
 
-    A page may need permission, asked at the player's next tap (iOS, and Chrome on Android),
-    so a game asks before the tap that starts play. Level is measured once the device is held
-    within 3 degrees for half a second (as the tilt starts, after the screen turns, and after
-    wgf_tilt_calibrate); the tilt reads 0 meanwhile. Readings are taken as each frame ends, once
-    asked for: a program that never asks links none of it.
+    - A page may need permission, asked at the player's next tap (iOS, and Chrome on Android).
+      So a game asks before the tap that starts play.
+    - Level is measured once the device is held within 3 degrees for half a second. That happens
+      as the tilt starts, after the screen turns, and after wgf_tilt_calibrate. The tilt reads 0
+      meanwhile.
+    - Once asked for, readings are taken as each frame ends. A program that never asks links
+      none of the tilt's code.
 **/
 class Tilt {
 	/**
-	    Ask for the tilt. False where it can't be had at once (UNAVAILABLE, NEEDS_HTTPS); true when
-	    asked, the status then saying how it goes. Asking again while asked does nothing.
+	    Asks for the tilt.
+
+	    Returns false if it can't be had at once (UNAVAILABLE, NEEDS_HTTPS). Returns true once asked,
+	    and the status then says how it goes. Asking again while asked does nothing.
 	**/
 	public static inline function request():Bool
 		return Raw.wgf_tilt_request();
 
 	/**
-	    Stop the readings, OFF, reading 0 from then. A permission granted stays granted.
+	    Stops the readings: the status is OFF, and the tilt reads 0 from then. A permission granted
+	    stays granted.
 	**/
 	public static inline function release():Void
 		Raw.wgf_tilt_release();
 
 	/**
-	    Stop the readings, OFF, reading 0 from then. A permission granted stays granted.
+	    Stops the readings: the status is OFF, and the tilt reads 0 from then. A permission granted
+	    stays granted.
 	**/
 	public static inline function getStatus():TiltStatus
 		return Raw.wgf_tilt_get_status();
 
 	/**
-	    Whether level is being measured, reading 0 until it is.
+	    Returns whether level is being measured. The tilt reads 0 until it is.
 	**/
 	public static inline function isCalibrating():Bool
 		return Raw.wgf_tilt_is_calibrating();
 
 	/**
-	    ON, and level measured: the tilt steers.
+	    Returns whether the status is ON and level is measured, so the tilt steers.
 	**/
 	public static inline function isReady():Bool
 		return Raw.wgf_tilt_is_ready();
 
 	/**
-	    Measure level again from how the device is held next, as a game's "Level" button does.
+	    Measures level again from how the device is held next, as a game's "Level" button does.
 	**/
 	public static inline function calibrate():Void
 		Raw.wgf_tilt_calibrate();
 
 	/**
-	    How far the device is tilted from level, -1 to 1, `range` degrees reading 1: x across the
-	    screen, right positive; y up and down it, down positive. 0 while calibrating, or not ON.
+	    Returns how far the device is tilted from level, -1 to 1. A tilt of the range's degrees
+	    reads 1 (see wgf_tilt_set_range).
+
+	    - x is across the screen, right positive.
+	    - y is up and down the screen, down positive.
+
+	    Returns 0 while calibrating, or while the status isn't ON.
 	**/
 	public static inline function getX():Float
 		return Raw.wgf_tilt_get_x();
 
 	/**
-	    How far the device is tilted from level, -1 to 1, `range` degrees reading 1: x across the
-	    screen, right positive; y up and down it, down positive. 0 while calibrating, or not ON.
+	    Returns how far the device is tilted from level, -1 to 1. A tilt of the range's degrees
+	    reads 1 (see wgf_tilt_set_range).
+
+	    - x is across the screen, right positive.
+	    - y is up and down the screen, down positive.
+
+	    Returns 0 while calibrating, or while the status isn't ON.
 	**/
 	public static inline function getY():Float
 		return Raw.wgf_tilt_get_y();
 
 	/**
-	    The degrees of tilt that read 1, at least 1; default 30.
+	    Sets or gets the tilt, in degrees, that reads 1. It is at least 1 (default: 30).
 	**/
 	public static inline function setRange(degrees:Float):Void
 		Raw.wgf_tilt_set_range(degrees);
 
 	/**
-	    The degrees of tilt that read 1, at least 1; default 30.
+	    Sets or gets the tilt, in degrees, that reads 1. It is at least 1 (default: 30).
 	**/
 	public static inline function getRange():Float
 		return Raw.wgf_tilt_get_range();

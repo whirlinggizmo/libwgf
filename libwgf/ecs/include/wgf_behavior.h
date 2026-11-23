@@ -10,60 +10,86 @@
 extern "C" {
 #endif
 
-/* Behaviors: the program's own code on an actor, named here and written in the program's
- * language. An actor has any number, several of one name too, each its own parameters.
- * libwgf keeps each behavior's name and parameters (from a scene file, or set) and raises
- * its lifecycle as events (wgf_world.h): CREATED when it is added, DESTROYED when it is
- * removed or its actor goes, and its actor's colliders' triggers. The program's binding
- * takes those and calls its behaviors' create, destroy, and trigger enter and exit, and
- * their tick and frame from its own: nothing in C calls a behavior.
+/* Behaviors: your game's own code on an actor, named here and written in your game's
+ * language.
  *
- * A behavior is named by its actor and its id: a number from 1 the actor gives it as it is
- * added, kept until it is removed, never given to another of the actor's behaviors. A name
- * is 1 to 63 bytes; a parameter's key 1 to 63 bytes and its value, text, under 256; at
- * most 32 parameters. Every call is false (or 0, or "") for an actor or id that isn't one. */
+ * An actor can have any number of behaviors, several with the same name too, each with its
+ * own parameters. libwgf keeps each behavior's name and parameters, from a scene file or set
+ * in code. It raises the behavior's lifecycle as events (wgf_world.h):
+ * - CREATED when the behavior is added.
+ * - DESTROYED when it is removed, or its actor is destroyed.
+ * - The triggers of its actor's colliders.
+ *
+ * Your game's binding takes those events and calls its behaviors' create, destroy, trigger
+ * enter, and trigger exit. It calls their tick and frame from its own. Nothing in C calls a
+ * behavior.
+ *
+ * A behavior is named by its actor and its id. The id is a number from 1 that the actor gives
+ * it when it is added. The behavior keeps it until it is removed, and the actor never gives it
+ * to another of its behaviors.
+ *
+ * Limits:
+ * - A name is 1 to 63 bytes.
+ * - A parameter's key is 1 to 63 bytes, and its value is text under 256 bytes.
+ * - A behavior has at most 32 parameters.
+ *
+ * Every call returns false (or 0, or "") for an actor or id that isn't one. */
 
-/* A behavior named `name` added to `actor`, after the ones it has: its id, or 0 when
- * `actor` isn't an actor, the name breaks the rule above, or it is out of memory. */
+/* Adds a behavior named `name` to `actor`, after the ones it has, and returns its id.
+ * Returns 0 if `actor` isn't an actor, the name breaks the limits above, or memory runs
+ * out. */
 WGF_API int wgf_actor_add_behavior(wgf_actor_t actor, const char *name);
-/* The behavior removed (DESTROYED raised for it). */
+/* Removes a behavior, raising DESTROYED for it. */
 WGF_API bool wgf_actor_remove_behavior(wgf_actor_t actor, int behavior);
 
-/* The actor's behaviors in the order they were added: how many, and the id of the one at
- * `index` (0 past the end); and the id of its first named `name` (0 for none). */
+/* Lists the actor's behaviors, in the order they were added.
+ *
+ * - get_behavior_count returns how many there are.
+ * - get_behavior returns the id of the one at `index`, or 0 past the end.
+ * - find_behavior returns the id of the first one named `name`, or 0 for none. */
 WGF_API int wgf_actor_get_behavior_count(wgf_actor_t actor);
 WGF_API int wgf_actor_get_behavior(wgf_actor_t actor, int index);
 WGF_API int wgf_actor_find_behavior(wgf_actor_t actor, const char *name);
 
-/* Its name: the actor's, valid while the behavior is. */
+/* Returns the behavior's name. The actor owns the string, valid while the behavior is. */
 WGF_API const char *wgf_behavior_get_name(wgf_actor_t actor, int behavior);
 
-/* A parameter, set to `value` (text), added the first time; NULL removes it. False too
- * for a key or value breaking the rule, or a 33rd parameter. get_param's is the actor's:
- * "" for one it doesn't have, valid until it changes. get_param_number reads it as a
- * number: 0 for one it doesn't have or that isn't one.
+/* Sets or gets a parameter, as text.
  *
- * A value starting with '@' refers to another actor, found once -- as it is set, and again
- * when a scene's actors are all made -- and kept: get_param_actor is it, never a search.
- * "@start_gate" is the one actor so named on this actor's stage (wgf_stage2d_find);
- * "@car/wheel_rl" a path from it (wgf_actor_find); "@./flame" a path from this actor and
- * "@../gun" from its parent. 0 for a parameter that isn't a reference, one that found
- * none, and an actor since destroyed. */
+ * - set_param sets `key` to `value`, adding the parameter the first time. A NULL `value`
+ *   removes it. It also returns false for a key or value that breaks the limits, or a 33rd
+ *   parameter.
+ * - get_param returns the value. The actor owns the string, valid until it changes. It
+ *   returns "" for a parameter the behavior doesn't have.
+ * - get_param_number reads the value as a number. It returns 0 for a parameter the behavior
+ *   doesn't have, or one that isn't a number.
+ *
+ * A value starting with '@' refers to another actor. The actor is found once, when the value
+ * is set, and again when all of a scene's actors are made. It is then kept, so
+ * get_param_actor returns it without a search.
+ * - "@start_gate" is the one actor with that name on this actor's stage (wgf_stage2d_find).
+ * - "@car/wheel_rl" is a path from that actor (wgf_actor_find).
+ * - "@./flame" is a path from this actor, and "@../gun" a path from its parent.
+ *
+ * get_param_actor returns 0 for a parameter that isn't a reference, a reference that found no
+ * actor, or an actor since destroyed. */
 WGF_API bool wgf_behavior_set_param(wgf_actor_t actor, int behavior, const char *key, const char *value);
 WGF_API const char *wgf_behavior_get_param(wgf_actor_t actor, int behavior, const char *key);
 WGF_API double wgf_behavior_get_param_number(wgf_actor_t actor, int behavior, const char *key);
 WGF_API wgf_actor_t wgf_behavior_get_param_actor(wgf_actor_t actor, int behavior, const char *key);
 WGF_API bool wgf_behavior_has_param(wgf_actor_t actor, int behavior, const char *key);
 
-/* Its parameters in the order first set: how many, and each one's key ("" past the
- * end). */
+/* Lists the behavior's parameters, in the order they were first set. get_param_count returns
+ * how many there are, and get_param_key returns each one's key, or "" past the end. */
 WGF_API int wgf_behavior_get_param_count(wgf_actor_t actor, int behavior);
 WGF_API const char *wgf_behavior_get_param_key(wgf_actor_t actor, int behavior, int index);
 
-/* The actors with a behavior named `name`, oldest first (by when their first component or
- * behavior came), into `out`, as many as fit in `count`, returning how many it filled;
- * and how many there are, to size `out`. An actor with two of the name is one actor.
- * Found by an index of each name, never by a look at every actor. */
+/* Finds the actors with a behavior named `name`, oldest first.
+ *
+ * An actor's age is when its first component or behavior was added. find_with_behavior fills
+ * `out` with as many as fit in `count`, and returns how many it filled. count_with_behavior
+ * returns how many there are, to size `out`. An actor with two behaviors of that name counts
+ * once. Each name is indexed, so neither call looks at every actor. */
 WGF_API int wgf_actor_find_with_behavior(const char *name, wgf_actor_t *out, int count);
 WGF_API int wgf_actor_count_with_behavior(const char *name);
 

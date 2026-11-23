@@ -2,8 +2,10 @@
 package wgf;
 
 /**
-    How a stage's lit colors map to the screen. Lighting can exceed what a screen shows;
-    tone mapping rolls off highlights instead of clipping them.
+    How a stage's lit colors map to the screen.
+
+    Lighting can exceed what a screen shows. Tone mapping rolls off highlights instead of
+    clipping them.
 **/
 enum abstract Stage3dTonemap(Int) from Int to Int {
 	var NONE = 0;

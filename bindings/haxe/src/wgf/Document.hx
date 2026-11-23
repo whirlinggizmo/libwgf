@@ -7,60 +7,83 @@ import wgf.impl.Raw;
     A document, a resource: a handle of kind "ui.document".
 
     Documents: menus written as files, in RML (HTML-like markup) styled with RCSS (CSS-like
-    style sheets), as RmlUi reads them: laid out, drawn, and worked by the pointer, the keys,
-    and the pads by libwgf, beside the immediate UI of wgf_ui.h, which stays for HUDs and
-    small screens. A document is a resource (wgf_resource.h): created from its path, loaded
-    with every file it names (its style sheets, images, and templates, made local first, so
-    it loads the same from a page as from a disk), READY once it is parsed, FAILED (logged)
-    when it can't be read or isn't a document. A program that never creates one links none
-    of RmlUi.
+    style sheets), as RmlUi reads them.
 
-    Shown documents are drawn by wgf_ui_draw_documents (wgf_ui.h), called in the frame callback, at that
-    point in the frame: over what was drawn before it. The input is read as they are drawn:
-    the pointer (the mouse), its buttons and wheel, the fingers (as touches: a tap clicks, and
-    a finger dragged scrolls what it drags, gliding on as it lifts), the keys and the
-    characters typed, and a pad's D-pad (as the arrow keys) and south button (as Enter). A
-    text field typed into asks for the device's on-screen keyboard while it has the focus
-    (on a phone's browser, a hidden input element of the page's at its caret, what is typed
-    there typed into the field). The
-    focus moves by Tab and Shift+Tab through what can take it (RCSS `tab-index: auto`, and
-    every form control), and by the arrow keys and the D-pad as each element's `nav`
-    properties say (`nav: auto`, or `nav-up: #id`...); Enter, Space, or the south button
-    clicks what has it. Documents say when they have the pointer and the keyboard
-    (wgf_input_set_pointer_captured): the pointer while it is over an element of a shown
-    document other than its body, and the keyboard while an element of one has the focus;
-    a frame that draws none lets both go.
+    libwgf lays documents out, draws them, and works them by the pointer, the keys, and the
+    pads. They sit beside the immediate UI of wgf_ui.h, which stays for HUDs and small screens.
 
-    Text is drawn in libwgf's fonts: RCSS's `font-family` names a family the program set
-    (wgf_ui_set_document_font, in wgf_ui.h), and one it didn't set draws in the default font
-    (wgf_font.h). A family's bold and italic are faces of their own
-    (wgf_ui_set_document_font_face): `font-weight` and `font-style` draw in the family's
-    face nearest them. Set the fonts before creating the documents: a document waits for
-    the fonts set to be loaded before it is laid out.
+    A document is a resource (wgf_resource.h), created from its path.
+    - It loads with every file it names: its style sheets, images, and templates. They are made
+      local first, so it loads the same from a web page as from a disk.
+    - It is READY once it is parsed.
+    - It is FAILED (logged) when it can't be read or isn't a document.
 
-    Elements are found by their id. An element's handle lives as long as its element: one
-    removed from its document (its parent's inner RML set again) or whose document is
-    released is refused from then on.
+    A game that never creates a document links none of RmlUi.
 
-    Tabs are RmlUi's `<tabset>`: its `<tabs>`' `<tab>`s choose among its `<panels>`' `<panel>`s,
-    the chosen tab and panel `:selected` (wgf_element_get_number reads which). A tooltip is an
-    element shown by its parent's `:hover` (`.hint:hover .tip { display: block; }`), so it
-    shows while the pointer is over its parent:
-    examples/assets/ui/options.rml has both.
+    Shown documents are drawn by wgf_ui_draw_documents (wgf_ui.h), called in the frame
+    callback. They are drawn at that point in the frame, over what was drawn before.
 
-    RCSS's gradients (linear, radial, conic, repeating), `box-shadow`, `filter` (blur,
-    drop-shadow, opacity, and the color filters), `backdrop-filter` (over what the documents
-    drew), `mask-image`, and clipping to rounded corners are drawn. Inside a program's own
-    render target (wgf_render_begin_target) documents draw without `filter`,
+    The input is read as they are drawn:
+    - The pointer (the mouse), its buttons, and its wheel.
+    - Fingers, as touches. A tap clicks. A finger dragged scrolls what it drags, gliding on as
+      it lifts.
+    - The keys, and the characters typed.
+    - A pad's D-pad, as the arrow keys, and its south button, as Enter.
+
+    A text field asks for the device's on-screen keyboard while it has the focus. On a phone's
+    browser that is a hidden input element of the page, at the field's caret. What is typed
+    there is typed into the field.
+
+    The focus moves:
+    - By Tab and Shift+Tab, through the elements that can take it (RCSS `tab-index: auto`, and
+      every form control).
+    - By the arrow keys and the D-pad, as each element's `nav` properties say (`nav: auto`, or
+      `nav-up: #id` and so on).
+
+    Enter, Space, or the south button clicks the element with the focus.
+
+    Documents say when they have the pointer and the keyboard (wgf_input_set_pointer_captured):
+    - The pointer, while it is over an element of a shown document other than its body.
+    - The keyboard, while an element of a shown document has the focus.
+    - A frame that draws no document lets both go.
+
+    Text is drawn in libwgf's fonts.
+    - RCSS's `font-family` names a family your game set (wgf_ui_set_document_font, in
+      wgf_ui.h). A family it didn't set draws in the default font (wgf_font.h).
+    - A family's bold and italic are faces of their own (wgf_ui_set_document_font_face).
+      `font-weight` and `font-style` draw in the family's face nearest them.
+    - Set the fonts before creating the documents. A document waits for the fonts set to be
+      loaded before it is laid out.
+
+    Elements are found by their id. An element's handle lives as long as its element. It is
+    refused from then on if the element is removed from its document (its parent's inner RML set
+    again), or its document is released.
+
+    Tabs are RmlUi's `<tabset>`. Its `<tabs>`' `<tab>`s choose among its `<panels>`' `<panel>`s,
+    and the chosen tab and panel are `:selected` (wgf_element_get_number reads which). A tooltip
+    is an element shown by its parent's `:hover` (`.hint:hover .tip { display: block; }`), so it
+    shows while the pointer is over its parent. examples/assets/ui/options.rml has both.
+
+    These RCSS features are drawn: gradients (linear, radial, conic, repeating), `box-shadow`,
+    `filter` (blur, drop-shadow, opacity, and the color filters), `backdrop-filter` (over what
+    the documents drew), `mask-image`, and clipping to rounded corners. Inside your game's own
+    render target (wgf_render_begin_target), documents draw without `filter`,
     `backdrop-filter`, `mask-image`, and `box-shadow`, which need render targets of their
     own.
 
-    An image named at run time -- in RML set, an attribute (`src`), or a property (a
-    decorator's) -- that isn't local yet (on the web, one the document's files didn't name)
-    is fetched first: the change is held, the element as it was, and made in the update its
-    images have arrived (or failed, which RmlUi logs). Held, the call is true and the getters
-    read the element as it is until then; another change to the same element's same
-    attribute or property (or RML) drops a held one. Natively a file on disk is local.
+    Images named at run time are fetched before they are used.
+
+    An image can be named at run time in RML that is set, in an attribute (`src`), or in a
+    property (a decorator's). If it isn't local yet, it is fetched first. On the web, that is
+    an image the document's files didn't name. Natively, a file on disk is local.
+
+    - The change is held, and the element stays as it was.
+    - The change is made in the update in which its images have arrived, or failed (RmlUi logs
+      the failure).
+    - While it is held, the call returns true, and the getters read the element as it is until
+      then.
+    - Another change to the same element's same attribute or property (or its RML) drops a held
+      change.
 
     A handle of kind wgf_document_t (libwgf/ui/include/wgf_document.h): 0 is none.
 **/
@@ -74,76 +97,102 @@ abstract Document(Int) from Int to Int to wgf.Handle {
 		return (this : Handle).isAlive();
 
 	/**
-	    The document in the .rml file at `path` under fs's root, loading: hidden until shown. A
-	    path created before gives the same document with one more reference. 0 only when there
-	    is no room for another (4096).
+	    Creates the document in the .rml file at `path` under fs's root, and starts loading it. It
+	    is hidden until shown.
+
+	    A path created before returns the same document, with one more reference. Returns 0 only
+	    when there is no room for another document (at most 4096).
 	**/
 	public static inline function create(path:String):Document
 		return Raw.wgf_document_create(path);
 
 	/**
-	    Shown (drawn by wgf_ui_draw_documents, and worked by the input) or hidden; a document
-	    asked to show while it loads is shown once READY. Shown documents are drawn in the
-	    order they were last shown, the last on top. False for a handle that isn't a document,
-	    or one that FAILED.
+	    Shows or hides a document, or gets whether it is shown.
+
+	    A shown document is drawn by wgf_ui_draw_documents, and worked by the input. A document
+	    asked to show while it loads is shown once it is READY. Shown documents are drawn in the
+	    order they were last shown, the last on top.
+
+	    Returns false for a handle that isn't a document, or one that FAILED.
 	**/
 	public inline function setVisible(visible:Bool):Bool
 		return Raw.wgf_document_set_visible(this, visible);
 
 	/**
-	    Shown (drawn by wgf_ui_draw_documents, and worked by the input) or hidden; a document
-	    asked to show while it loads is shown once READY. Shown documents are drawn in the
-	    order they were last shown, the last on top. False for a handle that isn't a document,
-	    or one that FAILED.
+	    Shows or hides a document, or gets whether it is shown.
+
+	    A shown document is drawn by wgf_ui_draw_documents, and worked by the input. A document
+	    asked to show while it loads is shown once it is READY. Shown documents are drawn in the
+	    order they were last shown, the last on top.
+
+	    Returns false for a handle that isn't a document, or one that FAILED.
 	**/
 	public inline function isVisible():Bool
 		return Raw.wgf_document_is_visible(this);
 
 	/**
-	    The element of `document` whose id is `id`, or 0: none has it, or the document isn't
-	    READY. The same element gives the same handle.
+	    Returns the element of `document` whose id is `id`. The same element returns the same
+	    handle. Returns 0 if no element has that id, or the document isn't READY.
 	**/
 	public inline function find(id:String):Element
 		return Raw.wgf_document_find(this, id);
 
 	/**
-	    The element of `document` that has the focus, or 0. Setting it moves the focus there,
-	    shown as keys move it (`:focus-visible`); 0 takes it from the document. False for a
-	    handle that isn't a document, an element of another document, or one that can't take
-	    the focus (hidden, disabled, or neither a form control nor `tab-index: auto`).
+	    Sets or gets the element of `document` that has the focus (0 for none).
+
+	    Setting it moves the focus there, shown as keys move it (`:focus-visible`). 0 takes the
+	    focus from the document.
+
+	    The setter returns false for a handle that isn't a document, an element of another
+	    document, or an element that can't take the focus. An element can't take it if it is
+	    hidden, disabled, or neither a form control nor `tab-index: auto`.
 	**/
 	public inline function setFocus(element:Element):Bool
 		return Raw.wgf_document_set_focus(this, element);
 
 	/**
-	    The element of `document` that has the focus, or 0. Setting it moves the focus there,
-	    shown as keys move it (`:focus-visible`); 0 takes it from the document. False for a
-	    handle that isn't a document, an element of another document, or one that can't take
-	    the focus (hidden, disabled, or neither a form control nor `tab-index: auto`).
+	    Sets or gets the element of `document` that has the focus (0 for none).
+
+	    Setting it moves the focus there, shown as keys move it (`:focus-visible`). 0 takes the
+	    focus from the document.
+
+	    The setter returns false for a handle that isn't a document, an element of another
+	    document, or an element that can't take the focus. An element can't take it if it is
+	    hidden, disabled, or neither a form control nor `tab-index: auto`.
 	**/
 	public inline function getFocus():Element
 		return Raw.wgf_document_get_focus(this);
 
 	/**
-	    The events of `document` since they were last taken, oldest first: how many wait, and
-	    the oldest taken into `out`, two ints each (the event, a wgf_document_event_t, and its
-	    element, a wgf_element_t), as many whole events as fit in `count` ints, returning how many
-	    ints it filled. An event's element is the one it happened to, or, when that has no id,
-	    the nearest element around it with one (a click on a button's label is the button's).
-	    Events wait while nobody takes them, the oldest dropped past 1024. 0 for a handle that
-	    isn't a document, or no array.
+	    Returns how many events of `document` wait, or takes the oldest, since they were last
+	    taken.
+
+	    take_events fills `out` with two ints an event: the event (a wgf_document_event_t) and its
+	    element (a wgf_element_t). It takes as many whole events as fit in `count` ints, oldest
+	    first, and returns how many ints it filled.
+
+	    An event's element is the one it happened to. If that element has no id, it is the nearest
+	    element around it that has one: a click on a button's label is the button's.
+
+	    Events wait while nobody takes them. Past 1024, the oldest are dropped. Returns 0 for a
+	    handle that isn't a document, or no array.
 	**/
 	public inline function getEventCount():Int
 		return Raw.wgf_document_get_event_count(this);
 
 	/**
-	    The events of `document` since they were last taken, oldest first: how many wait, and
-	    the oldest taken into `out`, two ints each (the event, a wgf_document_event_t, and its
-	    element, a wgf_element_t), as many whole events as fit in `count` ints, returning how many
-	    ints it filled. An event's element is the one it happened to, or, when that has no id,
-	    the nearest element around it with one (a click on a button's label is the button's).
-	    Events wait while nobody takes them, the oldest dropped past 1024. 0 for a handle that
-	    isn't a document, or no array.
+	    Returns how many events of `document` wait, or takes the oldest, since they were last
+	    taken.
+
+	    take_events fills `out` with two ints an event: the event (a wgf_document_event_t) and its
+	    element (a wgf_element_t). It takes as many whole events as fit in `count` ints, oldest
+	    first, and returns how many ints it filled.
+
+	    An event's element is the one it happened to. If that element has no id, it is the nearest
+	    element around it that has one: a click on a button's label is the button's.
+
+	    Events wait while nobody takes them. Past 1024, the oldest are dropped. Returns 0 for a
+	    handle that isn't a document, or no array.
 	**/
 	public inline function takeEvents(out:Array<Int>):Int
 		return Raw.wgf_document_take_events(this, out);

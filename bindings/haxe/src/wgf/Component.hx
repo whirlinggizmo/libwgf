@@ -2,18 +2,23 @@
 package wgf;
 
 /**
-    Components: the simulation's data on an actor -- any actor, of any kind, a 2D stage's UI
-    actors and cameras included -- run each tick by libwgf's systems (wgf_world.h). One kind
-    of object, the actor (SPEC.md), Godot's tree with Unity's components: what an actor draws
-    is its kind (a shape, a sprite, a model); what moves it, bounds it, ages it, and finds
-    what it overlaps are components on it; what the program does with it are its behaviors
-    (wgf_behavior.h), several to an actor.
+    Components: the simulation's data on an actor, run each tick by libwgf's systems
+    (wgf_world.h).
 
-    An actor with a component or a behavior is simulated (wgf_actor_snap): its transform is
+    Any actor of any kind can carry components, a 2D stage's UI actors and cameras included.
+    libwgf has one kind of object, the actor (SPEC.md), arranged like Godot's tree and given
+    components like Unity's:
+    - What an actor draws is its kind: a shape, a sprite, a model.
+    - What moves it, bounds it, ages it, and finds what it overlaps are its components.
+    - What your game does with it are its behaviors (wgf_behavior.h), several to an actor.
+
+    An actor with a component or a behavior is simulated (see wgf_actor_snap). Its transform is
     set and read at the tick rate, and it is drawn between its last two ticks, so it moves
-    smoothly at any frame rate. Its components go when it does (wgf_actor_destroy), and a
-    system that ends it (a lifetime run out, bounds of DESTROY) destroys the actor, with
-    everything under it, after the tick's systems have run.
+    smoothly at any frame rate.
+
+    An actor's components are destroyed with it (wgf_actor_destroy). A system that ends an
+    actor, such as a lifetime run out or bounds of DESTROY, destroys it and every actor under
+    it, after the tick's systems have run.
 **/
 enum abstract Component(Int) from Int to Int {
 	var NONE = 0;

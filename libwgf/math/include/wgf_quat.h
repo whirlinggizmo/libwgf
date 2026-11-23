@@ -10,8 +10,9 @@
 extern "C" {
 #endif
 
-/* A rotation, as a unit quaternion: 4 floats, x y z w, with no padding. The
- * identity is (0, 0, 0, 1). */
+/* A rotation, as a unit quaternion: 4 floats, x y z w, with no padding.
+ *
+ * The identity is (0, 0, 0, 1). */
 typedef struct wgf_quat_t {
     float x;
     float y;
@@ -38,30 +39,36 @@ static inline wgf_quat_t wgf_quat_identity(void)
     return wgf_quat_make(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-/* A turn of `radians` about `axis`, right-handed; the axis needn't be unit length.
- * A zero axis gives the identity. */
+/* Returns a turn of `radians` about `axis`, right-handed.
+ *
+ * `axis` needn't be unit length. A zero axis gives the identity. */
 static inline wgf_quat_t wgf_quat_from_axis_angle(wgf_vec3_t axis, float radians)
 {
     const wgf_vec3_t unit = wgf_vec3_normalize(axis);
-    const wgf_vec2_t half = wgf_trig_cos_sin(radians * 0.5f); /* the cosine and the sine for one call's cost */
+    const wgf_vec2_t half = wgf_trig_cos_sin(radians * 0.5f); /* the cosine and the sine, for the cost of one call */
     if (wgf_vec3_dot(unit, unit) == 0.0f) return wgf_quat_identity();
     return wgf_quat_make(unit.x * half.y, unit.y * half.y, unit.z * half.y, half.x);
 }
 
-/* A rotation from three angles in radians, about x, then y, then z, each about the
- * fixed axes: roll, pitch, then yaw. (As a product, z times y times x.) */
+/* Returns a rotation from three angles in radians: about x, then y, then z.
+ *
+ * Each turn is about the fixed axes: roll, then pitch, then yaw. As a product, that is z
+ * times y times x. */
 static inline wgf_quat_t wgf_quat_from_euler(wgf_vec3_t radians)
 {
     const wgf_vec2_t x = wgf_trig_cos_sin(radians.x * 0.5f), y = wgf_trig_cos_sin(radians.y * 0.5f);
-    const wgf_vec2_t z = wgf_trig_cos_sin(radians.z * 0.5f); /* each a cosine and a sine for one call's cost */
+    const wgf_vec2_t z = wgf_trig_cos_sin(radians.z * 0.5f); /* each a cosine and a sine, for the cost of one call */
     const float cx = x.x, sx = x.y, cy = y.x, sy = y.y, cz = z.x, sz = z.y;
     return wgf_quat_make(sx * cy * cz - cx * sy * sz, cx * sy * cz + sx * cy * sz, cx * cy * sz - sx * sy * cz,
                              cx * cy * cz + sx * sy * sz);
 }
 
-/* The three angles wgf_quat_from_euler takes, for a unit quaternion: x and z in
- * -pi..pi, y in -pi/2..pi/2. Where y is +-pi/2 (gimbal lock) x and z share one
- * turn, and x is given as 0. */
+/* Returns the three angles, in radians, that wgf_quat_from_euler takes for the unit quaternion `q`.
+ *
+ * - x and z are in -pi..pi.
+ * - y is in -pi/2..pi/2.
+ *
+ * Where y is +-pi/2 (gimbal lock), x and z share one turn, and x is given as 0. */
 static inline wgf_vec3_t wgf_quat_to_euler(wgf_quat_t q)
 {
     const float sin_y = 2.0f * (q.w * q.y - q.z * q.x);
@@ -75,7 +82,7 @@ static inline wgf_vec3_t wgf_quat_to_euler(wgf_quat_t q)
                              wgf_trig_atan2(2.0f * (q.w * q.z + q.x * q.y), 1.0f - 2.0f * (q.y * q.y + q.z * q.z)));
 }
 
-/* `b`, then `a`: rotating by the result is rotating by b and then by a. */
+/* Returns `b`, then `a`: rotating by the result is rotating by `b` and then by `a`. */
 static inline wgf_quat_t wgf_quat_mul(wgf_quat_t a, wgf_quat_t b)
 {
     return wgf_quat_make(a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
@@ -89,13 +96,13 @@ static inline float wgf_quat_dot(wgf_quat_t a, wgf_quat_t b)
     return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 }
 
-/* The inverse of a unit quaternion. */
+/* Returns the inverse of a unit quaternion. */
 static inline wgf_quat_t wgf_quat_conjugate(wgf_quat_t q)
 {
     return wgf_quat_make(-q.x, -q.y, -q.z, q.w);
 }
 
-/* `q` at length 1; a zero quaternion gives the identity. */
+/* Returns `q` at length 1. A zero quaternion gives the identity. */
 static inline wgf_quat_t wgf_quat_normalize(wgf_quat_t q)
 {
     const float length = sqrtf(wgf_quat_dot(q, q));
@@ -103,7 +110,7 @@ static inline wgf_quat_t wgf_quat_normalize(wgf_quat_t q)
     return wgf_quat_make(q.x / length, q.y / length, q.z / length, q.w / length);
 }
 
-/* `v` rotated by the unit quaternion `q`. */
+/* Returns `v` rotated by the unit quaternion `q`. */
 static inline wgf_vec3_t wgf_quat_rotate(wgf_quat_t q, wgf_vec3_t v)
 {
     const wgf_vec3_t u = wgf_vec3_make(q.x, q.y, q.z);
@@ -111,7 +118,9 @@ static inline wgf_vec3_t wgf_quat_rotate(wgf_quat_t q, wgf_vec3_t v)
     return wgf_vec3_add(wgf_vec3_add(v, wgf_vec3_scale(t, q.w)), wgf_vec3_cross(u, t));
 }
 
-/* From a (t = 0) to b (t = 1) along the shorter arc, at a steady angular speed. */
+/* Returns the rotation from `a` (at `t` = 0) to `b` (at `t` = 1).
+ *
+ * It turns along the shorter arc, at a steady angular speed. */
 static inline wgf_quat_t wgf_quat_slerp(wgf_quat_t a, wgf_quat_t b, float t)
 {
     float d = wgf_quat_dot(a, b);
@@ -142,9 +151,10 @@ static inline wgf_quat_t wgf_quat_slerp(wgf_quat_t a, wgf_quat_t b, float t)
                                                     wa * a.z + wb * b.z, wa * a.w + wb * b.w));
 }
 
-/* The rotation that turns the -z axis to `forward` and the +y axis as near to `up`
- * as can be: how a camera or a light, which looks down its -z, is aimed. Neither
- * needs unit length. Where forward is zero, or along up, the identity. */
+/* Returns the rotation that turns the -z axis to `forward`, and +y as near to `up` as it can.
+ *
+ * This is how a camera or a light, which looks down its -z, is aimed. Neither `forward` nor
+ * `up` needs unit length. Returns the identity if `forward` is zero, or along `up`. */
 static inline wgf_quat_t wgf_quat_look_rotation(wgf_vec3_t forward, wgf_vec3_t up)
 {
     const wgf_vec3_t z = wgf_vec3_normalize(wgf_vec3_scale(forward, -1.0f));
@@ -171,8 +181,9 @@ static inline wgf_quat_t wgf_quat_look_rotation(wgf_vec3_t forward, wgf_vec3_t u
     }
 }
 
-/* The shortest turn taking direction `from` to direction `to` (any lengths); identity
- * when either has none. */
+/* Returns the shortest turn that takes direction `from` to direction `to`.
+ *
+ * Either may be any length. Returns the identity if either has no length. */
 static inline wgf_quat_t wgf_quat_from_to(wgf_vec3_t from, wgf_vec3_t to)
 {
     const float lf = wgf_vec3_length(from), lt = wgf_vec3_length(to);
@@ -190,7 +201,9 @@ static inline wgf_quat_t wgf_quat_from_to(wgf_vec3_t from, wgf_vec3_t to)
     return wgf_quat_normalize(wgf_quat_make(c.x, c.y, c.z, 1.0f + d));
 }
 
-/* a to b by t, straight and normalized: slerp's cheaper kin, for small steps. */
+/* Returns the rotation from `a` to `b` at `t`, blended straight and then normalized.
+ *
+ * It is a cheaper wgf_quat_slerp, for small steps. */
 static inline wgf_quat_t wgf_quat_nlerp(wgf_quat_t a, wgf_quat_t b, float t)
 {
     const float s = wgf_quat_dot(a, b) < 0.0f ? -1.0f : 1.0f;

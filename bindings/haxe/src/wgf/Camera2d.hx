@@ -4,30 +4,38 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    A 2D camera: an actor whose position is the point a 2D stage shows at the frame's
-    center (wgf_stage2d_set_camera), turned by its rotation about z. Its world
-    position counts, so a camera parented to the player follows it. It draws nothing
-    itself.
+    A 2D camera: an actor whose position is the point a 2D stage shows at the frame's center.
+
+    - Give it to a stage with wgf_stage2d_set_camera.
+    - Its rotation about z turns the view.
+    - Its world position is what counts, so a camera parented to the player follows the player.
+    - It draws nothing itself.
 
     Camera2d's calls, on a Actor: `var x:Camera2d = handle` gives it them, and a Camera2d is still a Actor; it starts as 0, none, as a Actor does.
 **/
 @:forward abstract Camera2d(Actor) from Actor from Int to Actor {
 	/**
-	    A 2D camera, zoom 1. 0 when there is no room for another actor.
+	    Creates a 2D camera, at zoom 1.
+
+	    Returns 0 if there is no room for another actor.
 	**/
 	public static inline function create():Camera2d
 		return ((Raw.wgf_camera2d_create() : Actor) : Camera2d);
 
 	/**
-	    How big things look: 2 draws everything twice as big. False for a zoom of 0 or
-	    less.
+	    Sets or gets the camera's zoom: how big actors look. A zoom of 2 draws everything twice as
+	    big (default: 1).
+
+	    set_zoom returns false for a zoom of 0 or less.
 	**/
 	public inline function setZoom(zoom:Float):Bool
 		return Raw.wgf_camera2d_set_zoom(this, zoom);
 
 	/**
-	    How big things look: 2 draws everything twice as big. False for a zoom of 0 or
-	    less.
+	    Sets or gets the camera's zoom: how big actors look. A zoom of 2 draws everything twice as
+	    big (default: 1).
+
+	    set_zoom returns false for a zoom of 0 or less.
 	**/
 	public inline function getZoom():Float
 		return Raw.wgf_camera2d_get_zoom(this);

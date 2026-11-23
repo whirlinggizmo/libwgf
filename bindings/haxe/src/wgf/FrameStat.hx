@@ -2,11 +2,16 @@
 package wgf;
 
 /**
-    The frames' stats, helix's Debug extra's: each frame counted as its drawing ends, its time
-    from the frame before's end (real time, whatever the time scale or an autopilot), and its
-    cost wgf_loop_get_frame_cost's. Times in seconds; a percentile is the least of the slowest
-    share (P95: of the slowest 5%), so a single slow frame in twenty shows. Every stat is 0 for
-    no frames.
+    The frame stats you can read.
+
+    - Each frame is counted as its drawing ends.
+    - A frame's time runs from the previous frame's end. It is real time, whatever the time
+      scale, and under an autopilot too.
+    - A frame's cost is wgf_loop_get_frame_cost's.
+    - Times and costs are in seconds.
+    - A percentile is the least of the slowest share: P95 is the least of the slowest 5%. So
+      a single slow frame in twenty shows.
+    - Every stat is 0 when there are no frames.
 **/
 enum abstract FrameStat(Int) from Int to Int {
 	var FRAMES = 0;

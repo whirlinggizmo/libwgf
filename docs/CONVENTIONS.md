@@ -190,12 +190,13 @@ How libwgf's prose reads: public header comments first (they are the API referen
 
 The nouns, each with one meaning:
 
-- **actor:** anything placed in a scene tree, such as a sprite, model, light, camera, text, or emitter.
+- **actor:** an object placed in a scene tree, such as a sprite, model, light, camera, text, or emitter.
+- **object:** what a program creates and ends with its own destroy call, and that isn't shared: an actor, a voice, a bus, a tween, a scene, a document, a file task (ARCHITECTURE.md, "Resources and objects").
 - **component:** data an actor carries that a system runs, such as motion, a collider, or a body.
 - **resource:** shared, reference-counted data, loaded or made, such as a texture, mesh, material, font, sound, or shader.
 - **asset:** a file a game ships (an image, a glTF file, a sound), loaded as a resource.
 - **stage:** a 2D or 3D scene root that draws its actors.
-- **handle:** the number a call returns for an actor or a resource. 0 is none.
+- **handle:** the number a call returns for an object or a resource. 0 is none.
 - **element:** an RmlUi document's element, and nothing else.
 
 ## Docs

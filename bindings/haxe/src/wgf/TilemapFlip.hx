@@ -2,8 +2,10 @@
 package wgf;
 
 /**
-    A tile's flips, as bits: Tiled flips it across its diagonal first (with the others, its
-    turns by a quarter), then left for right, then top for bottom.
+    A tile's flips, as bits.
+
+    Tiled applies them in this order: across the diagonal first, then left for right, then top
+    for bottom. With the others, the diagonal flip turns a tile by a quarter.
 **/
 enum abstract TilemapFlip(Int) from Int to Int {
 	var NONE = 0;

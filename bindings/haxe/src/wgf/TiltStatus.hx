@@ -2,18 +2,21 @@
 package wgf;
 
 /**
-    The device's tilt, from level and turned with the screen, for a game steered by tilting a
-    phone or a tablet: on the web, the page's device orientation; natively, UNAVAILABLE (as
-    helix's Tilt service, whose behavior this is). Ask with wgf_tilt_request, then read each
-    frame:
+    The device's tilt, for a game steered by tilting a phone or a tablet.
+
+    The tilt is measured from level, and turns with the screen. On the web it comes from the
+    page's device orientation. Natively it is UNAVAILABLE. Ask for it with wgf_tilt_request,
+    then read it each frame:
 
       x += speed * wgf_tilt_get_x() * dt;
 
-    A page may need permission, asked at the player's next tap (iOS, and Chrome on Android),
-    so a game asks before the tap that starts play. Level is measured once the device is held
-    within 3 degrees for half a second (as the tilt starts, after the screen turns, and after
-    wgf_tilt_calibrate); the tilt reads 0 meanwhile. Readings are taken as each frame ends, once
-    asked for: a program that never asks links none of it.
+    - A page may need permission, asked at the player's next tap (iOS, and Chrome on Android).
+      So a game asks before the tap that starts play.
+    - Level is measured once the device is held within 3 degrees for half a second. That happens
+      as the tilt starts, after the screen turns, and after wgf_tilt_calibrate. The tilt reads 0
+      meanwhile.
+    - Once asked for, readings are taken as each frame ends. A program that never asks links
+      none of the tilt's code.
 **/
 enum abstract TiltStatus(Int) from Int to Int {
 	var OFF = 0;

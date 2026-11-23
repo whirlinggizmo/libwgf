@@ -2,14 +2,20 @@
 package wgf;
 
 /**
-    A 3D shape: an actor drawing a cube, a sphere, a filled rectangle or a circle's outline
-    in its local x-y plane, a line, or a line strip, in one color, unlit, on a stage
-    (wgf_stage3d.h), as libwgt's (wgrender's shape3d): what debug views and markers are
-    drawn with. On a 2D stage it draws nothing: 2D shapes are wgf_shape2d.h. Place, turn,
-    scale, and parent it with the actor calls. On a stage, shapes are drawn after its
-    opaque models and before its see-through ones, depth tested; a see-through color
-    blends over what is behind it in the order the shapes are found; lines are a pixel
-    wide.
+    A 3D shape: an actor that draws a simple shape on a 3D stage (wgf_stage3d.h), in one
+    color, unlit.
+
+    Use shapes to draw debug views and markers. A shape is one of:
+    - a cube or a sphere;
+    - a filled rectangle, or a circle's outline, in its local x-y plane;
+    - a line, or a line strip.
+
+    On a 2D stage it draws nothing. For 2D shapes, see wgf_shape2d.h. Place, turn, scale, and
+    parent it with the actor calls.
+
+    On a stage, shapes are drawn after its opaque models and before its see-through ones,
+    depth tested. A see-through color blends over what is behind it, in the order the shapes
+    are found. Lines are a pixel wide.
 **/
 enum abstract Shape3dKind(Int) from Int to Int {
 	var NONE = 0;

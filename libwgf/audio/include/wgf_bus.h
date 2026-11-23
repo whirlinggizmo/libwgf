@@ -10,48 +10,70 @@
 extern "C" {
 #endif
 
-/* A bus, an object: a handle of kind "audio.bus". */
+/* A bus is an object: a handle of kind "audio.bus". */
 typedef wgf_handle_t wgf_bus_t;
 
-/* Buses: what voices (wgf_voice.h) and plays (wgf_sound_play) are heard through, helix's
- * Audio.master, music, effects, and a game's own. Each has a volume, a mute, and a fade,
- * and a parent; a voice is heard at its own volume times its bus's heard volume: the
- * bus's volume times its parents' up to the master, 0 when it or a parent is muted (and
- * all of it under wgf_audio_set_volume). The master, music, and effects buses always
- * exist, music and effects under the master; a voice is on effects until set, and so is
- * a play, unless its sound says another (wgf_sound_set_bus). At most 64 buses. */
+/* Buses: what voices (wgf_voice.h) and plays (wgf_sound_play) are heard through.
+ *
+ * Each bus has a volume, a mute, a fade, and a parent.
+ * - A voice is heard at its own volume times its bus's heard volume.
+ * - A bus's heard volume is its volume times its parents', up to the master. It is 0 when it
+ *   or a parent is muted.
+ * - All of it is under wgf_audio_set_volume.
+ *
+ * - The master, music, and effects buses always exist. Music and effects are under the master.
+ *   A game can add its own.
+ * - A voice is on effects until set. So is a play, unless its sound names another bus
+ *   (wgf_sound_set_bus).
+ * - There are at most 64 buses. */
 
-/* The three that always exist. */
+/* Returns one of the three buses that always exist. */
 WGF_API wgf_bus_t wgf_bus_get_master(void);
 WGF_API wgf_bus_t wgf_bus_get_music(void);
 WGF_API wgf_bus_t wgf_bus_get_effects(void);
 
-/* A game's own bus under `parent`, at volume 1, unmuted. 0 for a handle that isn't a bus,
- * or when there are 64. */
+/* Creates a game's own bus under `parent`, at volume 1, unmuted.
+ *
+ * Returns 0 if `parent` isn't a bus, or if there are already 64 buses. */
 WGF_API wgf_bus_t wgf_bus_create(wgf_bus_t parent);
-/* The bus ended: its voices, and the buses under it, move to its parent. Nothing for the
- * three that always exist, or a handle that isn't a bus. */
+/* Destroys `bus`. Its voices, and the buses under it, move to its parent.
+ *
+ * Does nothing for the three buses that always exist, or a handle that isn't a bus. */
 WGF_API void wgf_bus_destroy(wgf_bus_t bus);
-/* Its parent; 0 for the master, and for a handle that isn't a bus. */
+/* Returns the bus's parent. Returns 0 for the master, and for a handle that isn't a bus. */
 WGF_API wgf_bus_t wgf_bus_get_parent(wgf_bus_t bus);
 
-/* Its volume: 1 as its voices are, 0 silent, above 1 louder (and may clip). Setting it
- * ends a fade. Refuses a negative or non-finite one, and a handle that isn't a bus. */
+/* Sets or gets the bus's volume.
+ *
+ * - 1 plays its voices as they are.
+ * - 0 is silent.
+ * - Above 1 is louder, and may clip.
+ *
+ * Setting it ends a fade. Returns false for a negative or non-finite volume, and for a handle
+ * that isn't a bus. */
 WGF_API bool wgf_bus_set_volume(wgf_bus_t bus, float volume);
 WGF_API float wgf_bus_get_volume(wgf_bus_t bus);
-/* Muted: its heard volume, and everything heard through it or a bus under it, is 0, its
- * volume kept for unmuting. False only for a handle that isn't a bus. */
+/* Sets or gets whether the bus is muted.
+ *
+ * While muted, its heard volume is 0, and so is everything heard through it or a bus under it.
+ * Its volume is kept for unmuting. Returns false only for a handle that isn't a bus. */
 WGF_API bool wgf_bus_set_muted(wgf_bus_t bus, bool muted);
 WGF_API bool wgf_bus_is_muted(wgf_bus_t bus);
-/* What it is heard at now: its volume times its parents', 0 when it or one is muted. 0
- * for a handle that isn't a bus. */
+/* Returns the volume the bus is heard at now: its volume times its parents'. It is 0 when the
+ * bus or a parent is muted.
+ *
+ * Returns 0 for a handle that isn't a bus. */
 WGF_API float wgf_bus_get_heard_volume(wgf_bus_t bus);
 
-/* Its volume moved to `volume` over `seconds` of the runtime's frames, even in decibels
- * (as an ear hears it; silence taken as -60 dB), helix's; 0 seconds or less sets it at
- * once. A fade over another, or a volume set, ends the one before. Refuses a negative or
- * non-finite volume, non-finite seconds, and a handle that isn't a bus. is_fading: a fade
- * not yet ended. */
+/* Fades the bus's volume to `volume` over `seconds` of the runtime's frames.
+ *
+ * - The fade is even in decibels, as an ear hears it. Silence is taken as -60 dB.
+ * - 0 seconds or less sets the volume at once.
+ * - A new fade, or setting the volume, ends the fade before it.
+ * - wgf_bus_is_fading returns whether a fade has not yet ended.
+ *
+ * Returns false for a negative or non-finite volume, non-finite seconds, or a handle that isn't
+ * a bus. */
 WGF_API bool wgf_bus_fade(wgf_bus_t bus, float volume, float seconds);
 WGF_API bool wgf_bus_is_fading(wgf_bus_t bus);
 

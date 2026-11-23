@@ -2,7 +2,7 @@
 package wgf;
 
 /**
-    A custom property's type, Tiled's.
+    A custom property's type, as Tiled has it.
 **/
 enum abstract TilemapPropertyType(Int) from Int to Int {
 	var NONE = 0;

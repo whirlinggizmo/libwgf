@@ -4,21 +4,21 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    A lifetime (WGF_COMPONENT_LIFETIME): seconds left, counted down each tick; at 0 the
+    A lifetime (WGF_COMPONENT_LIFETIME): seconds left, counted down each tick. At 0 the
     actor is destroyed. Default: 1 second.
 
     Lifetime's calls, on a Actor: `var x:Lifetime = handle` gives it them, and a Lifetime is still a Actor; it starts as 0, none, as a Actor does.
 **/
 @:forward abstract Lifetime(Actor) from Actor from Int to Actor {
 	/**
-	    Seconds left from now. False for an actor without a lifetime, or a time below 0 or
-	    not finite.
+	    Sets the seconds left, from now. Returns false for an actor without a lifetime, or a time
+	    below 0 or not finite.
 	**/
 	public inline function setSeconds(seconds:Float):Bool
 		return Raw.wgf_lifetime_set_seconds(this, seconds);
 
 	/**
-	    Seconds left; 0 for an actor without a lifetime.
+	    Returns the seconds left, or 0 for an actor without a lifetime.
 	**/
 	public inline function getSeconds():Float
 		return Raw.wgf_lifetime_get_seconds(this);

@@ -4,8 +4,8 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    One of a scene's prefabs, found once by its name (wgf_scene_find_prefab) and kept: what
-    is spawned, as often as wanted, with no lookup. Valid while its scene is.
+    One of a scene's prefabs, found once by its name (wgf_scene_find_prefab) and kept. You spawn
+    it as often as you want, with no lookup. It is valid while its scene is.
 
     A handle of kind wgf_prefab_t (libwgf/ecs/include/wgf_scene.h): 0 is none.
 **/
@@ -19,18 +19,24 @@ abstract Prefab(Int) from Int to Int to wgf.Handle {
 		return (this : Handle).isAlive();
 
 	/**
-	    Make one tree of the prefab under `parent` (0: none): its top actor, each actor as the
-	    file says, each behavior's CREATED raised, and its references found. 0 for a prefab
-	    that isn't one (or whose scene went), or a `parent` that isn't an actor.
+	    Makes one tree of the prefab under `parent` (0 for none), and returns its top actor.
+
+	    Each actor is made as the file says, each behavior's CREATED is raised, and the tree's
+	    references are found. Returns 0 for a prefab that isn't one (or whose scene is gone), or a
+	    `parent` that isn't an actor.
 	**/
 	public inline function spawn(parent:Actor):Actor
 		return Raw.wgf_prefab_spawn(this, parent);
 
 	/**
-	    The same, its top actor placed at (x, y, z) in `parent`'s space and turned `angle`
-	    radians about its stage's up -- y on a 3D stage, z otherwise -- its other angles and its
-	    scale the prefab's, then snapped: drawn there from its first frame, and what it bursts
-	    as it is made (an emitter's `burst=`) starts there.
+	    Makes one tree of the prefab, as wgf_prefab_spawn does, with its top actor placed and turned.
+
+	    - The top actor is placed at `x`, `y`, `z` in `parent`'s space.
+	    - It is turned `angle` radians about its stage's up axis: y on a 3D stage, z otherwise.
+	    - Its other angles and its scale are the prefab's.
+
+	    The actor is then snapped, so it is drawn there from its first frame. Whatever it bursts as
+	    it is made (an emitter's `burst=`) starts there too.
 	**/
 	public inline function spawnAt(parent:Actor, x:Float, y:Float, z:Float, angle:Float):Actor
 		return Raw.wgf_prefab_spawn_at(this, parent, x, y, z, angle);

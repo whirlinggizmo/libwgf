@@ -4,25 +4,32 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    Splines, raylib's GetSplinePoint* (wgf_draw_spline draws one): a path through or near
-    `points`, x and y in turn (`count` floats), read at `t` from 0 (its start) to 1 (its end),
-    each of its segments an equal share of t. Its kinds:
-      LINEAR            straight between each point and the next (2 points or more)
-      BASIS             a cubic B-spline, near its points, through none (4 or more)
-      CATMULL_ROM       through every point but its first and last, which steer its ends (4 or more)
-      BEZIER_QUADRATIC  start, control, end; each next segment's start the last's end (3, 5, 7...)
-      BEZIER_CUBIC      start, control, control, end; and on (4, 7, 10...)
+    A spline: a path through or near a list of points. To draw one, see wgf_draw_spline.
+
+    The points are `points`, x and y in turn, `count` floats in all. A spline is read at `t`,
+    from 0 at its start to 1 at its end. Each of its segments takes an equal share of `t`.
+
+    The kinds, and how many points each needs:
+      LINEAR            straight from each point to the next (2 points or more)
+      BASIS             a cubic B-spline, near its points but through none (4 or more)
+      CATMULL_ROM       through every point but the first and last, which steer its ends (4 or more)
+      BEZIER_QUADRATIC  start, control, end; each next one starts at the last's end (3, 5, 7...)
+      BEZIER_CUBIC      start, control, control, end, and so on in the same way (4, 7, 10...)
 **/
 class Spline {
 	/**
-	    How many segments `count` floats of points make for `kind`; 0 for too few, an odd count, or
-	    a kind that isn't one.
+	    Returns how many segments `count` floats of points make for `kind`.
+
+	    Returns 0 if there are too few points, if `count` is odd, or if `kind` isn't a
+	    wgf_spline_kind_t value.
 	**/
 	public static inline function getSegmentCount(kind:SplineKind, points:Array<Float>):Int
 		return Raw.wgf_spline_get_segment_count(kind, points);
 
 	/**
-	    The point at `t` (held to 0..1); 0, 0 for points that make no segment.
+	    Returns the point at `t`, which is held to 0..1.
+
+	    Returns 0, 0 if the points make no segment.
 	**/
 	public static inline function getPoint(kind:SplineKind, points:Array<Float>, t:Float, ?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_spline_get_point(kind, points, t, into);

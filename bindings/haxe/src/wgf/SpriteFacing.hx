@@ -2,8 +2,8 @@
 package wgf;
 
 /**
-    How a sprite on a 3D stage faces, libwgt's and wgrender-c's (on a 2D stage it lies in
-    the stage, turned by its actor):
+    How a sprite on a 3D stage faces. On a 2D stage, a sprite lies in the stage, turned by its
+    actor.
 **/
 enum abstract SpriteFacing(Int) from Int to Int {
 	var CAMERA = 0;

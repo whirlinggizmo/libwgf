@@ -2,39 +2,45 @@
 package wgf;
 
 /**
-    The simulation as a whole: libwgf's systems over the actors' components
-    (wgf_component.h), the events they raise, and the simulated actors written out as text;
-    the actors with a behavior or a component are found by wgf_actor_find_with_behavior
+    The simulation as a whole: libwgf's systems over the actors' components (wgf_component.h),
+    the events they raise, and the simulated actors written out as text.
+
+    To find the actors with a behavior or a component, see wgf_actor_find_with_behavior
     (wgf_behavior.h) and wgf_actor_find_with_component (wgf_component.h).
 
-    Each tick, as it begins, every simulated actor's transform is kept as it is; after the
-    program's tick the systems run in this order: lifetimes count down (an actor whose time is
-    up destroyed), motion moves each actor by its velocity and spin (damped, its speed
-    capped), bounds wrap, clamp, or destroy what has left its rectangle, and colliders find
-    the overlaps. Each frame a simulated actor is drawn between its last two ticks'
-    transforms.
+    Each tick, as it begins, every simulated actor's transform is kept as it is. After your
+    game's tick, the systems run in this order:
+    - Lifetimes count down. An actor whose time is up is destroyed.
+    - Motion moves each actor by its velocity and spin, damped, with its speed capped.
+    - Bounds wrap, clamp, or destroy an actor that has left its rectangle.
+    - Colliders find the overlaps.
 
-    Events are what the program's behaviors are told (wgf_behavior.h), queued as they
-    happen and taken by the program, in order, four ints each (the event and three more):
+    Each frame, a simulated actor is drawn between its last two ticks' transforms.
+
+    Events are what your game's behaviors are told (wgf_behavior.h). They are queued as they
+    happen and taken by your game, in order. Each is four ints: the event and three more.
 
       CREATED          a behavior added: its actor, its id, 0
-      DESTROYED        a behavior removed, or its actor gone: its actor (stale by then, a name
-                       for what it was), its id, 0
+      DESTROYED        a behavior removed, or its actor destroyed: its actor (stale by then,
+                       a name for what it was), its id, 0
       TRIGGER_ENTER    two colliders starting to overlap, told to each: the actor, the other,
                        and the other's collider layer as they met
-      TRIGGER_EXIT     and ceasing to
+      TRIGGER_EXIT     two colliders ceasing to overlap, as TRIGGER_ENTER
       CONTACT_BEGIN    two solid bodies beginning to touch (wgf_body3d.h), told to each: the
                        actor, the other, and the other's body layer
-      CONTACT_END      and ceasing to
+      CONTACT_END      two solid bodies ceasing to touch, as CONTACT_BEGIN
       SCREEN_ENTER     a screen coming to the top of the stack (wgf_screen.h): the screen,
                        the one it covers or replaced (0 for none)
       SCREEN_EXIT      a screen leaving the top: the screen, the one now there (0 for none)
 
-    An actor destroyed while it overlaps another raises no TRIGGER_EXIT. Events taken in a
-    batch can name an actor the program destroyed while handling an earlier one of the
-    batch: a binding's runtime drops a trigger whose actor or other is gone by then. Nothing is called
-    back: a binding takes them at its tick's start and calls its behaviors itself. At most
-    65536 wait; past that the oldest are dropped, warned once.
+    Notes:
+    - An actor destroyed while it overlaps another raises no TRIGGER_EXIT.
+    - Events taken in a batch can name an actor your game destroyed while handling an earlier
+      event of the batch. A binding's runtime drops a trigger whose actor or other actor is gone
+      by then.
+    - Nothing is called back. A binding takes the events at its tick's start and calls its
+      behaviors itself.
+    - At most 65536 events wait. Past that the oldest are dropped, with a warning once.
 **/
 enum abstract WorldEvent(Int) from Int to Int {
 	var NONE = 0;

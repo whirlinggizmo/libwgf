@@ -2,9 +2,10 @@
 package wgf;
 
 /**
-    The mouse, read inside a tick or a frame: what changed since the previous tick,
-    or the previous frame. Positions are logical pixels from the window's top-left,
-    y down, as gfx draws.
+    The mouse, read inside a tick or a frame.
+
+    A read reports what changed since the previous tick, or the previous frame. Positions are in
+    logical pixels from the window's top-left, with y down, as gfx draws.
 **/
 enum abstract MouseButton(Int) from Int to Int {
 	var LEFT = 0;

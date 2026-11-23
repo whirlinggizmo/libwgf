@@ -2,27 +2,31 @@
 package wgf;
 
 /**
-    Cameras flown by input, raylib's CAMERA_FREE and CAMERA_FIRST_PERSON (UpdateCamera): a 3D
-    camera actor (wgf_camera3d.h) given a mode is turned and moved each frame, before the frame
-    callback, by the keyboard, the mouse, and the pads. At most 64 cameras have a mode or a
-    setting.
+    Cameras flown by input: free-fly and first-person.
 
-      the mouse            looks: yaw and pitch, the pitch held just short of straight up or
-                           down; the pointer is locked while it looks (wgf_mouse_set_locked),
-                           and a click locks it again once the platform let it go (Escape in
-                           a browser)
+    A 3D camera actor (wgf_camera3d.h) given a mode is turned and moved each frame, before the
+    frame callback. The keyboard, the mouse, and the pads fly it. At most 64 cameras have a mode
+    or a setting.
+
+      the mouse            looks: yaw and pitch, with the pitch held just short of straight
+                           up or down. The pointer is locked while it looks
+                           (wgf_mouse_set_locked). A click locks it again once the platform
+                           has let it go (Escape in a browser)
       the right stick      looks, at the turn speed
-      W A S D, the arrows  move forward, left, back, and right; the left stick too
-      Space or E           FREE: up (the world's +y); a pad's right bumper too
-      Left Control or Q    FREE: down; a pad's left bumper too
+      W A S D, the arrows  move forward, left, back, and right. So does the left stick
+      Space or E           FREE: up (the world's +y). So does a pad's right bumper
+      Left Control or Q    FREE: down. So does a pad's left bumper
 
-    FREE moves where it looks; FIRST_PERSON moves on the ground plane, its height kept (what
-    the program sets it to: stairs, a jump). Every pad is read, the one pushed furthest
-    winning. Keys aren't read while the keyboard is captured, and the mouse doesn't look while
-    the pointer is (wgf_input.h: a UI has it). The camera's position is read each frame, so the
-    program may move it; it is turned only by the look below while it flies. Every flown
-    camera moves by the same input, so fly one at a time; a camera that also follows
-    (wgf_follow.h) is placed by both.
+    - FREE moves where the camera looks.
+    - FIRST_PERSON moves on the ground plane, and keeps the camera's height. The program sets
+      that height, for stairs or a jump.
+    - Every pad is read, and the one pushed furthest wins.
+    - Keys aren't read while the keyboard is captured. The mouse doesn't look while the pointer
+      is captured, as when a UI has it (wgf_input.h).
+    - The camera's position is read each frame, so the program may move it. While it flies, only
+      the look (wgf_fly_set_look) turns it.
+    - Every flown camera moves by the same input, so fly one at a time.
+    - A camera that also follows (wgf_follow.h) is placed by both.
 **/
 enum abstract FlyMode(Int) from Int to Int {
 	var NONE = 0;

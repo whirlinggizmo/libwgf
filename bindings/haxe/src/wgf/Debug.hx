@@ -5,83 +5,120 @@ import wgf.impl.Raw;
 
 class Debug {
 	/**
-	    The frame-rate overlay, for a program under development: "<fps> FPS <cost> ms" (the
-	    frames a second and a frame's own cost, wgf_loop.h's), drawn by the runtime over
-	    everything the program drew, every frame, at (x, y) in logical pixels, in `font` (0:
-	    the built-in), at `size`, in `color`; a size of 0 or less is none, so it isn't
-	    shown. Off by default; showing it again moves or restyles it. A program that never
-	    shows it links none of it.
+	    Shows, hides, or reports the frame-rate overlay, for a program under development.
+
+	    The overlay reads "<fps> FPS <cost> ms": the frames a second, and a frame's own cost
+	    (see wgf_loop.h). The runtime draws it every frame, over everything the program drew.
+
+	    - (x, y) is its position, in logical pixels.
+	    - `font` is the font to draw it in. 0 is the built-in font.
+	    - `size` is its size. A size of 0 or less draws nothing, so it isn't shown.
+	    - `color` is its color.
+
+	    It is off by default. Showing it again moves or restyles it. A program that never shows
+	    it links none of it.
 	**/
 	public static inline function showFps(font:Font, x:Float, y:Float, size:Float, color:Int):Void
 		Raw.wgf_debug_show_fps(font, x, y, size, color);
 
 	/**
-	    The frame-rate overlay, for a program under development: "<fps> FPS <cost> ms" (the
-	    frames a second and a frame's own cost, wgf_loop.h's), drawn by the runtime over
-	    everything the program drew, every frame, at (x, y) in logical pixels, in `font` (0:
-	    the built-in), at `size`, in `color`; a size of 0 or less is none, so it isn't
-	    shown. Off by default; showing it again moves or restyles it. A program that never
-	    shows it links none of it.
+	    Shows, hides, or reports the frame-rate overlay, for a program under development.
+
+	    The overlay reads "<fps> FPS <cost> ms": the frames a second, and a frame's own cost
+	    (see wgf_loop.h). The runtime draws it every frame, over everything the program drew.
+
+	    - (x, y) is its position, in logical pixels.
+	    - `font` is the font to draw it in. 0 is the built-in font.
+	    - `size` is its size. A size of 0 or less draws nothing, so it isn't shown.
+	    - `color` is its color.
+
+	    It is off by default. Showing it again moves or restyles it. A program that never shows
+	    it links none of it.
 	**/
 	public static inline function hideFps():Void
 		Raw.wgf_debug_hide_fps();
 
 	/**
-	    The frame-rate overlay, for a program under development: "<fps> FPS <cost> ms" (the
-	    frames a second and a frame's own cost, wgf_loop.h's), drawn by the runtime over
-	    everything the program drew, every frame, at (x, y) in logical pixels, in `font` (0:
-	    the built-in), at `size`, in `color`; a size of 0 or less is none, so it isn't
-	    shown. Off by default; showing it again moves or restyles it. A program that never
-	    shows it links none of it.
+	    Shows, hides, or reports the frame-rate overlay, for a program under development.
+
+	    The overlay reads "<fps> FPS <cost> ms": the frames a second, and a frame's own cost
+	    (see wgf_loop.h). The runtime draws it every frame, over everything the program drew.
+
+	    - (x, y) is its position, in logical pixels.
+	    - `font` is the font to draw it in. 0 is the built-in font.
+	    - `size` is its size. A size of 0 or less draws nothing, so it isn't shown.
+	    - `color` is its color.
+
+	    It is off by default. Showing it again moves or restyles it. A program that never shows
+	    it links none of it.
 	**/
 	public static inline function isFpsShown():Bool
 		return Raw.wgf_debug_is_fps_shown();
 
 	/**
-	    A stat of the last half second's frames. Frames are counted from the first call of this
-	    or wgf_debug_start_frame_recording, so the first returns 0 and the next ones cover the
-	    frames since, up to the last half second; a program that never asks counts none. 0 for a
-	    stat that isn't one.
+	    Returns a stat of the frames in the last half second.
+
+	    Frames are counted from the first call of this or wgf_debug_start_frame_recording. So
+	    the first call returns 0, and later ones cover the frames since then, up to the last half
+	    second. A program that never asks counts no frames.
+
+	    Returns 0 for a value of `stat` that isn't a stat.
 	**/
 	public static inline function getFrameStat(stat:FrameStat):Float
 		return Raw.wgf_debug_get_frame_stat(stat);
 
 	/**
-	    Records the frames' stats from the next frame's end until stopped, its latest 65,536
-	    frames kept; started again, it drops what it held. Stopped, its stats are kept for reading
-	    (wgf_debug_get_recorded_frame_stat) until the next start; stop is false, nothing kept, for
-	    a recording never started. Recording doesn't change the last half second's stats.
+	    Starts, stops, or reports a recording of frame stats.
+
+	    - A recording runs from the next frame's end until it is stopped. It keeps its latest
+	      65,536 frames.
+	    - Starting again drops what the recording held.
+	    - Once stopped, its stats are kept for reading (wgf_debug_get_recorded_frame_stat) until
+	      the next start.
+	    - Stop returns false, and keeps nothing, if no recording was started.
+	    - Recording doesn't change the stats of the last half second.
 	**/
 	public static inline function startFrameRecording():Void
 		Raw.wgf_debug_start_frame_recording();
 
 	/**
-	    Records the frames' stats from the next frame's end until stopped, its latest 65,536
-	    frames kept; started again, it drops what it held. Stopped, its stats are kept for reading
-	    (wgf_debug_get_recorded_frame_stat) until the next start; stop is false, nothing kept, for
-	    a recording never started. Recording doesn't change the last half second's stats.
+	    Starts, stops, or reports a recording of frame stats.
+
+	    - A recording runs from the next frame's end until it is stopped. It keeps its latest
+	      65,536 frames.
+	    - Starting again drops what the recording held.
+	    - Once stopped, its stats are kept for reading (wgf_debug_get_recorded_frame_stat) until
+	      the next start.
+	    - Stop returns false, and keeps nothing, if no recording was started.
+	    - Recording doesn't change the stats of the last half second.
 	**/
 	public static inline function stopFrameRecording():Bool
 		return Raw.wgf_debug_stop_frame_recording();
 
 	/**
-	    Records the frames' stats from the next frame's end until stopped, its latest 65,536
-	    frames kept; started again, it drops what it held. Stopped, its stats are kept for reading
-	    (wgf_debug_get_recorded_frame_stat) until the next start; stop is false, nothing kept, for
-	    a recording never started. Recording doesn't change the last half second's stats.
+	    Starts, stops, or reports a recording of frame stats.
+
+	    - A recording runs from the next frame's end until it is stopped. It keeps its latest
+	      65,536 frames.
+	    - Starting again drops what the recording held.
+	    - Once stopped, its stats are kept for reading (wgf_debug_get_recorded_frame_stat) until
+	      the next start.
+	    - Stop returns false, and keeps nothing, if no recording was started.
+	    - Recording doesn't change the stats of the last half second.
 	**/
 	public static inline function isFrameRecording():Bool
 		return Raw.wgf_debug_is_frame_recording();
 
 	/**
-	    A stat of the stopped recording's frames; 0 while one runs, or with none.
+	    Returns a stat of the stopped recording's frames. Returns 0 while a recording runs, or if
+	    there is none.
 	**/
 	public static inline function getRecordedFrameStat(stat:FrameStat):Float
 		return Raw.wgf_debug_get_recorded_frame_stat(stat);
 
 	/**
-	    The stopped recording's frames' times (`costs` false) or costs, oldest first, into `out`, at
-	    most `count`; the number written.
+	    Copies the stopped recording's frame times, or their costs if `costs` is true, into `out`,
+	    oldest first. Writes at most `count`, and returns the number written.
 	**/
 	public static inline function getRecordedFrameTimes(out:Array<Float>, costs:Bool):Int
 		return Raw.wgf_debug_get_recorded_frame_times(out, costs);

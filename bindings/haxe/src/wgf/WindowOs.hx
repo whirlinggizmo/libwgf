@@ -2,8 +2,12 @@
 package wgf;
 
 /**
-    What the device has: touch (to show on-screen controls), a fine pointer (a mouse or a
-    pad: hover means something), and its system, on the web the one the browser runs on.
+    The device's operating system, and what the device has.
+
+    - wgf_window_has_touch: whether it has touch, to decide on showing on-screen controls.
+    - wgf_window_has_fine_pointer: whether it has a fine pointer (a mouse or a pad), so hover
+      matters.
+    - wgf_window_get_os: its system. On the web, it is the system the browser runs on.
 **/
 enum abstract WindowOs(Int) from Int to Int {
 	var OTHER = 0;

@@ -5,106 +5,132 @@ import wgf.impl.Raw;
 
 class Color {
 	/**
-	    The stock color `stock` names; 0 (transparent) for a value that names none.
+	    Returns the stock color `stock` names, or 0 (transparent) for a value that names none.
 	**/
 	public static inline function get(stock:ColorStock):Int
 		return Raw.wgf_color_get(stock);
 
 	/**
-	    A color from components, clamped: 0..255 for make, 0..1 for make_float, which
-	    rounds to the nearest 8-bit step. Out-of-range components saturate; they never
-	    spill into the next channel.
+	    Makes a color from components, clamped.
+
+	    - make takes components from 0 to 255.
+	    - make_float takes components from 0 to 1, and rounds to the nearest 8-bit step.
+	    - Out-of-range components saturate. They never spill into the next channel.
 	**/
 	public static inline function make(r:Int, g:Int, b:Int, a:Int):Int
 		return Raw.wgf_color_make(r, g, b, a);
 
 	/**
-	    A color from components, clamped: 0..255 for make, 0..1 for make_float, which
-	    rounds to the nearest 8-bit step. Out-of-range components saturate; they never
-	    spill into the next channel.
+	    Makes a color from components, clamped.
+
+	    - make takes components from 0 to 255.
+	    - make_float takes components from 0 to 1, and rounds to the nearest 8-bit step.
+	    - Out-of-range components saturate. They never spill into the next channel.
 	**/
 	public static inline function makeFloat(r:Float, g:Float, b:Float, a:Float):Int
 		return Raw.wgf_color_make_float(r, g, b, a);
 
 	/**
-	    `color` with its alpha replaced, clamped to 0..255.
+	    Returns `color` with its alpha replaced by `a`, clamped to 0..255.
 	**/
 	public static inline function withAlpha(color:Int, a:Int):Int
 		return Raw.wgf_color_with_alpha(color, a);
 
 	/**
-	    Components back out, 0..255.
+	    Returns a color's components, each 0..255.
 	**/
 	public static inline function getRed(color:Int):Int
 		return Raw.wgf_color_get_red(color);
 
 	/**
-	    Components back out, 0..255.
+	    Returns a color's components, each 0..255.
 	**/
 	public static inline function getGreen(color:Int):Int
 		return Raw.wgf_color_get_green(color);
 
 	/**
-	    Components back out, 0..255.
+	    Returns a color's components, each 0..255.
 	**/
 	public static inline function getBlue(color:Int):Int
 		return Raw.wgf_color_get_blue(color);
 
 	/**
-	    Components back out, 0..255.
+	    Returns a color's components, each 0..255.
 	**/
 	public static inline function getAlpha(color:Int):Int
 		return Raw.wgf_color_get_alpha(color);
 
 	/**
-	    A straight blend, component by component, from `from` (t = 0) to `to` (t = 1);
-	    t is clamped to 0..1.
+	    Blends straight from `from` (t = 0) to `to` (t = 1), component by component.
+	    `t` is clamped to 0..1.
 	**/
 	public static inline function lerp(from:Int, to:Int, t:Float):Int
 		return Raw.wgf_color_lerp(from, to, t);
 
 	/**
-	    A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
-	    alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
-	    ColorToHSV): a palette walked round the wheel, a hit flash.
+	    Makes a color from hue, saturation, and value, or gets a color's hue, saturation, and value.
+
+	    - `hue` is in degrees, wrapped into 0..360.
+	    - `saturation` and `value` are 0..1, clamped.
+	    - `a`, the alpha, is 0..255.
+
+	    Use it to walk a palette round the color wheel, or for a hit flash.
 	**/
 	public static inline function makeHsv(hue:Float, saturation:Float, value:Float, a:Int):Int
 		return Raw.wgf_color_make_hsv(hue, saturation, value, a);
 
 	/**
-	    A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
-	    alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
-	    ColorToHSV): a palette walked round the wheel, a hit flash.
+	    Makes a color from hue, saturation, and value, or gets a color's hue, saturation, and value.
+
+	    - `hue` is in degrees, wrapped into 0..360.
+	    - `saturation` and `value` are 0..1, clamped.
+	    - `a`, the alpha, is 0..255.
+
+	    Use it to walk a palette round the color wheel, or for a hit flash.
 	**/
 	public static inline function getHue(color:Int):Float
 		return Raw.wgf_color_get_hue(color);
 
 	/**
-	    A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
-	    alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
-	    ColorToHSV): a palette walked round the wheel, a hit flash.
+	    Makes a color from hue, saturation, and value, or gets a color's hue, saturation, and value.
+
+	    - `hue` is in degrees, wrapped into 0..360.
+	    - `saturation` and `value` are 0..1, clamped.
+	    - `a`, the alpha, is 0..255.
+
+	    Use it to walk a palette round the color wheel, or for a hit flash.
 	**/
 	public static inline function getSaturation(color:Int):Float
 		return Raw.wgf_color_get_saturation(color);
 
 	/**
-	    A color from hue (degrees, wrapped into 0..360), saturation and value (0..1, clamped), its
-	    alpha 0..255; and a color's hue, saturation, and value back (raylib's ColorFromHSV and
-	    ColorToHSV): a palette walked round the wheel, a hit flash.
+	    Makes a color from hue, saturation, and value, or gets a color's hue, saturation, and value.
+
+	    - `hue` is in degrees, wrapped into 0..360.
+	    - `saturation` and `value` are 0..1, clamped.
+	    - `a`, the alpha, is 0..255.
+
+	    Use it to walk a palette round the color wheel, or for a hit flash.
 	**/
 	public static inline function getValue(color:Int):Float
 		return Raw.wgf_color_get_value(color);
 
 	/**
-	    Lighter toward white by `amount` (0..1), or darker toward black by a negative one, its
-	    alpha kept; and two colors multiplied, channel by channel (a tint applied).
+	    Brightens or multiplies a color.
+
+	    - brighten makes `color` lighter toward white by `amount` (0..1), or darker toward black
+	      by a negative `amount`. Its alpha is kept.
+	    - multiply multiplies two colors channel by channel, as a tint is applied.
 	**/
 	public static inline function brighten(color:Int, amount:Float):Int
 		return Raw.wgf_color_brighten(color, amount);
 
 	/**
-	    Lighter toward white by `amount` (0..1), or darker toward black by a negative one, its
-	    alpha kept; and two colors multiplied, channel by channel (a tint applied).
+	    Brightens or multiplies a color.
+
+	    - brighten makes `color` lighter toward white by `amount` (0..1), or darker toward black
+	      by a negative `amount`. Its alpha is kept.
+	    - multiply multiplies two colors channel by channel, as a tint is applied.
 	**/
 	public static inline function multiply(color:Int, by:Int):Int
 		return Raw.wgf_color_multiply(color, by);

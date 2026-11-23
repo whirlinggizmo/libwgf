@@ -1040,6 +1040,24 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## The public headers' comments rewritten plainly (2026-11-22)
+
+Rob read the new API site and found the doc comments rough: very long sentences, lots of semicolons, not written for a reader. No writing style had ever been set. CONVENTIONS.md now has one ("Writing"), with libwgf's nouns defined, and all 86 public headers follow it.
+
+- **How it was done.** `wgf_material.h` was rewritten first as a sample, which Rob approved. Seven agents then rewrote the other 85 headers in parallel, a layer or part of one each. A script checked each header: its code unchanged once comments are stripped, no line over 120 columns, and every comment still attached to the same declaration. Four more agents then compared every old comment with its rewrite and checked each added statement against the code.
+- **Lineage is out of the public comments.** Mentions of libwgt, wgrender, helix, and raylib went, and so did backend names (sokol, Clay, stb_image, the audio decoders). Real formats and libraries a reader can look up stay: glTF, Tiled, Jolt, RmlUi.
+- **Stale or wrong comments the work found, fixed against the code:**
+  - `wgf_mesh.h` said a glTF file's skins and animations aren't read. They are.
+  - `wgf_emitter3d.h` gave the default particle size as 8. In 3D it is 1.
+  - `wgf_asset.h` and `wgf_replay.h` named calls that don't exist.
+  - `wgf_identity.h` described a private path and left out saved files.
+  - `wgf_sheet.h` was called an object. It is a resource.
+  - `wgf_trig.h` didn't mention angles past 1.6 million radians.
+- **What the checkers caught in the rewrites, fixed before the commit:** a false statement that reading gravity starts physics, a widget rule that lost its condition, "object" narrowed to "actor" (the glossary had left "object" out, and now has it), a sprite's size on a 3D stage, an emitter's orbit axis, and a few smaller ones.
+- **Not changed, for Rob to judge:** colliders meet when either one's mask has the other's layer, and physics bodies only when each has the other's. Both comments match the code.
+
+The bindings are regenerated, since their docs are the headers'. Seven declarations in the headers are over 120 columns and were left, as changing them is a code change.
+
 ## The Pages site: the examples and the API reference beside the games (2026-11-22)
 
 Rob asked whether libwgf publishes an API page and its examples, as helix (its API from its doc comments) and wgrender-c (its examples) do. It published the games alone. `tools/build_pages.py` now also builds every C example and scene against wasm32-release, copies them to the site's `examples/` with `examples/assets/` beside them, and writes their launcher (`finish_site.py`'s, which the web build already had: a dropdown, each example in a frame, its code versioned for caching); and the API reference at `api/`, from a new `tools/gen_apidoc.py`: the headers as every tool reads them (`headers.py`), a page a header grouped by layer, its overview, enums, structs, and calls, each call's C signature beside its names in the bindings (`gen_binding.py`'s placing) or that it is C's alone, and its doc, a getter whose doc is its setter's linking to it; and a search, in the page, of every call, enum, and struct. The index links the three. 3 games, 50 examples, 86 headers, 1,538 calls, 44 MB. Seen served: the launcher's examples load their models from the shared assets. The two Pages runs that failed (2026-11-20, the racer over its 600 KB budget, since cut to 563; 2026-11-21, Wardens' smoke run timing out loading) had passed again on 2026-11-22.

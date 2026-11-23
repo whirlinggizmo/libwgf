@@ -4,111 +4,150 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    A 3D camera: an actor the world is seen from (wgf_draw_begin_3d), looking down its -z
-    with +y up. Place and aim it with the actor calls (wgf_actor_look_at), or parent it to
-    what it should follow; its scale is ignored. It sees in perspective by default, or
-    orthographically, with no shrinking with distance, for a plan view or an editor. What
-    it sees fills the presentation's visible area (wgf_presentation.h), the horizontal
-    field following from that area's shape. Space is right-handed, y up. It draws nothing
-    itself.
+    A 3D camera: an actor the world is seen from (see wgf_draw_begin_3d).
+
+    - It looks down its -z, with +y up.
+    - Place and aim it with the actor calls (wgf_actor_look_at), or parent it to the actor it
+      should follow. Its scale is ignored.
+    - It sees in perspective by default. It can instead see orthographically, with no shrinking
+      with distance, for a plan view or an editor.
+    - What it sees fills the presentation's visible area (wgf_presentation.h). The horizontal
+      field of view follows from that area's shape.
+    - Space is right-handed, with y up.
+    - It draws nothing itself.
 
     Camera3d's calls, on a Actor: `var x:Camera3d = handle` gives it them, and a Camera3d is still a Actor; it starts as 0, none, as a Actor does.
 **/
 @:forward abstract Camera3d(Actor) from Actor from Int to Actor {
 	/**
-	    A camera with a 60 degree vertical field of view, seeing from 0.1 to 1000 units in
-	    front of it. 0 when there is no room for another actor.
+	    Creates a 3D camera with a 60 degree vertical field of view, seeing from 0.1 to 1000 units
+	    in front of it.
+
+	    Returns 0 if there is no room for another actor.
 	**/
 	public static inline function create():Camera3d
 		return ((Raw.wgf_camera3d_create() : Actor) : Camera3d);
 
 	/**
-	    The vertical field of view, in radians, clamped to 0.01 to 3.13 (just short of a
-	    half turn).
+	    Sets or gets the vertical field of view, in radians.
+
+	    It is clamped to 0.01 to 3.13 (just short of a half turn).
 	**/
 	public inline function setFov(radians:Float):Bool
 		return Raw.wgf_camera3d_set_fov(this, radians);
 
 	/**
-	    The vertical field of view, in radians, clamped to 0.01 to 3.13 (just short of a
-	    half turn).
+	    Sets or gets the vertical field of view, in radians.
+
+	    It is clamped to 0.01 to 3.13 (just short of a half turn).
 	**/
 	public inline function getFov():Float
 		return Raw.wgf_camera3d_get_fov(this);
 
 	/**
-	    How near and far in front of the camera it sees. False unless 0 < near < far.
+	    Sets or gets how near and how far in front of the camera it sees, in units.
+
+	    set_clip returns false unless 0 < `near_z` < `far_z`.
 	**/
 	public inline function setClip(near_z:Float, far_z:Float):Bool
 		return Raw.wgf_camera3d_set_clip(this, near_z, far_z);
 
 	/**
-	    How near and far in front of the camera it sees. False unless 0 < near < far.
+	    Sets or gets how near and how far in front of the camera it sees, in units.
+
+	    set_clip returns false unless 0 < `near_z` < `far_z`.
 	**/
 	public inline function getNear():Float
 		return Raw.wgf_camera3d_get_near(this);
 
 	/**
-	    How near and far in front of the camera it sees. False unless 0 < near < far.
+	    Sets or gets how near and how far in front of the camera it sees, in units.
+
+	    set_clip returns false unless 0 < `near_z` < `far_z`.
 	**/
 	public inline function getFar():Float
 		return Raw.wgf_camera3d_get_far(this);
 
 	/**
-	    Orthographic (true) or perspective (false, the default).
+	    Sets or gets whether the camera is orthographic (true) or perspective (false) (default:
+	    perspective).
 	**/
 	public inline function setOrthographic(orthographic:Bool):Bool
 		return Raw.wgf_camera3d_set_orthographic(this, orthographic);
 
 	/**
-	    Orthographic (true) or perspective (false, the default).
+	    Sets or gets whether the camera is orthographic (true) or perspective (false) (default:
+	    perspective).
 	**/
 	public inline function isOrthographic():Bool
 		return Raw.wgf_camera3d_is_orthographic(this);
 
 	/**
-	    How tall a view an orthographic camera sees, in units (default 10). False for 0 or
-	    less.
+	    Sets or gets how tall a view an orthographic camera sees, in units (default: 10).
+
+	    set_ortho_height returns false for a height of 0 or less.
 	**/
 	public inline function setOrthoHeight(height:Float):Bool
 		return Raw.wgf_camera3d_set_ortho_height(this, height);
 
 	/**
-	    How tall a view an orthographic camera sees, in units (default 10). False for 0 or
-	    less.
+	    Sets or gets how tall a view an orthographic camera sees, in units (default: 10).
+
+	    set_ortho_height returns false for a height of 0 or less.
 	**/
 	public inline function getOrthoHeight():Float
 		return Raw.wgf_camera3d_get_ortho_height(this);
 
 	/**
-	    Between the world (its tree's root's space) and the screen's logical pixels, through the
-	    camera as it is now, filling the visible area as a stage draws it: where a point shows (x
-	    and y; z its depth, 0 at the near plane to 1 at the far, below 0 behind the camera: a
-	    name tag hidden), and the ray under a place on the screen, from the near plane (its origin)
-	    along a unit direction: picking, a click in the world. 0, 0, 0 for a handle that isn't a 3D
-	    camera.
+	    Converts between the world and the screen's logical pixels, through the camera as it is now.
+
+	    The world is the camera's tree's root's space. The view fills the visible area, as a stage
+	    draws it.
+
+	    - world_to_screen returns where a point shows: x and y on the screen, and z its depth. Depth
+	      runs from 0 at the near plane to 1 at the far plane. Below 0 is behind the camera, where a
+	      name tag would be hidden.
+	    - screen_to_origin and screen_to_direction return the ray under a place on the screen. Its
+	      origin is on the near plane, and its direction is a unit vector. Use it for picking, or
+	      for a click in the world.
+
+	    Each returns 0, 0, 0 if `camera` isn't a 3D camera.
 	**/
 	public inline function worldToScreen(x:Float, y:Float, z:Float, ?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_camera3d_world_to_screen(this, x, y, z, into);
 
 	/**
-	    Between the world (its tree's root's space) and the screen's logical pixels, through the
-	    camera as it is now, filling the visible area as a stage draws it: where a point shows (x
-	    and y; z its depth, 0 at the near plane to 1 at the far, below 0 behind the camera: a
-	    name tag hidden), and the ray under a place on the screen, from the near plane (its origin)
-	    along a unit direction: picking, a click in the world. 0, 0, 0 for a handle that isn't a 3D
-	    camera.
+	    Converts between the world and the screen's logical pixels, through the camera as it is now.
+
+	    The world is the camera's tree's root's space. The view fills the visible area, as a stage
+	    draws it.
+
+	    - world_to_screen returns where a point shows: x and y on the screen, and z its depth. Depth
+	      runs from 0 at the near plane to 1 at the far plane. Below 0 is behind the camera, where a
+	      name tag would be hidden.
+	    - screen_to_origin and screen_to_direction return the ray under a place on the screen. Its
+	      origin is on the near plane, and its direction is a unit vector. Use it for picking, or
+	      for a click in the world.
+
+	    Each returns 0, 0, 0 if `camera` isn't a 3D camera.
 	**/
 	public inline function screenToOrigin(x:Float, y:Float, ?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_camera3d_screen_to_origin(this, x, y, into);
 
 	/**
-	    Between the world (its tree's root's space) and the screen's logical pixels, through the
-	    camera as it is now, filling the visible area as a stage draws it: where a point shows (x
-	    and y; z its depth, 0 at the near plane to 1 at the far, below 0 behind the camera: a
-	    name tag hidden), and the ray under a place on the screen, from the near plane (its origin)
-	    along a unit direction: picking, a click in the world. 0, 0, 0 for a handle that isn't a 3D
-	    camera.
+	    Converts between the world and the screen's logical pixels, through the camera as it is now.
+
+	    The world is the camera's tree's root's space. The view fills the visible area, as a stage
+	    draws it.
+
+	    - world_to_screen returns where a point shows: x and y on the screen, and z its depth. Depth
+	      runs from 0 at the near plane to 1 at the far plane. Below 0 is behind the camera, where a
+	      name tag would be hidden.
+	    - screen_to_origin and screen_to_direction return the ray under a place on the screen. Its
+	      origin is on the near plane, and its direction is a unit vector. Use it for picking, or
+	      for a click in the world.
+
+	    Each returns 0, 0, 0 if `camera` isn't a 3D camera.
 	**/
 	public inline function screenToDirection(x:Float, y:Float, ?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_camera3d_screen_to_direction(this, x, y, into);

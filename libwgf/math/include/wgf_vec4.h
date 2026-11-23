@@ -8,8 +8,9 @@
 extern "C" {
 #endif
 
-/* 4 floats, in order, with no padding: the layout is a contract with every
- * binding, and never changes. */
+/* A vector of 4 floats, in order, with no padding.
+ *
+ * The layout is a contract with every binding, and never changes. */
 typedef struct wgf_vec4_t {
     float x;
     float y;
@@ -71,14 +72,14 @@ static inline float wgf_vec4_length(wgf_vec4_t v)
     return sqrtf(wgf_vec4_dot(v, v));
 }
 
-/* `v` at length 1; a zero vector stays zero. */
+/* Returns `v` at length 1. A zero vector stays zero. */
 static inline wgf_vec4_t wgf_vec4_normalize(wgf_vec4_t v)
 {
     const float length = wgf_vec4_length(v);
     return length > 0.0f ? wgf_vec4_scale(v, 1.0f / length) : v;
 }
 
-/* From a (t = 0) to b (t = 1); t outside 0..1 extrapolates. */
+/* Returns the vector from `a` (at `t` = 0) to `b` (at `t` = 1). A `t` outside 0..1 extrapolates. */
 static inline wgf_vec4_t wgf_vec4_lerp(wgf_vec4_t a, wgf_vec4_t b, float t)
 {
     wgf_vec4_t r;

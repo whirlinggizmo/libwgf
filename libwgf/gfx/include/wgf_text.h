@@ -13,12 +13,16 @@
 extern "C" {
 #endif
 
-/* A text actor: a string drawn in a font. On a 2D stage it is flat on the screen; on a 3D
- * stage it is a block in the world facing as it is told (wgf_text_set_facing), depth
- * tested, and sorted with the see-through things. Its actor's position is where its
- * block of lines sits, by its alignment, and the actor turns and scales it like any
- * other. It holds a reference to its font (0: the default font). Text is an
- * actor (wgf_actor.h): place, parent, and destroy it with the actor calls. */
+/* A text actor: a string drawn in a font.
+ *
+ * - On a 2D stage it is flat on the screen.
+ * - On a 3D stage it is a block in the world, facing as it is told (wgf_text_set_facing).
+ *   It is depth tested, and sorted with the other see-through drawing.
+ * - Its actor's position is where its block of lines sits, by its alignment. The actor
+ *   turns and scales it like any other.
+ * - It holds a reference to its font (0: the default font).
+ *
+ * Text is an actor (wgf_actor.h): place, parent, and destroy it with the actor calls. */
 
 typedef enum wgf_text_halign_t {
     WGF_TEXT_HALIGN_LEFT = 0,   /* the position is the block's left edge (the default) */
@@ -32,59 +36,88 @@ typedef enum wgf_text_valign_t {
     WGF_TEXT_VALIGN_BOTTOM = 2
 } wgf_text_valign_t;
 
-/* A text actor in `font` (0: the default font), with no string yet. 0 when `font`
- * isn't a font, or there is no room for another actor. */
+/* Creates a text actor in `font` (0: the default font), with no string yet.
+ *
+ * Returns 0 if `font` isn't a font, or if there is no room for another actor. */
 WGF_API wgf_actor_t wgf_text_create(wgf_font_t font);
 
-/* False when `font` isn't a font (0 is: the default font). */
+/* Sets or gets the text's font. The setter returns false if `font` isn't a font. 0 is a
+ * font: the default font. */
 WGF_API bool wgf_text_set_font(wgf_actor_t text, wgf_font_t font);
 WGF_API wgf_font_t wgf_text_get_font(wgf_actor_t text);
 
-/* What it says, UTF-8, copied. get_string's is the actor's: valid until the next
- * set_string, or until it is destroyed. */
+/* Sets or gets what the text says, in UTF-8. The setter copies the string.
+ *
+ * The string get_string returns belongs to the actor. It is valid until the next
+ * set_string, or until the actor is destroyed. */
 WGF_API bool wgf_text_set_string(wgf_actor_t text, const char *string);
 WGF_API const char *wgf_text_get_string(wgf_actor_t text);
 
-/* Its font size: the height of its lines, before the actor's scale, in stage units (a
- * font size, so it isn't taken for a sprite's size). 0 or less (the default) is 16 on a 2D
- * stage, 1 on a 3D one.
- * Read back as the size it draws at. False for a handle that isn't text. */
+/* Sets or gets the text's font size: the height of its lines in stage units, before the
+ * actor's scale.
+ *
+ * It is called a font size so it isn't taken for a sprite's size. A size of 0 or less (the
+ * default) is 16 on a 2D stage, and 1 on a 3D one. The getter returns the size it draws at.
+ *
+ * The setter returns false for a handle that isn't text. */
 WGF_API bool wgf_text_set_font_size(wgf_actor_t text, float size);
 WGF_API float wgf_text_get_font_size(wgf_actor_t text);
 
-/* Default: white. */
+/* Sets or gets the text's color (default: white). */
 WGF_API bool wgf_text_set_color(wgf_actor_t text, wgf_color_t color);
 WGF_API wgf_color_t wgf_text_get_color(wgf_actor_t text);
 
-/* Wrap lines at spaces and tabs to fit `width`, in stage units; a word wider keeps
- * a line to itself. 0 (the default) wraps nothing. Newlines always break a line. A
- * wrapped block is `width` wide for its alignment, or as wide as its widest line
- * where a word is wider. False for less than 0. */
+/* Sets or gets the width the text's lines wrap to, in stage units (default: 0).
+ *
+ * - Lines wrap at spaces and tabs to fit `width`.
+ * - A word wider than `width` keeps a line to itself.
+ * - 0 wraps nothing.
+ * - Newlines always break a line.
+ * - For its alignment, a wrapped block is `width` wide, or as wide as its widest line where
+ *   a word is wider.
+ *
+ * The setter returns false for a `width` below 0. */
 WGF_API bool wgf_text_set_wrap_width(wgf_actor_t text, float width);
 WGF_API float wgf_text_get_wrap_width(wgf_actor_t text);
 
-/* Where the block sits relative to the actor's position, on each axis; lines line
- * up the same way inside the block. False for a value that isn't one. */
+/* Sets or gets where the block sits relative to the actor's position, on each axis.
+ *
+ * Lines line up the same way inside the block. The setter returns false for a value that
+ * isn't an alignment. */
 WGF_API bool wgf_text_set_align(wgf_actor_t text, wgf_text_halign_t horizontal,
                                       wgf_text_valign_t vertical);
 WGF_API wgf_text_halign_t wgf_text_get_halign(wgf_actor_t text);
 WGF_API wgf_text_valign_t wgf_text_get_valign(wgf_actor_t text);
 
-/* Logical pixels added between its letters and between its lines (0 to start; below 0
- * tightens). False for numbers that aren't finite. */
+/* Sets or gets the spacing added between the text's letters and between its lines, in
+ * logical pixels.
+ *
+ * Both start at 0. Spacing below 0 tightens the text. The setter returns false for numbers
+ * that aren't finite. */
 WGF_API bool wgf_text_set_spacing(wgf_actor_t text, float letter, float line);
 WGF_API float wgf_text_get_letter_spacing(wgf_actor_t text);
 WGF_API float wgf_text_get_line_spacing(wgf_actor_t text);
 
-/* Which way its block faces on a 3D stage, as a sprite's (wgf_sprite.h): the camera (the
- * default), the camera about Y, flat facing up, or its actor's turn. A 2D stage's text is
- * flat on the screen whatever this says. False when `facing` isn't one. */
+/* Sets or gets which way the text's block faces on a 3D stage, as a sprite's does
+ * (wgf_sprite.h).
+ *
+ * It faces one of these:
+ * - the camera (the default);
+ * - the camera, turning about Y only;
+ * - up, lying flat;
+ * - the way its actor is turned.
+ *
+ * Text on a 2D stage is flat on the screen whatever this says. The setter returns false if
+ * `facing` isn't a facing. */
 WGF_API bool wgf_text_set_facing(wgf_actor_t text, wgf_sprite_facing_t facing);
 WGF_API wgf_sprite_facing_t wgf_text_get_facing(wgf_actor_t text);
 
-/* On a 3D stage, drawn `offset` stage units nearer the camera, as a sprite's
- * (wgf_sprite_set_depth_offset): text over the sprite it labels, kept in front at a distance.
- * False for a handle that isn't a text, or an offset that isn't finite. */
+/* Sets or gets how far nearer the camera the text is drawn on a 3D stage, in stage units.
+ *
+ * It works as a sprite's does (wgf_sprite_set_depth_offset). Use it for text over the sprite
+ * it labels, to keep the text in front at a distance.
+ *
+ * The setter returns false for a handle that isn't text, or an `offset` that isn't finite. */
 WGF_API bool wgf_text_set_depth_offset(wgf_actor_t text, float offset);
 WGF_API float wgf_text_get_depth_offset(wgf_actor_t text);
 

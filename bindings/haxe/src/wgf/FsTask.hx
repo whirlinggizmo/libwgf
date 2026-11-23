@@ -4,7 +4,7 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    A request's task: a handle of kind "core.fs_task".
+    The task a request returns: a handle of kind "core.fs_task".
 
     A handle of kind wgf_fs_task_t (libwgf/core/include/wgf_fs.h): 0 is none.
 **/
@@ -18,40 +18,46 @@ abstract FsTask(Int) from Int to Int to wgf.Handle {
 		return (this : Handle).isAlive();
 
 	/**
-	    Tasks. A getter answers NONE, "", NULL, or 0 for a handle that isn't a task.
+	    Reads a task. A getter returns NONE, "", NULL, or 0 for a handle that isn't a task.
 	**/
 	public inline function getStatus():FsTaskStatus
 		return Raw.wgf_fs_task_get_status(this);
 
 	/**
-	    Tasks. A getter answers NONE, "", NULL, or 0 for a handle that isn't a task.
+	    Reads a task. A getter returns NONE, "", NULL, or 0 for a handle that isn't a task.
 	**/
 	public inline function getPath():String
 		return Raw.wgf_fs_task_get_path(this);
 
 	/**
-	    A DONE read's bytes (or a list's text), NUL-terminated so they also read as text, valid
-	    until the task is destroyed. Any other task: NULL, 0, and "".
+	    Returns a DONE read's bytes, or a list's text, and their size.
+
+	    The bytes end in a NUL, so they also read as text. They are valid until the task is
+	    destroyed. Any other task gives NULL, 0, and "".
 	**/
 	public inline function getData():haxe.io.Bytes
 		return Raw.wgf_fs_task_get_data(this);
 
 	/**
-	    A DONE read's bytes (or a list's text), NUL-terminated so they also read as text, valid
-	    until the task is destroyed. Any other task: NULL, 0, and "".
+	    Returns a DONE read's bytes, or a list's text, and their size.
+
+	    The bytes end in a NUL, so they also read as text. They are valid until the task is
+	    destroyed. Any other task gives NULL, 0, and "".
 	**/
 	public inline function getSize():Int
 		return Raw.wgf_fs_task_get_size(this);
 
 	/**
-	    A DONE read's bytes (or a list's text), NUL-terminated so they also read as text, valid
-	    until the task is destroyed. Any other task: NULL, 0, and "".
+	    Returns a DONE read's bytes, or a list's text, and their size.
+
+	    The bytes end in a NUL, so they also read as text. They are valid until the task is
+	    destroyed. Any other task gives NULL, 0, and "".
 	**/
 	public inline function getText():String
 		return Raw.wgf_fs_task_get_text(this);
 
 	/**
-	    False for a handle that isn't a task.
+	    Destroys a task. Returns false for a handle that isn't a task.
 	**/
 	public inline function destroy():Bool
 		return Raw.wgf_fs_task_destroy(this);

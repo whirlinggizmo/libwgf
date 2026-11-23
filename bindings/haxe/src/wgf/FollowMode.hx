@@ -2,23 +2,27 @@
 package wgf;
 
 /**
-    Cameras that follow, helix-legacy's CameraFollow2D, CameraFollow3D, and Orbit3D: a camera
-    actor (wgf_camera2d.h, wgf_camera3d.h) given a target actor is moved each frame, before
-    the frame callback, to follow where the target is drawn. At most 64 cameras follow.
+    Cameras that follow a target actor: 2D follow, 3D follow, and 3D orbit.
 
-    A 2D camera centers the view on a point that follows the target: the target moves freely
-    inside a dead zone around it, and when it leaves, the point catches up, smoothed; the
-    view is kept inside its bounds when it has them (the presentation's visible area, over
-    the camera's zoom, is what must fit).
+    A camera actor (wgf_camera2d.h, wgf_camera3d.h) given a target actor is moved each frame,
+    before the frame callback. It follows where the target is drawn. At most 64 cameras follow.
 
-    A 3D camera sits at its offset from a point that follows the target the same way (a dead
-    zone of width across and height up, and smoothing), and looks at the point: in CHASE the
-    offset is turned with the target's heading (its turn about y), swinging round to it
-    smoothed, so it stays behind a car; in FIXED it isn't turned; in ORBIT it is the orbit's
-    (a yaw, a pitch, and a distance the program sets, from a stick or the pointer).
+    A 2D camera centers the view on a point that follows the target.
+    - The target moves freely inside a dead zone around the point. When it leaves, the point
+      catches up, smoothed.
+    - The view is kept inside the camera's bounds, when it has them. What must fit is the
+      presentation's visible area, divided by the camera's zoom.
 
-    Either shakes: trauma (0 to 1) added by shake and lost over time, the view thrown by its
-    square so small shakes are gentle, as helix's.
+    A 3D camera sits at its offset from a point that follows the target the same way, and looks
+    at the point. Its dead zone is a width across and a height up, and it is smoothed too.
+    - CHASE: the offset is turned with the target's heading (its turn about y). It swings round
+      to it, smoothed, so it stays behind a car.
+    - FIXED: the offset isn't turned.
+    - ORBIT: the offset is the orbit's: a yaw, a pitch, and a distance the program sets, from a
+      stick or the pointer.
+
+    Either kind of camera shakes. wgf_follow_shake adds trauma (0 to 1), which is lost over
+    time. The view is thrown by the trauma's square, so small shakes are gentle.
 **/
 enum abstract FollowMode(Int) from Int to Int {
 	var CHASE = 0;

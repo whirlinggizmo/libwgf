@@ -2,29 +2,33 @@
 package wgf;
 
 /**
-    How a game's design is fitted to the window or the screen (Godot's stretch modes
-    and aspects are the prior art). A game is written for a design resolution, and its
-    logical coordinates stay the design's at any window size and in fullscreen: drawing,
-    2D stages, the UI, the pointer and touches (mapped back into them), and an autopilot's
-    mouse. The same on the desktop, in a resized browser window, and in fullscreen.
+    How a game's design resolution is fitted to the window or the screen.
 
-      NONE     the default: logical pixels are the window's (a framebuffer pixel over the
-               DPI scale), and the visible area is the window
-      STRETCH  the design scaled to the window on each axis apart, its aspect lost
-      FIT      scaled alike on both axes, as large as it fits whole, centered; the rest
-               are bars (wgf_presentation_set_bar_color), nothing drawn in them
-      FILL     scaled alike, as small as covers the window, centered; what is past the
-               window's edges is cropped
+    A game is written for a design resolution. Its logical coordinates stay the design's at any
+    window size and in fullscreen. That holds for drawing, 2D stages, the UI, the pointer and
+    touches (mapped back into those coordinates), and an autopilot's mouse. It works the same
+    on the desktop, in a resized browser window, and in fullscreen.
+
+      NONE     the default: logical pixels are the window's (a framebuffer pixel divided by
+               the DPI scale), and the visible area is the window
+      STRETCH  the design scaled to the window on each axis separately, losing its aspect
+      FIT      scaled alike on both axes, as large as fits whole, and centered; the rest
+               is bars (wgf_presentation_set_bar_color), with nothing drawn in them
+      FILL     scaled alike, as small as covers the window, and centered; whatever is past
+               the window's edges is cropped
       EXPAND   scaled as FIT is, but the visible area grows past the design to the
-               window's edges, centered on it: the design is the least the game shows,
+               window's edges, centered on it; the design is the least the game shows,
                and a UI anchored to the visible area's edges stays at them
       INTEGER  as FIT, at a whole number of framebuffer pixels to a logical one (at
-               least 1), for pixel art; bars around it
+               least 1), for pixel art; with bars around it
 
-    Set any time; it takes effect at the next frame. A program that never sets a mode
-    links none of its fitting. Natively, a window whose size the program didn't set
-    (wgf_window_set_size) opens at the design size. False for a size under 1 (but for
-    NONE, which takes none) or a mode that isn't one.
+    wgf_presentation_set sets the mode and the design size.
+    - Set it any time. It takes effect at the next frame.
+    - A program that never sets a mode links none of the fitting code.
+    - Natively, a window whose size the program didn't set (wgf_window_set_size) opens at the
+      design size.
+    - It returns false for a size under 1 (except with NONE, which takes no size), or a mode
+      that isn't one.
 **/
 enum abstract PresentationMode(Int) from Int to Int {
 	var NONE = 0;

@@ -7,15 +7,17 @@
 extern "C" {
 #endif
 
-/* Marks a public function. The library is built with hidden visibility, so only
+/* Marks a public function. The library is built with hidden visibility, so only the
  * functions marked WGF_API are exported. */
 #include "wgf_api.h"
 
-/* The libwgf version, "MAJOR.MINOR.PATCH", from the repo's VERSION file. */
+/* Returns the libwgf version as "MAJOR.MINOR.PATCH", taken from the repo's VERSION file. */
 WGF_API const char *wgf_version_get(void);
 
-/* Its numbers: a binding built against one version checks them at start, and refuses a
- * library of another major or minor version (a patch apart is compatible). */
+/* Returns one part of the libwgf version as a number.
+ *
+ * A binding checks these numbers at start against the version it was built for. It refuses
+ * a library of another major or minor version. A different patch number is compatible. */
 WGF_API int wgf_version_get_major(void);
 WGF_API int wgf_version_get_minor(void);
 WGF_API int wgf_version_get_patch(void);

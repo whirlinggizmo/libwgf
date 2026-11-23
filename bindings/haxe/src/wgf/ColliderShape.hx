@@ -2,21 +2,39 @@
 package wgf;
 
 /**
-    A collider (WGF_COMPONENT_COLLIDER): a shape about the actor's position, in its parent's
-    space, that overlaps others as a trigger: each tick, after motion and bounds, two colliders
-    that start to overlap raise TRIGGER_ENTER and two that stop raise TRIGGER_EXIT
-    (wgf_world.h), told to each. They overlap only where one's layer meets the other's mask:
-    (a's layer & b's mask) or (b's layer & a's mask). Nothing is pushed apart by it: how far
-    apart would part a pair is read (get_push), and a body (wgf_arcade2d.h) is stopped by solid
-    ones. Only colliders under the same parent actor are compared, found by a sweep of their
-    bounds (a few thousand at once).
+    A collider (WGF_COMPONENT_COLLIDER): a shape that overlaps other colliders as a trigger.
 
-    Its shape: a circle (a sphere: its z counts against another circle's), its radius scaled
-    by the larger of the actor's scale's x and y; or, on a 2D stage's plane (x and y; z
-    ignored), a rectangle, a convex polygon, or a segment, scaled by the actor's scale and
-    turned by its turn about z. Each is about the actor's position moved by its offset
-    (scaled and turned with it). Defaults: a circle of radius 1, no offset, layer 1, mask
-    everything (-1), enabled. Every call is false (or 0) for an actor without a collider.
+    The shape is placed about the actor's position, in its parent's space. Each tick, after
+    motion and bounds, colliders are compared (wgf_world.h):
+    - Two colliders that start to overlap raise TRIGGER_ENTER, told to each of them.
+    - Two that stop overlapping raise TRIGGER_EXIT, told to each of them.
+
+    Two colliders overlap only where one's layer meets the other's mask: (a's layer & b's mask)
+    or (b's layer & a's mask).
+
+    A collider pushes nothing apart. You can read how far apart would part a pair (see
+    wgf_collider_get_push), and the arcade body (wgf_arcade2d.h) is stopped by solid colliders.
+
+    Only colliders under the same parent actor are compared. They are found by a sweep of their
+    bounds, which handles a few thousand at once.
+
+    Shapes:
+    - A circle, which is a sphere: its z counts against another circle's. Its radius is scaled
+      by the larger of the actor's scale's x and y.
+    - A rectangle, a convex polygon, or a segment, on a 2D stage's plane (x and y, with z
+      ignored). Each is scaled by the actor's scale and turned by its turn about z.
+
+    Each shape is about the actor's position moved by its offset. The offset is scaled and
+    turned with the shape.
+
+    Defaults:
+    - a circle of radius 1
+    - no offset
+    - layer 1
+    - a mask of every layer (-1)
+    - enabled
+
+    Every call returns false (or 0) for an actor without a collider.
 **/
 enum abstract ColliderShape(Int) from Int to Int {
 	var CIRCLE = 0;

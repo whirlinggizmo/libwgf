@@ -4,7 +4,7 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    One of a document's elements, an object of the document's: a handle of kind "ui.element".
+    One of a document's elements, an object owned by the document: a handle of kind "ui.element".
 
     A handle of kind wgf_element_t (libwgf/ui/include/wgf_document.h): 0 is none.
 **/
@@ -18,191 +18,259 @@ abstract Element(Int) from Int to Int to wgf.Handle {
 		return (this : Handle).isAlive();
 
 	/**
-	    The document an element is in, and its id ("" for none). 0 or "" for a handle that isn't
-	    an element.
+	    Returns the document an element is in, and its id ("" for none). Returns 0 or "" for a
+	    handle that isn't an element.
 	**/
 	public inline function getDocument():Document
 		return Raw.wgf_element_get_document(this);
 
 	/**
-	    The document an element is in, and its id ("" for none). 0 or "" for a handle that isn't
-	    an element.
+	    Returns the document an element is in, and its id ("" for none). Returns 0 or "" for a
+	    handle that isn't an element.
 	**/
 	public inline function getId():String
 		return Raw.wgf_element_get_id(this);
 
 	/**
-	    Its content as plain text (`text` shown as it is: no markup), or as RML (parsed, its
-	    elements made). The text getter gives the text of every element inside it, in order;
-	    the RML getter its content as RML. False for a handle that isn't an element, or no
-	    text. Text a getter returns is valid until the next call of this header that returns
-	    text.
+	    Sets or gets an element's content, as plain text or as RML.
+
+	    - set_text shows `text` as it is, with no markup.
+	    - set_rml parses `rml` and makes its elements.
+	    - get_text returns the text of every element inside it, in order.
+	    - get_rml returns its content as RML.
+
+	    Returns false for a handle that isn't an element, or no text. Text a getter returns is valid
+	    until the next call in this header that returns text.
 	**/
 	public inline function setText(text:String):Bool
 		return Raw.wgf_element_set_text(this, text);
 
 	/**
-	    Its content as plain text (`text` shown as it is: no markup), or as RML (parsed, its
-	    elements made). The text getter gives the text of every element inside it, in order;
-	    the RML getter its content as RML. False for a handle that isn't an element, or no
-	    text. Text a getter returns is valid until the next call of this header that returns
-	    text.
+	    Sets or gets an element's content, as plain text or as RML.
+
+	    - set_text shows `text` as it is, with no markup.
+	    - set_rml parses `rml` and makes its elements.
+	    - get_text returns the text of every element inside it, in order.
+	    - get_rml returns its content as RML.
+
+	    Returns false for a handle that isn't an element, or no text. Text a getter returns is valid
+	    until the next call in this header that returns text.
 	**/
 	public inline function getText():String
 		return Raw.wgf_element_get_text(this);
 
 	/**
-	    Its content as plain text (`text` shown as it is: no markup), or as RML (parsed, its
-	    elements made). The text getter gives the text of every element inside it, in order;
-	    the RML getter its content as RML. False for a handle that isn't an element, or no
-	    text. Text a getter returns is valid until the next call of this header that returns
-	    text.
+	    Sets or gets an element's content, as plain text or as RML.
+
+	    - set_text shows `text` as it is, with no markup.
+	    - set_rml parses `rml` and makes its elements.
+	    - get_text returns the text of every element inside it, in order.
+	    - get_rml returns its content as RML.
+
+	    Returns false for a handle that isn't an element, or no text. Text a getter returns is valid
+	    until the next call in this header that returns text.
 	**/
 	public inline function setRml(rml:String):Bool
 		return Raw.wgf_element_set_rml(this, rml);
 
 	/**
-	    Its content as plain text (`text` shown as it is: no markup), or as RML (parsed, its
-	    elements made). The text getter gives the text of every element inside it, in order;
-	    the RML getter its content as RML. False for a handle that isn't an element, or no
-	    text. Text a getter returns is valid until the next call of this header that returns
-	    text.
+	    Sets or gets an element's content, as plain text or as RML.
+
+	    - set_text shows `text` as it is, with no markup.
+	    - set_rml parses `rml` and makes its elements.
+	    - get_text returns the text of every element inside it, in order.
+	    - get_rml returns its content as RML.
+
+	    Returns false for a handle that isn't an element, or no text. Text a getter returns is valid
+	    until the next call in this header that returns text.
 	**/
 	public inline function getRml():String
 		return Raw.wgf_element_get_rml(this);
 
 	/**
-	    An attribute, set to `value` (`class`, `src`, a form control's `value`...); has: whether
-	    it is set; remove: unset, false when it wasn't. get gives "" for an attribute unset.
-	    False for a handle that isn't an element, or no name.
+	    Sets, gets, checks, or removes an attribute, such as `class`, `src`, or a form control's
+	    `value`.
+
+	    - get_attribute returns "" for an attribute that isn't set.
+	    - has_attribute returns whether it is set.
+	    - remove_attribute unsets it, and returns false if it wasn't set.
+
+	    Returns false for a handle that isn't an element, or no name.
 	**/
 	public inline function setAttribute(name:String, value:String):Bool
 		return Raw.wgf_element_set_attribute(this, name, value);
 
 	/**
-	    An attribute, set to `value` (`class`, `src`, a form control's `value`...); has: whether
-	    it is set; remove: unset, false when it wasn't. get gives "" for an attribute unset.
-	    False for a handle that isn't an element, or no name.
+	    Sets, gets, checks, or removes an attribute, such as `class`, `src`, or a form control's
+	    `value`.
+
+	    - get_attribute returns "" for an attribute that isn't set.
+	    - has_attribute returns whether it is set.
+	    - remove_attribute unsets it, and returns false if it wasn't set.
+
+	    Returns false for a handle that isn't an element, or no name.
 	**/
 	public inline function getAttribute(name:String):String
 		return Raw.wgf_element_get_attribute(this, name);
 
 	/**
-	    An attribute, set to `value` (`class`, `src`, a form control's `value`...); has: whether
-	    it is set; remove: unset, false when it wasn't. get gives "" for an attribute unset.
-	    False for a handle that isn't an element, or no name.
+	    Sets, gets, checks, or removes an attribute, such as `class`, `src`, or a form control's
+	    `value`.
+
+	    - get_attribute returns "" for an attribute that isn't set.
+	    - has_attribute returns whether it is set.
+	    - remove_attribute unsets it, and returns false if it wasn't set.
+
+	    Returns false for a handle that isn't an element, or no name.
 	**/
 	public inline function hasAttribute(name:String):Bool
 		return Raw.wgf_element_has_attribute(this, name);
 
 	/**
-	    An attribute, set to `value` (`class`, `src`, a form control's `value`...); has: whether
-	    it is set; remove: unset, false when it wasn't. get gives "" for an attribute unset.
-	    False for a handle that isn't an element, or no name.
+	    Sets, gets, checks, or removes an attribute, such as `class`, `src`, or a form control's
+	    `value`.
+
+	    - get_attribute returns "" for an attribute that isn't set.
+	    - has_attribute returns whether it is set.
+	    - remove_attribute unsets it, and returns false if it wasn't set.
+
+	    Returns false for a handle that isn't an element, or no name.
 	**/
 	public inline function removeAttribute(name:String):Bool
 		return Raw.wgf_element_remove_attribute(this, name);
 
 	/**
-	    A class, added (`on`) or taken off, as RCSS's selectors see it; has: whether it is on.
-	    False for a handle that isn't an element, or no name.
+	    Adds a class (`on`) or takes it off, as RCSS's selectors see it. has_class returns whether it
+	    is on. Returns false for a handle that isn't an element, or no name.
 	**/
 	public inline function setClass(name:String, on:Bool):Bool
 		return Raw.wgf_element_set_class(this, name, on);
 
 	/**
-	    A class, added (`on`) or taken off, as RCSS's selectors see it; has: whether it is on.
-	    False for a handle that isn't an element, or no name.
+	    Adds a class (`on`) or takes it off, as RCSS's selectors see it. has_class returns whether it
+	    is on. Returns false for a handle that isn't an element, or no name.
 	**/
 	public inline function hasClass(name:String):Bool
 		return Raw.wgf_element_has_class(this, name);
 
 	/**
-	    An RCSS property set on the element itself, over its style sheets' (`"color"`,
-	    `"#ffcc00"`); "" or NULL takes the element's own off. get gives the property's value as
-	    the element has it now, from wherever it comes, as RCSS text ("" for a name that isn't
-	    one). False for a handle that isn't an element, a name that isn't a property, or a value
-	    that isn't one of its values (logged).
+	    Sets or gets an RCSS property on the element itself, over its style sheets' value
+	    (`"color"`, `"#ffcc00"`).
+
+	    - A `value` of "" or NULL takes the element's own value off.
+	    - get_property returns the property's value as the element has it now, from wherever it
+	      comes, as RCSS text. It returns "" for a name that isn't a property.
+
+	    The setter returns false for a handle that isn't an element, a name that isn't a property, or
+	    a value that isn't one of its values (logged).
 	**/
 	public inline function setProperty(name:String, value:String):Bool
 		return Raw.wgf_element_set_property(this, name, value);
 
 	/**
-	    An RCSS property set on the element itself, over its style sheets' (`"color"`,
-	    `"#ffcc00"`); "" or NULL takes the element's own off. get gives the property's value as
-	    the element has it now, from wherever it comes, as RCSS text ("" for a name that isn't
-	    one). False for a handle that isn't an element, a name that isn't a property, or a value
-	    that isn't one of its values (logged).
+	    Sets or gets an RCSS property on the element itself, over its style sheets' value
+	    (`"color"`, `"#ffcc00"`).
+
+	    - A `value` of "" or NULL takes the element's own value off.
+	    - get_property returns the property's value as the element has it now, from wherever it
+	      comes, as RCSS text. It returns "" for a name that isn't a property.
+
+	    The setter returns false for a handle that isn't an element, a name that isn't a property, or
+	    a value that isn't one of its values (logged).
 	**/
 	public inline function getProperty(name:String):String
 		return Raw.wgf_element_get_property(this, name);
 
 	/**
-	    A form control's value: a text field's text, a slider's number, a choice's chosen value,
-	    a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
-	    text read as one: 0 for text that isn't). A tabset's number is its chosen tab, from 0 in
-	    its `<tabs>`' order, set as a whole number among them, and a tab chosen by the player
-	    raises its CHANGE. Setting either raises no event. False (and "", 0) for a handle that
-	    isn't a form control or a tabset (set_value: a form control).
+	    Sets or gets a form control's value, as text or as a number.
+
+	    - The value is a text field's text, a slider's number, a choice's chosen value, or a
+	      checkbox's own value.
+	    - As a number: a slider's value is clamped to its range. Text is read as a number, and text
+	      that isn't one reads 0.
+	    - A tabset's number is its chosen tab, from 0 in its `<tabs>`' order. Set it as a whole
+	      number among them. A tab chosen by the player raises the tabset's CHANGE.
+
+	    Setting either raises no event. Returns false (and "", or 0) for a handle that isn't a form
+	    control or a tabset. set_value takes a form control only.
 	**/
 	public inline function setValue(value:String):Bool
 		return Raw.wgf_element_set_value(this, value);
 
 	/**
-	    A form control's value: a text field's text, a slider's number, a choice's chosen value,
-	    a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
-	    text read as one: 0 for text that isn't). A tabset's number is its chosen tab, from 0 in
-	    its `<tabs>`' order, set as a whole number among them, and a tab chosen by the player
-	    raises its CHANGE. Setting either raises no event. False (and "", 0) for a handle that
-	    isn't a form control or a tabset (set_value: a form control).
+	    Sets or gets a form control's value, as text or as a number.
+
+	    - The value is a text field's text, a slider's number, a choice's chosen value, or a
+	      checkbox's own value.
+	    - As a number: a slider's value is clamped to its range. Text is read as a number, and text
+	      that isn't one reads 0.
+	    - A tabset's number is its chosen tab, from 0 in its `<tabs>`' order. Set it as a whole
+	      number among them. A tab chosen by the player raises the tabset's CHANGE.
+
+	    Setting either raises no event. Returns false (and "", or 0) for a handle that isn't a form
+	    control or a tabset. set_value takes a form control only.
 	**/
 	public inline function getValue():String
 		return Raw.wgf_element_get_value(this);
 
 	/**
-	    A form control's value: a text field's text, a slider's number, a choice's chosen value,
-	    a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
-	    text read as one: 0 for text that isn't). A tabset's number is its chosen tab, from 0 in
-	    its `<tabs>`' order, set as a whole number among them, and a tab chosen by the player
-	    raises its CHANGE. Setting either raises no event. False (and "", 0) for a handle that
-	    isn't a form control or a tabset (set_value: a form control).
+	    Sets or gets a form control's value, as text or as a number.
+
+	    - The value is a text field's text, a slider's number, a choice's chosen value, or a
+	      checkbox's own value.
+	    - As a number: a slider's value is clamped to its range. Text is read as a number, and text
+	      that isn't one reads 0.
+	    - A tabset's number is its chosen tab, from 0 in its `<tabs>`' order. Set it as a whole
+	      number among them. A tab chosen by the player raises the tabset's CHANGE.
+
+	    Setting either raises no event. Returns false (and "", or 0) for a handle that isn't a form
+	    control or a tabset. set_value takes a form control only.
 	**/
 	public inline function setNumber(value:Float):Bool
 		return Raw.wgf_element_set_number(this, value);
 
 	/**
-	    A form control's value: a text field's text, a slider's number, a choice's chosen value,
-	    a checkbox's own value; as text, or as a number (a slider's, clamped to its range, or
-	    text read as one: 0 for text that isn't). A tabset's number is its chosen tab, from 0 in
-	    its `<tabs>`' order, set as a whole number among them, and a tab chosen by the player
-	    raises its CHANGE. Setting either raises no event. False (and "", 0) for a handle that
-	    isn't a form control or a tabset (set_value: a form control).
+	    Sets or gets a form control's value, as text or as a number.
+
+	    - The value is a text field's text, a slider's number, a choice's chosen value, or a
+	      checkbox's own value.
+	    - As a number: a slider's value is clamped to its range. Text is read as a number, and text
+	      that isn't one reads 0.
+	    - A tabset's number is its chosen tab, from 0 in its `<tabs>`' order. Set it as a whole
+	      number among them. A tab chosen by the player raises the tabset's CHANGE.
+
+	    Setting either raises no event. Returns false (and "", or 0) for a handle that isn't a form
+	    control or a tabset. set_value takes a form control only.
 	**/
 	public inline function getNumber():Float
 		return Raw.wgf_element_get_number(this);
 
 	/**
-	    A checkbox or a radio button checked; false for a handle that isn't one.
+	    Sets or gets whether a checkbox or a radio button is checked. Returns false for a handle that
+	    isn't one.
 	**/
 	public inline function setChecked(checked:Bool):Bool
 		return Raw.wgf_element_set_checked(this, checked);
 
 	/**
-	    A checkbox or a radio button checked; false for a handle that isn't one.
+	    Sets or gets whether a checkbox or a radio button is checked. Returns false for a handle that
+	    isn't one.
 	**/
 	public inline function isChecked():Bool
 		return Raw.wgf_element_is_checked(this);
 
 	/**
-	    A form control disabled: drawn as RCSS's `:disabled` says, taking no input or focus;
-	    false for a handle that isn't a form control.
+	    Sets or gets whether a form control is disabled. A disabled control is drawn as RCSS's
+	    `:disabled` says, and takes no input or focus. Returns false for a handle that isn't a form
+	    control.
 	**/
 	public inline function setDisabled(disabled:Bool):Bool
 		return Raw.wgf_element_set_disabled(this, disabled);
 
 	/**
-	    A form control disabled: drawn as RCSS's `:disabled` says, taking no input or focus;
-	    false for a handle that isn't a form control.
+	    Sets or gets whether a form control is disabled. A disabled control is drawn as RCSS's
+	    `:disabled` says, and takes no input or focus. Returns false for a handle that isn't a form
+	    control.
 	**/
 	public inline function isDisabled():Bool
 		return Raw.wgf_element_is_disabled(this);

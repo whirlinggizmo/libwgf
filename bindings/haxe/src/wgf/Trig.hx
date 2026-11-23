@@ -5,66 +5,102 @@ import wgf.impl.Raw;
 
 class Trig {
 	/**
-	    Trigonometry that gives the same bits on every target -- natively, under Windows, and in a
-	    browser -- which the rotations (wgf_quat.h) and the generated meshes are made with, so a
-	    simulation started from the same numbers runs the same everywhere. The C library's sinf and
-	    cosf don't: glibc's and Emscripten's (musl's) differ in the last bit for some angles, enough
-	    for a pile of a thousand physics boxes, each turned as it is made, to come apart within
-	    seconds; and a binding's own (Haxe's Math on hxcpp and on JS) differ the same way. Within an
-	    ulp of the C library's, and usually equal to it. Radians; NaN for an infinite or NaN angle,
-	    and for asin and acos past -1..1, as the C library's.
+	    Returns the sine, cosine, or tangent of an angle in radians, with the same bits on every target.
+
+	    The results match natively, under Windows, and in a browser. So a simulation started from
+	    the same numbers runs the same everywhere. The rotations (wgf_quat.h) and the generated
+	    meshes are made with these calls.
+
+	    The C library's sinf and cosf don't match. glibc's and Emscripten's (musl's) differ in the
+	    last bit for some angles. That is enough for a pile of a thousand physics boxes, each turned
+	    as it is made, to come apart within seconds. A binding's own functions (Haxe's Math on hxcpp
+	    and on JS) differ in the same way.
+
+	    Each result is within an ulp of the C library's, and usually equal to it.
+
+	    The results are exact in this way for angles up to about 1.6 million radians. A larger angle
+	    is first brought within one turn. Its result is always within -1..1, but it loses accuracy
+	    as the angle grows.
+
+	    Returns NaN for an infinite or NaN angle, as the C library does. asin and acos also return
+	    NaN past -1..1.
 	**/
 	public static inline function sin(radians:Float):Float
 		return Raw.wgf_trig_sin(radians);
 
 	/**
-	    Trigonometry that gives the same bits on every target -- natively, under Windows, and in a
-	    browser -- which the rotations (wgf_quat.h) and the generated meshes are made with, so a
-	    simulation started from the same numbers runs the same everywhere. The C library's sinf and
-	    cosf don't: glibc's and Emscripten's (musl's) differ in the last bit for some angles, enough
-	    for a pile of a thousand physics boxes, each turned as it is made, to come apart within
-	    seconds; and a binding's own (Haxe's Math on hxcpp and on JS) differ the same way. Within an
-	    ulp of the C library's, and usually equal to it. Radians; NaN for an infinite or NaN angle,
-	    and for asin and acos past -1..1, as the C library's.
+	    Returns the sine, cosine, or tangent of an angle in radians, with the same bits on every target.
+
+	    The results match natively, under Windows, and in a browser. So a simulation started from
+	    the same numbers runs the same everywhere. The rotations (wgf_quat.h) and the generated
+	    meshes are made with these calls.
+
+	    The C library's sinf and cosf don't match. glibc's and Emscripten's (musl's) differ in the
+	    last bit for some angles. That is enough for a pile of a thousand physics boxes, each turned
+	    as it is made, to come apart within seconds. A binding's own functions (Haxe's Math on hxcpp
+	    and on JS) differ in the same way.
+
+	    Each result is within an ulp of the C library's, and usually equal to it.
+
+	    The results are exact in this way for angles up to about 1.6 million radians. A larger angle
+	    is first brought within one turn. Its result is always within -1..1, but it loses accuracy
+	    as the angle grows.
+
+	    Returns NaN for an infinite or NaN angle, as the C library does. asin and acos also return
+	    NaN past -1..1.
 	**/
 	public static inline function cos(radians:Float):Float
 		return Raw.wgf_trig_cos(radians);
 
 	/**
-	    Trigonometry that gives the same bits on every target -- natively, under Windows, and in a
-	    browser -- which the rotations (wgf_quat.h) and the generated meshes are made with, so a
-	    simulation started from the same numbers runs the same everywhere. The C library's sinf and
-	    cosf don't: glibc's and Emscripten's (musl's) differ in the last bit for some angles, enough
-	    for a pile of a thousand physics boxes, each turned as it is made, to come apart within
-	    seconds; and a binding's own (Haxe's Math on hxcpp and on JS) differ the same way. Within an
-	    ulp of the C library's, and usually equal to it. Radians; NaN for an infinite or NaN angle,
-	    and for asin and acos past -1..1, as the C library's.
+	    Returns the sine, cosine, or tangent of an angle in radians, with the same bits on every target.
+
+	    The results match natively, under Windows, and in a browser. So a simulation started from
+	    the same numbers runs the same everywhere. The rotations (wgf_quat.h) and the generated
+	    meshes are made with these calls.
+
+	    The C library's sinf and cosf don't match. glibc's and Emscripten's (musl's) differ in the
+	    last bit for some angles. That is enough for a pile of a thousand physics boxes, each turned
+	    as it is made, to come apart within seconds. A binding's own functions (Haxe's Math on hxcpp
+	    and on JS) differ in the same way.
+
+	    Each result is within an ulp of the C library's, and usually equal to it.
+
+	    The results are exact in this way for angles up to about 1.6 million radians. A larger angle
+	    is first brought within one turn. Its result is always within -1..1, but it loses accuracy
+	    as the angle grows.
+
+	    Returns NaN for an infinite or NaN angle, as the C library does. asin and acos also return
+	    NaN past -1..1.
 	**/
 	public static inline function tan(radians:Float):Float
 		return Raw.wgf_trig_tan(radians);
 
 	/**
-	    The cosine (x) and the sine (y) of an angle together, each as wgf_trig_cos and _sin give
-	    it, for about what one of them costs: the point at the angle on a circle of radius 1, what
-	    a turn needs. NaN, NaN for an infinite or NaN angle.
+	    Returns the cosine (x) and the sine (y) of an angle in radians together.
+
+	    Each is what wgf_trig_cos and wgf_trig_sin give, for about the cost of one of them. The
+	    result is the point at that angle on a circle of radius 1, which is what a turn needs.
+
+	    Returns NaN, NaN for an infinite or NaN angle.
 	**/
 	public static inline function cosSin(radians:Float, ?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_trig_cos_sin(radians, into);
 
 	/**
-	    The angle of (x, y) from the x axis, -pi..pi, as atan2f(y, x).
+	    Returns the angle of (x, y) from the x axis, in radians (-pi..pi), as atan2f(y, x) does.
 	**/
 	public static inline function atan2(y:Float, x:Float):Float
 		return Raw.wgf_trig_atan2(y, x);
 
 	/**
-	    The angle whose sine (asin, -pi/2..pi/2) or cosine (acos, 0..pi) is x.
+	    Returns the angle, in radians, whose sine (asin, -pi/2..pi/2) or cosine (acos, 0..pi) is `x`.
 	**/
 	public static inline function asin(x:Float):Float
 		return Raw.wgf_trig_asin(x);
 
 	/**
-	    The angle whose sine (asin, -pi/2..pi/2) or cosine (acos, 0..pi) is x.
+	    Returns the angle, in radians, whose sine (asin, -pi/2..pi/2) or cosine (acos, 0..pi) is `x`.
 	**/
 	public static inline function acos(x:Float):Float
 		return Raw.wgf_trig_acos(x);

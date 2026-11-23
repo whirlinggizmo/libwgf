@@ -2,11 +2,16 @@
 package wgf;
 
 /**
-    How a skin's edges and middle fill what is between its corners: stretched; or tiled, its
-    art repeated at its own size, an edge along it and the middle both ways, the last one cut
-    where the room ends (a rope border, a brick panel: art that can't stretch); or tiled to
-    fit, repeated a whole number of times, each stretched the little it takes to end on a
-    whole one. A part drawn smaller than its borders is stretched whichever.
+    How a skin's edges and middle fill the room between its corners.
+
+    - STRETCHED: stretched.
+    - TILED: its art repeated at its own size, an edge along its length and the middle both ways.
+      The last repeat is cut where the room ends. Use it for art that can't stretch, such as a
+      rope border or a brick panel.
+    - TILED_FIT: repeated a whole number of times, each repeat stretched the little it takes to
+      end on a whole one.
+
+    A part drawn smaller than its borders is stretched, whichever is set.
 **/
 enum abstract UiPatch(Int) from Int to Int {
 	var STRETCHED = 0;

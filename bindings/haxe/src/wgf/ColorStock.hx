@@ -2,9 +2,9 @@
 package wgf;
 
 /**
-    The stock colors. These name a color; they aren't one: wgf_color_get turns
-    a name into its color. (A packed color doesn't fit in an enum, so names are what
-    a binding can see.)
+    The stock colors' names. A name isn't a color: wgf_color_get turns a name into its color.
+
+    A packed color doesn't fit in an enum, so names are what a binding can see.
 **/
 enum abstract ColorStock(Int) from Int to Int {
 	var BLANK = 0;

@@ -4,7 +4,7 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    A generator, an object: a handle of kind "core.generator".
+    A generator of your own: a handle of kind "core.generator".
 
     A handle of kind wgf_generator_t (libwgf/core/include/wgf_random.h): 0 is none.
 **/

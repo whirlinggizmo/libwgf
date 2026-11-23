@@ -2,7 +2,7 @@
 package wgf;
 
 /**
-    Buttons by where they are on an Xbox-style pad, not by what they're labeled.
+    A pad's buttons, named by where they are on an Xbox-style pad, not by their labels.
 **/
 enum abstract GamepadButton(Int) from Int to Int {
 	var NONE = -1;

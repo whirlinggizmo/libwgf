@@ -5,8 +5,11 @@ import wgf.impl.Raw;
 
 class Ease {
 	/**
-	    `t` (0 to 1, clamped) eased: 0 at 0 and 1 at 1, BACK and ELASTIC going past between. An
-	    ease that isn't one is LINEAR.
+	    Returns `t` eased by `easing`.
+
+	    `t` runs from 0 to 1, and is clamped to that range. The result is 0 at 0 and 1 at 1. In
+	    between, BACK and ELASTIC go past that range. An `easing` that isn't one of
+	    wgf_easing_t's values is treated as LINEAR.
 	**/
 	public static inline function value(easing:Easing, t:Float):Float
 		return Raw.wgf_ease_value(easing, t);

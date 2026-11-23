@@ -10,10 +10,11 @@
 extern "C" {
 #endif
 
-/* The keyboard, read inside a tick or a frame: what changed since the previous
- * tick, or the previous frame. Keys are named by where they are on a US layout:
- * WGF_KEY_Z is the key left of X, whatever the layout prints on it. For the
- * characters the user typed, read wgf_input_get_chars. */
+/* The keyboard, read inside a tick or a frame.
+ *
+ * A read reports what changed since the previous tick, or the previous frame. Keys are named
+ * by where they are on a US layout: WGF_KEY_Z is the key left of X, whatever the layout prints
+ * on it. For the characters the user typed, read wgf_input_get_chars. */
 
 typedef enum wgf_keyboard_key_t {
     WGF_KEY_NONE = 0, /* no key */
@@ -139,22 +140,27 @@ typedef enum wgf_keyboard_key_t {
     WGF_KEY_MENU = 348
 } wgf_keyboard_key_t;
 
-/* Where `key` is: UP, PRESSED (went down since the previous tick or frame), DOWN,
- * or RELEASED. A key the keyboard doesn't have is UP. A key pressed and released
- * between two reads is PRESSED for one, so no tap is missed. */
+/* Returns the state of `key`: UP, PRESSED (went down since the previous tick or frame), DOWN,
+ * or RELEASED.
+ *
+ * A key the keyboard doesn't have is UP. A key pressed and released between two reads is
+ * PRESSED for one read, so no tap is missed. */
 WGF_API wgf_input_state_t wgf_keyboard_get_state(wgf_keyboard_key_t key);
 
-/* PRESSED or DOWN. */
+/* Returns whether `key` is PRESSED or DOWN. */
 WGF_API bool wgf_keyboard_is_down(wgf_keyboard_key_t key);
-/* Went down since the previous tick or frame; held keys repeating don't count. */
+/* Returns whether `key` went down since the previous tick or frame. A held key repeating
+ * doesn't count. */
 WGF_API bool wgf_keyboard_is_pressed(wgf_keyboard_key_t key);
-/* Went up since the previous tick or frame. */
+/* Returns whether `key` went up since the previous tick or frame. */
 WGF_API bool wgf_keyboard_is_released(wgf_keyboard_key_t key);
-/* Pressed, or repeated by the key held (the system's key repeat): a menu's cursor moving
- * while an arrow is held, a text field's backspace. */
+/* Returns whether `key` was pressed, or repeated by being held (the system's key repeat).
+ *
+ * Use it for a menu's cursor moving while an arrow is held, or a text field's backspace. */
 WGF_API bool wgf_keyboard_is_repeated(wgf_keyboard_key_t key);
-/* The last key pressed in this frame (in a tick, the tick), not repeated; WGF_KEY_NONE for
- * none: a rebinding screen's "press a key". */
+/* Returns the last key pressed in this frame (in a tick, in that tick), not counting repeats.
+ *
+ * Returns WGF_KEY_NONE if none was. A rebinding screen's "press a key" uses it. */
 WGF_API wgf_keyboard_key_t wgf_keyboard_get_last_pressed(void);
 
 #ifdef __cplusplus

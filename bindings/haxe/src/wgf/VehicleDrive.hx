@@ -2,20 +2,35 @@
 package wgf;
 
 /**
-    A wheeled vehicle (WGF_COMPONENT_VEHICLE, wgf_component.h) on an actor with a dynamic
-    body (wgf_body3d.h): wheels on springs, an engine, an automatic gearbox, and differentials,
-    driven by the program's intent (set_input), each tick, in the physics world
-    (wgf_physics3d.h). It faces its actor's +z, +y up.
+    A wheeled vehicle (WGF_COMPONENT_VEHICLE, wgf_component.h), on an actor with a dynamic body
+    (wgf_body3d.h).
 
-    Its wheels are actors under it, given in left and right pairs, front first: where each
-    is as the vehicle is made is where it attaches (its spring at rest), and each tick it is
-    set where the wheel is, steered, sprung, and turning about its own x, so a model under
-    it with its axle along x shows the wheel. The first pair steers. Defaults: no wheels, an engine of 500 Nm to 6000 rpm,
-    Jolt's gear ratios, rear drive, wheels of 0.3 m by 0.2 m, 0.3 m of spring travel at 1.5
-    Hz damped by half, 0.5 radians of steering, grip 1. Its settings take effect at the next
-    tick, when it is made again from them (at rest), as a body's are; reset puts it at rest
-    where it is (its anti-roll bars take a change at once). The calls are false (or 0) for
-    an actor without a vehicle.
+    A vehicle has wheels on springs, an engine, an automatic gearbox, and differentials. Each
+    tick it is driven by your game's intent (see wgf_vehicle_set_input), in the physics world
+    (wgf_physics3d.h). It faces its actor's +z, with +y up.
+
+    Its wheels are actors under it, given in left and right pairs, front first.
+    - Where each wheel is when the vehicle is made is where it attaches, with its spring at
+      rest.
+    - Each tick, the wheel's actor is set where the wheel is: steered, sprung, and turning about
+      its own x axis. A model under it with its axle along x shows the wheel.
+    - The first pair steers.
+
+    Defaults:
+    - no wheels
+    - an engine of 500 Nm, up to 6000 rpm
+    - Jolt's gear ratios
+    - rear drive
+    - wheels 0.3 meters in radius and 0.2 meters wide
+    - 0.3 meters of spring travel, at 1.5 Hz, damped by half
+    - 0.5 radians of steering
+    - grip 1
+
+    Its settings take effect at the next tick, when it is made again from them, at rest, as a
+    body's are. A change to its anti-roll bars is the exception: it takes effect at once.
+    wgf_vehicle_reset puts it at rest where it is.
+
+    The calls return false (or 0) for an actor without a vehicle.
 **/
 enum abstract VehicleDrive(Int) from Int to Int {
 	var FRONT = 0;

@@ -11,116 +11,153 @@
 extern "C" {
 #endif
 
-/* A sound, a resource: a handle of kind "audio.sound", or "audio.sound_streamed" for one
+/* A sound is a resource: a handle of kind "audio.sound", or "audio.sound_streamed" for one
  * made with wgf_sound_create_streamed. */
 typedef wgf_handle_t wgf_sound_t;
 
-/* Sounds: audio's data, a resource (wgf_resource.h), loaded on create, as wgrender's
- * Audio; a voice is to play one (phase 2, docs/ROADMAP.md). A program pulls in audio
- * only by creating a sound.
+/* Sounds: audio data, loaded when created.
  *
- * What plays: WAV (PCM or float), MP3, and Ogg Vorbis, mono or stereo. Natively libwgf
- * decodes them (dr_wav, dr_mp3, Xiph's libvorbis); on the web the browser does, so a
- * page plays what its browser plays: Chromium and Firefox play all three (tested);
- * Safari and iOS are not tested yet. A file a platform can't play makes a FAILED sound,
- * logged with its path.
+ * A sound is a resource (wgf_resource.h). A voice plays one (wgf_voice.h). A program pulls in
+ * audio only by creating a sound.
  *
- * Memory: a decoded sound is float samples, natively and on the web alike: a minute of
- * stereo at 48 kHz is about 23 MB. So: effects, create; music, create_streamed. */
+ * Sounds play from WAV (PCM or float), MP3, and Ogg Vorbis files, mono or stereo.
+ * - Natively libwgf decodes them itself.
+ * - On the web the browser decodes them, so a page plays what its browser plays. Chromium and
+ *   Firefox play all three (tested). Safari and iOS are not tested yet.
+ * - A file a platform can't play makes a FAILED sound, logged with its path.
+ *
+ * A decoded sound is held as float samples, natively and on the web alike. A minute of stereo
+ * at 48 kHz is about 23 MB. So create effects with wgf_sound_create, and music with
+ * wgf_sound_create_streamed. */
 
-/* The sound at `path`, decoded whole as it loads: PENDING at once, then READY, or FAILED
- * in a later update for a file that is missing or won't decode. The same path again
- * gives the same sound, with one more reference. 0 only when there's no room for
- * another. */
+/* Creates the sound at `path`, decoded whole as it loads.
+ *
+ * The sound is PENDING at once, then READY. It is FAILED in a later update for a file that is
+ * missing or won't decode. The same path again gives the same sound, with one more reference.
+ *
+ * Returns 0 only if there is no room for another sound. */
 WGF_API wgf_sound_t wgf_sound_create(const char *path);
 
-/* The sound at `path`, decoded while it plays rather than all at once (natively the file
- * is held and decoded as it plays; on the web an <audio> element plays it). READY once
- * its length is known, for a file that is local; one still to be fetched plays as it
+/* Creates the sound at `path`, decoded while it plays rather than all at once.
+ *
+ * Natively the file is held and decoded as it plays. On the web an <audio> element plays it.
+ * A local file is READY once its length is known. A file still to be fetched plays as it
  * arrives:
  *
  *   natively  a file the program is downloading (wgf_asset_set_fetching) is READY once
- *             its start has arrived and decodes, and plays while the rest comes, a
- *             voice that catches up with the download waiting where the file runs out,
- *             PLAYING, until more comes. A decoder keeps 128 KB ahead of where it plays
- *             while the file arrives, so a file shorter than that starts once whole. If
- *             the download fails, or once whole the file isn't what a manifest lists
- *             (wgf_asset_set_manifest), the sound is FAILED and its voices stop; so too
- *             a file that reaches 2 GB while it arrives, logged with its size.
- *   web       a copy here plays as any load's would (a bundled file; one in the asset
+ *             its start has arrived and decodes, and plays while the rest comes. A
+ *             voice that catches up with the download waits where the file runs out,
+ *             still PLAYING, until more comes. A decoder keeps 128 KB ahead of where it
+ *             plays while the file arrives, so a file shorter than that starts once
+ *             whole. The sound is FAILED, and its voices stop, if the download fails, or
+ *             if the whole file isn't what a manifest lists (wgf_asset_set_manifest). So
+ *             is a file that reaches 2 GB while it arrives, logged with its size.
+ *   web       a copy here plays as any load's would: a bundled file, or one in the asset
  *             cache that is fresh, trusted, matches its manifest, or is kept by a 304
- *             when asked about); without one, the <audio> element fetches the file
- *             alone, from its URL, as it plays (the redirects' tried in turn while one
- *             is missing), READY once the browser has its start. What it fetches is
- *             never written to the asset cache: to have the file local (offline,
+ *             when asked about. Without a copy, the <audio> element fetches the file
+ *             alone, from its URL, as it plays, trying the redirects in turn while one
+ *             is missing. It is READY once the browser has its start. What it fetches
+ *             is never written to the asset cache. To have the file local (offline,
  *             checked against the manifest), ensure it first (wgf_asset_ensure), and
  *             the next create plays the copy (wgf_asset.h). It needs CORS from another
  *             origin, as any fetch does. If the element fails, the sound is FAILED and
  *             its voices stop.
  *
- * A sound of its
- * own: the same path made with wgf_sound_create is another sound. Asked for, never
- * chosen by a file's size, since it plays differently: on one voice at a time, with no
- * segments and no negative pitch. */
+ * A streamed sound is a sound of its own: the same path made with wgf_sound_create is another
+ * sound. Streaming is asked for, never chosen by a file's size, since a streamed sound plays
+ * differently: on one voice at a time, with no segments and no negative pitch. */
 WGF_API wgf_sound_t wgf_sound_create_streamed(const char *path);
 
-/* A decoded sound made from `count` samples in -1 to 1, interleaved left then right for 2
- * `channels`, at `sample_rate` frames a second (raylib's LoadSoundFromWave): a sound made in
- * code (a tone, a sweep, a noise burst) that plays as a file's does, its plays and polyphony,
- * segments, and voices the same. READY at once, copied, so the caller's samples can go; it has
- * no path, so another call makes another sound. 0 for samples that are NULL, a count below 1
- * or not a whole number of frames, channels other than 1 or 2, a rate outside 8,000 to 192,000
- * (what every browser's buffers take), and no room for another. For samples made as they
- * play, a pushed voice (wgf_voice_create_pushed). */
+/* Creates a decoded sound from `count` samples, for a sound made in code, such as a tone, a
+ * sweep, or a noise burst.
+ *
+ * - Samples are in -1 to 1, interleaved left then right when `channels` is 2.
+ * - `sample_rate` is in frames a second.
+ * - The sound plays as a file's does: its plays, polyphony, segments, and voices are the same.
+ * - It is READY at once. The samples are copied, so the caller's can go.
+ * - It has no path, so another call makes another sound.
+ *
+ * Returns 0 for any of these:
+ * - `samples` is NULL
+ * - `count` is below 1, or not a whole number of frames
+ * - `channels` is other than 1 or 2
+ * - `sample_rate` is outside 8,000 to 192,000 (what every browser's buffers take)
+ * - there is no room for another sound
+ *
+ * For samples made as they play, use a pushed voice (wgf_voice_create_pushed). */
 WGF_API wgf_sound_t wgf_sound_create_from_samples(const float *samples, int count, int channels, int sample_rate);
 
-/* A named segment of a decoded sound, from `start` to `end` seconds, which a voice
- * selects by name (wgf_voice_set_segment) and plays as the whole sound: play from its
- * start, loop within it, COMPLETE at its end, position relative to it (CONVENTIONS.md, a
- * named segment). Many voices may play one segment at once; for one file of many
- * effects. Seconds in, the sound's own frames inside, the nearest. The end is clamped to
- * the sound's length; the same name again changes that segment's range. Refuses a name
- * that is NULL, "", or longer than 31 bytes; a negative or non-finite start or end, or a
- * start at or after the end; a streamed sound (it can't seek freely) and one that
- * FAILED; and a start at or past a READY sound's end. Added before the file comes, a
- * segment starting past its end is dropped then, logged with its name and the file's
- * path. MP3's encoder delay: an MP3 whose encoder wrote its delay (a Xing/Info frame with
- * a LAME extension, as LAME and FFmpeg write) plays its segments on time natively and in
- * Chromium and Firefox (Safari not tested yet); one without plays them 25 ms late
- * everywhere (the encoder's and the decoder's delay, which nothing in the file says), so
- * a file of many effects is best WAV or Ogg. */
+/* Adds a named segment of a decoded sound, from `start` to `end` seconds.
+ *
+ * A voice selects a segment by name (wgf_voice_set_segment) and plays it as the whole sound.
+ * It plays from the segment's start, loops within it, is COMPLETE at its end, and has its
+ * position relative to it (see CONVENTIONS.md, "a named segment"). Many voices may play one
+ * segment at once. Segments are for one file holding many effects.
+ *
+ * - Times are given in seconds, and kept as the nearest of the sound's own frames.
+ * - The end is clamped to the sound's length.
+ * - The same name again changes that segment's range.
+ *
+ * Returns false for any of these:
+ * - a name that is NULL, "", or longer than 31 bytes
+ * - a negative or non-finite start or end, or a start at or after the end
+ * - a streamed sound (it can't seek freely), or a sound that FAILED
+ * - a start at or past a READY sound's end
+ *
+ * A segment added before the file arrives, and starting past its end, is dropped once the file
+ * arrives. That is logged with the segment's name and the file's path.
+ *
+ * MP3's encoder delay: an MP3 whose encoder wrote its delay plays its segments on time,
+ * natively and in Chromium and Firefox (Safari not tested yet). The delay is written in a
+ * Xing/Info frame with a LAME extension, as LAME and FFmpeg write. An MP3 without one plays
+ * its segments 25 ms late everywhere. That is the encoder's and the decoder's delay, which
+ * nothing in the file states. So a file of many effects is best as WAV or Ogg. */
 WGF_API bool wgf_sound_add_segment(wgf_sound_t sound, const char *name, float start, float end);
 
-/* Play `sound` once and forget it: on a voice the mixer owns and lets go of when it
- * ends, at `volume` (0 or more), `pitch` (a voice's: clamped to -16 to 16, negative from
- * the end), and `pan` (-1 left to 1 right, clamped). A sound still PENDING plays once it
- * is READY. Its polyphony is how many of it play at once: past that, the oldest of it
- * starts again with these. At most 64 play at once, of every sound: past that, the
- * oldest is let go of. A game's own voices (wgf_voice.h) count in neither: a loop, or a
- * sound the game must stop, wants one of those. False for a handle that isn't a decoded sound (a
- * streamed one plays on a voice), one that FAILED, a volume, pitch, or pan that isn't
- * finite, and a volume below 0. */
+/* Plays `sound` once and forgets it, on a voice the mixer owns and lets go of when it ends.
+ *
+ * - `volume` is 0 or more.
+ * - `pitch` is as a voice's: clamped to -16 to 16, and negative plays from the end.
+ * - `pan` is -1 (left) to 1 (right), clamped.
+ * - A sound still PENDING plays once it is READY.
+ * - The sound's polyphony is how many plays of it sound at once. Past that, its oldest play
+ *   starts again with these values.
+ * - At most 64 plays sound at once, across every sound. Past that, the oldest is let go of.
+ * - A game's own voices (wgf_voice.h) count toward neither limit. A loop, or a sound the game
+ *   must stop, needs one of those.
+ *
+ * Returns false for any of these:
+ * - a handle that isn't a decoded sound (a streamed one plays on a voice)
+ * - a sound that FAILED
+ * - a volume, pitch, or pan that isn't finite
+ * - a volume below 0 */
 WGF_API bool wgf_sound_play(wgf_sound_t sound, float volume, float pitch, float pan);
-/* How many plays of `sound` (wgf_sound_play) sound at once, 1 to 64; 8 until set. A lower
- * count stops none playing: each play past it takes the oldest. False for a handle that
- * isn't a decoded sound, and a count outside 1 to 64. */
+/* Sets how many plays of `sound` (wgf_sound_play) sound at once, 1 to 64 (default: 8).
+ *
+ * A lower count stops none already playing: each play past it takes the oldest. Returns false
+ * for a handle that isn't a decoded sound, or a count outside 1 to 64. */
 WGF_API bool wgf_sound_set_polyphony(wgf_sound_t sound, int count);
-/* Its polyphony; 0 for a handle that isn't a decoded sound. */
+/* Returns the sound's polyphony. Returns 0 for a handle that isn't a decoded sound. */
 WGF_API int wgf_sound_get_polyphony(wgf_sound_t sound);
-/* The bus its plays (wgf_sound_play) are heard through (wgf_bus.h): effects until set, and
- * once the one set is destroyed. False for a handle that isn't a decoded sound, or a bus
- * that isn't one. */
+/* Sets or gets the bus the sound's plays (wgf_sound_play) are heard through (wgf_bus.h).
+ *
+ * It is the effects bus until set, and again once the bus set is destroyed. Returns false for
+ * a handle that isn't a decoded sound, or a bus that isn't one. */
 WGF_API bool wgf_sound_set_bus(wgf_sound_t sound, wgf_bus_t bus);
 WGF_API wgf_bus_t wgf_sound_get_bus(wgf_sound_t sound);
 
-/* Its length in seconds; 0 until it is READY, and for a handle that isn't a sound. A
- * streamed sound READY while its file arrives (wgf_sound_create_streamed) has its length
- * when the file says it at its start (natively a WAV's header, an MP3's Xing or Info
- * frame; on the web whatever the browser makes of it), and otherwise 0 until it is
- * known: natively once the file is whole, counted as a whole file's. The
- * decoders treat a file's edges each their own way, so the same file's length can
- * differ by a few milliseconds between platforms, and between a decoded sound and a
- * streamed one on the web (a 10 ms Ogg: 10.0 natively, 8.7 and 12.9 in Chromium). */
+/* Returns the sound's length in seconds.
+ *
+ * Returns 0 until it is READY, and for a handle that isn't a sound.
+ *
+ * A streamed sound READY while its file arrives (wgf_sound_create_streamed) has its length if
+ * the file states it at its start. Natively that is a WAV's header, or an MP3's Xing or Info
+ * frame. On the web it is whatever the browser makes of the file. Otherwise the length is 0
+ * until it is known. Natively that is once the file is whole, counted as a whole file's is.
+ *
+ * The decoders each treat a file's edges their own way. So the same file's length can differ
+ * by a few milliseconds between platforms, and between a decoded sound and a streamed one on
+ * the web. A 10 ms Ogg reads 10.0 natively, and 8.7 and 12.9 in Chromium. */
 WGF_API float wgf_sound_get_duration(wgf_sound_t sound);
 
 #ifdef __cplusplus

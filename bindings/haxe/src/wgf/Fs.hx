@@ -4,101 +4,140 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    Local file storage, the same on every platform. Native: files under the root, the
-    program's own directory by default (where its executable is, wherever it was
-    started from: a double-clicked program finds its files), never the working
-    directory. Web: files kept in the browser between visits.
-    Paths are relative to the root. "\\" is read as "/", "." and empty parts are
-    dropped, and ".." takes back the part before it, so "textures\\..\\models/box.glb"
-    is "models/box.glb". A path that is absolute, has a ":" or a control character,
-    climbs above the root, or names nothing is refused, so a path can only name
-    something under the root. A task's path is the normalized one.
+    Local file storage that works the same on every platform.
 
-    A path starting with "user:" names the program's own file that must last, such as a
-    save or its settings ("user:highscore.txt"), apart from the files it ships with:
-    natively under the user's data directory, by the program's identity
-    (<data>/<company>/<product>, wgf_identity.h: ~/.local/share on Linux, %APPDATA% on
-    Windows); on the web in the browser's store, beside the root's other files. The rest
-    of such a path keeps the rule above, under that directory. A request for one is
-    refused where there is no user data directory to be found (no HOME), with a warning. A symbolic link you put under the
-    root is followed by read and write; remove and rmdir remove the link itself,
-    never what it points to. Text is UTF-8.
+    - Natively, files live under the root. By default the root is the program's own
+      directory, where its executable is, wherever it was started from. So a double-clicked
+      program finds its files. The root is never the working directory.
+    - On the web, files are kept in the browser between visits.
 
-    Every request returns a task (kind "core.fs_task"): poll its status, read its
-    result, then destroy it. A task's status changes only during the runtime's
-    update at the start of a frame, never inside the call that made the request. A request made before storage is
-    ready waits for it. Destroying a task that is still pending lets it finish and
-    discards its result, so a write is never lost.
+    Paths are relative to the root, and are normalized:
+    - "\\" is read as "/".
+    - "." and empty parts are dropped.
+    - ".." removes the part before it, so "textures\\..\\models/box.glb" is "models/box.glb".
+
+    A path is refused if it is absolute, has a ":" or a control character, climbs above the
+    root, or names nothing. So a path can only name a file under the root. A task's path is
+    the normalized one.
+
+    A path starting with "user:" names a file of the program's own that must last, such as
+    a save or its settings ("user:highscore.txt"). These files are kept apart from the files
+    the program ships with.
+    - Natively they go under the user's data directory, by the program's identity:
+      <data>/<company>/<product> (see wgf_identity.h). <data> is ~/.local/share on Linux and
+      %APPDATA% on Windows.
+    - On the web they go in the browser's store, beside the root's other files.
+    - The rest of such a path follows the rules above, under that directory.
+    - A "user:" request is refused, with a warning, where no user data directory can be
+      found (no HOME).
+
+    A symbolic link you put under the root is followed by read and write. remove and rmdir
+    remove the link itself, never what it points to. Text is UTF-8.
+
+    Every request returns a task, a handle of kind "core.fs_task". Poll its status, read its
+    result, then destroy it.
+    - A task's status changes only during the runtime's update at the start of a frame,
+      never inside the call that made the request.
+    - A request made before storage is ready waits for it.
+    - Destroying a task that is still pending lets it finish and discards its result, so a
+      write is never lost.
 **/
 class Fs {
 	/**
-	    The root paths resolve against. Native: a directory, absolute or relative to the
-	    working dir; the default is the program's own directory (the executable's; the
-	    working dir where that can't be told). Web: "/wgf" by default; another root is another browser store, and
-	    requests wait while it opens. False when core isn't running.
+	    Sets or gets the root that paths resolve against.
+
+	    - Natively the root is a directory, absolute or relative to the working directory. The
+	      default is the program's own directory, where its executable is. Where that can't be
+	      told, the default is the working directory.
+	    - On the web the default is "/wgf". Another root is another browser store, and requests
+	      wait while it opens.
+
+	    The setter returns false if core isn't running.
 	**/
 	public static inline function setRoot(root:String):Bool
 		return Raw.wgf_fs_set_root(root);
 
 	/**
-	    The root paths resolve against. Native: a directory, absolute or relative to the
-	    working dir; the default is the program's own directory (the executable's; the
-	    working dir where that can't be told). Web: "/wgf" by default; another root is another browser store, and
-	    requests wait while it opens. False when core isn't running.
+	    Sets or gets the root that paths resolve against.
+
+	    - Natively the root is a directory, absolute or relative to the working directory. The
+	      default is the program's own directory, where its executable is. Where that can't be
+	      told, the default is the working directory.
+	    - On the web the default is "/wgf". Another root is another browser store, and requests
+	      wait while it opens.
+
+	    The setter returns false if core isn't running.
 	**/
 	public static inline function getRoot():String
 		return Raw.wgf_fs_get_root();
 
 	/**
-	    Requests. Each returns a task, or 0 when core isn't running, `path` breaks the
-	    rule above or is too long, `data` is NULL with a size, or memory runs out.
+	    Requests. Each one returns a task.
+
+	    Returns 0 if core isn't running, if `path` breaks the rules above or is too long, if
+	    `data` is NULL with a size, or if memory runs out.
 	**/
 	public static inline function read(path:String):FsTask
 		return Raw.wgf_fs_read(path);
 
 	/**
-	    Copies `data` before returning, and makes the parent directories. DONE once
-	    written, so a read of the path gives the new bytes; on the web the copy kept
-	    between visits is stored in the background after that.
+	    Writes `data` to `path`, making the parent directories.
+
+	    `data` is copied before the call returns. The task is DONE once the file is written, so
+	    a read of the path then gives the new bytes. On the web, the copy kept between visits is
+	    stored in the background after that.
 	**/
 	public static inline function write(path:String, data:haxe.io.Bytes):FsTask
 		return Raw.wgf_fs_write(path, data);
 
 	/**
-	    Copies `data` before returning, and makes the parent directories. DONE once
-	    written, so a read of the path gives the new bytes; on the web the copy kept
-	    between visits is stored in the background after that.
+	    Writes `data` to `path`, making the parent directories.
+
+	    `data` is copied before the call returns. The task is DONE once the file is written, so
+	    a read of the path then gives the new bytes. On the web, the copy kept between visits is
+	    stored in the background after that.
 	**/
 	public static inline function exists(path:String):FsTask
 		return Raw.wgf_fs_exists(path);
 
 	/**
-	    Copies `data` before returning, and makes the parent directories. DONE once
-	    written, so a read of the path gives the new bytes; on the web the copy kept
-	    between visits is stored in the background after that.
+	    Writes `data` to `path`, making the parent directories.
+
+	    `data` is copied before the call returns. The task is DONE once the file is written, so
+	    a read of the path then gives the new bytes. On the web, the copy kept between visits is
+	    stored in the background after that.
 	**/
 	public static inline function remove(path:String):FsTask
 		return Raw.wgf_fs_remove(path);
 
 	/**
-	    Make a directory and its parents. DONE when it exists after, so an existing
-	    one is DONE; FAILED.
+	    Makes a directory and its parents.
+
+	    The task is DONE if the directory exists afterwards, so an existing directory is DONE.
+	    Otherwise it is FAILED.
 	**/
 	public static inline function mkdir(path:String):FsTask
 		return Raw.wgf_fs_mkdir(path);
 
 	/**
-	    Remove a directory and everything in it. DONE; NOT_FOUND when there is no such
-	    directory (a link to one isn't one: remove the link instead); FAILED when
-	    something in it couldn't be removed.
+	    Removes a directory and everything in it.
+
+	    - DONE once it is removed.
+	    - NOT_FOUND if there is no such directory. A link to a directory isn't one: remove the
+	      link instead.
+	    - FAILED if a file or directory in it couldn't be removed.
 	**/
 	public static inline function rmdir(path:String):FsTask
 		return Raw.wgf_fs_rmdir(path);
 
 	/**
-	    What a directory holds: DONE, its names as the task's text, sorted, one a line, a
-	    directory's with a slash after it ("levels/\nsave.json\n"; "" for an empty one), on the web
-	    those kept only in the browser's store too; NOT_FOUND when there is no such directory.
+	    Lists what a directory holds.
+
+	    When DONE, the task's text holds the names, sorted, one a line. A directory's name has
+	    a slash after it: "levels/\nsave.json\n". An empty directory gives "". On the web the
+	    list also includes the files kept only in the browser's store.
+
+	    The task is NOT_FOUND if there is no such directory.
 	**/
 	public static inline function list(path:String):FsTask
 		return Raw.wgf_fs_list(path);

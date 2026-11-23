@@ -2,21 +2,28 @@
 package wgf;
 
 /**
-    Resources: the shared, reference counted data an object uses -- a texture, a mesh, a
-    material, a font, an environment, a shader. What every resource has in common is
-    here, as wgrender's wgr_resource.h; each kind's own calls are in its header
-    (wgf_texture.h, ...). docs/ARCHITECTURE.md, "Resources and objects".
+    Resources: the shared, reference-counted data that objects use, such as a texture, mesh,
+    material, font, environment, or shader.
 
-    A resource loads on create: wgf_<kind>_create(path) takes a path under fs's root and
-    returns the handle at once, PENDING; a worker prepares the file and the main thread
-    finishes it, and the handle turns READY or FAILED in a later update. Nothing is
-    called back. Creating the same path again gives the same handle, with one more
-    reference, whatever its status; releasing the last reference of one still loading
-    stops the load. A resource made from nothing but numbers (a generated mesh, a
-    material) is READY from the start. Objects take a resource in any status and do the
-    right thing until it is READY (each kind's header says what), so a program can
-    create everything at once and never wait; the status is for what a program wants to
-    show, such as a loading screen.
+    This header holds what every resource has in common. Each kind's own calls are in its
+    own header (wgf_texture.h, and so on). See docs/ARCHITECTURE.md, "Resources and
+    objects".
+
+    A resource loads when it is created:
+    - wgf_<kind>_create(path) takes a path under fs's root, and returns the handle at once,
+      PENDING.
+    - A worker prepares the file, and the main thread finishes it. The handle turns READY
+      or FAILED in a later update. Nothing is called back.
+    - Creating the same path again gives the same handle, with one more reference, whatever
+      its status.
+    - Releasing the last reference of a resource that is still loading stops the load.
+    - A resource made from numbers alone, such as a generated mesh or a material, is READY
+      from the start.
+
+    An object, such as an actor or a voice, takes a resource in any status. Until the
+    resource is READY it draws or plays a stand-in, or nothing, as each kind's header says. So a
+    program can create everything at once and never wait. The status is for what a program
+    wants to show, such as a loading screen.
 **/
 enum abstract ResourceStatus(Int) from Int to Int {
 	var NONE = 0;

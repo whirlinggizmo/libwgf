@@ -2,9 +2,14 @@
 package wgf;
 
 /**
-    Easing, helix-legacy's Ease (Robert Penner's set): how a tween (wgf_tween.h) runs from its
-    start to its end. Each but LINEAR in three forms: IN starts slow, OUT ends slow, IN_OUT
-    both. BACK goes a little past and returns, ELASTIC springs, BOUNCE bounces at the end.
+    An easing: how a tween (wgf_tween.h) runs from its start to its end.
+
+    The set is Robert Penner's. Each easing but LINEAR comes in three forms:
+    - IN starts slow.
+    - OUT ends slow.
+    - IN_OUT starts and ends slow.
+
+    BACK goes a little past and returns. ELASTIC springs. BOUNCE bounces at the end.
 **/
 enum abstract Easing(Int) from Int to Int {
 	var LINEAR = 0;

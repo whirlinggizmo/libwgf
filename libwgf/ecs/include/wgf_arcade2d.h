@@ -11,74 +11,112 @@
 extern "C" {
 #endif
 
-/* A 2D body (WGF_COMPONENT_ARCADE2D), helix-legacy's Body2D: an arcade box that moves its
- * actor each tick by its velocity and gravity, sliding along what is solid and stopping its
- * velocity against it, and what it touches kept: the ground under it, a wall either side, a
- * ceiling. A platformer's player or enemy; a top-down character, with no gravity. On a 2D
- * stage, y down: gravity is + down, and the ground is under it.
+/* The arcade body (WGF_COMPONENT_ARCADE2D): an arcade box that moves its actor each tick by
+ * its velocity and gravity.
  *
- * Its box is `size` about the actor's position, scaled by its scale (not turned). Each tick,
- * after motion, gravity speeds its fall (held to its fastest fall), and it moves across then
- * down (wgf_collide2d_move_rects), against two things under the same parent actor:
- *   - colliders (wgf_collider.h) whose layer is in its solid mask, by their bounds (a
- *     rectangle's own box; a circle's, a polygon's, a segment's box around it), switched on,
- *     on actors without a body: bodies don't push or stop each other (their colliders meet
- *     them as triggers);
- *   - the parent's grid of solid cells (set_grid below): a tilemap's walls and floors.
- * A body moves its actor itself: an actor with one should have no motion. Its collider, if it
- * has one, isn't solid to it.
+ * It slides along what is solid, and its velocity stops against it. It keeps what it touches:
+ * the ground under it, a wall on either side, and a ceiling. Use it for a platformer's player
+ * or enemy, or, with no gravity, for a top-down character. It works on a 2D stage, where y
+ * points down: positive gravity pulls down, and the ground is under it.
  *
- * Defaults: 1 by 1, still, no gravity, no fastest fall, a solid mask of every layer (-1).
- * Every call is false (or 0) for an actor without a body. */
+ * Its box is `size`, centered on the actor's position and scaled by the actor's scale. The
+ * box is never turned.
+ *
+ * Each tick, after motion, gravity speeds up its fall, up to its fastest fall. It then moves
+ * across, then down (see wgf_collide2d_move_rects). It is stopped by two kinds of obstacle
+ * under the same parent actor:
+ * - Colliders (wgf_collider.h) that are switched on, whose layer is in its solid mask, on
+ *   actors without an arcade body. Each is solid by its bounds: a rectangle's own box, or the
+ *   box around a circle, polygon, or segment. Arcade bodies don't push or stop each other.
+ *   Their colliders meet them as triggers.
+ * - The parent's grid of solid cells (see wgf_arcade2d_set_grid), such as a tilemap's walls
+ *   and floors.
+ *
+ * The arcade body moves its actor itself, so an actor with one should have no motion. The
+ * actor's own collider, if it has one, isn't solid to it.
+ *
+ * Defaults:
+ * - size 1 by 1
+ * - still (no velocity)
+ * - no gravity, and no fastest fall
+ * - a solid mask of every layer (-1)
+ *
+ * Every call returns false (or 0) for an actor without an arcade body. */
 
-/* False too for a size below 0, or not finite. */
+/* Sets or gets the box's width and height (default: 1 by 1). The setter also returns false
+ * for a size below 0, or one that isn't finite. */
 WGF_API bool wgf_arcade2d_set_size(wgf_actor_t actor, float width, float height);
 WGF_API wgf_vec2_t wgf_arcade2d_get_size(wgf_actor_t actor);
 
-/* Units a second, + right and down. False too for numbers that aren't finite. */
+/* Sets or gets the velocity, in units a second, positive right and down. The setter also
+ * returns false for numbers that aren't finite. */
 WGF_API bool wgf_arcade2d_set_velocity(wgf_actor_t actor, float x, float y);
 WGF_API wgf_vec2_t wgf_arcade2d_get_velocity(wgf_actor_t actor);
 
-/* Its fall speeding up, units a second each second (+ down; 0, none: top-down). False too for
- * a number that isn't finite. */
+/* Sets or gets gravity: how fast the fall speeds up, in units a second each second. Positive
+ * is down, and 0 is none, for a top-down game. The setter also returns false for a number
+ * that isn't finite. */
 WGF_API bool wgf_arcade2d_set_gravity(wgf_actor_t actor, float gravity);
 WGF_API float wgf_arcade2d_get_gravity(wgf_actor_t actor);
 
-/* The fastest it falls, units a second; 0 or less for no limit. False too for a number that
- * isn't finite. */
+/* Sets or gets the fastest fall, in units a second. 0 or less means no limit. The setter also
+ * returns false for a number that isn't finite. */
 WGF_API bool wgf_arcade2d_set_max_fall_speed(wgf_actor_t actor, float speed);
 WGF_API float wgf_arcade2d_get_max_fall_speed(wgf_actor_t actor);
 
-/* The collider layers that are solid to it. */
+/* Sets or gets the collider layers that are solid to the arcade body (default: every layer,
+ * -1). */
 WGF_API bool wgf_arcade2d_set_solid_mask(wgf_actor_t actor, int mask);
 WGF_API int wgf_arcade2d_get_solid_mask(wgf_actor_t actor);
 
-/* What it touched at its last tick, moving into it: standing on something (grounded: gravity
- * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
- * side reads blocked only while it moves that way: a body walking into a wall each tick, as
- * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
- * a jump a moment after walking off a ledge (coyote time) asks whether this is short. */
+/* Returns what the arcade body touched at its last tick, moving into it.
+ *
+ * - is_grounded: it is standing on a collider or a solid cell. Gravity presses it down each
+ *   tick, so it reads grounded while it stands.
+ * - is_blocked_left, is_blocked_right: it was stopped on that side.
+ * - is_blocked_above: it was stopped on its top (it hit its head).
+ * - get_air_time: the seconds since it was last grounded, or 0 while it is grounded.
+ *
+ * A side reads blocked only while the arcade body moves that way. A body walking into a wall
+ * each tick, as when a key is held, reads blocked. One stopped there and left still doesn't.
+ *
+ * To allow a jump a moment after walking off a ledge (coyote time), check that the air time
+ * is short. */
 WGF_API bool wgf_arcade2d_is_grounded(wgf_actor_t actor);
 WGF_API bool wgf_arcade2d_is_blocked_left(wgf_actor_t actor);
 WGF_API bool wgf_arcade2d_is_blocked_right(wgf_actor_t actor);
 WGF_API bool wgf_arcade2d_is_blocked_above(wgf_actor_t actor);
 WGF_API float wgf_arcade2d_get_air_time(wgf_actor_t actor);
 
-/* The grid of solid cells the bodies under `parent` slide against: `cells` row by row from
- * the top, `columns` a row, `count` of them (copied), nonzero solid; cell 0's top-left at
- * x, y in the parent's space, each `size` square; outside it is open. One a parent, set
- * again replacing it. False for a parent that isn't an actor, no cells, columns of 0 or less,
- * or a size that isn't above 0. clear: none again. A cell read (0 outside the grid, or with
- * none) and set (false outside it): a door opened, a block broken. */
+/* Sets the grid of solid cells that the arcade bodies under `parent` slide against.
+ *
+ * - `cells` holds `count` cells, row by row from the top, `columns` to a row. They are
+ *   copied. A nonzero cell is solid.
+ * - Cell 0's top-left corner is at `x`, `y` in the parent's space. Each cell is a square
+ *   `size` wide.
+ * - Outside the grid is open.
+ * - A parent has one grid. Setting it again replaces it.
+ *
+ * Returns false for a parent that isn't an actor, no cells, `columns` of 0 or less, or a
+ * `size` that isn't above 0.
+ *
+ * clear_grid removes the grid. get_grid_cell reads a cell, and returns 0 outside the grid or
+ * when there is none. set_grid_cell sets one, such as a door opened or a block broken, and
+ * returns false outside the grid. */
 WGF_API bool wgf_arcade2d_set_grid(wgf_actor_t parent, const int *cells, int count, int columns, float size, float x,
                                  float y);
-/* The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
- * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
- * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
- * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
- * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
- * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
- * whose tiles aren't square. */
+/* Sets the grid from a placed Tiled map's tile layer (wgf_tilemap_layer.h).
+ *
+ * - A cell with a tile is solid, and an empty cell is open.
+ * - Each cell is the map's tile size.
+ * - Cell 0 is where the layer's top-left cell is in the parent's space. That includes the
+ *   layer's offset, the placement of the map's root, and an infinite map's origin.
+ * - A layer scaled or turned under the parent is placed, but the grid isn't scaled or turned.
+ * - The grid copies the layer's cells as they are now. A cell set on the layer later must also
+ *   be set here, with set_grid_cell.
+ *
+ * Also returns false for a layer that isn't a placed tile layer, a map that isn't orthogonal,
+ * or a map whose tiles aren't square. */
 WGF_API bool wgf_arcade2d_set_grid_from_layer(wgf_actor_t parent, wgf_actor_t layer);
 WGF_API bool wgf_arcade2d_clear_grid(wgf_actor_t parent);
 WGF_API int wgf_arcade2d_get_grid_cell(wgf_actor_t parent, int column, int row);

@@ -2,44 +2,53 @@
 package wgf;
 
 /**
-    Game UI, immediate mode: each frame the program describes the UI as it is now --
-    boxes, panels, labels, buttons, progress bars -- between wgf_ui_begin and wgf_ui_end, inside the
-    frame callback; libwgf lays it out (Clay), answers what the pointer, the keys, and the
-    pads did to it, and draws it at wgf_ui_end, over what the frame drew before.
+    Game UI, in immediate mode: each frame your game describes the UI as it is now.
 
-    The screen is the root: a column of everything given, centered both ways. A box lays
-    its children out in a column or a row, sized to fit them unless set otherwise. A
-    button's answer comes from where things were in the frame before, as with every
-    immediate-mode UI: a UI that moves under the pointer is answered where it was.
+    You describe boxes, panels, labels, buttons, and progress bars between wgf_ui_begin and
+    wgf_ui_end, inside the frame callback. libwgf lays them out, answers what the
+    pointer, the keys, and the pads did to them, and draws them at wgf_ui_end, over what the
+    frame drew before.
 
-    Focus: one widget at a time has it, by its id: a button, a toggle, a checkbox, a slider,
-    a number, tabs, a choice, a combo, a tile, a list, a dropdown, or a text field. The arrow keys and a pad's D-pad move it to
-    the nearest widget that way on the screen, as last laid out (a grid of tiles moves in
-    two dimensions), or, with none that way, through the frame's widgets in the order they
-    were given, Down and Right to the next and Up and Left to the one before, wrapping; Tab
-    and Shift+Tab always go in that order. The first press of one puts it on the first or the
-    last widget. A focused widget keeps the arrows it uses (a slider, a number, tabs, a
-    choice, a combo, and a text field left and right; a slider that fills up or down, and a
-    list, up and down; an open dropdown, all four).
-    Enter, Space, or a pad's south button activates it. The
-    pointer activates the widget it is pressed and released over, and gives it the focus;
-    a focus moved by keys or pads is drawn, one given by the pointer isn't. A focused
-    widget that isn't given in a frame loses the focus. A disabled widget
-    (wgf_ui_set_disabled) is drawn so, answers nothing, and is never focused.
+    The screen is the root: a column of every widget given, centered both ways. A box lays its
+    children out in a column or a row, sized to fit them unless set otherwise. A button's answer
+    comes from where the widgets were in the frame before, as in every immediate-mode UI. A UI
+    that moves under the pointer is answered where it was.
 
-    The UI says when it has the pointer (wgf_input_set_pointer_captured): while the
-    pointer is over a panel, a button, or a box with a color, or a press on a button is
-    held; and the keyboard (wgf_input_set_keyboard_captured) while a button has the focus.
-    A frame without wgf_ui_end lets both go.
+    Focus: one widget at a time has it, by its id. A widget that can take it is a button, a
+    toggle, a checkbox, a slider, a number, tabs, a choice, a combo, a tile, a list, a dropdown,
+    or a text field.
+    - The arrow keys and a pad's D-pad move it to the nearest widget that way on the screen, as
+      last laid out. A grid of tiles moves in two dimensions.
+    - With no widget that way, they move it through the frame's widgets in the order they were
+      given: Down and Right to the next, Up and Left to the one before, wrapping.
+    - Tab and Shift+Tab always go in that order.
+    - The first press of one puts the focus on the first or the last widget.
+    - A focused widget keeps the arrows it uses. A slider, a number, tabs, a choice, a combo,
+      and a text field keep left and right. A slider that fills up or down, and a list, keep up
+      and down. An open dropdown keeps all four.
+    - Enter, Space, or a pad's south button activates the focused widget.
+    - The pointer activates the widget it is pressed and released over, and gives it the focus.
+    - A focus moved by keys or pads is drawn. One given by the pointer isn't.
+    - A focused widget that isn't given in a frame loses the focus.
+    - A disabled widget (wgf_ui_set_disabled) is drawn disabled, answers nothing, and is never
+      focused.
 
-    Ids name boxes, panels, groups, and widgets, and are unique in a frame (Clay refuses a
-    second, logged); a box, panel, or group may have none (NULL or ""). Text is copied: it
-    may change or go after the call. Every call but the style's and the skins' is false
-    (a widget's: its value as given) outside a begun UI.
+    The UI says when it has the pointer and the keyboard:
+    - The pointer (wgf_input_set_pointer_captured), while it is over a panel, a button, or a box
+      with a color, or while a press on a button is held.
+    - The keyboard (wgf_input_set_keyboard_captured), while a button has the focus.
+    - A frame without wgf_ui_end lets both go.
 
-    A widget with a value takes it and returns it as the user left it: the program keeps
-    the value, and the call shows it and answers what was done to it this frame
-    (`volume = wgf_ui_slider("volume", volume, 0, 10)`).
+    Ids name boxes, panels, groups, and widgets, and are unique in a frame. A second
+    one is refused (logged). A box, panel, or group may have no id (NULL or ""). Text is copied, so
+    it may change or go after the call.
+
+    Outside a begun UI, every call but the style's and the skins' returns false, and a widget's
+    call returns its value as given.
+
+    A widget with a value takes it and returns it as the user left it. Your game keeps the
+    value, and the call shows it and answers what was done to it this frame:
+    `volume = wgf_ui_slider("volume", volume, 0, 10)`.
 **/
 enum abstract UiDirection(Int) from Int to Int {
 	var COLUMN = 0;

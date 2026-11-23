@@ -4,119 +4,160 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    Physics in 3D: rigid bodies on actors (wgf_body3d.h), and wheeled vehicles (wgf_vehicle.h),
-    simulated in the tick, after the program's and the ecs's systems. One world for every
-    3D stage, its gravity set here; a body's actor moves where the world moves it, drawn
-    between ticks as any simulated actor is (wgf_actor.h). The same steps make the same world
-    to the bit on every target, so an autopilot's lap is the same on the desktop and in a
-    browser.
+    Physics in 3D: rigid bodies on actors (wgf_body3d.h), and wheeled vehicles (wgf_vehicle.h).
 
-    Physics is an optional part: a program that never starts it links none of it. It starts
-    with the first of these calls, or of wgf_body3d's or wgf_vehicle's; until then a body or a
-    vehicle component (added, or a scene's line) is refused, and logged once. A game whose
-    scene has bodies sets the gravity before it loads the scene.
+    Physics is simulated in the tick, after your game's tick and the ecs's systems.
+    - There is one world for every 3D stage, and its gravity is set here.
+    - A body's actor moves where the world moves it. It is drawn between ticks, as any
+      simulated actor is (wgf_actor.h).
+    - The same steps make the same world, to the bit, on every target. An autopilot's lap is
+      the same on the desktop and in a browser.
+
+    Physics is an optional part: a game that never starts it links none of it. It starts with
+    the first call in this header, or in wgf_body3d.h or wgf_vehicle.h. Until then, a body or
+    vehicle component is refused (logged once), whether it is added or is a scene's line. A
+    game whose scene has bodies sets the gravity before it loads the scene.
 **/
 class Physics3d {
 	/**
-	    Characters (WGF_BODY3D_TYPE_CHARACTER, wgf_body3d.h: Jolt's CharacterVirtual), linked on purpose:
-	    this call links them (a game: "characters" in wgf.json's features), so a program with none
-	    carries none of them (about 42 KB of code). Without it, a character type is refused, logged,
-	    a scene's too. Any time before the first character.
+	    Enables characters (WGF_BODY3D_TYPE_CHARACTER in wgf_body3d.h, Jolt's CharacterVirtual), or
+	    gets whether they are enabled.
+
+	    Characters are linked on purpose. This call links them, so a game with no characters carries
+	    none of their code (about 42 KB). A game enables them with "characters" in wgf.json's
+	    features. Without it, a character type is refused (logged), in a scene too. Call it any time
+	    before the first character.
 	**/
 	public static inline function enableCharacters():Bool
 		return Raw.wgf_physics3d_enable_characters();
 
 	/**
-	    Characters (WGF_BODY3D_TYPE_CHARACTER, wgf_body3d.h: Jolt's CharacterVirtual), linked on purpose:
-	    this call links them (a game: "characters" in wgf.json's features), so a program with none
-	    carries none of them (about 42 KB of code). Without it, a character type is refused, logged,
-	    a scene's too. Any time before the first character.
+	    Enables characters (WGF_BODY3D_TYPE_CHARACTER in wgf_body3d.h, Jolt's CharacterVirtual), or
+	    gets whether they are enabled.
+
+	    Characters are linked on purpose. This call links them, so a game with no characters carries
+	    none of their code (about 42 KB). A game enables them with "characters" in wgf.json's
+	    features. Without it, a character type is refused (logged), in a scene too. Call it any time
+	    before the first character.
 	**/
 	public static inline function isCharactersEnabled():Bool
 		return Raw.wgf_physics3d_is_characters_enabled();
 
 	/**
-	    Vehicles (wgf_vehicle.h: Jolt's VehicleConstraint), linked on purpose: this call links them
-	    (a game: "vehicles" in wgf.json's features), so a program with physics and no car carries
-	    none of them (about 46 KB of code). Without it, a vehicle component is refused, logged, a
-	    scene's too. Any time before the first vehicle.
+	    Enables vehicles (wgf_vehicle.h, Jolt's VehicleConstraint), or gets whether they are
+	    enabled.
+
+	    Vehicles are linked on purpose. This call links them, so a game with physics and no car
+	    carries none of their code (about 46 KB). A game enables them with "vehicles" in wgf.json's
+	    features. Without it, a vehicle component is refused (logged), in a scene too. Call it any
+	    time before the first vehicle.
 	**/
 	public static inline function enableVehicles():Bool
 		return Raw.wgf_physics3d_enable_vehicles();
 
 	/**
-	    Vehicles (wgf_vehicle.h: Jolt's VehicleConstraint), linked on purpose: this call links them
-	    (a game: "vehicles" in wgf.json's features), so a program with physics and no car carries
-	    none of them (about 46 KB of code). Without it, a vehicle component is refused, logged, a
-	    scene's too. Any time before the first vehicle.
+	    Enables vehicles (wgf_vehicle.h, Jolt's VehicleConstraint), or gets whether they are
+	    enabled.
+
+	    Vehicles are linked on purpose. This call links them, so a game with physics and no car
+	    carries none of their code (about 46 KB). A game enables them with "vehicles" in wgf.json's
+	    features. Without it, a vehicle component is refused (logged), in a scene too. Call it any
+	    time before the first vehicle.
 	**/
 	public static inline function isVehiclesEnabled():Bool
 		return Raw.wgf_physics3d_is_vehicles_enabled();
 
 	/**
-	    The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
-	    starting physics. False only when physics couldn't start (logged).
+	    Sets or gets the world's gravity, in units a second squared (default: 0, -9.81, 0, with y
+	    up and units in meters). Setting it starts physics. The setter returns false only when
+	    physics couldn't start (logged).
 	**/
 	public static inline function setGravity(x:Float, y:Float, z:Float):Bool
 		return Raw.wgf_physics3d_set_gravity(x, y, z);
 
 	/**
-	    The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
-	    starting physics. False only when physics couldn't start (logged).
+	    Sets or gets the world's gravity, in units a second squared (default: 0, -9.81, 0, with y
+	    up and units in meters). Setting it starts physics. The setter returns false only when
+	    physics couldn't start (logged).
 	**/
 	public static inline function getGravity(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_physics3d_get_gravity(into);
 
 	/**
-	    Every body's shape outlined in `color` (a sensor's in half its alpha), and each vehicle's
-	    wheels: a debug view, drawn into the 3D drawing begun (wgf_draw_begin_3d, wgf_draw.h);
-	    nothing outside one, or before physics starts. A mesh is drawn by its triangles' edges.
+	    Draws every body's shape outlined in `color`, and each vehicle's wheels, as a debug view.
+
+	    - A sensor is outlined at half the color's alpha.
+	    - A mesh is drawn by its triangles' edges.
+	    - It draws into the 3D drawing begun (wgf_draw_begin_3d, wgf_draw.h). It draws nothing
+	      outside one, or before physics starts.
 	**/
 	public static inline function drawBodies(color:Int):Void
 		Raw.wgf_physics3d_draw_bodies(color);
 
 	/**
-	    Queries of the world as its bodies are now (their last tick's), in its 3D stage's space,
-	    each meeting the bodies whose layer is in `mask` (wgf_body3d_set_layer) and never a sensor;
-	    starting physics.
+	    Casts a ray or a sphere through the world, and returns what it hits.
 
-	    A ray from x, y, z along dx, dy, dz (any length; it is normalized) for `distance`, and a
-	    sphere of `radius` swept so: what they hit, nearest first, a body once (its nearest
-	    hit), as many as fit in `count`: each one's actor into `actors`, and into `hits`, when
-	    it is given, 7 floats a hit as fit in `hits_count` (the point, the surface's normal
-	    there, and the distance along the ray), returning how many hits. 0 for nothing hit, a
-	    direction of no length, a distance or radius not above 0, or no array.
+	    The queries in this header see the bodies as they are now (as of their last tick), in their
+	    3D stage's space. Each meets the bodies whose layer is in `mask` (wgf_body3d_set_layer), and
+	    never a sensor. Each starts physics.
+
+	    - The ray starts at `x`, `y`, `z` and goes along `dx`, `dy`, `dz` for `distance`. The
+	      direction may be any length: it is normalized.
+	    - cast_sphere sweeps a sphere of `radius` the same way.
+	    - Hits come nearest first, each body once (its nearest hit), as many as fit in `count`.
+	    - Each hit's actor goes into `actors`.
+	    - If `hits` is given, each hit also fills 7 floats of it, as many as fit in `hits_count`:
+	      the point, the surface's normal there, and the distance along the ray.
+
+	    Returns how many hits. Returns 0 for nothing hit, a direction of no length, a distance or
+	    radius not above 0, or no array.
 	**/
 	public static inline function castRay(x:Float, y:Float, z:Float, dx:Float, dy:Float, dz:Float, distance:Float, mask:Int, actors:Array<Actor>, hits:Array<Float>):Int
 		return Raw.wgf_physics3d_cast_ray(x, y, z, dx, dy, dz, distance, mask, cast actors, hits);
 
 	/**
-	    Queries of the world as its bodies are now (their last tick's), in its 3D stage's space,
-	    each meeting the bodies whose layer is in `mask` (wgf_body3d_set_layer) and never a sensor;
-	    starting physics.
+	    Casts a ray or a sphere through the world, and returns what it hits.
 
-	    A ray from x, y, z along dx, dy, dz (any length; it is normalized) for `distance`, and a
-	    sphere of `radius` swept so: what they hit, nearest first, a body once (its nearest
-	    hit), as many as fit in `count`: each one's actor into `actors`, and into `hits`, when
-	    it is given, 7 floats a hit as fit in `hits_count` (the point, the surface's normal
-	    there, and the distance along the ray), returning how many hits. 0 for nothing hit, a
-	    direction of no length, a distance or radius not above 0, or no array.
+	    The queries in this header see the bodies as they are now (as of their last tick), in their
+	    3D stage's space. Each meets the bodies whose layer is in `mask` (wgf_body3d_set_layer), and
+	    never a sensor. Each starts physics.
+
+	    - The ray starts at `x`, `y`, `z` and goes along `dx`, `dy`, `dz` for `distance`. The
+	      direction may be any length: it is normalized.
+	    - cast_sphere sweeps a sphere of `radius` the same way.
+	    - Hits come nearest first, each body once (its nearest hit), as many as fit in `count`.
+	    - Each hit's actor goes into `actors`.
+	    - If `hits` is given, each hit also fills 7 floats of it, as many as fit in `hits_count`:
+	      the point, the surface's normal there, and the distance along the ray.
+
+	    Returns how many hits. Returns 0 for nothing hit, a direction of no length, a distance or
+	    radius not above 0, or no array.
 	**/
 	public static inline function castSphere(x:Float, y:Float, z:Float, radius:Float, dx:Float, dy:Float, dz:Float, distance:Float, mask:Int, actors:Array<Actor>, hits:Array<Float>):Int
 		return Raw.wgf_physics3d_cast_sphere(x, y, z, radius, dx, dy, dz, distance, mask, cast actors, hits);
 
 	/**
-	    The bodies overlapping a sphere of `radius` at x, y, z, or a box of width, height, and
-	    depth centered there (its axes the world's), in no order, as many as fit in `count`,
-	    returning how many. 0 for none, a size not above 0, or no array.
+	    Finds the bodies overlapping a sphere or a box, and returns how many.
+
+	    - overlap_sphere: a sphere of `radius` at `x`, `y`, `z`.
+	    - overlap_box: a box `width`, `height`, and `depth`, centered there, with the world's axes.
+
+	    The bodies go into `actors` in no order, as many as fit in `count`. Like the casts, these
+	    see the bodies as of their last tick, meet only those whose layer is in `mask` and never a
+	    sensor, and start physics. Returns 0 for none, a size not above 0, or no array.
 	**/
 	public static inline function overlapSphere(x:Float, y:Float, z:Float, radius:Float, mask:Int, actors:Array<Actor>):Int
 		return Raw.wgf_physics3d_overlap_sphere(x, y, z, radius, mask, cast actors);
 
 	/**
-	    The bodies overlapping a sphere of `radius` at x, y, z, or a box of width, height, and
-	    depth centered there (its axes the world's), in no order, as many as fit in `count`,
-	    returning how many. 0 for none, a size not above 0, or no array.
+	    Finds the bodies overlapping a sphere or a box, and returns how many.
+
+	    - overlap_sphere: a sphere of `radius` at `x`, `y`, `z`.
+	    - overlap_box: a box `width`, `height`, and `depth`, centered there, with the world's axes.
+
+	    The bodies go into `actors` in no order, as many as fit in `count`. Like the casts, these
+	    see the bodies as of their last tick, meet only those whose layer is in `mask` and never a
+	    sensor, and start physics. Returns 0 for none, a size not above 0, or no array.
 	**/
 	public static inline function overlapBox(x:Float, y:Float, z:Float, width:Float, height:Float, depth:Float, mask:Int, actors:Array<Actor>):Int
 		return Raw.wgf_physics3d_overlap_box(x, y, z, width, height, depth, mask, cast actors);

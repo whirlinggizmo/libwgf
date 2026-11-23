@@ -2,10 +2,11 @@
 package wgf;
 
 /**
-    The keyboard, read inside a tick or a frame: what changed since the previous
-    tick, or the previous frame. Keys are named by where they are on a US layout:
-    WGF_KEY_Z is the key left of X, whatever the layout prints on it. For the
-    characters the user typed, read wgf_input_get_chars.
+    The keyboard, read inside a tick or a frame.
+
+    A read reports what changed since the previous tick, or the previous frame. Keys are named
+    by where they are on a US layout: WGF_KEY_Z is the key left of X, whatever the layout prints
+    on it. For the characters the user typed, read wgf_input_get_chars.
 **/
 enum abstract KeyboardKey(Int) from Int to Int {
 	var NONE = 0;

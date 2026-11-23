@@ -2,42 +2,51 @@
 package wgf;
 
 /**
-    Assets: where a resource's file comes from. A path is an asset: creating a resource
-    from a path (wgf_texture_create, wgf_font_create, wgf_sound_create, a scene's) goes
-    through here, as does any call below, and that is what links it -- a program that
-    only makes generated content links none of it. A relative path is looked for under
-    the asset host, which needs no setting:
+    Assets: where a resource's file comes from.
+
+    A path is an asset. Creating a resource from a path goes through here, as does every
+    call below. That includes wgf_texture_create, wgf_font_create, wgf_sound_create, and a
+    scene's files. Those calls are what link this layer, so a program that only makes
+    generated content links none of it.
+
+    A relative path is looked for under the asset host, which needs no setting:
 
       natively  the host is the program's own directory (where its executable is,
-                wherever it was started from), the file storage's root (wgf_fs.h):
-                files are read where they are, as without this layer
-      web       the host is the page's own directory (its document's base URL, so a
-                <base href> moves it): a file not bundled into the page and not cached
-                is fetched from beside the page, cached in the browser's storage, and
-                checked again on later visits as the cache mode says. A file asked
-                for before that storage has opened (the first frames) waits for it,
-                so nothing kept is lost to it, and a game needs no wait of its own
+                wherever it was started from), which is the file storage's root
+                (wgf_fs.h). Files are read where they are, as without this layer
+      web       the host is the page's own directory: its document's base URL, so a
+                <base href> moves it. A file that isn't bundled into the page and isn't
+                cached is fetched from beside the page and cached in the browser's
+                storage. On later visits it is checked again as the cache mode says. A
+                file asked for before that storage has opened (the first frames) waits
+                for it. So no kept file is lost, and a game needs no wait of its own
 
-    so a web page loads its files with no call here at all, and one that should never
-    fetch bundles what it loads. Set another host to fetch from elsewhere (a CDN), or
-    natively to download (fetching, below). A path that is a URL ("https://...") is
-    fetched from there, cached under its own name; natively that needs fetching turned
-    on, and without it the load fails, logged with the URL.
+    So a web page loads its files with no call here at all. A page that should never fetch
+    bundles what it loads.
 
-    A resource makes its own file local as it loads (wgf_resource.h), so a program only
-    ENSURES a file to have it local without loading it: to fetch ahead (a level's files
-    during a menu), from an explicit source (a fetch_url), or to read it itself. An
-    ensure is a task: a handle whose status, local path and progress the program reads,
-    nothing called back, destroyed when done with. A path ensured from an explicit
-    source is what a later create of that path loads, wherever it was found.
+    - Set another host to fetch from elsewhere, such as a CDN, or natively to download (see
+      fetching, below).
+    - A path that is a URL ("https://...") is fetched from there, and cached under its own
+      name. Natively that needs fetching turned on. Without it the load fails, logged with
+      the URL.
 
-    A format whose files name other files is ensured with them, when the layer that
-    reads it registers how to list them (core's lister, wgf_core_load_priv.h): the task
-    is DONE once all are local. A glTF file's are listed (its buffers and images), in a
-    program with glTF (one that calls wgf_mesh_create); a scene's aren't yet, so a scene
-    ensured ahead is ensured beside the files its lines name.
+    A resource makes its own file local as it loads (wgf_resource.h). So a program only
+    ENSURES a file to have it local without loading it:
+    - to fetch ahead, such as a level's files during a menu
+    - to fetch from an explicit source (a fetch_url)
+    - to read the file itself
 
-    libwgt's asset layer, carried whole (docs/HISTORY.md).
+    An ensure is a task: a handle whose status, local path, and progress the program reads.
+    Nothing is called back. Destroy the task when you are done with it. A path ensured from
+    an explicit source is what a later create of that path loads, wherever it was found.
+
+    A file in a format that names other files is ensured with them, when the layer that
+    reads the format registers how to list them (core's lister, wgf_core_load_priv.h). The
+    task is DONE once all of them are local.
+    - A glTF file's buffers and images are listed, in a program with glTF (one that calls
+      wgf_mesh_create).
+    - A scene's files aren't listed yet. To ensure a scene ahead, also ensure the files its
+      lines name.
 **/
 enum abstract AssetTaskStatus(Int) from Int to Int {
 	var NONE = 0;

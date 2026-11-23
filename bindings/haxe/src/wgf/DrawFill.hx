@@ -2,9 +2,13 @@
 package wgf;
 
 /**
-    A texture drawn into the rectangle only up to `amount` (0 to 1): a bar filled from the
-    left or from the bottom, or swept clockwise from 12 o'clock (a cooldown, a health orb).
-    A width or height of 0 or less: the texture's size.
+    How wgf_draw_texture_fill fills: a texture drawn into the rectangle only up to `amount`
+    (0 to 1).
+
+    - LEFT_TO_RIGHT and BOTTOM_TO_TOP fill a bar from the left or from the bottom.
+    - CLOCKWISE sweeps clockwise from 12 o'clock, as for a cooldown or a health orb.
+
+    A width or height of 0 or less uses the texture's size.
 **/
 enum abstract DrawFill(Int) from Int to Int {
 	var LEFT_TO_RIGHT = 0;

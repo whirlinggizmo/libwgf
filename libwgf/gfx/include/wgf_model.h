@@ -14,94 +14,133 @@
 extern "C" {
 #endif
 
-/* A model: an actor showing a mesh on a stage (wgf_stage3d.h), each of the mesh's material
- * slots drawn with the mesh's material or one of the model's own (wgf_material.h), lit
- * by the stage's lights. It holds a reference to its mesh and to its own materials.
- * Place it with the actor calls. On a 2D stage it draws nothing. */
+/* A model: an actor that shows a mesh on a stage (wgf_stage3d.h), lit by the stage's lights.
+ *
+ * - Each of the mesh's material slots is drawn with the mesh's material, or with one of the
+ *   model's own (wgf_material.h).
+ * - The model holds a reference to its mesh and to its own materials.
+ * - Place it with the actor calls.
+ * - On a 2D stage it draws nothing. */
 
-/* A model of `mesh`; 0 for none yet. 0 when `mesh` isn't a mesh, or there is no room
- * for another actor. Tinted white: as its materials are. */
+/* Creates a model of `mesh`. A `mesh` of 0 means none yet.
+ *
+ * The model is tinted white, so it draws as its materials are.
+ *
+ * Returns 0 if `mesh` isn't a mesh, or if there is no room for another actor. */
 WGF_API wgf_actor_t wgf_model_create(wgf_mesh_t mesh);
 
-/* The model's mesh; 0 is none, and nothing drawn. A glTF file's mesh (wgf_mesh_create) makes
- * the model the file's root, its node tree made the model's children once the mesh is
- * READY, and is the model's for good; loaded again (wgf_asset_reload), the tree is made
- * again in place: a node's actor kept (found by its name under its parent's) and moved, its
- * mesh's handle the same with the new triangles, a node the file no longer has gone with its
- * actor and what is under it, a new one made, and the file's lights made again. False when `mesh` isn't a mesh, for a file's mesh on a
- * model with children, and for a file's root or one of its nodes (their meshes are the file's). */
+/* Sets or gets the model's mesh. 0 means none, and nothing is drawn.
+ *
+ * A glTF file's mesh (wgf_mesh_create) makes the model the file's root. Once the mesh is
+ * READY, the file's node tree is made the model's children. The mesh is then the model's for
+ * good.
+ *
+ * When the file is loaded again (wgf_asset_reload), the tree is made again in place:
+ * - A node's actor is kept, found by its name under its parent's actor, and moved.
+ * - Its mesh keeps the same handle, with the new triangles.
+ * - A node the file no longer has is gone, with its actor and every actor under it.
+ * - A new node is made.
+ * - The file's lights are made again.
+ *
+ * set_mesh returns false if:
+ * - `mesh` isn't a mesh.
+ * - `mesh` is a file's mesh, and the model has children.
+ * - The model is a file's root or one of its nodes, whose meshes are the file's. */
 WGF_API bool wgf_model_set_mesh(wgf_actor_t model, wgf_mesh_t mesh);
 WGF_API wgf_mesh_t wgf_model_get_mesh(wgf_actor_t model);
 
-/* A color its materials are multiplied by, as wgrender's tint (default white); alpha
- * below 255 makes the model see-through, blended back to front. A glTF file's root draws
- * nothing itself and stands for its file: its tint multiplies its nodes' own, so one call
- * tints the whole file (an enemy in red, a hit's flash). */
+/* Sets or gets a color the model's materials are multiplied by (default: white).
+ *
+ * Alpha below 255 makes the model see-through, blended back to front.
+ *
+ * A glTF file's root draws nothing itself, and stands for its file. Its tint multiplies its
+ * nodes' own, so one call tints the whole file: an enemy in red, or a hit's flash. */
 WGF_API bool wgf_model_set_tint(wgf_actor_t model, wgf_color_t color);
 WGF_API wgf_color_t wgf_model_get_tint(wgf_actor_t model);
 
-/* Draw material slot `slot` (0..31) with `material` instead of the mesh's; -1 sets every
- * slot, and 0 goes back to the mesh's. The model holds its own reference; its materials
- * stay when the mesh changes. False for a slot out of range, or a handle that isn't a
- * material. get_material is the material the slot draws with: borrowed, the model's
- * own or the mesh's, 0 for neither. */
+/* Sets or gets the material a slot is drawn with, in place of the mesh's.
+ *
+ * - `slot` is 0..31. A `slot` of -1 sets every slot.
+ * - A `material` of 0 goes back to the mesh's.
+ * - The model holds its own reference. Its materials stay when the mesh changes.
+ *
+ * set_material returns false for a slot out of range, or a handle that isn't a material.
+ *
+ * get_material returns the material the slot draws with: the model's own or the mesh's. The
+ * handle is borrowed. It returns 0 for neither. */
 WGF_API bool wgf_model_set_material(wgf_actor_t model, int slot, wgf_material_t material);
 WGF_API wgf_material_t wgf_model_get_material(wgf_actor_t model, int slot);
 
-/* Shadows, when a light on its stage casts them (wgf_light_set_shadow_casting). Casting
- * (default): the model is drawn into the light's depth map, so it shadows what is behind
- * it -- turn it off for a glow or a sky. Receiving (default): shadows darken it. Each is the
- * model's own: a glTF file's tree has a setting on each of its node's models. A hidden model
- * casts nothing; its see-through parts never cast. */
+/* Sets or gets whether the model casts and receives shadows, when a light on its stage casts
+ * them (see wgf_light_set_shadow_casting).
+ *
+ * - Casting (default: on): the model is drawn into the light's depth map, so it shadows what
+ *   is behind it. Turn it off for a glow or a sky.
+ * - Receiving (default: on): shadows darken the model.
+ *
+ * Each setting is the model's own. In a glTF file's tree, each node's model has its own
+ * setting. A hidden model casts nothing, and its see-through parts never cast. */
 WGF_API bool wgf_model_set_shadow_casting(wgf_actor_t model, bool casting);
 WGF_API bool wgf_model_is_shadow_casting(wgf_actor_t model);
 WGF_API bool wgf_model_set_shadow_receiving(wgf_actor_t model, bool receiving);
 WGF_API bool wgf_model_is_shadow_receiving(wgf_actor_t model);
 
-/* A glTF file's animations, played on its root (a model of wgf_mesh_create's mesh), which
- * moves the actors of its tree -- each joint of a skin is one, and what is put under one
- * moves with it -- and so poses the skinned parts its skins place, on the GPU, with up to 4
- * joints a vertex. A clip's translation, rotation, and scale channels play as the file has
- * them: linear (a rotation along the shorter arc), step, or cubic spline. What plays has
- * one state, wgf_play_state.h's, its transitions those of play, pause, resume, and stop
- * (as a voice's), advanced by libwgf once a frame by the frame's time before the frame
- * callback, and posed then, so the frame reads this frame's pose:
+/* Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- *   count, name, find, duration  the file's animations: how many (0 until it is READY),
- *                    one's name ("" for none), the first named so (-1 for none), its
- *                    length in seconds (its last key's time; 0 for none)
- *   play             `animation` from its start (its end with a negative speed), PLAYING,
- *                    from any state; posed at once. `fade` > 0 crossfades into it over
- *                    that many seconds from what shows now -- the clip that was playing,
- *                    still moving, or the pose held (a crossfade's middle, or a clip not
- *                    moving) -- each node's place, turn, and scale blended; 0 or less cuts
- *                    to it. A node one animation of the file moves and this one doesn't is
- *                    at the file's rest. Played before the file is READY, it plays once the
- *                    file is there (one the file hasn't is dropped then, warned). False for
+ * An animation moves the actors of the file's tree. Each joint of a skin is one of those
+ * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
+ * place, on the GPU, with up to 4 joints a vertex.
+ *
+ * A clip's translation, rotation, and scale channels play as the file has them: linear (a
+ * rotation takes the shorter arc), step, or cubic spline.
+ *
+ * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
+ * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
+ * time, before the frame callback, and poses the model then. So the frame reads this frame's
+ * pose.
+ *
+ *   count, name, find, duration  the file's animations: how many there are (0 until it is
+ *                    READY), one's name ("" for none), the first one so named (-1 for
+ *                    none), and its length in seconds (its last key's time; 0 for none)
+ *   play             plays `animation` from its start (from its end with a negative speed),
+ *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
+ *                    into it over that many seconds, from what shows now: the clip that was
+ *                    playing, still moving, or the pose held (a crossfade's middle, or a
+ *                    clip not moving). Each node's place, turn, and scale are blended. A
+ *                    `fade` of 0 or less cuts to it. A node that another animation of the
+ *                    file moves, and this one doesn't, is at the file's rest pose. Played
+ *                    before the file is READY, it plays once the file is there. If the file
+ *                    hasn't that animation, it is dropped then (warned). Returns false for
  *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, and an animation the READY file
+ *                    isn't a number, a file that FAILED, or an animation the READY file
  *                    hasn't
- *   get_animation    the one played (or stopped at, paused in); -1 for none
- *   weight           how much of the pose is the animation played's: 0 as its crossfade
- *                    begins to 1 when it is through, 1 with none, 0 with no animation
- *   pause, resume    from PLAYING, and from PAUSED, only; held where it was, the
- *                    crossfade too
- *   stop             to STOPPED from any state, at time 0, showing the clip's first pose,
- *                    its crossfade dropped
- *   state            COMPLETE when an animation not looping has run to the end it runs
- *                    toward, held there; and when its file FAILED while it played
- *   speed            1 normal (the default); negative plays backwards; 0 holds, still
- *                    PLAYING. False for a speed that isn't finite
- *   loop             wrap at the end (the default), or hold the last pose and be COMPLETE
- *   time             where it is, in seconds from its start; set poses it there at once,
- *                    wrapped when looping and clamped to [0, duration] when not, leaving
- *                    the state. False for a time that isn't finite
+ *   get_animation    the animation played (or stopped at, or paused in); -1 for none
+ *   weight           how much of the pose is the played animation's: 0 as its crossfade
+ *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
+ *                    animation
+ *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
+ *                    animation is held where it was, its crossfade too
+ *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
+ *                    pose. Its crossfade is dropped
+ *   state            COMPLETE when an animation that isn't looping has run to the end it
+ *                    runs toward, and is held there. Also COMPLETE when its file FAILED
+ *                    while it played
+ *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
+ *                    PLAYING. Returns false for a speed that isn't finite
+ *   loop             wraps at the end (the default), or holds the last pose and becomes
+ *                    COMPLETE
+ *   time             where it is, in seconds from its start. set_time poses it there at
+ *                    once, wrapped when looping and clamped to [0, duration] when not. It
+ *                    leaves the state as it is. Returns false for a time that isn't finite
  *
- * Each is false (or 0, -1, "") for a model that isn't a file's root. Moved on by the frame,
- * an animation is for what is seen; for what a game decides by (a hit frame, a replay),
- * drive it by hand: speed 0, and set_time from the game's fixed tick. A custom material
- * (wgf_material_create_custom) on a skinned part draws it posed too, its vertex hook run
- * before the joints pose it. */
+ * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
+ *
+ * Because the frame moves an animation on, an animation is for what is seen. For what a game
+ * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
+ * the game's fixed tick.
+ *
+ * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
+ * vertex hook runs before the joints pose it. */
 WGF_API int wgf_model_get_animation_count(wgf_actor_t model);
 WGF_API const char *wgf_model_get_animation_name(wgf_actor_t model, int animation);
 WGF_API int wgf_model_find_animation(wgf_actor_t model, const char *name);
@@ -120,17 +159,28 @@ WGF_API bool wgf_model_is_animation_loop(wgf_actor_t model);
 WGF_API bool wgf_model_set_animation_time(wgf_actor_t model, float seconds);
 WGF_API float wgf_model_get_animation_time(wgf_actor_t model);
 
-/* Layers over the animation playing, WGF_MODEL_LAYERS of them (`index` 0 up), each blended
- * over what is under it in order (the clip below, then layer 0, 1...): layer `index` plays
- * `animation` on the file's node named `bone` and every node under it (a mask: "Spine" for
- * the upper body), blended by the layer's weight, which comes in over `fade` seconds (0 or
- * less: at once); looping, or played once, when it fades out over the same `fade` as it ends
- * (COMPLETE) and is gone. An attack from the waist up while the legs run on, and a flinch of
- * the head over both. Its time runs at the model's speed while the animation below plays.
- * play is false for an index outside the layers, a model that isn't a file's root, one whose
- * file isn't READY or has no animation playing yet, an animation it hasn't, a bone it hasn't,
- * or a fade not finite. stop fades it out over `fade`. Its animation (-1 for none), its
- * state, and its weight now (0 to 1). */
+/* Plays animation layers over the animation playing: WGF_MODEL_LAYERS of them, `index` 0 up.
+ *
+ * Each layer is blended over what is under it, in order: the clip below, then layer 0, then
+ * 1, and so on. For example, an attack from the waist up while the legs run on, and a flinch
+ * of the head over both.
+ *
+ * - play_layer_animation plays `animation` on layer `index`. It moves the file's node named
+ *   `bone` and every node under it. That is a mask: "Spine" for the upper body.
+ * - The layer is blended by its weight, which comes in over `fade` seconds (0 or less: at
+ *   once).
+ * - With `loop`, it loops. Without, it plays once, then fades out over the same `fade` as it
+ *   ends (COMPLETE), and is gone.
+ * - Its time runs at the model's speed while the animation below plays.
+ * - stop_layer_animation fades it out over `fade`.
+ * - The getters return its animation (-1 for none), its state, and its weight now (0 to 1).
+ *
+ * play_layer_animation returns false if:
+ * - `index` is outside the layers.
+ * - The model isn't a file's root.
+ * - Its file isn't READY, or has no animation playing yet.
+ * - The file hasn't `animation`, or hasn't `bone`.
+ * - `fade` isn't finite. */
 #define WGF_MODEL_LAYERS 4
 WGF_API bool wgf_model_play_layer_animation(wgf_actor_t model, int index, int animation, const char *bone, float fade,
                                             bool loop);
@@ -139,39 +189,63 @@ WGF_API int wgf_model_get_layer_animation(wgf_actor_t model, int index);
 WGF_API wgf_play_state_t wgf_model_get_layer_state(wgf_actor_t model, int index);
 WGF_API float wgf_model_get_layer_weight(wgf_actor_t model, int index);
 
-/* `model` playing as `from` does now: its animation, time, speed, loop, and state, and its
- * layer (its bone found again by name); a crossfade running in `from` ends at its clip. For a
- * part of a character put on while the others play (a part model swapped, each given the same
- * clips, wgf_model_set_animations), so it doesn't start its clip again. False for a model that
- * isn't a file's root, `from` with no animation, or one whose clips `model` hasn't. */
+/* Sets `model` playing as `from` plays now.
+ *
+ * It copies the animation, time, speed, loop, and state, and the layers (each layer's bone
+ * found again by name). A crossfade running in `from` ends at its clip.
+ *
+ * Use it for a part of a character put on while the others play, so it doesn't start its clip
+ * again. For example, a part model swapped in, with each part given the same clips
+ * (wgf_model_set_animations).
+ *
+ * Returns false if `model` isn't a file's root, if `from` has no animation, or if `model`
+ * hasn't `from`'s clips. */
 WGF_API bool wgf_model_sync_animation(wgf_actor_t model, wgf_actor_t from);
 
-/* A socket: the first node named `name` under a file's root, at any depth (its joints are
- * actors: a bone "Hand.R", "Head"), 0 for none or a model that isn't a file's root. A sword
- * parented to it (wgf_actor_set_parent) follows the hand through every clip. */
+/* Returns a socket: the first node named `name` under a file's root, at any depth.
+ *
+ * A file's joints are actors, so `name` can be a bone such as "Hand.R" or "Head". A sword
+ * parented to the hand (wgf_actor_set_parent) follows it through every clip.
+ *
+ * Returns 0 if there is no such node, or if `model` isn't a file's root. */
 WGF_API wgf_actor_t wgf_model_find_node(wgf_actor_t model, const char *name);
 
-/* Its animations from another glTF file, `clips` (a file of animations alone, its skeleton
- * named as this file's: Wardens' Animations.glb for each of a character's part models), each
- * clip's channels moving this file's nodes of the same names; 0 for its own again. Each part
- * of a character given the same clips and played the same way moves as one. What played stops.
- * False for a model that isn't a file's root, or a mesh that isn't one. */
+/* Sets or gets where the model's animations come from: another glTF file, `clips`.
+ *
+ * `clips` is a file of animations alone, with its skeleton named as this file's is. For
+ * example, Wardens' Animations.glb for each of a character's part models. Each clip's
+ * channels move this file's nodes of the same names.
+ *
+ * - A `clips` of 0 goes back to the model's own animations.
+ * - What was playing stops.
+ * - Each part of a character given the same clips, and played the same way, moves as one.
+ *
+ * set_animations returns false if `model` isn't a file's root, or if `clips` isn't a mesh. */
 WGF_API bool wgf_model_set_animations(wgf_actor_t model, wgf_mesh_t clips);
 WGF_API wgf_mesh_t wgf_model_get_animations(wgf_actor_t model);
 
-/* The box around every model at and under `actor`, each mesh's box placed as it is now, in
- * the tree's root's space: its least and greatest corner (placing a glTF file's tree on the
- * ground, framing it in a camera). 0, 0, 0 for both when none there has a READY mesh. */
+/* Returns the box around every model at and under `actor`: its least and greatest corner.
+ *
+ * Each mesh's box is placed as the model is now, in the tree's root's space. Use it to place
+ * a glTF file's tree on the ground, or to frame it in a camera.
+ *
+ * Returns 0, 0, 0 for both if no model there has a READY mesh. */
 WGF_API wgf_vec3_t wgf_model_get_bounds_min(wgf_actor_t actor);
 WGF_API wgf_vec3_t wgf_model_get_bounds_max(wgf_actor_t actor);
 
-/* Where a ray meets this model as it is drawn now, raylib's GetRayCollisionModel: its
- * triangles (its box tested first; skinned, in its pose this frame), or a glTF file's root,
- * its file's visible nodes; whether it is pickable or not (wgf_stage3d_pick finds it among
- * others). The ray is its origin and its direction (not needing to be a unit vector), in its
- * stage's space; the hit goes into `hit` as wgf_stage3d_pick_ray's does, all 0 after a miss.
- * False for a miss, a handle that isn't a model, a mesh not READY, or a direction of 0 or
- * not finite. */
+/* Tests where a ray meets this model, as it is drawn now.
+ *
+ * - For a model, it tests its triangles. Its box is tested first. A skinned model is tested in
+ *   its pose this frame.
+ * - For a glTF file's root, it tests its file's visible nodes.
+ * - It tests the model whether it is pickable or not (wgf_actor_set_pickable). To find a model
+ *   among others, see wgf_stage3d_pick.
+ *
+ * The ray is its origin and its direction, in its stage's space. The direction need not be a
+ * unit vector. The hit goes into `hit` as wgf_stage3d_pick_ray's does, all 0 after a miss.
+ *
+ * Returns false for a miss, a handle that isn't a model, a mesh that isn't READY, or a
+ * direction of 0 or not finite. */
 WGF_API bool wgf_model_pick_ray(wgf_actor_t model, float ox, float oy, float oz, float dx, float dy, float dz,
                                 float *hit, int hit_count);
 

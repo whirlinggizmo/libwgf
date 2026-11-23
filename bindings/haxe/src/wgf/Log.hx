@@ -4,110 +4,149 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    Logging to stderr (the browser console on the web). A message below the
-    current level is dropped; the level starts at INFO. Text is UTF-8.
+    Logging to stderr, or to the browser console on the web.
 
-    The exported calls take finished text, so a binding formats in its own
-    language and passes one string. C code formats with the wgf_log_<level> macros,
-    or with wgf_log_debug and the rest from wgf_log.h.
+    A message below the current level is dropped. The level starts at INFO. Text is UTF-8.
+
+    The exported calls take finished text, so a binding formats in its own language and
+    passes one string. C code formats with the wgf_log_<level> macros, such as wgf_log_debug,
+    from wgf_log.h.
 **/
 class Log {
 	/**
-	    Logging to stderr (the browser console on the web). A message below the
-	    current level is dropped; the level starts at INFO. Text is UTF-8.
+	    Logging to stderr, or to the browser console on the web.
 
-	    The exported calls take finished text, so a binding formats in its own
-	    language and passes one string. C code formats with the wgf_log_<level> macros,
-	    or with wgf_log_debug and the rest from wgf_log.h.
+	    A message below the current level is dropped. The level starts at INFO. Text is UTF-8.
+
+	    The exported calls take finished text, so a binding formats in its own language and
+	    passes one string. C code formats with the wgf_log_<level> macros, such as wgf_log_debug,
+	    from wgf_log.h.
 	**/
 	public static inline function setLevel(level:LogLevel):Void
 		Raw.wgf_log_set_level(level);
 
 	/**
-	    Logging to stderr (the browser console on the web). A message below the
-	    current level is dropped; the level starts at INFO. Text is UTF-8.
+	    Logging to stderr, or to the browser console on the web.
 
-	    The exported calls take finished text, so a binding formats in its own
-	    language and passes one string. C code formats with the wgf_log_<level> macros,
-	    or with wgf_log_debug and the rest from wgf_log.h.
+	    A message below the current level is dropped. The level starts at INFO. Text is UTF-8.
+
+	    The exported calls take finished text, so a binding formats in its own language and
+	    passes one string. C code formats with the wgf_log_<level> macros, such as wgf_log_debug,
+	    from wgf_log.h.
 	**/
 	public static inline function getLevel():LogLevel
 		return Raw.wgf_log_get_level();
 
 	/**
-	    The last lines logged kept for the program to read, a game's console or a bug report:
-	    raylib's log callback, without the callback. set_history keeps the last `count` (0, the
-	    default, none; at most 1024), forgetting those kept; false for a count outside that.
-	    Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
-	    its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
-	    valid until the next read. Lines below the level aren't kept, as they aren't shown.
+	    Keeps the last lines logged for the program to read, such as for a game's console or a
+	    bug report.
+
+	    - set_history keeps the last `count` lines, at most 1024 (default: 0, none). It forgets
+	      the lines already kept. It returns false for a count outside 0 to 1024.
+	    - get_history_line returns a line as the console shows it, without its level, such as
+	      "file.c:12: text" (255 bytes at most). Index 0 is the oldest.
+	    - get_history_level returns that line's level.
+	    - For an index outside the lines kept, they return "" and TRACE.
+
+	    A line read is a copy, valid until the next read. Lines below the level aren't kept,
+	    just as they aren't shown.
 	**/
 	public static inline function setHistory(count:Int):Bool
 		return Raw.wgf_log_set_history(count);
 
 	/**
-	    The last lines logged kept for the program to read, a game's console or a bug report:
-	    raylib's log callback, without the callback. set_history keeps the last `count` (0, the
-	    default, none; at most 1024), forgetting those kept; false for a count outside that.
-	    Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
-	    its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
-	    valid until the next read. Lines below the level aren't kept, as they aren't shown.
+	    Keeps the last lines logged for the program to read, such as for a game's console or a
+	    bug report.
+
+	    - set_history keeps the last `count` lines, at most 1024 (default: 0, none). It forgets
+	      the lines already kept. It returns false for a count outside 0 to 1024.
+	    - get_history_line returns a line as the console shows it, without its level, such as
+	      "file.c:12: text" (255 bytes at most). Index 0 is the oldest.
+	    - get_history_level returns that line's level.
+	    - For an index outside the lines kept, they return "" and TRACE.
+
+	    A line read is a copy, valid until the next read. Lines below the level aren't kept,
+	    just as they aren't shown.
 	**/
 	public static inline function getHistory():Int
 		return Raw.wgf_log_get_history();
 
 	/**
-	    The last lines logged kept for the program to read, a game's console or a bug report:
-	    raylib's log callback, without the callback. set_history keeps the last `count` (0, the
-	    default, none; at most 1024), forgetting those kept; false for a count outside that.
-	    Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
-	    its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
-	    valid until the next read. Lines below the level aren't kept, as they aren't shown.
+	    Keeps the last lines logged for the program to read, such as for a game's console or a
+	    bug report.
+
+	    - set_history keeps the last `count` lines, at most 1024 (default: 0, none). It forgets
+	      the lines already kept. It returns false for a count outside 0 to 1024.
+	    - get_history_line returns a line as the console shows it, without its level, such as
+	      "file.c:12: text" (255 bytes at most). Index 0 is the oldest.
+	    - get_history_level returns that line's level.
+	    - For an index outside the lines kept, they return "" and TRACE.
+
+	    A line read is a copy, valid until the next read. Lines below the level aren't kept,
+	    just as they aren't shown.
 	**/
 	public static inline function getHistoryCount():Int
 		return Raw.wgf_log_get_history_count();
 
 	/**
-	    The last lines logged kept for the program to read, a game's console or a bug report:
-	    raylib's log callback, without the callback. set_history keeps the last `count` (0, the
-	    default, none; at most 1024), forgetting those kept; false for a count outside that.
-	    Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
-	    its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
-	    valid until the next read. Lines below the level aren't kept, as they aren't shown.
+	    Keeps the last lines logged for the program to read, such as for a game's console or a
+	    bug report.
+
+	    - set_history keeps the last `count` lines, at most 1024 (default: 0, none). It forgets
+	      the lines already kept. It returns false for a count outside 0 to 1024.
+	    - get_history_line returns a line as the console shows it, without its level, such as
+	      "file.c:12: text" (255 bytes at most). Index 0 is the oldest.
+	    - get_history_level returns that line's level.
+	    - For an index outside the lines kept, they return "" and TRACE.
+
+	    A line read is a copy, valid until the next read. Lines below the level aren't kept,
+	    just as they aren't shown.
 	**/
 	public static inline function getHistoryLine(index:Int):String
 		return Raw.wgf_log_get_history_line(index);
 
 	/**
-	    The last lines logged kept for the program to read, a game's console or a bug report:
-	    raylib's log callback, without the callback. set_history keeps the last `count` (0, the
-	    default, none; at most 1024), forgetting those kept; false for a count outside that.
-	    Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
-	    its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
-	    valid until the next read. Lines below the level aren't kept, as they aren't shown.
+	    Keeps the last lines logged for the program to read, such as for a game's console or a
+	    bug report.
+
+	    - set_history keeps the last `count` lines, at most 1024 (default: 0, none). It forgets
+	      the lines already kept. It returns false for a count outside 0 to 1024.
+	    - get_history_line returns a line as the console shows it, without its level, such as
+	      "file.c:12: text" (255 bytes at most). Index 0 is the oldest.
+	    - get_history_level returns that line's level.
+	    - For an index outside the lines kept, they return "" and TRACE.
+
+	    A line read is a copy, valid until the next read. Lines below the level aren't kept,
+	    just as they aren't shown.
 	**/
 	public static inline function getHistoryLevel(index:Int):LogLevel
 		return Raw.wgf_log_get_history_level(index);
 
 	/**
-	    The last lines logged kept for the program to read, a game's console or a bug report:
-	    raylib's log callback, without the callback. set_history keeps the last `count` (0, the
-	    default, none; at most 1024), forgetting those kept; false for a count outside that.
-	    Each line as the console has it but its level ("file.c:12: text", 255 bytes at most) with
-	    its level, 0 the oldest; "" and TRACE for an index outside them. A line read is a copy,
-	    valid until the next read. Lines below the level aren't kept, as they aren't shown.
+	    Keeps the last lines logged for the program to read, such as for a game's console or a
+	    bug report.
+
+	    - set_history keeps the last `count` lines, at most 1024 (default: 0, none). It forgets
+	      the lines already kept. It returns false for a count outside 0 to 1024.
+	    - get_history_line returns a line as the console shows it, without its level, such as
+	      "file.c:12: text" (255 bytes at most). Index 0 is the oldest.
+	    - get_history_level returns that line's level.
+	    - For an index outside the lines kept, they return "" and TRACE.
+
+	    A line read is a copy, valid until the next read. Lines below the level aren't kept,
+	    just as they aren't shown.
 	**/
 	public static inline function clearHistory():Void
 		Raw.wgf_log_clear_history();
 
 	/**
-	    Log one message.
+	    Logs one message.
 	**/
 	public static inline function message(level:LogLevel, text:String):Void
 		Raw.wgf_log_message(level, text);
 
 	/**
-	    Log one message with the file and line it came from.
+	    Logs one message with the file and line it came from.
 	**/
 	public static inline function messageSource(level:LogLevel, file:String, line:Int, text:String):Void
 		Raw.wgf_log_message_source(level, file, line, text);

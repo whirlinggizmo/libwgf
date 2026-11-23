@@ -2,9 +2,12 @@
 package wgf;
 
 /**
-    The cursor's shape over the window, sokol_app's set: DEFAULT the system's, a hand over a
-    button, an I-beam over text, the resizing arrows. Nothing on a phone. False for one that
-    isn't one.
+    The cursor's shape over the window, set and read with wgf_mouse_set_cursor and
+    wgf_mouse_get_cursor.
+
+    DEFAULT is the system's cursor. The others include a hand over a button, an I-beam over
+    text, and the resizing arrows. Setting it does nothing on a phone. wgf_mouse_set_cursor
+    returns false for a value that isn't a cursor.
 **/
 enum abstract MouseCursor(Int) from Int to Int {
 	var DEFAULT = 0;

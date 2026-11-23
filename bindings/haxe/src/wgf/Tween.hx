@@ -4,7 +4,7 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    A tween, an object: a handle of kind "ecs.tween".
+    A tween is an object: a handle of kind "ecs.tween".
 
     A handle of kind wgf_tween_t (libwgf/ecs/include/wgf_tween.h): 0 is none.
 **/
@@ -18,124 +18,157 @@ abstract Tween(Int) from Int to Int to wgf.Handle {
 		return (this : Handle).isAlive();
 
 	/**
-	    Tweens, helix-legacy's Tweens: a number, or an actor's position, turn, or scale, moved to
-	    a value over seconds on an ease (wgf_ease.h), stepped on the tick clock (wgf_loop.h), so
-	    an autopilot's run is the same each time. An actor's starts from where the actor is when
-	    it begins (after its delay), and ends with the actor: a tween of an actor destroyed is let
-	    go of. A tween that ends (its repeats done) is let go of too, its handle dead
-	    (wgf_handle_is_alive): what a program asks to know it ended. At most 4096.
+	    Tweens: move a number, or an actor's position, turn, or scale, to a value over seconds on an
+	    ease (wgf_ease.h).
 
-	    Each makes a tween, running; 0 for seconds not above 0 or not finite, an actor that isn't
-	    one, or no room.
+	    Tweens step on the tick clock (wgf_loop.h), so an autopilot's run is the same each time.
+
+	    - An actor's tween starts from where the actor is when the tween begins, after its delay.
+	    - It ends with the actor: a tween of a destroyed actor is let go of.
+	    - A tween that ends, its repeats done, is let go of too. Its handle is then dead (see
+	      wgf_handle_is_alive), which is how your game knows it ended.
+	    - There can be at most 4096 tweens.
+
+	    Each call below creates a tween, running. Each returns 0 for `seconds` not above 0 or not
+	    finite, an actor that isn't one, or no room for another tween.
 	**/
 	public static inline function create(from:Float, to:Float, seconds:Float, easing:Easing):Tween
 		return Raw.wgf_tween_create(from, to, seconds, easing);
 
 	/**
-	    Tweens, helix-legacy's Tweens: a number, or an actor's position, turn, or scale, moved to
-	    a value over seconds on an ease (wgf_ease.h), stepped on the tick clock (wgf_loop.h), so
-	    an autopilot's run is the same each time. An actor's starts from where the actor is when
-	    it begins (after its delay), and ends with the actor: a tween of an actor destroyed is let
-	    go of. A tween that ends (its repeats done) is let go of too, its handle dead
-	    (wgf_handle_is_alive): what a program asks to know it ended. At most 4096.
+	    Tweens: move a number, or an actor's position, turn, or scale, to a value over seconds on an
+	    ease (wgf_ease.h).
 
-	    Each makes a tween, running; 0 for seconds not above 0 or not finite, an actor that isn't
-	    one, or no room.
+	    Tweens step on the tick clock (wgf_loop.h), so an autopilot's run is the same each time.
+
+	    - An actor's tween starts from where the actor is when the tween begins, after its delay.
+	    - It ends with the actor: a tween of a destroyed actor is let go of.
+	    - A tween that ends, its repeats done, is let go of too. Its handle is then dead (see
+	      wgf_handle_is_alive), which is how your game knows it ended.
+	    - There can be at most 4096 tweens.
+
+	    Each call below creates a tween, running. Each returns 0 for `seconds` not above 0 or not
+	    finite, an actor that isn't one, or no room for another tween.
 	**/
 	public static inline function move(actor:Actor, x:Float, y:Float, z:Float, seconds:Float, easing:Easing):Tween
 		return Raw.wgf_tween_move(actor, x, y, z, seconds, easing);
 
 	/**
-	    Tweens, helix-legacy's Tweens: a number, or an actor's position, turn, or scale, moved to
-	    a value over seconds on an ease (wgf_ease.h), stepped on the tick clock (wgf_loop.h), so
-	    an autopilot's run is the same each time. An actor's starts from where the actor is when
-	    it begins (after its delay), and ends with the actor: a tween of an actor destroyed is let
-	    go of. A tween that ends (its repeats done) is let go of too, its handle dead
-	    (wgf_handle_is_alive): what a program asks to know it ended. At most 4096.
+	    Tweens: move a number, or an actor's position, turn, or scale, to a value over seconds on an
+	    ease (wgf_ease.h).
 
-	    Each makes a tween, running; 0 for seconds not above 0 or not finite, an actor that isn't
-	    one, or no room.
+	    Tweens step on the tick clock (wgf_loop.h), so an autopilot's run is the same each time.
+
+	    - An actor's tween starts from where the actor is when the tween begins, after its delay.
+	    - It ends with the actor: a tween of a destroyed actor is let go of.
+	    - A tween that ends, its repeats done, is let go of too. Its handle is then dead (see
+	      wgf_handle_is_alive), which is how your game knows it ended.
+	    - There can be at most 4096 tweens.
+
+	    Each call below creates a tween, running. Each returns 0 for `seconds` not above 0 or not
+	    finite, an actor that isn't one, or no room for another tween.
 	**/
 	public static inline function turn(actor:Actor, x:Float, y:Float, z:Float, seconds:Float, easing:Easing):Tween
 		return Raw.wgf_tween_turn(actor, x, y, z, seconds, easing);
 
 	/**
-	    Tweens, helix-legacy's Tweens: a number, or an actor's position, turn, or scale, moved to
-	    a value over seconds on an ease (wgf_ease.h), stepped on the tick clock (wgf_loop.h), so
-	    an autopilot's run is the same each time. An actor's starts from where the actor is when
-	    it begins (after its delay), and ends with the actor: a tween of an actor destroyed is let
-	    go of. A tween that ends (its repeats done) is let go of too, its handle dead
-	    (wgf_handle_is_alive): what a program asks to know it ended. At most 4096.
+	    Tweens: move a number, or an actor's position, turn, or scale, to a value over seconds on an
+	    ease (wgf_ease.h).
 
-	    Each makes a tween, running; 0 for seconds not above 0 or not finite, an actor that isn't
-	    one, or no room.
+	    Tweens step on the tick clock (wgf_loop.h), so an autopilot's run is the same each time.
+
+	    - An actor's tween starts from where the actor is when the tween begins, after its delay.
+	    - It ends with the actor: a tween of a destroyed actor is let go of.
+	    - A tween that ends, its repeats done, is let go of too. Its handle is then dead (see
+	      wgf_handle_is_alive), which is how your game knows it ended.
+	    - There can be at most 4096 tweens.
+
+	    Each call below creates a tween, running. Each returns 0 for `seconds` not above 0 or not
+	    finite, an actor that isn't one, or no room for another tween.
 	**/
 	public static inline function scale(actor:Actor, x:Float, y:Float, z:Float, seconds:Float, easing:Easing):Tween
 		return Raw.wgf_tween_scale(actor, x, y, z, seconds, easing);
 
 	/**
-	    Let go of at once, where it is. Nothing for a handle that isn't a tween.
+	    Lets go of a tween at once, leaving its value, or its actor, where it is. Does nothing for
+	    a handle that isn't a tween.
 	**/
 	public inline function destroy():Void
 		Raw.wgf_tween_destroy(this);
 
 	/**
-	    A number's tween's value now (from, to, or between); an actor's tween's eased progress, 0
-	    to 1. 0 for a handle that isn't a tween.
+	    Returns a tween's value now.
+
+	    - For a number's tween: the value, from `from` to `to` or between.
+	    - For an actor's tween: its eased progress, 0 to 1.
+
+	    Returns 0 for a handle that isn't a tween.
 	**/
 	public inline function getValue():Float
 		return Raw.wgf_tween_get_value(this);
 
 	/**
-	    The seconds it waits before it begins (0 by default), set before it begins. Refuses a
-	    negative or non-finite one, and one begun.
+	    Sets or gets the seconds a tween waits before it begins (default: 0). Set it before the
+	    tween begins. The setter refuses a negative or non-finite delay, and a tween already
+	    begun.
 	**/
 	public inline function setDelay(seconds:Float):Bool
 		return Raw.wgf_tween_set_delay(this, seconds);
 
 	/**
-	    The seconds it waits before it begins (0 by default), set before it begins. Refuses a
-	    negative or non-finite one, and one begun.
+	    Sets or gets the seconds a tween waits before it begins (default: 0). Set it before the
+	    tween begins. The setter refuses a negative or non-finite delay, and a tween already
+	    begun.
 	**/
 	public inline function getDelay():Float
 		return Raw.wgf_tween_get_delay(this);
 
 	/**
-	    How many times more it runs after the first (0 by default; -1 for ever), and whether each
-	    run after the first goes back the way it came (yoyo). Refuses a count below -1.
+	    Sets or gets how many more times a tween runs after the first (default: 0), and whether each
+	    run after the first goes back the way it came (yoyo).
+
+	    A repeat of -1 runs it for ever. set_repeat refuses a count below -1.
 	**/
 	public inline function setRepeat(count:Int):Bool
 		return Raw.wgf_tween_set_repeat(this, count);
 
 	/**
-	    How many times more it runs after the first (0 by default; -1 for ever), and whether each
-	    run after the first goes back the way it came (yoyo). Refuses a count below -1.
+	    Sets or gets how many more times a tween runs after the first (default: 0), and whether each
+	    run after the first goes back the way it came (yoyo).
+
+	    A repeat of -1 runs it for ever. set_repeat refuses a count below -1.
 	**/
 	public inline function getRepeat():Int
 		return Raw.wgf_tween_get_repeat(this);
 
 	/**
-	    How many times more it runs after the first (0 by default; -1 for ever), and whether each
-	    run after the first goes back the way it came (yoyo). Refuses a count below -1.
+	    Sets or gets how many more times a tween runs after the first (default: 0), and whether each
+	    run after the first goes back the way it came (yoyo).
+
+	    A repeat of -1 runs it for ever. set_repeat refuses a count below -1.
 	**/
 	public inline function setYoyo(yoyo:Bool):Bool
 		return Raw.wgf_tween_set_yoyo(this, yoyo);
 
 	/**
-	    How many times more it runs after the first (0 by default; -1 for ever), and whether each
-	    run after the first goes back the way it came (yoyo). Refuses a count below -1.
+	    Sets or gets how many more times a tween runs after the first (default: 0), and whether each
+	    run after the first goes back the way it came (yoyo).
+
+	    A repeat of -1 runs it for ever. set_repeat refuses a count below -1.
 	**/
 	public inline function isYoyo():Bool
 		return Raw.wgf_tween_is_yoyo(this);
 
 	/**
-	    Held where it is, and on again. False only for a handle that isn't a tween.
+	    Pauses a tween where it is, or runs it again, or gets whether it is paused. Returns false
+	    only for a handle that isn't a tween.
 	**/
 	public inline function setPaused(paused:Bool):Bool
 		return Raw.wgf_tween_set_paused(this, paused);
 
 	/**
-	    Held where it is, and on again. False only for a handle that isn't a tween.
+	    Pauses a tween where it is, or runs it again, or gets whether it is paused. Returns false
+	    only for a handle that isn't a tween.
 	**/
 	public inline function isPaused():Bool
 		return Raw.wgf_tween_is_paused(this);

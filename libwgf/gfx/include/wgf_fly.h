@@ -11,64 +11,89 @@
 extern "C" {
 #endif
 
-/* Cameras flown by input, raylib's CAMERA_FREE and CAMERA_FIRST_PERSON (UpdateCamera): a 3D
- * camera actor (wgf_camera3d.h) given a mode is turned and moved each frame, before the frame
- * callback, by the keyboard, the mouse, and the pads. At most 64 cameras have a mode or a
- * setting.
+/* Cameras flown by input: free-fly and first-person.
  *
- *   the mouse            looks: yaw and pitch, the pitch held just short of straight up or
- *                        down; the pointer is locked while it looks (wgf_mouse_set_locked),
- *                        and a click locks it again once the platform let it go (Escape in
- *                        a browser)
+ * A 3D camera actor (wgf_camera3d.h) given a mode is turned and moved each frame, before the
+ * frame callback. The keyboard, the mouse, and the pads fly it. At most 64 cameras have a mode
+ * or a setting.
+ *
+ *   the mouse            looks: yaw and pitch, with the pitch held just short of straight
+ *                        up or down. The pointer is locked while it looks
+ *                        (wgf_mouse_set_locked). A click locks it again once the platform
+ *                        has let it go (Escape in a browser)
  *   the right stick      looks, at the turn speed
- *   W A S D, the arrows  move forward, left, back, and right; the left stick too
- *   Space or E           FREE: up (the world's +y); a pad's right bumper too
- *   Left Control or Q    FREE: down; a pad's left bumper too
+ *   W A S D, the arrows  move forward, left, back, and right. So does the left stick
+ *   Space or E           FREE: up (the world's +y). So does a pad's right bumper
+ *   Left Control or Q    FREE: down. So does a pad's left bumper
  *
- * FREE moves where it looks; FIRST_PERSON moves on the ground plane, its height kept (what
- * the program sets it to: stairs, a jump). Every pad is read, the one pushed furthest
- * winning. Keys aren't read while the keyboard is captured, and the mouse doesn't look while
- * the pointer is (wgf_input.h: a UI has it). The camera's position is read each frame, so the
- * program may move it; it is turned only by the look below while it flies. Every flown
- * camera moves by the same input, so fly one at a time; a camera that also follows
- * (wgf_follow.h) is placed by both. */
+ * - FREE moves where the camera looks.
+ * - FIRST_PERSON moves on the ground plane, and keeps the camera's height. The program sets
+ *   that height, for stairs or a jump.
+ * - Every pad is read, and the one pushed furthest wins.
+ * - Keys aren't read while the keyboard is captured. The mouse doesn't look while the pointer
+ *   is captured, as when a UI has it (wgf_input.h).
+ * - The camera's position is read each frame, so the program may move it. While it flies, only
+ *   the look (wgf_fly_set_look) turns it.
+ * - Every flown camera moves by the same input, so fly one at a time.
+ * - A camera that also follows (wgf_follow.h) is placed by both. */
 
 typedef enum wgf_fly_mode_t {
     WGF_FLY_MODE_NONE = 0,        /* not flown: the program places it (the default) */
-    WGF_FLY_MODE_FREE = 1,        /* free-fly: forward where it looks, up and down by keys */
-    WGF_FLY_MODE_FIRST_PERSON = 2 /* on the ground plane, its height kept */
+    WGF_FLY_MODE_FREE = 1,        /* free-fly: forward is where it looks, and keys move it up and down */
+    WGF_FLY_MODE_FIRST_PERSON = 2 /* on the ground plane, keeping its height */
 } wgf_fly_mode_t;
 
-/* The camera flown in `mode` (NONE: no longer, staying where it is and its settings kept).
- * Starting, its look is taken from where it faces now. False for a camera that isn't a 3D
- * camera, a mode that isn't one, or 64 cameras with a mode or a setting. */
+/* Sets or gets the mode the camera is flown in (default: NONE).
+ *
+ * - NONE stops flying it. It stays where it is, and its settings are kept.
+ * - When it starts flying, its look is taken from where it faces now.
+ *
+ * set_mode returns false if `camera` isn't a 3D camera, if `mode` isn't a mode, or if 64
+ * cameras already have a mode or a setting. */
 WGF_API bool wgf_fly_set_mode(wgf_actor_t camera, wgf_fly_mode_t mode);
 WGF_API wgf_fly_mode_t wgf_fly_get_mode(wgf_actor_t camera);
 
-/* How fast it moves, world units a second (5.4 by default, raylib's); a stick part way, part
- * of it. False for a negative one, and, as every setter here, a camera refused as above. */
+/* Sets or gets how fast the camera moves, in world units a second (default: 5.4).
+ *
+ * A stick pushed part way moves it at that part of the speed.
+ *
+ * set_speed returns false for a negative speed. Like every setter here, it also returns false
+ * for a camera set_mode would refuse. */
 WGF_API bool wgf_fly_set_speed(wgf_actor_t camera, float speed);
 WGF_API float wgf_fly_get_speed(wgf_actor_t camera);
 
-/* How far the mouse turns it, radians a logical pixel (0.003 by default, raylib's); 0: the
- * mouse doesn't look. False for a negative one. */
+/* Sets or gets how far the mouse turns the camera, in radians a logical pixel (default:
+ * 0.003).
+ *
+ * At 0, the mouse doesn't look.
+ *
+ * set_sensitivity returns false for a negative value. */
 WGF_API bool wgf_fly_set_sensitivity(wgf_actor_t camera, float radians);
 WGF_API float wgf_fly_get_sensitivity(wgf_actor_t camera);
 
-/* How fast a stick pushed all the way turns it, radians a second (2 by default). False for
- * a negative one. */
+/* Sets or gets how fast a stick pushed all the way turns the camera, in radians a second
+ * (default: 2).
+ *
+ * set_turn_speed returns false for a negative value. */
 WGF_API bool wgf_fly_set_turn_speed(wgf_actor_t camera, float radians);
 WGF_API float wgf_fly_get_turn_speed(wgf_actor_t camera);
 
-/* Where it looks, turned at once: `yaw` radians about y (0 facing -z, a quarter turn
- * facing -x), `pitch` radians up (clamped to just short of straight up or down). Read back
- * as where it looks now, yaw (-pi to pi) and pitch. False for a value not finite. */
+/* Sets or gets where the camera looks. Setting it turns the camera at once.
+ *
+ * - `yaw` is in radians about y. 0 faces -z, and a quarter turn faces -x.
+ * - `pitch` is in radians up, clamped to just short of straight up or down.
+ *
+ * get_look returns where it looks now, as yaw (-pi to pi) and pitch.
+ *
+ * set_look returns false for a value that isn't finite. */
 WGF_API bool wgf_fly_set_look(wgf_actor_t camera, float yaw, float pitch);
 WGF_API wgf_vec2_t wgf_fly_get_look(wgf_actor_t camera);
 
-/* The mouse looking only while its right button is held, the pointer locked while it is (a
- * debug camera beside a game's own clicks); false (the default): always, the pointer locked
- * while it flies. */
+/* Sets or gets whether the mouse looks only while its right button is held (default: false).
+ *
+ * - true: the mouse looks only while the right button is held, and the pointer is locked while
+ *   it is. Use it for a debug camera beside a game's own clicks.
+ * - false: the mouse always looks, and the pointer is locked while the camera flies. */
 WGF_API bool wgf_fly_set_look_held(wgf_actor_t camera, bool held);
 WGF_API bool wgf_fly_is_look_held(wgf_actor_t camera);
 

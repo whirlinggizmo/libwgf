@@ -4,41 +4,55 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    A Tiled map, a resource: a handle of kind "gfx.tilemap".
+    A Tiled map: a resource handle of kind "gfx.tilemap".
 
-    A Tiled map (mapeditor.org), helix-legacy's TiledMap2D: a resource (wgf_resource.h) loaded
-    from its JSON, a `.tmj` file (Tiled's Save As, JSON map format), with its tilesets, each
-    embedded or a `.tsj` file beside it, and each one image cut into a grid of tiles (margin
-    and spacing as Tiled's). On the web the tilesets and their images named by a `.tmj` or a
-    `.tsj` are fetched with it. Its images are textures (wgf_texture.h) sampled nearest, for
-    pixel art; the map holds a reference to each.
+    A Tiled map (mapeditor.org), loaded as a resource (wgf_resource.h).
 
-    What is read: an orthogonal, isometric, staggered, or hexagonal map (its stagger axis and
-    index, its hexagons' side length, an orthogonal map's render order), finite or infinite;
-    its tile layers (CSV, or base64 plain, zlib, or gzip; an infinite map's in chunks), object
-    layers (their draw order), and image layers (their image); groups, flattened into the
-    layers inside them in their order, each named as its own and offset, faded, and hidden
-    with its groups; each tileset's tiles' classes, custom properties, and animations, its
-    object alignment, and its terrain (Wang) sets; every object's shape, place, size, turn,
-    tile, and custom properties; and the custom properties of the map and its layers. What
-    fails the load, logged naming the file: image-collection tilesets, zstd-compressed layers,
-    a tileset `.tsx` (save it as JSON, `.tsj`). Not read: an image layer's repeat, layers'
-    parallax and tint colors, and Tiled's older terrains (before 1.5: open and save the map in
-    a newer Tiled).
+    A map is loaded from its JSON: a `.tmj` file, from Tiled's Save As in the JSON map format.
+    Its tilesets are each embedded, or a `.tsj` file beside it. Each tileset is one image, cut
+    into a grid of tiles, with margin and spacing as Tiled has them. On the web, the tilesets
+    and images that a `.tmj` or `.tsj` names are fetched with it. The images are textures
+    (wgf_texture.h), sampled nearest for pixel art. The map holds a reference to each.
 
-    An infinite map is read as a finite one the size of the box its chunks fill: its cells
-    counted from that box's top-left cell, which is Tiled's column and row
-    get_origin_column and get_origin_row give (negative, for chunks left of or above Tiled's
-    first cell). It is drawn and its objects placed where Tiled has them.
+    What is read:
+    - Orthogonal, isometric, staggered, and hexagonal maps, finite or infinite. This includes
+      the stagger axis and index, the hexagons' side length, and an orthogonal map's render
+      order.
+    - Tile layers: CSV, or base64 plain, zlib, or gzip. An infinite map's come in chunks.
+    - Object layers, with their draw order, and image layers, with their image.
+    - Groups, flattened into the layers inside them, in their order. Each layer is named as
+      its own, and is offset, faded, and hidden with its groups.
+    - Each tileset's tile classes, custom properties, and animations, its object alignment,
+      and its terrain (Wang) sets.
+    - Every object's shape, place, size, turn, tile, and custom properties.
+    - The custom properties of the map and its layers.
 
-    A map loaded again in place (wgf_asset_reload, of its file, or of a tileset file or an
-    image it names) keeps its handle and is READY all the while; once the new file is in, each
-    placed copy of it is built again (wgf_tilemap_instantiate).
+    What fails the load (logged, naming the file):
+    - image-collection tilesets;
+    - zstd-compressed layers;
+    - a `.tsx` tileset. Save it as JSON, `.tsj`, instead.
 
-    Everything is read once READY, and 0, "", or none before (and for a handle that isn't a
-    map). Layers are counted in drawing order, groups flattened (the first under the rest);
-    a tile is named by its global id (gid), as Tiled numbers a map's tiles across its
-    tilesets from 1, its flips apart (0 is no tile).
+    What isn't read:
+    - an image layer's repeat;
+    - layers' parallax and tint colors;
+    - Tiled's older terrains, from before 1.5. Open and save the map in a newer Tiled.
+
+    An infinite map is read as a finite one, the size of the box its chunks fill. Its cells
+    count from that box's top-left cell. get_origin_column and get_origin_row give that cell's
+    Tiled column and row. They are negative for chunks left of or above Tiled's first cell. The
+    map is drawn, and its objects placed, where Tiled has them.
+
+    A map can be loaded again in place (wgf_asset_reload), from its file, or from a tileset file
+    or image it names. It keeps its handle, and stays READY all the while. Once the new file is
+    in, each placed copy of the map is built again (wgf_tilemap_instantiate).
+
+    The map's data can be read once the map is READY. Before that, and for a handle that isn't a map,
+    the calls return 0, "", or none.
+
+    - Layers are counted in drawing order, with groups flattened. The first layer is under the
+      rest.
+    - A tile is named by its global id (gid), apart from its flips. Tiled numbers a map's tiles
+      from 1, across its tilesets. A gid of 0 is no tile.
 
     A handle of kind wgf_tilemap_t (libwgf/gfx/include/wgf_tilemap.h): 0 is none.
 **/
@@ -52,582 +66,880 @@ abstract Tilemap(Int) from Int to Int to wgf.Handle {
 		return (this : Handle).isAlive();
 
 	/**
-	    The map at `path` (a `.tmj` file): loaded as a resource is (PENDING at once, READY or FAILED
-	    in a later update), its tilesets' images too. The same path again gives the same map, with
-	    one more reference. 0 only when there is no room for another.
+	    Creates the map at `path`, a `.tmj` file, with its tilesets' images.
+
+	    It loads as a resource does: it is PENDING at once, and READY or FAILED in a later update.
+	    The same path again returns the same map, with one more reference. Returns 0 only if there
+	    is no room for another map.
 	**/
 	public static inline function create(path:String):Tilemap
 		return Raw.wgf_tilemap_create(path);
 
 	/**
-	    Its size in tiles, and a tile's size in pixels.
+	    Returns the map's size in tiles, and a tile's size in pixels.
 	**/
 	public inline function getColumns():Int
 		return Raw.wgf_tilemap_get_columns(this);
 
 	/**
-	    Its size in tiles, and a tile's size in pixels.
+	    Returns the map's size in tiles, and a tile's size in pixels.
 	**/
 	public inline function getRows():Int
 		return Raw.wgf_tilemap_get_rows(this);
 
 	/**
-	    Its size in tiles, and a tile's size in pixels.
+	    Returns the map's size in tiles, and a tile's size in pixels.
 	**/
 	public inline function getTileWidth():Int
 		return Raw.wgf_tilemap_get_tile_width(this);
 
 	/**
-	    Its size in tiles, and a tile's size in pixels.
+	    Returns the map's size in tiles, and a tile's size in pixels.
 	**/
 	public inline function getTileHeight():Int
 		return Raw.wgf_tilemap_get_tile_height(this);
 
 	/**
-	    Its background color (Tiled's), 0 when it has none.
+	    Returns the map's background color, as Tiled sets it, or 0 if it has none.
 	**/
 	public inline function getBackgroundColor():Int
 		return Raw.wgf_tilemap_get_background_color(this);
 
 	/**
-	    How its cells are laid out, and whether it is infinite (NONE and false for a map not READY).
+	    Returns how the map's cells are laid out, and whether it is infinite. Returns NONE and false
+	    for a map that isn't READY.
 	**/
 	public inline function getOrientation():TilemapOrientation
 		return Raw.wgf_tilemap_get_orientation(this);
 
 	/**
-	    How its cells are laid out, and whether it is infinite (NONE and false for a map not READY).
+	    Returns how the map's cells are laid out, and whether it is infinite. Returns NONE and false
+	    for a map that isn't READY.
 	**/
 	public inline function isInfinite():Bool
 		return Raw.wgf_tilemap_is_infinite(this);
 
 	/**
-	    Tiled's column and row of its cell 0, 0: an infinite map's chunks' top-left, 0 for a
-	    finite map.
+	    Returns Tiled's column and row of the map's cell 0, 0. For an infinite map, that is its
+	    chunks' top-left. For a finite map, it is 0.
 	**/
 	public inline function getOriginColumn():Int
 		return Raw.wgf_tilemap_get_origin_column(this);
 
 	/**
-	    Tiled's column and row of its cell 0, 0: an infinite map's chunks' top-left, 0 for a
-	    finite map.
+	    Returns Tiled's column and row of the map's cell 0, 0. For an infinite map, that is its
+	    chunks' top-left. For a finite map, it is 0.
 	**/
 	public inline function getOriginRow():Int
 		return Raw.wgf_tilemap_get_origin_row(this);
 
 	/**
-	    The size of the box its cells cover, in its pixels, as Tiled gives a map's size (an
-	    isometric map's diamond's box; a staggered or hexagonal map's, its tile size made even).
+	    Returns the size of the box the map's cells cover, in the map's pixels, as Tiled gives a
+	    map's size.
+
+	    - For an isometric map, it is the box around its diamond.
+	    - For a staggered or hexagonal map, it is figured with the tile size made even.
 	**/
 	public inline function getPixelWidth():Int
 		return Raw.wgf_tilemap_get_pixel_width(this);
 
 	/**
-	    The size of the box its cells cover, in its pixels, as Tiled gives a map's size (an
-	    isometric map's diamond's box; a staggered or hexagonal map's, its tile size made even).
+	    Returns the size of the box the map's cells cover, in the map's pixels, as Tiled gives a
+	    map's size.
+
+	    - For an isometric map, it is the box around its diamond.
+	    - For a staggered or hexagonal map, it is figured with the tile size made even.
 	**/
 	public inline function getPixelHeight():Int
 		return Raw.wgf_tilemap_get_pixel_height(this);
 
 	/**
-	    Where a cell is, in the map's pixels from its top-left (y down; a layer's offset not
-	    added, wgf_tilemap_layer.h's calls add it): the middle of cell `column`, `row`'s shape (a
-	    rectangle, a diamond, or a hexagon), outside the map too; and the column and the row whose
-	    shape holds the point `x`, `y` (outside the map too: below 0, or its columns or rows and
-	    past), as Tiled finds them. 0 for a map that isn't READY.
+	    Converts between cells and points, in the map's pixels from its top-left, y down, as Tiled
+	    finds them.
+
+	    - get_cell_middle returns the middle of the shape of cell `column`, `row`: a rectangle, a
+	      diamond, or a hexagon. It works outside the map too.
+	    - get_column_at and get_row_at return the column and row whose shape holds the point `x`,
+	      `y`. They work outside the map too: below 0, or at its columns or rows and past.
+
+	    A layer's offset isn't added here. wgf_tilemap_layer.h's calls add it. Returns 0 for a map
+	    that isn't READY.
 	**/
 	public inline function getCellMiddle(column:Int, row:Int, ?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_tilemap_get_cell_middle(this, column, row, into);
 
 	/**
-	    Where a cell is, in the map's pixels from its top-left (y down; a layer's offset not
-	    added, wgf_tilemap_layer.h's calls add it): the middle of cell `column`, `row`'s shape (a
-	    rectangle, a diamond, or a hexagon), outside the map too; and the column and the row whose
-	    shape holds the point `x`, `y` (outside the map too: below 0, or its columns or rows and
-	    past), as Tiled finds them. 0 for a map that isn't READY.
+	    Converts between cells and points, in the map's pixels from its top-left, y down, as Tiled
+	    finds them.
+
+	    - get_cell_middle returns the middle of the shape of cell `column`, `row`: a rectangle, a
+	      diamond, or a hexagon. It works outside the map too.
+	    - get_column_at and get_row_at return the column and row whose shape holds the point `x`,
+	      `y`. They work outside the map too: below 0, or at its columns or rows and past.
+
+	    A layer's offset isn't added here. wgf_tilemap_layer.h's calls add it. Returns 0 for a map
+	    that isn't READY.
 	**/
 	public inline function getColumnAt(x:Float, y:Float):Int
 		return Raw.wgf_tilemap_get_column_at(this, x, y);
 
 	/**
-	    Where a cell is, in the map's pixels from its top-left (y down; a layer's offset not
-	    added, wgf_tilemap_layer.h's calls add it): the middle of cell `column`, `row`'s shape (a
-	    rectangle, a diamond, or a hexagon), outside the map too; and the column and the row whose
-	    shape holds the point `x`, `y` (outside the map too: below 0, or its columns or rows and
-	    past), as Tiled finds them. 0 for a map that isn't READY.
+	    Converts between cells and points, in the map's pixels from its top-left, y down, as Tiled
+	    finds them.
+
+	    - get_cell_middle returns the middle of the shape of cell `column`, `row`: a rectangle, a
+	      diamond, or a hexagon. It works outside the map too.
+	    - get_column_at and get_row_at return the column and row whose shape holds the point `x`,
+	      `y`. They work outside the map too: below 0, or at its columns or rows and past.
+
+	    A layer's offset isn't added here. wgf_tilemap_layer.h's calls add it. Returns 0 for a map
+	    that isn't READY.
 	**/
 	public inline function getRowAt(x:Float, y:Float):Int
 		return Raw.wgf_tilemap_get_row_at(this, x, y);
 
 	/**
-	    Its layers, groups flattened, in drawing order: how many, one's name and kind (NONE past
-	    the end), and the first named `name` (-1 for none).
+	    Returns the map's layers, with groups flattened, in drawing order.
+
+	    - get_layer_count returns how many layers there are.
+	    - get_layer_name and get_layer_kind return one layer's name and kind. The kind is NONE past
+	      the end.
+	    - find_layer returns the first layer named `name`, or -1 for none.
 	**/
 	public inline function getLayerCount():Int
 		return Raw.wgf_tilemap_get_layer_count(this);
 
 	/**
-	    Its layers, groups flattened, in drawing order: how many, one's name and kind (NONE past
-	    the end), and the first named `name` (-1 for none).
+	    Returns the map's layers, with groups flattened, in drawing order.
+
+	    - get_layer_count returns how many layers there are.
+	    - get_layer_name and get_layer_kind return one layer's name and kind. The kind is NONE past
+	      the end.
+	    - find_layer returns the first layer named `name`, or -1 for none.
 	**/
 	public inline function getLayerName(layer:Int):String
 		return Raw.wgf_tilemap_get_layer_name(this, layer);
 
 	/**
-	    Its layers, groups flattened, in drawing order: how many, one's name and kind (NONE past
-	    the end), and the first named `name` (-1 for none).
+	    Returns the map's layers, with groups flattened, in drawing order.
+
+	    - get_layer_count returns how many layers there are.
+	    - get_layer_name and get_layer_kind return one layer's name and kind. The kind is NONE past
+	      the end.
+	    - find_layer returns the first layer named `name`, or -1 for none.
 	**/
 	public inline function getLayerKind(layer:Int):TilemapLayerKind
 		return Raw.wgf_tilemap_get_layer_kind(this, layer);
 
 	/**
-	    Its layers, groups flattened, in drawing order: how many, one's name and kind (NONE past
-	    the end), and the first named `name` (-1 for none).
+	    Returns the map's layers, with groups flattened, in drawing order.
+
+	    - get_layer_count returns how many layers there are.
+	    - get_layer_name and get_layer_kind return one layer's name and kind. The kind is NONE past
+	      the end.
+	    - find_layer returns the first layer named `name`, or -1 for none.
 	**/
 	public inline function findLayer(name:String):Int
 		return Raw.wgf_tilemap_find_layer(this, name);
 
 	/**
-	    An image layer's image (a texture sampled nearest, the map's reference), 0 for a layer of
-	    another kind or one with no image.
+	    Returns an image layer's image: a texture sampled nearest, whose reference is the map's.
+	    Returns 0 for a layer of another kind, or one with no image.
 	**/
 	public inline function getLayerTexture(layer:Int):Texture
 		return Raw.wgf_tilemap_get_layer_texture(this, layer);
 
 	/**
-	    Its tilesets by first gid: how many, one's name, its first gid, how many tiles it has, and
-	    its image (0 past the end).
+	    Returns the map's tilesets, in order of first gid: how many there are, and one tileset's
+	    name, first gid, tile count, and image. Past the end, each returns 0, and the name "".
 	**/
 	public inline function getTilesetCount():Int
 		return Raw.wgf_tilemap_get_tileset_count(this);
 
 	/**
-	    Its tilesets by first gid: how many, one's name, its first gid, how many tiles it has, and
-	    its image (0 past the end).
+	    Returns the map's tilesets, in order of first gid: how many there are, and one tileset's
+	    name, first gid, tile count, and image. Past the end, each returns 0, and the name "".
 	**/
 	public inline function getTilesetName(tileset:Int):String
 		return Raw.wgf_tilemap_get_tileset_name(this, tileset);
 
 	/**
-	    Its tilesets by first gid: how many, one's name, its first gid, how many tiles it has, and
-	    its image (0 past the end).
+	    Returns the map's tilesets, in order of first gid: how many there are, and one tileset's
+	    name, first gid, tile count, and image. Past the end, each returns 0, and the name "".
 	**/
 	public inline function getTilesetFirstGid(tileset:Int):Int
 		return Raw.wgf_tilemap_get_tileset_first_gid(this, tileset);
 
 	/**
-	    Its tilesets by first gid: how many, one's name, its first gid, how many tiles it has, and
-	    its image (0 past the end).
+	    Returns the map's tilesets, in order of first gid: how many there are, and one tileset's
+	    name, first gid, tile count, and image. Past the end, each returns 0, and the name "".
 	**/
 	public inline function getTilesetTileCount(tileset:Int):Int
 		return Raw.wgf_tilemap_get_tileset_tile_count(this, tileset);
 
 	/**
-	    Its tilesets by first gid: how many, one's name, its first gid, how many tiles it has, and
-	    its image (0 past the end).
+	    Returns the map's tilesets, in order of first gid: how many there are, and one tileset's
+	    name, first gid, tile count, and image. Past the end, each returns 0, and the name "".
 	**/
 	public inline function getTilesetTexture(tileset:Int):Texture
 		return Raw.wgf_tilemap_get_tileset_texture(this, tileset);
 
 	/**
-	    An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
-	    each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
-	    the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
-	    shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
-	    polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
-	    Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
-	    object or layer that isn't one.
+	    Returns an object layer's objects, in Tiled's order.
+
+	    - get_object_count returns how many there are, or 0 for a layer of another kind.
+	    - get_object_id returns the object's id in the map.
+	    - get_object_name returns its name.
+	    - get_object_class returns its class: Tiled's Class, or Type before 1.9.
+	    - get_object_shape returns its shape.
+	    - get_object_position returns its place, in the map's pixels from the map's top-left, y
+	      down. That is a tile object's bottom-left corner, a point's point, and any other shape's
+	      top-left. Its layer's offset isn't added.
+	    - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
+	    - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
+	    - is_object_visible returns whether Tiled shows it.
+	    - get_object_tile returns a tile object's gid, or 0 for another shape.
+
+	    Each returns "", 0, or none for an object or layer that isn't one.
 	**/
 	public inline function getObjectCount(layer:Int):Int
 		return Raw.wgf_tilemap_get_object_count(this, layer);
 
 	/**
-	    An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
-	    each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
-	    the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
-	    shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
-	    polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
-	    Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
-	    object or layer that isn't one.
+	    Returns an object layer's objects, in Tiled's order.
+
+	    - get_object_count returns how many there are, or 0 for a layer of another kind.
+	    - get_object_id returns the object's id in the map.
+	    - get_object_name returns its name.
+	    - get_object_class returns its class: Tiled's Class, or Type before 1.9.
+	    - get_object_shape returns its shape.
+	    - get_object_position returns its place, in the map's pixels from the map's top-left, y
+	      down. That is a tile object's bottom-left corner, a point's point, and any other shape's
+	      top-left. Its layer's offset isn't added.
+	    - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
+	    - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
+	    - is_object_visible returns whether Tiled shows it.
+	    - get_object_tile returns a tile object's gid, or 0 for another shape.
+
+	    Each returns "", 0, or none for an object or layer that isn't one.
 	**/
 	public inline function getObjectId(layer:Int, object:Int):Int
 		return Raw.wgf_tilemap_get_object_id(this, layer, object);
 
 	/**
-	    An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
-	    each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
-	    the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
-	    shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
-	    polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
-	    Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
-	    object or layer that isn't one.
+	    Returns an object layer's objects, in Tiled's order.
+
+	    - get_object_count returns how many there are, or 0 for a layer of another kind.
+	    - get_object_id returns the object's id in the map.
+	    - get_object_name returns its name.
+	    - get_object_class returns its class: Tiled's Class, or Type before 1.9.
+	    - get_object_shape returns its shape.
+	    - get_object_position returns its place, in the map's pixels from the map's top-left, y
+	      down. That is a tile object's bottom-left corner, a point's point, and any other shape's
+	      top-left. Its layer's offset isn't added.
+	    - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
+	    - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
+	    - is_object_visible returns whether Tiled shows it.
+	    - get_object_tile returns a tile object's gid, or 0 for another shape.
+
+	    Each returns "", 0, or none for an object or layer that isn't one.
 	**/
 	public inline function getObjectName(layer:Int, object:Int):String
 		return Raw.wgf_tilemap_get_object_name(this, layer, object);
 
 	/**
-	    An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
-	    each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
-	    the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
-	    shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
-	    polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
-	    Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
-	    object or layer that isn't one.
+	    Returns an object layer's objects, in Tiled's order.
+
+	    - get_object_count returns how many there are, or 0 for a layer of another kind.
+	    - get_object_id returns the object's id in the map.
+	    - get_object_name returns its name.
+	    - get_object_class returns its class: Tiled's Class, or Type before 1.9.
+	    - get_object_shape returns its shape.
+	    - get_object_position returns its place, in the map's pixels from the map's top-left, y
+	      down. That is a tile object's bottom-left corner, a point's point, and any other shape's
+	      top-left. Its layer's offset isn't added.
+	    - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
+	    - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
+	    - is_object_visible returns whether Tiled shows it.
+	    - get_object_tile returns a tile object's gid, or 0 for another shape.
+
+	    Each returns "", 0, or none for an object or layer that isn't one.
 	**/
 	public inline function getObjectClass(layer:Int, object:Int):String
 		return Raw.wgf_tilemap_get_object_class(this, layer, object);
 
 	/**
-	    An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
-	    each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
-	    the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
-	    shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
-	    polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
-	    Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
-	    object or layer that isn't one.
+	    Returns an object layer's objects, in Tiled's order.
+
+	    - get_object_count returns how many there are, or 0 for a layer of another kind.
+	    - get_object_id returns the object's id in the map.
+	    - get_object_name returns its name.
+	    - get_object_class returns its class: Tiled's Class, or Type before 1.9.
+	    - get_object_shape returns its shape.
+	    - get_object_position returns its place, in the map's pixels from the map's top-left, y
+	      down. That is a tile object's bottom-left corner, a point's point, and any other shape's
+	      top-left. Its layer's offset isn't added.
+	    - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
+	    - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
+	    - is_object_visible returns whether Tiled shows it.
+	    - get_object_tile returns a tile object's gid, or 0 for another shape.
+
+	    Each returns "", 0, or none for an object or layer that isn't one.
 	**/
 	public inline function getObjectShape(layer:Int, object:Int):TilemapShape
 		return Raw.wgf_tilemap_get_object_shape(this, layer, object);
 
 	/**
-	    An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
-	    each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
-	    the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
-	    shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
-	    polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
-	    Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
-	    object or layer that isn't one.
+	    Returns an object layer's objects, in Tiled's order.
+
+	    - get_object_count returns how many there are, or 0 for a layer of another kind.
+	    - get_object_id returns the object's id in the map.
+	    - get_object_name returns its name.
+	    - get_object_class returns its class: Tiled's Class, or Type before 1.9.
+	    - get_object_shape returns its shape.
+	    - get_object_position returns its place, in the map's pixels from the map's top-left, y
+	      down. That is a tile object's bottom-left corner, a point's point, and any other shape's
+	      top-left. Its layer's offset isn't added.
+	    - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
+	    - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
+	    - is_object_visible returns whether Tiled shows it.
+	    - get_object_tile returns a tile object's gid, or 0 for another shape.
+
+	    Each returns "", 0, or none for an object or layer that isn't one.
 	**/
 	public inline function getObjectPosition(layer:Int, object:Int, ?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_tilemap_get_object_position(this, layer, object, into);
 
 	/**
-	    An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
-	    each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
-	    the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
-	    shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
-	    polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
-	    Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
-	    object or layer that isn't one.
+	    Returns an object layer's objects, in Tiled's order.
+
+	    - get_object_count returns how many there are, or 0 for a layer of another kind.
+	    - get_object_id returns the object's id in the map.
+	    - get_object_name returns its name.
+	    - get_object_class returns its class: Tiled's Class, or Type before 1.9.
+	    - get_object_shape returns its shape.
+	    - get_object_position returns its place, in the map's pixels from the map's top-left, y
+	      down. That is a tile object's bottom-left corner, a point's point, and any other shape's
+	      top-left. Its layer's offset isn't added.
+	    - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
+	    - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
+	    - is_object_visible returns whether Tiled shows it.
+	    - get_object_tile returns a tile object's gid, or 0 for another shape.
+
+	    Each returns "", 0, or none for an object or layer that isn't one.
 	**/
 	public inline function getObjectSize(layer:Int, object:Int, ?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_tilemap_get_object_size(this, layer, object, into);
 
 	/**
-	    An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
-	    each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
-	    the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
-	    shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
-	    polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
-	    Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
-	    object or layer that isn't one.
+	    Returns an object layer's objects, in Tiled's order.
+
+	    - get_object_count returns how many there are, or 0 for a layer of another kind.
+	    - get_object_id returns the object's id in the map.
+	    - get_object_name returns its name.
+	    - get_object_class returns its class: Tiled's Class, or Type before 1.9.
+	    - get_object_shape returns its shape.
+	    - get_object_position returns its place, in the map's pixels from the map's top-left, y
+	      down. That is a tile object's bottom-left corner, a point's point, and any other shape's
+	      top-left. Its layer's offset isn't added.
+	    - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
+	    - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
+	    - is_object_visible returns whether Tiled shows it.
+	    - get_object_tile returns a tile object's gid, or 0 for another shape.
+
+	    Each returns "", 0, or none for an object or layer that isn't one.
 	**/
 	public inline function getObjectRotation(layer:Int, object:Int):Float
 		return Raw.wgf_tilemap_get_object_rotation(this, layer, object);
 
 	/**
-	    An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
-	    each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
-	    the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
-	    shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
-	    polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
-	    Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
-	    object or layer that isn't one.
+	    Returns an object layer's objects, in Tiled's order.
+
+	    - get_object_count returns how many there are, or 0 for a layer of another kind.
+	    - get_object_id returns the object's id in the map.
+	    - get_object_name returns its name.
+	    - get_object_class returns its class: Tiled's Class, or Type before 1.9.
+	    - get_object_shape returns its shape.
+	    - get_object_position returns its place, in the map's pixels from the map's top-left, y
+	      down. That is a tile object's bottom-left corner, a point's point, and any other shape's
+	      top-left. Its layer's offset isn't added.
+	    - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
+	    - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
+	    - is_object_visible returns whether Tiled shows it.
+	    - get_object_tile returns a tile object's gid, or 0 for another shape.
+
+	    Each returns "", 0, or none for an object or layer that isn't one.
 	**/
 	public inline function isObjectVisible(layer:Int, object:Int):Bool
 		return Raw.wgf_tilemap_is_object_visible(this, layer, object);
 
 	/**
-	    An object layer's objects, in Tiled's order: how many (0 for a layer of another kind), and
-	    each one's id in the map, name, class (Tiled's Class, or Type before 1.9), shape, place in
-	    the map's pixels from its top-left (y down; a tile object's bottom-left corner, any other
-	    shape's top-left, a point's point; its layer's offset not added), size (0 for a point, a
-	    polygon, or a polyline), turn about its place (radians, clockwise as Tiled's), whether
-	    Tiled shows it, and a tile object's gid (0 for another shape). "", 0, or none for an
-	    object or layer that isn't one.
+	    Returns an object layer's objects, in Tiled's order.
+
+	    - get_object_count returns how many there are, or 0 for a layer of another kind.
+	    - get_object_id returns the object's id in the map.
+	    - get_object_name returns its name.
+	    - get_object_class returns its class: Tiled's Class, or Type before 1.9.
+	    - get_object_shape returns its shape.
+	    - get_object_position returns its place, in the map's pixels from the map's top-left, y
+	      down. That is a tile object's bottom-left corner, a point's point, and any other shape's
+	      top-left. Its layer's offset isn't added.
+	    - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
+	    - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
+	    - is_object_visible returns whether Tiled shows it.
+	    - get_object_tile returns a tile object's gid, or 0 for another shape.
+
+	    Each returns "", 0, or none for an object or layer that isn't one.
 	**/
 	public inline function getObjectTile(layer:Int, object:Int):Int
 		return Raw.wgf_tilemap_get_object_tile(this, layer, object);
 
 	/**
-	    A tile object's flips (wgf_tilemap_flip_t's X and Y; Tiled doesn't turn one by its
-	    diagonal), 0 for another shape.
+	    Returns a tile object's flips, as wgf_tilemap_flip_t's X and Y bits, or 0 for another shape.
+	    Tiled doesn't flip a tile object across its diagonal.
 	**/
 	public inline function getObjectTileFlips(layer:Int, object:Int):Int
 		return Raw.wgf_tilemap_get_object_tile_flips(this, layer, object);
 
 	/**
-	    An object's middle in the map's pixels (an isometric map's objects' places taken to its
-	    pixels): a tile object's tile's as drawn (its place the point of it its tileset's object
-	    alignment says: the bottom-left, or an isometric map's bottom middle, by default), a
-	    rectangle's, an ellipse's, or a text's half its size across and down from its place, turned
-	    with it, and any other shape's place. 0, 0 for an object that isn't one.
+	    Returns an object's middle, in the map's pixels. On an isometric map, the object's place is
+	    converted to the map's pixels first.
+
+	    - A tile object's middle is its tile's, as drawn. Its place is the point of the tile that
+	      its tileset's object alignment says. By default that is the bottom-left, or the bottom
+	      middle on an isometric map.
+	    - A rectangle's, an ellipse's, or a text's middle is half its size across and down from its
+	      place, turned with it.
+	    - Any other shape's middle is its place.
+
+	    Returns 0, 0 for an object that isn't one.
 	**/
 	public inline function getObjectMiddle(layer:Int, object:Int, ?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_tilemap_get_object_middle(this, layer, object, into);
 
 	/**
-	    A polygon's or a polyline's points, from its place (unturned), x and y in turn, into `out`
-	    as many as fit in `count` floats, returning how many floats it filled; 0 for another
-	    shape. get_object_point_count is how many points it has.
+	    Returns a polygon's or a polyline's points, relative to its place and unturned.
+
+	    get_object_points writes x and y in turn into `out`, as many as fit in `count` floats. It
+	    returns how many floats it filled, or 0 for another shape. get_object_point_count returns
+	    how many points the object has.
 	**/
 	public inline function getObjectPoints(layer:Int, object:Int, out:Array<Float>):Int
 		return Raw.wgf_tilemap_get_object_points(this, layer, object, out);
 
 	/**
-	    A polygon's or a polyline's points, from its place (unturned), x and y in turn, into `out`
-	    as many as fit in `count` floats, returning how many floats it filled; 0 for another
-	    shape. get_object_point_count is how many points it has.
+	    Returns a polygon's or a polyline's points, relative to its place and unturned.
+
+	    get_object_points writes x and y in turn into `out`, as many as fit in `count` floats. It
+	    returns how many floats it filled, or 0 for another shape. get_object_point_count returns
+	    how many points the object has.
 	**/
 	public inline function getObjectPointCount(layer:Int, object:Int):Int
 		return Raw.wgf_tilemap_get_object_point_count(this, layer, object);
 
 	/**
-	    Custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an object's of
-	    that layer. How many, each one's name in Tiled's order ("" past the end), one's type by
-	    name (NONE for one it hasn't), its value as text (a number written out, a bool "true" or
-	    "false"; "" for one it hasn't), and as a number (a bool 1 or 0; 0 for one it hasn't, or
-	    text). Text is the map's, valid while it is.
+	    Returns custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an
+	    object's in that layer.
+
+	    - get_property_count returns how many there are.
+	    - get_property_name returns each one's name, in Tiled's order ("" past the end).
+	    - get_property_type returns one's type by name (NONE for a property it doesn't have).
+	    - get_property returns its value as text: a number written out, or a bool as "true" or
+	      "false". It returns "" for a property it doesn't have.
+	    - get_property_number returns its value as a number: a bool as 1 or 0. It returns 0 for a
+	      property it doesn't have, or for text.
+
+	    The text belongs to the map, and is valid while the map is.
 	**/
 	public inline function getPropertyCount(layer:Int, object:Int):Int
 		return Raw.wgf_tilemap_get_property_count(this, layer, object);
 
 	/**
-	    Custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an object's of
-	    that layer. How many, each one's name in Tiled's order ("" past the end), one's type by
-	    name (NONE for one it hasn't), its value as text (a number written out, a bool "true" or
-	    "false"; "" for one it hasn't), and as a number (a bool 1 or 0; 0 for one it hasn't, or
-	    text). Text is the map's, valid while it is.
+	    Returns custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an
+	    object's in that layer.
+
+	    - get_property_count returns how many there are.
+	    - get_property_name returns each one's name, in Tiled's order ("" past the end).
+	    - get_property_type returns one's type by name (NONE for a property it doesn't have).
+	    - get_property returns its value as text: a number written out, or a bool as "true" or
+	      "false". It returns "" for a property it doesn't have.
+	    - get_property_number returns its value as a number: a bool as 1 or 0. It returns 0 for a
+	      property it doesn't have, or for text.
+
+	    The text belongs to the map, and is valid while the map is.
 	**/
 	public inline function getPropertyName(layer:Int, object:Int, index:Int):String
 		return Raw.wgf_tilemap_get_property_name(this, layer, object, index);
 
 	/**
-	    Custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an object's of
-	    that layer. How many, each one's name in Tiled's order ("" past the end), one's type by
-	    name (NONE for one it hasn't), its value as text (a number written out, a bool "true" or
-	    "false"; "" for one it hasn't), and as a number (a bool 1 or 0; 0 for one it hasn't, or
-	    text). Text is the map's, valid while it is.
+	    Returns custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an
+	    object's in that layer.
+
+	    - get_property_count returns how many there are.
+	    - get_property_name returns each one's name, in Tiled's order ("" past the end).
+	    - get_property_type returns one's type by name (NONE for a property it doesn't have).
+	    - get_property returns its value as text: a number written out, or a bool as "true" or
+	      "false". It returns "" for a property it doesn't have.
+	    - get_property_number returns its value as a number: a bool as 1 or 0. It returns 0 for a
+	      property it doesn't have, or for text.
+
+	    The text belongs to the map, and is valid while the map is.
 	**/
 	public inline function getPropertyType(layer:Int, object:Int, name:String):TilemapPropertyType
 		return Raw.wgf_tilemap_get_property_type(this, layer, object, name);
 
 	/**
-	    Custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an object's of
-	    that layer. How many, each one's name in Tiled's order ("" past the end), one's type by
-	    name (NONE for one it hasn't), its value as text (a number written out, a bool "true" or
-	    "false"; "" for one it hasn't), and as a number (a bool 1 or 0; 0 for one it hasn't, or
-	    text). Text is the map's, valid while it is.
+	    Returns custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an
+	    object's in that layer.
+
+	    - get_property_count returns how many there are.
+	    - get_property_name returns each one's name, in Tiled's order ("" past the end).
+	    - get_property_type returns one's type by name (NONE for a property it doesn't have).
+	    - get_property returns its value as text: a number written out, or a bool as "true" or
+	      "false". It returns "" for a property it doesn't have.
+	    - get_property_number returns its value as a number: a bool as 1 or 0. It returns 0 for a
+	      property it doesn't have, or for text.
+
+	    The text belongs to the map, and is valid while the map is.
 	**/
 	public inline function getProperty(layer:Int, object:Int, name:String):String
 		return Raw.wgf_tilemap_get_property(this, layer, object, name);
 
 	/**
-	    Custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an object's of
-	    that layer. How many, each one's name in Tiled's order ("" past the end), one's type by
-	    name (NONE for one it hasn't), its value as text (a number written out, a bool "true" or
-	    "false"; "" for one it hasn't), and as a number (a bool 1 or 0; 0 for one it hasn't, or
-	    text). Text is the map's, valid while it is.
+	    Returns custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an
+	    object's in that layer.
+
+	    - get_property_count returns how many there are.
+	    - get_property_name returns each one's name, in Tiled's order ("" past the end).
+	    - get_property_type returns one's type by name (NONE for a property it doesn't have).
+	    - get_property returns its value as text: a number written out, or a bool as "true" or
+	      "false". It returns "" for a property it doesn't have.
+	    - get_property_number returns its value as a number: a bool as 1 or 0. It returns 0 for a
+	      property it doesn't have, or for text.
+
+	    The text belongs to the map, and is valid while the map is.
 	**/
 	public inline function getPropertyNumber(layer:Int, object:Int, name:String):Float
 		return Raw.wgf_tilemap_get_property_number(this, layer, object, name);
 
 	/**
-	    A tile's (by gid, its flips apart): its class ("" none), and its custom properties as
-	    above.
+	    Returns a tile's class ("" for none), and its custom properties as above. The tile is named
+	    by its gid, apart from its flips.
 	**/
 	public inline function getTileClass(gid:Int):String
 		return Raw.wgf_tilemap_get_tile_class(this, gid);
 
 	/**
-	    A tile's (by gid, its flips apart): its class ("" none), and its custom properties as
-	    above.
+	    Returns a tile's class ("" for none), and its custom properties as above. The tile is named
+	    by its gid, apart from its flips.
 	**/
 	public inline function getTilePropertyCount(gid:Int):Int
 		return Raw.wgf_tilemap_get_tile_property_count(this, gid);
 
 	/**
-	    A tile's (by gid, its flips apart): its class ("" none), and its custom properties as
-	    above.
+	    Returns a tile's class ("" for none), and its custom properties as above. The tile is named
+	    by its gid, apart from its flips.
 	**/
 	public inline function getTilePropertyName(gid:Int, index:Int):String
 		return Raw.wgf_tilemap_get_tile_property_name(this, gid, index);
 
 	/**
-	    A tile's (by gid, its flips apart): its class ("" none), and its custom properties as
-	    above.
+	    Returns a tile's class ("" for none), and its custom properties as above. The tile is named
+	    by its gid, apart from its flips.
 	**/
 	public inline function getTilePropertyType(gid:Int, name:String):TilemapPropertyType
 		return Raw.wgf_tilemap_get_tile_property_type(this, gid, name);
 
 	/**
-	    A tile's (by gid, its flips apart): its class ("" none), and its custom properties as
-	    above.
+	    Returns a tile's class ("" for none), and its custom properties as above. The tile is named
+	    by its gid, apart from its flips.
 	**/
 	public inline function getTileProperty(gid:Int, name:String):String
 		return Raw.wgf_tilemap_get_tile_property(this, gid, name);
 
 	/**
-	    A tile's (by gid, its flips apart): its class ("" none), and its custom properties as
-	    above.
+	    Returns a tile's class ("" for none), and its custom properties as above. The tile is named
+	    by its gid, apart from its flips.
 	**/
 	public inline function getTilePropertyNumber(gid:Int, name:String):Float
 		return Raw.wgf_tilemap_get_tile_property_number(this, gid, name);
 
 	/**
-	    Its terrain (Wang) sets, by tileset and then as Tiled lists them: how many, one's name,
-	    kind (NONE past the end), and tileset's index (-1 past the end), and the first named
-	    `name` (-1 for none). A set's terrains are numbered from 1 (0 is none, as Tiled's): how
-	    many, one's name ("" for 0 or past the end), and the number of the first named `name` (0
-	    for none). A tile's terrain (by gid, its flips apart) at `place`, Tiled's order from its
-	    top clockwise: 0 its top edge, 1 its top-right corner, 2 its right edge, and so on to 7 its
-	    top-left corner (an edge set's tiles have terrains at the even places, a corner set's at
-	    the odd); 0 for a tile the set doesn't hold, or a place past 7. Painted into a layer with
-	    wgf_tilemap_layer_paint_terrain.
+	    Returns the map's terrain (Wang) sets, by tileset and then as Tiled lists them. To paint
+	    them into a layer, see wgf_tilemap_layer_paint_terrain.
+
+	    Sets:
+	    - get_terrainset_count returns how many there are.
+	    - get_terrainset_name returns one set's name.
+	    - get_terrainset_kind returns its kind (NONE past the end).
+	    - get_terrainset_tileset returns its tileset's index (-1 past the end).
+	    - find_terrainset returns the first set named `name` (-1 for none).
+
+	    A set's terrains are numbered from 1. As in Tiled, 0 is none.
+	    - get_terrain_count returns how many a set has.
+	    - get_terrain_name returns one terrain's name ("" for 0 or past the end).
+	    - find_terrain returns the number of the first terrain named `name` (0 for none).
+
+	    get_tile_terrain returns a tile's terrain at `place`. The tile is named by its gid, apart
+	    from its flips. Places go in Tiled's order, clockwise from the top:
+	    - 0 is its top edge, 1 its top-right corner, 2 its right edge, and so on, to 7, its
+	      top-left corner.
+	    - An edge set's tiles have terrains at the even places, and a corner set's at the odd.
+	    - It returns 0 for a tile the set doesn't hold, or a `place` past 7.
 	**/
 	public inline function getTerrainsetCount():Int
 		return Raw.wgf_tilemap_get_terrainset_count(this);
 
 	/**
-	    Its terrain (Wang) sets, by tileset and then as Tiled lists them: how many, one's name,
-	    kind (NONE past the end), and tileset's index (-1 past the end), and the first named
-	    `name` (-1 for none). A set's terrains are numbered from 1 (0 is none, as Tiled's): how
-	    many, one's name ("" for 0 or past the end), and the number of the first named `name` (0
-	    for none). A tile's terrain (by gid, its flips apart) at `place`, Tiled's order from its
-	    top clockwise: 0 its top edge, 1 its top-right corner, 2 its right edge, and so on to 7 its
-	    top-left corner (an edge set's tiles have terrains at the even places, a corner set's at
-	    the odd); 0 for a tile the set doesn't hold, or a place past 7. Painted into a layer with
-	    wgf_tilemap_layer_paint_terrain.
+	    Returns the map's terrain (Wang) sets, by tileset and then as Tiled lists them. To paint
+	    them into a layer, see wgf_tilemap_layer_paint_terrain.
+
+	    Sets:
+	    - get_terrainset_count returns how many there are.
+	    - get_terrainset_name returns one set's name.
+	    - get_terrainset_kind returns its kind (NONE past the end).
+	    - get_terrainset_tileset returns its tileset's index (-1 past the end).
+	    - find_terrainset returns the first set named `name` (-1 for none).
+
+	    A set's terrains are numbered from 1. As in Tiled, 0 is none.
+	    - get_terrain_count returns how many a set has.
+	    - get_terrain_name returns one terrain's name ("" for 0 or past the end).
+	    - find_terrain returns the number of the first terrain named `name` (0 for none).
+
+	    get_tile_terrain returns a tile's terrain at `place`. The tile is named by its gid, apart
+	    from its flips. Places go in Tiled's order, clockwise from the top:
+	    - 0 is its top edge, 1 its top-right corner, 2 its right edge, and so on, to 7, its
+	      top-left corner.
+	    - An edge set's tiles have terrains at the even places, and a corner set's at the odd.
+	    - It returns 0 for a tile the set doesn't hold, or a `place` past 7.
 	**/
 	public inline function getTerrainsetName(set:Int):String
 		return Raw.wgf_tilemap_get_terrainset_name(this, set);
 
 	/**
-	    Its terrain (Wang) sets, by tileset and then as Tiled lists them: how many, one's name,
-	    kind (NONE past the end), and tileset's index (-1 past the end), and the first named
-	    `name` (-1 for none). A set's terrains are numbered from 1 (0 is none, as Tiled's): how
-	    many, one's name ("" for 0 or past the end), and the number of the first named `name` (0
-	    for none). A tile's terrain (by gid, its flips apart) at `place`, Tiled's order from its
-	    top clockwise: 0 its top edge, 1 its top-right corner, 2 its right edge, and so on to 7 its
-	    top-left corner (an edge set's tiles have terrains at the even places, a corner set's at
-	    the odd); 0 for a tile the set doesn't hold, or a place past 7. Painted into a layer with
-	    wgf_tilemap_layer_paint_terrain.
+	    Returns the map's terrain (Wang) sets, by tileset and then as Tiled lists them. To paint
+	    them into a layer, see wgf_tilemap_layer_paint_terrain.
+
+	    Sets:
+	    - get_terrainset_count returns how many there are.
+	    - get_terrainset_name returns one set's name.
+	    - get_terrainset_kind returns its kind (NONE past the end).
+	    - get_terrainset_tileset returns its tileset's index (-1 past the end).
+	    - find_terrainset returns the first set named `name` (-1 for none).
+
+	    A set's terrains are numbered from 1. As in Tiled, 0 is none.
+	    - get_terrain_count returns how many a set has.
+	    - get_terrain_name returns one terrain's name ("" for 0 or past the end).
+	    - find_terrain returns the number of the first terrain named `name` (0 for none).
+
+	    get_tile_terrain returns a tile's terrain at `place`. The tile is named by its gid, apart
+	    from its flips. Places go in Tiled's order, clockwise from the top:
+	    - 0 is its top edge, 1 its top-right corner, 2 its right edge, and so on, to 7, its
+	      top-left corner.
+	    - An edge set's tiles have terrains at the even places, and a corner set's at the odd.
+	    - It returns 0 for a tile the set doesn't hold, or a `place` past 7.
 	**/
 	public inline function getTerrainsetKind(set:Int):TilemapTerrainKind
 		return Raw.wgf_tilemap_get_terrainset_kind(this, set);
 
 	/**
-	    Its terrain (Wang) sets, by tileset and then as Tiled lists them: how many, one's name,
-	    kind (NONE past the end), and tileset's index (-1 past the end), and the first named
-	    `name` (-1 for none). A set's terrains are numbered from 1 (0 is none, as Tiled's): how
-	    many, one's name ("" for 0 or past the end), and the number of the first named `name` (0
-	    for none). A tile's terrain (by gid, its flips apart) at `place`, Tiled's order from its
-	    top clockwise: 0 its top edge, 1 its top-right corner, 2 its right edge, and so on to 7 its
-	    top-left corner (an edge set's tiles have terrains at the even places, a corner set's at
-	    the odd); 0 for a tile the set doesn't hold, or a place past 7. Painted into a layer with
-	    wgf_tilemap_layer_paint_terrain.
+	    Returns the map's terrain (Wang) sets, by tileset and then as Tiled lists them. To paint
+	    them into a layer, see wgf_tilemap_layer_paint_terrain.
+
+	    Sets:
+	    - get_terrainset_count returns how many there are.
+	    - get_terrainset_name returns one set's name.
+	    - get_terrainset_kind returns its kind (NONE past the end).
+	    - get_terrainset_tileset returns its tileset's index (-1 past the end).
+	    - find_terrainset returns the first set named `name` (-1 for none).
+
+	    A set's terrains are numbered from 1. As in Tiled, 0 is none.
+	    - get_terrain_count returns how many a set has.
+	    - get_terrain_name returns one terrain's name ("" for 0 or past the end).
+	    - find_terrain returns the number of the first terrain named `name` (0 for none).
+
+	    get_tile_terrain returns a tile's terrain at `place`. The tile is named by its gid, apart
+	    from its flips. Places go in Tiled's order, clockwise from the top:
+	    - 0 is its top edge, 1 its top-right corner, 2 its right edge, and so on, to 7, its
+	      top-left corner.
+	    - An edge set's tiles have terrains at the even places, and a corner set's at the odd.
+	    - It returns 0 for a tile the set doesn't hold, or a `place` past 7.
 	**/
 	public inline function getTerrainsetTileset(set:Int):Int
 		return Raw.wgf_tilemap_get_terrainset_tileset(this, set);
 
 	/**
-	    Its terrain (Wang) sets, by tileset and then as Tiled lists them: how many, one's name,
-	    kind (NONE past the end), and tileset's index (-1 past the end), and the first named
-	    `name` (-1 for none). A set's terrains are numbered from 1 (0 is none, as Tiled's): how
-	    many, one's name ("" for 0 or past the end), and the number of the first named `name` (0
-	    for none). A tile's terrain (by gid, its flips apart) at `place`, Tiled's order from its
-	    top clockwise: 0 its top edge, 1 its top-right corner, 2 its right edge, and so on to 7 its
-	    top-left corner (an edge set's tiles have terrains at the even places, a corner set's at
-	    the odd); 0 for a tile the set doesn't hold, or a place past 7. Painted into a layer with
-	    wgf_tilemap_layer_paint_terrain.
+	    Returns the map's terrain (Wang) sets, by tileset and then as Tiled lists them. To paint
+	    them into a layer, see wgf_tilemap_layer_paint_terrain.
+
+	    Sets:
+	    - get_terrainset_count returns how many there are.
+	    - get_terrainset_name returns one set's name.
+	    - get_terrainset_kind returns its kind (NONE past the end).
+	    - get_terrainset_tileset returns its tileset's index (-1 past the end).
+	    - find_terrainset returns the first set named `name` (-1 for none).
+
+	    A set's terrains are numbered from 1. As in Tiled, 0 is none.
+	    - get_terrain_count returns how many a set has.
+	    - get_terrain_name returns one terrain's name ("" for 0 or past the end).
+	    - find_terrain returns the number of the first terrain named `name` (0 for none).
+
+	    get_tile_terrain returns a tile's terrain at `place`. The tile is named by its gid, apart
+	    from its flips. Places go in Tiled's order, clockwise from the top:
+	    - 0 is its top edge, 1 its top-right corner, 2 its right edge, and so on, to 7, its
+	      top-left corner.
+	    - An edge set's tiles have terrains at the even places, and a corner set's at the odd.
+	    - It returns 0 for a tile the set doesn't hold, or a `place` past 7.
 	**/
 	public inline function findTerrainset(name:String):Int
 		return Raw.wgf_tilemap_find_terrainset(this, name);
 
 	/**
-	    Its terrain (Wang) sets, by tileset and then as Tiled lists them: how many, one's name,
-	    kind (NONE past the end), and tileset's index (-1 past the end), and the first named
-	    `name` (-1 for none). A set's terrains are numbered from 1 (0 is none, as Tiled's): how
-	    many, one's name ("" for 0 or past the end), and the number of the first named `name` (0
-	    for none). A tile's terrain (by gid, its flips apart) at `place`, Tiled's order from its
-	    top clockwise: 0 its top edge, 1 its top-right corner, 2 its right edge, and so on to 7 its
-	    top-left corner (an edge set's tiles have terrains at the even places, a corner set's at
-	    the odd); 0 for a tile the set doesn't hold, or a place past 7. Painted into a layer with
-	    wgf_tilemap_layer_paint_terrain.
+	    Returns the map's terrain (Wang) sets, by tileset and then as Tiled lists them. To paint
+	    them into a layer, see wgf_tilemap_layer_paint_terrain.
+
+	    Sets:
+	    - get_terrainset_count returns how many there are.
+	    - get_terrainset_name returns one set's name.
+	    - get_terrainset_kind returns its kind (NONE past the end).
+	    - get_terrainset_tileset returns its tileset's index (-1 past the end).
+	    - find_terrainset returns the first set named `name` (-1 for none).
+
+	    A set's terrains are numbered from 1. As in Tiled, 0 is none.
+	    - get_terrain_count returns how many a set has.
+	    - get_terrain_name returns one terrain's name ("" for 0 or past the end).
+	    - find_terrain returns the number of the first terrain named `name` (0 for none).
+
+	    get_tile_terrain returns a tile's terrain at `place`. The tile is named by its gid, apart
+	    from its flips. Places go in Tiled's order, clockwise from the top:
+	    - 0 is its top edge, 1 its top-right corner, 2 its right edge, and so on, to 7, its
+	      top-left corner.
+	    - An edge set's tiles have terrains at the even places, and a corner set's at the odd.
+	    - It returns 0 for a tile the set doesn't hold, or a `place` past 7.
 	**/
 	public inline function getTerrainCount(set:Int):Int
 		return Raw.wgf_tilemap_get_terrain_count(this, set);
 
 	/**
-	    Its terrain (Wang) sets, by tileset and then as Tiled lists them: how many, one's name,
-	    kind (NONE past the end), and tileset's index (-1 past the end), and the first named
-	    `name` (-1 for none). A set's terrains are numbered from 1 (0 is none, as Tiled's): how
-	    many, one's name ("" for 0 or past the end), and the number of the first named `name` (0
-	    for none). A tile's terrain (by gid, its flips apart) at `place`, Tiled's order from its
-	    top clockwise: 0 its top edge, 1 its top-right corner, 2 its right edge, and so on to 7 its
-	    top-left corner (an edge set's tiles have terrains at the even places, a corner set's at
-	    the odd); 0 for a tile the set doesn't hold, or a place past 7. Painted into a layer with
-	    wgf_tilemap_layer_paint_terrain.
+	    Returns the map's terrain (Wang) sets, by tileset and then as Tiled lists them. To paint
+	    them into a layer, see wgf_tilemap_layer_paint_terrain.
+
+	    Sets:
+	    - get_terrainset_count returns how many there are.
+	    - get_terrainset_name returns one set's name.
+	    - get_terrainset_kind returns its kind (NONE past the end).
+	    - get_terrainset_tileset returns its tileset's index (-1 past the end).
+	    - find_terrainset returns the first set named `name` (-1 for none).
+
+	    A set's terrains are numbered from 1. As in Tiled, 0 is none.
+	    - get_terrain_count returns how many a set has.
+	    - get_terrain_name returns one terrain's name ("" for 0 or past the end).
+	    - find_terrain returns the number of the first terrain named `name` (0 for none).
+
+	    get_tile_terrain returns a tile's terrain at `place`. The tile is named by its gid, apart
+	    from its flips. Places go in Tiled's order, clockwise from the top:
+	    - 0 is its top edge, 1 its top-right corner, 2 its right edge, and so on, to 7, its
+	      top-left corner.
+	    - An edge set's tiles have terrains at the even places, and a corner set's at the odd.
+	    - It returns 0 for a tile the set doesn't hold, or a `place` past 7.
 	**/
 	public inline function getTerrainName(set:Int, terrain:Int):String
 		return Raw.wgf_tilemap_get_terrain_name(this, set, terrain);
 
 	/**
-	    Its terrain (Wang) sets, by tileset and then as Tiled lists them: how many, one's name,
-	    kind (NONE past the end), and tileset's index (-1 past the end), and the first named
-	    `name` (-1 for none). A set's terrains are numbered from 1 (0 is none, as Tiled's): how
-	    many, one's name ("" for 0 or past the end), and the number of the first named `name` (0
-	    for none). A tile's terrain (by gid, its flips apart) at `place`, Tiled's order from its
-	    top clockwise: 0 its top edge, 1 its top-right corner, 2 its right edge, and so on to 7 its
-	    top-left corner (an edge set's tiles have terrains at the even places, a corner set's at
-	    the odd); 0 for a tile the set doesn't hold, or a place past 7. Painted into a layer with
-	    wgf_tilemap_layer_paint_terrain.
+	    Returns the map's terrain (Wang) sets, by tileset and then as Tiled lists them. To paint
+	    them into a layer, see wgf_tilemap_layer_paint_terrain.
+
+	    Sets:
+	    - get_terrainset_count returns how many there are.
+	    - get_terrainset_name returns one set's name.
+	    - get_terrainset_kind returns its kind (NONE past the end).
+	    - get_terrainset_tileset returns its tileset's index (-1 past the end).
+	    - find_terrainset returns the first set named `name` (-1 for none).
+
+	    A set's terrains are numbered from 1. As in Tiled, 0 is none.
+	    - get_terrain_count returns how many a set has.
+	    - get_terrain_name returns one terrain's name ("" for 0 or past the end).
+	    - find_terrain returns the number of the first terrain named `name` (0 for none).
+
+	    get_tile_terrain returns a tile's terrain at `place`. The tile is named by its gid, apart
+	    from its flips. Places go in Tiled's order, clockwise from the top:
+	    - 0 is its top edge, 1 its top-right corner, 2 its right edge, and so on, to 7, its
+	      top-left corner.
+	    - An edge set's tiles have terrains at the even places, and a corner set's at the odd.
+	    - It returns 0 for a tile the set doesn't hold, or a `place` past 7.
 	**/
 	public inline function findTerrain(set:Int, name:String):Int
 		return Raw.wgf_tilemap_find_terrain(this, set, name);
 
 	/**
-	    Its terrain (Wang) sets, by tileset and then as Tiled lists them: how many, one's name,
-	    kind (NONE past the end), and tileset's index (-1 past the end), and the first named
-	    `name` (-1 for none). A set's terrains are numbered from 1 (0 is none, as Tiled's): how
-	    many, one's name ("" for 0 or past the end), and the number of the first named `name` (0
-	    for none). A tile's terrain (by gid, its flips apart) at `place`, Tiled's order from its
-	    top clockwise: 0 its top edge, 1 its top-right corner, 2 its right edge, and so on to 7 its
-	    top-left corner (an edge set's tiles have terrains at the even places, a corner set's at
-	    the odd); 0 for a tile the set doesn't hold, or a place past 7. Painted into a layer with
-	    wgf_tilemap_layer_paint_terrain.
+	    Returns the map's terrain (Wang) sets, by tileset and then as Tiled lists them. To paint
+	    them into a layer, see wgf_tilemap_layer_paint_terrain.
+
+	    Sets:
+	    - get_terrainset_count returns how many there are.
+	    - get_terrainset_name returns one set's name.
+	    - get_terrainset_kind returns its kind (NONE past the end).
+	    - get_terrainset_tileset returns its tileset's index (-1 past the end).
+	    - find_terrainset returns the first set named `name` (-1 for none).
+
+	    A set's terrains are numbered from 1. As in Tiled, 0 is none.
+	    - get_terrain_count returns how many a set has.
+	    - get_terrain_name returns one terrain's name ("" for 0 or past the end).
+	    - find_terrain returns the number of the first terrain named `name` (0 for none).
+
+	    get_tile_terrain returns a tile's terrain at `place`. The tile is named by its gid, apart
+	    from its flips. Places go in Tiled's order, clockwise from the top:
+	    - 0 is its top edge, 1 its top-right corner, 2 its right edge, and so on, to 7, its
+	      top-left corner.
+	    - An edge set's tiles have terrains at the even places, and a corner set's at the odd.
+	    - It returns 0 for a tile the set doesn't hold, or a `place` past 7.
 	**/
 	public inline function getTileTerrain(set:Int, gid:Int, place:Int):Int
 		return Raw.wgf_tilemap_get_tile_terrain(this, set, gid, place);
 
 	/**
-	    The map placed under `parent` (0: none): a plain actor named for its file ("level" for
-	    "maps/level.tmj"), in the map's pixels from its top-left, y down (scale it to place the map
-	    in other units), with a layer actor under it for each of the map's layers in their order
-	    (wgf_tilemap_layer.h): named for its layer, shown or hidden and at its offset as in Tiled.
-	    Drawn on a 2D stage, each faded by its layer's opacity:
-	      - a tile layer's cells as sprite batches' quads (wgf_sprite_batch.h) under it, each tile
-	        flipped as the map says, its bottom-left on its cell's box's (a tile larger than the
-	        map's cells reaches up and right, as Tiled draws it), and its animated tiles stepped each
-	        frame, held still under a paused actor (wgf_actor_set_paused). Where no tile can reach
-	        past its cell (an orthogonal map whose tiles are its cells' size, unmoved by their
-	        tilesets' offsets), a batch for each tileset the layer uses; where one can (larger or
-	        moved tiles, and every isometric, staggered, or hexagonal map), the cells are drawn in
-	        Tiled's order, a batch for each run of a tileset's tiles along a row of that order, so a
-	        tile drawn later in Tiled's order is drawn over one before it whatever their tilesets;
-	      - an object layer's tile objects as sprites (wgf_sprite.h) under it, each its tile sized
-	        as the object, at its middle (wgf_tilemap_get_object_middle), turned, flipped, and shown
-	        as Tiled has it, in the layer's draw order (by their y, Tiled's default, or as listed);
-	        wgf_tilemap_layer_get_object_actor finds one;
-	      - an image layer's image as a sprite under it, its top-left on the layer's.
-	    The layers hold a reference to the map. 0 for a map that isn't READY, a `parent` that isn't
-	    an actor (0 is), or no room for the actors.
+	    Places the map under `parent` (0 for none), and returns its root actor.
 
-	    Built again when the map is loaded again in place (wgf_asset_reload): the root kept, and
-	    each layer actor whose layer the new file still has (by name and kind; the first of a
-	    name) kept with what was put under it, showing the new file's layer (what set_cell and
-	    paint_terrain changed gone with the rest); a layer actor the file no longer has destroyed
-	    with what is under it, and a new layer's made; tile objects' sprites made anew.
+	    The root is a plain actor named for the map's file: "level" for "maps/level.tmj". It is in
+	    the map's pixels from its top-left, y down. Scale it to place the map in other units. Under
+	    it is a layer actor (wgf_tilemap_layer.h) for each of the map's layers, in their order. Each
+	    layer actor is named for its layer, and shown or hidden and offset as in Tiled.
+
+	    The map draws on a 2D stage. Each layer is faded by its opacity.
+
+	    A tile layer's cells are drawn as sprite batches' quads (wgf_sprite_batch.h) under it:
+	    - Each tile is flipped as the map says. Its bottom-left is on its cell's box's bottom-left.
+	      A tile larger than the map's cells reaches up and right, as Tiled draws it.
+	    - Animated tiles step each frame. They hold still under a paused actor
+	      (wgf_actor_set_paused).
+	    - Where no tile can reach past its cell, there is a batch for each tileset the layer uses.
+	      That is an orthogonal map whose tiles are its cells' size, unmoved by their tilesets'
+	      offsets.
+	    - Where a tile can reach past its cell, the cells are drawn in Tiled's order, with a batch
+	      for each run of a tileset's tiles along a row of that order. That is a map with larger or
+	      moved tiles, and every isometric, staggered, or hexagonal map. A tile later in Tiled's
+	      order then draws over one before it, whatever their tilesets.
+
+	    An object layer's tile objects are drawn as sprites (wgf_sprite.h) under it:
+	    - Each shows its tile, sized as the object, at its middle (wgf_tilemap_get_object_middle).
+	    - Each is turned, flipped, and shown as Tiled has it.
+	    - They draw in the layer's draw order: by their y (Tiled's default), or as listed.
+	    - wgf_tilemap_layer_get_object_actor finds one.
+
+	    An image layer's image is drawn as a sprite under it, its top-left on the layer's.
+
+	    The layers hold a reference to the map. Returns 0 for a map that isn't READY, a `parent`
+	    that isn't an actor (0, for none, is allowed), or no room for the actors.
+
+	    When the map is loaded again in place (wgf_asset_reload), its placed copy is built again:
+	    - The root is kept.
+	    - A layer actor whose layer the new file still has, by name and kind, is kept, with the
+	      actors put under it. Of layers with the same name, the first is matched. It shows the new
+	      file's layer, so changes from set_cell and paint_terrain are gone.
+	    - A layer actor whose layer the file no longer has is destroyed, with the actors under it.
+	    - A new layer gets a new layer actor.
+	    - Tile objects' sprites are made anew.
 	**/
 	public inline function instantiate(parent:Actor):Actor
 		return Raw.wgf_tilemap_instantiate(this, parent);

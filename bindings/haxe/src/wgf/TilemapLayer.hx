@@ -4,116 +4,142 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    A placed map's layer (WGF_ACTOR_KIND_TILEMAP_LAYER), made by wgf_tilemap_instantiate: an
-    actor named for its layer, in the map's pixels from its top-left (y down), placed, shown,
-    and parented with the actor calls. A tile layer's cells are its own once placed: read and
-    set here, set ones drawn from the next frame (the map's file unchanged). Every call is
-    false, 0, or -1 for an actor that isn't a placed layer; a layer of objects or an image has
-    no cells.
+    A placed map's layer (WGF_ACTOR_KIND_TILEMAP_LAYER), made by wgf_tilemap_instantiate.
 
-    A cell is a tile's gid (0 empty) and its flips (wgf_tilemap_flip_t's bits). In bulk
-    (get_cells, set_cells), a cell is one int: its gid plus its flips times 0x10000000. Columns
-    and rows are the map's (wgf_tilemap.h: an isometric map's along its axes, a staggered or
-    hexagonal map's as Tiled counts them, an infinite map's from its origin).
+    A layer is an actor named for its layer, in the map's pixels from the map's top-left, y
+    down. Place, show, and parent it with the actor calls. Once placed, a tile layer's cells
+    are its own. You read and set them here, and cells you set are drawn from the next frame.
+    The map's file is unchanged.
+
+    Every call returns false, 0, or -1 for an actor that isn't a placed layer. A layer of
+    objects or an image has no cells.
+
+    A cell is a tile's gid (0 for empty) and its flips (wgf_tilemap_flip_t's bits). In bulk
+    (get_cells and set_cells), a cell is one int: its gid plus its flips times 0x10000000.
+
+    Columns and rows are the map's (wgf_tilemap.h):
+    - an isometric map's run along its axes;
+    - a staggered or hexagonal map's are counted as Tiled counts them;
+    - an infinite map's count from its origin.
 
     TilemapLayer's calls, on a Actor: `var x:TilemapLayer = handle` gives it them, and a TilemapLayer is still a Actor; it starts as 0, none, as a Actor does.
 **/
 @:forward abstract TilemapLayer(Actor) from Actor from Int to Actor {
 	/**
-	    The map it is of, and its layer's index there.
+	    Returns the map the layer belongs to, and the layer's index in that map.
 	**/
 	public inline function getMap():Tilemap
 		return Raw.wgf_tilemap_layer_get_map(this);
 
 	/**
-	    The map it is of, and its layer's index there.
+	    Returns the map the layer belongs to, and the layer's index in that map.
 	**/
 	public inline function getIndex():Int
 		return Raw.wgf_tilemap_layer_get_index(this);
 
 	/**
-	    The tile at `column`, `row` (from the top-left), and its flips: 0 for an empty cell, or
-	    one outside the layer.
+	    Returns the tile at `column`, `row` (counted from the top-left), and its flips. Returns 0
+	    for an empty cell, or a cell outside the layer.
 	**/
 	public inline function getCell(column:Int, row:Int):Int
 		return Raw.wgf_tilemap_layer_get_cell(this, column, row);
 
 	/**
-	    The tile at `column`, `row` (from the top-left), and its flips: 0 for an empty cell, or
-	    one outside the layer.
+	    Returns the tile at `column`, `row` (counted from the top-left), and its flips. Returns 0
+	    for an empty cell, or a cell outside the layer.
 	**/
 	public inline function getCellFlips(column:Int, row:Int):Int
 		return Raw.wgf_tilemap_layer_get_cell_flips(this, column, row);
 
 	/**
-	    The cell given tile `gid` flipped by `flips` (0 empties it), drawn so from the next frame
-	    (an animated tile's animation starting in step with the others). False for a cell outside
-	    the layer, a gid none of the map's tilesets holds, or flips past the three bits.
+	    Sets a cell to tile `gid`, flipped by `flips`. A `gid` of 0 empties the cell.
+
+	    The cell draws so from the next frame. An animated tile's animation starts in step with the
+	    others. Returns false for a cell outside the layer, a `gid` that none of the map's tilesets
+	    holds, or `flips` past the three bits.
 	**/
 	public inline function setCell(column:Int, row:Int, gid:Int, flips:Int):Bool
 		return Raw.wgf_tilemap_layer_set_cell(this, column, row, gid, flips);
 
 	/**
-	    Every cell, row by row from the top-left, as one int each (above), into `out`, as many as
-	    fit in `count`, returning how many it filled: what a game saves of a layer it changed.
+	    Gets every cell, row by row from the top-left, as one int each (see above). This is what a
+	    game saves of a layer it changed.
+
+	    The cells are written into `out`, as many as fit in `count`. Returns how many it filled.
 	**/
 	public inline function getCells(out:Array<Int>):Int
 		return Raw.wgf_tilemap_layer_get_cells(this, out);
 
 	/**
-	    Every cell at once, as get_cells gives them. False, changing nothing, for a count other
-	    than the map's columns times its rows, or a cell set_cell refuses.
+	    Sets every cell at once, in the form get_cells gives them. Returns false, and changes
+	    nothing, for a `count` other than the map's columns times its rows, or a cell set_cell
+	    refuses.
 	**/
 	public inline function setCells(cells:Array<Int>):Bool
 		return Raw.wgf_tilemap_layer_set_cells(this, cells);
 
 	/**
-	    The column and the row at the point `x`, `y` in its parent's units (the placed map's: the
-	    map's pixels from its top-left), through the layer's own place, turn, and scale: outside
-	    the layer too (below 0, or its columns or rows and past). 0 for an actor that isn't a
-	    placed layer.
+	    Returns the column and the row at the point `x`, `y`.
+
+	    The point is in the layer's parent's units: the placed map's, which are the map's pixels
+	    from its top-left. It goes through the layer's own place, turn, and scale. It works outside
+	    the layer too: below 0, or at its columns or rows and past. Returns 0 for an actor that
+	    isn't a placed layer.
 	**/
 	public inline function getColumnAt(x:Float, y:Float):Int
 		return Raw.wgf_tilemap_layer_get_column_at(this, x, y);
 
 	/**
-	    The column and the row at the point `x`, `y` in its parent's units (the placed map's: the
-	    map's pixels from its top-left), through the layer's own place, turn, and scale: outside
-	    the layer too (below 0, or its columns or rows and past). 0 for an actor that isn't a
-	    placed layer.
+	    Returns the column and the row at the point `x`, `y`.
+
+	    The point is in the layer's parent's units: the placed map's, which are the map's pixels
+	    from its top-left. It goes through the layer's own place, turn, and scale. It works outside
+	    the layer too: below 0, or at its columns or rows and past. Returns 0 for an actor that
+	    isn't a placed layer.
 	**/
 	public inline function getRowAt(x:Float, y:Float):Int
 		return Raw.wgf_tilemap_layer_get_row_at(this, x, y);
 
 	/**
-	    The middle of cell `column`, `row` (outside the layer too) in its parent's units: the
-	    reverse of get_column_at and get_row_at. 0, 0 for an actor that isn't a placed layer.
+	    Returns the middle of cell `column`, `row`, in the layer's parent's units. It works outside
+	    the layer too, and is the reverse of get_column_at and get_row_at. Returns 0, 0 for an
+	    actor that isn't a placed layer.
 	**/
 	public inline function getCellMiddle(column:Int, row:Int, ?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_tilemap_layer_get_cell_middle(this, column, row, into);
 
 	/**
-	    Terrain `terrain` of terrain set `set` (wgf_tilemap.h, numbered from 1; 0 none) painted
-	    into cell `column`, `row` as Tiled's Terrain brush paints it (helix-legacy's setTerrain): a
-	    corner set's cell takes it at its four corners, an edge set's at its four edges, and the
-	    cell and the neighbors sharing them take the set's tile that fits what is around them (the
-	    first in the set's order; flips are never chosen). The terrains around are read from the
-	    layer's cells the first time a set is painted, and kept as painted until a cell is set
-	    another way (set_cell, set_cells), when they are read again. Where none of the set's tiles
-	    fits, a cell is left as it was; where nothing of the set is left, a cell showing a tile of
-	    the set's tileset is emptied. False, painting nothing, for a cell outside the layer, a set
-	    or terrain the map hasn't, a mixed set, or a staggered or hexagonal map; true once painted,
-	    whether every cell found its tile or not (each does when the set has a tile for every
-	    arrangement).
+	    Paints terrain `terrain` of terrain set `set` into cell `column`, `row`, as Tiled's Terrain
+	    brush paints it. Sets and terrains are wgf_tilemap.h's. Terrains are numbered from 1, and 0
+	    is none.
+
+	    - A corner set's cell takes the terrain at its four corners.
+	    - An edge set's cell takes it at its four edges.
+	    - The cell, and the neighbors sharing those corners or edges, take the set's tile that fits
+	      what is around them. That is the first such tile in the set's order. Flips are never
+	      chosen.
+	    - Where none of the set's tiles fits, a cell is left as it was.
+	    - Where no terrain of the set is left, a cell showing a tile of the set's tileset is emptied.
+
+	    The terrains around a cell are read from the layer's cells the first time a set is painted.
+	    They are kept as painted until a cell is set another way (set_cell or set_cells), and then
+	    read again.
+
+	    Returns false, and paints nothing, for a cell outside the layer, a set or terrain the map
+	    doesn't have, a mixed set, or a staggered or hexagonal map. Returns true once painted,
+	    whether every cell found its tile or not. Each cell does when the set has a tile for every
+	    arrangement.
 	**/
 	public inline function paintTerrain(column:Int, row:Int, set:Int, terrain:Int):Bool
 		return Raw.wgf_tilemap_layer_paint_terrain(this, column, row, set, terrain);
 
 	/**
-	    A tile object of an object layer drawn as its tile (wgf_tilemap_instantiate): its sprite
-	    (wgf_sprite.h), under the layer. 0 for an object that isn't a tile, an object past the
-	    layer's, or a sprite destroyed (wgf_scene_spawn_objects destroys one it spawns a prefab in
-	    place of).
+	    Returns the sprite (wgf_sprite.h) that draws tile object `object` of an object layer, under
+	    the layer (see wgf_tilemap_instantiate).
+
+	    Returns 0 for an object that isn't a tile, an `object` past the layer's objects, or a sprite
+	    that was destroyed. wgf_scene_spawn_objects destroys a sprite when it spawns a prefab in its
+	    place.
 	**/
 	public inline function getObjectActor(object:Int):Actor
 		return Raw.wgf_tilemap_layer_get_object_actor(this, object);

@@ -4,14 +4,21 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    A texture read back: its pixels in memory, for a screenshot of a render target, a tool,
-    a pixel check, or an image (wgf_image_create_from_read). A read is a task, a handle of
-    kind "gfx.texture_read" (CONVENTIONS.md's asynchronous work): PENDING as it is made, then,
-    in the runtime's update at the start of the next frame, DONE with what the texture held
-    once the frame the read was asked in was drawn -- or FAILED where there is no GPU to read
-    (a headless build), for a texture not READY by then or compressed (a .ktx), or with no
-    memory for its pixels. Reading stalls that update until the GPU has drawn the frame:
-    fine for a screenshot, not every frame.
+    A texture read back: its pixels in memory.
+
+    Use it for a screenshot of a render target, a tool, a pixel check, or an image
+    (wgf_image_create_from_read).
+
+    A read is a task, a handle of kind "gfx.texture_read" (CONVENTIONS.md's asynchronous work).
+    - It is PENDING as it is made.
+    - In the runtime's update at the start of the next frame, it becomes DONE. It then holds
+      what the texture held once the frame the read was asked in was drawn.
+    - It becomes FAILED instead where there is no GPU to read (a headless build), for a
+      texture that isn't READY by then or is compressed (a .ktx), or with no memory for its
+      pixels.
+
+    Reading stalls that update until the GPU has drawn the frame. That is fine for a
+    screenshot, but not for every frame.
 
     A handle of kind wgf_texture_read_t (libwgf/gfx/include/wgf_texture.h): 0 is none.
 **/
@@ -25,52 +32,67 @@ abstract TextureRead(Int) from Int to Int to wgf.Handle {
 		return (this : Handle).isAlive();
 
 	/**
-	    Its status: PENDING until the next frame's update, then DONE or FAILED. A getter
-	    answers NONE, 0, or NULL for a handle that isn't a read.
+	    Returns the read's status: PENDING until the next frame's update, then DONE or FAILED.
+
+	    Each read getter returns NONE, 0, or NULL for a handle that isn't a read.
 	**/
 	public inline function getStatus():TextureReadStatus
 		return Raw.wgf_texture_read_get_status(this);
 
 	/**
-	    The texture's size as it was read; 0 until DONE.
+	    Returns the texture's size as it was read, or 0 until DONE.
 	**/
 	public inline function getWidth():Int
 		return Raw.wgf_texture_read_get_width(this);
 
 	/**
-	    The texture's size as it was read; 0 until DONE.
+	    Returns the texture's size as it was read, or 0 until DONE.
 	**/
 	public inline function getHeight():Int
 		return Raw.wgf_texture_read_get_height(this);
 
 	/**
-	    A DONE read's pixels: RGBA, 8 bits a channel, width * 4 bytes a row, the top row
-	    first, as an image file stores them; valid until the read is destroyed. Any other read:
-	    NULL and 0.
+	    Returns a DONE read's pixels, and their size in bytes.
+
+	    Pixels are RGBA, 8 bits a channel, width * 4 bytes a row, with the top row first, as an
+	    image file stores them. They are valid until the read is destroyed.
+
+	    Returns NULL and 0 for any read that isn't DONE.
 	**/
 	public inline function getData():haxe.io.Bytes
 		return Raw.wgf_texture_read_get_data(this);
 
 	/**
-	    A DONE read's pixels: RGBA, 8 bits a channel, width * 4 bytes a row, the top row
-	    first, as an image file stores them; valid until the read is destroyed. Any other read:
-	    NULL and 0.
+	    Returns a DONE read's pixels, and their size in bytes.
+
+	    Pixels are RGBA, 8 bits a channel, width * 4 bytes a row, with the top row first, as an
+	    image file stores them. They are valid until the read is destroyed.
+
+	    Returns NULL and 0 for any read that isn't DONE.
 	**/
 	public inline function getSize():Int
 		return Raw.wgf_texture_read_get_size(this);
 
 	/**
-	    A DONE read's pixels saved as a PNG file at `path` (as wgf_fs_write: under the root, its
-	    directories made; on the web, kept in the browser's store): raylib's TakeScreenshot with
-	    wgf_render_read_screen. The write's task, or 0 for a read that isn't DONE, a NULL or
-	    refused path, or no memory to encode it. Encoded on the calling thread, a few hundredths
-	    of a second for a 1280 x 720 frame.
+	    Saves a DONE read's pixels as a PNG file at `path`.
+
+	    With wgf_render_read_screen, this takes a screenshot.
+
+	    - The path works as for wgf_fs_write: under the root, with its directories made. On the
+	      web, the file is kept in the browser's store.
+	    - The pixels are encoded on the calling thread. That takes a few hundredths of a second
+	      for a 1280 x 720 frame.
+
+	    Returns the write's task. Returns 0 for a read that isn't DONE, a NULL or refused `path`,
+	    or if there is no memory to encode it.
 	**/
 	public inline function save(path:String):FsTask
 		return Raw.wgf_texture_read_save(this, path);
 
 	/**
-	    False for a handle that isn't a read. One still PENDING is dropped, unread.
+	    Destroys a read. A read still PENDING is dropped, unread.
+
+	    Returns false for a handle that isn't a read.
 	**/
 	public inline function destroy():Bool
 		return Raw.wgf_texture_read_destroy(this);

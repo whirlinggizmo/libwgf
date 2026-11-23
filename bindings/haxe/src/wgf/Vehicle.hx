@@ -8,200 +8,308 @@ import wgf.impl.Raw;
 **/
 @:forward abstract Vehicle(Actor) from Actor from Int to Actor {
 	/**
-	    Its wheels: 2 to 8 actors under it, in left and right pairs, front first; false for an
-	    odd count, more than 8, or one that isn't an actor under it.
+	    Sets or gets the vehicle's wheels: 2 to 8 actors under it, in left and right pairs, front
+	    first. The setter returns false for an odd count, more than 8, or a wheel that isn't an
+	    actor under it.
 	**/
 	public inline function setWheels(wheels:Array<Actor>):Bool
 		return Raw.wgf_vehicle_set_wheels(this, cast wheels);
 
 	/**
-	    Its wheels: 2 to 8 actors under it, in left and right pairs, front first; false for an
-	    odd count, more than 8, or one that isn't an actor under it.
+	    Sets or gets the vehicle's wheels: 2 to 8 actors under it, in left and right pairs, front
+	    first. The setter returns false for an odd count, more than 8, or a wheel that isn't an
+	    actor under it.
 	**/
 	public inline function getWheelCount():Int
 		return Raw.wgf_vehicle_get_wheel_count(this);
 
 	/**
-	    Its wheels: 2 to 8 actors under it, in left and right pairs, front first; false for an
-	    odd count, more than 8, or one that isn't an actor under it.
+	    Sets or gets the vehicle's wheels: 2 to 8 actors under it, in left and right pairs, front
+	    first. The setter returns false for an odd count, more than 8, or a wheel that isn't an
+	    actor under it.
 	**/
 	public inline function getWheel(index:Int):Actor
 		return Raw.wgf_vehicle_get_wheel(this, index);
 
 	/**
-	    Each wheel's radius and width (m), its spring's travel (m), stiffness (Hz), and damping
-	    (0 none, 1 just enough), the front pair's steering (radians), and the tires' grip
-	    (1 a road tire's; more grips harder).
+	    Sets the wheels, springs, steering, and grip.
+
+	    - set_wheel_size: each wheel's radius and width, in meters.
+	    - set_suspension: each spring's travel (meters), stiffness (Hz), and damping (0 is none, and
+	      1 is just enough).
+	    - set_steering: how far the front pair steers, in radians.
+	    - set_grip: the tires' grip. 1 is a road tire's, and more grips harder.
 	**/
 	public inline function setWheelSize(radius:Float, width:Float):Bool
 		return Raw.wgf_vehicle_set_wheel_size(this, radius, width);
 
 	/**
-	    Each wheel's radius and width (m), its spring's travel (m), stiffness (Hz), and damping
-	    (0 none, 1 just enough), the front pair's steering (radians), and the tires' grip
-	    (1 a road tire's; more grips harder).
+	    Sets the wheels, springs, steering, and grip.
+
+	    - set_wheel_size: each wheel's radius and width, in meters.
+	    - set_suspension: each spring's travel (meters), stiffness (Hz), and damping (0 is none, and
+	      1 is just enough).
+	    - set_steering: how far the front pair steers, in radians.
+	    - set_grip: the tires' grip. 1 is a road tire's, and more grips harder.
 	**/
 	public inline function setSuspension(travel:Float, stiffness:Float, damping:Float):Bool
 		return Raw.wgf_vehicle_set_suspension(this, travel, stiffness, damping);
 
 	/**
-	    Each wheel's radius and width (m), its spring's travel (m), stiffness (Hz), and damping
-	    (0 none, 1 just enough), the front pair's steering (radians), and the tires' grip
-	    (1 a road tire's; more grips harder).
+	    Sets the wheels, springs, steering, and grip.
+
+	    - set_wheel_size: each wheel's radius and width, in meters.
+	    - set_suspension: each spring's travel (meters), stiffness (Hz), and damping (0 is none, and
+	      1 is just enough).
+	    - set_steering: how far the front pair steers, in radians.
+	    - set_grip: the tires' grip. 1 is a road tire's, and more grips harder.
 	**/
 	public inline function setSteering(radians:Float):Bool
 		return Raw.wgf_vehicle_set_steering(this, radians);
 
 	/**
-	    Each wheel's radius and width (m), its spring's travel (m), stiffness (Hz), and damping
-	    (0 none, 1 just enough), the front pair's steering (radians), and the tires' grip
-	    (1 a road tire's; more grips harder).
+	    Sets the wheels, springs, steering, and grip.
+
+	    - set_wheel_size: each wheel's radius and width, in meters.
+	    - set_suspension: each spring's travel (meters), stiffness (Hz), and damping (0 is none, and
+	      1 is just enough).
+	    - set_steering: how far the front pair steers, in radians.
+	    - set_grip: the tires' grip. 1 is a road tire's, and more grips harder.
 	**/
 	public inline function setGrip(grip:Float):Bool
 		return Raw.wgf_vehicle_set_grip(this, grip);
 
 	/**
-	    Each axle's anti-roll bar (N/m, 0 none, the default): the stiffer, the less the vehicle
-	    leans in a corner; taken at once.
+	    Sets or gets each axle's anti-roll bar stiffness, in N/m (default: 0, none). The stiffer it
+	    is, the less the vehicle leans in a corner. A change takes effect at once.
 	**/
 	public inline function setAntiRoll(stiffness:Float):Bool
 		return Raw.wgf_vehicle_set_anti_roll(this, stiffness);
 
 	/**
-	    Each axle's anti-roll bar (N/m, 0 none, the default): the stiffer, the less the vehicle
-	    leans in a corner; taken at once.
+	    Sets or gets each axle's anti-roll bar stiffness, in N/m (default: 0, none). The stiffer it
+	    is, the less the vehicle leans in a corner. A change takes effect at once.
 	**/
 	public inline function getAntiRoll():Float
 		return Raw.wgf_vehicle_get_anti_roll(this);
 
 	/**
-	    As set: (radius, width); (travel, stiffness, damping); radians; grip.
+	    Returns the settings as set.
+
+	    - get_wheel_size: (radius, width).
+	    - get_suspension: (travel, stiffness, damping).
+	    - get_steering: radians.
+	    - get_grip: the grip.
 	**/
 	public inline function getWheelSize(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_vehicle_get_wheel_size(this, into);
 
 	/**
-	    As set: (radius, width); (travel, stiffness, damping); radians; grip.
+	    Returns the settings as set.
+
+	    - get_wheel_size: (radius, width).
+	    - get_suspension: (travel, stiffness, damping).
+	    - get_steering: radians.
+	    - get_grip: the grip.
 	**/
 	public inline function getSuspension(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_vehicle_get_suspension(this, into);
 
 	/**
-	    As set: (radius, width); (travel, stiffness, damping); radians; grip.
+	    Returns the settings as set.
+
+	    - get_wheel_size: (radius, width).
+	    - get_suspension: (travel, stiffness, damping).
+	    - get_steering: radians.
+	    - get_grip: the grip.
 	**/
 	public inline function getSteering():Float
 		return Raw.wgf_vehicle_get_steering(this);
 
 	/**
-	    As set: (radius, width); (travel, stiffness, damping); radians; grip.
+	    Returns the settings as set.
+
+	    - get_wheel_size: (radius, width).
+	    - get_suspension: (travel, stiffness, damping).
+	    - get_steering: radians.
+	    - get_grip: the grip.
 	**/
 	public inline function getGrip():Float
 		return Raw.wgf_vehicle_get_grip(this);
 
 	/**
-	    The engine's torque (Nm) and top speed (rpm), its gearbox's forward ratios (1 to 8, the
-	    first the lowest: 3.2 down to 0.9, say), and which axles it drives.
+	    Sets the engine, the gearbox, and the drive.
+
+	    - set_engine: the engine's torque (Nm) and top speed (rpm).
+	    - set_gears: the gearbox's forward ratios, 1 to 8 of them, the first the lowest. For
+	      example, 3.2 down to 0.9.
+	    - set_drive: which axles the engine drives.
 	**/
 	public inline function setEngine(torque:Float, max_rpm:Float):Bool
 		return Raw.wgf_vehicle_set_engine(this, torque, max_rpm);
 
 	/**
-	    The engine's torque (Nm) and top speed (rpm), its gearbox's forward ratios (1 to 8, the
-	    first the lowest: 3.2 down to 0.9, say), and which axles it drives.
+	    Sets the engine, the gearbox, and the drive.
+
+	    - set_engine: the engine's torque (Nm) and top speed (rpm).
+	    - set_gears: the gearbox's forward ratios, 1 to 8 of them, the first the lowest. For
+	      example, 3.2 down to 0.9.
+	    - set_drive: which axles the engine drives.
 	**/
 	public inline function setGears(ratios:Array<Float>):Bool
 		return Raw.wgf_vehicle_set_gears(this, ratios);
 
 	/**
-	    The engine's torque (Nm) and top speed (rpm), its gearbox's forward ratios (1 to 8, the
-	    first the lowest: 3.2 down to 0.9, say), and which axles it drives.
+	    Sets the engine, the gearbox, and the drive.
+
+	    - set_engine: the engine's torque (Nm) and top speed (rpm).
+	    - set_gears: the gearbox's forward ratios, 1 to 8 of them, the first the lowest. For
+	      example, 3.2 down to 0.9.
+	    - set_drive: which axles the engine drives.
 	**/
 	public inline function setDrive(drive:VehicleDrive):Bool
 		return Raw.wgf_vehicle_set_drive(this, drive);
 
 	/**
-	    As set: (torque, max_rpm); how many forward ratios, and ratio `index` (0 for one it
-	    hasn't); the drive.
+	    Returns the engine, gearbox, and drive as set.
+
+	    - get_engine: (torque, max_rpm).
+	    - get_gear_count: how many forward ratios.
+	    - get_gear_ratio: ratio `index`, or 0 for one the gearbox doesn't have.
+	    - get_drive: the drive.
 	**/
 	public inline function getEngine(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_vehicle_get_engine(this, into);
 
 	/**
-	    As set: (torque, max_rpm); how many forward ratios, and ratio `index` (0 for one it
-	    hasn't); the drive.
+	    Returns the engine, gearbox, and drive as set.
+
+	    - get_engine: (torque, max_rpm).
+	    - get_gear_count: how many forward ratios.
+	    - get_gear_ratio: ratio `index`, or 0 for one the gearbox doesn't have.
+	    - get_drive: the drive.
 	**/
 	public inline function getGearCount():Int
 		return Raw.wgf_vehicle_get_gear_count(this);
 
 	/**
-	    As set: (torque, max_rpm); how many forward ratios, and ratio `index` (0 for one it
-	    hasn't); the drive.
+	    Returns the engine, gearbox, and drive as set.
+
+	    - get_engine: (torque, max_rpm).
+	    - get_gear_count: how many forward ratios.
+	    - get_gear_ratio: ratio `index`, or 0 for one the gearbox doesn't have.
+	    - get_drive: the drive.
 	**/
 	public inline function getGearRatio(index:Int):Float
 		return Raw.wgf_vehicle_get_gear_ratio(this, index);
 
 	/**
-	    As set: (torque, max_rpm); how many forward ratios, and ratio `index` (0 for one it
-	    hasn't); the drive.
+	    Returns the engine, gearbox, and drive as set.
+
+	    - get_engine: (torque, max_rpm).
+	    - get_gear_count: how many forward ratios.
+	    - get_gear_ratio: ratio `index`, or 0 for one the gearbox doesn't have.
+	    - get_drive: the drive.
 	**/
 	public inline function getDrive():VehicleDrive
 		return Raw.wgf_vehicle_get_drive(this);
 
 	/**
-	    The driver's intent, until set again: throttle 0 to 1 (below 0 is reverse), brake 0 to 1,
-	    steering -1 (full left) to 1 (full right), and the hand brake on the rear wheels; each
-	    clamped. Set it each tick from the input (wgf_action.h).
+	    Sets the driver's intent, which holds until it is set again. Set it each tick from the input
+	    (wgf_action.h). Each value is clamped.
+
+	    - `throttle`: 0 to 1. Below 0 is reverse.
+	    - `brake`: 0 to 1.
+	    - `steer`: -1 (full left) to 1 (full right).
+	    - `hand_brake`: the hand brake, on the rear wheels.
 	**/
 	public inline function setInput(throttle:Float, brake:Float, steer:Float, hand_brake:Bool):Bool
 		return Raw.wgf_vehicle_set_input(this, throttle, brake, steer, hand_brake);
 
 	/**
-	    How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
-	    it is in (1 the lowest, -1 reverse, 0 neutral), and how hard wheel `index`'s tire works,
-	    as a share of its grip's peak: below 1 gripping (a free-rolling wheel a little above 0,
-	    its small slip angle), 1 at the limit, above it sliding or spinning, up to 10 (traction
-	    control keeps it near 1, tire smoke shows above about 1.5); the larger of along and
-	    across the tire; 0 for a wheel it hasn't, or in the air.
+	    Returns how the vehicle is going.
+
+	    - get_speed: its speed along its +z, in meters a second. Below 0 is backing up.
+	    - get_rpm: the engine's rpm.
+	    - get_gear: the gear it is in. 1 is the lowest, -1 is reverse, and 0 is neutral.
+	    - get_wheel_slip: how hard wheel `index`'s tire works, as a share of its grip's peak. It is
+	      the larger of the slip along the tire and across it.
+
+	    Wheel slip:
+	    - Below 1, the tire grips. A free-rolling wheel reads a little above 0, from its small slip
+	      angle.
+	    - 1 is at the limit.
+	    - Above 1 it is sliding or spinning, up to 10. Traction control keeps it near 1, and tire
+	      smoke shows above about 1.5.
+	    - It is 0 for a wheel the vehicle doesn't have, or a wheel in the air.
 	**/
 	public inline function getSpeed():Float
 		return Raw.wgf_vehicle_get_speed(this);
 
 	/**
-	    How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
-	    it is in (1 the lowest, -1 reverse, 0 neutral), and how hard wheel `index`'s tire works,
-	    as a share of its grip's peak: below 1 gripping (a free-rolling wheel a little above 0,
-	    its small slip angle), 1 at the limit, above it sliding or spinning, up to 10 (traction
-	    control keeps it near 1, tire smoke shows above about 1.5); the larger of along and
-	    across the tire; 0 for a wheel it hasn't, or in the air.
+	    Returns how the vehicle is going.
+
+	    - get_speed: its speed along its +z, in meters a second. Below 0 is backing up.
+	    - get_rpm: the engine's rpm.
+	    - get_gear: the gear it is in. 1 is the lowest, -1 is reverse, and 0 is neutral.
+	    - get_wheel_slip: how hard wheel `index`'s tire works, as a share of its grip's peak. It is
+	      the larger of the slip along the tire and across it.
+
+	    Wheel slip:
+	    - Below 1, the tire grips. A free-rolling wheel reads a little above 0, from its small slip
+	      angle.
+	    - 1 is at the limit.
+	    - Above 1 it is sliding or spinning, up to 10. Traction control keeps it near 1, and tire
+	      smoke shows above about 1.5.
+	    - It is 0 for a wheel the vehicle doesn't have, or a wheel in the air.
 	**/
 	public inline function getRpm():Float
 		return Raw.wgf_vehicle_get_rpm(this);
 
 	/**
-	    How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
-	    it is in (1 the lowest, -1 reverse, 0 neutral), and how hard wheel `index`'s tire works,
-	    as a share of its grip's peak: below 1 gripping (a free-rolling wheel a little above 0,
-	    its small slip angle), 1 at the limit, above it sliding or spinning, up to 10 (traction
-	    control keeps it near 1, tire smoke shows above about 1.5); the larger of along and
-	    across the tire; 0 for a wheel it hasn't, or in the air.
+	    Returns how the vehicle is going.
+
+	    - get_speed: its speed along its +z, in meters a second. Below 0 is backing up.
+	    - get_rpm: the engine's rpm.
+	    - get_gear: the gear it is in. 1 is the lowest, -1 is reverse, and 0 is neutral.
+	    - get_wheel_slip: how hard wheel `index`'s tire works, as a share of its grip's peak. It is
+	      the larger of the slip along the tire and across it.
+
+	    Wheel slip:
+	    - Below 1, the tire grips. A free-rolling wheel reads a little above 0, from its small slip
+	      angle.
+	    - 1 is at the limit.
+	    - Above 1 it is sliding or spinning, up to 10. Traction control keeps it near 1, and tire
+	      smoke shows above about 1.5.
+	    - It is 0 for a wheel the vehicle doesn't have, or a wheel in the air.
 	**/
 	public inline function getGear():Int
 		return Raw.wgf_vehicle_get_gear(this);
 
 	/**
-	    How it goes: its speed along its +z (m/s; below 0 backing), the engine's rpm, the gear
-	    it is in (1 the lowest, -1 reverse, 0 neutral), and how hard wheel `index`'s tire works,
-	    as a share of its grip's peak: below 1 gripping (a free-rolling wheel a little above 0,
-	    its small slip angle), 1 at the limit, above it sliding or spinning, up to 10 (traction
-	    control keeps it near 1, tire smoke shows above about 1.5); the larger of along and
-	    across the tire; 0 for a wheel it hasn't, or in the air.
+	    Returns how the vehicle is going.
+
+	    - get_speed: its speed along its +z, in meters a second. Below 0 is backing up.
+	    - get_rpm: the engine's rpm.
+	    - get_gear: the gear it is in. 1 is the lowest, -1 is reverse, and 0 is neutral.
+	    - get_wheel_slip: how hard wheel `index`'s tire works, as a share of its grip's peak. It is
+	      the larger of the slip along the tire and across it.
+
+	    Wheel slip:
+	    - Below 1, the tire grips. A free-rolling wheel reads a little above 0, from its small slip
+	      angle.
+	    - 1 is at the limit.
+	    - Above 1 it is sliding or spinning, up to 10. Traction control keeps it near 1, and tire
+	      smoke shows above about 1.5.
+	    - It is 0 for a wheel the vehicle doesn't have, or a wheel in the air.
 	**/
 	public inline function getWheelSlip(index:Int):Float
 		return Raw.wgf_vehicle_get_wheel_slip(this, index);
 
 	/**
-	    At rest where it is: its velocity, spin, wheels, engine, and gearbox stopped, its intent
-	    none (a car put back on the grid: set its transform, then reset).
+	    Puts the vehicle at rest where it is. Its velocity, spin, wheels, engine, and gearbox are
+	    stopped, and its intent is cleared. To put a car back on the grid, set its transform, then
+	    reset it.
 	**/
 	public inline function reset():Bool
 		return Raw.wgf_vehicle_reset(this);

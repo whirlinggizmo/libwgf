@@ -8,8 +8,9 @@
 extern "C" {
 #endif
 
-/* 2 floats, in order, with no padding: the layout is a contract with every
- * binding, and never changes. */
+/* A vector of 2 floats, in order, with no padding.
+ *
+ * The layout is a contract with every binding, and never changes. */
 typedef struct wgf_vec2_t {
     float x;
     float y;
@@ -61,14 +62,14 @@ static inline float wgf_vec2_length(wgf_vec2_t v)
     return sqrtf(wgf_vec2_dot(v, v));
 }
 
-/* `v` at length 1; a zero vector stays zero. */
+/* Returns `v` at length 1. A zero vector stays zero. */
 static inline wgf_vec2_t wgf_vec2_normalize(wgf_vec2_t v)
 {
     const float length = wgf_vec2_length(v);
     return length > 0.0f ? wgf_vec2_scale(v, 1.0f / length) : v;
 }
 
-/* From a (t = 0) to b (t = 1); t outside 0..1 extrapolates. */
+/* Returns the vector from `a` (at `t` = 0) to `b` (at `t` = 1). A `t` outside 0..1 extrapolates. */
 static inline wgf_vec2_t wgf_vec2_lerp(wgf_vec2_t a, wgf_vec2_t b, float t)
 {
     wgf_vec2_t r;
@@ -77,26 +78,26 @@ static inline wgf_vec2_t wgf_vec2_lerp(wgf_vec2_t a, wgf_vec2_t b, float t)
     return r;
 }
 
-/* How far a is from b. */
+/* Returns how far `a` is from `b`. */
 static inline float wgf_vec2_distance(wgf_vec2_t a, wgf_vec2_t b)
 {
     return wgf_vec2_length(wgf_vec2_sub(a, b));
 }
 
-/* Its angle, radians from +x toward +y (atan2). */
+/* Returns the angle of `v`, in radians from +x toward +y, as atan2 gives it. */
 static inline float wgf_vec2_angle(wgf_vec2_t v)
 {
     return atan2f(v.y, v.x);
 }
 
-/* Turned by `radians`, from +x toward +y. */
+/* Returns `v` turned by `radians`, from +x toward +y. */
 static inline wgf_vec2_t wgf_vec2_rotate(wgf_vec2_t v, float radians)
 {
     const float c = cosf(radians), s = sinf(radians);
     return wgf_vec2_make(v.x * c - v.y * s, v.x * s + v.y * c);
 }
 
-/* `from` toward `to` by at most `step`, never past it. */
+/* Returns `from` moved toward `to` by at most `step`, never past it. */
 static inline wgf_vec2_t wgf_vec2_move_toward(wgf_vec2_t from, wgf_vec2_t to, float step)
 {
     const wgf_vec2_t d = wgf_vec2_sub(to, from);
@@ -104,13 +105,13 @@ static inline wgf_vec2_t wgf_vec2_move_toward(wgf_vec2_t from, wgf_vec2_t to, fl
     return len <= step || len == 0.0f ? to : wgf_vec2_add(from, wgf_vec2_scale(d, step / len));
 }
 
-/* Bounced off a surface of unit `normal`. */
+/* Returns `v` bounced off a surface whose normal is `normal`, a unit vector. */
 static inline wgf_vec2_t wgf_vec2_reflect(wgf_vec2_t v, wgf_vec2_t normal)
 {
     return wgf_vec2_sub(v, wgf_vec2_scale(normal, 2.0f * wgf_vec2_dot(v, normal)));
 }
 
-/* Each part the smaller, or the larger, of the two. */
+/* Returns each part the smaller of `a`'s and `b`'s (min), or the larger (max). */
 static inline wgf_vec2_t wgf_vec2_min(wgf_vec2_t a, wgf_vec2_t b)
 {
     return wgf_vec2_make(a.x < b.x ? a.x : b.x, a.y < b.y ? a.y : b.y);
@@ -121,13 +122,15 @@ static inline wgf_vec2_t wgf_vec2_max(wgf_vec2_t a, wgf_vec2_t b)
     return wgf_vec2_make(a.x > b.x ? a.x : b.x, a.y > b.y ? a.y : b.y);
 }
 
-/* Each part held within lo's and hi's. */
+/* Returns each part of `v` held within the same part of `lo` and of `hi`. */
 static inline wgf_vec2_t wgf_vec2_clamp(wgf_vec2_t v, wgf_vec2_t lo, wgf_vec2_t hi)
 {
     return wgf_vec2_max(wgf_vec2_min(v, hi), lo);
 }
 
-/* Its length held within lo..hi, its direction kept; a zero vector stays zero. */
+/* Returns `v` with its length held within `lo`..`hi` and its direction kept.
+ *
+ * A zero vector stays zero. */
 static inline wgf_vec2_t wgf_vec2_clamp_length(wgf_vec2_t v, float lo, float hi)
 {
     const float len = wgf_vec2_length(v);

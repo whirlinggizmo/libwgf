@@ -2,8 +2,7 @@
 package wgf;
 
 /**
-    How one image holds the six faces, raylib's CUBEMAP_LAYOUT_*. A face is a square of
-    `size` pixels.
+    How one image holds the six faces. A face is a square of `size` pixels.
 **/
 enum abstract CubemapLayout(Int) from Int to Int {
 	var AUTO = 0;

@@ -4,216 +4,317 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    Input actions: what the player means ("steer", "fire", "pause"), bound by name to
-    keys, pad buttons, pad axes, and touch regions, and read as one, so a game asks for
-    "fire" and never for Space or the south button. An action is made by its first
-    binding; a name is 1 to 31 bytes; at most 64 actions, each with at most 16 bindings.
-    Pads are read across all four: the one pushed furthest wins.
+    Input actions: what the player means, such as "steer", "fire", or "pause".
+
+    An action is bound by name to keys, pad buttons, pad axes, and touch regions, and they are
+    read as one. A game asks for "fire", never for Space or the south button.
+
+    - An action is made by its first binding.
+    - A name is 1 to 31 bytes.
+    - There are at most 64 actions, each with at most 16 bindings.
+    - Pads are read across all four. The one pushed furthest wins.
 
     Each binding gives a value from -1 to 1:
 
       a key, a pad button   1 while it is down
-      a pair of keys        -1 while the first is down, 1 the second, 0 both or neither
+      a pair of keys        -1 while the first is down, 1 while the second is, 0 for both or
+                            neither
       a pair of pad buttons the same, across the pads (the d-pad's left and right as a
                             steering axis)
       a pad axis            its value (sticks -1 to 1, past the dead zone; triggers 0 to 1),
                             either side (direction 0) or one side only (1 or -1, read as
-                            0 to 1), below `threshold` as 0
+                            0 to 1); a value below `threshold` reads as 0
       a touch region        1 while a finger is down in it (logical pixels, as the
-                            pointer's)
-      an on-screen stick    its pull across or up, -1 to 1 (below)
+                            pointer's are)
+      an on-screen stick    its pull across or up, -1 to 1 (see wgf_action_bind_touch_stick)
 
-    and the action is the binding pushed furthest: get_axis its value, get_value how far
-    (0 to 1), and down while that is at least 0.5 (a pad axis: at least its threshold, or
-    0.5 with a threshold of 0). Read inside a tick or a frame, as keys are: pressed and
-    released are since the previous tick, or the previous frame.
+    The action takes the value of the binding pushed furthest:
+    - get_axis returns that value.
+    - get_value returns how far it is pushed (0 to 1).
+    - The action is down while that is at least 0.5. For a pad axis, it is down at its
+      threshold or more, or at 0.5 or more with a threshold of 0.
+
+    Read actions inside a tick or a frame, as keys are. Pressed and released mean since the
+    previous tick, or the previous frame.
 **/
 class Action {
 	/**
-	    Bindings added to `action` (made by the first); false for a name breaking the rule, a
-	    65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
-	    isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+	    Adds a binding to `action`, making the action with its first binding.
+
+	    Returns false for any of these:
+	    - a name that breaks the rule above
+	    - a 65th action, or a 17th binding
+	    - a key, button, or axis that isn't one
+	    - a direction that isn't -1, 0, or 1
+	    - a threshold outside 0 to 1
+	    - a region with no area
 	**/
 	public static inline function bindKey(action:String, key:KeyboardKey):Bool
 		return Raw.wgf_action_bind_key(action, key);
 
 	/**
-	    Bindings added to `action` (made by the first); false for a name breaking the rule, a
-	    65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
-	    isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+	    Adds a binding to `action`, making the action with its first binding.
+
+	    Returns false for any of these:
+	    - a name that breaks the rule above
+	    - a 65th action, or a 17th binding
+	    - a key, button, or axis that isn't one
+	    - a direction that isn't -1, 0, or 1
+	    - a threshold outside 0 to 1
+	    - a region with no area
 	**/
 	public static inline function bindKeys(action:String, negative:KeyboardKey, positive:KeyboardKey):Bool
 		return Raw.wgf_action_bind_keys(action, negative, positive);
 
 	/**
-	    Bindings added to `action` (made by the first); false for a name breaking the rule, a
-	    65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
-	    isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+	    Adds a binding to `action`, making the action with its first binding.
+
+	    Returns false for any of these:
+	    - a name that breaks the rule above
+	    - a 65th action, or a 17th binding
+	    - a key, button, or axis that isn't one
+	    - a direction that isn't -1, 0, or 1
+	    - a threshold outside 0 to 1
+	    - a region with no area
 	**/
 	public static inline function bindPadButton(action:String, button:GamepadButton):Bool
 		return Raw.wgf_action_bind_pad_button(action, button);
 
 	/**
-	    Bindings added to `action` (made by the first); false for a name breaking the rule, a
-	    65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
-	    isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+	    Adds a binding to `action`, making the action with its first binding.
+
+	    Returns false for any of these:
+	    - a name that breaks the rule above
+	    - a 65th action, or a 17th binding
+	    - a key, button, or axis that isn't one
+	    - a direction that isn't -1, 0, or 1
+	    - a threshold outside 0 to 1
+	    - a region with no area
 	**/
 	public static inline function bindPadButtons(action:String, negative:GamepadButton, positive:GamepadButton):Bool
 		return Raw.wgf_action_bind_pad_buttons(action, negative, positive);
 
 	/**
-	    Bindings added to `action` (made by the first); false for a name breaking the rule, a
-	    65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
-	    isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+	    Adds a binding to `action`, making the action with its first binding.
+
+	    Returns false for any of these:
+	    - a name that breaks the rule above
+	    - a 65th action, or a 17th binding
+	    - a key, button, or axis that isn't one
+	    - a direction that isn't -1, 0, or 1
+	    - a threshold outside 0 to 1
+	    - a region with no area
 	**/
 	public static inline function bindPadAxis(action:String, axis:GamepadAxis, direction:Int, threshold:Float):Bool
 		return Raw.wgf_action_bind_pad_axis(action, axis, direction, threshold);
 
 	/**
-	    Bindings added to `action` (made by the first); false for a name breaking the rule, a
-	    65th action, a 17th binding, a key, button, or axis that isn't one, a direction that
-	    isn't -1, 0, or 1, a threshold outside 0 to 1, or a region with no area.
+	    Adds a binding to `action`, making the action with its first binding.
+
+	    Returns false for any of these:
+	    - a name that breaks the rule above
+	    - a 65th action, or a 17th binding
+	    - a key, button, or axis that isn't one
+	    - a direction that isn't -1, 0, or 1
+	    - a threshold outside 0 to 1
+	    - a region with no area
 	**/
 	public static inline function bindTouch(action:String, x:Float, y:Float, width:Float, height:Float):Bool
 		return Raw.wgf_action_bind_touch(action, x, y, width, height);
 
 	/**
-	    An on-screen stick: a finger landing in the region (logical pixels) makes a stick where
-	    it landed, and its pull, up to `radius` away, is read as `action_x` across and `action_y`
-	    up (-1 to 1, held within the circle), as a pad's left stick bound to them is; it ends when
-	    the finger lifts. At most 4 sticks bound at once: one whose actions are cleared
-	    (wgf_action_clear) is gone, and bound again, as a game does as the screen changes, it is
-	    the same stick, a finger holding it keeping it. False for two actions alike, a region with
-	    no area, a radius not above 0, a fifth stick (and as the other bindings are refused). For
-	    drawing it: whether a
-	    finger holds it, where it landed, and where its knob is (logical pixels; 0, 0 while none
-	    holds it), by its across action.
+	    Binds an on-screen stick to `action_x` (across) and `action_y` (up).
+
+	    A finger landing in the region (logical pixels) makes a stick where it landed. Its pull, up
+	    to `radius` away, is read as `action_x` and `action_y`, each -1 to 1 and held within the
+	    circle. That is how a pad's left stick bound to them reads. The stick ends when the finger
+	    lifts.
+
+	    - At most 4 sticks are bound at once.
+	    - A stick whose actions are cleared (wgf_action_clear) is gone.
+	    - Bound again, as a game does as the screen changes, it is the same stick. A finger
+	      holding it keeps holding it.
+
+	    Returns false for two actions alike, a region with no area, a radius not above 0, or a
+	    fifth stick. It is also refused for the reasons the other bindings are.
+
+	    For drawing the stick, the getters take its across action:
+	    - is_stick_held: whether a finger holds it.
+	    - get_stick_origin: where the finger landed.
+	    - get_stick_knob: where its knob is.
+	    Positions are in logical pixels, and 0, 0 while no finger holds it.
 	**/
 	public static inline function bindTouchStick(action_x:String, action_y:String, x:Float, y:Float, width:Float, height:Float, radius:Float):Bool
 		return Raw.wgf_action_bind_touch_stick(action_x, action_y, x, y, width, height, radius);
 
 	/**
-	    An on-screen stick: a finger landing in the region (logical pixels) makes a stick where
-	    it landed, and its pull, up to `radius` away, is read as `action_x` across and `action_y`
-	    up (-1 to 1, held within the circle), as a pad's left stick bound to them is; it ends when
-	    the finger lifts. At most 4 sticks bound at once: one whose actions are cleared
-	    (wgf_action_clear) is gone, and bound again, as a game does as the screen changes, it is
-	    the same stick, a finger holding it keeping it. False for two actions alike, a region with
-	    no area, a radius not above 0, a fifth stick (and as the other bindings are refused). For
-	    drawing it: whether a
-	    finger holds it, where it landed, and where its knob is (logical pixels; 0, 0 while none
-	    holds it), by its across action.
+	    Binds an on-screen stick to `action_x` (across) and `action_y` (up).
+
+	    A finger landing in the region (logical pixels) makes a stick where it landed. Its pull, up
+	    to `radius` away, is read as `action_x` and `action_y`, each -1 to 1 and held within the
+	    circle. That is how a pad's left stick bound to them reads. The stick ends when the finger
+	    lifts.
+
+	    - At most 4 sticks are bound at once.
+	    - A stick whose actions are cleared (wgf_action_clear) is gone.
+	    - Bound again, as a game does as the screen changes, it is the same stick. A finger
+	      holding it keeps holding it.
+
+	    Returns false for two actions alike, a region with no area, a radius not above 0, or a
+	    fifth stick. It is also refused for the reasons the other bindings are.
+
+	    For drawing the stick, the getters take its across action:
+	    - is_stick_held: whether a finger holds it.
+	    - get_stick_origin: where the finger landed.
+	    - get_stick_knob: where its knob is.
+	    Positions are in logical pixels, and 0, 0 while no finger holds it.
 	**/
 	public static inline function isStickHeld(action_x:String):Bool
 		return Raw.wgf_action_is_stick_held(action_x);
 
 	/**
-	    An on-screen stick: a finger landing in the region (logical pixels) makes a stick where
-	    it landed, and its pull, up to `radius` away, is read as `action_x` across and `action_y`
-	    up (-1 to 1, held within the circle), as a pad's left stick bound to them is; it ends when
-	    the finger lifts. At most 4 sticks bound at once: one whose actions are cleared
-	    (wgf_action_clear) is gone, and bound again, as a game does as the screen changes, it is
-	    the same stick, a finger holding it keeping it. False for two actions alike, a region with
-	    no area, a radius not above 0, a fifth stick (and as the other bindings are refused). For
-	    drawing it: whether a
-	    finger holds it, where it landed, and where its knob is (logical pixels; 0, 0 while none
-	    holds it), by its across action.
+	    Binds an on-screen stick to `action_x` (across) and `action_y` (up).
+
+	    A finger landing in the region (logical pixels) makes a stick where it landed. Its pull, up
+	    to `radius` away, is read as `action_x` and `action_y`, each -1 to 1 and held within the
+	    circle. That is how a pad's left stick bound to them reads. The stick ends when the finger
+	    lifts.
+
+	    - At most 4 sticks are bound at once.
+	    - A stick whose actions are cleared (wgf_action_clear) is gone.
+	    - Bound again, as a game does as the screen changes, it is the same stick. A finger
+	      holding it keeps holding it.
+
+	    Returns false for two actions alike, a region with no area, a radius not above 0, or a
+	    fifth stick. It is also refused for the reasons the other bindings are.
+
+	    For drawing the stick, the getters take its across action:
+	    - is_stick_held: whether a finger holds it.
+	    - get_stick_origin: where the finger landed.
+	    - get_stick_knob: where its knob is.
+	    Positions are in logical pixels, and 0, 0 while no finger holds it.
 	**/
 	public static inline function getStickOrigin(action_x:String, ?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_action_get_stick_origin(action_x, into);
 
 	/**
-	    An on-screen stick: a finger landing in the region (logical pixels) makes a stick where
-	    it landed, and its pull, up to `radius` away, is read as `action_x` across and `action_y`
-	    up (-1 to 1, held within the circle), as a pad's left stick bound to them is; it ends when
-	    the finger lifts. At most 4 sticks bound at once: one whose actions are cleared
-	    (wgf_action_clear) is gone, and bound again, as a game does as the screen changes, it is
-	    the same stick, a finger holding it keeping it. False for two actions alike, a region with
-	    no area, a radius not above 0, a fifth stick (and as the other bindings are refused). For
-	    drawing it: whether a
-	    finger holds it, where it landed, and where its knob is (logical pixels; 0, 0 while none
-	    holds it), by its across action.
+	    Binds an on-screen stick to `action_x` (across) and `action_y` (up).
+
+	    A finger landing in the region (logical pixels) makes a stick where it landed. Its pull, up
+	    to `radius` away, is read as `action_x` and `action_y`, each -1 to 1 and held within the
+	    circle. That is how a pad's left stick bound to them reads. The stick ends when the finger
+	    lifts.
+
+	    - At most 4 sticks are bound at once.
+	    - A stick whose actions are cleared (wgf_action_clear) is gone.
+	    - Bound again, as a game does as the screen changes, it is the same stick. A finger
+	      holding it keeps holding it.
+
+	    Returns false for two actions alike, a region with no area, a radius not above 0, or a
+	    fifth stick. It is also refused for the reasons the other bindings are.
+
+	    For drawing the stick, the getters take its across action:
+	    - is_stick_held: whether a finger holds it.
+	    - get_stick_origin: where the finger landed.
+	    - get_stick_knob: where its knob is.
+	    Positions are in logical pixels, and 0, 0 while no finger holds it.
 	**/
 	public static inline function getStickKnob(action_x:String, ?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_action_get_stick_knob(action_x, into);
 
 	/**
-	    Every binding of `action` taken off, the action kept (a remap screen binds it again);
-	    false for an action there isn't.
+	    Removes every binding of `action` and keeps the action, so a remap screen can bind it
+	    again.
+
+	    Returns false if there is no such action.
 	**/
 	public static inline function clear(action:String):Bool
 		return Raw.wgf_action_clear(action);
 
 	/**
-	    The action as it is: its axis (-1 to 1), its value (0 to 1), and its state. 0, 0, and
-	    UP for an action there isn't.
+	    Returns the action as it is now: its axis (-1 to 1), its value (0 to 1), and its state.
+
+	    Returns 0, 0, and UP for an action that doesn't exist.
 	**/
 	public static inline function getAxis(action:String):Float
 		return Raw.wgf_action_get_axis(action);
 
 	/**
-	    The action as it is: its axis (-1 to 1), its value (0 to 1), and its state. 0, 0, and
-	    UP for an action there isn't.
+	    Returns the action as it is now: its axis (-1 to 1), its value (0 to 1), and its state.
+
+	    Returns 0, 0, and UP for an action that doesn't exist.
 	**/
 	public static inline function getValue(action:String):Float
 		return Raw.wgf_action_get_value(action);
 
 	/**
-	    The action as it is: its axis (-1 to 1), its value (0 to 1), and its state. 0, 0, and
-	    UP for an action there isn't.
+	    Returns the action as it is now: its axis (-1 to 1), its value (0 to 1), and its state.
+
+	    Returns 0, 0, and UP for an action that doesn't exist.
 	**/
 	public static inline function getState(action:String):InputState
 		return Raw.wgf_action_get_state(action);
 
 	/**
-	    The action as it is: its axis (-1 to 1), its value (0 to 1), and its state. 0, 0, and
-	    UP for an action there isn't.
+	    Returns the action as it is now: its axis (-1 to 1), its value (0 to 1), and its state.
+
+	    Returns 0, 0, and UP for an action that doesn't exist.
 	**/
 	public static inline function isDown(action:String):Bool
 		return Raw.wgf_action_is_down(action);
 
 	/**
-	    The action as it is: its axis (-1 to 1), its value (0 to 1), and its state. 0, 0, and
-	    UP for an action there isn't.
+	    Returns the action as it is now: its axis (-1 to 1), its value (0 to 1), and its state.
+
+	    Returns 0, 0, and UP for an action that doesn't exist.
 	**/
 	public static inline function isPressed(action:String):Bool
 		return Raw.wgf_action_is_pressed(action);
 
 	/**
-	    The action as it is: its axis (-1 to 1), its value (0 to 1), and its state. 0, 0, and
-	    UP for an action there isn't.
+	    Returns the action as it is now: its axis (-1 to 1), its value (0 to 1), and its state.
+
+	    Returns 0, 0, and UP for an action that doesn't exist.
 	**/
 	public static inline function isReleased(action:String):Bool
 		return Raw.wgf_action_is_released(action);
 
 	/**
-	    The actions, in the order made, and each one's bindings as text for a help line or a
-	    remap screen ("Left / Right", "Space", "Pad south", "Left stick X", "Right trigger",
-	    "Touch"): libwgf's, valid until the next call here. "" past the end.
+	    Lists the actions, in the order they were made, and each one's bindings as text.
+
+	    The text is for a help line or a remap screen, such as "Left / Right", "Space", "Pad south",
+	    "Left stick X", "Right trigger", or "Touch". libwgf owns the strings, which are valid until
+	    the next call here. Returns "" past the end.
 	**/
 	public static inline function getCount():Int
 		return Raw.wgf_action_get_count();
 
 	/**
-	    The actions, in the order made, and each one's bindings as text for a help line or a
-	    remap screen ("Left / Right", "Space", "Pad south", "Left stick X", "Right trigger",
-	    "Touch"): libwgf's, valid until the next call here. "" past the end.
+	    Lists the actions, in the order they were made, and each one's bindings as text.
+
+	    The text is for a help line or a remap screen, such as "Left / Right", "Space", "Pad south",
+	    "Left stick X", "Right trigger", or "Touch". libwgf owns the strings, which are valid until
+	    the next call here. Returns "" past the end.
 	**/
 	public static inline function getName(index:Int):String
 		return Raw.wgf_action_get_name(index);
 
 	/**
-	    The actions, in the order made, and each one's bindings as text for a help line or a
-	    remap screen ("Left / Right", "Space", "Pad south", "Left stick X", "Right trigger",
-	    "Touch"): libwgf's, valid until the next call here. "" past the end.
+	    Lists the actions, in the order they were made, and each one's bindings as text.
+
+	    The text is for a help line or a remap screen, such as "Left / Right", "Space", "Pad south",
+	    "Left stick X", "Right trigger", or "Touch". libwgf owns the strings, which are valid until
+	    the next call here. Returns "" past the end.
 	**/
 	public static inline function getBindingCount(action:String):Int
 		return Raw.wgf_action_get_binding_count(action);
 
 	/**
-	    The actions, in the order made, and each one's bindings as text for a help line or a
-	    remap screen ("Left / Right", "Space", "Pad south", "Left stick X", "Right trigger",
-	    "Touch"): libwgf's, valid until the next call here. "" past the end.
+	    Lists the actions, in the order they were made, and each one's bindings as text.
+
+	    The text is for a help line or a remap screen, such as "Left / Right", "Space", "Pad south",
+	    "Left stick X", "Right trigger", or "Touch". libwgf owns the strings, which are valid until
+	    the next call here. Returns "" past the end.
 	**/
 	public static inline function getBindingText(action:String, index:Int):String
 		return Raw.wgf_action_get_binding_text(action, index);

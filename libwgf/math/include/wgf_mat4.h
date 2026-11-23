@@ -11,10 +11,12 @@
 extern "C" {
 #endif
 
-/* A 4 by 4 matrix: 16 floats, column by column (m[column * 4 + row]), with no
- * padding, as OpenGL and shaders take them. A point is a column vector on the right:
- * mul(a, b) applied to a point applies b first, then a. Space is right-handed; a
- * camera looks down its -z, with +y up. */
+/* A 4 by 4 matrix: 16 floats, column by column (m[column * 4 + row]), with no padding.
+ *
+ * This is the layout OpenGL and shaders take. A point is a column vector on the right, so
+ * mul(a, b) applied to a point applies b first, then a.
+ *
+ * Space is right-handed. A camera looks down its -z, with +y up. */
 typedef struct wgf_mat4_t {
     float m[16];
 } wgf_mat4_t;
@@ -31,7 +33,7 @@ static inline wgf_mat4_t wgf_mat4_identity(void)
     return r;
 }
 
-/* a times b: b's transform, then a's. */
+/* Returns `a` times `b`: `b`'s transform, then `a`'s. */
 static inline wgf_mat4_t wgf_mat4_mul(wgf_mat4_t a, wgf_mat4_t b)
 {
     wgf_mat4_t r;
@@ -56,7 +58,9 @@ static inline wgf_mat4_t wgf_mat4_transpose(wgf_mat4_t a)
     return r;
 }
 
-/* The cofactors of a, transposed: its inverse times its determinant. */
+/* Returns the adjugate of `m`: its cofactors, transposed.
+ *
+ * That is its inverse times its determinant. */
 static inline wgf_mat4_t wgf_mat4_adjugate(wgf_mat4_t m)
 {
     const float *a = m.m;
@@ -103,8 +107,10 @@ static inline float wgf_mat4_determinant(wgf_mat4_t a)
     return a.m[0] * adj.m[0] + a.m[1] * adj.m[4] + a.m[2] * adj.m[8] + a.m[3] * adj.m[12];
 }
 
-/* The inverse; the identity when there is none (a determinant within 1e-12 of 0,
- * such as a scale of 0), as wgrender's. */
+/* Returns the inverse of `a`.
+ *
+ * Returns the identity if there is none: a determinant within 1e-12 of 0, as from a scale
+ * of 0. */
 static inline wgf_mat4_t wgf_mat4_invert(wgf_mat4_t a)
 {
     wgf_mat4_t r = wgf_mat4_adjugate(a);
@@ -115,8 +121,9 @@ static inline wgf_mat4_t wgf_mat4_invert(wgf_mat4_t a)
     return r;
 }
 
-/* Scale, then rotate, then move: the transform of an actor at `position`, turned by
- * `rotation`, scaled by `scale`. */
+/* Returns the transform of an actor at `position`, turned by `rotation`, and scaled by `scale`.
+ *
+ * It scales, then rotates, then moves. */
 static inline wgf_mat4_t wgf_mat4_from_trs(wgf_vec3_t position, wgf_quat_t rotation,
                                                           wgf_vec3_t scale)
 {
@@ -140,8 +147,10 @@ static inline wgf_mat4_t wgf_mat4_from_trs(wgf_vec3_t position, wgf_quat_t rotat
     return r;
 }
 
-/* The pieces from_trs makes a matrix of, back out of one: exact unless the matrix
- * shears (an uneven scale over a turn), when the nearest rotation is given. */
+/* Returns a matrix's translation, scale, or rotation: the pieces wgf_mat4_from_trs makes it of.
+ *
+ * They are exact unless the matrix shears, as an uneven scale over a turn does. Then the
+ * nearest rotation is given. */
 static inline wgf_vec3_t wgf_mat4_get_translation(wgf_mat4_t m)
 {
     return wgf_vec3_make(m.m[12], m.m[13], m.m[14]);
@@ -188,9 +197,10 @@ static inline wgf_quat_t wgf_mat4_get_rotation(wgf_mat4_t m)
     }
 }
 
-/* A point moved by the whole transform, divided by w where w isn't 0, so a
- * projection maps it into clip space as wgrender's does; a direction only turned and
- * scaled. */
+/* Returns a point moved by the whole transform, or a direction only turned and scaled.
+ *
+ * transform_point divides by w where w isn't 0, so a projection maps the point into clip
+ * space. transform_direction ignores the translation. */
 static inline wgf_vec3_t wgf_mat4_transform_point(wgf_mat4_t m, wgf_vec3_t p)
 {
     float x = m.m[0] * p.x + m.m[4] * p.y + m.m[8] * p.z + m.m[12];
@@ -211,9 +221,12 @@ static inline wgf_vec3_t wgf_mat4_transform_direction(wgf_mat4_t m, wgf_vec3_t d
                              m.m[2] * d.x + m.m[6] * d.y + m.m[10] * d.z);
 }
 
-/* A perspective projection: `fov_y` the vertical field of view in radians, `aspect`
- * width over height, seeing from `near` to `far` in front of the camera (both more
- * than 0), into OpenGL's clip space (z -1 at near, 1 at far). */
+/* Returns a perspective projection into OpenGL's clip space, where z is -1 at near and 1 at far.
+ *
+ * - `fov_y` is the vertical field of view, in radians.
+ * - `aspect` is the width over the height.
+ * - `near_z` and `far_z` are how far in front of the camera it sees from and to. Both must
+ *   be more than 0. */
 static inline wgf_mat4_t wgf_mat4_perspective(float fov_y, float aspect, float near_z, float far_z)
 {
     const float f = 1.0f / wgf_trig_tan(fov_y * 0.5f);
@@ -228,8 +241,10 @@ static inline wgf_mat4_t wgf_mat4_perspective(float fov_y, float aspect, float n
     return r;
 }
 
-/* An orthographic projection of the box from left to right, bottom to top, and near
- * to far in front of the camera, into OpenGL's clip space. */
+/* Returns an orthographic projection into OpenGL's clip space.
+ *
+ * It projects the box from `left` to `right`, `bottom` to `top`, and `near_z` to `far_z` in
+ * front of the camera. */
 static inline wgf_mat4_t wgf_mat4_orthographic(float left, float right, float bottom, float top,
                                                               float near_z, float far_z)
 {
@@ -243,9 +258,10 @@ static inline wgf_mat4_t wgf_mat4_orthographic(float left, float right, float bo
     return r;
 }
 
-/* A view matrix: the world as seen from `eye` looking at `target`, with `up` as near
- * to up as can be. Where eye and target are the same, or up is along the line
- * between them, the identity. */
+/* Returns a view matrix: the world as seen from `eye`, looking at `target`.
+ *
+ * The camera's up is as near to `up` as it can be. Returns the identity if `eye` and `target`
+ * are the same, or if `up` is along the line between them. */
 static inline wgf_mat4_t wgf_mat4_look_at(wgf_vec3_t eye, wgf_vec3_t target,
                                                          wgf_vec3_t up)
 {

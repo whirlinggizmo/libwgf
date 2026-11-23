@@ -8,8 +8,9 @@
 extern "C" {
 #endif
 
-/* 3 floats, in order, with no padding: the layout is a contract with every
- * binding, and never changes. */
+/* A vector of 3 floats, in order, with no padding.
+ *
+ * The layout is a contract with every binding, and never changes. */
 typedef struct wgf_vec3_t {
     float x;
     float y;
@@ -66,14 +67,14 @@ static inline float wgf_vec3_length(wgf_vec3_t v)
     return sqrtf(wgf_vec3_dot(v, v));
 }
 
-/* `v` at length 1; a zero vector stays zero. */
+/* Returns `v` at length 1. A zero vector stays zero. */
 static inline wgf_vec3_t wgf_vec3_normalize(wgf_vec3_t v)
 {
     const float length = wgf_vec3_length(v);
     return length > 0.0f ? wgf_vec3_scale(v, 1.0f / length) : v;
 }
 
-/* From a (t = 0) to b (t = 1); t outside 0..1 extrapolates. */
+/* Returns the vector from `a` (at `t` = 0) to `b` (at `t` = 1). A `t` outside 0..1 extrapolates. */
 static inline wgf_vec3_t wgf_vec3_lerp(wgf_vec3_t a, wgf_vec3_t b, float t)
 {
     wgf_vec3_t r;
@@ -83,7 +84,7 @@ static inline wgf_vec3_t wgf_vec3_lerp(wgf_vec3_t a, wgf_vec3_t b, float t)
     return r;
 }
 
-/* Right-handed: x cross y is z. */
+/* Returns the cross product of `a` and `b`. It is right-handed: x cross y is z. */
 static inline wgf_vec3_t wgf_vec3_cross(wgf_vec3_t a, wgf_vec3_t b)
 {
     wgf_vec3_t r;
@@ -93,13 +94,15 @@ static inline wgf_vec3_t wgf_vec3_cross(wgf_vec3_t a, wgf_vec3_t b)
     return r;
 }
 
-/* How far a is from b. */
+/* Returns how far `a` is from `b`. */
 static inline float wgf_vec3_distance(wgf_vec3_t a, wgf_vec3_t b)
 {
     return wgf_vec3_length(wgf_vec3_sub(a, b));
 }
 
-/* The angle between a and b, radians, 0 to pi (0 when either has no length). */
+/* Returns the angle between `a` and `b`, in radians (0 to pi).
+ *
+ * Returns 0 if either has no length. */
 static inline float wgf_vec3_angle(wgf_vec3_t a, wgf_vec3_t b)
 {
     const float len = wgf_vec3_length(a) * wgf_vec3_length(b);
@@ -109,7 +112,7 @@ static inline float wgf_vec3_angle(wgf_vec3_t a, wgf_vec3_t b)
     return acosf(c < -1.0f ? -1.0f : c > 1.0f ? 1.0f : c);
 }
 
-/* `from` toward `to` by at most `step`, never past it. */
+/* Returns `from` moved toward `to` by at most `step`, never past it. */
 static inline wgf_vec3_t wgf_vec3_move_toward(wgf_vec3_t from, wgf_vec3_t to, float step)
 {
     const wgf_vec3_t d = wgf_vec3_sub(to, from);
@@ -117,20 +120,22 @@ static inline wgf_vec3_t wgf_vec3_move_toward(wgf_vec3_t from, wgf_vec3_t to, fl
     return len <= step || len == 0.0f ? to : wgf_vec3_add(from, wgf_vec3_scale(d, step / len));
 }
 
-/* Bounced off a surface of unit `normal`. */
+/* Returns `v` bounced off a surface whose normal is `normal`, a unit vector. */
 static inline wgf_vec3_t wgf_vec3_reflect(wgf_vec3_t v, wgf_vec3_t normal)
 {
     return wgf_vec3_sub(v, wgf_vec3_scale(normal, 2.0f * wgf_vec3_dot(v, normal)));
 }
 
-/* Its part along `onto` (any length; 0 when it has none). */
+/* Returns the part of `v` along `onto`. `onto` may be any length.
+ *
+ * Returns a zero vector if `onto` has no length. */
 static inline wgf_vec3_t wgf_vec3_project(wgf_vec3_t v, wgf_vec3_t onto)
 {
     const float d = wgf_vec3_dot(onto, onto);
     return d == 0.0f ? wgf_vec3_make(0.0f, 0.0f, 0.0f) : wgf_vec3_scale(onto, wgf_vec3_dot(v, onto) / d);
 }
 
-/* Each part the smaller, or the larger, of the two. */
+/* Returns each part the smaller of `a`'s and `b`'s (min), or the larger (max). */
 static inline wgf_vec3_t wgf_vec3_min(wgf_vec3_t a, wgf_vec3_t b)
 {
     return wgf_vec3_make(a.x < b.x ? a.x : b.x, a.y < b.y ? a.y : b.y, a.z < b.z ? a.z : b.z);
@@ -141,13 +146,15 @@ static inline wgf_vec3_t wgf_vec3_max(wgf_vec3_t a, wgf_vec3_t b)
     return wgf_vec3_make(a.x > b.x ? a.x : b.x, a.y > b.y ? a.y : b.y, a.z > b.z ? a.z : b.z);
 }
 
-/* Each part held within lo's and hi's. */
+/* Returns each part of `v` held within the same part of `lo` and of `hi`. */
 static inline wgf_vec3_t wgf_vec3_clamp(wgf_vec3_t v, wgf_vec3_t lo, wgf_vec3_t hi)
 {
     return wgf_vec3_max(wgf_vec3_min(v, hi), lo);
 }
 
-/* Its length held within lo..hi, its direction kept; a zero vector stays zero. */
+/* Returns `v` with its length held within `lo`..`hi` and its direction kept.
+ *
+ * A zero vector stays zero. */
 static inline wgf_vec3_t wgf_vec3_clamp_length(wgf_vec3_t v, float lo, float hi)
 {
     const float len = wgf_vec3_length(v);

@@ -5,28 +5,34 @@ import wgf.impl.Raw;
 
 class Version {
 	/**
-	    The libwgf version, "MAJOR.MINOR.PATCH", from the repo's VERSION file.
+	    Returns the libwgf version as "MAJOR.MINOR.PATCH", taken from the repo's VERSION file.
 	**/
 	public static inline function get():String
 		return Raw.wgf_version_get();
 
 	/**
-	    Its numbers: a binding built against one version checks them at start, and refuses a
-	    library of another major or minor version (a patch apart is compatible).
+	    Returns one part of the libwgf version as a number.
+
+	    A binding checks these numbers at start against the version it was built for. It refuses
+	    a library of another major or minor version. A different patch number is compatible.
 	**/
 	public static inline function getMajor():Int
 		return Raw.wgf_version_get_major();
 
 	/**
-	    Its numbers: a binding built against one version checks them at start, and refuses a
-	    library of another major or minor version (a patch apart is compatible).
+	    Returns one part of the libwgf version as a number.
+
+	    A binding checks these numbers at start against the version it was built for. It refuses
+	    a library of another major or minor version. A different patch number is compatible.
 	**/
 	public static inline function getMinor():Int
 		return Raw.wgf_version_get_minor();
 
 	/**
-	    Its numbers: a binding built against one version checks them at start, and refuses a
-	    library of another major or minor version (a patch apart is compatible).
+	    Returns one part of the libwgf version as a number.
+
+	    A binding checks these numbers at start against the version it was built for. It refuses
+	    a library of another major or minor version. A different patch number is compatible.
 	**/
 	public static inline function getPatch():Int
 		return Raw.wgf_version_get_patch();

@@ -2,8 +2,8 @@
 package wgf;
 
 /**
-    The style, the game's own, kept until changed: colors, sizes in logical pixels, and a
-    font (0: the default font). Reset gives libwgf's.
+    The style: your game's own colors, sizes in logical pixels, and font (0 for the default
+    font), kept until changed. wgf_ui_reset_style restores libwgf's.
 **/
 enum abstract UiColor(Int) from Int to Int {
 	var TEXT = 0;

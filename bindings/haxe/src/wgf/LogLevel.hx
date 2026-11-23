@@ -2,12 +2,13 @@
 package wgf;
 
 /**
-    Logging to stderr (the browser console on the web). A message below the
-    current level is dropped; the level starts at INFO. Text is UTF-8.
+    Logging to stderr, or to the browser console on the web.
 
-    The exported calls take finished text, so a binding formats in its own
-    language and passes one string. C code formats with the wgf_log_<level> macros,
-    or with wgf_log_debug and the rest from wgf_log.h.
+    A message below the current level is dropped. The level starts at INFO. Text is UTF-8.
+
+    The exported calls take finished text, so a binding formats in its own language and
+    passes one string. C code formats with the wgf_log_<level> macros, such as wgf_log_debug,
+    from wgf_log.h.
 **/
 enum abstract LogLevel(Int) from Int to Int {
 	var TRACE = 0;

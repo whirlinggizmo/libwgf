@@ -4,174 +4,233 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    A 2D shape: an actor drawing a rectangle, a circle, a line, or a polygon, filled or
-    outlined, in one color, on a 2D stage. Shapes are actors (wgf_actor.h): place, turn,
-    scale, parent, and destroy them with the actor calls; the shape turns and scales with
-    its actor, and an outline's thickness stays in the frame's logical pixels.
+    A 2D shape: an actor that draws a rectangle, a circle, a line, or a polygon on a 2D stage.
+
+    A shape is filled or outlined, in one color. Shapes are actors (wgf_actor.h): place, turn,
+    scale, parent, and destroy them with the actor calls. The shape turns and scales with its
+    actor, but an outline's thickness stays in the frame's logical pixels.
 
     Shape2d's calls, on a Actor: `var x:Shape2d = handle` gives it them, and a Shape2d is still a Actor; it starts as 0, none, as a Actor does.
 **/
 @:forward abstract Shape2d(Actor) from Actor from Int to Actor {
 	/**
-	    A shape with nothing to draw yet, white, filled. 0 when there is no room for another
-	    actor.
+	    Creates a shape with nothing to draw yet, white and filled.
+
+	    Returns 0 if there is no room for another actor.
 	**/
 	public static inline function create():Shape2d
 		return ((Raw.wgf_shape2d_create() : Actor) : Shape2d);
 
 	/**
-	    What it is, set by the calls below; NONE for a handle that isn't a 2D shape.
+	    Returns the shape's kind, set by the calls below, or NONE for a handle that isn't a 2D
+	    shape.
 	**/
 	public inline function getKind():Shape2dKind
 		return Raw.wgf_shape2d_get_kind(this);
 
 	/**
-	    A rectangle `width` by `height` from its own origin (its top-left corner, unless a
-	    pivot is set). False for a handle that isn't a 2D shape, or a size below 0.
+	    Makes the shape a rectangle `width` by `height` from its own origin. The origin is its
+	    top-left corner, unless a pivot is set.
+
+	    Returns false for a handle that isn't a 2D shape, or a size below 0.
 	**/
 	public inline function setRectangle(width:Float, height:Float):Bool
 		return Raw.wgf_shape2d_set_rectangle(this, width, height);
 
 	/**
-	    A circle of `radius` about its own origin (its center, unless a pivot is set). False
-	    for a handle that isn't a 2D shape, or a radius below 0.
+	    Makes the shape a circle of `radius` about its own origin. The origin is its center,
+	    unless a pivot is set.
+
+	    Returns false for a handle that isn't a 2D shape, or a `radius` below 0.
 	**/
 	public inline function setCircle(radius:Float):Bool
 		return Raw.wgf_shape2d_set_circle(this, radius);
 
 	/**
-	    A line from (x0, y0) to (x1, y1) in its own units, as thick as the outline (a hairline
-	    at 0). Its ends are its own, so the pivot doesn't move them. False for a handle that
-	    isn't a 2D shape.
+	    Makes the shape a line from (x0, y0) to (x1, y1), in its own units.
+
+	    The line is as thick as the outline, and a hairline at 0. Its ends are its own, so the
+	    pivot doesn't move them.
+
+	    Returns false for a handle that isn't a 2D shape.
 	**/
 	public inline function setLine(x0:Float, y0:Float, x1:Float, y1:Float):Bool
 		return Raw.wgf_shape2d_set_line(this, x0, y0, x1, y1);
 
 	/**
-	    A polygon through `points` in its own units, x and y in turn (count floats: count / 2
-	    points, at most 1024), copied; filled whether convex or not, or outlined, closed. Its
-	    points are its own, so the pivot doesn't move them. False for a handle that isn't a
-	    2D shape, NULL, an odd count, fewer than 3 points, or more than 1024.
+	    Makes the shape a polygon through `points`, in its own units.
+
+	    - `points` holds x and y in turn: `count` floats, so count / 2 points, at most 1024.
+	    - The points are copied.
+	    - The polygon is filled whether convex or not, or outlined as a closed line.
+	    - Its points are its own, so the pivot doesn't move them.
+
+	    Returns false for a handle that isn't a 2D shape, a NULL `points`, an odd `count`, fewer
+	    than 3 points, or more than 1024.
 	**/
 	public inline function setPolygon(points:Array<Float>):Bool
 		return Raw.wgf_shape2d_set_polygon(this, points);
 
 	/**
-	    What was set: a rectangle's width and height (0, 0 otherwise), a circle's radius (0
-	    otherwise), a line's ends, and a polygon's points: into `out`, x and y in turn, as
-	    many as fit in `count` floats, returning how many floats it filled (0 for anything
-	    but a polygon).
+	    Returns what was set.
+
+	    - get_size returns a rectangle's width and height, or 0, 0 for another kind.
+	    - get_radius returns a circle's radius, or 0 for another kind.
+	    - get_line_start and get_line_end return a line's ends.
+	    - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
+	      `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
 	**/
 	public inline function getSize(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_shape2d_get_size(this, into);
 
 	/**
-	    What was set: a rectangle's width and height (0, 0 otherwise), a circle's radius (0
-	    otherwise), a line's ends, and a polygon's points: into `out`, x and y in turn, as
-	    many as fit in `count` floats, returning how many floats it filled (0 for anything
-	    but a polygon).
+	    Returns what was set.
+
+	    - get_size returns a rectangle's width and height, or 0, 0 for another kind.
+	    - get_radius returns a circle's radius, or 0 for another kind.
+	    - get_line_start and get_line_end return a line's ends.
+	    - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
+	      `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
 	**/
 	public inline function getRadius():Float
 		return Raw.wgf_shape2d_get_radius(this);
 
 	/**
-	    What was set: a rectangle's width and height (0, 0 otherwise), a circle's radius (0
-	    otherwise), a line's ends, and a polygon's points: into `out`, x and y in turn, as
-	    many as fit in `count` floats, returning how many floats it filled (0 for anything
-	    but a polygon).
+	    Returns what was set.
+
+	    - get_size returns a rectangle's width and height, or 0, 0 for another kind.
+	    - get_radius returns a circle's radius, or 0 for another kind.
+	    - get_line_start and get_line_end return a line's ends.
+	    - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
+	      `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
 	**/
 	public inline function getLineStart(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_shape2d_get_line_start(this, into);
 
 	/**
-	    What was set: a rectangle's width and height (0, 0 otherwise), a circle's radius (0
-	    otherwise), a line's ends, and a polygon's points: into `out`, x and y in turn, as
-	    many as fit in `count` floats, returning how many floats it filled (0 for anything
-	    but a polygon).
+	    Returns what was set.
+
+	    - get_size returns a rectangle's width and height, or 0, 0 for another kind.
+	    - get_radius returns a circle's radius, or 0 for another kind.
+	    - get_line_start and get_line_end return a line's ends.
+	    - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
+	      `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
 	**/
 	public inline function getLineEnd(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_shape2d_get_line_end(this, into);
 
 	/**
-	    What was set: a rectangle's width and height (0, 0 otherwise), a circle's radius (0
-	    otherwise), a line's ends, and a polygon's points: into `out`, x and y in turn, as
-	    many as fit in `count` floats, returning how many floats it filled (0 for anything
-	    but a polygon).
+	    Returns what was set.
+
+	    - get_size returns a rectangle's width and height, or 0, 0 for another kind.
+	    - get_radius returns a circle's radius, or 0 for another kind.
+	    - get_line_start and get_line_end return a line's ends.
+	    - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
+	      `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
 	**/
 	public inline function getPointCount():Int
 		return Raw.wgf_shape2d_get_point_count(this);
 
 	/**
-	    What was set: a rectangle's width and height (0, 0 otherwise), a circle's radius (0
-	    otherwise), a line's ends, and a polygon's points: into `out`, x and y in turn, as
-	    many as fit in `count` floats, returning how many floats it filled (0 for anything
-	    but a polygon).
+	    Returns what was set.
+
+	    - get_size returns a rectangle's width and height, or 0, 0 for another kind.
+	    - get_radius returns a circle's radius, or 0 for another kind.
+	    - get_line_start and get_line_end return a line's ends.
+	    - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
+	      `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
 	**/
 	public inline function getPoints(out:Array<Float>):Int
 		return Raw.wgf_shape2d_get_points(this, out);
 
 	/**
-	    The point of a rectangle or circle at its actor's position, which it turns and scales
-	    about, as a fraction of it: 0, 0 its top-left, 1, 1 its bottom-right. Unset (the
-	    default), each keeps its own origin -- a rectangle's top-left corner, a circle's
-	    center -- read back as that fraction (0, 0 or 0.5, 0.5). False for a handle that
-	    isn't a 2D shape.
+	    Sets or gets the pivot: the point of a rectangle or circle at its actor's position, which
+	    it turns and scales about.
+
+	    - The pivot is a fraction of the shape: 0, 0 is its top-left, and 1, 1 its bottom-right.
+	    - Unset (the default), each shape keeps its own origin: a rectangle's top-left corner, or
+	      a circle's center.
+	    - The getter reads an unset pivot back as that fraction: 0, 0 or 0.5, 0.5.
+
+	    The setter returns false for a handle that isn't a 2D shape.
 	**/
 	public inline function setPivot(x:Float, y:Float):Bool
 		return Raw.wgf_shape2d_set_pivot(this, x, y);
 
 	/**
-	    The point of a rectangle or circle at its actor's position, which it turns and scales
-	    about, as a fraction of it: 0, 0 its top-left, 1, 1 its bottom-right. Unset (the
-	    default), each keeps its own origin -- a rectangle's top-left corner, a circle's
-	    center -- read back as that fraction (0, 0 or 0.5, 0.5). False for a handle that
-	    isn't a 2D shape.
+	    Sets or gets the pivot: the point of a rectangle or circle at its actor's position, which
+	    it turns and scales about.
+
+	    - The pivot is a fraction of the shape: 0, 0 is its top-left, and 1, 1 its bottom-right.
+	    - Unset (the default), each shape keeps its own origin: a rectangle's top-left corner, or
+	      a circle's center.
+	    - The getter reads an unset pivot back as that fraction: 0, 0 or 0.5, 0.5.
+
+	    The setter returns false for a handle that isn't a 2D shape.
 	**/
 	public inline function getPivot(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_shape2d_get_pivot(this, into);
 
 	/**
-	    Drawn as an outline `thickness` logical pixels wide, centered on its edge; 0 (the
-	    default) fills it, and a line is then a hairline. Clamped to 0 or more. False for a
-	    handle that isn't a 2D shape.
+	    Sets or gets the outline: the shape is drawn as an outline `thickness` logical pixels wide,
+	    centered on its edge.
+
+	    - A `thickness` of 0 (the default) fills the shape. A line is then a hairline.
+	    - The thickness is clamped to 0 or more.
+
+	    The setter returns false for a handle that isn't a 2D shape.
 	**/
 	public inline function setOutline(thickness:Float):Bool
 		return Raw.wgf_shape2d_set_outline(this, thickness);
 
 	/**
-	    Drawn as an outline `thickness` logical pixels wide, centered on its edge; 0 (the
-	    default) fills it, and a line is then a hairline. Clamped to 0 or more. False for a
-	    handle that isn't a 2D shape.
+	    Sets or gets the outline: the shape is drawn as an outline `thickness` logical pixels wide,
+	    centered on its edge.
+
+	    - A `thickness` of 0 (the default) fills the shape. A line is then a hairline.
+	    - The thickness is clamped to 0 or more.
+
+	    The setter returns false for a handle that isn't a 2D shape.
 	**/
 	public inline function getOutline():Float
 		return Raw.wgf_shape2d_get_outline(this);
 
 	/**
-	    A rectangle's corners rounded to `radius` in its own units (wgf_draw_rectangle_rounded's),
-	    filled or outlined: clamped to 0 or more (0, the default: square), and drawn at no more
-	    than half its shorter side. Kept for the other kinds, which it doesn't change. False for a
-	    handle that isn't a 2D shape.
+	    Sets or gets the radius a rectangle's corners are rounded to, in its own units (default: 0,
+	    square).
+
+	    - The corners are rounded as wgf_draw_rectangle_rounded rounds them, filled or outlined.
+	    - The radius is clamped to 0 or more, and drawn at no more than half the shorter side.
+	    - It is kept for the other kinds, which it doesn't change.
+
+	    The setter returns false for a handle that isn't a 2D shape.
 	**/
 	public inline function setCornerRadius(radius:Float):Bool
 		return Raw.wgf_shape2d_set_corner_radius(this, radius);
 
 	/**
-	    A rectangle's corners rounded to `radius` in its own units (wgf_draw_rectangle_rounded's),
-	    filled or outlined: clamped to 0 or more (0, the default: square), and drawn at no more
-	    than half its shorter side. Kept for the other kinds, which it doesn't change. False for a
-	    handle that isn't a 2D shape.
+	    Sets or gets the radius a rectangle's corners are rounded to, in its own units (default: 0,
+	    square).
+
+	    - The corners are rounded as wgf_draw_rectangle_rounded rounds them, filled or outlined.
+	    - The radius is clamped to 0 or more, and drawn at no more than half the shorter side.
+	    - It is kept for the other kinds, which it doesn't change.
+
+	    The setter returns false for a handle that isn't a 2D shape.
 	**/
 	public inline function getCornerRadius():Float
 		return Raw.wgf_shape2d_get_corner_radius(this);
 
 	/**
-	    Default: white. False for a handle that isn't a 2D shape.
+	    Sets or gets the shape's color (default: white). The setter returns false for a handle
+	    that isn't a 2D shape.
 	**/
 	public inline function setColor(color:Int):Bool
 		return Raw.wgf_shape2d_set_color(this, color);
 
 	/**
-	    Default: white. False for a handle that isn't a 2D shape.
+	    Sets or gets the shape's color (default: white). The setter returns false for a handle
+	    that isn't a 2D shape.
 	**/
 	public inline function getColor():Int
 		return Raw.wgf_shape2d_get_color(this);

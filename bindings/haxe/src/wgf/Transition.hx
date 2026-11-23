@@ -2,32 +2,45 @@
 package wgf;
 
 /**
-    Screens and scene flow: a game as a stack of screens (a title, play, a pause menu, game
-    over), helix-legacy's scene flow (Flow, Transition, Loader, LoadingScreen) without its
-    callbacks. A screen is an actor (a game's behaviors for it go on it) with its stages, 2D
-    and 3D, added to it in the order they draw (stages are always roots: they belong to it
-    without being its children); everything else of its hangs under them.
+    Screens and scene flow: a game as a stack of screens, such as a title, play, a pause menu,
+    and game over. Nothing is called back.
 
-    The stack: push puts a screen on top, pop takes the top off, replace swaps the top for
-    another. The top runs. A screen under one that pauses (the default) is paused
-    (wgf_actor_set_paused: drawn, frozen), it and its stages; one under one that doesn't (a
-    HUD laid over play) runs on. A screen off the stack is switched off and paused, it and its
-    stages (wgf_actor_set_enabled: not drawn, nothing under them moving), kept for the program
-    to push again or destroy. draw
-    draws what is shown: from the bottom up, each screen's stages in their order, but none
-    under an opaque one (the default), then the transition's cover.
+    A screen is an actor, and your game's behaviors for it go on it. Its stages, 2D and 3D, are
+    added to it in the order they draw. Stages are always roots: they belong to the screen
+    without being its children. Every other actor of the screen hangs under its stages.
 
-    A change runs through the transition set (none to start: at once). It covers the frame
-    over half its seconds, makes the change at the middle, and uncovers over the other half,
-    each half on the ease. A screen given assets to wait for (set_assets: a group,
-    wgf_asset.h), or set to wait for every load pending (set_wait_loads: the textures and
-    meshes made as it was built), is changed to only once they have settled: the stack held
-    covered meanwhile, with the loading screen (set_loading_screen) drawn over the cover and
-    its progress readable. While one runs, another change is refused (false).
+    The stack:
+    - push puts a screen on top.
+    - pop takes the top screen off.
+    - replace swaps the top screen for another.
 
-    Each change is told as world events (wgf_world.h): SCREEN_ENTER for the screen that
-    comes to the top, SCREEN_EXIT for the one that leaves it (pushed under, popped, or
-    replaced), each with the other screen (0 for none) as its second; a binding's behaviors
+    The top screen runs. The screens under it run or pause:
+    - A screen under one that pauses (the default) is paused, with its stages
+      (wgf_actor_set_paused: drawn, but frozen).
+    - A screen under one that doesn't pause, such as a HUD laid over play, runs on.
+    - A screen off the stack is switched off and paused, with its stages (wgf_actor_set_enabled:
+      not drawn, and nothing under them moving). It is kept for your game to push again or
+      destroy.
+
+    wgf_screen_draw draws what is shown. It draws from the bottom up, each screen's stages in
+    their order, but no screen under an opaque one (the default). It then draws the
+    transition's cover.
+
+    A change runs through the transition that is set (none to start, so changes happen at once).
+    - It covers the frame over half its seconds, makes the change at the middle, and uncovers
+      over the other half. Each half runs on the ease.
+    - A screen can wait for assets: a group (set_assets, wgf_asset.h), or every load pending
+      (set_wait_loads: the textures and meshes made as it was built). The change to it happens
+      only once they have settled.
+    - Meanwhile the stack is held covered. The loading screen (set_loading_screen) is drawn over
+      the cover, and its progress can be read.
+    - While a change runs, another change is refused (false).
+
+    Each change is told as world events (wgf_world.h):
+    - SCREEN_ENTER for the screen that comes to the top.
+    - SCREEN_EXIT for the one that leaves the top: pushed under, popped, or replaced.
+
+    Each event carries the other screen (0 for none) as its second value. A binding's behaviors
     on a screen hear them.
 **/
 enum abstract Transition(Int) from Int to Int {

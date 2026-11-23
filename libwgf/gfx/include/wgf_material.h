@@ -85,7 +85,7 @@ typedef wgf_handle_t wgf_material_t;
 typedef enum wgf_material_shading_t {
     WGF_MATERIAL_SHADING_PBR = 0,   /* glTF metallic-roughness, lit by the stage's lights */
     WGF_MATERIAL_SHADING_UNLIT = 1, /* base color times texture times tint, ignoring lights (KHR_materials_unlit) */
-    WGF_MATERIAL_SHADING_CUSTOM = 2 /* drawn by your own shader (wgf_material_create_custom); create and set_shading refuse it */
+    WGF_MATERIAL_SHADING_CUSTOM = 2 /* drawn by your own shader (wgf_material_create_custom); create refuses it */
 } wgf_material_shading_t;
 
 /* How a material, sprite, particle, or 2D drawing uses its alpha.

@@ -7,9 +7,14 @@
 extern "C" {
 #endif
 
-/* Easing, helix-legacy's Ease (Robert Penner's set): how a tween (wgf_tween.h) runs from its
- * start to its end. Each but LINEAR in three forms: IN starts slow, OUT ends slow, IN_OUT
- * both. BACK goes a little past and returns, ELASTIC springs, BOUNCE bounces at the end. */
+/* An easing: how a tween (wgf_tween.h) runs from its start to its end.
+ *
+ * The set is Robert Penner's. Each easing but LINEAR comes in three forms:
+ * - IN starts slow.
+ * - OUT ends slow.
+ * - IN_OUT starts and ends slow.
+ *
+ * BACK goes a little past and returns. ELASTIC springs. BOUNCE bounces at the end. */
 typedef enum wgf_easing_t {
     WGF_EASING_LINEAR = 0,
     WGF_EASING_QUAD_IN = 1,
@@ -41,8 +46,11 @@ typedef enum wgf_easing_t {
     WGF_EASING_BOUNCE_IN_OUT = 27
 } wgf_easing_t;
 
-/* `t` (0 to 1, clamped) eased: 0 at 0 and 1 at 1, BACK and ELASTIC going past between. An
- * ease that isn't one is LINEAR. */
+/* Returns `t` eased by `easing`.
+ *
+ * `t` runs from 0 to 1, and is clamped to that range. The result is 0 at 0 and 1 at 1. In
+ * between, BACK and ELASTIC go past that range. An `easing` that isn't one of
+ * wgf_easing_t's values is treated as LINEAR. */
 WGF_API float wgf_ease_value(wgf_easing_t easing, float t);
 
 #ifdef __cplusplus

@@ -4,92 +4,133 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    A 2D stage: the root of a 2D tree, in logical pixels from the top-left, y down.
-    It draws when asked, its actors depth first, a parent before its children and
-    children in order, so later ones draw over earlier ones. The game composes a
-    frame by drawing its stages in the order it wants: a backdrop, then the world,
-    then a HUD. A stage is an actor (wgf_actor.h): its own transform moves
-    everything on it, and wgf_actor_destroy ends it.
+    A 2D stage: the root of a 2D tree, in logical pixels from the top-left, with y down.
+
+    It draws when asked. It draws its actors depth first: a parent before its children, and
+    children in order, so later ones draw over earlier ones. The game composes a frame by
+    drawing its stages in the order it wants: a backdrop, then the world, then a HUD.
+
+    A stage is an actor (wgf_actor.h). Its own transform moves every actor on it, and
+    wgf_actor_destroy ends it.
 
     Stage2d's calls, on a Actor: `var x:Stage2d = handle` gives it them, and a Stage2d is still a Actor; it starts as 0, none, as a Actor does.
 **/
 @:forward abstract Stage2d(Actor) from Actor from Int to Actor {
 	/**
-	    A 2D stage, with no camera. 0 when there is no room for another actor.
+	    Creates a 2D stage, with no camera.
+
+	    Returns 0 if there is no room for another actor.
 	**/
 	public static inline function create():Stage2d
 		return ((Raw.wgf_stage2d_create() : Actor) : Stage2d);
 
 	/**
-	    Draw it into this frame. Outside a frame, nothing.
+	    Draws the stage into this frame. Outside a frame, it does nothing.
 	**/
 	public inline function draw():Void
 		Raw.wgf_stage2d_draw(this);
 
 	/**
-	    With a camera (wgf_camera2d.h), the stage's point at the camera's position is
-	    drawn at the frame's center, turned and zoomed as the camera is: a 2D world.
-	    Without one (0, the default), stage units are the frame's logical pixels: a HUD.
-	    The camera can be anywhere -- on this stage, parented to the player so it
-	    follows, or in no tree at all. False when `camera` isn't a 2D camera. A camera
-	    that is destroyed leaves the stage with none.
+	    Sets or gets the stage's camera (wgf_camera2d.h).
+
+	    - With a camera, the stage's point at the camera's position is drawn at the frame's center,
+	      turned and zoomed as the camera is. Use it for a 2D world.
+	    - Without one (0, the default), stage units are the frame's logical pixels. Use it for a HUD.
+
+	    The camera can be anywhere: on this stage, parented to the player so it follows, or in no
+	    tree at all. A camera that is destroyed leaves the stage with none.
+
+	    set_camera returns false if `camera` isn't a 2D camera.
 	**/
 	public inline function setCamera(camera:Actor):Bool
 		return Raw.wgf_stage2d_set_camera(this, camera);
 
 	/**
-	    With a camera (wgf_camera2d.h), the stage's point at the camera's position is
-	    drawn at the frame's center, turned and zoomed as the camera is: a 2D world.
-	    Without one (0, the default), stage units are the frame's logical pixels: a HUD.
-	    The camera can be anywhere -- on this stage, parented to the player so it
-	    follows, or in no tree at all. False when `camera` isn't a 2D camera. A camera
-	    that is destroyed leaves the stage with none.
+	    Sets or gets the stage's camera (wgf_camera2d.h).
+
+	    - With a camera, the stage's point at the camera's position is drawn at the frame's center,
+	      turned and zoomed as the camera is. Use it for a 2D world.
+	    - Without one (0, the default), stage units are the frame's logical pixels. Use it for a HUD.
+
+	    The camera can be anywhere: on this stage, parented to the player so it follows, or in no
+	    tree at all. A camera that is destroyed leaves the stage with none.
+
+	    set_camera returns false if `camera` isn't a 2D camera.
 	**/
 	public inline function getCamera():Actor
 		return Raw.wgf_stage2d_get_camera(this);
 
 	/**
-	    Between the stage's units and the screen's logical pixels (what the pointer reads,
-	    wgf_mouse.h), through its camera as it is now: where a point of the stage shows, and the
-	    stage's point under a place on the screen (a click in the world). 0, 0 for a handle that
-	    isn't a 2D stage.
+	    Converts between the stage's units and the screen's logical pixels, through its camera as it
+	    is now.
+
+	    Logical pixels are what the pointer reads (wgf_mouse.h).
+
+	    - world_to_screen returns where a point of the stage shows on the screen.
+	    - screen_to_world returns the stage's point under a place on the screen, as for a click in
+	      the world.
+
+	    Each returns 0, 0 if `stage` isn't a 2D stage.
 	**/
 	public inline function worldToScreen(x:Float, y:Float, ?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_stage2d_world_to_screen(this, x, y, into);
 
 	/**
-	    Between the stage's units and the screen's logical pixels (what the pointer reads,
-	    wgf_mouse.h), through its camera as it is now: where a point of the stage shows, and the
-	    stage's point under a place on the screen (a click in the world). 0, 0 for a handle that
-	    isn't a 2D stage.
+	    Converts between the stage's units and the screen's logical pixels, through its camera as it
+	    is now.
+
+	    Logical pixels are what the pointer reads (wgf_mouse.h).
+
+	    - world_to_screen returns where a point of the stage shows on the screen.
+	    - screen_to_world returns the stage's point under a place on the screen, as for a click in
+	      the world.
+
+	    Each returns 0, 0 if `stage` isn't a 2D stage.
 	**/
 	public inline function screenToWorld(x:Float, y:Float, ?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_stage2d_screen_to_world(this, x, y, into);
 
 	/**
-	    The topmost actor on this stage at the screen's point (x, y), in logical pixels (where the
-	    pointer is, wgf_mouse.h), through its camera as it is now; libwgt's canvas pick, raylib's
-	    CheckCollisionPointRec over a stage. The topmost is the one drawn last. What can be hit:
-	    a sprite by its quad, turned and scaled as it is drawn, or by its texels' alpha
-	    (wgf_sprite_set_pick_alpha); a 2D shape's rectangle (its corners rounded), circle, or
-	    polygon, filled or outlined, by its area (a line isn't hit); a text by its block. An
-	    actor not enabled isn't hit, nor anything under it; one not visible, or not pickable
-	    (wgf_actor_set_pickable), lets the point through, its children still hit.
+	    Returns the topmost actor on this stage at the screen's point (x, y).
 
-	    Where it hit goes into `hit`, a caller's array, as many as fit in `hit_count` (NULL, 0
-	    for none): 0, 1 the point in the stage's units; 2, 3 in the hit actor's own (its origin
-	    at its position: a sprite's top-left corner at minus its pivot times its size). All 0
-	    after a miss. Returns the actor hit; 0 for none, or a stage that isn't a 2D stage. Works
-	    outside a frame, as the stage is placed now.
+	    The point is in logical pixels, where the pointer is (wgf_mouse.h), seen through the stage's
+	    camera as it is now. The topmost actor is the one drawn last.
+
+	    What can be hit:
+	    - A sprite, by its quad, turned and scaled as it is drawn. Or by its texels' alpha, if set
+	      (see wgf_sprite_set_pick_alpha).
+	    - A 2D shape, by its area: a rectangle (with its corners rounded), circle, or polygon,
+	      filled or outlined. A line isn't hit.
+	    - A text, by its block.
+
+	    An actor that isn't enabled isn't hit, and neither is any actor under it. An actor that
+	    isn't visible, or isn't pickable (wgf_actor_set_pickable), lets the point through. Its
+	    children can still be hit.
+
+	    Where it hit goes into `hit`, your array, as many values as fit in `hit_count`. Pass NULL
+	    and 0 for none.
+	    - 0, 1: the point, in the stage's units.
+	    - 2, 3: the point, in the hit actor's own units. Its origin is at the actor's position, so a
+	      sprite's top-left corner is at minus its pivot times its size.
+
+	    All values are 0 after a miss.
+
+	    Returns the actor hit. Returns 0 if nothing is hit, or if `stage` isn't a 2D stage. It works
+	    outside a frame, with the stage as it is placed now.
 	**/
 	public inline function pick(x:Float, y:Float, hit:Array<Float>):Actor
 		return Raw.wgf_stage2d_pick(this, x, y, hit);
 
 	/**
-	    The actor on this stage named `name` (wgf_actor_set_name), at any depth, found by an
-	    index of names rather than a walk of the tree. 0 for none, for a stage that isn't a
-	    2D stage, and for a name two of its actors share (warned: find it by its path from an
-	    actor above it, wgf_actor_find, instead).
+	    Returns the actor on this stage named `name` (wgf_actor_set_name), at any depth.
+
+	    It looks the name up in an index, rather than walking the tree.
+
+	    Returns 0 if:
+	    - No actor has that name.
+	    - `stage` isn't a 2D stage.
+	    - Two of its actors share the name (warned). Find it by its path from an actor above it
+	      instead (see wgf_actor_find).
 	**/
 	public inline function find(name:String):Actor
 		return Raw.wgf_stage2d_find(this, name);

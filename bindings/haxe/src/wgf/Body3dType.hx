@@ -3,21 +3,33 @@ package wgf;
 
 /**
     A body (WGF_COMPONENT_BODY3D, wgf_component.h): an actor in the physics world
-    (wgf_physics3d.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
-    its size (1000 kg a cubic meter), friction 0.5, no bounce, damping of 0.05, layer 1,
-    mask every layer. Friction, bounce, and damping take effect at once, its motion kept (a
-    car's drag on grass, set as it goes); its other settings take effect at the next tick,
-    when the world's body is made again from them, at rest: set them together, before the
-    first tick, as a scene does.
+    (wgf_physics3d.h), as a rigid shape.
 
-    The actor's transform is the body's: where the world moves a dynamic body, each tick,
-    the actor is set; a transform the program sets puts the body there (a static or
-    dynamic one jumps; a kinematic one is moved there over the tick, pushing what it meets).
-    A box's, sphere's, or capsule's size isn't scaled with its actor; a convex or mesh shape
-    is read from the models at and under the actor, as they are drawn: the actor's own scale
-    and each model's place under it included. Its place is in its 3D
-    stage's space, the actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
-    body.
+    Defaults:
+    - dynamic
+    - a box of 1 by 1 by 1 meters
+    - a mass from its size (1000 kilograms a cubic meter)
+    - friction 0.5, no bounce, and damping of 0.05
+    - layer 1, and a mask of every layer
+
+    Friction, bounce, and damping take effect at once, and the body's motion is kept. A car's
+    drag on grass can be set as it goes. Its other settings take effect at the next tick, when
+    the world's body is made again from them, at rest. Set them together, before the first
+    tick, as a scene does.
+
+    The actor's transform is the body's:
+    - Each tick, the actor is set to where the world moved a dynamic body.
+    - A transform your game sets puts the body there. A static or dynamic body jumps there. A
+      kinematic body is moved there over the tick, pushing the bodies it meets.
+
+    A box's, sphere's, or capsule's size isn't scaled with its actor. A convex or mesh shape is
+    read from the models at and under the actor, as they are drawn. That includes the actor's
+    own scale and each model's place under it.
+
+    The body's place is in its 3D stage's space, and the actor may be anywhere in the stage's
+    tree.
+
+    The calls return false (or 0) for an actor without a body.
 **/
 enum abstract Body3dType(Int) from Int to Int {
 	var STATIC = 0;

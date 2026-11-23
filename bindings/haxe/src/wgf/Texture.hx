@@ -4,14 +4,17 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    A texture: an image on the GPU, loaded from a file. It is a resource
-    (wgf_resource.h): shared, reference counted, and loaded on create -- the handle comes
-    back at once, PENDING, the file is found (the asset layer: fetched on the web), read
-    and decoded on a worker thread, and uploaded during the runtime's update at the start
-    of a frame. Creating the same path again gives the same texture, with one more
-    reference. While a texture is PENDING it draws nothing; once it has FAILED (logged
-    once, naming the file) it draws a magenta and black checker in its place, hard to
-    miss.
+    A texture: an image on the GPU, loaded from a file.
+
+    A texture is a resource (wgf_resource.h): shared, reference counted, and loaded on create.
+    - The handle comes back at once, PENDING.
+    - The file is found by the asset layer (fetched on the web), then read and decoded on a
+      worker thread.
+    - It is uploaded during the runtime's update at the start of a frame.
+    - Creating the same path again gives the same texture, with one more reference.
+
+    While a texture is PENDING it draws nothing. Once it has FAILED (logged once, naming the
+    file), it draws a magenta and black checker in its place, which is hard to miss.
 
     A handle of kind wgf_texture_t (libwgf/gfx/include/wgf_texture.h): 0 is none.
 **/
@@ -25,120 +28,163 @@ abstract Texture(Int) from Int to Int to wgf.Handle {
 		return (this : Handle).isAlive();
 
 	/**
-	    A texture from an image file: PNG, JPEG, BMP, TGA, or GIF (its first frame), or a
-	    compressed one. "name.ktx" names a texture compressed for GPUs
-	    (tools/compress_textures.py, which writes them beside name.png): the first of
-	    name.bc7.ktx (desktops), name.astc.ktx (phones), and name.etc2.ktx (older phones) this
-	    GPU can sample is loaded, as it is, with no decoding and a quarter of the memory; where
-	    it can sample none, or its file is missing or can't be used (warned), name.png is.
-	    Made before the window opens there is no GPU to ask, so name.png. A variant named
-	    outright (name.bc7.ktx) is loaded or FAILED, with no PNG in its place. 0 only when
-	    there is no room for another texture; a path or file that can't be loaded gives a
-	    texture that FAILED. wgf_resource_get_path gives the file it read.
+	    Creates a texture from an image file: PNG, JPEG, BMP, TGA, or GIF (its first frame), or a
+	    compressed one.
+
+	    "name.ktx" names a texture compressed for GPUs. tools/compress_textures.py writes these
+	    beside name.png.
+	    - The first of these that this GPU can sample is loaded: name.bc7.ktx (desktops),
+	      name.astc.ktx (phones), then name.etc2.ktx (older phones).
+	    - It is loaded as it is, with no decoding, in a quarter of the memory.
+	    - If the GPU can sample none, or the file is missing or can't be used (warned), name.png
+	      is loaded instead.
+	    - A texture made before the window opens has no GPU to ask, so it loads name.png.
+	    - A variant named outright (name.bc7.ktx) is loaded or FAILED, with no PNG in its place.
+
+	    wgf_resource_get_path gives the file it read.
+
+	    Returns 0 only if there is no room for another texture. A path or file that can't be
+	    loaded gives a texture that FAILED.
 	**/
 	public static inline function create(path:String):Texture
 		return Raw.wgf_texture_create(path);
 
 	/**
-	    A texture to draw into, a render target, as libwgt's: `width` by `height` pixels,
-	    drawn into between wgf_render_begin_target and wgf_render_end_target (wgf_render.h),
-	    then used as any texture -- drawn (wgf_draw_texture), on a sprite, or on a material. It
-	    has the screen's pixel format and samples (wgf_window_set_msaa), and a depth buffer of
-	    its own, so whatever draws to the screen draws into it; it has no mipmaps. Made from
-	    numbers: READY at once, with no path. What was drawn into it is gone when the web's GPU
-	    context is lost (wgf_render_is_context_lost): it comes back blank. 0 for a size of 0 or
-	    less, or over 16384, or before gfx runs (in init or later), each logged.
+	    Creates a render target: a texture to draw into, `width` by `height` pixels.
+
+	    - You draw into it between wgf_render_begin_target and wgf_render_end_target
+	      (wgf_render.h).
+	    - You then use it as any texture: drawn (wgf_draw_texture), on a sprite, or on a material.
+	    - It has the screen's pixel format and samples (wgf_window_set_msaa), and a depth buffer of
+	      its own, so whatever draws to the screen draws into it.
+	    - It has no mipmaps.
+	    - It is made from numbers: READY at once, with no path.
+	    - What was drawn into it is gone when the web's GPU context is lost
+	      (wgf_render_is_context_lost). It comes back blank.
+
+	    Returns 0 for a size of 0 or less or over 16384, or before gfx runs (in init or later)
+	    (logged).
 	**/
 	public static inline function createTarget(width:Int, height:Int):Texture
 		return Raw.wgf_texture_create_target(width, height);
 
 	/**
-	    A texture made in code, `width` by `height` pixels of RGBA, transparent black until
-	    written: a minimap, fog of war, a picture worked out by the program. Made from numbers:
-	    READY at once, with no path; no mipmaps. 0 for a size of 0 or less, or over 16384, or
-	    before gfx runs, each logged.
+	    Creates a texture in code, `width` by `height` pixels of RGBA, transparent black until
+	    written.
+
+	    Use it for a minimap, fog of war, or a picture the program works out. It is made from
+	    numbers: READY at once, with no path, and no mipmaps.
+
+	    Returns 0 for a size of 0 or less or over 16384, or before gfx runs (logged).
 	**/
 	public static inline function createBlank(width:Int, height:Int):Texture
 		return Raw.wgf_texture_create_blank(width, height);
 
 	/**
-	    Its every pixel written, RGBA, 8 bits each, rows from the top (width x height x 4
-	    bytes), copied; seen from the next frame drawn. Once a frame: a second write in a frame
-	    is refused, as the GPU takes one. On the web the last write is also kept, a copy the
-	    texture's size, so the texture comes back as it was when the GPU's context does
-	    (wgf_render.h): the frame it comes back in takes no other write; while the context is lost,
-	    every write is kept and taken. False for a texture not made blank, a size that isn't its,
-	    NULL, and a second write in a frame.
+	    Writes every pixel of a texture made blank, copied from `data`.
+
+	    - `data` is RGBA, 8 bits each, rows from the top: width x height x 4 bytes.
+	    - The pixels are seen from the next frame drawn.
+	    - A texture takes one write a frame, as the GPU takes one. A second write in a frame is
+	      refused.
+	    - On the web, the last write is also kept, a copy the texture's size. The texture then
+	      comes back as it was when the GPU's context does (wgf_render.h).
+	    - The frame the context comes back in takes no other write.
+	    - While the context is lost, every write is kept and taken.
+
+	    Returns false for a texture not made blank, a `size` that isn't the texture's, a NULL
+	    `data`, or a second write in a frame.
 	**/
 	public inline function write(data:haxe.io.Bytes):Bool
 		return Raw.wgf_texture_write(this, data);
 
 	/**
-	    Its size in pixels; 0 until it is READY.
+	    Returns the texture's size in pixels, or 0 until it is READY.
 	**/
 	public inline function getWidth():Int
 		return Raw.wgf_texture_get_width(this);
 
 	/**
-	    Its size in pixels; 0 until it is READY.
+	    Returns the texture's size in pixels, or 0 until it is READY.
 	**/
 	public inline function getHeight():Int
 		return Raw.wgf_texture_get_height(this);
 
 	/**
-	    How it is sampled where it is drawn, from its mipmaps where it is drawn smaller than
-	    it is (built when it loads). Default: clamp, linear. False for a handle that isn't a
-	    texture, or a wrap or filter that isn't one.
+	    Sets or gets how the texture is sampled where it is drawn (default: clamp, linear).
+
+	    Where it is drawn smaller than it is, it samples from its mipmaps, built when it loads.
+
+	    The setter returns false for a handle that isn't a texture, or a wrap or filter that
+	    isn't one.
 	**/
 	public inline function setSampling(wrap_u:TextureWrap, wrap_v:TextureWrap, filter:TextureFilter):Bool
 		return Raw.wgf_texture_set_sampling(this, wrap_u, wrap_v, filter);
 
 	/**
-	    How it is sampled where it is drawn, from its mipmaps where it is drawn smaller than
-	    it is (built when it loads). Default: clamp, linear. False for a handle that isn't a
-	    texture, or a wrap or filter that isn't one.
+	    Sets or gets how the texture is sampled where it is drawn (default: clamp, linear).
+
+	    Where it is drawn smaller than it is, it samples from its mipmaps, built when it loads.
+
+	    The setter returns false for a handle that isn't a texture, or a wrap or filter that
+	    isn't one.
 	**/
 	public inline function getWrapU():TextureWrap
 		return Raw.wgf_texture_get_wrap_u(this);
 
 	/**
-	    How it is sampled where it is drawn, from its mipmaps where it is drawn smaller than
-	    it is (built when it loads). Default: clamp, linear. False for a handle that isn't a
-	    texture, or a wrap or filter that isn't one.
+	    Sets or gets how the texture is sampled where it is drawn (default: clamp, linear).
+
+	    Where it is drawn smaller than it is, it samples from its mipmaps, built when it loads.
+
+	    The setter returns false for a handle that isn't a texture, or a wrap or filter that
+	    isn't one.
 	**/
 	public inline function getWrapV():TextureWrap
 		return Raw.wgf_texture_get_wrap_v(this);
 
 	/**
-	    How it is sampled where it is drawn, from its mipmaps where it is drawn smaller than
-	    it is (built when it loads). Default: clamp, linear. False for a handle that isn't a
-	    texture, or a wrap or filter that isn't one.
+	    Sets or gets how the texture is sampled where it is drawn (default: clamp, linear).
+
+	    Where it is drawn smaller than it is, it samples from its mipmaps, built when it loads.
+
+	    The setter returns false for a handle that isn't a texture, or a wrap or filter that
+	    isn't one.
 	**/
 	public inline function getFilter():TextureFilter
 		return Raw.wgf_texture_get_filter(this);
 
 	/**
-	    A read of `texture` -- a render target, a texture made in code, or one loaded from a
-	    file (its largest level) -- which it holds a reference to until it is read. 0 for a
-	    handle that isn't a texture, or no room for another read, each logged.
+	    Creates a read of `texture`.
+
+	    `texture` may be a render target, a texture made in code, or one loaded from a file (its
+	    largest level is read). The read holds a reference to the texture until it is read.
+
+	    Returns 0 for a handle that isn't a texture, or if there is no room for another read
+	    (logged).
 	**/
 	public inline function read():TextureRead
 		return Raw.wgf_texture_read(this);
 
 	/**
-	    A texture made in code (as wgf_texture_create_blank) holding the image's pixels as they
-	    are now, seen from the next frame drawn (raylib's LoadTextureFromImage): no mipmaps,
-	    written again by wgf_texture_write or wgf_texture_write_image -- though not in the frame
-	    it is made, whose one write this is. 0 for an image that isn't READY, or before gfx
-	    runs, each logged.
+	    Creates a texture in code (as wgf_texture_create_blank) holding the image's pixels as they
+	    are now.
+
+	    - The pixels are seen from the next frame drawn.
+	    - The texture has no mipmaps.
+	    - You can write it again with wgf_texture_write or wgf_texture_write_image. You can't in
+	      the frame it is made, because this is that frame's one write.
+
+	    Returns 0 for an image that isn't READY, or before gfx runs (logged).
 	**/
 	public static inline function createFromImage(image:Image):Texture
 		return Raw.wgf_texture_create_from_image(image);
 
 	/**
-	    A texture made in code written whole with the image's pixels (raylib's UpdateTexture),
-	    as wgf_texture_write. False for a texture not made in code, an image that isn't READY
-	    or isn't the texture's size, and a second write in a frame.
+	    Writes a texture made in code whole with the image's pixels, as wgf_texture_write does.
+
+	    Returns false for a texture not made in code, an image that isn't READY or isn't the
+	    texture's size, or a second write in a frame.
 	**/
 	public inline function writeImage(image:Image):Bool
 		return Raw.wgf_texture_write_image(this, image);

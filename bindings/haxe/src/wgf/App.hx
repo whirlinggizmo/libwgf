@@ -4,93 +4,142 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    The runtime, as wgrender's wgr_run: app opens the window, starts and drives the
-    layers below it, and runs the frame loop. A program runs through it; see
-    docs/ARCHITECTURE.md, "app".
+    The runtime. app opens the window, starts and drives the layers below it, and runs the
+    frame loop. A program runs through it. See docs/ARCHITECTURE.md, "app".
 **/
 class App {
 	/**
-	    Let an autopilot fly this run (BUILDING.md, "Autopilot files": natively the file
-	    LIBWGF_AUTOPILOT names, on the web the one the page gives the module), as a build that is
-	    tested or checked does, before wgf_app_run. It is what links the autopilot's runner, so a
-	    program that never calls it (a game's web export, by default) carries none of it; given an
-	    autopilot all the same, it logs that it has none and quits. False once the program is
-	    running.
+	    Lets an autopilot fly this run, or returns whether that is enabled. Call it before
+	    wgf_app_run, as a build that is tested or checked does.
+
+	    - Natively the autopilot is the file LIBWGF_AUTOPILOT names.
+	    - On the web it is the one the page gives the module.
+	    - See BUILDING.md, "Autopilot files".
+
+	    This call is what links the autopilot's runner. A program that never calls it, such as
+	    a game's web export by default, carries none of it. Given an autopilot all the same, such
+	    a program logs that it has no runner and quits.
+
+	    Returns false once the program is running.
 	**/
 	public static inline function enableAutopilot():Bool
 		return Raw.wgf_app_enable_autopilot();
 
 	/**
-	    Let an autopilot fly this run (BUILDING.md, "Autopilot files": natively the file
-	    LIBWGF_AUTOPILOT names, on the web the one the page gives the module), as a build that is
-	    tested or checked does, before wgf_app_run. It is what links the autopilot's runner, so a
-	    program that never calls it (a game's web export, by default) carries none of it; given an
-	    autopilot all the same, it logs that it has none and quits. False once the program is
-	    running.
+	    Lets an autopilot fly this run, or returns whether that is enabled. Call it before
+	    wgf_app_run, as a build that is tested or checked does.
+
+	    - Natively the autopilot is the file LIBWGF_AUTOPILOT names.
+	    - On the web it is the one the page gives the module.
+	    - See BUILDING.md, "Autopilot files".
+
+	    This call is what links the autopilot's runner. A program that never calls it, such as
+	    a game's web export by default, carries none of it. Given an autopilot all the same, such
+	    a program logs that it has no runner and quits.
+
+	    Returns false once the program is running.
 	**/
 	public static inline function isAutopilotEnabled():Bool
 		return Raw.wgf_app_is_autopilot_enabled();
 
 	/**
-	    Ask the program to quit: the frame under way finishes, then shutdown runs.
+	    Asks the program to quit. The frame under way finishes, then shutdown runs.
 	**/
 	public static inline function quit():Void
 		Raw.wgf_app_quit();
 
 	/**
-	    Whether quitting means anything here: false on the web, where the page stays when
-	    the program would end, and the browser owns Escape. A game offers a quit key or
-	    button only where this is true.
+	    Returns whether quitting means anything on this platform.
+
+	    Returns false on the web, where the page stays when the program would end, and the
+	    browser owns Escape. Offer a quit key or button only where this is true.
 	**/
 	public static inline function canQuit():Bool
 		return Raw.wgf_app_can_quit();
 
 	/**
-	    Between wgf_app_run starting the program and shutdown finishing.
+	    Returns whether the program is running: from wgf_app_run starting it until shutdown
+	    finishes.
 	**/
 	public static inline function isRunning():Bool
 		return Raw.wgf_app_is_running();
 
 	/**
-	    The program's options by name, read the same way on both platforms: natively `--name=value`
-	    (or `--name`) among its arguments, on the web `name=value` (or `name`) in its page's
-	    address after the `?` (Wardens' `enemies=200`, a benchmark's `count=10000`). has: whether it
-	    was given; get: its value, "" for one given without a value or not given (valid for the
-	    program's life); get_int and get_float: the value as a number, `otherwise` when it wasn't
-	    given or isn't one. The last of a name given wins. False, "", or `otherwise` for NULL.
+	    Reads the program's options by name, the same way on both platforms.
+
+	    - Natively an option is `--name=value`, or `--name`, among the program's arguments.
+	    - On the web it is `name=value`, or `name`, in the page's address after the `?`. For
+	      example, Wardens' `enemies=200`, or a benchmark's `count=10000`.
+	    - If a name is given more than once, the last one wins.
+
+	    The calls:
+	    - has_option returns whether the option was given.
+	    - get_option returns its value, valid for the program's life. It returns "" for an
+	      option given without a value, or not given.
+	    - get_option_int and get_option_float return the value as a number. They return
+	      `otherwise` if the option wasn't given or isn't a number.
+
+	    For a NULL `name` they return false, "", or `otherwise`.
 	**/
 	public static inline function hasOption(name:String):Bool
 		return Raw.wgf_app_has_option(name);
 
 	/**
-	    The program's options by name, read the same way on both platforms: natively `--name=value`
-	    (or `--name`) among its arguments, on the web `name=value` (or `name`) in its page's
-	    address after the `?` (Wardens' `enemies=200`, a benchmark's `count=10000`). has: whether it
-	    was given; get: its value, "" for one given without a value or not given (valid for the
-	    program's life); get_int and get_float: the value as a number, `otherwise` when it wasn't
-	    given or isn't one. The last of a name given wins. False, "", or `otherwise` for NULL.
+	    Reads the program's options by name, the same way on both platforms.
+
+	    - Natively an option is `--name=value`, or `--name`, among the program's arguments.
+	    - On the web it is `name=value`, or `name`, in the page's address after the `?`. For
+	      example, Wardens' `enemies=200`, or a benchmark's `count=10000`.
+	    - If a name is given more than once, the last one wins.
+
+	    The calls:
+	    - has_option returns whether the option was given.
+	    - get_option returns its value, valid for the program's life. It returns "" for an
+	      option given without a value, or not given.
+	    - get_option_int and get_option_float return the value as a number. They return
+	      `otherwise` if the option wasn't given or isn't a number.
+
+	    For a NULL `name` they return false, "", or `otherwise`.
 	**/
 	public static inline function getOption(name:String):String
 		return Raw.wgf_app_get_option(name);
 
 	/**
-	    The program's options by name, read the same way on both platforms: natively `--name=value`
-	    (or `--name`) among its arguments, on the web `name=value` (or `name`) in its page's
-	    address after the `?` (Wardens' `enemies=200`, a benchmark's `count=10000`). has: whether it
-	    was given; get: its value, "" for one given without a value or not given (valid for the
-	    program's life); get_int and get_float: the value as a number, `otherwise` when it wasn't
-	    given or isn't one. The last of a name given wins. False, "", or `otherwise` for NULL.
+	    Reads the program's options by name, the same way on both platforms.
+
+	    - Natively an option is `--name=value`, or `--name`, among the program's arguments.
+	    - On the web it is `name=value`, or `name`, in the page's address after the `?`. For
+	      example, Wardens' `enemies=200`, or a benchmark's `count=10000`.
+	    - If a name is given more than once, the last one wins.
+
+	    The calls:
+	    - has_option returns whether the option was given.
+	    - get_option returns its value, valid for the program's life. It returns "" for an
+	      option given without a value, or not given.
+	    - get_option_int and get_option_float return the value as a number. They return
+	      `otherwise` if the option wasn't given or isn't a number.
+
+	    For a NULL `name` they return false, "", or `otherwise`.
 	**/
 	public static inline function getOptionInt(name:String, otherwise:Int):Int
 		return Raw.wgf_app_get_option_int(name, otherwise);
 
 	/**
-	    The program's options by name, read the same way on both platforms: natively `--name=value`
-	    (or `--name`) among its arguments, on the web `name=value` (or `name`) in its page's
-	    address after the `?` (Wardens' `enemies=200`, a benchmark's `count=10000`). has: whether it
-	    was given; get: its value, "" for one given without a value or not given (valid for the
-	    program's life); get_int and get_float: the value as a number, `otherwise` when it wasn't
-	    given or isn't one. The last of a name given wins. False, "", or `otherwise` for NULL.
+	    Reads the program's options by name, the same way on both platforms.
+
+	    - Natively an option is `--name=value`, or `--name`, among the program's arguments.
+	    - On the web it is `name=value`, or `name`, in the page's address after the `?`. For
+	      example, Wardens' `enemies=200`, or a benchmark's `count=10000`.
+	    - If a name is given more than once, the last one wins.
+
+	    The calls:
+	    - has_option returns whether the option was given.
+	    - get_option returns its value, valid for the program's life. It returns "" for an
+	      option given without a value, or not given.
+	    - get_option_int and get_option_float return the value as a number. They return
+	      `otherwise` if the option wasn't given or isn't a number.
+
+	    For a NULL `name` they return false, "", or `otherwise`.
 	**/
 	public static inline function getOptionFloat(name:String, otherwise:Float):Float
 		return Raw.wgf_app_get_option_float(name, otherwise);

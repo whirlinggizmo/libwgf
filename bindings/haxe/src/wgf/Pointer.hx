@@ -4,68 +4,92 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    The pointer over actors: hover, press, and click on the actors of the interactive 2D and
-    3D stages, from their picks (wgf_stage2d_pick, wgf_stage3d_pick) at the mouse's left
-    button, or the first finger on a touch screen (which drives the mouse,
-    wgf_touch_set_mouse_emulated); libwgt's pointer, wgrender's scene interaction. Once a
-    frame, before its ticks, the interactive stages drawn on the screen in the last frame are
-    picked at the pointer, the one drawn last first, so a HUD drawn over the world takes the
-    pointer where they overlap; a stage not drawn in the last frame is skipped. Actors are hit
-    as those picks hit them (a glTF file's node as its file's root).
+    The pointer over actors: hover, press, and click on the actors of interactive 2D and 3D
+    stages.
 
-    While the game's UI has the pointer (wgf_input_set_pointer_captured), nothing is under it
-    and no press starts on an actor. A press on a 2D stage's actor captures the pointer
-    (wgf_input_is_pointer_captured) until it is let go, through the frame it is let go in, so
-    camera drags and the game's own clicks leave it alone; a press on a 3D stage's actor
-    doesn't, so the world's camera still turns under a drag. States are read inside a tick or
-    a frame, with edges since the previous tick, or the previous frame, as keys have.
+    It works from the stages' picks (wgf_stage2d_pick, wgf_stage3d_pick), at the mouse's left
+    button. On a touch screen, the first finger drives the mouse (wgf_touch_set_mouse_emulated),
+    so it works there too.
+
+    - Once a frame, before its ticks, the interactive stages drawn on the screen in the last
+      frame are picked at the pointer.
+    - The stage drawn last is picked first. So a HUD drawn over the world takes the pointer where
+      they overlap.
+    - A stage not drawn in the last frame is skipped.
+    - Actors are hit as those picks hit them. A glTF file's node is hit as its file's root.
+
+    While the game's UI has the pointer (wgf_input_set_pointer_captured), no actor is under it,
+    and no press starts on an actor.
+
+    - A press on a 2D stage's actor captures the pointer (wgf_input_is_pointer_captured) until it
+      is let go, through the frame it is let go in. So camera drags and the game's own clicks
+      leave it alone.
+    - A press on a 3D stage's actor doesn't capture it, so the world's camera still turns under
+      a drag.
+
+    Read the states inside a tick or a frame. Their edges are since the previous tick, or the
+    previous frame, as keys' are.
 
     Pointer's calls, on a Actor: `var x:Pointer = handle` gives it them, and a Pointer is still a Actor; it starts as 0, none, as a Actor does.
 **/
 @:forward abstract Pointer(Actor) from Actor from Int to Actor {
 	/**
-	    Which stages the pointer picks (default: none). False for a handle that isn't a 2D or a
-	    3D stage. A stage destroyed leaves the list by itself.
+	    Sets or gets whether the pointer picks a stage (default: not picked).
+
+	    A stage that is destroyed leaves the list by itself.
+
+	    set_interactive returns false if `stage` isn't a 2D or a 3D stage.
 	**/
 	public inline function setInteractive(interactive:Bool):Bool
 		return Raw.wgf_pointer_set_interactive(this, interactive);
 
 	/**
-	    Which stages the pointer picks (default: none). False for a handle that isn't a 2D or a
-	    3D stage. A stage destroyed leaves the list by itself.
+	    Sets or gets whether the pointer picks a stage (default: not picked).
+
+	    A stage that is destroyed leaves the list by itself.
+
+	    set_interactive returns false if `stage` isn't a 2D or a 3D stage.
 	**/
 	public inline function isInteractive():Bool
 		return Raw.wgf_pointer_is_interactive(this);
 
 	/**
-	    The topmost actor under the pointer; 0 for none.
+	    Returns the topmost actor under the pointer, or 0 if there is none.
 	**/
 	public static inline function getHovered():Actor
 		return Raw.wgf_pointer_get_hovered();
 
 	/**
-	    PRESSED: came under the pointer; DOWN: under it; RELEASED: the pointer left it; UP: not
-	    under it.
+	    Returns whether `actor` is under the pointer.
+
+	    - PRESSED: it came under the pointer.
+	    - DOWN: it is under the pointer.
+	    - RELEASED: the pointer left it.
+	    - UP: it isn't under the pointer.
 	**/
 	public inline function getHoverState():InputState
 		return Raw.wgf_pointer_get_hover_state(this);
 
 	/**
-	    The left button, or a finger, for a press that started on `actor`: PRESSED when it went
-	    down on it, DOWN while held, also once the pointer has moved off it (a drag), RELEASED when
-	    let go, wherever the pointer is then; UP otherwise.
+	    Returns the state of a press that started on `actor`, by the left button or a finger.
+
+	    - PRESSED: it went down on the actor.
+	    - DOWN: it is held, even once the pointer has moved off the actor (a drag).
+	    - RELEASED: it was let go, wherever the pointer is then.
+	    - UP: otherwise.
 	**/
 	public inline function getPressState():InputState
 		return Raw.wgf_pointer_get_press_state(this);
 
 	/**
-	    A press let go while still over the actor it started on: a click.
+	    Returns true for a click: a press let go while still over the actor it started on.
 	**/
 	public inline function isClicked():Bool
 		return Raw.wgf_pointer_is_clicked(this);
 
 	/**
-	    The actor a held press started on, 0 with none held: what is being dragged.
+	    Returns the actor a held press started on: the actor being dragged. Returns 0 if no press is
+	    held.
 	**/
 	public static inline function getHeld():Actor
 		return Raw.wgf_pointer_get_held();

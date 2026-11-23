@@ -4,72 +4,97 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    3D collision as plain math, raylib's shapes (its CheckCollision* and GetRayCollision*):
-    boxes, spheres, and rays against them and triangles, with no actor or body
-    (wgf_physics3d.h casts against a physics world). A box is axis-aligned, its least corner and
-    its greatest (x0, y0, z0, x1, y1, z1); a ray its origin and its direction, which needn't be
-    a unit vector.
+    3D collision as plain math, with no actor or body.
 
-    What a test found goes into `hit`, a caller's array, as many of these as fit in
-    `hit_count` (NULL, 0 for none), as wgf_collide2d.h's with z:
-      0, 1, 2  the normal: the way out of the second shape (a unit vector; a ray's: the
-               surface's at the point it met, facing the ray; 0, 0, 0 when it started inside)
-      3        how deep an overlap goes along the normal (0 for a ray)
-      4, 5, 6  the point: of the second shape nearest the first's center, or where the ray met
-      7        how far along the ray, in its direction's lengths (0 for an overlap; 0 too for a
-               ray starting inside)
+    It tests boxes and spheres against each other, and casts rays against them and against
+    triangles. To cast against a physics world instead, see wgf_physics3d.h.
+
+    - A box is axis-aligned: its least corner, then its greatest (x0, y0, z0, x1, y1, z1).
+    - A ray is its origin, then its direction. The direction needn't be a unit vector.
+
+    What a test found goes into `hit`, an array you pass. As many of these values as fit in
+    `hit_count` are written. Pass NULL and 0 for none. The layout is wgf_collide2d.h's, with z:
+
+      0, 1, 2  the normal: the way out of the second shape, a unit vector. For a ray, the
+               surface's normal at the point it met, facing the ray (0, 0, 0 when it started inside)
+      3        the depth of an overlap along the normal (0 for a ray)
+      4, 5, 6  the point: the second shape's point nearest the first's center, or where the
+               ray met it
+      7        the time: how far along the ray, in lengths of its direction (0 for an overlap,
+               and 0 for a ray starting inside)
 **/
 class Collide3d {
 	/**
-	    Points.
+	    Point tests. Each returns whether the point px, py, pz is inside the box or the sphere.
 	**/
 	public static inline function pointInBox(px:Float, py:Float, pz:Float, x0:Float, y0:Float, z0:Float, x1:Float, y1:Float, z1:Float):Bool
 		return Raw.wgf_collide3d_point_in_box(px, py, pz, x0, y0, z0, x1, y1, z1);
 
 	/**
-	    Points.
+	    Point tests. Each returns whether the point px, py, pz is inside the box or the sphere.
 	**/
 	public static inline function pointInSphere(px:Float, py:Float, pz:Float, cx:Float, cy:Float, cz:Float, r:Float):Bool
 		return Raw.wgf_collide3d_point_in_sphere(px, py, pz, cx, cy, cz, r);
 
 	/**
-	    Overlaps: two boxes, two spheres, a sphere and a box. Touching doesn't count.
+	    Overlap tests: two boxes, two spheres, or a sphere and a box.
+
+	    Touching doesn't count as overlapping.
 	**/
 	public static inline function boxBox(ax0:Float, ay0:Float, az0:Float, ax1:Float, ay1:Float, az1:Float, bx0:Float, by0:Float, bz0:Float, bx1:Float, by1:Float, bz1:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide3d_box_box(ax0, ay0, az0, ax1, ay1, az1, bx0, by0, bz0, bx1, by1, bz1, hit);
 
 	/**
-	    Overlaps: two boxes, two spheres, a sphere and a box. Touching doesn't count.
+	    Overlap tests: two boxes, two spheres, or a sphere and a box.
+
+	    Touching doesn't count as overlapping.
 	**/
 	public static inline function sphereSphere(ax:Float, ay:Float, az:Float, ar:Float, bx:Float, by:Float, bz:Float, br:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide3d_sphere_sphere(ax, ay, az, ar, bx, by, bz, br, hit);
 
 	/**
-	    Overlaps: two boxes, two spheres, a sphere and a box. Touching doesn't count.
+	    Overlap tests: two boxes, two spheres, or a sphere and a box.
+
+	    Touching doesn't count as overlapping.
 	**/
 	public static inline function sphereBox(cx:Float, cy:Float, cz:Float, r:Float, x0:Float, y0:Float, z0:Float, x1:Float, y1:Float, z1:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide3d_sphere_box(cx, cy, cz, r, x0, y0, z0, x1, y1, z1, hit);
 
 	/**
-	    A ray's first meeting with a sphere, a box, or a triangle (either face; its points in
-	    order), at or after its origin; false for none. The ray goes on without end: the time in
-	    the hit says how far, for a game that wants a segment (a time of 1 or less).
+	    Casts a ray against a sphere, a box, or a triangle, and finds where it first meets it.
+
+	    - Only a meeting at or after the ray's origin counts.
+	    - A triangle is its points in order, and either face is hit.
+	    - The ray goes on without end. The time in the hit says how far it went, so a game that
+	      wants a segment keeps only a time of 1 or less.
+
+	    Returns false if the ray meets none.
 	**/
 	public static inline function raySphere(ox:Float, oy:Float, oz:Float, dx:Float, dy:Float, dz:Float, cx:Float, cy:Float, cz:Float, r:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide3d_ray_sphere(ox, oy, oz, dx, dy, dz, cx, cy, cz, r, hit);
 
 	/**
-	    A ray's first meeting with a sphere, a box, or a triangle (either face; its points in
-	    order), at or after its origin; false for none. The ray goes on without end: the time in
-	    the hit says how far, for a game that wants a segment (a time of 1 or less).
+	    Casts a ray against a sphere, a box, or a triangle, and finds where it first meets it.
+
+	    - Only a meeting at or after the ray's origin counts.
+	    - A triangle is its points in order, and either face is hit.
+	    - The ray goes on without end. The time in the hit says how far it went, so a game that
+	      wants a segment keeps only a time of 1 or less.
+
+	    Returns false if the ray meets none.
 	**/
 	public static inline function rayBox(ox:Float, oy:Float, oz:Float, dx:Float, dy:Float, dz:Float, x0:Float, y0:Float, z0:Float, x1:Float, y1:Float, z1:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide3d_ray_box(ox, oy, oz, dx, dy, dz, x0, y0, z0, x1, y1, z1, hit);
 
 	/**
-	    A ray's first meeting with a sphere, a box, or a triangle (either face; its points in
-	    order), at or after its origin; false for none. The ray goes on without end: the time in
-	    the hit says how far, for a game that wants a segment (a time of 1 or less).
+	    Casts a ray against a sphere, a box, or a triangle, and finds where it first meets it.
+
+	    - Only a meeting at or after the ray's origin counts.
+	    - A triangle is its points in order, and either face is hit.
+	    - The ray goes on without end. The time in the hit says how far it went, so a game that
+	      wants a segment keeps only a time of 1 or less.
+
+	    Returns false if the ray meets none.
 	**/
 	public static inline function rayTriangle(ox:Float, oy:Float, oz:Float, dx:Float, dy:Float, dz:Float, points:Array<Float>, hit:Array<Float>):Bool
 		return Raw.wgf_collide3d_ray_triangle(ox, oy, oz, dx, dy, dz, points, hit);

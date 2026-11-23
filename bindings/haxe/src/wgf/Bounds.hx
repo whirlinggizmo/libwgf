@@ -8,57 +8,67 @@ import wgf.impl.Raw;
 **/
 @:forward abstract Bounds(Actor) from Actor from Int to Actor {
 	/**
-	    False too for a width or height below 0. Read back as x, y, width, height.
+	    Sets or gets the rectangle. get_rect returns it as x, y, width, height. The setter also
+	    returns false for a width or height below 0.
 	**/
 	public inline function setRect(x:Float, y:Float, width:Float, height:Float):Bool
 		return Raw.wgf_bounds_set_rect(this, x, y, width, height);
 
 	/**
-	    False too for a width or height below 0. Read back as x, y, width, height.
+	    Sets or gets the rectangle. get_rect returns it as x, y, width, height. The setter also
+	    returns false for a width or height below 0.
 	**/
 	public inline function getRect(?into:wgf.Vec4):wgf.Vec4
 		return Raw.wgf_bounds_get_rect(this, into);
 
 	/**
-	    False too for a mode that isn't one.
+	    Sets or gets the mode (default: WRAP). The setter also returns false for a mode that isn't
+	    one.
 	**/
 	public inline function setMode(mode:BoundsMode):Bool
 		return Raw.wgf_bounds_set_mode(this, mode);
 
 	/**
-	    False too for a mode that isn't one.
+	    Sets or gets the mode (default: WRAP). The setter also returns false for a mode that isn't
+	    one.
 	**/
 	public inline function getMode():BoundsMode
 		return Raw.wgf_bounds_get_mode(this);
 
 	/**
-	    Whether the rectangle is the presentation's visible area (wgf_presentation.h), read
-	    each tick, so what wraps at the screen's edge wraps at the window's whatever its size
-	    (a scene file's `bounds visible=true`); read back by get_rect as it is now. Setting a
-	    rectangle turns it off. Default: off.
+	    Sets or gets whether the rectangle is the presentation's visible area (default: off).
+
+	    The visible area (wgf_presentation.h) is read each tick. An actor that wraps at the screen's
+	    edge then wraps at the window's edge, whatever its size. A scene file sets this with
+	    `bounds visible=true`. get_rect returns the rectangle as it is now. Setting a rectangle
+	    turns this off.
 	**/
 	public inline function setVisible(visible:Bool):Bool
 		return Raw.wgf_bounds_set_visible(this, visible);
 
 	/**
-	    Whether the rectangle is the presentation's visible area (wgf_presentation.h), read
-	    each tick, so what wraps at the screen's edge wraps at the window's whatever its size
-	    (a scene file's `bounds visible=true`); read back by get_rect as it is now. Setting a
-	    rectangle turns it off. Default: off.
+	    Sets or gets whether the rectangle is the presentation's visible area (default: off).
+
+	    The visible area (wgf_presentation.h) is read each tick. An actor that wraps at the screen's
+	    edge then wraps at the window's edge, whatever its size. A scene file sets this with
+	    `bounds visible=true`. get_rect returns the rectangle as it is now. Setting a rectangle
+	    turns this off.
 	**/
 	public inline function isVisible():Bool
 		return Raw.wgf_bounds_is_visible(this);
 
 	/**
-	    How far past the rectangle's edge it may go first, so a rock wraps once it is wholly
-	    off the screen. Clamped to 0 or more.
+	    Sets or gets the margin: how far past the rectangle's edge the actor may go first
+	    (default: 0). With a margin, a rock wraps only once it is wholly off the screen. It is
+	    clamped to 0 or more.
 	**/
 	public inline function setMargin(margin:Float):Bool
 		return Raw.wgf_bounds_set_margin(this, margin);
 
 	/**
-	    How far past the rectangle's edge it may go first, so a rock wraps once it is wholly
-	    off the screen. Clamped to 0 or more.
+	    Sets or gets the margin: how far past the rectangle's edge the actor may go first
+	    (default: 0). With a margin, a rock wraps only once it is wholly off the screen. It is
+	    clamped to 0 or more.
 	**/
 	public inline function getMargin():Float
 		return Raw.wgf_bounds_get_margin(this);

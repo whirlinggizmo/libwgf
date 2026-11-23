@@ -2,7 +2,7 @@
 package wgf;
 
 /**
-    Where a key or button is, as read inside a tick or a frame.
+    The state of a key or button, as read inside a tick or a frame.
 **/
 enum abstract InputState(Int) from Int to Int {
 	var UP = 0;
