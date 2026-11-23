@@ -29,6 +29,7 @@ wgf_layer(gfx
         src/mesh/wgf_gfx_cgltf_impl.c
         src/mesh/wgf_gfx_mesh.c
         src/mesh/wgf_gfx_mesh_gltf.c
+        src/mesh/wgf_gfx_mesh_merge.c
         src/mesh/wgf_gfx_mesh_shapes.c
         src/actor/wgf_gfx_camera2d.c
         src/actor/wgf_gfx_camera3d.c
@@ -117,6 +118,7 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_mesh_test)
         wgf_test(gfx wgf_gfx_gltf_test)
         wgf_test(gfx wgf_gfx_skin_test)
+        wgf_test(gfx wgf_gfx_merge_test)
         wgf_test(gfx wgf_gfx_stage3d_test)
         wgf_test(gfx wgf_gfx_shadow_test)
         wgf_test(gfx wgf_gfx_environment_test)

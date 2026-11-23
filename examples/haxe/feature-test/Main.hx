@@ -505,6 +505,13 @@ class Main {
 			&& Math.abs(corners[1] - 0.5) < 1e-3 && !land.setColors([1.0, 0, 0, 1]),
 			"its corners colored; a count that isn't its corners': refused");
 		expect(Resource.release(land), "a heightmap let go of");
+		final pieces = [Mesh.createCube(1, 1, 1), Mesh.createSphere(1, 8, 16)];
+		final merged = Mesh.createMerged(pieces, cast 0);
+		expect(!merged.isNone() && Resource.getStatus(merged) == ResourceStatus.PENDING,
+			"meshes merged: PENDING until made in the parts' update");
+		for (piece in pieces)
+			Resource.release(piece);
+		Resource.release(merged);
 		final file = Mesh.create("models/toy_car.glb");
 		car = Model.create(file);
 		expect(!file.isNone() && !car.isNone() && Resource.release(file), "a glTF file's mesh, a model of it");

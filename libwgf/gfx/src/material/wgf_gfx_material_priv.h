@@ -102,6 +102,11 @@ typedef struct wgf_gfx_priv_material_t {
 /* The material, without logging; NULL for 0 or a handle that isn't one. */
 const wgf_gfx_priv_material_t *wgf_gfx_priv_material_get(wgf_material_t material);
 
+/* A new material drawing as `material` does but white (its base color 1, 1, 1, 1), its
+ * textures referenced again: what merged meshes draw a group with once its colors are in the
+ * vertices (wgf_gfx_mesh_merge.c). 0 for a custom material, or a handle that isn't one. */
+wgf_material_t wgf_gfx_priv_material_copy_white(wgf_material_t material);
+
 /* `material`, a new one, made a custom material's (its shading CUSTOM), to be filled in by
  * the custom part (wgf_material_create_custom); NULL for a handle that isn't one. */
 wgf_gfx_priv_material_t *wgf_gfx_priv_material_make_custom(wgf_material_t material);

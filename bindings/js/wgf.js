@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "7c1798509b6bb88e" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "e7b8108e4a76468e" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -11361,6 +11361,43 @@ export function wgf_mesh_create(path) {
     const mark = host["stackSave"]();
     const value = host["_wgf_mesh_create"](cstr(path));
     host["stackRestore"](mark);
+    return value >>> 0;
+}
+
+// wgf: call wgf_mesh_create_merged
+/**
+ * One mesh of several, drawn with fewer draws (helix-raylib's LoadModelFromModels): a
+ * character's head, body, legs, and feet as one, posed once and drawn as few primitives.
+ * `meshes`, `count` of them (1 to 64), are glTF files' meshes or meshes made in code; each is
+ * held until the merged mesh is made, so they may be let go of at once. The merged mesh is
+ * PENDING until every one of them (and `skeleton`) is READY, then made; FAILED when one
+ * FAILED, or the skeleton has no skin.
+ *
+ * Primitives whose materials differ only in base color are one primitive, each color
+ * multiplied into its vertices' colors and drawn by a copy of the first material made white;
+ * any other difference (shading, alpha, double sided, metal, roughness, emission, a texture or
+ * its sampling) keeps them apart, and a custom material merges only with itself.
+ *
+ * With `skeleton`, a glTF file's mesh with a skin (usually one of `meshes`), the merged mesh is
+ * a file's: its tree the skeleton's nodes, their names, places, and animations (a model of it
+ * is the file's root, wgf_model.h: its joints are actors, wgf_model_find_node finds a socket,
+ * wgf_model_set_animations gives it clips), the skeleton's own meshes not drawn but as pieces.
+ * Each piece's skinned primitives are bound to the skeleton's first skin by its joints' names:
+ * a joint the skeleton hasn't follows its nearest ancestor the skeleton has, and a vertex
+ * following none follows the skin's first joint. A piece bound in another bind pose is bound
+ * again to the skeleton's. A piece's primitive that isn't skinned follows the joint its node
+ * or nearest ancestor is named as (a helmet under "Head"), placed as its file placed it under
+ * that node; one under no such node, and a mesh made in code, stays where it is, under the
+ * root. With 0, the merged mesh is a plain one with no tree: every primitive placed where its
+ * file put it at rest, a skinned one at its bind pose.
+ *
+ * Lights, and a piece's own animations, aren't carried. A piece loaded again (wgf_asset_reload)
+ * doesn't change the merged mesh. 0 (logged) for no meshes or more than 64, a handle that isn't
+ * a mesh, or a skeleton that isn't a glTF file's mesh.
+ */
+export function wgf_mesh_create_merged(meshes, skeleton) {
+    const meshesPointer = arrayIn(meshes, 0, "HEAPU32");
+    const value = host["_wgf_mesh_create_merged"](meshesPointer, lengthOf(meshes), skeleton);
     return value >>> 0;
 }
 

@@ -735,6 +735,7 @@ class Reach {
 		"wgf_mesh_create_cube",
 		"wgf_mesh_create_cylinder",
 		"wgf_mesh_create_heightmap",
+		"wgf_mesh_create_merged",
 		"wgf_mesh_create_plane",
 		"wgf_mesh_create_sphere",
 		"wgf_mesh_create_torus",
@@ -1464,7 +1465,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1455) 0];
+	static final counts:Array<Int> = [for (_ in 0...1456) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

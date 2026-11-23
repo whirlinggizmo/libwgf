@@ -39,6 +39,7 @@ typedef enum wgf_core_priv_part_order_t {
     WGF_CORE_PRIV_PART_TEXTURE_READS, /* textures read back (libwgf/gfx/src/texture/wgf_gfx_texture_read.c) */
     WGF_CORE_PRIV_PART_IMAGES,    /* images on the CPU (libwgf/gfx/src/texture/wgf_gfx_image.c) */
     WGF_CORE_PRIV_PART_EFFECTS,   /* screen effects (libwgf/gfx/src/render/wgf_gfx_render_effect.c), before the materials they hold */
+    WGF_CORE_PRIV_PART_MESH_MERGES, /* meshes merged (libwgf/gfx/src/mesh/wgf_gfx_mesh_merge.c), before the meshes they wait for */
     WGF_CORE_PRIV_PART_MESHES,    /* meshes (libwgf/gfx/src/mesh/), stopped before the materials they hold */
     WGF_CORE_PRIV_PART_MATERIALS, /* materials (libwgf/gfx/src/material/) */
     WGF_CORE_PRIV_PART_SHADERS,   /* custom shaders (libwgf/gfx/src/material/wgf_gfx_shader.c), after the materials holding them */

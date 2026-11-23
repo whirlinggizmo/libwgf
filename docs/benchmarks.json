@@ -837,7 +837,7 @@
  },
  "libwgf": {
   "budgets": {},
-  "commit": "61f4d94 2026-11-22",
+  "commit": "53d23cf 2026-11-22",
   "programs": {
    "app-device": {
     "js": {
@@ -1305,9 +1305,9 @@
      "raw": 55227
     },
     "wasm": {
-     "br": 165806,
-     "gz": 204762,
-     "raw": 511656
+     "br": 172466,
+     "gz": 214685,
+     "raw": 533983
     }
    },
    "gfx-sprite-batch": {

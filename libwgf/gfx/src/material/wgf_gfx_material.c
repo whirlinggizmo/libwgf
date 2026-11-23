@@ -173,6 +173,27 @@ const wgf_gfx_priv_material_t *wgf_gfx_priv_material_get(wgf_material_t material
     return resolve(material);
 }
 
+wgf_material_t wgf_gfx_priv_material_copy_white(wgf_material_t material)
+{
+    const wgf_gfx_priv_material_t *from = resolve(material);
+    wgf_material_t copy;
+    wgf_gfx_priv_material_t *to;
+    int i;
+    if (from == NULL || from->custom != NULL) return 0;
+    copy = wgf_material_create(from->shading == WGF_MATERIAL_SHADING_UNLIT ? WGF_MATERIAL_SHADING_UNLIT
+                                                                           : WGF_MATERIAL_SHADING_PBR);
+    from = resolve(material); /* resolved again: the add may have moved the pool */
+    to = resolve(copy);
+    if (from == NULL || to == NULL) return copy;
+    memcpy((char *)to + sizeof(to->resource), (const char *)from + sizeof(from->resource),
+           sizeof(*to) - sizeof(to->resource));
+    to->base_color[0] = to->base_color[1] = to->base_color[2] = to->base_color[3] = 1.0f;
+    for (i = 0; i < WGF_GFX_PRIV_MATERIAL_TEXTURE_COUNT; i++) {
+        if (to->textures[i].texture != 0) wgf_core_priv_resource_retain(to->textures[i].texture);
+    }
+    return copy;
+}
+
 wgf_gfx_priv_material_t *wgf_gfx_priv_material_make_custom(wgf_material_t material)
 {
     wgf_gfx_priv_material_t *material_ptr = resolve(material);

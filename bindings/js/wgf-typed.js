@@ -1667,6 +1667,8 @@ export const Mesh = Object.freeze({
     getColors: raw.wgf_mesh_get_colors,
     // wgf: call wgf_mesh_create
     create: raw.wgf_mesh_create,
+    // wgf: call wgf_mesh_create_merged
+    createMerged: raw.wgf_mesh_create_merged,
     // wgf: call wgf_mesh_get_material_count
     getMaterialCount: raw.wgf_mesh_get_material_count,
     // wgf: call wgf_mesh_get_material

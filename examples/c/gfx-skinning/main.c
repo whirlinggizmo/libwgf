@@ -28,7 +28,10 @@
  * walk, run (waving from the torso up as it runs: a layer over its clip, masked to the torso
  * and what is under it), and wave (drawn by the toon shader, a custom material on skinned
  * parts), each started at another point of its clip. The sun casts, so their
- * shadows are posed too. Clips are found by name once the file has loaded. D draws the
+ * shadows are posed too. Clips are found by name once the file has loaded. Beside the front
+ * robot, the Adventurer twice: on the right its four part models, each posed, and on the left
+ * the four merged into one mesh on the body's skeleton (wgf_mesh_create_merged), posed once and
+ * drawn as one primitive, its colors in its vertices; the two run alike. D draws the
  * Adventurer over itself for debugging, as it is posed this frame: its triangles' wires,
  * its vertices as points, or its skeleton (immediate mode's model draws), the skeleton
  * alone, the Adventurer hidden, since its lines are inside it.
@@ -47,14 +50,14 @@
 static const char *const clips[ROBOTS] = {"Robot_Idle", "Robot_Dance", "Robot_Walking", "Robot_Running", "Robot_Wave"};
 
 /* A modular character: four part models on one skeleton, each given the clips of a file of
- * animations alone and played alike, so they move as one. */
+ * animations alone and played alike, so they move as one; and the same four merged. */
 #define CLIPS_PATH "models/characters/Animations.glb"
 #define PARTS 4
 static const char *const part_paths[PARTS] = {"models/characters/Adventurer_Body.glb", "models/characters/Adventurer_Legs.glb",
                                               "models/characters/Adventurer_Head.glb", "models/characters/Adventurer_Feet.glb"};
 
 static struct {
-    wgf_actor_t stage, camera, robots[ROBOTS], character, parts[PARTS];
+    wgf_actor_t stage, camera, robots[ROBOTS], character, parts[PARTS], merged;
     bool dressed;
     bool started, orbit, paused;
     int clip; /* the front robot's */
@@ -117,6 +120,18 @@ static void init(void *user)
         wgf_model_set_animations(g.parts[i], mesh); /* the clips file's channels, by its nodes' names */
         wgf_actor_set_parent(g.parts[i], g.character);
     }
+    { /* the four merged on the body's skeleton: the files shared by their paths, so loaded once */
+        wgf_mesh_t pieces[PARTS], merged;
+        for (i = 0; i < PARTS; i++) pieces[i] = wgf_mesh_create(part_paths[i]);
+        merged = wgf_mesh_create_merged(pieces, PARTS, pieces[0]);
+        for (i = 0; i < PARTS; i++) wgf_resource_release(pieces[i]); /* the merge holds them until it is made */
+        g.merged = wgf_model_create(merged);
+        wgf_resource_release(merged);
+        wgf_model_set_animations(g.merged, mesh);
+        wgf_actor_set_parent(g.merged, g.stage);
+        wgf_actor_set_position(g.merged, -5.0f, 0.0f, 3.0f);
+        wgf_actor_set_scale(g.merged, 2.0f, 2.0f, 2.0f);
+    }
     wgf_resource_release(mesh); /* each part holds the clips */
 }
 
@@ -127,6 +142,10 @@ static void dress(void)
     for (i = 0; i < PARTS; i++) {
         const int clip = wgf_model_find_animation(g.parts[i], "CharacterArmature|Run");
         wgf_model_play_animation(g.parts[i], clip >= 0 ? clip : 0, 0.0f);
+    }
+    {
+        const int clip = wgf_model_find_animation(g.merged, "CharacterArmature|Run");
+        wgf_model_play_animation(g.merged, clip >= 0 ? clip : 0, 0.0f);
     }
     g.dressed = true;
 }
@@ -222,6 +241,7 @@ static void frame(void *user)
         for (i = 0; i < PARTS; i++) {
             ready = ready && wgf_resource_get_status(wgf_model_get_mesh(g.parts[i])) == WGF_RESOURCE_STATUS_READY;
         }
+        ready = ready && wgf_resource_get_status(wgf_model_get_mesh(g.merged)) == WGF_RESOURCE_STATUS_READY;
         if (ready) dress();
     }
     if (g.started) {
