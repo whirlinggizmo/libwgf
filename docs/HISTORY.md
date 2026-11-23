@@ -1040,6 +1040,16 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## The racer is libwgf's own (2026-11-23)
+
+The racer was written in a repository of its own (`libwgf-racer`) by a session using libwgf as an outside developer would, and copied into `games/racer/` by `tools/import_game.py`, with an `IMPORTED.md` saying it wasn't edited here. It has been edited here since (the physics rename, the window's flags), so the copy was the newer one. Rob's call: one racer.
+
+- **`games/racer/` is the racer**, edited here. `IMPORTED.md` is gone, so its Markdown is checked as the rest is.
+- **Its sessions' log and brief are kept** in `games/racer/notes/` (`FRICTION.md`, 78 entries, and `BRIEF.md`), as written. `docs/FRICTION.md`'s eight pointers to the log name it there.
+- **The other repository is archived** on GitHub, its 23 commits readable. The commit hashes `docs/FRICTION.md` gives for the game are that repository's.
+- **A stray web export** under `games/racer/scratch/`, 47 files committed with the physics rename, is removed, and `scratch/` ignored.
+- `tools/import_game.py` stays: it imports any game.
+
 ## Text buffers (2026-11-23)
 
 A text buffer is text that libwgf holds, so a widget or a call can be given its handle instead of the text each frame, and a program can load a text file as it loads a texture. Rob's: from the text field's friction (it keeps its text by its id, unlike every other value widget) and the cost of a chat's text given again each frame (measured: an 80-character line crosses into C in about 300 ns from JS, and a chat of 200 lines spends about 60 µs a frame crossing and about 280 µs laid out).

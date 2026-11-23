@@ -265,7 +265,7 @@ Asteroids (milestone 1), from step 0 of milestone 2: the clean-room rebuild (`..
 - **Found by:** CI
 - **Triage:** fixed in milestone 2's step 1: `at <frame> wait <probe> <op> <number>` holds the autopilot's clock while the program's frames go on (BUILDING.md, "Autopilot files"); Asteroids publishes `asteroids.ready`, and its playthrough and smoke autopilots wait for it
 
-Racer (milestone 2), from step 4: the game-developer session that wrote the drivable slice outside libwgf (`../libwgf-racer/FRICTION.md`, its log entries numbered as there; the game in `../libwgf-racer/game/`), 2026-10-07.
+Racer (milestone 2), from step 4: the game-developer session that wrote the drivable slice outside libwgf (`games/racer/notes/FRICTION.md`, its log entries numbered as there; the game in `../libwgf-racer/game/`), 2026-10-07.
 
 ### Racer: the sketch calls what milestone 2 hasn't built yet
 
@@ -429,7 +429,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Found by:** the racer's session
 - **Triage:** fine: kept as they are, and kept so (a change that loses one of them is a regression)
 
-Racer (milestone 2), from step 5: the game-developer session's part 2, the car on physics3d (`../libwgf-racer/FRICTION.md`, "Part 2", its entries P1 to P14; the game at d4c0284), 2026-10-07.
+Racer (milestone 2), from step 5: the game-developer session's part 2, the car on physics3d (`games/racer/notes/FRICTION.md`, "Part 2", its entries P1 to P14; the game at d4c0284), 2026-10-07.
 
 ### Racer: the car rolled onto its roof, with no center of mass to lower
 
@@ -521,7 +521,7 @@ Racer (milestone 2), from step 5: the game-developer session's part 2, the car o
 - **Found by:** the racer's session (its P14)
 - **Triage:** fine: the game's, as expected; recording with no one there stays in ROADMAP's "Later" on its condition
 
-Racer (milestone 2), from step 6: the game-developer session's part 3, the track as a glTF file (`../libwgf-racer/FRICTION.md`, "Part 3", its entries G1 to G8; the game at db88e32), 2026-10-09.
+Racer (milestone 2), from step 6: the game-developer session's part 3, the track as a glTF file (`games/racer/notes/FRICTION.md`, "Part 3", its entries G1 to G8; the game at db88e32), 2026-10-09.
 
 ### Racer: a scene can't put a body on a node of a glTF file
 
@@ -577,7 +577,7 @@ Racer (milestone 2), from step 6: the game-developer session's part 3, the track
 - **Found by:** the racer's session
 - **Triage:** fine: kept as they are, and kept so
 
-Racer (milestone 2), from step 8: the game-developer session's part 4, a sun that casts (`../libwgf-racer/FRICTION.md`, "Part 4", its entries S1 to S8; the game at 178a4ea), 2026-10-09.
+Racer (milestone 2), from step 8: the game-developer session's part 4, a sun that casts (`games/racer/notes/FRICTION.md`, "Part 4", its entries S1 to S8; the game at 178a4ea), 2026-10-09.
 
 ### Racer: the shadow pass cost a fixed 12.5 ms a frame
 
@@ -624,7 +624,7 @@ Racer (milestone 2), from step 8: the game-developer session's part 4, a sun tha
 - **Found by:** the racer's session
 - **Triage:** fine: kept as they are, and kept so; BUILDING says a node's block takes its kind's keys (`model cast_shadows=`)
 
-Racer (milestone 2), from step 9: the game-developer session's part 5, a sky and reflections (`../libwgf-racer/FRICTION.md`, "Part 5", its entries E1 to E8; the game at 83a5056), 2026-10-10.
+Racer (milestone 2), from step 9: the game-developer session's part 5, a sky and reflections (`games/racer/notes/FRICTION.md`, "Part 5", its entries E1 to E8; the game at 83a5056), 2026-10-10.
 
 ### Racer: on the web the sky's preparation was one 1.48 s frame
 
@@ -699,7 +699,7 @@ Racer (milestone 2), from step 9: the game-developer session's part 5, a sky and
 - **Triage:** fine: kept as they are
 
 
-Racer (milestone 2), from step 10: the game-developer session's part 6, the track streamed as Racing Kit pieces (`../libwgf-racer/FRICTION.md`, "Part 6", its entries P1 to P8; the game at aff98b5), 2026-10-10.
+Racer (milestone 2), from step 10: the game-developer session's part 6, the track streamed as Racing Kit pieces (`games/racer/notes/FRICTION.md`, "Part 6", its entries P1 to P8; the game at aff98b5), 2026-10-10.
 
 ### Racer: the root manifest lost to the browser store's first clearing
 
@@ -773,7 +773,7 @@ Racer (milestone 2), from step 10: the game-developer session's part 6, the trac
 - **Found by:** the racer's session (its P8)
 - **Triage:** `wgf_asset.h` says now which formats list their files (glTF's, in a program with glTF; a scene's not yet), and a scene's lister is milestone 2.5's (ROADMAP.md, "From the racer's friction"); the `wgf` tool finds an autopilot by its name in the game's autopilot folder, and names a missing one, before anything is built. The frame budget documented, `wgf screenshot --timeout`, and the environment prepared in steps (its worst loading frame 103 ms, from 1.48 s) were the session's good surprises
 
-Racer (milestone 2), from step 11: the game-developer session's part 7, props, signs, the gantry, and tire smoke (`../libwgf-racer/FRICTION.md`, "Part 7", its entries R1 to R11; the game at b1704d9), 2026-10-11.
+Racer (milestone 2), from step 11: the game-developer session's part 7, props, signs, the gantry, and tire smoke (`games/racer/notes/FRICTION.md`, "Part 7", its entries R1 to R11; the game at b1704d9), 2026-10-11.
 
 ### Racer: an emitter's first particles cost a frame of about 25 ms
 
@@ -816,7 +816,7 @@ Racer (milestone 2), from step 11: the game-developer session's part 7, props, s
 - **Found by:** the racer's session (its R2, R8, R9, R10, R11)
 - **Triage:** fine as built. The emitter's header told where to hang the smoke (velocity turns with the actor, particles stay where they were born, `skip_trail` on a teleport); signs and text in 3D did what BUILDING says on the first try; the emitter's limits never bit; part 6's frictions were fixed (`visible=`, the export's manifests, an autopilot by name). Of R10: a task waiting for the browser's store was in a commit and not in the header; `wgf_asset.h` says so now, so a game needs no wait of its own. The frame budget held: props and signs cost less than the run-to-run noise, the smoke about 0.1 ms of median (its table)
 
-Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-view mirror and a speed effect (`../libwgf-racer/FRICTION.md`, "Part 8", its entries S1 to S8; the game at 0ee2d68), 2026-10-12.
+Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-view mirror and a speed effect (`games/racer/notes/FRICTION.md`, "Part 8", its entries S1 to S8; the game at 0ee2d68), 2026-10-12.
 
 ### Racer: a release export crashed at a read every other run passed
 

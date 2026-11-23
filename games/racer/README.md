@@ -39,4 +39,6 @@ wgf export --autopilot autopilot/lap.autopilot   # export/web and export/desktop
   - The mirror and the effect: `racer.mirror` (1 on a frame it is drawn), `racer.mirror_read` (its pixels read back a second into the race: 2 DONE, 3 FAILED as headless), `racer.mirror_seen` (the share of them unlike its clear color; -1 unread), `racer.effect` (the effect's strength, 0 to 1).
   - Streaming: `racer.stream_ready`, `racer.stream_pending`, `racer.stream_pending_at_start`, `racer.stream_late`.
 
-What it took, and what libwgf couldn't do yet: [../FRICTION.md](../FRICTION.md).
+What it took, and what libwgf couldn't do yet: [notes/FRICTION.md](notes/FRICTION.md), the log of the sessions that wrote it, with their brief ([notes/BRIEF.md](notes/BRIEF.md)).
+
+The racer was first written in a repository of its own, `libwgf-racer`, by a session using libwgf as an outside developer would, and copied in. It is libwgf's own now, and edited here; that repository is archived.
