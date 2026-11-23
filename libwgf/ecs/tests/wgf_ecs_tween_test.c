@@ -63,6 +63,10 @@ int main(void)
     expect(near(wgf_tween_get_value(t), 15), "halfway");
     ticks(5);
     expect(!wgf_handle_is_alive(t) && wgf_tween_get_value(t) == 0.0f, "ended: let go of");
+    wgf_log_set_history(8);
+    wgf_tween_destroy(t);
+    expect(wgf_log_get_history_count() == 0, "destroying a finished tween logs nothing");
+    wgf_log_set_history(0);
 
     t = wgf_tween_create(0, 1, 1, WGF_EASING_LINEAR);
     expect(wgf_tween_set_delay(t, 0.5f) && near(wgf_tween_get_delay(t), 0.5f) && !wgf_tween_set_delay(t, -1),

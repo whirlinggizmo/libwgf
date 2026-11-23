@@ -172,7 +172,11 @@ wgf_tween_t wgf_tween_scale(wgf_actor_t actor, float x, float y, float z, float 
 
 void wgf_tween_destroy(wgf_tween_t tween)
 {
-    if (tween_of(tween) != NULL) wgf_core_priv_handle_pool_free(&tw.pool, tween);
+    uint16_t index;
+    /* asked quietly: a tween that finished is gone already, and stopping the last one is ordinary */
+    if (tw.ready && wgf_core_priv_handle_pool_resolve(&tw.pool, tween, &index)) {
+        wgf_core_priv_handle_pool_free(&tw.pool, tween);
+    }
 }
 
 float wgf_tween_get_value(wgf_tween_t tween)

@@ -54,8 +54,8 @@ abstract Bus(Int) from Int to Int to wgf.Handle {
 
 	    Returns 0 if `parent` isn't a bus, or if there are already 64 buses.
 	**/
-	public inline function create():Bus
-		return Raw.wgf_bus_create(this);
+	public static inline function create(parent:Bus):Bus
+		return Raw.wgf_bus_create(parent);
 
 	/**
 	    Destroys `bus`. Its voices, and the buses under it, move to its parent.

@@ -63,8 +63,8 @@ abstract Tween(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_tween_scale(actor, x, y, z, seconds, easing);
 
 	/**
-	    Lets go of a tween at once, leaving its value, or its actor, where it is. Does nothing for
-	    a handle that isn't a tween.
+	    Lets go of a tween at once, leaving its value, or its actor, where it is. Does nothing, and
+	    logs nothing, for a handle that isn't a tween or a tween that has finished.
 	**/
 	public inline function destroy():Void
 		Raw.wgf_tween_destroy(this);

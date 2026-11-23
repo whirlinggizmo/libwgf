@@ -33,8 +33,8 @@ WGF_API wgf_tween_t wgf_tween_move(wgf_actor_t actor, float x, float y, float z,
 WGF_API wgf_tween_t wgf_tween_turn(wgf_actor_t actor, float x, float y, float z, float seconds, wgf_easing_t easing);
 WGF_API wgf_tween_t wgf_tween_scale(wgf_actor_t actor, float x, float y, float z, float seconds, wgf_easing_t easing);
 
-/* Lets go of a tween at once, leaving its value, or its actor, where it is. Does nothing for
- * a handle that isn't a tween. */
+/* Lets go of a tween at once, leaving its value, or its actor, where it is. Does nothing, and
+ * logs nothing, for a handle that isn't a tween or a tween that has finished. */
 WGF_API void wgf_tween_destroy(wgf_tween_t tween);
 
 /* Returns a tween's value now.

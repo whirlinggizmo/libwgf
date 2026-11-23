@@ -17693,8 +17693,8 @@ export function wgf_tween_scale(actor, x, y, z, seconds, easing) {
 
 // wgf: call wgf_tween_destroy
 /**
- * Lets go of a tween at once, leaving its value, or its actor, where it is. Does nothing for
- * a handle that isn't a tween.
+ * Lets go of a tween at once, leaving its value, or its actor, where it is. Does nothing, and
+ * logs nothing, for a handle that isn't a tween or a tween that has finished.
  */
 export function wgf_tween_destroy(tween) {
     host["_wgf_tween_destroy"](tween);

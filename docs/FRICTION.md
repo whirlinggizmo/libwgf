@@ -965,7 +965,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** none taken: the example uses the built-in buses
 - **Cost:** A misleading name on the call that makes a bus.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** fine: HISTORY.md, "Two small fixes from the examples".
 
 ### examples: nothing says whether the browser has turned sound on
 
@@ -992,7 +992,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** Check `isAlive()` first.
 - **Cost:** A warning in the log for the natural "stop the last one if it still runs".
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** fine: HISTORY.md, "Two small fixes from the examples".
 
 ### examples: no way to ask whether a body is at rest
 

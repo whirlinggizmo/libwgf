@@ -338,7 +338,7 @@ class Main {
 		Resource.release(tone);
 		final master = Bus.getMaster(), effects = Bus.getEffects();
 		expect(Bus.getMusic().getParent() == master && effects.getParent() == master, "the buses that always exist");
-		final ui = effects.create();
+		final ui = Bus.create(effects);
 		expect(ui.setVolume(0.5) && near(ui.getVolume(), 0.5) && near(ui.getHeardVolume(), 0.5), "a bus's volume, heard");
 		expect(ui.setMuted(true) && ui.isMuted() && ui.getHeardVolume() == 0 && ui.setMuted(false), "muted");
 		expect(ui.fade(0, 0.5) && ui.isFading(), "a fade");

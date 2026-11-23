@@ -11337,8 +11337,8 @@ export declare const Tween: {
      */
     readonly scale: typeof raw.wgf_tween_scale;
     /**
-     * Lets go of a tween at once, leaving its value, or its actor, where it is. Does nothing for
-     * a handle that isn't a tween.
+     * Lets go of a tween at once, leaving its value, or its actor, where it is. Does nothing, and
+     * logs nothing, for a handle that isn't a tween or a tween that has finished.
      */
     readonly destroy: typeof raw.wgf_tween_destroy;
     /**

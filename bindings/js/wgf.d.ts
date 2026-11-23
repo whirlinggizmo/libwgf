@@ -12190,8 +12190,8 @@ export declare function wgf_tween_turn(actor: wgf_actor_t | 0, x: number, y: num
 export declare function wgf_tween_scale(actor: wgf_actor_t | 0, x: number, y: number, z: number, seconds: number, easing: wgf_easing_t): wgf_tween_t;
 
 /**
- * Lets go of a tween at once, leaving its value, or its actor, where it is. Does nothing for
- * a handle that isn't a tween.
+ * Lets go of a tween at once, leaving its value, or its actor, where it is. Does nothing, and
+ * logs nothing, for a handle that isn't a tween or a tween that has finished.
  */
 export declare function wgf_tween_destroy(tween: wgf_tween_t | 0): void;
 

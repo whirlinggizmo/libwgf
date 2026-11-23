@@ -154,7 +154,9 @@ class Binding:
                 section = self.section_of(f)
                 if section.startswith(f'{stem}_') and f.name.startswith(f'wgf_{section}_'):
                     break  # a section named longer than the kind (wgf_tilemap_layer_*): its own type
-                return haxe, MEMBER_NAMES.get(f.name, camel(f.name[len(f'wgf_{stem}_'):])), first == ctype
+                member = MEMBER_NAMES.get(f.name, camel(f.name[len(f'wgf_{stem}_'):]))
+                # a kind's create is never a method: wgf_bus_create(parent) is Bus.create(parent)
+                return haxe, member, first == ctype and member != 'create'
         section = self.section_of(f)
         prefix = f'wgf_{section}_'
         if not f.name.startswith(prefix):
