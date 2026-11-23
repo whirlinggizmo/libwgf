@@ -65,21 +65,35 @@ function init() {
     console.log(`calls: bulk-actor ${Math.round(best / BULK * 1000) / 1000}`);
 }
 
-const frames = [];
+const frames = [], viewFrames = [];
+let history = 0; // the chat's lines in a text buffer, for the text view
 
-// One UI frame a frame: the chat's lines given, laid out, and drawn at wgf_ui_end.
+// One UI frame a frame: the chat's lines given as labels, laid out, and drawn at wgf_ui_end;
+// then as many frames of the same lines in a text buffer, shown by a text view.
 function frame() {
+    if (frames.length < WARM + FRAMES) {
+        const start = performance.now();
+        if (wgf.wgf_ui_begin()) {
+            wgf.wgf_ui_begin_scroll("chat", 600, 400);
+            for (let i = 0; i < LINES; i++) if (wgf.wgf_ui_label(LINE, 0)) Main.sink += 1;
+            wgf.wgf_ui_end_scroll();
+            wgf.wgf_ui_end();
+        }
+        frames.push((performance.now() - start) * 1e6);
+        return;
+    }
+    if (history === 0) history = wgf.wgf_text_buffer_create_text(new Array(LINES).fill(LINE).join("\n"));
     const start = performance.now();
     if (wgf.wgf_ui_begin()) {
-        wgf.wgf_ui_begin_scroll("chat", 600, 400);
-        for (let i = 0; i < LINES; i++) if (wgf.wgf_ui_label(LINE, 0)) Main.sink += 1;
-        wgf.wgf_ui_end_scroll();
+        if (wgf.wgf_ui_text_view("view", history, 600, 400, false)) Main.sink += 1;
         wgf.wgf_ui_end();
     }
-    frames.push((performance.now() - start) * 1e6);
-    if (frames.length < WARM + FRAMES) return;
+    viewFrames.push((performance.now() - start) * 1e6);
+    if (viewFrames.length < WARM + FRAMES) return;
     const timed = frames.slice(WARM).sort((a, b) => a - b);
+    const viewed = viewFrames.slice(WARM).sort((a, b) => a - b);
     console.log(`calls: chat ${Math.round(timed[FRAMES >> 1])}`);
+    console.log(`calls: chat-view ${Math.round(viewed[FRAMES >> 1])}`);
     console.log(Main.sink !== 0 ? "calls done: PASS" : "calls done: FAIL (nothing was called)");
     wgf.wgf_app_quit();
 }

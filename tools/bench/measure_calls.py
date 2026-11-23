@@ -20,6 +20,8 @@ binding alone.
   chat       a whole UI frame, ns per frame: a scroll area of 200 such lines, given
              again (wgf_ui_label each), laid out, and drawn. 200 times string-80 is
              its lines' crossing; the rest is the UI's own work
+  chat-view  the same lines in a text buffer, shown by a text view (wgf_ui_text_view):
+             its handle crossing, its lines broken once, only those in view laid out
 Each page load is one run; with --runs, each shape's median over the loads, and every
 load's number after it. Timing, so not a check: CI doesn't run it. Standard library only.
 """
@@ -39,7 +41,7 @@ import webhost  # noqa: E402
 PROGRAM = Path(__file__).resolve().parent / 'calls'
 MARK = 'calls: '
 VERDICT = 'calls done: '
-SHAPES = ('set', 'get', 'transform', 'string', 'string-80', 'bulk', 'bulk-actor', 'chat')
+SHAPES = ('set', 'get', 'transform', 'string', 'string-80', 'bulk', 'bulk-actor', 'chat', 'chat-view')
 
 
 def numbers(output):

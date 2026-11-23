@@ -47,24 +47,44 @@ class Main {
 	}
 
 	static final frames:Array<Float> = [];
+	static final viewFrames:Array<Float> = [];
+	static var history:wgf.TextBuffer = 0; // the chat's lines in a text buffer, for the text view
 
-	/** One UI frame a frame: the chat's lines given, laid out, and drawn at Ui.end. **/
+	/**
+		One UI frame a frame: the chat's lines given as labels, laid out, and drawn at Ui.end;
+		then as many frames of the same lines in a text buffer, shown by a text view.
+	**/
 	static function frame() {
+		if (frames.length < WARM + FRAMES) {
+			final start = haxe.Timer.stamp();
+			if (wgf.Ui.begin()) {
+				wgf.Ui.beginScroll("chat", 600, 400);
+				for (_ in 0...LINES)
+					if (wgf.Ui.label(LINE, 0))
+						sink += 1;
+				wgf.Ui.endScroll();
+				wgf.Ui.end();
+			}
+			frames.push((haxe.Timer.stamp() - start) * 1e9);
+			return;
+		}
+		if (history == 0)
+			history = wgf.TextBuffer.createText([for (_ in 0...LINES) LINE].join("\n"));
 		final start = haxe.Timer.stamp();
 		if (wgf.Ui.begin()) {
-			wgf.Ui.beginScroll("chat", 600, 400);
-			for (_ in 0...LINES)
-				if (wgf.Ui.label(LINE, 0))
-					sink += 1;
-			wgf.Ui.endScroll();
+			if (wgf.Ui.textView("view", history, 600, 400, false))
+				sink += 1;
 			wgf.Ui.end();
 		}
-		frames.push((haxe.Timer.stamp() - start) * 1e9);
-		if (frames.length < WARM + FRAMES)
+		viewFrames.push((haxe.Timer.stamp() - start) * 1e9);
+		if (viewFrames.length < WARM + FRAMES)
 			return;
 		final timed = frames.slice(WARM);
 		timed.sort(Reflect.compare);
+		final viewed = viewFrames.slice(WARM);
+		viewed.sort(Reflect.compare);
 		Log.message(LogLevel.INFO, 'calls: chat ${Math.round(timed[FRAMES >> 1])}');
+		Log.message(LogLevel.INFO, 'calls: chat-view ${Math.round(viewed[FRAMES >> 1])}');
 		Log.message(LogLevel.INFO, sink != 0 ? "calls done: PASS" : "calls done: FAIL (nothing was called)");
 		wgf.App.quit();
 	}
