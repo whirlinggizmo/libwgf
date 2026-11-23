@@ -632,6 +632,11 @@ class Ui {
 	    - There is one modal a frame.
 
 	    Also returns false for no id, or a modal already open.
+
+	    A modal is open while the game gives it, so the game closes it. wgf_ui_is_modal_cancelled
+	    returns whether the player asked to: Escape or a pad's east button was pressed this frame,
+	    with a modal begun and no dropdown open (the press closes the dropdown instead). Ask it
+	    after wgf_ui_begin_modal, and stop giving the modal when it is true.
 	**/
 	public static inline function beginModal(id:String):Bool
 		return Raw.wgf_ui_begin_modal(id);
@@ -644,6 +649,15 @@ class Ui {
 	**/
 	public static inline function endModal():Bool
 		return Raw.wgf_ui_end_modal();
+
+	/**
+	    Begins a modal, closed by wgf_ui_end_modal: a panel at the screen's center, such as
+	    "Quit? Yes / No".
+
+	    See Ui.beginModal for the rest.
+	**/
+	public static inline function isModalCancelled():Bool
+		return Raw.wgf_ui_is_modal_cancelled();
 
 	/**
 	    Shows `text` as a tooltip for the widget given just before it, a disabled one too.

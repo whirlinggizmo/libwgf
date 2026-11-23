@@ -42,7 +42,8 @@ export function updatePlayer(player, dt) {
     // Pressed is true for the one frame the action went down.
     if (Action.isPressed("fire")) {
         player.front = !player.front;
-        // A large index is clamped to the last place: drawn over the rest.
-        Actor.setIndex(player.sprite, player.front ? 1000 : 0);
+        // The last of its parent's children is drawn over the rest.
+        if (player.front) Actor.moveToFront(player.sprite);
+        else Actor.moveToBack(player.sprite);
     }
 }

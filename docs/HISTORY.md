@@ -1040,6 +1040,14 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## Three more fixes from the examples (2026-11-23)
+
+From the examples' friction list.
+
+- **The chosen option stands out.** In the default style a chosen tab or choice, and a toggle that is on, were drawn in the pressed color, a shade darker than the rest: in the UI example "Normal" couldn't be told from "Easy" and "Hard". They are now drawn in the fill's color (`WGF_UI_COLOR_BAR_FILL`), as a list's chosen item already was. A skin still gets the PRESSED state.
+- **`wgf_ui_is_modal_cancelled`.** A dropdown closed on Escape or a pad's east button, and a modal didn't, so each game read Escape itself and missed the pad. A modal is open while the game gives it, so libwgf can't close it. The call says the player asked: the game stops giving the modal. With a dropdown open, the press closes the dropdown and the modal isn't cancelled.
+- **`wgf_actor_move_to_front` and `wgf_actor_move_to_back`.** To the front was `wgf_actor_set_index(actor, 1000)`, relying on the clamp.
+
 ## The window's open options are flags (2026-11-23)
 
 Transparent, high DPI, vsync, and MSAA are fixed when the window opens, but each had a setter (`wgf_window_set_msaa`) that looked like one a program could call any time, and failed once the window was open. Rob's call: they shouldn't look changeable.

@@ -95,6 +95,12 @@ WGF_API wgf_actor_t wgf_actor_get_child(wgf_actor_t actor, int index);
  * set_index returns false if the actor has no parent. */
 WGF_API bool wgf_actor_set_index(wgf_actor_t actor, int index);
 WGF_API int wgf_actor_get_index(wgf_actor_t actor);
+/* Moves `actor` to the last place among its parent's children, or the first.
+ *
+ * On a 2D stage the last child draws over the others (the front), and the first under them
+ * (the back). Each returns false if the actor has no parent. */
+WGF_API bool wgf_actor_move_to_front(wgf_actor_t actor);
+WGF_API bool wgf_actor_move_to_back(wgf_actor_t actor);
 
 /* Sets or gets the actor's transform, relative to its parent.
  *

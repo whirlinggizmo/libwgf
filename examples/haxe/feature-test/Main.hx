@@ -696,6 +696,7 @@ class Main {
 		expect(group.setPaused(true) && group.isPaused() && group.isFrozen() && group.setPaused(false) && !group.isFrozen(),
 			"paused and resumed");
 		expect(group.getKind() == ActorKind.PLAIN && group.setIndex(0) && group.getIndex() == 0, "its type and index");
+		expect(group.moveToFront() && group.moveToBack() && group.getIndex() == 0, "to the front and the back");
 
 		final shape = Shape2d.create();
 		shape.setParent(group);
@@ -1291,7 +1292,7 @@ class Main {
 			expect(Ui.setInvalid(true) && Ui.isInvalid() && !Ui.passwordField("secret", null, 0) && Ui.setInvalid(false)
 				&& Ui.getText("secret") == "", "an invalid password field, empty");
 			Ui.endPanel();
-			expect(Ui.beginModal("modal") && Ui.label("Sure?", 0) && Ui.endModal(), "a modal");
+			expect(Ui.beginModal("modal") && Ui.label("Sure?", 0) && !Ui.isModalCancelled() && Ui.endModal(), "a modal");
 			expect(Ui.end(), "a UI");
 		}
 		expect(Ui.setFocus("a") && Ui.getFocus() == "a", "the focus");

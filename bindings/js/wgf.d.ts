@@ -4034,6 +4034,21 @@ export declare function wgf_actor_set_index(actor: wgf_actor_t | 0, index: numbe
 export declare function wgf_actor_get_index(actor: wgf_actor_t | 0): number;
 
 /**
+ * Moves `actor` to the last place among its parent's children, or the first.
+ *
+ * On a 2D stage the last child draws over the others (the front), and the first under them
+ * (the back). Each returns false if the actor has no parent.
+ */
+export declare function wgf_actor_move_to_front(actor: wgf_actor_t | 0): boolean;
+
+/**
+ * Moves `actor` to the last place among its parent's children, or the first.
+ *
+ * See wgf_actor_move_to_front for the rest.
+ */
+export declare function wgf_actor_move_to_back(actor: wgf_actor_t | 0): boolean;
+
+/**
  * Sets or gets the actor's transform, relative to its parent.
  *
  * - Rotation is three angles in radians, about x, then y, then z (see wgf_quat_from_euler).
@@ -13591,6 +13606,11 @@ export declare function wgf_ui_dropdown(id: string | null, labels: string | null
  * - There is one modal a frame.
  *
  * Also returns false for no id, or a modal already open.
+ *
+ * A modal is open while the game gives it, so the game closes it. wgf_ui_is_modal_cancelled
+ * returns whether the player asked to: Escape or a pad's east button was pressed this frame,
+ * with a modal begun and no dropdown open (the press closes the dropdown instead). Ask it
+ * after wgf_ui_begin_modal, and stop giving the modal when it is true.
  */
 export declare function wgf_ui_begin_modal(id: string | null): boolean;
 
@@ -13601,6 +13621,14 @@ export declare function wgf_ui_begin_modal(id: string | null): boolean;
  * See wgf_ui_begin_modal for the rest.
  */
 export declare function wgf_ui_end_modal(): boolean;
+
+/**
+ * Begins a modal, closed by wgf_ui_end_modal: a panel at the screen's center, such as
+ * "Quit? Yes / No".
+ *
+ * See wgf_ui_begin_modal for the rest.
+ */
+export declare function wgf_ui_is_modal_cancelled(): boolean;
 
 /**
  * Shows `text` as a tooltip for the widget given just before it, a disabled one too.

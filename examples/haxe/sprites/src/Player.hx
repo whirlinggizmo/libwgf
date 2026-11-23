@@ -50,8 +50,11 @@ class Player {
 		// Pressed is true for the one frame the action went down.
 		if (Action.isPressed("fire")) {
 			front = !front;
-			// A large index is clamped to the last place: drawn over the rest.
-			sprite.setIndex(front ? 1000 : 0);
+			// The last of its parent's children is drawn over the rest.
+			if (front)
+				sprite.moveToFront();
+			else
+				sprite.moveToBack();
 		}
 	}
 

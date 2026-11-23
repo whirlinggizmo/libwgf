@@ -69,6 +69,10 @@ export const Actor = Object.freeze({
     setIndex: raw.wgf_actor_set_index,
     // wgf: call wgf_actor_get_index
     getIndex: raw.wgf_actor_get_index,
+    // wgf: call wgf_actor_move_to_front
+    moveToFront: raw.wgf_actor_move_to_front,
+    // wgf: call wgf_actor_move_to_back
+    moveToBack: raw.wgf_actor_move_to_back,
     // wgf: call wgf_actor_set_position
     setPosition: raw.wgf_actor_set_position,
     // wgf: call wgf_actor_get_position
@@ -2942,6 +2946,8 @@ export const Ui = Object.freeze({
     beginModal: raw.wgf_ui_begin_modal,
     // wgf: call wgf_ui_end_modal
     endModal: raw.wgf_ui_end_modal,
+    // wgf: call wgf_ui_is_modal_cancelled
+    isModalCancelled: raw.wgf_ui_is_modal_cancelled,
     // wgf: call wgf_ui_tooltip
     tooltip: raw.wgf_ui_tooltip,
     // wgf: call wgf_ui_set_alpha

@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "18b7e39aaa382693" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "b63f9dd8ee87b8c4" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -5621,6 +5621,29 @@ export function wgf_actor_set_index(actor, index) {
 export function wgf_actor_get_index(actor) {
     const value = host["_wgf_actor_get_index"](actor);
     return value;
+}
+
+// wgf: call wgf_actor_move_to_front
+/**
+ * Moves `actor` to the last place among its parent's children, or the first.
+ *
+ * On a 2D stage the last child draws over the others (the front), and the first under them
+ * (the back). Each returns false if the actor has no parent.
+ */
+export function wgf_actor_move_to_front(actor) {
+    const value = host["_wgf_actor_move_to_front"](actor);
+    return value !== 0;
+}
+
+// wgf: call wgf_actor_move_to_back
+/**
+ * Moves `actor` to the last place among its parent's children, or the first.
+ *
+ * See wgf_actor_move_to_front for the rest.
+ */
+export function wgf_actor_move_to_back(actor) {
+    const value = host["_wgf_actor_move_to_back"](actor);
+    return value !== 0;
 }
 
 // wgf: call wgf_actor_set_position
@@ -19692,6 +19715,11 @@ export function wgf_ui_dropdown(id, labels, selected) {
  * - There is one modal a frame.
  *
  * Also returns false for no id, or a modal already open.
+ *
+ * A modal is open while the game gives it, so the game closes it. wgf_ui_is_modal_cancelled
+ * returns whether the player asked to: Escape or a pad's east button was pressed this frame,
+ * with a modal begun and no dropdown open (the press closes the dropdown instead). Ask it
+ * after wgf_ui_begin_modal, and stop giving the modal when it is true.
  */
 export function wgf_ui_begin_modal(id) {
     const mark = host["stackSave"]();
@@ -19709,6 +19737,18 @@ export function wgf_ui_begin_modal(id) {
  */
 export function wgf_ui_end_modal() {
     const value = host["_wgf_ui_end_modal"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_ui_is_modal_cancelled
+/**
+ * Begins a modal, closed by wgf_ui_end_modal: a panel at the screen's center, such as
+ * "Quit? Yes / No".
+ *
+ * See wgf_ui_begin_modal for the rest.
+ */
+export function wgf_ui_is_modal_cancelled() {
+    const value = host["_wgf_ui_is_modal_cancelled"]();
     return value !== 0;
 }
 

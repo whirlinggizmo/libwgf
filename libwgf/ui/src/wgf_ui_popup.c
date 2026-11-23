@@ -11,6 +11,7 @@
 static void begin(wgf_ui_priv_popups_t *popups, bool *pressed, bool *down, bool *released)
 {
     popups->dropdown.seen = popups->modal.seen = false;
+    popups->dropdown.was_open = popups->dropdown.owner[0] != '\0';
     if (popups->dropdown.owner[0] != '\0' && *pressed) { /* a press off an open dropdown closes it, and is eaten */
         Clay_ElementId list, face;
         memset(&list, 0, sizeof(list));

@@ -1213,6 +1213,7 @@ static bool face(const char *what, const char *id, int widget, wgf_texture_t ico
     answer(id, element, Clay_PointerOver(element), ARROWS_NONE, false, &answered);
     if (on && answered.state != WGF_UI_STATE_DISABLED) answered.state = WGF_UI_STATE_PRESSED;
     piece = add_piece(draw_face, widget, answered.state);
+    if (piece_at(piece) != NULL) piece_at(piece)->on = on;
     memset(&declaration, 0, sizeof(declaration));
     declaration.layout.sizing.width.type = CLAY__SIZING_TYPE_FIT;
     declaration.layout.sizing.width.size.minMax.min = ui.values[WGF_UI_VALUE_BUTTON_WIDTH];
@@ -1503,6 +1504,7 @@ static int faces_row(const char *what, const char *id, const char *labels, int s
         Clay_ElementDeclaration tab;
         const int state = part_state(&answered, i == selected, i == hovered);
         void *piece = add_piece(draw_face, widget, state);
+        if (piece_at(piece) != NULL) piece_at(piece)->on = i == selected;
         face_layout(&tab, piece);
         tab.layout.padding.left = tab.layout.padding.right = pixels(ui.values[WGF_UI_VALUE_BUTTON_PADDING] * 0.5f);
         Clay__OpenElementWithId(Clay_GetElementIdWithIndex(name, (uint32_t)i));
@@ -2371,6 +2373,11 @@ bool wgf_ui_end_modal(void)
     return close_level(KIND_MODAL);
 }
 
+bool wgf_ui_is_modal_cancelled(void)
+{
+    return ui.begun && ui.popups.modal.seen && ui.keys.cancel && !ui.popups.dropdown.was_open;
+}
+
 bool wgf_ui_tooltip(const char *text)
 {
     Clay_ElementDeclaration box;
@@ -2899,10 +2906,13 @@ static void draw_group(const piece_t *piece, Clay_BoundingBox box)
                       line, faded(ui.colors[WGF_UI_COLOR_SEPARATOR]));
 }
 
+/* A face: a toggle that is on, and the chosen tab or choice, in the fill's color, so it is told
+ * from the rest at a glance (a skin draws each state). */
 static void draw_face(const piece_t *piece, Clay_BoundingBox box)
 {
-    paint(piece->widget, WGF_UI_PART_BASE, piece->state, box, face_color(piece->state),
-         ui.values[WGF_UI_VALUE_CORNER_RADIUS]);
+    const bool chosen = piece->on && piece->state != WGF_UI_STATE_DISABLED;
+    paint(piece->widget, WGF_UI_PART_BASE, piece->state, box,
+          chosen ? ui.colors[WGF_UI_COLOR_BAR_FILL] : face_color(piece->state), ui.values[WGF_UI_VALUE_CORNER_RADIUS]);
 }
 
 static void draw_number_box(const piece_t *piece, Clay_BoundingBox box)

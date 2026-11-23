@@ -138,6 +138,23 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_actor_get_index(this);
 
 	/**
+	    Moves `actor` to the last place among its parent's children, or the first.
+
+	    On a 2D stage the last child draws over the others (the front), and the first under them
+	    (the back). Each returns false if the actor has no parent.
+	**/
+	public inline function moveToFront():Bool
+		return Raw.wgf_actor_move_to_front(this);
+
+	/**
+	    Moves `actor` to the last place among its parent's children, or the first.
+
+	    See Actor.moveToFront for the rest.
+	**/
+	public inline function moveToBack():Bool
+		return Raw.wgf_actor_move_to_back(this);
+
+	/**
 	    Sets or gets the actor's transform, relative to its parent.
 
 	    - Rotation is three angles in radians, about x, then y, then z (see wgf_quat_from_euler).

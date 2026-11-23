@@ -63,6 +63,8 @@ class Reach {
 		"wgf_actor_is_pickable",
 		"wgf_actor_is_visible",
 		"wgf_actor_look_at",
+		"wgf_actor_move_to_back",
+		"wgf_actor_move_to_front",
 		"wgf_actor_remove_behavior",
 		"wgf_actor_remove_component",
 		"wgf_actor_set_enabled",
@@ -1305,6 +1307,7 @@ class Reach {
 		"wgf_ui_is_activated",
 		"wgf_ui_is_disabled",
 		"wgf_ui_is_invalid",
+		"wgf_ui_is_modal_cancelled",
 		"wgf_ui_label",
 		"wgf_ui_list",
 		"wgf_ui_number",
@@ -1464,7 +1467,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1455) 0];
+	static final counts:Array<Int> = [for (_ in 0...1458) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

@@ -929,7 +929,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** none
 - **Cost:** In the UI example's screenshot the chosen "Normal" can't be told from "Easy" and "Hard".
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** fine: HISTORY.md, "Three more fixes from the examples".
 
 ### examples: a modal has no built-in cancel
 
@@ -938,7 +938,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** The example checks Escape while the modal is open.
 - **Cost:** A few lines in every game with a modal, and an inconsistency between two popups.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** fine: HISTORY.md, "Three more fixes from the examples".
 
 ### examples: a rectangle shape is anchored top-left, its collider centered
 
@@ -1028,7 +1028,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** `setIndex(1000)`.
 - **Cost:** Reads as a trick.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** fine: HISTORY.md, "Three more fixes from the examples".
 
 ### examples: small things
 

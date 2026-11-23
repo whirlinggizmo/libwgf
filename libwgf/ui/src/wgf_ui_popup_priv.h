@@ -19,6 +19,7 @@ typedef struct wgf_ui_priv_popups_t {
         int hot, item;       /* the item stepped to, and the one a press began on (-1 none) */
         float pointer[2];    /* where the pointer was: one that moves over an item steps to it */
         bool seen;           /* given this frame */
+        bool was_open;       /* open as the frame began: a cancel this frame is its, not a modal's */
     } dropdown;
     struct {
         bool seen, was;  /* given this frame, and the frame before */

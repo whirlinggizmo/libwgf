@@ -1,5 +1,6 @@
 #include "wgf_actor.h"
 
+#include <limits.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -551,6 +552,16 @@ bool wgf_actor_set_index(wgf_actor_t actor, int index)
     parent = actor_ptr->parent;
     remove_child(parent, actor);
     return insert_child(parent, actor, index); /* the slot it left is free, so this can't run out */
+}
+
+bool wgf_actor_move_to_front(wgf_actor_t actor)
+{
+    return wgf_actor_set_index(actor, INT_MAX);
+}
+
+bool wgf_actor_move_to_back(wgf_actor_t actor)
+{
+    return wgf_actor_set_index(actor, 0);
 }
 
 int wgf_actor_get_index(wgf_actor_t actor)

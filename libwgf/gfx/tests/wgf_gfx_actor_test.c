@@ -94,6 +94,10 @@ static void test_tree(void)
            "a large index moves it to the front of the drawing");
     expect(wgf_actor_set_index(a, -5) && wgf_actor_get_index(a) == 0, "a negative one to the back");
     expect(!wgf_actor_set_index(d, 0), "a detached actor has no place to move");
+    expect(wgf_actor_move_to_front(a) && wgf_actor_get_index(a) == wgf_actor_get_child_count(stage) - 1,
+           "moved to the front: the last child");
+    expect(wgf_actor_move_to_back(a) && wgf_actor_get_index(a) == 0, "moved to the back: the first");
+    expect(!wgf_actor_move_to_front(d) && !wgf_actor_move_to_back(d), "a detached actor has no front or back");
 
     expect(wgf_actor_set_parent(d, a) && wgf_actor_get_parent(d) == a, "a grandchild");
     expect(!wgf_actor_set_parent(a, d), "an actor can't go under its own child");

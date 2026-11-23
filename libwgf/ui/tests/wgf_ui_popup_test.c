@@ -85,6 +85,7 @@ static void click_item(int i)
 
 static int quality = 0, opened = 0, unders = 0, others = 0;
 static bool modal, with_dropdown = true;
+static int cancels;
 static float tip_waited;
 
 /* A panel: a button with a tooltip that opens the modal, the dropdown, and two buttons below
@@ -109,6 +110,10 @@ static void form(void)
         wgf_ui_label("Quit?", 0);
         wgf_ui_button("yes", "Yes");
         if (wgf_ui_button("no", "No")) modal = false;
+        if (wgf_ui_is_modal_cancelled()) {
+            cancels++;
+            modal = false;
+        }
         expect(wgf_ui_end_modal(), "the modal ended");
     }
     expect(wgf_ui_end(), "ended");
@@ -270,7 +275,22 @@ static void on_frame(void *user)
                "no id, no labels: as given; else clamped");
         expect(!wgf_ui_begin_modal(NULL) && !wgf_ui_end_modal() && !wgf_ui_tooltip(NULL) && !wgf_ui_tooltip(""),
                "no id, nothing open, no text: refused");
+        expect(!wgf_ui_is_modal_cancelled(), "no modal: none cancelled");
         expect(wgf_ui_end(), "ended");
+        modal = true;
+        break;
+    case 30:
+        form();
+        expect(cancels == 0 && modal, "a modal, not cancelled");
+        tap(SAPP_KEYCODE_ESCAPE);
+        break;
+    case 31:
+        form();
+        expect(cancels == 1 && !modal, "Escape: the modal cancelled, once");
+        break;
+    case 32:
+        form();
+        expect(cancels == 1 && wgf_ui_get_bounds("modal").z == 0, "and gone");
         wgf_app_quit();
         break;
     default: break;
@@ -281,8 +301,9 @@ int main(void)
 {
     wgf_window_set_size(800, 800);
     wgf_app_run(NULL, NULL, on_frame, NULL, NULL);
-    expect(frame_number >= 30, "every frame ran");
-    expect(!wgf_ui_tooltip("x") && wgf_ui_dropdown("d", "a", 0) == 0 && !wgf_ui_begin_modal("m"),
+    expect(frame_number >= 33, "every frame ran");
+    expect(!wgf_ui_tooltip("x") && wgf_ui_dropdown("d", "a", 0) == 0 && !wgf_ui_begin_modal("m") &&
+               !wgf_ui_is_modal_cancelled(),
            "outside a begun UI: refused");
     return failures == 0 ? 0 : 1;
 }

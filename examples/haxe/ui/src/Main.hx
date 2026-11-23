@@ -12,7 +12,7 @@ import wgf.*;
 	- Tab and the arrow keys move the focus, and a pad's D-pad does too.
 	- Enter or Space (or a pad's south button) activates the focused widget.
 	- Left and Right change a focused slider, choice, or number.
-	- Reset asks first, in a modal. Escape there means No.
+	- Reset asks first, in a modal. Escape there, or a pad's east button, means No.
 	- Escape quits, where quitting means anything (not in a browser).
 
 	The UI keeps a text field's text itself, by its id: set it with `Ui.setText`, read it
@@ -55,12 +55,8 @@ class Main {
 	}
 
 	static function frame() {
-		if (Keyboard.isPressed(KeyboardKey.ESCAPE)) {
-			if (confirming)
-				confirming = false;
-			else if (App.canQuit())
-				App.quit();
-		}
+		if (Keyboard.isPressed(KeyboardKey.ESCAPE) && !confirming && App.canQuit())
+			App.quit();
 		if (Ui.begin()) {
 			settings();
 			if (confirming)
@@ -129,6 +125,8 @@ class Main {
 		if (Ui.button("no", "No"))
 			confirming = false;
 		Ui.endBox();
+		if (Ui.isModalCancelled()) // Escape, or a pad's east button
+			confirming = false;
 		Ui.endModal();
 	}
 }
