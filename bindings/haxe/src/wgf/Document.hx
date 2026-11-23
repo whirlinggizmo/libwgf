@@ -176,6 +176,8 @@ abstract Document(Int) from Int to Int to wgf.Handle {
 	    taken.
 
 	    See Document.getEventCount for the rest.
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function takeEvents(out:Array<Int>):Int
 		return Raw.wgf_document_take_events(this, out);

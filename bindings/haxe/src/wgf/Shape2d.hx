@@ -124,6 +124,8 @@ import wgf.impl.Raw;
 	    Returns what was set.
 
 	    See Shape2d.getSize for the rest.
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function getPoints(out:Array<Float>):Int
 		return Raw.wgf_shape2d_get_points(this, out);

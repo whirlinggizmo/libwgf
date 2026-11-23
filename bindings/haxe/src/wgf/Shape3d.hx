@@ -95,6 +95,8 @@ import wgf.impl.Raw;
 	    Makes the shape a line strip, or gets its points.
 
 	    See Shape3d.setLineStrip for the rest.
+
+	    Here `points` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function getPoints(points:Array<Float>):Int
 		return Raw.wgf_shape3d_get_points(this, points);

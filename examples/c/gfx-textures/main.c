@@ -156,7 +156,7 @@ int main(void)
 {
     wgf_window_set_title("libwgf textures");
     wgf_window_set_size(1010, 580);
-    wgf_window_set_msaa(true);
+    wgf_window_set_flags(WGF_WINDOW_FLAG_MSAA);
     wgf_app_run(init, NULL, frame, on_shutdown, NULL);
     return 0;
 }

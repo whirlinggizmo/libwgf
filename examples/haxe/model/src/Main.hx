@@ -36,7 +36,7 @@ class Main {
 		Window.setTitle("libwgf model (Haxe)");
 		// The design size, fitted to any window or page. A desktop window opens at this size.
 		Presentation.set(PresentationMode.FIT, 1000, 600);
-		Window.setMsaa(true);
+		Window.setFlags(WindowFlag.MSAA);
 		Window.setResizable(true);
 		Debug.showFps(0, 12, 10, 16, Color.make(0, 255, 0, 255));
 		Runtime.run(init, null, frame, null);

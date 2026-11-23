@@ -43,7 +43,7 @@ class Main {
 		Window.setTitle("libwgf physics (Haxe)");
 		// The design size, fitted to any window or page. A desktop window opens at this size.
 		Presentation.set(PresentationMode.FIT, 960, 600);
-		Window.setMsaa(true);
+		Window.setFlags(WindowFlag.MSAA);
 		Runtime.run(init, tick, frame, null);
 	}
 

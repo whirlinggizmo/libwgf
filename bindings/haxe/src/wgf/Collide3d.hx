@@ -40,6 +40,8 @@ class Collide3d {
 	    Overlap tests: two boxes, two spheres, or a sphere and a box.
 
 	    Touching doesn't count as overlapping.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function boxBox(ax0:Float, ay0:Float, az0:Float, ax1:Float, ay1:Float, az1:Float, bx0:Float, by0:Float, bz0:Float, bx1:Float, by1:Float, bz1:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide3d_box_box(ax0, ay0, az0, ax1, ay1, az1, bx0, by0, bz0, bx1, by1, bz1, hit);
@@ -48,6 +50,8 @@ class Collide3d {
 	    Overlap tests: two boxes, two spheres, or a sphere and a box.
 
 	    See Collide3d.boxBox for the rest.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function sphereSphere(ax:Float, ay:Float, az:Float, ar:Float, bx:Float, by:Float, bz:Float, br:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide3d_sphere_sphere(ax, ay, az, ar, bx, by, bz, br, hit);
@@ -56,6 +60,8 @@ class Collide3d {
 	    Overlap tests: two boxes, two spheres, or a sphere and a box.
 
 	    See Collide3d.boxBox for the rest.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function sphereBox(cx:Float, cy:Float, cz:Float, r:Float, x0:Float, y0:Float, z0:Float, x1:Float, y1:Float, z1:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide3d_sphere_box(cx, cy, cz, r, x0, y0, z0, x1, y1, z1, hit);
@@ -69,6 +75,8 @@ class Collide3d {
 	      wants a segment keeps only a time of 1 or less.
 
 	    Returns false if the ray meets none.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function raySphere(ox:Float, oy:Float, oz:Float, dx:Float, dy:Float, dz:Float, cx:Float, cy:Float, cz:Float, r:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide3d_ray_sphere(ox, oy, oz, dx, dy, dz, cx, cy, cz, r, hit);
@@ -77,6 +85,8 @@ class Collide3d {
 	    Casts a ray against a sphere, a box, or a triangle, and finds where it first meets it.
 
 	    See Collide3d.raySphere for the rest.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function rayBox(ox:Float, oy:Float, oz:Float, dx:Float, dy:Float, dz:Float, x0:Float, y0:Float, z0:Float, x1:Float, y1:Float, z1:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide3d_ray_box(ox, oy, oz, dx, dy, dz, x0, y0, z0, x1, y1, z1, hit);
@@ -85,6 +95,8 @@ class Collide3d {
 	    Casts a ray against a sphere, a box, or a triangle, and finds where it first meets it.
 
 	    See Collide3d.raySphere for the rest.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function rayTriangle(ox:Float, oy:Float, oz:Float, dx:Float, dy:Float, dz:Float, points:Array<Float>, hit:Array<Float>):Bool
 		return Raw.wgf_collide3d_ray_triangle(ox, oy, oz, dx, dy, dz, points, hit);

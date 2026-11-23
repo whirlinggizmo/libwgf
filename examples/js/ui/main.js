@@ -22,7 +22,7 @@ import createWgfHost from "./wgf-host.js";
 import {
     App, Color, Keyboard, KeyboardKey, Probe, Render, Ui, UiAlign, UiDirection, Window, attach,
 } from "./wgf-typed.js";
-import { Presentation, PresentationMode } from "./wgf-typed.js";
+import { Presentation, PresentationMode, WindowFlag } from "./wgf-typed.js";
 
 const host = await createWgfHost({
     canvas: document.getElementById("canvas"),
@@ -127,5 +127,5 @@ function frame() {
 Window.setTitle("libwgf ui (JS)");
 // The design size, fitted to any window or page. A desktop window opens at this size.
 Presentation.set(PresentationMode.FIT, 800, 600);
-Window.setMsaa(true);
+Window.setFlags(WindowFlag.MSAA);
 App.run(init, null, frame, null);

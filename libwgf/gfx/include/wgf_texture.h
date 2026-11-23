@@ -64,7 +64,7 @@ WGF_API wgf_texture_t wgf_texture_create(const char *path);
  * - You draw into it between wgf_render_begin_target and wgf_render_end_target
  *   (wgf_render.h).
  * - You then use it as any texture: drawn (wgf_draw_texture), on a sprite, or on a material.
- * - It has the screen's pixel format and samples (wgf_window_set_msaa), and a depth buffer of
+ * - It has the screen's pixel format and samples (wgf_window_get_msaa_samples), and a depth buffer of
  *   its own, so whatever draws to the screen draws into it.
  * - It has no mipmaps.
  * - It is made from numbers: READY at once, with no path.

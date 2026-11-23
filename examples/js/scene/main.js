@@ -19,6 +19,7 @@ import createWgfHost from "./wgf-host.js";
 import {
     Actor, App, Asset, Behavior, Color, ColorStock, Draw, Keyboard, KeyboardKey, Loop, Motion, Prefab, Presentation,
     PresentationMode, Probe, Render, Resource, ResourceStatus, Scene, Stage2d, Text, Window, attach,
+    WindowFlag,
 } from "./wgf-typed.js";
 
 const host = await createWgfHost({
@@ -126,5 +127,5 @@ function publish() {
 Window.setTitle("libwgf scene (JS)");
 // The design size, fitted to any window or page. A desktop window opens at this size.
 Presentation.set(PresentationMode.FIT, 800, 450);
-Window.setMsaa(true);
+Window.setFlags(WindowFlag.MSAA);
 App.run(init, null, frame, null);

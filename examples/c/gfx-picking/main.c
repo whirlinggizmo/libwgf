@@ -249,7 +249,7 @@ int main(void)
 {
     wgf_window_set_title("libwgf picking");
     wgf_window_set_size(1000, 640);
-    wgf_window_set_msaa(true);
+    wgf_window_set_flags(WGF_WINDOW_FLAG_MSAA);
     wgf_window_set_resizable(true);
     wgf_debug_show_fps(0, 12, 116, 14.0f, wgf_color_make(0, 160, 0, 255));
     wgf_app_run(init, NULL, frame, NULL, NULL);

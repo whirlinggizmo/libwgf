@@ -184,7 +184,7 @@ int main(void)
 #ifdef __EMSCRIPTEN__
     web_canvas_set_size(64, 32); /* the page sizes the canvas */
 #else
-    wgf_window_set_msaa(true);
+    wgf_window_set_flags(WGF_WINDOW_FLAG_MSAA);
 #endif
     wgf_app_run(init, NULL, on_frame, NULL, NULL);
     return 0;

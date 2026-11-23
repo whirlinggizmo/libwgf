@@ -17,7 +17,7 @@ import {
     Actor, App, Asset, Camera3d, Color, ColorStock, Debug, Draw, Keyboard, KeyboardKey, Light, LightType, Loop,
     Material, MaterialShading, Mesh, Model, Probe, Render, Resource, ResourceStatus, Stage3d, Window, attach,
 } from "./wgf-typed.js";
-import { Presentation, PresentationMode } from "./wgf-typed.js";
+import { Presentation, PresentationMode, WindowFlag } from "./wgf-typed.js";
 
 const host = await createWgfHost({
     canvas: document.getElementById("canvas"),
@@ -135,7 +135,7 @@ function frame() {
 Window.setTitle("libwgf model (JS)");
 // The design size, fitted to any window or page. A desktop window opens at this size.
 Presentation.set(PresentationMode.FIT, 1000, 600);
-Window.setMsaa(true);
+Window.setFlags(WindowFlag.MSAA);
 Window.setResizable(true);
 Debug.showFps(0, 12, 10, 16, Color.make(0, 255, 0, 255));
 App.run(init, null, frame, null);

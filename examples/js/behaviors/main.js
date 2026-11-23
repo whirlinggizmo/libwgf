@@ -18,6 +18,7 @@ import createWgfHost from "./wgf-host.js";
 import {
     Actor, App, Behavior, Bounds, Collider, Color, ColorStock, Component, Draw, Keyboard, KeyboardKey, Lifetime, Motion,
     Presentation, PresentationMode, Probe, Random, Render, Shape2d, Stage2d, TextHalign, TextValign, Window, attach,
+    WindowFlag,
 } from "./wgf-typed.js";
 
 const host = await createWgfHost({
@@ -215,7 +216,7 @@ function frame() {
 }
 
 Window.setTitle("libwgf behaviors (JS)");
-Window.setMsaa(true);
+Window.setFlags(WindowFlag.MSAA);
 // the scene's 800 by 600, fitted to any window, so the balls wrap at its edges
 Presentation.set(PresentationMode.FIT, WIDTH, HEIGHT);
 App.run(init, tick, frame, null);

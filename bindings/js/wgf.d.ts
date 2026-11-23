@@ -542,6 +542,16 @@ export declare const WGF_TILT_STATUS_NEEDS_HTTPS: 6;
 export type wgf_tilt_status_t = typeof WGF_TILT_STATUS_OFF | typeof WGF_TILT_STATUS_WAITING_FOR_TAP | typeof WGF_TILT_STATUS_STARTING | typeof WGF_TILT_STATUS_ON | typeof WGF_TILT_STATUS_REFUSED | typeof WGF_TILT_STATUS_UNAVAILABLE | typeof WGF_TILT_STATUS_NEEDS_HTTPS;
 
 /**
+ * The options fixed when the window opens. Add them together with |.
+ */
+export declare const WGF_WINDOW_FLAG_NONE: 0;
+export declare const WGF_WINDOW_FLAG_TRANSPARENT: 1;
+export declare const WGF_WINDOW_FLAG_MSAA: 2;
+export declare const WGF_WINDOW_FLAG_VSYNC_OFF: 4;
+export declare const WGF_WINDOW_FLAG_LOW_DPI: 8;
+export type wgf_window_flag_t = typeof WGF_WINDOW_FLAG_NONE | typeof WGF_WINDOW_FLAG_TRANSPARENT | typeof WGF_WINDOW_FLAG_MSAA | typeof WGF_WINDOW_FLAG_VSYNC_OFF | typeof WGF_WINDOW_FLAG_LOW_DPI;
+
+/**
  * Which way up the screen is held.
  */
 export declare const WGF_WINDOW_ORIENTATION_ANY: 0;
@@ -1580,21 +1590,29 @@ export type wgf_frame_stat_t = typeof WGF_FRAME_STAT_FRAMES | typeof WGF_FRAME_S
 
 /**
  * Overlap tests. Each returns true if its two shapes overlap, and fills `hit`.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide2d_rect_rect(ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
 /**
  * Overlap tests. Each returns true if its two shapes overlap, and fills `hit`.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide2d_circle_circle(ax: number, ay: number, ar: number, bx: number, by: number, br: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
 /**
  * Overlap tests. Each returns true if its two shapes overlap, and fills `hit`.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide2d_circle_rect(cx: number, cy: number, r: number, rx: number, ry: number, rw: number, rh: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
 /**
  * Tests a circle against the segment from x0, y0 to x1, y1, such as a wall or a slope.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide2d_circle_segment(cx: number, cy: number, r: number, x0: number, y0: number, x1: number, y1: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1602,6 +1620,8 @@ export declare function wgf_collide2d_circle_segment(cx: number, cy: number, r: 
  * Tests a circle against a polygon.
  *
  * The polygon may be convex or not, as long as its edges don't cross.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide2d_circle_polygon(cx: number, cy: number, r: number, points: readonly number[] | Float32Array | Float64Array | null, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1609,6 +1629,8 @@ export declare function wgf_collide2d_circle_polygon(cx: number, cy: number, r: 
  * Tests two convex polygons against each other, by the separating axis theorem.
  *
  * Either polygon may be a segment of two points. The hit's point is always 0, 0.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide2d_polygon_polygon(points: readonly number[] | Float32Array | Float64Array | null, others: readonly number[] | Float32Array | Float64Array | null, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1648,6 +1670,8 @@ export declare function wgf_collide2d_point_in_polygon(px: number, py: number, p
  *
  * Only a true crossing counts: touching, or lying along b, doesn't. The hit holds the time
  * along a, the point, and b's normal, facing a's start.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide2d_segment_segment(ax0: number, ay0: number, ax1: number, ay1: number, bx0: number, by0: number, bx1: number, by1: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1656,6 +1680,8 @@ export declare function wgf_collide2d_segment_segment(ax0: number, ay0: number, 
  *
  * The ray is dx, dy long: time 1 is its end. The hit holds the time, the point, and the
  * normal.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide2d_ray_rect(ox: number, oy: number, dx: number, dy: number, rx: number, ry: number, rw: number, rh: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1663,6 +1689,8 @@ export declare function wgf_collide2d_ray_rect(ox: number, oy: number, dx: numbe
  * Casts a ray from ox, oy along dx, dy against a rectangle or a circle.
  *
  * See wgf_collide2d_ray_rect for the rest.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide2d_ray_circle(ox: number, oy: number, dx: number, dy: number, cx: number, cy: number, r: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1671,6 +1699,8 @@ export declare function wgf_collide2d_ray_circle(ox: number, oy: number, dx: num
  *
  * The hit holds the time, the moving shape's top-left (for a circle, its center) at that
  * time, and the normal. If they already overlap, the time is 0 and there is no normal.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide2d_sweep_rect_rect(ax: number, ay: number, aw: number, ah: number, dx: number, dy: number, bx: number, by: number, bw: number, bh: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1678,6 +1708,8 @@ export declare function wgf_collide2d_sweep_rect_rect(ax: number, ay: number, aw
  * Sweeps a rectangle, or a circle, by dx, dy, and tests whether it meets another on the way.
  *
  * See wgf_collide2d_sweep_rect_rect for the rest.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide2d_sweep_circle_circle(ax: number, ay: number, ar: number, dx: number, dy: number, bx: number, by: number, br: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1700,6 +1732,8 @@ export declare function wgf_collide2d_sweep_circle_circle(ax: number, ay: number
  *   0, 0. Outside the grid is open.
  *
  * Returns false if there is no `out` (NULL, or an `out_count` of 0).
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide2d_move_rects(x: number, y: number, w: number, h: number, dx: number, dy: number, rects: readonly number[] | Float32Array | Float64Array | null, out: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1707,6 +1741,8 @@ export declare function wgf_collide2d_move_rects(x: number, y: number, w: number
  * Moves a box by dx, dy and slides it along the solids it meets.
  *
  * See wgf_collide2d_move_rects for the rest.
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide2d_move_cells(x: number, y: number, w: number, h: number, dx: number, dy: number, size: number, cells: readonly number[] | Int32Array | null, columns: number, out: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1724,6 +1760,8 @@ export declare function wgf_collide3d_point_in_sphere(px: number, py: number, pz
  * Overlap tests: two boxes, two spheres, or a sphere and a box.
  *
  * Touching doesn't count as overlapping.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide3d_box_box(ax0: number, ay0: number, az0: number, ax1: number, ay1: number, az1: number, bx0: number, by0: number, bz0: number, bx1: number, by1: number, bz1: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1731,6 +1769,8 @@ export declare function wgf_collide3d_box_box(ax0: number, ay0: number, az0: num
  * Overlap tests: two boxes, two spheres, or a sphere and a box.
  *
  * See wgf_collide3d_box_box for the rest.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide3d_sphere_sphere(ax: number, ay: number, az: number, ar: number, bx: number, by: number, bz: number, br: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1738,6 +1778,8 @@ export declare function wgf_collide3d_sphere_sphere(ax: number, ay: number, az: 
  * Overlap tests: two boxes, two spheres, or a sphere and a box.
  *
  * See wgf_collide3d_box_box for the rest.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide3d_sphere_box(cx: number, cy: number, cz: number, r: number, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1750,6 +1792,8 @@ export declare function wgf_collide3d_sphere_box(cx: number, cy: number, cz: num
  *   wants a segment keeps only a time of 1 or less.
  *
  * Returns false if the ray meets none.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide3d_ray_sphere(ox: number, oy: number, oz: number, dx: number, dy: number, dz: number, cx: number, cy: number, cz: number, r: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1757,6 +1801,8 @@ export declare function wgf_collide3d_ray_sphere(ox: number, oy: number, oz: num
  * Casts a ray against a sphere, a box, or a triangle, and finds where it first meets it.
  *
  * See wgf_collide3d_ray_sphere for the rest.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide3d_ray_box(ox: number, oy: number, oz: number, dx: number, dy: number, dz: number, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1764,6 +1810,8 @@ export declare function wgf_collide3d_ray_box(ox: number, oy: number, oz: number
  * Casts a ray against a sphere, a box, or a triangle, and finds where it first meets it.
  *
  * See wgf_collide3d_ray_sphere for the rest.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collide3d_ray_triangle(ox: number, oy: number, oz: number, dx: number, dy: number, dz: number, points: readonly number[] | Float32Array | Float64Array | null, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -2246,6 +2294,8 @@ export declare function wgf_random_get_int(min: number, max: number): number;
 /**
  * Shuffles the `count` numbers in `values` into a random order, each order equally likely,
  * such as for a deck of cards or a bag of pieces. Returns how many were shuffled.
+ *
+ * Here `values` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_random_shuffle(values: number[] | Int32Array | null): number;
 
@@ -2302,6 +2352,8 @@ export declare function wgf_random_next_int(generator: wgf_generator_t | 0, min:
 /**
  * Returns a generator's next numbers, as the program's calls above do, and shuffles as
  * wgf_random_shuffle does. Each returns 0 for a handle that isn't a generator.
+ *
+ * Here `values` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_random_next_shuffle(generator: wgf_generator_t | 0, values: number[] | Int32Array | null): number;
 
@@ -3360,71 +3412,62 @@ export declare function wgf_window_is_resized(): boolean;
 export declare function wgf_window_set_icon(rgba: Uint8Array | ArrayBuffer | null, width: number, height: number): boolean;
 
 /**
- * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
+ * Sets or gets the options fixed when the window opens (default: WGF_WINDOW_FLAG_NONE).
  *
- *   transparent  what is behind the window shows through where gfx clears with
- *                alpha below 1 (default: off). Desktop: where the window system
- *                allows it. Web: the page under the canvas shows
- *   high_dpi     draw at the display's full density (default: on). Off draws one
- *                pixel per logical pixel, scaled up by the display: fewer pixels,
- *                softer edges
- *   vsync        wait for the display between frames (default: on). Off runs as
- *                fast as it can, or at the target fps. The web is always in step
- *                with the display
- *   msaa         smooth edges by drawing with 4 samples a pixel (default: off). It
- *                is a request, and a platform may give fewer samples. gfx draws
- *                with what the window got
+ * Call it before wgf_app_run, with every flag wanted: it replaces the flags set before.
+ *
+ *   TRANSPARENT  Desktop: where the window system allows it. Web: the page under the canvas
+ *                shows.
+ *   MSAA         A request. A platform may give fewer samples, and gfx draws with what the
+ *                window got (wgf_window_get_msaa_samples).
+ *   VSYNC_OFF    Frames run as fast as they can, or at the target fps. The web is always in
+ *                step with the display.
+ *   LOW_DPI      Fewer pixels and softer edges. Without it, drawing is at the display's full
+ *                density.
+ *
+ * Returns false, changing nothing, once the window has opened (logged), or for a bit that
+ * isn't a flag.
  */
-export declare function wgf_window_set_transparent(transparent: boolean): boolean;
+export declare function wgf_window_set_flags(flags: number): boolean;
 
 /**
- * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
+ * Sets or gets the options fixed when the window opens (default: WGF_WINDOW_FLAG_NONE).
  *
- * See wgf_window_set_transparent for the rest.
+ * See wgf_window_set_flags for the rest.
+ */
+export declare function wgf_window_get_flags(): number;
+
+/**
+ * Returns each open flag's answer: transparent, drawing at full density, in step with the
+ * display, and MSAA asked for.
  */
 export declare function wgf_window_is_transparent(): boolean;
 
 /**
- * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
- *
- * See wgf_window_set_transparent for the rest.
- */
-export declare function wgf_window_set_high_dpi(high_dpi: boolean): boolean;
-
-/**
- * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
- *
- * See wgf_window_set_transparent for the rest.
+ * Returns each open flag's answer: transparent, drawing at full density, in step with the
+ * display, and MSAA asked for.
  */
 export declare function wgf_window_is_high_dpi(): boolean;
 
 /**
- * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
- *
- * See wgf_window_set_transparent for the rest.
- */
-export declare function wgf_window_set_vsync(vsync: boolean): boolean;
-
-/**
- * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
- *
- * See wgf_window_set_transparent for the rest.
+ * Returns each open flag's answer: transparent, drawing at full density, in step with the
+ * display, and MSAA asked for.
  */
 export declare function wgf_window_is_vsync(): boolean;
 
 /**
- * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
- *
- * See wgf_window_set_transparent for the rest.
- */
-export declare function wgf_window_set_msaa(msaa: boolean): boolean;
-
-/**
- * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
- *
- * See wgf_window_set_transparent for the rest.
+ * Returns each open flag's answer: transparent, drawing at full density, in step with the
+ * display, and MSAA asked for.
  */
 export declare function wgf_window_is_msaa(): boolean;
+
+/**
+ * Returns how many samples a pixel the window draws with: 1 without MSAA.
+ *
+ * Before the window opens, it is what was asked for (4 with WGF_WINDOW_FLAG_MSAA). Once open,
+ * it is what the window got, which may be fewer.
+ */
+export declare function wgf_window_get_msaa_samples(): number;
 
 /**
  * Opens `url` in the system's browser, such as a store page or the credits' links.
@@ -4067,6 +4110,8 @@ export declare function wgf_actor_snap(actor: wgf_actor_t | 0): boolean;
  * set_positions sets each from `positions`: x, y, z in turn, `positions_count` floats. It
  * skips a handle that isn't an actor. It returns false if there aren't three floats for each
  * actor.
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_actor_get_positions(actors: readonly wgf_actor_t[] | Uint32Array | null, out: number[] | Float32Array | Float64Array | null): number;
 
@@ -4546,7 +4591,7 @@ export declare function wgf_texture_create(path: string | null): wgf_texture_t;
  * - You draw into it between wgf_render_begin_target and wgf_render_end_target
  *   (wgf_render.h).
  * - You then use it as any texture: drawn (wgf_draw_texture), on a sprite, or on a material.
- * - It has the screen's pixel format and samples (wgf_window_set_msaa), and a depth buffer of
+ * - It has the screen's pixel format and samples (wgf_window_get_msaa_samples), and a depth buffer of
  *   its own, so whatever draws to the screen draws into it.
  * - It has no mipmaps.
  * - It is made from numbers: READY at once, with no path.
@@ -5493,6 +5538,8 @@ export declare function wgf_sprite_get_clip_speed(sprite: wgf_actor_t | 0): numb
  * are gone, so a second call doesn't return them again. At most the last 16 are kept.
  *
  * Returns how many events it wrote, or 0 for a sprite with no sheet.
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_sprite_take_clip_events(sprite: wgf_actor_t | 0, out: number[] | Int32Array | null): number;
 
@@ -8207,6 +8254,8 @@ export declare function wgf_mesh_get_vertex_count(mesh: wgf_mesh_t | 0): number;
  * Reads the corners of a mesh of one part.
  *
  * See wgf_mesh_get_vertex_count for the rest.
+ *
+ * Here `positions` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_mesh_get_positions(mesh: wgf_mesh_t | 0, positions: number[] | Float32Array | Float64Array | null): number;
 
@@ -8214,6 +8263,8 @@ export declare function wgf_mesh_get_positions(mesh: wgf_mesh_t | 0, positions: 
  * Reads the corners of a mesh of one part.
  *
  * See wgf_mesh_get_vertex_count for the rest.
+ *
+ * Here `normals` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_mesh_get_normals(mesh: wgf_mesh_t | 0, normals: number[] | Float32Array | Float64Array | null): number;
 
@@ -8221,6 +8272,8 @@ export declare function wgf_mesh_get_normals(mesh: wgf_mesh_t | 0, normals: numb
  * Reads the corners of a mesh of one part.
  *
  * See wgf_mesh_get_vertex_count for the rest.
+ *
+ * Here `uvs` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_mesh_get_uvs(mesh: wgf_mesh_t | 0, uvs: number[] | Float32Array | Float64Array | null): number;
 
@@ -8228,6 +8281,8 @@ export declare function wgf_mesh_get_uvs(mesh: wgf_mesh_t | 0, uvs: number[] | F
  * Reads the corners of a mesh of one part.
  *
  * See wgf_mesh_get_vertex_count for the rest.
+ *
+ * Here `colors` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_mesh_get_colors(mesh: wgf_mesh_t | 0, colors: number[] | Float32Array | Float64Array | null): number;
 
@@ -8741,6 +8796,8 @@ export declare function wgf_model_get_bounds_max(actor: wgf_actor_t | 0, into?: 
  *
  * Returns false for a miss, a handle that isn't a model, a mesh that isn't READY, or a
  * direction of 0 or not finite.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_model_pick_ray(model: wgf_actor_t | 0, ox: number, oy: number, oz: number, dx: number, dy: number, dz: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -9220,6 +9277,8 @@ export declare function wgf_shape2d_get_point_count(shape: wgf_actor_t | 0): num
  * Returns what was set.
  *
  * See wgf_shape2d_get_size for the rest.
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_shape2d_get_points(shape: wgf_actor_t | 0, out: number[] | Float32Array | Float64Array | null): number;
 
@@ -9371,6 +9430,8 @@ export declare function wgf_shape3d_get_point_count(shape: wgf_actor_t | 0): num
  * Makes the shape a line strip, or gets its points.
  *
  * See wgf_shape3d_set_line_strip for the rest.
+ *
+ * Here `points` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_shape3d_get_points(shape: wgf_actor_t | 0, points: number[] | Float32Array | Float64Array | null): number;
 
@@ -9472,6 +9533,8 @@ export declare function wgf_sprite_batch_set_positions(batch: wgf_actor_t | 0, f
  * the batch's units.
  *
  * See wgf_sprite_batch_set_positions for the rest.
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_sprite_batch_get_positions(batch: wgf_actor_t | 0, first: number, out: number[] | Float32Array | Float64Array | null): number;
 
@@ -9488,6 +9551,8 @@ export declare function wgf_sprite_batch_set_sizes(batch: wgf_actor_t | 0, first
  * Sets or gets the quads' sizes, as width and height in turn, in the same way as positions.
  *
  * See wgf_sprite_batch_set_sizes for the rest.
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_sprite_batch_get_sizes(batch: wgf_actor_t | 0, first: number, out: number[] | Float32Array | Float64Array | null): number;
 
@@ -9502,6 +9567,8 @@ export declare function wgf_sprite_batch_set_rotations(batch: wgf_actor_t | 0, f
  * Sets or gets the quads' turns about their pivots, in radians. There is one float a quad
  * (`count` floats, for `count` quads). On a 2D stage they turn clockwise, as an actor's turn
  * does.
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_sprite_batch_get_rotations(batch: wgf_actor_t | 0, first: number, out: number[] | Float32Array | Float64Array | null): number;
 
@@ -9521,6 +9588,8 @@ export declare function wgf_sprite_batch_set_regions(batch: wgf_actor_t | 0, fir
  * from the top-left.
  *
  * See wgf_sprite_batch_set_regions for the rest.
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_sprite_batch_get_regions(batch: wgf_actor_t | 0, first: number, out: number[] | Float32Array | Float64Array | null): number;
 
@@ -9533,6 +9602,8 @@ export declare function wgf_sprite_batch_set_tints(batch: wgf_actor_t | 0, first
 /**
  * Sets or gets the quads' tints, one a quad (`count` quads). Each is a wgf_color_t
  * (0xRRGGBBAA) as an int.
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_sprite_batch_get_tints(batch: wgf_actor_t | 0, first: number, out: number[] | Int32Array | null): number;
 
@@ -9669,6 +9740,8 @@ export declare function wgf_stage2d_screen_to_world(stage: wgf_actor_t | 0, x: n
  *
  * Returns the actor hit. Returns 0 if nothing is hit, or if `stage` isn't a 2D stage. It works
  * outside a frame, with the stage as it is placed now.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_stage2d_pick(stage: wgf_actor_t | 0, x: number, y: number, hit: number[] | Float32Array | Float64Array | null): wgf_actor_t;
 
@@ -9787,6 +9860,8 @@ export declare function wgf_stage3d_find(stage: wgf_actor_t | 0, name: string | 
  * - The direction is 0, or not finite (pick_ray only).
  *
  * It works outside a frame, with the stage as it is placed now.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_stage3d_pick(stage: wgf_actor_t | 0, x: number, y: number, hit: number[] | Float32Array | Float64Array | null): wgf_actor_t;
 
@@ -9794,6 +9869,8 @@ export declare function wgf_stage3d_pick(stage: wgf_actor_t | 0, x: number, y: n
  * Returns the nearest actor on this stage that a ray meets.
  *
  * See wgf_stage3d_pick for the rest.
+ *
+ * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_stage3d_pick_ray(stage: wgf_actor_t | 0, ox: number, oy: number, oz: number, dx: number, dy: number, dz: number, hit: number[] | Float32Array | Float64Array | null): wgf_actor_t;
 
@@ -10230,6 +10307,8 @@ export declare function wgf_tilemap_get_object_middle(map: wgf_tilemap_t | 0, la
  * get_object_points writes x and y in turn into `out`, as many as fit in `count` floats. It
  * returns how many floats it filled, or 0 for another shape. get_object_point_count returns
  * how many points the object has.
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_tilemap_get_object_points(map: wgf_tilemap_t | 0, layer: number, object: number, out: number[] | Float32Array | Float64Array | null): number;
 
@@ -10494,6 +10573,8 @@ export declare function wgf_tilemap_layer_set_cell(layer: wgf_actor_t | 0, colum
  * game saves of a layer it changed.
  *
  * The cells are written into `out`, as many as fit in `count`. Returns how many it filled.
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_tilemap_layer_get_cells(layer: wgf_actor_t | 0, out: number[] | Int32Array | null): number;
 
@@ -11250,6 +11331,8 @@ export declare function wgf_actor_get_voice(actor: wgf_actor_t | 0): wgf_voice_t
  * `out` with as many as fit in `count`, and returns how many it filled. count_with_component
  * returns how many there are, to size `out`. Each component is indexed, so neither call looks
  * at every actor. NONE, or a value that isn't a component, finds none.
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_actor_find_with_component(component: wgf_component_t, out: wgf_actor_t[] | Uint32Array | null): number;
 
@@ -11535,6 +11618,8 @@ export declare function wgf_behavior_get_param_key(actor: wgf_actor_t | 0, behav
  * `out` with as many as fit in `count`, and returns how many it filled. count_with_behavior
  * returns how many there are, to size `out`. An actor with two behaviors of that name counts
  * once. Each name is indexed, so neither call looks at every actor.
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_actor_find_with_behavior(name: string | null, out: wgf_actor_t[] | Uint32Array | null): number;
 
@@ -11656,6 +11741,8 @@ export declare function wgf_collider_get_shape(actor: wgf_actor_t | 0): wgf_coll
  * Returns the collider's shape, and a polygon's or a segment's points.
  *
  * See wgf_collider_get_shape for the rest.
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collider_get_points(actor: wgf_actor_t | 0, out: number[] | Float32Array | Float64Array | null): number;
 
@@ -11725,6 +11812,8 @@ export declare function wgf_collider_is_enabled(actor: wgf_actor_t | 0): boolean
 /**
  * Fills `out` with the actors whose colliders this one overlaps as of the last tick, as many
  * as fit in `count`. Returns how many it filled.
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_collider_get_overlaps(actor: wgf_actor_t | 0, out: wgf_actor_t[] | Uint32Array | null): number;
 
@@ -12275,6 +12364,8 @@ export declare function wgf_world_get_event_count(): number;
  * Returns how many events wait, or takes the oldest off the queue.
  *
  * See wgf_world_get_event_count for the rest.
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_world_take_events(out: number[] | Int32Array | null): number;
 
@@ -12716,6 +12807,10 @@ export declare function wgf_physics3d_draw_bodies(color: wgf_color_t): void;
  *
  * Returns how many hits. Returns 0 for nothing hit, a direction of no length, a distance or
  * radius not above 0, or no array.
+ *
+ * Here `actors` is an array, and its length is the count: size it first. An empty array is filled with nothing.
+ *
+ * Here `hits` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_physics3d_cast_ray(x: number, y: number, z: number, dx: number, dy: number, dz: number, distance: number, mask: number, actors: wgf_actor_t[] | Uint32Array | null, hits: number[] | Float32Array | Float64Array | null): number;
 
@@ -12723,6 +12818,10 @@ export declare function wgf_physics3d_cast_ray(x: number, y: number, z: number, 
  * Casts a ray or a sphere through the world, and returns what it hits.
  *
  * See wgf_physics3d_cast_ray for the rest.
+ *
+ * Here `actors` is an array, and its length is the count: size it first. An empty array is filled with nothing.
+ *
+ * Here `hits` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_physics3d_cast_sphere(x: number, y: number, z: number, radius: number, dx: number, dy: number, dz: number, distance: number, mask: number, actors: wgf_actor_t[] | Uint32Array | null, hits: number[] | Float32Array | Float64Array | null): number;
 
@@ -12735,6 +12834,8 @@ export declare function wgf_physics3d_cast_sphere(x: number, y: number, z: numbe
  * The bodies go into `actors` in no order, as many as fit in `count`. Like the casts, these
  * see the bodies as of their last tick, meet only those whose layer is in `mask` and never a
  * sensor, and start physics. Returns 0 for none, a size not above 0, or no array.
+ *
+ * Here `actors` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_physics3d_overlap_sphere(x: number, y: number, z: number, radius: number, mask: number, actors: wgf_actor_t[] | Uint32Array | null): number;
 
@@ -12742,6 +12843,8 @@ export declare function wgf_physics3d_overlap_sphere(x: number, y: number, z: nu
  * Finds the bodies overlapping a sphere or a box, and returns how many.
  *
  * See wgf_physics3d_overlap_sphere for the rest.
+ *
+ * Here `actors` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_physics3d_overlap_box(x: number, y: number, z: number, width: number, height: number, depth: number, mask: number, actors: wgf_actor_t[] | Uint32Array | null): number;
 
@@ -13847,6 +13950,8 @@ export declare function wgf_document_get_event_count(document: wgf_document_t | 
  * taken.
  *
  * See wgf_document_get_event_count for the rest.
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_document_take_events(document: wgf_document_t | 0, out: number[] | Int32Array | null): number;
 
@@ -14187,6 +14292,8 @@ export declare function wgf_debug_get_recorded_frame_stat(stat: wgf_frame_stat_t
 /**
  * Copies the stopped recording's frame times, or their costs if `costs` is true, into `out`,
  * oldest first. Writes at most `count`, and returns the number written.
+ *
+ * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
  */
 export declare function wgf_debug_get_recorded_frame_times(out: number[] | Float32Array | Float64Array | null, costs: boolean): number;
 

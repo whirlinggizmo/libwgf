@@ -956,7 +956,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** `new Array(Actor.countWithBehavior(name)).fill(0)`.
 - **Cost:** A silent empty result. Reported by two agents.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** fine: HISTORY.md, "Two small fixes from the examples" (the binding's doc now says so on each such call).
 
 ### examples: Bus.create is a method of its parent (Haxe)
 

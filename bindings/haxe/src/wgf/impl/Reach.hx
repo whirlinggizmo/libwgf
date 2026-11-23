@@ -1410,6 +1410,7 @@ class Reach {
 		"wgf_voice_stop",
 		"wgf_window_can_fullscreen",
 		"wgf_window_can_lock_orientation",
+		"wgf_window_get_flags",
 		"wgf_window_get_height",
 		"wgf_window_get_monitor",
 		"wgf_window_get_monitor_count",
@@ -1418,6 +1419,7 @@ class Reach {
 		"wgf_window_get_monitor_width",
 		"wgf_window_get_monitor_x",
 		"wgf_window_get_monitor_y",
+		"wgf_window_get_msaa_samples",
 		"wgf_window_get_orientation",
 		"wgf_window_get_orientation_lock",
 		"wgf_window_get_os",
@@ -1446,17 +1448,14 @@ class Reach {
 		"wgf_window_request_fullscreen",
 		"wgf_window_request_orientation",
 		"wgf_window_set_decorated",
-		"wgf_window_set_high_dpi",
+		"wgf_window_set_flags",
 		"wgf_window_set_icon",
 		"wgf_window_set_monitor",
-		"wgf_window_set_msaa",
 		"wgf_window_set_position",
 		"wgf_window_set_resizable",
 		"wgf_window_set_size",
 		"wgf_window_set_title",
-		"wgf_window_set_transparent",
 		"wgf_window_set_visible",
-		"wgf_window_set_vsync",
 		"wgf_world_clear",
 		"wgf_world_dump",
 		"wgf_world_get_event_count",
@@ -1465,7 +1464,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1456) 0];
+	static final counts:Array<Int> = [for (_ in 0...1455) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

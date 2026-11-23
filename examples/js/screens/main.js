@@ -14,6 +14,7 @@ import createWgfHost from "./wgf-host.js";
 import {
     Actor, App, Behavior, Color, ColorStock, Easing, Keyboard, KeyboardKey, Mouse, MouseButton, Presentation,
     PresentationMode, Probe, Render, Screen, Transition, Tween, Window, attach,
+    WindowFlag,
 } from "./wgf-typed.js";
 import { HEIGHT, Pause, Play, Title, WIDTH } from "./screens.js";
 
@@ -102,5 +103,5 @@ function handleInput() {
 Window.setTitle("libwgf screens (JS)");
 // The design size, fitted to any window or page. A desktop window opens at this size.
 Presentation.set(PresentationMode.FIT, WIDTH, HEIGHT);
-Window.setMsaa(true);
+Window.setFlags(WindowFlag.MSAA);
 App.run(init, null, frame, null);

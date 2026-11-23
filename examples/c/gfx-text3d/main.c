@@ -168,7 +168,7 @@ int main(void)
 {
     wgf_window_set_title("libwgf text3d");
     wgf_window_set_size(1000, 640);
-    wgf_window_set_msaa(true);
+    wgf_window_set_flags(WGF_WINDOW_FLAG_MSAA);
     wgf_debug_show_fps(0, 12, 60, 16.0f, WGF_COLOR_LIME); /* libwgt's wgt_loop_draw_fps_ex */
     wgf_app_run(init, NULL, frame, NULL, NULL);
     return 0;

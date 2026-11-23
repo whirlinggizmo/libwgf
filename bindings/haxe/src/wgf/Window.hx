@@ -276,79 +276,69 @@ class Window {
 		return Raw.wgf_window_set_icon(rgba, width, height);
 
 	/**
-	    Sets or gets options fixed when the window opens. A setter returns false once it has opened.
+	    Sets or gets the options fixed when the window opens (default: WGF_WINDOW_FLAG_NONE).
 
-	      transparent  what is behind the window shows through where gfx clears with
-	                   alpha below 1 (default: off). Desktop: where the window system
-	                   allows it. Web: the page under the canvas shows
-	      high_dpi     draw at the display's full density (default: on). Off draws one
-	                   pixel per logical pixel, scaled up by the display: fewer pixels,
-	                   softer edges
-	      vsync        wait for the display between frames (default: on). Off runs as
-	                   fast as it can, or at the target fps. The web is always in step
-	                   with the display
-	      msaa         smooth edges by drawing with 4 samples a pixel (default: off). It
-	                   is a request, and a platform may give fewer samples. gfx draws
-	                   with what the window got
+	    Call it before wgf_app_run, with every flag wanted: it replaces the flags set before.
+
+	      TRANSPARENT  Desktop: where the window system allows it. Web: the page under the canvas
+	                   shows.
+	      MSAA         A request. A platform may give fewer samples, and gfx draws with what the
+	                   window got (wgf_window_get_msaa_samples).
+	      VSYNC_OFF    Frames run as fast as they can, or at the target fps. The web is always in
+	                   step with the display.
+	      LOW_DPI      Fewer pixels and softer edges. Without it, drawing is at the display's full
+	                   density.
+
+	    Returns false, changing nothing, once the window has opened (logged), or for a bit that
+	    isn't a flag.
 	**/
-	public static inline function setTransparent(transparent:Bool):Bool
-		return Raw.wgf_window_set_transparent(transparent);
+	public static inline function setFlags(flags:Int):Bool
+		return Raw.wgf_window_set_flags(flags);
 
 	/**
-	    Sets or gets options fixed when the window opens. A setter returns false once it has opened.
+	    Sets or gets the options fixed when the window opens (default: WGF_WINDOW_FLAG_NONE).
 
-	    See Window.setTransparent for the rest.
+	    See Window.setFlags for the rest.
+	**/
+	public static inline function getFlags():Int
+		return Raw.wgf_window_get_flags();
+
+	/**
+	    Returns each open flag's answer: transparent, drawing at full density, in step with the
+	    display, and MSAA asked for.
 	**/
 	public static inline function isTransparent():Bool
 		return Raw.wgf_window_is_transparent();
 
 	/**
-	    Sets or gets options fixed when the window opens. A setter returns false once it has opened.
-
-	    See Window.setTransparent for the rest.
-	**/
-	public static inline function setHighDpi(high_dpi:Bool):Bool
-		return Raw.wgf_window_set_high_dpi(high_dpi);
-
-	/**
-	    Sets or gets options fixed when the window opens. A setter returns false once it has opened.
-
-	    See Window.setTransparent for the rest.
+	    Returns each open flag's answer: transparent, drawing at full density, in step with the
+	    display, and MSAA asked for.
 	**/
 	public static inline function isHighDpi():Bool
 		return Raw.wgf_window_is_high_dpi();
 
 	/**
-	    Sets or gets options fixed when the window opens. A setter returns false once it has opened.
-
-	    See Window.setTransparent for the rest.
-	**/
-	public static inline function setVsync(vsync:Bool):Bool
-		return Raw.wgf_window_set_vsync(vsync);
-
-	/**
-	    Sets or gets options fixed when the window opens. A setter returns false once it has opened.
-
-	    See Window.setTransparent for the rest.
+	    Returns each open flag's answer: transparent, drawing at full density, in step with the
+	    display, and MSAA asked for.
 	**/
 	public static inline function isVsync():Bool
 		return Raw.wgf_window_is_vsync();
 
 	/**
-	    Sets or gets options fixed when the window opens. A setter returns false once it has opened.
-
-	    See Window.setTransparent for the rest.
-	**/
-	public static inline function setMsaa(msaa:Bool):Bool
-		return Raw.wgf_window_set_msaa(msaa);
-
-	/**
-	    Sets or gets options fixed when the window opens. A setter returns false once it has opened.
-
-	    See Window.setTransparent for the rest.
+	    Returns each open flag's answer: transparent, drawing at full density, in step with the
+	    display, and MSAA asked for.
 	**/
 	public static inline function isMsaa():Bool
 		return Raw.wgf_window_is_msaa();
+
+	/**
+	    Returns how many samples a pixel the window draws with: 1 without MSAA.
+
+	    Before the window opens, it is what was asked for (4 with WGF_WINDOW_FLAG_MSAA). Once open,
+	    it is what the window got, which may be fewer.
+	**/
+	public static inline function getMsaaSamples():Int
+		return Raw.wgf_window_get_msaa_samples();
 
 	/**
 	    Opens `url` in the system's browser, such as a store page or the credits' links.

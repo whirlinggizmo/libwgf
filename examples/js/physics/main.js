@@ -19,6 +19,7 @@ import {
     Actor, App, Behavior, Body3d, Body3dShape, Body3dType, Camera3d, Color, ColorStock, Component, Draw, Keyboard,
     KeyboardKey, Light, LightType, Loop, Mesh, Model, Mouse, Physics3d, Presentation, PresentationMode, Probe,
     Render, Resource, Stage3d, Window, attach,
+    WindowFlag,
 } from "./wgf-typed.js";
 
 const host = await createWgfHost({
@@ -205,5 +206,5 @@ function frame() {
 Window.setTitle("libwgf physics (JS)");
 // The design size, fitted to any window or page. A desktop window opens at this size.
 Presentation.set(PresentationMode.FIT, 960, 600);
-Window.setMsaa(true);
+Window.setFlags(WindowFlag.MSAA);
 App.run(init, tick, frame, null);

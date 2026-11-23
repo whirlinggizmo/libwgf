@@ -93,7 +93,7 @@ int main(void)
 {
     wgf_window_set_title("libwgf font");
     wgf_window_set_size(900, 500);
-    wgf_window_set_msaa(true);
+    wgf_window_set_flags(WGF_WINDOW_FLAG_MSAA);
     wgf_debug_show_fps(0, 12, 12, 16.0f, wgf_color_make(0, 255, 0, 255)); /* libwgt's draw_fps */
     wgf_app_run(init, NULL, frame, on_shutdown, NULL);
     return 0;

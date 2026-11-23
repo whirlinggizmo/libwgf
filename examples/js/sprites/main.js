@@ -21,6 +21,7 @@ import createWgfHost from "./wgf-host.js";
 import {
     Action, Actor, App, Asset, Color, ColorStock, Draw, Keyboard, KeyboardKey, Loop, Presentation,
     PresentationMode, Probe, Render, Resource, ResourceStatus, Sprite, Stage2d, Texture, Window, attach,
+    WindowFlag,
 } from "./wgf-typed.js";
 import { bindActions, makePlayer, updatePlayer } from "./player.js";
 
@@ -101,7 +102,7 @@ function frame() {
 }
 
 Window.setTitle("libwgf sprites (JS)");
-Window.setMsaa(true);
+Window.setFlags(WindowFlag.MSAA);
 // The design size, fitted to any window or page. Natively, the window opens at it.
 Presentation.set(PresentationMode.FIT, WIDTH, HEIGHT);
 App.run(init, null, frame, null);

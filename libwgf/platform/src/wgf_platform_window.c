@@ -281,20 +281,26 @@ bool wgf_window_is_focused(void)
     return window.open && wgf_platform_priv_is_focused();
 }
 
-/* An option only an unopened window takes. */
-static bool set_at_open(bool *option, bool value, const char *name)
+bool wgf_window_set_flags(int flags)
 {
+    const int all = WGF_WINDOW_FLAG_TRANSPARENT | WGF_WINDOW_FLAG_MSAA | WGF_WINDOW_FLAG_VSYNC_OFF |
+                    WGF_WINDOW_FLAG_LOW_DPI;
     if (window.open) {
-        wgf_log_warn("wgf_app_window_set_%s: the window is open; set it before wgf_app_run", name);
+        wgf_log_warn("wgf_window_set_flags: the window is open; set them before wgf_app_run");
         return false;
     }
-    *option = value;
+    if ((flags & ~all) != 0) return false;
+    window.transparent = (flags & WGF_WINDOW_FLAG_TRANSPARENT) != 0;
+    window.msaa = (flags & WGF_WINDOW_FLAG_MSAA) != 0;
+    window.vsync = (flags & WGF_WINDOW_FLAG_VSYNC_OFF) == 0;
+    window.high_dpi = (flags & WGF_WINDOW_FLAG_LOW_DPI) == 0;
     return true;
 }
 
-bool wgf_window_set_transparent(bool transparent)
+int wgf_window_get_flags(void)
 {
-    return set_at_open(&window.transparent, transparent, "transparent");
+    return (window.transparent ? WGF_WINDOW_FLAG_TRANSPARENT : 0) | (window.msaa ? WGF_WINDOW_FLAG_MSAA : 0) |
+           (window.vsync ? 0 : WGF_WINDOW_FLAG_VSYNC_OFF) | (window.high_dpi ? 0 : WGF_WINDOW_FLAG_LOW_DPI);
 }
 
 bool wgf_window_is_transparent(void)
@@ -302,19 +308,9 @@ bool wgf_window_is_transparent(void)
     return window.transparent;
 }
 
-bool wgf_window_set_high_dpi(bool high_dpi)
-{
-    return set_at_open(&window.high_dpi, high_dpi, "high_dpi");
-}
-
 bool wgf_window_is_high_dpi(void)
 {
     return window.high_dpi;
-}
-
-bool wgf_window_set_vsync(bool vsync)
-{
-    return set_at_open(&window.vsync, vsync, "vsync");
 }
 
 bool wgf_window_is_vsync(void)
@@ -322,9 +318,10 @@ bool wgf_window_is_vsync(void)
     return window.vsync;
 }
 
-bool wgf_window_set_msaa(bool msaa)
+int wgf_window_get_msaa_samples(void)
 {
-    return set_at_open(&window.msaa, msaa, "msaa");
+    if (!window.open) return window.msaa ? 4 : 1;
+    return wgf_platform_priv_get_sample_count();
 }
 
 bool wgf_window_is_msaa(void)

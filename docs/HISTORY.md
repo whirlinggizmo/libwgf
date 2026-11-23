@@ -1040,12 +1040,24 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## The window's open options are flags (2026-11-23)
+
+Transparent, high DPI, vsync, and MSAA are fixed when the window opens, but each had a setter (`wgf_window_set_msaa`) that looked like one a program could call any time, and failed once the window was open. Rob's call: they shouldn't look changeable.
+
+- **One call, before the run:** `wgf_window_set_flags(WGF_WINDOW_FLAG_MSAA | WGF_WINDOW_FLAG_TRANSPARENT)`, as raylib's `SetConfigFlags`, helix-raylib's, and wgrender-c's `wgr_init_values` take them. It replaces the flags set before. `Window.setFlags(WindowFlag.MSAA)` in Haxe and JS.
+- **The flags:** `TRANSPARENT`, `MSAA` (4 samples, the one level), `VSYNC_OFF`, `LOW_DPI`. Vsync and full density stay on by default, so those two are negative.
+- **The four setters are gone.** The four `is` getters stay, and `wgf_window_get_flags` returns the flags.
+- **`wgf_window_get_msaa_samples` is new:** what the window draws with, which may be fewer than asked. Nothing public returned that before.
+- **Left:** more MSAA levels. 2x is rarely chosen and 8x isn't everywhere. A level would be a number, not more flags.
+- Title, size, visible, resizable, decorated, and fullscreen can change later, so they stay setters.
+
 ## Two small fixes from the examples (2026-11-23)
 
 From the examples' friction list.
 
 - **Destroying a finished tween logs nothing.** `wgf_tween_destroy` on a tween that had ended warned "handle is dead", though a finished tween is let go of by libwgf and "stop the last one" is ordinary. It now asks quietly, and the header says so.
 - **`Bus.create(parent)` in Haxe.** `wgf_bus_create` takes its parent bus first, so the binding made it a method, `parent.create()`, which read as making another of the same bus. A kind's `create` is now never a method (`Binding.place`). JS already had `Bus.create(parent)`.
+- **An array a call fills says how it is sized** (added after, the same day). In the bindings `Actor.findWithBehavior(name, out)` fills `out` up to its length, so `[]` got nothing, silently, while the doc spoke of C's `count`. Each of the 53 such calls' docs in Haxe and JS now ends: "Here `out` is an array, and its length is the count: size it first."
 
 ## A Haxe view converts to another view (2026-11-23)
 

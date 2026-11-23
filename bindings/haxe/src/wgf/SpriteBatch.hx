@@ -90,6 +90,8 @@ import wgf.impl.Raw;
 	    the batch's units.
 
 	    See SpriteBatch.setPositions for the rest.
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function getPositions(first:Int, out:Array<Float>):Int
 		return Raw.wgf_sprite_batch_get_positions(this, first, out);
@@ -108,6 +110,8 @@ import wgf.impl.Raw;
 	    Sets or gets the quads' sizes, as width and height in turn, in the same way as positions.
 
 	    See SpriteBatch.setSizes for the rest.
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function getSizes(first:Int, out:Array<Float>):Int
 		return Raw.wgf_sprite_batch_get_sizes(this, first, out);
@@ -124,6 +128,8 @@ import wgf.impl.Raw;
 	    Sets or gets the quads' turns about their pivots, in radians. There is one float a quad
 	    (`count` floats, for `count` quads). On a 2D stage they turn clockwise, as an actor's turn
 	    does.
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function getRotations(first:Int, out:Array<Float>):Int
 		return Raw.wgf_sprite_batch_get_rotations(this, first, out);
@@ -145,6 +151,8 @@ import wgf.impl.Raw;
 	    from the top-left.
 
 	    See SpriteBatch.setRegions for the rest.
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function getRegions(first:Int, out:Array<Float>):Int
 		return Raw.wgf_sprite_batch_get_regions(this, first, out);
@@ -159,6 +167,8 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the quads' tints, one a quad (`count` quads). Each is a wgf_color_t
 	    (0xRRGGBBAA) as an int.
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function getTints(first:Int, out:Array<Int>):Int
 		return Raw.wgf_sprite_batch_get_tints(this, first, out);

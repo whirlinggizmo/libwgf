@@ -148,7 +148,7 @@ int main(void)
 {
     wgf_window_set_title("libwgf heightmap");
     wgf_window_set_size(1000, 600);
-    wgf_window_set_msaa(true);
+    wgf_window_set_flags(WGF_WINDOW_FLAG_MSAA);
     wgf_window_set_resizable(true);
     wgf_debug_show_fps(0, 12, 10, 16.0f, wgf_color_make(0, 120, 0, 255));
     wgf_app_run(init, NULL, frame, NULL, NULL);

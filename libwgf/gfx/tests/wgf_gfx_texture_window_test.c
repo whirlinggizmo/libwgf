@@ -127,7 +127,7 @@ static void on_frame(void *user)
 int main(void)
 {
     wgf_window_set_size(SIZE, SIZE);
-    wgf_window_set_high_dpi(false); /* one pixel a logical pixel, whatever the display */
+    wgf_window_set_flags(WGF_WINDOW_FLAG_LOW_DPI); /* one pixel a logical pixel, whatever the display */
     wgf_app_run(NULL, NULL, on_frame, NULL, NULL);
     return 0;
 }

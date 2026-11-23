@@ -258,7 +258,7 @@ int main(void)
 {
     wgf_window_set_title("libwgf stream");
     wgf_window_set_size(960, 540);
-    wgf_window_set_msaa(true);
+    wgf_window_set_flags(WGF_WINDOW_FLAG_MSAA);
     wgf_debug_show_fps(0, 12, 10, 16.0f, wgf_color_make(0, 255, 0, 255));
     wgf_app_enable_autopilot(); /* its frames.autopilot flies it (tools/bench/measure_frames.py) */
     wgf_app_run(init, NULL, frame, NULL, NULL);

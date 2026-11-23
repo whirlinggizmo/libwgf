@@ -455,6 +455,8 @@ import wgf.impl.Raw;
 
 	    Returns false for a miss, a handle that isn't a model, a mesh that isn't READY, or a
 	    direction of 0 or not finite.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function pickRay(ox:Float, oy:Float, oz:Float, dx:Float, dy:Float, dz:Float, hit:Array<Float>):Bool
 		return Raw.wgf_model_pick_ray(this, ox, oy, oz, dx, dy, dz, hit);

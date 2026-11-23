@@ -3212,22 +3212,20 @@ export const Window = Object.freeze({
     isResized: raw.wgf_window_is_resized,
     // wgf: call wgf_window_set_icon
     setIcon: raw.wgf_window_set_icon,
-    // wgf: call wgf_window_set_transparent
-    setTransparent: raw.wgf_window_set_transparent,
+    // wgf: call wgf_window_set_flags
+    setFlags: raw.wgf_window_set_flags,
+    // wgf: call wgf_window_get_flags
+    getFlags: raw.wgf_window_get_flags,
     // wgf: call wgf_window_is_transparent
     isTransparent: raw.wgf_window_is_transparent,
-    // wgf: call wgf_window_set_high_dpi
-    setHighDpi: raw.wgf_window_set_high_dpi,
     // wgf: call wgf_window_is_high_dpi
     isHighDpi: raw.wgf_window_is_high_dpi,
-    // wgf: call wgf_window_set_vsync
-    setVsync: raw.wgf_window_set_vsync,
     // wgf: call wgf_window_is_vsync
     isVsync: raw.wgf_window_is_vsync,
-    // wgf: call wgf_window_set_msaa
-    setMsaa: raw.wgf_window_set_msaa,
     // wgf: call wgf_window_is_msaa
     isMsaa: raw.wgf_window_is_msaa,
+    // wgf: call wgf_window_get_msaa_samples
+    getMsaaSamples: raw.wgf_window_get_msaa_samples,
     // wgf: call wgf_window_open_url
     openUrl: raw.wgf_window_open_url,
     // wgf: call wgf_window_get_safe_inset_top
@@ -3400,6 +3398,8 @@ export const UiValue = Object.freeze({ TEXT_SIZE: 0, PADDING: 1, GAP: 2, CORNER_
 export const UiWidget = Object.freeze({ PANEL: 0, BUTTON: 1, TOGGLE: 2, CHECKBOX: 3, SLIDER: 4, PROGRESS: 5, GROUP: 6, TAB: 7, COMBO: 8, NUMBER: 9, TILE: 10, SCROLL: 11, LIST: 12, DROPDOWN: 13, POPUP: 14, TEXT: 15 });
 // wgf: enum VehicleDrive
 export const VehicleDrive = Object.freeze({ FRONT: 0, REAR: 1, ALL: 2 });
+// wgf: enum WindowFlag
+export const WindowFlag = Object.freeze({ NONE: 0, TRANSPARENT: 1, MSAA: 2, VSYNC_OFF: 4, LOW_DPI: 8 });
 // wgf: enum WindowOrientation
 export const WindowOrientation = Object.freeze({ ANY: 0, LANDSCAPE: 1, PORTRAIT: 2 });
 // wgf: enum WindowOs

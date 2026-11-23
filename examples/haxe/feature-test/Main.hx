@@ -225,14 +225,13 @@ class Main {
 		Window.isFocused();
 		Window.isResized();
 		expect(Window.setIcon(haxe.io.Bytes.alloc(16 * 16 * 4), 16, 16), "a window icon");
-		Window.setTransparent(false);
+		Window.setFlags(WindowFlag.NONE);
+		Window.getFlags();
 		Window.isTransparent();
-		Window.setHighDpi(true);
 		Window.isHighDpi();
-		Window.setVsync(true);
 		Window.isVsync();
-		Window.setMsaa(false);
 		Window.isMsaa();
+		Window.getMsaaSamples();
 		Loop.setTickRate(60);
 		expect(Loop.getTickRate() == 60 && near(Loop.getTickDelta(), 1 / 60), "the tick rate");
 		Loop.setTimeScale(1);

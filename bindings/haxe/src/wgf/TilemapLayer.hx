@@ -70,6 +70,8 @@ import wgf.impl.Raw;
 	    game saves of a layer it changed.
 
 	    The cells are written into `out`, as many as fit in `count`. Returns how many it filled.
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function getCells(out:Array<Int>):Int
 		return Raw.wgf_tilemap_layer_get_cells(this, out);

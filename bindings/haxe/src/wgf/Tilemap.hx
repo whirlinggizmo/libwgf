@@ -384,6 +384,8 @@ abstract Tilemap(Int) from Int to Int to wgf.Handle {
 	    get_object_points writes x and y in turn into `out`, as many as fit in `count` floats. It
 	    returns how many floats it filled, or 0 for another shape. get_object_point_count returns
 	    how many points the object has.
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function getObjectPoints(layer:Int, object:Int, out:Array<Float>):Int
 		return Raw.wgf_tilemap_get_object_points(this, layer, object, out);

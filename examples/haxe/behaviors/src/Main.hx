@@ -32,7 +32,7 @@ class Main {
 
 	static function main() {
 		Window.setTitle("libwgf behaviors (Haxe)");
-		Window.setMsaa(true);
+		Window.setFlags(WindowFlag.MSAA);
 		// the scene's 800 by 600, fitted to any window, so the balls wrap at its edges
 		Presentation.set(PresentationMode.FIT, WIDTH, HEIGHT);
 		Runtime.run(init, tick, frame, null);

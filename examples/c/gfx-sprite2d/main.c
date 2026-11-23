@@ -159,7 +159,7 @@ int main(void)
 {
     wgf_window_set_title("libwgf sprite2d");
     wgf_window_set_size(900, 520);
-    wgf_window_set_msaa(true);
+    wgf_window_set_flags(WGF_WINDOW_FLAG_MSAA);
     wgf_app_run(init, NULL, frame, NULL, NULL);
     return 0;
 }

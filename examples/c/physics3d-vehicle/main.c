@@ -182,7 +182,7 @@ int main(void)
     wgf_physics3d_enable_vehicles(); /* the car's: vehicles linked */
     wgf_window_set_title("libwgf physics3d");
     wgf_window_set_size(1000, 600);
-    wgf_window_set_msaa(true);
+    wgf_window_set_flags(WGF_WINDOW_FLAG_MSAA);
     wgf_window_set_resizable(true);
     wgf_debug_show_fps(0, 12, 64, 16.0f, wgf_color_make(0, 255, 0, 255));
     wgf_app_run(init, tick, frame, NULL, NULL);

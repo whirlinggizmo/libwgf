@@ -108,6 +108,8 @@ import wgf.impl.Raw;
 
 	    Returns the actor hit. Returns 0 if nothing is hit, or if `stage` isn't a 2D stage. It works
 	    outside a frame, with the stage as it is placed now.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function pick(x:Float, y:Float, hit:Array<Float>):Actor
 		return Raw.wgf_stage2d_pick(this, x, y, hit);

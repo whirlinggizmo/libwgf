@@ -293,8 +293,7 @@ int main(void)
 {
     wgf_window_set_title("libwgf spritebench");
     wgf_window_set_size(SCREEN_W, SCREEN_H);
-    wgf_window_set_vsync(false);
-    wgf_window_set_high_dpi(false);
+    wgf_window_set_flags(WGF_WINDOW_FLAG_VSYNC_OFF | WGF_WINDOW_FLAG_LOW_DPI);
     wgf_app_run(init, NULL, frame, NULL, NULL);
     return 0;
 }

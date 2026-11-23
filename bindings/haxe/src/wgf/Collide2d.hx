@@ -28,24 +28,32 @@ import wgf.impl.Raw;
 class Collide2d {
 	/**
 	    Overlap tests. Each returns true if its two shapes overlap, and fills `hit`.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function rectRect(ax:Float, ay:Float, aw:Float, ah:Float, bx:Float, by:Float, bw:Float, bh:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide2d_rect_rect(ax, ay, aw, ah, bx, by, bw, bh, hit);
 
 	/**
 	    Overlap tests. Each returns true if its two shapes overlap, and fills `hit`.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function circleCircle(ax:Float, ay:Float, ar:Float, bx:Float, by:Float, br:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide2d_circle_circle(ax, ay, ar, bx, by, br, hit);
 
 	/**
 	    Overlap tests. Each returns true if its two shapes overlap, and fills `hit`.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function circleRect(cx:Float, cy:Float, r:Float, rx:Float, ry:Float, rw:Float, rh:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide2d_circle_rect(cx, cy, r, rx, ry, rw, rh, hit);
 
 	/**
 	    Tests a circle against the segment from x0, y0 to x1, y1, such as a wall or a slope.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function circleSegment(cx:Float, cy:Float, r:Float, x0:Float, y0:Float, x1:Float, y1:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide2d_circle_segment(cx, cy, r, x0, y0, x1, y1, hit);
@@ -54,6 +62,8 @@ class Collide2d {
 	    Tests a circle against a polygon.
 
 	    The polygon may be convex or not, as long as its edges don't cross.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function circlePolygon(cx:Float, cy:Float, r:Float, points:Array<Float>, hit:Array<Float>):Bool
 		return Raw.wgf_collide2d_circle_polygon(cx, cy, r, points, hit);
@@ -62,6 +72,8 @@ class Collide2d {
 	    Tests two convex polygons against each other, by the separating axis theorem.
 
 	    Either polygon may be a segment of two points. The hit's point is always 0, 0.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function polygonPolygon(points:Array<Float>, others:Array<Float>, hit:Array<Float>):Bool
 		return Raw.wgf_collide2d_polygon_polygon(points, others, hit);
@@ -106,6 +118,8 @@ class Collide2d {
 
 	    Only a true crossing counts: touching, or lying along b, doesn't. The hit holds the time
 	    along a, the point, and b's normal, facing a's start.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function segmentSegment(ax0:Float, ay0:Float, ax1:Float, ay1:Float, bx0:Float, by0:Float, bx1:Float, by1:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide2d_segment_segment(ax0, ay0, ax1, ay1, bx0, by0, bx1, by1, hit);
@@ -115,6 +129,8 @@ class Collide2d {
 
 	    The ray is dx, dy long: time 1 is its end. The hit holds the time, the point, and the
 	    normal.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function rayRect(ox:Float, oy:Float, dx:Float, dy:Float, rx:Float, ry:Float, rw:Float, rh:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide2d_ray_rect(ox, oy, dx, dy, rx, ry, rw, rh, hit);
@@ -123,6 +139,8 @@ class Collide2d {
 	    Casts a ray from ox, oy along dx, dy against a rectangle or a circle.
 
 	    See Collide2d.rayRect for the rest.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function rayCircle(ox:Float, oy:Float, dx:Float, dy:Float, cx:Float, cy:Float, r:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide2d_ray_circle(ox, oy, dx, dy, cx, cy, r, hit);
@@ -132,6 +150,8 @@ class Collide2d {
 
 	    The hit holds the time, the moving shape's top-left (for a circle, its center) at that
 	    time, and the normal. If they already overlap, the time is 0 and there is no normal.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function sweepRectRect(ax:Float, ay:Float, aw:Float, ah:Float, dx:Float, dy:Float, bx:Float, by:Float, bw:Float, bh:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide2d_sweep_rect_rect(ax, ay, aw, ah, dx, dy, bx, by, bw, bh, hit);
@@ -140,6 +160,8 @@ class Collide2d {
 	    Sweeps a rectangle, or a circle, by dx, dy, and tests whether it meets another on the way.
 
 	    See Collide2d.sweepRectRect for the rest.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function sweepCircleCircle(ax:Float, ay:Float, ar:Float, dx:Float, dy:Float, bx:Float, by:Float, br:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide2d_sweep_circle_circle(ax, ay, ar, dx, dy, bx, by, br, hit);
@@ -163,6 +185,8 @@ class Collide2d {
 	      0, 0. Outside the grid is open.
 
 	    Returns false if there is no `out` (NULL, or an `out_count` of 0).
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function moveRects(x:Float, y:Float, w:Float, h:Float, dx:Float, dy:Float, rects:Array<Float>, out:Array<Float>):Bool
 		return Raw.wgf_collide2d_move_rects(x, y, w, h, dx, dy, rects, out);
@@ -171,6 +195,8 @@ class Collide2d {
 	    Moves a box by dx, dy and slides it along the solids it meets.
 
 	    See Collide2d.moveRects for the rest.
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function moveCells(x:Float, y:Float, w:Float, h:Float, dx:Float, dy:Float, size:Float, cells:Array<Int>, columns:Int, out:Array<Float>):Bool
 		return Raw.wgf_collide2d_move_cells(x, y, w, h, dx, dy, size, cells, columns, out);

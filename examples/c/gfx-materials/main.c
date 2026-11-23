@@ -179,7 +179,7 @@ int main(void)
 {
     wgf_window_set_title("libwgf materials");
     wgf_window_set_size(1000, 700);
-    wgf_window_set_msaa(true);
+    wgf_window_set_flags(WGF_WINDOW_FLAG_MSAA);
     wgf_window_set_resizable(true);
     wgf_app_run(init, NULL, frame, NULL, NULL);
     return 0;

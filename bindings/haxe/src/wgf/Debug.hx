@@ -89,6 +89,8 @@ class Debug {
 	/**
 	    Copies the stopped recording's frame times, or their costs if `costs` is true, into `out`,
 	    oldest first. Writes at most `count`, and returns the number written.
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function getRecordedFrameTimes(out:Array<Float>, costs:Bool):Int
 		return Raw.wgf_debug_get_recorded_frame_times(out, costs);

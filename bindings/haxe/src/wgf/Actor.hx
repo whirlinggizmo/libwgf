@@ -219,6 +219,8 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	    set_positions sets each from `positions`: x, y, z in turn, `positions_count` floats. It
 	    skips a handle that isn't an actor. It returns false if there aren't three floats for each
 	    actor.
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function getPositions(actors:Array<Actor>, out:Array<Float>):Int
 		return Raw.wgf_actor_get_positions(cast actors, out);
@@ -469,6 +471,8 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	    `out` with as many as fit in `count`, and returns how many it filled. count_with_component
 	    returns how many there are, to size `out`. Each component is indexed, so neither call looks
 	    at every actor. NONE, or a value that isn't a component, finds none.
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function findWithComponent(component:Component, out:Array<Actor>):Int
 		return Raw.wgf_actor_find_with_component(component, cast out);
@@ -528,6 +532,8 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	    `out` with as many as fit in `count`, and returns how many it filled. count_with_behavior
 	    returns how many there are, to size `out`. An actor with two behaviors of that name counts
 	    once. Each name is indexed, so neither call looks at every actor.
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function findWithBehavior(name:String, out:Array<Actor>):Int
 		return Raw.wgf_actor_find_with_behavior(name, cast out);

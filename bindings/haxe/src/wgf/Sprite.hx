@@ -398,6 +398,8 @@ import wgf.impl.Raw;
 	    are gone, so a second call doesn't return them again. At most the last 16 are kept.
 
 	    Returns how many events it wrote, or 0 for a sprite with no sheet.
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function takeClipEvents(out:Array<Int>):Int
 		return Raw.wgf_sprite_take_clip_events(this, out);

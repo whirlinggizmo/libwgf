@@ -105,6 +105,10 @@ class Physics3d {
 
 	    Returns how many hits. Returns 0 for nothing hit, a direction of no length, a distance or
 	    radius not above 0, or no array.
+
+	    Here `actors` is an array, and its length is the count: size it first. An empty array is filled with nothing.
+
+	    Here `hits` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function castRay(x:Float, y:Float, z:Float, dx:Float, dy:Float, dz:Float, distance:Float, mask:Int, actors:Array<Actor>, hits:Array<Float>):Int
 		return Raw.wgf_physics3d_cast_ray(x, y, z, dx, dy, dz, distance, mask, cast actors, hits);
@@ -113,6 +117,10 @@ class Physics3d {
 	    Casts a ray or a sphere through the world, and returns what it hits.
 
 	    See Physics3d.castRay for the rest.
+
+	    Here `actors` is an array, and its length is the count: size it first. An empty array is filled with nothing.
+
+	    Here `hits` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function castSphere(x:Float, y:Float, z:Float, radius:Float, dx:Float, dy:Float, dz:Float, distance:Float, mask:Int, actors:Array<Actor>, hits:Array<Float>):Int
 		return Raw.wgf_physics3d_cast_sphere(x, y, z, radius, dx, dy, dz, distance, mask, cast actors, hits);
@@ -126,6 +134,8 @@ class Physics3d {
 	    The bodies go into `actors` in no order, as many as fit in `count`. Like the casts, these
 	    see the bodies as of their last tick, meet only those whose layer is in `mask` and never a
 	    sensor, and start physics. Returns 0 for none, a size not above 0, or no array.
+
+	    Here `actors` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function overlapSphere(x:Float, y:Float, z:Float, radius:Float, mask:Int, actors:Array<Actor>):Int
 		return Raw.wgf_physics3d_overlap_sphere(x, y, z, radius, mask, cast actors);
@@ -134,6 +144,8 @@ class Physics3d {
 	    Finds the bodies overlapping a sphere or a box, and returns how many.
 
 	    See Physics3d.overlapSphere for the rest.
+
+	    Here `actors` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function overlapBox(x:Float, y:Float, z:Float, width:Float, height:Float, depth:Float, mask:Int, actors:Array<Actor>):Int
 		return Raw.wgf_physics3d_overlap_box(x, y, z, width, height, depth, mask, cast actors);

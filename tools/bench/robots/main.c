@@ -170,8 +170,7 @@ int main(void)
     if (r.count < 1) r.count = 1;
     wgf_window_set_title("libwgf robots");
     wgf_window_set_size(WIDTH, HEIGHT);
-    wgf_window_set_vsync(false);
-    wgf_window_set_high_dpi(false);
+    wgf_window_set_flags(WGF_WINDOW_FLAG_VSYNC_OFF | WGF_WINDOW_FLAG_LOW_DPI);
     wgf_app_run(init, NULL, frame, NULL, NULL);
     return 0;
 }

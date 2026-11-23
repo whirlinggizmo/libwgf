@@ -58,9 +58,9 @@ static void on_init(void *user)
     run->inits++;
     run->started = wgf_time_get_seconds();
     run->nested_run_refused = !wgf_app_run(NULL, NULL, NULL, NULL, NULL);
-    run->open_options_refused = !wgf_window_set_vsync(false) && wgf_window_is_vsync() &&
-                                !wgf_window_set_msaa(false) && wgf_window_is_msaa() &&
-                                !wgf_window_set_high_dpi(false) && !wgf_window_set_transparent(true);
+    run->open_options_refused = !wgf_window_set_flags(WGF_WINDOW_FLAG_VSYNC_OFF | WGF_WINDOW_FLAG_TRANSPARENT) &&
+                                wgf_window_get_flags() == WGF_WINDOW_FLAG_MSAA && wgf_window_is_vsync() &&
+                                wgf_window_is_msaa() && wgf_window_get_msaa_samples() == 4;
     wgf_loop_set_tick_rate(50);
     wgf_loop_set_target_fps(30);
     run->samples = sg_query_desc().environment.defaults.sample_count;
@@ -150,9 +150,16 @@ int main(void)
     expect(strcmp(wgf_window_get_title(), "loop test") == 0, "the title reads back");
     wgf_window_set_title(NULL);
     expect(strcmp(wgf_window_get_title(), "") == 0, "a NULL title is empty");
-    expect(wgf_window_set_transparent(true) && wgf_window_is_transparent(), "transparent, before it opens");
-    wgf_window_set_transparent(false);
-    expect(wgf_window_is_vsync() && wgf_window_is_high_dpi(), "vsync and high DPI by default");
+    expect(wgf_window_get_flags() == WGF_WINDOW_FLAG_NONE && wgf_window_is_vsync() && wgf_window_is_high_dpi(),
+           "no flags, so vsync and high DPI, by default");
+    expect(wgf_window_set_flags(WGF_WINDOW_FLAG_TRANSPARENT | WGF_WINDOW_FLAG_VSYNC_OFF | WGF_WINDOW_FLAG_LOW_DPI) &&
+               wgf_window_is_transparent() && !wgf_window_is_vsync() && !wgf_window_is_high_dpi() &&
+               wgf_window_get_flags() ==
+                   (WGF_WINDOW_FLAG_TRANSPARENT | WGF_WINDOW_FLAG_VSYNC_OFF | WGF_WINDOW_FLAG_LOW_DPI),
+           "flags, before it opens");
+    expect(!wgf_window_set_flags(64) && wgf_window_is_transparent(), "a bit that isn't a flag is refused");
+    expect(wgf_window_set_flags(WGF_WINDOW_FLAG_NONE) && !wgf_window_is_transparent() && wgf_window_is_vsync(),
+           "set again, the flags replace the last");
     wgf_window_set_resizable(false);
     expect(!wgf_window_is_resizable() && wgf_window_is_decorated(), "resizable and decorated read back");
     expect(wgf_loop_get_tick_rate() == 60 && fabsf(wgf_loop_get_tick_delta() - 1.0f / 60.0f) < 1e-6f,
@@ -162,7 +169,9 @@ int main(void)
     wgf_loop_set_time_scale(1.0f);
     expect(wgf_loop_get_target_fps() == 0, "no frame cap by default");
     expect(wgf_app_can_quit(), "a headless program can quit");
-    expect(!wgf_window_is_msaa() && wgf_window_set_msaa(true) && wgf_window_is_msaa(), "MSAA asked for");
+    expect(!wgf_window_is_msaa() && wgf_window_get_msaa_samples() == 1, "no MSAA by default: 1 sample");
+    expect(wgf_window_set_flags(WGF_WINDOW_FLAG_MSAA) && wgf_window_is_msaa() && wgf_window_get_msaa_samples() == 4,
+           "MSAA asked for: 4 samples");
     expect(!wgf_window_set_position(1, 2) && wgf_window_get_x() == 0, "no position before the window opens");
 
     expect(!wgf_debug_is_fps_shown(), "the readout off by default");

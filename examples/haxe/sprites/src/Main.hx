@@ -38,7 +38,7 @@ class Main {
 
 	static function main() {
 		Window.setTitle("libwgf sprites (Haxe)");
-		Window.setMsaa(true);
+		Window.setFlags(WindowFlag.MSAA);
 		// The design size, fitted to any window or page. Natively, the window opens at it.
 		Presentation.set(PresentationMode.FIT, WIDTH, HEIGHT);
 		Runtime.run(init, null, frame, null);

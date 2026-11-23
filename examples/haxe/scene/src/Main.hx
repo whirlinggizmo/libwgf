@@ -35,7 +35,7 @@ class Main {
 		Window.setTitle("libwgf scene (Haxe)");
 		// The design size, fitted to any window or page. A desktop window opens at this size.
 		Presentation.set(PresentationMode.FIT, 800, 450);
-		Window.setMsaa(true);
+		Window.setFlags(WindowFlag.MSAA);
 		Runtime.run(init, null, frame, null);
 	}
 

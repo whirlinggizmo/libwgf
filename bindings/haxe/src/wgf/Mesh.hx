@@ -202,6 +202,8 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 	    Reads the corners of a mesh of one part.
 
 	    See Mesh.getVertexCount for the rest.
+
+	    Here `positions` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function getPositions(positions:Array<Float>):Int
 		return Raw.wgf_mesh_get_positions(this, positions);
@@ -210,6 +212,8 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 	    Reads the corners of a mesh of one part.
 
 	    See Mesh.getVertexCount for the rest.
+
+	    Here `normals` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function getNormals(normals:Array<Float>):Int
 		return Raw.wgf_mesh_get_normals(this, normals);
@@ -218,6 +222,8 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 	    Reads the corners of a mesh of one part.
 
 	    See Mesh.getVertexCount for the rest.
+
+	    Here `uvs` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function getUvs(uvs:Array<Float>):Int
 		return Raw.wgf_mesh_get_uvs(this, uvs);
@@ -226,6 +232,8 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 	    Reads the corners of a mesh of one part.
 
 	    See Mesh.getVertexCount for the rest.
+
+	    Here `colors` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function getColors(colors:Array<Float>):Int
 		return Raw.wgf_mesh_get_colors(this, colors);

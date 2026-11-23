@@ -135,6 +135,8 @@ import wgf.impl.Raw;
 	    - The direction is 0, or not finite (pick_ray only).
 
 	    It works outside a frame, with the stage as it is placed now.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function pick(x:Float, y:Float, hit:Array<Float>):Actor
 		return Raw.wgf_stage3d_pick(this, x, y, hit);
@@ -143,6 +145,8 @@ import wgf.impl.Raw;
 	    Returns the nearest actor on this stage that a ray meets.
 
 	    See Stage3d.pick for the rest.
+
+	    Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function pickRay(ox:Float, oy:Float, oz:Float, dx:Float, dy:Float, dz:Float, hit:Array<Float>):Actor
 		return Raw.wgf_stage3d_pick_ray(this, ox, oy, oz, dx, dy, dz, hit);

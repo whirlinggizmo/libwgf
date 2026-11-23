@@ -239,6 +239,12 @@ class Binding:
                 out[f.name] = doc
             else:
                 out[f.name] = f'{paragraphs[0]}\n\nSee {name_of(first) if name_of else first} for the rest.'
+            if f.name not in SKIPPED and f.exported:
+                # the count the C doc speaks of is the array's length here, which an empty array hides
+                for kind, name, _, _ in self.params_of(f):
+                    if kind == 'array_out':
+                        out[f.name] += (f'\n\nHere `{name}` is an array, and its length is the count: size it first. '
+                                        f'An empty array is filled with nothing.')
         return out
 
     def haxe_name(self, cname):

@@ -28,7 +28,7 @@ class Main {
 		Window.setTitle("libwgf screens (Haxe)");
 		// The design size, fitted to any window or page. A desktop window opens at this size.
 		Presentation.set(PresentationMode.FIT, WIDTH, HEIGHT);
-		Window.setMsaa(true);
+		Window.setFlags(WindowFlag.MSAA);
 		Runtime.run(init, null, frame, null);
 	}
 

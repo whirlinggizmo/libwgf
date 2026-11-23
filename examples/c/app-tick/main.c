@@ -83,7 +83,7 @@ int main(void)
 {
     wgf_window_set_title("libwgf tick");
     wgf_window_set_size(WIDTH, HEIGHT);
-    wgf_window_set_msaa(true);
+    wgf_window_set_flags(WGF_WINDOW_FLAG_MSAA);
     wgf_debug_show_fps(0, 20, HEIGHT - 30, 16.0f, wgf_color_make(0, 255, 0, 255)); /* libwgt's draw_fps */
     wgf_app_run(init, tick, frame, NULL, NULL);
     return 0;

@@ -17,6 +17,8 @@ class World {
 	    Returns how many events wait, or takes the oldest off the queue.
 
 	    See World.getEventCount for the rest.
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function takeEvents(out:Array<Int>):Int
 		return Raw.wgf_world_take_events(out);

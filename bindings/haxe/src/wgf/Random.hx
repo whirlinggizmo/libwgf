@@ -52,6 +52,8 @@ class Random {
 	/**
 	    Shuffles the `count` numbers in `values` into a random order, each order equally likely,
 	    such as for a deck of cards or a bag of pieces. Returns how many were shuffled.
+
+	    Here `values` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function shuffle(values:Array<Int>):Int
 		return Raw.wgf_random_shuffle(values);
@@ -116,6 +118,8 @@ class Random {
 	/**
 	    Returns a generator's next numbers, as the program's calls above do, and shuffles as
 	    wgf_random_shuffle does. Each returns 0 for a handle that isn't a generator.
+
+	    Here `values` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public static inline function nextShuffle(generator:Generator, values:Array<Int>):Int
 		return Raw.wgf_random_next_shuffle(generator, values);

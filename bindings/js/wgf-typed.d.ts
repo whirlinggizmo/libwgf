@@ -364,6 +364,8 @@ export declare const Actor: {
      * set_positions sets each from `positions`: x, y, z in turn, `positions_count` floats. It
      * skips a handle that isn't an actor. It returns false if there aren't three floats for each
      * actor.
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly getPositions: typeof raw.wgf_actor_get_positions;
     /**
@@ -568,6 +570,8 @@ export declare const Actor: {
      * `out` with as many as fit in `count`, and returns how many it filled. count_with_component
      * returns how many there are, to size `out`. Each component is indexed, so neither call looks
      * at every actor. NONE, or a value that isn't a component, finds none.
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly findWithComponent: typeof raw.wgf_actor_find_with_component;
     /**
@@ -613,6 +617,8 @@ export declare const Actor: {
      * `out` with as many as fit in `count`, and returns how many it filled. count_with_behavior
      * returns how many there are, to size `out`. An actor with two behaviors of that name counts
      * once. Each name is indexed, so neither call looks at every actor.
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly findWithBehavior: typeof raw.wgf_actor_find_with_behavior;
     /**
@@ -2105,30 +2111,42 @@ export declare const Camera3d: {
 export declare const Collide2d: {
     /**
      * Overlap tests. Each returns true if its two shapes overlap, and fills `hit`.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly rectRect: typeof raw.wgf_collide2d_rect_rect;
     /**
      * Overlap tests. Each returns true if its two shapes overlap, and fills `hit`.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly circleCircle: typeof raw.wgf_collide2d_circle_circle;
     /**
      * Overlap tests. Each returns true if its two shapes overlap, and fills `hit`.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly circleRect: typeof raw.wgf_collide2d_circle_rect;
     /**
      * Tests a circle against the segment from x0, y0 to x1, y1, such as a wall or a slope.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly circleSegment: typeof raw.wgf_collide2d_circle_segment;
     /**
      * Tests a circle against a polygon.
      *
      * The polygon may be convex or not, as long as its edges don't cross.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly circlePolygon: typeof raw.wgf_collide2d_circle_polygon;
     /**
      * Tests two convex polygons against each other, by the separating axis theorem.
      *
      * Either polygon may be a segment of two points. The hit's point is always 0, 0.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly polygonPolygon: typeof raw.wgf_collide2d_polygon_polygon;
     /**
@@ -2163,6 +2181,8 @@ export declare const Collide2d: {
      *
      * Only a true crossing counts: touching, or lying along b, doesn't. The hit holds the time
      * along a, the point, and b's normal, facing a's start.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly segmentSegment: typeof raw.wgf_collide2d_segment_segment;
     /**
@@ -2170,12 +2190,16 @@ export declare const Collide2d: {
      *
      * The ray is dx, dy long: time 1 is its end. The hit holds the time, the point, and the
      * normal.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly rayRect: typeof raw.wgf_collide2d_ray_rect;
     /**
      * Casts a ray from ox, oy along dx, dy against a rectangle or a circle.
      *
      * See Collide2d.rayRect for the rest.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly rayCircle: typeof raw.wgf_collide2d_ray_circle;
     /**
@@ -2183,12 +2207,16 @@ export declare const Collide2d: {
      *
      * The hit holds the time, the moving shape's top-left (for a circle, its center) at that
      * time, and the normal. If they already overlap, the time is 0 and there is no normal.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly sweepRectRect: typeof raw.wgf_collide2d_sweep_rect_rect;
     /**
      * Sweeps a rectangle, or a circle, by dx, dy, and tests whether it meets another on the way.
      *
      * See Collide2d.sweepRectRect for the rest.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly sweepCircleCircle: typeof raw.wgf_collide2d_sweep_circle_circle;
     /**
@@ -2210,12 +2238,16 @@ export declare const Collide2d: {
      *   0, 0. Outside the grid is open.
      *
      * Returns false if there is no `out` (NULL, or an `out_count` of 0).
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly moveRects: typeof raw.wgf_collide2d_move_rects;
     /**
      * Moves a box by dx, dy and slides it along the solids it meets.
      *
      * See Collide2d.moveRects for the rest.
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly moveCells: typeof raw.wgf_collide2d_move_cells;
 };
@@ -2252,18 +2284,24 @@ export declare const Collide3d: {
      * Overlap tests: two boxes, two spheres, or a sphere and a box.
      *
      * Touching doesn't count as overlapping.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly boxBox: typeof raw.wgf_collide3d_box_box;
     /**
      * Overlap tests: two boxes, two spheres, or a sphere and a box.
      *
      * See Collide3d.boxBox for the rest.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly sphereSphere: typeof raw.wgf_collide3d_sphere_sphere;
     /**
      * Overlap tests: two boxes, two spheres, or a sphere and a box.
      *
      * See Collide3d.boxBox for the rest.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly sphereBox: typeof raw.wgf_collide3d_sphere_box;
     /**
@@ -2275,18 +2313,24 @@ export declare const Collide3d: {
      *   wants a segment keeps only a time of 1 or less.
      *
      * Returns false if the ray meets none.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly raySphere: typeof raw.wgf_collide3d_ray_sphere;
     /**
      * Casts a ray against a sphere, a box, or a triangle, and finds where it first meets it.
      *
      * See Collide3d.raySphere for the rest.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly rayBox: typeof raw.wgf_collide3d_ray_box;
     /**
      * Casts a ray against a sphere, a box, or a triangle, and finds where it first meets it.
      *
      * See Collide3d.raySphere for the rest.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly rayTriangle: typeof raw.wgf_collide3d_ray_triangle;
 };
@@ -2375,6 +2419,8 @@ export declare const Collider: {
      * Returns the collider's shape, and a polygon's or a segment's points.
      *
      * See Collider.getShape for the rest.
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly getPoints: typeof raw.wgf_collider_get_points;
     /**
@@ -2434,6 +2480,8 @@ export declare const Collider: {
     /**
      * Fills `out` with the actors whose colliders this one overlaps as of the last tick, as many
      * as fit in `count`. Returns how many it filled.
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly getOverlaps: typeof raw.wgf_collider_get_overlaps;
     /**
@@ -2672,6 +2720,8 @@ export declare const Debug: {
     /**
      * Copies the stopped recording's frame times, or their costs if `costs` is true, into `out`,
      * oldest first. Writes at most `count`, and returns the number written.
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly getRecordedFrameTimes: typeof raw.wgf_debug_get_recorded_frame_times;
 };
@@ -2826,6 +2876,8 @@ export declare const Document: {
      * taken.
      *
      * See Document.getEventCount for the rest.
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly takeEvents: typeof raw.wgf_document_take_events;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
@@ -6555,24 +6607,32 @@ export declare const Mesh: {
      * Reads the corners of a mesh of one part.
      *
      * See Mesh.getVertexCount for the rest.
+     *
+     * Here `positions` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly getPositions: typeof raw.wgf_mesh_get_positions;
     /**
      * Reads the corners of a mesh of one part.
      *
      * See Mesh.getVertexCount for the rest.
+     *
+     * Here `normals` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly getNormals: typeof raw.wgf_mesh_get_normals;
     /**
      * Reads the corners of a mesh of one part.
      *
      * See Mesh.getVertexCount for the rest.
+     *
+     * Here `uvs` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly getUvs: typeof raw.wgf_mesh_get_uvs;
     /**
      * Reads the corners of a mesh of one part.
      *
      * See Mesh.getVertexCount for the rest.
+     *
+     * Here `colors` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly getColors: typeof raw.wgf_mesh_get_colors;
     /**
@@ -7051,6 +7111,8 @@ export declare const Model: {
      *
      * Returns false for a miss, a handle that isn't a model, a mesh that isn't READY, or a
      * direction of 0 or not finite.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly pickRay: typeof raw.wgf_model_pick_ray;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
@@ -7292,12 +7354,20 @@ export declare const Physics3d: {
      *
      * Returns how many hits. Returns 0 for nothing hit, a direction of no length, a distance or
      * radius not above 0, or no array.
+     *
+     * Here `actors` is an array, and its length is the count: size it first. An empty array is filled with nothing.
+     *
+     * Here `hits` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly castRay: typeof raw.wgf_physics3d_cast_ray;
     /**
      * Casts a ray or a sphere through the world, and returns what it hits.
      *
      * See Physics3d.castRay for the rest.
+     *
+     * Here `actors` is an array, and its length is the count: size it first. An empty array is filled with nothing.
+     *
+     * Here `hits` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly castSphere: typeof raw.wgf_physics3d_cast_sphere;
     /**
@@ -7309,12 +7379,16 @@ export declare const Physics3d: {
      * The bodies go into `actors` in no order, as many as fit in `count`. Like the casts, these
      * see the bodies as of their last tick, meet only those whose layer is in `mask` and never a
      * sensor, and start physics. Returns 0 for none, a size not above 0, or no array.
+     *
+     * Here `actors` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly overlapSphere: typeof raw.wgf_physics3d_overlap_sphere;
     /**
      * Finds the bodies overlapping a sphere or a box, and returns how many.
      *
      * See Physics3d.overlapSphere for the rest.
+     *
+     * Here `actors` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly overlapBox: typeof raw.wgf_physics3d_overlap_box;
 };
@@ -7628,6 +7702,8 @@ export declare const Random: {
     /**
      * Shuffles the `count` numbers in `values` into a random order, each order equally likely,
      * such as for a deck of cards or a bag of pieces. Returns how many were shuffled.
+     *
+     * Here `values` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly shuffle: typeof raw.wgf_random_shuffle;
     /**
@@ -7676,6 +7752,8 @@ export declare const Random: {
     /**
      * Returns a generator's next numbers, as the program's calls above do, and shuffles as
      * wgf_random_shuffle does. Each returns 0 for a handle that isn't a generator.
+     *
+     * Here `values` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly nextShuffle: typeof raw.wgf_random_next_shuffle;
 };
@@ -8597,6 +8675,8 @@ export declare const Shape2d: {
      * Returns what was set.
      *
      * See Shape2d.getSize for the rest.
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly getPoints: typeof raw.wgf_shape2d_get_points;
     /**
@@ -8735,6 +8815,8 @@ export declare const Shape3d: {
      * Makes the shape a line strip, or gets its points.
      *
      * See Shape3d.setLineStrip for the rest.
+     *
+     * Here `points` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly getPoints: typeof raw.wgf_shape3d_get_points;
     /**
@@ -9440,6 +9522,8 @@ export declare const Sprite: {
      * are gone, so a second call doesn't return them again. At most the last 16 are kept.
      *
      * Returns how many events it wrote, or 0 for a sprite with no sheet.
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly takeClipEvents: typeof raw.wgf_sprite_take_clip_events;
     /**
@@ -9536,6 +9620,8 @@ export declare const SpriteBatch: {
      * the batch's units.
      *
      * See SpriteBatch.setPositions for the rest.
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly getPositions: typeof raw.wgf_sprite_batch_get_positions;
     /**
@@ -9550,6 +9636,8 @@ export declare const SpriteBatch: {
      * Sets or gets the quads' sizes, as width and height in turn, in the same way as positions.
      *
      * See SpriteBatch.setSizes for the rest.
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly getSizes: typeof raw.wgf_sprite_batch_get_sizes;
     /**
@@ -9562,6 +9650,8 @@ export declare const SpriteBatch: {
      * Sets or gets the quads' turns about their pivots, in radians. There is one float a quad
      * (`count` floats, for `count` quads). On a 2D stage they turn clockwise, as an actor's turn
      * does.
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly getRotations: typeof raw.wgf_sprite_batch_get_rotations;
     /**
@@ -9579,6 +9669,8 @@ export declare const SpriteBatch: {
      * from the top-left.
      *
      * See SpriteBatch.setRegions for the rest.
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly getRegions: typeof raw.wgf_sprite_batch_get_regions;
     /**
@@ -9589,6 +9681,8 @@ export declare const SpriteBatch: {
     /**
      * Sets or gets the quads' tints, one a quad (`count` quads). Each is a wgf_color_t
      * (0xRRGGBBAA) as an int.
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly getTints: typeof raw.wgf_sprite_batch_get_tints;
     /**
@@ -9726,6 +9820,8 @@ export declare const Stage2d: {
      *
      * Returns the actor hit. Returns 0 if nothing is hit, or if `stage` isn't a 2D stage. It works
      * outside a frame, with the stage as it is placed now.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly pick: typeof raw.wgf_stage2d_pick;
     /**
@@ -9859,12 +9955,16 @@ export declare const Stage3d: {
      * - The direction is 0, or not finite (pick_ray only).
      *
      * It works outside a frame, with the stage as it is placed now.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly pick: typeof raw.wgf_stage3d_pick;
     /**
      * Returns the nearest actor on this stage that a ray meets.
      *
      * See Stage3d.pick for the rest.
+     *
+     * Here `hit` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly pickRay: typeof raw.wgf_stage3d_pick_ray;
     /**
@@ -10212,7 +10312,7 @@ export declare const Texture: {
      * - You draw into it between wgf_render_begin_target and wgf_render_end_target
      *   (wgf_render.h).
      * - You then use it as any texture: drawn (wgf_draw_texture), on a sprite, or on a material.
-     * - It has the screen's pixel format and samples (wgf_window_set_msaa), and a depth buffer of
+     * - It has the screen's pixel format and samples (wgf_window_get_msaa_samples), and a depth buffer of
      *   its own, so whatever draws to the screen draws into it.
      * - It has no mipmaps.
      * - It is made from numbers: READY at once, with no path.
@@ -10687,6 +10787,8 @@ export declare const Tilemap: {
      * get_object_points writes x and y in turn into `out`, as many as fit in `count` floats. It
      * returns how many floats it filled, or 0 for another shape. get_object_point_count returns
      * how many points the object has.
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly getObjectPoints: typeof raw.wgf_tilemap_get_object_points;
     /**
@@ -10948,6 +11050,8 @@ export declare const TilemapLayer: {
      * game saves of a layer it changed.
      *
      * The cells are written into `out`, as many as fit in `count`. Returns how many it filled.
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly getCells: typeof raw.wgf_tilemap_layer_get_cells;
     /**
@@ -12948,64 +13052,56 @@ export declare const Window: {
      */
     readonly setIcon: typeof raw.wgf_window_set_icon;
     /**
-     * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
+     * Sets or gets the options fixed when the window opens (default: WGF_WINDOW_FLAG_NONE).
      *
-     *   transparent  what is behind the window shows through where gfx clears with
-     *                alpha below 1 (default: off). Desktop: where the window system
-     *                allows it. Web: the page under the canvas shows
-     *   high_dpi     draw at the display's full density (default: on). Off draws one
-     *                pixel per logical pixel, scaled up by the display: fewer pixels,
-     *                softer edges
-     *   vsync        wait for the display between frames (default: on). Off runs as
-     *                fast as it can, or at the target fps. The web is always in step
-     *                with the display
-     *   msaa         smooth edges by drawing with 4 samples a pixel (default: off). It
-     *                is a request, and a platform may give fewer samples. gfx draws
-     *                with what the window got
+     * Call it before wgf_app_run, with every flag wanted: it replaces the flags set before.
+     *
+     *   TRANSPARENT  Desktop: where the window system allows it. Web: the page under the canvas
+     *                shows.
+     *   MSAA         A request. A platform may give fewer samples, and gfx draws with what the
+     *                window got (wgf_window_get_msaa_samples).
+     *   VSYNC_OFF    Frames run as fast as they can, or at the target fps. The web is always in
+     *                step with the display.
+     *   LOW_DPI      Fewer pixels and softer edges. Without it, drawing is at the display's full
+     *                density.
+     *
+     * Returns false, changing nothing, once the window has opened (logged), or for a bit that
+     * isn't a flag.
      */
-    readonly setTransparent: typeof raw.wgf_window_set_transparent;
+    readonly setFlags: typeof raw.wgf_window_set_flags;
     /**
-     * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
+     * Sets or gets the options fixed when the window opens (default: WGF_WINDOW_FLAG_NONE).
      *
-     * See Window.setTransparent for the rest.
+     * See Window.setFlags for the rest.
+     */
+    readonly getFlags: typeof raw.wgf_window_get_flags;
+    /**
+     * Returns each open flag's answer: transparent, drawing at full density, in step with the
+     * display, and MSAA asked for.
      */
     readonly isTransparent: typeof raw.wgf_window_is_transparent;
     /**
-     * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
-     *
-     * See Window.setTransparent for the rest.
-     */
-    readonly setHighDpi: typeof raw.wgf_window_set_high_dpi;
-    /**
-     * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
-     *
-     * See Window.setTransparent for the rest.
+     * Returns each open flag's answer: transparent, drawing at full density, in step with the
+     * display, and MSAA asked for.
      */
     readonly isHighDpi: typeof raw.wgf_window_is_high_dpi;
     /**
-     * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
-     *
-     * See Window.setTransparent for the rest.
-     */
-    readonly setVsync: typeof raw.wgf_window_set_vsync;
-    /**
-     * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
-     *
-     * See Window.setTransparent for the rest.
+     * Returns each open flag's answer: transparent, drawing at full density, in step with the
+     * display, and MSAA asked for.
      */
     readonly isVsync: typeof raw.wgf_window_is_vsync;
     /**
-     * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
-     *
-     * See Window.setTransparent for the rest.
-     */
-    readonly setMsaa: typeof raw.wgf_window_set_msaa;
-    /**
-     * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
-     *
-     * See Window.setTransparent for the rest.
+     * Returns each open flag's answer: transparent, drawing at full density, in step with the
+     * display, and MSAA asked for.
      */
     readonly isMsaa: typeof raw.wgf_window_is_msaa;
+    /**
+     * Returns how many samples a pixel the window draws with: 1 without MSAA.
+     *
+     * Before the window opens, it is what was asked for (4 with WGF_WINDOW_FLAG_MSAA). Once open,
+     * it is what the window got, which may be fewer.
+     */
+    readonly getMsaaSamples: typeof raw.wgf_window_get_msaa_samples;
     /**
      * Opens `url` in the system's browser, such as a store page or the credits' links.
      *
@@ -13132,6 +13228,8 @@ export declare const World: {
      * Returns how many events wait, or takes the oldest off the queue.
      *
      * See World.getEventCount for the rest.
+     *
+     * Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
      */
     readonly takeEvents: typeof raw.wgf_world_take_events;
     /**
@@ -13300,6 +13398,8 @@ export type UiWidget = raw.wgf_ui_widget_t;
 export declare const UiWidget: { readonly PANEL: UiWidget; readonly BUTTON: UiWidget; readonly TOGGLE: UiWidget; readonly CHECKBOX: UiWidget; readonly SLIDER: UiWidget; readonly PROGRESS: UiWidget; readonly GROUP: UiWidget; readonly TAB: UiWidget; readonly COMBO: UiWidget; readonly NUMBER: UiWidget; readonly TILE: UiWidget; readonly SCROLL: UiWidget; readonly LIST: UiWidget; readonly DROPDOWN: UiWidget; readonly POPUP: UiWidget; readonly TEXT: UiWidget; };
 export type VehicleDrive = raw.wgf_vehicle_drive_t;
 export declare const VehicleDrive: { readonly FRONT: VehicleDrive; readonly REAR: VehicleDrive; readonly ALL: VehicleDrive; };
+export type WindowFlag = raw.wgf_window_flag_t;
+export declare const WindowFlag: { readonly NONE: WindowFlag; readonly TRANSPARENT: WindowFlag; readonly MSAA: WindowFlag; readonly VSYNC_OFF: WindowFlag; readonly LOW_DPI: WindowFlag; };
 export type WindowOrientation = raw.wgf_window_orientation_t;
 export declare const WindowOrientation: { readonly ANY: WindowOrientation; readonly LANDSCAPE: WindowOrientation; readonly PORTRAIT: WindowOrientation; };
 export type WindowOs = raw.wgf_window_os_t;

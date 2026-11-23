@@ -106,6 +106,8 @@ import wgf.impl.Raw;
 	    Returns the collider's shape, and a polygon's or a segment's points.
 
 	    See Collider.getShape for the rest.
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function getPoints(out:Array<Float>):Int
 		return Raw.wgf_collider_get_points(this, out);
@@ -183,6 +185,8 @@ import wgf.impl.Raw;
 	/**
 	    Fills `out` with the actors whose colliders this one overlaps as of the last tick, as many
 	    as fit in `count`. Returns how many it filled.
+
+	    Here `out` is an array, and its length is the count: size it first. An empty array is filled with nothing.
 	**/
 	public inline function getOverlaps(out:Array<Actor>):Int
 		return Raw.wgf_collider_get_overlaps(this, cast out);
