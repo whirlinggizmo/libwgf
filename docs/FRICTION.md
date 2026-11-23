@@ -867,3 +867,174 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 
 - **Found by:** the racer's session (its S1, S6, S7)
 - **Triage:** fine as built. A shader's errors cite the game's file and line, the export and the stream carry a packed shader as any asset, and an effect is skipped until its shader is READY; a custom material's parameters set before its shader loads are kept; part 7's two fixes held (no emitter warm-up, the stream check's worst frame 9.2 to 11.2 ms; the smoke's curves as scene keys). The mirror's cost is how far its camera sees, not its pixels: 120 m adds about 0.5 ms of median, the default 1000 m put the 95th percentile past the budget
+
+### examples: JS has no behavior class
+
+- **Where:** every JS example with behaviors, screens, or trigger events (examples/js/behaviors/behaviors.js, screens/screens.js, physics/main.js, scene/main.js)
+- **Missing:** The Haxe binding has `wgf.Behavior`: subclasses, registered by name, run by the runtime, with tick, frame, trigger, contact, and screen callbacks. The JS binding has nothing like it. Each JS program polls `World.takeEvents` itself, in its tick and its frame, and unsigns the handles (`>>> 0`).
+- **Workaround:** Each example carries its own module (109 lines in behaviors, on top of Asteroids' 127). They already differ from each other and from Haxe's: no skip of frozen actors, no contact or screen events in some.
+- **Cost:** The JS behaviors example is about 330 lines where Haxe's is 240, and four of eight topics read differently in the two languages. Reported by four agents independently.
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**
+
+### examples: Window.setSize with a presentation fixes the canvas on the web
+
+- **Where:** every example at first (they copied hello, which called Window.setSize)
+- **Missing:** With `Window.setSize` called, the web canvas keeps that size. A `Presentation.set(FIT, ...)` then draws unscaled in the page's top-left, cut off on a smaller page. `wgf_window.h` says so, but `hello` and `wgf new`'s neighbours are what people copy.
+- **Workaround:** The examples now set a design size through the presentation alone, with a comment saying why.
+- **Cost:** Five of the eight examples shipped their first screenshots cropped, and seven of eight agents didn't notice.
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**
+
+### examples: generated docs repeat a group's comment on every member
+
+- **Where:** bindings/haxe/src/wgf/Model.hx and every other generated type
+- **Missing:** One header comment often documents a group of calls ("Sets or gets ...", or a table for a whole family). The bindings copy it onto each member. `Model.hx` repeats a 60-line animation block on every animation call.
+- **Workaround:** none: the reader scrolls
+- **Cost:** Hard to look up one call in the Haxe or `.d.ts` file. The API site already shows "see <first call>, above" in these cases.
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**
+
+### examples: Haxe views don't convert to each other
+
+- **Where:** anywhere an actor made in code needs two views: examples/haxe/behaviors/src/Ball.hx, physics/src/Main.hx
+- **Missing:** `(shape : Motion)` fails when `shape` is a `Shape2d`, and a `Model` doesn't convert to `Body3d`: each view converts from and to `Actor` only, and Haxe won't chain two conversions.
+- **Workaround:** Keep the handle typed `Actor` and cast to each view at each use.
+- **Cost:** The first compile error anyone building actors in code will meet. Reported by two agents.
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**
+
+### examples: the UI's grid doesn't align columns
+
+- **Where:** examples/haxe/ui/src/Main.hx, the settings form
+- **Missing:** `Ui.beginGrid(id, 2)` wraps its children into rows of two, but columns don't line up across rows, and the grid's alignment doesn't reach the rows it makes. A label-and-widget form comes out ragged, with each label at the top of a taller widget. The header's "laid out in rows of `columns`" reads like a real grid.
+- **Workaround:** The example builds each row itself: a row box, with the label in a fixed-width column box.
+- **Cost:** A settings form is the first UI most games build.
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**
+
+### examples: the text field doesn't take and return its value
+
+- **Where:** examples/haxe/ui/src/Main.hx
+- **Missing:** Every other value widget is `value = Ui.widget(id, value, ...)`. `Ui.textField(id, placeholder, max)` takes no value and returns whether Enter was pressed; its text is kept by the UI under its id (`Ui.getText`, `Ui.setText`).
+- **Workaround:** The example reads the text back with `Ui.getText`, with a comment.
+- **Cost:** One widget that breaks the pattern the rest teach.
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**
+
+### examples: a choice's chosen option is hard to see
+
+- **Where:** the default UI style
+- **Missing:** In the default style, the chosen option of a choice or tab row is drawn only slightly darker than the others.
+- **Workaround:** none
+- **Cost:** In the UI example's screenshot the chosen "Normal" can't be told from "Easy" and "Hard".
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**
+
+### examples: a modal has no built-in cancel
+
+- **Where:** examples/haxe/ui/src/Main.hx
+- **Missing:** A dropdown closes on Escape or the pad's east button. A modal doesn't: the game handles Escape itself.
+- **Workaround:** The example checks Escape while the modal is open.
+- **Cost:** A few lines in every game with a modal, and an inconsistency between two popups.
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**
+
+### examples: a rectangle shape is anchored top-left, its collider centered
+
+- **Where:** examples/haxe/scene/assets/level.scene
+- **Missing:** A `shape2d rectangle` draws from its top-left by default, while a rectangle collider and an arcade body are centered on the actor. In a scene file every rectangle needs `pivot=0.5,0.5` to line up with its collider.
+- **Workaround:** `pivot=0.5,0.5` on every rectangle in the scene.
+- **Cost:** Easy to miss, and a shape that visibly doesn't match its collider.
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**
+
+### examples: findWithBehavior needs an array already sized (JS)
+
+- **Where:** examples/js/scene/main.js
+- **Missing:** `Actor.findWithBehavior(name, out)` fills as many as `out` is long, so `[]` gets nothing, silently. The same holds for `Physics3d.castRay`'s `actors`. The typed layer's docs only say "as many as fit in `count`".
+- **Workaround:** `new Array(Actor.countWithBehavior(name)).fill(0)`.
+- **Cost:** A silent empty result. Reported by two agents.
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**
+
+### examples: Bus.create is a method of its parent (Haxe)
+
+- **Where:** bindings/haxe/src/wgf/Bus.hx
+- **Missing:** `wgf_bus_create(parent)` takes a bus first, so the binding makes it an instance method: `parent.create()`, which reads as making another of the same bus. JS has `Bus.create(parent)`.
+- **Workaround:** none taken: the example uses the built-in buses
+- **Cost:** A misleading name on the call that makes a bus.
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**
+
+### examples: nothing says whether the browser has turned sound on
+
+- **Where:** examples/haxe/audio/src/Main.hx
+- **Missing:** Before the page's first input a voice reads PLAYING and is silent, its position still. There is no call that says whether sound is unlocked yet.
+- **Workaround:** The example says so in its help text, always.
+- **Cost:** A game can't show "click to enable sound" only when it is true.
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**
+
+### examples: a number tween doesn't freeze with its screen
+
+- **Where:** examples/haxe/screens/src/Play.hx
+- **Missing:** A tween on an actor freezes when its actor is frozen. A number tween has no actor, so it runs on under a pause. Neither `wgf_screen.h` nor `wgf_tween.h` says so.
+- **Workaround:** The example pauses and resumes it by hand in the screen's exit and enter.
+- **Cost:** A value that drifts while the game is paused, found only by reading wgf_ecs_tween.c.
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**
+
+### examples: destroying a finished tween warns
+
+- **Where:** examples/haxe/screens
+- **Missing:** `Tween.destroy` on a tween that has finished logs "handle ... is dead", though the header says it does nothing for a handle that isn't a tween.
+- **Workaround:** Check `isAlive()` first.
+- **Cost:** A warning in the log for the natural "stop the last one if it still runs".
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**
+
+### examples: no way to ask whether a body is at rest
+
+- **Where:** examples/haxe/physics/src/Main.hx
+- **Missing:** `Body3d` has no is-asleep or is-active call, so "the pile has settled" means polling every body's velocity. The default damping also kept a rolling sphere from ever reading still.
+- **Workaround:** Poll `getVelocity` on each body against a threshold, with the spheres' damping raised.
+- **Cost:** A loop over every body each frame for a common question.
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**
+
+### examples: three ways to tell a model has loaded
+
+- **Where:** examples/c/gfx-model, gfx-skinning, examples/haxe/model
+- **Missing:** The examples test the mesh's resource status, the model's child count, and its animation count. The headers don't say which a game should use.
+- **Workaround:** The new example uses the resource status.
+- **Cost:** Three idioms for one question.
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**
+
+### examples: bounds have no bounce
+
+- **Where:** examples/haxe/behaviors
+- **Missing:** `WGF_COMPONENT_BOUNDS` wraps, clamps, or destroys. A ball that bounces off the screen's edge needs clamp and a behavior that reflects the velocity.
+- **Workaround:** The example wraps instead.
+- **Cost:** A common arcade behavior left to each game.
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**
+
+### examples: no call brings an actor to the front
+
+- **Where:** examples/haxe/sprites/src/Player.hx
+- **Missing:** Drawing order is the child index. To the front is `setIndex(actor, <a large number>)`, relying on the clamp.
+- **Workaround:** `setIndex(1000)`.
+- **Cost:** Reads as a trick.
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**
+
+### examples: small things
+
+- **Where:** several examples
+- **Missing:** (a) `Scene.getActorCount` (the file's top actors) and `Actor.getCount` (simulated actors) are easy to confuse, and a text-only actor is in neither. (b) `voice.getSound()` returns the voice's own reference, easy to release by mistake. (c) Stick y running down is documented in `wgf_gamepad.h` only, not where actions are bound. (d) `Ui.number` works in floats, so a whole-number setting needs `Std.int` in Haxe. (e) Reaching a behavior's object in Haxe is `cast Behavior.of(actor, "Name")`, with no typed lookup. (f) Pressing play on a paused animation resumes it silently. (g) A behavior on a frozen actor gets no `onFrame`, said only in a comment on `tickAll`. (h) Loading a 1.6 MB glTF file took about 470 frames headless, 190 in a browser.
+- **Workaround:** each worked around in its example
+- **Cost:** Minor, each. Listed so none is lost.
+- **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
+- **Triage:**

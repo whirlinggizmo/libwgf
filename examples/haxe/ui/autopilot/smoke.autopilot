@@ -1,0 +1,29 @@
+wgf-autopilot 1
+# A smoke run: the keys move the focus and change values, then the mouse presses Apply,
+# and Reset, and the modal's Yes puts the values back.
+at 10 expect ui.volume == 50
+at 20 key tap tab                 # the first press focuses the first widget
+at 21 expect ui.focus == "volume"
+at 30 key tap right               # a twentieth of the slider's range
+at 32 expect ui.volume == 55
+at 40 key tap tab
+at 41 expect ui.focus == "sound"
+at 50 key tap space               # turns the toggle off
+at 52 expect ui.sound == 0
+at 60 key tap tab
+at 70 key tap right               # Normal to Hard
+at 72 expect ui.difficulty == 2
+at 80 mouse move 294 463          # over Apply
+at 90 mouse click left
+at 95 expect ui.clicks == 1
+at 95 expect ui.focus == "apply"
+at 100 mouse move 506 463         # over Reset...
+at 110 mouse click left
+at 115 expect ui.modal == 1
+at 115 expect ui.focus == "yes"   # a modal focuses its first widget
+at 120 key tap enter
+at 125 expect ui.modal == 0
+at 125 expect ui.volume == 50
+at 125 expect ui.sound == 1
+at 125 expect ui.focus == "reset" # the focus goes back
+at 150 end

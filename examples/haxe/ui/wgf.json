@@ -1,0 +1,9 @@
+{
+	"name": "ui",
+	"title": "libwgf ui (Haxe)",
+	"main": "Main",
+	"source": "src",
+	"assets": "assets",
+	"autopilot": "autopilot",
+	"playthrough": "smoke.autopilot"
+}

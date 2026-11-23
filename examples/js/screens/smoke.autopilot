@@ -1,0 +1,24 @@
+wgf-autopilot 1
+# A smoke run: title, play, pause and resume, back to the title, play by a click, then a pause
+# left by Escape. Each screen is checked in turn, and play is checked frozen under the pause.
+at 20 expect screens.current == 0
+at 80 expect screens.heading_y >= 119
+at 80 key tap enter
+at 120 expect screens.current == 1
+at 120 expect screens.paused == 0
+at 125 expect screens.charge > 0
+at 130 key tap p
+at 135 expect screens.current == 2
+at 135 expect screens.paused == 1
+at 170 expect screens.drift == 0
+at 175 key tap p
+at 180 expect screens.current == 1
+at 180 expect screens.paused == 0
+at 190 key tap escape
+at 230 expect screens.current == 0
+at 240 mouse click left
+at 280 expect screens.current == 1
+at 290 key tap p
+at 300 key tap escape
+at 340 expect screens.current == 0
+at 345 end

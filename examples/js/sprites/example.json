@@ -1,0 +1,4 @@
+{
+ "assets": "examples/js/sprites/assets",
+ "autopilot": "examples/js/sprites/smoke.autopilot"
+}

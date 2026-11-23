@@ -1,0 +1,8 @@
+wgf-autopilot 1
+# A smoke run: four seconds of the scene, no input. The program seeds its own random
+# numbers, so the balls fly the same way every run, and some meet a bumper by then.
+at 30 expect behaviors.balls >= 2
+at 240 expect behaviors.hits >= 1
+at 240 expect behaviors.balls >= 8
+at 240 expect behaviors.actors >= 13
+at 240 end

@@ -1,0 +1,4 @@
+{
+ "assets": "examples/js/audio/assets",
+ "autopilot": "examples/js/audio/smoke.autopilot"
+}

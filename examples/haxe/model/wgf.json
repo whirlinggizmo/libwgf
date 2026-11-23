@@ -1,0 +1,9 @@
+{
+	"name": "model",
+	"title": "libwgf model (Haxe)",
+	"main": "Main",
+	"source": "src",
+	"assets": "assets",
+	"autopilot": "autopilot",
+	"playthrough": "smoke.autopilot"
+}

@@ -1,0 +1,12 @@
+wgf-autopilot 1
+# A smoke run: the robot's file loaded, its idle clip playing, then N, Space, and Space again.
+at 1 wait model.loaded == 1
+at 2 expect model.clips == 14
+at 2 expect model.clip == 2
+at 60 key tap n
+at 62 expect model.clip == 3
+at 90 key tap space
+at 92 expect model.paused == 1
+at 120 key tap space
+at 122 expect model.paused == 0
+at 180 end

@@ -1,0 +1,9 @@
+{
+	"name": "sprites",
+	"title": "libwgf sprites (Haxe)",
+	"main": "Main",
+	"source": "src",
+	"assets": "assets",
+	"autopilot": "autopilot",
+	"playthrough": "smoke.autopilot"
+}

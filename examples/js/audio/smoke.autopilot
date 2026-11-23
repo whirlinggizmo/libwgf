@@ -1,0 +1,21 @@
+wgf-autopilot 1
+# A smoke run: the sounds loaded, the music played, paused, resumed, made louder, and stopped;
+# a click and a tone played. With no sound device the states still change.
+at 1 wait audio.loaded == 1
+at 10 expect audio.music_state == 0
+at 20 key tap space
+at 22 expect audio.music_state == 1
+at 40 key tap p
+at 42 expect audio.music_state == 2
+at 50 key tap p
+at 52 expect audio.music_state == 1
+at 60 key tap enter
+at 61 expect audio.plays == 1
+at 70 key tap t
+at 72 expect audio.tone_state == 1
+at 80 key down right
+at 110 key up right
+at 111 expect audio.music_volume > 0.7
+at 120 key tap s
+at 122 expect audio.music_state == 0
+at 150 end

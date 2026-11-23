@@ -1,0 +1,11 @@
+wgf-autopilot 1
+# A smoke run: wait for level.scene, check what it made, drop a crate by key, and check the
+# count rose. A crate drops on its own each second, so more follow.
+at 1 wait scene.loaded == 1
+at 2 expect scene.actors == 6
+at 2 expect scene.spawned == 0
+at 30 key tap space
+at 30 expect scene.spawned == 1
+at 30 expect scene.actors == 7
+at 150 expect scene.spawned >= 3
+at 150 end

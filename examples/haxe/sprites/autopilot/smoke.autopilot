@@ -1,0 +1,18 @@
+wgf-autopilot 1
+# A smoke run: the textures loaded, the player moved by a key and by a pad's stick, and sent
+# behind the other sprites and back by the fire action, from the keyboard and from the pad.
+at 0 wait sprites.loaded == 1
+at 10 expect sprites.x == 400
+at 10 expect sprites.front == 1
+at 20 key down right
+at 60 key up right
+at 61 expect sprites.x > 500
+at 70 pad 0 connect
+at 72 pad 0 axis left_y -1
+at 102 pad 0 axis left_y 0
+at 103 expect sprites.y < 300
+at 110 key tap space
+at 111 expect sprites.front == 0
+at 120 pad 0 tap south
+at 121 expect sprites.front == 1
+at 150 end

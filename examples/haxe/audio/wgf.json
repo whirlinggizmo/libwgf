@@ -1,0 +1,9 @@
+{
+	"name": "audio",
+	"title": "libwgf audio (Haxe)",
+	"main": "Main",
+	"source": "src",
+	"assets": "assets",
+	"autopilot": "autopilot",
+	"playthrough": "smoke.autopilot"
+}

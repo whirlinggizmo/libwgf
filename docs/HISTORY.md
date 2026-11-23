@@ -1040,6 +1040,17 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## The curated examples, in Haxe and JS (2026-11-22)
+
+Eight topics, each written twice so a reader can compare the languages: sprites with input actions, behaviors and components, tweens and screens, a 3D model with its animation, 3D physics, the UI's widgets, audio, and a scene file. With `hello` and Asteroids that is the set of ten. Eight agents wrote them in parallel, one topic each, from the docs, the headers, and the bindings alone.
+
+- **Each proves itself.** It publishes probes, and a smoke autopilot sends input and checks them: the UI example tabs through its widgets and clicks its buttons, the sprites example connects a virtual pad. `check_games.py --examples` and `check_js_binding.py` fly all of them, headless and in a browser.
+- **The pairs match.** Each agent looked at a screenshot of both versions. Where a scene has chance in it, it uses libwgf's seeded random numbers, so the two are the same to the frame.
+- **Review found one thing in most of them.** They called `Window.setSize`, as `hello` did, which fixes the canvas on the web: the scene sat unscaled and cut off in the launcher. Every example, `hello` too, now sets a design size through the presentation alone, and says why.
+- **What the writing found** is in FRICTION.md, nineteen entries. The largest: the JS binding has no behavior class, so four of the eight read differently in JS, each with its own event loop.
+
+`check_js_binding.py` takes `--example` to fly one. The site's examples in Haxe and JS come to 16 MB.
+
 ## Examples in Haxe and JS: the first, and the site's language choice (2026-11-22)
 
 Rob asked whether libwgf should have its examples in Haxe and JS too, with the site offering each language. Decided: a curated set, about ten in each language, not all 50. A copy of every C example in three languages would triple the upkeep and teach little, since most examples show a feature, not a language. What differs by language is how a game is written, so the set covers that: behaviors as classes, scenes, UI, a model with its animation, physics, audio, and one small whole game.

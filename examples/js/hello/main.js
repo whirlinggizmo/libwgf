@@ -1,5 +1,6 @@
 // libwgf from JavaScript: the C app-hello (examples/c/app-hello) through the JS binding's
-// typed layer (wgf-typed.js: Draw.circle, Keyboard.isPressed, ...), call for call. A window with 2D shapes, text, and input: a marker follows the mouse,
+// typed layer (wgf-typed.js: Draw.circle, Keyboard.isPressed, ...), call for call. A window with
+// 2D shapes, text, and input: a marker follows the mouse,
 // typing shows what was typed (Backspace takes the last character back), and Escape
 // quits where quitting means anything. The frame rate is drawn at the top.
 //
@@ -9,6 +10,7 @@
 import createWgfHost from "./wgf-host.js";
 import { App, Color, ColorStock, Draw, Input, Keyboard, KeyboardKey, Loop, Mouse, Render, Window, attach }
     from "./wgf-typed.js";
+import { Presentation, PresentationMode } from "./wgf-typed.js";
 
 const host = await createWgfHost({
     canvas: document.getElementById("canvas"),
@@ -62,6 +64,8 @@ function frame() {
 }
 
 Window.setTitle("libwgf hello (JS)");
-Window.setSize(800, 600);
+// The design size, fitted to any window or page. Window.setSize would fix the canvas at that
+// size on the web, unscaled, so it is left to the presentation.
+Presentation.set(PresentationMode.FIT, 800, 600);
 Window.setMsaa(true);
 App.run(init, null, frame, null);

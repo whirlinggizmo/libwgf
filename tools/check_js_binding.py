@@ -2,7 +2,7 @@
 """Check the JS binding (bindings/js/): generated, typed, and every JS example running in
 a browser through it.
 
-    tools/check_js_binding.py [--only STEP[,STEP...]] [--browser PATH]
+    tools/check_js_binding.py [--only STEP[,STEP...]] [--example NAME]... [--browser PATH]
 
 The steps, in order:
   generated   tools/gen_binding.py --check: wgf.js, wgf-typed.js, and their .d.ts current
@@ -174,7 +174,7 @@ def check_input(found):
     return skipped if skipped else True
 
 
-def step(name, browser_option):
+def step(name, browser_option, wanted=()):
     if name == 'generated':
         done = subprocess.run([sys.executable, ROOT / 'tools' / 'gen_binding.py', '--check'])
         return done.returncode == 0
@@ -204,7 +204,8 @@ def step(name, browser_option):
         return check_input(found)
     ok = True
     for example, trimmed in [(p, cut) for p in sorted(p for p in webhost.JS_EXAMPLES.iterdir()
-                                                      if (p / 'main.js').is_file()) for cut in (False, True)]:
+                                                      if (p / 'main.js').is_file() and (not wanted or p.name in wanted))
+                             for cut in (False, True)]:
         site = Path(variants.work(variants.web())) / 'js-examples' / (example.name + ('-trimmed' if trimmed else ''))
         webhost.build_js_example(example, variants.web(), site, trimmed=trimmed)
         _, autopilot_path = webhost.js_example_config(example)
@@ -226,6 +227,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--only', help='comma-separated steps: ' + ', '.join(STEPS))
     ap.add_argument('--browser', help='a Chromium-based browser (default: found)')
+    ap.add_argument('--example', action='append', default=[],
+                    help='a JS example the examples step flies (default: every one); may be given again')
     args = ap.parse_args()
     steps = args.only.split(',') if args.only else list(STEPS)
     unknown = [s for s in steps if s not in STEPS]
@@ -235,7 +238,7 @@ def main():
     failed, skipped = [], []
     for name in steps:
         print(f'== {name}', flush=True)
-        result = step(name, args.browser)
+        result = step(name, args.browser, args.example)
         if isinstance(result, str):
             print(f'check_js_binding: SKIPPING {name} ({result})')
             skipped.append(f'{name} ({result})')
