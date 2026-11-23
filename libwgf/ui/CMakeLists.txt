@@ -52,6 +52,7 @@ if(WGF_TESTS AND WGF_HEADLESS)
     wgf_test(ui wgf_ui_scroll_test)
     wgf_test(ui wgf_ui_popup_test)
     wgf_test(ui wgf_ui_text_test)
+    wgf_test(ui wgf_ui_text_view_test)
     if(EMSCRIPTEN)
         # a UI of the plain widgets links none of the skins or the other widgets: its link map
         # read by tools/check_link_map.py (wasm-ld drops what nothing reaches in any build)

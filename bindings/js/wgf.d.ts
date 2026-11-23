@@ -111,6 +111,8 @@ export type wgf_fs_task_t = number & { readonly [kind]: "wgf_fs_task_t" };
 export type wgf_generator_t = number & { readonly [kind]: "wgf_generator_t" };
 /** A handle of kind wgf_asset_task_t; 0 is none. */
 export type wgf_asset_task_t = number & { readonly [kind]: "wgf_asset_task_t" };
+/** A handle of kind wgf_text_buffer_t; 0 is none. */
+export type wgf_text_buffer_t = number & { readonly [kind]: "wgf_text_buffer_t" };
 /** A handle of kind wgf_actor_t; 0 is none. */
 export type wgf_actor_t = number & { readonly [kind]: "wgf_actor_t" };
 /** A handle of kind wgf_cubemap_t; 0 is none. */
@@ -3960,6 +3962,62 @@ export declare function wgf_asset_ping_host(host_: string | null, timeout_ms: nu
  * and for a handle that isn't a ping.
  */
 export declare function wgf_asset_ping_get_milliseconds(ping: wgf_asset_task_t | 0): number;
+
+/**
+ * Creates a text buffer from a file, read as UTF-8 (a byte order mark at its start is
+ * dropped).
+ *
+ * Returns 0 only if there is no room for another buffer. A path or file that can't be loaded
+ * gives a buffer that FAILED (logged once, naming the file). A file over 16 MiB fails.
+ */
+export declare function wgf_text_buffer_create(path: string | null): wgf_text_buffer_t;
+
+/**
+ * Creates a text buffer holding `text` (NULL is ""), READY at once.
+ *
+ * Returns 0 if there is no room for another buffer, no memory, or `text` is over 16 MiB
+ * (logged).
+ */
+export declare function wgf_text_buffer_create_text(text: string | null): wgf_text_buffer_t;
+
+/**
+ * Sets or gets the buffer's text.
+ *
+ * The text read is the buffer's own: valid until the buffer's text next changes or it is
+ * released. Copy it to keep it.
+ *
+ * set_text returns false, changing nothing, for a buffer that isn't READY, or a text that
+ * would take it over 16 MiB (logged). NULL is "".
+ */
+export declare function wgf_text_buffer_set_text(buffer: wgf_text_buffer_t | 0, text: string | null): boolean;
+
+/**
+ * Sets or gets the buffer's text.
+ *
+ * See wgf_text_buffer_set_text for the rest.
+ */
+export declare function wgf_text_buffer_get_text(buffer: wgf_text_buffer_t | 0): string;
+
+/**
+ * Adds `text` to the end of the buffer: a chat's new message, a log's new line.
+ *
+ * Returns false, changing nothing, as set_text does. Adding "" or NULL changes nothing and
+ * returns true.
+ */
+export declare function wgf_text_buffer_append(buffer: wgf_text_buffer_t | 0, text: string | null): boolean;
+
+/**
+ * Returns the text's length in bytes, without its ending NUL: 0 for a buffer that isn't
+ * READY.
+ */
+export declare function wgf_text_buffer_get_length(buffer: wgf_text_buffer_t | 0): number;
+
+/**
+ * Returns a number that changes each time the buffer's text does: set, added to, or loaded
+ * again. Compare it with the one last seen to know the text changed. 0 for a buffer that
+ * isn't READY.
+ */
+export declare function wgf_text_buffer_get_version(buffer: wgf_text_buffer_t | 0): number;
 
 /**
  * Creates a plain actor: a transform, with no parent.
@@ -13220,6 +13278,28 @@ export declare function wgf_ui_get_scroll<T extends number[] | Float32Array | Fl
 export declare function wgf_ui_get_scroll(id: string | null, into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
+ * Shows a text buffer's text (wgf_text_buffer.h), wrapped and scrolled: a chat, a log, credits,
+ * help. Read-only.
+ *
+ * It is a scroll area `width` by `height` (0 takes its parent's room that way), down only,
+ * scrolled as wgf_ui_begin_scroll says, by its id. Its text is in the style's text size and
+ * color, broken at each newline and before a word that would pass its width.
+ *
+ * A frame passes no text: libwgf holds the buffer, and the view keeps its lines.
+ * - The text is broken into lines again only when the buffer's version, the view's width, or
+ *   the style's size or font changes.
+ * - Only the lines in view are laid out and drawn, so a long text costs what its visible
+ *   lines do.
+ *
+ * With `follow`, a view scrolled to its end stays at it as its text grows, as a chat's does.
+ * Scrolled up, it stays where it is.
+ *
+ * A buffer that isn't READY shows nothing. Its lines are laid out from its second frame, when
+ * its width is known. Returns false for no id, the text buffer 0, or a size below 0.
+ */
+export declare function wgf_ui_text_view(id: string | null, text: wgf_text_buffer_t | 0, width: number, height: number, follow: boolean): boolean;
+
+/**
  * Sets the open box's or panel's layout, before its first child.
  *
  * Your game describes the open box each frame, so nothing keeps it to read back. A color draws
@@ -13481,12 +13561,22 @@ export declare function wgf_ui_is_activated(): boolean;
 export declare function wgf_ui_list(id: string | null, items: string | null, selected: number, rows: number): number;
 
 /**
- * Shows a text field: a line of text typed in. Returns true in the frame Enter is pressed in
- * it.
+ * Shows a text field: a line of text typed in, the text of a text buffer (wgf_text_buffer.h).
+ * Returns true in the frame Enter is pressed in it.
  *
- * It is as wide as its parent's room, at least the style's button width. The UI keeps its
- * text by its id (see wgf_ui_get_text), from the first call or wgf_ui_set_text on, until the
- * UI stops.
+ * Its text is the buffer's, held by libwgf, so it isn't given each frame: make the buffer
+ * once, give it to the field each frame, and read or set it when the game wants.
+ * - What is typed is written to the buffer as it is typed. Read it with
+ *   wgf_text_buffer_get_text, at Enter or any time.
+ * - A text set on the buffer (or added, or loaded again) is shown at the field's next call,
+ *   its caret at the end and its undo forgotten.
+ * - A buffer that isn't READY (loading, failed, released) shows "" and takes nothing typed.
+ * - The field holds 4095 bytes of a line. A longer text in the buffer is cut, in the buffer
+ *   too, as is one longer than `max_length`.
+ *
+ * The UI keeps the field's caret, selection, and undo by its id until the UI stops.
+ *
+ * It is as wide as its parent's room, at least the style's button width.
  *
  * Focused, it takes what is typed (wgf_input_get_chars) in place of the selection, and the
  * keys:
@@ -13519,37 +13609,17 @@ export declare function wgf_ui_list(id: string | null, items: string | null, sel
  * - A password field is the same, drawn as dots. Its words are the whole of it, and it is
  *   never copied or cut.
  *
- * Also returns false when refused (no id).
+ * Also returns false when refused (no id, or the text buffer 0).
  */
-export declare function wgf_ui_text_field(id: string | null, placeholder: string | null, max_length: number): boolean;
+export declare function wgf_ui_text_field(id: string | null, text: wgf_text_buffer_t | 0, placeholder: string | null, max_length: number): boolean;
 
 /**
- * Shows a text field: a line of text typed in. Returns true in the frame Enter is pressed in
- * it.
+ * Shows a text field: a line of text typed in, the text of a text buffer (wgf_text_buffer.h).
+ * Returns true in the frame Enter is pressed in it.
  *
  * See wgf_ui_text_field for the rest.
  */
-export declare function wgf_ui_password_field(id: string | null, placeholder: string | null, max_length: number): boolean;
-
-/**
- * Sets or gets the text field `id`'s text.
- *
- * - set_text puts its caret at the end and forgets its undo. The text is cut to 4095 bytes.
- *   A field not given yet keeps the text for its first call.
- * - get_text returns "" for a field never given or set. The string is valid until the field
- *   changes.
- *
- * The setter returns false for no id, an id of 64 bytes or more, or no text. These two work
- * outside a begun UI too.
- */
-export declare function wgf_ui_set_text(id: string | null, text: string | null): boolean;
-
-/**
- * Sets or gets the text field `id`'s text.
- *
- * See wgf_ui_set_text for the rest.
- */
-export declare function wgf_ui_get_text(id: string | null): string;
+export declare function wgf_ui_password_field(id: string | null, text: wgf_text_buffer_t | 0, placeholder: string | null, max_length: number): boolean;
 
 /**
  * Sets or gets whether the text fields given after it, until it is changed, show their text

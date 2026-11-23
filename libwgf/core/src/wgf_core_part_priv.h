@@ -59,6 +59,8 @@ typedef enum wgf_core_priv_part_order_t {
                                      end one */
     WGF_CORE_PRIV_PART_UI,        /* layout and widgets (ui/) */
     WGF_CORE_PRIV_PART_AUDIO,     /* sounds, voices, the mixer (audio/) */
+    WGF_CORE_PRIV_PART_TEXT_BUFFERS, /* text buffers (libwgf/asset/src/wgf_asset_text_buffer.c), before the asset
+                                        part, which locates their loads */
     WGF_CORE_PRIV_PART_ASSET,     /* where files come from: fetching, the cache (asset/) */
 } wgf_core_priv_part_order_t;
 

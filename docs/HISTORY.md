@@ -1040,6 +1040,19 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## Text buffers (2026-11-23)
+
+A text buffer is text that libwgf holds, so a widget or a call can be given its handle instead of the text each frame, and a program can load a text file as it loads a texture. Rob's: from the text field's friction (it keeps its text by its id, unlike every other value widget) and the cost of a chat's text given again each frame (measured: an 80-character line crosses into C in about 300 ns from JS, and a chat of 200 lines spends about 60 µs a frame crossing and about 280 µs laid out).
+
+- **`wgf_text_buffer.h`**: create from a path (a resource, loaded on create, loaded again by `wgf_asset_reload`) or from text in code; set, get, append, its length, and a version that changes with its text.
+- **In the asset layer**, kind 49 ("asset.text_buffer"): loading from a path needs the asset part, which is above core.
+- **0 and a buffer not READY read as ""**, quietly for 0.
+- **At most 16 MiB** of text; more is refused, logged.
+- **The text field takes a buffer:** `wgf_ui_text_field(id, buffer, placeholder, max_length)`, the password field the same, so its value is given as every other value widget's is, as a handle. The field writes what is typed into the buffer; a text set on the buffer is shown at the field's next call. `wgf_ui_set_text` and `wgf_ui_get_text` are gone. The field keeps its copy, caret, and undo by id, taking the buffer's text only when its version changes, so a frame passes no text. A buffer not READY shows "" and takes nothing typed.
+- **`wgf_ui_text_view(id, buffer, width, height, follow)`**: a buffer's text, read-only, wrapped and scrolled down. Its lines are broken (each word measured once) only when the buffer's version, its width, or the style's size or font changes, and only the lines in view are laid out, between two spacers as tall as the lines above and below. With `follow`, scrolled to its end it stays there as text is added. A chat or a log shows its whole history at the cost of its visible lines. The UI example's panel has a log in one, in Haxe and JS.
+- **A fix found on the way:** `wgf_ui_set_scroll` on content shorter than its area scrolled it to a negative offset. It holds at 0 now.
+- **Later:** HTML-like markup in a buffer (a coloured name, then plain text), selecting and copying in a view.
+
 ## Three more fixes from the examples (2026-11-23)
 
 From the examples' friction list.

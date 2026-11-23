@@ -12,15 +12,15 @@
 // - Reset asks first, in a modal. Escape there, or a pad's east button, means No.
 // - Escape quits, where quitting means anything (not in a browser).
 //
-// The UI keeps a text field's text itself, by its id: set it with Ui.setText, read it with
-// Ui.getText. The default style is used, so nothing is loaded.
+// A text field's text is a text buffer, made once: the field writes what is typed into it, and
+// the game reads or sets it when it wants. The default style is used, so nothing is loaded.
 //
 // Its probes: ui.volume, ui.sound (1 on), ui.difficulty, ui.lives, ui.clicks (Apply pressed),
 // and ui.modal (1 while the modal is open). libwgf publishes ui.focus. The Haxe example `ui`
 // is the same menu.
 import createWgfHost from "./wgf-host.js";
 import {
-    App, Color, Keyboard, KeyboardKey, Probe, Render, Ui, UiAlign, UiDirection, Window, attach,
+    App, Color, Keyboard, KeyboardKey, Probe, Render, TextBuffer, Ui, UiAlign, UiDirection, Window, attach,
 } from "./wgf-typed.js";
 import { Presentation, PresentationMode, WindowFlag } from "./wgf-typed.js";
 
@@ -41,15 +41,18 @@ const defaults = { volume: 50, sound: true, difficulty: 1, lives: 3 };
 let settings = { ...defaults };
 let clicks = 0;
 let confirming = false; // the "Reset?" modal is open
+let name = 0; // the name field's text buffer
+let log = 0; // what happened, shown in a text view under the buttons
 
 function init() {
     Render.setClearColor(Color.make(24, 28, 38, 255));
-    Ui.setText("name", "Ada"); // the field's first text
+    name = TextBuffer.createText("Ada"); // the field's first text
+    log = TextBuffer.createText("Settings opened.");
 }
 
 function reset() {
     settings = { ...defaults };
-    Ui.setText("name", "Ada");
+    TextBuffer.setText(name, "Ada");
 }
 
 // The panel: a title, a grid of the settings, then the buttons.
@@ -72,21 +75,28 @@ function settingsPanel() {
     Ui.label("Lives", 0);
     settings.lives = Ui.number("lives", settings.lives, 1, 9, 1);
     Ui.label("Name", 0);
-    Ui.textField("name", "your name", 16); // its text is the UI's, by its id
+    Ui.textField("name", name, "your name", 16); // writes what is typed into `name`
     Ui.endGrid();
 
     Ui.spacer(8);
     Ui.beginBox("buttons", UiDirection.ROW);
     Ui.setGap(12);
-    if (Ui.button("apply", "Apply")) clicks++;
+    if (Ui.button("apply", "Apply")) {
+        clicks++;
+        const { volume, difficulty, lives } = settings;
+        TextBuffer.append(log, `\nApplied: volume ${Math.round(volume)}, ${difficultyNames[difficulty]}, ${lives} lives.`);
+    }
     if (Ui.button("reset", "Reset...")) confirming = true;
     Ui.endBox();
+    // The log: its text is the buffer's, given as a handle, so a frame passes no text. It follows
+    // its end as lines are added.
+    Ui.textView("log", log, 0, 72, true);
     Ui.endPanel();
 
     // Under the panel: the values as the code holds them now.
     const { volume, sound, difficulty, lives } = settings;
     Ui.label(`volume ${Math.round(volume)}   sound ${sound ? "on" : "off"}   `
-        + `${difficultyNames[difficulty]}   lives ${lives}   name "${Ui.getText("name")}"   `
+        + `${difficultyNames[difficulty]}   lives ${lives}   name "${TextBuffer.getText(name)}"   `
         + `applied ${clicks}   focus: ${Ui.getFocus() || "none"}`, 14);
 }
 
@@ -99,6 +109,7 @@ function resetModal() {
     Ui.setGap(12);
     if (Ui.button("yes", "Yes")) {
         reset();
+        TextBuffer.append(log, "\nReset.");
         confirming = false;
     }
     if (Ui.button("no", "No")) confirming = false;

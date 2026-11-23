@@ -59,6 +59,8 @@ class Main {
 	static var ensure:AssetTask;
 	static var group:AssetTask;
 	static var ping:AssetTask;
+	static var fieldText:TextBuffer = 0; // the UI's text fields' buffers, made at the first frame
+	static var secretText:TextBuffer = 0;
 	static var reported = false;
 
 	static function expect(ok:Bool, what:String, ?pos:haxe.PosInfos):Void {
@@ -307,6 +309,16 @@ class Main {
 		Asset.fetchDone(request, false);
 		Asset.evict("nothing/here.png");
 		Asset.clearCache();
+		// a text buffer: made in code, and loaded from a file (read as text, whatever it holds)
+		final chat = TextBuffer.createText("hello");
+		final version = chat.getVersion();
+		expect(chat.append(", world") && chat.getText() == "hello, world" && chat.getLength() == 12
+			&& chat.getVersion() != version, "a text buffer, added to");
+		expect(chat.setText("") && chat.getText() == "" && (0 : TextBuffer).getText() == "", "a text buffer, emptied; none reads \"\"");
+		Resource.release(chat);
+		final file = TextBuffer.create("scenes/field.scene");
+		file.getText();
+		Resource.release(file);
 	}
 
 	static function audio():Void {
@@ -1287,10 +1299,15 @@ class Main {
 			expect(Ui.beginScroll("scroll", 120, 40) && Ui.label("A\nB\nC\nD", 0) && Ui.endScroll(), "a scroll area");
 			expect(Ui.list("list", "One\nTwo\nThree", 1, 2) == 1 && !Ui.isActivated(), "a list, untouched, its item not activated");
 			expect(Ui.dropdown("dropdown", "Low\nHigh", 1) == 1 && Ui.tooltip("Its quality"), "a dropdown, untouched, and a tooltip");
-			expect(Ui.setText("field", "typed") && !Ui.textField("field", "Name", 8) && Ui.getText("field") == "typed",
-				"a text field, untouched, its text set");
-			expect(Ui.setInvalid(true) && Ui.isInvalid() && !Ui.passwordField("secret", null, 0) && Ui.setInvalid(false)
-				&& Ui.getText("secret") == "", "an invalid password field, empty");
+			if (fieldText == 0)
+				fieldText = TextBuffer.createText("typed");
+			if (secretText == 0)
+				secretText = TextBuffer.createText("");
+			expect(!Ui.textField("field", fieldText, "Name", 8) && fieldText.getText() == "typed",
+				"a text field, untouched, its buffer's text");
+			expect(Ui.setInvalid(true) && Ui.isInvalid() && !Ui.passwordField("secret", secretText, null, 0) && Ui.setInvalid(false)
+				&& secretText.getText() == "", "an invalid password field, empty");
+			expect(Ui.textView("log", fieldText, 200, 60, true), "a text view");
 			Ui.endPanel();
 			expect(Ui.beginModal("modal") && Ui.label("Sure?", 0) && !Ui.isModalCancelled() && Ui.endModal(), "a modal");
 			expect(Ui.end(), "a UI");

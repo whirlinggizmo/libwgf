@@ -14,6 +14,7 @@ wgf_layer(asset
         src/wgf_asset_manifest_reader.c
         src/wgf_asset_sha256.c
         src/wgf_asset_task.c
+        src/wgf_asset_text_buffer.c
         src/wgf_asset_url.c
         ${asset_platform_sources}
     DEPS
@@ -23,6 +24,7 @@ if(WGF_TESTS AND NOT EMSCRIPTEN)
     # natively, on disk; the web's: tools/check_asset_cache.py, in a browser
     wgf_test(asset wgf_asset_test)
     wgf_test(asset wgf_asset_fetch_test)
+    wgf_test(asset wgf_asset_text_buffer_test)
     # the host rule: the program's directory, with the working directory elsewhere
     wgf_test(asset wgf_asset_host_test)
     set_tests_properties(wgf_asset_host_test PROPERTIES SKIP_RETURN_CODE 77)

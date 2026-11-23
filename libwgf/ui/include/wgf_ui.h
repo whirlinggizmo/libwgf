@@ -7,6 +7,7 @@
 #include "wgf_color.h"
 #include "wgf_font.h"
 #include "wgf_image.h"
+#include "wgf_text_buffer.h"
 #include "wgf_texture.h"
 #include "wgf_vec2.h"
 #include "wgf_vec4.h"
@@ -163,6 +164,26 @@ WGF_API bool wgf_ui_end_scroll(void);
  * before, or a value that isn't finite. These two work outside a begun UI too. */
 WGF_API bool wgf_ui_set_scroll(const char *id, float x, float y);
 WGF_API wgf_vec2_t wgf_ui_get_scroll(const char *id);
+
+/* Shows a text buffer's text (wgf_text_buffer.h), wrapped and scrolled: a chat, a log, credits,
+ * help. Read-only.
+ *
+ * It is a scroll area `width` by `height` (0 takes its parent's room that way), down only,
+ * scrolled as wgf_ui_begin_scroll says, by its id. Its text is in the style's text size and
+ * color, broken at each newline and before a word that would pass its width.
+ *
+ * A frame passes no text: libwgf holds the buffer, and the view keeps its lines.
+ * - The text is broken into lines again only when the buffer's version, the view's width, or
+ *   the style's size or font changes.
+ * - Only the lines in view are laid out and drawn, so a long text costs what its visible
+ *   lines do.
+ *
+ * With `follow`, a view scrolled to its end stays at it as its text grows, as a chat's does.
+ * Scrolled up, it stays where it is.
+ *
+ * A buffer that isn't READY shows nothing. Its lines are laid out from its second frame, when
+ * its width is known. Returns false for no id, the text buffer 0, or a size below 0. */
+WGF_API bool wgf_ui_text_view(const char *id, wgf_text_buffer_t text, float width, float height, bool follow);
 
 /* Sets the open box's or panel's layout, before its first child.
  *
@@ -329,12 +350,22 @@ WGF_API bool wgf_ui_is_activated(void);
  * `selected` as given when refused: no id, or `rows` below 1. */
 WGF_API int wgf_ui_list(const char *id, const char *items, int selected, int rows);
 
-/* Shows a text field: a line of text typed in. Returns true in the frame Enter is pressed in
- * it.
+/* Shows a text field: a line of text typed in, the text of a text buffer (wgf_text_buffer.h).
+ * Returns true in the frame Enter is pressed in it.
  *
- * It is as wide as its parent's room, at least the style's button width. The UI keeps its
- * text by its id (see wgf_ui_get_text), from the first call or wgf_ui_set_text on, until the
- * UI stops.
+ * Its text is the buffer's, held by libwgf, so it isn't given each frame: make the buffer
+ * once, give it to the field each frame, and read or set it when the game wants.
+ * - What is typed is written to the buffer as it is typed. Read it with
+ *   wgf_text_buffer_get_text, at Enter or any time.
+ * - A text set on the buffer (or added, or loaded again) is shown at the field's next call,
+ *   its caret at the end and its undo forgotten.
+ * - A buffer that isn't READY (loading, failed, released) shows "" and takes nothing typed.
+ * - The field holds 4095 bytes of a line. A longer text in the buffer is cut, in the buffer
+ *   too, as is one longer than `max_length`.
+ *
+ * The UI keeps the field's caret, selection, and undo by its id until the UI stops.
+ *
+ * It is as wide as its parent's room, at least the style's button width.
  *
  * Focused, it takes what is typed (wgf_input_get_chars) in place of the selection, and the
  * keys:
@@ -367,21 +398,9 @@ WGF_API int wgf_ui_list(const char *id, const char *items, int selected, int row
  * - A password field is the same, drawn as dots. Its words are the whole of it, and it is
  *   never copied or cut.
  *
- * Also returns false when refused (no id). */
-WGF_API bool wgf_ui_text_field(const char *id, const char *placeholder, int max_length);
-WGF_API bool wgf_ui_password_field(const char *id, const char *placeholder, int max_length);
-
-/* Sets or gets the text field `id`'s text.
- *
- * - set_text puts its caret at the end and forgets its undo. The text is cut to 4095 bytes.
- *   A field not given yet keeps the text for its first call.
- * - get_text returns "" for a field never given or set. The string is valid until the field
- *   changes.
- *
- * The setter returns false for no id, an id of 64 bytes or more, or no text. These two work
- * outside a begun UI too. */
-WGF_API bool wgf_ui_set_text(const char *id, const char *text);
-WGF_API const char *wgf_ui_get_text(const char *id);
+ * Also returns false when refused (no id, or the text buffer 0). */
+WGF_API bool wgf_ui_text_field(const char *id, wgf_text_buffer_t text, const char *placeholder, int max_length);
+WGF_API bool wgf_ui_password_field(const char *id, wgf_text_buffer_t text, const char *placeholder, int max_length);
 
 /* Sets or gets whether the text fields given after it, until it is changed, show their text
  * as refused.

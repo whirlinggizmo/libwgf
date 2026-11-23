@@ -3,10 +3,11 @@
 
 #include <stdbool.h>
 
-/* The Clay UI's text fields (wgf_ui.h): their texts, kept by id, and their editing are a
- * file of its own (wgf_ui_text.c). The frame's end, which shows the on-screen keyboard while
- * a field wants it and hides it after, and the UI's stop, which frees the texts, reach it
- * through hooks its first field sets from there, so a UI without one links none of it. */
+/* The Clay UI's text fields (wgf_ui.h): each one's copy of its text buffer's text, its caret
+ * and undo, kept by id, and their editing are a file of its own (wgf_ui_text.c). The frame's
+ * end, which shows the on-screen keyboard while a field wants it and hides it after, and the
+ * UI's stop, which frees the texts, reach it through hooks its first field sets from there,
+ * so a UI without one links none of it. */
 
 #define WGF_UI_PRIV_TEXT_MAX 4096 /* a field's bytes, with its NUL */
 #define WGF_UI_PRIV_UNDO_MAX 32   /* the steps kept each way */
@@ -20,7 +21,9 @@ typedef struct wgf_ui_priv_snapshot_t {
 /* A field, by its id: its text, and where its caret and selection are, in bytes. */
 typedef struct wgf_ui_priv_field_t {
     char id[64];
-    char *text; /* NUL-terminated, malloc'd: never NULL */
+    char *text;                 /* its buffer's, as last taken or written: NUL-terminated, malloc'd, never NULL */
+    unsigned buffer;            /* the text buffer it shows (wgf_text_buffer_t) */
+    int version;                /* that buffer's version as last taken or written */
     int length, capacity;
     int caret, anchor; /* the selection is between them: none when they are one */
     float scroll;      /* how far its text is scrolled left, in logical pixels */
@@ -62,6 +65,9 @@ bool wgf_ui_priv_field_edit(wgf_ui_priv_field_t *field, const wgf_ui_priv_edit_t
 /* Its caret and the selection's other end put at bytes `caret` and `anchor` (a press's), as a
  * move: a run of typing after it is a step of its own. */
 void wgf_ui_priv_field_place(wgf_ui_priv_field_t *field, int caret, int anchor, float clock);
+/* Its text made `text` (cut to 4095 bytes, whole characters), its caret at the end, its undo
+ * forgotten: a text its buffer was given. False when out of memory. */
+bool wgf_ui_priv_field_take(wgf_ui_priv_field_t *field, const char *text);
 /* Its text cut to `most` characters (0 or less: no cut). */
 void wgf_ui_priv_field_limit(wgf_ui_priv_field_t *field, int most);
 /* The word, or the run of what isn't one, at byte `at`: its start and end. */

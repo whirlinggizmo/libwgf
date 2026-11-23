@@ -5,6 +5,8 @@
 #include "wgf_font.h"
 #include "wgf_input.h"
 #include "wgf_platform_priv.h"
+#include "wgf_resource.h"
+#include "wgf_text_buffer.h"
 #include "wgf_time.h"
 #include "wgf_ui.h"
 #include "wgf_window.h"
@@ -14,7 +16,8 @@
  * selection, copy and paste (newlines stripped), a word deleted, the maximum length; a double
  * press selecting a word, a triple the whole, a drag, and a Shift press; Tab into one
  * selecting the whole; a password never copied; Enter's answer; a press off it letting the
- * focus and the keyboard go; a disabled one answering nothing; and the refusals. */
+ * focus and the keyboard go; a disabled one answering nothing; a text set on its buffer shown,
+ * a longer one cut in the buffer too, a buffer released showing ""; and the refusals. */
 
 static int failures;
 
@@ -78,13 +81,26 @@ static void click(float x, float y)
     mouse(SAPP_EVENTTYPE_MOUSE_UP, x, y);
 }
 
+/* The fields' text buffers, made at the first frame. */
+static wgf_text_buffer_t name_text, pass_text, off_text;
+
+static wgf_text_buffer_t buffer_of(const char *id)
+{
+    return strcmp(id, "name") == 0 ? name_text : strcmp(id, "pass") == 0 ? pass_text : off_text;
+}
+
+static const char *text_of(const char *id)
+{
+    return wgf_text_buffer_get_text(buffer_of(id));
+}
+
 /* Where in the field `id` the text's first `count` characters end: its inside starts half
  * the button padding (12) in, its text the style's size (20), unscrolled. */
 static float x_after(const char *id, int count)
 {
     char prefix[64];
     const wgf_vec4_t box = wgf_ui_get_bounds(id);
-    const char *text = wgf_ui_get_text(id);
+    const char *text = text_of(id);
     snprintf(prefix, sizeof(prefix), "%.*s", count, text);
     return box.x + 12.0f + (count > 0 ? wgf_font_measure(0, prefix, 20.0f).x : 0.0f);
 }
@@ -97,7 +113,7 @@ static float middle(const char *id)
 
 static bool is(const char *id, const char *text)
 {
-    return strcmp(wgf_ui_get_text(id), text) == 0;
+    return strcmp(text_of(id), text) == 0;
 }
 
 static int submits;
@@ -105,15 +121,20 @@ static bool disabled;
 
 static void form(void)
 {
+    if (name_text == 0) {
+        name_text = wgf_text_buffer_create_text(NULL);
+        pass_text = wgf_text_buffer_create_text(NULL);
+        off_text = wgf_text_buffer_create_text(NULL);
+    }
     expect(wgf_ui_begin(), "begun");
     wgf_ui_begin_panel("panel");
     wgf_ui_set_width(WGF_UI_SIZING_FIXED, 400);
-    if (wgf_ui_text_field("name", "Name", 16)) submits++;
+    if (wgf_ui_text_field("name", name_text, "Name", 16)) submits++;
     expect(wgf_ui_set_invalid(true) && wgf_ui_is_invalid(), "invalid");
-    wgf_ui_password_field("pass", NULL, 0);
+    wgf_ui_password_field("pass", pass_text, NULL, 0);
     expect(wgf_ui_set_invalid(false) && !wgf_ui_is_invalid(), "valid again");
     wgf_ui_set_disabled(disabled);
-    wgf_ui_text_field("off", NULL, 0);
+    wgf_ui_text_field("off", off_text, NULL, 0);
     wgf_ui_set_disabled(false);
     wgf_ui_button("after", "After");
     wgf_ui_end_panel();
@@ -194,7 +215,7 @@ static void on_frame(void *user)
     case 15:
         form();
         expect(is("name", "abc0123456789uvw"), "at most its 16 characters");
-        expect(wgf_ui_set_text("name", "one two three"), "set");
+        expect(wgf_text_buffer_set_text(name_text, "one two three"), "set on its buffer");
         break;
     case 16: form(); click(x_after("name", 5), middle("name")); break; /* in "two" */
     case 17: form(); click(x_after("name", 5), middle("name")); break;
@@ -210,7 +231,7 @@ static void on_frame(void *user)
     case 23:
         form();
         expect(is("name", "Z"), "a triple press: the whole");
-        wgf_ui_set_text("name", "abcdef");
+        wgf_text_buffer_set_text(name_text, "abcdef");
         since = wgf_time_get_seconds();
         break;
     case 24: /* past a double press's time: a drag from after "a" to after "e" */
@@ -287,8 +308,24 @@ static void on_frame(void *user)
         form();
         expect(is("off", "") && wgf_ui_get_focus()[0] == '\0', "a disabled field answers nothing");
         expect(wgf_ui_begin(), "begun");
-        expect(!wgf_ui_text_field(NULL, "x", 0) && !wgf_ui_password_field("", NULL, 0), "no id: refused");
+        expect(!wgf_ui_text_field(NULL, name_text, "x", 0) && !wgf_ui_password_field("", pass_text, NULL, 0) &&
+                   !wgf_ui_text_field("none", 0, NULL, 0),
+               "no id, no buffer: refused");
         expect(wgf_ui_end(), "ended");
+        disabled = false;
+        /* longer than the field's 16: cut, in the buffer too */
+        wgf_text_buffer_set_text(name_text, "abcdefghijklmnopqrstuvwxyz");
+        break;
+    case 41:
+        form();
+        expect(is("name", "abcdefghijklmnop"), "a longer text: cut in the buffer too");
+        wgf_resource_release(off_text); /* gone: "" shown, nothing taken */
+        break;
+    case 42: form(); click(x_after("off", 0), middle("off")); break;
+    case 43: form(); type("x"); break;
+    case 44:
+        form();
+        expect(is("off", "") && wgf_text_buffer_get_version(off_text) == 0, "a buffer released: \"\", nothing taken");
         wgf_app_quit();
         break;
     default: break;
@@ -297,15 +334,9 @@ static void on_frame(void *user)
 
 int main(void)
 {
-    char longer[66];
-    expect(wgf_ui_set_text("early", "kept") && is("early", "kept"), "set before any UI: kept");
-    expect(!wgf_ui_set_text(NULL, "x") && !wgf_ui_set_text("", "x") && !wgf_ui_set_text("x", NULL), "refused");
-    memset(longer, 'a', sizeof(longer) - 1);
-    longer[sizeof(longer) - 1] = '\0';
-    expect(!wgf_ui_set_text(longer, "x") && is(longer, "") && is("never", "") && is(NULL, ""), "an id too long, none");
     expect(!wgf_ui_set_invalid(true) && !wgf_ui_is_invalid(), "outside a begun UI: refused");
     wgf_window_set_size(800, 800);
     wgf_app_run(NULL, NULL, on_frame, NULL, NULL);
-    expect(frame_number >= 41, "every frame ran");
+    expect(frame_number >= 45, "every frame ran");
     return failures == 0 ? 0 : 1;
 }

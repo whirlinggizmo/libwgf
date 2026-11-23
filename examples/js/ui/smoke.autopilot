@@ -13,11 +13,11 @@ at 52 expect ui.sound == 0
 at 60 key tap tab
 at 70 key tap right               # Normal to Hard
 at 72 expect ui.difficulty == 2
-at 80 mouse move 294 463          # over Apply
+at 80 mouse move 294 421          # over Apply
 at 90 mouse click left
 at 95 expect ui.clicks == 1
 at 95 expect ui.focus == "apply"
-at 100 mouse move 506 463         # over Reset...
+at 100 mouse move 506 421         # over Reset...
 at 110 mouse click left
 at 115 expect ui.modal == 1
 at 115 expect ui.focus == "yes"   # a modal focuses its first widget

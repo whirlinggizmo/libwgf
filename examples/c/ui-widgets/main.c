@@ -303,18 +303,25 @@ static void list(void)
     wgf_ui_label(text, 0);
 }
 
-/* The name page: a name, refused while it is taken, and a password; Enter in the name greets. */
+/* The name page: a name, refused while it is taken, and a password; Enter in the name greets.
+ * Their texts are text buffers, made once: the fields write what is typed into them. */
 static void name(void)
 {
-    const bool taken = strcmp(wgf_ui_get_text("name"), "admin") == 0;
+    static wgf_text_buffer_t name_text, password_text;
+    bool taken;
+    if (name_text == 0) {
+        name_text = wgf_text_buffer_create_text(NULL);
+        password_text = wgf_text_buffer_create_text(NULL);
+    }
+    taken = strcmp(wgf_text_buffer_get_text(name_text), "admin") == 0;
     row("name-row", "Name", 130);
     wgf_ui_set_invalid(taken);
-    if (wgf_ui_text_field("name", "Your name", 16) && !taken && wgf_ui_get_text("name")[0] != '\0')
-        snprintf(greeting, sizeof(greeting), "Hello, %s", wgf_ui_get_text("name"));
+    if (wgf_ui_text_field("name", name_text, "Your name", 16) && !taken && wgf_text_buffer_get_length(name_text) > 0)
+        snprintf(greeting, sizeof(greeting), "Hello, %s", wgf_text_buffer_get_text(name_text));
     wgf_ui_set_invalid(false);
     wgf_ui_end_box();
     row("password-row", "Password", 130);
-    wgf_ui_password_field("password", "At least 8", 32);
+    wgf_ui_password_field("password", password_text, "At least 8", 32);
     wgf_ui_end_box();
     wgf_ui_label(taken ? "That name is taken" : greeting[0] != '\0' ? greeting : "Enter your name", 0);
 }

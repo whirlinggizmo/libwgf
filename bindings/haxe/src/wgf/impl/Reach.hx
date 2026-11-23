@@ -1097,6 +1097,13 @@ class Reach {
 		"wgf_stage3d_set_culling",
 		"wgf_stage3d_set_environment",
 		"wgf_stage3d_set_tonemap",
+		"wgf_text_buffer_append",
+		"wgf_text_buffer_create",
+		"wgf_text_buffer_create_text",
+		"wgf_text_buffer_get_length",
+		"wgf_text_buffer_get_text",
+		"wgf_text_buffer_get_version",
+		"wgf_text_buffer_set_text",
 		"wgf_text_create",
 		"wgf_text_get_color",
 		"wgf_text_get_depth_offset",
@@ -1299,7 +1306,6 @@ class Reach {
 		"wgf_ui_get_style_font",
 		"wgf_ui_get_style_texture",
 		"wgf_ui_get_style_value",
-		"wgf_ui_get_text",
 		"wgf_ui_get_text_offset",
 		"wgf_ui_icon_button",
 		"wgf_ui_image",
@@ -1336,13 +1342,13 @@ class Reach {
 		"wgf_ui_set_style_font",
 		"wgf_ui_set_style_texture",
 		"wgf_ui_set_style_value",
-		"wgf_ui_set_text",
 		"wgf_ui_set_text_offset",
 		"wgf_ui_set_width",
 		"wgf_ui_slider",
 		"wgf_ui_spacer",
 		"wgf_ui_tabs",
 		"wgf_ui_text_field",
+		"wgf_ui_text_view",
 		"wgf_ui_tile",
 		"wgf_ui_toggle",
 		"wgf_ui_tooltip",
@@ -1467,7 +1473,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1458) 0];
+	static final counts:Array<Int> = [for (_ in 0...1464) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

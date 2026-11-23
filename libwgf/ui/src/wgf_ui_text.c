@@ -381,23 +381,16 @@ void wgf_ui_priv_field_place(wgf_ui_priv_field_t *field, int caret, int anchor, 
 
 /* ---- the calls ---------------------------------------------------------------------- */
 
-bool wgf_ui_set_text(const char *id, const char *text)
+bool wgf_ui_priv_field_take(wgf_ui_priv_field_t *field, const char *text)
 {
-    wgf_ui_priv_field_t *field;
     int length;
-    if (text == NULL) return false;
-    field = wgf_ui_priv_field(id, true);
-    if (field == NULL) return false;
     for (length = 0; length < WGF_UI_PRIV_TEXT_MAX && text[length] != '\0'; length++) {
     }
     if (length > WGF_UI_PRIV_TEXT_MAX - 1) { /* cut to whole characters */
         length = WGF_UI_PRIV_TEXT_MAX - 1;
         while (length > 0 && continuation(text[length])) length--;
     }
-    if (!reserve(field, length)) {
-        wgf_log_error("wgf_ui_set_text: out of memory for its text");
-        return false;
-    }
+    if (!reserve(field, length)) return false;
     memcpy(field->text, text, (size_t)length);
     field->text[length] = '\0';
     field->length = field->caret = field->anchor = length;
@@ -405,10 +398,4 @@ bool wgf_ui_set_text(const char *id, const char *text)
     forget(field->undo, &field->undos);
     forget(field->redo, &field->redos);
     return true;
-}
-
-const char *wgf_ui_get_text(const char *id)
-{
-    const wgf_ui_priv_field_t *field = wgf_ui_priv_field(id, false);
-    return field != NULL ? field->text : "";
 }

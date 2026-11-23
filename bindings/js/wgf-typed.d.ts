@@ -10283,6 +10283,78 @@ export declare const Text: {
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
+/** A handle of kind wgf_text_buffer_t: the raw binding's branded type. */
+export type TextBuffer = raw.wgf_text_buffer_t;
+/**
+ * A text buffer: text in memory, UTF-8, which libwgf holds so it isn't passed in each time.
+ *
+ * - Load one from a file (credits, help, dialogue, data a game parses), or make one in code
+ *   (a chat's history, a log).
+ * - Read it, set it whole, or add to its end. Its version changes each time its text does,
+ *   so whatever shows it knows when to lay it out again.
+ *
+ * A text buffer is a resource (wgf_resource.h), a handle of kind "asset.text_buffer".
+ * - One loaded from a path is shared, reference counted, and loaded on create. It is PENDING
+ *   at once, and READY or FAILED in a later update. Creating the same path again gives the
+ *   same buffer, so a change to its text is seen through every handle of it.
+ * - wgf_asset_reload loads it again in place, replacing its text, changes and all.
+ * - One made in code is the program's own, and READY at once.
+ * - Release it with wgf_resource_release.
+ * - A buffer that isn't READY, and the handle 0, read as "".
+ */
+export declare const TextBuffer: {
+    /**
+     * Creates a text buffer from a file, read as UTF-8 (a byte order mark at its start is
+     * dropped).
+     *
+     * Returns 0 only if there is no room for another buffer. A path or file that can't be loaded
+     * gives a buffer that FAILED (logged once, naming the file). A file over 16 MiB fails.
+     */
+    readonly create: typeof raw.wgf_text_buffer_create;
+    /**
+     * Creates a text buffer holding `text` (NULL is ""), READY at once.
+     *
+     * Returns 0 if there is no room for another buffer, no memory, or `text` is over 16 MiB
+     * (logged).
+     */
+    readonly createText: typeof raw.wgf_text_buffer_create_text;
+    /**
+     * Sets or gets the buffer's text.
+     *
+     * The text read is the buffer's own: valid until the buffer's text next changes or it is
+     * released. Copy it to keep it.
+     *
+     * set_text returns false, changing nothing, for a buffer that isn't READY, or a text that
+     * would take it over 16 MiB (logged). NULL is "".
+     */
+    readonly setText: typeof raw.wgf_text_buffer_set_text;
+    /**
+     * Sets or gets the buffer's text.
+     *
+     * See TextBuffer.setText for the rest.
+     */
+    readonly getText: typeof raw.wgf_text_buffer_get_text;
+    /**
+     * Adds `text` to the end of the buffer: a chat's new message, a log's new line.
+     *
+     * Returns false, changing nothing, as set_text does. Adding "" or NULL changes nothing and
+     * returns true.
+     */
+    readonly append: typeof raw.wgf_text_buffer_append;
+    /**
+     * Returns the text's length in bytes, without its ending NUL: 0 for a buffer that isn't
+     * READY.
+     */
+    readonly getLength: typeof raw.wgf_text_buffer_get_length;
+    /**
+     * Returns a number that changes each time the buffer's text does: set, added to, or loaded
+     * again. Compare it with the one last seen to know the text changed. 0 for a buffer that
+     * isn't READY.
+     */
+    readonly getVersion: typeof raw.wgf_text_buffer_get_version;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
+};
 /** A handle of kind wgf_texture_t: the raw binding's branded type. */
 export type Texture = raw.wgf_texture_t;
 /**
@@ -11702,6 +11774,27 @@ export declare const Ui: {
      */
     readonly getScroll: typeof raw.wgf_ui_get_scroll;
     /**
+     * Shows a text buffer's text (wgf_text_buffer.h), wrapped and scrolled: a chat, a log, credits,
+     * help. Read-only.
+     *
+     * It is a scroll area `width` by `height` (0 takes its parent's room that way), down only,
+     * scrolled as wgf_ui_begin_scroll says, by its id. Its text is in the style's text size and
+     * color, broken at each newline and before a word that would pass its width.
+     *
+     * A frame passes no text: libwgf holds the buffer, and the view keeps its lines.
+     * - The text is broken into lines again only when the buffer's version, the view's width, or
+     *   the style's size or font changes.
+     * - Only the lines in view are laid out and drawn, so a long text costs what its visible
+     *   lines do.
+     *
+     * With `follow`, a view scrolled to its end stays at it as its text grows, as a chat's does.
+     * Scrolled up, it stays where it is.
+     *
+     * A buffer that isn't READY shows nothing. Its lines are laid out from its second frame, when
+     * its width is known. Returns false for no id, the text buffer 0, or a size below 0.
+     */
+    readonly textView: typeof raw.wgf_ui_text_view;
+    /**
      * Sets the open box's or panel's layout, before its first child.
      *
      * Your game describes the open box each frame, so nothing keeps it to read back. A color draws
@@ -11935,12 +12028,22 @@ export declare const Ui: {
      */
     readonly list: typeof raw.wgf_ui_list;
     /**
-     * Shows a text field: a line of text typed in. Returns true in the frame Enter is pressed in
-     * it.
+     * Shows a text field: a line of text typed in, the text of a text buffer (wgf_text_buffer.h).
+     * Returns true in the frame Enter is pressed in it.
      *
-     * It is as wide as its parent's room, at least the style's button width. The UI keeps its
-     * text by its id (see wgf_ui_get_text), from the first call or wgf_ui_set_text on, until the
-     * UI stops.
+     * Its text is the buffer's, held by libwgf, so it isn't given each frame: make the buffer
+     * once, give it to the field each frame, and read or set it when the game wants.
+     * - What is typed is written to the buffer as it is typed. Read it with
+     *   wgf_text_buffer_get_text, at Enter or any time.
+     * - A text set on the buffer (or added, or loaded again) is shown at the field's next call,
+     *   its caret at the end and its undo forgotten.
+     * - A buffer that isn't READY (loading, failed, released) shows "" and takes nothing typed.
+     * - The field holds 4095 bytes of a line. A longer text in the buffer is cut, in the buffer
+     *   too, as is one longer than `max_length`.
+     *
+     * The UI keeps the field's caret, selection, and undo by its id until the UI stops.
+     *
+     * It is as wide as its parent's room, at least the style's button width.
      *
      * Focused, it takes what is typed (wgf_input_get_chars) in place of the selection, and the
      * keys:
@@ -11973,34 +12076,16 @@ export declare const Ui: {
      * - A password field is the same, drawn as dots. Its words are the whole of it, and it is
      *   never copied or cut.
      *
-     * Also returns false when refused (no id).
+     * Also returns false when refused (no id, or the text buffer 0).
      */
     readonly textField: typeof raw.wgf_ui_text_field;
     /**
-     * Shows a text field: a line of text typed in. Returns true in the frame Enter is pressed in
-     * it.
+     * Shows a text field: a line of text typed in, the text of a text buffer (wgf_text_buffer.h).
+     * Returns true in the frame Enter is pressed in it.
      *
      * See Ui.textField for the rest.
      */
     readonly passwordField: typeof raw.wgf_ui_password_field;
-    /**
-     * Sets or gets the text field `id`'s text.
-     *
-     * - set_text puts its caret at the end and forgets its undo. The text is cut to 4095 bytes.
-     *   A field not given yet keeps the text for its first call.
-     * - get_text returns "" for a field never given or set. The string is valid until the field
-     *   changes.
-     *
-     * The setter returns false for no id, an id of 64 bytes or more, or no text. These two work
-     * outside a begun UI too.
-     */
-    readonly setText: typeof raw.wgf_ui_set_text;
-    /**
-     * Sets or gets the text field `id`'s text.
-     *
-     * See Ui.setText for the rest.
-     */
-    readonly getText: typeof raw.wgf_ui_get_text;
     /**
      * Sets or gets whether the text fields given after it, until it is changed, show their text
      * as refused.

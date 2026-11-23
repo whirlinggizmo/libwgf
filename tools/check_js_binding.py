@@ -137,12 +137,12 @@ def check_input(found):
             key('keyDown', letter, 'Key' + letter.upper(), ord(letter.upper()), text=letter)
             key('keyUp', letter, 'Key' + letter.upper(), ord(letter.upper()))
         frames(4)
-        typed = js('wgf.wgf_ui_get_text("name")')
+        typed = js('wgf.wgf_text_buffer_get_text(globalThis.name)')
         if typed != 'ab':
             problems.append(f'keys a and b typed {typed!r}')
         session.send('Input.insertText', {'text': ' cd'})  # as a phone's keyboard, or its paste, gives text
         frames(6)
-        given = js('wgf.wgf_ui_get_text("name")')
+        given = js('wgf.wgf_text_buffer_get_text(globalThis.name)')
         if given != 'ab cd':
             problems.append(f'text put in the input left {given!r}, not "ab cd"')
         skipped = None
@@ -156,7 +156,7 @@ def check_input(found):
             key('keyUp', 'v', 'KeyV', 86, 2)
             key('keyUp', 'Control', 'ControlLeft', 17, 0)
             frames(6)
-            pasted = js('wgf.wgf_ui_get_text("name")')
+            pasted = js('wgf.wgf_text_buffer_get_text(globalThis.name)')
             if pasted != 'ab cd once':
                 problems.append(f'Ctrl+V left {pasted!r}, not "ab cd once"')
         session.close()

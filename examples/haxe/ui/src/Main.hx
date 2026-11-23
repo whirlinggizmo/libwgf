@@ -15,8 +15,9 @@ import wgf.*;
 	- Reset asks first, in a modal. Escape there, or a pad's east button, means No.
 	- Escape quits, where quitting means anything (not in a browser).
 
-	The UI keeps a text field's text itself, by its id: set it with `Ui.setText`, read it
-	with `Ui.getText`. The default style is used, so nothing is loaded.
+	A text field's text is a text buffer, made once: the field writes what is typed into it,
+	and the game reads or sets it when it wants. The default style is used, so nothing is
+	loaded.
 
 	Its probes: ui.volume, ui.sound (1 on), ui.difficulty, ui.lives, ui.clicks (Apply
 	pressed), and ui.modal (1 while the modal is open). libwgf publishes ui.focus.
@@ -32,6 +33,8 @@ class Main {
 	static var lives = 3;
 	static var clicks = 0;
 	static var confirming = false; // the "Reset?" modal is open
+	static var name:TextBuffer; // the name field's text
+	static var log:TextBuffer; // what happened, shown in a text view under the buttons
 
 	static function main() {
 		Window.setTitle("libwgf ui (Haxe)");
@@ -43,7 +46,8 @@ class Main {
 
 	static function init() {
 		Render.setClearColor(Color.make(24, 28, 38, 255));
-		Ui.setText("name", "Ada"); // the field's first text
+		name = TextBuffer.createText("Ada"); // the field's first text
+		log = TextBuffer.createText("Settings opened.");
 	}
 
 	static function reset() {
@@ -51,7 +55,7 @@ class Main {
 		sound = true;
 		difficulty = 1;
 		lives = 3;
-		Ui.setText("name", "Ada");
+		name.setText("Ada");
 	}
 
 	static function frame() {
@@ -91,23 +95,28 @@ class Main {
 		Ui.label("Lives", 0);
 		lives = Std.int(Ui.number("lives", lives, 1, 9, 1)); // a number is a Float
 		Ui.label("Name", 0);
-		Ui.textField("name", "your name", 16); // its text is the UI's, by its id
+		Ui.textField("name", name, "your name", 16); // writes what is typed into `name`
 		Ui.endGrid();
 
 		Ui.spacer(8);
 		Ui.beginBox("buttons", UiDirection.ROW);
 		Ui.setGap(12);
-		if (Ui.button("apply", "Apply"))
+		if (Ui.button("apply", "Apply")) {
 			clicks++;
+			log.append('\nApplied: volume ${Math.round(volume)}, ${difficultyNames[difficulty]}, $lives lives.');
+		}
 		if (Ui.button("reset", "Reset..."))
 			confirming = true;
 		Ui.endBox();
+		// The log: its text is the buffer's, given as a handle, so a frame passes no text. It
+		// follows its end as lines are added.
+		Ui.textView("log", log, 0, 72, true);
 		Ui.endPanel();
 
 		// Under the panel: the values as the code holds them now.
 		final focus = Ui.getFocus();
 		Ui.label('volume ${Math.round(volume)}   sound ${sound ? "on" : "off"}   '
-			+ '${difficultyNames[difficulty]}   lives $lives   name "${Ui.getText("name")}"   '
+			+ '${difficultyNames[difficulty]}   lives $lives   name "${name.getText()}"   '
 			+ 'applied $clicks   focus: ${focus == "" ? "none" : focus}', 14);
 	}
 
@@ -120,6 +129,7 @@ class Main {
 		Ui.setGap(12);
 		if (Ui.button("yes", "Yes")) {
 			reset();
+			log.append("\nReset.");
 			confirming = false;
 		}
 		if (Ui.button("no", "No"))

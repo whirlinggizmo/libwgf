@@ -213,6 +213,29 @@ class Ui {
 		return Raw.wgf_ui_get_scroll(id, into);
 
 	/**
+	    Shows a text buffer's text (wgf_text_buffer.h), wrapped and scrolled: a chat, a log, credits,
+	    help. Read-only.
+
+	    It is a scroll area `width` by `height` (0 takes its parent's room that way), down only,
+	    scrolled as wgf_ui_begin_scroll says, by its id. Its text is in the style's text size and
+	    color, broken at each newline and before a word that would pass its width.
+
+	    A frame passes no text: libwgf holds the buffer, and the view keeps its lines.
+	    - The text is broken into lines again only when the buffer's version, the view's width, or
+	      the style's size or font changes.
+	    - Only the lines in view are laid out and drawn, so a long text costs what its visible
+	      lines do.
+
+	    With `follow`, a view scrolled to its end stays at it as its text grows, as a chat's does.
+	    Scrolled up, it stays where it is.
+
+	    A buffer that isn't READY shows nothing. Its lines are laid out from its second frame, when
+	    its width is known. Returns false for no id, the text buffer 0, or a size below 0.
+	**/
+	public static inline function textView(id:String, text:TextBuffer, width:Float, height:Float, follow:Bool):Bool
+		return Raw.wgf_ui_text_view(id, text, width, height, follow);
+
+	/**
 	    Sets the open box's or panel's layout, before its first child.
 
 	    Your game describes the open box each frame, so nothing keeps it to read back. A color draws
@@ -500,12 +523,22 @@ class Ui {
 		return Raw.wgf_ui_list(id, items, selected, rows);
 
 	/**
-	    Shows a text field: a line of text typed in. Returns true in the frame Enter is pressed in
-	    it.
+	    Shows a text field: a line of text typed in, the text of a text buffer (wgf_text_buffer.h).
+	    Returns true in the frame Enter is pressed in it.
 
-	    It is as wide as its parent's room, at least the style's button width. The UI keeps its
-	    text by its id (see wgf_ui_get_text), from the first call or wgf_ui_set_text on, until the
-	    UI stops.
+	    Its text is the buffer's, held by libwgf, so it isn't given each frame: make the buffer
+	    once, give it to the field each frame, and read or set it when the game wants.
+	    - What is typed is written to the buffer as it is typed. Read it with
+	      wgf_text_buffer_get_text, at Enter or any time.
+	    - A text set on the buffer (or added, or loaded again) is shown at the field's next call,
+	      its caret at the end and its undo forgotten.
+	    - A buffer that isn't READY (loading, failed, released) shows "" and takes nothing typed.
+	    - The field holds 4095 bytes of a line. A longer text in the buffer is cut, in the buffer
+	      too, as is one longer than `max_length`.
+
+	    The UI keeps the field's caret, selection, and undo by its id until the UI stops.
+
+	    It is as wide as its parent's room, at least the style's button width.
 
 	    Focused, it takes what is typed (wgf_input_get_chars) in place of the selection, and the
 	    keys:
@@ -538,41 +571,19 @@ class Ui {
 	    - A password field is the same, drawn as dots. Its words are the whole of it, and it is
 	      never copied or cut.
 
-	    Also returns false when refused (no id).
+	    Also returns false when refused (no id, or the text buffer 0).
 	**/
-	public static inline function textField(id:String, placeholder:String, max_length:Int):Bool
-		return Raw.wgf_ui_text_field(id, placeholder, max_length);
+	public static inline function textField(id:String, text:TextBuffer, placeholder:String, max_length:Int):Bool
+		return Raw.wgf_ui_text_field(id, text, placeholder, max_length);
 
 	/**
-	    Shows a text field: a line of text typed in. Returns true in the frame Enter is pressed in
-	    it.
+	    Shows a text field: a line of text typed in, the text of a text buffer (wgf_text_buffer.h).
+	    Returns true in the frame Enter is pressed in it.
 
 	    See Ui.textField for the rest.
 	**/
-	public static inline function passwordField(id:String, placeholder:String, max_length:Int):Bool
-		return Raw.wgf_ui_password_field(id, placeholder, max_length);
-
-	/**
-	    Sets or gets the text field `id`'s text.
-
-	    - set_text puts its caret at the end and forgets its undo. The text is cut to 4095 bytes.
-	      A field not given yet keeps the text for its first call.
-	    - get_text returns "" for a field never given or set. The string is valid until the field
-	      changes.
-
-	    The setter returns false for no id, an id of 64 bytes or more, or no text. These two work
-	    outside a begun UI too.
-	**/
-	public static inline function setText(id:String, text:String):Bool
-		return Raw.wgf_ui_set_text(id, text);
-
-	/**
-	    Sets or gets the text field `id`'s text.
-
-	    See Ui.setText for the rest.
-	**/
-	public static inline function getText(id:String):String
-		return Raw.wgf_ui_get_text(id);
+	public static inline function passwordField(id:String, text:TextBuffer, placeholder:String, max_length:Int):Bool
+		return Raw.wgf_ui_password_field(id, text, placeholder, max_length);
 
 	/**
 	    Sets or gets whether the text fields given after it, until it is changed, show their text

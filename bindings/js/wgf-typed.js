@@ -2521,6 +2521,25 @@ export const Text = Object.freeze({
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
+// wgf: typed TextBuffer
+export const TextBuffer = Object.freeze({
+    // wgf: call wgf_text_buffer_create
+    create: raw.wgf_text_buffer_create,
+    // wgf: call wgf_text_buffer_create_text
+    createText: raw.wgf_text_buffer_create_text,
+    // wgf: call wgf_text_buffer_set_text
+    setText: raw.wgf_text_buffer_set_text,
+    // wgf: call wgf_text_buffer_get_text
+    getText: raw.wgf_text_buffer_get_text,
+    // wgf: call wgf_text_buffer_append
+    append: raw.wgf_text_buffer_append,
+    // wgf: call wgf_text_buffer_get_length
+    getLength: raw.wgf_text_buffer_get_length,
+    // wgf: call wgf_text_buffer_get_version
+    getVersion: raw.wgf_text_buffer_get_version,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
+});
 // wgf: typed Texture
 export const Texture = Object.freeze({
     // wgf: call wgf_texture_create
@@ -2874,6 +2893,8 @@ export const Ui = Object.freeze({
     setScroll: raw.wgf_ui_set_scroll,
     // wgf: call wgf_ui_get_scroll
     getScroll: raw.wgf_ui_get_scroll,
+    // wgf: call wgf_ui_text_view
+    textView: raw.wgf_ui_text_view,
     // wgf: call wgf_ui_set_width
     setWidth: raw.wgf_ui_set_width,
     // wgf: call wgf_ui_set_height
@@ -2932,10 +2953,6 @@ export const Ui = Object.freeze({
     textField: raw.wgf_ui_text_field,
     // wgf: call wgf_ui_password_field
     passwordField: raw.wgf_ui_password_field,
-    // wgf: call wgf_ui_set_text
-    setText: raw.wgf_ui_set_text,
-    // wgf: call wgf_ui_get_text
-    getText: raw.wgf_ui_get_text,
     // wgf: call wgf_ui_set_invalid
     setInvalid: raw.wgf_ui_set_invalid,
     // wgf: call wgf_ui_is_invalid

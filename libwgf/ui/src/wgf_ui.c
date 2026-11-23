@@ -22,6 +22,7 @@
 #include "wgf_platform_priv.h"
 #include "wgf_render.h"
 #include "wgf_resource.h"
+#include "wgf_text_buffer.h"
 #include "wgf_ui_popup_priv.h"
 #include "wgf_ui_priv.h"
 #include "wgf_ui_scroll_priv.h"
@@ -87,6 +88,19 @@ typedef struct grid_t {
     float widths[GRID_COLUMNS_MAX]; /* each column's widest child */
 } grid_t;
 
+/* A text view's lines, as its buffer was last broken into them: kept until the buffer's version,
+ * the width it wraps to, its text's size, or the font changes, and the view until the UI stops. */
+typedef struct text_view_t {
+    char id[64];
+    unsigned buffer;        /* wgf_text_buffer_t */
+    int version;            /* the buffer's, as broken */
+    float wrap;             /* the width it was wrapped to */
+    float size;             /* its text's size */
+    uint16_t font;          /* font_key()'s, as broken */
+    int count, capacity;    /* its lines */
+    int *starts, *lengths;  /* each line's bytes in the buffer's text */
+} text_view_t;
+
 typedef struct level_t level_t;
 struct level_t {
     int kind;
@@ -127,6 +141,8 @@ static struct {
     int depth;
     grid_t grids[GRIDS_MAX];
     void (*measure_grids)(void); /* set by the first grid, so only a program with a grid links it */
+    text_view_t *views; /* the text views' lines */
+    int view_count, view_capacity;
     text_block_t *blocks, *block;
 
     /* this frame's answers, from the input as the UI began */
@@ -503,6 +519,7 @@ static void end_frame(void)
 static void stop(void)
 {
     text_block_t *block = ui.blocks;
+    int i;
     let_go();
     while (block != NULL) {
         text_block_t *next = block->next;
@@ -519,6 +536,11 @@ static void stop(void)
     free(ui.scroll.areas);
     free(ui.scroll.before);
     free(ui.scratch);
+    for (i = 0; i < ui.view_count; i++) {
+        free(ui.views[i].starts);
+        free(ui.views[i].lengths);
+    }
+    free(ui.views);
     memset(&ui, 0, sizeof(ui));
     style_set = false;
 }
@@ -2041,8 +2063,11 @@ bool wgf_ui_set_scroll(const char *id, float x, float y)
 {
     Clay_ScrollContainerData data;
     if (!isfinite(x) || !isfinite(y) || !scroll_named(id, &data)) return false;
-    data.scrollPosition->x = -clamped(x, data.contentDimensions.width - data.scrollContainerDimensions.width);
-    data.scrollPosition->y = -clamped(y, data.contentDimensions.height - data.scrollContainerDimensions.height);
+    /* held to its content: 0 when the content is shorter than the area */
+    data.scrollPosition->x =
+        -clamped(x, fmaxf(data.contentDimensions.width - data.scrollContainerDimensions.width, 0.0f));
+    data.scrollPosition->y =
+        -clamped(y, fmaxf(data.contentDimensions.height - data.scrollContainerDimensions.height, 0.0f));
     ui.scroll.flung = 0;
     return true;
 }
@@ -2052,6 +2077,196 @@ wgf_vec2_t wgf_ui_get_scroll(const char *id)
     Clay_ScrollContainerData data;
     if (!scroll_named(id, &data)) return wgf_vec2_make(0.0f, 0.0f);
     return wgf_vec2_make(-data.scrollPosition->x, -data.scrollPosition->y);
+}
+
+/* ---- text views -------------------------------------------------------------------------- */
+
+static float line_height(float size);
+
+/* The view `id`'s lines, made (empty) if it has none: NULL when out of memory. */
+static text_view_t *text_view_named(const char *id)
+{
+    int i;
+    for (i = 0; i < ui.view_count; i++) {
+        if (strcmp(ui.views[i].id, id) == 0) return &ui.views[i];
+    }
+    if (ui.view_count == ui.view_capacity) {
+        const int capacity = ui.view_capacity > 0 ? ui.view_capacity * 2 : 4;
+        text_view_t *grown = (text_view_t *)realloc(ui.views, sizeof(text_view_t) * (size_t)capacity);
+        if (grown == NULL) return NULL;
+        ui.views = grown;
+        ui.view_capacity = capacity;
+    }
+    memset(&ui.views[ui.view_count], 0, sizeof(text_view_t));
+    snprintf(ui.views[ui.view_count].id, sizeof(ui.views[0].id), "%s", id);
+    ui.views[ui.view_count].version = -1; /* never broken */
+    return &ui.views[ui.view_count++];
+}
+
+/* One more line, bytes `start` to `end`, its spaces at its end left off. False when out of memory. */
+static bool add_line(text_view_t *view, const char *text, int start, int end)
+{
+    while (end > start && text[end - 1] == ' ') end--;
+    if (view->count == view->capacity) {
+        const int capacity = view->capacity > 0 ? view->capacity * 2 : 64;
+        int *starts = (int *)realloc(view->starts, sizeof(int) * (size_t)capacity);
+        int *lengths;
+        if (starts == NULL) return false;
+        view->starts = starts;
+        lengths = (int *)realloc(view->lengths, sizeof(int) * (size_t)capacity);
+        if (lengths == NULL) return false;
+        view->lengths = lengths;
+        view->capacity = capacity;
+    }
+    view->starts[view->count] = start;
+    view->lengths[view->count++] = end - start;
+    return true;
+}
+
+static float width_of(const char *text, int length, float size)
+{
+    const char *line = terminated(text, length);
+    return line != NULL ? wgf_font_measure(ui.font, line, size).x : 0.0f;
+}
+
+/* `text` broken into lines `wrap` wide at `size`: at each newline, and before a word that would
+ * pass the width; a word wider than the width alone broken at a character. Each word measured
+ * once, so a change costs the text's length. False when out of memory. */
+static bool break_lines(text_view_t *view, const char *text, float wrap, float size)
+{
+    const float space = width_of(" ", 1, size);
+    int at = 0;
+    view->count = 0;
+    while (true) { /* a paragraph: to its newline or the end */
+        int start = at;
+        float width = 0.0f;
+        while (text[at] != '\0' && text[at] != '\n') {
+            int end = at;
+            float word;
+            while (text[end] != '\0' && text[end] != '\n' && text[end] != ' ') end++;
+            word = width_of(text + at, end - at, size);
+            if (width > 0.0f && width + space + word > wrap) { /* the word on the next line */
+                if (!add_line(view, text, start, at)) return false;
+                start = at;
+                width = 0.0f;
+            }
+            while (word > wrap && end - at > 1) { /* wider than a line: broken at a character */
+                int cut = at + 1, fits = at;
+                while (cut <= end) {
+                    if (width_of(text + start, cut - start, size) > wrap) break;
+                    fits = cut;
+                    do cut++; while (cut < end && (text[cut] & 0xC0) == 0x80); /* whole UTF-8 characters */
+                }
+                if (fits <= start) { /* not even a character fits: one alone */
+                    fits = start + 1;
+                    while (fits < end && (text[fits] & 0xC0) == 0x80) fits++;
+                }
+                if (!add_line(view, text, start, fits)) return false;
+                start = at = fits;
+                word = width_of(text + at, end - at, size);
+                width = 0.0f;
+            }
+            width += (width > 0.0f ? space : 0.0f) + word;
+            at = end;
+            while (text[at] == ' ') at++;
+        }
+        if (!add_line(view, text, start, at)) return false;
+        if (text[at] == '\0') return true;
+        at++; /* past the newline */
+    }
+}
+
+static void spacer_of(float height)
+{
+    Clay_ElementDeclaration space;
+    if (height <= 0.0f) return;
+    memset(&space, 0, sizeof(space));
+    sizing(&space.layout.sizing.width, WGF_UI_SIZING_GROW, 0.0f);
+    sizing(&space.layout.sizing.height, WGF_UI_SIZING_FIXED, height);
+    Clay__OpenElement();
+    Clay__ConfigureOpenElement(space);
+    Clay__CloseElement();
+}
+
+bool wgf_ui_text_view(const char *id, wgf_text_buffer_t text, float width, float height, bool follow)
+{
+    static const bool down[2] = {false, true};
+    Clay_ElementId element;
+    Clay_String name;
+    Clay_ScrollContainerData data;
+    text_view_t *view;
+    level_t *level;
+    const char *chars;
+    const float size = ui.values[WGF_UI_VALUE_TEXT_SIZE], line = line_height(size);
+    const wgf_color_t color = ui.colors[WGF_UI_COLOR_TEXT];
+    float wrap, total, end;
+    bool at_end;
+    int version, first, last, i;
+    if (text == 0 || !(width >= 0.0f) || !(height >= 0.0f) || !isfinite(width) || !isfinite(height)) return false;
+    if (!widget_named(id, "wgf_ui_text_view", &element, &name)) return false;
+    view = text_view_named(id);
+    if (view == NULL) {
+        wgf_log_error("wgf_ui: out of memory for a text view");
+        return false;
+    }
+    data = Clay_GetScrollContainerData(Clay_GetElementIdWithIndex(name, 0));
+    at_end = !data.found || data.scrollPosition == NULL ||
+             -data.scrollPosition->y >= data.contentDimensions.height - data.scrollContainerDimensions.height - 1.0f;
+    if (!open_scroll(element, name, width, height, 0.0f, 0.0f, NULL,
+                     bare_area(id, element, Clay_GetElementIdWithIndex(name, 0)), down, true)) {
+        return false;
+    }
+    level = &ui.levels[ui.depth - 1];
+    level->declaration.layout.childGap = 0;
+    memset(&level->declaration.layout.padding, 0, sizeof(level->declaration.layout.padding));
+    /* the width it wraps to, as last laid out, less the bar's room shown or not, so the bar
+       coming and going never wraps it again */
+    wrap = data.found ? data.scrollContainerDimensions.width : width;
+    if (data.found && !level->shown[1]) wrap -= ui.values[WGF_UI_VALUE_SCROLL_BAR];
+    version = wgf_text_buffer_get_version(text);
+    chars = wgf_text_buffer_get_text(text);
+    if (wrap <= 0.0f) {
+        view->count = 0; /* nothing laid out yet: its lines from the next frame */
+    } else if (view->buffer != text || view->version != version || view->wrap != wrap || view->size != size ||
+               view->font != font_key()) {
+        const bool grew = view->buffer == text && view->version != version;
+        if (!break_lines(view, chars, wrap, size)) {
+            wgf_log_error("wgf_ui: out of memory for a text view's lines");
+            view->count = 0;
+        }
+        view->buffer = text;
+        view->version = version;
+        view->wrap = wrap;
+        view->size = size;
+        view->font = font_key();
+        total = (float)view->count * line;
+        if (follow && grew && at_end && data.found && data.scrollPosition != NULL) { /* kept at its end */
+            end = total - data.scrollContainerDimensions.height;
+            level->offset[1] = end > 0.0f ? end : 0.0f;
+            data.scrollPosition->y = -level->offset[1];
+            level->declaration.clip.childOffset.y = -level->offset[1];
+        }
+    }
+    total = (float)view->count * line;
+    first = (int)floorf(level->offset[1] / line);
+    last = (int)ceilf((level->offset[1] + (data.found ? data.scrollContainerDimensions.height : height)) / line);
+    if (first < 0) first = 0;
+    if (last > view->count) last = view->count;
+    if (first > last) first = last;
+    spacer_of((float)first * line); /* the lines above the view: their room, not laid out */
+    for (i = first; i < last; i++) {
+        Clay_ElementDeclaration row;
+        memset(&row, 0, sizeof(row));
+        sizing(&row.layout.sizing.width, WGF_UI_SIZING_GROW, 0.0f);
+        sizing(&row.layout.sizing.height, WGF_UI_SIZING_FIXED, line);
+        Clay__OpenElement();
+        Clay__ConfigureOpenElement(row);
+        if (view->lengths[i] > 0)
+            text_slice(chars + view->starts[i], (size_t)view->lengths[i], size, color, CLAY_TEXT_WRAP_NONE, NULL);
+        Clay__CloseElement();
+    }
+    spacer_of(total - (float)last * line); /* and below */
+    return close_level(KIND_SCROLL);
 }
 
 static void draw_list_box(const piece_t *piece, Clay_BoundingBox box);
@@ -2528,7 +2743,14 @@ static void field_press(wgf_ui_priv_field_t *field, float x, bool masked, float 
 
 static void draw_field(const piece_t *piece, Clay_BoundingBox box);
 
-static bool text_field(const char *what, const char *id, const char *placeholder, int max_length, bool masked)
+/* The field's text, changed by its player or cut to its most, given to its buffer. */
+static void written(wgf_ui_priv_field_t *field, wgf_text_buffer_t buffer)
+{
+    if (wgf_text_buffer_set_text(buffer, field->text)) field->version = wgf_text_buffer_get_version(buffer);
+}
+
+static bool text_field(const char *what, const char *id, wgf_text_buffer_t buffer, const char *placeholder,
+                       int max_length, bool masked)
 {
     Clay_ElementId element;
     Clay_ElementDeclaration declaration;
@@ -2539,15 +2761,28 @@ static bool text_field(const char *what, const char *id, const char *placeholder
     const float size = ui.values[WGF_UI_VALUE_TEXT_SIZE], padding = ui.values[WGF_UI_VALUE_BUTTON_PADDING] * 0.5f;
     const bool visible = ui.focus_visible;
     float left = 0.0f, inside = 0.0f, caret;
-    bool submitted = false;
-    int state;
-    if (!widget_id(id, what, &element)) return false;
+    bool submitted = false, editable;
+    int state, version, length;
+    if (buffer == 0 || !widget_id(id, what, &element)) return false;
     field = wgf_ui_priv_field(id, true);
     if (field == NULL) {
         wgf_log_error("wgf_ui: out of memory for a text field");
         return false;
     }
+    /* the buffer's text taken when it changed outside the field: set, added to, loaded, or another buffer */
+    version = wgf_text_buffer_get_version(buffer);
+    editable = version != 0; /* READY: a buffer loading, failed, or released shows "" and takes nothing */
+    if (field->buffer != buffer || field->version != version) {
+        if (!wgf_ui_priv_field_take(field, wgf_text_buffer_get_text(buffer))) {
+            wgf_log_error("wgf_ui: out of memory for a text field");
+            return false;
+        }
+        field->buffer = buffer;
+        field->version = version;
+    }
+    length = field->length;
     wgf_ui_priv_field_limit(field, max_length);
+    if (field->length != length) written(field, buffer);
     answer(id, element, Clay_PointerOver(element), ARROWS_ACROSS, true, &answered);
     laid = Clay_GetElementData(element);
     if (laid.found) {
@@ -2568,11 +2803,11 @@ static bool text_field(const char *what, const char *id, const char *placeholder
             wgf_ui_priv_field_place(field, field_at(field, ui.pointer_x - left + field->scroll, masked, size),
                                     field->anchor, ui.clock);
         }
-        if (answered.focused) {
+        if (answered.focused && editable) {
             wgf_ui_priv_edit_t edit;
             if (!field->was_focused && ui.focus_visible) wgf_ui_priv_field_place(field, field->length, 0, ui.clock);
             field_keys(&edit, max_length, masked);
-            wgf_ui_priv_field_edit(field, &edit, ui.clock);
+            if (wgf_ui_priv_field_edit(field, &edit, ui.clock)) written(field, buffer);
             submitted = wgf_keyboard_is_pressed(WGF_KEY_ENTER) || wgf_keyboard_is_pressed(WGF_KEY_KP_ENTER);
         }
     }
@@ -2616,14 +2851,14 @@ static bool text_field(const char *what, const char *id, const char *placeholder
     return submitted;
 }
 
-bool wgf_ui_text_field(const char *id, const char *placeholder, int max_length)
+bool wgf_ui_text_field(const char *id, wgf_text_buffer_t text, const char *placeholder, int max_length)
 {
-    return text_field("wgf_ui_text_field", id, placeholder, max_length, false);
+    return text_field("wgf_ui_text_field", id, text, placeholder, max_length, false);
 }
 
-bool wgf_ui_password_field(const char *id, const char *placeholder, int max_length)
+bool wgf_ui_password_field(const char *id, wgf_text_buffer_t text, const char *placeholder, int max_length)
 {
-    return text_field("wgf_ui_password_field", id, placeholder, max_length, true);
+    return text_field("wgf_ui_password_field", id, text, placeholder, max_length, true);
 }
 
 bool wgf_ui_set_invalid(bool invalid)

@@ -920,7 +920,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** The example reads the text back with `Ui.getText`, with a comment.
 - **Cost:** One widget that breaks the pattern the rest teach.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** fine: HISTORY.md, "Text buffers" (the field takes a text buffer, its value, as the others take theirs).
 
 ### examples: a choice's chosen option is hard to see
 

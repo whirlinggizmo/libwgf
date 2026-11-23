@@ -79,6 +79,7 @@ typedef enum wgf_core_priv_handle_kind_t {
     WGF_CORE_PRIV_HANDLE_KIND_AUDIO_BUS = 43,            /* "audio.bus" */
     /* asset: 48.. */
     WGF_CORE_PRIV_HANDLE_KIND_ASSET_TASK = 48, /* "asset.task": a load's file */
+    WGF_CORE_PRIV_HANDLE_KIND_TEXT_BUFFER = 49, /* "asset.text_buffer": text in memory, a resource */
     /* ui: 56.. */
     WGF_CORE_PRIV_HANDLE_KIND_DOCUMENT = 56, /* "ui.document": an RML document, a resource */
     WGF_CORE_PRIV_HANDLE_KIND_ELEMENT = 57,  /* "ui.element": one of a document's elements */
