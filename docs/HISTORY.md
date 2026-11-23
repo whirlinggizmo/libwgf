@@ -1040,6 +1040,12 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## The `.clang-format` taken out again (2026-11-22)
+
+Removed the same day it went in (the entry below). Rob: it scared him. The reason is the trap that entry describes. clang-format breaks the JavaScript inside `EM_JS`, and the only guard was a list of files to skip, which an editor or a person can bypass. A formatter config that can silently break the web build isn't worth having for layout nobody had asked a tool to hold.
+
+`.clang-format`, `.clang-format-ignore`, BUILDING.md's "Formatting" section, and `check_lines.py`'s check of the ignore list are gone. libwgf never depended on clang-format: nothing in the build, the tests, or CI ran it. What stays is the line-length and tab check. If a formatter is wanted later, the JavaScript in C files has to be dealt with first, for example by moving it into `.js` library files.
+
 ## A `.clang-format`, tuned to the code (2026-11-22)
 
 Rob asked whether the line-length work had added one. It hadn't: no formatter was installed. This adds one, with his go-ahead.
