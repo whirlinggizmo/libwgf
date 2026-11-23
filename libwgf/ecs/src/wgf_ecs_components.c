@@ -141,7 +141,7 @@ bool wgf_bounds_is_visible(wgf_actor_t actor)
 bool wgf_bounds_set_mode(wgf_actor_t actor, wgf_bounds_mode_t mode)
 {
     wgf_ecs_priv_bounds_t *b = bounds_of(actor);
-    if (b == NULL || (int)mode < WGF_BOUNDS_MODE_WRAP || mode > WGF_BOUNDS_MODE_DESTROY) return false;
+    if (b == NULL || (int)mode < WGF_BOUNDS_MODE_WRAP || mode > WGF_BOUNDS_MODE_BOUNCE) return false;
     b->mode = mode;
     return true;
 }

@@ -190,6 +190,9 @@ void wgf_audio_priv_platform_free_voice(wgf_handle_t voice, wgf_audio_priv_voice
 void wgf_audio_priv_platform_update(void);
 /* The master volume or pause changed: the web carries it into its master gain. */
 void wgf_audio_priv_platform_master(float volume, bool paused);
+/* Whether the platform is holding sound back until an input (wgf_audio_is_blocked): the
+ * web's, before or after audio starts. */
+bool wgf_audio_priv_platform_is_blocked(void);
 
 /* A pushed voice's queue (wgf_voice_create_pushed), each platform's: natively a ring the
  * mixer takes from, on the web one in JS a ScriptProcessorNode takes from. All on the

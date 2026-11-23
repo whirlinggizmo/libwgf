@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "c533d69d26b9f83d" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "ae38e30bb821443a" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -1355,6 +1355,9 @@ export const WGF_COMPONENT_ARCADE2D = 8;
  * actor whose position leaves it by more than its margin is wrapped, clamped, or destroyed,
  * as its mode says.
  *
+ * The rectangle keeps the actor's position, not its picture. For a ball to bounce as its rim
+ * touches the screen's edge, make the rectangle smaller by its radius on each side.
+ *
  * Defaults: a rectangle at 0, 0, 800 by 600, WRAP, and a margin of 0.
  *
  * Every call returns false (or 0) for an actor without bounds.
@@ -1362,6 +1365,7 @@ export const WGF_COMPONENT_ARCADE2D = 8;
 export const WGF_BOUNDS_MODE_WRAP = 0;
 export const WGF_BOUNDS_MODE_CLAMP = 1;
 export const WGF_BOUNDS_MODE_DESTROY = 2;
+export const WGF_BOUNDS_MODE_BOUNCE = 3;
 
 /**
  * A collider (WGF_COMPONENT_COLLIDER): a shape that overlaps other colliders as a trigger.
@@ -1420,6 +1424,8 @@ export const WGF_COLLIDER_SHAPE_SEGMENT = 3;
  * - A screen under one that pauses (the default) is paused, with its stages
  *   (wgf_actor_set_paused: drawn, but frozen).
  * - A screen under one that doesn't pause, such as a HUD laid over play, runs on.
+ * - What a paused screen's stages hold waits with them: their actors' motion, behaviors, and
+ *   tweens. A number's tween (wgf_tween_create) belongs to no stage, and runs on.
  * - A screen off the stack is switched off and paused, with its stages (wgf_actor_set_enabled:
  *   not drawn, and nothing under them moving). It is kept for your game to push again or
  *   destroy.
@@ -1465,7 +1471,7 @@ export const WGF_TRANSITION_IRIS = 7;
  * game's tick, the systems run in this order:
  * - Lifetimes count down. An actor whose time is up is destroyed.
  * - Motion moves each actor by its velocity and spin, damped, with its speed capped.
- * - Bounds wrap, clamp, or destroy an actor that has left its rectangle.
+ * - Bounds wrap, clamp, destroy, or bounce an actor that has left its rectangle.
  * - Colliders find the overlaps.
  *
  * Each frame, a simulated actor is drawn between its last two ticks' transforms.
@@ -12243,6 +12249,10 @@ export function wgf_model_create(mesh) {
  * READY, the file's node tree is made the model's children. The mesh is then the model's for
  * good.
  *
+ * To tell that a model has loaded, test its mesh's status (wgf_resource_get_status of
+ * wgf_model_get_mesh). The moment it reads READY, the model's children are made and its
+ * animations are there, so there is no need to test their counts.
+ *
  * When the file is loaded again (wgf_asset_reload), the tree is made again in place:
  * - A node's actor is kept, found by its name under its parent's actor, and moved.
  * - Its mesh keeps the same handle, with the new triangles.
@@ -13330,6 +13340,9 @@ export function wgf_shape2d_get_kind(shape) {
 /**
  * Makes the shape a rectangle `width` by `height` from its own origin. The origin is its
  * top-left corner, unless a pivot is set.
+ *
+ * A rectangle collider (wgf_collider.h) and an arcade body are centered on their actor. To
+ * line a rectangle up with one, set its pivot to 0.5, 0.5 (`pivot=0.5,0.5` in a scene file).
  *
  * Returns false for a handle that isn't a 2D shape, or a size below 0.
  */
@@ -15508,6 +15521,20 @@ export function wgf_audio_is_paused() {
     return value !== 0;
 }
 
+// wgf: call wgf_audio_is_blocked
+/**
+ * Returns whether the browser is holding sound back until the page's first key, click, or
+ * touch. While it is, a voice told to play reads PLAYING, is silent, and its position stays.
+ *
+ * Use it to show "click for sound" only while it is true. Returns false outside a browser,
+ * and after that first input. Before any sound is made it is what the browser says of the
+ * page's input, and true in a browser that doesn't say.
+ */
+export function wgf_audio_is_blocked() {
+    const value = host["_wgf_audio_is_blocked"]();
+    return value !== 0;
+}
+
 // wgf: call wgf_audio_set_listener_position
 /**
  * Sets or gets the listener's position and facing. A spatial voice (wgf_voice_set_spatial) is
@@ -15961,8 +15988,9 @@ export function wgf_voice_set_sound(voice, sound) {
 
 // wgf: call wgf_voice_get_sound
 /**
- * Returns the voice's sound. The voice holds the reference. Returns 0 for none, and for a
- * handle that isn't a voice.
+ * Returns the voice's sound. The voice holds the reference, so don't release what this
+ * returns: that would let go of the voice's own. Returns 0 for none, and for a handle that
+ * isn't a voice.
  */
 export function wgf_voice_get_sound(voice) {
     const value = host["_wgf_voice_get_sound"](voice);
@@ -17357,7 +17385,9 @@ export function wgf_scene_find_prefab(scene, name) {
 /**
  * Returns what the file holds, once the scene is READY.
  *
- * - get_actor_count returns the number of top actors.
+ * - get_actor_count returns the number of top actors in the file: those with no parent
+ *   there, whatever they are. It is not how many actors are simulated now
+ *   (wgf_actor_get_count).
  * - get_prefab_count returns the number of prefabs.
  * - get_prefab_name returns each prefab's name in file order, or "" past the end.
  *
@@ -17842,6 +17872,9 @@ export function wgf_screen_get_load_progress() {
  *
  * - An actor's tween starts from where the actor is when the tween begins, after its delay.
  * - It ends with the actor: a tween of a destroyed actor is let go of.
+ * - It waits while its actor is paused (wgf_actor_set_paused), as under a pause screen.
+ * - A number's tween has no actor, so it runs on under a pause. Pause it yourself
+ *   (wgf_tween_set_paused), as in a screen's exit and enter.
  * - A tween that ends, its repeats done, is let go of too. Its handle is then dead (see
  *   wgf_handle_is_alive), which is how your game knows it ended.
  * - There can be at most 4096 tweens.
@@ -18032,7 +18065,9 @@ export function wgf_world_take_events(out) {
 
 // wgf: call wgf_actor_get_count
 /**
- * Returns how many actors have a component or a behavior: the simulated ones.
+ * Returns how many actors have a component or a behavior: the simulated ones. An actor with
+ * neither, such as a text or a sprite that only draws, isn't counted. For the actors a scene
+ * file holds, see wgf_scene_get_actor_count.
  */
 export function wgf_actor_get_count() {
     const value = host["_wgf_actor_get_count"]();
@@ -18455,6 +18490,19 @@ export function wgf_body3d_get_spin(actor, into) {
  */
 export function wgf_body3d_add_impulse(actor, x, y, z) {
     const value = host["_wgf_body3d_add_impulse"](actor, x, y, z);
+    return value !== 0;
+}
+
+// wgf: call wgf_body3d_is_sleeping
+/**
+ * Returns whether a dynamic body is asleep: the world stopped simulating it because it has
+ * been still for about half a second. A touch, a push, or a new position or velocity wakes it.
+ *
+ * Use it to ask whether things have settled, in place of testing each velocity. Returns false
+ * for a body not yet made in the world, and for a static, kinematic, or character body.
+ */
+export function wgf_body3d_is_sleeping(actor) {
+    const value = host["_wgf_body3d_is_sleeping"](actor);
     return value !== 0;
 }
 

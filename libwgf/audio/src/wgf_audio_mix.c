@@ -693,3 +693,8 @@ void wgf_audio_priv_platform_master(float volume, bool paused)
     (void)volume;
     (void)paused; /* the mixer reads them itself */
 }
+
+bool wgf_audio_priv_platform_is_blocked(void)
+{
+    return false;
+}

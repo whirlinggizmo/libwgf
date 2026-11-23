@@ -100,8 +100,9 @@ abstract Voice(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_voice_set_sound(this, sound);
 
 	/**
-	    Returns the voice's sound. The voice holds the reference. Returns 0 for none, and for a
-	    handle that isn't a voice.
+	    Returns the voice's sound. The voice holds the reference, so don't release what this
+	    returns: that would let go of the voice's own. Returns 0 for none, and for a handle that
+	    isn't a voice.
 	**/
 	public inline function getSound():Sound
 		return Raw.wgf_voice_get_sound(this);

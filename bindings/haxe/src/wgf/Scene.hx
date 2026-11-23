@@ -76,7 +76,9 @@ abstract Scene(Int) from Int to Int to wgf.Handle {
 	/**
 	    Returns what the file holds, once the scene is READY.
 
-	    - get_actor_count returns the number of top actors.
+	    - get_actor_count returns the number of top actors in the file: those with no parent
+	      there, whatever they are. It is not how many actors are simulated now
+	      (wgf_actor_get_count).
 	    - get_prefab_count returns the number of prefabs.
 	    - get_prefab_name returns each prefab's name in file order, or "" past the end.
 

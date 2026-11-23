@@ -22,6 +22,9 @@ typedef wgf_handle_t wgf_tween_t;
  *
  * - An actor's tween starts from where the actor is when the tween begins, after its delay.
  * - It ends with the actor: a tween of a destroyed actor is let go of.
+ * - It waits while its actor is paused (wgf_actor_set_paused), as under a pause screen.
+ * - A number's tween has no actor, so it runs on under a pause. Pause it yourself
+ *   (wgf_tween_set_paused), as in a screen's exit and enter.
  * - A tween that ends, its repeats done, is let go of too. Its handle is then dead (see
  *   wgf_handle_is_alive), which is how your game knows it ended.
  * - There can be at most 4096 tweens.

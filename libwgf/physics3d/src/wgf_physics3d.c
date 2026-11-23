@@ -939,6 +939,13 @@ wgf_vec3_t wgf_body3d_get_spin(wgf_actor_t actor)
     return moving_of(actor, true);
 }
 
+bool wgf_body3d_is_sleeping(wgf_actor_t actor)
+{
+    const body_t *b = body_of(actor);
+    return b != NULL && b->type == WGF_BODY3D_TYPE_DYNAMIC && b->id != WGF_PHYSICS3D_PRIV_NO_BODY && !b->dirty &&
+           wgf_physics3d_priv_jolt_body_is_sleeping(b->id);
+}
+
 bool wgf_body3d_add_impulse(wgf_actor_t actor, float x, float y, float z)
 {
     body_t *b;

@@ -278,7 +278,7 @@ static void dump_lines(out_t *out, wgf_actor_t e, const char *pad)
             v.y, v.z, w.x, w.y, w.z, wgf_motion_get_damping(e), wgf_motion_get_max_speed(e));
     }
     if (wgf_actor_has_component(e, WGF_COMPONENT_BOUNDS)) {
-        static const char *const modes[] = {"wrap", "clamp", "destroy"};
+        static const char *const modes[] = {"wrap", "clamp", "destroy", "bounce"};
         const wgf_vec4_t rect = wgf_bounds_get_rect(e);
         if (wgf_bounds_is_visible(e)) {
             put(out, "%s    bounds visible=true mode=%s margin=%.9g\n", pad, modes[wgf_bounds_get_mode(e)],

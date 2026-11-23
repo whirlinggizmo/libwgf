@@ -133,12 +133,16 @@ int main(void)
     expect(!wgf_body3d_set_layer(ball, 0) && !wgf_body3d_set_mask(ball, 0x8000) &&
                !wgf_body3d_set_type(ball, (wgf_body3d_type_t)9),
            "a layer, a mask, a type that isn't one: refused");
+    expect(!wgf_body3d_is_sleeping(ball), "not yet made: not asleep");
     step(1);
-    expect(wgf_actor_get_position(ball).y < 5.0f, "falling at the first tick");
+    expect(wgf_actor_get_position(ball).y < 5.0f && !wgf_body3d_is_sleeping(ball), "falling at the first tick");
     step(180);
     at = wgf_actor_get_position(ball);
     expect(fabsf(at.y - 0.5f) < 0.05f && fabsf(at.x) < 0.01f, "at rest on the floor");
     expect(fabsf(wgf_body3d_get_velocity(ball).y) < 0.05f, "still");
+    step(60);
+    expect(wgf_body3d_is_sleeping(ball) && !wgf_body3d_is_sleeping(floor_actor) && !wgf_body3d_is_sleeping(stage),
+           "still for a while: asleep; a static body, and no body, are not");
 
     /* put somewhere new by the program, and pushed */
     wgf_actor_set_position(ball, 3, 2, 0);
@@ -147,7 +151,7 @@ int main(void)
            "set by the program: the body there, falling");
     wgf_body3d_add_impulse(ball, 0, 0, 500);
     step(1);
-    expect(wgf_body3d_get_velocity(ball).z > 0.5f, "an impulse pushed it");
+    expect(wgf_body3d_get_velocity(ball).z > 0.5f && !wgf_body3d_is_sleeping(ball), "an impulse pushed it, awake");
     wgf_body3d_set_velocity(ball, 0, 0, 0);
     expect(fabsf(wgf_body3d_get_velocity(ball).z) < 1e-4f, "its velocity set");
 

@@ -152,6 +152,21 @@ int main(void)
                near(wgf_motion_get_velocity(e).y, 3),
            "held at the edge, its velocity across stopped and along kept");
 
+    /* bouncing */
+    expect(wgf_bounds_set_mode(e, WGF_BOUNDS_MODE_BOUNCE) && wgf_bounds_get_mode(e) == WGF_BOUNDS_MODE_BOUNCE,
+           "bouncing");
+    wgf_actor_set_position(e, 2, 50, 0);
+    wgf_motion_set_velocity(e, -5, 3, 0);
+    step(1.0f);
+    expect(near(wgf_actor_get_position(e).x, 3) && near(wgf_motion_get_velocity(e).x, 5) &&
+               near(wgf_motion_get_velocity(e).y, 3),
+           "put back in by as far as it went out, its velocity across reversed and along kept");
+    wgf_actor_set_position(e, -2, 50, 0);
+    step(0.0f);
+    expect(near(wgf_actor_get_position(e).x, 2) && near(wgf_motion_get_velocity(e).x, 5),
+           "put outside while heading in: back in, its velocity kept");
+    wgf_motion_set_velocity(e, 0, 0, 0);
+
     /* destroying */
     /* the visible area as the rectangle: a fit 100 by 100 over a 200 by 100 framebuffer
        shows the design's 100 by 100, so a position past 100 wraps */

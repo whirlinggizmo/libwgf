@@ -692,7 +692,7 @@ int main(void)
     expect(refused("key", "wgf-scene 2\nactor\n  motion speed=1\nend\n"), "an unknown key");
     expect(refused("shape", "wgf-scene 2\nactor\n  motion velocity=1,2\nend\n"), "a value of the wrong shape");
     expect(refused("number", "wgf-scene 2\nactor\n  lifetime seconds=soon\nend\n"), "a word for a number");
-    expect(refused("mode", "wgf-scene 2\nactor\n  bounds mode=bounce\nend\n"), "a mode that isn't one");
+    expect(refused("mode", "wgf-scene 2\nactor\n  bounds mode=spin\nend\n"), "a mode that isn't one");
     expect(refused("color", "wgf-scene 2\nactor\n  shape2d color=#12\nend\n"), "a color that isn't one");
     expect(refused("quote", "wgf-scene 2\nactor\n  text string=\"open\nend\n"), "a quote left open");
     expect(refused("nested", "wgf-scene 2\nactor\nactor\nend\n"), "an actor left open before another");

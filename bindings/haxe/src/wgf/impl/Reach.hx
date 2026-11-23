@@ -144,6 +144,7 @@ class Reach {
 		"wgf_audio_get_listener_facing",
 		"wgf_audio_get_listener_position",
 		"wgf_audio_get_volume",
+		"wgf_audio_is_blocked",
 		"wgf_audio_is_paused",
 		"wgf_audio_set_listener_facing",
 		"wgf_audio_set_listener_position",
@@ -175,6 +176,7 @@ class Reach {
 		"wgf_body3d_get_type",
 		"wgf_body3d_get_velocity",
 		"wgf_body3d_is_grounded",
+		"wgf_body3d_is_sleeping",
 		"wgf_body3d_set_bounce",
 		"wgf_body3d_set_damping",
 		"wgf_body3d_set_friction",
@@ -1473,7 +1475,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1464) 0];
+	static final counts:Array<Int> = [for (_ in 0...1466) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

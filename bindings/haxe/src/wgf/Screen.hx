@@ -20,6 +20,8 @@ import wgf.impl.Raw;
     - A screen under one that pauses (the default) is paused, with its stages
       (wgf_actor_set_paused: drawn, but frozen).
     - A screen under one that doesn't pause, such as a HUD laid over play, runs on.
+    - What a paused screen's stages hold waits with them: their actors' motion, behaviors, and
+      tweens. A number's tween (wgf_tween_create) belongs to no stage, and runs on.
     - A screen off the stack is switched off and paused, with its stages (wgf_actor_set_enabled:
       not drawn, and nothing under them moving). It is kept for your game to push again or
       destroy.

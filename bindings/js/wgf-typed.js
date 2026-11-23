@@ -306,6 +306,8 @@ export const Audio = Object.freeze({
     setPaused: raw.wgf_audio_set_paused,
     // wgf: call wgf_audio_is_paused
     isPaused: raw.wgf_audio_is_paused,
+    // wgf: call wgf_audio_is_blocked
+    isBlocked: raw.wgf_audio_is_blocked,
     // wgf: call wgf_audio_set_listener_position
     setListenerPosition: raw.wgf_audio_set_listener_position,
     // wgf: call wgf_audio_get_listener_position
@@ -390,6 +392,8 @@ export const Body3d = Object.freeze({
     getSpin: raw.wgf_body3d_get_spin,
     // wgf: call wgf_body3d_add_impulse
     addImpulse: raw.wgf_body3d_add_impulse,
+    // wgf: call wgf_body3d_is_sleeping
+    isSleeping: raw.wgf_body3d_is_sleeping,
     // wgf: call wgf_body3d_is_grounded
     isGrounded: raw.wgf_body3d_is_grounded,
     // wgf: call wgf_body3d_get_ground_normal
@@ -3308,7 +3312,7 @@ export const Body3dShape = Object.freeze({ BOX: 0, SPHERE: 1, CAPSULE: 2, CONVEX
 // wgf: enum Body3dType
 export const Body3dType = Object.freeze({ STATIC: 0, DYNAMIC: 1, KINEMATIC: 2, SENSOR: 3, CHARACTER: 4 });
 // wgf: enum BoundsMode
-export const BoundsMode = Object.freeze({ WRAP: 0, CLAMP: 1, DESTROY: 2 });
+export const BoundsMode = Object.freeze({ WRAP: 0, CLAMP: 1, DESTROY: 2, BOUNCE: 3 });
 // wgf: enum ColliderShape
 export const ColliderShape = Object.freeze({ CIRCLE: 0, RECTANGLE: 1, POLYGON: 2, SEGMENT: 3 });
 // wgf: enum ColorStock

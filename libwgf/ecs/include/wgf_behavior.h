@@ -24,6 +24,9 @@ extern "C" {
  * enter, and trigger exit. It calls their tick and frame from its own. Nothing in C calls a
  * behavior.
  *
+ * A behavior on a paused actor (wgf_actor_set_paused, as under a pause screen) gets no tick
+ * and no frame until the actor runs again.
+ *
  * A behavior is named by its actor and its id. The id is a number from 1 that the actor gives
  * it when it is added. The behavior keeps it until it is removed, and the actor never gives it
  * to another of its behaviors.

@@ -3,14 +3,14 @@ wgf-autopilot 1
 # kicked back up through it, and R puts the pile back.
 at 10 expect physics.bodies == 18
 at 90 expect physics.sensed >= 18
-at 300 expect physics.settled == 1
-at 300 mouse move 480 330
-at 302 expect physics.hovered == 1
-at 310 key tap space
-at 312 expect physics.kicks == 1
-at 312 expect physics.settled == 0
-at 340 expect physics.sensed >= 19
-at 345 key tap r
-at 346 expect physics.sensed == 0
-at 346 expect physics.kicks == 0
-at 346 end
+at 420 expect physics.settled == 1
+at 420 mouse move 480 330
+at 422 expect physics.hovered == 1
+at 430 key tap space
+at 432 expect physics.kicks == 1
+at 432 expect physics.settled == 0
+at 460 expect physics.sensed >= 19
+at 465 key tap r
+at 466 expect physics.sensed == 0
+at 466 expect physics.kicks == 0
+at 466 end

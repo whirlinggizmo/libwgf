@@ -8,6 +8,9 @@ package wgf;
     actor whose position leaves it by more than its margin is wrapped, clamped, or destroyed,
     as its mode says.
 
+    The rectangle keeps the actor's position, not its picture. For a ball to bounce as its rim
+    touches the screen's edge, make the rectangle smaller by its radius on each side.
+
     Defaults: a rectangle at 0, 0, 800 by 600, WRAP, and a margin of 0.
 
     Every call returns false (or 0) for an actor without bounds.
@@ -16,4 +19,5 @@ enum abstract BoundsMode(Int) from Int to Int {
 	var WRAP = 0;
 	var CLAMP = 1;
 	var DESTROY = 2;
+	var BOUNCE = 3;
 }

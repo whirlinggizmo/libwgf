@@ -1040,6 +1040,24 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## The rest of the examples' list (2026-11-23)
+
+The last entries of the examples' friction list.
+
+- **`wgf_body3d_is_sleeping`.** "Has the pile settled" was a loop testing every body's velocity against a threshold, with the spheres' damping raised so one ever read still. The world already knows: it stops simulating a dynamic body that has been still for about half a second. The call returns that. The physics examples use it.
+- **`wgf_audio_is_blocked`.** A browser holds sound back until the page's first key, click, or touch, and a voice reads PLAYING meanwhile. The call says whether it still is, so a game shows "click for sound" only while it is true. It is false outside a browser. On the web it reads the audio context, an input libwgf saw, or the browser's own word for the page (`navigator.userActivation`); a context suspended by `wgf_audio_set_paused` is not blocked. The audio examples show their line only while it is true.
+- **`WGF_BOUNDS_MODE_BOUNCE`** (`mode=bounce` in a scene). An actor past the rectangle's edge is put back in by as far as it went out, and its velocity across the edge is reversed. The rectangle keeps the position, not the picture, so a ball's rectangle is made smaller by its radius; `wgf_bounds.h` says so.
+- **One test for a loaded model.** The examples tested the mesh's status, the model's child count, and its animation count. All three change at the same moment, since the tree is built as the mesh turns READY. `wgf_model.h` now says to test the mesh's status, and gfx-model and gfx-skinning do.
+- **Said in the headers now:**
+  - A number's tween runs on under a pause, since it has no actor (`wgf_tween.h`, `wgf_screen.h`).
+  - A behavior on a paused actor gets no tick or frame (`wgf_behavior.h`).
+  - A rectangle shape needs `pivot=0.5,0.5` to line up with a collider (`wgf_shape2d.h`).
+  - `wgf_scene_get_actor_count` and `wgf_actor_get_count` count different things (`wgf_scene.h`, `wgf_world.h`).
+  - Don't release what `wgf_voice_get_sound` returns (`wgf_voice.h`).
+  - A stick's y runs down where an action is bound to it (`wgf_action.h`).
+- **Left as they are:** `Ui.number` works in floats; play on a paused animation plays it from its start, as `wgf_model.h` says of any state.
+- **Not done:** a rectangle shape still draws from its top-left by default (Rob's to decide); a typed lookup of a behavior's object in Haxe; and why a 1.6 MB glTF file took about 470 frames to load headless.
+
 ## The racer is libwgf's own (2026-11-23)
 
 The racer was written in a repository of its own (`libwgf-racer`) by a session using libwgf as an outside developer would, and copied into `games/racer/` by `tools/import_game.py`, with an `IMPORTED.md` saying it wasn't edited here. It has been edited here since (the physics rename, the window's flags), so the copy was the newer one. Rob's call: one racer.

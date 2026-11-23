@@ -168,7 +168,9 @@ function draw() {
     Draw.text(0, "[Space] play  [P] pause/resume  [S] stop  [Enter]/click: click  [T] tone", 40, 480, 16, gray);
     Draw.text(0, "[Up/Down] choose a setting  [Left/Right] change it" + (App.canQuit() ? "  [Esc] quit" : ""),
         40, 504, 16, gray);
-    Draw.text(0, "In a browser, sound starts after your first key or click.", 40, 528, 16, gray);
+    if (Audio.isBlocked()) {
+        Draw.text(0, "Press a key or click to turn sound on.", 40, 528, 16, Color.get(ColorStock.YELLOW));
+    }
 }
 
 Window.setTitle("libwgf audio (JS)");

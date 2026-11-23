@@ -36,6 +36,9 @@ import wgf.impl.Raw;
 	    Makes the shape a rectangle `width` by `height` from its own origin. The origin is its
 	    top-left corner, unless a pivot is set.
 
+	    A rectangle collider (wgf_collider.h) and an arcade body are centered on their actor. To
+	    line a rectangle up with one, set its pivot to 0.5, 0.5 (`pivot=0.5,0.5` in a scene file).
+
 	    Returns false for a handle that isn't a 2D shape, or a size below 0.
 	**/
 	public inline function setRectangle(width:Float, height:Float):Bool

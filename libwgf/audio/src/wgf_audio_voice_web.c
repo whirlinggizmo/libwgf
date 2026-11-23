@@ -25,7 +25,9 @@ EM_JS(void, wgf_audio_js_start, (void), {
     audio.master = audio.context.createGain();
     audio.master.connect(audio.context.destination);
     audio.unlock = function() {
-        if (Module.wgf_audio && !Module.wgf_audio.paused) Module.wgf_audio.context.resume();
+        if (!Module.wgf_audio) return;
+        Module.wgf_audio.unlocked = true;
+        if (!Module.wgf_audio.paused) Module.wgf_audio.context.resume();
     };
     ["pointerdown", "keydown", "touchstart"].forEach(function(name) {
         window.addEventListener(name, audio.unlock, {capture: true});
@@ -380,6 +382,19 @@ void wgf_audio_priv_platform_update(void)
 void wgf_audio_priv_platform_master(float volume, bool paused)
 {
     wgf_audio_js_master(volume, paused);
+}
+
+/* Not blocked once an input reached the page (ours seen, or the browser's own word), or the
+ * context runs: a paused context is suspended, and not blocked. */
+EM_JS(int, wgf_audio_js_is_blocked, (void), {
+    var audio = Module.wgf_audio;
+    if (audio && (audio.unlocked || (audio.context && audio.context.state === "running"))) return 0;
+    return navigator.userActivation && navigator.userActivation.hasBeenActive ? 0 : 1;
+})
+
+bool wgf_audio_priv_platform_is_blocked(void)
+{
+    return wgf_audio_js_is_blocked() != 0;
 }
 
 bool wgf_audio_priv_platform_pushed_start(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr)

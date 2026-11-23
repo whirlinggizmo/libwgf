@@ -34,6 +34,9 @@ import wgf.impl.Raw;
     enter, and trigger exit. It calls their tick and frame from its own. Nothing in C calls a
     behavior.
 
+    A behavior on a paused actor (wgf_actor_set_paused, as under a pause screen) gets no tick
+    and no frame until the actor runs again.
+
     A behavior is named by its actor and its id. The id is a number from 1 that the actor gives
     it when it is added. The behavior keeps it until it is removed, and the actor never gives it
     to another of its behaviors.
@@ -564,7 +567,9 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_actor_count_with_behavior(name);
 
 	/**
-	    Returns how many actors have a component or a behavior: the simulated ones.
+	    Returns how many actors have a component or a behavior: the simulated ones. An actor with
+	    neither, such as a text or a sprite that only draws, isn't counted. For the actors a scene
+	    file holds, see wgf_scene_get_actor_count.
 	**/
 	public static inline function getCount():Int
 		return Raw.wgf_actor_get_count();

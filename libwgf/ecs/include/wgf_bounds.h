@@ -17,13 +17,17 @@ extern "C" {
  * actor whose position leaves it by more than its margin is wrapped, clamped, or destroyed,
  * as its mode says.
  *
+ * The rectangle keeps the actor's position, not its picture. For a ball to bounce as its rim
+ * touches the screen's edge, make the rectangle smaller by its radius on each side.
+ *
  * Defaults: a rectangle at 0, 0, 800 by 600, WRAP, and a margin of 0.
  *
  * Every call returns false (or 0) for an actor without bounds. */
 typedef enum wgf_bounds_mode_t {
     WGF_BOUNDS_MODE_WRAP = 0,    /* comes back in at the other side, drawn moving on, not sweeping back across */
     WGF_BOUNDS_MODE_CLAMP = 1,   /* held at the edge, with its velocity across the edge stopped */
-    WGF_BOUNDS_MODE_DESTROY = 2  /* destroyed */
+    WGF_BOUNDS_MODE_DESTROY = 2, /* destroyed */
+    WGF_BOUNDS_MODE_BOUNCE = 3   /* put back in by as far as it went out, with its velocity across the edge reversed */
 } wgf_bounds_mode_t;
 
 /* Sets or gets the rectangle. get_rect returns it as x, y, width, height. The setter also

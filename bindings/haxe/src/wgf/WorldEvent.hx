@@ -12,7 +12,7 @@ package wgf;
     game's tick, the systems run in this order:
     - Lifetimes count down. An actor whose time is up is destroyed.
     - Motion moves each actor by its velocity and spin, damped, with its speed capped.
-    - Bounds wrap, clamp, or destroy an actor that has left its rectangle.
+    - Bounds wrap, clamp, destroy, or bounce an actor that has left its rectangle.
     - Colliders find the overlaps.
 
     Each frame, a simulated actor is drawn between its last two ticks' transforms.

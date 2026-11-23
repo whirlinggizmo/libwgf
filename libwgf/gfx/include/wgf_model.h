@@ -35,6 +35,10 @@ WGF_API wgf_actor_t wgf_model_create(wgf_mesh_t mesh);
  * READY, the file's node tree is made the model's children. The mesh is then the model's for
  * good.
  *
+ * To tell that a model has loaded, test its mesh's status (wgf_resource_get_status of
+ * wgf_model_get_mesh). The moment it reads READY, the model's children are made and its
+ * animations are there, so there is no need to test their counts.
+ *
  * When the file is loaded again (wgf_asset_reload), the tree is made again in place:
  * - A node's actor is kept, found by its name under its parent's actor, and moved.
  * - Its mesh keeps the same handle, with the new triangles.

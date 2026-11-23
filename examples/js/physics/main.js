@@ -40,7 +40,7 @@ let hovered = null;
 let kicks = 0, nextKick = 0;
 
 const mouse = { x: 0, y: 0 };
-const origin = { x: 0, y: 0, z: 0 }, direction = { x: 0, y: 0, z: 0 }, velocity = { x: 0, y: 0, z: 0 };
+const origin = { x: 0, y: 0, z: 0 }, direction = { x: 0, y: 0, z: 0 };
 const hit = new Uint32Array(1);
 
 // A model of `mesh` on the stage at (x, y, z), tinted, with a body (a dynamic box until set).
@@ -173,11 +173,8 @@ function tick() {
         kicks++;
     }
 
-    // Settled: every piece nearly still.
-    const settled = pieces.every((piece) => {
-        Body3d.getVelocity(piece.actor, velocity);
-        return velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z <= 0.1 * 0.1;
-    });
+    // Settled: the world has put every piece to sleep.
+    const settled = pieces.every((piece) => Body3d.isSleeping(piece.actor));
     Probe.setValue("physics.bodies", pieces.length);
     Probe.setValue("physics.sensed", counter() ? counter().count : 0);
     Probe.setValue("physics.settled", settled ? 1 : 0);

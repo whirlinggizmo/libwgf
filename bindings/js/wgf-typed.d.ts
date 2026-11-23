@@ -22,7 +22,8 @@ export { attach, isAttached } from "./wgf.js";
  *                         steering axis)
  *   a pad axis            its value (sticks -1 to 1, past the dead zone; triggers 0 to 1),
  *                         either side (direction 0) or one side only (1 or -1, read as
- *                         0 to 1); a value below `threshold` reads as 0
+ *                         0 to 1); a value below `threshold` reads as 0. A stick's y runs
+ *                         down, as wgf_gamepad.h's: pushed up is direction -1
  *   a touch region        1 while a finger is down in it (logical pixels, as the
  *                         pointer's are)
  *   an on-screen stick    its pull across or up, -1 to 1 (see wgf_action_bind_touch_stick)
@@ -222,6 +223,9 @@ export type Actor = raw.wgf_actor_t;
  * Your game's binding takes those events and calls its behaviors' create, destroy, trigger
  * enter, and trigger exit. It calls their tick and frame from its own. Nothing in C calls a
  * behavior.
+ *
+ * A behavior on a paused actor (wgf_actor_set_paused, as under a pause screen) gets no tick
+ * and no frame until the actor runs again.
  *
  * A behavior is named by its actor and its id. The id is a number from 1 that the actor gives
  * it when it is added. The behavior keeps it until it is removed, and the actor never gives it
@@ -641,7 +645,9 @@ export declare const Actor: {
      */
     readonly countWithBehavior: typeof raw.wgf_actor_count_with_behavior;
     /**
-     * Returns how many actors have a component or a behavior: the simulated ones.
+     * Returns how many actors have a component or a behavior: the simulated ones. An actor with
+     * neither, such as a text or a sprite that only draws, isn't counted. For the actors a scene
+     * file holds, see wgf_scene_get_actor_count.
      */
     readonly getCount: typeof raw.wgf_actor_get_count;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
@@ -1404,6 +1410,15 @@ export declare const Audio: {
      */
     readonly isPaused: typeof raw.wgf_audio_is_paused;
     /**
+     * Returns whether the browser is holding sound back until the page's first key, click, or
+     * touch. While it is, a voice told to play reads PLAYING, is silent, and its position stays.
+     *
+     * Use it to show "click for sound" only while it is true. Returns false outside a browser,
+     * and after that first input. Before any sound is made it is what the browser says of the
+     * page's input, and true in a browser that doesn't say.
+     */
+    readonly isBlocked: typeof raw.wgf_audio_is_blocked;
+    /**
      * Sets or gets the listener's position and facing. A spatial voice (wgf_voice_set_spatial) is
      * heard from the listener.
      *
@@ -1751,6 +1766,14 @@ export declare const Body3d: {
      * See Body3d.setVelocity for the rest.
      */
     readonly addImpulse: typeof raw.wgf_body3d_add_impulse;
+    /**
+     * Returns whether a dynamic body is asleep: the world stopped simulating it because it has
+     * been still for about half a second. A touch, a push, or a new position or velocity wakes it.
+     *
+     * Use it to ask whether things have settled, in place of testing each velocity. Returns false
+     * for a body not yet made in the world, and for a static, kinematic, or character body.
+     */
+    readonly isSleeping: typeof raw.wgf_body3d_is_sleeping;
     /**
      * Returns whether a character is standing on ground.
      *
@@ -6781,6 +6804,10 @@ export declare const Model: {
      * READY, the file's node tree is made the model's children. The mesh is then the model's for
      * good.
      *
+     * To tell that a model has loaded, test its mesh's status (wgf_resource_get_status of
+     * wgf_model_get_mesh). The moment it reads READY, the model's children are made and its
+     * animations are there, so there is no need to test their counts.
+     *
      * When the file is loaded again (wgf_asset_reload), the tree is made again in place:
      * - A node's actor is kept, found by its name under its parent's actor, and moved.
      * - Its mesh keeps the same handle, with the new triangles.
@@ -8243,7 +8270,9 @@ export declare const Scene: {
     /**
      * Returns what the file holds, once the scene is READY.
      *
-     * - get_actor_count returns the number of top actors.
+     * - get_actor_count returns the number of top actors in the file: those with no parent
+     *   there, whatever they are. It is not how many actors are simulated now
+     *   (wgf_actor_get_count).
      * - get_prefab_count returns the number of prefabs.
      * - get_prefab_name returns each prefab's name in file order, or "" past the end.
      *
@@ -8314,6 +8343,8 @@ export declare const Scene: {
  * - A screen under one that pauses (the default) is paused, with its stages
  *   (wgf_actor_set_paused: drawn, but frozen).
  * - A screen under one that doesn't pause, such as a HUD laid over play, runs on.
+ * - What a paused screen's stages hold waits with them: their actors' motion, behaviors, and
+ *   tweens. A number's tween (wgf_tween_create) belongs to no stage, and runs on.
  * - A screen off the stack is switched off and paused, with its stages (wgf_actor_set_enabled:
  *   not drawn, and nothing under them moving). It is kept for your game to push again or
  *   destroy.
@@ -8617,6 +8648,9 @@ export declare const Shape2d: {
     /**
      * Makes the shape a rectangle `width` by `height` from its own origin. The origin is its
      * top-left corner, unless a pivot is set.
+     *
+     * A rectangle collider (wgf_collider.h) and an arcade body are centered on their actor. To
+     * line a rectangle up with one, set its pivot to 0.5, 0.5 (`pivot=0.5,0.5` in a scene file).
      *
      * Returns false for a handle that isn't a 2D shape, or a size below 0.
      */
@@ -11496,6 +11530,9 @@ export declare const Tween: {
      *
      * - An actor's tween starts from where the actor is when the tween begins, after its delay.
      * - It ends with the actor: a tween of a destroyed actor is let go of.
+     * - It waits while its actor is paused (wgf_actor_set_paused), as under a pause screen.
+     * - A number's tween has no actor, so it runs on under a pause. Pause it yourself
+     *   (wgf_tween_set_paused), as in a screen's exit and enter.
      * - A tween that ends, its repeats done, is let go of too. Its handle is then dead (see
      *   wgf_handle_is_alive), which is how your game knows it ended.
      * - There can be at most 4096 tweens.
@@ -12695,8 +12732,9 @@ export declare const Voice: {
      */
     readonly setSound: typeof raw.wgf_voice_set_sound;
     /**
-     * Returns the voice's sound. The voice holds the reference. Returns 0 for none, and for a
-     * handle that isn't a voice.
+     * Returns the voice's sound. The voice holds the reference, so don't release what this
+     * returns: that would let go of the voice's own. Returns 0 for none, and for a handle that
+     * isn't a voice.
      */
     readonly getSound: typeof raw.wgf_voice_get_sound;
     /**
@@ -13395,7 +13433,7 @@ export declare const Body3dShape: { readonly BOX: Body3dShape; readonly SPHERE: 
 export type Body3dType = raw.wgf_body3d_type_t;
 export declare const Body3dType: { readonly STATIC: Body3dType; readonly DYNAMIC: Body3dType; readonly KINEMATIC: Body3dType; readonly SENSOR: Body3dType; readonly CHARACTER: Body3dType; };
 export type BoundsMode = raw.wgf_bounds_mode_t;
-export declare const BoundsMode: { readonly WRAP: BoundsMode; readonly CLAMP: BoundsMode; readonly DESTROY: BoundsMode; };
+export declare const BoundsMode: { readonly WRAP: BoundsMode; readonly CLAMP: BoundsMode; readonly DESTROY: BoundsMode; readonly BOUNCE: BoundsMode; };
 export type ColliderShape = raw.wgf_collider_shape_t;
 export declare const ColliderShape: { readonly CIRCLE: ColliderShape; readonly RECTANGLE: ColliderShape; readonly POLYGON: ColliderShape; readonly SEGMENT: ColliderShape; };
 export type ColorStock = raw.wgf_color_stock_t;

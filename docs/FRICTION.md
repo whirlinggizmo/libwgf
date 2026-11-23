@@ -947,7 +947,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** `pivot=0.5,0.5` on every rectangle in the scene.
 - **Cost:** Easy to miss, and a shape that visibly doesn't match its collider.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** the header says how to line them up (HISTORY.md, "The rest of the examples' list"); whether a rectangle should be centered by default is open, Rob's to decide
 
 ### examples: findWithBehavior needs an array already sized (JS)
 
@@ -974,7 +974,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** The example says so in its help text, always.
 - **Cost:** A game can't show "click to enable sound" only when it is true.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** fine: HISTORY.md, "The rest of the examples' list" (`wgf_audio_is_blocked`)
 
 ### examples: a number tween doesn't freeze with its screen
 
@@ -983,7 +983,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** The example pauses and resumes it by hand in the screen's exit and enter.
 - **Cost:** A value that drifts while the game is paused, found only by reading wgf_ecs_tween.c.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** fine: the headers say so now (HISTORY.md, "The rest of the examples' list")
 
 ### examples: destroying a finished tween warns
 
@@ -1001,7 +1001,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** Poll `getVelocity` on each body against a threshold, with the spheres' damping raised.
 - **Cost:** A loop over every body each frame for a common question.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** fine: HISTORY.md, "The rest of the examples' list" (`wgf_body3d_is_sleeping`)
 
 ### examples: three ways to tell a model has loaded
 
@@ -1010,7 +1010,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** The new example uses the resource status.
 - **Cost:** Three idioms for one question.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** fine: HISTORY.md, "The rest of the examples' list"
 
 ### examples: bounds have no bounce
 
@@ -1019,7 +1019,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** The example wraps instead.
 - **Cost:** A common arcade behavior left to each game.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** fine: HISTORY.md, "The rest of the examples' list" (`WGF_BOUNDS_MODE_BOUNCE`)
 
 ### examples: no call brings an actor to the front
 
@@ -1037,4 +1037,4 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** each worked around in its example
 - **Cost:** Minor, each. Listed so none is lost.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** (a), (b), (c), (g) said in the headers; (d) and (f) fine as they are (HISTORY.md, "The rest of the examples' list"); (e) a typed behavior lookup in Haxe and (h) the glTF file's slow load are open

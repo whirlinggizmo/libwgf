@@ -47,6 +47,17 @@ class Audio {
 		return Raw.wgf_audio_is_paused();
 
 	/**
+	    Returns whether the browser is holding sound back until the page's first key, click, or
+	    touch. While it is, a voice told to play reads PLAYING, is silent, and its position stays.
+
+	    Use it to show "click for sound" only while it is true. Returns false outside a browser,
+	    and after that first input. Before any sound is made it is what the browser says of the
+	    page's input, and true in a browser that doesn't say.
+	**/
+	public static inline function isBlocked():Bool
+		return Raw.wgf_audio_is_blocked();
+
+	/**
 	    Sets or gets the listener's position and facing. A spatial voice (wgf_voice_set_spatial) is
 	    heard from the listener.
 

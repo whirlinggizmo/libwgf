@@ -23,7 +23,8 @@ import wgf.impl.Raw;
                             steering axis)
       a pad axis            its value (sticks -1 to 1, past the dead zone; triggers 0 to 1),
                             either side (direction 0) or one side only (1 or -1, read as
-                            0 to 1); a value below `threshold` reads as 0
+                            0 to 1); a value below `threshold` reads as 0. A stick's y runs
+                            down, as wgf_gamepad.h's: pushed up is direction -1
       a touch region        1 while a finger is down in it (logical pixels, as the
                             pointer's are)
       an on-screen stick    its pull across or up, -1 to 1 (see wgf_action_bind_touch_stick)

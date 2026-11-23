@@ -96,7 +96,8 @@ static void init(void *user)
 static void frame(void *user)
 {
     const float dt = wgf_loop_get_frame_delta();
-    const bool loaded = wgf_actor_get_child_count(g.car) > 0; /* the file's nodes, made once it is READY */
+    /* loaded: its mesh READY, and with that its nodes made and its animations there */
+    const bool loaded = wgf_resource_get_status(wgf_model_get_mesh(g.car)) == WGF_RESOURCE_STATUS_READY;
     int i;
     (void)user;
     if (wgf_keyboard_is_pressed(WGF_KEY_ESCAPE) && g.fly != WGF_FLY_MODE_NONE) {

@@ -36,7 +36,6 @@ class Main {
 	static final mouse = new Vec2(0, 0);
 	static final origin = new Vec3(0, 0, 0);
 	static final direction = new Vec3(0, 0, 0);
-	static final velocity = new Vec3(0, 0, 0);
 	static final hit:Array<Actor> = [0];
 
 	static function main() {
@@ -165,11 +164,10 @@ class Main {
 			kicks++;
 		}
 
-		// Settled: every piece nearly still.
+		// Settled: the world has put every piece to sleep.
 		var settled = true;
 		for (piece in pieces) {
-			(piece.actor : Body3d).getVelocity(velocity);
-			if (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z > 0.1 * 0.1)
+			if (!(piece.actor : Body3d).isSleeping())
 				settled = false;
 		}
 		final counter:Null<Sensor> = cast Behavior.of(sensor, "Sensor");

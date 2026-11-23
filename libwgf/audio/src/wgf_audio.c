@@ -120,6 +120,11 @@ bool wgf_audio_is_paused(void)
     return paused;
 }
 
+bool wgf_audio_is_blocked(void)
+{
+    return wgf_audio_priv_platform_is_blocked();
+}
+
 /* --------------------------------------------------------------- the listener ---- */
 
 void wgf_audio_priv_spatial(const wgf_audio_priv_voice_t *voice_ptr, float *gain, float *pan)

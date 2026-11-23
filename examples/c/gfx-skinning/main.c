@@ -237,9 +237,9 @@ static void frame(void *user)
     if (wgf_keyboard_is_pressed(WGF_KEY_O)) g.orbit = !g.orbit;
     if (wgf_keyboard_is_pressed(WGF_KEY_D)) g.debug = (g.debug + 1) % 4;
     show_below(g.character, g.debug != 3); /* the skeleton alone; every frame, as the parts load */
-    if (!g.started && wgf_model_get_animation_count(g.robots[0]) > 0) start();
-    if (!g.dressed && wgf_model_get_animation_count(g.parts[0]) > 0) {
-        bool ready = true; /* every part's file too: one loaded later would start behind */
+    if (!g.started && wgf_resource_get_status(wgf_model_get_mesh(g.robots[0])) == WGF_RESOURCE_STATUS_READY) start();
+    if (!g.dressed) {
+        bool ready = true; /* every part's file: one loaded later would start behind */
         for (i = 0; i < PARTS; i++) {
             ready = ready && wgf_resource_get_status(wgf_model_get_mesh(g.parts[i])) == WGF_RESOURCE_STATUS_READY;
         }

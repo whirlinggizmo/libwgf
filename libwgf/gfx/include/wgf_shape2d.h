@@ -38,6 +38,9 @@ WGF_API wgf_shape2d_kind_t wgf_shape2d_get_kind(wgf_actor_t shape);
 /* Makes the shape a rectangle `width` by `height` from its own origin. The origin is its
  * top-left corner, unless a pivot is set.
  *
+ * A rectangle collider (wgf_collider.h) and an arcade body are centered on their actor. To
+ * line a rectangle up with one, set its pivot to 0.5, 0.5 (`pivot=0.5,0.5` in a scene file).
+ *
  * Returns false for a handle that isn't a 2D shape, or a size below 0. */
 WGF_API bool wgf_shape2d_set_rectangle(wgf_actor_t shape, float width, float height);
 

@@ -548,7 +548,8 @@ static void move(float dt)
 }
 
 /* One axis of an actor's position against [lo, hi]: wrapped (its smoothing carried across),
- * clamped (its velocity across stopped), or found out (true: to destroy). */
+ * clamped (its velocity across stopped), bounced (put back in by as far as it went out, its
+ * velocity across reversed), or found out (true: to destroy). */
 static bool keep_in(wgf_gfx_priv_actor_t *actor_ptr, wgf_ecs_priv_motion_t *motion, int axis, float lo, float hi,
                     int mode)
 {
@@ -562,6 +563,15 @@ static bool keep_in(wgf_gfx_priv_actor_t *actor_ptr, wgf_ecs_priv_motion_t *moti
     if (mode == WGF_BOUNDS_MODE_CLAMP) {
         *p = *p < lo ? lo : hi;
         if (motion != NULL) motion->velocity[axis] = 0.0f;
+        return false;
+    }
+    if (mode == WGF_BOUNDS_MODE_BOUNCE) {
+        const bool low = *p < lo;
+        const float back = low ? lo + (lo - *p) : hi - (*p - hi);
+        *p = back < lo ? lo : (back > hi ? hi : back); /* further out than the rectangle is wide: held */
+        if (motion != NULL && (low ? motion->velocity[axis] < 0.0f : motion->velocity[axis] > 0.0f)) {
+            motion->velocity[axis] = -motion->velocity[axis];
+        }
         return false;
     }
     {

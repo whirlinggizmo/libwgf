@@ -325,6 +325,7 @@ class Main {
 		expect(Audio.setVolume(0.5) && near(Audio.getVolume(), 0.5), "the master volume");
 		Audio.setPaused(false);
 		expect(!Audio.isPaused(), "audio playing");
+		Audio.isBlocked(); // a browser's, until its page's first input
 		click = Sound.create("sounds/click_004.ogg");
 		music = Sound.createStreamed("music/a_hero_is_born.mp3");
 		expect(click.addSegment("start", 0, 0.05), "a segment");
@@ -891,6 +892,7 @@ class Main {
 		expect(motion.setMaxSpeed(50) && near(motion.getMaxSpeed(), 50), "a top speed");
 		final bounds:Bounds = ship;
 		expect(bounds.setRect(0, 0, 640, 360) && near(bounds.getRect().z, 640), "bounds");
+		expect(bounds.setMode(BoundsMode.BOUNCE) && bounds.getMode() == BoundsMode.BOUNCE, "bouncing");
 		expect(bounds.setMode(BoundsMode.WRAP) && bounds.getMode() == BoundsMode.WRAP, "wrapping");
 		expect(bounds.setMargin(10) && near(bounds.getMargin(), 10), "a margin");
 		expect(bounds.setVisible(true) && bounds.isVisible(), "bounds the visible area");
@@ -971,7 +973,7 @@ class Main {
 		car.addComponent(Component.BODY3D);
 		final carBody:Body3d = car;
 		expect(carBody.setVelocity(0, 0, 1) && near(carBody.getVelocity().z, 1) && carBody.setSpin(0, 1, 0)
-			&& near(carBody.getSpin().y, 1) && carBody.addImpulse(0, 0, 10), "moving");
+			&& near(carBody.getSpin().y, 1) && carBody.addImpulse(0, 0, 10) && !carBody.isSleeping(), "moving");
 		final wheels = [for (i in 0...4) Actor.create()];
 		for (i in 0...4) {
 			wheels[i].setParent(car);

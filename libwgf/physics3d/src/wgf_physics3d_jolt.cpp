@@ -510,6 +510,13 @@ void wgf_physics3d_priv_jolt_body_add_impulse(uint32_t body, const float impulse
     world->system.GetBodyInterface().AddImpulse(BodyID(body), V(impulse));
 }
 
+bool wgf_physics3d_priv_jolt_body_is_sleeping(uint32_t body)
+{
+    if (world == nullptr) return false;
+    const BodyInterface &bodies = world->system.GetBodyInterface();
+    return bodies.IsAdded(BodyID(body)) && !bodies.IsActive(BodyID(body));
+}
+
 void wgf_physics3d_priv_jolt_body_set_material(uint32_t body, float friction, float restitution, float linear_damping,
                                               float angular_damping)
 {

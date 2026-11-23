@@ -306,6 +306,16 @@ import wgf.impl.Raw;
 		return Raw.wgf_body3d_add_impulse(this, x, y, z);
 
 	/**
+	    Returns whether a dynamic body is asleep: the world stopped simulating it because it has
+	    been still for about half a second. A touch, a push, or a new position or velocity wakes it.
+
+	    Use it to ask whether things have settled, in place of testing each velocity. Returns false
+	    for a body not yet made in the world, and for a static, kinematic, or character body.
+	**/
+	public inline function isSleeping():Bool
+		return Raw.wgf_body3d_is_sleeping(this);
+
+	/**
 	    Returns whether a character is standing on ground.
 
 	    A character (Jolt's CharacterVirtual) is moved by its velocity each tick. Use it for a

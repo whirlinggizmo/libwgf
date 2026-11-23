@@ -131,6 +131,12 @@ WGF_API wgf_vec3_t wgf_body3d_get_velocity(wgf_actor_t actor);
 WGF_API bool wgf_body3d_set_spin(wgf_actor_t actor, float x, float y, float z);
 WGF_API wgf_vec3_t wgf_body3d_get_spin(wgf_actor_t actor);
 WGF_API bool wgf_body3d_add_impulse(wgf_actor_t actor, float x, float y, float z);
+/* Returns whether a dynamic body is asleep: the world stopped simulating it because it has
+ * been still for about half a second. A touch, a push, or a new position or velocity wakes it.
+ *
+ * Use it to ask whether things have settled, in place of testing each velocity. Returns false
+ * for a body not yet made in the world, and for a static, kinematic, or character body. */
+WGF_API bool wgf_body3d_is_sleeping(wgf_actor_t actor);
 
 /* Returns whether a character is standing on ground.
  *

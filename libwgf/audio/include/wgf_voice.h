@@ -61,8 +61,9 @@ WGF_API void wgf_voice_destroy(wgf_voice_t voice);
  * Returns false for a handle that isn't a voice, a `sound` that isn't a sound, or a pushed
  * voice (see wgf_voice_create_pushed). */
 WGF_API bool wgf_voice_set_sound(wgf_voice_t voice, wgf_sound_t sound);
-/* Returns the voice's sound. The voice holds the reference. Returns 0 for none, and for a
- * handle that isn't a voice. */
+/* Returns the voice's sound. The voice holds the reference, so don't release what this
+ * returns: that would let go of the voice's own. Returns 0 for none, and for a handle that
+ * isn't a voice. */
 WGF_API wgf_sound_t wgf_voice_get_sound(wgf_voice_t voice);
 
 /* Plays the voice from the start (the end, with a negative pitch), from any state: PLAYING.

@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "wgf_sound.h"
+#include "wgf_audio.h"
 #include "wgf_audio_priv.h"
 #include "wgf_core_fs_priv.h"
 #include "wgf_core_load_priv.h"
@@ -132,6 +133,7 @@ int main(void)
     garbage = wgf_sound_create("sounds/garbage.ogg");
     garbage_streamed = wgf_sound_create_streamed("sounds/garbage.ogg");
     settle();
+    expect(!wgf_audio_is_blocked(), "outside a browser: sound never held back");
     expect(wgf_resource_get_status(missing) == WGF_RESOURCE_STATUS_FAILED, "a missing file: FAILED");
     expect(wgf_resource_get_status(garbage) == WGF_RESOURCE_STATUS_FAILED &&
                wgf_resource_get_status(garbage_streamed) == WGF_RESOURCE_STATUS_FAILED,

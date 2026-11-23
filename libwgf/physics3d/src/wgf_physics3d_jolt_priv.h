@@ -65,6 +65,8 @@ void wgf_physics3d_priv_jolt_body_move(uint32_t body, const float position[3], c
 void wgf_physics3d_priv_jolt_body_get_velocity(uint32_t body, float linear[3], float angular[3]);
 void wgf_physics3d_priv_jolt_body_set_velocity(uint32_t body, const float linear[3], const float angular[3]);
 void wgf_physics3d_priv_jolt_body_add_impulse(uint32_t body, const float impulse[3]);
+/* Whether it is asleep: in the world, and not simulated. */
+bool wgf_physics3d_priv_jolt_body_is_sleeping(uint32_t body);
 /* Its friction, bounce, and damping changed in place, its motion kept. */
 void wgf_physics3d_priv_jolt_body_set_material(uint32_t body, float friction, float restitution, float linear_damping,
                                               float angular_damping);

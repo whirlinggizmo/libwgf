@@ -58,7 +58,7 @@ enum {
     V_COLOR,
     V_COLOR2,
     V_TEXT,   /* a word or quoted text */
-    V_MODE,   /* wrap, clamp, destroy */
+    V_MODE,   /* wrap, clamp, destroy, bounce */
     V_ALIGN,  /* left|center|right,top|middle|bottom */
     V_ALPHA,  /* opaque, mask, blend, add */
     V_FACING, /* camera, camera-y, up, free */
@@ -343,13 +343,17 @@ static bool parse_value(int type, const char *text, value_t *v)
             return comma != NULL && parse_color(text, (size_t)(comma - text), &v->colors[0]) &&
                    parse_color(comma + 1, strlen(comma + 1), &v->colors[1]);
         }
-        case V_MODE:
-            v->n[0] = strcmp(text, "wrap") == 0 ? WGF_BOUNDS_MODE_WRAP
-                                                 : (strcmp(text, "clamp") == 0 ? WGF_BOUNDS_MODE_CLAMP
-                                                                               : (strcmp(text, "destroy") == 0
-                                                                                      ? WGF_BOUNDS_MODE_DESTROY
-                                                                                      : -1));
-            return v->n[0] >= 0;
+        case V_MODE: {
+            static const char *const modes[] = {"wrap", "clamp", "destroy", "bounce"}; /* wgf_bounds_mode_t's order */
+            int mode;
+            for (mode = 0; mode < 4; mode++) {
+                if (strcmp(text, modes[mode]) == 0) {
+                    v->n[0] = mode;
+                    return true;
+                }
+            }
+            return false;
+        }
         case V_ALIGN: {
             static const char *const across[] = {"left", "center", "right"},
                               *const down[] = {"top", "middle", "bottom"};
