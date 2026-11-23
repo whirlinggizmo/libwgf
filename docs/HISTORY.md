@@ -1040,6 +1040,24 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## The comparison measured again (2026-11-22)
+
+Rob, after the day's changes (sokol at upstream's, an actor 64 bytes smaller, the paused actors counted, the trigonometry): the comparison's speed and size rows (HISTORY.md, "The comparison") taken again the same way, on coinspinner, at 3cfe5cf's parent: pages by helix's `tools/speed/run_page.cjs` (read-only) with helix-raylib's built programs as the control, natively by `measure_frames.py --native`; each cell the median of three runs. The control came within a few percent of its rows again (page bunnymark 0.28 and 4.60 ms, robots 2.07 and 15.78). Frame time in ms, 2026-11-20's in brackets:
+
+| program | where | 10k | 50k | 100k | 150k | 200k | most held |
+|---|---|---:|---:|---:|---:|---:|---:|
+| libwgf, the sprite batch | page | 0.10 (0.11) | 0.40 (0.43) | 0.79 (0.80) | 2.52 (2.49) | 1.78 (1.82) | 1,666k |
+| libwgf, an actor a bunny | page | 0.87 (0.98) | 4.18 (4.58) | | | | 65k (the actor limit) |
+| libwgf, the sprite batch | native | 0.18 (0.19) | 0.48 (0.50) | 0.86 (0.86) | 1.26 (1.25) | 1.69 (1.68) | 2,090k |
+| libwgf, an actor a bunny | native | 0.84 (0.82) | 3.87 (3.88) | | | | 65k |
+
+| program | where | 50 robots | 200 | 400 |
+|---|---|---:|---:|---:|
+| libwgf | page | 0.99 (1.01) | 3.58 (3.78) | 7.28 (7.50) |
+| libwgf | native | 0.62 (0.59) | 2.54 (2.32) | 4.85 (4.77) |
+
+In a page an actor a bunny is about a tenth faster (the smaller record, frozen answered at once), the robots a few percent; natively the same within the runs' spread, but for the 200 robots, 9% slower in this run, not chased. The batch's 150k cell still sits above its 200k one. Size, a page's code as helix counts it: the bunnymark 110.8 KB gzip (92.1 brotli), 145.7 before, and the robots 185.9 (151.1), 215.3 before, the 2026-11-21 cuts' (images and glyphs the browser's, the C library's float parser and trigonometry out of pages); helix-raylib's 51.5 and 86.8. Wardens' export, as a game's row counts it: 275.2 KB gzip (228.7 brotli) against helix-raylib's own Wardens, built 2026-11-21, 263.2 (197.7): a fixed floor (an empty window 77.6 KB against 36.0) that a game's features dilute, gzip's gap 5% at Wardens and brotli's 16%, since brotli shrinks JS further than wasm.
+
 ## Meshes merged: helix-raylib's LoadModelFromModels (2026-11-22)
 
 Rob asked whether libwgf has helix's mesh combiner, to make one skinned character of separate pieces (head, body, hands); it didn't. A character of pieces was its pieces side by side, each a file's model with its own copy of the skeleton, given the same clips and played alike (Wardens, `gfx-skinning`): a pose a piece, a draw a primitive (the Adventurer's four files, ten), and every play call made once a piece. Built as parity:
