@@ -1,0 +1,6 @@
+wgf-autopilot 1
+# A smoke run: two seconds of frames, two letters typed, and the example's probes checked.
+at 30 text hi
+at 60 expect hello.typed == 2
+at 120 expect hello.frames >= 120
+at 120 end

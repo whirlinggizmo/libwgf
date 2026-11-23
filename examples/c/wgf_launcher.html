@@ -6,8 +6,10 @@
 <title>libwgf examples</title>
 <!-- The site's launcher, at its root (tools/finish_site.py writes it from
      examples/c/wgf_launcher.html, with examples.json beside it): a dropdown of the
-     examples built, each loaded in a frame from its own page, <name>/index.html. No
-     example depends on this page: each runs on its own. -->
+     examples built, each loaded in a frame from its own page. examples.json is a list of
+     C examples (<name>/index.html), or, on the Pages site, an object of lists by language:
+     "c" (<name>/), "haxe" (haxe/<name>/), and "js" (js/<name>/), chosen in a second
+     dropdown. No example depends on this page: each runs on its own. -->
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: #15171c;
     color: #cdd3de; font: 14px/1.4 system-ui, sans-serif; }
@@ -15,7 +17,7 @@
     display: flex; align-items: center; gap: 12px; padding: 0 12px;
     background: #1e2128; border-bottom: 1px solid #2c313c; white-space: nowrap; overflow: hidden; }
   #bar b { color: #7ea2ff; }
-  @media (max-width: 520px) { #exlabel { display: none; } }
+  @media (max-width: 520px) { #exlabel, #langlabel { display: none; } }
   #src { color: #7ea2ff; text-decoration: none; }
   #src:hover { text-decoration: underline; }
   select { background: #0f1115; color: #cdd3de; border: 1px solid #3a4150;
@@ -27,36 +29,68 @@
 <body>
   <div id="bar">
     <b>libwgf</b>
+    <label id="langbox" hidden><span id="langlabel">language </span><select id="lang" aria-label="language"></select></label>
     <label><span id="exlabel">example </span><select id="ex" aria-label="example"></select></label>
     <a id="src" target="_blank" rel="noopener">source</a>
   </div>
   <iframe id="frame" allow="autoplay; gamepad; fullscreen" title="example"></iframe>
   <script>
-    // Where each example's source is read, {name} standing for the example.
-    const SOURCE = "https://github.com/whirlinggizmo/libwgf/blob/main/examples/c/{name}/main.c";
+    // Each language's name, where its examples' pages are, and where each one's source is read
+    // ({name} standing for the example).
+    const REPO = "https://github.com/whirlinggizmo/libwgf/blob/main/examples/";
+    const LANGUAGES = {
+      c: { label: "C", page: "{name}/index.html", source: REPO + "c/{name}/main.c" },
+      haxe: { label: "Haxe", page: "haxe/{name}/index.html", source: REPO + "haxe/{name}/src/Main.hx" },
+      js: { label: "JS", page: "js/{name}/index.html", source: REPO + "js/{name}/main.js" },
+    };
     const params = new URLSearchParams(location.search);
     const sel = document.getElementById("ex");
+    const langSel = document.getElementById("lang");
     const frame = document.getElementById("frame");
     const src = document.getElementById("src");
-    function show(name) {
-      frame.src = encodeURIComponent(name) + "/index.html";
-      src.href = SOURCE.replaceAll("{name}", name);
-      document.title = "libwgf: " + name;
+    let lists = { c: [] };
+    function show(lang, name) {
+      frame.src = LANGUAGES[lang].page.replaceAll("{name}", encodeURIComponent(name));
+      src.href = LANGUAGES[lang].source.replaceAll("{name}", name);
+      document.title = "libwgf: " + name + (lang === "c" ? "" : " (" + LANGUAGES[lang].label + ")");
     }
-    fetch("examples.json").then(r => (r.ok ? r.json() : [])).catch(() => []).then(list => {
-      const current = params.get("ex") || list[0] || "app-hello";
-      if (!list.includes(current)) list = [current, ...list];
+    // The example dropdown filled for `lang`, `wanted` chosen when that language has it.
+    function fill(lang, wanted) {
+      const list = lists[lang] || [];
+      const current = list.includes(wanted) ? wanted : list[0];
+      sel.replaceChildren();
       for (const name of list) {
         const o = document.createElement("option");
         o.value = o.textContent = name;
         if (name === current) o.selected = true;
         sel.appendChild(o);
       }
-      show(current);
+      if (current) show(lang, current);
+    }
+    function remember() {
+      history.replaceState(null, "", "?lang=" + langSel.value + "&ex=" + encodeURIComponent(sel.value));
+    }
+    fetch("examples.json").then(r => (r.ok ? r.json() : [])).catch(() => []).then(found => {
+      lists = Array.isArray(found) ? { c: found } : found;
+      const langs = Object.keys(LANGUAGES).filter(l => (lists[l] || []).length > 0);
+      for (const l of langs) {
+        const o = document.createElement("option");
+        o.value = l;
+        o.textContent = LANGUAGES[l].label;
+        langSel.appendChild(o);
+      }
+      document.getElementById("langbox").hidden = langs.length < 2;
+      const lang = langs.includes(params.get("lang")) ? params.get("lang") : langs[0] || "c";
+      langSel.value = lang;
+      fill(lang, params.get("ex") || "app-hello");
+    });
+    langSel.addEventListener("change", () => {
+      fill(langSel.value, sel.value);  // the same example in the other language, when it has one
+      remember();
     });
     sel.addEventListener("change", () => {
-      history.replaceState(null, "", "?ex=" + encodeURIComponent(sel.value));
-      show(sel.value);
+      show(langSel.value || "c", sel.value);
+      remember();
     });
   </script>
 </body>

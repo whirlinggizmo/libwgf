@@ -1040,6 +1040,17 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## Examples in Haxe and JS: the first, and the site's language choice (2026-11-22)
+
+Rob asked whether libwgf should have its examples in Haxe and JS too, with the site offering each language. Decided: a curated set, about ten in each language, not all 50. A copy of every C example in three languages would triple the upkeep and teach little, since most examples show a feature, not a language. What differs by language is how a game is written, so the set covers that: behaviors as classes, scenes, UI, a model with its animation, physics, audio, and one small whole game.
+
+- **A Haxe example is a small game project,** laid out as `wgf new` makes one: `wgf.json`, `src/Main.hx`, a smoke autopilot, and its own `assets/`. So `wgf serve`, `wgf run`, and `wgf export` work in its folder, and a reader sees a real project. `examples/haxe/hello` is the first: the C `app-hello` written the Haxe way, 114.6 KB of gzip exported.
+- **Checked** by `tools/check_games.py --examples`: each one's smoke run headless and in a browser, and its web export. It is a step of the full tier (`haxe-examples`) and of CI's release job.
+- **On the site,** `build_pages.py` exports the Haxe examples and builds the JS ones on trimmed hosts, beside the C examples. The launcher gained a language dropdown, and its `examples.json` may now list examples by language.
+- **A JS example copies no assets by default.** It used to get all of `examples/assets/` (11 MB) unless its `example.json` named others, which `hello` never used.
+
+The other examples of the set are still to write.
+
 ## The `.clang-format` taken out again (2026-11-22)
 
 Removed the same day it went in (the entry below). Rob: it scared him. The reason is the trap that entry describes. clang-format breaks the JavaScript inside `EM_JS`, and the only guard was a list of files to skip, which an editor or a person can bypass. A formatter config that can silently break the web build isn't worth having for layout nobody had asked a tool to hold.

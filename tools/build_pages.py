@@ -10,7 +10,11 @@ size budget; any that fails fails the site. Each C example and combination scene
 (tools/examples.py's) is built against wasm32-release, as the browser check builds them,
 and copied to <out>/examples/ with examples/assets/ beside them, the launcher written for
 them (tools/finish_site.py: a dropdown, each example in a frame, its code versioned); one
-that doesn't build fails the site (the browser check runs them; this doesn't again). The API
+that doesn't build fails the site (the browser check runs them; this doesn't again). The
+Haxe examples (examples/haxe/<name>/, each a small game project) are exported as the games
+are, to <out>/examples/haxe/<name>/, and the JS examples (examples/js/<name>/) built with a
+trimmed host, to <out>/examples/js/<name>/; the launcher's examples.json then lists all
+three by language, and it offers a language beside the example. The API
 reference is tools/gen_apidoc.py's, at <out>/api/. The site (default build/pages/) is the
 games at <out>/<game>/, those, and an index.html linking them, what
 .github/workflows/pages.yml deploys. --no-games, --no-examples, and --no-api leave a part
@@ -27,10 +31,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # an embedded Python (Windows) doesn't add it
 import examples  # noqa: E402
 import variants  # noqa: E402
+import webhost  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 GAMES = ROOT / 'games'
 EXAMPLES_VARIANT = 'wasm32-release'
+HAXE_EXAMPLES = ROOT / 'examples' / 'haxe'
+JS_EXAMPLES = ROOT / 'examples' / 'js'
 
 PAGE = """<!doctype html>
 <html lang="en">
@@ -112,7 +119,46 @@ def build_examples(out):
         names.append(name)
     shutil.copytree(ROOT / 'examples' / 'assets', site / 'assets')
     subprocess.run([sys.executable, str(ROOT / 'tools' / 'finish_site.py'), '--site', str(site)], check=True)
-    print(f'build_pages: {len(names)} example(s)', flush=True)
+    haxe, haxe_failed = build_haxe_examples(site / 'haxe')
+    js, js_failed = build_js_examples(site / 'js')
+    # the launcher's list, by language (finish_site.py wrote the C examples' alone)
+    (site / 'examples.json').write_text(json.dumps({'c': names, 'haxe': haxe, 'js': js}, separators=(',', ':')) + '\n',
+                                        encoding='utf-8')
+    print(f'build_pages: {len(names)} C, {len(haxe)} Haxe, and {len(js)} JS example(s)', flush=True)
+    return {'c': names, 'haxe': haxe, 'js': js}, failed + haxe_failed + js_failed
+
+
+def build_haxe_examples(out):
+    """Every Haxe example exported for the web into `out`/<name>/, as a game is: their
+    names, and those that failed."""
+    names, failed = [], []
+    for example in sorted(d for d in HAXE_EXAMPLES.iterdir() if (d / 'wgf.json').exists()):
+        name = example.name
+        work = out / '.export' / name
+        done = subprocess.run([sys.executable, str(ROOT / 'wgf'), 'export', '--web', '--out', str(work)], cwd=example,
+                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors='replace')
+        if done.returncode != 0:
+            print(done.stdout, flush=True)
+            failed.append(f'haxe:{name}')
+            continue
+        shutil.move(str(work / 'web'), str(out / name))
+        names.append(name)
+    shutil.rmtree(out / '.export', ignore_errors=True)
+    return names, failed
+
+
+def build_js_examples(out):
+    """Every JS example built into `out`/<name>/ on a host trimmed to its calls: their
+    names, and those that failed."""
+    names, failed = [], []
+    for example in sorted(d for d in JS_EXAMPLES.iterdir() if (d / 'main.js').exists()):
+        try:
+            webhost.build_js_example(example, EXAMPLES_VARIANT, out / example.name, trimmed=True)
+        except (RuntimeError, subprocess.CalledProcessError) as e:
+            print(e, flush=True)
+            failed.append(f'js:{example.name}')
+            continue
+        names.append(example.name)
     return names, failed
 
 
@@ -135,14 +181,19 @@ def main():
         shutil.rmtree(out)
     out.mkdir(parents=True)
     items, failed = ([], []) if args.no_games else build_games(out)
-    shown, example_failures = ([], []) if args.no_examples else build_examples(out)
+    shown, example_failures = ({}, []) if args.no_examples else build_examples(out)
     failed += example_failures
+    count = sum(len(v) for v in shown.values())
     api = False if args.no_api else build_api(out)
     if not args.no_api and not api:
         failed.append('the API reference')
-    examples_text = (f'<a href="examples/">{len(shown)} examples</a>, each a page of its own, chosen in the launcher: '
-                     + ', '.join(f'<a href="examples/{html.escape(n)}/">{html.escape(n)}</a>' for n in shown)
-                     if shown else 'Not in this build.')
+    labels = {'c': 'C', 'haxe': 'Haxe', 'js': 'JS'}
+    examples_text = (f'<a href="examples/">{count} examples</a> in C, Haxe, and JS, each a page of its own, chosen in '
+                     'the launcher.</p>' + ''.join(
+                         f'<p><b>{labels[lang]}:</b> ' + ', '.join(
+                             f'<a href="examples/?lang={lang}&amp;ex={html.escape(n)}">{html.escape(n)}</a>' for n in names)
+                         + '</p>' for lang, names in shown.items() if names) + '<p>'
+                     if count else 'Not in this build.')
     api_text = ('<a href="api/">The API reference</a>: every public header, from its own doc comments, each call '
                 'beside its name in the Haxe and JS bindings.' if api else 'Not in this build.')
     (out / 'index.html').write_text(PAGE.format(items='\n'.join(items) or '<li>Not in this build.</li>',
@@ -151,7 +202,7 @@ def main():
     if failed:
         print(f'build_pages: FAIL ({", ".join(failed)})')
         return 1
-    print(f'build_pages: {len(items)} game(s), {len(shown)} example(s), the API {"in" if api else "left out"}, in {out}')
+    print(f'build_pages: {len(items)} game(s), {count} example(s), the API {"in" if api else "left out"}, in {out}')
     return 0
 
 

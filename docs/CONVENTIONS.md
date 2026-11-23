@@ -153,7 +153,7 @@ No other pointer, no struct, no function pointer, no `void *`, no variadic call.
 
 - A layer's tests are in `<layer>/tests/`, through its public headers, and its private ones for private pieces. A test that waits on a load gives up after a while and fails.
 - Every example and game runs headless in the smoke run and in a browser in the browser check; a game also ships an autopilot playthrough.
-- Example files are under `examples/assets/`; a game's under `games/<name>/assets/`. Each asset not made here is credited, with its license, in a `CREDITS.md` beside it.
+- A C example's files are under `examples/assets/`; a game's under `games/<name>/assets/`, and a Haxe example's, a small game project, under its own `assets/`. Each asset not made here is credited, with its license, in a `CREDITS.md` beside it.
 
 ## Tooling
 

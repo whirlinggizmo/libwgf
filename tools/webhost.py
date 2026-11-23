@@ -101,10 +101,10 @@ JS_EXAMPLES = ROOT / 'examples' / 'js'
 
 def js_example_config(example):
     """A JS example's example.json, if it has one: its assets and its autopilot, each a
-    path from the root (default: examples/assets, and none)."""
+    path from the root (default: none of either)."""
     path = Path(example) / 'example.json'
     config = json.loads(path.read_text(encoding='utf-8')) if path.exists() else {}
-    assets = ROOT / config.get('assets', 'examples/assets')
+    assets = ROOT / config['assets'] if 'assets' in config else None
     autopilot = ROOT / config['autopilot'] if 'autopilot' in config else None
     return assets, autopilot
 
@@ -113,7 +113,7 @@ def build_js_example(example, variant, out, trimmed=False):
     """A JS example (examples/js/<name>/) as a site in `out`: its page and modules, the
     host and the JS binding beside them (with `trimmed`, both cut to the calls and enums
     its modules name, as a release export is, and the autopilot's runner, since a check
-    flies it), and its assets copied in. The directory."""
+    flies it), and its assets copied in, when its example.json names any. The directory."""
     example, out = Path(example), Path(out)
     if out.exists():
         shutil.rmtree(out)
@@ -138,7 +138,8 @@ def build_js_example(example, variant, out, trimmed=False):
     else:
         build(variant, None, out)
     assets, _ = js_example_config(example)
-    shutil.copytree(assets, out / 'assets')
+    if assets is not None:
+        shutil.copytree(assets, out / 'assets')
     return out
 
 

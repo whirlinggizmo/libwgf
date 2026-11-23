@@ -36,6 +36,8 @@ The binding's checks (tools/check_binding.py), when there is a haxe:
                   steps needing what this machine hasn't are skipped, and said so
   games           every game: its playthrough headless and in a browser, its web export
                   within its budget, its desktop export (tools/check_games.py), as cli skips
+  haxe-examples   every Haxe example (examples/haxe/): its smoke run headless and in a browser, and
+                  its web export (tools/check_games.py --examples)
   shaders         gfx's committed shader headers current with their GLSL (tools/gen_shaders.py
                   --check; skipped where sokol-shdc can't be had)
   brdf-lut        the environments' committed BRDF table current (tools/gen_brdf_lut.py --check)
@@ -158,6 +160,7 @@ CHECKS = {
     'js-binding': (['tools/check_js_binding.py'], True, None),
     'cli': (['tools/check_cli.py'], False, ('haxe', 'no haxe')),
     'games': (['tools/check_games.py'], False, ('haxe', 'no haxe')),
+    'haxe-examples': (['tools/check_games.py', '--examples'], False, ('haxe', 'no haxe')),
     'shaders': (['tools/gen_shaders.py', '--check'], False, None),
     'brdf-lut': (['tools/gen_brdf_lut.py', '--check'], False, None),
     'actors': (['tools/bench/measure_actors.py', '--check'], False,

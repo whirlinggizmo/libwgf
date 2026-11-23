@@ -3,7 +3,7 @@
 passing headless and in a browser, and its exports made, smoke-tested, and the web one
 within the game's size budget.
 
-    tools/check_games.py [--only STEP[,STEP...]] [game ...]
+    tools/check_games.py [--examples] [--only STEP[,STEP...]] [game ...]
 
 For each game (default: every games/<name>/ with a wgf.json), with the wgf tool, run in
 the game's directory as a developer would:
@@ -17,6 +17,10 @@ the game's directory as a developer would:
               fly in time
   web         wgf export --web: the trimmed host, the budget, the smoke run in a browser
   desktop     wgf export --desktop: the release build, its smoke run in a window
+With --examples, the Haxe examples (examples/haxe/<name>/ with a wgf.json, each a small
+game project) are checked in place of the games: the playthrough, browser, and web steps,
+their playthrough their smoke.autopilot (wgf.json's "playthrough").
+
 A step that can't run here (no haxe, hxcpp, Emscripten, or browser) says
 `check_games: SKIPPING <step> (<why>)`, and the last line repeats every skip. Standard
 library only.
@@ -35,6 +39,8 @@ import webhost  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 GAMES = ROOT / 'games'
+EXAMPLES = ROOT / 'examples' / 'haxe'
+EXAMPLE_STEPS = ('playthrough', 'browser', 'web')  # an example has nothing generated, and no desktop export to keep
 WGF = ROOT / 'wgf'
 STEPS = ('generated', 'playthrough', 'browser', 'web', 'desktop')
 GENERATORS = {'asteroids': ['tools/gen_sounds.py', '--check'], 'racer': ['games/racer/tools/gen_track.py', '--check'],
@@ -52,11 +58,12 @@ BROWSER_FLIGHTS = {'racer': ('bench.autopilot', "its full lap, shadows and all, 
                                                   "software renderer's time; the headless playthrough flies it", 600)}
 
 
-def games(names):
-    found = sorted(d.name for d in GAMES.iterdir() if (d / 'wgf.json').exists()) if GAMES.is_dir() else []
+def games(names, folder=GAMES):
+    found = sorted(d.name for d in folder.iterdir() if (d / 'wgf.json').exists()) if folder.is_dir() else []
     for name in names:
         if name not in found:
-            raise SystemExit(f'check_games: no game "{name}" in games/ ({", ".join(found) or "none"})')
+            where = folder.relative_to(ROOT).as_posix()
+            raise SystemExit(f'check_games: no game "{name}" in {where}/ ({", ".join(found) or "none"})')
     return names or found
 
 
@@ -90,8 +97,8 @@ def why_not(step):
     return None
 
 
-def run_step(name, step):
-    game_dir = GAMES / name
+def run_step(name, step, folder=GAMES):
+    game_dir = folder / name
     if step == 'generated':
         command = GENERATORS.get(name)
         if command is None:
@@ -123,14 +130,16 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('games', nargs='*', help='the games to check (default: every one)')
     ap.add_argument('--only', help='comma-separated steps: ' + ', '.join(STEPS))
+    ap.add_argument('--examples', action='store_true', help='check the Haxe examples (examples/haxe/) instead')
     args = ap.parse_args()
-    steps = args.only.split(',') if args.only else list(STEPS)
+    folder = EXAMPLES if args.examples else GAMES
+    steps = args.only.split(',') if args.only else list(EXAMPLE_STEPS if args.examples else STEPS)
     for step in steps:
         if step not in STEPS:
             print(f'check_games: no step "{step}" ({", ".join(STEPS)})', file=sys.stderr)
             return 2
     skipped, failed = [], []
-    for name in games(args.games):
+    for name in games(args.games, folder):
         for step in steps:
             print(f'== {name}: {step}', flush=True)
             why = why_not(step)
@@ -138,7 +147,7 @@ def main():
                 print(f'check_games: SKIPPING {name} {step} ({why})', flush=True)
                 skipped.append(f'{name} {step} ({why})')
                 continue
-            ok, out = run_step(name, step)
+            ok, out = run_step(name, step, folder)
             summary = [line for line in out.splitlines()
                        if line.startswith('wgf: ') or 'wgf_autopilot: PASS' in line or 'gen_sounds' in line]
             print('\n'.join(summary[-4:]) if ok else '\n'.join(out.strip().splitlines()[-30:]), flush=True)
