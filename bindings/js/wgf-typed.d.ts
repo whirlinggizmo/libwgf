@@ -5717,22 +5717,26 @@ export declare const Loop: {
 /** A handle of kind wgf_material_t: the raw binding's branded type. */
 export type Material = raw.wgf_material_t;
 /**
- * A material: how a surface is shaded, libwgt's (wgrender's). It is a resource
- * (wgf_resource.h): shared and reference counted, made from numbers, never a file.
+ * A material: how a surface is shaded.
  *
- * - A mesh comes with its materials, one a slot (wgf_mesh_get_material), shared by
- *   every model of that mesh, so changing one changes all of them. To change one model
- *   only, create a material and give it to the model (wgf_model_set_material).
- * - wgf_material_create returns a material with glTF's defaults (white, fully
- *   metallic, fully rough, opaque, single sided), with a reference of the caller's.
- *   Models hold their own reference, so release yours (wgf_resource_release) when done.
- * - Shading follows glTF metallic-roughness, lit in linear color space. Colors given as
- *   wgf_color_t, and color textures (base color, emissive), are sRGB and converted to
- *   linear; numeric color values (vec3, vec4) are already linear, as glTF's factors
- *   are. Metallic-roughness, normal, and occlusion textures are linear data.
+ * A material is a resource (wgf_resource.h). It is shared and reference counted, and it
+ * is always made in code, never loaded from a file.
  *
- * Parameters are set by name. A setter returns false for an unknown name or a value of
- * the wrong kind (logged); a getter returns 0 for either.
+ * - A mesh comes with its own materials, one for each slot (wgf_mesh_get_material). Every
+ *   model of that mesh shares them, so changing one changes all of those models. To
+ *   change a single model, create a material and give it to that model
+ *   (wgf_model_set_material).
+ * - wgf_material_create returns a material with glTF's defaults: white, fully metallic,
+ *   fully rough, opaque, and single sided. You hold one reference to it. Models take their
+ *   own, so release yours when you are done with it (see wgf_resource_release).
+ * - Shading follows glTF's metallic-roughness model, lit in linear color space.
+ * - Colors given as wgf_color_t are sRGB, and so are color textures (base color and
+ *   emissive). Both are converted to linear.
+ * - Numeric colors (vec3 and vec4 values) are already linear, as glTF's factors are.
+ * - Metallic-roughness, normal, and occlusion textures hold linear data.
+ *
+ * Parameters are set by name. A setter returns false for an unknown name, or for a value
+ * of the wrong kind (logged). A getter returns 0 in either case.
  *
  *   name                          kind     default    notes
  *   base_color                    vec4     1,1,1,1    linear rgba; alpha drives MASK and BLEND
@@ -5747,190 +5751,245 @@ export type Material = raw.wgf_material_t;
  *   emissive                      vec3     0,0,0      linear rgb, may exceed 1
  *   emissive_texture              texture  none       sRGB rgb
  *
- * Each texture <t> above (base_color_texture, ...) also has:
+ * Each texture <t> above (base_color_texture, and so on) also has these:
  *
  *   <t>_texcoord                  int      0          texture coordinate set: 0 or 1
  *   <t>_offset                    vec2     0,0        texture transform (glTF
  *   <t>_rotation                  float    0          KHR_texture_transform):
  *   <t>_scale                     vec2     1,1        uv' = offset + rotate(scale * uv)
  *
- * Scale tiles the texture (2,2 repeats it twice each way); rotation is radians,
- * counterclockwise in texture space. Textures repeat, sample smoothly, and use their
- * mipmaps unless wgf_material_set_texture_sampling says otherwise. A texture still
- * loading draws as nothing set would, but a base color texture, which draws the
- * placeholder checker once it has FAILED, as sprites do.
+ * Scale tiles the texture: 2,2 repeats it twice in each direction. Rotation is in radians,
+ * counterclockwise in texture space.
+ *
+ * Textures repeat, sample smoothly, and use their mipmaps, unless
+ * wgf_material_set_texture_sampling says otherwise. A texture that is still loading draws
+ * as if it weren't set. The one exception is a base color texture that has FAILED: it
+ * draws the placeholder checker, as a sprite does.
  *
  * A custom material (wgf_material_create_custom) is drawn by a shader of your own
- * (wgf_shader.h): its parameters and textures are the ones that shader declares, set by
- * the same calls by its names (float, int, vec2, vec3, vec4; set_color for a vec3 or vec4;
- * set_int takes any int), and the names above don't apply. Values set while its shader is
- * still loading are kept, and checked once it is READY: a name it has none of, or a value of
- * another type, is then warned about and dropped. Its alpha mode, cutoff, and double sides
- * work as above. It draws nothing until its shader is READY, and nothing if that FAILED
- * (warned once).
+ * (wgf_shader.h).
+ *
+ * - Its parameters and textures are the ones that shader declares. The names above don't
+ *   apply.
+ * - They are set with the same calls, by the shader's names: float, int, vec2, vec3, and
+ *   vec4. set_color sets a vec3 or vec4, and set_int takes any int.
+ * - Values set while the shader is still loading are kept, and checked once it is READY.
+ *   A name the shader doesn't have, or a value of another type, is then dropped with a
+ *   warning.
+ * - Its alpha mode, cutoff, and double-sided setting work as they do for any material.
+ * - It draws nothing until its shader is READY, and nothing at all if the shader FAILED.
+ *   That failure is warned about once.
  */
 export declare const Material: {
     /**
-     * A material with glTF's defaults. 0 when `shading` isn't one (logged), or there is no
-     * room for another material.
+     * Creates a material with glTF's defaults.
+     *
+     * Returns 0 if `shading` isn't PBR or UNLIT (logged), or if there is no room for another
+     * material.
      */
     readonly create: typeof raw.wgf_material_create;
     /**
-     * A material drawn by `shader` (wgf_shader_create), loaded or still loading; the material
-     * holds its own reference to it. A surface shader's draws a stage's models; a screen
-     * effect's is added to the frame's effects (wgf_render_add_effect). 0 when `shader`
-     * isn't a shader (logged), or there is no room for another material.
+     * Creates a material drawn by `shader` (wgf_shader_create), which may still be loading.
+     * The material holds its own reference to the shader.
+     *
+     * - With a surface shader, the material draws a stage's models.
+     * - With a screen effect's shader, the material is added to the frame's effects
+     *   (wgf_render_add_effect).
+     *
+     * Returns 0 if `shader` isn't a shader (logged), or if there is no room for another
+     * material.
      */
     readonly createCustom: typeof raw.wgf_material_create_custom;
     /**
-     * The custom material's shader; 0 for a built-in shading's.
+     * Returns a custom material's shader, or 0 for a material with built-in shading.
      */
     readonly getShader: typeof raw.wgf_material_get_shader;
     /**
-     * False when `shading` isn't PBR or UNLIT, or the material is a custom one.
+     * Sets or gets the material's shading. The setter returns false if `shading` isn't PBR or
+     * UNLIT, or if the material is a custom one.
      */
     readonly setShading: typeof raw.wgf_material_set_shading;
     /**
-     * False when `shading` isn't PBR or UNLIT, or the material is a custom one.
+     * Sets or gets the material's shading. The setter returns false if `shading` isn't PBR or
+     * UNLIT, or if the material is a custom one.
      */
     readonly getShading: typeof raw.wgf_material_get_shading;
     /**
-     * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
-     * 0 is clamped to 0). False when `mode` isn't one.
+     * Sets how the material uses alpha (default: OPAQUE), and the cutoff for MASK (default: 0.5).
+     * MASK draws only where alpha reaches the cutoff. A cutoff below 0 is clamped to 0.
+     * Returns false if `mode` isn't an alpha mode.
      */
     readonly setAlphaMode: typeof raw.wgf_material_set_alpha_mode;
     /**
-     * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
-     * 0 is clamped to 0). False when `mode` isn't one.
+     * Sets how the material uses alpha (default: OPAQUE), and the cutoff for MASK (default: 0.5).
+     * MASK draws only where alpha reaches the cutoff. A cutoff below 0 is clamped to 0.
+     * Returns false if `mode` isn't an alpha mode.
      */
     readonly getAlphaMode: typeof raw.wgf_material_get_alpha_mode;
     /**
-     * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
-     * 0 is clamped to 0). False when `mode` isn't one.
+     * Sets how the material uses alpha (default: OPAQUE), and the cutoff for MASK (default: 0.5).
+     * MASK draws only where alpha reaches the cutoff. A cutoff below 0 is clamped to 0.
+     * Returns false if `mode` isn't an alpha mode.
      */
     readonly getAlphaCutoff: typeof raw.wgf_material_get_alpha_cutoff;
     /**
-     * A double-sided surface isn't culled from behind; its back faces are lit from their
-     * side (default single sided).
+     * Sets whether both sides of a surface are drawn (default: single sided). The back faces
+     * of a double-sided surface are lit from their own side.
      */
     readonly setDoubleSided: typeof raw.wgf_material_set_double_sided;
     /**
-     * A double-sided surface isn't culled from behind; its back faces are lit from their
-     * side (default single sided).
+     * Sets whether both sides of a surface are drawn (default: single sided). The back faces
+     * of a double-sided surface are lit from their own side.
      */
     readonly isDoubleSided: typeof raw.wgf_material_is_double_sided;
     /**
-     * The parameters, by name (the table above). set_int refuses a texture coordinate set
-     * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
-     * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+     * Sets or gets a parameter by name, from the table above.
+     *
+     * - set_int refuses a texture coordinate set other than 0 or 1.
+     * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+     *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
      */
     readonly setInt: typeof raw.wgf_material_set_int;
     /**
-     * The parameters, by name (the table above). set_int refuses a texture coordinate set
-     * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
-     * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+     * Sets or gets a parameter by name, from the table above.
+     *
+     * - set_int refuses a texture coordinate set other than 0 or 1.
+     * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+     *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
      */
     readonly getInt: typeof raw.wgf_material_get_int;
     /**
-     * The parameters, by name (the table above). set_int refuses a texture coordinate set
-     * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
-     * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+     * Sets or gets a parameter by name, from the table above.
+     *
+     * - set_int refuses a texture coordinate set other than 0 or 1.
+     * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+     *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
      */
     readonly setFloat: typeof raw.wgf_material_set_float;
     /**
-     * The parameters, by name (the table above). set_int refuses a texture coordinate set
-     * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
-     * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+     * Sets or gets a parameter by name, from the table above.
+     *
+     * - set_int refuses a texture coordinate set other than 0 or 1.
+     * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+     *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
      */
     readonly getFloat: typeof raw.wgf_material_get_float;
     /**
-     * The parameters, by name (the table above). set_int refuses a texture coordinate set
-     * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
-     * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+     * Sets or gets a parameter by name, from the table above.
+     *
+     * - set_int refuses a texture coordinate set other than 0 or 1.
+     * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+     *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
      */
     readonly setVec2: typeof raw.wgf_material_set_vec2;
     /**
-     * The parameters, by name (the table above). set_int refuses a texture coordinate set
-     * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
-     * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+     * Sets or gets a parameter by name, from the table above.
+     *
+     * - set_int refuses a texture coordinate set other than 0 or 1.
+     * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+     *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
      */
     readonly getVec2: typeof raw.wgf_material_get_vec2;
     /**
-     * The parameters, by name (the table above). set_int refuses a texture coordinate set
-     * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
-     * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+     * Sets or gets a parameter by name, from the table above.
+     *
+     * - set_int refuses a texture coordinate set other than 0 or 1.
+     * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+     *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
      */
     readonly setVec3: typeof raw.wgf_material_set_vec3;
     /**
-     * The parameters, by name (the table above). set_int refuses a texture coordinate set
-     * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
-     * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+     * Sets or gets a parameter by name, from the table above.
+     *
+     * - set_int refuses a texture coordinate set other than 0 or 1.
+     * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+     *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
      */
     readonly getVec3: typeof raw.wgf_material_get_vec3;
     /**
-     * The parameters, by name (the table above). set_int refuses a texture coordinate set
-     * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
-     * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+     * Sets or gets a parameter by name, from the table above.
+     *
+     * - set_int refuses a texture coordinate set other than 0 or 1.
+     * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+     *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
      */
     readonly setVec4: typeof raw.wgf_material_set_vec4;
     /**
-     * The parameters, by name (the table above). set_int refuses a texture coordinate set
-     * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
-     * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+     * Sets or gets a parameter by name, from the table above.
+     *
+     * - set_int refuses a texture coordinate set other than 0 or 1.
+     * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+     *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
      */
     readonly getVec4: typeof raw.wgf_material_get_vec4;
     /**
-     * The parameters, by name (the table above). set_int refuses a texture coordinate set
-     * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
-     * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+     * Sets or gets a parameter by name, from the table above.
+     *
+     * - set_int refuses a texture coordinate set other than 0 or 1.
+     * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+     *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
      */
     readonly setColor: typeof raw.wgf_material_set_color;
     /**
-     * A texture parameter: the material holds its own reference to the texture; 0 clears
-     * it. False when `texture` isn't a texture.
+     * Sets or gets a texture parameter by name. The material holds its own reference to the
+     * texture, and 0 clears it. Returns false if `texture` isn't a texture.
      */
     readonly setTexture: typeof raw.wgf_material_set_texture;
     /**
-     * A texture parameter: the material holds its own reference to the texture; 0 clears
-     * it. False when `texture` isn't a texture.
+     * Sets or gets a texture parameter by name. The material holds its own reference to the
+     * texture, and 0 clears it. Returns false if `texture` isn't a texture.
      */
     readonly getTexture: typeof raw.wgf_material_get_texture;
     /**
-     * A custom material's cubemap (wgf_cubemap.h): its shader's textureCube `name`, sampled as
-     * samplerCube (wgf.glsl); the material holds its own reference; 0 clears it. False for a
-     * built-in material, a handle that isn't a cubemap, or a name that is its shader's texture2D
-     * (wgf_material_set_texture's) -- or, set while its shader loads, warned of and dropped once
-     * it is READY. set_texture likewise refuses a textureCube's name, and each getter answers 0
-     * for the other's.
+     * Sets or gets a custom material's cubemap (wgf_cubemap.h): its shader's textureCube
+     * `name`, sampled as a samplerCube (wgf.glsl). The material holds its own reference to the
+     * cubemap, and 0 clears it.
+     *
+     * Returns false for a material with built-in shading, a handle that isn't a cubemap, or a
+     * name that is one of the shader's texture2Ds (set those with wgf_material_set_texture).
+     * If the shader is still loading, the cubemap is kept and checked once the shader is
+     * READY. A wrong name is then dropped with a warning.
+     *
+     * set_texture refuses a textureCube's name in the same way, and each getter returns 0 for
+     * the other kind.
      */
     readonly setCubemap: typeof raw.wgf_material_set_cubemap;
     /**
-     * A custom material's cubemap (wgf_cubemap.h): its shader's textureCube `name`, sampled as
-     * samplerCube (wgf.glsl); the material holds its own reference; 0 clears it. False for a
-     * built-in material, a handle that isn't a cubemap, or a name that is its shader's texture2D
-     * (wgf_material_set_texture's) -- or, set while its shader loads, warned of and dropped once
-     * it is READY. set_texture likewise refuses a textureCube's name, and each getter answers 0
-     * for the other's.
+     * Sets or gets a custom material's cubemap (wgf_cubemap.h): its shader's textureCube
+     * `name`, sampled as a samplerCube (wgf.glsl). The material holds its own reference to the
+     * cubemap, and 0 clears it.
+     *
+     * Returns false for a material with built-in shading, a handle that isn't a cubemap, or a
+     * name that is one of the shader's texture2Ds (set those with wgf_material_set_texture).
+     * If the shader is still loading, the cubemap is kept and checked once the shader is
+     * READY. A wrong name is then dropped with a warning.
+     *
+     * set_texture refuses a textureCube's name in the same way, and each getter returns 0 for
+     * the other kind.
      */
     readonly getCubemap: typeof raw.wgf_material_get_cubemap;
     /**
-     * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
-     * alone, clamped at its edges. False for a wrap or filter that isn't one.
+     * Sets or gets how texture parameter `name` is sampled (default: repeat, linear). A
+     * cubemap uses only the filter, and is always clamped at its edges. Returns false for a
+     * wrap or filter that isn't one.
      */
     readonly setTextureSampling: typeof raw.wgf_material_set_texture_sampling;
     /**
-     * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
-     * alone, clamped at its edges. False for a wrap or filter that isn't one.
+     * Sets or gets how texture parameter `name` is sampled (default: repeat, linear). A
+     * cubemap uses only the filter, and is always clamped at its edges. Returns false for a
+     * wrap or filter that isn't one.
      */
     readonly getTextureWrapU: typeof raw.wgf_material_get_texture_wrap_u;
     /**
-     * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
-     * alone, clamped at its edges. False for a wrap or filter that isn't one.
+     * Sets or gets how texture parameter `name` is sampled (default: repeat, linear). A
+     * cubemap uses only the filter, and is always clamped at its edges. Returns false for a
+     * wrap or filter that isn't one.
      */
     readonly getTextureWrapV: typeof raw.wgf_material_get_texture_wrap_v;
     /**
-     * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
-     * alone, clamped at its edges. False for a wrap or filter that isn't one.
+     * Sets or gets how texture parameter `name` is sampled (default: repeat, linear). A
+     * cubemap uses only the filter, and is always clamped at its edges. Returns false for a
+     * wrap or filter that isn't one.
      */
     readonly getTextureFilter: typeof raw.wgf_material_get_texture_filter;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */

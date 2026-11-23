@@ -122,7 +122,7 @@ No other pointer, no struct, no function pointer, no `void *`, no variadic call.
 ## Code
 
 - C11, compiled with `-Wall -Wextra -Wpedantic` (`/W4` with MSVC), warnings as errors. C++ is two files, each a module's way into a C++ dependency, its interface C: physics3d's into Jolt (`libwgf/physics3d/src/wgf_physics3d_jolt.cpp`) and ui's into RmlUi (`libwgf/ui/src/wgf_ui_rmlui.cpp`), C++17 without exceptions or RTTI; C++ is in no other file, and in no header.
-- Four spaces, no tabs; lines up to 120 columns; a function's opening brace on its own line, a block's on the line of its statement. Comments are `/* */`, sentences, saying what and why, not how.
+- Four spaces, no tabs; lines up to 120 columns; a function's opening brace on its own line, a block's on the line of its statement. Comments are `/* */`, sentences, saying what and why, not how, written as "Writing" says.
 - A public header comment says what the call does now, and is changed in the commit that changes the behavior. When a header and the code disagree, the header is the bug.
 - What a simulation starts from or steps with is the same to the bit on every target: trigonometry there is `wgf_trig.h`'s (Haxe's `Trig`), never the C library's or a binding's own, whose results differ by target (glibc's and Emscripten's `sinf` disagree in a last bit), and a check holds a pile of physics bodies to one hash on every target (`wgf_physics3d_test`).
 - Untrusted input (files, autopilot files, scene text) is checked before it is read: sizes and offsets bounded, numbers parsed with their range checked. A parser refuses rather than guessing.
@@ -172,6 +172,31 @@ No other pointer, no struct, no function pointer, no `void *`, no variadic call.
 ## Guards
 
 There are none now: no size, timing, or benchmark baseline is held. `tools/measure_sizes.py` and `tools/bench/` stay as measurements, run for the comparison with helix, and their numbers are recorded, not enforced.
+
+## Writing
+
+How libwgf's prose reads: public header comments first (they are the API reference in C, Haxe, and JS, and the bindings' docs), then every doc, comment, and commit message. HISTORY.md entries written before this rule stay as they are.
+
+- **Lead with what it does,** in one plain sentence. Details come after.
+- **One idea a sentence,** usually under about 25 words. No chains of clauses joined by semicolons or colons.
+- **Lists for cases:** values, defaults, refusals, and what each option does.
+- **Results and failures as sentences:** "Returns 0 if `path` is empty (logged)." Not "0 (logged) for an empty path". "(logged)" marks a failure the log explains.
+- **One order:** what it does, then details, then what it returns and when it fails, then notes. A setter and its getter are documented together, as "Sets or gets".
+- **Defaults and units the same way every time:** "(default: OPAQUE)" after what it sets, and a unit wherever a number has one (radians, seconds, pixels).
+- **Plain words, active voice, and the parameter's name.** "You" is fine. A short example where use isn't obvious.
+- **Cross-references in the sentence,** as "see wgf_resource_release", rather than a call's name in brackets every few words.
+- **No lineage in public comments.** Where a design came from (libwgt, wgrender, helix) is HISTORY.md's or ARCHITECTURE.md's.
+- **Name the specific thing.** Not "something" or "thing": use the nouns below, or list the types it applies to ("a sprite, model, or emitter").
+
+The nouns, each with one meaning:
+
+- **actor:** anything placed in a scene tree, such as a sprite, model, light, camera, text, or emitter.
+- **component:** data an actor carries that a system runs, such as motion, a collider, or a body.
+- **resource:** shared, reference-counted data, loaded or made, such as a texture, mesh, material, font, sound, or shader.
+- **asset:** a file a game ships (an image, a glTF file, a sound), loaded as a resource.
+- **stage:** a 2D or 3D scene root that draws its actors.
+- **handle:** the number a call returns for an actor or a resource. 0 is none.
+- **element:** an RmlUi document's element, and nothing else.
 
 ## Docs
 

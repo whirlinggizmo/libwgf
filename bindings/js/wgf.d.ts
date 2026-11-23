@@ -625,11 +625,16 @@ export declare const WGF_MATERIAL_SHADING_CUSTOM: 2;
 export type wgf_material_shading_t = typeof WGF_MATERIAL_SHADING_PBR | typeof WGF_MATERIAL_SHADING_UNLIT | typeof WGF_MATERIAL_SHADING_CUSTOM;
 
 /**
- * How something drawn uses its alpha. In a stage, OPAQUE and MASK parts write depth and
- * aren't sorted; BLEND parts are drawn after them, sorted back to front; ADD, particles'
- * alone (a material refuses it), after those. MULTIPLY and PREMULTIPLIED are 2D drawing's:
- * immediate mode's (wgf_draw_set_blend_mode) and a sprite's on a 2D stage (on a 3D one they
- * draw as BLEND); a material, an emitter, and a sprite batch refuse them.
+ * How a material, sprite, particle, or 2D drawing uses its alpha.
+ *
+ * On a stage, the modes draw in this order:
+ * - OPAQUE and MASK write depth and are drawn first, unsorted.
+ * - BLEND is drawn next, sorted back to front.
+ * - ADD is drawn last. It is for particles only: a material refuses it.
+ *
+ * MULTIPLY and PREMULTIPLIED are for 2D drawing only: immediate mode
+ * (wgf_draw_set_blend_mode), and sprites on a 2D stage. A sprite on a 3D stage draws them
+ * as BLEND. Materials, emitters, and sprite batches refuse them.
  */
 export declare const WGF_ALPHA_MODE_OPAQUE: 0;
 export declare const WGF_ALPHA_MODE_MASK: 1;
@@ -4433,197 +4438,245 @@ export declare function wgf_font_measure(font: wgf_font_t | 0, text: string | nu
 export declare function wgf_shader_create(path: string | null): wgf_shader_t;
 
 /**
- * A material with glTF's defaults. 0 when `shading` isn't one (logged), or there is no
- * room for another material.
+ * Creates a material with glTF's defaults.
+ *
+ * Returns 0 if `shading` isn't PBR or UNLIT (logged), or if there is no room for another
+ * material.
  */
 export declare function wgf_material_create(shading: wgf_material_shading_t): wgf_material_t;
 
 /**
- * A material drawn by `shader` (wgf_shader_create), loaded or still loading; the material
- * holds its own reference to it. A surface shader's draws a stage's models; a screen
- * effect's is added to the frame's effects (wgf_render_add_effect). 0 when `shader`
- * isn't a shader (logged), or there is no room for another material.
+ * Creates a material drawn by `shader` (wgf_shader_create), which may still be loading.
+ * The material holds its own reference to the shader.
+ *
+ * - With a surface shader, the material draws a stage's models.
+ * - With a screen effect's shader, the material is added to the frame's effects
+ *   (wgf_render_add_effect).
+ *
+ * Returns 0 if `shader` isn't a shader (logged), or if there is no room for another
+ * material.
  */
 export declare function wgf_material_create_custom(shader: wgf_shader_t | 0): wgf_material_t;
 
 /**
- * The custom material's shader; 0 for a built-in shading's.
+ * Returns a custom material's shader, or 0 for a material with built-in shading.
  */
 export declare function wgf_material_get_shader(material: wgf_material_t | 0): wgf_shader_t;
 
 /**
- * False when `shading` isn't PBR or UNLIT, or the material is a custom one.
+ * Sets or gets the material's shading. The setter returns false if `shading` isn't PBR or
+ * UNLIT, or if the material is a custom one.
  */
 export declare function wgf_material_set_shading(material: wgf_material_t | 0, shading: wgf_material_shading_t): boolean;
 
 /**
- * False when `shading` isn't PBR or UNLIT, or the material is a custom one.
+ * Sets or gets the material's shading. The setter returns false if `shading` isn't PBR or
+ * UNLIT, or if the material is a custom one.
  */
 export declare function wgf_material_get_shading(material: wgf_material_t | 0): wgf_material_shading_t;
 
 /**
- * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
- * 0 is clamped to 0). False when `mode` isn't one.
+ * Sets how the material uses alpha (default: OPAQUE), and the cutoff for MASK (default: 0.5).
+ * MASK draws only where alpha reaches the cutoff. A cutoff below 0 is clamped to 0.
+ * Returns false if `mode` isn't an alpha mode.
  */
 export declare function wgf_material_set_alpha_mode(material: wgf_material_t | 0, mode: wgf_alpha_mode_t, cutoff: number): boolean;
 
 /**
- * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
- * 0 is clamped to 0). False when `mode` isn't one.
+ * Sets how the material uses alpha (default: OPAQUE), and the cutoff for MASK (default: 0.5).
+ * MASK draws only where alpha reaches the cutoff. A cutoff below 0 is clamped to 0.
+ * Returns false if `mode` isn't an alpha mode.
  */
 export declare function wgf_material_get_alpha_mode(material: wgf_material_t | 0): wgf_alpha_mode_t;
 
 /**
- * How alpha is used, and the cutoff MASK draws from (default OPAQUE, 0.5; a cutoff below
- * 0 is clamped to 0). False when `mode` isn't one.
+ * Sets how the material uses alpha (default: OPAQUE), and the cutoff for MASK (default: 0.5).
+ * MASK draws only where alpha reaches the cutoff. A cutoff below 0 is clamped to 0.
+ * Returns false if `mode` isn't an alpha mode.
  */
 export declare function wgf_material_get_alpha_cutoff(material: wgf_material_t | 0): number;
 
 /**
- * A double-sided surface isn't culled from behind; its back faces are lit from their
- * side (default single sided).
+ * Sets whether both sides of a surface are drawn (default: single sided). The back faces
+ * of a double-sided surface are lit from their own side.
  */
 export declare function wgf_material_set_double_sided(material: wgf_material_t | 0, double_sided: boolean): boolean;
 
 /**
- * A double-sided surface isn't culled from behind; its back faces are lit from their
- * side (default single sided).
+ * Sets whether both sides of a surface are drawn (default: single sided). The back faces
+ * of a double-sided surface are lit from their own side.
  */
 export declare function wgf_material_is_double_sided(material: wgf_material_t | 0): boolean;
 
 /**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ * Sets or gets a parameter by name, from the table above.
+ *
+ * - set_int refuses a texture coordinate set other than 0 or 1.
+ * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+ *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
  */
 export declare function wgf_material_set_int(material: wgf_material_t | 0, name: string | null, value_: number): boolean;
 
 /**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ * Sets or gets a parameter by name, from the table above.
+ *
+ * - set_int refuses a texture coordinate set other than 0 or 1.
+ * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+ *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
  */
 export declare function wgf_material_get_int(material: wgf_material_t | 0, name: string | null): number;
 
 /**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ * Sets or gets a parameter by name, from the table above.
+ *
+ * - set_int refuses a texture coordinate set other than 0 or 1.
+ * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+ *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
  */
 export declare function wgf_material_set_float(material: wgf_material_t | 0, name: string | null, value_: number): boolean;
 
 /**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ * Sets or gets a parameter by name, from the table above.
+ *
+ * - set_int refuses a texture coordinate set other than 0 or 1.
+ * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+ *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
  */
 export declare function wgf_material_get_float(material: wgf_material_t | 0, name: string | null): number;
 
 /**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ * Sets or gets a parameter by name, from the table above.
+ *
+ * - set_int refuses a texture coordinate set other than 0 or 1.
+ * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+ *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
  */
 export declare function wgf_material_set_vec2(material: wgf_material_t | 0, name: string | null, x: number, y: number): boolean;
 
 /**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ * Sets or gets a parameter by name, from the table above.
+ *
+ * - set_int refuses a texture coordinate set other than 0 or 1.
+ * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+ *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
  */
 export declare function wgf_material_get_vec2<T extends number[] | Float32Array | Float64Array>(material: wgf_material_t | 0, name: string | null, into: T): T;
 export declare function wgf_material_get_vec2(material: wgf_material_t | 0, name: string | null, into?: wgf_vec2_t | null): wgf_vec2_t;
 
 /**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ * Sets or gets a parameter by name, from the table above.
+ *
+ * - set_int refuses a texture coordinate set other than 0 or 1.
+ * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+ *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
  */
 export declare function wgf_material_set_vec3(material: wgf_material_t | 0, name: string | null, x: number, y: number, z: number): boolean;
 
 /**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ * Sets or gets a parameter by name, from the table above.
+ *
+ * - set_int refuses a texture coordinate set other than 0 or 1.
+ * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+ *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
  */
 export declare function wgf_material_get_vec3<T extends number[] | Float32Array | Float64Array>(material: wgf_material_t | 0, name: string | null, into: T): T;
 export declare function wgf_material_get_vec3(material: wgf_material_t | 0, name: string | null, into?: wgf_vec3_t | null): wgf_vec3_t;
 
 /**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ * Sets or gets a parameter by name, from the table above.
+ *
+ * - set_int refuses a texture coordinate set other than 0 or 1.
+ * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+ *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
  */
 export declare function wgf_material_set_vec4(material: wgf_material_t | 0, name: string | null, x: number, y: number, z: number, w: number): boolean;
 
 /**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ * Sets or gets a parameter by name, from the table above.
+ *
+ * - set_int refuses a texture coordinate set other than 0 or 1.
+ * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+ *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
  */
 export declare function wgf_material_get_vec4<T extends number[] | Float32Array | Float64Array>(material: wgf_material_t | 0, name: string | null, into: T): T;
 export declare function wgf_material_get_vec4(material: wgf_material_t | 0, name: string | null, into?: wgf_vec4_t | null): wgf_vec4_t;
 
 /**
- * The parameters, by name (the table above). set_int refuses a texture coordinate set
- * other than 0 or 1. set_color takes an sRGB color for a vec3 or vec4 parameter,
- * stored linear, its alpha as it is (read back with get_vec3 or get_vec4).
+ * Sets or gets a parameter by name, from the table above.
+ *
+ * - set_int refuses a texture coordinate set other than 0 or 1.
+ * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
+ *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
  */
 export declare function wgf_material_set_color(material: wgf_material_t | 0, name: string | null, color: wgf_color_t): boolean;
 
 /**
- * A texture parameter: the material holds its own reference to the texture; 0 clears
- * it. False when `texture` isn't a texture.
+ * Sets or gets a texture parameter by name. The material holds its own reference to the
+ * texture, and 0 clears it. Returns false if `texture` isn't a texture.
  */
 export declare function wgf_material_set_texture(material: wgf_material_t | 0, name: string | null, texture: wgf_texture_t | 0): boolean;
 
 /**
- * A texture parameter: the material holds its own reference to the texture; 0 clears
- * it. False when `texture` isn't a texture.
+ * Sets or gets a texture parameter by name. The material holds its own reference to the
+ * texture, and 0 clears it. Returns false if `texture` isn't a texture.
  */
 export declare function wgf_material_get_texture(material: wgf_material_t | 0, name: string | null): wgf_texture_t;
 
 /**
- * A custom material's cubemap (wgf_cubemap.h): its shader's textureCube `name`, sampled as
- * samplerCube (wgf.glsl); the material holds its own reference; 0 clears it. False for a
- * built-in material, a handle that isn't a cubemap, or a name that is its shader's texture2D
- * (wgf_material_set_texture's) -- or, set while its shader loads, warned of and dropped once
- * it is READY. set_texture likewise refuses a textureCube's name, and each getter answers 0
- * for the other's.
+ * Sets or gets a custom material's cubemap (wgf_cubemap.h): its shader's textureCube
+ * `name`, sampled as a samplerCube (wgf.glsl). The material holds its own reference to the
+ * cubemap, and 0 clears it.
+ *
+ * Returns false for a material with built-in shading, a handle that isn't a cubemap, or a
+ * name that is one of the shader's texture2Ds (set those with wgf_material_set_texture).
+ * If the shader is still loading, the cubemap is kept and checked once the shader is
+ * READY. A wrong name is then dropped with a warning.
+ *
+ * set_texture refuses a textureCube's name in the same way, and each getter returns 0 for
+ * the other kind.
  */
 export declare function wgf_material_set_cubemap(material: wgf_material_t | 0, name: string | null, cubemap: wgf_cubemap_t | 0): boolean;
 
 /**
- * A custom material's cubemap (wgf_cubemap.h): its shader's textureCube `name`, sampled as
- * samplerCube (wgf.glsl); the material holds its own reference; 0 clears it. False for a
- * built-in material, a handle that isn't a cubemap, or a name that is its shader's texture2D
- * (wgf_material_set_texture's) -- or, set while its shader loads, warned of and dropped once
- * it is READY. set_texture likewise refuses a textureCube's name, and each getter answers 0
- * for the other's.
+ * Sets or gets a custom material's cubemap (wgf_cubemap.h): its shader's textureCube
+ * `name`, sampled as a samplerCube (wgf.glsl). The material holds its own reference to the
+ * cubemap, and 0 clears it.
+ *
+ * Returns false for a material with built-in shading, a handle that isn't a cubemap, or a
+ * name that is one of the shader's texture2Ds (set those with wgf_material_set_texture).
+ * If the shader is still loading, the cubemap is kept and checked once the shader is
+ * READY. A wrong name is then dropped with a warning.
+ *
+ * set_texture refuses a textureCube's name in the same way, and each getter returns 0 for
+ * the other kind.
  */
 export declare function wgf_material_get_cubemap(material: wgf_material_t | 0, name: string | null): wgf_cubemap_t;
 
 /**
- * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
- * alone, clamped at its edges. False for a wrap or filter that isn't one.
+ * Sets or gets how texture parameter `name` is sampled (default: repeat, linear). A
+ * cubemap uses only the filter, and is always clamped at its edges. Returns false for a
+ * wrap or filter that isn't one.
  */
 export declare function wgf_material_set_texture_sampling(material: wgf_material_t | 0, name: string | null, wrap_u: wgf_texture_wrap_t, wrap_v: wgf_texture_wrap_t, filter: wgf_texture_filter_t): boolean;
 
 /**
- * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
- * alone, clamped at its edges. False for a wrap or filter that isn't one.
+ * Sets or gets how texture parameter `name` is sampled (default: repeat, linear). A
+ * cubemap uses only the filter, and is always clamped at its edges. Returns false for a
+ * wrap or filter that isn't one.
  */
 export declare function wgf_material_get_texture_wrap_u(material: wgf_material_t | 0, name: string | null): wgf_texture_wrap_t;
 
 /**
- * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
- * alone, clamped at its edges. False for a wrap or filter that isn't one.
+ * Sets or gets how texture parameter `name` is sampled (default: repeat, linear). A
+ * cubemap uses only the filter, and is always clamped at its edges. Returns false for a
+ * wrap or filter that isn't one.
  */
 export declare function wgf_material_get_texture_wrap_v(material: wgf_material_t | 0, name: string | null): wgf_texture_wrap_t;
 
 /**
- * How texture parameter `name` is sampled (default repeat, linear): a cubemap's by its filter
- * alone, clamped at its edges. False for a wrap or filter that isn't one.
+ * Sets or gets how texture parameter `name` is sampled (default: repeat, linear). A
+ * cubemap uses only the filter, and is always clamped at its edges. Returns false for a
+ * wrap or filter that isn't one.
  */
 export declare function wgf_material_get_texture_filter(material: wgf_material_t | 0, name: string | null): wgf_texture_filter_t;
 

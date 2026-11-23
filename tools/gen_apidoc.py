@@ -12,8 +12,8 @@ tools/gen_binding.py writes them by), its Haxe signature as the Haxe binding wri
 (tools/jsbinding.py's Emitter). Every doc is the headers' (a call's own comment, its group's as
 the bindings take it, or, where that is a member's above it on the page, a link to it).
 
-  c/<header>.html    a page a public header, grouped by layer: its overview, enums, structs,
-                     and calls in header order, each its C signature and its names in Haxe and
+  c/<header>.html    a page a public header, grouped by layer: its overview, its documented
+                     types (a handle kind's typedef), enums, structs, and calls in header order, each its C signature and its names in Haxe and
                      JS, or that it is C's alone (a static inline, or one the bindings skip)
   haxe/<Type>.html   a page a Haxe type: an abstract over a handle kind (its calls its
                      methods), one over a kind for a section of calls on it, a class of
@@ -73,6 +73,8 @@ h2.section { margin: 36px 0 8px; padding-bottom: 4px; border-bottom: 1px solid v
 .names { color: var(--dim); font-size: 13px; margin: 2px 0 6px; }
 .names code { color: var(--text); }
 .doc p { margin: 6px 0; }
+.doc ul { margin: 6px 0; padding-left: 22px; }
+.doc li { margin: 3px 0; }
 table { border-collapse: collapse; margin: 6px 0; font-size: 13px; }
 td, th { border: 1px solid var(--line); padding: 3px 8px; text-align: left; }
 .search { width: 100%; padding: 8px 10px; margin: 8px 0 14px; background: var(--bg); color: var(--text);
@@ -123,14 +125,29 @@ def inline(text):
 
 
 def doc_html(text):
-    """A doc comment as HTML: its paragraphs (blank lines apart) as paragraphs, a block whose
-    lines are indented or laid out in columns (a list of keys and their defaults) as it is."""
+    """A doc comment as HTML: its paragraphs (blank lines apart) as paragraphs; a run of
+    lines starting "- " as a list, an item's indented lines joined to it; and a block laid
+    out in columns (a table of keys and their defaults) as it is."""
     out = []
     for block in (text or '').split('\n\n'):
         lines = block.split('\n')
         if not block.strip():
             continue
-        if any(line.startswith(' ') or '   ' in line.strip() for line in lines):
+        if any(line.startswith('- ') for line in lines):
+            lead, items = [], []
+            for line in lines:
+                if line.startswith('- '):
+                    items.append(line[2:].strip())
+                elif items and line.startswith(' '):
+                    items[-1] += ' ' + line.strip()
+                elif items:
+                    items.append(line.strip())
+                else:
+                    lead.append(line.strip())
+            if lead:
+                out.append(f'<p>{inline(" ".join(lead))}</p>')
+            out.append('<ul>' + ''.join(f'<li>{inline(item)}</li>' for item in items) + '</ul>')
+        elif any(line.startswith(' ') or '   ' in line.strip() for line in lines):
             out.append(f'<pre>{html.escape(block)}</pre>')
         else:
             out.append(f'<p>{inline(" ".join(line.strip() for line in lines))}</p>')
@@ -293,6 +310,18 @@ class Reference:
                         f'<p class="sub">C &middot; {html.escape(layer_of(h))} &middot; '
                         f'<a href="{REPOSITORY}/blob/main/{html.escape(h)}">{html.escape(h)}</a></p>',
                         doc_html(self.api.overviews.get(h, ''))]
+                types = [(name, target) for name, (target, header) in self.api.typedefs.items()
+                         if header == h and self.api.type_docs.get(name)]
+                if types:
+                    body.append('<h2 class="section">Types</h2>')
+                    for tname, target in types:
+                        haxe = self.binding.kinds.get(tname)
+                        names = (f'<p class="names">Haxe: <a href="../haxe/{haxe}.html"><code>{haxe}</code></a>; JS: '
+                                 f'<a href="../js/{haxe}.html"><code>{haxe}</code></a></p>' if haxe else '')
+                        body.append(f'<div class="item" id="{html.escape(tname)}"><h3>{html.escape(tname)}</h3>'
+                                    f'<pre>typedef {html.escape(target)} {html.escape(tname)};</pre>{names}'
+                                    f'{doc_html(self.api.type_docs[tname])}</div>')
+                        self.index.append({'lang': 'c', 'name': tname, 'page': f'c/{pg}#{tname}', 'where': name})
                 if d['e']:
                     body.append('<h2 class="section">Enums</h2>')
                     for e in d['e']:
